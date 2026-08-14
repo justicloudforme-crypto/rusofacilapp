@@ -16,6 +16,11 @@ const eslintConfig = defineConfig([
     // source, and its minified/worker-scoped code isn't meant to satisfy
     // the app's own lint rules.
     "public/sw.js",
+    // Native Capacitor projects (see MOBILE.md) — `cap sync` copies
+    // public/ (including the generated sw.js above) into both, plus
+    // Xcode/Gradle project files that aren't app source at all.
+    "ios/**",
+    "android/**",
   ]),
 ]);
 

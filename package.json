@@ -24,9 +24,15 @@
     "db:grant-subscription": "tsx prisma/grant-subscription.ts",
     "generate:story-audio": "tsx prisma/generate-story-audio.ts",
     "generate:lesson-audio": "tsx prisma/generate-lesson-audio.ts",
-    "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts"
+    "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts",
+    "cap:sync": "cap sync",
+    "cap:ios": "cap open ios",
+    "cap:android": "cap open android"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@react-pdf/renderer": "^4.6.0",
@@ -39,6 +45,9 @@
     "stripe": "^22.4.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@next/bundle-analyzer": "^16.3.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

@@ -14,6 +14,9 @@
  *   src/app/favicon.ico is intentionally left alone here — Next 16 also
  *     honors src/app/icon.png (Metadata Files convention), so this script
  *     writes that too and it takes priority over the old placeholder .ico.
+ *   resources/icon.png (1024x1024) and resources/splash.png (2732x2732) —
+ *     source images for `npx capacitor-assets generate` (see MOBILE.md),
+ *     which rasterizes these into every iOS/Android native size.
  *
  * Re-run any time BrandMark's glyph or brand colors change:
  *   npx tsx scripts/generate-pwa-icons.ts
@@ -43,6 +46,26 @@ function iconSvg(size: number, glyphScale: number, opaqueBackground: boolean): s
     </linearGradient>
   </defs>
   ${backgroundRect}
+  <svg x="${offset}" y="${offset}" width="${glyphSize}" height="${glyphSize}" viewBox="0 0 24 24">
+    <path d="${SPARKLE_PATH}" fill="#ffffff" />
+  </svg>
+</svg>`;
+}
+
+/** Same brand gradient, sparkle glyph small and centered — used as the
+ * source for native app splash screens, which are always a square canvas
+ * that each platform's tooling letterboxes/crops per device. */
+function splashSvg(size: number): string {
+  const glyphSize = size * 0.22;
+  const offset = (size - glyphSize) / 2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${BRAND_START}" />
+      <stop offset="100%" stop-color="${BRAND_END}" />
+    </linearGradient>
+  </defs>
+  <rect width="${size}" height="${size}" fill="url(#bg)" />
   <svg x="${offset}" y="${offset}" width="${glyphSize}" height="${glyphSize}" viewBox="0 0 24 24">
     <path d="${SPARKLE_PATH}" fill="#ffffff" />
   </svg>
@@ -83,7 +106,15 @@ async function main() {
   // static favicon.ico automatically, no code changes needed.
   await renderPng(iconSvg(256, 0.72, false), path.join(process.cwd(), "src", "app", "icon.png"), 256);
 
-  console.log("✔ PWA icons generated.");
+  // Capacitor native asset sources (see MOBILE.md) — 1024x1024 icon,
+  // edge-to-edge like the maskable/apple variants since iOS/Android both
+  // apply their own platform-specific icon masking on top.
+  const resourcesDir = path.join(process.cwd(), "resources");
+  await mkdir(resourcesDir, { recursive: true });
+  await renderPng(iconSvg(1024, 0.5, true), path.join(resourcesDir, "icon.png"), 1024, { flatten: true });
+  await renderPng(splashSvg(2732), path.join(resourcesDir, "splash.png"), 2732, { flatten: true });
+
+  console.log("✔ PWA + Capacitor icons generated.");
 }
 
 main().catch((error) => {
