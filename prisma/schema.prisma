@@ -1,0 +1,361 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// role is one of: owner | admin | student
+// (kept as String because SQLite has no native enum type in Prisma)
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  name             String?
+  role             String           @default("student")
+  stripeCustomerId String?          @unique
+  createdAt        DateTime         @default(now())
+  subscriptions        Subscription[]
+  lessonProgress       LessonProgress[]
+  voiceSubmissions     VoiceSubmission[]
+  examAttempts         ExamAttempt[]
+  flashcardProgress    FlashcardProgress[]
+  storyReadingProgress StoryReadingProgress[]
+}
+
+// status is one of: active | trialing | past_due | canceled | incomplete_expired
+// (kept as String because SQLite has no native enum type in Prisma)
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id])
+  plan                 String
+  status               String   @default("active")
+  currentPeriodEnd     DateTime
+  stripeSubscriptionId String?  @unique
+  stripeCustomerId     String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([userId])
+  // Covers getLatestSubscription's findFirst({ where: { userId }, orderBy:
+  // { createdAt: "desc" } }) — the hottest query in the access-control
+  // path (run on every lesson/exam view, twice: once in proxy.ts, once in
+  // the page itself) — without this, that orderBy falls back to sorting
+  // the userId-filtered rows in memory instead of walking the index in order.
+  @@index([userId, createdAt])
+  @@index([stripeSubscriptionId])
+}
+
+// One row per lesson a user has ATTEMPTED (pass or fail) — written by
+// POST /api/progress on every "Comprobar" check, upserted so this is always
+// the most recent attempt for that lesson. Read two ways: (1) filtered to
+// `passed: true` for the course-progress bars and /profile's per-lesson
+// result cards (preserves the original "only passes count" semantics),
+// and (2) unfiltered by GET /api/progress?level=&lesson=, which
+// ExercisesTab uses to restore exactly the state a student left a lesson
+// in — right down to which exercises they got right or wrong — instead of
+// showing a blank form on a repeat visit, whether or not they'd passed yet.
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  level       String
+  lessonSlug  String
+  // Percentage score (0-100) of the attempt that triggered this row/update.
+  score       Int      @default(0)
+  // Whether THIS attempt cleared the pass threshold — distinct from score,
+  // since callers that only care about "has this lesson been passed"
+  // (course-progress bars, /profile) must filter on this, not infer it from
+  // score, now that failing attempts are saved too.
+  passed      Boolean  @default(true)
+  // JSON-encoded string[]: a short human-readable label per exercise the
+  // student got wrong on this attempt (e.g. the fill-blank prompt or the
+  // multiple-choice question), used to build "revisa esto" hints on
+  // /profile. "[]" when the student got everything right.
+  mistakes    String   @default("[]")
+  // JSON-encoded AnswerMap (see src/lib/lessons/scoring.ts) — every answer
+  // the student gave on this attempt, restored verbatim into ExercisesTab
+  // on a repeat visit so the graded view (not just the aggregate score)
+  // reappears exactly as left.
+  answers     String   @default("{}")
+  completedAt DateTime @default(now())
+
+  @@unique([userId, level, lessonSlug])
+  @@index([userId])
+}
+
+// One row per exam attempt (the 10-lesson milestone exams, see
+// src/lib/exams/). Every attempt is kept (not just the best/first), so a
+// student's exam history is visible on /profile. breakdown is a
+// JSON-encoded Record<skillAreaId, { earned, total, percentage }> letting
+// the profile show which skill areas (alphabet, greetings, numbers...) are
+// solid vs. need review, not just one aggregate number.
+model ExamAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  level       String
+  examSlug    String
+  earned      Int
+  total       Int
+  percentage  Int
+  passed      Boolean
+  breakdown   String
+  completedAt DateTime @default(now())
+
+  @@index([userId, level, examSlug])
+}
+
+// A short story or folk tale in the "Cuentos / Lecturas" reading library.
+// level uses the CEFR scale (A1-C1), one step further than course levels
+// (which stop at B2) since some readings target advanced students who have
+// finished the course track. isPremium gates the full text/audio behind an
+// active subscription, mirroring the lesson access-control check.
+model Story {
+  id            String   @id @default(cuid())
+  title         String
+  author        String
+  level         String
+  text          String
+  // Short intro shown on the catalog card and above the text on the
+  // reader page — the "summary" a student reads before committing to
+  // the full story.
+  description   String?
+  // Spanish parallel translation, paragraph-aligned with `text` via the
+  // same newline-per-paragraph convention (see splitStoryParagraphs) —
+  // powers the "show translation" toggle on the reader page.
+  translationEs String?
+  audioUrl      String?
+  isPremium     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Admin-edited lesson content (grammar/vocabulary/exercises), stored as a
+// JSON string matching the LessonContent shape in src/lib/lessons/types.ts.
+// getLessonContent() checks this table first and falls back to the static
+// src/lib/lessons/content.json bundled with the app — so the two seed
+// lessons keep working even before an admin touches anything, and any
+// lesson an admin creates/edits here overrides the static file (and,
+// unlike file edits, actually persists on serverless hosting like Vercel).
+model Lesson {
+  id          String   @id @default(cuid())
+  level       String
+  lessonSlug  String
+  contentJson String
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@unique([level, lessonSlug])
+}
+
+// Admin-edited exam content (skill areas + exercises), stored as a JSON
+// string matching the ExamContent shape in src/lib/exams/types.ts — same
+// override-table pattern as Lesson above. getExamContent() checks this
+// table first and falls back to the static src/lib/exams/content.json, so
+// a1-exam-1 keeps working unmodified and every future exam (a1-exam-2,
+// a1-exam-3...) can be authored entirely through /admin/exams without
+// touching the JSON file or redeploying.
+model Exam {
+  id          String   @id @default(cuid())
+  level       String
+  examSlug    String
+  contentJson String
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@unique([level, examSlug])
+}
+
+// A student's uploaded recording of themselves reading a word/phrase aloud
+// (pronunciation practice, read-aloud practice). One row per attempt — kept
+// as a history rather than overwritten, so a student can hear how they've
+// improved. Only ever readable by the student who made it (see
+// GET /api/voice-submissions) — there is no admin review UI yet.
+model VoiceSubmission {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  level      String
+  lessonSlug String
+  // Identifies which practice item this recording belongs to, e.g. the
+  // vocabulary word or readingPractice sentence (stable across content
+  // edits because it's the Russian text itself, not an array index).
+  itemKey    String
+  audioUrl   String
+  createdAt  DateTime @default(now())
+
+  @@index([userId, level, lessonSlug, itemKey])
+}
+
+// Per-flashcard "known" flag, server-backed so it survives a device switch
+// or app reinstall (a mobile-launch requirement — see rusofasil_project_state
+// memory). Mirrors the shape of the legacy localStorage-only map in
+// src/lib/flashcard-progress.ts; the client still writes to localStorage
+// first for instant UI feedback, then syncs here in the background.
+model FlashcardProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  cardId    String
+  known     Boolean  @default(true)
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, cardId])
+  @@index([userId])
+}
+
+// Per-story reading/listening progress, server-backed for the same reason
+// as FlashcardProgress above. Named StoryReadingProgress (not StoryProgress)
+// to avoid colliding with the unrelated Story content model.
+model StoryReadingProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  storyId     String
+  currentPage Int
+  queueIndex  Int?
+  totalPages  Int
+  percent     Int
+  isCompleted Boolean  @default(false)
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@unique([userId, storyId])
+  @@index([userId])
+}
+
+// Pre-generated pronunciation audio for lesson content (vocabulary words,
+// grammar examples, readingPractice sentences), mirroring Story.audioUrl's
+// pattern but at per-item granularity. Exists so SpeakButton can play a
+// real file instead of the browser's Web Speech API — the latter is
+// unreliable or absent in a native/WebView mobile context (see
+// rusofasil_project_state memory). itemKey is the Russian text itself
+// (same "stable across content edits" convention as VoiceSubmission.itemKey),
+// not an array index. Populated by prisma/generate-lesson-audio.ts — a paid
+// OpenAI TTS call per item, so this table is filled incrementally, not all
+// at once; SpeakButton falls back to browser synthesis for any item not
+// yet cached here.
+model LessonAudioCache {
+  id         String   @id @default(cuid())
+  level      String
+  lessonSlug String
+  itemKey    String
+  audioUrl   String
+  voice      String
+  createdAt  DateTime @default(now())
+
+  @@unique([level, lessonSlug, itemKey])
+  @@index([level, lessonSlug])
+}
+
+// Architectural foundation for the planned "linguistic terms glossary" —
+// a searchable reference of the METALANGUAGE the course itself uses
+// (aspecto perfectivo, caso genitivo, participio activo...), distinct from
+// /api/dictionary/translate (which looks up arbitrary Russian WORDS a
+// student encounters in a story, via a free external API, not course
+// terminology). term/definition are always Spanish, matching the course's
+// language policy (see src/lib/lessons/content.ts); russianEquivalent is
+// the term's standard Russian name, so a student can map "aspecto
+// perfectivo" to "совершенный вид" directly. category groups related
+// entries for the future search/filter UI (e.g. "casos", "aspecto",
+// "participios"). relatedLessons is a JSON-encoded string[] of lesson
+// slugs ("b1-19") where the term is first taught, for future cross-linking
+// — kept as JSON rather than a join table since this is a small reference
+// set, not a high-write relation.
+model GlossaryTerm {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  term             String
+  definition       String
+  russianEquivalent String
+  transcription    String?
+  category         String
+  // A short paragraph bridging to Russian — how this concept behaves (or
+  // doesn't exist) in Russian grammar, e.g. "en español el sustantivo no
+  // cambia de forma; en ruso sí, según el caso". Optional because it only
+  // makes sense for the "partes-de-la-oracion" category (Spanish
+  // metalanguage terms) — the older Russian-concept entries (aspecto,
+  // casos...) already ARE the Russian explanation, so this would be
+  // redundant for them.
+  russianComparison String?
+  // JSON-encoded { es: string; ru: string }[] — replaces the old singular
+  // exampleRu/exampleEs pair so a term can carry more than one example
+  // sentence (the whole point of "examples" as an array: showing the
+  // pattern in more than one live context). Same JSON-string-column
+  // pattern as relatedLessons below, for the same reason (small reference
+  // table, not worth a join table).
+  examples         String   @default("[]")
+  relatedLessons   String   @default("[]")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([category])
+}
+
+// A single vocabulary flashcard shown on /vocabulary. Previously these
+// lived as ~4,500 lines of hand-written literal arrays across
+// src/lib/flashcards/*.ts, imported directly by the "use client"
+// FlashcardsApp component — which meant the ENTIRE bank shipped in the
+// browser JS bundle on every visit, regardless of which category/level a
+// student actually opened. Moving to a DB-backed model (mirroring Story
+// and GlossaryTerm) fixes that: the client now fetches only the filtered
+// slice it needs from GET /api/flashcards?category=&level=, and new words
+// can be added by an admin without a code change or redeploy.
+//
+// `id` intentionally stays a stable, meaningful string (not just a cuid
+// default) for EXISTING migrated cards — FlashcardProgress.cardId
+// references it directly, and a student's "known" flag must survive this
+// migration. New admin-created cards fall back to the cuid() default,
+// which is fine since nothing referenced their id before creation.
+model FlashcardCard {
+  id            String   @id @default(cuid())
+  category      String   // FlashcardCategory union — see src/lib/flashcards.ts
+  level         String   // FlashcardLevel: A1 | A2 | B1 | B2 | C1
+  emoji         String
+  russian       String
+  transcription String
+  translationEs String
+  exampleRu     String
+  exampleEs     String
+  // JSON-encoded WordRelation[] ({ word, translation }) — same
+  // small-reference-set-as-JSON-column reasoning as GlossaryTerm.examples
+  // above; a join table would be overkill for a handful of related words
+  // per card.
+  synonyms      String   @default("[]")
+  antonyms      String   @default("[]")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+  @@index([level])
+}
+
+// A Russian idiom/proverb shown on /vocabulary's "Idioms" tab. Same
+// rationale and migration story as FlashcardCard above: previously
+// ~7,400 lines of literal arrays (src/lib/idioms/{daily,proverbs,literary}.ts)
+// bundled whole into the client. id stays stable for the same
+// FlashcardProgress.cardId reason (idioms use the same known/unknown
+// tracking as flashcards).
+model Idiom {
+  id                 String   @id @default(cuid())
+  category           String   // IdiomCategory: daily | proverbs | literary
+  phrase             String
+  literalTranslation String
+  spanishEquivalent  String
+  explanation        String
+  contextExampleRu   String
+  contextExampleEs   String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([category])
+}

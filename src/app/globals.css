@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* RusoFácil brand palette — deep indigo-blue (nods to the Russian flag's
+     blue) paired with a warm amber accent (nods to Mexico). Used wherever
+     the site needs to look distinctly "branded" rather than the default
+     grayscale UI chrome — currently just the lesson slide decks and their
+     PDF export, see src/components/lesson/SlidesTab.tsx and
+     src/lib/lessons/pdf.tsx. */
+  --brand: #3730a3;
+  --brand-light: #4f46e5;
+  --brand-accent: #b45309;
+  --brand-accent-light: #d97706;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand: var(--brand);
+  --color-brand-light: var(--brand-light);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-light: var(--brand-accent-light);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --brand: #6366f1;
+    --brand-light: #818cf8;
+    --brand-accent: #f59e0b;
+    --brand-accent-light: #fbbf24;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}

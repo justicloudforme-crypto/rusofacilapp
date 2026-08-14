@@ -1,0 +1,202 @@
+[
+  {
+    "question": "¿Cómo se dice '¡Escucha!' (informal) en ruso?",
+    "options": [
+      "Слушай",
+      "Слушайте",
+      "Слушать",
+      "Слушал"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "¿Qué caso rige la preposición 'с' (con)?",
+    "options": [
+      "instrumental",
+      "genitivo",
+      "dativo",
+      "acusativo"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "¿Cuál es la forma correcta de 'школа' con 'в' (en la escuela)?",
+    "options": [
+      "в школе",
+      "в школа",
+      "в школу",
+      "в школы"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "¿Cómo se pronuncia la vocal 'О' cuando NO lleva el acento de la palabra?",
+    "options": [
+      "Como una 'o' clara",
+      "Como una 'a' débil",
+      "Como una 'u'",
+      "No se pronuncia"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Cómo se dice 'Trabajo como médico'?",
+    "options": [
+      "Я работаю врачом",
+      "Я работаю врач",
+      "Я работаю врача",
+      "Я есть врачом"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "En 'Он бегает быстрее меня', ¿qué palabra es el adverbio comparativo?",
+    "options": [
+      "бегает",
+      "быстрее",
+      "меня",
+      "он"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Qué significa 'за углом'?",
+    "options": [
+      "muy lejos",
+      "a la vuelta de la esquina",
+      "recto",
+      "en el centro"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Qué característica tienen las oraciones negativas rusas con 'никто/ничего'?",
+    "options": [
+      "nunca llevan 'не'",
+      "doble negación obligatoria",
+      "solo se usan en preguntas",
+      "no existen en ruso"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Cómo pides probarte una prenda?",
+    "options": [
+      "Можно это примерить?",
+      "Можно это вернуть?",
+      "У вас есть чек?",
+      "Это мой размер"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "¿Cuál es la terminación del pasado para un sujeto femenino?",
+    "options": [
+      "-л",
+      "-ла",
+      "-ло",
+      "-ли"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "'Я успел закончить работу' expresa...",
+    "options": [
+      "un proceso habitual",
+      "un logro puntual conseguido a tiempo",
+      "una acción que nunca ocurrió",
+      "una acción repetida"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Qué preposición acompaña típicamente a подойти?",
+    "options": [
+      "от + genitivo",
+      "к + dativo",
+      "в + acusativo",
+      "на + prepositivo"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "'Студент, читающий книгу' equivale en registro coloquial a...",
+    "options": [
+      "Студент, который читает книгу",
+      "Студент прочитал книгу",
+      "Студент будет читать книгу",
+      "Студент читал книгу вчера"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "¿Cómo se dice 'noticias' en ruso?",
+    "options": [
+      "газета",
+      "новости",
+      "журналист",
+      "интернет"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Qué es 'баня' en la cultura rusa?",
+    "options": [
+      "muñeca de madera",
+      "baño de vapor tradicional",
+      "tetera tradicional",
+      "fiesta de invierno"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Cuál es la traducción correcta de «Считается, что»?",
+    "options": [
+      "Se considera que",
+      "Los que consideran",
+      "Considerando esto",
+      "Se decide que"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "¿Qué transformación es típica al pasar de coloquial a formal?",
+    "options": [
+      "verbo → sustantivo verbal",
+      "sustantivo → verbo",
+      "no hay diferencia",
+      "presente → pasado"
+    ],
+    "correct_option_id": 0
+  },
+  {
+    "question": "¿Qué significa «выйти из себя»?",
+    "options": [
+      "salir de casa",
+      "perder los estribos",
+      "salir de vacaciones",
+      "salir a caminar"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Cómo se forma el modo condicional en ruso?",
+    "options": [
+      "con una terminación especial del verbo",
+      "verbo en pasado + partícula «бы»",
+      "verbo en futuro + «бы»",
+      "con el verbo auxiliar «быть» en presente"
+    ],
+    "correct_option_id": 1
+  },
+  {
+    "question": "¿Qué forma verbal sigue siempre a «бы ни» en estas construcciones?",
+    "options": [
+      "presente",
+      "pasado",
+      "futuro",
+      "infinitivo"
+    ],
+    "correct_option_id": 1
+  }
+]

@@ -1,0 +1,57 @@
+{
+  "name": "ruso-mexico-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:clean": "rm -rf .next && next dev",
+    "build": "next build",
+    "analyze": "ANALYZE=true next build",
+    "start": "next start",
+    "lint": "eslint",
+    "pretypecheck": "next typegen",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run lint && npm run typecheck && npm run build",
+    "db:set-owner": "tsx prisma/set-owner.ts",
+    "db:seed-lessons": "tsx prisma/seed-lessons.ts",
+    "db:seed-stories": "tsx prisma/seed-stories.ts",
+    "db:seed-glossary": "tsx prisma/seed-glossary.ts",
+    "db:glossary-coverage-report": "tsx prisma/glossary-coverage-report.ts",
+    "db:vocabulary-audit": "tsx prisma/vocabulary-idioms-audit.ts",
+    "lint:stories": "tsx prisma/story-structure-lint.ts",
+    "db:grant-subscription": "tsx prisma/grant-subscription.ts",
+    "generate:story-audio": "tsx prisma/generate-story-audio.ts",
+    "generate:lesson-audio": "tsx prisma/generate-lesson-audio.ts",
+    "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@react-pdf/renderer": "^4.6.0",
+    "next": "16.3.0",
+    "prisma": "^7.9.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "stripe": "^22.4.0"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^16.3.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.11",
+    "typescript": "^5"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.9.1": true,
+    "prisma@7.9.1": true,
+    "unrs-resolver@1.12.2": true,
+    "better-sqlite3@12.11.1": true,
+    "esbuild@0.28.1": true
+  }
+}

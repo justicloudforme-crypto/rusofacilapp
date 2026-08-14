@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Edit(**)",
+      "Write(**)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(curl *localhost*)",
+      "Bash(ls*)",
+      "Bash(find *)",
+      "Bash(python3 -c *)",
+      "Bash(lsof*)",
+      "Bash(ps *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(npm install*)",
+      "Bash(npm uninstall*)",
+      "Bash(npx prisma migrate*)",
+      "Bash(npx prisma db push*)"
+    ]
+  }
+}

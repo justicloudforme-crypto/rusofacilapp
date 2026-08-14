@@ -1,0 +1,65 @@
+import { notFound, redirect } from "next/navigation";
+import { isLocale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
+import { isLevelSlug, isLessonSlug, lessonSlugsFor } from "@/lib/courses";
+import { getCurrentUser } from "@/lib/auth";
+import { userHasActiveSubscription } from "@/lib/subscription";
+import { isStaff } from "@/lib/roles";
+import { getLessonContent } from "@/lib/lessons/content";
+import LessonView from "@/components/lesson/LessonView";
+import SlideIllustration from "@/components/lesson/SlideIllustration";
+
+export default async function LessonPage({
+  params,
+}: PageProps<"/[lang]/courses/[level]/[lesson]">) {
+  const { lang, level, lesson } = await params;
+  if (!isLocale(lang) || !isLevelSlug(level) || !isLessonSlug(level, lesson)) notFound();
+
+  // Proxy already gates this route, but auth/subscription state is
+  // re-checked here too: a page should never rely solely on the proxy for
+  // access control (a matcher change elsewhere shouldn't silently expose it).
+  // Staff (owner/admin) bypass the subscription requirement entirely.
+  const user = await getCurrentUser();
+  if (!user || (!isStaff(user.role) && !(await userHasActiveSubscription(user.id)))) {
+    redirect(`/${lang}/pricing?next=/${lang}/courses/${level}/${lesson}`);
+  }
+
+  const dict = await getDictionary(lang);
+  const levelDict = dict.courses.levels[level];
+  const index = Number(lesson) - 1;
+  const title = levelDict.lessons[index];
+  if (!title) notFound();
+
+  const slugs = lessonSlugsFor(level);
+  const prevSlug = index > 0 ? slugs[index - 1] : null;
+  const nextSlug = index < slugs.length - 1 ? slugs[index + 1] : null;
+  const content = await getLessonContent(level, lesson);
+
+  // Rendered server-side, once per slide, and handed down as already-built
+  // markup — SlideIllustration's shape data (src/lib/lessons/slideIcons.ts,
+  // ~10,700 lines) would otherwise have to ship in the client JS bundle for
+  // every lesson page, just so the "use client" SlidesTab could pick a
+  // shape by icon key at render time. A slide's icon never changes at
+  // runtime, so there's nothing for the client to compute here.
+  const slideIllustrations = Object.fromEntries(
+    (content?.slides ?? []).map((slide) => [
+      slide.id,
+      <SlideIllustration key={slide.id} icon={slide.icon} className="h-full w-full" />,
+    ])
+  );
+
+  return (
+    <LessonView
+      lang={lang}
+      level={level}
+      lessonSlug={lesson}
+      title={title}
+      levelTitle={levelDict.title}
+      content={content}
+      slideIllustrations={slideIllustrations}
+      dict={dict.lesson}
+      prevHref={prevSlug ? `/${lang}/courses/${level}/${prevSlug}` : null}
+      nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
+    />
+  );
+}

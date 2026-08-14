@@ -1,0 +1,38 @@
+import { notFound, redirect } from "next/navigation";
+import { isLocale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
+import { isLevelSlug } from "@/lib/courses";
+import { getCurrentUser } from "@/lib/auth";
+import { userHasActiveSubscription } from "@/lib/subscription";
+import { isStaff } from "@/lib/roles";
+import { getExamContent } from "@/lib/exams/content";
+import ExamView from "@/components/lesson/ExamView";
+
+export default async function ExamPage({
+  params,
+}: PageProps<"/[lang]/courses/[level]/exam/[examSlug]">) {
+  const { lang, level, examSlug } = await params;
+  if (!isLocale(lang) || !isLevelSlug(level)) notFound();
+
+  const exam = await getExamContent(level, examSlug);
+  if (!exam) notFound();
+
+  const user = await getCurrentUser();
+  if (!user || (!isStaff(user.role) && !(await userHasActiveSubscription(user.id)))) {
+    redirect(`/${lang}/pricing?next=/${lang}/courses/${level}/exam/${examSlug}`);
+  }
+
+  const dict = await getDictionary(lang);
+
+  return (
+    <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
+      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+        {exam.lessonRangeLabel}
+      </p>
+      <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{exam.title}</h1>
+      <div className="mt-8">
+        <ExamView exam={exam} level={level} dict={dict.lesson.exercises} examDict={dict.profile} />
+      </div>
+    </div>
+  );
+}
