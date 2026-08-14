@@ -12,6 +12,9 @@
     "pretypecheck": "next typegen",
     "typecheck": "tsc --noEmit",
     "verify": "npm run lint && npm run typecheck && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "db:set-owner": "tsx prisma/set-owner.ts",
     "db:seed-lessons": "tsx prisma/seed-lessons.ts",
     "db:seed-stories": "tsx prisma/seed-stories.ts",
@@ -49,22 +52,31 @@
     "@capacitor/cli": "^8.5.0",
     "@capacitor/ios": "^8.5.0",
     "@next/bundle-analyzer": "^16.3.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.5",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.11",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   },
   "allowScripts": {
     "@prisma/engines@7.9.1": true,
     "prisma@7.9.1": true,
     "unrs-resolver@1.12.2": true,
     "better-sqlite3@12.11.1": true,
-    "esbuild@0.28.1": true
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true,
+    "fsevents@2.3.2": true
   }
 }
