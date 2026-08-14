@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LanguageSwitcher from "./LanguageSwitcher";
+import MobileMenu from "./MobileMenu";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 import { getCurrentUser } from "@/lib/auth";
@@ -13,43 +14,47 @@ export default async function Navbar({
   dict: Dictionary;
 }) {
   const user = await getCurrentUser();
+  const staff = Boolean(user && isStaff(user.role));
+
+  const navLinks = [
+    { href: `/${lang}`, label: dict.nav.home },
+    { href: `/${lang}/courses`, label: dict.nav.courses },
+    { href: `/${lang}/stories`, label: dict.nav.stories },
+    { href: `/${lang}/media`, label: dict.nav.media },
+    { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary },
+    ...(staff ? [{ href: `/${lang}/admin`, label: dict.admin.title }] : []),
+  ];
+  const ctaHref = user ? `/${lang}/profile` : `/${lang}/login`;
+  const ctaLabel = user ? user.email : dict.nav.cta;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/10 bg-background/80 backdrop-blur dark:border-white/10">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+    <header className="sticky top-0 z-50 border-b border-black/10 bg-background/80 pt-safe backdrop-blur dark:border-white/10">
+      <div className="relative mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <Link href={`/${lang}`} className="text-lg font-semibold tracking-tight">
           RusoFácil
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
-          <Link href={`/${lang}`} className="hover:text-foreground/70">
-            {dict.nav.home}
-          </Link>
-          <Link href={`/${lang}/courses`} className="hover:text-foreground/70">
-            {dict.nav.courses}
-          </Link>
-          <Link href={`/${lang}/stories`} className="hover:text-foreground/70">
-            {dict.nav.stories}
-          </Link>
-          <Link href={`/${lang}/media`} className="hover:text-foreground/70">
-            {dict.nav.media}
-          </Link>
-          <Link href={`/${lang}/vocabulary`} className="hover:text-foreground/70">
-            {dict.nav.vocabulary}
-          </Link>
-          {user && isStaff(user.role) && (
-            <Link href={`/${lang}/admin`} className="hover:text-foreground/70">
-              {dict.admin.title}
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-foreground/70">
+              {link.label}
             </Link>
-          )}
+          ))}
         </nav>
         <div className="flex items-center gap-3">
           <LanguageSwitcher current={lang} />
           <Link
-            href={user ? `/${lang}/profile` : `/${lang}/login`}
+            href={ctaHref}
             className="hidden rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 sm:inline-block"
           >
-            {user ? user.email : dict.nav.cta}
+            {ctaLabel}
           </Link>
+          <MobileMenu
+            links={navLinks}
+            ctaHref={ctaHref}
+            ctaLabel={ctaLabel}
+            openLabel={dict.nav.openMenu}
+            closeLabel={dict.nav.closeMenu}
+          />
         </div>
       </div>
     </header>

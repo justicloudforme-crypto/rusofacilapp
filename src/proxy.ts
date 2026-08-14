@@ -123,6 +123,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico|mp4|webm|mov|ogv|ogg|mp3|wav|m4a)$).*)",
+    // Root-level PWA files (manifest.ts → /manifest.webmanifest, icon.png,
+    // and the Serwist-generated /sw.js — see next.config.ts) live outside
+    // [lang] on purpose: a manifest/service-worker URL is a fixed contract
+    // with the browser, not a page, so it must never get locale-prefixed.
+    "/((?!api/|_next/static|_next/image|favicon.ico|sw\\.js$|.*\\.(?:svg|png|jpg|jpeg|webp|ico|webmanifest|mp4|webm|mov|ogv|ogg|mp3|wav|m4a)$).*)",
   ],
 };

@@ -10,7 +10,9 @@
     "media": "Audio y video",
     "vocabulary": "Vocabulario",
     "about": "Nosotros",
-    "cta": "Empezar ahora"
+    "cta": "Empezar ahora",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   },
   "intro": {
     "title": "Antes de tu primera lección",

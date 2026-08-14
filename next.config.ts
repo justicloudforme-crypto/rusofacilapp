@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import withSerwistInit from "@serwist/next";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -13,4 +14,18 @@ const nextConfig: NextConfig = {
 // is set, so normal builds/deploys are unaffected.
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
-export default withBundleAnalyzer(nextConfig);
+// `npm run dev` uses Turbopack; Serwist's compiler is webpack-only and
+// `withSerwistInit(...)` unconditionally attaches a `webpack` config
+// function to nextConfig (its own `disable` option only skips emitting
+// public/sw.js, not that attachment) — which Next 16 refuses to run under
+// Turbopack. Rather than force the whole dev server onto webpack (losing
+// Turbopack's fast refresh) just for a service worker nothing needs in
+// dev, only wrap with Serwist for `next build`/`next start`
+// (NODE_ENV=production, set automatically by the Next CLI) and skip it
+// entirely otherwise.
+const config =
+  process.env.NODE_ENV === "production"
+    ? withSerwistInit({ swSrc: "src/app/sw.ts", swDest: "public/sw.js" })(withBundleAnalyzer(nextConfig))
+    : withBundleAnalyzer(nextConfig);
+
+export default config;

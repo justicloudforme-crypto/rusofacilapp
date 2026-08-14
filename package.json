@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
-    "build": "next build",
-    "analyze": "ANALYZE=true next build",
+    "build": "next build --webpack",
+    "analyze": "ANALYZE=true next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "pretypecheck": "next typegen",
@@ -18,6 +18,8 @@
     "db:seed-glossary": "tsx prisma/seed-glossary.ts",
     "db:glossary-coverage-report": "tsx prisma/glossary-coverage-report.ts",
     "db:vocabulary-audit": "tsx prisma/vocabulary-idioms-audit.ts",
+    "db:add-flashcards": "tsx prisma/add-flashcards.ts",
+    "db:add-idioms": "tsx prisma/add-idioms.ts",
     "lint:stories": "tsx prisma/story-structure-lint.ts",
     "db:grant-subscription": "tsx prisma/grant-subscription.ts",
     "generate:story-audio": "tsx prisma/generate-story-audio.ts",
@@ -28,10 +30,12 @@
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@react-pdf/renderer": "^4.6.0",
+    "@serwist/next": "^9.5.12",
     "next": "16.3.0",
     "prisma": "^7.9.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "serwist": "^9.5.12",
     "stripe": "^22.4.0"
   },
   "devDependencies": {

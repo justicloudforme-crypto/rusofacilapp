@@ -13,6 +13,16 @@
   --brand-light: #4f46e5;
   --brand-accent: #b45309;
   --brand-accent-light: #d97706;
+
+  /* Device safe-area insets (notch/status bar/home-indicator) — 0 on a
+     regular browser tab, real values once this runs standalone (PWA
+     "Add to Home Screen" or a Capacitor WebView). Applied to the fixed
+     Navbar header and TelegramFloatButton so branded chrome never sits
+     under a notch or gets covered by the home-indicator gesture bar. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 @theme inline {
@@ -41,4 +51,15 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Tailwind v4 custom utilities (see globals.css safe-area vars above) —
+   stack with the element's own padding rather than replacing it, e.g.
+   Navbar's header uses both `py-4` (visual spacing) and `pt-safe` (device
+   inset) together. */
+@utility pt-safe {
+  padding-top: var(--safe-top);
+}
+@utility pb-safe {
+  padding-bottom: var(--safe-bottom);
 }
