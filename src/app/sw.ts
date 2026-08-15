@@ -28,6 +28,16 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: defaultCache,
+  // When a page navigation isn't in the cache and the network fetch fails
+  // (offline, DNS down, etc.), serve the precached offline.html instead of
+  // letting the browser show its own generic error screen. Only matches
+  // document (HTML page) requests — a failed API/asset fetch still just
+  // fails normally, since offline.html has no useful fallback data for
+  // those. Deliberately a static public/ file, not a Next page — see
+  // public/offline.html's own comment for why a real app route broke here.
+  fallbacks: {
+    entries: [{ url: "/offline.html", matcher: ({ request }) => request.destination === "document" }],
+  },
 });
 
 serwist.addEventListeners();

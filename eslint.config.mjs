@@ -21,6 +21,11 @@ const eslintConfig = defineConfig([
     // Xcode/Gradle project files that aren't app source at all.
     "ios/**",
     "android/**",
+    // Playwright's own generated output (HTML report + trace viewer
+    // bundles, raw test artifacts) — not app source, and its minified
+    // bundled JS isn't meant to satisfy the app's lint rules either.
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 

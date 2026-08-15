@@ -127,6 +127,11 @@ export const config = {
     // and the Serwist-generated /sw.js — see next.config.ts) live outside
     // [lang] on purpose: a manifest/service-worker URL is a fixed contract
     // with the browser, not a page, so it must never get locale-prefixed.
-    "/((?!api/|_next/static|_next/image|favicon.ico|sw\\.js$|.*\\.(?:svg|png|jpg|jpeg|webp|ico|webmanifest|mp4|webm|mov|ogv|ogg|mp3|wav|m4a)$).*)",
+    // public/offline.html (the ".html" extension below) joins them for the
+    // same reason — it's the Service Worker's precached navigation fallback
+    // (see sw.ts's `fallbacks` config), served in place of whatever page the
+    // browser actually asked for while offline, so it must live at one
+    // fixed, locale-independent URL that's known at precache time.
+    "/((?!api/|_next/static|_next/image|favicon.ico|sw\\.js$|.*\\.(?:svg|png|jpg|jpeg|webp|ico|webmanifest|html|mp4|webm|mov|ogv|ogg|mp3|wav|m4a)$).*)",
   ],
 };

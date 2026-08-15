@@ -31,7 +31,17 @@ process.env.SERWIST_SUPPRESS_TURBOPACK_WARNING = "1";
 // entirely otherwise.
 const config =
   process.env.NODE_ENV === "production"
-    ? withSerwistInit({ swSrc: "src/app/sw.ts", swDest: "public/sw.js" })(withBundleAnalyzer(nextConfig))
+    ? withSerwistInit({
+        swSrc: "src/app/sw.ts",
+        swDest: "public/sw.js",
+        // public/offline.html isn't reachable through Next's own link graph
+        // (it's a static file, not a route), so it needs to be added to the
+        // precache list by hand — sw.ts's `fallbacks` config is what
+        // actually serves it when a navigation fails offline. Bump the
+        // revision string if the file's content ever changes, so existing
+        // installs pick up the update.
+        additionalPrecacheEntries: [{ url: "/offline.html", revision: "1" }],
+      })(withBundleAnalyzer(nextConfig))
     : withBundleAnalyzer(nextConfig);
 
 export default config;

@@ -794,5 +794,8 @@
     "relatedLessonsLabel": "Aparece en",
     "noResultsMessage": "No se encontraron términos.",
     "russianComparisonLabel": "Cómo funciona en ruso"
+  },
+  "offline": {
+    "bannerMessage": "Нет подключения к интернету. Некоторые изменения сохранятся и отправятся, когда связь восстановится."
   }
 }
