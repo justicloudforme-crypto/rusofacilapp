@@ -18,6 +18,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(dirname, "./src"),
+      // Next.js only resolves the bare "server-only" import inside its own
+      // bundler — see vitest.stubs/server-only.ts for why Vitest needs its
+      // own stand-in.
+      "server-only": path.resolve(dirname, "./vitest.stubs/server-only.ts"),
     },
   },
 });
