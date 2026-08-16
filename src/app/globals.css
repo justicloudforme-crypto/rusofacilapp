@@ -1,18 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  /* RusoFácil brand palette — deep indigo-blue (nods to the Russian flag's
-     blue) paired with a warm amber accent (nods to Mexico). Used wherever
-     the site needs to look distinctly "branded" rather than the default
-     grayscale UI chrome — currently just the lesson slide decks and their
-     PDF export, see src/components/lesson/SlidesTab.tsx and
-     src/lib/lessons/pdf.tsx. */
-  --brand: #3730a3;
-  --brand-light: #4f46e5;
-  --brand-accent: #b45309;
-  --brand-accent-light: #d97706;
+  /* RusoFácilapp brand palette — "Городецкая роспись" (Gorodets folk
+     painting): a warm cream ground with saturated folk-craft blue/red/gold,
+     flattened into plain UI color rather than literal ornament. Picked over
+     two other pitched directions (a black-lacquer "Khokhloma" treatment,
+     and a cooler teal/coral minimal mark) — see the brand-concepts session
+     for the full comparison. --brand/--brand-light is the PRIMARY
+     interactive accent used all over the app (glossary highlights, active
+     pills, progress bars — not just decorative slides, despite the narrower
+     name); --brand-accent/--brand-accent-light is the secondary/decorative
+     accent (gradient endpoints, bullet dots). Same four-token shape as
+     before the rebrand, only the hex values moved — every consumer
+     component (SlidesTab.tsx, GlossaryApp.tsx, IntroPresentation.tsx, etc.)
+     needed zero changes. */
+  --background: #fff8ec;
+  --foreground: #241c15;
+  --brand: #2d5f8a;
+  --brand-light: #4a7ba8;
+  --brand-accent: #d63b2f;
+  --brand-accent-light: #e0a934;
 
   /* Device safe-area insets (notch/status bar/home-indicator) — 0 on a
      regular browser tab, real values once this runs standalone (PWA
@@ -32,25 +39,29 @@
   --color-brand-light: var(--brand-light);
   --color-brand-accent: var(--brand-accent);
   --color-brand-accent-light: var(--brand-accent-light);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-pt-sans);
+  --font-serif: var(--font-pt-serif);
+  --font-mono: var(--font-pt-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --brand: #6366f1;
-    --brand-light: #818cf8;
-    --brand-accent: #f59e0b;
-    --brand-accent-light: #fbbf24;
+    /* Same Gorodets identity, brightened for contrast on a dark ground —
+       the ground itself stays warm (a deep brown-black, not neutral gray)
+       so dark mode still reads as the same brand, not a generic inversion. */
+    --background: #1b140f;
+    --foreground: #f5ead2;
+    --brand: #5b9bd5;
+    --brand-light: #82b8e8;
+    --brand-accent: #e8574a;
+    --brand-accent-light: #f0b84a;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
 /* Tailwind v4 custom utilities (see globals.css safe-area vars above) —

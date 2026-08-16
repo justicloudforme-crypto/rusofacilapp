@@ -6,8 +6,8 @@ export default function TelegramFloatButton() {
       href={TELEGRAM_INVITE_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Únete al canal de Telegram de RusoFásil"
-      title="Únete al canal de Telegram de RusoFásil"
+      aria-label="Únete al canal de Telegram de RusoFácilapp.com"
+      title="Únete al canal de Telegram de RusoFácilapp.com"
       className="fixed z-[1000] flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-[0_4px_10px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-out hover:scale-110 hover:bg-[#2090c7]"
       style={{ bottom: "calc(30px + var(--safe-bottom))", right: "calc(30px + var(--safe-right))" }}
     >

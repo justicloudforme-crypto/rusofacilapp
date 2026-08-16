@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { PT_Sans, PT_Serif, PT_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { SerwistProvider } from "@serwist/next/react";
 import "../globals.css";
@@ -11,14 +11,27 @@ import TelegramFloatButton from "@/components/TelegramFloatButton";
 import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
+// (body/UI), PT Serif (display headings/wordmark), PT Mono (labels/status
+// text) — all three by ParaType, a Russian type foundry, so Cyrillic and
+// Spanish diacritics render with the same care as Latin. See globals.css
+// for the matching color tokens.
+const ptSans = PT_Sans({
+  variable: "--font-pt-sans",
   subsets: ["latin", "cyrillic"],
+  weight: ["400", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const ptSerif = PT_Serif({
+  variable: "--font-pt-serif",
   subsets: ["latin", "cyrillic"],
+  weight: ["400", "700"],
+});
+
+const ptMono = PT_Mono({
+  variable: "--font-pt-mono",
+  subsets: ["latin", "cyrillic"],
+  weight: "400",
 });
 
 export function generateStaticParams() {
@@ -31,8 +44,8 @@ export const viewport: Viewport = {
   // notch/home-indicator once this runs standalone (PWA/Capacitor).
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#3730a3" },
-    { media: "(prefers-color-scheme: dark)", color: "#6366f1" },
+    { media: "(prefers-color-scheme: light)", color: "#2d5f8a" },
+    { media: "(prefers-color-scheme: dark)", color: "#5b9bd5" },
   ],
 };
 
@@ -49,7 +62,7 @@ export async function generateMetadata({
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
-      title: "RusoFásil",
+      title: "RusoFácilapp",
     },
   };
 }
@@ -66,7 +79,7 @@ export default async function LangLayout({
   return (
     <html
       lang={lang}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${ptSans.variable} ${ptSerif.variable} ${ptMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} />

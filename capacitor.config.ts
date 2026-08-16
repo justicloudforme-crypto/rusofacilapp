@@ -17,8 +17,12 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const devServerUrl = process.env.CAPACITOR_SERVER_URL ?? "http://192.168.1.69:3000";
 
 const config: CapacitorConfig = {
-  appId: "com.rusofasil.app",
-  appName: "RusoFásil",
+  // Reverse-domain of the now-confirmed production domain (rusofacilapp.com,
+  // purchased 2026-08-16) — set for real, not a placeholder anymore. Still
+  // change-before-first-publish territory in principle, but this is now the
+  // actual intended identifier, not a stand-in.
+  appId: "com.rusofacilapp.app",
+  appName: "RusoFácilapp",
   // Required by the Capacitor CLI schema (and `cap doctor`, which errors
   // on a missing index.html) even though nothing here is ever actually
   // served — server.url below is what really loads. Points at a tiny
@@ -40,7 +44,7 @@ const config: CapacitorConfig = {
     // in this remote-URL setup to call that from.
     SplashScreen: {
       launchShowDuration: 1500,
-      backgroundColor: "#3730a3",
+      backgroundColor: "#2d5f8a",
       androidSplashResourceName: "splash",
     },
     // Style.Light = dark text/icons, for a light background — matches the

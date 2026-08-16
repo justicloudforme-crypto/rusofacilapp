@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LanguageSwitcher from "./LanguageSwitcher";
 import MobileMenu from "./MobileMenu";
+import MatryoshkaMark from "./MatryoshkaMark";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 import { getCurrentUser } from "@/lib/auth";
@@ -30,8 +31,9 @@ export default async function Navbar({
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-background/80 pt-safe backdrop-blur dark:border-white/10">
       <div className="relative mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link href={`/${lang}`} className="text-lg font-semibold tracking-tight">
-          RusoFácil
+        <Link href={`/${lang}`} className="flex items-center gap-2 font-serif text-lg font-bold tracking-tight">
+          <MatryoshkaMark size={26} />
+          RusoFácilapp
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
           {navLinks.map((link) => (
