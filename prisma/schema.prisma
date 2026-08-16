@@ -18,7 +18,21 @@ model User {
   id               String           @id @default(cuid())
   email            String           @unique
   name             String?
+  // One of AVATAR_IDS in src/lib/avatars.ts (e.g. "matryoshka_calm") — never
+  // a file path or URL. The avatar itself is a client-rendered component,
+  // not a stored asset; this column is only ever a tiny string.
+  avatarId         String           @default("matryoshka_calm")
   role             String           @default("student")
+  // bcrypt hash, never the plaintext. Null on accounts created before real
+  // password auth existed (the old email-only demo flow) — those users are
+  // asked to set a password on their next login (see src/lib/auth.ts).
+  passwordHash     String?
+  // Bumped by "sign out other devices"/change-password/reset-password —
+  // every issued session token embeds the version it was signed with (see
+  // session-token.ts), so incrementing this invalidates every
+  // previously-issued token at once with no server-side session table to
+  // store or clean up.
+  sessionVersion   Int              @default(0)
   stripeCustomerId String?          @unique
   createdAt        DateTime         @default(now())
   subscriptions        Subscription[]
@@ -34,7 +48,7 @@ model User {
 model Subscription {
   id                   String   @id @default(cuid())
   userId               String
-  user                 User     @relation(fields: [userId], references: [id])
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan                 String
   status               String   @default("active")
   currentPeriodEnd     DateTime
@@ -65,7 +79,7 @@ model Subscription {
 model LessonProgress {
   id          String   @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   level       String
   lessonSlug  String
   // Percentage score (0-100) of the attempt that triggered this row/update.
@@ -100,7 +114,7 @@ model LessonProgress {
 model ExamAttempt {
   id          String   @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   level       String
   examSlug    String
   earned      Int
@@ -184,7 +198,7 @@ model Exam {
 model VoiceSubmission {
   id         String   @id @default(cuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   level      String
   lessonSlug String
   // Identifies which practice item this recording belongs to, e.g. the
@@ -205,7 +219,7 @@ model VoiceSubmission {
 model FlashcardProgress {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   cardId    String
   known     Boolean  @default(true)
   updatedAt DateTime @default(now()) @updatedAt
@@ -220,7 +234,7 @@ model FlashcardProgress {
 model StoryReadingProgress {
   id          String   @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   storyId     String
   currentPage Int
   queueIndex  Int?

@@ -2,11 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 
-export default async function LoginPage({
+export default async function RegisterPage({
   params,
   searchParams,
-}: PageProps<"/[lang]/login">) {
+}: PageProps<"/[lang]/register">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
@@ -16,30 +17,25 @@ export default async function LoginPage({
     typeof query.redirectTo === "string" ? query.redirectTo : `/${lang}/profile`;
   const errorMessages: Record<string, string> = {
     invalid_email: dict.auth.invalidEmail,
-    invalid_credentials: dict.auth.invalidCredentials,
+    weak_password: dict.auth.weakPassword,
+    email_taken: dict.auth.emailTaken,
     rate_limited: dict.auth.rateLimited,
   };
   const errorMessage =
     typeof query.error === "string" ? errorMessages[query.error] : undefined;
-  const resetSuccess = query.reset === "success";
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">{dict.auth.loginTitle}</h1>
-      <p className="mt-2 text-sm text-foreground/70">{dict.auth.loginSubtitle}</p>
+      <h1 className="text-2xl font-semibold tracking-tight">{dict.auth.registerTitle}</h1>
+      <p className="mt-2 text-sm text-foreground/70">{dict.auth.registerSubtitle}</p>
 
-      {resetSuccess && (
-        <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
-          {dict.auth.resetSuccess}
-        </p>
-      )}
       {errorMessage && (
         <p className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
           {errorMessage}
         </p>
       )}
 
-      <form action="/api/auth/login" method="POST" className="mt-6 flex flex-col gap-4">
+      <form action="/api/auth/register" method="POST" className="mt-6 flex flex-col gap-4">
         <input type="hidden" name="lang" value={lang} />
         <input type="hidden" name="redirectTo" value={redirectTo} />
         <label className="flex flex-col gap-1.5 text-sm">
@@ -58,7 +54,8 @@ export default async function LoginPage({
             type="password"
             name="password"
             required
-            autoComplete="current-password"
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
             placeholder={dict.auth.passwordPlaceholder}
             className="rounded-lg border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/50 dark:border-white/20"
           />
@@ -67,21 +64,15 @@ export default async function LoginPage({
           type="submit"
           className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
         >
-          {dict.auth.submit}
+          {dict.auth.registerSubmit}
         </button>
       </form>
 
       <Link
-        href={`/${lang}/forgot-password`}
+        href={`/${lang}/login?redirectTo=${encodeURIComponent(redirectTo)}`}
         className="mt-4 text-center text-sm text-foreground/70 hover:text-foreground"
       >
-        {dict.auth.forgotPasswordLink}
-      </Link>
-      <Link
-        href={`/${lang}/register?redirectTo=${encodeURIComponent(redirectTo)}`}
-        className="mt-2 text-center text-sm text-foreground/70 hover:text-foreground"
-      >
-        {dict.auth.noAccountLink}
+        {dict.auth.haveAccountLink}
       </Link>
     </div>
   );

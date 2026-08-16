@@ -1,17 +1,34 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
-import { isLocale } from "@/i18n/config";
+import { isLocale, locales, localeNames, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import {
   getLatestSubscription,
+  getSubscriptionHistory,
   getDisplayStatus,
   type DisplayStatus,
 } from "@/lib/subscription";
 import { getLevelProgress, getLessonProgressDetails } from "@/lib/progress";
 import { getExamAttempts } from "@/lib/exams/progress";
 import { levelSlugs } from "@/lib/courses";
+import { getThemePreference, type ThemePreference } from "@/lib/theme";
+import { AVATAR_IDS, isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
+import { MIN_PASSWORD_LENGTH } from "@/lib/password";
+import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import ProfileNameForm from "@/components/profile/ProfileNameForm";
+import ThemeSwitcher from "@/components/profile/ThemeSwitcher";
+import AvatarPicker from "@/components/profile/AvatarPicker";
+import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
+import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
+
+const PROFILE_TABS = ["personal", "progress", "subscription", "security", "language"] as const;
+type ProfileTab = (typeof PROFILE_TABS)[number];
+function isProfileTab(value: string): value is ProfileTab {
+  return (PROFILE_TABS as readonly string[]).includes(value);
+}
 
 const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
   active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
@@ -38,13 +55,24 @@ export default async function ProfilePage({
   const query = await searchParams;
   const checkout = typeof query.checkout === "string" ? query.checkout : null;
   const justCanceled = query.subscription === "canceled";
+  const loggedOutEverywhere = query.loggedOutEverywhere === "1";
+  const rawTab = typeof query.tab === "string" ? query.tab : "";
+  // Checkout/cancel redirects land here without a `tab` param — default to
+  // the subscription tab in that case so the notice and the section it's
+  // about are visible together, instead of the notice appearing on
+  // whatever tab happens to be default.
+  const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
+  const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
-  const [subscription, progress, lessonResults, examAttempts] =
+  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, theme] =
     await Promise.all([
       getLatestSubscription(user.id),
+      getSubscriptionHistory(user.id),
       getLevelProgress(user.id),
       getLessonProgressDetails(user.id),
       getExamAttempts(user.id),
+      db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
+      getThemePreference(),
     ]);
 
   const displayStatus = getDisplayStatus(subscription);
@@ -60,16 +88,65 @@ export default async function ProfilePage({
     none: dict.profile.statusNoSubscription,
   };
 
+  // Highest level with at least one completed lesson, in level order —
+  // a simple, honest "current level" indicator without inventing a
+  // separate CEFR-estimate feature.
+  const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0);
+
+  const currentAvatarId = isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID;
+  const avatarLabels = {
+    matryoshka_calm: dict.profile.avatarCalm,
+    matryoshka_happy: dict.profile.avatarHappy,
+    matryoshka_wink: dict.profile.avatarWink,
+    matryoshka_surprised: dict.profile.avatarSurprised,
+    matryoshka_sleepy: dict.profile.avatarSleepy,
+    matryoshka_proud: dict.profile.avatarProud,
+    matryoshka_thinking: dict.profile.avatarThinking,
+    matryoshka_laughing: dict.profile.avatarLaughing,
+  } satisfies Record<(typeof AVATAR_IDS)[number], string>;
+
+  const themeOptions: { id: ThemePreference; label: string; description: string; swatch: string }[] = [
+    { id: "light", label: dict.profile.themeLightLabel, description: dict.profile.themeLightDescription, swatch: "#fff8ec" },
+    { id: "dark", label: dict.profile.themeDarkLabel, description: dict.profile.themeDarkDescription, swatch: "#1b140f" },
+    { id: "reading", label: dict.profile.themeReadingLabel, description: dict.profile.themeReadingDescription, swatch: "#f6efdc" },
+  ];
+
+  const tabs: { id: ProfileTab; label: string }[] = [
+    { id: "personal", label: dict.profile.tabPersonal },
+    { id: "progress", label: dict.profile.tabProgress },
+    { id: "subscription", label: dict.profile.tabSubscription },
+    { id: "security", label: dict.profile.tabSecurity },
+    { id: "language", label: dict.profile.tabLanguage },
+  ];
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
         {dict.profile.title}
       </h1>
       <p className="mt-1 text-sm text-foreground/70">{dict.profile.subtitle}</p>
-      <p className="mt-4 text-sm text-foreground/70">
-        {dict.account.signedInAs}{" "}
-        <span className="font-medium">{user.email}</span>
-      </p>
+
+      <nav
+        role="tablist"
+        aria-label={dict.profile.title}
+        className="mt-6 flex gap-1 overflow-x-auto rounded-full border border-black/10 bg-white/60 p-1 dark:border-white/15 dark:bg-white/5"
+      >
+        {tabs.map((tab) => (
+          <Link
+            key={tab.id}
+            href={`/${lang}/profile?tab=${tab.id}`}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? "bg-foreground text-background"
+                : "text-foreground/70 hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
 
       {checkout === "mock" && (
         <p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
@@ -87,7 +164,68 @@ export default async function ProfilePage({
         </p>
       )}
 
+      {/* Personal data */}
+      {activeTab === "personal" && (
+        <section className="mt-8 flex flex-col gap-6">
+          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+            <div className="flex items-center gap-4">
+              <MatryoshkaAvatar id={currentAvatarId} size={56} label={avatarLabels[currentAvatarId]} />
+              <div className="min-w-0">
+                <p className="truncate font-medium">{user.name?.trim() || dict.profile.nameEmpty}</p>
+                <p className="truncate text-sm text-foreground/60">{user.email}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 border-t border-black/10 pt-5 dark:border-white/10">
+              <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                {dict.profile.nameLabel}
+              </span>
+              <ProfileNameForm
+                initialName={user.name}
+                namePlaceholder={dict.profile.namePlaceholder}
+                saveLabel={dict.profile.saveButton}
+                savedLabel={dict.profile.savedNotice}
+              />
+            </div>
+
+            <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-black/10 pt-5 text-sm dark:border-white/10">
+              <dt className="text-foreground/60">{dict.profile.emailLabel}</dt>
+              <dd>{user.email}</dd>
+              <dt className="text-foreground/60">{dict.profile.memberSinceLabel}</dt>
+              <dd>{dateFormatter.format(user.createdAt)}</dd>
+            </dl>
+          </div>
+
+          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+            <h2 className="font-medium">{dict.profile.avatarHeading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.avatarDescription}</p>
+            <div className="mt-4">
+              <AvatarPicker initialAvatarId={currentAvatarId} labels={avatarLabels} />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+            <h2 className="font-medium">{dict.profile.appearanceHeading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.appearanceDescription}</p>
+            <div className="mt-4">
+              <ThemeSwitcher initialTheme={theme} options={themeOptions} />
+            </div>
+          </div>
+
+          <form action="/api/auth/logout" method="POST">
+            <input type="hidden" name="lang" value={lang} />
+            <button
+              type="submit"
+              className="w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] sm:w-auto"
+            >
+              {dict.auth.logout}
+            </button>
+          </form>
+        </section>
+      )}
+
       {/* Subscription status */}
+      {activeTab === "subscription" && (
       <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-medium">{dict.profile.subscriptionHeading}</h2>
@@ -130,19 +268,138 @@ export default async function ProfilePage({
                 : dict.profile.renewButton}
             </Link>
           )}
-          <form action="/api/auth/logout" method="POST">
-            <input type="hidden" name="lang" value={lang} />
-            <button
-              type="submit"
-              className="w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] sm:w-auto"
-            >
-              {dict.auth.logout}
-            </button>
-          </form>
+        </div>
+
+        <div className="mt-6 border-t border-black/10 pt-5 dark:border-white/10">
+          <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+            {dict.profile.paymentHistoryHeading}
+          </span>
+          {subscriptionHistory.length === 0 ? (
+            <p className="mt-2 text-sm text-foreground/60">{dict.profile.paymentHistoryEmpty}</p>
+          ) : (
+            <div className="mt-3 flex flex-col gap-2">
+              {subscriptionHistory.map((row) => (
+                <div
+                  key={row.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-black/[.03] px-3 py-2 text-sm dark:bg-white/[.05]"
+                >
+                  <span className="capitalize">{row.plan}</span>
+                  <span className="text-foreground/60">{dateFormatter.format(row.createdAt)}</span>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE_CLASSES[getDisplayStatus(row)]}`}
+                  >
+                    {statusLabels[getDisplayStatus(row)]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+      )}
+
+      {/* Security */}
+      {activeTab === "security" && (
+        <section className="mt-8 flex flex-col gap-6">
+          {loggedOutEverywhere && (
+            <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
+              {dict.profile.loggedOutEverywhereNotice}
+            </p>
+          )}
+
+          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+            <h2 className="font-medium">{dict.profile.changePasswordHeading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.changePasswordDescription}</p>
+            <ChangePasswordForm
+              currentPasswordLabel={dict.profile.currentPasswordLabel}
+              newPasswordLabel={dict.profile.newPasswordLabelShort}
+              saveLabel={dict.profile.saveButton}
+              savedLabel={dict.profile.passwordChangedNotice}
+              invalidCurrentPasswordLabel={dict.profile.invalidCurrentPassword}
+              weakPasswordLabel={dict.auth.weakPassword}
+              minLength={MIN_PASSWORD_LENGTH}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+            <h2 className="font-medium">{dict.profile.sessionsHeading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.sessionsDescription}</p>
+            <form action="/api/auth/logout-everywhere" method="POST" className="mt-3">
+              <input type="hidden" name="lang" value={lang} />
+              <button
+                type="submit"
+                className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+              >
+                {dict.profile.logoutEverywhereButton}
+              </button>
+            </form>
+          </div>
+
+          <div className="rounded-2xl border border-red-500/20 p-5 sm:p-6">
+            <h2 className="font-medium text-red-600 dark:text-red-400">{dict.profile.deleteAccountHeading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.deleteAccountDescription}</p>
+            <DeleteAccountForm
+              lang={lang}
+              warningLabel={dict.profile.deleteAccountWarning}
+              passwordLabel={dict.profile.currentPasswordLabel}
+              submitLabel={dict.profile.deleteAccountButton}
+              sentLabel={dict.profile.deleteAccountEmailSent}
+              invalidPasswordLabel={dict.profile.invalidCurrentPassword}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Language */}
+      {activeTab === "language" && (
+        <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+          <h2 className="font-medium">{dict.profile.languageHeading}</h2>
+          <p className="mt-1 text-sm text-foreground/60">{dict.profile.languageDescription}</p>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            {locales.map((locale: Locale) => (
+              <Link
+                key={locale}
+                href={`/${locale}/profile?tab=language`}
+                aria-current={locale === lang}
+                className={`rounded-full px-4 py-2.5 text-center text-sm font-medium transition-colors ${
+                  locale === lang
+                    ? "bg-foreground text-background"
+                    : "border border-black/10 hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+                }`}
+              >
+                {localeNames[locale]}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Progress */}
+      {activeTab === "progress" && (
+      <>
+      <section className="mt-8">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+            <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
+            <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
+          </div>
+          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+            <p className="text-2xl font-semibold tabular-nums">
+              {levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0)}
+            </p>
+            <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
+          </div>
+          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+            <p className="text-2xl font-semibold uppercase">
+              {currentLevel ? currentLevel : "—"}
+            </p>
+            <p className="text-sm text-foreground/60">
+              {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Progress */}
       <section className="mt-8">
         <h2 className="font-medium">{dict.profile.progressHeading}</h2>
         <div className="mt-4 flex flex-col gap-4">
@@ -402,6 +659,8 @@ export default async function ProfilePage({
           })}
         </div>
       </section>
+      </>
+      )}
     </div>
   );
 }

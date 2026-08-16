@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import TelegramFloatButton from "@/components/TelegramFloatButton";
 import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
+import { getThemePreference } from "@/lib/theme";
 
 // RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
 // (body/UI), PT Serif (display headings/wordmark), PT Mono (labels/status
@@ -38,16 +39,25 @@ export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
 
-export const viewport: Viewport = {
-  // Lets fixed/sticky UI (Navbar, StoryText's sticky audio player) read
-  // env(safe-area-inset-*) in globals.css instead of sitting under a
-  // notch/home-indicator once this runs standalone (PWA/Capacitor).
-  viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#2d5f8a" },
-    { media: "(prefers-color-scheme: dark)", color: "#5b9bd5" },
-  ],
+const THEME_COLORS: Record<string, string> = {
+  light: "#2d5f8a",
+  dark: "#1b140f",
+  reading: "#f6efdc",
 };
+
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await getThemePreference();
+  return {
+    // Lets fixed/sticky UI (Navbar, StoryText's sticky audio player) read
+    // env(safe-area-inset-*) in globals.css instead of sitting under a
+    // notch/home-indicator once this runs standalone (PWA/Capacitor).
+    viewportFit: "cover",
+    // Matches the browser/OS chrome (status bar, task switcher card) to
+    // whichever of the three theme modes the user picked — never inferred
+    // from the device's color-scheme setting, same as the page itself.
+    themeColor: THEME_COLORS[theme],
+  };
+}
 
 export async function generateMetadata({
   params,
@@ -75,10 +85,12 @@ export default async function LangLayout({
   if (!isLocale(lang)) notFound();
 
   const dict = await getDictionary(lang);
+  const theme = await getThemePreference();
 
   return (
     <html
       lang={lang}
+      data-theme={theme}
       className={`${ptSans.variable} ${ptSerif.variable} ${ptMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
@@ -88,7 +100,10 @@ export default async function LangLayout({
         <Navbar lang={lang} dict={dict} />
         <main className="flex flex-1 flex-col">{children}</main>
         <Footer dict={dict} />
-        <TelegramFloatButton />
+        {/* Reading mode is meant to minimize distractions — the floating
+            Telegram CTA is the one persistent, animated, non-content element
+            on every page, so it's the one thing this mode hides. */}
+        {theme !== "reading" && <TelegramFloatButton />}
       </body>
     </html>
   );

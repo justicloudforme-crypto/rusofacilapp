@@ -48,15 +48,22 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const userId = token ? verifySessionToken(token) : null;
-  if (!userId) return redirectToPricing(request, lang);
+  const parsed = token ? verifySessionToken(token) : null;
+  if (!parsed) return redirectToPricing(request, lang);
 
-  const user = await db.user.findUnique({ where: { id: userId }, select: { role: true } });
-  if (!user) return redirectToPricing(request, lang);
+  const user = await db.user.findUnique({
+    where: { id: parsed.userId },
+    select: { role: true, sessionVersion: true },
+  });
+  // A version mismatch means this token predates a password change or
+  // "sign out other devices" — treat it as no session, same as getCurrentUser
+  // does (see src/lib/auth.ts), so a revoked session can't still pass this
+  // gate even if the cookie itself is still a validly-signed token.
+  if (!user || user.sessionVersion !== parsed.sessionVersion) return redirectToPricing(request, lang);
   if (isStaff(user.role)) return null;
 
   const subscription = await db.subscription.findFirst({
-    where: { userId },
+    where: { userId: parsed.userId },
     orderBy: { createdAt: "desc" },
   });
 
@@ -76,8 +83,8 @@ async function protectAdminRoute(request: NextRequest, segments: string[]) {
   if (section !== "admin") return null;
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const userId = token ? verifySessionToken(token) : null;
-  if (!userId) {
+  const parsed = token ? verifySessionToken(token) : null;
+  if (!parsed) {
     const url = request.nextUrl.clone();
     url.pathname = `/${lang}/login`;
     url.search = "";
@@ -85,8 +92,11 @@ async function protectAdminRoute(request: NextRequest, segments: string[]) {
     return NextResponse.redirect(url);
   }
 
-  const user = await db.user.findUnique({ where: { id: userId }, select: { role: true } });
-  if (!user || !isStaff(user.role)) {
+  const user = await db.user.findUnique({
+    where: { id: parsed.userId },
+    select: { role: true, sessionVersion: true },
+  });
+  if (!user || user.sessionVersion !== parsed.sessionVersion || !isStaff(user.role)) {
     const url = request.nextUrl.clone();
     url.pathname = `/${lang}`;
     url.search = "";

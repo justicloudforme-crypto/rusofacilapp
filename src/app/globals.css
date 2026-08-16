@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* The brand is a warm, light "Городецкая роспись" identity by default — but
+   unlike the old behavior (dark mode silently activating from the visitor's
+   OS/browser color-scheme setting, which read as "gloomy" and had no way to
+   turn off), theme is now an explicit three-way choice made from the profile
+   page's "Личные данные" tab (see ThemeSwitcher.tsx) and stored server-side
+   as a cookie, applied as `data-theme` on <html> by [lang]/layout.tsx — never
+   inferred from the OS. Redirecting Tailwind's `dark` variant to that
+   attribute (instead of `prefers-color-scheme`) means every pre-existing
+   `dark:` utility across the app reactivates correctly the moment the user
+   picks "Тёмный", with zero per-component changes needed. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   /* RusoFácilapp brand palette — "Городецкая роспись" (Gorodets folk
      painting): a warm cream ground with saturated folk-craft blue/red/gold,
@@ -32,6 +44,37 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 
+/* Opt-in dark theme — same Gorodets identity, brightened for contrast on a
+   dark ground (the ground itself stays warm brown-black, not neutral gray,
+   so it still reads as the same brand). These are the exact values the
+   original rebrand shipped with when dark mode still followed the OS —
+   restored here verbatim, just re-gated behind an explicit user choice. */
+:root[data-theme="dark"] {
+  --background: #1b140f;
+  --foreground: #f5ead2;
+  --brand: #5b9bd5;
+  --brand-light: #82b8e8;
+  --brand-accent: #e8574a;
+  --brand-accent-light: #f0b84a;
+}
+
+/* Reading mode — for parsing grammar explanations and long story texts
+   comfortably: a softer, lower-contrast warm paper tone instead of the
+   brighter cream, more line-height, and a modest root font-size bump. Since
+   Tailwind's spacing/sizing scale is rem-based throughout, bumping the root
+   font-size scales the whole interface together (not just body text) rather
+   than only enlarging some elements and leaving buttons/nav cramped by
+   comparison. Brand colors are left untouched — this is a comfort mode, not
+   a full retheme. */
+:root[data-theme="reading"] {
+  --background: #f6efdc;
+  --foreground: #2b2318;
+  font-size: 106%;
+}
+:root[data-theme="reading"] body {
+  line-height: 1.7;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -42,20 +85,6 @@
   --font-sans: var(--font-pt-sans);
   --font-serif: var(--font-pt-serif);
   --font-mono: var(--font-pt-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Same Gorodets identity, brightened for contrast on a dark ground —
-       the ground itself stays warm (a deep brown-black, not neutral gray)
-       so dark mode still reads as the same brand, not a generic inversion. */
-    --background: #1b140f;
-    --foreground: #f5ead2;
-    --brand: #5b9bd5;
-    --brand-light: #82b8e8;
-    --brand-accent: #e8574a;
-    --brand-accent-light: #f0b84a;
-  }
 }
 
 body {

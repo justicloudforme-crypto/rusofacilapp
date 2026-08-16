@@ -4,15 +4,20 @@ import { db } from "./db";
 import { SESSION_COOKIE, signUserId, verifySessionToken } from "./session-token";
 
 /**
- * Demo/mock authentication: no password check, just an email-based
- * find-or-create flow (see /api/auth/login). The session cookie is
- * HMAC-signed so it can't be forged, but this is not a production-grade
- * auth system — it's a stand-in so subscription/access-control logic has
- * a real user to check against.
+ * Real email+password authentication (see /api/auth/login and
+ * /api/auth/register, password hashing in src/lib/password.ts). The session
+ * cookie is HMAC-signed so it can't be forged (src/lib/session-token.ts) and
+ * carries the `sessionVersion` it was issued with — bumping a user's
+ * sessionVersion (change-password, reset-password, "sign out other
+ * devices") invalidates every token signed with an older version, with no
+ * server-side session table to store or clean up.
+ * Accounts created before this existed have `passwordHash: null` — signing
+ * up again with that same email "claims" the account and sets its first
+ * password, rather than being locked out (see /api/auth/register).
  */
-export async function createSession(userId: string) {
+export async function createSession(userId: string, sessionVersion: number) {
   const store = await cookies();
-  store.set(SESSION_COOKIE, signUserId(userId), {
+  store.set(SESSION_COOKIE, signUserId(userId, sessionVersion), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -26,15 +31,20 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-export async function getCurrentUserId(): Promise<string | null> {
+export async function getCurrentUser() {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return verifySessionToken(token);
-}
 
-export async function getCurrentUser() {
-  const userId = await getCurrentUserId();
-  if (!userId) return null;
-  return db.user.findUnique({ where: { id: userId } });
+  const parsed = verifySessionToken(token);
+  if (!parsed) return null;
+
+  const user = await db.user.findUnique({ where: { id: parsed.userId } });
+  // A version mismatch means this token was issued before the user's most
+  // recent password change / "sign out other devices" — treat it exactly
+  // like no session at all, rather than a distinct error, since from the
+  // caller's perspective it is one.
+  if (!user || user.sessionVersion !== parsed.sessionVersion) return null;
+
+  return user;
 }

@@ -32,11 +32,16 @@ export default function MatryoshkaMark({ size = 28 }: { size?: number }) {
           className="absolute bottom-0 left-[18%] right-[18%] rounded-t-full"
           style={{ height: "46%", background: "#fff8ec" }}
         />
-        <span className="absolute rounded-full" style={{ width: "15%", aspectRatio: "1", top: "44%", left: "27%", background: "#d63b2f" }} />
-        <span className="absolute rounded-full" style={{ width: "15%", aspectRatio: "1", top: "44%", right: "27%", background: "#d63b2f" }} />
+        {/* A small four-petal flower (Gorodets folk-painting motif), not a
+            triangular cluster — an earlier three-dot arrangement here read
+            as a star badge, which felt militaristic rather than friendly. */}
+        <span className="absolute rounded-full -translate-x-1/2" style={{ width: "14%", aspectRatio: "1", top: "40%", left: "50%", background: "#e0a934" }} />
+        <span className="absolute rounded-full -translate-y-1/2" style={{ width: "14%", aspectRatio: "1", top: "52%", left: "62%", background: "#e0a934" }} />
+        <span className="absolute rounded-full -translate-x-1/2" style={{ width: "14%", aspectRatio: "1", top: "64%", left: "50%", background: "#e0a934" }} />
+        <span className="absolute rounded-full -translate-y-1/2" style={{ width: "14%", aspectRatio: "1", top: "52%", left: "38%", background: "#e0a934" }} />
         <span
-          className="absolute rounded-full -translate-x-1/2"
-          style={{ width: "15%", aspectRatio: "1", top: "68%", left: "50%", background: "#d63b2f" }}
+          className="absolute rounded-full -translate-x-1/2 -translate-y-1/2"
+          style={{ width: "11%", aspectRatio: "1", top: "52%", left: "50%", background: "#d63b2f" }}
         />
       </span>
     </span>

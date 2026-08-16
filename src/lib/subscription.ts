@@ -40,6 +40,18 @@ export async function getLatestSubscription(userId: string) {
   );
 }
 
+/** All of a user's Subscription rows, newest first — the profile page's
+ * "payment history" tab, since this demo-auth setup has no separate
+ * invoice/payment model and each Subscription row already stands for one
+ * billing cycle (plan, status, period). Not cached like getLatestSubscription
+ * since it's only read on the profile page, not on every access check. */
+export async function getSubscriptionHistory(userId: string) {
+  return db.subscription.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 /** Call after any write to a user's Subscription rows (checkout, cancel,
  * webhook, admin grant/revoke) so the next read reflects it immediately
  * instead of waiting out the TTL. */
