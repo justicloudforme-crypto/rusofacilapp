@@ -3,7 +3,17 @@ import bundleAnalyzer from "@next/bundle-analyzer";
 import withSerwistInit from "@serwist/next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Next.js's dev server blocks cross-origin requests for its own JS
+  // chunks/HMR websocket by default (a DNS-rebinding protection) — only
+  // "localhost" is allowed out of the box. That silently 403s every JS
+  // chunk (React never hydrates, so nothing client-side works — including
+  // MobileMenu's tap handler) for anyone testing over the LAN via the dev
+  // machine's IP instead of localhost, e.g. a phone hitting the "Network:"
+  // URL `next dev` prints (see MOBILE.md's mobile-testing instructions).
+  // Add the dev machine's LAN IP here if it changes (`ipconfig getifaddr
+  // en0` on macOS) — the error Next.js logs to the terminal when it blocks
+  // a request always names the exact origin to add.
+  allowedDevOrigins: ["192.168.1.69"],
 };
 
 // Run `ANALYZE=true npm run build` to get an interactive treemap of the
