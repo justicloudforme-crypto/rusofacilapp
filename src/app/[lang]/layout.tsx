@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TelegramFloatButton from "@/components/TelegramFloatButton";
 import OfflineBanner from "@/components/OfflineBanner";
+import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,6 +70,7 @@ export default async function LangLayout({
     >
       <body className="flex min-h-full flex-col">
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} />
+        {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <OfflineBanner message={dict.offline.bannerMessage} />
         <Navbar lang={lang} dict={dict} />
         <main className="flex flex-1 flex-col">{children}</main>
