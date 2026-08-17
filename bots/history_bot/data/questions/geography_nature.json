@@ -1,0 +1,1476 @@
+[
+  {
+    "question": "¿Qué lago siberiano es reconocido como el lago de agua dulce más profundo y con mayor volumen de agua del mundo?",
+    "options": [
+      "El lago Ládoga",
+      "El lago Baikal",
+      "El lago Onega",
+      "El mar Caspio (es un mar cerrado, no un lago de agua dulce)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Baikal contiene aproximadamente el 20% del agua dulce no congelada disponible en la superficie terrestre del planeta."
+  },
+  {
+    "question": "¿Qué península del extremo oriente de Rusia, célebre por su alta concentración de volcanes activos, géiseres y osos pardos, es considerada una de las regiones volcánicas más activas del planeta?",
+    "options": [
+      "La península de Taimyr",
+      "La península de Kola",
+      "La península de Kamchatka",
+      "La península de Chukotka"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Kamchatka alberga más de 160 volcanes, unos 29 de ellos aún activos, además del célebre Valle de los Géiseres, uno de los pocos campos geotérmicos de este tipo en el mundo."
+  },
+  {
+    "question": "¿Qué asentamiento de la república de Yakutia, en el noreste siberiano, es considerado uno de los lugares habitados permanentemente más fríos de la Tierra, con temperaturas registradas cercanas a los -68°C?",
+    "options": [
+      "Yakutsk",
+      "Norilsk",
+      "Verjoyansk (también compite por el récord, pero Oymiakón suele citarse como el más frío)",
+      "Oymiakón"
+    ],
+    "correct_option_id": 3,
+    "explanation": "A pesar de las temperaturas extremas, Oymiakón tiene una población permanente que ha desarrollado formas de vida adaptadas al frío extremo, incluida ganadería especializada."
+  },
+  {
+    "question": "¿Qué cordillera, relativamente baja y de origen muy antiguo, se considera tradicionalmente la frontera geográfica entre Europa y Asia dentro del territorio ruso?",
+    "options": [
+      "Los montes Altái",
+      "Los montes Sayanes",
+      "El Cáucaso",
+      "Los montes Urales"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque geológicamente son montañas modestas comparadas con el Cáucaso, los Urales son ricos en minerales y metales, lo que impulsó tempranamente la industrialización de la región."
+  },
+  {
+    "question": "¿Qué río, que nace en las colinas de Valdái y desemboca en el mar Caspio tras recorrer casi 3,700 kilómetros, es el más largo de Europa y ha sido llamado tradicionalmente 'la madre Volga' en la cultura rusa?",
+    "options": [
+      "El Volga",
+      "El Dniéper",
+      "El Don",
+      "El Obi"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El Volga ha sido durante siglos una arteria comercial vital y un símbolo cultural profundamente arraigado, presente en canciones, pinturas y literatura rusas."
+  },
+  {
+    "question": "¿Qué isla del lago Onega alberga un conjunto de iglesias de madera construidas —según la tradición— sin usar un solo clavo, incluida la célebre iglesia de la Transfiguración con sus 22 cúpulas?",
+    "options": [
+      "La isla Solovetski",
+      "La isla Valaam",
+      "La isla Sájalin",
+      "La isla de Kizhi"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El conjunto arquitectónico de Kizhi, declarado Patrimonio de la Humanidad por la UNESCO, es un ejemplo excepcional de carpintería tradicional rusa sin uso de metal."
+  },
+  {
+    "question": "¿Qué lago, el más extenso de Europa por superficie, se convirtió durante el sitio de Leningrado en la única vía de suministro hacia la ciudad sitiada, cruzándose sobre su hielo en invierno bajo el nombre de 'el Camino de la Vida'?",
+    "options": [
+      "El lago Baikal",
+      "El lago Onega",
+      "El lago Ládoga",
+      "El lago Peipus"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Miles de toneladas de alimentos entraron a la ciudad —y miles de personas fueron evacuadas— cruzando el hielo del Ládoga bajo constante bombardeo alemán durante el asedio de 1941-1944."
+  },
+  {
+    "question": "¿Qué isla del extremo oriente ruso, separada del continente por un estrecho estuario y del archipiélago de las Kuriles por otro, fue disputada históricamente entre el Imperio ruso y Japón?",
+    "options": [
+      "Wrángel",
+      "Sajalín",
+      "Nueva Zembla",
+      "Kamchatka (es una península, no una isla)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Sajalín cambió de manos varias veces entre Rusia y Japón a lo largo de los siglos XIX y XX, hasta quedar bajo control soviético tras la Segunda Guerra Mundial."
+  },
+  {
+    "question": "¿Qué archipiélago ártico ruso, formado por casi 200 islas cubiertas casi por completo de hielo, recibió su nombre en honor a un emperador austrohúngaro por parte de los exploradores austriacos que lo descubrieron en 1873?",
+    "options": [
+      "La Tierra del Norte (Sévernaya Zemliá)",
+      "La Tierra de Francisco José",
+      "Las islas de Nueva Siberia",
+      "Nueva Zembla"
+    ],
+    "correct_option_id": 1,
+    "explanation": "A pesar de su nombre de origen austríaco, el archipiélago forma parte del territorio ártico ruso desde 1926."
+  },
+  {
+    "question": "¿Qué tipo de suelo extremadamente fértil, de color oscuro y rico en materia orgánica, cubre amplias zonas de las estepas del sur de Rusia y Ucrania, y es considerado uno de los suelos agrícolas más productivos del mundo?",
+    "options": [
+      "La tundra permafrost",
+      "La turba de pantano",
+      "El chernozem ('tierra negra')",
+      "El loess amarillo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El chernozem ruso fue tan valorado que, durante la Segunda Guerra Mundial, hubo intentos documentados de trasladar grandes cantidades de esta tierra fértil hacia Alemania."
+  },
+  {
+    "question": "¿Qué remota meseta de Siberia central, con cientos de cascadas y lagos glaciares y prácticamente sin presencia humana permanente, fue declarada Patrimonio de la Humanidad por la UNESCO en 2010?",
+    "options": [
+      "La meseta de Putorana",
+      "La meseta Central de Siberia",
+      "Los montes Altái",
+      "La meseta de Ustiurt"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El aislamiento extremo de Putorana ha permitido la supervivencia de poblaciones intactas de especies como el reno salvaje y el argali, una especie de carnero montés."
+  },
+  {
+    "question": "¿Qué estrecha y larga franja de arena, compartida entre Rusia (región de Kaliningrado) y Lituania, separa una laguna del mar Báltico y es célebre por sus dunas móviles gigantes?",
+    "options": [
+      "El delta del Volga",
+      "La bahía de Finlandia",
+      "El Espolón de Curlandia",
+      "La península de Kola"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Algunas de las dunas del Espolón de Curlandia alcanzan más de 60 metros de altura y avanzan lentamente, habiendo sepultado aldeas enteras en siglos pasados."
+  },
+  {
+    "question": "¿Qué región rusa constituye un enclave geográfico separado del resto del país, ubicado en la costa del mar Báltico entre Polonia y Lituania, y que hasta 1945 formaba parte de Prusia Oriental bajo el nombre de Königsberg?",
+    "options": [
+      "Karelia",
+      "Kaliningrado",
+      "Smolensk",
+      "Pskov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La ciudad, cuna del filósofo Immanuel Kant, cambió de nombre y de población tras pasar a soberanía soviética al final de la Segunda Guerra Mundial."
+  },
+  {
+    "question": "¿Qué pueblo indígena del norte ártico ruso, tradicionalmente nómada, basa su forma de vida en la cría de renos en la tundra de las penínsulas de Yamal y Taimyr?",
+    "options": [
+      "Los bashkires",
+      "Los tártaros",
+      "Los buriatos (viven principalmente cerca del lago Baikal, no en el Ártico)",
+      "Los nenets"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los nenets mantienen hasta hoy una de las últimas grandes tradiciones de pastoreo nómada de renos a gran escala del mundo, migrando cientos de kilómetros cada año."
+  },
+  {
+    "question": "¿Qué montaña del Cáucaso ruso, un volcán inactivo con dos picos cubiertos de glaciares, es considerada el punto más alto de Europa según la convención geográfica que sitúa la frontera continental en la cresta caucásica?",
+    "options": [
+      "El Mont Blanc (está en los Alpes franco-italianos, no en Rusia)",
+      "El monte Elbrús",
+      "El pico Dombái-Ulguén",
+      "El monte Kazbek"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Con 5,642 metros, el Elbrús supera en altura al Mont Blanc, aunque esta clasificación depende de dónde se trace exactamente la frontera entre Europa y Asia."
+  },
+  {
+    "question": "¿Qué especie de mamífero acuático, la única foca del mundo que vive exclusivamente en agua dulce, habita en el lago Baikal sin que los científicos tengan una explicación definitiva de cómo llegó originalmente hasta ese lago situado a miles de kilómetros de cualquier océano?",
+    "options": [
+      "La nerpa del Baikal",
+      "El leopardo marino (vive en aguas antárticas, no en lagos)",
+      "La foca anillada del Ártico (existen poblaciones de agua dulce relacionadas, pero distintas de la nerpa del Baikal)",
+      "La foca de Weddell (vive en la Antártida, en agua salada)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Una de las teorías más aceptadas sugiere que los ancestros de la nerpa llegaron al Baikal a través de antiguas conexiones fluviales durante periodos glaciales, quedando después aisladas conforme el paisaje cambiaba."
+  },
+  {
+    "question": "¿Qué gran felino, el más grande de todos los tigres del mundo y capaz de sobrevivir a temperaturas de hasta -45°C, habita exclusivamente en los bosques del extremo oriente ruso, cerca de la frontera con China?",
+    "options": [
+      "El leopardo de las nieves (es una especie distinta, más pequeña, propia de zonas montañosas de Asia central)",
+      "El tigre de Sumatra (habita en la isla indonesia de Sumatra)",
+      "El tigre de Bengala (habita en el subcontinente indio, en clima tropical)",
+      "El tigre de Amur (o tigre siberiano)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a estar en peligro de extinción, con una población silvestre que llegó a caer a apenas unas decenas de ejemplares a mediados del siglo XX, programas de conservación han permitido una recuperación parcial en las últimas décadas."
+  },
+  {
+    "question": "¿En qué isla ártica rusa, hoy deshabitada por humanos, sobrevivió la última población conocida de mamuts lanudos del planeta hasta hace apenas unos 4,000 años, mucho después de que la especie se extinguiera en el resto del mundo?",
+    "options": [
+      "La Tierra de Francisco José",
+      "La isla de Wrangel",
+      "Sajalín",
+      "Nueva Zembla"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El aislamiento de la isla, separada del continente por la subida del nivel del mar tras la última glaciación, permitió que esta población de mamuts sobreviviera —aunque enanizados por falta de recursos— hasta una época en la que ya existían las pirámides de Egipto."
+  },
+  {
+    "question": "¿Qué zona elevada del noroeste de Rusia, pese a su modesta altitud, es célebre por ser el punto de origen del río Volga y de otros importantes ríos que fluyen en direcciones opuestas hacia distintos mares?",
+    "options": [
+      "Los montes Urales",
+      "Las colinas de Valdái",
+      "Los montes Jibiny",
+      "La meseta de Putorana"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Desde esta modesta divisoria de aguas, de apenas unos 300 metros de altitud máxima, nacen ríos que terminan en el mar Caspio (el Volga), el mar Báltico y el mar Negro, según la dirección de su curso."
+  },
+  {
+    "question": "¿Qué río de Siberia occidental, uno de los más largos del mundo, forma junto con su afluente el Irtish un sistema fluvial que desemboca en el océano Ártico a través del golfo del mismo nombre?",
+    "options": [
+      "El río Yeniséi",
+      "El río Lena",
+      "El río Amur",
+      "El río Obi"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El sistema Obi-Irtish, con más de 5,000 kilómetros de longitud combinada, atraviesa zonas industriales, agrícolas y de tundra completamente distintas a lo largo de su curso."
+  },
+  {
+    "question": "¿Qué río siberiano, uno de los más largos y caudalosos del mundo, es famoso por las 'Columnas de Lena', formaciones rocosas verticales de piedra caliza declaradas Patrimonio de la Humanidad por la UNESCO?",
+    "options": [
+      "El río Obi",
+      "El río Lena",
+      "El río Yeniséi",
+      "El río Kolimá"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Lena fluye casi en su totalidad dentro de la república de Yakutia y desemboca en el mar de Láptev, en el océano Ártico, tras recorrer más de 4,000 kilómetros casi sin ciudades grandes a su paso."
+  },
+  {
+    "question": "¿Qué caudaloso río siberiano marca tradicionalmente la línea divisoria entre Siberia occidental y Siberia oriental, y sobre el cual se construyó una de las primeras grandes represas hidroeléctricas soviéticas, en Krasnoyarsk?",
+    "options": [
+      "El río Lena",
+      "El río Obi",
+      "El río Amur",
+      "El río Yeniséi"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El Yeniséi, que nace en Mongolia y desemboca en el mar de Kara, transporta un volumen de agua superior incluso al del propio Obi, pese a ser ligeramente más corto en distancia total."
+  },
+  {
+    "question": "¿Qué archipiélago volcánico ruso del Pacífico norte, formado por varias decenas de islas entre Kamchatka y la isla japonesa de Hokkaido, alberga volcanes activos y una notable biodiversidad marina pese a su clima frío y neblinoso?",
+    "options": [
+      "Las islas Comandantes",
+      "Las islas Shántar",
+      "Las islas Kuriles",
+      "El archipiélago de Nueva Siberia"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La intensa actividad volcánica y sísmica de la región, situada sobre el llamado 'Cinturón de Fuego' del Pacífico, ha moldeado un paisaje de acantilados escarpados y aguas ricas en vida marina."
+  },
+  {
+    "question": "¿Cómo se llama el bioma de bosque boreal, dominado por coníferas como el abeto, el pino y el alerce, que cubre una franja inmensa del territorio ruso y constituye el bosque continuo más extenso del planeta?",
+    "options": [
+      "La taigá",
+      "La pampa (es un bioma de pastizales de Sudamérica, no de Rusia)",
+      "La tundra (es el bioma más al norte, sin árboles, no boscoso)",
+      "La estepa (es el bioma de pastizales del sur, sin bosque)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La taigá rusa alberga aproximadamente una quinta parte de todos los árboles del planeta, desempeñando un papel climático global comparable, según algunos estudios, al de la selva amazónica."
+  },
+  {
+    "question": "¿Qué archipiélago del mar Blanco, sede de un antiguo y poderoso monasterio ortodoxo fundado en el siglo XV, fue convertido durante el periodo soviético en uno de los primeros y más duros campos de trabajo forzado, precursor del posterior sistema de gulags?",
+    "options": [
+      "Las islas Solovetski",
+      "La isla de Kizhi (es del lago Onega, célebre por su arquitectura de madera, no por un campo de prisioneros)",
+      "La isla de Wrangel",
+      "Nueva Zembla"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El monasterio de Solovkí, hoy nuevamente en funciones religiosas y declarado Patrimonio de la Humanidad, resume en un mismo lugar siglos de historia espiritual y una de las páginas más sombrías del siglo XX soviético."
+  },
+  {
+    "question": "¿Qué cordillera del sur de Siberia, conocida como las 'Montañas Doradas' y declarada Patrimonio de la Humanidad por la UNESCO, marca el punto donde confluyen las fronteras de Rusia, Mongolia, China y Kazajistán?",
+    "options": [
+      "Los montes Altái",
+      "Los montes Sayanes",
+      "Los montes Urales",
+      "El Cáucaso"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La región del Altái, cuna de varios pueblos túrquicos y mongoles a lo largo de la historia, conserva también hallazgos arqueológicos excepcionales, incluidas momias congeladas de más de dos mil años de antigüedad."
+  },
+  {
+    "question": "¿Qué reserva natural, establecida en 1916 a orillas del lago Baikal para proteger a la marta cibelina de la caza excesiva, es considerada la reserva natural protegida más antigua de toda Rusia?",
+    "options": [
+      "La Reserva de Astracán (fue fundada en 1919, unos años después)",
+      "El Parque Nacional de Sochi (fue creado mucho después, en la era soviética tardía)",
+      "La Reserva de Kandalaksha",
+      "La Reserva de Barguzín"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La marta cibelina, cuya piel había sido durante siglos una de las principales fuentes de riqueza comercial de Siberia —tanto que motivó buena parte de la expansión rusa hacia el este—, estaba al borde de la extinción local antes de la creación de esta reserva."
+  },
+  {
+    "question": "¿Qué extenso humedal de Siberia occidental, uno de los mayores del planeta y con una superficie comparable a la de algunos países europeos enteros, actúa como un gigantesco sumidero natural de carbono y regulador del clima regional?",
+    "options": [
+      "El lago Chany",
+      "La tundra de Yamal",
+      "El pantano de Vasiugán",
+      "El delta del Volga"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Formado a lo largo de miles de años, este inmenso sistema de turberas y pantanos almacena una cantidad de carbono comparable a varios años de emisiones globales de dióxido de carbono, según estimaciones científicas."
+  },
+  {
+    "question": "¿En qué remoto archipiélago ártico ruso se detonó en 1961 la 'Bomba Zar', el arma nuclear más potente jamás probada en la historia de la humanidad, cuya onda expansiva llegó a rodear la Tierra varias veces?",
+    "options": [
+      "Nueva Zembla",
+      "Las islas de Nueva Siberia",
+      "La isla de Wrangel",
+      "La Tierra de Francisco José"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a su potencia descomunal —varios miles de veces superior a la bomba de Hiroshima—, la Bomba Zar fue diseñada deliberadamente para minimizar la lluvia radiactiva, en parte como una demostración de capacidad técnica más que como un arma pensada para uso real en combate."
+  },
+  {
+    "question": "¿Sobre qué lago fronterizo, hoy compartido entre Rusia y Estonia, se libró en 1242 la célebre 'Batalla del Hielo' entre las fuerzas de Alejandro Nevski y los caballeros teutónicos?",
+    "options": [
+      "El lago Baikal",
+      "El lago Peipus (o Chudskoye)",
+      "El lago Onega",
+      "El lago Ládoga (es el escenario del 'Camino de la Vida' durante el sitio de Leningrado, no de la Batalla del Hielo)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El lago Peipus, de aguas poco profundas y clima extremadamente frío en invierno, ofrecía las condiciones ideales para que el hielo pudiera soportar —o ceder bajo— el peso de los ejércitos medievales en combate."
+  },
+  {
+    "question": "¿En qué península ártica rusa se perforó, entre 1970 y 1989, el pozo artificial más profundo jamás excavado en la historia de la humanidad, alcanzando más de 12 kilómetros de profundidad con fines puramente científicos?",
+    "options": [
+      "La península de Chukotka",
+      "La península de Yamal",
+      "La península de Kola",
+      "La península de Taimyr"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El Pozo Superprofundo de Kola, hoy abandonado y sellado, permitió a los científicos soviéticos estudiar directamente la corteza terrestre a profundidades hasta entonces solo accesibles mediante inferencias sísmicas indirectas."
+  },
+  {
+    "question": "¿Qué volcán de la península de Kamchatka, con más de 4,750 metros de altitud, es el volcán activo más alto de toda Eurasia y uno de los más activos del mundo, con erupciones registradas casi cada pocos años?",
+    "options": [
+      "El monte Elbrús (es un volcán inactivo del Cáucaso, no de Kamchatka, y es más alto pero está extinto)",
+      "El Kliuchevskaya Sopka",
+      "El Shivéluch (es otro volcán activo de Kamchatka, pero de menor altitud)",
+      "El monte Kazbek (también es un volcán inactivo del Cáucaso)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La actividad casi constante del Kliuchevskaya Sopka, con su columna de humo visible desde grandes distancias, lo convierte en uno de los símbolos naturales más reconocibles del extremo oriente ruso."
+  },
+  {
+    "question": "¿Qué campo geotérmico de Kamchatka, uno de los pocos del mundo con una concentración semejante de géiseres activos en un espacio reducido, fue descubierto por la ciencia soviética recién en 1941, pese a estar en territorio ya explorado desde hacía siglos?",
+    "options": [
+      "El Parque de los Volcanes de Kliuchevskaya (no es el nombre correcto de esta zona geotérmica específica)",
+      "El Valle de la Muerte de Kamchatka (es otro paraje cercano, célebre por emanaciones de gases tóxicos, distinto de los géiseres)",
+      "El Valle de los Géiseres",
+      "Los Campos Fumarólicos de Uzon (es una caldera volcánica cercana, con actividad distinta a la de géiseres propiamente dichos)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Un derrumbe causado por un alud de barro en 2007 sepultó buena parte del valle original, alterando drásticamente el paisaje que había permanecido casi intacto desde su descubrimiento científico décadas antes."
+  },
+  {
+    "question": "¿Qué lago salado del sur de Rusia, cuyo fondo de barro terapéutico se explota desde el siglo XIX para tratamientos de balneario, alberga también un pequeño depósito de sal de roca prácticamente puro que se extrae comercialmente desde hace siglos?",
+    "options": [
+      "El lago Baskunchak",
+      "El lago Elton (es otro lago salado cercano, de propiedades similares pero de explotación histórica distinta)",
+      "El lago Chany (es un lago de agua dulce de Siberia occidental, sin depósitos significativos de sal)",
+      "El mar de Aral (es un mar interior mucho mayor, hoy en gran parte desecado, en Asia Central, no un lago del sur de Rusia)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La sal del Baskunchak abasteció durante siglos buena parte del consumo del imperio ruso, transportada históricamente por un ferrocarril construido específicamente para esa función hacia finales del siglo XIX."
+  },
+  {
+    "question": "¿Qué parque natural de las montañas Sayán, célebre entre montañistas y excursionistas por sus imponentes formaciones rocosas graníticas y sus lagos de alta montaña, se encuentra en la república de Jakasia y el krai de Krasnoyarsk?",
+    "options": [
+      "La reserva de Putorana (está en una meseta de Siberia central, con un paisaje geológicamente distinto)",
+      "El parque natural de Ergaki",
+      "El parque nacional de Sochi (está en el Cáucaso, en el extremo suroeste de Rusia)",
+      "El parque nacional del Altái (está en una cordillera distinta, más al oeste)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Formaciones rocosas con nombres populares como 'Los Hermanos Fantasma' atraen cada año a miles de excursionistas y escaladores a esta remota región siberiana."
+  },
+  {
+    "question": "¿Qué par de pequeñas islas del estrecho de Bering, una rusa y otra estadounidense, separadas por apenas unos 3.8 kilómetros de agua pero por casi 21 horas de diferencia horaria debido a la línea internacional de cambio de fecha, dan lugar a la peculiaridad de poder 'ver el futuro' desde una de ellas?",
+    "options": [
+      "Las islas Kuriles (están en el Pacífico norte, lejos del estrecho de Bering)",
+      "La Gran Diómedes y la Pequeña Diómedes",
+      "Las islas Shántar (están en el mar de Ojotsk, sin relación con el estrecho de Bering)",
+      "Las islas Comandantes (están mucho más al sur, sin esta particularidad de husos horarios)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a la cercanía física entre ambas islas, la línea internacional de cambio de fecha pasa exactamente entre ellas, por lo que un observador en la isla rusa (Gran Diómedes) técnicamente 've' el día siguiente ya en curso en la isla estadounidense vecina."
+  },
+  {
+    "question": "¿Qué inusual formación geológica de los montes Urales, un conjunto de siete gigantescas columnas de piedra de hasta 42 metros de altura esculpidas por la erosión durante millones de años, es sagrada para el pueblo local mansi y fue votada como una de las 'Siete Maravillas de Rusia'?",
+    "options": [
+      "Las Columnas de Lena (están junto al río Lena, en Siberia oriental, muy lejos de los Urales)",
+      "Los pilares de Krasnoyarsk (son formaciones rocosas de otra región siberiana, cerca de esa ciudad)",
+      "El Valle de la Muerte de Kamchatka (es un paraje volcánico, no una formación de columnas de piedra)",
+      "Los pilares de Manpupuner"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Su remota ubicación, accesible únicamente tras varios días de caminata o mediante helicóptero, ha ayudado a preservar tanto su carácter sagrado para los mansi como su estado natural prácticamente intacto."
+  },
+  {
+    "question": "¿Qué extenso lago de la región de Tver, popular destino de pesca y turismo de veraneo desde la época soviética, alberga en una de sus islas los restos de un antiguo monasterio ortodoxo llamado Nilova Pústyn?",
+    "options": [
+      "El lago Chudskoye (es el mismo lago Peipus, en la frontera con Estonia)",
+      "El lago Onega (también está en el noroeste, en la república de Karelia)",
+      "El lago Ládoga (es mucho más extenso y está en otra región, cerca de San Petersburgo)",
+      "El lago Séliger"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La particular forma irregular del lago Séliger, resultado de la actividad glacial, genera un laberinto de bahías, penínsulas e islas que lo convierten en un destino popular de recreo desde hace generaciones."
+  },
+  {
+    "question": "¿Qué región del extremo nororiental de Rusia, separada de Alaska por el estrecho de Bering en su punto más angosto de apenas unos 82 kilómetros, es hogar de los pueblos indígenas chukchis y da nombre a la península más oriental del país?",
+    "options": [
+      "Chukotka",
+      "Kamchatka (es la península volcánica vecina, al sur de Chukotka, de geografía distinta)",
+      "Magadán (es una región costera del mar de Ojotsk, al sur de Chukotka)",
+      "Yakutia (es una vasta república siberiana más al oeste, sin costa directa sobre el estrecho de Bering)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "En días despejados, es posible divisar la costa de Alaska desde ciertos puntos elevados de Chukotka, una de las pocas regiones del mundo donde Estados Unidos y Rusia son literalmente vecinos visibles."
+  },
+  {
+    "question": "¿Qué cabo, el punto más septentrional de toda la masa continental euroasiática, se encuentra en la península de Taimyr y fue alcanzado por tierra por primera vez recién en 1742, durante la Gran Expedición del Norte?",
+    "options": [
+      "El cabo Zhelania (está en el extremo norte de Nueva Zembla, una isla, no en el continente propiamente dicho)",
+      "El cabo Cheliuskin",
+      "El cabo Kanin (está mucho más al oeste, en la costa del mar Blanco)",
+      "El cabo DeZhniov (es el punto más oriental de Eurasia, no el más septentrional)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El cabo recibió su nombre en honor al oficial ruso Semión Cheliuskin, quien lo alcanzó tras un extenuante recorrido en trineo, completando así el mapeo de toda la costa ártica continental de Rusia."
+  },
+  {
+    "question": "¿Qué remoto archipiélago del mar de Ojotsk, célebre entre observadores de fauna marina por las ballenas grises y beluga que se congregan en sus aguas cada verano, permanece prácticamente deshabitado y de difícil acceso durante todo el año?",
+    "options": [
+      "Las islas Comandantes (están en el mar de Bering, no en el de Ojotsk)",
+      "Las islas Shántar",
+      "Las islas Kuriles (son un archipiélago mucho más extenso y volcánico, más al sur)",
+      "La isla de Sajalín (es una isla mucho más grande y poblada, no un archipiélago remoto)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El acceso limitado y las corrientes traicioneras que rodean las islas Shántar han mantenido esta región como uno de los últimos refugios prácticamente vírgenes de vida marina en el extremo oriente ruso."
+  },
+  {
+    "question": "¿Qué pequeña isla ártica, situada en el estrecho entre el continente y el archipiélago de Nueva Zembla, es considerada sagrada por el pueblo nenets, que durante siglos peregrinó hasta allí para realizar rituales religiosos junto a antiguos ídolos de piedra?",
+    "options": [
+      "La isla de Vaigach",
+      "La isla de Kolgúyev (es otra isla ártica cercana, pero sin esta tradición sagrada específica asociada a los nenets)",
+      "La Tierra de Francisco José (es un archipiélago mucho más al norte, deshabitado, sin esta tradición)",
+      "La isla de Wrangel (está mucho más al este, célebre por su población de mamuts extintos, no por su relevancia espiritual nenets)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Los nenets llamaban a esta isla 'la puerta al inframundo', y los antiguos ídolos de piedra que aún se conservan en ella siguen siendo objeto de investigación arqueológica y de respeto espiritual por parte de las comunidades indígenas actuales."
+  },
+  {
+    "question": "¿Qué lago del sur de Rusia, situado en la región de Volgogrado, es considerado el mayor lago mineral de Europa, con una salinidad tan alta que en verano sus orillas se cubren de una gruesa costra de sal rosada?",
+    "options": [
+      "El lago Chany",
+      "El lago Manych",
+      "El lago Baskunchak",
+      "El lago Elton"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El lago Elton, cuyo nombre podría derivar de una antigua palabra túrquica para 'dorado', es tan salado que resulta prácticamente imposible hundirse en sus aguas, similar en ese sentido al mar Muerto."
+  },
+  {
+    "question": "¿Qué reserva natural, situada en la costa del mar Blanco y fundada en 1932, protege una de las colonias más importantes de aves marinas migratorias del norte de Rusia, punto de descanso clave en las rutas entre Europa y el Ártico?",
+    "options": [
+      "La reserva de Pechoro-Ilych",
+      "El parque de Vodlozero",
+      "La reserva de Barguzinski",
+      "La reserva de Kandalaksha"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Kandalaksha protege decenas de pequeñas islas del golfo homónimo, refugio de eíderes, gaviotas y otras aves árticas, además de ser uno de los primeros territorios protegidos con fines específicamente ornitológicos en toda la URSS."
+  },
+  {
+    "question": "¿En qué remoto archipiélago del mar de Bering, hoy deshabitado en su mayor parte, murió en 1741 el explorador Vitus Bering y donde se extinguió, ya en el siglo XVIII, la vaca marina de Steller, descubierta científicamente allí mismo?",
+    "options": [
+      "Las islas del Comandante",
+      "Las islas Kuriles",
+      "Las islas Diomedes",
+      "El archipiélago de Nueva Siberia"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Bering murió de escorbuto tras naufragar en estas islas durante su viaje de regreso; su tripulación describió allí por primera vez a la ciencia la enorme vaca marina de Steller, un manatí gigante que sería cazado hasta su extinción total en apenas 27 años."
+  },
+  {
+    "question": "¿Qué inusual formación geográfica presenta el río Volga a la altura de la ciudad de Samara, donde el curso del río traza un enorme bucle de más de 200 kilómetros alrededor de una cadena montañosa, para volver casi al punto de partida?",
+    "options": [
+      "El Bucle de Kazán",
+      "La Curva de Sarátov",
+      "El Recodo de Samara",
+      "El Meandro de Astracán"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El Recodo de Samara rodea las montañas Zhigulí, las únicas elevaciones considerables junto al curso medio del Volga, y es hoy un popular destino de senderismo protegido como parque nacional."
+  },
+  {
+    "question": "¿Sobre qué cordillera del extremo oriente ruso, hábitat clave del tigre siberiano, cayó en febrero de 1947 una intensa lluvia de meteoritos de hierro, uno de los mayores episodios de este tipo jamás documentados y estudiados científicamente?",
+    "options": [
+      "Los montes Verjoyansk",
+      "Las montañas de Sijoté-Alín",
+      "La cordillera de Cherski",
+      "Los montes Dzhugdzhur"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El meteorito de Sijoté-Alín se fragmentó en la atmósfera antes de impactar, esparciendo toneladas de fragmentos de hierro y níquel sobre el bosque taiga; científicos soviéticos llegaron al lugar en cuestión de días para estudiar los cráteres recién formados."
+  },
+  {
+    "question": "¿Qué lago del noroeste de Rusia, situado cerca de la ciudad de Nóvgorod y desde el cual nace el río Volhov, formaba parte esencial de la antigua ruta comercial fluvial entre Escandinavia y Constantinopla?",
+    "options": [
+      "El lago Ládoga",
+      "El lago Seliger",
+      "El lago Cudsko",
+      "El lago Ilmen"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El lago Ilmen, relativamente poco profundo pero de gran extensión, conectaba a través de sus ríos la histórica Nóvgorod con las rutas fluviales que llevaban hasta el mar Báltico y, en dirección opuesta, hacia el mar Negro."
+  },
+  {
+    "question": "¿Qué extenso lago salobre del sur de Rusia, en la frontera con la actual estepa de Kalmukia, alberga una de las mayores colonias de flamencos rosados del país, un ave poco habitual en latitudes tan septentrionales?",
+    "options": [
+      "El lago Manych-Gudiló",
+      "El lago Elton",
+      "El lago Chany",
+      "El lago Baskunchak"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a encontrarse muy al norte del hábitat típico de estas aves, las aguas cálidas y ricas en microorganismos del Manych-Gudiló atraen cada año a miles de flamencos, además de pelícanos y otras aves acuáticas poco comunes en Rusia."
+  },
+  {
+    "question": "¿Qué archipiélago ártico ruso, el más septentrional de toda Eurasia, formado por casi 200 islas cubiertas casi en su totalidad por glaciares, sirvió históricamente de base de partida para expediciones polares hacia el Polo Norte?",
+    "options": [
+      "Nueva Zembla",
+      "El archipiélago de Severnaya Zemlya",
+      "La Tierra de Francisco José",
+      "Las islas de Nueva Siberia"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Descubierto por una expedición austrohúngara en 1873, el archipiélago fue anexionado formalmente por Rusia en el siglo XX y utilizado como estación meteorológica y punto de partida para varias expediciones soviéticas hacia el Polo Norte."
+  },
+  {
+    "question": "¿Qué inusuales formaciones rocosas, columnas de piedra caliza esculpidas por siglos de erosión a orillas del río Yeniséi, cerca de la ciudad de Krasnoyarsk, dieron nombre a una reserva natural muy popular entre escaladores?",
+    "options": [
+      "Las 'Puertas de Piedra' de los Urales",
+      "Las 'Torres de Ergaki'",
+      "Los 'Stolby' (Columnas) de Krasnoyarsk",
+      "Los 'Hombres de Manpupuner'"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Estas formaciones de granito, algunas de más de cien metros de altura y con nombres populares como 'el Abuelo' o 'las Alas', son escaladas sin cuerdas desde el siglo XIX por una tradición local conocida como 'stolbismo'."
+  },
+  {
+    "question": "¿Qué lago del noroeste ruso, célebre por la isla de Kizhi y sus iglesias de madera, conserva también en sus orillas rocosas uno de los mayores conjuntos de petroglifos prehistóricos de toda Europa, grabados hace miles de años?",
+    "options": [
+      "El lago Vozhe",
+      "El lago Beloye",
+      "El lago Onega",
+      "El lago Ládoga"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Los petroglifos del lago Onega, tallados sobre roca hace más de 5,000 años, representan alces, aves, embarcaciones y figuras humanas, y constituyen una de las expresiones artísticas más antiguas conocidas del norte de Europa."
+  },
+  {
+    "question": "¿Qué parque nacional del noroeste de Rusia protege una de las mayores extensiones de bosque boreal virgen, prácticamente intacto por la actividad humana, de todo el continente europeo?",
+    "options": [
+      "El Parque Nacional de Vodlozero",
+      "La reserva de Pechoro-Ilych",
+      "El Parque Nacional de los Montes Sayán",
+      "El Parque Nacional de Kenozero"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Vodlozero, declarado reserva de la biosfera por la UNESCO, conserva bosques que nunca han sido talados de forma industrial, un ecosistema cada vez más escaso en el continente europeo tras siglos de explotación forestal."
+  },
+  {
+    "question": "¿Qué golfo del mar Blanco, en el noroeste de Rusia, presenta la mayor amplitud de mareas de todo el país, con diferencias de varios metros entre pleamar y bajamar que dejan al descubierto extensos fondos marinos dos veces al día?",
+    "options": [
+      "El golfo de Mezen",
+      "El golfo de Dvina",
+      "El golfo de Onega",
+      "El golfo de Kandalaksha"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Estas fuertes mareas, poco habituales en los mares interiores rusos, condicionan desde hace siglos la vida y las actividades pesqueras de las comunidades costeras que habitan sus orillas rocosas."
+  },
+  {
+    "question": "¿Qué extenso lago fronterizo entre Rusia y China, situado en el extremo suroriental del país, es un humedal clave de descanso para aves migratorias y hogar de una rara especie de loto rosado que florece en sus aguas cada verano?",
+    "options": [
+      "El lago Baikal",
+      "El lago Janka",
+      "El lago Chany",
+      "El lago Teletskoye"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El lago Janka, compartido con China, alberga uno de los pocos lugares de Rusia donde crece de forma natural el loto sagrado, además de servir de refugio a grullas de collar blanco y otras aves en peligro de extinción."
+  },
+  {
+    "question": "¿Qué extraño fenómeno geológico se observa en el llamado 'cráter de Patom', una formación cónica aislada en pleno bosque siberiano de la región de Irkutsk, cuyo origen —volcánico, meteórico o de otro tipo— sigue sin explicación científica definitiva?",
+    "options": [
+      "Una formación artificial de origen desconocido",
+      "Un montículo cónico de piedra caliza rota, de origen aún debatido entre los científicos",
+      "Un cráter de impacto meteórico plenamente confirmado",
+      "Un antiguo volcán de lodo todavía activo"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Descubierto por geólogos soviéticos en 1949 y apodado por los lugareños 'el nido del águila de fuego', el cráter de Patom sigue intrigando a los científicos: las hipótesis van desde un impacto meteórico hasta una erupción de gas subterráneo, sin que ninguna haya sido confirmada del todo."
+  },
+  {
+    "question": "¿Qué inusual formación geológica del extremo oriente ruso, un anillo casi perfectamente circular de varios kilómetros de diámetro visible incluso desde el espacio, alberga en su interior uno de los mayores yacimientos de platino del país?",
+    "options": [
+      "La caldera de Uzon",
+      "El cráter de Popigái",
+      "El macizo de Kondiór",
+      "El anillo de Patom"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Formado por la intrusión de roca alcalina hace millones de años y erosionado después de forma que dejó expuesto su característico anillo, el macizo de Kondiór parece, visto desde satélite, un cráter de impacto, aunque su origen es en realidad puramente volcánico-geológico."
+  },
+  {
+    "question": "¿Qué delta fluvial del extremo norte de Siberia, uno de los mayores y mejor conservados del mundo, forma un extenso laberinto de más de 1,600 islas al desembocar en el océano Ártico?",
+    "options": [
+      "El delta del río Ob",
+      "El delta del río Indigirka",
+      "El delta del río Kolymá",
+      "El delta del río Lena"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Protegido como reserva natural desde 1985, el delta del Lena es uno de los ecosistemas árticos mejor preservados del planeta, refugio de decenas de especies de aves migratorias y de una de las mayores poblaciones de gansos de cuello rojo del mundo."
+  },
+  {
+    "question": "¿Qué región rusa alberga la mayor densidad de osos pardos del mundo, gracias a la enorme abundancia de salmón que remonta sus ríos cada año para desovar?",
+    "options": [
+      "La isla de Sajalín",
+      "La región del Altái",
+      "Los montes Urales",
+      "La península de Kamchatka"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Durante la temporada de desove del salmón, es habitual observar en Kamchatka a decenas de osos pescando simultáneamente en un mismo tramo de río, una concentración de fauna salvaje que atrae a fotógrafos de naturaleza de todo el mundo."
+  },
+  {
+    "question": "¿Cerca de qué ciudad de los Urales se explotan desde el siglo XVIII algunos de los yacimientos de esmeraldas más importantes de Rusia, descubiertos por casualidad por un campesino que encontró unas piedras verdes entre las raíces de un árbol caído?",
+    "options": [
+      "Perm",
+      "Ufá",
+      "Cheliábinsk",
+      "Yekaterimburgo"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las minas de esmeraldas de los Urales, situadas a poca distancia de Yekaterimburgo, llegaron a ser durante el Imperio ruso una de las principales fuentes mundiales de estas piedras preciosas, y siguen explotándose de forma limitada en la actualidad."
+  },
+  {
+    "question": "¿Qué pequeña zona de dunas de arena, a menudo descrita como un 'desierto en miniatura', se encuentra sorprendentemente rodeada por completo de bosque de taiga siberiana en la región de Zabaikalie?",
+    "options": [
+      "Las dunas de Kurshskaya",
+      "El desierto de Kalmukia",
+      "Las arenas de Chará",
+      "El erg de Tuvá"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a encontrarse en pleno clima siberiano, con inviernos extremadamente fríos, este pequeño desierto de dunas —de apenas unos kilómetros cuadrados— se formó por procesos geológicos locales relacionados con antiguos lechos glaciares y sigue siendo una rareza geográfica muy visitada por su singularidad."
+  },
+  {
+    "question": "¿Qué macizo montañoso de la península de Kola es considerado sagrado por el pueblo indígena sami, que tradicionalmente evitaba adentrarse en sus valles centrales por motivos espirituales, y que además alberga minerales extremadamente raros?",
+    "options": [
+      "La cordillera de Serpéntica",
+      "El macizo de Lovozero",
+      "Los montes Jibiny",
+      "El macizo de Pechenga"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Los sami consideraban el interior del macizo de Lovozero morada de espíritus, y hoy en día geólogos han identificado allí varios minerales que no se encuentran en ningún otro lugar del planeta, producto de una geología volcánica muy particular."
+  },
+  {
+    "question": "¿Qué archipiélago del lago Ládoga, hogar de un antiguo monasterio ortodoxo fundado posiblemente ya en el siglo X y célebre por sus paisajes de acantilados y bosques de coníferas, se convirtió en un importante centro espiritual del norte de Rusia?",
+    "options": [
+      "Las islas Solovkí",
+      "El archipiélago de Kizhi",
+      "Las islas Kárelia",
+      "El archipiélago de Valaam"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El monasterio de Valaam, a diferencia del más conocido de Solovkí, se encuentra en un lago de agua dulce en vez de en el mar, y su remota ubicación y austera belleza natural lo convirtieron en destino de peregrinación desde la Edad Media."
+  },
+  {
+    "question": "Además de la cordillera de los Urales, ¿qué otro accidente geográfico, un largo río que desemboca en el mar Caspio, se ha usado tradicionalmente como referencia alternativa para marcar el límite entre Europa y Asia en su tramo final?",
+    "options": [
+      "El río Emba",
+      "El río Ural",
+      "El río Tobol",
+      "El río Irtish"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Mientras la cordillera de los Urales marca la frontera convencional entre ambos continentes en su tramo norte, el curso final del río Ural, que atraviesa la ciudad de Oremburgo antes de desembocar en el Caspio, se usa a menudo como continuación de esa misma línea divisoria hacia el sur."
+  },
+  {
+    "question": "¿Qué república rusa de las estepas del sur, situada al noroeste del mar Caspio, es la única región de toda Europa donde la religión mayoritaria de la población es el budismo?",
+    "options": [
+      "Buriatia",
+      "Tuvá",
+      "Adiguesia",
+      "Kalmukia"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los kalmukos, descendientes de tribus mongolas que migraron hacia el oeste en el siglo XVII, conservaron su budismo tibetano tradicional pese a hallarse rodeados de territorio de mayoría cristiana ortodoxa, y hoy Kalmukia alberga el templo budista más grande de Europa."
+  },
+  {
+    "question": "¿Qué reserva natural del Cáucaso occidental, fundada en 1924 y una de las más antiguas de Rusia, se creó específicamente para proteger a los últimos ejemplares silvestres del bisonte europeo (zubr), entonces al borde de la extinción total?",
+    "options": [
+      "La Reserva de la Biosfera del Cáucaso",
+      "El Parque Nacional de Sochi",
+      "El Parque Nacional del Elbrus",
+      "La Reserva de Teberdá"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Gracias a programas de cría en cautividad y reintroducción impulsados desde esta reserva, el bisonte europeo, que había desaparecido casi por completo en estado silvestre tras la Primera Guerra Mundial, logró recuperar poblaciones estables en los bosques del Cáucaso."
+  },
+  {
+    "question": "¿Cómo se llama el mayor río que desemboca en el lago Baikal, aportando por sí solo casi la mitad de todo el caudal de agua que recibe el lago más profundo del mundo?",
+    "options": [
+      "El río Barguzín",
+      "El río Seleng",
+      "El río Angará",
+      "El río Upper Angará"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Seleng, que nace en Mongolia y cruza la frontera hacia Rusia antes de desembocar en el Baikal, forma un extenso delta de humedales considerado zona clave para la reproducción de peces y aves acuáticas de la región."
+  },
+  {
+    "question": "¿Qué peculiar y a veces violento viento local, que sopla desde el valle homónimo hacia el lago Baikal y puede generar olas de varios metros de altura en cuestión de minutos, es temido tradicionalmente por los pescadores de la zona?",
+    "options": [
+      "El viento Vercojanka",
+      "El viento Kultuk",
+      "El viento Sarmá",
+      "El viento Barguzín"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El Barguzín, que da nombre también a una famosa canción popular rusa sobre un fugitivo que cruza el lago, sopla desde el valle del río homónimo con una fuerza capaz de sorprender a embarcaciones que segundos antes navegaban con aguas en calma."
+  },
+  {
+    "question": "¿Qué región de la cuenca del río Kama, cerca de la ciudad de Solikamsk, alberga uno de los mayores yacimientos de sales de potasio del mundo, explotados desde el siglo XV para la producción tradicional de sal y hoy como fertilizante industrial?",
+    "options": [
+      "La cuenca del Don",
+      "La cuenca de Orenburgo",
+      "La cuenca de Astracán",
+      "La cuenca de Solikamsk"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Solikamsk, cuyo propio nombre significa 'sal del río Kama', fue durante siglos uno de los principales centros de producción salinera de Rusia, y hoy sus vastos depósitos subterráneos de potasa lo convierten en una de las mayores reservas de fertilizante mineral del planeta."
+  },
+  {
+    "question": "¿Qué valle situado junto al lago Baikal, formado por la misma fractura geológica que da origen al lago, es célebre por sus aguas termales naturales y su papel en la formación geológica de toda la región?",
+    "options": [
+      "El valle de Jubsugul",
+      "El valle de Chará",
+      "El valle de Barguzín",
+      "El valle de Tunka"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El valle de Tunka forma parte del mismo sistema de fallas tectónicas que originó la cuenca del Baikal hace millones de años, uno de los sistemas de fractura continental más activos y estudiados del mundo, comparable en algunos aspectos al Gran Valle del Rift africano."
+  },
+  {
+    "question": "¿Qué vasta región de tierras altas, situada entre los ríos Yeniséi y Lena y cubierta casi en su totalidad por taiga, constituye una de las mayores mesetas continuas del planeta pese a ser poco conocida fuera de Rusia?",
+    "options": [
+      "La Meseta de Putorana",
+      "El Altiplano de Aldán",
+      "La Meseta Central Siberiana",
+      "La Meseta de Vitim"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Con una extensión comparable a la de varios países europeos juntos, la Meseta Central Siberiana permanece en gran parte deshabitada, cubierta de bosques boreales y atravesada por profundos valles fluviales formados por ríos que se abren paso hacia el norte, hacia el océano Ártico."
+  },
+  {
+    "question": "¿Cómo se llama la profunda fosa oceánica situada frente a las costas del Pacífico ruso, entre las islas Kuriles y la península de Kamchatka, una de las depresiones submarinas más profundas del planeta?",
+    "options": [
+      "La Fosa de las Kuriles-Kamchatka",
+      "La Fosa de Sajalín",
+      "La Fosa de Bering",
+      "La Fosa de Ojotsk"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Con profundidades que superan los 9,000 metros en algunos puntos, esta fosa forma parte del llamado 'Anillo de Fuego' del Pacífico y está directamente relacionada con la intensa actividad volcánica y sísmica de la región de Kamchatka y las islas Kuriles."
+  },
+  {
+    "question": "¿Qué reserva natural, situada en el delta del Volga antes de su desembocadura en el mar Caspio, protege extensos campos de loto sagrado y sirve de refugio a miles de pelícanos y otras aves acuáticas migratorias?",
+    "options": [
+      "La Reserva del Delta del Don",
+      "El Parque Nacional de Samara",
+      "La Reserva de Kizliar",
+      "La Reserva Natural de Astracán"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Fundada ya en 1919, poco después de la revolución, esta reserva fue una de las primeras áreas protegidas de toda la naciente Unión Soviética, y sus campos de loto rosado, floreciendo cada verano sobre las aguas del delta, se han convertido en un llamativo atractivo natural."
+  },
+  {
+    "question": "¿Qué mar interior, compartido entre Rusia y varios países de Asia central y el Cáucaso, es considerado el mayor cuerpo de agua completamente rodeado de tierra del planeta, aunque los geógrafos debaten si técnicamente debería clasificarse como mar o como lago?",
+    "options": [
+      "El mar de Azov",
+      "El mar de Aral",
+      "El mar Caspio",
+      "El lago Baljash"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El estatus exacto del Caspio —mar o lago— no es una cuestión meramente académica: de ello dependen distintos marcos legales internacionales sobre la explotación de sus abundantes recursos petroleros y pesqueros, un debate que involucra a los cinco países ribereños."
+  },
+  {
+    "question": "¿Qué reserva natural de los Urales del sur, fundada en 1920, es célebre entre los mineralogistas de todo el mundo por concentrar en un área relativamente pequeña más de 260 especies distintas de minerales, varias de ellas descritas científicamente por primera vez allí mismo?",
+    "options": [
+      "La Reserva de Basegui",
+      "La Reserva de Visherski",
+      "La Reserva de Ilmenski",
+      "El Parque Nacional de Taganái"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La excepcional diversidad geológica de esta zona, resultado de complejos procesos magmáticos antiguos, ha convertido a la reserva de Ilmenski en un auténtico museo natural a cielo abierto, visitado regularmente por geólogos e investigadores de todo el mundo."
+  },
+  {
+    "question": "¿Qué reserva natural de la estepa transbaikaliana, en la frontera con Mongolia, protege importantes humedales y praderas y es célebre por su papel en la conservación de varias especies de grullas en peligro de extinción?",
+    "options": [
+      "El Parque Nacional de Alján",
+      "La Reserva de Sojondó",
+      "La Reserva de Bargusinski",
+      "La Reserva de Daurski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Daurski forma parte de una red internacional de reservas transfronterizas compartidas con Mongolia y China, fundamental para proteger las rutas migratorias de la grulla de Manchuria y otras aves cuyo hábitat se extiende más allá de las fronteras políticas."
+  },
+  {
+    "question": "¿Qué solución arquitectónica adoptaron las ciudades industriales del extremo norte siberiano, como Norilsk, para construir edificios sobre suelo de permafrost sin que el calor de las propias viviendas derritiera el hielo subyacente y desestabilizara los cimientos?",
+    "options": [
+      "Excavar cimientos profundos reforzados con hormigón armado especial",
+      "Construir los edificios sobre pilotes elevados, dejando una capa de aire entre el suelo y la base",
+      "Usar exclusivamente estructuras de madera flotante sobre el hielo",
+      "Calentar artificialmente el subsuelo antes de construir para estabilizarlo"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta técnica, desarrollada específicamente para las condiciones del permafrost siberiano, permite que el aire frío circule libremente bajo los edificios, evitando que el calor de la calefacción interior derrita el suelo helado y provoque hundimientos peligrosos en las estructuras."
+  },
+  {
+    "question": "¿Cómo se conoce a una amplia zona del océano Ártico frente a las costas siberianas que, pese a las bajísimas temperaturas circundantes, permanece total o parcialmente libre de hielo durante buena parte del año debido a corrientes marinas particulares?",
+    "options": [
+      "La Franja de Aguas Abiertas de Kara",
+      "El Corredor del Noreste",
+      "La Gran Polinia Siberiana",
+      "El Paso de Nóvaya Zembla"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Este fenómeno de aguas relativamente abiertas en pleno Ártico fue aprovechado históricamente tanto por la fauna marina —que encontraba allí zonas de alimentación durante el invierno— como por cazadores y navegantes que buscaban rutas alternativas a través del hielo circundante."
+  },
+  {
+    "question": "¿Qué localidad de la república rusa de Sajá (Yakutia), célebre por registrar algunas de las temperaturas invernales más bajas jamás medidas en un asentamiento humano permanente, es considerada junto a otra ciudad cercana el 'Polo del Frío' habitado del planeta?",
+    "options": [
+      "Yakutsk",
+      "Verjoyansk",
+      "Oimiakón",
+      "Tiksí"
+    ],
+    "correct_option_id": 2,
+    "explanation": "En Oimiakón se han registrado temperaturas cercanas a los -68°C, y sus habitantes han desarrollado formas de vida adaptadas a este clima extremo, desde vehículos que nunca apagan el motor hasta cementerios donde el suelo debe fundirse con fuego antes de poder cavar una tumba."
+  },
+  {
+    "question": "¿Qué felino salvaje, uno de los más amenazados del planeta con apenas un centenar de ejemplares en libertad, habita exclusivamente en un pequeño reducto boscoso del extremo suroriental de Rusia, cerca de la frontera con China y Corea del Norte?",
+    "options": [
+      "El leopardo de las nieves",
+      "El lince siberiano",
+      "El leopardo del Amur",
+      "El gato de Pallas"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El leopardo del Amur, adaptado a soportar inviernos mucho más fríos que cualquier otra subespecie de leopardo del mundo, estuvo al borde de la extinción total antes de que programas de conservación en reservas dedicadas lograran estabilizar, aunque no asegurar por completo, su población silvestre."
+  },
+  {
+    "question": "¿Qué depresión geográfica de la república de Tuvá, compartida con Mongolia y catalogada como Patrimonio de la Humanidad por la UNESCO, constituye una rareza ecológica al reunir en un área relativamente reducida desiertos, estepas, bosques y humedales sin salida al mar?",
+    "options": [
+      "La Depresión de Jövsgöl",
+      "El Valle de los Reyes de Tuvá",
+      "La Hondonada de Ubsunur",
+      "La Cuenca de Tannu-Ola"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Esta cuenca cerrada, centrada en torno al lago Ubsunur del lado mongol, alberga una sorprendente variedad de ecosistemas en un espacio compacto, desde dunas de arena hasta glaciares de montaña, lo que la convierte en un laboratorio natural único para el estudio de la biodiversidad de Asia central."
+  },
+  {
+    "question": "¿Qué reserva natural de la región de Tver, fundada en 1931 y una de las más antiguas de la Rusia europea, protege uno de los últimos bosques de abetos y píceas verdaderamente vírgenes de todo el continente, jamás sometido a explotación forestal industrial?",
+    "options": [
+      "El Parque Nacional del Alto Volga",
+      "La Reserva del Bosque Central",
+      "La Reserva de Valdái",
+      "La Reserva de Nelidovo"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Estos bosques centenarios, con árboles de varios siglos de antigüedad y un sotobosque nunca alterado por la tala, son especialmente valiosos para los científicos que estudian cómo eran los ecosistemas forestales europeos antes de la intervención humana masiva."
+  },
+  {
+    "question": "¿Cómo se llama la cascada situada en la república de Karelia, considerada una de las mayores cataratas de tierras bajas de toda Europa pese a su modesta altura, y que ya era mencionada con admiración por viajeros del siglo XVIII?",
+    "options": [
+      "La cascada de Girvas",
+      "La cascada de Ruskeala",
+      "La cascada de Kivach",
+      "La cascada de Yuma"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a que su caída de agua apenas supera los diez metros de altura, el enorme volumen de agua que transporta el río Suná en este punto convierte a Kivach en un espectáculo natural impresionante, y su entorno protegido alberga además uno de los reservorios de abedul de Karelia, una rara variedad de madera especialmente dura y veteada."
+  },
+  {
+    "question": "¿Qué parque nacional del noroeste ruso, establecido en torno a un lago del mismo nombre, es notable porque de sus tierras altas nacen simultáneamente tres importantes ríos que fluyen en direcciones completamente distintas: el Volga, el Dviná Occidental y el Lovat?",
+    "options": [
+      "El Parque Nacional de Sebezh",
+      "El Parque Nacional de Valdái",
+      "El Parque Nacional de Smolensk",
+      "El Parque Nacional de Meschiora"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta característica convierte a las colinas de Valdái en una auténtica encrucijada hidrográfica de Europa oriental: sus aguas terminan, según la dirección que tomen, en el mar Caspio, el mar Báltico o el lago Ilmen, tres destinos completamente distintos desde un origen geográfico común."
+  },
+  {
+    "question": "¿Qué extenso parque nacional de los Urales del norte, declarado Patrimonio de la Humanidad por la UNESCO, protege una de las mayores superficies de bosque boreal virgen de toda Europa, prácticamente inaccesible salvo por rutas de senderismo remotas?",
+    "options": [
+      "El Parque Nacional de Yugid Va",
+      "El Parque Nacional de Kutub",
+      "El Parque Nacional de Vishera",
+      "La Reserva de Pechoro-Ilych"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Junto con la vecina reserva de Pechoro-Ilych, este parque forma parte de un vasto territorio protegido conocido colectivamente como 'los Bosques Vírgenes de Komi', reconocido internacionalmente por conservar ecosistemas boreales prácticamente intactos desde tiempos prehistóricos."
+  },
+  {
+    "question": "¿Cuál es la mayor reserva natural de toda Rusia y de todo el continente euroasiático en extensión territorial, situada en la remota península de Taimyr y dedicada a proteger vastas áreas de tundra y costa ártica?",
+    "options": [
+      "El Parque Nacional Ruso del Ártico",
+      "La Reserva de Vrángel",
+      "La Reserva de Taimyrski",
+      "La Gran Reserva Ártica (Bolshoy Arkticheski Zapovédnik)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Con una superficie que supera los cuatro millones de hectáreas repartidas en varios sectores a lo largo de la costa ártica siberiana, esta reserva protege hábitats esenciales para especies como el buey almizclero, el oso polar y numerosas aves migratorias que crían en sus costas durante el breve verano ártico."
+  },
+  {
+    "question": "¿Qué montaña, la más alta de toda la cordillera del Altái y considerada sagrada tanto por los Viejos Creyentes rusos como por las tradiciones budistas y chamánicas de los pueblos locales, se eleva por encima de los 4,500 metros en la frontera con Kazajistán, China y Mongolia?",
+    "options": [
+      "El monte Chuya",
+      "El monte Beluja",
+      "El pico Korona Altaya",
+      "El monte Aktrú"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Su doble estatus sagrado —venerada por igual desde tradiciones cristianas heterodoxas rusas como desde creencias budistas y animistas locales— convierte al Beluja en un raro punto de encuentro espiritual entre culturas muy distintas, todas coincidiendo en atribuir un carácter especial a su imponente presencia cubierta de glaciares."
+  },
+  {
+    "question": "¿Qué gran lago de Siberia occidental, en la región de Novosibirsk, es conocido por la notable variación de su superficie según los años, llegando a reducirse drásticamente en periodos secos y a expandirse considerablemente en años más húmedos, al carecer de salida fluvial hacia el mar?",
+    "options": [
+      "El lago Sartlan",
+      "El lago Chany",
+      "El lago Ubinskoye",
+      "El lago Tenis"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Al ser una cuenca endorreica sin desagüe hacia ningún océano, el nivel del lago Chany depende enteramente del equilibrio entre las precipitaciones y la evaporación, lo que provoca fluctuaciones de superficie tan pronunciadas que en algunos periodos históricos el lago ha llegado a dividirse en varios cuerpos de agua separados."
+  },
+  {
+    "question": "¿Qué extensa llanura inundable, situada entre los cursos del Volga y su antiguo brazo el Ajtubá al sur de Volgogrado, constituye un excepcional oasis de biodiversidad en pleno entorno semidesértico circundante, gracias a las inundaciones periódicas del río?",
+    "options": [
+      "La llanura del Volga-Ajtubá",
+      "El delta interior del Don",
+      "La cuenca del Manych",
+      "La depresión del Caspio norte"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Las inundaciones primaverales del Volga fertilizan naturalmente esta franja de tierra, permitiendo el desarrollo de una vegetación exuberante de bosques ribereños y praderas húmedas que contrasta notablemente con las áridas estepas y semidesiertos que la rodean por ambos lados."
+  },
+  {
+    "question": "¿Qué cueva de los Urales, célebre por sus formaciones de hielo permanentes, sus lagos subterráneos y su explotación turística ya desde el siglo XVIII, es una de las mayores cuevas de yeso y anhidrita de toda Europa?",
+    "options": [
+      "La cueva de hielo de Kungur",
+      "La cueva de Oreshnaya",
+      "La cueva de Divia",
+      "La cueva de Kapova"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Con varios kilómetros de galerías exploradas, numerosos lagos subterráneos y espectaculares formaciones de hielo que varían según la estación del año, la cueva de Kungur se convirtió en un destino turístico organizado desde hace más de dos siglos, entre los más antiguos de toda Rusia."
+  },
+  {
+    "question": "¿Qué reserva natural, situada junto a la orilla occidental del lago Baikal, fue creada específicamente para proteger la cuenca donde nace el río Lena, uno de los grandes ríos de Siberia, a apenas unos kilómetros del propio lago?",
+    "options": [
+      "La Reserva de Vitim",
+      "La Reserva Baikalo-Lenski",
+      "El Parque Nacional Pribaikalski",
+      "La Reserva de Barguzinski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Resulta geográficamente llamativo que el nacimiento del Lena, uno de los ríos más largos y caudalosos del planeta que termina desembocando en el océano Ártico, se encuentre a tan corta distancia del propio lago Baikal, cuyas aguas fluyen en cambio hacia el océano Pacífico a través del río Angará."
+  },
+  {
+    "question": "¿Qué reserva natural de los Urales del norte, fundada en 1946 y llamada así por una prominente formación rocosa cubierta de líquenes que le da un aspecto plateado característico, protege una de las últimas áreas de taiga verdaderamente virgen de la región?",
+    "options": [
+      "La Reserva de Pechoro-Ilych",
+      "El Parque Nacional Yugid Va",
+      "La Reserva de Denezhkin Kamen",
+      "La Reserva de Vishera"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El propio nombre de la reserva, que significa aproximadamente 'la piedra del dinero', proviene de una leyenda local sobre monedas o tesoros escondidos en la montaña homónima que domina el paisaje protegido, aunque el verdadero valor del lugar reside en sus bosques primarios prácticamente inalterados por la actividad humana."
+  },
+  {
+    "question": "¿Qué cadena montañosa de Siberia oriental marca tradicionalmente la línea divisoria entre las cuencas hidrográficas que drenan hacia el océano Ártico y las que fluyen hacia el océano Pacífico?",
+    "options": [
+      "Los montes Cherski",
+      "La cordillera de Stanovói",
+      "La cordillera de Verjoyansk",
+      "La cordillera de Dzhugdzhur"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta remota y poco poblada cordillera actúa como una auténtica columna vertebral hidrográfica de Siberia oriental, separando los ríos que finalmente desembocan en el helado océano Ártico de aquellos que fluyen, a través del río Amur y otros cauces, hacia las cálidas aguas del Pacífico."
+  },
+  {
+    "question": "¿Cómo se conoce a la extensa formación geológica del sureste de Siberia, compuesta por algunas de las rocas más antiguas expuestas en la superficie terrestre, con una edad que en algunos puntos supera los 3,000 millones de años?",
+    "options": [
+      "La Plataforma de Angará",
+      "El Macizo de Yakutia",
+      "La Meseta de Stanovói",
+      "El Escudo de Aldán"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Estas rocas precámbricas extremadamente antiguas, entre las más viejas conocidas en todo el planeta, ofrecen a los geólogos una ventana única hacia los primeros capítulos de la historia geológica de la Tierra, en una época muy anterior a la aparición de cualquier forma de vida compleja."
+  },
+  {
+    "question": "¿Qué gigantesco cráter de impacto meteórico, formado hace unos 35 millones de años en el norte de Siberia, es célebre entre geólogos por contener un tipo especial de diamantes microscópicos formados instantáneamente por la enorme presión del impacto, distintos de los diamantes de origen volcánico habituales?",
+    "options": [
+      "El cráter de Chicxulub siberiano",
+      "El cráter de Zhamanshín",
+      "El cráter de Kará",
+      "El cráter de Popigái"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Se estima que el cráter de Popigái podría albergar una de las mayores reservas de diamantes de impacto del planeta, aunque su explotación comercial a gran escala sigue siendo limitada por la remota ubicación y las difíciles condiciones climáticas de la región donde se encuentra."
+  },
+  {
+    "question": "¿Cómo se conoce a la vasta llanura que se extiende entre los montes Urales y el río Yeniséi, una de las áreas de tierras bajas continuas más extensas de todo el planeta, cubierta en gran parte por bosques boreales, pantanos y permafrost?",
+    "options": [
+      "La Depresión de Turgái",
+      "La Llanura de Siberia Occidental",
+      "La Llanura Sarmática",
+      "La Meseta Central Siberiana"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Con una superficie comparable a la de India, esta enorme llanura, que incluye al gigantesco humedal de Vasiugán, alberga además algunas de las mayores reservas de petróleo y gas natural de Rusia bajo su superficie de bosques, tundra y pantanos aparentemente uniformes."
+  },
+  {
+    "question": "¿Cómo se llama la montaña más alta de toda la cordillera de los Urales, situada en su tramo septentrional y con una altitud que apenas supera los 1,890 metros, modesta si se compara con otras grandes cordilleras del mundo?",
+    "options": [
+      "El monte Naródnaya",
+      "El monte Yanguan-Pe",
+      "El monte Telpósiz",
+      "El monte Manaraga"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a que su nombre —'del pueblo'— fue asignado deliberadamente en la época soviética, la relativamente modesta altura del monte Naródnaya, comparada con montañas mucho más elevadas de otras cordilleras rusas como el Cáucaso o el Altái, refleja el carácter antiguo y muy erosionado de toda la cordillera de los Urales."
+  },
+  {
+    "question": "¿Qué extenso río de Siberia oriental, que discurre principalmente por la actual república de Sajá (Yakutia), estuvo asociado durante la época soviética con una densa red de campos de trabajo forzado dedicados a la extracción de oro en condiciones climáticas extremas?",
+    "options": [
+      "El río Yana",
+      "El río Kolymá",
+      "El río Indigirka",
+      "El río Aldán"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La cuenca del río Kolymá, con sus inviernos extraordinariamente severos incluso para los estándares siberianos, alojó durante el periodo estalinista una de las mayores concentraciones de campos del sistema Gulag, dedicados principalmente a la explotación de sus ricos yacimientos auríferos."
+  },
+  {
+    "question": "¿Cómo se conoce a la estepa de alta montaña situada en la república de Altái, considerada uno de los lugares más fríos de toda Siberia fuera de Yakutia, con inviernos extremadamente severos pese a encontrarse en una latitud relativamente más meridional que otras zonas gélidas del país?",
+    "options": [
+      "La depresión de Uimón",
+      "La estepa de Chuyá",
+      "La estepa de Kosh-Agach",
+      "La meseta de Ukok"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Rodeada de altas montañas que impiden la circulación del aire y favorecen la acumulación de masas de aire frío estancado, la estepa de Chuyá registra temperaturas invernales excepcionalmente bajas para su latitud, comparables en ocasiones a las de regiones mucho más septentrionales de Siberia."
+  },
+  {
+    "question": "¿En la confluencia de qué dos ríos siberianos se fundó en 1587 la ciudad de Tobolsk, que durante mucho tiempo funcionó como principal puerta de entrada administrativa y comercial rusa hacia toda Siberia?",
+    "options": [
+      "El Tura y el Tavdá",
+      "El Irtish y el Tobol",
+      "El Yeniséi y el Angará",
+      "El Obi y el Irtish"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Gracias a su posición estratégica en la confluencia de estos dos importantes ríos navegables, Tobolsk se convirtió durante más de un siglo en la capital de facto de toda la Siberia rusa, antes de que ese papel administrativo se trasladara gradualmente hacia ciudades más orientales como Omsk o Irkutsk."
+  },
+  {
+    "question": "¿Cómo se llama el gran embalse artificial formado sobre el río Zeyá en el Lejano Oriente ruso, uno de los mayores de toda la región y creado como parte de una central hidroeléctrica destinada a abastecer de energía a una vasta área escasamente poblada de Siberia oriental?",
+    "options": [
+      "El embalse de Amgún",
+      "El embalse de Kolimá",
+      "El embalse de Bureiá",
+      "El embalse de Zeyá"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Situado en una región de baja densidad poblacional pero de creciente importancia industrial y minera, el embalse de Zeyá y su central hidroeléctrica asociada representan una de las principales infraestructuras energéticas del extremo oriente ruso, en una zona donde las alternativas de generación eléctrica son limitadas."
+  },
+  {
+    "question": "¿Qué delta fluvial del sur de Rusia, formado por el Volga antes de desembocar en el mar Caspio, es considerado el mayor delta fluvial de toda Europa, con un intrincado laberinto de miles de canales, islas y humedales?",
+    "options": [
+      "El delta del Ural",
+      "El delta del Volga",
+      "El delta del Térek",
+      "El delta del Don"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El delta del Volga, con más de quinientos canales distintos que se ramifican antes de alcanzar el mar Caspio, alberga una biodiversidad excepcional, incluidos los extensos campos de loto sagrado y numerosas colonias de aves acuáticas protegidas en la reserva natural circundante."
+  },
+  {
+    "question": "¿Cómo se conoce a la antigua conexión terrestre que, durante las glaciaciones, unía Siberia con el continente americano a través del actual estrecho de Bering, permitiendo la migración de personas, animales y plantas entre ambos continentes?",
+    "options": [
+      "La Franja Circumpolar",
+      "Beringia",
+      "El Puente Ártico",
+      "El Istmo de Chukotka"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque hoy sumergida bajo las aguas del estrecho de Bering, Beringia jugó un papel fundamental en la historia de la humanidad al permitir, según la teoría más aceptada, el poblamiento original del continente americano por grupos humanos procedentes de Asia durante la última gran glaciación."
+  },
+  {
+    "question": "¿Qué península del extremo nororiental de Rusia, la más cercana geográficamente a Alaska y separada de esta solo por el estrecho de Bering, constituye el punto más oriental de todo el territorio ruso?",
+    "options": [
+      "La península de Taimyr",
+      "La península de Yamal",
+      "La península de Chukotka",
+      "La península de Kamchatka"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Esta remota y escasamente poblada península, hogar tradicional del pueblo chukchi, se encuentra tan próxima a Alaska que en días despejados es posible divisar territorio estadounidense desde ciertos puntos elevados de su costa, y ambos territorios comparten además una frontera de husos horarios especialmente peculiar."
+  },
+  {
+    "question": "¿Qué cordillera de Siberia oriental, asociada a las temperaturas invernales más extremas del hemisferio norte habitado, da nombre también a una pequeña ciudad situada en uno de sus valles, considerada tradicionalmente el 'Polo del Frío' junto a la vecina Oimiakón?",
+    "options": [
+      "Los montes Kolymá",
+      "La cordillera de Suntar-Jayatá",
+      "La cordillera de Verjoyansk",
+      "La cordillera de Cherski"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La ciudad de Verjoyansk, fundada originalmente como fuerte cosaco en el siglo XVII, comparte con Oimiakón el discutido título de lugar habitado más frío del hemisferio norte, con temperaturas invernales que en ocasiones han descendido por debajo de los -67°C."
+  },
+  {
+    "question": "¿Cómo se conoce a la extensa región montañosa del noreste de Siberia, en la actual república de Sajá, célebre por sus enormes yacimientos auríferos que fueron explotados intensivamente durante la época soviética mediante mano de obra del sistema de campos de trabajo forzado?",
+    "options": [
+      "La cordillera de Anyuiski",
+      "Los montes Momski",
+      "Las tierras altas de Kolymá",
+      "La meseta de Yana"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Las condiciones climáticas extremas de esta remota región, combinadas con la dureza del trabajo minero forzado impuesto durante el periodo estalinista, convirtieron a las tierras altas de Kolymá en una de las áreas más temidas y mortíferas de todo el sistema de campos soviético, un legado histórico que contrasta con la notable riqueza mineral de la región."
+  },
+  {
+    "question": "¿Qué presa hidroeléctrica, construida sobre el río Yeniséi en Siberia y considerada durante mucho tiempo la más alta de toda Rusia y una de las mayores generadoras de electricidad del mundo, sufrió un grave accidente en su central en 2009 que causó numerosas víctimas?",
+    "options": [
+      "La presa de Krasnoyarsk",
+      "La presa de Ust-Ilimsk",
+      "La presa de Bratsk",
+      "La presa de Sayano-Shushénskaya"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Con más de 240 metros de altura, esta presa arqueada de doble curvatura sobre el curso alto del Yeniséi representa una de las mayores obras de ingeniería hidroeléctrica jamás construidas en Rusia, capaz de generar electricidad suficiente para abastecer a extensas regiones industriales de Siberia."
+  },
+  {
+    "question": "¿Qué otra gran presa hidroeléctrica, construida durante la época soviética sobre el curso medio del río Yeniséi cerca de la ciudad del mismo nombre, formó al embalsarse uno de los mayores lagos artificiales de toda Rusia?",
+    "options": [
+      "La presa de Krasnoyarsk",
+      "La presa de Boguchani",
+      "La presa de Novosibirsk",
+      "La presa de Sayano-Shushénskaya"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El embalse formado por esta presa, con centenares de kilómetros de longitud, transformó profundamente el paisaje y el clima local de la región circundante, y su construcción durante los años 1960 formó parte de un ambicioso programa soviético de aprovechamiento energético de los grandes ríos siberianos."
+  },
+  {
+    "question": "¿Cómo se llama el enorme y estrecho golfo o estuario del océano Ártico formado por la desembocadura del río Obi, uno de los estuarios más largos del mundo, que se adentra profundamente en el territorio siberiano?",
+    "options": [
+      "El estrecho de Kara",
+      "La bahía de Yenisséi",
+      "El golfo de Taz",
+      "La bahía del Obi (Obskaya Guba)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Con más de ochocientos kilómetros de longitud, esta angosta bahía separa la península de Yamal del resto de la costa siberiana continental, y su exploración y navegación resultaron cruciales históricamente para el desarrollo de las rutas comerciales fluviales y marítimas hacia el interior de Siberia occidental."
+  },
+  {
+    "question": "¿Cómo se conoce al enorme embalse artificial formado sobre el curso del río Obi cerca de la ciudad de Novosibirsk, tan extenso que los propios habitantes de la región lo llaman coloquialmente 'el mar de Obi'?",
+    "options": [
+      "El embalse de Novosibirsk",
+      "El lago de Ob-Irtish",
+      "El embalse de Bijsk",
+      "El embalse de Kámen"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Formado durante la construcción de la presa hidroeléctrica de Novosibirsk en la década de 1950, este gigantesco embalse se ha convertido además en un destino recreativo popular para los habitantes de la ciudad, con playas y actividades acuáticas pese a encontrarse a cientos de kilómetros de cualquier mar real."
+  },
+  {
+    "question": "¿Cuál es la segunda montaña más alta de toda la cordillera del Cáucaso, un antiguo volcán inactivo situado en Georgia cerca de la frontera con Rusia, que supera los 5,000 metros de altitud y es venerado en el folclore local como el lugar donde el titán Prometeo fue encadenado?",
+    "options": [
+      "El monte Shjará",
+      "El monte Dijtau",
+      "El monte Koshtantau",
+      "El monte Kazbek"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque ligeramente inferior en altitud al vecino Elbrus, el Kazbek ha ejercido tradicionalmente una fascinación especial sobre poetas y escritores rusos, entre ellos Pushkin y Lérmontov, quienes lo mencionaron repetidamente en sus obras como símbolo de la majestuosidad e inaccesibilidad del Cáucaso."
+  },
+  {
+    "question": "¿Qué mar ártico, situado frente a las costas de Siberia central entre las islas de Nueva Zembla y el archipiélago de Severnaya Zemlia, es considerado por muchos glaciólogos como una de las principales zonas de formación del hielo marino que después se dispersa por todo el océano Ártico?",
+    "options": [
+      "El mar de Chukotka",
+      "El mar de Láptev",
+      "El mar de Kara",
+      "El mar de Siberia Oriental"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Debido a las bajas temperaturas y la relativamente escasa profundidad de sus aguas, el mar de Kara desarrolla cada invierno una espesa capa de hielo que resultó históricamente uno de los mayores obstáculos para la navegación a través de la Ruta Marítima del Norte, la vía marítima que conecta Europa con el Pacífico bordeando la costa ártica siberiana."
+  },
+  {
+    "question": "¿Qué remoto y poco explorado mar ártico, situado entre las islas de Nueva Siberia y la isla Wrangel frente a las costas del norte de Siberia, es considerado el 'lugar de nacimiento' de buena parte del hielo marino ártico más antiguo, debido a las corrientes que allí se forman?",
+    "options": [
+      "El mar de Kara",
+      "El mar Blanco",
+      "El mar de Láptev",
+      "El mar de Chukotka"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Las aguas relativamente someras del mar de Láptev, combinadas con las bajísimas temperaturas invernales de la región, favorecen la formación temprana y extensa de hielo marino cada año, un proceso que los científicos consideran clave para entender la dinámica general del hielo en todo el océano Ártico."
+  },
+  {
+    "question": "¿Cómo se llama el mar ártico más oriental de Rusia, situado entre la isla Wrangel y el estrecho de Bering, considerado uno de los menos estudiados y más remotos de todos los mares árticos por su lejanía de los principales centros de investigación?",
+    "options": [
+      "El mar de Bering septentrional",
+      "El mar de Wrangel",
+      "El mar de Chukotka",
+      "El mar Ártico Oriental"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Compartido en su límite oriental con Estados Unidos a través de Alaska, el mar de Chukotka permanece cubierto de hielo durante buena parte del año, y su relativo aislamiento geográfico ha hecho que históricamente haya recibido mucha menos atención científica que otros mares árticos más accesibles desde puertos rusos establecidos."
+  },
+  {
+    "question": "¿Qué mar ártico, situado frente a la costa de la región de Arjánguelsk y célebre por albergar el archipiélago de las islas Solovkí, es el único mar interior de todo el territorio ruso que permanece prácticamente cerrado, con una única salida estrecha hacia el mar de Barents?",
+    "options": [
+      "El golfo de Kandalaksha",
+      "El mar de Barents interior",
+      "El mar Blanco",
+      "El mar de Pechora"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a su relativamente pequeño tamaño comparado con otros mares árticos rusos, el mar Blanco tuvo una enorme importancia histórica como puerta marítima de Rusia hacia Europa occidental durante siglos, antes de que la fundación de San Petersburgo por Pedro el Grande abriera un acceso más directo al mar Báltico."
+  },
+  {
+    "question": "¿Cómo se llama el principal río de la región de Chukotka, en el extremo nororiental de Rusia, que da también su nombre a la capital administrativa de esa remota región y desemboca finalmente en el mar de Bering?",
+    "options": [
+      "El río Amguema",
+      "El río Velikaya Kepervéyem",
+      "El río Anádyr",
+      "El río Beliaya"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El río Anádyr, navegable solo durante los breves meses del corto verano ártico antes de congelarse completamente, ha sido históricamente la principal vía de transporte y comunicación de la región de Chukotka, una de las zonas habitadas más remotas y aisladas de todo el territorio ruso."
+  },
+  {
+    "question": "¿Qué extensa península del norte de Siberia occidental, cubierta casi en su totalidad por permafrost y hogar tradicional del pueblo nenets con sus grandes manadas de renos, se ha convertido también en las últimas décadas en una importante zona de extracción de gas natural?",
+    "options": [
+      "La península de Taimyr",
+      "La península de Tazovski",
+      "La península de Yamal",
+      "La península de Guidán"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El propio nombre 'Yamal' significa en la lengua nenets 'el fin de la tierra', reflejo de la percepción tradicional de este remoto territorio como límite del mundo habitable; la coexistencia entre el pastoreo tradicional de renos y la moderna industria gasística representa hoy uno de los grandes desafíos de gestión territorial de la región."
+  },
+  {
+    "question": "¿Qué otra remota península del Ártico siberiano occidental, vecina de Yamal y separada de esta por la bahía de Obi, permanece considerablemente menos poblada y desarrollada industrialmente que su vecina, pese a compartir un paisaje similar de tundra y permafrost?",
+    "options": [
+      "La península de Bolshezemélskaya",
+      "La península de Kanín",
+      "La península de Guidán",
+      "La península de Yugorski"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La península de Guidán, con un clima aún más severo y un acceso considerablemente más limitado que Yamal, ha conservado hasta hoy formas de vida tradicional casi inalteradas entre las comunidades nenets que allí habitan, alejadas del intenso desarrollo industrial que ha transformado buena parte de la vecina península."
+  },
+  {
+    "question": "¿Qué meseta remota del norte de Siberia central, con escasa presencia humana permanente, alberga importantes yacimientos de diamantes descubiertos ya durante la época soviética y que convirtieron a la URSS en uno de los mayores productores mundiales de esta piedra preciosa?",
+    "options": [
+      "La meseta de Aldán",
+      "La meseta de Vilyui",
+      "La meseta de Yenisséi",
+      "La meseta de Anabar"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El descubrimiento de kimberlitas diamantíferas en esta remota región siberiana durante los años 1950, en condiciones de exploración geológica extraordinariamente difíciles debido al clima extremo, transformó radicalmente la posición de la Unión Soviética en el mercado mundial de diamantes, hasta entonces dominado casi exclusivamente por Sudáfrica."
+  },
+  {
+    "question": "¿Qué importante afluente del río Lena, que nace en la meseta de Aldán y recorre una extensa región de Siberia oriental antes de unirse al gran río, da también su nombre a una de las principales ciudades y regiones auríferas de la república de Sajá?",
+    "options": [
+      "El río Viliui",
+      "El río Aldán",
+      "El río Olekmá",
+      "El río Maya"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La cuenca del río Aldán, rica en yacimientos de oro explotados desde el siglo XIX, atrajo durante décadas a buscadores y mineros hacia una de las regiones más remotas y climáticamente extremas de toda Siberia, contribuyendo al desarrollo de asentamientos permanentes en un territorio hasta entonces habitado casi exclusivamente por pueblos indígenas nómadas."
+  },
+  {
+    "question": "¿Qué río de Siberia oriental, afluente del Lena, es objeto de una persistente leyenda popular local conocida como el 'Valle de la Muerte', que habla de misteriosas cúpulas metálicas semienterradas en la taiga cuyo origen nunca ha sido confirmado científicamente?",
+    "options": [
+      "El río Olekmá",
+      "El río Aleková",
+      "El río Aldán",
+      "El río Viliui"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a que ninguna expedición científica seria ha logrado confirmar la existencia real de tales estructuras, la leyenda del Valle de la Muerte del Viliui sigue circulando entre la población local de Yakutia, alimentada por relatos orales que hablan de un área donde tradicionalmente se evitaba acampar por temor a fenómenos inexplicables."
+  },
+  {
+    "question": "¿Cómo se llama la cordillera de la república de Sajá (Yakutia), situada entre los ríos Indigirka y Kolymá, con picos que superan los 2,500 metros de altitud en pleno corazón de una de las regiones más frías habitadas del planeta?",
+    "options": [
+      "La cordillera de Momski",
+      "La cordillera de Cherski",
+      "La cordillera de Suntar-Jayatá",
+      "Los montes Verjoyanski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a su considerable altitud, la cordillera de Momski permanece prácticamente inexplorada por el turismo de montaña convencional, tanto por su extrema lejanía como por las durísimas condiciones climáticas que prevalecen en la región durante la mayor parte del año."
+  },
+  {
+    "question": "¿En qué cordillera de Yakutia, situada cerca de la localidad de Oimiakón, se registran algunas de las condiciones climáticas más extremas de toda Siberia, contribuyendo directamente al característico clima polar continental de esta región conocida como el 'Polo del Frío'?",
+    "options": [
+      "La cordillera de Anyuiski",
+      "La cordillera de Suntar-Jayatá",
+      "Los montes Kolymá",
+      "La cordillera de Momski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La combinación de la altitud de esta cordillera con la particular configuración geográfica de la cuenca de Oimiakón, rodeada de montañas que impiden la circulación de aire y favorecen el estancamiento de masas de aire extremadamente frío, explica en gran medida por qué esta región registra temperaturas invernales tan excepcionalmente bajas incluso para los estándares siberianos."
+  },
+  {
+    "question": "¿A qué geólogo y explorador de origen polaco, que realizó importantes estudios científicos sobre Siberia oriental mientras cumplía una larga condena de exilio político bajo el gobierno zarista, se debe el nombre de una extensa cordillera situada entre las cuencas del Indigirka y el Kolymá?",
+    "options": [
+      "Piotr Kropotkin",
+      "Vladímir Obruchev",
+      "Alexánder Middendorf",
+      "Jan Czerski (Iván Cherski)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Czerski, desterrado a Siberia tras participar en un levantamiento independentista polaco, aprovechó su largo exilio para realizar extensos estudios geológicos y geográficos de una región entonces prácticamente desconocida científicamente, y la cordillera que lleva su nombre honra hoy su contribución pionera pese al origen forzado de sus investigaciones."
+  },
+  {
+    "question": "¿Qué cordillera costera del extremo oriente ruso, que se extiende paralela a la costa del mar de Ojotsk, separa las cuencas hidrográficas que drenan hacia este mar de aquellas que fluyen hacia la cuenca del río Lena en dirección al Ártico?",
+    "options": [
+      "La cordillera de Sijoté-Alín",
+      "La cordillera de Dzhugdzhur",
+      "La cordillera de Baikal",
+      "Los montes Yablonovi"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta remota cordillera, con acantilados escarpados que en algunos tramos caen directamente sobre las aguas del mar de Ojotsk, constituye una importante línea divisoria de aguas en una de las regiones geográficamente más aisladas y menos pobladas de todo el territorio ruso."
+  },
+  {
+    "question": "¿Qué río de Siberia occidental, afluente del Obi que atraviesa una región especialmente rica en yacimientos de gas natural, da también su nombre a una importante ciudad y centro administrativo de la industria energética rusa?",
+    "options": [
+      "El río Pur",
+      "El río Taz",
+      "El río Nadym",
+      "El río Kazym"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La cuenca del río Pur, situada en pleno corazón de la región gasística de Yamalo-Nenetsia, alberga algunos de los mayores yacimientos de gas natural de toda Rusia, y el desarrollo de la industria energética ha transformado profundamente el paisaje humano de esta antes remota región subártica."
+  },
+  {
+    "question": "¿Cómo se llama el amplio golfo o bahía formado por la desembocadura del río Taz en el mar de Kara, en el extremo norte de Siberia occidental, cuya cuenca circundante constituye otra importante región de extracción de gas natural?",
+    "options": [
+      "La bahía de Taz",
+      "La bahía de Guidán",
+      "El golfo de Ob",
+      "El estrecho de Yamal"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Junto a la vecina y mucho más extensa bahía del Obi, la bahía de Taz forma parte de un complejo sistema de estuarios árticos que, pese a estar cubiertos de hielo durante buena parte del año, adquirieron enorme importancia estratégica y económica tras el descubrimiento de sus riquezas en hidrocarburos durante la segunda mitad del siglo XX."
+  },
+  {
+    "question": "¿Cómo se llama la extensa zona de tierras bajas y humedales de Siberia occidental, situada en la cuenca media del río Obi, que constituye una de las regiones con mayor concentración de pantanos y ciénagas de todo el planeta?",
+    "options": [
+      "La depresión de Kondá",
+      "La llanura de Baraba",
+      "La meseta de Surgut",
+      "La cuenca de Vasiugán"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta vasta zona pantanosa, poblada tradicionalmente por comunidades de los pueblos jantis y mansis dedicadas a la caza y la pesca, presenta enormes dificultades de acceso y desarrollo de infraestructura debido a su terreno prácticamente intransitable durante buena parte del año, lo que ha contribuido paradójicamente a preservar buena parte de su ecosistema original relativamente intacto."
+  },
+  {
+    "question": "¿Qué cordillera del extremo noreste de Rusia, situada en la región de Chukotka y que da nombre también a un río que desemboca en el mar de Siberia Oriental, marca una de las últimas grandes cadenas montañosas antes de llegar al estrecho de Bering?",
+    "options": [
+      "La cordillera de Iskatén",
+      "Los montes Kolymá orientales",
+      "Los montes Chukotski",
+      "La cordillera de Anyuiski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Situada en una de las regiones más remotas y escasamente pobladas de toda Rusia, esta cordillera permanece prácticamente inexplorada fuera de estudios geológicos especializados, reflejo del aislamiento extremo que caracteriza a buena parte del territorio de Chukotka respecto al resto del país."
+  },
+  {
+    "question": "¿Cómo se llama la extensa región montañosa situada entre la península de Kamchatka y Chukotka, que constituye una de las últimas grandes zonas de tierras altas prácticamente deshabitadas del extremo oriente ruso, con escasa presencia humana permanente incluso hoy en día?",
+    "options": [
+      "Las tierras altas de Koriakia",
+      "La meseta de Anadyr",
+      "Los montes Penzhinski",
+      "La cordillera de Oljon"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta remota región montañosa, hogar tradicional del pueblo indígena koriako dedicado a la cría de renos, se caracteriza por un clima extremadamente severo influido tanto por su latitud septentrional como por la cercanía del mar de Bering, cuyas frías corrientes marinas moderan solo parcialmente las temperaturas invernales de la zona costera."
+  },
+  {
+    "question": "¿Qué sistema de canales, mandado construir por Pedro el Grande a comienzos del siglo XVIII para permitir a las embarcaciones fluviales evitar las peligrosas tormentas del lago Ládoga, conectó este lago con el río Nevá mediante una vía navegable artificial más segura?",
+    "options": [
+      "El Canal Mariinski",
+      "El Canal de Vyshni Volochiok",
+      "El Canal de Ládoga",
+      "El Canal de Tijvin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Antes de la construcción de este canal, numerosas embarcaciones se hundían cada año al intentar cruzar directamente las aguas del lago Ládoga, célebres por sus repentinas y violentas tormentas; la nueva vía artificial, excavada junto a la orilla sur del lago, permitió un tránsito mucho más seguro de mercancías hacia la nueva capital de San Petersburgo."
+  },
+  {
+    "question": "¿Qué cadena de canales y embalses artificiales, construida parcialmente durante distintas épocas históricas, conecta las cuencas del mar Caspio y el mar de Azov a través de una serie de lagos y ríos en la estepa del sur de Rusia?",
+    "options": [
+      "El Canal del Vólgo-Don",
+      "El Canal de Kalmukia",
+      "El Canal de Kubán",
+      "El Canal de Manych"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aprovechando una antigua depresión geológica que en épocas remotas conectó directamente ambos mares, el sistema de canales y embalses de Manych permite hoy la navegación entre las dos cuencas a través de una cadena de lagos artificiales, aunque con una capacidad y un uso considerablemente más limitados que el vecino Canal del Volga-Don."
+  },
+  {
+    "question": "¿Qué sistema de canales, iniciado ya bajo Pedro el Grande a comienzos del siglo XVIII, fue el primero en conectar la cuenca del Volga con el mar Báltico, permitiendo por primera vez el transporte fluvial directo entre el interior de Rusia y la nueva capital de San Petersburgo?",
+    "options": [
+      "El Sistema del Canal Tijvin",
+      "El Sistema de Vyshni Volochiok",
+      "El Canal Mariinski",
+      "El Canal tres del río Svir"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a las limitaciones técnicas de la época, que restringían considerablemente la capacidad y la profundidad navegable de estas primeras vías artificiales, el sistema de Vyshni Volochiok representó un logro de ingeniería civil pionero para la Rusia de comienzos del siglo XVIII, sentando las bases para sistemas de canales posteriores mucho más sofisticados."
+  },
+  {
+    "question": "¿Qué importante río del norte de Rusia europea, que nace en los Urales y desemboca en el mar de Barents tras atravesar la república de Komi, es célebre por sus aguas particularmente ricas en peces como el salmón y el esturión, aunque hoy afectadas por la contaminación industrial en algunos tramos?",
+    "options": [
+      "El río Mezen",
+      "El río Dviná Septentrional",
+      "El río Pechora",
+      "El río Onega"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La cuenca del Pechora, con su delta protegido como reserva natural antes de desembocar en el helado mar de Barents, constituye uno de los últimos grandes sistemas fluviales relativamente prístinos del norte de Europa, aunque el desarrollo de la industria petrolera y de extracción de carbón en la región ha generado crecientes preocupaciones ambientales en las últimas décadas."
+  }
+]

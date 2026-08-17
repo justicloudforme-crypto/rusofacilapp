@@ -159,30 +159,30 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
             const isOpen = openId === idiom.id;
             const isKnown = Boolean(knownIdioms[idiom.id]);
             return (
-              <div key={idiom.id} className="rounded-2xl border border-black/10 p-5 dark:border-white/10">
-                <div className="flex items-start justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(isOpen ? null : idiom.id)}
-                    aria-expanded={isOpen}
-                    className="flex-1 text-left text-lg font-medium hover:text-foreground/80"
-                  >
-                    «{idiom.phrase}»
-                  </button>
-                  <div className="flex flex-shrink-0 items-center gap-2">
-                    <SpeakButton text={idiom.phrase} label={dict.listenLabel} />
+              <div key={idiom.id} className="rounded-2xl border border-black/10 p-4 dark:border-white/10 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => toggleKnown(idiom.id)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                        isKnown
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-                      }`}
+                      onClick={() => setOpenId(isOpen ? null : idiom.id)}
+                      aria-expanded={isOpen}
+                      className="flex-1 text-left text-lg font-medium hover:text-foreground/80"
                     >
-                      {isKnown ? `✓ ${dict.knownBadge}` : dict.knownButton}
+                      «{idiom.phrase}»
                     </button>
+                    <SpeakButton text={idiom.phrase} label={dict.listenLabel} />
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleKnown(idiom.id)}
+                    className={`self-start rounded-full px-3 py-1.5 text-xs font-medium transition-colors sm:flex-shrink-0 ${
+                      isKnown
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+                    }`}
+                  >
+                    {isKnown ? `✓ ${dict.knownBadge}` : dict.knownButton}
+                  </button>
                 </div>
 
                 {isOpen && (

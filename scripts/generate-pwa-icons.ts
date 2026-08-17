@@ -56,9 +56,14 @@ function dollSvg(): string {
     <rect x="0" y="72" width="100" height="14" fill="${DOLL_BAND_1}" />
     <rect x="0" y="98" width="100" height="14" fill="${DOLL_BAND_2}" />
     <ellipse cx="50" cy="132" rx="27" ry="24" fill="${DOLL_APRON}" />
-    <circle cx="38" cy="114" r="6" fill="${DOLL_FLOWER}" />
-    <circle cx="62" cy="114" r="6" fill="${DOLL_FLOWER}" />
-    <circle cx="50" cy="128" r="6" fill="${DOLL_FLOWER}" />
+    <!-- Four-petal flower (Gorodets folk-painting motif), not a triangular
+         dot cluster — an earlier three-dot arrangement here read as a star
+         badge, which felt militaristic rather than friendly. -->
+    <circle cx="50" cy="116" r="7" fill="${DOLL_BAND_2}" />
+    <circle cx="61" cy="126" r="7" fill="${DOLL_BAND_2}" />
+    <circle cx="50" cy="136" r="7" fill="${DOLL_BAND_2}" />
+    <circle cx="39" cy="126" r="7" fill="${DOLL_BAND_2}" />
+    <circle cx="50" cy="126" r="5" fill="${DOLL_FLOWER}" />
   </g>
 </svg>`;
 }

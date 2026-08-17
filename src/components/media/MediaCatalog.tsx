@@ -18,6 +18,7 @@ export interface MediaCatalogDict {
   categorySong: string;
   categoryMovie: string;
   categoryVideo: string;
+  categoryGrammar: string;
   openButton: string;
   emptyState: string;
 }
@@ -38,6 +39,7 @@ export default function MediaCatalog({
     song: dict.categorySong,
     movie: dict.categoryMovie,
     video: dict.categoryVideo,
+    grammar: dict.categoryGrammar,
   };
 
   const filtered = useMemo(

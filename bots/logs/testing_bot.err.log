@@ -1,0 +1,33 @@
+2026-08-15T16:47:08: INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-08-15T16:47:08: INFO:scheduler:Job 'daily_test_announcement' programado para las 15:00.
+2026-08-15T16:47:08: INFO:apscheduler.scheduler:Added job "send_test_announcement" to job store "default"
+2026-08-15T16:47:08: INFO:apscheduler.scheduler:Scheduler started
+2026-08-15T16:47:08: INFO:aiogram.dispatcher:Start polling
+2026-08-15T16:47:08: INFO:aiogram.dispatcher:Run polling for bot @rf_quiz_bot id=8861339132 - 'RusoFasil Quiz Bot'
+2026-08-15T17:51:51: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - ClientOSError: [Errno 60] Operation timed out
+2026-08-15T17:51:51: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8861339132)
+2026-08-15T17:52:03: INFO:aiogram.dispatcher:Connection established (tryings = 1, bot id = 8861339132)
+2026-08-15T20:38:30: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-15T20:38:30: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8861339132)
+2026-08-15T20:38:42: INFO:aiogram.dispatcher:Connection established (tryings = 1, bot id = 8861339132)
+2026-08-16T01:53:07: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T01:53:07: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8861339132)
+2026-08-16T01:53:19: INFO:aiogram.dispatcher:Connection established (tryings = 1, bot id = 8861339132)
+2026-08-16T03:03:56: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T03:03:56: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8861339132)
+2026-08-16T03:19:07: INFO:aiogram.dispatcher:Connection established (tryings = 1, bot id = 8861339132)
+2026-08-16T03:19:07: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-08-16T03:19:07: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8861339132)
+2026-08-16T03:19:19: INFO:aiogram.dispatcher:Connection established (tryings = 1, bot id = 8861339132)
+2026-08-16T04:05:00: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T04:05:00: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8861339132)
+2026-08-16T05:50:26: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T05:50:26: WARNING:aiogram.dispatcher:Sleep for 1.325066 seconds and try again... (tryings = 1, bot id = 8861339132)
+2026-08-16T05:50:38: INFO:aiogram.dispatcher:Connection established (tryings = 2, bot id = 8861339132)
+2026-08-16T06:51:36: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T06:51:36: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8861339132)
+2026-08-16T07:33:59: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T07:33:59: WARNING:aiogram.dispatcher:Sleep for 1.441975 seconds and try again... (tryings = 1, bot id = 8861339132)
+2026-08-16T08:21:54: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T08:21:54: WARNING:aiogram.dispatcher:Sleep for 1.823315 seconds and try again... (tryings = 2, bot id = 8861339132)
+2026-08-16T08:22:07: INFO:aiogram.dispatcher:Connection established (tryings = 3, bot id = 8861339132)

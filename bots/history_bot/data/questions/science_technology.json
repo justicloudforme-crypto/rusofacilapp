@@ -1,0 +1,1575 @@
+[
+  {
+    "question": "¿Quién fue el primer ser humano en viajar al espacio, en 1961, a bordo de la nave soviética Vostok 1?",
+    "options": [
+      "Yuri Gagarin",
+      "Valentina Tereshkova",
+      "Alekséi Leónov",
+      "Serguéi Koroliov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Gagarin completó una órbita alrededor de la Tierra el 12 de abril de 1961, hito histórico de la carrera espacial soviética."
+  },
+  {
+    "question": "¿Quién fue la primera mujer en viajar al espacio, en 1963, también a bordo de una nave soviética?",
+    "options": [
+      "Svetlana Savítskaya (fue la segunda mujer, en 1982)",
+      "Valentina Tereshkova",
+      "Yuri Gagarin (fue el primer hombre, no mujer)",
+      "Anna Fisher (es una astronauta estadounidense)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Valentina Tereshkova completó 48 órbitas alrededor de la Tierra en 1963, marcando otro hito soviético en la carrera espacial."
+  },
+  {
+    "question": "¿Qué línea ferroviaria, terminada a inicios del siglo XX, conecta Moscú con el extremo oriente de Rusia, siendo la más larga del mundo?",
+    "options": [
+      "El Ferrocarril del Cáucaso",
+      "El Ferrocarril del Báltico",
+      "El Ferrocarril del Volga",
+      "El Ferrocarril Transiberiano"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Con más de 9,000 kilómetros, el Transiberiano conecta Moscú con Vladivostok, atravesando ocho zonas horarias."
+  },
+  {
+    "question": "¿Qué químico ruso creó en 1869 la primera versión de la tabla periódica de los elementos, ordenándolos según su peso atómico?",
+    "options": [
+      "Konstantín Tsiolkovski",
+      "Dmitri Mendeléyev",
+      "Iván Pávlov",
+      "Mijaíl Lomonósov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Mendeléyev no solo ordenó los elementos conocidos, sino que predijo con precisión las propiedades de elementos aún no descubiertos."
+  },
+  {
+    "question": "¿En qué año se inauguró el Metro de Moscú, famoso por la decoración monumental de muchas de sus estaciones?",
+    "options": [
+      "1980",
+      "1917",
+      "1935",
+      "1957"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Concebido como un 'palacio para el pueblo', el Metro de Moscú combina función de transporte con mármol, mosaicos y candelabros en varias estaciones."
+  },
+  {
+    "question": "¿Cómo se llamó el primer satélite artificial de la historia, lanzado por la URSS en 1957 e iniciando la carrera espacial?",
+    "options": [
+      "Soyuz 1",
+      "Vostok 1",
+      "Mir",
+      "Sputnik 1"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El lanzamiento del Sputnik 1 el 4 de octubre de 1957 sorprendió al mundo y marcó el inicio oficial de la era espacial."
+  },
+  {
+    "question": "¿Qué perra se convirtió en el primer ser vivo en orbitar la Tierra, a bordo del Sputnik 2 en noviembre de 1957?",
+    "options": [
+      "Zvezdochka (voló en 1961, poco antes que Gagarin)",
+      "Belka (voló en 1960, en el Sputnik 5)",
+      "Strelka (voló en 1960, junto a Belka)",
+      "Laika"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Laika no sobrevivió al vuelo, pero su misión demostró que un ser vivo podía soportar el lanzamiento y la órbita, allanando el camino para los vuelos tripulados."
+  },
+  {
+    "question": "¿Qué central, inaugurada en 1954 en la ciudad rusa de Obninsk, fue la primera planta de energía nuclear del mundo conectada a una red eléctrica?",
+    "options": [
+      "La Central Nuclear de Kola",
+      "La Central Nuclear de Obninsk",
+      "La Central Nuclear de Chernóbil",
+      "La Central Nuclear de Beloyarsk"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La planta de Obninsk, con una capacidad modesta de 5 megavatios, abrió la era de la energía nuclear civil."
+  },
+  {
+    "question": "¿Qué científico y erudito ruso del siglo XVIII, hijo de un pescador del norte de Rusia, hizo aportes en química, física, astronomía y lingüística, y dio nombre a la principal universidad de Moscú?",
+    "options": [
+      "Mijaíl Lomonósov",
+      "Dmitri Mendeléyev",
+      "Nikolái Lobachevski",
+      "Iván Pávlov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Lomonósov caminó cientos de kilómetros desde su aldea natal hasta Moscú para poder estudiar, y llegó a formular tempranamente principios cercanos a la conservación de la masa."
+  },
+  {
+    "question": "¿Qué matemático ruso desarrolló, en la década de 1820, una de las primeras geometrías no euclidianas conocidas, cuestionando el postulado de las paralelas de Euclides que se había considerado incuestionable durante más de dos mil años?",
+    "options": [
+      "Nikolái Lobachevski",
+      "Sofía Kovalévskaya",
+      "Pafnuti Chebyshov",
+      "Andréi Kolmogórov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La geometría de Lobachevski fue recibida con escepticismo en vida del propio autor, pero décadas después resultó fundamental para desarrollos matemáticos y físicos posteriores, incluida la relatividad general."
+  },
+  {
+    "question": "¿Qué matemática rusa se convirtió en la primera mujer en obtener un doctorado en matemáticas en Europa (1874) y la primera en ocupar una cátedra universitaria de esta disciplina en el continente?",
+    "options": [
+      "Yekaterina Dáshkova (fue una figura de la Ilustración rusa, pero no matemática)",
+      "Sofía Kovalévskaya",
+      "Nadezhda Krúpskaya (fue educadora y esposa de Lenin, no matemática)",
+      "Anna Filosófova"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Kovalévskaya tuvo que estudiar en el extranjero, ya que las universidades rusas de su época no admitían mujeres; su tesis doctoral fue supervisada en Alemania."
+  },
+  {
+    "question": "¿Qué fisiólogo ruso, ganador del Premio Nobel en 1904, es célebre por sus experimentos sobre el reflejo condicionado en perros, que sentaron las bases de la psicología conductista?",
+    "options": [
+      "Vladímir Bejterev",
+      "Iván Pávlov",
+      "Iliá Méchnikov (también ganó el Nobel, pero por inmunología, no por el reflejo condicionado)",
+      "Nikolái Vavílov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pávlov descubrió que los perros salivaban al escuchar un sonido asociado repetidamente con la comida, incluso sin presencia de alimento — el origen del concepto de 'condicionamiento clásico'."
+  },
+  {
+    "question": "¿Qué biólogo ruso-ucraniano compartió el Premio Nobel de Fisiología o Medicina en 1908 por descubrir la fagocitosis, el proceso por el cual ciertas células del sistema inmunológico devoran patógenos?",
+    "options": [
+      "Nikolái Vavílov",
+      "Serguéi Vinográdski",
+      "Iván Pávlov",
+      "Iliá Méchnikov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Méchnikov fue el primer científico del Imperio ruso en recibir un Premio Nobel, y también es recordado por sus teorías (hoy superadas) sobre la relación entre el yogur y la longevidad."
+  },
+  {
+    "question": "¿Qué maestro de escuela sordo, autodidacta y visionario, formuló a inicios del siglo XX la ecuación fundamental que describe el movimiento de los cohetes y es considerado el padre teórico de la astronáutica moderna?",
+    "options": [
+      "Konstantín Tsiolkovski",
+      "Mstislav Kéldysh",
+      "Valentín Glushkó",
+      "Serguéi Koroliov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tsiolkovski nunca vio un cohete real despegar, pero sus cálculos teóricos —incluida la idea de estaciones espaciales y trajes presurizados— anticiparon décadas de desarrollo espacial soviético."
+  },
+  {
+    "question": "¿Qué ingeniero, conocido oficialmente durante años solo como el 'Diseñador Jefe' por razones de secreto militar, dirigió el programa espacial soviético pese a haber sobrevivido a un campo de trabajo forzado (gulag) durante las purgas estalinistas?",
+    "options": [
+      "Konstantín Tsiolkovski",
+      "Yuri Gagarin",
+      "Serguéi Koroliov",
+      "Valentín Glushkó"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La identidad de Koroliov se mantuvo en secreto incluso tras el éxito del Sputnik; solo se reveló públicamente tras su muerte en 1966."
+  },
+  {
+    "question": "¿Qué par de perras espaciales soviéticas, lanzadas en 1960 a bordo del Sputnik 5, se convirtieron en los primeros seres vivos en orbitar la Tierra y regresar sanos y salvos?",
+    "options": [
+      "Chernushka y Zvezdochka (volaron en misiones separadas de 1961)",
+      "Dezik y Tsygán",
+      "Laika (murió durante su misión de 1957, no regresó)",
+      "Belka y Strelka"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Uno de los cachorros de Strelka, llamado Pushinka, fue regalado más tarde por Nikita Jrushchov a la familia del presidente estadounidense John F. Kennedy."
+  },
+  {
+    "question": "¿Qué cosmonauta soviético realizó, en marzo de 1965, la primera caminata espacial de la historia, y estuvo a punto de no poder regresar a la nave debido a que su traje se había inflado más de lo previsto en el vacío?",
+    "options": [
+      "Alekséi Leónov",
+      "Yuri Gagarin",
+      "Valeri Bykovski",
+      "Guerman Titov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Leónov tuvo que liberar parte del aire de su traje espacial, en contra del procedimiento oficial, para poder doblarse lo suficiente y volver a entrar en la nave."
+  },
+  {
+    "question": "¿Qué misión soviética logró, en febrero de 1966, el primer alunizaje suave (no destructivo) de la historia, varios meses antes de que Estados Unidos lograra la misma hazaña?",
+    "options": [
+      "Luná 9",
+      "Sputnik 1",
+      "Vostok 1",
+      "Soyuz 1"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Luná 9 transmitió las primeras fotografías panorámicas tomadas desde la superficie lunar, un hito que sorprendió al mundo en plena carrera espacial."
+  },
+  {
+    "question": "¿Qué estación espacial soviética, ensamblada en órbita a partir de 1986 y ocupada de forma casi continua durante quince años, fue durante mucho tiempo el hábitat espacial de mayor duración construido por el ser humano?",
+    "options": [
+      "La estación Salyut 1",
+      "La estación Mir",
+      "El Skylab (fue una estación estadounidense)",
+      "La Estación Espacial Internacional (es un proyecto multinacional posterior)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes de la Estación Espacial Internacional, Mir estableció récords de permanencia humana continua en el espacio, incluida la estancia de casi 438 días del cosmonauta Valeri Poliakov."
+  },
+  {
+    "question": "Según una anécdota célebre (aunque probablemente embellecida con el tiempo), ¿cómo dijo Dmitri Mendeléyev haber concebido la disposición final de su tabla periódica de los elementos?",
+    "options": [
+      "Durante una conversación casual con un colega alemán",
+      "Leyendo un texto antiguo de alquimia china",
+      "En un sueño, tras días de trabajo agotador organizando tarjetas con los elementos",
+      "Observando la disposición de las teclas de un piano"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El propio Mendeléyev restó importancia después a la anécdota del sueño, insistiendo en que fueron años de trabajo sistemático los que realmente produjeron el resultado."
+  },
+  {
+    "question": "¿Qué ingeniero, nacido en Rusia y luego emigrado a Estados Unidos tras la revolución, es considerado uno de los principales inventores de la tecnología de la televisión electrónica moderna, incluido el iconoscopio?",
+    "options": [
+      "Vladímir Zvorykin",
+      "Lev Termén",
+      "Piotr Kapitsa",
+      "Alexánder Popov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque desarrolló su carrera principalmente en Estados Unidos, Zvorykin se formó como ingeniero en San Petersburgo antes de emigrar."
+  },
+  {
+    "question": "¿Qué inventor ruso creó en 1920 uno de los primeros instrumentos musicales electrónicos de la historia, que se toca sin tocarlo físicamente, moviendo las manos en el aire cerca de dos antenas?",
+    "options": [
+      "Alexánder Popov",
+      "Vladímir Zvorykin",
+      "Lev Termén (Theremín)",
+      "Piotr Kapitsa"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El instrumento, conocido internacionalmente como 'theremín' por el apellido occidentalizado de su inventor, produce un sonido característico usado después en música de cine de ciencia ficción."
+  },
+  {
+    "question": "¿Qué extraño evento ocurrido en 1908 sobre una remota zona de Siberia arrasó unos 2,000 km² de bosque mediante una explosión aérea sin dejar cráter de impacto claro, y sigue siendo estudiado científicamente hasta hoy como uno de los mayores eventos de este tipo en tiempos históricos?",
+    "options": [
+      "La erupción del volcán Tambora (ocurrió en Indonesia, no en Rusia)",
+      "El evento de Tunguska",
+      "El meteorito de Cheliábinsk (ocurrió en 2013, fuera del periodo cubierto aquí)",
+      "El terremoto de Ashjabad"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La hipótesis más aceptada es que se trató de la explosión aérea de un asteroide o cometa a varios kilómetros de altura; la remota ubicación retrasó casi veinte años la primera expedición científica al lugar."
+  },
+  {
+    "question": "¿Qué inusual computadora soviética, desarrollada en la Universidad Estatal de Moscú y presentada en 1958, funcionaba con un sistema numérico de base tres (ternario) en lugar del sistema binario que terminaría imponiéndose en toda la informática mundial?",
+    "options": [
+      "La Ural-1 (también fue binaria)",
+      "La Strela (fue la primera computadora soviética producida en serie, binaria)",
+      "La Setún",
+      "La BESM (fue una de las primeras computadoras soviéticas, pero binaria, no ternaria)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La lógica ternaria de la Setún ofrecía ciertas ventajas matemáticas teóricas, pero la abrumadora estandarización mundial hacia el binario hizo que el proyecto no tuviera continuidad a largo plazo."
+  },
+  {
+    "question": "¿Qué ambicioso programa espacial soviético para llevar un ser humano a la Luna fue cancelado a mediados de los años 1970, tras el fracaso repetido (incluida una explosión particularmente catastrófica en 1969) de su cohete gigante N1?",
+    "options": [
+      "El programa Energía-Burán (fue un proyecto posterior, de transbordador espacial, de los años 1980)",
+      "El programa Soyuz (continúa en uso hasta hoy, con otros fines)",
+      "El programa lunar tripulado soviético (cohete N1)",
+      "El programa Vostok (fue el programa de los primeros vuelos orbitales tripulados, ya exitoso)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La URSS ocultó durante años la existencia misma de este programa fallido, y solo se conoció públicamente en detalle tras el fin de la Guerra Fría, cuando Estados Unidos ya había llegado a la Luna."
+  },
+  {
+    "question": "¿Qué misión soviética se convirtió en 1970 en la primera nave espacial de la historia en aterrizar (o más bien 'venusizar') con éxito sobre la superficie de otro planeta, transmitiendo brevemente datos desde el infernal ambiente de Venus?",
+    "options": [
+      "Luná 9 (logró el primer alunizaje suave, no un aterrizaje en otro planeta)",
+      "Venera 7",
+      "Vega 1 (fue una misión posterior, de los años 1980, combinada con Venus y el cometa Halley)",
+      "Marte 3 (logró un aterrizaje en Marte, pero en 1971, un año después)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Las temperaturas y presiones extremas de la superficie venusina destruyeron la sonda apenas 23 minutos después de aterrizar, pero ese breve lapso bastó para confirmar por primera vez datos directos desde la superficie de otro planeta."
+  },
+  {
+    "question": "¿Qué misión soviética de 1964 logró poner en órbita, por primera vez en la historia, una tripulación de más de un cosmonauta a bordo de la misma nave espacial?",
+    "options": [
+      "Sputnik 5 (fue una misión no tripulada, con animales a bordo)",
+      "Vostok 1 (fue el primer vuelo tripulado, pero con un solo ocupante, Gagarin)",
+      "Voskhod 1",
+      "Soyuz 1 (fue una misión posterior, de 1967, trágicamente fallida)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Por razones de prestigio frente a Estados Unidos, la tripulación de tres cosmonautas voló sin trajes espaciales completos, en un vehículo modificado apresuradamente y con muy poco margen de seguridad según estándares posteriores."
+  },
+  {
+    "question": "¿Qué estación espacial soviética, lanzada en 1971, se convirtió en la primera estación espacial de la historia, varios años antes de estaciones posteriores como Skylab o la propia Mir?",
+    "options": [
+      "Mir (fue una estación mucho más tardía, de 1986)",
+      "La Estación Espacial Internacional (es un proyecto multinacional de finales de los años 1990)",
+      "Salyut 1",
+      "Almaz (fue un programa de estaciones militares soviéticas, relacionado pero distinto y posterior)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La primera tripulación de Salyut 1 pasó a la historia por una tragedia: los tres cosmonautas murieron por descompresión accidental durante el regreso a la Tierra, el único caso de muertes humanas en el espacio exterior mismo."
+  },
+  {
+    "question": "¿Qué físico e ingeniero ruso es reconocido en su país como uno de los pioneros —junto al italiano Guglielmo Marconi, cuya prioridad sigue siendo debatida entre historiadores de ambos países— del desarrollo práctico de la radiotransmisión a finales del siglo XIX?",
+    "options": [
+      "Vladímir Zvorykin (fue pionero de la televisión, no de la radio)",
+      "Alexánder Popov",
+      "Piotr Lébedev (investigó la presión de la luz, un campo distinto de la física)",
+      "Lev Termén (inventó el theremín, un instrumento musical electrónico)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Popov realizó demostraciones públicas de transmisión inalámbrica en San Petersburgo en 1895, el mismo año en que Marconi patentaba su propio sistema en Gran Bretaña; en Rusia se celebra oficialmente el 7 de mayo como 'Día de la Radio' en su honor."
+  },
+  {
+    "question": "¿A qué científico ruso, profesor de la Universidad de Moscú y fundador de un instituto de investigación que hoy lleva su nombre, se le considera el padre de la aerodinámica y la aviación teórica rusas, formulando principios fundamentales sobre la sustentación de las alas?",
+    "options": [
+      "Konstantín Tsiolkovski (se dedicó a la teoría de cohetes y el espacio, no a la aerodinámica de aviones)",
+      "Nikolái Zhukovski",
+      "Ígor Sikorski (fue diseñador práctico de aviones y helicópteros, no el teórico fundacional)",
+      "Andréi Túpolev (fue discípulo de Zhukovski y diseñador de aviones, no el fundador teórico de la disciplina)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Instituto Central de Aerohidrodinámica soviético (TsAGI), fundado en 1918 y que lleva la impronta de sus principios, se convirtió en el centro neurálgico del diseño aeronáutico soviético durante décadas."
+  },
+  {
+    "question": "¿Qué diseñador aeronáutico soviético, encarcelado durante las purgas estalinistas y obligado a seguir diseñando aviones desde una 'sharashka' (oficina de diseño dentro de un campo de prisioneros), dio después su apellido a una de las familias de aviones comerciales y militares más conocidas del mundo?",
+    "options": [
+      "Serguéi Koroliov (también fue prisionero del sistema de gulags, pero se dedicó después a cohetes, no a aviones)",
+      "Nikolái Zhukovski (murió en 1921, antes de las purgas estalinistas de los años 1930)",
+      "Andréi Túpolev",
+      "Artem Mikoyán (fundó junto a Gurévich la firma MiG, pero no fue encarcelado)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Túpolev fue liberado y rehabilitado durante la Segunda Guerra Mundial, cuando la necesidad urgente de bombarderos volvió a hacer indispensable su talento; su oficina de diseño llegó a producir después el primer avión de pasajeros supersónico soviético."
+  },
+  {
+    "question": "¿Qué ingeniero, nacido cerca de Kiev y emigrado a Estados Unidos tras la Revolución de 1917, es reconocido internacionalmente como el creador del primer helicóptero de producción en serie exitoso del mundo, en 1942?",
+    "options": [
+      "Vladímir Zvorykin (emigró también, pero se dedicó a la televisión, no a los helicópteros)",
+      "Andréi Túpolev (desarrolló su carrera dentro de la URSS, no en el exilio)",
+      "Ígor Sikorski",
+      "Alexánder Popov (murió en 1906, mucho antes del desarrollo del helicóptero)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Antes de emigrar, Sikorski ya había diseñado en la Rusia imperial algunos de los primeros aviones multimotor del mundo; en Estados Unidos reorientó por completo su carrera hacia la naciente industria del helicóptero."
+  },
+  {
+    "question": "¿Qué físico soviético recibió el Premio Nobel de Física en 1978 por sus fundamentales investigaciones en física de bajas temperaturas, tras una carrera marcada por haber sido retenido por las autoridades soviéticas —en contra de su voluntad— al regresar de una visita a Cambridge en 1934?",
+    "options": [
+      "Ígor Tamm (también fue premio Nobel de Física, en 1958, junto a otros dos científicos, por un descubrimiento distinto)",
+      "Piotr Kapitsa",
+      "Lev Landau (también fue premio Nobel de Física, en 1962, pero por otro campo, la teoría de la materia condensada)",
+      "Andréi Sájarov (fue premio Nobel de la Paz, no de Física)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a la frustración inicial de verse impedido de regresar a su laboratorio en Cambridge, Kapitsa logró establecer en Moscú un instituto de física de primer nivel mundial, manteniendo colaboraciones científicas internacionales incluso durante los años más duros de la Guerra Fría."
+  },
+  {
+    "question": "¿Qué físico teórico soviético, célebre por su trabajo sobre la superfluidez del helio líquido a temperaturas extremadamente bajas, recibió el Premio Nobel de Física en 1962 pese a sufrir un grave accidente automovilístico ese mismo año que lo dejó permanentemente incapacitado?",
+    "options": [
+      "Piotr Kapitsa (también premio Nobel de Física, pero en 1978, por un aspecto distinto de las bajas temperaturas)",
+      "Vitali Guínzburg (recibió el Nobel de Física en 2003, ya en la era postsoviética)",
+      "Nikolái Basov (compartió el Nobel de Física en 1964, por el láser y el máser)",
+      "Lev Landau"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Landau, considerado uno de los físicos teóricos más brillantes del siglo XX, nunca pudo recoger personalmente su premio en Estocolmo debido a las secuelas del accidente; falleció seis años después sin recuperar del todo sus facultades."
+  },
+  {
+    "question": "¿Qué megaproyecto ferroviario soviético, una segunda gran línea al norte del Transiberiano, iniciado en los años 1930 pero construido masivamente entre 1974 y 1984 con participación de decenas de miles de jóvenes voluntarios (o movilizados), atraviesa algunas de las regiones más remotas de Siberia oriental?",
+    "options": [
+      "El Ferrocarril Transiberiano (es la línea original, mucho más al sur, terminada a inicios del siglo XX)",
+      "El Ferrocarril Transcaspiano (está en Asia Central, no en Siberia)",
+      "El Ferrocarril Circunbaikal (es un tramo mucho más corto, alrededor del propio lago Baikal)",
+      "La línea Baikal-Amur (BAM)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Presentado por la propaganda soviética como la 'obra del siglo', el BAM enfrentó enormes desafíos de ingeniería, incluidos kilómetros de permafrost y una de las mayores perforaciones de túneles del mundo en su época."
+  },
+  {
+    "question": "¿Qué físico dirigió el proyecto que llevó a la URSS a probar su primera bomba atómica en 1949, convirtiéndose en la figura central —comparada a veces con su contraparte estadounidense del Proyecto Manhattan— del programa nuclear soviético?",
+    "options": [
+      "Ígor Kurchátov",
+      "Lev Landau (colaboró en cálculos teóricos del programa, pero no lo dirigió)",
+      "Andréi Sájarov (participó de forma clave en el desarrollo posterior de la bomba de hidrógeno soviética, pero no dirigió el proyecto original de la bomba atómica)",
+      "Piotr Kapitsa (se negó de hecho a participar directamente en el proyecto de la bomba atómica por motivos personales)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Apodado 'el Barbudo' por sus colegas debido a su característica barba —que juró no afeitarse hasta el éxito del proyecto—, Kurchátov dirigió un programa que combinó ciencia propia con información obtenida por vías de inteligencia."
+  },
+  {
+    "question": "¿Qué matemático ruso del siglo XIX, fundador de una influyente escuela matemática en San Petersburgo, es conocido por sus contribuciones a la teoría de la probabilidad y por los polinomios que hoy llevan su apellido, usados en teoría de la aproximación?",
+    "options": [
+      "Andréi Kolmogórov (desarrolló la base axiomática moderna de la probabilidad, pero una generación después)",
+      "Sofía Kovalévskaya (fue alumna dentro de esa misma tradición matemática rusa, pero en ecuaciones diferenciales)",
+      "Nikolái Lobachevski (es célebre por la geometría no euclidiana, un campo distinto)",
+      "Pafnuti Chebyshov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La escuela matemática de Chebyshov en San Petersburgo formó a varias generaciones de matemáticos rusos destacados, incluida la propia Kovalévskaya de forma indirecta a través de sus discípulos."
+  },
+  {
+    "question": "¿Qué botánico y genetista soviético, pionero en la creación de uno de los primeros grandes bancos de semillas del mundo, murió de hambre en una prisión estalinista en 1943, mientras algunos de sus propios colegas, atrincherados durante el sitio de Leningrado, se negaban a comer las semillas de la colección que custodiaban pese a estar también muriendo de inanición?",
+    "options": [
+      "Trofim Lysenko (fue, por el contrario, el rival científico cuyas teorías pseudocientíficas contribuyeron a la persecución de Vavílov)",
+      "Iliá Méchnikov (murió mucho antes, en 1916, en circunstancias no relacionadas)",
+      "Nikolái Vavílov",
+      "Iván Michurin (fue otro botánico soviético de la época, pero no el fundador del banco de semillas ni víctima de las purgas)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El sacrificio de los investigadores del Instituto Vavílov, que protegieron miles de muestras de semillas con su propia vida durante el asedio, es recordado hoy como uno de los episodios más conmovedores de la historia de la ciencia."
+  },
+  {
+    "question": "¿Qué ingeniero ferroviario autodidacta, prácticamente desconocido en vida y trabajando de forma aislada en Siberia, calculó ya en 1916 la trayectoria de 'encuentro en órbita lunar' que décadas después usaría la NASA para las misiones Apolo, sin que los estadounidenses conocieran inicialmente su trabajo previo?",
+    "options": [
+      "Serguéi Koroliov (fue el gran ingeniero práctico del programa espacial soviético, no el autor de este cálculo teórico específico)",
+      "Yuri Kondratiuk",
+      "Konstantín Tsiolkovski (también fue un pionero teórico de la astronáutica, pero no es el autor de este cálculo específico de trayectoria)",
+      "Fridrij Tsander (fue otro pionero teórico soviético de la cohetería, pero no el autor de este cálculo)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Kondratiuk, cuyo verdadero nombre era Alexánder Shárguey, vivió gran parte de su vida bajo una identidad falsa para escapar de su pasado político, y nunca llegó a ver reconocido en vida el enorme valor de sus cálculos."
+  },
+  {
+    "question": "¿Qué dos navegantes rusos al servicio del zar, Fadéi Bellingshausen e Iván Lazarev, se convirtieron en 1820 en los primeros exploradores en avistar el continente antártico, décadas antes de que otras expediciones reclamaran ese mismo logro?",
+    "options": [
+      "La expedición de Vitus Béring (exploró el estrecho que lleva su nombre, en el extremo norte, no la Antártida)",
+      "La expedición de Bellingshausen y Lazarev",
+      "La expedición de Semión Dezhniov (navegó por el Ártico en el siglo XVII, mucho antes y en una región distinta)",
+      "La expedición del rompehielos Lenin (es un buque de propulsión nuclear del siglo XX, sin relación con este descubrimiento)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a la importancia de este descubrimiento, el papel pionero ruso en el avistamiento de la Antártida permaneció relativamente poco reconocido internacionalmente durante buena parte del siglo XIX y XX."
+  },
+  {
+    "question": "¿Qué explorador y cosaco ruso del siglo XVII navegó en 1648, ochenta años antes que el propio Vitus Béring, a través del estrecho que separa Asia de América, demostrando que ambos continentes no estaban unidos por tierra?",
+    "options": [
+      "Semión Dezhniov",
+      "Yermak Timoféyevich (conquistó Siberia por tierra en el siglo XVI, no navegó el estrecho)",
+      "Afanasi Nikitin (viajó a la India en el siglo XV, sin relación con esta exploración ártica)",
+      "Vitus Béring (redescubriría y daría nombre al mismo estrecho ocho décadas después)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El logro de Dezhniov permaneció prácticamente desconocido en Europa occidental durante mucho tiempo, hasta que documentos de su expedición fueron redescubiertos en archivos siberianos casi un siglo después."
+  },
+  {
+    "question": "¿Qué explorador de origen danés, al servicio de la marina imperial rusa, dirigió las expediciones que exploraron el estrecho y el mar que hoy llevan su nombre, y murió durante la segunda de ellas en la isla donde también quedó su apellido?",
+    "options": [
+      "Otto Schmidt (fue un explorador soviético mucho más tardío, del siglo XX)",
+      "Vitus Béring",
+      "Georgi Sedov (fue otro explorador polar ruso, de principios del siglo XX, de una expedición distinta)",
+      "Fadéi Bellingshausen (también fue un explorador al servicio ruso, pero de origen báltico-alemán, y su descubrimiento principal fue la Antártida)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Béring murió en 1741 en la isla que hoy lleva su nombre, frente a las costas de Kamchatka, tras el naufragio de su propio barco durante el viaje de regreso de su segunda gran expedición al Pacífico norte."
+  },
+  {
+    "question": "¿Qué naturalista y etnógrafo ruso del siglo XIX vivió durante largos periodos entre los pueblos indígenas de Nueva Guinea, documentando sus costumbres con un respeto poco habitual para la época y oponiéndose activamente a las teorías raciales entonces en boga en la ciencia europea?",
+    "options": [
+      "Nikolái Miklujó-Maclay",
+      "Ivan Krúzenshtern (dirigió la primera circunnavegación rusa del globo, pero no se dedicó al estudio etnográfico prolongado de un solo pueblo)",
+      "Piotr Semiónov-Tian-Shanski (fue un geógrafo y explorador de Asia Central, no de Nueva Guinea)",
+      "Nikolái Przhevalski (exploró Asia Central y Mongolia, no el Pacífico)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La costa nororiental de Nueva Guinea llegó a conocerse durante un tiempo como 'Costa Maclay' en su honor; sus diarios de campo son hoy valorados como pioneros de la antropología moderna por su rigor y falta de prejuicios raciales para la época."
+  },
+  {
+    "question": "¿Qué biólogo ruso descubrió en 1892, al estudiar una enfermedad de las plantas de tabaco, la existencia de agentes infecciosos más pequeños que cualquier bacteria conocida —lo que hoy se reconoce como el descubrimiento fundacional del campo de la virología?",
+    "options": [
+      "Dmitri Ivanovski",
+      "Serguéi Vinográdski (fue pionero en microbiología del suelo, no en el descubrimiento de los virus)",
+      "Iliá Méchnikov (descubrió la fagocitosis, un mecanismo del sistema inmunológico, no los virus)",
+      "Iván Pávlov (se dedicó al estudio de los reflejos condicionados, un campo completamente distinto)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Ivanovski demostró que el agente causante del mosaico del tabaco atravesaba filtros diseñados para retener cualquier bacteria conocida, aunque no llegó a comprender del todo la naturaleza exacta de lo que había descubierto, un paso que darían otros científicos después."
+  },
+  {
+    "question": "¿Qué químico ruso del siglo XIX desarrolló la teoría de la estructura química, explicando por primera vez de forma sistemática cómo el orden en que se conectan los átomos dentro de una molécula determina las propiedades de una sustancia?",
+    "options": [
+      "Dmitri Konovalov (trabajó en termodinámica química, un campo distinto)",
+      "Nikolái Zinin (fue un destacado químico orgánico ruso de la generación anterior, pero no el formulador de esta teoría específica)",
+      "Alexánder Butlérov",
+      "Dmitri Mendeléyev (ordenó los elementos en la tabla periódica, un logro relacionado pero distinto de la teoría estructural de las moléculas)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La teoría de Butlérov, formulada hacia 1861, explicó por primera vez de forma coherente fenómenos como la isomería —moléculas con la misma fórmula pero propiedades distintas según su estructura interna—, sentando las bases de la química orgánica moderna."
+  },
+  {
+    "question": "¿Qué científico ruso, fundador de la biogeoquímica moderna, desarrolló a inicios del siglo XX los conceptos de 'biosfera' (la capa de vida que envuelve el planeta) y 'noosfera' (la esfera de la actividad racional humana como fuerza transformadora global)?",
+    "options": [
+      "Kliment Timiriázev (fue un destacado botánico ruso de fisiología vegetal, pero no el formulador de estos conceptos)",
+      "Vladímir Vernadski",
+      "Iván Michurin (se dedicó al mejoramiento genético de plantas, un campo distinto)",
+      "Nikolái Vavílov (se dedicó a la genética y los bancos de semillas, no a la biogeoquímica planetaria)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Las ideas de Vernadski sobre la biosfera como sistema planetario integrado se adelantaron en varias décadas a conceptos hoy centrales en la ciencia ambiental global, incluida buena parte del pensamiento moderno sobre el cambio climático."
+  },
+  {
+    "question": "¿Qué matemático soviético estableció en 1933 los axiomas formales que hoy sirven de fundamento riguroso a toda la teoría moderna de la probabilidad, además de realizar aportes fundamentales en turbulencia, topología y teoría de la información?",
+    "options": [
+      "Andréi Kolmogórov",
+      "Sofía Kovalévskaya (trabajó en ecuaciones diferenciales, un campo distinto de las matemáticas)",
+      "Nikolái Lobachevski (es célebre por la geometría no euclidiana, un campo completamente distinto)",
+      "Pafnuti Chebyshov (es de una generación muy anterior, del siglo XIX, y sentó bases previas pero no la axiomatización formal moderna)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Considerado uno de los matemáticos más influyentes del siglo XX en cualquier país, la obra de Kolmogórov tuvo aplicaciones que van desde la meteorología hasta la teoría económica y la ciencia de la computación."
+  },
+  {
+    "question": "¿Qué histórica misión conjunta de 1975 entre la URSS y Estados Unidos logró el primer acoplamiento en órbita de una nave Soyuz soviética con una cápsula Apolo estadounidense, en un simbólico gesto de cooperación en plena era de distensión de la Guerra Fría?",
+    "options": [
+      "El Proyecto de Prueba Soyuz-Apolo",
+      "La misión Mir-Shuttle (fue un programa de cooperación posterior, de la década de 1990, ya con la Estación Mir)",
+      "La misión Vostok-Mercury (nunca existió una misión conjunta bajo ese nombre; fueron programas paralelos y rivales de la década de 1960)",
+      "El programa Intercosmos (fue un programa de cooperación espacial soviético, pero con países del bloque socialista, no con Estados Unidos)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El histórico apretón de manos entre los astronautas y cosmonautas, realizado directamente en el espacio a través de las escotillas acopladas de ambas naves, se transmitió en vivo y fue celebrado como un raro momento de distensión genuina entre las dos superpotencias."
+  },
+  {
+    "question": "¿Qué avión, presentado en 1956, se convirtió en el primer avión de pasajeros a reacción de la URSS y uno de los primeros del mundo en entrar en servicio comercial regular, apenas unos años después del pionero británico De Havilland Comet?",
+    "options": [
+      "El Ilyushin Il-62 (fue un avión a reacción soviético posterior, de la década de 1960)",
+      "El Antónov An-2 (es un avión de hélice, no a reacción, diseñado para uso agrícola y regional)",
+      "El Yakovlev Yak-40 (fue otro avión a reacción soviético, pero regional y posterior, de finales de los años 1960)",
+      "El Túpolev Tu-104"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Durante un breve periodo tras el retiro temporal del Comet británico por fallos estructurales, el Tu-104 llegó a ser el único avión de pasajeros a reacción en servicio regular en todo el mundo."
+  },
+  {
+    "question": "¿Qué inventor ruso desarrolló, en la década de 1870, una de las primeras lámparas incandescentes prácticas del mundo, con una patente anterior en varios años a la más célebre bombilla comercializada por Thomas Edison?",
+    "options": [
+      "Alexánder Popov (es célebre por sus experimentos pioneros con la radio, no con la iluminación eléctrica)",
+      "Nikolái Benardós (fue pionero de la soldadura eléctrica por arco, no de la iluminación)",
+      "Alexánder Lódyguin",
+      "Pável Yáblochkov (inventó otro sistema de alumbrado eléctrico de la misma época, el arco voltaico conocido como 'vela de Yáblochkov', de principio distinto)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a la prioridad temprana de Lódyguin, fueron las mejoras posteriores de Edison en la durabilidad y comercialización en masa del filamento las que terminaron popularizando la bombilla incandescente a escala mundial."
+  },
+  {
+    "question": "¿Qué sistema de iluminación eléctrica por arco voltaico, inventado por el ingeniero ruso Pável Yáblochkov y conocido popularmente como 'luz rusa' o 'vela Yáblochkov', llegó a iluminar las calles de París en la década de 1870, antes de ser finalmente superado por la bombilla incandescente?",
+    "options": [
+      "El acumulador de Yablochkov (no existe tal invento bajo ese nombre; su invención relevante fue el sistema de iluminación por arco)",
+      "La lámpara de Lódyguin (fue un invento distinto, una lámpara incandescente, no de arco voltaico)",
+      "La 'vela de Yáblochkov'",
+      "El generador de Popov (Popov es célebre por la radio, no por sistemas de iluminación)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Antes de que las bombillas incandescentes se volvieran prácticas y asequibles, el sistema de Yáblochkov fue una novedad tan sorprendente para el público parisino que la prensa de la época llegó a hablar de una 'luz rusa' conquistando Europa."
+  },
+  {
+    "question": "¿Qué ingeniero soviético diseñó los ekranoplanos, unos inusuales vehículos híbridos entre avión y barco que vuelan a muy baja altura aprovechando el 'efecto suelo' sobre el agua, incluido el gigantesco modelo apodado por la inteligencia occidental el 'Monstruo del Caspio'?",
+    "options": [
+      "Ígor Sikorski (fue pionero de los helicópteros, un tipo de vehículo completamente distinto)",
+      "Andréi Túpolev (diseñó aviones convencionales, no vehículos de efecto suelo)",
+      "Rostislav Alekséyev",
+      "Serguéi Koroliov (se dedicó al diseño de cohetes y naves espaciales, no de ekranoplanos)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a su enorme tamaño y velocidad, capaz de superar los 400 km/h volando apenas a unos metros sobre las olas, los ekranoplanos nunca llegaron a producirse en gran escala tras el fin de la Guerra Fría, y hoy son considerados una curiosidad tecnológica soviética."
+  },
+  {
+    "question": "¿Cómo se llama la ciudad especialmente construida cerca de Moscú a partir de 1960 para alojar y entrenar a los cosmonautas soviéticos, y que durante décadas apareció en los mapas oficiales solo bajo nombres en clave?",
+    "options": [
+      "Akademgorodok",
+      "Plesetsk",
+      "Ciudad de las Estrellas (Zviózdny Gorodok)",
+      "Baikonur"
+    ],
+    "correct_option_id": 2,
+    "explanation": "En Zviózdny Gorodok, hoy abierta parcialmente al turismo, se entrenó Yuri Gagarin y siguen preparándose hasta el día de hoy los cosmonautas rusos, con centrifugadoras, simuladores y una réplica de la estación orbital para prácticas."
+  },
+  {
+    "question": "¿Qué cosmonauta soviético perdió la vida en abril de 1967 cuando su nave, la Soyuz 1, se estrelló al regresar a la Tierra tras fallar el sistema de paracaídas, convirtiéndose en la primera víctima mortal de un vuelo espacial de la historia?",
+    "options": [
+      "Alexéi Leónov",
+      "Vladímir Komárov",
+      "Yuri Gagarin",
+      "Guerman Titov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Komárov era consciente de los graves problemas técnicos de la nave antes del lanzamiento, pero la misión siguió adelante por presión política; su muerte marcó un antes y un después en los protocolos de seguridad del programa espacial soviético."
+  },
+  {
+    "question": "¿Qué tripulación soviética murió en junio de 1971 durante el regreso a la Tierra de la misión Soyuz 11, al despresurizarse accidentalmente la cápsula, siendo hasta hoy los únicos seres humanos que han muerto en el espacio exterior propiamente dicho?",
+    "options": [
+      "Los tres cosmonautas de la Soyuz 11",
+      "La tripulación del Salyut 1",
+      "Los cosmonautas del Vostok 3",
+      "La tripulación de la Soyuz 5"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Una válvula defectuosa se abrió prematuramente durante la separación de módulos, vaciando el aire de la cabina en segundos; tras esta tragedia, los cosmonautas soviéticos comenzaron a usar trajes presurizados durante despegue y reentrada."
+  },
+  {
+    "question": "¿Qué característica técnica novedosa incorporó la estación espacial soviética Salyut 6, lanzada en 1977, que permitió por primera vez recibir naves de carga automáticas sin necesidad de desocupar la estación?",
+    "options": [
+      "Incluía un invernadero experimental permanente",
+      "Contaba con dos puertos de acoplamiento en lugar de uno",
+      "Era la primera estación con paneles solares giratorios",
+      "Fue la primera con un módulo de gravedad artificial"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Gracias a su segundo puerto de acoplamiento, la Salyut 6 podía recibir simultáneamente una nave tripulada y una nave de carga Progress, lo que permitió por primera vez reabastecer una estación y prolongar enormemente las estancias en órbita."
+  },
+  {
+    "question": "¿Qué serie de satélites de reconocimiento militar soviéticos, basados en el diseño de la cápsula Vostok que había llevado a Gagarin al espacio, fotografiaba territorios extranjeros y devolvía a la Tierra la película fotográfica en una cápsula recuperable?",
+    "options": [
+      "El programa Zenit",
+      "El programa Cosmos-Foto",
+      "El programa Molniya",
+      "El programa Almaz"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El parecido entre las cápsulas Vostok y Zenit no era casualidad: ambas compartían un diseño básico común, desarrollado en paralelo para fines civiles de exploración tripulada y para fines militares de reconocimiento fotográfico."
+  },
+  {
+    "question": "¿Qué misión soviética logró en 1970, por primera vez en la historia de la exploración espacial, traer de regreso a la Tierra de forma totalmente automática una muestra de suelo lunar, sin tripulación humana a bordo?",
+    "options": [
+      "Luna 16",
+      "Luna 9",
+      "Luna 2",
+      "Zond 5"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Mientras Estados Unidos llevaba astronautas a la Luna, la URSS desarrolló en paralelo sondas robóticas capaces de perforar el suelo lunar, recoger muestras y regresar automáticamente, logro tecnológico notable pese a la menor atención mediática que recibió."
+  },
+  {
+    "question": "¿Qué sonda soviética logró en diciembre de 1971 el primer alunizaje suave de la historia sobre la superficie de Marte, aunque la transmisión de datos se interrumpió apenas segundos después de tocar tierra por una tormenta de polvo marciana?",
+    "options": [
+      "Venera 7",
+      "Mars 3",
+      "Fobos 1",
+      "Mars 1"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque el aterrizaje en sí fue un éxito técnico pionero, la sonda dejó de transmitir casi de inmediato, probablemente vencida por una intensa tormenta de arena marciana, por lo que Estados Unidos lograría transmisiones prolongadas desde Marte solo años después."
+  },
+  {
+    "question": "¿Qué peculiaridad técnica del sistema ferroviario ruso, heredada del Imperio y mantenida hasta hoy, consiste en usar una distancia entre rieles ligeramente mayor que la empleada en la mayoría de los ferrocarriles europeos?",
+    "options": [
+      "El ancho de vía de 1,520 milímetros",
+      "El uso exclusivo de locomotoras de vapor",
+      "La electrificación total de todas sus líneas",
+      "La ausencia de pasos a nivel en todo el territorio"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El ancho de vía ruso, distinto del estándar europeo de 1,435 mm, obliga hoy en día a cambiar los ejes de los trenes o transbordar la carga en las fronteras, una decisión del siglo XIX cuyo origen exacto —¿estratégico o simplemente técnico?— sigue debatido por los historiadores."
+  },
+  {
+    "question": "¿En qué año realizó el físico e inventor ruso Alexánder Popov una de las primeras demostraciones públicas documentadas de un aparato receptor de ondas radioeléctricas, apenas meses antes de que Guillermo Marconi patentara su propio sistema en Europa occidental?",
+    "options": [
+      "1888",
+      "1910",
+      "1901",
+      "1895"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Popov presentó su receptor ante la Sociedad Física y Química Rusa en San Petersburgo; en Rusia se le sigue considerando ampliamente el verdadero inventor de la radio, aunque el desarrollo comercial de la tecnología terminó liderado por Marconi."
+  },
+  {
+    "question": "¿A qué científico e ingeniero ruso, fundador de una influyente escuela de aerodinámica y mecánica de fluidos aplicada a la aviación, se le conoce en Rusia como 'el padre de la aviación rusa'?",
+    "options": [
+      "Ígor Sikorski",
+      "Andréi Túpolev",
+      "Nikolái Zhukovski",
+      "Konstantín Tsiolkovski"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Zhukovski desarrolló fórmulas fundamentales sobre la sustentación de las alas y fundó el primer instituto especializado de investigación aerodinámica del país; una prestigiosa academia militar de la fuerza aérea rusa lleva hoy su nombre."
+  },
+  {
+    "question": "¿Qué avión de pasajeros soviético, presentado en 1968, se convirtió en el primer transporte supersonic comercial del mundo en volar, adelantándose incluso al célebre Concorde franco-británico?",
+    "options": [
+      "El Tupolev Tu-144",
+      "El Iliushin Il-86",
+      "El Yakovlev Yak-40",
+      "El Antónov An-22"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Apodado con ironía 'Concordski' en Occidente por su parecido con el avión franco-británico, el Tu-144 realizó su primer vuelo de prueba semanas antes que el Concorde, aunque tuvo una vida operativa comercial mucho más breve y accidentada."
+  },
+  {
+    "question": "¿Qué hicieron los científicos del Instituto de Industria Vegetal de Leningrado durante el brutal asedio nazi de la ciudad, en lugar de comer las semillas de la vasta colección de granos y tubérculos que custodiaban, pese a estar muriendo de hambre?",
+    "options": [
+      "Distribuyeron la mitad de la colección entre la población civil",
+      "Prefirieron morir de inanición antes que consumir la colección de semillas",
+      "Enterraron toda la colección para protegerla y la abandonaron",
+      "Enviaron la colección completa fuera de la ciudad al iniciarse el asedio"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Varios científicos del instituto, fundado por el genetista Nikolái Vavílov, murieron literalmente de hambre rodeados de miles de muestras de semillas y tubérculos comestibles, negándose a tocar una colección que consideraban un tesoro científico para el futuro de la humanidad."
+  },
+  {
+    "question": "¿Qué destacado físico soviético, Premio Nobel por sus investigaciones sobre bajas temperaturas, se negó a participar en el proyecto de la bomba atómica soviética y pasó varios años bajo una suerte de arresto domiciliario por ello, sin sufrir sin embargo un destino más trágico?",
+    "options": [
+      "Andréi Sájarov",
+      "Piotr Kapitsa",
+      "Lev Landau",
+      "Ígor Kurchátov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Kapitsa se opuso abiertamente a los métodos autoritarios impuestos por Beria al frente del proyecto nuclear, lo que le costó ser apartado de la dirección de su propio instituto durante casi una década, aunque sobrevivió al periodo y siguió investigando desde su casa de campo."
+  },
+  {
+    "question": "¿Por cuántos votos perdió Dmitri Mendeléyev, creador de la tabla periódica, la concesión del Premio Nobel de Química de 1906, en una votación de la Academia Sueca de Ciencias que sigue considerándose una de las decisiones más discutidas de la historia del premio?",
+    "options": [
+      "Por mayoría absoluta",
+      "Por un solo voto",
+      "Por unanimidad en contra",
+      "Por diez votos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Mendeléyev, que moriría apenas un año después sin haber recibido nunca el Nobel, perdió la votación final por un estrechísimo margen frente al químico francés Henri Moissan, en una decisión que historiadores de la ciencia siguen debatiendo."
+  },
+  {
+    "question": "¿Qué ingeniero soviético dirigió en 1950 la construcción de la MESM, la primera computadora electrónica programable de toda la Europa continental, ensamblada en un antiguo monasterio cerca de Kiev?",
+    "options": [
+      "Andréi Túpolev",
+      "Serguéi Korolióv",
+      "Serguéi Lébedev",
+      "Alexéi Krylov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Trabajando de forma casi aislada del desarrollo occidental por el secretismo de la Guerra Fría, Lébedev llegó a soluciones técnicas similares a las de sus contemporáneos estadounidenses, y su equipo construiría después una serie de computadoras cada vez más avanzadas para uso científico y militar soviético."
+  },
+  {
+    "question": "¿Qué químico soviético recibió en 1956 el Premio Nobel de Química —compartido con un investigador británico— por sus fundamentales investigaciones sobre el mecanismo de las reacciones químicas en cadena?",
+    "options": [
+      "Vladímir Ipátiev",
+      "Nikolái Zelinski",
+      "Alexánder Butlérov",
+      "Nikolái Semiónov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Semiónov sigue siendo, hasta hoy, el único científico soviético o ruso en recibir el Premio Nobel de Química; sus investigaciones sobre reacciones en cadena tuvieron aplicaciones que van desde la combustión industrial hasta la comprensión de procesos biológicos."
+  },
+  {
+    "question": "¿Qué físico soviético recibió en 1958 el Premio Nobel de Física, compartido con dos colegas, por la interpretación teórica de un curioso resplandor azulado que emiten ciertas partículas al moverse en un medio más rápido que la luz en ese mismo medio?",
+    "options": [
+      "Vitali Ginzburg",
+      "Ígor Tamm",
+      "Lev Landau",
+      "Piotr Kapitsa"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Tamm, junto a Ilyá Frank, desarrolló la explicación teórica del fenómeno físico descubierto experimentalmente por su colega Pável Cherenkov, conocido hoy como radiación de Cherenkov y ampliamente utilizado en detectores de partículas de física nuclear."
+  },
+  {
+    "question": "¿Qué físico soviético descubrió experimentalmente en 1934 el peculiar resplandor azulado —hoy conocido con su propio apellido— que emiten las partículas cargadas al atravesar ciertos líquidos transparentes a gran velocidad?",
+    "options": [
+      "Ígor Tamm",
+      "Lev Landau",
+      "Pável Cherenkov",
+      "Ilyá Frank"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Cherenkov observó este fenómeno durante experimentos con radiación en líquidos, y su descubrimiento, junto con la explicación teórica de sus colegas Tamm y Frank, les valió a los tres el Premio Nobel de Física de 1958."
+  },
+  {
+    "question": "¿Qué exigente prueba, apodada informalmente el 'mínimo teórico', diseñó el físico Lev Landau para seleccionar a los aspirantes a estudiar bajo su dirección, un examen tan difícil que solo unas cuarenta personas lo aprobaron a lo largo de varias décadas?",
+    "options": [
+      "El Test de Aptitud Científica Soviético",
+      "El 'mínimo teórico' de Landau",
+      "El Examen de Física de Moscú",
+      "La Prueba de Física del Instituto Kurchátov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El examen, que cubría prácticamente todas las ramas de la física teórica conocida, se convirtió en una leyenda entre los físicos soviéticos; aprobar el 'mínimo teórico' de Landau era considerado casi una insignia de honor intelectual."
+  },
+  {
+    "question": "¿Qué ingeniero y profesor ucraniano-soviético, autodidacta y prácticamente desconocido en vida, calculó ya en los años 1920 una trayectoria orbital eficiente para viajar a la Luna, cuya lógica sería redescubierta y usada décadas después por la NASA en el programa Apolo?",
+    "options": [
+      "Yuri Kondrátiuk",
+      "Konstantín Tsiolkovski",
+      "Valentín Glushkó",
+      "Fridrij Tsander"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Kondrátiuk, que trabajaba en almacenes de grano siberianos y publicaba sus cálculos científicos de forma autofinanciada, ideó la llamada 'órbita de encuentro lunar', una trayectoria que separaba el módulo de descenso del módulo orbital para ahorrar combustible, exactamente el método que la NASA terminaría adoptando."
+  },
+  {
+    "question": "¿Qué cohete soviético, desarrollado originalmente como el primer misil balístico intercontinental de la historia en 1957, se convirtió después, con distintas modificaciones, en la base del vehículo de lanzamiento Soyuz, todavía en uso hoy?",
+    "options": [
+      "El Protón",
+      "El Vostok-K",
+      "El R-7",
+      "El N1"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Diseñado bajo la dirección de Serguéi Koroliov, el R-7 lanzó tanto el primer satélite artificial como la primera nave tripulada de la historia; su diseño básico, notablemente longevo, sigue siendo la base de los cohetes Soyuz que aún hoy transportan tripulaciones al espacio."
+  },
+  {
+    "question": "¿A qué matemático y científico soviético, apodado el 'Teórico Jefe' del programa espacial en paralelo al 'Diseñador Jefe' Koroliov, se debe buena parte de los cálculos matemáticos que hicieron posibles las primeras misiones espaciales soviéticas?",
+    "options": [
+      "Nikolái Bogoliúbov",
+      "Mstislav Keldysh",
+      "Serguéi Sóbolev",
+      "Andréi Kolmogórov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Keldysh, presidente durante años de la Academia de Ciencias soviética, dirigió el equipo matemático encargado de calcular las trayectorias orbitales, mantenido en el anonimato oficial junto a Koroliov por motivos de seguridad de Estado."
+  },
+  {
+    "question": "¿En qué remota zona de la estepa kazaja, elegida en parte por su lejanía y escasa población, comenzó la Unión Soviética en 1955 la construcción secreta del cosmódromo desde el que despegarían tanto el Sputnik como Yuri Gagarin?",
+    "options": [
+      "Cerca de la localidad de Baikonur",
+      "Cerca del lago Baljash",
+      "En la península de Kamchatka",
+      "Cerca de la ciudad de Plesetsk"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El nombre 'Baikonur' correspondía en realidad a un pequeño poblado minero situado a varios cientos de kilómetros del cosmódromo real, usado deliberadamente como pista falsa para confundir a la inteligencia extranjera sobre la ubicación exacta de las instalaciones."
+  },
+  {
+    "question": "¿Qué familia de cohetes pesados soviéticos, desarrollada originalmente en los años 1960 y todavía utilizada hoy para lanzar satélites y cargas pesadas, debe su nombre a un dios de la mitología griega asociado con el fuego y la fragua?",
+    "options": [
+      "El Vulcano",
+      "El Protón",
+      "El Hefesto",
+      "El Titán soviético"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a su nombre, el cohete Protón no tiene relación directa con la partícula subatómica del mismo nombre; fue diseñado inicialmente con fines tanto militares como científicos antes de convertirse en uno de los principales vehículos de lanzamiento comercial soviéticos."
+  },
+  {
+    "question": "¿Qué transbordador espacial soviético, desarrollado como respuesta al programa estadounidense equivalente, realizó en noviembre de 1988 un único vuelo orbital no tripulado, aterrizando de forma completamente automática sin intervención humana?",
+    "options": [
+      "El Burán",
+      "El Zaria",
+      "El Almaz",
+      "El Energía"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A diferencia de su contraparte estadounidense, el Burán realizó su único vuelo espacial completamente sin tripulación, controlado en su totalidad por sistemas automáticos, incluido un aterrizaje de precisión en medio de fuertes vientos, un logro técnico notable para la época."
+  },
+  {
+    "question": "¿Qué cohete soviético, el más potente jamás construido hasta ese momento en la URSS, fue diseñado específicamente para poner en órbita al transbordador Burán en su único vuelo de 1988?",
+    "options": [
+      "El Energía",
+      "El Protón-M",
+      "El N1",
+      "El Vostok-2M"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El programa Energía-Burán, uno de los más costosos de la historia soviética, quedó prácticamente cancelado poco después de su primer y único vuelo exitoso debido a la crisis económica y política que atravesaba el país a finales de la década de 1980."
+  },
+  {
+    "question": "¿Qué ambicioso programa de sondas soviéticas, lanzado en 1984, combinó el sobrevuelo y aterrizaje en Venus con un posterior encuentro cercano con el cometa Halley durante su paso por el sistema solar interior en 1986?",
+    "options": [
+      "El programa Mars",
+      "El programa Vega",
+      "El programa Fobos",
+      "El programa Venera"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El nombre 'Vega' combinaba las siglas en ruso de Venus y del cometa Halley (Gali); las sondas soltaron globos aerostáticos en la atmósfera venusiana antes de continuar su trayectoria para fotografiar de cerca el núcleo del célebre cometa."
+  },
+  {
+    "question": "¿Qué dramática misión de rescate llevaron a cabo dos cosmonautas soviéticos en 1985, al acoplarse manualmente a la estación Salyut 7, que había quedado completamente 'muerta' y sin control tras un fallo eléctrico total, logrando revivirla poco a poco?",
+    "options": [
+      "El salvamento del Almaz-3",
+      "La reparación de emergencia del Mir",
+      "El rescate de la estación Salyut 7",
+      "La misión de auxilio al Kosmos 954"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Los cosmonautas Vladímir Dzhánibekov y Víktor Sávinij tuvieron que acoplarse a una estación sin energía, girando descontroladamente y a temperaturas bajo cero en su interior, un rescate tan extraordinario que después inspiró una película rusa sobre el episodio."
+  },
+  {
+    "question": "¿Qué cirujano militar ruso del siglo XIX es considerado pionero de la medicina de campaña moderna, al introducir por primera vez en un conflicto bélico el uso sistemático de anestesia con éter y de vendajes enyesados para tratar fracturas?",
+    "options": [
+      "Iliá Méchnikov",
+      "Iván Séchenov",
+      "Nikolái Pirogov",
+      "Serguéi Bótkin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pirogov desarrolló también un sistema pionero de triaje de heridos según la gravedad de sus lesiones, y sus innovaciones en cirugía de campaña salvaron incontables vidas de soldados, sentando las bases de prácticas médicas militares empleadas durante generaciones."
+  },
+  {
+    "question": "¿Qué físico nacido en Odesa, que tuvo que huir de la Unión Soviética en 1933 tras una visita a un congreso científico en el extranjero, terminó proponiendo décadas después, ya en Estados Unidos, una de las primeras versiones de lo que hoy se conoce como la teoría del Big Bang?",
+    "options": [
+      "Yákov Frenkel",
+      "Ígor Tamm",
+      "Lev Landau",
+      "Gueorgui Gámov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Gámov, además de sus aportes a la cosmología, fue un notable divulgador científico, autor de populares libros de ciencia para el público general protagonizados por un personaje llamado 'señor Tompkins', y también contribuyó de forma pionera a entender el código genético del ADN."
+  },
+  {
+    "question": "¿Qué destino sufrió el destacado genetista y botánico soviético Nikolái Vavílov, pionero en la creación de bancos de semillas y perseguido por las teorías rivales de Trofim Lysenko, quien gozaba del respaldo político de Stalin?",
+    "options": [
+      "Emigró a Estados Unidos y continuó su carrera allí",
+      "Se retiró voluntariamente de la ciencia tras perder el debate académico",
+      "Fue rehabilitado en vida y recibió honores estatales",
+      "Fue arrestado y murió de hambre en una prisión soviética en 1943"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Vavílov, uno de los científicos agrícolas más respetados internacionalmente de su generación, fue detenido en 1940 acusado de espionaje y sabotaje, y murió de inanición en una prisión de Sarátov apenas tres años después, mientras su propia colección de semillas era defendida por sus colaboradores en el Leningrado sitiado."
+  },
+  {
+    "question": "¿En honor a qué físico soviético, director del proyecto de la bomba atómica del país, se bautizó el elemento químico número 104 de la tabla periódica, cuyo nombre sigue siendo motivo de disputa científica internacional entre 'kurchatovio' y 'dubnio'?",
+    "options": [
+      "Anatoli Alexándrov",
+      "Ígor Kurchátov",
+      "Yuli Jaritón",
+      "Andréi Sájarov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La disputa sobre el nombre del elemento 104 formó parte de una larga controversia científica entre laboratorios soviéticos y estadounidenses, ambos reclamando prioridad en su descubrimiento; la Unión Internacional de Química finalmente adoptó el nombre 'dubnio', en honor al laboratorio ruso donde se sintetizó."
+  },
+  {
+    "question": "¿Qué instituto científico internacional, fundado en 1956 en la ciudad rusa de Dubná con la participación de varios países del bloque socialista, se especializó en física nuclear y de partículas, y sigue operando hasta hoy con colaboración internacional?",
+    "options": [
+      "El Centro Nacional de Física de Altas Energías",
+      "El Instituto Conjunto de Investigaciones Nucleares",
+      "El Laboratorio Central de Física Nuclear",
+      "El Instituto Kurchátov de Energía Atómica"
+    ],
+    "correct_option_id": 1,
+    "explanation": "A diferencia de otras instalaciones nucleares soviéticas de carácter estrictamente militar y secreto, este instituto de Dubná se concibió desde el inicio como un centro de cooperación científica internacional entre países socialistas, un modelo comparado a veces con el CERN europeo."
+  },
+  {
+    "question": "¿Qué físico soviético, fundador de la investigación de elementos transuránicos pesados en Dubná, descubrió en 1940 —junto a un colega— el fenómeno de la fisión espontánea del uranio, sin necesidad de bombardeo externo de neutrones?",
+    "options": [
+      "Venedikt Dzhelépov",
+      "Gueorgui Fliórov",
+      "Yuli Jaritón",
+      "Ígor Kurchátov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Fliórov, que además alertó personalmente a Stalin en 1942 sobre el sospechoso silencio de las publicaciones científicas occidentales en torno a la fisión nuclear —lo que ayudó a impulsar el propio programa atómico soviético—, dirigió después durante décadas la investigación de elementos superpesados en Dubná."
+  },
+  {
+    "question": "¿Qué tipo de investigación paleoclimática, basada en la perforación de columnas de hielo de varios kilómetros de profundidad en la Antártida soviética, permitió reconstruir la historia del clima terrestre de los últimos cientos de miles de años?",
+    "options": [
+      "Las perforaciones de testigos de hielo en la estación Vostok",
+      "El mapeo satelital de la capa de hielo continental",
+      "Los estudios de sedimentos marinos del mar de Ross",
+      "Los sondeos sísmicos del casquete antártico occidental"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Al analizar burbujas de aire atrapadas en capas de hielo depositadas hace cientos de miles de años, los científicos soviéticos y, después, internacionales de la estación Vostok pudieron reconstruir con notable precisión los ciclos de temperatura y composición atmosférica de la Tierra en épocas remotas."
+  },
+  {
+    "question": "¿Qué localidad de Siberia, construida a partir de 1957 específicamente para concentrar a destacados científicos e institutos de investigación lejos de la burocracia de Moscú, se convirtió en un importante centro académico conocido como 'la ciudad de la ciencia'?",
+    "options": [
+      "Akademgorodok",
+      "Ciudad de la Ciencia de Tomsk",
+      "Naukograd de Krasnoyarsk",
+      "Novosibirsk-Nauka"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Situada cerca de Novosibirsk, Akademgorodok reunió a matemáticos, físicos y biólogos en un entorno diseñado deliberadamente para fomentar el intercambio intelectual informal, y llegó a gozar de un ambiente académico relativamente más libre que otras instituciones soviéticas más vigiladas."
+  },
+  {
+    "question": "¿Qué bombardero soviético de largo alcance, propulsado por hélices contrarrotativas en lugar de motores a reacción puros y presentado en los años 1950, se hizo célebre por su enorme autonomía de vuelo y por seguir en servicio, con modernizaciones, muchas décadas después?",
+    "options": [
+      "El Tupolev Tu-95 'Bear'",
+      "El Tupolev Tu-16",
+      "El Miásischev M-4",
+      "El Iliushin Il-28"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El diseño de hélices contrarrotativas, poco habitual en aviones militares de esa envergadura, permitió al Tu-95 alcanzar velocidades notablemente altas para un avión de hélice, además de un ruido característico tan intenso que resultaba detectable por sonar submarino incluso en pleno vuelo."
+  },
+  {
+    "question": "¿Qué ingeniero aeronáutico soviético fundó la oficina de diseño responsable de célebres cazas y aviones de combate como el Su-7 y el Su-27, cuyo apellido sigue dando nombre hoy a una de las principales marcas de aviación militar rusa?",
+    "options": [
+      "Semión Lávochkin",
+      "Alexánder Yákovlev",
+      "Pável Sujói",
+      "Vladímir Miásischev"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Sujói, que había trabajado anteriormente bajo la dirección de Tupolev, fundó su propia oficina de diseño en 1939, la cual, tras superar periodos de disolución y reactivación durante las purgas y reorganizaciones soviéticas, se consolidaría después como una de las grandes potencias mundiales en diseño de cazas."
+  },
+  {
+    "question": "¿Qué dos ingenieros aeronáuticos dieron sus apellidos combinados a la célebre familia de cazas 'MiG', desarrollados por su oficina de diseño conjunta desde 1939 y usados por decenas de fuerzas aéreas de todo el mundo?",
+    "options": [
+      "Nikolái Polikárpov y Serguéi Iliushín",
+      "Vladímir Petliakov y Pável Sujói",
+      "Artiom Mikoyán y Mijaíl Gurévich",
+      "Alexánder Yákovlev y Semión Lávochkin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El caza MiG-15, uno de los productos más célebres de esta oficina, sorprendió a las fuerzas occidentales por su desempeño durante la Guerra de Corea, marcando el inicio de una larga rivalidad tecnológica en el diseño de aviones de combate entre bloques."
+  },
+  {
+    "question": "¿Qué microbióloga soviética, apodada popularmente 'Madame Penicilina', desarrolló durante la Segunda Guerra Mundial la primera penicilina producida en la URSS, ayudando a salvar a miles de soldados heridos de infecciones mortales?",
+    "options": [
+      "Zinaída Ermolskaya",
+      "Lina Stern",
+      "Olga Lepeshínskaya",
+      "Zinaída Yermólieva"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Trabajando con recursos muy limitados en plena guerra, Yermólieva logró aislar un hongo productor de penicilina a partir de muestras tomadas en el metro de Moscú, y su fórmula, aunque distinta de la occidental, resultó eficaz para tratar heridas infectadas en los hospitales militares soviéticos."
+  },
+  {
+    "question": "¿Qué médico y organizador sanitario soviético diseñó en 1918 uno de los primeros sistemas de salud pública centralizados y gratuitos del mundo, con una red estatal unificada de hospitales y clínicas conocida hoy con su propio apellido?",
+    "options": [
+      "Grigori Zajárin",
+      "Nikolái Bourdenko",
+      "Serguéi Bótkin",
+      "Nikolái Semashkó"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El llamado 'sistema Semashkó', pese a sus limitaciones y a las carencias de recursos en distintas épocas, ofrecía atención médica gratuita y universal a toda la población soviética, y sirvió de modelo de referencia para varios sistemas de salud pública en otros países durante el siglo XX."
+  },
+  {
+    "question": "¿Qué estación de investigación, fundada en 1956 en la costa de la Antártida, se convirtió en la primera base científica permanente soviética en el continente helado, sirviendo de punto de partida para expediciones posteriores hacia el interior?",
+    "options": [
+      "La estación Mirny",
+      "La estación Vostok",
+      "La estación Bellingshausen",
+      "La estación Novolazarévskaya"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Desde esta base costera, establecida durante el Año Geofísico Internacional, los científicos soviéticos organizaron expediciones cada vez más profundas hacia el interior del continente, que culminarían con la fundación de la remota estación Vostok, célebre después por su récord de temperatura extrema."
+  },
+  {
+    "question": "¿En qué gran proyecto de ingeniería civil en el extranjero colaboró activamente la Unión Soviética durante los años 1960, aportando ingenieros, maquinaria y financiación para la construcción de una enorme presa sobre el río Nilo en Egipto?",
+    "options": [
+      "La central hidroeléctrica de El Cairo",
+      "La presa de Asuán",
+      "El canal de Suez",
+      "El puerto de Alejandría"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La Presa Alta de Asuán, que permitió regular las crecidas del Nilo y generar electricidad para buena parte de Egipto, se convirtió en un símbolo de la cooperación técnica soviética con países del llamado 'Tercer Mundo' durante la Guerra Fría, y su construcción implicó también el traslado de templos antiguos amenazados por el nuevo embalse."
+  },
+  {
+    "question": "¿Qué dispositivo mecánico, inventado por el físico Piotr Kapitsa en los años 1930 para licuar gases a gran escala de forma mucho más eficiente que los métodos anteriores, resultó clave para el desarrollo posterior de la industria del oxígeno líquido en la URSS?",
+    "options": [
+      "El compresor criogénico de Landau",
+      "El refrigerador de Semiónov",
+      "La turbina de expansión de Kapitsa",
+      "El licuefactor de Ioffe"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La turbina de Kapitsa, mucho más sencilla y eficiente que los sistemas de compresión de pistones usados hasta entonces, revolucionó la producción industrial de oxígeno líquido, con aplicaciones que iban desde la industria metalúrgica hasta la propia investigación en física de bajas temperaturas."
+  },
+  {
+    "question": "¿Qué físico soviético, hermano del genetista Nikolái Vavílov y presidente de la Academia de Ciencias soviética, dio también su nombre —junto al de Cherenkov— al fenómeno de la radiación que emiten las partículas al superar la velocidad de la luz en un medio determinado?",
+    "options": [
+      "Abram Ióffe",
+      "Ígor Kurchátov",
+      "Serguéi Vavílov",
+      "Piotr Kapitsa"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Como director del laboratorio donde trabajaba Cherenkov, Vavílov supervisó las investigaciones que llevaron al descubrimiento del fenómeno, razón por la cual en la tradición científica rusa se le conoce habitualmente como 'radiación de Vavílov-Cherenkov', aunque el Premio Nobel de 1958 reconoció únicamente a Cherenkov, Tamm y Frank."
+  },
+  {
+    "question": "¿Qué inusual computadora soviética, construida en 1958 en la Universidad Estatal de Moscú, funcionaba con un sistema numérico de base tres (ternario) en lugar del sistema binario habitual, siendo hasta hoy prácticamente la única de su tipo jamás producida en cantidad?",
+    "options": [
+      "La BESM",
+      "La Setún",
+      "La Minsk-2",
+      "La Ural-1"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a que la lógica ternaria ofrecía en teoría ciertas ventajas de eficiencia respecto al sistema binario dominante, la falta de componentes electrónicos estandarizados para esta arquitectura hizo que el proyecto quedara como una curiosidad histórica, sin continuidad en el desarrollo posterior de la computación soviética o mundial."
+  },
+  {
+    "question": "¿Qué astrofísico soviético de origen armenio es considerado uno de los fundadores de la astrofísica teórica moderna, célebre por desarrollar el concepto de 'asociaciones estelares', grupos de estrellas jóvenes formadas simultáneamente a partir de una misma nube de gas?",
+    "options": [
+      "Iósif Shklovski",
+      "Otto Struve",
+      "Víktor Ambartsumián",
+      "Nikolái Kozyrev"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Ambartsumián, fundador además del Observatorio Astrofísico de Biurakán en Armenia, desafió ideas astronómicas entonces dominantes al proponer que ciertas estrellas y galaxias podían formarse mediante procesos mucho más dinámicos y violentos de lo que se pensaba, ideas inicialmente controvertidas que después encontrarían respaldo observacional parcial."
+  },
+  {
+    "question": "¿Qué matemático y explorador polar soviético dirigió en 1933 la desafortunada expedición del buque 'Cheliuskin', que quedó atrapado y finalmente aplastado por los hielos árticos, obligando a toda su tripulación a acampar sobre un témpano flotante durante meses?",
+    "options": [
+      "Vladímir Vize",
+      "Gueorgui Ushakov",
+      "Otto Schmidt",
+      "Iván Papanin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Schmidt, matemático y también destacado organizador científico, había buscado demostrar que la Ruta Marítima del Norte podía navegarse en una sola temporada; aunque el barco se perdió, la posterior evacuación aérea de los más de cien tripulantes se convirtió en una hazaña celebrada como triunfo propagandístico soviético."
+  },
+  {
+    "question": "¿Qué título honorífico, de reciente creación en ese momento, recibieron por primera vez en la historia soviética los siete pilotos que lograron rescatar por aire a la tripulación completa del buque Cheliuskin, varada durante meses sobre el hielo ártico en 1934?",
+    "options": [
+      "Orden de Lenin de Primera Clase",
+      "Héroe del Trabajo Socialista",
+      "Héroe de la Unión Soviética",
+      "Caballero de la Estrella Roja"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La distinción de 'Héroe de la Unión Soviética', instaurada apenas semanas antes específicamente para reconocer esta hazaña, se convertiría después en el máximo honor civil y militar soviético, otorgado posteriormente a miles de personas a lo largo de las décadas siguientes, desde combatientes de guerra hasta los primeros cosmonautas."
+  },
+  {
+    "question": "¿Cómo se llamó la primera estación de investigación soviética a la deriva sobre el hielo del océano Ártico, establecida en 1937 bajo la dirección del explorador Iván Papanin y que permaneció transmitiendo datos científicos durante nueve meses mientras el témpano se desplazaba cientos de kilómetros?",
+    "options": [
+      "Ártika-1",
+      "Estación Vrángel",
+      "Polo Norte-1 (Severny Polius-1)",
+      "Sévernaya Zemliá"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Los cuatro miembros de la expedición vivieron durante meses en condiciones extremas sobre un témpano que se iba fragmentando y reduciendo de tamaño progresivamente, siendo finalmente rescatados por barcos rompehielos cuando el hielo bajo su campamento se había reducido a un peligroso fragmento de apenas unos metros."
+  },
+  {
+    "question": "¿Qué piloto soviético logró en junio de 1937, junto a su tripulación, el primer vuelo transpolar sin escalas de la historia, cruzando directamente sobre el Polo Norte desde Moscú hasta el estado de Washington en Estados Unidos?",
+    "options": [
+      "Valeri Chkálov",
+      "Andréi Yumashev",
+      "Mijaíl Grómov",
+      "Serguéi Danilin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El vuelo de Chkálov, que duró más de 63 horas y atravesó condiciones climáticas extremas, incluidas capas de hielo que se formaban sobre las alas del avión, fue recibido con enorme entusiasmo tanto en la URSS como en Estados Unidos, convirtiéndose en un notable episodio de distensión durante un periodo por lo demás tenso entre ambos países."
+  },
+  {
+    "question": "¿Qué modelo de avión soviético, diseñado específicamente para vuelos de larga distancia y resistencia récord, fue el utilizado tanto en el vuelo transpolar de Chkálov como en el posterior vuelo de distancia de Mijaíl Grómov ese mismo año?",
+    "options": [
+      "El Túpolev ANT-25",
+      "El Iliushín DB-3",
+      "El Petliakov Pe-8",
+      "El Polikárpov I-16"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Diseñado por la oficina de Andréi Túpolev específicamente para intentar récords de distancia, el ANT-25 contaba con alas extremadamente alargadas que maximizaban su eficiencia aerodinámica, sacrificando velocidad y maniobrabilidad en favor de una autonomía de vuelo excepcional para la época."
+  },
+  {
+    "question": "¿Qué piloto soviético logró apenas semanas después que Chkálov, en julio de 1937, un vuelo transpolar aún más largo desde Moscú hasta California, estableciendo un nuevo récord mundial de distancia en línea recta para un vuelo sin escalas?",
+    "options": [
+      "Mijaíl Grómov",
+      "Grigori Bájchivandzhi",
+      "Vladímir Kokkinaki",
+      "Valeri Chkálov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El vuelo de Grómov, que aterrizó en un campo cercano a San Jacinto, California, tras recorrer más de 10,000 kilómetros en línea recta, superó incluso la distancia lograda semanas antes por Chkálov, consolidando el prestigio internacional de la aviación soviética de largo alcance en la década de 1930."
+  },
+  {
+    "question": "¿Qué circunstancia personal, poco conocida fuera de Rusia, marcó profundamente la juventud del pionero de la cohetería teórica Konstantín Tsiolkovski, obligándolo a educarse de forma prácticamente autodidacta mientras trabajaba como modesto maestro de escuela en una provincia alejada de los grandes centros científicos?",
+    "options": [
+      "Fue exiliado a Siberia por motivos políticos en su juventud",
+      "Perdió la vista parcialmente en un accidente de laboratorio",
+      "Sufrió una parálisis que lo mantuvo postrado durante años",
+      "Quedó prácticamente sordo tras una enfermedad infantil, lo que le impidió asistir a una escuela convencional"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La sordera casi total que sufrió tras contraer escarlatina de niño lo aisló socialmente y le impidió seguir una educación formal convencional, por lo que se formó leyendo por su cuenta en bibliotecas; pese a estas dificultades, y trabajando toda su vida como oscuro profesor provinciano, desarrolló las bases matemáticas fundamentales de la cohetería y los viajes espaciales modernos."
+  },
+  {
+    "question": "¿Qué dos ingenieros rusos del siglo XIX son reconocidos, de forma independiente y casi simultánea, como los inventores de la soldadura eléctrica por arco, técnica que revolucionaría después la industria metalúrgica y la construcción naval mundial?",
+    "options": [
+      "Pável Yablochkov y Alexánder Lódyguin",
+      "Alexánder Popov y Piotr Lébedev",
+      "Borís Yakobi y Emili Lenz",
+      "Nikolái Benardos y Nikolái Slaviánov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Benardos desarrolló primero, en la década de 1880, un método usando un electrodo de carbono, mientras Slaviánov perfeccionó poco después la técnica empleando electrodos metálicos consumibles, sentando ambos las bases de los métodos de soldadura por arco que siguen usándose, con perfeccionamientos, hasta hoy."
+  },
+  {
+    "question": "¿Qué biplano soviético, diseñado en los años 1940 y célebre por su extraordinaria robustez y versatilidad, se convirtió en el biplano producido en mayor cantidad de toda la historia de la aviación, usado durante décadas en agricultura, transporte y misiones remotas?",
+    "options": [
+      "El Beriev Be-6",
+      "El Polikárpov Po-2",
+      "El Yakovlev Yak-12",
+      "El Antónov An-2"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Capaz de despegar y aterrizar en pistas extremadamente cortas y rudimentarias, el An-2 se mantuvo en producción activa durante más de medio siglo en distintos países, y todavía hoy vuelan ejemplares de este avión en remotas regiones de Rusia y otros países donde su sencillez y resistencia lo hacen prácticamente insustituible."
+  },
+  {
+    "question": "¿Qué arma de fuego, diseñada por el sargento soviético Mijaíl Kaláshnikov y presentada oficialmente en 1947, se convertiría con el tiempo en el fusil de asalto más producido y ampliamente distribuido de toda la historia militar mundial?",
+    "options": [
+      "El fusil Mosin-Nagant modernizado",
+      "La ametralladora Degtiariov",
+      "El fusil de asalto AK-47",
+      "El subfusil PPSh-41"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Valorado sobre todo por su extraordinaria simplicidad mecánica y fiabilidad incluso en condiciones extremas de suciedad, humedad o frío, el diseño de Kaláshnikov se fabricó bajo licencia y también de forma no autorizada en decenas de países durante las décadas siguientes, convirtiéndose en un símbolo reconocible en todo el mundo."
+  },
+  {
+    "question": "¿Qué sistema de monitoreo médico a distancia desarrolló la Unión Soviética para las primeras misiones espaciales tripuladas, permitiendo a los controladores en tierra seguir en tiempo real los signos vitales de los cosmonautas durante el vuelo orbital?",
+    "options": [
+      "La red de sensores Sokol",
+      "Los sistemas de biotelemetría del programa Vostok",
+      "El protocolo médico Orbita",
+      "El sistema de monitoreo Zvezda"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes de enviar al primer ser humano al espacio, los ingenieros soviéticos desarrollaron sofisticados sistemas capaces de transmitir el ritmo cardíaco, la respiración y otros parámetros vitales de Gagarin y los cosmonautas posteriores directamente a los centros de control en tierra, un desafío técnico considerable para la época."
+  },
+  {
+    "question": "¿Qué físico soviético desarrolló, ya en los años 1960, fundamentos teóricos sobre la difracción de ondas de radar en superficies con bordes afilados que, décadas después y sin que él mismo lo supiera, resultarían clave para el desarrollo de la tecnología furtiva ('stealth') de aviones estadounidenses?",
+    "options": [
+      "Piotr Ufimtsev",
+      "Vitali Guínzburg",
+      "Nikolái Basov",
+      "Lev Landau"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El trabajo teórico de Ufimtsev, publicado abiertamente en una revista científica soviética de difusión limitada, fue descubierto años después por ingenieros estadounidenses, quienes lo utilizaron como base matemática fundamental para calcular formas de aeronaves capaces de minimizar su reflejo ante el radar, sin que las propias autoridades soviéticas dieran en su momento demasiada importancia práctica al hallazgo."
+  },
+  {
+    "question": "¿Qué ingeniero soviético, principal diseñador de motores de cohetes líquidos y colaborador cercano —aunque a menudo enfrentado— de Serguéi Koroliov, desarrolló los propulsores que impulsaron buena parte de los primeros vehículos espaciales soviéticos?",
+    "options": [
+      "Valentín Glushkó",
+      "Nikolái Pilugin",
+      "Vladímir Chelomei",
+      "Vasili Michin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a su larga y fructífera colaboración técnica, Glushkó y Koroliov mantuvieron durante años una intensa rivalidad personal y profesional sobre el tipo de combustible más adecuado para los cohetes soviéticos, una disputa que llegó a influir directamente en el rumbo y los retrasos del propio programa lunar soviético."
+  },
+  {
+    "question": "¿Qué ingeniero soviético, jefe de una oficina de diseño rival a la de Koroliov y con estrechos vínculos políticos con la cúpula del Kremlin, desarrolló misiles de crucero y participó también en el diseño de estaciones espaciales militares?",
+    "options": [
+      "Valentín Glushkó",
+      "Vladímir Chelomei",
+      "Georgui Babakin",
+      "Mijaíl Yángel"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La rivalidad entre las distintas oficinas de diseño soviéticas —la de Koroliov, la de Chelomei y la de Yángel, entre otras— por recursos, prioridad política y proyectos estratégicos fragmentó considerablemente los esfuerzos del programa espacial y de misiles soviético, contribuyendo según muchos historiadores a varios de sus fracasos y retrasos posteriores."
+  },
+  {
+    "question": "¿Cómo se conoce a la catástrofe ocurrida en octubre de 1960 en el cosmódromo de Baikonur, cuando la explosión accidental de un misil balístico en su plataforma de lanzamiento mató a decenas de técnicos e ingenieros, incluido el propio mariscal a cargo del programa, en un desastre mantenido en secreto durante casi tres décadas?",
+    "options": [
+      "La explosión del Vostok cero",
+      "El accidente de Plesetsk",
+      "El desastre del R-7",
+      "La catástrofe de Nedelin"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El mariscal Mitrofán Nedelin, que había insistido en permanecer cerca de la plataforma durante una revisión de última hora del cohete R-16 pese a los riesgos evidentes, murió junto a decenas de otros técnicos cuando el motor se encendió accidentalmente; el gobierno soviético ocultó el incidente durante décadas, atribuyendo oficialmente la muerte de Nedelin a un accidente aéreo."
+  },
+  {
+    "question": "¿Cómo se llamó la línea de supercomputadoras soviéticas desarrolladas a partir de los años 1970, empleadas principalmente para cálculos militares y científicos de alto rendimiento, cuyo nombre evoca la elevación de la cordillera del Cáucaso?",
+    "options": [
+      "Beshtau",
+      "Elbrus",
+      "Kazbek",
+      "Ararat"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Desarrolladas por un equipo dirigido por el ingeniero Vsévolod Burtsev, estas supercomputadoras buscaban competir tecnológicamente con los sistemas de alto rendimiento occidentales, aunque las limitaciones de la industria de semiconductores soviética hicieron que su desempeño relativo fuera generalmente inferior al de sus equivalentes estadounidenses de la misma época."
+  },
+  {
+    "question": "¿Qué ingeniero nuclear soviético diseñó el reactor de tipo RBMK, empleado en varias centrales nucleares soviéticas incluida la de Óbninsk (la primera planta civil del mundo) y, más tarde, la de Chernóbil?",
+    "options": [
+      "Ígor Kurchátov",
+      "Nikolái Dollezhal",
+      "Anatoli Alexándrov",
+      "Yuli Jaritón"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Dollezhal, ingeniero de gran prestigio dentro del programa nuclear civil soviético, defendió durante años las ventajas económicas y de escalabilidad de su diseño de reactor, aunque ciertas características particulares del RBMK resultarían después decisivas para entender las causas técnicas del accidente de Chernóbil."
+  },
+  {
+    "question": "¿Qué físico nuclear soviético, encargado durante décadas de la dirección técnica del programa de energía atómica civil y militar del país, presidió también la Academia de Ciencias de la URSS durante buena parte de los años 1970 y 1980?",
+    "options": [
+      "Yuli Jaritón",
+      "Anatoli Alexándrov",
+      "Ígor Golovín",
+      "Andréi Sájarov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Alexándrov, que había comenzado su carrera científica investigando la protección magnética de buques de guerra contra minas, se convirtió con el tiempo en una de las figuras más poderosas e influyentes de todo el establishment científico soviético, supervisando el desarrollo de la energía nuclear civil durante décadas."
+  },
+  {
+    "question": "¿Cómo se conoce al programa soviético, desarrollado entre 1965 y 1988, que empleó explosiones nucleares controladas con fines exclusivamente civiles, como la excavación de canales, la extinción de incendios en pozos de gas o la creación artificial de cavernas subterráneas para almacenamiento?",
+    "options": [
+      "El Programa de Explosiones Nucleares Pacíficas",
+      "El Proyecto Taiga",
+      "La Operación Chagan Civil",
+      "El Plan de Ingeniería Nuclear Aplicada"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A lo largo de más de dos décadas, la URSS realizó más de un centenar de estas detonaciones controladas con fines industriales, un programa comparable al estadounidense 'Operación Plowshare', aunque las preocupaciones sobre contaminación radiactiva residual llevaron finalmente a su abandono definitivo hacia el final de la era soviética."
+  },
+  {
+    "question": "¿Qué tipo de estaciones espaciales militares soviéticas, desarrolladas en paralelo a las civiles Salyut y tripuladas en secreto por cosmonautas con misiones de reconocimiento fotográfico, mantuvo oculto su verdadero propósito militar tras una fachada oficial de investigación científica?",
+    "options": [
+      "Las plataformas Zenit-Orbita",
+      "Las estaciones Zvezda militares",
+      "Las estaciones Almaz",
+      "El programa Cosmos Orbital"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Camufladas bajo la misma denominación pública 'Salyut' que las estaciones científicas civiles, las estaciones Almaz albergaban en realidad equipos de reconocimiento fotográfico de alta resolución y, según algunas fuentes, incluso un cañón instalado para defenderse de una eventual interceptación enemiga, todo ello mantenido en riguroso secreto durante la Guerra Fría."
+  },
+  {
+    "question": "¿Qué oftalmólogo soviético desarrolló y popularizó a partir de los años 1970 la técnica de la queratotomía radial, un procedimiento quirúrgico pionero para corregir la miopía mediante incisiones precisas en la córnea, atendiendo a miles de pacientes en su clínica especializada de Moscú?",
+    "options": [
+      "Mijaíl Krasnov",
+      "Arkadi Watchevski",
+      "Alexéi Brovkina",
+      "Sviatoslav Fiódorov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Fiódorov, que llegó a operar en una innovadora línea de producción quirúrgica con varios pacientes atendidos simultáneamente por distintos cirujanos en una misma sala, se convirtió en una figura casi legendaria de la medicina soviética, atrayendo a pacientes de todo el país e incluso del extranjero para someterse a su técnica pionera."
+  },
+  {
+    "question": "¿A qué ingeniero soviético, especializado en el diseño de vehículos hidroalados y posteriormente en los inusuales ekranoplanos —híbridos entre barco y avión que vuelan a muy baja altura sobre el agua—, se debe el desarrollo del célebre 'Monstruo del Caspio'?",
+    "options": [
+      "Rostislav Alexéyev",
+      "Oleg Antónov",
+      "Robert Bartini",
+      "Georgui Bériev"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Alexéyev, que había comenzado su carrera diseñando hidroalas civiles para el transporte fluvial soviético, aplicó después sus conocimientos aerodinámicos al ambicioso y poco convencional proyecto militar de los ekranoplanos, vehículos que aprovechaban el llamado 'efecto suelo' para desplazarse a gran velocidad prácticamente sobre la superficie del agua."
+  },
+  {
+    "question": "¿Qué particular circunstancia compartieron tanto Serguéi Koroliov como Andréi Túpolev, dos de los más destacados ingenieros aeroespaciales soviéticos, antes de que ambos alcanzaran fama y reconocimiento por sus posteriores logros técnicos?",
+    "options": [
+      "Ambos fueron arrestados y obligados a trabajar en prisiones especiales de diseño técnico ('sharashki') durante las purgas estalinistas",
+      "Ambos comenzaron sus carreras exclusivamente en la marina de guerra soviética",
+      "Ambos fueron rechazados repetidamente por la Academia de Ciencias antes de ser aceptados",
+      "Ambos emigraron primero a Estados Unidos antes de regresar a la URSS"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tanto Koroliov como Túpolev fueron detenidos durante las Grandes Purgas bajo acusaciones fabricadas de sabotaje, y ambos pasaron años trabajando en las llamadas 'sharashki', prisiones especiales donde ingenieros y científicos detenidos continuaban su labor técnica bajo estricta vigilancia, antes de ser finalmente liberados y rehabilitados para liderar los grandes proyectos aeroespaciales soviéticos posteriores."
+  },
+  {
+    "question": "¿Cómo se llamó el primer vehículo robótico de la historia en operar exitosamente sobre la superficie de otro cuerpo celeste, un rover soviético no tripulado que recorrió varios kilómetros sobre la superficie lunar en 1970, controlado remotamente desde la Tierra?",
+    "options": [
+      "Lunik Rover",
+      "Lunojod 1",
+      "Vezdejod Lunar",
+      "Marsojod 1"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Lunojod 1, transportado hasta la Luna por la sonda Luna 17 y operado por un equipo de controladores en Tierra que trabajaban en turnos especiales debido al desfase entre el ciclo día-noche lunar y terrestre, recorrió más de diez kilómetros sobre la superficie lunar, tomando miles de fotografías y realizando análisis del suelo."
+  },
+  {
+    "question": "¿Qué diminuto vehículo robótico experimental intentó enviar la Unión Soviética a la superficie de Marte en 1971, como parte de la misión Mars 3, aunque nunca llegó a desplegarse con éxito debido a la pérdida de la señal de la sonda poco después del aterrizaje?",
+    "options": [
+      "El PrOP-M",
+      "El Robot Fóbos-1",
+      "El Marsojod Piloto",
+      "El Kompas-Mars"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Diseñado para desplazarse mediante un sistema de esquíes en lugar de ruedas convencionales y conectado a la nave nodriza mediante un cable, el PrOP-M representaba un ambicioso intento pionero de exploración robótica marciana, adelantándose por décadas a los exitosos rovers marcianos que otras agencias espaciales lograrían operar mucho tiempo después."
+  },
+  {
+    "question": "¿A qué físico teórico soviético, considerado uno de los principales contribuyentes al diseño teórico de la bomba de hidrógeno soviética junto a Sájarov, se le atribuyen también fundamentales aportaciones a la teoría de la superconductividad y la astrofísica?",
+    "options": [
+      "Vitali Guínzburg",
+      "Isaak Pomerán",
+      "Lev Landau",
+      "Yákov Zeldóvich"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Guínzburg, cuya contribución teórica al diseño de la bomba termonuclear soviética permaneció clasificada durante décadas, desarrolló en paralelo una prolífica carrera académica en física teórica pura, abarcando desde la propagación de ondas electromagnéticas hasta el origen de los rayos cósmicos."
+  },
+  {
+    "question": "¿Qué dispositivo experimental, inventado por físicos soviéticos a mediados de los años 1950, utiliza un potente campo magnético en forma de toroide (anillo) para confinar plasma extremadamente caliente con el objetivo de lograr la fusión nuclear controlada?",
+    "options": [
+      "El estelarator soviético",
+      "El pinch magnético Z",
+      "El tokamak",
+      "El reactor Z-máquina"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El propio término 'tokamak' es un acrónimo del ruso que describe su configuración técnica ('cámara toroidal con bobinas magnéticas'); décadas después de su invención soviética, este diseño se convertiría en el modelo predominante seguido por la mayoría de los proyectos internacionales de investigación en fusión nuclear controlada, incluido el reactor experimental ITER."
+  },
+  {
+    "question": "¿Qué físico soviético dirigió durante décadas el programa de investigación sobre fusión nuclear controlada mediante tokamaks, siendo considerado uno de los principales impulsores de esta tecnología a nivel mundial?",
+    "options": [
+      "Andréi Sájarov",
+      "Lev Artsímovich",
+      "Nikolái Basov",
+      "Ígor Tamm"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Bajo la dirección de Artsímovich, el Instituto Kurchátov logró avances experimentales tan significativos en el confinamiento de plasma que científicos de todo el mundo, incluidos investigadores occidentales durante la Guerra Fría, terminaron adoptando el diseño soviético del tokamak como base fundamental para sus propios programas de investigación en fusión."
+  },
+  {
+    "question": "¿Cómo se llamó la computadora soviética considerada la más potente de su tiempo en la URSS durante los años 1970, ampliamente utilizada en investigación científica, defensa y control del tráfico aéreo?",
+    "options": [
+      "La Ural-14",
+      "La ES EVM",
+      "La BESM-6",
+      "La Minsk-32"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Capaz de realizar aproximadamente un millón de operaciones por segundo —una cifra notable para su época—, la BESM-6 se mantuvo en producción y uso durante casi dos décadas, un periodo excepcionalmente largo para un equipo informático, reflejo tanto de su sólido diseño técnico como de las limitaciones de la industria soviética de semiconductores para desarrollar reemplazos más avanzados."
+  },
+  {
+    "question": "¿Qué científico soviético, pionero de la cibernética en su país tras la inicial condena oficial de esta disciplina como 'pseudociencia burguesa', propuso en los años 1960 un ambicioso proyecto de red nacional de computadoras interconectadas para gestionar toda la economía soviética, nunca llegado a implementarse plenamente?",
+    "options": [
+      "Alexéi Liapunov",
+      "Andréi Ershov",
+      "Víktor Glushkov",
+      "Anatoli Kitov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El proyecto de Glushkov, conocido como OGAS (Sistema Estatal Automatizado), habría creado una red de computadoras interconectadas décadas antes de la popularización de internet, pero enfrentó fuerte resistencia burocrática de ministerios que temían perder poder e influencia si la planificación económica pasaba a depender de un sistema informático centralizado."
+  },
+  {
+    "question": "¿Qué actitud oficial adoptó inicialmente la ciencia soviética hacia la cibernética durante finales de los años 1940 y comienzos de los 1950, antes de que la disciplina fuera plenamente rehabilitada y activamente promovida a partir de mediados de esa misma década?",
+    "options": [
+      "Fue adoptada con entusiasmo inmediato sin ninguna resistencia ideológica",
+      "Se consideró una disciplina neutral sin ninguna connotación ideológica",
+      "Fue condenada oficialmente como una 'pseudociencia burguesa reaccionaria'",
+      "Se prohibió únicamente su aplicación militar, permitiendo su uso civil"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Este rechazo inicial, basado en la percepción de que la cibernética negaba el papel determinante de la conciencia humana y servía a intereses militares e industriales capitalistas, se revirtió drásticamente tras la muerte de Stalin, cuando la disciplina pasó a recibir un fuerte respaldo estatal como herramienta clave para modernizar la industria y la ciencia soviéticas."
+  },
+  {
+    "question": "¿Qué cirujano soviético llevó a cabo, ya en los años 1950, controvertidos y pioneros experimentos de trasplante de órganos en perros, incluida la creación de un perro con dos cabezas mediante el injerto quirúrgico de la parte anterior de un segundo animal?",
+    "options": [
+      "Gavriil Ilizárov",
+      "Nikolái Amósov",
+      "Vladímir Demíjov",
+      "Serguéi Yudin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque sus experimentos con perros bicéfalos generaron una considerable controversia ética y mediática internacional, las técnicas quirúrgicas desarrolladas por Demíjov durante estos años sentaron bases fundamentales para la posterior cirugía de trasplantes de corazón y otros órganos en humanos, incluida la primera operación experimental de bypass de arteria coronaria."
+  },
+  {
+    "question": "¿En qué década aproximada se realizó el primer trasplante de riñón exitoso en la Unión Soviética, un logro médico que, pese a llegar más tarde que en algunos países occidentales, marcó un hito importante para la cirugía de trasplantes soviética?",
+    "options": [
+      "La década de 1960",
+      "La década de 1980",
+      "La década de 1930",
+      "La década de 1990"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El desarrollo relativamente tardío de la cirugía de trasplantes en la URSS, comparado con avances similares en Estados Unidos y Europa occidental, reflejaba en parte las limitaciones tanto tecnológicas como de infraestructura médica especializada que enfrentaba el sistema sanitario soviético para este tipo de procedimientos altamente complejos."
+  },
+  {
+    "question": "¿Qué cirujano soviético, pionero de la cirugía cardíaca a corazón abierto en la URSS, fue también un destacado divulgador científico y escritor, cuyos libros sobre salud, longevidad y ejercicio físico alcanzaron enorme popularidad entre el público soviético general?",
+    "options": [
+      "Nikolái Amósov",
+      "Alexánder Vishnevski",
+      "Borís Petrovski",
+      "Vladímir Demíjov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Además de desarrollar técnicas quirúrgicas pioneras para reparar defectos cardíacos congénitos, Amósov defendió públicamente y practicó él mismo un régimen personal de ejercicio físico intenso hasta edad muy avanzada, convirtiéndose en una suerte de celebridad pública más allá del estricto ámbito médico soviético."
+  },
+  {
+    "question": "¿Qué ingeniero soviético especializado en sistemas de control y guiado de naves espaciales desarrolló también, de forma poco habitual para un científico de su formación, una teoría propia sobre la perspectiva geométrica en la pintura y las artes visuales?",
+    "options": [
+      "Borís Raushenbaj",
+      "Vladímir Barmín",
+      "Nikolái Pilugin",
+      "Vasili Michin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Raushenbaj, encargado de diseñar los sistemas de orientación y navegación de varias misiones espaciales soviéticas, dedicó también parte de su carrera académica a estudiar cómo distintas tradiciones artísticas —incluidos los iconos rusos medievales— representaban el espacio tridimensional, publicando estudios que combinaban su formación técnica con un genuino interés por la historia del arte."
+  },
+  {
+    "question": "¿Qué dos físicos soviéticos compartieron el Premio Nobel de Física de 1964 por sus fundamentales trabajos sobre los principios que hicieron posible el desarrollo posterior del máser y el láser?",
+    "options": [
+      "Nikolái Básov y Alexánder Projorov",
+      "Ígor Tamm y Pável Cherenkov",
+      "Lev Landau y Vitali Guínzburg",
+      "Piotr Kapitsa y Serguéi Vavílov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Compartiendo el galardón con el estadounidense Charles Townes, que había desarrollado investigaciones paralelas de forma independiente, Básov y Projorov sentaron las bases teóricas y experimentales de una tecnología que después transformaría campos tan diversos como las telecomunicaciones, la medicina y la industria."
+  },
+  {
+    "question": "¿Qué propuesta teórica formularon Ígor Tamm y Andréi Sájarov ya en 1950, sentando las bases conceptuales de lo que años después se convertiría en el diseño del tokamak para lograr la fusión nuclear mediante confinamiento magnético?",
+    "options": [
+      "La teoría del confinamiento electrostático puro",
+      "El principio del láser de fusión inercial",
+      "El modelo de fusión por implosión directa",
+      "La idea del confinamiento magnético toroidal del plasma"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Esta temprana propuesta teórica, desarrollada apenas años después de que ambos científicos participaran en el diseño de la bomba de hidrógeno soviética, buscaba aprovechar de forma pacífica y controlada el mismo principio físico de fusión nuclear empleado en el arma termonuclear, sentando las bases conceptuales que Artsímovich y otros desarrollarían prácticamente después."
+  },
+  {
+    "question": "¿Qué particularidad tuvo la misión espacial soviética Vosjod 1, lanzada en octubre de 1964, respecto a las misiones espaciales anteriores tanto soviéticas como estadounidenses de la época?",
+    "options": [
+      "Llevó por primera vez una tripulación de tres cosmonautas en una misma cápsula, sin trajes espaciales debido al reducido espacio disponible",
+      "Fue la primera misión en incluir a una mujer cosmonauta",
+      "Fue la primera misión tripulada en orbitar la Luna",
+      "Realizó la primera caminata espacial de la historia"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Para lograr acomodar a tres cosmonautas en una cápsula diseñada originalmente para uno solo, los ingenieros soviéticos tuvieron que eliminar los trajes espaciales de emergencia y otros sistemas de seguridad, una decisión arriesgada motivada principalmente por el deseo político de lograr otro 'primero' espacial antes que Estados Unidos."
+  },
+  {
+    "question": "¿Qué inusual carga llevaron a bordo las sondas soviéticas del programa Zond en su vuelo de septiembre de 1968 alrededor de la Luna, convirtiéndose en los primeros seres vivos terrestres en circunnavegar nuestro satélite natural, meses antes de la misión tripulada Apolo 8?",
+    "options": [
+      "Un mono adiestrado junto a semillas vegetales de control",
+      "Varios ratones de laboratorio en cápsulas presurizadas separadas",
+      "Un par de perros entrenados especialmente para el vuelo",
+      "Dos tortugas de estepa rusa, junto a otros organismos biológicos de prueba"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las tortugas, elegidas por su capacidad de sobrevivir largos periodos con requerimientos metabólicos mínimos, regresaron sanas a la Tierra tras el vuelo circunlunar de la sonda Zond 5, aunque habían perdido una parte considerable de su peso corporal durante el viaje, proporcionando datos biológicos valiosos antes del posterior vuelo tripulado estadounidense."
+  },
+  {
+    "question": "¿Qué característica de diseño incorporó deliberadamente la Unión Soviética en la señal de radio emitida por el primer satélite artificial Sputnik en 1957, permitiendo que aficionados a la radioafición de todo el mundo pudieran captarla fácilmente con equipos sencillos?",
+    "options": [
+      "Una transmisión encriptada exclusivamente para receptores militares soviéticos",
+      "Una señal de banda extremadamente estrecha detectable solo con equipos profesionales",
+      "Una señal simple de pitidos regulares, transmitida en una frecuencia accesible para radioaficionados comunes",
+      "Un mensaje codificado en código Morse solo descifrable por gobiernos"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Esta decisión, que permitió a personas comunes de todo el mundo escuchar directamente las señales del satélite en sus propias radios caseras, contribuyó enormemente al impacto psicológico y propagandístico global del lanzamiento, convirtiendo el característico 'bip-bip' del Sputnik en un sonido instantáneamente reconocible en todo el planeta."
+  },
+  {
+    "question": "¿Qué instituto de investigación aerodinámica, fundado en 1918 por iniciativa del propio Nikolái Zhukovski, se convirtió en el principal centro soviético de estudios sobre vuelo, ensayo de aeronaves y desarrollo de nuevas tecnologías aeroespaciales durante todo el siglo XX?",
+    "options": [
+      "El Instituto Kurchátov de Aviación",
+      "El Instituto Central de Aerohidrodinámica (TsAGI)",
+      "La Academia Aeroespacial de Moscú",
+      "El Centro Zhukovski de Vuelo"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Por las instalaciones del TsAGI, dotadas de algunos de los túneles de viento más grandes y avanzados del mundo en su época, pasaron prácticamente todos los diseños de aeronaves soviéticas más importantes del siglo XX, desde los primeros aviones experimentales hasta los cazas y bombarderos más sofisticados de la era de la Guerra Fría."
+  },
+  {
+    "question": "¿Qué fórmula matemática fundamental, desarrollada de forma independiente por Nikolái Zhukovski y el alemán Martin Kutta a comienzos del siglo XX, permite calcular la fuerza de sustentación que genera un perfil alar en movimiento a través del aire, y sigue siendo hoy la base de la aerodinámica moderna?",
+    "options": [
+      "El teorema de Zhukovski-Kutta",
+      "La ecuación de Bernoulli aplicada",
+      "El principio de Zhukovski del flujo laminar",
+      "La fórmula de sustentación de Chaplygin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este teorema, que relaciona matemáticamente la circulación del flujo de aire alrededor de un perfil alar con la fuerza de sustentación generada, resultó fundamental para el diseño científico y no meramente empírico de las alas de aeronaves, consolidando a Zhukovski como una figura central en el desarrollo de la aerodinámica teórica moderna."
+  },
+  {
+    "question": "¿Qué concepto científico, desarrollado por el geoquímico Vladímir Vernadski a partir de los años 1920 junto a otros pensadores, describe una hipotética etapa evolutiva de la Tierra en la que la actividad consciente y racional de la humanidad se convertiría en una fuerza geológica determinante, comparable a los propios procesos biológicos o físicos del planeta?",
+    "options": [
+      "La biosfera consciente",
+      "La noosfera",
+      "El antropoceno vernadskiano",
+      "La geosfera racional"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Vernadski, que ya había desarrollado el concepto más amplio de biosfera para describir la capa terrestre transformada por la vida, propuso la noosfera como una etapa evolutiva posterior en la que la mente humana, mediante la ciencia y la tecnología, comenzaría a rivalizar en influencia transformadora con los propios procesos geológicos y biológicos naturales del planeta."
+  },
+  {
+    "question": "¿Qué sonda soviética se convirtió en enero de 1959 en el primer objeto fabricado por el ser humano en escapar completamente de la fuerza gravitatoria terrestre, pasando cerca de la Luna sin lograr impactar directamente sobre su superficie como estaba originalmente previsto?",
+    "options": [
+      "Sputnik 3",
+      "Luna 2",
+      "Luna 1",
+      "Zond 1"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque un pequeño error de cálculo hizo que la sonda pasara a varios miles de kilómetros de la superficie lunar en lugar de impactarla como se había planeado inicialmente, Luna 1 logró de todos modos un hito histórico igualmente significativo, convirtiéndose en el primer objeto artificial en alcanzar la velocidad de escape necesaria para abandonar definitivamente la órbita terrestre."
+  }
+]

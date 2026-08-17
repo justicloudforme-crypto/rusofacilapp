@@ -15,26 +15,26 @@ datasource db {
 // role is one of: owner | admin | student
 // (kept as String because SQLite has no native enum type in Prisma)
 model User {
-  id               String           @id @default(cuid())
-  email            String           @unique
-  name             String?
+  id                   String                 @id @default(cuid())
+  email                String                 @unique
+  name                 String?
   // One of AVATAR_IDS in src/lib/avatars.ts (e.g. "matryoshka_calm") — never
   // a file path or URL. The avatar itself is a client-rendered component,
   // not a stored asset; this column is only ever a tiny string.
-  avatarId         String           @default("matryoshka_calm")
-  role             String           @default("student")
+  avatarId             String                 @default("matryoshka_calm")
+  role                 String                 @default("student")
   // bcrypt hash, never the plaintext. Null on accounts created before real
   // password auth existed (the old email-only demo flow) — those users are
   // asked to set a password on their next login (see src/lib/auth.ts).
-  passwordHash     String?
+  passwordHash         String?
   // Bumped by "sign out other devices"/change-password/reset-password —
   // every issued session token embeds the version it was signed with (see
   // session-token.ts), so incrementing this invalidates every
   // previously-issued token at once with no server-side session table to
   // store or clean up.
-  sessionVersion   Int              @default(0)
-  stripeCustomerId String?          @unique
-  createdAt        DateTime         @default(now())
+  sessionVersion       Int                    @default(0)
+  stripeCustomerId     String?                @unique
+  createdAt            DateTime               @default(now())
   subscriptions        Subscription[]
   lessonProgress       LessonProgress[]
   voiceSubmissions     VoiceSubmission[]
@@ -314,13 +314,13 @@ model AudioAsset {
 // — kept as JSON rather than a join table since this is a small reference
 // set, not a high-write relation.
 model GlossaryTerm {
-  id               String   @id @default(cuid())
-  slug             String   @unique
-  term             String
-  definition       String
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  term              String
+  definition        String
   russianEquivalent String
-  transcription    String?
-  category         String
+  transcription     String?
+  category          String
   // A short paragraph bridging to Russian — how this concept behaves (or
   // doesn't exist) in Russian grammar, e.g. "en español el sustantivo no
   // cambia de forma; en ruso sí, según el caso". Optional because it only
@@ -335,10 +335,10 @@ model GlossaryTerm {
   // pattern in more than one live context). Same JSON-string-column
   // pattern as relatedLessons below, for the same reason (small reference
   // table, not worth a join table).
-  examples         String   @default("[]")
-  relatedLessons   String   @default("[]")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  examples          String   @default("[]")
+  relatedLessons    String   @default("[]")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([category])
 }
@@ -360,8 +360,8 @@ model GlossaryTerm {
 // which is fine since nothing referenced their id before creation.
 model FlashcardCard {
   id            String   @id @default(cuid())
-  category      String   // FlashcardCategory union — see src/lib/flashcards.ts
-  level         String   // FlashcardLevel: A1 | A2 | B1 | B2 | C1
+  category      String // FlashcardCategory union — see src/lib/flashcards.ts
+  level         String // FlashcardLevel: A1 | A2 | B1 | B2 | C1
   emoji         String
   russian       String
   transcription String
@@ -389,7 +389,7 @@ model FlashcardCard {
 // tracking as flashcards).
 model Idiom {
   id                 String   @id @default(cuid())
-  category           String   // IdiomCategory: daily | proverbs | literary
+  category           String // IdiomCategory: daily | proverbs | literary
   phrase             String
   literalTranslation String
   spanishEquivalent  String

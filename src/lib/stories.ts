@@ -35,6 +35,84 @@ export function splitStoryParagraphs(text: string): string[] {
     .filter(Boolean);
 }
 
+// Splits a paragraph into sentences (kept together with their trailing
+// punctuation/quotes). Shared between the reader UI (StoryText, for its
+// sentence-level playback queue) and generate-story-audio.ts (which now
+// synthesizes one audio clip per sentence) — both sides must agree on
+// exactly the same boundaries, or a clip won't line up with the sentence
+// it's supposed to narrate.
+const SENTENCE_SPLIT_REGEX = /[^.!?…]+[.!?…]+[»"'\]) ]*|[^.!?…]+$/gu;
+
+export interface StorySentence {
+  text: string;
+  /** Offset of this sentence's first character within its paragraph. */
+  start: number;
+}
+
+export function splitSentences(paragraph: string): StorySentence[] {
+  const sentences: StorySentence[] = [];
+  SENTENCE_SPLIT_REGEX.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = SENTENCE_SPLIT_REGEX.exec(paragraph))) {
+    if (match[0].trim().length > 0) {
+      sentences.push({ text: match[0], start: match.index });
+    }
+  }
+  return sentences.length > 0 ? sentences : [{ text: paragraph, start: 0 }];
+}
+
+/** One playable unit in a story's full (paginated-free) reading/listening
+ * queue — a sentence located within a specific paragraph. */
+export interface StorySegment {
+  paragraphIndex: number;
+  sentenceIndex: number;
+  /** Offset of this sentence's first character within its paragraph. */
+  start: number;
+  text: string;
+}
+
+/** Flattens every paragraph's sentences into one ordered queue, indices
+ * matching the {@link StoryAudioSegment} array generate-story-audio.ts
+ * produces for the same paragraphs. */
+export function buildStoryQueue(paragraphs: string[]): StorySegment[] {
+  const queue: StorySegment[] = [];
+  paragraphs.forEach((paragraph, paragraphIndex) => {
+    splitSentences(paragraph).forEach((sentence, sentenceIndex) => {
+      queue.push({ paragraphIndex, sentenceIndex, start: sentence.start, text: sentence.text });
+    });
+  });
+  return queue;
+}
+
+/** One pre-generated narration clip, produced by generate-story-audio.ts —
+ * one per sentence, matching {@link buildStoryQueue}'s indices exactly. */
+export interface StoryAudioSegment {
+  paragraphIndex: number;
+  sentenceIndex: number;
+  url: string;
+}
+
+/** A story's narration clips live in the shared `AudioAsset` table
+ * (contentType "story", contentId = Story.id), keyed by
+ * `itemKey = "<paragraphIndex>-<sentenceIndex>"` — see
+ * src/lib/audio-assets.ts. */
+export function storyAudioItemKey(paragraphIndex: number, sentenceIndex: number): string {
+  return `${paragraphIndex}-${sentenceIndex}`;
+}
+
+/** Turns a story's raw `AudioAsset` rows into {@link StoryAudioSegment}s,
+ * dropping any row whose itemKey doesn't parse (defensive only — every row
+ * this app itself writes is well-formed). */
+export function toStoryAudioSegments(rows: { itemKey: string; audioUrl: string }[]): StoryAudioSegment[] {
+  const segments: StoryAudioSegment[] = [];
+  for (const row of rows) {
+    const match = /^(\d+)-(\d+)$/.exec(row.itemKey);
+    if (!match) continue;
+    segments.push({ paragraphIndex: Number(match[1]), sentenceIndex: Number(match[2]), url: row.audioUrl });
+  }
+  return segments;
+}
+
 /** Shared by the create/update API route so the form and the server agree
  * on what a valid story looks like. */
 export function validateStoryInput(body: unknown): StoryValidationResult {

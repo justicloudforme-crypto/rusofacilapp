@@ -1,0 +1,1652 @@
+[
+  {
+    "question": "¿En qué año tuvo lugar la Revolución de Octubre, que llevó a los bolcheviques al poder liderados por Lenin?",
+    "options": [
+      "1905",
+      "1917",
+      "1922",
+      "1991"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La Revolución de Octubre de 1917 (según el calendario juliano vigente entonces) derrocó al Gobierno Provisional e instauró el poder soviético."
+  },
+  {
+    "question": "¿En qué año se formó oficialmente la Unión de Repúblicas Socialistas Soviéticas (URSS)?",
+    "options": [
+      "1991",
+      "1922",
+      "1945",
+      "1917"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La URSS se estableció formalmente en diciembre de 1922, uniendo varias repúblicas socialistas bajo un mismo Estado federal."
+  },
+  {
+    "question": "¿Cómo se le conoce en Rusia a la Segunda Guerra Mundial en su frente contra la Alemania nazi (1941-1945)?",
+    "options": [
+      "La Guerra de Invierno",
+      "La Guerra Fría",
+      "La Gran Guerra Nacional",
+      "La Gran Guerra Patria"
+    ],
+    "correct_option_id": 3,
+    "explanation": "'La Gran Guerra Patria' es el nombre con el que se conoce en Rusia al periodo de la Segunda Guerra Mundial iniciado con la invasión alemana en 1941."
+  },
+  {
+    "question": "¿En qué año se disolvió oficialmente la Unión Soviética, dando paso a la Federación Rusa y otros nuevos países independientes?",
+    "options": [
+      "1917",
+      "1985",
+      "2000",
+      "1991"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La URSS se disolvió formalmente el 26 de diciembre de 1991, tras años de reformas (perestroika) y crisis política."
+  },
+  {
+    "question": "¿Entre qué dos bandos principales se libró la Guerra Civil rusa que siguió a la Revolución de 1917, extendiéndose hasta 1922?",
+    "options": [
+      "El Ejército Rojo (bolchevique) y el Ejército Blanco (antibolchevique)",
+      "El Ejército Rojo y el Ejército alemán",
+      "El Ejército Imperial y la Guardia Nacional",
+      "Los mencheviques y los eseristas"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La Guerra Civil, con millones de víctimas, consolidó el poder bolchevique y llevó a la formación de la URSS en 1922."
+  },
+  {
+    "question": "¿Cómo se llamó la política económica impulsada por Lenin en 1921 que permitió cierto grado de comercio privado tras los estragos del 'comunismo de guerra'?",
+    "options": [
+      "La perestroika",
+      "La colectivización forzosa",
+      "El primer Plan Quinquenal",
+      "La Nueva Política Económica (NEP)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La NEP combinó elementos de mercado con el control estatal de la 'gran industria', estabilizando la economía soviética tras la Guerra Civil."
+  },
+  {
+    "question": "¿Qué instrumento de planificación económica, iniciado en 1928 bajo Stalin, impulsó la rápida industrialización de la URSS mediante metas quinquenales?",
+    "options": [
+      "La Nueva Política Económica",
+      "El Plan Marshall (fue un programa estadounidense de ayuda a Europa occidental)",
+      "La perestroika",
+      "Los Planes Quinquenales"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El primer Plan Quinquenal (1928-1932) priorizó la industria pesada, transformando a la URSS en una potencia industrial en pocas décadas."
+  },
+  {
+    "question": "¿Qué ciudad soviética resistió un asedio nazi de casi 900 días, entre 1941 y 1944, durante la Gran Guerra Patria?",
+    "options": [
+      "Leningrado (actual San Petersburgo)",
+      "Moscú",
+      "Stalingrado (actual Volgogrado)",
+      "Kiev"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El Sitio de Leningrado, uno de los más largos y mortíferos de la historia, causó la muerte de más de un millón de civiles, muchos por hambruna."
+  },
+  {
+    "question": "¿Qué batalla de 1942-1943, librada en la ciudad que hoy se llama Volgogrado, es considerada el punto de inflexión de la Segunda Guerra Mundial en el frente oriental?",
+    "options": [
+      "El sitio de Leningrado",
+      "La batalla de Stalingrado",
+      "La batalla de Moscú",
+      "La batalla de Kursk"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La derrota del Sexto Ejército alemán en Stalingrado marcó el inicio de la ofensiva soviética que terminaría en Berlín en 1945."
+  },
+  {
+    "question": "¿Qué batalla de julio-agosto de 1943 es recordada como el mayor enfrentamiento de tanques de la historia?",
+    "options": [
+      "La batalla de Poltava",
+      "La batalla de Borodinó",
+      "La batalla de Kursk",
+      "La batalla de Stalingrado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "En Kursk, miles de tanques soviéticos y alemanes se enfrentaron en una batalla que consolidó la iniciativa soviética en el frente oriental."
+  },
+  {
+    "question": "¿En qué congreso del Partido Comunista, celebrado en 1956, Nikita Jrushchov denunció los crímenes y el culto a la personalidad de Stalin en su célebre 'Discurso Secreto'?",
+    "options": [
+      "El Congreso de Fundación de la URSS (1922)",
+      "El XXII Congreso del PCUS",
+      "El XIX Congreso del PCUS",
+      "El XX Congreso del PCUS"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El discurso de Jrushchov en 1956 marcó el inicio del periodo conocido como el 'Deshielo', con una relativa liberalización cultural y política."
+  },
+  {
+    "question": "¿Cómo se llamó la alianza militar formada en 1955 por la URSS y sus países satélites de Europa del Este, como contrapeso a la OTAN?",
+    "options": [
+      "La Internacional Comunista (Komintern, disuelta en 1943)",
+      "El Bloque del Este (es un término general, no el nombre de la alianza)",
+      "El Comecon",
+      "El Pacto de Varsovia"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El Pacto de Varsovia unió militarmente a la URSS con Polonia, Alemania Oriental, Checoslovaquia, Hungría, Rumania, Bulgaria y Albania."
+  },
+  {
+    "question": "¿Qué dos políticas de reforma, impulsadas por Mijaíl Gorbachov a partir de 1985, buscaban reestructurar la economía soviética y abrir mayor transparencia informativa?",
+    "options": [
+      "La perestroika y la glásnost",
+      "El deshielo y la desestalinización",
+      "La NEP y el comunismo de guerra",
+      "La colectivización y la industrialización"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Estas reformas de Gorbachov, aunque buscaban revitalizar el sistema soviético, terminaron acelerando su desintegración hacia 1991."
+  },
+  {
+    "question": "¿En qué año ocurrió el accidente en la central nuclear de Chernóbil, en la actual Ucrania, entonces parte de la URSS, considerado el peor desastre nuclear civil de la historia?",
+    "options": [
+      "1991",
+      "1986",
+      "1954",
+      "1979"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La explosión del reactor 4 de Chernóbil en abril de 1986 liberó grandes cantidades de material radiactivo y aceleró el clima de apertura de la glásnost."
+  },
+  {
+    "question": "¿Qué levantamiento de marineros de la base naval de Krondstadt, antiguos aliados entusiastas de los bolcheviques, fue aplastado violentamente por el Ejército Rojo en marzo de 1921, apenas semanas antes de que Lenin lanzara la NEP?",
+    "options": [
+      "La revuelta de Astracán",
+      "El motín de Ijévsk",
+      "La rebelión de Tambov",
+      "La rebelión de Krondstadt"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los marineros de Krondstadt, que habían apoyado activamente la Revolución de Octubre, exigían 'soviets sin comunistas'; su represión mostró hasta dónde llegaría el nuevo régimen para mantener el poder."
+  },
+  {
+    "question": "¿Qué región sufrió una hambruna devastadora entre 1921 y 1922, agravada por la sequía y los estragos de la Guerra Civil, que llevó incluso a que organizaciones estadounidenses enviaran ayuda alimentaria a la joven Rusia soviética?",
+    "options": [
+      "Siberia oriental",
+      "Crimea",
+      "El Cáucaso",
+      "La región del Volga"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La hambruna del Volga, que causó millones de muertes, obligó a Lenin a aceptar ayuda humanitaria extranjera, incluida la Administración de Ayuda Estadounidense dirigida por Herbert Hoover."
+  },
+  {
+    "question": "¿Qué decisión, tomada tras la muerte de Lenin en enero de 1924 y en contra de los deseos de su viuda, llevó a embalsamar su cuerpo para exhibición permanente en la Plaza Roja?",
+    "options": [
+      "El entierro en el Kremlin sin exhibición pública",
+      "La cremación con honores de Estado",
+      "El traslado del cuerpo a San Petersburgo",
+      "La construcción del Mausoleo de Lenin"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El cuerpo embalsamado de Lenin, mantenido mediante técnicas especiales de conservación, sigue siendo exhibido en el mausoleo de la Plaza Roja hasta el día de hoy."
+  },
+  {
+    "question": "¿Cómo se conoce el periodo de represión política masiva en la URSS, con su punto álgido entre 1936 y 1938, durante el cual miles de dirigentes del propio Partido Comunista y del Ejército Rojo fueron arrestados y ejecutados?",
+    "options": [
+      "La Colectivización",
+      "La Perestroika",
+      "El Deshielo",
+      "La Gran Purga"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La Gran Purga afectó también a la cúpula militar soviética, debilitando al Ejército Rojo justo antes del inicio de la Segunda Guerra Mundial."
+  },
+  {
+    "question": "¿Qué mariscal soviético, considerado el militar más condecorado de la Segunda Guerra Mundial, dirigió las defensas de Moscú, Stalingrado y finalmente la toma de Berlín en 1945?",
+    "options": [
+      "Gueorgui Zhúkov",
+      "Konstantín Rokossovski",
+      "Semión Budionni",
+      "Kliment Voroshílov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Zhúkov firmó, en representación soviética, la rendición incondicional de Alemania nazi en mayo de 1945."
+  },
+  {
+    "question": "¿Qué batalla de finales de 1941, en la que el avance alemán fue detenido a las puertas de la capital soviética tras meses de retirada, marcó el primer gran fracaso estratégico de la operación Barbarroja?",
+    "options": [
+      "La batalla de Stalingrado",
+      "La batalla de Kursk",
+      "La batalla de Moscú",
+      "El sitio de Leningrado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El contraataque soviético de diciembre de 1941, con refuerzos siberianos recién llegados, marcó el primer gran revés militar de la Alemania nazi en la guerra."
+  },
+  {
+    "question": "¿Qué programa de ayuda militar y logística estadounidense, que incluyó camiones, aviones y alimentos, resultó crucial para sostener el esfuerzo bélico soviético durante la Segunda Guerra Mundial, según reconocieron después varios mariscales soviéticos?",
+    "options": [
+      "El Plan Marshall (fue posterior a la guerra y no incluyó a la URSS)",
+      "El Tratado de Ayuda Mutua de Teherán",
+      "El Programa de Préstamo y Arriendo (Lend-Lease)",
+      "La Alianza del Atlántico"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque la propaganda soviética minimizó su importancia durante décadas, historiadores actuales coinciden en que el Lend-Lease aportó vehículos, combustible y alimentos decisivos para el esfuerzo bélico."
+  },
+  {
+    "question": "¿En qué conferencia de febrero de 1945, celebrada en un balneario de Crimea, Stalin, Roosevelt y Churchill negociaron el futuro orden de posguerra en Europa?",
+    "options": [
+      "La Conferencia de Potsdam",
+      "La Conferencia de Teherán",
+      "La Conferencia de Génova",
+      "La Conferencia de Yalta"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Yalta, en la costa del mar Negro, fue elegida por Stalin en parte porque los otros líderes debían viajar largas distancias hasta territorio soviético mientras él se recuperaba de su propia fatiga de guerra."
+  },
+  {
+    "question": "¿Qué ruptura diplomática e ideológica de comienzos de los años 1960 dividió al bloque comunista internacional entre la URSS y otra gran potencia socialista asiática?",
+    "options": [
+      "La ruptura con Yugoslavia (ocurrió antes, en 1948)",
+      "La ruptura chino-soviética",
+      "La ruptura con Vietnam",
+      "La ruptura con Cuba"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Las diferencias ideológicas entre Mao Zedong y los líderes soviéticos, sumadas a disputas fronterizas, llevaron a un distanciamiento que llegó a incluir enfrentamientos armados fronterizos en 1969."
+  },
+  {
+    "question": "¿Qué crisis internacional de octubre de 1962, provocada por el despliegue soviético de misiles nucleares en una isla del Caribe, llevó al mundo más cerca que nunca de una guerra nuclear directa entre superpotencias?",
+    "options": [
+      "La Crisis de Berlín de 1961",
+      "La Crisis del Canal de Suez",
+      "La Crisis de los Misiles de Cuba",
+      "La Crisis de los Euromisiles"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La crisis se resolvió mediante negociaciones secretas: la URSS retiró sus misiles de Cuba a cambio del retiro estadounidense de misiles en Turquía, aunque esto último no se hizo público entonces."
+  },
+  {
+    "question": "¿En qué conflicto, iniciado con la invasión soviética de diciembre de 1979 y prolongado durante casi una década, la URSS sufrió un desgaste militar y político comparado por algunos con la guerra de Vietnam para Estados Unidos?",
+    "options": [
+      "La guerra de Corea",
+      "La guerra civil de Angola",
+      "La guerra de Afganistán (1979-1989)",
+      "La guerra chino-soviética fronteriza"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La retirada soviética de Afganistán en 1989, tras casi diez años de conflicto y fuertes pérdidas, es señalada por muchos historiadores como uno de los factores que debilitaron al sistema soviético en sus últimos años."
+  },
+  {
+    "question": "¿Qué intento de golpe de Estado, protagonizado en agosto de 1991 por una facción conservadora del gobierno soviético que buscaba revertir las reformas de Gorbachov, terminó acelerando paradójicamente la disolución de la URSS?",
+    "options": [
+      "El golpe de Estado de agosto de 1991",
+      "La rebelión de Krondstadt",
+      "El motín de los Streltsý",
+      "El levantamiento decembrista"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El fallido golpe, resistido públicamente desde encima de un tanque frente al parlamento ruso, debilitó fatalmente la autoridad central soviética meses antes de la disolución oficial."
+  },
+  {
+    "question": "¿Qué estación científica soviética en la Antártida registró en 1983 la temperatura más baja jamás medida de forma natural en la superficie terrestre, -89.2°C?",
+    "options": [
+      "La estación Vostok",
+      "La estación Bellingshausen",
+      "La estación Novolazarévskaya",
+      "La estación Mirni"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La estación Vostok, ubicada cerca del Polo Sur geomagnético, también se encuentra sobre un enorme lago subglacial del mismo nombre, sellado bajo el hielo durante millones de años."
+  },
+  {
+    "question": "¿Qué buque soviético, botado en 1957, se convirtió en el primer rompehielos de propulsión nuclear del mundo, abriendo rutas marítimas árticas antes inaccesibles?",
+    "options": [
+      "El rompehielos Yermak",
+      "El submarino Kursk (es posterior, de los años 90)",
+      "El rompehielos Lenin",
+      "El crucero Aurora (es un buque histórico de la Revolución de 1917, de propulsión convencional)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El Lenin demostró que la energía nuclear podía usarse para navegación civil, permitiendo a la URSS mantener abierta la Ruta Marítima del Norte durante más meses al año."
+  },
+  {
+    "question": "¿En qué año murió Iósif Stalin, un suceso que provocó una crisis de sucesión inmediata en la cúpula del Partido Comunista y una ola de pánico y duelo genuino —con estampidas mortales incluidas— entre buena parte de la población soviética?",
+    "options": [
+      "1956",
+      "1949",
+      "1953",
+      "1961"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La muerte de Stalin, el 5 de marzo de 1953, desató una compleja lucha de poder entre varios dirigentes que terminaría, tres años después, con el ascenso de Nikita Jrushchov."
+  },
+  {
+    "question": "¿Qué poderoso jefe de la policía secreta, considerado el segundo hombre más temido de la URSS bajo Stalin, fue arrestado y ejecutado apenas meses después de la muerte de este, en la lucha de poder que siguió?",
+    "options": [
+      "Nikolái Yezhov (fue ejecutado antes, en 1940, durante la propia Gran Purga)",
+      "Lavrenti Beria",
+      "Viacheslav Mólotov",
+      "Gueorgui Malenkov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La rápida caída de Beria, arrestado por sus propios colegas del Politburó y fusilado a finales de 1953, marcó simbólicamente el inicio del fin del terror policial de la era estalinista."
+  },
+  {
+    "question": "¿Cómo se llamó la campaña agrícola impulsada por Jrushchov a partir de 1954, que buscaba poner bajo cultivo millones de hectáreas de estepas antes vírgenes en Kazajistán y el sur de Siberia?",
+    "options": [
+      "La colectivización (es de los años 1930, bajo Stalin)",
+      "La perestroika (es de los años 1980, bajo Gorbachov)",
+      "La Nueva Política Económica (es de los años 1920, bajo Lenin)",
+      "La campaña de las 'Tierras Vírgenes'"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La campaña tuvo éxitos iniciales notables, pero la erosión del suelo y las malas prácticas agrícolas provocaron después tormentas de polvo y rendimientos decrecientes en buena parte de las tierras roturadas."
+  },
+  {
+    "question": "¿Qué anécdota, ampliamente citada aunque de veracidad histórica discutida entre historiadores, describe a Nikita Jrushchov golpeando un zapato contra su pupitre durante un acalorado debate en la Asamblea General de la ONU en 1960?",
+    "options": [
+      "El 'Debate de la Cocina' con Nixon (fue un intercambio verbal en una exposición en Moscú en 1959, sin ningún zapato de por medio)",
+      "La Crisis de los Misiles de Cuba (ocurrió en 1962, dos años después)",
+      "El derribo del avión espía U-2 (ocurrió en 1960, pero es un episodio distinto)",
+      "El episodio del zapato de Jrushchov en la ONU"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Sea cual sea su veracidad exacta, la anécdota se convirtió en un símbolo popular —en Occidente— del carácter impulsivo y confrontacional que se atribuía a Jrushchov durante la Guerra Fría."
+  },
+  {
+    "question": "¿Cómo se conoce el intercambio verbal improvisado entre Jrushchov y el entonces vicepresidente estadounidense Richard Nixon, ocurrido en 1959 frente a una cocina modelo estadounidense exhibida en una feria en Moscú?",
+    "options": [
+      "La Cumbre de Reikiavik (fue en 1986, entre Reagan y Gorbachov)",
+      "El episodio del zapato de Jrushchov en la ONU (ocurrió al año siguiente, en un contexto distinto)",
+      "El 'Debate de la Cocina'",
+      "La Cumbre de Ginebra de 1955"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El debate, centrado en las ventajas relativas del capitalismo y el comunismo a través del ejemplo de los electrodomésticos, se transmitió ampliamente en ambos países como una pieza más de la propaganda de la Guerra Fría."
+  },
+  {
+    "question": "¿Qué primer ministro soviético impulsó, a mediados de los años 1960, una serie de reformas económicas que introducían tímidos incentivos de mercado y mayor autonomía para las empresas estatales, antes de que fueran frenadas por la resistencia del aparato del Partido?",
+    "options": [
+      "Anastás Mikoyán",
+      "Alexéi Kosyguín",
+      "Nikolái Podgorny",
+      "Leonid Brézhnev (fue el líder político principal de la época, pero no el autor directo de estas reformas económicas)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Las reformas de Kosyguín, aunque modestas comparadas con cambios de mercado posteriores, generaron mejoras económicas iniciales antes de diluirse frente al conservadurismo burocrático soviético."
+  },
+  {
+    "question": "¿Con qué expresión, acuñada retrospectivamente ya durante la perestroika, se conoce al largo periodo del liderazgo de Leonid Brézhnev (1964-1982), caracterizado por estabilidad social pero también por un creciente estancamiento económico e ideológico?",
+    "options": [
+      "La 'Gran Purga' (es de los años 1930, bajo Stalin)",
+      "La 'Era del Estancamiento' (zastói)",
+      "La 'Perestroika' (es el propio periodo de reformas que siguió, bajo Gorbachov)",
+      "El 'Deshielo' (ese término corresponde a la época de Jrushchov, la anterior)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a la crítica retrospectiva del 'estancamiento', muchos ciudadanos soviéticos recordarían después la era Brézhnev como un periodo de relativa previsibilidad y seguridad social, en contraste con las turbulencias posteriores."
+  },
+  {
+    "question": "¿En qué ciudad se celebraron los Juegos Olímpicos de Verano de 1980, boicoteados por Estados Unidos y varias decenas de países más en protesta por la invasión soviética de Afganistán el año anterior?",
+    "options": [
+      "Leningrado",
+      "Sochi (albergó los Juegos de Invierno mucho después, en 2014)",
+      "Kiev",
+      "Moscú"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El boicot occidental redujo significativamente el nivel competitivo de estos Juegos, aunque la URSS igualmente los usó como vitrina de propaganda para mostrar sus logros deportivos y organizativos."
+  },
+  {
+    "question": "¿Qué serie de partidos de hockey sobre hielo de 1972, disputados entre la selección soviética y la de Canadá, es recordada como uno de los enfrentamientos deportivos más intensos de toda la Guerra Fría?",
+    "options": [
+      "La 'Serie del Siglo' (Summit Series)",
+      "Los Juegos Olímpicos de Invierno de 1972 (se disputaron en Sapporo ese mismo año, pero es una competencia distinta)",
+      "El Mundial de Hockey de 1954",
+      "El 'Milagro sobre el hielo' (fue en 1980, entre la URSS y Estados Unidos, en Lake Placid)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a que Canadá ganó la serie por un margen mínimo, el altísimo nivel técnico mostrado por los jugadores soviéticos sorprendió a los canadienses, que hasta entonces se consideraban indiscutiblemente superiores en este deporte."
+  },
+  {
+    "question": "¿Qué físico soviético, conocido por su papel clave en el desarrollo de la bomba de hidrógeno, se convirtió después en una de las voces más prominentes en defensa de los derechos humanos dentro de la URSS, ganando el Premio Nobel de la Paz en 1975?",
+    "options": [
+      "Lev Landau",
+      "Ígor Kurchátov (dirigió el programa nuclear soviético en general, pero no se convirtió en disidente)",
+      "Piotr Kapitsa (también fue un destacado físico, pero no desarrolló la bomba de hidrógeno ni fue disidente en el mismo sentido)",
+      "Andréi Sájarov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las autoridades soviéticas impidieron a Sájarov viajar a Oslo a recoger su premio y lo mantuvieron después varios años en arresto domiciliario en la ciudad de Gorki, hoy Nizhni Nóvgorod."
+  },
+  {
+    "question": "¿Qué escritor, autor de 'Archipiélago Gulag' —una extensa investigación sobre el sistema de campos de trabajo forzado soviético publicada por primera vez en 1973 en el extranjero—, fue despojado de su ciudadanía y expulsado de la URSS al año siguiente?",
+    "options": [
+      "Mijaíl Sholójov",
+      "Borís Pasternak (también sufrió una fuerte presión política, pero por 'Doctor Zhivago', no por 'Archipiélago Gulag')",
+      "Alexánder Solzhenitsin",
+      "Vasili Grossman"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Solzhenitsin, quien había sido él mismo prisionero del sistema de gulags durante casi una década, vivió después largos años en el exilio antes de poder regresar a Rusia tras la caída de la URSS."
+  },
+  {
+    "question": "¿Cuántas repúblicas socialistas soviéticas componían formalmente la URSS en el momento de su disolución en 1991, siendo la Federación Rusa (RSFSR) solo una de ellas, aunque la más extensa y poblada?",
+    "options": [
+      "9",
+      "15",
+      "22",
+      "6"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Un error común es asumir que 'la URSS' y 'Rusia' fueron siempre lo mismo; en realidad, la URSS agrupaba a 15 repúblicas distintas, cada una de las cuales se convirtió en un país independiente tras 1991."
+  },
+  {
+    "question": "¿Qué grave accidente nuclear, ocurrido en 1957 en el complejo de Mayak (entonces una ciudad secreta cerrada), fue mantenido oculto por las autoridades soviéticas durante más de tres décadas y solo se reconoció oficialmente en 1989?",
+    "options": [
+      "El accidente de la central de Obninsk (esa planta no sufrió ningún accidente grave conocido)",
+      "El hundimiento del submarino K-19",
+      "El desastre de Chernóbil (ocurrió casi tres décadas después, en 1986, y sí se reconoció rápidamente por la presión internacional)",
+      "El desastre de Kyshtym"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La explosión de un tanque de residuos radiactivos en Mayak contaminó una extensa área de los Urales; el hecho de mantenerse en secreto durante tanto tiempo hizo que fuera prácticamente desconocido fuera de la URSS hasta muy tarde."
+  },
+  {
+    "question": "¿Con qué país socialista europeo rompió Stalin relaciones en 1948, tras negarse su líder Josip Broz Tito a subordinar completamente la política exterior e interna de su país a Moscú, en la primera gran fractura del bloque comunista internacional?",
+    "options": [
+      "Hungría (la crisis húngara fue en 1956, un episodio distinto)",
+      "Yugoslavia",
+      "Albania (rompió con la URSS después, ya en los años 1960, alineándose entonces con China)",
+      "China (la ruptura chino-soviética ocurrió más de una década después, a inicios de los años 1960)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La ruptura con la Yugoslavia de Tito demostró tempranamente que el 'bloque socialista' no era tan monolítico como pretendía la propaganda soviética, algo que se repetiría después con China y otros países."
+  },
+  {
+    "question": "¿Qué tratado de paz, firmado por el gobierno bolchevique en marzo de 1918 con las Potencias Centrales, sacó a Rusia de la Primera Guerra Mundial a cambio de ceder enormes territorios en Europa oriental, incluidas Polonia, Finlandia, los países bálticos y Ucrania?",
+    "options": [
+      "El Tratado de Brest-Litovsk",
+      "El Tratado de Riga (fue un tratado distinto, de 1921, que puso fin a la guerra polaco-soviética)",
+      "El Tratado de Rapallo (fue un acuerdo posterior, de 1922, entre la URSS y Alemania de posguerra)",
+      "El Pacto Ribbentrop-Mólotov (fue un pacto muy posterior, de 1939)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Lenin aceptó estas duras condiciones —criticadas internamente incluso por otros bolcheviques— convencido de que la revolución necesitaba paz inmediata a cualquier costo territorial para poder consolidarse en el poder."
+  },
+  {
+    "question": "¿Cómo se llamó la política económica de emergencia aplicada durante la Guerra Civil (1918-1921), que incluyó la confiscación forzosa de granos a los campesinos y la nacionalización total de la industria, precediendo a la más moderada NEP?",
+    "options": [
+      "La perestroika (es de los años 1980, bajo Gorbachov)",
+      "La Nueva Política Económica (fue precisamente la política que sucedió y suavizó al comunismo de guerra, a partir de 1921)",
+      "El 'comunismo de guerra'",
+      "La colectivización (es una política posterior, de finales de los años 1920, bajo Stalin)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El colapso económico y el descontento campesino generados por el comunismo de guerra —agravados por la propia hambruna del Volga— llevaron a Lenin a adoptar la NEP como una retirada táctica hacia cierto pragmatismo de mercado."
+  },
+  {
+    "question": "¿Qué organización internacional, fundada en Moscú en 1919 para coordinar y dirigir los partidos comunistas de todo el mundo bajo liderazgo soviético, fue disuelta por Stalin en 1943 como gesto hacia sus aliados occidentales durante la Segunda Guerra Mundial?",
+    "options": [
+      "El Comecon (es una organización económica posterior, de 1949)",
+      "La Internacional Comunista (Komintern)",
+      "La Segunda Internacional (fue una organización socialista anterior a la Revolución, disuelta en 1916)",
+      "El Pacto de Varsovia (es una alianza militar posterior, de 1955)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La disolución del Komintern buscaba tranquilizar a Estados Unidos y Gran Bretaña, aliados de la URSS contra la Alemania nazi, sobre las supuestas intenciones revolucionarias soviéticas fuera de sus propias fronteras."
+  },
+  {
+    "question": "¿Qué constitución soviética de 1936, promovida por el propio Stalin y calificada oficialmente en su momento como 'la más democrática del mundo', garantizaba sobre el papel derechos civiles y libertades que en la práctica eran sistemáticamente ignorados, coincidiendo cronológicamente con el inicio de la Gran Purga?",
+    "options": [
+      "La Constitución de 1977 (fue una constitución posterior, bajo Brézhnev)",
+      "La Constitución de 1918 (fue la primera constitución soviética, de un periodo distinto)",
+      "El Manifiesto de Octubre (es un documento del Imperio ruso, de 1905, no una constitución soviética)",
+      "La Constitución de 1936 (o 'Constitución Stalin')"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La contradicción entre las libertades formalmente garantizadas en el texto constitucional y la represión masiva que se desataba simultáneamente sigue siendo citada como uno de los ejemplos más flagrantes de la distancia entre la propaganda y la realidad soviética de la época."
+  },
+  {
+    "question": "¿Cómo se conoce a la última gran campaña de represión política del periodo estalinista, iniciada a finales de 1952 con acusaciones fabricadas contra un grupo de médicos —muchos de ellos judíos— del Kremlin, y que quedó interrumpida por la propia muerte de Stalin en marzo de 1953?",
+    "options": [
+      "El caso Beria (se refiere al arresto y ejecución del propio jefe de la policía secreta, ocurrido después de la muerte de Stalin)",
+      "El 'Complot de los Médicos'",
+      "La Gran Purga (fue una campaña anterior y de mucho mayor escala, de 1936-1938)",
+      "La 'Doctrina Jdánov' (fue una campaña de control cultural e ideológico, de otro tipo, de finales de los años 1940)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Muchos historiadores consideran que, de no haber muerto Stalin poco después, el 'Complot de los Médicos' podría haber desencadenado una nueva ola represiva de gran escala, posiblemente con tintes antisemitas aún más marcados."
+  },
+  {
+    "question": "¿Qué conflicto de 1939-1940, iniciado con la invasión soviética de un pequeño país vecino, resultó sorprendentemente costoso para el Ejército Rojo pese a la enorme desproporción de fuerzas, revelando serias debilidades militares soviéticas justo antes de la invasión alemana de 1941?",
+    "options": [
+      "La Batalla de Jaljin Gol (fue un conflicto fronterizo contra Japón, ese mismo año, pero en el extremo oriente, no contra Finlandia)",
+      "La Guerra de Invierno contra Finlandia",
+      "La ocupación de los países bálticos (fue una anexión distinta, sin una guerra formal declarada de por medio)",
+      "La Guerra Ruso-Polaca de 1920 (fue un conflicto anterior, de circunstancias muy distintas)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque la URSS finalmente impuso sus condiciones territoriales, las inesperadas pérdidas sufridas frente a la pequeña Finlandia llevaron a varios observadores extranjeros —incluido el propio mando militar alemán— a subestimar peligrosamente la capacidad de recuperación posterior del Ejército Rojo."
+  },
+  {
+    "question": "¿Qué pacto de no agresión, firmado en agosto de 1939 por los ministros de Exteriores de la URSS y la Alemania nazi apenas días antes del estallido de la Segunda Guerra Mundial, incluía protocolos secretos que repartían Europa oriental en zonas de influencia entre ambas potencias?",
+    "options": [
+      "El Tratado de Brest-Litovsk (es un tratado anterior, de 1918, de circunstancias completamente distintas)",
+      "El Pacto Antikomintern (fue un acuerdo entre Alemania, Japón e Italia, dirigido precisamente contra la URSS)",
+      "El Pacto Ribbentrop-Mólotov",
+      "El Pacto de Varsovia (es una alianza militar posterior, de 1955, entre la URSS y sus aliados socialistas)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El pacto sorprendió al mundo entero al unir temporalmente a dos regímenes ideológicamente antagónicos; la propia invasión alemana de la URSS en junio de 1941 rompería unilateralmente este acuerdo apenas dos años después de su firma."
+  },
+  {
+    "question": "¿Qué gigantesca ofensiva soviética de junio-agosto de 1944, coordinada para coincidir aproximadamente con el desembarco aliado en Normandía, destruyó casi por completo al Grupo de Ejércitos Centro alemán y se considera una de las mayores derrotas militares de toda la historia de la Wehrmacht?",
+    "options": [
+      "La Operación Barbarroja (fue, por el contrario, la propia invasión alemana de la URSS, de 1941)",
+      "La toma de Berlín (fue la operación final de la guerra, de abril-mayo de 1945, casi un año después)",
+      "La batalla de Kursk (fue una gran batalla anterior, de julio-agosto de 1943, un año antes)",
+      "La Operación Bagratión"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Bautizada en honor a un general ruso de las guerras napoleónicas, la Operación Bagratión permitió al Ejército Rojo avanzar cientos de kilómetros en pocas semanas, liberando Bielorrusia y llegando hasta las puertas de Polonia y Prusia oriental."
+  },
+  {
+    "question": "¿Qué campo de concentración nazi, el mayor centro de exterminio de la Segunda Guerra Mundial, fue liberado por tropas soviéticas en enero de 1945, encontrando a unos siete mil prisioneros supervivientes en condiciones extremas?",
+    "options": [
+      "Treblinka (había sido desmantelado por los propios nazis antes de esa fecha, para ocultar pruebas)",
+      "Dachau (fue liberado por tropas estadounidenses, no soviéticas, en abril de 1945)",
+      "Bergen-Belsen (fue liberado por tropas británicas, no soviéticas, también en abril de 1945)",
+      "Auschwitz-Birkenau"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El 27 de enero, fecha de la liberación de Auschwitz por el Ejército Rojo, se conmemora hoy internacionalmente como el Día Internacional de Conmemoración en Memoria de las Víctimas del Holocausto."
+  },
+  {
+    "question": "¿Sobre qué edificio berlinés ondearon soldados soviéticos una bandera roja el 30 de abril de 1945, en una fotografía —parcialmente escenificada días después para la prensa— que se convirtió en uno de los símbolos visuales más célebres del fin de la Segunda Guerra Mundial en Europa?",
+    "options": [
+      "La Puerta de Brandeburgo (es un monumento cercano, pero distinto del edificio fotografiado)",
+      "La Cancillería del Reich (fue tomada y ocupada, pero no es el edificio de la fotografía icónica)",
+      "El Reichstag de Núremberg (Núremberg y Berlín son ciudades distintas; el edificio del Reichstag está en Berlín)",
+      "El edificio del Reichstag"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La icónica fotografía 'La bandera de la Victoria sobre el Reichstag', tomada por el fotógrafo Yevgueni Jaldéi, requirió una recreación posterior para la cámara, aunque el hecho de izar banderas soviéticas sobre el edificio sí ocurrió realmente durante la batalla."
+  },
+  {
+    "question": "¿Como una de las cuatro potencias aliadas victoriosas, junto con Estados Unidos, Gran Bretaña y Francia, participó la URSS en los juicios de 1945-1946 celebrados en una ciudad alemana para procesar a los principales criminales de guerra nazis?",
+    "options": [
+      "Los Juicios de Núremberg",
+      "La Conferencia de Potsdam (fue otra reunión diplomática de posguerra, de julio-agosto de 1945, tampoco judicial)",
+      "La Conferencia de Yalta (fue una reunión diplomática previa, de febrero de 1945, no un proceso judicial)",
+      "El Tribunal de Tokio (juzgó a criminales de guerra japoneses, en un proceso aparte, no a los nazis)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Un juez y un fiscal soviéticos participaron activamente en Núremberg, aunque la propia participación soviética generó cierta incomodidad diplomática dado que la URSS misma había cometido crímenes de guerra durante el conflicto, como la masacre de Katyn."
+  },
+  {
+    "question": "¿Qué episodio, mantenido en secreto durante décadas, ocurrió en junio de 1962 en una ciudad del sur de Rusia, cuando tropas soviéticas dispararon contra trabajadores de una fábrica local que protestaban pacíficamente por alzas de precios y recortes salariales?",
+    "options": [
+      "La masacre de Novocherkassk",
+      "El Domingo Sangriento (es un episodio de la era zarista, de 1905)",
+      "El levantamiento de Kronstadt (es un episodio muy anterior, de 1921, de circunstancias distintas)",
+      "La revuelta húngara de 1956 (ocurrió en Hungría, no en territorio soviético)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Las autoridades soviéticas ocultaron por completo lo sucedido en Novocherkassk durante décadas; el hecho solo se reconoció públicamente ya en tiempos de la glásnost de Gorbachov, más de veinticinco años después."
+  },
+  {
+    "question": "¿Qué acuerdo de control de armamento nuclear, firmado en 1972 entre la URSS y Estados Unidos tras años de negociación, marcó el punto culminante de la política de 'distensión' (détente) de la Guerra Fría al limitar los sistemas defensivos antimisiles y ciertas armas ofensivas de ambas potencias?",
+    "options": [
+      "Los Acuerdos de Helsinki (son acuerdos posteriores, de 1975, sobre seguridad y derechos humanos en Europa)",
+      "El START (fue un tratado posterior, negociado ya en los años 1980, con Reagan)",
+      "El Tratado de No Proliferación Nuclear (es un tratado multilateral distinto, de 1968)",
+      "El tratado SALT I"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El encuentro en Moscú entre Leonid Brézhnev y Richard Nixon para firmar el SALT I representó uno de los momentos de mayor cooperación directa entre las dos superpotencias durante toda la Guerra Fría."
+  },
+  {
+    "question": "¿Qué exjefe de la KGB dirigió brevemente la URSS entre 1982 y 1984, tras la muerte de Brézhnev, iniciando algunas investigaciones anticorrupción antes de que su propia y frágil salud le impidiera profundizar en sus reformas?",
+    "options": [
+      "Alexéi Kosyguín (había sido primer ministro antes, en los años 1960 y 1970, no en esta época)",
+      "Konstantín Chernenko (fue su sucesor inmediato, también de mandato muy breve)",
+      "Mijaíl Gorbachov (llegaría al poder después, en 1985, con un perfil bastante distinto)",
+      "Yuri Andrópov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El mandato de Andrópov, marcado por medidas de disciplina laboral y algunos intentos de reforma económica limitada, se vio truncado por una enfermedad renal que lo mantuvo hospitalizado buena parte de su corto periodo en el poder."
+  },
+  {
+    "question": "¿Cómo se conoce, con cierta ironía, al breve periodo entre 1982 y 1985 en que la URSS tuvo tres líderes supremos distintos (Brézhnev, Andrópov y Chernenko) en rápida sucesión debido a sus fallecimientos, justo antes de la llegada al poder de un Mijaíl Gorbachov mucho más joven y enérgico?",
+    "options": [
+      "La 'Perestroika' (es, precisamente, el periodo posterior que inauguraría Gorbachov)",
+      "La 'era de los funerales de Estado' (o 'sucesión de ancianos')",
+      "El 'Deshielo' (ese término corresponde a la época de Jrushchov, décadas antes)",
+      "La 'Era del Estancamiento' (zastói, ese término se refiere específicamente al largo periodo anterior, bajo el propio Brézhnev)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La avanzada edad y fragilidad de Chernenko al asumir el poder —tan evidentes que apenas pudo aparecer en público durante su breve mandato— convencieron finalmente al Politburó de apostar por un dirigente considerablemente más joven en la siguiente sucesión."
+  },
+  {
+    "question": "¿Cómo se conoce a la conspiración inventada por la policía política a comienzos de 1953, poco antes de la muerte de Stalin, según la cual un grupo de médicos —en su mayoría judíos— habría planeado asesinar a la cúpula soviética?",
+    "options": [
+      "El proceso de los ingenieros",
+      "La conjura del Kremlin",
+      "El complot de Leningrado",
+      "El caso de los médicos"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El 'caso de los médicos' se interrumpió abruptamente tras la muerte de Stalin en marzo de 1953; los acusados fueron liberados poco después y el caso se reconoció oficialmente como una fabricación de la policía política."
+  },
+  {
+    "question": "¿Qué decreto de septiembre de 1918, aprobado tras el atentado que hirió gravemente a Lenin, autorizó a las autoridades bolcheviques a fusilar sumariamente a opositores reales o sospechosos durante la Guerra Civil?",
+    "options": [
+      "El decreto de Movilización General",
+      "El decreto del Terror Rojo",
+      "El decreto de Requisición de Guerra",
+      "El decreto de Defensa de la Revolución"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Terror Rojo, ejecutado principalmente por la Cheká (la primera policía política bolchevique), buscaba aterrorizar a la oposición durante los momentos más críticos de la Guerra Civil rusa."
+  },
+  {
+    "question": "¿Cómo se llamó el ambicioso plan estatal de electrificación de toda Rusia, aprobado en 1920 bajo el impulso personal de Lenin, que este consideraba tan esencial para el futuro comunista como la propia revolución política?",
+    "options": [
+      "El plan Sovnarjoz",
+      "El plan de Colectivización",
+      "El plan GOELRO",
+      "El primer Plan Quinquenal"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Lenin resumió su visión con la célebre frase 'el comunismo es el poder soviético más la electrificación de todo el país'; el plan GOELRO sentó las bases de la industrialización eléctrica soviética de las décadas siguientes."
+  },
+  {
+    "question": "¿Cómo se conocen los tres grandes juicios espectáculo celebrados en Moscú entre 1936 y 1938, en los que antiguos dirigentes bolcheviques como Zinóviev, Kámenev y Bujarin confesaron públicamente crímenes fabricados antes de ser ejecutados?",
+    "options": [
+      "Los Tribunales de Octubre",
+      "Los Procesos de Moscú",
+      "Los Procesos del Kremlin",
+      "Los Juicios de Leningrado"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Las confesiones, obtenidas mediante presión psicológica, torturas y amenazas a familiares, sirvieron a Stalin para eliminar legalmente a rivales de la vieja guardia bolchevique durante las Grandes Purgas."
+  },
+  {
+    "question": "¿El asesinato de qué destacado dirigente del Partido Comunista de Leningrado, ocurrido en diciembre de 1934 en circunstancias nunca del todo aclaradas, utilizó Stalin como pretexto para desencadenar la ola de represión conocida como las Grandes Purgas?",
+    "options": [
+      "Lev Kámenev",
+      "Serguéi Kírov",
+      "Grigori Zinóviev",
+      "Nikolái Bujarin"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Muchos historiadores sospechan que el propio aparato de Stalin pudo estar implicado en el asesinato de Kírov, un popular dirigente que gozaba de gran prestigio dentro del partido y que representaba una posible alternativa de liderazgo."
+  },
+  {
+    "question": "¿Qué acuerdo diplomático firmado con Japón en abril de 1941, apenas dos meses antes de la invasión alemana, permitió a la URSS evitar durante años una guerra en dos frentes simultáneos, en Europa y en el Lejano Oriente?",
+    "options": [
+      "El Pacto Anti-Comintern soviético",
+      "El Acuerdo de Manchuria",
+      "El Pacto de Neutralidad Soviético-Japonés",
+      "El Tratado de Portsmouth"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Gracias a este pacto de neutralidad mutua, la URSS pudo trasladar en 1941 divisiones enteras estacionadas en Siberia hacia el frente occidental, reforzando la defensa de Moscú frente al avance alemán."
+  },
+  {
+    "question": "¿Cómo se conoce a la ruta de suministro trazada sobre el hielo del lago Ládoga durante el asedio nazi a Leningrado, única vía que permitía introducir alimentos y evacuar a civiles de la ciudad sitiada en los meses de invierno?",
+    "options": [
+      "El Puente de Ládoga",
+      "La Senda de Invierno",
+      "El Camino de la Vida",
+      "La Ruta del Hielo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "A pesar de los constantes bombardeos alemanes, camiones cargados de harina cruzaban el lago congelado hacia la ciudad sitiada; se calcula que esta precaria ruta salvó a cientos de miles de personas de morir de hambre."
+  },
+  {
+    "question": "¿Cómo se conoce a la orden militar número 227, emitida por Stalin en julio de 1942 en el momento más crítico de la batalla de Stalingrado, que prohibía cualquier retirada no autorizada bajo pena de fusilamiento o batallones penales?",
+    "options": [
+      "'Todo por la victoria'",
+      "'Resistir hasta el final'",
+      "'La patria nos llama'",
+      "'Ni un paso atrás'"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La orden creó unidades de castigo y batallones de bloqueo situados detrás de las propias líneas soviéticas, encargados de detener a cualquier soldado que intentara retirarse sin autorización."
+  },
+  {
+    "question": "¿Cómo se conoce el primer gran enfrentamiento de la Guerra Fría entre las antiguas potencias aliadas, ocurrido en 1948-49 cuando la URSS cortó todas las vías terrestres de acceso a los sectores occidentales de Berlín, obligando a un puente aéreo aliado?",
+    "options": [
+      "El conflicto de Trieste",
+      "El bloqueo de Berlín",
+      "La crisis de Praga",
+      "La crisis del canal de Kiel"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Durante casi once meses, aviones occidentales abastecieron por aire a los berlineses del sector occidental sitiado, hasta que la URSS finalmente levantó el bloqueo, en un episodio que consolidó la división de Alemania y de Europa."
+  },
+  {
+    "question": "¿Qué hizo la Unión Soviética en agosto de 1945, apenas días después de los bombardeos atómicos sobre Japón, cumpliendo un compromiso adquirido meses antes con sus aliados occidentales?",
+    "options": [
+      "Envió únicamente ayuda humanitaria a China",
+      "Firmó un tratado de paz separado con Japón",
+      "Declaró la guerra a Japón e invadió Manchuria",
+      "Se retiró formalmente de la guerra en el Pacífico"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El rápido y contundente avance del Ejército Rojo sobre el ejército japonés estacionado en Manchuria fue uno de los factores que precipitó la rendición incondicional de Japón, apenas días después de comenzada la ofensiva."
+  },
+  {
+    "question": "¿Qué reforma monetaria de 1961 sustituyó los antiguos rublos soviéticos por una nueva moneda a razón de diez a uno, con el objetivo declarado de simplificar la contabilidad y frenar el mercado negro?",
+    "options": [
+      "La reforma monetaria de 1961",
+      "La reforma del rublo dorado",
+      "La reforma de Kosyguin",
+      "La devaluación de Jrushchov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Además de simplificar los precios oficiales, la reforma sirvió también para desvalorizar de forma encubierta los ahorros acumulados en efectivo por la población, especialmente los provenientes del mercado negro."
+  },
+  {
+    "question": "De las quince repúblicas socialistas que formaban la URSS al momento de su disolución en 1991, ¿cuál era, con enorme diferencia, la más extensa territorialmente y la que albergaba la capital, Moscú?",
+    "options": [
+      "La República Socialista Federativa Soviética de Rusia (RSFSR)",
+      "La República Socialista Soviética de Kazajistán",
+      "La República Socialista Soviética de Bielorrusia",
+      "La República Socialista Soviética de Ucrania"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La RSFSR ocupaba por sí sola más de las tres cuartas partes del territorio total de la URSS, extendiéndose desde el mar Báltico hasta el estrecho de Bering, y tras 1991 se convirtió en la actual Federación Rusa."
+  },
+  {
+    "question": "¿Qué físico soviético, tras participar en el desarrollo de la bomba de hidrógeno, se convirtió después en el disidente más célebre de la URSS, recibiendo el Premio Nobel de la Paz en 1975 y siendo posteriormente confinado en la ciudad cerrada de Gorki?",
+    "options": [
+      "Andréi Sájarov",
+      "Piotr Kapitsa",
+      "Ígor Kurchátov",
+      "Lev Landau"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Sájarov, considerado uno de los padres de la bomba H soviética, se transformó con los años en un firme defensor de los derechos humanos y el desarme nuclear, lo que le costó años de exilio interno vigilado."
+  },
+  {
+    "question": "¿Qué mariscal soviético, encarcelado y torturado durante las purgas estalinistas de finales de los años 1930, fue liberado poco antes de la guerra y llegó a dirigir después algunas de las ofensivas más decisivas del frente oriental, incluida la liberación de Polonia?",
+    "options": [
+      "Gueorgui Zhúkov",
+      "Konstantín Rokossovski",
+      "Iván Kónev",
+      "Semión Timoshenko"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Rokossovski, de origen polaco, pasó casi tres años en prisión acusado falsamente de espionaje, perdiendo varios dientes durante los interrogatorios; pese a ello, tras su liberación se convirtió en uno de los generales más brillantes y respetados de la guerra."
+  },
+  {
+    "question": "¿Cómo se conoce al juicio celebrado en 1928 en la ciudad minera de Shajti, en el que varios ingenieros fueron acusados de 'sabotaje' industrial y que marcó el inicio de una larga serie de procesos contra supuestos 'especialistas burgueses'?",
+    "options": [
+      "El Juicio de los Ingenieros Rojos",
+      "El Proceso de Shajti",
+      "El Caso de los Técnicos Industriales",
+      "El Proceso del Carbón del Donbás"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El caso, con escasas pruebas reales, sirvió para culpar a técnicos formados antes de la revolución por los fallos de la industrialización acelerada, sentando un precedente de campañas similares contra 'saboteadores' en los años siguientes."
+  },
+  {
+    "question": "¿Cómo se conoce al documento crítico redactado en secreto en 1932 por un grupo de comunistas encabezado por Martemián Riútin, que denunciaba a Stalin como el 'sepulturero de la revolución' y pedía su destitución pacífica del liderazgo?",
+    "options": [
+      "La Plataforma de Riútin",
+      "El Programa de Oposición de 1932",
+      "El Manifiesto de los Viejos Bolcheviques",
+      "La Carta de los Cien"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque el documento pedía expresamente evitar la violencia, Stalin exigió la pena de muerte para sus autores; el Politburó se la negó en ese momento, pero Riútin y buena parte de los firmantes serían ejecutados pocos años después, durante las Grandes Purgas."
+  },
+  {
+    "question": "¿Con qué apodo, dado por las tropas alemanas debido al característico sonido agudo de sus proyectiles al ser lanzados, se hizo célebre el lanzacohetes múltiple soviético 'Katiusha' durante la Segunda Guerra Mundial?",
+    "options": [
+      "'El órgano de Stalin'",
+      "'El trueno rojo'",
+      "'La sierra del diablo'",
+      "'El coro de acero'"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El sonido agudo y sincronizado de docenas de cohetes disparados a la vez recordaba a los soldados alemanes al de un instrumento musical, de ahí el sobrenombre; el arma se hizo célebre por su devastador efecto psicológico además del puramente destructivo."
+  },
+  {
+    "question": "¿Qué carro de combate soviético, producido en cantidades superiores a las 80,000 unidades durante la Segunda Guerra Mundial, se convirtió en el tanque más fabricado de todo el conflicto y en un símbolo de la resistencia militar soviética?",
+    "options": [
+      "El BT-7",
+      "El T-34",
+      "El KV-1",
+      "El IS-2"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El T-34, con su combinación de blindaje inclinado, buena movilidad y potente cañón, sorprendió inicialmente al ejército alemán y, gracias a su producción masiva y simplificada, ayudó a compensar las enormes pérdidas sufridas por el Ejército Rojo en los primeros meses de guerra."
+  },
+  {
+    "question": "¿Qué papel desempeñaron miles de combatientes irregulares organizados detrás de las líneas alemanas durante la Segunda Guerra Mundial, saboteando vías férreas, atacando convoyes y recolectando información para el Ejército Rojo?",
+    "options": [
+      "Las Brigadas Internacionales",
+      "La Guardia Territorial",
+      "El movimiento partisano soviético",
+      "Los batallones de castigo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Operando desde bosques y pantanos en territorios ocupados, especialmente en Bielorrusia, los partisanos soviéticos —muchos de ellos civiles y antiguos soldados atrapados tras las líneas enemigas— destruyeron miles de kilómetros de vías férreas y obligaron a Alemania a desviar tropas para combatirlos."
+  },
+  {
+    "question": "¿Qué extraordinario operativo logístico llevó a cabo la Unión Soviética en los meses posteriores a la invasión alemana de junio de 1941, trasladando cientos de fábricas enteras —maquinaria, materiales y trabajadores— hacia los Urales y Siberia?",
+    "options": [
+      "La evacuación industrial de 1941",
+      "El Traslado de la Producción Bélica",
+      "El Plan de Reconstrucción del Este",
+      "La Operación Retaguardia"
+    ],
+    "correct_option_id": 0,
+    "explanation": "En cuestión de semanas, trenes enteros transportaron plantas industriales completas —a veces reinstaladas y produciendo de nuevo en cuestión de días, a la intemperie, antes incluso de construir techos sobre ellas— fuera del alcance del avance alemán, un logro logístico que resultó decisivo para sostener el esfuerzo bélico soviético."
+  },
+  {
+    "question": "¿Cómo se llamó el gran festival internacional celebrado en Moscú en 1957, que reunió a más de 30,000 jóvenes de todo el mundo y marcó una notable apertura cultural de la URSS hacia el exterior tras años de aislamiento estalinista?",
+    "options": [
+      "El Congreso Mundial de la Paz",
+      "La Feria Internacional de la Amistad",
+      "La Olimpiada Cultural Soviética",
+      "El VI Festival Mundial de la Juventud y los Estudiantes"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El festival, celebrado poco después del histórico lanzamiento del Sputnik, permitió a muchos jóvenes soviéticos tener por primera vez contacto directo con extranjeros y con música y moda occidentales, dejando una huella cultural duradera en la sociedad soviética."
+  },
+  {
+    "question": "¿Qué peculiaridad diplomática tuvo la Unión Soviética al convertirse en miembro fundador de las Naciones Unidas en 1945, además de contar con su propio asiento en la organización?",
+    "options": [
+      "Se le concedió un voto adicional en el Consejo de Seguridad",
+      "Fue la única potencia con derecho a veto sobre resoluciones económicas",
+      "Consiguió que Ucrania y Bielorrusia obtuvieran también asientos propios, pese a ser repúblicas soviéticas",
+      "Obtuvo la sede permanente de la organización en Moscú"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Como parte de un compromiso negociado, Stalin logró que Ucrania y Bielorrusia, formalmente repúblicas soviéticas y no estados plenamente independientes, obtuvieran también su propio asiento en la Asamblea General, otorgando a la URSS en la práctica tres votos en ese órgano."
+  },
+  {
+    "question": "¿Qué gigantesca obra de infraestructura, construida entre 1931 y 1933 casi enteramente con mano de obra de prisioneros del Gulag y célebre por la rapidez —y el altísimo costo humano— de su construcción, unió el mar Blanco con el mar Báltico?",
+    "options": [
+      "El Canal Mar Blanco-Báltico (Belomorkanal)",
+      "El Canal del Volga-Don",
+      "El Canal Moscú-Volga",
+      "El Canal de Ládoga"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Construido en un tiempo récord de apenas veinte meses, el canal resultó, sin embargo, demasiado poco profundo para uso naval y comercial a gran escala, lo que llevó a algunos historiadores a cuestionar si su verdadero propósito no fue tanto económico como propagandístico."
+  },
+  {
+    "question": "¿Qué otra gran obra hidráulica, construida entre 1932 y 1937 también con trabajo forzado de prisioneros, conectó el río Moscova con el Volga, garantizando por primera vez un suministro estable de agua potable a la capital soviética?",
+    "options": [
+      "El Canal de Riazán",
+      "El Canal Moscú-Volga",
+      "El Canal de Yaroslavl",
+      "El Canal del Cáucaso"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Además de resolver el crónico problema de abastecimiento de agua de Moscú, el canal permitió también convertir a la capital, situada a cientos de kilómetros de cualquier costa, en lo que la propaganda soviética llamó orgullosamente 'puerto de los cinco mares'."
+  },
+  {
+    "question": "¿Qué campaña de disciplina laboral impulsó Yuri Andrópov al asumir el liderazgo soviético en 1982, enviando a agentes a realizar redadas sorpresa en tiendas, cines y baños públicos durante el horario laboral para detectar a empleados ausentes de su puesto de trabajo?",
+    "options": [
+      "La Operación Disciplina Roja",
+      "La Cruzada contra la Corrupción de 1983",
+      "El Plan de Productividad Nacional",
+      "La campaña contra el absentismo laboral"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las inusuales redadas de Andrópov, que buscaban atajar el estancamiento económico atribuido en parte a la baja disciplina laboral, se hicieron muy conocidas —y a menudo objeto de burla popular— aunque tuvieron un efecto limitado dado el corto tiempo que Andrópov permaneció al frente del país antes de morir."
+  },
+  {
+    "question": "¿Qué grave accidente sufrió en 1961 el primer submarino nuclear soviético con misiles balísticos, K-19, cuando un fallo en su reactor obligó a la tripulación a improvisar reparaciones de emergencia con altísimo costo en radiación para varios de sus marineros?",
+    "options": [
+      "El incidente del Léninskiy Komsomol",
+      "La avería del Komsomólets",
+      "El accidente del submarino K-19",
+      "El hundimiento del Kursk"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Varios miembros de la tripulación, conscientes del riesgo mortal, entraron al compartimento del reactor para repararlo manualmente y evitar una explosión nuclear a bordo; varios de ellos murieron semanas después por la exposición a radiación, y el submarino sería apodado extraoficialmente 'Hiroshima' entre la marina soviética."
+  },
+  {
+    "question": "¿Qué política penal aplicó la Unión Soviética entre 1947 y 1950, al abolir por decreto la pena de muerte para luego, tras un breve periodo, reinstaurarla explícitamente para ciertos delitos considerados graves contra el Estado?",
+    "options": [
+      "La amnistía general de presos políticos de posguerra",
+      "La despenalización de los delitos económicos menores",
+      "La sustitución permanente de la pena capital por trabajos forzados",
+      "La abolición temporal y posterior restablecimiento de la pena de muerte"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La abolición de 1947, presentada como un gesto humanitario de posguerra, resultó breve: apenas tres años después el gobierno soviético restableció la pena capital, primero para casos de traición y espionaje, y después para una lista creciente de delitos."
+  },
+  {
+    "question": "¿En qué disciplina deportiva mantuvo la Unión Soviética una dominación casi ininterrumpida a nivel mundial durante décadas, con campeones como Mijaíl Botvínnik, Vasili Smyslov y Tigrán Petrosián ocupando el título mundial de forma casi consecutiva?",
+    "options": [
+      "El ajedrez",
+      "La gimnasia artística",
+      "La halterofilia",
+      "El patinaje artístico"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El ajedrez gozaba de enorme prestigio social en la URSS, con una infraestructura estatal de clubes y escuelas especializadas que produjo generaciones de grandes maestros, convirtiendo el dominio del tablero en un motivo constante de orgullo nacional soviético."
+  },
+  {
+    "question": "¿Qué derrota deportiva de 1972, cuando el estadounidense Bobby Fischer venció al campeón soviético Borís Spaski en un célebre y muy seguido match por el título mundial de ajedrez, fue vivida en la URSS casi como una humillación de prestigio nacional?",
+    "options": [
+      "La pérdida del título mundial ante un jugador húngaro",
+      "La derrota de Petrosián frente a un jugador yugoslavo",
+      "La derrota de Spaski frente a Fischer en Reikiavik",
+      "La eliminación soviética en la Olimpiada de Ajedrez de Múnich"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El enfrentamiento, celebrado en plena Guerra Fría en la capital islandesa, fue seguido con enorme atención mediática en ambos bloques; la victoria de Fischer puso fin a más de dos décadas de dominio ininterrumpido soviético sobre el ajedrez mundial."
+  },
+  {
+    "question": "¿Cómo se conoce al episodio de tensión diplomática de 1927, tras la ruptura de relaciones con el Reino Unido, que generó en la URSS un intenso temor —en gran parte infundado— a una inminente invasión extranjera, y que Stalin usaría para justificar la urgencia de la industrialización acelerada?",
+    "options": [
+      "La Crisis de Curzon",
+      "El Incidente de Shanghái",
+      "La Alarma de Odesa",
+      "El 'Susto de Guerra' de 1927"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque ningún ataque real llegó a producirse, el clima de pánico generalizado —con compras masivas de provisiones y rumores de movilización— fue aprovechado políticamente para acelerar el primer Plan Quinquenal bajo el argumento de la necesidad de fortalecer urgentemente la industria pesada soviética."
+  },
+  {
+    "question": "¿Cómo se titulaba el artículo publicado por Stalin en marzo de 1930, en el que, ante el creciente descontento campesino, culpó a funcionarios locales de 'excesos' en la colectivización forzosa y ordenó frenar temporalmente su ritmo?",
+    "options": [
+      "'Errores en el campo'",
+      "'El vértigo del éxito'",
+      "'La marcha hacia el socialismo'",
+      "'La gran transformación'"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El artículo permitió a millones de campesinos abandonar temporalmente los koljoses recién formados, aliviando brevemente la presión social, aunque la colectivización forzosa se reanudó con la misma intensidad apenas unos meses después."
+  },
+  {
+    "question": "¿Qué documento constitucional de 1924 estableció formalmente la estructura federal de la recién creada Unión Soviética, definiendo las competencias entre el gobierno central y las repúblicas que la integraban?",
+    "options": [
+      "El Tratado de Formación de la URSS de 1922",
+      "La Constitución de la URSS de 1924",
+      "El Estatuto de Repúblicas Soviéticas",
+      "La Carta de Unificación Federal"
+    ],
+    "correct_option_id": 1,
+    "explanation": "A diferencia de la posterior y más conocida Constitución 'estalinista' de 1936, este primer texto constitucional se centró casi exclusivamente en cuestiones de organización estatal y federal, sin la extensa declaración de derechos individuales que incluiría el documento de 1936."
+  },
+  {
+    "question": "¿Qué líder anarquista ucraniano dirigió durante la Guerra Civil rusa un 'Ejército Insurgente' propio, conocido informalmente como el 'Ejército Negro', que combatió alternativamente contra los blancos, los bolcheviques y las fuerzas de ocupación extranjeras en el sur de Ucrania?",
+    "options": [
+      "Néstor Majnó",
+      "Simón Petliura",
+      "Nikifor Grigóriev",
+      "Grigori Kotovski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Majnó estableció durante un tiempo una suerte de territorio autónomo campesino de inspiración anarquista en la región de Ucrania, y sus fuerzas llegaron incluso a aliarse temporalmente con el Ejército Rojo contra los blancos, antes de ser finalmente perseguido y derrotado por los propios bolcheviques."
+  },
+  {
+    "question": "¿Qué intento de levantamiento armado protagonizaron en Moscú, en julio de 1918, los Socialistas Revolucionarios de Izquierda, antiguos socios de coalición de los bolcheviques, tras oponerse violentamente a la firma del tratado de paz con Alemania?",
+    "options": [
+      "La Insurrección de los Socialistas Revolucionarios de Izquierda",
+      "La Revuelta de los Mencheviques",
+      "El Motín de Kronstadt",
+      "El Levantamiento de los Anarquistas de Moscú"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El levantamiento, que incluyó el asesinato del embajador alemán en Moscú por parte de los rebeldes, fue rápidamente aplastado por las fuerzas leales a Lenin, marcando el fin definitivo de la breve coalición de gobierno entre bolcheviques y socialistas revolucionarios de izquierda."
+  },
+  {
+    "question": "¿Qué sistema de documentación de identidad interna, introducido en 1932, restringió severamente la libertad de movimiento de los campesinos soviéticos, al no otorgárseles inicialmente este documento indispensable para residir legalmente en las ciudades?",
+    "options": [
+      "El pasaporte interno soviético",
+      "El registro de koljós",
+      "El carnet de trabajo obligatorio",
+      "El certificado de residencia (propiska) independiente"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Al carecer de este pasaporte interno, los campesinos quedaban legalmente atados a sus koljoses, sin poder trasladarse libremente a buscar trabajo en las ciudades, una restricción que en la práctica recordaba a formas anteriores de servidumbre y que se mantuvo, con variaciones, durante décadas."
+  },
+  {
+    "question": "¿Qué minero soviético del Donbás se hizo célebre en 1935 al extraer, según la propaganda oficial, más de diez veces la cuota diaria de carbón asignada en un único turno, dando origen a un movimiento de trabajadores 'récord' que llevaría su nombre?",
+    "options": [
+      "Piotr Krivonós",
+      "Alexéi Stajánov",
+      "Pasha Angelina",
+      "Nikita Izótov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El 'movimiento estajanovista' resultante, que premiaba y celebraba públicamente a trabajadores capaces de superar ampliamente sus cuotas de producción, se convirtió en una pieza central de la propaganda laboral soviética, aunque generó también resentimiento entre compañeros de trabajo que veían elevadas sus propias metas de producción como consecuencia."
+  },
+  {
+    "question": "¿Cómo se conoce al conflicto fronterizo no declarado de 1939 entre la Unión Soviética y Japón en la frontera de Mongolia, en el que el general Gueorgui Zhúkov obtuvo una contundente victoria que lanzó su carrera militar hacia la fama?",
+    "options": [
+      "El Incidente de Manchuria",
+      "La Batalla del Lago Jasán",
+      "Los combates de Khalkin Gol",
+      "La Guerra Fronteriza de Amur"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La aplastante derrota japonesa en Khalkin Gol contribuyó a que Japón decidiera después orientar su expansión militar hacia el sur y el Pacífico en lugar de intentar una nueva ofensiva contra territorio soviético, mientras Zhúkov quedaba marcado como uno de los generales más prometedores del Ejército Rojo."
+  },
+  {
+    "question": "¿Qué medida excepcional tomaron las autoridades soviéticas con las colecciones de arte del Museo del Hermitage al comenzar el asedio nazi de Leningrado en 1941, logrando salvarlas casi en su totalidad de la destrucción?",
+    "options": [
+      "Evacuaron por tren la mayor parte de las obras hacia los Urales antes de cerrarse el cerco",
+      "Las trasladaron en barcazas por el lago Ládoga durante todo el asedio",
+      "Las escondieron en las propias catacumbas del museo sellándolas con hormigón",
+      "Permanecieron en el museo protegidas únicamente con sacos de arena"
+    ],
+    "correct_option_id": 0,
+    "explanation": "En un operativo de evacuación realizado con extrema urgencia, se lograron trasladar cientos de miles de piezas antes de que se cerrara por completo el cerco alemán sobre la ciudad, mientras el personal del museo que permaneció en Leningrado sufrió igualmente los rigores del hambre del asedio."
+  },
+  {
+    "question": "¿Qué soldado soviético se convirtió en héroe propagandístico de la Segunda Guerra Mundial tras arrojarse, según el relato oficial, sobre la boca de una ametralladora enemiga en 1943 para permitir el avance de sus compañeros?",
+    "options": [
+      "Zoya Kosmodemiánskaya",
+      "Alexánder Matrósov",
+      "Víktor Talalijin",
+      "Nikolái Gastelo"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El gesto de Matrósov, repetido después —según registros oficiales, aunque con detalles discutidos por historiadores— por varios cientos de soldados soviéticos más a lo largo de la guerra, se convirtió en un arquetipo central de la propaganda de sacrificio heroico soviética."
+  },
+  {
+    "question": "¿Cómo se conoce a la legendaria (y posteriormente cuestionada por investigaciones soviéticas oficiales) unidad de veintiocho soldados que, según el relato propagandístico, defendió heroicamente hasta la muerte un cruce de carreteras cerca de Moscú frente a decenas de tanques alemanes en 1941?",
+    "options": [
+      "Los 28 Panfílovtsy",
+      "Los Defensores de Moscú",
+      "Los Héroes de Stalingrado",
+      "El Batallón de Volokolamsk"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Una investigación de la fiscalía militar soviética realizada ya en 1948, mantenida en secreto durante décadas, concluyó que buena parte del relato había sido exagerado o inventado por un periodista de guerra; pese a ello, la historia siguió siendo enseñada oficialmente como hecho histórico literal durante mucho tiempo."
+  },
+  {
+    "question": "¿Cómo se conoce al fallido intento de 1957 por parte de un grupo de veteranos dirigentes estalinistas —entre ellos Mólotov, Kaganóvich y Malenkov— de destituir a Nikita Jrushchov del liderazgo del partido, derrotado gracias al apoyo del ejército y el Comité Central?",
+    "options": [
+      "El Complot de los Viejos Bolcheviques",
+      "El 'Grupo Antipartido'",
+      "La Facción Estalinista de 1957",
+      "La Conjura de Junio"
+    ],
+    "correct_option_id": 1,
+    "explanation": "A diferencia de lo que habría ocurrido bajo Stalin, los derrotados miembros del 'Grupo Antipartido' no fueron ejecutados sino reasignados a puestos administrativos menores, un signo del cambio de época política tras la desestalinización iniciada por el propio Jrushchov."
+  },
+  {
+    "question": "¿Qué cargo diplomático ocupó Yuri Andrópov, futuro líder soviético, durante la brutal represión del levantamiento húngaro de 1956, experiencia que según muchos historiadores marcó profundamente su posterior visión endurecida sobre el control político en el bloque comunista?",
+    "options": [
+      "Embajador soviético en Hungría",
+      "Comandante militar del Pacto de Varsovia",
+      "Consejero cultural de la embajada soviética",
+      "Jefe de la delegación comercial en Budapest"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Como embajador en Budapest durante los sucesos de 1956, Andrópov jugó un papel activo en la coordinación de la intervención militar soviética que aplastó el levantamiento húngaro, una experiencia que muchos consideran clave para entender su posterior etapa al frente de la KGB y, después, del propio país."
+  },
+  {
+    "question": "¿Cómo se conoce a la campaña ideológica impulsada entre 1928 y 1931, que buscaba reemplazar a la vieja intelectualidad y a los técnicos formados antes de la revolución por nuevos cuadros 'proletarios' educados bajo el sistema soviético?",
+    "options": [
+      "La Ofensiva contra el Analfabetismo",
+      "La 'Revolución Cultural' soviética de 1928-1931",
+      "La Campaña de Alfabetización Universal",
+      "El Plan de Formación de Cuadros Rojos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta campaña, que coincidió con juicios como el de Shajti contra ingenieros 'burgueses', promovió el rápido ascenso de trabajadores de origen obrero a puestos técnicos y directivos, a menudo con formación insuficiente, generando tensiones considerables dentro de la industria soviética."
+  },
+  {
+    "question": "¿Qué agrónomo soviético, favorecido políticamente por Stalin, promovió teorías pseudocientíficas sobre la herencia de caracteres adquiridos que, al imponerse oficialmente sobre la genética moderna, retrasaron durante décadas el desarrollo científico soviético en biología?",
+    "options": [
+      "Trofim Lysenko",
+      "Iván Michurin",
+      "Alexánder Oparín",
+      "Nikolái Vavílov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Lysenko, que rechazaba la genética mendeliana por considerarla 'burguesa', consiguió que numerosos genetistas rivales —entre ellos el propio Nikolái Vavílov— fueran perseguidos, encarcelados o incluso muertos en prisión, mientras sus propias teorías, hoy completamente desacreditadas, guiaron oficialmente la política agrícola soviética durante años."
+  },
+  {
+    "question": "¿Cómo se conoce al enfrentamiento militar de marzo de 1969 entre la Unión Soviética y China en una pequeña isla del río Ussuri, episodio que marcó el punto más álgido y violento de la ruptura entre ambas potencias comunistas?",
+    "options": [
+      "El choque fronterizo de Manchuria",
+      "El incidente del lago Jasán",
+      "La crisis del río Amur",
+      "El conflicto de la isla Damanski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque la disputa territorial sobre esta pequeña isla fluvial parecía menor, los combates dejaron varios cientos de muertos en ambos bandos y llevaron a las dos potencias al borde de una guerra abierta, reflejo de lo profundamente que se había deteriorado la relación chino-soviética desde la ruptura ideológica de los años 1960."
+  },
+  {
+    "question": "¿Cómo se conoce a la intervención militar del Pacto de Varsovia en agosto de 1968, liderada por tropas soviéticas, que puso fin por la fuerza a un periodo de reformas liberalizadoras en Checoslovaquia?",
+    "options": [
+      "La Crisis de Berlín de 1968",
+      "La Operación Danubio Blanco",
+      "El Levantamiento de Bratislava",
+      "La invasión de Checoslovaquia (fin de la Primavera de Praga)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Bautizada oficialmente como 'Operación Danubio', la intervención de cientos de miles de soldados del Pacto de Varsovia puso fin abruptamente a las reformas del llamado 'socialismo con rostro humano' impulsadas por el líder checoslovaco Alexánder Dubček, generando una fuerte condena internacional incluso entre partidos comunistas occidentales."
+  },
+  {
+    "question": "¿Cómo se conoce a la doctrina política formulada tras la invasión de Checoslovaquia, según la cual la Unión Soviética se reservaba el derecho de intervenir militarmente en cualquier país socialista donde considerara amenazado el sistema comunista?",
+    "options": [
+      "La Doctrina de Soberanía Limitada de Kosyguin",
+      "La Doctrina Brézhnev",
+      "La Doctrina de Seguridad Colectiva",
+      "El Principio de Solidaridad Socialista"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta doctrina, que en la práctica limitaba severamente la soberanía real de los países del bloque comunista europeo, se mantuvo como principio rector de la política soviética hacia sus aliados hasta que fue explícitamente abandonada por Mijaíl Gorbachov durante la perestroika."
+  },
+  {
+    "question": "¿Qué destino sufrió el escritor Alexánder Solzhenitsin en febrero de 1974, apenas semanas después de que se publicara en el extranjero su obra 'Archipiélago Gulag', que documentaba minuciosamente el sistema de campos de trabajo forzado soviético?",
+    "options": [
+      "Fue detenido, despojado de la ciudadanía soviética y expulsado por la fuerza del país",
+      "Recibió un indulto oficial y pudo continuar publicando libremente",
+      "Fue enviado de nuevo a un campo de trabajo en Siberia",
+      "Fue confinado indefinidamente en un hospital psiquiátrico"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tras ser arrestado y acusado formalmente de traición, Solzhenitsin fue subido a un avión y deportado a Alemania Occidental sin previo aviso; pasaría los siguientes veinte años en el exilio, primero en Europa y después en Estados Unidos, antes de poder regresar finalmente a Rusia ya en la década de 1990."
+  },
+  {
+    "question": "¿Qué controvertida orden militar de agosto de 1941, firmada por Stalin, declaraba a todo soldado soviético capturado por el enemigo como automáticamente sospechoso de traición, con graves consecuencias posteriores para millones de excautivos de guerra?",
+    "options": [
+      "La Orden No. 227",
+      "La Orden No. 270",
+      "La Directiva de Defensa Absoluta",
+      "El Decreto de Movilización Total"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Bajo esta orden, incluso soldados que habían sido capturados en circunstancias de combate desesperadas, sin ninguna posibilidad razonable de evitarlo, quedaban marcados oficialmente como potenciales traidores, y muchos de ellos, tras ser liberados al final de la guerra, fueron enviados directamente a campos de filtración o de trabajo soviéticos en lugar de ser recibidos como héroes."
+  },
+  {
+    "question": "¿Qué comunidad étnica de origen alemán, asentada en la región del Volga desde el siglo XVIII por invitación de Catalina la Grande, fue deportada en masa hacia Siberia y Asia central por orden de Stalin apenas semanas después de la invasión alemana de 1941?",
+    "options": [
+      "Los colonos bálticos",
+      "Los alemanes del Volga",
+      "Los alemanes de Crimea",
+      "Los menonitas de Ucrania"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Acusados colectivamente, sin ninguna prueba individual, de constituir una potencial amenaza de colaboración con el enemigo alemán invasor, cientos de miles de alemanes del Volga —muchas de cuyas familias llevaban viviendo en Rusia durante generaciones— fueron reubicados forzosamente, y su antigua república autónoma del Volga quedó disuelta de forma permanente."
+  },
+  {
+    "question": "¿Qué pueblo del norte del Cáucaso fue deportado en su totalidad hacia Asia central en febrero de 1944, en una operación militar masiva y súbita ordenada por Stalin bajo acusaciones colectivas de colaboración con las fuerzas de ocupación alemanas?",
+    "options": [
+      "Los chechenos (junto a los ingusetios)",
+      "Los daguestaníes",
+      "Los kabardinos",
+      "Los osetios"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La deportación, ejecutada en cuestión de días mediante trenes de carga, provocó numerosas muertes durante el propio traslado por las duras condiciones del viaje; la república autónoma checheno-ingusetia fue disuelta y su territorio repartido entre regiones vecinas, hasta que los deportados pudieron finalmente regresar años después de la muerte de Stalin."
+  },
+  {
+    "question": "¿Cómo se conoce a la campaña de represión cultural desatada en 1946 por Andréi Zhdánov, que denunció públicamente a escritores como Anna Ajmátova y Mijaíl Zoschenko por 'formalismo' y falta de compromiso ideológico con el realismo socialista?",
+    "options": [
+      "La Zhdánovschina",
+      "La Purga Cultural de Posguerra",
+      "La Campaña contra el Cosmopolitismo",
+      "La Reforma Ideológica de 1946"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Además de la censura y expulsión de la Unión de Escritores de las figuras señaladas, la campaña se extendió pronto también a la música, con compositores como Shostakóvich y Prokófiev denunciados de nuevo por 'formalismo', marcando uno de los periodos de mayor control ideológico sobre la cultura soviética de posguerra."
+  },
+  {
+    "question": "¿Cómo se conoce a la purga política que en 1949 eliminó a buena parte de la dirigencia del Partido Comunista de Leningrado, ejecutada bajo sospechas —nunca demostradas— de que estos dirigentes pretendían establecer una base de poder rival dentro del propio partido?",
+    "options": [
+      "El Complot de los Leningradenses",
+      "La Conspiración de Smolni",
+      "El Caso de Leningrado",
+      "La Purga del Norte"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Varios altos funcionarios, incluidos dirigentes que habían jugado papeles destacados durante el heroico asedio de la ciudad en la guerra, fueron ejecutados tras juicios secretos; el episodio reflejó la creciente paranoia de los últimos años del gobierno de Stalin hacia cualquier posible foco de poder alternativo dentro del aparato soviético."
+  },
+  {
+    "question": "¿En qué año realizó la Unión Soviética su primera prueba exitosa de una bomba termonuclear (de hidrógeno), apenas unos años después de haber probado su primera bomba atómica de fisión?",
+    "options": [
+      "1953",
+      "1949",
+      "1957",
+      "1961"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El rápido desarrollo del arma termonuclear soviética, apenas meses después de la primera prueba estadounidense de un dispositivo similar, sorprendió a los servicios de inteligencia occidentales y confirmó que la carrera armamentística nuclear entre ambas superpotencias se había vuelto ya prácticamente inevitable."
+  },
+  {
+    "question": "¿Qué ministro de Asuntos Exteriores soviético, en el cargo durante casi tres décadas consecutivas entre los años 1950 y 1980, se ganó el apodo occidental de 'señor No' por su costumbre de emplear repetidamente el veto soviético en las Naciones Unidas?",
+    "options": [
+      "Andréi Grómyko",
+      "Viacheslav Mólotov",
+      "Andréi Vyshinski",
+      "Eduard Shevardnadze"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Grómyko, considerado el diplomático más experimentado y duradero de toda la Guerra Fría, participó en negociaciones clave desde la fundación de la ONU hasta las conversaciones de desarme de los años 1980, y su firmeza negociadora, casi inflexible, le valió tanto respeto como el apodo con el que se hizo célebre en Occidente."
+  },
+  {
+    "question": "¿Cómo se conoce al proceso judicial de 1965-1966 contra los escritores Andréi Siniavski y Yuli Daniel, juzgados y condenados a trabajos forzados por publicar obras satíricas en el extranjero bajo pseudónimo, un caso considerado el punto de partida del movimiento disidente soviético organizado?",
+    "options": [
+      "El caso de la literatura clandestina",
+      "El juicio del samizdat",
+      "El proceso de los escritores de Moscú",
+      "El juicio de Siniavski-Daniel"
+    ],
+    "correct_option_id": 3,
+    "explanation": "A diferencia de represiones anteriores más silenciosas, este juicio generó una notable protesta pública, con manifestaciones e incluso una carta abierta firmada por decenas de intelectuales soviéticos, marcando el inicio de una etapa de disidencia más visible y organizada dentro de la sociedad soviética."
+  },
+  {
+    "question": "¿Qué militar soviético, desertando de su unidad, intentó asesinar en enero de 1969 al líder Leonid Brézhnev disparando contra una caravana de automóviles que confundió con la del propio dirigente, matando en realidad al conductor de otro vehículo?",
+    "options": [
+      "Guennadi Sujov",
+      "Alexéi Miasnikov",
+      "Piotr Krasin",
+      "Víktor Ilín"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El atentado, mantenido en secreto por las autoridades soviéticas durante años, fue uno de los pocos intentos serios de asesinato contra un líder soviético de posguerra; Ilín, declarado enfermo mental para evitar un juicio político embarazoso, pasó después varios años internado en una institución psiquiátrica."
+  },
+  {
+    "question": "¿Cómo se conoce a la extendida red informal de intercambio de bienes y servicios escasos, favores personales y pequeño comercio no oficial que floreció en la sociedad soviética para compensar las persistentes carencias del sistema de distribución estatal planificado?",
+    "options": [
+      "La 'segunda economía' (vtoraya ekonomika)",
+      "El mercado gris permitido",
+      "El sistema de trueque estatal",
+      "La red de blat institucional"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque técnicamente ilegal en muchos de sus aspectos, esta economía paralela —que iba desde pequeños talleres clandestinos hasta redes de contactos personales para obtener bienes escasos— era tolerada de forma tácita por las autoridades, conscientes de que la economía planificada oficial era incapaz por sí sola de satisfacer las necesidades cotidianas de la población."
+  },
+  {
+    "question": "¿Qué ocurrió con los resultados del censo de población soviético realizado en 1937, que reveló una cifra de habitantes considerablemente menor a la esperada oficialmente, en parte como consecuencia de la hambruna y las purgas de los años anteriores?",
+    "options": [
+      "Los resultados se publicaron íntegramente sin ninguna consecuencia",
+      "Se realizó un recuento inmediato que corrigió las cifras al alza",
+      "Los datos se compartieron únicamente con gobiernos extranjeros aliados",
+      "Los resultados fueron suprimidos y varios de los organizadores del censo fueron arrestados"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Al no coincidir la cifra real de población con las proyecciones oficiales previamente anunciadas por el propio Stalin, el gobierno declaró 'defectuoso' el censo, ocultó sus resultados durante décadas y arrestó a varios de los estadísticos responsables, mientras se organizaba apresuradamente un nuevo censo en 1939 con cifras más favorables al relato oficial."
+  },
+  {
+    "question": "¿Cómo se conoce a la gran rebelión campesina de 1920-1921 en la región de Tambov, una de las mayores insurrecciones internas contra el gobierno bolchevique durante la Guerra Civil, finalmente sofocada mediante el uso de gas tóxico contra los rebeldes escondidos en los bosques?",
+    "options": [
+      "El Motín de Vorónezh",
+      "El Levantamiento de Sarátov",
+      "La Revuelta del Volga Medio",
+      "La Rebelión de Tambov (Antónovschina)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Liderada por el antiguo maestro rural Alexánder Antónov, la rebelión surgió como respuesta directa a las brutales requisas forzosas de grano de la política de 'comunismo de guerra'; su violenta represión, que incluyó el uso de armas químicas contra posiciones rebeldes en zonas boscosas, contribuyó decisivamente a que Lenin decidiera abandonar poco después esa política económica en favor de la NEP."
+  },
+  {
+    "question": "¿Cómo se conoce a la contraofensiva polaca de agosto de 1920 que detuvo el avance del Ejército Rojo hacia Varsovia durante la guerra soviético-polaca, frustrando así los planes bolcheviques de exportar la revolución hacia Europa occidental?",
+    "options": [
+      "El Cerco de Minsk",
+      "La Ofensiva de Kiev",
+      "La Batalla de Lvov",
+      "El 'Milagro del Vístula'"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La inesperada derrota soviética, tras un avance que parecía imparable semanas antes, obligó a Moscú a firmar una paz que cedía importantes territorios a Polonia y frustró las esperanzas bolcheviques de que la revolución se extendiera rápidamente hacia una Alemania también convulsionada políticamente en esos años."
+  },
+  {
+    "question": "¿Qué destacado dirigente bolchevique, comisario del pueblo para Asuntos Militares durante la Guerra Civil, es considerado el principal artífice de la organización y disciplina del recién creado Ejército Rojo?",
+    "options": [
+      "León Trotski",
+      "Kliment Voroshílov",
+      "Semión Budionni",
+      "Mijaíl Frunze"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Trotski, pese a carecer de experiencia militar previa formal, demostró una notable capacidad organizativa al crear desde cero un ejército disciplinado a partir de una mezcla heterogénea de voluntarios revolucionarios, antiguos oficiales zaristas reclutados a la fuerza y soldados movilizados, viajando constantemente en un tren blindado especial para supervisar personalmente los distintos frentes de batalla."
+  },
+  {
+    "question": "¿Qué destino final sufrió León Trotski tras ser expulsado de la Unión Soviética en 1929 por orden de Stalin, con quien había perdido la lucha por el liderazgo tras la muerte de Lenin?",
+    "options": [
+      "Regresó secretamente a la URSS y fue ejecutado en 1938",
+      "Vivió el resto de su vida sin incidentes en Turquía",
+      "Murió en el exilio de causas naturales en Francia",
+      "Fue asesinado en México en 1940 por un agente soviético infiltrado"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Tras años de exilio itinerante por varios países, Trotski fue finalmente asesinado en su residencia de Ciudad de México con un piolet de montañismo, en un atentado orquestado por los servicios secretos soviéticos que puso fin definitivamente a la larga rivalidad personal e ideológica entre Trotski y Stalin."
+  },
+  {
+    "question": "¿Cómo se conoce al proceso judicial de 1933 contra un grupo de ingenieros británicos de la empresa Metropolitan-Vickers, acusados de sabotaje y espionaje mientras trabajaban en proyectos de electrificación soviéticos, generando una notable tensión diplomática con el Reino Unido?",
+    "options": [
+      "El proceso de los ingenieros de Dnieprostroi",
+      "El caso de los técnicos de Magnitogorsk",
+      "El juicio de Metro-Vickers",
+      "El juicio de los especialistas extranjeros"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque las acusaciones concretas contra los ingenieros británicos resultaron muy débiles, el juicio se enmarcaba en un clima más amplio de sospecha hacia los especialistas extranjeros que trabajaban en la industrialización soviética, y la condena de varios de ellos provocó una breve pero intensa crisis diplomática con Londres."
+  },
+  {
+    "question": "¿En qué año fue admitida la Unión Soviética como miembro de la Sociedad de Naciones, tras años de aislamiento diplomático inicial del nuevo Estado comunista respecto a las principales organizaciones internacionales de la época?",
+    "options": [
+      "1934",
+      "1928",
+      "1922",
+      "1945"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La entrada soviética en la organización, que ocurrió incluso con un asiento permanente en su Consejo, reflejaba un cambio en la política exterior de Moscú hacia una mayor búsqueda de seguridad colectiva frente a la creciente amenaza del nazismo alemán y el militarismo japonés, aunque la propia Sociedad de Naciones expulsaría después a la URSS en 1939 tras su invasión de Finlandia."
+  },
+  {
+    "question": "¿Cómo se conoce al antiguo campo de tiro cercano a Moscú, hoy santuario conmemorativo, donde se estima que fueron ejecutadas en secreto varias decenas de miles de personas durante el punto más álgido de las Grandes Purgas de 1937-38?",
+    "options": [
+      "La fosa de Levashovo",
+      "El polígono de Butovo",
+      "El campo de Kommunarka",
+      "El bosque de Sandormoj"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Mantenido en absoluto secreto durante toda la era soviética, el polígono de Butovo fue identificado y documentado solo después de la apertura de archivos en los años 1990, revelando la escala de las ejecuciones masivas ejecutadas allí en apenas poco más de un año, a un ritmo que en ciertos días superó las quinientas personas."
+  },
+  {
+    "question": "¿Qué significan exactamente las siglas del acrónimo 'GULAG', que terminó dando nombre popular a todo el vasto sistema de campos de trabajo forzado soviético, aunque en su origen designaba únicamente a la agencia administrativa encargada de gestionarlos?",
+    "options": [
+      "Gobierno Unido de Asentamientos y Granjas",
+      "Grupo Unificado de Labor Agrícola Gubernamental",
+      "Gran Unión de Administración Laboral",
+      "Dirección General de Campos de Trabajo Correctivo"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque hoy la palabra 'Gulag' evoca directamente el sistema completo de campos de trabajo forzado, su origen técnico y burocrático como acrónimo administrativo —'Glávnoye Upravlénie Lágerei', Dirección General de Campos— refleja el carácter deliberadamente aséptico y burocrático con que el Estado soviético denominaba oficialmente a esta vasta institución represiva."
+  },
+  {
+    "question": "¿Qué breve episodio de pánico generalizado se produjo en Moscú el 16 de octubre de 1941, cuando corrió el rumor de que las tropas alemanas estaban a punto de entrar en la ciudad, provocando saqueos, huidas masivas y un temporal colapso del orden público?",
+    "options": [
+      "La Fuga de Octubre",
+      "El pánico de Moscú de octubre de 1941",
+      "El Día del Caos Moscovita",
+      "La Gran Evacuación de Moscú"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Ante rumores de que el propio gobierno soviético había abandonado o estaba a punto de abandonar la capital, miles de moscovitas intentaron huir de la ciudad por cualquier medio disponible, mientras se producían saqueos de tiendas y almacenes; el orden se restableció días después, en parte gracias a la decisión simbólica de Stalin de permanecer personalmente en Moscú."
+  },
+  {
+    "question": "¿Qué medida extrema de 'tierra quemada' ordenó el mando soviético en 1941 respecto a la enorme presa hidroeléctrica del Dniéper (Dnieprostroi), una de las mayores obras de ingeniería del primer Plan Quinquenal, ante el avance del ejército alemán invasor?",
+    "options": [
+      "La desmanteló pieza por pieza para trasladarla al este",
+      "La convirtió en fortaleza defensiva sin dañarla",
+      "La entregó intacta a cambio de garantías de no agresión",
+      "Ordenó su destrucción parcial mediante explosivos para impedir su uso por el enemigo"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La voladura de la presa, símbolo del orgullo industrial soviético de la década anterior, causó además una inundación repentina aguas abajo que provocó numerosas víctimas civiles y militares, tanto soviéticas como alemanas, un costo humano considerable de la estrategia de tierra quemada aplicada durante la desesperada retirada de 1941."
+  },
+  {
+    "question": "¿En qué ciudad iraní se celebró en noviembre de 1943 la primera conferencia conjunta entre Stalin, Roosevelt y Churchill, en la que los tres líderes aliados coordinaron por primera vez su estrategia militar conjunta contra la Alemania nazi?",
+    "options": [
+      "El Cairo",
+      "Bagdad",
+      "Teherán",
+      "Ankara"
+    ],
+    "correct_option_id": 2,
+    "explanation": "En esta primera reunión de los llamados 'Tres Grandes', celebrada antes de las posteriores conferencias de Yalta y Potsdam, se discutió y acordó en principio la fecha aproximada de apertura de un segundo frente occidental en Europa mediante un desembarco aliado en Francia, que se concretaría meses después en Normandía."
+  },
+  {
+    "question": "¿En qué ciudad alemana se celebró en julio y agosto de 1945 la última gran conferencia de posguerra entre las potencias aliadas, en la que se definieron aspectos clave de la futura ocupación y administración de la Alemania derrotada?",
+    "options": [
+      "Potsdam",
+      "Núremberg",
+      "Dresde",
+      "Fráncfort"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A diferencia de la anterior conferencia de Yalta, en Potsdam el presidente estadounidense era ya Harry Truman tras la muerte de Roosevelt, y las crecientes tensiones entre las potencias occidentales y la URSS —que ya anticipaban la futura Guerra Fría— se hicieron mucho más evidentes que en encuentros anteriores entre los aliados."
+  },
+  {
+    "question": "¿Qué decisión simbólica se tomó en el XXII Congreso del Partido Comunista de la Unión Soviética en 1961, respecto al cuerpo embalsamado de Stalin, que hasta entonces había reposado junto al de Lenin en el mausoleo de la Plaza Roja?",
+    "options": [
+      "Se retiró el cuerpo de Stalin del mausoleo y se le dio una sepultura separada junto al muro del Kremlin",
+      "Se decidió incinerar completamente los restos de Stalin",
+      "Se trasladó el cuerpo de Stalin a su Georgia natal",
+      "Se mantuvo el cuerpo pero se cerró el mausoleo al público indefinidamente"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta decisión, parte de la profundización del proceso de desestalinización impulsado por Jrushchov, retiró simbólicamente a Stalin de su posición de honor junto a Lenin, enterrándolo en cambio en una tumba individual, aunque todavía prominente, a los pies del propio muro del Kremlin junto a otros dirigentes soviéticos destacados."
+  },
+  {
+    "question": "¿Qué acuerdo internacional, firmado en 1975 en la capital finlandesa por 35 países incluida la URSS, incluyó compromisos formales sobre derechos humanos que después serían invocados activamente por movimientos disidentes dentro del propio bloque soviético?",
+    "options": [
+      "El Tratado de Estocolmo",
+      "La Declaración de Viena",
+      "El Pacto de Ginebra de 1975",
+      "Los Acuerdos de Helsinki"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque Moscú aceptó los acuerdos principalmente por el reconocimiento formal que suponían de las fronteras europeas surgidas tras la Segunda Guerra Mundial, la inclusión de compromisos sobre derechos humanos y libertad de información terminó dando una base legal internacional inesperada a los grupos disidentes soviéticos, que formaron 'grupos de vigilancia de Helsinki' para denunciar su incumplimiento."
+  },
+  {
+    "question": "¿En qué año se adoptó oficialmente el diseño de la bandera roja con la hoz y el martillo cruzados como emblema y bandera del nuevo Estado soviético?",
+    "options": [
+      "1917",
+      "1945",
+      "1923",
+      "1936"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque los símbolos de la hoz (representando al campesinado) y el martillo (representando a la clase obrera industrial) se habían usado ya de forma más informal desde los primeros años de la revolución, su combinación quedó fijada de manera oficial y definitiva como emblema del Estado con la aprobación de la Constitución de la URSS de 1923-1924."
+  },
+  {
+    "question": "¿Qué militante del Partido Socialista Revolucionario disparó e hirió gravemente a Lenin en agosto de 1918, en un atentado que se convirtió en pretexto oficial para intensificar drásticamente la campaña del Terror Rojo?",
+    "options": [
+      "Fanni Kaplán",
+      "Yekaterina Breshkó",
+      "María Spiridónova",
+      "Dora Kaplán-Roid"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Kaplán, casi ciega debido a una explosión sufrida años antes durante su etapa como revolucionaria condenada a trabajos forzados, fue ejecutada apenas días después del atentado sin apenas juicio formal, mientras Lenin, gravemente herido, lograría sobrevivir aunque con secuelas de salud que algunos historiadores vinculan a su posterior deterioro físico."
+  },
+  {
+    "question": "¿Qué tratado de paz, firmado en marzo de 1921 entre la Rusia soviética y Polonia, puso fin formalmente a la guerra soviético-polaca, estableciendo una frontera que otorgaba a Polonia extensos territorios de Bielorrusia occidental y Ucrania occidental?",
+    "options": [
+      "El Tratado de Minsk",
+      "El Pacto de Brest de 1921",
+      "El Acuerdo de Varsovia",
+      "El Tratado de Riga"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La frontera trazada por este tratado permanecería vigente durante casi dos décadas, hasta que fue alterada de nuevo por la invasión soviética de Polonia oriental en 1939, en aplicación del protocolo secreto del pacto Mólotov-Ribbentrop firmado ese mismo año con la Alemania nazi."
+  },
+  {
+    "question": "¿Qué acuerdo diplomático de 1922, firmado entre la Rusia soviética y la República de Weimar alemana, restableció relaciones diplomáticas plenas entre ambos países y estableció una sorprendente cooperación económica y militar secreta que ayudó a romper el aislamiento internacional soviético?",
+    "options": [
+      "El Pacto de Génova",
+      "El Tratado de Berlín de 1922",
+      "El Acuerdo de Locarno soviético",
+      "El Tratado de Rapallo"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Firmado durante una conferencia económica internacional en la que ambos países, considerados entonces parias diplomáticos tras la Primera Guerra Mundial, se encontraban aislados del resto de las potencias, el tratado incluyó además una cooperación militar secreta que permitió al ejército alemán entrenar tropas y probar armamento en territorio soviético, eludiendo así las restricciones del Tratado de Versalles."
+  },
+  {
+    "question": "¿Qué destino final sufrió Guenrij Yagoda, primer jefe del NKVD durante buena parte de las Grandes Purgas iniciales, tras haber dirigido personalmente numerosas represiones y ejecuciones bajo las órdenes de Stalin?",
+    "options": [
+      "Emigró a Occidente antes de ser capturado",
+      "Se retiró con honores tras una larga carrera al servicio del Estado",
+      "Murió de causas naturales durante su mandato en el cargo",
+      "Fue destituido, acusado en un juicio espectáculo y ejecutado él mismo en 1938"
+    ],
+    "correct_option_id": 3,
+    "explanation": "En un giro característico de la lógica devoradora de las propias Purgas, Yagoda terminó siendo él mismo procesado y ejecutado bajo acusaciones fabricadas, tras haber sido sustituido en el cargo por Nikolái Yezhov, quien a su vez correría después una suerte similar."
+  },
+  {
+    "question": "¿Qué jefe del NKVD, cuyo apellido dio nombre popular al periodo de mayor intensidad represiva de las Grandes Purgas de 1937-38, fue también finalmente destituido y ejecutado en 1940, apenas dos años después de dirigir personalmente la maquinaria represiva más letal de toda la era estalinista?",
+    "options": [
+      "Lavrenti Beria",
+      "Nikolái Yezhov",
+      "Iván Serov",
+      "Vsévolod Merkulov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El periodo conocido popularmente como 'Yezhovschina', en referencia directa a su apellido, marcó el punto álgido de las ejecuciones masivas de la era estalinista; irónicamente, Yezhov correría después el mismo destino que muchas de sus víctimas, siendo acusado de conspiración y fusilado tras un juicio secreto."
+  },
+  {
+    "question": "¿Qué destacado dirigente soviético, jefe de la policía secreta durante los últimos años de Stalin y considerado el segundo hombre más poderoso del país, fue arrestado y ejecutado apenas meses después de la muerte del propio Stalin en 1953?",
+    "options": [
+      "Nikita Jrushchov",
+      "Lavrenti Beria",
+      "Viacheslav Mólotov",
+      "Gueorgui Malenkov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Temido por buena parte de la cúpula soviética debido a su enorme poder acumulado al frente del aparato de seguridad del Estado, Beria fue arrestado en una audaz maniobra política liderada por Jrushchov y otros dirigentes apenas meses después de la muerte de Stalin, siendo ejecutado tras un juicio sumario a finales de 1953."
+  },
+  {
+    "question": "¿Cómo se llamaba la joven partisana soviética, capturada y ejecutada por los alemanes en noviembre de 1941 tras negarse a revelar información bajo tortura, cuya historia se convirtió en un poderoso símbolo de heroísmo y resistencia durante la Gran Guerra Patria?",
+    "options": [
+      "Marina Raskova",
+      "Lyudmila Pavlichenko",
+      "Valentina Grizódubova",
+      "Zoya Kosmodemiánskaya"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Antes de ser ahorcada públicamente ante los habitantes del pueblo, Zoya, de apenas 18 años, pronunció un desafiante discurso llamando a la resistencia contra los ocupantes; su historia, ampliamente difundida por la propaganda soviética tras la guerra, la convirtió en una de las heroínas más veneradas de todo el panteón bélico soviético."
+  },
+  {
+    "question": "¿Qué fuerzas aliadas fueron las primeras en llegar y liberar el campo de exterminio de Auschwitz-Birkenau en enero de 1945, encontrando a los pocos prisioneros que los nazis no habían logrado evacuar a tiempo?",
+    "options": [
+      "Tropas del Ejército Rojo soviético",
+      "Fuerzas estadounidenses avanzando desde el oeste",
+      "Tropas británicas que avanzaban desde Italia",
+      "Fuerzas polacas del Ejército Nacional"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Los soldados soviéticos que llegaron al campo encontraron solo a unos siete mil prisioneros supervivientes, la mayoría demasiado enfermos o débiles para haber podido participar en la 'marcha de la muerte' con que los nazis habían evacuado forzosamente a decenas de miles de prisioneros semanas antes ante el avance del frente."
+  },
+  {
+    "question": "¿Como una de las cuatro potencias aliadas victoriosas, junto con Estados Unidos, Gran Bretaña y Francia, qué papel desempeñó específicamente la Unión Soviética en los Juicios de Núremberg contra los principales criminales de guerra nazis?",
+    "options": [
+      "Aportó jueces y fiscales propios que participaron activamente en el proceso judicial internacional",
+      "Organizó un tribunal paralelo y separado en territorio soviético",
+      "Rechazó formalmente participar por considerar el tribunal ilegítimo",
+      "Se limitó a observar el proceso sin participación judicial directa"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a las evidentes tensiones ideológicas que ya comenzaban a manifestarse entre la URSS y las potencias occidentales, los cuatro países aliados cooperaron formalmente en la organización del tribunal de Núremberg, con jueces y fiscales soviéticos participando activamente en la presentación de pruebas y el desarrollo de un proceso que sentó precedentes fundamentales para el derecho penal internacional."
+  },
+  {
+    "question": "¿Qué territorios de la actual Polonia oriental fueron ocupados por el Ejército Rojo en septiembre de 1939, apenas semanas después de la invasión alemana que dio inicio a la Segunda Guerra Mundial, en aplicación del protocolo secreto del pacto firmado entre la URSS y la Alemania nazi?",
+    "options": [
+      "Las regiones orientales de Polonia, correspondientes a la actual Bielorrusia y Ucrania occidentales",
+      "La totalidad del territorio polaco, sin excepción",
+      "Únicamente la región fronteriza de Bialystok",
+      "Solo las principales ciudades sin ocupación territorial completa"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta ocupación, resultado directo del protocolo secreto anexo al pacto de no agresión Mólotov-Ribbentrop firmado semanas antes, dividió efectivamente el territorio polaco entre la Alemania nazi y la Unión Soviética, un episodio que marcó el inicio de años de ocupación soviética en estas regiones hasta la posterior invasión alemana de 1941."
+  },
+  {
+    "question": "¿Qué tratado de amistad y cooperación firmó la Unión Soviética con la recién proclamada República Popular China en 1950, estableciendo formalmente una alianza estratégica entre ambas potencias comunistas que se mantendría, con crecientes tensiones, durante la siguiente década?",
+    "options": [
+      "El Tratado de Mongolia Interior",
+      "El Acuerdo de Cooperación Asiática",
+      "El Tratado Sino-Soviético de Amistad de 1950",
+      "El Pacto de Pekín"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Este tratado incluía compromisos de asistencia militar mutua y préstamos económicos soviéticos destinados a apoyar la reconstrucción de la nueva China comunista, aunque las diferencias ideológicas y geopolíticas entre ambos países crecerían de forma constante hasta desembocar, hacia finales de los años 1950, en la abierta ruptura conocida como la escisión sino-soviética."
+  },
+  {
+    "question": "¿Qué acuerdo internacional de 1955 estableció la retirada de todas las tropas de ocupación soviéticas, estadounidenses, británicas y francesas de Austria, a cambio del compromiso permanente de este país de mantener una neutralidad estricta similar a la de Suiza?",
+    "options": [
+      "El Pacto de Neutralidad Centroeuropea",
+      "El Acuerdo de Viena de 1955",
+      "El Tratado de Salzburgo",
+      "El Tratado de Estado de Austria"
+    ],
+    "correct_option_id": 3,
+    "explanation": "A diferencia de Alemania, que permanecería dividida durante décadas más, Austria logró recuperar su plena soberanía e independencia a cambio de renunciar formalmente a cualquier alianza militar, un resultado diplomático relativamente excepcional en el contexto general de la Guerra Fría europea."
+  },
+  {
+    "question": "¿Cómo se conoció al programa soviético de ayuda económica ofrecido a los países de Europa oriental en 1947, concebido explícitamente como alternativa comunista al Plan Marshall estadounidense que Moscú rechazaba aceptar para sí misma y sus aliados?",
+    "options": [
+      "El Plan Mólotov",
+      "La Iniciativa de Ayuda Fraternal",
+      "El Plan Vishinski",
+      "El Programa de Reconstrucción Socialista"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Bautizado en honor al ministro de Exteriores soviético que lo presentó, este programa buscaba tanto ayudar a la reconstrucción económica de posguerra de los países del bloque socialista como, sobre todo, evitar que estos aceptaran la ayuda económica estadounidense y quedaran así bajo su influencia geopolítica."
+  },
+  {
+    "question": "¿Cómo se conoce a la organización económica internacional, fundada en 1949 por la Unión Soviética junto a varios países de Europa oriental, destinada a coordinar la planificación económica y el comercio entre los países del bloque socialista?",
+    "options": [
+      "La Unión Económica del Este",
+      "La Federación Económica de Varsovia",
+      "El Comecon (Consejo de Ayuda Mutua Económica)",
+      "El Pacto Comercial Socialista"
+    ],
+    "correct_option_id": 2,
+    "explanation": "A través de esta organización, la Unión Soviética coordinó durante décadas la especialización productiva y el intercambio comercial entre los países de su bloque de influencia, aunque el sistema resultante generó también notables desequilibrios y dependencias económicas entre los distintos países miembros."
+  },
+  {
+    "question": "¿Qué zona de ocupación soviética en la Alemania derrotada tras la Segunda Guerra Mundial se transformó formalmente en 1949 en un nuevo Estado comunista independiente, conocido oficialmente como República Democrática Alemana?",
+    "options": [
+      "La región de Sajonia bajo mandato soviético",
+      "El territorio de Prusia oriental soviética",
+      "La zona de ocupación soviética de Alemania oriental",
+      "La zona desmilitarizada del Elba"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La fundación de este nuevo Estado, apenas meses después de que las zonas de ocupación occidentales se unificaran en la República Federal de Alemania, formalizó la división de Alemania en dos países separados que perduraría durante más de cuatro décadas como uno de los símbolos más visibles de la propia división de Europa durante la Guerra Fría."
+  },
+  {
+    "question": "¿En qué fecha exacta se firmó el Tratado de Creación de la URSS, documento fundacional mediante el cual Rusia, Ucrania, Bielorrusia y la Federación Transcaucásica se unieron formalmente para dar origen a la Unión de Repúblicas Socialistas Soviéticas?",
+    "options": [
+      "El 30 de diciembre de 1922",
+      "El 21 de enero de 1924",
+      "El 7 de noviembre de 1917",
+      "El 6 de julio de 1923"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aprobado por el Primer Congreso de los Soviets de la URSS, este tratado fundacional sentó las bases jurídicas de la nueva unión federal, aunque el texto constitucional más elaborado y definitivo que desarrollaría sus principios no se aprobaría formalmente hasta 1924."
+  },
+  {
+    "question": "¿En qué año comenzaron a emitirse en la Unión Soviética las primeras transmisiones regulares de televisión, tras años de experimentación técnica previa con sistemas mecánicos y, después, electrónicos de bajo alcance?",
+    "options": [
+      "1957",
+      "1926",
+      "1948",
+      "1939"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las primeras emisiones regulares, transmitidas desde Moscú con un alcance todavía muy limitado y recibidas por un número reducido de aparatos receptores experimentales, marcaron el inicio de una televisión soviética que no se popularizaría masivamente entre los hogares del país hasta bien entrada la década de 1950."
+  },
+  {
+    "question": "¿Qué organización internacional, fundada por Lenin en 1919 para coordinar y dirigir a los partidos comunistas de todo el mundo, fue disuelta por Stalin en 1943 como gesto diplomático hacia sus aliados occidentales durante la Segunda Guerra Mundial?",
+    "options": [
+      "La Internacional Socialista",
+      "La Liga Comunista Mundial",
+      "La Internacional Comunista (Comintern)",
+      "El Buró de Información Comunista"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La disolución del Comintern, presentada oficialmente como una medida para permitir que cada partido comunista nacional actuara con mayor independencia, buscaba en realidad tranquilizar a Estados Unidos y Gran Bretaña, aliados de la URSS en la guerra contra la Alemania nazi, que veían con recelo la existencia de un organismo dedicado abiertamente a promover la revolución comunista mundial."
+  },
+  {
+    "question": "¿En qué año se redujo oficialmente en la Unión Soviética la semana laboral estándar de seis a cinco días, estableciendo dos días completos de descanso semanal para la mayoría de los trabajadores del país?",
+    "options": [
+      "1956",
+      "1977",
+      "1945",
+      "1967"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Esta reforma laboral, que otorgó a los trabajadores soviéticos dos días consecutivos de descanso en lugar del único día libre semanal previamente habitual, se enmarcó dentro de una serie más amplia de mejoras en las condiciones laborales impulsadas durante la etapa de Brézhnev, buscando aumentar el nivel de vida general de la población tras décadas de sacrificios previos."
+  }
+]

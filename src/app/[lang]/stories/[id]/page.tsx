@@ -6,8 +6,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { userHasActiveSubscription } from "@/lib/subscription";
-import { splitStoryParagraphs } from "@/lib/stories";
-import AudioPlayer from "@/components/stories/AudioPlayer";
+import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
 
 export default async function StoryReaderPage({
@@ -37,6 +36,21 @@ export default async function StoryReaderPage({
     ? translationParagraphs
     : translationParagraphs.slice(0, 1);
 
+  // Narration clips live in the shared AudioAsset cache, indexed against
+  // the FULL story text, so they stay aligned even when visibleParagraphs
+  // is truncated to the free preview — just drop clips for paragraphs the
+  // reader can't see. Not fetched at all for a non-entitled reader, same
+  // as the text/translation truncation above.
+  const audioAssetRows = entitled
+    ? await db.audioAsset.findMany({
+        where: { contentType: "story", contentId: story.id },
+        select: { itemKey: true, audioUrl: true },
+      })
+    : [];
+  const audioSegments = toStoryAudioSegments(audioAssetRows).filter(
+    (segment) => segment.paragraphIndex < visibleParagraphs.length
+  );
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <Link
@@ -65,28 +79,27 @@ export default async function StoryReaderPage({
         <p className="mt-3 text-foreground/70">{story.description}</p>
       )}
 
-      {entitled && <AudioPlayer audioUrl={story.audioUrl} label={dict.stories.audioLabel} />}
-
       <p className="mt-8 text-xs font-medium uppercase tracking-wide text-foreground/40">
         {dict.stories.translationHint}
       </p>
       <div className="mt-3">
         <StoryText
           storyId={entitled ? story.id : null}
+          title={story.title}
+          author={story.author}
           paragraphs={visibleParagraphs}
           translationParagraphs={visibleTranslationParagraphs}
+          audioSegments={audioSegments}
           dict={{
             translationLoading: dict.stories.translationLoading,
             translationError: dict.stories.translationError,
             wordListenLabel: dict.stories.wordListenLabel,
             closeLabel: dict.stories.closeLabel,
-            showTranslationButton: dict.stories.showTranslationButton,
-            hideTranslationButton: dict.stories.hideTranslationButton,
             playLabel: dict.stories.playLabel,
             pauseLabel: dict.stories.pauseLabel,
-            pageLabel: dict.stories.pageLabel,
-            prevPageLabel: dict.stories.prevPageLabel,
-            nextPageLabel: dict.stories.nextPageLabel,
+            skipBackLabel: dict.stories.skipBackLabel,
+            skipForwardLabel: dict.stories.skipForwardLabel,
+            seekLabel: dict.stories.seekLabel,
             completedBadge: dict.stories.completedBadge,
           }}
         />

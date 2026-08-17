@@ -27,7 +27,9 @@
     "db:grant-subscription": "tsx prisma/grant-subscription.ts",
     "generate:story-audio": "tsx prisma/generate-story-audio.ts",
     "generate:lesson-audio": "tsx prisma/generate-lesson-audio.ts",
+    "generate:flashcard-audio": "tsx prisma/generate-flashcard-audio.ts",
     "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts",
+    "check:media-embeds": "tsx prisma/check-media-embeds.ts",
     "cap:sync": "cap sync",
     "cap:ios": "cap open ios",
     "cap:android": "cap open android"

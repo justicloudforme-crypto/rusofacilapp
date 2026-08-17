@@ -1,0 +1,1630 @@
+[
+  {
+    "question": "¿Qué famosos huevos ornamentales, elaborados por un joyero de origen francés para la familia imperial rusa, son hoy símbolo de lujo y orfebrería?",
+    "options": [
+      "Las muñecas matrioshka",
+      "Las coronas de los zares",
+      "Los samovares imperiales",
+      "Los huevos de Fabergé"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Peter Carl Fabergé creó decenas de estos huevos ornamentales para los zares Alejandro III y Nicolás II entre 1885 y 1917."
+  },
+  {
+    "question": "¿De qué país llegó originalmente la inspiración artesanal para la creación de la muñeca matrioshka a finales del siglo XIX?",
+    "options": [
+      "Alemania",
+      "Francia",
+      "Japón",
+      "China"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La matrioshka se inspiró en figuras japonesas anidables, adaptadas por artesanos rusos hacia 1890."
+  },
+  {
+    "question": "¿Qué célebre teatro moscovita es reconocido mundialmente por su compañía de ballet y ópera?",
+    "options": [
+      "El Teatro de Arte de Moscú",
+      "El Teatro Bolshói",
+      "La Ópera Estatal de Moscú",
+      "El Teatro Mariinski (está en San Petersburgo, no en Moscú)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Bolshói, fundado en 1776, es una de las compañías de ballet y ópera más prestigiosas del mundo."
+  },
+  {
+    "question": "¿Qué poeta y escritor es considerado el fundador de la literatura rusa moderna, autor de 'Eugenio Onegin'?",
+    "options": [
+      "Lev Tolstói",
+      "Antón Chéjov",
+      "Fiódor Dostoyevski",
+      "Alexánder Pushkin"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pushkin (1799-1837) es venerado en Rusia como el padre de la lengua literaria rusa moderna."
+  },
+  {
+    "question": "¿Qué célebre novela de Lev Tolstói narra la vida de varias familias aristocráticas rusas durante las guerras napoleónicas?",
+    "options": [
+      "Crimen y castigo",
+      "Guerra y paz",
+      "Ana Karenina (trata de la sociedad rusa de finales del XIX, no de las guerras napoleónicas)",
+      "Los hermanos Karamázov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "'Guerra y paz' (1869) es una de las novelas más extensas y ambiciosas de la literatura universal, ambientada en la Rusia de 1805-1812."
+  },
+  {
+    "question": "¿Qué novela de Fiódor Dostoyevski narra el tormento moral del estudiante Rodión Raskólnikov tras cometer un asesinato?",
+    "options": [
+      "Padres e hijos (es de Turguénev)",
+      "Crimen y castigo",
+      "Guerra y paz (es de Tolstói, no de Dostoyevski)",
+      "El jugador (es de Dostoyevski, pero trata de la ludopatía, no de un asesinato)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Publicada en 1866, 'Crimen y castigo' es una de las obras cumbre de la literatura psicológica rusa."
+  },
+  {
+    "question": "¿Qué dramaturgo y escritor de cuentos ruso es autor de obras de teatro como 'El jardín de los cerezos' y 'Tío Vania'?",
+    "options": [
+      "Nikolái Gógol",
+      "Iván Turguénev",
+      "Alexánder Pushkin",
+      "Antón Chéjov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Chéjov (1860-1904) revolucionó el teatro y el cuento breve con un estilo sobrio centrado en la vida cotidiana rusa."
+  },
+  {
+    "question": "¿Qué museo de San Petersburgo, uno de los más grandes y visitados del mundo, tiene su origen en la colección de arte privada de Catalina la Grande?",
+    "options": [
+      "El Museo Ruso (es un museo distinto, también en San Petersburgo)",
+      "El Museo Pushkin (está en Moscú)",
+      "El Museo del Hermitage",
+      "La Galería Tretiakov (está en Moscú, no en San Petersburgo)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El Hermitage, alojado en el antiguo Palacio de Invierno, alberga más de tres millones de obras de arte y objetos históricos."
+  },
+  {
+    "question": "¿Qué catedral moscovita, con sus característicos bulbos multicolores en la Plaza Roja, mandó construir Iván el Terrible para conmemorar la conquista de Kazán?",
+    "options": [
+      "La Catedral de San Isaac (está en San Petersburgo)",
+      "La Catedral de Cristo Salvador (fue construida en el siglo XIX)",
+      "La Catedral de la Asunción (está dentro del Kremlin, no en la Plaza Roja exterior)",
+      "La Catedral de San Basilio"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Construida entre 1555 y 1561, la Catedral de San Basilio es uno de los símbolos arquitectónicos más reconocibles de Rusia."
+  },
+  {
+    "question": "¿Qué escritor ucraniano-ruso es autor de la novela satírica 'Almas muertas' y del relato 'El capote', del que se dice (en una cita muy repetida, aunque de origen incierto) que 'todos salimos' los escritores rusos posteriores?",
+    "options": [
+      "Nikolái Gógol",
+      "Alexánder Ostrovski",
+      "Mijaíl Lérmontov",
+      "Iván Turguénev"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Gógol combinó lo grotesco, lo cómico y lo trágico en obras que retratan la burocracia y la sociedad rusa del siglo XIX con un humor profundamente inquietante."
+  },
+  {
+    "question": "¿Qué compositor ruso, autor de los ballets 'El lago de los cisnes' y 'El cascanueces', escribió también la 'Obertura 1812', que incluye disparos de cañón reales en su partitura para conmemorar la derrota de Napoleón?",
+    "options": [
+      "Nikolái Rimski-Kórsakov",
+      "Piotr Ilich Chaikovski",
+      "Serguéi Rajmáninov",
+      "Modest Mussorgski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La 'Obertura 1812', compuesta en 1880, se interpreta a veces con artillería real o efectos de cañón grabados en conciertos al aire libre."
+  },
+  {
+    "question": "¿Qué compositor y pianista ruso, célebre por conciertos de piano de enorme dificultad técnica, tenía —según se cuenta— manos excepcionalmente grandes capaces de abarcar hasta trece teclas blancas, casi una octava y media?",
+    "options": [
+      "Serguéi Rajmáninov",
+      "Alexánder Skriabin",
+      "Modest Mussorgski",
+      "Antón Rubinstein"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El enorme abarque de manos de Rajmáninov le permitió componer acordes y saltos que resultan extremadamente difíciles para la mayoría de los pianistas."
+  },
+  {
+    "question": "¿Qué pintor de vanguardia ruso presentó en 1915 su obra 'Cuadrado negro', un simple cuadrado negro sobre fondo blanco considerado un manifiesto radical del arte abstracto y del movimiento suprematista?",
+    "options": [
+      "Kazimir Malévich",
+      "Vasili Kandinski",
+      "Marc Chagall",
+      "Iliá Repin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Malévich consideraba su 'Cuadrado negro' como el 'punto cero' de la pintura, un rechazo total de la representación figurativa tradicional."
+  },
+  {
+    "question": "¿Qué pintor ruso, nacido en Moscú, es considerado pionero del arte abstracto occidental, tras afirmar haber tenido una revelación al ver una de sus propias pinturas figurativas colocada accidentalmente al revés?",
+    "options": [
+      "Marc Chagall",
+      "Vasili Kandinski",
+      "Kazimir Malévich",
+      "Alexéi Yavlenski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Kandinski desarrolló buena parte de su carrera en Alemania y Francia, pero su formación e influencias iniciales fueron profundamente rusas."
+  },
+  {
+    "question": "¿Qué pintor, originario de una pequeña ciudad judía del Imperio ruso (hoy Bielorrusia), es célebre por sus imágenes oníricas de figuras y animales flotando sobre pueblos, mezclando folclore judío y vanguardia europea?",
+    "options": [
+      "Iliá Repin",
+      "Vasili Kandinski",
+      "Kazimir Malévich",
+      "Marc Chagall"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Chagall pasó gran parte de su vida entre Rusia, Francia y Estados Unidos, pero sus recuerdos de infancia en Vítebsk marcaron toda su obra."
+  },
+  {
+    "question": "¿Qué estreno de ballet en París en 1913, con música de Ígor Stravinski y coreografía de Vaslav Nizhinski, provocó un escándalo tan grande entre el público que terminó en gritos, peleas y casi un motín en el teatro?",
+    "options": [
+      "'El lago de los cisnes'",
+      "'El pájaro de fuego' (también de Stravinski, pero su estreno en 1910 no causó escándalo)",
+      "'La consagración de la primavera'",
+      "'Petrushka'"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Los ritmos disonantes y la coreografía deliberadamente antinatural de 'La consagración de la primavera' rompían tan radicalmente con las convenciones del ballet clásico que el público reaccionó con violencia."
+  },
+  {
+    "question": "Además de su exquisita orfebrería exterior, ¿qué característica hacía especialmente codiciados a los huevos imperiales de Fabergé por parte de la familia Románov?",
+    "options": [
+      "Estaban hechos enteramente de diamantes sin ningún otro material",
+      "Cada huevo contenía un reloj suizo funcional",
+      "Cada huevo escondía una 'sorpresa' interior, como una réplica en miniatura o un mecanismo animado",
+      "Podían usarse como joyeros para guardar coronas"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Una de las sorpresas más famosas es una réplica miniatura del tren transiberiano en oro, con vagones que se desplazan realmente, escondida dentro de uno de los huevos."
+  },
+  {
+    "question": "¿Qué explicación tradicional se da al característico diseño en forma de bulbo o cebolla de las cúpulas de las iglesias ortodoxas rusas, a diferencia de las cúpulas semiesféricas bizantinas de las que derivan?",
+    "options": [
+      "Se dice que representan una llama de vela ardiendo hacia el cielo",
+      "Fueron diseñadas para resistir mejor los terremotos",
+      "Fueron una imposición arquitectónica de arquitectos italianos",
+      "Imitan la forma de los cascos de los guerreros mongoles"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque también hay explicaciones prácticas relacionadas con la nieve y el clima, la interpretación simbólica más difundida asocia la cúpula bulbosa con una llama espiritual."
+  },
+  {
+    "question": "¿Qué objeto, un recipiente metálico con un compartimento interior para brasas que mantiene el agua caliente durante horas, se convirtió en un símbolo central de la hospitalidad y la vida doméstica rusa desde el siglo XVIII?",
+    "options": [
+      "El ushanka (es un gorro de piel)",
+      "El sarafán (es un vestido tradicional, no un utensilio)",
+      "El samovar",
+      "La balalaica (es un instrumento musical)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Reunirse alrededor del samovar para tomar té se convirtió en un ritual social tan importante que dio origen a la expresión 'ir a tomar té', sinónimo de visita social."
+  },
+  {
+    "question": "¿Qué instrumento musical de cuerda, de caja triangular característica y tradicionalmente con tres cuerdas, es uno de los símbolos folclóricos más reconocibles de la música popular rusa?",
+    "options": [
+      "La gúsli (es un instrumento de cuerdas pulsadas, de forma distinta)",
+      "El bayán (es un tipo de acordeón)",
+      "La balalaica",
+      "La domra (es similar pero de caja redonda, no triangular)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque su forma triangular actual se estandarizó en el siglo XIX, existen referencias a instrumentos similares desde el siglo XVII."
+  },
+  {
+    "question": "¿Qué antiguo pueblo nómada de las estepas, que dominó gran parte del sur de la actual Rusia y Ucrania entre los siglos VII y III a.C., dejó como legado un tesoro de orfebrería en oro tan refinado que hoy ocupa salas enteras del Hermitage?",
+    "options": [
+      "Los jázaros",
+      "Los sármatas (fue un pueblo relacionado, pero de importancia arqueológica menor en las colecciones del Hermitage)",
+      "Los pechenegos",
+      "Los escitas"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El llamado 'oro escita', hallado en túmulos funerarios (kurganes) de las estepas, muestra un dominio técnico de la orfebrería que sorprendió a los arqueólogos europeos del siglo XIX."
+  },
+  {
+    "question": "¿Qué museo, fundado por Pedro el Grande en San Petersburgo en 1714 y célebre (entre otras cosas) por su antigua colección de especímenes anatómicos y curiosidades naturales, se considera el primer museo público de Rusia?",
+    "options": [
+      "La Kunstkámera",
+      "El Museo Ruso",
+      "El Hermitage",
+      "La Galería Tretiakov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pedro el Grande quería fomentar el pensamiento científico y combatir la superstición popular exhibiendo abiertamente fenómenos naturales raros, incluida su famosa colección de anomalías anatómicas."
+  },
+  {
+    "question": "¿Qué monje del siglo XIV, fundador del monasterio que hoy se conoce como la Lavra de la Santísima Trinidad y San Sergio, cerca de Moscú, es una de las figuras espirituales más veneradas de la Iglesia ortodoxa rusa?",
+    "options": [
+      "Néstor el Cronista",
+      "Sergio de Rádonezh",
+      "Filipo de Moscú",
+      "Serafín de Sárov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Se dice que Sergio de Rádonezh bendijo al príncipe Dmitri Donskói antes de la batalla de Kulikovo en 1380, vinculando espiritualidad y resistencia nacional en la memoria histórica rusa."
+  },
+  {
+    "question": "¿Qué comerciante y mecenas moscovita fundó, a partir de su colección privada donada a la ciudad en 1892, la galería de arte que hoy lleva su apellido y alberga la mayor colección de pintura rusa del mundo?",
+    "options": [
+      "Savva Mámontov",
+      "Iván Morózov",
+      "Serguéi Shchukin",
+      "Pável Tretiakov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "A diferencia del Hermitage, centrado en arte europeo, la Galería Tretiakov se especializó desde el inicio en coleccionar exclusivamente obra de artistas rusos."
+  },
+  {
+    "question": "¿Qué novela de Mijaíl Bulgákov, que mezcla sátira, fantasía y una versión del diablo visitando Moscú, fue escrita en los años 1930 pero no se publicó completa en la URSS hasta 1966-67, casi tres décadas después de haber sido concebida?",
+    "options": [
+      "'Un día en la vida de Iván Denísovich' (es de Solzhenitsin)",
+      "'El maestro y Margarita'",
+      "'Doctor Zhivago' (es de Borís Pasternak, no de Bulgákov)",
+      "'Almas muertas' (es de Gógol, del siglo XIX)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Bulgákov quemó un primer borrador de la novela por miedo a la censura estalinista, pero luego la reescribió de memoria; hoy es considerada una de las grandes novelas rusas del siglo XX."
+  },
+  {
+    "question": "¿Qué escritor, autor de novelas como 'Vida de Arséniev' y célebre por sus relatos breves, se convirtió en 1933 en el primer autor de lengua rusa en recibir el Premio Nobel de Literatura, viviendo entonces en el exilio en Francia?",
+    "options": [
+      "Alexánder Solzhenitsin (lo recibió en 1970)",
+      "Mijaíl Sholójov (lo recibió en 1965)",
+      "Iván Bunin",
+      "Borís Pasternak (lo recibió después, en 1958)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Bunin abandonó Rusia tras la Revolución de 1917 y nunca regresó; recibió la noticia de su Nobel en un pequeño hotel de la Riviera francesa, según sus propios recuerdos, con más incredulidad que euforia inicial."
+  },
+  {
+    "question": "¿Qué autor de 'Doctor Zhivago' se vio forzado, bajo intensa presión de las autoridades soviéticas, a rechazar el Premio Nobel de Literatura que le fue concedido en 1958, tras haber publicado su novela únicamente en el extranjero?",
+    "options": [
+      "Borís Pasternak",
+      "Mijaíl Sholójov",
+      "Iván Bunin (lo recibió antes, en 1933, y sí pudo aceptarlo, ya que vivía en el exilio)",
+      "Andréi Voznesenski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pasternak fue expulsado de la Unión de Escritores Soviéticos tras el escándalo; su hijo recogería finalmente el premio en su nombre en Estocolmo, pero solo hasta 1989, ya con Pasternak fallecido."
+  },
+  {
+    "question": "¿Qué autor de la extensa novela 'El Don apacible', ambientada entre los cosacos del Don durante la revolución y la guerra civil, fue el único escritor soviético en recibir el Premio Nobel de Literatura con la aprobación plena de las autoridades del Kremlin, en 1965?",
+    "options": [
+      "Mijaíl Sholójov",
+      "Borís Pasternak (fue presionado a rechazarlo, no a aceptarlo con aprobación oficial)",
+      "Alexánder Solzhenitsin (fue expulsado del país tras el suyo)",
+      "Iliá Ehrenburg"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A diferencia de Pasternak y Solzhenitsin, la obra de Sholójov encajaba con la estética del 'realismo socialista' promovida oficialmente, lo que facilitó que Moscú celebrara en vez de condenar su premio."
+  },
+  {
+    "question": "¿Qué poeta, autora del extenso poema 'Réquiem' —escrito en secreto durante las purgas estalinistas, mientras su propio hijo permanecía encarcelado—, es considerada una de las voces mayores de la Edad de Plata que sobrevivió, no sin sufrimiento, hasta la era soviética tardía?",
+    "options": [
+      "Nadezhda Mandelshtam (fue memorialista, esposa del poeta Ósip Mandelshtam, no autora de 'Réquiem')",
+      "Zinaída Guíppius",
+      "Marina Tsvetáyeva (también fue una gran poeta de la época, pero se suicidó en 1941, sin llegar a escribir 'Réquiem')",
+      "Anna Ajmátova"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Por miedo a que un manuscrito fuera descubierto durante un registro policial, Ajmátova y sus allegadas memorizaron el poema durante años, quemando el papel tras cada lectura conjunta."
+  },
+  {
+    "question": "¿Qué compositor soviético escribió la partitura orquestal para el cuento musical infantil 'Pedro y el lobo', en el que cada personaje está representado por un instrumento distinto?",
+    "options": [
+      "Dmitri Shostakóvich",
+      "Aram Jachaturián",
+      "Ígor Stravinski",
+      "Serguéi Prokófiev"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Prokófiev compuso esta pieza en 1936 con fines pedagógicos, pensada explícitamente para introducir a los niños en el reconocimiento de los distintos instrumentos de la orquesta."
+  },
+  {
+    "question": "¿Qué compositor comenzó a escribir su Séptima Sinfonía, apodada 'Leningrado', durante el propio asedio nazi a esa ciudad en 1941, convirtiéndose la obra en un símbolo internacional de la resistencia soviética frente al fascismo?",
+    "options": [
+      "Serguéi Prokófiev",
+      "Serguéi Rajmáninov (ya vivía en Estados Unidos para entonces, alejado del asedio)",
+      "Dmitri Shostakóvich",
+      "Aram Jachaturián"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La sinfonía se interpretó por primera vez en la propia Leningrado sitiada en agosto de 1942, con músicos debilitados por el hambre, en una actuación transmitida por altavoces hacia las líneas enemigas."
+  },
+  {
+    "question": "¿Qué célebre pintura realista de Iliá Repin, que muestra a un grupo de hombres extenuados arrastrando una embarcación a lo largo de la orilla mediante cuerdas, se convirtió en un símbolo del sufrimiento de las clases trabajadoras en la Rusia imperial?",
+    "options": [
+      "'La mañana en el bosque de pinos' (es de Iván Shishkin, no de Repin)",
+      "'La aparición de Cristo al pueblo' (es de Alexánder Ivánov, no de Repin)",
+      "'Los sirgadores del Volga'",
+      "'Iván el Terrible y su hijo' (también es de Repin, pero representa otro tema completamente distinto)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Repin observó directamente a los sirgadores durante un viaje de estudio al Volga, y la crudeza de la obra, expuesta en 1873, generó tanto admiración artística como incomodidad social entre las clases acomodadas."
+  },
+  {
+    "question": "¿Qué pintor ruso es célebre por sus grandes lienzos de temática folclórica y heroica, como 'Los tres bogatyrs' (guerreros legendarios de la épica popular rusa) o 'El caballero en la encrucijada'?",
+    "options": [
+      "Vasili Súrikov",
+      "Iván Aivazovski (se especializó en paisajes marinos, no en temas folclóricos)",
+      "Víktor Vasnetsov",
+      "Iliá Repin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Vasnetsov contribuyó también al diseño arquitectónico, incluida la fachada de la propia Galería Tretiakov en Moscú, con un estilo inspirado en la arquitectura tradicional rusa."
+  },
+  {
+    "question": "¿Qué monje e icononógrafo del siglo XV, autor del icono de 'La Trinidad' —considerada la cumbre del arte religioso medieval ruso—, dio nombre siglos después a una célebre película de Andréi Tarkovski?",
+    "options": [
+      "Dionisio (fue otro gran iconógrafo, mmás tardío, de finales del siglo XV)",
+      "Simón Ushakov (fue un iconógrafo posterior, del siglo XVII)",
+      "Andréi Rubliov",
+      "Teófanes el Griego (fue su maestro, de origen bizantino, no ruso)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El icono de 'La Trinidad' de Rubliov, pintado para el Monasterio de la Trinidad y San Sergio, representa a los tres visitantes angelicales de Abraham como símbolo de la Trinidad cristiana, con una serenidad compositiva estudiada hasta hoy."
+  },
+  {
+    "question": "¿Qué folclorista ruso del siglo XIX recopiló y publicó cientos de cuentos populares tradicionales en una colección comparada a menudo con la de los hermanos Grimm en Alemania?",
+    "options": [
+      "Vladímir Dal (compiló un diccionario de la lengua rusa, no una colección de cuentos)",
+      "Piotr Kiréyevski (se dedicó sobre todo a recopilar canciones populares, no cuentos)",
+      "Alexánder Afanásiev",
+      "Iván Krylov (escribió fábulas originales, no una recopilación de folclore)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La colección de Afanásiev sigue siendo hoy la fuente principal de referencia para buena parte de los cuentos populares rusos más conocidos, incluidas las historias de Baba Yagá."
+  },
+  {
+    "question": "¿Cómo se conoce al grupo de pintores realistas rusos que, a partir de 1870, rompieron con la rígida Academia Imperial de Artes y organizaron exposiciones itinerantes propias por ciudades de provincia, llevando el arte a un público mucho más amplio?",
+    "options": [
+      "Los Peredvízhniki (o 'ambulantes')",
+      "Los Miriskúsniki (o 'Mundo del Arte', fue un grupo posterior y de estética muy distinta, más cercano al simbolismo)",
+      "Los Suprematistas (es el movimiento de Malévich, de principios del siglo XX)",
+      "Los Constructivistas (es un movimiento aún más tardío, posrevolucionario)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Iliá Repin, Iván Shishkin y Víktor Vasnetsov, entre otros, formaron parte de este movimiento, que buscaba retratar la vida social y el paisaje ruso con una honestidad ausente en el arte académico oficial."
+  },
+  {
+    "question": "¿Qué revista y movimiento artístico de comienzos del siglo XX, fundado por Serguéi Diáguilev y Alexandr Benois antes de que el primero creara los Ballets Rusos, promovía el refinamiento estético y la conexión de Rusia con las corrientes artísticas de Europa occidental?",
+    "options": [
+      "'Mir Iskusstva' ('El Mundo del Arte')",
+      "El Suprematismo (es posterior, de Malévich)",
+      "El Acmeísmo (fue un movimiento poético, no de artes visuales)",
+      "Los Peredvízhniki ('los ambulantes', fue un movimiento anterior y de estética opuesta, más realista y social)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La revista y el círculo de artistas reunidos en torno a 'Mir Iskusstva' formaron el laboratorio estético del que después nacerían los célebres Ballets Rusos de Diáguilev."
+  },
+  {
+    "question": "¿A qué compositor, considerado el fundador de la tradición de música clásica nacionalista rusa con su ópera 'Una vida por el zar' (1836), se le suele llamar 'el padre de la música rusa'?",
+    "options": [
+      "Modest Mussorgski",
+      "Mijaíl Glinka",
+      "Alexánder Borodín",
+      "Piotr Ilich Chaikovski (llegó una generación después, y no es considerado el fundador de la tradición)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes de Glinka, la música 'seria' en Rusia imitaba casi por completo modelos italianos y alemanes; su obra abrió el camino a una tradición explícitamente rusa en temática y lenguaje musical."
+  },
+  {
+    "question": "¿Qué compositor ruso, autor de la ópera 'El príncipe Ígor' y de la pieza orquestal 'En las estepas del Asia Central', desarrolló en paralelo una carrera científica como reconocido químico especializado en compuestos orgánicos?",
+    "options": [
+      "Mijaíl Glinka",
+      "Alexánder Borodín",
+      "Nikolái Rimski-Kórsakov (llegó a ser oficial naval antes que compositor, pero no químico)",
+      "Modest Mussorgski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Borodín compaginó durante toda su vida la investigación química —realizó aportes reales a la química orgánica— con la composición musical, que practicaba principalmente los fines de semana."
+  },
+  {
+    "question": "¿Cómo se conoce, en la historia de la música clásica rusa, al grupo de cinco compositores —Balákirev, Cui, Mussorgski, Rimski-Kórsakov y Borodín— que buscaron desarrollar un estilo nacional ruso deliberadamente alejado de la formación académica occidental?",
+    "options": [
+      "Los Acmeístas (es un movimiento poético, no musical)",
+      "Mir Iskusstva (es una revista y círculo posterior, de artes visuales y escénicas)",
+      "Los Peredvízhniki (es un movimiento de pintores, no de músicos)",
+      "El 'Grupo de los Cinco' (o 'El Puñado Poderoso')"
+    ],
+    "correct_option_id": 3,
+    "explanation": "A diferencia de Chaikovski, formado en el conservatorio según cánones europeos, la mayoría de los miembros de este grupo eran autodidactas o tenían otras profesiones principales, como Borodín con la química."
+  },
+  {
+    "question": "¿Qué fabulista ruso, cuyas fábulas protagonizadas por animales siguen memorizando de niños generaciones de escolares rusos, es comparado a menudo con Esopo o La Fontaine, aunque adaptó sus historias a un humor y una moraleja marcadamente rusos?",
+    "options": [
+      "Nikolái Nekrásov (es célebre por su poesía sobre la vida campesina, no por fábulas)",
+      "Alexánder Pushkin (escribió cuentos en verso, pero no se le conoce principalmente como fabulista)",
+      "Iván Krylov",
+      "Iván Turguénev"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Muchas expresiones y moralejas de las fábulas de Krylov —como aquellas sobre la cigarra y la hormiga, adaptadas de La Fontaine pero rusificadas— siguen usándose hoy como refranes cotidianos en ruso."
+  },
+  {
+    "question": "¿Qué poeta y novelista, autor de 'Un héroe de nuestro tiempo' y considerado el gran sucesor de Pushkin en la poesía romántica rusa, murió también joven en un duelo, en 1841, apenas cuatro años después que su propio predecesor literario?",
+    "options": [
+      "Fiódor Tiútchev (murió de causas naturales, a edad avanzada)",
+      "Nikolái Gógol (murió de causas relacionadas con una enfermedad y un ayuno autoimpuesto, no en un duelo)",
+      "Afanasi Fet",
+      "Mijaíl Lérmontov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La temprana muerte de Lérmontov, exiliado al Cáucaso por su poesía crítica tras la muerte de Pushkin, alimentó la imagen romántica del poeta ruso como figura trágica y rebelde frente al poder."
+  },
+  {
+    "question": "¿En qué circunstancia perdió la vida el propio Alexánder Pushkin en 1837, a los 37 años, en un episodio que privó a la literatura rusa de su figura fundacional en la plenitud de su carrera creativa?",
+    "options": [
+      "Un ataque de bandidos en un camino rural",
+      "Un duelo de honor por rumores sobre su esposa",
+      "Un accidente durante un viaje en trineo",
+      "Una enfermedad repentina no diagnosticada"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pushkin se batió en duelo con Georges d'Anthès, un oficial francés al servicio ruso acusado de cortejar a su esposa Natalia Goncharova; murió dos días después, a causa de una herida de bala en el abdomen."
+  },
+  {
+    "question": "¿Qué novela de Iván Turguénev, publicada en 1862 y protagonizada por el joven médico Bazárov, introdujo en el vocabulario ruso (y después internacional) el término 'nihilista' para describir a una nueva generación que rechazaba toda autoridad tradicional?",
+    "options": [
+      "'Rudin' (es también de Turguénev, pero de 1856, y no acuñó ese término)",
+      "'Aguas primaverales' (es de Turguénev, pero muy posterior y de temática romántica, no ideológica)",
+      "'Padres e hijos'",
+      "'Nido de nobles' (es otra novela de Turguénev, mmás anterior y de temática distinta)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El personaje de Bazárov, que se autodefine como 'nihilista' al rechazar el arte, la religión y las convenciones sociales en nombre de la razón científica, generó una intensa polémica entre la crítica rusa de la época."
+  },
+  {
+    "question": "¿Qué poeta ruso del siglo XIX, célebre por versos de fuerte contenido social sobre el sufrimiento campesino como el extenso poema '¿Quién puede vivir feliz en Rusia?', dirigió también durante años una influyente revista literaria?",
+    "options": [
+      "Fiódor Tiútchev (su poesía es de tono más filosófico e íntimo, no centrada en la crítica social campesina)",
+      "Nikolái Nekrásov",
+      "Afanasi Fet (su poesía se centra en la naturaleza y el amor, alejada deliberadamente de temas sociales)",
+      "Konstantín Balmont (perteneció a una generación posterior, la del simbolismo de finales de siglo)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "A diferencia de otros poetas de su época centrados en temas líricos o filosóficos, Nekrásov dedicó buena parte de su obra a denunciar directamente las duras condiciones de vida del campesinado ruso antes y después de la emancipación de 1861."
+  },
+  {
+    "question": "De los 50 huevos imperiales de Fabergé conocidos, elaborados para la familia Románov entre 1885 y 1917, ¿cuál es la situación actual de varios de ellos, un dato que sorprende a menudo a quienes solo conocen los ejemplares hoy exhibidos en museos?",
+    "options": [
+      "Fueron destruidos deliberadamente por los bolcheviques poco después de 1917",
+      "Todos y cada uno de ellos se conservan hoy perfectamente catalogados en un único museo ruso",
+      "Ninguno sobrevivió a la Revolución rusa; todos son reconstrucciones modernas",
+      "Varios permanecen perdidos o de paradero desconocido desde la revolución de 1917"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Tras la revolución, muchos huevos fueron confiscados y posteriormente vendidos por el gobierno soviético a coleccionistas extranjeros necesitado de divisas; el paradero exacto de al menos siete de ellos sigue siendo desconocido hasta hoy."
+  },
+  {
+    "question": "¿Qué célebre bailarina rusa, estrella de los Ballets Rusos de Diáguilev y creadora del solo coreográfico 'La muerte del cisne', llegó a dar la vuelta al mundo en giras que popularizaron el ballet clásico en países donde antes era prácticamente desconocido?",
+    "options": [
+      "Anna Pávlova",
+      "Tamara Karsávina (también bailó con los Ballets Rusos, pero no es la asociada principalmente a esa coreografía)",
+      "Ekaterina Gueltser (fue una destacada bailarina del Bolshói, de una trayectoria distinta)",
+      "Matilda Kschessínska (fue otra célebre bailarina de la época, pero no la creadora de esa pieza)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Se dice que Pávlova pidió, en su lecho de muerte en 1931, que le prepararan su traje de cisne, y que las funciones programadas en su honor tras su fallecimiento se representaron con un único foco iluminando el escenario vacío."
+  },
+  {
+    "question": "¿Qué legendario bailarín de los Ballets Rusos, célebre por saltos que parecían desafiar la gravedad y por protagonizar el escandaloso estreno de 'La consagración de la primavera' en 1913, vio truncada su carrera por una enfermedad mental diagnosticada apenas unos años después, a los veintitantos años?",
+    "options": [
+      "Mijaíl Fokín (fue el coreógrafo principal de la compañía en sus primeros años, no el bailarín protagonista)",
+      "Serguéi Diáguilev (fue el empresario y fundador de la compañía, no un bailarín)",
+      "Léonide Massine (fue otro coreógrafo y bailarín de los Ballets Rusos, de una generación algo posterior)",
+      "Vaslav Nizhinski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Nizhinski pasó las últimas tres décadas de su vida entrando y saliendo de instituciones psiquiátricas, un final trágico que contrasta dramáticamente con la fama fulgurante de sus años como estrella indiscutida de la danza europea."
+  },
+  {
+    "question": "¿Qué estilo arquitectónico religioso ruso, caracterizado por techos altos y puntiagudos en forma de tienda de campaña (en lugar de las tradicionales cúpulas semiesféricas o bulbosas), se puede admirar en la Iglesia de la Ascensión de Kolomenskoye, cerca de Moscú, construida en 1532?",
+    "options": [
+      "El estilo 'shatiór' (de tienda o carpa)",
+      "El estilo bizantino clásico (se caracteriza, precisamente, por cúpulas semiesféricas, no por techos puntiagudos)",
+      "El constructivismo (es un estilo del siglo XX, completamente distinto y no religioso)",
+      "El estilo barroco naryshkiniano (es un estilo posterior, de finales del siglo XVII, de características ornamentales distintas)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Se cree que la Iglesia de la Ascensión fue construida para celebrar el nacimiento del futuro Iván el Terrible; su silueta vertical, sin precedentes en la arquitectura bizantina de la que partía la tradición rusa, marcó un antes y un después estético."
+  },
+  {
+    "question": "¿Qué catedral moscovita, construida en el siglo XIX para conmemorar la victoria sobre Napoleón, fue completamente demolida por orden de Stalin en 1931 para dar paso a un nunca terminado 'Palacio de los Soviets', y finalmente reconstruida casi idéntica ya en los años 1990?",
+    "options": [
+      "La Catedral de San Basilio (sigue en pie desde el siglo XVI; nunca fue demolida)",
+      "La Catedral de la Asunción del Kremlin (tampoco fue demolida; es de origen mucho más antiguo)",
+      "La Catedral de Kazán (fue efectivamente demolida en la era soviética, pero en la Plaza Roja, y con una historia distinta)",
+      "La Catedral de Cristo Salvador"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El terreno donde se demolió la catedral original permaneció durante años como una piscina pública al aire libre —la mayor del mundo en su momento—, antes de que la catedral fuera finalmente reconstruida tras la caída de la URSS."
+  },
+  {
+    "question": "¿Qué familia noble rusa, propietaria de uno de los teatros privados más célebres del imperio en su finca de Kuskovo, mantuvo compañías teatrales formadas enteramente por sus propios siervos, incluida la cantante Praskovia Zhemchugova, con quien el conde de la familia terminaría casándose en secreto?",
+    "options": [
+      "Los Stróganov (fueron célebres sobre todo por su riqueza comercial y el patrocinio de la conquista de Siberia)",
+      "Los Sheremétev",
+      "Los Yusúpov (también fueron una familia noble muy rica, pero célebres por otras razones, no por este teatro específico)",
+      "Los Románov (eran la propia familia imperial, no simplemente una familia noble con un teatro de siervos)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El matrimonio del conde Nikolái Sheremétev con su antigua sierva Praskovia, tras años de relación oculta debido a la enorme diferencia de estatus social, escandalizó a la sociedad aristocrática de su tiempo."
+  },
+  {
+    "question": "¿Qué diseñador de escenografía y vestuario, colaborador clave de Diáguilev en los Ballets Rusos, revolucionó el aspecto visual del ballet europeo con sus vibrantes y exóticos diseños, muy influyentes también en la moda de la época?",
+    "options": [
+      "Nicolás Roerich (diseñó específicamente el vestuario de 'La consagración de la primavera', pero de estilo muy distinto, inspirado en lo primitivo eslavo)",
+      "Alexandr Benois (también fue escenógrafo de los Ballets Rusos, pero de un estilo más clásico y menos identificado con la revolución del color y la moda)",
+      "León Bakst",
+      "Natalia Goncharova (diseñó también para los Ballets Rusos, pero en una etapa posterior, ya en los años 1920)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Los diseños de Bakst para producciones como 'Scheherazade' causaron sensación en París, influyendo directamente en tendencias de moda y decoración de interiores de la alta sociedad europea de la década de 1910."
+  },
+  {
+    "question": "¿Qué ilustrador ruso desarrolló un estilo visual inmediatamente reconocible, inspirado en el folclore y el arte popular tradicional, para ilustrar cuentos de hadas rusos como los de la bruja Baba Yagá o el pájaro de fuego?",
+    "options": [
+      "Iván Bilibin",
+      "Víktor Vasnetsov (también se inspiró en temas folclóricos, pero en grandes lienzos al óleo, no principalmente en ilustración de libros)",
+      "Marc Chagall (su estilo onírico se inspira en el folclore judío, no en los cuentos populares eslavos)",
+      "Kazimir Malévich (su estilo, el suprematismo abstracto, no tiene relación alguna con la ilustración folclórica)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El estilo decorativo y minucioso de Bilibin, con bordes ornamentales inspirados en el arte popular ruso tradicional, se convirtió en la imagen visual de referencia para generaciones posteriores de ilustraciones de cuentos populares rusos."
+  },
+  {
+    "question": "¿Qué pintor, maestro del llamado 'paisaje de estado de ánimo' (nastroyénie), transmitía atmósferas emocionales completas a través de paisajes rusos aparentemente sencillos, como en su célebre obra 'El silencio del convento' o 'Marzo'?",
+    "options": [
+      "Vasili Polénov (fue paisajista y pintor de escenas religiosas, de un estilo distinto)",
+      "Isaak Levitán",
+      "Iván Shishkin (también fue un gran paisajista, pero de un estilo más detallista y descriptivo, menos centrado en transmitir estados de ánimo)",
+      "Arjip Kuindzhí (se especializó en efectos lumínicos dramáticos, un enfoque distinto del de Levitán)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a morir joven, a los 39 años, Levitán es considerado hoy el paisajista más influyente de la pintura rusa, habiendo elevado el género del paisaje a una categoría de profundidad emocional comparable a la pintura de temas históricos o religiosos."
+  },
+  {
+    "question": "¿Qué pintor marino, de origen armenio y afincado toda su vida en la ciudad de Crimea donde nació, produjo la asombrosa cifra de más de 6,000 cuadros a lo largo de su carrera, siendo su obra más célebre 'La novena ola'?",
+    "options": [
+      "Isaak Levitán (se especializó en paisajes terrestres, no marinos)",
+      "Vasili Súrikov (se especializó en grandes escenas históricas, no en pintura marina)",
+      "Iván Aivazovski",
+      "Arjip Kuindzhí (también pintó efectos lumínicos, pero no se especializó específicamente en temas marinos)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La extraordinaria productividad de Aivazovski —a menudo terminaba un cuadro completo en pocas horas— y su dominio técnico de la luz sobre el agua lo convirtieron en uno de los pintores marinos más célebres y prolíficos de toda la historia del arte."
+  },
+  {
+    "question": "¿Qué cantautor, actor y poeta soviético, jamás reconocido oficialmente por las autoridades culturales pero cuyas grabaciones caseras circulaban clandestinamente en cintas de casete por todo el país, se convirtió en una de las voces más queridas y populares de la URSS?",
+    "options": [
+      "Alexánder Guálich",
+      "Bulat Okudzhava",
+      "Yuri Vizbor",
+      "Vladímir Vysotski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Actor del Teatro Taganka y compositor de canciones de crítica social envuelta en ironía, Vysotski nunca publicó un disco oficial en vida, pero su funeral en 1980 reunió a decenas de miles de personas en Moscú, a pesar del silencio de la prensa soviética."
+  },
+  {
+    "question": "¿Qué célebre huevo de Fabergé, fabricado en 1900 para el zar Nicolás II, contiene en su interior una diminuta réplica funcional del tren Transiberiano, hecha de oro y platino, con vagones que se pueden desplegar en miniatura?",
+    "options": [
+      "El huevo del Ferrocarril Transiberiano",
+      "El huevo de la Gallina",
+      "El huevo del Reloj del Pavo Real",
+      "El huevo del Coronación"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este huevo conmemoraba la construcción del Transiberiano y su 'sorpresa' interior —un tren de cuerda con locomotora y cinco vagones, cada uno correctamente identificado— es una de las piezas de orfebrería más admiradas de toda la colección imperial."
+  },
+  {
+    "question": "¿Qué compositor ruso, miembro del llamado 'Grupo de los Cinco', escribió la suite orquestal 'Sherezade', inspirada en los cuentos de 'Las mil y una noches'?",
+    "options": [
+      "Nikolái Rimski-Kórsakov",
+      "Mili Balákirev",
+      "César Cui",
+      "Modest Músorgski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Rimski-Kórsakov, además de compositor, fue un maestro de la orquestación que influyó decisivamente en músicos posteriores como Stravinski; 'Sherezade' es célebre por su vibrante colorido orquestal y su tema recurrente de violín solista."
+  },
+  {
+    "question": "¿Qué pintor ruso es el autor de 'Mañana en un bosque de pinos', una de las pinturas más reproducidas y populares de Rusia, célebre por sus osos jugando entre los árboles (aunque los animales, según se sabe, fueron pintados en realidad por otro artista)?",
+    "options": [
+      "Ivan Aivazovski",
+      "Iván Shishkin",
+      "Vasili Súrikov",
+      "Isaak Levitán"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Shishkin, maestro absoluto del paisaje forestal ruso, contó con la colaboración de su colega Konstantín Sávitski para pintar los osos de esta célebre obra, aunque la firma de Sávitski fue posteriormente borrada del cuadro por decisión del comprador."
+  },
+  {
+    "question": "¿Qué fortaleza de San Petersburgo alberga en su catedral las tumbas de casi todos los emperadores rusos desde Pedro el Grande, incluidos los restos de Nicolás II y su familia, trasladados allí muchos años después de su muerte?",
+    "options": [
+      "La Fortaleza de Peter y Pável en Nóvgorod",
+      "La Fortaleza de San Pedro y San Pablo",
+      "El Kremlin de Moscú",
+      "El Monasterio Alexandr Nevski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La catedral de esta fortaleza-isla, con su altísima aguja dorada visible desde buena parte de la ciudad, funciona como panteón imperial desde el reinado del propio fundador de San Petersburgo."
+  },
+  {
+    "question": "¿Qué célebre cantante de ópera ruso, dotado de una voz de bajo excepcionalmente potente y expresiva, alcanzó fama internacional interpretando papeles como Borís Godunov y llegó a triunfar en los principales teatros de Europa y Estados Unidos?",
+    "options": [
+      "Leonid Sobinov",
+      "Serguéi Lémeshev",
+      "Fiódor Chaliapin",
+      "Dmitri Hvorostovski"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Chaliapin, nacido en una familia campesina pobre, se convirtió en la primera gran estrella operística rusa de fama mundial, célebre tanto por su voz como por su intensa capacidad dramática sobre el escenario."
+  },
+  {
+    "question": "¿En qué año se fundó el Conservatorio de Moscú, institución educativa musical que formaría a generaciones de compositores e intérpretes rusos y que hoy lleva el nombre de Chaikovski?",
+    "options": [
+      "1840",
+      "1917",
+      "1866",
+      "1890"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Fundado por el pianista y director Nikolái Rubinstein, hermano del también célebre pianista Antón Rubinstein, el Conservatorio de Moscú contó entre su primer profesorado con el propio Piotr Chaikovski, entonces un joven maestro de armonía."
+  },
+  {
+    "question": "¿Qué dramaturgo ruso del siglo XIX, considerado el padre del teatro realista ruso, es autor de la obra 'La tormenta' ('Grozá'), que retrata con crudeza la opresión social en una pequeña ciudad de provincias?",
+    "options": [
+      "Alexánder Ostrovski",
+      "Alexánder Griboyédov",
+      "Nikolái Ostrovski",
+      "Denís Fonvizin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Ostrovski escribió decenas de obras que retrataban con gran realismo la vida de los mercaderes y la burguesía provinciana rusa; el Teatro Maly de Moscú, que estrenó buena parte de su repertorio, es conocido popularmente como 'la casa de Ostrovski'."
+  },
+  {
+    "question": "¿Qué antigua tradición artesanal rusa, originaria de una región al norte de Moscú, consiste en la elaboración de finísimos encajes de hilo blanco tejidos a mano sobre bolillos, empleados en manteles, chales y adornos de vestidos?",
+    "options": [
+      "El encaje de Vólogda",
+      "El tejido de Torzhók",
+      "La blonda de Kaluga",
+      "El bordado de Riazán"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El encaje de Vólogda, con sus característicos motivos de flores, pájaros y formas geométricas continuas, se convirtió en un artículo de exportación apreciado ya desde el siglo XIX y sigue elaborándose de forma artesanal hasta hoy."
+  },
+  {
+    "question": "¿Cómo se llama la técnica tradicional rusa de pintura en miniatura sobre pequeñas cajas de laca negra, generalmente representando escenas de cuentos populares, que toma su nombre de una aldea situada al este de Moscú?",
+    "options": [
+      "El esmalte de Rostov",
+      "La miniatura de Palej",
+      "La laca de Fedoskino",
+      "El barniz de Mstiora"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Los artesanos de Palej, muchos de ellos antiguos pintores de iconos religiosos que reorientaron su oficio tras la Revolución, desarrollaron un estilo minucioso y luminoso sobre fondo negro que hoy se considera patrimonio artístico ruso."
+  },
+  {
+    "question": "¿Qué característica cerámica popular rusa, elaborada tradicionalmente en una región cercana a Moscú, se distingue por su decoración en azul cobalto sobre fondo blanco, aplicada a mano con pinceladas libres sobre vajillas y figuras?",
+    "options": [
+      "El barro de Filímonovo",
+      "La porcelana de Skópin",
+      "La loza de Dulevo",
+      "La cerámica de Gzhel"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La producción cerámica en la región de Gzhel se remonta a varios siglos atrás, aunque el característico estilo azul y blanco que hoy se asocia con el nombre se consolidó especialmente durante el siglo XX."
+  },
+  {
+    "question": "¿Cómo se llama el estilo tradicional ruso de pintura decorativa sobre objetos de madera —cucharas, cuencos, mobiliario— caracterizado por motivos florales en rojo, negro y dorado sobre fondo generalmente oscuro?",
+    "options": [
+      "Zhóstovo",
+      "Gorodéts",
+      "Jojlomá",
+      "Mezen"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a su aspecto dorado y aparentemente metálico, la pintura de Jojlomá se logra con pigmentos aplicados sobre una capa de aluminio o estaño y luego barnizada y horneada, técnica que produce un brillo similar al oro sin usar metales preciosos."
+  },
+  {
+    "question": "¿Qué célebre ballet de Serguéi Prokófiev, compuesto a finales de los años 1930 basándose en la tragedia de Shakespeare, incluye la famosa 'Danza de los Caballeros', pieza reutilizada en incontables anuncios y programas de televisión de todo el mundo?",
+    "options": [
+      "Romeo y Julieta",
+      "La flor de piedra",
+      "Cenicienta",
+      "El bufón"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Prokófiev tuvo que modificar el final originalmente feliz que había compuesto para adaptarse al desenlace trágico de Shakespeare, tras las objeciones de los bailarines del Bolshói, que consideraban imposible bailar una tragedia con música alegre."
+  },
+  {
+    "question": "¿Qué pintor ruso, fundador y principal impulsor del grupo de los Peredvízhniki, es autor del célebre retrato 'Desconocida', que representa a una elegante mujer en un carruaje abierto cuya identidad real nunca ha sido confirmada con certeza?",
+    "options": [
+      "Iliá Repin",
+      "Nikolái Gue",
+      "Iván Kramskói",
+      "Vasili Perov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Kramskói, líder intelectual del movimiento realista que rompió con la academia oficial de arte en 1870, pintó esta enigmática mujer con tal ambigüedad que generaciones de críticos han debatido si representaba a una aristócrata o a una cortesana de moda."
+  },
+  {
+    "question": "¿Qué poeta ruso de origen campesino, célebre por sus versos nostálgicos sobre la vida rural y las aldeas de madera, se hizo enormemente popular en los años posteriores a la revolución antes de morir en circunstancias trágicas en 1925, con apenas 30 años?",
+    "options": [
+      "Serguéi Yesenin",
+      "Piotr Oréshin",
+      "Serguéi Klichkov",
+      "Nikolái Kliúyev"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Yesenin, casado brevemente con la bailarina estadounidense Isadora Duncan, escribió un último poema con su propia sangre poco antes de su muerte en un hotel de Leningrado; su funeral reunió a multitudes y su poesía sigue siendo memorizada por escolares rusos hasta hoy."
+  },
+  {
+    "question": "¿Qué poeta futurista, autoproclamado 'la voz más alta' de la revolución bolchevique y autor de versos propagandísticos y carteles publicitarios soviéticos, terminó quitándose la vida en 1930 tras una profunda crisis personal y política?",
+    "options": [
+      "Velimir Jlébnikov",
+      "Vladímir Maiakovski",
+      "Dmitri Burliuk",
+      "Alexéi Krucheniyj"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a su entusiasmo inicial y sincero por la revolución, Maiakovski se sintió cada vez más asfixiado por la burocracia cultural soviética y sus fracasos personales; su suicidio conmocionó a toda la Unión Soviética."
+  },
+  {
+    "question": "¿Qué destacada poeta rusa, tras años de exilio en Europa junto a su esposo —un antiguo oficial del Ejército Blanco—, regresó a la URSS en 1939 y se quitó la vida apenas dos años después, agobiada por la pobreza y la persecución política?",
+    "options": [
+      "Adelina Adalis",
+      "Marina Tsvetáyeva",
+      "Zinaída Guíppius",
+      "Sofía Parnok"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Tsvetáyeva regresó a una Unión Soviética que veía con sospecha su pasado en el exilio; poco después su esposo fue ejecutado y su hija encarcelada, y ella misma, sin apoyo ni medios de subsistencia, terminó suicidándose en 1941."
+  },
+  {
+    "question": "¿Qué célebre teatro moscovita, fundado en 1898 por Konstantín Stanislavski y Vladímir Nemiróvich-Dánchenko, revolucionó el arte de la actuación gracias al desarrollo del llamado 'sistema' o 'método' de interpretación realista?",
+    "options": [
+      "El Teatro Taganka",
+      "El Teatro Vajtángov",
+      "El Teatro Maly",
+      "El Teatro de Arte de Moscú (MJAT)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El 'sistema Stanislavski', que buscaba una actuación emocionalmente genuina basada en la memoria y experiencia personal del actor, influyó profundamente en el teatro y el cine de todo el mundo, incluido el llamado 'método' de Hollywood."
+  },
+  {
+    "question": "¿En qué teatro de San Petersburgo se estrenó en diciembre de 1892 el ballet 'El cascanueces' de Chaikovski, hoy uno de los espectáculos navideños más representados del mundo, aunque su recepción inicial fue en realidad bastante fría?",
+    "options": [
+      "El Teatro Bolshói",
+      "El Teatro Alexandrinski",
+      "El Teatro Mijáilovski",
+      "El Teatro Mariinski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La crítica de la época consideró la trama del ballet, basada en un cuento de E. T. A. Hoffmann, demasiado infantil y poco coherente; solo décadas después, especialmente fuera de Rusia, 'El cascanueces' se convertiría en un clásico navideño mundial."
+  },
+  {
+    "question": "¿Cuál es el histórico teatro de ópera y ballet de San Petersburgo, sede permanente de una de las compañías más prestigiosas del mundo y equivalente en importancia, para esa ciudad, a lo que el Bolshói representa para Moscú?",
+    "options": [
+      "El Teatro Mijáilovski",
+      "El Teatro Alexandrinski",
+      "El Teatro Mariinski",
+      "El Palacio de la Ópera de Petrogrado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Fundado en el siglo XVIII y renombrado en honor a la emperatriz María Alexándrovna, el Mariinski ha sido escenario de estrenos históricos de Chaikovski y Stravinski, y hoy sigue siendo, junto al Bolshói, uno de los dos grandes templos del ballet ruso."
+  },
+  {
+    "question": "¿Qué ópera de Dmitri Shostakóvich fue duramente denunciada en 1936 por un artículo del periódico oficial Pravda titulado 'Caos en lugar de música', tras haber sido vista por el propio Stalin en un palco del teatro?",
+    "options": [
+      "Katerina Izmáilova",
+      "Lady Macbeth del distrito de Mtsensk",
+      "El nariz",
+      "Los Jugadores"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La condena oficial, que acusaba a la obra de 'formalismo' burgués y de música deliberadamente confusa, aterrorizó al compositor durante años y lo llevó a retirar temporalmente algunas de sus obras más experimentales, dedicándose a un estilo más accesible en su siguiente sinfonía."
+  },
+  {
+    "question": "¿Con qué subtítulo, en referencia directa a la crítica recibida por su ópera anterior, se presentó la Quinta Sinfonía de Shostakóvich en 1937, buscando reconciliarse públicamente con las autoridades culturales soviéticas?",
+    "options": [
+      "'La respuesta creativa de un artista soviético a una justa crítica'",
+      "'Sinfonía de la Reconciliación'",
+      "'Oda a la Nueva Rusia'",
+      "'Sinfonía del Pueblo Trabajador'"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El propio Shostakóvich —o quizás un crítico en su nombre— acuñó esta frase, con la que la obra fue recibida con un éxito enorme y una ovación de más de media hora en su estreno, permitiéndole recuperar por un tiempo el favor oficial."
+  },
+  {
+    "question": "¿Qué poeta acmeísta ruso, primer esposo de Anna Ajmátova, fue arrestado y fusilado en 1921 acusado de participar en una supuesta conspiración monárquica cuya existencia real sigue siendo cuestionada por historiadores?",
+    "options": [
+      "Nikolái Gumiliov",
+      "Osip Mandelshtam",
+      "Mijaíl Kuzmín",
+      "Serguéi Górodetski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Gumiliov, viajero, oficial condecorado en la Primera Guerra Mundial y cofundador del movimiento acmeísta, fue una de las primeras grandes figuras culturales ejecutadas por el nuevo régimen soviético, un golpe devastador para la intelectualidad de la época."
+  },
+  {
+    "question": "¿Qué poeta ruso escribió en 1933 un breve pero mordaz epigrama satírico sobre Stalin —al que describía con 'dedos gruesos como gusanos'— y murió pocos años después en un campo de tránsito del Gulag cerca de Vladivostok?",
+    "options": [
+      "Borís Pasternak",
+      "Osip Mandelshtam",
+      "Daniil Jarms",
+      "Nikolái Zabolotski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El epigrama, que Mandelshtam recitaba solo en privado ante amigos de confianza, terminó llegando a oídos de la policía política; tras un primer arresto y exilio, fue detenido de nuevo en 1938 y murió, enfermo y desnutrido, en un campo de tránsito siberiano."
+  },
+  {
+    "question": "¿Con qué figuras del arte moderno occidental, como el pintor Pablo Picasso y la diseñadora de moda Coco Chanel, llegó a colaborar la compañía de los Ballets Rusos de Serguéi Diáguilev en sus producciones parisinas de las décadas de 1910 y 1920?",
+    "options": [
+      "Con Picasso y Chanel, entre otros grandes artistas de la vanguardia europea",
+      "Con compositores alemanes exclusivamente",
+      "Con arquitectos, pero no con pintores ni diseñadores de moda",
+      "Únicamente con artistas rusos exiliados en París"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Diáguilev tenía un don especial para atraer a las figuras más innovadoras de su tiempo: Picasso diseñó decorados y vestuario para el ballet 'Parade', mientras Chanel colaboró en el vestuario de otras producciones, cruzando así los mundos del ballet, la pintura de vanguardia y la moda."
+  },
+  {
+    "question": "¿Qué célebre pintura de Víktor Vasnetsov, que representa a tres legendarios héroes-caballeros del folclore ruso montados a caballo y vigilando la frontera de la estepa, se convirtió en una de las imágenes más reproducidas del arte popular ruso?",
+    "options": [
+      "Los Bogatyrs",
+      "Iván Tsarévich y el Lobo Gris",
+      "El Caballero en la Encrucijada",
+      "Alionushka"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El cuadro, que tardó casi veinte años en completarse, representa a Iliá Múromets, Dobrinia Nikítich y Aliosha Popóvich, los tres bogatyrs más célebres de las bilinas medievales, y hoy es fácilmente reconocible incluso por quienes desconocen su origen artístico."
+  },
+  {
+    "question": "¿Qué célebre y perturbadora pintura de Iliá Repin representa al zar Iván el Terrible sosteniendo entre sus brazos, horrorizado, a su hijo agonizante tras golpearlo mortalmente en un arrebato de ira?",
+    "options": [
+      "La Ira del Zar",
+      "El Zarévich Herido",
+      "Iván el Terrible y su hijo Iván, el 16 de noviembre de 1581",
+      "El Último Abrazo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La obra, de un realismo psicológico intensísimo, ha sido objeto de varios ataques vandálicos a lo largo de su historia por parte de personas que consideraban ofensiva su representación de la figura histórica del zar."
+  },
+  {
+    "question": "¿Qué escuela de pintura de iconos, desarrollada por una influyente familia de mercaderes y mecenas a partir del siglo XVI, se distinguió por su estilo refinado, colores vivos y una minuciosa atención al detalle en formatos de pequeño tamaño?",
+    "options": [
+      "La Escuela de Pskov",
+      "La Escuela de Vladímir-Súzdal",
+      "La Escuela de Nóvgorod",
+      "La Escuela de los Stróganov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los Stróganov, la misma familia de comerciantes que financió la expedición de Yermak a Siberia, patrocinaron también a un grupo de iconógrafos que desarrollaron un estilo especialmente delicado, casi de miniatura, muy apreciado por coleccionistas posteriores."
+  },
+  {
+    "question": "¿Qué ocurrió con el célebre taller de orfebrería de la familia Fabergé en San Petersburgo tras la Revolución de Octubre de 1917?",
+    "options": [
+      "Continuó operando de forma privada bajo supervisión soviética hasta los años 1930",
+      "Se convirtió en cooperativa de artesanos bajo gestión obrera",
+      "Fue nacionalizado por el nuevo gobierno y la familia tuvo que huir al extranjero",
+      "Fue trasladado íntegramente a Moscú por orden de Lenin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Piotr Fabergé, viendo confiscado su negocio familiar, huyó de Rusia disfrazado como correo diplomático y murió en Suiza pocos años después, mientras numerosas piezas de su colección imperial eran vendidas por el gobierno soviético a coleccionistas extranjeros para obtener divisas."
+  },
+  {
+    "question": "¿Qué escritor ruso del siglo XIX es autor de la breve pero intensa novela 'Lady Macbeth del distrito de Mtsensk', relato de crimen y pasión ambientado en la provincia rusa que décadas más tarde inspiraría una célebre y controvertida ópera de Shostakóvich?",
+    "options": [
+      "Iván Turguénev",
+      "Alexánder Ostrovski",
+      "Gleb Uspenski",
+      "Nikolái Leskov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Leskov, maestro del relato corto y de un ruso narrativo especialmente rico en giros populares, exploró en esta obra los límites morales de una protagonista atrapada en un matrimonio sin amor, un material dramático que Shostakóvich transformaría después en una ópera de crudo realismo psicológico."
+  },
+  {
+    "question": "¿Qué compositor ruso, célebre por explorar la relación entre sonido y color y por afirmar que ciertas notas musicales le provocaban sensaciones visuales de determinados colores, compuso la sinfonía 'Prometeo, el poema del fuego', pensada para ejecutarse junto a proyecciones lumínicas?",
+    "options": [
+      "Anatoli Liádov",
+      "Nikolái Medtner",
+      "Alexánder Scriabin",
+      "Serguéi Rajmáninov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Scriabin, figura profundamente mística y ambiciosa, llegó a diseñar un instrumento especial —el 'clavier à lumières'— para proyectar colores sincronizados con la música durante la interpretación de su obra, una de las primeras exploraciones históricas de lo que hoy se llamaría arte multisensorial."
+  },
+  {
+    "question": "¿Qué ópera de Modest Músorgski, basada en un drama de Pushkin sobre el ascenso al trono de un antiguo boyardo tras la muerte del hijo menor de Iván el Terrible, es considerada una de las cumbres del repertorio operístico ruso?",
+    "options": [
+      "El matrimonio",
+      "La feria de Sorochyntsi",
+      "Jovanschina",
+      "Borís Godunov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La ópera, con su poderoso retrato psicológico de un gobernante atormentado por la culpa y sus impresionantes coros populares, refleja el interés de Músorgski —y de todo el 'Grupo de los Cinco'— por temas genuinamente rusos alejados de los modelos operísticos italianos o alemanes dominantes en la época."
+  },
+  {
+    "question": "¿Cómo se llamaba el famoso café-cabaret bohemio de San Petersburgo, inaugurado en 1911 en un sótano, donde poetas de la Edad de Plata como Ajmátova, Mandelshtam y Maiakovski se reunían a recitar sus versos ante un público reducido y selecto?",
+    "options": [
+      "La Torre de Marfil",
+      "El Perro Vagabundo (Brodyáchaya Sobaka)",
+      "El Café de los Poetas",
+      "El Sótano de Pegaso"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Decorado con murales de artistas de vanguardia y frecuentado por la élite intelectual y artística de la ciudad, este local se convirtió en el epicentro simbólico de la vida literaria de la Edad de Plata rusa, hasta su cierre forzado por las autoridades en 1915."
+  },
+  {
+    "question": "¿Qué pintor ruso especializado en escenas bélicas es autor de 'El apoteosis de la guerra', un célebre cuadro que muestra una pirámide de cráneos humanos en un paisaje desértico, con una dedicatoria explícita 'a todos los grandes conquistadores'?",
+    "options": [
+      "Frants Rubó",
+      "Nikolái Dmitríyev-Orenburgski",
+      "Vasili Vereschaguin",
+      "Piotr Kovalevski"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Lejos de glorificar la guerra, Vereschaguin, que acompañó personalmente a varias campañas militares rusas como pintor de guerra, usó su obra para denunciar de forma explícita el horror y la destrucción bélica, algo poco habitual en la pintura militar de su época."
+  },
+  {
+    "question": "¿Qué pintor y místico ruso, autor también de numerosas expediciones científicas y espirituales por el Himalaya y Asia central, impulsó el llamado 'Pacto Roerich' de 1935, primer tratado internacional dedicado a la protección de monumentos artísticos y culturales en tiempos de guerra?",
+    "options": [
+      "Nikolái Roerich",
+      "Iván Bilibin",
+      "Konstantín Bogáyevski",
+      "Vasili Vereschaguin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Roerich, cuya obra pictórica combinaba paisajes montañosos con temática espiritual y esotérica, dedicó buena parte de su vida a promover la idea de que el patrimonio cultural debía protegerse incluso durante los conflictos armados, una idea que influiría después en convenciones internacionales posteriores."
+  },
+  {
+    "question": "¿En qué circunstancias murió en 1929 el legendario empresario Serguéi Diáguilev, fundador de los Ballets Rusos que habían revolucionado la escena artística europea durante casi dos décadas?",
+    "options": [
+      "Murió en un accidente durante una gira por Estados Unidos",
+      "Falleció en París tras una larga enfermedad, rodeado de gran fortuna",
+      "Murió en Venecia, prácticamente arruinado pese a su fama internacional",
+      "Se suicidó en Montecarlo tras la disolución de su compañía"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a haber transformado el ballet y la escenografía moderna, colaborando con artistas como Stravinski, Picasso y Chanel, Diáguilev murió con enormes deudas, y sus más cercanos colaboradores tuvieron que costear discretamente su funeral en la ciudad de los canales que tanto amaba."
+  },
+  {
+    "question": "Además de componer óperas y sinfonías como parte del 'Grupo de los Cinco', ¿a qué otra profesión científica se dedicó de forma simultánea y seria el compositor Alexánder Borodín durante toda su vida?",
+    "options": [
+      "Fue ingeniero ferroviario",
+      "Fue médico militar en activo",
+      "Fue químico investigador y profesor de medicina",
+      "Fue astrónomo aficionado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Borodín, célebre por logros musicales como la ópera 'El príncipe Ígor', realizó también contribuciones genuinas a la química orgánica y fue profesor titular de esta materia, componiendo música principalmente los domingos y días festivos, por lo que se le apodaba en broma 'el compositor dominical'."
+  },
+  {
+    "question": "¿Qué hizo Nikolái Gógol poco antes de morir en 1852, en un episodio que privó a la literatura rusa de buena parte de una de sus obras más ambiciosas?",
+    "options": [
+      "Vendió los derechos de toda su obra a un editor extranjero",
+      "Quemó el manuscrito casi terminado de la segunda parte de 'Almas muertas'",
+      "Destruyó su correspondencia personal completa",
+      "Renunció públicamente a la literatura en favor de la vida religiosa"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Sumido en una profunda crisis religiosa y bajo la influencia de un confesor ortodoxo extremadamente severo, Gógol arrojó al fuego el manuscrito casi completo de la continuación de su obra maestra apenas días antes de morir, dejando solo fragmentos incompletos que se conservan hasta hoy."
+  },
+  {
+    "question": "¿Qué peculiaridad biográfica comparten los dos gigantes de la literatura rusa del siglo XIX, Lev Tolstói y Fiódor Dostoyevski, pese a haber vivido en la misma época, moverse en círculos literarios similares y admirarse mutuamente como escritores?",
+    "options": [
+      "Fueron compañeros de estudios en su juventud",
+      "Colaboraron juntos en una única novela inconclusa",
+      "Mantuvieron una intensa correspondencia epistolar durante décadas",
+      "Nunca llegaron a conocerse en persona"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a varias ocasiones en que pudieron haberse encontrado —incluida una conferencia pública a la que ambos asistieron por separado—, los dos escritores nunca llegaron a conocerse personalmente, un hecho que ha intrigado durante generaciones a los estudiosos de la literatura rusa."
+  },
+  {
+    "question": "¿Qué característica particular tenían las exposiciones organizadas por el grupo de los Peredvízhniki ('los Ambulantes') a partir de 1871, que dio origen precisamente a su nombre?",
+    "options": [
+      "Vendían sus cuadros exclusivamente mediante subasta itinerante",
+      "Cambiaban de sede cada año dentro de la propia San Petersburgo",
+      "Viajaban físicamente en tren de ciudad en ciudad para exhibir sus obras fuera de la capital",
+      "Rotaban la presidencia del grupo entre sus miembros cada temporada"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Al llevar sus exposiciones a ciudades de provincia que normalmente no tenían acceso al arte académico oficial de las capitales, los Peredvízhniki lograron acercar la pintura contemporánea a un público mucho más amplio, reforzando además su compromiso ideológico con representar la vida rusa real más allá de los salones aristocráticos."
+  },
+  {
+    "question": "¿Qué célebre cuadro de Isaak Levitán, que representa una pequeña iglesia solitaria sobre un promontorio junto a un lago al atardecer, es considerado una de las cumbres del llamado 'paisaje de estado de ánimo' ruso y una reflexión pictórica sobre la vida, la muerte y la eternidad?",
+    "options": [
+      "El estanque",
+      "Sobre el reposo eterno",
+      "Marzo",
+      "El día de plata"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Levitán, gran amigo personal de Chéjov, consideraba esta obra una de las más importantes y filosóficas de toda su carrera, capaz de transmitir mediante el paisaje puro una profunda sensación de silencio, contemplación y trascendencia."
+  },
+  {
+    "question": "¿Qué pianista y compositor, hermano del fundador del Conservatorio de Moscú, fundó a su vez el primer Conservatorio de música de Rusia, en San Petersburgo, en el año 1862?",
+    "options": [
+      "Anatoli Liádov",
+      "Mili Balákirev",
+      "Antón Rubinstein",
+      "Nikolái Rubinstein"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Antón Rubinstein, pianista virtuoso de fama internacional comparado a menudo con Liszt, impulsó la fundación de esta institución para profesionalizar la enseñanza musical rusa, entonces considerada por muchos aristócratas una actividad poco apropiada para caballeros de buena familia."
+  },
+  {
+    "question": "¿Cómo se conoce a la tradicional estampa popular rusa, impresa mediante grabados en madera o cobre con textos y colores vivos, que circulaba masivamente entre la población desde el siglo XVII narrando cuentos, sátiras y noticias de forma sencilla y accesible?",
+    "options": [
+      "El lubok",
+      "El izba-print",
+      "El narodni list",
+      "El skaz gráfico"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Antecesor lejano del cómic y la ilustración satírica moderna, el lubok combinaba imagen y texto breve para narrar desde cuentos populares hasta comentarios políticos y sociales, y fue usado también durante la Primera Guerra Mundial y la revolución con fines de propaganda."
+  },
+  {
+    "question": "¿Cómo se llama la gigantesca campana de bronce, fundida en el siglo XVIII y expuesta hoy en el Kremlin de Moscú, que se resquebrajó durante un incendio antes de ser instalada y por ello nunca llegó a tañer, convirtiéndose sin embargo en la campana más grande jamás fundida en el mundo?",
+    "options": [
+      "La Campana de la Trinidad",
+      "El Zar Kolokol (Zar Campana)",
+      "El Gran Bordón de Nóvgorod",
+      "La Campana de Uspenski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Con más de 200 toneladas de peso, esta campana permaneció enterrada en su propio foso de fundición durante casi un siglo antes de ser rescatada y colocada sobre un pedestal; el enorme fragmento roto que se desprendió durante el incendio se exhibe hoy junto a ella como testimonio de su accidentada historia."
+  },
+  {
+    "question": "¿Qué escritor soviético, maestro del relato satírico breve sobre la vida cotidiana y las absurdas burocracias de su tiempo, fue duramente denunciado en 1946 durante la campaña cultural de Zhdánov y expulsado de la Unión de Escritores?",
+    "options": [
+      "Mijaíl Zoschenko",
+      "Yevgueni Petrov",
+      "Iliá Ilf",
+      "Mijaíl Bulgákov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Zoschenko, cuyo humor agudo sobre las pequeñas miserias y absurdos de la vida soviética cotidiana lo había hecho enormemente popular entre los lectores, fue acusado oficialmente de 'vulgaridad' y de retratar de forma distorsionada y hostil a la sociedad soviética, quedando marginado durante años de la vida literaria oficial."
+  },
+  {
+    "question": "¿Qué dúo de escritores soviéticos, que firmaban sus obras conjuntamente pese a ser dos personas distintas, es autor de la célebre novela satírica 'Las doce sillas', sobre la búsqueda de un tesoro escondido en el forro de una silla en plena Rusia soviética?",
+    "options": [
+      "Mijaíl Zoschenko y Yuri Oleshá",
+      "Iliá Ilf y Yevgueni Petrov",
+      "Valentín Kataev y Isaac Bábel",
+      "Daniil Jarms y Nikolái Zabolotski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El dúo, que combinaba un fino sentido del absurdo con una aguda crítica social envuelta en comedia, escribió también una secuela, 'El becerro de oro', y ambas novelas se convirtieron en clásicos del humor soviético pese a las dificultades que enfrentaron con la censura por su tono satírico."
+  },
+  {
+    "question": "¿Qué director de cine soviético revolucionó el lenguaje cinematográfico con su técnica de montaje en la película 'El acorazado Potiomkin' de 1925, incluida la célebre secuencia de la escalinata de Odesa?",
+    "options": [
+      "Serguéi Eisenstein",
+      "Alexánder Dovzhenko",
+      "Dziga Vértov",
+      "Vsévolod Pudovkin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Eisenstein desarrolló y teorizó el concepto de 'montaje de atracciones', según el cual el significado de una escena surge del choque y la yuxtaposición entre planos individuales más que de la continuidad narrativa tradicional, una técnica que influiría profundamente en el cine mundial posterior."
+  },
+  {
+    "question": "¿Qué cineasta documental soviético, pionero de un estilo experimental sin actores ni guion preestablecido, dirigió en 1929 la célebre película 'El hombre de la cámara', un retrato fragmentado de la vida urbana soviética mediante técnicas de montaje entonces revolucionarias?",
+    "options": [
+      "Serguéi Eisenstein",
+      "Esfir Shub",
+      "Dziga Vértov",
+      "Grigori Alexándrov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Vértov, defensor de lo que llamaba el 'cine-ojo' (kino-glaz), rechazaba deliberadamente los guiones y actores profesionales del cine narrativo tradicional en favor de capturar la realidad cotidiana mediante técnicas de cámara y montaje innovadoras, incluyendo la cámara oculta y efectos de doble exposición."
+  },
+  {
+    "question": "¿Cómo se llama el histórico estudio cinematográfico soviético, fundado en 1920 en Moscú, que se convirtió en el principal centro de producción de películas de toda la Unión Soviética durante décadas?",
+    "options": [
+      "Mosfilm",
+      "Lenfilm",
+      "Soyuzmultfilm",
+      "Gorki Film Studio"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Por los estudios de Mosfilm pasaron generaciones de directores soviéticos, desde Eisenstein hasta Tarkovski, y sus extensos platós e instalaciones técnicas lo convirtieron en uno de los mayores complejos de producción cinematográfica de toda Europa durante gran parte del siglo XX."
+  },
+  {
+    "question": "¿Qué actriz y cantante soviética, protagonista de populares comedias musicales como 'Volga, Volga' y 'Circo' dirigidas por su esposo Grigori Alexándrov, se convirtió en la primera gran estrella del cine soviético de masas?",
+    "options": [
+      "Vera Jolódnaya",
+      "Tatiana Samóilova",
+      "Faina Ranévskaya",
+      "Liubov Orlova"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Orlova, con su carisma y talento tanto para el canto como para la comedia física, encarnó durante los años 1930 y 1940 un ideal de mujer soviética moderna y alegre en plena época de propaganda estalinista, y sus películas siguen siendo hoy referentes clásicos del cine musical soviético."
+  },
+  {
+    "question": "¿Qué compositor soviético es autor de la célebre pieza orquestal 'Tiempo, adelante!', compuesta originalmente para una película sobre la construcción industrial soviética y usada durante décadas como sintonía de un noticiero televisivo muy popular?",
+    "options": [
+      "Aram Jachaturián",
+      "Gueorgui Sviridov",
+      "Rodión Schedrín",
+      "Dmitri Kabalevski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La enérgica pieza de Sviridov, compuesta en 1965 para una película sobre la construcción de una planta metalúrgica siberiana, trasciende hoy su origen cinematográfico original, siendo reconocida instantáneamente por generaciones de espectadores soviéticos como la música de apertura de un célebre programa informativo."
+  },
+  {
+    "question": "¿Cómo se llama el movimiento artístico de vanguardia fundado por Kazimir Malévich, basado en formas geométricas puras y abstractas —como el célebre cuadrado negro— que buscaba liberar al arte de cualquier representación figurativa del mundo real?",
+    "options": [
+      "El rayonismo",
+      "El constructivismo",
+      "El suprematismo",
+      "El cubo-futurismo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Malévich presentó el suprematismo como la culminación lógica de la evolución del arte moderno hacia la abstracción total, argumentando que las formas geométricas puras podían expresar sensaciones y estados espirituales de forma más directa que cualquier representación figurativa tradicional."
+  },
+  {
+    "question": "¿Qué cargo asumió el pintor Marc Chagall poco después de la Revolución de Octubre en su ciudad natal, dirigiendo durante un tiempo una escuela de arte local antes de terminar renunciando por diferencias artísticas con otros profesores vanguardistas?",
+    "options": [
+      "Director del Museo Estatal de Arte Moderno",
+      "Comisario de Bellas Artes de Moscú",
+      "Director de la Escuela de Arte de Vitebsk",
+      "Rector de la Academia Imperial de San Petersburgo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Chagall fundó y dirigió durante un breve periodo esta escuela en su ciudad natal, pero terminó renunciando tras conflictos artísticos con colegas como Malévich, que defendían un suprematismo mucho más radical que la propia visión onírica y figurativa de Chagall; poco después el pintor abandonaría definitivamente la Unión Soviética."
+  },
+  {
+    "question": "¿Qué actor soviético se hizo célebre principalmente por interpretar a dos de los mayores héroes históricos de las películas de Serguéi Eisenstein, encarnando tanto a Alejandro Nevski como, años después, al propio Iván el Terrible?",
+    "options": [
+      "Nikolái Cherkásov",
+      "Borís Chirkov",
+      "Piotr Aleinikov",
+      "Mijaíl Zharov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Cherkásov, con su presencia imponente y su capacidad para transmitir tanto autoridad como complejidad psicológica, se convirtió en el rostro cinematográfico definitivo de dos de los gobernantes más venerados —y también más temidos— de la historia rusa medieval y moderna."
+  },
+  {
+    "question": "¿Qué célebre teatro de marionetas y títeres moscovita, fundado y dirigido durante décadas por Serguéi Obraztsov, se convirtió en una de las compañías de este tipo más reconocidas y admiradas de todo el mundo?",
+    "options": [
+      "El Teatro de Marionetas de San Petersburgo",
+      "El Teatro de Sombras de Leningrado",
+      "El Teatro Central de Títeres de Obraztsov",
+      "El Teatro Infantil de Moscú"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Obraztsov elevó el arte de la marioneta, tradicionalmente considerado un entretenimiento menor o exclusivamente infantil, a la categoría de arte escénico serio y sofisticado, con producciones que combinaban virtuosismo técnico y una profunda sensibilidad dramática apreciada por público de todas las edades."
+  },
+  {
+    "question": "¿Qué actriz soviética, célebre por su ingenio, su voz grave inconfundible y sus frases mordaces —muchas de las cuales siguen citándose hoy como parte del acervo popular ruso—, se convirtió en una de las grandes figuras de la comedia cinematográfica y teatral soviética?",
+    "options": [
+      "Fáina Ranévskaya",
+      "Tatiana Péltzer",
+      "Rina Zeliónaya",
+      "Nonna Mordiukova"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Ranévskaya, pese a interpretar principalmente papeles secundarios a lo largo de su carrera, se convirtió en una auténtica leyenda popular gracias a su capacidad de improvisación y su humor corrosivo, y muchas de sus frases ingeniosas siguen circulando hoy como parte del refranero coloquial ruso."
+  },
+  {
+    "question": "¿Qué obra teatral escribió Mijaíl Bulgákov a partir de su propia novela 'La guardia blanca', ambientada en el caos de la Guerra Civil en Kiev, y que, pese a su retrato comprensivo de oficiales del bando blanco, se convirtió sorprendentemente en una de las favoritas personales de Stalin?",
+    "options": [
+      "Los días de los Turbín",
+      "La huida",
+      "El apartamento de Zoya",
+      "Molière"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Según se cuenta, Stalin asistió a esta obra en el Teatro de Arte de Moscú numerosas veces, pese a que su contenido —centrado en una familia de oficiales del Ejército Blanco tratados con notable empatía— resultaba ideológicamente problemático, lo que probablemente salvó a Bulgákov de una persecución aún más severa durante buena parte de su carrera."
+  },
+  {
+    "question": "¿Cómo se conoce a la tradicional canción folclórica rusa de estrofas breves, rimadas y a menudo humorísticas o satíricas, improvisada habitualmente en celebraciones populares y capaz de comentar con ironía tanto la vida cotidiana como los acontecimientos políticos del momento?",
+    "options": [
+      "La bylina cantada",
+      "El skaz popular",
+      "La chastushka",
+      "La chastúshka lírica"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Estas breves coplas, cantadas a menudo con acompañamiento de acordeón, permitieron durante generaciones expresar de forma ingeniosa y a veces subversiva críticas veladas hacia figuras de autoridad o situaciones sociales, funcionando como una válvula de escape popular difícil de censurar por su naturaleza oral e improvisada."
+  },
+  {
+    "question": "¿Qué comedia musical soviética de 1938, dirigida por Grigori Alexándrov y protagonizada por su esposa Liubov Orlova, narra el viaje de un grupo de trabajadores por el río Volga en un barco, combinando sátira burocrática con números musicales muy populares en su época?",
+    "options": [
+      "Circo",
+      "Primavera",
+      "Volga, Volga",
+      "La chica alegre"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La película, muy apreciada personalmente por Stalin —quien llegó a regalar una copia al presidente estadounidense Roosevelt—, combina la comedia ligera con una sátira sutil de la burocracia soviética, logrando un equilibrio poco habitual entre entretenimiento popular y crítica social permitida dentro del cine oficial de la época."
+  },
+  {
+    "question": "¿Qué director de cine soviético, célebre por su estilo contemplativo y de largos planos secuencia, es autor de películas como 'Solaris' y 'Andréi Rubliov', consideradas hoy entre las obras maestras del cine mundial pese a las dificultades que enfrentó con la censura soviética?",
+    "options": [
+      "Alexéi Guerman",
+      "Andréi Tarkovski",
+      "Larisa Sheptiko",
+      "Serguéi Paradzhánov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El estilo profundamente personal y filosófico de Tarkovski, alejado del realismo socialista oficial, le generó constantes tensiones con las autoridades cinematográficas soviéticas, y terminaría emigrando a Europa occidental en los años 1980, donde moriría poco después sin haber regresado a su país natal."
+  },
+  {
+    "question": "¿Qué película de Andréi Tarkovski, estrenada en 1966 tras enfrentar años de dificultades con la censura antes de su distribución completa, narra de forma fragmentaria y poética la vida del célebre iconógrafo medieval del mismo nombre en la Rusia del siglo XV?",
+    "options": [
+      "El espejo",
+      "La infancia de Iván",
+      "Andréi Rubliov",
+      "Stalker"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a su ambientación histórica, la película fue vista por las autoridades soviéticas como una reflexión demasiado sombría y espiritual sobre la violencia y la creación artística, lo que retrasó considerablemente su estreno público completo dentro de la propia Unión Soviética."
+  },
+  {
+    "question": "¿Qué director de cine soviético, especializado en comedias entrañables y ligeramente melancólicas, dirigió 'La ironía del destino', película que se convirtió en una tradición televisiva de Año Nuevo vista por millones de familias soviéticas y rusas cada 31 de diciembre?",
+    "options": [
+      "Eldar Riazánov",
+      "Grigori Chujrái",
+      "Leonid Gaidái",
+      "Mark Zajárov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La trama de la película, sobre un hombre que aterriza por error en la ciudad equivocada tras una noche de copas navideñas y termina, por una curiosa coincidencia urbanística soviética, en un apartamento idéntico al suyo pero con otra inquilina, resonó profundamente con el público por su retrato tierno y humorístico de la vida cotidiana soviética."
+  },
+  {
+    "question": "¿Qué cantautor soviético, junto a Vladímir Vysotski uno de los grandes representantes de la llamada 'canción de autor' (avtorskaya pesnia), es recordado por temas melancólicos sobre la amistad, la guerra y la vida cotidiana, interpretados habitualmente con guitarra acústica en pequeñas reuniones privadas?",
+    "options": [
+      "Bulat Okudzhava",
+      "Novellá Matvéyeva",
+      "Alexánder Guálich",
+      "Yuri Vizbor"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A diferencia del tono más combativo de Vysotski, las canciones de Okudzhava, de origen georgiano-armenio, se caracterizaban por una ternura y una nostalgia particular, y su influencia resultó decisiva para la consolidación de todo un género musical semi-clandestino que circulaba principalmente mediante grabaciones caseras."
+  },
+  {
+    "question": "¿Qué teatro moscovita, dirigido durante décadas por Yuri Liubímov a partir de 1964, se convirtió en un foco de experimentación escénica y crítica social velada, atrayendo a artistas como Vladímir Vysotski entre sus actores más célebres?",
+    "options": [
+      "El Teatro Vajtángov",
+      "El Teatro Sovreménnik",
+      "El Teatro Tagánka",
+      "El Teatro Lenkom"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Las innovadoras puestas en escena de Liubímov, que combinaban técnicas de vanguardia con alusiones políticas apenas veladas, convirtieron al Teatro Tagánka en un espacio de libertad artística relativa dentro del panorama cultural soviético, aunque no exento de constantes fricciones con la censura oficial."
+  },
+  {
+    "question": "¿Qué destino final sufrió el innovador director teatral Vsévolod Meyerhold, cuyo teatro había sido clausurado en 1938 por 'formalismo antisoviético', tras ser arrestado poco después por la policía política?",
+    "options": [
+      "Murió de causas naturales durante su encarcelamiento",
+      "Fue torturado y ejecutado en 1940 tras un juicio sumario",
+      "Logró escapar al extranjero antes de ser capturado",
+      "Fue rehabilitado poco después y readmitido en el teatro oficial"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Tras ser detenido y sometido a brutales interrogatorios, Meyerhold fue fusilado en 1940 bajo falsas acusaciones de espionaje; su esposa, la actriz Zinaída Raij, había sido asesinada en su propio apartamento pocos días después del arresto de su marido, en circunstancias que nunca fueron esclarecidas oficialmente."
+  },
+  {
+    "question": "¿Qué compositor soviético de origen armenio es autor de la célebre y frenética 'Danza del sable', parte del ballet 'Gayaneh', una pieza tan popular que ha sido usada innumerables veces en publicidad, circo y cine de todo el mundo?",
+    "options": [
+      "Edvard Mirzoián",
+      "Arno Babadzhanián",
+      "Aram Jachaturián",
+      "Alexánder Arutiunián"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Compuesta casi como una ocurrencia de último momento para completar el ballet, la 'Danza del sable' terminó eclipsando en fama a prácticamente el resto de la obra de Jachaturián, convirtiéndose en una de las piezas de música clásica más reconocibles instantáneamente en todo el mundo."
+  },
+  {
+    "question": "¿Qué legendaria bailarina soviética, primera figura del Bolshói durante décadas, es considerada una de las más grandes intérpretes de la historia del ballet clásico, célebre por su interpretación de Julieta y Odette-Odile en 'El lago de los cisnes'?",
+    "options": [
+      "Natalia Bessmértnova",
+      "Maya Plisétskaya",
+      "Ekaterina Maxímova",
+      "Galina Ulánova"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Ulánova, cuya técnica y expresividad dramática marcaron un antes y un después en el ballet soviético, fue tan admirada internacionalmente que, según se cuenta, incluso Winston Churchill la calificó como el mayor genio artístico que había conocido tras verla bailar durante una gira del Bolshói en Londres."
+  },
+  {
+    "question": "¿Qué otra célebre bailarina del Bolshói, conocida especialmente por su interpretación de 'La muerte del cisne' y por permanecer activa en escena hasta una edad excepcionalmente avanzada para el exigente mundo del ballet clásico, se convirtió también en un ícono de estilo y elegancia?",
+    "options": [
+      "Galina Ulánova",
+      "Maya Plisétskaya",
+      "Marina Semiónova",
+      "Raisa Struchkova"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Plisétskaya, sobrina del célebre bailarín Asaf Messerer, siguió bailando profesionalmente hasta bien entrada la sesentena, un logro extraordinario en una disciplina donde la mayoría de los bailarines se retiran décadas antes, y su interpretación del breve solo 'La muerte del cisne' se convirtió en su seña de identidad artística más reconocida."
+  },
+  {
+    "question": "¿Qué escritor soviético de literatura infantil es autor de la popular serie de 'Las aventuras de Neznaika' (Dunno), sobre un pequeño hombrecito ingenuo y fanfarrón que vive en una ciudad poblada exclusivamente por seres diminutos?",
+    "options": [
+      "Vitali Bianki",
+      "Nikolái Nósov",
+      "Kornéi Chukovski",
+      "Eduard Uspenski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Los libros de Nósov, con su tono ligero y sus aventuras protagonizadas por un personaje entrañablemente torpe, se convirtieron en lectura obligada de infancia para generaciones de niños soviéticos, y sus traducciones circularon también ampliamente por otros países del bloque comunista."
+  },
+  {
+    "question": "¿Qué poeta y escritor soviético, autor de célebres poemas infantiles como 'El doctor Aiból' inspirado libremente en el 'Doctor Dolittle' inglés, fue también un influyente crítico literario y traductor?",
+    "options": [
+      "Kornéi Chukovski",
+      "Serguéi Mijalkov",
+      "Samuil Marshak",
+      "Agnia Bartó"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Chukovski, cuyo verdadero nombre era Nikolái Korneichukov, combinó una prolífica carrera como poeta infantil enormemente popular con una seria labor académica como historiador y crítico de la literatura rusa del siglo XIX, incluyendo importantes estudios sobre la obra de Chéjov."
+  },
+  {
+    "question": "¿Qué poeta soviético, además de escribir numerosos poemas infantiles muy populares, es reconocido también por sus célebres traducciones al ruso de los sonetos de Shakespeare y de la poesía de Robert Burns?",
+    "options": [
+      "Boris Zajóder",
+      "Valentín Beréstov",
+      "Kornéi Chukovski",
+      "Samuil Marshak"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las traducciones de Marshak, consideradas modelos de fidelidad poética además de precisión literal, introdujeron a generaciones de lectores rusos a la poesía inglesa clásica, mientras sus propios poemas infantiles originales seguían siendo memorizados y recitados en escuelas de toda la Unión Soviética."
+  },
+  {
+    "question": "¿Cómo se llama el histórico estudio de animación soviético, fundado en Moscú en 1936, responsable de la producción de la inmensa mayoría de los dibujos animados vistos por generaciones de niños en toda la URSS?",
+    "options": [
+      "Krugozor",
+      "Ekran",
+      "Soyuzmultfilm",
+      "Kievnauchfilm"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Con un estilo de animación distintivo que combinaba técnicas tradicionales con una fuerte influencia del folclore y la ilustración rusa clásica, Soyuzmultfilm produjo cientos de cortometrajes y series que siguen siendo ampliamente recordados con nostalgia por varias generaciones de espectadores en Rusia y otros países postsoviéticos."
+  },
+  {
+    "question": "¿Qué película soviética de 1934, ganadora incluso de reconocimiento internacional, narra las hazañas de un comandante campesino durante la Guerra Civil rusa y se convirtió en una de las cintas más populares y citadas de todo el cine soviético, dando origen a innumerables chistes populares sobre su protagonista?",
+    "options": [
+      "Los hermanos Vasíliev en el frente",
+      "La joven guardia",
+      "Chapáyev",
+      "El camino a la vida"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Basada en la novela homónima sobre el auténtico comandante del Ejército Rojo Vasili Chapáyev, la película se convirtió en un éxito de taquilla sin precedentes en la URSS, y su carismático protagonista terminó siendo, con el tiempo, el centro de todo un género propio de chistes populares soviéticos, transformándose en un personaje casi folclórico independiente de la película original."
+  },
+  {
+    "question": "¿Qué elemento formal, poco habitual para el cine de la época, empleó Andréi Tarkovski en su película 'El espejo' (1975), estructurando la narración mediante recuerdos fragmentados y no lineales entrelazados con material de archivo documental real?",
+    "options": [
+      "Una estructura narrativa fragmentada y no cronológica mezclada con metraje documental",
+      "Una narración enteramente sin diálogos, solo con música orquestal",
+      "Un formato exclusivamente de animación experimental",
+      "El uso continuo de una sola toma sin cortes durante toda la película"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta estructura, profundamente personal y autobiográfica, desconcertó inicialmente tanto a la censura soviética como a parte del público habituado a narrativas cinematográficas más convencionales, aunque hoy se considera una de las obras más innovadoras y estudiadas de toda la historia del cine soviético."
+  },
+  {
+    "question": "¿Qué usó reiteradamente la policía política soviética como forma de presión indirecta contra la poeta Anna Ajmátova a lo largo de varias décadas, encarcelando en repetidas ocasiones a su propio hijo Lev Gumiliov bajo diversas acusaciones políticas?",
+    "options": [
+      "La confiscación total de su vivienda familiar",
+      "El encarcelamiento repetido de su hijo Lev Gumiliov",
+      "La prohibición permanente de publicar bajo cualquier seudónimo",
+      "El exilio forzoso de toda su familia a Kazajistán"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Los repetidos arrestos de Lev, hijo de Ajmátova y del fusilado poeta Nikolái Gumiliov, funcionaron durante años como una forma de chantaje emocional y político contra la propia poeta, quien dedicó parte de su célebre poema 'Réquiem' precisamente a las largas colas de familiares esperando noticias de sus seres queridos detenidos frente a las prisiones soviéticas."
+  },
+  {
+    "question": "¿Qué escritor soviético, conocido principalmente por su única y célebre novela 'Moscú-Petushkí', escrita en la clandestinidad y distribuida durante años exclusivamente en copias mecanografiadas antes de su publicación oficial, narra el errático viaje etílico de su protagonista en tren hacia un pequeño pueblo?",
+    "options": [
+      "Sasha Sokolov",
+      "Venedikt Yeroféyev",
+      "Vasili Aksiónov",
+      "Yuz Aleshkovski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Escrita con un tono a la vez desesperado y absurdamente cómico, la novela de Yeroféyev, que mezcla referencias filosóficas eruditas con la crónica de una borrachera continuada, se convirtió en un texto de culto entre lectores clandestinos soviéticos mucho antes de poder publicarse legalmente en su propio país."
+  },
+  {
+    "question": "¿Cómo se conoce al método de distribución clandestina de literatura prohibida en la Unión Soviética, mediante el cual los propios lectores mecanografiaban y copiaban manualmente textos censurados para hacerlos circular en secreto entre círculos de confianza?",
+    "options": [
+      "El tamizdat",
+      "La red skazka",
+      "El samizdat",
+      "El podpolye literario"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El término, que literalmente significa 'autoeditado', reflejaba con cierta ironía el hecho de que, ante la imposibilidad de publicar oficialmente ciertos textos, los propios lectores se convertían en editores improvisados, copiando a mano o a máquina de escribir obras completas para hacerlas circular de mano en mano dentro de círculos de confianza mutua."
+  },
+  {
+    "question": "¿Qué extensa novela sobre la Segunda Guerra Mundial, escrita por el periodista y escritor Vasili Grossman, fue literalmente confiscada por la policía política soviética —incluidas las cintas de la máquina de escribir usadas para redactarla— antes de poder ser publicada, y solo vería la luz décadas después gracias a una copia clandestina conservada en secreto?",
+    "options": [
+      "Stalingrado en llamas",
+      "Por una causa justa",
+      "Vida y destino",
+      "El pueblo es inmortal"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a que la propia policía política soviética confiscó el manuscrito completo y hasta las cintas de máquina de escribir, considerando la novela una amenaza ideológica comparable a la de un arma nuclear según palabras atribuidas a un alto funcionario de censura, una copia microfilmada sobrevivió en secreto y permitió finalmente su publicación años después de la muerte del propio Grossman."
+  },
+  {
+    "question": "¿Qué poeta soviético de la llamada 'generación de los sesenta', célebre por realizar lecturas multitudinarias de su propia poesía en estadios deportivos ante miles de espectadores, algo inusual para la poesía en cualquier país del mundo, se hizo conocido internacionalmente durante el llamado 'Deshielo' post-estalinista?",
+    "options": [
+      "Bela Ajmadúlina",
+      "Andréi Voznesenski",
+      "Robert Rozhdestvenski",
+      "Yevgueni Yevtushenko"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La capacidad de Yevtushenko para atraer a auditorios masivos, comparable en escala a la de las estrellas de rock occidentales, reflejaba el hambre de expresión pública y debate cultural que se había acumulado durante los años de mayor represión estalinista, encontrando en la poesía un cauce de expresión relativamente tolerado durante el periodo del Deshielo."
+  },
+  {
+    "question": "¿Qué célebre poema de Yevgueni Yevtushenko, publicado en 1961, denunciaba abiertamente el antisemitismo soviético al recordar la masacre nazi de judíos ucranianos ocurrida en un barranco cercano a Kiev durante la ocupación alemana?",
+    "options": [
+      "El vagón blindado",
+      "Herencia rusa",
+      "Babi Yar",
+      "La estación de Zimá"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La publicación del poema, que criticaba implícitamente el hecho de que no existiera ningún monumento oficial soviético dedicado específicamente a las víctimas judías de esta masacre, generó una considerable polémica; Shostakóvich musicalizaría después el poema como parte de su Sinfonía No. 13, también motivo de controversia oficial."
+  },
+  {
+    "question": "¿Qué escritor y periodista soviético dio título, con su novela homónima de 1954, al término que pasaría a designar todo el periodo de relativa liberalización cultural y política que siguió a la muerte de Stalin?",
+    "options": [
+      "Konstantín Simonov",
+      "Ilyá Ehrenburg",
+      "Veniamín Kaverin",
+      "Alexánder Tvardovski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El título de la novela de Ehrenburg, 'El deshielo' ('Ottepel'), se convirtió rápidamente en metáfora política de todo el periodo de apertura relativa iniciado por Jrushchov tras el 'discurso secreto' de 1956, un término que los propios historiadores usan hoy convencionalmente para referirse a esta etapa de la historia cultural soviética."
+  },
+  {
+    "question": "¿Cómo se llama la localidad cercana a Moscú, convertida en colonia de dachas destinadas específicamente a escritores soviéticos desde los años 1930, donde vivieron y murieron figuras como Borís Pasternak, y que hoy conserva varias casas-museo dedicadas a sus antiguos residentes?",
+    "options": [
+      "Kúntsevo cultural",
+      "Abrámtsevo de escritores",
+      "Peredélkino",
+      "Zvenígorod literario"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Concebida originalmente como un privilegio otorgado a escritores considerados leales al régimen soviético, Peredélkino se convirtió paradójicamente también en refugio de figuras posteriormente marginadas como Pasternak, cuya casa en la colonia sigue siendo hoy un destino de peregrinación literaria para admiradores de 'Doctor Zhivago'."
+  },
+  {
+    "question": "¿Qué cantautor y dramaturgo soviético, cuyas canciones satíricas circulaban ampliamente de forma clandestina pese a estar oficialmente prohibidas, terminó emigrando forzosamente de la URSS en 1974 tras años de creciente presión de las autoridades?",
+    "options": [
+      "Yuli Kim",
+      "Vladímir Vysotski",
+      "Yuri Kukin",
+      "Alexánder Guálich"
+    ],
+    "correct_option_id": 3,
+    "explanation": "A diferencia de Vysotski, que pese a sus críticas veladas nunca fue formalmente expulsado del país, Guálich se vio obligado a emigrar tras ser expulsado tanto de la Unión de Escritores como de la Unión de Cinematografistas soviéticos, y moriría pocos años después en París en un accidente doméstico nunca del todo aclarado."
+  },
+  {
+    "question": "¿Qué célebre bailarín del Ballet Kírov (hoy Mariinski) protagonizó en 1961, durante una gira de la compañía en París, uno de los primeros y más sonados casos de deserción de un artista soviético hacia Occidente durante la Guerra Fría?",
+    "options": [
+      "Mijaíl Barýshnikov",
+      "Alexánder Godunov",
+      "Valeri Panov",
+      "Rudolf Nuréyev"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Nuréyev, temiendo ser enviado de regreso a la URSS tras haberse mostrado demasiado cercano a artistas occidentales durante la gira, corrió literalmente hacia agentes de policía franceses en el aeropuerto de Le Bourget en un instante decisivo, pidiendo asilo político en una escena que se convertiría en legendaria dentro de la historia del ballet."
+  },
+  {
+    "question": "¿Qué otro célebre bailarín soviético, primera figura del Ballet Kírov, desertó también hacia Occidente en 1974 durante una gira por Canadá, convirtiéndose después en una de las mayores estrellas internacionales del ballet y, más tarde, también en actor de cine?",
+    "options": [
+      "Mijaíl Barýshnikov",
+      "Nikita Dolgushin",
+      "Rudolf Nuréyev",
+      "Vladímir Vasíliev"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Barýshnikov, cuya deserción ocurrió durante una función en Toronto cuando escapó por una puerta trasera del teatro hacia un automóvil que lo esperaba, se convirtió en Occidente en una figura de enorme prestigio artístico, dirigiendo después compañías de danza propias y participando en numerosas producciones cinematográficas y televisivas."
+  },
+  {
+    "question": "¿Qué célebre payaso soviético, con su característico personaje del 'Vagabundo Solar' vestido con ropa demasiado grande y un llamativo sombrero, se convirtió en la estrella más internacionalmente reconocida del Circo Estatal de Moscú durante décadas?",
+    "options": [
+      "Leonid Yengibárov",
+      "Oleg Popov",
+      "Yuri Nikulin",
+      "Karandash"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Popov, cuyo estilo de payaso mezclaba una ternura infantil con una notable habilidad acrobática, giró con enorme éxito por decenas de países durante la Guerra Fría, convirtiéndose en uno de los pocos artistas soviéticos capaces de conquistar aplausos entusiastas incluso en plena tensión política entre bloques."
+  },
+  {
+    "question": "¿Cómo se llamó el almanaque literario clandestino compilado en 1979 por un grupo de destacados escritores soviéticos, entre ellos Vasili Aksiónov y Andréi Voznesenski, que buscaba publicar textos fuera del control directo de la censura oficial, generando una fuerte represalia de las autoridades culturales?",
+    "options": [
+      "Continente Literario",
+      "Sintaksis",
+      "Chasy (Las Horas)",
+      "Metrópol"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La compilación, que reunía textos considerados demasiado experimentales o políticamente incómodos para la publicación oficial, provocó la expulsión de varios de sus participantes de la Unión de Escritores soviética y contribuyó a la posterior emigración de algunos de ellos, entre otros el propio Aksiónov, hacia Estados Unidos."
+  },
+  {
+    "question": "¿Con qué apelativo colectivo, derivado del número de la propia década, se conoce a la generación de escritores, poetas y artistas soviéticos que alcanzaron notoriedad cultural durante el periodo de relativa apertura posterior al 'discurso secreto' de Jrushchov de 1956?",
+    "options": [
+      "Los 'sesentistas' (shestidesiátniki)",
+      "La 'Generación de Octubre'",
+      "Los 'Nuevos Realistas'",
+      "Los 'renovadores del Deshielo'"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta generación, que incluía a figuras tan diversas como Yevtushenko, Voznesenski, Ajmadúlina o el propio director Tarkovski, compartía un característico optimismo idealista inicial sobre las posibilidades de reforma dentro del propio sistema soviético, una esperanza que se iría desvaneciendo gradualmente durante los años posteriores de mayor rigidez ideológica bajo Brézhnev."
+  },
+  {
+    "question": "¿Qué poeta soviética de la generación de los sesenta, célebre por su voz distintiva y su elegante dicción al recitar, casada durante un tiempo con Yevgueni Yevtushenko, es autora de una poesía marcada por un profundo lirismo personal alejado de la temática abiertamente política de algunos de sus contemporáneos?",
+    "options": [
+      "Yunna Morits",
+      "Bela Ajmadúlina",
+      "Novellá Matvéyeva",
+      "Rimma Kazakova"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Ajmadúlina, considerada por muchos críticos la heredera más directa de la tradición lírica de Ajmátova y Tsvetáyeva dentro de su propia generación, mantuvo durante toda su carrera una voz poética marcadamente personal e introspectiva, alejada tanto del tono político directo como de las lecturas masivas multitudinarias que caracterizaron a otros poetas de su misma generación."
+  },
+  {
+    "question": "¿Qué compositor ruso del 'Grupo de los Cinco', autor de 'Cuadros de una exposición' y de la ópera 'Borís Godunov', murió en 1881 a los 42 años debido en gran parte al alcoholismo, siendo retratado poco antes de morir en un célebre y crudo retrato de Iliá Repin?",
+    "options": [
+      "César Cui",
+      "Mili Balákirev",
+      "Alexánder Borodín",
+      "Modest Músorgski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El retrato que Repin pintó de Músorgski apenas días antes de su muerte, mostrándolo demacrado y enfermo en una bata de hospital, se convirtió en una de las imágenes más conmovedoras y honestas de toda la pintura rusa, documentando sin idealización el trágico declive final del compositor."
+  },
+  {
+    "question": "¿Qué escritor soviético, autor de la célebre colección de relatos 'Caballería roja' sobre su experiencia con las tropas cosacas durante la guerra soviético-polaca de 1920, fue arrestado y ejecutado en 1940 bajo falsas acusaciones de espionaje y actividad antisoviética?",
+    "options": [
+      "Yuri Olesha",
+      "Artiom Vesioli",
+      "Borís Pilniak",
+      "Isaak Bábel"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Bábel, célebre por su estilo narrativo conciso y su retrato desprovisto de romanticismo de la violencia y el caos de la guerra, fue detenido durante las purgas finales de la era estalinista; su manuscrito confiscado en el arresto nunca fue recuperado, y la fecha exacta de su ejecución permaneció desconocida oficialmente durante años tras su muerte."
+  },
+  {
+    "question": "Además de sus célebres novelas y su labor poética, ¿qué otra importante contribución literaria realizó Borís Pasternak, considerada por muchos críticos entre las mejores versiones existentes en lengua rusa de estas obras clásicas europeas?",
+    "options": [
+      "Sus traducciones de las tragedias de Shakespeare y del 'Fausto' de Goethe",
+      "Sus traducciones de la poesía de Dante al ruso",
+      "Sus versiones rusas de las óperas de Wagner",
+      "Sus adaptaciones teatrales de novelas de Tolstói"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Durante los periodos en que sus propias obras originales resultaban políticamente problemáticas para su publicación, Pasternak se dedicó extensamente a la traducción literaria, y sus versiones rusas de 'Hamlet', 'Romeo y Julieta' y el 'Fausto' de Goethe siguen siendo consideradas hoy, por su calidad poética, entre las mejores jamás realizadas en el idioma ruso."
+  },
+  {
+    "question": "¿Cómo se conoce al estilo arquitectónico monumental y ornamentado que caracterizó la construcción de los siete grandes rascacielos moscovitas conocidos popularmente como las 'Siete Hermanas', edificados entre 1947 y 1953 bajo instrucciones personales de Stalin?",
+    "options": [
+      "El estilo imperio estalinista (Stalinski ampir)",
+      "El neoclasicismo soviético",
+      "El realismo arquitectónico socialista",
+      "El constructivismo tardío"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Combinando elementos de rascacielos estadounidenses con una ornamentación monumental de inspiración clásica y gótica rusa, estos edificios —entre ellos la Universidad Estatal de Moscú y varios hoteles y ministerios— buscaban proyectar una imagen de poder y grandiosidad soviética comparable a los skylines de las grandes capitales capitalistas."
+  }
+]

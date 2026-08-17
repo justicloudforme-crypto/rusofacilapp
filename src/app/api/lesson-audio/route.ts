@@ -19,13 +19,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid level or lesson" }, { status: 400 });
   }
 
-  const rows = await db.lessonAudioCache.findMany({
-    where: { level, lessonSlug: lesson },
-    select: { itemKey: true, audioUrl: true },
+  const rows = await db.audioAsset.findMany({
+    where: { contentType: "lesson", contentId: `${level}-${lesson}` },
+    select: { text: true, audioUrl: true },
   });
 
+  // Keyed by the Russian text itself (not the internal itemKey hash) — see
+  // LessonView/VocabularyTab, which look up this map by `item.word`.
   const audio: Record<string, string> = {};
-  for (const row of rows) audio[row.itemKey] = row.audioUrl;
+  for (const row of rows) audio[row.text] = row.audioUrl;
 
   return NextResponse.json({ audio });
 }

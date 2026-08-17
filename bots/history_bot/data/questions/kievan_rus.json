@@ -1,0 +1,1619 @@
+[
+  {
+    "question": "¿En qué año se considera fundado el Estado de la Rus de Kiev, según la Crónica de Néstor, con la llegada del príncipe varego Rúrik?",
+    "options": [
+      "1147",
+      "1613",
+      "862",
+      "988"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Según la tradición cronística, en el año 862 Rúrik fue invitado a gobernar Nóvgorod, evento considerado el origen del Estado ruso."
+  },
+  {
+    "question": "¿En qué año el príncipe Vladímir de Kiev adoptó el cristianismo ortodoxo como religión oficial de la Rus?",
+    "options": [
+      "862",
+      "988",
+      "1240",
+      "1721"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El 'Bautismo de la Rus' en 988 marcó el inicio del cristianismo ortodoxo como eje cultural y religioso de la civilización rusa."
+  },
+  {
+    "question": "¿Qué pueblo invadió y dominó gran parte de la Rus durante los siglos XIII a XV, periodo conocido como el 'yugo tártaro-mongol'?",
+    "options": [
+      "Los otomanos",
+      "Los mongoles (Horda de Oro)",
+      "Los vikingos",
+      "Los polacos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La invasión mongola, liderada por Batu Kan, sometió a los principados rusos a tributo durante casi 250 años."
+  },
+  {
+    "question": "¿Qué monjes bizantinos son tradicionalmente reconocidos como creadores del alfabeto en que se basa el cirílico?",
+    "options": [
+      "Néstor el Cronista",
+      "Cirilo y Metodio",
+      "Andrés el Apóstol",
+      "Pedro y Pablo"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque el alfabeto cirílico como tal fue desarrollado por sus discípulos, se le rinde homenaje a Cirilo, creador del alfabeto glagolítico previo."
+  },
+  {
+    "question": "¿Qué gobernante de la Rus de Kiev promulgó la 'Rússkaya Pravda', el primer código de leyes escrito conocido de los eslavos orientales?",
+    "options": [
+      "Yaroslav el Sabio",
+      "Sviatoslav I",
+      "Vladímir el Grande",
+      "Oleg de Nóvgorod"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Yaroslav el Sabio (reinó 1019-1054) mandó compilar la 'Rússkaya Pravda' hacia el siglo XI, sentando las bases del derecho ruso medieval."
+  },
+  {
+    "question": "¿En qué año se menciona por primera vez a Moscú en las crónicas, fecha tradicionalmente considerada su fundación, atribuida al príncipe Yuri Dolgoruki?",
+    "options": [
+      "988",
+      "1547",
+      "1380",
+      "1147"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La primera mención de Moscú aparece en las crónicas de 1147, cuando el príncipe Yuri Dolgoruki invitó a un aliado a un banquete en la ciudad."
+  },
+  {
+    "question": "¿Cómo se llamaba la asamblea popular que gobernaba la República de Nóvgorod, una de las pocas ciudades-estado rusas medievales con un sistema no hereditario de gobierno?",
+    "options": [
+      "La Horda de Oro",
+      "El veche",
+      "La duma boyarda",
+      "El zemski sobor"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El veche era una asamblea de ciudadanos libres que elegía y podía destituir al príncipe de Nóvgorod, un sistema inusualmente participativo para la época."
+  },
+  {
+    "question": "¿En qué famosa batalla librada sobre el hielo del lago Peipus en 1242 el príncipe Alejandro Nevski derrotó a los caballeros teutónicos?",
+    "options": [
+      "La batalla de Poltava",
+      "La batalla de Kulikovo",
+      "El sitio de Kazán",
+      "La Batalla del Hielo"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La 'Batalla del Hielo' (Ledóvoye poboíshche) consolidó la fama de Alejandro Nevski como defensor de las tierras rusas frente a la expansión occidental."
+  },
+  {
+    "question": "¿En qué año el príncipe Dmitri Donskói derrotó a las fuerzas de la Horda de Oro en la batalla de Kulikovo, un hito simbólico en la resistencia rusa al dominio mongol?",
+    "options": [
+      "1480",
+      "1242",
+      "1237",
+      "1380"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque no puso fin al yugo mongol, la victoria de 1380 en Kulikovo reforzó el prestigio de Moscú como líder de la resistencia rusa."
+  },
+  {
+    "question": "¿Qué acontecimiento de 1480, conocido como el 'Gran Enfrentamiento del río Ugrá', se considera el fin oficial del yugo tártaro-mongol sobre Rusia?",
+    "options": [
+      "La caída de Constantinopla",
+      "La retirada de las tropas de la Horda de Oro ante el ejército de Iván III",
+      "La batalla de Kulikovo",
+      "La coronación de Iván IV como zar"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Sin librarse una batalla decisiva, el enfrentamiento en el río Ugrá en 1480 terminó con la retirada mongola, liberando a Moscú del tributo tártaro."
+  },
+  {
+    "question": "¿Qué princesa de Kiev, tras el asesinato de su esposo el príncipe Ígor a manos de la tribu de los drevlianos, se vengó con una serie de estratagemas brutales antes de convertirse ella misma al cristianismo décadas antes que su nieto Vladímir?",
+    "options": [
+      "La princesa Anna Porfirogéneta",
+      "La princesa Rogneda de Pólotsk",
+      "La princesa Olga",
+      "La reina Sigrid la Altiva (es una figura de las sagas escandinavas, no de la Rus)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Olga gobernó como regente tras la muerte de Ígor (945) y se bautizó en Constantinopla hacia 957, convirtiéndose en la primera gobernante de la Rus en adoptar el cristianismo."
+  },
+  {
+    "question": "¿Qué príncipe guerrero de la Rus de Kiev destruyó el Kaganato Jázaro, un poderoso imperio comercial túrquico-judío que dominaba las estepas del Volga, hacia el año 965?",
+    "options": [
+      "Sviatoslav I",
+      "Vladímir el Grande",
+      "Yaroslav el Sabio",
+      "Oleg de Nóvgorod"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Sviatoslav, hijo de Olga, pasó casi todo su reinado en campaña militar; su destrucción del Kaganato Jázaro reconfiguró el equilibrio de poder en las estepas euroasiáticas."
+  },
+  {
+    "question": "¿En qué monasterio de Kiev trabajó el monje Néstor, autor tradicionalmente atribuido de la 'Crónica de los tiempos pasados', la fuente más importante sobre los primeros siglos de la Rus?",
+    "options": [
+      "El Monasterio de San Sergio (está cerca de Moscú)",
+      "El Monasterio Solovetski (está en el mar Blanco)",
+      "El Monasterio de las Cuevas de Kiev",
+      "El Monasterio de Nóvgorod-Séversk"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El Monasterio de las Cuevas de Kiev, fundado en 1051, fue durante siglos el principal centro de producción de crónicas y textos religiosos de la Rus."
+  },
+  {
+    "question": "¿Qué gran príncipe de Kiev, nieto del emperador bizantino Constantino Monómaco, escribió hacia 1117 una 'Instrucción a sus hijos' considerada uno de los primeros textos literarios originales (no traducidos) de la Rus?",
+    "options": [
+      "Sviatopolk II",
+      "Mstislav el Grande",
+      "Yaroslav el Sabio",
+      "Vladímir Monómaco"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La 'Instrucción' de Vladímir Monómaco mezcla autobiografía, consejos morales y relatos de caza, ofreciendo una rara ventana a la mentalidad de un príncipe medieval de la Rus."
+  },
+  {
+    "question": "¿Qué poema épico medieval, redescubierto en un manuscrito del siglo XVIII y luego perdido en el incendio de Moscú de 1812, narra la fallida campaña de 1185 del príncipe Ígor Sviatoslávich contra los polovtsianos (cumanos)?",
+    "options": [
+      "La Balada de Sadkó",
+      "El Cantar de las huestes de Ígor",
+      "La Crónica de Néstor",
+      "El Cantar de Rolando (es una épica francesa, no rusa)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El manuscrito original se perdió en el incendio de Moscú durante la invasión napoleónica, pero sobrevivió gracias a una copia impresa realizada poco antes, en 1800."
+  },
+  {
+    "question": "¿Qué tipo de hallazgo arqueológico, descubierto por primera vez en Nóvgorod en 1951 y que hoy suma más de mil ejemplares, reveló que la alfabetización en la Rus medieval era mucho más amplia de lo que se creía, incluso entre mujeres y niños?",
+    "options": [
+      "Las tablillas de cera",
+      "Las monedas con inscripciones",
+      "Las cartas de corteza de abedul",
+      "Los sellos de plomo princeros"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Las 'berestianyye gramoty' (cartas de corteza de abedul) son mensajes cotidianos —listas de compras, cartas de amor, deberes escolares— que muestran una alfabetización práctica sorprendentemente extendida."
+  },
+  {
+    "question": "¿Qué príncipe trasladó el centro de poder de la Rus lejos de Kiev hacia el noreste, a la ciudad de Vladímir, sentando las bases del futuro ascenso de Moscú, tras saquear la propia Kiev en 1169?",
+    "options": [
+      "Daniil de Moscú",
+      "Andréi Bogoliubski",
+      "Yuri Dolgoruki",
+      "Alejandro Nevski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Andréi Bogoliubski, hijo de Yuri Dolgoruki, marcó el declive de Kiev como centro político al preferir gobernar desde Vladímir-Súzdal."
+  },
+  {
+    "question": "¿Qué monumento de Kiev, construido por Yaroslav el Sabio a imitación de la Puerta Dorada de Constantinopla, dio nombre décadas después a una célebre pieza para piano de Modest Mussorgski?",
+    "options": [
+      "La Puerta del Triunfo",
+      "La Puerta de los Leones",
+      "La Puerta Dorada de Kiev",
+      "El Arco de Santa Sofía"
+    ],
+    "correct_option_id": 2,
+    "explanation": "'La gran puerta de Kiev' es el movimiento final de 'Cuadros de una exposición' de Mussorgski, inspirado en un diseño (nunca construido) para reconstruir el monumento."
+  },
+  {
+    "question": "¿Qué catedral, mandada construir por Yaroslav el Sabio en 1037 para conmemorar una victoria sobre los pechenegos, es hoy el templo en pie más antiguo de Ucrania?",
+    "options": [
+      "La Catedral de Santa Sofía de Nóvgorod",
+      "La Catedral de San Basilio",
+      "La Catedral de Santa Sofía de Kiev",
+      "La Catedral de la Asunción de Vladímir"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Con sus mosaicos bizantinos originales aún visibles, Santa Sofía de Kiev es uno de los pocos edificios que sobrevivió intacto a siglos de invasiones y saqueos."
+  },
+  {
+    "question": "¿Cómo se llamaba el peculiar sistema de sucesión de la Rus de Kiev, por el cual el trono no pasaba de padre a hijo sino al pariente varón de mayor edad de toda la dinastía, generando conflictos constantes entre primos y hermanos?",
+    "options": [
+      "El sistema electivo del Zemski Sobor",
+      "El derecho de conquista",
+      "La primogenitura",
+      "El sistema de sucesión colateral ('léstvichnoye pravo')"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Este sistema, pensado para evitar que un solo príncipe acumulara demasiado poder, terminó fragmentando la Rus en principados rivales antes incluso de la invasión mongola."
+  },
+  {
+    "question": "¿Qué decisión estratégica tomó Alejandro Nevski tras sus victorias militares contra suecos y caballeros teutónicos, que lo distingue de otros príncipes rusos de su época?",
+    "options": [
+      "Aliarse con los caballeros teutónicos contra los mongoles",
+      "Trasladar su capital a Roma bajo protección papal",
+      "Declarar la independencia total de todo poder externo",
+      "Someterse políticamente a la Horda de Oro mientras resistía militarmente a Occidente"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Nevski calculó que el dominio mongol, que exigía tributo pero toleraba la religión ortodoxa, era menos peligroso a largo plazo que la presión católica occidental — una apuesta que marcó la política rusa durante siglos."
+  },
+  {
+    "question": "¿Qué otra ciudad rusa medieval, además de Nóvgorod, mantuvo un sistema republicano con asamblea popular (veche) hasta ser anexada por Moscú en 1510?",
+    "options": [
+      "Pskov",
+      "Riazán",
+      "Tver",
+      "Súzdal"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pskov, antigua dependencia de Nóvgorod, desarrolló su propia identidad política independiente y fue la última república medieval rusa en perder su autonomía."
+  },
+  {
+    "question": "¿Cómo se llamaba la ruta comercial fluvial que conectaba Escandinavia con Constantinopla a través de los ríos de la Rus, y que dio origen a buena parte de la riqueza y el poder de Kiev?",
+    "options": [
+      "El Camino Real báltico",
+      "La ruta 'de los váregos a los griegos'",
+      "La Ruta de la Seda",
+      "La Ruta del Ámbar"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta red fluvial, que unía el mar Báltico con el mar Negro a través del Dniéper, convirtió a Kiev en un cruce comercial estratégico entre el norte europeo y Bizancio."
+  },
+  {
+    "question": "¿Qué dos guerreros varegos, según la Crónica de Néstor, gobernaron Kiev antes de ser asesinados por el príncipe Oleg de Nóvgorod, quien así unificó Kiev y Nóvgorod bajo un solo gobierno hacia el año 882?",
+    "options": [
+      "Sviatoslav y Yaropolk",
+      "Rúrik y Sineus",
+      "Ígor y Oleg",
+      "Askold y Dir"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La toma de Kiev por Oleg en 882 se considera tradicionalmente el momento fundacional de un Estado unificado de la Rus, con Kiev como su nueva capital."
+  },
+  {
+    "question": "¿Qué logro diplomático-militar del príncipe Oleg de Nóvgorod, tras sitiar Constantinopla, quedó registrado en tratados comerciales de 907 y 911 considerados los primeros documentos diplomáticos escritos conocidos de la Rus?",
+    "options": [
+      "Un tratado de paz con los pechenegos",
+      "Tratados comerciales con el Imperio bizantino",
+      "Una alianza militar permanente con los jázaros",
+      "La cesión de Crimea a los bizantinos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Según la leyenda cronística, Oleg habría colgado su escudo en las puertas de Constantinopla como símbolo de victoria antes de negociar condiciones comerciales favorables para los mercaderes de la Rus."
+  },
+  {
+    "question": "¿De qué forma extremadamente cruel murió el príncipe Ígor de Kiev en 945, según la Crónica de Néstor, a manos de la tribu de los drevlianos tras intentar cobrarles tributo dos veces en el mismo año?",
+    "options": [
+      "Fue ahogado en el río Dniéper",
+      "Fue quemado vivo en su propio palacio",
+      "Fue atado a dos árboles doblados que, al soltarse, lo despedazaron",
+      "Murió envenenado en un banquete"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La codicia de Ígor, que regresó a exigir un segundo tributo tras haber recibido ya el primero, provocó la furia de los drevlianos y desencadenó la posterior y sangrienta venganza de su viuda, la princesa Olga."
+  },
+  {
+    "question": "Según la leyenda cronística, ¿qué hizo el príncipe Vladímir antes de decidirse por el cristianismo ortodoxo en 988, enviando embajadores a distintos países para evaluar personalmente cada una?",
+    "options": [
+      "Envió emisarios a examinar el islam, el judaísmo, el catolicismo y la ortodoxia bizantina",
+      "Consultó únicamente con sacerdotes locales paganos",
+      "Organizó un concilio de todos los príncipes eslavos",
+      "Se limitó a copiar la religión de su madre Olga sin más consulta"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Según la leyenda, los enviados de Vladímir quedaron especialmente impresionados por la belleza de la liturgia en Constantinopla, lo que habría inclinado la balanza hacia el cristianismo ortodoxo."
+  },
+  {
+    "question": "¿Qué hija de Yaroslav el Sabio se casó con el rey Enrique I de Francia en 1051 y llegó a ejercer como regente de ese reino, en un ejemplo poco conocido de la influencia diplomática de la Rus de Kiev en la Europa medieval?",
+    "options": [
+      "Anna de Kiev",
+      "Anastasia de Kiev (se casó con el rey de Hungría, no de Francia)",
+      "Elizabeth de Kiev (se casó con el rey de Noruega, no de Francia)",
+      "Agatha de Kiev"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Se dice que Anna, alfabetizada en una época en que muchos nobles franceses no lo estaban, firmaba documentos oficiales mientras su esposo apenas podía poner una cruz."
+  },
+  {
+    "question": "¿Qué icono, pintado originalmente en Constantinopla y traído a Kiev en el siglo XII antes de ser trasladado a Vladímir y finalmente a Moscú, se convirtió en uno de los objetos religiosos más venerados de toda la historia rusa?",
+    "options": [
+      "La Virgen de Vladímir",
+      "El Cristo Pantocrátor de Nóvgorod",
+      "La Trinidad de Rubliov (fue pintada varios siglos después, ya en Moscú)",
+      "El icono de San Jorge"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Cada traslado de este icono bizantino a una nueva ciudad —Kiev, luego Vladímir, luego Moscú— coincidió simbólicamente con el ascenso de esa ciudad como nuevo centro de poder de la Rus."
+  },
+  {
+    "question": "¿Cómo se llamaban los funcionarios mongoles encargados de administrar el censo y recaudar el tributo en los principados rusos sometidos durante el yugo tártaro-mongol?",
+    "options": [
+      "Los boyardos",
+      "Los oprichniki (ese término es de siglos después, bajo Iván el Terrible)",
+      "Los basqaq (o báskaki)",
+      "Los posádniki"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Con el tiempo, los propios príncipes rusos —especialmente los de Moscú— asumieron el papel de recaudar el tributo mongol en nombre del kan, acumulando así poder y riqueza propios."
+  },
+  {
+    "question": "¿Qué kan mongol, nieto de Gengis Kan, dirigió la invasión de la Rus en 1237-1240 y fundó después la capital de la Horda de Oro, Sarái, a orillas del río Volga?",
+    "options": [
+      "Batu Kan",
+      "Mamai",
+      "Tojtamish",
+      "Gengis Kan"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Desde Sarái, una ciudad que llegó a tener más población que muchas capitales europeas de la época, la Horda de Oro administró el tributo de los principados rusos durante generaciones."
+  },
+  {
+    "question": "¿Qué príncipe de Vladímir-Súzdal, célebre por haber tenido doce hijos, recibió el apodo de 'Gran Nido' y consolidó el poder de esta región del noreste de la Rus a finales del siglo XII?",
+    "options": [
+      "Andréi Bogoliubski",
+      "Mstislav el Grande",
+      "Vsévolod 'el Gran Nido'",
+      "Yuri Dolgoruki"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Su numerosa descendencia dio origen a varias ramas principescas que más tarde competirían entre sí por el control de Moscú y otras ciudades del noreste ruso."
+  },
+  {
+    "question": "¿Con qué liga comercial de ciudades del norte de Europa mantuvo Nóvgorod una intensa relación de intercambio de pieles, cera y madera por textiles y metales durante la Baja Edad Media?",
+    "options": [
+      "La Liga de Esmalcalda (es del siglo XVI, posterior)",
+      "La Liga Hanseática",
+      "La Confederación Suiza",
+      "La Liga Lombarda"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Nóvgorod albergó una de las oficinas comerciales (kontor) más importantes de la Liga Hanseática fuera de Europa occidental, reforzando su riqueza como república mercantil."
+  },
+  {
+    "question": "¿Qué hijo menor de Alejandro Nevski, considerado el fundador de la línea de príncipes de Moscú, recibió esa ciudad —entonces una aldea sin mayor importancia— como su modesto principado hacia 1276?",
+    "options": [
+      "Simeón el Orgulloso",
+      "Iván Kalitá",
+      "Daniil de Moscú",
+      "Yuri de Moscú"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Nadie en su época hubiera imaginado que este pequeño principado, el más joven y menos prestigioso de la familia, terminaría convirtiéndose en el núcleo del futuro Estado ruso."
+  },
+  {
+    "question": "¿Qué príncipe de Moscú, apodado 'Kalitá' ('la bolsa de dinero') por su habilidad para acumular riqueza, obtuvo del kan mongol el derecho exclusivo de recaudar el tributo de otros principados rusos, sentando así las bases económicas del ascenso de Moscú?",
+    "options": [
+      "Daniil de Moscú",
+      "Iván I Kalitá",
+      "Vasili I",
+      "Dmitri Donskói"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Al quedarse con parte de lo recaudado y prestar dinero a otros príncipes endeudados, Iván Kalitá convirtió a Moscú en el centro financiero de facto de la Rus mucho antes de que lo fuera políticamente."
+  },
+  {
+    "question": "¿Qué príncipe de Moscú mandó construir, tras la victoria de Kulikovo, las primeras murallas de piedra blanca del Kremlin, sustituyendo las anteriores fortificaciones de madera?",
+    "options": [
+      "Iván III",
+      "Dmitri Donskói",
+      "Iván Kalitá",
+      "Vasili II"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Estas murallas de piedra caliza blanca, construidas en la década de 1360, dieron origen a la expresión 'Moscú la de piedra blanca', usada en la literatura rusa mucho después de que Iván III las sustituyera por las actuales murallas de ladrillo rojo."
+  },
+  {
+    "question": "Además de la Crónica de Néstor (o 'de los tiempos pasados'), ¿qué otra importante compilación cronística medieval, centrada en los sucesos de la república mercantil del norte, se conoce como la Primera Crónica de Nóvgorod?",
+    "options": [
+      "La Primera Crónica de Nóvgorod",
+      "El Códice Laurenciano (es un manuscrito que contiene copias de crónicas, no una crónica distinta)",
+      "El Sinópsis de Kiev",
+      "La Crónica Hipaciana (también es una copia/versión, centrada en el sur)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A diferencia de la Crónica de Néstor, centrada en Kiev, la Crónica de Nóvgorod ofrece un valioso registro independiente de la vida cotidiana, los precios y los conflictos internos de esa república."
+  },
+  {
+    "question": "¿Qué príncipe de Kiev, apodado 'el Maldito' en la tradición cronística, es señalado como el responsable del asesinato de sus propios hermanos Borís y Gleb hacia 1015, en una lucha por la sucesión tras la muerte de Vladímir?",
+    "options": [
+      "Mstislav de Chernígov",
+      "Yaroslav el Sabio",
+      "Sviatopolk 'el Maldito'",
+      "Iziaslav I"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Irónicamente, fue el propio Yaroslav el Sabio quien finalmente derrotó a Sviatopolk y heredó el trono de Kiev, dejando el apodo 'el Maldito' como castigo póstumo en la memoria histórica."
+  },
+  {
+    "question": "¿Quiénes fueron los primeros santos canonizados formalmente por la Iglesia de la Rus, venerados como mártires ejemplares por haberse negado a levantar armas contra su propio hermano incluso sabiendo que este los mataría?",
+    "options": [
+      "Vladímir y Olga (son santos, pero por su papel en la cristianización, no como mártires)",
+      "Cirilo y Metodio (son santos, pero griegos/búlgaros, no rusos)",
+      "Antonio y Teodosio de las Cuevas",
+      "Borís y Gleb"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El culto a Borís y Gleb, asesinados por su hermano Sviatopolk, promovió un ideal de no resistencia y humildad cristiana que marcó profundamente la espiritualidad rusa medieval."
+  },
+  {
+    "question": "¿Qué explicación ha dividido tradicionalmente a los historiadores sobre el origen del propio nombre 'Rus', que da nombre a Rusia: un origen escandinavo (varego) o un origen eslavo local?",
+    "options": [
+      "El nombre fue inventado en el siglo XVIII por historiadores alemanes sin base alguna",
+      "La disputa entre la teoría normanista y la antinormanista",
+      "No existe ningún debate: el origen está documentado con certeza absoluta",
+      "El nombre proviene con seguridad del río Ros, sin relación con los varegos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La teoría normanista sostiene que 'Rus' deriva de un término escandinavo asociado a los remeros varegos, mientras que la antinormanista defiende raíces eslavas locales; el debate, con matices políticos a lo largo de la historia, sigue abierto académicamente."
+  },
+  {
+    "question": "Según la leyenda recogida en la Crónica de Néstor, ¿qué tres hermanos —junto con una hermana llamada Lýbed— fundaron la ciudad de Kiev, dando cada uno nombre a una de las colinas sobre las que se asienta?",
+    "options": [
+      "Kiy, Schek y Joriv",
+      "Oleg, Ígor y Sviatoslav",
+      "Rúrik, Sineus y Trúvor (son los tres hermanos varegos de la leyenda de Nóvgorod, no de Kiev)",
+      "Askold, Dir y Oleg"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Según la leyenda, la ciudad tomó su nombre del hermano mayor, Kiy; aunque es imposible confirmar históricamente su existencia real, la leyenda sigue siendo central en la identidad fundacional de Kiev."
+  },
+  {
+    "question": "¿Qué tamaño relativo tenía Kiev hacia el siglo XII, en la época de mayor esplendor de la Rus, en comparación con otras grandes ciudades de la Europa de entonces?",
+    "options": [
+      "Solo superaba en tamaño a Nóvgorod, siendo insignificante frente al resto de Europa",
+      "Era una aldea pequeña, muy por debajo de cualquier ciudad europea relevante",
+      "Era una de las ciudades más grandes de Europa, comparable en población a París o Londres",
+      "No existen estimaciones razonables sobre su tamaño en esa época"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Con decenas de miles de habitantes y cientos de iglesias según relatos de la época, Kiev rivalizaba en tamaño con las mayores capitales de la Europa occidental de su tiempo, antes de la devastación mongola de 1240."
+  },
+  {
+    "question": "¿Qué gran príncipe de Kiev, muerto en 1132, es considerado tradicionalmente el último gobernante capaz de mantener una autoridad centralizada real sobre toda la Rus, tras cuya muerte el territorio se fragmentó definitivamente en principados rivales?",
+    "options": [
+      "Mstislav el Grande",
+      "Vladímir Monómaco (fue su padre, y también mantuvo la unidad, pero murió antes, en 1125)",
+      "Yaroslav el Sabio (murió mucho antes, en 1054)",
+      "Iziaslav II"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tras la muerte de Mstislav, hijo de Vladímir Monómaco, ningún príncipe volvería a ejercer una autoridad comparable sobre el conjunto de los territorios de la Rus antes de la invasión mongola."
+  },
+  {
+    "question": "¿Qué príncipe de Kiev mandó acuñar, hacia el año 980, las primeras monedas propias de la Rus —los 'zlatniki' de oro y 'srebreniki' de plata—, imitando el diseño de las monedas bizantinas pero con su propio retrato?",
+    "options": [
+      "Yaroslav el Sabio",
+      "Vladímir el Grande",
+      "Iziaslav I",
+      "Sviatoslav I"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Estas primeras monedas, más un símbolo de prestigio y soberanía que un medio de cambio masivo, dejaron pronto de acuñarse, y la Rus volvió a depender durante siglos de monedas extranjeras para el comercio cotidiano."
+  },
+  {
+    "question": "Antes de la gran amenaza mongola del siglo XIII, ¿qué pueblo nómada de las estepas, cuyos ataques llevaron a la construcción de líneas defensivas al sur de Kiev, representó la principal amenaza militar para la Rus durante los siglos X y XI?",
+    "options": [
+      "Los ávaros (su periodo de mayor poder fue anterior, en los siglos VI-VII)",
+      "Los polovtsianos (o cumanos, se convirtieron en la principal amenaza después, en los siglos XI-XII)",
+      "Los pechenegos",
+      "Los jázaros (fueron derrotados por Sviatoslav en el siglo X, antes de convertirse en una amenaza duradera)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Se dice que el propio príncipe Sviatoslav murió en una emboscada pechenega en 972, cuando regresaba de una campaña militar, y que su cráneo fue convertido en copa de bebida por el kan pechenego victorioso."
+  },
+  {
+    "question": "¿Qué pueblo nómada túrquico, sucesor de los pechenegos como principal amenaza de las estepas del sur, mantuvo una relación de guerra y alianzas cambiantes con los príncipes de la Rus durante los siglos XI y XII, hasta ser finalmente sometido por los mongoles?",
+    "options": [
+      "Los búlgaros del Volga",
+      "Los pechenegos (fueron la amenaza del periodo anterior, siglos X-XI)",
+      "Los jázaros",
+      "Los polovtsianos (o cumanos)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Es precisamente contra los polovtsianos que el príncipe Ígor Sviatoslávich lanzó la fallida campaña de 1185 inmortalizada en 'El Cantar de las huestes de Ígor'."
+  },
+  {
+    "question": "¿Qué cargo electivo, equivalente aproximado a un alcalde o magistrado principal, gobernaba junto al príncipe (y a menudo limitaba sus poderes) en la República de Nóvgorod?",
+    "options": [
+      "El tysiatski (era un cargo militar/administrativo distinto, jefe de la milicia urbana)",
+      "El boyardo (era un título de nobleza general, no un cargo específico de gobierno)",
+      "El voivoda (era principalmente un cargo militar, no el máximo magistrado civil)",
+      "El posádnik"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El posádnik, elegido por el veche entre las familias boyardas más influyentes, podía llegar a limitar seriamente el poder del príncipe convocado por la propia asamblea, en un equilibrio de poderes poco común en la época."
+  },
+  {
+    "question": "¿Qué antigua ciudad del noreste de la Rus, mencionada en las crónicas ya en el siglo IX —posiblemente antes que la propia Moscú—, se convirtió más tarde en sede de una de las diócesis ortodoxas más importantes del norte del país?",
+    "options": [
+      "Rostov el Grande",
+      "Vladímir",
+      "Tver",
+      "Súzdal"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Rostov el Grande, a orillas del lago Nero, conserva hasta hoy uno de los conjuntos de arquitectura religiosa antigua más notables de Rusia, pese a haber quedado eclipsada políticamente por ciudades más jóvenes como Moscú."
+  },
+  {
+    "question": "¿Qué arma incendiaria bizantina, cuya fórmula exacta sigue siendo desconocida hoy, destruyó buena parte de la flota del príncipe Ígor durante su fallido ataque naval contra Constantinopla en el año 941?",
+    "options": [
+      "La pólvora negra (no se usaría en Europa hasta varios siglos después)",
+      "El nafta persa (es un término impreciso, no el nombre real del arma bizantina)",
+      "El fuego griego",
+      "El azufre ardiente (no era el componente principal, aunque a veces se menciona en descripciones populares)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El pánico causado por esta misteriosa arma, capaz de arder incluso sobre el agua, quedó grabado en la memoria de la Rus como una advertencia sobre el poderío militar bizantino, pese a la victoria posterior de Oleg en 907."
+  },
+  {
+    "question": "¿Cómo se conoce a la adición legal realizada por los hijos de Yaroslav el Sabio a la 'Rússkaya Pravda' original, que amplió y matizó las disposiciones legales de su padre a mediados del siglo XI?",
+    "options": [
+      "La Carta de Nóvgorod (es un documento distinto, relativo al autogobierno de esa ciudad)",
+      "El Sudébnik (es un código legal posterior, de la Moscovia del siglo XV)",
+      "El Sobórnoye Ulozhenie (es el Código de Leyes de 1649, muy posterior)",
+      "La 'Pravda de los Yaroslávichi'"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Esta ampliación reguló con mayor detalle cuestiones como la herencia, las multas por distintos delitos y la condición de los distintos estamentos sociales de la Rus."
+  },
+  {
+    "question": "¿Qué principado rival de Kiev, gobernado durante generaciones por una rama distinta de la dinastía Riúrikovich y frecuentemente en conflicto con la propia capital, dio origen a figuras como el príncipe guerrero Oleg Sviatoslávich, cuyo nombre fue usado siglos después en la ópera 'El príncipe Ígor'?",
+    "options": [
+      "Galitzia-Volinia",
+      "Pereyaslavl",
+      "Smolensk",
+      "Chernígov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Chernígov, una de las ciudades más ricas y pobladas de la Rus medieval, mantuvo una larga rivalidad dinástica con Kiev antes de ser también devastada por la invasión mongola de 1240."
+  },
+  {
+    "question": "¿Qué príncipe de Pólotsk del siglo XI, protagonista de leyendas populares que le atribuían la capacidad de transformarse en lobo, gobernó brevemente Kiev tras ser liberado por una revuelta popular que lo sacó de una prisión donde estaba encerrado?",
+    "options": [
+      "Briacheslav de Pólotsk",
+      "Rogvolod de Pólotsk (es una generación anterior, padre de Rogneda)",
+      "Vseslav 'el Hechicero'",
+      "Vsévolod 'el Gran Nido' (es un príncipe distinto, de Vladímir-Súzdal, sin leyendas de brujería)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El 'Cantar de las huestes de Ígor' alude directamente a las legendarias transformaciones nocturnas de Vseslav, mezclando historia real y folclore pagano pese al ya oficial cristianismo de la época."
+  },
+  {
+    "question": "Según la propia Crónica de Néstor, ¿qué práctica personal del joven príncipe Vladímir, antes de su conversión al cristianismo en 988, contrastaba notablemente con la estricta monogamia que después promovería como gobernante cristiano?",
+    "options": [
+      "Practicaba un ascetismo religioso pagano extremo",
+      "Vivía como ermitaño alejado de la corte antes de subir al trono",
+      "Se negaba por completo a casarse",
+      "Mantenía varias esposas y cientos de concubinas en distintas residencias"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La propia crónica, escrita ya en un monasterio cristiano, no oculta este contraste, presentándolo como parte del dramático 'antes y después' espiritual del príncipe que cristianizó la Rus."
+  },
+  {
+    "question": "¿Qué expresión, usada ya en crónicas y textos medievales para referirse colectivamente al territorio y al pueblo de la Rus, es considerada un antecedente temprano de la idea de una identidad política y cultural compartida entre los principados eslavos orientales?",
+    "options": [
+      "La 'Tercera Roma' (es un concepto posterior, del siglo XVI, aplicado a Moscú)",
+      "La 'Gran Rusia' (es una denominación administrativa mucho más tardía, del Imperio ruso)",
+      "La 'Santa Rusia' (es una expresión que se popularizó más tarde, ya en la época moscovita)",
+      "La 'Tierra Rusa' (Rússkaya zemliá)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a la fragmentación política entre principados rivales, textos como 'El Cantar de las huestes de Ígor' apelan repetidamente a esta 'Tierra Rusa' compartida como llamado a la unidad frente a amenazas externas."
+  },
+  {
+    "question": "¿Con qué nombre, que significa aproximadamente 'la tierra de las ciudades', se refirieron las sagas escandinavas medievales al territorio de la Rus, impresionadas por la cantidad de asentamientos fortificados que encontraban los viajeros nórdicos?",
+    "options": [
+      "Vinlandia",
+      "Miklagard",
+      "Bjarmaland",
+      "Gárdariki"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los vikingos llamaban 'Miklagard' (la gran ciudad) a Constantinopla, pero para el conjunto de la Rus usaban 'Gárdariki', reflejo de la densa red de ciudades fortificadas (górod) que hallaban al comerciar por sus ríos."
+  },
+  {
+    "question": "¿Qué viajero árabe, enviado en el año 921 en una misión diplomática hacia el Volga, dejó uno de los relatos más detallados y a menudo citados sobre las costumbres, el comercio y los rituales funerarios de los mercaderes 'rus' que encontró junto al río?",
+    "options": [
+      "Ibn Battuta",
+      "Al-Masudi",
+      "Ibn Fadlán",
+      "Ibn Jordadbeh"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Ibn Fadlán, secretario de una embajada del califa abasí, describió con detalle asombroso la apariencia física, los tatuajes, el comercio de esclavos y un elaborado funeral fluvial de un jefe rus, convirtiéndose en fuente clave para historiadores."
+  },
+  {
+    "question": "¿Cómo se conoce a la batalla librada en 1216 cerca del río Lipitsa, considerada por muchos historiadores el mayor enfrentamiento entre ejércitos rivales de distintos principados de la Rus antes de la invasión mongola?",
+    "options": [
+      "Batalla de Vozha",
+      "Batalla de Sit",
+      "Batalla de Kalka",
+      "Batalla del río Lipitsa"
+    ],
+    "correct_option_id": 3,
+    "explanation": "En esta feroz batalla, príncipes rivales de Vladímir-Súzdal y Nóvgorod se enfrentaron con decenas de miles de combatientes; las crónicas hablan de miles de caídos, cifra enorme para la guerra medieval rusa de la época."
+  },
+  {
+    "question": "Según la tradición cronística, ¿qué príncipe de Súzdal invitó hacia 1147 a un aliado a un banquete en un pequeño asentamiento a orillas del río Moscova, episodio que suele señalarse como el origen simbólico de la ciudad de Moscú?",
+    "options": [
+      "Andréi Bogoliubski",
+      "Alejandro Nevski",
+      "Vsévolod el Nido Grande",
+      "Yuri Dolgoruki"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Yuri Dolgoruki ('de brazos largos', por su expansión territorial) es tradicionalmente considerado el fundador de Moscú, al haber invitado a un príncipe aliado a 'venir a Moscú' en 1147, primera mención documentada del lugar."
+  },
+  {
+    "question": "¿Qué destino sufrió el príncipe Andréi Bogoliubski, que había trasladado el centro de poder de la Rus hacia el noreste, en el año 1174?",
+    "options": [
+      "Falleció de enfermedad durante una peregrinación",
+      "Fue depuesto y exiliado a Bizancio",
+      "Fue asesinado por un grupo de sus propios boyardos en su palacio",
+      "Murió en batalla contra los búlgaros del Volga"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Bogoliubski, gobernante autoritario que había fortalecido enormemente el principado de Vladímir-Súzdal, murió asesinado en una conjura de boyardos y sirvientes cercanos descontentos con su gobierno personalista."
+  },
+  {
+    "question": "¿Cómo se conoce al conjunto de normas legales de la República de Nóvgorod que, complementando a la 'Rússkaya Pravda', regulaba especialmente los procedimientos judiciales y comerciales de esta próspera ciudad-estado?",
+    "options": [
+      "La Carta Judicial de Nóvgorod",
+      "La Ley de las Estepas",
+      "El Estatuto de Pskov",
+      "El Código de Yaroslav"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este documento, conservado en fragmentos posteriores, refleja el carácter singularmente mercantil y semi-republicano de Nóvgorod, con reglas detalladas sobre contratos, herencias y disputas comerciales entre mercaderes."
+  },
+  {
+    "question": "¿Contra qué pueblo túrquico, asentado a orillas del Volga y dedicado también al comercio, dirigió el príncipe Sviatoslav de Kiev una campaña militar en el siglo X, tras haber destruido antes el Kaganato Jázaro?",
+    "options": [
+      "Los polovtsianos",
+      "Los búlgaros del Volga",
+      "Los pechenegos",
+      "Los ávaros"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Tras aplastar a los jázaros, Sviatoslav también atacó a los búlgaros del Volga, un reino comercial túrquico que había abrazado el islam y controlaba rutas clave entre Europa oriental y Asia central."
+  },
+  {
+    "question": "Antes de que Sviatoslav destruyera su poder, ¿a qué pueblo estaban obligadas a pagar tributo varias tribus eslavas orientales, entre ellas los polianos de Kiev, según relata la Crónica de Néstor?",
+    "options": [
+      "A los pechenegos",
+      "A los ávaros",
+      "A los jázaros",
+      "A los vikingos suecos"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El Kaganato Jázaro, un poderoso estado túrquico que había adoptado el judaísmo entre su élite gobernante, cobraba tributo a tribus eslavas antes de que los príncipes de Kiev se liberaran de esa dependencia."
+  },
+  {
+    "question": "¿Qué ocurrió con el ídolo de Perún, dios del trueno venerado por los eslavos paganos, inmediatamente después de que el príncipe Vladímir impusiera el cristianismo en Kiev en el año 988?",
+    "options": [
+      "Fue enviado como regalo a Constantinopla",
+      "Fue trasladado a un templo cristiano como reliquia",
+      "Fue arrastrado y arrojado al río Dniéper",
+      "Fue quemado públicamente en la plaza mayor"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Según la crónica, el ídolo de madera de Perún fue atado a la cola de un caballo, arrastrado hasta el Dniéper y arrojado al agua ante la multitud, en un gesto simbólico del fin oficial del paganismo."
+  },
+  {
+    "question": "¿Cómo se llama el héroe legendario más célebre de las 'bilinas' o cantares épicos populares de la Rus medieval, un campesino convertido en poderoso guerrero al servicio del príncipe de Kiev?",
+    "options": [
+      "Alioscha Popóvich",
+      "Sadkó",
+      "Dobrinia Nikítich",
+      "Iliá Múromets"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Iliá Múromets, que según la leyenda pasó postrado los primeros treinta años de su vida hasta recibir una fuerza milagrosa, es el más venerado de los 'bogatyrs' (héroes-caballeros) del folclore ruso medieval."
+  },
+  {
+    "question": "Además de las cartas escritas sobre corteza de abedul, ¿qué otro soporte de escritura, consistente en pequeñas tablillas de madera recubiertas de cera sobre las que se grababa el texto con un punzón, se usaba también en la Rus medieval para notas cotidianas?",
+    "options": [
+      "Los pergaminos de piel de cordero",
+      "Los rollos de papiro importado",
+      "Las tabletas de arcilla cocida",
+      "Las tablillas de cera (tsera)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las 'tsera' —tablillas de madera con una capa de cera— permitían escribir y luego borrar el texto raspando la superficie, un método reutilizable y barato usado junto a la corteza de abedul para la escritura práctica diaria."
+  },
+  {
+    "question": "¿Qué principado de la Rus medieval, situado al sureste de Kiev y considerado uno de los tres grandes centros de poder junto con Kiev y Chernígov, dio nombre a una importante línea dinástica de príncipes?",
+    "options": [
+      "El principado de Pereyaslavl",
+      "El principado de Volinia",
+      "El principado de Riazán",
+      "El principado de Smolensk"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pereyaslavl, situado en la frontera con las estepas y por ello expuesto constantemente a incursiones nómadas, era tradicionalmente el tercer trono más prestigioso de la Rus, tras Kiev y Chernígov."
+  },
+  {
+    "question": "¿Qué peculiar hallazgo hicieron los monjes del Monasterio de las Cuevas de Kiev al excavar sus galerías subterráneas, un fenómeno atribuido a las condiciones del suelo y que convirtió el lugar en centro de peregrinación?",
+    "options": [
+      "Manantiales de agua con propiedades minerales únicas",
+      "Fósiles de animales prehistóricos desconocidos",
+      "Los cuerpos de los monjes fallecidos se momificaban de forma natural",
+      "Vetas de plata pura en las paredes de las cuevas"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Las condiciones secas y estables de las cuevas calcáreas favorecían la momificación natural de los restos de los monjes, un fenómeno que reforzó la fama del monasterio como lugar sagrado de la ortodoxia eslava."
+  },
+  {
+    "question": "¿Cómo se llamaba el consejo de nobles y ancianos que asesoraba al gran príncipe de Kiev en asuntos de gobierno, guerra y justicia, institución que con el tiempo evolucionaría hacia formas más elaboradas de gobierno aristocrático?",
+    "options": [
+      "La Duma de los boyardos",
+      "El Sinodo eclesiástico",
+      "El Zemski Sobor",
+      "El Veche popular"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La duma de boyardos, un consejo consultivo de la aristocracia guerrera, acompañaba al príncipe en la toma de decisiones importantes; su influencia y forma variaban de un principado a otro dentro de la Rus fragmentada."
+  },
+  {
+    "question": "¿Con qué princesa bizantina, hermana del emperador Basilio II, se casó el príncipe Vladímir de Kiev como condición previa para sellar su conversión al cristianismo ortodoxo en el año 988?",
+    "options": [
+      "La princesa Irene",
+      "La princesa Teodora",
+      "La princesa Ana",
+      "La princesa Zoe"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El matrimonio con Ana, hermana del propio emperador bizantino, era un honor diplomático extraordinario para un gobernante 'bárbaro' y sirvió para legitimar plenamente la nueva fe cristiana de Vladímir ante ojos europeos."
+  },
+  {
+    "question": "Según una célebre leyenda recogida en la crónica y luego inmortalizada por Pushkin en un poema, ¿de qué murió el príncipe Oleg de Nóvgorod, pese a haber sido advertido por un adivino que la causa de su muerte vendría de su propio caballo?",
+    "options": [
+      "Cayó del caballo durante una cacería y se rompió el cuello",
+      "Le mordió una serpiente escondida en el cráneo de su caballo ya muerto",
+      "Se ahogó al cruzar un río sobre su caballo en plena tormenta",
+      "Su caballo lo coceó mortalmente durante un desfile militar"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Oleg, para burlar la profecía, se alejó de su caballo, que murió de viejo; años después, al visitar sus restos y apoyar el pie sobre el cráneo, una serpiente escondida en él lo mordió y acabó cumpliéndose el augurio."
+  },
+  {
+    "question": "¿Cómo se conoce a la batalla de 1223, librada junto al río Kalka, en la que los príncipes de la Rus, aliados con los cumanos, sufrieron una aplastante derrota en su primer choque directo con un ejército mongol?",
+    "options": [
+      "La batalla del río Sit",
+      "La batalla del río Kalka",
+      "La batalla de Vozha",
+      "La batalla de Kulikovo"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta derrota, causada en parte por la falta de coordinación entre los príncipes rusos, fue solo una incursión de reconocimiento mongol; la gran invasión propiamente dicha llegaría más de una década después, en 1237."
+  },
+  {
+    "question": "¿Qué disposición testamentaria de Yaroslav el Sabio, al repartir la Rus entre sus varios hijos poco antes de morir en 1054, sentó las bases de la posterior fragmentación política del estado en principados rivales?",
+    "options": [
+      "El reparto de la Rus entre sus hijos según un sistema jerárquico de ciudades",
+      "La entrega de todo el territorio a su hijo mayor de forma indivisible",
+      "La cesión de la mitad del territorio a la Iglesia ortodoxa",
+      "La creación de un consejo permanente de todos sus hijos"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Yaroslav distribuyó las principales ciudades entre sus hijos según un orden de prestigio, con la intención de que ascendieran de ciudad en ciudad a medida que morían los hermanos mayores; el sistema, sin embargo, generó conflictos sucesorios crónicos."
+  },
+  {
+    "question": "Tras la muerte de su esposo Ígor, ¿qué medida administrativa introdujo la princesa Olga de Kiev para evitar que se repitiera la revuelta que le había costado la vida a su marido, fijando cantidades exactas de tributo y puntos de recaudación?",
+    "options": [
+      "Delegó la recaudación de tributos en la Iglesia bizantina",
+      "Estableció los 'pogosty', puntos fijos de recaudación con cuotas de tributo determinadas",
+      "Abolió por completo el cobro de tributos a las tribus eslavas",
+      "Impuso que el tributo se pagara únicamente en monedas de plata bizantinas"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes de esta reforma, el tributo se recolectaba de forma arbitraria e itinerante ('poliudie'), lo que había provocado el asesinato de Ígor a manos de la tribu de los drevlianos; Olga sustituyó ese sistema por otro fijo y predecible."
+  },
+  {
+    "question": "¿Qué monumental puerta de Kiev, construida por Yaroslav el Sabio a imitación de la de Constantinopla, quedó reducida a ruinas tras el asalto mongol de 1240 y sería reconstruida recién en el siglo XX como monumento conmemorativo?",
+    "options": [
+      "La Puerta de Zhitomir",
+      "La Puerta de los Leones",
+      "La Puerta de Lyadski",
+      "La Puerta Dorada de Kiev"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La Puerta Dorada original, principal acceso ceremonial a la Kiev medieval, fue severamente dañada durante la toma mongola de la ciudad; las ruinas se conservaron durante siglos hasta la reconstrucción moderna del monumento."
+  },
+  {
+    "question": "¿Qué príncipe del suroeste de la Rus, gobernante de Galitzia-Volinia, fue coronado 'Rey de Rus' por un legado papal en 1253, en un intento de acercamiento político y religioso hacia Europa occidental frente a la amenaza mongola?",
+    "options": [
+      "Yaroslav Osmomisl",
+      "Román Mstislávich",
+      "Mstislav el Audaz",
+      "Daniel de Galitzia"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a aceptar la corona papal con la esperanza de obtener ayuda militar occidental contra los mongoles, esa ayuda nunca llegó de forma efectiva, y el principado de Galitzia-Volinia mantuvo en la práctica su vasallaje ante la Horda."
+  },
+  {
+    "question": "Además de la Crónica de Néstor, ¿qué otra importante fuente cronística medieval, redactada y conservada en la propia república comercial del norte, ofrece un relato independiente y a menudo más sobrio de los sucesos de la Rus?",
+    "options": [
+      "La Crónica de Ipátiev",
+      "La Crónica de Radziwiłł",
+      "La Primera Crónica de Nóvgorod",
+      "La Crónica Láurentiana"
+    ],
+    "correct_option_id": 2,
+    "explanation": "A diferencia de las crónicas escritas en los centros de poder principesco, la Primera Crónica de Nóvgorod refleja una perspectiva más ligada a los intereses mercantiles y republicanos de esta próspera ciudad-estado del norte."
+  },
+  {
+    "question": "¿De qué palabra se cree que deriva el término 'boyardo', usado para designar a los miembros de la alta aristocracia guerrera y terrateniente que asesoraba a los príncipes de la Rus?",
+    "options": [
+      "De un préstamo directo del griego bizantino 'basileus'",
+      "De un término mongol posterior a la conquista",
+      "De una palabra escandinava que significa 'jefe de barco'",
+      "De una antigua raíz eslava relacionada con 'combatir' o 'lucha'"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque su etimología exacta sigue debatida entre lingüistas, la explicación más aceptada vincula 'boyardo' con una raíz eslava relacionada con la lucha o el combate, coherente con su origen como clase de guerreros nobles."
+  },
+  {
+    "question": "¿Cómo se conoce a los guerreros de origen escandinavo y, más tarde, también rus, que sirvieron como élite militar personal de los emperadores bizantinos desde finales del siglo X, conocidos por su lealtad y su temible hacha de combate?",
+    "options": [
+      "La Guardia Varega",
+      "Los Tagmata",
+      "La Guardia Excubita",
+      "Los Cataphractos"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Formada inicialmente con guerreros enviados por Vladímir de Kiev al emperador bizantino como parte de un acuerdo, la Guardia Varega se convirtió en una fuerza de élite legendaria, y más tarde incluso incorporó a vikingos como el futuro rey noruego Harald Hardrada."
+  },
+  {
+    "question": "¿Qué congreso de príncipes de la Rus, celebrado en la ciudad de Liubech en 1097, estableció el principio de que cada príncipe conservara hereditariamente el territorio de su padre, buscando poner fin a las guerras internas por la sucesión?",
+    "options": [
+      "La Asamblea de Vladímir",
+      "La Dieta de Chernígov",
+      "El Congreso de Liubech",
+      "El Consejo de Pereyaslavl"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El principio acordado en Liubech —'que cada uno conserve su patrimonio'— buscaba estabilizar la sucesión, aunque en la práctica no logró evitar nuevas guerras entre príncipes rivales en las décadas siguientes."
+  },
+  {
+    "question": "Según una leyenda popular, ¿qué hazaña realizó Yaroslav el Sabio, dando origen simbólico al nombre de la ciudad que él mismo fundó a orillas del río Volga?",
+    "options": [
+      "Venció en duelo a un caudillo local pagano",
+      "Mató a un oso con un hacha en el lugar donde luego fundó Yaroslavl",
+      "Encontró una fuente sagrada que dio nombre al asentamiento",
+      "Cruzó el río a nado para elegir la ubicación de la ciudad"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Según la leyenda, los habitantes paganos del lugar soltaron un oso amaestrado contra el príncipe, quien lo abatió con su hacha; el oso con hacha sigue apareciendo hoy en el escudo de armas de la ciudad de Yaroslavl."
+  },
+  {
+    "question": "¿Qué tipo de asentamientos fortificados eslavos, rodeados de empalizadas de madera y fosos defensivos, existían ya en la región mucho antes de la llegada legendaria de Riurik y sus hermanos varegos en el siglo IX?",
+    "options": [
+      "Los 'gorodishcha' o poblados fortificados eslavos",
+      "Los castros célticos orientales",
+      "Los kremlin de piedra",
+      "Las 'stanitsa' cosacas"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Estos primitivos poblados fortificados, precursores de las futuras ciudades de la Rus, demuestran que la organización política y defensiva eslava en la región ya existía antes de la llegada de los guerreros escandinavos que tradicionalmente se asocian con la fundación del estado."
+  },
+  {
+    "question": "¿Cómo se llamaba el remoto principado de la Rus situado junto al mar de Azov, en la península de Tamán, prácticamente aislado del resto de los territorios rusos y rodeado de pueblos túrquicos y del Cáucaso norte?",
+    "options": [
+      "El principado de Riazán",
+      "El principado de Turov",
+      "El principado de Tmutarakán",
+      "El principado de Múrom"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a su enorme distancia y aislamiento geográfico respecto a Kiev, Tmutarakán mantuvo durante un tiempo vínculos dinásticos y comerciales con el resto de la Rus, sirviendo de puesto avanzado hacia el mundo estepario y bizantino."
+  },
+  {
+    "question": "¿Qué ciudad, situada al norte de Kiev y gobernada durante generaciones por una rama rival de la dinastía descendiente de Riurik, ocupaba el segundo lugar en prestigio dentro del sistema jerárquico de sucesión de tronos de la Rus?",
+    "options": [
+      "Pólotsk",
+      "Chernígov",
+      "Smolensk",
+      "Pskov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Chernígov, gobernada tradicionalmente por la línea de los Sviatoslávichi, era el segundo trono en importancia tras Kiev dentro del sistema de sucesión escalonada, y sus príncipes disputaron en más de una ocasión el propio trono kievita."
+  },
+  {
+    "question": "¿Qué acuerdo alcanzaron los príncipes Yaroslav el Sabio y su hermano Mstislav tras la batalla de Listven en 1024, dividiendo la Rus en dos zonas de influencia a lo largo del río Dniéper?",
+    "options": [
+      "Yaroslav gobernó al oeste del Dniéper y Mstislav al este, con capital en Chernígov",
+      "Mstislav cedió todo el poder a Yaroslav a cambio de tierras en Tmutarakán",
+      "Ambos gobernaron conjuntamente Kiev en co-regencia",
+      "Se sorteó el territorio entre ambos hermanos ante un consejo de boyardos"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este reparto pacífico, poco habitual entre príncipes rivales de la época, se mantuvo hasta la muerte de Mstislav en 1036 sin heredero varón, momento en que Yaroslav reunificó toda la Rus bajo su gobierno."
+  },
+  {
+    "question": "¿Contra qué campeón de la tribu caucásica de los kasogos se batió en singular combate el príncipe Mstislav de Tmutarakán, según narra la crónica, venciéndolo y sometiendo después a su pueblo?",
+    "options": [
+      "Kurya",
+      "Redediá",
+      "Bonyak",
+      "Konchak"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes del combate, Redediá propuso resolver el enfrentamiento entre ambos ejércitos con una lucha cuerpo a cuerpo entre los dos líderes; Mstislav lo venció y, según la tradición, fundó una iglesia en agradecimiento por la victoria."
+  },
+  {
+    "question": "¿Qué ocurrió en Kiev en el año 968, mientras el príncipe Sviatoslav se encontraba lejos combatiendo en los Balcanes, dejando la ciudad prácticamente indefensa frente a un enemigo estepario?",
+    "options": [
+      "Los jázaros reconquistaron brevemente la ciudad",
+      "Un incendio destruyó buena parte del casco antiguo",
+      "Los búlgaros del Volga lanzaron una incursión de castigo",
+      "Los pechenegos sitiaron la ciudad, defendida por su madre, la princesa Olga, y sus hijos pequeños"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Al recibir noticias del asedio, Sviatoslav regresó apresuradamente y logró levantar el cerco, aunque el episodio demostró los riesgos de mantener al gobernante tan alejado del centro político de la Rus."
+  },
+  {
+    "question": "¿A qué princesa de la Rus se atribuye tradicionalmente, según algunas versiones de la leyenda local, el haber fundado la ciudad de Pskov tras contemplar el lugar de confluencia de dos ríos durante un viaje?",
+    "options": [
+      "A la princesa Malfrida",
+      "A la princesa Olga",
+      "A la princesa Ana",
+      "A la princesa Rogneda"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Olga, nacida según la tradición en la propia región de Pskov, es recordada localmente como fundadora simbólica de la ciudad, aunque los primeros asentamientos en el lugar son en realidad anteriores a su época."
+  },
+  {
+    "question": "¿Cómo se conoce a un sistema de antiguas murallas y terraplenes defensivos, de varios cientos de kilómetros de longitud, construidos al sur de Kiev para proteger a la Rus de las incursiones de pueblos nómadas de la estepa, y que el folclore atribuye a un legendario matador de serpientes?",
+    "options": [
+      "Las 'Murallas de Yaroslav'",
+      "La 'Línea de Vladímir'",
+      "El 'Foso de Pereyaslavl'",
+      "Los 'Zmiyevy Valy' (Terraplenes de la Serpiente)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque su construcción real data de los siglos IX al XI y respondía a necesidades defensivas concretas contra pechenegos y otros pueblos esteparios, la tradición popular vinculó estas gigantescas obras con leyendas sobre un héroe que sometió a una serpiente monstruosa y la obligó a arar la tierra con un arado gigante."
+  },
+  {
+    "question": "¿Cuántas veces fue expulsado de Kiev por levantamientos populares el gran príncipe Izyaslav I, hijo de Yaroslav el Sabio, antes de recuperar finalmente el trono con ayuda militar polaca?",
+    "options": [
+      "Tres veces",
+      "Nunca fue expulsado",
+      "Dos veces",
+      "Una sola vez"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Izyaslav fue depuesto en dos ocasiones distintas por revueltas de la población kievita, descontenta con su gobierno; en ambos casos logró regresar al trono, aunque su reinado estuvo marcado por una notable inestabilidad política."
+  },
+  {
+    "question": "¿Qué levantamiento popular de 1113 en Kiev, dirigido contra los abusivos prestamistas de la ciudad, llevó al poder al respetado príncipe Vladímir Monómaj, entonces ya de edad avanzada?",
+    "options": [
+      "El levantamiento de Kiev de 1113",
+      "La revuelta de los artesanos de 1097",
+      "La sublevación de los pescadores del Dniéper",
+      "El motín del mercado de 1125"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Los kievitas, hartos de las tasas de interés usureras impuestas por algunos prestamistas cercanos al príncipe fallecido, se rebelaron e invitaron directamente a Vladímir Monómaj —fuera del orden habitual de sucesión— a gobernar la ciudad para restaurar el orden."
+  },
+  {
+    "question": "¿Cómo se conoce al sistema de herencia territorial de la Rus fragmentada, por el cual cada príncipe recibía en vida un territorio propio ('udel') que después transmitía a sus propios descendientes, en lugar de devolverlo al conjunto dinástico?",
+    "options": [
+      "El sistema de 'udely' (apanajes)",
+      "El sistema de 'kormlenie'",
+      "El régimen de 'votchina' colectiva",
+      "El sistema de 'pomestie'"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este sistema, que sustituyó gradualmente al antiguo orden de sucesión escalonada entre hermanos, aceleró la fragmentación territorial de la Rus en numerosos principados cada vez más pequeños e independientes entre sí."
+  },
+  {
+    "question": "Según la Crónica de Néstor, ¿qué dos hermanos de Riúrik lo acompañaron al llegar a gobernar territorios eslavos y fineses en el siglo IX, estableciéndose respectivamente en Beloózero e Izborsk, antes de morir ambos pocos años después?",
+    "options": [
+      "Sineus y Truvor",
+      "Askold y Dir",
+      "Rogvolod y Turov",
+      "Oleg y Igor"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tras la temprana muerte de Sineus y Truvor, Riúrik quedó como único gobernante de los tres territorios, consolidando así el núcleo original del poder varego que daría origen a la futura Rus de Kiev."
+  },
+  {
+    "question": "¿Qué mercancía, obtenida de animales como la marta y el armiño, constituía uno de los principales productos de tributo y comercio de la Rus medieval, tan valiosa que a veces funcionaba prácticamente como una forma de moneda?",
+    "options": [
+      "Las pieles de animales de caza",
+      "El lino cultivado en el norte",
+      "La sal de los lagos del sur",
+      "La cera de abejas silvestres"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Las pieles finas, especialmente de marta cibelina, eran tan apreciadas en los mercados de Bizancio y Europa occidental que su comercio impulsó buena parte de la prosperidad de ciudades como Nóvgorod, situadas cerca de los territorios de caza del norte."
+  },
+  {
+    "question": "Tras la muerte sin heredero varón de su hermano Mstislav en 1036, ¿qué logró finalmente el príncipe Yaroslav el Sabio respecto al territorio de la Rus, que hasta entonces había estado dividido desde la batalla de Listven?",
+    "options": [
+      "Repartió el territorio unificado entre sus propios hijos de inmediato",
+      "Reunificó todo el territorio bajo su único gobierno",
+      "Mantuvo la división, gobernando solo la mitad occidental",
+      "Cedió el territorio oriental a un tercer hermano"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Con la reunificación de 1036, Yaroslav alcanzó el apogeo de su poder personal, gobernando sin rivales sobre la totalidad de la Rus hasta su propia muerte en 1054, cuando repartiría el territorio entre sus hijos."
+  },
+  {
+    "question": "¿Qué peligroso punto del curso del río Dniéper, descrito con detalle por el emperador bizantino Constantino Porfirogéneto en su obra 'Sobre la administración del Imperio', obligaba a los mercaderes rusos a desembarcar y transportar sus barcas por tierra, expuestos a ataques de los pechenegos?",
+    "options": [
+      "El delta del Danubio",
+      "El paso de Perekop",
+      "Los raudales o cataratas del Dniéper",
+      "El estrecho del Bósforo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Este tramo del Dniéper, con varios saltos rocosos que hacían imposible la navegación directa, era uno de los puntos más peligrosos de toda la ruta comercial 'de los varegos a los griegos', y las crónicas registran numerosos ataques pecenegos contra las caravanas allí detenidas."
+  },
+  {
+    "question": "¿Qué destino sufrió el príncipe Rostislav de Tmutarakán, exitoso gobernante que había extendido la influencia rusa entre los pueblos del Cáucaso norte, en el año 1066?",
+    "options": [
+      "Fue depuesto por sus propios súbditos y exiliado",
+      "Fue envenenado por un agente enviado desde Bizancio, alarmado por su creciente poder",
+      "Murió en combate contra los cumanos",
+      "Falleció de una enfermedad tras un largo asedio"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Según la crónica, un funcionario bizantino compartió una copa envenenada con Rostislav en un banquete aparentemente amistoso, revelándole la verdad —y su propia muerte inminente por el mismo veneno— solo después de que el príncipe hubiera bebido."
+  },
+  {
+    "question": "¿Cómo se conoce a la colección de relatos edificantes sobre la vida, los milagros y las virtudes de los monjes del Monasterio de las Cuevas de Kiev, compilada a lo largo de los siglos XII y XIII y muy leída durante toda la Rus medieval?",
+    "options": [
+      "El Patericón de las Cuevas de Kiev",
+      "El Sinaxario de Nóvgorod",
+      "La Vida de los Santos de Chernígov",
+      "El Menologio de Vladímir"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Estos relatos, que mezclan hagiografía con anécdotas de la vida cotidiana monástica, ofrecen una de las fuentes más vívidas para conocer la vida religiosa y social de la Rus medieval, más allá de los sucesos puramente políticos registrados en las crónicas."
+  },
+  {
+    "question": "¿Qué brutal episodio de 1097, en el que el príncipe Vasilko de Terebovl fue cegado por orden de otros príncipes rivales durante una supuesta reunión de paz, escandalizó profundamente a toda la Rus y violó el espíritu del reciente pacto de Liubech?",
+    "options": [
+      "El cegamiento del príncipe Vasilko de Terebovl",
+      "El envenenamiento del príncipe Yaropolk",
+      "La masacre de la corte de Turov",
+      "El asesinato del príncipe Gleb de Múrom"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El crimen, cometido apenas un año después de que los príncipes hubieran jurado en Liubech respetar los territorios ajenos, provocó una indignación tan generalizada entre el resto de los gobernantes de la Rus que estuvo a punto de desencadenar una guerra general de castigo contra sus responsables."
+  },
+  {
+    "question": "¿Qué dos versiones distintas del código legal 'Rússkaya Pravda' conservan los manuscritos medievales, una más breve y antigua y otra mucho más extensa y detallada, redactada posteriormente bajo Vladímir Monómaj?",
+    "options": [
+      "La 'Pravda de Kiev' y la 'Pravda de Nóvgorod'",
+      "La 'Pravda Antigua' y la 'Pravda Reformada'",
+      "La 'Pravda Breve' y la 'Pravda Extensa'",
+      "La 'Pravda Real' y la 'Pravda Popular'"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Mientras la versión breve se limita principalmente a normas sobre delitos violentos y su compensación, la versión extensa añade regulaciones mucho más detalladas sobre comercio, herencias, préstamos y relaciones de dependencia económica, reflejando una sociedad ya considerablemente más compleja."
+  },
+  {
+    "question": "¿En qué año atacaron por primera vez los guerreros de la Rus, liderados según la tradición por Askold y Dir, la propia Constantinopla, sorprendiendo a un imperio bizantino que hasta entonces apenas conocía la existencia de este pueblo del norte?",
+    "options": [
+      "El año 860",
+      "El año 907",
+      "El año 988",
+      "El año 941"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El ataque de 860, que tomó por completo desprevenida a la capital bizantina —cuyo emperador se encontraba entonces en campaña militar lejos de la ciudad—, marcó el primer contacto violento documentado entre la Rus y el Imperio bizantino, décadas antes de las más célebres campañas de Oleg."
+  },
+  {
+    "question": "¿Qué segundo tratado comercial y militar entre la Rus y el Imperio bizantino, firmado en el año 944 por el propio príncipe Ígor tras una campaña militar menos exitosa que la de su predecesor Oleg, estableció condiciones algo menos favorables para los rusos que el acuerdo anterior?",
+    "options": [
+      "El Tratado de Ígor de 944",
+      "El Pacto de Constantinopla de 950",
+      "El Tratado de Sviatoslav de 971",
+      "El segundo Tratado de Oleg"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A diferencia del generoso tratado logrado por Oleg en 911, el acuerdo de 944 impuso mayores restricciones al comercio ruso en territorio bizantino, reflejo probablemente del fracaso relativo de la campaña militar previa de Ígor contra el imperio."
+  },
+  {
+    "question": "¿Qué asentamiento, situado a orillas del río Volhov y con hallazgos arqueológicos —incluidas inscripciones rúnicas— fechados mediante dendrocronología ya en el año 753, es considerado por muchos historiadores el núcleo urbano más antiguo vinculado a la presencia varega en el territorio de la futura Rus?",
+    "options": [
+      "Beloózero",
+      "Izborsk",
+      "Stáraya Ládoga",
+      "Nóvgorod"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Las excavaciones en Stáraya Ládoga han revelado capas de ocupación continua desde mediados del siglo VIII, con abundante presencia de objetos escandinavos, eslavos y fineses mezclados, evidencia del carácter multiétnico de este temprano centro comercial fluvial."
+  },
+  {
+    "question": "¿Qué princesa de Pólotsk fue obligada a casarse con el príncipe Vladímir tras el asesinato de su padre y hermanos a manos de este, y que años después intentó, sin éxito, asesinarlo mientras dormía en venganza?",
+    "options": [
+      "Predslava",
+      "Anastasia",
+      "Rogneda",
+      "Malusha"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Según la crónica, Vladímir descubrió el intento de asesinato y estuvo a punto de ejecutar personalmente a Rogneda, deteniéndose solo ante la súplica de su propio hijo pequeño; el episodio refleja la violencia extrema que a menudo acompañaba los matrimonios políticos de la época."
+  },
+  {
+    "question": "¿Cómo se llama el héroe legendario del folclore ruso, un curtidor de pieles convertido en poderoso guerrero, que según la tradición popular venció con sus propias manos a un temible dragón o gigante que amenazaba Kiev, dando origen también a leyendas sobre el arado de los 'Zmiyevy Valy'?",
+    "options": [
+      "Vaska Buslayev",
+      "Nikita Kozhemiaka",
+      "Dobrinia Nikítich",
+      "Churila Plenkóvich"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque figura menos conocida internacionalmente que Iliá Múromets, Nikita Kozhemiaka ocupa un lugar destacado en el folclore ruso, y su leyenda de haber uncido a la bestia derrotada a un arado gigante para trazar un surco defensivo se asocia popularmente con el origen de las antiguas murallas de tierra al sur de Kiev."
+  },
+  {
+    "question": "¿Qué principio general seguía la 'Rússkaya Pravda' para castigar la mayoría de los delitos, incluido el homicidio, en lugar de aplicar penas corporales o de muerte como solía ser habitual en otros códigos medievales europeos de la época?",
+    "options": [
+      "Una escala de compensaciones económicas (el 'vira') según la gravedad del delito y el estatus social de la víctima",
+      "La expulsión permanente del territorio del culpable",
+      "El servicio obligatorio de por vida a la víctima o su familia",
+      "La confiscación total de bienes sin excepción, sin importar el delito"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este sistema de compensación monetaria escalonada, con montos distintos según si la víctima era un príncipe, un hombre libre o un siervo, refleja una sociedad que priorizaba, al menos formalmente, restaurar el equilibrio económico y social por encima del castigo corporal directo."
+  },
+  {
+    "question": "¿Con qué gobernante extranjero se alió el príncipe Sviatopolk, tras ser expulsado de Kiev por su hermanastro Yaroslav, para intentar recuperar el trono con ayuda militar externa, obteniendo así el apodo posterior de 'el Maldito'?",
+    "options": [
+      "El rey de Suecia Olaf Skötkonung",
+      "El emperador bizantino Basilio II",
+      "El rey Boleslao I de Polonia, su suegro",
+      "El kan de los pechenegos"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque logró recuperar brevemente Kiev con ayuda del ejército de su suegro polaco, Sviatopolk terminó siendo definitivamente derrotado por Yaroslav en la batalla del río Alta, y la crónica lo condenó posteriormente a la memoria histórica como responsable del asesinato de sus propios hermanos Borís y Gleb."
+  },
+  {
+    "question": "¿Qué ciudad fue saqueada brutalmente en 1169 por una coalición de príncipes liderada por el hijo de Andréi Bogoliubski, un episodio considerado por muchos historiadores como el momento simbólico en que Kiev perdió definitivamente su primacía política sobre el resto de la Rus?",
+    "options": [
+      "Kiev",
+      "Smolensk",
+      "Chernígov",
+      "Pereyaslavl"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El hecho de que un príncipe de Vladímir-Súzdal ordenara saquear la propia Kiev —hasta entonces la ciudad más venerada de toda la Rus— sin siquiera trasladar su corte allí después, mostró que el centro real de poder político se había desplazado ya definitivamente hacia el noreste."
+  },
+  {
+    "question": "¿Cómo se conoce al debate historiográfico, iniciado ya en el siglo XVIII y todavía vivo entre especialistas, sobre si el Estado de la Rus fue fundado principalmente por guerreros escandinavos (varegos) o si su origen fue predominantemente eslavo con una participación varega solo secundaria?",
+    "options": [
+      "El debate eslavófilo-occidentalista",
+      "La controversia normanista",
+      "La polémica del Rurikato",
+      "La disputa de los cronistas"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La cuestión, lejos de ser meramente académica, adquirió en distintas épocas connotaciones políticas e ideológicas, con historiadores rusos e internacionales defendiendo posiciones encontradas según el peso relativo que atribuían a la aristocracia guerrera escandinava frente a las estructuras sociales eslavas preexistentes."
+  },
+  {
+    "question": "Además de los pueblos eslavos, ¿qué otro grupo de tribus, de origen fino-úgrico como los chud, los meria y los ves, pagaba también tributo a los primeros gobernantes varegos de la Rus según la Crónica de Néstor?",
+    "options": [
+      "Los pueblos túrquicos de la estepa",
+      "Los pueblos germánicos del Báltico",
+      "Los pueblos bálticos del oeste",
+      "Los pueblos fino-úgricos del norte y noreste"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La convivencia e integración gradual de estos pueblos fino-úgricos con la población eslava y varega fue un proceso fundamental, aunque poco documentado en detalle, en la formación étnica y territorial de la futura Rus, especialmente en las regiones del noreste que después darían lugar a Moscú."
+  },
+  {
+    "question": "¿Qué decisión religiosa adoptó la élite gobernante del Kaganato Jázaro hacia el siglo VIII o IX, situándose así en una posición única entre los estados vecinos de la época, rodeados como estaban de potencias cristianas e islámicas?",
+    "options": [
+      "Mantuvo un politeísmo túrquico tradicional sin cambios",
+      "Adoptó el judaísmo como religión de la clase dirigente",
+      "Se convirtió al maniqueísmo persa",
+      "Adoptó el budismo procedente de Asia central"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La conversión de la aristocracia jázara al judaísmo —mientras buena parte de la población general probablemente mantenía otras creencias— convirtió a este poderoso estado túrquico de la estepa en un caso singular en la historia religiosa medieval, situado geopolíticamente entre el Califato islámico y el Imperio bizantino cristiano."
+  },
+  {
+    "question": "Además de Ana, casada con el rey de Francia, ¿con qué gobernante extranjero se casó otra hija de Yaroslav el Sabio, Isabel (Elisif), llegando a ser reina consorte de un reino escandinavo antes de que su esposo muriera invadiendo Inglaterra en 1066?",
+    "options": [
+      "El rey Canuto el Grande de Dinamarca",
+      "El rey Enrique III de Alemania",
+      "El rey Harald Hardrada de Noruega",
+      "El rey Esteban I de Hungría"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Harald Hardrada, antes de convertirse en rey de Noruega, había servido incluso como mercenario en la Guardia Varega de Constantinopla; su matrimonio con Isabel de Kiev refleja la amplia red de conexiones dinásticas que unía a la corte de Yaroslav el Sabio con buena parte de la Europa de su época."
+  },
+  {
+    "question": "¿Qué levantamiento popular de 1024, protagonizado por 'magos' o hechiceros paganos en la región de Súzdal en pleno contexto de hambruna, y dirigido en parte contra la nobleza cristiana local, tuvo que ser sofocado personalmente por Yaroslav el Sabio?",
+    "options": [
+      "El levantamiento de los magos de Súzdal",
+      "La sublevación de Múrom",
+      "El motín de los ancianos de Beloózero",
+      "La revuelta pagana de Rostov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El episodio revela que, más de tres décadas después de la conversión oficial de Vladímir, las creencias paganas seguían profundamente arraigadas en algunas regiones periféricas de la Rus, y podían resurgir con fuerza especial en momentos de crisis económica y social como una hambruna severa."
+  },
+  {
+    "question": "¿Cómo se llama el manuscrito religioso ruso más antiguo que se conserva con una fecha exacta conocida, elaborado entre 1056 y 1057 para un noble de Nóvgorod y considerado una obra maestra temprana de la caligrafía y el arte del libro eslavo oriental?",
+    "options": [
+      "El Evangelio de Ostromir",
+      "El Codex Suprasliensis",
+      "El Salterio de Kiev",
+      "El Evangeliario de Réims"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Encargado por el 'posádnik' (gobernador) Óstromir de Nóvgorod, este evangeliario, ricamente iluminado con miniaturas de estilo bizantino, ofrece a los historiadores un punto de referencia cronológico preciso y fundamental para datar la evolución posterior de la escritura y el arte del libro en toda la Rus medieval."
+  },
+  {
+    "question": "¿Qué monje del Monasterio de las Cuevas de Kiev realizó en 1116 una importante redacción revisada de la Crónica de Néstor, introduciendo cambios y añadidos al texto original que hoy dificultan reconstruir con precisión la versión más antigua?",
+    "options": [
+      "Silvestre",
+      "Nifont de Nóvgorod",
+      "Teodosio",
+      "Nicón el Grande"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La existencia de esta y otras redacciones posteriores explica por qué los historiadores modernos deben comparar cuidadosamente distintos manuscritos supervivientes para intentar reconstruir el contenido más cercano posible a la versión original de la crónica, hoy perdida en su forma primigenia."
+  },
+  {
+    "question": "¿Qué príncipe, hijo de Vladímir Monómaj, es considerado el fundador de la línea dinástica que gobernaría Smolensk como principado propio y separado a partir del siglo XII?",
+    "options": [
+      "Gleb Vladímirovich",
+      "Sviatoslav Ígorevich",
+      "Vsévolod Yaroslávich",
+      "Rostislav Mstislávich"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Bajo el gobierno de Rostislav y sus descendientes, Smolensk se convirtió en uno de los principados más prósperos y estables de la Rus fragmentada, gracias en parte a su posición estratégica sobre importantes rutas comerciales fluviales hacia el Báltico y el Dniéper."
+  },
+  {
+    "question": "¿Qué príncipe de Kiev, hermano mayor de Vladímir, gobernó brevemente antes de ser asesinado por orden del propio Vladímir en una lucha fratricida por el trono, tras la muerte de su padre Sviatoslav?",
+    "options": [
+      "Oleg de Drevlia",
+      "Sviatopolk el Maldito",
+      "Vsévolod el Grande",
+      "Yarópolk I"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Yarópolk había gobernado Kiev tras derrotar y provocar indirectamente la muerte de su propio hermano Oleg; poco después sería a su vez traicionado y asesinado por hombres de su hermano menor Vladímir, quien de esta forma se convirtió en único gobernante de toda la Rus."
+  },
+  {
+    "question": "¿Qué principado del oeste de la Rus, con centro en una ciudad del mismo nombre a orillas del río Pripiat, estuvo tradicionalmente asociado al príncipe Sviatopolk antes de que este intentara, sin éxito duradero, hacerse con el trono de Kiev?",
+    "options": [
+      "El principado de Drogóbich",
+      "El principado de Turov",
+      "El principado de Volinia",
+      "El principado de Galitzia"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Turov, situado en una región de bosques y pantanos del oeste de la Rus, funcionaba tradicionalmente como base de poder para príncipes menores de la dinastía, y su posesión por parte de Sviatopolk antes de su intento fallido de apoderarse de Kiev refleja el papel de estos principados periféricos como plataformas de ambición dinástica."
+  },
+  {
+    "question": "¿Cuál era, según la Crónica de Néstor, el origen social de Malusha, la madre del príncipe Vladímir, un dato que generó cierta controversia sobre la legitimidad de su ascenso al trono frente a sus hermanastros de origen más noble?",
+    "options": [
+      "Era hija de un noble bizantino exiliado",
+      "Era una princesa pechenega capturada en guerra",
+      "Era hermana de un poderoso boyardo de Nóvgorod",
+      "Era una sierva (ama de llaves) al servicio de la princesa Olga"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El origen relativamente humilde de la madre de Vladímir, contrastado con la ascendencia más prestigiosa de otros posibles herederos, se convirtió en un argumento usado por sus rivales dinásticos para cuestionar su legitimidad, aunque finalmente no impidió su ascenso al trono tras la muerte de su padre."
+  },
+  {
+    "question": "¿En qué tradiciones legales se inspiró en buena parte Yaroslav el Sabio al compilar la 'Rússkaya Pravda', combinando elementos del derecho consuetudinario eslavo con influencias identificables del derecho bizantino y de las costumbres legales escandinavas?",
+    "options": [
+      "El código legal jázaro adaptado al eslavo",
+      "Las leyes islámicas del califato abasí",
+      "El derecho consuetudinario eslavo, con influencias bizantinas y escandinavas",
+      "Exclusivamente el derecho romano clásico"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Esta mezcla de influencias refleja la naturaleza multicultural de la sociedad de la Rus de Kiev, situada en un cruce de rutas comerciales y culturales entre Escandinavia, el mundo bizantino y las estepas eslavas y túrquicas, cada una de las cuales dejó su huella en el desarrollo del derecho local."
+  },
+  {
+    "question": "¿Qué campaña militar de 1043, la última gran expedición bélica de la Rus contra el Imperio bizantino, fue dirigida por Vladímir, hijo de Yaroslav el Sabio, y terminó en un fracaso tras una tormenta que dispersó la flota rusa?",
+    "options": [
+      "La campaña de Sviatoslav contra Bizancio",
+      "El ataque de Ígor a las costas del mar Negro",
+      "El asedio de Oleg a Constantinopla",
+      "La expedición de Vladímir Yaroslávich contra Constantinopla"
+    ],
+    "correct_option_id": 3,
+    "explanation": "A diferencia de las campañas anteriores de Oleg e Ígor, esta expedición terminó en un rotundo fracaso militar, con buena parte de la flota rusa destruida por una tormenta o capturada por los bizantinos, marcando el fin definitivo de las grandes campañas navales de la Rus contra Constantinopla."
+  },
+  {
+    "question": "Antes de convertirse en gran príncipe de Kiev, ¿en qué principado fronterizo, frecuentemente expuesto a incursiones de pueblos esteparios como los polovtsianos, desarrolló Vladímir Monómaj buena parte de su temprana carrera militar y política?",
+    "options": [
+      "Pereyaslavl",
+      "Chernígov",
+      "Smolensk",
+      "Turov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La experiencia acumulada por Monómaj defendiendo esta expuesta frontera meridional contra las incursiones nómadas —logrando incluso varias campañas exitosas contra los propios polovtsianos en su propio territorio— contribuyó decisivamente al gran prestigio militar y político que le permitiría después ser invitado a gobernar Kiev."
+  },
+  {
+    "question": "¿Qué palabra de origen fino-báltico, empleada por los pueblos fineses vecinos para referirse a los suecos y, por extensión, a los varegos en general, es citada por algunos historiadores como posible raíz etimológica del propio término 'Rus'?",
+    "options": [
+      "'Austrvegr'",
+      "'Vikinga'",
+      "'Normanni'",
+      "'Ruotsi'"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Según esta teoría, ampliamente aunque no unánimemente aceptada, el término finés 'Ruotsi' —usado todavía hoy en finés moderno para referirse a Suecia— habría pasado primero a los eslavos como nombre para los guerreros y comerciantes escandinavos, para terminar aplicándose después al propio Estado que estos fundaron."
+  },
+  {
+    "question": "Además de la Crónica de los tiempos pasados, ¿qué otras dos obras hagiográficas se atribuyen tradicionalmente a la pluma del monje Néstor, dedicadas respectivamente a los primeros santos canonizados de la Rus y al fundador del propio monasterio donde vivía?",
+    "options": [
+      "La Vida de Borís y Gleb, y la Vida de Teodosio de las Cuevas",
+      "La Vida de Vladímir y la Vida de Olga",
+      "El Elogio a Yaroslav y la Vida de Antonio",
+      "La Homilía Pascual y el Sermón sobre la Ley y la Gracia"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Estas dos obras hagiográficas, escritas con un estilo narrativo cuidado y una clara intención edificante, complementan la labor cronística de Néstor y ofrecen una valiosa ventana adicional hacia la vida religiosa y los valores morales promovidos por la Iglesia de la Rus medieval."
+  },
+  {
+    "question": "¿Qué símbolo, un tridente o bidente estilizado usado como sello personal por varios grandes príncipes de la dinastía Rurikida, entre ellos el propio Vladímir en sus monedas, ha llegado hasta la actualidad como emblema estatal de un país moderno de la región?",
+    "options": [
+      "El grifo alado",
+      "El león rampante eslavo",
+      "El águila bicéfala",
+      "El tridente (trizub)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El origen exacto y el significado original de este símbolo dinástico, que aparece grabado en sellos y en las primeras monedas acuñadas por los príncipes de Kiev, sigue siendo objeto de debate entre historiadores, aunque su uso continuado por gobernantes sucesivos confirma su importancia como marca distintiva del poder principesco."
+  },
+  {
+    "question": "¿Qué tipo de mercancías de lujo bizantinas, entre ellas sedas, especias y vino, llegaban regularmente a la corte y la aristocracia de la Rus de Kiev a través de la ruta comercial fluvial que conectaba el mar Báltico con Constantinopla?",
+    "options": [
+      "Exclusivamente cerámica y vidrio decorativo",
+      "Solo objetos religiosos y libros litúrgicos",
+      "Únicamente armas y herramientas de hierro",
+      "Sedas, especias y vino, entre otros bienes de lujo bizantinos"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Este intenso comercio de lujo, documentado tanto por hallazgos arqueológicos como por fuentes escritas bizantinas, permitió a la aristocracia de la Rus acceder a bienes exóticos que reforzaban su estatus social, al tiempo que la propia Rus exportaba hacia Bizancio principalmente pieles, cera, miel y esclavos."
+  },
+  {
+    "question": "¿Qué dos monjes son tradicionalmente considerados los fundadores del Monasterio de las Cuevas de Kiev a mediados del siglo XI, estableciendo primero una humilde cueva excavada antes de que la comunidad monástica creciera hasta convertirse en un influyente centro religioso?",
+    "options": [
+      "Antonio y Teodosio",
+      "Néstor y Nicón",
+      "Isaía y Matías",
+      "Silvestre y Policarpo"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Mientras Antonio representaba el ideal ascético y eremítico original, retirado en la soledad de la cueva, Teodosio se encargó después de organizar la vida comunitaria del monasterio según una regla monástica más estructurada, combinando ambas tradiciones espirituales en la base fundacional de la que se convertiría en la institución religiosa más influyente de toda la Rus medieval."
+  },
+  {
+    "question": "¿Cómo se llamaba la reunión o asamblea de príncipes de la Rus, convocada ocasionalmente para negociar tratados de paz, repartos territoriales o alianzas militares conjuntas contra amenazas comunes como los pueblos esteparios?",
+    "options": [
+      "El 'veche' principesco",
+      "La 'duma' interprincipesca",
+      "El 'sobor' de gobernantes",
+      "El 'sniem' (congreso de príncipes)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Reuniones de este tipo, como la ya mencionada de Liubech en 1097, permitían a los frecuentemente enfrentados príncipes de la Rus alcanzar acuerdos temporales sobre cuestiones de interés común, aunque su carácter no vinculante hacía que los pactos alcanzados se rompieran a menudo poco tiempo después."
+  },
+  {
+    "question": "¿Qué término empleaba la 'Rússkaya Pravda' para designar a los campesinos libres de la Rus medieval, una categoría social distinta tanto de los siervos dependientes como de la aristocracia guerrera de los boyardos?",
+    "options": [
+      "Los 'smerdy'",
+      "Los 'ryadóvichi'",
+      "Los 'jólopy'",
+      "Los 'izgói'"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque técnicamente libres, los 'smerdy' estaban sujetos a obligaciones específicas hacia el príncipe y su condición legal, incluidas las normas de herencia de sus bienes en caso de morir sin hijos varones, aparece regulada con considerable detalle en el propio código de la Rússkaya Pravda."
+  },
+  {
+    "question": "¿Cómo se llama el manuscrito, copiado hacia el año 1425 y conservado hoy en San Petersburgo, que junto a la Crónica Laurenciana constituye una de las dos fuentes manuscritas más importantes y completas para reconstruir el texto de la Crónica de los tiempos pasados?",
+    "options": [
+      "La Crónica de Radziwiłł",
+      "La Crónica de Ipátiev",
+      "La Crónica de Nikón",
+      "El Códice de Tver"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Conservada originalmente en el monasterio de Ipátiev cerca de Kostromá, esta crónica incluye además, a diferencia de otras copias, una detallada continuación con crónicas regionales de Kiev y Galitzia-Volinia que se extienden bien entrado el siglo XIII."
+  },
+  {
+    "question": "¿Cómo se llama el manuscrito de 1377, copiado por el monje Lavrenti para el príncipe de Súzdal-Nizhni Nóvgorod, que constituye la copia más antigua conservada de la Crónica de los tiempos pasados?",
+    "options": [
+      "La Crónica de Ipátiev",
+      "El Sinodal de Nóvgorod",
+      "La Crónica de Vladímir",
+      "La Crónica Laurenciana"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a ser una copia relativamente tardía respecto a los sucesos que narra, la Crónica Laurenciana es fundamental para los historiadores precisamente por ser la más antigua conservada, sirviendo como referencia base para comparar y corregir otras versiones posteriores del mismo texto original."
+  },
+  {
+    "question": "¿Contra qué dos ciudades rivales, Nóvgorod y la propia Kiev, libró el príncipe Yuri Dolgoruki numerosas campañas militares a lo largo de su vida, buscando extender la influencia de su propio principado de Súzdal sobre el resto de la Rus?",
+    "options": [
+      "Nóvgorod y Kiev",
+      "Riazán y Múrom",
+      "Pólotsk y Turov",
+      "Chernígov y Smolensk"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Las repetidas guerras de Yuri Dolgoruki contra estas dos importantes ciudades, motivadas tanto por rivalidades comerciales como por sus propias ambiciones dinásticas de ocupar el trono de Kiev, reflejan cómo el ascenso del principado de Súzdal hacia el noreste implicó también un prolongado conflicto con los centros de poder tradicionales de la Rus."
+  },
+  {
+    "question": "¿Cómo se llamaba el antiguo sistema de sucesión de la Rus de Kiev, previo a la consolidación del régimen de apanajes hereditarios, según el cual el trono debía pasar siempre al miembro de mayor edad y prestigio dentro de toda la dinastía, y no directamente a un hijo del gobernante fallecido?",
+    "options": [
+      "El régimen de 'kormlenie'",
+      "El sistema de 'stárshinstvo' (antigüedad dinástica)",
+      "El principio de 'votchina' familiar",
+      "El sistema de 'udely' hereditarios"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Este complejo sistema, que en teoría buscaba asegurar que gobernara siempre el príncipe de mayor experiencia y prestigio dentro de toda la dinastía Rurikida, generó en la práctica constantes disputas sucesorias, ya que la definición exacta de quién tenía mayor derecho por antigüedad resultaba con frecuencia ambigua y discutible."
+  },
+  {
+    "question": "Según relata la crónica, ¿qué advertencia recibió Yaroslav el Sabio de parte de su propia hermana Predslava, permitiéndole escapar a tiempo de un ataque planeado en su contra por su hermanastro Sviatopolk?",
+    "options": [
+      "Le informó de una alianza secreta entre Sviatopolk y los pechenegos",
+      "Le advirtió sobre una conspiración de boyardos de Kiev en su contra",
+      "Le avisó en secreto de que Sviatopolk planeaba matarlo tras haber asesinado ya a otros hermanos",
+      "Le reveló la ubicación de un tesoro escondido por su padre"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Gracias al aviso oportuno de Predslava, que se enteró de los planes homicidas de Sviatopolk tras el asesinato de Borís y Gleb, Yaroslav pudo prepararse a tiempo para el enfrentamiento militar que finalmente lo llevaría a derrotar a su hermanastro y hacerse con el trono de Kiev."
+  },
+  {
+    "question": "¿Qué congreso de príncipes de la Rus, celebrado en 1103 cerca de Kiev, decidió organizar una gran campaña militar conjunta contra los polovtsianos, resultando en una notable victoria que alivió temporalmente la presión nómada sobre las fronteras meridionales?",
+    "options": [
+      "El Congreso de Dolobsk",
+      "La Asamblea de Vitíchev",
+      "El Consejo de Zarub",
+      "La Dieta de Percheiaslavl"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Impulsado especialmente por la insistencia de Vladímir Monómaj, que argumentó ante los demás príncipes que era mejor atacar a los polovtsianos en primavera, cuando sus caballos estaban débiles tras el invierno, este congreso condujo a una de las campañas conjuntas más exitosas de la Rus contra las tribus nómadas de la estepa."
+  },
+  {
+    "question": "Además de sus reformas legales y su célebre 'Testamento', ¿por qué otro logro militar destacó especialmente Vladímir Monómaj antes y durante su gobierno como gran príncipe de Kiev?",
+    "options": [
+      "Por conquistar definitivamente el kanato jázaro remanente",
+      "Por derrotar a una invasión bizantina del sur de la Rus",
+      "Por anexionar Nóvgorod al dominio directo de Kiev",
+      "Por dirigir numerosas y exitosas campañas militares contra los polovtsianos"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Monómaj lideró personalmente decenas de campañas contra los polovtsianos a lo largo de su carrera, logrando alejar significativamente la amenaza nómada de las fronteras meridionales de la Rus durante su gobierno, un logro militar que contribuyó decisivamente a su enorme prestigio y popularidad entre sus contemporáneos."
+  },
+  {
+    "question": "¿Qué crónica regional, centrada específicamente en los sucesos del principado fronterizo de Pereyaslavl y hoy conocida principalmente por fragmentos conservados en compilaciones posteriores, complementa el relato más general ofrecido por la Crónica de Néstor?",
+    "options": [
+      "La Crónica de Volinia Menor",
+      "La Crónica de Pereyaslavl-Súzdal",
+      "La Crónica del Don",
+      "El Sinaxario de Chernígov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque menos conocida y peor conservada que las grandes crónicas de Kiev o Nóvgorod, esta fuente regional ofrece a los historiadores detalles adicionales valiosos sobre la vida de un principado fronterizo particularmente expuesto a las incursiones esteparias, complementando así la visión más centralizada de las crónicas principales."
+  },
+  {
+    "question": "¿Qué princesa de Pólotsk, nieta de Vseslav 'el Hechicero' y posteriormente canonizada como santa, fundó en el siglo XII varios monasterios en su ciudad natal y encargó la elaboración de una célebre cruz relicario ricamente decorada que hoy lleva su nombre?",
+    "options": [
+      "Predslava de Pólotsk",
+      "Rogneda de Pólotsk",
+      "Eufrosinia de Pólotsk",
+      "Anastasia de Pólotsk"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Eufrosinia, que renunció a un matrimonio ventajoso para dedicarse a la vida monástica, encargó al orfebre local Lazar Bogsha una elaborada cruz de madera revestida de oro, plata y piedras preciosas que se convirtió en una de las reliquias más veneradas de toda la Rus medieval, aunque desaparecería trágicamente durante el siglo XX."
+  },
+  {
+    "question": "¿De qué crimen concreto, cometido en 1015 poco después de la muerte de Vladímir, fue responsable el príncipe Sviatopolk, ordenando el asesinato de sus propios hermanastros menores Borís y Gleb antes de que estos pudieran disputarle el trono de Kiev?",
+    "options": [
+      "Ordenó el asesinato de Borís y Gleb, quienes se negaron a levantar armas contra su propio hermano",
+      "Los obligó a ingresar por la fuerza en un monasterio remoto",
+      "Envenenó a ambos durante un banquete de reconciliación familiar",
+      "Los desterró a Bizancio, donde murieron años después en el exilio"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Lo que hizo especialmente conmovedor este crimen para los cronistas medievales fue la actitud de las propias víctimas: tanto Borís como Gleb, siguiendo un ideal cristiano de no resistencia, se negaron deliberadamente a defenderse o a levantar un ejército contra su hermano, aceptando la muerte con una resignación que llevaría después a su canonización como los primeros santos propiamente rusos."
+  },
+  {
+    "question": "¿Con qué descripción geográfica general comienza la propia Crónica de los tiempos pasados, situando a los eslavos y sus vecinos dentro de un marco más amplio derivado en parte de tradiciones bíblicas y geográficas bizantinas heredadas?",
+    "options": [
+      "Un listado exhaustivo de las tribus eslavas y sus respectivos territorios sin referencias bíblicas",
+      "Una comparación directa entre el territorio de la Rus y el del Imperio romano",
+      "Un mapa detallado de las rutas comerciales del Báltico al mar Negro",
+      "Una descripción del reparto del mundo entre los hijos de Noé tras el Diluvio, ubicando a los eslavos en la porción correspondiente a Jafet"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Siguiendo un modelo historiográfico común en las crónicas cristianas medievales, Néstor enmarca el origen de los pueblos eslavos dentro de una narrativa bíblica universal, vinculando la geografía y los orígenes étnicos conocidos de su época con la tradición del reparto de la tierra entre los descendientes de Noé tras el Diluvio."
+  },
+  {
+    "question": "Según estimaciones de historiadores modernos basadas en el área ocupada y los hallazgos arqueológicos, ¿aproximadamente cuántos habitantes podría haber tenido Kiev en su momento de mayor esplendor durante el siglo XI, una cifra considerable para los estándares de la Europa medieval de la época?",
+    "options": [
+      "Más de 200,000 habitantes",
+      "Menos de 5,000 habitantes",
+      "Alrededor de 30,000 a 50,000 habitantes",
+      "Aproximadamente 100,000 habitantes"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque las cifras exactas siguen siendo objeto de debate académico, una población estimada de varias decenas de miles de habitantes situaría a Kiev, en su apogeo, entre las ciudades más pobladas de toda Europa medieval, comparable en tamaño a algunas de las principales ciudades de Europa occidental de la misma época."
+  },
+  {
+    "question": "¿Qué principado del oeste de la Rus, gobernado en el siglo XI por el príncipe Vasilko —el mismo que sería cegado tras el pacto de Liubech—, mantenía frecuentes conflictos fronterizos tanto con Polonia como con los húngaros vecinos?",
+    "options": [
+      "El principado de Terebovl independiente",
+      "El principado de Turov-Pinsk",
+      "El principado de Vladímir-Volinia",
+      "El principado de Peremyshl"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Situado en una región fronteriza especialmente expuesta a la influencia y las incursiones de sus vecinos occidentales, el principado de Volinia desarrolló con el tiempo vínculos culturales y políticos particularmente estrechos con Polonia y Hungría, un rasgo distintivo que marcaría también el posterior desarrollo del vecino principado de Galitzia."
+  },
+  {
+    "question": "¿Qué pequeño principado del oeste de la Rus, centrado en dos ciudades cercanas entre sí, mantuvo una existencia política relativamente modesta y poco documentada en comparación con otros centros de poder más prominentes como Kiev, Nóvgorod o Vladímir-Súzdal?",
+    "options": [
+      "El principado de Belz",
+      "El principado de Dorogobuzh",
+      "El principado de Peremyshl",
+      "El principado de Turov-Pinsk"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a su relativa oscuridad histórica frente a otros grandes centros de la Rus, Turov-Pinsk conservó durante generaciones su propia línea dinástica de gobernantes, y su territorio, situado en una región de extensos pantanos boscosos, funcionó como una suerte de refugio periférico relativamente aislado de los grandes conflictos entre los principados más poderosos."
+  },
+  {
+    "question": "¿Qué tipo de asentamientos fortificados construyó el príncipe Vladímir a lo largo de las fronteras meridionales de la Rus, entre ellos localidades como Zvenígorod, con el fin de crear una línea defensiva permanente contra las incursiones de los pechenegos?",
+    "options": [
+      "Campamentos militares temporales desmontados cada invierno",
+      "Monasterios fortificados administrados directamente por la Iglesia",
+      "Simples torres de vigilancia sin población permanente",
+      "Ciudades-fortaleza fronterizas guarnecidas con soldados reclutados de distintas regiones de la Rus"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Según la crónica, Vladímir pobló deliberadamente estas nuevas ciudades fronterizas con hombres reclutados de diversas regiones de la Rus —eslovenos, krívichi y otros—, buscando crear una defensa permanente y diversificada capaz de resistir mejor las incursiones esteparias que amenazaban constantemente el territorio meridional de su reino."
+  },
+  {
+    "question": "Según la Crónica de Néstor, ¿qué motivo llevó a las tribus eslavas y fineses del norte, cansadas de sus propias disputas internas, a invitar hacia el año 862 al varego Riúrik y sus hermanos a gobernarlas, en el episodio conocido como la 'Invitación de los Varegos'?",
+    "options": [
+      "Buscaban establecer una alianza comercial exclusiva con Escandinavia",
+      "Deseaban forzar la conversión al cristianismo de todas las tribus",
+      "Necesitaban protección militar urgente frente a una invasión bizantina",
+      "Buscaban un gobernante externo capaz de poner orden tras años de conflictos internos entre ellas mismas"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El relato cronístico, célebre por su frase 'nuestra tierra es grande y abundante, pero no hay en ella orden', describe cómo las propias tribus, hartas de guerras intestinas, decidieron buscar un gobernante externo capaz de imponer una autoridad estable; los historiadores debaten hoy hasta qué punto este relato refleja hechos reales o una narrativa legendaria construida posteriormente para legitimar a la dinastía Rurikida."
+  },
+  {
+    "question": "¿En qué año logró Yaroslav el Sabio infligir una derrota tan decisiva a los pechenegos frente a los muros de Kiev que este pueblo nómada dejó de representar una amenaza significativa para la Rus, siendo desplazado poco después por otros pueblos esteparios como los polovtsianos?",
+    "options": [
+      "1036",
+      "1097",
+      "1019",
+      "1054"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tras esta aplastante victoria, conmemorada según la tradición con la construcción de la Catedral de Santa Sofía en el mismo lugar de la batalla, los pechenegos perdieron definitivamente su capacidad de amenazar seriamente a Kiev, siendo gradualmente absorbidos o desplazados por otros pueblos túrquicos que llegarían después a la región, como los polovtsianos (cumanos)."
+  },
+  {
+    "question": "¿Quién se convirtió en 1051 en el primer metropolitano de Kiev de origen eslavo, y no griego, al ser nombrado directamente por Yaroslav el Sabio sin la aprobación previa del patriarca de Constantinopla, siendo además autor del célebre 'Sermón sobre la Ley y la Gracia'?",
+    "options": [
+      "Hilarión",
+      "Clemente Smoliatich",
+      "Kirill de Turov",
+      "Nifont"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El nombramiento de Hilarión, un sacerdote local de notable erudición, representó un temprano y significativo gesto de autonomía eclesiástica de la Rus frente a Constantinopla, aunque tras la muerte de Yaroslav la sede metropolitana de Kiev volvería, durante mucho tiempo, a estar ocupada mayoritariamente por clérigos de origen griego enviados desde Bizancio."
+  },
+  {
+    "question": "¿Qué célebre icono, traído originalmente desde Constantinopla y trasladado en 1155 desde Kiev hasta la ciudad de Vladímir por el príncipe Andréi Bogoliubski, se convirtió en una de las imágenes religiosas más veneradas de toda la historia rusa, dando nombre a la propia ciudad que la acogió?",
+    "options": [
+      "El icono de la Virgen de Smolensk",
+      "El icono de la Virgen de Kazán",
+      "El icono de la Virgen de Vladímir",
+      "El icono de la Trinidad de Rubliov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Al llevarse consigo este venerado icono hacia su nuevo centro de poder en el noreste, Andréi Bogoliubski buscaba deliberadamente transferir también parte del prestigio espiritual asociado tradicionalmente a Kiev hacia la emergente Vladímir, un gesto simbólico que reforzaba su ambición de desplazar el centro político y religioso de la Rus hacia su propio principado."
+  }
+]

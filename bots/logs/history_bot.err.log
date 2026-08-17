@@ -1,0 +1,57 @@
+2026-08-15T16:47:07: INFO:apscheduler.scheduler:Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-08-15T16:47:07: INFO:scheduler:Job 'daily_history_quiz' programado para las 12:00.
+2026-08-15T16:47:07: INFO:apscheduler.scheduler:Added job "send_history_quiz" to job store "default"
+2026-08-15T16:47:07: INFO:apscheduler.scheduler:Scheduler started
+2026-08-15T16:47:07: INFO:aiogram.dispatcher:Start polling
+2026-08-15T16:47:08: INFO:aiogram.dispatcher:Run polling for bot @rusofasil_history_bot id=8294567498 - 'RusoFasil History Bot'
+2026-08-15T16:47:09: INFO:aiogram.event:Update id=25902743 is handled. Duration 780 ms by bot id=8294567498
+2026-08-15T18:11:53: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-08-15T18:11:53: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8294567498)
+2026-08-15T18:11:54: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-08-15T18:11:54: WARNING:aiogram.dispatcher:Sleep for 1.281930 seconds and try again... (tryings = 1, bot id = 8294567498)
+2026-08-15T18:11:56: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-08-15T18:11:56: WARNING:aiogram.dispatcher:Sleep for 1.677019 seconds and try again... (tryings = 2, bot id = 8294567498)
+2026-08-15T18:11:57: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-08-15T18:11:57: WARNING:aiogram.dispatcher:Sleep for 2.064902 seconds and try again... (tryings = 3, bot id = 8294567498)
+2026-08-15T18:13:10: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-15T18:13:10: WARNING:aiogram.dispatcher:Sleep for 2.675202 seconds and try again... (tryings = 4, bot id = 8294567498)
+2026-08-15T18:13:23: INFO:aiogram.dispatcher:Connection established (tryings = 5, bot id = 8294567498)
+2026-08-15T20:38:27: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-15T20:38:27: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8294567498)
+2026-08-15T20:38:39: INFO:aiogram.dispatcher:Connection established (tryings = 1, bot id = 8294567498)
+2026-08-16T01:53:07: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T01:53:07: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8294567498)
+2026-08-16T01:53:19: INFO:aiogram.dispatcher:Connection established (tryings = 1, bot id = 8294567498)
+2026-08-16T03:03:56: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T03:03:56: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8294567498)
+2026-08-16T03:19:07: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - ClientOSError: [Errno 54] Connection reset by peer
+2026-08-16T03:19:07: WARNING:aiogram.dispatcher:Sleep for 1.525346 seconds and try again... (tryings = 1, bot id = 8294567498)
+2026-08-16T03:19:20: INFO:aiogram.dispatcher:Connection established (tryings = 2, bot id = 8294567498)
+2026-08-16T04:05:00: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T04:05:00: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8294567498)
+2026-08-16T05:50:26: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T05:50:26: WARNING:aiogram.dispatcher:Sleep for 1.295226 seconds and try again... (tryings = 1, bot id = 8294567498)
+2026-08-16T05:50:38: INFO:aiogram.dispatcher:Connection established (tryings = 2, bot id = 8294567498)
+2026-08-16T06:51:36: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T06:51:36: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8294567498)
+2026-08-16T07:33:58: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T07:33:58: WARNING:aiogram.dispatcher:Sleep for 1.260887 seconds and try again... (tryings = 1, bot id = 8294567498)
+2026-08-16T08:21:54: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramNetworkError: HTTP Client says - Request timeout error
+2026-08-16T08:21:54: WARNING:aiogram.dispatcher:Sleep for 1.765363 seconds and try again... (tryings = 2, bot id = 8294567498)
+2026-08-16T08:22:07: INFO:aiogram.dispatcher:Connection established (tryings = 3, bot id = 8294567498)
+2026-08-16T18:11:17: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramRetryAfter: Telegram server says - Flood control exceeded on method 'GetUpdates'. Retry in 5 seconds.
+2026-08-16T18:11:17: Original description: Too Many Requests: retry after 5
+2026-08-16T18:11:17: (background on this error at: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this)
+2026-08-16T18:11:17: WARNING:aiogram.dispatcher:Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8294567498)
+2026-08-16T18:11:19: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramRetryAfter: Telegram server says - Flood control exceeded on method 'GetUpdates'. Retry in 5 seconds.
+2026-08-16T18:11:19: Original description: Too Many Requests: retry after 5
+2026-08-16T18:11:19: (background on this error at: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this)
+2026-08-16T18:11:19: WARNING:aiogram.dispatcher:Sleep for 1.401089 seconds and try again... (tryings = 1, bot id = 8294567498)
+2026-08-16T18:11:22: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-08-16T18:11:22: WARNING:aiogram.dispatcher:Sleep for 1.922819 seconds and try again... (tryings = 2, bot id = 8294567498)
+2026-08-16T18:11:24: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-08-16T18:11:24: WARNING:aiogram.dispatcher:Sleep for 2.546128 seconds and try again... (tryings = 3, bot id = 8294567498)
+2026-08-16T18:11:27: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramServerError: Telegram server says - Bad Gateway
+2026-08-16T18:11:27: WARNING:aiogram.dispatcher:Sleep for 3.278593 seconds and try again... (tryings = 4, bot id = 8294567498)
+2026-08-16T18:12:07: INFO:aiogram.dispatcher:Connection established (tryings = 5, bot id = 8294567498)
+2026-08-16T19:46:47: WARNING:apscheduler.executors.default:Run time of job "send_history_quiz (trigger: cron[hour='12', minute='0'], next run at: 2026-08-17 12:00:00 PDT)" was missed by 7:46:47.676372

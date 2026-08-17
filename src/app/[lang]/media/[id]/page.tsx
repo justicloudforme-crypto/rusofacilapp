@@ -24,6 +24,7 @@ export default async function MediaDetailPage({
     song: dict.media.categorySong,
     movie: dict.media.categoryMovie,
     video: dict.media.categoryVideo,
+    grammar: dict.media.categoryGrammar,
   };
 
   // Prefer the timestamped, interactive transcript (player + synced/clickable
@@ -56,6 +57,7 @@ export default async function MediaDetailPage({
             title={item.title}
             subtitles={item.subtitles!}
             transcriptHeading={dict.media.transcriptHeading}
+            brokenLabel={dict.media.videoBroken}
           />
         </div>
       ) : (
@@ -65,6 +67,7 @@ export default async function MediaDetailPage({
               youtubeVideoId={item.youtubeVideoId}
               title={item.title}
               emptyLabel={dict.media.videoUnavailable}
+              brokenLabel={dict.media.videoBroken}
             />
           </div>
 

@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import { sanitizeTextForTTS } from "@/lib/speech";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
+import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 
 // Captures runs of Cyrillic letters (optionally hyphenated, e.g.
 // "кто-то") as clickable tokens; everything else (spaces, punctuation)
@@ -11,20 +19,13 @@ import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/re
 const WORD_SPLIT_REGEX = /([а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*)/gu;
 const CYRILLIC_WORD_REGEX = /^[а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*$/u;
 
-// Splits a paragraph into sentences (kept together with their trailing
-// punctuation/quotes). Chrome silently stops narrating an utterance longer
-// than ~15s, so long paragraphs must be spoken as a queue of short
-// utterances rather than one call to speak() per paragraph.
-const SENTENCE_SPLIT_REGEX = /[^.!?…]+[.!?…]+[»"'\]) ]*|[^.!?…]+$/gu;
-
 const READ_ALOUD_RATES = [0.8, 1, 1.2] as const;
-const PAGE_SIZE = 5;
 
-function tokenizeParagraph(paragraph: string): string[] {
-  return paragraph.split(WORD_SPLIT_REGEX).filter((token) => token.length > 0);
+function tokenizeParagraph(text: string): string[] {
+  return text.split(WORD_SPLIT_REGEX).filter((token) => token.length > 0);
 }
 
-/** Start offset of each token within the paragraph string — used to map a
+/** Start offset of each token within its sentence — used to map a
  * SpeechSynthesis boundary event's charIndex back to a token to highlight. */
 function tokenStarts(tokens: string[]): number[] {
   const starts: number[] = [];
@@ -52,32 +53,6 @@ function tokenIndexAtChar(tokens: string[], starts: number[], charIndex: number)
   return null;
 }
 
-interface Sentence {
-  text: string;
-  /** Offset of this sentence's first character within its paragraph. */
-  start: number;
-}
-
-function splitSentences(paragraph: string): Sentence[] {
-  const sentences: Sentence[] = [];
-  SENTENCE_SPLIT_REGEX.lastIndex = 0;
-  let match: RegExpExecArray | null;
-  while ((match = SENTENCE_SPLIT_REGEX.exec(paragraph))) {
-    if (match[0].trim().length > 0) {
-      sentences.push({ text: match[0], start: match.index });
-    }
-  }
-  return sentences.length > 0 ? sentences : [{ text: paragraph, start: 0 }];
-}
-
-interface QueueItem {
-  /** Index into the current page's paragraph array. */
-  paragraphIndex: number;
-  /** Offset of this sentence's first character within its paragraph. */
-  start: number;
-  text: string;
-}
-
 type TranslationState =
   | { status: "loading" }
   | { status: "done"; translation: string }
@@ -97,111 +72,161 @@ export interface StoryTextDict {
   translationError: string;
   wordListenLabel: string;
   closeLabel: string;
-  showTranslationButton: string;
-  hideTranslationButton: string;
   playLabel: string;
   pauseLabel: string;
-  pageLabel: string;
-  prevPageLabel: string;
-  nextPageLabel: string;
+  skipBackLabel: string;
+  skipForwardLabel: string;
+  seekLabel: string;
   completedBadge: string;
 }
 
 export default function StoryText({
   storyId,
+  title,
+  author,
   paragraphs,
   translationParagraphs,
+  audioSegments,
   dict,
 }: {
   /** Used as the localStorage key for per-story reading progress. Pass
    * `null` to disable progress tracking entirely — used for the
-   * paywalled single-paragraph preview, where "reading" it would
-   * otherwise get saved as the whole (1-page) story being 100% done. */
+   * paywalled single-paragraph preview. */
   storyId: string | null;
+  /** Shown on the lock screen / notification media controls via the Media
+   * Session API — see the effect below. */
+  title: string;
+  author: string;
   paragraphs: string[];
-  /** Spanish paragraphs aligned by index with `paragraphs`. Optional —
-   * when absent (or empty), the toggle button doesn't render at all and
-   * only the per-word popover translation is available. */
+  /** Spanish paragraphs aligned by index with `paragraphs` — rendered
+   * permanently beneath each Russian paragraph (no toggle). */
   translationParagraphs?: string[];
+  /** One narration clip per sentence, produced by generate-story-audio.ts.
+   * When it doesn't cover every sentence in `paragraphs` (missing, or a
+   * truncated/preview view runs ahead of what was generated), the reader
+   * falls back to browser TTS narration with no real audio<->text sync. */
+  audioSegments?: StoryAudioSegment[];
   dict: StoryTextDict;
 }) {
   const [activeWord, setActiveWord] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<PopoverPosition | null>(null);
   const [translation, setTranslation] = useState<TranslationState | null>(null);
-  const [showTranslation, setShowTranslation] = useState(false);
 
-  const totalPages = Math.max(1, Math.ceil(paragraphs.length / PAGE_SIZE));
-  const [currentPage, setCurrentPage] = useState(0);
-  const pageStart = currentPage * PAGE_SIZE;
-  const pageParagraphs = useMemo(
-    () => paragraphs.slice(pageStart, pageStart + PAGE_SIZE),
-    [paragraphs, pageStart]
-  );
-  const pageTranslationParagraphs = useMemo(
-    () => translationParagraphs?.slice(pageStart, pageStart + PAGE_SIZE) ?? [],
-    [translationParagraphs, pageStart]
-  );
-  const hasParagraphTranslation = Boolean(translationParagraphs && translationParagraphs.length > 0);
-  const containerTopRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sentenceRefs = useRef<Array<HTMLElement | null>>([]);
 
   const [ttsSupported, setTtsSupported] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState<(typeof READ_ALOUD_RATES)[number]>(1);
-  const [readingParagraph, setReadingParagraph] = useState<number | null>(null);
-  const [readingToken, setReadingToken] = useState<number | null>(null);
   const [readingQueueIndex, setReadingQueueIndex] = useState<number | null>(null);
+  const [readingToken, setReadingToken] = useState<number | null>(null);
   const [playerSticky, setPlayerSticky] = useState(false);
+  // The site header is itself `sticky top-0` with a higher z-index — without
+  // this offset, our sticky player would pin to the same y=0 and end up
+  // hidden behind it as soon as the reader scrolls. Measured at runtime
+  // (rather than a hardcoded height) since the header's height varies with
+  // safe-area-inset padding on notched devices.
+  const [navOffset, setNavOffset] = useState(0);
   const rateRef = useRef(rate);
   const playingRef = useRef(false);
   const pendingNextRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const playerSentinelRef = useRef<HTMLDivElement>(null);
-  // Every intentional cancel (pause, word click, page change, rate change,
-  // unmount) bumps this counter. Each utterance captures the counter's
-  // value when it starts; its onend/onerror only act if the counter is
-  // still at that value. This replaced an earlier boolean "was this a
-  // manual cancel" flag, which had to be reset back to false by the very
-  // callback it was guarding — if that callback never fired (cancel() on
-  // an idle synth fires no events at all, and a cancelled utterance can
-  // fire onerror instead of onend depending on the engine), the flag got
-  // stuck true and silently killed the sentence-chain after one sentence.
-  // A monotonic counter can't get stuck: a stale utterance simply never
+  const audioRef = useRef<HTMLAudioElement>(null);
+  // Every intentional cancel (pause, word click, seek, rate change [TTS
+  // mode], unmount) bumps this counter. Each utterance/clip captures the
+  // counter's value when it starts; its onend/onerror only act if the
+  // counter is still at that value. This replaced an earlier boolean "was
+  // this a manual cancel" flag, which had to be reset back to false by the
+  // very callback it was guarding — if that callback never fired, the flag
+  // got stuck true and silently killed the queue after one item. A
+  // monotonic counter can't get stuck: a stale utterance/clip simply never
   // matches the current generation, no reset step required.
   const playbackGenRef = useRef(0);
 
-  // Reading-progress restore: a finished story reopens on page 1 with just
-  // the "completed" badge (per spec), while an in-progress one jumps
-  // straight to the page the reader left off on. `resumeQueueIndexRef`
-  // carries the saved sentence index across the render where `currentPage`
-  // updates to that page — it's consumed (and cleared) by the effect below
-  // once `readingQueue` reflects the resumed page.
   const [isCompletedBadge, setIsCompletedBadge] = useState(false);
-  const [resumeParagraphIndex, setResumeParagraphIndex] = useState<number | null>(null);
+  const [resumeQueueIndex, setResumeQueueIndex] = useState<number | null>(null);
   const resumeQueueIndexRef = useRef<number | null>(null);
-  const paragraphRefs = useRef<Array<HTMLDivElement | null>>([]);
+  // Timestamp (Date.now()) until which the popover's "close on scroll"
+  // listener below should ignore scroll events — set right before we
+  // programmatically scrollIntoView() a sentence (seek, auto-advance,
+  // resume), so seeking to a word's own sentence right after opening its
+  // popover doesn't immediately scroll-close it again.
+  const suppressScrollCloseUntilRef = useRef(0);
 
-  const tokenizedParagraphs = useMemo(() => pageParagraphs.map(tokenizeParagraph), [pageParagraphs]);
+  function setContainerScrollTop(container: HTMLElement, targetTop: number) {
+    // A single instant write, not an eased rAF loop or CSS/native smooth
+    // scroll — confirmed by direct testing that this exact page can leak a
+    // sequence of scrollTop writes on this container into the outer
+    // window's scroll position (the container's own box isn't always
+    // fully inside the viewport — e.g. its bottom edge can sit below the
+    // fold on a short mobile screen — and a RUN of scrollTop changes on it
+    // gets treated like an in-progress scroll gesture bringing that box
+    // into view, dragging the window along for the ride). A single
+    // instant jump never reproduced it in testing, at every element
+    // position tried. This trades the eased scroll animation for that
+    // guarantee — an instant jump between two nearby sentences reads as a
+    // small, unremarkable cut, not a jarring one.
+    container.scrollTop = targetTop;
+  }
 
-  // Cancels any in-flight utterance and invalidates it for the queue chain.
+  // Scrolls ONLY the reading pane, never Element.scrollIntoView() —
+  // scrollIntoView walks up and animates EVERY scrollable ancestor, not
+  // just the nearest one, so on this page it was also nudging the whole
+  // window on every sentence auto-advance.
+  function scrollSentenceIntoView(index: number) {
+    const container = scrollContainerRef.current;
+    const el = sentenceRefs.current[index];
+    if (!container || !el) return;
+    suppressScrollCloseUntilRef.current = Date.now() + 700;
+    const elRect = el.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const targetTop = container.scrollTop + (elRect.top - containerRect.top);
+    setContainerScrollTop(container, targetTop);
+  }
+
+  const queue = useMemo(() => buildStoryQueue(paragraphs), [paragraphs]);
+  const sentenceTokens = useMemo(() => queue.map((item) => tokenizeParagraph(item.text)), [queue]);
+
+  const paragraphGroups = useMemo(() => {
+    const groups: { paragraphIndex: number; queueIndexes: number[] }[] = [];
+    queue.forEach((item, queueIndex) => {
+      const last = groups[groups.length - 1];
+      if (!last || last.paragraphIndex !== item.paragraphIndex) {
+        groups.push({ paragraphIndex: item.paragraphIndex, queueIndexes: [queueIndex] });
+      } else {
+        last.queueIndexes.push(queueIndex);
+      }
+    });
+    return groups;
+  }, [queue]);
+
+  const segmentUrlByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const segment of audioSegments ?? []) {
+      map.set(`${segment.paragraphIndex}-${segment.sentenceIndex}`, segment.url);
+    }
+    return map;
+  }, [audioSegments]);
+
+  // Real narration only drives playback when every sentence in the queue
+  // has a matching clip — a partial set (e.g. a stale generation run) would
+  // otherwise strand playback mid-story, so it's real-audio-all or none.
+  const hasRealAudio = useMemo(
+    () =>
+      queue.length > 0 &&
+      queue.every((item) => segmentUrlByKey.has(`${item.paragraphIndex}-${item.sentenceIndex}`)),
+    [queue, segmentUrlByKey]
+  );
+  const canPlay = hasRealAudio || ttsSupported;
+
+  // Cancels any in-flight utterance/clip and invalidates it for the queue
+  // chain.
   function cancelSpeech() {
     playbackGenRef.current += 1;
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
   }
-
-  const readingQueue = useMemo(() => {
-    const queue: QueueItem[] = [];
-    pageParagraphs.forEach((paragraph, paragraphIndex) => {
-      for (const sentence of splitSentences(paragraph)) {
-        // Sanitize right as each queue entry is built (not only later, at
-        // speak() time) so a stray backslash can never reach the TTS
-        // engine and get read aloud as "backslash" — belt-and-suspenders
-        // with the sanitizeTextForTTS() call in speakQueueAt below.
-        queue.push({ paragraphIndex, start: sentence.start, text: sanitizeTextForTTS(sentence.text) });
-      }
-    });
-    return queue;
-  }, [pageParagraphs]);
 
   useEffect(() => {
     // Same SSR/hydration-safe pattern as SpeakButton: start true, correct
@@ -210,10 +235,9 @@ export default function StoryText({
     setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
   }, []);
 
-  // Restore reading position on mount. A completed story reopens on page 1
-  // with just the "read" badge; an in-progress one jumps to the saved page,
-  // and the saved sentence index is applied once that page's readingQueue
-  // is built (see the effect below).
+  // Restore reading position on mount. A completed story reopens with just
+  // the "read" badge; an in-progress one scrolls to and rings the saved
+  // sentence once the queue is ready (see the effect below).
   useEffect(() => {
     if (!storyId) return;
     const stored = getStoryProgress(storyId);
@@ -223,13 +247,7 @@ export default function StoryText({
       setIsCompletedBadge(true);
       return;
     }
-    // Applies whether or not the saved page differs from the default (page
-    // 1) — resuming mid-sentence on page 1 itself needs this too, not just
-    // jumps to page 2+.
     resumeQueueIndexRef.current = stored.queueIndex;
-    if (stored.currentPage > 1 && stored.currentPage <= totalPages) {
-      setCurrentPage(stored.currentPage - 1);
-    }
     // Runs once on mount only — storyId is stable for the lifetime of this
     // component (a different story is a full route/component remount).
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -237,30 +255,25 @@ export default function StoryText({
 
   // Background reconciliation with the server copy of this story's
   // progress (if the user is logged in) — deliberately does NOT re-jump
-  // the reader to a different page once rendered, even if the server turns
-  // out to have a newer position from another device: that would be a
-  // jarring page change mid-read. It only updates localStorage so the
-  // NEXT visit (this story or the catalog) already reflects it.
+  // the reader once rendered, even if the server turns out to have a newer
+  // position from another device: that would be a jarring scroll jump
+  // mid-read. It only updates localStorage so the NEXT visit already
+  // reflects it.
   useEffect(() => {
     if (!storyId) return;
     syncStoryProgress();
   }, [storyId]);
 
-  // Applies the saved sentence position once the resumed page's
-  // readingQueue is ready, then scrolls it into view. Self-consuming: the
-  // ref is cleared right away, so this is a no-op on every later
-  // readingQueue change (manual page turns, etc).
+  // Applies the saved sentence position once the queue is ready, then
+  // scrolls it to the top of the reading pane. Self-consuming: the ref is
+  // cleared right away, so this is a no-op on every later queue change.
   useEffect(() => {
     const idx = resumeQueueIndexRef.current;
     resumeQueueIndexRef.current = null;
-    if (idx === null || idx < 0 || idx >= readingQueue.length) return;
-    const item = readingQueue[idx];
-    setReadingQueueIndex(idx);
-    setResumeParagraphIndex(item.paragraphIndex);
-    requestAnimationFrame(() => {
-      paragraphRefs.current[item.paragraphIndex]?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  }, [readingQueue]);
+    if (idx === null || idx < 0 || idx >= queue.length) return;
+    setResumeQueueIndex(idx);
+    requestAnimationFrame(() => scrollSentenceIntoView(idx));
+  }, [queue]);
 
   useEffect(() => {
     rateRef.current = rate;
@@ -270,36 +283,29 @@ export default function StoryText({
     playingRef.current = playing;
   }, [playing]);
 
-  // Reset narration and the word popover whenever the reader switches pages
-  // — audio should only ever cover the page that's currently open. Done as
-  // a direct event-handler call rather than an effect keyed on `currentPage`
-  // so the reset isn't a synchronous setState-in-effect cascade.
-  function goToPage(page: number) {
-    if (pendingNextRef.current) {
-      clearTimeout(pendingNextRef.current);
-      pendingNextRef.current = null;
-    }
-    cancelSpeech();
-    setPlaying(false);
-    setReadingParagraph(null);
-    setReadingToken(null);
-    setReadingQueueIndex(null);
-    setResumeParagraphIndex(null);
-    setIsCompletedBadge(false);
-    setActiveWord(null);
-    setPopoverPosition(null);
-    setTranslation(null);
-    setCurrentPage(page);
-    containerTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    if (storyId) saveStoryProgress(storyId, { currentPage: page + 1, totalPages, queueIndex: null });
-  }
+  // Audio -> text sync: whenever the active sentence changes (auto-advance
+  // during playback, a manual seek, or the resume-position restore above),
+  // keep it pinned to the top of the scroll container.
+  useEffect(() => {
+    if (readingQueueIndex === null) return;
+    scrollSentenceIntoView(readingQueueIndex);
+  }, [readingQueueIndex]);
 
   // Stop any in-flight narration when the reader navigates away.
   useEffect(() => {
+    const audio = audioRef.current;
     return () => {
       if (pendingNextRef.current) clearTimeout(pendingNextRef.current);
+      playbackGenRef.current += 1;
       cancelSpeech();
+      audio?.pause();
     };
+  }, []);
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (header) setNavOffset(header.getBoundingClientRect().height);
   }, []);
 
   // Shrink the player into a compact floating bar once the reader scrolls
@@ -319,9 +325,10 @@ export default function StoryText({
   // 15s of continuous speaking — it looks like playback "stops after the
   // first sentence" once the queue reaches that mark. Nudging the engine
   // with pause()+resume() every few seconds resets its internal timer and
-  // keeps the queue alive for arbitrarily long pages.
+  // keeps the queue alive for arbitrarily long stories. Only relevant to
+  // the browser-TTS fallback — real <audio> playback has no such bug.
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || hasRealAudio) return;
     const keepAlive = setInterval(() => {
       if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
       if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
@@ -330,42 +337,186 @@ export default function StoryText({
       }
     }, 5000);
     return () => clearInterval(keepAlive);
-  }, [playing]);
+  }, [playing, hasRealAudio]);
 
-  function speakQueueAt(index: number) {
-    const item = readingQueue[index];
-    if (!item) {
+  /** url -> duration in seconds, filled in as clips are actually played
+   * (see the `loadedmetadata` handler below) or explicitly probed by
+   * getClipDuration() when a ±15s skip needs to know a clip it hasn't
+   * played yet. */
+  const clipDurationCacheRef = useRef<Map<string, number>>(new Map());
+
+  function cacheClipDuration(url: string, duration: number) {
+    if (Number.isFinite(duration) && duration > 0) clipDurationCacheRef.current.set(url, duration);
+  }
+
+  /** Resolves a clip's duration without playing it — used by skipBy() to
+   * walk across sentence boundaries. Falls back to a rough 3s guess if the
+   * probe errors or takes too long, so a flaky/slow load can't hang the
+   * skip button forever. */
+  function getClipDuration(url: string): Promise<number> {
+    const cached = clipDurationCacheRef.current.get(url);
+    if (cached) return Promise.resolve(cached);
+    return new Promise((resolve) => {
+      const probe = new Audio();
+      let settled = false;
+      const finish = (value: number) => {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+      };
+      probe.preload = "metadata";
+      probe.onloadedmetadata = () => {
+        const duration = Number.isFinite(probe.duration) && probe.duration > 0 ? probe.duration : 3;
+        cacheClipDuration(url, duration);
+        finish(duration);
+      };
+      probe.onerror = () => finish(3);
+      probe.src = url;
+      setTimeout(() => finish(3), 4000);
+    });
+  }
+
+  /** `startOffset` seconds into the clip — used by skipBy() when a ±15s
+   * skip lands mid-sentence rather than at its start. */
+  function playSegmentAt(index: number, startOffset = 0) {
+    const item = queue[index];
+    const audio = audioRef.current;
+    const url = item ? segmentUrlByKey.get(`${item.paragraphIndex}-${item.sentenceIndex}`) : undefined;
+    if (!item || !audio || !url) {
       setPlaying(false);
-      setReadingParagraph(null);
-      setReadingToken(null);
       setReadingQueueIndex(null);
       return;
     }
-    // This utterance belongs to the current playback generation. If a
-    // cancel happens later (pause, word click, page change, rate change),
-    // playbackGenRef moves on and this closure's `generation` goes stale —
-    // its onend/onerror then know to no-op instead of continuing the chain.
     const generation = playbackGenRef.current;
     setReadingQueueIndex(index);
-    setReadingParagraph(item.paragraphIndex);
-    setReadingToken(null);
-    setResumeParagraphIndex(null);
+    setResumeQueueIndex(null);
     setIsCompletedBadge(false);
-    if (storyId) saveStoryProgress(storyId, { currentPage: currentPage + 1, totalPages, queueIndex: index });
+    if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
+
+    audio.pause();
+    audio.src = url;
+    audio.playbackRate = rateRef.current;
+    audio.onloadedmetadata = () => {
+      cacheClipDuration(url, audio.duration);
+      if (startOffset > 0) audio.currentTime = Math.min(startOffset, audio.duration || startOffset);
+    };
+    audio.onended = () => {
+      if (playbackGenRef.current !== generation) return;
+      const next = index + 1;
+      if (next < queue.length) {
+        playSegmentAt(next);
+      } else {
+        setPlaying(false);
+        setReadingQueueIndex(null);
+      }
+    };
+    audio.onerror = () => {
+      if (playbackGenRef.current !== generation) return;
+      console.error("[StoryText audio] playback error for", url);
+      setPlaying(false);
+    };
+    audio.play().catch(() => {
+      if (playbackGenRef.current === generation) setPlaying(false);
+    });
+  }
+
+  /** ±15s skip, correctly crossing sentence boundaries (each clip is one
+   * sentence, commonly just a few seconds — so 15s of real audio almost
+   * always spans several of them). Walks the queue accumulating each
+   * crossed clip's actual duration until `deltaSeconds` is used up, then
+   * seeks into whichever sentence that lands on and re-syncs the
+   * highlight/scroll there — same as any other seek. Real-audio mode only:
+   * speechSynthesis has no seekable timeline to walk. */
+  async function skipBy(deltaSeconds: number) {
+    if (!hasRealAudio || readingQueueIndex === null) return;
+    const audio = audioRef.current;
+    const currentItem = queue[readingQueueIndex];
+    const currentUrl = currentItem
+      ? segmentUrlByKey.get(`${currentItem.paragraphIndex}-${currentItem.sentenceIndex}`)
+      : undefined;
+    if (!audio || !currentUrl) return;
+
+    const currentDuration =
+      Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : await getClipDuration(currentUrl);
+
+    if (deltaSeconds > 0) {
+      const available = currentDuration - audio.currentTime;
+      if (deltaSeconds <= available) {
+        audio.currentTime += deltaSeconds;
+        return;
+      }
+      let remaining = deltaSeconds - available;
+      for (let index = readingQueueIndex + 1; index < queue.length; index++) {
+        const item = queue[index];
+        const url = segmentUrlByKey.get(`${item.paragraphIndex}-${item.sentenceIndex}`);
+        if (!url) break;
+        const duration = await getClipDuration(url);
+        if (remaining <= duration) {
+          setPlaying(true);
+          playSegmentAt(index, remaining);
+          return;
+        }
+        remaining -= duration;
+      }
+      setPlaying(true);
+      playSegmentAt(queue.length - 1);
+    } else {
+      const backAmount = -deltaSeconds;
+      if (backAmount <= audio.currentTime) {
+        audio.currentTime -= backAmount;
+        return;
+      }
+      let remaining = backAmount - audio.currentTime;
+      for (let index = readingQueueIndex - 1; index >= 0; index--) {
+        const item = queue[index];
+        const url = segmentUrlByKey.get(`${item.paragraphIndex}-${item.sentenceIndex}`);
+        if (!url) break;
+        const duration = await getClipDuration(url);
+        if (remaining <= duration) {
+          setPlaying(true);
+          playSegmentAt(index, Math.max(0, duration - remaining));
+          return;
+        }
+        remaining -= duration;
+      }
+      setPlaying(true);
+      playSegmentAt(0);
+    }
+  }
+
+  function speakQueueAt(index: number) {
+    const item = queue[index];
+    if (!item) {
+      setPlaying(false);
+      setReadingQueueIndex(null);
+      setReadingToken(null);
+      return;
+    }
+    // This utterance belongs to the current playback generation. If a
+    // cancel happens later (pause, word click, seek, rate change,
+    // unmount), playbackGenRef moves on and this closure's `generation`
+    // goes stale — its onend/onerror then know to no-op instead of
+    // continuing the chain.
+    const generation = playbackGenRef.current;
+    setReadingQueueIndex(index);
+    setReadingToken(null);
+    setResumeQueueIndex(null);
+    setIsCompletedBadge(false);
+    if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
 
     const utterance = new SpeechSynthesisUtterance(sanitizeTextForTTS(item.text));
     utterance.lang = "ru-RU";
     utterance.rate = rateRef.current;
     utterance.onboundary = (event) => {
-      const tokens = tokenizedParagraphs[item.paragraphIndex];
+      const tokens = sentenceTokens[index];
       const starts = tokenStarts(tokens);
-      const tokenIndex = tokenIndexAtChar(tokens, starts, item.start + event.charIndex);
+      const tokenIndex = tokenIndexAtChar(tokens, starts, event.charIndex);
       setReadingToken(tokenIndex);
     };
     utterance.onend = () => {
       if (playbackGenRef.current !== generation) return;
       const next = index + 1;
-      if (next < readingQueue.length) {
+      if (next < queue.length) {
         // Calling speak() synchronously from inside another utterance's
         // onend is itself flaky in Chromium (the new utterance can be
         // silently dropped) — deferring to the next tick works around it.
@@ -380,15 +531,14 @@ export default function StoryText({
         }, 50);
       } else {
         setPlaying(false);
-        setReadingParagraph(null);
-        setReadingToken(null);
         setReadingQueueIndex(null);
+        setReadingToken(null);
       }
     };
     utterance.onerror = (event) => {
       if (playbackGenRef.current !== generation) {
         // Expected: this utterance was cancelled by our own cancelSpeech()
-        // (rate change, word click, page change, pause, unmount).
+        // (rate change, word click, seek, pause, unmount).
         return;
       }
       console.error("[StoryText TTS] speechSynthesis error:", event.error);
@@ -397,17 +547,28 @@ export default function StoryText({
     window.speechSynthesis.speak(utterance);
   }
 
-  function stopReading() {
-    if (pendingNextRef.current) {
-      clearTimeout(pendingNextRef.current);
-      pendingNextRef.current = null;
-    }
-    cancelSpeech();
-    setPlaying(false);
-  }
-
   function handlePlayPause() {
-    if (!ttsSupported || readingQueue.length === 0) return;
+    if (queue.length === 0) return;
+    if (hasRealAudio) {
+      const audio = audioRef.current;
+      if (!audio) return;
+      if (playing) {
+        audio.pause();
+        setPlaying(false);
+        return;
+      }
+      if (readingQueueIndex !== null && !audio.ended && audio.currentTime > 0) {
+        setPlaying(true);
+        audio.play().catch(() => setPlaying(false));
+        return;
+      }
+      const startIndex = readingQueueIndex !== null && readingQueueIndex < queue.length - 1 ? readingQueueIndex : 0;
+      setPlaying(true);
+      playSegmentAt(startIndex);
+      return;
+    }
+
+    if (!ttsSupported) return;
     if (playing) {
       window.speechSynthesis.pause();
       setPlaying(false);
@@ -418,9 +579,7 @@ export default function StoryText({
       setPlaying(true);
       return;
     }
-    const startIndex = readingQueueIndex !== null && readingQueueIndex < readingQueue.length - 1
-      ? readingQueueIndex
-      : 0;
+    const startIndex = readingQueueIndex !== null && readingQueueIndex < queue.length - 1 ? readingQueueIndex : 0;
     setPlaying(true);
     speakQueueAt(startIndex);
   }
@@ -428,20 +587,88 @@ export default function StoryText({
   function handleRateChange(nextRate: (typeof READ_ALOUD_RATES)[number]) {
     setRate(nextRate);
     rateRef.current = nextRate;
+    if (hasRealAudio) {
+      if (audioRef.current) audioRef.current.playbackRate = nextRate;
+      return;
+    }
     if (playing && readingQueueIndex !== null) {
       cancelSpeech();
       speakQueueAt(readingQueueIndex);
     }
   }
 
+  // Text -> audio sync: clicking a sentence seeks playback straight to it.
+  function handleSentenceClick(index: number) {
+    if (!canPlay || queue.length === 0) return;
+    if (hasRealAudio) {
+      setPlaying(true);
+      playSegmentAt(index);
+      return;
+    }
+    cancelSpeech();
+    setPlaying(true);
+    speakQueueAt(index);
+  }
+
+  function handleSentenceKeyDown(event: ReactKeyboardEvent, index: number) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    handleSentenceClick(index);
+  }
+
+  // Lock-screen / notification media controls, and the signal mobile
+  // browsers use to decide a backgrounded tab's audio should keep playing
+  // instead of being suspended — this is what "background playback" (play
+  // with the app minimized or the screen locked) actually runs on, there's
+  // no separate "enable background mode" switch to flip. No dependency
+  // array: re-runs every render so the handlers always close over the
+  // latest playback state, cheap enough not to bother memoizing.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (!canPlay || queue.length === 0) return;
+
+    // Mutating the browser's global MediaSession object is the API's only
+    // interface — it's namespaced under `navigator` rather than a
+    // local/ref, which the compiler's mutation check doesn't recognize as
+    // effect-safe.
+    // eslint-disable-next-line react-hooks/immutability
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title,
+      artist: author,
+      artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],
+    });
+    // eslint-disable-next-line react-hooks/immutability
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    navigator.mediaSession.setActionHandler("play", () => handlePlayPause());
+    navigator.mediaSession.setActionHandler("pause", () => handlePlayPause());
+    navigator.mediaSession.setActionHandler("seekbackward", () => skipBy(-15));
+    navigator.mediaSession.setActionHandler("seekforward", () => skipBy(15));
+    navigator.mediaSession.setActionHandler("previoustrack", () =>
+      handleSentenceClick(Math.max(0, (readingQueueIndex ?? 0) - 1))
+    );
+    navigator.mediaSession.setActionHandler("nexttrack", () =>
+      handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1))
+    );
+
+    return () => {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("seekbackward", null);
+      navigator.mediaSession.setActionHandler("seekforward", null);
+      navigator.mediaSession.setActionHandler("previoustrack", null);
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+    };
+  });
+
   const progress =
-    readingQueue.length > 0 && readingQueueIndex !== null
-      ? (readingQueueIndex + 1) / readingQueue.length
-      : 0;
+    queue.length > 0 && readingQueueIndex !== null ? (readingQueueIndex + 1) / queue.length : 0;
 
   async function handleWordClick(word: string, event: ReactMouseEvent<HTMLButtonElement>) {
-    stopReading();
-
+    // Deliberately doesn't stop propagation: a word is part of its
+    // sentence's clickable line, so the click also bubbles up to
+    // handleSentenceClick on the wrapping span and seeks playback there —
+    // "click any line to seek" would otherwise almost never fire, since
+    // word buttons cover nearly all of a line's clickable area.
     const rect = event.currentTarget.getBoundingClientRect();
     const spaceAbove = rect.top;
     const placeAbove = spaceAbove > POPOVER_HEIGHT_ESTIMATE + POPOVER_MARGIN;
@@ -479,31 +706,52 @@ export default function StoryText({
     // The popover is positioned with fixed viewport coordinates computed
     // at click time — close it on scroll rather than let it drift away
     // from the word it's supposed to be anchored to.
-    const handleScroll = () => close();
+    const container = scrollContainerRef.current;
+    const handleScroll = () => {
+      if (Date.now() < suppressScrollCloseUntilRef.current) return;
+      close();
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    container?.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      container?.removeEventListener("scroll", handleScroll);
+    };
   }, [activeWord]);
 
-  const pageLabelText = dict.pageLabel
-    .replace("{page}", String(currentPage + 1))
-    .replace("{total}", String(totalPages));
-
   return (
-    <div ref={containerTopRef}>
+    <div>
       {isCompletedBadge && (
         <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
           <span aria-hidden="true">✓</span> {dict.completedBadge}
         </div>
       )}
 
-      {ttsSupported && paragraphs.length > 0 && (
+      {hasRealAudio && <audio ref={audioRef} preload="none" className="hidden" />}
+
+      {canPlay && queue.length > 0 && (
         <>
           <div ref={playerSentinelRef} />
           <div
-            className={`sticky top-0 z-30 mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-black/10 bg-background/95 backdrop-blur transition-all dark:border-white/10 ${
+            style={{ top: navOffset }}
+            className={`sticky z-30 mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-black/10 bg-background/95 backdrop-blur transition-all dark:border-white/10 ${
               playerSticky ? "gap-3 p-2.5 shadow-lg" : "p-4"
             }`}
           >
+            {hasRealAudio && (
+              <button
+                type="button"
+                onClick={() => skipBy(-15)}
+                aria-label={dict.skipBackLabel}
+                title={dict.skipBackLabel}
+                className={`flex flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:text-foreground ${
+                  playerSticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
+                }`}
+              >
+                <span aria-hidden="true">⏪</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handlePlayPause}
@@ -516,10 +764,43 @@ export default function StoryText({
               <span aria-hidden="true">{playing ? "⏸" : "▶"}</span>
             </button>
 
-            <div className="h-1.5 min-w-[100px] flex-1 overflow-hidden rounded-full bg-foreground/10">
-              <div
-                className="h-full rounded-full bg-foreground transition-[width] duration-300"
-                style={{ width: `${Math.min(progress * 100, 100)}%` }}
+            {hasRealAudio && (
+              <button
+                type="button"
+                onClick={() => skipBy(15)}
+                aria-label={dict.skipForwardLabel}
+                title={dict.skipForwardLabel}
+                className={`flex flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:text-foreground ${
+                  playerSticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
+                }`}
+              >
+                <span aria-hidden="true">⏩</span>
+              </button>
+            )}
+
+            <div className="relative flex min-w-[100px] flex-1 items-center">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+                <div
+                  className="h-full rounded-full bg-foreground transition-[width] duration-300"
+                  style={{ width: `${Math.min(progress * 100, 100)}%` }}
+                />
+              </div>
+              {/* Transparent range input on top of the visual bar above —
+                  reuses its look while getting native drag/keyboard/touch
+                  seek behavior for free. React's onChange fires on every
+                  drag step (not just on release), so the text highlight
+                  and scroll follow the thumb live — the player -> text
+                  sync side of the two-way sync. */}
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, queue.length - 1)}
+                step={1}
+                value={readingQueueIndex ?? 0}
+                disabled={queue.length === 0}
+                onChange={(event) => handleSentenceClick(Number(event.target.value))}
+                aria-label={dict.seekLabel}
+                className="absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 cursor-pointer opacity-0"
               />
             </div>
 
@@ -543,81 +824,77 @@ export default function StoryText({
         </>
       )}
 
-      {hasParagraphTranslation && (
-        <button
-          type="button"
-          onClick={() => setShowTranslation((prev) => !prev)}
-          className="mb-4 rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground dark:border-white/15"
-        >
-          {showTranslation ? dict.hideTranslationButton : dict.showTranslationButton}
-        </button>
-      )}
-
-      <div className="flex flex-col gap-6 text-lg leading-8 sm:text-xl sm:leading-9">
-        {pageParagraphs.map((paragraph, paragraphIndex) => (
-          <div
-            key={pageStart + paragraphIndex}
-            ref={(el) => {
-              paragraphRefs.current[paragraphIndex] = el;
-            }}
-            className={
-              resumeParagraphIndex === paragraphIndex
-                ? "rounded-lg ring-2 ring-amber-400/50 ring-offset-4 ring-offset-background transition-shadow"
-                : ""
-            }
-          >
+      <div
+        ref={scrollContainerRef}
+        // overscroll-contain: without it, a *programmatic* scrollTo() on
+        // this container (our own scrollSentenceIntoView(), called on
+        // every sentence auto-advance) was also chaining into the outer
+        // page scroll — moving the window even though only this inner
+        // pane should move. That stray window scroll is what made the
+        // `position: sticky` player jitter/flicker during playback: its
+        // pinned position tracks window scroll, so it was fighting our
+        // own auto-scroll every single sentence.
+        className="flex max-h-[70dvh] flex-col gap-6 overflow-y-auto overscroll-contain rounded-2xl border border-black/10 p-4 text-lg leading-8 dark:border-white/10 sm:max-h-[75dvh] sm:p-6 sm:text-xl sm:leading-9"
+      >
+        {paragraphGroups.map((group) => (
+          <div key={group.paragraphIndex}>
             <p>
-              {tokenizedParagraphs[paragraphIndex].map((token, tokenIndex) =>
-                CYRILLIC_WORD_REGEX.test(token) ? (
-                  <button
-                    key={tokenIndex}
-                    type="button"
-                    onClick={(event) => handleWordClick(token, event)}
-                    className={`rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 focus:outline-none ${
-                      playing && readingParagraph === paragraphIndex && readingToken === tokenIndex
-                        ? "bg-amber-400/40 dark:bg-amber-400/30"
-                        : ""
-                    }`}
-                  >
-                    {token}
-                  </button>
-                ) : (
-                  <span key={tokenIndex}>{token}</span>
-                )
-              )}
+              {group.queueIndexes.map((queueIndex) => (
+                <span
+                  key={queueIndex}
+                  ref={(el) => {
+                    sentenceRefs.current[queueIndex] = el;
+                  }}
+                  role={canPlay ? "button" : undefined}
+                  tabIndex={canPlay ? 0 : undefined}
+                  // A tabIndex=0 element gets the browser's own native
+                  // "scroll the newly-focused element into view" on click —
+                  // separate from and in addition to our own
+                  // scrollSentenceIntoView() call, and just as prone to
+                  // cascading into a window-level scroll. Suppressing focus
+                  // on mousedown (mouse/touch only, Tab-key focus is
+                  // unaffected) avoids that duplicate, competing scroll —
+                  // this was the other half of the sticky-player jitter.
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => handleSentenceClick(queueIndex)}
+                  onKeyDown={(event) => handleSentenceKeyDown(event, queueIndex)}
+                  className={`rounded transition-colors ${canPlay ? "cursor-pointer hover:bg-foreground/5" : ""} ${
+                    readingQueueIndex === queueIndex ? "bg-amber-400/20 dark:bg-amber-400/10" : ""
+                  } ${
+                    resumeQueueIndex === queueIndex
+                      ? "ring-2 ring-amber-400/50 ring-offset-4 ring-offset-background"
+                      : ""
+                  }`}
+                >
+                  {sentenceTokens[queueIndex].map((token, tokenIndex) =>
+                    CYRILLIC_WORD_REGEX.test(token) ? (
+                      <button
+                        key={tokenIndex}
+                        type="button"
+                        onClick={(event) => handleWordClick(token, event)}
+                        className={`rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 focus:outline-none ${
+                          playing && readingQueueIndex === queueIndex && readingToken === tokenIndex
+                            ? "bg-amber-400/40 dark:bg-amber-400/30"
+                            : ""
+                        }`}
+                      >
+                        {token}
+                      </button>
+                    ) : (
+                      <span key={tokenIndex}>{token}</span>
+                    )
+                  )}
+                </span>
+              ))}
             </p>
-            {showTranslation && pageTranslationParagraphs[paragraphIndex] && (
+            {translationParagraphs?.[group.paragraphIndex] && (
               <p className="mt-2 text-base leading-7 text-foreground/60 italic">
-                {pageTranslationParagraphs[paragraphIndex]}
+                {translationParagraphs[group.paragraphIndex]}
               </p>
             )}
           </div>
         ))}
       </div>
-
-      {totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-between gap-4 border-t border-black/10 pt-6 dark:border-white/10">
-          <button
-            type="button"
-            onClick={() => goToPage(Math.max(0, currentPage - 1))}
-            disabled={currentPage === 0}
-            aria-label={dict.prevPageLabel}
-            className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
-          >
-            ← {dict.prevPageLabel}
-          </button>
-          <span className="text-sm text-foreground/60">{pageLabelText}</span>
-          <button
-            type="button"
-            onClick={() => goToPage(Math.min(totalPages - 1, currentPage + 1))}
-            disabled={currentPage === totalPages - 1}
-            aria-label={dict.nextPageLabel}
-            className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
-          >
-            {dict.nextPageLabel} →
-          </button>
-        </div>
-      )}
 
       {activeWord && popoverPosition && (
         <>

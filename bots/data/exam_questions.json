@@ -1,0 +1,7163 @@
+[
+  {
+    "question": "¿Qué sonido representa la letra rusa 'В'?",
+    "options": [
+      "h",
+      "b",
+      "y",
+      "v"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál de estas letras rusas se pronuncia 'n', y no 'h'?",
+    "options": [
+      "Н",
+      "С",
+      "У",
+      "Р"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué tipo de letra es 'Ъ' (твёрдый знак)?",
+    "options": [
+      "Una semivocal",
+      "Una consonante",
+      "Una vocal",
+      "Un signo, no tiene sonido propio"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pronuncia la vocal 'О' cuando NO lleva el acento de la palabra?",
+    "options": [
+      "Como una 'a' débil",
+      "No se pronuncia",
+      "Como una 'o' clara",
+      "Como una 'u'"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el saludo formal en ruso?",
+    "options": [
+      "здравствуйте",
+      "привет",
+      "спасибо",
+      "пока"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué pronombre usarías para hablar de forma respetuosa con un desconocido?",
+    "options": [
+      "я",
+      "вы",
+      "она",
+      "ты"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'chau' de forma informal en ruso?",
+    "options": [
+      "пока",
+      "здравствуйте",
+      "да",
+      "до свидания"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué significa literalmente 'меня зовут'?",
+    "options": [
+      "yo me llamo (con verbo 'llamarse')",
+      "a mí me llaman",
+      "cómo te llamas",
+      "mucho gusto"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuántos casos gramaticales tiene el ruso?",
+    "options": [
+      "4",
+      "7",
+      "5",
+      "6"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué caso se usa para nombrar algo, la forma 'de diccionario'?",
+    "options": [
+      "prepositivo",
+      "genitivo",
+      "nominativo",
+      "instrumental"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué pregunta responde el caso instrumental?",
+    "options": [
+      "¿dónde?",
+      "¿a quién?",
+      "¿con qué?",
+      "¿de quién?"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "Por su terminación, '-о' o '-е', ¿qué género suele tener un sustantivo ruso?",
+    "options": [
+      "masculino",
+      "neutro",
+      "no indica género",
+      "femenino"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'cinco' en ruso?",
+    "options": [
+      "пять",
+      "семь",
+      "четыре",
+      "шесть"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué frase usarías para preguntar el precio?",
+    "options": [
+      "Сколько это стоит?",
+      "Как дела?",
+      "Как тебя зовут?",
+      "До свидания"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo preguntas la hora?",
+    "options": [
+      "Сколько рублей?",
+      "Который час?",
+      "Что это?",
+      "Где город?"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'dos rublos'?",
+    "options": [
+      "два рубля",
+      "один рубль",
+      "пять рублей",
+      "десять рублей"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'yo quiero' en ruso?",
+    "options": [
+      "я хочу",
+      "он хочет",
+      "мы хотим",
+      "ты хочешь"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué pides para pagar en un restaurante?",
+    "options": [
+      "Меню, пожалуйста",
+      "Хлеб, пожалуйста",
+      "Счёт, пожалуйста",
+      "Чай, пожалуйста"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'nosotros queremos'?",
+    "options": [
+      "я хочу",
+      "они хотят",
+      "мы хотим",
+      "вы хотите"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué significa 'можно'?",
+    "options": [
+      "adiós",
+      "cuánto",
+      "se puede / permíteme",
+      "gracias"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'hermano' en ruso?",
+    "options": [
+      "мама",
+      "сестра",
+      "брат",
+      "папа"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué expresión usarías para decir 'tengo una hermana'?",
+    "options": [
+      "Сестра большая",
+      "Я хочу сестру",
+      "У меня есть сестра",
+      "Это моя мама"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la terminación típica del adjetivo femenino?",
+    "options": [
+      "-ая",
+      "-ый",
+      "-ое",
+      "-ой"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'abuela' en ruso?",
+    "options": [
+      "дедушка",
+      "сын",
+      "бабушка",
+      "семья"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'yo leo' en ruso?",
+    "options": [
+      "мы читаем",
+      "они читают",
+      "ты читаешь",
+      "я читаю"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿En qué termina el infinitivo de los verbos como 'читать'?",
+    "options": [
+      "-уть",
+      "-еть",
+      "-ать",
+      "-ить"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'ellos saben'?",
+    "options": [
+      "я знаю",
+      "они знают",
+      "мы знаем",
+      "он знает"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se niega un verbo en ruso?",
+    "options": [
+      "con un verbo auxiliar",
+      "poniendo 'не' antes",
+      "cambiando la terminación",
+      "no se puede negar"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta '¿Dónde está el metro?'?",
+    "options": [
+      "Сколько это стоит?",
+      "Как дела?",
+      "Кто это?",
+      "Где метро?"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué significa 'прямо'?",
+    "options": [
+      "a la derecha",
+      "atrás",
+      "a la izquierda",
+      "todo recto"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué significa 'близко'?",
+    "options": [
+      "recto",
+      "cerca",
+      "al lado",
+      "lejos"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué forma verbal es 'идите'?",
+    "options": [
+      "futuro",
+      "infinitivo",
+      "pasado",
+      "imperativo formal"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué forma verbal describe una acción ya terminada, con resultado?",
+    "options": [
+      "infinitivo",
+      "imperfectiva",
+      "perfectiva",
+      "gerundio"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma perfectiva de 'делать' (hacer)?",
+    "options": [
+      "делать",
+      "сделать",
+      "делаю",
+      "делал"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se forma el futuro imperfectivo?",
+    "options": [
+      "solo con el prefijo про-",
+      "no existe futuro imperfectivo",
+      "быть + infinitivo imperfectivo",
+      "conjugando el verbo perfectivo"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué forma verbal es 'сказать' respecto a 'говорить'?",
+    "options": [
+      "su forma perfectiva",
+      "su sinónimo imperfectivo",
+      "no están relacionados",
+      "su forma pasada"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo cambia el verbo en pasado en ruso?",
+    "options": [
+      "por persona (yo/tú/él)",
+      "por género y número del sujeto",
+      "no cambia nunca",
+      "solo en plural"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la terminación del pasado para un sujeto femenino?",
+    "options": [
+      "-ла",
+      "-л",
+      "-ло",
+      "-ли"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'nosotros trabajaremos'?",
+    "options": [
+      "мы работать",
+      "мы будем работать",
+      "мы работали",
+      "мы работаем"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué terminación del pasado corresponde al plural?",
+    "options": [
+      "-л",
+      "-ла",
+      "-ло",
+      "-ли"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué pregunta responde el caso genitivo?",
+    "options": [
+      "¿de quién?/¿de qué?",
+      "¿con qué?",
+      "¿a quién?",
+      "¿dónde?"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "En acusativo, 'книга' (libro) se convierte en...",
+    "options": [
+      "книгу",
+      "книге",
+      "книгой",
+      "книги"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué le pasa a un sustantivo masculino inanimado en acusativo?",
+    "options": [
+      "desaparece",
+      "cambia mucho",
+      "se vuelve femenino",
+      "no cambia, igual que nominativo"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué preposición rige genitivo y significa 'sin'?",
+    "options": [
+      "из",
+      "с",
+      "без",
+      "у"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'verano' en ruso?",
+    "options": [
+      "лето",
+      "зима",
+      "весна",
+      "осень"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'На улице холодно'?",
+    "options": [
+      "Es de noche",
+      "Hace calor afuera",
+      "Está lloviendo",
+      "Hace frío afuera"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se pregunta '¿qué tiempo hace hoy?'?",
+    "options": [
+      "Сколько это стоит?",
+      "Где город?",
+      "Какая сегодня погода?",
+      "Который час?"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'en otoño'?",
+    "options": [
+      "летом",
+      "весной",
+      "осенью",
+      "зимой"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo se usa para ir en vehículo, a diferencia de ir a pie?",
+    "options": [
+      "идти",
+      "знать",
+      "быть",
+      "ехать"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'avión' en ruso?",
+    "options": [
+      "автобус",
+      "метро",
+      "поезд",
+      "самолёт"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'llegar en vehículo' (evento puntual)?",
+    "options": [
+      "ехать",
+      "поехать",
+      "приехать",
+      "уехать"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'irse, partir en vehículo'?",
+    "options": [
+      "приехать",
+      "поехать",
+      "уехать",
+      "ехать"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo se usa en anuncios de estación para 'salir según horario'?",
+    "options": [
+      "приехать",
+      "отправляться",
+      "идти",
+      "ехать"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'solo ida' al comprar un billete?",
+    "options": [
+      "расписание",
+      "до Москвы",
+      "в один конец",
+      "туда и обратно"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'cocina' en ruso?",
+    "options": [
+      "спальня",
+      "кухня",
+      "гостиная",
+      "ванная"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué preposición usarías para 'cerca de la casa'?",
+    "options": [
+      "на дома",
+      "около дома",
+      "в дома",
+      "из дома"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'balcón' en ruso?",
+    "options": [
+      "балкон",
+      "лестница",
+      "двор",
+      "подъезд"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'refrigerador'?",
+    "options": [
+      "кровать",
+      "холодильник",
+      "шкаф",
+      "диван"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué caso rige 'рядом с' (cerca de)?",
+    "options": [
+      "genitivo",
+      "dativo",
+      "acusativo",
+      "instrumental"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es el orden correcto de una dirección completa?",
+    "options": [
+      "el orden no importa",
+      "улица, дом, квартира",
+      "дом, квартира, улица",
+      "quartira, dom, улица"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'mejor' en ruso?",
+    "options": [
+      "лучше",
+      "менее",
+      "более",
+      "хуже"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué palabra se usa para comparar dos cosas, como 'que' en español?",
+    "options": [
+      "а",
+      "чем",
+      "и",
+      "или"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'un libro más interesante' (ANTES del sustantivo)?",
+    "options": [
+      "книга интереснее",
+      "более интересная книга",
+      "интереснее книга",
+      "самая интересная книга"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'el más interesante' (superlativo)?",
+    "options": [
+      "интереснее",
+      "более интересный",
+      "самый интересный",
+      "лучше интересный"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Él es mayor que yo' usando genitivo, sin 'чем'?",
+    "options": [
+      "Он старше меня",
+      "Он старше со мной",
+      "Он старше мне",
+      "Он старше я"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estas NO es una forma de dar una opinión?",
+    "options": [
+      "По-моему",
+      "Мне кажется",
+      "На мой взгляд",
+      "Более интересно"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'рука' en ruso?",
+    "options": [
+      "pie",
+      "solo brazo",
+      "mano o brazo",
+      "solo mano"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo dices 'me duele la cabeza'?",
+    "options": [
+      "Мне нужен врач",
+      "Я врач",
+      "Голова большая",
+      "У меня болит голова"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'me duelen las piernas' (plural)?",
+    "options": [
+      "Мои ноги болеть",
+      "У меня боль ноги",
+      "У меня болит ноги",
+      "У меня болят ноги"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es el plural irregular de 'глаз' (ojo)?",
+    "options": [
+      "глаза",
+      "глазов",
+      "глазы",
+      "глази"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué diferencia hay entre 'болеть' y 'заболеть'?",
+    "options": [
+      "болеть = proceso (imperfectivo); заболеть = evento puntual (perfectivo)",
+      "no hay ninguna diferencia",
+      "заболеть significa 'curarse'",
+      "болеть es formal; заболеть es informal"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo le dice el médico a un paciente que descanse?",
+    "options": [
+      "Он отдохнул",
+      "Я отдыхаю",
+      "Отдых был хороший",
+      "Вам нужно отдохнуть"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'porque' en el registro más común y neutro?",
+    "options": [
+      "потому что",
+      "так как",
+      "поэтому",
+      "хотя"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia principal entre 'потому что' y 'так как'?",
+    "options": [
+      "потому что es más formal que так как",
+      "так как es más formal y SÍ puede abrir la oración; потому что no",
+      "No hay ninguna diferencia real",
+      "Significan cosas opuestas"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué introduce 'поэтому'?",
+    "options": [
+      "La concesión",
+      "La causa",
+      "La consecuencia o resultado",
+      "Una pregunta"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'fui al trabajo, aunque me enfermé'?",
+    "options": [
+      "Я заболел, хотя я пошёл на работу",
+      "Я пошёл на работу, потому что я заболел",
+      "Я не пошёл на работу, поэтому я заболел",
+      "Я пошёл на работу, хотя я заболел"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es el sinónimo MÁS FORMAL de 'хотя'?",
+    "options": [
+      "несмотря на то, что",
+      "поэтому",
+      "потому что",
+      "так как"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige 'несмотря на' cuando va seguido directamente de un sustantivo (sin 'что')?",
+    "options": [
+      "Dativo",
+      "Acusativo",
+      "Genitivo",
+      "Instrumental"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige obligatoriamente 'нужно/можно/нельзя' + infinitivo?",
+    "options": [
+      "dativo",
+      "instrumental",
+      "acusativo",
+      "genitivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'tengo frío' en ruso?",
+    "options": [
+      "Мой холодно",
+      "Мне холодно",
+      "Это холодно",
+      "Я холодно"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige 'стать' para expresar profesión, como en 'стать врачом'?",
+    "options": [
+      "genitivo",
+      "acusativo",
+      "instrumental",
+      "dativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'escribo con un bolígrafo'?",
+    "options": [
+      "Я пишу к ручке",
+      "Я пишу ручку",
+      "Я пишу с ручкой",
+      "Я пишу ручкой"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'нужно' y 'надо'?",
+    "options": [
+      "Significan lo mismo; надо es más coloquial",
+      "Significan cosas opuestas",
+      "надо no existe en el habla actual",
+      "нужно solo se usa en plural"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'por la mañana' usando el instrumental de tiempo?",
+    "options": [
+      "в утро",
+      "утром",
+      "на утре",
+      "утро"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo dice una mujer que está de acuerdo?",
+    "options": [
+      "Я согласна",
+      "Мы согласна",
+      "Он согласна",
+      "Я согласен"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'мне кажется, что...'?",
+    "options": [
+      "necesito que...",
+      "me parece que...",
+      "me gusta que...",
+      "recuerdo que..."
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra se usa para contradecir suavemente, con el sentido de 'al contrario'?",
+    "options": [
+      "возможно",
+      "точно",
+      "наоборот",
+      "иначе"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué estructura se usa para presentar dos lados de un argumento?",
+    "options": [
+      "По-моему...",
+      "Наверное...",
+      "Точно!",
+      "С одной стороны... с другой стороны..."
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la forma de 'согласен' para el trato formal 'usted' o un grupo?",
+    "options": [
+      "согласны",
+      "согласен",
+      "согласна",
+      "согласный"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra expresa incertidumbre, no certeza total?",
+    "options": [
+      "полностью",
+      "наверное",
+      "точно",
+      "именно так"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'trabajo de nueve a seis'?",
+    "options": [
+      "Я работаю с девяти до шести",
+      "Я работаю на девять до шести",
+      "Я работаю девять шесть",
+      "Я работаю от девять к шести"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra significa 'jefe'?",
+    "options": [
+      "предмет",
+      "начальник",
+      "студент",
+      "коллега"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'поступить в университет' y 'учиться в университете'?",
+    "options": [
+      "поступить es para profesores, учиться para estudiantes",
+      "Significan exactamente lo mismo",
+      "поступить es el momento de ingresar; учиться es el proceso de estudiar ya matriculado",
+      "учиться solo se usa en pasado"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'сдать экзамен' (perfectivo)?",
+    "options": [
+      "reprobar el examen",
+      "presentarse a examinarse (el proceso)",
+      "cancelar el examen",
+      "aprobar el examen (resultado exitoso)"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige el verbo 'заниматься' (dedicarse a, estudiar por cuenta propia)?",
+    "options": [
+      "instrumental",
+      "dativo",
+      "genitivo",
+      "acusativo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'semestre' en ruso?",
+    "options": [
+      "предмет",
+      "семестр",
+      "лекция",
+      "курс"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra abre casi cualquier historia rusa, como 'había una vez'?",
+    "options": [
+      "однажды",
+      "потом",
+      "вдруг",
+      "наконец"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la cadena correcta de secuencia narrativa?",
+    "options": [
+      "потом → наконец → сначала",
+      "сначала → потом → наконец",
+      "вдруг → сначала → потом",
+      "наконец → сначала → потом"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra introduce una acción de fondo simultánea, con verbo imperfectivo, distinta de 'когда'?",
+    "options": [
+      "в итоге",
+      "затем",
+      "пока",
+      "вдруг"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra marca un giro inesperado en la historia?",
+    "options": [
+      "тем временем",
+      "в конце концов",
+      "сначала",
+      "вдруг"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se expresa la duración 'viví allí dos года' sin preposición?",
+    "options": [
+      "Я жил там два года",
+      "Я жил там с два года",
+      "Я жил там на два года",
+      "Я жил там за два года"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué expresión implica que el final llegó tras dificultades o mucho tiempo?",
+    "options": [
+      "потом",
+      "в конце концов",
+      "наконец",
+      "сначала"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'noticias' en ruso (siempre en plural)?",
+    "options": [
+      "новости",
+      "интернет",
+      "газета",
+      "журнал"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué expresión significa 'según las palabras de...'?",
+    "options": [
+      "например",
+      "по словам",
+      "по данным",
+      "потому что"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige la preposición 'по' en 'по данным' y 'по словам'?",
+    "options": [
+      "genitivo",
+      "acusativo",
+      "dativo",
+      "instrumental"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra significa 'televidente' (persona que ve la televisión)?",
+    "options": [
+      "читатель",
+      "ведущий",
+      "слушатель",
+      "зритель"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "En un titular como '«Президент в Москве»' (sin verbo), ¿qué palabra se omite por registro periodístico?",
+    "options": [
+      "быть",
+      "сообщать",
+      "новости",
+      "данные"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'en vivo, en directo' (transmisión)?",
+    "options": [
+      "ежедневно",
+      "в прямом эфире",
+      "по данным",
+      "еженедельно"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué es 'баня' en la cultura rusa?",
+    "options": [
+      "baño de vapor tradicional",
+      "tetera tradicional",
+      "fiesta de invierno",
+      "muñeca de madera"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué verbo se usa para 'celebrar' una fiesta?",
+    "options": [
+      "изучать",
+      "праздновать",
+      "работать",
+      "думать"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Con qué se recibe tradicionalmente a los invitados en Rusia?",
+    "options": [
+      "con flores y velas",
+      "con vodka y pepinillos",
+      "con pan y sal",
+      "con té y azúcar"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa la construcción impersonal 'принято'?",
+    "options": [
+      "es peligroso",
+      "está prohibido",
+      "es imposible",
+      "se acostumbra, es costumbre"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'принято' y 'нужно' (b1-2)?",
+    "options": [
+      "принято describe una costumbre social general, sin dativo de persona; нужно expresa una necesidad personal, con dativo",
+      "принято es solo para comida; нужно para todo lo demás",
+      "Significan exactamente lo mismo",
+      "нужно es más formal que принято"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra designa la ceremonia o el momento tradicional de tomar té?",
+    "options": [
+      "самовар",
+      "чаепитие",
+      "баня",
+      "масленица"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se termina un correo formal en ruso?",
+    "options": [
+      "С уважением,",
+      "До скорого",
+      "Привет!",
+      "Пока!"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué es el 'отчество'?",
+    "options": [
+      "el nombre de la empresa",
+      "un nombre derivado del nombre del padre",
+      "el apellido",
+      "un título académico"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se escribe 'usted' con respeto en un correo formal?",
+    "options": [
+      "Ты",
+      "вы",
+      "Вы",
+      "ты"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué frase cortés usa la partícula 'бы' para pedir algo con suavidad?",
+    "options": [
+      "Хочу...",
+      "Дай мне...",
+      "Дай сюда",
+      "Не могли бы Вы..."
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se forma el patronímico masculino a partir de 'Пётр'?",
+    "options": [
+      "Петрович",
+      "Петрик",
+      "Петров",
+      "Петровна"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra introduce la línea de asunto de un correo?",
+    "options": [
+      "Просьба",
+      "Тема",
+      "Приложение",
+      "Ответ"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se forma el modo condicional/subjuntivo en ruso?",
+    "options": [
+      "Verbo en pasado (concordando en género/número) + la partícula invariable «бы»",
+      "Con el verbo auxiliar «быть» en presente",
+      "Con una terminación especial añadida al infinitivo",
+      "Verbo en futuro + «бы»"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué tienen en común el ruso 'сказал бы' y el español 'diría' en cuanto a CONJUGACIÓN?",
+    "options": [
+      "Ambos conjugan por persona igual",
+      "Nada: el español conjuga el condicional por persona (diría/dirías/diría...); el ruso solo concuerda por género/número, nunca por persona",
+      "El ruso también tiene 6 formas distintas por persona",
+      "El español tampoco conjuga por persona"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Dónde se coloca «бы» dentro de la parte con «если»?",
+    "options": [
+      "Da igual, se puede poner en cualquier parte",
+      "Siempre al final de la oración",
+      "Siempre pegada a «если»: «если бы», nunca separada",
+      "Antes de «если»"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "'Я бы пошёл' frente a 'Пошёл бы я' — ¿qué cambia al mover «бы»?",
+    "options": [
+      "El registro de cortesía únicamente",
+      "El tiempo verbal",
+      "Nada, son exactamente lo mismo sin matiz",
+      "El foco de la oración se desplaza hacia la palabra que precede a «бы»"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué distinción hace el ESPAÑOL que el ruso NO hace con «бы»?",
+    "options": [
+      "Entre condicional hipotético de presente/futuro ('si tuviera... iría') y condicional de pasado ('si hubiera sabido... habría llamado')",
+      "El español no tiene ninguna distinción que el ruso no tenga",
+      "El español no usa condicionales",
+      "El ruso distingue más matices temporales que el español"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué tienen en común 'если бы' (hoy) y 'чтобы' + pasado (b1-24)?",
+    "options": [
+      "Son la misma partícula con otro nombre",
+      "Ambos reutilizan la forma de pasado para marcar irrealidad/hipótesis, no tiempo real",
+      "No tienen ninguna relación",
+      "чтобы también significa 'si'"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estas oraciones expresa una condición REAL (no hipotética)?",
+    "options": [
+      "Если ты позвонишь, я отвечу.",
+      "Я хотел бы поехать.",
+      "Если бы я знал, я бы сказал.",
+      "На твоём месте я бы не делал этого."
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué diferencia hay entre «если» y «когда»?",
+    "options": [
+      "No hay ninguna diferencia entre ambas",
+      "«если» expresa condición incierta; «когда» expresa tiempo, algo que se sabe que ocurrirá",
+      "«если» solo se usa en pasado",
+      "«когда» siempre requiere «бы»"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Por qué 'позвонишь' (forma de presente de un verbo perfectivo) puede referirse al futuro?",
+    "options": [
+      "Porque es un error común aceptado",
+      "Porque siempre significa pasado",
+      "Porque los verbos perfectivos no tienen presente real; su conjugación no-pasada siempre expresa futuro",
+      "Porque necesita el auxiliar 'будешь'"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuándo es obligatorio usar «то» en una condición real?",
+    "options": [
+      "Siempre, en toda oración con «если»",
+      "Solo si no hay «бы»",
+      "Solo en pasado",
+      "Nunca es obligatorio, es opcional, aunque frecuente cuando la cláusula con «если» es larga"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "'Если он опоздал на поезд, он расстроился' — pasado + pasado. ¿Qué tiene de especial esta estructura frente al español?",
+    "options": [
+      "Es un paralelo casi exacto: el español también usa 'si' + indicativo pasado para razonar sobre un hecho pasado ya conocido",
+      "No existe en ruso, es un error",
+      "Necesita бы obligatoriamente",
+      "Solo se puede usar con verbos imperfectivos"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué tienen en común 'при условии, что' y 'в случае, если'?",
+    "options": [
+      "Ambas expresan condición irreal",
+      "Ambas son fórmulas condicionales más formales, típicas de registro escrito/oficial",
+      "Son sinónimos de «когда»",
+      "Solo se usan en preguntas"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué esquema estructural sigue un buen argumento formal en ruso?",
+    "options": [
+      "Tesis → argumento → ejemplo/prueba → conclusión",
+      "Conclusión → tesis → ejemplo",
+      "Ejemplo → tesis → pregunta",
+      "Solo opinión personal, sin estructura"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué modo verbal sigue a 'я сомневаюсь, что...' (dudo que...) en ruso?",
+    "options": [
+      "El condicional con бы",
+      "El indicativo normal, sin ningún modo especial",
+      "El subjuntivo, como en español",
+      "El imperativo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué es siempre obligatorio antes de «что» en una oración de opinión como «Я считаю, что...»?",
+    "options": [
+      "Un punto",
+      "Un guion",
+      "Una coma",
+      "Nada especial"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué hace la estructura 'хотя в этом есть доля правды, всё же...' antes de contradecir?",
+    "options": [
+      "Es pura cortesía sin contenido real",
+      "Expresa acuerdo total",
+      "Cambia de tema por completo",
+      "Suaviza la contradicción, reconociendo algo de razón antes de discrepar"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige 'согласен' en 'не совсем согласен С тем, что...'?",
+    "options": [
+      "Instrumental (с + instrumental)",
+      "Dativo",
+      "Genitivo",
+      "Acusativo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué expresa 'нельзя не согласиться с тем, что...' (doble negación)?",
+    "options": [
+      "Una pregunta retórica sin respuesta",
+      "Un acuerdo MUY fuerte, casi obligatorio ('no se puede dejar de estar de acuerdo')",
+      "Un desacuerdo total",
+      "Una duda profunda"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué palabra es un sinónimo literario/arcaico de «глаза» (ojos)?",
+    "options": [
+      "очи",
+      "ланиты",
+      "уста",
+      "чело"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "«Ветер шептал» (el viento susurraba) es un ejemplo de:",
+    "options": [
+      "сравнение",
+      "олицетворение",
+      "эпитет",
+      "метафора"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "«Море огня» (un mar de fuego) es un ejemplo de:",
+    "options": [
+      "олицетворение",
+      "эпитет",
+      "метафора",
+      "сравнение"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "«Белый, как снег» (blanco como la nieve) es un ejemplo de:",
+    "options": [
+      "эпитет",
+      "олицетворение",
+      "метафора",
+      "сравнение"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "En «Тихо шумел лес» (en vez del orden neutro «Лес тихо шумел»), ¿qué efecto produce colocar «лес» al final?",
+    "options": [
+      "Destaca «лес» como la información nueva/más importante de la frase",
+      "Convierte la frase en una pregunta",
+      "No tiene ningún efecto especial",
+      "Cambia el significado por completo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se usa el vocabulario poético/arcaico (очи, уста, чело) en ruso moderno?",
+    "options": [
+      "Ha desaparecido por completo del idioma",
+      "Solo de forma pasiva: se reconoce al leer, pero no se usa en el habla activa",
+      "Se usa constantemente en conversaciones cotidianas",
+      "Solo lo usan los niños en la escuela"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «Всё путём»?",
+    "options": [
+      "Todo va bien",
+      "Todo está en el camino (literal)",
+      "Estoy perdido",
+      "Nada funciona"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estas frases es la más formal para «me voy»?",
+    "options": [
+      "Забей, я домой.",
+      "Прошу прощения, мне необходимо удалиться.",
+      "Го домой.",
+      "Короче, я пошёл."
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué función cumple la partícula «же» en «Я же говорил!»?",
+    "options": [
+      "Niega la frase",
+      "No tiene ninguna función",
+      "Añade énfasis/insistencia (¡si ya te lo dije!)",
+      "Convierte la frase en pregunta"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué añade la partícula «-то» en «А ты-то что думаешь?»?",
+    "options": [
+      "Hace la frase negativa",
+      "Es solo un error tipográfico",
+      "Convierte el verbo en pasado",
+      "Señala/contrasta a esa persona en concreto (¿y TÚ qué piensas?)"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se debe tratar la jerga juvenil/de internet (сленг) como estudiante?",
+    "options": [
+      "Con uso pasivo (para entender), confirmando vigencia con hablantes actuales antes de usarla activamente",
+      "Solo en textos formales",
+      "Usándola siempre en cualquier contexto",
+      "Ignorándola por completo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué NO se debe hacer con expresiones fijas como «не вопрос» o «забей»?",
+    "options": [
+      "Usarlas en contexto informal",
+      "Traducirlas palabra por palabra",
+      "Reconocer su significado idiomático",
+      "Aprenderlas como bloques fijos"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la traducción correcta de «Считается, что...»?",
+    "options": [
+      "Se considera que...",
+      "Los que consideran...",
+      "Se decide que...",
+      "Considerando esto..."
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué preposición se usa para una causa negativa/problemática, como una crisis?",
+    "options": [
+      "для + genitivo",
+      "из-за + genitivo",
+      "о + preposicional",
+      "благодаря + dativo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué preposición introduce una causa neutra, sin connotación negativa?",
+    "options": [
+      "несмотря на + acusativo",
+      "из-за + genitivo",
+      "в связи с + instrumental",
+      "вопреки + dativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué introduce «в результате + genitivo»?",
+    "options": [
+      "Una pregunta retórica",
+      "Una opinión personal",
+      "Una causa",
+      "Una consecuencia (lo que resultó de algo)"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué tipo de sustantivo es «развитие» (desarrollo) en «развитие общества»?",
+    "options": [
+      "Un sustantivo verbal (отглагольное существительное), típico del registro formal/objetivo",
+      "Un adjetivo sustantivado",
+      "Un diminutivo",
+      "Un participio"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se expresa «según la opinión de los expertos» en ruso?",
+    "options": [
+      "мнение об экспертах",
+      "по мнению экспертов",
+      "с точки зрения из экспертов",
+      "экспертное мнение о"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la forma más cortés de expresar desacuerdo en una reunión de negocios?",
+    "options": [
+      "Позвольте не согласиться.",
+      "Это неправда.",
+      "Нет.",
+      "Я не согласен."
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué expresión significa «cerrar un trato»?",
+    "options": [
+      "сделать сделку",
+      "заключить сделку",
+      "заключить дело",
+      "открыть сделку"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo te presentas formalmente en un contexto profesional?",
+    "options": [
+      "Го, я тут.",
+      "Забей, я новенький.",
+      "Разрешите представиться.",
+      "Как дела?"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuándo se puede pasar de «Вы» a «ты» con un colega en ruso?",
+    "options": [
+      "Automáticamente después de la primera reunión",
+      "Nunca, ni con acuerdo explícito",
+      "En cuanto se conocen",
+      "Solo si se acuerda explícitamente ('¿Puede que nos tuteemos?'), nunca espontáneamente"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué fórmula se usa para cerrar/resumir una reunión?",
+    "options": [
+      "Подведём итоги.",
+      "Позвольте представиться.",
+      "Разрешите не согласиться.",
+      "Я отвечаю за это."
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué colocación significa «cumplir el plan»?",
+    "options": [
+      "сделать план",
+      "выполнить план",
+      "подписать план",
+      "закрыть план"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la forma corta correcta de «готовый» en femenino?",
+    "options": [
+      "готова",
+      "готовая",
+      "готово",
+      "готовы"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso exige el sustantivo después de «два»?",
+    "options": [
+      "dativo singular",
+      "genitivo singular",
+      "genitivo plural",
+      "nominativo plural"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso exige el sustantivo después de «пять»?",
+    "options": [
+      "nominativo singular",
+      "acusativo plural",
+      "genitivo plural",
+      "genitivo singular"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre «он болен» y «он больной»?",
+    "options": [
+      "болен es incorrecto gramaticalmente",
+      "больной solo se usa en plural",
+      "No hay ninguna diferencia de significado",
+      "болен = estado temporal; больной = cualidad permanente/sustantivada"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se dice «con veinticinco estudiantes» declinando correctamente el numeral compuesto?",
+    "options": [
+      "с двадцатью пятью студентами",
+      "с двадцать пятью студентами",
+      "с двадцати пяти студентами",
+      "с двадцать пять студентами"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estos adjetivos existe en ruso moderno prácticamente solo en forma corta como predicado?",
+    "options": [
+      "красивый (bonito)",
+      "рад (contento)",
+      "новый (nuevo)",
+      "большой (grande)"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se dice '¡Escucha!' (informal) en ruso?",
+    "options": [
+      "Слушай",
+      "Слушать",
+      "Слушал",
+      "Слушайте"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la forma imperativa NEGATIVA correcta de 'говорить' (tú)?",
+    "options": [
+      "Не говори",
+      "Говори",
+      "Не говорил",
+      "Не говорить"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'ella puede' en ruso?",
+    "options": [
+      "она можешь",
+      "она могу",
+      "она могут",
+      "она может"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la forma correcta de 'школа' con 'в' (en la escuela)?",
+    "options": [
+      "в школы",
+      "в школе",
+      "в школу",
+      "в школа"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué preposición se usa para 'sobre la mesa'?",
+    "options": [
+      "в",
+      "на",
+      "от",
+      "к"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'en autobús'?",
+    "options": [
+      "в автобусе",
+      "на автобус",
+      "на автобусу",
+      "на автобусе"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué palabra de transporte NO cambia de forma (indeclinable)?",
+    "options": [
+      "метро",
+      "автобус",
+      "машина",
+      "поезд"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'ir a pie'?",
+    "options": [
+      "в пешком",
+      "ехать пешком",
+      "на пешком",
+      "идти пешком"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el acusativo de 'книга' (libro)?",
+    "options": [
+      "книги",
+      "книга",
+      "книге",
+      "книгу"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué sustantivo NO cambia en acusativo?",
+    "options": [
+      "окно",
+      "машина",
+      "книга",
+      "газета"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Veo a un amigo' correctamente?",
+    "options": [
+      "Я вижу друга.",
+      "Я вижу други.",
+      "Я вижу друг.",
+      "Я вижу другу."
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice '¿Me ves?'?",
+    "options": [
+      "Ты видишь я?",
+      "Ты видишь моя?",
+      "Ты видишь мне?",
+      "Ты видишь меня?"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Voy a la escuela'?",
+    "options": [
+      "Я иду в школе",
+      "Я иду на школу",
+      "Я иду в школу",
+      "Я иду школу"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué caso se usa después de 'куда' (¿adónde?)?",
+    "options": [
+      "genitivo",
+      "preposicional",
+      "nominativo",
+      "acusativo"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Voy a casa' correctamente?",
+    "options": [
+      "Я иду на домой",
+      "Я иду дом",
+      "Я иду домой",
+      "Я иду в домой"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la forma correcta de 'ты' con el verbo 'идти'?",
+    "options": [
+      "идёт",
+      "идёшь",
+      "идём",
+      "иду"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'ella trabajó'?",
+    "options": [
+      "она работала",
+      "она работало",
+      "она работали",
+      "она работал"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué terminación de pasado se usa para el plural (они)?",
+    "options": [
+      "-ло",
+      "-ла",
+      "-л",
+      "-ли"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Estuve en casa' (hablante masculino)?",
+    "options": [
+      "Я была дома.",
+      "Я были дома.",
+      "Я было дома.",
+      "Я был дома."
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'No leí el libro'?",
+    "options": [
+      "Я не читал книгу.",
+      "Я читал книгу не.",
+      "Я читал не книгу.",
+      "Не я читал книгу."
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué frase expresa una acción que se completará por entero?",
+    "options": [
+      "Я читаю книгу",
+      "Я читал книгу",
+      "Я буду читать книгу",
+      "Я прочитаю книгу"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'No trabajaré mañana' (proceso, sin enfocarse en terminar)?",
+    "options": [
+      "Я не поработаю завтра.",
+      "Не я буду работать завтра.",
+      "Я не работаю завтра.",
+      "Я не буду работать завтра."
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el verbo perfectivo de 'писать' (escribir)?",
+    "options": [
+      "будет писать",
+      "написать",
+      "писать",
+      "писал"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Tengo un perro'?",
+    "options": [
+      "У меня собаку",
+      "У меня есть собака",
+      "Я есть собака",
+      "Я имею собаку"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué palabra se usa para negar 'tener' (no tengo...)?",
+    "options": [
+      "нет",
+      "ни",
+      "нет есть",
+      "не"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el genitivo correcto de 'машина' en 'У меня нет...'?",
+    "options": [
+      "машину",
+      "машины",
+      "машина",
+      "машине"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Él tiene un coche nuevo' describiendo la cualidad (sin 'есть')?",
+    "options": [
+      "У него есть новая.",
+      "У него нет новая машина.",
+      "У него новая машина.",
+      "Он есть новая машина."
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta la hora en ruso?",
+    "options": [
+      "Какой час?",
+      "Который час?",
+      "Что час?",
+      "Где час?"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'por la mañana'?",
+    "options": [
+      "утра",
+      "утро",
+      "утром",
+      "утре"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice correctamente 'cinco horas'?",
+    "options": [
+      "пять часа",
+      "пять час",
+      "пять часов",
+      "пять часом"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'las dos y media'?",
+    "options": [
+      "половина второго",
+      "два часа",
+      "без четверти два",
+      "половина третьего"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'miércoles'?",
+    "options": [
+      "четверг",
+      "вторник",
+      "среда",
+      "пятница"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué preposición se usa con los meses ('en mayo')?",
+    "options": [
+      "с",
+      "у",
+      "в",
+      "на"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice correctamente 'el sábado' (con acusativo)?",
+    "options": [
+      "в субботе",
+      "на субботу",
+      "в субботу",
+      "в суббота"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el mes que sigue a 'февраль' (febrero)?",
+    "options": [
+      "январь",
+      "апрель",
+      "март",
+      "май"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta la fecha de hoy?",
+    "options": [
+      "Какое сегодня число?",
+      "Который сегодня день?",
+      "Сколько сегодня число?",
+      "Какой сегодня число?"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿En qué género están los números ordinales de fecha (первое, второе)?",
+    "options": [
+      "masculino",
+      "plural",
+      "femenino",
+      "neutro"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice correctamente 'Nací el cinco de mayo'?",
+    "options": [
+      "Я родился пятого май.",
+      "Я родилось пятого мая.",
+      "Я родился пятого мая.",
+      "Я родился пятое мая."
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué caso usa siempre el nombre del mes en una fecha?",
+    "options": [
+      "preposicional",
+      "nominativo",
+      "acusativo",
+      "genitivo"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'No tengo libro'?",
+    "options": [
+      "У меня нет книгу",
+      "У меня нет книги",
+      "У меня не книги",
+      "У меня нет книга"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué caso se usa después de 'нет'?",
+    "options": [
+      "acusativo",
+      "dativo",
+      "nominativo",
+      "genitivo"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el genitivo correcto de 'книга' (regla ortográfica de -и)?",
+    "options": [
+      "книгы",
+      "книги",
+      "книгу",
+      "книге"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'No veo nada'?",
+    "options": [
+      "Ничего я вижу.",
+      "Я ничего не вижу.",
+      "Я ничего вижу.",
+      "Я не вижу ничего не."
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué caso sigue a 'много' (mucho)?",
+    "options": [
+      "nominativo",
+      "dativo",
+      "acusativo",
+      "genitivo"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la forma correcta para 'cinco mesas'?",
+    "options": [
+      "пять столы",
+      "пять стол",
+      "пять стола",
+      "пять столов"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'dos libros' correctamente (книга es femenino)?",
+    "options": [
+      "два книга",
+      "два книги",
+      "две книги",
+      "две книга"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'una ventana' con el número 1 (окно es neutro)?",
+    "options": [
+      "один окно",
+      "одно окно",
+      "одна окно",
+      "одно окна"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Soy de México'?",
+    "options": [
+      "Я на Мексике",
+      "Я от Мексики",
+      "Я в Мексике",
+      "Я из Мексики"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué preposición se usa típicamente con personas ('carta de mamá')?",
+    "options": [
+      "на",
+      "из",
+      "от",
+      "в"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta '¿De quién es este libro?' (книга es femenino)?",
+    "options": [
+      "Чей это книга?",
+      "Чья это книга?",
+      "Что это книга?",
+      "Чьё это книга?"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el opuesto de 'в школу' (dirección) para expresar origen?",
+    "options": [
+      "от школы",
+      "со школы",
+      "на школу",
+      "из школы"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta la edad?",
+    "options": [
+      "Сколько тебе лет?",
+      "Сколько ты лет?",
+      "Сколько у тебя лет?",
+      "Какой тебе год?"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué forma se usa con el número 1 (un año)?",
+    "options": [
+      "лет",
+      "год",
+      "годов",
+      "года"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Él tiene catorce años' (excepción de los números 11 a 14)?",
+    "options": [
+      "Ему четырнадцать год.",
+      "Ему четырнадцать года.",
+      "Он четырнадцать лет.",
+      "Ему четырнадцать лет."
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es el pronombre dativo correcto para 'a nosotros'?",
+    "options": [
+      "вам",
+      "им",
+      "нас",
+      "нам"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Me gusta la música'?",
+    "options": [
+      "Я люблю нравится",
+      "Я нравлюсь музыку",
+      "Мне нравятся музыка",
+      "Мне нравится музыка"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué forma se usa cuando lo que gusta es plural (libros)?",
+    "options": [
+      "нравлюсь",
+      "нравится",
+      "нравятся",
+      "нравиться"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'No me gusta esta película'?",
+    "options": [
+      "Мне нравится не этот фильм.",
+      "Мне не нравится этот фильм.",
+      "Мне не нравятся этот фильм.",
+      "Не мне нравится этот фильм."
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál de estas frases usa el caso acusativo, no el dativo?",
+    "options": [
+      "Мне нравится музыка.",
+      "Ему нравится Москва.",
+      "Я люблю музыку.",
+      "Мне холодно."
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Trabajo como médico'?",
+    "options": [
+      "Я есть врачом",
+      "Я работаю врач",
+      "Я работаю врачом",
+      "Я работаю врача"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué caso se usa con 'работать' + profesión?",
+    "options": [
+      "genitivo",
+      "acusativo",
+      "nominativo",
+      "instrumental"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Él era ingeniero' (быть en pasado)?",
+    "options": [
+      "Он был инженером.",
+      "Он был инженер.",
+      "Он есть инженером.",
+      "Он был инженера."
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta '¿En qué trabajas?'?",
+    "options": [
+      "Кем ты работаешь?",
+      "Что ты работаешь?",
+      "Кто ты работаешь?",
+      "Где ты работаешь?"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Voy al cine con un amigo'?",
+    "options": [
+      "Я иду в кино с друг",
+      "Я иду в кино другом",
+      "Я иду в кино друг",
+      "Я иду в кино с другом"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'conmigo' correctamente?",
+    "options": [
+      "с мной",
+      "со мне",
+      "с меня",
+      "со мной"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la forma instrumental de 'подруга' (amiga)?",
+    "options": [
+      "подруги",
+      "подругу",
+      "подругом",
+      "подругой"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la forma instrumental de 'учитель' (profesor)?",
+    "options": [
+      "учителе",
+      "учителем",
+      "учителя",
+      "учителью"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué forma toma 'кто' (quién) después de 'с'?",
+    "options": [
+      "кому",
+      "кем",
+      "кто",
+      "кого"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué preposición usa el verbo 'дружить' (ser amigo de) para indicar con quién?",
+    "options": [
+      "у + genitivo",
+      "о + prepositional",
+      "к + dativo",
+      "с + instrumental"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Quiero pedir sopa'?",
+    "options": [
+      "Я хочу заказать суп",
+      "Я хочу заказал суп",
+      "Я хочу заказать супа",
+      "Я хочу заказать супом"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Quiero pedir pizza'?",
+    "options": [
+      "Я хочу заказать пицца",
+      "Я хочу заказать пиццой",
+      "Я хочу заказать пиццы",
+      "Я хочу заказать пиццу"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pide la cuenta educadamente en ruso?",
+    "options": [
+      "Счёт хотите?",
+      "Дать пожалуйста счёт",
+      "Вы даёте счёт?",
+      "Дайте, пожалуйста, счёт"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta si hay una habitación libre en el hotel?",
+    "options": [
+      "Вы есть свободный номер?",
+      "Есть вы свободный номер?",
+      "У вас есть свободный номер?",
+      "У вас свободный номер есть быть?"
+    ],
+    "correct_option_id": 2,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'por dos días' (duración de la reserva)?",
+    "options": [
+      "на два день",
+      "на два дня",
+      "на два днями",
+      "на два дней"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'por cinco días'?",
+    "options": [
+      "на пять дней",
+      "на пять дню",
+      "на пять дня",
+      "на пять день"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se pregunta cortésmente 'Diga, por favor, ¿dónde está el metro?'?",
+    "options": [
+      "Скажите, пожалуйста, где метро?",
+      "Сказать, пожалуйста, где метро?",
+      "Скажите, пожалуйста, метро где?",
+      "Скажи, пожалуйста, где метро?"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Gire a la izquierda'?",
+    "options": [
+      "Повернуть налево",
+      "Поверните налево",
+      "Поверни налево",
+      "Поворот налево"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué preposición se usa para 'cruzar la calle'?",
+    "options": [
+      "через + acusativo",
+      "в + acusativo",
+      "у + genitivo",
+      "с + instrumental"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'lejos del metro'?",
+    "options": [
+      "далеко метром",
+      "далеко от метро",
+      "далеко метро",
+      "далеко у метро"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué diferencia hay entre 'у светофора' y 'рядом с остановкой'?",
+    "options": [
+      "у es informal; рядом с es formal",
+      "no hay ninguna diferencia",
+      "у se usa solo con personas; рядом с solo con lugares",
+      "у = justo en el punto; рядом с = al lado, algo más separado"
+    ],
+    "correct_option_id": 3,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'la segunda vuelta a la derecha'?",
+    "options": [
+      "два поворот направо",
+      "второй поворот направо",
+      "вторая поворот направо",
+      "второе поворот направо"
+    ],
+    "correct_option_id": 1,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Necesito un billete'?",
+    "options": [
+      "Мне нужен билет",
+      "Мне нужна билет",
+      "Я нужен билет",
+      "Мне нужно билет"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'Necesito una visa'?",
+    "options": [
+      "Мне нужна виза",
+      "Мне нужен виза",
+      "Мне нужно виза",
+      "Я нужна виза"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'billete hasta Moscú'?",
+    "options": [
+      "билет до Москвы",
+      "билет в Москву",
+      "билет до Москва",
+      "билет от Москвы"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice '¡Gracias por la ayuda!'?",
+    "options": [
+      "Спасибо за помощь!",
+      "Спасибо с помощью!",
+      "Спасибо помощь!",
+      "Спасибо на помощь!"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'в аэропорт' y 'до аэропорта'?",
+    "options": [
+      "в + acusativo indica ir hacia un lugar; до + genitivo marca el punto final del trayecto",
+      "no hay ninguna diferencia de significado",
+      "в se usa con personas; до con objetos",
+      "в es formal; до es informal"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Qué caso concuerda con lo necesitado en la construcción нужен?",
+    "options": [
+      "nominativo (lo necesitado), dativo (quien lo necesita)",
+      "acusativo",
+      "genitivo",
+      "instrumental"
+    ],
+    "correct_option_id": 0,
+    "level": "A1"
+  },
+  {
+    "question": "¿Cómo se dice 'nueva casa' en genitivo masculino/neutro? (нет ... дома)",
+    "options": [
+      "нового",
+      "новых",
+      "новый",
+      "новая"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué terminación toman los adjetivos femeninos en genitivo singular?",
+    "options": [
+      "-ая",
+      "-ого",
+      "-ой/-ей",
+      "-ых"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estos posesivos NUNCA cambia de forma, sin importar el caso?",
+    "options": [
+      "мой",
+      "наш",
+      "его",
+      "твой"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'en casa de mi hermano' (у + genitivo)?",
+    "options": [
+      "у мой брат",
+      "у моего брата",
+      "у моя брата",
+      "у моем брате"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'mayor que mi hermano' sin usar чем?",
+    "options": [
+      "старше мой братом",
+      "старше моему брату",
+      "старше моего брата",
+      "старше мой брат"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'su casa' (de ella) en cualquier caso gramatical?",
+    "options": [
+      "её домом (cambia)",
+      "её дома (cambia)",
+      "еёго дом",
+      "её дом (siempre igual)"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué terminación toma un adjetivo masculino en dativo singular?",
+    "options": [
+      "-ой/-ей",
+      "-ого/-его",
+      "-ым/-им",
+      "-ому/-ему"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "En 'моей маме нравится чай', ¿en qué caso está 'мама'?",
+    "options": [
+      "nominativo",
+      "genitivo",
+      "acusativo",
+      "dativo"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estos posesivos NUNCA cambia de forma, tampoco en dativo?",
+    "options": [
+      "моему",
+      "нашей",
+      "его",
+      "твоему"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Llamo a mi profesor' (звонить + dativo)?",
+    "options": [
+      "Я звоню мой учитель",
+      "Я звоню моему учителю",
+      "Я звоню моего учителя",
+      "Я звоню моим учителем"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué terminación toma un adjetivo en dativo plural, sin importar el género?",
+    "options": [
+      "-ым/-им",
+      "-ому/-ему",
+      "-ой/-ей",
+      "-ых/-их"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'su hermana' (de él) en dativo, cualquiera que sea el caso de 'его'?",
+    "options": [
+      "егоей сестре",
+      "его сестре (invariable)",
+      "его сестры",
+      "своему сестре"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué preposición se usa típicamente con instrumental para 'con'?",
+    "options": [
+      "на",
+      "с",
+      "у",
+      "в"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma instrumental femenina de 'новая'?",
+    "options": [
+      "новой",
+      "нового",
+      "новым",
+      "новую"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estos posesivos NUNCA cambia de forma, tampoco en instrumental?",
+    "options": [
+      "моим",
+      "его",
+      "твоим",
+      "нашей"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma instrumental de 'синий' (adjetivo de tema blando)?",
+    "options": [
+      "синего",
+      "синей",
+      "синым",
+      "синим"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Hablo con mi mejor amigo' (говорить + с + instrumental)?",
+    "options": [
+      "Я говорю с мой лучший друг",
+      "Я говорю с моего лучшего друга",
+      "Я говорю с моим лучшим другом",
+      "Я говорю с моему лучшему другу"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Ella se convirtió en una excelente profesora' (стать + instrumental sin preposición)?",
+    "options": [
+      "Она стала прекрасная учительница",
+      "Она стала прекрасную учительницу",
+      "Она стала прекрасной учительнице",
+      "Она стала прекрасной учительницей"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué caso exige 'благодаря' (gracias a)?",
+    "options": [
+      "dativo",
+      "instrumental",
+      "genitivo",
+      "acusativo"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué caso exige 'между' (entre)?",
+    "options": [
+      "instrumental",
+      "genitivo",
+      "dativo",
+      "acusativo"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué caso rige 'вокруг' (alrededor de)?",
+    "options": [
+      "instrumental",
+      "acusativo",
+      "genitivo",
+      "dativo"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué caso rige 'над' (encima de)?",
+    "options": [
+      "genitivo",
+      "acusativo",
+      "dativo",
+      "instrumental"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuáles de estas son las TRES preposiciones que rigen dativo?",
+    "options": [
+      "вокруг, после, кроме",
+      "благодаря, согласно, вопреки",
+      "между, перед, над",
+      "из-за, вместо, под"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'La casa está enfrente de la escuela' (напротив + genitivo)?",
+    "options": [
+      "Дом находится напротив школа",
+      "Дом находится напротив школе",
+      "Дом находится напротив школы",
+      "Дом находится напротив школу"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "En 'Я живу в новом доме', ¿en qué caso está 'новом доме'?",
+    "options": [
+      "genitivo",
+      "instrumental",
+      "acusativo",
+      "preposicional"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué caso responde a la pregunta '¿de quién?' ('нет кого?')?",
+    "options": [
+      "nominativo",
+      "instrumental",
+      "genitivo",
+      "dativo"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué caso responde a la pregunta '¿о ком? ¿о чём?' (¿de quién/qué se habla?)?",
+    "options": [
+      "винительный",
+      "предложный",
+      "творительный",
+      "родительный"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "En 'Мама любит сына', ¿qué caso indica que 'сын' es el objeto directo?",
+    "options": [
+      "именительный",
+      "дательный",
+      "винительный",
+      "творительный"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma instrumental de 'новый дом'?",
+    "options": [
+      "новом доме",
+      "нового дома",
+      "новым домом",
+      "новому дому"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Por qué 'Мама любит сына' y 'Сына любит мама' significan lo mismo?",
+    "options": [
+      "Porque el caso (сына = acusativo) indica el objeto, no la posición",
+      "Porque 'сын' siempre es el sujeto",
+      "No significan lo mismo",
+      "Porque el orden de palabras en ruso no importa nunca"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo usarías para 'Ahora voy a la escuela' (en camino, ahora mismo)?",
+    "options": [
+      "ходил",
+      "иду",
+      "ходит",
+      "хожу"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo usarías para 'Voy a la escuela todos los días'?",
+    "options": [
+      "идёт",
+      "шёл",
+      "иду",
+      "хожу"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Ayer fui a la tienda (fui y volví)'?",
+    "options": [
+      "Вчера я иду в магазин",
+      "Вчера я шёл в магазин",
+      "Вчера я ходил в магазин",
+      "Вчера я хожу в магазин"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Cuando iba a casa, me encontré a un amigo' (en camino, pasado)?",
+    "options": [
+      "Когда я ходил домой...",
+      "Когда я иду домой...",
+      "Когда я шёл домой...",
+      "Когда я хожу домой..."
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo forma 'пойти' (partir, perfectivo) al añadirle el prefijo по-?",
+    "options": [
+      "идти",
+      "бежать",
+      "ездить",
+      "ходить"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Para qué tipo de desplazamiento se usan идти/ходить?",
+    "options": [
+      "En coche",
+      "En avión",
+      "A pie",
+      "En autobús"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo se usa para movimiento habitual en vehículo?",
+    "options": [
+      "ездить",
+      "идти",
+      "ехать",
+      "ходить"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "'Сейчас мы ___ в аэропорт' — ¿qué forma va aquí?",
+    "options": [
+      "ходим",
+      "ездим",
+      "идём",
+      "едем"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo forma 'поехать' (partir en vehículo, perfectivo) al añadirle el prefijo по-?",
+    "options": [
+      "ездить",
+      "ехать",
+      "идти",
+      "бежать"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma imperativa correcta de 'ехать' (¡ve! en vehículo)?",
+    "options": [
+      "ехай!",
+      "едь!",
+      "поезжай!",
+      "ездий!"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Nos fuimos temprano por la mañana' (perfectivo, en vehículo)?",
+    "options": [
+      "Мы уехали рано утром",
+      "Мы ехали рано утром",
+      "Мы едем рано утром",
+      "Мы ездим рано утром"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Para qué tipo de movimiento se usan ехать/ездить, a diferencia de идти/ходить?",
+    "options": [
+      "A pie",
+      "En vehículo",
+      "Nadando",
+      "Volando siempre"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo usarías para 'Él corre hacia el autobús' (ahora, una dirección)?",
+    "options": [
+      "бегают",
+      "бегает",
+      "бежит",
+      "бегал"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "'Я ___ по утрам для здоровья' (actividad habitual) — ¿qué forma va aquí?",
+    "options": [
+      "бежишь",
+      "бежит",
+      "бегаю",
+      "бегу"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo forma 'побежать' (echarse a correr, perfectivo) al añadirle el prefijo по-?",
+    "options": [
+      "бегать",
+      "ходить",
+      "бежать",
+      "идти"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la orden más común para 'corre' (puntual)?",
+    "options": [
+      "бегает!",
+      "бегай!",
+      "бежит!",
+      "беги!"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Salió corriendo detrás del autobús' (perfectivo, pasado)?",
+    "options": [
+      "Он бегает за автобусом",
+      "Он бегал за автобусом",
+      "Он побежал за автобусом",
+      "Он бежит за автобусом"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Por qué бежать/бегать siguen el mismo patrón que идти/ходить?",
+    "options": [
+      "Porque бегать es el pasado de бежать",
+      "Porque son sinónimos exactos",
+      "Porque no tienen ninguna relación",
+      "Porque ambos pares distinguen movimiento puntual de habitual, con los mismos prefijos"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo describe 'el avión vuela a Moscú' ahora mismo?",
+    "options": [
+      "плывёт",
+      "летает",
+      "летит",
+      "несёт"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo significa 'usar/llevar gafas' de forma habitual?",
+    "options": [
+      "носить",
+      "нёс",
+      "нести",
+      "несёт"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estos significados tiene 'носить' que 'нести' NUNCA tiene?",
+    "options": [
+      "Cargar algo físicamente",
+      "Moverse en una dirección",
+      "Llevar puesto (ropa, gafas)",
+      "Ser un verbo de movimiento"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué verbo forma 'полететь' (partir volando, perfectivo) al añadirle el prefijo по-?",
+    "options": [
+      "летать",
+      "лететь",
+      "нести",
+      "плыть"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Tráeme agua, por favor' (imperativo con prefijo при-)?",
+    "options": [
+      "Принеси мне воду, пожалуйста",
+      "Носи мне воду, пожалуйста",
+      "Унеси мне воду, пожалуйста",
+      "Неси мне воду, пожалуйста"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué tienen en común лететь/летать, плыть/плавать y нести/носить?",
+    "options": [
+      "Todos siguen el patrón unidireccional/multidireccional y los mismos prefijos",
+      "Ninguno se combina con prefijos",
+      "Todos significan lo mismo",
+      "Solo se usan en pasado"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "'— Куда ты идёшь? — Я ___ в магазин.' — ¿qué forma completa la respuesta?",
+    "options": [
+      "иду",
+      "ходил",
+      "хожу",
+      "шёл"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "'Вчера я ___ в спортзал' (fui y volví) — ¿qué forma va aquí?",
+    "options": [
+      "хожу",
+      "ходил",
+      "иду",
+      "шёл"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué prefijo se combina con los seis verbos de movimiento para significar 'llegar'?",
+    "options": [
+      "по-",
+      "у-",
+      "при-",
+      "за-"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estas frases usa el verbo de movimiento incorrecto?",
+    "options": [
+      "Я иду на работу на автобусе.",
+      "Я еду на работу на машине.",
+      "Я лечу в Париж на самолёте.",
+      "Я иду на работу пешком."
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es el error en '✗ сейчас я хожу в магазин' (queriendo decir 'voy ahora')?",
+    "options": [
+      "Falta un prefijo",
+      "Se usó la forma multidireccional para una acción puntual",
+      "El verbo está mal conjugado",
+      "No hay ningún error"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué dos preguntas determinan qué verbo de movimiento usar?",
+    "options": [
+      "Solo el tiempo verbal",
+      "Cómo te mueves (medio) y cuándo (puntual o habitual)",
+      "Solo la persona gramatical",
+      "El género del hablante"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es el comparativo de 'дорогой' (caro)?",
+    "options": [
+      "дорогее",
+      "дорогей",
+      "дороже",
+      "самый дорогой"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es el comparativo de 'молодой' (joven)?",
+    "options": [
+      "младше",
+      "молодший",
+      "молодее",
+      "моложе"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué palabra falta? 'Этот отель ___ дороже.' (mucho más caro)",
+    "options": [
+      "очень",
+      "чуть",
+      "намного",
+      "самый"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estas frases es INCORRECTA?",
+    "options": [
+      "гораздо больше",
+      "намного интереснее",
+      "чуть дешевле",
+      "очень интереснее"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'cuanto más, mejor'?",
+    "options": [
+      "больше — лучше",
+      "чем больше, тем лучше",
+      "самый больше и лучше",
+      "более большой, более хороший"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Él no es tan alto como tú' SIN usar la forma comparativa?",
+    "options": [
+      "Он не выше, чем ты",
+      "Он ниже тебя",
+      "Он не такой высокий, как ты",
+      "Он самый высокий"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma comparativa de 'хорошо' (bien)?",
+    "options": [
+      "хуже",
+      "лучше",
+      "больше",
+      "хорошее"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "En 'Он бегает быстрее меня', ¿qué palabra es el adverbio comparativo?",
+    "options": [
+      "быстрее",
+      "бегает",
+      "он",
+      "меня"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'Ella canta más bonito que todos' (superlativo sin самый)?",
+    "options": [
+      "Она поёт самая красивее",
+      "Она самая красивая поёт",
+      "Она поёт очень красивее",
+      "Она поёт красивее всех"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "En 'Она быстрее', ¿qué función tiene 'быстрее'?",
+    "options": [
+      "Adjetivo, describe a 'она'",
+      "Sustantivo",
+      "Adverbio, modifica un verbo",
+      "Preposición"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es el error en '✗ самый быстрее'?",
+    "options": [
+      "самый no se combina con la forma comparativa de un adverbio",
+      "Falta 'всех'",
+      "быстрее está mal formado",
+      "No hay ningún error"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué tienen en común el comparativo de adjetivo y de adverbio en ruso?",
+    "options": [
+      "Comparten exactamente la misma forma (-ее o el irregular)",
+      "El adverbio siempre añade -о extra",
+      "Nada, son completamente distintos",
+      "Solo coinciden en plural"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'el más alto de todos los estudiantes'?",
+    "options": [
+      "самый высокий из всех студентов",
+      "самый высокий всех студентов",
+      "высокий из всех студентов",
+      "самый высокий в всех студентов"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿En qué registro se usa 'наилучший' en vez de 'самый лучший'?",
+    "options": [
+      "coloquial/informal",
+      "formal/literario (noticias, documentos)",
+      "vulgar",
+      "no hay diferencia de registro"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma correcta?",
+    "options": [
+      "самый интереснее",
+      "самый интересный",
+      "интереснее самый",
+      "самый интерес"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué preposición se usa cuando el conjunto de comparación es un lugar (no un grupo)?",
+    "options": [
+      "из + genitivo",
+      "в + prepositional",
+      "у + genitivo",
+      "о + prepositional"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "Москва — одна из самых красивых ___ мира.",
+    "options": [
+      "столица",
+      "столицы",
+      "столиц",
+      "столицей"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'чрезвычайно интересный'?",
+    "options": [
+      "poco interesante",
+      "interesantísimo / sumamente interesante",
+      "el más interesante de todos",
+      "nada interesante"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'tan alto como' comparando a dos personas (con adjetivo)?",
+    "options": [
+      "чем выше, тем выше",
+      "так же высокий, как",
+      "всё выше, как",
+      "такой же высокий, как"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué construcción se usa con un ADVERBIO (no un adjetivo) para expresar igualdad?",
+    "options": [
+      "всё... как",
+      "так же... как",
+      "одинаковый... как",
+      "такой же... как"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'Они одинаково умные'?",
+    "options": [
+      "No se sabe nada de su inteligencia",
+      "Son igual de inteligentes",
+      "Son muy diferentes en inteligencia",
+      "Uno es más inteligente que el otro"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'cada vez mejor'?",
+    "options": [
+      "такой же хороший",
+      "самый лучший",
+      "всё лучше",
+      "чем лучше"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué forma se usa para 'cada vez más complicada', en registro más formal, con el adjetivo completo?",
+    "options": [
+      "всё сложнее",
+      "так же сложная",
+      "самая сложная",
+      "всё более сложная"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'не такой высокий, как' (a2-19) y 'не такой же высокий, как'?",
+    "options": [
+      "Una usa comparativo y la otra no",
+      "Significan cosas opuestas",
+      "Una es formal y la otra no existe",
+      "Esencialmente lo mismo — 'же' solo refuerza"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'alguien' en ruso?",
+    "options": [
+      "кто-то",
+      "что-то",
+      "никто",
+      "какой-то"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'algo importante'?",
+    "options": [
+      "никто важный",
+      "кто-то важный",
+      "какой-то важный",
+      "что-то важное"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma correcta de кто-то en instrumental ('con alguien')?",
+    "options": [
+      "кому-то",
+      "кто-то",
+      "кого-то",
+      "кем-то"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'él vive en algún lugar de Siberia'?",
+    "options": [
+      "Он живёт где-то в Сибири",
+      "Он живёт какой-то в Сибири",
+      "Он живёт куда-то в Сибири",
+      "Он живёт когда-то в Сибири"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué construcción declina COMPLETO como un adjetivo normal?",
+    "options": [
+      "какой-то",
+      "где-то",
+      "почему-то",
+      "как-то"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la diferencia principal entre 'кто-то звонил' y 'кто-нибудь звонил?'?",
+    "options": [
+      "-то solo se usa con objetos, -нибудь solo con personas",
+      "-нибудь es más formal que -то",
+      "No hay ninguna diferencia",
+      "-то describe un hecho concreto ya ocurrido; -нибудь se usa típicamente en preguntas/hipótesis"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿En qué tipo de frase se usa '-нибудь' en vez de '-то'?",
+    "options": [
+      "afirmaciones sobre hechos ya confirmados",
+      "preguntas, condiciones, peticiones y futuro",
+      "nunca se usa",
+      "descripciones fijas"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo dirías 'dame algo de comer'?",
+    "options": [
+      "Дай мне что-нибудь поесть",
+      "Дай мне что-то поесть",
+      "Дай мне кто-нибудь поесть",
+      "Дай мне какой-то поесть"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma correcta de кто-нибудь en dativo ('a alguien')?",
+    "options": [
+      "кто-нибудь",
+      "кому-нибудь",
+      "кем-нибудь",
+      "кого-нибудь"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué construcción es el sinónimo FORMAL/escrito de какой-нибудь?",
+    "options": [
+      "какой-то",
+      "никакой",
+      "какой-либо",
+      "какой-нибудь"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál de estas preguntas sobre el futuro es correcta?",
+    "options": [
+      "Ninguna es correcta",
+      "Обе son igual de correctas",
+      "Кто-то придёт завтра?",
+      "Кто-нибудь придёт завтра?"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice '¿Has estado alguna vez en Rusia?'?",
+    "options": [
+      "Ты был когда-нибудь в России?",
+      "Ты был где-нибудь в России?",
+      "Ты был как-нибудь в России?",
+      "Ты был куда-нибудь в России?"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice correctamente 'con nadie' (con preposición)?",
+    "options": [
+      "ни с кем",
+      "с никем",
+      "с ни кем",
+      "никем с"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma de instrumental de 'никто' (sin preposición)?",
+    "options": [
+      "никого",
+      "никем",
+      "ничем",
+      "никому"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué forma de 'ничто' se usa normalmente como OBJETO en la conversación cotidiana?",
+    "options": [
+      "ничего",
+      "ничто",
+      "ничему",
+      "ничем"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuándo se usa 'ничто' en vez de 'ничего'?",
+    "options": [
+      "Nunca se usa 'ничто'",
+      "Como objeto siempre",
+      "Como sujeto, en registro formal/literario",
+      "Solo en preguntas"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice de forma más enfática que 'никто не пришёл' que ni una sola persona vino?",
+    "options": [
+      "Никого не пришёл",
+      "Ни один человек не пришёл",
+      "Никто не пришёл",
+      "Никакой человек не пришёл"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Dónde se coloca la preposición en construcciones como 'ни у кого'?",
+    "options": [
+      "Antes de 'ни'",
+      "No se usa preposición nunca con estos pronombres",
+      "Entre 'ни' y la forma declinada del pronombre",
+      "Después de la forma declinada"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'nunca' en ruso?",
+    "options": [
+      "никогда",
+      "никуда",
+      "никто",
+      "нигде"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué adverbio responde a '¿adónde?' en negativo?",
+    "options": [
+      "никто",
+      "никуда",
+      "нигде",
+      "никогда"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa exactamente 'никак' (más allá de un simple 'no')?",
+    "options": [
+      "A ningún lugar",
+      "En ningún lugar",
+      "De ninguna manera posible, con énfasis en la imposibilidad",
+      "Nunca"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'de ningún lugar' (origen, откуда)?",
+    "options": [
+      "нигде",
+      "никуда",
+      "никогда",
+      "ниоткуда"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "En el sistema где → где-то → где-нибудь → нигде, ¿qué representa 'где-нибудь'?",
+    "options": [
+      "Algo incierto: preguntas, condiciones, futuro",
+      "Una pregunta interrogativa simple",
+      "La negación total",
+      "Un hecho concreto ya ocurrido"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa la expresión 'как никогда'?",
+    "options": [
+      "Nunca jamás",
+      "Más que nunca",
+      "De ninguna manera",
+      "Como siempre"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice correctamente 'tengo gripe' usando болеть con la enfermedad en instrumental?",
+    "options": [
+      "Я болею гриппом",
+      "Я болит гриппом",
+      "Я болею грипп",
+      "У меня болит грипп"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'У меня болит горло' y 'Я болею ангиной'?",
+    "options": [
+      "La segunda es un registro informal",
+      "La primera describe el síntoma localizado; la segunda, la enfermedad/diagnóstico",
+      "La primera es incorrecta gramaticalmente",
+      "Son exactamente lo mismo"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿A qué especialista visitas para revisar la vista?",
+    "options": [
+      "стоматолог",
+      "терапевт",
+      "окулист",
+      "кардиолог"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'quiero pedir cita con el médico general'?",
+    "options": [
+      "Я хочу лечить терапевта",
+      "Я записан терапевтом",
+      "Терапевт хочет ко мне",
+      "Я хочу записаться на приём к терапевту"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'без рецепта'?",
+    "options": [
+      "Sin receta (venta libre)",
+      "Con receta",
+      "Con descuento",
+      "Receta de cocina"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'llevo tres días enfermo'?",
+    "options": [
+      "Три дня я здоров",
+      "Я болею уже три дня",
+      "Я болел три дня назад",
+      "Через три дня я заболею"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo pides probarte una prenda?",
+    "options": [
+      "Можно это примерить?",
+      "Это мой размер",
+      "Можно это вернуть?",
+      "У вас есть чек?"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es la forma singular de 'брюки'?",
+    "options": [
+      "брюко",
+      "No existe forma singular",
+      "брюк",
+      "брюка"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'мне идёт' (distinto de мне мало/велико)?",
+    "options": [
+      "No me gusta",
+      "Me queda pequeño",
+      "Me favorece, estilísticamente",
+      "Me queda grande"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo pides una talla más grande?",
+    "options": [
+      "Это мне мало",
+      "Я хочу возврат",
+      "Размер идёт",
+      "У вас есть размер побольше?"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué diferencia hay entre обмен y возврат?",
+    "options": [
+      "обмен es cambio por otro artículo; возврат es reembolso del dinero",
+      "Son exactamente lo mismo",
+      "Ninguno existe en las tiendas rusas",
+      "обмен es reembolso; возврат es cambio"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué necesitas normalmente para devolver un artículo?",
+    "options": [
+      "размер",
+      "чек",
+      "цвет",
+      "рубашку"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'mañana lloverá'?",
+    "options": [
+      "Завтра будет дождь",
+      "Завтра дождь",
+      "Вчера был дождь",
+      "Дождь идёт сейчас"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'обещают дождь'?",
+    "options": [
+      "Prometen que no lloverá",
+      "Pronostican lluvia",
+      "Ya llovió ayer",
+      "Preguntan si va a llover"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué diferencia hay entre 'как пройти к вокзалу' (a1-29) y 'как доехать до вокзала'?",
+    "options": [
+      "пройти es más formal que доехать",
+      "Son exactamente iguales",
+      "доехать especifica llegar en transporte hasta un destino concreto",
+      "доехать solo se usa a pie"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué preposición y caso usa доехать/дойти para marcar el destino?",
+    "options": [
+      "у + genitivo",
+      "в + acusativo",
+      "к + dativo",
+      "до + genitivo"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo dices 'me perdí' (perfectivo, femenino)?",
+    "options": [
+      "Я заблудилась",
+      "Я заблудился",
+      "Я теряюсь",
+      "Я потерян"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo preguntas en qué autobús se puede llegar al centro?",
+    "options": [
+      "Автобус идёт в центр?",
+      "На каком автобусе можно доехать до центра?",
+      "Куда автобус?",
+      "Где автобус?"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'ella tiene ojos azules' (sin 'есть')?",
+    "options": [
+      "У неё голубые глаза",
+      "Она голубые глаза",
+      "Она имеет голубые глаза",
+      "У неё есть голубые глаза"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Por qué no se usa 'есть' para describir el color de los ojos?",
+    "options": [
+      "Porque 'есть' solo se usa con objetos comprados",
+      "Porque es un rasgo físico inherente, no una posesión que pueda faltar",
+      "No hay ninguna razón, es completamente arbitrario",
+      "Es un error común, pero se acepta igual"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué significa 'довольно' en 'довольно общительная'?",
+    "options": [
+      "Nunca",
+      "Definitivamente",
+      "Bastante (matiz intermedio entre немного y очень)",
+      "Apenas un poco"
+    ],
+    "correct_option_id": 2,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cuál es el comparativo simple de 'добрый'?",
+    "options": [
+      "добрый",
+      "более добрый",
+      "самый добрый",
+      "добрее"
+    ],
+    "correct_option_id": 3,
+    "level": "A2"
+  },
+  {
+    "question": "¿Cómo se dice 'ella es la más alegre de nuestra familia'?",
+    "options": [
+      "Она самая весёлая в нашей семье",
+      "Она самая весёлая из семьи",
+      "Она более весёлая семья",
+      "Она весёлая самая семья"
+    ],
+    "correct_option_id": 0,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué distinción del español NO existe en ruso al describir a alguien?",
+    "options": [
+      "Presente/pasado",
+      "Ser/estar",
+      "Singular/plural",
+      "Masculino/femenino"
+    ],
+    "correct_option_id": 1,
+    "level": "A2"
+  },
+  {
+    "question": "¿Qué prefijo indica 'llegada, aproximación al destino'?",
+    "options": [
+      "при-",
+      "у-",
+      "до-",
+      "про-"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'ella se fue a Moscú' (en vehículo, hecho puntual)?",
+    "options": [
+      "Она уходит в Москву",
+      "Она уехала в Москву",
+      "Она приезжает в Москву",
+      "Она приехала в Москву"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué preposición + caso se usa con приходить/приезжать para indicar el destino?",
+    "options": [
+      "с + instrumental",
+      "из/с + genitivo",
+      "в/на + acusativo",
+      "к + dativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué preposición + caso se usa con уходить/уезжать para indicar el origen?",
+    "options": [
+      "о + prepositivo",
+      "к + dativo",
+      "в + acusativo",
+      "из/с + genitivo"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la forma imperativa de 'ven/venga' (llegar a pie, repetidamente o en general)?",
+    "options": [
+      "приходи / приходите",
+      "уходи / уходите",
+      "уйти",
+      "прийти"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué verbo significa 'despedirse'?",
+    "options": [
+      "оставаться",
+      "прощаться / попрощаться",
+      "встречать",
+      "скучать"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué preposición se usa típicamente con войти?",
+    "options": [
+      "в + acusativo",
+      "к + dativo",
+      "из + genitivo",
+      "с + instrumental"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Dónde recae siempre el acento en los perfectivos 'вы́йти', 'вы́ехать'?",
+    "options": [
+      "en la terminación",
+      "en el prefijo вы-",
+      "varía libremente",
+      "en la raíz"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Por qué 'войти' tiene una 'о' extra entre 'в-' y '-йти'?",
+    "options": [
+      "es un prefijo distinto, во-, sin relación con в-",
+      "es un error ortográfico común",
+      "por eufonía, para evitar un grupo consonántico difícil de pronunciar",
+      "solo ocurre en el imperativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'ella se casó' (mujer, verbo con prefijo вы-)?",
+    "options": [
+      "Она вошла замуж",
+      "Она женилась",
+      "Она выехала замуж",
+      "Она вышла замуж"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'войти в историю'?",
+    "options": [
+      "pasar a la historia",
+      "entrar en una habitación",
+      "estudiar historia",
+      "salir de viaje"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'вошла' y 'входит'?",
+    "options": [
+      "вошла es presente; входит es pasado",
+      "вошла es un hecho puntual (perfectivo); входит es habitual (imperfectivo)",
+      "Significan exactamente lo mismo",
+      "входит solo se usa con vehículos"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué preposición acompaña típicamente a 'подойти'?",
+    "options": [
+      "к + dativo",
+      "в + acusativo",
+      "от + genitivo",
+      "на + prepositivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "'Поезд отошёл от платформы' describe...",
+    "options": [
+      "el destino final del viaje",
+      "un movimiento corto de alejamiento del andén",
+      "un movimiento habitual",
+      "la llegada del tren a Moscú"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'подойти к двери' y 'войти в комнату'?",
+    "options": [
+      "войти es más informal que подойти",
+      "подойти solo se usa con vehículos",
+      "подойти es acercarse SIN cruzar un umbral; войти es entrar CRUZÁNDOLO",
+      "Significan exactamente lo mismo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'Это платье тебе подходит' (uso figurado)?",
+    "options": [
+      "Este vestido se aleja de ti",
+      "Este vestido se acerca a ti",
+      "Este vestido es lejano",
+      "Este vestido te queda bien"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'подошёл' y 'подходит'?",
+    "options": [
+      "подошёл es un hecho puntual (perfectivo); подходит es habitual (imperfectivo)",
+      "подходит solo se usa con personas",
+      "подошёл es presente; подходит es pasado",
+      "Significan lo mismo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se dice 'acercarse' de forma más formal, sin el prefijo под-?",
+    "options": [
+      "отходить",
+      "приближаться / приблизиться",
+      "издалека",
+      "вплотную"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'переехать в новую квартиру'?",
+    "options": [
+      "mudarse a un piso nuevo",
+      "vender el piso",
+      "cruzar el piso nuevo en coche",
+      "visitar un piso nuevo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué idea general aporta el prefijo пере-?",
+    "options": [
+      "salida hacia afuera",
+      "cruce, cambio de un lado/estado a otro",
+      "llegada final",
+      "aproximación"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuándo se usa explícitamente 'через' con 'перейти'?",
+    "options": [
+      "solo en el imperativo",
+      "nunca, es incorrecto",
+      "con obstáculos u superficies más notables, como un puente o un río",
+      "solo con vehículos"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'переписываться' (con -ся)?",
+    "options": [
+      "reescribir un documento",
+      "traducir un texto",
+      "cambiar de opinión",
+      "escribirse mutuamente, cartearse"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'перешёл' y 'переходит'?",
+    "options": [
+      "перешёл es un hecho puntual (perfectivo); переходит es habitual (imperfectivo)",
+      "перешёл es presente; переходит es pasado",
+      "переходит solo se usa con vehículos",
+      "Significan lo mismo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'пересесть' en el contexto de transporte?",
+    "options": [
+      "quedarse de pie",
+      "cambiar de asiento o hacer trasbordo",
+      "bajar del vehículo definitivamente",
+      "sentarse por primera vez"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'пройти мимо магазина'?",
+    "options": [
+      "pasar junto a la tienda sin entrar",
+      "comprar en la tienda",
+      "entrar en la tienda",
+      "cerrar la tienda"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "'Как доехать до вокзала?' pregunta por...",
+    "options": [
+      "dónde comer",
+      "cómo llegar hasta la estación",
+      "el precio del billete",
+      "la hora del tren"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia clave entre 'прийти' (при-) y 'дойти' (до-)?",
+    "options": [
+      "Significan exactamente lo mismo",
+      "прийти solo se usa en pasado",
+      "прийти enfatiza la llegada como resultado final; дойти enfatiza el proceso de alcanzar un punto, con esfuerzo o distancia",
+      "дойти solo se usa con vehículos"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'произойти' (figurado de про-)?",
+    "options": [
+      "pasar de largo caminando",
+      "recorrer una distancia",
+      "llegar hasta un límite",
+      "suceder, ocurrir"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'добиться' (figurado de до-)?",
+    "options": [
+      "lograr, alcanzar algo con esfuerzo",
+      "recorrer diez kilómetros",
+      "llegar hasta la estación",
+      "pasar de largo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'дошёл' y 'доходит'?",
+    "options": [
+      "Significan lo mismo",
+      "дошёл es un hecho puntual (perfectivo); доходит es habitual (imperfectivo)",
+      "дошёл es presente; доходит es pasado",
+      "доходит solo se usa con vehículos"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué prefijo indica 'aproximación' (acercarse a algo cercano)?",
+    "options": [
+      "под-",
+      "про-",
+      "пере-",
+      "до-"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "'Войти в моду' es un ejemplo de...",
+    "options": [
+      "significado espacial literal",
+      "significado figurado",
+      "verbo multidireccional",
+      "error gramatical"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué prefijo indica 'cruzar un umbral hacia adentro' (entrar)?",
+    "options": [
+      "про-",
+      "при-",
+      "в-",
+      "до-"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué prefijo indica la 'partida global de un origen lejano'?",
+    "options": [
+      "вы-",
+      "от-",
+      "до-",
+      "у-"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa 'сделать вывод' (de вывести, вы-)?",
+    "options": [
+      "sacar una conclusión",
+      "salir de la habitación",
+      "mudarse de casa",
+      "pasar de largo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significan juntos 'договориться' y 'добиться цели'?",
+    "options": [
+      "entrar y salir",
+      "llegar a un acuerdo y lograr una meta (figurados de до-)",
+      "acercarse y alejarse",
+      "cruzar la calle"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué significa el uso 'general-fáctico' del imperfectivo, como en 'Ты когда-нибудь читал эту книгу?'",
+    "options": [
+      "Se pregunta solo por la experiencia/el hecho, sin importar el resultado",
+      "Se pregunta si terminó de leerla",
+      "Es un error gramatical",
+      "Se refiere al futuro"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál de estos pares es SUPLETIVO (formas completamente distintas, no con prefijo)?",
+    "options": [
+      "читать / прочитать",
+      "брать / взять",
+      "делать / сделать",
+      "писать / написать"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "En 'Он встал, оделся и вышел', los tres verbos perfectivos indican...",
+    "options": [
+      "Un hábito diario",
+      "Una acción de fondo",
+      "Una cadena de eventos sucesivos, uno tras otro",
+      "Tres acciones simultáneas"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "En 'Когда я готовил ужин, зазвонил телефон', ¿qué función tiene 'готовил' (imperfectivo)?",
+    "options": [
+      "Señala que la cena nunca se terminó",
+      "Indica el resultado final",
+      "Es un error, debería ser perfectivo",
+      "Describe la acción de fondo sobre la que ocurre otra"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "'Я три раза прочитал эту статью' usa el perfectivo 'прочитал' porque...",
+    "options": [
+      "Se especifica un número exacto de repeticiones, cada una completada",
+      "Es una acción en curso",
+      "Se habla de un hábito sin importar el resultado",
+      "Es general-fáctico"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'Кто открыл окно?' y 'Кто открывал окно?'",
+    "options": [
+      "Son sinónimos exactos",
+      "открыл = resultado visible ahora; открывал = solo el hecho, quizá ya está cerrada de nuevo",
+      "открыл es un hábito",
+      "открывал es futuro"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Por qué el verbo perfectivo no tiene una forma de PRESENTE?",
+    "options": [
+      "Porque su conjugación no-pasada siempre expresa futuro, ya que la acción es completa/con resultado",
+      "Porque siempre necesitan el auxiliar буду",
+      "Porque solo se usan en pasado",
+      "Porque los verbos perfectivos no existen en ruso"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál oración expresa una acción HABITUAL en el futuro (repetida cada vez)?",
+    "options": [
+      "Я звоню тебе сейчас",
+      "Я буду звонить тебе каждый день",
+      "Я тебе позвонил",
+      "Я позвоню тебе завтра"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "Tras 'как только' (en cuanto) o 'если' (si) referidos al futuro, el ruso usa...",
+    "options": [
+      "El infinitivo",
+      "El pasado",
+      "El futuro (nunca el presente ni un modo subjuntivo)",
+      "El subjuntivo, igual que el español"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué forma futura corresponde al par supletivo 'брать / взять'?",
+    "options": [
+      "беру",
+      "взял",
+      "буду брать",
+      "возьму"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "'Я обещаю, что сделаю это к пятнице' usa el perfectivo 'сделаю' porque...",
+    "options": [
+      "Es una promesa de un resultado concreto y único",
+      "Es un proceso sin fin, sin resultado",
+      "Es un uso general-fáctico",
+      "Es un hábito repetido"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "'Я буду стараться закончить проект вовремя' (imperfectivo) transmite...",
+    "options": [
+      "Un resultado ya logrado",
+      "Un esfuerzo continuo, sin garantizar el resultado",
+      "Una promesa firme de éxito seguro",
+      "Una acción única ya terminada"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué aspecto de infinitivo exigen SIEMPRE los verbos de FASE (начать, продолжать, перестать)?",
+    "options": [
+      "Imperfectivo, siempre",
+      "Depende del contexto",
+      "Perfectivo, siempre",
+      "Ninguno, no llevan infinitivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'Я не мог поднять чемодан' y 'Я не смог поднять чемодан'?",
+    "options": [
+      "смог es presente",
+      "мог = incapacidad general (imperfectivo); смог = intento puntual fallido (perfectivo)",
+      "Son sinónimos exactos",
+      "мог se usa solo en el futuro"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "'Она перестала курить' significa que...",
+    "options": [
+      "Sigue fumando",
+      "Nunca fumó",
+      "Dejó de fumar (ya no fuma)",
+      "Va a empezar a fumar"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "'Он всегда забывает выключать свет' (imperfectivo забывает + выключать) expresa...",
+    "options": [
+      "Un olvido único y puntual",
+      "Un resultado ya logrado",
+      "Que nunca se olvida",
+      "Un olvido habitual, repetido"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué matiz añade el perfectivo en 'Я хочу написать письмо'?",
+    "options": [
+      "Un deseo de lograr un resultado concreto",
+      "Un hábito",
+      "Una negación",
+      "Un deseo de proceso sin fin"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué tienen en común 'успеть', 'решить' y 'удаться' en este tipo de construcción?",
+    "options": [
+      "Nunca llevan infinitivo",
+      "Suelen pedir infinitivo perfectivo, para un logro puntual",
+      "Siempre piden infinitivo imperfectivo",
+      "Son verbos de fase"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué aspecto es la opción POR DEFECTO (no marcada) cuando se niega una acción, sin más matiz?",
+    "options": [
+      "El imperfectivo — simplemente el hecho no ocurrió",
+      "Depende del sujeto de la oración",
+      "El perfectivo, siempre",
+      "Ninguno de los dos, se evita el verbo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "'Я не прочитал книгу до конца' (perfectivo negado) implica que...",
+    "options": [
+      "La acción es un hábito repetido",
+      "Hubo un intento, y el resultado esperado no se alcanzó",
+      "Nunca empezó a leer",
+      "Leerá el libro en el futuro"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "'Автобус не пришёл вовремя' (perfectivo negado) expresa...",
+    "options": [
+      "Un hábito de llegar tarde",
+      "Que el autobús nunca existió",
+      "Una expectativa concreta que no se cumplió",
+      "Un intento fallido de alguien de detenerlo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "Según b1-15, '¿Я три раза прочитал книгу' usa perfectivo porque...",
+    "options": [
+      "Es una negación",
+      "Es un hábito sin cuenta exacta",
+      "Es un intento fallido",
+      "El número de repeticiones es exacto y cada una se completó"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "'Я чуть не забыл ключи' significa que...",
+    "options": [
+      "Por poco se le olvidan las llaves, pero no se olvidaron",
+      "Siempre olvida las llaves",
+      "Nunca tuvo llaves",
+      "Se le olvidaron las llaves"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué tienen en común 'всегда', 'часто', 'обычно' y 'ни разу' en cuanto al aspecto verbal?",
+    "options": [
+      "No afectan el aspecto en absoluto",
+      "Todos exigen casi siempre imperfectivo, con o sin negación",
+      "Cambian el aspecto según el sujeto",
+      "Todos exigen perfectivo"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿De qué verbos se forma el participio activo de PRESENTE?",
+    "options": [
+      "Solo de imperfectivos",
+      "De ambos por igual",
+      "Solo de perfectivos",
+      "No existe en ruso"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'читавший' y 'прочитавший'?",
+    "options": [
+      "читавший es presente",
+      "читавший = imperfectivo, proceso; прочитавший = perfectivo, resultado",
+      "Son sinónimos exactos",
+      "прочитавший es un adjetivo, no un participio"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo concuerda el participio con el sustantivo que modifica?",
+    "options": [
+      "Solo en género",
+      "Solo en número",
+      "En género, número y caso, como cualquier adjetivo",
+      "No concuerda, es invariable"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "Si la frase participial va DESPUÉS del sustantivo, ¿cómo se puntúa?",
+    "options": [
+      "Nunca lleva comas",
+      "Se pone entre paréntesis",
+      "Se separa con punto y coma",
+      "Se separa con comas"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "'Настоящий друг всегда поможет' — aquí 'настоящий' significa...",
+    "options": [
+      "Real, genuino (adjetivo lexicalizado, ya no 'el que es')",
+      "El que existe ahora mismo",
+      "Siguiente",
+      "Futuro"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es el registro más frecuente de 'который' frente al participio?",
+    "options": [
+      "Son intercambiables sin diferencia de registro",
+      "который = hablado/cotidiano; el participio = escrito/formal",
+      "который = escrito; el participio = hablado",
+      "который ya no se usa en ruso moderno"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué describe un participio pasivo?",
+    "options": [
+      "Algo que recibe la acción",
+      "Quien realiza la acción",
+      "El aspecto imperfectivo siempre",
+      "El tiempo verbal"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "'Письмо написано' usa...",
+    "options": [
+      "Futuro compuesto",
+      "La forma corta del participio pasivo pasado",
+      "Participio activo presente",
+      "Infinitivo"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "En 'Книга написана автором', ¿en qué caso va el agente ('автором')?",
+    "options": [
+      "Dativo",
+      "Genitivo, con 'от'",
+      "Instrumental, sin preposición",
+      "Acusativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre la forma LARGA y la forma CORTA del participio pasivo pasado?",
+    "options": [
+      "La corta es más antigua y ya no se usa",
+      "La larga solo existe en presente",
+      "Son exactamente lo mismo",
+      "La larga es atributiva y declina como adjetivo; la corta es predicativa e invariable en caso"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Por qué el participio pasivo de PRESENTE (читаемый, любимый) es menos productivo que el de pasado?",
+    "options": [
+      "Se limita a un grupo reducido de verbos frecuentes, en vez de formarse libremente",
+      "Porque solo se usa en el pasado",
+      "Porque siempre es reflexivo",
+      "Porque no existe en ruso"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué tipo de verbos forman normalmente el participio pasivo de PASADO?",
+    "options": [
+      "Solo verbos reflexivos",
+      "Verbos perfectivos transitivos",
+      "Solo verbos intransitivos",
+      "Verbos imperfectivos únicamente"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué terminación toma el gerundio imperfectivo?",
+    "options": [
+      "-я (-а)",
+      "-в / -вши",
+      "-щий",
+      "-нный"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "El gerundio imperfectivo expresa una acción...",
+    "options": [
+      "Posterior a la principal",
+      "Simultánea a la principal",
+      "Anterior a la principal",
+      "Imposible"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se forma el gerundio de un verbo reflexivo como 'улыбаться'?",
+    "options": [
+      "No tiene gerundio",
+      "Con -вшись",
+      "Con -ясь (nunca -сь): улыбаясь",
+      "Con -сь: улыбася"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Por qué 'Подъезжая к станции, у меня слетела шляпа' es gramaticalmente INCORRECTO?",
+    "options": [
+      "No se puede usar деепричастие con 'к'",
+      "El verbo está mal conjugado",
+      "Falta una coma",
+      "El sujeto de la oración principal ('шляпа') no es el mismo que el del gerundio ('yo')"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se puntúa la frase con деепричастие, sin importar su posición en la oración?",
+    "options": [
+      "Siempre se separa con comas",
+      "Solo si va al final",
+      "Solo si va al principio",
+      "Nunca lleva comas"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué tienen en común быть, мочь y петь en relación con el gerundio imperfectivo?",
+    "options": [
+      "Todos terminan en -ясь",
+      "No tienen gerundio de uso natural (formas defectivas)",
+      "Son los únicos verbos que sí tienen gerundio",
+      "Se usan solo con деепричастие perfectivo"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué terminación toma el gerundio perfectivo NEUTRO/estándar?",
+    "options": [
+      "-в (-вши, -вшись)",
+      "-я / -а",
+      "-мый",
+      "-ущий"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "El gerundio perfectivo expresa una acción...",
+    "options": [
+      "En futuro",
+      "Anterior y completada respecto a la principal",
+      "Simultánea a la principal",
+      "Que nunca ocurrió"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se forma el gerundio perfectivo de un verbo REFLEXIVO como 'вернуться'?",
+    "options": [
+      "Con -я: верняясь",
+      "Con -в: вернув",
+      "Con -вшись (nunca solo -вши): вернувшись",
+      "No tiene gerundio"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué terminación toma excepcionalmente el gerundio de los verbos perfectivos de movimiento en -йти (прийти, войти)?",
+    "options": [
+      "-в: пришёв, войшёв",
+      "-вши: пришедши, войшедши",
+      "No tienen gerundio",
+      "-я, la misma que el imperfectivo: придя, войдя"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'прочитанный' y 'прочитав'?",
+    "options": [
+      "прочитанный es un adjetivo (participio) que concuerda; прочитав es un adverbio invariable",
+      "Son exactamente lo mismo",
+      "прочитанный es el gerundio y прочитав el participio",
+      "прочитав es un sustantivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué tipo de estructura crean varios gerundios perfectivos en cadena, como 'Встав, умывшись и позавтракав, он вышел из дома'?",
+    "options": [
+      "Una lista de opciones",
+      "Una secuencia de acciones completadas por el mismo sujeto, sin repetirlo",
+      "Una oración condicional",
+      "Varias acciones simultáneas"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cambia el tiempo verbal al pasar a discurso indirecto en ruso?",
+    "options": [
+      "No, se mantiene el tiempo original",
+      "Solo en futuro",
+      "Solo en presente",
+      "Sí, siempre retrocede un tiempo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué se coloca SIEMPRE antes de 'что' en estas oraciones, a diferencia del español?",
+    "options": [
+      "Un punto",
+      "Una coma",
+      "Dos puntos",
+      "Nada"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "Al convertir «Я устал» (dicho por él) a discurso indirecto, ¿qué pronombre se usa?",
+    "options": [
+      "Se omite el pronombre",
+      "ты (tú)",
+      "он (él): 'что он устал'",
+      "Se mantiene 'я'"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "«Я приду сегодня» se convierte en discurso indirecto (contado después) en...",
+    "options": [
+      "что он придёт сегодня (sin cambios)",
+      "что он завтра придёт",
+      "что он пришёл сегодня",
+      "что он придёт в тот день (сегодня → в тот день)"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué construcción se usa para ÓRDENES o DESEOS en discurso indirecto (no afirmaciones)?",
+    "options": [
+      "чтобы (se verá en la próxima lección)",
+      "Ninguna, se usa el imperativo directo",
+      "ли",
+      "что"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál de estos verbos introduce afirmaciones con 'что' en un registro más FORMAL?",
+    "options": [
+      "попросить",
+      "утверждать",
+      "спросить",
+      "хотеть"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuándo se usa 'чтобы' en discurso indirecto (en vez de 'что')?",
+    "options": [
+      "Para órdenes, peticiones y deseos",
+      "Nunca en discurso indirecto",
+      "Solo en preguntas",
+      "Para simples afirmaciones"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué forma verbal sigue a 'чтобы' cuando el SUJETO CAMBIA?",
+    "options": [
+      "Futuro compuesto",
+      "Pasado",
+      "Infinitivo",
+      "Presente"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué forma sigue a 'чтобы' cuando el sujeto es EL MISMO en ambas partes, como en 'Я хочу...'?",
+    "options": [
+      "Presente",
+      "Futuro",
+      "Infinitivo: 'Я хочу пойти в кино'",
+      "Pasado: 'Я хочу, чтобы я пошёл'"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Por qué el verbo tras 'чтобы' va en pasado, aunque la acción deseada sea futura?",
+    "options": [
+      "Es un error común que se acepta",
+      "Porque siempre se refiere al pasado real",
+      "Porque чтобы solo se usa para el pasado",
+      "Es un uso especial (irrealis), no indica tiempo real"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se niega una orden en discurso indirecto con 'чтобы'?",
+    "options": [
+      "La negación va justo antes del verbo en pasado: 'чтобы я не опаздывал'",
+      "No se puede negar con чтобы",
+      "Se usa 'нет' al final",
+      "Se cambia что por чтобы"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué paralelo existe entre чтобы y el español?",
+    "options": [
+      "чтобы equivale al futuro español",
+      "El español también cambia de modo verbal (subjuntivo) para deseos/órdenes reportados",
+      "El español usa siempre indicativo",
+      "No hay ningún paralelo"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué ocurre con la palabra interrogativa (где, когда, почему...) en una pregunta indirecta?",
+    "options": [
+      "Se conserva tal cual, sin usar что ni чтобы",
+      "Se reemplaza por что",
+      "Se reemplaza por чтобы",
+      "Se elimina de la frase"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué partícula se usa para reportar una pregunta de SÍ/NO (sin palabra interrogativa)?",
+    "options": [
+      "что",
+      "ли",
+      "как",
+      "чтобы"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Dónde se coloca ли dentro de la oración?",
+    "options": [
+      "Siempre al principio de la oración",
+      "Antes del sujeto, sin excepción",
+      "Justo después de la palabra más importante (el foco de la pregunta)",
+      "Siempre al final de la oración"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "'Он спросил, приду ли я' frente a 'Он спросил, я ли приду' — ¿qué cambia?",
+    "options": [
+      "Nada, son intercambiables sin matiz",
+      "El registro de cortesía",
+      "El tiempo verbal",
+      "El foco: en la primera se pregunta SI vendrá; en la segunda, QUIÉN vendrá"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo termina, en la escritura, una oración de pregunta indirecta en ruso?",
+    "options": [
+      "Con punto, no con signo de interrogación",
+      "Con puntos suspensivos",
+      "Con exclamación",
+      "Siempre con '?'"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es el paralelo real con el español para preguntas indirectas de sí/no?",
+    "options": [
+      "El español usa 'que' en vez de 'si'",
+      "El español usa 'si' siempre al inicio de la subordinada, sin importar el foco",
+      "El español no tiene forma de reportar preguntas de sí/no",
+      "El español mueve 'si' igual que el ruso mueve ли"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿De qué depende exactamente el GÉNERO/NÚMERO de 'который', y de qué depende su CASO?",
+    "options": [
+      "Género/número: del antecedente. Caso: de su función en la subordinada",
+      "Género/número: de su función. Caso: del antecedente",
+      "Ambos dependen del antecedente",
+      "Ambos dependen de su función en la subordinada"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "'Человек, с которым я говорил...' — ¿por qué который está en instrumental?",
+    "options": [
+      "Porque 'человек' es masculino",
+      "Porque sigue a la preposición 'с', que siempre rige instrumental",
+      "Por concordancia con 'говорил'",
+      "Porque es el sujeto de la subordinada"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se declina который en acusativo cuando el antecedente es masculino ANIMADO (una persona)?",
+    "options": [
+      "которому",
+      "которым",
+      "которого (igual que un sustantivo animado: genitivo = acusativo)",
+      "который (forma igual al nominativo)"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué construcción es más literaria/formal para expresar posesión ('cuyo/a') en una cláusula relativa?",
+    "options": [
+      "который en nominativo",
+      "чей siempre, en cualquier registro",
+      "No existe forma de expresar posesión con cláusulas relativas",
+      "который en genitivo, colocado después del sustantivo poseído: 'произведения которого'"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cómo se puntúa siempre una cláusula con который en ruso, sin importar si es restrictiva o no?",
+    "options": [
+      "Siempre con comas a ambos lados",
+      "Nunca con comas",
+      "Depende del registro",
+      "Solo con coma al final"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuándo se puede reemplazar который por un participio (b1-19/20) en vez de una cláusula relativa?",
+    "options": [
+      "Siempre, en cualquier caso",
+      "Solo cuando который sería el SUJETO de la subordinada (nominativo)",
+      "Solo en acusativo",
+      "Nunca, son intercambiables solo con чтобы"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige el verbo 'владеть' (dominar un idioma/habilidad)?",
+    "options": [
+      "Instrumental",
+      "Acusativo",
+      "Prepositivo",
+      "Genitivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia de registro entre 'знать язык' y 'владеть языком'?",
+    "options": [
+      "владеть solo se usa para idiomas extranjeros",
+      "владеть es más formal/profesional, propio de CV y entrevistas; знать es neutro/cotidiano",
+      "Son exactamente sinónimos, sin diferencia",
+      "знать es más formal que владеть"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué diferencia hay entre 'устроиться на работу' y 'меня приняли на работу'?",
+    "options": [
+      "приняли на работу solo se usa en pasado remoto",
+      "Significan exactamente lo mismo, sin matiz",
+      "устроиться es la acción activa del candidato; приняли на работу describe el resultado desde fuera (lo contrataron)",
+      "устроиться es para despedir; приняли, para contratar"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué verbo usa la EMPRESA para contratar a alguien (sujeto = la empresa, no el candidato)?",
+    "options": [
+      "уволиться",
+      "искать",
+      "устроиться",
+      "нанять"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "'Если меня примут на работу, я буду стараться' — ¿qué tiempo/modo usa el ruso en ambas partes?",
+    "options": [
+      "Futuro de indicativo en las dos partes, sin subjuntivo",
+      "Pasado en la condición",
+      "Subjuntivo en la condición, indicativo en la consecuencia",
+      "Imperativo en ambas partes"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué expresión fija se usa para decir 'presentar el currículum para un puesto'?",
+    "options": [
+      "уволить резюме",
+      "подать резюме на должность",
+      "владеть резюме",
+      "сдать резюме"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué estructura expresa 'cuanto más experiencia, más alto el salario'?",
+    "options": [
+      "Чем больше опыта, тем выше зарплата",
+      "Если больше опыта, больше зарплата",
+      "Опыт больше, зарплата больше",
+      "Больше опыта, чтобы больше зарплата"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Con qué preposición se usa 'поступить' para el nivel de facultad/carrera, distinta de la universidad como institución?",
+    "options": [
+      "к (поступить к факультету)",
+      "на (поступить на факультет)",
+      "в (поступить в факультет)",
+      "у (поступить у факультета)"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué grado NO tiene un equivalente directo en el sistema hispanohablante?",
+    "options": [
+      "магистратура (equivalente a maestría)",
+      "бакалавриат (equivalente a licenciatura)",
+      "доктор наук (segundo doctorado, superior al 'kandidat nauk')",
+      "аспирантура (equivalente a doctorado)"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige 'специализироваться на' (especializarse en)?",
+    "options": [
+      "Acusativo",
+      "Genitivo",
+      "Instrumental",
+      "Prepositivo"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso sigue a 'по' en 'продвигаться по карьерной лестнице' (avanzar por la escalera profesional)?",
+    "options": [
+      "Dativo",
+      "Instrumental",
+      "Acusativo",
+      "Genitivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Ya viste el instrumental para profesiones ('работает врачом') en qué lección anterior?",
+    "options": [
+      "b1-4",
+      "a1-26",
+      "b1-27",
+      "a2-21"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre 'нравится' y 'понравился'?",
+    "options": [
+      "нравится = gusto continuado/general; понравился = reacción puntual tras verlo/leerlo una vez",
+      "Son exactamente lo mismo, sin diferencia",
+      "нравится solo se usa para personas",
+      "понравился es presente; нравится es pasado"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Con qué género concuerda 'понравился/понравилась/понравилось/понравились'?",
+    "options": [
+      "Con la persona que sintió el gusto",
+      "Con lo que gustó (el sujeto gramatical), no con la persona que sintió el gusto",
+      "Siempre con masculino",
+      "No concuerda con nada"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué caso rige 'произвести впечатление НА' (causar una impresión en alguien)?",
+    "options": [
+      "Dativo",
+      "Instrumental",
+      "Acusativo",
+      "Genitivo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "'Фильм основан на реальных событиях' usa qué tipo de construcción gramatical ya conocida (b1-19/20)?",
+    "options": [
+      "Un participio activo",
+      "Un gerundio",
+      "Un infinitivo",
+      "Un participio pasivo de forma corta"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "¿En qué se diferencia 'Книга интереснее, чем фильм' de la estructura чем...тем... (b1-28)?",
+    "options": [
+      "Es un comparativo simple (una sola comparación), no una proporcionalidad entre dos cantidades",
+      "Solo se usa para libros, no para películas",
+      "Requiere тем obligatoriamente",
+      "Son la misma estructura con distinto orden"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué preposición y caso se usan en 'снят в жанре триллера' (rodada en el género del thriller)?",
+    "options": [
+      "на + acusativo",
+      "в + prepositivo (жанре) + genitivo del género (триллера)",
+      "у + genitivo",
+      "с + instrumental"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra exclamativa se usa directamente con un SUSTANTIVO, concordando en género y número?",
+    "options": [
+      "какой/какая/какое/какие",
+      "чтобы",
+      "что",
+      "как (invariable)"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué palabra exclamativa se usa con un ADJETIVO CORTO o un ADVERBIO, sin concordar?",
+    "options": [
+      "который",
+      "как (invariable)",
+      "чей",
+      "какой/какая/какое"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "En español, '¡qué' sirve tanto para sustantivos ('¡qué película!') como para adjetivos ('¡qué interesante!'). ¿Qué pasa en ruso?",
+    "options": [
+      "какой y как son intercambiables sin ninguna diferencia",
+      "El ruso no tiene exclamaciones",
+      "El ruso obliga a elegir entre какой (sustantivos) y как (adjetivos/adverbios) — no hay una sola palabra universal",
+      "El ruso también usa una sola palabra para todo"
+    ],
+    "correct_option_id": 2,
+    "level": "B1"
+  },
+  {
+    "question": "¿Qué adverbios intensifican un adjetivo con más fuerza que 'очень' (a1-25)?",
+    "options": [
+      "иногда, редко",
+      "немного, чуть-чуть",
+      "может быть, наверное",
+      "невероятно, потрясающе, безумно"
+    ],
+    "correct_option_id": 3,
+    "level": "B1"
+  },
+  {
+    "question": "'Как здорово, ___ ты приехал!' — ¿qué palabra introduce la razón de la exclamación?",
+    "options": [
+      "что",
+      "ли",
+      "который",
+      "чтобы"
+    ],
+    "correct_option_id": 0,
+    "level": "B1"
+  },
+  {
+    "question": "¿En qué lección anterior se introdujo 'жаль' por primera vez, en la construcción 'мне жаль, что...'?",
+    "options": [
+      "a1-25",
+      "b1-2",
+      "a2-10",
+      "b1-29"
+    ],
+    "correct_option_id": 1,
+    "level": "B1"
+  },
+  {
+    "question": "¿Cuándo se puede sustituir «который» por un participio simple?",
+    "options": [
+      "Solo cuando «который» es sujeto de su propia oración",
+      "Solo en pasado",
+      "Siempre, sin excepción",
+      "Nunca"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "«Книга, которую написал автор» se transforma correctamente en:",
+    "options": [
+      "Книга, который написал автор",
+      "Книга, написанная автором",
+      "Книга, писающая автором",
+      "Книга, написавшая автор"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Con qué concuerda el participio: con el antecedente o con el sujeto de la oración principal?",
+    "options": [
+      "Con el sujeto de la oración principal",
+      "Con el verbo principal",
+      "Con el antecedente (el sustantivo que modifica)",
+      "Con ninguno de los dos"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué participio se usa cuando el antecedente RECIBE la acción?",
+    "options": [
+      "Cualquiera de los dos, es indiferente",
+      "El participio activo",
+      "Ninguno, se usa el infinitivo",
+      "El participio pasivo"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "En «Книга, написанная автором», ¿qué caso lleva «автором» y por qué?",
+    "options": [
+      "Instrumental, porque es el agente de una construcción pasiva",
+      "Genitivo, porque indica posesión",
+      "Acusativo, porque es el objeto directo",
+      "Nominativo, porque es el sujeto"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿En qué registro se prefieren los participios frente a «который»?",
+    "options": [
+      "Solo en mensajes de texto informales",
+      "En el registro escrito formal, periodístico y académico",
+      "En el habla coloquial cotidiana",
+      "Nunca se usan en ningún registro"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué gerundio corresponde a una subordinada con «когда» + acción SIMULTÁNEA?",
+    "options": [
+      "El gerundio imperfectivo",
+      "El gerundio perfectivo",
+      "Ninguno, когда nunca se sustituye",
+      "Cualquiera de los dos, es indiferente"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué gerundio corresponde a «после того как» (acción ya completada antes de la principal)?",
+    "options": [
+      "El participio activo",
+      "El gerundio perfectivo",
+      "El participio pasivo",
+      "El gerundio imperfectivo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se transforma «Так как она устала, она легла спать» en una frase con gerundio?",
+    "options": [
+      "Уставшая, она легла спать.",
+      "Она устав легла спать.",
+      "Устав, она легла спать.",
+      "Уставая, она легла спать."
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Por qué es agramatical «Читая книгу, зазвонил телефон»?",
+    "options": [
+      "Porque falta una coma",
+      "Porque телефон es un sustantivo inanimado",
+      "Porque el gerundio está mal formado",
+      "Porque el sujeto del gerundio (quien lee) no coincide con el sujeto de la oración principal (el teléfono)"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué expresa «не» + gerundio, como en «Не зная ответа, он промолчал»?",
+    "options": [
+      "Causa o modo negativo",
+      "Una pregunta",
+      "Una acción futura",
+      "Una orden"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "A diferencia del participio (b2-9), ¿cómo se comporta el gerundio en cuanto a concordancia?",
+    "options": [
+      "Solo concuerda en caso",
+      "Es completamente invariable, nunca concuerda en género, número o caso",
+      "Concuerda en género y número, igual que el participio",
+      "Concuerda únicamente en plural"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué recurso usa con más frecuencia el habla coloquial para relativizar, en vez de un participio?",
+    "options": [
+      "«который»",
+      "participios",
+      "gerundios",
+      "el estilo burocrático"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la diferencia funcional principal entre participio y gerundio?",
+    "options": [
+      "El gerundio concuerda en género",
+      "El participio es adjetivo (concuerda), el gerundio es adverbio (invariable)",
+      "No hay ninguna diferencia funcional",
+      "El participio es invariable"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la norma prudente sobre cuántos participios/gerundios usar por cláusula?",
+    "options": [
+      "Nunca usar más de tres en todo el texto",
+      "Tantos como sea posible, para sonar más culto",
+      "Un máximo de uno por cláusula",
+      "Exactamente dos por frase"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿En qué registro se lleva la densidad participial al extremo, como en «Лицо, обратившееся с заявлением...»?",
+    "options": [
+      "El habla coloquial",
+      "Los mensajes de texto informales",
+      "La poesía romántica",
+      "El estilo burocrático (канцелярский стиль)"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Por qué el habla espontánea evita los participios activos?",
+    "options": [
+      "Porque exigen procesar la concordancia de caso en tiempo real, algo difícil de improvisar",
+      "Porque no existen en el habla oral",
+      "Porque están prohibidos en el habla oral",
+      "Porque solo existen en pasado"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué frase suena más natural en una conversación cotidiana?",
+    "options": [
+      "Друг, встретивший меня, вернулся.",
+      "Я встретил друга, который вернулся из Москвы.",
+      "Встретивший друга я вернулся из Москвы.",
+      "Я встретил друга, вернувшегося из Москвы."
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Por qué un escritor experimentado evitaría dos «который» en la misma frase compleja?",
+    "options": [
+      "Porque suena repetitivo (тавтология); conviene sustituir uno por un participio",
+      "Porque который no se puede repetir nunca en ruso",
+      "Porque es un error gramatical grave",
+      "Porque который solo se usa una vez por texto entero"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "En «Студент, который сидит у окна и который читает книгу», ¿qué mejora el estilo?",
+    "options": [
+      "Eliminar la segunda cláusula por completo",
+      "Convertir el segundo который-clause en participio: «...который сидит у окна и читающий книгу»",
+      "Repetir который una tercera vez",
+      "Usar чей en vez del segundo который"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué ventaja tiene el participio frente a «который» en textos con enumeraciones o titulares?",
+    "options": [
+      "Es obligatorio en cualquier titular",
+      "Solo el participio puede ir en plural",
+      "Permite una posición compacta, pegada al sustantivo, sin necesitar una cláusula completa separada por comas",
+      "который nunca se usa en titulares"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué riesgo tiene «который» en una frase con varios sustantivos antes de él?",
+    "options": [
+      "Ningún riesgo, siempre es claro",
+      "Solo genera ambigüedad en plural",
+      "El riesgo es que cambie de género",
+      "Puede generar ambigüedad sobre a qué sustantivo se refiere realmente"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo resuelve el participio la ambigüedad de antecedente que puede tener «который»?",
+    "options": [
+      "Al ir pegado directamente al sustantivo que modifica, no deja duda sobre el antecedente",
+      "El participio nunca tiene antecedente",
+      "Solo genera más ambigüedad",
+      "El participio tiene el mismo riesgo de ambigüedad"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "Cuando который es sujeto (caso en que AMBAS opciones son gramaticalmente posibles, repaso de b1-26/b2-9), ¿qué decide cuál elegir?",
+    "options": [
+      "Solo el género del antecedente",
+      "Consideraciones de estilo: evitar repetición, compactar, o evitar ambigüedad — no la gramática",
+      "Solo el número del antecedente",
+      "Es indiferente, nunca hay una elección real"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se forma la pasiva de PASADO con participio corto?",
+    "options": [
+      "был/была/было/были + participio corto",
+      "solo el participio corto, sin ningún verbo",
+      "будет + participio largo",
+      "быть (presente) + participio corto"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se forma la pasiva de FUTURO con participio corto?",
+    "options": [
+      "solo participio corto en futuro",
+      "будет/будут + participio corto",
+      "был + participio corto",
+      "быть + participio largo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Por qué se omite tan a menudo el agente en avisos oficiales como «Вход запрещён»?",
+    "options": [
+      "Porque запрещён no admite agente nunca",
+      "Porque siempre se debe repetir el agente dos veces",
+      "Porque el agente (quién prohíbe) es irrelevante o se sobreentiende — la regla importa, no quién la dictó",
+      "Porque está gramaticalmente prohibido mencionar el agente"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Por qué predomina la voz pasiva sobre la activa en noticias y documentos oficiales?",
+    "options": [
+      "Porque es gramaticalmente más simple",
+      "Porque la voz activa está prohibida en ruso escrito",
+      "Porque nunca se puede usar la voz activa con estos verbos",
+      "Porque pone el foco en la acción/el resultado, no en quién la realizó — más objetivo e impersonal"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué formulación es la más natural para un titular de noticias?",
+    "options": [
+      "Президент избран большинством голосов.",
+      "Народ избрал президента большинством голосов, и это очень важно знать.",
+      "Голоса избрали президента.",
+      "Президент, который был избран, есть избранный."
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso lleva SIEMPRE el agente cuando se menciona en una pasiva con participio?",
+    "options": [
+      "Dativo",
+      "Instrumental, sin preposición (repaso de b1-20)",
+      "Nominativo",
+      "Genitivo con «от»"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la conjunción causal más neutra/coloquial, que casi siempre va después de la consecuencia (repaso de b1-1)?",
+    "options": [
+      "потому что",
+      "ведь",
+      "поскольку",
+      "так как"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué conjunción es la más formal de las tres, típica de textos científicos y ensayos?",
+    "options": [
+      "ведь",
+      "поскольку",
+      "потому что",
+      "так как"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "Completa la escala de formalidad de menor a mayor:",
+    "options": [
+      "так как → потому что → поскольку",
+      "ведь → поскольку → потому что",
+      "потому что → так как → поскольку",
+      "поскольку → так как → потому что"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Dónde va la coma cuando «так как»/«поскольку» ENCABEZAN la oración?",
+    "options": [
+      "Al final de toda la oración",
+      "No se necesita ninguna coma",
+      "Siempre después de так как/поскольку",
+      "Antes de la consecuencia, no antes de la conjunción"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué matiz tiene «ведь» como conector causal coloquial?",
+    "options": [
+      "Funciona casi como un recordatorio implícito de algo ya sabido",
+      "Solo se usa en documentos oficiales",
+      "Es la forma más formal de expresar causa",
+      "Nunca se usa como conector causal"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué palabra significa «conclusión» dentro del vocabulario de razonamiento causal?",
+    "options": [
+      "причина",
+      "вывод",
+      "предварительный",
+      "следствие"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué estructura se combina con un sustantivo en acusativo (no con una oración completa)?",
+    "options": [
+      "несмотря на",
+      "несмотря на то что",
+      "как бы то ни было",
+      "хотя"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «вопреки»?",
+    "options": [
+      "instrumental",
+      "дативо",
+      "acusativo",
+      "genitivo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de las dos es más formal/escrita, propia de textos argumentativos (repaso de b1-1)?",
+    "options": [
+      "тем не менее",
+      "хотя",
+      "несмотря на то что",
+      "всё же"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué diferencia a «даже если» de «хотя»?",
+    "options": [
+      "хотя siempre rige dativo",
+      "son sinónimos exactos, intercambiables en cualquier contexto",
+      "даже если solo se usa en el pasado",
+      "даже если presenta una condición hipotética; хотя presenta un obstáculo que ya es un hecho real"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Dónde va la coma cuando la concesiva ENCABEZA la oración («Несмотря на то что..., ...»)?",
+    "options": [
+      "Entre la subordinada concesiva y la consecuencia, no justo tras la conjunción",
+      "Siempre después de несмотря на",
+      "Al final de toda la oración",
+      "No se necesita ninguna coma"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué expresión significa «a pesar de todo, sin excepción»?",
+    "options": [
+      "при всём том",
+      "несмотря ни на что",
+      "вопреки ожиданиям",
+      "как бы то ни было"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué preposición tiene matiz POSITIVO?",
+    "options": [
+      "благодаря",
+      "из-за",
+      "по причине",
+      "в связи с"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «благодаря»?",
+    "options": [
+      "acusativo",
+      "дативо",
+      "instrumental",
+      "genitivo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «из-за»?",
+    "options": [
+      "instrumental",
+      "dativo",
+      "генитиво",
+      "acusativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «в связи с»?",
+    "options": [
+      "genitivo",
+      "dativo",
+      "acusativo",
+      "инструментал"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Por qué «Благодаря болезни, я не сдал экзамен» suena raro o irónico?",
+    "options": [
+      "Porque благодаря tiene matiz positivo y no encaja con una causa claramente negativa, salvo ironía deliberada",
+      "Porque благодаря siempre rige genitivo",
+      "Porque болезнь no existe como palabra",
+      "Porque no se puede usar благодаря con sustantivos"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué forma de «то» se usa con «в связи с» para introducir una oración completa?",
+    "options": [
+      "тому",
+      "тем",
+      "того",
+      "то"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "Cuando el sujeto de la finalidad es distinto del sujeto principal, ¿qué forma sigue a «чтобы»?",
+    "options": [
+      "pasado",
+      "futuro",
+      "presente",
+      "infinitivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué conjunción introduce una consecuencia lógica, no un propósito?",
+    "options": [
+      "чтобы",
+      "так что",
+      "во избежание",
+      "для того чтобы"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre el чтобы de b1-24 y el чтобы de esta lección?",
+    "options": [
+      "En b1-24 solo se usa en plural",
+      "No hay ninguna diferencia real",
+      "En b1-24 completaba un verbo específico de deseo/orden; aquí es un adjunto de finalidad que se añade a cualquier oración",
+      "En b1-24 rige genitivo; aquí rige dativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuándo se prefiere «для того чтобы» en vez de «чтобы» a secas?",
+    "options": [
+      "Nunca — son formas mutuamente excluyentes",
+      "Solo con verbos de movimiento",
+      "Solo en preguntas",
+      "Cuando la cláusula de finalidad encabeza la oración, en un registro más formal/escrito"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «с целью»?",
+    "options": [
+      "genitivo",
+      "acusativo",
+      "instrumental",
+      "dativo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «во избежание»?",
+    "options": [
+      "instrumental",
+      "genitivo",
+      "dativo",
+      "acusativo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «выйти из себя»?",
+    "options": [
+      "perder los estribos",
+      "salir a caminar",
+      "salir de vacaciones",
+      "salir de casa"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «зайти в тупик»?",
+    "options": [
+      "entrar en una tienda",
+      "llegar a un callejón sin salida (punto muerto)",
+      "llegar tarde",
+      "perderse en la ciudad"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «дойти до»?",
+    "options": [
+      "instrumental",
+      "acusativo",
+      "genitivo",
+      "dativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «выйти из»?",
+    "options": [
+      "acusativo",
+      "instrumental",
+      "dativo",
+      "genitivo"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué estructura usa «перейти» para cambiar de código de trato («pasar al tuteo»)?",
+    "options": [
+      "перейти на + acusativo",
+      "перейти к + dativo",
+      "перейти + acusativo directo",
+      "перейти с + instrumental"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "Según el patrón semántico de los prefijos, ¿qué expresa за- en sentido figurado?",
+    "options": [
+      "cruzar un límite o cambiar de sistema",
+      "adentrarse en una situación sin salida clara",
+      "abandonar un estado",
+      "alcanzar un extremo tras un proceso"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «прийти к выводу»?",
+    "options": [
+      "llegar a una conclusión",
+      "llegar tarde",
+      "llegar a una tienda",
+      "volver a casa"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «пойти на компромисс»?",
+    "options": [
+      "ir de compras",
+      "llegar a un compromiso, ceder",
+      "salir a caminar",
+      "irse de viaje"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «прийти к»?",
+    "options": [
+      "instrumental",
+      "genitivo",
+      "dativo",
+      "acusativo"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué preposición usa «прийти в себя», rompiendo el patrón de «прийти к»?",
+    "options": [
+      "от (+ genitivo)",
+      "на (+ acusativo)",
+      "к (+ dativo)",
+      "в (+ acusativo)"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «уйти от»?",
+    "options": [
+      "genitivo",
+      "instrumental",
+      "dativo",
+      "acusativo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rigen «войти в» y «пойти на» por igual?",
+    "options": [
+      "instrumental",
+      "acusativo",
+      "genitivo",
+      "dativo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «найти общий язык con alguien»?",
+    "options": [
+      "entenderse bien, llevarse bien",
+      "aprender el mismo idioma",
+      "discutir mucho",
+      "traducir algo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se dice correctamente «ella se casó con un músico»?",
+    "options": [
+      "Она вышла на музыканта.",
+      "Она вышла замуж за музыканта.",
+      "Она женилась на музыканте.",
+      "Она женилась замуж музыканта."
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «сходить с ума по кому-то»?",
+    "options": [
+      "odiar a alguien profundamente",
+      "temer a alguien",
+      "estar locamente enamorado de alguien",
+      "olvidar a alguien por completo"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué palabra nunca se puede omitir en «вести себя»?",
+    "options": [
+      "хорошо",
+      "как",
+      "ребёнок",
+      "себя"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «найти общий язык с»?",
+    "options": [
+      "instrumental",
+      "acusativo",
+      "genitivo",
+      "dativo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué estructura usa «жениться», dicho de un hombre?",
+    "options": [
+      "жениться за + acusativo",
+      "жениться на + prepositivo",
+      "жениться к + dativo",
+      "жениться с + instrumental"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué forma verbal sigue siempre a «бы ni» en estas construcciones?",
+    "options": [
+      "pasado",
+      "infinitivo",
+      "futuro",
+      "presente"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «во что бы то ни стало»?",
+    "options": [
+      "sea como sea",
+      "cueste lo que cueste",
+      "de vez en cuando",
+      "por extraño que parezca"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «как ни странно»?",
+    "options": [
+      "cueste lo que cueste",
+      "por más que",
+      "por extraño que parezca",
+      "digan lo que digan"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué introduce «что ни говори»?",
+    "options": [
+      "una disculpa formal",
+      "una orden directa",
+      "una pregunta retórica sin respuesta",
+      "una afirmación firme del hablante pese a posibles objeciones"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «сколько бы ni»?",
+    "options": [
+      "por mucho que (cuánto sea)",
+      "a veces",
+      "nunca jamás",
+      "de repente"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estas es una construcción GRAMATICALMENTE PRODUCTIVA (se genera con cualquier interrogativo), a diferencia del léxico fijo de b2-5?",
+    "options": [
+      "так себе",
+      "кто/что/как/где бы ни",
+      "всё путём",
+      "не вопрос"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué construcción pasiva describe un proceso habitual o en curso, no un resultado puntual?",
+    "options": [
+      "construcción con -ся",
+      "participio pasivo corto",
+      "infinitivo pasivo",
+      "forma larga del participio"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué es un «отглагольное существительное»?",
+    "options": [
+      "una preposición",
+      "un sustantivo derivado de un verbo",
+      "un verbo conjugado",
+      "un adjetivo"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué diferencia hay entre «исследуется» y «исследован»?",
+    "options": [
+      "исследован es la forma negativa de исследуется",
+      "son sinónimos exactos, intercambiables en cualquier contexto",
+      "исследуется describe un proceso en curso; исследован describe un resultado ya completado",
+      "исследуется solo se usa en plural"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué pronombre evita típicamente el estilo científico ruso?",
+    "options": [
+      "они",
+      "который",
+      "это",
+      "мы (primera persona)"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «вышеупомянутый»?",
+    "options": [
+      "el mencionado anteriormente",
+      "un dato sin confirmar",
+      "el que se menciona más adelante",
+      "un método nuevo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué caso rige «в рамках»?",
+    "options": [
+      "dativo",
+      "genitivo",
+      "acusativo",
+      "instrumental"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se dirige uno formalmente a «Iván Petróvich» en una carta oficial?",
+    "options": [
+      "Уважаемый Иван Петрович!",
+      "Дорогой Иван!",
+      "Привет, Иван!",
+      "Иван, здравствуй!"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué fórmula se usa para cerrar una carta formal?",
+    "options": [
+      "Обнимаю!",
+      "С уважением,",
+      "Пока!",
+      "До скорого!"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué ocurre si se omite el patronímico en un saludo oficial?",
+    "options": [
+      "Es obligatorio solo en cartas muy largas",
+      "Solo es un error si se dirige a una mujer",
+      "Es un error de registro tan grave como tutear sin permiso",
+      "No tiene ninguna consecuencia, es opcional"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «Настоящим сообщаю»?",
+    "options": [
+      "Verdaderamente le comunico algo",
+      "Ahora mismo le comunico algo urgente",
+      "Nunca le comunicaré nada",
+      "Por la presente le comunico"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es el orden correcto de una carta formal?",
+    "options": [
+      "saludo → introducción del motivo → cuerpo → cierre",
+      "introducción → cierre → saludo → cuerpo",
+      "cuerpo → saludo → cierre → introducción",
+      "cierre → cuerpo → saludo → introducción"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «уведомить»?",
+    "options": [
+      "denegar",
+      "notificar",
+      "solicitar",
+      "agradecer"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué recurso sustituye frecuentemente al verbo «быть» en los titulares?",
+    "options": [
+      "el guion (—)",
+      "los dos puntos",
+      "el participio",
+      "el infinitivo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la fórmula correcta para citar una fuente institucional (con referencia a ella)?",
+    "options": [
+      "со ссылкой на",
+      "как утверждает",
+      "по информации",
+      "как считает"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué fórmula se usa para citar la afirmación de una persona concreta?",
+    "options": [
+      "со ссылкой на",
+      "как утверждает",
+      "как сообщает",
+      "по информации"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué preguntas clásicas condensa el лид (primer párrafo de una noticia)?",
+    "options": [
+      "cuándo, por qué, para qué",
+      "por qué, cómo, cuánto",
+      "quién, cómo, con quién",
+      "qué, quién, cuándo, dónde"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué es obligatorio antes de «что» en una cita indirecta como «Министр заявил, что...»?",
+    "options": [
+      "una coma",
+      "ningún signo de puntuación",
+      "un punto y coma",
+      "dos puntos"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «анонсировать»?",
+    "options": [
+      "desmentir",
+      "anunciar",
+      "investigar",
+      "confirmar"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es el equivalente formal de «помочь»?",
+    "options": [
+      "оказать помощь",
+      "сделать помощь",
+      "дать помощь",
+      "помочь официально"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué transformación es típica al pasar de coloquial a formal?",
+    "options": [
+      "sustantivo → verbo",
+      "verbo → sustantivo verbal",
+      "no hay diferencia",
+      "presente → pasado"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿En qué se transforma «который + verbo» en registro formal?",
+    "options": [
+      "en un infinitivo",
+      "en un sustantivo verbal",
+      "en un participio",
+      "en un gerundio"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿En qué se transforma «ну/короче» en registro formal?",
+    "options": [
+      "впоследствии",
+      "однако",
+      "тем не менее",
+      "таким образом"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿En qué se transforma «но» en registro formal?",
+    "options": [
+      "однако / тем не менее",
+      "чрезвычайно",
+      "впоследствии",
+      "таким образом"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «выяснить»?",
+    "options": [
+      "proporcionar",
+      "determinar, averiguar",
+      "demostrar",
+      "adquirir"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué expresión indica el grado más alto de certeza?",
+    "options": [
+      "несомненно",
+      "сомнительно",
+      "возможно",
+      "вряд ли"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué es una pregunta retórica?",
+    "options": [
+      "una pregunta formal de cortesía",
+      "una pregunta que refuerza un argumento sin esperar respuesta",
+      "una pregunta indirecta",
+      "una pregunta que espera respuesta detallada"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué estructura reutiliza «Нельзя не признать, что...» de b2-3?",
+    "options": [
+      "la subordinada con который",
+      "el aspecto perfectivo de mandato",
+      "la doble negación retórica de «нельзя не + infinitivo»",
+      "el condicional irreal con бы"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la función de matizar con «Возможно, я ошибаюсь, но...» antes de afirmar?",
+    "options": [
+      "mostrar total inseguridad en el argumento",
+      "cambiar de tema por completo",
+      "pedir disculpas por hablar",
+      "aumentar la credibilidad reconociendo una posible objeción"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «апеллировать к»?",
+    "options": [
+      "apelar a",
+      "renunciar a",
+      "dudar de",
+      "oponerse a"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué expresión introduce evidencia presentada como ya aceptada por todos?",
+    "options": [
+      "вряд ли",
+      "как известно",
+      "не может быть",
+      "при всём уважении"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es el término técnico correcto para «desarrollo sostenible»?",
+    "options": [
+      "устойчивое развитие",
+      "стабильное развитие",
+      "долгое развитие",
+      "поддерживаемое развитие"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «углеродный след»?",
+    "options": [
+      "energía renovable",
+      "huella de carbono",
+      "reciclaje",
+      "cambio climático"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre «выбросы» y «отходы»?",
+    "options": [
+      "выбросы son residuos sólidos; отходы son emisiones al aire",
+      "no hay diferencia de registro",
+      "выбросы son emisiones al aire; отходы son residuos sólidos",
+      "son sinónimos exactos"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cómo se dice correctamente «La tecnología es importante para el futuro» en sentido general?",
+    "options": [
+      "Технологии важна для будущего",
+      "Технология важен для будущего",
+      "Технология важна для будущего",
+      "Технологии важны для будущего"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué palabra se usa en contextos técnicos/institucionales, como informes o leyes?",
+    "options": [
+      "окружающая среда",
+      "природа",
+      "земля",
+      "мир"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «утечка данных»?",
+    "options": [
+      "digitalización",
+      "fuga de datos",
+      "ciberseguridad",
+      "inteligencia artificial"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estos adjetivos es el elogio máximo, reservado para lo excepcional?",
+    "options": [
+      "гениальный",
+      "выдающийся",
+      "впечатляющий",
+      "самобытный"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estos adjetivos tiene matiz negativo?",
+    "options": [
+      "выдающийся",
+      "посредственный",
+      "самобытный",
+      "проникновенный"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «затянутый» aplicado a una obra?",
+    "options": [
+      "que es muy corto",
+      "que tiene un final feliz",
+      "que tiene un ritmo lento como defecto",
+      "que está basado en hechos reales"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «тронуть до глубины души»?",
+    "options": [
+      "decepcionar por completo",
+      "dejar indiferente",
+      "causar aburrimiento",
+      "conmover profundamente"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre b2-4 y la valoración crítica de hoy?",
+    "options": [
+      "b2-4 analiza cómo está escrito; hoy se valora si la obra es buena",
+      "no hay ninguna diferencia de enfoque",
+      "son exactamente el mismo tipo de análisis",
+      "b2-4 es sobre cine y hoy sobre literatura"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «оставлять желать лучшего»?",
+    "options": [
+      "superar todas las expectativas",
+      "dejar mucho que desear",
+      "ser digno de elogio",
+      "merecer un premio"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué implica la expresión «мягко говоря»?",
+    "options": [
+      "que la realidad suele ser peor de lo dicho",
+      "que el hablante está de acuerdo",
+      "que todo está bien",
+      "que se necesita más información"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué indican «как бы» y «якобы»?",
+    "options": [
+      "una orden",
+      "distanciamiento/duda del hablante",
+      "tiempo pasado",
+      "certeza total"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estas expresiones es un marcador de ironía verbal?",
+    "options": [
+      "мягко говоря",
+      "по причине",
+      "ну конечно",
+      "как бы то ни было"
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál es la diferencia entre ирония y сарказм?",
+    "options": [
+      "la ironía siempre es más agresiva",
+      "el sarcasmo nunca implica lo contrario de lo dicho",
+      "son exactamente lo mismo",
+      "el sarcasmo añade una intención deliberadamente hiriente"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «задеть за живое»?",
+    "options": [
+      "tocar la fibra sensible",
+      "pedir disculpas",
+      "hacer reír a alguien",
+      "ignorar por completo"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿En qué se diferencia «как бы то ни было» de «как бы»?",
+    "options": [
+      "no hay ninguna diferencia de significado",
+      "«как бы то ни было» es una concesiva fija (sea como sea), no marca duda",
+      "«как бы» es formal y «как бы то ни было» es coloquial",
+      "son sinónimos exactos"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué sección del examen evalúa la comprensión de textos escritos?",
+    "options": [
+      "Чтение",
+      "Говорение",
+      "Аудирование",
+      "Письмо"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué fórmula es apropiada para abrir un ensayo argumentativo?",
+    "options": [
+      "Короче, я думаю...",
+      "В настоящее время всё чаще обсуждается вопрос о...",
+      "Слушай, короче...",
+      "Ну, короче говоря..."
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué fórmula sirve para ganar tiempo antes de responder en la sección oral?",
+    "options": [
+      "На фоне остальных выделяется...",
+      "Нельзя не признать, что...",
+      "Это интересный вопрос. Дайте подумать...",
+      "Таким образом, можно сделать вывод..."
+    ],
+    "correct_option_id": 2,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué significa «распределить время» como estrategia de examen?",
+    "options": [
+      "dedicar todo el tiempo a la primera tarea",
+      "terminar el examen lo más rápido posible",
+      "pedir tiempo adicional al evaluador",
+      "administrar el tiempo entre todas las secciones"
+    ],
+    "correct_option_id": 3,
+    "level": "B2"
+  },
+  {
+    "question": "¿Qué es la «апелляция» en el contexto de un examen de certificación?",
+    "options": [
+      "un recurso contra el resultado si se considera que hubo un error",
+      "un tipo de pregunta de comprensión lectora",
+      "un certificado de nivel superior",
+      "una tarea adicional del examen oral"
+    ],
+    "correct_option_id": 0,
+    "level": "B2"
+  },
+  {
+    "question": "¿Cuál de estas estrategias corresponde a la comprensión lectora/auditiva?",
+    "options": [
+      "ignorar los marcadores discursivos",
+      "leer las preguntas antes del texto",
+      "memorizar el ensayo de antemano",
+      "responder sin leer las opciones"
+    ],
+    "correct_option_id": 1,
+    "level": "B2"
+  }
+]

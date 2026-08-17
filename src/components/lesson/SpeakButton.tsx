@@ -5,7 +5,7 @@ import { sanitizeTextForTTS } from "@/lib/speech";
 
 /**
  * Reads `text` aloud in Russian. Prefers a pre-generated audio file
- * (`audioUrl`, from LessonAudioCache — see prisma/generate-lesson-audio.ts)
+ * (`audioUrl`, from the shared AudioAsset cache — see prisma/generate-lesson-audio.ts)
  * when one is passed in, playing it through a plain <audio> element; falls
  * back to the browser's SpeechSynthesis API otherwise, exactly as before.
  * The file path matters for the mobile port: Web Speech API is unreliable
@@ -26,7 +26,7 @@ export default function SpeakButton({
   label: string;
   size?: "sm" | "md";
   /** Pre-generated pronunciation file for `text`, if one exists in
-   * LessonAudioCache. Omit to always use browser synthesis. */
+   * the shared AudioAsset cache. Omit to always use browser synthesis. */
   audioUrl?: string;
 }) {
   const [supported, setSupported] = useState(true);

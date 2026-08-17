@@ -1,0 +1,1399 @@
+[
+  {
+    "question": "¿Qué emperador ruso, el último de la dinastía Románov, abdicó al trono en marzo de 1917 en medio de la Revolución de Febrero?",
+    "options": [
+      "Alejandro II",
+      "Pablo I",
+      "Alejandro III",
+      "Nicolás II"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La abdicación de Nicolás II en 1917 puso fin a más de tres siglos de gobierno Románov y abrió paso al Gobierno Provisional."
+  },
+  {
+    "question": "¿En qué guerra de 1904-1905 el Imperio ruso sufrió una derrota humillante frente a Japón, incluyendo la destrucción casi total de su flota en la batalla naval de Tsushima?",
+    "options": [
+      "La Guerra Ruso-Japonesa",
+      "La Primera Guerra Mundial",
+      "La Guerra Ruso-Turca",
+      "La Guerra de Crimea"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La derrota ante Japón, la primera de una potencia europea frente a una nación asiática en la era moderna, desató una ola de indignación interna que desembocó en la Revolución de 1905."
+  },
+  {
+    "question": "¿Cómo se conoce la matanza de manifestantes desarmados frente al Palacio de Invierno el 9 de enero de 1905, que desencadenó la primera gran ola revolucionaria contra el zarismo?",
+    "options": [
+      "El Domingo Sangriento",
+      "El Levantamiento de Enero",
+      "La Noche Roja",
+      "La Masacre de Invierno"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tropas imperiales dispararon contra una procesión pacífica que buscaba entregar una petición al zar Nicolás II, matando a cientos de personas y erosionando gravemente la legitimidad de la monarquía."
+  },
+  {
+    "question": "¿Qué primer ministro impulsó, entre 1906 y 1911, una ambiciosa reforma agraria destinada a crear una clase de campesinos propietarios independientes de la comuna rural tradicional (obschina)?",
+    "options": [
+      "Alexánder Kerenski",
+      "Serguéi Witte",
+      "Piotr Durnovó",
+      "Piotr Stolýpin"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Stolýpin creía que una clase de campesinos propietarios sería más conservadora y estable; fue asesinado en 1911 antes de poder completar sus reformas."
+  },
+  {
+    "question": "¿Qué personaje, un monje errante campesino con gran influencia sobre la familia imperial debido a su aparente capacidad para aliviar la hemofilia del zarévich Alexéi, se convirtió en un símbolo del descrédito de la corte antes de la revolución?",
+    "options": [
+      "Filipp Vajin",
+      "Iván Kronstadtski",
+      "Serafín de Sárov",
+      "Grigori Rasputín"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La influencia de Rasputín sobre la emperatriz Alejandra alimentó rumores y escándalos que dañaron severamente el prestigio de la dinastía Románov en sus últimos años."
+  },
+  {
+    "question": "¿Qué institución parlamentaria, la primera de su tipo en la historia rusa, fue creada en 1906 tras la Revolución de 1905, aunque con poderes limitados frente al zar?",
+    "options": [
+      "El Zemski Sobor",
+      "El Soviet de Petrogrado",
+      "La Duma Estatal",
+      "El Senado Imperial"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque representó un paso hacia el constitucionalismo, Nicolás II disolvió varias de las primeras Dumas cuando resultaban demasiado críticas con su gobierno."
+  },
+  {
+    "question": "¿Qué compañía de ballet, fundada por el empresario Serguéi Diáguilev y que debutó en París en 1909, revolucionó la danza y el arte escénico europeo con coreografías de Nizhinski y música de Stravinski?",
+    "options": [
+      "Los Ballets Rusos",
+      "El Ballet Bolshói (es la compañía de Moscú, no la fundada por Diáguilev)",
+      "La Ópera Imperial Rusa",
+      "El Ballet Mariinski (es la compañía de San Petersburgo, base de muchos de sus bailarines)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Los Ballets Rusos de Diáguilev, aunque nunca actuaron formalmente en Rusia, difundieron internacionalmente el talento de artistas rusos como Nizhinski, Pávlova y Stravinski."
+  },
+  {
+    "question": "¿Qué juicio de 1878, en el que un jurado absolvió sorprendentemente a una joven revolucionaria que había disparado contra el gobernador de San Petersburgo, es considerado un hito temprano de la creciente tensión entre la sociedad civil y el autoritarismo zarista?",
+    "options": [
+      "El proceso de los Cien (juicio masivo de 1877 contra populistas)",
+      "El juicio de Vera Zasúlich",
+      "El juicio de Necháyev",
+      "El juicio de los decembristas"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La absolución de Zasúlich, pese a que ella misma admitió el disparo, escandalizó a las autoridades y llevó a que los delitos políticos posteriores se juzgaran fuera del sistema de jurados."
+  },
+  {
+    "question": "¿Cómo se conoce al periodo de extraordinaria efervescencia poética y artística rusa entre finales del siglo XIX y las primeras décadas del XX, que incluyó a figuras como Alexánder Blok y la joven Anna Ajmátova?",
+    "options": [
+      "La Edad de Oro (se refiere generalmente a la época de Pushkin, principios del XIX)",
+      "El Siglo Ilustrado",
+      "El Renacimiento ruso",
+      "La Edad de Plata"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La Edad de Plata, interrumpida abruptamente por la revolución y la posterior censura soviética, es hoy considerada uno de los momentos más ricos de la poesía rusa."
+  },
+  {
+    "question": "¿Qué director y actor de teatro moscovita desarrolló, a inicios del siglo XX, un innovador sistema de interpretación actoral basado en la memoria emocional, que influiría décadas después en el llamado 'método' del cine estadounidense?",
+    "options": [
+      "Serguéi Diáguilev",
+      "Antón Chéjov (fue dramaturgo, no el creador del sistema actoral)",
+      "Vsévolod Meyerhold",
+      "Konstantín Stanislavski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El 'sistema Stanislavski', desarrollado en el Teatro de Arte de Moscú, sigue siendo hoy una de las bases fundamentales de la formación actoral en todo el mundo."
+  },
+  {
+    "question": "¿Qué ministro de Finanzas y luego primer ministro, impulsor del patrón oro y del Ferrocarril Transiberiano, negoció también el Manifiesto de Octubre de 1905 que concedía por primera vez una Duma legislativa?",
+    "options": [
+      "Alexánder Kerenski",
+      "Serguéi Witte",
+      "Vladímir Kokovtsov",
+      "Piotr Stolýpin"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Witte es considerado el gran modernizador económico del imperio tardío, aunque su papel en 1905 lo enfrentó tanto a revolucionarios como a conservadores de la corte."
+  },
+  {
+    "question": "¿Qué documento, firmado por Nicolás II el 17 de octubre de 1905 bajo presión de huelgas generalizadas, concedió por primera vez libertades civiles básicas y la creación de una Duma con poder legislativo real?",
+    "options": [
+      "La Constitución de 1906 (fueron las 'Leyes Fundamentales', un documento distinto y posterior)",
+      "El Manifiesto de Octubre",
+      "El Manifiesto de Emancipación (es de 1861, de Alejandro II)",
+      "El Nakaz (es del siglo XVIII, de Catalina la Grande)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El Manifiesto de Octubre dividió al movimiento opositor: liberales moderados lo aceptaron como una victoria, mientras que sectores más radicales lo consideraron insuficiente y continuaron la agitación."
+  },
+  {
+    "question": "¿Qué puerto de la península de Liaodong, arrendado por Rusia a China y convertido en su principal base naval en el Pacífico, sufrió un largo asedio japonés entre 1904 y 1905 que terminó en una humillante rendición rusa?",
+    "options": [
+      "Vladivostok",
+      "Odesa",
+      "Port Arthur",
+      "Sebastopol (está en Crimea, escenario de la Guerra de Crimea, no de la Ruso-Japonesa)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La caída de Port Arthur, tras meses de asedio y la destrucción de la flota rusa del Pacífico, fue uno de los golpes más duros para el prestigio militar del imperio antes de la propia batalla de Tsushima."
+  },
+  {
+    "question": "¿Qué buque de guerra ruso protagonizó, en junio de 1905, un célebre motín de su tripulación en protesta por la mala calidad de la comida —carne con gusanos, según los marineros—, un episodio inmortalizado décadas después en una famosa película de Serguéi Eisenstein?",
+    "options": [
+      "El acorazado Oslyabya (fue hundido en Tsushima, sin motín)",
+      "El crucero Aurora (protagonizó un episodio distinto, el disparo que anunció el asalto al Palacio de Invierno en 1917)",
+      "El acorazado Potiomkin",
+      "El crucero Variag"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El motín del Potiomkin, aunque militarmente sofocado en pocos días, se convirtió en un símbolo del descontento popular durante la Revolución de 1905."
+  },
+  {
+    "question": "¿Qué dos corrientes políticas liberales, los 'Constitucionalistas Demócratas' (más conocidos por su apodo) y la 'Unión del 17 de Octubre', surgieron como partidos legales tras el Manifiesto de Octubre de 1905?",
+    "options": [
+      "Los kadetes y los octubristas",
+      "Los eseristas y los populistas",
+      "Los decembristas y los eslavófilos",
+      "Los bolcheviques y los mencheviques (son facciones socialistas marxistas, no liberales)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Los kadetes (por las siglas de su nombre en ruso) representaban a la intelectualidad liberal profesional, mientras que los octubristas, más moderados, aceptaban el Manifiesto como suficiente y buscaban colaborar con el gobierno."
+  },
+  {
+    "question": "¿Quién presidió el Gobierno Provisional ruso entre julio y octubre de 1917, tras la abdicación de Nicolás II y antes de ser derrocado por los bolcheviques en la Revolución de Octubre?",
+    "options": [
+      "Pável Miliukov",
+      "Alexánder Kerenski",
+      "Gueorgui Lvov (fue el primer jefe del Gobierno Provisional, hasta julio)",
+      "León Trotski"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Kerenski intentó mantener a Rusia en la Primera Guerra Mundial pese al agotamiento del país, una decisión que erosionó rápidamente su apoyo popular y facilitó el ascenso bolchevique."
+  },
+  {
+    "question": "¿Qué orden emitida por el Soviet de Petrogrado en marzo de 1917, poco después de la abdicación del zar, socavó gravemente la disciplina y la cadena de mando tradicional del ejército ruso al crear comités de soldados electos?",
+    "options": [
+      "El Decreto sobre la Paz (fue emitido después, por los bolcheviques en octubre de 1917)",
+      "El Manifiesto de Octubre (es de 1905, doce años antes)",
+      "La Ley Marcial de 1914",
+      "La Orden No. 1"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pensada para democratizar el ejército tras la caída del zarismo, la Orden No. 1 aceleró en la práctica la desintegración de la disciplina militar en un momento crítico de la guerra."
+  },
+  {
+    "question": "¿Qué general ruso protagonizó, en agosto-septiembre de 1917, un fallido intento de golpe militar contra el Gobierno Provisional de Kerenski, en un episodio que debilitó fatalmente la posición de los moderados frente a los bolcheviques?",
+    "options": [
+      "El golpe de agosto de 1991 (es del final de la era soviética, siete décadas después)",
+      "El levantamiento decembrista (es de 1825)",
+      "El caso Kornílov",
+      "El motín del Potiomkin (es de 1905, doce años antes)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Irónicamente, Kerenski tuvo que armar a milicias bolcheviques para defenderse de Kornílov, dándoles así armas y legitimidad que usarían pocas semanas después para derrocarlo a él mismo."
+  },
+  {
+    "question": "¿Qué institución educativa de San Petersburgo, fundada en 1878, ofreció por primera vez en Rusia estudios universitarios formales y rigurosos a mujeres, en una época en que las universidades tradicionales les seguían negando el acceso?",
+    "options": [
+      "La Academia de Ciencias",
+      "El Instituto Smolny (era una escuela para señoritas de la nobleza, de nivel secundario, fundada en el siglo XVIII)",
+      "Los Cursos Superiores Bestúzhev",
+      "La Universidad de Moscú (no admitió mujeres hasta bien entrado el siglo XX)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a la resistencia de sectores conservadores, los Cursos Bestúzhev formaron a varias generaciones de mujeres profesionales, incluida la futura matemática y física que estudiarían en sus aulas."
+  },
+  {
+    "question": "¿Qué desastrosa derrota sufrió el ejército ruso frente a Alemania en agosto de 1914, apenas semanas después del estallido de la Primera Guerra Mundial, terminando con el suicidio del propio general al mando y decenas de miles de prisioneros?",
+    "options": [
+      "La batalla de Maséuria (los Lagos Masurianos fueron escenario de otra derrota rusa relacionada, pero distinta y algo posterior)",
+      "La batalla de Tannenberg",
+      "La Gran Retirada de 1915 (fue un repliegue prolongado posterior, no una batalla puntual)",
+      "La Ofensiva Brusílov (fue, por el contrario, una ofensiva exitosa, de 1916)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a que la rápida movilización rusa contribuyó a desviar tropas alemanas del frente occidental —ayudando indirectamente a Francia—, el costo militar inmediato para Rusia en Tannenberg fue devastador."
+  },
+  {
+    "question": "¿Qué extenso repliegue del ejército ruso durante 1915, que implicó el abandono de Polonia y grandes extensiones de territorio occidental frente al avance germano-austríaco, es recordado en la historiografía militar como una las mayores retiradas organizadas de la Primera Guerra Mundial?",
+    "options": [
+      "La Revolución de Febrero (es un proceso político de 1917, no una operación militar)",
+      "La Ofensiva Brusílov (fue, por el contrario, un avance ruso exitoso, de 1916)",
+      "La batalla de Tannenberg (fue una derrota puntual de 1914, no un repliegue prolongado)",
+      "La Gran Retirada"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a las enormes pérdidas territoriales, buena parte del ejército ruso logró evitar el cerco total y la aniquilación completa, reagrupándose para resistir durante casi dos años más de guerra."
+  },
+  {
+    "question": "¿Qué exitosa ofensiva rusa de 1916 contra las fuerzas austrohúngaras, dirigida por el general que le da nombre, es considerada una de las operaciones militares más logradas —aunque a un costo humano enorme— de toda la Primera Guerra Mundial para cualquiera de los bandos?",
+    "options": [
+      "La Gran Retirada (fue un repliegue, no una ofensiva exitosa)",
+      "La batalla de Tannenberg (fue una derrota rusa, de 1914)",
+      "La Revolución de Febrero (es un proceso político, no una operación militar)",
+      "La Ofensiva Brusílov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a su éxito táctico inicial, la ofensiva de Alekséi Brusílov agotó de tal manera las reservas humanas del ejército ruso que contribuyó, indirectamente, al colapso militar y político del año siguiente."
+  },
+  {
+    "question": "¿Qué reforma reaccionaria de Alejandro III, instaurada en 1889, creó la figura de los 'capitanes rurales' (zemskiye nachálniki), designados entre la nobleza local para supervisar de cerca —y en la práctica limitar— la autonomía campesina lograda tras la emancipación de 1861?",
+    "options": [
+      "La reforma judicial de 1864 (introdujo el juicio por jurado, de sentido también liberal)",
+      "La institución de los capitanes rurales",
+      "La reforma de los zemstvos (fue la reforma anterior, de 1864, de sentido más bien liberal)",
+      "El Manifiesto de Octubre (es posterior, de 1905, y de sentido opuesto, concesivo)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Esta reforma es citada a menudo como ejemplo del giro conservador de Alejandro III frente a las políticas más liberales de su padre asesinado, Alejandro II."
+  },
+  {
+    "question": "¿Qué coalición mayoritaria de diputados de la Duma, formada en 1915 en plena Primera Guerra Mundial y que reunía a liberales moderados y algunos conservadores, exigía sin éxito la formación de un 'gobierno de confianza pública' responsable ante el parlamento?",
+    "options": [
+      "La Unión del 17 de Octubre (fue, igualmente, solo uno de los grupos integrantes del Bloque)",
+      "Los Kadetes (fueron uno de los partidos que integraron el Bloque, pero no el bloque completo)",
+      "El Bloque Progresista",
+      "El Soviet de Petrogrado (surgiría después, en 1917, y era un órgano distinto, no parlamentario)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El rechazo de Nicolás II a ceder ante las demandas del Bloque Progresista erosionó aún más la confianza de la clase política moderada en la capacidad del propio zar para conducir el país durante la guerra."
+  },
+  {
+    "question": "¿Qué discurso pronunciado en la Duma en noviembre de 1916 por el líder kadete Pável Miliukov, en el que enumeraba escándalos del gobierno preguntando repetidamente '¿Es esto estupidez o traición?', se hizo célebre por su dura crítica pública a la influencia de Rasputín y la corte imperial?",
+    "options": [
+      "El discurso del Manifiesto de Octubre (no fue un discurso, sino un documento firmado por el propio zar, de 1905)",
+      "El discurso de '¿Estupidez o traición?'",
+      "El discurso del caso Kornílov (se refiere a un episodio militar de 1917, no a un discurso de 1916)",
+      "El discurso de la Orden No. 1 (no fue un discurso parlamentario, sino una orden militar, de 1917)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque la censura impidió publicar el texto completo en la prensa rusa, copias manuscritas circularon ampliamente, alimentando aún más el descontento generalizado contra el gobierno en los meses previos a la revolución."
+  },
+  {
+    "question": "¿Qué gran duquesa, hermana de la última emperatriz Alejandra Fiódorovna, fundó en 1909 un convento de la caridad en Moscú dedicado a atender a los pobres y enfermos, renunciando a sus joyas y a buena parte de su vida cortesana anterior?",
+    "options": [
+      "La gran duquesa María Pávlovna",
+      "La gran duquesa Isabel Fiódorovna",
+      "La gran duquesa Anastasia (era hija, no hermana, de la emperatriz, y no fundó ningún convento)",
+      "La gran duquesa Xenia Alexándrovna"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Viuda de un gran duque asesinado por un atentado revolucionario en 1905, Isabel Fiódorovna dedicó el resto de su vida a obras de caridad, convirtiéndose en una figura de profunda veneración popular por su entrega personal a los más pobres."
+  },
+  {
+    "question": "¿En qué año se completó finalmente, con la construcción del puente sobre el río Amur cerca de Jabárovsk, la última sección del Ferrocarril Transiberiano, permitiendo por primera vez un trayecto completo en tren desde Moscú hasta el Pacífico sin necesidad de transbordadores?",
+    "options": [
+      "1891",
+      "1916",
+      "1904",
+      "1922"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes de la finalización de este último puente, los trenes debían cruzar el río Amur en verano mediante transbordadores y en invierno directamente sobre el hielo, una solución precaria para una línea de semejante importancia estratégica."
+  },
+  {
+    "question": "¿Qué grandes celebraciones de 1913, organizadas en toda Rusia con desfiles, misas y actos oficiales, conmemoraron el tercer centenario de la elección de Mijaíl Románov como zar, en un ambiente de aparente esplendor imperial apenas cuatro años antes de la caída de la propia dinastía?",
+    "options": [
+      "El Jubileo de Plata de Nicolás II (no es una celebración histórica real bajo ese nombre)",
+      "La Coronación de 1896 (fue la coronación específica de Nicolás II, un evento distinto y anterior)",
+      "El Congreso de la Duma de 1913 (no existió una sesión conmemorativa bajo ese nombre)",
+      "El Tricentenario de la Casa Románov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El contraste entre el fasto oficial de estas celebraciones y la fragilidad real del régimen, ya erosionado por años de tensiones sociales, resultaría evidente con la caída de la dinastía apenas cuatro años después."
+  },
+  {
+    "question": "¿Qué tragedia ensombreció desde el inicio el reinado de Nicolás II, cuando durante los festejos populares de su coronación en 1896 en un campo a las afueras de Moscú, una estampida multitudinaria dejó cerca de 1,400 muertos por el rumor de escasez de regalos?",
+    "options": [
+      "El desastre de Odesa",
+      "La catástrofe de Tsárskoye Seló",
+      "La masacre del Domingo Sangriento",
+      "La tragedia de Jodinka"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La tragedia de Jodinka, causada por una estampida al correrse el rumor de que faltarían regalos conmemorativos, fue vista por muchos contemporáneos como un mal presagio del reinado que comenzaba."
+  },
+  {
+    "question": "¿Cómo se llamó el primer consejo de representantes obreros elegidos democráticamente por fábricas, formado en San Petersburgo durante la Revolución de 1905, que sentaría un precedente organizativo decisivo para 1917?",
+    "options": [
+      "La Asamblea de Delegados Sindicales",
+      "El Congreso Popular de Fábricas",
+      "El Soviet de Diputados Obreros de San Petersburgo",
+      "La Duma de Trabajadores"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Este primer soviet, que llegó a reunir a cientos de delegados de distintas fábricas durante semanas de huelga general, mostró un modelo de autoorganización obrera que los bolcheviques retomarían y radicalizarían en 1917."
+  },
+  {
+    "question": "¿En qué circunstancia dramática fue asesinado en 1911 el primer ministro Piotr Stolýpin, artífice de la gran reforma agraria del periodo?",
+    "options": [
+      "Recibió un disparo en la ópera de Kiev, ante la presencia del propio zar",
+      "Murió en un atentado con bomba en su residencia oficial",
+      "Fue envenenado durante una cena de estado",
+      "Falleció en un accidente de tren provocado deliberadamente"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Stolýpin fue tiroteado en el teatro de la ópera de Kiev por un joven con vínculos ambiguos entre el revolucionarismo y la policía secreta, en un episodio que generó (y sigue generando) numerosas teorías sobre quién ordenó realmente el atentado."
+  },
+  {
+    "question": "¿Qué destacado ministro de Finanzas ruso, ya conocido por impulsar el patrón oro y el Ferrocarril Transiberiano, negoció en 1905 el tratado que puso fin a la guerra ruso-japonesa en la ciudad estadounidense de Portsmouth?",
+    "options": [
+      "Piotr Stolýpin",
+      "Vladímir Kokovtsov",
+      "Serguéi Witte",
+      "Alexánder Izvólski"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Witte logró condiciones relativamente favorables para una Rusia derrotada, evitando el pago de indemnizaciones de guerra, lo que le valió el título de conde, aunque con cierta ironía popular como 'conde de la mitad de Sajalín' por el territorio cedido."
+  },
+  {
+    "question": "¿Qué iniciativa diplomática, sorprendente para la época, promovió Nicolás II en 1899 al convocar en La Haya una conferencia internacional dedicada a limitar el armamentismo y establecer normas para resolver conflictos entre naciones?",
+    "options": [
+      "El Congreso de Desarme de Ginebra",
+      "La Conferencia de Paz de La Haya",
+      "El Tratado de No Agresión Europeo",
+      "La Cumbre de las Grandes Potencias"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque sus resultados prácticos fueron limitados, la iniciativa de Nicolás II sentó las bases del derecho internacional humanitario moderno y condujo a la creación de la Corte Permanente de Arbitraje."
+  },
+  {
+    "question": "¿Qué suceso de abril de 1912, en el que tropas del gobierno abrieron fuego contra mineros en huelga en una remota región siberiana, causando más de cien muertos y provocó una ola de indignación en toda Rusia?",
+    "options": [
+      "La masacre de los yacimientos auríferos del Lena",
+      "El fusilamiento de los mineros de los Urales",
+      "La matanza de los talleres textiles de Ivánovo",
+      "La represión de los ferroviarios de Moscú"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La matanza del Lena, ocurrida en unas remotas minas de oro siberianas propiedad de una compañía con capital británico, se convirtió en símbolo de la desigualdad social del imperio y disparó nuevas oleadas de huelgas en todo el país."
+  },
+  {
+    "question": "¿De qué elaborada manera, según el relato tradicional de sus propios asesinos, murió Grigori Rasputín en diciembre de 1916, en un episodio rodeado de leyenda y exageración con el paso del tiempo?",
+    "options": [
+      "Murió repentinamente de un infarto durante una cena",
+      "Fue linchado por una turba en las calles de Petrogrado",
+      "Fue envenenado, tiroteado y finalmente arrojado a un río helado",
+      "Falleció envenenado por gas en su propia vivienda"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Según el relato clásico —hoy cuestionado en algunos detalles por historiadores— Rasputín sobrevivió al veneno servido en pasteles y vino, recibió varios disparos, y finalmente fue arrojado al río Nevá, donde la autopsia sugirió que aún respiraba al caer al agua helada."
+  },
+  {
+    "question": "¿Qué decisión personal tomó Nicolás II en 1915, en plena Primera Guerra Mundial, que lo alejó de la capital y lo asoció directamente, ante la opinión pública, con cada derrota militar posterior?",
+    "options": [
+      "Asumió personalmente el mando supremo del ejército ruso",
+      "Delegó todo el poder militar en la Duma",
+      "Abolió temporalmente el Estado Mayor General",
+      "Trasladó la capital de Petrogrado a Moscú"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Al tomar el mando militar directo, Nicolás II se ausentó largas temporadas del cuartel general de Stavka, dejando la gobernación cotidiana del imperio en manos de la emperatriz Alejandra, muy influida por Rasputín, con efectos políticos desastrosos."
+  },
+  {
+    "question": "¿Qué edificio de San Petersburgo, propiedad de una célebre bailarina vinculada sentimentalmente a la familia imperial, fue confiscado y convertido en cuartel general bolchevique tras el regreso de Lenin a Rusia en abril de 1917?",
+    "options": [
+      "El Palacio de Invierno",
+      "El Palacio Tavrícheski",
+      "La mansión de Matilda Kschesínskaya",
+      "El Instituto Smolni"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Desde el balcón de esta lujosa mansión de estilo modernista, Lenin pronunció algunos de sus primeros discursos públicos tras su regreso del exilio, antes de que el gobierno provisional recuperara temporalmente el edificio."
+  },
+  {
+    "question": "¿Qué acontecimiento del 8 de marzo (23 de febrero según el calendario juliano entonces vigente) de 1917, protagonizado por obreras textiles que exigían pan y protestaban por el Día Internacional de la Mujer, se considera la chispa que encendió la Revolución de Febrero?",
+    "options": [
+      "Las manifestaciones de mujeres obreras de Petrogrado",
+      "El asalto al Palacio de Invierno",
+      "El motín de la guarnición de Kronstadt",
+      "La huelga general de ferroviarios"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Lo que comenzó como una protesta de mujeres trabajadoras por la escasez de pan se extendió rápidamente a otras fábricas y, en pocos días, arrastró también a soldados de la guarnición, precipitando la caída del régimen zarista."
+  },
+  {
+    "question": "¿Qué gran duque, hermano menor de Nicolás II a quien este intentó ceder el trono tras su abdicación en marzo de 1917, rechazó la corona, poniendo fin de facto a más de trescientos años de gobierno de la dinastía Románov?",
+    "options": [
+      "El gran duque Kiril Vladímirovich",
+      "El gran duque Nikolái Nikoláyevich",
+      "El gran duque Miguel Aleksándrovich",
+      "El gran duque Dmitri Pávlovich"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Miguel, consciente de que aceptar la corona sin el respaldo de una asamblea constituyente sería insostenible, declinó el trono al día siguiente de recibirlo, dejando a Rusia sin monarca y bajo un gobierno provisional."
+  },
+  {
+    "question": "¿Quiénes constituyeron, junto a un pequeño grupo de oficiales, los últimos defensores leales del Gobierno Provisional durante el asalto bolchevique al Palacio de Invierno en octubre de 1917?",
+    "options": [
+      "Regimientos completos de la Guardia Imperial",
+      "Marineros de la flota del Báltico leales al zar",
+      "Voluntarios cosacos venidos del Don",
+      "Cadetes de escuelas militares y un batallón femenino de choque"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Para entonces, la mayoría del ejército y la guarnición de Petrogrado ya simpatizaba con los soviets; solo un puñado de jóvenes cadetes y un batallón de mujeres voluntarias permanecieron defendiendo el palacio hasta su caída casi sin resistencia."
+  },
+  {
+    "question": "¿Qué exposición organizada en París en 1906 por el empresario Serguéi Diáguilev, mostrando por primera vez a gran escala pintura, iconos y artes decorativas rusas al público occidental, se considera precursora directa de sus posteriores 'Temporadas Rusas' de ballet?",
+    "options": [
+      "La exposición de arte ruso del Salón de Otoño de París",
+      "La Bienal de Venecia de arte eslavo",
+      "La Exposición Universal de San Luis",
+      "La muestra de iconografía de Múnich"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El éxito de esta muestra convenció a Diáguilev de que el público europeo estaba listo para descubrir la cultura rusa contemporánea, allanando el camino hacia sus célebres temporadas de ópera y ballet en París a partir de 1908."
+  },
+  {
+    "question": "¿Cómo se conoce al manifiesto firmado en julio de 1906 por más de un centenar de diputados destituidos de la primera Duma estatal, disuelta anticipadamente por el zar, en el que llamaban a la desobediencia civil pacífica?",
+    "options": [
+      "El Llamado de Táuride",
+      "El Manifiesto de Víborg",
+      "La Declaración de Petrogrado",
+      "El Acta de los Cien"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Redactado en la ciudad finlandesa de Víborg tras la disolución de la Duma, el manifiesto tuvo escaso eco práctico entre la población y sus firmantes fueron procesados judicialmente, perdiendo el derecho a presentarse a futuras elecciones."
+  },
+  {
+    "question": "¿Qué exministro del Interior redactó en febrero de 1914, meses antes del estallido de la Primera Guerra Mundial, un memorando dirigido al zar advirtiendo con notable precisión que una guerra contra Alemania terminaría hundiendo a ambos imperios en la revolución?",
+    "options": [
+      "Vladímir Kokovtsov",
+      "Piotr Durnovó",
+      "Alexánder Protopópov",
+      "Serguéi Sazónov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El memorando de Durnovó, redescubierto y muy citado por historiadores posteriores, predijo con inquietante exactitud que una guerra prolongada agotaría a Rusia económica y socialmente, desembocando en un colapso revolucionario."
+  },
+  {
+    "question": "¿Qué grave enfermedad hereditaria, que afectaba la coagulación de la sangre, padecía Alexéi, el único hijo varón y heredero de Nicolás II, y que explica en buena parte la enorme influencia que Rasputín llegó a ejercer sobre la familia imperial?",
+    "options": [
+      "La escarlatina crónica",
+      "La hemofilia",
+      "La epilepsia",
+      "La tuberculosis"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Al parecer capaz de calmar las hemorragias del zarévich cuando la medicina oficial fracasaba, Rasputín se ganó la confianza absoluta de la emperatriz Alejandra, portadora del gen de la hemofilia heredado de la reina Victoria de Inglaterra."
+  },
+  {
+    "question": "¿Qué artículo de las Leyes Fundamentales de 1906 permitía al gobierno del zar aprobar decretos de emergencia con fuerza de ley cuando la Duma no estaba en sesión, mecanismo usado repetidamente por Stolýpin para imponer reformas sin esperar la aprobación parlamentaria?",
+    "options": [
+      "El artículo 12",
+      "El artículo 101",
+      "El artículo 45",
+      "El artículo 87"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque en teoría estos decretos debían someterse después a ratificación de la Duma, el uso frecuente del artículo 87 —por ejemplo, para lanzar la reforma agraria— fue duramente criticado como un modo de gobernar esquivando al parlamento."
+  },
+  {
+    "question": "¿Qué acuerdo diplomático de 1907 puso fin a más de medio siglo de rivalidad entre el Imperio ruso y el Imperio británico por el control e influencia sobre Persia, Afganistán y el Tíbet central, delimitando sus respectivas esferas de interés?",
+    "options": [
+      "El Acuerdo de Teherán",
+      "El Tratado de San Petersburgo",
+      "El Pacto de Calcuta",
+      "La Entente anglo-rusa"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Esta entente, sumada a la ya existente entre Francia y Gran Bretaña, completó el sistema de alianzas conocido como la Triple Entente, que enfrentaría a Rusia, Francia y Gran Bretaña contra las Potencias Centrales en 1914."
+  },
+  {
+    "question": "Tras la humillante derrota naval de Tsushima en 1905, ¿qué corriente dentro del Estado Mayor naval ruso impulsó una profunda modernización de la flota basada en acorazados más rápidos y mejor artillados, antes de que estallara la Primera Guerra Mundial?",
+    "options": [
+      "La llamada 'Escuela Joven' de reforma naval",
+      "El Comité de Renovación de Kronstadt",
+      "El movimiento de los oficiales decembristas",
+      "La Liga Naval Imperial"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tras el desastre de Tsushima, un grupo de oficiales reformistas impulsó nuevos diseños de acorazados tipo 'dreadnought' y una reorganización del mando naval, aunque la modernización aún estaba incompleta cuando comenzó la guerra en 1914."
+  },
+  {
+    "question": "¿A qué joven aristócrata, heredero de una de las mayores fortunas del Imperio ruso y esposo de una sobrina del propio zar, se atribuye haber organizado en su propio palacio el complot para asesinar a Rasputín en 1916?",
+    "options": [
+      "El príncipe Vladímir Golitsyn",
+      "El barón Piotr Wrangel",
+      "El conde Serguéi Witte",
+      "El príncipe Félix Yusúpov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Yusúpov, cuya familia poseía una fortuna que rivalizaba con la de los propios Románov, relató décadas después en sus memorias los detalles —a menudo cuestionados por historiadores— del asesinato planeado en el sótano de su palacio de San Petersburgo."
+  },
+  {
+    "question": "¿Qué política de colonización agraria impulsó Piotr Stolýpin, ofreciendo tierra gratuita en Siberia a campesinos dispuestos a trasladarse, transportados en vagones de tren especialmente acondicionados que terminaron dando nombre popular al programa?",
+    "options": [
+      "La colonización del Cáucaso",
+      "La reforma de las comunas agrarias",
+      "La reinstalación siberiana ('vagones Stolýpin')",
+      "El programa de tierras vírgenes"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Millones de campesinos se trasladaron a Siberia en estos trenes, buscando escapar de la escasez de tierra en la Rusia europea; los vagones diseñados para transportar tanto personas como su ganado se hicieron tan conocidos que su nombre se usó después, con macabra ironía, para los vagones de prisioneros soviéticos."
+  },
+  {
+    "question": "¿Cómo se llamó la organización conservadora de grandes terratenientes, fundada en 1906, que presionó activamente contra las reformas agrarias y constitucionales por considerarlas una amenaza a sus privilegios tradicionales?",
+    "options": [
+      "El Sindicato Agrario Conservador",
+      "La Unión de Terratenientes Imperiales",
+      "El Consejo de la Nobleza Unida",
+      "La Liga de Propietarios Rurales"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Este poderoso grupo de presión, integrado por algunos de los mayores terratenientes del imperio, ejerció notable influencia sobre la política del gobierno y la propia Duma en los años previos a la Primera Guerra Mundial."
+  },
+  {
+    "question": "¿Qué dama de honor de la emperatriz Alejandra, su amiga más cercana e intermediaria habitual con Grigori Rasputín, se convirtió en una figura clave —y muy mal vista por la corte— en los últimos años del reinado de Nicolás II?",
+    "options": [
+      "Zinaída Yusúpova",
+      "María Vasílchikova",
+      "Anna Vyrúbova",
+      "Elizaveta Naryshkina"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Vyrúbova, devota creyente en los poderes curativos de Rasputín sobre el hemofílico zarévich, se convirtió en objeto de intensos rumores y escándalos, y fue arrestada brevemente tras la Revolución de Febrero de 1917."
+  },
+  {
+    "question": "¿Cómo se conoce a la intentona armada de julio de 1917, protagonizada por soldados, marineros y obreros radicalizados con apoyo bolchevique, que fue finalmente reprimida por el Gobierno Provisional y obligó a Lenin a huir disfrazado a Finlandia?",
+    "options": [
+      "El Levantamiento de Junio",
+      "La Insurrección de Kronstadt",
+      "Los Días de Julio",
+      "El Motín de Petrogrado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Tras el fracaso de esta intentona prematura, el Gobierno Provisional emitió una orden de arresto contra Lenin, acusado de ser un agente alemán, lo que lo obligó a esconderse durante semanas antes de regresar triunfante en octubre."
+  },
+  {
+    "question": "¿Qué reunión política, convocada por Alexánder Kérenski en Moscú en agosto de 1917 con representantes de todos los sectores sociales y políticos, buscaba sin éxito unir al país en torno al Gobierno Provisional poco antes del intento de golpe de Kornílov?",
+    "options": [
+      "La Asamblea Constituyente Preparatoria",
+      "La Conferencia Estatal de Moscú",
+      "El Congreso de los Soviets",
+      "El Foro Nacional de Unidad"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La conferencia, que reunió a más de dos mil delegados de fábricas, sindicatos, la Iglesia y el ejército, evidenció en realidad la profunda polarización del país entre una derecha que exigía mano dura y una izquierda cada vez más radicalizada."
+  },
+  {
+    "question": "¿Qué poeta simbolista ruso escribió en enero de 1918, apenas semanas después de la toma bolchevique del poder, el célebre y controvertido poema 'Los doce', que mezclaba imágenes revolucionarias con simbolismo religioso cristiano?",
+    "options": [
+      "Konstantín Balmont",
+      "Andréi Bieli",
+      "Alexánder Blok",
+      "Valeri Briúsov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El poema, que describe a un grupo de guardias rojos marchando por un Petrogrado nevado y termina con una enigmática aparición de Jesucristo a la cabeza de la columna, dividió profundamente a la intelectualidad rusa entre quienes vieron en él una traición y quienes lo consideraron una obra maestra."
+  },
+  {
+    "question": "¿Qué región de Asia central del Imperio ruso protagonizó en 1916 una violenta revuelta contra el reclutamiento forzoso de la población local para trabajos de retaguardia durante la Primera Guerra Mundial, hasta entonces exenta del servicio militar?",
+    "options": [
+      "Turquestán",
+      "El Cáucaso",
+      "Finlandia",
+      "Besarabia"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La revuelta de Turquestán, brutalmente reprimida por las autoridades zaristas, provocó decenas de miles de muertes y el desplazamiento masivo de población, un episodio poco conocido pero significativo del descontento acumulado en las periferias del imperio durante la guerra."
+  },
+  {
+    "question": "¿Qué inusual medida económica y social adoptó Nicolás II al estallar la Primera Guerra Mundial en 1914, prohibiendo temporalmente la venta de vodka en todo el imperio como parte del esfuerzo bélico?",
+    "options": [
+      "La movilización obligatoria de mujeres",
+      "El racionamiento del pan",
+      "La prohibición del vodka ('sujói zakón')",
+      "El control estatal de precios agrícolas"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque buscaba mejorar la disciplina durante la movilización militar, la prohibición del vodka —que privaba al Estado de una fuente clave de ingresos fiscales por el monopolio estatal del alcohol— tuvo un fuerte impacto negativo en las finanzas públicas durante la guerra."
+  },
+  {
+    "question": "¿Qué organismo especial creó el gobierno ruso en 1915, integrado por representantes del Estado, la industria y el ejército, para coordinar la producción de armamento y suministros ante la grave escasez de material bélico en el frente?",
+    "options": [
+      "El Consejo Especial de Defensa Estatal",
+      "La Junta Suprema de Guerra",
+      "El Comité de Movilización Industrial",
+      "El Ministerio de Producción Bélica"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La creación de este consejo reflejaba el reconocimiento oficial de que el aparato administrativo tradicional del imperio era insuficiente para sostener el enorme esfuerzo logístico de una guerra industrial moderna."
+  },
+  {
+    "question": "¿Qué nombre recibió la capital rusa, San Petersburgo, a partir de 1914, cuando el gobierno decidió sustituir su denominación de origen alemán por una versión rusificada en medio del fervor patriótico antigermano de la Primera Guerra Mundial?",
+    "options": [
+      "San Piotrogrado",
+      "Nueva Moscovia",
+      "Petrogrado",
+      "Petrovsk"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El cambio de nombre, de 'Sankt-Peterburg' a 'Petrogrado', buscaba eliminar cualquier resonancia germánica del nombre de la capital en plena guerra contra Alemania; la ciudad volvería a cambiar de nombre en 1924, tras la muerte de Lenin, pasando a llamarse Leningrado."
+  },
+  {
+    "question": "¿Qué papel asumieron voluntariamente la emperatriz Alejandra y sus hijas mayores durante la Primera Guerra Mundial, formándose como enfermeras de la Cruz Roja y atendiendo personalmente a soldados heridos en un hospital de Tsárskoye Seló?",
+    "options": [
+      "Se formaron y trabajaron como enfermeras de guerra",
+      "Se dedicaron exclusivamente a la producción de vendajes",
+      "Administraron hospitales sin contacto directo con los pacientes",
+      "Organizaron comités de recaudación de fondos desde Petrogrado"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La emperatriz y sus dos hijas mayores, Olga y Tatiana, completaron un curso de enfermería y llegaron a asistir directamente en operaciones quirúrgicas, un gesto que buscaba también mejorar la imagen pública de una dinastía cada vez más impopular."
+  },
+  {
+    "question": "¿Qué movimiento poético de vanguardia, autodenominado 'Ego-futurismo' y liderado por el excéntrico poeta Ígor Sévieryanin, gozó de gran popularidad y escándalo en los salones literarios de San Petersburgo poco antes de la revolución?",
+    "options": [
+      "El Acmeísmo",
+      "El Imaginismo",
+      "El Cubo-futurismo",
+      "El Ego-futurismo"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Sévieryanin, célebre por sus recitales teatrales y su uso extravagante de neologismos, llegó a ser proclamado 'rey de los poetas' en una votación pública de 1918, aunque su fama decayó rápidamente tras emigrar poco después."
+  },
+  {
+    "question": "¿Cómo se conoció a la división de caballería voluntaria formada en 1914 por musulmanes del Cáucaso, exentos del servicio militar obligatorio, que combatió con fama de gran valentía en el frente oriental durante la Primera Guerra Mundial?",
+    "options": [
+      "La División Salvaje",
+      "La Caballería Circasiana",
+      "La Legión del Cáucaso",
+      "El Regimiento de las Montañas"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Comandada en parte por el gran duque Mijaíl, hermano del zar, esta unidad de voluntarios de distintos pueblos caucásicos —chechenos, circasianos, daguestaníes, entre otros— combatió bajo su propio estandarte religioso, algo inusual en el ejército imperial ruso."
+  },
+  {
+    "question": "¿En qué edificio de San Petersburgo, antigua residencia de una favorita de Catalina la Grande y luego sede de la Duma estatal, se proclamó formalmente la abdicación de Nicolás II y se reunió después la breve Asamblea Constituyente de 1918?",
+    "options": [
+      "El Palacio Mariinski",
+      "El Instituto Smolni",
+      "El Palacio de Táuride",
+      "El Palacio de Invierno"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El Palacio de Táuride, construido originalmente para el príncipe Grigori Potiomkin, se convirtió en el epicentro simbólico de la política rusa entre 1906 y 1918, alojando sucesivamente a la Duma imperial, el Sóviet de Petrogrado y la fugaz Asamblea Constituyente disuelta por los bolcheviques."
+  },
+  {
+    "question": "¿Qué consecuencia, no buscada por Alexánder Kérenski, tuvo su decisión de armar a los Guardias Rojos bolcheviques en agosto de 1917 para defender Petrogrado del intento de golpe militar del general Kornílov?",
+    "options": [
+      "Fortaleció militarmente a los propios bolcheviques, que meses después tomarían el poder con esas mismas armas",
+      "Llevó a una reconciliación duradera entre el Gobierno Provisional y los bolcheviques",
+      "Provocó la disolución inmediata de los soviets locales",
+      "Debilitó permanentemente la capacidad militar bolchevique"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Al distribuir armas entre los obreros bolcheviques para frenar a Kornílov, Kérenski cometió, según muchos historiadores, un error estratégico decisivo: esas mismas armas y esos mismos Guardias Rojos serían clave apenas dos meses después en la Revolución de Octubre que derrocaría a su propio gobierno."
+  },
+  {
+    "question": "¿En qué ciudad textil, meses antes de que se formara el más célebre soviet de San Petersburgo, los obreros en huelga de mayo de 1905 crearon lo que muchos historiadores consideran el primer soviet de diputados obreros de la historia rusa?",
+    "options": [
+      "Yaroslavl",
+      "Ivánovo-Voznesensk",
+      "Oriol",
+      "Tver"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El soviet de esta ciudad textil, formado por representantes elegidos directamente en las fábricas durante una huelga general de 72 días, funcionó durante semanas como una auténtica autoridad paralela local, sirviendo de modelo organizativo que luego se replicaría en Petrogrado y otras ciudades."
+  },
+  {
+    "question": "¿Qué reforma de octubre de 1905 creó una cámara alta, el Consejo de Estado, con la mitad de sus miembros designados por el zar y la otra mitad elegidos, que actuaba como contrapeso conservador frente a la nueva Duma?",
+    "options": [
+      "La reforma del Consejo de Estado de 1906",
+      "El Estatuto de la Duma Suprema",
+      "La Ley Electoral de Junio",
+      "La Reforma del Senado Imperial"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Al necesitar cualquier ley la aprobación tanto de la Duma como de este Consejo de Estado reformado, el gobierno zarista se aseguró un poderoso mecanismo de veto conservador sobre la legislación aprobada por la cámara baja, elegida de forma más amplia."
+  },
+  {
+    "question": "¿Qué estrategia policial impulsó el coronel de la Ojrana Serguéi Zubátov a comienzos del siglo XX, promoviendo sindicatos obreros 'legales' y controlados por el Estado con el fin de alejar a los trabajadores de la propaganda revolucionaria?",
+    "options": [
+      "El Programa de Seguridad Social Imperial",
+      "La Ley de Fábricas de 1903",
+      "La Reforma Obrera de Von Plehve",
+      "El 'sindicalismo policial' (zubatovismo)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Irónicamente, algunos de estos sindicatos patrocinados por la policía terminaron organizando huelgas genuinas contra sus propios patrones, y uno de sus líderes, el sacerdote Gapón, terminaría encabezando la marcha reprimida en el propio Domingo Sangriento de 1905."
+  },
+  {
+    "question": "¿Qué ministro del Interior fue asesinado en julio de 1904 por una bomba lanzada por un miembro de la Organización de Combate del Partido Socialista Revolucionario, en uno de los atentados más sonados de la época?",
+    "options": [
+      "Dmitri Sipiaguin",
+      "Viacheslav von Plehve",
+      "Alexánder Protopópov",
+      "Piotr Stolýpin"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Von Plehve, conocido por su dura política represiva contra minorías y disidentes, fue volado en su carruaje en las calles de San Petersburgo; su muerte fue celebrada abiertamente por buena parte de la oposición revolucionaria rusa."
+  },
+  {
+    "question": "¿Qué ala armada, especializada en asesinatos políticos selectivos de altos funcionarios zaristas, mantenía el Partido Socialista Revolucionario como parte de su estrategia de lucha contra el régimen?",
+    "options": [
+      "La Guardia Roja Campesina",
+      "La Liga de Vindicación Popular",
+      "El Comité de Acción Directa",
+      "La Organización de Combate"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Esta organización clandestina, responsable de varios de los asesinatos políticos más resonantes del periodo, mezclaba en su interior a auténticos idealistas revolucionarios con al menos un célebre infiltrado de la policía secreta, lo que generó después escándalos y desconfianza dentro del propio partido."
+  },
+  {
+    "question": "¿Qué gran duque, tío de Nicolás II y gobernador general de Moscú, murió en febrero de 1905 al estallarle una bomba lanzada por el terrorista socialista-revolucionario Iván Kaliáyev mientras cruzaba en su carruaje una plaza del Kremlin?",
+    "options": [
+      "El gran duque Serguéi Alexándrovich",
+      "El gran duque Nikolái Nikoláyevich",
+      "El gran duque Pável Alexándrovich",
+      "El gran duque Vladímir Alexándrovich"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Kaliáyev había abortado un primer intento días antes al ver que en el carruaje viajaban también los hijos pequeños del gran duque; tras el atentado exitoso, la propia viuda del gran duque visitó al asesino en prisión antes de su ejecución, en un gesto de perdón cristiano que causó sensación."
+  },
+  {
+    "question": "¿Con qué tipo de mano de obra se construyeron algunos de los tramos más remotos y difíciles del Ferrocarril Transiberiano, especialmente al atravesar la región del lago Baikal, ante la escasez de trabajadores libres dispuestos a instalarse en zonas tan aisladas?",
+    "options": [
+      "Con soldados del ejército imperial en servicio activo",
+      "Con trabajadores chinos contratados bajo régimen de servidumbre por deudas",
+      "Con presidiarios y deportados condenados a trabajos forzados",
+      "Exclusivamente con ingenieros y obreros importados de Europa occidental"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El uso de mano de obra penal, habitual en la Rusia zarista para proyectos de infraestructura en zonas remotas, permitió avanzar la obra del Transiberiano en condiciones extremas, aunque a un enorme costo humano poco documentado en su momento."
+  },
+  {
+    "question": "¿Qué escritor ruso, antes de alcanzar fama internacional por su narrativa posterior, estrenó en 1902 la obra teatral 'Los bajos fondos', un crudo retrato de marginados sociales que se convirtió en un gran éxito del Teatro de Arte de Moscú?",
+    "options": [
+      "Maxim Gorki",
+      "Leonid Andréyev",
+      "Iván Bunin",
+      "Alexánder Kuprín"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Gorki, de origen humilde y autodidacta, se convirtió en la gran voz literaria de los sectores más pobres de la sociedad rusa; su obra, dirigida por el propio Konstantín Stanislavski, retrataba con crudo realismo la vida de vagabundos y desposeídos en un albergue de Moscú."
+  },
+  {
+    "question": "¿Qué ocurrió con la Asamblea Constituyente rusa, elegida en noviembre de 1917 en las únicas elecciones verdaderamente libres y multipartidistas de toda la historia del imperio y la revolución, apenas un día después de su primera y única sesión en enero de 1918?",
+    "options": [
+      "Se transformó pacíficamente en el nuevo Congreso de los Soviets",
+      "Fue disuelta por la fuerza por los bolcheviques, que habían perdido la mayoría de escaños",
+      "Continuó sesionando en el exilio desde París",
+      "Aprobó una nueva constitución que rigió durante varios años"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese a haber convocado ellos mismos las elecciones, los bolcheviques, que habían obtenido solo una minoría de escaños frente a los socialistas revolucionarios, disolvieron por la fuerza la asamblea tras su primera sesión, un episodio que marcó simbólicamente el fin de cualquier experimento democrático parlamentario en la Rusia revolucionaria."
+  },
+  {
+    "question": "¿Con qué expresión, en referencia macabra a la agilidad con que se ejecutaban las sentencias, se conocía popularmente a los tribunales militares de campaña creados por Piotr Stolýpin en 1906 para procesar y ejecutar con rapidez a sospechosos de terrorismo político?",
+    "options": [
+      "La 'justicia relámpago'",
+      "Los 'tribunales del terror blanco'",
+      "Los 'nudos de agosto'",
+      "Las 'corbatas de Stolýpin'"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La expresión, acuñada irónicamente por un diputado de la oposición en la Duma en referencia a la soga del ahorcamiento, se hizo tan popular que terminó aplicándose también, con la misma ironía negra, al nombre de los vagones de tren usados después para deportar presos a Siberia."
+  },
+  {
+    "question": "¿Qué evento histórico protagonizaron en 1907 un grupo de bolcheviques, entre ellos un joven revolucionario georgiano después conocido como Iósif Stalin, al asaltar violentamente un convoy bancario en la plaza central de Tiflis para financiar las actividades clandestinas del partido?",
+    "options": [
+      "La expropiación de Batumi",
+      "El robo del tren de Bakú",
+      "El atraco de la Casa de Moneda de Moscú",
+      "El asalto bancario de Tiflis"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El violento asalto, que causó numerosas víctimas civiles entre los transeúntes de la plaza, permitió obtener una considerable suma de dinero para las arcas del partido bolchevique, aunque generó también fuertes críticas dentro del propio movimiento socialdemócrata ruso por sus métodos."
+  },
+  {
+    "question": "¿Qué reforma electoral aprobada por el propio zar en junio de 1907, tras la disolución de la segunda Duma, redujo drásticamente el peso del voto campesino y obrero en favor de los grandes propietarios, en lo que la oposición calificó como un auténtico 'golpe de Estado' constitucional?",
+    "options": [
+      "El Manifiesto de Octubre revisado",
+      "El Estatuto de Representación de 1906",
+      "La reforma de la ley electoral de 1907",
+      "La Ley Fundamental de la Duma"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Gracias a esta reforma, impulsada por Stolýpin para asegurar una Duma más manejable, la Cuarta Duma resultó mucho más conservadora que las anteriores, aunque el propio Stolýpin reconoció en privado que la medida violaba el espíritu de las promesas constitucionales del Manifiesto de Octubre de 1905."
+  },
+  {
+    "question": "¿Qué destacado escritor ruso fue excomulgado formalmente por el Santo Sínodo en 1901, al criticar abiertamente los dogmas y las jerarquías de la Iglesia ortodoxa en su propia interpretación radical del cristianismo?",
+    "options": [
+      "Lev Tolstói",
+      "Vladímir Soloviov",
+      "Fiódor Dostoyevski",
+      "Nikolái Leskov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a la excomunión, Tolstói siguió siendo enormemente popular y respetado, y multitudes acompañaron su funeral en 1910; el episodio reflejaba las profundas tensiones entre la ortodoxia oficial y las corrientes de pensamiento religioso alternativo que proliferaban entre la intelectualidad rusa de la época."
+  },
+  {
+    "question": "¿Cómo se llamó la influyente colección de ensayos publicada en 1909 por un grupo de intelectuales rusos, que hacía una dura autocrítica del papel de la intelligentsia radical en el fracaso de la revolución de 1905?",
+    "options": [
+      "Osvobozhdenie (Liberación)",
+      "Russkaya Mysl (Pensamiento Ruso)",
+      "Novy Put (Nueva Vía)",
+      "Veji (Mojones/Señales)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los autores de 'Veji', antiguos marxistas convertidos al idealismo religioso y liberal, argumentaban que el radicalismo revolucionario había descuidado los valores espirituales y jurídicos, provocando un intenso debate público que dividió profundamente a la intelectualidad rusa de la época."
+  },
+  {
+    "question": "¿Qué gran duque, primo del zar, ocupó el cargo de comandante en jefe supremo del ejército ruso durante el primer año de la Primera Guerra Mundial, antes de que Nicolás II decidiera asumir personalmente el mando en 1915?",
+    "options": [
+      "El gran duque Serguéi Mijáilovich",
+      "El gran duque Andréi Vladímirovich",
+      "El gran duque Kiril Vladímirovich",
+      "El gran duque Nikolái Nikoláyevich"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Popular entre la tropa por su porte imponente y su experiencia militar, Nikolái Nikoláyevich fue relevado del mando en 1915 en medio de las derrotas del Gran Repliegue y enviado a un puesto secundario en el Cáucaso, decisión que muchos historiadores consideran un grave error político de Nicolás II."
+  },
+  {
+    "question": "¿Qué gran feria y exposición industrial, celebrada en 1896 en la ciudad de Nizhni Nóvgorod, mostró al público ruso e internacional los avances tecnológicos e industriales más recientes del imperio, incluidas las primeras demostraciones eléctricas a gran escala en el país?",
+    "options": [
+      "La Exposición Imperial de San Petersburgo",
+      "La Feria Industrial de Moscú",
+      "El Salón de la Industria de Kazán",
+      "La Exposición Panrusa de Nizhni Nóvgorod"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La exposición, que atrajo a más de un millón de visitantes durante los meses que estuvo abierta, mostró desde las primeras torres eléctricas hiperboloides diseñadas por el ingeniero Vladímir Shújov hasta pabellones industriales de las principales empresas rusas de la época, reflejo del rápido despegue industrial del imperio en las últimas décadas del siglo XIX."
+  },
+  {
+    "question": "¿Qué institución financiera estatal, creada en 1882 y reforzada considerablemente durante la reforma agraria de Stolýpin, otorgaba préstamos a campesinos para facilitar la compra de tierras a título individual, apartándose así del sistema tradicional de propiedad comunal?",
+    "options": [
+      "El Banco Campesino",
+      "El Fondo de Colonización Estatal",
+      "El Banco Agrario Imperial",
+      "La Caja de Créditos Rurales"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Al facilitar créditos específicamente para la adquisición individual de tierras, el Banco Campesino se convirtió en una pieza clave de la estrategia de Stolýpin para crear una nueva clase de propietarios rurales independientes, alejados de la comuna agraria tradicional que el gobierno consideraba un freno a la modernización económica."
+  },
+  {
+    "question": "¿Cuál era la ocupación original de Grigori Rasputín antes de convertirse en una figura de enorme influencia dentro de la corte imperial rusa, alcanzando fama primero como sanador y peregrino religioso itinerante?",
+    "options": [
+      "Era un monje ordenado formalmente por la Iglesia ortodoxa",
+      "Era un campesino siberiano sin educación formal, dedicado después a peregrinaciones religiosas",
+      "Era un médico rural con formación académica reconocida",
+      "Era un noble venido a menos que fingía ser campesino"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Nacido en un pequeño pueblo de Siberia occidental, Rasputín nunca fue ordenado monje ni sacerdote formalmente, pese a la percepción popular; su fama se construyó a través de largas peregrinaciones religiosas y una reputación —cultivada cuidadosamente— de poseer dones místicos y curativos excepcionales."
+  },
+  {
+    "question": "¿Con qué nombre se conocía a la extensa campaña social y médica de comienzos del siglo XX, impulsada por médicos, filántropos y algunos miembros de la propia familia imperial, para combatir la tuberculosis, entonces una de las principales causas de muerte en Rusia?",
+    "options": [
+      "La Sociedad de Higiene Popular",
+      "El Comité Nacional de Salud Pública",
+      "La Liga contra la Peste Blanca",
+      "La Cruzada Sanitaria Imperial"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Conocida popularmente como la lucha contra la 'peste blanca' por el color pálido característico de los enfermos avanzados, esta campaña organizó jornadas anuales de recaudación de fondos ('el día de la margarita blanca') y campañas de concienciación pública sobre higiene y prevención de la enfermedad."
+  },
+  {
+    "question": "¿Qué gran duque, primo del zar Nicolás II, se distinguió como poeta de considerable talento bajo el seudónimo 'K.R.' (sus propias iniciales), llegando a ser también un notable mecenas de las artes y presidente de la Academia Imperial de Ciencias?",
+    "options": [
+      "El gran duque Alexéi Alexándrovich",
+      "El gran duque Dmitri Konstantínovich",
+      "El gran duque Konstantín Konstantínovich",
+      "El gran duque Nikolái Mijáilovich"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Sus poemas, de tono melancólico y profundamente religioso, fueron musicalizados por compositores como Chaikovski y siguen siendo interpretados hoy; su doble faceta de militar de alto rango y poeta sensible resultaba poco habitual entre los miembros de la familia imperial rusa."
+  },
+  {
+    "question": "¿Qué nuevo impuesto, aprobado por el gobierno ruso en 1916 en plena Primera Guerra Mundial ante la urgente necesidad de financiar el esfuerzo bélico, gravó por primera vez en la historia rusa los ingresos personales de los ciudadanos según una escala progresiva?",
+    "options": [
+      "La contribución patriótica obligatoria",
+      "El gravamen sobre el capital de 1915",
+      "El impuesto sobre la renta de 1916",
+      "El impuesto de guerra extraordinario"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Antes de esta reforma, el sistema fiscal ruso dependía principalmente de impuestos indirectos sobre el consumo y monopolios estatales como el del alcohol; la introducción tardía del impuesto sobre la renta reflejaba tanto la desesperada necesidad de financiación bélica como la creciente influencia de ideas fiscales modernas entre los reformistas del gobierno."
+  },
+  {
+    "question": "¿Qué oleada de disturbios estalló en Moscú en mayo de 1915, cuando turbas enfurecidas por las derrotas militares y el fervor patriótico antigermano asaltaron y destruyeron cientos de comercios y viviendas pertenecientes a ciudadanos de apellido alemán, muchos de ellos rusos de varias generaciones?",
+    "options": [
+      "El levantamiento xenófobo de 1914",
+      "La revuelta del hambre de 1916",
+      "Los motines patrióticos de Petrogrado",
+      "Los disturbios antialemanes de Moscú de 1915"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las autoridades tardaron varios días en restablecer el orden, y el episodio reveló las profundas tensiones sociales y el creciente nacionalismo exacerbado que la prolongada y costosa guerra estaba generando entre la población urbana rusa, mucho antes de que estas tensiones se canalizaran hacia la revolución."
+  },
+  {
+    "question": "¿Con qué apodo despectivo, en referencia a su composición mayoritariamente conservadora tras la restrictiva reforma electoral de 1907, fue conocida popularmente la Cuarta Duma estatal, convocada en 1912?",
+    "options": [
+      "La 'Duma del Silencio'",
+      "La 'Duma de la Ira Nacional' (nombre irónico usado por sus críticos liberales)",
+      "La 'Duma de los Terratenientes'",
+      "La 'Duma Sumisa'"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Pese al apodo irónico —acuñado en realidad por sectores liberales frustrados con su carácter conservador y su docilidad inicial ante el gobierno—, esta misma Duma terminaría jugando un papel decisivo en 1917, al formar el núcleo del primer Gobierno Provisional tras la abdicación de Nicolás II."
+  },
+  {
+    "question": "¿Cómo se conoce, con cierta ironía, a la sucesión de rápidos cambios de ministros —incluidos varios primeros ministros y ministros del Interior— que caracterizó al gobierno ruso entre 1915 y 1916, atribuida por muchos contemporáneos a la creciente influencia de Rasputín sobre los nombramientos?",
+    "options": [
+      "La 'zarandeada ministerial' (mininisterskaya cherejarda)",
+      "El 'carrusel de Rasputín'",
+      "La 'rotación imperial'",
+      "La 'crisis de gabinete permanente'"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta inestabilidad gubernamental, con hasta cuatro primeros ministros diferentes en poco más de un año, reflejaba tanto la creciente desconfianza del propio Nicolás II hacia sus consejeros como la percepción, extendida entre la opinión pública, de que decisiones clave de gobierno se tomaban bajo la sombra de la influencia de Rasputín sobre la emperatriz."
+  },
+  {
+    "question": "¿Cómo se titulaba el himno nacional oficial del Imperio ruso, compuesto en 1833 y que permaneció vigente hasta la caída de la monarquía en 1917, con versos que proclamaban fidelidad directa a la persona del zar?",
+    "options": [
+      "'Himno de la Santa Rus'",
+      "'Dios salve al zar' (Bozhe, Tsariá jraní)",
+      "'Marcha del Águila Imperial'",
+      "'Gloria a Rusia'"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Compuesto por el compositor Alexéi Lvov con letra del poeta Vasili Zhukovski, este himno sustituyó a una versión anterior basada en una melodía británica, y su tono solemne y directamente monárquico lo convertía en un símbolo tan identificado con la dinastía Románov que dejó de usarse de inmediato tras la abdicación de Nicolás II."
+  },
+  {
+    "question": "¿Cómo se conoce a la catastrófica batalla naval de mayo de 1905, en la que la flota rusa del Báltico, tras un agotador viaje de siete meses alrededor de medio mundo, fue prácticamente aniquilada por la armada japonesa en apenas un día de combate?",
+    "options": [
+      "La batalla de Vladivostok",
+      "La batalla de Port Arthur",
+      "La batalla del mar Amarillo",
+      "La batalla de Tsushima"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La destrucción casi total de la flota rusa en el estrecho de Tsushima, con la pérdida de la mayoría de sus acorazados, conmocionó a la opinión pública mundial —fue la primera vez que una potencia asiática derrotaba de forma tan aplastante a una potencia naval europea— y precipitó el fin de la guerra ruso-japonesa."
+  },
+  {
+    "question": "¿Qué general ruso, comandante en jefe durante buena parte de la guerra ruso-japonesa, fue duramente criticado por su excesiva cautela y su estrategia de repliegues constantes en lugar de buscar una batalla decisiva contra el ejército japonés?",
+    "options": [
+      "Zasúlich Pável",
+      "Nikolái Linévich",
+      "Alexéi Kuropatkin",
+      "Anatoli Stessel"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Kuropatkin, ministro de Guerra antes del conflicto y considerado un administrador militar competente, resultó sin embargo un comandante de campo demasiado indeciso en la práctica, y su estrategia de retiradas sucesivas —aunque a veces militarmente prudente— fue vista por la opinión pública como una serie de derrotas humillantes."
+  },
+  {
+    "question": "¿Qué motín naval de noviembre de 1905, protagonizado por marineros del crucero 'Ochakov' en el puerto de Sebastopol y liderado por el teniente Piotr Schmidt, terminó siendo aplastado con dureza por fuerzas leales al gobierno?",
+    "options": [
+      "La rebelión de Kronstadt de 1905",
+      "El motín del crucero Ochakov",
+      "El levantamiento naval de Vladivostok",
+      "El motín del acorazado Potiomkin"
+    ],
+    "correct_option_id": 1,
+    "explanation": "A diferencia del más célebre motín del Potiomkin meses antes, la rebelión del Ochakov contó con un liderazgo político más definido en la figura de Schmidt, quien sería capturado, juzgado y ejecutado por su participación, convirtiéndose después en un mártir célebre para el movimiento revolucionario ruso."
+  },
+  {
+    "question": "¿Qué reforma monetaria y financiera, impulsada por Serguéi Witte en 1897, estableció por primera vez la plena convertibilidad del rublo ruso en oro, atrayendo importantes inversiones extranjeras hacia la industria del imperio?",
+    "options": [
+      "La unificación monetaria con el sistema francés",
+      "La adopción del patrón oro para el rublo",
+      "La creación del primer banco central ruso",
+      "La devaluación controlada del rublo de plata"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Al garantizar la conversión estable del rublo en oro, la reforma de Witte otorgó a la moneda rusa una credibilidad internacional sin precedentes, facilitando la llegada de capital extranjero —especialmente francés y belga— que financió buena parte de la rápida industrialización rusa de finales del siglo XIX."
+  },
+  {
+    "question": "¿Qué línea ferroviaria estratégica, construida a partir de la década de 1880 a través de las estepas de Asia central, permitió a Rusia extender su influencia militar y comercial hacia el Turquestán y las fronteras con Afganistán y Persia?",
+    "options": [
+      "El ferrocarril del Cáucaso",
+      "El ferrocarril Transcaspio",
+      "El ferrocarril del Turquestán-Siberia",
+      "El ferrocarril de Asia Central"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Construido inicialmente con fines principalmente militares tras las campañas rusas de conquista en Asia central, el ferrocarril Transcaspio facilitó después también un notable desarrollo comercial y agrícola —especialmente del cultivo de algodón— en una región hasta entonces muy aislada del resto del imperio."
+  },
+  {
+    "question": "¿Qué ministro del Interior, predecesor de Von Plehve en el cargo, fue asesinado en 1902 por un revolucionario socialista, iniciando así una racha de asesinatos políticos de altos funcionarios que marcaría buena parte de la década siguiente?",
+    "options": [
+      "Dmitri Sipiaguin",
+      "Piotr Stolýpin",
+      "Piotr Durnovó",
+      "Vladímir Plehve"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El asesinato de Sipiaguin, disparado dentro del propio edificio del Comité de Ministros por un estudiante disfrazado de ayudante militar, conmocionó profundamente a la corte imperial y marcó un preocupante precedente de violencia política de alto perfil que se repetiría varias veces en los años siguientes."
+  },
+  {
+    "question": "¿En qué congreso del Partido Obrero Socialdemócrata Ruso, celebrado en 1903 primero en Bruselas y luego en Londres, se produjo la histórica escisión entre las facciones que pasarían a conocerse como bolcheviques y mencheviques?",
+    "options": [
+      "El Tercer Congreso de Praga",
+      "El Primer Congreso de Minsk",
+      "El Segundo Congreso del POSDR",
+      "El Congreso de Ginebra de 1900"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La división, originada en un debate aparentemente técnico sobre los requisitos de afiliación al partido, reflejaba en realidad diferencias más profundas sobre la organización revolucionaria: Lenin defendía un partido reducido de profesionales disciplinados, mientras sus opositores preferían una organización más amplia y menos centralizada."
+  },
+  {
+    "question": "¿En qué remoto pueblo de Siberia oriental pasó Vladímir Lenin su periodo de exilio interno entre 1897 y 1900, tiempo que aprovechó para escribir varias de sus primeras obras teóricas y casarse con su compañera revolucionaria Nadezhda Krúpskaya?",
+    "options": [
+      "Turujansk",
+      "Yeniséisk",
+      "Kirensk",
+      "Shushénskoye"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque técnicamente un exilio penal, las condiciones de Lenin en Shushénskoye resultaron relativamente cómodas comparadas con destinos más duros: pudo cazar, pescar y mantener correspondencia regular, un régimen bastante más laxo que el que sufrirían décadas después los prisioneros del sistema soviético del Gulag."
+  },
+  {
+    "question": "¿Cómo se llamó el periódico revolucionario clandestino fundado en 1900 por Lenin y otros socialdemócratas rusos en el exilio, impreso en el extranjero y contrabandeado después hacia Rusia para difundir propaganda marxista organizada?",
+    "options": [
+      "Vperiod ('Adelante')",
+      "Iskra ('La Chispa')",
+      "Rabóchaya Gazeta",
+      "Pravda ('La Verdad')"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El nombre del periódico, tomado de un verso que comparaba la propaganda revolucionaria con una chispa capaz de encender un incendio, reflejaba la ambición de sus fundadores de construir, a través de esta publicación clandestina, una red organizativa disciplinada capaz de coordinar el movimiento revolucionario ruso disperso."
+  },
+  {
+    "question": "¿A qué pensador ruso, considerado el fundador del marxismo ruso y mentor intelectual de una generación de socialdemócratas, entre ellos el propio Lenin en sus inicios, se le atribuye la primera traducción sistemática de las ideas de Marx al contexto específico del atraso económico ruso?",
+    "options": [
+      "Gueorgui Plejánov",
+      "Pável Axelrod",
+      "Piotr Struve",
+      "Vera Zasúlich"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Plejánov, exiliado durante décadas en Europa occidental, desarrolló los primeros análisis marxistas serios sobre las particularidades del desarrollo capitalista ruso, aunque terminaría distanciándose políticamente de Lenin tras la escisión bolchevique-menchevique, alineándose con la corriente menchevique más moderada."
+  },
+  {
+    "question": "¿En qué año aproximado se formó dentro del Partido Socialista Revolucionario la llamada 'Organización de Combate', dedicada específicamente a la planificación y ejecución de asesinatos políticos selectivos contra altos funcionarios del régimen zarista?",
+    "options": [
+      "Entre 1901 y 1902",
+      "En 1881, tras el asesinato de Alejandro II",
+      "En 1914, al inicio de la Primera Guerra Mundial",
+      "En 1905, tras el Domingo Sangriento"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Fundada apenas unos años antes del estallido de la revolución de 1905, esta organización clandestina sería responsable, en las siguientes dos décadas, de algunos de los atentados políticos más resonantes contra la administración zarista, aunque también se vería marcada por infiltraciones de la policía secreta en sus propias filas."
+  },
+  {
+    "question": "¿Qué destacada revolucionaria socialista, que había participado en el asesinato de un gobernador provincial en 1906 y sido condenada a trabajos forzados en Siberia, se convirtió después en una de las principales dirigentes del ala izquierda de los Socialistas Revolucionarios en 1917?",
+    "options": [
+      "Fanni Kaplán",
+      "Vera Fígner",
+      "María Spiridónova",
+      "Ekaterina Bréshko-Bréshkovskaya"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Spiridónova, convertida en una suerte de heroína popular tras su condena, terminaría después enfrentándose también a los propios bolcheviques, cuando su partido —los Socialistas Revolucionarios de Izquierda— rompió la coalición de gobierno en protesta por el tratado de paz firmado con Alemania en 1918."
+  },
+  {
+    "question": "¿Qué decreto del Gobierno Provisional, emitido apenas días después de la abdicación de Nicolás II en marzo de 1917, abolió formalmente todas las restricciones legales basadas en religión, origen étnico o nacionalidad dentro del territorio ruso?",
+    "options": [
+      "El decreto sobre la igualdad de derechos civiles y religiosos",
+      "El Manifiesto de Marzo sobre las Nacionalidades",
+      "La Ley de Ciudadanía Universal",
+      "El Decreto de Emancipación de las Minorías"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Esta medida, una de las primeras y más significativas del nuevo gobierno, eliminó de un plumazo numerosas restricciones legales que habían pesado durante generaciones sobre minorías religiosas y étnicas del imperio, incluidas limitaciones históricas que habían afectado particularmente a la población judía rusa."
+  },
+  {
+    "question": "¿Qué ocurrió con el general Lavr Kornílov tras el fracaso de su intento de golpe militar contra el Gobierno Provisional en agosto de 1917?",
+    "options": [
+      "Fue arrestado, pero logró escapar meses después y se unió al naciente movimiento del Ejército Blanco",
+      "Se exilió voluntariamente a Francia sin ser procesado",
+      "Fue perdonado de inmediato y reintegrado al mando militar",
+      "Fue ejecutado inmediatamente por orden de Kérenski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Kornílov permaneció detenido durante varios meses en la ciudad de Bykhov, hasta que, en medio del caos posterior a la toma bolchevique del poder, logró escapar junto a otros oficiales y dirigirse hacia el sur de Rusia, donde ayudaría a organizar el naciente Ejército Voluntario blanco, muriendo poco después en combate en 1918."
+  },
+  {
+    "question": "¿Cómo se conoce a la situación política de doble autoridad que existió en Rusia entre marzo y octubre de 1917, con el Gobierno Provisional oficial coexistiendo de forma tensa e inestable con el poder paralelo ejercido por el Soviet de Petrogrado?",
+    "options": [
+      "La 'diarquía revolucionaria'",
+      "El 'sovietismo dual'",
+      "El 'dvoevlastie' (doble poder)",
+      "El 'bezvlastie' (vacío de poder)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque formalmente el Gobierno Provisional ostentaba la autoridad legal del Estado, dependía en la práctica de la aquiescencia del Soviet de Petrogrado, que controlaba de forma mucho más directa a los soldados de la guarnición y a buena parte de los trabajadores organizados de la capital, generando una situación de poder compartido inherentemente inestable."
+  },
+  {
+    "question": "¿En qué batalla de agosto de 1914, ocurrida apenas semanas después del inicio de la guerra en el frente oriental, obtuvo el ejército ruso una victoria inicial sobre las fuerzas alemanas en Prusia Oriental, antes del desastre posterior de Tannenberg?",
+    "options": [
+      "La batalla de Gumbinnen",
+      "La batalla del lago Masuria",
+      "La batalla de Augustów",
+      "La batalla de Lodz"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este éxito inicial, aunque táctico y de alcance limitado, animó a los mandos rusos a proseguir un avance excesivamente confiado hacia el interior de Prusia Oriental, lo que terminaría exponiendo a otro ejército ruso al desastroso cerco y derrota que sufriría pocos días después en la vecina batalla de Tannenberg."
+  },
+  {
+    "question": "¿Qué advertencia, según relatos posteriores nunca confirmados de forma totalmente concluyente, habría hecho Rasputín en una carta o profecía dirigida al zar poco antes de morir, prediciendo que su propia muerte violenta desencadenaría la caída de toda la dinastía Románov en poco tiempo?",
+    "options": [
+      "Que su asesinato sería seguido por la caída de la dinastía en menos de dos años",
+      "Que una guerra civil estallaría antes de que terminara la Primera Guerra Mundial",
+      "Que la familia imperial debía abandonar Rusia de inmediato",
+      "Que solo él podía salvar al heredero Alexéi de morir joven"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque la autenticidad exacta de esta supuesta carta profética ha sido cuestionada por varios historiadores, que la consideran posiblemente apócrifa o embellecida con el tiempo, la leyenda se popularizó enormemente después de que, en efecto, la dinastía Románov cayera apenas poco más de un año después del asesinato de Rasputín."
+  },
+  {
+    "question": "¿Cómo se llamó la organización civil de apoyo logístico a la guerra, formada en 1915 por la unión de los zemstvos provinciales y las dumas municipales, que organizó hospitales de campaña, suministros médicos y ayuda a refugiados durante la Primera Guerra Mundial?",
+    "options": [
+      "La Unión Cívica de Ayuda",
+      "El Zemgor",
+      "El Comité Central de Guerra",
+      "El Consejo de Zemstvos Unidos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Al organizarse de forma mucho más eficiente que buena parte de la burocracia estatal oficial para atender las necesidades del frente y la retaguardia, el Zemgor no solo prestó un servicio esencial durante la guerra, sino que también sirvió como plataforma política para políticos liberales que después ocuparían cargos destacados en el Gobierno Provisional de 1917."
+  },
+  {
+    "question": "¿Qué órgano especial, creado por el gobierno ruso en 1915 junto al ya existente Consejo Especial de Defensa, se encargó específicamente de coordinar el abastecimiento de combustible y alimentos para el esfuerzo bélico y la población civil?",
+    "options": [
+      "El Consejo Especial de Combustible y Alimentación",
+      "La Junta Nacional de Abastecimiento",
+      "La Comisión de Suministros de Guerra",
+      "El Comité de Racionamiento Imperial"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La creciente desorganización logística del imperio ruso durante la guerra, agravada por una red ferroviaria insuficiente y una administración fragmentada, llevó a la creación de varios de estos consejos especiales, aunque su efectividad real resultó limitada frente a la magnitud de la crisis de abastecimiento que afectaba tanto al frente como a las principales ciudades rusas hacia 1916 y 1917."
+  },
+  {
+    "question": "¿Qué derecho político concedió el Gobierno Provisional a las mujeres rusas en julio de 1917, convirtiendo a Rusia en uno de los primeros grandes países del mundo en otorgarlo de forma universal, meses antes que la mayoría de las naciones occidentales?",
+    "options": [
+      "El derecho al voto en igualdad de condiciones con los hombres",
+      "El acceso obligatorio a la educación superior estatal",
+      "El derecho a ocupar cargos ministeriales",
+      "El derecho a la propiedad privada independiente"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Impulsado en parte por la intensa presión de organizaciones sufragistas rusas activas desde años antes de la revolución, este reconocimiento del voto femenino universal se adelantó a países como Estados Unidos o el Reino Unido, aunque su aplicación práctica quedaría pronto eclipsada por la toma del poder bolchevique apenas unos meses después."
+  },
+  {
+    "question": "¿Qué pedía en realidad la petición que los trabajadores intentaban entregar pacíficamente al zar durante la marcha del Domingo Sangriento de enero de 1905, antes de ser recibidos a tiros por las tropas imperiales?",
+    "options": [
+      "Mejoras laborales, una jornada de ocho horas y la convocatoria de una asamblea popular representativa",
+      "La independencia de Polonia y Finlandia",
+      "La nacionalización total de las fábricas y talleres",
+      "La abdicación inmediata del zar Nicolás II"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Lejos de ser un documento revolucionario radical, la petición redactada por el sacerdote Gapón y los propios obreros expresaba en un tono todavía respetuoso y casi religioso hacia la figura del zar la esperanza de mejoras laborales concretas y una mayor participación popular en el gobierno, lo que hizo aún más chocante para la opinión pública la violenta respuesta armada que recibió."
+  },
+  {
+    "question": "¿Qué ocurrió con el sacerdote Gueorgui Gapón, organizador de la marcha del Domingo Sangriento de 1905, en los años posteriores a este trágico suceso que había contribuido decisivamente a desencadenar?",
+    "options": [
+      "Se retiró definitivamente de la vida pública y religiosa en un monasterio",
+      "Fue ejecutado inmediatamente por las autoridades zaristas tras la masacre",
+      "Continuó liderando el movimiento obrero legal durante varias décadas más",
+      "Huyó al extranjero y fue después asesinado por revolucionarios que sospechaban que colaboraba con la policía secreta"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Tras huir de Rusia, Gapón mantuvo contactos ambiguos tanto con revolucionarios en el exilio como, según se descubrió después, con la propia policía secreta zarista; esta doble relación despertó tal desconfianza entre sus antiguos camaradas socialrevolucionarios que terminó siendo ahorcado por ellos mismos en una casa de campo cerca de San Petersburgo en 1906."
+  },
+  {
+    "question": "¿Cómo se conoce al breve periodo de relativa libertad de prensa, reunión y asociación que siguió a la promulgación del Manifiesto de Octubre de 1905, antes de que el gobierno zarista comenzara a restringir gradualmente de nuevo estas libertades recién concedidas?",
+    "options": [
+      "El 'Deshielo Constitucional'",
+      "Los 'Días de Libertad'",
+      "La 'Tregua Política'",
+      "La 'Primavera de Octubre'"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Durante estas pocas semanas de apertura excepcional, proliferaron periódicos, partidos políticos y asociaciones de todo tipo que hasta entonces habían operado en la clandestinidad, un breve respiro de libertades civiles que contrastaba notablemente tanto con el periodo represivo anterior como con las restricciones que pronto volverían a imponerse."
+  },
+  {
+    "question": "¿Qué organización campesina de alcance nacional, fundada en 1905 para representar los intereses y reivindicaciones de los agricultores rusos —incluida la demanda de redistribución de tierras—, fue rápidamente perseguida y disuelta por las autoridades zaristas?",
+    "options": [
+      "El Sindicato Agrario Nacional",
+      "El Congreso Rural de 1905",
+      "La Liga de Labradores Libres",
+      "La Unión Panrusa de Campesinos"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a su corta existencia legal antes de ser reprimida, esta organización logró articular por primera vez a nivel nacional las demandas históricas del campesinado ruso sobre la propiedad de la tierra, reivindicaciones que seguirían siendo centrales en la política rusa hasta la revolución de 1917 y más allá."
+  },
+  {
+    "question": "¿Qué escritor, ya célebre internacionalmente, fue arrestado brevemente por las autoridades zaristas tras el Domingo Sangriento de 1905 debido a su firme condena pública de la masacre, generando una campaña internacional de protesta por su liberación entre intelectuales de toda Europa?",
+    "options": [
+      "Anton Chéjov",
+      "Maxim Gorki",
+      "Leonid Andréyev",
+      "Lev Tolstói"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El encarcelamiento de una figura literaria ya tan reconocida internacionalmente como Gorki provocó una notable ola de protestas desde el extranjero, incluidas cartas de destacados intelectuales europeos exigiendo su liberación, presión que contribuyó finalmente a que las autoridades zaristas lo dejaran en libertad tras varias semanas de detención."
+  },
+  {
+    "question": "¿En qué conferencia diplomática internacional de 1906, celebrada en una ciudad española, participó también Rusia como una de las potencias europeas involucradas en resolver una crisis colonial relacionada con el control de Marruecos?",
+    "options": [
+      "La Conferencia de Casablanca",
+      "La Cumbre de Tánger",
+      "El Congreso de Madrid",
+      "La Conferencia de Algeciras"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a no tener intereses coloniales directos en el norte de África, Rusia participó en esta conferencia como parte de su alianza diplomática con Francia, en un episodio que ilustra cómo el sistema de alianzas europeas de la época involucraba a las grandes potencias incluso en crisis geográficamente alejadas de sus propios intereses inmediatos."
+  },
+  {
+    "question": "¿A qué regiones periféricas del imperio, tradicionalmente excluidas del sistema de autogobierno local, se extendieron finalmente y de forma tardía las instituciones de zemstvo durante los últimos años del gobierno zarista, aunque con importantes restricciones respecto a su versión original en la Rusia europea?",
+    "options": [
+      "Asia Central y el Turquestán",
+      "El Cáucaso en su totalidad",
+      "Varias provincias occidentales como Vitebsk, Minsk y Podolia",
+      "Toda Siberia sin excepción"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La extensión de los zemstvos a estas provincias occidentales, impulsada por Stolýpin en 1911 pese a fuerte oposición conservadora en el Consejo de Estado, buscaba modernizar la administración local en regiones de composición étnica y religiosa mixta, aunque las nuevas instituciones mantenían limitaciones que las diferenciaban de los zemstvos plenamente autónomos de la Rusia central."
+  },
+  {
+    "question": "¿Qué llamativo giro tomó la carrera del general Alexéi Brusílov, célebre por su exitosa ofensiva de 1916 contra Austria-Hungría, tras la Revolución de Octubre de 1917?",
+    "options": [
+      "Se retiró completamente de cualquier actividad militar o política",
+      "Se unió inmediatamente al Ejército Blanco contrarrevolucionario",
+      "Terminó sirviendo como asesor militar del nuevo Ejército Rojo soviético",
+      "Emigró de inmediato a Francia y nunca regresó a Rusia"
+    ],
+    "correct_option_id": 2,
+    "explanation": "A diferencia de muchos otros generales zaristas que se unieron al bando blanco durante la Guerra Civil, Brusílov optó por permanecer en Rusia y, años después, ofreció sus servicios al Ejército Rojo soviético, una decisión que generó entonces —y sigue generando hoy— un intenso debate entre historiadores sobre sus verdaderas motivaciones."
+  },
+  {
+    "question": "¿Qué unidad militar, formada originalmente a partir de prisioneros de guerra checos y eslovacos capturados por Rusia durante la Primera Guerra Mundial, terminaría desempeñando un papel decisivo en el estallido de la Guerra Civil rusa tras 1917?",
+    "options": [
+      "El Regimiento de Praga Libre",
+      "La Legión Checoslovaca",
+      "La Brigada Panslava",
+      "El Cuerpo de Voluntarios Eslavos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Formada inicialmente para luchar del lado ruso contra Austria-Hungría con la esperanza de lograr la independencia checoslovaca, esta legión de decenas de miles de soldados terminó, tras la salida de Rusia de la guerra, enfrentándose directamente a las fuerzas bolcheviques mientras intentaba abrirse paso hacia el este a través de Siberia, un episodio clave del comienzo de la Guerra Civil."
+  },
+  {
+    "question": "¿Qué contingente militar ruso, formado por varias decenas de miles de soldados, fue enviado en 1916 al frente occidental para combatir junto a las tropas francesas, en un gesto de apoyo directo del Imperio ruso a sus aliados de la Entente en territorio europeo occidental?",
+    "options": [
+      "El Regimiento Ruso de Verdún",
+      "El Cuerpo Expedicionario Ruso en Francia",
+      "La Brigada Imperial de Champaña",
+      "La División Eslava de Occidente"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Estos soldados rusos, que combatieron en varias batallas del frente occidental, quedaron en una situación particularmente difícil tras la Revolución de Octubre, cuando Francia dejó de reconocer al nuevo gobierno bolchevique; algunos de estos soldados terminarían integrándose posteriormente en la Legión Extranjera francesa."
+  },
+  {
+    "question": "¿Qué avión ruso, diseñado por el ingeniero Ígor Sikorski antes de emigrar a Estados Unidos, se convirtió en el primer bombardero pesado de cuatro motores de la historia, utilizado por el Imperio ruso durante la Primera Guerra Mundial?",
+    "options": [
+      "El Anatra DS",
+      "El Sikorski S-16",
+      "El Lebed XII",
+      "El Ilyá Múromets"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Bautizado en honor a un legendario héroe épico ruso, este avión pionero, originalmente concebido como aeronave de pasajeros de lujo, fue adaptado durante la guerra para misiones de bombardeo estratégico, demostrando una capacidad de carga y un alcance sin precedentes para la aviación militar de la época."
+  },
+  {
+    "question": "¿Qué órgano parlamentario, integrado dentro de la Cuarta Duma estatal, adquirió un peso especialmente relevante durante la Primera Guerra Mundial al supervisar y cuestionar públicamente los gastos y la gestión del gobierno en la conducción del esfuerzo bélico?",
+    "options": [
+      "La Comisión de Presupuesto de la Duma",
+      "El Consejo de Auditoría Imperial",
+      "El Comité de Defensa Nacional",
+      "La Junta de Fiscalización de Guerra"
+    ],
+    "correct_option_id": 0,
+    "explanation": "A través de esta comisión, diputados de distintas tendencias políticas pudieron ejercer una crítica cada vez más abierta hacia la gestión gubernamental de la guerra, contribuyendo a erosionar públicamente la confianza en la capacidad administrativa del gobierno imperial en los últimos y críticos años antes de la revolución."
+  },
+  {
+    "question": "Pese a las sospechas generalizadas y las investigaciones policiales sobre el asesinato de Rasputín en diciembre de 1916, ¿qué decisión final tomaron las autoridades respecto a los principales implicados en el crimen, entre ellos el propio príncipe Félix Yusúpov?",
+    "options": [
+      "Ninguno de los implicados fue jamás identificado oficialmente",
+      "Recibieron castigos sorprendentemente leves, limitados a destierros internos sin juicio formal alguno",
+      "Fueron todos condenados a muerte y ejecutados públicamente",
+      "Fueron completamente absueltos y readmitidos en la corte sin consecuencias"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Dado el estatus aristocrático de los principales implicados y la satisfacción, apenas disimulada, que muchos en la propia familia imperial y la corte sentían por la muerte de Rasputín, las consecuencias legales fueron sorprendentemente leves: Yusúpov fue desterrado a una de sus propiedades rurales, mientras el gran duque Dmitri Pávlovich fue enviado al frente persa, castigos simbólicos muy alejados de la gravedad formal del crimen cometido."
+  },
+  {
+    "question": "¿Qué comité, presidido por la gran duquesa Tatiana, segunda hija de Nicolás II, se dedicó durante la Primera Guerra Mundial a coordinar la ayuda humanitaria y el auxilio a los millones de refugiados desplazados por los avances y retiradas del frente oriental?",
+    "options": [
+      "La Cruz Roja de Petrogrado",
+      "La Liga de Socorro a Víctimas de Guerra",
+      "El Comité Tatiana para Refugiados de Guerra",
+      "La Sociedad de Ayuda a Desplazados Imperial"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Ante la enorme crisis humanitaria generada por los desplazamientos masivos de población civil huyendo del avance alemán, especialmente durante el Gran Repliegue de 1915, este comité coordinó la distribución de ayuda, alojamiento temporal y asistencia médica a millones de refugiados en todo el territorio ruso."
+  },
+  {
+    "question": "¿Qué característica distinguió trágicamente a Rusia entre todas las grandes potencias combatientes durante la Primera Guerra Mundial en relación con el número de soldados propios capturados por el enemigo?",
+    "options": [
+      "Sufrió, con diferencia, el mayor número absoluto de prisioneros de guerra de todos los ejércitos combatientes",
+      "Tuvo la menor proporción de prisioneros respecto al total de soldados movilizados",
+      "Fue el único país que se negó a intercambiar prisioneros con el enemigo",
+      "Fue el único ejército que no tuvo ningún prisionero de guerra capturado"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La combinación de una preparación militar deficiente, un mando a menudo desorganizado y desastres como el cerco de Tannenberg contribuyó a que Rusia sufriera un número de prisioneros de guerra excepcionalmente alto —varios millones de soldados— en comparación con cualquier otra potencia combatiente, una cifra que refleja las profundas deficiencias estructurales del esfuerzo bélico ruso."
+  },
+  {
+    "question": "¿Cómo se conoce al conjunto de leyes aprobadas en abril de 1906, poco antes de reunirse la primera Duma, que establecieron formalmente el marco constitucional del imperio, definiendo las competencias compartidas entre el zar y el nuevo parlamento?",
+    "options": [
+      "El Código Constitucional de 1906",
+      "La Carta Orgánica del Imperio",
+      "Las Leyes Fundamentales del Estado",
+      "El Estatuto Imperial de Representación"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque reconocían la existencia de la Duma y ciertos derechos civiles, estas leyes preservaban también amplísimos poderes para el zar, incluido el título de 'autócrata' y la capacidad de disolver la Duma o gobernar por decreto en su ausencia, por lo que muchos historiadores las consideran una constitución solo parcial y limitada."
+  },
+  {
+    "question": "¿Qué aviador militar ruso realizó en septiembre de 1913, cerca de Kiev, la primera maniobra de vuelo en bucle vertical completo (looping) de la historia de la aviación, una acrobacia hasta entonces considerada imposible sin perder el control de la aeronave?",
+    "options": [
+      "Alexánder de Sévero",
+      "Yevgueni Kruten",
+      "Piotr Néstorov",
+      "Vsévolod Abramóvich"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La hazaña de Néstorov, realizada desafiando las advertencias de otros aviadores que consideraban la maniobra suicida, demostró que un avión podía completar un giro vertical de 360 grados sin perder sustentación, abriendo el camino a toda la acrobacia aérea moderna posterior."
+  },
+  {
+    "question": "¿Qué hazaña, considerada la primera de su tipo en la historia militar aérea, protagonizó el propio Piotr Néstorov en septiembre de 1914, apenas semanas después del estallido de la Primera Guerra Mundial, muriendo él mismo en el intento?",
+    "options": [
+      "Realizó el primer bombardeo aéreo nocturno de la historia",
+      "Llevó a cabo el primer reconocimiento fotográfico aéreo del frente oriental",
+      "Embistió deliberadamente con su avión a un aparato de reconocimiento austrohúngaro, derribándolo pero muriendo también en el choque",
+      "Efectuó el primer ataque con torpedo aéreo contra un buque enemigo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Sin contar con armamento a bordo para atacar al avión enemigo, Néstorov decidió embestirlo directamente con su propio aparato, logrando derribarlo pero perdiendo también el control de su propio avión y muriendo en el impacto, en lo que se considera el primer ataque de choque aéreo intencional (taran) de la historia militar."
+  },
+  {
+    "question": "¿Qué movimiento juvenil, fundado en Rusia en 1909 por el oficial Oleg Pantiújov con el apoyo personal del propio Nicolás II, introdujo por primera vez en el país las actividades de escultismo (boy scouts) siguiendo el modelo británico originado por Baden-Powell?",
+    "options": [
+      "La Hermandad de Cadetes Voluntarios",
+      "La Sociedad Imperial de Juventud",
+      "La Liga de Jóvenes Patriotas",
+      "El movimiento de los 'exploradores rusos' (Russki Skaut)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pantiújov, tras conocer directamente el movimiento scout británico, organizó la primera tropa de exploradores rusos en Tsárskoye Seló; el movimiento creció considerablemente durante la década siguiente hasta ser finalmente disuelto y sustituido tras la revolución por la organización comunista de los Pioneros."
+  }
+]

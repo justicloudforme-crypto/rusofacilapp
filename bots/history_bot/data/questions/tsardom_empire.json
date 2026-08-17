@@ -1,0 +1,1707 @@
+[
+  {
+    "question": "¿Quién fue el primer gobernante ruso en adoptar oficialmente el título de 'zar' de toda Rusia?",
+    "options": [
+      "Pedro el Grande",
+      "Boris Godunov",
+      "Iván IV ('el Terrible')",
+      "Iván III"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Iván IV se coronó formalmente como zar en 1547, consolidando el poder centralizado en Moscú."
+  },
+  {
+    "question": "¿Qué zar fundó San Petersburgo en 1703 como parte de su ambicioso proyecto de modernización y apertura hacia Europa?",
+    "options": [
+      "Iván el Terrible",
+      "Nicolás II",
+      "Alejandro I",
+      "Pedro el Grande"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pedro I fundó San Petersburgo como 'ventana hacia Europa', trasladando ahí la capital del imperio."
+  },
+  {
+    "question": "¿Qué emperatriz rusa del siglo XVIII, de origen alemán, es recordada como 'la Grande' por expandir el territorio y promover la Ilustración?",
+    "options": [
+      "Catalina II",
+      "María Fiódorovna",
+      "Ana Ioánnovna",
+      "Isabel Petrovna"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Catalina la Grande gobernó de 1762 a 1796, expandiendo el imperio ruso y modernizando la administración estatal."
+  },
+  {
+    "question": "¿Qué ejército invasor fue derrotado catastróficamente en su intento de conquistar Rusia en 1812?",
+    "options": [
+      "El ejército sueco de Carlos XII",
+      "El ejército de Napoleón Bonaparte",
+      "El ejército mongol",
+      "El ejército otomano"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La invasión napoleónica de 1812 terminó en un desastroso retiro francés, inmortalizado en la obra 'Guerra y paz' de Tolstói."
+  },
+  {
+    "question": "¿Qué fortaleza, ubicada en el corazón de Moscú, es hoy sede del gobierno ruso y uno de los símbolos más reconocibles del país?",
+    "options": [
+      "El Kremlin",
+      "El Palacio de Invierno",
+      "La Fortaleza de Pedro y Pablo",
+      "El Palacio Ekaterininski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El Kremlin de Moscú, con sus murallas rojas y catedrales históricas, es el centro simbólico y político de Rusia desde hace siglos."
+  },
+  {
+    "question": "¿Qué dos figuras lideraron la milicia popular que liberó Moscú de la ocupación polaca en 1612, poniendo fin al 'Periodo de las Turbulencias'?",
+    "options": [
+      "Iván Susanin y Borís Godunov",
+      "Alekséi Románov y Filaret",
+      "Kuzmá Minin y Dmitri Pozharski",
+      "Stepán Razin y Emelián Pugachov"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El mercader Minin y el príncipe Pozharski organizaron el segundo ejército popular que expulsó a las tropas polacas de Moscú en 1612."
+  },
+  {
+    "question": "¿En qué año fue elegido Mijaíl Románov como zar por una asamblea (Zemski Sobor), fundando la dinastía que gobernaría Rusia hasta 1917?",
+    "options": [
+      "1547",
+      "1613",
+      "1682",
+      "1721"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Tras el Periodo de las Turbulencias, el Zemski Sobor eligió a Mijaíl Románov, de 16 años, como zar en 1613."
+  },
+  {
+    "question": "¿En qué batalla de 1709 Pedro el Grande derrotó decisivamente al rey Carlos XII de Suecia, marcando un punto de inflexión en la Gran Guerra del Norte?",
+    "options": [
+      "La batalla de Borodinó",
+      "La batalla de Gángut",
+      "La batalla de Poltava",
+      "La batalla de Narva"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La victoria en Poltava consolidó a Rusia como potencia militar europea y debilitó permanentemente al Imperio sueco."
+  },
+  {
+    "question": "¿Qué reforma administrativa de Pedro el Grande, instaurada en 1722, organizó la nobleza y la burocracia rusa según el mérito y el servicio al Estado, en lugar del linaje?",
+    "options": [
+      "El Zemski Sobor",
+      "La Tabla de Rangos",
+      "El Código de Leyes de 1649",
+      "La Duma Estatal"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La Tabla de Rangos estableció 14 grados jerárquicos en el servicio civil, militar y cortesano, permitiendo ascender por mérito."
+  },
+  {
+    "question": "¿Quién lideró la mayor rebelión campesina y cosaca del siglo XVIII contra el gobierno de Catalina la Grande, haciéndose pasar por el difunto zar Pedro III?",
+    "options": [
+      "Emelián Pugachov",
+      "Iván Bolótnikov",
+      "Kondrati Bulavin",
+      "Stepán Razin"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La rebelión de Pugachov (1773-1775) sacudió el sureste del imperio antes de ser aplastada; su líder fue ejecutado en Moscú en 1775."
+  },
+  {
+    "question": "¿Cómo se llamó la batalla más sangrienta de la invasión napoleónica de Rusia en 1812, librada a unos 120 km al oeste de Moscú?",
+    "options": [
+      "La batalla de Borodinó",
+      "La batalla de Smolensk",
+      "La batalla de Austerlitz",
+      "La batalla de Waterloo"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La batalla de Borodinó, dirigida por el general ruso Mijaíl Kutúzov, es recordada por Tolstói en 'Guerra y paz' como el enfrentamiento decisivo de la campaña."
+  },
+  {
+    "question": "¿Cómo se conoce al levantamiento de oficiales del ejército ruso ocurrido en diciembre de 1825, que exigía reformas constitucionales al asumir el zar Nicolás I?",
+    "options": [
+      "El levantamiento decembrista",
+      "La Revolución de 1905",
+      "La rebelión de Pugachov",
+      "El motín de los Streltsý"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque fue rápidamente sofocado, el levantamiento decembrista de 1825 es considerado el primer movimiento revolucionario moderno en la historia rusa."
+  },
+  {
+    "question": "¿Qué zar liberó a los siervos rusos en 1861 mediante el Manifiesto de Emancipación, poniendo fin legal a la servidumbre en el imperio?",
+    "options": [
+      "Alejandro II",
+      "Alejandro I",
+      "Nicolás II",
+      "Nicolás I"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El Manifiesto de Emancipación de 1861, promulgado por Alejandro II, liberó a más de 20 millones de siervos, aunque con obligaciones económicas hacia sus antiguos señores."
+  },
+  {
+    "question": "¿Cómo se llamaba la política de terror instaurada por Iván el Terrible en 1565, que dividió el país en dos administraciones y usó una guardia personal vestida de negro para perseguir a la nobleza boyarda?",
+    "options": [
+      "La Duma boyarda",
+      "El Zemski Sobor",
+      "La Tabla de Rangos",
+      "La oprichnina"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los oprichniki, montados en caballos negros con cabezas de perro y escobas atadas a la silla, simbolizaban su misión de 'morder' y 'barrer' a los enemigos del zar."
+  },
+  {
+    "question": "¿Qué trágico episodio de la vida de Iván el Terrible, ocurrido en 1581, inspiró uno de los cuadros más célebres del pintor Iliá Repin, titulado 'Iván el Terrible y su hijo'?",
+    "options": [
+      "El hijo del zar fue envenenado por boyardos rivales",
+      "El zar mató accidentalmente a su propio hijo y heredero en un arrebato de ira",
+      "El zar ejecutó a su hijo por traición comprobada",
+      "El hijo del zar murió en batalla contra los tártaros"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La muerte del zarévich Iván, golpeado accidentalmente por su padre, dejó al trono sin un heredero capaz, contribuyendo a la crisis dinástica que desembocaría en el Periodo de las Turbulencias."
+  },
+  {
+    "question": "¿Cómo se conoce a los impostores que, durante el Periodo de las Turbulencias de inicios del siglo XVII, afirmaron falsamente ser el zarévich Dmitri, hijo menor de Iván el Terrible fallecido en circunstancias misteriosas en 1591?",
+    "options": [
+      "Los falsos Dmitri",
+      "Los ataman cosacos",
+      "Los pretendientes streltsý",
+      "Los boyardos usurpadores"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Al menos tres impostores distintos reclamaron ser el zarévich Dmitri; el primero de ellos llegó a reinar brevemente como zar entre 1605 y 1606 con apoyo polaco."
+  },
+  {
+    "question": "¿Con qué identidad falsa viajó Pedro el Grande por Europa occidental entre 1697 y 1698, trabajando de incógnito como carpintero en astilleros holandeses para aprender técnicas navales?",
+    "options": [
+      "Como el 'sargento Piotr Mijáilov'",
+      "Como un noble francés",
+      "Como un peregrino religioso",
+      "Como un mercader anónimo"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Durante la llamada 'Gran Embajada', Pedro I recorrió Europa bajo un nombre falso para observar de primera mano la tecnología naval e industrial occidental."
+  },
+  {
+    "question": "¿Qué impuesto poco convencional introdujo Pedro el Grande para forzar la modernización de la apariencia de la nobleza rusa al estilo europeo?",
+    "options": [
+      "Un impuesto sobre la barba",
+      "Un impuesto sobre el pelo largo",
+      "Un impuesto sobre las botas tradicionales",
+      "Un impuesto sobre los sombreros altos"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Quienes se negaban a afeitarse debían pagar un impuesto anual y portar una 'moneda de la barba' como comprobante de haberlo pagado."
+  },
+  {
+    "question": "¿Qué fortaleza, construida en una pequeña isla del río Nevá en 1703, marcó el nacimiento oficial de la ciudad de San Petersburgo, antes incluso de que existiera la ciudad misma?",
+    "options": [
+      "La Fortaleza de Pedro y Pablo",
+      "El Kremlin",
+      "La Fortaleza de Ivánguorod",
+      "La Fortaleza de Oréshek"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La primera piedra de la Fortaleza de Pedro y Pablo, colocada el 27 de mayo de 1703, se considera la fecha fundacional de San Petersburgo."
+  },
+  {
+    "question": "¿Qué inusual promesa personal hizo la emperatriz Isabel Petrovna al ascender al trono en 1741, y que cumplió durante todo su reinado de veinte años?",
+    "options": [
+      "Nunca abandonar San Petersburgo",
+      "Nunca casarse",
+      "Nunca hablar en público",
+      "Nunca firmar una sentencia de muerte"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Isabel, hija de Pedro el Grande, juró no ejecutar a nadie durante su reinado tras un golpe de palacio, convirtiendo a Rusia en una rareza europea en materia de pena capital durante dos décadas."
+  },
+  {
+    "question": "¿Cómo llegó Catalina la Grande al poder en 1762, siendo de origen alemán y sin ningún vínculo de sangre con la dinastía Románov?",
+    "options": [
+      "Derrocó a su propio esposo, el zar Pedro III, mediante un golpe de palacio",
+      "Fue elegida por el Zemski Sobor",
+      "Ganó una guerra civil contra su hermano",
+      "Heredó el trono directamente de Isabel Petrovna"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Con el respaldo de la Guardia Imperial, Catalina depuso a su esposo Pedro III pocos meses después de su coronación; él murió poco después en circunstancias nunca del todo aclaradas."
+  },
+  {
+    "question": "¿Qué célebre general ruso del siglo XVIII es recordado por cruzar los Alpes suizos con su ejército en 1799 durante una campaña contra Francia, en una hazaña militar comparada con la de Aníbal?",
+    "options": [
+      "Mijaíl Kutúzov",
+      "Alexánder Suvórov",
+      "Grigori Potiomkin",
+      "Piotr Rumiántsev"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Suvórov nunca perdió una batalla en toda su carrera; su travesía de los Alpes, en retirada estratégica, es estudiada aún hoy como una proeza de logística militar."
+  },
+  {
+    "question": "¿Qué expresión, hoy usada en muchos idiomas para describir una fachada engañosa que oculta una realidad menos favorable, se originó (según una leyenda no del todo confirmada históricamente) en un viaje de Catalina la Grande por Crimea en 1787?",
+    "options": [
+      "Los 'palacios de cartón'",
+      "Las 'fachadas de Románov'",
+      "Las 'aldeas de Potiomkin'",
+      "Las 'ciudades de utilería'"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Según la leyenda, el favorito de Catalina, Grigori Potiomkin, habría hecho construir fachadas falsas de pueblos prósperos a lo largo de la ruta imperial; los historiadores debaten cuánto de esto es cierto."
+  },
+  {
+    "question": "¿Qué estrategia militar rusa, más que el frío invernal por sí solo, resultó decisiva para desgastar al ejército de Napoleón durante la invasión de 1812, evitando batallas frontales y quemando recursos a su paso?",
+    "options": [
+      "Una alianza secreta con Gran Bretaña",
+      "El bloqueo naval del mar Báltico",
+      "El uso masivo de artillería pesada",
+      "La táctica de tierra arrasada y retirada estratégica"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Kutúzov evitó el enfrentamiento directo, dejando que la falta de suministros, las largas distancias y el hostigamiento constante desgastaran al Grand Armée incluso antes de la llegada del invierno."
+  },
+  {
+    "question": "¿Qué ciudad rusa fue parcialmente incendiada —posiblemente por sus propios habitantes antes de la retirada— poco después de ser ocupada por las tropas de Napoleón en septiembre de 1812?",
+    "options": [
+      "San Petersburgo",
+      "Kiev",
+      "Smolensk",
+      "Moscú"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El incendio de Moscú dejó a las tropas francesas sin refugio ni suministros adecuados para el invierno, acelerando la catastrófica retirada napoleónica."
+  },
+  {
+    "question": "¿Qué apodo recibió el zar Nicolás I por su papel en la represión de movimientos revolucionarios liberales en otros países europeos durante su reinado (1825-1855)?",
+    "options": [
+      "El 'protector de las naciones'",
+      "El 'gendarme de Europa'",
+      "El 'guardián del Congreso de Viena'",
+      "El 'zar de hierro'"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Nicolás I envió tropas rusas a sofocar la revolución húngara de 1848, ganándose fama de defensor del absolutismo frente a las olas revolucionarias liberales de la época."
+  },
+  {
+    "question": "¿En qué guerra de mediados del siglo XIX (1853-1856), en la que Rusia se enfrentó a una coalición de Gran Bretaña, Francia y el Imperio otomano, se hizo célebre la enfermera Florence Nightingale por reformar la atención médica militar?",
+    "options": [
+      "La Guerra Ruso-Turca de 1877-1878",
+      "La Guerra del Cáucaso",
+      "La Guerra Ruso-Japonesa",
+      "La Guerra de Crimea"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La derrota rusa en Crimea expuso el atraso técnico y militar del imperio frente a las potencias occidentales, impulsando después las reformas de Alejandro II."
+  },
+  {
+    "question": "¿Cómo murió el zar Alejandro II en 1881, apenas semanas después de aprobar una serie de reformas constitucionales adicionales, en un atentado que truncó posibles cambios políticos más profundos?",
+    "options": [
+      "Murió en batalla durante una campaña militar",
+      "Murió de causas naturales en su palacio",
+      "Fue asesinado con una bomba lanzada por un grupo revolucionario ('Voluntad del Pueblo')",
+      "Fue derrocado y exiliado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La muerte de Alejandro II, el 'zar liberador' que había abolido la servidumbre, provocó un giro hacia políticas mucho más represivas bajo su hijo Alejandro III."
+  },
+  {
+    "question": "¿Qué cosaco, financiado por la poderosa familia de comerciantes Stróganov, lideró la expedición de finales del siglo XVI que inició la conquista rusa de Siberia, derrotando al Kanato de Sibir?",
+    "options": [
+      "Afanasi Nikitin",
+      "Yermak Timoféyevich",
+      "Vitus Béring",
+      "Semión Dezhniov"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La campaña de Yermak, iniciada hacia 1581 con apenas un puñado de cosacos, abrió el camino para una expansión rusa hacia el este que en pocas décadas llegaría hasta el océano Pacífico."
+  },
+  {
+    "question": "¿Qué mercader de Tver viajó a la India entre 1468 y 1474, dejando un relato de viaje ('Viaje más allá de los tres mares') varias décadas antes de que Vasco da Gama llegara por mar a ese mismo país?",
+    "options": [
+      "Afanasi Nikitin",
+      "Yermak Timoféyevich",
+      "Vitus Béring",
+      "Semión Dezhniov"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El relato de Nikitin es uno de los primeros textos de viaje no religiosos de la literatura rusa, describiendo con curiosidad las costumbres, la fauna y la vida cotidiana de la India."
+  },
+  {
+    "question": "¿Qué campaña militar de 1478 llevó a cabo Iván III contra Nóvgorod, poniendo fin definitivamente a la independencia de la república del veche y anexando su vasto territorio al principado de Moscú?",
+    "options": [
+      "La guerra Ruso-Lituana",
+      "La conquista de Nóvgorod por Iván III",
+      "La campaña de Kazán",
+      "El 'Gran Enfrentamiento del río Ugrá' (fue contra la Horda de Oro, no contra Nóvgorod)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Iván III hizo trasladar a la fuerza a buena parte de la aristocracia mercantil de Nóvgorod hacia otras regiones, rompiendo así el poder de las familias que habían sostenido siglos de autogobierno republicano."
+  },
+  {
+    "question": "¿Con el matrimonio de qué princesa bizantina, sobrina del último emperador de Constantinopla, se introdujo en la heráldica rusa el símbolo del águila bicéfala, adoptado por Iván III hacia 1472?",
+    "options": [
+      "Elena Glínskaya",
+      "Sofía Paleóloga",
+      "Anastasia Románovna",
+      "Marfa Sóbakina"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El matrimonio con Sofía Paleóloga reforzó la idea de Moscú como heredera política y religiosa de Bizancio, caída ante los otomanos apenas dos décadas antes."
+  },
+  {
+    "question": "¿Qué boyardo llegó a gobernar Rusia como zar entre 1598 y 1605, un reinado marcado por una devastadora hambruna y por acusaciones (nunca comprobadas del todo) de haber ordenado el asesinato del zarévich Dmitri, hecho que después inspiraría una ópera de Mussorgski y un drama de Pushkin?",
+    "options": [
+      "Simeón Bekbulátovich",
+      "Borís Godunov",
+      "Vasili Shuiski",
+      "Fiódor Nikítich Románov (más conocido como el patriarca Filaret)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La hambruna de 1601-1603, una de las peores de la historia rusa, debilitó gravemente la legitimidad de Godunov y allanó el camino para la aparición de los 'falsos Dmitri' durante el Periodo de las Turbulencias."
+  },
+  {
+    "question": "¿Quién fue el padre del zar Mijaíl Románov, un antiguo boyardo forzado a convertirse en monje bajo el nombre de Filaret, que a su regreso del cautiverio polaco gobernó de facto Rusia junto a su hijo como patriarca de la Iglesia?",
+    "options": [
+      "Vasili Shuiski",
+      "Iván Shuiski",
+      "Borís Godunov",
+      "Fiódor Nikítich Románov (Filaret)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Durante años, Rusia tuvo en la práctica un doble gobierno: el joven zar Mijaíl en el trono civil y su padre Filaret al frente de la Iglesia, ejerciendo una autoridad comparable a la del propio zar."
+  },
+  {
+    "question": "¿Qué reforma introdujo Pedro el Grande en 1700, alineando el calendario ruso con el usado en gran parte de Europa occidental y trasladando el inicio del año nuevo del 1 de septiembre al 1 de enero?",
+    "options": [
+      "La adopción del calendario juliano con año nuevo el 1 de enero",
+      "La adopción del calendario gregoriano completo (Rusia mantuvo el juliano hasta 1918)",
+      "La abolición total de los calendarios religiosos",
+      "La introducción de la semana de diez días (fue una medida francesa revolucionaria posterior, no rusa)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque Pedro modernizó la fecha de inicio del año, Rusia conservó el calendario juliano —cada vez más desfasado respecto al gregoriano occidental— hasta la reforma bolchevique de 1918."
+  },
+  {
+    "question": "¿Qué institución científica, fundada por decreto de Pedro el Grande poco antes de su muerte en 1725, se convirtió en el principal centro de investigación científica del imperio ruso durante los siglos siguientes?",
+    "options": [
+      "La Academia de Ciencias de Rusia",
+      "La Kunstkámera (es un museo, aunque asociado a la misma Academia)",
+      "El Instituto Smolny (fue fundado mucho después, en 1764)",
+      "La Universidad de Moscú (fue fundada después, en 1755)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pedro invitó a destacados científicos extranjeros a instalarse en San Petersburgo para dar impulso inmediato a la nueva academia, ya que Rusia aún no contaba con suficientes científicos propios formados."
+  },
+  {
+    "question": "¿Qué cámara decorativa del Palacio de Catalina, cerca de San Petersburgo, revestida enteramente de paneles de ámbar y regalada en 1716 por el rey de Prusia a Pedro el Grande, desapareció misteriosamente durante la Segunda Guerra Mundial y nunca ha sido recuperada?",
+    "options": [
+      "El Cuarto de Ámbar",
+      "El Salón de los Espejos (es del Palacio de Versalles, en Francia)",
+      "El Gabinete de Laca del Palacio de Invierno",
+      "La Sala del Trono del Hermitage"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tropas alemanas desmontaron y se llevaron el Cuarto de Ámbar original durante la ocupación en 1941; su paradero final sigue siendo un misterio, aunque hoy existe una reconstrucción completa inaugurada en 2003."
+  },
+  {
+    "question": "¿Qué texto redactado por Catalina la Grande en 1767, inspirado en pensadores de la Ilustración como Montesquieu, proponía principios de gobierno relativamente progresistas para su época, aunque nunca llegó a convertirse en un código legal completo?",
+    "options": [
+      "El 'Nakaz' (Instrucción)",
+      "El Código de Leyes de 1649",
+      "El Manifiesto de Emancipación (es de un siglo después, de Alejandro II)",
+      "La Tabla de Rangos"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque el Nakaz nunca se aplicó en su totalidad, causó sensación en la Europa ilustrada y contribuyó a la reputación de Catalina como una gobernante progresista, al menos en el papel."
+  },
+  {
+    "question": "¿Cómo murió el zar Pablo I en 1801, apenas cinco años después de heredar el trono de su madre Catalina la Grande, en un episodio que muchos historiadores consideran el último gran golpe de palacio de la historia rusa?",
+    "options": [
+      "Fue asesinado por un grupo de oficiales descontentos en su propio dormitorio",
+      "Murió en combate durante una campaña militar",
+      "Fue derrocado y exiliado a Siberia",
+      "Murió de una enfermedad repentina sin sospecha de intervención externa"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Su hijo y sucesor, Alejandro I, tuvo conocimiento previo de la conspiración contra su padre, un hecho que pesó sobre su conciencia durante buena parte de su reinado."
+  },
+  {
+    "question": "¿Qué alianza informal, promovida por el zar Alejandro I tras la derrota final de Napoleón en 1815, buscaba que los monarcas europeos gobernaran según principios cristianos de justicia y paz, y es vista hoy como un símbolo del conservadurismo posnapoleónico?",
+    "options": [
+      "La Entente Cordiale (es de 1904, entre Francia y Gran Bretaña)",
+      "El Pacto de Varsovia (es de 1955, de la era soviética)",
+      "La Liga Hanseática (es medieval, de siglos antes)",
+      "La Santa Alianza"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La Santa Alianza, firmada inicialmente por Rusia, Austria y Prusia, se convirtió en el símbolo de la reacción conservadora contra los ideales liberales y nacionalistas que había dejado la era napoleónica."
+  },
+  {
+    "question": "¿Qué prolongado conflicto militar en el sur del imperio, iniciado en 1817 y que no terminó hasta 1864, enfrentó al ejército ruso con la resistencia de pueblos montañeses liderados durante años por el imán Shamil?",
+    "options": [
+      "La Guerra del Cáucaso",
+      "La Guerra Ruso-Persa",
+      "La Guerra Ruso-Turca de 1877-1878",
+      "La Guerra de Crimea"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La resistencia de Shamil en las montañas de Chechenia y Daguestán se prolongó durante décadas antes de su rendición final en 1859, aunque los combates en la región continuaron años más."
+  },
+  {
+    "question": "Además de la abolición de la servidumbre en 1861, ¿qué otra reforma importante de Alejandro II, promulgada en 1864, creó asambleas locales electas (zemstvos) responsables de educación, salud y obras públicas a nivel provincial y distrital?",
+    "options": [
+      "La reforma de Stolýpin (es de principios del siglo XX)",
+      "El Nakaz (es de Catalina la Grande, siglo XVIII)",
+      "La reforma de los zemstvos",
+      "La Tabla de Rangos (es de Pedro el Grande, siglo XVIII)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque limitados por restricciones de voto que favorecían a los terratenientes, los zemstvos representaron una de las primeras formas de autogobierno local moderno en la historia rusa."
+  },
+  {
+    "question": "¿Cómo se conoció al movimiento de jóvenes intelectuales rusos que, a partir de 1874, se dirigieron en masa hacia las aldeas rurales con la esperanza (en general frustrada) de despertar una conciencia revolucionaria entre los campesinos?",
+    "options": [
+      "El movimiento 'ir al pueblo' (jozhdenie v naród) de los populistas (naródniki)",
+      "La Revolución de 1905",
+      "El movimiento decembrista (es de 1825, medio siglo antes)",
+      "La Gran Purga (es de la era estalinista, décadas después)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Muchos campesinos, lejos de unirse a la causa, denunciaron a estos jóvenes activistas urbanos ante las autoridades, lo que llevó a numerosos populistas a radicalizarse posteriormente hacia el terrorismo político."
+  },
+  {
+    "question": "¿Qué campañas militares emprendidas por un joven Pedro el Grande en 1695 y 1696 contra una fortaleza otomana en el mar de Azov marcaron el nacimiento de la primera flota de guerra rusa?",
+    "options": [
+      "La Gran Guerra del Norte (fue posterior, contra Suecia)",
+      "Las campañas persas (fueron mucho después, en 1722-1723)",
+      "Las campañas de Azov",
+      "Las campañas de Crimea (fueron anteriores, bajo la regencia de Sofía, y fracasaron)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El fracaso de la primera campaña de Azov en 1695, por falta de una flota, convenció a Pedro de la necesidad urgente de construir barcos de guerra —una flotilla improvisada que permitió la victoria al año siguiente."
+  },
+  {
+    "question": "¿Qué monumento ecuestre de Pedro el Grande, esculpido por el francés Étienne Falconet e inaugurado en San Petersburgo en 1782, dio título a un célebre poema narrativo de Alexánder Pushkin?",
+    "options": [
+      "La Columna de Alejandro (conmemora la victoria sobre Napoleón, no a Pedro I)",
+      "El Monumento a los Mil Años de Rusia (está en Nóvgorod, no en San Petersburgo)",
+      "El Jinete de Bronce",
+      "La Estatua de Catalina la Grande"
+    ],
+    "correct_option_id": 2,
+    "explanation": "En el poema de Pushkin, la estatua cobra vida y persigue por las calles inundadas de la ciudad a un pobre funcionario que se había atrevido a maldecir al zar fundador."
+  },
+  {
+    "question": "¿Qué favorito de Pedro el Grande, de origen humilde —según la leyenda, vendía pasteles en las calles de Moscú de niño—, llegó a convertirse en uno de los hombres más poderosos y ricos del imperio antes de caer en desgracia y morir en el exilio siberiano?",
+    "options": [
+      "Borís Godunov (es de un siglo antes)",
+      "Andréi Razumovski",
+      "Alexánder Ménshikov",
+      "Grigori Potiomkin (fue favorito de Catalina la Grande, no de Pedro I)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Ménshikov llegó a ser generalísimo y prácticamente co-gobernante durante los primeros años del reinado del niño Pedro II, antes de que sus rivales lograran su caída y destierro definitivos."
+  },
+  {
+    "question": "¿Con qué violencia extrema reprimió Pedro el Grande, a su regreso apresurado de la Gran Embajada europea en 1698, la revuelta de los streltsý, el antiguo cuerpo de infantería que veía amenazados sus privilegios por sus reformas?",
+    "options": [
+      "Ordenó cientos de ejecuciones públicas, algunas realizadas personalmente por el propio zar y sus cortesanos",
+      "Se limitó a exiliar a los cabecillas sin derramamiento de sangre",
+      "Disolvió el cuerpo sin castigo alguno, integrando a sus miembros al nuevo ejército regular",
+      "Perdonó completamente a los amotinados a cambio de lealtad futura"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Las ejecuciones masivas de streltsý en la Plaza Roja, con cadáveres exhibidos durante meses como advertencia, marcaron simbólicamente el final violento de la vieja Rusia moscovita y el inicio brutal de las reformas petrinas."
+  },
+  {
+    "question": "¿Qué media hermana de Pedro el Grande ejerció como regente de facto entre 1682 y 1689, gobernando en nombre de sus dos hermanos menores coronados conjuntamente, antes de ser finalmente apartada del poder por el propio Pedro?",
+    "options": [
+      "Sofía Alekséyevna",
+      "Ana Ioánnovna (gobernaría como emperatriz mucho después, en la década de 1730)",
+      "Isabel Petrovna (era hija de Pedro, no su hermana)",
+      "Natalia Naryshkina (era la madre de Pedro, no su hermana regente)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Tras perder el poder frente a Pedro, Sofía fue recluida en un convento, donde permanecería el resto de su vida, incluso después de un nuevo intento fallido de los streltsý por restaurarla en el trono."
+  },
+  {
+    "question": "¿Con qué nombre despectivo se conoce al periodo del reinado de la emperatriz Ana Ioánnovna (1730-1740), marcado por la enorme influencia de su favorito de origen alemán, Ernst Johann von Biron, y el resentimiento de buena parte de la nobleza rusa hacia los cortesanos extranjeros?",
+    "options": [
+      "La 'Oprichnina' (es del siglo XVI, bajo Iván el Terrible)",
+      "La 'Bironovschina'",
+      "La 'Época de los Palacios de Cristal' (no es un término histórico real)",
+      "El 'Periodo de las Turbulencias' (es de inicios del siglo XVII)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El resentimiento hacia el favoritismo alemán de la Bironovschina explotaría poco después del final del reinado de Ana, contribuyendo al golpe de palacio que llevaría al trono a Isabel Petrovna, hija de Pedro el Grande."
+  },
+  {
+    "question": "¿En qué tres repartos sucesivos, realizados entre 1772 y 1795 junto con Prusia y Austria, participó Catalina la Grande para eliminar por completo a Polonia-Lituania como Estado independiente del mapa europeo?",
+    "options": [
+      "Los tratados de Nystad (ese tratado, de 1721, puso fin a la guerra contra Suecia, sin relación con Polonia)",
+      "Las particiones de Polonia",
+      "Las particiones de Ucrania (el término histórico correcto para este episodio se refiere a Polonia, no a Ucrania como entidad separada de la época)",
+      "Los repartos de Livonia (Livonia fue anexada de forma distinta, no en tres repartos conjuntos con otras potencias)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Tras la tercera partición en 1795, Polonia desapareció del mapa como Estado independiente durante 123 años, hasta su restauración al término de la Primera Guerra Mundial."
+  },
+  {
+    "question": "¿Qué segundo impostor, que llegó a establecer una corte rival en la localidad de Tushino cerca de Moscú entre 1607 y 1610 reclamando también ser el zarévich Dmitri, es conocido en la historiografía simplemente como 'el ladrón de Tushino'?",
+    "options": [
+      "El falso Dmitri I (fue el primer impostor, coronado brevemente zar entre 1605 y 1606)",
+      "Iván Bolótnikov (lideró una rebelión campesina de la misma época, pero no afirmaba ser el zarévich)",
+      "El falso Dmitri II",
+      "Vasili Shuiski (fue, por el contrario, un zar legítimamente entronizado en ese periodo, rival de los impostores)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La existencia simultánea de dos cortes rivales —una en Moscú, otra en Tushino, cada una con su propio patriarca y boyardos— ilustra el extremo caos político del Periodo de las Turbulencias."
+  },
+  {
+    "question": "Más allá de la leyenda de las fachadas falsas, ¿qué logro territorial real se atribuye al favorito de Catalina la Grande, Grigori Potiomkin, en la región recién anexada del sur de Ucrania y Crimea durante la década de 1780?",
+    "options": [
+      "La fundación de San Petersburgo (fue obra de Pedro el Grande, casi un siglo antes)",
+      "La abolición de la servidumbre en la región (la servidumbre no sería abolida hasta 1861)",
+      "La fundación de nuevas ciudades como Sebastopol y Jersón, y la creación de la Flota del mar Negro",
+      "La conquista militar de Polonia (fue un proceso distinto, con distinta dirección política)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a la leyenda negra de las 'aldeas de cartón', el desarrollo real de la región de Nueva Rusia bajo la dirección de Potiomkin —incluida la creación de una flota naval desde cero— fue uno de los grandes logros administrativos del reinado de Catalina."
+  },
+  {
+    "question": "¿Qué inusual asamblea consultiva convocó Catalina la Grande en 1767, reuniendo por primera vez en la historia rusa a más de 500 delegados de prácticamente todos los estamentos sociales libres —nobles, comerciantes, campesinos estatales e incluso algunos pueblos no eslavos— para discutir la reforma de las leyes del imperio?",
+    "options": [
+      "El Senado Gobernante (era un órgano administrativo permanente, no una asamblea consultiva convocada para esta ocasión)",
+      "La Duma Estatal (es una institución mucho más tardía, de 1906)",
+      "El Zemski Sobor (es una institución anterior, del siglo XVII, de composición distinta)",
+      "La Comisión Legislativa"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque la Comisión se disolvió sin producir un nuevo código legal completo, sus debates —basados en el 'Nakaz' de Catalina— ofrecen hoy una fuente histórica única sobre las condiciones de vida de distintos sectores sociales del imperio del siglo XVIII."
+  },
+  {
+    "question": "¿Qué inusual título honorífico, vinculado a una antigua orden de caballería católica con sede mediterránea, aceptó el zar Pablo I en 1798, en un episodio considerado uno de los rasgos más excéntricos de su breve y controvertido reinado?",
+    "options": [
+      "Protector de la Santa Sede",
+      "Gran Maestre de la Orden de Malta",
+      "Defensor del Sacro Imperio Romano Germánico",
+      "Gran Almirante de la Liga Hanseática (la Liga ya no existía como entidad activa para esa época)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La aceptación de este título católico por parte de un zar ortodoxo, tras la ocupación francesa de Malta, escandalizó tanto a la Iglesia rusa como a buena parte de la nobleza, y se cuenta entre las razones de la creciente impopularidad de Pablo I."
+  },
+  {
+    "question": "¿Qué leyenda popular, nunca confirmada por los historiadores pese a investigaciones y hasta una exhumación en tiempos más recientes, sostiene que el zar Alejandro I no murió realmente en 1825, sino que fingió su muerte para retirarse como ermitaño bajo el nombre de Fiódor Kuzmich?",
+    "options": [
+      "La leyenda de los falsos Dmitri (pertenece a un periodo muy anterior, el Periodo de las Turbulencias)",
+      "La leyenda del Preste Juan (es una leyenda medieval europea sin relación con la dinastía Románov)",
+      "La leyenda de Ana Anastasia (se refiere a una hija del último zar Nicolás II, no a Alejandro I)",
+      "La leyenda de Fiódor Kuzmich"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El propio Liev Tolstói se interesó seriamente por esta leyenda hacia el final de su vida, y algunos historiadores señalan ciertas coincidencias sospechosas en las circunstancias de la muerte oficial de Alejandro I en la lejana ciudad de Taganrog."
+  },
+  {
+    "question": "¿Qué primera línea ferroviaria de Rusia, inaugurada en 1837 bajo el reinado de Nicolás I, conectaba San Petersburgo con la residencia imperial de Tsárskoye Seló, sirviendo inicialmente más como novedad de recreo que como infraestructura de transporte masivo?",
+    "options": [
+      "El Ferrocarril Nikoláyevski (conectó Moscú y San Petersburgo, pero fue inaugurado después, en 1851)",
+      "El Ferrocarril del Volga (no existió como línea específica bajo ese nombre en esa época)",
+      "El Ferrocarril de Tsárskoye Seló",
+      "El Ferrocarril Transiberiano (es de fines del siglo XIX e inicios del XX, muchas décadas después)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese al escepticismo inicial de varios ministros, que temían que el ferrocarril fuera una moda pasajera inadecuada para el clima ruso, esta breve línea de recreo abrió el camino a la posterior expansión ferroviaria masiva del imperio."
+  },
+  {
+    "question": "Además de la emancipación de los siervos, ¿qué otra reforma judicial de Alejandro II, promulgada en 1864, introdujo por primera vez en Rusia el juicio por jurado y una magistratura más independiente del poder administrativo directo?",
+    "options": [
+      "La Tabla de Rangos (es de Pedro el Grande, siglo XVIII, y no trata de tribunales)",
+      "El Manifiesto de Emancipación (se refiere específicamente a la abolición de la servidumbre, no al sistema judicial)",
+      "La reforma judicial de 1864",
+      "La reforma de los zemstvos (fue una reforma de gobierno local, del mismo año, pero distinta en su objeto)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Considerada una de las reformas más exitosas y duraderas de Alejandro II, la reforma judicial de 1864 introdujo principios como la publicidad de los juicios y la igualdad formal ante la ley, hasta entonces prácticamente inexistentes en el sistema legal ruso."
+  },
+  {
+    "question": "¿Qué compañía comercial semiestatal administró, desde finales del siglo XVIII hasta 1867, los asentamientos rusos en Alaska y a lo largo de la costa noroeste de América del Norte, incluido el comercio de pieles de nutria marina?",
+    "options": [
+      "La Compañía Ruso-Americana",
+      "La Compañía Hudson Bay (fue una empresa británica-canadiense, rival comercial en la región)",
+      "La Compañía de las Indias Orientales (fue una empresa británica, sin relación con Rusia)",
+      "La Compañía de Nueva Rusia (no existió bajo ese nombre específico)"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La Compañía Ruso-Americana, con sede administrativa en Nueva Arcángel (la actual Sitka, Alaska), llegó a operar puestos comerciales tan al sur como California, mucho antes de que Rusia decidiera vender el territorio."
+  },
+  {
+    "question": "¿En qué año vendió el Imperio ruso el territorio de Alaska a Estados Unidos, por la entonces criticada (y hoy considerada absurdamente baja) suma de 7.2 millones de dólares?",
+    "options": [
+      "1891",
+      "1867",
+      "1905",
+      "1825"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La venta, motivada en parte por el temor ruso a no poder defender militarmente el territorio frente a Gran Bretaña en caso de guerra, fue duramente criticada en su momento en la prensa estadounidense como 'la locura de Seward', en referencia al secretario de Estado que la negoció."
+  },
+  {
+    "question": "¿Qué asentamiento colonial ruso, fundado en 1812 en la costa del norte de California para el comercio de pieles y el abastecimiento agrícola de las colonias de Alaska, representa el punto más meridional alcanzado por la colonización rusa en América?",
+    "options": [
+      "Nueva Arcángel (es el nombre de la capital de la colonia en Alaska, la actual Sitka, no de este asentamiento californiano)",
+      "Fuerte Ross",
+      "Kodiak (es otro asentamiento, pero ubicado en Alaska, no en California)",
+      "San Francisco (nunca fue un asentamiento ruso; era, de hecho, territorio español y después mexicano)"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Fuerte Ross, vendido finalmente en 1841 tras resultar poco rentable, es hoy un parque histórico estatal en California que conserva edificaciones originales de esta inusual presencia rusa en Norteamérica."
+  },
+  {
+    "question": "¿Qué ambicioso y nunca del todo realizado plan geopolítico de Catalina la Grande, elaborado junto con Potiomkin, imaginaba restaurar un imperio cristiano ortodoxo en Constantinopla bajo un nieto de la propia emperatriz, expulsando a los otomanos de Europa?",
+    "options": [
+      "El Tratado de Kuchuk-Kainardzhi (fue un tratado real ya firmado, de 1774, no un proyecto especulativo)",
+      "La Santa Alianza (es un proyecto posterior, de Alejandro I, de naturaleza distinta)",
+      "El 'Proyecto Griego'",
+      "El Nakaz (es un texto legal e ideológico, no un plan geopolítico territorial)"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Catalina llegó a bautizar a uno de sus nietos con el nombre de Constantino, precisamente pensando en un eventual trono bizantino restaurado, aunque el ambicioso proyecto nunca pasó de la fase de aspiración diplomática."
+  },
+  {
+    "question": "¿Cómo se llamó la larga guerra, iniciada en 1558 y prolongada durante 25 años, que libró Iván el Terrible para intentar conseguir para Rusia una salida al mar Báltico frente a Polonia, Lituania y Suecia?",
+    "options": [
+      "La guerra de Smolensk",
+      "La guerra del Norte",
+      "La guerra de los Trece Años",
+      "La guerra de Livonia"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a comenzar con éxitos iniciales, la guerra de Livonia terminó en fracaso para Rusia, que no lograría un acceso estable al Báltico hasta que, más de un siglo después, Pedro el Grande fundara San Petersburgo."
+  },
+  {
+    "question": "¿Qué ciudad rusa sufrió en 1570 una brutal masacre de varios miles de sus habitantes, ordenada por Iván el Terrible al sospechar, sin pruebas claras, que sus élites conspiraban con Polonia-Lituania?",
+    "options": [
+      "Tver",
+      "Nóvgorod",
+      "Pskov",
+      "Riazán"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La masacre de Nóvgorod, ejecutada por los temidos 'opríchniki' vestidos de negro, es recordada como uno de los episodios más sangrientos del reinado de Iván el Terrible, con un número de víctimas que las crónicas discuten pero que fue enorme."
+  },
+  {
+    "question": "¿Qué institución militar permanente, dotada de una flota construida prácticamente desde cero en los astilleros de Vorónezh y luego del Báltico, fundó Pedro el Grande como parte esencial de su proyecto de modernización?",
+    "options": [
+      "La Guardia Imperial",
+      "El cuerpo de artillería",
+      "La Armada rusa",
+      "El servicio de correos estatal"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Antes de Pedro el Grande, Rusia carecía prácticamente de marina de guerra; él mismo aprendió carpintería naval en los Países Bajos e Inglaterra antes de crear una flota que resultaría decisiva en la guerra contra Suecia."
+  },
+  {
+    "question": "¿Qué cambio introdujo el emperador Pablo I en 1797 respecto a la sucesión al trono ruso, revirtiendo una práctica que había permitido a los zares nombrar libremente a su sucesor desde tiempos de Pedro el Grande?",
+    "options": [
+      "Permitió que el Senado eligiera al sucesor",
+      "Abolió por completo el derecho de sucesión dinástica",
+      "Estableció la sucesión estrictamente por primogenitura masculina",
+      "Instauró la sucesión electiva entre los grandes duques"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Hijo de Catalina la Grande, que había llegado al poder por un golpe sin derecho dinástico claro, Pablo I fijó una ley de sucesión rígida por línea masculina directa que rigió a la dinastía Románov hasta su caída en 1917."
+  },
+  {
+    "question": "¿Qué apodo, reflejo de su papel represor frente a movimientos revolucionarios en Europa, especialmente durante su intervención militar en Hungría en 1849 para ayudar al Imperio austríaco, recibió el zar Nicolás I?",
+    "options": [
+      "El pacificador",
+      "El gendarme de Europa",
+      "El zar de hierro",
+      "El defensor de la fe"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Nicolás I envió tropas rusas para aplastar la revolución húngara de 1848-49 en apoyo del emperador austríaco, consolidando la fama de Rusia como principal potencia contrarrevolucionaria de la época."
+  },
+  {
+    "question": "¿Cómo se llamó el debate intelectual del siglo XIX ruso entre quienes defendían un camino de desarrollo propio basado en la tradición ortodoxa y comunitaria rusa, y quienes abogaban por seguir el modelo de modernización de Europa occidental?",
+    "options": [
+      "La controversia entre conservadores y liberales",
+      "La disputa entre populistas y marxistas",
+      "El debate entre eslavófilos y occidentalistas",
+      "El enfrentamiento entre panslavistas y panasiáticos"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Los eslavófilos idealizaban la comuna campesina y la ortodoxia como vías propias de Rusia, mientras los occidentalistas, como el escritor Turguénev, veían en las reformas al estilo europeo el único camino hacia el progreso."
+  },
+  {
+    "question": "¿Qué política, marcada por la rusificación forzada de las minorías del imperio y una fuerte reacción conservadora frente a las reformas de su padre, caracterizó el reinado del zar Alejandro III?",
+    "options": [
+      "La descentralización administrativa",
+      "Las contrarreformas y la rusificación",
+      "La apertura a los partidos políticos",
+      "La emancipación de los siervos"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Tras el asesinato de su padre Alejandro II, el nuevo zar impulsó una política de mano dura, limitando la autonomía local y promoviendo el idioma y la cultura rusas en detrimento de las identidades de Polonia, Finlandia y otras regiones."
+  },
+  {
+    "question": "¿Qué institución de autogobierno local, con competencias en educación, sanidad y obras públicas a nivel provincial y distrital, fue creada por Alejandro II en 1864 como parte de sus reformas tras la emancipación de los siervos?",
+    "options": [
+      "El zemstvo",
+      "El soviet local",
+      "El veche",
+      "La duma municipal"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Los zemstvos, elegidos por representantes de distintas clases sociales, mejoraron notablemente los servicios rurales rusos, aunque su poder real quedaba limitado por la supervisión del gobierno central."
+  },
+  {
+    "question": "¿Qué órgano de policía política secreta, creado por Nicolás I en 1826 tras el levantamiento decembrista, se encargó de vigilar a la sociedad rusa en busca de disidencia política y actividad revolucionaria?",
+    "options": [
+      "La Ojrana",
+      "La Cheká",
+      "El Sínodo Santísimo",
+      "La Tercera Sección de la Cancillería Imperial"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La Tercera Sección, con su brazo ejecutivo de gendarmes de azul, marcó el inicio de un aparato de vigilancia política sistemático en Rusia, precursor lejano de la posterior Ojrana zarista de finales de siglo."
+  },
+  {
+    "question": "¿Qué reforma eclesiástica de gran alcance llevó a cabo Pedro el Grande en 1721, al abolir el patriarcado de Moscú y sustituirlo por un órgano colegiado de gobierno de la Iglesia sometido a la supervisión del Estado?",
+    "options": [
+      "La separación total entre Iglesia y Estado",
+      "La instauración del calendario juliano eclesiástico",
+      "La creación del Santo Sínodo",
+      "La fundación de la Lavra de la Santísima Trinidad"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Al eliminar el patriarcado, Pedro el Grande subordinó definitivamente a la Iglesia ortodoxa rusa al poder estatal a través del Santo Sínodo, dirigido por un funcionario laico nombrado por el propio zar."
+  },
+  {
+    "question": "¿Qué breve y controvertido reinado, marcado por su admiración hacia Prusia y su desprecio hacia las tropas rusas, terminó en julio de 1762 con un golpe de palacio protagonizado por su propia esposa alemana?",
+    "options": [
+      "El reinado de Iván VI",
+      "El reinado de Pedro II",
+      "El reinado de Fiódor III",
+      "El reinado de Pedro III"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pedro III gobernó apenas seis meses antes de ser depuesto por su esposa, quien se convertiría en Catalina la Grande; murió poco después en circunstancias nunca del todo aclaradas mientras estaba bajo custodia."
+  },
+  {
+    "question": "¿Cómo se llamó el primer periódico impreso de la historia rusa, fundado por decreto personal de Pedro el Grande en 1702 para informar sobre asuntos militares, comerciales y de gobierno?",
+    "options": [
+      "Moskovskiye Novosti",
+      "Pravda",
+      "Vedomosti",
+      "Sankt-Peterburgskie Vedomosti"
+    ],
+    "correct_option_id": 2,
+    "explanation": "'Vedomosti' ('noticias' o 'informes') marcó el inicio de la prensa periódica rusa; el propio Pedro el Grande a veces revisaba y corregía personalmente sus contenidos antes de la impresión."
+  },
+  {
+    "question": "¿Qué gesto llevó a cabo Catalina la Grande en 1768, en plena epidemia de viruela, para demostrar públicamente la seguridad de la inoculación y animar a sus súbditos a vacunarse?",
+    "options": [
+      "Fundó el primer hospital dedicado exclusivamente a la viruela",
+      "Ordenó la cuarentena total de la corte imperial",
+      "Se hizo inocular ella misma junto a su hijo, siendo de los primeros casos documentados en Rusia",
+      "Prohibió por decreto la práctica de la inoculación"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Catalina se sometió a la inoculación contra la viruela —un procedimiento aún experimental y temido en la época— antes que muchos de sus súbditos, buscando dar ejemplo público de confianza en la nueva práctica médica."
+  },
+  {
+    "question": "¿Qué característica distinguió la carrera militar del generalísimo Alexánder Suvórov, además de su célebre cruce de los Alpes suizos, y que lo convirtió en una leyenda del ejército imperial ruso?",
+    "options": [
+      "No perdió ni una sola batalla en más de sesenta enfrentamientos a lo largo de su carrera",
+      "Fue el primer general ruso en usar artillería de campaña móvil",
+      "Rechazó todos los títulos nobiliarios que le ofrecieron los zares",
+      "Se negó siempre a luchar fuera del territorio ruso"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Suvórov es recordado en Rusia como un genio militar invicto, autor además de un influyente manual táctico ('La ciencia de la victoria') que enfatizaba la rapidez, la sorpresa y el cuidado de la tropa por encima del formalismo."
+  },
+  {
+    "question": "¿Qué reveló el primer y único censo general de población de todo el Imperio ruso, realizado en 1897, sobre el nivel educativo de la población del vasto país?",
+    "options": [
+      "Que la mayoría de la población era completamente alfabetizada",
+      "Que apenas alrededor de una cuarta parte de la población sabía leer y escribir",
+      "Que no existían diferencias de alfabetización entre nobleza y campesinado",
+      "Que la alfabetización superaba el 80% en las zonas rurales"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El censo de 1897, organizado con criterios estadísticos modernos, confirmó una tasa de alfabetización muy baja para el conjunto del imperio (en torno al 21-24%), un dato que alimentaría los debates sobre la necesidad urgente de reforma educativa."
+  },
+  {
+    "question": "¿Qué significa realmente el apodo 'Grozny' que se traduce tradicionalmente al español como 'el Terrible' al referirse a Iván IV, aunque su sentido original en ruso antiguo era algo distinto?",
+    "options": [
+      "'Cruel' sin matices, exactamente como se traduce al español",
+      "'Iluminado', por su promoción de la cultura",
+      "'Formidable' o 'temible', en el sentido de inspirar respeto y temor",
+      "'Justo', en referencia a su papel como legislador"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El adjetivo ruso 'grozny' se aplica también a fenómenos naturales imponentes como una tormenta; describe a alguien temible y poderoso por su autoridad, matiz que la traducción histórica al español como 'el Terrible' no capta del todo."
+  },
+  {
+    "question": "¿Qué catástrofe demográfica, considerada la peor hambruna de la historia rusa hasta entonces, asoló el país entre 1601 y 1603 durante el reinado de Borís Godunov, contribuyendo al estallido del Periodo de las Turbulencias?",
+    "options": [
+      "La hambruna de Smolensk",
+      "La hambruna del Volga",
+      "La crisis de las cosechas de Nóvgorod",
+      "La Gran Hambruna Rusa de 1601-1603"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Provocada por una serie de veranos anormalmente fríos —posiblemente relacionados con una erupción volcánica lejana— la hambruna mató, según algunas estimaciones, hasta un tercio de la población de algunas regiones, debilitando gravemente la autoridad de Godunov."
+  },
+  {
+    "question": "¿Qué reforma litúrgica del patriarca Nikon, impuesta a mediados del siglo XVII para uniformar las prácticas rusas con las griegas, provocó un cisma religioso permanente al surgir un grupo de fieles que rechazó los cambios?",
+    "options": [
+      "La fundación del Santo Sínodo",
+      "La abolición del patriarcado",
+      "La reforma del calendario juliano",
+      "El cisma de los Viejos Creyentes (Raskol)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Los 'Viejos Creyentes' rechazaron cambios como la forma de persignarse con tres dedos en vez de dos, y muchos prefirieron el exilio, la persecución o incluso el suicidio colectivo antes que aceptar lo que consideraban una herejía impuesta desde arriba."
+  },
+  {
+    "question": "¿Cómo se conoce al levantamiento popular de Moscú en 1648, provocado por un fuerte incremento del impuesto sobre la sal que encareció un producto de primera necesidad para toda la población?",
+    "options": [
+      "La Revuelta de los Streltsí",
+      "El Motín de la Sal",
+      "El Levantamiento de Razin",
+      "El Motín del Cobre"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La revuelta, que incluyó el saqueo de las casas de varios altos funcionarios considerados responsables del impuesto, obligó al gobierno del joven zar Alejo I a hacer concesiones y ejecutar a algunos de los ministros más impopulares."
+  },
+  {
+    "question": "¿Qué motín popular estalló en Moscú en 1662 como reacción a la emisión masiva de moneda de cobre que el gobierno intentó hacer circular al mismo valor que la plata, provocando una brutal inflación?",
+    "options": [
+      "La Revuelta de Kaza",
+      "El Motín de la Sal",
+      "El Motín del Cobre",
+      "El Levantamiento de Búlavin"
+    ],
+    "correct_option_id": 2,
+    "explanation": "La devaluación encubierta arruinó a comerciantes y campesinos que debían pagar impuestos en plata pero cobraban en cobre; la revuelta terminó con una dura represión, aunque el gobierno finalmente retiró la moneda de cobre de la circulación."
+  },
+  {
+    "question": "¿Qué ritual simbólico llevó a cabo Pedro el Grande en 1682 para abolir el sistema de 'mestnichestvo', que otorgaba cargos según el linaje familiar y no según el mérito personal?",
+    "options": [
+      "Exilió a Siberia a las familias que se negaron a aceptarla",
+      "Ordenó quemar públicamente los libros genealógicos que regían el sistema",
+      "Nombró una comisión que tardó décadas en aplicar la reforma",
+      "Obligó a los boyardos a firmar un juramento de renuncia formal"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El sistema de mestnichestvo, que había generado disputas interminables sobre la precedencia de cada familia noble en cargos y banquetes, quedó formalmente abolido al destruirse los registros que lo sustentaban, aunque la reforma se aprobó realmente bajo el reinado de su hermano Fiódor III."
+  },
+  {
+    "question": "¿Qué desastrosa campaña militar de 1711 estuvo a punto de terminar con la captura del propio Pedro el Grande, rodeado por un ejército otomano muy superior en número junto al río Prut, en la actual Moldavia?",
+    "options": [
+      "La campaña de Crimea",
+      "La campaña de Azov",
+      "La campaña del río Prut",
+      "La campaña del Cáucaso"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Solo gracias a una negociación de emergencia —que incluyó, según la leyenda, sobornar con las joyas de su esposa Catalina al gran visir otomano— Pedro logró evitar la captura, aunque tuvo que devolver la fortaleza de Azov conquistada años antes."
+  },
+  {
+    "question": "¿Qué institución educativa, fundada por Catalina la Grande en 1764 en San Petersburgo, se convirtió en la primera institución estatal de Europa dedicada exclusivamente a la educación formal de mujeres nobles?",
+    "options": [
+      "La Escuela de Tsárskoye Seló",
+      "La Academia de Damas de Moscú",
+      "El Colegio Imperial Femenino",
+      "El Instituto Smolni"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El Instituto Smolni ofrecía a jóvenes de familias nobles una educación en idiomas, artes y buenas maneras alejada de sus familias durante años; el edificio se haría célebre más tarde, en 1917, como cuartel general bolchevique."
+  },
+  {
+    "question": "¿Qué kanato túrquico-musulmán, con capital en una ciudad a orillas del Volga, fue conquistado por Iván el Terrible en 1552 tras un largo asedio, abriendo el camino a la expansión rusa hacia el este?",
+    "options": [
+      "El Kanato Siberiano",
+      "El Kanato de Crimea",
+      "El Kanato de Astracán",
+      "El Kanato de Kazán"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La conquista de Kazán, celebrada con la construcción de la Catedral de San Basilio en Moscú, marcó el fin de siglos de tributo y amenaza tártara sobre el corazón de la Rus y el inicio de la expansión imperial rusa hacia Asia."
+  },
+  {
+    "question": "¿Qué otro kanato, situado en la desembocadura del Volga hacia el mar Caspio, fue conquistado por Iván el Terrible apenas cuatro años después de la toma de Kazán, en 1556?",
+    "options": [
+      "El Kanato de Kazán",
+      "El Kanato de Sibir",
+      "El Kanato de Astracán",
+      "El Kanato Nogái"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Con la caída de Astracán, Rusia obtuvo el control total del curso del Volga hasta el mar Caspio, asegurando una ruta comercial estratégica hacia Persia y Asia central."
+  },
+  {
+    "question": "¿Qué gesto de lealtad conmovedor llevaron a cabo varias esposas de los oficiales condenados tras el fallido levantamiento decembrista de 1825, renunciando a sus privilegios nobiliarios para acompañarlos a su exilio en Siberia?",
+    "options": [
+      "Siguieron voluntariamente a sus maridos al destierro siberiano",
+      "Fundaron una sociedad secreta de apoyo desde San Petersburgo",
+      "Emigraron juntas a Europa occidental en señal de protesta",
+      "Organizaron una petición formal ante el zar para su indulto"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Estas mujeres, conocidas como las 'esposas decembristas', renunciaron a su rango social y comodidades para vivir cerca de las minas y prisiones siberianas donde sus maridos cumplían condena, un episodio muy celebrado después en la literatura y el cine rusos."
+  },
+  {
+    "question": "¿Qué reformador legal, encargado por el zar Alejandro I de sistematizar por primera vez todas las leyes del Imperio ruso en un cuerpo legal coherente, cayó después en desgracia y fue acusado (sin pruebas concluyentes) de simpatizar con ideas revolucionarias francesas?",
+    "options": [
+      "Víktor Kochubéi",
+      "Alexéi Arakchéyev",
+      "Nikolái Novosíltsev",
+      "Mijaíl Speranski"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Speranski, de origen humilde y ascenso meteórico gracias a su brillantez, elaboró planes de reforma constitucional considerados demasiado audaces para la época; aunque cayó en desgracia y fue exiliado temporalmente, más tarde regresó y culminó su gran obra de codificación legal bajo Nicolás I."
+  },
+  {
+    "question": "¿Qué innovación social introdujo Pedro el Grande en 1718 al obligar a la nobleza —incluidas las mujeres, tradicionalmente recluidas en el 'terem'— a asistir a reuniones sociales occidentalizadas con baile, música y conversación libre entre sexos?",
+    "options": [
+      "Los 'bailes de máscaras' imperiales",
+      "Las 'asambleas'",
+      "Las 'veladas' de la corte",
+      "Los 'salones' al estilo francés"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Estas 'asambleas', obligatorias para la nobleza de San Petersburgo, buscaban imponer modales europeos y romper con la tradicional reclusión doméstica de las mujeres nobles rusas, generando fuerte resistencia entre los sectores más conservadores."
+  },
+  {
+    "question": "¿Qué territorios del sur, ganados a costa del Imperio otomano y desarrollados bajo el impulso del favorito imperial Grigori Potiomkin con la fundación de ciudades como Jersón y Yekaterinoslav, se conocieron colectivamente en la época de Catalina la Grande?",
+    "options": [
+      "La Provincia del Sur",
+      "El Territorio del Don",
+      "Nueva Rusia (Novorossiya)",
+      "La Gran Estepa"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Potiomkin impulsó la colonización agrícola y urbana de estas extensas estepas del sur, atrayendo colonos de distintos orígenes y fundando ciudades enteras que en pocas décadas se convirtieron en centros comerciales y agrícolas prósperos."
+  },
+  {
+    "question": "¿Qué reforma económica de la emperatriz Isabel Petrovna, aprobada en 1753 por iniciativa de su ministro Piotr Shuválov, suprimió las barreras aduaneras internas que hasta entonces gravaban el comercio entre las distintas provincias del imperio?",
+    "options": [
+      "La liberalización del comercio exterior",
+      "La abolición de las aduanas internas",
+      "La creación del primer banco estatal ruso",
+      "La reforma monetaria del rublo de cobre"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes de esta reforma, las mercancías debían pagar aranceles al cruzar los límites de cada provincia rusa, encareciendo enormemente el comercio interno; su eliminación se considera uno de los primeros pasos hacia un mercado nacional unificado."
+  },
+  {
+    "question": "¿Qué idea política e ideológica, fortalecida tras el matrimonio de Iván III con la princesa bizantina Sofía Paleóloga, comenzó a presentar a Moscú como heredera directa de Roma y de Constantinopla tras la caída de esta última en manos otomanas?",
+    "options": [
+      "La doctrina de 'Moscú, la Tercera Roma'",
+      "El principio de la 'Santa Rus'",
+      "La doctrina del 'Imperio Restaurado'",
+      "La teoría del 'Zar Ungido'"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Formulada por un monje de Pskov a comienzos del siglo XVI, esta idea sostenía que, tras la caída de Roma y luego de Constantinopla ('la segunda Roma'), Moscú se había convertido en la 'tercera Roma', y que no habría una cuarta, otorgando a los gobernantes rusos una misión histórica de defensa de la ortodoxia."
+  },
+  {
+    "question": "¿Qué símbolo heráldico bizantino introdujo en Moscú la princesa Sofía Paleóloga tras casarse con Iván III en 1472, y que se convertiría desde entonces en emblema permanente del Estado ruso?",
+    "options": [
+      "La cruz de ocho puntas",
+      "El león rampante",
+      "El águila bicéfala",
+      "El grifo dorado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El águila de dos cabezas, símbolo tradicional del Imperio bizantino que miraba simultáneamente hacia Oriente y Occidente, pasó a representar la pretensión rusa de heredar la autoridad imperial bizantina, y sigue siendo hoy el emblema oficial del país."
+  },
+  {
+    "question": "¿Cómo se conoce al grupo informal de consejeros reformistas —entre ellos el sacerdote Silvestre y el noble Alexéi Adáshev— que asesoró a un joven Iván IV durante la primera y más constructiva etapa de su reinado, antes del giro represivo posterior?",
+    "options": [
+      "El Círculo de Moscú",
+      "El Consejo de los Boyardos",
+      "La 'Rada Elegida'",
+      "La Duma Reformista"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Durante los años de influencia de la Rada Elegida, Iván IV impulsó reformas legales, militares y administrativas relativamente moderadas; su disolución hacia 1560, tras diferencias personales y políticas, marcó el inicio del periodo más oscuro y represivo del reinado, con la Oprichnina."
+  },
+  {
+    "question": "¿Qué concilio eclesiástico de 1551, convocado bajo Iván IV y llamado así por el número de capítulos de sus decretos, estandarizó las prácticas litúrgicas, artísticas y disciplinarias de la Iglesia ortodoxa rusa?",
+    "options": [
+      "El Concilio de los Cien Capítulos (Stoglav)",
+      "La Asamblea Eclesiástica de Nóvgorod",
+      "El Sínodo de Moscú de 1551",
+      "El Concilio de Vladímir"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El Stoglav reguló desde las normas de pintura de iconos hasta la conducta del clero, buscando unificar prácticas que variaban considerablemente entre las distintas regiones de Rusia tras siglos de fragmentación política."
+  },
+  {
+    "question": "¿Qué zar, hijo de Iván el Terrible, apodado 'el Campanero' por su afición a las campanas de iglesia y considerado poco apto para gobernar, fue el último gobernante de la dinastía Rurikida antes del inicio del Periodo de las Turbulencias?",
+    "options": [
+      "Dmitri de Úglich",
+      "Simeón Bekbulátovich",
+      "Fiódor Godunov",
+      "Fiódor I"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El gobierno efectivo durante el reinado de Fiódor I recayó en gran medida en su cuñado, el boyardo Borís Godunov, quien terminaría siendo elegido zar tras la muerte sin herederos de Fiódor en 1598."
+  },
+  {
+    "question": "¿Con qué noble polaca, hija de un influyente magnate, se casó el primer Falso Dmitri en 1606, poco antes de que ambos fueran víctimas de un levantamiento popular en Moscú que acabó con su breve reinado?",
+    "options": [
+      "Bárbara Radziwiłł",
+      "Ludwika Karolina",
+      "Marina Mniszech",
+      "Ana Vasa"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Marina fue coronada brevemente zarina de Rusia, un hecho sin precedentes para una mujer católica y extranjera; tras el asesinato de su esposo, sería capturada y su destino final —vinculado después a un segundo impostor— sigue siendo objeto de debate histórico."
+  },
+  {
+    "question": "¿Qué institución fundó Pedro el Grande en Moscú en 1707, el primer hospital general de Rusia dotado además de una escuela para formar cirujanos y médicos según modelos europeos?",
+    "options": [
+      "El Colegio de Cirujanos del Almirantazgo",
+      "El Hospital General de Moscú y su escuela de medicina anexa",
+      "La Academia Imperial de Medicina de San Petersburgo",
+      "El Instituto Médico de Kiev"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Antes de esta institución, Rusia dependía casi exclusivamente de médicos extranjeros contratados por la corte; la nueva escuela, dirigida inicialmente por un médico holandés, formó a las primeras generaciones de médicos formados dentro del propio país."
+  },
+  {
+    "question": "¿Qué catedral de San Petersburgo, con su imponente columnata semicircular inspirada en la Basílica de San Pedro del Vaticano, fue construida a comienzos del siglo XIX y se convirtió después en monumento a la victoria rusa sobre Napoleón?",
+    "options": [
+      "La Catedral de San Isaac",
+      "La Catedral de la Trinidad",
+      "La Catedral de la Anunciación",
+      "La Catedral de Kazán"
+    ],
+    "correct_option_id": 3,
+    "explanation": "En su interior descansan los restos del mariscal Mijaíl Kutúzov, comandante en jefe ruso durante la invasión napoleónica de 1812, y sus muros exhiben estandartes y trofeos militares capturados durante aquella campaña."
+  },
+  {
+    "question": "¿Qué inusual acuerdo alcanzó Catalina la Grande con el filósofo francés Denis Diderot, al comprarle toda su valiosa biblioteca personal mientras le permitía conservarla en su propia casa de París y le pagaba además un salario vitalicio como su 'bibliotecario'?",
+    "options": [
+      "La compra de la biblioteca de Diderot con salario de bibliotecario vitalicio",
+      "Una pensión anual a cambio de manuscritos inéditos",
+      "La financiación completa de la imprenta de la Enciclopedia francesa",
+      "El encargo de escribir una enciclopedia exclusiva para la corte rusa"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El gesto, tan generoso como inusual, alivió las dificultades económicas de Diderot en sus últimos años y reforzó la imagen de Catalina como mecenas ilustrada de la cultura europea, aunque la colección completa finalmente llegó a Rusia solo tras la muerte del filósofo."
+  },
+  {
+    "question": "¿A qué misionero ortodoxo ruso, posteriormente canonizado como san Inocencio de Alaska, se debe buena parte de la evangelización, el estudio lingüístico y la creación de alfabetos escritos para los pueblos indígenas de Alaska durante la colonización rusa del territorio?",
+    "options": [
+      "Germán de Alaska",
+      "Inocencio Veniamínov",
+      "Tijon de Zadonsk",
+      "Filaret de Moscú"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Veniamínov vivió durante años entre los aleutianos y tlingit, aprendiendo sus lenguas y desarrollando sistemas de escritura para ellas, antes de convertirse finalmente en metropolitano de Moscú, uno de los cargos más altos de toda la Iglesia ortodoxa rusa."
+  },
+  {
+    "question": "¿Qué monumental compilación jurídica, completada en 1832 bajo la dirección de Mijaíl Speranski, sistematizó por primera vez de forma coherente todas las leyes vigentes del Imperio ruso en un único código?",
+    "options": [
+      "La Sobornoye Ulozhenie",
+      "El Svod Zakonov (Código de Leyes)",
+      "El Ustav Voinsky",
+      "El Ulozhenie de Alejo I"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Speranski, que décadas antes había caído en desgracia por sus ambiciosos planes de reforma constitucional, culminó en su vejez esta enorme obra de codificación bajo el reinado de Nicolás I, considerada uno de sus mayores legados duraderos al Estado ruso."
+  },
+  {
+    "question": "¿Qué monumento, inaugurado en Nóvgorod en 1862 para celebrar el supuesto milenio de la fundación del Estado ruso, representa en bronce a decenas de figuras clave de la historia rusa agrupadas en torno a una gigantesca esfera coronada por una cruz?",
+    "options": [
+      "El Monumento al Milenio de Rusia",
+      "El Obelisco de la Fundación",
+      "El Memorial de Riúrik",
+      "La Columna de los Mil Años"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La fecha elegida, el año 862, correspondía a la llegada legendaria de Riúrik según la Crónica de Néstor; el monumento, con más de cien figuras esculpidas representando gobernantes, militares, artistas y santos, sigue siendo un símbolo nacional muy visitado en la actual Nóvgorod."
+  },
+  {
+    "question": "Tras aplastar la rebelión de Pugachov, ¿qué decisión simbólica tomó Catalina la Grande respecto al río Yaik, cuyas orillas cosacas habían sido cuna del levantamiento, con el fin de borrar su memoria de los mapas oficiales?",
+    "options": [
+      "Prohibió la navegación comercial por sus aguas",
+      "Ordenó renombrarlo con el nombre de río Ural",
+      "Desvió artificialmente su curso hacia el sur",
+      "Trasladó a toda la población cosaca ribereña a Siberia"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El cambio de nombre, de Yaik a Ural, buscaba deliberadamente disociar el río de los cosacos yaikos que habían apoyado masivamente a Pugachov, en un intento de borrar simbólicamente el recuerdo de la mayor rebelión campesina de la historia rusa del siglo XVIII."
+  },
+  {
+    "question": "¿Cómo se conoce al levantamiento armado protagonizado por oficiales y civiles polacos entre 1830 y 1831 contra el dominio ruso sobre el Reino de Polonia, finalmente aplastado por las tropas de Nicolás I con una fuerte represión posterior?",
+    "options": [
+      "La Revuelta del Vístula",
+      "El Levantamiento de Enero",
+      "El Levantamiento de Noviembre",
+      "La Insurrección de Varsovia"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Tras sofocar el levantamiento, Nicolás I abolió la constitución que había concedido al Reino de Polonia, reforzando un control mucho más directo y represivo desde San Petersburgo sobre el territorio polaco durante el resto de su reinado."
+  },
+  {
+    "question": "¿Qué entidad política semiautónoma, con su propia constitución, ejército y moneda propios pero bajo la corona del zar ruso como rey, se estableció en 1815 tras el Congreso de Viena sobre parte del antiguo territorio polaco?",
+    "options": [
+      "El Gran Ducado de Varsovia autónomo",
+      "El Reino de Polonia (Polonia del Congreso)",
+      "La Confederación Polaco-Lituana restaurada",
+      "El Protectorado de Cracovia"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Este arreglo, relativamente liberal para los estándares de la época, permitió a Polonia conservar instituciones propias durante años, hasta que la represión posterior al Levantamiento de Noviembre de 1830-31 redujo drásticamente su autonomía real."
+  },
+  {
+    "question": "¿Cuánto tiempo permaneció en el trono el joven Fiódor Godunov, hijo de Borís Godunov, antes de ser depuesto y asesinado en 1605 tras la muerte de su padre y el avance militar del primer Falso Dmitri sobre Moscú?",
+    "options": [
+      "Poco más de dos años",
+      "Solo tres días",
+      "Apenas unas seis semanas",
+      "Casi un año completo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "El breve e infortunado reinado de Fiódor II, un joven bien preparado y educado que había mostrado incluso talento propio como cartógrafo, terminó abruptamente cuando la nobleza moscovita, temiendo la llegada del pretendiente Dmitri, decidió entregarlo a sus enemigos junto con su madre."
+  },
+  {
+    "question": "¿Cómo se conoce al gobierno interino de siete grandes boyardos que asumió el control de Moscú en 1610, durante el caos del Periodo de las Turbulencias, y que llegó a ofrecer el trono ruso a un príncipe polaco?",
+    "options": [
+      "La Semiboyarschina (Gobierno de los Siete Boyardos)",
+      "La Duma de Regencia",
+      "El Consejo de los Ancianos de Moscú",
+      "La Junta de Boyardos de 1610"
+    ],
+    "correct_option_id": 0,
+    "explanation": "La decisión de este grupo de boyardos de invitar al príncipe polaco Ladislao a ocupar el trono ruso, y de permitir la entrada de tropas polacas en el propio Kremlin, sería vista después como uno de los episodios más humillantes del Periodo de las Turbulencias, hasta la liberación de Moscú por la milicia de Minin y Pozharski."
+  },
+  {
+    "question": "¿Cómo se conoce a la legendaria biblioteca personal de Iván el Terrible, supuestamente compuesta por valiosos manuscritos griegos y bizantinos heredados de su abuela Sofía Paleóloga, cuyo paradero final nunca ha sido confirmado pese a numerosas búsquedas a lo largo de los siglos?",
+    "options": [
+      "La 'Liberia' de Iván el Terrible",
+      "La Colección Imperial de Constantinopla",
+      "La Biblioteca de Oro del Kremlin",
+      "El Archivo Perdido de Moscovia"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Generaciones de arqueólogos e historiadores han buscado sin éxito esta legendaria colección, que según algunas teorías estaría escondida en pasadizos secretos bajo el propio Kremlin de Moscú, aunque la mayoría de los especialistas dudan hoy que la biblioteca haya existido realmente en la escala descrita por la leyenda."
+  },
+  {
+    "question": "¿Qué institución del Kremlin de Moscú, con orígenes que se remontan al siglo XVI como tesoro y arsenal real, alberga hoy una de las mayores colecciones del mundo de joyas de la corona, carruajes imperiales y regalos diplomáticos recibidos por los zares a lo largo de los siglos?",
+    "options": [
+      "El Arsenal Imperial de Moscú",
+      "La Sala del Trono de Fasetas",
+      "El Tesoro de la Trinidad",
+      "La Cámara de Armas (Oruzheináya Palata)"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Convertida en museo público ya en el siglo XIX, la Cámara de Armas conserva piezas tan singulares como el trono de marfil de Iván el Terrible o los célebres huevos de Fabergé de la última dinastía imperial, constituyendo uno de los museos de artes decorativas más ricos del mundo."
+  },
+  {
+    "question": "¿En qué batalla de 1700, su primer gran enfrentamiento contra Suecia al inicio de la Gran Guerra del Norte, sufrió Pedro el Grande una humillante derrota frente a un ejército sueco muy inferior en número, comandado por el joven rey Carlos XII?",
+    "options": [
+      "La batalla de Lesnaya",
+      "La batalla de Riga",
+      "La batalla de Poltava",
+      "La batalla de Narva"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Esta temprana derrota, que Carlos XII subestimó gravemente al considerar a Rusia ya neutralizada como amenaza, dio a Pedro el tiempo necesario para reorganizar y modernizar profundamente su ejército, resultando nueve años después en la contundente victoria rusa de Poltava."
+  },
+  {
+    "question": "¿Qué reforma fiscal introdujo Pedro el Grande en 1718, sustituyendo el antiguo sistema de tributación por hogar familiar por un nuevo impuesto calculado según el número de varones registrados ('almas') en cada propiedad?",
+    "options": [
+      "El tributo de guerra permanente",
+      "El impuesto por 'alma' (revizhskaya dusha)",
+      "El impuesto sobre la barba",
+      "El diezmo eclesiástico reformado"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Este nuevo sistema, que requería censos periódicos ('revisiones de almas') para actualizar el número de contribuyentes, se convirtió en la principal fuente de ingresos fiscales del Estado ruso durante más de un siglo, y afectaba también a los siervos, que debían pagar el impuesto independientemente de su condición de servidumbre."
+  },
+  {
+    "question": "¿En qué circunstancias murió en 1791 el príncipe Grigori Potiomkin, favorito y estrecho colaborador de Catalina la Grande en la administración y colonización de los territorios del sur del imperio?",
+    "options": [
+      "Falleció al aire libre, en pleno camino por la estepa, mientras viajaba de regreso de unas negociaciones diplomáticas",
+      "Murió asesinado en un complot palaciego en San Petersburgo",
+      "Murió envenenado en un banquete oficial en Moscú",
+      "Falleció en batalla durante un asedio en el sur del imperio"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Enfermo y agotado tras años de intenso trabajo administrativo y diplomático, Potiomkin pidió detener su carruaje en pleno camino y murió recostado sobre una alfombra tendida directamente sobre la hierba de la estepa, un final que contrastaba dramáticamente con el fasto y el lujo que había caracterizado su vida."
+  },
+  {
+    "question": "¿Qué tipo de prohibiciones curiosas, entre ellas ciertas palabras de origen francés y determinados estilos de sombrero considerados demasiado 'revolucionarios', llegó a decretar el zar Pablo I durante su breve y excéntrico reinado?",
+    "options": [
+      "Prohibió la importación de libros europeos sin excepción",
+      "Prohibió cualquier tipo de vestimenta de origen occidental",
+      "Prohibió palabras como 'ciudadano' y ciertos sombreros redondos de estilo francés",
+      "Prohibió el uso del idioma francés en la corte por completo"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Obsesionado con evitar cualquier influencia asociada a la Revolución Francesa, Pablo I llegó a prohibir palabras como 'ciudadano' o 'patria' por sus connotaciones revolucionarias, además de ciertos estilos de vestimenta considerados demasiado modernos, decretos que contribuyeron a la creciente impopularidad de su gobierno entre la nobleza."
+  },
+  {
+    "question": "¿Qué institución, fundada por Catalina la Grande en 1765 como la primera sociedad científica de este tipo en Rusia, se dedicó a promover mejoras en la agricultura y la economía mediante la publicación de estudios, concursos de ideas y traducciones de obras extranjeras?",
+    "options": [
+      "La Academia Imperial de Agricultura",
+      "El Instituto de Ciencias Rurales",
+      "La Sociedad Económica Libre",
+      "La Junta de Fomento Agrícola"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque sus resultados prácticos fueron limitados frente a la enorme escala de la economía agraria rusa, la Sociedad Económica Libre representó un temprano intento de aplicar métodos científicos ilustrados a los problemas agrícolas y económicos del imperio, e incluso llegó a convocar un célebre concurso de ensayos sobre la conveniencia de abolir la servidumbre."
+  },
+  {
+    "question": "¿Qué favorito y colaborador cercano de Pedro el Grande, de origen humilde según la tradición popular (se dice que de niño vendía pasteles por las calles), llegó a convertirse en príncipe y en uno de los hombres más ricos y poderosos de Rusia, para terminar exiliado en Siberia tras la muerte del zar?",
+    "options": [
+      "Borís Sheremétev",
+      "Fiódor Golovín",
+      "Yakov Bruce",
+      "Alexánder Ménshikov"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Ménshikov, prácticamente analfabeto en su juventud pero dotado de un enorme talento administrativo y militar, acumuló una fortuna e influencia extraordinarias bajo Pedro el Grande, pero tras la muerte del zar cayó en desgracia durante el breve reinado de Pedro II y murió en el exilio siberiano, despojado de todos sus títulos y posesiones."
+  },
+  {
+    "question": "¿Qué catedral del Kremlin de Moscú, con sus características cinco cúpulas doradas, fue durante siglos el escenario tradicional de la coronación de los zares rusos, incluida la del propio Iván el Terrible?",
+    "options": [
+      "La Catedral de las Doce Apóstoles",
+      "La Catedral del Arcángel",
+      "La Catedral de la Dormición (Uspenski Sobor)",
+      "La Catedral de la Anunciación"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Además de las coronaciones, la Catedral de la Dormición albergaba también las ceremonias de entronización de los metropolitanos y patriarcas de la Iglesia rusa, consolidando su papel como el templo más importante y solemne de todo el Estado moscovita."
+  },
+  {
+    "question": "¿Cuántas veces se casó formalmente a lo largo de su vida el zar Iván el Terrible, un número inusualmente alto que generó considerable escándalo incluso según los estándares de la época, dado que la Iglesia ortodoxa solo permitía oficialmente hasta tres matrimonios?",
+    "options": [
+      "Solo dos veces",
+      "Exactamente cuatro veces",
+      "Seis o siete veces, según distintas fuentes históricas",
+      "Más de diez veces"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Para justificar matrimonios posteriores al tercero, considerados canónicamente irregulares, Iván tuvo que solicitar dispensas especiales a la jerarquía eclesiástica; varias de sus esposas murieron en circunstancias poco claras o fueron enviadas a monasterios, reflejo de la inestabilidad emocional que marcó buena parte de su vida personal."
+  },
+  {
+    "question": "¿En qué año se fundó la Universidad de Moscú, la primera universidad rusa moderna, gracias en gran parte a la insistencia del propio científico y polímata Mijaíl Lomonósov ante la emperatriz Isabel Petrovna?",
+    "options": [
+      "1755",
+      "1725",
+      "1801",
+      "1786"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Lomonósov, hijo de un pescador del norte que había logrado formarse como uno de los científicos más destacados de su generación, defendió activamente la necesidad de una institución que educara a rusos en su propio idioma, en lugar de depender exclusivamente de académicos extranjeros contratados por la corte."
+  },
+  {
+    "question": "¿Qué región del noroeste ruso permaneció bajo ocupación militar sueca entre 1611 y 1617, durante el caos del Periodo de las Turbulencias, antes de ser devuelta a Rusia mediante un tratado de paz negociado por el nuevo gobierno de la dinastía Románov?",
+    "options": [
+      "Smolensk",
+      "Pskov",
+      "Arjánguelsk",
+      "Nóvgorod"
+    ],
+    "correct_option_id": 3,
+    "explanation": "La ocupación sueca de Nóvgorod, aprovechando el colapso casi total de la autoridad central rusa durante el Periodo de las Turbulencias, terminó formalmente con el Tratado de Stolbovo de 1617, mediante el cual Rusia recuperó la ciudad aunque tuvo que ceder otros territorios costeros que le cerraron temporalmente el acceso directo al mar Báltico."
+  },
+  {
+    "question": "¿Qué inclinación personal, marcada por una admiración casi obsesiva hacia los uniformes, desfiles y disciplina militar del ejército prusiano, caracterizó al zar Pedro III durante su brevísimo reinado y contribuyó a alienar profundamente a la Guardia Imperial rusa?",
+    "options": [
+      "Su desprecio hacia todo lo relacionado con el ejército",
+      "Su preferencia exclusiva por la cultura y las tropas francesas",
+      "Su fervorosa germanofilia y admiración por el rey Federico II de Prusia",
+      "Su rechazo total a cualquier tipo de ceremonial militar"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pedro III llegó a vestir a sus propios guardias con uniformes de estilo prusiano y organizaba desfiles militares que imitaban directamente el estilo del ejército de Federico II, actitud que la Guardia Imperial rusa —orgullosa de sus propias tradiciones— consideró profundamente humillante, contribuyendo decisivamente a su posterior derrocamiento."
+  },
+  {
+    "question": "¿Qué extenso código legal, aprobado en 1649 bajo el zar Alexéi Mijáilovich, formalizó de manera definitiva y hereditaria la servidumbre campesina en Rusia, atando a los siervos permanentemente a la tierra de sus señores?",
+    "options": [
+      "El Svod Zakonov",
+      "La Sudébnik de Iván IV",
+      "El Sobórnoye Ulozhénie",
+      "El Ulozhénie de Fiódor"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Antes de este código, los campesinos rusos habían conservado ciertos derechos limitados para cambiar de señor en fechas determinadas del año; el Ulozhénie de 1649 eliminó por completo esa posibilidad, consolidando un sistema de servidumbre que se mantendría vigente en Rusia durante más de dos siglos."
+  },
+  {
+    "question": "¿Qué estatuto comercial de 1667, impulsado por el diplomático y estadista Afanasi Ordín-Naschokin, estableció medidas proteccionistas para favorecer a los comerciantes rusos frente a la competencia extranjera dentro del propio territorio del país?",
+    "options": [
+      "El Nuevo Estatuto Comercial (Novotorgovy Ustav)",
+      "La Carta de Comercio de Moscú",
+      "El Reglamento de Aduanas de Arjánguelsk",
+      "El Código Mercantil de 1653"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El estatuto imponía aranceles considerablemente más altos a los mercaderes extranjeros que operaban dentro de Rusia, además de restringir el comercio interior de estos exclusivamente a determinadas ciudades fronterizas, en un temprano ejemplo de política económica proteccionista rusa."
+  },
+  {
+    "question": "¿Qué patriarca de la Iglesia ortodoxa rusa, padre del recién elegido zar Mijaíl Románov, ejerció en la práctica un poder casi equivalente al de un cogobernante durante buena parte del reinado de su propio hijo?",
+    "options": [
+      "El patriarca Adrián",
+      "El patriarca Nikon",
+      "El patriarca Filaret",
+      "El patriarca Job"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Tras regresar de un largo cautiverio en Polonia, Filaret asumió el título de patriarca y, aprovechando su autoridad tanto religiosa como su cercanía familiar directa con el joven zar, ejerció una influencia política tan decisiva sobre el gobierno del país que algunos historiadores consideran este periodo casi una diarquía efectiva."
+  },
+  {
+    "question": "¿Cómo se conoce a la prolongada rebelión armada de los monjes del monasterio de las islas Solovkí entre 1668 y 1676, que se negaron violentamente a aceptar las reformas litúrgicas del patriarca Nikon y resistieron un largo asedio de tropas zaristas?",
+    "options": [
+      "El Sitio del Monasterio Blanco",
+      "El Levantamiento de Solovkí",
+      "La Revuelta de los Viejos Creyentes del Norte",
+      "La Rebelión del Mar Blanco"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El asedio del bien fortificado monasterio se prolongó durante años antes de que las tropas zaristas lograran finalmente tomarlo, en gran parte gracias a la traición de un monje que reveló una entrada secreta; la mayoría de los defensores fueron ejecutados, convirtiendo el episodio en un símbolo de resistencia para el movimiento de los Viejos Creyentes."
+  },
+  {
+    "question": "¿Qué institución cultural, establecida en 1672 en la corte del zar Alexéi Mijáilovich por iniciativa de un pastor luterano alemán residente en Moscú, se convirtió en el primer teatro cortesano de la historia rusa?",
+    "options": [
+      "El Teatro de la Corte de Moscú",
+      "La Sala de Representaciones del Kremlin",
+      "La Cámara de Diversiones (Poteshnaya Palata)",
+      "El Teatro Imperial de Preobrazhénskoye"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Las representaciones, con temática principalmente bíblica y actores en su mayoría extranjeros residentes en Moscú, resultaban una novedad tan llamativa para la corte rusa de la época que el propio zar asistía regularmente, pese a las reticencias de sectores más conservadores del clero ortodoxo hacia este tipo de espectáculo."
+  },
+  {
+    "question": "¿Cómo se conocen las grandes maniobras militares de simulacro organizadas por un joven Pedro el Grande en 1694 cerca de Moscú, en las que dividió a sus tropas —incluidos sus célebres regimientos de juegos infantiles convertidos en unidades reales— en dos bandos para practicar tácticas de combate modernas?",
+    "options": [
+      "Las maniobras de Kozhújovo",
+      "Las prácticas de Semiónovskoye",
+      "La campaña simulada de Izmáilovo",
+      "Los ejercicios de Preobrazhénskoye"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Estos elaborados simulacros, que incluían el uso de pólvora real y resultaron incluso en algunas bajas accidentales, sirvieron como valioso entrenamiento práctico para las tropas que Pedro emplearía poco después en sus primeras campañas militares reales contra la fortaleza otomana de Azov."
+  },
+  {
+    "question": "¿Qué orden de caballería, fundada por Pedro el Grande en 1698 e inspirada en las órdenes honoríficas de las monarquías europeas occidentales, se convirtió en la más alta distinción civil y militar del Imperio ruso?",
+    "options": [
+      "La Orden de San Jorge",
+      "La Orden del Águila Blanca",
+      "La Orden de Santa Catalina",
+      "La Orden de San Andrés"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Nombrada en honor al apóstol Andrés, considerado tradicionalmente el primer evangelizador de las tierras rusas, esta orden se otorgaba únicamente a un número muy reducido de personas, generalmente miembros de la familia imperial, altos dignatarios extranjeros o militares de mérito excepcional."
+  },
+  {
+    "question": "¿Quién se convirtió en 1725, tras la muerte de Pedro el Grande, en la primera mujer en gobernar Rusia oficialmente como emperatriz reinante, pese a su origen humilde como antigua sirvienta báltica antes de convertirse en esposa del propio zar?",
+    "options": [
+      "Isabel Petrovna",
+      "Ana Ioánnovna",
+      "Catalina la Grande",
+      "Catalina I"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El ascenso de Catalina I, apoyado decisivamente por la Guardia Imperial y por el favorito Alexánder Ménshikov, marcó un precedente sin igual en la historia rusa hasta entonces: una mujer de origen extremadamente humilde llegando a gobernar formalmente el vasto imperio como soberana por derecho propio."
+  },
+  {
+    "question": "¿Qué princesa alemana ejerció brevemente como regente del imperio en nombre de su hijo, el infante Iván VI, entre 1740 y 1741, antes de ser depuesta por un golpe palaciego liderado por Isabel Petrovna con apoyo de la Guardia?",
+    "options": [
+      "Sofía Federica de Anhalt",
+      "Ana Leopóldovna",
+      "Ana Ioánnovna",
+      "Isabel Cristina de Brunswick"
+    ],
+    "correct_option_id": 1,
+    "explanation": "El brevísimo periodo de regencia de Ana Leopóldovna terminó de forma abrupta cuando la propia Isabel, hija de Pedro el Grande, irrumpió de noche en el palacio con el apoyo de la Guardia Preobrazhenski para proclamarse emperatriz, enviando a la depuesta regente y a su familia al exilio y, después, a la prisión."
+  },
+  {
+    "question": "¿Qué golpe de Estado protagonizó Isabel Petrovna en la noche del 25 de noviembre de 1741, apareciendo personalmente ante los soldados de la Guardia Preobrazhenski para pedirles su apoyo directo en el derrocamiento del gobierno de la regente Ana Leopóldovna?",
+    "options": [
+      "El golpe palaciego de Isabel Petrovna",
+      "La conjura de los Dolgorúkov",
+      "El motín de la Guardia de 1741",
+      "La revuelta de Preobrazhénskoye"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Isabel, hija legítima aunque no reconocida formalmente como heredera prioritaria, apeló directamente al orgullo de los soldados invocando su condición de hija de Pedro el Grande, logrando así su apoyo inmediato para tomar el poder sin apenas resistencia ni derramamiento de sangre."
+  },
+  {
+    "question": "Durante la Guerra de los Siete Años, ¿qué capital europea llegó a ser ocupada brevemente por tropas rusas en 1760, en un episodio que sorprendió a toda Europa por la profundidad del avance militar ruso hacia el corazón de Prusia?",
+    "options": [
+      "Praga",
+      "Berlín",
+      "Dresde",
+      "Viena"
+    ],
+    "correct_option_id": 1,
+    "explanation": "La ocupación rusa de Berlín, aunque breve y seguida de una retirada, demostró la creciente capacidad militar del Imperio ruso para proyectar su poder muy lejos de sus propias fronteras, y solo la muerte oportuna de la emperatriz Isabel en 1762 —y el ascenso de un nuevo zar admirador de Prusia— salvó al rey Federico II de una derrota probablemente definitiva."
+  },
+  {
+    "question": "¿Qué identidad usurpada, asumida por el cosaco Yemelián Pugachov durante su gran rebelión de 1773-75 contra Catalina la Grande, le permitió atraer a numerosos seguidores que creían estar restaurando al legítimo emperador supuestamente asesinado?",
+    "options": [
+      "Aseguró representar a un consejo de boyardos exiliados",
+      "Se hizo pasar por el zar Pedro III, oficialmente muerto pero que muchos campesinos creían aún vivo",
+      "Se proclamó heredero directo de Iván VI",
+      "Afirmó ser hijo secreto de Pedro el Grande"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Al hacerse pasar por el depuesto y asesinado Pedro III —cuya muerte real muchos campesinos rusos desconfiaban o directamente rechazaban creer—, Pugachov logró movilizar a un número extraordinario de seguidores entre cosacos, campesinos siervos y minorías étnicas descontentas, convirtiendo su rebelión en la mayor amenaza interna que enfrentó jamás el gobierno de Catalina la Grande."
+  },
+  {
+    "question": "¿Qué trágico destino sufrió el infante Iván VI, proclamado zar siendo apenas un bebé y depuesto meses después, tras pasar prácticamente toda su vida encarcelado en aislamiento hasta ser asesinado por sus propios guardianes durante un intento de rescate en 1764?",
+    "options": [
+      "Fue liberado y enviado a un monasterio remoto donde murió de vejez",
+      "Fue asesinado por sus guardias al intentar un oficial liberarlo de su encierro",
+      "Murió de causas naturales tras décadas de reclusión pacífica",
+      "Logró escapar y vivió en el anonimato en Europa"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Las instrucciones secretas dadas a sus carceleros ordenaban ejecutarlo inmediatamente ante cualquier intento de liberación no autorizada; cuando un oficial intentó efectivamente rescatarlo en 1764, los propios guardias cumplieron la orden y asesinaron al entonces joven exzar, que había pasado prácticamente toda su vida consciente en aislamiento casi total."
+  },
+  {
+    "question": "¿Qué manifiesto de 1762, promulgado brevemente por Pedro III y confirmado después por Catalina la Grande, liberó a la nobleza rusa de la obligación histórica de prestar servicio estatal o militar, permitiéndoles por primera vez vivir de sus propiedades sin ninguna obligación de servicio a la Corona?",
+    "options": [
+      "El Edicto de Exención Militar",
+      "La Carta de Privilegios Nobiliarios de Catalina",
+      "El Manifiesto sobre la Libertad de la Nobleza",
+      "El Decreto de Emancipación Aristocrática"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Esta medida, que revirtió una de las obligaciones fundamentales impuestas por Pedro el Grande décadas antes, transformó profundamente la relación entre la nobleza rusa y el Estado, permitiendo el surgimiento de una clase de terratenientes rurales dedicados plenamente a administrar sus propiedades y siervos sin ninguna contrapartida directa de servicio obligatorio."
+  },
+  {
+    "question": "¿Qué decreto de 1722, promulgado por Pedro el Grande, exigió por primera vez formalmente el consentimiento voluntario de ambos futuros cónyuges como condición para la validez de cualquier matrimonio en Rusia, apartándose de la práctica tradicional de matrimonios arreglados sin consulta previa?",
+    "options": [
+      "El Reglamento sobre los Esponsales",
+      "La Ley de Familia de 1722",
+      "El decreto sobre el consentimiento matrimonial",
+      "El Ukaz sobre la mayoría de edad nupcial"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Aunque en la práctica la presión familiar seguía siendo determinante en la elección de pareja, especialmente entre la nobleza, este decreto representó un temprano y poco conocido intento de reforma social de Pedro el Grande, orientado a limitar los matrimonios forzados sin ningún tipo de consentimiento personal de los contrayentes."
+  },
+  {
+    "question": "Además del príncipe polaco Wladyslaw, ¿qué otro candidato extranjero, un príncipe sueco propuesto por facciones de boyardos de Nóvgorod durante el caos del Periodo de las Turbulencias, llegó a considerarse brevemente como posible zar de Rusia?",
+    "options": [
+      "El príncipe Erik de Suecia",
+      "El duque Gustavo de Vasa",
+      "El príncipe Segismundo de Suecia",
+      "El príncipe Karl Filip de Suecia"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Ante el temor de una ocupación polaca permanente, un sector de la nobleza de Nóvgorod llegó a negociar con Suecia la posible entronización de Karl Filip, aunque estas negociaciones nunca llegaron a concretarse antes de que la elección del Zemski Sobor de 1613 se decidiera finalmente por el joven Mijaíl Románov."
+  },
+  {
+    "question": "¿Qué cargo desempeñó Dmitri Pozharski, el príncipe que había liderado junto a Kuzmá Minin la liberación de Moscú en 1612, durante los primeros años del nuevo gobierno de la dinastía Románov?",
+    "options": [
+      "Fue nombrado patriarca de la Iglesia ortodoxa rusa",
+      "Se retiró completamente de la vida pública tras la liberación de Moscú",
+      "Emigró a Polonia tras negociar su propio perdón",
+      "Continuó sirviendo como consejero militar y administrador de confianza del nuevo zar Mijaíl"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Pese a no aspirar él mismo al trono, pese a contar con considerable apoyo popular tras la liberación de Moscú, Pozharski permaneció leal y activo al servicio de la nueva dinastía, ocupando diversos cargos militares y administrativos de responsabilidad durante los primeros y difíciles años del reinado de Mijaíl Románov."
+  },
+  {
+    "question": "¿Cómo se organizó el proceso que llevó a la elección de Mijaíl Románov como zar en el Zemski Sobor de 1613, un procedimiento inusual comparado con la sucesión hereditaria tradicional de la mayoría de las monarquías europeas?",
+    "options": [
+      "El propio patriarca de Moscú designó unilateralmente al nuevo zar sin consulta",
+      "Se realizó un sorteo entre los principales candidatos dinásticos disponibles",
+      "Una amplia asamblea de representantes de distintos estamentos sociales de todo el país deliberó y votó entre varios candidatos posibles",
+      "Un pequeño consejo de solo cinco boyardos decidió en privado sin participación popular"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Esta asamblea, que reunió a representantes de la nobleza, el clero, los comerciantes e incluso, según algunas fuentes, de los campesinos libres de distintas regiones del país, constituyó un ejercicio excepcional de legitimación colectiva del poder monárquico, muy distinto del principio de sucesión puramente hereditaria habitual en otras monarquías europeas de la época."
+  },
+  {
+    "question": "¿Cómo se conoce a la batalla de septiembre de 1708, librada cerca de la aldea del mismo nombre en la actual Bielorrusia, en la que Pedro el Grande derrotó a un destacamento sueco que transportaba refuerzos y suministros vitales, debilitando así al ejército de Carlos XII antes de la decisiva Poltava?",
+    "options": [
+      "El asedio de Veprik",
+      "La batalla de Grodno",
+      "La batalla de Holowczyn",
+      "La batalla de Lesnaya"
+    ],
+    "correct_option_id": 3,
+    "explanation": "El propio Pedro el Grande llegaría a describir después esta victoria, que privó al ejército sueco de refuerzos cruciales y de un enorme convoy de suministros, como 'la madre de la victoria de Poltava', reconociendo su importancia estratégica decisiva para el desenlace final de la campaña."
+  },
+  {
+    "question": "¿Qué órgano supremo de gobierno y administración creó Pedro el Grande en 1711, destinado a supervisar los asuntos del Estado durante sus frecuentes ausencias en campaña militar, y que con el tiempo se consolidaría como institución permanente del Imperio ruso?",
+    "options": [
+      "El Colegio de Ministros",
+      "El Consejo Supremo Privado",
+      "El Senado Gobernante",
+      "La Duma de Estado"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Concebido inicialmente como un órgano temporal para gestionar los asuntos internos mientras Pedro combatía contra los otomanos, el Senado terminó consolidándose como una institución permanente y central del gobierno imperial ruso, encargada de supervisar la administración, la justicia y las finanzas del Estado."
+  },
+  {
+    "question": "¿Qué nuevo sistema administrativo, inspirado en modelos suecos y organizado por ramos temáticos especializados, sustituyó gradualmente a partir de 1717-1721 a los antiguos y desordenados 'prikazy' medievales como principales órganos ejecutivos del gobierno ruso?",
+    "options": [
+      "El sistema de intendencias regionales",
+      "El régimen de ministerios centralizados",
+      "El sistema de colegios (kollegii)",
+      "La estructura de guberniyas administrativas"
+    ],
+    "correct_option_id": 2,
+    "explanation": "A diferencia de los antiguos prikazy, cuyas competencias a menudo se solapaban de forma confusa y desorganizada, los nuevos colegios se organizaron según criterios funcionales claros —finanzas, comercio, guerra, justicia—, siguiendo deliberadamente el modelo de gobierno colegiado que Pedro había estudiado y admirado durante sus viajes por Suecia y otros países europeos."
+  },
+  {
+    "question": "¿Qué reforma administrativa de 1775, impulsada por Catalina la Grande tras la conmoción causada por la rebelión de Pugachov, dividió el vasto territorio del imperio en un número mucho mayor de provincias (guberniyas) de tamaño más manejable, cada una con una administración más uniforme?",
+    "options": [
+      "El Ukaz de División Administrativa",
+      "La Reorganización Territorial Imperial",
+      "La reforma de las guberniyas",
+      "El Estatuto Provincial de 1763"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Al aumentar considerablemente el número de unidades administrativas provinciales y estandarizar sus estructuras de gobierno, Catalina buscaba tanto mejorar la eficiencia del control estatal sobre un territorio inmenso como prevenir futuras revueltas similares a la de Pugachov, que se había beneficiado inicialmente de la débil presencia administrativa rusa en algunas regiones periféricas."
+  },
+  {
+    "question": "¿Qué documento legal de 1785, promulgado por Catalina la Grande, formalizó y amplió considerablemente los privilegios exclusivos de la nobleza rusa, incluida su exención de impuestos directos y castigos corporales?",
+    "options": [
+      "La Carta a la Nobleza",
+      "El Estatuto de Privilegios Aristocráticos",
+      "La Ley de Fueros Señoriales",
+      "El Manifiesto sobre la Libertad Nobiliaria"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Este documento, complementario al anterior Manifiesto sobre la Libertad de la Nobleza de Pedro III y Catalina, consolidó jurídicamente el estatus privilegiado de la aristocracia rusa de forma tan completa que muchos historiadores consideran 1785 el punto culminante del poder social y legal de la nobleza dentro del sistema imperial ruso."
+  },
+  {
+    "question": "¿Qué otro documento legal, promulgado simultáneamente en 1785 junto a la Carta a la Nobleza, estableció por primera vez un sistema formal de autogobierno municipal limitado para las ciudades rusas, con un ayuntamiento electo y categorías definidas de ciudadanía urbana?",
+    "options": [
+      "El Reglamento de Corporaciones Comerciales",
+      "La Carta a las Ciudades",
+      "La Ley de Burguesía Urbana",
+      "El Estatuto Municipal de Catalina"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Aunque el poder real de estos nuevos ayuntamientos municipales seguía estando fuertemente limitado por la supervisión de los gobernadores provinciales designados por la Corona, la Carta a las Ciudades representó un intento pionero, aunque modesto en sus resultados prácticos, de introducir formas incipientes de autogobierno urbano en el Imperio ruso."
+  },
+  {
+    "question": "¿Qué actitud inicial mostraron algunos altos funcionarios conservadores del gobierno de Nicolás I hacia el proyecto de construir el primer ferrocarril ruso en la década de 1830, temiendo que esta nueva tecnología pudiera facilitar la difusión de ideas revolucionarias por el imperio?",
+    "options": [
+      "Apoyaron entusiastamente el proyecto desde el primer momento sin ninguna objeción",
+      "Consideraron el ferrocarril una tecnología puramente militar sin aplicación civil",
+      "Se mostraron recelosos, temiendo que los ferrocarriles facilitaran tanto el desplazamiento de agitadores como la propagación de ideas peligrosas",
+      "Exigieron que el ferrocarril se construyera exclusivamente para uso del ejército"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Pese a estas reticencias iniciales de sectores conservadores, el propio Nicolás I terminó apoyando decididamente el desarrollo ferroviario, consciente de sus enormes ventajas estratégicas y económicas, aunque el ritmo de expansión de la red ferroviaria rusa seguiría siendo considerablemente más lento que el de las principales potencias industriales europeas de la época."
+  },
+  {
+    "question": "¿Qué proyecto de reforma constitucional, elaborado en secreto por el consejero Nikolái Novosíltsev bajo instrucciones del propio Alejandro I hacia 1820, habría introducido un sistema parlamentario limitado y una carta de derechos para Rusia, aunque nunca llegó a promulgarse oficialmente?",
+    "options": [
+      "La 'Carta Estatutaria' (Ustávnaya Grámota)",
+      "La Carta Fundamental Rusa",
+      "El Estatuto de Gobierno Representativo",
+      "El Proyecto Constitucional de Speranski"
+    ],
+    "correct_option_id": 0,
+    "explanation": "El hecho de que este ambicioso proyecto constitucional, redactado por encargo del propio zar, permaneciera completamente desconocido para la gran mayoría de la población rusa de la época —y solo se hiciera público mucho después de la muerte de Alejandro I— refleja las profundas contradicciones e indecisiones del propio monarca respecto a una posible reforma liberal del sistema autocrático."
+  },
+  {
+    "question": "¿Qué órgano de inteligencia y control político, fundado por el zar Alexéi Mijáilovich a mediados del siglo XVII, funcionaba como una suerte de cancillería personal y secreta del propio zar, encargada de investigar asuntos considerados de máxima sensibilidad para la Corona?",
+    "options": [
+      "La Cancillería Privada del Zar",
+      "El Prikaz de Asuntos Secretos",
+      "El Departamento de Vigilancia Real",
+      "El Consejo Confidencial de Moscú"
+    ],
+    "correct_option_id": 1,
+    "explanation": "Este temprano órgano de inteligencia estatal, que operaba con considerable autonomía y discreción respecto a otros departamentos administrativos ordinarios, se considera un precedente lejano de los posteriores aparatos de policía política y seguridad del Estado que caracterizarían a la Rusia imperial y, después, soviética."
+  },
+  {
+    "question": "¿Qué institución económica, fundada por decreto de Pedro el Grande en 1703 en su nueva capital de San Petersburgo, se convirtió en la primera bolsa de valores y de mercancías de toda la historia rusa?",
+    "options": [
+      "La Cámara de Comercio de Arjánguelsk",
+      "El Mercado Imperial de Moscú",
+      "La Bolsa de San Petersburgo",
+      "El Banco Mercantil de Nevá"
+    ],
+    "correct_option_id": 2,
+    "explanation": "Inspirada directamente en las bolsas comerciales que Pedro había observado durante sus viajes por los Países Bajos, esta institución buscaba modernizar y organizar el comercio ruso siguiendo modelos occidentales, aunque su desarrollo pleno como centro financiero relevante tardaría todavía varias décadas más en consolidarse."
+  },
+  {
+    "question": "¿Qué fortaleza de San Petersburgo, además de su función militar original, se utilizó también durante siglos como prisión para detenidos políticos de alto perfil, incluido en un caso especialmente trágico el propio hijo de Pedro el Grande?",
+    "options": [
+      "La Fortaleza de Shlisselburg",
+      "El Castillo de Ingermanland",
+      "La Fortaleza de Kronstadt",
+      "La Fortaleza de San Pedro y San Pablo"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Además de servir como panteón imperial en su catedral, la propia fortaleza albergó también una de las prisiones más temidas del imperio, utilizada para encarcelar tanto a miembros de la propia familia real caídos en desgracia como a generaciones posteriores de disidentes y revolucionarios políticos."
+  },
+  {
+    "question": "¿Qué trágico destino sufrió el zarévich Alexéi Petrovich, único hijo varón superviviente de Pedro el Grande de su primer matrimonio, tras huir al extranjero y ser posteriormente persuadido a regresar y procesado por traición en 1718?",
+    "options": [
+      "Fue exiliado a un monasterio remoto donde murió de vejez",
+      "Fue perdonado y restituido como heredero al trono",
+      "Logró escapar de nuevo y vivió el resto de su vida en el exilio",
+      "Murió en prisión, oficialmente de causas naturales, apenas días después de ser condenado a muerte por su propio padre"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Las circunstancias exactas de la muerte de Alexéi en la Fortaleza de San Pedro y San Pablo, oficialmente atribuida a un ataque de apoplejía apenas días después de que su propio padre lo condenara a muerte por traición, generaron sospechas entonces y siguen siendo objeto de debate histórico hasta hoy, en uno de los episodios más sombríos de la vida personal de Pedro el Grande."
+  },
+  {
+    "question": "¿Qué diácono e impresor, considerado el pionero de la imprenta en Rusia, publicó en 1564 en Moscú el 'Apóstol', el primer libro impreso y fechado con precisión de toda la historia rusa?",
+    "options": [
+      "Iván Fiódorov",
+      "Anisim Radishevski",
+      "Piotr Mstislávets",
+      "Andronik Nevezha"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Pese a la importancia histórica de su logro, Fiódorov tuvo que abandonar Moscú poco después, posiblemente debido a la hostilidad de copistas de manuscritos que veían la nueva tecnología de la imprenta como una amenaza directa a su oficio tradicional, continuando su labor impresora en Lituania y Ucrania."
+  },
+  {
+    "question": "¿Qué institución educativa fundó Pedro el Grande en Moscú en 1701, dedicada a formar a futuros oficiales navales y especialistas en matemáticas, navegación y artillería, como parte esencial de su proyecto de creación de una armada rusa moderna?",
+    "options": [
+      "El Colegio de Artillería Imperial",
+      "La Academia Naval de San Petersburgo",
+      "La Escuela de Ingenieros de Moscú",
+      "La Escuela de Matemáticas y Navegación"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Instalada inicialmente en la torre Sujareva de Moscú, esta escuela, dirigida en sus primeros años por matemáticos y navegantes ingleses contratados especialmente para la tarea, sentó las bases educativas técnicas que permitirían después a Pedro el Grande formar a los oficiales necesarios para su ambiciosa nueva flota."
+  },
+  {
+    "question": "¿Qué inusual política personal mantuvo la emperatriz Isabel Petrovna durante prácticamente todo su reinado (1741-1761), evitando de manera consciente firmar sentencias de muerte pese a que la pena capital seguía existiendo legalmente en el imperio?",
+    "options": [
+      "Se negó sistemáticamente a autorizar ejecuciones, en la práctica suspendiendo la pena de muerte durante su gobierno",
+      "Permitió ejecuciones solo para delitos militares específicos",
+      "Delegó completamente esta decisión en tribunales locales sin su intervención",
+      "Abolió formalmente la pena de muerte mediante decreto oficial"
+    ],
+    "correct_option_id": 0,
+    "explanation": "Aunque nunca llegó a abolir formalmente la pena capital mediante un decreto explícito, la negativa sistemática de Isabel a firmar sentencias de muerte —motivada, según la tradición, por una promesa personal hecha al ascender al trono— supuso en la práctica una suspensión casi total de las ejecuciones legales en Rusia durante las dos décadas de su gobierno."
+  },
+  {
+    "question": "¿En qué año trasladó oficialmente Pedro el Grande la capital del Imperio ruso desde Moscú hasta su nueva ciudad de San Petersburgo, consolidando así el traslado del centro político del país hacia la costa del Báltico?",
+    "options": [
+      "1698",
+      "1703",
+      "1725",
+      "1712"
+    ],
+    "correct_option_id": 3,
+    "explanation": "Aunque la construcción de San Petersburgo había comenzado ya en 1703 tras la fundación de la Fortaleza de San Pedro y San Pablo, el traslado formal de la sede del gobierno y la corte imperial a la nueva ciudad se consolidó en 1712, obligando a buena parte de la nobleza rusa a mudarse a esta ciudad recién construida sobre terrenos pantanosos del Báltico."
+  }
+]

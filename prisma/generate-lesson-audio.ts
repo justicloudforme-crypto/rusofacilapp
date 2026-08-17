@@ -2,9 +2,10 @@
  * Generates pronunciation audio for lesson content (vocabulary words,
  * grammar examples, readingPractice sentences) using OpenAI's text-to-speech
  * API, and saves the .mp3 files into public/audio/lessons/. Fills the
- * LessonAudioCache table so SpeakButton can play a real file on mobile
- * instead of relying on the browser's Web Speech API — see
- * rusofasil_project_state memory for why that mattered for the mobile port.
+ * shared AudioAsset cache (see src/lib/audio-assets.ts) so SpeakButton can
+ * play a real file on mobile instead of relying on the browser's Web
+ * Speech API — see rusofasil_project_state memory for why that mattered
+ * for the mobile port.
  *
  * SETUP
  * 1. Get an API key at https://platform.openai.com/api-keys.
@@ -19,27 +20,28 @@
  *   npm run generate:lesson-audio -- --level=a1 --lesson=1   # one lesson only
  *   npm run generate:lesson-audio -- --level=a1               # every a1 lesson
  *   npm run generate:lesson-audio                              # ⚠ every lesson in the app (120 lessons — many hundreds of paid TTS calls, review cost first)
- *   npm run generate:lesson-audio -- --force                   # regenerate items that already have cached audio
+ *   npm run generate:lesson-audio -- --force                   # resynthesize even items already cached
  *   npm run generate:lesson-audio -- --voice=nova               # pick an OpenAI TTS voice
  *
- * Each request costs a small amount against your OpenAI account — this is
- * a paid API. Always start with a single --level/--lesson pilot to check
- * quality and cost before running it against the whole course.
+ * Each new/changed item is a separate paid TTS request — this is a paid
+ * API. Always start with a single --level/--lesson pilot to check quality
+ * and cost before running it against the whole course.
  *
  * Reads lesson content from the static content.json only (not the DB
  * Lesson-override table) — same source the seed script treats as
- * authoritative, and simplest for a one-off generation pass. Re-run after
- * editing a lesson's Russian text to keep the cache in sync; stale cached
- * audio for since-edited text is harmless (SpeakButton just plays slightly
- * outdated wording) but not automatically detected.
+ * authoritative, and simplest for a one-off generation pass. Safe to
+ * re-run after editing a lesson's Russian text: the AudioAsset cache is
+ * keyed by a hash of the text itself, so an edited item is detected and
+ * resynthesized on its own — nothing else in the lesson (or app) is
+ * touched or re-paid-for.
  */
 import "dotenv/config";
-import { mkdir, writeFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { sanitizeTextForTTS } from "../src/lib/speech";
+import { ensureAudioAsset } from "../src/lib/audio-assets";
 // Imported directly from the JSON file (not src/lib/lessons/content.ts,
 // which is marked "server-only" and can't be required outside Next.js's
 // own module graph) — same reasoning as generate-story-audio.ts using its
@@ -66,33 +68,36 @@ function parseArgs(argv: string[]) {
   return { force, voice, level, lesson };
 }
 
-function keyHash(itemKey: string): string {
-  return createHash("sha1").update(itemKey).digest("hex").slice(0, 16);
+/** Short filesystem/DB-key-safe id for an item, derived from its own text
+ * — so the id itself already IS the "did this text change" signal, same
+ * spirit as AudioAsset's textHash but usable as a stable file name. */
+function itemKeyFor(text: string): string {
+  return createHash("sha1").update(text).digest("hex").slice(0, 16);
 }
 
 /** Every distinct Russian string worth a pronunciation button in this
  * lesson — vocabulary words, grammar example sentences, and readingPractice
  * items — deduplicated (the same phrase sometimes appears in both the
  * grammar examples and readingPractice). */
-function collectItemKeys(content: Record<string, unknown>): string[] {
-  const keys = new Set<string>();
+function collectItemTexts(content: Record<string, unknown>): string[] {
+  const texts = new Set<string>();
 
   const vocabulary = content.vocabulary as { word: string }[] | undefined;
   for (const item of vocabulary ?? []) {
-    if (item?.word) keys.add(item.word);
+    if (item?.word) texts.add(item.word);
   }
 
   const grammar = content.grammar as { examples?: { russian: string }[] } | undefined;
   for (const example of grammar?.examples ?? []) {
-    if (example?.russian) keys.add(example.russian);
+    if (example?.russian) texts.add(example.russian);
   }
 
   const readingPractice = content.readingPractice as { items?: { text: string }[] } | undefined;
   for (const item of readingPractice?.items ?? []) {
-    if (item?.text) keys.add(item.text);
+    if (item?.text) texts.add(item.text);
   }
 
-  return [...keys];
+  return [...texts];
 }
 
 async function synthesizeSpeech(apiKey: string, text: string, voice: string): Promise<Buffer> {
@@ -161,52 +166,48 @@ async function main() {
     return;
   }
 
-  await mkdir(AUDIO_DIR, { recursive: true });
-
-  let ok = 0;
-  let skipped = 0;
+  let generated = 0;
+  let cached = 0;
   let failed = 0;
 
   for (const lessonId of lessonIds) {
-    const [lessonLevel, lessonSlug] = lessonId.split("-");
     const content = staticLessonContent[lessonId];
-    const itemKeys = collectItemKeys(content);
+    const texts = collectItemTexts(content);
 
-    console.log(`\n${lessonId} — ${itemKeys.length} item(s)`);
+    console.log(`\n${lessonId} — ${texts.length} item(s)`);
 
-    for (const itemKey of itemKeys) {
-      if (!force) {
-        const existing = await db.lessonAudioCache.findUnique({
-          where: { level_lessonSlug_itemKey: { level: lessonLevel, lessonSlug, itemKey } },
-        });
-        if (existing) {
-          skipped++;
-          continue;
-        }
-      }
+    for (const text of texts) {
+      const sanitized = sanitizeTextForTTS(text);
+      const itemKey = itemKeyFor(sanitized);
+      const result = await ensureAudioAsset(db, {
+        contentType: "lesson",
+        contentId: lessonId,
+        itemKey,
+        text: sanitized,
+        voice,
+        model: OPENAI_TTS_MODEL,
+        force,
+        audioDir: AUDIO_DIR,
+        publicPath: "/audio/lessons",
+        fileName: `${lessonId}-${itemKey}.mp3`,
+        synthesize: (t, v) => synthesizeSpeech(apiKey, t, v),
+      });
 
-      process.stdout.write(`  "${itemKey.slice(0, 40)}${itemKey.length > 40 ? "…" : ""}"... `);
-      try {
-        const audioBuffer = await synthesizeSpeech(apiKey, sanitizeTextForTTS(itemKey), voice);
-        const fileName = `${lessonId}-${keyHash(itemKey)}.mp3`;
-        await writeFile(path.join(AUDIO_DIR, fileName), audioBuffer);
-        await db.lessonAudioCache.upsert({
-          where: { level_lessonSlug_itemKey: { level: lessonLevel, lessonSlug, itemKey } },
-          update: { audioUrl: `/audio/lessons/${fileName}`, voice },
-          create: { level: lessonLevel, lessonSlug, itemKey, audioUrl: `/audio/lessons/${fileName}`, voice },
-        });
-        console.log("done.");
-        ok++;
-      } catch (error) {
-        console.log("FAILED.");
-        console.error(`    ${(error as Error).message}`);
+      const label = `"${text.slice(0, 40)}${text.length > 40 ? "…" : ""}"`;
+      if (result.status === "cached") {
+        cached++;
+      } else if (result.status === "generated") {
+        console.log(`  ${label}: done.`);
+        generated++;
+      } else {
+        console.error(`  ${label}: FAILED — ${result.error}`);
         failed++;
       }
     }
   }
 
   console.log(
-    `\n✔ Generated audio for ${ok} item(s)${skipped ? `, ${skipped} already cached` : ""}${failed ? `, ${failed} failed` : ""}.`
+    `\n✔ Generated ${generated} item(s), ${cached} already cached${failed ? `, ${failed} failed` : ""}.`
   );
 }
 
