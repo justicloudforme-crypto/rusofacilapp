@@ -113,36 +113,43 @@ export default function MatchBoard({
     return "idle";
   }
 
+  // A single two-column grid instead of two independent flex columns — with
+  // independent columns, a row on one side can wrap to two lines (long
+  // Russian words on a narrow mobile screen) while the row at the same
+  // index on the other side stays one line, so the two columns silently
+  // drift out of sync row-by-row the further down the list you go. CSS
+  // Grid rows size to their tallest cell automatically, so pairing each
+  // emoji tile with the word tile at the same array index inside one grid
+  // keeps every row's height in lockstep on both sides, at every screen
+  // width, with no measurement code needed.
+  const visibleEmojiTiles = emojiTiles.filter((c) => !matchedIds.has(c.id));
+  const visibleWordTiles = wordTiles.filter((c) => !matchedIds.has(c.id));
+
   return (
-    <div className="flex gap-3">
-      <div className="flex flex-1 flex-col gap-2">
-        {emojiTiles
-          .filter((card) => !matchedIds.has(card.id))
-          .map((card) => (
+    <div className="grid grid-cols-2 gap-2">
+      {visibleEmojiTiles.map((emojiCard, i) => {
+        const wordCard = visibleWordTiles[i];
+        return (
+          <div key={emojiCard.id} className="contents">
             <button
-              key={card.id}
               type="button"
-              onClick={() => selectTile("emoji", card.id)}
-              className={`flex h-14 touch-manipulation select-none items-center justify-center rounded-xl border text-3xl transition-colors ${tileClass(tileState("emoji", card.id))}`}
+              onClick={() => selectTile("emoji", emojiCard.id)}
+              className={`flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-3xl transition-colors ${tileClass(tileState("emoji", emojiCard.id))}`}
             >
-              {card.emoji}
+              {emojiCard.emoji}
             </button>
-          ))}
-      </div>
-      <div className="flex flex-1 flex-col gap-2">
-        {wordTiles
-          .filter((card) => !matchedIds.has(card.id))
-          .map((card) => (
-            <button
-              key={card.id}
-              type="button"
-              onClick={() => selectTile("word", card.id)}
-              className={`flex h-14 touch-manipulation select-none items-center justify-center rounded-xl border px-2 text-center text-sm font-medium transition-colors ${tileClass(tileState("word", card.id))}`}
-            >
-              {card.russian}
-            </button>
-          ))}
-      </div>
+            {wordCard && (
+              <button
+                type="button"
+                onClick={() => selectTile("word", wordCard.id)}
+                className={`flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("word", wordCard.id))}`}
+              >
+                {wordCard.russian}
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -62,4 +62,10 @@ describe("buildFillBlankRound", () => {
     expect(round.every((c) => c.id !== "bad")).toBe(true);
     expect(round).toHaveLength(5);
   });
+
+  it("gives a different card selection/order across repeated calls on the same pool", () => {
+    const cards = Array.from({ length: 30 }, (_, i) => makeCard(`card-${i}`, `слово${i}`, `Это слово${i} тут.`));
+    const runs = Array.from({ length: 8 }, () => buildFillBlankRound(cards, {}, 10).map((c) => c.id).join(","));
+    expect(new Set(runs).size).toBeGreaterThan(1);
+  });
 });

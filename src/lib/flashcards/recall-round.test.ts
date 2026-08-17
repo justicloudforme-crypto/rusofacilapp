@@ -89,4 +89,15 @@ describe("buildRecallRound", () => {
     const round = buildRecallRound(cards, {}, 10);
     expect(round).toHaveLength(10);
   });
+
+  it("gives a different card selection/order across repeated calls on the same pool", () => {
+    // Regression check for a real bug report where "the round never changes"
+    // turned out to be a stale-round UI bug elsewhere, not a shuffle bug —
+    // this asserts the shuffle itself was never the problem and stays that
+    // way. A pool this size makes an accidental repeat across 8 runs
+    // astronomically unlikely if selection/order is genuinely random.
+    const cards = Array.from({ length: 30 }, (_, i) => makeCard(`card-${i}`));
+    const runs = Array.from({ length: 8 }, () => buildRecallRound(cards, {}, 10).map((c) => c.id).join(","));
+    expect(new Set(runs).size).toBeGreaterThan(1);
+  });
 });

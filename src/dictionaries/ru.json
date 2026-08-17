@@ -478,6 +478,7 @@
     "searchPlaceholder": "Найти слово...",
     "cardCountLabel": "{count} слов",
     "backToCategories": "← Категории",
+    "nextLevelBadgeLabel": "Этот уровень уже освоен! Попробуй {level}",
     "modeVocabulary": "Словарь по категориям",
     "modeRecall": "Написать слово",
     "modeFillBlank": "Пропущенное слово",

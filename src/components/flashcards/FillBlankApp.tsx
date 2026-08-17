@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
+import LevelFilterBar from "./LevelFilterBar";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { buildFillBlankRound } from "@/lib/flashcards/fill-blank-round";
@@ -17,7 +18,6 @@ export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   playAgainButton: string;
 }
 
-const levels: FlashcardLevel[] = ["A1", "A2", "B1"];
 const ROUND_SIZE = 10;
 
 export default function FillBlankApp({ dict }: { dict: FillBlankAppDict }) {
@@ -93,35 +93,11 @@ export default function FillBlankApp({ dict }: { dict: FillBlankAppDict }) {
   return (
     <div>
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
-        <button
-          type="button"
-          onClick={() => setLevelFilter("all")}
-          className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-            levelFilter === "all"
-              ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-          }`}
-        >
-          {dict.levelAll}
-        </button>
-        {levels.map((lvl) => (
-          <button
-            key={lvl}
-            type="button"
-            onClick={() => setLevelFilter(lvl)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-              levelFilter === lvl
-                ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-            }`}
-          >
-            {lvl}
-          </button>
-        ))}
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
       </div>
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} onSelectCategory={selectCategory} />
+        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
       ) : (
         <>
           <button

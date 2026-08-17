@@ -49,6 +49,12 @@ describe("buildMatchRound", () => {
     const round = buildMatchRound(cards, 4);
     expect(round).toHaveLength(2);
   });
+
+  it("gives a different card selection/order across repeated calls on the same pool", () => {
+    const cards = Array.from({ length: 30 }, (_, i) => makeCard(`card-${i}`, `emoji-${i}`));
+    const runs = Array.from({ length: 8 }, () => buildMatchRound(cards, 8).map((c) => c.id).join(","));
+    expect(new Set(runs).size).toBeGreaterThan(1);
+  });
 });
 
 describe("countPlayableCards", () => {

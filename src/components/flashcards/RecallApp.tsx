@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import RecallCard, { type RecallCardDict, type RecallDirection } from "./RecallCard";
+import LevelFilterBar from "./LevelFilterBar";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { buildRecallRound, checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
@@ -18,7 +19,6 @@ export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   playAgainButton: string;
 }
 
-const levels: FlashcardLevel[] = ["A1", "A2", "B1"];
 const ROUND_SIZE = 10;
 
 export default function RecallApp({ dict }: { dict: RecallAppDict }) {
@@ -96,33 +96,7 @@ export default function RecallApp({ dict }: { dict: RecallAppDict }) {
   return (
     <div>
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setLevelFilter("all")}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-              levelFilter === "all"
-                ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-            }`}
-          >
-            {dict.levelAll}
-          </button>
-          {levels.map((lvl) => (
-            <button
-              key={lvl}
-              type="button"
-              onClick={() => setLevelFilter(lvl)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-                levelFilter === lvl
-                  ? "bg-foreground text-background"
-                  : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-              }`}
-            >
-              {lvl}
-            </button>
-          ))}
-        </div>
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
 
         <div className="ml-auto flex gap-1 rounded-full border border-black/10 p-1 dark:border-white/10">
           <button
@@ -147,7 +121,7 @@ export default function RecallApp({ dict }: { dict: RecallAppDict }) {
       </div>
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} onSelectCategory={selectCategory} />
+        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
       ) : (
         <>
           <button

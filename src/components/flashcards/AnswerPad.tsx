@@ -44,6 +44,8 @@ export default function AnswerPad({
   result,
   onSubmit,
   onNext,
+  hideAnswerBox = false,
+  onAnswerChange,
 }: {
   dict: AnswerPadDict;
   alphabet: AnswerAlphabet;
@@ -51,10 +53,20 @@ export default function AnswerPad({
   result: RecallResult | null;
   onSubmit: (answer: string) => void;
   onNext: () => void;
+  // When the caller renders the live answer itself (e.g. inline inside a
+  // sentence blank), the box below is redundant — an extra typing target
+  // users don't need. Everything else (keyboard, buttons, physical-keyboard
+  // handling) still works the same; only this one box disappears.
+  hideAnswerBox?: boolean;
+  onAnswerChange?: (answer: string) => void;
 }) {
   const [answer, setAnswer] = useState("");
   const isCyrillic = alphabet === "cyrillic";
   const expectedLetter = isCyrillic ? CYRILLIC_LETTER : LATIN_LETTER;
+
+  useEffect(() => {
+    onAnswerChange?.(answer);
+  }, [answer, onAnswerChange]);
 
   // Read via a ref instead of listing `answer` as an effect dependency
   // below — a dependency would tear down and re-add the window listener on
@@ -109,32 +121,33 @@ export default function AnswerPad({
 
   return (
     <div className="flex touch-manipulation w-full flex-col items-center gap-6">
-      <div className="flex w-full items-center gap-3">
+      <div className={`flex w-full items-center gap-3 ${hideAnswerBox ? "justify-center" : ""}`}>
         <MatryoshkaAvatar id={result ? avatarId : "matryoshka_calm"} size={48} />
-        {isCyrillic ? (
-          <div
-            className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium transition-colors ${answerBoxColorClass(result)}`}
-          >
-            {answer || <span className="text-foreground/30">{dict.answerPlaceholder}</span>}
-          </div>
-        ) : (
-          <input
-            type="text"
-            inputMode="text"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            value={answer}
-            disabled={Boolean(result)}
-            placeholder={dict.answerPlaceholder}
-            onChange={(e) => setAnswer(e.target.value.split("").filter((ch) => ch === " " || LATIN_LETTER.test(ch)).join(""))}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !result) onSubmit(answer);
-            }}
-            className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${answerBoxColorClass(result)}`}
-          />
-        )}
+        {!hideAnswerBox &&
+          (isCyrillic ? (
+            <div
+              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium transition-colors ${answerBoxColorClass(result)}`}
+            >
+              {answer || <span className="text-foreground/30">{dict.answerPlaceholder}</span>}
+            </div>
+          ) : (
+            <input
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              value={answer}
+              disabled={Boolean(result)}
+              placeholder={dict.answerPlaceholder}
+              onChange={(e) => setAnswer(e.target.value.split("").filter((ch) => ch === " " || LATIN_LETTER.test(ch)).join(""))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !result) onSubmit(answer);
+              }}
+              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${answerBoxColorClass(result)}`}
+            />
+          ))}
       </div>
 
       {feedbackText && <p className="-mt-3 text-sm text-foreground/70">{feedbackText}</p>}

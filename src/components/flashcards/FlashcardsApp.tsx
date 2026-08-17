@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import CategoryGrid, { type CategorySummary } from "./CategoryGrid";
+import LevelFilterBar from "./LevelFilterBar";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 
@@ -22,9 +23,9 @@ export interface FlashcardsDict {
   searchPlaceholder: string;
   cardCountLabel: string; // template, contains literal "{count}"
   backToCategories: string;
+  nextLevelBadgeLabel: string; // template, contains literal "{level}"
 }
 
-const levels: FlashcardLevel[] = ["A1", "A2", "B1"];
 // Debounce delay for the always-visible search box — short enough to feel
 // responsive, long enough that a 4-5 letter Russian word doesn't fire a
 // request per keystroke.
@@ -168,37 +169,11 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
           placeholder={dict.searchPlaceholder}
           className="mb-3 w-full rounded-full border border-black/10 bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-foreground/40 dark:border-white/15"
         />
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => selectLevel("all")}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-              levelFilter === "all"
-                ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-            }`}
-          >
-            {dict.levelAll}
-          </button>
-          {levels.map((lvl) => (
-            <button
-              key={lvl}
-              type="button"
-              onClick={() => selectLevel(lvl)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-                levelFilter === lvl
-                  ? "bg-foreground text-background"
-                  : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-              }`}
-            >
-              {lvl}
-            </button>
-          ))}
-        </div>
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={selectLevel} />
       </div>
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} onSelectCategory={selectCategory} />
+        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
       ) : (
         <>
           {category && (

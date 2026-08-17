@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
+import LevelFilterBar from "./LevelFilterBar";
 import MatchBoard, { type MatchResult } from "./MatchBoard";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
-import { buildMatchRound, countPlayableCards } from "@/lib/flashcards/match-round";
+import { buildMatchRound } from "@/lib/flashcards/match-round";
 import { recordSrsAnswer } from "@/lib/flashcard-progress";
 
 export interface MatchAppDict extends CategoryGridDict {
@@ -17,7 +18,6 @@ export interface MatchAppDict extends CategoryGridDict {
   nextRoundButton: string;
 }
 
-const levels: FlashcardLevel[] = ["A1", "A2", "B1"];
 const ROUND_SIZES = [4, 6, 8];
 const MIN_PLAYABLE = 4;
 
@@ -39,22 +39,6 @@ export default function MatchApp({ dict }: { dict: MatchAppDict }) {
       .catch(() => setCategorySummary({}));
   }, [levelFilter, round]);
 
-  // How many playable pairs the CURRENT category has at each level — lets
-  // the level buttons disable themselves before the player switches into a
-  // level with too few cards, rather than switching and finding a stale or
-  // empty board (see the two bugs this component used to have: switching
-  // level while already inside a category didn't rebuild the round at all,
-  // and there was no way to tell in advance that a level had nothing to play).
-  const playableCounts = useMemo(() => {
-    const counts: Record<FlashcardLevel | "all", number> = { all: countPlayableCards(categoryCards), A1: 0, A2: 0, B1: 0, B2: 0, C1: 0 };
-    for (const lvl of levels) counts[lvl] = countPlayableCards(categoryCards.filter((c) => c.level === lvl));
-    return counts;
-  }, [categoryCards]);
-
-  // Takes the level explicitly instead of reading levelFilter from the
-  // closure — selectLevel below calls this right after setLevelFilter,
-  // whose new value isn't visible in this render's closure yet, so reading
-  // the state directly here would rebuild the round against the OLD level.
   function startRound(size: number, sourceCards: FlashcardRow[], level: FlashcardLevel | "all") {
     const filtered = level === "all" ? sourceCards : sourceCards.filter((c) => c.level === level);
     setRound(buildMatchRound(filtered, size));
@@ -78,18 +62,6 @@ export default function MatchApp({ dict }: { dict: MatchAppDict }) {
       });
   }
 
-  // Switching the level filter while already inside a category must
-  // immediately rebuild the round from the new level's cards — previously
-  // this only updated levelFilter and left the old level's round on
-  // screen untouched.
-  function selectLevel(next: FlashcardLevel | "all") {
-    setLevelFilter(next);
-    if (category) {
-      setSizeIndex(0);
-      startRound(ROUND_SIZES[0], categoryCards, next);
-    }
-  }
-
   function backToCategories() {
     setCategory(null);
     setRound([]);
@@ -111,38 +83,17 @@ export default function MatchApp({ dict }: { dict: MatchAppDict }) {
 
   return (
     <div>
+      {/* Level is locked (disabled) for the duration of a round, same rule
+          as recall/fill-blank — matching a category immediately starts a
+          round here, so "in a round" and "a category is selected" are the
+          same condition. To play a different level, back out to the
+          category grid first, same as changing category. */}
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
-        <button
-          type="button"
-          onClick={() => selectLevel("all")}
-          disabled={Boolean(category) && playableCounts.all < MIN_PLAYABLE}
-          className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-            levelFilter === "all"
-              ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-          }`}
-        >
-          {dict.levelAll}
-        </button>
-        {levels.map((lvl) => (
-          <button
-            key={lvl}
-            type="button"
-            onClick={() => selectLevel(lvl)}
-            disabled={Boolean(category) && playableCounts[lvl] < MIN_PLAYABLE}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-              levelFilter === lvl
-                ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-            }`}
-          >
-            {lvl}
-          </button>
-        ))}
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
       </div>
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} onSelectCategory={selectCategory} />
+        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
       ) : (
         <>
           <button

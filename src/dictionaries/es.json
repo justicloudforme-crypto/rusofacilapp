@@ -478,6 +478,7 @@
     "searchPlaceholder": "Buscar una palabra...",
     "cardCountLabel": "{count} palabras",
     "backToCategories": "← Categorías",
+    "nextLevelBadgeLabel": "¡Ya dominas este nivel aquí! Prueba {level}",
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",
     "modeFillBlank": "Completa la frase",

@@ -18,9 +18,9 @@ export interface VocabularyDict extends FlashcardsDict {
   modeMatch: string;
   modeIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel">;
-  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel">;
-  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel">;
+  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel">;
+  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel">;
+  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -57,15 +57,34 @@ export default function VocabularyApp({ dict }: { dict: VocabularyDict }) {
 
       {mode === "vocabulary" && <FlashcardsApp dict={dict} />}
       {mode === "recall" && (
-        <RecallApp dict={{ ...dict.recall, categoryLabels: dict.categoryLabels, cardCountLabel: dict.cardCountLabel }} />
+        <RecallApp
+          dict={{
+            ...dict.recall,
+            categoryLabels: dict.categoryLabels,
+            cardCountLabel: dict.cardCountLabel,
+            nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+          }}
+        />
       )}
       {mode === "fillBlank" && (
         <FillBlankApp
-          dict={{ ...dict.fillBlank, categoryLabels: dict.categoryLabels, cardCountLabel: dict.cardCountLabel }}
+          dict={{
+            ...dict.fillBlank,
+            categoryLabels: dict.categoryLabels,
+            cardCountLabel: dict.cardCountLabel,
+            nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+          }}
         />
       )}
       {mode === "match" && (
-        <MatchApp dict={{ ...dict.match, categoryLabels: dict.categoryLabels, cardCountLabel: dict.cardCountLabel }} />
+        <MatchApp
+          dict={{
+            ...dict.match,
+            categoryLabels: dict.categoryLabels,
+            cardCountLabel: dict.cardCountLabel,
+            nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+          }}
+        />
       )}
       {mode === "idioms" && <IdiomsList dict={dict.idioms} />}
     </div>
