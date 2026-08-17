@@ -41,6 +41,10 @@ export interface Flashcard {
   exampleEs: string;
   synonyms?: WordRelation[];
   antonyms?: WordRelation[];
+  /** Pre-generated pronunciation clip for `russian`, from the shared
+   * AudioAsset cache (see prisma/generate-flashcard-audio.ts). Undefined
+   * until generated — SpeakButton falls back to browser TTS. */
+  audioUrl?: string | null;
 }
 
 export const flashcardCategories: FlashcardCategory[] = [

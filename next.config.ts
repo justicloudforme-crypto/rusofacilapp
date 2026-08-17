@@ -12,8 +12,11 @@ const nextConfig: NextConfig = {
   // URL `next dev` prints (see MOBILE.md's mobile-testing instructions).
   // Add the dev machine's LAN IP here if it changes (`ipconfig getifaddr
   // en0` on macOS) — the error Next.js logs to the terminal when it blocks
-  // a request always names the exact origin to add.
-  allowedDevOrigins: ["192.168.1.69"],
+  // a request always names the exact origin to add. "0.0.0.0" is separate
+  // from the LAN IP above — it's the origin an in-editor browser preview
+  // (e.g. VS Code's Simple Browser/webview) presents when proxying
+  // localhost, hit the same 403-all-chunks failure mode from here too.
+  allowedDevOrigins: ["192.168.1.69", "0.0.0.0"],
 };
 
 // Run `ANALYZE=true npm run build` to get an interactive treemap of the

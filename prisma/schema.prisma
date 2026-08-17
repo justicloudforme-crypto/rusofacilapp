@@ -217,12 +217,20 @@ model VoiceSubmission {
 // src/lib/flashcard-progress.ts; the client still writes to localStorage
 // first for instant UI feedback, then syncs here in the background.
 model FlashcardProgress {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cardId    String
-  known     Boolean  @default(true)
-  updatedAt DateTime @default(now()) @updatedAt
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId        String
+  known         Boolean   @default(true)
+  // Leitner-box spaced repetition, laid down for the upcoming recall/typing
+  // trainer and match game (both need "which words is this user weak on"
+  // beyond the coarse known/unknown flag above). box: 0 = new/learning,
+  // 1 = review, 2 = mastered. correctStreak resets to 0 on any miss;
+  // reaching 2 in a row promotes the card to the next box.
+  box           Int       @default(0)
+  correctStreak Int       @default(0)
+  lastSeenAt    DateTime?
+  updatedAt     DateTime  @default(now()) @updatedAt
 
   @@unique([userId, cardId])
   @@index([userId])
@@ -258,17 +266,37 @@ model StoryReadingProgress {
 // OpenAI TTS call per item, so this table is filled incrementally, not all
 // at once; SpeakButton falls back to browser synthesis for any item not
 // yet cached here.
-model LessonAudioCache {
-  id         String   @id @default(cuid())
-  level      String
-  lessonSlug String
-  itemKey    String
-  audioUrl   String
-  voice      String
-  createdAt  DateTime @default(now())
+// Single shared cache for every pre-generated (paid, OpenAI) narration clip
+// in the app — stories, lesson pronunciation, flashcard words, and future
+// content types all write here instead of each rolling its own table.
+// Nothing but the generate-*-audio.ts CLI scripts ever writes to this model
+// (they're the only code that holds OPENAI_API_KEY) — no request handler
+// under src/app/api reads that key or calls the TTS provider, so ordinary
+// users have no code path that can trigger a paid generation.
+//
+// (contentType, contentId, itemKey) identifies WHERE a clip belongs (e.g.
+// story "abc123" paragraph 3 sentence 1, or lesson "a1-3"'s pronunciation
+// for a specific word/example). `textHash` identifies WHAT was actually
+// synthesized: a generation run only re-synthesizes an item when the
+// current text's hash no longer matches the stored one (content was
+// edited), so fixing a typo in one already-narrated sentence costs one
+// clip, not a re-run of the whole story/lesson/corpus — see
+// src/lib/audio-assets.ts.
+model AudioAsset {
+  id          String   @id @default(cuid())
+  contentType String // "story" | "lesson" | "flashcard"
+  contentId   String // Story.id | `${level}-${lessonSlug}` | FlashcardCard.id
+  itemKey     String // position/id of the item within its content (see call sites)
+  textHash    String // sha256 of the exact sanitized text last synthesized
+  text        String // that text, kept for audit/debugging and for lesson-audio's by-word lookup
+  voice       String
+  model       String // e.g. "gpt-4o-mini-tts" — lets a future voice/model switch be told apart from old clips
+  audioUrl    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([level, lessonSlug, itemKey])
-  @@index([level, lessonSlug])
+  @@unique([contentType, contentId, itemKey])
+  @@index([contentType, contentId])
 }
 
 // Architectural foundation for the planned "linguistic terms glossary" —

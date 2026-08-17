@@ -7,6 +7,11 @@
 // calls just means "not logged in, stay local" — never surfaced as an error.
 
 const STORAGE_KEY = "rusofacil:flashcard-progress";
+// Separate key from the "known" map above: box progress is written far more
+// often (every answer in the recall trainer / match game, not just a
+// deliberate "Lo sé" tap), so keeping it in its own record avoids re-parsing
+// and re-serializing the known map on every recall-mode answer.
+const SRS_STORAGE_KEY = "rusofacil:flashcard-srs";
 
 interface Entry {
   known: boolean;
@@ -15,6 +20,95 @@ interface Entry {
 
 type EntryMap = Record<string, Entry>;
 type KnownMap = Record<string, boolean>;
+
+/** Leitner-box progress for one card. box 0 = new/learning, 1 = review,
+ * 2 = mastered. See prisma/schema.prisma's FlashcardProgress comment for
+ * the full promotion rule. */
+export interface SrsEntry {
+  box: number;
+  correctStreak: number;
+  lastSeenAt: number;
+}
+
+type SrsMap = Record<string, SrsEntry>;
+
+const MAX_BOX = 2;
+
+function readSrsAll(): SrsMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(SRS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: SrsMap = {};
+    for (const [cardId, value] of Object.entries(parsed as Record<string, unknown>)) {
+      if (
+        value &&
+        typeof value === "object" &&
+        typeof (value as SrsEntry).box === "number" &&
+        typeof (value as SrsEntry).correctStreak === "number"
+      ) {
+        const entry = value as SrsEntry;
+        out[cardId] = {
+          box: entry.box,
+          correctStreak: entry.correctStreak,
+          lastSeenAt: typeof entry.lastSeenAt === "number" ? entry.lastSeenAt : 0,
+        };
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function writeSrsAll(map: SrsMap) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SRS_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // Same "nice-to-have, never block studying" reasoning as writeAll above.
+  }
+}
+
+function syncSrsToServer(cardId: string, known: boolean, entry: SrsEntry) {
+  fetch("/api/flashcard-progress", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cardId, known, box: entry.box, correctStreak: entry.correctStreak }),
+  }).catch(() => {
+    // Offline or logged out — same fire-and-forget reasoning as syncToServer.
+  });
+}
+
+export function getSrsProgress(): SrsMap {
+  return readSrsAll();
+}
+
+/** Records one recall/typing-trainer or match-game answer for a card and
+ * returns its updated box entry. Two correct answers in a row promote the
+ * card to the next box (shown less often); any miss drops it straight back
+ * to box 0 and resets the streak, since a mistake means the word needs
+ * full re-learning, not just one fewer review. */
+export function recordSrsAnswer(cardId: string, correct: boolean): SrsEntry {
+  const all = readSrsAll();
+  const prev = all[cardId] ?? { box: 0, correctStreak: 0, lastSeenAt: 0 };
+
+  const next: SrsEntry = correct
+    ? prev.correctStreak + 1 >= 2
+      ? { box: Math.min(prev.box + 1, MAX_BOX), correctStreak: 0, lastSeenAt: Date.now() }
+      : { box: prev.box, correctStreak: prev.correctStreak + 1, lastSeenAt: Date.now() }
+    : { box: 0, correctStreak: 0, lastSeenAt: Date.now() };
+
+  all[cardId] = next;
+  writeSrsAll(all);
+  // A correct answer that just promoted a card, or any miss, is worth
+  // marking "known"/"not known" too — keeps the coarse flag used by the
+  // flip-card progress bar roughly in sync with the finer-grained box.
+  syncSrsToServer(cardId, next.box >= MAX_BOX, next);
+  return next;
+}
 
 function toKnownMap(entries: EntryMap): KnownMap {
   const out: KnownMap = {};
@@ -106,5 +200,36 @@ export async function syncKnownWords(): Promise<KnownMap> {
     return toKnownMap(merged);
   } catch {
     return toKnownMap(local);
+  }
+}
+
+/** Same device-switch reconciliation as syncKnownWords, for the box/streak
+ * data instead of the coarse known flag. Issues its own GET request rather
+ * than sharing syncKnownWords' — the two are called from different places
+ * (browse mode only needs known words; the recall trainer only needs box
+ * data), so there's no single caller to share a request between. */
+export async function syncSrsProgress(): Promise<SrsMap> {
+  const local = readSrsAll();
+  try {
+    const res = await fetch("/api/flashcard-progress");
+    if (!res.ok) return local;
+    const body: unknown = await res.json();
+    const remote =
+      body && typeof body === "object" && (body as { progress?: unknown }).progress
+        ? ((body as { progress: Record<string, SrsEntry & { lastSeenAt: number | null }> }).progress ?? {})
+        : {};
+
+    const merged: SrsMap = { ...local };
+    for (const [cardId, remoteEntry] of Object.entries(remote)) {
+      if (remoteEntry.lastSeenAt === null) continue;
+      const localEntry = merged[cardId];
+      if (!localEntry || remoteEntry.lastSeenAt >= localEntry.lastSeenAt) {
+        merged[cardId] = { box: remoteEntry.box, correctStreak: remoteEntry.correctStreak, lastSeenAt: remoteEntry.lastSeenAt };
+      }
+    }
+    writeSrsAll(merged);
+    return merged;
+  } catch {
+    return local;
   }
 }
