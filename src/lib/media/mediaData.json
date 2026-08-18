@@ -21997,5 +21997,89 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video SgP3HdIy5Tg ('Косвенная речь. Часть 2 || Прямая и косвенная речь'), canal independiente «О русском по-русски» / About Russian in Russian, segunda parte de la misma serie usada para b1-23. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y regla de los 'tres pasos' extraídos directamente de la transcripción."
+  },
+  "video-discurso-indirecto-preguntas-especiales": {
+    "id": "video-discurso-indirecto-preguntas-especiales",
+    "title": "Preguntas indirectas: как, где, когда, почему",
+    "description": "Cuando la pregunta original en discurso directo contiene una palabra interrogativa (где, куда, откуда, когда, почему, зачем, как, на каком этаже), esa misma palabra se conserva y funciona como conector en el discurso indirecto — no se añade «что» ni «чтобы»: Он спросил: «Где ты живёшь?» → Он спросил, где я живу.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "qo5Ur19tTak",
+    "curriculumLessonId": "b1-25",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Он спросил, почему... Он спросил, где ты живёшь. Он спросил, откуда она приехала.",
+        "translation": "Él preguntó por qué... Él preguntó dónde vives. Él preguntó de dónde vino ella. (la palabra interrogativa se conserva igual en la pregunta indirecta)"
+      },
+      {
+        "russian": "Зачем, на каком этаже, куда, откуда — вот эти все вопросы.",
+        "translation": "Para qué, en qué piso, adónde, de dónde — todas estas son palabras interrogativas que funcionan igual."
+      },
+      {
+        "russian": "Сегодня мы будем делать диалоги: где, почему, куда, на каком этаже, откуда, когда.",
+        "translation": "Hoy haremos diálogos con: dónde, por qué, adónde, en qué piso, de dónde, cuándo."
+      },
+      {
+        "russian": "Там не только вопросы «где», «куда», «почему», но ещё вопросы «да» или «нет».",
+        "translation": "Ahí no solo hay preguntas con «dónde», «adónde», «por qué», sino también preguntas de sí/no (que se tratan con la partícula «ли», tema aparte)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "он спросил, где...",
+        "transcription": "on sprasíl, gd'e",
+        "translation": "él preguntó dónde... (la palabra interrogativa se mantiene)"
+      },
+      {
+        "word": "он спросил, почему...",
+        "transcription": "on sprasíl, pachimú",
+        "translation": "él preguntó por qué..."
+      },
+      {
+        "word": "он спросил, куда...",
+        "transcription": "on sprasíl, kudá",
+        "translation": "él preguntó adónde..."
+      },
+      {
+        "word": "он спросил, откуда...",
+        "transcription": "on sprasíl, atkúda",
+        "translation": "él preguntó de dónde..."
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodiscursoindirectopreguntasespeciales-mc-1",
+        "type": "multiple-choice",
+        "prompt": "«Он спросил: «Где ты живёшь?»» en discurso indirecto es:",
+        "options": [
+          "Он спросил, что я живу.",
+          "Он спросил, где я живу.",
+          "Он спросил, чтобы я жил.",
+          "Он спросил я живу где."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodiscursoindirectopreguntasespeciales-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "«Где ты живёшь?» →",
+            "right": "он спросил, где я живу"
+          },
+          {
+            "left": "«Откуда ты приехал?» →",
+            "right": "он спросил, откуда я приехал"
+          },
+          {
+            "left": "«Почему ты опоздал?» →",
+            "right": "он спросил, почему я опоздал"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video qo5Ur19tTak ('Косвенная речь: специальный вопрос. Русский язык как иностранный уровень А2'), canal independiente 'Наталья Сорокина'. Público, playable_in_embed=true, no es livestream (video estructurado de clase individual con diálogos de ejemplo interpretados por la propia profesora, no una grabación de clase con estudiantes reales). Verificado con subtítulos AUTOMÁTICOS reales en ruso (legibles): ejemplos con palabras interrogativas extraídos directamente de la transcripción."
   }
 }
