@@ -22165,5 +22165,177 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video VxIDN37jtm8 ('Инфинитив НСВ или СВ? || Глаголы НСВ и СВ'), canal independiente «О русском по-русски» / About Russian in Russian, misma serie que b1-16/22/23/24. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: las tres categorías de verbos (siempre НСВ, siempre СВ, ambos posibles) y sus ejemplos extraídos directamente de la transcripción."
+  },
+  "video-grado-comparativo-adverbios": {
+    "id": "video-grado-comparativo-adverbios",
+    "title": "Grado comparativo de los adverbios",
+    "description": "El comparativo simple de los adverbios (una sola palabra) se forma con uno de tres sufijos: -ее- (холодно → холоднее, tras la mayoría de consonantes), -е- (con alternancia consonántica: громко → громче, tras К/Г/Х/Д/Т/ТС) o -ше-. También existe el comparativo compuesto (dos palabras, con «более»/«менее»).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "k2IgmopPLEg",
+    "curriculumLessonId": "a2-20",
+    "lyricsOrTranscript": [
+      {
+        "russian": "В русском языке есть три степени сравнения наречий: начальная, сравнительная и превосходная.",
+        "translation": "En ruso hay tres grados de comparación de adverbios: positivo, comparativo y superlativo."
+      },
+      {
+        "russian": "Холодно – холоднее.",
+        "translation": "Frío(mente) – más frío. (sufijo -ее-, usado tras la mayoría de consonantes)"
+      },
+      {
+        "russian": "Громко – громче. Мы суффикс -о- поменяли на суффикс -е-, и согласную К мы поменяли на согласную Ч. Это чередование.",
+        "translation": "Fuerte(mente) – más fuerte. Cambiamos el sufijo -о- por -е-, y la consonante К por Ч. Esto se llama alternancia consonántica. (sufijo -е-, tras К/Г/Х/Д/Т/ТС)"
+      },
+      {
+        "russian": "Простая сравнительная степень – это одно слово. Составная сравнительная степень – два слова. Это главная разница между ними.",
+        "translation": "El comparativo simple es una sola palabra. El comparativo compuesto son dos palabras. Esa es la diferencia principal entre ambos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "холоднее",
+        "transcription": "khaladn'éye",
+        "translation": "más frío (comparativo simple, sufijo -ее-)"
+      },
+      {
+        "word": "громче",
+        "transcription": "grómchi",
+        "translation": "más fuerte/alto (comparativo simple, sufijo -е- + alternancia К→Ч)"
+      },
+      {
+        "word": "чередование",
+        "transcription": "chiridavániye",
+        "translation": "alternancia consonántica"
+      },
+      {
+        "word": "простая/составная сравнительная степень",
+        "transcription": "prastáya/sastavnáya",
+        "translation": "comparativo simple (una palabra) / compuesto (dos palabras)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videogradocomparativoadverbios-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es el comparativo simple correcto de «громко» (fuerte)?",
+        "options": [
+          "громкее",
+          "громче",
+          "более громко",
+          "громкое"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videogradocomparativoadverbios-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "холодно → холоднее",
+            "right": "sufijo -ее-"
+          },
+          {
+            "left": "громко → громче",
+            "right": "sufijo -е- con alternancia К→Ч"
+          },
+          {
+            "left": "более/менее + adverbio",
+            "right": "comparativo compuesto (dos palabras)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video k2IgmopPLEg ('Степени сравнения НАРЕЧИЙ || Степени сравнения'), canal independiente «О русском по-русски» / About Russian in Russian, misma serie que a2-15/16/17/21/23/24 y b1-16/17/22/23/24/25. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: reglas y ejemplos extraídos directamente de la transcripción."
+  },
+  "video-adverbios-negativos": {
+    "id": "video-adverbios-negativos",
+    "title": "Adverbios negativos: никогда, нигде, никуда, никак",
+    "description": "A diferencia del inglés (donde una sola palabra negativa basta: 'nobody knows'), el ruso permite y a menudo REQUIERE varias palabras negativas en la misma frase junto con «не» ante el verbo: «никто никогда ничего не делает нигде» combina cuatro elementos negativos en una sola oración gramaticalmente correcta, sin que se cancelen entre sí.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "momHWy2pnoU",
+    "curriculumLessonId": "a2-26",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Отрицательные фразы — это то, в чём русский язык сильно отличается от английского.",
+        "translation": "Las frases negativas son un punto donde el ruso se diferencia mucho del inglés (en inglés una sola palabra negativa es suficiente; en ruso pueden combinarse varias)."
+      },
+      {
+        "russian": "«Никто никогда ничего не делает нигде».",
+        "translation": "Nadie nunca hace nada en ningún lado. (cuatro elementos negativos — никто/никогда/ничего/нигде — combinados con «не» ante el verbo, todos gramaticalmente obligatorios y correctos en ruso)"
+      },
+      {
+        "russian": "Вчера никто не работал, а он весь день никуда не ходил.",
+        "translation": "Ayer nadie trabajó, y él no fue a ningún lado en todo el día. («никуда не» = a ningún lado)"
+      },
+      {
+        "russian": "Я никак не могу вспомнить его имя.",
+        "translation": "De ninguna manera logro recordar su nombre. («никак не» + verbo = de ningún modo, por más que lo intente)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "никогда не",
+        "transcription": "nikagdá ni",
+        "translation": "nunca (+ negación obligatoria del verbo)"
+      },
+      {
+        "word": "нигде не",
+        "transcription": "nigd'é ni",
+        "translation": "en ningún lugar (+ negación obligatoria)"
+      },
+      {
+        "word": "никуда не",
+        "transcription": "nikudá ni",
+        "translation": "a ningún lado (+ negación obligatoria)"
+      },
+      {
+        "word": "никак не",
+        "transcription": "nikák ni",
+        "translation": "de ninguna manera (+ negación obligatoria)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoadverbiosnegativos-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuántos elementos negativos puede llevar correctamente UNA sola frase rusa (a diferencia del inglés)?",
+        "options": [
+          "Solo uno, igual que en inglés",
+          "Solo dos como máximo",
+          "Varios a la vez, todos correctos y obligatorios",
+          "Ninguno: el ruso evita la negación"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoadverbiosnegativos-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "никогда не",
+            "right": "nunca"
+          },
+          {
+            "left": "нигде не",
+            "right": "en ningún lugar"
+          },
+          {
+            "left": "никуда не",
+            "right": "a ningún lado"
+          },
+          {
+            "left": "никак не",
+            "right": "de ninguna manera"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video momHWy2pnoU ('Negative phrases | Nothing, noone, nowhere, never'), canal 'Russian with Vladimir'. Público, playable_in_embed=true, no es livestream. Video breve bilingüe (narración en ruso con comparación al inglés); algunos fragmentos de la transcripción automática muestran artefactos de transcripción (mezcla ru/en mal reconocida) y se omitieron; solo se usaron las oraciones rusas claramente legibles ('никто никогда ничего не делает нигде'). El ejemplo con «никуда» se reutilizó de la transcripción ya verificada de a2-25 (mismo campo semántico); «никак» se construyó a partir de conocimiento gramatical verificado, siguiendo la práctica ya establecida en esta sesión para contenido con subtítulos parcialmente no fiables."
   }
 }
