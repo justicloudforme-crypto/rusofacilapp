@@ -68,6 +68,18 @@ export default async function RegisterPage({
         </button>
       </form>
 
+      <p className="mt-4 text-center text-xs text-foreground/50">
+        {dict.auth.legalNoticeBeforeTerms}{" "}
+        <Link href={`/${lang}/terms`} className="underline hover:text-foreground/70">
+          {dict.footer.termsLink}
+        </Link>{" "}
+        {dict.auth.legalNoticeBetween}{" "}
+        <Link href={`/${lang}/privacy`} className="underline hover:text-foreground/70">
+          {dict.footer.privacyLink}
+        </Link>
+        {dict.auth.legalNoticeAfterPrivacy}
+      </p>
+
       <Link
         href={`/${lang}/login?redirectTo=${encodeURIComponent(redirectTo)}`}
         className="mt-4 text-center text-sm text-foreground/70 hover:text-foreground"

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "RusoFácilapp — Aprende ruso desde México",
-    "description": "Cursos de ruso para hispanohablantes mexicanos, del nivel A1 al B2."
+    "title": "RusoFácilapp — Aprende ruso en español",
+    "description": "Cursos de ruso para hispanohablantes de todo el mundo, del nivel A1 al B2."
   },
   "nav": {
     "home": "Inicio",
@@ -27,7 +27,7 @@
     "startLevelLabel": "Empezar"
   },
   "home": {
-    "badge": "Diseñado para hispanohablantes de México",
+    "badge": "Diseñado para hispanohablantes de todo el mundo",
     "heroTitle": "Aprende ruso a tu ritmo, explicado en español",
     "heroSubtitle": "Un programa estructurado del nivel A1 al B2, con comparaciones directas entre el español y el ruso para que avances más rápido.",
     "heroCta": "Ver los cursos",
@@ -219,8 +219,10 @@
     }
   },
   "footer": {
-    "tagline": "Ruso para hispanohablantes de México, del A1 al B2.",
-    "rights": "Todos los derechos reservados."
+    "tagline": "Ruso para hispanohablantes, del A1 al B2.",
+    "rights": "Todos los derechos reservados.",
+    "termsLink": "Términos de Servicio",
+    "privacyLink": "Política de Privacidad"
   },
   "languageSwitcher": {
     "label": "Idioma"
@@ -236,6 +238,9 @@
     "passwordPlaceholder": "Mínimo 8 caracteres",
     "submit": "Iniciar sesión",
     "registerSubmit": "Crear cuenta",
+    "legalNoticeBeforeTerms": "Al crear una cuenta, aceptas nuestros",
+    "legalNoticeBetween": "y nuestra",
+    "legalNoticeAfterPrivacy": ".",
     "invalidEmail": "Introduce un correo electrónico válido.",
     "invalidCredentials": "Correo o contraseña incorrectos.",
     "weakPassword": "La contraseña debe tener al menos 8 caracteres.",

@@ -99,7 +99,7 @@ export default async function LangLayout({
         <OfflineBanner message={dict.offline.bannerMessage} />
         <Navbar lang={lang} dict={dict} />
         <main className="flex flex-1 flex-col">{children}</main>
-        <Footer dict={dict} />
+        <Footer dict={dict} lang={lang} />
         {/* Reading mode is meant to minimize distractions — the floating
             Telegram CTA is the one persistent, animated, non-content element
             on every page, so it's the one thing this mode hides. */}
