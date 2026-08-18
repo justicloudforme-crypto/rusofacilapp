@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { invalidateStoryCatalogCache } from "@/lib/stories-catalog";
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
 
   if (id) {
     await db.story.deleteMany({ where: { id } });
+    await invalidateStoryCatalogCache();
   }
 
   return NextResponse.redirect(storiesUrl, { status: 303 });

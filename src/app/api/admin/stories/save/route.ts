@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { validateStoryInput } from "@/lib/stories";
+import { invalidateStoryCatalogCache } from "@/lib/stories-catalog";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
   const story = id
     ? await db.story.update({ where: { id }, data: result.value })
     : await db.story.create({ data: result.value });
+  await invalidateStoryCatalogCache();
 
   return NextResponse.json({ ok: true, id: story.id });
 }

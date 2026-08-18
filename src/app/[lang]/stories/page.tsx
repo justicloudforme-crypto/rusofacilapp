@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { db } from "@/lib/db";
-import { isStoryLevel, type StoryLevel } from "@/lib/stories";
+import { getStoryCatalog } from "@/lib/stories-catalog";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
 
 export default async function StoriesPage({ params }: PageProps<"/[lang]/stories">) {
@@ -12,17 +11,7 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
   const dict = await getDictionary(lang);
   if (!dict?.stories) notFound();
 
-  const rows = await db.story.findMany({ orderBy: { createdAt: "desc" } });
-  const stories = rows
-    .filter((row) => isStoryLevel(row.level))
-    .map((row) => ({
-      id: row.id,
-      title: row.title,
-      author: row.author,
-      level: row.level as StoryLevel,
-      isPremium: row.isPremium,
-      description: row.description,
-    }));
+  const stories = await getStoryCatalog();
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-16">

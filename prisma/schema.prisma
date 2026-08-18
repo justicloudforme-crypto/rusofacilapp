@@ -150,6 +150,8 @@ model Story {
   isPremium     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([level])
 }
 
 // Admin-edited lesson content (grammar/vocabulary/exercises), stored as a
@@ -390,6 +392,13 @@ model FlashcardCard {
 model Idiom {
   id                 String   @id @default(cuid())
   category           String // IdiomCategory: daily | proverbs | literary
+  // CEFR level (StoryLevel: A1 | A2 | B1 | B2 | C1), added after the fact —
+  // every pre-existing row defaults to "A2" as a safe placeholder (not "A1",
+  // which would understate literary idioms; not null, which would just
+  // create a third, unlabeled state). This is a temporary stand-in, not a
+  // real classification — re-tagging the existing 771 rows by actual
+  // difficulty is separate, future content work.
+  level              String   @default("A2")
   phrase             String
   literalTranslation String
   spanishEquivalent  String
@@ -400,4 +409,5 @@ model Idiom {
   updatedAt          DateTime @updatedAt
 
   @@index([category])
+  @@index([level])
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { idiomCategories, type IdiomCategory } from "@/lib/idioms";
+import { idiomCategories, idiomLevels, type IdiomCategory } from "@/lib/idioms";
+import type { StoryLevel } from "@/lib/stories";
 
 export interface IdiomAdminDict {
   categoryFilterLabel: string;
@@ -9,15 +10,19 @@ export interface IdiomAdminDict {
   categoryDailyLabel: string;
   categoryProverbsLabel: string;
   categoryLiteraryLabel: string;
+  levelFilterLabel: string;
+  levelAllLabel: string;
   searchPlaceholder: string;
   phraseHeader: string;
   categoryHeader: string;
+  levelHeader: string;
   newButton: string;
   editButton: string;
   deleteButton: string;
   cancelButton: string;
   emptyState: string;
   categoryLabel: string;
+  levelLabel: string;
   phraseLabel: string;
   literalTranslationLabel: string;
   spanishEquivalentLabel: string;
@@ -34,6 +39,7 @@ export interface IdiomAdminDict {
 interface IdiomRow {
   id: string;
   category: IdiomCategory;
+  level: StoryLevel;
   phrase: string;
   literalTranslation: string;
   spanishEquivalent: string;
@@ -45,6 +51,7 @@ interface IdiomRow {
 const emptyForm = {
   id: null as string | null,
   category: idiomCategories[0] as IdiomCategory,
+  level: "A2" as StoryLevel,
   phrase: "",
   literalTranslation: "",
   spanishEquivalent: "",
@@ -57,6 +64,7 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
   const [idioms, setIdioms] = useState<IdiomRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<IdiomCategory | "all">("all");
+  const [levelFilter, setLevelFilter] = useState<StoryLevel | "all">("all");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState<typeof emptyForm | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -89,10 +97,11 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
     const query = search.trim().toLowerCase();
     return idioms.filter((idiom) => {
       if (categoryFilter !== "all" && idiom.category !== categoryFilter) return false;
+      if (levelFilter !== "all" && idiom.level !== levelFilter) return false;
       if (!query) return true;
       return idiom.phrase.toLowerCase().includes(query) || idiom.spanishEquivalent.toLowerCase().includes(query);
     });
-  }, [idioms, categoryFilter, search]);
+  }, [idioms, categoryFilter, levelFilter, search]);
 
   function startEdit(row: IdiomRow) {
     setSaved(false);
@@ -154,6 +163,21 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
             ))}
           </select>
         </label>
+        <label className="block text-sm">
+          <span className="mb-1 block text-foreground/70">{dict.levelFilterLabel}</span>
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value as StoryLevel | "all")}
+            className="rounded-lg border border-black/10 bg-transparent px-3 py-2 outline-none focus:border-foreground/40 dark:border-white/15"
+          >
+            <option value="all">{dict.levelAllLabel}</option>
+            {idiomLevels.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </label>
         <input
           type="search"
           value={search}
@@ -184,6 +208,20 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
                 {idiomCategories.map((c) => (
                   <option key={c} value={c}>
                     {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground/70">{dict.levelLabel}</span>
+              <select
+                value={form.level}
+                onChange={(e) => setForm({ ...form, level: e.target.value as StoryLevel })}
+                className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 outline-none focus:border-foreground/40 dark:border-white/15"
+              >
+                {idiomLevels.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
                   </option>
                 ))}
               </select>
@@ -271,6 +309,7 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
               <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
                 <th className="px-4 py-2">{dict.phraseHeader}</th>
                 <th className="px-4 py-2">{dict.categoryHeader}</th>
+                <th className="px-4 py-2">{dict.levelHeader}</th>
                 <th className="px-4 py-2" />
               </tr>
             </thead>
@@ -280,6 +319,9 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
                   <td className="px-4 py-2.5">«{row.phrase}»</td>
                   <td className="px-4 py-2.5">
                     <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium">{row.category}</span>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium">{row.level}</span>
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex flex-wrap items-center justify-end gap-3">
