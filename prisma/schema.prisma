@@ -55,6 +55,15 @@ model User {
   referredBy           User?                  @relation("UserReferrals", fields: [referredByUserId], references: [id], onDelete: SetNull)
   referredUsers        User[]                 @relation("UserReferrals")
   referralRewardsEarned ReferralReward[]
+  // Off by default — a badge/streak profile is only reachable at
+  // /u/[publicHandle] once the user explicitly opts in from /profile.
+  // publicHandle is lazily generated the same way referralCode is (see
+  // src/lib/public-profile.ts): most accounts never enable this, so
+  // there's no reason to burn a handle at signup.
+  publicProfileEnabled Boolean                @default(false)
+  publicHandle         String?                @unique
+  ownedGroups          Group[]                @relation("GroupOwner")
+  groupMemberships     GroupMember[]
 }
 
 // status is one of: active | trialing | past_due | canceled | incomplete_expired
@@ -461,4 +470,35 @@ model ReferralReward {
   createdAt      DateTime @default(now())
 
   @@index([referrerUserId])
+}
+
+// A study group: a small, invite-only circle whose members can see each
+// other's streak/level/badge count on the group page (see
+// src/lib/groups.ts) — that visibility is scoped to fellow members only,
+// unlike the opt-in PUBLIC profile above, so it doesn't need
+// publicProfileEnabled. Deleting the owner's account deletes the group
+// entirely (Cascade) rather than leaving it ownerless.
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  inviteCode  String        @unique
+  ownerUserId String
+  owner       User          @relation("GroupOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+  createdAt   DateTime      @default(now())
+
+  @@index([ownerUserId])
+}
+
+model GroupMember {
+  id       String   @id @default(cuid())
+  groupId  String
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
 }

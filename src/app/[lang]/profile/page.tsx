@@ -19,6 +19,7 @@ import { getUserBadgesForDisplay } from "@/lib/badges";
 import { getWeeklyWeakTopic } from "@/lib/weak-topic";
 import { getReferralStats } from "@/lib/referral";
 import CopyReferralLink from "@/components/profile/CopyReferralLink";
+import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
 import { levelSlugs } from "@/lib/courses";
 import { getThemePreference, type ThemePreference } from "@/lib/theme";
 import { AVATAR_IDS, isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
@@ -70,7 +71,7 @@ export default async function ProfilePage({
   const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
   const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
-  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges, weakTopic, referral, requestHeaders] =
+  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges, weakTopic, referral, publicProfile, requestHeaders] =
     await Promise.all([
       getLatestSubscription(user.id),
       getSubscriptionHistory(user.id),
@@ -83,6 +84,7 @@ export default async function ProfilePage({
       getUserBadgesForDisplay(user.id),
       getWeeklyWeakTopic(user.id),
       getReferralStats(user.id),
+      db.user.findUnique({ where: { id: user.id }, select: { publicProfileEnabled: true, publicHandle: true } }),
       headers(),
     ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
@@ -226,6 +228,22 @@ export default async function ProfilePage({
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.appearanceDescription}</p>
             <div className="mt-4">
               <ThemeSwitcher initialTheme={theme} options={themeOptions} />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+            <h2 className="font-medium">{dict.profile.publicProfileHeading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.publicProfileDescription}</p>
+            <div className="mt-4">
+              <PublicProfileToggle
+                origin={`${requestProto}://${requestHost}`}
+                lang={lang}
+                initialEnabled={publicProfile?.publicProfileEnabled ?? false}
+                initialHandle={publicProfile?.publicHandle ?? null}
+                toggleLabel={dict.profile.publicProfileToggleLabel}
+                copyLabel={dict.profile.referralCopyButton}
+                copiedLabel={dict.profile.referralCopiedNotice}
+              />
             </div>
           </div>
 

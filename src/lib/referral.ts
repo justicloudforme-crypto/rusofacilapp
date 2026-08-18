@@ -1,7 +1,7 @@
 import "server-only";
-import { randomInt } from "node:crypto";
 import { db } from "./db";
 import { extendOrGrantSubscription } from "./subscription";
+import { generateShortCode, isPlausibleShortCode } from "./short-code";
 
 // Referrer gets a free-month extension the moment the person they referred
 // completes their FIRST real checkout — see awardReferralRewardIfEligible.
@@ -13,15 +13,11 @@ const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const CODE_LENGTH = 7;
 
 export function generateReferralCode(): string {
-  let code = "";
-  for (let i = 0; i < CODE_LENGTH; i++) {
-    code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
-  }
-  return code;
+  return generateShortCode(CODE_ALPHABET, CODE_LENGTH);
 }
 
 export function isPlausibleReferralCode(value: string): boolean {
-  return new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`).test(value);
+  return isPlausibleShortCode(value, CODE_ALPHABET, CODE_LENGTH);
 }
 
 /** Returns the user's referral code, generating and persisting one on

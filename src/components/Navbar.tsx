@@ -25,6 +25,7 @@ export default async function Navbar({
     { href: `/${lang}/stories`, label: dict.nav.stories },
     { href: `/${lang}/media`, label: dict.nav.media },
     { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary },
+    ...(user ? [{ href: `/${lang}/groups`, label: dict.nav.groups }] : []),
     ...(staff ? [{ href: `/${lang}/admin`, label: dict.admin.title }] : []),
   ];
   const ctaHref = user ? `/${lang}/profile` : `/${lang}/login`;
