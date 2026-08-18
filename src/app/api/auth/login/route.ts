@@ -5,6 +5,7 @@ import { createSession } from "@/lib/auth";
 import { verifyPassword } from "@/lib/password";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 /**
  * Real email+password login (see src/lib/password.ts). Two rate limiters:
@@ -48,5 +49,11 @@ export async function POST(request: NextRequest) {
 
   await createSession(user.id, user.sessionVersion);
 
-  return NextResponse.redirect(new URL(redirectTo, request.url), { status: 303 });
+  // redirectTo is client-supplied (a query param echoed into a hidden form
+  // field) — resolving it without checking where it actually points would
+  // make this an open redirect: a link to OUR login page that, after a
+  // real login with real credentials, silently bounces the user to an
+  // attacker's site. See safe-redirect.ts.
+  const target = safeRedirectPath(redirectTo, request.url, `/${lang}/profile`);
+  return NextResponse.redirect(new URL(target, request.url), { status: 303 });
 }

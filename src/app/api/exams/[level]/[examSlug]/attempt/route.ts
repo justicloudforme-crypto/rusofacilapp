@@ -8,6 +8,8 @@ import { computeScore, describeMistakes, type AnswerMap } from "@/lib/lessons/sc
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
 import { invalidateWeakTopicCache } from "@/lib/weak-topic";
+import { userHasActiveSubscription } from "@/lib/subscription";
+import { isStaff } from "@/lib/roles";
 
 // Exam attempts are inherently rare (one exam every 10 lessons) — this
 // limit exists only to stop a scripted client from spamming attempts.
@@ -20,6 +22,14 @@ export async function POST(
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  // Same access rule as the exam page itself (src/app/[lang]/courses/[level]/exam/[examSlug]/page.tsx)
+  // — without this, a non-subscribed user could call this route directly
+  // (bypassing the page entirely) and read every correct answer/explanation
+  // for a whole exam back out of describeMistakes' response, for free.
+  if (!isStaff(user.role) && !(await userHasActiveSubscription(user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   if (await examAttemptLimiter.check(user.id)) {

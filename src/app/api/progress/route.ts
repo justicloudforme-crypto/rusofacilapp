@@ -5,6 +5,8 @@ import { getLessonAttempt, saveLessonAttempt } from "@/lib/progress";
 import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
+import { userHasActiveSubscription } from "@/lib/subscription";
+import { isStaff } from "@/lib/roles";
 import type { AnswerMap, MistakeDetail } from "@/lib/lessons/scoring";
 
 function isMistakeDetail(value: unknown): value is MistakeDetail {
@@ -40,6 +42,15 @@ export async function POST(request: NextRequest) {
 
   if (await progressLimiter.check(user.id)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
+  // Same access rule as the lesson page itself (src/app/[lang]/courses/[level]/[lesson]/page.tsx)
+  // — every lesson is behind the paywall, so recording an attempt without
+  // one is either a stale session or a client bypassing the page's gate;
+  // either way, this must not let a non-subscriber fabricate lesson
+  // completions that then feed badges, streaks, and public leaderboards.
+  if (!isStaff(user.role) && !(await userHasActiveSubscription(user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const body = await request.json().catch(() => null);

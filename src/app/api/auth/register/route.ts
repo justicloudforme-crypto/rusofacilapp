@@ -6,6 +6,7 @@ import { hashPassword, isPasswordStrongEnough } from "@/lib/password";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
 import { captureReferralOnRegister } from "@/lib/referral";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 const registerLimiter = getRateLimiter("register", 60_000, 10);
 
@@ -55,5 +56,8 @@ export async function POST(request: NextRequest) {
 
   await createSession(user.id, user.sessionVersion);
 
-  return NextResponse.redirect(new URL(redirectTo, request.url), { status: 303 });
+  // See safe-redirect.ts — redirectTo is client-supplied and must not be
+  // trusted as-is, same open-redirect risk as /api/auth/login.
+  const target = safeRedirectPath(redirectTo, request.url, `/${lang}/profile`);
+  return NextResponse.redirect(new URL(target, request.url), { status: 303 });
 }
