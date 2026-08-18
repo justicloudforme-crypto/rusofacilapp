@@ -101,9 +101,13 @@ export async function evaluateAndAwardBadges(userId: string): Promise<BadgeDef[]
   const newIds = [...earnedIds].filter((id) => !existingIds.has(id));
   if (newIds.length === 0) return [];
 
+  // SQLite's createMany has no skipDuplicates support in Prisma; newIds is
+  // already filtered against existingIds above, so a collision here would
+  // only happen under a concurrent duplicate call — left to the [userId,
+  // badgeId] unique constraint to reject, caught by awardBadgesSafely's
+  // fail-soft wrapper (this function's only real caller).
   await db.userBadge.createMany({
     data: newIds.map((badgeId) => ({ userId, badgeId })),
-    skipDuplicates: true,
   });
 
   return newIds.map(getBadgeDef).filter((b): b is BadgeDef => b !== undefined);

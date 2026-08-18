@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getRateLimiter } from "@/lib/rate-limit";
+import { awardBadgesSafely } from "@/lib/badges";
 
 // Server-backed mirror of src/lib/flashcard-progress.ts's localStorage map —
 // lets "known" flags survive a device switch or app reinstall. Unauthenticated
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
     update: { known, ...srsFields },
     create: { userId: user.id, cardId, known, ...srsFields },
   });
+  await awardBadgesSafely(user.id);
 
   return NextResponse.json({ ok: true, updatedAt: row.updatedAt.getTime() });
 }

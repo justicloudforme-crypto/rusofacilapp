@@ -14,6 +14,7 @@ import {
 import { getLevelProgress, getLessonProgressDetails } from "@/lib/progress";
 import { getUserStreakStats } from "@/lib/streaks";
 import { getExamAttempts } from "@/lib/exams/progress";
+import { getUserBadgesForDisplay } from "@/lib/badges";
 import { levelSlugs } from "@/lib/courses";
 import { getThemePreference, type ThemePreference } from "@/lib/theme";
 import { AVATAR_IDS, isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
@@ -25,7 +26,7 @@ import AvatarPicker from "@/components/profile/AvatarPicker";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 
-const PROFILE_TABS = ["personal", "progress", "subscription", "security", "language"] as const;
+const PROFILE_TABS = ["personal", "progress", "badges", "subscription", "security", "language"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
 function isProfileTab(value: string): value is ProfileTab {
   return (PROFILE_TABS as readonly string[]).includes(value);
@@ -65,7 +66,7 @@ export default async function ProfilePage({
   const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
   const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
-  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme] =
+  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges] =
     await Promise.all([
       getLatestSubscription(user.id),
       getSubscriptionHistory(user.id),
@@ -75,7 +76,9 @@ export default async function ProfilePage({
       db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
       getUserStreakStats(user.id),
       getThemePreference(),
+      getUserBadgesForDisplay(user.id),
     ]);
+  const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
 
   const displayStatus = getDisplayStatus(subscription);
   const isActive = displayStatus === "active" || displayStatus === "trialing";
@@ -116,6 +119,7 @@ export default async function ProfilePage({
   const tabs: { id: ProfileTab; label: string }[] = [
     { id: "personal", label: dict.profile.tabPersonal },
     { id: "progress", label: dict.profile.tabProgress },
+    { id: "badges", label: dict.profile.tabBadges },
     { id: "subscription", label: dict.profile.tabSubscription },
     { id: "security", label: dict.profile.tabSecurity },
     { id: "language", label: dict.profile.tabLanguage },
@@ -298,6 +302,46 @@ export default async function ProfilePage({
           )}
         </div>
       </section>
+      )}
+
+      {/* Badges */}
+      {activeTab === "badges" && (
+        <section className="mt-8">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-medium">{dict.profile.badgesHeading}</h2>
+            <span className="text-sm tabular-nums text-foreground/60">
+              {earnedBadgeCount} / {badges.length} {dict.profile.badgesUnlockedUnit}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-foreground/60">{dict.profile.badgesSubtitle}</p>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {badges.map(({ def, earnedAt }) => {
+              const earned = earnedAt !== null;
+              return (
+                <div
+                  key={def.id}
+                  className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center ${
+                    earned
+                      ? "border-black/10 bg-white/60 dark:border-white/10 dark:bg-white/5"
+                      : "border-black/10 opacity-40 grayscale dark:border-white/10"
+                  }`}
+                >
+                  <span aria-hidden="true" className="text-3xl">
+                    {def.icon}
+                  </span>
+                  <span className="text-sm font-medium">{def.title[lang]}</span>
+                  <span className="text-xs text-foreground/60">{def.description[lang]}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/40">
+                    {earned
+                      ? `${dict.profile.badgesEarnedOnLabel} ${dateFormatter.format(earnedAt)}`
+                      : dict.profile.badgesLockedLabel}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Security */}

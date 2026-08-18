@@ -6,6 +6,7 @@ import { getExamContent } from "@/lib/exams/content";
 import { recordExamAttempt, type ExamSkillBreakdown } from "@/lib/exams/progress";
 import { computeScore, describeMistakes, type AnswerMap } from "@/lib/lessons/scoring";
 import { getRateLimiter } from "@/lib/rate-limit";
+import { awardBadgesSafely } from "@/lib/badges";
 
 // Exam attempts are inherently rare (one exam every 10 lessons) — this
 // limit exists only to stop a scripted client from spamming attempts.
@@ -60,6 +61,7 @@ export async function POST(
   }
 
   const outcome = await recordExamAttempt(user.id, level, examSlug, totalEarned, totalPoints, breakdown);
+  await awardBadgesSafely(user.id);
 
   return NextResponse.json({
     earned: totalEarned,

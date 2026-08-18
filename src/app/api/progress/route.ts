@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getLessonAttempt, saveLessonAttempt } from "@/lib/progress";
 import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
+import { awardBadgesSafely } from "@/lib/badges";
 import type { AnswerMap, MistakeDetail } from "@/lib/lessons/scoring";
 
 function isMistakeDetail(value: unknown): value is MistakeDetail {
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
   }
 
   await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers);
+  await awardBadgesSafely(user.id);
 
   return NextResponse.json({ ok: true });
 }
