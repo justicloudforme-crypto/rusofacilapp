@@ -132,9 +132,19 @@ export interface DisplayBadge {
 
 /** Every catalog badge, in catalog order, paired with when the user earned
  * it (or null if still locked) — powers the /profile "badges" tab, which
- * shows the full catalog rather than only what's been unlocked. */
+ * shows the full catalog rather than only what's been unlocked. Called
+ * unconditionally on every /profile render (not just the badges tab), so
+ * unlike awardBadgesSafely's callers it can't rely on a wrapper at the call
+ * site — a DB error here (e.g. between deploying this code and the
+ * UserBadge table existing on every environment) must fail soft to "show
+ * everything locked" rather than 500 the whole profile page. */
 export async function getUserBadgesForDisplay(userId: string): Promise<DisplayBadge[]> {
-  const earned = await db.userBadge.findMany({ where: { userId } });
-  const earnedMap = new Map(earned.map((b) => [b.badgeId, b.earnedAt]));
-  return BADGE_CATALOG.map((def) => ({ def, earnedAt: earnedMap.get(def.id) ?? null }));
+  try {
+    const earned = await db.userBadge.findMany({ where: { userId } });
+    const earnedMap = new Map(earned.map((b) => [b.badgeId, b.earnedAt]));
+    return BADGE_CATALOG.map((def) => ({ def, earnedAt: earnedMap.get(def.id) ?? null }));
+  } catch (error) {
+    console.error("[badges] getUserBadgesForDisplay failed", error);
+    return BADGE_CATALOG.map((def) => ({ def, earnedAt: null }));
+  }
 }
