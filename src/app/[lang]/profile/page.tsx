@@ -18,6 +18,7 @@ import { getExamAttempts } from "@/lib/exams/progress";
 import { getUserBadgesForDisplay } from "@/lib/badges";
 import { getWeeklyWeakTopic } from "@/lib/weak-topic";
 import { getReferralStats } from "@/lib/referral";
+import { getPublicProfileToggleState } from "@/lib/public-profile";
 import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
 import { levelSlugs } from "@/lib/courses";
@@ -84,7 +85,7 @@ export default async function ProfilePage({
       getUserBadgesForDisplay(user.id),
       getWeeklyWeakTopic(user.id),
       getReferralStats(user.id),
-      db.user.findUnique({ where: { id: user.id }, select: { publicProfileEnabled: true, publicHandle: true } }),
+      getPublicProfileToggleState(user.id),
       headers(),
     ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
@@ -238,8 +239,8 @@ export default async function ProfilePage({
               <PublicProfileToggle
                 origin={`${requestProto}://${requestHost}`}
                 lang={lang}
-                initialEnabled={publicProfile?.publicProfileEnabled ?? false}
-                initialHandle={publicProfile?.publicHandle ?? null}
+                initialEnabled={publicProfile.enabled}
+                initialHandle={publicProfile.handle}
                 toggleLabel={dict.profile.publicProfileToggleLabel}
                 copyLabel={dict.profile.referralCopyButton}
                 copiedLabel={dict.profile.referralCopiedNotice}

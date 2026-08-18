@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
-import { awardReferralRewardSafely } from "@/lib/referral";
 import { isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
 
@@ -62,6 +61,11 @@ export async function POST(request: NextRequest) {
   // Stripe isn't configured for this environment (no secret key / price id):
   // activate the subscription directly so the access-control flow can still
   // be exercised end-to-end in local/dev use without real Stripe credentials.
+  // Deliberately does NOT call awardReferralRewardSafely — unlike the real
+  // Stripe path, nothing here proves money changed hands, so treating it as
+  // a qualifying "first checkout" would let anyone farm unlimited referral
+  // rewards for free with throwaway accounts. Only the checkout.session.completed
+  // webhook (a real payment) grants the reward.
   const currentPeriodEnd = new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000);
   await db.subscription.create({
     data: {
@@ -72,7 +76,6 @@ export async function POST(request: NextRequest) {
     },
   });
   await invalidateSubscriptionCache(user.id);
-  await awardReferralRewardSafely(user.id);
 
   return NextResponse.redirect(
     new URL(`/${lang}/profile?checkout=mock`, request.url),

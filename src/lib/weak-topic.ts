@@ -81,3 +81,10 @@ export async function getWeeklyWeakTopic(userId: string): Promise<WeakTopicResul
     return null;
   }
 }
+
+/** Call after recording a new exam attempt so the nudge reflects it right
+ * away instead of staying frozen on a stale (possibly now-fixed) weak spot
+ * for up to the full 7-day TTL. */
+export async function invalidateWeakTopicCache(userId: string): Promise<void> {
+  await weakTopicCache.del(userId);
+}

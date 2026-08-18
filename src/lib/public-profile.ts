@@ -39,6 +39,29 @@ export async function getOrCreatePublicHandle(userId: string): Promise<string> {
   throw new Error("Could not generate a unique public handle after 5 attempts");
 }
 
+export interface PublicProfileToggleState {
+  enabled: boolean;
+  handle: string | null;
+}
+
+/** Read-only counterpart to setPublicProfileEnabled, for rendering the
+ * /profile toggle's initial state. Called unconditionally on every
+ * /profile render (see getUserBadgesForDisplay/getReferralStats for the
+ * same reasoning) — fails soft to "off, no link" rather than 500ing the
+ * whole page on a DB hiccup. */
+export async function getPublicProfileToggleState(userId: string): Promise<PublicProfileToggleState> {
+  try {
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { publicProfileEnabled: true, publicHandle: true },
+    });
+    return { enabled: user?.publicProfileEnabled ?? false, handle: user?.publicHandle ?? null };
+  } catch (error) {
+    console.error("[public-profile] getPublicProfileToggleState failed", error);
+    return { enabled: false, handle: null };
+  }
+}
+
 /** Toggles a user's public badge profile on/off, generating a handle the
  * first time it's turned on. Returns the handle so the caller can show
  * the link immediately (or null if the profile was just turned off). */
