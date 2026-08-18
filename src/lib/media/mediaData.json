@@ -21733,5 +21733,269 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video apZvLoS1K-8 ('Часть 1. -ТО, -ЛИБО и -НИБУДЬ || Частицы'), canal independiente «О русском по-русски» / About Russian in Russian, misma serie que a2-15/16/17/23 y b1-16. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y explicación del registro formal de -либо extraídos directamente de la transcripción."
+  },
+  "video-deeprichastiya-sv": {
+    "id": "video-deeprichastiya-sv",
+    "title": "Gerundios perfectivos (деепричастия СВ)",
+    "description": "El gerundio perfectivo (деепричастие СВ, formado con -в/-вши/-я a partir de un verbo perfectivo: увидев, приготовив, написав, сдав) expresa una acción que se completó ANTES de la acción principal, describiendo dos acciones secuenciales realizadas por el mismo sujeto. Equivale a una oración con «и» + dos verbos en pasado, o a una subordinada con «когда».",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "7llR-Y9CDLw",
+    "curriculumLessonId": "b1-22",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Увидев меня, мой друг подошёл ко мне.",
+        "translation": "Al verme, mi amigo se acercó a mí. (= Мой друг увидел меня и подошёл ко мне.)"
+      },
+      {
+        "russian": "Приготовив ужин, Катя решила немного отдохнуть.",
+        "translation": "Después de preparar la cena, Katia decidió descansar un poco."
+      },
+      {
+        "russian": "Написав упражнение, я пошёл гулять. — Когда я написал упражнение, я пошёл гулять.",
+        "translation": "Después de escribir el ejercicio, salí a caminar. — Cuando terminé de escribir el ejercicio, salí a caminar. (dos formas de expresar lo mismo)"
+      },
+      {
+        "russian": "Поужинав, мы легли спать. — Мы поужинали и легли спать.",
+        "translation": "Después de cenar, nos fuimos a dormir. — Cenamos y nos fuimos a dormir."
+      },
+      {
+        "russian": "Сдав экзамены, студенты поехали домой.",
+        "translation": "Después de aprobar los exámenes, los estudiantes se fueron a casa."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "увидев",
+        "transcription": "uvídiv",
+        "translation": "al ver, habiendo visto (gerundio perfectivo de «увидеть»)"
+      },
+      {
+        "word": "приготовив",
+        "transcription": "prigatóviv",
+        "translation": "habiendo preparado"
+      },
+      {
+        "word": "написав",
+        "transcription": "napisáv",
+        "translation": "habiendo escrito"
+      },
+      {
+        "word": "поужинав",
+        "transcription": "pauzhináv",
+        "translation": "habiendo cenado"
+      },
+      {
+        "word": "сдав",
+        "transcription": "sdav",
+        "translation": "habiendo aprobado (un examen)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodeeprichastiyasv-mc-1",
+        "type": "multiple-choice",
+        "prompt": "«Написав упражнение, я пошёл гулять» es equivalente a:",
+        "options": [
+          "Пока я писал упражнение, я гулял.",
+          "Когда я написал упражнение, я пошёл гулять.",
+          "Я гулял и писал упражнение одновременно.",
+          "Я не написал упражнение, но пошёл гулять."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodeeprichastiyasv-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "увидев",
+            "right": "al ver / habiendo visto"
+          },
+          {
+            "left": "приготовив",
+            "right": "habiendo preparado"
+          },
+          {
+            "left": "сдав экзамены",
+            "right": "habiendo aprobado los exámenes"
+          },
+          {
+            "left": "поужинав",
+            "right": "habiendo cenado"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 7llR-Y9CDLw ('Деепричастия совершенного вида. Russian for Foreigners.'), canal 'Russian for Foreigners. Русский как иностранный'. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos AUTOMÁTICOS reales en ruso (legibles, sin fragmentación grave): ejemplos y sus equivalencias extraídos directamente de la transcripción."
+  },
+  "video-discurso-indirecto-que": {
+    "id": "video-discurso-indirecto-que",
+    "title": "Discurso indirecto con «что»",
+    "description": "Cuando la frase original en discurso directo NO es una pregunta y NO contiene ya la palabra «что», usamos «что» para unir la frase introductora con el contenido citado (Он сказал: «Ты не прав» → Он сказал, что я не прав). El tiempo verbal no cambia; solo se ajustan pronombres y formas verbales para que concuerden. Ojo: «спасибо», «да» y «нет» no pueden usarse tras «что» — se reemplazan por verbos (поблагодарить, согласиться, отказаться).",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "3DrUSQ-75P4",
+    "curriculumLessonId": "b1-23",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Он сказал: «Ты не прав». → Он сказал, что я не прав.",
+        "translation": "Él dijo: «No tienes razón». → Él dijo que yo no tenía razón. (sin pregunta, sin «что» en el original → se añade «что»)"
+      },
+      {
+        "russian": "Друзья ответили: «Мы идём в театр». → Друзья ответили, что они идут в театр.",
+        "translation": "Los amigos respondieron: «Vamos al teatro». → Los amigos respondieron que iban al teatro. (el tiempo del verbo NO cambia: presente → presente)"
+      },
+      {
+        "russian": "Он сказал: «Спасибо». → Он поблагодарил. (NO: «Он сказал, что спасибо»)",
+        "translation": "Él dijo: «Gracias». → Él dio las gracias. («спасибо» no puede seguir a «что»: se reemplaza por el verbo «поблагодарить»)"
+      },
+      {
+        "russian": "Он сказал: «Да». → Он согласился. Он сказал: «Нет». → Он отказался.",
+        "translation": "Él dijo: «Sí». → Él aceptó/estuvo de acuerdo. Él dijo: «No». → Él se negó. («да»/«нет» se reemplazan por verbos, nunca «...что да/нет»)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "сказать, что...",
+        "transcription": "skazát' shto",
+        "translation": "decir que... (introduce discurso indirecto)"
+      },
+      {
+        "word": "поблагодарить",
+        "transcription": "pablagadarít'",
+        "translation": "dar las gracias (sustituye a «сказал: спасибо»)"
+      },
+      {
+        "word": "согласиться",
+        "transcription": "saglasítsa",
+        "translation": "estar de acuerdo, aceptar (sustituye a «сказал: да»)"
+      },
+      {
+        "word": "отказаться",
+        "transcription": "atkazátsa",
+        "translation": "negarse, rechazar (sustituye a «сказал: нет»)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodiscursoindirectoque-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se convierte correctamente a discurso indirecto «Он сказал: «Спасибо»»?",
+        "options": [
+          "Он сказал, что спасибо.",
+          "Он поблагодарил.",
+          "Он сказал спасибо что.",
+          "Он согласился."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodiscursoindirectoque-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "«Да» →",
+            "right": "Он согласился."
+          },
+          {
+            "left": "«Нет» →",
+            "right": "Он отказался."
+          },
+          {
+            "left": "«Спасибо» →",
+            "right": "Он поблагодарил."
+          },
+          {
+            "left": "«Ты не прав» →",
+            "right": "Он сказал, что я не прав."
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 3DrUSQ-75P4 ('Косвенная речь. Часть 1 || Прямая и косвенная речь'), canal independiente «О русском по-русски» / About Russian in Russian, misma serie que a2-15/16/17/23/24 y b1-16/22. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y excepciones (спасибо/да/нет) extraídos directamente de la transcripción. Este tema (discurso indirecto) fue marcado como un intento de dead-end en sesiones previas ('b1-23-25 retried with fresh angles, looks like a genuine long-term dead end'); resuelto en esta sesión buscando la Parte 1 específica del canal de confianza en vez de términos genéricos."
+  },
+  "video-discurso-indirecto-chtoby": {
+    "id": "video-discurso-indirecto-chtoby",
+    "title": "Discurso indirecto con «чтобы»",
+    "description": "Cuando la frase citada original está en modo imperativo (Купи! Иди! Пишите!), el discurso indirecto se forma con «чтобы» + sujeto + verbo en pasado (aunque el sentido sea de orden/petición, no de pasado real): Он попросил меня: «Купи сыр!» → Он попросил меня, чтобы я купил сыр. La negación «не» se conserva si estaba en el imperativo original.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "SgP3HdIy5Tg",
+    "curriculumLessonId": "b1-24",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Он попросил меня: «Купи сыр!» → Он попросил меня, чтобы я купил сыр.",
+        "translation": "Me pidió: «¡Compra queso!» → Me pidió que comprara queso. (imperativo → «чтобы» + sujeto + verbo en PASADO, aunque grammaticalmente, no por el sentido)"
+      },
+      {
+        "russian": "Она сказала Маше: «Иди сюда!» → Она сказала, чтобы она (Маша) шла сюда.",
+        "translation": "Le dijo a Masha: «¡Ven aquí!» → Le dijo que viniera aquí."
+      },
+      {
+        "russian": "Мы говорим вам: «Не пишите слова!» → Мы говорим вам, чтобы вы не писали слова.",
+        "translation": "Les decimos: «¡No escriban las palabras!» → Les decimos que no escriban las palabras. (la negación «не» se conserva)"
+      },
+      {
+        "russian": "Три момента: 1) используем слово «чтобы»; 2) пишем субъект; 3) используем глагол в прошедшем времени.",
+        "translation": "Tres pasos: 1) usar la palabra «чтобы»; 2) escribir el sujeto; 3) usar el verbo en tiempo pasado (por regla gramatical, no por significado real)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "чтобы",
+        "transcription": "shtóby",
+        "translation": "para que / que (conector del discurso indirecto con imperativo)"
+      },
+      {
+        "word": "попросить",
+        "transcription": "paprasít'",
+        "translation": "pedir (algo a alguien)"
+      },
+      {
+        "word": "императив",
+        "transcription": "impirativ",
+        "translation": "modo imperativo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodiscursoindirectochtoby-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Он попросил меня: «Купи сыр!» → discurso indirecto:",
+        "options": [
+          "Он попросил меня, что я купил сыр.",
+          "Он попросил меня, чтобы я купил сыр.",
+          "Он попросил меня купи сыр.",
+          "Он попросил меня, чтобы я куплю сыр."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodiscursoindirectochtoby-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "«Купи сыр!» →",
+            "right": "чтобы я купил сыр"
+          },
+          {
+            "left": "«Иди сюда!» →",
+            "right": "чтобы она шла сюда"
+          },
+          {
+            "left": "«Не пишите слова!» →",
+            "right": "чтобы вы не писали слова"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video SgP3HdIy5Tg ('Косвенная речь. Часть 2 || Прямая и косвенная речь'), canal independiente «О русском по-русски» / About Russian in Russian, segunda parte de la misma serie usada para b1-23. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y regla de los 'tres pasos' extraídos directamente de la transcripción."
   }
 }
