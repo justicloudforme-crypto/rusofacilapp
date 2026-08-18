@@ -52,10 +52,24 @@ export class TtlCache<T> {
     return `ttlcache:${this.namespace}:${key}`;
   }
 
+  // A Redis error (wrong/expired token, network blip, Upstash outage) must
+  // never take down the page that's reading through this cache — get/set/
+  // del all fail soft: get() treats an error as a miss (cached() below
+  // then just reads through to the DB, same as a cold cache), set()/del()
+  // swallow it (a failed cache write/invalidation isn't worth failing the
+  // request over). Not falling back to the in-memory `store` here on a
+  // Redis error, unlike RateLimiter — a half-populated local Map would be
+  // inconsistent with what other instances see, whereas "always re-read
+  // from the DB" is simply always correct, just uncached.
   async get(key: string): Promise<T | undefined> {
     if (redis) {
-      const value = await redis.get<T>(this.redisKey(key));
-      return value ?? undefined;
+      try {
+        const value = await redis.get<T>(this.redisKey(key));
+        return value ?? undefined;
+      } catch (error) {
+        console.error(`[ttl-cache] Redis get failed for ${this.redisKey(key)}, treating as a miss`, error);
+        return undefined;
+      }
     }
     const entry = this.store.get(key);
     if (!entry) return undefined;
@@ -68,7 +82,11 @@ export class TtlCache<T> {
 
   async set(key: string, value: T): Promise<void> {
     if (redis) {
-      await redis.set(this.redisKey(key), value, { px: this.ttlMs });
+      try {
+        await redis.set(this.redisKey(key), value, { px: this.ttlMs });
+      } catch (error) {
+        console.error(`[ttl-cache] Redis set failed for ${this.redisKey(key)}`, error);
+      }
       return;
     }
     this.store.set(key, { value, expiresAt: Date.now() + this.ttlMs });
@@ -76,7 +94,11 @@ export class TtlCache<T> {
 
   async del(key: string): Promise<void> {
     if (redis) {
-      await redis.del(this.redisKey(key));
+      try {
+        await redis.del(this.redisKey(key));
+      } catch (error) {
+        console.error(`[ttl-cache] Redis del failed for ${this.redisKey(key)}`, error);
+      }
       return;
     }
     this.store.delete(key);

@@ -20,9 +20,21 @@ export class RateLimiter {
     private readonly maxHits: number,
   ) {}
 
-  /** Records one hit for `key` and reports whether it exceeds the limit. */
+  /** Records one hit for `key` and reports whether it exceeds the limit.
+   * A Redis error (wrong/expired token, network blip, Upstash outage)
+   * fails open to the in-memory path rather than throwing — a broken rate
+   * limiter must never take down the route it's protecting (login,
+   * password reset...); weaker per-instance protection for the duration
+   * of the outage is the correct trade-off over a hard 500. */
   async check(key: string): Promise<boolean> {
-    if (redis) return this.checkRedis(key);
+    if (redis) {
+      try {
+        return await this.checkRedis(key);
+      } catch (error) {
+        console.error(`[rate-limit] Redis check failed for ${key}, falling back to in-memory`, error);
+        return this.checkInMemory(key);
+      }
+    }
     return this.checkInMemory(key);
   }
 
