@@ -15,6 +15,7 @@ import { getLevelProgress, getLessonProgressDetails } from "@/lib/progress";
 import { getUserStreakStats } from "@/lib/streaks";
 import { getExamAttempts } from "@/lib/exams/progress";
 import { getUserBadgesForDisplay } from "@/lib/badges";
+import { getWeeklyWeakTopic } from "@/lib/weak-topic";
 import { levelSlugs } from "@/lib/courses";
 import { getThemePreference, type ThemePreference } from "@/lib/theme";
 import { AVATAR_IDS, isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
@@ -66,7 +67,7 @@ export default async function ProfilePage({
   const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
   const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
-  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges] =
+  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges, weakTopic] =
     await Promise.all([
       getLatestSubscription(user.id),
       getSubscriptionHistory(user.id),
@@ -77,6 +78,7 @@ export default async function ProfilePage({
       getUserStreakStats(user.id),
       getThemePreference(),
       getUserBadgesForDisplay(user.id),
+      getWeeklyWeakTopic(user.id),
     ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
 
@@ -474,6 +476,24 @@ export default async function ProfilePage({
           </p>
         )}
       </section>
+
+      {weakTopic && (
+        <section className="mt-8 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 sm:p-6">
+          <span className="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            {dict.profile.weakTopicHeading}
+          </span>
+          <p className="mt-1 font-medium">{weakTopic.title}</p>
+          <p className="mt-1 text-sm text-foreground/60">
+            {dict.profile.weakTopicScoreLabel}: {weakTopic.percentage}%
+          </p>
+          <Link
+            href={`/${lang}/courses/${weakTopic.level}/exam/${weakTopic.examSlug}`}
+            className="mt-4 inline-block rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          >
+            {dict.profile.weakTopicCta}
+          </Link>
+        </section>
+      )}
 
       <section className="mt-8">
         <h2 className="font-medium">{dict.profile.progressHeading}</h2>
