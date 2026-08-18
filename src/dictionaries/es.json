@@ -271,16 +271,16 @@
     "subtitle": "Elige un plan para desbloquear todas las lecciones, de A1 a B2.",
     "monthly": {
       "name": "Mensual",
-      "price": "$249",
+      "price": "$7.99 USD",
       "period": "/ mes",
       "cta": "Suscribirme"
     },
     "annual": {
       "name": "Anual",
-      "price": "$1,990",
+      "price": "$47.99 USD",
       "period": "/ año",
       "cta": "Suscribirme",
-      "badge": "Ahorra 33%"
+      "badge": "Ahorra 50%"
     },
     "featuresTitle": "Incluye",
     "features": [
