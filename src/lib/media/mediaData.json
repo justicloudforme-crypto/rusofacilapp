@@ -20116,5 +20116,1234 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video CY6yYcqEZws, canal independiente 'Russian Songs Translated' (no el canal oficial de la artista). Público, playable_in_embed=true, no es livestream. Letra original completa verificada directamente desde la descripción del video (texto en ruso + traducción al inglés del canal, usada solo como referencia — la traducción al español es propia). Canción de la película «Судьба» (1977), letra de Robert Rozhdestvenski, música de Yevgeni Ptichkin; contenido puramente romántico (amor, eco, ternura, memoria), sin temas políticos ni sensibles."
+  },
+  "song-nash-sosed": {
+    "id": "song-nash-sosed",
+    "title": "Наш сосед — Эдита Пьеха",
+    "description": "Una canción ligera y divertida sobre un vecino músico que despierta a todo el edificio tocando el clarinete y la trompeta cada mañana — al final, todos se acostumbran a su melodía y hasta la extrañan si no la oyen. Contenido puramente cotidiano y humorístico, sin ningún tema sensible, nivel A2.",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "DYChcUNYy7U",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Как теперь не веселиться, не грустить от разных бед — в нашем доме поселился замечательный сосед.",
+        "translation": "Cómo no alegrarse ahora, no entristecerse por diversos problemas — en nuestra casa se ha instalado un vecino maravilloso."
+      },
+      {
+        "russian": "Мы с соседями не знали и не верили себе, что у нас сосед играет на кларнете и трубе.",
+        "translation": "Los vecinos y yo no sabíamos ni podíamos creer que nuestro vecino toca el clarinete y la trompeta."
+      },
+      {
+        "russian": "Утром зазвонит будильник, нам будильник ни к чему, потому что доверяю я соседу своему.",
+        "translation": "Por la mañana sonará el despertador, pero no lo necesitamos, porque confío en mi vecino."
+      },
+      {
+        "russian": "Никогда не засыпаю, если не услышу я: Пап-пап, па-па-рапа пап-пап...",
+        "translation": "Nunca me quedo dormido si no oigo: Pap-pap, pa-pa-rapa pap-pap... (el estribillo imitando la trompeta)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "сосед",
+        "transcription": "sasyéd",
+        "translation": "vecino"
+      },
+      {
+        "word": "будильник",
+        "transcription": "budíl'nik",
+        "translation": "despertador"
+      },
+      {
+        "word": "доверять",
+        "transcription": "davyeryát'",
+        "translation": "confiar"
+      },
+      {
+        "word": "труба",
+        "transcription": "trubá",
+        "translation": "trompeta"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songnashsosed-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Por qué el narrador ya no necesita despertador?",
+        "options": [
+          "porque se levanta solo muy temprano",
+          "porque confía en la música de su vecino para despertarlo",
+          "porque no trabaja",
+          "porque su despertador está roto"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songnashsosed-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "сосед",
+            "right": "vecino"
+          },
+          {
+            "left": "будильник",
+            "right": "despertador"
+          },
+          {
+            "left": "доверять",
+            "right": "confiar"
+          },
+          {
+            "left": "труба",
+            "right": "trompeta"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video DYChcUNYy7U, canal independiente 'Andrey Quoc' (no el canal oficial de la artista). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (texto en ruso, con autores Б. Potiomkin). Interpretada por Edita Pieja; contenido ligero y humorístico sobre un vecino músico, sin ningún tema sensible."
+  },
+  "video-idiomatizmos-verbos-movimiento": {
+    "id": "video-idiomatizmos-verbos-movimiento",
+    "title": "Idiomatismos con verbos de movimiento",
+    "description": "Modismos formados con verbos de movimiento cuyo significado es completamente figurado: «выйти сухим из воды» (literalmente 'salir seco del agua') significa escapar de un castigo o de las consecuencias de algo malo que se hizo, sin importar cuán culpable se sea. También se ven «войти в положение» (ponerse en el lugar de alguien) y «уйти с головой в работу» (sumergirse por completo en el trabajo).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "SiMoTCyMJWs",
+    "curriculumLessonId": "b2-20",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Он соврал и вышел сухим из воды.",
+        "translation": "Mintió y salió impune (sin consecuencias)."
+      },
+      {
+        "russian": "Чиновник присвоил часть бюджета, но вышел сухим из воды.",
+        "translation": "El funcionario se apropió de parte del presupuesto, pero se libró sin castigo."
+      },
+      {
+        "russian": "Преступнику удалось выйти сухим из воды.",
+        "translation": "El criminal logró escapar sin castigo. («выйти сухим из воды» = избежать наказания, обойтись без плохих последствий — evitar el castigo, salir sin malas consecuencias)"
+      },
+      {
+        "russian": "Войти в положение. Уйти с головой в работу.",
+        "translation": "Ponerse en el lugar de alguien (comprender su situación). Sumergirse por completo en el trabajo (dedicarse intensamente)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "выйти сухим из воды",
+        "transcription": "výyti sukhím iz vadý",
+        "translation": "salir impune, escapar sin consecuencias"
+      },
+      {
+        "word": "избежать наказания",
+        "transcription": "izbezhát' nakazániya",
+        "translation": "evitar el castigo"
+      },
+      {
+        "word": "войти в положение",
+        "transcription": "vaytí v palazhéniye",
+        "translation": "ponerse en el lugar de alguien"
+      },
+      {
+        "word": "уйти с головой в работу",
+        "transcription": "uytí s galavóy v rabótu",
+        "translation": "sumergirse por completo en el trabajo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoidiomatizmosverbosmovimiento-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué significa «выйти сухим из воды»?",
+        "options": [
+          "salir literalmente de una piscina",
+          "escapar de un castigo o de malas consecuencias",
+          "resolver un problema con ayuda de otros",
+          "quedarse totalmente solo"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoidiomatizmosverbosmovimiento-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "выйти сухим из воды",
+            "right": "salir impune"
+          },
+          {
+            "left": "избежать наказания",
+            "right": "evitar el castigo"
+          },
+          {
+            "left": "войти в положение",
+            "right": "ponerse en el lugar de alguien"
+          },
+          {
+            "left": "уйти с головой в работу",
+            "right": "sumergirse en el trabajo"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video SiMoTCyMJWs ('№ 771 ВЫЙТИ СУХИМ ИЗ ВОДЫ'), canal independiente 'русский с носителем' (profesora individual). Público, playable_in_embed=true, no es livestream. La descripción menciona un curso de pago/Patreon, pero el video en sí es gratuito y no es un fragmento extraído de ese curso — mismo criterio aplicado a Lina's Lessons en b2-17. Verificado con subtítulos automáticos reales en ruso, legibles: ejemplos extraídos directamente ('он соврал и вышел сухим из воды', 'чиновник присвоил часть бюджета, но вышел сухим из воды', 'преступнику удалось выйти сухим из воды'). Idiomas adicionales (войти в положение, уйти с головой в работу) añadidos a partir de conocimiento gramatical objetivo verificado, mismo patrón que b2-19."
+  },
+  "song-aysberg": {
+    "id": "song-aysberg",
+    "title": "Айсберг — Алла Пугачёва (1984)",
+    "description": "Una metáfora poética sobre la incertidumbre en el amor: la persona amada es fría como un iceberg en el océano, y la protagonista se lanza al amor como al mar, tratando de entender quién es realmente él — ¿un iceberg helado o una persona cálida? Contenido puramente emocional/romántico, sin ningún tema sensible, nivel C1.",
+    "level": "C1",
+    "category": "song",
+    "youtubeVideoId": "OQR_KjnTV5o",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Ты такой холодный, как айсберг в океане.",
+        "translation": "Eres tan frío como un iceberg en el océano."
+      },
+      {
+        "russian": "А я в любовь, как в море, бросаюсь с головой.",
+        "translation": "Y yo me lanzo de cabeza al amor, como al mar."
+      },
+      {
+        "russian": "И все твои печали под чёрною водой.",
+        "translation": "Y todas tus tristezas bajo el agua oscura."
+      },
+      {
+        "russian": "Я понять тебя пытаюсь: кто же ты на самом деле — айсберг или человек?",
+        "translation": "Trato de entenderte: ¿quién eres realmente — un iceberg o una persona?"
+      },
+      {
+        "russian": "Хорошо тому, кто знает, как опасен в океане этот айсберг ледяной горою.",
+        "translation": "Bien por quien sabe cuán peligroso es en el océano este iceberg de montaña helada."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "айсберг",
+        "transcription": "áysberg",
+        "translation": "iceberg"
+      },
+      {
+        "word": "холодный",
+        "transcription": "khalódnyy",
+        "translation": "frío"
+      },
+      {
+        "word": "печаль",
+        "transcription": "pechál'",
+        "translation": "tristeza"
+      },
+      {
+        "word": "бросаться с головой",
+        "transcription": "brasát'sya s galavóy",
+        "translation": "lanzarse de cabeza (a algo)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songaysberg-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Con qué compara la protagonista al hombre del que habla?",
+        "options": [
+          "con un iceberg frío",
+          "con el sol cálido",
+          "con un barco",
+          "con una tormenta"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "id": "songaysberg-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "айсберг",
+            "right": "iceberg"
+          },
+          {
+            "left": "холодный",
+            "right": "frío"
+          },
+          {
+            "left": "печаль",
+            "right": "tristeza"
+          },
+          {
+            "left": "бросаться с головой",
+            "right": "lanzarse de cabeza"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video OQR_KjnTV5o, canal personal independiente 'zima2066' (no el canal oficial de la artista). Público, playable_in_embed=true, no es livestream. Sin descripción con letra; verificado mediante subtítulos automáticos reales en ruso, mayormente legibles (algunos fragmentos con ruido ASR típico se omitieron, usando solo las líneas claramente reconstruibles). Canción de Alla Pugachova (1984); metáfora puramente emocional/romántica (frialdad, incertidumbre en el amor), sin temas sensibles."
+  },
+  "song-dorogoy-dlinnoyu": {
+    "id": "song-dorogoy-dlinnoyu",
+    "title": "Дорогой длинною (romance clásico ruso)",
+    "description": "Uno de los romances rusos más famosos internacionalmente (conocido en inglés como «Those Were the Days»): un viaje nostálgico en un carruaje de tres caballos con cascabeles, evocando noches pasadas y una vieja canción de siete cuerdas que atormentaba al protagonista. Letra de K. Podrevski, música de B. Fomin. Contenido puramente nostálgico y melancólico, sin ningún tema sensible, nivel B2.",
+    "level": "B2",
+    "category": "song",
+    "youtubeVideoId": "zUWnJTIPBHQ",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Ехали на тройке с бубенцами, а вдали мелькали огоньки.",
+        "translation": "Viajábamos en un carruaje de tres caballos con cascabeles, y a lo lejos brillaban lucecitas."
+      },
+      {
+        "russian": "Дорогой длинною, да ночкой лунною, да с песней той, что вдаль летит звеня.",
+        "translation": "Por el largo camino, en la noche de luna, con aquella canción que vuela sonando a la distancia."
+      },
+      {
+        "russian": "И с той старинною, да с семиструнною, что по ночам так мучила меня.",
+        "translation": "Y con aquella antigua, de siete cuerdas, que por las noches tanto me atormentaba."
+      },
+      {
+        "russian": "В даль родную новыми путями нам отныне ехать суждено.",
+        "translation": "Hacia la lejanía natal, por nuevos caminos, nos está destinado viajar de ahora en adelante."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "тройка",
+        "transcription": "tróyka",
+        "translation": "carruaje tirado por tres caballos"
+      },
+      {
+        "word": "бубенцы",
+        "transcription": "bubentsý",
+        "translation": "cascabeles"
+      },
+      {
+        "word": "старинный",
+        "transcription": "starínnyy",
+        "translation": "antiguo, de antaño"
+      },
+      {
+        "word": "мучить",
+        "transcription": "múchit'",
+        "translation": "atormentar"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songdorogoydlinnoyu-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿En qué viajaban los protagonistas de la canción?",
+        "options": [
+          "en tren",
+          "en una troika (carruaje de tres caballos)",
+          "a pie",
+          "en barco"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songdorogoydlinnoyu-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "тройка",
+            "right": "carruaje de tres caballos"
+          },
+          {
+            "left": "бубенцы",
+            "right": "cascabeles"
+          },
+          {
+            "left": "старинный",
+            "right": "antiguo"
+          },
+          {
+            "left": "мучить",
+            "right": "atormentar"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video zUWnJTIPBHQ, canal independiente 'Andrey Quoc' (interpretado por Taisiya Povaliy, 2011; no el canal oficial de ninguna artista). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video ('Полный текст песни'). Romance clásico ruso de K. Podrevski (letra) y B. Fomin (música), internacionalmente conocido como 'Those Were the Days'; contenido puramente nostálgico/melancólico, sin temas sensibles."
+  },
+  "video-potomu-chto-tak-kak-poskolku": {
+    "id": "video-potomu-chto-tak-kak-poskolku",
+    "title": "Causales neutras: «потому что», «так как», «поскольку»",
+    "description": "Tres conjunciones causales con el mismo significado neutro (a diferencia de «благодаря»/«из-за» de b2-16, que sí valoran el resultado como bueno o malo), pero con una diferencia de posición y registro: «потому что» y «так как» pueden ir al principio o en medio de la frase, mientras que «поэтому» (consecuencia, no causa) solo va en medio. «Поскольку» es la más formal de las tres y es intercambiable con «так как» en la mayoría de los contextos escritos.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "41eSZMwztdw",
+    "curriculumLessonId": "b2-14",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Вчера я поздно легла спать, потому что читала книгу.",
+        "translation": "Ayer me acosté tarde porque estaba leyendo un libro. («потому что» — causa, puede ir en medio de la frase)"
+      },
+      {
+        "russian": "Так как вчера я поздно легла спать, сегодня я чувствую себя уставшей.",
+        "translation": "Como ayer me acosté tarde, hoy me siento cansada. («так как» — misma causa, pero puede ir también al PRINCIPIO de la frase, a diferencia de «потому что» en este uso)"
+      },
+      {
+        "russian": "Вчера я поздно легла спать, поэтому сегодня я чувствую себя уставшей.",
+        "translation": "Ayer me acosté tarde, por eso hoy me siento cansada. («поэтому» introduce la CONSECUENCIA, no la causa, y solo va en medio de la frase — nunca al principio)"
+      },
+      {
+        "russian": "Поскольку вчера я поздно легла спать, сегодня я чувствую себя уставшей.",
+        "translation": "Puesto que ayer me acosté tarde, hoy me siento cansada. («поскольку» — la más formal de las tres, típica del registro escrito; intercambiable con «так как» en la mayoría de los contextos)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "потому что",
+        "transcription": "patamú shto",
+        "translation": "porque"
+      },
+      {
+        "word": "так как",
+        "transcription": "tak kak",
+        "translation": "como, ya que"
+      },
+      {
+        "word": "поскольку",
+        "transcription": "paskól'ku",
+        "translation": "puesto que (formal)"
+      },
+      {
+        "word": "поэтому",
+        "transcription": "paétamu",
+        "translation": "por eso (consecuencia, no causa)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopotomuchtotakkak-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál de estas palabras introduce una CONSECUENCIA y no una causa?",
+        "options": [
+          "потому что",
+          "так как",
+          "поэтому",
+          "поскольку"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videopotomuchtotakkak-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "потому что",
+            "right": "porque"
+          },
+          {
+            "left": "так как",
+            "right": "como, ya que"
+          },
+          {
+            "left": "поскольку",
+            "right": "puesto que (formal)"
+          },
+          {
+            "left": "поэтому",
+            "right": "por eso (consecuencia)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 41eSZMwztdw ('Потому что | Так как | Поэтому'), canal independiente 'Говорю по-русски' (profesora individual Tatiana). Público, playable_in_embed=true, no es livestream. La descripción menciona Patreon para material extra, pero el video en sí es gratuito y no es un fragmento de un curso de pago. Verificado con subtítulos automáticos reales en ruso: ejemplo extraído directamente ('Вчера я поздно легла спать, потому что/так как... поэтому сегодня я чувствую себя уставшей') y la regla de posición explícita ('потому что/так как — в начале и в середине фразы; поэтому — только в середине'). «Поскольку» (no cubierta en este video corto) añadida a partir de conocimiento gramatical objetivo verificado, mismo patrón que b2-16/b2-19."
+  },
+  "video-verbos-movimiento-exat-ezdit": {
+    "id": "video-verbos-movimiento-exat-ezdit",
+    "title": "Verbos de movimiento: «ехать» y «ездить»",
+    "description": "Igual que «идти»/«ходить» para desplazamientos a pie, «ехать» describe un movimiento en vehículo en UNA sola dirección (o un viaje de ida y vuelta ya completado, visto como un solo trayecto), mientras que «ездить» describe viajes de ida Y vuelta, o una acción habitual/repetida («я часто езжу в Минск»).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "JB8kolZ0ltg",
+    "curriculumLessonId": "a2-15",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Она ездила в Москву — то есть она была там, а потом вернулась обратно.",
+        "translation": "Ella fue a Moscú (y volvió) — es decir, estuvo allí y luego regresó. («ездить» = ida y vuelta completada)"
+      },
+      {
+        "russian": "Она была в Москве.",
+        "translation": "Ella estuvo en Moscú. (misma idea, reformulada sin el verbo de movimiento)"
+      },
+      {
+        "russian": "Я часто (или каждый месяц) обычно езжу в Минск.",
+        "translation": "Yo suelo ir a Minsk a menudo (o cada mes). («ездить» para una acción habitual/repetida)"
+      },
+      {
+        "russian": "Если мы скажем «я часто еду в Минск», используя глагол «ехать»...",
+        "translation": "Si decimos «voy a Minsk a menudo» usando el verbo «ехать» (en vez de «ездить»), el sentido cambia: describe un único trayecto en curso, no una costumbre repetida."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "ехать",
+        "transcription": "yékhat'",
+        "translation": "ir (en vehículo, una sola dirección)"
+      },
+      {
+        "word": "ездить",
+        "transcription": "yézdit'",
+        "translation": "ir y volver / ir habitualmente (en vehículo)"
+      },
+      {
+        "word": "обычно",
+        "transcription": "abýchna",
+        "translation": "habitualmente, normalmente"
+      },
+      {
+        "word": "туда и обратно",
+        "transcription": "tudá i abrátna",
+        "translation": "de ida y vuelta"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoverbosmovimientoexatezdit-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es correcta para «Suelo ir a Minsk cada mes» (acción habitual)?",
+        "options": [
+          "Я часто еду в Минск.",
+          "Я часто езжу в Минск.",
+          "Я поехал в Минск.",
+          "Я иду в Минск."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoverbosmovimientoexatezdit-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "ехать",
+            "right": "ir (una dirección)"
+          },
+          {
+            "left": "ездить",
+            "right": "ir y volver / habitualmente"
+          },
+          {
+            "left": "обычно",
+            "right": "habitualmente"
+          },
+          {
+            "left": "туда и обратно",
+            "right": "de ida y vuelta"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video JB8kolZ0ltg ('Урок 1. ИДТИ - ХОДИТЬ и ЕХАТЬ - ЕЗДИТЬ'), canal independiente 'About Russian in Russian' / «О русском по-русски» (profesora individual 'Ира'). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos extraídos directamente de la transcripción ('Она ездила в Москву' = 'Она была в Москве'; 'я часто/обычно езжу в Минск' como acción habitual)."
+  },
+  "video-verbos-movimiento-bezhat-begat": {
+    "id": "video-verbos-movimiento-bezhat-begat",
+    "title": "Verbos de movimiento: «бежать» y «бегать»",
+    "description": "Igual que «идти»/«ходить», el par «бежать»/«бегать» distingue movimiento a la carrera en UNA dirección concreta y en curso («бежать») de una acción habitual, repetida o en varias direcciones («бегать»).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "pYsNoHEDAZM",
+    "curriculumLessonId": "a2-16",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Мальчик бежит домой.",
+        "translation": "El niño corre a casa (ahora mismo, en una dirección concreta). («бежать» — acción en curso, unidireccional)"
+      },
+      {
+        "russian": "Иван бегает по парку каждое утро.",
+        "translation": "Iván corre por el parque cada mañana. («бегать» — acción habitual, repetida)"
+      },
+      {
+        "russian": "Собаки в цирке бегают по кругу.",
+        "translation": "Los perros en el circo corren en círculos. («бегать» — movimiento en varias direcciones/sin dirección fija)"
+      },
+      {
+        "russian": "Я бегу, ты бежишь, он бежит — я бегаю, ты бегаешь, он бегает.",
+        "translation": "Conjugación de ambos verbos en presente: «бежать» (unidireccional) y «бегать» (habitual/multidireccional)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "бежать",
+        "transcription": "bezhát'",
+        "translation": "correr (una dirección, en curso)"
+      },
+      {
+        "word": "бегать",
+        "transcription": "bégat'",
+        "translation": "correr (habitualmente / varias direcciones)"
+      },
+      {
+        "word": "каждое утро",
+        "transcription": "kázhdaye útra",
+        "translation": "cada mañana"
+      },
+      {
+        "word": "по кругу",
+        "transcription": "pa krúgu",
+        "translation": "en círculos"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoverbosmovimientobezhatbegat-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es correcta para «Iván corre por el parque cada mañana» (acción habitual)?",
+        "options": [
+          "Иван бежит по парку каждое утро.",
+          "Иван бегает по парку каждое утро.",
+          "Иван побежал по парку.",
+          "Иван бег по парку."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoverbosmovimientobezhatbegat-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "бежать",
+            "right": "correr (una dirección)"
+          },
+          {
+            "left": "бегать",
+            "right": "correr (habitualmente)"
+          },
+          {
+            "left": "каждое утро",
+            "right": "cada mañana"
+          },
+          {
+            "left": "по кругу",
+            "right": "en círculos"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video pYsNoHEDAZM, canal independiente 'Русский язык как иностранный. Маргарита Злобина' (recurso educativo universitario, ИМО ВГУ). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos automáticos reales en ruso, legibles: ejemplos extraídos directamente ('мальчик бежит домой', 'Иван бегает по парку каждое утро', 'собаки в цирке бегают по кругу')."
+  },
+  "video-superlativo-adjetivos": {
+    "id": "video-superlativo-adjetivos",
+    "title": "Grado superlativo de los adjetivos",
+    "description": "El ruso tiene dos formas de superlativo: la SIMPLE (una sola palabra, con los sufijos -айш-/-ейш- añadidos a la raíz: высокий → высочайший, умный → умнейший) y la COMPUESTA (dos palabras: «самый» + adjetivo en su forma básica, concordando en género/número: самый красивый, самая умная, самое дорогое, самые тихие).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "3ysbztx3bqM",
+    "curriculumLessonId": "a2-21",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Высокий → высочайший. Тихий → тишайший.",
+        "translation": "Alto → altísimo. Tranquilo → silenciosísimo. (superlativo simple, sufijo -айш-, se usa tras ciertas consonantes de la raíz)"
+      },
+      {
+        "russian": "Умный → умнейший.",
+        "translation": "Inteligente → inteligentísimo. (superlativo simple, sufijo -ейш-, el más común para el resto de adjetivos)"
+      },
+      {
+        "russian": "Самый красивый (masc.), самая умная (fem.), самое дорогое (neutro), самые тихие (plural).",
+        "translation": "El más guapo, la más inteligente, lo más caro, los más silenciosos. (superlativo compuesto: «самый/самая/самое/самые» + adjetivo en forma básica, concordando en género y número)"
+      },
+      {
+        "russian": "Segunda forma compuesta: comparativo simple + «всех» (более alto que todos).",
+        "translation": "Existe también una segunda construcción compuesta: comparativo simple + la palabra «всех» ('de todos'), como alternativa a «самый»."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "самый / самая / самое / самые",
+        "transcription": "sámyy / sámaya / sámaye / sámyye",
+        "translation": "el/la/lo más (superlativo compuesto)"
+      },
+      {
+        "word": "высочайший",
+        "transcription": "vysacháyshiy",
+        "translation": "altísimo (superlativo simple)"
+      },
+      {
+        "word": "умнейший",
+        "transcription": "umnéyshiy",
+        "translation": "inteligentísimo"
+      },
+      {
+        "word": "начальная форма",
+        "transcription": "nachál'naya fórma",
+        "translation": "forma básica (la del diccionario)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videosuperlativoadjetivos-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice «la mujer más inteligente» usando el superlativo compuesto?",
+        "options": [
+          "самый умная женщина",
+          "самая умная женщина",
+          "умнейшая самая женщина",
+          "женщина умный самая"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videosuperlativoadjetivos-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "самый / самая",
+            "right": "el/la más"
+          },
+          {
+            "left": "высочайший",
+            "right": "altísimo"
+          },
+          {
+            "left": "умнейший",
+            "right": "inteligentísimo"
+          },
+          {
+            "left": "начальная форма",
+            "right": "forma básica"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 3ysbztx3bqM ('Степени сравнения ПРИЛАГАТЕЛЬНЫХ'), canal independiente 'About Russian in Russian' / «О русском по-русски» (profesora individual 'Ира'). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos extraídos directamente ('высокий → высочайший', 'тихий → тишайший', 'умный → умнейший', 'самый красивый / самая умная / самое дорогое / самые тихие')."
+  },
+  "video-verbos-movimiento-letat-plavat-nesti": {
+    "id": "video-verbos-movimiento-letat-plavat-nesti",
+    "title": "Verbos de movimiento: «лететь/летать», «плыть/плавать» y «нести/носить»",
+    "description": "Tercera entrega de la serie de verbos de movimiento del canal «О русском по-русски»: «лететь»/«летать» (volar, para aviones o pájaros) sigue el mismo patrón unidireccional/multidireccional que «идти»/«ходить», igual que «плыть»/«плавать» (nadar, navegar) y «нести»/«носить» (llevar algo cargado mientras caminas).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "CRvCaEsM41k",
+    "curriculumLessonId": "a2-17",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Сегодня я лечу на самолёте в Милан.",
+        "translation": "Hoy vuelo en avión a Milán. («лечу» = «лететь», un solo trayecto, dirección única)"
+      },
+      {
+        "russian": "Каждое лето я летаю в Милан.",
+        "translation": "Cada verano vuelo a Milán. («летаю» = «летать», acción repetida/habitual, no una sola dirección)"
+      },
+      {
+        "russian": "Я несу маркеры.",
+        "translation": "Llevo (cargando) los marcadores. («несу» = «нести», llevar algo en un trayecto único)"
+      },
+      {
+        "russian": "Каждый день я ношу маркеры на работу в университет.",
+        "translation": "Cada día llevo los marcadores al trabajo, a la universidad. («ношу» = «носить», acción habitual/repetida)"
+      },
+      {
+        "russian": "Мой друг плывёт так быстро! Они плавают туда и обратно так быстро!",
+        "translation": "¡Mi amigo nada tan rápido! (dirección única, «плывёт») / ¡Ellos nadan de ida y vuelta tan rápido! (dirección repetida/múltiple, «плавают»)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "лететь",
+        "transcription": "lit'ét'",
+        "translation": "volar (una dirección)"
+      },
+      {
+        "word": "летать",
+        "transcription": "litát'",
+        "translation": "volar (habitualmente / ida y vuelta)"
+      },
+      {
+        "word": "плыть",
+        "transcription": "plyt'",
+        "translation": "nadar/navegar (una dirección)"
+      },
+      {
+        "word": "плавать",
+        "transcription": "plávat'",
+        "translation": "nadar/navegar (habitualmente / ida y vuelta)"
+      },
+      {
+        "word": "нести",
+        "transcription": "nist'í",
+        "translation": "llevar cargando (una dirección)"
+      },
+      {
+        "word": "носить",
+        "transcription": "nasít'",
+        "translation": "llevar cargando (habitualmente)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoverbosmovimientoletatplavatnesti-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es correcta para «Cada verano vuelo a Milán» (acción habitual/repetida)?",
+        "options": [
+          "Каждое лето я лечу в Милан.",
+          "Каждое лето я летаю в Милан.",
+          "Сегодня я лечу в Милан.",
+          "Я летел в Милан вчера."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoverbosmovimientoletatplavatnesti-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "лететь",
+            "right": "volar (una dirección)"
+          },
+          {
+            "left": "летать",
+            "right": "volar (habitualmente)"
+          },
+          {
+            "left": "плыть",
+            "right": "nadar (una dirección)"
+          },
+          {
+            "left": "плавать",
+            "right": "nadar (habitualmente)"
+          },
+          {
+            "left": "нести",
+            "right": "llevar cargando (una dirección)"
+          },
+          {
+            "left": "носить",
+            "right": "llevar cargando (habitualmente)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video CRvCaEsM41k ('Урок 11. ИДТИ и ХОДИТЬ, ЛЕТЕТЬ и ЛЕТАТЬ, ТАЩИТЬ и ТАСКАТЬ и др. || Глаголы движения'), canal independiente «О русском по-русски» (misma profesora 'Ира' de a2-15/a2-16). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos extraídos directamente de la transcripción para лететь/летать, нести/носить y плыть/плавать (los tres verbos que cubre el slot a2-17)."
+  },
+  "video-glagoly-dvizheniya-pri-u": {
+    "id": "video-glagoly-dvizheniya-pri-u",
+    "title": "Prefijos ПРИ- y У- con verbos de movimiento: llegar y partir",
+    "description": "El prefijo «при-» añadido a un verbo de movimiento indica llegada/acercamiento al objetivo (приехать, прилететь, прийти), mientras que «у-» indica alejamiento por mucho tiempo y a gran distancia (уехать, улететь, уйти). Con verbos del grupo «идти» (unidireccionales) el resultado es de aspecto perfectivo; con verbos del grupo «ходить» (multidireccionales) sigue siendo imperfectivo.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "70uW_0nqwnY",
+    "curriculumLessonId": "b1-9",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Они приехали из России. Самолёт прилетел в аэропорт Москвы вовремя.",
+        "translation": "Ellos llegaron de Rusia. El avión llegó al aeropuerto de Moscú a tiempo. («при-» = llegada/logro del destino)"
+      },
+      {
+        "russian": "Во сколько вы планируете прийти сегодня?",
+        "translation": "¿A qué hora piensan llegar hoy?"
+      },
+      {
+        "russian": "Дети становятся старше и уезжают из дома.",
+        "translation": "Los hijos crecen y se van de casa. («у-» = alejamiento, por mucho tiempo y lejos)"
+      },
+      {
+        "russian": "Самолёт уже улетел, мы не успели. Когда вы уехали из родного города?",
+        "translation": "El avión ya partió, no llegamos a tiempo. ¿Cuándo te fuiste de tu ciudad natal?"
+      },
+      {
+        "russian": "прийти в голову — Как хорошо, что это пришло в голову именно мне.",
+        "translation": "Modismo «venir a la mente» — Qué bien que se me ocurrió justo a mí."
+      },
+      {
+        "russian": "уйти по-английски — Почему он всегда уходит по-английски?",
+        "translation": "Modismo «irse a la inglesa» (sin despedirse) — ¿Por qué siempre se va sin decir adiós?"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "приехать",
+        "transcription": "priyékhat'",
+        "translation": "llegar (en vehículo)"
+      },
+      {
+        "word": "прилететь",
+        "transcription": "prilit'ét'",
+        "translation": "llegar volando"
+      },
+      {
+        "word": "прийти",
+        "transcription": "priytí",
+        "translation": "llegar (a pie)"
+      },
+      {
+        "word": "уехать",
+        "transcription": "uyékhat'",
+        "translation": "irse, partir (en vehículo, lejos y por mucho tiempo)"
+      },
+      {
+        "word": "улететь",
+        "transcription": "ulit'ét'",
+        "translation": "irse volando"
+      },
+      {
+        "word": "уйти по-английски",
+        "transcription": "uytí pa-anglíyski",
+        "translation": "irse a la francesa/inglesa (sin despedirse)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoglagolydvizheniyapriu-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué prefijo indica llegada / acercamiento al objetivo?",
+        "options": [
+          "у-",
+          "при-",
+          "по-",
+          "вы-"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoglagolydvizheniyapriu-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "приехать",
+            "right": "llegar (en vehículo)"
+          },
+          {
+            "left": "уехать",
+            "right": "irse (en vehículo, lejos)"
+          },
+          {
+            "left": "прийти",
+            "right": "llegar (a pie)"
+          },
+          {
+            "left": "уйти по-английски",
+            "right": "irse sin despedirse"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 70uW_0nqwnY ('Prefix ПРИ- and prefix У- ║verbs of motion'), canal independiente 'Russian Language Club' (Марина Ивкина, profesora individual). Público, playable_in_embed=true, no es livestream ni excerpt de curso pagado (solo mención promocional de un curso propio, sin alumnos identificados). Verificado con subtítulos MANUALES reales en ruso: ejemplos y modismos extraídos directamente de la transcripción."
+  },
+  "video-glagoly-dvizheniya-pod-ot": {
+    "id": "video-glagoly-dvizheniya-pod-ot",
+    "title": "Prefijos ПОД- y ОТ- con verbos de movimiento: acercarse y alejarse",
+    "description": "El prefijo «под-» indica un acercamiento a un objeto desde una distancia corta (подойти, подъехать), mientras que «от-» indica un alejamiento de un objeto también a corta distancia (отойти, отъехать) — a diferencia de «у-» (b1-9), que implica alejamiento largo y definitivo. Con prefijos, ya no importa si el verbo base era unidireccional o multidireccional: lo que cuenta es el significado del prefijo, y el par resultante es siempre imperfectivo/perfectivo.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "0N8D8k1mxRU",
+    "curriculumLessonId": "b1-11",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Мама подошла к окну, чтобы посмотреть, где дети.",
+        "translation": "Mamá se acercó a la ventana para ver dónde estaban los niños. («под-» = acercamiento a corta distancia)"
+      },
+      {
+        "russian": "Такси уже подъехало к подъезду, можно выходить.",
+        "translation": "El taxi ya se acercó a la entrada, se puede salir."
+      },
+      {
+        "russian": "Наш поезд отходит через 5 минут.",
+        "translation": "Nuestro tren sale (se aleja del andén) en 5 minutos. («от-» = alejamiento a corta distancia)"
+      },
+      {
+        "russian": "Машина отъехала от дома и повернула на автостраду.",
+        "translation": "El coche se alejó de la casa y giró hacia la autopista."
+      },
+      {
+        "russian": "Подходить к концу — Коллеги, я подхожу к концу, сейчас я расскажу о последних результатах.",
+        "translation": "Modismo «llegar al final» (de un discurso) — Colegas, ya casi termino, ahora les contaré los últimos resultados."
+      },
+      {
+        "russian": "Отойти в мир иной — значит умереть.",
+        "translation": "Modismo «partir a otro mundo» = morir."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "подойти",
+        "transcription": "padaytí",
+        "translation": "acercarse (a pie, corta distancia)"
+      },
+      {
+        "word": "подъехать",
+        "transcription": "padyékhat'",
+        "translation": "acercarse (en vehículo, corta distancia)"
+      },
+      {
+        "word": "отойти",
+        "transcription": "ataytí",
+        "translation": "alejarse (a pie, corta distancia)"
+      },
+      {
+        "word": "отъехать",
+        "transcription": "atyékhat'",
+        "translation": "alejarse (en vehículo, corta distancia)"
+      },
+      {
+        "word": "подводить итог",
+        "transcription": "padvadít' itóg",
+        "translation": "resumir, sacar una conclusión"
+      },
+      {
+        "word": "подвести",
+        "transcription": "padvistí",
+        "translation": "decepcionar, fallarle a alguien"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoglagolydvizheniyapodot-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué prefijo indica alejamiento a corta distancia (a diferencia de «у-», que es lejos y para siempre)?",
+        "options": [
+          "под-",
+          "при-",
+          "от-",
+          "про-"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoglagolydvizheniyapodot-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "подойти",
+            "right": "acercarse (a pie)"
+          },
+          {
+            "left": "отойти",
+            "right": "alejarse (a pie)"
+          },
+          {
+            "left": "подъехать",
+            "right": "acercarse (en vehículo)"
+          },
+          {
+            "left": "отойти в мир иной",
+            "right": "morir (modismo)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 0N8D8k1mxRU ('Prefix ПОД- and prefix ОТ- ║verbs of motion'), canal independiente 'Russian Language Club' (Марина Ивкина), misma profesora de b1-9. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y modismos extraídos directamente de la transcripción."
+  },
+  "video-glagoly-dvizheniya-pere": {
+    "id": "video-glagoly-dvizheniya-pere",
+    "title": "Prefijo ПЕРЕ- con verbos de movimiento: cruzar y trasladarse",
+    "description": "El prefijo «пере-» indica desplazamiento de un lado a otro, de un lugar a otro: cruzar una calle (перейти дорогу), mudarse de casa o ciudad (переехать), o volar sobre un océano (перелететь). También tiene significados figurados frecuentes: перенести дату (posponer una fecha), перевести дух (tomar aliento), переводить стрелки (echarle la culpa a otro).",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "1zDVpHn-gzo",
+    "curriculumLessonId": "b1-12",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Мы можем перейти дорогу по пешеходному переходу.",
+        "translation": "Podemos cruzar la calle por el paso de peatones."
+      },
+      {
+        "russian": "Жизнь артистов такова, что им очень часто приходится переезжать с одного места на другое.",
+        "translation": "La vida de los artistas es tal que a menudo tienen que mudarse de un lugar a otro."
+      },
+      {
+        "russian": "Когда вы переехали? — Когда вы поменяли место жительства?",
+        "translation": "¿Cuándo se mudaron? — ¿Cuándo cambiaron de lugar de residencia?"
+      },
+      {
+        "russian": "Нам сказали, что перенесли дедлайн.",
+        "translation": "Nos dijeron que pospusieron la fecha límite. («перенести дату» = posponer una fecha)"
+      },
+      {
+        "russian": "Переведи дух и дальше продолжишь свой марафон.",
+        "translation": "Toma aliento y sigues con tu maratón. Modismo «перевести дух»."
+      },
+      {
+        "russian": "Не переводи на меня стрелки, пора уже взять ответственность на себя.",
+        "translation": "No me eches la culpa a mí, ya es hora de asumir tu responsabilidad. Modismo «переводить стрелки» = culpar a otro."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "перейти",
+        "transcription": "piriytí",
+        "translation": "cruzar (a pie)"
+      },
+      {
+        "word": "переехать",
+        "transcription": "piriyékhat'",
+        "translation": "mudarse / cruzar (en vehículo)"
+      },
+      {
+        "word": "перенести дату",
+        "transcription": "pirinistí dátu",
+        "translation": "posponer una fecha"
+      },
+      {
+        "word": "перевести дух",
+        "transcription": "pirivistí dukh",
+        "translation": "tomar aliento, hacer una pausa"
+      },
+      {
+        "word": "переводить стрелки",
+        "transcription": "piravadít' str'élki",
+        "translation": "echarle la culpa a otro"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoglagolydvizheniyapere-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué significa el prefijo «пере-» con verbos de movimiento?",
+        "options": [
+          "Acercamiento a corta distancia",
+          "Alejamiento largo y definitivo",
+          "Desplazamiento de un lugar/lado a otro",
+          "Movimiento alrededor de un objeto"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoglagolydvizheniyapere-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "перейти дорогу",
+            "right": "cruzar la calle"
+          },
+          {
+            "left": "переехать",
+            "right": "mudarse"
+          },
+          {
+            "left": "перевести дух",
+            "right": "tomar aliento"
+          },
+          {
+            "left": "переводить стрелки",
+            "right": "echarle la culpa a otro"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 1zDVpHn-gzo ('Prefix ПЕРЕ- ║verbs of motion'), canal independiente 'Russian Language Club' (Марина Ивкина), misma profesora de b1-9/b1-11. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y modismos extraídos directamente de la transcripción."
+  },
+  "video-glagoly-dvizheniya-pro-do": {
+    "id": "video-glagoly-dvizheniya-pro-do",
+    "title": "Prefijos ПРО- y ДО- con verbos de movimiento: pasar de largo y llegar hasta",
+    "description": "El prefijo «до-» indica movimiento hasta un punto o lugar determinado (доехать до города, дойти до бассейна), a menudo con la preposición «до». El prefijo «про-» indica movimiento a través de un objeto o pasando de largo sin detenerse (пройти через парк, проехать мимо Кремля) o cubrir una gran distancia (проехать сорок тысяч километров).",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "hjCaL86zAY4",
+    "curriculumLessonId": "b1-13",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Мы доехали до города за два часа.",
+        "translation": "Llegamos a la ciudad en dos horas. («до-» = movimiento hasta un punto definido, con la preposición «до»)"
+      },
+      {
+        "russian": "Как ты думаешь, во сколько мы дойдём до бассейна?",
+        "translation": "¿A qué hora crees que llegaremos a la piscina?"
+      },
+      {
+        "russian": "К сожалению, наш самолёт не долетел, мы были вынуждены сделать остановку здесь.",
+        "translation": "Lamentablemente nuestro avión no llegó a destino, tuvimos que hacer una parada aquí."
+      },
+      {
+        "russian": "Довести до белого каления — Почему ты меня всегда доводишь, как это у тебя получается?",
+        "translation": "Modismo «sacar de quicio» — ¿Por qué siempre me sacas de quicio, cómo lo logras?"
+      },
+      {
+        "russian": "Мы очень быстро прошли через весь парк, и не нашли вас.",
+        "translation": "Cruzamos todo el parque muy rápido y no los encontramos. («про-» = movimiento a través de un objeto)"
+      },
+      {
+        "russian": "Каждое утро мы проезжаем Кремль, и даже не обращаем на него внимания.",
+        "translation": "Cada mañana pasamos por el Kremlin sin siquiera notarlo. («про-» = pasar de largo, sin detenerse)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "доехать до",
+        "transcription": "dayékhat' da",
+        "translation": "llegar hasta (en vehículo)"
+      },
+      {
+        "word": "дойти до",
+        "transcription": "daytí da",
+        "translation": "llegar hasta (a pie)"
+      },
+      {
+        "word": "довести до белого каления",
+        "transcription": "davistí da b'élava kal'éniya",
+        "translation": "sacar de quicio a alguien"
+      },
+      {
+        "word": "пройти через",
+        "transcription": "praytí ch'éris",
+        "translation": "cruzar a través de"
+      },
+      {
+        "word": "проехать мимо",
+        "transcription": "prayékhat' míma",
+        "translation": "pasar de largo (sin detenerse)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoglagolydvizheniyaprodo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué prefijo indica movimiento hasta un punto determinado, usado a menudo con la preposición «до»?",
+        "options": [
+          "про-",
+          "до-",
+          "пере-",
+          "под-"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoglagolydvizheniyaprodo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "доехать до города",
+            "right": "llegar a la ciudad"
+          },
+          {
+            "left": "пройти через парк",
+            "right": "cruzar el parque"
+          },
+          {
+            "left": "проехать мимо",
+            "right": "pasar de largo"
+          },
+          {
+            "left": "довести до белого каления",
+            "right": "sacar de quicio"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "Video principal (embebido): YouTube hjCaL86zAY4 ('Prefix ДО- ║verbs of motion'), canal 'Russian Language Club' (Марина Ивкина), misma serie que b1-9/b1-11/b1-12. Público, playable_in_embed=true. Ejemplos de «про-» tomados de un video complementario NO embebido de la MISMA serie/canal (9TtlNtHfOvs, 'Prefix ПРО- ║verbs of motion'), también público y playable_in_embed=true, verificado con subtítulos MANUALES reales para ambos videos."
   }
 }
