@@ -19,7 +19,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (userUpdateLimiter.check(user.id)) {
+  if (await userUpdateLimiter.check(user.id)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

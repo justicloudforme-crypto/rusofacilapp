@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(url, { status: 303 });
   };
 
-  if (resetLimiter.check(requestIp(request))) return fail("rate_limited");
+  if (await resetLimiter.check(requestIp(request))) return fail("rate_limited");
   if (!isPasswordStrongEnough(password)) return fail("weak_password");
 
   const decoded = decodeVerificationToken(token, "password_reset");

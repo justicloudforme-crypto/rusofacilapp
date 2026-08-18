@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       },
     });
   }
-  invalidateSubscriptionCache(target.id);
+  await invalidateSubscriptionCache(target.id);
 
   return NextResponse.redirect(new URL(`/${lang}/admin/subscriptions`, request.url), {
     status: 303,

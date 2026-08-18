@@ -26,7 +26,7 @@ function staticExamFor(level: LevelSlug, examSlug: string): ExamContent | null {
 // the rare admin save/delete — see invalidateExamContentCache.
 const examContentCache = getOrCreateGlobalSingleton(
   "examContentCache",
-  () => new TtlCache<ExamContent | null>(60_000)
+  () => new TtlCache<ExamContent | null>(60_000, "examContent")
 );
 
 function examContentCacheKey(level: string, examSlug: string): string {
@@ -50,8 +50,8 @@ export async function getExamContent(level: LevelSlug, examSlug: string): Promis
 
 /** Call after any write to an exam's Exam row (admin save or delete) so the
  * next read reflects it immediately instead of waiting out the TTL. */
-export function invalidateExamContentCache(level: string, examSlug: string) {
-  examContentCache.del(examContentCacheKey(level, examSlug));
+export async function invalidateExamContentCache(level: string, examSlug: string) {
+  await examContentCache.del(examContentCacheKey(level, examSlug));
 }
 
 /** Exam slugs follow "{level}-exam-{n}" (e.g. "a1-exam-2") — unlike lesson

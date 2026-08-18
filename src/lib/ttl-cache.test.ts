@@ -2,37 +2,37 @@ import { describe, expect, it, vi } from "vitest";
 import { TtlCache, cached, getOrCreateGlobalSingleton } from "./ttl-cache";
 
 describe("TtlCache", () => {
-  it("returns a stored value before it expires", () => {
-    const cache = new TtlCache<string>(1000);
-    cache.set("a", "hello");
-    expect(cache.get("a")).toBe("hello");
+  it("returns a stored value before it expires", async () => {
+    const cache = new TtlCache<string>(1000, "test");
+    await cache.set("a", "hello");
+    expect(await cache.get("a")).toBe("hello");
   });
 
-  it("returns undefined for a missing key", () => {
-    const cache = new TtlCache<string>(1000);
-    expect(cache.get("missing")).toBeUndefined();
+  it("returns undefined for a missing key", async () => {
+    const cache = new TtlCache<string>(1000, "test");
+    expect(await cache.get("missing")).toBeUndefined();
   });
 
-  it("expires a value once its TTL has passed", () => {
+  it("expires a value once its TTL has passed", async () => {
     vi.useFakeTimers();
-    const cache = new TtlCache<string>(1000);
-    cache.set("a", "hello");
+    const cache = new TtlCache<string>(1000, "test");
+    await cache.set("a", "hello");
     vi.advanceTimersByTime(1001);
-    expect(cache.get("a")).toBeUndefined();
+    expect(await cache.get("a")).toBeUndefined();
     vi.useRealTimers();
   });
 
-  it("removes a value on del", () => {
-    const cache = new TtlCache<string>(1000);
-    cache.set("a", "hello");
-    cache.del("a");
-    expect(cache.get("a")).toBeUndefined();
+  it("removes a value on del", async () => {
+    const cache = new TtlCache<string>(1000, "test");
+    await cache.set("a", "hello");
+    await cache.del("a");
+    expect(await cache.get("a")).toBeUndefined();
   });
 });
 
 describe("cached", () => {
   it("calls load and caches the result on a miss", async () => {
-    const cache = new TtlCache<string>(1000);
+    const cache = new TtlCache<string>(1000, "test");
     const load = vi.fn().mockResolvedValue("loaded");
     const result = await cached(cache, "key", load);
     expect(result).toBe("loaded");
@@ -40,7 +40,7 @@ describe("cached", () => {
   });
 
   it("does not call load again on a hit", async () => {
-    const cache = new TtlCache<string>(1000);
+    const cache = new TtlCache<string>(1000, "test");
     const load = vi.fn().mockResolvedValue("loaded");
     await cached(cache, "key", load);
     const result = await cached(cache, "key", load);

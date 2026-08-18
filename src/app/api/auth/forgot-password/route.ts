@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
   const done = () =>
     NextResponse.redirect(new URL(`/${lang}/forgot-password?sent=1`, request.url), { status: 303 });
 
-  if (forgotLimiterByIp.check(requestIp(request))) return done();
+  if (await forgotLimiterByIp.check(requestIp(request))) return done();
   if (!email || !email.includes("@")) return done();
-  if (forgotLimiterByEmail.check(email)) return done();
+  if (await forgotLimiterByEmail.check(email)) return done();
 
   const user = await db.user.findUnique({ where: { email } });
   if (user?.passwordHash) {

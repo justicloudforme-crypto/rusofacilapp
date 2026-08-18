@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       updatedBy: user.id,
     },
   });
-  invalidateExamContentCache(level, examSlug);
+  await invalidateExamContentCache(level, examSlug);
 
   return NextResponse.json({ ok: true });
 }

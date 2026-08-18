@@ -32,7 +32,7 @@ export function staticContentFor(level: string, lessonSlug: string): LessonConte
 // that forgets to invalidate.
 const lessonContentCache = getOrCreateGlobalSingleton(
   "lessonContentCache",
-  () => new TtlCache<LessonContent | null>(60_000)
+  () => new TtlCache<LessonContent | null>(60_000, "lessonContent")
 );
 
 function lessonContentCacheKey(level: string, lessonSlug: string): string {
@@ -60,8 +60,8 @@ export async function getLessonContent(
 /** Call after any write to a lesson's Lesson row (admin save, delete, or a
  * reseed) so the next read reflects it immediately instead of waiting out
  * the TTL. */
-export function invalidateLessonContentCache(level: string, lessonSlug: string) {
-  lessonContentCache.del(lessonContentCacheKey(level, lessonSlug));
+export async function invalidateLessonContentCache(level: string, lessonSlug: string) {
+  await lessonContentCache.del(lessonContentCacheKey(level, lessonSlug));
 }
 
 export type LessonStatus = "custom" | "example" | "empty";

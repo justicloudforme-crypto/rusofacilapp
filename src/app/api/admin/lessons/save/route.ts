@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       updatedBy: user.id,
     },
   });
-  invalidateLessonContentCache(level, lessonSlug);
+  await invalidateLessonContentCache(level, lessonSlug);
 
   return NextResponse.json({ ok: true });
 }

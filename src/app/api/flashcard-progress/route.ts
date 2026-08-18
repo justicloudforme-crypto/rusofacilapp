@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (flashcardLimiter.check(user.id)) {
+  if (await flashcardLimiter.check(user.id)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (progressLimiter.check(user.id)) {
+  if (await progressLimiter.check(user.id)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

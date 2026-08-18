@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (requestDeletionLimiter.check(user.id)) {
+  if (await requestDeletionLimiter.check(user.id)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       where: { id: subscription.id },
       data: { status: "canceled" },
     });
-    invalidateSubscriptionCache(targetUserId);
+    await invalidateSubscriptionCache(targetUserId);
   }
 
   return NextResponse.redirect(new URL(`/${lang}/admin/subscriptions`, request.url), {

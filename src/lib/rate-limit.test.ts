@@ -2,34 +2,34 @@ import { describe, expect, it, vi } from "vitest";
 import { RateLimiter, requestIp } from "./rate-limit";
 
 describe("RateLimiter", () => {
-  it("allows hits up to the configured max", () => {
+  it("allows hits up to the configured max", async () => {
     const limiter = new RateLimiter(1000, 3);
-    expect(limiter.check("client")).toBe(false);
-    expect(limiter.check("client")).toBe(false);
-    expect(limiter.check("client")).toBe(false);
+    expect(await limiter.check("client")).toBe(false);
+    expect(await limiter.check("client")).toBe(false);
+    expect(await limiter.check("client")).toBe(false);
   });
 
-  it("reports over-limit once maxHits is exceeded", () => {
+  it("reports over-limit once maxHits is exceeded", async () => {
     const limiter = new RateLimiter(1000, 3);
-    limiter.check("client");
-    limiter.check("client");
-    limiter.check("client");
-    expect(limiter.check("client")).toBe(true);
+    await limiter.check("client");
+    await limiter.check("client");
+    await limiter.check("client");
+    expect(await limiter.check("client")).toBe(true);
   });
 
-  it("tracks separate keys independently", () => {
+  it("tracks separate keys independently", async () => {
     const limiter = new RateLimiter(1000, 1);
-    limiter.check("a");
-    expect(limiter.check("b")).toBe(false);
+    await limiter.check("a");
+    expect(await limiter.check("b")).toBe(false);
   });
 
-  it("forgets hits older than the window", () => {
+  it("forgets hits older than the window", async () => {
     vi.useFakeTimers();
     const limiter = new RateLimiter(1000, 1);
-    limiter.check("client");
-    limiter.check("client");
+    await limiter.check("client");
+    await limiter.check("client");
     vi.advanceTimersByTime(1001);
-    expect(limiter.check("client")).toBe(false);
+    expect(await limiter.check("client")).toBe(false);
     vi.useRealTimers();
   });
 });

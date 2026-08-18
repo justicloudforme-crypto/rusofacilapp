@@ -32,9 +32,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(url, { status: 303 });
   };
 
-  if (loginLimiterByIp.check(requestIp(request))) return fail("rate_limited");
+  if (await loginLimiterByIp.check(requestIp(request))) return fail("rate_limited");
   if (!email || !email.includes("@")) return fail("invalid_email");
-  if (loginLimiterByEmail.check(email)) return fail("rate_limited");
+  if (await loginLimiterByEmail.check(email)) return fail("rate_limited");
 
   const user = await db.user.findUnique({ where: { email } });
 

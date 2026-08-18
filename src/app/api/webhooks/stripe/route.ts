@@ -55,7 +55,7 @@ async function upsertFromStripeSubscription(subscription: Stripe.Subscription) {
       stripeCustomerId: customerId,
     },
   });
-  invalidateSubscriptionCache(userId);
+  await invalidateSubscriptionCache(userId);
 }
 
 export async function POST(request: NextRequest) {
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
         where: { stripeSubscriptionId: subscription.id },
         data: { status: "canceled" },
       });
-      if (existing) invalidateSubscriptionCache(existing.userId);
+      if (existing) await invalidateSubscriptionCache(existing.userId);
       break;
     }
 
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
           where: { stripeSubscriptionId: subscriptionId },
           data: { status: "past_due" },
         });
-        if (existing) invalidateSubscriptionCache(existing.userId);
+        if (existing) await invalidateSubscriptionCache(existing.userId);
       }
       break;
     }

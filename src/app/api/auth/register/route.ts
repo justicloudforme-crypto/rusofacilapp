@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(url, { status: 303 });
   };
 
-  if (registerLimiter.check(requestIp(request))) return fail("rate_limited");
+  if (await registerLimiter.check(requestIp(request))) return fail("rate_limited");
   if (!email || !email.includes("@")) return fail("invalid_email");
   if (!isPasswordStrongEnough(password)) return fail("weak_password");
 

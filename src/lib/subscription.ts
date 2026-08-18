@@ -29,7 +29,10 @@ export const MANUAL_GRANT_DAYS = 30;
 // Caches the raw DB row, not the derived active/expired boolean, so the
 // time-based expiry check in isSubscriptionActive() still runs fresh on
 // every call — only the read is cached, not the answer.
-const subscriptionCache = getOrCreateGlobalSingleton("subscriptionCache", () => new TtlCache<Subscription | null>(30_000));
+const subscriptionCache = getOrCreateGlobalSingleton(
+  "subscriptionCache",
+  () => new TtlCache<Subscription | null>(30_000, "subscription")
+);
 
 export async function getLatestSubscription(userId: string) {
   return cached(subscriptionCache, userId, () =>
@@ -55,8 +58,8 @@ export async function getSubscriptionHistory(userId: string) {
 /** Call after any write to a user's Subscription rows (checkout, cancel,
  * webhook, admin grant/revoke) so the next read reflects it immediately
  * instead of waiting out the TTL. */
-export function invalidateSubscriptionCache(userId: string) {
-  subscriptionCache.del(userId);
+export async function invalidateSubscriptionCache(userId: string) {
+  await subscriptionCache.del(userId);
 }
 
 export async function userHasActiveSubscription(userId: string): Promise<boolean> {

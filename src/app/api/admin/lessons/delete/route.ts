@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   }
 
   await db.lesson.deleteMany({ where: { level, lessonSlug } });
-  invalidateLessonContentCache(level, lessonSlug);
+  await invalidateLessonContentCache(level, lessonSlug);
 
   return NextResponse.json({ ok: true });
 }

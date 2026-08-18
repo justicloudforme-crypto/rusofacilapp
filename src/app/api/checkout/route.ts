@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       currentPeriodEnd,
     },
   });
-  invalidateSubscriptionCache(user.id);
+  await invalidateSubscriptionCache(user.id);
 
   return NextResponse.redirect(
     new URL(`/${lang}/profile?checkout=mock`, request.url),
