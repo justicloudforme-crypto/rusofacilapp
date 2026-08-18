@@ -5,6 +5,7 @@ import { createSession } from "@/lib/auth";
 import { hashPassword, isPasswordStrongEnough } from "@/lib/password";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
+import { captureReferralOnRegister } from "@/lib/referral";
 
 const registerLimiter = getRateLimiter("register", 60_000, 10);
 
@@ -17,6 +18,7 @@ export async function POST(request: NextRequest) {
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const redirectTo = String(formData.get("redirectTo") ?? `/${lang}/profile`);
+  const referralCode = String(formData.get("ref") ?? "");
 
   const fail = (error: string) => {
     const url = new URL(`/${lang}/register`, request.url);
@@ -44,6 +46,12 @@ export async function POST(request: NextRequest) {
   const user = existing
     ? await db.user.update({ where: { id: existing.id }, data: { passwordHash } })
     : await db.user.create({ data: { email, passwordHash } });
+
+  // Referral attribution only applies to a genuinely new account — claiming
+  // an old passwordless demo row isn't a new signup.
+  if (!existing && referralCode) {
+    await captureReferralOnRegister(user.id, referralCode);
+  }
 
   await createSession(user.id, user.sessionVersion);
 

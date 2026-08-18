@@ -42,6 +42,19 @@ model User {
   flashcardProgress    FlashcardProgress[]
   storyReadingProgress StoryReadingProgress[]
   badges               UserBadge[]
+  // Lazily generated on first visit to the referral tab/link (see
+  // src/lib/referral.ts) rather than at signup — most users never open
+  // that tab, so this avoids burning a code (and a uniqueness retry loop)
+  // for every account ever created.
+  referralCode         String?                @unique
+  // Set once, at registration, from a ?ref= link — never changed
+  // afterwards ("first touch wins"). SetNull (not Cascade) on delete: if a
+  // referrer's account is later deleted, the people they referred keep
+  // their own accounts, they just lose the (already-resolved) attribution.
+  referredByUserId     String?
+  referredBy           User?                  @relation("UserReferrals", fields: [referredByUserId], references: [id], onDelete: SetNull)
+  referredUsers        User[]                 @relation("UserReferrals")
+  referralRewardsEarned ReferralReward[]
 }
 
 // status is one of: active | trialing | past_due | canceled | incomplete_expired
@@ -431,4 +444,21 @@ model UserBadge {
 
   @@unique([userId, badgeId])
   @@index([userId])
+}
+
+// One row per referral that has actually paid off — created exactly once,
+// the moment the REFERRED user completes their first real checkout (see
+// src/lib/referral.ts). referredUserId is unique so this table itself is
+// the idempotency guard: even a duplicated Stripe webhook delivery for the
+// same checkout can't grant the referrer a second reward, no separate
+// "already rewarded" flag needed anywhere else.
+model ReferralReward {
+  id             String   @id @default(cuid())
+  referrerUserId String
+  referrer       User     @relation(fields: [referrerUserId], references: [id], onDelete: Cascade)
+  referredUserId String   @unique
+  grantedDays    Int
+  createdAt      DateTime @default(now())
+
+  @@index([referrerUserId])
 }

@@ -15,6 +15,7 @@ export default async function RegisterPage({
   const query = await searchParams;
   const redirectTo =
     typeof query.redirectTo === "string" ? query.redirectTo : `/${lang}/profile`;
+  const referralCode = typeof query.ref === "string" ? query.ref : "";
   const errorMessages: Record<string, string> = {
     invalid_email: dict.auth.invalidEmail,
     weak_password: dict.auth.weakPassword,
@@ -35,9 +36,16 @@ export default async function RegisterPage({
         </p>
       )}
 
+      {referralCode && (
+        <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
+          {dict.auth.referralInviteNotice}
+        </p>
+      )}
+
       <form action="/api/auth/register" method="POST" className="mt-6 flex flex-col gap-4">
         <input type="hidden" name="lang" value={lang} />
         <input type="hidden" name="redirectTo" value={redirectTo} />
+        {referralCode && <input type="hidden" name="ref" value={referralCode} />}
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium">{dict.auth.emailLabel}</span>
           <input

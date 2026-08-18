@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
+import { awardReferralRewardSafely } from "@/lib/referral";
 import { isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
 
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
     },
   });
   await invalidateSubscriptionCache(user.id);
+  await awardReferralRewardSafely(user.id);
 
   return NextResponse.redirect(
     new URL(`/${lang}/profile?checkout=mock`, request.url),

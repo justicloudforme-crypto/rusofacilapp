@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isLocale, locales, localeNames, type Locale } from "@/i18n/config";
@@ -16,6 +17,8 @@ import { getUserStreakStats } from "@/lib/streaks";
 import { getExamAttempts } from "@/lib/exams/progress";
 import { getUserBadgesForDisplay } from "@/lib/badges";
 import { getWeeklyWeakTopic } from "@/lib/weak-topic";
+import { getReferralStats } from "@/lib/referral";
+import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import { levelSlugs } from "@/lib/courses";
 import { getThemePreference, type ThemePreference } from "@/lib/theme";
 import { AVATAR_IDS, isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
@@ -27,7 +30,7 @@ import AvatarPicker from "@/components/profile/AvatarPicker";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 
-const PROFILE_TABS = ["personal", "progress", "badges", "subscription", "security", "language"] as const;
+const PROFILE_TABS = ["personal", "progress", "badges", "referral", "subscription", "security", "language"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
 function isProfileTab(value: string): value is ProfileTab {
   return (PROFILE_TABS as readonly string[]).includes(value);
@@ -67,7 +70,7 @@ export default async function ProfilePage({
   const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
   const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
-  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges, weakTopic] =
+  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges, weakTopic, referral, requestHeaders] =
     await Promise.all([
       getLatestSubscription(user.id),
       getSubscriptionHistory(user.id),
@@ -79,8 +82,13 @@ export default async function ProfilePage({
       getThemePreference(),
       getUserBadgesForDisplay(user.id),
       getWeeklyWeakTopic(user.id),
+      getReferralStats(user.id),
+      headers(),
     ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
+  const requestHost = requestHeaders.get("host") ?? "rusofacilapp.com";
+  const requestProto = requestHeaders.get("x-forwarded-proto") ?? (requestHost.startsWith("localhost") ? "http" : "https");
+  const referralLink = referral ? `${requestProto}://${requestHost}/${lang}/register?ref=${referral.code}` : null;
 
   const displayStatus = getDisplayStatus(subscription);
   const isActive = displayStatus === "active" || displayStatus === "trialing";
@@ -122,6 +130,7 @@ export default async function ProfilePage({
     { id: "personal", label: dict.profile.tabPersonal },
     { id: "progress", label: dict.profile.tabProgress },
     { id: "badges", label: dict.profile.tabBadges },
+    { id: "referral", label: dict.profile.tabReferral },
     { id: "subscription", label: dict.profile.tabSubscription },
     { id: "security", label: dict.profile.tabSecurity },
     { id: "language", label: dict.profile.tabLanguage },
@@ -343,6 +352,39 @@ export default async function ProfilePage({
               );
             })}
           </div>
+        </section>
+      )}
+
+      {/* Referral */}
+      {activeTab === "referral" && (
+        <section className="mt-8 flex flex-col gap-6">
+          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+            <h2 className="font-medium">{dict.profile.referralHeading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.referralDescription}</p>
+
+            {referralLink ? (
+              <CopyReferralLink
+                link={referralLink}
+                copyLabel={dict.profile.referralCopyButton}
+                copiedLabel={dict.profile.referralCopiedNotice}
+              />
+            ) : (
+              <p className="mt-3 text-sm text-foreground/60">{dict.profile.referralUnavailable}</p>
+            )}
+          </div>
+
+          {referral && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <p className="text-2xl font-semibold tabular-nums">{referral.referredCount}</p>
+                <p className="text-sm text-foreground/60">{dict.profile.referralInvitedLabel}</p>
+              </div>
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <p className="text-2xl font-semibold tabular-nums">{referral.rewardsEarnedCount}</p>
+                <p className="text-sm text-foreground/60">{dict.profile.referralRewardsLabel}</p>
+              </div>
+            </div>
+          )}
         </section>
       )}
 

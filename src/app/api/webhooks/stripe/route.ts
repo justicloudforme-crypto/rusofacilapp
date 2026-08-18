@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
+import { awardReferralRewardSafely } from "@/lib/referral";
 
 function mapStripeStatus(status: Stripe.Subscription.Status): string {
   switch (status) {
@@ -96,6 +97,12 @@ export async function POST(request: NextRequest) {
           };
         }
         await upsertFromStripeSubscription(subscription);
+        // checkout.session.completed fires once per real Checkout Session —
+        // exactly the "first purchase" moment a referral reward should key
+        // off of (a renewal fires other event types, never this one again).
+        if (session.client_reference_id) {
+          await awardReferralRewardSafely(session.client_reference_id);
+        }
       }
       break;
     }

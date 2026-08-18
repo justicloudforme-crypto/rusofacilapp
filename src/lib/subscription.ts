@@ -34,13 +34,31 @@ const subscriptionCache = getOrCreateGlobalSingleton(
   () => new TtlCache<Subscription | null>(30_000, "subscription")
 );
 
+// The Redis path stores/reads T through JSON (see ttl-cache.ts), which
+// turns Date fields into plain strings on the way back — a cache hit for a
+// Subscription row would otherwise silently hand callers a `currentPeriodEnd`
+// that isn't actually a Date, breaking isSubscriptionActive's `.getTime()`
+// call (and anything else that treats it as one) on every warm read, not
+// just a cold DB one. Revives the three Date columns after every read
+// through the cache so a Subscription row is always a real Subscription
+// regardless of whether it came from Redis or Prisma.
+function reviveSubscriptionDates(row: Subscription): Subscription {
+  return {
+    ...row,
+    currentPeriodEnd: new Date(row.currentPeriodEnd),
+    createdAt: new Date(row.createdAt),
+    updatedAt: new Date(row.updatedAt),
+  };
+}
+
 export async function getLatestSubscription(userId: string) {
-  return cached(subscriptionCache, userId, () =>
+  const row = await cached(subscriptionCache, userId, () =>
     db.subscription.findFirst({
       where: { userId },
       orderBy: { createdAt: "desc" },
     })
   );
+  return row ? reviveSubscriptionDates(row) : row;
 }
 
 /** All of a user's Subscription rows, newest first — the profile page's
@@ -60,6 +78,35 @@ export async function getSubscriptionHistory(userId: string) {
  * instead of waiting out the TTL. */
 export async function invalidateSubscriptionCache(userId: string) {
   await subscriptionCache.del(userId);
+}
+
+/** Extends the user's current subscription period if it's still active, or
+ * grants a fresh one if not — shared by every "add N free days" path
+ * (admin manual grant, referral rewards) so they can't drift into two
+ * different extend-vs-create rules. */
+export async function extendOrGrantSubscription(userId: string, days: number, plan: string) {
+  const extraMs = days * 24 * 60 * 60 * 1000;
+  const existing = await getLatestSubscription(userId);
+
+  if (existing && isSubscriptionActive(existing)) {
+    await db.subscription.update({
+      where: { id: existing.id },
+      data: {
+        status: "active",
+        currentPeriodEnd: new Date(existing.currentPeriodEnd.getTime() + extraMs),
+      },
+    });
+  } else {
+    await db.subscription.create({
+      data: {
+        userId,
+        plan,
+        status: "active",
+        currentPeriodEnd: new Date(Date.now() + extraMs),
+      },
+    });
+  }
+  await invalidateSubscriptionCache(userId);
 }
 
 export async function userHasActiveSubscription(userId: string): Promise<boolean> {
