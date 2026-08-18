@@ -15,13 +15,9 @@
  *   npm run db:seed-stories
  */
 import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { db } from "../src/lib/db";
 import { validateStoryInput } from "../src/lib/stories";
 import { stories } from "./stories-data";
-
-const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
-const db = new PrismaClient({ adapter });
 
 
 async function main() {

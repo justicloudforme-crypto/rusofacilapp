@@ -12,6 +12,7 @@ import {
   type DisplayStatus,
 } from "@/lib/subscription";
 import { getLevelProgress, getLessonProgressDetails } from "@/lib/progress";
+import { getUserStreakStats } from "@/lib/streaks";
 import { getExamAttempts } from "@/lib/exams/progress";
 import { levelSlugs } from "@/lib/courses";
 import { getThemePreference, type ThemePreference } from "@/lib/theme";
@@ -64,7 +65,7 @@ export default async function ProfilePage({
   const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
   const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
-  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, theme] =
+  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme] =
     await Promise.all([
       getLatestSubscription(user.id),
       getSubscriptionHistory(user.id),
@@ -72,6 +73,7 @@ export default async function ProfilePage({
       getLessonProgressDetails(user.id),
       getExamAttempts(user.id),
       db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
+      getUserStreakStats(user.id),
       getThemePreference(),
     ]);
 
@@ -397,7 +399,36 @@ export default async function ProfilePage({
               {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
             </p>
           </div>
+          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+            <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
+              {streak.currentStreak > 0 && <span aria-hidden="true">🔥</span>}
+              {streak.currentStreak} {dict.profile.streakDaysUnit}
+            </p>
+            <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
+          </div>
+          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+            <p className="text-2xl font-semibold tabular-nums">
+              {streak.longestStreak} {dict.profile.streakDaysUnit}
+            </p>
+            <p className="text-sm text-foreground/60">{dict.profile.longestStreakLabel}</p>
+          </div>
         </div>
+
+        {streak.currentStreak > 0 ? (
+          <p
+            className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+              streak.activeToday
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            }`}
+          >
+            {streak.activeToday ? dict.profile.streakActiveTodayNote : dict.profile.streakAtRiskNote}
+          </p>
+        ) : (
+          <p className="mt-3 rounded-lg bg-foreground/5 px-3 py-2 text-sm text-foreground/60">
+            {dict.profile.streakNoneNote}
+          </p>
+        )}
       </section>
 
       <section className="mt-8">

@@ -10,12 +10,8 @@
  *   npm run db:seed-glossary
  */
 import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { db } from "../src/lib/db";
 import { validateGlossaryInput, type GlossaryCategory, type GlossaryExample } from "../src/lib/glossary";
-
-const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
-const db = new PrismaClient({ adapter });
 
 interface SeedTerm {
   slug: string;

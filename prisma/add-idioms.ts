@@ -10,12 +10,8 @@
 import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { db } from "../src/lib/db";
 import { validateIdiomInput } from "../src/lib/idioms";
-
-const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
-const db = new PrismaClient({ adapter });
 
 async function main() {
   const batchPath = join(__dirname, "idioms-batch.json");

@@ -41,6 +41,7 @@ model User {
   examAttempts         ExamAttempt[]
   flashcardProgress    FlashcardProgress[]
   storyReadingProgress StoryReadingProgress[]
+  badges               UserBadge[]
 }
 
 // status is one of: active | trialing | past_due | canceled | incomplete_expired
@@ -410,4 +411,24 @@ model Idiom {
 
   @@index([category])
   @@index([level])
+}
+
+// A badge a user has earned (streaks, exam milestones, grammar-case
+// mastery, vocabulary size). The badge catalog itself (title, description,
+// icon, unlock condition) lives in code (src/lib/badges/catalog.ts), not
+// here — it's static content with no admin-editing need yet, same
+// reasoning as the static lessons/exams JSON before the Lesson/Exam
+// override tables existed. This table only records the fact and moment a
+// given user unlocked a given badge. badgeId is a stable slug from the
+// catalog (e.g. "streak-7", "genitive-master"), not a foreign key, so the
+// catalog can be edited/reordered in code without a migration.
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
 }

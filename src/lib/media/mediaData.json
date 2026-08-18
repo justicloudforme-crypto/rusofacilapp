@@ -19192,5 +19192,929 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-17",
     "sourceNote": "YouTube video 6sSFpdIM7t4, canal independiente 'Stay with Jane' (profesora individual, no institución/curso de pago). Público, playable_in_embed=true, no es livestream. Subtítulos automáticos en español disponibles y legibles (narración en inglés con ejemplos en ruso, traducidos automáticamente con calidad aceptable, aunque los ejemplos rusos aparecen transliterados de forma poco fiable por el reconocimiento de voz). Tema confirmado: la lección compara хотя, несмотря на (то что) e иначе. Contenido gramatical reconstruido a partir de conocimiento gramatical objetivo verificado, no transcrito literalmente de los subtítulos transliterados."
+  },
+  "video-expresiones-coloquiales": {
+    "id": "video-expresiones-coloquiales",
+    "title": "Cómo hablar ruso como un nativo: expresiones coloquiales",
+    "description": "Palabras y muletillas que los rusos usan constantemente en el habla informal, pero que casi nunca aparecen en los libros de texto: respuestas cortas a «¿cómo estás?», interjecciones de sorpresa o fastidio, y una expresión imprescindible para sonar natural. Registro coloquial: útiles para entender conversaciones reales, no para el registro formal escrito.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "PCzKaRuofvc",
+    "curriculumLessonId": "b2-5",
+    "lyricsOrTranscript": [
+      {
+        "russian": "— Как дела? — Ничего.",
+        "translation": "—¿Cómo estás? —Nada mal / voy tirando. («ничего», literalmente «nada», es la respuesta corta más común y neutra a «¿cómo estás?»."
+      },
+      {
+        "russian": "— Как дела? — Нормально.",
+        "translation": "—¿Cómo estás? —Normal / bien. «Нормально» es una palabra comodín: sirve como respuesta a casi cualquier pregunta sobre cómo va algo, no solo en el sentido literal de «normal»."
+      },
+      {
+        "russian": "— Как дела? — Плохо.",
+        "translation": "—¿Cómo estás? —Mal. La respuesta directa cuando de verdad las cosas van mal, sin rodeos."
+      },
+      {
+        "russian": "Блин, я забыл ключи дома!",
+        "translation": "¡Vaya, se me olvidaron las llaves en casa! «Блин» es una interjección coloquial muy suave para expresar fastidio o contrariedad — mucho más leve que una palabrota real, es la que usan hasta en la televisión."
+      },
+      {
+        "russian": "Ты сдал экзамен? Круто!",
+        "translation": "¿Aprobaste el examen? ¡Qué bien / genial! «Круто» es el equivalente coloquial de «genial/estupendo», muy usado entre jóvenes."
+      },
+      {
+        "russian": "Ни фига себе, ты выиграл в лотерею!",
+        "translation": "¡No puede ser / vaya sorpresa, ganaste la lotería! «Ни фига себе» expresa asombro o incredulidad ante algo inesperado — el equivalente a un «¡no me lo puedo creer!» coloquial."
+      },
+      {
+        "russian": "Дополнительный факт: en ruso existe un juego de palabras muy conocido — a la pregunta «Как дела?» («¿cómo estás?»), a veces se responde en broma «Родила?» («¿diste a luz?»), porque rima con «дела».",
+        "translation": "Es solo un chiste fonético por la rima, no una respuesta real — pero es tan conocido que un ruso se sorprenderá gratamente si un extranjero lo usa."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "ничего",
+        "transcription": "nichivó",
+        "translation": "nada / así así (respuesta a «¿cómo estás?»)"
+      },
+      {
+        "word": "нормально",
+        "transcription": "narmál'na",
+        "translation": "normal, bien (palabra comodín)"
+      },
+      {
+        "word": "плохо",
+        "transcription": "plókha",
+        "translation": "mal"
+      },
+      {
+        "word": "блин",
+        "transcription": "blin",
+        "translation": "¡vaya!, ¡caramba! (interjección suave de fastidio)"
+      },
+      {
+        "word": "круто",
+        "transcription": "krúta",
+        "translation": "genial, estupendo (coloquial)"
+      },
+      {
+        "word": "ни фига себе",
+        "transcription": "ni figá sibyé",
+        "translation": "¡no puede ser!, ¡vaya sorpresa!"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoexpresionescoloquiales-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Un amigo te dice que reprobó el examen. ¿Qué respuesta suya esperarías si le preguntas «Как дела?»?",
+        "options": [
+          "Круто.",
+          "Плохо.",
+          "Ни фига себе.",
+          "Нормально."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoexpresionescoloquiales-mc-2",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál de estas palabras es una interjección coloquial suave, similar a «¡vaya!» o «¡caramba!»?",
+        "options": [
+          "Нормально",
+          "Ничего",
+          "Блин",
+          "Круто"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoexpresionescoloquiales-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "ничего",
+            "right": "nada / así así"
+          },
+          {
+            "left": "нормально",
+            "right": "normal, bien"
+          },
+          {
+            "left": "плохо",
+            "right": "mal"
+          },
+          {
+            "left": "блин",
+            "right": "¡vaya!, ¡caramba!"
+          },
+          {
+            "left": "круто",
+            "right": "genial, estupendo"
+          },
+          {
+            "left": "ни фига себе",
+            "right": "¡no puede ser!"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video PCzKaRuofvc, «Cómo hablar ruso como un nativo: 7 expresiones útiles», canal 'Hackeando Idiomas' (no oficial de un artista/marca). yt-dlp confirmó availability: public, playable_in_embed: true. El track de subtítulos automáticos en español se descargó y confirma el tema (respuestas coloquiales a «как дела», блин, круто, ни фига себе), pero el track ruso no pudo descargarse por un rate-limit persistente de YouTube (HTTP 429) tras varios reintentos espaciados. El contenido se construyó únicamente con palabras/expresiones rusas de uso extremadamente común y sin ambigüedad ortográfica (confirmadas además por la traducción literal del track español), no con texto reconstruido de memoria de partes ambiguas del vídeo. Se omitieron deliberadamente 2 de las 7 expresiones originales del vídeo: una fórmula vulgar («да пошёл ты/пошла ты», mandar a alguien a paseo) por registro inadecuado para la plataforma, y una palabra cuya transcripción exacta no pudo confirmarse con certeza sin el track ruso. Pendiente: re-verificar contra el track ruso si vuelve a estar disponible."
+  },
+  "song-eti-glaza-naprotiv": {
+    "id": "song-eti-glaza-naprotiv",
+    "title": "Эти глаза напротив — Валерий Ободзинский (1975)",
+    "description": "Uno de los grandes éxitos de la estrada soviética de los 70: una balada íntima y melancólica dedicada a los ojos de la persona amada, que el destino ha puesto frente a frente. Letra de Tatiana Sashko, música de David Tujmánov. Contenido puramente romántico y sentimental, sin ningún tema oscuro o sensible, nivel B2.",
+    "level": "B2",
+    "category": "song",
+    "youtubeVideoId": "qF9xhtpuWSQ",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Эти глаза напротив — калейдоскоп огней. Эти глаза напротив ярче и всё теплей.",
+        "translation": "Estos ojos frente a mí — un caleidoscopio de luces. Estos ojos frente a mí, cada vez más brillantes y cálidos."
+      },
+      {
+        "russian": "Пусть я впадаю, пусть, в сентиментальность и грусть. Воли моей супротив, эти глаза напротив.",
+        "translation": "Que caiga, que caiga, en la sentimentalidad y la tristeza. Contra mi propia voluntad, estos ojos frente a mí."
+      },
+      {
+        "russian": "Вот и свела судьба, вот и свела судьба, вот и свела судьба нас.",
+        "translation": "Así nos unió el destino, así nos unió el destino a nosotros."
+      },
+      {
+        "russian": "Эти глаза напротив — и больше нет разлук. Эти глаза напротив — мой молчаливый друг.",
+        "translation": "Estos ojos frente a mí — y ya no hay más separaciones. Estos ojos frente a mí — mi amigo silencioso."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "калейдоскоп",
+        "transcription": "kaleydaskóp",
+        "translation": "caleidoscopio"
+      },
+      {
+        "word": "судьба",
+        "transcription": "sud'bá",
+        "translation": "destino"
+      },
+      {
+        "word": "разлука",
+        "transcription": "razlúka",
+        "translation": "separación (de dos personas)"
+      },
+      {
+        "word": "молчаливый",
+        "transcription": "malchalívyy",
+        "translation": "silencioso, callado"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songetiglazanaprotiv-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según la canción, ¿qué unió al hablante con la persona de esos ojos?",
+        "options": [
+          "una carta",
+          "el destino (судьба)",
+          "un amigo en común",
+          "el trabajo"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songetiglazanaprotiv-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "калейдоскоп",
+            "right": "caleidoscopio"
+          },
+          {
+            "left": "судьба",
+            "right": "destino"
+          },
+          {
+            "left": "разлука",
+            "right": "separación"
+          },
+          {
+            "left": "молчаливый",
+            "right": "silencioso"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video qF9xhtpuWSQ, canal personal independiente 'ЕленаИюльская' (no el canal oficial del artista). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (texto en ruso). Canción de David Tujmánov (música) y Tatiana Sashko (letra), interpretada por Valeri Obodzinski (1975); contenido revisado íntegramente antes de aceptar — puramente romántico/sentimental (ojos, destino, ausencia de separación), sin imágenes oscuras u obsesivas pese a la reputación dramática de la canción."
+  },
+  "video-blagodarya-iz-za-togo-chto": {
+    "id": "video-blagodarya-iz-za-togo-chto",
+    "title": "Causa positiva y negativa: «благодаря тому что» vs. «из-за того что»",
+    "description": "El ruso distingue explícitamente entre una causa POSITIVA y una NEGATIVA, algo que el español no marca gramaticalmente: «благодаря тому что» ('gracias a que') se usa solo para causas que llevan a un resultado bueno, mientras que «из-за того что» ('por culpa de que') se usa para causas que llevan a un resultado malo o no deseado.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "xZpatx8bMes",
+    "curriculumLessonId": "b2-16",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Благодаря тому что мы приехали рано, мы нашли хорошие места.",
+        "translation": "Gracias a que llegamos temprano, encontramos buenos lugares. (causa con resultado positivo)"
+      },
+      {
+        "russian": "Из-за того что мы приехали поздно, все хорошие места были заняты.",
+        "translation": "Por culpa de que llegamos tarde, todos los buenos lugares estaban ocupados. (causa con resultado negativo)"
+      },
+      {
+        "russian": "«Благодаря» también funciona como preposición simple: «благодаря дождю» (gracias a la lluvia); «из-за» igual: «из-за дождя» (por culpa de la lluvia).",
+        "translation": "Ambas palabras también se usan solas + sustantivo en dativo/genitivo respectivamente, sin necesidad de la cláusula completa «тому что» / «того что»."
+      },
+      {
+        "russian": "A diferencia de «потому что» (causa neutra, b2-14), «благодаря» y «из-за» siempre llevan una valoración implícita: bueno o malo.",
+        "translation": "Regla clave: «потому что» no juzga el resultado; «благодаря»/«из-за» sí — elegir la palabra correcta comunica si el hablante ve el resultado como positivo o negativo."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "благодаря тому что",
+        "transcription": "blagadaryá tamú shto",
+        "translation": "gracias a que (causa positiva)"
+      },
+      {
+        "word": "из-за того что",
+        "transcription": "izzá tavó shto",
+        "translation": "por culpa de que (causa negativa)"
+      },
+      {
+        "word": "результат",
+        "transcription": "rezul'тát",
+        "translation": "resultado"
+      },
+      {
+        "word": "занятый",
+        "transcription": "zányatyy",
+        "translation": "ocupado"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoblagodaryaizza-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es correcta para un resultado NEGATIVO: «... того что шёл дождь, мы промокли» (nos mojamos)?",
+        "options": [
+          "Благодаря",
+          "Из-за",
+          "Потому",
+          "Несмотря"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoblagodaryaizza-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "благодаря тому что",
+            "right": "gracias a que"
+          },
+          {
+            "left": "из-за того что",
+            "right": "por culpa de que"
+          },
+          {
+            "left": "результат",
+            "right": "resultado"
+          },
+          {
+            "left": "занятый",
+            "right": "ocupado"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video xZpatx8bMes, canal independiente 'Jurussia Учим русский' (lección de diálogo con personajes Антон y Алиса, no un curso de pago ni una grabación de clase con alumnos nombrados; el video en sí es gratuito, aunque el canal ofrece material extra vía Patreon). Público, playable_in_embed=true, no es livestream. Tema confirmado mediante la descripción oficial del video, que enumera explícitamente 'Positive vs. Negative Cause: Благодаря тому что (Thanks to) and Из-за того что (Due to)' junto con otros conectores (несмотря на то что, ya cubierto en b2-15). Los subtítulos automáticos no pudieron descargarse por límite de peticiones persistente de YouTube durante esta sesión; contenido gramatical reconstruido a partir de conocimiento gramatical objetivo verificado, con el tema confirmado por la descripción del canal, no transcrito de subtítulos."
+  },
+  "video-dlya-togo-chtoby-tak-chto": {
+    "id": "video-dlya-togo-chtoby-tak-chto",
+    "title": "Finalidad y consecuencia: «чтобы» / «для того чтобы» y «так что»",
+    "description": "Dos construcciones distintas: «чтобы» (o su forma enfática «для того чтобы») introduce el PROPÓSITO de una acción (infinitivo si el sujeto es el mismo; pasado si se quiere que otra persona haga algo), mientras que «так что» introduce una CONSECUENCIA — el resultado que sigue naturalmente de lo dicho antes, sin idea de propósito.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "8m56myjClo4",
+    "curriculumLessonId": "b2-17",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я пошла в магазин, чтобы купить продукты.",
+        "translation": "Fui a la tienda para comprar comida. («чтобы» + infinitivo — mismo sujeto en ambas partes)"
+      },
+      {
+        "russian": "Я хочу, чтобы ты купил продукты.",
+        "translation": "Quiero que compres comida. («чтобы» + pasado — sujetos distintos: quiero que TÚ hagas algo)"
+      },
+      {
+        "russian": "Для того чтобы сдать экзамен, нужно много заниматься.",
+        "translation": "Para aprobar el examen, hay que estudiar mucho. («для того чтобы» — variante más formal/enfática de «чтобы», misma estructura)"
+      },
+      {
+        "russian": "Было очень холодно, так что мы остались дома.",
+        "translation": "Hacía mucho frío, así que nos quedamos en casa. («так что» introduce una consecuencia, no un propósito — no hay elección deliberada, solo un resultado natural)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "чтобы",
+        "transcription": "shtóby",
+        "translation": "para que / para (+ infinitivo)"
+      },
+      {
+        "word": "для того чтобы",
+        "transcription": "dlya tavó shtóby",
+        "translation": "para que / con el fin de que (forma enfática)"
+      },
+      {
+        "word": "так что",
+        "transcription": "tak shto",
+        "translation": "así que (consecuencia)"
+      },
+      {
+        "word": "заниматься",
+        "transcription": "zanimát'sya",
+        "translation": "estudiar, dedicarse (a algo)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodlyatogochtoby-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál expresa una CONSECUENCIA (no un propósito)?",
+        "options": [
+          "Я пошла в магазин, чтобы купить продукты.",
+          "Было холодно, так что мы остались дома.",
+          "Я хочу, чтобы ты купил продукты.",
+          "Для того чтобы сдать экзамен, нужно заниматься."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodlyatogochtoby-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "чтобы",
+            "right": "para (que)"
+          },
+          {
+            "left": "для того чтобы",
+            "right": "con el fin de que"
+          },
+          {
+            "left": "так что",
+            "right": "así que"
+          },
+          {
+            "left": "заниматься",
+            "right": "estudiar"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 8m56myjClo4 ('25 Russian conjunctions'), canal independiente 'Lina's Lessons' (profesora individual). Público, playable_in_embed=true, no es livestream. La descripción menciona un curso de pago no relacionado (Udemy) pero el video en sí es gratuito y no es un fragmento extraído de ese curso — no aplica el criterio de rechazo de cursos de pago (que se refiere a grabaciones de clases con alumnos, no a menciones de productos). Se usaron subtítulos MANUALES reales en ruso (no autogenerados, mayor fiabilidad) para verificar los ejemplos de «чтобы» (minuto 10:00-11:00: 'Я пошла в магазин, чтобы купить продукты' y 'Я хочу, чтобы ты купил продукты'). El video no cubre «так что» (consecuencia); esa parte se construyó a partir de conocimiento gramatical objetivo verificado."
+  },
+  "video-prichastiya-aktivnye": {
+    "id": "video-prichastiya-aktivnye",
+    "title": "Participios activos: sustituyendo «который» + verbo",
+    "description": "El participio activo de presente reemplaza una cláusula de relativo con «который» + verbo en presente por una sola palabra adjetival: «мужчина, который работает» → «работающий мужчина». Se forma añadiendo los sufijos -ущ-/-ющ- (verbos de 1ª conjugación) o -ащ-/-ящ- (2ª conjugación) a la raíz del presente, y se declina como cualquier adjetivo (género, número, caso).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "VWxt9wxDPbE",
+    "curriculumLessonId": "b2-9",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Это мужчина, который работает там.",
+        "translation": "Este es el hombre que trabaja allí. (con cláusula de relativo «который»)"
+      },
+      {
+        "russian": "Это работающий там мужчина.",
+        "translation": "Este es el hombre que trabaja allí. (misma idea, con participio activo «работающий» en vez de «который работает»)"
+      },
+      {
+        "russian": "Любящий, думающий, слышащий — три ejemplos con distintos sufijos.",
+        "translation": "«любящий» (que ama, de «любить», suf. -ющ-), «думающий» (que piensa, de «думать», suf. -ющ-), «слышащий» (que oye, de «слышать», suf. -ащ-) — el sufijo depende de la conjugación del verbo."
+      },
+      {
+        "russian": "El participio activo solo existe para verbos imperfectivos y no tiene forma de futuro — solo presente y pasado.",
+        "translation": "Regla clave: no se puede formar un participio activo de un verbo perfectivo en presente (los perfectivos no tienen tiempo presente); el participio se declina como adjetivo según el sustantivo al que describe."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "причастие",
+        "transcription": "prichástiye",
+        "translation": "participio"
+      },
+      {
+        "word": "работающий",
+        "transcription": "rabótayushchiy",
+        "translation": "que trabaja / trabajador (participio activo)"
+      },
+      {
+        "word": "любящий",
+        "transcription": "lyúbyashchiy",
+        "translation": "que ama"
+      },
+      {
+        "word": "который",
+        "transcription": "katóryy",
+        "translation": "que, el cual (pronombre relativo)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoprichastiyaaktivnye-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se reemplaza «мужчина, который работает там» usando un participio?",
+        "options": [
+          "работающий там мужчина",
+          "работавший там мужчина",
+          "который работает мужчина",
+          "мужчина работать там"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "id": "videoprichastiyaaktivnye-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "причастие",
+            "right": "participio"
+          },
+          {
+            "left": "работающий",
+            "right": "que trabaja"
+          },
+          {
+            "left": "любящий",
+            "right": "que ama"
+          },
+          {
+            "left": "который",
+            "right": "que, el cual"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video VWxt9wxDPbE ('Урок 1. Активные причастия'), canal independiente 'About Russian in Russian' / «О русском по-русски» (profesora individual 'Ира'). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso (no autogenerados): ejemplos extraídos directamente de la transcripción ('Это мужчина, который работает там' → 'работающий там мужчина'; 'любящий', 'думающий', 'слышащий' como ejemplos de distintos sufijos)."
+  },
+  "video-deeprichastiya": {
+    "id": "video-deeprichastiya",
+    "title": "Gerundios (деепричастия): sustituyendo oraciones subordinadas",
+    "description": "El deepríchastie es una forma verbal invariable que reemplaza una acción secundaria simultánea o previa a la acción principal, cuando ambas comparten el mismo sujeto. Responde a la pregunta «¿haciendo qué?» (что делая?) para la forma imperfectiva (sufijo -я/-а) o «¿habiendo hecho qué?» (что сделав?) para la perfectiva (sufijo -в/-вши), y a diferencia del participio, siempre depende del verbo, no de un sustantivo.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "K-AWZvKPeVQ",
+    "curriculumLessonId": "b2-10",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Читая текст, он переводил слова.",
+        "translation": "Leyendo el texto, traducía las palabras. (деепричастие imperfectivo «читая», suf. -я-; acción simultánea)"
+      },
+      {
+        "russian": "Когда он читал текст, он переводил слова.",
+        "translation": "Cuando leía el texto, traducía las palabras. (misma idea, con oración subordinada en vez de gerundio)"
+      },
+      {
+        "russian": "Прочитав текст, он перевёл слова.",
+        "translation": "Habiendo leído el texto, tradujo las palabras. (деепричастие perfectivo «прочитав», suf. -в-; acción previa a la principal)"
+      },
+      {
+        "russian": "Пара de preguntas clave: «Он переводил слова, что делая?» / «Он перевёл слова, что сделав?»",
+        "translation": "El deepríchastie siempre depende del verbo principal (no del sustantivo, a diferencia del participio) — por eso se le pregunta desde el verbo: '¿haciendo qué?' / '¿habiendo hecho qué?'."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "деепричастие",
+        "transcription": "deyepríchastiye",
+        "translation": "gerundio (forma verbal invariable)"
+      },
+      {
+        "word": "читая",
+        "transcription": "chitáya",
+        "translation": "leyendo"
+      },
+      {
+        "word": "прочитав",
+        "transcription": "prachitáv",
+        "translation": "habiendo leído"
+      },
+      {
+        "word": "деепричастный оборот",
+        "transcription": "deyepríchastnyy abarót",
+        "translation": "construcción de gerundio (gerundio + sus complementos)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodeeprichastiya-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es la forma correcta del gerundio PERFECTIVO de «прочитать» (habiendo leído)?",
+        "options": [
+          "читая",
+          "прочитав",
+          "читав",
+          "прочитая"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodeeprichastiya-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "деепричастие",
+            "right": "gerundio"
+          },
+          {
+            "left": "читая",
+            "right": "leyendo"
+          },
+          {
+            "left": "прочитав",
+            "right": "habiendo leído"
+          },
+          {
+            "left": "деепричастный оборот",
+            "right": "construcción de gerundio"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video K-AWZvKPeVQ ('Урок 1. Что такое ДЕЕПРИЧАСТИЕ?'), canal independiente 'About Russian in Russian' / «О русском по-русски» (misma profesora 'Ира' que en b2-9, curso de participios/gerundios). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso (no autogenerados): ejemplos extraídos directamente de la transcripción ('Читая текст, он переводил слова' / 'Прочитав текст, он перевёл слова', y las preguntas guía 'что делая?' / 'что сделав?')."
+  },
+  "video-prichastiya-passivnye": {
+    "id": "video-prichastiya-passivnye",
+    "title": "Participios pasivos de pasado: registro escrito formal",
+    "description": "El participio pasivo de pasado («написанный», «построенный», «сделанный»...) se forma solo a partir de verbos PERFECTIVOS y describe algo que RECIBE la acción, no la realiza — es la construcción típica del registro escrito formal para sustituir «который» en voz pasiva: «текст, который написал автор» → «текст, написанный автором».",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "79Id4a5aS6Y",
+    "curriculumLessonId": "b2-13",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Это автор, написавший текст.",
+        "translation": "Este es el autor que escribió el texto. (ACTIVO: el autor realiza la acción — participio activo «написавший»)"
+      },
+      {
+        "russian": "Это текст, написанный автором.",
+        "translation": "Este es el texto escrito por el autor. (PASIVO: el texto recibe la acción — participio pasivo «написанный», el agente va en caso instrumental: «автором»)"
+      },
+      {
+        "russian": "Он построил дом. → построенный дом.",
+        "translation": "Él construyó la casa. → la casa construida. (suf. -енн-/-ённ- para verbos terminados en -ить: построить → построенный)"
+      },
+      {
+        "russian": "El participio pasivo de pasado solo existe para verbos perfectivos (a diferencia del activo, que admite ambos aspectos).",
+        "translation": "Regla clave: no se puede formar un participio pasivo de pasado de un verbo imperfectivo — esta es la diferencia principal frente al participio activo visto en b2-9."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "написанный",
+        "transcription": "napísannyy",
+        "translation": "escrito (participio pasivo)"
+      },
+      {
+        "word": "построенный",
+        "transcription": "pastróyennyy",
+        "translation": "construido"
+      },
+      {
+        "word": "сделанный",
+        "transcription": "sdélannyy",
+        "translation": "hecho"
+      },
+      {
+        "word": "автор",
+        "transcription": "ávtar",
+        "translation": "autor"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoprichastiyapassivnye-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál de estas frases usa un participio PASIVO?",
+        "options": [
+          "автор, написавший текст",
+          "текст, написанный автором",
+          "человек, читающий книгу",
+          "мужчина, который пишет"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoprichastiyapassivnye-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "написанный",
+            "right": "escrito"
+          },
+          {
+            "left": "построенный",
+            "right": "construido"
+          },
+          {
+            "left": "сделанный",
+            "right": "hecho"
+          },
+          {
+            "left": "автор",
+            "right": "autor"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 79Id4a5aS6Y ('Урок 4. Пассивные причастия'), canal independiente 'About Russian in Russian' / «О русском по-русски» (misma profesora 'Ира' que en b2-9/b2-10, mismo curso de participios). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplo contrastivo extraído directamente de la transcripción ('Это автор, написавший текст' vs. 'Это текст, написанный автором', минуто 13:55-15:20)."
+  },
+  "video-glagoly-dvizheniya-perenosnoe": {
+    "id": "video-glagoly-dvizheniya-perenosnoe",
+    "title": "Verbos de movimiento en sentido figurado I: «идти»",
+    "description": "El verbo «идти» (ir/caminar a pie) tiene numerosos usos figurados que no implican movimiento físico real: el paso del tiempo («время идёт», «часы идут»), fenómenos meteorológicos («дождь идёт», «снег идёт») y expresiones idiomáticas como «голова идёт кругом» (estar abrumado) o «идти по головам» (pasar por encima de otros para lograr un objetivo).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "rEGIecINVwk",
+    "curriculumLessonId": "b2-18",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Время идёт быстрее! Часы идут. Годы идут.",
+        "translation": "¡El tiempo pasa más rápido! El reloj funciona (avanza). Los años pasan. (sentido figurado: el paso del tiempo, no movimiento físico)"
+      },
+      {
+        "russian": "Снег идёт, дождь идёт, град идёт.",
+        "translation": "Nieva, llueve, graniza. (fenómenos meteorológicos — siempre con «идти», nunca «ходить», porque solo van en una dirección: de arriba hacia abajo)"
+      },
+      {
+        "russian": "У меня столько дел сегодня — голова идёт кругом.",
+        "translation": "Tengo tantas cosas que hacer hoy — la cabeza me da vueltas. (expresión idiomática: estar abrumado, confundido)"
+      },
+      {
+        "russian": "Он готов идти по головам, чтобы достичь своей цели.",
+        "translation": "Está dispuesto a pasar por encima de los demás para lograr su objetivo. (expresión idiomática negativa: actuar sin importarle a quién perjudica)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "время идёт",
+        "transcription": "vryémya idyot",
+        "translation": "el tiempo pasa"
+      },
+      {
+        "word": "дождь идёт",
+        "transcription": "dozhd' idyot",
+        "translation": "llueve"
+      },
+      {
+        "word": "голова идёт кругом",
+        "transcription": "galavá idyot krugóm",
+        "translation": "la cabeza da vueltas (estar abrumado)"
+      },
+      {
+        "word": "идти по головам",
+        "transcription": "idtí pa galavám",
+        "translation": "pasar por encima de los demás"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoglagolydvizheniya-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué significa «у меня голова идёт кругом»?",
+        "options": [
+          "tengo mareos físicos por girar",
+          "estoy abrumado, con demasiadas cosas en la cabeza",
+          "estoy caminando en círculos",
+          "mi reloj funciona mal"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoglagolydvizheniya-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "время идёт",
+            "right": "el tiempo pasa"
+          },
+          {
+            "left": "дождь идёт",
+            "right": "llueve"
+          },
+          {
+            "left": "голова идёт кругом",
+            "right": "estar abrumado"
+          },
+          {
+            "left": "идти по головам",
+            "right": "pasar por encima de los demás"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video rEGIecINVwk ('Урок 10. Глаголы движения БЕЗ ПРИСТАВОК в ПЕРЕНОСНОМ значении'), canal independiente «О русском по-русски» (misma profesora 'Ира', curso de verbos de movimiento). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos extraídos directamente de la transcripción ('время идёт', 'часы идут', 'снег идёт, дождь идёт, град идёт', 'голова идёт кругом', 'идти по головам')."
+  },
+  "video-glagoly-dvizheniya-pristavki": {
+    "id": "video-glagoly-dvizheniya-pristavki",
+    "title": "Verbos de movimiento en sentido figurado II: verbos con prefijo",
+    "description": "Los verbos de movimiento con prefijo (подойти, выйти, перейти...) también desarrollan significados figurados junto a su sentido literal de desplazamiento físico: «подойти к дому» (acercarse a la casa, literal) frente a «подойти к костюму» (quedar bien, sentar bien — figurado); «выйти из дома» (salir de casa, literal) frente a «выйти из себя» (perder los estribos — figurado).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "jAwrWQlKC8Q",
+    "curriculumLessonId": "b2-19",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Подойти к дому. — Подойти к костюму.",
+        "translation": "Acercarse a la casa (literal). — Quedarle bien / sentarle bien (a alguien, el traje) (figurado)."
+      },
+      {
+        "russian": "Выйти из дома. — Выйти из себя.",
+        "translation": "Salir de casa (literal). — Perder los estribos, perder la paciencia (figurado)."
+      },
+      {
+        "russian": "Перейти к делу.",
+        "translation": "Ir al grano, pasar al asunto principal. (де «перейти» — cruzar/pasar, sentido figurado de avanzar en una conversación)"
+      },
+      {
+        "russian": "Отойти от темы.",
+        "translation": "Desviarse del tema. (de «отойти» — alejarse, sentido figurado de divagar en una conversación)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "подойти",
+        "transcription": "padaytí",
+        "translation": "acercarse / quedar bien (fig.)"
+      },
+      {
+        "word": "выйти из себя",
+        "transcription": "výyti iz sebyá",
+        "translation": "perder los estribos"
+      },
+      {
+        "word": "перейти к делу",
+        "transcription": "pereytí k délu",
+        "translation": "ir al grano"
+      },
+      {
+        "word": "отойти от темы",
+        "transcription": "ataytí at témy",
+        "translation": "desviarse del tema"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoglagolydvizheniyapristavki-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué significa «выйти из себя»?",
+        "options": [
+          "salir físicamente de un edificio",
+          "perder los estribos, enfadarse mucho",
+          "quedarse dormido",
+          "cambiar de opinión"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoglagolydvizheniyapristavki-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "подойти",
+            "right": "quedar bien (fig.)"
+          },
+          {
+            "left": "выйти из себя",
+            "right": "perder los estribos"
+          },
+          {
+            "left": "перейти к делу",
+            "right": "ir al grano"
+          },
+          {
+            "left": "отойти от темы",
+            "right": "desviarse del tema"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video jAwrWQlKC8Q, canal independiente 'Russian for Foreigners. Русский как иностранный'. Público, playable_in_embed=true, no es livestream. Ejemplos ('подойти к дому' vs. 'подойти к костюму'; 'выйти из дома' vs. 'выйти из себя') tomados directamente y verificados de la descripción oficial del video, no de subtítulos automáticos (que no se descargaron por precaución de calidad). Ejemplos adicionales (перейти к делу, отойти от темы) añadidos a partir de conocimiento gramatical objetivo verificado, siguiendo el mismo patrón temático."
+  },
+  "song-ekho-lyubvi": {
+    "id": "song-ekho-lyubvi",
+    "title": "Эхо любви — Анна Герман (1975)",
+    "description": "Balada romántica clásica de la estrada soviética, de la película «Судьба» (Destino, 1977): el amor entre dos personas como un eco eterno que resuena a través de la distancia y del tiempo. Letra de Роберт Рождественский, música de Евгений Птичкин. Contenido puramente romántico y poético, sin ningún tema político o sensible, nivel C1.",
+    "level": "C1",
+    "category": "song",
+    "youtubeVideoId": "CY6yYcqEZws",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Покроется небо пылинками звёзд, и выгнутся ветви упруго.",
+        "translation": "El cielo se cubrirá de motas de polvo de estrellas, y las ramas se curvarán con fuerza."
+      },
+      {
+        "russian": "Тебя я услышу за тысячу вёрст. Мы эхо, мы эхо, мы долгое эхо друг друга.",
+        "translation": "Te escucharé a mil verstas de distancia. Somos eco, somos eco, somos el largo eco el uno del otro."
+      },
+      {
+        "russian": "И мне до тебя, где бы я ни была, дотронуться сердцем не трудно.",
+        "translation": "Y llegar hasta ti, esté donde esté, no me cuesta tocarte con el corazón."
+      },
+      {
+        "russian": "Опять нас любовь за собой позвала. Мы нежность, мы нежность, мы вечная нежность друг друга.",
+        "translation": "De nuevo el amor nos llamó tras de sí. Somos ternura, somos ternura, somos la eterna ternura el uno del otro."
+      },
+      {
+        "russian": "Я знаю: с тобой не расстанемся мы. Мы память, мы память, мы звёздная память друг друга.",
+        "translation": "Sé que no nos separaremos. Somos memoria, somos memoria, somos el recuerdo estelar el uno del otro."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "эхо",
+        "transcription": "ékho",
+        "translation": "eco"
+      },
+      {
+        "word": "нежность",
+        "transcription": "nézhnast'",
+        "translation": "ternura"
+      },
+      {
+        "word": "память",
+        "transcription": "pámyat'",
+        "translation": "memoria, recuerdo"
+      },
+      {
+        "word": "вёрста",
+        "transcription": "vyorstá",
+        "translation": "versta (antigua unidad de distancia rusa, ~1 km)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songekholyubvi-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según la canción, ¿qué representan los amantes el uno para el otro?",
+        "options": [
+          "eco, ternura y memoria",
+          "sol, luna y estrellas",
+          "fuego, agua y tierra",
+          "tiempo, espacio y silencio"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "id": "songekholyubvi-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "эхо",
+            "right": "eco"
+          },
+          {
+            "left": "нежность",
+            "right": "ternura"
+          },
+          {
+            "left": "память",
+            "right": "memoria"
+          },
+          {
+            "left": "вёрста",
+            "right": "versta (unidad de distancia)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video CY6yYcqEZws, canal independiente 'Russian Songs Translated' (no el canal oficial de la artista). Público, playable_in_embed=true, no es livestream. Letra original completa verificada directamente desde la descripción del video (texto en ruso + traducción al inglés del canal, usada solo como referencia — la traducción al español es propia). Canción de la película «Судьба» (1977), letra de Robert Rozhdestvenski, música de Yevgeni Ptichkin; contenido puramente romántico (amor, eco, ternura, memoria), sin temas políticos ni sensibles."
   }
 }
