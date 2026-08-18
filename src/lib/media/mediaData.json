@@ -22081,5 +22081,89 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video qo5Ur19tTak ('Косвенная речь: специальный вопрос. Русский язык как иностранный уровень А2'), canal independiente 'Наталья Сорокина'. Público, playable_in_embed=true, no es livestream (video estructurado de clase individual con diálogos de ejemplo interpretados por la propia profesora, no una grabación de clase con estudiantes reales). Verificado con subtítulos AUTOMÁTICOS reales en ruso (legibles): ejemplos con palabras interrogativas extraídos directamente de la transcripción."
+  },
+  "video-aspecto-infinitivo-modales": {
+    "id": "video-aspecto-infinitivo-modales",
+    "title": "Aspecto del infinitivo tras verbos modales",
+    "description": "Algunos verbos (не надо, не нужно, не следует, не должен, любить, ненавидеть, продолжать) exigen SIEMPRE un infinitivo imperfectivo (не нужно пить пиво). Otros (суметь, успеть) exigen SIEMPRE un infinitivo perfectivo (я сумею сказать это). Con хотеть/захотеть, мочь y otros, ambos aspectos son posibles: el НСВ señala proceso o repetición (хочу гулять каждый день), y el СВ señala una acción única con resultado (хочу погулять сегодня).",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "VxIDN37jtm8",
+    "curriculumLessonId": "b1-17",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Не нужно пить пиво. Не следует гулять поздно. Ты не должен разговаривать с ней. Я не хочу ехать в Санкт-Петербург.",
+        "translation": "No hace falta beber cerveza. No conviene salir a caminar tarde. No debes hablar con ella. No quiero ir a San Petersburgo. (todos con infinitivo imperfectivo obligatorio, típicamente tras «не + verbo modal»)"
+      },
+      {
+        "russian": "Я умею говорить по-русски. — Я сумею сказать это по-русски. Нельзя: «я сумею разговаривать»!",
+        "translation": "Sé hablar ruso (habilidad general, НСВ). — Lograré decir esto en ruso (una vez, resultado, СВ obligatorio). ¡No se puede decir «я сумею разговаривать»! («суметь» exige siempre infinitivo perfectivo)"
+      },
+      {
+        "russian": "Я хочу гулять в лесу каждый день. — Я хочу погулять в лесу сегодня.",
+        "translation": "Quiero caminar por el bosque cada día (acción repetida, НСВ). — Quiero caminar por el bosque hoy (una vez, con resultado, СВ). Mismo verbo modal «хотеть», dos aspectos posibles según el sentido."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "не нужно / не надо + НСВ",
+        "transcription": "ni núzhna / ni náda",
+        "translation": "no hace falta (+ infinitivo imperfectivo obligatorio)"
+      },
+      {
+        "word": "суметь + СВ",
+        "transcription": "sumít'",
+        "translation": "lograr, conseguir (+ infinitivo perfectivo obligatorio)"
+      },
+      {
+        "word": "успеть + СВ",
+        "transcription": "uspét'",
+        "translation": "llegar a tiempo de, dar tiempo a (+ infinitivo perfectivo obligatorio)"
+      },
+      {
+        "word": "хотеть + НСВ/СВ",
+        "transcription": "khatét'",
+        "translation": "querer (ambos aspectos posibles según proceso/repetición o resultado único)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoaspectoinfinitivomodales-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es la única opción correcta después de «суметь» (lograr)?",
+        "options": [
+          "Я сумею разговаривать.",
+          "Я сумею сказать это.",
+          "Я сумею говорить.",
+          "Ambas son correctas."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoaspectoinfinitivomodales-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "не нужно + НСВ",
+            "right": "no hace falta (siempre imperfectivo)"
+          },
+          {
+            "left": "суметь + СВ",
+            "right": "lograr (siempre perfectivo)"
+          },
+          {
+            "left": "хочу гулять каждый день",
+            "right": "proceso/repetición (НСВ)"
+          },
+          {
+            "left": "хочу погулять сегодня",
+            "right": "acción única con resultado (СВ)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video VxIDN37jtm8 ('Инфинитив НСВ или СВ? || Глаголы НСВ и СВ'), canal independiente «О русском по-русски» / About Russian in Russian, misma serie que b1-16/22/23/24. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: las tres categorías de verbos (siempre НСВ, siempre СВ, ambos posibles) y sus ejemplos extraídos directamente de la transcripción."
   }
 }
