@@ -21345,5 +21345,296 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "Video principal (embebido): YouTube hjCaL86zAY4 ('Prefix ДО- ║verbs of motion'), canal 'Russian Language Club' (Марина Ивкина), misma serie que b1-9/b1-11/b1-12. Público, playable_in_embed=true. Ejemplos de «про-» tomados de un video complementario NO embebido de la MISMA serie/canal (9TtlNtHfOvs, 'Prefix ПРО- ║verbs of motion'), también público y playable_in_embed=true, verificado con subtítulos MANUALES reales para ambos videos."
+  },
+  "video-aspecto-verbal-futuro": {
+    "id": "video-aspecto-verbal-futuro",
+    "title": "Aspecto verbal en futuro: perfectivo e imperfectivo",
+    "description": "El futuro imperfectivo se forma con «быть» conjugado + infinitivo imperfectivo (я буду читать) y expresa proceso, un simple hecho, o una acción repetida. El futuro perfectivo se forma conjugando directamente el verbo perfectivo (я прочитаю) y expresa siempre un resultado: la acción se completará por entero.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "xi8vWNKol3E",
+    "curriculumLessonId": "b1-16",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я буду читать книгу завтра два часа.",
+        "translation": "Mañana leeré el libro durante dos horas. (НСВ, valor de proceso: la acción dura un tiempo)"
+      },
+      {
+        "russian": "Я буду читать книгу или журнал завтра.",
+        "translation": "Mañana leeré un libro o una revista. (НСВ, valor de simple hecho, sin indicar si se termina)"
+      },
+      {
+        "russian": "Я буду ходить в спортзал каждый день утром и вечером.",
+        "translation": "Iré al gimnasio cada día por la mañana y por la noche. (НСВ, valor de acción repetida)"
+      },
+      {
+        "russian": "Я прочитаю эту книгу завтра вечером. — Вы прочитаете её до конца.",
+        "translation": "Mañana por la noche terminaré de leer este libro. — Lo leerás hasta el final. (СВ, valor de resultado)"
+      },
+      {
+        "russian": "Я буду читать книгу завтра. / Я прочитаю книгу завтра.",
+        "translation": "Mañana leeré el libro (sin garantía de terminarlo, НСВ) / Mañana terminaré de leer el libro (por completo, СВ) — el mismo verbo, dos aspectos, dos significados distintos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "буду + infinitivo НСВ",
+        "transcription": "búdu",
+        "translation": "futuro imperfectivo (proceso/hecho/repetición)"
+      },
+      {
+        "word": "прочитаю (СВ)",
+        "transcription": "prachitáyu",
+        "translation": "leeré por completo (futuro perfectivo, resultado)"
+      },
+      {
+        "word": "процесс",
+        "transcription": "prats'és",
+        "translation": "proceso (acción que dura)"
+      },
+      {
+        "word": "результат",
+        "transcription": "rizul'tát",
+        "translation": "resultado (acción completada)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoaspectoverbalfuturo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál de las dos frases garantiza que el libro se leerá HASTA EL FINAL?",
+        "options": [
+          "Я буду читать книгу завтра.",
+          "Я прочитаю книгу завтра.",
+          "Ambas garantizan lo mismo.",
+          "Ninguna de las dos lo garantiza."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoaspectoverbalfuturo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "буду + infinitivo НСВ",
+            "right": "futuro imperfectivo"
+          },
+          {
+            "left": "прочитаю (СВ)",
+            "right": "futuro perfectivo, resultado"
+          },
+          {
+            "left": "процесс",
+            "right": "acción que dura"
+          },
+          {
+            "left": "результат",
+            "right": "acción completada"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video xi8vWNKol3E ('Урок 2. Буду делать или сделаю? || Глаголы НСВ и СВ. Будущее время'), canal independiente «О русском по-русски» / About Russian in Russian (profesora 'Ира'), misma serie que a2-15/a2-16/a2-17. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y contraste directo НСВ/СВ extraídos de la transcripción."
+  },
+  "video-pronombres-indefinidos-to": {
+    "id": "video-pronombres-indefinidos-to",
+    "title": "Pronombres indefinidos: кто-то, что-то, какой-то",
+    "description": "El postfijo «-то» se usa cuando algo/alguien existe con certeza pero el hablante no sabe (o no dice) exactamente qué/quién/cuál es («кто-то стучит в дверь» = alguien toca la puerta, no sé quién). Se contrasta con «-нибудь», que se usa en preguntas, imperativos y contextos donde no importa la identidad exacta («принесите мне какие-нибудь газеты» = tráigame cualquier periódico).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "4zTJkzb36-w",
+    "curriculumLessonId": "a2-23",
+    "lyricsOrTranscript": [
+      {
+        "russian": "К тебе кто-то заходил. — Кто-то из числа лиц. Я не знаю, кто это был.",
+        "translation": "Alguien vino a verte. — Alguien entre varias personas posibles. No sé quién fue exactamente. («-то» = existe con certeza, identidad desconocida)"
+      },
+      {
+        "russian": "Ко мне кто-нибудь заходил? — Хоть кто-нибудь, неважно кто.",
+        "translation": "¿Vino alguien a verme? — Cualquiera, no importa quién. («-нибудь» en pregunta)"
+      },
+      {
+        "russian": "Я должен вам что-то передать.",
+        "translation": "Tengo que entregarte algo. (correcto: «что-то», porque el hablante sabe que algo existe, solo no lo dice todavía)"
+      },
+      {
+        "russian": "Расскажите что-нибудь интересное. — Неважно, что именно. Хоть что-нибудь.",
+        "translation": "Cuéntame algo interesante. — No importa qué exactamente. Cualquier cosa. («-нибудь» en imperativo)"
+      },
+      {
+        "russian": "Какой-то человек просил передать вам письмо.",
+        "translation": "Una persona (no sé cuál) pidió entregarle una carta."
+      },
+      {
+        "russian": "Дайте мне посмотреть какой-нибудь журнал.",
+        "translation": "Déjeme ver alguna revista, cualquiera. («-нибудь» = no importa cuál)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "кто-то",
+        "transcription": "któ-ta",
+        "translation": "alguien (existe, identidad desconocida)"
+      },
+      {
+        "word": "кто-нибудь",
+        "transcription": "któ-nibud'",
+        "translation": "alguien (cualquiera, en preguntas/imperativos)"
+      },
+      {
+        "word": "что-то",
+        "transcription": "shtó-ta",
+        "translation": "algo (existe, no se especifica)"
+      },
+      {
+        "word": "что-нибудь",
+        "transcription": "shtó-nibud'",
+        "translation": "algo (cualquier cosa)"
+      },
+      {
+        "word": "какой-то",
+        "transcription": "kakóy-ta",
+        "translation": "algún/alguna (no se sabe cuál)"
+      },
+      {
+        "word": "какой-нибудь",
+        "transcription": "kakóy-nibud'",
+        "translation": "cualquier (no importa cuál)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopronombresindefinidosto-mc-1",
+        "type": "multiple-choice",
+        "prompt": "«Мимо нас проходили ... люди» (yo no los conozco, pero sé que pasaron). ¿Cuál es correcta?",
+        "options": [
+          "какие-нибудь",
+          "какие-то",
+          "какой-то",
+          "кто-нибудь"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videopronombresindefinidosto-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "кто-то",
+            "right": "alguien (identidad desconocida, pero existe)"
+          },
+          {
+            "left": "кто-нибудь",
+            "right": "alguien (cualquiera, en preguntas)"
+          },
+          {
+            "left": "что-то",
+            "right": "algo (sin especificar)"
+          },
+          {
+            "left": "какой-нибудь",
+            "right": "cualquiera (no importa cuál)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 4zTJkzb36-w ('Indefinite Pronouns and Adverbs with -ТО, -НИБУДЬ in Russian with Examples! Lesson 66'), canal independiente 'Говорю по-русски' (misma profesora de b2-14). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejercicio de contraste directo -то vs. -нибудь con explicación de cada respuesta, extraído íntegramente de la transcripción."
+  },
+  "video-pronombres-negativos": {
+    "id": "video-pronombres-negativos",
+    "title": "Pronombres negativos: никто, ничего, никуда, никому, ни с кем",
+    "description": "Los pronombres/adverbios negativos rusos (никто, ничего, никуда, нигде, никогда) siempre requieren un «не» delante del verbo — la doble negación es obligatoria en ruso, a diferencia del español («Никто не работал» = Nadie trabajó, literalmente «nadie no trabajó»). Con preposición, esta se inserta EN MEDIO del pronombre: ни с кем, ни о ком, ни у кого.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "CQk-koVKsBA",
+    "curriculumLessonId": "a2-25",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Вчера было воскресенье. Вчера никто не работал, а он весь день никуда не ходил, ничего не делал, никому не звонил, ни с кем не разговаривал. Он весь день спал.",
+        "translation": "Ayer fue domingo. Ayer nadie trabajó, y él no fue a ningún lado en todo el día, no hizo nada, no llamó a nadie, no habló con nadie. Durmió todo el día."
+      },
+      {
+        "russian": "Кто дома? — Никого нет дома. Кто был на уроке? — Никого не было на уроке.",
+        "translation": "¿Quién está en casa? — No hay nadie en casa. ¿Quién estuvo en clase? — No hubo nadie en clase. (sin verbo, «никто» → «никого»)"
+      },
+      {
+        "russian": "О ком ты думаешь? — Ни о ком не думаю. С кем ты обсуждал? — Ни с кем не обсуждал.",
+        "translation": "¿En quién piensas? — No pienso en nadie. ¿Con quién lo discutiste? — No lo discutí con nadie. (la preposición se inserta dentro del pronombre negativo)"
+      },
+      {
+        "russian": "Кто-то звонил — не знаю кто. Кто-нибудь звонил мне? — вопрос, неважно кто.",
+        "translation": "Alguien llamó — no sé quién (afirmativo, «-то»). ¿Me llamó alguien? — pregunta, no importa quién (interrogativo, «-нибудь»)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "никто не",
+        "transcription": "niktó ni",
+        "translation": "nadie (+ negación obligatoria del verbo)"
+      },
+      {
+        "word": "ничего не",
+        "transcription": "nichivó ni",
+        "translation": "nada (+ negación obligatoria)"
+      },
+      {
+        "word": "никуда не",
+        "transcription": "nikudá ni",
+        "translation": "a ningún lado (+ negación obligatoria)"
+      },
+      {
+        "word": "никому не",
+        "transcription": "nikamú ni",
+        "translation": "a nadie (+ negación obligatoria)"
+      },
+      {
+        "word": "ни с кем не",
+        "transcription": "ni s k'em ni",
+        "translation": "con nadie (preposición insertada dentro del pronombre)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopronombresnegativos-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice correctamente «No hablé con nadie»?",
+        "options": [
+          "Я не разговаривал с никем.",
+          "Я ни с кем не разговаривал.",
+          "Я никто не разговаривал.",
+          "Я не разговаривал никто."
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videopronombresnegativos-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "никто не работал",
+            "right": "nadie trabajó"
+          },
+          {
+            "left": "ничего не делал",
+            "right": "no hizo nada"
+          },
+          {
+            "left": "ни с кем не говорил",
+            "right": "no habló con nadie"
+          },
+          {
+            "left": "никого нет дома",
+            "right": "no hay nadie en casa"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video CQk-koVKsBA ('Отрицательные и неопределенные местоимения и наречия. Nobody, nothing. Грамматика'), canal 'Russian for Foreigners. Русский как иностранный'. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos AUTOMÁTICOS reales en ruso (legibles, sin fragmentación grave): texto de práctica y ejemplos de pronombres negativos extraídos directamente de la transcripción."
   }
 }
