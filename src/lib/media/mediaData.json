@@ -21636,5 +21636,102 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video CQk-koVKsBA ('Отрицательные и неопределенные местоимения и наречия. Nobody, nothing. Грамматика'), canal 'Russian for Foreigners. Русский как иностранный'. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos AUTOMÁTICOS reales en ruso (legibles, sin fragmentación grave): texto de práctica y ejemplos de pronombres negativos extraídos directamente de la transcripción."
+  },
+  "video-pronombres-indefinidos-nibud-libo": {
+    "id": "video-pronombres-indefinidos-nibud-libo",
+    "title": "Pronombres indefinidos con -нибудь (y -либо)",
+    "description": "La partícula «-нибудь» se usa cuando la identidad exacta le resulta indiferente al hablante («принесите какую-нибудь газету» = tráigame un periódico cualquiera, no importa cuál), a diferencia de «-то», que se usa cuando el hablante no sabe o ha olvidado la información. «-либо» es un sinónimo formal/oficial de «-нибудь», típico del habla periodística y burocrática (какой-либо, кто-либо, что-либо).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "apZvLoS1K-8",
+    "curriculumLessonId": "a2-24",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Он что-то купил тебе, но я не знаю что.",
+        "translation": "Él te compró algo, pero no sé qué. («-то» = desconocido, no importa el registro)"
+      },
+      {
+        "russian": "Купи мне что-нибудь. Мне всё равно, неважно: торт, творог или мясо.",
+        "translation": "Cómprame algo (cualquier cosa). Me da igual: pastel, requesón o carne. («-нибудь» = indiferencia sobre la identidad exacta)"
+      },
+      {
+        "russian": "Давай где-нибудь поужинаем. Всё равно где: неважно, в каком кафе или ресторане.",
+        "translation": "Cenemos en algún lugar. No importa dónde: cualquier café o restaurante está bien."
+      },
+      {
+        "russian": "Когда-нибудь я побываю в этих странах. Неважно когда: завтра, в следующем году или через 10 лет.",
+        "translation": "Algún día visitaré estos países. No importa cuándo: mañana, el año que viene o dentro de 10 años."
+      },
+      {
+        "russian": "Частица -либо — это синоним частицы -нибудь, но мы используем её в официальной речи, в официальном стиле.",
+        "translation": "La partícula «-либо» es sinónimo de «-нибудь», pero se usa en el habla oficial, en estilo formal (какой-либо, кто-либо, что-либо: típico de noticias y documentos oficiales)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "что-нибудь",
+        "transcription": "shtó-nibud'",
+        "translation": "algo, cualquier cosa (indiferente)"
+      },
+      {
+        "word": "где-нибудь",
+        "transcription": "gd'é-nibud'",
+        "translation": "en algún lugar, no importa dónde"
+      },
+      {
+        "word": "когда-нибудь",
+        "transcription": "kagdá-nibud'",
+        "translation": "algún día, no importa cuándo"
+      },
+      {
+        "word": "какой-либо",
+        "transcription": "kakóy-liba",
+        "translation": "cualquiera (registro formal/oficial)"
+      },
+      {
+        "word": "кто-либо",
+        "transcription": "któ-liba",
+        "translation": "cualquiera, quienquiera (registro formal)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopronombresindefinidosnibudlibo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál partícula indica que al hablante le resulta indiferente la respuesta exacta (no importa cuál)?",
+        "options": [
+          "-то",
+          "-нибудь",
+          "Ninguna de las dos",
+          "Ambas por igual"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videopronombresindefinidosnibudlibo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "что-нибудь",
+            "right": "algo, no importa qué"
+          },
+          {
+            "left": "когда-нибудь",
+            "right": "algún día, no importa cuándo"
+          },
+          {
+            "left": "какой-либо",
+            "right": "cualquiera (registro formal)"
+          },
+          {
+            "left": "что-то",
+            "right": "algo (desconocido u olvidado)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video apZvLoS1K-8 ('Часть 1. -ТО, -ЛИБО и -НИБУДЬ || Частицы'), canal independiente «О русском по-русски» / About Russian in Russian, misma serie que a2-15/16/17/23 y b1-16. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: ejemplos y explicación del registro formal de -либо extraídos directamente de la transcripción."
   }
 }
