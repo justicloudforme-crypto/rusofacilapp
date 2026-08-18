@@ -22,14 +22,20 @@
  *   npm run generate:flashcard-audio -- --level=A1              # one level only
  *   npm run generate:flashcard-audio -- --category=food          # one category only
  *   npm run generate:flashcard-audio                              # ⚠ every card in the app (4000+ — many hundreds of paid TTS calls, review cost first)
- *   npm run generate:flashcard-audio -- --force                   # resynthesize even cards already cached
+ *   npm run generate:flashcard-audio -- --level=A1 --category=food --force   # re-narrate one narrow slice, even cards already cached (paid) — requires BOTH --level and --category
  *   npm run generate:flashcard-audio -- --voice=nova               # pick an OpenAI TTS voice
  *
- * Each new/changed card is a separate paid TTS request. Always start with
- * a single --level or --category pilot to check quality and cost before
- * running it against the whole bank. Safe to re-run any time: cards
- * already narrated with unchanged text cost nothing (AudioAsset is keyed
- * by a hash of the card's own text).
+ * COST POLICY — audio is permanent once generated, never auto-regenerated.
+ * Each card's cache key is its own DB id (contentId: card.id), which never
+ * changes when the card's Russian text is edited — so fixing a typo NEVER
+ * triggers a new paid TTS call on a plain re-run. The existing clip keeps
+ * playing; the script only logs that the text has drifted. The only way
+ * to pay to re-narrate cards is `--force`, which requires both --level
+ * and --category together (one alone can still be hundreds of cards) —
+ * always start narrow when you actually want to update audio for edited
+ * cards. Every never-narrated card is still a separate paid TTS request
+ * either way; always start with a single --level or --category pilot to
+ * check quality and cost before running it against the whole bank.
  */
 import "dotenv/config";
 import path from "node:path";
@@ -110,6 +116,18 @@ async function main() {
     return;
   }
 
+  if (force && !(level && category)) {
+    console.log(
+      [
+        "--force without BOTH --level and --category is refused on purpose:",
+        "one alone can still match hundreds of cards to re-pay for.",
+        "",
+        "Re-narrate a narrow slice:  npm run generate:flashcard-audio -- --level=A1 --category=food --force",
+      ].join("\n")
+    );
+    return;
+  }
+
   const where: { level?: string; category?: string } = {};
   if (level) where.level = level;
   if (category) where.category = category;
@@ -122,6 +140,7 @@ async function main() {
 
   let generated = 0;
   let cached = 0;
+  let stale = 0;
   let failed = 0;
 
   for (const card of cards) {
@@ -142,6 +161,10 @@ async function main() {
 
     if (result.status === "cached") {
       cached++;
+      if (result.textStale) {
+        stale++;
+        console.log(`"${card.russian}": text changed since narration — keeping existing clip (not re-billing).`);
+      }
     } else if (result.status === "generated") {
       console.log(`"${card.russian}": done.`);
       generated++;
@@ -152,7 +175,9 @@ async function main() {
   }
 
   console.log(
-    `\n✔ Generated ${generated} card(s), ${cached} already cached${failed ? `, ${failed} failed` : ""}.`
+    `\n✔ Generated ${generated} card(s), ${cached} already cached` +
+      `${stale ? ` (${stale} of those have edited text — see notes above)` : ""}` +
+      `${failed ? `, ${failed} failed` : ""}.`
   );
 }
 

@@ -11,12 +11,16 @@
  * reader UI (StoryText) uses to build its on-screen sentence queue — the
  * two must never disagree, or a clip would narrate the wrong line.
  *
+ * COST POLICY — audio is permanent once generated, never auto-regenerated.
  * Safe to re-run any time (e.g. after adding new stories): every sentence
  * is looked up in the shared `AudioAsset` cache (see
- * src/lib/audio-assets.ts) before synthesizing — already-narrated
- * sentences whose text hasn't changed since cost nothing. Editing a
- * typo in one already-narrated sentence only re-synthesizes that one
- * sentence, not the whole story or the whole library.
+ * src/lib/audio-assets.ts) before synthesizing — a sentence that already
+ * has a clip costs nothing on a plain re-run, EVEN IF ITS TEXT HAS SINCE
+ * CHANGED (a typo fix, a rewording). The existing clip keeps playing as-is;
+ * the script only prints a note that it's stale. Re-narrating a specific
+ * sentence/story is a paid action that only happens when you explicitly
+ * pass --force together with --story=<id> for that one story — never as a
+ * side effect of editing text or of a routine re-run.
  *
  * SETUP
  * 1. Get an API key at https://platform.openai.com/api-keys.
@@ -28,12 +32,15 @@
  * degradation as the Stripe integration elsewhere in this app.
  *
  * USAGE
- *   npm run generate:story-audio            # generate whatever's missing/changed
- *   npm run generate:story-audio -- --force # resynthesize every sentence, ignoring the cache
- *   npm run generate:story-audio -- --voice=nova   # pick an OpenAI TTS voice
+ *   npm run generate:story-audio                            # narrate only stories that have never been narrated at all
+ *   npm run generate:story-audio -- --story=<storyId>        # same, scoped to one story
+ *   npm run generate:story-audio -- --story=<storyId> --force  # re-narrate EVERY sentence of one story, even ones with a still-valid cached clip — the only way to pay to update audio for an edited story
+ *   npm run generate:story-audio -- --voice=nova              # pick an OpenAI TTS voice
  *
- * Each new/changed sentence is a separate paid TTS request. Review
- * OpenAI's current TTS pricing before running this against many stories.
+ * --force with no --story is refused on purpose: it would re-pay for the
+ * entire library's worth of clips (hundreds of sentences) in one run.
+ * Every new/never-narrated sentence is a separate paid TTS request either
+ * way — review OpenAI's current TTS pricing before a large first pass.
  *
  * USING ELEVENLABS INSTEAD
  * The OpenAI-specific parts are isolated in synthesizeSpeech() below. To
@@ -61,7 +68,9 @@ function parseArgs(argv: string[]) {
   const force = argv.includes("--force");
   const voiceArg = argv.find((arg) => arg.startsWith("--voice="));
   const voice = voiceArg ? voiceArg.split("=")[1] : "alloy";
-  return { force, voice };
+  const storyArg = argv.find((arg) => arg.startsWith("--story="));
+  const storyId = storyArg ? storyArg.split("=")[1] : null;
+  return { force, voice, storyId };
 }
 
 async function synthesizeSpeech(apiKey: string, text: string, voice: string): Promise<Buffer> {
@@ -103,11 +112,30 @@ async function main() {
     return;
   }
 
-  const { force, voice } = parseArgs(process.argv.slice(2));
-  const stories = await db.story.findMany();
+  const { force, voice, storyId } = parseArgs(process.argv.slice(2));
+
+  if (force && !storyId) {
+    console.log(
+      [
+        "--force with no --story=<id> is refused on purpose: it would re-pay",
+        "to re-narrate every sentence of every story in the library, not just",
+        "the one you meant to fix.",
+        "",
+        "Re-narrate one story:  npm run generate:story-audio -- --story=<id> --force",
+      ].join("\n")
+    );
+    return;
+  }
+
+  const stories = storyId ? await db.story.findMany({ where: { id: storyId } }) : await db.story.findMany();
+  if (storyId && stories.length === 0) {
+    console.log(`No story found with id="${storyId}".`);
+    return;
+  }
 
   let generated = 0;
   let cached = 0;
+  let stale = 0;
   let failed = 0;
 
   for (const story of stories) {
@@ -135,6 +163,13 @@ async function main() {
 
         if (result.status === "cached") {
           cached++;
+          if (result.textStale) {
+            stale++;
+            console.log(
+              `Text changed since narration for ${label} — keeping the existing clip (not re-billing). ` +
+                `Run with --story=${story.id} --force to update it.`
+            );
+          }
         } else if (result.status === "generated") {
           console.log(`Generated audio for ${label}.`);
           generated++;
@@ -147,7 +182,9 @@ async function main() {
   }
 
   console.log(
-    `\n✔ Generated ${generated} clip(s), ${cached} already cached${failed ? `, ${failed} failed` : ""}.`
+    `\n✔ Generated ${generated} clip(s), ${cached} already cached` +
+      `${stale ? ` (${stale} of those have edited text — see notes above)` : ""}` +
+      `${failed ? `, ${failed} failed` : ""}.`
   );
 }
 

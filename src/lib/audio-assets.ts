@@ -5,6 +5,22 @@
  * `ensureAudioAsset()` instead of rolling its own "check cache, else call
  * the provider, else write the file+row" logic.
  *
+ * STANDING COST POLICY (explicit project owner directive): once a clip
+ * exists for a given (contentType, contentId, itemKey), it is PERMANENT.
+ * Editing the underlying text — fixing a typo, rewording a sentence —
+ * never triggers an automatic re-synthesis, no matter how much the text
+ * has drifted from what was actually narrated. Re-narrating a specific
+ * item only ever happens when a human explicitly passes `force: true` for
+ * that exact item (see each generate-*-audio.ts script's --story=/
+ * --lesson=/--category= scoping flags) — never as a side effect of a
+ * content edit or a routine re-run. This was a deliberate reversal of an
+ * earlier "auto re-sync on text change" design: that behavior meant a
+ * plain typo fix silently re-billed paid TTS generation, which is
+ * unacceptable at this app's content-editing cadence. `textHash` is still
+ * stored and still compared, but purely as a read-only staleness signal a
+ * caller can surface to a human ("this text changed since narration") —
+ * it must never by itself cause a write or a provider call.
+ *
  * Deliberately dependency-light: no `@/` import alias (this file is loaded
  * both by Next.js and directly by `tsx` from prisma/*.ts scripts, and tsx
  * doesn't apply tsconfig's path aliases — every existing prisma/*.ts script
@@ -41,16 +57,20 @@ export interface EnsureAudioAssetParams {
 }
 
 export type EnsureAudioAssetResult =
-  | { status: "cached"; audioUrl: string }
+  | { status: "cached"; audioUrl: string; textStale: boolean }
   | { status: "generated"; audioUrl: string }
   | { status: "failed"; error: string };
 
 /**
- * Looks up an existing clip for (contentType, contentId, itemKey) whose
- * stored textHash still matches `text` — if found (and `force` isn't set),
- * returns it with zero provider calls. Otherwise synthesizes a fresh clip,
- * writes it to disk, and upserts the cache row (so a text edit regenerates
- * only that one item, not the whole content type's corpus).
+ * Looks up an existing clip for (contentType, contentId, itemKey) — if one
+ * exists (and `force` isn't explicitly set), returns it with zero provider
+ * calls, REGARDLESS of whether `text` still matches what was narrated.
+ * `textStale: true` on the result means the text has drifted since
+ * narration — surface that to a human for a possible manual `force`
+ * re-run, but never act on it automatically here. Only synthesizes (a
+ * paid call) when no clip exists yet for this exact key, or when the
+ * caller explicitly passes `force: true` for this exact item. See the
+ * STANDING COST POLICY note at the top of this file.
  */
 export async function ensureAudioAsset(
   db: Pick<PrismaClient, "audioAsset">,
@@ -64,8 +84,8 @@ export async function ensureAudioAsset(
     const existing = await db.audioAsset.findUnique({
       where: { contentType_contentId_itemKey: { contentType, contentId, itemKey } },
     });
-    if (existing && existing.textHash === textHash) {
-      return { status: "cached", audioUrl: existing.audioUrl };
+    if (existing) {
+      return { status: "cached", audioUrl: existing.audioUrl, textStale: existing.textHash !== textHash };
     }
   }
 

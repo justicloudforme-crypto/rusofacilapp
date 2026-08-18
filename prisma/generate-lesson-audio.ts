@@ -20,24 +20,31 @@
  *   npm run generate:lesson-audio -- --level=a1 --lesson=1   # one lesson only
  *   npm run generate:lesson-audio -- --level=a1               # every a1 lesson
  *   npm run generate:lesson-audio                              # ⚠ every lesson in the app (120 lessons — many hundreds of paid TTS calls, review cost first)
- *   npm run generate:lesson-audio -- --force                   # resynthesize even items already cached
+ *   npm run generate:lesson-audio -- --level=a1 --lesson=1 --force   # re-narrate one lesson's items, even ones already cached (paid) — requires --lesson, see below
  *   npm run generate:lesson-audio -- --voice=nova               # pick an OpenAI TTS voice
  *
- * Each new/changed item is a separate paid TTS request — this is a paid
- * API. Always start with a single --level/--lesson pilot to check quality
- * and cost before running it against the whole course.
+ * Each never-narrated-before item is a separate paid TTS request (edited
+ * items are NOT re-paid for automatically — see the cost policy above).
+ * Always start with a single --level/--lesson pilot to check quality and
+ * cost before running it against the whole course.
  *
  * Reads lesson content from the static content.json only (not the DB
  * Lesson-override table) — same source the seed script treats as
- * authoritative, and simplest for a one-off generation pass. Safe to
- * re-run after editing a lesson's Russian text: the AudioAsset cache is
- * keyed by a hash of the text itself, so an edited item is detected and
- * resynthesized on its own — nothing else in the lesson (or app) is
- * touched or re-paid-for.
+ * authoritative, and simplest for a one-off generation pass.
+ *
+ * COST POLICY — audio is permanent once generated, never auto-regenerated.
+ * Each item's cache key is derived from its fixed position in the lesson
+ * (which vocabulary/grammar-example/reading-practice slot it is), not from
+ * its text — so editing a lesson's Russian text (a typo fix, a reword)
+ * NEVER triggers a new paid TTS call on a plain re-run. The existing clip
+ * keeps playing; the script only logs that the text has drifted. The only
+ * way to pay to re-narrate an item is `--force`, which re-narrates every
+ * item in whatever --level/--lesson scope you give it — always start
+ * narrow (a single --lesson) when you actually want to update audio for
+ * edited content.
  */
 import "dotenv/config";
 import path from "node:path";
-import { createHash } from "node:crypto";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { sanitizeTextForTTS } from "../src/lib/speech";
@@ -68,36 +75,47 @@ function parseArgs(argv: string[]) {
   return { force, voice, level, lesson };
 }
 
-/** Short filesystem/DB-key-safe id for an item, derived from its own text
- * — so the id itself already IS the "did this text change" signal, same
- * spirit as AudioAsset's textHash but usable as a stable file name. */
-function itemKeyFor(text: string): string {
-  return createHash("sha1").update(text).digest("hex").slice(0, 16);
+interface LessonAudioItem {
+  key: string;
+  text: string;
 }
 
-/** Every distinct Russian string worth a pronunciation button in this
- * lesson — vocabulary words, grammar example sentences, and readingPractice
- * items — deduplicated (the same phrase sometimes appears in both the
- * grammar examples and readingPractice). */
-function collectItemTexts(content: Record<string, unknown>): string[] {
-  const texts = new Set<string>();
+/** Every Russian string worth a pronunciation button in this lesson —
+ * vocabulary words, grammar example sentences, and readingPractice items.
+ * `key` is derived from the item's fixed position within its own source
+ * list ("vocab-2", "grammar-example-0", "reading-1"), NOT from the text
+ * itself. This is what lets ensureAudioAsset() recognize "this is still
+ * the same item, just edited" instead of treating an edited phrase as a
+ * brand-new item to pay to narrate — the previous text-hash-derived key
+ * meant fixing a typo silently minted a new, unrelated cache entry (paid)
+ * while the old clip sat orphaned. See the cost policy note atop
+ * src/lib/audio-assets.ts.
+ *
+ * No longer deduplicates an identical phrase that happens to appear in
+ * two different slots (e.g. the same word in both vocabulary and a
+ * reading-practice sentence) — each slot gets its own clip now. That can
+ * cost marginally more on a first narration pass, but a stable per-slot
+ * key matters far more than that small savings once "audio is permanent,
+ * never silently re-billed" is the rule. */
+function collectLessonAudioItems(content: Record<string, unknown>): LessonAudioItem[] {
+  const items: LessonAudioItem[] = [];
 
   const vocabulary = content.vocabulary as { word: string }[] | undefined;
-  for (const item of vocabulary ?? []) {
-    if (item?.word) texts.add(item.word);
-  }
+  (vocabulary ?? []).forEach((item, i) => {
+    if (item?.word) items.push({ key: `vocab-${i}`, text: item.word });
+  });
 
   const grammar = content.grammar as { examples?: { russian: string }[] } | undefined;
-  for (const example of grammar?.examples ?? []) {
-    if (example?.russian) texts.add(example.russian);
-  }
+  (grammar?.examples ?? []).forEach((example, i) => {
+    if (example?.russian) items.push({ key: `grammar-example-${i}`, text: example.russian });
+  });
 
   const readingPractice = content.readingPractice as { items?: { text: string }[] } | undefined;
-  for (const item of readingPractice?.items ?? []) {
-    if (item?.text) texts.add(item.text);
-  }
+  (readingPractice?.items ?? []).forEach((item, i) => {
+    if (item?.text) items.push({ key: `reading-${i}`, text: item.text });
+  });
 
-  return [...texts];
+  return items;
 }
 
 async function synthesizeSpeech(apiKey: string, text: string, voice: string): Promise<Buffer> {
@@ -154,6 +172,18 @@ async function main() {
     return;
   }
 
+  if (force && !lesson) {
+    console.log(
+      [
+        `--force with --level=${level} but no --lesson=<n> is refused on purpose:`,
+        "it would re-pay to re-narrate every item in every lesson of that level.",
+        "",
+        `Re-narrate one lesson:  npm run generate:lesson-audio -- --level=${level} --lesson=<n> --force`,
+      ].join("\n")
+    );
+    return;
+  }
+
   const lessonIds = Object.keys(staticLessonContent).filter((id) => {
     const [idLevel, idLesson] = id.split("-");
     if (idLevel !== level) return false;
@@ -168,17 +198,17 @@ async function main() {
 
   let generated = 0;
   let cached = 0;
+  let stale = 0;
   let failed = 0;
 
   for (const lessonId of lessonIds) {
     const content = staticLessonContent[lessonId];
-    const texts = collectItemTexts(content);
+    const items = collectLessonAudioItems(content);
 
-    console.log(`\n${lessonId} — ${texts.length} item(s)`);
+    console.log(`\n${lessonId} — ${items.length} item(s)`);
 
-    for (const text of texts) {
+    for (const { key: itemKey, text } of items) {
       const sanitized = sanitizeTextForTTS(text);
-      const itemKey = itemKeyFor(sanitized);
       const result = await ensureAudioAsset(db, {
         contentType: "lesson",
         contentId: lessonId,
@@ -196,6 +226,10 @@ async function main() {
       const label = `"${text.slice(0, 40)}${text.length > 40 ? "…" : ""}"`;
       if (result.status === "cached") {
         cached++;
+        if (result.textStale) {
+          stale++;
+          console.log(`  ${label}: text changed since narration — keeping existing clip (not re-billing).`);
+        }
       } else if (result.status === "generated") {
         console.log(`  ${label}: done.`);
         generated++;
@@ -207,7 +241,9 @@ async function main() {
   }
 
   console.log(
-    `\n✔ Generated ${generated} item(s), ${cached} already cached${failed ? `, ${failed} failed` : ""}.`
+    `\n✔ Generated ${generated} item(s), ${cached} already cached` +
+      `${stale ? ` (${stale} of those have edited text — see notes above)` : ""}` +
+      `${failed ? `, ${failed} failed` : ""}.`
   );
 }
 
