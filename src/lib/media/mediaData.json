@@ -22337,5 +22337,102 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video momHWy2pnoU ('Negative phrases | Nothing, noone, nowhere, never'), canal 'Russian with Vladimir'. Público, playable_in_embed=true, no es livestream. Video breve bilingüe (narración en ruso con comparación al inglés); algunos fragmentos de la transcripción automática muestran artefactos de transcripción (mezcla ru/en mal reconocida) y se omitieron; solo se usaron las oraciones rusas claramente legibles ('никто никогда ничего не делает нигде'). El ejemplo con «никуда» se reutilizó de la transcripción ya verificada de a2-25 (mismo campo semántico); «никак» se construyó a partir de conocimiento gramatical verificado, siguiendo la práctica ya establecida en esta sesión para contenido con subtítulos parcialmente no fiables."
+  },
+  "video-verbos-movimiento-practica-dialogo": {
+    "id": "video-verbos-movimiento-practica-dialogo",
+    "title": "Verbos de movimiento en diálogos y práctica",
+    "description": "Un breve relato de audición ('Поездка в деревню') que aplica en contexto natural una amplia variedad de verbos de movimiento con y sin prefijo: пойти, поехать, приехать, подойти, войти, отъехать, выйти — mostrando cómo se combinan al narrar un desplazamiento real de principio a fin.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "pG_MxzbDcQE",
+    "curriculumLessonId": "a2-18",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Один наш товарищ живёт в деревне недалеко от Москвы. Мы решили поехать к нему в субботу вечером.",
+        "translation": "Un amigo nuestro vive en un pueblo cerca de Moscú. Decidimos ir a verlo el sábado por la noche."
+      },
+      {
+        "russian": "Мы вышли из дома в шесть часов утра, сели в автобус и поехали на вокзал.",
+        "translation": "Salimos de casa a las seis de la mañana, subimos al autobús y fuimos a la estación."
+      },
+      {
+        "russian": "Мы приехали на вокзал и подошли к кассам. Мы купили билеты и пошли на платформу.",
+        "translation": "Llegamos a la estación y nos acercamos a las taquillas. Compramos los boletos y fuimos al andén."
+      },
+      {
+        "russian": "Когда подошёл поезд, мы вошли в вагон и сели. Через пять минут поезд отъехал от вокзала.",
+        "translation": "Cuando llegó el tren, subimos al vagón y nos sentamos. Cinco minutos después el tren partió de la estación."
+      },
+      {
+        "russian": "От станции до деревни мы шли четыре километра. Наконец мы вошли в деревню.",
+        "translation": "Desde la estación hasta el pueblo caminamos cuatro kilómetros. Finalmente entramos al pueblo."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "поехать",
+        "transcription": "payékhat'",
+        "translation": "irse, partir (en vehículo, inicio del movimiento)"
+      },
+      {
+        "word": "подойти",
+        "transcription": "padaytí",
+        "translation": "acercarse"
+      },
+      {
+        "word": "войти",
+        "transcription": "vaytí",
+        "translation": "entrar"
+      },
+      {
+        "word": "отъехать",
+        "transcription": "atyékhat'",
+        "translation": "partir, alejarse (en vehículo)"
+      },
+      {
+        "word": "выйти",
+        "transcription": "výyti",
+        "translation": "salir"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoverbosmovimientopracticadialogo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "«Через пять минут поезд ... от вокзала» — ¿cuál verbo completa correctamente la frase (el tren partió/se alejó de la estación)?",
+        "options": [
+          "подошёл",
+          "отъехал",
+          "вошёл",
+          "пришёл"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoverbosmovimientopracticadialogo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "мы вышли из дома",
+            "right": "salimos de casa"
+          },
+          {
+            "left": "мы подошли к кассам",
+            "right": "nos acercamos a las taquillas"
+          },
+          {
+            "left": "мы вошли в вагон",
+            "right": "subimos al vagón"
+          },
+          {
+            "left": "поезд отъехал от вокзала",
+            "right": "el tren partió de la estación"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video pG_MxzbDcQE ('Аудирование. Поездка в деревню. Глаголы движения.'). Público, playable_in_embed=true, no es livestream (ejercicio corto de audición/dictado). Verificado con subtítulos AUTOMÁTICOS reales en ruso (claros y legibles): narración completa extraída directamente de la transcripción, sin fragmentos garbled."
   }
 }
