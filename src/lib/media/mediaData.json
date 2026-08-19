@@ -27132,5 +27132,89 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video MXz1cquaSnA ('Русский язык как иностранный. 25. Чьё это мнение (ответ на вопрос об оценке ситуации)'), canal «Nadine Asta Learning Russian», misma serie que b1-3/b1-30/b2-26/b2-29 (videos distintos). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b2-3 (debates: marcar de quién es la opinión, base para argumentar y contraargumentar)."
+  },
+  "video-registro-coloquial-vidite-li": {
+    "id": "video-registro-coloquial-vidite-li",
+    "title": "Registro coloquial: muletillas para ganar tiempo («видите ли», «понимаете», «знаете», «тут вот какое дело»)",
+    "description": "Lección del canal «Русский язык как иностранный» (Nadezhda) sobre las muletillas típicas del registro coloquial ruso que rellenan la pausa mientras se busca la mejor respuesta a una pregunta difícil: «видите ли» (matiz de sorpresa), «понимаете» (buscar complicidad), «знаете» (confesar algo personal) y «тут вот какое дело / тут вот какая история» (señal de estar desconcertado, sin poder responder de inmediato) — recursos exclusivamente orales, ausentes del registro formal escrito.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "sVlPiV0ax3U",
+    "curriculumLessonId": "b2-25",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Вы чем-то удивлены? — Видите ли, я никак не ожидала встретить вас здесь.",
+        "translation": "¿Le sorprende algo? — Verá, no esperaba en absoluto encontrarlo aquí. («видите ли» = matiz de sorpresa, mientras se busca la respuesta)"
+      },
+      {
+        "russian": "Кто из этих актёров, как вам кажется, больше подходит на эту роль? — Понимаете, я просто никому из них не могу отдать предпочтение.",
+        "translation": "¿Cuál de estos actores le parece más adecuado para el papel? — Compréndame, simplemente no puedo dar preferencia a ninguno de ellos. («понимаете» = busca que el interlocutor entienda su postura)"
+      },
+      {
+        "russian": "Чем же вас привлекает Андрей Миронов? — Знаете, в его игре такая искренность, такая естественность.",
+        "translation": "¿Qué es lo que le atrae de Andréi Mirónov? — ¿Sabe?, hay tanta sinceridad, tanta naturalidad en su actuación. («знаете» = comparte algo personal)"
+      },
+      {
+        "russian": "Что там у тебя, в чём дело? — Видишь ли, тут вот какое дело: мне надо срочно на два дня уехать.",
+        "translation": "¿Qué te pasa, cuál es el problema? — Mira, resulta que tengo que irme urgentemente por dos días. («тут вот какое дело» = señal de desconcierto antes de explicar algo incómodo)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "видите ли",
+        "transcription": "víd'it'e li",
+        "translation": "verá (formal) / видишь ли, verás (informal) — introduce sorpresa o matización"
+      },
+      {
+        "word": "понимаете",
+        "transcription": "panimáyet'e",
+        "translation": "compréndame — busca complicidad del interlocutor"
+      },
+      {
+        "word": "знаете",
+        "transcription": "znáyet'e",
+        "translation": "¿sabe? — introduce una confidencia personal"
+      },
+      {
+        "word": "тут вот какое дело",
+        "transcription": "tut vot kakóye d'éla",
+        "translation": "resulta que... (señal de desconcierto, muy coloquial)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoregistrocoloquialviditeli-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál de estas muletillas introduce específicamente una CONFIDENCIA PERSONAL?",
+        "options": [
+          "видите ли",
+          "понимаете",
+          "знаете",
+          "тут вот какое дело"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoregistrocoloquialviditeli-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "видите ли",
+            "right": "matiz de sorpresa"
+          },
+          {
+            "left": "понимаете",
+            "right": "busca complicidad"
+          },
+          {
+            "left": "тут вот какое дело",
+            "right": "desconcierto, algo incómodo"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video sVlPiV0ax3U ('Русский язык как иностранный. 21. Видите ли, Понимаете, Тут вот какое дело, Тут вот какая история'), canal «Nadine Asta Learning Russian», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b2-25 (registro formal vs. coloquial: estas muletillas son marcadores puramente orales/coloquiales, ausentes del registro escrito formal)."
   }
 }
