@@ -29498,5 +29498,169 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video zjtxyajeKiI ('Русский язык. Урок 2.4. Деловая беседа'), canal «Education for all», misma serie que video-delovoe-obshenie-negocios (b2-7, video distinto). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-27 (búsqueda de trabajo y la entrevista)."
+  },
+  "video-yazyk-molodezhnoy-pressy": {
+    "id": "video-yazyk-molodezhnoy-pressy",
+    "title": "Estilo periodístico: el lenguaje de la prensa juvenil rusa («язык молодёжной прессы»)",
+    "description": "Fragmento de la serie televisiva educativa «Русский язык для всех» sobre las características lingüísticas de la prensa juvenil rusa: la mezcla de estilos funcionales (habla oficial, coloquial, de distintos grupos sociales), la saturación de jerga juvenil y anglicismos («жаргон», «интержаргон») organizada temáticamente en torno a temas fijos como video, música, moda, deporte y amor.",
+    "level": "C1",
+    "category": "grammar",
+    "youtubeVideoId": "cMwKuf1BdDc",
+    "curriculumLessonId": "b2-24",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Массовая коммуникация оперирует множеством вторичных текстов, изначально принадлежащих другим функциональным сферам: официально-деловая речь, речевой обиход разных социальных групп.",
+        "translation": "La comunicación de masas emplea numerosos textos «secundarios», originarios de otras esferas funcionales: el habla oficial, el habla cotidiana de distintos grupos sociales."
+      },
+      {
+        "russian": "Насыщение текстов жаргоном и интержаргоном задано тематически и адресно.",
+        "translation": "La saturación de los textos con jerga (juvenil e internacional) está determinada por el tema y el público al que se dirigen."
+      },
+      {
+        "russian": "Большинство изданий содержат стабильный тематический ряд: видео, музыка, мода, спорт, мультимедиа, любовь.",
+        "translation": "La mayoría de las publicaciones contienen una serie temática estable: video, música, moda, deporte, multimedia, amor."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "молодёжная пресса",
+        "transcription": "malad'ózhnaya pr'ésa",
+        "translation": "prensa juvenil"
+      },
+      {
+        "word": "жаргон",
+        "transcription": "zhargón",
+        "translation": "jerga"
+      },
+      {
+        "word": "средства массовой информации (СМИ)",
+        "transcription": "sr'étstva másavai infarmátsii",
+        "translation": "medios de comunicación de masas"
+      },
+      {
+        "word": "стилистическая разнородность",
+        "transcription": "stil'ist'ích'iskaya raznaród'nast'",
+        "translation": "heterogeneidad estilística"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoyazykmolodezhnoypressy-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué determina, según el video, la presencia de jerga en la prensa juvenil?",
+        "options": [
+          "Es totalmente aleatoria",
+          "Está determinada por el tema y el público al que se dirige",
+          "Solo aparece en artículos de deportes",
+          "Está prohibida por la normativa periodística"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoyazykmolodezhnoypressy-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "молодёжная пресса",
+            "right": "prensa juvenil"
+          },
+          {
+            "left": "жаргон",
+            "right": "jerga"
+          },
+          {
+            "left": "СМИ",
+            "right": "medios de comunicación"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video cMwKuf1BdDc ('Речевая безопасность. Урок 9.9. Язык молодёжной прессы'), canal «Education for all», misma serie que video-delovoe-obshenie-negocios y video-delovaya-beseda-trabajo. Público, playable_in_embed=true, no es livestream, duración 43 min. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Se detectó y revisó una mención de 'смерть' — verificada en contexto: es una estadística neutra sobre accidentes de paracaidismo, usada como ejemplo del estilo sensacionalista de la prensa juvenil, sin ninguna connotación bélica o violenta. Cubre el slot b2-24 (estilo periodístico: reportajes y titulares)."
+  },
+  "video-nauchny-stil-bezlichnye": {
+    "id": "video-nauchny-stil-bezlichnye",
+    "title": "Estilo científico: terminología y construcciones impersonales («безличные предложения»)",
+    "description": "Fragmento de la serie televisiva educativa «Русский язык для всех» sobre las características del estilo científico ruso: el papel central de la terminología precisa (formando sistemas terminológicos propios de cada disciplina) y el uso frecuente de construcciones impersonales/pasivas que debilitan la persona gramatical («можно прийти к результату», «известно, что...», «золото добывается»), reflejo de la objetividad exigida por el discurso científico.",
+    "level": "C1",
+    "category": "grammar",
+    "youtubeVideoId": "OhNslLkrZVs",
+    "curriculumLessonId": "b2-22",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Терминологическая лексика составляет ядро научного стиля. Термины образуют терминологическую систему, специфичную для той или иной отрасли науки.",
+        "translation": "El léxico terminológico constituye el núcleo del estilo científico. Los términos forman un sistema terminológico propio de cada rama de la ciencia."
+      },
+      {
+        "russian": "Известно, что не существует метода... — так мы избегаем личной конструкции, заменяя её безличной.",
+        "translation": "Se sabe que no existe un método... — así evitamos la construcción personal, sustituyéndola por una impersonal."
+      },
+      {
+        "russian": "Можно прийти к результату. Можно заключить. Золото добывается.",
+        "translation": "Se puede llegar a un resultado. Se puede concluir. Se extrae oro. (construcciones impersonales/pasivas típicas del estilo científico)"
+      },
+      {
+        "russian": "Безличностный характер изложения — отражение объективности — активизирует употребление неопределённо-личных предложений.",
+        "translation": "El carácter impersonal de la exposición —reflejo de la objetividad— favorece el uso de oraciones indefinidamente personales."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "научный стиль",
+        "transcription": "naúch'nyi st'il'",
+        "translation": "estilo científico"
+      },
+      {
+        "word": "терминологическая система",
+        "transcription": "t'irminalag'ích'iskaya sist'éma",
+        "translation": "sistema terminológico"
+      },
+      {
+        "word": "безличное предложение",
+        "transcription": "b'izl'íchnaye pridlazh'éniye",
+        "translation": "oración impersonal"
+      },
+      {
+        "word": "объективность",
+        "transcription": "ab'ekt'ívnast'",
+        "translation": "objetividad"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videonauchnystilbezlichnye-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Por qué el estilo científico usa tantas construcciones impersonales?",
+        "options": [
+          "Para hacer el texto más literario",
+          "Para reflejar objetividad, debilitando la referencia a la persona gramatical",
+          "Porque el ruso no tiene forma personal para el pasado",
+          "Para simplificar la ortografía"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videonauchnystilbezlichnye-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "научный стиль",
+            "right": "estilo científico"
+          },
+          {
+            "left": "терминологическая система",
+            "right": "sistema terminológico"
+          },
+          {
+            "left": "безличное предложение",
+            "right": "oración impersonal"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video OhNslLkrZVs ('Урок 9. Научный стиль речи. Часть 1'), canal «Education for all», misma serie que otras entradas B2/C1 de esta sesión. Público, playable_in_embed=true, no es livestream, duración 43 min. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Contenido específico sobre terminología y construcciones impersonales extraído directamente de la transcripción. Cubre el slot b2-22 (estilo científico: cancelarismos y construcciones pasivas)."
   }
 }
