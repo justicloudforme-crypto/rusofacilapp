@@ -28318,5 +28318,191 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video lbDDxbm1W3w ('First Impression in Russian | Easy Story (B1) + Short Song'), canal «Jurussia Учим русский», misma serie que a2-6/a2-8/b2-6 (videos distintos). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso (contenido narrativo verificado directamente; traducción propia al español para mayor precisión). Cubre el slot b1-5 (narrar experiencias pasadas con detalle): la historia usa consistentemente el pasado para narrar un reencuentro con detalle emocional."
+  },
+  "video-en-el-cafe-restaurante": {
+    "id": "video-en-el-cafe-restaurante",
+    "title": "En el restaurante y en la tienda: «В кафе» — pedir, pagar y dejar propina",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel A2): María entra en una cafetería, pide el menú, elige entre entrantes, sopas, platos calientes y postres tradicionales rusos (borsch, pelmeni, «selyodka pod shuboi»), hace su pedido, paga la cuenta y deja propina — un diálogo completo y natural de restaurante con todo el vocabulario del proceso.",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "Csr8AwcC_mE",
+    "curriculumLessonId": "a1-5",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Можно, пожалуйста, меню? — Конечно, сейчас принесу.",
+        "translation": "¿Me trae el menú, por favor? — Claro, ahora se lo traigo."
+      },
+      {
+        "russian": "Вы готовы сделать заказ? Что будете заказывать? — Я буду борщ, селёдку под шубой и пельмени.",
+        "translation": "¿Están listos para pedir? ¿Qué van a pedir? — Voy a tomar borsch, «selyodka pod shuboi» (arenque bajo un «abrigo» de verduras) y pelmeni."
+      },
+      {
+        "russian": "Можно счёт, пожалуйста? — С Вас восемьсот пятьдесят рублей.",
+        "translation": "¿Me trae la cuenta, por favor? — Son 850 rublos."
+      },
+      {
+        "russian": "Вот, пожалуйста. Сдачи не нужно. — Спасибо большое!",
+        "translation": "Aquí tiene. Quédese con el cambio (propina). — ¡Muchas gracias!"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "меню",
+        "transcription": "min'ú",
+        "translation": "menú"
+      },
+      {
+        "word": "делать заказ / заказывать",
+        "transcription": "d'élat' zakás / zakázyvat'",
+        "translation": "hacer el pedido / pedir"
+      },
+      {
+        "word": "счёt",
+        "transcription": "shchot",
+        "translation": "la cuenta"
+      },
+      {
+        "word": "чаевые",
+        "transcription": "ch'iyeváye",
+        "translation": "propina"
+      },
+      {
+        "word": "приятного аппетита!",
+        "transcription": "priyátnava ap'it'íta",
+        "translation": "¡buen provecho!"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoenelcaferestaurante-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se pide la cuenta en un restaurante ruso?",
+        "options": [
+          "Можно меню?",
+          "Можно счёт, пожалуйста?",
+          "Что будете заказывать?",
+          "Приятного аппетита!"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoenelcaferestaurante-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "меню",
+            "right": "menú"
+          },
+          {
+            "left": "счёт",
+            "right": "la cuenta"
+          },
+          {
+            "left": "чаевые",
+            "right": "propina"
+          },
+          {
+            "left": "заказывать",
+            "right": "pedir"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Csr8AwcC_mE ('Cozy Russian Café Story for A2 Learners'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a1-5 (en el restaurante y en la tienda)."
+  },
+  "video-na-dache-viaje-transporte": {
+    "id": "video-na-dache-viaje-transporte",
+    "title": "Planes de viaje y transporte público: «На даче» — un fin de semana en la casa de campo",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel A2): Anna e Ígor preparan su viaje habitual de fin de semana a la dacha (casa de campo rusa) con su hija Masha y su gato Barsik — el trayecto en tren de cercanías («электричка»), luego autobús y a pie, y la vida sencilla en el campo (huerto, banya, vecinos, gallinas).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "ElKNl1yNgIY",
+    "curriculumLessonId": "a2-5",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Они живут в Москве, но каждые выходные ездят на дачу.",
+        "translation": "Viven en Moscú, pero cada fin de semana van a la dacha."
+      },
+      {
+        "russian": "Утром семья садится в электричку. Барсик едет в переноске, Маша смотрит в окно.",
+        "translation": "Por la mañana la familia sube al tren de cercanías. Barsik viaja en su transportín, Masha mira por la ventana."
+      },
+      {
+        "russian": "Потом автобус, и ещё немного пешком. Вот и дача.",
+        "translation": "Luego el autobús, y un poco más a pie. Y ya llegan a la dacha. (recorrido típico: tren + autobús + caminata)"
+      },
+      {
+        "russian": "Здесь так хорошо, — говорит Анна. — Лучше, чем в городе, — отвечает Игорь.",
+        "translation": "Aquí se está tan bien, dice Anna. — Mejor que en la ciudad, responde Ígor."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "дача",
+        "transcription": "dách'a",
+        "translation": "dacha (casa de campo típica rusa)"
+      },
+      {
+        "word": "электричка",
+        "transcription": "el'ektr'ích'ka",
+        "translation": "tren de cercanías"
+      },
+      {
+        "word": "садиться в электричку",
+        "transcription": "sad'ítsa v el'ektr'ích'ku",
+        "translation": "subir al tren de cercanías"
+      },
+      {
+        "word": "пешком",
+        "transcription": "p'ishkóm",
+        "translation": "a pie"
+      },
+      {
+        "word": "выходные",
+        "transcription": "vykhadnýye",
+        "translation": "fin de semana"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videonadachaviajetransporte-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo llega la familia a la dacha?",
+        "options": [
+          "Solo en coche",
+          "En electrichka, luego autobús, luego a pie",
+          "En avión",
+          "En barco"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videonadachaviajetransporte-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "электричка",
+            "right": "tren de cercanías"
+          },
+          {
+            "left": "пешком",
+            "right": "a pie"
+          },
+          {
+            "left": "дача",
+            "right": "casa de campo"
+          },
+          {
+            "left": "выходные",
+            "right": "fin de semana"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video ElKNl1yNgIY ('A Weekend at the Dacha – Russian Story for A2 Learners'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-5 (planes de viaje y transporte público): el trayecto electrichka + autobús + a pie es el eje narrativo del video."
   }
 }
