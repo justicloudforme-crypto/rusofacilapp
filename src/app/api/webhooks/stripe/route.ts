@@ -3,8 +3,9 @@ import type { NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
-import { invalidateSubscriptionCache } from "@/lib/subscription";
+import { extendOrGrantSubscription, invalidateSubscriptionCache } from "@/lib/subscription";
 import { awardReferralRewardSafely } from "@/lib/referral";
+import { isPlanId, plans } from "@/lib/plans";
 
 function mapStripeStatus(status: Stripe.Subscription.Status): string {
   switch (status) {
@@ -88,6 +89,12 @@ export async function POST(request: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
+      // An OXXO Checkout Session (mode: "payment") fires this event the
+      // moment the voucher/barcode is generated — before any money has
+      // actually moved. It has no `subscription` field at all (that's
+      // exclusive to mode: "subscription"), so the branch below is a
+      // no-op for it by construction; access is granted later, once the
+      // store payment actually clears — see async_payment_succeeded below.
       if (typeof session.subscription === "string") {
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
         if (session.client_reference_id && !subscription.metadata?.userId) {
@@ -106,6 +113,37 @@ export async function POST(request: NextRequest) {
       }
       break;
     }
+
+    // The OXXO voucher was actually paid at a physical store (can be up to
+    // `expires_after_days` — 3 — after checkout). This, not
+    // checkout.session.completed, is the real "money received" moment for
+    // an async payment method, so this is where access is granted. There's
+    // no Stripe Subscription object behind an OXXO purchase (see
+    // /api/checkout's oxxo branch) — extendOrGrantSubscription writes a
+    // plain, non-Stripe-linked Subscription row directly, the same helper
+    // used for referral rewards and manual admin grants.
+    case "checkout.session.async_payment_succeeded": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.client_reference_id;
+      const planId = session.metadata?.plan;
+      if (userId && planId && isPlanId(planId)) {
+        await extendOrGrantSubscription(userId, plans[planId].durationDays, planId);
+        // Same "only on a real payment" rule as the card path's
+        // checkout.session.completed handler above — the voucher being
+        // generated proves nothing, only it being paid does.
+        await awardReferralRewardSafely(userId);
+      }
+      break;
+    }
+
+    // The voucher expired unpaid, or the async payment otherwise failed.
+    // Nothing was ever granted for this session (see
+    // async_payment_succeeded above), so there's nothing to revert here —
+    // this case exists so the event type is explicitly acknowledged
+    // instead of silently falling through to `default`.
+    case "checkout.session.async_payment_failed":
+    case "checkout.session.expired":
+      break;
 
     case "customer.subscription.updated":
     case "customer.subscription.created": {

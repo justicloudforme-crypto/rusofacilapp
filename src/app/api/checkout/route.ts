@@ -4,14 +4,21 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
-import { isPlanId, plans } from "@/lib/plans";
+import { isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
+
+const PLAN_LABELS: Record<string, string> = {
+  monthly: "Suscripción mensual",
+  annual: "Suscripción anual",
+};
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const planRaw = String(formData.get("plan") ?? "");
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
+  const methodRaw = String(formData.get("method") ?? "card");
+  const method = isCheckoutMethod(methodRaw) ? methodRaw : "card";
 
   if (!isPlanId(planRaw)) {
     return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
@@ -26,8 +33,9 @@ export async function POST(request: NextRequest) {
 
   const plan = plans[planRaw];
   const stripe = getStripe();
+  const origin = new URL(request.url).origin;
 
-  if (stripe && plan.priceId) {
+  if (stripe && (method === "oxxo" || plan.priceId)) {
     let stripeCustomerId = user.stripeCustomerId;
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
@@ -41,21 +49,61 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const origin = new URL(request.url).origin;
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: stripeCustomerId,
-      client_reference_id: user.id,
-      line_items: [{ price: plan.priceId, quantity: 1 }],
-      subscription_data: { metadata: { userId: user.id, plan: plan.id } },
-      success_url: `${origin}/${lang}/profile?checkout=success`,
-      cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
-    });
+    if (method === "oxxo") {
+      // OXXO is a cash-voucher payment method: the customer gets a barcode
+      // (shown on Stripe's own hosted checkout page, and emailed to them)
+      // and pays in person at a physical OXXO store, usually within a few
+      // days. There is no reusable off-session payment instrument behind
+      // it, so — unlike the card branch below — this can never be a
+      // recurring Stripe Subscription; it's a one-time payment that grants
+      // a fixed period of access once the voucher is actually paid. Access
+      // is NOT granted here: see the checkout.session.async_payment_succeeded
+      // handler in /api/webhooks/stripe, which fires only once the store
+      // payment clears (checkout.session.completed fires immediately on
+      // voucher creation, before any money has moved).
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer: stripeCustomerId,
+        client_reference_id: user.id,
+        payment_method_types: ["oxxo"],
+        payment_method_options: { oxxo: { expires_after_days: 3 } },
+        line_items: [
+          {
+            price_data: {
+              currency: "mxn",
+              unit_amount: plan.oxxoAmountMxnCents,
+              product_data: { name: `RusoFácilapp — ${PLAN_LABELS[plan.id]}` },
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: { userId: user.id, plan: plan.id },
+        success_url: `${origin}/${lang}/profile?checkout=oxxo_pending`,
+        cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
+      });
 
-    if (!session.url) {
-      return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+      if (!session.url) {
+        return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+      }
+      return NextResponse.redirect(session.url, { status: 303 });
     }
-    return NextResponse.redirect(session.url, { status: 303 });
+
+    if (plan.priceId) {
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: stripeCustomerId,
+        client_reference_id: user.id,
+        line_items: [{ price: plan.priceId, quantity: 1 }],
+        subscription_data: { metadata: { userId: user.id, plan: plan.id } },
+        success_url: `${origin}/${lang}/profile?checkout=success`,
+        cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
+      });
+
+      if (!session.url) {
+        return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+      }
+      return NextResponse.redirect(session.url, { status: 303 });
+    }
   }
 
   // Stripe isn't configured for this environment (no secret key / price id):

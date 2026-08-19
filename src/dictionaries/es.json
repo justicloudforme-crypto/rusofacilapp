@@ -273,15 +273,19 @@
       "name": "Mensual",
       "price": "$7.99 USD",
       "period": "/ mes",
-      "cta": "Suscribirme"
+      "cta": "Suscribirme",
+      "oxxoPrice": "$150 MXN"
     },
     "annual": {
       "name": "Anual",
       "price": "$47.99 USD",
       "period": "/ año",
       "cta": "Suscribirme",
-      "badge": "Ahorra 50%"
+      "badge": "Ahorra 50%",
+      "oxxoPrice": "$899 MXN"
     },
+    "oxxoCta": "Pagar en efectivo (OXXO)",
+    "oxxoNote": "Recibirás un código de barras por correo y en pantalla para pagar en cualquier tienda OXXO de México. Tu acceso se activa en cuanto se confirme el pago (hasta 3 días); el código vence si no se usa en ese plazo.",
     "featuresTitle": "Incluye",
     "features": [
       "Acceso a los niveles A1 a B2",
@@ -302,7 +306,8 @@
     "seePricing": "Ver planes",
     "goToCourses": "Ir a los cursos",
     "checkoutMock": "Suscripción activada (modo demo, sin Stripe real).",
-    "checkoutSuccess": "¡Pago confirmado! Tu suscripción ya está activa."
+    "checkoutSuccess": "¡Pago confirmado! Tu suscripción ya está activa.",
+    "checkoutOxxoPending": "Revisa tu correo: ahí tienes tu código de barras de OXXO. En cuanto se confirme el pago en la tienda (hasta 3 días), tu suscripción se activará automáticamente."
   },
   "profile": {
     "title": "Mi perfil",

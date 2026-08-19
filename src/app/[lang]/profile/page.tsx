@@ -178,6 +178,11 @@ export default async function ProfilePage({
           {dict.account.checkoutSuccess}
         </p>
       )}
+      {checkout === "oxxo_pending" && (
+        <p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
+          {dict.account.checkoutOxxoPending}
+        </p>
+      )}
       {justCanceled && (
         <p className="mt-6 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
           {dict.profile.canceledNotice}

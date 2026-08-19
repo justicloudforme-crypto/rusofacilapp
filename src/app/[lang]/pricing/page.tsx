@@ -14,6 +14,9 @@ function PlanCard({
   features,
   featuresTitle,
   highlighted,
+  oxxoPrice,
+  oxxoCta,
+  oxxoNote,
 }: {
   lang: string;
   planId: PlanId;
@@ -25,6 +28,9 @@ function PlanCard({
   features: string[];
   featuresTitle: string;
   highlighted?: boolean;
+  oxxoPrice: string;
+  oxxoCta: string;
+  oxxoNote: string;
 }) {
   return (
     <div
@@ -64,10 +70,21 @@ function PlanCard({
         <input type="hidden" name="plan" value={planId} />
         <button
           type="submit"
+          name="method"
+          value="card"
           className="w-full rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
         >
           {cta}
         </button>
+        <button
+          type="submit"
+          name="method"
+          value="oxxo"
+          className="mt-3 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 dark:border-white/10"
+        >
+          {oxxoCta} — {oxxoPrice}
+        </button>
+        <p className="mt-2 text-xs text-foreground/50">{oxxoNote}</p>
       </form>
     </div>
   );
@@ -96,6 +113,9 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
           cta={dict.pricing.monthly.cta}
           features={dict.pricing.features}
           featuresTitle={dict.pricing.featuresTitle}
+          oxxoPrice={dict.pricing.monthly.oxxoPrice}
+          oxxoCta={dict.pricing.oxxoCta}
+          oxxoNote={dict.pricing.oxxoNote}
         />
         <PlanCard
           lang={lang}
@@ -108,6 +128,9 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
           features={dict.pricing.features}
           featuresTitle={dict.pricing.featuresTitle}
           highlighted
+          oxxoPrice={dict.pricing.annual.oxxoPrice}
+          oxxoCta={dict.pricing.oxxoCta}
+          oxxoNote={dict.pricing.oxxoNote}
         />
       </div>
     </div>
