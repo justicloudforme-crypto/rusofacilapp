@@ -29826,5 +29826,98 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video xR9vLAPRmaw ('Русский язык. Урок 1.7. Функциональные стили речи'), canal «Education for all», misma serie que otras entradas B2/C1 de esta sesión. Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Contiene una referencia histórica neutra a los cambios revolucionarios de 1917 como ejemplo de análisis literario (técnica narrativa, sin ninguna connotación bélica). Cubre el slot b2-4 (ruso literario: fragmentos comentados)."
+  },
+  "video-bakalavr-magistr-educacion": {
+    "id": "video-bakalavr-magistr-educacion",
+    "title": "Educación y carrera profesional: «бакалавр», «специалист», «магистр», «аспирант» — el sistema universitario ruso",
+    "description": "Video del canal «Адукар» que explica las diferencias entre los niveles del sistema universitario postsoviético: «бакалавриат» (grado general, 4 años), «специалитет» (especialización más estrecha, 5-6 años), «магистратура» (segundo nivel, especialización) y «аспирантура» (doctorado, trabajo científico) — vocabulario esencial para hablar de estudios y trayectoria académica.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "pke_pvRjNOQ",
+    "curriculumLessonId": "b1-28",
+    "lyricsOrTranscript": [
+      {
+        "russian": "К первому уровню высшего образования относится бакалавриат. Мы учимся 4 года и получаем более общую специальность.",
+        "translation": "Al primer nivel de educación superior pertenece el «бакалавриат» (grado). Estudiamos 4 años y obtenemos una especialidad más general."
+      },
+      {
+        "russian": "Есть также специалитет: мы учимся 5-6 лет, и у нас более узкая специализация.",
+        "translation": "También existe el «специалитет»: estudiamos 5-6 años y tenemos una especialización más estrecha."
+      },
+      {
+        "russian": "Все мы получаем диплом после окончания обучения и можем работать по специальности, а также поступать в магистратуру.",
+        "translation": "Todos obtenemos un diploma al terminar los estudios y podemos trabajar en nuestra especialidad, así como ingresar a la «магистратура» (maestría)."
+      },
+      {
+        "russian": "Магистратура и аспирантура позволяют получить более узкую специализацию или заниматься научной работой.",
+        "translation": "La maestría y el doctorado («аспирантура») permiten obtener una especialización más estrecha o dedicarse al trabajo científico."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "бакалавриат",
+        "transcription": "bakalavriát",
+        "translation": "grado universitario (primer nivel)"
+      },
+      {
+        "word": "специалитет",
+        "transcription": "sp'itsialit'ét",
+        "translation": "especialidad (5-6 años, más estrecha)"
+      },
+      {
+        "word": "магистратура",
+        "transcription": "magistratúra",
+        "translation": "maestría"
+      },
+      {
+        "word": "аспирантура",
+        "transcription": "aspirantúra",
+        "translation": "doctorado"
+      },
+      {
+        "word": "диплом",
+        "transcription": "diplóm",
+        "translation": "diploma/título"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videobakalavrmagistreducacion-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es el siguiente nivel académico después del бакалавриат/специалитет?",
+        "options": [
+          "Аспирантура directamente",
+          "Магистратура",
+          "No hay más niveles",
+          "Специалитет"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videobakalavrmagistreducacion-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "бакалавриат",
+            "right": "grado (4 años)"
+          },
+          {
+            "left": "специалитет",
+            "right": "especialidad (5-6 años)"
+          },
+          {
+            "left": "магистратура",
+            "right": "maestría"
+          },
+          {
+            "left": "аспирантура",
+            "right": "doctorado"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video pke_pvRjNOQ ('Специалист, бакалавр, магистр, аспирант: в чём разница?'), canal «Адукар». Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-28 (educación y carrera profesional)."
   }
 }
