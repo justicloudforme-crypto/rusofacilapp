@@ -29662,5 +29662,169 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video OhNslLkrZVs ('Урок 9. Научный стиль речи. Часть 1'), canal «Education for all», misma serie que otras entradas B2/C1 de esta sesión. Público, playable_in_embed=true, no es livestream, duración 43 min. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Contenido específico sobre terminología y construcciones impersonales extraído directamente de la transcripción. Cubre el slot b2-22 (estilo científico: cancelarismos y construcciones pasivas)."
+  },
+  "video-publicisticheskiy-stil-cultura": {
+    "id": "video-publicisticheskiy-stil-cultura",
+    "title": "Cultura y arte: crítica y opinión en el estilo publicístico («публицистический стиль»)",
+    "description": "Fragmento de la serie televisiva educativa «Русский язык для всех» sobre el estilo publicístico (periodístico de opinión): su presencia en periódicos, revistas, intervenciones radiofónicas/televisivas y discursos públicos, y su temática sin límites — filosofía, economía, ética, educación, cultura y arte — razón por la que se le llama «la crónica de nuestro tiempo».",
+    "level": "C1",
+    "category": "grammar",
+    "youtubeVideoId": "ReDwYjN8qAA",
+    "curriculumLessonId": "b2-28",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Публицистический стиль может быть представлен в журналах, журналистских выступлениях по радио, по телевидению, и в речах общественно-политических деятелей на митингах, съездах, собраниях.",
+        "translation": "El estilo publicístico puede presentarse en revistas, intervenciones periodísticas de radio y televisión, y en los discursos de figuras públicas en mítines, congresos y asambleas."
+      },
+      {
+        "russian": "Философские, экономические, морально-этические вопросы, вопросы воспитания, вопросы культуры, вопросы искусства — её тематика ничем не ограничена.",
+        "translation": "Cuestiones filosóficas, económicas, morales-éticas, de educación, de cultura, de arte — su temática no tiene límites."
+      },
+      {
+        "russian": "Именно поэтому публицистику называют летописью современности.",
+        "translation": "Por eso se le llama a la publicística «la crónica de nuestro tiempo»."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "публицистический стиль",
+        "transcription": "publitsist'ích'iskii st'il'",
+        "translation": "estilo publicístico (periodístico de opinión)"
+      },
+      {
+        "word": "критика",
+        "transcription": "kr'ít'ika",
+        "translation": "crítica"
+      },
+      {
+        "word": "летопись современности",
+        "transcription": "l'étapis' savr'im'énnasti",
+        "translation": "crónica de nuestro tiempo"
+      },
+      {
+        "word": "жанровое разнообразие",
+        "transcription": "zhánravaye raznaabráziye",
+        "translation": "diversidad de géneros"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopublicisticheskiystilcultura-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Por qué se llama a la publicística «la crónica de nuestro tiempo»?",
+        "options": [
+          "Porque solo trata temas históricos",
+          "Porque su temática no tiene límites y refleja la vida actual",
+          "Porque solo se publica una vez al año",
+          "Porque solo la escriben historiadores"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videopublicisticheskiystilcultura-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "публицистический стиль",
+            "right": "estilo publicístico"
+          },
+          {
+            "left": "критика",
+            "right": "crítica"
+          },
+          {
+            "left": "летопись современности",
+            "right": "crónica de nuestro tiempo"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video ReDwYjN8qAA ('Урок 13. Публицистический стиль и сферы его функционирования. Часть 1'), canal «Education for all», misma serie que otras entradas B2/C1 de esta sesión. Público, playable_in_embed=true, no es livestream, duración 44 min. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Cubre el slot b2-28 (cultura y arte: crítica y opinión) — distinto de b2-24 (estilo periodístico de la prensa juvenil, video diferente)."
+  },
+  "video-hudozhestvenny-stil-literario": {
+    "id": "video-hudozhestvenny-stil-literario",
+    "title": "Ruso literario: el estilo artístico («художественный стиль») y su capacidad de crear imágenes",
+    "description": "Fragmento de la serie televisiva educativa «Русский язык для всех» que presenta el estilo literario/artístico dentro del panorama general de los estilos funcionales del ruso (junto al publicístico, el científico y el coloquial): su base es el ruso literario y su rasgo distintivo es un «sistema de formas figurativas» — la capacidad de, con pocas frases bien elegidas, evocar toda una época o una vida entera, algo que ningún otro estilo funcional logra.",
+    "level": "C1",
+    "category": "grammar",
+    "youtubeVideoId": "xR9vLAPRmaw",
+    "curriculumLessonId": "b2-4",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Мы с вами читаем художественную литературу, когда мы берём в руки книгу — мы сталкиваемся с художественным стилем.",
+        "translation": "Leemos literatura artística cuando tomamos un libro en las manos — ahí es donde nos encontramos con el estilo literario."
+      },
+      {
+        "russian": "Художественный стиль имеет свою систему образных форм, что выражается и языковыми, и экстралингвистическими средствами.",
+        "translation": "El estilo literario tiene su propio sistema de formas figurativas, que se expresa tanto por medios lingüísticos como extralingüísticos."
+      },
+      {
+        "russian": "Основой художественного стиля речи является литературный русский язык.",
+        "translation": "La base del estilo literario es el ruso literario estándar."
+      },
+      {
+        "russian": "В буквально двух предложениях автору удаётся показать отрезок индивидуальной человеческой жизни и атмосферу целой эпохи.",
+        "translation": "En apenas dos frases, el autor logra mostrar un fragmento de una vida individual y la atmósfera de toda una época."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "художественный стиль",
+        "transcription": "khudózh'estv'innyi st'il'",
+        "translation": "estilo literario/artístico"
+      },
+      {
+        "word": "образность",
+        "transcription": "óbraznast'",
+        "translation": "capacidad figurativa/imaginativa"
+      },
+      {
+        "word": "литературный язык",
+        "transcription": "l'it'iratúrnyi yazýk",
+        "translation": "lengua literaria estándar"
+      },
+      {
+        "word": "зримый образ",
+        "transcription": "zrímyi óbras",
+        "translation": "imagen visible/vívida"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videohudozhestvennystilliterario-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es la base lingüística del estilo literario según el video?",
+        "options": [
+          "El habla coloquial",
+          "La lengua literaria estándar (литературный язык)",
+          "La jerga juvenil",
+          "El estilo científico"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videohudozhestvennystilliterario-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "художественный стиль",
+            "right": "estilo literario"
+          },
+          {
+            "left": "образность",
+            "right": "capacidad figurativa"
+          },
+          {
+            "left": "литературный язык",
+            "right": "lengua literaria estándar"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video xR9vLAPRmaw ('Русский язык. Урок 1.7. Функциональные стили речи'), canal «Education for all», misma serie que otras entradas B2/C1 de esta sesión. Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Contiene una referencia histórica neutra a los cambios revolucionarios de 1917 como ejemplo de análisis literario (técnica narrativa, sin ninguna connotación bélica). Cubre el slot b2-4 (ruso literario: fragmentos comentados)."
   }
 }
