@@ -25652,5 +25652,97 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video RR5wYy3C_tc, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Maksim Dunaevski, letra de Leonid Derbenev, cantada por Zhanna Rozhdestvenskaya), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción cómica y absurda sobre un marinero amistoso."
+  },
+  "song-pod-muzyku-vivaldi": {
+    "id": "song-pod-muzyku-vivaldi",
+    "title": "Под музыку Вивальди — de la película «Почти смешная история» (1977)",
+    "description": "Clásico de la canción de autor soviética, interpretado por Tatiana y Serguéi Nikitin, sobre la melancolía dulce que provoca la música de Vivaldi en una tarde nevada, y la promesa de amarse con todas las fuerzas y volver a empezar de nuevo.",
+    "level": "B2",
+    "category": "song",
+    "youtubeVideoId": "BLgkC3N6Uys",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Под музыку Вивальди, Под вьюгу за окном, Печалиться давайте Об этом, и о том.",
+        "translation": "Con la música de Vivaldi, con la ventisca tras la ventana, entristezcámonos por esto y por aquello."
+      },
+      {
+        "russian": "И стало нам так ясно, Что жизнь была напрасна, Что жизнь была прекрасна, Что все мы будем счастливы, Когда-нибудь, бог даст.",
+        "translation": "Y quedó tan claro para nosotros que la vida fue en vano, que la vida fue hermosa, que todos seremos felices algún día, si Dios quiere."
+      },
+      {
+        "russian": "И только ты молчала, И головой качала Любви печальной в такт.",
+        "translation": "Y solo tú te quedabas callada, y movías la cabeza al compás de un amor triste."
+      },
+      {
+        "russian": "Условимся друг друга Любить, что было сил.",
+        "translation": "Acordemos amarnos el uno al otro con todas nuestras fuerzas."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "вьюга",
+        "transcription": "v'yúga",
+        "translation": "ventisca"
+      },
+      {
+        "word": "печалиться",
+        "transcription": "pichálitsa",
+        "translation": "entristecerse"
+      },
+      {
+        "word": "напрасно",
+        "transcription": "naprásna",
+        "translation": "en vano"
+      },
+      {
+        "word": "качать головой",
+        "transcription": "kachát' galavóy",
+        "translation": "negar/mover la cabeza"
+      },
+      {
+        "word": "условиться",
+        "transcription": "uslóvitsa",
+        "translation": "acordar, ponerse de acuerdo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songpodmuzykuvivaldi-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué acuerdan hacer los amantes al final de la canción?",
+        "options": [
+          "Separarse para siempre",
+          "Amarse con todas sus fuerzas",
+          "Mudarse de ciudad",
+          "Dejar de escuchar música"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songpodmuzykuvivaldi-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "вьюга",
+            "right": "ventisca"
+          },
+          {
+            "left": "печалиться",
+            "right": "entristecerse"
+          },
+          {
+            "left": "напрасно",
+            "right": "en vano"
+          },
+          {
+            "left": "условиться",
+            "right": "acordar"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video BLgkC3N6Uys, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Víktor Berkovski/Serguéi Nikitin, letra de Aleksandr Velichanski, cantada por Tatiana y Serguéi Nikitin), sin usar la letra de memoria. Sin contenido de guerra/violencia — clásico lírico de la canción de autor soviética."
   }
 }
