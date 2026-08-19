@@ -27832,5 +27832,491 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video uYSBuPusmFY ('СКОЛЬКО ВРЕМЕНИ? КОТОРЫЙ ЧАС? / учим русский'), canal «русский с носителем» (mismo canal usado en a1-12). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot a1-4 (números, precios y la hora — específicamente la hora; precios/números cardinales ya se tratan en video-genitivo-numeros a1-22)."
+  },
+  "video-orientarse-en-la-ciudad": {
+    "id": "video-orientarse-en-la-ciudad",
+    "title": "Orientarse en la ciudad: paseo por Krasnoyarsk con vocabulario urbano",
+    "description": "Video real del canal «Твои сибирские каникулы»: una estudiante hace una videollamada a su abuela mientras pasea por el centro de Krasnoyarsk, mostrándole y nombrando los lugares de la ciudad — el teatro, la parada de autobús, el parque, el monumento, el río, el puente y la universidad — vocabulario urbano en un contexto natural y conversacional.",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "Sm38fjFv2XM",
+    "curriculumLessonId": "a1-8",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я сейчас гуляю в центре.",
+        "translation": "Ahora estoy paseando por el centro."
+      },
+      {
+        "russian": "А что это там? Музей? — Неет, это театр Пушкина.",
+        "translation": "¿Y eso qué es? ¿Un museo? — No, es el teatro Pushkin."
+      },
+      {
+        "russian": "А это остановка. Вот автобус номер 3, он идёт до университета.",
+        "translation": "Y esta es la parada de autobús. Ahí está el autobús número 3, va hasta la universidad."
+      },
+      {
+        "russian": "А это что? Парк? — Нет, это маленький сквер. А это памятник Пушкину.",
+        "translation": "¿Y esto qué es? ¿Un parque? — No, es una pequeña plazoleta ajardinada. Y esto es el monumento a Pushkin."
+      },
+      {
+        "russian": "А вот и Енисей. — Ого, большая река. А там мост? — Да, это мост.",
+        "translation": "Y aquí está el río Yeniséi. — Vaya, qué río tan grande. ¿Y eso es un puente? — Sí, es un puente."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "центр",
+        "transcription": "tsentr",
+        "translation": "centro (de la ciudad)"
+      },
+      {
+        "word": "остановка",
+        "transcription": "astanófka",
+        "translation": "parada (de autobús)"
+      },
+      {
+        "word": "сквер",
+        "transcription": "skv'er",
+        "translation": "plazoleta ajardinada"
+      },
+      {
+        "word": "памятник",
+        "transcription": "pám'itn'ik",
+        "translation": "monumento"
+      },
+      {
+        "word": "мост",
+        "transcription": "most",
+        "translation": "puente"
+      },
+      {
+        "word": "университет",
+        "transcription": "universit'ét",
+        "translation": "universidad"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoorientarseenlaciudad-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice «parada de autobús» en ruso?",
+        "options": [
+          "сквер",
+          "остановка",
+          "памятник",
+          "мост"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoorientarseenlaciudad-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "центр",
+            "right": "centro"
+          },
+          {
+            "left": "остановка",
+            "right": "parada de autobús"
+          },
+          {
+            "left": "мост",
+            "right": "puente"
+          },
+          {
+            "left": "памятник",
+            "right": "monumento"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Sm38fjFv2XM ('Урок 4. Город / Russian vocabulary in use: City'), canal «Твои сибирские каникулы». Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: diálogo real de videollamada extraído directamente de la transcripción. Cubre el slot a1-8 (orientarse en la ciudad)."
+  },
+  "video-u-vracha-salud-cuerpo": {
+    "id": "video-u-vracha-salud-cuerpo",
+    "title": "Salud y el cuerpo humano: «У врача» — un resfriado contado paso a paso",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel A1): Iván se enferma, llama al trabajo para avisar, va al médico, describe sus síntomas («болит голова/горло/спина», fiebre) y recibe el diagnóstico y el remedio tradicional ruso contra el resfriado (té con miel y frambuesa, reposo). Video con subtítulos manuales en ruso Y español (caso raro y valioso).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "yTZPP5qwfN4",
+    "curriculumLessonId": "a2-8",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я заболел. У меня болит голова. И нос... я не могу нормально дышать!",
+        "translation": "Me he puesto enfermo. Me duele la cabeza. Y la nariz... ¡no puedo respirar bien!"
+      },
+      {
+        "russian": "У меня болит горло, болит нос и болит спина. У меня температура — тридцать восемь.",
+        "translation": "Me duele la garganta, me duele la nariz y me duele la espalda. Tengo 38 de fiebre."
+      },
+      {
+        "russian": "Откройте рот, пожалуйста. Покажите горло. Теперь высуньте язык.",
+        "translation": "Abra la boca, por favor. Muéstreme la garganta. Ahora saque la lengua."
+      },
+      {
+        "russian": "У вас простуда. Вам нужен чай, мёд, малина и сон. Не ходите на работу три дня.",
+        "translation": "Tiene un resfriado. Necesita té, miel, frambuesa y dormir. No vaya a trabajar durante tres días."
+      },
+      {
+        "russian": "Я лечусь дома. Я пью чай с мёдом, малиной и с лимоном. Я выздоравливаю.",
+        "translation": "Me curo en casa. Tomo té con miel, frambuesa y limón. Me estoy recuperando."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "болеть / заболеть",
+        "transcription": "bal'ét' / zabal'ét'",
+        "translation": "estar enfermo / ponerse enfermo"
+      },
+      {
+        "word": "болит голова/горло/спина",
+        "transcription": "balít galavá/górla/spiná",
+        "translation": "me duele la cabeza/garganta/espalda"
+      },
+      {
+        "word": "температура",
+        "transcription": "t'impiratúra",
+        "translation": "fiebre (lit. temperatura)"
+      },
+      {
+        "word": "простуда",
+        "transcription": "prastúda",
+        "translation": "resfriado"
+      },
+      {
+        "word": "выздоравливать",
+        "transcription": "vyzdaráv'livat'",
+        "translation": "recuperarse, sanar"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videouvrachasaludcuerpo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué le receta el médico a Iván para el resfriado?",
+        "options": [
+          "Antibióticos",
+          "Té, miel, frambuesa y reposo",
+          "Ir al hospital",
+          "Una operación"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videouvrachasaludcuerpo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "болит голова",
+            "right": "me duele la cabeza"
+          },
+          {
+            "left": "температура",
+            "right": "fiebre"
+          },
+          {
+            "left": "простуда",
+            "right": "resfriado"
+          },
+          {
+            "left": "выздоравливать",
+            "right": "recuperarse"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video yTZPP5qwfN4 ('Learn Russian Through Story – У врача (A1 Level)'), canal «Jurussia Учим русский». Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español (caso raro y valioso: el propio canal los proporciona en paralelo). Texto extraído directamente de ambas transcripciones oficiales. Cubre el slot a2-8 (salud y el cuerpo humano)."
+  },
+  "video-anya-v-moskve-casa": {
+    "id": "video-anya-v-moskve-casa",
+    "title": "La casa y sus habitaciones: «Аня в Москве» — el piso, los muebles y la vida cotidiana",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel A2): Anya, estudiante de periodismo, describe el piso que alquila en Moscú junto con su casera Galina Ivánovna — las habitaciones, los muebles (cama, escritorio, armario, cómoda, sillón), y la comida tradicional rusa que comparten cada noche (borsch, trigo sarraceno, blinis). Video con subtítulos manuales en ruso Y español.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "EVHVcnfJmHk",
+    "curriculumLessonId": "a2-6",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я живу не с родителями. Я снимаю квартиру.",
+        "translation": "No vivo con mis padres. Alquilo un piso."
+      },
+      {
+        "russian": "В квартире есть три комнаты: моя комната, комната хозяйки и гостиная. Ещё есть ванная, кухня и маленький балкон.",
+        "translation": "En el piso hay tres habitaciones: mi habitación, la habitación de la casera y el salón. También hay un baño, una cocina y un pequeño balcón. («хозяйка» = casera/dueña del piso, no «amante»)"
+      },
+      {
+        "russian": "У окна стоит кровать. Над кроватью висит портрет. Справа от кровати — мой рабочий стол и стул.",
+        "translation": "Junto a la ventana hay una cama. Encima de la cama cuelga un retrato. A la derecha de la cama está mi escritorio y mi silla."
+      },
+      {
+        "russian": "Недалеко от стола стоит книжный шкаф. В шкафу мои любимые книги и сувениры.",
+        "translation": "No lejos de la mesa hay una estantería de libros. En el armario están mis libros favoritos y recuerdos."
+      },
+      {
+        "russian": "На столе — борщ, гречка с подливой, салат из свёклы и компот.",
+        "translation": "En la mesa hay borsch, trigo sarraceno con salsa, ensalada de remolacha y compota."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "снимать квартиру",
+        "transcription": "sn'imát' kvart'íru",
+        "translation": "alquilar un piso"
+      },
+      {
+        "word": "комната",
+        "transcription": "kómnata",
+        "translation": "habitación"
+      },
+      {
+        "word": "кровать",
+        "transcription": "kravát'",
+        "translation": "cama"
+      },
+      {
+        "word": "книжный шкаф",
+        "transcription": "kn'ízhnyi shkaf",
+        "translation": "estantería de libros"
+      },
+      {
+        "word": "хозяйка",
+        "transcription": "khaz'áika",
+        "translation": "casera, dueña del piso"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoanyavmoskvecasa-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué significa «хозяйка» en el contexto de este video?",
+        "options": [
+          "La madre de Anya",
+          "La casera/dueña del piso",
+          "Una compañera de universidad",
+          "Una vecina"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoanyavmoskvecasa-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "снимать квартиру",
+            "right": "alquilar un piso"
+          },
+          {
+            "left": "книжный шкаф",
+            "right": "estantería de libros"
+          },
+          {
+            "left": "гостиная",
+            "right": "salón"
+          },
+          {
+            "left": "хозяйка",
+            "right": "casera"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video EVHVcnfJmHk ('Learn Russian Through Story – Аня в Москве (A2 Level)'), canal «Jurussia Учим русский», misma serie que a2-8 (video distinto). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Nota: la traducción española oficial del canal tradujo erróneamente 'хозяйка' como 'amante' — corregido a 'casera/dueña del piso' (significado correcto) en las traducciones de esta entrada. Cubre el slot a2-6 (la casa, el barrio y las direcciones)."
+  },
+  "video-problemy-molodezhi-sociedad": {
+    "id": "video-problemy-molodezhi-sociedad",
+    "title": "Temas de actualidad: «Проблемы молодёжи» — cinco retratos de la generación joven",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel B1-B2): Ania describe a cinco compañeros de su facultad, cada uno enfrentando un problema social/psicológico muy actual — el aislamiento social de un introvertido programador, el burnout de una influencer, la depresión de un joven poeta, el perfeccionismo de un deportista lesionado y la inseguridad de una actriz de teatro estudiantil — con el vocabulario específico para hablar de salud mental y presión social en ruso.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "l_79IVlaBqk",
+    "curriculumLessonId": "b2-6",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Игорь почти не общается с людьми. Он избегает общения даже с одногруппниками. Мне кажется, он одинок.",
+        "translation": "Ígor apenas se comunica con la gente. Evita la comunicación incluso con sus compañeros de clase. Creo que se siente solo. («социальная изоляция» = aislamiento social)"
+      },
+      {
+        "russian": "Лена страдает от выгорания. Каждый день она чувствует давление: подписчики, реклама, конкуренция.",
+        "translation": "Lena sufre de burnout. Cada día siente presión: seguidores, publicidad, competencia. («психоэмоциональное выгорание» = burnout psicoemocional)"
+      },
+      {
+        "russian": "Саша часто говорит, что не видит смысла жизни. Он посещает психолога, и это уже большой шаг.",
+        "translation": "Sasha a menudo dice que no le ve sentido a la vida. Va al psicólogo, y eso ya es un gran paso. («депрессия» = depresión)"
+      },
+      {
+        "russian": "Максим боится, что не оправдает ожиданий — ни своих, ни чужих.",
+        "translation": "Maxim teme no estar a la altura de las expectativas — ni las propias ni las ajenas. («перфекционизм» = perfeccionismo)"
+      },
+      {
+        "russian": "Мы такие разные, но мы — одно поколение. И, несмотря ни на что, мы продолжаем идти вперёд.",
+        "translation": "Somos todos tan diferentes, pero somos una sola generación. Y, a pesar de todo, seguimos adelante."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "социальная изоляция",
+        "transcription": "sats'iál'naya izal'átsiya",
+        "translation": "aislamiento social"
+      },
+      {
+        "word": "выгорание",
+        "transcription": "vygarániye",
+        "translation": "burnout, agotamiento emocional"
+      },
+      {
+        "word": "депрессия",
+        "transcription": "d'ipr'ésiya",
+        "translation": "depresión"
+      },
+      {
+        "word": "перфекционизм",
+        "transcription": "p'irf'ikts'yaníz'm",
+        "translation": "perfeccionismo"
+      },
+      {
+        "word": "неуверенность в себе",
+        "transcription": "n'euv'ér'inast' f s'ib'é",
+        "translation": "inseguridad, falta de confianza en uno mismo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoproblemymolodezhisociedad-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué problema tiene Lena, la bloguera del video?",
+        "options": [
+          "Perfeccionismo",
+          "Aislamiento social",
+          "Burnout (выгорание)",
+          "Depresión"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoproblemymolodezhisociedad-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "выгорание",
+            "right": "burnout"
+          },
+          {
+            "left": "депрессия",
+            "right": "depresión"
+          },
+          {
+            "left": "перфекционизм",
+            "right": "perfeccionismo"
+          },
+          {
+            "left": "неуверенность в себе",
+            "right": "inseguridad"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video l_79IVlaBqk ('Проблемы молодёжи – 5 Stories of Student Struggles (B1–B2)'), canal «Jurussia Учим русский», misma serie que a2-6/a2-8 (videos distintos). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Contenido sensible pero apropiado (salud mental, presión social) presentado de forma constructiva y de apoyo mutuo, sin ninguna referencia a violencia. Cubre el slot b2-6 (temas de actualidad y sociedad)."
+  },
+  "video-pervoye-vpechatlenie-narracion": {
+    "id": "video-pervoye-vpechatlenie-narracion",
+    "title": "Narrar experiencias pasadas con detalle: «Первое впечатление» — el reencuentro de dos amigos",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel B1): Alekséi y Dmitri, amigos de la universidad, se reencuentran por casualidad en la calle diez años después. La narración detalla la primera impresión (ropa, tono de voz), la conversación sobre trabajo y familia, y la revelación final de que las apariencias («producir la impresión de...») no siempre reflejan la verdad interior.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "lbDDxbm1W3w",
+    "curriculumLessonId": "b1-5",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Алексей и Дмитрий были друзьями в университете, но после окончания учёбы они долго не виделись. Через десять лет они случайно встретились на улице.",
+        "translation": "Alekséi y Dmitri eran amigos en la universidad, pero tras terminar los estudios llevaban mucho sin verse. Diez años después se encontraron por casualidad en la calle."
+      },
+      {
+        "russian": "Дмитрий рассказывал, что у него хорошая работа, что он часто ездит за границу и недавно купил квартиру.",
+        "translation": "Dmitri contaba que tenía un buen trabajo, que viajaba a menudo al extranjero y que había comprado un piso recientemente."
+      },
+      {
+        "russian": "Через несколько минут разговор стал более откровенным. Дмитрий признался, что из-за работы он почти не видел свою семью и недавно развёлся.",
+        "translation": "Pasados unos minutos, la conversación se volvió más sincera. Dmitri confesó que, por el trabajo, casi no veía a su familia y que se había divorciado hacía poco."
+      },
+      {
+        "russian": "Так оба поняли, что первое впечатление не всегда отражает правду.",
+        "translation": "Así los dos comprendieron que la primera impresión no siempre refleja la verdad."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "случайно встретиться",
+        "transcription": "sluch'áina fstr'ét'itsa",
+        "translation": "encontrarse por casualidad"
+      },
+      {
+        "word": "первое впечатление",
+        "transcription": "p'érvaye fp'ich'atl'éniye",
+        "translation": "primera impresión"
+      },
+      {
+        "word": "откровенный разговор",
+        "transcription": "atkrav'énnyi razgavór",
+        "translation": "conversación sincera"
+      },
+      {
+        "word": "признаться",
+        "transcription": "priznát'sa",
+        "translation": "confesar, admitir"
+      },
+      {
+        "word": "производить впечатление",
+        "transcription": "praizvad'ít' fp'ich'atl'éniye",
+        "translation": "causar/dar la impresión de..."
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopervoyevpechatlenienarracion-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué reveló Dmitri más adelante en la conversación, cuando esta se volvió más sincera?",
+        "options": [
+          "Que había ganado la lotería",
+          "Que casi no veía a su familia por el trabajo y se había divorciado",
+          "Que había cambiado de trabajo",
+          "Que iba a mudarse al extranjero"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videopervoyevpechatlenienarracion-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "случайно встретиться",
+            "right": "encontrarse por casualidad"
+          },
+          {
+            "left": "признаться",
+            "right": "confesar"
+          },
+          {
+            "left": "откровенный разговор",
+            "right": "conversación sincera"
+          },
+          {
+            "left": "производить впечатление",
+            "right": "causar la impresión de"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video lbDDxbm1W3w ('First Impression in Russian | Easy Story (B1) + Short Song'), canal «Jurussia Учим русский», misma serie que a2-6/a2-8/b2-6 (videos distintos). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso (contenido narrativo verificado directamente; traducción propia al español para mayor precisión). Cubre el slot b1-5 (narrar experiencias pasadas con detalle): la historia usa consistentemente el pasado para narrar un reencuentro con detalle emocional."
   }
 }
