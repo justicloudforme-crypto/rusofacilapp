@@ -22845,5 +22845,197 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video emPpnV3-Cpw, canal 'Светлана Куваева', interpretación de Gulnara Ismaeva. Público, playable_in_embed=true, no es livestream. Letra reconstruida a partir de subtítulos AUTOMÁTICOS reales en ruso (legibles, sin fragmentos garbled), nunca de memoria. Sin contenido de guerra/violencia — romance clásico sobre un amor perdido."
+  },
+  "song-oy-tsvetet-kalina": {
+    "id": "song-oy-tsvetet-kalina",
+    "title": "Ой, цветёт калина (canción folclórica clásica)",
+    "description": "Canción popular soviética muy conocida (de la película «Кубанские казаки», 1949, música de Isaak Dunaevsky) sobre una joven tímida enamorada de un muchacho que no se atreve a confesarle su amor. Interpretada aquí por Antonina Osipchuk.",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "UVyxKUSaVrA",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Ой, цветёт калина в поле у ручья. Парня молодого полюбила я.",
+        "translation": "Ay, florece el viburno en el campo junto al arroyo. Me enamoré de un chico joven."
+      },
+      {
+        "russian": "Парня полюбила на свою беду — Не могу открыться, слов я не найду.",
+        "translation": "Me enamoré del chico para mi propia desgracia — no puedo confesarme, no encuentro las palabras."
+      },
+      {
+        "russian": "Он живёт, не зная ничего о том, Что одна дивчина думает о нём.",
+        "translation": "Él vive sin saber nada de que una muchacha piensa en él."
+      },
+      {
+        "russian": "У ручья с калины облетает цвет, А любовь девичья не проходит, нет!",
+        "translation": "Junto al arroyo se caen las flores del viburno, pero el amor de una muchacha no se pasa, ¡no!"
+      },
+      {
+        "russian": "А любовь девичья с каждым днём сильней. Как же мне решиться, рассказать о ней?",
+        "translation": "Y el amor de la muchacha se hace más fuerte cada día. ¿Cómo decidirme a contárselo?"
+      },
+      {
+        "russian": "Я хожу, не смея волю дать словам. Милый мой, хороший, догадайся сам!",
+        "translation": "Camino sin atreverme a dar rienda suelta a las palabras. ¡Mi querido, adivínalo tú mismo!"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "калина",
+        "transcription": "kalína",
+        "translation": "viburno (arbusto de flores blancas y bayas rojas)"
+      },
+      {
+        "word": "ручей",
+        "transcription": "ruchéy",
+        "translation": "arroyo"
+      },
+      {
+        "word": "на свою беду",
+        "transcription": "na svayú bidú",
+        "translation": "para desgracia propia (modismo)"
+      },
+      {
+        "word": "дивчина",
+        "transcription": "divchína",
+        "translation": "muchacha (regionalismo/ucranianismo cariñoso)"
+      },
+      {
+        "word": "догадаться",
+        "transcription": "dagadátsa",
+        "translation": "adivinar, darse cuenta"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songoytsvetetkalina-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Por qué no le confiesa la muchacha su amor al chico?",
+        "options": [
+          "Porque él ya tiene novia",
+          "Porque no encuentra las palabras / no se atreve",
+          "Porque sus padres se lo prohíben",
+          "Porque él se muda de ciudad"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songoytsvetetkalina-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "калина",
+            "right": "viburno"
+          },
+          {
+            "left": "ручей",
+            "right": "arroyo"
+          },
+          {
+            "left": "дивчина",
+            "right": "muchacha"
+          },
+          {
+            "left": "догадаться",
+            "right": "adivinar"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video UVyxKUSaVrA, canal independiente 'Andrey Quoc' (ya usado anteriormente para song-eti-glaza-naprotiv y song-nash-sosed). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción del video, sin usar la letra de memoria. Sin contenido de guerra/violencia — canción folclórica de amor juvenil tímido."
+  },
+  "song-ochi-chernye": {
+    "id": "song-ochi-chernye",
+    "title": "Очи чёрные (romance clásico ruso, siglo XIX)",
+    "description": "El romance ruso más famoso internacionalmente, escrito por Yevhen Hrebinka en 1843. Habla de unos ojos negros apasionados que 'destruyeron' al narrador con su amor imposible. Aquí interpretado por Lev Leshchenko y Nadezhda Babkina.",
+    "level": "B2",
+    "category": "song",
+    "youtubeVideoId": "SXv69yGyM4g",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Очи чёрные, очи страстные! Очи жгучие и прекрасные!",
+        "translation": "¡Ojos negros, ojos apasionados! ¡Ojos ardientes y hermosos!"
+      },
+      {
+        "russian": "Как люблю я вас! Как боюсь я вас! Знать увидел вас я в недобрый час!",
+        "translation": "¡Cómo os amo! ¡Cómo os temo! Sin duda os vi en una hora aciaga."
+      },
+      {
+        "russian": "Не встречал бы вас, не страдал бы так, Век свой прожил бы припеваючи.",
+        "translation": "Si no os hubiera conocido, no sufriría así, habría vivido mi vida sin preocupaciones."
+      },
+      {
+        "russian": "Вы сгубили меня, очи чёрные, Унесли навек моё счастие.",
+        "translation": "Me destruisteis, ojos negros, os llevasteis mi felicidad para siempre."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "очи",
+        "transcription": "óchi",
+        "translation": "ojos (forma poética arcaica de «глаза»)"
+      },
+      {
+        "word": "страстный",
+        "transcription": "strásnyy",
+        "translation": "apasionado"
+      },
+      {
+        "word": "недобрый час",
+        "transcription": "nidóbryy chas",
+        "translation": "hora aciaga, mal momento (modismo)"
+      },
+      {
+        "word": "сгубить",
+        "transcription": "sgubít'",
+        "translation": "destruir, arruinar (a alguien)"
+      },
+      {
+        "word": "припеваючи",
+        "transcription": "pripiváyuchi",
+        "translation": "sin preocupaciones, alegremente (adverbio poético)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songochichernye-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué palabra poética arcaica se usa en la canción en lugar de «глаза» (ojos)?",
+        "options": [
+          "очи",
+          "зеницы",
+          "взор",
+          "лик"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "id": "songochichernye-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "очи",
+            "right": "ojos (poético)"
+          },
+          {
+            "left": "недобрый час",
+            "right": "hora aciaga"
+          },
+          {
+            "left": "сгубить",
+            "right": "destruir"
+          },
+          {
+            "left": "припеваючи",
+            "right": "sin preocupaciones"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video SXv69yGyM4g, canal independiente 'Andrey Quoc' (ya usado en song-oy-tsvetet-kalina y otras entradas). Público, playable_in_embed=true, no es livestream. Letra verificada directamente desde la descripción del video, usando ÚNICAMENTE las 4 estrofas canónicas de apertura (las universalmente conocidas); se omitieron deliberadamente las estrofas finales de la versión extendida en la descripción (banquete con champán, húsares, coqueteo), que no encajan con el estándar de contenido de la plataforma."
   }
 }
