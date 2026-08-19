@@ -27216,5 +27216,262 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video sVlPiV0ax3U ('Русский язык как иностранный. 21. Видите ли, Понимаете, Тут вот какое дело, Тут вот какая история'), canal «Nadine Asta Learning Russian», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b2-25 (registro formal vs. coloquial: estas muletillas son marcadores puramente orales/coloquiales, ausentes del registro escrito formal)."
+  },
+  "video-okazyvaetsya-nueva-informacion": {
+    "id": "video-okazyvaetsya-nueva-informacion",
+    "title": "Comunicar información nueva: «оказывается», «оказалось, что», «как оказалось»",
+    "description": "Lección del canal «Русский язык как иностранный» (Nadezhda) sobre cómo señalar en ruso que se acaba de descubrir algo que antes no se sabía — un recurso típico de las noticias y de las narraciones cotidianas: «оказывается» (resulta que), «оказалось, что» (resultó que) y «как оказалось» (según resultó), todos intercambiables entre sí.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "Y5CuLsIaSco",
+    "curriculumLessonId": "b1-6",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Интересно, почему на этом доме мемориальная доска? — Оказывается, здесь жил Михаил Юрьевич Лермонтов.",
+        "translation": "Qué interesante, ¿por qué hay una placa conmemorativa en esta casa? — Resulta que aquí vivió Mijaíl Yúrievich Lérmontov. («оказывается» = revela información recién descubierta)"
+      },
+      {
+        "russian": "Я думал, что легко найду эту книгу в магазинах. И что не нашёл? Да, оказалось, что найти её совсем не так просто.",
+        "translation": "Pensé que encontraría fácilmente este libro en las tiendas. ¿Y no lo encontraste? Sí, resultó que no era nada fácil encontrarlo. («оказалось, что» = versión con verbo conjugado en pasado)"
+      },
+      {
+        "russian": "У тебя получится сделать видео по этому учебнику за месяц? — О нет, как оказалось, это долгая работа.",
+        "translation": "¿Podrás hacer el video sobre este manual en un mes? — Ay no, según resultó, es un trabajo largo. («как оказалось» = versión con orden de palabras distinto, mismo significado)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "оказывается",
+        "transcription": "akázyvayitsa",
+        "translation": "resulta que (presente, revela info nueva)"
+      },
+      {
+        "word": "оказалось, что",
+        "transcription": "akazálas' shto",
+        "translation": "resultó que (pasado + «что»)"
+      },
+      {
+        "word": "как оказалось",
+        "transcription": "kak akazálas'",
+        "translation": "según resultó (forma alternativa, se inserta en la frase)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videookazyvaetsyanuevainformacion-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué expresión usarías para introducir un descubrimiento inesperado, equivalente a «resulta que»?",
+        "options": [
+          "по-моему",
+          "оказывается",
+          "вряд ли",
+          "несмотря на то что"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videookazyvaetsyanuevainformacion-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "оказывается",
+            "right": "resulta que"
+          },
+          {
+            "left": "оказалось, что",
+            "right": "resultó que"
+          },
+          {
+            "left": "как оказалось",
+            "right": "según resultó"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Y5CuLsIaSco ('Русский язык как иностранный. 49. Вы узнали что-то новое (Оказывается,... Как оказалось,...)'), canal «Nadine Asta Learning Russian», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-6 (medios de comunicación y noticias sencillas): «оказывается» es un recurso típico para introducir información nueva, propio de noticias y narraciones."
+  },
+  "video-sobesedovanie-mundo-laboral": {
+    "id": "video-sobesedovanie-mundo-laboral",
+    "title": "El mundo laboral: vocabulario y diálogo de una entrevista de trabajo («собеседование»)",
+    "description": "Lección del canal «Russian for foreigners» (РКИ) que presenta el vocabulario esencial del mundo laboral en ruso (резюме, вакансия, работодатель, испытательный срок, отдел кадров...) y lo pone en práctica con un diálogo realista de entrevista de trabajo: preguntas típicas sobre experiencia, disponibilidad para viajar e idiomas.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "Vc3l-Q-3F7M",
+    "curriculumLessonId": "b1-4",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Добрый день, мы ознакомились с вашим резюме, и оно нам показалось очень интересным. Расскажите, пожалуйста, подробнее о вашем опыте работы.",
+        "translation": "Buenos días, hemos revisado su currículum y nos ha parecido muy interesante. Cuéntenos, por favor, más sobre su experiencia laboral."
+      },
+      {
+        "russian": "Я работала переводчиком в течение пяти лет в крупной международной компании.",
+        "translation": "Trabajé como traductora durante cinco años en una gran empresa internacional."
+      },
+      {
+        "russian": "Вы готовы к командировкам? — Да, я согласна, у меня уже есть опыт работы с иностранными компаниями.",
+        "translation": "¿Está dispuesta a viajar por trabajo? — Sí, estoy de acuerdo, ya tengo experiencia trabajando con empresas extranjeras."
+      },
+      {
+        "russian": "Какими языками вы владеете? — Я свободно говорю по-английски и по-немецки. — Отлично, вы нам подходите.",
+        "translation": "¿Qué idiomas domina? — Hablo inglés y alemán con fluidez. — Excelente, usted nos conviene."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "резюме",
+        "transcription": "rizyumé",
+        "translation": "currículum"
+      },
+      {
+        "word": "вакансия",
+        "transcription": "vakáns'iya",
+        "translation": "vacante de empleo"
+      },
+      {
+        "word": "работодатель",
+        "transcription": "rabotadát'el'",
+        "translation": "empleador"
+      },
+      {
+        "word": "опыт работы",
+        "transcription": "ópyt rabóty",
+        "translation": "experiencia laboral"
+      },
+      {
+        "word": "испытательный срок",
+        "transcription": "ispytát'el'nyi srok",
+        "translation": "período de prueba"
+      },
+      {
+        "word": "отдел кадров",
+        "transcription": "atd'él kádraf",
+        "translation": "departamento de recursos humanos"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videosobesedovaniemundolaboral-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice «currículum» en ruso?",
+        "options": [
+          "вакансия",
+          "резюме",
+          "стажировка",
+          "контракт"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videosobesedovaniemundolaboral-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "работодатель",
+            "right": "empleador"
+          },
+          {
+            "left": "опыт работы",
+            "right": "experiencia laboral"
+          },
+          {
+            "left": "отдел кадров",
+            "right": "recursos humanos"
+          },
+          {
+            "left": "испытательный срок",
+            "right": "período de prueba"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Vc3l-Q-3F7M ('РКИ Собеседование Russian Job interview'), canal «Russian for foreigners» (РКИ, diseñado específicamente para el ruso como lengua extranjera). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos (lista de vocabulario + diálogo real). Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-4 (el mundo laboral y los estudios)."
+  },
+  "video-gostepriimstvo-tradicii": {
+    "id": "video-gostepriimstvo-tradicii",
+    "title": "Cultura y costumbres rusas: la tradición de la hospitalidad («гостеприимство»)",
+    "description": "Video del proyecto cultural «Всероссийский проект \"Культурное наследие\"» sobre la antigua tradición rusa de recibir invitados: el ceremonial de bienvenida en la puerta, el «красный угол» (rincón de honor de la casa, reservado para los invitados más importantes) y el gesto simbólico de recibir con «хлеб-соль» (pan y sal) como señal de hospitalidad y respeto.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "1rriHlyiT_A",
+    "curriculumLessonId": "b1-7",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Славится русский народ своим гостеприимством.",
+        "translation": "El pueblo ruso es famoso por su hospitalidad."
+      },
+      {
+        "russian": "Гостей встречали у крыльца, важных гостей — в самой почётной комнате.",
+        "translation": "A los invitados se les recibía en el porche; a los invitados importantes, en la habitación más honorable de la casa."
+      },
+      {
+        "russian": "Самое почётное место для гостя было в «красном углу» — по правую руку хозяина.",
+        "translation": "El lugar más honorable para el invitado era el «rincón rojo/de honor» — a la derecha del anfitrión. («красный» aquí significa «hermoso», no el color)"
+      },
+      {
+        "russian": "Хлеб-соль — традиционное приветствие для дорогого гостя.",
+        "translation": "Pan y sal — saludo tradicional para un invitado querido (símbolo de hospitalidad y buena voluntad)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "гостеприимство",
+        "transcription": "gast'ipriímstva",
+        "translation": "hospitalidad"
+      },
+      {
+        "word": "гость",
+        "transcription": "gost'",
+        "translation": "invitado/huésped"
+      },
+      {
+        "word": "красный угол",
+        "transcription": "krásnyi úgal",
+        "translation": "rincón de honor de la casa (lit. \"rincón rojo/hermoso\")"
+      },
+      {
+        "word": "хлеб-соль",
+        "transcription": "khl'ep-sol'",
+        "translation": "pan y sal (saludo tradicional de bienvenida)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videogostepriimstvotradicii-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué significa «красный угол» en la tradición rusa de hospitalidad?",
+        "options": [
+          "Una esquina de la casa pintada de color rojo",
+          "El rincón de honor de la casa, reservado para los invitados importantes",
+          "La entrada principal de la casa",
+          "La cocina, donde se preparaba la comida para los invitados"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videogostepriimstvotradicii-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "гостеприимство",
+            "right": "hospitalidad"
+          },
+          {
+            "left": "хлеб-соль",
+            "right": "pan y sal (saludo)"
+          },
+          {
+            "left": "красный угол",
+            "right": "rincón de honor"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 1rriHlyiT_A ('Традиции русского гостеприимства'), canal «Всероссийский проект \"Культурное наследие\"» (proyecto cultural oficial). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; los auto-subtítulos rusos disponibles resultaron significativamente garbled (narración folclórica dramatizada, difícil de transcribir con precisión automática) — se conservaron solo los conceptos y fragmentos claramente legibles ('гостеприимство', 'красный угол', referencia a recibir con pan) y el resto del contenido se reconstruyó a partir de conocimiento cultural verificado y ampliamente documentado sobre estas costumbres tradicionales, siguiendo el mismo precedente que otras entradas con captions garbled. Cubre el slot b1-7 (cultura y costumbres rusas)."
   }
 }
