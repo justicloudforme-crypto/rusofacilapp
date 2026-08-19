@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
-import path from "node:path";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
+import { deleteVoiceSubmission, saveVoiceSubmission } from "@/lib/voice-storage";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const SUBMISSIONS_PER_ITEM_LIMIT = 5;
@@ -41,8 +40,8 @@ async function trimOldSubmissions(userId: string, level: string, lessonSlug: str
     await db.voiceSubmission.deleteMany({ where: { id: { in: older.map((row) => row.id) } } });
     await Promise.all(
       older.map((row) =>
-        unlink(path.join(process.cwd(), "public", row.audioUrl)).catch(() => {
-          // File already gone (e.g. a previous cleanup raced this one) — fine.
+        deleteVoiceSubmission(row.audioUrl).catch(() => {
+          // File/blob already gone (e.g. a previous cleanup raced this one) — fine.
         })
       )
     );
@@ -81,17 +80,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "file_too_large" }, { status: 400 });
   }
 
-  const dir = path.join(process.cwd(), "public", "audio", "submissions", user.id, `${level}-${lessonSlug}`);
-  await mkdir(dir, { recursive: true });
-
   // randomUUID (not just Date.now()) so two uploads for the same item in
   // the same millisecond — two browser tabs, a double-click — never
-  // collide on the filename and silently overwrite each other on disk.
+  // collide on the filename and silently overwrite each other.
   const filename = `${keyHash(itemKey)}-${Date.now()}-${randomUUID()}.webm`;
   const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(dir, filename), bytes);
-
-  const audioUrl = `/audio/submissions/${user.id}/${level}-${lessonSlug}/${filename}`;
+  const audioUrl = await saveVoiceSubmission(user.id, `${level}-${lessonSlug}`, filename, bytes);
 
   const submission = await db.voiceSubmission.create({
     data: { userId: user.id, level, lessonSlug, itemKey, audioUrl },

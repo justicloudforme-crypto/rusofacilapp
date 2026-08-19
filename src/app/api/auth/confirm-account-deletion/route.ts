@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { rm } from "node:fs/promises";
-import path from "node:path";
 import { db } from "@/lib/db";
 import { destroySession } from "@/lib/auth";
 import { getLatestSubscription } from "@/lib/subscription";
 import { getStripe } from "@/lib/stripe";
 import { decodeVerificationToken, matchesCurrentPassword } from "@/lib/verification-token";
+import { deleteAllVoiceSubmissionsForUser } from "@/lib/voice-storage";
 import { defaultLocale, isLocale } from "@/i18n/config";
 
 export async function POST(request: NextRequest) {
@@ -43,14 +42,11 @@ export async function POST(request: NextRequest) {
   // All of the user's rows (subscriptions, progress, flashcard/story
   // progress, voice submissions) cascade-delete with this one query — see
   // `onDelete: Cascade` on each relation in schema.prisma. The one thing
-  // Prisma's cascade can't touch is the audio files VoiceSubmission rows
-  // point to on disk; remove that whole per-user directory in one shot
-  // rather than per-file, and before the DB rows are gone so this can
-  // still be attempted even if it fails silently on that clean-up branch.
-  await rm(path.join(process.cwd(), "public", "audio", "submissions", user.id), {
-    recursive: true,
-    force: true,
-  }).catch(() => {});
+  // Prisma's cascade can't touch is the audio files/blobs VoiceSubmission
+  // rows point to; remove the whole per-user prefix in one shot rather
+  // than per-file, and before the DB rows are gone so this can still be
+  // attempted even if it fails silently on that clean-up branch.
+  await deleteAllVoiceSubmissionsForUser(user.id).catch(() => {});
 
   await db.user.delete({ where: { id: user.id } });
   await destroySession();
