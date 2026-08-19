@@ -23513,5 +23513,192 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video Jm6RAuBngMo, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм), ya usado en song-pesnya-druzei. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos de autor incluidos: Gladkov/Uspenski), sin usar la letra de memoria. Sin contenido de guerra/violencia — clásico infantil absurdista soviético."
+  },
+  "song-igra": {
+    "id": "song-igra",
+    "title": "Игра — de la película «Пластилиновая ворона» (1981)",
+    "description": "Una tierna canción de juego infantil (abrir y cerrar los ojos para 've' cosas distintas cada vez), con letra del poeta Ovsei Driz, de la misma película de plastilina «Пластилиновая ворона» (1981).",
+    "level": "A1",
+    "category": "song",
+    "youtubeVideoId": "_4SNRQ_8vE8",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Вот я вижу — куст растёт в саду, Воробьи играют в чехарду.",
+        "translation": "Ahora veo — crece un arbusto en el jardín, los gorriones juegan a saltar."
+      },
+      {
+        "russian": "Вижу пса смешного своего, А теперь не видим ничего!",
+        "translation": "Veo a mi perro gracioso, ¡y ahora no vemos nada!"
+      },
+      {
+        "russian": "Вот мы видим — жёлтый мотылёк Раскачал зелёный стебелёк.",
+        "translation": "Ahora vemos — una mariposa amarilla balancea un tallo verde."
+      },
+      {
+        "russian": "Видим мы, как шмель влетел в окно. И опять, опять вокруг меня темно!",
+        "translation": "Vemos cómo un abejorro entró volando por la ventana. ¡Y otra vez, otra vez a mi alrededor está oscuro!"
+      },
+      {
+        "russian": "До чего же это интересно — Закрывать и открывать глаза.",
+        "translation": "Qué interesante es esto — cerrar y abrir los ojos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "воробей",
+        "transcription": "varabéy",
+        "translation": "gorrión"
+      },
+      {
+        "word": "мотылёк",
+        "transcription": "matylyók",
+        "translation": "mariposa (pequeña, nocturna)"
+      },
+      {
+        "word": "шмель",
+        "transcription": "shmel'",
+        "translation": "abejorro"
+      },
+      {
+        "word": "закрывать/открывать глаза",
+        "transcription": "zakryvát'/atkryvát' glazá",
+        "translation": "cerrar/abrir los ojos"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songigra-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿A qué juego juega el narrador de la canción?",
+        "options": [
+          "A las escondidas",
+          "A cerrar y abrir los ojos para ver cosas distintas",
+          "A la pelota",
+          "A cantar canciones"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songigra-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "воробей",
+            "right": "gorrión"
+          },
+          {
+            "left": "мотылёк",
+            "right": "mariposa"
+          },
+          {
+            "left": "шмель",
+            "right": "abejorro"
+          },
+          {
+            "left": "закрывать глаза",
+            "right": "cerrar los ojos"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video _4SNRQ_8vE8, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм), ya usado en song-pesnya-druzei y song-a-mozhet-byt-vorona. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: Гладков/Дриз), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción infantil juguetona."
+  },
+  "song-dyudyuka-barbidokskaya": {
+    "id": "song-dyudyuka-barbidokskaya",
+    "title": "Песня Дюдюки Барбидокской — de la película «Подарок для слона» (1984)",
+    "description": "La canción de la traviesa 'Diudiuka', una duendecilla cómicamente malvada que se jacta de asustar a los niños en sueños, mentir y sembrar discordia — todo con humor infantil inofensivo, de la película animada soviética «Подарок для слона» (1984).",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "lHlv3yYOvA8",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я могу летать, как птица, Плыть медузой по волне.",
+        "translation": "Puedo volar como un pájaro, nadar como una medusa entre las olas."
+      },
+      {
+        "russian": "В одуванчик превратиться — Ничего не стоит мне!",
+        "translation": "¡Convertirme en un diente de león no me cuesta nada!"
+      },
+      {
+        "russian": "Я всегда во сне являюсь К непослушным малышам.",
+        "translation": "Siempre aparezco en sueños a los niños desobedientes."
+      },
+      {
+        "russian": "Ах, Дюдюка! Ух, Дюдюка! Бяка, привередина, Исключительная злюка, Ябеда и вредина!",
+        "translation": "¡Ah, Diudiuka! ¡Uh, Diudiuka! Sucia, caprichosa, malvada de excepción, chismosa y traviesa."
+      },
+      {
+        "russian": "Обожаю врать и спорить И дразнить из-за угла.",
+        "translation": "Adoro mentir y discutir, y molestar a escondidas."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "медуза",
+        "transcription": "midúza",
+        "translation": "medusa"
+      },
+      {
+        "word": "одуванчик",
+        "transcription": "aduvánchik",
+        "translation": "diente de león"
+      },
+      {
+        "word": "непослушный",
+        "transcription": "nyeposlúshnyy",
+        "translation": "desobediente"
+      },
+      {
+        "word": "злюка",
+        "transcription": "zlyúka",
+        "translation": "persona malvada/gruñona (cariñoso-cómico)"
+      },
+      {
+        "word": "ябеда",
+        "transcription": "yábida",
+        "translation": "chismoso, soplón"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songdyudyukabarbidokskaya-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué hace Diudiuka en los sueños de los niños desobedientes?",
+        "options": [
+          "Les canta canciones",
+          "Los asusta",
+          "Les regala dulces",
+          "Los ayuda con la tarea"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songdyudyukabarbidokskaya-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "одуванчик",
+            "right": "diente de león"
+          },
+          {
+            "left": "непослушный",
+            "right": "desobediente"
+          },
+          {
+            "left": "злюка",
+            "right": "malvada (cómico)"
+          },
+          {
+            "left": "ябеда",
+            "right": "chismoso"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video lHlv3yYOvA8, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм), ya usado en entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: Игорь Егиков/Владимир Антонов), sin usar la letra de memoria. Sin contenido de guerra/violencia — personaje cómicamente travieso, no violento."
   }
 }
