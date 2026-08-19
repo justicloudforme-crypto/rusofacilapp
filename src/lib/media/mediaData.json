@@ -25836,5 +25836,97 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video MroYpxWEalg, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de V. Kladnitski, letra de I. Réznik, cantada por VIA «Lira»), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción sobre partir de casa hacia nuevos horizontes."
+  },
+  "song-pesnya-princa-penapyu": {
+    "id": "song-pesnya-princa-penapyu",
+    "title": "Песня принца Пенапью — de la película «Не покидай» (1989)",
+    "description": "Canción cómica y autoirónica del príncipe Penapiú, quien admite que su único talento verdadero es ser un buen espectador, mientras acusa juguetonamente a la enciclopedia de mentir 'como un caballo tordo' (modismo ruso). De la película fantástica soviética «Не покидай» (No me abandones, 1989).",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "iJj0gvMVKRU",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Прошу, не говорите Вы о талантах мне, Возможно, что, как зритель, Талантлив я вполне.",
+        "translation": "Por favor, no me hablen de talentos, es posible que, como espectador, yo tenga bastante talento."
+      },
+      {
+        "russian": "Врёт энциклопедия, как сивый мерин, А я её восторженно читал.",
+        "translation": "La enciclopedia miente como un caballo tordo (modismo: mentir descaradamente), y yo la leía con entusiasmo."
+      },
+      {
+        "russian": "Когда притихнув в ложе От счастья трепещу, Талантливо, быть может, Смеюсь я и грущу.",
+        "translation": "Cuando, callado en el palco, tiemblo de felicidad, tal vez con talento río y me entristezco."
+      },
+      {
+        "russian": "Талантлив я как зритель, Талантлив с детских лет, А прочих, извините, Талантов нет как нет.",
+        "translation": "Tengo talento como espectador, talento desde niño, y disculpen, pero de otros talentos no hay ni rastro."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "талант",
+        "transcription": "talánt",
+        "translation": "talento"
+      },
+      {
+        "word": "зритель",
+        "transcription": "zrítil'",
+        "translation": "espectador"
+      },
+      {
+        "word": "врать как сивый мерин",
+        "transcription": "vrat' kak sívyy myérin",
+        "translation": "mentir descaradamente (modismo, lit. 'como un caballo tordo')"
+      },
+      {
+        "word": "трепетать",
+        "transcription": "tripitát'",
+        "translation": "temblar (de emoción)"
+      },
+      {
+        "word": "ложа",
+        "transcription": "lózha",
+        "translation": "palco (de teatro)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songpesnyaprincapenapyu-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es el único talento que el príncipe admite tener?",
+        "options": [
+          "Cantar",
+          "Ser un buen espectador",
+          "Actuar",
+          "Escribir enciclopedias"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songpesnyaprincapenapyu-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "талант",
+            "right": "talento"
+          },
+          {
+            "left": "зритель",
+            "right": "espectador"
+          },
+          {
+            "left": "ложа",
+            "right": "palco"
+          },
+          {
+            "left": "трепетать",
+            "right": "temblar de emoción"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video iJj0gvMVKRU, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Yevgueni Krylatov, letra de Leonid Derbenev, cantada por Artiom Tynkasov), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción cómica y autoirónica."
   }
 }
