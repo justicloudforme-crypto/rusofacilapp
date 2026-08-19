@@ -27473,5 +27473,187 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video 1rriHlyiT_A ('Традиции русского гостеприимства'), canal «Всероссийский проект \"Культурное наследие\"» (proyecto cultural oficial). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; los auto-subtítulos rusos disponibles resultaron significativamente garbled (narración folclórica dramatizada, difícil de transcribir con precisión automática) — se conservaron solo los conceptos y fragmentos claramente legibles ('гостеприимство', 'красный угол', referencia a recibir con pan) y el resto del contenido se reconstruyó a partir de conocimiento cultural verificado y ampliamente documentado sobre estas costumbres tradicionales, siguiendo el mismo precedente que otras entradas con captions garbled. Cubre el slot b1-7 (cultura y costumbres rusas)."
+  },
+  "video-ekologiya-vocabulario-debate": {
+    "id": "video-ekologiya-vocabulario-debate",
+    "title": "Ecología y tecnología: vocabulario y debate sobre el medioambiente",
+    "description": "Lección del canal «О русском по-русски» sobre el vocabulario de ecología («экосистема», «окружающий мир», «беречь/сохранять») y cómo hablar de los problemas medioambientales causados por el ser humano: la deforestación («вырубка лесов»), la contaminación («мусор», «отходы», «загрязнять»), el desequilibrio del clima y el riesgo de extinción de especies («вымереть»).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "du3X6MAe2_Q",
+    "curriculumLessonId": "b2-27",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Экология имеет два значения: наука, которая изучает отношения в экосистеме, и окружающий нас мир.",
+        "translation": "La ecología tiene dos significados: la ciencia que estudia las relaciones dentro de un ecosistema, y el mundo que nos rodea."
+      },
+      {
+        "russian": "Мы должны заботиться о нашей планете, беречь её, потому что это наш дом.",
+        "translation": "Debemos cuidar nuestro planeta, protegerlo, porque es nuestro hogar."
+      },
+      {
+        "russian": "Мусор и отходы загрязняют землю, воздух, воду — так мы нарушаем баланс в природе, и изменяется климат.",
+        "translation": "La basura y los residuos contaminan la tierra, el aire, el agua — así rompemos el equilibrio de la naturaleza, y el clima cambia."
+      },
+      {
+        "russian": "Мы вырубаем леса, а деревья производят кислород, которым мы дышим.",
+        "translation": "Talamos los bosques, y los árboles producen el oxígeno que respiramos."
+      },
+      {
+        "russian": "Из-за того что мы нарушаем баланс, животные могут вымереть.",
+        "translation": "Debido a que rompemos el equilibrio, los animales pueden extinguirse."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "экосистема",
+        "transcription": "ekasist'éma",
+        "translation": "ecosistema"
+      },
+      {
+        "word": "окружающий мир",
+        "transcription": "akruzháyushchii mir",
+        "translation": "el mundo que nos rodea, el medioambiente"
+      },
+      {
+        "word": "беречь / сберечь",
+        "transcription": "b'ir'éch' / sb'ir'éch'",
+        "translation": "proteger, cuidar / conservar"
+      },
+      {
+        "word": "загрязнять",
+        "transcription": "zagr'azn'át'",
+        "translation": "contaminar"
+      },
+      {
+        "word": "вырубка лесов",
+        "transcription": "výrupka lisóf",
+        "translation": "deforestación"
+      },
+      {
+        "word": "вымереть",
+        "transcription": "výmir'et'",
+        "translation": "extinguirse"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoekologiyavocabulariodebate-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es el verbo que significa «cuidar/proteger» (algo que se quiere conservar)?",
+        "options": [
+          "загрязнять",
+          "вырубать",
+          "беречь",
+          "вымереть"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoekologiyavocabulariodebate-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "экосистема",
+            "right": "ecosistema"
+          },
+          {
+            "left": "вырубка лесов",
+            "right": "deforestación"
+          },
+          {
+            "left": "загрязнять",
+            "right": "contaminar"
+          },
+          {
+            "left": "вымереть",
+            "right": "extinguirse"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video du3X6MAe2_Q ('Как говорить об ЭКОЛОГИИ и вести себя ЭКОЛОГИЧНО?'), canal independiente «О русском по-русски» (misma profesora 'Ира' de varias entradas previas). Público, playable_in_embed=true, was_live=false (no es livestream, verificado explícitamente). Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Se detectó y revisó cuidadosamente una mención de 'убийство животных' (matanza de animales) — verificado en contexto: es una discusión estándar de educación ambiental sobre caza/peletería/deforestación como causas de extinción de especies, sin ninguna connotación bélica o violenta. Cubre el slot b2-27 (ecología y tecnología)."
+  },
+  "video-trki-preparacion-examen": {
+    "id": "video-trki-preparacion-examen",
+    "title": "Preparación para exámenes de certificación: cómo funciona el TRKI (ТРКИ), el examen oficial de ruso",
+    "description": "Laura, española y creadora del canal «Laura en Rusia», narra en ruso (con subtítulos oficiales en español) su experiencia aprobando el TRKI-4 (equivalente al C2), explicando el sistema de certificación TRKI/TORFL (6 niveles, del elemental al TRKI-4), en qué se diferencia de otros exámenes internacionales de idiomas, y consejos prácticos sobre qué nivel merece la pena preparar según el objetivo de cada estudiante.",
+    "level": "C1",
+    "category": "grammar",
+    "youtubeVideoId": "MQJrnjAxtE0",
+    "curriculumLessonId": "b2-30",
+    "lyricsOrTranscript": [
+      {
+        "russian": "ТРКИ означает «Тест по русскому языку как иностранному».",
+        "translation": "TRKI significa «Test de Ruso como Lengua Extranjera», el examen oficial de ruso para extranjeros (equivalente al DELE de español, Cambridge de inglés)."
+      },
+      {
+        "russian": "В системе ТРКИ есть 6 уровней: элементарный, базовый, ТРКИ-1, 2, 3 и 4.",
+        "translation": "El sistema TRKI tiene 6 niveles: elemental, básico, TRKI-1, 2, 3 y 4 — corresponden aproximadamente a los niveles europeos A1-C2."
+      },
+      {
+        "russian": "Если вам просто нужно доказать, что у вас очень хороший уровень русского, ТРКИ-3 достаточно.",
+        "translation": "Si solo necesitas demostrar que tienes un muy buen nivel de ruso, el TRKI-3 es suficiente — consejo práctico de la autora, ya que el TRKI-4 es extremadamente difícil incluso para hablantes muy avanzados."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "ТРКИ",
+        "transcription": "TeRKaI",
+        "translation": "TRKI, examen oficial de certificación de ruso como lengua extranjera"
+      },
+      {
+        "word": "уровень",
+        "transcription": "úrav'in'",
+        "translation": "nivel"
+      },
+      {
+        "word": "сертификат",
+        "transcription": "s'irt'ifikát",
+        "translation": "certificado"
+      },
+      {
+        "word": "сдать экзамен",
+        "transcription": "sdat' ekzám'in",
+        "translation": "aprobar un examen"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videotrkipreparacionexamen-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuántos niveles tiene el sistema de certificación TRKI?",
+        "options": [
+          "4",
+          "5",
+          "6",
+          "8"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videotrkipreparacionexamen-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "ТРКИ",
+            "right": "examen oficial de ruso para extranjeros"
+          },
+          {
+            "left": "сдать экзамен",
+            "right": "aprobar un examen"
+          },
+          {
+            "left": "уровень",
+            "right": "nivel"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video MQJrnjAxtE0 ('Как сдать ТРКИ-4 (С2 по русскому языку), мой опыт'), canal «Laura en Rusia | Ruso en español». playable_in_embed=true, live_status=not_live, age_limit=0 (el campo 'availability' no se pudo determinar vía yt-dlp pero el resto de metadatos confirma que es un video público normal). Verificado con subtítulos OFICIALES en español (raro y valioso: el propio creador los proporciona). Contenido narrativo en primera persona sobre el examen TRKI, sin ninguna referencia a temas sensibles. Cubre el slot b2-30 (preparación para exámenes de certificación)."
   }
 }
