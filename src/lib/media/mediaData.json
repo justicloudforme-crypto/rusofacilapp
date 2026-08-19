@@ -29166,5 +29166,89 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video qCQwsgrlSIw ('№ 187 Грамматика русского языка: степени сравнения прилагательных'), canal «русский с носителем» (mismo canal usado en a1-4/a1-12/b2-21). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot a2-7 (comparaciones y opiniones simples)."
+  },
+  "video-futuro-nsv": {
+    "id": "video-futuro-nsv",
+    "title": "El pasado y el futuro: cómo formar el futuro de los verbos imperfectivos («быть» + infinitivo)",
+    "description": "Lección del canal «О русском по-русски» sobre el futuro compuesto de los verbos НСВ (imperfectivos): el verbo «быть» conjugado (я буду, ты будешь, он будет...) + infinitivo НСВ, y sus tres matices de significado — hecho puntual futuro, proceso con duración, o acción repetida — cada uno con sus propios marcadores temporales típicos.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "fUBAatZmZvg",
+    "curriculumLessonId": "a2-2",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я буду читать завтра, он будет гулять послезавтра, они будут заниматься во вторник.",
+        "translation": "Yo leeré mañana, él paseará pasado mañana, ellos estudiarán el martes. («быть» conjugado + infinitivo НСВ = futuro)"
+      },
+      {
+        "russian": "Я буду читать завтра. — Hecho puntual en el futuro.",
+        "translation": "Leeré mañana. — Simplemente indica que la acción ocurrirá (hecho)."
+      },
+      {
+        "russian": "Я буду читать завтра два часа. — Proceso.",
+        "translation": "Mañana leeré durante dos horas. — Enfatiza la duración del proceso."
+      },
+      {
+        "russian": "Я буду читать каждый день. — Повторение действия.",
+        "translation": "Leeré todos los días. — Acción repetida/habitual."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "я буду / ты будешь / он будет",
+        "transcription": "ya búdu / ty búdish' / on búd'it",
+        "translation": "yo seré/estaré / tú serás/estarás / él será/estará (futuro de «быть»)"
+      },
+      {
+        "word": "мы будем / вы будете / они будут",
+        "transcription": "my búd'im / vy búd'it'e / aní búdut",
+        "translation": "nosotros seremos / vosotros seréis / ellos serán"
+      },
+      {
+        "word": "инфинитив",
+        "transcription": "infinitíf",
+        "translation": "infinitivo"
+      },
+      {
+        "word": "послезавтра",
+        "transcription": "pasl'izáftra",
+        "translation": "pasado mañana"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videofuturonsv-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se forma el futuro de un verbo imperfectivo (НСВ) en ruso?",
+        "options": [
+          "Con el verbo «быть» conjugado + infinitivo НСВ",
+          "Solo conjugando el verbo en presente",
+          "Añadiendo el prefijo по-",
+          "Con el verbo «делать» + infinitivo"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "id": "videofuturonsv-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "я буду читать",
+            "right": "yo leeré"
+          },
+          {
+            "left": "он будет гулять",
+            "right": "él paseará"
+          },
+          {
+            "left": "они будут заниматься",
+            "right": "ellos estudiarán"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video fUBAatZmZvg ('Будущее время глаголов НСВ || Время и спряжение глаголов'), canal «About Russian in Russian» (Ира), misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso. Cubre el slot a2-2 (el pasado y el futuro — enfoque en futuro; el pasado ya se practica extensamente en otras entradas narrativas de la sesión, p.ej. b1-5)."
   }
 }
