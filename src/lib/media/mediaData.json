@@ -24448,5 +24448,189 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video 3Ye8poiM0ag, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos AUTOMÁTICOS reales en ruso (claros y legibles): letra completa extraída directamente de la transcripción, sin usar la letra de memoria. Sin contenido de guerra/violencia — canción infantil absurdista y cómica; el 'mordisco' es puramente humorístico, sin sangre ni descripción de daño real."
+  },
+  "song-pesenka-rusalochek": {
+    "id": "song-pesenka-rusalochek",
+    "title": "Песенка русалочек — de la película «Питер Пэн» (1987)",
+    "description": "Canción juguetona de las sirenitas de la versión soviética de «Peter Pan» (1987), que se burlan cómicamente de los humanos que caminan en tierra ('¡qué feo, qué poco estético!') mientras ellas juegan bajo las estrellas hasta el amanecer.",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "nNquumo6k28",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Выйдет в небо луна, И задремлет волна, И кругом станет пусто и тихо.",
+        "translation": "Saldrá la luna al cielo, y la ola se adormecerá, y todo alrededor quedará vacío y silencioso."
+      },
+      {
+        "russian": "До утра играть мы будем, И огромные над нами Будут звёзды плавать В небе тёмно-синем.",
+        "translation": "Jugaremos hasta el amanecer, y enormes por encima de nosotras flotarán las estrellas en el cielo azul oscuro."
+      },
+      {
+        "russian": "По земле зачем-то люди Ходят, топая ногами, Что и глупо, и ужасно не красиво.",
+        "translation": "Por alguna razón, la gente en tierra camina pisando fuerte con los pies, lo cual es tonto y terriblemente feo."
+      },
+      {
+        "russian": "Днём мы спим в глубине, А в ночной тишине Веселимся, поём и хохочем.",
+        "translation": "De día dormimos en las profundidades, y en el silencio de la noche nos divertimos, cantamos y reímos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "русалочка",
+        "transcription": "rusálachka",
+        "translation": "sirenita"
+      },
+      {
+        "word": "дремать",
+        "transcription": "drimát'",
+        "translation": "dormitar, adormecerse"
+      },
+      {
+        "word": "плескаться",
+        "transcription": "pliskátsa",
+        "translation": "chapotear"
+      },
+      {
+        "word": "хохотать",
+        "transcription": "khakhatát'",
+        "translation": "reír a carcajadas"
+      },
+      {
+        "word": "топать ногами",
+        "transcription": "tópat' nagámi",
+        "translation": "pisar fuerte con los pies"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songpesenkarusalochek-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué critican cómicamente las sirenitas de los humanos en tierra?",
+        "options": [
+          "Que hablan muy alto",
+          "Que caminan pisando fuerte",
+          "Que no saben nadar",
+          "Que comen mucho"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songpesenkarusalochek-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "русалочка",
+            "right": "sirenita"
+          },
+          {
+            "left": "плескаться",
+            "right": "chapotear"
+          },
+          {
+            "left": "хохотать",
+            "right": "reír a carcajadas"
+          },
+          {
+            "left": "топать ногами",
+            "right": "pisar fuerte"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video nNquumo6k28, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (interpretada por Lyudmila Larina), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción infantil juguetona."
+  },
+  "song-klenovy-list": {
+    "id": "song-klenovy-list",
+    "title": "Кленовый лист — Николай Караченцов, de «Маленькое одолжение» (1984)",
+    "description": "Canción lírica sobre una hoja de arce amarilla que se posó como un pájaro en la mano del narrador, y el deseo de que vuelva a soñarla en pleno invierno, cuando todo está cubierto de nieve. Interpretada por el famoso actor Nikolái Karachentsov.",
+    "level": "B2",
+    "category": "song",
+    "youtubeVideoId": "xYOtSzAJbaE",
+    "lyricsOrTranscript": [
+      {
+        "russian": "В путь-дорогу птицам пора, птицам снится юг, Жёлтый лист кленовый вчера сел в ладонь мою.",
+        "translation": "Es hora de que los pájaros emprendan camino, sueñan con el sur; ayer una hoja amarilla de arce se posó en mi palma."
+      },
+      {
+        "russian": "Кто-то мне пусть скажет в ответ: «Ничего такого здесь нет», Жёлтый лист, как птица, вчера сел в ладонь мою.",
+        "translation": "Que alguien me diga en respuesta: «Aquí no hay nada especial», pero la hoja amarilla, como un pájaro, ayer se posó en mi palma."
+      },
+      {
+        "russian": "Кленовый лист, кленовый лист, Ты мне среди зимы приснись, В тот миг, когда всё замело И на душе белым-бело.",
+        "translation": "Hoja de arce, hoja de arce, sueña conmigo en pleno invierno, en el momento en que todo esté cubierto de nieve y el alma esté blanca del todo."
+      },
+      {
+        "russian": "Век моих усталых коснись, тихий сон даря, Заплутавшей птицей вернись в стужу января.",
+        "translation": "Toca mis párpados cansados, regalando un sueño tranquilo, vuelve como un pájaro extraviado en el frío de enero."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "кленовый лист",
+        "transcription": "kl'onavyy list",
+        "translation": "hoja de arce"
+      },
+      {
+        "word": "ладонь",
+        "transcription": "ladón'",
+        "translation": "palma de la mano"
+      },
+      {
+        "word": "приснись (imperativo)",
+        "transcription": "prisnís'",
+        "translation": "¡aparécete en un sueño!"
+      },
+      {
+        "word": "пурга",
+        "transcription": "purgá",
+        "translation": "ventisca"
+      },
+      {
+        "word": "заплутавший",
+        "transcription": "zaplutávshiy",
+        "translation": "extraviado, que perdió el camino"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songklenovylist-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué le pide el narrador a la hoja de arce en el estribillo?",
+        "options": [
+          "Que caiga del árbol",
+          "Que se le aparezca en un sueño en pleno invierno",
+          "Que cambie de color",
+          "Que vuele hacia el sur"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songklenovylist-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "кленовый лист",
+            "right": "hoja de arce"
+          },
+          {
+            "left": "ладонь",
+            "right": "palma de la mano"
+          },
+          {
+            "left": "пурга",
+            "right": "ventisca"
+          },
+          {
+            "left": "заплутавший",
+            "right": "extraviado"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video xYOtSzAJbaE, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (interpretada por Nikolái Karachentsov), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción lírica sobre la naturaleza y las estaciones."
   }
 }
