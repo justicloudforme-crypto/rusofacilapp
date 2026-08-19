@@ -25372,5 +25372,101 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video 4Fz_fowEAlk, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Tijon Jrénnikov, letra de Yákov Jaletski), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción lírica romántica."
+  },
+  "song-buratino-final": {
+    "id": "song-buratino-final",
+    "title": "Буратино! Финальная песня — de «Приключения Буратино» (1975)",
+    "description": "Alegre canción final de la película musical soviética «Приключения Буратино» (basada en Pinocho), celebrando al travieso muñeco de madera que engañó a los villanos y trajo la libertad a las marionetas.",
+    "level": "A1",
+    "category": "song",
+    "youtubeVideoId": "_RAD83ZtFJU",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я убедился нынче сам, Что надо верить чудесам.",
+        "translation": "Hoy me convencí yo mismo de que hay que creer en los milagros."
+      },
+      {
+        "russian": "Бу! Ра! Ти! Но! Буратино!",
+        "translation": "¡Bu! ¡Ra! ¡Ti! ¡No! ¡Buratino! (deletreo cantado del nombre)"
+      },
+      {
+        "russian": "Есть у меня теперь сынок. Он из полена вдруг возник — Великий юный озорник.",
+        "translation": "Ahora tengo un hijo. De repente surgió de un leño — un gran travieso jovencito."
+      },
+      {
+        "russian": "Свободу куклам он принёс. Ему отныне предан пёс.",
+        "translation": "Trajo la libertad a las marionetas. Desde ahora un perro le es fiel."
+      },
+      {
+        "russian": "И Дуремар, и Карабас Мной одурачены не раз.",
+        "translation": "Tanto a Duremar como a Karabás los he engañado más de una vez."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "чудо / чудеса",
+        "transcription": "chúda / chudisá",
+        "translation": "milagro / milagros"
+      },
+      {
+        "word": "полено",
+        "transcription": "palyéna",
+        "translation": "leño, trozo de madera"
+      },
+      {
+        "word": "озорник",
+        "transcription": "azarník",
+        "translation": "travieso, pícaro"
+      },
+      {
+        "word": "свобода",
+        "transcription": "svabóda",
+        "translation": "libertad"
+      },
+      {
+        "word": "одурачить",
+        "transcription": "aduráchit'",
+        "translation": "engañar, hacer tonto a alguien"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songburatinofinal-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿De qué surgió Buratino, según la canción?",
+        "options": [
+          "De un huevo",
+          "De un trozo de madera (полено)",
+          "De una semilla",
+          "De un sueño"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songburatinofinal-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "полено",
+            "right": "trozo de madera"
+          },
+          {
+            "left": "озорник",
+            "right": "travieso"
+          },
+          {
+            "left": "свобода",
+            "right": "libertad"
+          },
+          {
+            "left": "одурачить",
+            "right": "engañar"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video _RAD83ZtFJU, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм), misma película que 'Песня Пьеро'. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de A. Rybnikov, letra de Yuri Entin), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción final alegre e infantil."
   }
 }
