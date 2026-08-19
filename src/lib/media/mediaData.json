@@ -25744,5 +25744,97 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video BLgkC3N6Uys, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Víktor Berkovski/Serguéi Nikitin, letra de Aleksandr Velichanski, cantada por Tatiana y Serguéi Nikitin), sin usar la letra de memoria. Sin contenido de guerra/violencia — clásico lírico de la canción de autor soviética."
+  },
+  "song-vremya-toropitsya": {
+    "id": "song-vremya-toropitsya",
+    "title": "Время торопится — de la película «Наследники» (1974)",
+    "description": "Canción sobre un joven que se despide de su madre para partir hacia nuevos horizontes ('el tiempo se apresura, el tiempo es terco'), sintiendo que en algún lugar alguien lo necesita y lo espera. Interpretada por el grupo VIA «Lira», de la miniserie soviética «Наследники» (Los herederos, 1974).",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "MroYpxWEalg",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Косогоры, поля, перелески, Шум берёз, голоса журавлей.",
+        "translation": "Laderas, campos, bosquecillos, el susurro de los abedules, las voces de las grullas."
+      },
+      {
+        "russian": "Если северный ветер и южный, Прилетев, за собой позовут, Это значит — кому-то я нужен, Это значит — меня где-то ждут.",
+        "translation": "Si el viento del norte y el del sur, al llegar, me llaman a seguirlos, eso significa que alguien me necesita, eso significa que en algún lugar me esperan."
+      },
+      {
+        "russian": "А время торопится, время упрямо, Промедлишь — за ним не поспеть. Ты пойми меня правильно, мама, Не могу я на месте сидеть!",
+        "translation": "Y el tiempo se apresura, el tiempo es terco, si te demoras no lo alcanzarás. Entiéndeme bien, mamá, ¡no puedo quedarme quieto!"
+      },
+      {
+        "russian": "Что поделаешь, надо прощаться. Обними лучше сына на счастье И в дорогу его проводи.",
+        "translation": "Qué se le va a hacer, hay que despedirse. Mejor abraza a tu hijo por buena suerte y despídelo en su camino."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "косогор",
+        "transcription": "kasagór",
+        "translation": "ladera, cuesta"
+      },
+      {
+        "word": "перелесок",
+        "transcription": "pirilyésak",
+        "translation": "bosquecillo pequeño"
+      },
+      {
+        "word": "торопиться",
+        "transcription": "tarapítsa",
+        "translation": "apresurarse"
+      },
+      {
+        "word": "упрямый",
+        "transcription": "uprýamyy",
+        "translation": "terco, obstinado"
+      },
+      {
+        "word": "проводить в дорогу",
+        "transcription": "pravadít' v darógu",
+        "translation": "despedir a alguien que emprende un viaje"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songvremyatoropitsya-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Por qué el joven no puede quedarse quieto, según el estribillo?",
+        "options": [
+          "Porque tiene miedo",
+          "Porque el tiempo se apresura y es terco",
+          "Porque su madre lo obliga",
+          "Porque no le gusta su casa"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songvremyatoropitsya-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "торопиться",
+            "right": "apresurarse"
+          },
+          {
+            "left": "упрямый",
+            "right": "terco"
+          },
+          {
+            "left": "косогор",
+            "right": "ladera"
+          },
+          {
+            "left": "проводить в дорогу",
+            "right": "despedir en un viaje"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video MroYpxWEalg, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de V. Kladnitski, letra de I. Réznik, cantada por VIA «Lira»), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción sobre partir de casa hacia nuevos horizontes."
   }
 }
