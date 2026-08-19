@@ -22644,5 +22644,206 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video oOJDwRFlbrY ('Юрий Визбор - Ты У Меня Одна Караоке'), canal karaoke independiente 'Юлия Ре'. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción del video (texto oficial de karaoke, no de memoria). Sin contenido de guerra/violencia — canción de amor/familia atemporal."
+  },
+  "song-pesnya-druzei": {
+    "id": "song-pesnya-druzei",
+    "title": "Песня друзей — de la película «По дороге с облаками» (1984)",
+    "description": "Canción sencilla y alegre sobre la amistad y los caminos compartidos, de la película animada soviética «По дороге с облаками» (1984, TO Экран, música de Vladímir Bystriakov, letra de Naum Olev). El Tigre y la Monita salen a pasear en un día nublado.",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "IOFPlyMKtm4",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Дорога, дорога идёт от порога, Идёт от порога к мечте голубой!",
+        "translation": "El camino, el camino sale del umbral, sale del umbral hacia un sueño azul."
+      },
+      {
+        "russian": "Пусть мир необъятный, но всё же приятно, Когда ты шагаешь обратно домой!",
+        "translation": "Aunque el mundo es inmenso, es agradable cuando caminas de vuelta a casa."
+      },
+      {
+        "russian": "Хорошо под небесами, Словно в лодке с парусами, Вместе с верными друзьями Плыть куда глаза глядят.",
+        "translation": "Qué bien se está bajo el cielo, como en un barco con velas, navegar a donde sea junto a amigos fieles."
+      },
+      {
+        "russian": "По дороге с облаками, По дороге с облаками, Очень нравится, когда мы Возвращаемся назад.",
+        "translation": "Por el camino con las nubes, por el camino con las nubes, nos encanta cuando volvemos de regreso."
+      },
+      {
+        "russian": "Дороги, дороги, как добрые руки, Как добрые руки хороших друзей.",
+        "translation": "Los caminos, los caminos, como manos bondadosas, como las manos bondadosas de buenos amigos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "дорога",
+        "transcription": "daróga",
+        "translation": "camino"
+      },
+      {
+        "word": "порог",
+        "transcription": "paróg",
+        "translation": "umbral"
+      },
+      {
+        "word": "парус",
+        "transcription": "párus",
+        "translation": "vela (de barco)"
+      },
+      {
+        "word": "верный друг",
+        "transcription": "v'érnyy drug",
+        "translation": "amigo fiel"
+      },
+      {
+        "word": "плыть куда глаза глядят",
+        "transcription": "plyt' kudá glazá glyad'át",
+        "translation": "navegar a donde sea (modismo, lit. 'a donde miren los ojos')"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songpesnyadruzei-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Con qué se compara caminar bajo el cielo en el estribillo?",
+        "options": [
+          "Con volar en avión",
+          "Con navegar en un barco de velas",
+          "Con correr en el bosque",
+          "Con nadar en el mar"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songpesnyadruzei-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "дорога",
+            "right": "camino"
+          },
+          {
+            "left": "порог",
+            "right": "umbral"
+          },
+          {
+            "left": "парус",
+            "right": "vela"
+          },
+          {
+            "left": "верный друг",
+            "right": "amigo fiel"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video IOFPlyMKtm4, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video, sin usar la letra de memoria. Sin contenido de guerra/violencia — canción infantil de amistad."
+  },
+  "song-v-lunnom-siyanii": {
+    "id": "song-v-lunnom-siyanii",
+    "title": "В лунном сиянии (romance clásico ruso)",
+    "description": "Uno de los romances rusos más antiguos y queridos, sobre un trineo de tres caballos (тройка) que corre por un camino nevado bajo la luz de la luna, mientras el narrador recuerda un amor pasado que ahora está casada con otro. Interpretado aquí por Gulnara Ismaeva.",
+    "level": "C1",
+    "category": "song",
+    "youtubeVideoId": "emPpnV3-Cpw",
+    "lyricsOrTranscript": [
+      {
+        "russian": "В лунном сиянии снег серебрится, Вдоль по дороге троечка мчится.",
+        "translation": "Bajo la luz de la luna la nieve se platea, a lo largo del camino corre un trineo de tres caballos."
+      },
+      {
+        "russian": "Колокольчик звенит, этот звон, этот звук о любви говорит.",
+        "translation": "La campanilla suena, este tañido, este sonido habla de amor."
+      },
+      {
+        "russian": "В лунном сиянии ранней весною Вспомнились встречи, друг мой, с тобою.",
+        "translation": "Bajo la luz de la luna, en la primavera temprana, recordé nuestros encuentros, amigo mío, contigo."
+      },
+      {
+        "russian": "Колокольчиком твой голос юный звенел, Динь-динь-динь о любви сладко пел.",
+        "translation": "Tu voz joven sonaba como una campanilla, tintineando dulcemente cantaba sobre el amor."
+      },
+      {
+        "russian": "Вспомнился зал мне, шумной толпою, Личика милой с белой фатою.",
+        "translation": "Recordé el salón, con su multitud ruidosa, el rostro de mi amada con el velo blanco."
+      },
+      {
+        "russian": "Динь-динь-динь, звон бокалов звучит, С молодою женой твой соперник стоит.",
+        "translation": "Tintineo de copas resuena; junto a su joven esposa está tu rival."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "сиянье",
+        "transcription": "siyán'ye",
+        "translation": "resplandor, brillo"
+      },
+      {
+        "word": "серебриться",
+        "transcription": "sirybrítsa",
+        "translation": "plateares, brillar como plata"
+      },
+      {
+        "word": "тройка",
+        "transcription": "tróyka",
+        "translation": "trineo/carruaje tirado por tres caballos"
+      },
+      {
+        "word": "колокольчик",
+        "transcription": "kalakól'chik",
+        "translation": "campanilla"
+      },
+      {
+        "word": "фата",
+        "transcription": "fatá",
+        "translation": "velo (de novia)"
+      },
+      {
+        "word": "соперник",
+        "transcription": "sap'érnik",
+        "translation": "rival"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songvlunnomsiyanii-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué anuncia el sonido de la campanilla (колокольчик) en la canción?",
+        "options": [
+          "El invierno",
+          "El amor",
+          "Una boda",
+          "Un peligro"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songvlunnomsiyanii-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "тройка",
+            "right": "trineo de tres caballos"
+          },
+          {
+            "left": "колокольчик",
+            "right": "campanilla"
+          },
+          {
+            "left": "фата",
+            "right": "velo de novia"
+          },
+          {
+            "left": "соперник",
+            "right": "rival"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video emPpnV3-Cpw, canal 'Светлана Куваева', interpretación de Gulnara Ismaeva. Público, playable_in_embed=true, no es livestream. Letra reconstruida a partir de subtítulos AUTOMÁTICOS reales en ruso (legibles, sin fragmentos garbled), nunca de memoria. Sin contenido de guerra/violencia — romance clásico sobre un amor perdido."
   }
 }
