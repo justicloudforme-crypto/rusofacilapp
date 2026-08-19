@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { isLocale, locales, localeNames, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
+import { isStaff } from "@/lib/roles";
 import { db } from "@/lib/db";
 import {
   getLatestSubscription,
@@ -95,6 +96,12 @@ export default async function ProfilePage({
 
   const displayStatus = getDisplayStatus(subscription);
   const isActive = displayStatus === "active" || displayStatus === "trialing";
+  // Staff/owner accounts have full access regardless of whether they've
+  // ever had a paid Subscription row — without this, an owner who never
+  // went through checkout would see the same "subscribe now" upsells as a
+  // regular unsubscribed student on this page (the lesson/story/exam pages
+  // already had this bypass; this page didn't).
+  const entitled = isStaff(user.role) || isActive;
   const dateFormatter = new Intl.DateTimeFormat(lang, { dateStyle: "long" });
 
   const statusLabels: Record<DisplayStatus, string> = {
@@ -299,6 +306,8 @@ export default async function ProfilePage({
                 {dict.profile.cancelButton}
               </button>
             </form>
+          ) : isStaff(user.role) ? (
+            <p className="text-sm text-foreground/60">{dict.profile.staffAccessNotice}</p>
           ) : (
             <Link
               href={`/${lang}/pricing`}
@@ -773,7 +782,7 @@ export default async function ProfilePage({
       {/* Courses list */}
       <section className="mt-8">
         <h2 className="font-medium">{dict.profile.coursesHeading}</h2>
-        {!isActive && (
+        {!entitled && (
           <p className="mt-2 text-sm text-foreground/60">
             {dict.profile.lockedNotice}
           </p>
@@ -805,15 +814,15 @@ export default async function ProfilePage({
                 </div>
                 <Link
                   href={
-                    isActive ? `/${lang}/courses/${level}` : `/${lang}/pricing`
+                    entitled ? `/${lang}/courses/${level}` : `/${lang}/pricing`
                   }
                   className={`w-full rounded-full px-4 py-2 text-center text-sm font-medium transition-colors sm:w-fit ${
-                    isActive
+                    entitled
                       ? "bg-foreground text-background hover:bg-foreground/85"
                       : "border border-black/10 hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
                   }`}
                 >
-                  {isActive ? ctaLabel : dict.account.seePricing}
+                  {entitled ? ctaLabel : dict.account.seePricing}
                 </Link>
               </div>
             );
