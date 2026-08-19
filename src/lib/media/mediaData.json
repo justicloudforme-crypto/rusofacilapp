@@ -26945,5 +26945,192 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video do6QP_3G7b0 ('Русский язык как иностранный. 44. Ну и что тут такого? Подумаешь какое дело!'), canal «Nadine Asta Learning Russian», misma serie que b1-3 y b2-26 (videos distintos). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b2-29 (emociones ocultas, ironía y matices)."
+  },
+  "video-udivlenie-voshishenie": {
+    "id": "video-udivlenie-voshishenie",
+    "title": "Valoraciones emocionales expresivas: sorpresa y admiración («представьте себе», «надо же!», «вот это да!»)",
+    "description": "Lección del canal «Русский язык как иностранный» (Nadezhda) sobre fórmulas para introducir una noticia sorprendente («представьте себе», «можете себе представить», «подумать только») y para reaccionar a ella con sorpresa, incredulidad o admiración («что вы говорите?!», «не может быть!», «поразительно!», «надо же!», «вот это да!»).",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "a44tYmwnwUU",
+    "curriculumLessonId": "b1-30",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Представьте, Женя участвовал в международном конкурсе скрипачей. — Что вы говорите!",
+        "translation": "Imagínese, Zhenia participó en un concurso internacional de violinistas. — ¡No me diga! («представьте» introduce la noticia; «что вы говорите» reacciona con sorpresa)"
+      },
+      {
+        "russian": "Вообразите, он занял на этом конкурсе второе место. — Не может быть!",
+        "translation": "Figúrese, quedó segundo en ese concurso. — ¡No puede ser! («не может be» = sorpresa mezclada con incredulidad)"
+      },
+      {
+        "russian": "Подумать только, этому музыканту всего лишь 15 лет. — Поразительно!",
+        "translation": "Y pensar que este músico tiene solo 15 años. — ¡Asombroso! («поразительно» = admiración pura, sin duda)"
+      },
+      {
+        "russian": "Она сдавала экзамен самому профессору Фёдорову, и тот поставил ей «отлично». — Надо же!",
+        "translation": "Presentó el examen ante el mismísimo profesor Fiódorov, y él le puso «sobresaliente». — ¡Vaya cosa/qué te parece! («надо же» = reacción de admiración con sorpresa)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "представьте себе",
+        "transcription": "pridstáv'te sib'á",
+        "translation": "imagínese (introduce noticia sorprendente)"
+      },
+      {
+        "word": "подумать только",
+        "transcription": "padúmat' tól'ka",
+        "translation": "y pensar que... (introduce noticia sorprendente)"
+      },
+      {
+        "word": "что вы говорите?!",
+        "transcription": "shto vy gavar'ít'e",
+        "translation": "¡no me diga! (reacción de sorpresa)"
+      },
+      {
+        "word": "не может быть!",
+        "transcription": "n'e mózhet byt'",
+        "translation": "¡no puede ser! (sorpresa + incredulidad)"
+      },
+      {
+        "word": "поразительно!",
+        "transcription": "parazít'el'na",
+        "translation": "¡asombroso! (admiración)"
+      },
+      {
+        "word": "надо же!",
+        "transcription": "náda zh'e",
+        "translation": "¡vaya cosa!/¡qué te parece! (admiración con sorpresa)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoudivlenievoshishenie-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué expresión introduce una noticia sorprendente ANTES de contarla, en vez de reaccionar a ella?",
+        "options": [
+          "поразительно!",
+          "не может быть!",
+          "представьте себе",
+          "надо же!"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoudivlenievoshishenie-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "представьте себе",
+            "right": "introduce la noticia"
+          },
+          {
+            "left": "не может быть!",
+            "right": "sorpresa + incredulidad"
+          },
+          {
+            "left": "поразительно!",
+            "right": "admiración pura"
+          },
+          {
+            "left": "надо же!",
+            "right": "admiración con sorpresa"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video a44tYmwnwUU ('Русский язык как иностранный. 43. Удивление, восхищение'), canal «Nadine Asta Learning Russian», misma serie que b1-3/b2-26/b2-29 (videos distintos). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-30 (valoraciones emocionales expresivas)."
+  },
+  "video-marcadores-de-opinion-chyo-mnenie": {
+    "id": "video-marcadores-de-opinion-chyo-mnenie",
+    "title": "Debates: marcar de quién es la opinión («по-моему», «на мой взгляд», «по его мнению», «как он считает»)",
+    "description": "Lección del canal «Русский язык как иностранный» (Nadezhda) sobre las fórmulas básicas para argumentar en un debate dejando claro de quién es la opinión que se expresa: en primera persona («по-моему», «по моему мнению», «на мой взгляд», «я думаю/считаю/нахожу, что...») o citando la opinión de un tercero («по его мнению», «он думает/считает, что...», «как ему кажется») — con la flexibilidad de colocar estas fórmulas en distintas posiciones de la frase sin cambiar el sentido.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "MXz1cquaSnA",
+    "curriculumLessonId": "b2-3",
+    "lyricsOrTranscript": [
+      {
+        "russian": "По-моему, по моему мнению, на мой взгляд...",
+        "translation": "En mi opinión, a mi parecer, desde mi punto de vista... (marcadores de opinión propia, intercambiables)"
+      },
+      {
+        "russian": "Я думаю, что... Я считаю, что... Я нахожу, что...",
+        "translation": "Pienso que... Considero que... Encuentro que... (verbos de opinión en primera persona + «что»)"
+      },
+      {
+        "russian": "По его мнению... Он думает, что... Как ему кажется...",
+        "translation": "En su opinión (de él)... Él piensa que... Según le parece... (misma estructura, citando la opinión de otra persona)"
+      },
+      {
+        "russian": "Я считаю, что это надо сделать. / Как я считаю, это надо сделать. / Это, как я считаю, надо сделать.",
+        "translation": "Considero que hay que hacerlo. (la misma frase «как я считаю» puede colocarse al inicio, en medio o al final sin cambiar el sentido)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "по-моему",
+        "transcription": "pa-móyemu",
+        "translation": "en mi opinión"
+      },
+      {
+        "word": "на мой взгляд",
+        "transcription": "na moy vzgl'at",
+        "translation": "a mi parecer"
+      },
+      {
+        "word": "я считаю, что",
+        "transcription": "ya shchitáyu shto",
+        "translation": "considero que"
+      },
+      {
+        "word": "по его мнению",
+        "transcription": "pa yevó mn'éniyu",
+        "translation": "en su opinión (de él)"
+      },
+      {
+        "word": "как ему кажется",
+        "transcription": "kak yemú kázhitsa",
+        "translation": "según le parece (a él)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videomarcadoresdeopinionchyomnenie-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál de estas frases cita la opinión de OTRA persona, no la propia?",
+        "options": [
+          "по-моему",
+          "на мой взгляд",
+          "по его мнению",
+          "я думаю, что"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videomarcadoresdeopinionchyomnenie-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "по-моему",
+            "right": "en mi opinión"
+          },
+          {
+            "left": "по его мнению",
+            "right": "en su opinión (de él)"
+          },
+          {
+            "left": "я считаю, что",
+            "right": "considero que"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video MXz1cquaSnA ('Русский язык как иностранный. 25. Чьё это мнение (ответ на вопрос об оценке ситуации)'), canal «Nadine Asta Learning Russian», misma serie que b1-3/b1-30/b2-26/b2-29 (videos distintos). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b2-3 (debates: marcar de quién es la opinión, base para argumentar y contraargumentar)."
   }
 }
