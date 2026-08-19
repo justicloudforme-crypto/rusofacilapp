@@ -26670,5 +26670,280 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video RMxjL9REbkw ('№ 70 РАЗВЕ и ВЕДЬ / Разговорный Русский'), canal «русский с носителем» (canal ya usado en entradas previas, ej. a1-12). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; los auto-subtítulos rusos disponibles resultaron significativamente garbled (mezclados con fragmentos de traducción automática al inglés ilegibles) para varios ejemplos — se conservaron solo los fragmentos claramente legibles de la transcripción ('я ведь тебе говорил', 'разве ты не узнал меня', 'ты разве со мной не согласен', 'погода тихая, разве что волны на море шумят') y el resto del contenido (traducciones, matices) se reconstruyó a partir de conocimiento gramatical verificado sobre el uso estándar de estas partículas, siguiendo el mismo precedente que video-esli-vs-li y video-adjetivos-cortos-largos."
+  },
+  "video-expresar-acuerdo-desacuerdo": {
+    "id": "video-expresar-acuerdo-desacuerdo",
+    "title": "Expresar opiniones: fórmulas de acuerdo, duda y desacuerdo («конечно», «вряд ли», «ну да, скажешь тоже»)",
+    "description": "Lección del canal «Русский язык как иностранный» (profesora Nadezhda) sobre las fórmulas rusas — más allá de un simple «да»/«нет» — para expresar pleno acuerdo («конечно», «разумеется», «ещё бы»), duda sobre lo dicho («вряд ли», «как знать») y desacuerdo, a veces con sorpresa («ну да, скажешь тоже», «вот уж не сказал бы», «с чего ты взял»).",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "gQNTuLphUnE",
+    "curriculumLessonId": "b1-3",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Конечно! Разумеется! Само собой разумеется!",
+        "translation": "¡Claro! ¡Por supuesto! ¡Se sobreentiende! (acuerdo total)"
+      },
+      {
+        "russian": "Ещё бы! Она ученица одного из известнейших пианистов.",
+        "translation": "¡Ya lo creo! Es alumna de uno de los pianistas más famosos. («ещё бы» = el hablante confirma que el interlocutor entendió perfectamente bien la situación)"
+      },
+      {
+        "russian": "Вряд ли этот фильм будет пользоваться успехом. — Как знать, может наоборот многим понравится.",
+        "translation": "Dudo que esta película tenga éxito. — Quién sabe, a lo mejor le gusta a mucha gente. («вряд ли» = duda sobre lo afirmado)"
+      },
+      {
+        "russian": "Андрей прекрасно водит машину. — Ну да, прекрасно! Лично я ездить с ним боюсь.",
+        "translation": "Andréi conduce estupendamente. — ¡Sí, claro, estupendamente! Yo personalmente tengo miedo de ir con él. («ну да» irónico = desacuerdo)"
+      },
+      {
+        "russian": "Нам лучше ехать туда на автобусе. — С чего ты взял? Это очень долго.",
+        "translation": "Es mejor que vayamos allí en autobús. — ¿De dónde sacaste eso? Es muy largo. («с чего ты взял» = desacuerdo con sorpresa)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "конечно",
+        "transcription": "kan'éshna",
+        "translation": "claro, por supuesto (acuerdo total)"
+      },
+      {
+        "word": "ещё бы",
+        "transcription": "yishchó by",
+        "translation": "¡ya lo creo! (acuerdo enfático)"
+      },
+      {
+        "word": "вряд ли",
+        "transcription": "vryat li",
+        "translation": "dudo que, es poco probable (duda)"
+      },
+      {
+        "word": "как знать",
+        "transcription": "kak znat'",
+        "translation": "quién sabe (duda)"
+      },
+      {
+        "word": "вот уж не сказал бы",
+        "transcription": "vot uzh n'e skazál by",
+        "translation": "yo diría que no, para nada (desacuerdo firme)"
+      },
+      {
+        "word": "с чего ты взял?",
+        "transcription": "s ch'evó ty vzyal",
+        "translation": "¿de dónde sacaste eso? (desacuerdo con sorpresa)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoexpresaracuerdodesacuerdo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué expresión indica DUDA sobre lo que dijo el interlocutor, no acuerdo ni desacuerdo directo?",
+        "options": [
+          "конечно",
+          "вряд ли",
+          "ещё бы",
+          "разумеется"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoexpresaracuerdodesacuerdo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "конечно",
+            "right": "acuerdo total"
+          },
+          {
+            "left": "вряд ли",
+            "right": "duda"
+          },
+          {
+            "left": "ну да, скажешь тоже",
+            "right": "desacuerdo irónico"
+          },
+          {
+            "left": "с чего ты взял?",
+            "right": "desacuerdo con sorpresa"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video gQNTuLphUnE ('Русский язык как иностранный. 41. Согласие, несогласие'), canal «Nadine Asta Learning Russian» (diseñado específicamente para el ruso como lengua extranjera). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos (a diferencia de otros casos garbled): todos los ejemplos extraídos directamente de la transcripción. Cubre el slot b1-3 (expresar opiniones y estar de acuerdo o en desacuerdo)."
+  },
+  "video-vy-pravy-vy-oshibaetes": {
+    "id": "video-vy-pravy-vy-oshibaetes",
+    "title": "Modalidad de opinión: decir «tienes razón» o «te equivocas» («то-то и оно», «в том-то и дело»)",
+    "description": "Lección del canal «Русский язык как иностранный» (Nadezhda) sobre fórmulas idiomáticas para confirmar que el interlocutor tiene razón («то-то и оно», «в том-то и дело», «вы правы, это так») o, con la misma estructura pero significado opuesto, señalar que se equivoca («в том-то и дело, что не...», «причём тут...», «вы ошибаетесь»).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "9qYH0duPO8g",
+    "curriculumLessonId": "b2-26",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Мы должны ему помочь, ему нужна наша помощь. — То-то и оно, согласен, ты прав, это так.",
+        "translation": "Debemos ayudarlo, necesita nuestra ayuda. — Exacto, eso es, estoy de acuerdo, tienes razón, así es. («то-то и оно» = confirmación, tienes razón)"
+      },
+      {
+        "russian": "Мы должны ему помочь. — То-то и оно, что не нужна, он всё прекрасно сделает сам. Ты ошибаешься, это не так.",
+        "translation": "Debemos ayudarlo. — Pues resulta que no la necesita, lo hará todo perfectamente él solo. Te equivocas, no es así. (misma frase + «что не» = significado opuesto, indica error)"
+      },
+      {
+        "russian": "Карту Москвы можно купить прямо здесь. — В том-то и дело, что здесь ни в одном киоске я её не видел. Вы ошибаетесь.",
+        "translation": "El mapa de Moscú se puede comprar aquí mismo. — Resulta que no la he visto en ningún quiosco de aquí. Se equivoca. («в том-то и дело, что не» = corrección/desacuerdo)"
+      },
+      {
+        "russian": "Причём тут Андрей? Он к этому делу не имел никакого отношения.",
+        "translation": "¿Qué tiene que ver Andréi con esto? No tuvo ninguna relación con este asunto. («причём тут...» = rechazar una suposición incorrecta)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "то-то и оно",
+        "transcription": "tóta i óna",
+        "translation": "exacto, eso es (confirma que el interlocutor tiene razón)"
+      },
+      {
+        "word": "в том-то и дело",
+        "transcription": "f tómta i d'éla",
+        "translation": "ahí está el asunto (confirmación o, + «что не», corrección)"
+      },
+      {
+        "word": "вы правы",
+        "transcription": "vy právy",
+        "translation": "usted tiene razón"
+      },
+      {
+        "word": "вы ошибаетесь",
+        "transcription": "vy ashibáyet'es'",
+        "translation": "usted se equivoca"
+      },
+      {
+        "word": "причём тут...?",
+        "transcription": "prich'yóm tut",
+        "translation": "¿qué tiene que ver...? (rechaza una suposición)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videovypravyvyoshibaetes-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué significa «в том-то и дело, что не...»?",
+        "options": [
+          "Confirma que el interlocutor tiene razón",
+          "Señala que el interlocutor se equivoca (corrección)",
+          "Es una pregunta neutra sin opinión",
+          "Expresa sorpresa positiva"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videovypravyvyoshibaetes-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "то-то и оно",
+            "right": "tienes razón, exacto"
+          },
+          {
+            "left": "в том-то и дело, что не",
+            "right": "te equivocas, corrección"
+          },
+          {
+            "left": "причём тут...?",
+            "right": "rechaza una suposición"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 9qYH0duPO8g ('Русский язык как иностранный. 50. Как сказать \"вы правы\"/\"вы ошибаетесь\"'), canal «Nadine Asta Learning Russian», misma serie que video-expresar-acuerdo-desacuerdo (b1-3, video distinto). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b2-26 (medios de persuasión y modalidad de opinión)."
+  },
+  "video-nu-i-chto-podumaesh": {
+    "id": "video-nu-i-chto-podumaesh",
+    "title": "Emociones ocultas y matices: expresar indiferencia o restar importancia («ну и что тут такого?», «подумаешь!»)",
+    "description": "Lección del canal «Русский язык как иностранный» (Nadezhda) sobre fórmulas para decirle al interlocutor que algo no le parece sorprendente ni impresionante: «ну и что?», «а что тут такого/особенного?» y, con un matiz aún más irónico y desdeñoso, «подумаешь!» («¡vaya cosa!»).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "do6QP_3G7b0",
+    "curriculumLessonId": "b2-29",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Гале этот фильм не понравился. — Ну и что? У каждого свой вкус.",
+        "translation": "A Galia no le gustó esta película. — ¿Y qué? Cada quien tiene su gusto. («ну и что?» = resta importancia, indiferencia neutra)"
+      },
+      {
+        "russian": "Аня сегодня смотрела этот фильм в третий раз. — Что тут такого, его все смотрят по нескольку раз.",
+        "translation": "Ania vio hoy esta película por tercera vez. — ¿Qué tiene eso de especial? Todos la ven varias veces. («что тут такого» = no le parece sorprendente)"
+      },
+      {
+        "russian": "Антон знает наизусть всю первую главу «Евгения Онегина». — Подумаешь, моя сестра знает всего «Евгения Онегина»!",
+        "translation": "Antón se sabe de memoria todo el primer capítulo de «Evgueni Oneguin». — ¡Vaya cosa! Mi hermana se sabe todo «Evgueni Oneguin». («подумаешь» = tono irónico, restando mérito con exageración propia)"
+      },
+      {
+        "russian": "Нам придётся ехать с двумя пересадками. — Подумаешь какое дело, с пересадками так с пересадками.",
+        "translation": "Tendremos que ir con dos transbordos. — ¡Qué más da! Si hay que hacer transbordos, se hacen. («подумаешь какое дело» = indiferencia resignada)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "ну и что?",
+        "transcription": "nu i shto",
+        "translation": "¿y qué? (indiferencia neutra)"
+      },
+      {
+        "word": "что тут такого?",
+        "transcription": "shto tut takóva",
+        "translation": "¿qué tiene eso de especial?"
+      },
+      {
+        "word": "подумаешь!",
+        "transcription": "padúmayesh'",
+        "translation": "¡vaya cosa! (irónico, resta importancia con exageración)"
+      },
+      {
+        "word": "подумаешь какое дело",
+        "transcription": "padúmayesh' kakóye d'éla",
+        "translation": "¡qué más da! (indiferencia resignada)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videonuichtopodumaesh-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué expresión tiene el matiz más irónico/desdeñoso, restando mérito con una exageración propia?",
+        "options": [
+          "ну и что?",
+          "что тут такого?",
+          "подумаешь!",
+          "а что?"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videonuichtopodumaesh-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "ну и что?",
+            "right": "indiferencia neutra"
+          },
+          {
+            "left": "подумаешь!",
+            "right": "ironía, resta mérito"
+          },
+          {
+            "left": "что тут такого?",
+            "right": "no le parece sorprendente"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video do6QP_3G7b0 ('Русский язык как иностранный. 44. Ну и что тут такого? Подумаешь какое дело!'), canal «Nadine Asta Learning Russian», misma serie que b1-3 y b2-26 (videos distintos). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b2-29 (emociones ocultas, ironía y matices)."
   }
 }
