@@ -26326,5 +26326,261 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video psa-5n0n3uA ('VLOG | Practicing Russian: ТАК КАК, ПОЭТОМУ, ХОТЯ, НЕСМОТРЯ НА'), canal «Learn Russian in Context» (Russian Radio Show). Público, playable_in_embed=true. Aunque el título dice 'VLOG', es contenido pedagógico estructurado y explícitamente ligado a la lección 1.2 del manual 'Точка Ру B1.1' (no es un livestream ni una charla improvisada) — tiene subtítulos MANUALES en ruso Y español (caso raro), verificados directamente. Ejemplos extraídos de la transcripción real. Cubre el slot b1-1 (conectores lógicos: causa, consecuencia y concesión)."
+  },
+  "video-aspecto-imperativo-negacion": {
+    "id": "video-aspecto-imperativo-negacion",
+    "title": "Aspecto verbal en la negación y la repetición (imperativos)",
+    "description": "Lección del canal «Russian grammar» que explica cuándo usar el aspecto imperfectivo con imperativos: para acciones repetidas o generales, y — la regla clave de este tema — para NEGAR una orden («не говори», «не читайте», «не пиши»), ya que en ruso una orden negativa casi siempre usa el imperfectivo. También cubre la excepción de las advertencias accidentales («не забудь деньги!»), que sí usan el perfectivo.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "HIMTC5SG_mY",
+    "curriculumLessonId": "b1-18",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Прочитайте это письмо.",
+        "translation": "Lea esta carta. (perfectivo: petición cortés de una acción única)"
+      },
+      {
+        "russian": "Читайте наш блог!",
+        "translation": "¡Lean nuestro blog! (imperfectivo: acción repetida/general, no una sola vez)"
+      },
+      {
+        "russian": "Не говори по-русски. Не читайте эту статью. Не пиши маме об этом.",
+        "translation": "No hables en ruso. No lean este artículo. No le escribas a mamá sobre esto. (imperfectivo: regla clave — las órdenes NEGADAS casi siempre usan el aspecto imperfectivo)"
+      },
+      {
+        "russian": "Приезжайте к нам! Заходите, садитесь.",
+        "translation": "¡Vengan a visitarnos! Entren, siéntense. (imperfectivo: invitaciones sociales, aunque sea una sola vez)"
+      },
+      {
+        "russian": "Не забудь деньги! Осторожно — смотри не упади!",
+        "translation": "¡No olvides el dinero! ¡Cuidado, no te vayas a caer! (excepción: advertencia sobre algo accidental → aquí SÍ se usa el perfectivo, a pesar de ser una orden negada)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "не + imperfectivo",
+        "transcription": "n'e",
+        "translation": "regla general para negar una orden"
+      },
+      {
+        "word": "читайте / прочитайте",
+        "transcription": "chitáyt'e / prachitáyt'e",
+        "translation": "lean (repetido/general) / lean (una vez, perfectivo)"
+      },
+      {
+        "word": "не забудь",
+        "transcription": "n'e zabúd'",
+        "translation": "no olvides (excepción: perfectivo, advertencia accidental)"
+      },
+      {
+        "word": "заходите",
+        "transcription": "zajód'it'e",
+        "translation": "entren, pasen (invitación, imperfectivo)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoaspectoimperativonegacion-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué aspecto se usa normalmente para negar una orden (decirle a alguien que NO haga algo)?",
+        "options": [
+          "Perfectivo",
+          "Imperfectivo",
+          "Depende siempre del verbo",
+          "Se usa el infinitivo, no el imperativo"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoaspectoimperativonegacion-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "Не читайте эту статью.",
+            "right": "orden negada → imperfectivo"
+          },
+          {
+            "left": "Не забудь деньги!",
+            "right": "advertencia accidental → perfectivo (excepción)"
+          },
+          {
+            "left": "Читайте наш блог!",
+            "right": "acción repetida/general → imperfectivo"
+          },
+          {
+            "left": "Прочитайте это письмо.",
+            "right": "petición de una sola vez → perfectivo"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video HIMTC5SG_mY ('Imperatives and Aspect in Russian'), canal «Russian grammar». Público, playable_in_embed=true, no es livestream, duración 3.4 min. Verificado con subtítulos MANUALES reales en inglés (canal en inglés, sin subs en ruso/español): ejemplos rusos extraídos directamente de la transcripción real, traducción al español elaborada a partir de la explicación gramatical verificada del video. Cubre precisamente el slot b1-18 (aspecto verbal en la negación y la repetición), incluyendo la excepción de advertencias accidentales."
+  },
+  "video-participios-pasado-vs-kotoryi": {
+    "id": "video-participios-pasado-vs-kotoryi",
+    "title": "Participios activos de pasado vs. cláusulas con «который» (причастие прошедшего времени)",
+    "description": "Segunda lección de la serie sobre participios del canal «О русском по-русски»: participios activos de PASADO (a diferencia del video anterior sobre presente), formados con verbo НСВ o СВ + sufijos -вш-/-ш-, y su equivalencia directa con «который» + verbo pasado — «врач, который лечил Ваню» = «врач, лечивший Ваню».",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "J1vJTTNGJG4",
+    "curriculumLessonId": "b2-12",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Это врач, который лечил Ваню.",
+        "translation": "Este es el médico que curaba/trataba a Vania. (cláusula con «который» + verbo en pasado)"
+      },
+      {
+        "russian": "Он писал / он написал → писавший / написавший.",
+        "translation": "él escribía / él escribió → que escribía (НСВ) / que escribió (СВ). (verbo НСВ o СВ + sufijo -вш- después de vocal)"
+      },
+      {
+        "russian": "Писавший, писавшая, писавшее, писавшие.",
+        "translation": "que escribía (masculino, femenino, neutro, plural) — el participio se declina como un adjetivo."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "-вш-",
+        "transcription": "-vsh-",
+        "translation": "sufijo de participio activo pasado, después de vocal"
+      },
+      {
+        "word": "-ш-",
+        "transcription": "-sh-",
+        "translation": "sufijo de participio activo pasado, después de consonante"
+      },
+      {
+        "word": "который лечил",
+        "transcription": "katóryi lich'íl",
+        "translation": "que curaba/trataba (cláusula relativa)"
+      },
+      {
+        "word": "лечивший",
+        "transcription": "l'ich'ívshii",
+        "translation": "que curaba/trataba (participio activo pasado equivalente)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoparticipiospasadovskotoryi-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué sufijo se usa para formar el participio activo pasado de un verbo cuya forma pasada termina en vocal + л (ej. «писал»)?",
+        "options": [
+          "-ущ-",
+          "-ящ-",
+          "-вш-",
+          "-ш-"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoparticipiospasadovskotoryi-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "врач, который лечил Ваню",
+            "right": "врач, лечивший Ваню"
+          },
+          {
+            "left": "он написал",
+            "right": "написавший"
+          },
+          {
+            "left": "-вш-",
+            "right": "sufijo tras vocal"
+          },
+          {
+            "left": "-ш-",
+            "right": "sufijo tras consonante"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video J1vJTTNGJG4 ('Урок 2. Активные причастия (прошедшее время) || Причастия'), canal independiente «О русском по-русски», misma serie que video-prichastiya-aktivnye (b2-9, video distinto: presente vs. pasado). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: regla de formación con sufijos -вш-/-ш- y la equivalencia explícita con «который» ('врач, который лечил Ваню') extraídas directamente de la transcripción. Cubre el slot b2-12, distinto de b2-9 (que cubre el participio de presente)."
+  },
+  "video-estilo-deeprichastie-oborot-vs-slozhnoe": {
+    "id": "video-estilo-deeprichastie-oborot-vs-slozhnoe",
+    "title": "Estilo y matices: sustituir la construcción de gerundio por una oración compuesta",
+    "description": "Segunda lección de la serie del canal «О русском по-русски» sobre el «деепричастие»: cómo convertir una frase con construcción de gerundio («Хорошо готовясь к экзаменам, студент сдаёт их на 5») en una oración compuesta con conjunción («Если студент хорошо готовится к экзаменам, он сдаёт их на 5») — mostrando cómo elegir la conjunción correcta (si, cuando, porque...) según la relación de sentido, un matiz de estilo clave entre el registro compacto/literario y el más explícito.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "aldtsDXtW9g",
+    "curriculumLessonId": "b2-11",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Хорошо готовясь к экзаменам, студент сдаёт их на 5.",
+        "translation": "Preparándose bien para los exámenes, el estudiante los aprueba con la nota máxima. (construcción de gerundio, más compacta)"
+      },
+      {
+        "russian": "Если студент хорошо готовится к экзаменам, он сдаёт их на 5.",
+        "translation": "Si el estudiante se prepara bien para los exámenes, los aprueba con la nota máxima. (oración compuesta con «если», mismo significado, más explícita)"
+      },
+      {
+        "russian": "готовясь = деепричастие НСВ (acción simultánea, suf. -ясь-)",
+        "translation": "«готовясь» = gerundio imperfectivo (acción simultánea a la principal, sufijo -ясь-)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "деепричастный оборот",
+        "transcription": "d'iyeprichástnyi abarót",
+        "translation": "construcción de gerundio"
+      },
+      {
+        "word": "сложное предложение",
+        "transcription": "slózhnaye pridlazh'éniye",
+        "translation": "oración compuesta"
+      },
+      {
+        "word": "если",
+        "transcription": "yésli",
+        "translation": "si (conjunción condicional, sustituye el gerundio)"
+      },
+      {
+        "word": "готовясь",
+        "transcription": "gatóv'as'",
+        "translation": "preparándose (деепричастие НСВ)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoestilodeeprichastieoborotvsslozhnoe-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué conjunción sustituye correctamente al gerundio en «Хорошо готовясь к экзаменам, студент сдаёт их на 5» cuando expresa una condición?",
+        "options": [
+          "потому что",
+          "хотя",
+          "если",
+          "когда"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoestilodeeprichastieoborotvsslozhnoe-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "деепричастный оборот",
+            "right": "construcción compacta, un solo sujeto"
+          },
+          {
+            "left": "сложное предложение",
+            "right": "oración explícita con conjunción y predicado propio"
+          },
+          {
+            "left": "готовясь",
+            "right": "гerundio НСВ, acción simultánea"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video aldtsDXtW9g ('Урок 2. Деепричастный оборот и сложное предложение || Деепричастия'), canal independiente «О русском по-русски», continuación de video-deeprichastiya (b2-10, mismo canal, video distinto: урок 1 vs урок 2). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: el par de ejemplos (deeprichastie ↔ oración con 'если') extraído directamente de la transcripción. Cubre el slot b2-11 (estilo y matices en participios y gerundios), distinto de b2-10 (introducción al деепричастие) y b2-12 (participios vs который)."
   }
 }
