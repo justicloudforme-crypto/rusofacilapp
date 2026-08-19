@@ -24724,5 +24724,189 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video CjPbbNfubTo, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video, sin usar la letra de memoria. Sin contenido de guerra/violencia — canción de cuento de hadas clásico (La Bella Durmiente)."
+  },
+  "song-kolybelnaya-rassmeshite-klouna": {
+    "id": "song-kolybelnaya-rassmeshite-klouna",
+    "title": "Колыбельная песня — de la película «Рассмешите клоуна» (1984)",
+    "description": "Nana cantada a los animales de circo tras el espectáculo, sobre el orgullo del oficio circense y la buena vida a pesar de las dificultades. Letra de Yuli Kim, música de Vladímir Dashkévich, de la película soviética «Рассмешите клоуна» (Hagan reír al payaso, 1984).",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "KaXKcrBBJ2Q",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Баю-бай, уже позднее время, Отсыпайся, хвостатое племя.",
+        "translation": "Duérmete ya, es tarde, descansen bien, pueblo de cola (los animales del circo)."
+      },
+      {
+        "russian": "Молодцы, поработали знатно, Отдыхайте, ребята, до завтра.",
+        "translation": "Bien hecho, trabajaron estupendamente, descansen, muchachos, hasta mañana."
+      },
+      {
+        "russian": "Не леса, не луга, не тропинки, А всё тот же манеж да опилки.",
+        "translation": "No bosques, ni praderas, ni senderos, sino la misma pista de circo y el aserrín de siempre."
+      },
+      {
+        "russian": "Ремесло наше с вами такое: Цирк есть цирк, это дело святое. Очень трудно, и всё же прекрасно! Верьте, братцы: живём не напрасно.",
+        "translation": "Nuestro oficio es así: el circo es el circo, es un asunto sagrado. ¡Muy difícil, y aun así hermoso! Créanme, hermanos: no vivimos en vano."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "баю-бай",
+        "transcription": "báyu-bay",
+        "translation": "duérmete ya (expresión de canción de cuna)"
+      },
+      {
+        "word": "хвостатый",
+        "transcription": "khvastátyy",
+        "translation": "con cola (adjetivo cariñoso para animales)"
+      },
+      {
+        "word": "манеж",
+        "transcription": "manézh",
+        "translation": "pista de circo"
+      },
+      {
+        "word": "опилки",
+        "transcription": "apílki",
+        "translation": "aserrín"
+      },
+      {
+        "word": "ремесло",
+        "transcription": "riimislo",
+        "translation": "oficio, profesión artesanal"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songkolybelnayarassmeshiteklouna-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿A quiénes está dirigida esta canción de cuna?",
+        "options": [
+          "A los niños del pueblo",
+          "A los animales del circo",
+          "A los payasos jubilados",
+          "A los espectadores del circo"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songkolybelnayarassmeshiteklouna-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "манеж",
+            "right": "pista de circo"
+          },
+          {
+            "left": "хвостатый",
+            "right": "con cola"
+          },
+          {
+            "left": "опилки",
+            "right": "aserrín"
+          },
+          {
+            "left": "ремесло",
+            "right": "oficio"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video KaXKcrBBJ2Q, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de V. Dashkévich, letra de Yuli Kim, cantada por el propio Kim), sin usar la letra de memoria. Sin contenido de guerra/violencia — nana sobre el circo y los animales."
+  },
+  "song-zurbagan": {
+    "id": "song-zurbagan",
+    "title": "Зурбаган — de la película «Выше радуги» (1986)",
+    "description": "Canción de fantasía poética sobre la ciudad imaginaria de Zurbagán y Assol, personaje de «Velas escarlatas» de Alexander Grin, cantada por un joven Vladímir Presnyakov. Sobre el tiempo, la nostalgia y un mundo entre el pasado y el futuro, de la película «Выше радуги» (1986).",
+    "level": "C1",
+    "category": "song",
+    "youtubeVideoId": "4xxqHk-QLIA",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Засыпает синий Зурбаган, А за горизонтом ураган, С грохотом и гомоном и гамом, Путь свой начинает к Зурбагану.",
+        "translation": "Se duerme el azul Zurbagán, y tras el horizonte un huracán, con estruendo y bullicio y alboroto, empieza su camino hacia Zurbagán."
+      },
+      {
+        "russian": "Грянет ливень, резкий и косой, И продрогнет юная Ассоль, И опять понять не смогут люди — Было это или только будет.",
+        "translation": "Estallará un aguacero, brusco y oblicuo, y la joven Assol tiritará de frío, y otra vez la gente no podrá entender si esto ya sucedió o si aún sucederá."
+      },
+      {
+        "russian": "Смотрит юная девушка с пристани Вслед кораблю, Я люблю это время, безнадёжно люблю.",
+        "translation": "La joven mira desde el muelle cómo se aleja el barco; amo este tiempo, lo amo sin remedio."
+      },
+      {
+        "russian": "Сгинет ночь, и день придёт иной, Как волна приходит за волной, И проснусь я в мире невозможном, Где-то между будущим и прошлым.",
+        "translation": "Se desvanecerá la noche, y vendrá otro día, como una ola llega tras otra ola, y despertaré en un mundo imposible, en algún lugar entre el futuro y el pasado."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "ураган",
+        "transcription": "uragán",
+        "translation": "huracán (fenómeno meteorológico)"
+      },
+      {
+        "word": "ливень",
+        "transcription": "líviyn'",
+        "translation": "aguacero, chaparrón"
+      },
+      {
+        "word": "продрогнуть",
+        "transcription": "pradrógnut'",
+        "translation": "tiritar de frío"
+      },
+      {
+        "word": "пристань",
+        "transcription": "prístan'",
+        "translation": "muelle, embarcadero"
+      },
+      {
+        "word": "сгинуть",
+        "transcription": "sgínut'",
+        "translation": "desvanecerse, desaparecer"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songzurbagan-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué observa la joven desde el muelle?",
+        "options": [
+          "Un huracán",
+          "Un barco que se aleja",
+          "Las estrellas",
+          "A Zurbagán durmiendo"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songzurbagan-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "ураган",
+            "right": "huracán"
+          },
+          {
+            "left": "ливень",
+            "right": "aguacero"
+          },
+          {
+            "left": "пристань",
+            "right": "muelle"
+          },
+          {
+            "left": "сгинуть",
+            "right": "desvanecerse"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 4xxqHk-QLIA, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Yuri Chernavski, letra de Leonid Derbenev; cantada por Vladímir Presnyakov Jr.), sin usar la letra de memoria. Sin contenido de guerra/violencia — 'ураган' es un fenómeno meteorológico, no un conflicto armado."
   }
 }
