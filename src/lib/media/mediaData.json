@@ -25188,5 +25188,189 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video SHAfX7_GhXw, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (adaptación del poema de Lewis Carroll, traducción de Dina Orlóvskaya), sin usar la letra de memoria. Sin violencia real — 'драка' se menciona pero nunca ocurre (los personajes huyen asustados antes)."
+  },
+  "song-pogovorim-o-pustyakah": {
+    "id": "song-pogovorim-o-pustyakah",
+    "title": "Поговорим о пустяках — de la película «Только в мюзик-холле» (1980)",
+    "description": "Dueto romántico y juguetón entre dos personajes que empiezan hablando 'de tonterías' y terminan descubriendo un mundo mágico compartido, lleno de montañas, mares, ríos y campos — donde caminan juntos con amor. De la comedia musical soviética «Только в мюзик-холле» (1980).",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "-xPEWCIEWiM",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Поговорим о пустяках, В стихах. В стихах мы сразу запоём, Вдвоём.",
+        "translation": "Hablemos de tonterías, en verso. En verso enseguida nos pondremos a cantar, los dos juntos."
+      },
+      {
+        "russian": "О том, что мы нашли волшебный дом, В котором горные хребты, Автомобили и мосты, Аэропорты и киты, И я и ты.",
+        "translation": "Sobre que encontramos una casa mágica, en la que hay cordilleras, automóviles y puentes, aeropuertos y ballenas, y tú y yo."
+      },
+      {
+        "russian": "Наступит миг, и мы поймём Без лишних слов, Что новый мир открыли мы, Где по земле идёт любовь.",
+        "translation": "Llegará el momento en que entenderemos sin palabras de más, que descubrimos un mundo nuevo, donde el amor camina por la tierra."
+      },
+      {
+        "russian": "Наш дом, сверкающий волшебный дом, В котором кружится земля, А с нею горы и моря, А с нею реки и поля.",
+        "translation": "Nuestra casa, la casa mágica y resplandeciente, en la que gira la tierra, y con ella las montañas y los mares, y con ella los ríos y los campos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "пустяки",
+        "transcription": "pustyakí",
+        "translation": "tonterías, cosas sin importancia"
+      },
+      {
+        "word": "горный хребет",
+        "transcription": "górnyy khribyét",
+        "translation": "cordillera"
+      },
+      {
+        "word": "кит",
+        "transcription": "kit",
+        "translation": "ballena"
+      },
+      {
+        "word": "суета",
+        "transcription": "suitá",
+        "translation": "ajetreo, bullicio cotidiano"
+      },
+      {
+        "word": "сверкающий",
+        "transcription": "svirkáyushiy",
+        "translation": "resplandeciente, brillante"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songpogovorimopustyakah-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué descubren juntos los dos personajes de la canción?",
+        "options": [
+          "Un tesoro escondido",
+          "Un mundo/casa mágica llena de amor",
+          "Un secreto de familia",
+          "Una isla desierta"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songpogovorimopustyakah-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "пустяки",
+            "right": "tonterías"
+          },
+          {
+            "left": "кит",
+            "right": "ballena"
+          },
+          {
+            "left": "суета",
+            "right": "ajetreo"
+          },
+          {
+            "left": "сверкающий",
+            "right": "resplandeciente"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video -xPEWCIEWiM, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Víktor Lebedev, letra de Boris Purgalin), sin usar la letra de memoria. Sin contenido de guerra/violencia — dueto romántico y juguetón."
+  },
+  "song-ne-skuchay": {
+    "id": "song-ne-skuchay",
+    "title": "Не скучай — de la película «Дуэнья» (1978)",
+    "description": "Canción lírica sobre un eco en la noche que atrae a la protagonista por un sendero olvidado junto al río, como si su amado cantara a lo lejos. Interpretada por Tatiana Vasilieva y Yevgueni Leónov en la comedia musical soviética «Дуэнья» (basada en Sheridan, 1978).",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "4Fz_fowEAlk",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Забытой тропинкой я шла за рекой, И эхо манило меня за собой.",
+        "translation": "Caminaba por un sendero olvidado junto al río, y el eco me atraía tras de sí."
+      },
+      {
+        "russian": "Волшебные звуки в ночной тишине На крылышках нежных летели ко мне.",
+        "translation": "Sonidos mágicos en el silencio de la noche volaban hacia mí en alitas tiernas."
+      },
+      {
+        "russian": "Не скучай, ай-ай, И в дожди жди-жди! Навсегда, да-да, Я с тобой!",
+        "translation": "No te aburras, ¡ay ay! Y en los días de lluvia, espera, espera. Para siempre, sí sí, ¡estoy contigo!"
+      },
+      {
+        "russian": "И птички шептали рулады любви, Как будто мой милый пел где-то вдали.",
+        "translation": "Y los pajaritos susurraban trinos de amor, como si mi amado cantara en algún lugar lejano."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "тропинка",
+        "transcription": "trapínka",
+        "translation": "sendero"
+      },
+      {
+        "word": "манить",
+        "transcription": "manít'",
+        "translation": "atraer, llamar con seducción"
+      },
+      {
+        "word": "эхо",
+        "transcription": "ékha",
+        "translation": "eco"
+      },
+      {
+        "word": "рулада",
+        "transcription": "ruláda",
+        "translation": "trino, floritura musical (canto de ave)"
+      },
+      {
+        "word": "не скучай",
+        "transcription": "ni skucháy",
+        "translation": "no te aburras / no me extrañes (despedida cariñosa)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songneskuchay-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué atrae a la protagonista por el sendero olvidado?",
+        "options": [
+          "Una luz",
+          "Un eco / sonido mágico",
+          "Un animal",
+          "Una carta"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songneskuchay-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "тропинка",
+            "right": "sendero"
+          },
+          {
+            "left": "эхо",
+            "right": "eco"
+          },
+          {
+            "left": "манить",
+            "right": "atraer"
+          },
+          {
+            "left": "рулада",
+            "right": "trino"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 4Fz_fowEAlk, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Tijon Jrénnikov, letra de Yákov Jaletski), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción lírica romántica."
   }
 }
