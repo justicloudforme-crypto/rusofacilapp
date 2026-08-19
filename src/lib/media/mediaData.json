@@ -25004,5 +25004,189 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video FefNmy4XdeE, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм), misma película que 'Зурбаган'. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Yuri Chernavski, letra de Leonid Derbenev, cantada por Alla Pugachova), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción mitológica sobre el mar."
+  },
+  "song-kolokola": {
+    "id": "song-kolokola",
+    "title": "Колокола — de «Приключения Электроника» (1979)",
+    "description": "Canción poética sobre las campanas de un reloj antiguo que anuncia el amanecer, disipando los miedos de la noche con la luz del día. De la misma serie de TV «Приключения Электроника» que dio 'Крылатые качели', cantada por el coro infantil del Teatro Bolshói.",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "UTPsbPk7DO8",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Бьют часы на старой башне, Провожая день вчерашний, И звонят колокола... Будет, будет даль светла!",
+        "translation": "El reloj de la torre vieja da la hora, despidiendo el día de ayer, y suenan las campanas... ¡El horizonte será, será luminoso!"
+      },
+      {
+        "russian": "Бой часов, как ключик золотой, Двери утра весело открой! Окна утра настежь распахни! Сумрак ночи с улиц прогони!",
+        "translation": "El tañido del reloj, como una llavecita dorada, ¡abre alegremente las puertas de la mañana! ¡Abre de par en par las ventanas de la mañana! ¡Espanta la penumbra de la noche de las calles!"
+      },
+      {
+        "russian": "То, что ночью было страшным, Светом залито дневным. То, что ночью было страшным, Стало тёплым и домашним, Стало милым и смешным.",
+        "translation": "Lo que de noche daba miedo, ahora está inundado de luz diurna. Lo que de noche daba miedo, se volvió cálido y hogareño, se volvió tierno y gracioso."
+      },
+      {
+        "russian": "В этом мире должен каждый Не спешить, не отставать, Слушать время и отважно В ногу с временем шагать!",
+        "translation": "En este mundo, todos deben no apresurarse ni quedarse atrás, escuchar el tiempo y caminar con valentía al ritmo del tiempo."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "башня",
+        "transcription": "báshnya",
+        "translation": "torre"
+      },
+      {
+        "word": "колокол",
+        "transcription": "kólakal",
+        "translation": "campana"
+      },
+      {
+        "word": "сумрак",
+        "transcription": "súmrak",
+        "translation": "penumbra, oscuridad crepuscular"
+      },
+      {
+        "word": "распахнуть",
+        "transcription": "raspakhnút'",
+        "translation": "abrir de par en par"
+      },
+      {
+        "word": "отважно",
+        "transcription": "atvázhna",
+        "translation": "con valentía"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songkolokola-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según la canción, ¿qué le pasa a lo que daba miedo por la noche cuando llega la mañana?",
+        "options": [
+          "Desaparece para siempre",
+          "Se vuelve cálido, hogareño y gracioso",
+          "Se vuelve más aterrador",
+          "Nadie lo recuerda"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songkolokola-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "башня",
+            "right": "torre"
+          },
+          {
+            "left": "колокол",
+            "right": "campana"
+          },
+          {
+            "left": "сумрак",
+            "right": "penumbra"
+          },
+          {
+            "left": "отважно",
+            "right": "con valentía"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video UTPsbPk7DO8, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм), misma serie que 'Крылатые качели'. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Yevgueni Krylatov, letra de Yuri Entin, cantada por el coro infantil del Bolshói), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción poética sobre el amanecer y el tiempo."
+  },
+  "song-pesenka-trulyalyat": {
+    "id": "song-pesenka-trulyalyat",
+    "title": "Песенка Трулялят — de «Алиса в Зазеркалье» (1982)",
+    "description": "Adaptación cómica del célebre poema de disparate de Lewis Carroll sobre Tuiterí y Tuiteré (Tweedledum y Tweedledee), que se enfadan por un sonajero roto pero salen huyendo asustados por un cuervo antes de pelear. De la película animada soviética «Алиса в Зазеркалье» (A través del espejo, 1982).",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "SHAfX7_GhXw",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Раз Труляля и Траляля Решили вздуть друг дружку, Из-за того, что Траляля Испортил погремушку.",
+        "translation": "Una vez Trulialiá y Traliá decidieron pelearse, porque Traliá había roto un sonajero."
+      },
+      {
+        "russian": "Хорошую и новую испортил погремушку.",
+        "translation": "Rompió un sonajero bueno y nuevo."
+      },
+      {
+        "russian": "Но ворон, чёрный, будто ночь, На них слетел во мраке.",
+        "translation": "Pero un cuervo, negro como la noche, bajó volando sobre ellos en la oscuridad."
+      },
+      {
+        "russian": "Герои убежали прочь, Совсем забыв о драке.",
+        "translation": "Los héroes salieron corriendo, olvidándose por completo de la pelea."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "вздуть друг дружку",
+        "transcription": "vzdut' drug druzhku",
+        "translation": "pelearse el uno con el otro (coloquial, no literal)"
+      },
+      {
+        "word": "погремушка",
+        "transcription": "pagrimúshka",
+        "translation": "sonajero"
+      },
+      {
+        "word": "ворон",
+        "transcription": "vóran",
+        "translation": "cuervo grande"
+      },
+      {
+        "word": "мрак",
+        "transcription": "mrak",
+        "translation": "oscuridad"
+      },
+      {
+        "word": "драка",
+        "transcription": "dráka",
+        "translation": "pelea, riña"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songpesenkatrulyalyat-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Por qué al final Trulialiá y Traliá NO se pelean?",
+        "options": [
+          "Porque hicieron las paces",
+          "Porque un cuervo los asustó y salieron corriendo",
+          "Porque llegó Alicia",
+          "Porque se les olvidó por qué estaban enojados"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songpesenkatrulyalyat-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "погремушка",
+            "right": "sonajero"
+          },
+          {
+            "left": "ворон",
+            "right": "cuervo"
+          },
+          {
+            "left": "драка",
+            "right": "pelea"
+          },
+          {
+            "left": "мрак",
+            "right": "oscuridad"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video SHAfX7_GhXw, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (adaptación del poema de Lewis Carroll, traducción de Dina Orlóvskaya), sin usar la letra de memoria. Sin violencia real — 'драка' se menciona pero nunca ocurre (los personajes huyen asustados antes)."
   }
 }
