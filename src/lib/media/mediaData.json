@@ -27655,5 +27655,182 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video MQJrnjAxtE0 ('Как сдать ТРКИ-4 (С2 по русскому языку), мой опыт'), canal «Laura en Rusia | Ruso en español». playable_in_embed=true, live_status=not_live, age_limit=0 (el campo 'availability' no se pudo determinar vía yt-dlp pero el resto de metadatos confirma que es un video público normal). Verificado con subtítulos OFICIALES en español (raro y valioso: el propio creador los proporciona). Contenido narrativo en primera persona sobre el examen TRKI, sin ninguna referencia a temas sensibles. Cubre el slot b2-30 (preparación para exámenes de certificación)."
+  },
+  "video-saludos-presentaciones": {
+    "id": "video-saludos-presentaciones",
+    "title": "Saludos y presentaciones: «здравствуйте», «привет» y los saludos según la hora del día",
+    "description": "Lección del canal «Хочу говорить по-русски» sobre los saludos rusos según el nivel de formalidad («здравствуйте» formal, «привет» informal, «здорово»/«салют» entre amigos) y según la hora del día («доброе утро», «добрый день», «добрый вечер», «доброй ночи»), además de cómo presentarse («меня зовут...», «как вас зовут?», «очень приятно познакомиться»).",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "KHe_1BO---I",
+    "curriculumLessonId": "a1-2",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Здравствуйте! Меня зовут Анжелика. Очень приятно с вами познакомиться.",
+        "translation": "¡Hola! Me llamo Angélica. Encantada de conocerlo. («здравствуйте» = saludo formal más común, entre desconocidos, en el trabajo)"
+      },
+      {
+        "russian": "Здравствуй! — форма попроще, но тоже используется в формальных отношениях (например, учитель ученику).",
+        "translation": "«Здравствуй» es una forma más simple, pero también propia de relaciones formales (por ejemplo, un profesor a un alumno) — solo se usa con UNA persona."
+      },
+      {
+        "russian": "Привет! Здорово! Салют!",
+        "translation": "¡Hola! ¡Qué tal! ¡Salut! (saludos informales, entre amigos, compañeros, vecinos)"
+      },
+      {
+        "russian": "Доброе утро! Добрый день! Добрый вечер! Доброй ночи!",
+        "translation": "¡Buenos días! ¡Buenas tardes! ¡Buenas noches (al llegar)! ¡Buenas noches (al despedirse)! («доброе утро» hasta las 12h, «добрый день» hasta la noche, «добрый вечер» desde las 18h, «доброй ночи» al despedirse antes de dormir)"
+      },
+      {
+        "russian": "Меня зовут Марина. Как вас зовут?",
+        "translation": "Me llamo Marina. ¿Cómo se llama usted?"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "здравствуйте",
+        "transcription": "zdrástvuyt'e",
+        "translation": "hola (formal)"
+      },
+      {
+        "word": "привет",
+        "transcription": "priv'ét",
+        "translation": "hola (informal)"
+      },
+      {
+        "word": "доброе утро / добрый день / добрый вечер",
+        "transcription": "dóbraye útra / dóbryi d'en' / dóbryi v'éch'ir",
+        "translation": "buenos días / buenas tardes / buenas noches (al llegar)"
+      },
+      {
+        "word": "меня зовут...",
+        "transcription": "min'á zavút",
+        "translation": "me llamo..."
+      },
+      {
+        "word": "очень приятно",
+        "transcription": "óch'in' pri'átna",
+        "translation": "mucho gusto"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videosaludospresentaciones-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué saludo se usa aproximadamente entre las 18:00 y la medianoche?",
+        "options": [
+          "доброе утро",
+          "добрый день",
+          "добрый вечер",
+          "доброй ночи"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videosaludospresentaciones-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "здравствуйте",
+            "right": "hola formal"
+          },
+          {
+            "left": "привет",
+            "right": "hola informal"
+          },
+          {
+            "left": "меня зовут...",
+            "right": "me llamo..."
+          },
+          {
+            "left": "доброй ночи",
+            "right": "buenas noches (al despedirse)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video KHe_1BO---I ('№1 Хочу говорить по-русски: Приветствие и знакомство'), canal «Хочу говорить по-русски». Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot a1-2 (saludos y presentaciones)."
+  },
+  "video-numeros-precios-hora": {
+    "id": "video-numeros-precios-hora",
+    "title": "Números, precios y la hora: «сколько времени?», «который час?»",
+    "description": "Lección del canal «русский с носителем» sobre cómo decir la hora en ruso: los cuatro períodos del día (утро/день/вечер/ночь), el uso del reloj de 12 horas en el habla coloquial (frente al de 24 horas más formal), y las expresiones para minutos exactos, minutos «después de» la hora («минут седьмого» = pasadas las seis) y minutos «antes de» la siguiente hora («без 15» = menos 15).",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "uYSBuPusmFY",
+    "curriculumLessonId": "a1-4",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Утро с 6:00 до 12 дня. День с 12 дня до 6:00 вечера. Вечер с 6:00 вечера до полуночи. Ночь с полуночи до 6:00 утра.",
+        "translation": "Mañana de las 6:00 al mediodía. Tarde del mediodía a las 18:00. Noche (vespertina) de las 18:00 a medianoche. Noche (madrugada) de medianoche a las 6:00."
+      },
+      {
+        "russian": "6:15 — минут седьмого. 6:30 — половина седьмого. Без 15 (шесть сорок пять) — без пятнадцати семь.",
+        "translation": "6:15 — «pasados [algunos] minutos de la séptima [hora]» = las seis y cuarto. 6:30 — «media de la séptima» = las seis y media. 6:45 — «sin quince para las siete» = las siete menos cuarto."
+      },
+      {
+        "russian": "Он идёт на работу в 7 утра. Магазин открывается в 8 утра.",
+        "translation": "Él va al trabajo a las 7 de la mañana. La tienda abre a las 8 de la mañana."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "который час?",
+        "transcription": "katóryi chas",
+        "translation": "¿qué hora es?"
+      },
+      {
+        "word": "сколько времени?",
+        "transcription": "skól'ka vr'ém'ini",
+        "translation": "¿qué hora es? (sinónimo)"
+      },
+      {
+        "word": "утро / день / вечер / ночь",
+        "transcription": "útra / d'en' / v'éch'ir / noch'",
+        "translation": "mañana / tarde / noche (vespertina) / madrugada"
+      },
+      {
+        "word": "без пятнадцати",
+        "transcription": "b'ez p'itnátsati",
+        "translation": "menos cuarto (lit. \"sin quince\")"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videonumerosprecioshora-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice «las seis y cuarto» de forma coloquial en ruso?",
+        "options": [
+          "шесть пятнадцать",
+          "минут седьмого",
+          "без пятнадцати семь",
+          "половина седьмого"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videonumerosprecioshora-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "который час?",
+            "right": "¿qué hora es?"
+          },
+          {
+            "left": "утро",
+            "right": "mañana"
+          },
+          {
+            "left": "без пятнадцати",
+            "right": "menos cuarto"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video uYSBuPusmFY ('СКОЛЬКО ВРЕМЕНИ? КОТОРЫЙ ЧАС? / учим русский'), canal «русский с носителем» (mismo canal usado en a1-12). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot a1-4 (números, precios y la hora — específicamente la hora; precios/números cardinales ya se tratan en video-genitivo-numeros a1-22)."
   }
 }
