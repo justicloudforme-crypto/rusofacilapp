@@ -1,66 +1,52 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { db } from "@/lib/db";
-import {
-  FLASHCARD_LIST_CACHE_PREFIX,
-  isFlashcardCategory,
-  isFlashcardLevel,
-  parseWordRelationsJson,
-  type FlashcardRow,
-} from "@/lib/flashcards";
-import { cacheGet, cacheSet } from "@/lib/cache";
+import { isFlashcardCategory, isFlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
+import { getFlashcardIndex } from "@/lib/flashcards/cache";
 
-// Flashcard content changes rarely (admin edits, or a new seed batch) and is
-// read on every /vocabulary category switch — same caching rationale as
-// /api/glossary.
-const FLASHCARD_CACHE_TTL_MS = 5 * 60_000;
-// A full ?search= sweep needs to scan every card's russian/translationEs/
-// transcription text, and SQLite's LIKE only case-folds ASCII — it would
-// silently miss "Холодильник" for a query of "холодильник". Filtering in
-// JS after one cached fetch of the whole bank gets correct Cyrillic
-// case-insensitivity, and 5 minutes is an acceptable staleness window for
-// a rarely-edited content table (same TTL as the per-category cache above).
-const FLASHCARD_SEARCH_INDEX_CACHE_KEY = "flashcards:search-index";
 const SEARCH_RESULT_LIMIT = 50;
 
-async function attachAudio(cards: Awaited<ReturnType<typeof db.flashcardCard.findMany>>): Promise<FlashcardRow[]> {
-  const audioRows = await db.audioAsset.findMany({
-    where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) }, itemKey: "word" },
-    select: { contentId: true, audioUrl: true },
-  });
-  const audioByCardId = new Map(audioRows.map((row) => [row.contentId, row.audioUrl]));
-
-  return cards.map((card) => ({
-    ...card,
-    category: card.category as FlashcardRow["category"],
-    level: card.level as FlashcardRow["level"],
-    synonyms: parseWordRelationsJson(card.synonyms),
-    antonyms: parseWordRelationsJson(card.antonyms),
-    audioUrl: audioByCardId.get(card.id) ?? null,
-  }));
+// NFC-normalize before comparing so accented Spanish text matches regardless
+// of whether the DB or the user's keyboard produced a precomposed ("ó") or
+// decomposed ("o" + combining acute) codepoint sequence — both look
+// identical on screen but fail a naive .includes() against each other.
+function normalize(value: string): string {
+  return value.toLowerCase().normalize("NFC");
 }
 
-async function searchFlashcards(query: string, level: string): Promise<{ cards: FlashcardRow[] }> {
-  let index = cacheGet<FlashcardRow[]>(FLASHCARD_SEARCH_INDEX_CACHE_KEY);
-  if (!index) {
-    const cards = await db.flashcardCard.findMany({ orderBy: { createdAt: "asc" } });
-    index = await attachAudio(cards);
-    cacheSet(FLASHCARD_SEARCH_INDEX_CACHE_KEY, index, FLASHCARD_CACHE_TTL_MS);
-  }
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
-  const needle = query.toLowerCase();
-  const levelFilter = level && isFlashcardLevel(level) ? level : null;
+// Plain substring .includes() ranks a match buried mid-word (e.g. "mil"
+// inside "familia") exactly the same as a real match — this scores matches
+// into tiers so an exact/prefix/whole-word hit always outranks a substring
+// found by accident inside an unrelated word. 0 means no match.
+function fieldScore(haystack: string, needle: string): number {
+  const h = normalize(haystack);
+  if (!h.includes(needle)) return 0;
+  if (h === needle) return 4;
+  if (h.startsWith(needle)) return 3;
+  if (new RegExp(`\\b${escapeRegExp(needle)}`, "u").test(h)) return 2;
+  return 1;
+}
 
-  const matches = index.filter((card) => {
-    if (levelFilter && card.level !== levelFilter) return false;
-    return (
-      card.russian.toLowerCase().includes(needle) ||
-      card.translationEs.toLowerCase().includes(needle) ||
-      card.transcription.toLowerCase().includes(needle)
-    );
-  });
+function cardScore(card: FlashcardRow, needle: string): number {
+  return Math.max(
+    fieldScore(card.russian, needle),
+    fieldScore(card.translationEs, needle),
+    fieldScore(card.transcription, needle)
+  );
+}
 
-  return { cards: matches.slice(0, SEARCH_RESULT_LIMIT) };
+function searchIndex(index: FlashcardRow[], query: string, level: string | null): FlashcardRow[] {
+  const needle = normalize(query);
+  const scored = index
+    .filter((card) => !level || card.level === level)
+    .map((card) => ({ card, score: cardScore(card, needle) }))
+    .filter((entry) => entry.score > 0);
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, SEARCH_RESULT_LIMIT).map((entry) => entry.card);
 }
 
 // Public and unauthenticated: flashcards are reference content, not user
@@ -71,28 +57,17 @@ export async function GET(request: NextRequest) {
   const level = searchParams.get("level") ?? "";
   const search = (searchParams.get("search") ?? "").trim();
 
+  const index = await getFlashcardIndex();
+  const levelFilter = level && isFlashcardLevel(level) ? level : null;
+
   if (search) {
-    return NextResponse.json(await searchFlashcards(search, level));
+    return NextResponse.json({ cards: searchIndex(index, search, levelFilter) });
   }
 
-  const where: { category?: string; level?: string } = {};
-  if (category && isFlashcardCategory(category)) {
-    where.category = category;
-  }
-  if (level && isFlashcardLevel(level)) {
-    where.level = level;
-  }
+  const categoryFilter = category && isFlashcardCategory(category) ? category : null;
+  const cards = index.filter(
+    (card) => (!categoryFilter || card.category === categoryFilter) && (!levelFilter || card.level === levelFilter)
+  );
 
-  const cacheKey = FLASHCARD_LIST_CACHE_PREFIX + searchParams.toString();
-  const cached = cacheGet<{ cards: FlashcardRow[] }>(cacheKey);
-  if (cached) return NextResponse.json(cached);
-
-  const cards = await db.flashcardCard.findMany({
-    where,
-    orderBy: { createdAt: "asc" },
-  });
-
-  const body = { cards: await attachAudio(cards) };
-  cacheSet(cacheKey, body, FLASHCARD_CACHE_TTL_MS);
-  return NextResponse.json(body);
+  return NextResponse.json({ cards });
 }

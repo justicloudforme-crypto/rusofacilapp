@@ -16,18 +16,6 @@ import {
 export type { Flashcard, FlashcardCategory, FlashcardLevel, WordRelation } from "./types";
 export { flashcardCategories, flashcardLevels } from "./types";
 
-/** Prefix for cached /api/flashcards list responses (see src/lib/cache.ts)
- * — shared so the admin save/delete routes can invalidate every cached
- * category/level combination after a write. */
-export const FLASHCARD_LIST_CACHE_PREFIX = "flashcards:list:";
-
-/** Broader prefix covering FLASHCARD_LIST_CACHE_PREFIX above plus the
- * /api/flashcards search index and /api/flashcards/summary category totals
- * — all three are derived from the same FlashcardCard table, so an admin
- * write must drop all of them together or one would keep serving stale
- * data until its own TTL expires. */
-export const FLASHCARD_CACHE_PREFIX = "flashcards:";
-
 export function isFlashcardCategory(value: string): value is FlashcardCategory {
   return (flashcardCategories as readonly string[]).includes(value);
 }

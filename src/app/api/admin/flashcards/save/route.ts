@@ -3,8 +3,8 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
-import { FLASHCARD_CACHE_PREFIX, serializeFlashcardData, validateFlashcardInput } from "@/lib/flashcards";
-import { cacheInvalidate } from "@/lib/cache";
+import { serializeFlashcardData, validateFlashcardInput } from "@/lib/flashcards";
+import { invalidateFlashcardIndex } from "@/lib/flashcards/cache";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const card = id
       ? await db.flashcardCard.update({ where: { id }, data })
       : await db.flashcardCard.create({ data });
-    cacheInvalidate(FLASHCARD_CACHE_PREFIX);
+    await invalidateFlashcardIndex();
     return NextResponse.json({ ok: true, id: card.id });
   } catch {
     return NextResponse.json({ error: "save_failed" }, { status: 409 });

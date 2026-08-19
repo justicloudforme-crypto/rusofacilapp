@@ -16,6 +16,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { db } from "../src/lib/db";
 import { validateFlashcardInput, serializeFlashcardData } from "../src/lib/flashcards";
+import { invalidateFlashcardIndex } from "../src/lib/flashcards/cache";
 
 async function main() {
   const batchPath = join(__dirname, "flashcards-batch.json");
@@ -35,6 +36,18 @@ async function main() {
     const card = await db.flashcardCard.create({ data });
     console.log(`  + [${card.id}] ${card.category}/${card.level} ${card.russian}`);
     inserted++;
+  }
+
+  if (inserted > 0) {
+    // Without this, the live site's shared flashcard cache (Redis-backed,
+    // see src/lib/flashcards/cache.ts) has no way to know this batch
+    // exists — this script runs in a separate process from the deployed
+    // server, so it can only invalidate a *shared* cache, never an
+    // in-process one. Missing this call was the root cause of newly
+    // inserted batches not appearing on the live site until the cache's
+    // own TTL happened to expire.
+    await invalidateFlashcardIndex();
+    console.log("Invalidated the shared flashcard cache — new cards are live immediately.");
   }
 
   console.log(`\n${inserted} inserted, ${failed} failed (of ${raw.length}).`);

@@ -3,8 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
-import { FLASHCARD_CACHE_PREFIX } from "@/lib/flashcards";
-import { cacheInvalidate } from "@/lib/cache";
+import { invalidateFlashcardIndex } from "@/lib/flashcards/cache";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -19,6 +18,6 @@ export async function POST(request: NextRequest) {
   }
 
   await db.flashcardCard.deleteMany({ where: { id } });
-  cacheInvalidate(FLASHCARD_CACHE_PREFIX);
+  await invalidateFlashcardIndex();
   return NextResponse.json({ ok: true });
 }
