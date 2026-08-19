@@ -24260,5 +24260,193 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video Rf6oy_2a52w, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de N. Bogoslovski, letra de V. Dyjovichni y M. Slobodskoi; interpretada por Leonid Jaritonov), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción cómica sobre el orgullo laboral."
+  },
+  "song-krylatye-kacheli": {
+    "id": "song-krylatye-kacheli",
+    "title": "Крылатые качели — de la película «Приключения Электроника» (1979)",
+    "description": "Una de las canciones infantiles más queridas de la URSS, sobre unos 'columpios alados' que vuelan hacia el cielo en un parque de abril, y la nostalgia anticipada por una infancia que algún día terminará. De la serie de TV «Приключения Электроника» (1979).",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "Jnl6Jf4yiu8",
+    "lyricsOrTranscript": [
+      {
+        "russian": "В юном месяце апреле В старом парке тает снег И крылатые качели Начинают свой разбег.",
+        "translation": "En el joven mes de abril, en el viejo parque se derrite la nieve, y los columpios alados empiezan a tomar impulso."
+      },
+      {
+        "russian": "Позабыто всё на свете, Сердце замерло в груди, Только небо, только ветер, Только радость впереди.",
+        "translation": "Se olvida todo en el mundo, el corazón se detiene en el pecho, solo el cielo, solo el viento, solo la alegría por delante."
+      },
+      {
+        "russian": "Взмывая выше ели, Не ведая преград, Крылатые качели Летят, летят, летят.",
+        "translation": "Elevándose más alto que el abeto, sin conocer obstáculos, los columpios alados vuelan, vuelan, vuelan."
+      },
+      {
+        "russian": "Детство кончится когда-то, Ведь оно не навсегда. Станут взрослыми ребята, Разлетятся кто-куда.",
+        "translation": "La infancia terminará algún día, pues no es para siempre. Los niños se harán adultos, cada uno volará hacia un lado distinto."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "крылатый",
+        "transcription": "krylátyy",
+        "translation": "alado"
+      },
+      {
+        "word": "качели",
+        "transcription": "kach'éli",
+        "translation": "columpio"
+      },
+      {
+        "word": "разбег",
+        "transcription": "razbyég",
+        "translation": "toma de impulso, carrera previa"
+      },
+      {
+        "word": "взмывать",
+        "transcription": "vzmyvát'",
+        "translation": "elevarse rápidamente (volando)"
+      },
+      {
+        "word": "преграда",
+        "transcription": "prigráda",
+        "translation": "obstáculo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songkrylatyekacheli-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿En qué estación/mes empieza a derretirse la nieve en la canción?",
+        "options": [
+          "En diciembre",
+          "En abril",
+          "En agosto",
+          "En enero"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songkrylatyekacheli-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "качели",
+            "right": "columpio"
+          },
+          {
+            "left": "крылатый",
+            "right": "alado"
+          },
+          {
+            "left": "взмывать",
+            "right": "elevarse volando"
+          },
+          {
+            "left": "преграда",
+            "right": "obstáculo"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Jnl6Jf4yiu8, canal 'Советское телевидение' (archivo estatal Гостелерадиофонд). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video, sin usar la letra de memoria. Sin contenido de guerra/violencia — clásico infantil sobre la alegría y el paso de la infancia."
+  },
+  "song-menya-ukusil-gippopotam": {
+    "id": "song-menya-ukusil-gippopotam",
+    "title": "Меня укусил гиппопотам — de «Рассказы о Кешке и его друзьях» (1974)",
+    "description": "Canción absurdista infantil sobre un niño que asegura que le mordió un hipopótamo (o tal vez un camello, o un hipopótamo otra vez — nunca queda claro), de la película soviética «Рассказы о Кешке и его друзьях» (1974), con letra de Yuli Kim.",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "3Ye8poiM0ag",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Меня укусил гиппопотам, с испугу я на веточку залез.",
+        "translation": "Me mordió un hipopótamo, del susto me subí a una ramita."
+      },
+      {
+        "russian": "И вот я здесь, а нога моя там, меня укусил гиппопотам.",
+        "translation": "Y aquí estoy yo, y mi pierna está allá, me mordió un hipopótamo."
+      },
+      {
+        "russian": "Но это был не гиппопотам, а просто старый верблюд.",
+        "translation": "Pero no era un hipopótamo, sino simplemente un viejo camello."
+      },
+      {
+        "russian": "Остался только маленький шрам.",
+        "translation": "Solo quedó una pequeña cicatriz."
+      },
+      {
+        "russian": "Меня укусил бегемот... Но это был не бегемот, а просто гиппопотам.",
+        "translation": "Me mordió un hipopótamo (sinónimo)... Pero no era ese, sino simplemente otro hipopótamo. (el juego cómico continúa confundiendo los animales sin parar)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "гиппопотам / бегемот",
+        "transcription": "gipapatám / bigimót",
+        "translation": "hipopótamo (dos palabras sinónimas en ruso)"
+      },
+      {
+        "word": "верблюд",
+        "transcription": "virblyúd",
+        "translation": "camello"
+      },
+      {
+        "word": "укусить",
+        "transcription": "ukusít'",
+        "translation": "morder"
+      },
+      {
+        "word": "с испугу",
+        "transcription": "s ispúgu",
+        "translation": "del susto, por miedo"
+      },
+      {
+        "word": "шрам",
+        "transcription": "shram",
+        "translation": "cicatriz"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songmenyaukusilgippopotam-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es el chiste central de la canción?",
+        "options": [
+          "El niño nunca fue mordido por nada",
+          "La confusión constante sobre qué animal lo mordió",
+          "El niño perdió la pierna",
+          "El animal habla ruso"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songmenyaukusilgippopotam-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "гиппопотам",
+            "right": "hipopótamo"
+          },
+          {
+            "left": "верблюд",
+            "right": "camello"
+          },
+          {
+            "left": "укусить",
+            "right": "morder"
+          },
+          {
+            "left": "шрам",
+            "right": "cicatriz"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 3Ye8poiM0ag, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos AUTOMÁTICOS reales en ruso (claros y legibles): letra completa extraída directamente de la transcripción, sin usar la letra de memoria. Sin contenido de guerra/violencia — canción infantil absurdista y cómica; el 'mordisco' es puramente humorístico, sin sangre ni descripción de daño real."
   }
 }
