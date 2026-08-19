@@ -28884,5 +28884,195 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video Dk57EyHRN30 ('Russian Weather Talk: Autumn in St. Petersburg & Spring in Irkutsk'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-4 (hablar del clima y las estaciones)."
+  },
+  "video-direcciones-tango-cancion": {
+    "id": "video-direcciones-tango-cancion",
+    "title": "Diálogo práctico en la calle: pedir direcciones con una canción de tango",
+    "description": "Canción-lección del canal «Jurussia Учим русский» en forma de tango, construida enteramente sobre preguntas y respuestas para pedir y dar direcciones en ruso: «Извините, где музей?», «Как пройти на вокзал?», y el patrón repetido de respuesta «прямо-прямо, потом направо/налево поверни...» — con puntos de referencia como el puente, la escuela, la farmacia y el banco.",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "0ZdZQuJRUQI",
+    "curriculumLessonId": "a1-29",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Извините, где музей? Как пройти мне на вокзал?",
+        "translation": "Disculpe, ¿dónde está el museo? ¿Cómo llego a la estación?"
+      },
+      {
+        "russian": "Прямо-прямо, не спеши, потом направо поверни, через мост, а там сверни — ты пришёл уже почти.",
+        "translation": "Todo recto, no te apures, luego gira a la derecha, cruza el puente y gira allí — ya casi has llegado."
+      },
+      {
+        "russian": "Слева школа, справа дом — ты дойдёшь туда пешком.",
+        "translation": "A la izquierda la escuela, a la derecha la casa — llegarás caminando."
+      },
+      {
+        "russian": "Где находится кафе? — Между школой и аптекой, рядом с банком и аллеей.",
+        "translation": "¿Dónde está el café? — Entre la escuela y la farmacia, junto al banco y la alameda."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "как пройти?",
+        "transcription": "kak praití",
+        "translation": "¿cómo llego a pie?"
+      },
+      {
+        "word": "прямо",
+        "transcription": "pr'áma",
+        "translation": "todo recto"
+      },
+      {
+        "word": "направо / налево",
+        "transcription": "naprávа / nal'éva",
+        "translation": "a la derecha / a la izquierda"
+      },
+      {
+        "word": "повернуть",
+        "transcription": "pav'irnút'",
+        "translation": "girar"
+      },
+      {
+        "word": "рядом с...",
+        "transcription": "r'ádam s",
+        "translation": "junto a..."
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodireccionestangocancion-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se pregunta «¿cómo llego a la estación?» en ruso?",
+        "options": [
+          "Где вокзал?",
+          "Как пройти на вокзал?",
+          "Сколько метров?",
+          "Прямо-прямо?"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodireccionestangocancion-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "прямо",
+            "right": "todo recto"
+          },
+          {
+            "left": "направо",
+            "right": "a la derecha"
+          },
+          {
+            "left": "налево",
+            "right": "a la izquierda"
+          },
+          {
+            "left": "повернуть",
+            "right": "girar"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 0ZdZQuJRUQI ('Don't Rush – Russian Tango Song for Directions (A2)'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a1-29 (diálogo práctico: en la calle, cómo pedir direcciones)."
+  },
+  "video-en-el-hotel-dialogo": {
+    "id": "video-en-el-hotel-dialogo",
+    "title": "Diálogo práctico en el hotel: un huésped exigente se queja de todo",
+    "description": "Diálogo cómico del canal «The Linguists Family» (nivel A2-B1): un huésped llama a recepción para quejarse de absolutamente todo en su habitación — el tamaño, la cama, las toallas, la vista, el balcón — mostrando el vocabulario esencial del hotel (номер, администратор, горничная, полотенца, сейф) en un contexto natural y memorable.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "_-XfUfrh52Y",
+    "curriculumLessonId": "a1-28",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Можно поговорить с администратором? Я хочу поменять номер!",
+        "translation": "¿Puedo hablar con el/la gerente? ¡Quiero cambiar de habitación!"
+      },
+      {
+        "russian": "Эта комната слишком маленькая! Я хочу большую комнату. — Это стандартный номер.",
+        "translation": "¡Esta habitación es demasiado pequeña! Quiero una habitación grande. — Esta es una habitación estándar."
+      },
+      {
+        "russian": "У меня аллергия на этот материал! — Я попрошу горничную поменять бельё.",
+        "translation": "¡Soy alérgico a este material! — Le pediré a la camarera que cambie la ropa de cama."
+      },
+      {
+        "russian": "Перед вами панорама города. Другие окна выходят во двор.",
+        "translation": "Frente a usted está la vista panorámica de la ciudad. Las otras ventanas dan al patio."
+      },
+      {
+        "russian": "Сначала я должен достать свой телефон из сейфа. Как он работает?",
+        "translation": "Primero tengo que sacar mi teléfono de la caja fuerte. ¿Cómo funciona?"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "номер",
+        "transcription": "nómir",
+        "translation": "habitación (de hotel)"
+      },
+      {
+        "word": "администратор",
+        "transcription": "adminisrátar",
+        "translation": "recepcionista/gerente"
+      },
+      {
+        "word": "горничная",
+        "transcription": "górnichnaya",
+        "translation": "camarera de piso"
+      },
+      {
+        "word": "полотенце",
+        "transcription": "palat'éntse",
+        "translation": "toalla"
+      },
+      {
+        "word": "сейф",
+        "transcription": "seif",
+        "translation": "caja fuerte"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoenelhoteldialogo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿A quién puede pedir el huésped que cambie la ropa de cama?",
+        "options": [
+          "Al administrador",
+          "A la horничная (camarera)",
+          "Al taxista",
+          "Al cocinero"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoenelhoteldialogo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "номер",
+            "right": "habitación"
+          },
+          {
+            "left": "администратор",
+            "right": "recepcionista"
+          },
+          {
+            "left": "полотенце",
+            "right": "toalla"
+          },
+          {
+            "left": "сейф",
+            "right": "caja fuerte"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video _-XfUfrh52Y ('Гостиница. Hotel in Russian, RU/ES subtitles'), canal «The Linguists Family. Dialogues in Russian». Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español (el propio canal los proporciona en 9 idiomas). Cubre el slot a1-28 (diálogo práctico: en el restaurante y en el hotel — enfoque en hotel, ya que a1-5 cubre restaurante)."
   }
 }
