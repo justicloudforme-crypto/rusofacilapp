@@ -90,6 +90,11 @@ export interface StoryAudioSegment {
   paragraphIndex: number;
   sentenceIndex: number;
   url: string;
+  /** Null for clips generated before this column existed and not yet
+   * covered by the backfill script (see prisma/backfill-audio-durations.ts)
+   * — callers building a whole-story timeline (scrubber, Media Session)
+   * must treat that as "unknown," not zero. */
+  durationSeconds: number | null;
 }
 
 /** A story's narration clips live in the shared `AudioAsset` table
@@ -103,12 +108,19 @@ export function storyAudioItemKey(paragraphIndex: number, sentenceIndex: number)
 /** Turns a story's raw `AudioAsset` rows into {@link StoryAudioSegment}s,
  * dropping any row whose itemKey doesn't parse (defensive only — every row
  * this app itself writes is well-formed). */
-export function toStoryAudioSegments(rows: { itemKey: string; audioUrl: string }[]): StoryAudioSegment[] {
+export function toStoryAudioSegments(
+  rows: { itemKey: string; audioUrl: string; durationSeconds: number | null }[]
+): StoryAudioSegment[] {
   const segments: StoryAudioSegment[] = [];
   for (const row of rows) {
     const match = /^(\d+)-(\d+)$/.exec(row.itemKey);
     if (!match) continue;
-    segments.push({ paragraphIndex: Number(match[1]), sentenceIndex: Number(match[2]), url: row.audioUrl });
+    segments.push({
+      paragraphIndex: Number(match[1]),
+      sentenceIndex: Number(match[2]),
+      url: row.audioUrl,
+      durationSeconds: row.durationSeconds,
+    });
   }
   return segments;
 }

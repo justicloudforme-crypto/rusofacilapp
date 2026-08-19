@@ -44,7 +44,7 @@ export default async function StoryReaderPage({
   const audioAssetRows = entitled
     ? await db.audioAsset.findMany({
         where: { contentType: "story", contentId: story.id },
-        select: { itemKey: true, audioUrl: true },
+        select: { itemKey: true, audioUrl: true, durationSeconds: true },
       })
     : [];
   const audioSegments = toStoryAudioSegments(audioAssetRows).filter(

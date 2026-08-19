@@ -317,6 +317,14 @@ model AudioAsset {
   voice       String
   model       String // e.g. "gpt-4o-mini-tts" — lets a future voice/model switch be told apart from old clips
   audioUrl    String
+  // Nullable: existing rows predate this column. Populated at generation
+  // time going forward (see generate-story-audio.ts) and by a one-time
+  // backfill script for rows that already existed — see
+  // prisma/backfill-audio-durations.ts. Feeds the story player's
+  // whole-track scrubber and Media Session setPositionState(), both of
+  // which need every segment's length known up front rather than
+  // discovered lazily client-side as each clip plays.
+  durationSeconds Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
