@@ -23888,5 +23888,193 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video QTX--4B_vIA, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de A. Rybnikov, letra de Bulat Okudzhava), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción cómico-romántica infantil clásica."
+  },
+  "song-pesenka-krasnoy-shapochki": {
+    "id": "song-pesenka-krasnoy-shapochki",
+    "title": "Песенка Красной Шапочки — de la película «Про Красную Шапочку» (1977)",
+    "description": "Canción alegre de Caperucita Roja sobre caminar mucho tiempo por el sendero hasta llegar a África, donde hay ríos anchos, montañas altas, cocodrilos, hipopótamos, monos y un loro verde — y sobre la importancia de saludar educadamente a todo el que se encuentre en el camino.",
+    "level": "A1",
+    "category": "song",
+    "youtubeVideoId": "dZFr0Eji6gc",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Если долго, долго, долго, Если долго по тропинке, Топать, ехать и бежать, То, пожалуй, можно в Африку прийти.",
+        "translation": "Si caminas, caminas, caminas mucho tiempo, si caminas mucho tiempo por el sendero, pisando, viajando y corriendo, entonces tal vez puedas llegar a África."
+      },
+      {
+        "russian": "А-а, в Африке реки вот такой ширины. А-а, в Африке горы вот такой вышины.",
+        "translation": "Ah, en África los ríos son así de anchos. Ah, en África las montañas son así de altas."
+      },
+      {
+        "russian": "А-а, крокодилы, бегемоты, А-а, обезьяны, кашалоты, А-а, и зелёный попугай.",
+        "translation": "Ah, cocodrilos, hipopótamos, ah, monos, cachalotes, ah, y un loro verde."
+      },
+      {
+        "russian": "Если только на дорожке Встречу я кого-нибудь, То тому, кого я встречу, Не забуду здрасьте говорить.",
+        "translation": "Si en el camino me encuentro con alguien, a quien me encuentre no olvidaré decirle hola."
+      },
+      {
+        "russian": "Но, конечно, если ты такой ленивый, Если ты такой пугливый, Сиди дома, не гуляй.",
+        "translation": "Pero, claro, si eres tan perezoso, si eres tan miedoso, quédate en casa, no salgas a pasear."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "тропинка",
+        "transcription": "trapínka",
+        "translation": "sendero"
+      },
+      {
+        "word": "бегемот",
+        "transcription": "bigimót",
+        "translation": "hipopótamo"
+      },
+      {
+        "word": "попугай",
+        "transcription": "papugáy",
+        "translation": "loro"
+      },
+      {
+        "word": "ленивый",
+        "transcription": "linívyy",
+        "translation": "perezoso"
+      },
+      {
+        "word": "пугливый",
+        "transcription": "pugliviy",
+        "translation": "miedoso, asustadizo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songpesenkakrasnoyshapochki-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué promete hacer Caperucita si se encuentra con alguien en el camino?",
+        "options": [
+          "Ignorarlo",
+          "Saludarlo (decir «здрасьте»)",
+          "Correr",
+          "Esconderse"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songpesenkakrasnoyshapochki-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "тропинка",
+            "right": "sendero"
+          },
+          {
+            "left": "бегемот",
+            "right": "hipopótamo"
+          },
+          {
+            "left": "попугай",
+            "right": "loro"
+          },
+          {
+            "left": "ленивый",
+            "right": "perezoso"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video dZFr0Eji6gc, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de A. Rybnikov, letra de Yuli Kim), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción infantil juguetona sobre un viaje imaginario a África."
+  },
+  "song-mezhdu-nami-dikaryami": {
+    "id": "song-mezhdu-nami-dikaryami",
+    "title": "Между нами, дикарями — de la película «Завтрак на траве» (1979)",
+    "description": "Canción cómica y aventurera sobre preferir dormir en el bosque a dormir en una cama, comer arándanos silvestres, y mantener el buen ánimo pase lo que pase — 'al borde de un precipicio o en la boca de un tigre, no pierdas el optimismo y cree en la felicidad'.",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "hK0wjukemgE",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Между нами дикарями говоря, Спать в кровати — только тратить время зря.",
+        "translation": "Hablando entre nosotros como salvajes, dormir en cama es solo perder el tiempo."
+      },
+      {
+        "russian": "Нам под крышей плохо спится, душно нам, Надо, братцы, разбегаться по лесам.",
+        "translation": "Bajo techo dormimos mal, sentimos sofoco; hay que dispersarse por los bosques, hermanos."
+      },
+      {
+        "russian": "И у края пропасти, И у тигра в пасти — Не теряйте бодрости И верьте в счастье.",
+        "translation": "Ya sea al borde de un precipicio, o en la boca de un tigre — no pierdan el buen ánimo y crean en la felicidad."
+      },
+      {
+        "russian": "Захотелось антрекота в сухарях, Жизнь лесная возбуждает аппетит, Хоть черникой и брусникой рот набит.",
+        "translation": "Dieron ganas de un entrecot empanizado; la vida en el bosque despierta el apetito, aunque la boca esté llena de arándanos y arándanos rojos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "дикарь",
+        "transcription": "dikár'",
+        "translation": "salvaje (persona que vive en la naturaleza)"
+      },
+      {
+        "word": "пропасть",
+        "transcription": "própast'",
+        "translation": "precipicio, abismo"
+      },
+      {
+        "word": "пасть",
+        "transcription": "past'",
+        "translation": "boca/fauces (de un animal)"
+      },
+      {
+        "word": "бодрость",
+        "transcription": "bódrast'",
+        "translation": "buen ánimo, vigor"
+      },
+      {
+        "word": "черника",
+        "transcription": "chirníka",
+        "translation": "arándano"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songmezhdunamidikaryami-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según el estribillo, ¿qué se debe hacer incluso al borde de un precipicio o en la boca de un tigre?",
+        "options": [
+          "Huir de inmediato",
+          "No perder el buen ánimo y creer en la felicidad",
+          "Llamar a la policía",
+          "Quedarse quieto y en silencio"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songmezhdunamidikaryami-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "дикарь",
+            "right": "salvaje"
+          },
+          {
+            "left": "пропасть",
+            "right": "precipicio"
+          },
+          {
+            "left": "бодрость",
+            "right": "buen ánimo"
+          },
+          {
+            "left": "черника",
+            "right": "arándano"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video hK0wjukemgE, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video, sin usar la letra de memoria. Sin contenido de guerra/violencia — 'el tigre' y 'el precipicio' son hipérboles cómicas sobre el espíritu aventurero, no violencia real."
   }
 }
