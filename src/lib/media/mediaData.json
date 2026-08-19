@@ -23225,5 +23225,105 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video kOXqQu93i1s, canal 'Slavic Roots Western Mind' (video de letras). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos AUTOMÁTICOS reales en ruso: se usaron ÚNICAMENTE los versos con transcripción perfectamente clara (el estribillo repetido y el puente sobre los jeans/bajo desgastados); se omitieron deliberadamente dos estrofas intermedias cuya transcripción automática resultó ambigua/parcialmente garbled ('спи спокойно' — frase potencialmente ambigua que no se pudo verificar con certeza), siguiendo la regla de no reconstruir letras de memoria. Sin contenido de guerra/violencia — 'враг' aparece una vez de forma puramente metafórica ('ni casa, ni amigos, ni enemigos' = una vida sin fricciones)."
+  },
+  "song-koster": {
+    "id": "song-koster",
+    "title": "Костёр — Машина времени",
+    "description": "Canción filosófica de Машина времени que usa la imagen de una fogata como metáfora de la vida: los que consumen su 'fuego' con moderación sobreviven más tiempo que los que lo queman todo de golpe. Interpretada en el concierto del 30 aniversario del grupo (1999).",
+    "level": "B2",
+    "category": "song",
+    "youtubeVideoId": "Cle6zxNc4HM",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Каждый костёр когда-то догорит, ветер золу развеет без следа.",
+        "translation": "Toda fogata algún día se apagará, el viento dispersará las cenizas sin dejar rastro."
+      },
+      {
+        "russian": "Но до тех пор, пока огонь горит, каждый его по-своему хранит.",
+        "translation": "Pero mientras el fuego arde, cada uno lo cuida a su manera."
+      },
+      {
+        "russian": "Но иногда найдётся вдруг чудак, этот чудак всё сделает не так, и его костёр зовётся до небес.",
+        "translation": "Pero a veces aparece de pronto un excéntrico, este excéntrico hace todo diferente, y su fogata llega hasta el cielo."
+      },
+      {
+        "russian": "Тот был умней, кто свой огонь сберёг, он обогреть других уже не мог, но без потерь дожил до тёплых дней.",
+        "translation": "Fue más sabio quien conservó su fuego; ya no podía calentar a otros, pero llegó sin pérdidas a días cálidos."
+      },
+      {
+        "russian": "А ты был не прав, ты всё спалил за час, и через час большой огонь угас.",
+        "translation": "Pero tú te equivocaste, quemaste todo en una hora, y una hora después el gran fuego se apagó."
+      },
+      {
+        "russian": "Ещё не всё дорешено, ещё не всё разрешено, ещё не все погасли краски дня.",
+        "translation": "Todavía no todo está decidido, todavía no todo está permitido, todavía no se han apagado todos los colores del día."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "костёр",
+        "transcription": "kast'ór",
+        "translation": "fogata"
+      },
+      {
+        "word": "догореть",
+        "transcription": "dagar'ét'",
+        "translation": "consumirse por completo (un fuego)"
+      },
+      {
+        "word": "зола",
+        "transcription": "zalá",
+        "translation": "ceniza"
+      },
+      {
+        "word": "сберечь",
+        "transcription": "sbir'éch'",
+        "translation": "conservar, cuidar, ahorrar"
+      },
+      {
+        "word": "угаснуть",
+        "transcription": "ugásnut'",
+        "translation": "apagarse (un fuego, una pasión)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songkoster-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según la canción, ¿quién fue más sabio?",
+        "options": [
+          "El que quemó todo su fuego en una hora",
+          "El que conservó su fuego con moderación",
+          "El que nunca encendió una fogata",
+          "El que dejó que otros cuidaran su fuego"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songkoster-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "костёр",
+            "right": "fogata"
+          },
+          {
+            "left": "зола",
+            "right": "ceniza"
+          },
+          {
+            "left": "сберечь",
+            "right": "conservar"
+          },
+          {
+            "left": "угаснуть",
+            "right": "apagarse"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Cle6zxNc4HM ('Машина времени - Костер, с текстом песни'), canal 'GalaBiR', concierto del 30 aniversario en el Olímpico de Moscú (1999). Público, playable_in_embed=true, no es livestream propiamente (es un concierto grabado). Verificado con subtítulos AUTOMÁTICOS reales en ruso: se usaron ÚNICAMENTE los versos con transcripción claramente legible; se omitió un puente intermedio cuya transcripción resultó demasiado fragmentada/ilegible para confiar en su exactitud. Sin contenido de guerra/violencia — metáfora filosófica sobre moderación y autopreservación."
   }
 }
