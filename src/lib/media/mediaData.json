@@ -28698,5 +28698,191 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video 84C7ef0ehsk ('New Dress for the Party – Simple Russian Story for Beginners (A1)'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-28 (de compras: ropa y devoluciones)."
+  },
+  "video-v-aeroportu-dialogo": {
+    "id": "video-v-aeroportu-dialogo",
+    "title": "Diálogo práctico en el aeropuerto: «В аэропорту» — de la facturación al aterrizaje",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel A2): Marina viaja de Moscú (Sheremétievo) a Ereván. La historia recorre todo el proceso del aeropuerto en orden: facturación, etiqueta de equipaje, tarjeta de embarque, control de seguridad, sala de espera, embarque, vuelo, aterrizaje, recogida de equipaje y control de pasaportes.",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "Uv5FixmCPgA",
+    "curriculumLessonId": "a1-30",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Ваш билет и паспорт, пожалуйста. — Марина достаёт документы и показывает их.",
+        "translation": "Su billete y pasaporte, por favor. — Marina saca los documentos y los muestra."
+      },
+      {
+        "russian": "Это ваш посадочный талон. Выход на посадку С17, посадка в 10:30.",
+        "translation": "Esta es su tarjeta de embarque. Puerta de embarque C17, embarque a las 10:30."
+      },
+      {
+        "russian": "Пассажиры рейса SU 123 на Ереван, просим пройти к выходу на посадку С17.",
+        "translation": "Pasajeros del vuelo SU 123 a Ereván, por favor diríjanse a la puerta de embarque C17."
+      },
+      {
+        "russian": "Марина идёт к ленте выдачи багажа. Она ищет свой чемодан.",
+        "translation": "Marina va a la cinta de recogida de equipaje. Busca su maleta."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "стойка регистрации",
+        "transcription": "stóika r'igistrátsii",
+        "translation": "mostrador de facturación"
+      },
+      {
+        "word": "посадочный талон",
+        "transcription": "pasádachnyi talón",
+        "translation": "tarjeta de embarque"
+      },
+      {
+        "word": "ручная кладь",
+        "transcription": "ruchnáya klad'",
+        "translation": "equipaje de mano"
+      },
+      {
+        "word": "паспортный контроль",
+        "transcription": "páspartnyi kantról'",
+        "translation": "control de pasaportes"
+      },
+      {
+        "word": "лента выдачи багажа",
+        "transcription": "l'énta vydáchi bagazhá",
+        "translation": "cinta de recogida de equipaje"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videovaeroportudialogo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué necesitas mostrar en la стойка регистрации (mostrador de facturación)?",
+        "options": [
+          "Solo el pasaporte",
+          "Solo el billete",
+          "El billete y el pasaporte",
+          "La tarjeta de embarque"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videovaeroportudialogo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "посадочный талон",
+            "right": "tarjeta de embarque"
+          },
+          {
+            "left": "ручная кладь",
+            "right": "equipaje de mano"
+          },
+          {
+            "left": "паспортный контроль",
+            "right": "control de pasaportes"
+          },
+          {
+            "left": "стойка регистрации",
+            "right": "mostrador de facturación"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Uv5FixmCPgA ('Russian at the Airport | Beginner Story + Vocabulary (A2)'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso (este video no tenía subtítulos oficiales en español a diferencia de otros de la misma serie; traducción propia verificada palabra por palabra contra la transcripción). Cubre el slot a1-30 (diálogo práctico: en el aeropuerto)."
+  },
+  "video-pogoda-clima-estaciones": {
+    "id": "video-pogoda-clima-estaciones",
+    "title": "Hablar del clima y las estaciones: otoño en San Petersburgo, primavera en Irkutsk",
+    "description": "Lección del canal «Jurussia Учим русский» que compara el clima real de dos regiones muy distintas de Rusia: el otoño lluvioso y brumoso de San Petersburgo (llovizna, granizo, niebla) frente a la primavera fría de Irkutsk en Siberia (aguanieve, viento, nueva nevada) — mientras en Crimea, al mismo tiempo, ya hace calor y la gente lleva camiseta y sandalias.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "Dk57EyHRN30",
+    "curriculumLessonId": "a2-4",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Сегодня пасмурно, идёт моросящий дождь, и всего семь градусов.",
+        "translation": "Hoy está nublado, cae una llovizna, y solo hace siete grados."
+      },
+      {
+        "russian": "Я всегда беру с собой зонт, ношу непромокаемую куртку с капюшоном и резиновые сапоги.",
+        "translation": "Siempre llevo un paraguas, uso una chaqueta impermeable con capucha y botas de goma."
+      },
+      {
+        "russian": "У нас только началась весна. Идёт снег с дождём. Такой снег называется мокрый снег.",
+        "translation": "Aquí acaba de empezar la primavera. Cae aguanieve (nieve con lluvia). A esa mezcla se le llama «nieve mojada»."
+      },
+      {
+        "russian": "В Крыму, говорят, жарко и сухо. Люди уже носят футболки, шорты и сандалии, а у нас ещё шубы и сапоги.",
+        "translation": "En Crimea, dicen, hace calor y está seco. La gente ya lleva camiseta, pantalón corto y sandalias, y aquí todavía llevamos abrigo de piel y botas."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "пасмурно",
+        "transcription": "pásmurna",
+        "translation": "nublado"
+      },
+      {
+        "word": "моросящий дождь",
+        "transcription": "marasyáshch'ii dozhd'",
+        "translation": "llovizna"
+      },
+      {
+        "word": "мокрый снег",
+        "transcription": "mókryi sn'ek",
+        "translation": "aguanieve"
+      },
+      {
+        "word": "похолодание",
+        "transcription": "pakhaladániye",
+        "translation": "bajada de temperatura"
+      },
+      {
+        "word": "снегопад",
+        "transcription": "sn'igapát",
+        "translation": "nevada"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopogodaclimaestaciones-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se llama la mezcla de nieve y lluvia que describe Lena en Irkutsk?",
+        "options": [
+          "снегопад",
+          "мокрый снег",
+          "моросящий дождь",
+          "град"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videopogodaclimaestaciones-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "пасмурно",
+            "right": "nublado"
+          },
+          {
+            "left": "мокрый снег",
+            "right": "aguanieve"
+          },
+          {
+            "left": "снегопад",
+            "right": "nevada"
+          },
+          {
+            "left": "похолодание",
+            "right": "bajada de temperatura"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Dk57EyHRN30 ('Russian Weather Talk: Autumn in St. Petersburg & Spring in Irkutsk'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-4 (hablar del clima y las estaciones)."
   }
 }
