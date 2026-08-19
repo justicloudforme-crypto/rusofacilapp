@@ -25928,5 +25928,97 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video iJj0gvMVKRU, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Yevgueni Krylatov, letra de Leonid Derbenev, cantada por Artiom Tynkasov), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción cómica y autoirónica."
+  },
+  "song-ya-tebya-nikogda-ne-zabudu": {
+    "id": "song-ya-tebya-nikogda-ne-zabudu",
+    "title": "Я тебя никогда не забуду — de la rock-ópera «Юнона и Авось» (1983)",
+    "description": "Uno de los romances más queridos y famosos de Rusia, del legendario musical de rock soviético «Юнона и Авось» (dirigido por Mark Zajárov), con letra del poeta Andréi Voznesenski. Un lamento de amor y despedida eterna, interpretado por Nikolái Karachentsov y Yelena Shanina.",
+    "level": "C1",
+    "category": "song",
+    "youtubeVideoId": "zLjIKdrq2wE",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Ты меня на рассвете разбудишь, Проводить, необутая, выйдешь.",
+        "translation": "Me despertarás al amanecer, saldrás a despedirme sin siquiera calzarte."
+      },
+      {
+        "russian": "Ты меня никогда не забудешь, Ты меня никогда не увидишь.",
+        "translation": "Tú nunca me olvidarás, tú nunca volverás a verme."
+      },
+      {
+        "russian": "Заслонивши тебя от простуды, Я подумаю: Боже Всевышний! Я тебя никогда не забуду, Я тебя никогда не увижу.",
+        "translation": "Protegiéndote del frío, pensaré: ¡Dios Todopoderoso! Yo nunca te olvidaré, yo nunca volveré a verte."
+      },
+      {
+        "russian": "Не мигают, слезятся от ветра Без надежды карие вишни. Возвращаться — плохая примета.",
+        "translation": "No parpadean, se llenan de lágrimas por el viento, sin esperanza, los ojos color cereza. Volver atrás es mal presagio."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "рассвет",
+        "transcription": "rassvyét",
+        "translation": "amanecer"
+      },
+      {
+        "word": "необутый",
+        "transcription": "niabútyy",
+        "translation": "descalzo, sin zapatos puestos"
+      },
+      {
+        "word": "заслонить",
+        "transcription": "zaslanít'",
+        "translation": "proteger, cubrir (a alguien de algo)"
+      },
+      {
+        "word": "плохая примета",
+        "transcription": "plajáya primyéta",
+        "translation": "mal presagio, mala señal"
+      },
+      {
+        "word": "вишня (перен.)",
+        "transcription": "víshnya",
+        "translation": "cereza — aquí, metáfora poética de ojos oscuros"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songyatebyanikogdanezabudu-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según la creencia popular mencionada en la canción, ¿qué es mala señal?",
+        "options": [
+          "Despedirse de noche",
+          "Volver atrás (regresar)",
+          "Salir sin zapatos",
+          "Llorar por el viento"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songyatebyanikogdanezabudu-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "рассвет",
+            "right": "amanecer"
+          },
+          {
+            "left": "необутый",
+            "right": "descalzo"
+          },
+          {
+            "left": "заслонить",
+            "right": "proteger"
+          },
+          {
+            "left": "плохая примета",
+            "right": "mal presagio"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video zLjIKdrq2wE, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Alekséi Rybnikov, letra de Andréi Voznesenski, cantada por Nikolái Karachentsov y Yelena Shanina), sin usar la letra de memoria. Sin contenido de guerra/violencia — romance clásico de amor y despedida. Canción #100 de la meta de canciones de la galería."
   }
 }
