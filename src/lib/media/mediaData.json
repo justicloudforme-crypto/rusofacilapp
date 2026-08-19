@@ -22434,5 +22434,215 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video pG_MxzbDcQE ('Аудирование. Поездка в деревню. Глаголы движения.'). Público, playable_in_embed=true, no es livestream (ejercicio corto de audición/dictado). Verificado con subtítulos AUTOMÁTICOS reales en ruso (claros y legibles): narración completa extraída directamente de la transcripción, sin fragmentos garbled."
+  },
+  "song-gorizont": {
+    "id": "song-gorizont",
+    "title": "Горизонт — Новелла Матвеева (canción de autor, clásico del bardismo soviético)",
+    "description": "Una de las canciones más queridas de la poeta y cantautora Novella Matveeva (1934–2016), figura central del movimiento de la 'авторская песня' (canción de autor) soviética. Con imágenes marinas y nostálgicas —barcos, el horizonte, Constantinopla, Suez— evoca el deseo de viajar y lo inalcanzable del horizonte.",
+    "level": "C1",
+    "category": "song",
+    "youtubeVideoId": "IyHNf_0VEUI",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Видишь, зелёным бархатом отливая, Море лежит спокойнее чем земля,",
+        "translation": "¿Ves? Reluciendo en verde terciopelo, el mar yace más tranquilo que la tierra,"
+      },
+      {
+        "russian": "Видишь, как будто ломтик от каравая, Шлюпка отшвартовалась от корабля.",
+        "translation": "¿Ves? Como una rebanada de un pan redondo, un bote se ha desatracado del barco."
+      },
+      {
+        "russian": "Яхты и пароходы ушли куда-то, Снова, по краю моря на край Земли,",
+        "translation": "Los yates y los vapores se fueron a algún lugar, de nuevo, bordeando el mar hacia el confín de la Tierra,"
+      },
+      {
+        "russian": "Словно, как по натянутому канату В цирке канатоходцы пройти смогли.",
+        "translation": "Como si, sobre una cuerda floja tensada, los equilibristas del circo pudieran cruzar."
+      },
+      {
+        "russian": "Ты же так хорошо это море знаешь, Ты же такие песни о нём поёшь",
+        "translation": "Tú que conoces tan bien este mar, tú que cantas tales canciones sobre él,"
+      },
+      {
+        "russian": "Что ж ты, за горизонтом не исчезаешь, Что ж ты за пароходами не плывёшь",
+        "translation": "¿Por qué no desapareces tras el horizonte? ¿Por qué no navegas tras los vapores?"
+      },
+      {
+        "russian": "Снова Константинополь, Суец, Канада, Снова по краю моря на край земли.",
+        "translation": "De nuevo Constantinopla, Suez, Canadá, de nuevo bordeando el mar hacia el confín de la tierra."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "бархат",
+        "transcription": "bárkhat",
+        "translation": "terciopelo"
+      },
+      {
+        "word": "каравай",
+        "transcription": "karaváy",
+        "translation": "pan redondo tradicional"
+      },
+      {
+        "word": "шлюпка",
+        "transcription": "shlyúpka",
+        "translation": "bote, chalupa"
+      },
+      {
+        "word": "отшвартоваться",
+        "transcription": "atshvartavátsa",
+        "translation": "desatracar (soltar amarras)"
+      },
+      {
+        "word": "канатоходец",
+        "transcription": "kanatakhódits",
+        "translation": "equilibrista de cuerda floja"
+      },
+      {
+        "word": "горизонт",
+        "transcription": "garizónt",
+        "translation": "horizonte"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songgorizont-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Con qué se compara el mar en la primera estrofa?",
+        "options": [
+          "Con un espejo",
+          "Con terciopelo verde",
+          "Con un desierto",
+          "Con un jardín"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songgorizont-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "бархат",
+            "right": "terciopelo"
+          },
+          {
+            "left": "шлюпка",
+            "right": "bote"
+          },
+          {
+            "left": "горизонт",
+            "right": "horizonte"
+          },
+          {
+            "left": "канатоходец",
+            "right": "equilibrista"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video IyHNf_0VEUI, canal independiente 'Nifigas' (bardovskiye pesni pod gitaru). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: letra completa (sin fragmentos garbled) extraída directamente de la transcripción, sin usar la letra de memoria en ningún momento. Sin contenido de guerra/violencia — temática puramente marina/nostálgica de viaje."
+  },
+  "song-ty-u-menya-odna": {
+    "id": "song-ty-u-menya-odna",
+    "title": "Ты у меня одна — Юрий Визбор (canción de autor clásica)",
+    "description": "Otra canción entrañable del cantautor Yuri Vizbor, comparando a la persona amada con la luna, un pino en la estepa, la primavera — y cerrando con la imagen tierna de mecer a una hija en la cuna. Un clásico atemporal del repertorio de la canción de autor soviética.",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "oOJDwRFlbrY",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Ты у меня одна, словно в ночи луна, Словно в степи сосна, словно в году весна.",
+        "translation": "Eres mi única, como la luna en la noche, como un pino en la estepa, como la primavera en el año."
+      },
+      {
+        "russian": "Нету другой такой, ни за какой рекой, Нет за туманами, дальними странами.",
+        "translation": "No hay otra igual, tras ningún río, no hay tras las nieblas, tras países lejanos."
+      },
+      {
+        "russian": "В инее провода, в сумерках города, Вот и взошла звезда, чтобы светить всегда.",
+        "translation": "Los cables cubiertos de escarcha, en el crepúsculo de la ciudad, ha salido una estrella para brillar siempre."
+      },
+      {
+        "russian": "Чтобы гореть в метель, чтобы стелить постель, Чтобы качать всю ночь у колыбельной дочь,",
+        "translation": "Para arder en la ventisca, para tender la cama, para mecer toda la noche a la hija en la cuna,"
+      },
+      {
+        "russian": "Можешь отнять покой, можешь махнуть рукой, Можешь отдать долги, можешь любить других, Можешь совсем уйти, только свети, свети.",
+        "translation": "Puedes quitarme la paz, puedes darte por vencido, puedes pagar tus deudas, puedes amar a otros, puedes irte del todo — solo brilla, brilla."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "иней",
+        "transcription": "íniy",
+        "translation": "escarcha"
+      },
+      {
+        "word": "сумерки",
+        "transcription": "súmirki",
+        "translation": "crepúsculo, penumbra"
+      },
+      {
+        "word": "метель",
+        "transcription": "mit'él'",
+        "translation": "ventisca"
+      },
+      {
+        "word": "колыбель",
+        "transcription": "kalybél'",
+        "translation": "cuna"
+      },
+      {
+        "word": "отнять покой",
+        "transcription": "atnyát' pakóy",
+        "translation": "quitar la paz/tranquilidad"
+      },
+      {
+        "word": "махнуть рукой",
+        "transcription": "makhnút' rukóy",
+        "translation": "darse por vencido (modismo, lit. 'agitar la mano')"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songtyumenyaodna-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Con qué NO se compara a la persona amada en la primera estrofa?",
+        "options": [
+          "la luna",
+          "un pino",
+          "el sol",
+          "la primavera"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "songtyumenyaodna-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "иней",
+            "right": "escarcha"
+          },
+          {
+            "left": "сумерки",
+            "right": "crepúsculo"
+          },
+          {
+            "left": "колыбель",
+            "right": "cuna"
+          },
+          {
+            "left": "махнуть рукой",
+            "right": "darse por vencido"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video oOJDwRFlbrY ('Юрий Визбор - Ты У Меня Одна Караоке'), canal karaoke independiente 'Юлия Ре'. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción del video (texto oficial de karaoke, no de memoria). Sin contenido de guerra/violencia — canción de amor/familia atemporal."
   }
 }
