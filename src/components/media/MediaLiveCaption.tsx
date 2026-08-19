@@ -31,14 +31,12 @@ function estimateWordTimings(line: SubtitleLine): TimedWord[] {
   const duration = Math.max(line.end - line.start, 0.1);
 
   let cursor = line.start;
-  let wordIndex = 0;
   return parts.map((part) => {
     if (/^\s+$/.test(part)) return { text: part, start: cursor, end: cursor };
     const share = (part.length / totalChars) * duration;
     const start = cursor;
     const end = start + share;
     cursor = end;
-    wordIndex += 1;
     return { text: part, start, end };
   });
 }

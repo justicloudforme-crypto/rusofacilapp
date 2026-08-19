@@ -395,6 +395,15 @@ export default function StoryText({
 
     audio.pause();
     audio.src = url;
+    // Explicit load() after reassigning src: setting .src alone is
+    // supposed to trigger this per spec, but on several Android
+    // Chrome/WebView builds an element that just fired `ended` and gets a
+    // new `src` synchronously (as happens on every auto-advance below)
+    // can be left in a stale readyState that makes the immediate play()
+    // call below reject — reliably enough to be the leading real-world
+    // explanation for "plays the first sentence, then silently stops" on
+    // Android specifically. load() forces a clean reset before play().
+    audio.load();
     audio.playbackRate = rateRef.current;
     audio.onloadedmetadata = () => {
       cacheClipDuration(url, audio.duration);
@@ -415,8 +424,25 @@ export default function StoryText({
       console.error("[StoryText audio] playback error for", url);
       setPlaying(false);
     };
-    audio.play().catch(() => {
-      if (playbackGenRef.current === generation) setPlaying(false);
+    // The auto-advance case (index > 0, no fresh user gesture) is where a
+    // rejected play() previously failed completely silently — the catch
+    // below swallowed it with no log line and no retry, which is exactly
+    // why this bug shipped invisibly: nothing in the console pointed at
+    // it. Now it retries once after a tick (some Android builds need a
+    // moment to settle after load() before play() succeeds) and always
+    // logs if it still fails, so a real device report is debuggable
+    // instead of a mystery "it just stops."
+    audio.play().catch((err) => {
+      if (playbackGenRef.current !== generation) return;
+      console.error("[StoryText audio] play() rejected for", url, err);
+      window.setTimeout(() => {
+        if (playbackGenRef.current !== generation) return;
+        audio.play().catch((retryErr) => {
+          if (playbackGenRef.current !== generation) return;
+          console.error("[StoryText audio] retry also rejected for", url, retryErr);
+          setPlaying(false);
+        });
+      }, 150);
     });
   }
 

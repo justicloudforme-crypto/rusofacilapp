@@ -79,8 +79,10 @@ export async function fetchRussianCaptions(videoId: string): Promise<CaptionLine
       return null;
     }
 
+    const rawEvents = data.events ?? [];
     const lines: CaptionLine[] = [];
-    for (const event of data.events ?? []) {
+    for (let i = 0; i < rawEvents.length; i++) {
+      const event = rawEvents[i];
       const text = (event.segs ?? [])
         .map((seg) => seg.utf8 ?? "")
         .join("")
@@ -88,9 +90,27 @@ export async function fetchRussianCaptions(videoId: string): Promise<CaptionLine
         .trim();
       if (!text || event.tStartMs === undefined) continue;
 
+      const start = event.tStartMs;
+      let end: number;
+      if (event.dDurationMs !== undefined) {
+        end = start + event.dDurationMs;
+      } else {
+        // YouTube's json3 auto-caption events frequently omit
+        // dDurationMs entirely — this used to fall back to a flat 2s for
+        // every such event regardless of how long the line is actually
+        // spoken, which is a real, systematic desync (not just ASR
+        // imprecision): a line spoken for 4-5s still got a 2s highlight
+        // window. json3 events are sequential and back-to-back, so the
+        // NEXT event's own start is a far more accurate end for this one
+        // than a fixed guess — capped so a real silence gap between
+        // lines doesn't stretch one caption's highlight across it.
+        const nextStart = rawEvents[i + 1]?.tStartMs;
+        end = nextStart !== undefined ? Math.min(nextStart, start + 8000) : start + 2000;
+      }
+
       lines.push({
-        start: Math.round(event.tStartMs) / 1000,
-        end: Math.round(event.tStartMs + (event.dDurationMs ?? 2000)) / 1000,
+        start: Math.round(start) / 1000,
+        end: Math.round(end) / 1000,
         text,
       });
     }
