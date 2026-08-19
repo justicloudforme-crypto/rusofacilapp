@@ -6,11 +6,20 @@ import { getStripe } from "@/lib/stripe";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
 import { isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { getRateLimiter } from "@/lib/rate-limit";
 
 const PLAN_LABELS: Record<string, string> = {
   monthly: "Suscripción mensual",
   annual: "Suscripción anual",
 };
+
+// Every other mutating route in this app has a rate limiter — this one was
+// the exception despite being the highest-stakes: each call creates a real
+// Stripe Checkout Session (an API call Stripe itself rate-limits, and for
+// the OXXO branch, a real one-time payment object). Generous limit: a
+// student retrying after closing the Stripe tab, or comparing monthly vs.
+// annual, is normal use — this only stops a runaway retry loop or script.
+const checkoutLimiter = getRateLimiter("checkout", 60_000, 10);
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -29,6 +38,12 @@ export async function POST(request: NextRequest) {
     const url = new URL(`/${lang}/login`, request.url);
     url.searchParams.set("redirectTo", `/${lang}/pricing`);
     return NextResponse.redirect(url, { status: 303 });
+  }
+
+  if (await checkoutLimiter.check(user.id)) {
+    return NextResponse.redirect(new URL(`/${lang}/pricing?checkout=rate_limited`, request.url), {
+      status: 303,
+    });
   }
 
   const plan = plans[planRaw];

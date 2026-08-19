@@ -7,7 +7,16 @@ import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { deleteVoiceSubmission, saveVoiceSubmission } from "@/lib/voice-storage";
 
-const MAX_BYTES = 10 * 1024 * 1024;
+// Vercel serverless functions reject any request body over ~4.5MB before
+// it ever reaches this handler (a platform-level limit, not something
+// Next.js or this route controls) — confirmed live: a 6MB upload came back
+// as a raw FUNCTION_PAYLOAD_TOO_LARGE 413, never even reaching this file's
+// own validation. 4MB leaves headroom for multipart/form-data's own
+// boundary/header overhead on top of the raw file bytes, so a file that
+// passes this check is guaranteed to actually reach the platform, not
+// bounce off it with a confusing unstyled error page instead of the
+// localized "file_too_large" response below.
+const MAX_BYTES = 4 * 1024 * 1024;
 const SUBMISSIONS_PER_ITEM_LIMIT = 5;
 
 // Defends against a runaway client (buggy tab stuck in a retry loop, or a
