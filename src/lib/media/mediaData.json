@@ -23037,5 +23037,193 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video SXv69yGyM4g, canal independiente 'Andrey Quoc' (ya usado en song-oy-tsvetet-kalina y otras entradas). Público, playable_in_embed=true, no es livestream. Letra verificada directamente desde la descripción del video, usando ÚNICAMENTE las 4 estrofas canónicas de apertura (las universalmente conocidas); se omitieron deliberadamente las estrofas finales de la versión extendida en la descripción (banquete con champán, húsares, coqueteo), que no encajan con el estándar de contenido de la plataforma."
+  },
+  "song-techet-reka-volga": {
+    "id": "song-techet-reka-volga",
+    "title": "Течёт река Волга (canción clásica soviética, 1962)",
+    "description": "Canción clásica de Lev Oshanin (letra) y Mark Fradkin (música) que sigue el paso de una vida entera —desde los 17 años hasta la vejez— usando el río Volga como metáfora del tiempo que fluye. Una de las canciones soviéticas más queridas sobre la memoria y el paso de la vida.",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "Y-xVFmlzyoE",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Издалека долго течёт река Волга, Течёт река Волга, конца и края нет.",
+        "translation": "Desde lejos, largamente, fluye el río Volga, fluye el río Volga, no tiene fin ni límite."
+      },
+      {
+        "russian": "Среди хлебов спелых, среди снегов белых, Течёт моя Волга, а мне семнадцать лет.",
+        "translation": "Entre trigales maduros, entre nieves blancas, fluye mi Volga, y yo tengo diecisiete años."
+      },
+      {
+        "russian": "Сказала мать: бывает всё, сынок, Быть может, ты устанешь от дорог.",
+        "translation": "Mi madre dijo: todo puede pasar, hijo, quizás te canses de los caminos."
+      },
+      {
+        "russian": "Когда домой придёшь в конце пути, Свои ладони в Волгу опусти.",
+        "translation": "Cuando llegues a casa al final del camino, sumerge tus manos en el Volga."
+      },
+      {
+        "russian": "Течёт моя Волга, а мне уж тридцать лет. ... Гляжу в тебя, Волга, седьмой десяток лет.",
+        "translation": "Fluye mi Volga, y ya tengo treinta años. ... Te miro, Volga, ya en mi séptima década de vida. (el estribillo se repite marcando el paso de los años)"
+      },
+      {
+        "russian": "Здесь мой причал и здесь мои друзья, Всё, без чего на свете жить нельзя.",
+        "translation": "Aquí está mi amarradero y aquí están mis amigos, todo aquello sin lo cual no se puede vivir."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "издалека",
+        "transcription": "izdalyiká",
+        "translation": "desde lejos"
+      },
+      {
+        "word": "хлеба (мн.ч.)",
+        "transcription": "khlibá",
+        "translation": "trigales, sembrados de cereal"
+      },
+      {
+        "word": "ладонь",
+        "transcription": "ladón'",
+        "translation": "palma de la mano"
+      },
+      {
+        "word": "причал",
+        "transcription": "prichál",
+        "translation": "amarradero, muelle"
+      },
+      {
+        "word": "плёс",
+        "transcription": "plyos",
+        "translation": "tramo ancho y tranquilo de un río"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songtechetrekavolga-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué representa el río Volga a lo largo de la canción?",
+        "options": [
+          "La frontera del país",
+          "El paso del tiempo y de la vida del narrador",
+          "Una ruta comercial",
+          "Un lugar de trabajo"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songtechetrekavolga-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "издалека",
+            "right": "desde lejos"
+          },
+          {
+            "left": "ладонь",
+            "right": "palma de la mano"
+          },
+          {
+            "left": "причал",
+            "right": "amarradero"
+          },
+          {
+            "left": "хлеба",
+            "right": "trigales"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Y-xVFmlzyoE, canal independiente 'Andrey Quoc'. Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción del video (créditos de autor incluidos: Ошанин/Фрадкин), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción nostálgica sobre el paso de la vida."
+  },
+  "song-mir-prognetsya": {
+    "id": "song-mir-prognetsya",
+    "title": "Однажды мир прогнётся под нас — Машина времени",
+    "description": "Himno motivacional del legendario grupo de rock ruso Машина времени (Andrei Makarevich), sobre no rendirse ante un mundo cambiante y mantenerse fiel a los propios principios. Uno de los estribillos más citados del rock ruso.",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "kOXqQu93i1s",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Не стоит прогибаться под изменчивый мир, Пусть лучше он прогнётся под нас.",
+        "translation": "No vale la pena doblegarse ante un mundo cambiante, mejor que sea él quien se doblegue ante nosotros."
+      },
+      {
+        "russian": "Однажды он прогнётся под нас.",
+        "translation": "Algún día él se doblegará ante nosotros."
+      },
+      {
+        "russian": "Пусть старая джинса давно протёрта до дыр, Пускай хрипит раздолбанный бас.",
+        "translation": "Aunque los viejos jeans ya estén gastados hasta los agujeros, aunque el bajo desvencijado suene rasposo."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "прогибаться",
+        "transcription": "pragibátsa",
+        "translation": "doblegarse, ceder (bajo presión)"
+      },
+      {
+        "word": "изменчивый",
+        "transcription": "izm'énchivyy",
+        "translation": "cambiante, voluble"
+      },
+      {
+        "word": "прогнуться",
+        "transcription": "pragnútsa",
+        "translation": "doblegarse, ceder (forma perfectiva)"
+      },
+      {
+        "word": "протёртый до дыр",
+        "transcription": "prat'yórtyy da dyr",
+        "translation": "gastado hasta los agujeros (modismo)"
+      },
+      {
+        "word": "хрипеть",
+        "transcription": "khrip'ét'",
+        "translation": "sonar ronco/rasposo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songmirprognetsya-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según el estribillo, ¿qué NO se debe hacer ante un mundo cambiante?",
+        "options": [
+          "Ignorarlo",
+          "Doblegarse (прогибаться)",
+          "Estudiarlo",
+          "Evitarlo"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songmirprognetsya-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "прогибаться",
+            "right": "doblegarse, ceder"
+          },
+          {
+            "left": "изменчивый",
+            "right": "cambiante"
+          },
+          {
+            "left": "хрипеть",
+            "right": "sonar ronco"
+          },
+          {
+            "left": "протёртый до дыр",
+            "right": "gastado hasta los agujeros"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video kOXqQu93i1s, canal 'Slavic Roots Western Mind' (video de letras). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos AUTOMÁTICOS reales en ruso: se usaron ÚNICAMENTE los versos con transcripción perfectamente clara (el estribillo repetido y el puente sobre los jeans/bajo desgastados); se omitieron deliberadamente dos estrofas intermedias cuya transcripción automática resultó ambigua/parcialmente garbled ('спи спокойно' — frase potencialmente ambigua que no se pudo verificar con certeza), siguiendo la regla de no reconstruir letras de memoria. Sin contenido de guerra/violencia — 'враг' aparece una vez de forma puramente metafórica ('ni casa, ni amigos, ni enemigos' = una vida sin fricciones)."
   }
 }
