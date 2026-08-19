@@ -97,7 +97,10 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     id: submission.id,
-    audioUrl: submission.audioUrl,
+    // Not the raw storage URL (private Blob, unfetchable without the
+    // token) — the browser plays it back through the ownership-checked
+    // proxy at /api/voice-submissions/[id] instead.
+    audioUrl: `/api/voice-submissions/${submission.id}`,
     createdAt: submission.createdAt,
   });
 }
@@ -120,12 +123,20 @@ export async function GET(request: NextRequest) {
   // Backed by the composite index on (userId, level, lessonSlug, itemKey)
   // in prisma/schema.prisma — an index-only lookup, not a table scan, so
   // this stays cheap no matter how many submissions accumulate overall.
-  const submissions = await db.voiceSubmission.findMany({
+  const rows = await db.voiceSubmission.findMany({
     where: { userId: user.id, level, lessonSlug, itemKey },
     orderBy: { createdAt: "desc" },
     take: SUBMISSIONS_PER_ITEM_LIMIT,
-    select: { id: true, audioUrl: true, createdAt: true },
+    select: { id: true, createdAt: true },
   });
+
+  // See the POST handler above — audioUrl is the playback proxy path, not
+  // the raw (private) storage URL.
+  const submissions = rows.map((row) => ({
+    id: row.id,
+    audioUrl: `/api/voice-submissions/${row.id}`,
+    createdAt: row.createdAt,
+  }));
 
   return NextResponse.json({ submissions });
 }

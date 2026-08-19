@@ -1,5 +1,5 @@
 import "server-only";
-import { mkdir, rm, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 // Vercel's serverless functions have a read-only filesystem outside a
@@ -31,8 +31,14 @@ export async function saveVoiceSubmission(
 ): Promise<string> {
   if (hasBlobToken()) {
     const { put } = await import("@vercel/blob");
+    // access: "private" — these are personal pronunciation recordings, not
+    // public assets. A private blob's URL isn't fetchable by a bare
+    // `<audio src>` in the browser (no way to attach an auth header to
+    // that), so playback goes through /api/voice-submissions/[id], which
+    // fetches the bytes server-side (see readVoiceSubmission below) after
+    // checking the requester actually owns the recording.
     const blob = await put(`submissions/${userId}/${itemDir}/${filename}`, bytes, {
-      access: "public",
+      access: "private",
       contentType: "audio/webm",
     });
     return blob.url;
@@ -42,6 +48,29 @@ export async function saveVoiceSubmission(
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), bytes);
   return `/audio/submissions/${userId}/${itemDir}/${filename}`;
+}
+
+/** Reads one recording's raw bytes back out, for the authenticated,
+ * ownership-checked proxy route at /api/voice-submissions/[id] — a private
+ * Blob URL needs the read-write token as a bearer credential to fetch, and
+ * even a public one shouldn't be handed to the browser directly, since
+ * that would let anyone who learns the URL bypass the ownership check. */
+export async function readVoiceSubmission(
+  audioUrl: string
+): Promise<{ body: Buffer; contentType: string }> {
+  if (audioUrl.startsWith("http")) {
+    const res = await fetch(audioUrl, {
+      headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch voice submission blob: ${res.status}`);
+    }
+    const body = Buffer.from(await res.arrayBuffer());
+    return { body, contentType: res.headers.get("content-type") ?? "audio/webm" };
+  }
+
+  const body = await readFile(path.join(process.cwd(), "public", audioUrl));
+  return { body, contentType: "audio/webm" };
 }
 
 /** Deletes one recording by the URL stored in VoiceSubmission.audioUrl —
