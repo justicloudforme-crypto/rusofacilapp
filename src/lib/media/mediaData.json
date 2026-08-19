@@ -29919,5 +29919,178 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video pke_pvRjNOQ ('Специалист, бакалавр, магистр, аспирант: в чём разница?'), canal «Адукар». Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-28 (educación y carrera profesional)."
+  },
+  "video-poliklinika-vizita-medico": {
+    "id": "video-poliklinika-vizita-medico",
+    "title": "Salud y la visita al médico: vocabulario del cuerpo humano y el verbo «болеть/заболеть»",
+    "description": "Lección del canal «О русском по-русски» que repasa las partes del cuerpo humano en detalle (cabeza, torso, brazos, piernas — hasta los dedos y el pulgar/índice/medio/anular/meñique) y enseña el complicado verbo «болеть/заболеть», que se usa de dos formas distintas: para hablar de una persona («я болею») o de una parte del cuerpo que duele.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "fVPewQx8DTM",
+    "curriculumLessonId": "a2-27",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Голова, лоб, затылок, висок. Шея, горло. Глаз, глаза. Нос. Ухо, уши.",
+        "translation": "Cabeza, frente, nuca, sien. Cuello, garganta. Ojo, ojos. Nariz. Oreja, orejas."
+      },
+      {
+        "russian": "Большой палец, указательный палец, средний палец, безымянный палец и мизинец.",
+        "translation": "Pulgar, dedo índice, dedo medio, dedo anular y meñique."
+      },
+      {
+        "russian": "Я болею, ты болеешь, он болеет — глагол «болеть/заболеть» можно использовать, чтобы говорить о человеке или о части тела.",
+        "translation": "Estoy enfermo, estás enfermo, está enfermo — el verbo «болеть/заболеть» se puede usar para hablar de una persona o de una parte del cuerpo (que duele)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "голова / лоб / затылок",
+        "transcription": "galavá / lop / zát'ilak",
+        "translation": "cabeza / frente / nuca"
+      },
+      {
+        "word": "болеть",
+        "transcription": "bal'ét'",
+        "translation": "estar enfermo / doler (según el sujeto)"
+      },
+      {
+        "word": "заболеть",
+        "transcription": "zabal'ét'",
+        "translation": "ponerse enfermo"
+      },
+      {
+        "word": "запястье",
+        "transcription": "zap'ást'ye",
+        "translation": "muñeca (parte del brazo)"
+      },
+      {
+        "word": "щиколотка",
+        "transcription": "shch'íkalatka",
+        "translation": "tobillo"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videopoliklinikavizitamedico-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice «dedo pulgar» en ruso?",
+        "options": [
+          "мизинец",
+          "большой палец",
+          "указательный палец",
+          "средний палец"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videopoliklinikavizitamedico-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "голова",
+            "right": "cabeza"
+          },
+          {
+            "left": "запястье",
+            "right": "muñeca"
+          },
+          {
+            "left": "щиколотка",
+            "right": "tobillo"
+          },
+          {
+            "left": "болеть",
+            "right": "estar enfermo/doler"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video fVPewQx8DTM ('Диалог 6. В ПОЛИКЛИНИКЕ. ПАЦИЕНТ И ВРАЧ || Диалоги'), canal «О русском по-русски», misma serie que otras entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso. Cubre el slot a2-27 (salud y la visita al médico), distinto de a2-8 (que cubre una historia narrativa sobre un resfriado, de otro canal)."
+  },
+  "video-hablar-libros-hobbies": {
+    "id": "video-hablar-libros-hobbies",
+    "title": "Hablar de películas y libros: una charla real entre amigas sobre sus lecturas favoritas",
+    "description": "Conversación auténtica y natural entre dos amigas rusas (canal «Antonia Romaker») sobre sus aficiones: rompecabezas, y sobre todo libros — «Преступление и наказание» (Crimen y castigo) de Dostoievski, «Анна Каренина» de Tolstói, y la novela histórico-fantástica «Туманы Авалона» — con opiniones espontáneas sobre qué las engancha de cada lectura.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "NpGZe24L1cM",
+    "curriculumLessonId": "b1-29",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Стандартная вещь, читать ты любишь? — Читать люблю, по возможности это делаю. Даже на работе в свободное время.",
+        "translation": "Algo típico, ¿te gusta leer? — Me gusta leer, lo hago cuando puedo. Incluso en el trabajo, en mi tiempo libre."
+      },
+      {
+        "russian": "Какие книги ты любишь читать? — Люблю читать классику, ну, и которые посоветуют друзья.",
+        "translation": "¿Qué tipo de libros te gusta leer? — Me gusta leer los clásicos, y también los que me recomiendan mis amigos."
+      },
+      {
+        "russian": "Сейчас я читаю «Преступление и наказание» Достоевского. Это сильно.",
+        "translation": "Ahora estoy leyendo «Crimen y castigo» de Dostoievski. Es fuerte/impactante."
+      },
+      {
+        "russian": "Но она так захватывает, что читаешь, читаешь, читаешь, и как-то даже не замечаешь. А книга уже и кончилась.",
+        "translation": "Pero engancha tanto que lees, lees, lees, y casi ni te das cuenta. Y el libro ya se terminó."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "любимая книга",
+        "transcription": "l'ubímaya kn'íga",
+        "translation": "libro favorito"
+      },
+      {
+        "word": "классика",
+        "transcription": "klás'ika",
+        "translation": "clásicos (literatura)"
+      },
+      {
+        "word": "захватывает",
+        "transcription": "zakhvátyvayet",
+        "translation": "engancha, cautiva (un libro)"
+      },
+      {
+        "word": "перечитать",
+        "transcription": "p'irich'itát'",
+        "translation": "releer"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videohablarlibroshobbies-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué novela de Dostoievski está leyendo una de las amigas?",
+        "options": [
+          "Анна Каренина",
+          "Преступление и наказание",
+          "Туманы Авалона",
+          "Империя ангелов"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videohablarlibroshobbies-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "любимая книга",
+            "right": "libro favorito"
+          },
+          {
+            "left": "захватывает",
+            "right": "engancha"
+          },
+          {
+            "left": "перечитать",
+            "right": "releer"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video NpGZe24L1cM ('Russian dialogue - hobbies, диалог на русском - хобби, чтение, музыка и др.'), canal «Antonia Romaker - English and Russian online». Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: conversación auténtica y espontánea entre dos hablantes nativas. Cubre el slot b1-29 (hablar de películas y libros — con fuerte énfasis en libros)."
   }
 }
