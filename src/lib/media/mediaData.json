@@ -26020,5 +26020,311 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video zLjIKdrq2wE, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Alekséi Rybnikov, letra de Andréi Voznesenski, cantada por Nikolái Karachentsov y Yelena Shanina), sin usar la letra de memoria. Sin contenido de guerra/violencia — romance clásico de amor y despedida. Canción #100 de la meta de canciones de la galería."
+  },
+  "video-caso-preposicional-transporte": {
+    "id": "video-caso-preposicional-transporte",
+    "title": "Caso preposicional: preposiciones «в» y «на» con medios de transporte",
+    "description": "Lección práctica del canal «русский с носителем» que recorre, uno por uno, todos los medios de transporte en ruso y explica por qué se usa «на» (autobús, coche, tren, taxi, metro, avión, bicicleta, moto, barco) o «в» (vagón, cabina, coche de caballos, cochecito de bebé) con cada uno — el caso preposicional en su uso más frecuente del día a día.",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "TxmHnH_QTI8",
+    "curriculumLessonId": "a1-12",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я еду на автобусе. Мы едем в автобусе.",
+        "translation": "Voy en autobús. Vamos en el autobús. (con transporte público grande, se usa «на», pero también se oye «в» cuando se piensa en el interior)"
+      },
+      {
+        "russian": "Я еду на машине. Я еду на поезде. Я еду на такси. Я еду на метро.",
+        "translation": "Voy en coche. Voy en tren. Voy en taxi. Voy en metro. («на» + caso preposicional es la norma con casi todos los medios de transporte)"
+      },
+      {
+        "russian": "Я лечу на самолёте. Мы летим на вертолёте.",
+        "translation": "Vuelo en avión. Volamos en helicóptero. (con «лететь»/volar, también se usa «на»)"
+      },
+      {
+        "russian": "Я еду на велосипеде. Я еду на мотоцикле. Я еду на лошади.",
+        "translation": "Voy en bicicleta. Voy en moto. Voy a caballo. («на» también con vehículos que se montan)"
+      },
+      {
+        "russian": "Я еду в вагоне поезда. Я еду в кабине грузовика. Я еду в карете. Малыш едет в коляске.",
+        "translation": "Voy en el vagón del tren. Voy en la cabina del camión. Voy en el carruaje. El bebé va en el cochecito. («в» cuando se enfatiza estar DENTRO de un compartimento o vehículo pequeño y cerrado)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "на автобусе",
+        "transcription": "na aftóbusi",
+        "translation": "en autobús"
+      },
+      {
+        "word": "на машине",
+        "transcription": "na mashín'e",
+        "translation": "en coche"
+      },
+      {
+        "word": "на поезде",
+        "transcription": "na póyizd'e",
+        "translation": "en tren"
+      },
+      {
+        "word": "на самолёте",
+        "transcription": "na samal'yót'e",
+        "translation": "en avión"
+      },
+      {
+        "word": "в вагоне",
+        "transcription": "v vagón'e",
+        "translation": "en el vagón"
+      },
+      {
+        "word": "в коляске",
+        "transcription": "v kal'ásk'e",
+        "translation": "en el cochecito"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videocasoprepositransporte-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál preposición se usa normalmente con «метро» (metro)?",
+        "options": [
+          "в метро",
+          "на метро",
+          "с метро",
+          "у метро"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videocasoprepositransporte-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "на машине",
+            "right": "en coche"
+          },
+          {
+            "left": "на поезде",
+            "right": "en tren"
+          },
+          {
+            "left": "в вагоне",
+            "right": "en el vagón"
+          },
+          {
+            "left": "в коляске",
+            "right": "en el cochecito"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video TxmHnH_QTI8 ('№ 398 Предлоги В и НА с транспортом'), canal «русский с носителем». Público, playable_in_embed=true, no es livestream, duración 6 min. Verificado con auto-subtítulos rusos reales (sin subtítulos manuales disponibles): lista completa de medios de transporte con на/в extraída directamente de la transcripción. Cubre el slot a1-12 (caso preposicional con medios de transporte, на чём?)."
+  },
+  "video-genitivo-numeros": {
+    "id": "video-genitivo-numeros",
+    "title": "Caso genitivo: sustantivos después de los numerales (1, 2-4, 5+)",
+    "description": "Lección del canal «О русском по-русски» (Ира) que explica la regla clave para «cuántos/cuántas» en ruso: con «один/одна/одно» el sustantivo va en nominativo singular; con «два/две, три, четыре» va en genitivo singular; con «пять» y números mayores va en genitivo plural — con ejemplos de género masculino, femenino y neutro (стул, книга, окно).",
+    "level": "A1",
+    "category": "grammar",
+    "youtubeVideoId": "2BijFfC3N2E",
+    "curriculumLessonId": "a1-22",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Один стул. Одна книга. Одно окно.",
+        "translation": "Una silla. Un libro. Una ventana. (con «один/одна/одно» → sustantivo en NOMINATIVO singular)"
+      },
+      {
+        "russian": "Два стула. Две книги. Два окна.",
+        "translation": "Dos sillas. Dos libros. Dos ventanas. (con «два/две, три, четыре» → sustantivo en GENITIVO singular)"
+      },
+      {
+        "russian": "Три стула. Три книги. Три окна.",
+        "translation": "Tres sillas. Tres libros. Tres ventanas. («три» tiene una sola forma para los tres géneros)"
+      },
+      {
+        "russian": "Четыре стула. Четыре книги. Четыре окна.",
+        "translation": "Cuatro sillas. Cuatro libros. Cuatro ventanas. («четыре» también tiene una sola forma)"
+      },
+      {
+        "russian": "Пять стульев. Пять книг. Пять окон.",
+        "translation": "Cinco sillas. Cinco libros. Cinco ventanas. (desde «пять» en adelante → sustantivo en GENITIVO plural)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "один/одна/одно",
+        "transcription": "adín/adná/adnó",
+        "translation": "uno/una (+ nominativo singular)"
+      },
+      {
+        "word": "два/две",
+        "transcription": "dva/dvie",
+        "translation": "dos (+ genitivo singular)"
+      },
+      {
+        "word": "три",
+        "transcription": "tri",
+        "translation": "tres (+ genitivo singular)"
+      },
+      {
+        "word": "четыре",
+        "transcription": "chityri",
+        "translation": "cuatro (+ genitivo singular)"
+      },
+      {
+        "word": "пять",
+        "transcription": "piat'",
+        "translation": "cinco (+ genitivo plural)"
+      },
+      {
+        "word": "стул / стула / стульев",
+        "transcription": "stul / stúla / stúl'yef",
+        "translation": "silla (nominativo sg. / genitivo sg. / genitivo pl.)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videogenitivonumeros-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice correctamente «cinco libros»?",
+        "options": [
+          "пять книга",
+          "пять книги",
+          "пять книг",
+          "пять книгу"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videogenitivonumeros-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "один стул",
+            "right": "nominativo singular"
+          },
+          {
+            "left": "два стула",
+            "right": "genitivo singular"
+          },
+          {
+            "left": "пять стульев",
+            "right": "genitivo plural"
+          },
+          {
+            "left": "три книги",
+            "right": "genitivo singular"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 2BijFfC3N2E ('Урок 1. Как использовать существительные после числительных?'), canal independiente «О русском по-русски» (misma profesora 'Ира' usada en varias entradas previas). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: regla y ejemplos (один/два/пять + стул/книга/окно) extraídos directamente de la transcripción. Cubre el slot a1-22 (caso genitivo: cantidad y números)."
+  },
+  "video-conectores-causa-consecuencia-concesion": {
+    "id": "video-conectores-causa-consecuencia-concesion",
+    "title": "Conectores lógicos: causa, consecuencia y concesión («потому что», «поэтому», «хотя», «несмотря на то что»)",
+    "description": "Lección en formato «vlog» del canal «Learn Russian in Context» (profesor Serguéi, paseando por un parque de Barcelona con su perro Martín) que ilustra en contexto real la diferencia entre conectores de causa («потому что», «так как»), consecuencia («поэтому») y concesión («хотя», «несмотря на», «несмотря на то что»), diseñada específicamente para el nivel B1 (corresponde a la lección 1.2 del manual «Точка Ру B1.1»).",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "psa-5n0n3uA",
+    "curriculumLessonId": "b1-1",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я сейчас в парке, потому что Мартин хочет гулять.",
+        "translation": "Estoy ahora en el parque, porque Martín quiere pasear. («потому que» = causa, respuesta directa a «por qué»)"
+      },
+      {
+        "russian": "Так как Мартин хочет гулять, я сейчас в парке.",
+        "translation": "Como Martín quiere pasear, ahora estoy en el parque. («так как» = causa, normalmente al inicio de la frase)"
+      },
+      {
+        "russian": "Мартин очень хочет гулять, поэтому я сейчас в парке.",
+        "translation": "Martín quiere mucho pasear, por eso ahora estoy en el parque. («поэтому» = consecuencia, introduce el resultado)"
+      },
+      {
+        "russian": "Несмотря на то что на улице прохладно, я надел лёгкую весеннюю куртку.",
+        "translation": "A pesar de que hace fresco fuera, me puse una chaqueta ligera de primavera. («несмотря на то что» = concesión, + oración completa)"
+      },
+      {
+        "russian": "Хотя на улице сейчас прохладно, они занимаются спортом на улице.",
+        "translation": "Aunque ahora hace fresco fuera, hacen deporte al aire libre. («хотя» = concesión, + oración completa, más informal que «несмотря на то что»)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "потому что",
+        "transcription": "patamú shto",
+        "translation": "porque (causa)"
+      },
+      {
+        "word": "так как",
+        "transcription": "tak kak",
+        "translation": "como / ya que (causa, al inicio)"
+      },
+      {
+        "word": "поэтому",
+        "transcription": "paétamu",
+        "translation": "por eso / por lo tanto (consecuencia)"
+      },
+      {
+        "word": "хотя",
+        "transcription": "jatiá",
+        "translation": "aunque (concesión)"
+      },
+      {
+        "word": "несмотря на то что",
+        "transcription": "nismatr'á na to shto",
+        "translation": "a pesar de que (concesión, + oración)"
+      },
+      {
+        "word": "несмотря на",
+        "transcription": "nismatr'á na",
+        "translation": "a pesar de (concesión, + sustantivo)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoconectorescausaconsecuenciaconcesion-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué conector introduce la CONSECUENCIA (el resultado), no la causa?",
+        "options": [
+          "потому что",
+          "так как",
+          "поэтому",
+          "несмотря на"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videoconectorescausaconsecuenciaconcesion-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "потому что",
+            "right": "causa"
+          },
+          {
+            "left": "поэтому",
+            "right": "consecuencia"
+          },
+          {
+            "left": "хотя",
+            "right": "concesión"
+          },
+          {
+            "left": "несмотря на то что",
+            "right": "concesión (+ oración completa)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video psa-5n0n3uA ('VLOG | Practicing Russian: ТАК КАК, ПОЭТОМУ, ХОТЯ, НЕСМОТРЯ НА'), canal «Learn Russian in Context» (Russian Radio Show). Público, playable_in_embed=true. Aunque el título dice 'VLOG', es contenido pedagógico estructurado y explícitamente ligado a la lección 1.2 del manual 'Точка Ру B1.1' (no es un livestream ni una charla improvisada) — tiene subtítulos MANUALES en ruso Y español (caso raro), verificados directamente. Ejemplos extraídos de la transcripción real. Cubre el slot b1-1 (conectores lógicos: causa, consecuencia y concesión)."
   }
 }
