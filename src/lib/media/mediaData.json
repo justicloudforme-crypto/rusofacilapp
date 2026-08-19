@@ -24168,5 +24168,97 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video HdkRjbqa5fQ, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de A. Rybnikov, letra de Yuli Kim; interpretada por Rina Zelénaya y Yevgueni Yevstignéyev), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción infantil poética sobre las estrellas."
+  },
+  "song-i-shveytsar-ya-i-monter": {
+    "id": "song-i-shveytsar-ya-i-monter",
+    "title": "И швейцар я, и монтёр — de la película «Факир на час» (1971)",
+    "description": "Canción alegre y ligera sobre el orgullo por el trabajo, en la que un hombre enumera con entusiasmo todos sus oficios — portero, electricista, pintor, encerador de pisos — y declara que ama su trabajo como a una esposa. De la comedia musical soviética «Факир на час» (1971).",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "Rf6oy_2a52w",
+    "lyricsOrTranscript": [
+      {
+        "russian": "И швейцар я, и монтёр, И маляр, и полотёр. От утра и до утра — Ух, дела!",
+        "translation": "Soy portero y electricista, pintor y encerador de pisos. De la mañana a la mañana — ¡uf, cuánto trabajo!"
+      },
+      {
+        "russian": "Я дежурю на посту, штукатурю и мету. И работу как жену люблю!",
+        "translation": "Hago guardia en mi puesto, enyeso y barro. ¡Y amo el trabajo como a una esposa!"
+      },
+      {
+        "russian": "Среда или суббота — я не жду, Зовёт меня работа — я иду.",
+        "translation": "Sea miércoles o sábado, no espero: si el trabajo me llama, yo voy."
+      },
+      {
+        "russian": "Ведь я — электрик, это раз, Ведь и швейцар я — это два, Ведь я — работник первый класс!",
+        "translation": "Porque soy electricista, esa es una; porque también soy portero, esa es dos; ¡porque soy un trabajador de primera clase!"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "швейцар",
+        "transcription": "shvyeytsár",
+        "translation": "portero (de un edificio, hotel)"
+      },
+      {
+        "word": "монтёр",
+        "transcription": "mant'ór",
+        "translation": "electricista, técnico instalador"
+      },
+      {
+        "word": "маляр",
+        "transcription": "malyár",
+        "translation": "pintor (de paredes)"
+      },
+      {
+        "word": "полотёр",
+        "transcription": "palat'ór",
+        "translation": "encerador de pisos"
+      },
+      {
+        "word": "дежурить",
+        "transcription": "dizhúrit'",
+        "translation": "estar de guardia/turno"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songishveytsaryaimonter-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Con qué compara el narrador su amor por el trabajo?",
+        "options": [
+          "Con su casa",
+          "Con una esposa",
+          "Con su coche",
+          "Con el dinero"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songishveytsaryaimonter-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "швейцар",
+            "right": "portero"
+          },
+          {
+            "left": "монтёр",
+            "right": "electricista"
+          },
+          {
+            "left": "маляр",
+            "right": "pintor"
+          },
+          {
+            "left": "дежурить",
+            "right": "estar de guardia"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video Rf6oy_2a52w, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de N. Bogoslovski, letra de V. Dyjovichni y M. Slobodskoi; interpretada por Leonid Jaritonov), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción cómica sobre el orgullo laboral."
   }
 }
