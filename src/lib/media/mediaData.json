@@ -29330,5 +29330,173 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video BFuO1DMqvkk ('Винительный падеж в русском языке | Существительные + примеры'), canal «Русский с Натальей» (diseñado para el ruso como lengua extranjera). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos y test práctico extraídos directamente de la transcripción. Cubre el slot a2-3 (casos rusos en la práctica: genitivo y acusativo — enfoque acusativo; genitivo ya se practica en a1-22)."
+  },
+  "video-delovoe-obshenie-negocios": {
+    "id": "video-delovoe-obshenie-negocios",
+    "title": "Ruso profesional y de negocios: los principios de la comunicación empresarial («деловое общение»)",
+    "description": "Fragmento de la serie televisiva educativa «Русский язык для всех» (profesor Vladímir Bazýlev) sobre los principios que rigen el habla en un entorno laboral: la jerarquía organizacional («иерархичность»), la motivación laboral («мотивация труда») y la regulación del comportamiento («регламентация поведения») — el vocabulario de nivel C1 necesario para hablar sobre las dinámicas de comunicación en una empresa.",
+    "level": "C1",
+    "category": "grammar",
+    "youtubeVideoId": "ZvFYVGRQIG8",
+    "curriculumLessonId": "b2-7",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Деловое общение — это общение, которое подчинено решению определённой задачи: производственные, научные, коммерческие, творческие задачи.",
+        "translation": "La comunicación empresarial es aquella subordinada a la resolución de una tarea concreta: tareas productivas, científicas, comerciales, creativas."
+      },
+      {
+        "russian": "Иерархичность — один из основополагающих принципов социальной организации. Между подразделениями и сотрудниками закрепляются отношения подчинения.",
+        "translation": "La jerarquía es uno de los principios fundamentales de la organización social. Entre los departamentos y los empleados se establecen relaciones de subordinación."
+      },
+      {
+        "russian": "Мотивация труда — это процесс стимулирования деятельности сотрудников для достижения целей организации.",
+        "translation": "La motivación laboral es el proceso de estimular la actividad de los empleados para alcanzar los objetivos de la organización."
+      },
+      {
+        "russian": "Регламентация поведения — принцип, в соответствии с которым за каждым работником закрепляется стандарт поведения в виде формальных прав и обязанностей.",
+        "translation": "La regulación del comportamiento es el principio según el cual a cada trabajador se le asigna un estándar de conducta en forma de derechos y obligaciones formales."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "деловое общение",
+        "transcription": "d'ilavóye apshch'éniye",
+        "translation": "comunicación empresarial"
+      },
+      {
+        "word": "иерархичность",
+        "transcription": "iyerarj'ích'nast'",
+        "translation": "carácter jerárquico"
+      },
+      {
+        "word": "подчинённый / руководитель",
+        "transcription": "patch'in'ónnyi / rukavad'ít'el'",
+        "translation": "subordinado / directivo"
+      },
+      {
+        "word": "мотивация труда",
+        "transcription": "mat'ivátsiya trudá",
+        "translation": "motivación laboral"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodelovoeobsheniyenegocios-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué principio establece relaciones de subordinación entre departamentos y empleados?",
+        "options": [
+          "мотивация труда",
+          "иерархичность",
+          "регламентация поведения",
+          "деловое общение"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodelovoeobsheniyenegocios-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "деловое общение",
+            "right": "comunicación empresarial"
+          },
+          {
+            "left": "иерархичность",
+            "right": "carácter jerárquico"
+          },
+          {
+            "left": "подчинённый",
+            "right": "subordinado"
+          },
+          {
+            "left": "мотивация труда",
+            "right": "motivación laboral"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video ZvFYVGRQIG8 ('Русский язык. Урок 2.3. Особенности служебно-делового общения'), canal «Education for all» (serie televisiva educativa 'Русский язык для всех', Первый образовательный канал). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles (contenido académico denso pero claro). Ejemplos y definiciones extraídos directamente de la transcripción. Cubre el slot b2-7 (ruso profesional y de negocios), nivel C1 por la densidad conceptual."
+  },
+  "video-delovaya-beseda-trabajo": {
+    "id": "video-delovaya-beseda-trabajo",
+    "title": "Búsqueda de trabajo y la entrevista: tipos de conversación empresarial («деловая беседа»)",
+    "description": "Fragmento de la serie televisiva educativa «Русский язык для всех» (profesor Vladímir Bazýlev) que clasifica los distintos tipos de «деловая беседа» (conversación empresarial) en el ámbito laboral: la entrevista de contratación («беседа при приёме на работу» — evalúa las cualidades profesionales, la experiencia, la actitud hacia las condiciones de trabajo), y otras menos agradables como la conversación de despido o la conversación disciplinaria.",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "zjtxyajeKiI",
+    "curriculumLessonId": "b1-27",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Беседа при приёме на работу — это вид деловой беседы, основная цель которой оценить деловые качества поступающего на работу.",
+        "translation": "La entrevista de contratación es un tipo de conversación empresarial cuyo objetivo principal es evaluar las cualidades profesionales del candidato."
+      },
+      {
+        "russian": "Она сводится к нескольким базовым вопросам: качеств обратившегося, его трудового стажа, взглядов на условия труда.",
+        "translation": "Se reduce a unas preguntas básicas: las cualidades del solicitante, su experiencia laboral, sus opiniones sobre las condiciones de trabajo."
+      },
+      {
+        "russian": "С нами беседуют, когда мы приступаем к работе, и когда мы увольняемся. Бывают дисциплинарные беседы, проблемные беседы.",
+        "translation": "Se conversa con nosotros cuando empezamos a trabajar, y cuando nos despiden. Existen las conversaciones disciplinarias, las conversaciones sobre problemas."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "деловая беседа",
+        "transcription": "d'ilaváya b'is'éda",
+        "translation": "conversación empresarial"
+      },
+      {
+        "word": "беседа при приёме на работу",
+        "transcription": "b'is'éda pri pri'yóm'e na rabótu",
+        "translation": "entrevista de contratación"
+      },
+      {
+        "word": "трудовой стаж",
+        "transcription": "trudavói stash",
+        "translation": "experiencia/antigüedad laboral"
+      },
+      {
+        "word": "увольняться",
+        "transcription": "uval'n'átsa",
+        "translation": "ser despedido/renunciar"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodelovayabesedatrabajo-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es el objetivo principal de la «беседа при приёме на работу»?",
+        "options": [
+          "Despedir a un empleado",
+          "Evaluar las cualidades profesionales del candidato",
+          "Aplicar una sanción disciplinaria",
+          "Anunciar un ascenso"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodelovayabesedatrabajo-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "деловая беседа",
+            "right": "conversación empresarial"
+          },
+          {
+            "left": "трудовой стаж",
+            "right": "experiencia laboral"
+          },
+          {
+            "left": "увольняться",
+            "right": "ser despedido"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video zjtxyajeKiI ('Русский язык. Урок 2.4. Деловая беседа'), canal «Education for all», misma serie que video-delovoe-obshenie-negocios (b2-7, video distinto). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-27 (búsqueda de trabajo y la entrevista)."
   }
 }
