@@ -29250,5 +29250,85 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video fUBAatZmZvg ('Будущее время глаголов НСВ || Время и спряжение глаголов'), canal «About Russian in Russian» (Ира), misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso. Cubre el slot a2-2 (el pasado y el futuro — enfoque en futuro; el pasado ya se practica extensamente en otras entradas narrativas de la sesión, p.ej. b1-5)."
+  },
+  "video-caso-acusativo-practica": {
+    "id": "video-caso-acusativo-practica",
+    "title": "Casos rusos en la práctica: el caso acusativo con el objeto directo",
+    "description": "Lección práctica del canal «Русский с Натальей» sobre el caso acusativo: el sustantivo que funciona como objeto directo de la frase («Я покупаю машину» = compro un coche). Solo el género femenino cambia su terminación (-а→-у, -я→-ю, se mantiene la «ь»); masculino, neutro y plural no cambian — con un test práctico incluido de verificación.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "BFuO1DMqvkk",
+    "curriculumLessonId": "a2-3",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я покупаю машину. — «Машину» — это винительный падеж, прямой объект.",
+        "translation": "Compro un coche. — «Машину» está en acusativo, es el objeto directo. («машина» → «машину»: -а → -у)"
+      },
+      {
+        "russian": "Я покупаю торт. Я покупаю зеркало. Я покупаю книги.",
+        "translation": "Compro una tarta. Compro un espejo. Compro libros. (masculino, neutro y plural no cambian su forma)"
+      },
+      {
+        "russian": "Я люблю море. Я читаю книгу. Я пишу письмо. Я беру чашку.",
+        "translation": "Me gusta el mar. Leo un libro. Escribo una carta. Cojo una taza. (práctica: solo «книгу» y «чашку», femeninos, cambian su terminación)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "винительный падеж",
+        "transcription": "vinít'il'nyi pádish",
+        "translation": "caso acusativo"
+      },
+      {
+        "word": "прямой объект",
+        "transcription": "pr'imói ab'ékt",
+        "translation": "objeto directo"
+      },
+      {
+        "word": "машина → машину",
+        "transcription": "mashína → mashínu",
+        "translation": "coche (nominativo → acusativo, femenino -а → -у)"
+      },
+      {
+        "word": "книга → книгу",
+        "transcription": "kn'íga → kn'ígu",
+        "translation": "libro (nominativo → acusativo, femenino)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videocasoacusativopractica-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es la forma correcta de «книга» (libro) en «Я читаю ...» (Leo un...)?",
+        "options": [
+          "книга",
+          "книгу",
+          "книги",
+          "книге"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videocasoacusativopractica-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "Я покупаю машину.",
+            "right": "Compro un coche."
+          },
+          {
+            "left": "Я читаю книгу.",
+            "right": "Leo un libro."
+          },
+          {
+            "left": "Я покупаю торт.",
+            "right": "Compro una tarta."
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video BFuO1DMqvkk ('Винительный падеж в русском языке | Существительные + примеры'), canal «Русский с Натальей» (diseñado para el ruso como lengua extranjera). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos y test práctico extraídos directamente de la transcripción. Cubre el slot a2-3 (casos rusos en la práctica: genitivo y acusativo — enfoque acusativo; genitivo ya se practica en a1-22)."
   }
 }
