@@ -28504,5 +28504,199 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video ElKNl1yNgIY ('A Weekend at the Dacha – Russian Story for A2 Learners'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-5 (planes de viaje y transporte público): el trayecto electrichka + autobús + a pie es el eje narrativo del video."
+  },
+  "video-harakter-cheloveka-adjetivos": {
+    "id": "video-harakter-cheloveka-adjetivos",
+    "title": "Describir el carácter: adjetivos de personalidad («добрый», «злой», «щедрый», «скромный»)",
+    "description": "Lección del canal «Jurussia Учим русский» que presenta, a través de mini-retratos de distintas personas, los adjetivos rusos más comunes para describir el carácter: opuestos como «добрый» (bondadoso) / «злой» (malvado), y también «активный», «вежливый», «внимательный», «верный», «весёлый», «гостеприимный» y «скромный» — cada uno en su forma masculina y femenina.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "iyOZRl_8mtU",
+    "curriculumLessonId": "a2-30",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Антон добрый, а Лиза добрая.",
+        "translation": "Antón es bondadoso, y Lisa es bondadosa."
+      },
+      {
+        "russian": "Сергей злой, холодный и бессердечный, а Жанна злая, холодная и бессердечная.",
+        "translation": "Serguéi es malvado, frío y desalmado, y Zhanna es malvada, fría y desalmada."
+      },
+      {
+        "russian": "Павел активный и энергичный. Анна активная и энергичная.",
+        "translation": "Pável es activo y enérgico. Anna es activa y enérgica."
+      },
+      {
+        "russian": "Кирилл очень вежливый и культурный, он воспитанный и деликатный.",
+        "translation": "Kiril es muy educado y culto, es de buenos modales y delicado."
+      },
+      {
+        "russian": "Андрей очень скромный, он не любит говорить о своих успехах.",
+        "translation": "Andréi es muy modesto, no le gusta hablar de sus éxitos."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "добрый / добрая",
+        "transcription": "dóbryi / dóbraya",
+        "translation": "bondadoso/a"
+      },
+      {
+        "word": "злой / злая",
+        "transcription": "zloi / zlája",
+        "translation": "malvado/a"
+      },
+      {
+        "word": "вежливый / вежливая",
+        "transcription": "v'ézhlivyi / v'ézhlivaya",
+        "translation": "educado/a"
+      },
+      {
+        "word": "гостеприимный / гостеприимная",
+        "transcription": "gast'ipriímnyi / gast'ipriímnaya",
+        "translation": "hospitalario/a"
+      },
+      {
+        "word": "скромный / скромная",
+        "transcription": "skrómnyi / skrómnaya",
+        "translation": "modesto/a"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoharakterchelovekaadjetivos-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué adjetivo describe a alguien que recibe muy bien a los invitados?",
+        "options": [
+          "скромный",
+          "гостеприимный",
+          "холодный",
+          "бессердечный"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoharaktercheloveka-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "добрый",
+            "right": "bondadoso"
+          },
+          {
+            "left": "злой",
+            "right": "malvado"
+          },
+          {
+            "left": "скромный",
+            "right": "modesto"
+          },
+          {
+            "left": "вежливый",
+            "right": "educado"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video iyOZRl_8mtU ('Характер человека 1. Words you need to describe a character'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-30 (describir el carácter y el aspecto físico — enfoque en carácter)."
+  },
+  "video-magazin-odezhdy-compras": {
+    "id": "video-magazin-odezhdy-compras",
+    "title": "De compras: ropa y probadores («В магазине одежды») — encontrar el vestido perfecto",
+    "description": "Historia narrada del canal «Jurussia Учим русский» (nivel A1): Natalia necesita un vestido nuevo para una fiesta. En la tienda, con su amiga Olia, se prueba tres vestidos distintos — uno le queda grande, otro pequeño, y el tercero «le queda perfecto» — antes de pagar en caja.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "84C7ef0ehsk",
+    "curriculumLessonId": "a2-28",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Наталье нужно новое платье. Её платья старые и немодные.",
+        "translation": "Natalia necesita un vestido nuevo. Sus vestidos son viejos y anticuados."
+      },
+      {
+        "russian": "Я хочу его померить. Наталья идёт в примерочную.",
+        "translation": "Quiero probármelo. Natalia va al probador."
+      },
+      {
+        "russian": "Оно мне большое. Это платье мне не подходит.",
+        "translation": "Me queda grande. Este vestido no me queda bien."
+      },
+      {
+        "russian": "Это платье слишком маленькое. Оно мне тоже не подходит.",
+        "translation": "Este vestido es demasiado pequeño. Tampoco me queda bien."
+      },
+      {
+        "russian": "Это платье мне подходит! Это платье мне как раз!",
+        "translation": "¡Este vestido me queda bien! ¡Este vestido me queda justo!"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "примерочная",
+        "transcription": "prim'éraсh'naya",
+        "translation": "probador"
+      },
+      {
+        "word": "мерить / померить",
+        "transcription": "m'ér'it' / pam'ér'it'",
+        "translation": "probarse (ropa)"
+      },
+      {
+        "word": "мне подходит",
+        "transcription": "mn'e patkhód'it",
+        "translation": "me queda bien"
+      },
+      {
+        "word": "большое / маленькое",
+        "transcription": "bal'sháye / mál'in'kaye",
+        "translation": "grande / pequeño (talla)"
+      },
+      {
+        "word": "мне как раз",
+        "transcription": "mn'e kak ras",
+        "translation": "me queda justo/perfecto"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videomagazinodezhdycompras-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se dice «me queda bien» al probarse ropa en ruso?",
+        "options": [
+          "мне большое",
+          "мне подходит",
+          "мне маленькое",
+          "мне грустно"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videomagazinodezhdycompras-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "примерочная",
+            "right": "probador"
+          },
+          {
+            "left": "мерить",
+            "right": "probarse"
+          },
+          {
+            "left": "мне подходит",
+            "right": "me queda bien"
+          },
+          {
+            "left": "мне как раз",
+            "right": "me queda perfecto"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video 84C7ef0ehsk ('New Dress for the Party – Simple Russian Story for Beginners (A1)'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-28 (de compras: ropa y devoluciones)."
   }
 }
