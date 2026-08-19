@@ -24632,5 +24632,97 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video xYOtSzAJbaE, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (interpretada por Nikolái Karachentsov), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción lírica sobre la naturaleza y las estaciones."
+  },
+  "song-i-esli-rycar-ne-naidyotsya": {
+    "id": "song-i-esli-rycar-ne-naidyotsya",
+    "title": "И если рыцарь не найдётся — de «Сказки старого волшебника» (1984)",
+    "description": "Canción sobre una princesa dormida en un castillo antiguo, rodeado de un bosque denso, esperando cien años a que un caballero valiente venga a despertarla con un beso. De la película de fantasía soviética «Сказки старого волшебника» (Cuentos del viejo mago, 1984).",
+    "level": "B1",
+    "category": "song",
+    "youtubeVideoId": "CjPbbNfubTo",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Дремучим бором, тёмной чащею Старинный замок окружён.",
+        "translation": "Rodeado de un bosque denso, de una espesura oscura, se encuentra un antiguo castillo."
+      },
+      {
+        "russian": "Там принца ждёт принцесса спящая, Погружена в покой и сон.",
+        "translation": "Allí la princesa dormida espera a un príncipe, sumida en paz y sueño."
+      },
+      {
+        "russian": "Принцесса спит сто лет, сто лет, А храбреца всё нет и нет, И если рыцарь не найдётся, Принцесса так и не проснётся.",
+        "translation": "La princesa duerme cien años, cien años, y el valiente no aparece, y si no se encuentra un caballero, la princesa jamás despertará."
+      },
+      {
+        "russian": "Я в дальний путь решил отправиться, За тем, чтоб принца убедить, Что должен он свою красавицу Поцеловать и разбудить.",
+        "translation": "Decidí emprender un largo viaje, para convencer al príncipe de que debe besar y despertar a su bella."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "дремучий бор",
+        "transcription": "drimúchiy bor",
+        "translation": "bosque denso y antiguo"
+      },
+      {
+        "word": "чаща",
+        "transcription": "chásha",
+        "translation": "espesura, maleza del bosque"
+      },
+      {
+        "word": "храбрец",
+        "transcription": "khrabréts",
+        "translation": "valiente, hombre valeroso"
+      },
+      {
+        "word": "рыцарь",
+        "transcription": "rýtsar'",
+        "translation": "caballero"
+      },
+      {
+        "word": "разбудить",
+        "transcription": "razbudít'",
+        "translation": "despertar (a alguien)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songiyeslirycarnenaidyotsya-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según el estribillo, ¿qué pasará si no se encuentra un caballero?",
+        "options": [
+          "El castillo desaparecerá",
+          "La princesa nunca despertará",
+          "El bosque se secará",
+          "El príncipe se casará con otra"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songiyeslirycarnenaidyotsya-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "рыцарь",
+            "right": "caballero"
+          },
+          {
+            "left": "храбрец",
+            "right": "valiente"
+          },
+          {
+            "left": "разбудить",
+            "right": "despertar"
+          },
+          {
+            "left": "чаща",
+            "right": "espesura del bosque"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video CjPbbNfubTo, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video, sin usar la letra de memoria. Sin contenido de guerra/violencia — canción de cuento de hadas clásico (La Bella Durmiente)."
   }
 }
