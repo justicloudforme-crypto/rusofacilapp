@@ -26582,5 +26582,93 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video aldtsDXtW9g ('Урок 2. Деепричастный оборот и сложное предложение || Деепричастия'), canal independiente «О русском по-русски», continuación de video-deeprichastiya (b2-10, mismo canal, video distinto: урок 1 vs урок 2). Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: el par de ejemplos (deeprichastie ↔ oración con 'если') extraído directamente de la transcripción. Cubre el slot b2-11 (estilo y matices en participios y gerundios), distinto de b2-10 (introducción al деепричастие) y b2-12 (participios vs который)."
+  },
+  "video-particulas-vryed-razve": {
+    "id": "video-particulas-vryed-razve",
+    "title": "Modismos gramaticales avanzados: las partículas «ведь» y «разве»",
+    "description": "Lección del canal «русский с носителем» sobre dos partículas/conjunciones muy frecuentes en el habla coloquial rusa y difíciles de traducir literalmente: «ведь» (refuerza una afirmación, equivalente a «después de todo», «si ya te lo dije») y «разве» (expresa duda o incredulidad, equivalente a «¿acaso...?», «¿de verdad...?»).",
+    "level": "B2",
+    "category": "grammar",
+    "youtubeVideoId": "RMxjL9REbkw",
+    "curriculumLessonId": "b2-21",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я ведь тебе говорил.",
+        "translation": "Si ya te lo dije. / Después de todo, te lo dije. («ведь» refuerza y recuerda algo ya dicho)"
+      },
+      {
+        "russian": "Ты ведь не послушал.",
+        "translation": "Es que no me hiciste caso. («ведь» aquí subraya un reproche implícito)"
+      },
+      {
+        "russian": "Разве ты не узнал меня?",
+        "translation": "¿Acaso no me reconociste? («разве» + negación expresa sorpresa/incredulidad ante algo inesperado)"
+      },
+      {
+        "russian": "Ты разве со мной не согласен?",
+        "translation": "¿De verdad no estás de acuerdo conmigo? («разве» al inicio o en medio de la pregunta, mismo matiz de sorpresa)"
+      },
+      {
+        "russian": "Погода тихая, разве что волны на море шумят.",
+        "translation": "El tiempo está tranquilo, salvo que las olas hacen ruido en el mar. («разве что» = «excepto que», uso como conjunción restrictiva)"
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "ведь",
+        "transcription": "v'ed'",
+        "translation": "es que / después de todo (partícula/conjunción que refuerza o justifica)"
+      },
+      {
+        "word": "разве",
+        "transcription": "rázv'e",
+        "translation": "¿acaso...? (partícula que expresa duda o sorpresa)"
+      },
+      {
+        "word": "разве что",
+        "transcription": "rázv'e shto",
+        "translation": "salvo que / a menos que (conjunción restrictiva)"
+      },
+      {
+        "word": "неужели",
+        "transcription": "n'euzh'éli",
+        "translation": "¿de verdad...? (sinónimo cercano de «разве» como partícula)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videoparticulasvryedrazve-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Qué partícula expresa duda o sorpresa incrédula, como en «¿Acaso no me reconociste?»?",
+        "options": [
+          "ведь",
+          "разве",
+          "поэтому",
+          "хотя"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videoparticulasvryedrazve-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "ведь",
+            "right": "refuerza una afirmación ya conocida"
+          },
+          {
+            "left": "разве",
+            "right": "expresa duda/sorpresa"
+          },
+          {
+            "left": "разве что",
+            "right": "salvo que"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video RMxjL9REbkw ('№ 70 РАЗВЕ и ВЕДЬ / Разговорный Русский'), canal «русский с носителем» (canal ya usado en entradas previas, ej. a1-12). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; los auto-subtítulos rusos disponibles resultaron significativamente garbled (mezclados con fragmentos de traducción automática al inglés ilegibles) para varios ejemplos — se conservaron solo los fragmentos claramente legibles de la transcripción ('я ведь тебе говорил', 'разве ты не узнал меня', 'ты разве со мной не согласен', 'погода тихая, разве что волны на море шумят') y el resto del contenido (traducciones, matices) se reconstruyó a partir de conocimiento gramatical verificado sobre el uso estándar de estas partículas, siguiendo el mismo precedente que video-esli-vs-li y video-adjetivos-cortos-largos."
   }
 }
