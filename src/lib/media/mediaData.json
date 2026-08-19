@@ -25564,5 +25564,93 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video i1yYs2xbudk, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Yevgueni Krylatov, letra de Leonid Derbenev, cantada por Aleksandr Abdulov), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción filosófica sobre el amor."
+  },
+  "song-matrosik": {
+    "id": "song-matrosik",
+    "title": "Матросик — de la película «Проданный смех» (1981)",
+    "description": "Canción cómica y absurda sobre un marinerito amistoso que se puede encontrar en cualquier puerto del mundo, descrito con rasgos deliberadamente contradictorios ('un poco rubio y un poco moreno, bastante alto aunque de estatura baja'). De la película de fantasía soviética «Проданный смех» (La risa vendida, basada en el cuento de James Krüss, 1981).",
+    "level": "A2",
+    "category": "song",
+    "youtubeVideoId": "RR5wYy3C_tc",
+    "lyricsOrTranscript": [
+      {
+        "russian": "В любом порту и гавани любой Зимой, весною, осенью и летом, Всегда найдётся парень, что с тобой На чём-нибудь когда-то плавал где-то.",
+        "translation": "En cualquier puerto y en cualquier bahía, en invierno, primavera, otoño y verano, siempre habrá un muchacho que en algo, alguna vez, navegó contigo en algún lugar."
+      },
+      {
+        "russian": "Слегка блондин он и чуть-чуть брюнет, Весьма высок, хоть маленького роста.",
+        "translation": "Es un poco rubio y un poco moreno, bastante alto, aunque de estatura pequeña. (descripción cómicamente contradictoria)"
+      },
+      {
+        "russian": "При встрече он что-нибудь спросит, А может, помашет рукой. Матросик, знакомый матросик, Матросик весёлый такой.",
+        "translation": "Al encontrarlo, te preguntará algo, o tal vez te saludará con la mano. El marinerito, el marinerito conocido, un marinerito tan alegre."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "порт",
+        "transcription": "port",
+        "translation": "puerto"
+      },
+      {
+        "word": "гавань",
+        "transcription": "gávan'",
+        "translation": "bahía, puerto natural"
+      },
+      {
+        "word": "матросик",
+        "transcription": "matrósik",
+        "translation": "marinerito (diminutivo cariñoso de «матрос»)"
+      },
+      {
+        "word": "плавать",
+        "transcription": "plávat'",
+        "translation": "navegar"
+      },
+      {
+        "word": "помахать рукой",
+        "transcription": "pamakhát' rukóy",
+        "translation": "saludar con la mano"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "songmatrosik-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se describe cómicamente la apariencia del marinerito?",
+        "options": [
+          "Con rasgos muy precisos y claros",
+          "Con rasgos deliberadamente contradictorios (rubio y moreno a la vez)",
+          "Siempre con uniforme militar",
+          "Nunca se describe su apariencia"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "songmatrosik-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "порт",
+            "right": "puerto"
+          },
+          {
+            "left": "гавань",
+            "right": "bahía"
+          },
+          {
+            "left": "плавать",
+            "right": "navegar"
+          },
+          {
+            "left": "помахать рукой",
+            "right": "saludar con la mano"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video RR5wYy3C_tc, canal oficial del archivo estatal 'Музыка на советском телевидении' (Госфонд теле- и радиопрограмм). Público, playable_in_embed=true, no es livestream. Letra completa verificada directamente desde la descripción oficial del video (créditos: música de Maksim Dunaevski, letra de Leonid Derbenev, cantada por Zhanna Rozhdestvenskaya), sin usar la letra de memoria. Sin contenido de guerra/violencia — canción cómica y absurda sobre un marinero amistoso."
   }
 }
