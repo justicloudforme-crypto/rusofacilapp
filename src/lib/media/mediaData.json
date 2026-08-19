@@ -30269,5 +30269,89 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video UvWOnLohocU ('Современные тенденции в деловой переписке. Часть 2: Структура делового письма'), canal «ПРОСТО О ВЫБОРАХ», misma serie que video-delovaya-perepiska-stil (b2-23, Parte 4 distinta). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-8 (escribir correos y mensajes formales)."
+  },
+  "video-otpusk-v-moskve-clima-orientarse": {
+    "id": "video-otpusk-v-moskve-clima-orientarse",
+    "title": "El clima y cómo orientarse en una ciudad desconocida: «Отпуск в Москве», mi primer viaje",
+    "description": "Historia narrada del canal «Jurussia Учим русский»: Lindsey, de Chicago, cuenta su primera visita a Moscú — el clima de julio (cálido, soleado, con lluvias ocasionales), cómo se orientó en una ciudad desconocida usando el metro («las estaciones son como museos»), y sus impresiones sobre los lugares más conocidos (la Plaza Roja, el Kremlin) y la comida rusa.",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "LAv3S7OI26k",
+    "curriculumLessonId": "a2-29",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Я приехала в Москву в июле. Погода была тёплая, солнечная. Иногда шёл дождь.",
+        "translation": "Llegué a Moscú en julio. El clima era cálido, soleado. A veces llovía."
+      },
+      {
+        "russian": "Московское метро — очень красивое! Оно чистое, удобное и быстрое. Я много ездила на метро, чтобы увидеть разные места.",
+        "translation": "¡El metro de Moscú es muy bonito! Es limpio, cómodo y rápido. Viajé mucho en metro para ver distintos lugares. (forma principal de orientarse en la ciudad)"
+      },
+      {
+        "russian": "Конечно, я пошла на Красную площадь. Это самое известное место в Москве.",
+        "translation": "Por supuesto, fui a la Plaza Roja. Es el lugar más conocido de Moscú."
+      },
+      {
+        "russian": "Я старалась говорить по-русски. Иногда было трудно, но люди помогали. Все были добрые и улыбались.",
+        "translation": "Intenté hablar en ruso. A veces era difícil, pero la gente ayudaba. Todos eran amables y sonreían."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "тёплая, солнечная погода",
+        "transcription": "t'yóplaya, sólnich'naya pagóda",
+        "translation": "clima cálido y soleado"
+      },
+      {
+        "word": "шёл дождь",
+        "transcription": "shol dozhd'",
+        "translation": "llovía"
+      },
+      {
+        "word": "метро",
+        "transcription": "m'itró",
+        "translation": "metro"
+      },
+      {
+        "word": "самое известное место",
+        "transcription": "sámaye izv'ésnaye m'ésta",
+        "translation": "el lugar más conocido"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videootpuskvmoskveclimaorientarse-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cómo se orientaba principalmente Lindsey para ver distintos lugares de Moscú?",
+        "options": [
+          "A pie únicamente",
+          "En taxi",
+          "En metro",
+          "En bicicleta"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "id": "videootpuskvmoskveclimaorientarse-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "тёплая, солнечная погода",
+            "right": "clima cálido y soleado"
+          },
+          {
+            "left": "шёл дождь",
+            "right": "llovía"
+          },
+          {
+            "left": "метро",
+            "right": "metro"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video LAv3S7OI26k ('My Vacation in Moscow – Отпуск в Москве | А2 + В1'), canal «Jurussia Учим русский», misma serie que varias entradas previas de esta sesión. Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español. Cubre el slot a2-29 (el clima y cómo orientarse en una ciudad desconocida), combinando ambos temas en una única narración de primera visita."
   }
 }
