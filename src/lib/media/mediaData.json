@@ -30092,5 +30092,182 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video NpGZe24L1cM ('Russian dialogue - hobbies, диалог на русском - хобби, чтение, музыка и др.'), canal «Antonia Romaker - English and Russian online». Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso: conversación auténtica y espontánea entre dos hablantes nativas. Cubre el slot b1-29 (hablar de películas y libros — con fuerte énfasis en libros)."
+  },
+  "video-delovaya-perepiska-stil": {
+    "id": "video-delovaya-perepiska-stil",
+    "title": "Estilo empresarial: correspondencia oficial — el estilo formal frente a la comunicación eficaz",
+    "description": "Video del canal «ПРОСТО О ВЫБОРАХ» que contrasta el estilo formal tradicional de las cartas oficiales rusas (con sello y membrete, construcciones largas de 15-20 palabras y varios casos gramaticales encadenados) con la correspondencia empresarial electrónica moderna, que exige frases claras y eficaces — la estrategia clave: identificar siempre el sujeto (quién realiza la acción) y el predicado (qué se dice de él) para que la frase sea inequívoca.",
+    "level": "C1",
+    "category": "grammar",
+    "youtubeVideoId": "w6dpwUCElhU",
+    "curriculumLessonId": "b2-23",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Письмо нужно писать эффективно и ясно. В советской переписке были очень сложные конструкции, они сохранились в формальном стиле — в письмах, которые пишутся на гербовой печати.",
+        "translation": "Una carta debe escribirse de forma eficaz y clara. En la correspondencia soviética había construcciones muy complejas, que se han conservado en el estilo formal — en las cartas que se escriben con membrete oficial."
+      },
+      {
+        "russian": "Признаки формальной конструкции: непонятно, где находится подлежащее, сложные обороты, нанизывание падежей 3-4-5-6-7 падежей подряд.",
+        "translation": "Rasgos de la construcción formal: no está claro dónde está el sujeto, giros complejos, encadenamiento de 3-4-5-6-7 casos gramaticales seguidos."
+      },
+      {
+        "russian": "Электронная деловая переписка — это форма оперативной связи. Такими сложными конструкциями пользоваться нельзя.",
+        "translation": "La correspondencia empresarial electrónica es una forma de comunicación ágil. No se pueden usar esas construcciones tan complejas."
+      },
+      {
+        "russian": "Стратегия построения ясной фразы: понять и показать своему адресату, кто производит действие (подлежащее) и что об этом говорится (сказуемое).",
+        "translation": "La estrategia para construir una frase clara: entender y mostrarle al destinatario quién realiza la acción (sujeto) y qué se dice de ello (predicado)."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "деловая переписка",
+        "transcription": "d'ilaváya p'ir'ipíska",
+        "translation": "correspondencia empresarial"
+      },
+      {
+        "word": "формальный стиль",
+        "transcription": "farmál'nyi st'il'",
+        "translation": "estilo formal"
+      },
+      {
+        "word": "оперативная связь",
+        "transcription": "ap'irat'ívnaya sv'as'",
+        "translation": "comunicación ágil/rápida"
+      },
+      {
+        "word": "подлежащее / сказуемое",
+        "transcription": "padl'ezháshch'eye / skazúyemaye",
+        "translation": "sujeto / predicado"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videodelovayaperepiskastil-mc-1",
+        "type": "multiple-choice",
+        "prompt": "Según el video, ¿cuál es la estrategia clave para construir una frase clara en la correspondencia empresarial?",
+        "options": [
+          "Usar tantos casos gramaticales encadenados como sea posible",
+          "Identificar claramente el sujeto y el predicado",
+          "Escribir siempre con membrete oficial",
+          "Evitar por completo el estilo formal"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videodelovayaperepiskastil-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "деловая переписка",
+            "right": "correspondencia empresarial"
+          },
+          {
+            "left": "формальный стиль",
+            "right": "estilo formal"
+          },
+          {
+            "left": "оперативная связь",
+            "right": "comunicación ágil"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video w6dpwUCElhU ('Современные тенденции в деловой переписке. Часть 4: Стиль и слог письма'), canal «ПРОСТО О ВЫБОРАХ». Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Ejemplos y estrategia extraídos directamente de la transcripción. Cubre el slot b2-23 (estilo empresarial: correspondencia oficial), contrastando explícitamente el registro formal tradicional con la comunicación empresarial moderna eficaz."
+  },
+  "video-struktura-delovogo-pisma": {
+    "id": "video-struktura-delovogo-pisma",
+    "title": "Escribir correos formales: la estructura de la carta empresarial (saludo, cuerpo y firma)",
+    "description": "Video del canal «ПРОСТО О ВЫБОРАХ» sobre la estructura de una carta empresarial en ruso: los dos elementos obligatorios son el saludo/tratamiento y la firma (todo lo demás es el «cuerpo» de la carta). Explica las opciones de saludo formal («Добрый день», «Здравствуйте») y advierte contra la frase informal de moda «Доброго времени суток», que el etiqueta empresarial actual considera fuera de lugar en cualquier correo formal.",
+    "level": "B1",
+    "category": "grammar",
+    "youtubeVideoId": "UvWOnLohocU",
+    "curriculumLessonId": "b1-8",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Деловое письмо состоит из этих блоков: приветствие, обращение, вступительная фраза, суть письма, финальная фраза и подпись.",
+        "translation": "Una carta empresarial se compone de estos bloques: saludo, tratamiento, frase introductoria, contenido de la carta, frase final y firma."
+      },
+      {
+        "russian": "Два обязательных реквизита — это приветствие и подпись. Всё остальное называется телом письма.",
+        "translation": "Los dos elementos obligatorios son el saludo y la firma. Todo lo demás se llama «el cuerpo de la carta»."
+      },
+      {
+        "russian": "Приветствие и обращение: «Добрый день, Анна Сергеевна», а не наоборот — это более вежливая форма обращения.",
+        "translation": "Saludo y tratamiento: «Buenas tardes, Anna Serguéyevna» (en ese orden, no al revés) — es la forma más cortés de dirigirse a alguien."
+      },
+      {
+        "russian": "«Доброго времени суток» — это не русское приветствие, это шутливая фраза, придуманная кем-то. Категорически не у места ни в каком деловом письме.",
+        "translation": "«Que tengas un buen momento del día» (fórmula neutra al horario) no es un saludo ruso auténtico, es una frase inventada en broma. Está categóricamente fuera de lugar en cualquier carta empresarial."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "деловое письмо",
+        "transcription": "d'ilavóye pis'mó",
+        "translation": "carta empresarial"
+      },
+      {
+        "word": "приветствие",
+        "transcription": "priv'étstviye",
+        "translation": "saludo"
+      },
+      {
+        "word": "обращение",
+        "transcription": "abrashch'éniye",
+        "translation": "tratamiento (forma de dirigirse a alguien)"
+      },
+      {
+        "word": "подпись",
+        "transcription": "pótpis'",
+        "translation": "firma"
+      },
+      {
+        "word": "тело письма",
+        "transcription": "t'éla pis'má",
+        "translation": "cuerpo de la carta"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videostrukturadelovogopisma-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuáles son los dos elementos OBLIGATORIOS de una carta empresarial según el video?",
+        "options": [
+          "El saludo y la firma",
+          "La frase introductoria y la fecha",
+          "El asunto y los datos de contacto",
+          "El membrete y el sello"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "id": "videostrukturadelovogopisma-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "деловое письмо",
+            "right": "carta empresarial"
+          },
+          {
+            "left": "приветствие",
+            "right": "saludo"
+          },
+          {
+            "left": "подпись",
+            "right": "firma"
+          },
+          {
+            "left": "обращение",
+            "right": "tratamiento"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video UvWOnLohocU ('Современные тенденции в деловой переписке. Часть 2: Структура делового письма'), canal «ПРОСТО О ВЫБОРАХ», misma serie que video-delovaya-perepiska-stil (b2-23, Parte 4 distinta). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles. Ejemplos extraídos directamente de la transcripción. Cubre el slot b1-8 (escribir correos y mensajes formales)."
   }
 }
