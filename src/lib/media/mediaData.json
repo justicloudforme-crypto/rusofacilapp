@@ -29074,5 +29074,97 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-18",
     "sourceNote": "YouTube video _-XfUfrh52Y ('Гостиница. Hotel in Russian, RU/ES subtitles'), canal «The Linguists Family. Dialogues in Russian». Público, playable_in_embed=true, no es livestream. Verificado con subtítulos MANUALES reales en ruso Y español (el propio canal los proporciona en 9 idiomas). Cubre el slot a1-28 (diálogo práctico: en el restaurante y en el hotel — enfoque en hotel, ya que a1-5 cubre restaurante)."
+  },
+  "video-comparativos-simples": {
+    "id": "video-comparativos-simples",
+    "title": "Comparaciones y opiniones simples: el comparativo de adjetivos («выше», «лучше», «более сильный»)",
+    "description": "Lección del canal «русский с носителем» sobre el grado comparativo de los adjetivos rusos: la forma simple con sufijos (-ее/-ей, -е, -ше: «белее», «короче», «выше») o raíz irregular («хороший» → «лучше»), y la forma compuesta con «более»/«менее» + adjetivo («более сильный», «менее умный») — con ejemplos prácticos de opinión («Алиса красивее, чем Сара»).",
+    "level": "A2",
+    "category": "grammar",
+    "youtubeVideoId": "qCQwsgrlSIw",
+    "curriculumLessonId": "a2-7",
+    "lyricsOrTranscript": [
+      {
+        "russian": "Ты выше, чем я. Ваш дом меньше моего. Мой сосед богаче тебя.",
+        "translation": "Tú eres más alto que yo. Su casa es más pequeña que la mía. Mi vecino es más rico que tú. (comparativo simple)"
+      },
+      {
+        "russian": "Белый → белее. Короткий → короче. Высокий → выше.",
+        "translation": "Blanco → más blanco. Corto → más corto. Alto → más alto. (comparativo simple con sufijos -ее/-е)"
+      },
+      {
+        "russian": "Хороший → лучше. Плохой → хуже. Маленький → меньше.",
+        "translation": "Bueno → mejor. Malo → peor. Pequeño → menor/más pequeño. (comparativo irregular, raíz distinta)"
+      },
+      {
+        "russian": "Сильный → более сильный. Умный → менее умный.",
+        "translation": "Fuerte → más fuerte. Inteligente → menos inteligente. (comparativo compuesto con «более»/«менее»)"
+      },
+      {
+        "russian": "Осенью погода холоднее, чем летом. Алиса красивее, чем Сара.",
+        "translation": "En otoño el clima es más frío que en verano. Alicia es más guapa que Sara."
+      }
+    ],
+    "vocabulary": [
+      {
+        "word": "выше",
+        "transcription": "výshe",
+        "translation": "más alto (de «высокий»)"
+      },
+      {
+        "word": "лучше",
+        "transcription": "lúch'she",
+        "translation": "mejor (de «хороший», irregular)"
+      },
+      {
+        "word": "более / менее",
+        "transcription": "bóleye / méneye",
+        "translation": "más / menos (comparativo compuesto)"
+      },
+      {
+        "word": "чем",
+        "transcription": "ch'em",
+        "translation": "que (en comparaciones: «выше, чем я»)"
+      }
+    ],
+    "exercises": [
+      {
+        "id": "videocomparativossimples-mc-1",
+        "type": "multiple-choice",
+        "prompt": "¿Cuál es el comparativo de «хороший» (bueno)?",
+        "options": [
+          "хорошее",
+          "лучше",
+          "более хороший",
+          "хорошейший"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "id": "videocomparativossimples-matching-1",
+        "type": "matching",
+        "pairs": [
+          {
+            "left": "выше",
+            "right": "más alto"
+          },
+          {
+            "left": "лучше",
+            "right": "mejor"
+          },
+          {
+            "left": "более сильный",
+            "right": "más fuerte"
+          },
+          {
+            "left": "чем",
+            "right": "que (en comparaciones)"
+          }
+        ]
+      }
+    ],
+    "embedStatus": "ok",
+    "lastCheckedAt": "2026-08-18",
+    "sourceNote": "YouTube video qCQwsgrlSIw ('№ 187 Грамматика русского языка: степени сравнения прилагательных'), canal «русский с носителем» (mismo canal usado en a1-4/a1-12/b2-21). Público, playable_in_embed=true, no es livestream. Sin subtítulos manuales; auto-subtítulos rusos verificados como legibles y precisos. Ejemplos extraídos directamente de la transcripción. Cubre el slot a2-7 (comparaciones y opiniones simples)."
   }
 }
