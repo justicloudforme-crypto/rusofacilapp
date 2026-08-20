@@ -54,6 +54,48 @@ export function extendPath(path: Cell[], next: Cell): Cell[] {
   return path;
 }
 
+/** Same three interactions as extendPath (start, backtrack, extend) but
+ * for a word that can only ever be a single straight ray (every non-★
+ * puzzle): once the path has 2 cells, the direction between them is
+ * locked, and every further cell must be exactly `last + direction` or
+ * it's ignored outright rather than accepted.
+ *
+ * This is the fix for a real reported bug: dragging the mouse along a
+ * diagonal, the pointer's actual pixel path routinely strays onto a
+ * neighboring row or column for a sample or two — plain extendPath
+ * accepts that stray cell (it's still 8-adjacent to the path's last
+ * cell) and the selection visibly zigzags off the word the player is
+ * tracing. Locking the ray after the first step means a stray sample
+ * off that ray is simply ignored — the selection holds steady on the
+ * intended line and only resumes growing once the pointer comes back
+ * onto it, instead of derailing.
+ *
+ * Deliberately NOT used for curved/★ puzzles, whose whole point is
+ * bending mid-word — those keep using plain extendPath (see
+ * WordSearchBoard, which picks one or the other based on
+ * `puzzle.curved`). */
+export function extendPathStraight(path: Cell[], next: Cell): Cell[] {
+  if (path.length === 0) return [next];
+
+  const last = path[path.length - 1];
+  if (sameCell(last, next)) return path;
+
+  if (path.length >= 2 && sameCell(path[path.length - 2], next)) {
+    return path.slice(0, -1);
+  }
+
+  if (path.length === 1) {
+    // The second cell is what picks the ray's direction — any adjacent
+    // cell is still a valid choice here, same as extendPath.
+    return isAdjacent(last, next) ? [...path, next] : path;
+  }
+
+  const dirRow = Math.sign(path[1].row - path[0].row);
+  const dirCol = Math.sign(path[1].col - path[0].col);
+  const expected: Cell = { row: last.row + dirRow, col: last.col + dirCol };
+  return sameCell(expected, next) ? [...path, next] : path;
+}
+
 export function readWord(grid: string[][], cells: Cell[]): string {
   return cells.map((c) => grid[c.row]?.[c.col] ?? "").join("");
 }

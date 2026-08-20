@@ -182,6 +182,28 @@ async function dragSelect(page: Page, path: { row: number; col: number }[]) {
   await page.mouse.up();
 }
 
+test("word search: hovering the grid with no button held must not select anything", async ({ page }) => {
+  // Regression guard for a real reported bug: the Pointer Events API
+  // fires pointermove on plain hover, not only while a button is held,
+  // so without an explicit "is a button actually down" guard, merely
+  // moving the mouse across the grid — no click at all — was silently
+  // building a selection on its own.
+  await page.goto("/es/word-games/WORD_SEARCH/A1/1");
+  await page.waitForSelector("button[data-row]");
+
+  const cells = await page.locator("button[data-row]").all();
+  for (let i = 0; i < 30; i++) {
+    const box = await cells[i].boundingBox();
+    if (!box) continue;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 3 });
+  }
+
+  const highlighted = await page.locator("button[data-row].bg-foreground\\/15").count();
+  expect(highlighted).toBe(0);
+  const foundCount = await page.locator("ul li[data-word].line-through").count();
+  expect(foundCount).toBe(0);
+});
+
 test("word search: select a real word and see it struck through in the word list", async ({ page }) => {
   await page.goto("/es/word-games/WORD_SEARCH/A1/1");
 

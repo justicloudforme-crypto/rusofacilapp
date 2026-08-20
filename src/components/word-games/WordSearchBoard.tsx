@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { PublicWordSearchPuzzle } from "@/lib/word-games/data";
-import { extendPath, matchSelection, type Cell } from "@/lib/word-games/word-search-select";
+import { extendPath, extendPathStraight, matchSelection, type Cell } from "@/lib/word-games/word-search-select";
 import { playCorrectTone } from "@/lib/sound";
 
 interface Dict {
@@ -89,9 +89,9 @@ function cellFromPoint(gridEl: HTMLElement, clientX: number, clientY: number, ro
  * have the click swallowed. Drag-move uses extendPath directly instead
  * (see handlePointerMove) so a stray off-path sample during a continuous
  * gesture doesn't reset it. */
-function startOrExtend(path: Cell[], cell: Cell): Cell[] {
+function startOrExtend(extend: (path: Cell[], next: Cell) => Cell[], path: Cell[], cell: Cell): Cell[] {
   if (path.length > 0 && sameCell(path[path.length - 1], cell)) return path;
-  const extended = extendPath(path, cell);
+  const extended = extend(path, cell);
   if (extended !== path) return extended;
   return [cell];
 }
@@ -127,10 +127,24 @@ export default function WordSearchBoard({
   // click (which leaves the path standing for the next click to
   // continue), without needing two separate interaction "modes".
   const draggedRef = useRef(false);
+  // True only between an actual pointerdown and its matching pointerup/
+  // cancel — guards handlePointerMove so it only ever extends the path
+  // while a button/touch is actually held. Without this, a REAL reported
+  // bug: the Pointer Events API fires pointermove on plain hover too, not
+  // only while a button is pressed, so merely moving the mouse across the
+  // grid (no click at all) was silently building a selection on its own,
+  // and once a click-built word was in progress, so much as passing the
+  // cursor back over the grid kept extending it further.
+  const isDraggingRef = useRef(false);
 
   const rows = puzzle.grid.length;
   const cols = puzzle.grid[0]?.length ?? 0;
   const selectionKeys = new Set(path.map(cellKey));
+  // Curved/★ puzzles keep the free adjacency-only rule (bending is the
+  // whole point); every other puzzle locks to a single ray after the
+  // first step so a drag can't zigzag off the intended line — see
+  // extendPathStraight's doc comment for the real bug this fixes.
+  const extend = puzzle.curved ? extendPath : extendPathStraight;
 
   // The single point every path mutation (drag or click alike) funnels
   // through: checks the new path against the still-unfound words and
@@ -187,7 +201,8 @@ export default function WordSearchBoard({
   function handlePointerDown(e: React.PointerEvent<HTMLButtonElement>, cell: Cell) {
     e.currentTarget.setPointerCapture(e.pointerId);
     draggedRef.current = false;
-    commitPath(startOrExtend(pathRef.current, cell));
+    isDraggingRef.current = true;
+    commitPath(startOrExtend(extend, pathRef.current, cell));
   }
 
   // Pointer capture (set on the cell the drag started on) keeps this
@@ -198,9 +213,14 @@ export default function WordSearchBoard({
   // pointermove events can land within one React batch, and only the ref
   // is guaranteed up to date between them (see pathRef's own comment).
   function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    // Guards against the Pointer Events API firing pointermove on plain
+    // hover, not just while a button/touch is actually held — without
+    // this check, moving the mouse over the grid with no click at all
+    // would silently build a selection (see isDraggingRef's comment).
+    if (!isDraggingRef.current) return;
     if (!gridRef.current) return;
     const cell = cellFromPoint(gridRef.current, e.clientX, e.clientY, rows, cols);
-    const next = extendPath(pathRef.current, cell);
+    const next = extend(pathRef.current, cell);
     if (next !== pathRef.current) {
       draggedRef.current = true;
       commitPath(next);
@@ -208,6 +228,7 @@ export default function WordSearchBoard({
   }
 
   function handlePointerUp() {
+    isDraggingRef.current = false;
     // A drag always clears on release, matched or not (matches the
     // original swipe-to-select feel); a discrete click leaves the path
     // standing so the next click can continue building it.
