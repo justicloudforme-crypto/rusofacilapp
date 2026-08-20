@@ -104,45 +104,82 @@ const DIRECTIONS: Array<{ name: WordSearchDirection; dr: number; dc: number }> =
 // eye (too many rare letters like Ъ, Ё, Ц clustering together).
 const FILLER_LETTERS = "оооооееееаааанннниииттсрввлкмдпуяызбгчйхжюшцщэфъё".split("");
 
-function tryPlaceWord(
+/** All valid (conflict-free, in-bounds) starting cells for `word` placed
+ * in one specific direction. */
+function validStartsForDirection(
   grid: string[][],
   size: number,
   word: string,
-  rng: () => number
-): { row: number; col: number; direction: WordSearchDirection } | null {
-  const dirs = shuffle(DIRECTIONS, rng);
-  const starts = shuffle(
-    Array.from({ length: size * size }, (_, i) => ({ row: Math.floor(i / size), col: i % size })),
-    rng
-  );
-
-  for (const dir of dirs) {
-    for (const start of starts) {
-      const endRow = start.row + dir.dr * (word.length - 1);
-      const endCol = start.col + dir.dc * (word.length - 1);
+  dir: { dr: number; dc: number }
+): { row: number; col: number }[] {
+  const out: { row: number; col: number }[] = [];
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      const endRow = row + dir.dr * (word.length - 1);
+      const endCol = col + dir.dc * (word.length - 1);
       if (endRow < 0 || endRow >= size || endCol < 0 || endCol >= size) continue;
 
       let fits = true;
       for (let i = 0; i < word.length; i++) {
-        const r = start.row + dir.dr * i;
-        const c = start.col + dir.dc * i;
+        const r = row + dir.dr * i;
+        const c = col + dir.dc * i;
         const existing = grid[r][c];
         if (existing !== "" && existing !== word[i]) {
           fits = false;
           break;
         }
       }
-      if (!fits) continue;
-
-      for (let i = 0; i < word.length; i++) {
-        const r = start.row + dir.dr * i;
-        const c = start.col + dir.dc * i;
-        grid[r][c] = word[i];
-      }
-      return { row: start.row, col: start.col, direction: dir.name };
+      if (fits) out.push({ row, col });
     }
   }
-  return null;
+  return out;
+}
+
+/** Picks a direction among the ones that have at least one legal spot for
+ * this word, preferring whichever direction(s) this puzzle has used
+ * *least so far* (ties broken randomly), then a random spot within it.
+ *
+ * Weighting every available direction equally per word (an earlier
+ * version of this function) still came out cardinal-heavy in practice:
+ * on a square grid, a cardinal direction (E/W/S/N) has roughly `size`
+ * candidate starts for a given word length, while a diagonal has roughly
+ * `(size - word.length + 1)²` — quadratically fewer as the word gets
+ * longer relative to the grid. As the grid fills up over the course of
+ * placing a puzzle's words, diagonals are the first to run out of valid
+ * starts entirely (dropping out of contention), while cardinals still
+ * have room — so later words default to cardinal not by unfair
+ * weighting but by diagonals genuinely having nothing left. Actively
+ * tracking usage and favoring the least-used direction corrects for
+ * that: once a direction has been used a few times, it stops competing
+ * for the earliest, roomiest slots and leaves them to whichever
+ * direction is behind. */
+function tryPlaceWord(
+  grid: string[][],
+  size: number,
+  word: string,
+  rng: () => number,
+  directionUsage: Record<WordSearchDirection, number>
+): { row: number; col: number; direction: WordSearchDirection } | null {
+  const dirs = shuffle(DIRECTIONS, rng);
+  const candidates: { dir: (typeof DIRECTIONS)[number]; starts: { row: number; col: number }[] }[] = [];
+  for (const dir of dirs) {
+    const starts = validStartsForDirection(grid, size, word, dir);
+    if (starts.length > 0) candidates.push({ dir, starts });
+  }
+  if (candidates.length === 0) return null;
+
+  const minUsage = Math.min(...candidates.map((c) => directionUsage[c.dir.name]));
+  const leastUsed = candidates.filter((c) => directionUsage[c.dir.name] === minUsage);
+  const { dir, starts } = leastUsed[Math.floor(rng() * leastUsed.length)];
+  const start = starts[Math.floor(rng() * starts.length)];
+
+  for (let i = 0; i < word.length; i++) {
+    const r = start.row + dir.dr * i;
+    const c = start.col + dir.dc * i;
+    grid[r][c] = word[i];
+  }
+  directionUsage[dir.name]++;
+  return { row: start.row, col: start.col, direction: dir.name };
 }
 
 function buildWordSearch(
@@ -158,11 +195,12 @@ function buildWordSearch(
 
   const grid: string[][] = Array.from({ length: size }, () => Array(size).fill(""));
   const placements: WordPlacement[] = [];
+  const directionUsage: Record<WordSearchDirection, number> = { E: 0, W: 0, S: 0, N: 0, SE: 0, SW: 0, NE: 0, NW: 0 };
 
   for (const entry of shuffled) {
     if (placements.length >= targetCount) break;
     if (entry.word.length > size) continue;
-    const placed = tryPlaceWord(grid, size, entry.word, rng);
+    const placed = tryPlaceWord(grid, size, entry.word, rng, directionUsage);
     if (placed) {
       placements.push({ word: entry.word, clue: entry.clue, ...placed });
     }
@@ -179,6 +217,32 @@ function buildWordSearch(
   }
 
   return { grid: { size, grid }, words: placements };
+}
+
+/** Retries buildWordSearch at progressively larger grid sizes until the
+ * full target word count actually fits, instead of silently shipping a
+ * puzzle that's short of its advertised word list — a fixed grid area
+ * can only hold so many (especially long, C1-length) words before
+ * running out of room, no matter how large the candidate pool is. Caps
+ * growth at baseSize+10 so a puzzle can't balloon indefinitely; if even
+ * that can't fit the target, returns the largest attempt reached (still
+ * self-consistent — every word in `words` really is in the grid — just
+ * short of the intended count, which the caller reports as a problem). */
+function buildWordSearchWithGrowth(
+  pool: WordCandidate[],
+  baseSize: number,
+  targetCount: number,
+  seedPrefix: string
+): { grid: WordGameGrid; words: WordPlacement[] } | null {
+  const maxSize = baseSize + 10;
+  let best: { grid: WordGameGrid; words: WordPlacement[] } | null = null;
+  for (let size = baseSize; size <= maxSize; size += 2) {
+    const rng = makeRng(`${seedPrefix}-grow${size}`);
+    const built = buildWordSearch(pool, size, targetCount, rng);
+    if (built && (!best || built.words.length > best.words.length)) best = built;
+    if (built && built.words.length >= targetCount) return built;
+  }
+  return best;
 }
 
 async function upsertPuzzle(
@@ -221,22 +285,35 @@ async function main() {
     for (let rungIndex = 0; rungIndex < WORD_SEARCH_RUNGS.length; rungIndex++) {
       const sequence = rungIndex + 1;
       const rung = WORD_SEARCH_RUNGS[rungIndex];
-      const rng = makeRng(`WORD_SEARCH-${level}-${sequence}`);
-      const pool = candidateWords(cards, rung.size, clueForLevel);
+      // Capped at size-2 (not size) so a word can never span the grid's
+      // full row/column/diagonal on its own — a word exactly as long as
+      // the grid claims an entire line with zero conflict risk against
+      // parallel same-orientation words, which crowds out every other
+      // orientation almost entirely (verified: A1's word bank is full of
+      // exactly-8-letter words, and an 8x8 grid made rung 1 come out
+      // nearly all-horizontal for exactly this reason). A couple of
+      // cells of slack is enough for real crossing to become possible.
+      const wordSearchMaxLen = Math.max(rung.size - 2, 4);
+      const pool = candidateWords(cards, wordSearchMaxLen, clueForLevel);
 
       if (pool.length < 5) {
         problems.push(`WORD_SEARCH ${level} seq ${sequence}: only ${pool.length} eligible words (need >=5), skipped`);
         continue;
       }
 
-      const built = buildWordSearch(pool, rung.size, rung.wordCount, rng);
+      const built = buildWordSearchWithGrowth(pool, rung.size, rung.wordCount, `WORD_SEARCH-${level}-${sequence}`);
       if (!built) {
         problems.push(`WORD_SEARCH ${level} seq ${sequence}: generator could not place enough words, skipped`);
         continue;
       }
+      if (built.words.length < rung.wordCount) {
+        problems.push(
+          `WORD_SEARCH ${level} seq ${sequence}: only fit ${built.words.length}/${rung.wordCount} target words even after growing to ${built.grid.size}x${built.grid.size} (word list itself is still fully consistent with the grid)`
+        );
+      }
 
       await upsertPuzzle("WORD_SEARCH", level, sequence, built, counters);
-      console.log(`  [WORD_SEARCH/${level}/${sequence}] ${built.words.length} words in a ${rung.size}x${rung.size} grid`);
+      console.log(`  [WORD_SEARCH/${level}/${sequence}] ${built.words.length} words in a ${built.grid.size}x${built.grid.size} grid`);
     }
 
     for (let rungIndex = 0; rungIndex < CROSSWORD_RUNGS.length; rungIndex++) {

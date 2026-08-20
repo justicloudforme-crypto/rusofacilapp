@@ -51,16 +51,45 @@ test("crossword: full solve flow shows check feedback and the completion celebra
   await page.screenshot({ path: "test-results/word-games-crossword-solved.png" });
 });
 
-test("word search: select a real word and see it struck through in the word list", async ({ page }) => {
-  await page.goto("/es/word-games/WORD_SEARCH/A1/1");
+const DIRS = [
+  [0, 1],
+  [0, -1],
+  [1, 0],
+  [-1, 0],
+  [1, 1],
+  [1, -1],
+  [-1, 1],
+  [-1, -1],
+] as const;
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Sopa de letras");
+function findPath(
+  grid: string[][],
+  word: string,
+): { start: { row: number; col: number }; end: { row: number; col: number }; dir: readonly [number, number] } | null {
+  const upper = word.toUpperCase();
+  for (let row = 0; row < grid.length; row++) {
+    for (let col = 0; col < grid[0].length; col++) {
+      for (const dir of DIRS) {
+        const [dr, dc] = dir;
+        const endRow = row + dr * (upper.length - 1);
+        const endCol = col + dc * (upper.length - 1);
+        if (endRow < 0 || endRow >= grid.length || endCol < 0 || endCol >= grid[0].length) continue;
+        let matches = true;
+        for (let i = 0; i < upper.length; i++) {
+          if (grid[row + dr * i]?.[col + dc * i]?.toUpperCase() !== upper[i]) {
+            matches = false;
+            break;
+          }
+        }
+        if (matches) return { start: { row, col }, end: { row: endRow, col: endCol }, dir };
+      }
+    }
+  }
+  return null;
+}
 
-  const cells = page.locator("button[data-row]");
-  const cellCount = await cells.count();
-  expect(cellCount).toBeGreaterThan(0);
-
-  const grid = await page.evaluate(() => {
+async function readGrid(page: Page): Promise<string[][]> {
+  return page.evaluate(() => {
     const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("button[data-row]"));
     const rows = Math.max(...buttons.map((b) => Number(b.dataset.row))) + 1;
     const cols = Math.max(...buttons.map((b) => Number(b.dataset.col))) + 1;
@@ -68,58 +97,70 @@ test("word search: select a real word and see it struck through in the word list
     for (const b of buttons) g[Number(b.dataset.row)][Number(b.dataset.col)] = b.textContent?.trim() ?? "";
     return g;
   });
+}
+
+async function dragSelect(page: Page, start: { row: number; col: number }, end: { row: number; col: number }) {
+  const startBox = await page.locator(`button[data-row="${start.row}"][data-col="${start.col}"]`).boundingBox();
+  const endBox = await page.locator(`button[data-row="${end.row}"][data-col="${end.col}"]`).boundingBox();
+  if (!startBox || !endBox) throw new Error("missing cell bounding box");
+  await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, { steps: 8 });
+  await page.mouse.up();
+}
+
+test("word search: select a real word and see it struck through in the word list", async ({ page }) => {
+  await page.goto("/es/word-games/WORD_SEARCH/A1/1");
+
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Sopa de letras");
+
+  const cellCount = await page.locator("button[data-row]").count();
+  expect(cellCount).toBeGreaterThan(0);
+
+  const grid = await readGrid(page);
   const words = await page.locator("ul li").allTextContents();
   expect(words.length).toBeGreaterThan(0);
   const targetWord = words[0].trim();
 
-  const DIRS = [
-    [0, 1],
-    [0, -1],
-    [1, 0],
-    [-1, 0],
-    [1, 1],
-    [1, -1],
-    [-1, 1],
-    [-1, -1],
-  ] as const;
-
-  function findPath(word: string): { row: number; col: number }[] | null {
-    const upper = word.toUpperCase();
-    for (let row = 0; row < grid.length; row++) {
-      for (let col = 0; col < grid[0].length; col++) {
-        for (const [dr, dc] of DIRS) {
-          const endRow = row + dr * (upper.length - 1);
-          const endCol = col + dc * (upper.length - 1);
-          if (endRow < 0 || endRow >= grid.length || endCol < 0 || endCol >= grid[0].length) continue;
-          let matches = true;
-          for (let i = 0; i < upper.length; i++) {
-            if (grid[row + dr * i]?.[col + dc * i]?.toUpperCase() !== upper[i]) {
-              matches = false;
-              break;
-            }
-          }
-          if (matches) return [{ row, col }, { row: endRow, col: endCol }];
-        }
-      }
-    }
-    return null;
-  }
-
-  const path = findPath(targetWord);
+  const path = findPath(grid, targetWord);
   expect(path).not.toBeNull();
-  const [start, end] = path!;
-
-  const startBox = await page.locator(`button[data-row="${start.row}"][data-col="${start.col}"]`).boundingBox();
-  const endBox = await page.locator(`button[data-row="${end.row}"][data-col="${end.col}"]`).boundingBox();
-  if (!startBox || !endBox) throw new Error("missing cell bounding box");
-
-  await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, { steps: 5 });
-  await page.mouse.up();
+  if (!path) return;
+  await dragSelect(page, path.start, path.end);
 
   const foundEntry = page.locator("ul li", { hasText: targetWord });
   await expect(foundEntry).toHaveClass(/line-through/);
 
   await page.screenshot({ path: "test-results/word-games-word-search.png" });
+});
+
+test("word search: diagonal words are findable and each found word gets a distinct highlight color", async ({ page }) => {
+  // C1's densest rung (16x16, 16 words) — real content, not a synthetic
+  // fixture, chosen because a dense grid is where the placement
+  // algorithm's direction mix actually matters (a sparse grid can look
+  // fine even with a cardinal-only bug).
+  await page.goto("/es/word-games/WORD_SEARCH/C1/5");
+  const grid = await readGrid(page);
+  const words = await page.locator("ul li").allTextContents();
+  expect(words.length).toBeGreaterThanOrEqual(3);
+
+  for (const word of words.slice(0, 3)) {
+    const trimmed = word.trim();
+    const path = findPath(grid, trimmed);
+    expect(path).not.toBeNull();
+    if (!path) continue;
+    await dragSelect(page, path.start, path.end);
+    // Exact match, not `hasText` (substring) — this puzzle's word list can
+    // contain one word inside another (e.g. "материальность" inside
+    // "нематериальность"), which `hasText` would match ambiguously.
+    await expect(page.locator("ul li").filter({ hasText: new RegExp(`^${trimmed}$`) })).toHaveClass(/line-through/);
+  }
+
+  // Each found word's chip must carry a DIFFERENT color class — the bug
+  // report was that every found word shared the same green, making the
+  // grid unreadable once several words were found.
+  const chipClasses = await page.locator("ul li").evaluateAll((els) => els.slice(0, 3).map((el) => el.className));
+  const hues = chipClasses.map((c) => c.match(/bg-(\w+)-500/)?.[1]);
+  expect(new Set(hues).size).toBe(3);
+
+  await page.screenshot({ path: "test-results/word-games-word-search-multicolor.png" });
 });
