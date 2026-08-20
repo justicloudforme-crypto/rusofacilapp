@@ -42,10 +42,12 @@ export class TtlCache<T> {
   /** `namespace` prefixes every Redis key so different TtlCache instances
    * (lesson content, exam content, subscriptions, flashcards...) can't
    * collide on the same shared Redis keyspace even if two of them happen
-   * to use the same inner key string. */
+   * to use the same inner key string. Public (not just used internally) so
+   * `cached()` below can build a matching de-dupe key for stampede
+   * protection without needing its own copy of the namespace. */
   constructor(
     private readonly ttlMs: number,
-    private readonly namespace: string,
+    public readonly namespace: string,
   ) {}
 
   private redisKey(key: string): string {
@@ -105,12 +107,38 @@ export class TtlCache<T> {
   }
 }
 
+// Cache-stampede protection: tracks loads currently in flight, keyed by
+// namespace+key, across every TtlCache in this process. Without this, a
+// burst of concurrent requests arriving while a key is cold (first hit
+// after startup, or right as a TTL expires) would each independently call
+// `load()` — for a full-table query like the flashcard index, dozens of
+// simultaneous heavy reads against the same local SQLite file pile up and
+// serialize each other into multi-second timeouts (confirmed empirically:
+// 30 concurrent cold requests to GET /api/flashcards took 7-15s each
+// before this fix). Only per-process, not cross-instance like Redis itself
+// — on Vercel each serverless instance could still fire one redundant load
+// on its own first cold hit, but that's a single query, not a stampede of
+// concurrent ones, so a distributed lock isn't worth the complexity here.
+const inFlight = new Map<string, Promise<unknown>>();
+
 /** get-or-populate: returns the cached value if fresh, otherwise calls
- * `load`, caches the result, and returns it. */
+ * `load`, caches the result, and returns it. Concurrent callers that miss
+ * the same cold key share one in-flight `load()` call instead of each
+ * firing their own. */
 export async function cached<T>(cache: TtlCache<T>, key: string, load: () => Promise<T>): Promise<T> {
   const hit = await cache.get(key);
   if (hit !== undefined) return hit;
-  const value = await load();
-  await cache.set(key, value);
-  return value;
+
+  const dedupeKey = `${cache.namespace}:${key}`;
+  const existing = inFlight.get(dedupeKey) as Promise<T> | undefined;
+  if (existing) return existing;
+
+  const promise = (async () => {
+    const value = await load();
+    await cache.set(key, value);
+    return value;
+  })().finally(() => inFlight.delete(dedupeKey));
+
+  inFlight.set(dedupeKey, promise);
+  return promise;
 }
