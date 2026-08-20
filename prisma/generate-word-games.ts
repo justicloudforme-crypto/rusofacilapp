@@ -1,8 +1,8 @@
 /**
- * Offline generator for WORD_SEARCH (Sopa de Letras) puzzles — the only
- * thing that ever writes WordGamePuzzle rows. The app reads these back
- * verbatim at request time; it never runs a placement algorithm itself
- * (see docs/plan-2026-08-19-three-windows.md, Window 1).
+ * Offline generator for WORD_SEARCH (Sopa de Letras) and CROSSWORD puzzles
+ * — the only thing that ever writes WordGamePuzzle rows. The app reads
+ * these back verbatim at request time; it never runs a placement
+ * algorithm itself (see docs/plan-2026-08-19-three-windows.md, Window 1).
  *
  * Source words come straight from the existing FlashcardCard bank — no new
  * content, no LLM calls, nothing that costs money to (re)run.
@@ -12,10 +12,6 @@
  * without any FlashcardCard changes reproduces byte-identical puzzles
  * (upsert is then a no-op). Only a change to the word bank for a level
  * shifts that level's puzzles.
- *
- * CROSSWORD is not implemented here yet — word-intersection placement is a
- * substantially harder constraint problem and gets its own pass; see the
- * plan doc for the intended algorithm.
  *
  * Usage (against local dev.db, the default):
  *   npm run generate:word-games
@@ -27,6 +23,8 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import type { WordGameGrid, WordPlacement, WordSearchDirection } from "../src/lib/word-games/types";
+import { candidateWords, makeRng, shuffle, type WordCandidate } from "../src/lib/word-games/generation";
+import { buildCrossword } from "../src/lib/word-games/crossword";
 
 const adapter = new PrismaLibSql({
   url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
@@ -39,12 +37,28 @@ const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 // One rung per level, growing in grid size + word count — the "simple to
 // complex" progression the plan calls for. A student clears rung N before
 // rung N+1 unlocks (enforced by the app reading WordGameProgress, not here).
-const RUNGS: Array<{ size: number; wordCount: number }> = [
+const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 8, wordCount: 8 },
   { size: 10, wordCount: 10 },
   { size: 12, wordCount: 12 },
   { size: 14, wordCount: 14 },
   { size: 16, wordCount: 16 },
+];
+
+// Crosswords need more candidate words per target than word search does
+// (many candidates never find a valid intersection and get dropped), so
+// the rungs stay smaller — a 12-word crossword is already a substantial
+// puzzle, unlike a 12-word word-search grid. maxLen grows with sequence:
+// shorter words share letters more densely (more intersection chances per
+// letter), which keeps the easiest puzzles compact — a 6-word grid built
+// from 12-letter words spans far more cells than one built from 5-letter
+// words, even with the same intersection count.
+const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
+  { wordCount: 6, maxLen: 6 },
+  { wordCount: 8, maxLen: 7 },
+  { wordCount: 10, maxLen: 8 },
+  { wordCount: 12, maxLen: 10 },
+  { wordCount: 14, maxLen: 12 },
 ];
 
 const DIRECTIONS: Array<{ name: WordSearchDirection; dr: number; dc: number }> = [
@@ -62,53 +76,7 @@ const DIRECTIONS: Array<{ name: WordSearchDirection; dr: number; dc: number }> =
 // corpus stats) — filler letters that "look Russian" instead of a flat
 // uniform distribution, which reads as visibly wrong to a Russian-literate
 // eye (too many rare letters like Ъ, Ё, Ц clustering together).
-const FILLER_LETTERS =
-  "оооооееееаааанннниииттсрввлкмдпуяызбгчйхжюшцщэфъё".split("");
-
-// mulberry32 — tiny deterministic PRNG so a given (type, level, sequence)
-// always produces the same puzzle from the same word pool.
-function makeRng(seedStr: string): () => number {
-  let h = 1779033703 ^ seedStr.length;
-  for (let i = 0; i < seedStr.length; i++) {
-    h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  let seed = h >>> 0;
-  return function rng() {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function shuffle<T>(arr: T[], rng: () => number): T[] {
-  const out = arr.slice();
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-
-// A word is grid-friendly if it's a single unbroken run of Cyrillic
-// letters (no spaces/hyphens) and fits the smallest grid we generate.
-const SINGLE_CYRILLIC_WORD = /^[а-яё]+$/i;
-
-function candidateWords(cards: { russian: string; translationEs: string }[], maxLen: number) {
-  const seen = new Set<string>();
-  const out: { word: string; clue: string }[] = [];
-  for (const card of cards) {
-    const word = card.russian.trim().toLowerCase();
-    if (!SINGLE_CYRILLIC_WORD.test(word)) continue;
-    if (word.length < 3 || word.length > maxLen) continue;
-    if (seen.has(word)) continue;
-    seen.add(word);
-    out.push({ word, clue: card.translationEs });
-  }
-  return out;
-}
+const FILLER_LETTERS = "оооооееееаааанннниииттсрввлкмдпуяызбгчйхжюшцщэфъё".split("");
 
 function tryPlaceWord(
   grid: string[][],
@@ -152,7 +120,7 @@ function tryPlaceWord(
 }
 
 function buildWordSearch(
-  pool: { word: string; clue: string }[],
+  pool: WordCandidate[],
   size: number,
   targetCount: number,
   rng: () => number
@@ -187,9 +155,34 @@ function buildWordSearch(
   return { grid: { size, grid }, words: placements };
 }
 
+async function upsertPuzzle(
+  type: "WORD_SEARCH" | "CROSSWORD",
+  level: string,
+  sequence: number,
+  built: { grid: WordGameGrid; words: WordPlacement[] },
+  counters: { created: number; unchanged: number }
+): Promise<void> {
+  const gridData = JSON.stringify(built.grid);
+  const words = JSON.stringify(built.words);
+
+  const existing = await db.wordGamePuzzle.findUnique({
+    where: { type_level_sequence: { type, level, sequence } },
+  });
+  if (existing && existing.gridData === gridData && existing.words === words) {
+    counters.unchanged++;
+    return;
+  }
+
+  await db.wordGamePuzzle.upsert({
+    where: { type_level_sequence: { type, level, sequence } },
+    create: { type, level, sequence, gridData, words },
+    update: { gridData, words },
+  });
+  counters.created++;
+}
+
 async function main() {
-  let created = 0;
-  let unchanged = 0;
+  const counters = { created: 0, unchanged: 0 };
   const problems: string[] = [];
 
   for (const level of LEVELS) {
@@ -198,45 +191,53 @@ async function main() {
       select: { russian: true, translationEs: true },
     });
 
-    for (let rungIndex = 0; rungIndex < RUNGS.length; rungIndex++) {
+    for (let rungIndex = 0; rungIndex < WORD_SEARCH_RUNGS.length; rungIndex++) {
       const sequence = rungIndex + 1;
-      const rung = RUNGS[rungIndex];
+      const rung = WORD_SEARCH_RUNGS[rungIndex];
       const rng = makeRng(`WORD_SEARCH-${level}-${sequence}`);
       const pool = candidateWords(cards, rung.size);
 
       if (pool.length < 5) {
-        problems.push(`${level} seq ${sequence}: only ${pool.length} eligible words (need >=5), skipped`);
+        problems.push(`WORD_SEARCH ${level} seq ${sequence}: only ${pool.length} eligible words (need >=5), skipped`);
         continue;
       }
 
       const built = buildWordSearch(pool, rung.size, rung.wordCount, rng);
       if (!built) {
-        problems.push(`${level} seq ${sequence}: generator could not place enough words, skipped`);
+        problems.push(`WORD_SEARCH ${level} seq ${sequence}: generator could not place enough words, skipped`);
         continue;
       }
 
-      const gridData = JSON.stringify(built.grid);
-      const words = JSON.stringify(built.words);
-
-      const existing = await db.wordGamePuzzle.findUnique({
-        where: { type_level_sequence: { type: "WORD_SEARCH", level, sequence } },
-      });
-      if (existing && existing.gridData === gridData && existing.words === words) {
-        unchanged++;
-        continue;
-      }
-
-      await db.wordGamePuzzle.upsert({
-        where: { type_level_sequence: { type: "WORD_SEARCH", level, sequence } },
-        create: { type: "WORD_SEARCH", level, sequence, gridData, words },
-        update: { gridData, words },
-      });
-      created++;
+      await upsertPuzzle("WORD_SEARCH", level, sequence, built, counters);
       console.log(`  [WORD_SEARCH/${level}/${sequence}] ${built.words.length} words in a ${rung.size}x${rung.size} grid`);
+    }
+
+    for (let rungIndex = 0; rungIndex < CROSSWORD_RUNGS.length; rungIndex++) {
+      const sequence = rungIndex + 1;
+      const rung = CROSSWORD_RUNGS[rungIndex];
+      const rng = makeRng(`CROSSWORD-${level}-${sequence}`);
+      const pool = candidateWords(cards, rung.maxLen);
+
+      if (pool.length < rung.wordCount) {
+        problems.push(`CROSSWORD ${level} seq ${sequence}: only ${pool.length} eligible words (need >=${rung.wordCount}), skipped`);
+        continue;
+      }
+
+      const minWords = Math.min(rung.wordCount, 6);
+      const built = buildCrossword(pool, rung.wordCount, minWords, rng);
+      if (!built) {
+        problems.push(`CROSSWORD ${level} seq ${sequence}: generator could not reach ${minWords} intersecting words, skipped`);
+        continue;
+      }
+
+      await upsertPuzzle("CROSSWORD", level, sequence, built, counters);
+      console.log(
+        `  [CROSSWORD/${level}/${sequence}] ${built.words.length} words in a ${built.grid.grid.length}x${built.grid.grid[0].length} grid`
+      );
     }
   }
 
-  console.log(`\n${created} puzzle(s) written, ${unchanged} already up to date.`);
+  console.log(`\n${counters.created} puzzle(s) written, ${counters.unchanged} already up to date.`);
   if (problems.length > 0) {
     console.log(`\n${problems.length} rung(s) skipped:`);
     for (const p of problems) console.log(`  - ${p}`);
