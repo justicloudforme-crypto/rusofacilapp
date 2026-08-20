@@ -34,15 +34,20 @@ function PlanCard({
 }) {
   return (
     <div
-      className={`flex flex-col rounded-2xl border p-8 ${
+      className={`relative flex flex-col rounded-2xl border p-8 ${
         highlighted
-          ? "border-foreground/60"
+          ? "border-brand bg-brand/5 shadow-lg shadow-brand/10 sm:scale-[1.03]"
           : "border-black/10 dark:border-white/10"
       }`}
     >
+      {highlighted && badge && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-accent px-3 py-1 text-xs font-semibold text-white shadow-sm">
+          {badge}
+        </span>
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{name}</h2>
-        {badge && (
+        {!highlighted && badge && (
           <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium">
             {badge}
           </span>
@@ -72,7 +77,11 @@ function PlanCard({
           type="submit"
           name="method"
           value="card"
-          className="w-full rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          className={`w-full rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
+            highlighted
+              ? "bg-brand text-white hover:bg-brand-light"
+              : "bg-foreground text-background hover:bg-foreground/85"
+          }`}
         >
           {cta}
         </button>
@@ -103,7 +112,7 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
       </h1>
       <p className="mt-3 max-w-xl text-foreground/70">{dict.pricing.subtitle}</p>
 
-      <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-start">
         <PlanCard
           lang={lang}
           planId="monthly"
