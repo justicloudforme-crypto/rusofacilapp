@@ -90,44 +90,50 @@ export default function WordSearchBoard({
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      <div
-        ref={gridRef}
-        className="grid w-fit touch-none select-none gap-0.5"
-        style={{ gridTemplateColumns: `repeat(${puzzle.grid[0]?.length ?? 0}, minmax(0, 1fr))` }}
-        onMouseUp={finalizeSelection}
-        onMouseLeave={() => start && finalizeSelection()}
-        onTouchEnd={finalizeSelection}
-        onTouchMove={handleTouchMove}
-        role="grid"
-        aria-label="word search"
-      >
-        {puzzle.grid.map((rowCells, row) =>
-          rowCells.map((letter, col) => {
-            const key = cellKey({ row, col });
-            const isFound = foundCells.has(key);
-            const isSelecting = selectionKeys.has(key);
-            return (
-              <button
-                key={key}
-                type="button"
-                data-row={row}
-                data-col={col}
-                onMouseDown={() => handlePointerDown({ row, col })}
-                onMouseEnter={() => handlePointerEnter({ row, col })}
-                onTouchStart={() => handlePointerDown({ row, col })}
-                className={`flex h-8 w-8 items-center justify-center rounded text-sm font-semibold uppercase transition-colors sm:h-9 sm:w-9 ${
-                  isFound
-                    ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                    : isSelecting
-                      ? "bg-foreground/15"
-                      : "hover:bg-foreground/5"
-                }`}
-              >
-                {letter}
-              </button>
-            );
-          }),
-        )}
+      {/* minmax(18px, 2rem) columns shrink together with the container
+          (fixed-size buttons previously overlapped instead of shrinking —
+          invisible here since these cells are borderless, but the same
+          bug as CrosswordBoard's, fixed the same way; see its comment). */}
+      <div className="max-w-full overflow-x-auto">
+        <div
+          ref={gridRef}
+          className="grid touch-none select-none gap-0.5"
+          style={{ gridTemplateColumns: `repeat(${puzzle.grid[0]?.length ?? 0}, minmax(18px, 2rem))` }}
+          onMouseUp={finalizeSelection}
+          onMouseLeave={() => start && finalizeSelection()}
+          onTouchEnd={finalizeSelection}
+          onTouchMove={handleTouchMove}
+          role="grid"
+          aria-label="word search"
+        >
+          {puzzle.grid.map((rowCells, row) =>
+            rowCells.map((letter, col) => {
+              const key = cellKey({ row, col });
+              const isFound = foundCells.has(key);
+              const isSelecting = selectionKeys.has(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  data-row={row}
+                  data-col={col}
+                  onMouseDown={() => handlePointerDown({ row, col })}
+                  onMouseEnter={() => handlePointerEnter({ row, col })}
+                  onTouchStart={() => handlePointerDown({ row, col })}
+                  className={`flex aspect-square w-full items-center justify-center rounded text-[10px] font-semibold uppercase transition-colors sm:text-sm ${
+                    isFound
+                      ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                      : isSelecting
+                        ? "bg-foreground/15"
+                        : "hover:bg-foreground/5"
+                  }`}
+                >
+                  {letter}
+                </button>
+              );
+            }),
+          )}
+        </div>
       </div>
 
       <div className="flex-1">

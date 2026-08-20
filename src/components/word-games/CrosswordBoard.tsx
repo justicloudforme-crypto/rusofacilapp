@@ -169,59 +169,67 @@ export default function CrosswordBoard({
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      <div
-        className="grid w-fit gap-0.5"
-        style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(0, 1fr))` }}
-        role="grid"
-        aria-label="crossword"
-      >
-        {puzzle.blocked.map((rowCells, row) =>
-          rowCells.map((isBlocked, col) => {
-            if (isBlocked) {
-              return <div key={`${row},${col}`} className="h-9 w-9 sm:h-10 sm:w-10" aria-hidden />;
-            }
-            const key = `${row},${col}`;
-            const number = puzzle.words.find((w) => w.row === row && w.col === col)?.number;
-            const status = cellStatus[key];
-            const isActive = activeCell?.row === row && activeCell?.col === col;
-            const inActiveWord = activeWordCells.has(key);
-            return (
-              <div key={key} className="relative">
-                {number ? (
-                  <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] font-semibold text-foreground/40">
-                    {number}
-                  </span>
-                ) : null}
-                <input
-                  ref={(el) => {
-                    if (el) inputRefs.current.set(key, el);
-                    else inputRefs.current.delete(key);
-                  }}
-                  value={guesses[key]?.toUpperCase() ?? ""}
-                  maxLength={1}
-                  inputMode="text"
-                  aria-label={`row ${row + 1} col ${col + 1}`}
-                  title={status === "incorrect" ? dict.wrongCellHint : undefined}
-                  onClick={() => handleCellClick(row, col)}
-                  onFocus={() => activateCell(row, col)}
-                  onChange={(e) => handleChange(row, col, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(e, row, col)}
-                  className={`h-9 w-9 border text-center text-sm font-semibold uppercase focus:outline-none sm:h-10 sm:w-10 ${
-                    status === "correct"
-                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                      : status === "incorrect"
-                        ? "border-red-400 bg-red-400/10 text-red-600 dark:text-red-400"
-                        : isActive
-                          ? "border-foreground bg-foreground/5"
-                          : inActiveWord
-                            ? "border-foreground/40 bg-foreground/[0.03]"
-                            : "border-black/15 dark:border-white/20"
-                  }`}
-                />
-              </div>
-            );
-          }),
-        )}
+      {/* overflow-x-auto is the safety net for puzzles wide enough that
+          even the shrunk 18px floor below doesn't fit the viewport — the
+          grid scrolls horizontally rather than squeezing cells illegibly
+          small. minmax(18px, 2.25rem) makes columns shrink together with
+          the container (unlike a fixed w-9 on the cells themselves, which
+          silently overlapped instead of shrinking — the bug this replaces). */}
+      <div className="max-w-full overflow-x-auto">
+        <div
+          className="grid gap-0.5"
+          style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(18px, 2.25rem))` }}
+          role="grid"
+          aria-label="crossword"
+        >
+          {puzzle.blocked.map((rowCells, row) =>
+            rowCells.map((isBlocked, col) => {
+              if (isBlocked) {
+                return <div key={`${row},${col}`} className="aspect-square" aria-hidden />;
+              }
+              const key = `${row},${col}`;
+              const number = puzzle.words.find((w) => w.row === row && w.col === col)?.number;
+              const status = cellStatus[key];
+              const isActive = activeCell?.row === row && activeCell?.col === col;
+              const inActiveWord = activeWordCells.has(key);
+              return (
+                <div key={key} className="relative aspect-square">
+                  {number ? (
+                    <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] font-semibold text-foreground/40">
+                      {number}
+                    </span>
+                  ) : null}
+                  <input
+                    ref={(el) => {
+                      if (el) inputRefs.current.set(key, el);
+                      else inputRefs.current.delete(key);
+                    }}
+                    value={guesses[key]?.toUpperCase() ?? ""}
+                    maxLength={1}
+                    inputMode="text"
+                    aria-label={`row ${row + 1} col ${col + 1}`}
+                    title={status === "incorrect" ? dict.wrongCellHint : undefined}
+                    onClick={() => handleCellClick(row, col)}
+                    onFocus={() => activateCell(row, col)}
+                    onChange={(e) => handleChange(row, col, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, row, col)}
+                    className={`absolute inset-0 h-full w-full border text-center text-[10px] font-semibold uppercase focus:outline-none sm:text-sm ${
+                      status === "correct"
+                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                        : status === "incorrect"
+                          ? "border-red-400 bg-red-400/10 text-red-600 dark:text-red-400"
+                          : isActive
+                            ? "border-foreground bg-foreground/5"
+                            : inActiveWord
+                              ? "border-foreground/40 bg-foreground/[0.03]"
+                              : "border-black/15 dark:border-white/20"
+                    }`}
+                  />
+                </div>
+              );
+            }),
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-4">

@@ -39,12 +39,25 @@ const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 // complex" progression the plan calls for. Self-paced like the rest of the
 // app (see src/lib/flashcards/level-progress.ts): every rung stays
 // playable, WordGameProgress only drives a completed-checkmark badge.
+//
+// Grid size is capped at 16x16 (rung 5) rather than growing indefinitely —
+// CrosswordBoard/WordSearchBoard render with CSS grid's minmax(0,1fr), so a
+// bigger grid never overflows the mobile viewport, but past ~16 columns the
+// per-cell touch target gets uncomfortably small on a 390px-wide screen.
+// Rungs 6-10 instead keep growing difficulty through word DENSITY (more
+// words packed into the same 16x16 grid) — real replay content, not just a
+// visual re-skin of rung 5, and still comfortable to play.
 const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 8, wordCount: 8 },
   { size: 10, wordCount: 10 },
   { size: 12, wordCount: 12 },
   { size: 14, wordCount: 14 },
   { size: 16, wordCount: 16 },
+  { size: 16, wordCount: 18 },
+  { size: 16, wordCount: 20 },
+  { size: 16, wordCount: 22 },
+  { size: 16, wordCount: 24 },
+  { size: 16, wordCount: 26 },
 ];
 
 // Crosswords need more candidate words per target than word search does
@@ -55,12 +68,23 @@ const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
 // letter), which keeps the easiest puzzles compact — a 6-word grid built
 // from 12-letter words spans far more cells than one built from 5-letter
 // words, even with the same intersection count.
+//
+// maxLen is capped at 12 (rung 5) for the same mobile-layout reason as
+// WORD_SEARCH_RUNGS above — an individual word much longer than that
+// would force a very wide/tall grid on its own. Rungs 6-10 grow difficulty
+// through word count instead (more intersecting entries, same per-word
+// length ceiling), which grows the grid gradually rather than in one leap.
 const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
   { wordCount: 6, maxLen: 6 },
   { wordCount: 8, maxLen: 7 },
   { wordCount: 10, maxLen: 8 },
   { wordCount: 12, maxLen: 10 },
   { wordCount: 14, maxLen: 12 },
+  { wordCount: 16, maxLen: 12 },
+  { wordCount: 18, maxLen: 12 },
+  { wordCount: 20, maxLen: 12 },
+  { wordCount: 22, maxLen: 12 },
+  { wordCount: 24, maxLen: 12 },
 ];
 
 const DIRECTIONS: Array<{ name: WordSearchDirection; dr: number; dc: number }> = [
