@@ -64,6 +64,7 @@ model User {
   publicHandle         String?                @unique
   ownedGroups          Group[]                @relation("GroupOwner")
   groupMemberships     GroupMember[]
+  wordGameProgress     WordGameProgress[]
 }
 
 // status is one of: active | trialing | past_due | canceled | incomplete_expired
@@ -509,4 +510,76 @@ model GroupMember {
   @@unique([groupId, userId])
   @@index([groupId])
   @@index([userId])
+}
+
+// A single pre-generated Sopa de Letras / crossword grid. Deliberately
+// generated ONCE offline by `npm run generate:word-games` (prisma/generate-word-games.ts)
+// from the existing FlashcardCard bank and stored here — the app never runs
+// the placement algorithm at request time, only reads a finished row. See
+// docs/plan-2026-08-19-three-windows.md (Window 1) for the full rationale
+// (avoiding unpredictable runtime compute/API cost).
+model WordGamePuzzle {
+  id       String              @id @default(cuid())
+  type     String // WordGameType: WORD_SEARCH | CROSSWORD — see src/lib/word-games/types.ts
+  level    String // FlashcardLevel: A1 | A2 | B1 | B2 | C1
+  // Difficulty rung within [type, level], starting at 1 — the app opens
+  // sequence N+1 only once WordGameProgress shows sequence N complete for
+  // that user, giving the "simple to complex" progression without a
+  // separate lesson-slug table.
+  sequence Int
+  // JSON-encoded { size: number, grid: string[][] } — the finished letter
+  // grid, ready to render as-is.
+  gridData String
+  // JSON-encoded WordPlacement[]: { word, clue, row, col, direction,
+  // number? } (number only set for CROSSWORD, used as the clue-list index).
+  // `clue` is the FlashcardCard.translationEs of the placed word, captured
+  // at generation time rather than joined live, so a puzzle keeps working
+  // even if the source card is later edited or removed.
+  words    String
+
+  progress WordGameProgress[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([type, level, sequence])
+  @@index([type, level])
+}
+
+model WordGameProgress {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puzzleId    String
+  puzzle      WordGamePuzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+  completedAt DateTime       @default(now())
+  timeSeconds Int?
+
+  @@unique([userId, puzzleId])
+  @@index([userId])
+}
+
+// One offline grammar-check result for a single (entity, field) pair —
+// see prisma/check-grammar.ts (Window 3, docs/plan-2026-08-19-three-windows.md).
+// Written ONLY by that CLI script, run before content ships; the app never
+// calls an LLM for this at request time, only reads the stored verdict.
+model GrammarCheckResult {
+  id          String   @id @default(cuid())
+  // "FlashcardCard" | "Idiom" | "GlossaryTerm" | "Story" — no FK, since a
+  // single row here addresses one field on one of several unrelated
+  // models (same reasoning AudioAsset already uses for contentType/contentId).
+  entityType  String
+  entityId    String
+  fieldName   String
+  // sha256 of the exact text last checked. On every re-run, check-grammar.ts
+  // skips any (entityType, entityId, fieldName) whose current text still
+  // hashes to this value and whose status is CLEAN — the whole point being
+  // to never re-spend an LLM call re-checking text that hasn't changed.
+  contentHash String
+  status      String   @default("PENDING") // GrammarCheckStatus: PENDING | CLEAN | FLAGGED
+  // JSON-encoded { errorType, excerpt, explanation, suggestion }[] — "[]" when CLEAN.
+  findings    String   @default("[]")
+  checkedAt   DateTime @default(now())
+
+  @@unique([entityType, entityId, fieldName])
+  @@index([status])
 }
