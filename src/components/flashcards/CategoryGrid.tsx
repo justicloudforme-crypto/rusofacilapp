@@ -2,6 +2,7 @@
 
 import { flashcardCategories, type FlashcardCategory, type FlashcardLevel } from "@/lib/flashcards";
 import { flashcardCategoryIcons } from "@/lib/flashcards/category-icons";
+import { flashcardCategoryIconColors } from "@/lib/flashcards/category-icon-colors";
 import { getNextLevel, shouldSuggestNextLevel } from "@/lib/flashcards/level-progress";
 
 export interface CategorySummary {
@@ -57,7 +58,10 @@ export default function CategoryGrid({
                   → {nextLevel}
                 </span>
               )}
-              <span className="text-3xl" aria-hidden>
+              <span
+                className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${flashcardCategoryIconColors[category]}`}
+                aria-hidden
+              >
                 {flashcardCategoryIcons[category]}
               </span>
               <span className="text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
