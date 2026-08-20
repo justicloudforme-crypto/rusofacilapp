@@ -750,6 +750,708 @@ const terms: SeedTerm[] = [
     ],
     relatedLessons: ["a2-16", "b1-4"],
   },
+  // 2026-08-19 expansion (run 154+): user flagged the glossary as far too
+  // thin for Spanish speakers relative to the rest of the platform.
+  // Targeting the weakest categories first: conjunciones (1 term),
+  // registro-estilo (1 term), verbos-movimiento (3 terms), plus deeper
+  // usage-pattern entries for casos/aspecto beyond the base case/aspect
+  // names already covered above.
+  {
+    slug: "conjuncion-coordinante",
+    term: "conjunción coordinante",
+    definition:
+      "Es la conjunción que une dos palabras, frases u oraciones de igual valor gramatical, sin que una dependa de la otra (y, pero, o).",
+    russianEquivalent: "сочинительный союз",
+    transcription: "sachinítyel'nyy soyúz",
+    category: "conjunciones",
+    russianComparison:
+      "El ruso distingue tres conjunciones coordinantes básicas donde el español a veces usa una sola: и (suma neutra, «y»), а (contraste suave, introduce algo nuevo o distinto sin ser tan fuerte como «pero») y но (contraste fuerte, «pero»). Confundir а y но es un error típico de hispanohablantes, porque ambas se traducen como «pero», pero а es mucho más suave.",
+    examples: [
+      { es: "Compré pan y leche.", ru: "Я купил хлеб и молоко." },
+      { es: "Ella no llamó, sino que escribió.", ru: "Она не позвонила, а написала." },
+    ],
+    relatedLessons: ["b2-14", "b2-15"],
+  },
+  {
+    slug: "verbo-reflexivo-sya",
+    term: "verbo reflexivo (con -ся)",
+    definition:
+      "Es el verbo que lleva el postfijo -ся/-сь pegado al final, y que puede indicar una acción reflexiva, recíproca, pasiva, o simplemente ser un verbo distinto sin ese matiz — depende del verbo concreto.",
+    russianEquivalent: "возвратный глагол",
+    transcription: "vazvrátnyy glagól",
+    category: "otros",
+    russianComparison:
+      "El postfijo -ся en ruso no siempre significa lo mismo que un verbo reflexivo en español. A veces sí es reflexivo puro (мыться — «lavarse»), pero también puede marcar reciprocidad (обниматься — «abrazarse mutuamente»), un significado pasivo (строиться — «ser construido») o incluso cambiar totalmente el significado del verbo, sin equivalente reflexivo en español (нравиться — «gustar», que sin «-ся» no existe con ese sentido). No hay que traducir automáticamente cada verbo en -ся como reflexivo.",
+    examples: [
+      { es: "Me lavo por la mañana.", ru: "Я умываюсь по утрам." },
+      { es: "La casa se está construyendo.", ru: "Дом строится." },
+    ],
+    relatedLessons: [],
+  },
+  {
+    slug: "diminutivo",
+    term: "diminutivo",
+    definition:
+      "Es el sufijo que se añade a un sustantivo (o adjetivo) para expresar tamaño pequeño, cariño, familiaridad o, según el tono, incluso ironía o desprecio.",
+    russianEquivalent: "уменьшительно-ласкательный суффикс",
+    transcription: "umyen'shítyel'na-laskátyel'nyy súfiks",
+    category: "otros",
+    russianComparison:
+      "El español tiene diminutivos (casita, perrito) pero el ruso los usa con mucha más frecuencia y con más matices: мама → мамочка (cariño), стол → столик (tamaño real más pequeño), собака → собачка (cariño hacia el animal). Un mismo sustantivo puede tener varios diminutivos distintos según el grado de cariño (нога → ножка), y usarlos mal — por ejemplo, con un desconocido en un contexto formal — puede sonar infantil o inapropiado.",
+    examples: [
+      { es: "¡Qué gatito tan bonito!", ru: "Какой хорошенький котик!" },
+      { es: "Espera un momentito.", ru: "Подожди минуточку." },
+    ],
+    relatedLessons: [],
+  },
+  {
+    slug: "par-ehat-ezdit",
+    term: "ехать / ездить",
+    definition:
+      "Es el segundo par de verbos de movimiento más importante: ехать (unidireccional) se usa para un desplazamiento en vehículo, en curso o hacia un destino concreto; ездить (multidireccional) se usa para desplazamientos habituales o de ida y vuelta, siempre en vehículo.",
+    russianEquivalent: "ехать / ездить",
+    transcription: "yékhat' / yézdit'",
+    category: "verbos-movimiento",
+    russianComparison:
+      "Funciona igual que идти/ходить (ver «verbo de movimiento unidireccional»), pero se usa cuando el desplazamiento es en un medio de transporte (coche, tren, autobús...) y no a pie. Un error común de hispanohablantes es usar идти para «ir en coche» simplemente porque «ir» en español no distingue el medio de transporte — en ruso, el verbo cambia según cómo te desplazas.",
+    examples: [
+      { es: "Voy al trabajo en coche (ahora).", ru: "Я еду на работу." },
+      { es: "Todos los días voy al trabajo en coche.", ru: "Я каждый день езжу на работу." },
+    ],
+    relatedLessons: ["a2-15"],
+  },
+  {
+    slug: "par-bezhat-begat",
+    term: "бежать / бегать",
+    definition:
+      "Es el par de verbos de movimiento para «correr»: бежать (unidireccional) describe una carrera en curso, en una dirección concreta; бегать (multidireccional) describe correr como actividad habitual, sin dirección fija, o de ida y vuelta.",
+    russianEquivalent: "бежать / бегать",
+    transcription: "byezhát' / byégat'",
+    category: "verbos-movimiento",
+    russianComparison:
+      "Como con los demás pares de verbos de movimiento, el error típico es usar solo una forma para todo. Бегать también se usa para «hacer running» como afición, no solo para desplazamientos concretos — un matiz que en español se resuelve con verbos o expresiones distintas («correr» frente a «hacer running»), no con dos formas del mismo verbo.",
+    examples: [
+      { es: "Mira, el niño corre hacia la puerta.", ru: "Смотри, мальчик бежит к двери." },
+      { es: "Corro (hago running) todas las mañanas.", ru: "Я бегаю каждое утро." },
+    ],
+    relatedLessons: ["a2-16"],
+  },
+  {
+    slug: "verbo-movimiento-con-prefijo",
+    term: "verbo de movimiento con prefijo",
+    definition:
+      "Es un verbo de movimiento (идти, ехать, бежать...) al que se añade un prefijo espacial (при-, у-, в-, вы-, под-, от-, пере-, про-, до-...) para expresar un matiz preciso de dirección, como llegar, salir, cruzar o acercarse.",
+    russianEquivalent: "приставочный глагол движения",
+    transcription: "pristávachnyy glagól dvizhéniya",
+    category: "verbos-movimiento",
+    russianComparison:
+      "El español expresa estos matices con verbos completamente distintos o con preposiciones (llegar, salir, entrar, cruzar, acercarse), mientras que el ruso construye todos a partir del mismo verbo base más un prefijo. Una vez aprendido el patrón (при- = llegar/acercarse, у- = irse, в-/вы- = entrar/salir, пере- = cruzar, до- = llegar hasta un punto), se puede predecir el significado de muchos verbos nuevos sin memorizarlos uno a uno.",
+    examples: [
+      { es: "El tren llegó a las tres.", ru: "Поезд пришёл в три часа." },
+      { es: "Ella salió de la habitación.", ru: "Она вышла из комнаты." },
+    ],
+    relatedLessons: ["b1-9", "b1-10", "b1-12"],
+  },
+  {
+    slug: "genitivo-de-negacion",
+    term: "genitivo de negación",
+    definition:
+      "Es el uso del caso genitivo para el complemento de un verbo en forma negativa, en lugar del acusativo que usaría la misma frase en afirmativo.",
+    russianEquivalent: "родительный падеж при отрицании",
+    transcription: "radítyel'nyy padyézh pri atritsánii",
+    category: "casos",
+    russianComparison:
+      "En español la negación no cambia el caso del complemento («leo un libro» → «no leo el libro»), pero en ruso muchos verbos cambian el complemento de acusativo a genitivo al negarse: «Я читаю книгу» (acusativo) frente a «Я не читаю книги» (genitivo). No es obligatorio en todos los verbos ni registros, pero es muy frecuente, sobre todo por escrito.",
+    examples: [
+      { es: "No tengo dinero.", ru: "У меня нет денег." },
+      { es: "No leo periódicos.", ru: "Я не читаю газет." },
+    ],
+    relatedLessons: ["a1-21", "a2-9"],
+  },
+  {
+    slug: "acusativo-animado-inanimado",
+    term: "acusativo animado/inanimado",
+    definition:
+      "Es la distinción, exclusiva del caso acusativo masculino singular (y de todo el plural), entre sustantivos animados (personas, animales) e inanimados: los animados toman la forma del genitivo, los inanimados la del nominativo.",
+    russianEquivalent: "одушевлённость в винительном падеже",
+    transcription: "adushivlyónnast' v vinítyel'nam padyezhé",
+    category: "casos",
+    russianComparison:
+      "El español no tiene esta distinción morfológica (usa siempre el mismo sustantivo, con o sin la preposición «a» para personas), pero el ruso obliga a elegir una forma distinta según si el objeto directo es un ser vivo o no: «Я вижу стол» (mesa, inanimado, igual que el nominativo) frente a «Я вижу брата» (hermano, animado, igual que el genitivo).",
+    examples: [
+      { es: "Veo la mesa.", ru: "Я вижу стол." },
+      { es: "Veo a mi hermano.", ru: "Я вижу брата." },
+    ],
+    relatedLessons: ["a1-13", "a1-14"],
+  },
+  {
+    slug: "instrumental-predicativo",
+    term: "instrumental predicativo",
+    definition:
+      "Es el uso del caso instrumental para el atributo de verbos como «быть» (fuera del presente), «стать», «казаться» o «работать», en vez del nominativo que se usaría con «быть» en presente.",
+    russianEquivalent: "творительный падеж в роли сказуемого",
+    transcription: "tvarítyel'nyy padyézh v rolí skazúyemava",
+    category: "casos",
+    russianComparison:
+      "En español el atributo del verbo «ser» no cambia de forma («es médico», «era médico», «será médico»), pero en ruso el atributo pasa a instrumental fuera del presente: «Он врач» (presente, nominativo) frente a «Он был врачом» / «Он станет врачом» (pasado/futuro, instrumental). Es un error muy común dejar el atributo en nominativo en pasado o futuro por calco del español.",
+    examples: [
+      { es: "Él es médico.", ru: "Он врач." },
+      { es: "Él era médico.", ru: "Он был врачом." },
+    ],
+    relatedLessons: ["a1-26", "a1-27"],
+  },
+  {
+    slug: "verbo-de-aspecto-unico",
+    term: "verbo de aspecto único",
+    definition:
+      "Es el verbo que solo existe en una forma aspectual (casi siempre imperfectivo), sin una pareja del aspecto opuesto.",
+    russianEquivalent: "одновидовой глагол",
+    transcription: "adnavidavóy glagól",
+    category: "aspecto",
+    russianComparison:
+      "El español no tiene esta categoría: cualquier verbo español puede, en principio, presentarse como completado o como proceso según el tiempo verbal elegido. En ruso, en cambio, algunos verbos —sobre todo los que describen estados o situaciones, no acciones puntuales— solo tienen una forma, y no hay que buscarles una pareja perfectiva que no existe.",
+    examples: [
+      { es: "Este edificio ya existía en el siglo XIX.", ru: "Это здание уже существовало в девятнадцатом веке." },
+      { es: "Esta casa le pertenecía a mi abuelo.", ru: "Этот дом принадлежал моему дедушке." },
+    ],
+    relatedLessons: ["a2-1"],
+  },
+  {
+    slug: "verbo-biaspectual",
+    term: "verbo biaspectual",
+    definition:
+      "Es el verbo que tiene la misma forma para el aspecto perfectivo y el imperfectivo — el contexto, y no la morfología, indica si la acción se presenta como completa o como proceso.",
+    russianEquivalent: "двувидовой глагол",
+    transcription: "dvuvidavóy glagól",
+    category: "aspecto",
+    russianComparison:
+      "Es lo contrario del verbo de aspecto único: aquí una misma palabra cubre los dos aspectos, y solo el contexto (a menudo palabras como «уже» para el sentido perfectivo o «сейчас»/«постоянно» para el imperfectivo) indica cuál se quiere expresar — algo que en español no ocurre, porque el aspecto se marca siempre con el tiempo verbal, nunca con la forma léxica del verbo.",
+    examples: [
+      { es: "Ellos ya investigaron el caso.", ru: "Они уже исследовали это дело." },
+      { es: "Los científicos están investigando el fenómeno ahora mismo.", ru: "Учёные сейчас исследуют это явление." },
+    ],
+    relatedLessons: ["a2-1"],
+  },
+  {
+    slug: "estilo-coloquial",
+    term: "estilo coloquial",
+    definition:
+      "Es el registro relajado, propio de la conversación cotidiana entre amigos o familia, con vocabulario informal, partículas de relleno y construcciones más libres que en el habla o escritura formal.",
+    russianEquivalent: "разговорный стиль",
+    transcription: "razgavórnyy stíl'",
+    category: "registro-estilo",
+    russianComparison:
+      "Igual que en español distinguimos «voy a comer» de «me voy pa' comer», el ruso coloquial recorta palabras (сейчас → щас, «ahora mismo»), usa muletillas como «ну», «короче», «типа» constantemente, y tolera un orden de palabras más libre que el ruso escrito o formal.",
+    examples: [
+      { es: "Ahora mismo voy, espera.", ru: "Щас иду, подожди." },
+      { es: "Bueno, en fin, ni idea.", ru: "Ну короче, без понятия." },
+    ],
+    relatedLessons: ["b2-5", "b2-25"],
+  },
+  {
+    slug: "estilo-cientifico-oficial",
+    term: "estilo científico/oficial",
+    definition:
+      "Es el registro más formal del ruso escrito, usado en textos académicos, administrativos y burocráticos: frases largas, sustantivación de verbos, voz pasiva y ausencia casi total de coloquialismos o emociones.",
+    russianEquivalent: "научный и официально-деловой стиль",
+    transcription: "naúchnyy i afitsiál'na-delavóy stíl'",
+    category: "registro-estilo",
+    russianComparison:
+      "El español académico/burocrático también evita el «yo» y prefiere construcciones impersonales o pasivas («se considera que», «fue determinado»), pero el ruso lleva esto más lejos con sustantivos derivados de verbos que suenan muy pesados en español si se traducen literalmente: «осуществление мероприятия» sería literalmente «la realización de la medida», donde el español normal simplemente diría «hacer/organizar algo».",
+    examples: [
+      { es: "Se determinó que el proceso no cumplía la norma.", ru: "Было установлено, что процесс не соответствует норме." },
+      { es: "La comisión llevará a cabo la revisión del proyecto.", ru: "Комиссия осуществит рассмотрение проекта." },
+    ],
+    relatedLessons: ["b2-22", "b2-23", "b2-24"],
+  },
+  {
+    slug: "segundo-caso-locativo",
+    term: "segundo caso locativo (местный падеж)",
+    definition:
+      "Es una forma especial y poco frecuente del caso preposicional que solo existe para un grupo pequeño de sustantivos masculinos, usada exclusivamente con «в» y «на» para indicar lugar. En vez de la terminación normal del preposicional, estos sustantivos toman una terminación en «-у»/«-ю» acentuada: «в лесу» (no «в лесе»), «в саду», «на полу», «в году».",
+    russianEquivalent: "местный падеж",
+    transcription: "myéstnyy padyézh",
+    category: "casos",
+    examples: [
+      { es: "Los niños juegan en el bosque.", ru: "Дети играют в лесу." },
+      { es: "Este año viajaremos a España.", ru: "В этом году мы поедем в Испанию." },
+    ],
+    relatedLessons: ["b1-14"],
+  },
+  {
+    slug: "dativo-impersonal",
+    term: "dativo impersonal (мне холодно)",
+    definition:
+      "Es una construcción típicamente rusa sin sujeto gramatical: la persona que siente o experimenta algo va en caso dativo, y no en nominativo como en español. Por eso «tengo frío» se dice literalmente «a mí (me) frío»: «мне холодно». Lo mismo pasa con «me gusta» (мне нравится), «tengo... años» (мне... лет) o «no puedo» (мне нельзя).",
+    russianEquivalent: "безличная конструкция с дательным падежом",
+    transcription: "byezlíchnaya kanstruktsíya s datyél'nym padyezhóm",
+    category: "casos",
+    russianComparison:
+      "En español el que siente frío, sueño o vergüenza es el SUJETO de la oración («yo tengo frío»). En ruso esa persona no es sujeto: va en dativo y el verbo (si lo hay) queda en forma neutra invariable, sin sujeto gramatical. Es uno de los cambios de perspectiva más difíciles de interiorizar para un hispanohablante.",
+    examples: [
+      { es: "Tengo frío, cierra la ventana, por favor.", ru: "Мне холодно, закрой окно, пожалуйста." },
+      { es: "A mi hermano le gusta este libro.", ru: "Моему брату нравится эта книга." },
+    ],
+    relatedLessons: ["a2-8"],
+  },
+  {
+    slug: "conjuncion-adversativa",
+    term: "conjunción adversativa",
+    definition:
+      "Es la conjunción que une dos ideas que se contraponen o contrastan entre sí, como «pero» o «sino» en español. En ruso hay dos palabras distintas para esta idea: «но» (contraste general, como «pero») y «а» (contraste más suave, casi de comparación, sin equivalente exacto en español).",
+    russianEquivalent: "противительный союз",
+    transcription: "prativítyel'nyy sayúz",
+    category: "conjunciones",
+    russianComparison:
+      "El español tiene una sola palabra fuerte para esto («pero»), mientras que el ruso distingue: «но» se usa para un contraste marcado («quería ir, pero no pude» — хотел пойти, но не смог), y «а» conecta dos ideas paralelas que simplemente difieren, sin tanta fuerza opositora («yo estudio, y/mientras mi hermano trabaja» — я учусь, а мой брат работает). Confundir «но» y «а» es un error muy común de hispanohablantes.",
+    examples: [
+      { es: "Quería llamarte, pero se me acabó la batería.", ru: "Я хотел тебе позвонить, но у меня сел телефон." },
+      { es: "Yo vivo en Madrid, y mi hermana vive en Barcelona.", ru: "Я живу в Мадриде, а моя сестра живёт в Барселоне." },
+    ],
+    relatedLessons: ["a1-9"],
+  },
+  {
+    slug: "conjuncion-causal",
+    term: "conjunción causal",
+    definition:
+      "Es la conjunción que introduce la causa o razón de algo, como «porque» en español. En ruso las más comunes son «потому что» (la más neutra y frecuente) y «так как»/«поскольку» (más formales, típicas de textos escritos).",
+    russianEquivalent: "причинный союз",
+    transcription: "prichínnyy sayúz",
+    category: "conjunciones",
+    examples: [
+      { es: "No fui a la fiesta porque estaba enfermo.", ru: "Я не пошёл на вечеринку, потому что был болен." },
+      { es: "Como llovía mucho, cancelaron el partido.", ru: "Так как шёл сильный дождь, матч отменили." },
+    ],
+    relatedLessons: ["a2-5"],
+  },
+  {
+    slug: "conjuncion-condicional",
+    term: "conjunción condicional",
+    definition:
+      "Es la conjunción que introduce una condición, como «si» en español. En ruso es «если». Cuando la condición es hipotética o contraria a la realidad («si tuviera dinero...»), el ruso añade la partícula «бы» junto al verbo en pasado: «если бы у меня были деньги...».",
+    russianEquivalent: "условный союз",
+    transcription: "uslóvnyy sayúz",
+    category: "conjunciones",
+    russianComparison:
+      "El español cambia de modo verbal (indicativo / subjuntivo) para marcar si la condición es real o hipotética. El ruso, en cambio, no tiene subjuntivo: usa siempre el pasado + la partícula «бы» para marcar lo hipotético, sin importar si se refiere a presente, pasado o futuro imaginado.",
+    examples: [
+      { es: "Si llueve, me quedaré en casa.", ru: "Если пойдёт дождь, я останусь дома." },
+      { es: "Si tuviera más tiempo, aprendería piano.", ru: "Если бы у меня было больше времени, я бы учился играть на пианино." },
+    ],
+    relatedLessons: ["b1-4"],
+  },
+  {
+    slug: "particula-modal",
+    term: "partícula modal",
+    definition:
+      "Es una palabra corta e invariable que no se traduce sola, pero cambia el tono o matiz de la frase: énfasis, duda, suavidad, sorpresa. En ruso son muy frecuentes: «же» (énfasis: «ведь я же говорил» — si es que ya te lo dije), «ли» (marca de pregunta indirecta o duda), «бы» (condicional/deseo), «-то» (algo impreciso, como «un tal»).",
+    russianEquivalent: "модальная частица",
+    transcription: "madál'naya chastítsa",
+    category: "otros",
+    russianComparison:
+      "El español expresa estos matices con entonación, adverbios («si es que», «acaso») o el orden de palabras, pero rara vez con una palabra dedicada y pegada al verbo como el ruso. Por eso las partículas modales suelen «desaparecer» al traducir al español y son difíciles de notar para un hispanohablante que lee ruso.",
+    examples: [
+      { es: "¡Si ya te lo había dicho!", ru: "Я же тебе говорил!" },
+      { es: "Alguien llamó, no sé quién.", ru: "Кто-то звонил, не знаю кто." },
+    ],
+    relatedLessons: ["b1-1"],
+  },
+  {
+    slug: "interjeccion",
+    term: "interjección",
+    definition:
+      "Es una palabra corta que expresa una emoción o reacción espontánea, sin formar parte de la estructura gramatical de la frase: dolor, sorpresa, alegría, dolor. En español: «¡ay!», «¡uy!», «¡vaya!». En ruso: «ой» (sorpresa o dolor leve), «ах» (asombro, a veces pena), «ура» (¡viva!).",
+    russianEquivalent: "междометие",
+    transcription: "mizhdamyétiye",
+    category: "otros",
+    examples: [
+      { es: "¡Ay! Me pillé el dedo con la puerta.", ru: "Ой! Я прищемил палец дверью." },
+      { es: "¡Viva! ¡Ganamos el partido!", ru: "Ура! Мы выиграли матч!" },
+    ],
+    relatedLessons: ["a1-3"],
+  },
+  {
+    slug: "palabra-parentetica",
+    term: "palabra parentética (вводное слово)",
+    definition:
+      "Es una palabra o expresión que se inserta en la frase para dar la opinión, actitud o grado de certeza del hablante, sin ser parte gramatical de la oración: «por suerte», «claro», «al parecer». En ruso siempre se marca con comas por ambos lados: «конечно» (claro), «кажется» (al parecer, parece que), «к счастью» (por suerte).",
+    russianEquivalent: "вводное слово",
+    transcription: "vvódnaye slóva",
+    category: "otros",
+    russianComparison:
+      "En español estas expresiones no siempre llevan coma obligatoria, pero en ruso la coma es una regla ortográfica estricta: toda «вводное слово» se separa con comas del resto de la frase, algo que muchos estudiantes olvidan al escribir.",
+    examples: [
+      { es: "Por suerte, no perdimos el tren.", ru: "К счастью, мы не опоздали на поезд." },
+      { es: "Parece que va a llover.", ru: "Кажется, будет дождь." },
+    ],
+    relatedLessons: ["a2-1"],
+  },
+  {
+    slug: "construccion-participial",
+    term: "construcción participial (причастный оборот)",
+    definition:
+      "Es un participio junto con las palabras que lo acompañan (complementos), que en conjunto funcionan como una oración de relativo reducida. Equivale a una frase con «que + verbo» en español: «el libro que está en la mesa» = «книга, лежащая на столе».",
+    russianEquivalent: "причастный оборот",
+    transcription: "prichástnyy abarót",
+    category: "participios-gerundios",
+    russianComparison:
+      "El español prefiere casi siempre la oración de relativo completa («el hombre que lee un libro»), mientras que el ruso escrito usa mucho el participio con su complemento como una sola unidad compacta («читающий книгу человек» o «человек, читающий книгу»), típico de un registro más formal o literario.",
+    examples: [
+      { es: "El estudiante que escribe la carta es mi amigo.", ru: "Студент, пишущий письмо, — мой друг." },
+      { es: "Vimos la casa construida el año pasado.", ru: "Мы увидели дом, построенный в прошлом году." },
+    ],
+    relatedLessons: ["b2-10"],
+  },
+  {
+    slug: "construccion-de-gerundio",
+    term: "construcción de gerundio (деепричастный оборот)",
+    definition:
+      "Es un gerundio (деепричастие) junto con las palabras que lo acompañan, que describe una acción secundaria simultánea o previa a la acción principal, realizada por el MISMO sujeto. Equivale a «-ando/-iendo» en español cuando el sujeto de ambas acciones es el mismo: «leyendo el periódico, tomaba café» = «читая газету, он пил кофе».",
+    russianEquivalent: "деепричастный оборот",
+    transcription: "diyepríchastnyy abarót",
+    category: "participios-gerundios",
+    russianComparison:
+      "En español el gerundio («-ando/-iendo») se usa con más libertad y a veces con sujetos distintos al de la frase principal (uso más laxo). En ruso, el деепричастие exige estrictamente que las dos acciones tengan el MISMO sujeto — usarlo con sujetos distintos es un error gramatical grave, a diferencia del español.",
+    examples: [
+      { es: "Leyendo el periódico, él tomaba café.", ru: "Читая газету, он пил кофе." },
+      { es: "Saliendo de casa, se dio cuenta de que había olvidado las llaves.", ru: "Выходя из дома, он понял, что забыл ключи." },
+    ],
+    relatedLessons: ["b2-11"],
+  },
+  {
+    slug: "jerga-juvenil",
+    term: "jerga juvenil",
+    definition:
+      "Es el vocabulario informal usado sobre todo por gente joven, que cambia rápido con las modas y suele venir de préstamos del inglés o de juegos de palabras. En ruso: «крутой» (genial, guay), «тусовка» (quedada, reunión informal), «чилить» (relajarse, del inglés «chill»).",
+    russianEquivalent: "молодёжный сленг",
+    transcription: "maladyózhnyy slyeng",
+    category: "registro-estilo",
+    examples: [
+      { es: "Esta fiesta está genial.", ru: "Эта тусовка просто крутая." },
+      { es: "Voy a relajarme en casa este finde.", ru: "Я собираюсь чилить дома в эти выходные." },
+    ],
+    relatedLessons: ["b1-25"],
+  },
+  {
+    slug: "arcaismo",
+    term: "arcaísmo",
+    definition:
+      "Es una palabra o forma antigua que ya no se usa en el habla cotidiana, pero que aparece en textos literarios, religiosos o históricos, o de forma irónica/solemne. En ruso: «сей» (este, antiguo), «очи» (ojos, poético), «уста» (labios/boca, poético).",
+    russianEquivalent: "архаизм",
+    transcription: "arkhaízm",
+    category: "registro-estilo",
+    examples: [
+      { es: "Sus ojos (poético: sus «ojos» arcaicos) brillaban de emoción.", ru: "Её очи сияли от волнения." },
+      { es: "En este (arcaico: «este mismo») lugar nació el poeta.", ru: "На сём месте родился поэт." },
+    ],
+    relatedLessons: ["c1-3"],
+  },
+  {
+    slug: "par-nesti-nosit",
+    term: "нести / носить",
+    definition:
+      "Es otro par de verbos de movimiento, esta vez para «llevar (cargando algo)»: «нести» describe llevar algo en una dirección concreta, una sola vez (unidireccional); «носить» describe llevar algo de forma habitual, repetida o en varias direcciones (multidireccional) — y también significa «llevar puesto» (ropa).",
+    russianEquivalent: "нести / носить",
+    transcription: "nyestí / nasít'",
+    category: "verbos-movimiento",
+    examples: [
+      { es: "Ahora mismo llevo (cargando) una caja pesada a la oficina.", ru: "Сейчас я несу тяжёлую коробку в офис." },
+      { es: "Ella siempre lleva puesto un abrigo azul.", ru: "Она всегда носит синее пальто." },
+    ],
+    relatedLessons: ["a2-20"],
+  },
+  {
+    slug: "genitivo-de-cantidad",
+    term: "genitivo de cantidad",
+    definition:
+      "Es el uso del caso genitivo después de números y palabras de cantidad. La forma exacta depende del número: después de «1» el sustantivo va en nominativo singular; después de «2, 3, 4» va en genitivo SINGULAR; después de «5» en adelante (y después de «много», «мало», «сколько») va en genitivo PLURAL.",
+    russianEquivalent: "родительный падеж количества",
+    transcription: "radítyel'nyy padyézh kalíchistva",
+    category: "casos",
+    russianComparison:
+      "En español el sustantivo casi nunca cambia de forma después de un número («un libro», «dos libros», «cinco libros» — solo cambia singular/plural). En ruso la terminación del sustantivo cambia tres veces según el número: «одна книга», «две книги», «пять книг» — un obstáculo real para hispanohablantes que no están acostumbrados a que el número «elija» la forma del sustantivo.",
+    examples: [
+      { es: "Tengo dos hermanas y cinco amigos.", ru: "У меня две сестры и пять друзей." },
+      { es: "En la mesa había tres manzanas.", ru: "На столе было три яблока." },
+    ],
+    relatedLessons: ["a1-20"],
+  },
+  {
+    slug: "instrumental-de-medio",
+    term: "instrumental de medio",
+    definition:
+      "Es el uso del caso instrumental, SIN preposición, para indicar la herramienta o el medio con el que se hace algo. Equivale a «con + sustantivo» en español, pero en ruso no lleva ninguna preposición: solo la terminación del sustantivo cambia.",
+    russianEquivalent: "творительный падеж орудия действия",
+    transcription: "tvarítyel'nyy padyézh arúdiya dyéystviya",
+    category: "casos",
+    russianComparison:
+      "En español siempre se necesita la preposición «con» para expresar el instrumento («escribo con un bolígrafo»). En ruso esa idea se expresa solo con la terminación del caso instrumental, sin ninguna preposición: «пишу ручкой» (literalmente «escribo bolígrafo-INSTRUMENTAL»). Añadir «с» aquí sería un error.",
+    examples: [
+      { es: "Escribo la carta con un bolígrafo.", ru: "Я пишу письмо ручкой." },
+      { es: "Cortó el pan con un cuchillo.", ru: "Он разрезал хлеб ножом." },
+    ],
+    relatedLessons: ["a1-26"],
+  },
+  {
+    slug: "dativo-de-direccion",
+    term: "dativo de dirección (к + dativo)",
+    definition:
+      "Es el uso de la preposición «к» con el caso dativo para indicar movimiento HACIA una persona o un lugar (sin llegar a entrar), como «hacia» o «a casa de» en español. Es distinto del acusativo de dirección, que se usa con «в»/«на» cuando sí se entra a un lugar.",
+    russianEquivalent: "дательный падеж направления (к + дательный)",
+    transcription: "datyél'nyy padyézh napravlyéniya",
+    category: "casos",
+    russianComparison:
+      "El español usa «a» o «hacia» tanto para ir HACIA una persona como para entrar en un lugar, sin distinguir gramaticalmente los dos casos. El ruso sí distingue: «к» + dativo para acercarse a alguien o algo sin entrar («voy a casa de mi abuela» — иду к бабушке), y «в»/«на» + acusativo para entrar en un lugar («voy a la tienda» — иду в магазин).",
+    examples: [
+      { es: "Voy a casa de mi abuela este fin de semana.", ru: "В эти выходные я еду к бабушке." },
+      { es: "El tren se acerca a la estación.", ru: "Поезд подъезжает к станции." },
+    ],
+    relatedLessons: ["a2-14"],
+  },
+  {
+    slug: "acusativo-de-direccion",
+    term: "acusativo de dirección (в/на + acusativo)",
+    definition:
+      "Es el uso de las preposiciones «в» o «на» con el caso acusativo para indicar movimiento hacia DENTRO o ENCIMA de un lugar, como respuesta a la pregunta «¿adónde?». Se distingue del uso de «в»/«на» con el caso preposicional, que responde a «¿dónde?» e indica ubicación estática, sin movimiento.",
+    russianEquivalent: "винительный падеж направления (в/на + винительный)",
+    transcription: "vinítyel'nyy padyézh napravlyéniya",
+    category: "casos",
+    russianComparison:
+      "El español usa «en» tanto para ubicación («estoy en la tienda») como, con verbos de movimiento y la preposición «a», para dirección («voy a la tienda»), sin cambiar la forma del sustantivo. El ruso usa la MISMA preposición «в»/«на» para ambas ideas, pero cambia el CASO: preposicional para ubicación estática («я в магазине»), acusativo para movimiento hacia allí («я иду в магазин») — el caso, no la preposición, es lo que marca la diferencia.",
+    examples: [
+      { es: "Voy a la tienda a comprar pan.", ru: "Я иду в магазин за хлебом." },
+      { es: "Puso el libro en la mesa.", ru: "Он положил книгу на стол." },
+    ],
+    relatedLessons: ["a1-14"],
+  },
+  {
+    slug: "preposicional-de-tema",
+    term: "preposicional de tema (о/об + preposicional)",
+    definition:
+      "Es el uso de la preposición «о» (u «об» antes de vocal) con el caso preposicional para indicar el TEMA del que se habla, piensa o escribe. Equivale a «de/sobre» en español: «hablar de algo» = «говорить о чём-то».",
+    russianEquivalent: "предложный падеж темы (о/об + предложный)",
+    transcription: "pryedlózhnyy padyézh tyémy",
+    category: "casos",
+    examples: [
+      { es: "Ellos hablaban de sus planes de vacaciones.", ru: "Они говорили о своих планах на отпуск." },
+      { es: "Escribí un artículo sobre el clima.", ru: "Я написал статью о погоде." },
+    ],
+    relatedLessons: ["a1-12"],
+  },
+  {
+    slug: "genitivo-posesivo",
+    term: "genitivo posesivo",
+    definition:
+      "Es el uso del caso genitivo, sin preposición, para indicar de quién es algo o a qué pertenece algo. Equivale a «de + persona» en español: «el libro de mi hermano» = «книга брата».",
+    russianEquivalent: "родительный падеж принадлежности",
+    transcription: "radítyel'nyy padyézh prinadlyézhnasti",
+    category: "casos",
+    russianComparison:
+      "El español necesita siempre la preposición «de» para marcar posesión («la casa de mi amigo»). El ruso no usa ninguna preposición aquí: solo cambia la terminación de la palabra que indica el poseedor, colocada después del sustantivo poseído: «дом друга» (literalmente «casa amigo-GENITIVO»).",
+    examples: [
+      { es: "Este es el coche de mi padre.", ru: "Это машина моего отца." },
+      { es: "La puerta de la casa estaba abierta.", ru: "Дверь дома была открыта." },
+    ],
+    relatedLessons: ["a1-18"],
+  },
+  {
+    slug: "instrumental-de-compania",
+    term: "instrumental de compañía (с + instrumental)",
+    definition:
+      "Es el uso de la preposición «с» («con») junto con el caso instrumental para indicar con QUIÉN se hace algo, es decir, compañía. No debe confundirse con el instrumental de medio, que no lleva preposición: aquí sí es obligatoria la preposición «с» porque se trata de una persona que acompaña, no de una herramienta.",
+    russianEquivalent: "творительный падеж совместности (с + творительный)",
+    transcription: "tvarítyel'nyy padyézh savmyéstnasti",
+    category: "casos",
+    russianComparison:
+      "Aquí el ruso sí usa preposición, igual que el español «con», pero conviene contrastarlo con el instrumental de medio (sin preposición): «пишу ручкой» (con un bolígrafo, herramienta, SIN «с») frente a «иду с другом» (con un amigo, compañía, CON «с»). La misma idea de «con» en español corresponde a dos construcciones distintas en ruso según sea herramienta o persona.",
+    examples: [
+      { es: "Fui al cine con mi amiga.", ru: "Я пошёл в кино с подругой." },
+      { es: "Tomamos café con leche.", ru: "Мы пили кофе с молоком." },
+    ],
+    relatedLessons: ["a1-27"],
+  },
+  {
+    slug: "genitivo-partitivo",
+    term: "genitivo partitivo",
+    definition:
+      "Es el uso del caso genitivo para indicar una PARTE de un todo, o una cantidad indefinida de algo, especialmente con líquidos y sustancias. Equivale a «de» en español: «un vaso de agua» = «стакан воды».",
+    russianEquivalent: "родительный падеж части целого",
+    transcription: "radítyel'nyy padyézh cháhsti tsélava",
+    category: "casos",
+    examples: [
+      { es: "Quiero un vaso de agua, por favor.", ru: "Я хочу стакан воды, пожалуйста." },
+      { es: "Compré una barra de pan.", ru: "Я купил буханку хлеба." },
+    ],
+    relatedLessons: ["a1-17"],
+  },
+  {
+    slug: "aspecto-en-imperativo",
+    term: "aspecto en el imperativo",
+    definition:
+      "Al dar una orden o petición en ruso, la elección entre aspecto perfectivo e imperfectivo cambia el matiz: el IMPERFECTIVO se usa para invitaciones amables o para pedir que se empiece/continúe una acción en general («Заходи!» — ¡Entra! como invitación cordial), mientras que el PERFECTIVO se usa para una orden concreta, puntual, o más urgente/enfática («Зайди!» — ¡Entra! como orden específica y directa).",
+    russianEquivalent: "вид глагола в повелительном наклонении",
+    transcription: "vid glagóla v pavyelítyel'nam naklanyénii",
+    category: "aspecto",
+    russianComparison:
+      "El español no distingue el matiz de urgencia o cordialidad mediante un cambio morfológico del verbo en el imperativo (se hace con entonación o palabras como «por favor»). El ruso sí tiene una herramienta gramatical específica para esto: la elección de aspecto, que un hispanohablante debe aprender a manejar activamente y no solo con el tono de voz.",
+    examples: [
+      { es: "¡Pasa, pasa! (invitación cordial)", ru: "Заходи, заходи!" },
+      { es: "¡Cierra la puerta! (orden concreta y directa)", ru: "Закрой дверь!" },
+    ],
+    relatedLessons: ["a1-9"],
+  },
+  {
+    slug: "gerundio-de-pasado",
+    term: "gerundio de pasado (деепричастие прошедшего времени)",
+    definition:
+      "Es la forma del gerundio ruso (деепричастие) que describe una acción SECUNDARIA ya terminada, ocurrida ANTES de la acción principal — se forma normalmente de verbos perfectivos con el sufijo «-в»/«-вши». Se diferencia del gerundio normal (de presente), que describe una acción simultánea y se forma de verbos imperfectivos con «-я»/«-а».",
+    russianEquivalent: "деепричастие прошедшего времени",
+    transcription: "diyeprichástiye prashédshiva vryémini",
+    category: "participios-gerundios",
+    russianComparison:
+      "El gerundio español («-ando/-iendo») casi siempre indica simultaneidad, y para una acción previa el español prefiere otra construcción («después de leer», «habiendo leído»). El ruso, en cambio, tiene una forma de gerundio dedicada exclusivamente a la anterioridad («прочитав» — habiendo leído / después de leer), formada del aspecto perfectivo — una distinción morfológica que el español no marca de forma tan sistemática.",
+    examples: [
+      { es: "Habiendo leído el libro, se lo devolvió a la biblioteca.", ru: "Прочитав книгу, он вернул её в библиотеку." },
+      { es: "Habiendo terminado el trabajo, se fue a casa.", ru: "Закончив работу, она пошла домой." },
+    ],
+    relatedLessons: ["b2-10"],
+  },
+  {
+    slug: "conjuncion-final",
+    term: "conjunción final (чтобы)",
+    definition:
+      "Es la conjunción que introduce una finalidad o propósito, equivalente a «para que» en español. Cuando el sujeto de las dos acciones es el mismo, «чтобы» va seguida de un infinitivo; cuando los sujetos son distintos, va seguida de un verbo en pasado (aunque la acción se refiera al futuro).",
+    russianEquivalent: "целевой союз",
+    transcription: "tsilyevóy sayúz",
+    category: "conjunciones",
+    russianComparison:
+      "El español usa el subjuntivo después de «para que» cuando cambia el sujeto («para que lo leyera»). El ruso no tiene subjuntivo: en su lugar usa siempre el verbo en PASADO después de «чтобы», sin importar si la acción es futura — el mismo mecanismo que se usa en el modo condicional con «бы».",
+    examples: [
+      { es: "Estudio ruso para viajar a Rusia.", ru: "Я учу русский, чтобы поехать в Россию." },
+      { es: "Le di el libro para que lo leyera.", ru: "Я дал ему книгу, чтобы он её прочитал." },
+    ],
+    relatedLessons: ["b1-8"],
+  },
+  {
+    slug: "conjuncion-concesiva",
+    term: "conjunción concesiva (хотя)",
+    definition:
+      "Es la conjunción que introduce una idea que contrasta con la principal sin anularla, equivalente a «aunque» en español. La más común es «хотя».",
+    russianEquivalent: "уступительный союз",
+    transcription: "ustupítyel'nyy sayúz",
+    category: "conjunciones",
+    examples: [
+      { es: "Aunque llovía, salimos a caminar.", ru: "Хотя шёл дождь, мы пошли гулять." },
+      { es: "Compré el vestido, aunque era caro.", ru: "Я купила платье, хотя оно было дорогое." },
+    ],
+    relatedLessons: ["b1-16"],
+  },
+  {
+    slug: "prefijo-verbal",
+    term: "prefijo verbal",
+    definition:
+      "Es la partícula que se añade al principio de un verbo ruso para cambiar su significado y, casi siempre, convertirlo de imperfectivo a perfectivo. Un mismo verbo base puede dar lugar a muchos verbos distintos según el prefijo: «писать» (escribir) → «написать» (terminar de escribir), «переписать» (reescribir), «дописать» (terminar de escribir lo que faltaba).",
+    russianEquivalent: "приставка глагола",
+    transcription: "pristávka glagóla",
+    category: "otros",
+    russianComparison:
+      "El español expresa estos matices con verbos o frases distintas («terminar de escribir», «volver a escribir»), mientras que el ruso los codifica dentro de un solo verbo mediante el prefijo — una herramienta sistemática de formación de palabras que el español no tiene de forma tan productiva.",
+    examples: [
+      { es: "Terminé de escribir la carta.", ru: "Я дописал письмо." },
+      { es: "Voy a reescribir el informe.", ru: "Я перепишу отчёт." },
+    ],
+    relatedLessons: ["b1-2"],
+  },
+  {
+    slug: "sufijo-aumentativo",
+    term: "sufijo aumentativo",
+    definition:
+      "Es el sufijo que se añade a un sustantivo para indicar que algo es grande, exagerado o intenso, a veces con un matiz tosco o cómico — lo contrario del diminutivo. El más común es «-ище»/«-ища»: «дом» (casa) → «домище» (casona enorme), «рука» (mano) → «ручища» (manaza).",
+    russianEquivalent: "увеличительный суффикс",
+    transcription: "uvyelíchityel'nyy súfiks",
+    category: "otros",
+    examples: [
+      { es: "Vive en una casona enorme.", ru: "Он живёт в домище." },
+      { es: "Tiene unas manazas enormes.", ru: "У него ручища." },
+    ],
+    relatedLessons: ["a2-2"],
+  },
+  {
+    slug: "participio-corto-largo",
+    term: "forma corta y larga del participio pasivo",
+    definition:
+      "El participio pasivo ruso tiene dos formas: la LARGA, que se declina como un adjetivo (cambia según género, número y caso) y se usa antes de un sustantivo, y la CORTA, que solo cambia según género y número (no se declina por caso) y se usa como predicado, después de un sujeto. «закрытая дверь» (la puerta cerrada, forma larga, atributiva) frente a «Дверь закрыта» (la puerta está cerrada, forma corta, predicado).",
+    russianEquivalent: "краткая и полная форма причастия",
+    transcription: "krátkaya i pólnaya fórma prichástiya",
+    category: "participios-gerundios",
+    russianComparison:
+      "En español, el participio usado como adjetivo tiene una sola forma tanto delante del sustantivo como en el predicado: «la puerta cerrada» / «la puerta está cerrada» — siempre «cerrada». En ruso son dos formas morfológicamente distintas («закрытая» / «закрыта»), y elegir la incorrecta suena claramente mal a un hablante nativo.",
+    examples: [
+      { es: "La puerta cerrada está a la izquierda.", ru: "Закрытая дверь находится слева." },
+      { es: "La puerta está cerrada.", ru: "Дверь закрыта." },
+    ],
+    relatedLessons: ["b1-20"],
+  },
+  {
+    slug: "aspecto-en-negacion",
+    term: "aspecto en la negación (imperativo)",
+    definition:
+      "En una orden negativa, el aspecto cambia el sentido: el IMPERFECTIVO expresa una prohibición general de la acción en sí («no hagas esto [en general]»), mientras que el PERFECTIVO expresa una advertencia contra hacer algo por accidente o sin querer. «Не хлопай дверью!» (¡No [andes] dando portazos!, prohibición general, imperfectivo) frente a «Не разбей вазу!» (¡Cuidado, no [vayas a] romper el jarrón!, advertencia ante un accidente, perfectivo).",
+    russianEquivalent: "вид глагола в отрицании",
+    transcription: "vid glagóla v atritsánii",
+    category: "aspecto",
+    russianComparison:
+      "El español no distingue gramaticalmente entre «prohibir algo en general» y «advertir contra un accidente» — ambas ideas se expresan igual con el imperativo negativo más el tono o «cuidado». El ruso sí tiene una herramienta morfológica dedicada a esta distinción: la elección de aspecto.",
+    examples: [
+      { es: "No des portazos (prohibición general).", ru: "Не хлопай дверью!" },
+      { es: "¡Cuidado, no rompas el jarrón! (advertencia ante un accidente)", ru: "Осторожно, не разбей вазу!" },
+    ],
+    relatedLessons: ["a1-9"],
+  },
+  {
+    slug: "aspecto-en-pasado-habitual",
+    term: "aspecto en el pasado habitual",
+    definition:
+      "En pasado, el IMPERFECTIVO se usa para acciones repetidas o habituales, sin destacar un resultado concreto («solía llamarme»), mientras que el PERFECTIVO se usa para una acción única y completada, con un resultado visible («me llamó [una vez] y me contó la noticia»).",
+    russianEquivalent: "вид глагола в прошедшем времени при повторяющемся действии",
+    transcription: "vid glagóla v prashédshim vryémini pri pavtaryáyushchimsya dyéystvii",
+    category: "aspecto",
+    examples: [
+      { es: "De niño, iba a la playa todos los veranos.", ru: "В детстве я каждое лето ездил на пляж." },
+      { es: "Ayer me llamó y me contó la noticia.", ru: "Вчера он позвонил мне и рассказал новость." },
+    ],
+    relatedLessons: ["a2-1"],
+  },
+  {
+    slug: "estilo-poetico",
+    term: "estilo poético/literario",
+    definition:
+      "Es el registro elevado propio de la poesía y la prosa literaria de alto nivel, marcado por un orden de palabras inusual (a menudo invertido), vocabulario elevado y, a veces, formas arcaicas. A diferencia del arcaísmo (que es específicamente una palabra anticuada), el estilo poético puede usar palabras totalmente modernas colocadas de forma marcada o inesperada.",
+    russianEquivalent: "поэтический стиль",
+    transcription: "paetíchyeskiy stíl'",
+    category: "registro-estilo",
+    examples: [
+      { es: "¡Te amo, oh patria mía!", ru: "Люблю тебя, о родина моя!" },
+      { es: "El viento cantaba entre los árboles.", ru: "Пел ветер меж деревьев." },
+    ],
+    relatedLessons: ["c1-1"],
+  },
+  {
+    slug: "caso-vocativo",
+    term: "caso vocativo (звательный падеж)",
+    definition:
+      "Es un caso antiguo, ya casi desaparecido del ruso moderno, que se conserva en un puñado de formas fijas y arcaicas de invocación religiosa o poética («Господи!» — ¡Dios mío!, «Боже!» — ¡Dios!). De forma informal, el ruso coloquial actual también crea un «vocativo truncado»: se corta la vocal final de un nombre al dirigirse directamente a alguien («Кать!» de Катя, «Маш!» de Маша, «Пап!» de папа).",
+    russianEquivalent: "звательный падеж",
+    transcription: "zvátyel'nyy padyézh",
+    category: "casos",
+    russianComparison:
+      "El español no tiene una forma morfológica distinta para el vocativo: el nombre no cambia, solo se marca con entonación o coma («¡Katia, ven aquí!»). El ruso históricamente sí tenía una forma de caso dedicada a esto, y de manera informal conserva ese impulso hoy en el habla coloquial.",
+    examples: [
+      { es: "¡Dios mío, ayúdame!", ru: "Господи, помоги мне!" },
+      { es: "¡Kate, ven aquí!", ru: "Кать, иди сюда!" },
+    ],
+    relatedLessons: ["a1-1"],
+  },
 ];
 
 async function main() {
