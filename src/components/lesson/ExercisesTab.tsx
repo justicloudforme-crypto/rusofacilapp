@@ -20,6 +20,8 @@ import ListeningTranscriptionItem from "./ListeningTranscriptionItem";
 import PronunciationPractice from "./PronunciationPractice";
 import type { VocabularyItem } from "@/lib/lessons/types";
 import { flushPendingProgress, queuePendingProgress } from "@/lib/progress-client";
+import CelebrationModal from "@/components/celebration/CelebrationModal";
+import EncouragementModal from "@/components/celebration/EncouragementModal";
 
 type ExercisesDict = Dictionary["lesson"]["exercises"];
 
@@ -28,6 +30,7 @@ export default function ExercisesTab({
   vocabulary,
   dict,
   pronunciationDict,
+  celebrationDict,
   level,
   lessonSlug,
   storageKey,
@@ -38,6 +41,7 @@ export default function ExercisesTab({
   vocabulary: VocabularyItem[];
   dict: ExercisesDict;
   pronunciationDict: Dictionary["lesson"]["pronunciation"];
+  celebrationDict: Dictionary["celebration"];
   level: string;
   lessonSlug: string;
   storageKey: string;
@@ -55,6 +59,14 @@ export default function ExercisesTab({
   // "this is your previous attempt" banner so restored state doesn't read
   // as a brand-new result.
   const [restored, setRestored] = useState(false);
+  // True only for a pass that just happened from a check button click in
+  // this visit — never for a pass restored from a previous attempt (the
+  // effect below) or one already unlocked before mount — so the
+  // celebration fires exactly once, the moment it's actually earned.
+  const [justPassed, setJustPassed] = useState(false);
+  // Same "fired exactly once, only for a fresh result this visit" rule as
+  // justPassed above, mirrored for the failing case.
+  const [justFailed, setJustFailed] = useState(false);
 
   useEffect(() => {
     // Reading localStorage is only possible after mount (it doesn't exist
@@ -137,8 +149,11 @@ export default function ExercisesTab({
     setRestored(false);
     if (outcome.passed && !passed) {
       setPassed(true);
+      setJustPassed(true);
       window.localStorage.setItem(storageKey, "1");
       onPassChange(true);
+    } else if (!outcome.passed) {
+      setJustFailed(true);
     }
     // Saved on every check, pass or fail, so a repeat visit can restore
     // this exact attempt — see the restore effect above.
@@ -169,11 +184,29 @@ export default function ExercisesTab({
   function handleRetry() {
     setSubmitted(false);
     setRestored(false);
+    setJustFailed(false);
     setAnswers({});
   }
 
   return (
     <div className="flex flex-col gap-8">
+      <CelebrationModal
+        open={justPassed}
+        title={celebrationDict.lessonPassedTitle}
+        subtitle={celebrationDict.lessonPassedSubtitle}
+        scoreLabel={result ? `${result.earned}/${result.total} (${result.percentage}%)` : undefined}
+        ctaLabel={celebrationDict.continueButton}
+        exclamations={celebrationDict.exclamations}
+        onClose={() => setJustPassed(false)}
+      />
+      <EncouragementModal
+        open={justFailed}
+        title={dict.failed}
+        ctaLabel={celebrationDict.continueButton}
+        exclamations={celebrationDict.consolationExclamations}
+        onClose={() => setJustFailed(false)}
+      />
+
       {passed && !submitted && (
         <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
           {dict.alreadyPassed}

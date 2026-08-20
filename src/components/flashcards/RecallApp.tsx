@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import RecallCard, { type RecallCardDict, type RecallDirection } from "./RecallCard";
@@ -8,6 +8,10 @@ import LevelFilterBar from "./LevelFilterBar";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { buildRecallRound, checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
+import CelebrationModal from "@/components/celebration/CelebrationModal";
+import StreakToast from "@/components/celebration/StreakToast";
+import { playStreakFanfare } from "@/lib/sound";
+import type { Dictionary } from "@/i18n/dictionaries";
 
 export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   levelAll: string;
@@ -17,11 +21,23 @@ export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   noCategoryCardsMessage: string;
   roundCompleteLabel: string; // template, contains literal "{correct}" and "{total}"
   playAgainButton: string;
+  streakToastLabel: string; // template, contains literal "{count}"
 }
 
 const ROUND_SIZE = 10;
+// Every third correct answer in a row triggers the streak fanfare/toast —
+// frequent enough to feel responsive within a 10-card round, not so
+// frequent it fires on every single answer.
+const STREAK_MILESTONE = 3;
+const STREAK_TOAST_MS = 1800;
 
-export default function RecallApp({ dict }: { dict: RecallAppDict }) {
+export default function RecallApp({
+  dict,
+  celebrationDict,
+}: {
+  dict: RecallAppDict;
+  celebrationDict: Dictionary["celebration"];
+}) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [direction, setDirection] = useState<RecallDirection>("esToRu");
@@ -32,6 +48,13 @@ export default function RecallApp({ dict }: { dict: RecallAppDict }) {
   const [result, setResult] = useState<RecallResult | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [complete, setComplete] = useState(false);
+  // True only right after a round just finished this visit — drives the
+  // CelebrationModal, which the underlying static "complete" screen (with
+  // its own back/play-again buttons) stays behind once dismissed.
+  const [justComplete, setJustComplete] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [streakToast, setStreakToast] = useState<number | null>(null);
+  const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -56,6 +79,8 @@ export default function RecallApp({ dict }: { dict: RecallAppDict }) {
     setResult(null);
     setScore({ correct: 0, total: 0 });
     setComplete(false);
+    setJustComplete(false);
+    setStreak(0);
   }
 
   function selectCategory(next: FlashcardCategory) {
@@ -70,6 +95,7 @@ export default function RecallApp({ dict }: { dict: RecallAppDict }) {
     setCategory(null);
     setRound([]);
     setComplete(false);
+    setJustComplete(false);
   }
 
   function handleSubmit(answer: string) {
@@ -80,21 +106,48 @@ export default function RecallApp({ dict }: { dict: RecallAppDict }) {
     setScore((s) => ({ correct: s.correct + (outcome === "correct" ? 1 : 0), total: s.total + 1 }));
     const entry = recordSrsAnswer(card.id, outcome === "correct");
     setSrsMap((prev) => ({ ...prev, [card.id]: entry }));
+
+    const newStreak = outcome === "correct" ? streak + 1 : 0;
+    setStreak(newStreak);
+    if (outcome === "correct" && newStreak > 0 && newStreak % STREAK_MILESTONE === 0) {
+      playStreakFanfare();
+      setStreakToast(newStreak);
+      if (streakToastTimer.current) clearTimeout(streakToastTimer.current);
+      streakToastTimer.current = setTimeout(() => setStreakToast(null), STREAK_TOAST_MS);
+    }
   }
 
   function handleNext() {
     if (roundIndex + 1 >= round.length) {
       setComplete(true);
+      setJustComplete(true);
       return;
     }
     setRoundIndex((i) => i + 1);
     setResult(null);
   }
 
+  useEffect(() => {
+    return () => {
+      if (streakToastTimer.current) clearTimeout(streakToastTimer.current);
+    };
+  }, []);
+
   const inGrid = !category;
 
   return (
     <div>
+      {streakToast !== null && (
+        <StreakToast label={dict.streakToastLabel.replace("{count}", String(streakToast))} />
+      )}
+      <CelebrationModal
+        open={justComplete}
+        title={dict.roundCompleteLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
+        ctaLabel={celebrationDict.continueButton}
+        exclamations={celebrationDict.exclamations}
+        onClose={() => setJustComplete(false)}
+      />
+
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
         <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
 

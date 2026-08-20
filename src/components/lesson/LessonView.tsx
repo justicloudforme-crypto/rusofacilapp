@@ -23,6 +23,7 @@ export default function LessonView({
   content,
   slideIllustrations,
   dict,
+  celebrationDict,
   prevHref,
   nextHref,
 }: {
@@ -37,6 +38,7 @@ export default function LessonView({
   // client" component's bundle.
   slideIllustrations: Record<string, ReactNode>;
   dict: Dictionary["lesson"];
+  celebrationDict: Dictionary["celebration"];
   prevHref: string | null;
   nextHref: string | null;
 }) {
@@ -159,6 +161,7 @@ export default function LessonView({
                 vocabulary={content.vocabulary}
                 dict={dict.exercises}
                 pronunciationDict={dict.pronunciation}
+                celebrationDict={celebrationDict}
                 level={level}
                 lessonSlug={lessonSlug}
                 storageKey={`lesson-passed:${level}:${lessonSlug}`}

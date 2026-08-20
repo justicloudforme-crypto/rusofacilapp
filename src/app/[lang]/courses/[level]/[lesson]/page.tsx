@@ -58,6 +58,7 @@ export default async function LessonPage({
       content={content}
       slideIllustrations={slideIllustrations}
       dict={dict.lesson}
+      celebrationDict={dict.celebration}
       prevHref={prevSlug ? `/${lang}/courses/${level}/${prevSlug}` : null}
       nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
     />

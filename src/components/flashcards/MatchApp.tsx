@@ -8,6 +8,8 @@ import MatchBoard, { type MatchResult } from "./MatchBoard";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { buildMatchRound } from "@/lib/flashcards/match-round";
 import { recordSrsAnswer } from "@/lib/flashcard-progress";
+import CelebrationModal from "@/components/celebration/CelebrationModal";
+import type { Dictionary } from "@/i18n/dictionaries";
 
 export interface MatchAppDict extends CategoryGridDict {
   levelAll: string;
@@ -21,7 +23,13 @@ export interface MatchAppDict extends CategoryGridDict {
 const ROUND_SIZES = [4, 6, 8];
 const MIN_PLAYABLE = 4;
 
-export default function MatchApp({ dict }: { dict: MatchAppDict }) {
+export default function MatchApp({
+  dict,
+  celebrationDict,
+}: {
+  dict: MatchAppDict;
+  celebrationDict: Dictionary["celebration"];
+}) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
@@ -30,6 +38,10 @@ export default function MatchApp({ dict }: { dict: MatchAppDict }) {
   const [round, setRound] = useState<FlashcardRow[]>([]);
   const [roundKey, setRoundKey] = useState(0);
   const [complete, setComplete] = useState(false);
+  // True only right after a round just finished this visit — drives the
+  // CelebrationModal, which the underlying static "complete" screen (with
+  // its own back/next-round buttons) stays behind once dismissed.
+  const [justCompleted, setJustCompleted] = useState(false);
 
   useEffect(() => {
     const params = levelFilter === "all" ? "" : `?level=${levelFilter}`;
@@ -44,6 +56,7 @@ export default function MatchApp({ dict }: { dict: MatchAppDict }) {
     setRound(buildMatchRound(filtered, size));
     setRoundKey((k) => k + 1);
     setComplete(false);
+    setJustCompleted(false);
   }
 
   function selectCategory(next: FlashcardCategory) {
@@ -66,11 +79,13 @@ export default function MatchApp({ dict }: { dict: MatchAppDict }) {
     setCategory(null);
     setRound([]);
     setComplete(false);
+    setJustCompleted(false);
   }
 
   function handleComplete(results: MatchResult[]) {
     for (const r of results) recordSrsAnswer(r.cardId, r.firstTryCorrect);
     setComplete(true);
+    setJustCompleted(true);
   }
 
   function nextRound() {
@@ -91,6 +106,14 @@ export default function MatchApp({ dict }: { dict: MatchAppDict }) {
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
         <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
       </div>
+
+      <CelebrationModal
+        open={justCompleted}
+        title={dict.roundCompleteLabel.replace("{pairs}", String(round.length))}
+        ctaLabel={celebrationDict.continueButton}
+        exclamations={celebrationDict.exclamations}
+        onClose={() => setJustCompleted(false)}
+      />
 
       {inGrid ? (
         <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />

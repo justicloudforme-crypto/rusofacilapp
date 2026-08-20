@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FlashcardRow } from "@/lib/flashcards";
 import { shuffle } from "@/lib/flashcards/shuffle";
+import PatternBurst from "@/components/celebration/PatternBurst";
+import { playCorrectTone, playIncorrectTone } from "@/lib/sound";
 
 // How long the green/red flash holds before tiles unlock again — long
 // enough to actually see the feedback, short enough not to feel like a
@@ -69,6 +71,11 @@ export default function MatchBoard({
   function evaluate(emojiCardId: string, wordCardId: string) {
     const correct = emojiCardId === wordCardId;
     setFlash({ emojiId: emojiCardId, wordId: wordCardId, correct });
+    if (correct) {
+      playCorrectTone();
+    } else {
+      playIncorrectTone();
+    }
     if (!correct) {
       wrongIdsRef.current.add(emojiCardId);
       wrongIdsRef.current.add(wordCardId);
@@ -134,17 +141,19 @@ export default function MatchBoard({
             <button
               type="button"
               onClick={() => selectTile("emoji", emojiCard.id)}
-              className={`flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-3xl transition-colors ${tileClass(tileState("emoji", emojiCard.id))}`}
+              className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-3xl transition-colors ${tileClass(tileState("emoji", emojiCard.id))}`}
             >
               {emojiCard.emoji}
+              {tileState("emoji", emojiCard.id) === "correct" && <PatternBurst />}
             </button>
             {wordCard && (
               <button
                 type="button"
                 onClick={() => selectTile("word", wordCard.id)}
-                className={`flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("word", wordCard.id))}`}
+                className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("word", wordCard.id))}`}
               >
                 {wordCard.russian}
+                {tileState("word", wordCard.id) === "correct" && <PatternBurst />}
               </button>
             )}
           </div>

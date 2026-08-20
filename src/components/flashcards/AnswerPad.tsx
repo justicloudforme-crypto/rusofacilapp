@@ -2,8 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import FolkSpark from "@/components/celebration/FolkSpark";
 import CyrillicKeyboard, { type CyrillicKeyboardDict } from "./CyrillicKeyboard";
 import type { RecallResult } from "@/lib/flashcards/recall-round";
+import type { AvatarId } from "@/lib/avatars";
+import { playCorrectTone, playIncorrectTone } from "@/lib/sound";
+
+// A correct answer picks one of these at random (once per card) instead of
+// always the same "happy" face — small, cheap variety so the approval
+// reaction doesn't feel identical every time.
+const CORRECT_REACTIONS: AvatarId[] = ["matryoshka_happy", "matryoshka_wink", "matryoshka_laughing", "matryoshka_proud"];
 
 export type AnswerAlphabet = "cyrillic" | "latin";
 
@@ -27,6 +35,17 @@ function answerBoxColorClass(result: RecallResult | null): string {
   if (result === "almost") return "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400";
   if (result === "incorrect") return "border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-400";
   return "border-black/10 dark:border-white/15 bg-background";
+}
+
+// A correct answer gets a small confident pop; a wrong one gets a shake —
+// same "correct"/"almost"/"incorrect" states as the color above, just the
+// motion half of the same feedback (pure CSS, see globals.css). "almost"
+// reads as a near-miss rather than a full miss, so it shares the pop
+// rather than the shake.
+function answerBoxMotionClass(result: RecallResult | null): string {
+  if (result === "correct" || result === "almost") return "animate-answer-pop";
+  if (result === "incorrect") return "animate-answer-shake";
+  return "";
 }
 
 /** The typing half of every recall-style exercise (typing trainer,
@@ -61,12 +80,30 @@ export default function AnswerPad({
   onAnswerChange?: (answer: string) => void;
 }) {
   const [answer, setAnswer] = useState("");
+  // Picked once per card (this component remounts with a fresh `key` on
+  // every new card, per the class comment above) rather than re-rolled on
+  // every render.
+  const [correctReaction] = useState(
+    () => CORRECT_REACTIONS[Math.floor(Math.random() * CORRECT_REACTIONS.length)],
+  );
   const isCyrillic = alphabet === "cyrillic";
   const expectedLetter = isCyrillic ? CYRILLIC_LETTER : LATIN_LETTER;
 
   useEffect(() => {
     onAnswerChange?.(answer);
   }, [answer, onAnswerChange]);
+
+  // Fires exactly once per submitted answer — `result` goes null -> a
+  // result on submit, then a fresh AnswerPad instance (remounted by the
+  // parent with a new `key`) starts null again for the next card, so this
+  // never double-plays for the same answer.
+  useEffect(() => {
+    if (result === "correct" || result === "almost") {
+      playCorrectTone();
+    } else if (result === "incorrect") {
+      playIncorrectTone();
+    }
+  }, [result]);
 
   // Read via a ref instead of listing `answer` as an effect dependency
   // below — a dependency would tear down and re-add the window listener on
@@ -117,16 +154,19 @@ export default function AnswerPad({
           : null;
 
   const avatarId =
-    result === "correct" ? "matryoshka_happy" : result === "almost" ? "matryoshka_thinking" : "matryoshka_surprised";
+    result === "correct" ? correctReaction : result === "almost" ? "matryoshka_thinking" : "matryoshka_surprised";
 
   return (
     <div className="flex touch-manipulation w-full flex-col items-center gap-6">
       <div className={`flex w-full items-center gap-3 ${hideAnswerBox ? "justify-center" : ""}`}>
         <MatryoshkaAvatar id={result ? avatarId : "matryoshka_calm"} size={48} />
+        {/* A little folk-pattern reward next to a fully correct answer —
+            "almost" still gets the amber near-miss treatment, not this. */}
+        {result === "correct" && <FolkSpark size={22} />}
         {!hideAnswerBox &&
           (isCyrillic ? (
             <div
-              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium transition-colors ${answerBoxColorClass(result)}`}
+              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium transition-colors ${answerBoxColorClass(result)} ${answerBoxMotionClass(result)}`}
             >
               {answer || <span className="text-foreground/30">{dict.answerPlaceholder}</span>}
             </div>
@@ -145,7 +185,7 @@ export default function AnswerPad({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !result) onSubmit(answer);
               }}
-              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${answerBoxColorClass(result)}`}
+              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${answerBoxColorClass(result)} ${answerBoxMotionClass(result)}`}
             />
           ))}
       </div>

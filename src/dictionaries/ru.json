@@ -14,7 +14,9 @@
     "cta": "Начать сейчас",
     "profile": "Мой профиль",
     "openMenu": "Открыть меню",
-    "closeMenu": "Закрыть меню"
+    "closeMenu": "Закрыть меню",
+    "soundOnLabel": "Звук включён — нажмите, чтобы отключить",
+    "soundOffLabel": "Звук выключен — нажмите, чтобы включить"
   },
   "intro": {
     "title": "Перед первым уроком",
@@ -337,6 +339,9 @@
     "publicProfileHeading": "Публичный профиль",
     "publicProfileDescription": "Показывай свою серию занятий и значки по публичной ссылке, которой можно поделиться.",
     "publicProfileToggleLabel": "Сделать мой профиль публичным",
+    "telegramHeading": "RusoFácilapp — официальное сообщество",
+    "telegramDescription": "Новости, вопросы и общение с другими студентами.",
+    "telegramCta": "Присоединиться в Telegram",
     "changePasswordHeading": "Смена пароля",
     "changePasswordDescription": "Введите текущий пароль и придумайте новый.",
     "currentPasswordLabel": "Текущий пароль",
@@ -531,11 +536,13 @@
       "art": "Искусство и досуг",
       "society": "Общество и новости",
       "abstract": "Абстрактные понятия",
-      "connectors": "Связки и вводные слова",
+      "connectors": "Базовые элементы речи",
       "science": "Наука",
       "politics": "Политика",
       "psychology": "Психология",
-      "synonymsAntonyms": "Синонимы и антонимы"
+      "synonymsAntonyms": "Синонимы и антонимы",
+      "sport": "Спорт",
+      "law": "Право и закон"
     },
     "levelAll": "Все",
     "tapToFlip": "Нажми на карточку, чтобы перевернуть",
@@ -563,6 +570,7 @@
       "noCategoryCardsMessage": "Нет фраз для этого фильтра.",
       "roundCompleteLabel": "Раунд завершён! {correct} из {total} правильно",
       "playAgainButton": "Ещё раунд",
+      "streakToastLabel": "{count} подряд!",
       "instructionLabel": "Впиши пропущенное слово",
       "answerPlaceholder": "Твой ответ...",
       "checkButton": "Проверить",
@@ -589,6 +597,7 @@
       "noCategoryCardsMessage": "Нет карточек для этого фильтра.",
       "roundCompleteLabel": "Раунд завершён! {correct} из {total} правильно",
       "playAgainButton": "Ещё раунд",
+      "streakToastLabel": "{count} подряд!",
       "promptEsToRu": "Напиши слово по-русски",
       "promptRuToEs": "Напиши перевод по-испански",
       "answerPlaceholder": "Твой ответ...",
@@ -620,6 +629,13 @@
       "paginationNext": "Вперёд",
       "paginationInfo": "Страница {current} из {total}"
     }
+  },
+  "celebration": {
+    "lessonPassedTitle": "Урок пройден!",
+    "lessonPassedSubtitle": "Так держать — каждый урок приближает вас к свободному русскому.",
+    "continueButton": "Продолжить",
+    "exclamations": ["Невероятно!", "Отлично!", "Так держать!", "Ты гений!", "Прекрасно!", "У тебя получилось!"],
+    "consolationExclamations": ["Почти!", "Продолжай тренироваться", "В следующий раз получится", "Ещё один шаг", "Идеальных нет"]
   },
   "lesson": {
     "lessonLabel": "Урок",

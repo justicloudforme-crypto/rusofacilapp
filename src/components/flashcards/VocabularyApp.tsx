@@ -6,6 +6,7 @@ import IdiomsList, { type IdiomsDict } from "./IdiomsList";
 import RecallApp, { type RecallAppDict } from "./RecallApp";
 import MatchApp, { type MatchAppDict } from "./MatchApp";
 import FillBlankApp, { type FillBlankAppDict } from "./FillBlankApp";
+import type { Dictionary } from "@/i18n/dictionaries";
 
 // recall/match/fillBlank's dicts omit categoryLabels/cardCountLabel — those
 // are reused from the top-level FlashcardsDict below rather than
@@ -25,7 +26,13 @@ export interface VocabularyDict extends FlashcardsDict {
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
 
-export default function VocabularyApp({ dict }: { dict: VocabularyDict }) {
+export default function VocabularyApp({
+  dict,
+  celebrationDict,
+}: {
+  dict: VocabularyDict;
+  celebrationDict: Dictionary["celebration"];
+}) {
   const [mode, setMode] = useState<Mode>("vocabulary");
 
   const tabs: { value: Mode; label: string }[] = [
@@ -64,6 +71,7 @@ export default function VocabularyApp({ dict }: { dict: VocabularyDict }) {
             cardCountLabel: dict.cardCountLabel,
             nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
           }}
+          celebrationDict={celebrationDict}
         />
       )}
       {mode === "fillBlank" && (
@@ -74,6 +82,7 @@ export default function VocabularyApp({ dict }: { dict: VocabularyDict }) {
             cardCountLabel: dict.cardCountLabel,
             nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
           }}
+          celebrationDict={celebrationDict}
         />
       )}
       {mode === "match" && (
@@ -84,6 +93,7 @@ export default function VocabularyApp({ dict }: { dict: VocabularyDict }) {
             cardCountLabel: dict.cardCountLabel,
             nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
           }}
+          celebrationDict={celebrationDict}
         />
       )}
       {mode === "idioms" && <IdiomsList dict={dict.idioms} />}

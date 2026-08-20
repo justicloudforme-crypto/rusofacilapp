@@ -103,3 +103,1748 @@ body {
 @utility pb-safe {
   padding-bottom: var(--safe-bottom);
 }
+
+/* Gamification micro-animations — pure CSS, no JS animation library, so
+   there's nothing to load or run beyond GPU-composited transform/opacity.
+   Used by CelebrationModal/Confetti (lesson/exam pass, streak milestones)
+   and AnswerPad (flashcard correct/incorrect feedback). */
+@keyframes celebration-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes celebration-pop-in {
+  0% { opacity: 0; transform: scale(0.85) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+@keyframes answer-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
+}
+@keyframes answer-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+.animate-celebration-fade-in {
+  animation: celebration-fade-in 0.2s ease-out both;
+}
+.celebration-panel {
+  animation: celebration-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  border-radius: 1px;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+.animate-answer-shake {
+  animation: answer-shake 0.4s ease-in-out both;
+}
+.animate-answer-pop {
+  animation: answer-pop 0.35s ease-out both;
+}
+
+/* Russian-folk celebration cast (CelebrationMatryoshka/CelebrationBear/
+   FolkSpark) — same "pure transform/opacity, no library" approach as the
+   animations above. */
+@keyframes doll-cascade-in {
+  0% { opacity: 0; transform: scale(0.4) translateY(14px); }
+  60% { opacity: 1; transform: scale(1.08) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.doll-cascade-piece {
+  display: inline-block;
+  animation: doll-cascade-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes sparkle-twinkle {
+  0% { opacity: 0; transform: scale(0.4) rotate(-10deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(6deg); }
+  100% { opacity: 0; transform: scale(0.8) rotate(0deg); }
+}
+.sparkle-twinkle {
+  animation: sparkle-twinkle 0.9s ease-out both;
+}
+@keyframes bear-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4%) rotate(-1.5deg); }
+}
+.bear-bounce {
+  animation: bear-bounce 1.6s ease-in-out infinite;
+}
+@keyframes balalaika-strum {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(6deg); }
+}
+.balalaika-strum {
+  animation: balalaika-strum 0.9s ease-in-out infinite;
+}
+@keyframes folk-spark-pop {
+  0% { opacity: 0; transform: scale(0.3) rotate(-15deg); }
+  60% { opacity: 1; transform: scale(1.2) rotate(6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.folk-spark-pop {
+  animation: folk-spark-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* The four extra CelebrationModal scenarios (samovar, winter, balalaika
+   party, khokhloma) — same pure transform/opacity approach throughout. */
+@keyframes steam-rise {
+  0% { opacity: 0; transform: translateY(0) scaleX(1); }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-18px) scaleX(1.4); }
+}
+.steam-wisp {
+  animation: steam-rise 1.8s ease-out infinite;
+}
+@keyframes teacup-pop-in {
+  0% { opacity: 0; transform: scale(0.5) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.teacup-pop-in {
+  animation: teacup-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes snowflake-fall {
+  0% { transform: translateY(-10%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(220%); opacity: 0; }
+}
+.snowflake-piece {
+  position: absolute;
+  top: 0;
+  animation-name: snowflake-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes rabbit-hop-in {
+  0% { opacity: 0; transform: translateX(-40px) translateY(0); }
+  60% { opacity: 1; transform: translateX(4px) translateY(-6px); }
+  100% { opacity: 1; transform: translateX(0) translateY(0); }
+}
+.rabbit-hop-in {
+  animation: rabbit-hop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes note-float {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-46px) rotate(14deg); }
+}
+.note-float {
+  position: absolute;
+  animation-name: note-float;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+@keyframes khokhloma-petal-in {
+  0% { opacity: 0; transform: scale(0.2) rotate(-20deg); }
+  70% { opacity: 1; transform: scale(1.15) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.khokhloma-petal {
+  animation: khokhloma-petal-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Second wave of CelebrationModal scenarios (accordion, kalinka, shawl,
+   pancakes, stove fire, izba, nalichniki) — same pure transform/opacity
+   approach throughout. */
+@keyframes accordion-squeeze {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.72); }
+}
+.accordion-squeeze {
+  animation: accordion-squeeze 1.1s ease-in-out infinite;
+}
+@keyframes berry-bob {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.12) translateY(-3px); }
+}
+.berry-bob {
+  animation: berry-bob 0.8s ease-in-out infinite;
+}
+@keyframes shawl-unfurl {
+  0% { opacity: 0; transform: rotate(45deg) scale(0.2); }
+  70% { opacity: 1; transform: rotate(45deg) scale(1.08); }
+  100% { opacity: 1; transform: rotate(45deg) scale(1); }
+}
+.shawl-unfurl {
+  animation: shawl-unfurl 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes pancake-flip {
+  0%, 20% { transform: rotate(0deg) scaleY(1); }
+  45% { transform: rotate(190deg) scaleY(0.7); }
+  70% { transform: rotate(360deg) scaleY(1.1); }
+  85%, 100% { transform: rotate(360deg) scaleY(1); }
+}
+.pancake-flip {
+  animation: pancake-flip 2.2s ease-in-out infinite;
+}
+@keyframes flame-flicker {
+  0%, 100% { transform: scaleY(1) scaleX(1); opacity: 0.95; }
+  30% { transform: scaleY(1.15) scaleX(0.9); opacity: 1; }
+  60% { transform: scaleY(0.9) scaleX(1.05); opacity: 0.85; }
+}
+.flame-flicker {
+  animation: flame-flicker 0.7s ease-in-out infinite;
+}
+.cabin-pop-in {
+  animation: celebration-pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes nalichniki-shine {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+.nalichniki-shine {
+  animation: nalichniki-shine 1.8s ease-in-out infinite;
+}
+@keyframes pattern-burst-ray {
+  0% { opacity: 0; transform: translateY(0) scale(0.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-26px) scale(1); }
+}
+.pattern-burst-ray {
+  animation: pattern-burst-ray 0.5s ease-out both;
+}
+@keyframes streak-toast {
+  0% { opacity: 0; transform: translate(-50%, -8px) scale(0.8); }
+  15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+  25% { transform: translate(-50%, 0) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -6px) scale(0.95); }
+}
+.streak-toast {
+  /* Static fallback so reduced-motion users (animation removed below) still
+     see this centered and visible, not stuck at the keyframe's 0% state. */
+  opacity: 1;
+  transform: translate(-50%, 0);
+  animation: streak-toast 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ============================================================
+   catalog/ win scenarios, second wave — see the story-beat comment
+   at the top of each component file (catalog/characters/
+   MatryoshkaKazachokParade.tsx, catalog/music/BearSmokingBalalaika.tsx,
+   catalog/seasons/SnowmanDisco.tsx, catalog/home/SamovarOverflowJoy.tsx,
+   catalog/music/AccordionVictoryWheeze.tsx) for what each keyframe below
+   is playing out and when.
+   ============================================================ */
+@keyframes kazachok-pop {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.kazachok-pop {
+  display: inline-block;
+  animation: kazachok-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes kazachok-pop-in {
+  0% { opacity: 0; transform: scale(0.3) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.kazachok-pop-in {
+  display: inline-block;
+  animation: kazachok-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes kazachok-dance {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(-6deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-6px) rotate(6deg); }
+}
+.kazachok-dance {
+  display: inline-block;
+  animation: kazachok-dance 0.6s ease-in-out infinite;
+}
+@keyframes balalaika-shred {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-16deg); }
+  75% { transform: rotate(14deg); }
+}
+.balalaika-shred {
+  animation: balalaika-shred 0.22s ease-in-out infinite;
+}
+@keyframes smoke-puff {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  30% { opacity: 0.7; }
+  100% { opacity: 0; transform: translateY(-22px) scale(1.4); }
+}
+.smoke-puff {
+  animation: smoke-puff 1.4s ease-out infinite;
+}
+@keyframes disco-light-blink {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+.disco-light-blink {
+  animation: disco-light-blink 0.7s ease-in-out infinite;
+}
+@keyframes snowman-groove {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+.snowman-groove {
+  animation: snowman-groove 0.5s ease-in-out infinite;
+}
+@keyframes overflow-burst {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-22px) scale(1); }
+}
+.overflow-burst {
+  animation: overflow-burst 0.7s ease-out infinite;
+}
+@keyframes accordion-victory-stretch {
+  0%, 15% { transform: scaleX(1); }
+  55% { transform: scaleX(1.6); }
+  75% { transform: scaleX(1.6); }
+  100% { transform: scaleX(1); }
+}
+.accordion-victory-stretch {
+  animation: accordion-victory-stretch 1.4s ease-in-out infinite;
+}
+@keyframes victory-spark-pop {
+  0%, 50% { opacity: 0; transform: scale(0.3); }
+  62% { opacity: 1; transform: scale(1.2); }
+  75% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 0; }
+}
+.victory-spark-pop {
+  animation: victory-spark-pop 1.4s ease-out infinite;
+}
+
+/* ============================================================
+   catalog/fail/ scenarios — the consolation-side counterpart to the win
+   scenarios above, used by EncouragementModal. See each component file's
+   story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes bear-huff {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(-3deg); }
+  40% { transform: rotate(3deg); }
+  60% { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
+}
+.bear-huff {
+  animation: bear-huff 0.4s ease-in-out both;
+}
+@keyframes ushanka-toss {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  40% { transform: translate(28px, -18px) rotate(80deg); opacity: 1; }
+  70% { transform: translate(46px, 6px) rotate(160deg); opacity: 1; }
+  100% { transform: translate(50px, 10px) rotate(150deg); opacity: 1; }
+}
+.ushanka-toss {
+  animation: ushanka-toss 0.6s cubic-bezier(0.32, 0.1, 0.4, 1) 0.15s both;
+}
+@keyframes ushanka-thud {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.3, 0.7); }
+}
+.ushanka-thud {
+  animation: ushanka-thud 0.2s ease-out 0.75s both;
+}
+@keyframes string-stretch {
+  0%, 20% { height: 26px; }
+  34% { height: 34px; }
+  35%, 100% { height: 0; opacity: 0; }
+}
+.string-stretch {
+  animation: string-stretch 1.6s ease-in 0.1s both;
+}
+@keyframes string-snap-left {
+  0%, 34% { opacity: 0; transform: rotate(0deg) translateY(0); }
+  36% { opacity: 1; transform: rotate(0deg) translateY(0); }
+  100% { opacity: 0; transform: rotate(-70deg) translateY(-6px); }
+}
+.string-snap-left {
+  animation: string-snap-left 1.4s ease-out 0.1s both;
+}
+@keyframes string-snap-right {
+  0%, 34% { opacity: 0; transform: rotate(0deg) translateY(0); }
+  36% { opacity: 1; transform: rotate(0deg) translateY(0); }
+  100% { opacity: 0; transform: rotate(70deg) translateY(-6px); }
+}
+.string-snap-right {
+  animation: string-snap-right 1.4s ease-out 0.1s both;
+}
+@keyframes avatar-flinch {
+  0%, 34% { transform: translateX(0) rotate(0deg); }
+  40% { transform: translateX(-5px) rotate(-5deg); }
+  55% { transform: translateX(3px) rotate(3deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+.avatar-flinch {
+  display: inline-block;
+  animation: avatar-flinch 1s ease-out both;
+}
+@keyframes tear-drip {
+  0% { opacity: 0; transform: translateY(0); }
+  20% { opacity: 1; }
+  90% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(14px); }
+}
+.tear-drip {
+  animation: tear-drip 2s ease-in infinite;
+}
+@keyframes knit-stitch {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.18); }
+}
+.knit-stitch {
+  transform-origin: bottom;
+  animation: knit-stitch 0.8s ease-in-out infinite;
+}
+@keyframes lid-slump {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-12deg); }
+}
+.lid-slump {
+  animation: lid-slump 0.4s ease-out both;
+}
+@keyframes steam-fizzle {
+  0% { opacity: 0.6; transform: translateY(0) scaleY(1); }
+  100% { opacity: 0; transform: translateY(10px) scaleY(0.4); }
+}
+.steam-fizzle {
+  animation: steam-fizzle 1.5s ease-in infinite;
+}
+@keyframes nap-flop {
+  0% { transform: rotate(0deg) translateY(0); }
+  100% { transform: rotate(-6deg) translateY(4px); }
+}
+.nap-flop {
+  animation: nap-flop 0.35s ease-out both;
+}
+@keyframes zzz-drift {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.8); }
+  20% { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(-10px, -20px) scale(1.2); }
+}
+.zzz-drift {
+  animation: zzz-drift 1.8s ease-out infinite;
+}
+
+/* Respect the OS-level "reduce motion" setting — celebrations still show
+   (the modal/colors/text/characters all still communicate success), they
+   just stop moving. The infinite bear/balalaika loops are the most
+   important ones to kill here — a motion-sensitive user shouldn't get an
+   idle animation that never stops for as long as the modal is open. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-celebration-fade-in,
+  .celebration-panel,
+  .confetti-piece,
+  .animate-answer-shake,
+  .animate-answer-pop,
+  .doll-cascade-piece,
+  .sparkle-twinkle,
+  .bear-bounce,
+  .balalaika-strum,
+  .folk-spark-pop,
+  .steam-wisp,
+  .teacup-pop-in,
+  .snowflake-piece,
+  .rabbit-hop-in,
+  .note-float,
+  .khokhloma-petal,
+  .accordion-squeeze,
+  .berry-bob,
+  .shawl-unfurl,
+  .pancake-flip,
+  .flame-flicker,
+  .cabin-pop-in,
+  .nalichniki-shine,
+  .pattern-burst-ray,
+  .streak-toast,
+  .kazachok-pop,
+  .kazachok-pop-in,
+  .kazachok-dance,
+  .balalaika-shred,
+  .smoke-puff,
+  .disco-light-blink,
+  .snowman-groove,
+  .overflow-burst,
+  .accordion-victory-stretch,
+  .victory-spark-pop,
+  .bear-huff,
+  .ushanka-toss,
+  .ushanka-thud,
+  .string-stretch,
+  .string-snap-left,
+  .string-snap-right,
+  .avatar-flinch,
+  .tear-drip,
+  .knit-stitch,
+  .lid-slump,
+  .steam-fizzle,
+  .nap-flop,
+  .zzz-drift,
+  .barista-tilt,
+  .tea-stream-fall,
+  .tea-fill-rise,
+  .barista-wink,
+  .helicopter-spin-up,
+  .helicopter-liftoff,
+  .helicopter-flash,
+  .sunglasses-drop-on,
+  .rockstar-headbang,
+  .sparkler-flare,
+  .lid-sad-droop,
+  .steam-tear-drip,
+  .ushanka-pull-down,
+  .comic-shiver,
+  .letters-scatter-fall,
+  .snowman-toppled,
+  .spoons-clack-left,
+  .spoons-clack-right,
+  .bear-glide-circle,
+  .angel-flop-down,
+  .angel-arm-sweep-out,
+  .angel-arm-sweep-in,
+  .juggle-arc,
+  .accordion-hiccup,
+  .sour-note-wobble,
+  .lid-peekaboo,
+  .bear-trip-lurch,
+  .pelmeni-scatter,
+  .comb-stroke,
+  .sled-glide,
+  .trail-streak,
+  .baton-wave,
+  .confetti-fountain-shoot,
+  .layers-fan-out,
+  .barrel-wiggle,
+  .honey-drip,
+  .accordion-deflate,
+  .snowman-melt-shrink,
+  .puddle-grow,
+  .yoga-wobble,
+  .ushanka-victory-toss,
+  .conga-bob,
+  .hat-blow-away,
+  .spoon-fumble-left,
+  .spoon-fumble-right,
+  .string-sag,
+  .dizzy-spin,
+  .dizzy-star-orbit,
+  .fish-reel-up,
+  .fish-flop,
+  .carrot-raise,
+  .sparkler-wave,
+  .chimney-firework-burst,
+  .fish-slip-away,
+  .splash-pop,
+  .frame-peel-left,
+  .frame-peel-right,
+  .crack-flicker,
+  .valenki-stomp-left,
+  .valenki-stomp-right,
+  .step-dust,
+  .shawl-twirl,
+  .bell-jingle-swing,
+  .valenki-slip,
+  .boot-fly-off,
+  .shawl-tangle-wrap,
+  .sled-crash-flip,
+  .karavai-raise,
+  .ribbon-flutter,
+  .icicle-strike-left,
+  .icicle-strike-right,
+  .top-spin-fast,
+  .genie-swirl-rise,
+  .karavai-slump,
+  .ribbon-coil-wrap,
+  .icicle-crack-fall,
+  .broom-wave,
+  .broom-drop-fall,
+  .jar-raise,
+  .leaf-flutter,
+  .branch-droop,
+  .honey-pour-spill,
+  .leaf-fall,
+  .snowball-throw-arm,
+  .snowball-fly,
+  .snowball-boomerang,
+  .fan-open,
+  .fan-snap-shut,
+  .pancake-toss-arc,
+  .lid-rattle-shake,
+  .steam-sideways,
+  .pancake-flyoff,
+  .splat-flatten,
+  .roly-poly-rock,
+  .topple-over-fall,
+  .garmoshka-jam-freeze,
+  .fog-cloud-pulse,
+  .carousel-spin,
+  .carousel-halt,
+  .bear-wave-arm,
+  .barrel-roll-away,
+  .tongue-catch,
+  .warm-glow-pulse,
+  .frost-melt-fade,
+  .warmup-arm-pump,
+  .bucket-tip-pour,
+  .bear-startle-jump,
+  .ice-crust-freeze,
+  .pancake-boomerang-loop,
+  .bear-pick-dip,
+  .pancake-face-fly,
+  .vacuum-suck-pull,
+  .balalaika-scamper-off,
+  .barrel-tip-over,
+  .fountain-jet,
+  .lid-rocket-launch,
+  .samovar-panic-spin,
+  .matryoshka-halves-part,
+  .matryoshka-top-squeak-off,
+  .rocket-blastoff-exit,
+  .pancake-stack-piece,
+  .domovoy-pop-up,
+  .hat-pull-reveal,
+  .boot-bonk-recoil,
+  .carpet-glide,
+  .carpet-unroll-snap,
+  .pike-leap-up,
+  .pike-dive-escape,
+  .snowball-grow-roll,
+  .giant-ball-rollover {
+    animation: none !important;
+  }
+  /* Several of the above are one-shot "punchline" motions (the hat flying
+     off, the string snapping) rather than decorative loops — turning them
+     off does lose part of the joke for reduced-motion users, same
+     trade-off as everywhere else in this file. There's no separate static
+     illustration to fall back to; the character still renders, just
+     mid-pose instead of mid-action. */
+}
+
+/* ============================================================
+   catalog/ third wave — BearBarista, UshankaHelicopter,
+   BalalaikaRockStar (win/milestone) and SamovarCriesPuff, UshankaHides,
+   SnowballLetters (fail/everyday). Reuses `bear-bounce`, `sparkle-twinkle`,
+   and `tear-drip` (defined above) under new class names where the motion
+   is genuinely the same shape, rather than redefining identical keyframes.
+   See each component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes barista-tilt {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-14deg); }
+}
+.barista-tilt {
+  animation: barista-tilt 0.3s ease-out 0.1s both;
+}
+@keyframes tea-stream-fall {
+  0%, 15% { height: 0; opacity: 0; }
+  25% { opacity: 1; }
+  45% { height: 26px; opacity: 1; }
+  60%, 100% { height: 0; opacity: 0; }
+}
+.tea-stream-fall {
+  animation: tea-stream-fall 0.9s ease-in 0.3s both;
+}
+@keyframes tea-fill-rise {
+  0%, 50% { height: 0; }
+  100% { height: 14px; }
+}
+.tea-fill-rise {
+  animation: tea-fill-rise 0.4s ease-out 0.55s both;
+}
+@keyframes barista-wink {
+  0%, 80%, 100% { transform: scaleY(1); }
+  90% { transform: scaleY(0.15); }
+}
+.barista-wink {
+  animation: barista-wink 2.2s ease-in-out 0.9s infinite;
+}
+@keyframes helicopter-spin-up {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.helicopter-spin-up {
+  animation: helicopter-spin-up 0.18s linear infinite;
+}
+@keyframes helicopter-liftoff {
+  0%, 15% { transform: translateY(0); }
+  100% { transform: translateY(-26px); }
+}
+.helicopter-liftoff {
+  animation: helicopter-liftoff 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.25s both;
+}
+.helicopter-flash {
+  animation: victory-spark-pop 1.1s ease-out infinite;
+}
+@keyframes sunglasses-drop-on {
+  0% { opacity: 0; transform: translateY(-16px); }
+  70% { opacity: 1; transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.sunglasses-drop-on {
+  animation: sunglasses-drop-on 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.rockstar-headbang {
+  animation: bear-bounce 1s ease-in-out infinite;
+}
+.sparkler-flare {
+  animation: sparkle-twinkle 0.8s ease-out infinite;
+}
+@keyframes lid-sad-droop {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-26deg); }
+}
+.lid-sad-droop {
+  animation: lid-sad-droop 0.7s ease-in both;
+}
+.steam-tear-drip {
+  animation: tear-drip 1.6s ease-in infinite;
+}
+@keyframes ushanka-pull-down {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(34%); }
+}
+.ushanka-pull-down {
+  animation: ushanka-pull-down 0.35s ease-in both;
+}
+@keyframes comic-shiver {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(0); }
+  75% { transform: translateX(2px); }
+}
+.comic-shiver {
+  animation: comic-shiver 0.15s ease-in-out infinite;
+}
+@keyframes letters-scatter-fall {
+  0% { opacity: 0; top: -10%; transform: rotate(0deg); }
+  70% { opacity: 1; }
+  100% { opacity: 1; top: 62%; transform: rotate(140deg); }
+}
+.letters-scatter-fall {
+  animation: letters-scatter-fall 0.9s cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+@keyframes snowman-toppled {
+  0%, 75% { transform: rotate(0deg); }
+  100% { transform: rotate(78deg) translateX(-6px); }
+}
+.snowman-toppled {
+  animation: snowman-toppled 1s cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+
+/* ============================================================
+   catalog/ fourth wave — SpoonsVirtuoso, BearIceSkating,
+   SnowmanSnowAngel, MatryoshkaJuggler (win) and AccordionHiccups,
+   MatryoshkaLostInside, BearDropsPelmeni (fail). Reuses `note-float` and
+   `rockstar-headbang` (defined above) under their existing names — see
+   each component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes spoons-clack-left {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(18deg); }
+}
+.spoons-clack-left {
+  display: inline-block;
+  animation: spoons-clack-left 0.4s ease-in-out infinite;
+}
+@keyframes spoons-clack-right {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-18deg); }
+}
+.spoons-clack-right {
+  display: inline-block;
+  animation: spoons-clack-right 0.4s ease-in-out infinite;
+}
+@keyframes bear-glide-circle {
+  0% { transform: translate(18px, 0) rotate(8deg); }
+  25% { transform: translate(0, 10px) rotate(-6deg); }
+  50% { transform: translate(-18px, 0) rotate(-8deg); }
+  75% { transform: translate(0, -10px) rotate(6deg); }
+  100% { transform: translate(18px, 0) rotate(8deg); }
+}
+.bear-glide-circle {
+  animation: bear-glide-circle 2.2s ease-in-out infinite;
+}
+@keyframes angel-flop-down {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(90deg); }
+}
+.angel-flop-down {
+  animation: angel-flop-down 0.3s ease-out both;
+}
+@keyframes angel-arm-sweep-out {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(50deg); }
+}
+.angel-arm-sweep-out {
+  animation: angel-arm-sweep-out 0.7s ease-in-out infinite;
+}
+@keyframes angel-arm-sweep-in {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-50deg); }
+}
+.angel-arm-sweep-in {
+  animation: angel-arm-sweep-in 0.7s ease-in-out infinite;
+}
+@keyframes juggle-arc {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  45% { transform: translateY(-34px) scale(0.9); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.juggle-arc {
+  display: inline-block;
+  animation: juggle-arc 0.9s ease-in-out infinite;
+}
+@keyframes accordion-hiccup {
+  0%, 100% { transform: scaleX(1); }
+  15% { transform: scaleX(0.85); }
+  30% { transform: scaleX(1.05); }
+  48% { transform: scaleX(0.92); }
+  70% { transform: scaleX(1.1); }
+  85% { transform: scaleX(0.97); }
+}
+.accordion-hiccup {
+  animation: accordion-hiccup 0.9s steps(1, end) infinite;
+}
+@keyframes sour-note-wobble {
+  0%, 100% { opacity: 0.4; transform: rotate(-8deg); }
+  50% { opacity: 1; transform: rotate(8deg); }
+}
+.sour-note-wobble {
+  animation: sour-note-wobble 0.5s ease-in-out infinite;
+}
+@keyframes lid-peekaboo {
+  0%, 20% { transform: translateY(0); }
+  35%, 55% { transform: translateY(-85%); }
+  70%, 100% { transform: translateY(0); }
+}
+.lid-peekaboo {
+  animation: lid-peekaboo 1.8s ease-in-out infinite;
+}
+@keyframes bear-trip-lurch {
+  0% { transform: rotate(0deg) translateX(0); }
+  100% { transform: rotate(18deg) translateX(10px); }
+}
+.bear-trip-lurch {
+  animation: bear-trip-lurch 0.3s ease-out both;
+}
+@keyframes pelmeni-scatter {
+  0% { opacity: 0; transform: scale(0.3) rotate(0deg) translateY(-20px); }
+  60% { opacity: 1; transform: scale(1.15) rotate(180deg) translateY(0); }
+  100% { opacity: 1; transform: scale(1) rotate(220deg) translateY(0); }
+}
+.pelmeni-scatter {
+  animation: pelmeni-scatter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ============================================================
+   catalog/ fifth wave — MatryoshkaFlorist, BearHairdresser,
+   AccordionConductor, TroikaSled, SamovarConfettiFountain (win) and
+   MatryoshkaLayersFan, BearHoneyBarrelStuck, AccordionDeflate,
+   SnowmanMeltsBlush (fail). Reuses `khokhloma-petal`, `sparkle-twinkle`,
+   `note-float`, `accordion-squeeze`, `tear-drip` (as `.honey-drip`), and
+   `sour-note-wobble` (defined above) under new class names where the
+   motion is genuinely the same shape. See each component file's
+   story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes comb-stroke {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(6px) rotate(-8deg); }
+}
+.comb-stroke {
+  animation: comb-stroke 0.6s ease-in-out infinite;
+}
+@keyframes sled-glide {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  50% { transform: translateX(-3px) rotate(-1.5deg); }
+}
+.sled-glide {
+  animation: sled-glide 0.5s ease-in-out infinite;
+}
+@keyframes trail-streak {
+  0% { opacity: 0; transform: translateX(0) scaleX(1); }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateX(26px) scaleX(0.4); }
+}
+.trail-streak {
+  animation: trail-streak 0.6s ease-in infinite;
+}
+@keyframes baton-wave {
+  0%, 100% { transform: rotate(-18deg); }
+  50% { transform: rotate(18deg); }
+}
+.baton-wave {
+  animation: baton-wave 0.8s ease-in-out infinite;
+}
+@keyframes confetti-fountain-shoot {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+  15% { opacity: 1; }
+  60% { transform: translateY(-48px) rotate(180deg); }
+  100% { opacity: 0; transform: translateY(-10px) rotate(320deg); }
+}
+.confetti-fountain-shoot {
+  animation: confetti-fountain-shoot 1.1s ease-out infinite;
+}
+@keyframes layers-fan-out {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  60% { opacity: 1; transform: translateY(-34px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(-30px) scale(1); }
+}
+.layers-fan-out {
+  animation: layers-fan-out 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes barrel-wiggle {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-3px) rotate(-4deg); }
+  75% { transform: translateX(3px) rotate(4deg); }
+}
+.barrel-wiggle {
+  animation: barrel-wiggle 0.5s ease-in-out infinite;
+}
+.honey-drip {
+  animation: tear-drip 2s ease-in infinite;
+}
+@keyframes accordion-deflate {
+  0% { transform: scaleX(1); }
+  100% { transform: scaleX(0.4); }
+}
+.accordion-deflate {
+  animation: accordion-deflate 0.5s ease-in both;
+}
+@keyframes snowman-melt-shrink {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(0.8) translateY(10px); }
+}
+.snowman-melt-shrink {
+  animation: snowman-melt-shrink 0.7s ease-in both;
+}
+@keyframes puddle-grow {
+  0% { transform: scaleX(0.3); opacity: 0; }
+  100% { transform: scaleX(1); opacity: 0.7; }
+}
+.puddle-grow {
+  animation: puddle-grow 0.7s ease-out both;
+}
+
+/* ============================================================
+   catalog/ sixth wave — BearGusli, MatryoshkaYoga,
+   BearUshankaVictoryToss, SnowmanCongaLine (win) and
+   SnowmanHatBlownAway, SpoonsFumble, BalalaikaOutOfTune,
+   MatryoshkaDizzySpin (fail). Reuses `sparkle-twinkle`, `note-float`,
+   `bear-bounce`, `comic-shiver`, and `sour-note-wobble` (defined above)
+   under new class names where the motion is genuinely the same shape.
+   See each component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes yoga-wobble {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+.yoga-wobble {
+  animation: yoga-wobble 1.2s ease-in-out infinite;
+}
+@keyframes ushanka-victory-toss {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-26px) rotate(180deg); }
+}
+.ushanka-victory-toss {
+  animation: ushanka-victory-toss 0.7s ease-in-out infinite;
+}
+@keyframes conga-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.conga-bob {
+  animation: conga-bob 0.6s ease-in-out infinite;
+}
+@keyframes hat-blow-away {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(60px, -18px) rotate(160deg); }
+}
+.hat-blow-away {
+  animation: hat-blow-away 0.6s ease-in both;
+}
+@keyframes spoon-fumble-left {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-34px, 10px) rotate(-140deg); }
+}
+.spoon-fumble-left {
+  animation: spoon-fumble-left 0.5s ease-in both;
+}
+@keyframes spoon-fumble-right {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(34px, 10px) rotate(140deg); }
+}
+.spoon-fumble-right {
+  animation: spoon-fumble-right 0.5s ease-in both;
+}
+@keyframes string-sag {
+  0%, 100% { transform: scaleY(1) skewX(0deg); }
+  50% { transform: scaleY(0.7) skewX(6deg); }
+}
+.string-sag {
+  animation: string-sag 1.4s ease-in-out infinite;
+}
+@keyframes dizzy-spin {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+.dizzy-spin {
+  animation: dizzy-spin 0.5s ease-in-out infinite;
+}
+@keyframes dizzy-star-orbit {
+  0% { opacity: 0; transform: rotate(0deg); }
+  20% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(300deg); }
+}
+.dizzy-star-orbit {
+  animation: dizzy-star-orbit 1.2s linear infinite;
+}
+
+/* ============================================================
+   catalog/ seventh wave — BearIceFishing, RabbitCarrotVictory,
+   MatryoshkaSparkler, IzbaFireworks (win) and BearFishSlipsAway,
+   NalichnikiCrack, GusliStringSnap (fail). Reuses `bear-bounce`,
+   `sparkle-twinkle`, `sparkler-flare`, `string-stretch`,
+   `string-snap-left`/`string-snap-right`, and `sour-note-wobble` (defined
+   above) under new class names or wholesale where the motion is genuinely
+   the same shape. See each component file's story-beat comment for the
+   full timeline.
+   ============================================================ */
+@keyframes fish-reel-up {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-30px); }
+}
+.fish-reel-up {
+  animation: fish-reel-up 0.5s ease-out both;
+}
+@keyframes fish-flop {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+.fish-flop {
+  animation: fish-flop 0.3s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+@keyframes carrot-raise {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(-12deg) translateY(-8px); }
+}
+.carrot-raise {
+  animation: carrot-raise 0.7s ease-in-out infinite;
+}
+@keyframes sparkler-wave {
+  0%, 100% { transform: rotate(-14deg); }
+  50% { transform: rotate(14deg); }
+}
+.sparkler-wave {
+  animation: sparkler-wave 0.6s ease-in-out infinite;
+}
+@keyframes chimney-firework-burst {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  40% { opacity: 1; transform: translateY(-26px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-34px) scale(0.8); }
+}
+.chimney-firework-burst {
+  animation: chimney-firework-burst 1s ease-out infinite;
+}
+@keyframes fish-slip-away {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(14px); }
+}
+.fish-slip-away {
+  animation: fish-slip-away 0.4s ease-in both;
+}
+@keyframes splash-pop {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  50% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { opacity: 0; transform: translateY(-14px) scale(0.8); }
+}
+.splash-pop {
+  animation: splash-pop 0.5s ease-out both;
+}
+@keyframes frame-peel-left {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-10deg) translateX(-3px); }
+}
+.frame-peel-left {
+  animation: frame-peel-left 0.5s ease-out both;
+}
+@keyframes frame-peel-right {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(10deg) translateX(3px); }
+}
+.frame-peel-right {
+  animation: frame-peel-right 0.5s ease-out both;
+}
+@keyframes crack-flicker {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.9; }
+}
+.crack-flicker {
+  animation: crack-flicker 0.9s ease-in-out infinite;
+}
+
+/* ============================================================
+   catalog/ eighth wave — BearValenkiDance, MatryoshkaShawlTwirl,
+   SnowmanSledding, TroikaBellsJingle (win) and BearValenkiSlip,
+   MatryoshkaShawlTangle, SnowmanSleddingCrash (fail) — three deliberate
+   win/fail pairs sharing the same prop (valenki boots, a shawl, a sled).
+   Reuses `smoke-puff` (as `.step-dust`), `shawl-unfurl`'s easing (folded
+   into `.shawl-twirl`), `sled-glide`/`trail-streak` (from TroikaSled.tsx),
+   `sparkle-twinkle`, and `pelmeni-scatter` (defined above) where the
+   motion is genuinely the same shape. See each component file's
+   story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes valenki-stomp-left {
+  0%, 100% { transform: scaleY(1); }
+  25% { transform: scaleY(0.7); }
+}
+.valenki-stomp-left {
+  animation: valenki-stomp-left 0.5s ease-in-out infinite;
+}
+@keyframes valenki-stomp-right {
+  0%, 100% { transform: scaleY(1); }
+  75% { transform: scaleY(0.7); }
+}
+.valenki-stomp-right {
+  animation: valenki-stomp-right 0.5s ease-in-out infinite;
+}
+.step-dust {
+  animation: smoke-puff 1.4s ease-out infinite;
+}
+@keyframes shawl-twirl {
+  0% { opacity: 0; transform: rotate(45deg) scale(0.2); }
+  35% { opacity: 1; transform: rotate(45deg) scale(1.08); }
+  50% { opacity: 1; transform: rotate(45deg) scale(1); }
+  100% { opacity: 1; transform: rotate(405deg) scale(1); }
+}
+.shawl-twirl {
+  animation: shawl-twirl 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+@keyframes bell-jingle-swing {
+  0%, 100% { transform: rotate(-16deg); }
+  50% { transform: rotate(16deg); }
+}
+.bell-jingle-swing {
+  animation: bell-jingle-swing 0.5s ease-in-out infinite;
+}
+@keyframes valenki-slip {
+  0% { transform: rotate(0deg) translateY(0); }
+  100% { transform: rotate(24deg) translateY(6px); }
+}
+.valenki-slip {
+  animation: valenki-slip 0.35s ease-out both;
+}
+@keyframes boot-fly-off {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-18px, -22px) rotate(-120deg); }
+}
+.boot-fly-off {
+  animation: boot-fly-off 0.5s ease-out both;
+}
+@keyframes shawl-tangle-wrap {
+  0%, 15% { transform: translateY(-14%); }
+  45%, 65% { transform: translateY(0%); }
+  90%, 100% { transform: translateY(-14%); }
+}
+.shawl-tangle-wrap {
+  animation: shawl-tangle-wrap 2s ease-in-out infinite;
+}
+@keyframes sled-crash-flip {
+  0% { transform: rotate(0deg) translateX(0); }
+  100% { transform: rotate(-26deg) translateX(-8px); }
+}
+.sled-crash-flip {
+  animation: sled-crash-flip 0.4s ease-out both;
+}
+
+/* ============================================================
+   catalog/ ninth wave — BearBakesKaravai, MatryoshkaRibbonDance,
+   SnowmanIcicleXylophone, KhokhlomaSpinningTop, SamovarSteamGenie (win)
+   and BearKaravaiBurnt, MatryoshkaRibbonTangle, SnowmanIcicleCrack (fail).
+   Reuses `carrot-raise` (as `.karavai-raise`), `khokhloma-petal`,
+   `smoke-puff`, `sour-note-wobble`, and `sparkle-twinkle` (defined above)
+   under new class names or wholesale where the motion is genuinely the
+   same shape. See each component file's story-beat comment for the full
+   timeline.
+   ============================================================ */
+.karavai-raise {
+  animation: carrot-raise 0.7s ease-in-out infinite;
+}
+@keyframes ribbon-flutter {
+  0%, 100% { transform: rotate(-14deg) translateY(0); }
+  50% { transform: rotate(14deg) translateY(-3px); }
+}
+.ribbon-flutter {
+  animation: ribbon-flutter 0.9s ease-in-out infinite;
+}
+@keyframes icicle-strike-left {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-30deg); }
+}
+.icicle-strike-left {
+  animation: icicle-strike-left 0.7s ease-in-out infinite;
+}
+@keyframes icicle-strike-right {
+  0%, 100% { transform: rotate(0deg); }
+  75% { transform: rotate(30deg); }
+}
+.icicle-strike-right {
+  animation: icicle-strike-right 0.7s ease-in-out infinite;
+}
+@keyframes top-spin-fast {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.top-spin-fast {
+  animation: top-spin-fast 0.35s linear infinite;
+}
+@keyframes genie-swirl-rise {
+  0% { opacity: 0; transform: translateY(0) scaleX(1) rotate(0deg); }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-36px) scaleX(1.8) rotate(20deg); }
+}
+.genie-swirl-rise {
+  animation: genie-swirl-rise 1.8s ease-out infinite;
+}
+@keyframes karavai-slump {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(0.82) translateY(6px); }
+}
+.karavai-slump {
+  animation: karavai-slump 0.5s ease-in both;
+}
+@keyframes ribbon-coil-wrap {
+  0%, 15% { transform: scale(1); opacity: 0.9; }
+  45%, 65% { transform: scale(0.6); opacity: 1; }
+  90%, 100% { transform: scale(1); opacity: 0.9; }
+}
+.ribbon-coil-wrap {
+  animation: ribbon-coil-wrap 2s ease-in-out infinite;
+}
+@keyframes icicle-crack-fall {
+  0%, 30% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(36px) rotate(24deg); }
+}
+.icicle-crack-fall {
+  animation: icicle-crack-fall 0.5s ease-in both;
+}
+
+/* ============================================================
+   catalog/ tenth wave — BearBanyaBroom, MatryoshkaPaintsEgg,
+   SnowmanSnowballJuggle, BearBellRinger, MatryoshkaKokoshnikSparkle (win)
+   and BearBanyaBroomDrop, SnowmanSnowballJuggleDrop,
+   MatryoshkaKokoshnikTilt (fail) — the heaviest-reuse batch yet. Every
+   fail scenario and two of five win scenarios lean entirely on keyframes
+   already defined above (`khokhloma-petal`, `sparkle-twinkle`,
+   `steam-wisp`, `steam-fizzle`, `juggle-arc`, `pelmeni-scatter`,
+   `bell-jingle-swing`, `bear-bounce`, `ushanka-pull-down`,
+   `comic-shiver`); only the broom-wave/broom-drop motion below is new.
+   See each component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes broom-wave {
+  0%, 100% { transform: rotate(-24deg); }
+  50% { transform: rotate(24deg); }
+}
+.broom-wave {
+  animation: broom-wave 0.6s ease-in-out infinite;
+}
+@keyframes broom-drop-fall {
+  0% { opacity: 1; transform: rotate(0deg) translateY(0); }
+  100% { opacity: 0; transform: rotate(70deg) translateY(30px); }
+}
+.broom-drop-fall {
+  animation: broom-drop-fall 0.5s ease-in both;
+}
+
+/* ============================================================
+   catalog/ eleventh wave — BearHoneyJarVictory, MatryoshkaBirchBranchDance,
+   RabbitSnowballToss, MatryoshkaFirebirdFeather, BearSledGiftDelivery
+   (win) and BearHoneyJarSpill, MatryoshkaBirchBranchWilt,
+   RabbitSnowballBackfire (fail). Six of eight scenarios lean entirely on
+   keyframes already defined above (`carrot-raise` as `.jar-raise`,
+   `honey-drip`, `ribbon-flutter` as `.leaf-flutter`, `sparkler-wave`/
+   `sparkler-flare`, `sled-glide`/`trail-streak`, `lid-slump` as
+   `.branch-droop`, `tea-stream-fall` as `.honey-pour-spill`,
+   `letters-scatter-fall` as `.leaf-fall`, `avatar-flinch`); only the
+   snowball throw/fly/boomerang motions below are new. See each component
+   file's story-beat comment for the full timeline.
+   ============================================================ */
+.jar-raise {
+  animation: carrot-raise 0.7s ease-in-out infinite;
+}
+.leaf-flutter {
+  animation: ribbon-flutter 0.9s ease-in-out infinite;
+}
+.branch-droop {
+  animation: lid-slump 0.4s ease-out both;
+}
+.honey-pour-spill {
+  animation: tea-stream-fall 0.9s ease-in 0.3s both;
+}
+.leaf-fall {
+  animation: letters-scatter-fall 0.9s ease-in both;
+}
+@keyframes snowball-throw-arm {
+  0%, 100% { transform: rotate(30deg); }
+  40% { transform: rotate(-50deg); }
+}
+.snowball-throw-arm {
+  animation: snowball-throw-arm 0.9s ease-in-out infinite;
+}
+@keyframes snowball-fly {
+  0%, 44% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  55% { opacity: 1; transform: translate(-14px, -6px) scale(1); }
+  100% { opacity: 0; transform: translate(-60px, -18px) scale(0.7); }
+}
+.snowball-fly {
+  animation: snowball-fly 0.9s ease-out infinite;
+}
+@keyframes snowball-boomerang {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  40% { opacity: 1; transform: translate(-50px, -20px) scale(1); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+.snowball-boomerang {
+  animation: snowball-boomerang 0.5s ease-in both;
+}
+
+/* ============================================================
+   catalog/ twelfth wave — BearSnowFort, SnowmanIceSkatingDuo,
+   MatryoshkaPaintedFan, KhokhlomaBowlStack, TroikaSnowSpray (win) and
+   BearSnowFortCollapse, SnowmanIceSkateSpill, MatryoshkaFanSnap (fail).
+   The heaviest-reuse batch yet — six of eight scenarios lean entirely on
+   keyframes already defined above (`carrot-raise` as `.karavai-raise`,
+   `sparkle-twinkle`, `bear-glide-circle`, `doll-cascade-in`, `sled-glide`/
+   `trail-streak`/`snowflake-piece`, `pelmeni-scatter`, `comic-shiver`,
+   `valenki-slip`, `avatar-flinch`); only the folding-fan motion below is
+   new. See each component file's story-beat comment for the full
+   timeline.
+   ============================================================ */
+@keyframes fan-open {
+  0% { opacity: 0; transform: rotate(-70deg) scale(0.2); }
+  60% { opacity: 1; transform: rotate(6deg) scale(1.05); }
+  75% { transform: rotate(-6deg) scale(1); }
+  100% { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+.fan-open {
+  animation: fan-open 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both, fan-sway 0.9s ease-in-out 0.6s infinite;
+}
+@keyframes fan-sway {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+@keyframes fan-snap-shut {
+  0% { transform: rotate(0deg) scale(1); }
+  100% { transform: rotate(-64deg) scale(0.3); }
+}
+.fan-snap-shut {
+  animation: fan-snap-shut 0.3s ease-in both;
+}
+
+/* ============================================================
+   catalog/ thirteenth wave — user-requested trio: samovar tea, matryoshka
+   pancake flip, and bear balalaika fireside, each with a fail
+   counterpart. SamovarBoilTea and BearBalalaikaFireside lean entirely on
+   keyframes already defined above (`steam-wisp`, `teacup-pop-in`,
+   `sparkle-twinkle`, `balalaika-strum`, `bear-bounce`, `flame-flicker`,
+   `note-float`); BearBalalaikaStringSnap reuses `string-stretch`/
+   `string-snap-left`/`string-snap-right`/`bear-huff` wholesale, the same
+   pattern already used once for GusliStringSnap.tsx. Only the pancake-
+   toss/flyoff/splat and samovar lid-rattle motions below are new. See
+   each component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes pancake-toss-arc {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(200deg); }
+}
+.pancake-toss-arc {
+  animation: pancake-toss-arc 0.9s ease-in-out infinite;
+}
+@keyframes lid-rattle-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-2px, -1px) rotate(-4deg); }
+  75% { transform: translate(2px, -1px) rotate(4deg); }
+}
+.lid-rattle-shake {
+  animation: lid-rattle-shake 0.25s ease-in-out infinite;
+}
+@keyframes steam-sideways {
+  0% { opacity: 0; transform: translateY(0) scaleX(1); }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-18px) scaleX(1.6); }
+}
+.steam-sideways {
+  animation: steam-sideways 0.9s ease-out infinite;
+}
+@keyframes pancake-flyoff {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-70px) rotate(260deg); }
+}
+.pancake-flyoff {
+  animation: pancake-flyoff 0.5s ease-in both;
+}
+@keyframes splat-flatten {
+  0%, 40% { opacity: 0; transform: scale(0.3); }
+  100% { opacity: 0.6; transform: scale(1); }
+}
+.splat-flatten {
+  animation: splat-flatten 0.7s ease-out both;
+}
+
+/* ============================================================
+   catalog/ fourteenth wave — user-requested trio: valenki tap dance,
+   garmoshka tune, and matryoshka-неваляшка balance, each with a fail
+   counterpart. MatryoshkaValenkiTapDance and GarmoshkaStretchTune lean
+   entirely on keyframes already defined above (`valenki-stomp-left`/
+   `valenki-stomp-right`, `snowflake-piece`, `accordion-squeeze`,
+   `sparkler-flare`); BearValenkiSnowTrip reuses `bear-trip-lurch`/
+   `pelmeni-scatter` (from BearDropsPelmeni.tsx) and GarmoshkaJamClank
+   reuses `crack-flicker`/`comic-shiver` wholesale. Only the roly-poly
+   rock/topple and garmoshka-jam-freeze motions below are new. See each
+   component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes roly-poly-rock {
+  0%, 100% { transform: rotate(-13deg); }
+  50% { transform: rotate(13deg); }
+}
+.roly-poly-rock {
+  animation: roly-poly-rock 0.9s ease-in-out infinite;
+}
+@keyframes topple-over-fall {
+  0% { transform: rotate(0deg) translateY(0); }
+  100% { transform: rotate(88deg) translateY(4px); }
+}
+.topple-over-fall {
+  animation: topple-over-fall 0.4s ease-in both;
+}
+@keyframes garmoshka-jam-freeze {
+  0% { transform: scaleX(1); }
+  20% { transform: scaleX(0.86); }
+  40%, 100% { transform: scaleX(0.7); }
+}
+.garmoshka-jam-freeze {
+  animation: garmoshka-jam-freeze 0.4s ease-out both;
+}
+
+/* ============================================================
+   catalog/ fifteenth wave — user-requested trio: banya steam, ice
+   carousel, and fairground bear, each with a fail counterpart.
+   BanyaSteamRefresh, BanyaFogSlip, MedvedBarrelTrip, and
+   KaruselHaltSpin/KaruselIceSpin's ring visuals lean on keyframes already
+   defined above (`genie-swirl-rise`, `broom-wave`, `splash-pop`,
+   `leaf-fall`, `bear-trip-lurch`, `sparkle-twinkle`, `avatar-flinch`,
+   `bell-jingle-swing`); only fog-cloud-pulse, the carousel spin/halt, the
+   greeting wave, and the barrel roll below are new. See each component
+   file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes fog-cloud-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+.fog-cloud-pulse {
+  animation: fog-cloud-pulse 1.6s ease-in-out infinite;
+}
+@keyframes carousel-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.carousel-spin {
+  animation: carousel-spin 3.2s linear infinite;
+}
+@keyframes carousel-halt {
+  0% { transform: rotate(0deg); }
+  60% { transform: rotate(300deg); }
+  80% { transform: rotate(332deg); }
+  100% { transform: rotate(320deg); }
+}
+.carousel-halt {
+  animation: carousel-halt 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes bear-wave-arm {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(30deg); }
+}
+.bear-wave-arm {
+  animation: bear-wave-arm 0.6s ease-in-out infinite;
+}
+@keyframes barrel-roll-away {
+  0% { transform: translateX(0) rotate(0deg); }
+  100% { transform: translateX(18px) rotate(140deg); }
+}
+.barrel-roll-away {
+  animation: barrel-roll-away 0.5s ease-out both;
+}
+
+/* ============================================================
+   catalog/ sixteenth wave — user-requested trio: ice shower, deep freeze,
+   and shivering warm-up, each with a fail counterpart. BearShiverSmoke
+   needs no new keyframes at all (`comic-shiver`/`sparkle-twinkle`/
+   `steam-wisp` reused wholesale); MedvedBucketSplash reuses
+   `honey-pour-spill`, MatryoshkaIceShatter reuses `pelmeni-scatter`, and
+   MatryoshkaWarmupDance reuses `kazachok-dance`. Only tongue-catch,
+   warm-glow-pulse, frost-melt-fade, warmup-arm-pump, bucket-tip-pour,
+   bear-startle-jump, and ice-crust-freeze below are new. See each
+   component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes tongue-catch {
+  0%, 70%, 100% { transform: scaleY(1); }
+  85% { transform: scaleY(1.6); }
+}
+.tongue-catch {
+  animation: tongue-catch 1s ease-in-out infinite;
+}
+@keyframes warm-glow-pulse {
+  0%, 100% { opacity: 0.15; transform: scale(0.9); }
+  50% { opacity: 0.35; transform: scale(1.05); }
+}
+.warm-glow-pulse {
+  animation: warm-glow-pulse 1.2s ease-in-out infinite;
+}
+@keyframes frost-melt-fade {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.4); }
+}
+.frost-melt-fade {
+  animation: frost-melt-fade 0.8s ease-in both;
+}
+@keyframes warmup-arm-pump {
+  0%, 100% { transform: rotate(-20deg); }
+  50% { transform: rotate(40deg); }
+}
+.warmup-arm-pump {
+  animation: warmup-arm-pump 0.5s ease-in-out infinite;
+}
+@keyframes bucket-tip-pour {
+  0%, 20% { transform: rotate(0deg); }
+  100% { transform: rotate(120deg); }
+}
+.bucket-tip-pour {
+  animation: bucket-tip-pour 0.4s ease-in both;
+}
+@keyframes bear-startle-jump {
+  0%, 30% { transform: translateY(0); }
+  55% { transform: translateY(-16px); }
+  75% { transform: translateY(0); }
+  90% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+.bear-startle-jump {
+  animation: bear-startle-jump 0.7s ease-out both;
+}
+@keyframes ice-crust-freeze {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { opacity: 0.55; transform: scale(1.05); }
+  100% { opacity: 0.5; transform: scale(1); }
+}
+.ice-crust-freeze {
+  animation: ice-crust-freeze 0.5s ease-out both;
+}
+
+/* ============================================================
+   catalog/ seventeenth wave — user-requested trio: pancake boomerang,
+   berry gathering, and an escaped balalaika, each with a fail
+   counterpart. Reuses `berry-bob` (from Kalinka.tsx), `sparkle-twinkle`,
+   `balalaika-strum`/`note-float`, `comic-shiver`, `avatar-flinch`, and
+   `sour-note-wobble` (defined above) wholesale where the motion is
+   genuinely the same shape. Only pancake-boomerang-loop, bear-pick-dip,
+   pancake-face-fly, vacuum-suck-pull, and balalaika-scamper-off below are
+   new. See each component file's story-beat comment for the full
+   timeline.
+   ============================================================ */
+@keyframes pancake-boomerang-loop {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  30% { transform: translate(-10px, -50px) rotate(160deg); }
+  60% { transform: translate(14px, -60px) rotate(340deg); }
+  85% { transform: translate(4px, -12px) rotate(520deg); }
+  100% { transform: translate(0, 0) rotate(560deg); }
+}
+.pancake-boomerang-loop {
+  animation: pancake-boomerang-loop 0.9s ease-in-out infinite;
+}
+@keyframes bear-pick-dip {
+  0%, 100% { transform: rotate(-6deg) translateY(0); }
+  50% { transform: rotate(18deg) translateY(6px); }
+}
+.bear-pick-dip {
+  animation: bear-pick-dip 0.6s ease-in-out infinite;
+}
+@keyframes pancake-face-fly {
+  0% { opacity: 0; transform: translate(40px, -30px) scale(0.5); }
+  60% { opacity: 1; transform: translate(0, 0) scale(1.1); }
+  75% { transform: scale(0.85, 1.15); }
+  100% { opacity: 1; transform: scale(1.3, 0.7); }
+}
+.pancake-face-fly {
+  animation: pancake-face-fly 0.5s ease-out both;
+}
+@keyframes vacuum-suck-pull {
+  0% { opacity: 0; transform: translateX(0) scale(1); }
+  20% { opacity: 1; }
+  100% { opacity: 1; transform: translateX(-16px) scale(0.5); }
+}
+.vacuum-suck-pull {
+  animation: vacuum-suck-pull 0.5s ease-in both;
+}
+@keyframes balalaika-scamper-off {
+  0%, 20% { transform: translateX(0) rotate(0deg); }
+  35% { transform: translateX(4px) rotate(-4deg); }
+  50% { transform: translateX(-4px) rotate(4deg); }
+  100% { opacity: 0; transform: translateX(-120px) rotate(-8deg); }
+}
+.balalaika-scamper-off {
+  animation: balalaika-scamper-off 0.9s ease-in both;
+}
+
+/* ============================================================
+   catalog/ eighteenth wave — user-requested trio: honey overload, wind-
+   boomeranged snowball, and a samovar meltdown, each with a fail
+   counterpart. Reuses `tongue-catch`/`honey-drip`/`bear-bounce` (honey
+   pair), `snowball-throw-arm`/`snowball-fly`/`snowball-boomerang`/
+   `bear-trip-lurch` (snowball pair), and `steam-wisp`/`warm-glow-pulse`/
+   `steam-rise` (as `.fountain-jet`, samovar pair) wholesale where the
+   motion is genuinely the same shape. Only barrel-tip-over,
+   lid-rocket-launch, and samovar-panic-spin below are new. See each
+   component file's story-beat comment for the full timeline.
+   ============================================================ */
+@keyframes barrel-tip-over {
+  0% { opacity: 0; transform: rotate(-90deg) translateY(-30px); }
+  70% { opacity: 1; transform: rotate(4deg) translateY(2px); }
+  100% { opacity: 1; transform: rotate(0deg) translateY(0); }
+}
+.barrel-tip-over {
+  animation: barrel-tip-over 0.4s ease-in both;
+}
+.fountain-jet {
+  animation: steam-rise 0.9s ease-out infinite;
+}
+@keyframes lid-rocket-launch {
+  0%, 15% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-140px) rotate(180deg); }
+}
+.lid-rocket-launch {
+  animation: lid-rocket-launch 0.7s ease-in both;
+}
+@keyframes samovar-panic-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.samovar-panic-spin {
+  animation: samovar-panic-spin 0.5s linear infinite;
+}
+
+/* ============================================================
+   catalog/ nineteenth wave — user-requested trio: a runaway matryoshka,
+   a frozen choir, and a sleepwalking bear, each with a fail counterpart.
+   Reuses `doll-cascade-piece`, `dizzy-spin`, `bear-bounce`/`note-float`
+   (choir), `ice-crust-freeze`/`snowflake-piece` (choir fail),
+   `valenki-stomp-left`/`valenki-stomp-right`/`warmup-arm-pump` (march),
+   and `bear-trip-lurch`/`ushanka-toss`/`zzz-drift` (faceplant) wholesale.
+   Only matryoshka-halves-part and matryoshka-top-squeak-off below are
+   new. See each component file's story-beat comment for the full
+   timeline.
+   ============================================================ */
+@keyframes matryoshka-halves-part {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-6px) translateX(-3px); }
+}
+.matryoshka-halves-part {
+  animation: matryoshka-halves-part 0.5s ease-out both;
+}
+@keyframes matryoshka-top-squeak-off {
+  0%, 10% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-160px) rotate(-30deg); }
+}
+.matryoshka-top-squeak-off {
+  animation: matryoshka-top-squeak-off 0.6s ease-in both;
+}
+
+/* ============================================================
+   catalog/ twentieth (final) wave — the closing batch that brings the
+   catalog to its 150-scenario target: the user's requested trio
+   (balalaika rocket, pancake well, hare magician) plus three more
+   original pairs (flying carpet, magic pike, giant snowball) added to
+   land exactly on 150. Heaviest-reuse wave yet — `.pancake-stack-piece`
+   (doll-cascade-in), `.carpet-glide` (sled-glide), `.carpet-unroll-snap`
+   (fan-snap-shut), `.pike-leap-up` (fish-reel-up), and
+   `.pike-dive-escape` (fish-slip-away) are all existing keyframes reused
+   wholesale under new names; `balalaika-shred`, `carousel-spin`,
+   `flame-flicker`, `smoke-puff`, `khokhloma-petal`, `pelmeni-scatter`,
+   `avatar-flinch`, `splash-pop`, `nap-flop`, `barrel-roll-away`,
+   `bear-bounce`, and `sparkle-twinkle` are reused directly. Only
+   rocket-blastoff-exit, domovoy-pop-up, hat-pull-reveal,
+   boot-bonk-recoil, snowball-grow-roll, and giant-ball-rollover below are
+   genuinely new. See each component file's story-beat comment for the
+   full timeline.
+   ============================================================ */
+@keyframes rocket-blastoff-exit {
+  0%, 15% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(160px, -140px) rotate(30deg); }
+}
+.rocket-blastoff-exit {
+  animation: rocket-blastoff-exit 0.7s ease-in both;
+}
+.pancake-stack-piece {
+  display: inline-block;
+  animation: doll-cascade-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes domovoy-pop-up {
+  0% { opacity: 0; transform: translateY(20px) scale(0.6); }
+  60% { opacity: 1; transform: translateY(-4px) scale(1.08); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.domovoy-pop-up {
+  animation: domovoy-pop-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes hat-pull-reveal {
+  0% { opacity: 0; transform: translateY(20px) scale(0.4); }
+  70% { opacity: 1; transform: translateY(-4px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hat-pull-reveal {
+  animation: hat-pull-reveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes boot-bonk-recoil {
+  0%, 60% { transform: rotate(0deg); }
+  75% { transform: rotate(-14deg); }
+  100% { transform: rotate(-6deg); }
+}
+.boot-bonk-recoil {
+  animation: boot-bonk-recoil 0.4s ease-out both;
+}
+.carpet-glide {
+  animation: sled-glide 0.5s ease-in-out infinite;
+}
+.carpet-unroll-snap {
+  animation: fan-snap-shut 0.3s ease-in both;
+}
+.pike-leap-up {
+  animation: fish-reel-up 0.5s ease-out both;
+}
+.pike-dive-escape {
+  animation: fish-slip-away 0.4s ease-in both;
+}
+@keyframes snowball-grow-roll {
+  0% { transform: scale(0.3) rotate(0deg); }
+  100% { transform: scale(1.3) rotate(720deg); }
+}
+.snowball-grow-roll {
+  animation: snowball-grow-roll 1.4s ease-out infinite alternate;
+}
+@keyframes giant-ball-rollover {
+  0% { opacity: 0; transform: translateX(-120px) rotate(0deg); }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(120px) rotate(360deg); }
+}
+.giant-ball-rollover {
+  animation: giant-ball-rollover 1s ease-in-out infinite;
+}

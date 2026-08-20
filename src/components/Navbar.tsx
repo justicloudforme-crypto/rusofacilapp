@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LanguageSwitcher from "./LanguageSwitcher";
+import SoundToggle from "./SoundToggle";
 import MobileMenu from "./MobileMenu";
 import MatryoshkaMark from "./MatryoshkaMark";
 import ProfileMenu from "./ProfileMenu";
@@ -59,6 +60,7 @@ export default async function Navbar({
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-3 sm:ml-0">
+          <SoundToggle onLabel={dict.nav.soundOnLabel} offLabel={dict.nav.soundOffLabel} />
           <LanguageSwitcher current={lang} />
           {user ? (
             <ProfileMenu

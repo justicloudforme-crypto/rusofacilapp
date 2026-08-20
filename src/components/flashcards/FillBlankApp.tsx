@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
@@ -9,6 +9,10 @@ import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flas
 import { checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { buildFillBlankRound } from "@/lib/flashcards/fill-blank-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
+import CelebrationModal from "@/components/celebration/CelebrationModal";
+import StreakToast from "@/components/celebration/StreakToast";
+import { playStreakFanfare } from "@/lib/sound";
+import type { Dictionary } from "@/i18n/dictionaries";
 
 export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   levelAll: string;
@@ -16,11 +20,20 @@ export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   noCategoryCardsMessage: string;
   roundCompleteLabel: string; // template, contains literal "{correct}" and "{total}"
   playAgainButton: string;
+  streakToastLabel: string; // template, contains literal "{count}"
 }
 
 const ROUND_SIZE = 10;
+const STREAK_MILESTONE = 3;
+const STREAK_TOAST_MS = 1800;
 
-export default function FillBlankApp({ dict }: { dict: FillBlankAppDict }) {
+export default function FillBlankApp({
+  dict,
+  celebrationDict,
+}: {
+  dict: FillBlankAppDict;
+  celebrationDict: Dictionary["celebration"];
+}) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
@@ -30,6 +43,10 @@ export default function FillBlankApp({ dict }: { dict: FillBlankAppDict }) {
   const [result, setResult] = useState<RecallResult | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [complete, setComplete] = useState(false);
+  const [justComplete, setJustComplete] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [streakToast, setStreakToast] = useState<number | null>(null);
+  const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -54,6 +71,8 @@ export default function FillBlankApp({ dict }: { dict: FillBlankAppDict }) {
     setResult(null);
     setScore({ correct: 0, total: 0 });
     setComplete(false);
+    setJustComplete(false);
+    setStreak(0);
   }
 
   function selectCategory(next: FlashcardCategory) {
@@ -68,6 +87,7 @@ export default function FillBlankApp({ dict }: { dict: FillBlankAppDict }) {
     setCategory(null);
     setRound([]);
     setComplete(false);
+    setJustComplete(false);
   }
 
   function handleSubmit(answer: string) {
@@ -77,21 +97,48 @@ export default function FillBlankApp({ dict }: { dict: FillBlankAppDict }) {
     setScore((s) => ({ correct: s.correct + (outcome === "correct" ? 1 : 0), total: s.total + 1 }));
     const entry = recordSrsAnswer(card.id, outcome === "correct");
     setSrsMap((prev) => ({ ...prev, [card.id]: entry }));
+
+    const newStreak = outcome === "correct" ? streak + 1 : 0;
+    setStreak(newStreak);
+    if (outcome === "correct" && newStreak > 0 && newStreak % STREAK_MILESTONE === 0) {
+      playStreakFanfare();
+      setStreakToast(newStreak);
+      if (streakToastTimer.current) clearTimeout(streakToastTimer.current);
+      streakToastTimer.current = setTimeout(() => setStreakToast(null), STREAK_TOAST_MS);
+    }
   }
 
   function handleNext() {
     if (roundIndex + 1 >= round.length) {
       setComplete(true);
+      setJustComplete(true);
       return;
     }
     setRoundIndex((i) => i + 1);
     setResult(null);
   }
 
+  useEffect(() => {
+    return () => {
+      if (streakToastTimer.current) clearTimeout(streakToastTimer.current);
+    };
+  }, []);
+
   const inGrid = !category;
 
   return (
     <div>
+      {streakToast !== null && (
+        <StreakToast label={dict.streakToastLabel.replace("{count}", String(streakToast))} />
+      )}
+      <CelebrationModal
+        open={justComplete}
+        title={dict.roundCompleteLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
+        ctaLabel={celebrationDict.continueButton}
+        exclamations={celebrationDict.exclamations}
+        onClose={() => setJustComplete(false)}
+      />
+
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
         <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
       </div>

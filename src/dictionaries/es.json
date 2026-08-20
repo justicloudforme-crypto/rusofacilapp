@@ -14,7 +14,9 @@
     "cta": "Empezar ahora",
     "profile": "Mi perfil",
     "openMenu": "Abrir menú",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "soundOnLabel": "Sonido activado — pulsa para silenciar",
+    "soundOffLabel": "Sonido silenciado — pulsa para activar"
   },
   "intro": {
     "title": "Antes de tu primera lección",
@@ -337,6 +339,9 @@
     "publicProfileHeading": "Perfil público",
     "publicProfileDescription": "Muestra tu racha e insignias en un enlace público que puedes compartir.",
     "publicProfileToggleLabel": "Hacer mi perfil público",
+    "telegramHeading": "RusoFácilapp — comunidad oficial",
+    "telegramDescription": "Novedades, preguntas y contacto con otros estudiantes de ruso.",
+    "telegramCta": "Unirme al canal de Telegram",
     "changePasswordHeading": "Cambiar contraseña",
     "changePasswordDescription": "Introduce tu contraseña actual y elige una nueva.",
     "currentPasswordLabel": "Contraseña actual",
@@ -531,11 +536,13 @@
       "art": "Arte y Ocio",
       "society": "Sociedad y Noticias",
       "abstract": "Conceptos Abstractos",
-      "connectors": "Conectores y Muletillas",
+      "connectors": "Elementos básicos",
       "science": "Ciencia",
       "politics": "Política",
       "psychology": "Psicología",
-      "synonymsAntonyms": "Sinónimos y Antónimos"
+      "synonymsAntonyms": "Sinónimos y Antónimos",
+      "sport": "Deporte",
+      "law": "Derecho y ley"
     },
     "levelAll": "Todos",
     "tapToFlip": "Toca la tarjeta para voltearla",
@@ -563,6 +570,7 @@
       "noCategoryCardsMessage": "No hay frases para este filtro.",
       "roundCompleteLabel": "¡Ronda completa! {correct} de {total} correctas",
       "playAgainButton": "Otra ronda",
+      "streakToastLabel": "¡{count} seguidas!",
       "instructionLabel": "Completa la frase",
       "answerPlaceholder": "Tu respuesta...",
       "checkButton": "Comprobar",
@@ -589,6 +597,7 @@
       "noCategoryCardsMessage": "No hay tarjetas para este filtro.",
       "roundCompleteLabel": "¡Ronda completa! {correct} de {total} correctas",
       "playAgainButton": "Otra ronda",
+      "streakToastLabel": "¡{count} seguidas!",
       "promptEsToRu": "Escribe la palabra en ruso",
       "promptRuToEs": "Escribe la traducción en español",
       "answerPlaceholder": "Tu respuesta...",
@@ -620,6 +629,13 @@
       "paginationNext": "Adelante",
       "paginationInfo": "Página {current} de {total}"
     }
+  },
+  "celebration": {
+    "lessonPassedTitle": "¡Lección superada!",
+    "lessonPassedSubtitle": "Sigue así, cada lección te acerca a la fluidez.",
+    "continueButton": "Continuar",
+    "exclamations": ["¡Increíble!", "¡Muy bien!", "¡Sigue así!", "¡Eres un genio!", "¡Excelente!", "¡Lo lograste!"],
+    "consolationExclamations": ["¡Casi!", "Sigue practicando", "La próxima será", "Un pasito más", "Nadie es perfecto"]
   },
   "lesson": {
     "lessonLabel": "Lección",
