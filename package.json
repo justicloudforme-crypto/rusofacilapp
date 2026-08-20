@@ -34,6 +34,7 @@
     "check:media-embeds": "tsx prisma/check-media-embeds.ts",
     "generate:word-games": "tsx prisma/generate-word-games.ts",
     "check:grammar": "tsx prisma/check-grammar.ts",
+    "sync:to-production": "tsx prisma/sync-to-production.ts",
     "cap:sync": "cap sync",
     "cap:ios": "cap open ios",
     "cap:android": "cap open android"
