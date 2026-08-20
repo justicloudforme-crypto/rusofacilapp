@@ -113,7 +113,14 @@ export function buildSnakeWordSearch(
 ): { grid: WordGameGrid; words: WordPlacement[] } | null {
   // Longest-first, same reasoning as the straight placer: a long word has
   // fewer valid paths, so it should claim space before short ones compete.
-  const shuffled = shuffle(pool, rng).sort((a, b) => b.word.length - a.word.length);
+  // Windowed the same way word-search.ts's buildWordSearch is, and for the
+  // identical reason: sorting the whole pool by length made a level's few
+  // longest words win a slot in nearly every puzzle regardless of seed.
+  const shuffledPool = shuffle(pool, rng);
+  const windowSize = Math.min(shuffledPool.length, targetCount * 4);
+  const primary = shuffledPool.slice(0, windowSize).sort((a, b) => b.word.length - a.word.length);
+  const rest = shuffledPool.slice(windowSize).sort((a, b) => b.word.length - a.word.length);
+  const shuffled = [...primary, ...rest];
 
   const grid: string[][] = Array.from({ length: size }, () => Array(size).fill(""));
   const placements: WordPlacement[] = [];

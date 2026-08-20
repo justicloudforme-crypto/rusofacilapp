@@ -10,12 +10,12 @@ test.use({ viewport: { width: 390, height: 844 } });
 // itself doesn't change). Row/col are 0-indexed to match the grid; the DOM
 // exposes 1-indexed `row N col M` aria-labels (see CrosswordBoard.tsx).
 const CROSSWORD_WORDS: { word: string; row: number; col: number; direction: "E" | "S" }[] = [
-  { word: "завтра", row: 3, col: 4, direction: "E" },
-  { word: "бумага", row: 0, col: 5, direction: "S" },
-  { word: "жёлтый", row: 0, col: 7, direction: "S" },
-  { word: "январь", row: 0, col: 9, direction: "S" },
-  { word: "сестра", row: 5, col: 0, direction: "E" },
-  { word: "вопрос", row: 0, col: 0, direction: "S" },
+  { word: "завтра", row: 4, col: 4, direction: "E" },
+  { word: "язык", row: 3, col: 4, direction: "S" },
+  { word: "кухня", row: 3, col: 0, direction: "E" },
+  { word: "огурец", row: 1, col: 1, direction: "S" },
+  { word: "дождь", row: 1, col: 0, direction: "E" },
+  { word: "один", row: 0, col: 3, direction: "S" },
 ];
 
 async function fillCrossword(page: Page) {
@@ -39,7 +39,11 @@ test("crossword: full solve flow shows check feedback and the completion celebra
   // Type one wrong letter first — confirms the red incorrect-cell styling
   // actually round-trips through POST /check before we type the real
   // answers over it.
-  const firstCell = page.getByLabel("row 1 col 1", { exact: true });
+  // (0,3) 0-indexed — the start of "один" (row 0, col 3, direction S) in
+  // the current seeded content; not (0,0), which isn't an active cell in
+  // this grid (verified directly: filling it timed out waiting for a
+  // cell that doesn't exist).
+  const firstCell = page.getByLabel("row 1 col 4", { exact: true });
   await firstCell.fill("ю");
   await expect(firstCell).toHaveClass(/border-red-400/);
 

@@ -201,8 +201,19 @@ export function buildCrossword(
   let bestResult: ReturnType<typeof attemptBuild> | null = null;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
-    const ordered = shuffle(pool, rng).sort((a, b) => b.word.length - a.word.length);
-    const trimmedPool = ordered.slice(0, Math.max(targetWordCount * 3, targetWordCount + 10));
+    // Random window BEFORE the length sort, not after: slicing a
+    // pool that's already sorted by length just takes the pool's
+    // globally-longest words every time (shuffling only breaks ties
+    // within one exact length, and a level's rarest, longest words
+    // often have too few candidates to tie at all) — verified as a
+    // real content-diversity bug, one A1 word winning a slot in 9 of
+    // 20 crossword rungs regardless of seed. Picking the random
+    // window first, then sorting only that window by length, keeps
+    // the longest-first placement-order heuristic while letting which
+    // long words actually show up vary puzzle to puzzle.
+    const windowSize = Math.max(targetWordCount * 3, targetWordCount + 10);
+    const shuffledPool = shuffle(pool, rng);
+    const trimmedPool = shuffledPool.slice(0, Math.min(shuffledPool.length, windowSize)).sort((a, b) => b.word.length - a.word.length);
     const result = attemptBuild(trimmedPool, rng);
     const capped = { ...result, placements: result.placements.slice(0, targetWordCount) };
     if (!bestResult || capped.placements.length > bestResult.placements.length) {

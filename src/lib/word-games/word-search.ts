@@ -108,8 +108,23 @@ export function buildWordSearch(
 ): { grid: WordGameGrid; words: WordPlacement[] } | null {
   // Longest-first placement is far more likely to succeed than random
   // order — a long word has fewer valid positions, so it should claim
-  // grid space before the short, easy-to-fit ones compete for it.
-  const shuffled = shuffle(pool, rng).sort((a, b) => b.word.length - a.word.length);
+  // grid space before the short, easy-to-fit ones compete for it. But
+  // sorting the *entire* pool by length before picking is what a real
+  // content-diversity bug turned out to hinge on: the handful of longest
+  // words in a level's whole bank (e.g. A1 has only ~12 words at 11-12
+  // letters) would then win a placement slot in nearly every puzzle that
+  // needs long words, regardless of seed — verified directly, one word
+  // ("здравствуйте") appeared in 17 of 20 A1 rungs. Restricting the
+  // length-sort to a randomly-shuffled *window* (a few times targetCount)
+  // keeps the placement-order heuristic locally while letting which long
+  // words show up vary puzzle to puzzle; the untouched remainder is still
+  // appended (also length-sorted) as a fallback so a small/thin pool still
+  // reaches targetCount exactly as before.
+  const shuffledPool = shuffle(pool, rng);
+  const windowSize = Math.min(shuffledPool.length, targetCount * 4);
+  const primary = shuffledPool.slice(0, windowSize).sort((a, b) => b.word.length - a.word.length);
+  const rest = shuffledPool.slice(windowSize).sort((a, b) => b.word.length - a.word.length);
+  const shuffled = [...primary, ...rest];
 
   const grid: string[][] = Array.from({ length: size }, () => Array(size).fill(""));
   const placements: WordPlacement[] = [];
