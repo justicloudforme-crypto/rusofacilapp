@@ -9,6 +9,7 @@
     "stories": "Рассказы",
     "media": "Аудио и видео",
     "vocabulary": "Слова",
+    "wordGames": "Игры со словами",
     "groups": "Группы",
     "about": "О нас",
     "cta": "Начать сейчас",
@@ -631,6 +632,27 @@
       "paginationNext": "Вперёд",
       "paginationInfo": "Страница {current} из {total}"
     }
+  },
+  "wordGames": {
+    "title": "Игры со словами",
+    "subtitle": "Потренируй уже знакомые слова: филворд и кроссворд.",
+    "typeWordSearch": "Филворд",
+    "typeCrossword": "Кроссворд",
+    "chooseLevelLabel": "Уровень",
+    "puzzleLabel": "Головоломка {n}",
+    "completedBadge": "Пройдено",
+    "backToWordGames": "← К играм со словами",
+    "hintButton": "Подсказка",
+    "hintUsedNote": "В этой попытке использована подсказка.",
+    "wordsFoundLabel": "Найдено слов: {found}/{total}",
+    "cluesTitle": "Подсказки",
+    "acrossLabel": "По горизонтали",
+    "downLabel": "По вертикали",
+    "signInToSaveNote": "Войдите в аккаунт, чтобы сохранять прогресс в играх со словами.",
+    "solvedTitle": "Головоломка решена!",
+    "solvedSubtitle": "Отлично, ты справился с головоломкой.",
+    "playAgainButton": "Сыграть ещё раз",
+    "wrongCellHint": "Эта буква неверна, попробуй ещё раз."
   },
   "celebration": {
     "lessonPassedTitle": "Урок пройден!",

@@ -9,6 +9,7 @@
     "stories": "Cuentos",
     "media": "Audio y video",
     "vocabulary": "Vocabulario",
+    "wordGames": "Juegos de palabras",
     "groups": "Grupos",
     "about": "Nosotros",
     "cta": "Empezar ahora",
@@ -631,6 +632,27 @@
       "paginationNext": "Adelante",
       "paginationInfo": "Página {current} de {total}"
     }
+  },
+  "wordGames": {
+    "title": "Juegos de palabras",
+    "subtitle": "Practica el vocabulario que ya conoces con la sopa de letras y el crucigrama.",
+    "typeWordSearch": "Sopa de letras",
+    "typeCrossword": "Crucigrama",
+    "chooseLevelLabel": "Nivel",
+    "puzzleLabel": "Puzle {n}",
+    "completedBadge": "Completado",
+    "backToWordGames": "← Volver a los juegos de palabras",
+    "hintButton": "Pista",
+    "hintUsedNote": "Has usado una pista en este intento.",
+    "wordsFoundLabel": "Palabras encontradas: {found}/{total}",
+    "cluesTitle": "Pistas",
+    "acrossLabel": "Horizontal",
+    "downLabel": "Vertical",
+    "signInToSaveNote": "Inicia sesión para guardar tu progreso en los juegos de palabras.",
+    "solvedTitle": "¡Puzle resuelto!",
+    "solvedSubtitle": "Muy bien, has completado el puzle.",
+    "playAgainButton": "Jugar otro puzle",
+    "wrongCellHint": "Esa letra no es correcta, inténtalo de nuevo."
   },
   "celebration": {
     "lessonPassedTitle": "¡Lección superada!",

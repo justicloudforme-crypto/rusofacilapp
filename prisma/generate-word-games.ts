@@ -36,8 +36,9 @@ const db = new PrismaClient({ adapter });
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 
 // One rung per level, growing in grid size + word count — the "simple to
-// complex" progression the plan calls for. A student clears rung N before
-// rung N+1 unlocks (enforced by the app reading WordGameProgress, not here).
+// complex" progression the plan calls for. Self-paced like the rest of the
+// app (see src/lib/flashcards/level-progress.ts): every rung stays
+// playable, WordGameProgress only drives a completed-checkmark badge.
 const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 8, wordCount: 8 },
   { size: 10, wordCount: 10 },

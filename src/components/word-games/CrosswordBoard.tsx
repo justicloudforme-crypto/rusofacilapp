@@ -1,0 +1,295 @@
+"use client";
+
+import { useMemo, useRef, useState } from "react";
+import type { PublicCrosswordPuzzle, PublicCrosswordWord } from "@/lib/word-games/data";
+import {
+  buildCellWordMap,
+  cellsOfWord,
+  firstEmptyCellInWord,
+  isWordSolved,
+  nextCellInWord,
+  prevCellInWord,
+  resolveDirectionOnClick,
+  wordAt,
+  type Direction,
+} from "@/lib/word-games/crossword-input";
+import { playCorrectTone, playIncorrectTone } from "@/lib/sound";
+
+interface Dict {
+  hintButton: string;
+  cluesTitle: string;
+  acrossLabel: string;
+  downLabel: string;
+  wrongCellHint: string;
+}
+
+type CellStatus = "correct" | "incorrect" | undefined;
+
+export default function CrosswordBoard({
+  puzzle,
+  dict,
+  onHintUsed,
+  onSolved,
+}: {
+  puzzle: PublicCrosswordPuzzle;
+  dict: Dict;
+  onHintUsed: () => void;
+  onSolved: () => void;
+}) {
+  const cellWordMap = useMemo(() => buildCellWordMap(puzzle.words), [puzzle.words]);
+  const [guesses, setGuesses] = useState<Record<string, string>>({});
+  const [cellStatus, setCellStatus] = useState<Record<string, CellStatus>>({});
+  const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(null);
+  const [activeDirection, setActiveDirection] = useState<Direction | null>(null);
+  const solvedReported = useRef(false);
+  const inputRefs = useRef(new Map<string, HTMLInputElement>());
+
+  function focusCell(row: number, col: number) {
+    inputRefs.current.get(`${row},${col}`)?.focus();
+  }
+
+  async function runCheck(nextGuesses: Record<string, string>, soundCell?: { row: number; col: number }) {
+    const guessList = Object.entries(nextGuesses).map(([key, letter]) => {
+      const [row, col] = key.split(",").map(Number);
+      return { row, col, letter };
+    });
+    if (guessList.length === 0) return;
+
+    const res = await fetch("/api/word-games/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ puzzleId: puzzle.id, guesses: guessList }),
+    }).catch(() => null);
+    if (!res || !res.ok) return;
+    const data = (await res.json()) as { results: { row: number; col: number; correct: boolean }[]; solved: boolean };
+
+    const nextStatus: Record<string, CellStatus> = {};
+    for (const r of data.results) nextStatus[`${r.row},${r.col}`] = r.correct ? "correct" : "incorrect";
+    setCellStatus(nextStatus);
+
+    if (soundCell) {
+      const status = nextStatus[`${soundCell.row},${soundCell.col}`];
+      if (status === "correct") playCorrectTone();
+      else if (status === "incorrect") playIncorrectTone();
+    }
+
+    if (data.solved && !solvedReported.current) {
+      solvedReported.current = true;
+      onSolved();
+    }
+  }
+
+  function updateGuess(row: number, col: number, letter: string | undefined, soundCell?: { row: number; col: number }) {
+    setGuesses((prev) => {
+      const next = { ...prev };
+      const key = `${row},${col}`;
+      if (letter) next[key] = letter;
+      else delete next[key];
+      void runCheck(next, soundCell);
+      return next;
+    });
+  }
+
+  function activateCell(row: number, col: number) {
+    const direction = resolveDirectionOnClick(cellWordMap, row, col, activeDirection, activeCell);
+    setActiveCell({ row, col });
+    setActiveDirection(direction);
+  }
+
+  function handleCellClick(row: number, col: number) {
+    if (puzzle.blocked[row]?.[col]) return;
+    activateCell(row, col);
+    focusCell(row, col);
+  }
+
+  function handleChange(row: number, col: number, rawValue: string) {
+    const letter = rawValue.slice(-1);
+    if (!letter) return;
+    updateGuess(row, col, letter.toLowerCase(), { row, col });
+
+    const word = activeDirection ? wordAt(cellWordMap, row, col, activeDirection)?.word : null;
+    if (word) {
+      const next = nextCellInWord(word, row, col);
+      if (next) {
+        setActiveCell(next);
+        focusCell(next.row, next.col);
+      }
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>, row: number, col: number) {
+    if (e.key !== "Backspace") return;
+    e.preventDefault();
+    const key = `${row},${col}`;
+    if (guesses[key]) {
+      updateGuess(row, col, undefined);
+      return;
+    }
+    const word = activeDirection ? wordAt(cellWordMap, row, col, activeDirection)?.word : null;
+    if (!word) return;
+    const prev = prevCellInWord(word, row, col);
+    if (prev) {
+      updateGuess(prev.row, prev.col, undefined);
+      setActiveCell(prev);
+      focusCell(prev.row, prev.col);
+    }
+  }
+
+  function handleClueClick(word: PublicCrosswordWord) {
+    setActiveDirection(word.direction as Direction);
+    const cell = firstEmptyCellInWord(word, new Map(Object.entries(guesses))) ?? cellsOfWord(word)[0];
+    setActiveCell(cell);
+    focusCell(cell.row, cell.col);
+  }
+
+  function handleHint() {
+    if (!activeCell) return;
+    const key = `${activeCell.row},${activeCell.col}`;
+    if (guesses[key]) return;
+    void fetch("/api/word-games/hint", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ puzzleId: puzzle.id, row: activeCell.row, col: activeCell.col }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { row: number; col: number; letter: string } | null) => {
+        if (!data) return;
+        onHintUsed();
+        updateGuess(data.row, data.col, data.letter);
+      });
+  }
+
+  const correctCells = useMemo(() => {
+    const set = new Set<string>();
+    for (const [key, status] of Object.entries(cellStatus)) if (status === "correct") set.add(key);
+    return set;
+  }, [cellStatus]);
+  const activeWord = activeCell && activeDirection ? wordAt(cellWordMap, activeCell.row, activeCell.col, activeDirection)?.word : null;
+  const activeWordCells = activeWord ? new Set(cellsOfWord(activeWord).map((c) => `${c.row},${c.col}`)) : new Set<string>();
+
+  return (
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <div
+        className="grid w-fit gap-0.5"
+        style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(0, 1fr))` }}
+        role="grid"
+        aria-label="crossword"
+      >
+        {puzzle.blocked.map((rowCells, row) =>
+          rowCells.map((isBlocked, col) => {
+            if (isBlocked) {
+              return <div key={`${row},${col}`} className="h-9 w-9 sm:h-10 sm:w-10" aria-hidden />;
+            }
+            const key = `${row},${col}`;
+            const number = puzzle.words.find((w) => w.row === row && w.col === col)?.number;
+            const status = cellStatus[key];
+            const isActive = activeCell?.row === row && activeCell?.col === col;
+            const inActiveWord = activeWordCells.has(key);
+            return (
+              <div key={key} className="relative">
+                {number ? (
+                  <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] font-semibold text-foreground/40">
+                    {number}
+                  </span>
+                ) : null}
+                <input
+                  ref={(el) => {
+                    if (el) inputRefs.current.set(key, el);
+                    else inputRefs.current.delete(key);
+                  }}
+                  value={guesses[key]?.toUpperCase() ?? ""}
+                  maxLength={1}
+                  inputMode="text"
+                  aria-label={`row ${row + 1} col ${col + 1}`}
+                  title={status === "incorrect" ? dict.wrongCellHint : undefined}
+                  onClick={() => handleCellClick(row, col)}
+                  onFocus={() => activateCell(row, col)}
+                  onChange={(e) => handleChange(row, col, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, row, col)}
+                  className={`h-9 w-9 border text-center text-sm font-semibold uppercase focus:outline-none sm:h-10 sm:w-10 ${
+                    status === "correct"
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                      : status === "incorrect"
+                        ? "border-red-400 bg-red-400/10 text-red-600 dark:text-red-400"
+                        : isActive
+                          ? "border-foreground bg-foreground/5"
+                          : inActiveWord
+                            ? "border-foreground/40 bg-foreground/[0.03]"
+                            : "border-black/15 dark:border-white/20"
+                  }`}
+                />
+              </div>
+            );
+          }),
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-4">
+        <button
+          type="button"
+          onClick={handleHint}
+          disabled={!activeCell}
+          className="w-fit rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
+        >
+          {dict.hintButton}
+        </button>
+
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+            {dict.acrossLabel}
+          </h2>
+          <ClueList
+            words={puzzle.words.filter((w) => w.direction === "E")}
+            correctCells={correctCells}
+            activeWord={activeWord}
+            onClick={handleClueClick}
+          />
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">{dict.downLabel}</h2>
+          <ClueList
+            words={puzzle.words.filter((w) => w.direction === "S")}
+            correctCells={correctCells}
+            activeWord={activeWord}
+            onClick={handleClueClick}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClueList({
+  words,
+  correctCells,
+  activeWord,
+  onClick,
+}: {
+  words: PublicCrosswordWord[];
+  correctCells: Set<string>;
+  activeWord: PublicCrosswordWord | null | undefined;
+  onClick: (word: PublicCrosswordWord) => void;
+}) {
+  return (
+    <ol className="mt-2 flex flex-col gap-1.5 text-sm">
+      {words.map((word) => {
+        const solved = isWordSolved(word, correctCells);
+        const isActive = activeWord === word;
+        return (
+          <li key={`${word.direction}-${word.number}`}>
+            <button
+              type="button"
+              onClick={() => onClick(word)}
+              className={`flex w-full items-start gap-2 rounded-lg px-2 py-1 text-left transition-colors ${
+                isActive ? "bg-foreground/10" : "hover:bg-foreground/5"
+              } ${solved ? "text-emerald-600 line-through dark:text-emerald-400" : ""}`}
+            >
+              <span className="font-semibold">{word.number}.</span>
+              <span>{word.clue}</span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
