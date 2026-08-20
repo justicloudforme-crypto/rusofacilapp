@@ -1,6 +1,5 @@
 import "server-only";
 import { db } from "./db";
-import { getUserStreakStats } from "./streaks";
 import { getLevelProgress } from "./progress";
 import { levelSlugs } from "./courses";
 import { isAvatarId, DEFAULT_AVATAR_ID, type AvatarId } from "./avatars";
@@ -22,7 +21,7 @@ export function isPlausibleGroupInviteCode(value: string): boolean {
 export const MAX_GROUP_NAME_LENGTH = 60;
 // A study group is meant to be a small circle (a class, a few friends),
 // not a public leaderboard — this cap keeps the per-member Promise.all in
-// getGroupLeaderboard cheap and keeps a group from being (ab)used as an
+// getGroupForMember cheap and keeps a group from being (ab)used as an
 // open community.
 export const MAX_GROUP_MEMBERS = 30;
 // Defensive cap against one account spinning up unlimited groups; a real
@@ -138,8 +137,12 @@ export interface GroupMemberStanding {
   avatarId: AvatarId;
   isOwner: boolean;
   currentLevel: string | null;
-  currentStreak: number;
-  longestStreak: number;
+  /** Sum of completed lessons across every level — the leaderboard's
+   * ranking metric. Not a stored counter: computed fresh from
+   * LessonProgress on every read via getLevelProgress, same as
+   * currentLevel below — consistent with this file's existing "no extra
+   * storage for a small, invite-only leaderboard" approach. */
+  completedLessons: number;
 }
 
 export interface GroupDetail {
@@ -167,26 +170,23 @@ export async function getGroupForMember(userId: string, groupId: string): Promis
 
   const members = await Promise.all(
     group.members.map(async ({ user }): Promise<GroupMemberStanding> => {
-      const [progress, streak] = await Promise.all([
-        getLevelProgress(user.id),
-        getUserStreakStats(user.id),
-      ]);
+      const progress = await getLevelProgress(user.id);
       const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0) ?? null;
+      const completedLessons = levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0);
       return {
         userId: user.id,
         name: user.name,
         avatarId: isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID,
         isOwner: user.id === group.ownerUserId,
         currentLevel,
-        currentStreak: streak.currentStreak,
-        longestStreak: streak.longestStreak,
+        completedLessons,
       };
     }),
   );
 
-  // Most active first — the whole point of a shared leaderboard is a
+  // Most progress first — the whole point of a shared leaderboard is a
   // gentle nudge toward the top, so ordering carries real meaning here.
-  members.sort((a, b) => b.currentStreak - a.currentStreak);
+  members.sort((a, b) => b.completedLessons - a.completedLessons);
 
   return { id: group.id, name: group.name, inviteCode: group.inviteCode, ownerUserId: group.ownerUserId, members };
 }

@@ -79,8 +79,8 @@ export default async function GroupDetailPage({
                 </p>
               </div>
               <span className="flex flex-shrink-0 items-center gap-1 tabular-nums text-foreground/70">
-                {member.currentStreak > 0 && <span aria-hidden="true">🔥</span>}
-                {member.currentStreak}
+                {member.completedLessons > 0 && <span aria-hidden="true">📚</span>}
+                {member.completedLessons}
               </span>
             </div>
           ))}
