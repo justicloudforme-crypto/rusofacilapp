@@ -29,6 +29,7 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
       description: item.description,
       level: item.level,
       category: item.category,
+      youtubeVideoId: item.youtubeVideoId,
     }));
 
   return (

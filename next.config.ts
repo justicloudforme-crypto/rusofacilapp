@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
   // (e.g. VS Code's Simple Browser/webview) presents when proxying
   // localhost, hit the same 403-all-chunks failure mode from here too.
   allowedDevOrigins: ["192.168.1.69", "0.0.0.0"],
+  // Static YouTube thumbnail hosts for the /media catalog cards
+  // (img.youtube.com/vi/{id}/mqdefault.jpg) — no API call, just a plain
+  // static image URL YouTube serves for any public video.
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "img.youtube.com" }],
+  },
 };
 
 // Run `ANALYZE=true npm run build` to get an interactive treemap of the

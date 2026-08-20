@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { mediaLevels, mediaCategories, type MediaLevel, type MediaCategory } from "@/lib/media/types";
 import LevelBadge from "@/components/LevelBadge";
 
@@ -11,6 +12,7 @@ export interface MediaSummary {
   description: string;
   level: MediaLevel;
   category: MediaCategory;
+  youtubeVideoId: string;
 }
 
 export interface MediaCatalogDict {
@@ -119,19 +121,33 @@ export default function MediaCatalog({
             <Link
               key={item.id}
               href={`/${lang}/media/${item.id}`}
-              className="group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 dark:border-white/10"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 dark:border-white/10"
             >
-              <div className="flex items-center justify-between gap-2">
-                <LevelBadge level={item.level} />
-                <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/70">
-                  {categoryLabels[item.category]}
+              <div className="relative aspect-video w-full overflow-hidden bg-foreground/5">
+                {/* Static YouTube-hosted thumbnail (img.youtube.com) — no
+                    API call, no re-hosting, same "read-only, no runtime
+                    generation" spirit as the rest of this catalog. */}
+                <Image
+                  src={`https://img.youtube.com/vi/${item.youtubeVideoId}/mqdefault.jpg`}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-200 group-hover:scale-105"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-6">
+                <div className="flex items-center justify-between gap-2">
+                  <LevelBadge level={item.level} />
+                  <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/70">
+                    {categoryLabels[item.category]}
+                  </span>
+                </div>
+                <h2 className="mt-3 text-lg font-medium">{item.title}</h2>
+                <p className="mt-2 line-clamp-2 text-sm text-foreground/70">{item.description}</p>
+                <span className="mt-4 text-sm font-medium text-foreground/70 group-hover:text-foreground">
+                  {dict.openButton} →
                 </span>
               </div>
-              <h2 className="mt-3 text-lg font-medium">{item.title}</h2>
-              <p className="mt-2 line-clamp-2 text-sm text-foreground/70">{item.description}</p>
-              <span className="mt-4 text-sm font-medium text-foreground/70 group-hover:text-foreground">
-                {dict.openButton} →
-              </span>
             </Link>
           ))}
         </div>
