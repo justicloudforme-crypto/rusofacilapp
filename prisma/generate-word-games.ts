@@ -49,6 +49,14 @@ const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 // Rungs 6-10 instead keep growing difficulty through word DENSITY (more
 // words packed into the same 16x16 grid) — real replay content, not just a
 // visual re-skin of rung 5, and still comfortable to play.
+// Rungs 11-20 are a second "lap" at the 16x16 ceiling — each still draws a
+// fresh, independently-seeded random subset of the level's word pool (see
+// generation.ts's makeRng, keyed on `${type}-${level}-${sequence}`), so
+// these aren't reruns of rungs 1-10 with a new number slapped on; they're
+// genuinely different puzzles. wordCount deliberately doesn't just keep
+// climbing past rung 10 (real replay content shouldn't feel like an
+// infinite grind toward a bigger number) — it varies non-monotonically so
+// consecutive rungs feel distinct rather than a flat continuation.
 const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 8, wordCount: 8 },
   { size: 10, wordCount: 10 },
@@ -60,11 +68,22 @@ const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 16, wordCount: 22 },
   { size: 16, wordCount: 24 },
   { size: 16, wordCount: 26 },
+  { size: 16, wordCount: 17 },
+  { size: 16, wordCount: 25 },
+  { size: 16, wordCount: 19 },
+  { size: 16, wordCount: 23 },
+  { size: 16, wordCount: 21 },
+  { size: 16, wordCount: 18 },
+  { size: 16, wordCount: 26 },
+  { size: 16, wordCount: 20 },
+  { size: 16, wordCount: 24 },
+  { size: 16, wordCount: 22 },
 ];
 
-// Expert/★ tier, appended after the 10 straight rungs as sequence 11-13 —
-// same picker grid, just badged, not a separate type/tab (see the plan
-// this shipped from). Kept smaller than the straight rungs' word counts:
+// Expert/★ tier, appended right after WORD_SEARCH_RUNGS (currently
+// starting at sequence 21) — same picker grid, just badged, not a separate
+// type/tab (see the plan this shipped from). Kept smaller than the
+// straight rungs' word counts:
 // a bending path uses more of its own "personal space" (can't run
 // adjacent to itself) than a straight line does, so packing as many
 // curved words into one grid is inherently harder.
@@ -72,6 +91,11 @@ const WORD_SEARCH_STAR_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 10, wordCount: 6 },
   { size: 12, wordCount: 8 },
   { size: 14, wordCount: 10 },
+  { size: 10, wordCount: 7 },
+  { size: 12, wordCount: 9 },
+  { size: 14, wordCount: 11 },
+  { size: 16, wordCount: 12 },
+  { size: 16, wordCount: 14 },
 ];
 
 // Crosswords need more candidate words per target than word search does
@@ -88,6 +112,9 @@ const WORD_SEARCH_STAR_RUNGS: Array<{ size: number; wordCount: number }> = [
 // would force a very wide/tall grid on its own. Rungs 6-10 grow difficulty
 // through word count instead (more intersecting entries, same per-word
 // length ceiling), which grows the grid gradually rather than in one leap.
+// Rungs 11-20, same "second lap" rationale as WORD_SEARCH_RUNGS above —
+// fresh seeded word subsets, non-monotonic wordCount/maxLen so each rung
+// reads as its own puzzle rather than a mechanical continuation of 1-10.
 const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
   { wordCount: 6, maxLen: 6 },
   { wordCount: 8, maxLen: 7 },
@@ -99,6 +126,16 @@ const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
   { wordCount: 20, maxLen: 12 },
   { wordCount: 22, maxLen: 12 },
   { wordCount: 24, maxLen: 12 },
+  { wordCount: 16, maxLen: 8 },
+  { wordCount: 26, maxLen: 12 },
+  { wordCount: 18, maxLen: 9 },
+  { wordCount: 28, maxLen: 12 },
+  { wordCount: 20, maxLen: 10 },
+  { wordCount: 22, maxLen: 11 },
+  { wordCount: 14, maxLen: 7 },
+  { wordCount: 25, maxLen: 12 },
+  { wordCount: 21, maxLen: 10 },
+  { wordCount: 24, maxLen: 11 },
 ];
 
 async function upsertPuzzle(

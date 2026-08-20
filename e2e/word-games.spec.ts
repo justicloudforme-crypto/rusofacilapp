@@ -236,9 +236,10 @@ test("word search: diagonal words are findable and each found word gets a distin
 test("word search: ★ expert puzzle can be solved by clicking through a bent word, and a wrong click can be canceled", async ({
   page,
 }) => {
-  // Sequence 11 is the first curved/★ rung for every level (see
-  // WORD_SEARCH_STAR_RUNGS in prisma/generate-word-games.ts).
-  await page.goto("/es/word-games/WORD_SEARCH/A1/11");
+  // The star tier is appended right after WORD_SEARCH_RUNGS, so its first
+  // sequence number is WORD_SEARCH_RUNGS.length + 1 (see
+  // prisma/generate-word-games.ts) — currently 21.
+  await page.goto("/es/word-games/WORD_SEARCH/A1/21");
 
   await expect(page.getByText("★")).toBeVisible();
 
