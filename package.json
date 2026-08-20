@@ -33,6 +33,7 @@
     "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts",
     "check:media-embeds": "tsx prisma/check-media-embeds.ts",
     "generate:word-games": "tsx prisma/generate-word-games.ts",
+    "check:grammar": "tsx prisma/check-grammar.ts",
     "cap:sync": "cap sync",
     "cap:ios": "cap open ios",
     "cap:android": "cap open android"
