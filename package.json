@@ -21,6 +21,7 @@
     "db:seed-glossary": "tsx prisma/seed-glossary.ts",
     "db:glossary-coverage-report": "tsx prisma/glossary-coverage-report.ts",
     "db:vocabulary-audit": "tsx prisma/vocabulary-idioms-audit.ts",
+    "db:check-typos": "tsx prisma/check-typos.ts",
     "db:add-flashcards": "tsx prisma/add-flashcards.ts",
     "db:add-idioms": "tsx prisma/add-idioms.ts",
     "lint:stories": "tsx prisma/story-structure-lint.ts",
