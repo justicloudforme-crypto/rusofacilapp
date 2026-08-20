@@ -90,15 +90,22 @@ const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 16, wordCount: 18 },
   { size: 16, wordCount: 24 },
   { size: 16, wordCount: 20 },
+  // Beyond this point (rung 31+, toward the 1000-puzzle target), hand-
+  // curating another 50+ literal entries adds no real value: actual word
+  // *content* diversity comes entirely from word-search.ts's per-seed
+  // randomized selection window (see its own doc comment), not from this
+  // number — a formula that keeps producing a varied, non-monotonic
+  // wordCount is exactly as good as another wall of literal objects, and
+  // far less error-prone to extend further later. See extraWordSearchRungs.
+  ...extraWordSearchRungs(54),
 ];
 
-// Expert/★ tier, appended right after WORD_SEARCH_RUNGS (currently
-// starting at sequence 31) — same picker grid, just badged, not a separate
-// type/tab (see the plan this shipped from). Kept smaller than the
-// straight rungs' word counts:
-// a bending path uses more of its own "personal space" (can't run
-// adjacent to itself) than a straight line does, so packing as many
-// curved words into one grid is inherently harder.
+// Expert/★ tier, appended right after WORD_SEARCH_RUNGS — same picker
+// grid, just badged, not a separate type/tab (see the plan this shipped
+// from). Kept smaller than the straight rungs' word counts: a bending
+// path uses more of its own "personal space" (can't run adjacent to
+// itself) than a straight line does, so packing as many curved words
+// into one grid is inherently harder.
 const WORD_SEARCH_STAR_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 10, wordCount: 6 },
   { size: 12, wordCount: 8 },
@@ -112,6 +119,9 @@ const WORD_SEARCH_STAR_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 12, wordCount: 8 },
   { size: 14, wordCount: 10 },
   { size: 16, wordCount: 13 },
+  // See extraStarRungs — same "formula beats another wall of literals"
+  // reasoning as extraWordSearchRungs above.
+  ...extraStarRungs(20),
 ];
 
 // Crosswords need more candidate words per target than word search does
@@ -167,7 +177,65 @@ const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
   { wordCount: 19, maxLen: 11 },
   { wordCount: 23, maxLen: 12 },
   { wordCount: 13, maxLen: 9 },
+  // See extraCrosswordRungs — same reasoning as the two functions above.
+  ...extraCrosswordRungs(54),
 ];
+
+/** Generates additional straight-tier word-search rungs beyond the
+ * hand-curated ramp above, all at the 16x16 mobile-comfortable ceiling
+ * (see WORD_SEARCH_RUNGS's own doc comment for why grid size stops
+ * growing there). wordCount cycles in a triangle wave between 16 and 28
+ * so consecutive generated rungs still read as distinct puzzles instead
+ * of repeating one flat target count. */
+function extraWordSearchRungs(count: number): Array<{ size: number; wordCount: number }> {
+  const min = 16;
+  const max = 28;
+  const period = (max - min) * 2;
+  const rungs: Array<{ size: number; wordCount: number }> = [];
+  for (let i = 0; i < count; i++) {
+    const t = i % period;
+    const wordCount = t <= max - min ? min + t : min + (period - t);
+    rungs.push({ size: 16, wordCount });
+  }
+  return rungs;
+}
+
+/** Same idea for the curved/★ tier — cycles through the size band the
+ * hand-curated entries already established, with wordCount kept in the
+ * same "size-4 to size-2" density this tier has used throughout (a
+ * bending path needs more of its own personal space than a straight
+ * line, so it can't pack as densely as the straight rungs). */
+function extraStarRungs(count: number): Array<{ size: number; wordCount: number }> {
+  const sizes = [10, 12, 14, 16, 16];
+  const rungs: Array<{ size: number; wordCount: number }> = [];
+  for (let i = 0; i < count; i++) {
+    const size = sizes[i % sizes.length];
+    const wordCount = Math.max(6, size - 4 + (i % 3));
+    rungs.push({ size, wordCount });
+  }
+  return rungs;
+}
+
+/** Same idea for crossword — wordCount cycles in a triangle wave (kept
+ * within the range the hand-curated rungs already established, see the
+ * comment on the third lap above for why it doesn't climb past ~28:
+ * more words means a sprawlier, not squarer, grid), maxLen cycles
+ * through the same 6-12 band independently so the two don't move in
+ * lockstep. */
+function extraCrosswordRungs(count: number): Array<{ wordCount: number; maxLen: number }> {
+  const wcMin = 8;
+  const wcMax = 28;
+  const wcPeriod = (wcMax - wcMin) * 2;
+  const maxLens = [6, 7, 8, 9, 10, 11, 12];
+  const rungs: Array<{ wordCount: number; maxLen: number }> = [];
+  for (let i = 0; i < count; i++) {
+    const t = i % wcPeriod;
+    const wordCount = t <= wcMax - wcMin ? wcMin + t : wcMin + (wcPeriod - t);
+    const maxLen = maxLens[i % maxLens.length];
+    rungs.push({ wordCount, maxLen });
+  }
+  return rungs;
+}
 
 async function upsertPuzzle(
   type: "WORD_SEARCH" | "CROSSWORD",
@@ -232,12 +300,28 @@ async function main() {
       where: { level },
       select: { russian: true, translationEs: true, exampleEs: true },
     });
-    const crosswordClueForLevel = (card: { translationEs: string; exampleEs: string }) => buildClue(level, card);
+    const crosswordClueForLevel = (card: { translationEs: string; exampleEs: string }, word: string) => buildClue(level, card, word);
     // WORD_SEARCH never masks — unlike a crossword, there's no blank to
     // spoil (the letters are already fully visible in the grid), so a
     // masked example sentence there is just confusing, not protective.
     // Direct translation is a straightforward vocabulary aid instead.
     const wordSearchClue = (card: { translationEs: string }) => card.translationEs;
+
+    // Tracks how many times each word has already been placed across this
+    // level's rungs so far — shared between the straight and star tiers
+    // (both draw from the same word-search word bank) but a separate map
+    // per level, and a separate one again for crossword below (a word
+    // being overused in one game type says nothing about the other, since
+    // each has its own eligible pool per rung). Threaded into every
+    // build*() call so their windowed-random selection can deprioritize
+    // an already-overused word instead of drawing on it again with no
+    // memory of prior rungs — see word-search.ts's buildWordSearch doc
+    // comment for why the windowing fix alone wasn't enough at this scale.
+    const wordSearchUsage = new Map<string, number>();
+    const crosswordUsage = new Map<string, number>();
+    function recordUsage(usage: Map<string, number>, words: { word: string }[]) {
+      for (const w of words) usage.set(w.word, (usage.get(w.word) ?? 0) + 1);
+    }
 
     for (let rungIndex = 0; rungIndex < WORD_SEARCH_RUNGS.length; rungIndex++) {
       const sequence = rungIndex + 1;
@@ -258,7 +342,7 @@ async function main() {
         continue;
       }
 
-      const built = buildWordSearchWithGrowth(pool, rung.size, rung.wordCount, `WORD_SEARCH-${level}-${sequence}`);
+      const built = buildWordSearchWithGrowth(pool, rung.size, rung.wordCount, `WORD_SEARCH-${level}-${sequence}`, wordSearchUsage);
       if (!built) {
         problems.push(`WORD_SEARCH ${level} seq ${sequence}: generator could not place enough words, skipped`);
         continue;
@@ -269,6 +353,7 @@ async function main() {
         );
       }
 
+      recordUsage(wordSearchUsage, built.words);
       await upsertPuzzle("WORD_SEARCH", level, sequence, false, built, counters);
       console.log(`  [WORD_SEARCH/${level}/${sequence}] ${built.words.length} words in a ${built.grid.size}x${built.grid.size} grid`);
     }
@@ -288,7 +373,13 @@ async function main() {
         continue;
       }
 
-      const built = buildSnakeWordSearchWithGrowth(pool, rung.size, rung.wordCount, `WORD_SEARCH_STAR-${level}-${sequence}`);
+      const built = buildSnakeWordSearchWithGrowth(
+        pool,
+        rung.size,
+        rung.wordCount,
+        `WORD_SEARCH_STAR-${level}-${sequence}`,
+        wordSearchUsage
+      );
       if (!built) {
         problems.push(`WORD_SEARCH★ ${level} seq ${sequence}: generator could not place enough curved words, skipped`);
         continue;
@@ -299,6 +390,7 @@ async function main() {
         );
       }
 
+      recordUsage(wordSearchUsage, built.words);
       await upsertPuzzle("WORD_SEARCH", level, sequence, true, built, counters);
       console.log(`  [WORD_SEARCH★/${level}/${sequence}] ${built.words.length} curved words in a ${built.grid.size}x${built.grid.size} grid`);
     }
@@ -315,12 +407,13 @@ async function main() {
       }
 
       const minWords = Math.min(rung.wordCount, 6);
-      const built = buildCrossword(pool, rung.wordCount, minWords, rng);
+      const built = buildCrossword(pool, rung.wordCount, minWords, rng, 6, crosswordUsage);
       if (!built) {
         problems.push(`CROSSWORD ${level} seq ${sequence}: generator could not reach ${minWords} intersecting words, skipped`);
         continue;
       }
 
+      recordUsage(crosswordUsage, built.words);
       await upsertPuzzle("CROSSWORD", level, sequence, false, built, counters);
       console.log(
         `  [CROSSWORD/${level}/${sequence}] ${built.words.length} words in a ${built.grid.grid.length}x${built.grid.grid[0].length} grid`

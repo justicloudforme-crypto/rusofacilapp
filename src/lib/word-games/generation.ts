@@ -43,7 +43,7 @@ export interface WordCandidate {
 export function candidateWords(
   cards: { russian: string; translationEs: string; exampleEs: string }[],
   maxLen: number,
-  buildClue: (card: { translationEs: string; exampleEs: string }) => string | null,
+  buildClue: (card: { translationEs: string; exampleEs: string }, word: string) => string | null,
   minLen = 3
 ): WordCandidate[] {
   const seen = new Set<string>();
@@ -53,7 +53,7 @@ export function candidateWords(
     if (!SINGLE_CYRILLIC_WORD.test(word)) continue;
     if (word.length < minLen || word.length > maxLen) continue;
     if (seen.has(word)) continue;
-    const clue = buildClue(card);
+    const clue = buildClue(card, word);
     // No good clue for this level (e.g. a masked-example clue that
     // couldn't locate the word in its own example sentence) — skip the
     // word rather than ship a broken or spoiling clue.

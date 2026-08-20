@@ -104,7 +104,8 @@ export function buildWordSearch(
   pool: WordCandidate[],
   size: number,
   targetCount: number,
-  rng: () => number
+  rng: () => number,
+  usage?: Map<string, number>
 ): { grid: WordGameGrid; words: WordPlacement[] } | null {
   // Longest-first placement is far more likely to succeed than random
   // order — a long word has fewer valid positions, so it should claim
@@ -120,10 +121,26 @@ export function buildWordSearch(
   // words show up vary puzzle to puzzle; the untouched remainder is still
   // appended (also length-sorted) as a fallback so a small/thin pool still
   // reaches targetCount exactly as before.
+  //
+  // Windowing alone still left a residual bias once puzzle *counts* grew
+  // large: a level's one-and-only 13-letter word still lands in the
+  // random window a fixed fraction of the time every single rung, with no
+  // memory of how often it already won — verified directly at 116 rungs,
+  // one A1 word appeared in 25 of them. `usage` (optional, populated by
+  // the caller across a whole level's rungs — see generate-word-games.ts)
+  // fixes this the same way tryPlaceWord already balances *direction*
+  // usage: stable-sort the shuffled pool by ascending usage count first,
+  // so an already-overused word sinks toward the tail before the window
+  // is even taken, and a candidate with real alternatives at its length
+  // rotates in instead. When usage is omitted every count is 0, so this
+  // sort is a no-op and behavior is identical to before.
   const shuffledPool = shuffle(pool, rng);
-  const windowSize = Math.min(shuffledPool.length, targetCount * 4);
-  const primary = shuffledPool.slice(0, windowSize).sort((a, b) => b.word.length - a.word.length);
-  const rest = shuffledPool.slice(windowSize).sort((a, b) => b.word.length - a.word.length);
+  const byUsage = usage
+    ? shuffledPool.slice().sort((a, b) => (usage.get(a.word) ?? 0) - (usage.get(b.word) ?? 0))
+    : shuffledPool;
+  const windowSize = Math.min(byUsage.length, targetCount * 4);
+  const primary = byUsage.slice(0, windowSize).sort((a, b) => b.word.length - a.word.length);
+  const rest = byUsage.slice(windowSize).sort((a, b) => b.word.length - a.word.length);
   const shuffled = [...primary, ...rest];
 
   const grid: string[][] = Array.from({ length: size }, () => Array(size).fill(""));
@@ -165,13 +182,14 @@ export function buildWordSearchWithGrowth(
   pool: WordCandidate[],
   baseSize: number,
   targetCount: number,
-  seedPrefix: string
+  seedPrefix: string,
+  usage?: Map<string, number>
 ): { grid: WordGameGrid; words: WordPlacement[] } | null {
   const maxSize = baseSize + 10;
   let best: { grid: WordGameGrid; words: WordPlacement[] } | null = null;
   for (let size = baseSize; size <= maxSize; size += 2) {
     const rng = makeRng(`${seedPrefix}-grow${size}`);
-    const built = buildWordSearch(pool, size, targetCount, rng);
+    const built = buildWordSearch(pool, size, targetCount, rng, usage);
     if (built && (!best || built.words.length > best.words.length)) best = built;
     if (built && built.words.length >= targetCount) return built;
   }

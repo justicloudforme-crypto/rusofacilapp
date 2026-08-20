@@ -67,15 +67,30 @@ function maskedExampleClue(translationEs: string, exampleEs: string): string | n
   return null;
 }
 
+/** True if `clue` spells out `word` (the actual Cyrillic answer) as a
+ * standalone token, not just a substring of some unrelated longer word —
+ * a real bug found during a content audit: a couple of FlashcardCards for
+ * grammatically irregular words ("нравится", "больно") have a
+ * `translationEs` that includes a parenthetical usage note spelling out
+ * the Russian word itself (e.g. "gustar (construcción impersonal: мне
+ * нравится = me gusta)") — genuinely useful as a vocabulary aid where
+ * translationEs is shown deliberately (word search always shows it), but
+ * it hands a crossword player the exact answer outright. */
+function clueLeaksWord(clue: string, word: string): boolean {
+  const pattern = new RegExp(`(^|[^а-яё])${escapeRegExp(word)}([^а-яё]|$)`, "i");
+  return pattern.test(clue);
+}
+
 /** Builds the clue for one FlashcardCard at a given level, or null if no
  * good clue could be built (caller should exclude the word as a
  * candidate rather than ship a broken/spoiling clue). */
 export function buildClue(
   level: string,
-  card: { translationEs: string; exampleEs: string }
+  card: { translationEs: string; exampleEs: string },
+  word: string
 ): string | null {
   if (level === "A1" || level === "A2") {
-    return card.translationEs;
+    return clueLeaksWord(card.translationEs, word) ? null : card.translationEs;
   }
   return maskedExampleClue(card.translationEs, card.exampleEs);
 }

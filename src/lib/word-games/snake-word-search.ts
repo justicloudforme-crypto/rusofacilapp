@@ -109,17 +109,25 @@ export function buildSnakeWordSearch(
   pool: WordCandidate[],
   size: number,
   targetCount: number,
-  rng: () => number
+  rng: () => number,
+  usage?: Map<string, number>
 ): { grid: WordGameGrid; words: WordPlacement[] } | null {
   // Longest-first, same reasoning as the straight placer: a long word has
   // fewer valid paths, so it should claim space before short ones compete.
   // Windowed the same way word-search.ts's buildWordSearch is, and for the
   // identical reason: sorting the whole pool by length made a level's few
   // longest words win a slot in nearly every puzzle regardless of seed.
+  // `usage` (optional, tracked across a whole level's rungs by the caller)
+  // deprioritizes already-overused words the same way — see
+  // buildWordSearch's doc comment for the full story and why an omitted
+  // usage map is a no-op that preserves prior behavior exactly.
   const shuffledPool = shuffle(pool, rng);
-  const windowSize = Math.min(shuffledPool.length, targetCount * 4);
-  const primary = shuffledPool.slice(0, windowSize).sort((a, b) => b.word.length - a.word.length);
-  const rest = shuffledPool.slice(windowSize).sort((a, b) => b.word.length - a.word.length);
+  const byUsage = usage
+    ? shuffledPool.slice().sort((a, b) => (usage.get(a.word) ?? 0) - (usage.get(b.word) ?? 0))
+    : shuffledPool;
+  const windowSize = Math.min(byUsage.length, targetCount * 4);
+  const primary = byUsage.slice(0, windowSize).sort((a, b) => b.word.length - a.word.length);
+  const rest = byUsage.slice(windowSize).sort((a, b) => b.word.length - a.word.length);
   const shuffled = [...primary, ...rest];
 
   const grid: string[][] = Array.from({ length: size }, () => Array(size).fill(""));
@@ -170,13 +178,14 @@ export function buildSnakeWordSearchWithGrowth(
   pool: WordCandidate[],
   baseSize: number,
   targetCount: number,
-  seedPrefix: string
+  seedPrefix: string,
+  usage?: Map<string, number>
 ): { grid: WordGameGrid; words: WordPlacement[] } | null {
   const maxSize = baseSize + 10;
   let best: { grid: WordGameGrid; words: WordPlacement[] } | null = null;
   for (let size = baseSize; size <= maxSize; size += 2) {
     const rng = makeRng(`${seedPrefix}-grow${size}`);
-    const built = buildSnakeWordSearch(pool, size, targetCount, rng);
+    const built = buildSnakeWordSearch(pool, size, targetCount, rng, usage);
     if (built && (!best || built.words.length > best.words.length)) best = built;
     if (built && built.words.length >= targetCount) return built;
   }

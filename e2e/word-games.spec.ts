@@ -262,10 +262,19 @@ test("word search: diagonal words are findable and each found word gets a distin
 test("word search: ★ expert puzzle can be solved by clicking through a bent word, and a wrong click can be canceled", async ({
   page,
 }) => {
-  // The star tier is appended right after WORD_SEARCH_RUNGS, so its first
-  // sequence number is WORD_SEARCH_RUNGS.length + 1 (see
-  // prisma/generate-word-games.ts) — currently 31.
-  await page.goto("/es/word-games/WORD_SEARCH/A1/31");
+  // Discover the star tier's first sequence number from the picker UI
+  // itself rather than hardcoding it — WORD_SEARCH_RUNGS.length (and so
+  // where the star tier's numbering starts) has changed three times
+  // already across content-expansion batches this session, breaking a
+  // hardcoded sequence number every time. The picker is the actual
+  // source of truth a real player would use, so it's also the more
+  // faithful way to locate a ★ puzzle here.
+  await page.goto("/es/word-games");
+  const starTile = page.locator("a", { hasText: "★" }).first();
+  await expect(starTile).toBeVisible();
+  const href = await starTile.getAttribute("href");
+  expect(href).toBeTruthy();
+  await page.goto(href!);
 
   await expect(page.getByText("★")).toBeVisible();
 

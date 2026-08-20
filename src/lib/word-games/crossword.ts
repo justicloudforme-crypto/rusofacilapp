@@ -196,7 +196,8 @@ export function buildCrossword(
   targetWordCount: number,
   minWords: number,
   rng: () => number,
-  attempts = 6
+  attempts = 6,
+  usage?: Map<string, number>
 ): { grid: WordGameGrid; words: WordPlacement[] } | null {
   let bestResult: ReturnType<typeof attemptBuild> | null = null;
 
@@ -211,9 +212,23 @@ export function buildCrossword(
     // window first, then sorting only that window by length, keeps
     // the longest-first placement-order heuristic while letting which
     // long words actually show up vary puzzle to puzzle.
+    //
+    // `usage` (optional, tracked across a whole level's rungs by the
+    // caller) adds a second layer on top: stable-sort by ascending
+    // usage count before windowing, so an already-overused word sinks
+    // toward the tail before the window is even taken. Needed even
+    // after the windowing fix above — at 84 rungs a level's rarest
+    // short words (e.g. only a handful of eligible 3-4 letter C1
+    // words) still won a slot a fixed fraction of the time every
+    // single rung with no memory of prior use, verified directly at
+    // one word in 30 of 84 C1 rungs. Omitted usage is a no-op, so
+    // behavior is unchanged when the caller doesn't track it.
     const windowSize = Math.max(targetWordCount * 3, targetWordCount + 10);
     const shuffledPool = shuffle(pool, rng);
-    const trimmedPool = shuffledPool.slice(0, Math.min(shuffledPool.length, windowSize)).sort((a, b) => b.word.length - a.word.length);
+    const byUsage = usage
+      ? shuffledPool.slice().sort((a, b) => (usage.get(a.word) ?? 0) - (usage.get(b.word) ?? 0))
+      : shuffledPool;
+    const trimmedPool = byUsage.slice(0, Math.min(byUsage.length, windowSize)).sort((a, b) => b.word.length - a.word.length);
     const result = attemptBuild(trimmedPool, rng);
     const capped = { ...result, placements: result.placements.slice(0, targetWordCount) };
     if (!bestResult || capped.placements.length > bestResult.placements.length) {
