@@ -24,7 +24,11 @@ export interface StoriesCatalogDict {
   completedBadge: string;
   /** Template containing the literal placeholder "{percent}". */
   progressLabel: string;
+  /** Template containing the literal placeholder "{count}". */
+  loadMoreButton: string;
 }
+
+const PAGE_SIZE = 24;
 
 export default function StoriesCatalog({
   lang,
@@ -36,6 +40,7 @@ export default function StoriesCatalog({
   dict: StoriesCatalogDict;
 }) {
   const [filter, setFilter] = useState<"all" | StoryLevel>("all");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Empty until after mount (localStorage isn't available during SSR) —
   // cards simply render without a progress badge until this fills in,
   // same hydration-safe pattern used elsewhere for client-only state.
@@ -51,13 +56,15 @@ export default function StoriesCatalog({
     () => (filter === "all" ? stories : stories.filter((story) => story.level === filter)),
     [stories, filter]
   );
+  const visible = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - visible.length;
 
   return (
     <div>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setFilter("all")}
+          onClick={() => { setFilter("all"); setVisibleCount(PAGE_SIZE); }}
           className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             filter === "all"
               ? "bg-foreground text-background"
@@ -70,7 +77,7 @@ export default function StoriesCatalog({
           <button
             key={level}
             type="button"
-            onClick={() => setFilter(level)}
+            onClick={() => { setFilter(level); setVisibleCount(PAGE_SIZE); }}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               filter === level
                 ? "bg-foreground text-background"
@@ -86,7 +93,7 @@ export default function StoriesCatalog({
         <p className="mt-10 text-sm text-foreground/60">{dict.emptyState}</p>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((story) => {
+          {visible.map((story) => {
             const progress = progressById[story.id];
             return (
               <Link
@@ -134,6 +141,18 @@ export default function StoriesCatalog({
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {remaining > 0 && (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+            className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 dark:border-white/15"
+          >
+            {dict.loadMoreButton.replace("{count}", String(remaining))}
+          </button>
         </div>
       )}
     </div>

@@ -24,7 +24,10 @@ export interface MediaCatalogDict {
   categoryGrammar: string;
   openButton: string;
   emptyState: string;
+  loadMoreButton: string; // template, contains literal "{count}"
 }
+
+const PAGE_SIZE = 24;
 
 export default function MediaCatalog({
   lang,
@@ -37,6 +40,7 @@ export default function MediaCatalog({
 }) {
   const [level, setLevel] = useState<"all" | MediaLevel>("all");
   const [category, setCategory] = useState<"all" | MediaCategory>("all");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const categoryLabels: Record<MediaCategory, string> = {
     song: dict.categorySong,
@@ -55,12 +59,19 @@ export default function MediaCatalog({
     [items, level, category]
   );
 
+  // A filter change can make `visibleCount` stale (too low to show a
+  // just-narrowed list in full, or pointlessly high after switching to a
+  // smaller filter) — reset the page window whenever the filtered set
+  // itself changes rather than tracking level/category separately.
+  const visible = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - visible.length;
+
   return (
     <div>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setLevel("all")}
+          onClick={() => { setLevel("all"); setVisibleCount(PAGE_SIZE); }}
           className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             level === "all"
               ? "bg-foreground text-background"
@@ -73,7 +84,7 @@ export default function MediaCatalog({
           <button
             key={lvl}
             type="button"
-            onClick={() => setLevel(lvl)}
+            onClick={() => { setLevel(lvl); setVisibleCount(PAGE_SIZE); }}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               level === lvl
                 ? "bg-foreground text-background"
@@ -88,7 +99,7 @@ export default function MediaCatalog({
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setCategory("all")}
+          onClick={() => { setCategory("all"); setVisibleCount(PAGE_SIZE); }}
           className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             category === "all"
               ? "bg-foreground/80 text-background"
@@ -101,7 +112,7 @@ export default function MediaCatalog({
           <button
             key={cat}
             type="button"
-            onClick={() => setCategory(cat)}
+            onClick={() => { setCategory(cat); setVisibleCount(PAGE_SIZE); }}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               category === cat
                 ? "bg-foreground/80 text-background"
@@ -117,7 +128,7 @@ export default function MediaCatalog({
         <p className="mt-10 text-sm text-foreground/60">{dict.emptyState}</p>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((item) => (
+          {visible.map((item) => (
             <Link
               key={item.id}
               href={`/${lang}/media/${item.id}`}
@@ -150,6 +161,18 @@ export default function MediaCatalog({
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {remaining > 0 && (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+            className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 dark:border-white/15"
+          >
+            {dict.loadMoreButton.replace("{count}", String(remaining))}
+          </button>
         </div>
       )}
     </div>
