@@ -25,4 +25,6 @@ export const flashcardCategoryIcons: Record<FlashcardCategory, string> = {
   politics: "🏛️",
   psychology: "🧠",
   synonymsAntonyms: "↔️",
+  sport: "⚽",
+  law: "⚖️",
 };

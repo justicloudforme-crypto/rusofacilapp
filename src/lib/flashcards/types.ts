@@ -19,7 +19,9 @@ export type FlashcardCategory =
   | "science"
   | "politics"
   | "psychology"
-  | "synonymsAntonyms";
+  | "synonymsAntonyms"
+  | "sport"
+  | "law";
 export type FlashcardLevel = "A1" | "A2" | "B1" | "B2" | "C1";
 
 export const flashcardLevels: FlashcardLevel[] = ["A1", "A2", "B1", "B2", "C1"];
@@ -69,4 +71,6 @@ export const flashcardCategories: FlashcardCategory[] = [
   "politics",
   "psychology",
   "synonymsAntonyms",
+  "sport",
+  "law",
 ];
