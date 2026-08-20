@@ -78,10 +78,22 @@ const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 16, wordCount: 20 },
   { size: 16, wordCount: 24 },
   { size: 16, wordCount: 22 },
+  // Third lap (21-30) — same rationale, another independently-seeded
+  // random draw per rung.
+  { size: 16, wordCount: 16 },
+  { size: 16, wordCount: 23 },
+  { size: 16, wordCount: 19 },
+  { size: 16, wordCount: 26 },
+  { size: 16, wordCount: 21 },
+  { size: 16, wordCount: 17 },
+  { size: 16, wordCount: 25 },
+  { size: 16, wordCount: 18 },
+  { size: 16, wordCount: 24 },
+  { size: 16, wordCount: 20 },
 ];
 
 // Expert/★ tier, appended right after WORD_SEARCH_RUNGS (currently
-// starting at sequence 21) — same picker grid, just badged, not a separate
+// starting at sequence 31) — same picker grid, just badged, not a separate
 // type/tab (see the plan this shipped from). Kept smaller than the
 // straight rungs' word counts:
 // a bending path uses more of its own "personal space" (can't run
@@ -96,6 +108,10 @@ const WORD_SEARCH_STAR_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 14, wordCount: 11 },
   { size: 16, wordCount: 12 },
   { size: 16, wordCount: 14 },
+  { size: 10, wordCount: 6 },
+  { size: 12, wordCount: 8 },
+  { size: 14, wordCount: 10 },
+  { size: 16, wordCount: 13 },
 ];
 
 // Crosswords need more candidate words per target than word search does
@@ -136,6 +152,21 @@ const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
   { wordCount: 25, maxLen: 12 },
   { wordCount: 21, maxLen: 10 },
   { wordCount: 24, maxLen: 11 },
+  // Third lap (21-30) — same rationale, wordCount deliberately stays
+  // within the range already established above rather than climbing
+  // further, since a longer target list means a sprawlier grid (the
+  // algorithm optimizes for intersections, not squareness) and rungs
+  // past ~24 words already produce a distinctly wide/tall board.
+  { wordCount: 8, maxLen: 6 },
+  { wordCount: 12, maxLen: 9 },
+  { wordCount: 17, maxLen: 12 },
+  { wordCount: 22, maxLen: 10 },
+  { wordCount: 15, maxLen: 8 },
+  { wordCount: 26, maxLen: 12 },
+  { wordCount: 10, maxLen: 7 },
+  { wordCount: 19, maxLen: 11 },
+  { wordCount: 23, maxLen: 12 },
+  { wordCount: 13, maxLen: 9 },
 ];
 
 async function upsertPuzzle(
@@ -163,6 +194,33 @@ async function upsertPuzzle(
     update: { curved, gridData, words },
   });
   counters.created++;
+}
+
+// Highest sequence number this script will ever write for each type — the
+// straight rungs plus (for WORD_SEARCH only) the star tier appended after
+// them. Used purely for the cleanup pass below.
+const MAX_WORD_SEARCH_SEQUENCE = WORD_SEARCH_RUNGS.length + WORD_SEARCH_STAR_RUNGS.length;
+const MAX_CROSSWORD_SEQUENCE = CROSSWORD_RUNGS.length;
+
+/** Deletes any WordGamePuzzle row past the current max sequence for its
+ * type/level — rows `upsertPuzzle` above can never touch since it only
+ * ever writes sequences 1..max. Without this, shrinking a rungs array (or
+ * — the way this bit us once already — changing WORD_SEARCH_RUNGS.length,
+ * which shifts where the star tier's sequence numbers start) leaves
+ * stale rows sitting in the DB forever, since `upsert` only ever
+ * creates/updates, never deletes. Those orphans are silently invisible
+ * in the picker today only because `countSequences` is a raw row COUNT
+ * and the picker assumes sequences are contiguous 1..count — an orphan
+ * gap would make that assumption false and hand a player a tile that
+ * links to a puzzle sequence nothing ever generated (a 404, at best).
+ * Run every time so the DB can never drift out of sync with what these
+ * rung tables currently define, regardless of how they're edited later. */
+async function cleanupStaleSequences(): Promise<number> {
+  const [ws, cw] = await Promise.all([
+    db.wordGamePuzzle.deleteMany({ where: { type: "WORD_SEARCH", sequence: { gt: MAX_WORD_SEARCH_SEQUENCE } } }),
+    db.wordGamePuzzle.deleteMany({ where: { type: "CROSSWORD", sequence: { gt: MAX_CROSSWORD_SEQUENCE } } }),
+  ]);
+  return ws.count + cw.count;
 }
 
 async function main() {
@@ -269,6 +327,9 @@ async function main() {
       );
     }
   }
+
+  const deleted = await cleanupStaleSequences();
+  if (deleted > 0) console.log(`\nDeleted ${deleted} stale puzzle row(s) past the current rung tables' range.`);
 
   console.log(`\n${counters.created} puzzle(s) written, ${counters.unchanged} already up to date.`);
   if (problems.length > 0) {

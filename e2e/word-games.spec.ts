@@ -264,8 +264,8 @@ test("word search: ★ expert puzzle can be solved by clicking through a bent wo
 }) => {
   // The star tier is appended right after WORD_SEARCH_RUNGS, so its first
   // sequence number is WORD_SEARCH_RUNGS.length + 1 (see
-  // prisma/generate-word-games.ts) — currently 21.
-  await page.goto("/es/word-games/WORD_SEARCH/A1/21");
+  // prisma/generate-word-games.ts) — currently 31.
+  await page.goto("/es/word-games/WORD_SEARCH/A1/31");
 
   await expect(page.getByText("★")).toBeVisible();
 
