@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { mediaLevels, mediaCategories, type MediaLevel, type MediaCategory } from "@/lib/media/types";
+import LevelBadge from "@/components/LevelBadge";
 
 export interface MediaSummary {
   id: string;
@@ -121,9 +122,7 @@ export default function MediaCatalog({
               className="group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 dark:border-white/10"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/70">
-                  {item.level}
-                </span>
+                <LevelBadge level={item.level} />
                 <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/70">
                   {categoryLabels[item.category]}
                 </span>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { storyLevels, type StoryLevel } from "@/lib/stories";
+import LevelBadge from "@/components/LevelBadge";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
 
 export interface StorySummary {
@@ -94,9 +95,7 @@ export default function StoriesCatalog({
                 className="group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 dark:border-white/10"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/70">
-                    {story.level}
-                  </span>
+                  <LevelBadge level={story.level} />
                   {story.isPremium && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
                       ⭐ {dict.premiumBadge}

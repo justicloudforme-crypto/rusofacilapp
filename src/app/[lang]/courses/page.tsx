@@ -6,6 +6,8 @@ import { levelMeta, levelSlugs } from "@/lib/courses";
 import { introSlides } from "@/lib/intro/content";
 import IntroPresentation from "@/components/intro/IntroPresentation";
 import LevelGlossaryBadge from "@/components/glossary/LevelGlossaryBadge";
+import LevelBadge from "@/components/LevelBadge";
+import type { FlashcardLevel } from "@/lib/flashcards/types";
 
 export default async function CoursesPage({ params }: PageProps<"/[lang]/courses">) {
   const { lang } = await params;
@@ -46,9 +48,7 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
               className="group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 dark:border-white/10"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
-                  {slug}
-                </span>
+                <LevelBadge level={slug.toUpperCase() as FlashcardLevel} />
                 <LevelGlossaryBadge
                   level={slug}
                   dict={{
