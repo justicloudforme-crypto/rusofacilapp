@@ -32,6 +32,7 @@ import ThemeSwitcher from "@/components/profile/ThemeSwitcher";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
+import { TELEGRAM_INVITE_URL } from "@/components/TelegramFloatButton";
 
 const PROFILE_TABS = ["personal", "progress", "badges", "referral", "subscription", "security", "language"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
@@ -258,6 +259,26 @@ export default async function ProfilePage({
                 copiedLabel={dict.profile.referralCopiedNotice}
               />
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#24A1DE]/25 bg-[#24A1DE]/5 p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#24A1DE] text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.666 2.01-.378.15-.577.298-.595.442-.03.243.275.339.69.47l1.75.55c.392.123.845.023 1.136-.26l2.132-2.062c.168-.163.342-.056.246.075l-1.74 1.63c-.237.222-.284.542-.107.755l1.642 1.972c.288.347.79.432 1.177.197l2.25-1.383c.485-.298.796-.867.72-1.442-.078-.598-.62-1.127-1.428-1.447l-5.06-2.11z" />
+                </svg>
+              </span>
+              <h2 className="font-medium">{dict.profile.telegramHeading}</h2>
+            </div>
+            <p className="mt-3 text-sm text-foreground/70">{dict.profile.telegramDescription}</p>
+            <a
+              href={TELEGRAM_INVITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-block rounded-full bg-[#24A1DE] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2090c7]"
+            >
+              {dict.profile.telegramCta}
+            </a>
           </div>
 
           <form action="/api/auth/logout" method="POST">
