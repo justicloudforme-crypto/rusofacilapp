@@ -1,16 +1,22 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PublicWordSearchPuzzle } from "@/lib/word-games/data";
-import { lineBetween, matchSelection, type Cell } from "@/lib/word-games/word-search-select";
+import { extendPath, matchSelection, type Cell } from "@/lib/word-games/word-search-select";
 import { playCorrectTone } from "@/lib/sound";
 
 interface Dict {
   wordsFoundLabel: string;
+  resetSelectionButton: string;
+  expertModeLabel: string;
 }
 
 function cellKey(c: Cell): string {
   return `${c.row},${c.col}`;
+}
+
+function sameCell(a: Cell, b: Cell): boolean {
+  return a.row === b.row && a.col === b.col;
 }
 
 // Each found word gets its own hue, cycling through this palette by
@@ -49,21 +55,45 @@ const CHIP_COLORS = [
   "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400",
 ];
 
-/** Maps a client (viewport) point to the nearest grid cell by position
- * within the grid's bounding box, clamped in-bounds — not by hit-testing
- * which element is under the pointer. Hit-testing was the previous
- * approach (elementFromPoint / native mouseenter) and it silently lost
- * the drag whenever the pointer strayed even slightly outside a cell's
- * button (e.g. a long diagonal drag toward a corner, or fast touch
- * movement outrunning intermediate mouseenter events) — this is
- * geometry-based instead, so it can't "miss" a cell. */
+/** Maps a client (viewport) point to the nearest grid cell by measuring
+ * real rendered cell positions — not by hit-testing which element is
+ * under the pointer (elementFromPoint / native mouseenter, the original
+ * approach: it silently lost the drag whenever the pointer strayed even
+ * slightly outside a cell's button), and not by naively dividing the
+ * grid's total bounding-box width by the column count either (tried
+ * that first here: it ignores the CSS grid's `gap` between cells, which
+ * accumulates into a systematic drift — wrong by a full column near the
+ * far edge of a wide grid, confirmed by instrumenting a real drag that
+ * silently landed one column short of the true target). Deriving the
+ * actual column/row pitch from two real cells is correct regardless of
+ * gap size, cell shrinkage, or any future layout tweak. */
 function cellFromPoint(gridEl: HTMLElement, clientX: number, clientY: number, rows: number, cols: number): Cell {
-  const rect = gridEl.getBoundingClientRect();
-  const relX = clientX - rect.left;
-  const relY = clientY - rect.top;
-  const col = Math.min(cols - 1, Math.max(0, Math.floor((relX / rect.width) * cols)));
-  const row = Math.min(rows - 1, Math.max(0, Math.floor((relY / rect.height) * rows)));
+  const origin = gridEl.querySelector<HTMLElement>('[data-row="0"][data-col="0"]')?.getBoundingClientRect();
+  if (!origin) return { row: 0, col: 0 };
+
+  const colNeighbor = cols > 1 ? gridEl.querySelector<HTMLElement>('[data-row="0"][data-col="1"]')?.getBoundingClientRect() : null;
+  const rowNeighbor = rows > 1 ? gridEl.querySelector<HTMLElement>('[data-row="1"][data-col="0"]')?.getBoundingClientRect() : null;
+  const colPitch = colNeighbor ? colNeighbor.left - origin.left : origin.width;
+  const rowPitch = rowNeighbor ? rowNeighbor.top - origin.top : origin.height;
+
+  const col = Math.min(cols - 1, Math.max(0, Math.floor((clientX - origin.left) / colPitch)));
+  const row = Math.min(rows - 1, Math.max(0, Math.floor((clientY - origin.top) / rowPitch)));
   return { row, col };
+}
+
+/** Applied on a fresh pointerdown/click (not on drag-move): if the tapped
+ * cell doesn't continue the in-progress path (extend, backtrack, or
+ * re-tap the same last cell), treat it as "start a new selection here"
+ * instead of silently ignoring the tap — a desktop player clicking a
+ * completely different word mid-build should just start that word, not
+ * have the click swallowed. Drag-move uses extendPath directly instead
+ * (see handlePointerMove) so a stray off-path sample during a continuous
+ * gesture doesn't reset it. */
+function startOrExtend(path: Cell[], cell: Cell): Cell[] {
+  if (path.length > 0 && sameCell(path[path.length - 1], cell)) return path;
+  const extended = extendPath(path, cell);
+  if (extended !== path) return extended;
+  return [cell];
 }
 
 export default function WordSearchBoard({
@@ -75,8 +105,15 @@ export default function WordSearchBoard({
   dict: Dict;
   onSolved: () => void;
 }) {
-  const [start, setStart] = useState<Cell | null>(null);
-  const [current, setCurrent] = useState<Cell | null>(null);
+  const [path, setPath] = useState<Cell[]>([]);
+  // Mirrors `path`, updated synchronously on every mutation. Needed
+  // because pointermove fires several times per animation frame during a
+  // real drag — React can batch/coalesce those `setPath` calls before a
+  // re-render happens, so reading `path` (the render-closure value) from
+  // one pointermove handler call to the next can see a stale value and
+  // silently drop intermediate steps of the drag. Reading this ref
+  // instead always sees the true latest path.
+  const pathRef = useRef<Cell[]>([]);
   const [foundWords, setFoundWords] = useState<Set<string>>(new Set());
   // word -> its index in WORD_COLORS/CHIP_COLORS, assigned in discovery
   // order so the Nth word found always gets the Nth palette color.
@@ -84,104 +121,158 @@ export default function WordSearchBoard({
   const [foundCells, setFoundCells] = useState<Map<string, number>>(new Map());
   const gridRef = useRef<HTMLDivElement>(null);
   const solvedReported = useRef(false);
+  // True once real pointer *movement* extended the path during the
+  // current down-to-up gesture — distinguishes a drag (which always
+  // clears the selection on release, matched or not) from a discrete
+  // click (which leaves the path standing for the next click to
+  // continue), without needing two separate interaction "modes".
+  const draggedRef = useRef(false);
 
   const rows = puzzle.grid.length;
   const cols = puzzle.grid[0]?.length ?? 0;
+  const selectionKeys = new Set(path.map(cellKey));
 
-  const selectionPath = start && current ? lineBetween(start, current) : null;
-  const selectionKeys = new Set((selectionPath ?? []).map(cellKey));
+  // The single point every path mutation (drag or click alike) funnels
+  // through: checks the new path against the still-unfound words and
+  // either commits a match (marking it found, coloring it, resetting)
+  // or just stores the in-progress path. Called directly from the
+  // pointer handlers below rather than from an effect reacting to `path`
+  // — setting state synchronously inside an effect causes an avoidable
+  // extra render, and there's no external system to synchronize with
+  // here, so a plain function is the right tool.
+  function updatePath(next: Cell[]) {
+    pathRef.current = next;
+    setPath(next);
+  }
 
-  const finalizeSelection = useCallback(() => {
-    if (start && current) {
-      const path = lineBetween(start, current);
-      if (path) {
-        const match = matchSelection(
-          puzzle.grid,
-          path,
-          puzzle.words.map((w) => w.word),
-        );
-        if (match && !foundWords.has(match)) {
-          const colorIndex = foundWords.size % WORD_COLORS.length;
-          const nextFound = new Set(foundWords);
-          nextFound.add(match);
-          setFoundWords(nextFound);
-          setWordColor((prev) => new Map(prev).set(match, colorIndex));
-          setFoundCells((prev) => {
-            const next = new Map(prev);
-            for (const c of path) next.set(cellKey(c), colorIndex);
-            return next;
-          });
-          playCorrectTone();
-          if (nextFound.size === puzzle.words.length && !solvedReported.current) {
-            solvedReported.current = true;
-            onSolved();
-          }
-        }
-      }
+  function commitPath(next: Cell[]) {
+    const unfound = puzzle.words.map((w) => w.word).filter((w) => !foundWords.has(w));
+    const match = matchSelection(puzzle.grid, next, unfound);
+    if (!match) {
+      updatePath(next);
+      return;
     }
-    setStart(null);
-    setCurrent(null);
-  }, [start, current, foundWords, puzzle.grid, puzzle.words, onSolved]);
+
+    const colorIndex = foundWords.size % WORD_COLORS.length;
+    const nextFound = new Set(foundWords);
+    nextFound.add(match);
+    setFoundWords(nextFound);
+    setWordColor((prev) => new Map(prev).set(match, colorIndex));
+    setFoundCells((prev) => {
+      const copy = new Map(prev);
+      for (const c of next) copy.set(cellKey(c), colorIndex);
+      return copy;
+    });
+    playCorrectTone();
+    updatePath([]);
+    if (nextFound.size === puzzle.words.length && !solvedReported.current) {
+      solvedReported.current = true;
+      onSolved();
+    }
+  }
+
+  // Cancels a pending click-built selection when the player clicks
+  // anywhere outside the grid — the explicit "cancel by clicking outside"
+  // affordance, alongside the reset button and re-tapping the last cell.
+  useEffect(() => {
+    function handleOutsideClick(e: MouseEvent) {
+      if (pathRef.current.length === 0) return;
+      if (gridRef.current?.contains(e.target as Node)) return;
+      updatePath([]);
+    }
+    window.addEventListener("click", handleOutsideClick);
+    return () => window.removeEventListener("click", handleOutsideClick);
+  }, []);
 
   function handlePointerDown(e: React.PointerEvent<HTMLButtonElement>, cell: Cell) {
     e.currentTarget.setPointerCapture(e.pointerId);
-    setStart(cell);
-    setCurrent(cell);
+    draggedRef.current = false;
+    commitPath(startOrExtend(pathRef.current, cell));
   }
 
   // Pointer capture (set on the cell the drag started on) keeps this
   // firing on that same element for the whole gesture regardless of
   // where the pointer physically is, so geometry — not hit-testing — is
   // what resolves the cell underneath it. Works identically for mouse,
-  // touch, and pen.
+  // touch, and pen. Reads pathRef (not the `path` state) because several
+  // pointermove events can land within one React batch, and only the ref
+  // is guaranteed up to date between them (see pathRef's own comment).
   function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
-    if (!start || !gridRef.current) return;
-    setCurrent(cellFromPoint(gridRef.current, e.clientX, e.clientY, rows, cols));
+    if (!gridRef.current) return;
+    const cell = cellFromPoint(gridRef.current, e.clientX, e.clientY, rows, cols);
+    const next = extendPath(pathRef.current, cell);
+    if (next !== pathRef.current) {
+      draggedRef.current = true;
+      commitPath(next);
+    }
+  }
+
+  function handlePointerUp() {
+    // A drag always clears on release, matched or not (matches the
+    // original swipe-to-select feel); a discrete click leaves the path
+    // standing so the next click can continue building it.
+    if (draggedRef.current) updatePath([]);
   }
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      {/* minmax(18px, 2rem) columns shrink together with the container
-          (fixed-size buttons previously overlapped instead of shrinking —
-          invisible here since these cells are borderless, but the same
-          bug as CrosswordBoard's, fixed the same way; see its comment). */}
-      <div className="max-w-full overflow-x-auto">
-        <div
-          ref={gridRef}
-          className="grid touch-none select-none gap-0.5"
-          style={{ gridTemplateColumns: `repeat(${cols}, minmax(18px, 2rem))` }}
-          role="grid"
-          aria-label="word search"
-        >
-          {puzzle.grid.map((rowCells, row) =>
-            rowCells.map((letter, col) => {
-              const key = cellKey({ row, col });
-              const foundColorIndex = foundCells.get(key);
-              const isSelecting = selectionKeys.has(key);
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  data-row={row}
-                  data-col={col}
-                  onPointerDown={(e) => handlePointerDown(e, { row, col })}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={finalizeSelection}
-                  onPointerCancel={finalizeSelection}
-                  className={`flex aspect-square w-full items-center justify-center rounded text-[10px] font-semibold uppercase transition-colors sm:text-sm ${
-                    foundColorIndex !== undefined
-                      ? WORD_COLORS[foundColorIndex]
-                      : isSelecting
-                        ? "bg-foreground/15"
-                        : "hover:bg-foreground/5"
-                  }`}
-                >
-                  {letter}
-                </button>
-              );
-            }),
-          )}
+      <div className="flex flex-col gap-2">
+        {puzzle.curved && (
+          <span className="w-fit rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand dark:bg-brand-light/15 dark:text-brand-light">
+            ★ {dict.expertModeLabel}
+          </span>
+        )}
+        {/* minmax(18px, 2rem) columns shrink together with the container
+            (fixed-size buttons previously overlapped instead of shrinking —
+            invisible here since these cells are borderless, but the same
+            bug as CrosswordBoard's, fixed the same way; see its comment). */}
+        <div className="max-w-full overflow-x-auto">
+          <div
+            ref={gridRef}
+            className="grid touch-none select-none gap-0.5"
+            style={{ gridTemplateColumns: `repeat(${cols}, minmax(18px, 2rem))` }}
+            role="grid"
+            aria-label="word search"
+          >
+            {puzzle.grid.map((rowCells, row) =>
+              rowCells.map((letter, col) => {
+                const key = cellKey({ row, col });
+                const foundColorIndex = foundCells.get(key);
+                const isSelecting = selectionKeys.has(key);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    data-row={row}
+                    data-col={col}
+                    onPointerDown={(e) => handlePointerDown(e, { row, col })}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                    className={`flex aspect-square w-full items-center justify-center rounded text-[10px] font-semibold uppercase transition-colors sm:text-sm ${
+                      foundColorIndex !== undefined
+                        ? WORD_COLORS[foundColorIndex]
+                        : isSelecting
+                          ? "bg-foreground/15"
+                          : "hover:bg-foreground/5"
+                    }`}
+                  >
+                    {letter}
+                  </button>
+                );
+              }),
+            )}
+          </div>
         </div>
+        {path.length > 0 && (
+          <button
+            type="button"
+            onClick={() => updatePath([])}
+            className="w-fit rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:border-foreground/40 hover:text-foreground dark:border-white/15"
+          >
+            ✕ {dict.resetSelectionButton}
+          </button>
+        )}
       </div>
 
       <div className="flex-1">
@@ -194,6 +285,7 @@ export default function WordSearchBoard({
             return (
               <li
                 key={w.word}
+                data-word={w.word}
                 className={`rounded-full border px-3 py-1 text-sm ${
                   colorIndex !== undefined
                     ? `${CHIP_COLORS[colorIndex]} line-through`
@@ -201,6 +293,7 @@ export default function WordSearchBoard({
                 }`}
               >
                 {w.word}
+                {w.clue && <span className="opacity-70"> ({w.clue})</span>}
               </li>
             );
           })}

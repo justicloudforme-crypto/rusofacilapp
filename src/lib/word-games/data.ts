@@ -8,17 +8,27 @@ export interface PuzzleRow {
   type: WordGameType;
   level: string;
   sequence: number;
+  curved: boolean;
   grid: WordGameGrid;
   words: WordPlacement[];
 }
 
-function parseRow(row: { id: string; type: string; level: string; sequence: number; gridData: string; words: string }): PuzzleRow {
+function parseRow(row: {
+  id: string;
+  type: string;
+  level: string;
+  sequence: number;
+  curved: boolean;
+  gridData: string;
+  words: string;
+}): PuzzleRow {
   if (!isWordGameType(row.type)) throw new Error(`invalid word game type in DB: ${row.type}`);
   return {
     id: row.id,
     type: row.type,
     level: row.level,
     sequence: row.sequence,
+    curved: row.curved,
     grid: JSON.parse(row.gridData) as WordGameGrid,
     words: JSON.parse(row.words) as WordPlacement[],
   };
@@ -38,6 +48,17 @@ export async function getPuzzleById(id: string): Promise<PuzzleRow | null> {
  * "sequence + 1" is a real next puzzle or the end of that level's ladder. */
 export async function countSequences(type: WordGameType, level: string): Promise<number> {
   return db.wordGamePuzzle.count({ where: { type, level } });
+}
+
+/** Which sequences of a (type, level) ladder are the curved/★ expert
+ * tier — powers the picker's star badge without parsing every puzzle's
+ * `words` JSON just to check. */
+export async function getCurvedSequences(type: WordGameType, level: string): Promise<Set<number>> {
+  const rows = await db.wordGamePuzzle.findMany({
+    where: { type, level, curved: true },
+    select: { sequence: true },
+  });
+  return new Set(rows.map((r) => r.sequence));
 }
 
 // --- Public (answer-free) shapes sent to the client ---------------------
@@ -80,6 +101,10 @@ export interface PublicWordSearchPuzzle {
   type: "WORD_SEARCH";
   level: string;
   sequence: number;
+  // Expert tier: words bend mid-path instead of running straight. Safe to
+  // expose — it doesn't reveal any word's actual path, just tells the UI
+  // to show the ★ badge and enable click-sequence selection hints.
+  curved: boolean;
   grid: string[][];
   words: { word: string; clue?: string }[];
 }
@@ -93,7 +118,12 @@ export function toPublicPuzzle(row: PuzzleRow): PublicPuzzle {
       type: "WORD_SEARCH",
       level: row.level,
       sequence: row.sequence,
+      curved: row.curved,
       grid: row.grid.grid,
+      // Deliberately never sends `path`/`row`/`col`/`direction` — same
+      // secrecy model as straight words today: the grid is public, exact
+      // positions aren't, so "search" stays a real search even for a
+      // curved word.
       words: row.words.map((w) => ({ word: w.word, clue: w.clue })),
     };
   }

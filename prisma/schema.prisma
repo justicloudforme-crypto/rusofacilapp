@@ -522,19 +522,30 @@ model WordGamePuzzle {
   id       String              @id @default(cuid())
   type     String // WordGameType: WORD_SEARCH | CROSSWORD — see src/lib/word-games/types.ts
   level    String // FlashcardLevel: A1 | A2 | B1 | B2 | C1
-  // Difficulty rung within [type, level], starting at 1 — the app opens
-  // sequence N+1 only once WordGameProgress shows sequence N complete for
-  // that user, giving the "simple to complex" progression without a
-  // separate lesson-slug table.
+  // Difficulty rung within [type, level], starting at 1 — self-paced like
+  // the rest of the app (see src/lib/flashcards/level-progress.ts): every
+  // rung stays playable, WordGameProgress only drives a completed-checkmark
+  // badge on the picker, never a lock.
   sequence Int
+  // Expert-tier WORD_SEARCH puzzle whose words bend mid-path instead of
+  // running in a single straight line (src/lib/word-games/snake-word-search.ts).
+  // Always false for CROSSWORD. Surfaced as a ★ badge on the picker grid —
+  // kept as a real column (not embedded in `words`) so the picker can
+  // render it without parsing every puzzle's JSON.
+  curved   Boolean             @default(false)
   // JSON-encoded { size: number, grid: string[][] } — the finished letter
   // grid, ready to render as-is.
   gridData String
   // JSON-encoded WordPlacement[]: { word, clue, row, col, direction,
-  // number? } (number only set for CROSSWORD, used as the clue-list index).
-  // `clue` is the FlashcardCard.translationEs of the placed word, captured
-  // at generation time rather than joined live, so a puzzle keeps working
-  // even if the source card is later edited or removed.
+  // number?, path? } (number only set for CROSSWORD, used as the clue-list
+  // index; path only set for curved WORD_SEARCH words — the ordered list of
+  // cells the word actually bends through, row/col/direction still point at
+  // path[0] for type uniformity but direction is meaningless for these).
+  // `clue` is the FlashcardCard.translationEs of the placed word (for
+  // WORD_SEARCH, always the direct translation — no blank to spoil, unlike
+  // CROSSWORD's masked-example clue for B1+), captured at generation time
+  // rather than joined live, so a puzzle keeps working even if the source
+  // card is later edited or removed.
   words    String
 
   progress WordGameProgress[]

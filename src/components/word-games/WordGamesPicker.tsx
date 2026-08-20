@@ -7,7 +7,10 @@ import { flashcardLevels } from "@/lib/flashcards";
 import type { WordGameType } from "@/lib/word-games/types";
 import type { Locale } from "@/i18n/config";
 
-export type PickerData = Record<WordGameType, Record<FlashcardLevel, { total: number; completed: number[] }>>;
+export type PickerData = Record<
+  WordGameType,
+  Record<FlashcardLevel, { total: number; completed: number[]; curved: number[] }>
+>;
 
 export interface WordGamesPickerDict {
   typeWordSearch: string;
@@ -15,6 +18,7 @@ export interface WordGamesPickerDict {
   chooseLevelLabel: string;
   puzzleLabel: string;
   completedBadge: string;
+  expertModeLabel: string;
 }
 
 /** Type tab + level pill + sequence grid — self-paced, matches the rest of
@@ -33,8 +37,9 @@ export default function WordGamesPicker({
   const [type, setType] = useState<WordGameType>("WORD_SEARCH");
   const [level, setLevel] = useState<FlashcardLevel>("A1");
 
-  const { total, completed } = data[type][level];
+  const { total, completed, curved } = data[type][level];
   const completedSet = new Set(completed);
+  const curvedSet = new Set(curved);
 
   return (
     <div className="mt-8 flex flex-col gap-6">
@@ -87,12 +92,24 @@ export default function WordGamesPicker({
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
         {Array.from({ length: total }, (_, i) => i + 1).map((sequence) => {
           const isCompleted = completedSet.has(sequence);
+          const isCurved = curvedSet.has(sequence);
           return (
             <Link
               key={sequence}
               href={`/${lang}/word-games/${type}/${level}/${sequence}`}
-              className="relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border border-black/10 text-lg font-semibold transition-colors hover:border-foreground/40 dark:border-white/10"
+              className={`relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 ${
+                isCurved ? "border-brand/40 bg-brand/5 dark:border-brand-light/40 dark:bg-brand-light/10" : "border-black/10 dark:border-white/10"
+              }`}
             >
+              {isCurved && (
+                <span
+                  aria-label={dict.expertModeLabel}
+                  title={dict.expertModeLabel}
+                  className="absolute left-1.5 top-1.5 text-sm leading-none text-brand dark:text-brand-light"
+                >
+                  ★
+                </span>
+              )}
               {sequence}
               {isCompleted && (
                 <span

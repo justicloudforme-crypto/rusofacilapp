@@ -20,6 +20,8 @@ export interface WordGamePlayerDict {
   solvedSubtitle: string;
   playAgainButton: string;
   wrongCellHint: string;
+  resetSelectionButton: string;
+  expertModeLabel: string;
 }
 
 /** Orchestrates one puzzle attempt: picks the right board (crossword vs

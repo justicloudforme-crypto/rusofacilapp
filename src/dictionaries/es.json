@@ -652,7 +652,9 @@
     "solvedTitle": "¡Puzle resuelto!",
     "solvedSubtitle": "Muy bien, has completado el puzle.",
     "playAgainButton": "Jugar otro puzle",
-    "wrongCellHint": "Esa letra no es correcta, inténtalo de nuevo."
+    "wrongCellHint": "Esa letra no es correcta, inténtalo de nuevo.",
+    "resetSelectionButton": "Cancelar selección",
+    "expertModeLabel": "Modo experto"
   },
   "celebration": {
     "lessonPassedTitle": "¡Lección superada!",

@@ -18,9 +18,14 @@ export type WordSearchDirection =
   | "SE"
   | "SW";
 
-/** A single word placed in a generated grid. `number`/`clue` are only
- * meaningful for CROSSWORD — WORD_SEARCH highlights by `word` alone once
- * found, it has no visible clue list. */
+/** A single word placed in a generated grid. `number` is only meaningful
+ * for CROSSWORD (the clue-list index). `path` is only set for a curved
+ * ("snake") WORD_SEARCH word — the ordered list of cells it bends through,
+ * one per letter; `row`/`col` still equal `path[0]` for type uniformity,
+ * but `direction` is meaningless for these (a bent word has no single
+ * direction) and consumers must check `path` first. Every other placement
+ * (straight WORD_SEARCH, all CROSSWORD) has no `path` and is fully
+ * described by row/col/direction as before. */
 export interface WordPlacement {
   word: string;
   clue?: string;
@@ -28,6 +33,7 @@ export interface WordPlacement {
   col: number;
   direction: WordSearchDirection;
   number?: number;
+  path?: { row: number; col: number }[];
 }
 
 export interface WordGameGrid {

@@ -11,21 +11,47 @@ export interface Cell {
   col: number;
 }
 
-/** The straight-line path of cells between two endpoints (inclusive), in
- * one of the 8 word-search directions, or null if the two cells aren't
- * aligned on any of them (e.g. a knight's-move drag). */
-export function lineBetween(start: Cell, end: Cell): Cell[] | null {
-  const dr = end.row - start.row;
-  const dc = end.col - start.col;
-  if (dr === 0 && dc === 0) return [{ ...start }];
+function sameCell(a: Cell, b: Cell): boolean {
+  return a.row === b.row && a.col === b.col;
+}
 
-  const isStraight = dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc);
-  if (!isStraight) return null;
+function isAdjacent(a: Cell, b: Cell): boolean {
+  const dr = Math.abs(a.row - b.row);
+  const dc = Math.abs(a.col - b.col);
+  return (dr !== 0 || dc !== 0) && dr <= 1 && dc <= 1;
+}
 
-  const steps = Math.max(Math.abs(dr), Math.abs(dc));
-  const stepR = Math.sign(dr);
-  const stepC = Math.sign(dc);
-  return Array.from({ length: steps + 1 }, (_, i) => ({ row: start.row + stepR * i, col: start.col + stepC * i }));
+/** The one rule both selection inputs share — a continuous drag and a
+ * sequence of discrete clicks both just call this on every new cell the
+ * player lands on. Handles a straight word as a degenerate case of a
+ * general path, which is what makes one mechanism cover both the
+ * original straight-line drag and a curved/"snake" word's bent path:
+ *
+ * - empty path: `next` becomes the sole first cell.
+ * - `next` is the path's current last cell (hovering in place / a
+ *   repeat click): no-op, returns the *same* array reference so a caller
+ *   using this in a state updater doesn't trigger a pointless re-render.
+ * - `next` is the path's second-to-last cell: the player backtracked —
+ *   pop the last cell.
+ * - `next` is 8-adjacent to the last cell and not already anywhere else
+ *   in the path: extend.
+ * - anything else (a jump, or revisiting a non-tail cell): ignored,
+ *   returns the path unchanged. */
+export function extendPath(path: Cell[], next: Cell): Cell[] {
+  if (path.length === 0) return [next];
+
+  const last = path[path.length - 1];
+  if (sameCell(last, next)) return path;
+
+  if (path.length >= 2 && sameCell(path[path.length - 2], next)) {
+    return path.slice(0, -1);
+  }
+
+  if (isAdjacent(last, next) && !path.some((c) => sameCell(c, next))) {
+    return [...path, next];
+  }
+
+  return path;
 }
 
 export function readWord(grid: string[][], cells: Cell[]): string {

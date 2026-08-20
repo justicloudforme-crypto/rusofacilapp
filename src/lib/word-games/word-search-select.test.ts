@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lineBetween, matchSelection, readWord } from "./word-search-select";
+import { extendPath, matchSelection, readWord } from "./word-search-select";
 
 const grid = [
   ["К", "О", "Т", "Х"],
@@ -8,42 +8,55 @@ const grid = [
   ["З", "У", "Т", "Ъ"],
 ];
 
-describe("lineBetween", () => {
-  it("returns a single cell when start equals end", () => {
-    expect(lineBetween({ row: 1, col: 1 }, { row: 1, col: 1 })).toEqual([{ row: 1, col: 1 }]);
+describe("extendPath", () => {
+  it("starts a new path from an empty one", () => {
+    expect(extendPath([], { row: 1, col: 1 })).toEqual([{ row: 1, col: 1 }]);
   });
 
-  it("builds a horizontal path", () => {
-    expect(lineBetween({ row: 0, col: 0 }, { row: 0, col: 2 })).toEqual([
+  it("extends onto an 8-adjacent cell", () => {
+    const path = [{ row: 0, col: 0 }];
+    expect(extendPath(path, { row: 1, col: 1 })).toEqual([
+      { row: 0, col: 0 },
+      { row: 1, col: 1 },
+    ]);
+  });
+
+  it("supports a genuine bend — two straight segments in different directions", () => {
+    let path = [{ row: 0, col: 0 }];
+    path = extendPath(path, { row: 0, col: 1 }); // east
+    path = extendPath(path, { row: 0, col: 2 }); // east
+    path = extendPath(path, { row: 1, col: 2 }); // south — the bend
+    expect(path).toEqual([
       { row: 0, col: 0 },
       { row: 0, col: 1 },
       { row: 0, col: 2 },
+      { row: 1, col: 2 },
     ]);
   });
 
-  it("builds a vertical path", () => {
-    expect(lineBetween({ row: 0, col: 0 }, { row: 2, col: 0 })).toEqual([
+  it("is a no-op (same reference) when the pointer re-enters the current last cell", () => {
+    const path = [{ row: 0, col: 0 }, { row: 0, col: 1 }];
+    expect(extendPath(path, { row: 0, col: 1 })).toBe(path);
+  });
+
+  it("pops the last cell when the pointer backtracks onto the second-to-last cell", () => {
+    const path = [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }];
+    expect(extendPath(path, { row: 0, col: 1 })).toEqual([
       { row: 0, col: 0 },
-      { row: 1, col: 0 },
-      { row: 2, col: 0 },
+      { row: 0, col: 1 },
     ]);
   });
 
-  it("builds a diagonal path in any of the 4 diagonal directions", () => {
-    expect(lineBetween({ row: 0, col: 0 }, { row: 2, col: 2 })).toEqual([
-      { row: 0, col: 0 },
-      { row: 1, col: 1 },
-      { row: 2, col: 2 },
-    ]);
-    expect(lineBetween({ row: 2, col: 0 }, { row: 0, col: 2 })).toEqual([
-      { row: 2, col: 0 },
-      { row: 1, col: 1 },
-      { row: 0, col: 2 },
-    ]);
+  it("ignores a non-adjacent jump", () => {
+    const path = [{ row: 0, col: 0 }];
+    expect(extendPath(path, { row: 5, col: 5 })).toBe(path);
   });
 
-  it("rejects a non-straight (knight's-move) drag", () => {
-    expect(lineBetween({ row: 0, col: 0 }, { row: 1, col: 2 })).toBeNull();
+  it("ignores revisiting a cell already in the path (other than backtracking one step)", () => {
+    const path = [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 1 }];
+    // (0,0) is adjacent to the last cell (1,1) but already used earlier —
+    // must not be re-added (would make an invalid self-intersecting path).
+    expect(extendPath(path, { row: 0, col: 0 })).toBe(path);
   });
 });
 

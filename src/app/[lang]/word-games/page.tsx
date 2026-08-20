@@ -3,7 +3,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { flashcardLevels } from "@/lib/flashcards";
 import { wordGameTypes } from "@/lib/word-games/types";
-import { countSequences } from "@/lib/word-games/data";
+import { countSequences, getCurvedSequences } from "@/lib/word-games/data";
 import { getCompletedSequences } from "@/lib/word-games/progress";
 import WordGamesPicker, { type PickerData } from "@/components/word-games/WordGamesPicker";
 import { notFound } from "next/navigation";
@@ -23,11 +23,12 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
   for (const type of wordGameTypes) {
     const levelData = {} as PickerData[typeof type];
     for (const level of flashcardLevels) {
-      const [total, completed] = await Promise.all([
+      const [total, completed, curved] = await Promise.all([
         countSequences(type, level),
         user ? getCompletedSequences(user.id, type, level) : Promise.resolve(new Set<number>()),
+        getCurvedSequences(type, level),
       ]);
-      levelData[level] = { total, completed: Array.from(completed) };
+      levelData[level] = { total, completed: Array.from(completed), curved: Array.from(curved) };
     }
     data[type] = levelData;
   }

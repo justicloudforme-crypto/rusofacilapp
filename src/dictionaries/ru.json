@@ -652,7 +652,9 @@
     "solvedTitle": "Головоломка решена!",
     "solvedSubtitle": "Отлично, ты справился с головоломкой.",
     "playAgainButton": "Сыграть ещё раз",
-    "wrongCellHint": "Эта буква неверна, попробуй ещё раз."
+    "wrongCellHint": "Эта буква неверна, попробуй ещё раз.",
+    "resetSelectionButton": "Отменить выбор",
+    "expertModeLabel": "Режим эксперта"
   },
   "celebration": {
     "lessonPassedTitle": "Урок пройден!",
