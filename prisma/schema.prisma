@@ -553,6 +553,12 @@ model WordGameProgress {
   puzzle      WordGamePuzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
   completedAt DateTime       @default(now())
   timeSeconds Int?
+  // Client-reported: true if the "reveal a letter" hint was used at any
+  // point during this attempt. Not tamper-proof (the client could lie),
+  // same trust level as LessonProgress.mistakes elsewhere in this schema
+  // — this is for the completion celebration/UI to distinguish a clean
+  // solve, not an anti-cheat mechanism.
+  usedHint    Boolean        @default(false)
 
   @@unique([userId, puzzleId])
   @@index([userId])

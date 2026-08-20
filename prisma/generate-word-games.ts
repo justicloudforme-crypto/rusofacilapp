@@ -25,6 +25,7 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import type { WordGameGrid, WordPlacement, WordSearchDirection } from "../src/lib/word-games/types";
 import { candidateWords, makeRng, shuffle, type WordCandidate } from "../src/lib/word-games/generation";
 import { buildCrossword } from "../src/lib/word-games/crossword";
+import { buildClue } from "../src/lib/word-games/clue";
 
 const adapter = new PrismaLibSql({
   url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
@@ -188,14 +189,15 @@ async function main() {
   for (const level of LEVELS) {
     const cards = await db.flashcardCard.findMany({
       where: { level },
-      select: { russian: true, translationEs: true },
+      select: { russian: true, translationEs: true, exampleEs: true },
     });
+    const clueForLevel = (card: { translationEs: string; exampleEs: string }) => buildClue(level, card);
 
     for (let rungIndex = 0; rungIndex < WORD_SEARCH_RUNGS.length; rungIndex++) {
       const sequence = rungIndex + 1;
       const rung = WORD_SEARCH_RUNGS[rungIndex];
       const rng = makeRng(`WORD_SEARCH-${level}-${sequence}`);
-      const pool = candidateWords(cards, rung.size);
+      const pool = candidateWords(cards, rung.size, clueForLevel);
 
       if (pool.length < 5) {
         problems.push(`WORD_SEARCH ${level} seq ${sequence}: only ${pool.length} eligible words (need >=5), skipped`);
@@ -216,7 +218,7 @@ async function main() {
       const sequence = rungIndex + 1;
       const rung = CROSSWORD_RUNGS[rungIndex];
       const rng = makeRng(`CROSSWORD-${level}-${sequence}`);
-      const pool = candidateWords(cards, rung.maxLen);
+      const pool = candidateWords(cards, rung.maxLen, clueForLevel);
 
       if (pool.length < rung.wordCount) {
         problems.push(`CROSSWORD ${level} seq ${sequence}: only ${pool.length} eligible words (need >=${rung.wordCount}), skipped`);
