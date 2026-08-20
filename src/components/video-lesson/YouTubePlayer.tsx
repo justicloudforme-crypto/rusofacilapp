@@ -15,13 +15,22 @@ interface YTPlayerVars {
 interface YTErrorEvent {
   data: number;
 }
+interface YTStateChangeEvent {
+  data: number;
+}
+// https://developers.google.com/youtube/iframe_api_reference#Playback_status
+const YT_STATE_PLAYING = 1;
 interface YTNamespace {
   Player: new (
     el: HTMLElement,
     options: {
       videoId: string;
       playerVars?: YTPlayerVars;
-      events: { onReady?: () => void; onError?: (event: YTErrorEvent) => void };
+      events: {
+        onReady?: () => void;
+        onError?: (event: YTErrorEvent) => void;
+        onStateChange?: (event: YTStateChangeEvent) => void;
+      };
     },
   ) => YTPlayer;
 }
@@ -40,21 +49,48 @@ declare global {
   }
 }
 
-let apiLoadPromise: Promise<void> | null = null;
+// The iframe API `<script>` previously had no `onerror` and the promise it
+// fed had no timeout — if an ad/privacy blocker or a restrictive network
+// blocked youtube.com/iframe_api outright, this promise just never
+// resolved, and every caller's `.then()` chain silently stalled forever:
+// no error, no player, no explanation. A user tapping the resulting empty
+// black box got exactly the reported "нажал и не получилось" experience.
+// Resolving with a boolean (never rejecting) keeps every existing `.then()`
+// call site simple — no new `.catch()` needed anywhere.
+const API_LOAD_TIMEOUT_MS = 10_000;
+let apiLoadPromise: Promise<boolean> | null = null;
 
-function loadYouTubeApi(): Promise<void> {
-  if (window.YT?.Player) return Promise.resolve();
+function loadYouTubeApi(): Promise<boolean> {
+  if (window.YT?.Player) return Promise.resolve(true);
   if (apiLoadPromise) return apiLoadPromise;
 
   apiLoadPromise = new Promise((resolve) => {
+    let settled = false;
+    const settle = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      resolve(ok);
+    };
+
     const previous = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
       previous?.();
-      resolve();
+      settle(true);
     };
     const script = document.createElement("script");
     script.src = "https://www.youtube.com/iframe_api";
+    script.onerror = () => settle(false);
     document.head.appendChild(script);
+
+    setTimeout(() => settle(false), API_LOAD_TIMEOUT_MS);
+  });
+  // A timeout/onerror here doesn't necessarily mean the script will NEVER
+  // load — a slow (not blocked) network could still deliver it after our
+  // timeout fires. Don't let one slow load permanently poison every future
+  // player mount on the page: only cache a SUCCESSFUL load; a failed one
+  // clears the cache so the next mount attempt retries from scratch.
+  apiLoadPromise.then((ok) => {
+    if (!ok) apiLoadPromise = null;
   });
   return apiLoadPromise;
 }
@@ -83,6 +119,14 @@ const YouTubePlayer = forwardRef<
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayer | null>(null);
   const [errorCode, setErrorCode] = useState<number | null>(null);
+  // Distinct from errorCode (a real onError event): true means the iframe
+  // API script never loaded (blocked/timed out) or the player reported
+  // "playing" but its clock never actually moved — both silent-failure
+  // modes the API's own onError never reports, so without this a broken
+  // video was just an unresponsive black box (the reported "нажал и не
+  // получилось" bug). Same visual treatment as errorCode; kept separate so
+  // future callers could give each a distinct message if they want to.
+  const [silentlyBroken, setSilentlyBroken] = useState(false);
 
   useImperativeHandle(
     ref,
@@ -100,10 +144,28 @@ const YouTubePlayer = forwardRef<
   useEffect(() => {
     let cancelled = false;
     let player: YTPlayer | null = null;
+    let stallTimer: ReturnType<typeof setTimeout> | null = null;
     setErrorCode(null);
+    setSilentlyBroken(false);
 
-    loadYouTubeApi().then(() => {
-      if (cancelled || !containerRef.current || !window.YT) return;
+    const clearStallTimer = () => {
+      if (stallTimer !== null) {
+        clearTimeout(stallTimer);
+        stallTimer = null;
+      }
+    };
+
+    loadYouTubeApi().then((loaded) => {
+      if (cancelled) return;
+      if (!loaded) {
+        // The API script itself never loaded (blocked or timed out) — no
+        // player was ever created, so onError can't fire for us. Surface
+        // this the same way as a real playback error rather than leaving
+        // the container permanently blank.
+        setSilentlyBroken(true);
+        return;
+      }
+      if (!containerRef.current || !window.YT) return;
       player = new window.YT.Player(containerRef.current, {
         videoId: youtubeVideoId,
         playerVars: {
@@ -127,12 +189,31 @@ const YouTubePlayer = forwardRef<
           onError: (event) => {
             if (!cancelled && UNRECOVERABLE_ERROR_CODES.has(event.data)) setErrorCode(event.data);
           },
+          // Covers a real, previously-confirmed blind spot (see
+          // src/lib/media/checkEmbeds.ts's song-ty-uydyosh incident): a
+          // region-restricted or otherwise soft-blocked video can report
+          // itself as "playing" without ever actually advancing, and never
+          // fires onError at all — the user just sees a stuck frame with no
+          // explanation. If the reported state is "playing", check a few
+          // seconds later whether the clock actually moved; if it didn't,
+          // treat it as broken.
+          onStateChange: (event) => {
+            clearStallTimer();
+            if (cancelled || event.data !== YT_STATE_PLAYING) return;
+            const startedAt = player?.getCurrentTime() ?? 0;
+            stallTimer = setTimeout(() => {
+              if (cancelled) return;
+              const now = player?.getCurrentTime() ?? 0;
+              if (now <= startedAt + 0.5) setSilentlyBroken(true);
+            }, 4000);
+          },
         },
       });
     });
 
     return () => {
       cancelled = true;
+      clearStallTimer();
       player?.destroy();
       playerRef.current = null;
     };
@@ -142,7 +223,7 @@ const YouTubePlayer = forwardRef<
     <div className="overflow-hidden rounded-2xl border border-black/10 bg-black dark:border-white/10">
       <div className="relative aspect-video w-full" aria-label={title}>
         <div ref={containerRef} className="absolute inset-0 h-full w-full" />
-        {errorCode !== null && (
+        {(errorCode !== null || silentlyBroken) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black px-6 text-center text-sm text-white/70">
             {unavailableLabel}
           </div>

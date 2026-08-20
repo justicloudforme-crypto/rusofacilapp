@@ -132,7 +132,14 @@ function SubtitleTrack({
 
   const handleSeek = useCallback(
     (line: SubtitleLine) => {
-      playerRef.current?.seekTo(line.start);
+      // If the player never actually initialized (blocked/failed API load —
+      // see YouTubePlayer's loadYouTubeApi), seekTo is a no-op. Don't
+      // optimistically highlight the row in that case — a highlight with no
+      // corresponding video movement is exactly the "clicked and nothing
+      // happened" confusion the player component now surfaces its own error
+      // for; this row shouldn't paper over that with a false "it worked" cue.
+      if (!playerRef.current) return;
+      playerRef.current.seekTo(line.start);
       // Optimistic: highlight immediately instead of waiting for the next tick.
       activeLineIdRef.current = line.id;
       setActiveLineId(line.id);
