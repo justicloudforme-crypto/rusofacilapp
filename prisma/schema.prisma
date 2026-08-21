@@ -600,3 +600,41 @@ model GrammarCheckResult {
   @@unique([entityType, entityId, fieldName])
   @@index([status])
 }
+
+// Runtime-writable state layered on top of the static `mediaData.json`
+// catalog (title/vocab/exercises stay in the JSON file, which ships with
+// the code — no runtime writes needed there). This table exists because
+// `mediaData.json` lives inside the deployed app's own source tree, and
+// Vercel's serverless functions have a read-only filesystem: any
+// `fs.writeFile()` against it in production silently fails, which is why
+// admin-generated subtitles never used to persist there. Read as an
+// overlay in src/lib/media/data.ts — a null/absent field here means "fall
+// back to whatever the static JSON has for this id."
+model MediaOverride {
+  id      String @id @default(cuid())
+  mediaId String @unique
+
+  // JSON-encoded SubtitleLine[], set by the admin "Generar subtítulos con
+  // Claude" action. Overrides mediaData.json's own `subtitles` field when
+  // present.
+  subtitles String?
+
+  // EmbedStatus: "ok" | "blocked". Set by the automated YouTube Data API
+  // check (src/lib/media/checkEmbeds.ts) or manually via the admin panel.
+  embedStatus   String?
+  lastCheckedAt String?
+  // Appended to the static item's sourceNote for display, not a replacement —
+  // keeps curatorial history readable in one place.
+  sourceNoteAppend String?
+
+  // When true, the automated embed-status check (check-embeds route) must
+  // skip writing embedStatus/lastCheckedAt for this item entirely — a human
+  // judgment call (e.g. a direct user report of "Video unavailable" that
+  // contradicts what the YouTube Data API itself reports) takes precedence
+  // over the next automated re-check. See rusofasil_media_content_policy
+  // memory for why this exists: song-ty-uydyosh is a confirmed case where
+  // the API disagrees with reality.
+  manualOverride Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+}
