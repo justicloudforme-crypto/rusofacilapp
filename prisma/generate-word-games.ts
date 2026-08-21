@@ -36,6 +36,20 @@ const adapter = new PrismaLibSql({
 const db = new PrismaClient({ adapter });
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
+type Level = (typeof LEVELS)[number];
+
+// Real eligible single-word Cyrillic candidate counts per level (measured
+// directly against FlashcardCard: length 3-16, no spaces/hyphens — see
+// generation.ts's SINGLE_CYRILLIC_WORD filter). A1's word bank is ~3x
+// smaller than B1's, so splitting a puzzle-count target evenly across
+// levels (400 each toward 2000) would force A1 to reuse its words far
+// more heavily than B1 ever would at parity count — the opposite of the
+// "no cyclic repetition, use the ~5500-word base appropriately per level"
+// requirement this batch was built for. LEVEL_TARGETS below instead
+// allocates the 2000 total proportionally to each level's own pool size,
+// keeping the average reuse ratio roughly EQUAL across levels instead of
+// disproportionately punishing the smallest one.
+const LEVEL_POOL_SIZE: Record<Level, number> = { A1: 444, A2: 931, B1: 1268, B2: 739, C1: 543 };
 
 // One rung per level, growing in grid size + word count — the "simple to
 // complex" progression the plan calls for. Self-paced like the rest of the
@@ -90,14 +104,19 @@ const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 16, wordCount: 18 },
   { size: 16, wordCount: 24 },
   { size: 16, wordCount: 20 },
-  // Beyond this point (rung 31+, toward the 1000-puzzle target), hand-
-  // curating another 50+ literal entries adds no real value: actual word
-  // *content* diversity comes entirely from word-search.ts's per-seed
-  // randomized selection window (see its own doc comment), not from this
-  // number — a formula that keeps producing a varied, non-monotonic
-  // wordCount is exactly as good as another wall of literal objects, and
-  // far less error-prone to extend further later. See extraWordSearchRungs.
-  ...extraWordSearchRungs(54),
+  // Beyond this point (rung 31+), hand-curating hundreds more literal
+  // entries adds no real value: actual word *content* diversity comes
+  // entirely from word-search.ts's per-seed randomized selection window
+  // (see its own doc comment), not from this number — a formula that
+  // keeps producing a varied, non-monotonic wordCount is exactly as good
+  // as another wall of literal objects, and far less error-prone to
+  // extend further later. Sized with headroom past every level's actual
+  // LEVEL_TARGETS allocation (B1's is the largest, currently 271) rather
+  // than trimmed to exactly match it — the per-level loops below slice
+  // this array to LEVEL_TARGETS[level].straight, so a comfortable margin
+  // here means LEVEL_POOL_SIZE can be re-tuned later without also having
+  // to remember to grow this call. See extraWordSearchRungs.
+  ...extraWordSearchRungs(270),
 ];
 
 // Expert/★ tier, appended right after WORD_SEARCH_RUNGS — same picker
@@ -120,8 +139,9 @@ const WORD_SEARCH_STAR_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 14, wordCount: 10 },
   { size: 16, wordCount: 13 },
   // See extraStarRungs — same "formula beats another wall of literals"
-  // reasoning as extraWordSearchRungs above.
-  ...extraStarRungs(20),
+  // and headroom-not-exact-fit reasoning as extraWordSearchRungs above
+  // (B1's actual LEVEL_TARGETS star allocation is currently 103).
+  ...extraStarRungs(110),
 ];
 
 // Crosswords need more candidate words per target than word search does
@@ -177,8 +197,9 @@ const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
   { wordCount: 19, maxLen: 11 },
   { wordCount: 23, maxLen: 12 },
   { wordCount: 13, maxLen: 9 },
-  // See extraCrosswordRungs — same reasoning as the two functions above.
-  ...extraCrosswordRungs(54),
+  // See extraCrosswordRungs — same reasoning as the two functions above
+  // (B1's actual LEVEL_TARGETS crossword allocation is currently 272).
+  ...extraCrosswordRungs(270),
 ];
 
 /** Generates additional straight-tier word-search rungs beyond the
@@ -237,6 +258,42 @@ function extraCrosswordRungs(count: number): Array<{ wordCount: number; maxLen: 
   return rungs;
 }
 
+// Total puzzles across all levels/tiers, and the straight:star:crossword
+// split within each level's own allocation — kept at the same 21:8:21
+// ratio the hand-curated rungs already established (84:32:84 at the
+// 1000-puzzle milestone), just scaled up.
+const TOTAL_TARGET = 2000;
+const TIER_RATIO = { straight: 21, star: 8, crossword: 21 };
+
+interface LevelTarget {
+  straight: number;
+  star: number;
+  crossword: number;
+}
+
+/** Splits TOTAL_TARGET across levels proportional to each one's own word-
+ * bank size (LEVEL_POOL_SIZE), then splits each level's share across the
+ * three tiers at TIER_RATIO. `crossword` absorbs each level's rounding
+ * remainder so straight+star+crossword always sums to exactly that
+ * level's rounded total — the grand total across all 5 levels lands at
+ * 2000 for the actual measured pool sizes here, but isn't forced to by
+ * fiat; a future change to LEVEL_POOL_SIZE just redistributes rather than
+ * silently drifting off-target. */
+function computeLevelTargets(): Record<Level, LevelTarget> {
+  const poolTotal = LEVELS.reduce((sum, l) => sum + LEVEL_POOL_SIZE[l], 0);
+  const ratioSum = TIER_RATIO.straight + TIER_RATIO.star + TIER_RATIO.crossword;
+  const targets = {} as Record<Level, LevelTarget>;
+  for (const level of LEVELS) {
+    const levelTotal = Math.round((LEVEL_POOL_SIZE[level] / poolTotal) * TOTAL_TARGET);
+    const straight = Math.round((levelTotal * TIER_RATIO.straight) / ratioSum);
+    const star = Math.round((levelTotal * TIER_RATIO.star) / ratioSum);
+    const crossword = levelTotal - straight - star;
+    targets[level] = { straight, star, crossword };
+  }
+  return targets;
+}
+const LEVEL_TARGETS = computeLevelTargets();
+
 async function upsertPuzzle(
   type: "WORD_SEARCH" | "CROSSWORD",
   level: string,
@@ -264,14 +321,20 @@ async function upsertPuzzle(
   counters.created++;
 }
 
-// Highest sequence number this script will ever write for each type — the
-// straight rungs plus (for WORD_SEARCH only) the star tier appended after
-// them. Used purely for the cleanup pass below.
-const MAX_WORD_SEARCH_SEQUENCE = WORD_SEARCH_RUNGS.length + WORD_SEARCH_STAR_RUNGS.length;
-const MAX_CROSSWORD_SEQUENCE = CROSSWORD_RUNGS.length;
+// Highest sequence number this script will ever write for each
+// (type, level) — the straight rungs plus (for WORD_SEARCH only) the star
+// tier appended after them, per that level's own LEVEL_TARGETS allocation
+// (levels no longer share one flat count — see LEVEL_TARGETS' doc
+// comment). Used purely for the cleanup pass below.
+function maxWordSearchSequence(level: Level): number {
+  return LEVEL_TARGETS[level].straight + LEVEL_TARGETS[level].star;
+}
+function maxCrosswordSequence(level: Level): number {
+  return LEVEL_TARGETS[level].crossword;
+}
 
 /** Deletes any WordGamePuzzle row past the current max sequence for its
- * type/level — rows `upsertPuzzle` above can never touch since it only
+ * (type, level) — rows `upsertPuzzle` above can never touch since it only
  * ever writes sequences 1..max. Without this, shrinking a rungs array (or
  * — the way this bit us once already — changing WORD_SEARCH_RUNGS.length,
  * which shifts where the star tier's sequence numbers start) leaves
@@ -284,11 +347,15 @@ const MAX_CROSSWORD_SEQUENCE = CROSSWORD_RUNGS.length;
  * Run every time so the DB can never drift out of sync with what these
  * rung tables currently define, regardless of how they're edited later. */
 async function cleanupStaleSequences(): Promise<number> {
-  const [ws, cw] = await Promise.all([
-    db.wordGamePuzzle.deleteMany({ where: { type: "WORD_SEARCH", sequence: { gt: MAX_WORD_SEARCH_SEQUENCE } } }),
-    db.wordGamePuzzle.deleteMany({ where: { type: "CROSSWORD", sequence: { gt: MAX_CROSSWORD_SEQUENCE } } }),
-  ]);
-  return ws.count + cw.count;
+  let deleted = 0;
+  for (const level of LEVELS) {
+    const [ws, cw] = await Promise.all([
+      db.wordGamePuzzle.deleteMany({ where: { type: "WORD_SEARCH", level, sequence: { gt: maxWordSearchSequence(level) } } }),
+      db.wordGamePuzzle.deleteMany({ where: { type: "CROSSWORD", level, sequence: { gt: maxCrosswordSequence(level) } } }),
+    ]);
+    deleted += ws.count + cw.count;
+  }
+  return deleted;
 }
 
 async function main() {
@@ -296,6 +363,7 @@ async function main() {
   const problems: string[] = [];
 
   for (const level of LEVELS) {
+    const target = LEVEL_TARGETS[level];
     const cards = await db.flashcardCard.findMany({
       where: { level },
       select: { russian: true, translationEs: true, exampleEs: true },
@@ -323,7 +391,7 @@ async function main() {
       for (const w of words) usage.set(w.word, (usage.get(w.word) ?? 0) + 1);
     }
 
-    for (let rungIndex = 0; rungIndex < WORD_SEARCH_RUNGS.length; rungIndex++) {
+    for (let rungIndex = 0; rungIndex < target.straight; rungIndex++) {
       const sequence = rungIndex + 1;
       const rung = WORD_SEARCH_RUNGS[rungIndex];
       // Capped at size-2 (not size) so a word can never span the grid's
@@ -358,8 +426,8 @@ async function main() {
       console.log(`  [WORD_SEARCH/${level}/${sequence}] ${built.words.length} words in a ${built.grid.size}x${built.grid.size} grid`);
     }
 
-    for (let starIndex = 0; starIndex < WORD_SEARCH_STAR_RUNGS.length; starIndex++) {
-      const sequence = WORD_SEARCH_RUNGS.length + starIndex + 1;
+    for (let starIndex = 0; starIndex < target.star; starIndex++) {
+      const sequence = target.straight + starIndex + 1;
       const rung = WORD_SEARCH_STAR_RUNGS[starIndex];
       // Curved words need real segments to bend through — a word shorter
       // than 5 letters is too cramped to produce an interesting curve
@@ -395,7 +463,7 @@ async function main() {
       console.log(`  [WORD_SEARCH★/${level}/${sequence}] ${built.words.length} curved words in a ${built.grid.size}x${built.grid.size} grid`);
     }
 
-    for (let rungIndex = 0; rungIndex < CROSSWORD_RUNGS.length; rungIndex++) {
+    for (let rungIndex = 0; rungIndex < target.crossword; rungIndex++) {
       const sequence = rungIndex + 1;
       const rung = CROSSWORD_RUNGS[rungIndex];
       const rng = makeRng(`CROSSWORD-${level}-${sequence}`);
