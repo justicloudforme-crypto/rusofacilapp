@@ -1,7 +1,14 @@
-import "server-only";
+// Deliberately no `import "server-only"` — this module is dual-use, loaded
+// both by Next API routes and directly by `tsx` from prisma/generate-
+// media-subtitles.ts (a plain Node process, not a webpack/Next build, so
+// the `server-only` shim wouldn't resolve there — see audio-assets.ts's
+// file header for the same reasoning applied to another dual-use module).
+// Safe: this file only exports Node-only APIs (execFile, fs, fetch to
+// external hosts) that no client component imports or could usefully
+// import.
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { access, chmod, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, chmod, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -229,5 +236,126 @@ export async function fetchRussianCaptions(videoId: string): Promise<CaptionLine
     return lines;
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+// OpenAI's /v1/audio/transcriptions rejects uploads over 25MB.
+const WHISPER_MAX_BYTES = 24 * 1024 * 1024;
+
+let ffmpegBinaryPromise: Promise<string | null> | null = null;
+
+/**
+ * Resolves an ffmpeg binary for yt-dlp's `--ffmpeg-location`, or null if
+ * none is available. No system ffmpeg was found on this machine (no
+ * Homebrew either), but `pip install --user imageio-ffmpeg` bundles a
+ * static binary and needs no system package manager — installed
+ * specifically for this. Checks a real system `ffmpeg` on PATH first in
+ * case one exists (respects it instead of shadowing it), and only falls
+ * back to asking Python for imageio_ffmpeg's bundled copy.
+ */
+async function resolveFfmpegBinary(): Promise<string | null> {
+  if (!ffmpegBinaryPromise) {
+    ffmpegBinaryPromise = (async () => {
+      try {
+        await execFileAsync("ffmpeg", ["-version"]);
+        return "ffmpeg";
+      } catch {
+        // fall through to the Python-bundled copy
+      }
+      try {
+        const { stdout } = await execFileAsync("python3", [
+          "-c",
+          "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())",
+        ]);
+        const binaryPath = stdout.trim();
+        await access(binaryPath);
+        return binaryPath;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return ffmpegBinaryPromise;
+}
+
+export interface DownloadedAudio {
+  /** Absolute path to the downloaded file — actual container format varies
+   * (webm/m4a/mp4) depending on what YouTube serves this video without a
+   * PO token; Whisper reads the audio track directly regardless. */
+  path: string;
+  cleanup: () => Promise<void>;
+}
+
+/**
+ * Downloads the smallest reasonable audio for a video — used only as a
+ * fallback when `fetchRussianCaptions` finds no existing YouTube caption
+ * track to extract for free (see prisma/generate-media-subtitles.ts).
+ *
+ * `18` (a legacy 360p progressive mp4, video+audio combined) is what
+ * actually gets picked for most videos in practice: YouTube increasingly
+ * gates its audio-only/higher-quality formats behind a PO token this app
+ * doesn't have, but format 18 stays reliably available without one.
+ * That's a real, un-negotiable 20-30MB+ download for a 10-minute video —
+ * comfortably over Whisper's 25MB cap on its own. When ffmpeg is
+ * available (resolveFfmpegBinary — a bundled static binary via
+ * `pip install --user imageio-ffmpeg`, no system package manager needed),
+ * yt-dlp re-encodes the downloaded video down to a mono 16kHz 32kbps
+ * mp3 (`-x`), which shrinks a 10-minute video to ~2-3MB — Whisper reads
+ * the audio track regardless of source quality, so this loses nothing
+ * that matters for transcription. Without ffmpeg, falls back to shipping
+ * the raw downloaded file as-is, which only works for shorter videos.
+ */
+export async function downloadAudioForWhisper(videoId: string): Promise<DownloadedAudio> {
+  const dir = await mkdtemp(path.join(tmpdir(), "yt-audio-"));
+  const outputTemplate = path.join(dir, `${videoId}.%(ext)s`);
+
+  const cleanup = () => rm(dir, { recursive: true, force: true }).catch(() => {});
+
+  try {
+    const ytdlpBinary = await resolveYtDlpBinary();
+    const ffmpegBinary = await resolveFfmpegBinary();
+
+    const args = [
+      "-f",
+      "bestaudio/18/best",
+      "--extractor-args",
+      "youtube:player_client=android",
+      "-o",
+      outputTemplate,
+    ];
+    if (ffmpegBinary) {
+      args.push(
+        "-x",
+        "--audio-format",
+        "mp3",
+        "--postprocessor-args",
+        "-ac 1 -ar 16000 -b:a 32k",
+        "--ffmpeg-location",
+        ffmpegBinary,
+      );
+    }
+    args.push(`https://www.youtube.com/watch?v=${videoId}`);
+
+    try {
+      await execFileAsync(ytdlpBinary, args, { timeout: 180_000, maxBuffer: 1024 * 1024 * 10 });
+    } catch (error) {
+      if (isCommandNotFound(error)) throw new Error("missing_ytdlp");
+      throw new Error("audio_download_failed");
+    }
+
+    const files = await readdir(dir).catch(() => []);
+    const audioFile = files[0];
+    if (!audioFile) throw new Error("audio_download_failed");
+
+    const filePath = path.join(dir, audioFile);
+    const stats = await stat(filePath);
+    if (stats.size > WHISPER_MAX_BYTES) {
+      throw new Error("audio_too_large");
+    }
+
+    return { path: filePath, cleanup };
+  } catch (error) {
+    await cleanup();
+    throw error;
   }
 }

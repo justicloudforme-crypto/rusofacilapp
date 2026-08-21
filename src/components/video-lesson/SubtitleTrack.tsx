@@ -30,6 +30,13 @@ function SubtitleLineRow({
   onSeek: (line: SubtitleLine) => void;
 }) {
   const tokens = useMemo(() => line.ru.split(/(\s+)/), [line.ru]);
+  // Bilingual grammar-explainer subtitles include the teacher's own Spanish
+  // narration, not just Russian examples — those lines carry no Russian at
+  // all (see generateSubtitlesWithClaude.ts's REGLA ABSOLUTA 2). Rendering
+  // an empty bold "ru" paragraph above the Spanish text would leave an
+  // ugly gap, so a narration-only line shows just its "es" text, styled as
+  // the primary line instead of a muted translation underneath one.
+  const isNarrationOnly = line.ru.trim().length === 0;
 
   return (
     <div
@@ -47,34 +54,44 @@ function SubtitleLineRow({
         isActive ? "bg-foreground/10" : ""
       }`}
     >
-      <p className={`leading-relaxed ${isActive ? "text-base font-medium" : "text-sm text-foreground/70"}`}>
-        {tokens.map((token, index) => {
-          if (/^\s+$/.test(token)) return <Fragment key={index}>{token}</Fragment>;
+      {isNarrationOnly ? (
+        <p
+          className={`leading-relaxed italic ${isActive ? "text-base font-medium text-foreground" : "text-sm text-foreground/70"}`}
+        >
+          {line.es}
+        </p>
+      ) : (
+        <>
+          <p className={`leading-relaxed ${isActive ? "text-base font-medium" : "text-sm text-foreground/70"}`}>
+            {tokens.map((token, index) => {
+              if (/^\s+$/.test(token)) return <Fragment key={index}>{token}</Fragment>;
 
-          const key = normalizeToken(token);
-          const gloss = key ? glossary[key] : undefined;
-          const wordId = `${line.id}-${index}`;
+              const key = normalizeToken(token);
+              const gloss = key ? glossary[key] : undefined;
+              const wordId = `${line.id}-${index}`;
 
-          if (!gloss) return <Fragment key={index}>{token}</Fragment>;
+              if (!gloss) return <Fragment key={index}>{token}</Fragment>;
 
-          return (
-            <span key={index} className="relative inline-block">
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleWord(wordId);
-                }}
-                className="rounded px-0.5 underline decoration-dotted decoration-2 underline-offset-4 transition-colors hover:bg-foreground/10"
-              >
-                {token}
-              </button>
-              {openWord === wordId && <WordTooltip gloss={gloss} onClose={() => onToggleWord(wordId)} />}
-            </span>
-          );
-        })}
-      </p>
-      <p className={`text-sm ${isActive ? "text-foreground/80" : "text-foreground/50"}`}>{line.es}</p>
+              return (
+                <span key={index} className="relative inline-block">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggleWord(wordId);
+                    }}
+                    className="rounded px-0.5 underline decoration-dotted decoration-2 underline-offset-4 transition-colors hover:bg-foreground/10"
+                  >
+                    {token}
+                  </button>
+                  {openWord === wordId && <WordTooltip gloss={gloss} onClose={() => onToggleWord(wordId)} />}
+                </span>
+              );
+            })}
+          </p>
+          <p className={`text-sm ${isActive ? "text-foreground/80" : "text-foreground/50"}`}>{line.es}</p>
+        </>
+      )}
     </div>
   );
 }

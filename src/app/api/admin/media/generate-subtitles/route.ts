@@ -29,6 +29,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  // Write Once, Lock Forever: once subtitles exist for an item, no code
+  // path is allowed to silently overwrite them — including this button.
+  // A deliberate re-generation (a confirmed error found in already-saved
+  // subtitles) is a CLI action with an explicit --force=<id>, never a web
+  // click. See prisma/generate-media-subtitles.ts.
+  if (item.subtitles && item.subtitles.length > 0) {
+    return NextResponse.json({ error: "already_has_subtitles" }, { status: 409 });
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "missing_api_key" }, { status: 503 });
   }

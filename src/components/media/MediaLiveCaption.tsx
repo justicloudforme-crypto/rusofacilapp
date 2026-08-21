@@ -23,26 +23,38 @@ function findActiveLine(subtitles: SubtitleLine[], time: number): SubtitleLine |
  * boundaries by splitting the line's duration proportionally to each
  * word's character length — long words "get" more time than short ones,
  * which tracks real speech closely enough for a karaoke-style highlight.
+ * Takes the actual spoken text directly (not the SubtitleLine) so it works
+ * for both a Russian example line and a Spanish narration line — whichever
+ * one is the real speech for that segment (see CaptionLine below).
  */
-function estimateWordTimings(line: SubtitleLine): TimedWord[] {
-  const parts = line.ru.split(/(\s+)/).filter((part) => part.length > 0);
+function estimateWordTimings(text: string, start: number, end: number): TimedWord[] {
+  const parts = text.split(/(\s+)/).filter((part) => part.length > 0);
   const words = parts.filter((part) => !/^\s+$/.test(part));
   const totalChars = words.reduce((sum, word) => sum + word.length, 0) || 1;
-  const duration = Math.max(line.end - line.start, 0.1);
+  const duration = Math.max(end - start, 0.1);
 
-  let cursor = line.start;
+  let cursor = start;
   return parts.map((part) => {
     if (/^\s+$/.test(part)) return { text: part, start: cursor, end: cursor };
     const share = (part.length / totalChars) * duration;
-    const start = cursor;
-    const end = start + share;
-    cursor = end;
-    return { text: part, start, end };
+    const wordStart = cursor;
+    const wordEnd = wordStart + share;
+    cursor = wordEnd;
+    return { text: part, start: wordStart, end: wordEnd };
   });
 }
 
-function CaptionLine({ line, time }: { line: SubtitleLine; time: number }) {
-  const words = useMemo(() => estimateWordTimings(line), [line]);
+/**
+ * Word-by-word karaoke highlight for whichever text is the ACTUAL spoken
+ * content of this segment — the Russian example when there is one, or the
+ * teacher's Spanish narration when there isn't (see REGLA ABSOLUTA 2 in
+ * generateSubtitlesWithClaude.ts). Highlighting only the Russian half and
+ * leaving Spanish narration as static text would mean most of a grammar
+ * video (which is mostly Spanish explanation) never highlights at all —
+ * this makes every currently-spoken word highlighted, in either language.
+ */
+function CaptionLine({ text, start, end, time }: { text: string; start: number; end: number; time: number }) {
+  const words = useMemo(() => estimateWordTimings(text, start, end), [text, start, end]);
 
   return (
     <p className="text-balance text-center text-lg font-medium leading-relaxed sm:text-xl">
@@ -106,13 +118,25 @@ function MediaLiveCaption({
 
   if (subtitles.length === 0) return null;
 
+  // Bilingual grammar-explainer subtitles include narration-only lines
+  // (the teacher's Spanish explanation, no Russian at all — see
+  // generateSubtitlesWithClaude.ts's REGLA ABSOLUTA 2). The spoken text to
+  // highlight is `ru` when there is one, `es` otherwise — never both, and
+  // never neither (the schema guarantees `es` is non-empty either way).
+  const isNarrationOnly = Boolean(activeLine) && activeLine!.ru.trim().length === 0;
+  const spokenText = activeLine ? (isNarrationOnly ? activeLine.es : activeLine.ru) : "";
+
   return (
     <div className="flex min-h-[6.5rem] flex-col justify-center gap-2 rounded-2xl border border-black/10 bg-foreground/[0.03] px-4 py-4 dark:border-white/10">
       {activeLine ? (
-        <>
-          <MemoCaptionLine line={activeLine} time={time} />
-          <p className="text-balance text-center text-sm text-foreground/60">{activeLine.es}</p>
-        </>
+        isNarrationOnly ? (
+          <MemoCaptionLine text={spokenText} start={activeLine.start} end={activeLine.end} time={time} />
+        ) : (
+          <>
+            <MemoCaptionLine text={spokenText} start={activeLine.start} end={activeLine.end} time={time} />
+            <p className="text-balance text-center text-sm text-foreground/60">{activeLine.es}</p>
+          </>
+        )
       ) : (
         <p className="text-center text-sm text-foreground/40">···</p>
       )}

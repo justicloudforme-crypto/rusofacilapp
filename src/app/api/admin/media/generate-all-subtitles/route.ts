@@ -15,11 +15,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => null);
-  const force = body?.force === true;
+  // Write Once, Lock Forever: `force` is intentionally NOT read from the
+  // request body here (it used to be — a real gap, since any POST to this
+  // route, not just the admin button, could have re-billed the entire
+  // catalog). Re-generating an already-saved item is a deliberate CLI
+  // action scoped to one id (prisma/generate-media-subtitles.ts --force=id),
+  // never something a web request can trigger, blank body or not.
+  await request.json().catch(() => null);
 
   try {
-    const results = await generateMissingMediaSubtitles({ force });
+    const results = await generateMissingMediaSubtitles();
     return NextResponse.json({ results });
   } catch (error) {
     const message = error instanceof Error ? error.message : "generation_failed";

@@ -35,6 +35,7 @@
     "check:grammar": "tsx prisma/check-grammar.ts",
     "check:lessons": "tsx prisma/check-lessons-grammar.ts",
     "check:wordgames-clues": "tsx prisma/check-wordgames-clues.ts",
+    "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts",
     "sync:to-production": "tsx prisma/sync-to-production.ts",
     "cap:sync": "cap sync",
     "cap:ios": "cap open ios",

@@ -24,6 +24,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   incomplete_subtitles:
     "Claude solo transcribió una parte del video (no llegó hasta el final). Intenta de nuevo.",
   claude_invalid_response: "La respuesta de Claude llegó incompleta o corrupta. Intenta de nuevo.",
+  already_has_subtitles:
+    "Este video ya tiene subtítulos guardados — no se sobrescriben automáticamente (regla \"un pago, para siempre\"). Usa el script de CLI con --force=<id> si de verdad hace falta regenerar.",
 };
 
 function errorMessage(code: string): string {
