@@ -59,6 +59,25 @@ function hashText(text: string): string {
   return createHash("sha256").update(text, "utf-8").digest("hex");
 }
 
+// A single flaky write (seen in practice: local dev.db lock contention from
+// a concurrent session also writing to it) used to take down the entire
+// 700+-batch run with an uncaught rejection, discarding an in-progress
+// Claude call's results. Retry a few times with backoff before giving up —
+// and even then, giving up on ONE item must not stop the whole run: it just
+// never gets upserted, so the hash-gating check naturally retries it (along
+// with everything after it in a crashed run) on the next invocation.
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === attempts - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** i));
+    }
+  }
+  throw new Error("unreachable");
+}
+
 async function collectItems(): Promise<CheckItem[]> {
   const items: CheckItem[] = [];
 
@@ -257,29 +276,38 @@ async function main() {
       const findings = resultsByIndex.get(i) ?? [];
       const status = findings.length > 0 ? "FLAGGED" : "CLEAN";
 
-      await db.grammarCheckResult.upsert({
-        where: {
-          entityType_entityId_fieldName: {
-            entityType: item.entityType,
-            entityId: item.entityId,
-            fieldName: item.fieldName,
-          },
-        },
-        create: {
-          entityType: item.entityType,
-          entityId: item.entityId,
-          fieldName: item.fieldName,
-          contentHash: item.hash,
-          status,
-          findings: JSON.stringify(findings),
-        },
-        update: {
-          contentHash: item.hash,
-          status,
-          findings: JSON.stringify(findings),
-          checkedAt: new Date(),
-        },
-      });
+      try {
+        await withRetry(() =>
+          db.grammarCheckResult.upsert({
+            where: {
+              entityType_entityId_fieldName: {
+                entityType: item.entityType,
+                entityId: item.entityId,
+                fieldName: item.fieldName,
+              },
+            },
+            create: {
+              entityType: item.entityType,
+              entityId: item.entityId,
+              fieldName: item.fieldName,
+              contentHash: item.hash,
+              status,
+              findings: JSON.stringify(findings),
+            },
+            update: {
+              contentHash: item.hash,
+              status,
+              findings: JSON.stringify(findings),
+              checkedAt: new Date(),
+            },
+          })
+        );
+      } catch (err) {
+        console.error(
+          `  Failed to save ${item.entityType}/${item.fieldName} ${item.entityId} after retries: ${(err as Error).message} — will retry next run.`
+        );
+        continue;
+      }
 
       if (status === "CLEAN") {
         cleanCount++;
