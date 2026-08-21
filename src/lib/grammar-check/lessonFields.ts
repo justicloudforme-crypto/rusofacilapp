@@ -58,9 +58,15 @@ function collectExercise(items: LessonCheckItem[], prefix: string, ex: Exercise)
       ex.options.forEach((opt, i) => push(items, `${prefix}.options[${i}]`, opt, "index_graded"));
       break;
     case "fill-blank":
-      push(items, `${prefix}.before`, ex.before, "grading_key");
-      push(items, `${prefix}.after`, ex.after, "grading_key");
-      ex.answers.forEach((a, i) => push(items, `${prefix}.answers[${i}]`, a, "grading_key"));
+      // `before`/`after`/`answers[]` are deliberately fragments of one
+      // sentence split around the blank ("Я в школ" + "е" + "." = "Я в
+      // школе.") — checking a fragment alone is meaningless (it reads as
+      // an incomplete sentence by design, not a grammar error) and was a
+      // real, confirmed source of false positives (17 of 24 grading_key
+      // findings in the first lessons audit run traced to exactly this).
+      // Check the RECONSTRUCTED full sentence instead, once per accepted
+      // answer alternative.
+      ex.answers.forEach((a, i) => push(items, `${prefix}.reconstructed[${i}]`, `${ex.before}${a}${ex.after}`, "grading_key"));
       break;
     case "matching":
       ex.pairs.forEach((p, i) => {
@@ -69,7 +75,11 @@ function collectExercise(items: LessonCheckItem[], prefix: string, ex: Exercise)
       });
       break;
     case "word-reorder":
-      ex.words.forEach((w, i) => push(items, `${prefix}.words[${i}]`, w, "grading_key"));
+      // Same fragmentation issue as fill-blank above — a single shuffled
+      // word checked alone has no sentence context to judge agreement
+      // against. `words` is the CORRECT target order (see WordReorderExercise's
+      // own doc comment), so joining it reconstructs the real sentence.
+      push(items, `${prefix}.words`, ex.words.join(" "), "grading_key");
       push(items, `${prefix}.translation`, ex.translation, "safe");
       break;
     case "listening":

@@ -206,6 +206,31 @@ async function callClaude(apiKey: string, batch: CheckItem[]): Promise<Map<numbe
   return new Map(toolUse.input.results.map((r) => [r.index, r.findings]));
 }
 
+/** Deletes any Lesson GrammarCheckResult row whose (lessonId, path) no
+ * longer appears in the current collectAllItems() output — same stale-row
+ * problem as word-games' cleanupStaleClues: upsert never deletes, and a
+ * walker change (like fill-blank/word-reorder now checking reconstructed
+ * sentences under new paths instead of the old before/after/answers[N]/
+ * words[N] fragments) retires a batch of paths at once. Without this,
+ * stale FLAGGED rows for paths that don't exist anymore would keep
+ * showing up in every report forever. */
+async function cleanupStaleLessonFields(currentKeys: Set<string>): Promise<number> {
+  const rows = await db.grammarCheckResult.findMany({
+    where: { entityType: "Lesson" },
+    select: { entityId: true, fieldName: true },
+  });
+  const staleRows = rows.filter((r) => !currentKeys.has(`${r.entityId}:${r.fieldName}`));
+  if (staleRows.length === 0) return 0;
+  let deleted = 0;
+  for (const r of staleRows) {
+    await db.grammarCheckResult.deleteMany({
+      where: { entityType: "Lesson", entityId: r.entityId, fieldName: r.fieldName },
+    });
+    deleted++;
+  }
+  return deleted;
+}
+
 async function main() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -215,6 +240,9 @@ async function main() {
   }
 
   const allItems = collectAllItems();
+
+  const deleted = await cleanupStaleLessonFields(new Set(allItems.map((i) => `${i.lessonId}:${i.path}`)));
+  if (deleted > 0) console.log(`Deleted ${deleted} stale Lesson result(s) for fields no longer in content.json.`);
 
   const existingResults = await db.grammarCheckResult.findMany({
     where: { entityType: "Lesson" },
