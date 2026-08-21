@@ -227,6 +227,28 @@ async function callClaude(apiKey: string, batch: CheckItem[]): Promise<Map<numbe
   return new Map(toolUse.input.results.map((r) => [r.index, r.findings]));
 }
 
+/** Deletes any WordGameClue GrammarCheckResult row whose (word, clue) pair
+ * no longer appears in the current puzzle set — same stale-row problem
+ * generate-word-games.ts's cleanupStaleSequences already solves for
+ * puzzles themselves: regenerating (a clue-generation fix, a word-bank
+ * change) can retire a pair entirely, and upsert-by-id never deletes, so
+ * without this the "flagged" count silently accumulates findings for
+ * clues that don't exist anymore. Found this drift directly: 825 stale
+ * rows (252 of them FLAGGED) after the cognate-exclusion fix retired a
+ * batch of pairs. */
+async function cleanupStaleClues(currentIds: Set<string>): Promise<number> {
+  const rows = await db.grammarCheckResult.findMany({
+    where: { entityType: "WordGameClue" },
+    select: { entityId: true },
+  });
+  const staleIds = rows.map((r) => r.entityId).filter((id) => !currentIds.has(id));
+  if (staleIds.length === 0) return 0;
+  const result = await db.grammarCheckResult.deleteMany({
+    where: { entityType: "WordGameClue", entityId: { in: staleIds } },
+  });
+  return result.count;
+}
+
 async function main() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -236,6 +258,9 @@ async function main() {
   }
 
   const allItems = await collectUniqueItems();
+
+  const deleted = await cleanupStaleClues(new Set(allItems.map((i) => i.entityId)));
+  if (deleted > 0) console.log(`Deleted ${deleted} stale WordGameClue result(s) for pairs no longer in the puzzle set.`);
 
   const existingResults = await db.grammarCheckResult.findMany({
     where: { entityType: "WordGameClue" },
