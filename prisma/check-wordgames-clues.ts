@@ -165,9 +165,9 @@ const TOOL_SCHEMA = {
 
 function puzzleContext(usedIn: CheckItem["usedIn"]): string {
   if (usedIn === "WORD_SEARCH") {
-    return "word-search only (letters are already visible in the grid — the clue is just a vocabulary aid, so a direct or cognate/loanword translation is FINE and should NOT be flagged as a giveaway)";
+    return "word-search only (letters are already visible in the grid — the clue is just a vocabulary aid; direct translation, even of a cognate/loanword, is FINE and should NOT be flagged as a giveaway)";
   }
-  return "used in a crossword (letters are hidden — a clue that reveals the answer directly or via an obvious cognate/loanword DOES defeat the puzzle and should be flagged)";
+  return "used in a crossword (letters are hidden)";
 }
 
 function buildPrompt(batch: CheckItem[]): string {
@@ -178,12 +178,12 @@ function buildPrompt(batch: CheckItem[]): string {
     )
     .join("\n\n");
 
-  return `You are reviewing clues for Russian-vocabulary word-search and crossword puzzles aimed at Spanish-speaking learners. For each numbered pair, the "clue" is what the student sees; they must guess the Russian "answer word" from it. Each item states which puzzle type it's used in — read that carefully, since it changes what counts as a "giveaway" (see below).
+  return `You are reviewing clues for Russian-vocabulary word-search and crossword puzzles aimed at Spanish-speaking learners. For each numbered pair, the "clue" is what the student sees; they must guess the Russian "answer word" from it. Each item states which puzzle type it's used in.
 
 Check for:
 1. Grammar or spelling errors in the clue text itself.
 2. Whether the clue clearly and correctly points to that specific answer word (not a different word, not multiple equally-valid words).
-3. ONLY for crossword items: whether the clue accidentally reveals the Russian answer word directly or via an obvious cognate (defeats the puzzle, since letters are hidden there). Do NOT apply this check to word-search-only items — a direct/cognate translation is the intended, correct clue style there.
+3. "giveaway" — ONLY report this for crossword items, and ONLY when the Spanish clue word (or, for a masked example-sentence clue, the word the blank obviously stands for given the surrounding sentence) is itself a near-cognate/loanword of the Russian answer — phonetically close enough ("караоке"/"karaoke", "майонез"/"mayonesa") that no real inference is needed. Do NOT report "giveaway" just because a crossword clue is a plain direct translation of an unrelated-looking word (e.g. "caro" for "дорого") — a direct-translation clue testing whether the student recognizes the word's meaning is this platform's deliberate, already-reviewed design for A1/A2 vocabulary, not a bug. The problem is specifically cognates defeating that design, not the design itself.
 
 Do NOT flag a clue just for being short or a single word/phrase — that's normal for this format. Only report genuine problems.
 

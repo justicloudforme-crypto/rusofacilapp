@@ -136,22 +136,31 @@ function clueLeaksWord(clue: string, word: string): boolean {
 /** Builds the CROSSWORD clue for one FlashcardCard at a given level, or
  * null if no good clue could be built (caller should exclude the word as
  * a candidate rather than ship a broken/spoiling clue). Crossword hides
- * the word's letters, so a clue that gives the answer away — literally
- * (clueLeaksWord) or phonetically via a cognate (isCognateGiveaway) —
- * defeats the puzzle; word-search's own clue function deliberately
- * doesn't call this (see prisma/generate-word-games.ts's wordSearchClue)
- * since the letters are already visible there and a direct/cognate
- * translation is just a normal vocabulary aid, not a spoiler. */
+ * the word's letters, so a clue that gives the answer away defeats the
+ * puzzle; word-search's own clue function deliberately doesn't call this
+ * (see prisma/generate-word-games.ts's wordSearchClue) since the letters
+ * are already visible there and a direct/cognate translation is just a
+ * normal vocabulary aid, not a spoiler.
+ *
+ * Cognates (isCognateGiveaway) are excluded outright rather than
+ * downgraded to a masked-example clue — a first version tried the masked
+ * fallback, but a real audit (check-wordgames-clues.ts) found ~330 cases
+ * where the surrounding sentence context alone still made the blank
+ * trivially inferable ("Fuimos a cantar ______ después de la cena." is
+ * obviously "karaoke" regardless of masking). Masking hides the literal
+ * string, not the fact that a common short sentence has only one sensible
+ * word to fill it — for a cognate, that's not a fixable clue, it's not a
+ * good crossword word at all; word-search still uses it fine. */
 export function buildClue(
   level: string,
   card: { translationEs: string; exampleEs: string },
   word: string
 ): string | null {
+  const isCognate = extractCoreWords(card.translationEs).some((alt) => isCognateGiveaway(word, alt));
+  if (isCognate) return null;
+
   if (level === "A1" || level === "A2") {
-    if (clueLeaksWord(card.translationEs, word)) return null;
-    const isCognate = extractCoreWords(card.translationEs).some((alt) => isCognateGiveaway(word, alt));
-    if (isCognate) return maskedExampleClue(card.translationEs, card.exampleEs);
-    return card.translationEs;
+    return clueLeaksWord(card.translationEs, word) ? null : card.translationEs;
   }
   return maskedExampleClue(card.translationEs, card.exampleEs);
 }
