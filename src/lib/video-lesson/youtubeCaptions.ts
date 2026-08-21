@@ -2,7 +2,7 @@ import "server-only";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { access, chmod, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
@@ -46,6 +46,53 @@ const YTDLP_LINUX_SHA256 = "83d2c55a8893b49d0ccd23f5c528acf06840fc59bd1100519832
 
 let ytdlpBinaryPromise: Promise<string> | null = null;
 
+// A `pip install --user yt-dlp` (no venv, no `pip3 install -e` — the setup
+// this project's own .env.example tells you to run) puts the executable in
+// a per-user bin directory that most shells do NOT add to PATH by default,
+// especially when `next dev` is launched from something other than an
+// interactive login shell (an IDE task runner, this agent's own Bash tool,
+// etc.) — its child process only inherits whatever PATH that launcher
+// already had. `execFile("yt-dlp", ...)` then fails ENOENT even though the
+// binary is right there on disk. Rather than require every contributor to
+// hand-edit their shell profile, check PATH first (respects a real
+// install/venv/homebrew yt-dlp if one exists) and fall back to the common
+// per-user pip bin locations for macOS and Linux.
+const LOCAL_YTDLP_FALLBACK_CANDIDATES = [
+  path.join(homedir(), "Library/Python/3.9/bin/yt-dlp"), // macOS `pip install --user`, matches .env.example
+  path.join(homedir(), "Library/Python/3.11/bin/yt-dlp"),
+  path.join(homedir(), "Library/Python/3.12/bin/yt-dlp"),
+  path.join(homedir(), ".local/bin/yt-dlp"), // Linux `pip install --user`
+];
+
+let localYtDlpBinaryPromise: Promise<string> | null = null;
+
+async function resolveLocalYtDlpBinary(): Promise<string> {
+  if (!localYtDlpBinaryPromise) {
+    localYtDlpBinaryPromise = (async () => {
+      try {
+        // `--version` is a cheap way to confirm PATH actually resolves it,
+        // rather than just checking PATH string contents.
+        await execFileAsync("yt-dlp", ["--version"]);
+        return "yt-dlp";
+      } catch (error) {
+        if (!isCommandNotFound(error)) throw error;
+      }
+      for (const candidate of LOCAL_YTDLP_FALLBACK_CANDIDATES) {
+        try {
+          await access(candidate);
+          return candidate;
+        } catch {
+          // not at this candidate path, keep looking
+        }
+      }
+      // Nothing found anywhere — surface the original, familiar ENOENT
+      // path so the existing "missing_ytdlp" error handling still applies.
+      return "yt-dlp";
+    })();
+  }
+  return localYtDlpBinaryPromise;
+}
+
 async function downloadYtDlpBinary(destination: string): Promise<void> {
   const response = await fetch(YTDLP_LINUX_URL, { redirect: "follow" });
   if (!response.ok) {
@@ -69,7 +116,7 @@ async function downloadYtDlpBinary(destination: string): Promise<void> {
  * concurrent requests don't race to download it twice.
  */
 async function resolveYtDlpBinary(): Promise<string> {
-  if (process.env.VERCEL !== "1") return "yt-dlp";
+  if (process.env.VERCEL !== "1") return resolveLocalYtDlpBinary();
 
   if (!ytdlpBinaryPromise) {
     const destination = path.join(tmpdir(), `yt-dlp-${YTDLP_VERSION}`);
