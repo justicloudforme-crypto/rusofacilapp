@@ -122,8 +122,19 @@ function SubtitleTrack({
 
   useEffect(() => {
     if (!activeLineId || !containerRef.current) return;
-    const row = containerRef.current.querySelector(`[data-line-id="${activeLineId}"]`);
-    row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const container = containerRef.current;
+    const row = container.querySelector<HTMLElement>(`[data-line-id="${activeLineId}"]`);
+    if (!row) return;
+    // Scroll only this container's own scrollbar — never `element.scrollIntoView()`,
+    // which also nudges every scrollable ancestor (including the page itself) to
+    // bring the row into view, dragging the video above it out of the viewport.
+    const rowTop = row.offsetTop;
+    const rowBottom = rowTop + row.offsetHeight;
+    if (rowTop < container.scrollTop) {
+      container.scrollTo({ top: rowTop, behavior: "smooth" });
+    } else if (rowBottom > container.scrollTop + container.clientHeight) {
+      container.scrollTo({ top: rowBottom - container.clientHeight, behavior: "smooth" });
+    }
   }, [activeLineId]);
 
   const toggleWord = useCallback((wordId: string) => {
