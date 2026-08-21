@@ -42,12 +42,12 @@ type Level = (typeof LEVELS)[number];
 // directly against FlashcardCard: length 3-16, no spaces/hyphens — see
 // generation.ts's SINGLE_CYRILLIC_WORD filter). A1's word bank is ~3x
 // smaller than B1's, so splitting a puzzle-count target evenly across
-// levels (400 each toward 2000) would force A1 to reuse its words far
-// more heavily than B1 ever would at parity count — the opposite of the
-// "no cyclic repetition, use the ~5500-word base appropriately per level"
-// requirement this batch was built for. LEVEL_TARGETS below instead
-// allocates the 2000 total proportionally to each level's own pool size,
-// keeping the average reuse ratio roughly EQUAL across levels instead of
+// levels would force A1 to reuse its words far more heavily than B1 ever
+// would at parity count — the opposite of the "no cyclic repetition, use
+// the ~5500-word base appropriately per level" requirement this content
+// scaling has been built around. LEVEL_TARGETS below instead allocates
+// TOTAL_TARGET proportionally to each level's own pool size, keeping the
+// average reuse ratio roughly EQUAL across levels instead of
 // disproportionately punishing the smallest one.
 const LEVEL_POOL_SIZE: Record<Level, number> = { A1: 444, A2: 931, B1: 1268, B2: 739, C1: 543 };
 
@@ -111,12 +111,12 @@ const WORD_SEARCH_RUNGS: Array<{ size: number; wordCount: number }> = [
   // keeps producing a varied, non-monotonic wordCount is exactly as good
   // as another wall of literal objects, and far less error-prone to
   // extend further later. Sized with headroom past every level's actual
-  // LEVEL_TARGETS allocation (B1's is the largest, currently 271) rather
+  // LEVEL_TARGETS allocation (B1's is the largest, currently 407) rather
   // than trimmed to exactly match it — the per-level loops below slice
   // this array to LEVEL_TARGETS[level].straight, so a comfortable margin
-  // here means LEVEL_POOL_SIZE can be re-tuned later without also having
-  // to remember to grow this call. See extraWordSearchRungs.
-  ...extraWordSearchRungs(270),
+  // here means LEVEL_POOL_SIZE/TOTAL_TARGET can both grow later without
+  // also having to remember to extend this call. See extraWordSearchRungs.
+  ...extraWordSearchRungs(420),
 ];
 
 // Expert/★ tier, appended right after WORD_SEARCH_RUNGS — same picker
@@ -140,8 +140,8 @@ const WORD_SEARCH_STAR_RUNGS: Array<{ size: number; wordCount: number }> = [
   { size: 16, wordCount: 13 },
   // See extraStarRungs — same "formula beats another wall of literals"
   // and headroom-not-exact-fit reasoning as extraWordSearchRungs above
-  // (B1's actual LEVEL_TARGETS star allocation is currently 103).
-  ...extraStarRungs(110),
+  // (B1's actual LEVEL_TARGETS star allocation is currently 155).
+  ...extraStarRungs(168),
 ];
 
 // Crosswords need more candidate words per target than word search does
@@ -198,8 +198,8 @@ const CROSSWORD_RUNGS: Array<{ wordCount: number; maxLen: number }> = [
   { wordCount: 23, maxLen: 12 },
   { wordCount: 13, maxLen: 9 },
   // See extraCrosswordRungs — same reasoning as the two functions above
-  // (B1's actual LEVEL_TARGETS crossword allocation is currently 272).
-  ...extraCrosswordRungs(270),
+  // (B1's actual LEVEL_TARGETS crossword allocation is currently 407).
+  ...extraCrosswordRungs(420),
 ];
 
 /** Generates additional straight-tier word-search rungs beyond the
@@ -260,9 +260,17 @@ function extraCrosswordRungs(count: number): Array<{ wordCount: number; maxLen: 
 
 // Total puzzles across all levels/tiers, and the straight:star:crossword
 // split within each level's own allocation — kept at the same 21:8:21
-// ratio the hand-curated rungs already established (84:32:84 at the
-// 1000-puzzle milestone), just scaled up.
-const TOTAL_TARGET = 2000;
+// ratio the hand-curated rungs originally established (84:32:84 at the
+// first 1000-puzzle milestone), just scaled up each time this target grows.
+const TOTAL_TARGET = 3000;
+
+// CEFR order, low to high — used only to find "one level down" for the
+// short-word supplementation below.
+const LEVEL_ORDER: readonly Level[] = ["A1", "A2", "B1", "B2", "C1"];
+function lowerLevel(level: Level): Level | null {
+  const idx = LEVEL_ORDER.indexOf(level);
+  return idx > 0 ? LEVEL_ORDER[idx - 1] : null;
+}
 const TIER_RATIO = { straight: 21, star: 8, crossword: 21 };
 
 interface LevelTarget {
@@ -275,10 +283,11 @@ interface LevelTarget {
  * bank size (LEVEL_POOL_SIZE), then splits each level's share across the
  * three tiers at TIER_RATIO. `crossword` absorbs each level's rounding
  * remainder so straight+star+crossword always sums to exactly that
- * level's rounded total — the grand total across all 5 levels lands at
- * 2000 for the actual measured pool sizes here, but isn't forced to by
- * fiat; a future change to LEVEL_POOL_SIZE just redistributes rather than
- * silently drifting off-target. */
+ * level's rounded total — the grand total across all 5 levels lands
+ * within rounding distance of TOTAL_TARGET for the actual measured pool
+ * sizes here, but isn't forced to match it exactly by fiat; a future
+ * change to LEVEL_POOL_SIZE just redistributes rather than silently
+ * drifting off-target. */
 function computeLevelTargets(): Record<Level, LevelTarget> {
   const poolTotal = LEVELS.reduce((sum, l) => sum + LEVEL_POOL_SIZE[l], 0);
   const ratioSum = TIER_RATIO.straight + TIER_RATIO.star + TIER_RATIO.crossword;
@@ -368,12 +377,57 @@ async function main() {
       where: { level },
       select: { russian: true, translationEs: true, exampleEs: true },
     });
+    // Real content gap found by direct measurement (not assumption): C1's
+    // own word bank has only 3 eligible 4-letter words and ZERO 3-letter
+    // ones (vocabulary that advanced skews long/technical), so any
+    // short-maxLen rung — which every crossword ladder needs, short words
+    // being what makes intersections possible at all — is forced into
+    // heavy reuse purely by pool scarcity, independent of how good the
+    // selection algorithm is. A word this short is also, structurally,
+    // never an advanced/technical one — it's exactly the kind of word a
+    // C1 learner (who has necessarily already mastered every level below)
+    // already knows. `lowerCards` is fetched once per level and only
+    // pulled into a rung's pool when that rung's own-level pool is
+    // actually thin (see poolWithSupplement below) — a healthy maxLen
+    // band never touches it, so this only ever kicks in for the specific
+    // bands that need it.
+    const lower = lowerLevel(level);
+    const lowerCards = lower
+      ? await db.flashcardCard.findMany({ where: { level: lower }, select: { russian: true, translationEs: true, exampleEs: true } })
+      : [];
+
     const crosswordClueForLevel = (card: { translationEs: string; exampleEs: string }, word: string) => buildClue(level, card, word);
     // WORD_SEARCH never masks — unlike a crossword, there's no blank to
     // spoil (the letters are already fully visible in the grid), so a
     // masked example sentence there is just confusing, not protective.
     // Direct translation is a straightforward vocabulary aid instead.
     const wordSearchClue = (card: { translationEs: string }) => card.translationEs;
+
+    // Floor a rung's own-level pool must clear before skipping
+    // supplementation — sized so the windowed-random selection (see
+    // word-search.ts/crossword.ts's own doc comments, windowSize is
+    // roughly targetCount*3-4) still has real room to pick from, not just
+    // barely enough to hit targetCount once. Scales with the rung's own
+    // wordCount so a dense high-count rung still gets a proportionally
+    // bigger pool floor, with 60 as an absolute minimum for small rungs.
+    function poolWithSupplement(
+      maxLen: number,
+      clueFn: (card: { translationEs: string; exampleEs: string }, word: string) => string | null,
+      wordCount: number,
+      minLen = 3
+    ) {
+      const pool = candidateWords(cards, maxLen, clueFn, minLen);
+      const floor = Math.max(60, wordCount * 4);
+      if (pool.length >= floor || lowerCards.length === 0) return pool;
+      const seen = new Set(pool.map((c) => c.word));
+      for (const c of candidateWords(lowerCards, maxLen, clueFn, minLen)) {
+        if (!seen.has(c.word)) {
+          pool.push(c);
+          seen.add(c.word);
+        }
+      }
+      return pool;
+    }
 
     // Tracks how many times each word has already been placed across this
     // level's rungs so far — shared between the straight and star tiers
@@ -403,7 +457,7 @@ async function main() {
       // nearly all-horizontal for exactly this reason). A couple of
       // cells of slack is enough for real crossing to become possible.
       const wordSearchMaxLen = Math.max(rung.size - 2, 4);
-      const pool = candidateWords(cards, wordSearchMaxLen, wordSearchClue);
+      const pool = poolWithSupplement(wordSearchMaxLen, wordSearchClue, rung.wordCount);
 
       if (pool.length < 5) {
         problems.push(`WORD_SEARCH ${level} seq ${sequence}: only ${pool.length} eligible words (need >=5), skipped`);
@@ -434,7 +488,7 @@ async function main() {
       // even though 4 is the hard geometric floor (see
       // buildSnakeWordSearch's own length guard for the floor itself).
       const wordSearchMaxLen = Math.max(rung.size - 2, 5);
-      const pool = candidateWords(cards, wordSearchMaxLen, wordSearchClue, 5);
+      const pool = poolWithSupplement(wordSearchMaxLen, wordSearchClue, rung.wordCount, 5);
 
       if (pool.length < 5) {
         problems.push(`WORD_SEARCH★ ${level} seq ${sequence}: only ${pool.length} eligible words (need >=5), skipped`);
@@ -467,7 +521,7 @@ async function main() {
       const sequence = rungIndex + 1;
       const rung = CROSSWORD_RUNGS[rungIndex];
       const rng = makeRng(`CROSSWORD-${level}-${sequence}`);
-      const pool = candidateWords(cards, rung.maxLen, crosswordClueForLevel);
+      const pool = poolWithSupplement(rung.maxLen, crosswordClueForLevel, rung.wordCount);
 
       if (pool.length < rung.wordCount) {
         problems.push(`CROSSWORD ${level} seq ${sequence}: only ${pool.length} eligible words (need >=${rung.wordCount}), skipped`);
