@@ -61,5 +61,15 @@ export function candidateWords(
     seen.add(word);
     out.push({ word, clue });
   }
-  return out;
+
+  // A content-audit finding: two different words occasionally land on the
+  // identical clue text (shared/overlapping translationEs, e.g. two
+  // synonyms both glossed "caro"). Whichever word a player is actually
+  // looking for, an ambiguous clue shared with another word in the SAME
+  // puzzle's own word list is a genuine defect, not just noise — drop
+  // every word involved in a clue collision rather than arbitrarily
+  // keeping one and hoping it was the "right" one.
+  const clueCounts = new Map<string, number>();
+  for (const c of out) clueCounts.set(c.clue, (clueCounts.get(c.clue) ?? 0) + 1);
+  return out.filter((c) => clueCounts.get(c.clue) === 1);
 }

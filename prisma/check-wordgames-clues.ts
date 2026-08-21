@@ -54,6 +54,14 @@ interface CheckItem {
   clue: string;
   entityId: string;
   hash: string;
+  /** Which puzzle type(s) this exact (word, clue) pair is actually used
+   * in. Matters for interpretation: crossword hides the word's letters,
+   * so a clue that gives the answer away (directly, or via an obvious
+   * cognate) defeats the puzzle. Word-search shows the letters already —
+   * there's nothing to spoil — so a direct/cognate translation there is
+   * a normal vocabulary aid, not a defect. A pair used in BOTH is judged
+   * by the stricter (crossword) standard. */
+  usedIn: "WORD_SEARCH" | "CROSSWORD" | "BOTH";
 }
 
 function hashText(text: string): string {
@@ -73,23 +81,25 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 }
 
 async function collectUniqueItems(): Promise<CheckItem[]> {
-  const puzzles = await db.wordGamePuzzle.findMany({ select: { words: true } });
-  const unique = new Map<string, { word: string; clue: string }>();
+  const puzzles = await db.wordGamePuzzle.findMany({ select: { type: true, words: true } });
+  const unique = new Map<string, { word: string; clue: string; types: Set<string> }>();
 
   for (const p of puzzles) {
     const placements: Placement[] = JSON.parse(p.words);
     for (const placement of placements) {
       if (!placement.clue) continue;
       const key = `${placement.word}|${placement.clue}`;
-      if (!unique.has(key)) unique.set(key, { word: placement.word, clue: placement.clue });
+      if (!unique.has(key)) unique.set(key, { word: placement.word, clue: placement.clue, types: new Set() });
+      unique.get(key)!.types.add(p.type);
     }
   }
 
-  return [...unique.entries()].map(([key, { word, clue }]) => ({
+  return [...unique.entries()].map(([key, { word, clue, types }]) => ({
     word,
     clue,
     entityId: createHash("sha256").update(key, "utf-8").digest("hex").slice(0, 32),
     hash: hashText(clue),
+    usedIn: types.size > 1 ? "BOTH" : (types.values().next().value as "WORD_SEARCH" | "CROSSWORD"),
   }));
 }
 
@@ -153,17 +163,27 @@ const TOOL_SCHEMA = {
   },
 };
 
+function puzzleContext(usedIn: CheckItem["usedIn"]): string {
+  if (usedIn === "WORD_SEARCH") {
+    return "word-search only (letters are already visible in the grid — the clue is just a vocabulary aid, so a direct or cognate/loanword translation is FINE and should NOT be flagged as a giveaway)";
+  }
+  return "used in a crossword (letters are hidden — a clue that reveals the answer directly or via an obvious cognate/loanword DOES defeat the puzzle and should be flagged)";
+}
+
 function buildPrompt(batch: CheckItem[]): string {
   const numbered = batch
-    .map((item, i) => `[${i}] answer word: "${item.word}" | clue (Spanish, shown to the student): "${item.clue}"`)
+    .map(
+      (item, i) =>
+        `[${i}] answer word: "${item.word}" | clue (Spanish, shown to the student): "${item.clue}" | puzzle type: ${puzzleContext(item.usedIn)}`
+    )
     .join("\n\n");
 
-  return `You are reviewing clues for Russian-vocabulary word-search and crossword puzzles aimed at Spanish-speaking learners. For each numbered pair, the "clue" is what the student sees; they must guess the Russian "answer word" from it.
+  return `You are reviewing clues for Russian-vocabulary word-search and crossword puzzles aimed at Spanish-speaking learners. For each numbered pair, the "clue" is what the student sees; they must guess the Russian "answer word" from it. Each item states which puzzle type it's used in — read that carefully, since it changes what counts as a "giveaway" (see below).
 
 Check for:
 1. Grammar or spelling errors in the clue text itself.
 2. Whether the clue clearly and correctly points to that specific answer word (not a different word, not multiple equally-valid words).
-3. Whether the clue accidentally reveals the Russian answer word directly (defeats the puzzle).
+3. ONLY for crossword items: whether the clue accidentally reveals the Russian answer word directly or via an obvious cognate (defeats the puzzle, since letters are hidden there). Do NOT apply this check to word-search-only items — a direct/cognate translation is the intended, correct clue style there.
 
 Do NOT flag a clue just for being short or a single word/phrase — that's normal for this format. Only report genuine problems.
 

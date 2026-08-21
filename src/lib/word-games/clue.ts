@@ -35,6 +35,58 @@ function extractCoreWords(translationEs: string): string[] {
     });
 }
 
+// Approximate Cyrillic->Latin transliteration — good enough to compare
+// against a Spanish clue for phonetic similarity, not meant to be a
+// correct romanization standard.
+const TRANSLIT: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z",
+  и: "i", й: "i", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r",
+  с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh",
+  щ: "sch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya",
+};
+
+function transliterate(word: string): string {
+  return [...word.toLowerCase()].map((ch) => TRANSLIT[ch] ?? ch).join("");
+}
+
+function levenshtein(a: string, b: string): number {
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+// A first version compared only a fixed-length leading prefix of the
+// transliterated word (mirroring maskedExampleClue's stem trick) — real
+// testing against known giveaways found it missed most of them
+// ("публикация"/"publicación", "навигатор"/"navegación",
+// "майонез"/"mayonesa") because normal transliteration variance (й as
+// "i" vs Spanish "y", ц as "ts" vs "c", etc.) shows up scattered through
+// the word, not just at the end — a rigid prefix match is too brittle for
+// that. Normalized edit distance over the whole word tolerates scattered
+// single-character differences far better while still requiring the
+// words be substantially similar overall (short unrelated words can't
+// accidentally clear the bar just by chance).
+const COGNATE_DISTANCE_RATIO = 0.45;
+
+/** True if `spanishCandidate` is a recognizable cognate/loanword of the
+ * transliterated Russian `word` — a real content-audit finding: A1/A2's
+ * direct-translation clue trivially gives away a cognate/loanword
+ * ("караоке" -> clue "karaoke", "майонез" -> clue "mayonesa"). */
+function isCognateGiveaway(word: string, spanishCandidate: string): boolean {
+  const translit = transliterate(word);
+  const spanish = stripAccents(spanishCandidate.toLowerCase());
+  const maxLen = Math.max(translit.length, spanish.length);
+  if (maxLen < 4) return false;
+  return levenshtein(translit, spanish) / maxLen <= COGNATE_DISTANCE_RATIO;
+}
+
 const BLANK = "______";
 
 /** Returns exampleEs with the word masked out, or null if the word's core
@@ -81,16 +133,25 @@ function clueLeaksWord(clue: string, word: string): boolean {
   return pattern.test(clue);
 }
 
-/** Builds the clue for one FlashcardCard at a given level, or null if no
- * good clue could be built (caller should exclude the word as a
- * candidate rather than ship a broken/spoiling clue). */
+/** Builds the CROSSWORD clue for one FlashcardCard at a given level, or
+ * null if no good clue could be built (caller should exclude the word as
+ * a candidate rather than ship a broken/spoiling clue). Crossword hides
+ * the word's letters, so a clue that gives the answer away — literally
+ * (clueLeaksWord) or phonetically via a cognate (isCognateGiveaway) —
+ * defeats the puzzle; word-search's own clue function deliberately
+ * doesn't call this (see prisma/generate-word-games.ts's wordSearchClue)
+ * since the letters are already visible there and a direct/cognate
+ * translation is just a normal vocabulary aid, not a spoiler. */
 export function buildClue(
   level: string,
   card: { translationEs: string; exampleEs: string },
   word: string
 ): string | null {
   if (level === "A1" || level === "A2") {
-    return clueLeaksWord(card.translationEs, word) ? null : card.translationEs;
+    if (clueLeaksWord(card.translationEs, word)) return null;
+    const isCognate = extractCoreWords(card.translationEs).some((alt) => isCognateGiveaway(word, alt));
+    if (isCognate) return maskedExampleClue(card.translationEs, card.exampleEs);
+    return card.translationEs;
   }
   return maskedExampleClue(card.translationEs, card.exampleEs);
 }
