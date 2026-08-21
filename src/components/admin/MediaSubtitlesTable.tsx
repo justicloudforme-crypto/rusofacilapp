@@ -114,6 +114,7 @@ export default function MediaSubtitlesTable({ rows }: { rows: Row[] }) {
         {bulkStatus.kind === "done" && (
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
             Listo: {bulkStatus.ok} generados{bulkStatus.failed ? `, ${bulkStatus.failed} fallaron` : ""} ✓
+            {pendingCount > 0 && " — vuelve a pulsar el botón para continuar con el resto del catálogo."}
           </span>
         )}
         {bulkStatus.kind === "error" && (

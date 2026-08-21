@@ -1,6 +1,7 @@
 import "server-only";
 import { execFile } from "node:child_process";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { access, chmod, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -23,6 +24,69 @@ function isCommandNotFound(error: unknown): boolean {
   return typeof error === "object" && error !== null && (error as { code?: string }).code === "ENOENT";
 }
 
+// Vercel's Node.js Functions have no `yt-dlp`/Python on PATH and no way to
+// `pip install` at request time — that's the actual root cause of every
+// "missing_ytdlp" error seen in production, not a one-off misconfiguration.
+// Locally, `yt-dlp` is expected to already be on PATH (installed once via
+// `pip install yt-dlp`, per .env.example) and we keep using that, so local
+// dev behavior (including the ENOENT error if it's genuinely missing) is
+// unchanged. In production we instead fetch yt-dlp's own standalone Linux
+// binary (no Python required at all) into /tmp on first use per container
+// and exec it from there — /tmp is writable and persists for the life of a
+// warm container, so this only costs a download on cold starts.
+//
+// Version pinned deliberately (not "latest") so a binary that started an
+// in-flight request never gets silently swapped mid-request, and so a
+// yt-dlp release that breaks something is a controlled version bump here,
+// not a surprise. Bump alongside the locally pip-installed version
+// (`yt-dlp --version`) when YouTube-side breakage shows up.
+const YTDLP_VERSION = "2025.10.14";
+const YTDLP_LINUX_URL = `https://github.com/yt-dlp/yt-dlp/releases/download/${YTDLP_VERSION}/yt-dlp_linux`;
+const YTDLP_LINUX_SHA256 = "83d2c55a8893b49d0ccd23f5c528acf06840fc59bd1100519832b60724af34b7";
+
+let ytdlpBinaryPromise: Promise<string> | null = null;
+
+async function downloadYtDlpBinary(destination: string): Promise<void> {
+  const response = await fetch(YTDLP_LINUX_URL, { redirect: "follow" });
+  if (!response.ok) {
+    throw new Error(`ytdlp_download_failed_${response.status}`);
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+
+  const actualHash = createHash("sha256").update(bytes).digest("hex");
+  if (actualHash !== YTDLP_LINUX_SHA256) {
+    throw new Error("ytdlp_checksum_mismatch");
+  }
+
+  await writeFile(destination, bytes);
+  await chmod(destination, 0o755);
+}
+
+/**
+ * Resolves the yt-dlp executable to invoke: the PATH-installed binary in
+ * local dev, or a lazily-downloaded, checksum-verified standalone Linux
+ * binary cached in /tmp on Vercel. Memoized per warm container so
+ * concurrent requests don't race to download it twice.
+ */
+async function resolveYtDlpBinary(): Promise<string> {
+  if (process.env.VERCEL !== "1") return "yt-dlp";
+
+  if (!ytdlpBinaryPromise) {
+    const destination = path.join(tmpdir(), `yt-dlp-${YTDLP_VERSION}`);
+    ytdlpBinaryPromise = access(destination)
+      .catch(() => downloadYtDlpBinary(destination))
+      .then(() => destination)
+      .catch((error) => {
+        // Don't cache a failed download — the next call should retry
+        // rather than being stuck on a rejected promise for the
+        // container's whole lifetime.
+        ytdlpBinaryPromise = null;
+        throw error;
+      });
+  }
+  return ytdlpBinaryPromise;
+}
+
 /**
  * Fetches the Russian caption track for a public YouTube video (manual
  * captions preferred, falling back to auto-generated) via the `yt-dlp` CLI.
@@ -39,9 +103,10 @@ export async function fetchRussianCaptions(videoId: string): Promise<CaptionLine
   const outputPrefix = path.join(dir, videoId);
 
   try {
+    const ytdlpBinary = await resolveYtDlpBinary();
     try {
       await execFileAsync(
-        "yt-dlp",
+        ytdlpBinary,
         [
           "--skip-download",
           "--write-subs",

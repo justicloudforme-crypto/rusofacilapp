@@ -6,6 +6,12 @@ import { getMediaById, saveMediaSubtitles } from "@/lib/media/data";
 import { fetchRussianCaptions } from "@/lib/video-lesson/youtubeCaptions";
 import { generateSubtitlesWithClaude } from "@/lib/media/generateSubtitlesWithClaude";
 
+// Downloading yt-dlp's standalone binary on a cold start plus the actual
+// caption fetch plus the Claude generation call can comfortably exceed the
+// platform's 10s default — see youtubeCaptions.ts for why the download
+// happens at all.
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user || !isStaff(user.role)) {

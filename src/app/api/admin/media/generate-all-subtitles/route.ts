@@ -4,6 +4,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { generateMissingMediaSubtitles } from "@/lib/media/generateAllSubtitles";
 
+// generateMissingMediaSubtitles stops itself with time to spare (see its
+// TIME_BUDGET_MS) — this just needs enough headroom above that budget for
+// the platform to never kill the function first.
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user || !isStaff(user.role)) {
