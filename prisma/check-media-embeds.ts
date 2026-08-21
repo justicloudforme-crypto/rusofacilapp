@@ -42,10 +42,11 @@ import type { EmbedStatus, MediaItem } from "../src/lib/media/types";
 // src/lib/media/data.ts: that module is tagged `import "server-only"`,
 // which Next's webpack build resolves via a built-in shim but plain
 // `tsx` (no bundler) can't — the package isn't actually installed in
-// node_modules. (This is a pre-existing issue: `generate-media-subtitles.ts`
-// hits the exact same `Cannot find module 'server-only'` error today,
-// unrelated to this script.) Duplicating the tiny amount of file I/O here
-// keeps this script runnable standalone without touching that module.
+// node_modules. (This same issue is why subtitle generation has no CLI
+// equivalent — see the admin `/admin/media` panel instead, which runs
+// through Next's build and doesn't hit it.) Duplicating the tiny amount
+// of file I/O here keeps this script runnable standalone without
+// touching that module.
 const MEDIA_DATA_FILE = path.join(__dirname, "../src/lib/media/mediaData.json");
 
 async function readMediaStore(): Promise<Record<string, MediaItem>> {

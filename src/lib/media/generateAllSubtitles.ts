@@ -12,9 +12,11 @@ export interface SubtitleGenerationResult {
 
 /**
  * Backfills timestamped subtitles for every catalog item that doesn't have
- * them yet (or all of them, with `force`). Shared by the admin "Generar
- * subtítulos para todos los videos" button (api/admin/media/generate-all-subtitles)
- * and the `npm run generate:media-subtitles` CLI script, so both stay in sync.
+ * them yet (or all of them, with `force`). Used by the admin "Generar
+ * subtítulos para todos los videos" button
+ * (api/admin/media/generate-all-subtitles) — there's no CLI equivalent
+ * (see check-media-embeds.ts's file header for why a plain `tsx` script
+ * can't import this module).
  */
 // Each video costs a real yt-dlp fetch + a Claude call (several seconds
 // apiece), and the whole batch runs inside one serverless invocation with a
