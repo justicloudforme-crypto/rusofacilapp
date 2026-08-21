@@ -75,12 +75,24 @@ function collectExercise(items: LessonCheckItem[], prefix: string, ex: Exercise)
       });
       break;
     case "word-reorder":
-      // Same fragmentation issue as fill-blank above — a single shuffled
-      // word checked alone has no sentence context to judge agreement
-      // against. `words` is the CORRECT target order (see WordReorderExercise's
-      // own doc comment), so joining it reconstructs the real sentence.
-      push(items, `${prefix}.words`, ex.words.join(" "), "grading_key");
-      push(items, `${prefix}.translation`, ex.translation, "safe");
+      // Checked scoring.ts: grading compares the student's reordered array
+      // against `words` element-by-element — `translation` is a
+      // display-only reference field, never read by the grader. `words`
+      // has no punctuation (commas aren't draggable tiles), so
+      // `words.join(" ")` alone produces predictable "missing comma"
+      // false positives on anything with a subordinate clause, address,
+      // or comparison (found this checking real content: "потому что",
+      // "чем", "улице X, дом N" all flagged for exactly this). `translation`
+      // already holds the same sentence correctly punctuated, so prefer
+      // checking that — genuinely "safe" too, since fixing it can never
+      // change what the grader accepts. Only fall back to the unpunctuated
+      // `words` join (still grading_key, since it IS what's graded) when
+      // no translation reference exists to check instead.
+      if (ex.translation) {
+        push(items, `${prefix}.translation`, ex.translation, "safe");
+      } else {
+        push(items, `${prefix}.words`, ex.words.join(" "), "grading_key");
+      }
       break;
     case "listening":
       push(items, `${prefix}.audioText`, ex.audioText, "grading_key");
