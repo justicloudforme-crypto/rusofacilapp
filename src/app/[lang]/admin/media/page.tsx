@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getAllMedia } from "@/lib/media/data";
+import { getAllMedia, getOverrideMeta } from "@/lib/media/data";
 import MediaSubtitlesTable from "@/components/admin/MediaSubtitlesTable";
 import MediaEmbedStatusPanel from "@/components/admin/MediaEmbedStatusPanel";
 
@@ -8,7 +8,7 @@ export default async function AdminMediaPage({ params }: PageProps<"/[lang]/admi
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const items = await getAllMedia();
+  const [items, overrideMeta] = await Promise.all([getAllMedia(), getOverrideMeta()]);
   const subtitleRows = items.map((item) => ({
     id: item.id,
     title: item.title,
@@ -19,6 +19,8 @@ export default async function AdminMediaPage({ params }: PageProps<"/[lang]/admi
     title: item.title,
     embedStatus: item.embedStatus ?? "unchecked",
     lastCheckedAt: item.lastCheckedAt,
+    manualOverride: overrideMeta.get(item.id)?.manualOverride ?? false,
+    overrideNote: overrideMeta.get(item.id)?.note ?? undefined,
   }));
 
   return (

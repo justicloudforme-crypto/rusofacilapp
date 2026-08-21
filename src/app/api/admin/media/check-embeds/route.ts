@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
-import { getAllMedia, saveEmbedStatuses } from "@/lib/media/data";
+import { getAllMedia, getManualOverrideIds, saveEmbedStatuses } from "@/lib/media/data";
 import { checkMediaEmbeds } from "@/lib/media/checkEmbeds";
 import type { EmbedStatus } from "@/lib/media/types";
 
@@ -16,9 +16,14 @@ export async function POST() {
     return NextResponse.json({ error: "missing_api_key" }, { status: 503 });
   }
 
-  const items = await getAllMedia();
+  const [items, manualIds] = await Promise.all([getAllMedia(), getManualOverrideIds()]);
+  // Manually-protected ids (see MediaOverride.manualOverride) are excluded
+  // from the check entirely — not just from the write-back — since a human
+  // judgment call already settled their status and re-querying the API
+  // just to discard the answer wastes quota.
+  const toCheck = items.filter((item) => !manualIds.has(item.id));
   const results = await checkMediaEmbeds(
-    items.map((item) => ({ id: item.id, youtubeVideoId: item.youtubeVideoId })),
+    toCheck.map((item) => ({ id: item.id, youtubeVideoId: item.youtubeVideoId })),
     apiKey,
   );
 

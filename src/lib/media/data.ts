@@ -113,3 +113,20 @@ export async function setManualOverride(id: string, manualOverride: boolean, not
     update: { manualOverride, ...(note ? { sourceNoteAppend: note } : {}) },
   });
 }
+
+/** IDs currently protected from automated embed-status overwrites. */
+export async function getManualOverrideIds(): Promise<Set<string>> {
+  const rows = await db.mediaOverride.findMany({ where: { manualOverride: true }, select: { mediaId: true } });
+  return new Set(rows.map((r) => r.mediaId));
+}
+
+/** Per-id { manualOverride, note } for the admin embed-status panel. */
+export async function getOverrideMeta(): Promise<Map<string, { manualOverride: boolean; note: string | null }>> {
+  const overrides = await readOverrides();
+  return new Map(
+    Array.from(overrides.entries()).map(([id, o]) => [
+      id,
+      { manualOverride: o.manualOverride, note: o.sourceNoteAppend },
+    ]),
+  );
+}
