@@ -39,6 +39,7 @@
     "apply-audio-blob-urls": "tsx prisma/apply-audio-blob-urls.ts",
     "sync-audio-assets-to-turso": "tsx prisma/sync-audio-assets-to-turso.ts",
     "remap-audio-content-ids": "tsx prisma/remap-audio-content-ids.ts",
+    "sync-media-overrides-to-turso": "tsx prisma/sync-media-overrides-to-turso.ts",
     "check:media-embeds": "tsx prisma/check-media-embeds.ts",
     "generate:word-games": "tsx prisma/generate-word-games.ts",
     "check:grammar": "tsx prisma/check-grammar.ts",
