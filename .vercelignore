@@ -1,0 +1,8 @@
+# narration audio is fully migrated to Vercel Blob (see prisma/migrate-audio-to-blob.ts
+# and AudioAsset.audioUrl) — these local files are generation source/cache only.
+# Vercel does NOT honor .gitignore for anything under public/ (it always bundles
+# public/ regardless, to avoid accidentally breaking normal static assets), so this
+# needs its own explicit exclusion or every deploy re-uploads 1.4GB+ of dead weight
+# and blows past the CLI's 15,000-file-per-deploy limit (confirmed: 22,644 files
+# without this, deploy rejected outright).
+/public/audio/
