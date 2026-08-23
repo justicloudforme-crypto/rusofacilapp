@@ -21,9 +21,12 @@
  *   TURSO_DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npm run db:backfill-audio-durations
  */
 import "dotenv/config";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
-import { parseBuffer } from "music-metadata";
+import { parseFile } from "music-metadata";
 
 const SITE_ORIGIN = process.env.BACKFILL_SITE_ORIGIN ?? "https://rusofacilapp.com";
 
@@ -36,8 +39,14 @@ const adapter = new PrismaLibSql({
 });
 const db = new PrismaClient({ adapter });
 
-async function probeDurationSeconds(url: string): Promise<number | null> {
+// Probes via a temp file + parseFile, not parseBuffer — a real, confirmed
+// bug: under this project's tsx/ESM module resolution, parseBuffer(buffer,
+// "audio/mpeg") always fails with "Guessed MIME-type not supported:
+// audio/mpeg" (see src/lib/audio-assets.ts's probeDurationSeconds for the
+// full story). parseFile's extension-based lookup is unaffected.
+async function probeDurationSeconds(url: string, tmpDir: string): Promise<number | null> {
   const absoluteUrl = url.startsWith("http") ? url : `${SITE_ORIGIN}${url}`;
+  const tmpFile = path.join(tmpDir, `probe-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`);
   try {
     const res = await fetch(absoluteUrl);
     if (!res.ok) {
@@ -45,12 +54,15 @@ async function probeDurationSeconds(url: string): Promise<number | null> {
       return null;
     }
     const buffer = Buffer.from(await res.arrayBuffer());
-    const metadata = await parseBuffer(buffer, "audio/mpeg");
+    await writeFile(tmpFile, buffer);
+    const metadata = await parseFile(tmpFile);
     const duration = metadata.format.duration;
     return typeof duration === "number" && Number.isFinite(duration) ? duration : null;
   } catch (error) {
     console.error(`  probe failed for ${absoluteUrl}:`, (error as Error).message);
     return null;
+  } finally {
+    await rm(tmpFile, { force: true });
   }
 }
 
@@ -68,10 +80,11 @@ async function main() {
   console.log(`Backfilling durationSeconds for ${rows.length} row(s)...`);
   let updated = 0;
   let failed = 0;
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "audio-duration-backfill-"));
 
   for (const row of rows) {
     const label = `${row.contentType}/${row.contentId}/${row.itemKey}`;
-    const duration = await probeDurationSeconds(row.audioUrl);
+    const duration = await probeDurationSeconds(row.audioUrl, tmpDir);
     if (duration === null) {
       failed++;
       continue;
@@ -81,6 +94,7 @@ async function main() {
     console.log(`  ${label}: ${duration.toFixed(2)}s`);
   }
 
+  await rm(tmpDir, { recursive: true, force: true });
   console.log(`\n✔ Updated ${updated} row(s)${failed ? `, ${failed} failed (see errors above)` : ""}.`);
 }
 

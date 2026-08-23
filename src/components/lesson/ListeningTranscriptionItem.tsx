@@ -13,6 +13,7 @@ export default function ListeningTranscriptionItem({
   submitted,
   correct,
   dict,
+  audioUrl,
 }: {
   exercise: ListeningTranscriptionExercise;
   value: string | undefined;
@@ -20,6 +21,8 @@ export default function ListeningTranscriptionItem({
   submitted: boolean;
   correct: boolean;
   dict: ExercisesDict;
+  /** Pre-generated narration for exercise.audioText, if any. */
+  audioUrl?: string;
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
@@ -31,6 +34,7 @@ export default function ListeningTranscriptionItem({
           text={exercise.audioText}
           label={dict.listeningPlayLabel}
           size="md"
+          audioUrl={audioUrl}
         />
         {exercise.prompt}
       </legend>

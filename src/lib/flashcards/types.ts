@@ -47,6 +47,9 @@ export interface Flashcard {
    * AudioAsset cache (see prisma/generate-flashcard-audio.ts). Undefined
    * until generated — SpeakButton falls back to browser TTS. */
   audioUrl?: string | null;
+  /** Pre-generated pronunciation clip for `exampleRu` (see prisma/generate-
+   * flashcard-example-audio.ts). Undefined until generated. */
+  exampleAudioUrl?: string | null;
 }
 
 export const flashcardCategories: FlashcardCategory[] = [

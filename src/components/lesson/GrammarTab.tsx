@@ -1,6 +1,7 @@
 import type { LessonContent } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
+import { lookupAudio } from "@/lib/speech";
 import ReadingPracticeBlock from "./ReadingPracticeBlock";
 import GlossaryText from "@/components/glossary/GlossaryText";
 import GlossaryHint from "@/components/glossary/GlossaryHint";
@@ -12,6 +13,7 @@ export default function GrammarTab({
   dict,
   level,
   lessonSlug,
+  audioMap,
 }: {
   grammar: LessonContent["grammar"];
   readingPractice: LessonContent["readingPractice"];
@@ -19,6 +21,11 @@ export default function GrammarTab({
   dict: Dictionary["lesson"];
   level: string;
   lessonSlug: string;
+  /** Pre-generated pronunciation audio (see prisma/generate-lesson-audio.ts),
+   * keyed by the Russian text — was never wired up here before, so every
+   * grammar example silently fell back to the browser's free built-in
+   * speech synthesis instead of the paid, cached narration. */
+  audioMap: Record<string, string>;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -46,7 +53,7 @@ export default function GrammarTab({
                 key={example.russian}
                 className="flex items-center gap-3 border-t border-black/5 pt-2 first:border-t-0 first:pt-0 dark:border-white/10"
               >
-                <SpeakButton text={example.russian} label={dict.alphabet.listenLabel} />
+                <SpeakButton text={example.russian} label={dict.alphabet.listenLabel} audioUrl={lookupAudio(audioMap, example.russian)} />
                 <div className="flex flex-col">
                   <span className="font-medium">{example.russian}</span>
                   <span className="text-xs text-foreground/60">{example.translation}</span>
@@ -64,6 +71,7 @@ export default function GrammarTab({
           readAloudDict={dict.readAloud}
           level={level}
           lessonSlug={lessonSlug}
+          audioMap={audioMap}
         />
       )}
     </div>

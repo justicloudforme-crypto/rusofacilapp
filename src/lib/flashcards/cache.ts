@@ -57,10 +57,15 @@ const localLayer = getOrCreateGlobalSingleton<{ entry: LocalEntry | null }>(
 async function fetchFlashcardIndex(): Promise<FlashcardRow[]> {
   const cards = await db.flashcardCard.findMany({ orderBy: { createdAt: "asc" } });
   const audioRows = await db.audioAsset.findMany({
-    where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) }, itemKey: "word" },
-    select: { contentId: true, audioUrl: true },
+    where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
+    select: { contentId: true, itemKey: true, audioUrl: true },
   });
-  const audioByCardId = new Map(audioRows.map((row) => [row.contentId, row.audioUrl]));
+  const wordAudioByCardId = new Map<string, string>();
+  const exampleAudioByCardId = new Map<string, string>();
+  for (const row of audioRows) {
+    if (row.itemKey === "word") wordAudioByCardId.set(row.contentId, row.audioUrl);
+    else if (row.itemKey === "example") exampleAudioByCardId.set(row.contentId, row.audioUrl);
+  }
 
   return cards.map((card) => ({
     ...card,
@@ -68,7 +73,8 @@ async function fetchFlashcardIndex(): Promise<FlashcardRow[]> {
     level: card.level as FlashcardRow["level"],
     synonyms: parseWordRelationsJson(card.synonyms),
     antonyms: parseWordRelationsJson(card.antonyms),
-    audioUrl: audioByCardId.get(card.id) ?? null,
+    audioUrl: wordAudioByCardId.get(card.id) ?? null,
+    exampleAudioUrl: exampleAudioByCardId.get(card.id) ?? null,
   }));
 }
 

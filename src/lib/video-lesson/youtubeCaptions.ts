@@ -253,7 +253,7 @@ let ffmpegBinaryPromise: Promise<string | null> | null = null;
  * case one exists (respects it instead of shadowing it), and only falls
  * back to asking Python for imageio_ffmpeg's bundled copy.
  */
-async function resolveFfmpegBinary(): Promise<string | null> {
+export async function resolveFfmpegBinary(): Promise<string | null> {
   if (!ffmpegBinaryPromise) {
     ffmpegBinaryPromise = (async () => {
       try {

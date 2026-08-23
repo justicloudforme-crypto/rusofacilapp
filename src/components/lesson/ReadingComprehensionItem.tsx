@@ -13,6 +13,7 @@ export default function ReadingComprehensionItem({
   submitted,
   correctness,
   dict,
+  audioUrl,
 }: {
   exercise: ReadingComprehensionExercise;
   value: Record<number, number> | undefined;
@@ -20,6 +21,8 @@ export default function ReadingComprehensionItem({
   submitted: boolean;
   correctness: boolean[];
   dict: ExercisesDict;
+  /** Pre-generated narration for exercise.text, if any. */
+  audioUrl?: string;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -32,6 +35,7 @@ export default function ReadingComprehensionItem({
             text={exercise.text}
             label={dict.listeningPlayLabel}
             size="md"
+            audioUrl={audioUrl}
           />
           <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
             {dict.readingTextLabel}

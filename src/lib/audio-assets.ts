@@ -32,23 +32,30 @@
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { parseBuffer } from "music-metadata";
+import { parseFile } from "music-metadata";
 import type { PrismaClient } from "../generated/prisma/client";
 
 export function hashText(text: string): string {
   return createHash("sha256").update(text).digest("hex");
 }
 
-/** Reads an MP3 buffer's duration without touching disk — used right
- * after synthesis, before the file is even written. Never throws: a
- * malformed/unreadable buffer just means this AudioAsset row keeps
- * durationSeconds null, same as it would have before this column existed
- * — worth surfacing in logs, never worth failing a whole generation run
- * over (matches this module's existing "generation must not silently
- * break the caller" philosophy for provider/network failures). */
-async function probeDurationSeconds(buffer: Buffer): Promise<number | null> {
+/** Reads a just-written MP3 file's duration. Takes a path (not the raw
+ * buffer) and probes via `parseFile` rather than `parseBuffer` — a real,
+ * confirmed bug: under this project's tsx/ESM module resolution,
+ * `parseBuffer(buffer, "audio/mpeg")` always fails with "Guessed MIME-type
+ * not supported: audio/mpeg" (the content-type hint is silently dropped,
+ * falling through to music-metadata's buffer-sniffing path, which then
+ * fails to match its own supported-type list — reproduced in isolation
+ * outside this codebase too, so it's a music-metadata/tsx interop issue,
+ * not a bug in the mp3 bytes themselves). `parseFile`'s extension-based
+ * lookup takes a completely different, unaffected code path and was
+ * verified against a real generated clip. Never throws: a malformed/
+ * unreadable file just means this AudioAsset row keeps durationSeconds
+ * null, same as it would have before this column existed — worth
+ * surfacing in logs, never worth failing a whole generation run over. */
+async function probeDurationSeconds(filePath: string): Promise<number | null> {
   try {
-    const metadata = await parseBuffer(buffer, "audio/mpeg");
+    const metadata = await parseFile(filePath);
     const duration = metadata.format.duration;
     return typeof duration === "number" && Number.isFinite(duration) ? duration : null;
   } catch (error) {
@@ -111,8 +118,9 @@ export async function ensureAudioAsset(
   try {
     await mkdir(audioDir, { recursive: true });
     const buffer = await synthesize(text, voice);
-    const durationSeconds = await probeDurationSeconds(buffer);
-    await writeFile(path.join(audioDir, fileName), buffer);
+    const filePath = path.join(audioDir, fileName);
+    await writeFile(filePath, buffer);
+    const durationSeconds = await probeDurationSeconds(filePath);
     const audioUrl = `${publicPath}/${fileName}`;
     await db.audioAsset.upsert({
       where: { contentType_contentId_itemKey: { contentType, contentId, itemKey } },

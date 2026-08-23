@@ -13,6 +13,7 @@ export default function ListeningItem({
   submitted,
   correct,
   dict,
+  audioUrl,
 }: {
   exercise: ListeningExercise;
   value: number | undefined;
@@ -20,6 +21,10 @@ export default function ListeningItem({
   submitted: boolean;
   correct: boolean;
   dict: ExercisesDict;
+  /** Pre-generated narration for exercise.audioText, if any (see prisma/
+   * generate-lesson-audio.ts / generate-exam-audio.ts). Falls back to
+   * browser TTS when undefined. */
+  audioUrl?: string;
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
@@ -31,6 +36,7 @@ export default function ListeningItem({
           text={exercise.audioText}
           label={dict.listeningPlayLabel}
           size="md"
+          audioUrl={audioUrl}
         />
         {exercise.prompt}
       </legend>

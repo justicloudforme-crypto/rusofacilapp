@@ -170,7 +170,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
                     >
                       «{idiom.phrase}»
                     </button>
-                    <SpeakButton text={idiom.phrase} label={dict.listenLabel} />
+                    <SpeakButton text={idiom.phrase} label={dict.listenLabel} audioUrl={idiom.audioUrl} />
                   </div>
                   <button
                     type="button"
@@ -201,7 +201,10 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
                     </p>
                     <div className="rounded-xl bg-foreground/5 p-3">
                       <span className="mb-1 block font-medium text-foreground/60">{dict.contextExampleLabel}:</span>
-                      <p className="text-foreground/80">{idiom.contextExampleRu}</p>
+                      <p className="flex items-start gap-1.5 text-foreground/80">
+                        <SpeakButton text={idiom.contextExampleRu} label={dict.listenLabel} audioUrl={idiom.contextExampleAudioUrl} />
+                        <span>{idiom.contextExampleRu}</span>
+                      </p>
                       <p className="mt-1 text-foreground/50">{idiom.contextExampleEs}</p>
                     </div>
                   </div>

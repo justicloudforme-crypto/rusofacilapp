@@ -171,7 +171,7 @@ export default function TermQuiz({
         </p>
         <div className="mt-1 flex items-center gap-2">
           <h3 className="text-xl font-bold leading-tight text-foreground">{question.term.term}</h3>
-          <SpeakButton text={question.term.russianEquivalent} label={dict.listenLabel} />
+          <SpeakButton text={question.term.russianEquivalent} label={dict.listenLabel} audioUrl={question.term.audioUrl} />
         </div>
       </div>
       <div className="mt-3 flex flex-col gap-1.5">

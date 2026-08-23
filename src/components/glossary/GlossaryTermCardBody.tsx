@@ -28,7 +28,7 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
           — {term.russianEquivalent}
           {term.transcription ? ` [${term.transcription}]` : ""}
         </span>
-        <SpeakButton text={term.russianEquivalent} label="Escuchar en ruso" />
+        <SpeakButton text={term.russianEquivalent} label="Escuchar en ruso" audioUrl={term.audioUrl} />
         {earliestLevel && (
           <span className="rounded-full border border-black/10 px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-foreground/50 dark:border-white/15">
             Introducido en {earliestLevel}
@@ -46,7 +46,7 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
         <span className="mt-2 flex flex-col gap-1.5">
           {term.examples.map((example) => (
             <span key={example.ru} className="flex items-start gap-1.5 leading-5 text-foreground/70">
-              <SpeakButton text={example.ru} label="Escuchar en ruso" />
+              <SpeakButton text={example.ru} label="Escuchar en ruso" audioUrl={example.audioUrl} />
               <span>
                 {example.ru}
                 <span className="text-foreground/50"> — {example.es}</span>

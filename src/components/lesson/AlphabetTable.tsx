@@ -1,6 +1,7 @@
 import type { AlphabetLetter } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
+import { lookupAudio } from "@/lib/speech";
 
 type AlphabetDict = Dictionary["lesson"]["alphabet"];
 
@@ -9,9 +10,16 @@ const GROUP_ORDER: AlphabetLetter["type"][] = ["vowel", "consonant", "sign"];
 export default function AlphabetTable({
   alphabet,
   dict,
+  audioMap,
 }: {
   alphabet: AlphabetLetter[];
   dict: AlphabetDict;
+  /** Pre-generated pronunciation audio (see prisma/generate-lesson-audio.ts),
+   * keyed by the Russian text — was never wired up here before, so every
+   * alphabet letter silently fell back to the browser's free built-in
+   * speech synthesis instead of the paid, cached narration that already
+   * exists in the database for all 33 letters. */
+  audioMap: Record<string, string>;
 }) {
   const groupLabel: Record<AlphabetLetter["type"], string> = {
     vowel: dict.vowels,
@@ -49,7 +57,7 @@ export default function AlphabetTable({
                       <span className="font-mono text-xs text-foreground/50">
                         [{letter.transcription}]
                       </span>
-                      <SpeakButton text={letter.letter} label={dict.listenLabel} />
+                      <SpeakButton text={letter.name} label={dict.listenLabel} audioUrl={lookupAudio(audioMap, letter.name)} />
                     </div>
                     <p className="text-xs leading-5 text-foreground/70">{letter.pronunciation}</p>
                   </div>

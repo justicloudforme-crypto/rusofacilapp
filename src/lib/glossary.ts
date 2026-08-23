@@ -31,6 +31,10 @@ export function isGlossaryCategory(value: string): value is GlossaryCategory {
 export interface GlossaryExample {
   es: string;
   ru: string;
+  /** Pre-generated narration for `ru` (see prisma/generate-glossary-audio.ts),
+   * attached server-side by the /api/glossary routes. Undefined until that
+   * generation pass runs — SpeakButton falls back to browser TTS silently. */
+  audioUrl?: string;
 }
 
 export interface GlossaryTermInput {

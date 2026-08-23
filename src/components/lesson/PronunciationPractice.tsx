@@ -1,6 +1,7 @@
 import type { VocabularyItem } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
+import { lookupAudio } from "@/lib/speech";
 import VoiceRecorder from "./VoiceRecorder";
 
 type PronunciationDict = Dictionary["lesson"]["pronunciation"];
@@ -15,11 +16,16 @@ export default function PronunciationPractice({
   level,
   lessonSlug,
   dict,
+  audioMap,
 }: {
   vocabulary: VocabularyItem[];
   level: string;
   lessonSlug: string;
   dict: PronunciationDict;
+  /** Pre-generated pronunciation audio (see prisma/generate-lesson-audio.ts),
+   * keyed by the Russian text itself — these are the same vocabulary words
+   * already narrated for the Vocabulario tab. */
+  audioMap: Record<string, string>;
 }) {
   const items = vocabulary.slice(0, MAX_WORDS);
   if (items.length === 0) return null;
@@ -34,7 +40,7 @@ export default function PronunciationPractice({
         {items.map((item) => (
           <div key={item.word} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/10">
             <div className="flex items-center gap-2">
-              <SpeakButton text={item.word} label={dict.listenLabel} />
+              <SpeakButton text={item.word} label={dict.listenLabel} audioUrl={lookupAudio(audioMap, item.word)} />
               <span className="font-medium">{item.word}</span>
               <span className="text-xs text-foreground/50">[{item.transcription}]</span>
             </div>

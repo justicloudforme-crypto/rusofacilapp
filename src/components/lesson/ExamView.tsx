@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ExamContent } from "@/lib/exams/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import {
@@ -16,6 +16,7 @@ import WordReorderItem from "./WordReorderItem";
 import ListeningItem from "./ListeningItem";
 import ReadingComprehensionItem from "./ReadingComprehensionItem";
 import ListeningTranscriptionItem from "./ListeningTranscriptionItem";
+import { lookupAudio } from "@/lib/speech";
 
 type ExercisesDict = Dictionary["lesson"]["exercises"];
 type ExamDict = Dictionary["profile"];
@@ -46,6 +47,22 @@ export default function ExamView({
   const [submitted, setSubmitted] = useState(false);
   const [attempt, setAttempt] = useState<AttemptResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Pre-generated pronunciation audio for this exam's listening/reading
+  // items (see prisma/generate-exam-audio.ts), keyed by the Russian text
+  // itself — same pattern as LessonView's audioMap. Empty until this
+  // resolves; SpeakButton falls back to browser synthesis meanwhile.
+  const [audioMap, setAudioMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch(`/api/exam-audio?level=${level}&examSlug=${exam.slug}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { audio?: Record<string, string> } | null) => {
+        if (body?.audio) setAudioMap(body.audio);
+      })
+      .catch(() => {
+        // No cached audio available — browser-synthesis fallback covers this.
+      });
+  }, [level, exam.slug]);
 
   const allExercises = exam.skillAreas.flatMap((area) => area.exercises);
   const allComplete = allExercises.every((exercise) =>
@@ -205,6 +222,7 @@ export default function ExamView({
                       submitted={submitted}
                       correct={itemResult?.correctness[0] ?? false}
                       dict={dict}
+                      audioUrl={lookupAudio(audioMap, exercise.audioText)}
                     />
                   )}
                   {exercise.type === "listening-transcription" && (
@@ -215,6 +233,7 @@ export default function ExamView({
                       submitted={submitted}
                       correct={itemResult?.correctness[0] ?? false}
                       dict={dict}
+                      audioUrl={lookupAudio(audioMap, exercise.audioText)}
                     />
                   )}
                   {exercise.type === "reading-comprehension" && (
@@ -236,6 +255,7 @@ export default function ExamView({
                       submitted={submitted}
                       correctness={itemResult?.correctness ?? []}
                       dict={dict}
+                      audioUrl={lookupAudio(audioMap, exercise.text)}
                     />
                   )}
                 </div>

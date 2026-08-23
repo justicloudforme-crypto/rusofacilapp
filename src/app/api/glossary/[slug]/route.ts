@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { parseExamplesJson, parseRelatedLessonsJson } from "@/lib/glossary";
+import { attachGlossaryAudio } from "@/lib/glossary-audio";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -8,7 +9,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   if (!term) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  return NextResponse.json({
-    term: { ...term, relatedLessons: parseRelatedLessonsJson(term.relatedLessons), examples: parseExamplesJson(term.examples) },
-  });
+  const [withAudio] = await attachGlossaryAudio([
+    { ...term, relatedLessons: parseRelatedLessonsJson(term.relatedLessons), examples: parseExamplesJson(term.examples) },
+  ]);
+  return NextResponse.json({ term: withAudio });
 }

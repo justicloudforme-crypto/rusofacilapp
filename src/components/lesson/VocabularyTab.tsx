@@ -1,6 +1,7 @@
 import type { VocabularyItem } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
+import { lookupAudio } from "@/lib/speech";
 
 export default function VocabularyTab({
   vocabulary,
@@ -32,7 +33,7 @@ export default function VocabularyTab({
           {vocabulary.map((item) => (
             <tr key={item.word} className="border-t border-black/5 dark:border-white/10">
               <td className="py-2.5 pr-2">
-                <SpeakButton text={item.word} label={listenLabel} audioUrl={audioMap?.[item.word]} />
+                <SpeakButton text={item.word} label={listenLabel} audioUrl={lookupAudio(audioMap, item.word)} />
               </td>
               <td className="py-2.5 pr-4 font-medium">{item.word}</td>
               <td className="py-2.5 pr-4 font-mono text-foreground/60">

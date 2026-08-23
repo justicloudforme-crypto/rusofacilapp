@@ -218,11 +218,23 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
               </p>
 
               <div className="[perspective:1200px]">
-                <button
-                  type="button"
+                {/* A <div role="button">, not a real <button> — the example
+                    sentence's SpeakButton (below) is itself a <button>, and
+                    nesting <button> inside <button> is invalid HTML (React
+                    warns "cannot be a descendant of"). Keyboard/AT support
+                    is preserved via tabIndex + onKeyDown. */}
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setFlipped((f) => !f)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setFlipped((f) => !f);
+                    }
+                  }}
                   aria-label={dict.tapToFlip}
-                  className="relative block h-64 w-full [transform-style:preserve-3d] transition-transform duration-500"
+                  className="relative block h-64 w-full cursor-pointer [transform-style:preserve-3d] transition-transform duration-500"
                   style={{ transform: flipped ? "rotateY(180deg)" : "none" }}
                 >
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-black/10 bg-background p-6 [backface-visibility:hidden] dark:border-white/10">
@@ -239,7 +251,14 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                     style={{ transform: "rotateY(180deg)" }}
                   >
                     <span className="text-2xl font-semibold">{card.translationEs}</span>
-                    <p className="text-sm leading-6 text-foreground/70">{card.exampleRu}</p>
+                    <p className="flex items-start justify-center gap-1.5 text-sm leading-6 text-foreground/70">
+                      {/* stopPropagation so pressing play doesn't also
+                          trigger the card-flip div's onClick above it */}
+                      <span onClick={(event) => event.stopPropagation()}>
+                        <SpeakButton text={card.exampleRu} label={dict.listenLabel} audioUrl={card.exampleAudioUrl ?? undefined} />
+                      </span>
+                      <span>{card.exampleRu}</span>
+                    </p>
                     <p className="text-sm leading-6 text-foreground/50">{card.exampleEs}</p>
                     {(card.synonyms?.length || card.antonyms?.length) ? (
                       <div className="mt-1 flex w-full flex-col gap-1 text-xs">
@@ -258,7 +277,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                       </div>
                     ) : null}
                   </div>
-                </button>
+                </div>
               </div>
 
               <div className="mt-6 flex items-center justify-center gap-3">

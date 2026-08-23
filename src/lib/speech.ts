@@ -52,3 +52,27 @@ export function sanitizeTextForTTS(text: string): string {
     .replace(/\s{2,}/g, " ")
     .trim();
 }
+
+/**
+ * Looks up a pre-generated clip in an audioMap (see prisma/generate-lesson-
+ * audio.ts, generate-exam-audio.ts, /api/lesson-audio, /api/exam-audio) by
+ * the SAME sanitized text the generation script keyed it by — never by the
+ * raw source text directly.
+ *
+ * A real, confirmed bug this fixes: every generate-*-audio.ts script
+ * writes AudioAsset.text as `sanitizeTextForTTS(rawText)` (quotes/
+ * newlines/backslashes stripped — see sanitizeTextForTTS above), and
+ * /api/lesson-audio and /api/exam-audio key their returned map by that
+ * same stored `text` column. But every consuming component was looking
+ * up `audioMap[rawText]` — the ORIGINAL, unsanitized source text. For any
+ * item without quotes/newlines the two strings happened to be identical,
+ * so the bug was invisible; but reading-comprehension passages and
+ * dialogue-style exercises are full of «guillemets» and \n line breaks,
+ * so their lookups always missed and silently fell back to the browser's
+ * free synthesis — looking exactly like "the professional voice isn't
+ * being used" even though the correct clip was sitting in the map the
+ * whole time, just under a different key.
+ */
+export function lookupAudio(audioMap: Record<string, string> | undefined, rawText: string): string | undefined {
+  return audioMap?.[sanitizeTextForTTS(rawText)];
+}

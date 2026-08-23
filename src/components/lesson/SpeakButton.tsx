@@ -42,6 +42,26 @@ export default function SpeakButton({
     setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
   }, []);
 
+  // A real, confirmed bug: this component instance is reused across
+  // different cards (e.g. flipping through a flashcard deck) without
+  // unmounting, so `audioUrl` changes on every card — but the cached
+  // `audioRef.current` from speak()'s `if (!audioRef.current)` check
+  // below was never invalidated, so every card after the first kept
+  // replaying whichever file was cached from the very first press.
+  // Resetting the ref whenever `audioUrl` changes forces speak() to build
+  // a fresh Audio element for the new file. Also stops/rewinds a clip
+  // still playing from the previous card so it doesn't keep going after
+  // the user has already moved on.
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    audioRef.current = null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSpeaking(false);
+  }, [audioUrl]);
+
   if (!supported && !audioUrl) return null;
 
   function speak() {

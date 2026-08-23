@@ -18,6 +18,7 @@ import ListeningItem from "./ListeningItem";
 import ReadingComprehensionItem from "./ReadingComprehensionItem";
 import ListeningTranscriptionItem from "./ListeningTranscriptionItem";
 import PronunciationPractice from "./PronunciationPractice";
+import { lookupAudio } from "@/lib/speech";
 import type { VocabularyItem } from "@/lib/lessons/types";
 import { flushPendingProgress, queuePendingProgress } from "@/lib/progress-client";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
@@ -36,6 +37,7 @@ export default function ExercisesTab({
   storageKey,
   onPassChange,
   enableAudioRecording = true,
+  audioMap = {},
 }: {
   exercises: Exercise[];
   vocabulary: VocabularyItem[];
@@ -47,6 +49,11 @@ export default function ExercisesTab({
   storageKey: string;
   onPassChange: (passed: boolean) => void;
   enableAudioRecording?: boolean;
+  /** Pre-generated narration keyed by Russian text (see prisma/generate-
+   * lesson-audio.ts and prisma/generate-exam-audio.ts) — covers vocabulary
+   * words (PronunciationPractice) and listening/reading exercise text.
+   * Falls back to browser TTS per-item when a key is missing. */
+  audioMap?: Record<string, string>;
 }) {
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [submitted, setSubmitted] = useState(false);
@@ -313,6 +320,7 @@ export default function ExercisesTab({
                 submitted={submitted}
                 correct={itemResult?.correctness[0] ?? false}
                 dict={dict}
+                audioUrl={lookupAudio(audioMap, exercise.audioText)}
               />
             )}
             {exercise.type === "listening-transcription" && (
@@ -323,6 +331,7 @@ export default function ExercisesTab({
                 submitted={submitted}
                 correct={itemResult?.correctness[0] ?? false}
                 dict={dict}
+                audioUrl={lookupAudio(audioMap, exercise.audioText)}
               />
             )}
             {exercise.type === "reading-comprehension" && (
@@ -343,6 +352,7 @@ export default function ExercisesTab({
                 submitted={submitted}
                 correctness={itemResult?.correctness ?? []}
                 dict={dict}
+                audioUrl={lookupAudio(audioMap, exercise.text)}
               />
             )}
           </div>
@@ -355,6 +365,7 @@ export default function ExercisesTab({
           level={level}
           lessonSlug={lessonSlug}
           dict={pronunciationDict}
+          audioMap={audioMap}
         />
       )}
 

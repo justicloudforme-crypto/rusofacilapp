@@ -35,6 +35,10 @@ export interface GlossaryTermData {
   russianComparison: string | null;
   examples: GlossaryExample[];
   relatedLessons: string[];
+  /** Pre-generated narration for russianEquivalent (see prisma/generate-
+   * glossary-audio.ts), attached server-side by /api/glossary. Undefined
+   * until that generation pass runs. */
+  audioUrl?: string;
 }
 
 export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: string }) {
@@ -203,7 +207,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
               <span className="flex items-center gap-1.5 text-sm text-foreground/50">
                 {dict.russianEquivalentLabel}: <span className="font-medium text-foreground/80">{term.russianEquivalent}</span>
                 {term.transcription ? <span className="text-foreground/50"> [{term.transcription}]</span> : null}
-                <SpeakButton text={term.russianEquivalent} label={dict.listenLabel} />
+                <SpeakButton text={term.russianEquivalent} label={dict.listenLabel} audioUrl={term.audioUrl} />
               </span>
             </div>
             <p className="mt-2 text-sm leading-6 text-foreground/80">{term.definition}</p>
@@ -217,7 +221,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
               <ul className="mt-3 flex flex-col gap-1.5">
                 {term.examples.map((example) => (
                   <li key={example.ru} className="flex items-start gap-2 text-sm text-foreground/70">
-                    <SpeakButton text={example.ru} label={dict.listenLabel} />
+                    <SpeakButton text={example.ru} label={dict.listenLabel} audioUrl={example.audioUrl} />
                     <span>
                       <span className="font-medium text-foreground/50">{dict.exampleLabel}: </span>
                       {example.ru}

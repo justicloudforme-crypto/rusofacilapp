@@ -135,7 +135,7 @@ export default function LessonView({
               />
             )}
             {tab === "alphabet" && content.alphabet && (
-              <AlphabetTable alphabet={content.alphabet} dict={dict.alphabet} />
+              <AlphabetTable alphabet={content.alphabet} dict={dict.alphabet} audioMap={audioMap} />
             )}
             {tab === "grammar" && (
               <GrammarTab
@@ -145,6 +145,7 @@ export default function LessonView({
                 dict={dict}
                 level={level}
                 lessonSlug={lessonSlug}
+                audioMap={audioMap}
               />
             )}
             {tab === "vocabulary" && (
@@ -167,6 +168,7 @@ export default function LessonView({
                 storageKey={`lesson-passed:${level}:${lessonSlug}`}
                 onPassChange={setPassed}
                 enableAudioRecording={content.enableAudioRecording}
+                audioMap={audioMap}
               />
             )}
           </div>
