@@ -44,21 +44,43 @@ export async function getPuzzleById(id: string): Promise<PuzzleRow | null> {
   return row ? parseRow(row) : null;
 }
 
-/** How many rungs exist for a (type, level) — used to know whether
- * "sequence + 1" is a real next puzzle or the end of that level's ladder. */
-export async function countSequences(type: WordGameType, level: string): Promise<number> {
-  return db.wordGamePuzzle.count({ where: { type, level } });
+/** `${type}:${level}` — the picker needs data broken down per (type,
+ * level) pair, but fetching each pair separately means one DB round trip
+ * per pair; this key lets a single query's results be grouped in memory
+ * instead. */
+function pairKey(type: string, level: string): string {
+  return `${type}:${level}`;
 }
 
-/** Which sequences of a (type, level) ladder are the curved/★ expert
- * tier — powers the picker's star badge without parsing every puzzle's
- * `words` JSON just to check. */
-export async function getCurvedSequences(type: WordGameType, level: string): Promise<Set<number>> {
+/** How many rungs exist for every (type, level) pair at once — one query
+ * instead of one per pair. Used to know whether "sequence + 1" is a real
+ * next puzzle or the end of that level's ladder, and to size the picker
+ * grid. Cross-region Turso round trips (see PROJECT_SUMMARY.md's regional
+ * latency note) made the old per-pair version genuinely slow: the picker
+ * page loops over every (type, level) combination, so 10 pairs meant 10
+ * sequential round trips just for this one piece of data. */
+export async function countAllSequences(): Promise<Map<string, number>> {
+  const rows = await db.wordGamePuzzle.groupBy({ by: ["type", "level"], _count: true });
+  return new Map(rows.map((r) => [pairKey(r.type, r.level), r._count]));
+}
+
+/** Which sequences are the curved/★ expert tier, for every (type, level)
+ * pair at once — powers the picker's star badge without parsing every
+ * puzzle's `words` JSON just to check. See countAllSequences for why this
+ * is batched instead of one query per pair. */
+export async function getAllCurvedSequences(): Promise<Map<string, Set<number>>> {
   const rows = await db.wordGamePuzzle.findMany({
-    where: { type, level, curved: true },
-    select: { sequence: true },
+    where: { curved: true },
+    select: { type: true, level: true, sequence: true },
   });
-  return new Set(rows.map((r) => r.sequence));
+  const byPair = new Map<string, Set<number>>();
+  for (const row of rows) {
+    const key = pairKey(row.type, row.level);
+    const existing = byPair.get(key);
+    if (existing) existing.add(row.sequence);
+    else byPair.set(key, new Set([row.sequence]));
+  }
+  return byPair;
 }
 
 // --- Public (answer-free) shapes sent to the client ---------------------
