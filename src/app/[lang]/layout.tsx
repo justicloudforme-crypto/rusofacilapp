@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { PT_Sans, PT_Serif, PT_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { SerwistProvider } from "@serwist/next/react";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "../globals.css";
 import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -104,6 +106,12 @@ export default async function LangLayout({
             Telegram CTA is the one persistent, animated, non-content element
             on every page, so it's the one thing this mode hides. */}
         {theme !== "reading" && <TelegramFloatButton />}
+        {/* Both are no-ops until Web Analytics / Speed Insights are turned
+            on for this project in the Vercel dashboard — see
+            vercel.com/rusofacilappcom/rusofacilapp → Analytics /
+            Speed Insights tabs. Safe to ship ahead of that toggle. */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
