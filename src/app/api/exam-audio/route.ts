@@ -19,11 +19,13 @@ export async function GET(request: NextRequest) {
 
   const rows = await db.audioAsset.findMany({
     where: { contentType: "exam", contentId: `${level}-${examSlug}` },
-    select: { text: true, audioUrl: true },
+    select: { itemKey: true, audioUrl: true },
   });
 
+  // Keyed by position (see src/lib/lessons/audioKeys.ts), not text — same
+  // reasoning as /api/lesson-audio.
   const audio: Record<string, string> = {};
-  for (const row of rows) audio[row.text] = row.audioUrl;
+  for (const row of rows) audio[row.itemKey] = row.audioUrl;
 
   return NextResponse.json({ audio });
 }

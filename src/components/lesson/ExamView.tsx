@@ -16,7 +16,7 @@ import WordReorderItem from "./WordReorderItem";
 import ListeningItem from "./ListeningItem";
 import ReadingComprehensionItem from "./ReadingComprehensionItem";
 import ListeningTranscriptionItem from "./ListeningTranscriptionItem";
-import { lookupAudio } from "@/lib/speech";
+import { examAudioKey } from "@/lib/lessons/audioKeys";
 
 type ExercisesDict = Dictionary["lesson"]["exercises"];
 type ExamDict = Dictionary["profile"];
@@ -48,9 +48,10 @@ export default function ExamView({
   const [attempt, setAttempt] = useState<AttemptResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // Pre-generated pronunciation audio for this exam's listening/reading
-  // items (see prisma/generate-exam-audio.ts), keyed by the Russian text
-  // itself — same pattern as LessonView's audioMap. Empty until this
-  // resolves; SpeakButton falls back to browser synthesis meanwhile.
+  // items (see prisma/generate-exam-audio.ts), keyed by item position
+  // (see src/lib/lessons/audioKeys.ts) — same pattern as LessonView's
+  // audioMap. Empty until this resolves; SpeakButton falls back to
+  // browser synthesis meanwhile.
   const [audioMap, setAudioMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -127,7 +128,7 @@ export default function ExamView({
         </div>
       )}
 
-      {exam.skillAreas.map((area) => {
+      {exam.skillAreas.map((area, areaIndex) => {
         const areaBreakdown = attempt?.breakdown[area.id];
         return (
           <section key={area.id} className="flex flex-col gap-4">
@@ -222,7 +223,7 @@ export default function ExamView({
                       submitted={submitted}
                       correct={itemResult?.correctness[0] ?? false}
                       dict={dict}
-                      audioUrl={lookupAudio(audioMap, exercise.audioText)}
+                      audioUrl={audioMap[examAudioKey(areaIndex, index, "listening")]}
                     />
                   )}
                   {exercise.type === "listening-transcription" && (
@@ -233,7 +234,7 @@ export default function ExamView({
                       submitted={submitted}
                       correct={itemResult?.correctness[0] ?? false}
                       dict={dict}
-                      audioUrl={lookupAudio(audioMap, exercise.audioText)}
+                      audioUrl={audioMap[examAudioKey(areaIndex, index, "listening-transcription")]}
                     />
                   )}
                   {exercise.type === "reading-comprehension" && (
@@ -255,7 +256,7 @@ export default function ExamView({
                       submitted={submitted}
                       correctness={itemResult?.correctness ?? []}
                       dict={dict}
-                      audioUrl={lookupAudio(audioMap, exercise.text)}
+                      audioUrl={audioMap[examAudioKey(areaIndex, index, "reading")]}
                     />
                   )}
                 </div>

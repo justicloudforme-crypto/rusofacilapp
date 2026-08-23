@@ -1,7 +1,7 @@
 import type { VocabularyItem } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
-import { lookupAudio } from "@/lib/speech";
+import { vocabAudioKey } from "@/lib/lessons/audioKeys";
 
 export default function VocabularyTab({
   vocabulary,
@@ -12,10 +12,10 @@ export default function VocabularyTab({
   vocabulary: VocabularyItem[];
   dict: Dictionary["lesson"]["vocabulary"];
   listenLabel: string;
-  /** Pre-generated pronunciation audio for this lesson, keyed by the
-   * Russian word — see prisma/generate-lesson-audio.ts. Omit (or leave a
-   * word out of it) to fall back to browser speech synthesis for that
-   * word. */
+  /** Pre-generated pronunciation audio for this lesson, keyed by item
+   * position (see src/lib/lessons/audioKeys.ts) — see
+   * prisma/generate-lesson-audio.ts. Omit (or leave an index out of it)
+   * to fall back to browser speech synthesis for that word. */
   audioMap?: Record<string, string>;
 }) {
   return (
@@ -30,10 +30,10 @@ export default function VocabularyTab({
           </tr>
         </thead>
         <tbody>
-          {vocabulary.map((item) => (
+          {vocabulary.map((item, index) => (
             <tr key={item.word} className="border-t border-black/5 dark:border-white/10">
               <td className="py-2.5 pr-2">
-                <SpeakButton text={item.word} label={listenLabel} audioUrl={lookupAudio(audioMap, item.word)} />
+                <SpeakButton text={item.word} label={listenLabel} audioUrl={audioMap?.[vocabAudioKey(index)]} />
               </td>
               <td className="py-2.5 pr-4 font-medium">{item.word}</td>
               <td className="py-2.5 pr-4 font-mono text-foreground/60">

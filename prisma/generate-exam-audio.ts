@@ -39,6 +39,7 @@ import { ensureAudioAsset } from "../src/lib/audio-assets";
 import { transcribeAudioWithWhisper } from "../src/lib/media/whisperTranscribe";
 import type { ExamContent } from "../src/lib/exams/types";
 import rawExamContent from "../src/lib/exams/content.json";
+import { examAudioKey } from "../src/lib/lessons/audioKeys";
 
 const staticExamContent = rawExamContent as unknown as Record<string, ExamContent>;
 
@@ -88,13 +89,16 @@ function collectExamAudioItems(exam: ExamContent): ExamAudioItem[] {
   const items: ExamAudioItem[] = [];
   exam.skillAreas.forEach((area, areaIndex) => {
     area.exercises.forEach((exercise, exIndex) => {
-      const prefix = `area-${areaIndex}-ex-${exIndex}`;
       if (exercise.type === "listening" && exercise.audioText) {
-        items.push({ key: `${prefix}-listening`, text: exercise.audioText, voice: NARRATOR_VOICE });
+        items.push({ key: examAudioKey(areaIndex, exIndex, "listening"), text: exercise.audioText, voice: NARRATOR_VOICE });
       } else if (exercise.type === "listening-transcription" && exercise.audioText) {
-        items.push({ key: `${prefix}-listening-transcription`, text: exercise.audioText, voice: NARRATOR_VOICE });
+        items.push({
+          key: examAudioKey(areaIndex, exIndex, "listening-transcription"),
+          text: exercise.audioText,
+          voice: NARRATOR_VOICE,
+        });
       } else if (exercise.type === "reading-comprehension" && exercise.text) {
-        items.push({ key: `${prefix}-reading`, text: exercise.text, voice: NARRATOR_VOICE });
+        items.push({ key: examAudioKey(areaIndex, exIndex, "reading"), text: exercise.text, voice: NARRATOR_VOICE });
       }
     });
   });

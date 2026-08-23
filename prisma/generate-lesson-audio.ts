@@ -68,6 +68,13 @@ import { sanitizeTextForTTS } from "../src/lib/speech";
 import { ensureAudioAsset } from "../src/lib/audio-assets";
 import { transcribeAudioWithWhisper } from "../src/lib/media/whisperTranscribe";
 import { resolveFfmpegBinary } from "../src/lib/video-lesson/youtubeCaptions";
+import {
+  vocabAudioKey,
+  alphabetAudioKey,
+  grammarExampleAudioKey,
+  readingPracticeAudioKey,
+  exerciseAudioKey,
+} from "../src/lib/lessons/audioKeys";
 import { execFile } from "node:child_process";
 // Imported directly from the JSON file (not src/lib/lessons/content.ts,
 // which is marked "server-only" and can't be required outside Next.js's
@@ -128,17 +135,17 @@ function collectLessonAudioItems(content: Record<string, unknown>): LessonAudioI
 
   const vocabulary = content.vocabulary as { word: string }[] | undefined;
   (vocabulary ?? []).forEach((item, i) => {
-    if (item?.word) items.push({ key: `vocab-${i}`, text: item.word, voice: NARRATOR_VOICE });
+    if (item?.word) items.push({ key: vocabAudioKey(i), text: item.word, voice: NARRATOR_VOICE });
   });
 
   const grammar = content.grammar as { examples?: { russian: string }[] } | undefined;
   (grammar?.examples ?? []).forEach((example, i) => {
-    if (example?.russian) items.push({ key: `grammar-example-${i}`, text: example.russian, voice: NARRATOR_VOICE });
+    if (example?.russian) items.push({ key: grammarExampleAudioKey(i), text: example.russian, voice: NARRATOR_VOICE });
   });
 
   const readingPractice = content.readingPractice as { items?: { text: string }[] } | undefined;
   (readingPractice?.items ?? []).forEach((item, i) => {
-    if (item?.text) items.push({ key: `reading-${i}`, text: item.text, voice: NARRATOR_VOICE });
+    if (item?.text) items.push({ key: readingPracticeAudioKey(i), text: item.text, voice: NARRATOR_VOICE });
   });
 
   // `name` is the letter's spoken name ("бэ", "вэ"), not the two-glyph
@@ -147,28 +154,28 @@ function collectLessonAudioItems(content: Record<string, unknown>): LessonAudioI
   const alphabet = content.alphabet as { name: string }[] | undefined;
   (alphabet ?? []).forEach((item, i) => {
     if (item?.name) {
-      items.push({ key: `alphabet-${i}`, text: item.name, voice: NARRATOR_VOICE });
+      items.push({ key: alphabetAudioKey(i), text: item.name, voice: NARRATOR_VOICE });
     }
   });
 
   // Exercises tab: listening/listening-transcription play a Russian
   // sentence via TTS before the student answers; reading-comprehension
   // shows a Russian passage with its own listen button. Keyed by exercise
-  // type + position (not exercise.id) for the same "edit text without
-  // re-billing" reason as everything else above. See ExercisesTab.tsx /
-  // ListeningItem.tsx / ReadingComprehensionItem.tsx for the read side —
-  // the frontend looks these up by literal text via /api/lesson-audio, not
-  // by this key, so the key only needs to be stable and unique here.
+  // type + position (not exercise.id or its text) via the shared
+  // src/lib/lessons/audioKeys.ts helpers — ExercisesTab/ExamView look
+  // these up by that same position-derived key via /api/lesson-audio, not
+  // by literal text, so an admin editing the Lesson-override text later
+  // (a typo/grammar fix) can never silently break the audio link.
   const exercises = content.exercises as
     | { type: string; audioText?: string; text?: string }[]
     | undefined;
   (exercises ?? []).forEach((exercise, i) => {
     if (exercise.type === "listening" && exercise.audioText) {
-      items.push({ key: `exercise-listening-${i}`, text: exercise.audioText, voice: NARRATOR_VOICE });
+      items.push({ key: exerciseAudioKey("listening", i), text: exercise.audioText, voice: NARRATOR_VOICE });
     } else if (exercise.type === "listening-transcription" && exercise.audioText) {
-      items.push({ key: `exercise-listening-transcription-${i}`, text: exercise.audioText, voice: NARRATOR_VOICE });
+      items.push({ key: exerciseAudioKey("listening-transcription", i), text: exercise.audioText, voice: NARRATOR_VOICE });
     } else if (exercise.type === "reading-comprehension" && exercise.text) {
-      items.push({ key: `exercise-reading-${i}`, text: exercise.text, voice: NARRATOR_VOICE });
+      items.push({ key: exerciseAudioKey("reading", i), text: exercise.text, voice: NARRATOR_VOICE });
     }
   });
 

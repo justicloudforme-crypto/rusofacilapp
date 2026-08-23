@@ -21,13 +21,17 @@ export async function GET(request: NextRequest) {
 
   const rows = await db.audioAsset.findMany({
     where: { contentType: "lesson", contentId: `${level}-${lesson}` },
-    select: { text: true, audioUrl: true },
+    select: { itemKey: true, audioUrl: true },
   });
 
-  // Keyed by the Russian text itself (not the internal itemKey hash) — see
-  // LessonView/VocabularyTab, which look up this map by `item.word`.
+  // Keyed by the item's fixed position (see src/lib/lessons/audioKeys.ts),
+  // not its text — a real, confirmed incident: keying by literal text
+  // meant an admin's later typo/grammar fix in the Lesson-override editor
+  // silently broke the link to already-paid-for narration for 14 items
+  // across the course, since the generation script only ever saw the
+  // original static content.json text.
   const audio: Record<string, string> = {};
-  for (const row of rows) audio[row.text] = row.audioUrl;
+  for (const row of rows) audio[row.itemKey] = row.audioUrl;
 
   return NextResponse.json({ audio });
 }

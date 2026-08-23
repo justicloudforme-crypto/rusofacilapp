@@ -1,7 +1,7 @@
 import type { LessonContent } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
-import { lookupAudio } from "@/lib/speech";
+import { readingPracticeAudioKey } from "@/lib/lessons/audioKeys";
 import VoiceRecorder from "./VoiceRecorder";
 
 type ReadAloudDict = Dictionary["lesson"]["readAloud"];
@@ -21,9 +21,7 @@ export default function ReadingPracticeBlock({
   level: string;
   lessonSlug: string;
   /** Pre-generated pronunciation audio (see prisma/generate-lesson-audio.ts),
-   * keyed by the Russian text — was never wired up here before, so every
-   * reading-practice item silently fell back to the browser's free built-in
-   * speech synthesis instead of the paid, cached narration. */
+   * keyed by item position (see src/lib/lessons/audioKeys.ts). */
   audioMap: Record<string, string>;
 }) {
   return (
@@ -31,10 +29,10 @@ export default function ReadingPracticeBlock({
       <h3 className="text-sm font-semibold">{readingPractice.title}</h3>
       {readAloudDict && <p className="text-xs text-foreground/60">{readAloudDict.instructions}</p>}
       <div className="flex flex-col gap-3">
-        {readingPractice.items.map((item) => (
+        {readingPractice.items.map((item, index) => (
           <div key={item.text} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/10">
             <div className="flex items-center gap-3">
-              <SpeakButton text={item.text} label={listenLabel} audioUrl={lookupAudio(audioMap, item.text)} />
+              <SpeakButton text={item.text} label={listenLabel} audioUrl={audioMap[readingPracticeAudioKey(index)]} />
               <div className="flex flex-col">
                 <span className="font-medium">{item.text}</span>
                 {item.translation && (
