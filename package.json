@@ -60,6 +60,7 @@
     "@prisma/adapter-libsql": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@react-pdf/renderer": "^4.6.0",
+    "@sentry/nextjs": "^10.70.0",
     "@serwist/next": "^9.5.12",
     "@upstash/redis": "^1.38.2",
     "@vercel/blob": "^2.8.0",
@@ -104,6 +105,7 @@
     "better-sqlite3@12.11.1": true,
     "esbuild@0.28.1": true,
     "fsevents@2.3.3": true,
-    "fsevents@2.3.2": true
+    "fsevents@2.3.2": true,
+    "@sentry/cli@2.58.6": true
   }
 }

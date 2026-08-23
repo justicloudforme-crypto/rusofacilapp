@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import withSerwistInit from "@serwist/next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Next.js's dev server blocks cross-origin requests for its own JS
@@ -63,4 +64,24 @@ const config =
       })(withBundleAnalyzer(nextConfig))
     : withBundleAnalyzer(nextConfig);
 
-export default config;
+// Wraps the build with the Sentry webpack plugin (source map upload +
+// automatic instrumentation of route handlers/server components). This
+// only actually uploads anything when SENTRY_AUTH_TOKEN/SENTRY_ORG/
+// SENTRY_PROJECT are set — without them it logs a warning and skips the
+// upload step rather than failing the build, so this is safe to ship
+// before a real Sentry project exists.
+export default withSentryConfig(config, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  // Source maps are uploaded to Sentry directly, not shipped to the
+  // client — keeps them out of the public bundle.
+  widenClientFileUpload: true,
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
+  disableLogger: true,
+  // This project's Next dev server already declines Turbopack for the
+  // service worker (see the Serwist comment above) — Sentry's tunnel
+  // route similarly only matters for production, keep it off in dev.
+  tunnelRoute: process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
+});
