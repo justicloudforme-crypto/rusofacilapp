@@ -9,13 +9,21 @@ test.use({ viewport: { width: 390, height: 844 } });
 // re-runs of `npm run generate:word-games` as long as the A1 word bank
 // itself doesn't change). Row/col are 0-indexed to match the grid; the DOM
 // exposes 1-indexed `row N col M` aria-labels (see CrosswordBoard.tsx).
+//
+// Re-derived 2026-08-23 after the cognate-exclusion/clue-collision fixes
+// (clue.ts/generation.ts) changed which words this exact seed produces —
+// the previous hardcoded fixture ("завтра"/"язык"/... ) stopped matching
+// dev.db's actual content and broke this test in CI (the first time CI
+// ever actually ran against a real GitHub remote surfaced it). Verified
+// directly against `WordGamePuzzle` for (CROSSWORD, A1, 1) rather than
+// against the UI, so this reflects the real seeded grid, not a guess.
 const CROSSWORD_WORDS: { word: string; row: number; col: number; direction: "E" | "S" }[] = [
-  { word: "завтра", row: 4, col: 4, direction: "E" },
-  { word: "язык", row: 3, col: 4, direction: "S" },
-  { word: "кухня", row: 3, col: 0, direction: "E" },
-  { word: "огурец", row: 1, col: 1, direction: "S" },
-  { word: "дождь", row: 1, col: 0, direction: "E" },
-  { word: "один", row: 0, col: 3, direction: "S" },
+  { word: "среда", row: 0, col: 1, direction: "E" },
+  { word: "сын", row: 0, col: 1, direction: "S" },
+  { word: "нос", row: 2, col: 1, direction: "E" },
+  { word: "стул", row: 2, col: 3, direction: "S" },
+  { word: "арбуз", row: 0, col: 5, direction: "S" },
+  { word: "школа", row: 5, col: 0, direction: "E" },
 ];
 
 async function fillCrossword(page: Page) {
@@ -39,11 +47,10 @@ test("crossword: full solve flow shows check feedback and the completion celebra
   // Type one wrong letter first — confirms the red incorrect-cell styling
   // actually round-trips through POST /check before we type the real
   // answers over it.
-  // (0,3) 0-indexed — the start of "один" (row 0, col 3, direction S) in
+  // (0,1) 0-indexed — the start of "среда" (row 0, col 1, direction E) in
   // the current seeded content; not (0,0), which isn't an active cell in
-  // this grid (verified directly: filling it timed out waiting for a
-  // cell that doesn't exist).
-  const firstCell = page.getByLabel("row 1 col 4", { exact: true });
+  // this grid.
+  const firstCell = page.getByLabel("row 1 col 2", { exact: true });
   await firstCell.fill("ю");
   await expect(firstCell).toHaveClass(/border-red-400/);
 

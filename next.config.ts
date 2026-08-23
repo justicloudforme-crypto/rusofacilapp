@@ -79,7 +79,7 @@ export default withSentryConfig(config, {
   // client — keeps them out of the public bundle.
   widenClientFileUpload: true,
   sourcemaps: { deleteSourcemapsAfterUpload: true },
-  disableLogger: true,
+  webpack: { treeshake: { removeDebugLogging: true } },
   // This project's Next dev server already declines Turbopack for the
   // service worker (see the Serwist comment above) — Sentry's tunnel
   // route similarly only matters for production, keep it off in dev.

@@ -72,6 +72,18 @@ jobs:
       - name: Push database schema
         run: npx prisma db push
 
+      # Word-games are "100% pre-generated, zero on-request computation" —
+      # unlike lessons/exams (which fall back to a bundled content.json when
+      # the DB has no rows), WordGamePuzzle has no fallback at all. Without
+      # this, e2e/word-games.spec.ts runs against a completely empty table
+      # (schema-only db push seeds nothing) and every assertion that expects
+      # real puzzle content — including just finding a ★ tile on the picker
+      # page — fails outright. Deterministic/idempotent, reads DATABASE_URL
+      # only (no TURSO_* secrets exist in this workflow's env), so this is
+      # always local to the ephemeral CI database, never production.
+      - name: Seed word-games content
+        run: npm run generate:word-games
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
 
