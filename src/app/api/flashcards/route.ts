@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
-import { isEntitled, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { canAccessLevel, getEntitlementTier, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 
 const SEARCH_RESULT_LIMIT = 50;
 
@@ -65,14 +65,19 @@ function searchIndex(index: FlashcardRow[], query: string, level: string | null)
 // fixed slice. Capping per-filtered-request instead means every category
 // a free-trial visitor opens shows up to 10 real words from THAT category.
 export async function GET(request: NextRequest) {
-  const entitled = await isEntitled();
+  const tier = await getEntitlementTier();
+  const entitled = tier !== "free";
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") ?? "";
   const level = searchParams.get("level") ?? "";
   const search = (searchParams.get("search") ?? "").trim();
 
-  const index = await getFlashcardIndex();
+  // C1 is Premium-exclusive (see entitlement.ts canAccessLevel) — filtered
+  // out of the index up front so it's excluded from every downstream path
+  // (search, category browse, and the free-trial sample alike) rather than
+  // needing a separate check in each branch.
+  const index = (await getFlashcardIndex()).filter((card) => canAccessLevel(tier, card.level));
   const levelFilter = level && isFlashcardLevel(level) ? level : null;
 
   if (search) {

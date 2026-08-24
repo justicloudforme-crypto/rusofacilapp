@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import { extendOrGrantSubscription, invalidateSubscriptionCache } from "@/lib/subscription";
+import { LIFETIME_DURATION_DAYS } from "@/lib/plans";
 import { awardReferralRewardSafely } from "@/lib/referral";
 import { isPlanId, plans } from "@/lib/plans";
 
@@ -109,6 +110,19 @@ export async function POST(request: NextRequest) {
         // off of (a renewal fires other event types, never this one again).
         if (session.client_reference_id) {
           await awardReferralRewardSafely(session.client_reference_id);
+        }
+      } else if (session.mode === "payment" && session.metadata?.plan === "lifetime") {
+        // A lifetime purchase is also mode: "payment", same as an OXXO
+        // voucher session — but unlike OXXO, a card payment settles
+        // synchronously, so payment_status is already "paid" by the time
+        // this event fires (an OXXO session is still "unpaid" here; it
+        // gets access later, via async_payment_succeeded below). Gating on
+        // payment_status, not just mode, keeps this branch a no-op for
+        // OXXO sessions instead of double-granting access for them.
+        const userId = session.client_reference_id;
+        if (userId && session.payment_status === "paid") {
+          await extendOrGrantSubscription(userId, LIFETIME_DURATION_DAYS, "lifetime");
+          await awardReferralRewardSafely(userId);
         }
       }
       break;

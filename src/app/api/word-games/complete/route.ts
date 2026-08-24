@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { isStaff } from "@/lib/roles";
-import { userHasActiveSubscription } from "@/lib/subscription";
 import { getPuzzleById } from "@/lib/word-games/data";
-import { isFreeWordGamePuzzle } from "@/lib/entitlement";
+import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 import { db } from "@/lib/db";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
 
@@ -47,8 +45,12 @@ export async function POST(request: NextRequest) {
   // A logged-in, not-yet-subscribed user can still get credit for a
   // free-trial puzzle (see isFreeWordGamePuzzle) — anything beyond that
   // needs staff or an active subscription, same as the rest of this route
-  // family.
-  if (!isFreeWordGamePuzzle(puzzle) && !isStaff(user.role) && !(await userHasActiveSubscription(user.id))) {
+  // family. ★ (curved) puzzles additionally need Premium specifically.
+  const tier = await getEntitlementTier();
+  if (!isFreeWordGamePuzzle(puzzle) && tier === "free") {
+    return NextResponse.json({ recorded: false });
+  }
+  if (puzzle.curved && !canAccessCurvedPuzzle(tier)) {
     return NextResponse.json({ recorded: false });
   }
 

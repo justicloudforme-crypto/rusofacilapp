@@ -291,13 +291,28 @@
       "badge": "Ahorra 50%",
       "oxxoPrice": "$899 MXN"
     },
+    "lifetime": {
+      "name": "Premium",
+      "price": "$169.99 USD",
+      "period": "pago único",
+      "cta": "Comprar Premium de por vida",
+      "badge": "Acceso para siempre"
+    },
     "oxxoCta": "Pagar en efectivo (OXXO)",
     "oxxoNote": "Recibirás un código de barras por correo y en pantalla para pagar en cualquier tienda OXXO de México. Tu acceso se activa en cuanto se confirme el pago (hasta 3 días); el código vence si no se usa en ese plazo.",
     "featuresTitle": "Incluye",
     "features": [
       "Acceso a los niveles A1 a B2",
-      "Todas las lecciones y ejercicios",
+      "Tarjetas, modismos e historias (sin nivel C1)",
+      "Todos los juegos de palabras estándar",
       "Cancela cuando quieras"
+    ],
+    "featuresPremiumTitle": "Todo lo anterior, más",
+    "featuresPremium": [
+      "Nivel C1: palabras, modismos e historias",
+      "Biblioteca ampliada de modismos e historias",
+      "Juegos de dificultad avanzada (★)",
+      "Acceso de por vida — pago único, sin renovaciones"
     ]
   },
   "account": {
@@ -536,7 +551,10 @@
     "notStartedLabel": "No empezado",
     "premiumLockTitle": "Esta historia es solo para suscriptores",
     "premiumLockBody": "Estás viendo una vista previa gratuita con el primer párrafo. Suscríbete para leer la historia completa y escuchar el audio.",
-    "premiumLockCta": "Ver planes de suscripción"
+    "premiumLockCta": "Ver planes de suscripción",
+    "premiumTierBadge": "Solo Premium",
+    "premiumTierLockTitle": "Esta historia está disponible solo en el plan Premium",
+    "premiumTierLockBody": "Tu suscripción actual da acceso a la mayoría de las historias, pero esta forma parte de la biblioteca ampliada de nivel C1, exclusiva para el plan Premium."
   },
   "media": {
     "pageTitle": "Biblioteca de audio y video",

@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { IDIOM_LIST_CACHE_PREFIX, idiomCategories, isIdiomCategory, isIdiomLevel } from "@/lib/idioms";
 import { cacheGet, cacheSet } from "@/lib/cache";
-import { isEntitled, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { canAccessLevel, getEntitlementTier, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 
 // IMPORTANT: only the raw idiom rows go in this cache, never the audio join
 // below — same real, confirmed bug and fix as /api/glossary/route.ts (see
@@ -55,7 +55,8 @@ function buildFreeIdiomSample<T extends { category: string }>(idioms: T[], limit
 // gating idiom exposure by student level, per the content audit's
 // level-tagging gap).
 export async function GET(request: NextRequest) {
-  const entitled = await isEntitled();
+  const tier = await getEntitlementTier();
+  const entitled = tier !== "free";
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") ?? "";
@@ -79,16 +80,21 @@ export async function GET(request: NextRequest) {
     cacheSet(cacheKey, idioms, IDIOM_CACHE_TTL_MS);
   }
 
+  // C1 idioms are Premium-exclusive (see entitlement.ts canAccessLevel),
+  // filtered out up front so it applies uniformly to the entitled, free-
+  // sample, and category-sliced paths below.
+  const accessibleIdioms = idioms.filter((idiom) => canAccessLevel(tier, idiom.level));
+
   // Non-entitled visitors get a free sample instead of a hard 403. If the
   // caller already filtered to one category (where.category set), a plain
   // slice is correct — every row is already that one category. Otherwise
   // (IdiomsList's default fetch-everything-then-filter-client-side call),
   // spread the sample across categories so every tab has something to show.
   const visibleIdioms = entitled
-    ? idioms
+    ? accessibleIdioms
     : where.category
-      ? idioms.slice(0, FREE_TRIAL_LIMITS.idioms)
-      : buildFreeIdiomSample(idioms, FREE_TRIAL_LIMITS.idioms);
+      ? accessibleIdioms.slice(0, FREE_TRIAL_LIMITS.idioms)
+      : buildFreeIdiomSample(accessibleIdioms, FREE_TRIAL_LIMITS.idioms);
 
   const audioRows = await db.audioAsset.findMany({
     where: { contentType: "idiom", contentId: { in: visibleIdioms.map((idiom) => idiom.id) } },

@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
-import { isStaff } from "@/lib/roles";
-import { userHasActiveSubscription } from "@/lib/subscription";
+import { canAccessLevel, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
 
@@ -16,22 +14,24 @@ export default async function StoryReaderPage({
   if (!isLocale(lang)) notFound();
 
   // Independent reads collapsed into one round trip instead of 3 sequential
-  // ones — dict/story/user don't depend on each other, only the
-  // subscription check below depends on `user`.
-  const [dict, story, user] = await Promise.all([
+  // ones — dict/story/tier don't depend on each other.
+  const [dict, story, tier] = await Promise.all([
     getDictionary(lang),
     db.story.findUnique({ where: { id } }),
-    getCurrentUser(),
+    getEntitlementTier(),
   ]);
   if (!story) notFound();
 
   // Non-premium stories are open to everyone, no login required. Premium
-  // stories need either staff access or an active subscription — checked
-  // here (not just via a client-side flag) so the full text/audio never
-  // reaches the browser for a non-entitled reader.
-  const entitled =
-    !story.isPremium ||
-    Boolean(user && (isStaff(user.role) || (await userHasActiveSubscription(user.id))));
+  // stories need any active subscription (or staff); C1 stories additionally
+  // need Premium specifically — checked here (not just via a client-side
+  // flag) so the full text/audio never reaches the browser for a
+  // non-entitled reader.
+  const hasSubscriptionAccess = !story.isPremium || tier !== "free";
+  const entitled = hasSubscriptionAccess && canAccessLevel(tier, story.level);
+  // Distinguishes the two lock states below: "subscribe at all" vs. "you're
+  // subscribed, but this needs Premium specifically".
+  const needsPremiumUpgrade = hasSubscriptionAccess && !entitled;
 
   const paragraphs = splitStoryParagraphs(story.text);
   const visibleParagraphs = entitled ? paragraphs : paragraphs.slice(0, 1);
@@ -74,6 +74,11 @@ export default async function StoryReaderPage({
             ⭐ {dict.stories.premiumBadge}
           </span>
         )}
+        {story.level === "C1" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
+            👑 {dict.stories.premiumTierBadge}
+          </span>
+        )}
       </div>
 
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{story.title}</h1>
@@ -112,8 +117,12 @@ export default async function StoryReaderPage({
 
       {!entitled && (
         <div className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
-          <h2 className="font-medium">{dict.stories.premiumLockTitle}</h2>
-          <p className="mt-2 text-sm text-foreground/70">{dict.stories.premiumLockBody}</p>
+          <h2 className="font-medium">
+            {needsPremiumUpgrade ? dict.stories.premiumTierLockTitle : dict.stories.premiumLockTitle}
+          </h2>
+          <p className="mt-2 text-sm text-foreground/70">
+            {needsPremiumUpgrade ? dict.stories.premiumTierLockBody : dict.stories.premiumLockBody}
+          </p>
           <Link
             href={`/${lang}/pricing?next=/${lang}/stories/${story.id}`}
             className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"

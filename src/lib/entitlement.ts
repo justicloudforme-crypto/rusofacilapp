@@ -1,7 +1,52 @@
 import "server-only";
 import { getCurrentUser } from "./auth";
 import { isStaff } from "./roles";
-import { userHasActiveSubscription } from "./subscription";
+import { getLatestSubscription, isSubscriptionActive, userHasActiveSubscription } from "./subscription";
+
+/**
+ * Three-tier content model (replaces the old binary entitled/not-entitled
+ * check for C1-level vocabulary/stories and ★ word games — everything else
+ * still only cares about "free" vs "not free", see {@link isEntitled}):
+ *
+ * - "free": no active subscription (or staff-free anonymous visitor) — gets
+ *   the free-trial sample only.
+ * - "standard": an active monthly or annual subscription — full access
+ *   EXCEPT the Premium-exclusive content below.
+ * - "premium": an active lifetime subscription ("Premium" plan) — full
+ *   access, no restrictions.
+ *
+ * Staff always resolve to "premium" (same bypass-everything rule as
+ * isEntitled/hasContentAccess elsewhere in this file).
+ */
+export type EntitlementTier = "free" | "standard" | "premium";
+
+export async function getEntitlementTier(): Promise<EntitlementTier> {
+  const user = await getCurrentUser();
+  if (!user) return "free";
+  if (isStaff(user.role)) return "premium";
+
+  const subscription = await getLatestSubscription(user.id);
+  if (!isSubscriptionActive(subscription)) return "free";
+  return subscription!.plan === "lifetime" ? "premium" : "standard";
+}
+
+/**
+ * C1 is the one CEFR level reserved for Premium — every other level
+ * (including the free-trial sample, capped separately by FREE_TRIAL_LIMITS)
+ * is available to any active subscriber. Reused identically for
+ * flashcards, idioms, and stories so "Premium-only content" means one
+ * consistent thing across the app rather than three separate rules.
+ */
+export function canAccessLevel(tier: EntitlementTier, level: string): boolean {
+  if (level !== "C1") return true;
+  return tier === "premium";
+}
+
+/** ★ (curved) word-search puzzles are Premium-exclusive — a "harder game"
+ * per the pricing grid, gated the same way as C1 content above. */
+export function canAccessCurvedPuzzle(tier: EntitlementTier): boolean {
+  return tier === "premium";
+}
 
 /**
  * Gate for the API routes backing Vocabulary/Word games (Stories and
