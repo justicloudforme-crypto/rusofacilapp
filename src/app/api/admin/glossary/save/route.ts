@@ -20,10 +20,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
+  // Same human-review stamp as the stories admin route — lets
+  // prisma/seed-glossary.ts tell a hand-edited term apart from one that's
+  // only ever seen batch content and refuse to silently overwrite it.
   const data = {
     ...result.value,
     relatedLessons: JSON.stringify(result.value.relatedLessons),
     examples: JSON.stringify(result.value.examples),
+    reviewedAt: new Date(),
   };
 
   try {
