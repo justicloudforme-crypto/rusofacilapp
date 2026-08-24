@@ -35,7 +35,7 @@ export default async function ConfirmDeleteAccountPage({
           <input type="hidden" name="token" value={token} />
           <button
             type="submit"
-            className="rounded-full bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            className="tap rounded-full bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 active:bg-red-700"
           >
             {dict.auth.confirmDeleteButton}
           </button>

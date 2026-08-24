@@ -204,7 +204,7 @@ export default function AnswerPad({
         <button
           type="button"
           onClick={onNext}
-          className="touch-manipulation select-none rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          className="touch-manipulation select-none rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
         >
           {dict.nextButton}
         </button>
@@ -216,7 +216,7 @@ export default function AnswerPad({
                 type="button"
                 onClick={() => setKeyboardOpen((o) => !o)}
                 aria-expanded={keyboardOpen}
-                className="touch-manipulation select-none self-center rounded-full border border-brand px-4 py-1.5 text-xs font-medium text-brand transition-colors hover:bg-brand/10"
+                className="touch-manipulation select-none self-center rounded-full border border-brand px-4 py-1.5 text-xs font-medium text-brand transition-colors hover:bg-brand/10 active:bg-brand/10"
               >
                 <span aria-hidden="true">⌨ </span>
                 {keyboardOpen ? dict.hideKeyboardLabel : dict.showKeyboardLabel}
@@ -230,7 +230,7 @@ export default function AnswerPad({
             type="button"
             onClick={() => onSubmit(answer)}
             disabled={!answer.trim()}
-            className="touch-manipulation select-none rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+            className="touch-manipulation select-none rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {dict.checkButton}
           </button>

@@ -293,7 +293,7 @@ export default function ExamView({
               type="button"
               onClick={handleSubmit}
               disabled={!allComplete}
-              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+              className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {dict.checkButton}
             </button>
@@ -302,7 +302,7 @@ export default function ExamView({
               type="button"
               onClick={handleRetry}
               disabled={submitting}
-              className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] disabled:opacity-40 dark:border-white/15 dark:hover:bg-white/[.06]"
+              className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] disabled:opacity-40 dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
             >
               {dict.retryButton}
             </button>

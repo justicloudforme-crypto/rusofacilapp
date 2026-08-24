@@ -42,7 +42,7 @@ export default function SlidesTab({
           onClick={goPrev}
           disabled={index === 0}
           aria-label={dict.prevSlide}
-          className="absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
+          className="tap absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
         >
           ←
         </button>
@@ -51,7 +51,7 @@ export default function SlidesTab({
           onClick={goNext}
           disabled={index === slides.length - 1}
           aria-label={dict.nextSlide}
-          className="absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
+          className="tap absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
         >
           →
         </button>
@@ -119,8 +119,8 @@ export default function SlidesTab({
             type="button"
             aria-label={s.title}
             onClick={() => setIndex(i)}
-            className={`h-1.5 rounded-full transition-all ${
-              i === index ? "w-6 bg-brand dark:bg-brand-light" : "w-1.5 bg-foreground/15 hover:bg-foreground/30"
+            className={`tap h-1.5 rounded-full transition-all ${
+              i === index ? "w-6 bg-brand dark:bg-brand-light" : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
             }`}
           />
         ))}
@@ -128,7 +128,7 @@ export default function SlidesTab({
 
       <a
         href={`/api/lessons/${level}/${lessonSlug}/pdf`}
-        className="inline-flex w-fit items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+        className="tap inline-flex w-fit items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
       >
         {dict.downloadPdfButton}
       </a>

@@ -40,7 +40,7 @@ const QuestionBlock = memo(function QuestionBlock({
             <label
               key={option.id}
               className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-2.5 text-sm transition-colors ${stateClasses} ${
-                submitted ? "cursor-default" : "hover:border-foreground/40"
+                submitted ? "cursor-default" : "tap hover:border-foreground/40 active:border-foreground/40"
               }`}
             >
               <input
@@ -144,7 +144,7 @@ function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
               type="button"
               onClick={() => setSubmitted(true)}
               disabled={!allAnswered}
-              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+              className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Comprobar
             </button>
@@ -155,7 +155,7 @@ function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
                 setSubmitted(false);
                 setAnswers({});
               }}
-              className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+              className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
             >
               Reintentar
             </button>

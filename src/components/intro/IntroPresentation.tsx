@@ -55,7 +55,7 @@ export default function IntroPresentation({
           onClick={goPrev}
           disabled={index === 0}
           aria-label={dict.prevSlide}
-          className="absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
+          className="tap absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
         >
           ←
         </button>
@@ -64,7 +64,7 @@ export default function IntroPresentation({
           onClick={goNext}
           disabled={index === slides.length - 1}
           aria-label={dict.nextSlide}
-          className="absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
+          className="tap absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
         >
           →
         </button>
@@ -117,8 +117,10 @@ export default function IntroPresentation({
             type="button"
             aria-label={s.title}
             onClick={() => setIndex(i)}
-            className={`h-1.5 rounded-full transition-all ${
-              i === index ? "w-6 bg-brand dark:bg-brand-light" : "w-1.5 bg-foreground/15 hover:bg-foreground/30"
+            className={`tap h-1.5 rounded-full transition-all ${
+              i === index
+                ? "w-6 bg-brand dark:bg-brand-light"
+                : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
             }`}
           />
         ))}
@@ -127,7 +129,7 @@ export default function IntroPresentation({
       <div className="flex flex-wrap items-center gap-4">
         <a
           href={`/api/intro/pdf`}
-          className="inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+          className="tap inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
         >
           {dict.downloadPdfButton}
         </a>
@@ -147,13 +149,13 @@ export default function IntroPresentation({
               <Link
                 key={level.slug}
                 href={`/${lang}/courses/${level.slug}/1`}
-                className="group flex flex-col rounded-xl border border-black/10 bg-background p-4 transition-colors hover:border-brand dark:border-white/10 dark:hover:border-brand-light"
+                className="tap group flex flex-col rounded-xl border border-black/10 bg-background p-4 transition-colors hover:border-brand active:border-brand dark:border-white/10 dark:hover:border-brand-light dark:active:border-brand-light"
               >
                 <span className="text-xs font-semibold uppercase tracking-wide text-brand dark:text-brand-light">
                   {level.title}
                 </span>
                 <span className="mt-1 text-sm font-medium leading-tight">{level.subtitle}</span>
-                <span className="mt-3 text-xs font-medium text-foreground/50 group-hover:text-foreground/80">
+                <span className="mt-3 text-xs font-medium text-foreground/50 group-hover:text-foreground/80 group-active:text-foreground/80">
                   {dict.startLevelLabel} →
                 </span>
               </Link>

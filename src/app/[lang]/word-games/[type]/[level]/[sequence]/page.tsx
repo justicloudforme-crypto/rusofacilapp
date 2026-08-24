@@ -45,7 +45,7 @@ export default async function WordGamePuzzlePage({
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <Link
         href={`/${lang}/word-games`}
-        className="text-sm font-medium text-foreground/60 hover:text-foreground"
+        className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground"
       >
         {dict.wordGames.backToWordGames}
       </Link>

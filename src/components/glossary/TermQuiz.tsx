@@ -92,7 +92,7 @@ export default function TermQuiz({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="mt-3 rounded-full border border-brand/30 px-3 py-1 text-xs font-medium text-brand transition-colors hover:bg-brand/[0.06] dark:border-brand-light/40 dark:text-brand-light"
+        className="tap mt-3 rounded-full border border-brand/30 px-3 py-1 text-xs font-medium text-brand transition-colors hover:bg-brand/[0.06] active:bg-brand/[0.06] dark:border-brand-light/40 dark:text-brand-light"
       >
         {dict.toggleLabel}
       </button>
@@ -120,14 +120,14 @@ export default function TermQuiz({
               setCorrectCount(0);
               setAttempt((a) => a + 1);
             }}
-            className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium hover:border-foreground/40 dark:border-white/15"
+            className="tap rounded-full border border-black/10 px-3 py-1 text-xs font-medium hover:border-foreground/40 active:border-foreground/40 dark:border-white/15"
           >
             {dict.retryLabel}
           </button>
           <button
             type="button"
             onClick={() => setExpanded(false)}
-            className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium hover:border-foreground/40 dark:border-white/15"
+            className="tap rounded-full border border-black/10 px-3 py-1 text-xs font-medium hover:border-foreground/40 active:border-foreground/40 dark:border-white/15"
           >
             {dict.closeLabel}
           </button>
@@ -190,7 +190,7 @@ export default function TermQuiz({
               disabled={selected !== null}
               onClick={() => choose(optionIndex)}
               className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${stateClasses} ${
-                selected === null ? "hover:border-foreground/40" : "cursor-default"
+                selected === null ? "tap hover:border-foreground/40 active:border-foreground/40" : "cursor-default"
               }`}
             >
               {option}
@@ -228,7 +228,7 @@ export default function TermQuiz({
                 href={`/${lang}/glossary?slug=${encodeURIComponent(question.term.slug)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1.5 inline-block text-xs font-medium text-brand underline-offset-2 hover:underline dark:text-brand-light"
+                className="tap mt-1.5 inline-block text-xs font-medium text-brand underline-offset-2 hover:underline active:underline dark:text-brand-light"
               >
                 {dict.reviewInGlossaryLabel} ›
               </Link>

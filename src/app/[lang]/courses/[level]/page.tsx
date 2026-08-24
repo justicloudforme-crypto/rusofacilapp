@@ -46,7 +46,7 @@ export default async function LevelPage({
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <Link
         href={`/${lang}/courses`}
-        className="text-sm font-medium text-foreground/60 hover:text-foreground"
+        className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground"
       >
         ← {dict.courses.backToCourses}
       </Link>
@@ -104,7 +104,7 @@ export default async function LevelPage({
             <li key={lesson} className="flex flex-col gap-3">
               <Link
                 href={`/${lang}/courses/${level}/${lessonNumber}`}
-                className="flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 dark:border-white/10"
+                className="tap flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
               >
                 <span
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${circleClasses}`}
@@ -128,7 +128,7 @@ export default async function LevelPage({
               {milestone && (
                 <Link
                   href={`/${lang}/courses/${level}/exam/${milestone.examSlug}`}
-                  className="flex items-start gap-3 rounded-xl border border-dashed border-brand/40 bg-brand/5 p-4 transition-colors hover:border-brand dark:border-brand-light/40 dark:bg-brand-light/10"
+                  className="tap flex items-start gap-3 rounded-xl border border-dashed border-brand/40 bg-brand/5 p-4 transition-colors hover:border-brand active:border-brand dark:border-brand-light/40 dark:bg-brand-light/10"
                 >
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-medium text-white">
                     ★

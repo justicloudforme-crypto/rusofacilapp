@@ -25,13 +25,13 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         <div className="flex flex-wrap gap-4 pt-2">
           <Link
             href={`/${lang}/courses`}
-            className="rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className="tap rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
           >
             {dict.home.heroCta}
           </Link>
           <Link
             href="#features"
-            className="rounded-full border border-black/10 px-6 py-3 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+            className="tap rounded-full border border-black/10 px-6 py-3 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
           >
             {dict.home.heroSecondaryCta}
           </Link>
@@ -74,7 +74,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                 <Link
                   key={slug}
                   href={`/${lang}/courses/${slug}`}
-                  className="group flex flex-col justify-between rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 dark:border-white/10"
+                  className="tap group flex flex-col justify-between rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
                 >
                   <div>
                     <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
@@ -85,7 +85,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                       {level.subtitle}
                     </p>
                   </div>
-                  <span className="mt-4 text-sm font-medium text-foreground/80 group-hover:text-foreground">
+                  <span className="mt-4 text-sm font-medium text-foreground/80 group-hover:text-foreground group-active:text-foreground">
                     {dict.home.viewLevel} →
                   </span>
                 </Link>

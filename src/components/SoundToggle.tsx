@@ -32,7 +32,7 @@ export default function SoundToggle({ onLabel, offLabel }: { onLabel: string; of
       aria-pressed={enabled}
       aria-label={enabled ? onLabel : offLabel}
       title={enabled ? onLabel : offLabel}
-      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-base text-foreground/70 transition-colors hover:bg-black/[.04] hover:text-foreground dark:hover:bg-white/[.06]"
+      className="tap flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-base text-foreground/70 transition-colors hover:bg-black/[.04] hover:text-foreground active:bg-black/[.04] active:text-foreground dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
     >
       <span aria-hidden="true">{enabled ? "🔊" : "🔇"}</span>
     </button>

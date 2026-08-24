@@ -38,7 +38,7 @@ export default async function ForgotPasswordPage({
           </label>
           <button
             type="submit"
-            className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
           >
             {dict.auth.forgotSubmit}
           </button>
@@ -47,7 +47,7 @@ export default async function ForgotPasswordPage({
 
       <Link
         href={`/${lang}/login`}
-        className="mt-4 text-center text-sm text-foreground/70 hover:text-foreground"
+        className="tap mt-4 text-center text-sm text-foreground/70 hover:text-foreground active:text-foreground"
       >
         {dict.auth.haveAccountLink}
       </Link>

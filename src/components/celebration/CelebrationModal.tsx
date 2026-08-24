@@ -116,7 +116,7 @@ export default function CelebrationModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-2 w-full rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          className="tap mt-2 w-full rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
         >
           {ctaLabel}
         </button>

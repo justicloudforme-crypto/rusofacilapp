@@ -55,7 +55,7 @@ export default async function StoryReaderPage({
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <Link
         href={`/${lang}/stories`}
-        className="text-sm font-medium text-foreground/60 hover:text-foreground"
+        className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground"
       >
         ← {dict.stories.backToList}
       </Link>
@@ -111,7 +111,7 @@ export default async function StoryReaderPage({
           <p className="mt-2 text-sm text-foreground/70">{dict.stories.premiumLockBody}</p>
           <Link
             href={`/${lang}/pricing?next=/${lang}/stories/${story.id}`}
-            className="mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
           >
             {dict.stories.premiumLockCta}
           </Link>

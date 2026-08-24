@@ -122,7 +122,7 @@ export default function MatchApp({
           <button
             type="button"
             onClick={backToCategories}
-            className="mb-4 text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
+            className="tap mb-4 text-sm font-medium text-foreground/60 transition-colors hover:text-foreground active:text-foreground"
           >
             {dict.backToCategories}
           </button>
@@ -135,14 +135,14 @@ export default function MatchApp({
                 <button
                   type="button"
                   onClick={backToCategories}
-                  className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground dark:border-white/15"
+                  className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground active:border-foreground/40 active:text-foreground dark:border-white/15"
                 >
                   {dict.backToCategories}
                 </button>
                 <button
                   type="button"
                   onClick={nextRound}
-                  className="touch-manipulation select-none rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+                  className="tap touch-manipulation select-none rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
                 >
                   {dict.nextRoundButton}
                 </button>

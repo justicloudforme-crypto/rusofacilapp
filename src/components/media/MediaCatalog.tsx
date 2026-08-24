@@ -72,10 +72,10 @@ export default function MediaCatalog({
         <button
           type="button"
           onClick={() => { setLevel("all"); setVisibleCount(PAGE_SIZE); }}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             level === "all"
               ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
           }`}
         >
           {dict.filterAllLevels}
@@ -85,10 +85,10 @@ export default function MediaCatalog({
             key={lvl}
             type="button"
             onClick={() => { setLevel(lvl); setVisibleCount(PAGE_SIZE); }}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               level === lvl
                 ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+                : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
             {lvl}
@@ -100,10 +100,10 @@ export default function MediaCatalog({
         <button
           type="button"
           onClick={() => { setCategory("all"); setVisibleCount(PAGE_SIZE); }}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             category === "all"
               ? "bg-foreground/80 text-background"
-              : "border border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
           }`}
         >
           {dict.filterAllCategories}
@@ -113,10 +113,10 @@ export default function MediaCatalog({
             key={cat}
             type="button"
             onClick={() => { setCategory(cat); setVisibleCount(PAGE_SIZE); }}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               category === cat
                 ? "bg-foreground/80 text-background"
-                : "border border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+                : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
             {categoryLabels[cat]}
@@ -132,7 +132,7 @@ export default function MediaCatalog({
             <Link
               key={item.id}
               href={`/${lang}/media/${item.id}`}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 dark:border-white/10"
+              className="tap group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
             >
               <div className="relative aspect-video w-full overflow-hidden bg-foreground/5">
                 {/* Static YouTube-hosted thumbnail (img.youtube.com) — no
@@ -169,7 +169,7 @@ export default function MediaCatalog({
           <button
             type="button"
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-            className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 dark:border-white/15"
+            className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/15"
           >
             {dict.loadMoreButton.replace("{count}", String(remaining))}
           </button>

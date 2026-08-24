@@ -53,7 +53,7 @@ export default async function GroupsPage({
               <Link
                 key={group.id}
                 href={`/${lang}/groups/${group.id}`}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 p-4 text-sm transition-colors hover:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/[.05]"
+                className="tap flex items-center justify-between gap-3 rounded-2xl border border-black/10 p-4 text-sm transition-colors hover:bg-black/[.03] active:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/[.05] dark:active:bg-white/[.05]"
               >
                 <span className="font-medium">{group.name}</span>
                 <span className="text-foreground/60">
@@ -81,7 +81,7 @@ export default async function GroupsPage({
           />
           <button
             type="submit"
-            className="flex-shrink-0 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className="tap flex-shrink-0 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
           >
             {dict.groups.createButton}
           </button>
@@ -103,7 +103,7 @@ export default async function GroupsPage({
           />
           <button
             type="submit"
-            className="flex-shrink-0 rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+            className="tap flex-shrink-0 rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
           >
             {dict.groups.joinButton}
           </button>

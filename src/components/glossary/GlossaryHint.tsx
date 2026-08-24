@@ -44,7 +44,7 @@ export default function GlossaryHint() {
         type="button"
         onClick={dismiss}
         aria-label="Cerrar aviso"
-        className="flex-shrink-0 text-foreground/40 transition-colors hover:text-foreground"
+        className="tap flex-shrink-0 text-foreground/40 transition-colors hover:text-foreground active:text-foreground"
       >
         ×
       </button>

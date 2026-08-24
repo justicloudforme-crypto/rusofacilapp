@@ -35,7 +35,7 @@ export default async function JoinGroupPage({
         <input type="hidden" name="code" value={code} />
         <button
           type="submit"
-          className="w-full rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          className="tap w-full rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
         >
           {dict.groups.joinPreviewButton}
         </button>

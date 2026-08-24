@@ -56,10 +56,10 @@ export default function WordGamesPicker({
             role="tab"
             aria-selected={type === t}
             onClick={() => setType(t)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`tap rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
               type === t
                 ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+                : "border border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
             {label}
@@ -77,10 +77,10 @@ export default function WordGamesPicker({
               key={lvl}
               type="button"
               onClick={() => setLevel(lvl)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
+              className={`tap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
                 level === lvl
                   ? "bg-foreground text-background"
-                  : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+                  : "border border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
               }`}
             >
               {lvl}
@@ -97,7 +97,7 @@ export default function WordGamesPicker({
             <Link
               key={sequence}
               href={`/${lang}/word-games/${type}/${level}/${sequence}`}
-              className={`relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 ${
+              className={`tap relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 active:border-foreground/40 ${
                 isCurved ? "border-brand/40 bg-brand/5 dark:border-brand-light/40 dark:bg-brand-light/10" : "border-black/10 dark:border-white/10"
               }`}
             >

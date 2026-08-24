@@ -109,7 +109,7 @@ export default function WordReorderItem({
               type="button"
               disabled={submitted}
               onClick={() => pick(poolIndex)}
-              className="rounded-lg border border-black/15 px-3 py-1.5 text-sm font-medium transition-colors hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/20"
+              className="tap rounded-lg border border-black/15 px-3 py-1.5 text-sm font-medium transition-colors hover:border-foreground/40 active:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/20"
             >
               {word}
             </button>

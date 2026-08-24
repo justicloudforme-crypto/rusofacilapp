@@ -77,7 +77,7 @@ export default async function RegisterPage({
           </label>
           <button
             type="submit"
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-light"
+            className="tap rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-light active:bg-brand-light"
           >
             {dict.auth.registerSubmit}
           </button>
@@ -85,11 +85,11 @@ export default async function RegisterPage({
 
         <p className="mt-4 text-center text-xs text-foreground/50">
           {dict.auth.legalNoticeBeforeTerms}{" "}
-          <Link href={`/${lang}/terms`} className="underline hover:text-brand">
+          <Link href={`/${lang}/terms`} className="tap underline hover:text-brand active:text-brand">
             {dict.footer.termsLink}
           </Link>{" "}
           {dict.auth.legalNoticeBetween}{" "}
-          <Link href={`/${lang}/privacy`} className="underline hover:text-brand">
+          <Link href={`/${lang}/privacy`} className="tap underline hover:text-brand active:text-brand">
             {dict.footer.privacyLink}
           </Link>
           {dict.auth.legalNoticeAfterPrivacy}
@@ -97,7 +97,7 @@ export default async function RegisterPage({
 
         <Link
           href={`/${lang}/login?redirectTo=${encodeURIComponent(redirectTo)}`}
-          className="mt-4 block text-center text-sm text-foreground/70 hover:text-brand"
+          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-brand active:text-brand"
         >
           {dict.auth.haveAccountLink}
         </Link>

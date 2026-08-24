@@ -71,7 +71,7 @@ export default function AvatarPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group flex items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 p-3 pr-4 transition-colors hover:bg-brand/10"
+        className="tap group flex items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 p-3 pr-4 transition-colors hover:bg-brand/10 active:bg-brand/10"
       >
         <span className={justSaved ? "folk-spark-pop" : undefined}>
           <MatryoshkaAvatar id={avatarId} size={56} label={labels[avatarId]} />
@@ -104,7 +104,7 @@ export default function AvatarPicker({
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={closeLabel}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/60 transition-colors hover:bg-foreground/10"
+                className="tap flex h-8 w-8 items-center justify-center rounded-full text-foreground/60 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
               >
                 ✕
               </button>
@@ -125,10 +125,10 @@ export default function AvatarPicker({
                         aria-pressed={avatarId === id}
                         title={labels[id]}
                         disabled={saving !== null}
-                        className={`flex flex-col items-center gap-1 rounded-2xl border p-2 transition-colors disabled:opacity-70 ${
+                        className={`tap flex flex-col items-center gap-1 rounded-2xl border p-2 transition-colors disabled:opacity-70 ${
                           avatarId === id
                             ? "border-brand bg-brand/5"
-                            : "border-black/10 hover:bg-black/[.03] dark:border-white/15 dark:hover:bg-white/[.05]"
+                            : "border-black/10 hover:bg-black/[.03] active:bg-black/[.03] dark:border-white/15 dark:hover:bg-white/[.05] dark:active:bg-white/[.05]"
                         }`}
                       >
                         <MatryoshkaAvatar id={id} size={48} label={labels[id]} />

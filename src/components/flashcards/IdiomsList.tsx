@@ -132,8 +132,8 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
             key={tab.value}
             type="button"
             onClick={() => selectCategory(tab.value)}
-            className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
-              categoryFilter === tab.value ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground"
+            className={`tap flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+              categoryFilter === tab.value ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground active:text-foreground"
             }`}
           >
             {tab.label}
@@ -166,7 +166,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
                       type="button"
                       onClick={() => setOpenId(isOpen ? null : idiom.id)}
                       aria-expanded={isOpen}
-                      className="flex-1 text-left text-lg font-medium hover:text-foreground/80"
+                      className="tap flex-1 text-left text-lg font-medium hover:text-foreground/80 active:text-foreground/80"
                     >
                       «{idiom.phrase}»
                     </button>
@@ -175,10 +175,10 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
                   <button
                     type="button"
                     onClick={() => toggleKnown(idiom.id)}
-                    className={`self-start rounded-full px-3 py-1.5 text-xs font-medium transition-colors sm:flex-shrink-0 ${
+                    className={`tap self-start rounded-full px-3 py-1.5 text-xs font-medium transition-colors sm:flex-shrink-0 ${
                       isKnown
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+                        : "border border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
                     }`}
                   >
                     {isKnown ? `✓ ${dict.knownBadge}` : dict.knownButton}
@@ -222,7 +222,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
               type="button"
               onClick={() => goToPage(safePage - 1)}
               disabled={safePage === 1}
-              className="rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
+              className="tap rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground active:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
             >
               {dict?.paginationPrev ?? "Back"}
             </button>
@@ -237,10 +237,10 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
                   type="button"
                   onClick={() => goToPage(p)}
                   aria-current={p === safePage ? "page" : undefined}
-                  className={`h-9 w-9 rounded-full text-sm font-medium transition-colors ${
+                  className={`tap h-9 w-9 rounded-full text-sm font-medium transition-colors ${
                     p === safePage
                       ? "bg-foreground text-background"
-                      : "text-foreground/70 hover:bg-foreground/10 hover:text-foreground"
+                      : "text-foreground/70 hover:bg-foreground/10 hover:text-foreground active:bg-foreground/10 active:text-foreground"
                   }`}
                 >
                   {p}
@@ -251,7 +251,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
               type="button"
               onClick={() => goToPage(safePage + 1)}
               disabled={safePage === totalPages}
-              className="rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
+              className="tap rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground active:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
             >
               {dict?.paginationNext ?? "Next"}
             </button>

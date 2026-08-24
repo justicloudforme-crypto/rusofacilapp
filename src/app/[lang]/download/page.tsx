@@ -78,7 +78,7 @@ export default async function DownloadPage({ params }: PageProps<"/[lang]/downlo
 
         <Link
           href={`/${lang}/courses`}
-          className="mt-2 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          className="tap mt-2 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
         >
           {d.webCta}
         </Link>

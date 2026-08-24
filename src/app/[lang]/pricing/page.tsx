@@ -77,10 +77,10 @@ function PlanCard({
           type="submit"
           name="method"
           value="card"
-          className={`w-full rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
+          className={`tap w-full rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
             highlighted
-              ? "bg-brand text-white hover:bg-brand-light"
-              : "bg-foreground text-background hover:bg-foreground/85"
+              ? "bg-brand text-white hover:bg-brand-light active:bg-brand-light"
+              : "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/85"
           }`}
         >
           {cta}
@@ -89,7 +89,7 @@ function PlanCard({
           type="submit"
           name="method"
           value="oxxo"
-          className="mt-3 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 dark:border-white/10"
+          className="tap mt-3 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/10"
         >
           {oxxoCta} — {oxxoPrice}
         </button>

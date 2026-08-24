@@ -53,8 +53,8 @@ export default function VocabularyApp({
             role="tab"
             aria-selected={mode === tab.value}
             onClick={() => setMode(tab.value)}
-            className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
-              mode === tab.value ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground"
+            className={`tap flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+              mode === tab.value ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground active:text-foreground"
             }`}
           >
             {tab.label}

@@ -82,7 +82,7 @@ export default function EncouragementModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-2 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+          className="tap mt-2 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
         >
           {ctaLabel}
         </button>

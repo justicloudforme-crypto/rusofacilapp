@@ -45,7 +45,7 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
             <Link
               key={slug}
               href={`/${lang}/courses/${slug}`}
-              className="group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 dark:border-white/10"
+              className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
             >
               <div className="flex items-center justify-between gap-2">
                 <LevelBadge level={slug.toUpperCase() as FlashcardLevel} />
