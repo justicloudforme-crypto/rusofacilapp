@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { locales, localeFlags, localeNames, type Locale } from "@/i18n/config";
@@ -25,8 +25,18 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
   // param. window.location.search read after mount gets the same value
   // for this one interaction without that site-wide cost — same
   // SSR-safe "start empty, correct after mount" pattern as SoundToggle.
+  //
+  // useLayoutEffect, not useEffect: it runs synchronously after the DOM
+  // updates but before the browser paints, so the corrected href (with the
+  // query string restored) is already in place before the link is ever
+  // visible to tap. A plain useEffect leaves a real — if usually brief —
+  // window where the link's href still points at the query-string-less
+  // fallback; on a slower device (a real reported case: Android, where JS
+  // parse/hydration can trail a fast first paint by much longer than on a
+  // fast iPhone) that window is long enough for an eager tap to land on it,
+  // silently dropping e.g. /profile?tab=progress back to the default tab.
   const [search, setSearch] = useState("");
-  useEffect(() => {
+  useLayoutEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearch(window.location.search);
   }, [pathname]);
