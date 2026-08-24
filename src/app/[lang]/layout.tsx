@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import TelegramFloatButton from "@/components/TelegramFloatButton";
 import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
+import NativeBackButtonHandler from "@/components/NativeBackButtonHandler";
 import { getThemePreference } from "@/lib/theme";
 
 // RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
@@ -98,6 +99,7 @@ export default async function LangLayout({
       <body className="flex min-h-full flex-col">
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} />
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
+        <NativeBackButtonHandler />
         <OfflineBanner message={dict.offline.bannerMessage} />
         <Navbar lang={lang} dict={dict} />
         <main className="flex flex-1 flex-col">{children}</main>

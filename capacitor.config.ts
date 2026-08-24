@@ -33,6 +33,15 @@ const config: CapacitorConfig = {
   server: {
     url: devServerUrl,
     cleartext: devServerUrl.startsWith("http://"),
+    // A remote-URL Capacitor app has one native-only failure mode a
+    // regular website never does: the very first request, before a
+    // single byte of the real Next.js app (or its OfflineBanner
+    // component) has loaded. With no device connection or an
+    // unreachable server.url, the WebView would otherwise show a bare
+    // native browser error page — this local, dependency-free file
+    // (capacitor-shell/error.html) replaces that with something branded
+    // and gives the user a Retry button. Resolved relative to webDir.
+    errorPath: "error.html",
   },
   plugins: {
     // Keep the native splash (resources/splash.png, brand gradient) up

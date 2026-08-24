@@ -1,0 +1,132 @@
+{
+  "identifier" : "E7699E69-4550-4056-A809-82BBC3A9BB66",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "49.99",
+      "familyShareable" : false,
+      "internalID" : "E57D37F1-8B7C-4CCD-BB8E-43988549790D",
+      "localizations" : [
+        {
+          "description" : "Acceso de por vida a todos los cursos y funciones PRO de RusoFácilapp, sin renovación.",
+          "displayName" : "RusoFácilapp PRO — De por vida",
+          "locale" : "es_MX"
+        }
+      ],
+      "productID" : "com.rusofacilapp.app.pro.lifetime",
+      "referenceName" : "PRO Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_lockOverlayEnabled" : false,
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "5ED1B77E-2F43-4EF5-BBFD-D189607EE009",
+      "localizations" : [],
+      "name" : "RusoFácilapp PRO",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "7.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "7EEF7E95-718E-4ABC-8A6A-4F283B3C959D",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Acceso mensual a todos los cursos y funciones PRO de RusoFácilapp.",
+              "displayName" : "PRO Mensual",
+              "locale" : "es_MX"
+            }
+          ],
+          "productID" : "com.rusofacilapp.app.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "PRO Monthly",
+          "subscriptionGroupID" : "5ED1B77E-2F43-4EF5-BBFD-D189607EE009",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "47.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "40E78BD3-F1D6-4CFA-91F6-66C95C28CC14",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Acceso anual a todos los cursos y funciones PRO de RusoFácilapp. Ahorra frente al plan mensual.",
+              "displayName" : "PRO Anual",
+              "locale" : "es_MX"
+            }
+          ],
+          "productID" : "com.rusofacilapp.app.pro.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "PRO Yearly",
+          "subscriptionGroupID" : "5ED1B77E-2F43-4EF5-BBFD-D189607EE009",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

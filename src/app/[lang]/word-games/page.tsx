@@ -3,8 +3,8 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { flashcardLevels } from "@/lib/flashcards";
 import { wordGameTypes } from "@/lib/word-games/types";
-import { countSequences, getCurvedSequences } from "@/lib/word-games/data";
-import { getCompletedSequences } from "@/lib/word-games/progress";
+import { countAllSequences, getAllCurvedSequences } from "@/lib/word-games/data";
+import { getAllCompletedSequences } from "@/lib/word-games/progress";
 import WordGamesPicker, { type PickerData } from "@/components/word-games/WordGamesPicker";
 import { notFound } from "next/navigation";
 
@@ -19,16 +19,29 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
   const dict = await getDictionary(lang);
   const user = await getCurrentUser();
 
+  // 3 queries total (2 for a signed-out visitor) instead of up to 30 — one
+  // per (type, level) pair, times 3 pieces of data, run sequentially. Each
+  // round trip pays real cross-region Turso latency (see the load-test
+  // notes in PROJECT_SUMMARY.md), so this page used to take 1.6-2.4s cold
+  // and was the single worst offender in a production load test. Batched
+  // functions return everything keyed by `${type}:${level}`, grouped here
+  // in memory instead of by the database.
+  const [totals, completedByPair, curvedByPair] = await Promise.all([
+    countAllSequences(),
+    user ? getAllCompletedSequences(user.id) : Promise.resolve(new Map<string, Set<number>>()),
+    getAllCurvedSequences(),
+  ]);
+
   const data = {} as PickerData;
   for (const type of wordGameTypes) {
     const levelData = {} as PickerData[typeof type];
     for (const level of flashcardLevels) {
-      const [total, completed, curved] = await Promise.all([
-        countSequences(type, level),
-        user ? getCompletedSequences(user.id, type, level) : Promise.resolve(new Set<number>()),
-        getCurvedSequences(type, level),
-      ]);
-      levelData[level] = { total, completed: Array.from(completed), curved: Array.from(curved) };
+      const key = `${type}:${level}`;
+      levelData[level] = {
+        total: totals.get(key) ?? 0,
+        completed: Array.from(completedByPair.get(key) ?? []),
+        curved: Array.from(curvedByPair.get(key) ?? []),
+      };
     }
     data[type] = levelData;
   }

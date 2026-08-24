@@ -76,8 +76,21 @@ model Subscription {
   plan                 String
   status               String   @default("active")
   currentPeriodEnd     DateTime
+
+  // "stripe" (web) | "revenuecat" (native App Store / Play Billing).
+  // Defaults to "stripe" so every existing row backfills correctly.
+  provider             String   @default("stripe")
+
   stripeSubscriptionId String?  @unique
   stripeCustomerId     String?
+
+  // RevenueCat/native-store fields. original_transaction_id is the stable
+  // per-purchase key both Apple and Google keep across renewals, so it's
+  // what we dedupe webhook events on (like stripeSubscriptionId for Stripe).
+  rcOriginalTransactionId String? @unique
+  rcAppUserId             String?
+  rcStore                 String?
+
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -89,6 +102,7 @@ model Subscription {
   // the userId-filtered rows in memory instead of walking the index in order.
   @@index([userId, createdAt])
   @@index([stripeSubscriptionId])
+  @@index([rcOriginalTransactionId])
 }
 
 // One row per lesson a user has ATTEMPTED (pass or fail) — written by

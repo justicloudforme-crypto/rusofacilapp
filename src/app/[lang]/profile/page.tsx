@@ -32,6 +32,7 @@ import ThemeSwitcher from "@/components/profile/ThemeSwitcher";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
+import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
 import { TELEGRAM_INVITE_URL } from "@/components/TelegramFloatButton";
 
 const PROFILE_TABS = ["personal", "progress", "badges", "referral", "subscription", "security", "language"] as const;
@@ -295,6 +296,17 @@ export default async function ProfilePage({
 
       {/* Subscription status */}
       {activeTab === "subscription" && (
+      <>
+      {/* Renders only inside the native app shell (no-op on web, see the
+          component's own Capacitor.isNativePlatform() guard) — a separate
+          section from the Stripe-driven one below rather than merged into
+          it, since a RevenueCat purchase's on-device entitlement state
+          (this panel) and the DB-backed Subscription row the Stripe
+          section reads are two different sources of truth that only
+          converge once /api/webhooks/revenuecat has actually synced a
+          purchase server-side (not the case yet for a purely local
+          StoreKit Testing purchase with no webhook tunnel configured). */}
+      <NativeSubscriptionPanel userId={user.id} dict={dict.profile.nativeSubscription} />
       <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-medium">{dict.profile.subscriptionHeading}</h2>
@@ -367,6 +379,7 @@ export default async function ProfilePage({
           )}
         </div>
       </section>
+      </>
       )}
 
       {/* Badges */}

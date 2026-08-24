@@ -22,6 +22,24 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!--
+	  Dev-only: iOS blocks ALL cleartext (http://) navigation by default,
+	  not just to "localhost" — capacitor.config.ts's server.cleartext
+	  flag alone does NOT override this OS-level policy, an explicit ATS
+	  exception is required too. Without this block, the WebView cannot
+	  reach `server.url` (currently the LAN dev IP) at all and falls
+	  straight to server.errorPath ("Sin conexión"). NSAllowsArbitraryLoads
+	  is blanket rather than scoped to one IP because the dev IP changes
+	  between networks (see capacitor.config.ts's own comment on that) —
+	  scoping it would mean editing this file every time. MUST be removed
+	  (or the app switched to HTTPS-only production origin) before a real
+	  App Store / Play submission — Apple explicitly reviews for this.
+	-->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

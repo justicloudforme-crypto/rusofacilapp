@@ -9,17 +9,25 @@ import SpeakButton from "./SpeakButton";
 class FakeAudio {
   src: string;
   currentTime = 0;
+  duration = 5;
+  ended = false;
+  paused = true;
   onplay: (() => void) | null = null;
+  onpause: (() => void) | null = null;
   onended: (() => void) | null = null;
   onerror: (() => void) | null = null;
   constructor(src: string) {
     this.src = src;
   }
   play() {
+    this.paused = false;
     this.onplay?.();
     return Promise.resolve();
   }
-  pause() {}
+  pause() {
+    this.paused = true;
+    this.onpause?.();
+  }
 }
 
 afterEach(() => {
@@ -53,5 +61,37 @@ describe("SpeakButton", () => {
     await user.click(screen.getByRole("button", { name: "Escuchar" }));
     expect(audioCtor).toHaveBeenCalledTimes(2);
     expect(audioCtor).toHaveBeenLastCalledWith("/audio/flashcards/food-soup-word.mp3");
+  });
+
+  it("toggles pause/resume in place instead of always restarting from 0", async () => {
+    const user = userEvent.setup();
+    let created: FakeAudio | null = null;
+    vi.stubGlobal(
+      "Audio",
+      vi.fn(function (src: string) {
+        created = new FakeAudio(src);
+        return created;
+      })
+    );
+
+    render(<SpeakButton text="хлеб" label="Escuchar" audioUrl="/audio/flashcards/food-bread-word.mp3" />);
+    const button = screen.getByRole("button", { name: "Escuchar" });
+
+    // First tap starts playback from the top.
+    await user.click(button);
+    expect(created!.paused).toBe(false);
+    expect(created!.currentTime).toBe(0);
+
+    // Simulate 2s of playback, then pause mid-clip.
+    created!.currentTime = 2;
+    await user.click(button);
+    expect(created!.paused).toBe(true);
+    // The regression this guards against: pausing must not reset position.
+    expect(created!.currentTime).toBe(2);
+
+    // Resuming must continue from 2s, not restart from 0.
+    await user.click(button);
+    expect(created!.paused).toBe(false);
+    expect(created!.currentTime).toBe(2);
   });
 });

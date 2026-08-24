@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  Capacitor's `server.errorPath` target (see capacitor.config.ts). Loaded
+  by the native WebView itself — not by Next.js, not proxied through the
+  remote server — whenever it can't reach `server.url` at all (device has
+  no connection, DNS failure, server down). This is the one screen in the
+  whole app that has to work with zero network and zero JS bundle: no
+  Capacitor plugin access on Android (per Capacitor's own docs for this
+  file), no dictionary/i18n system, nothing from the Next.js app. Colors
+  match the site's light-theme brand tokens (src/app/globals.css) by
+  hardcoded hex since there's no CSS variable pipeline here.
+-->
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>RusoFácilapp</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #fff8ec;
+        color: #1c1a16;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 32px;
+        padding-top: max(32px, env(safe-area-inset-top));
+        padding-bottom: max(32px, env(safe-area-inset-bottom));
+        text-align: center;
+      }
+      .mark {
+        width: 56px;
+        height: 90px;
+        position: relative;
+      }
+      .mark .head {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 46%;
+        aspect-ratio: 1;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: #fbe3c0;
+      }
+      .mark .body {
+        position: absolute;
+        inset-inline: 0;
+        bottom: 0;
+        height: 80%;
+        border-radius: 46% 46% 38% 38% / 58% 58% 30% 30%;
+        background: #2d5f8a;
+      }
+      h1 { font-size: 1.25rem; font-weight: 600; margin: 0; }
+      p { max-width: 30ch; margin: 0; color: #6b6255; line-height: 1.5; font-size: 0.95rem; }
+      button {
+        margin-top: 8px;
+        border: none;
+        border-radius: 999px;
+        background: #1c1a16;
+        color: #fff8ec;
+        font-size: 0.95rem;
+        font-weight: 500;
+        padding: 12px 28px;
+        cursor: pointer;
+      }
+      button:active { opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <div class="mark" aria-hidden="true">
+      <div class="head"></div>
+      <div class="body"></div>
+    </div>
+    <h1 data-i18n="title">Sin conexión</h1>
+    <p data-i18n="body">No pudimos conectar con RusoFácilapp. Revisa tu conexión a internet e inténtalo de nuevo.</p>
+    <button type="button" onclick="location.reload()" data-i18n="retry">Reintentar</button>
+
+    <script>
+      // No framework, no dictionary import — just enough to not show
+      // Spanish to a Russian-speaking user on their very first (failed)
+      // launch. Keys mirror the two locales the rest of the app supports.
+      var strings = {
+        ru: {
+          title: "Нет соединения",
+          body: "Не удалось подключиться к RusoFácilapp. Проверьте интернет-соединение и попробуйте снова.",
+          retry: "Повторить",
+        },
+      };
+      var lang = (navigator.language || "").slice(0, 2);
+      var t = strings[lang];
+      if (t) {
+        document.documentElement.lang = lang;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var key = el.getAttribute("data-i18n");
+          if (t[key]) el.textContent = t[key];
+        });
+      }
+    </script>
+  </body>
+</html>
