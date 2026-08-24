@@ -1,6 +1,7 @@
 import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
+import { getEntitlementTier } from "@/lib/entitlement";
 import { flashcardLevels } from "@/lib/flashcards";
 import { wordGameTypes } from "@/lib/word-games/types";
 import { countAllSequences, getAllCurvedSequences } from "@/lib/word-games/data";
@@ -26,10 +27,11 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
   // and was the single worst offender in a production load test. Batched
   // functions return everything keyed by `${type}:${level}`, grouped here
   // in memory instead of by the database.
-  const [totals, completedByPair, curvedByPair] = await Promise.all([
+  const [totals, completedByPair, curvedByPair, tier] = await Promise.all([
     countAllSequences(),
     user ? getAllCompletedSequences(user.id) : Promise.resolve(new Map<string, Set<number>>()),
     getAllCurvedSequences(),
+    getEntitlementTier(),
   ]);
 
   const data = {} as PickerData;
@@ -50,7 +52,7 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.wordGames.title}</h1>
       <p className="mt-2 text-lg text-foreground/70">{dict.wordGames.subtitle}</p>
-      <WordGamesPicker lang={lang} dict={dict.wordGames} data={data} />
+      <WordGamesPicker lang={lang} dict={dict.wordGames} data={data} isPremium={tier === "premium"} />
     </div>
   );
 }

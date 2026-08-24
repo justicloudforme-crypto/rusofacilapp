@@ -29,6 +29,12 @@ export async function POST(request: NextRequest) {
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const methodRaw = String(formData.get("method") ?? "card");
   const method = isCheckoutMethod(methodRaw) ? methodRaw : "card";
+  // Where to send the visitor back to after a successful card checkout —
+  // e.g. the word-game or story page that triggered the paywall — instead
+  // of always landing on /profile. Restricted to a same-locale in-app path
+  // so this can't be turned into an open redirect via a crafted form post.
+  const nextRaw = String(formData.get("next") ?? "");
+  const nextPath = nextRaw.startsWith(`/${lang}/`) && !nextRaw.startsWith("//") ? nextRaw : null;
 
   if (!isPlanId(planRaw)) {
     return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
@@ -117,7 +123,7 @@ export async function POST(request: NextRequest) {
         ...(plan.mode === "subscription"
           ? { subscription_data: { metadata: { userId: user.id, plan: plan.id } } }
           : { metadata: { userId: user.id, plan: plan.id } }),
-        success_url: `${origin}/${lang}/profile?checkout=success`,
+        success_url: `${origin}${nextPath ?? `/${lang}/profile`}${(nextPath ?? "").includes("?") ? "&" : "?"}checkout=success`,
         cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
       });
 
@@ -148,7 +154,7 @@ export async function POST(request: NextRequest) {
   await invalidateSubscriptionCache(user.id);
 
   return NextResponse.redirect(
-    new URL(`/${lang}/profile?checkout=mock`, request.url),
+    new URL(`${nextPath ?? `/${lang}/profile`}?checkout=mock`, request.url),
     { status: 303 }
   );
 }

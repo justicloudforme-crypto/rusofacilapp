@@ -6,6 +6,7 @@ import type { PlanId } from "@/lib/plans";
 function PlanCard({
   lang,
   planId,
+  next,
   name,
   price,
   period,
@@ -20,6 +21,9 @@ function PlanCard({
 }: {
   lang: string;
   planId: PlanId;
+  /** Page to return to after a successful card checkout — see
+   * /api/checkout's `next` handling. Undefined falls back to /profile. */
+  next?: string;
   name: string;
   price: string;
   period: string;
@@ -75,6 +79,7 @@ function PlanCard({
       <form action="/api/checkout" method="POST" className="mt-8">
         <input type="hidden" name="lang" value={lang} />
         <input type="hidden" name="plan" value={planId} />
+        {next && <input type="hidden" name="next" value={next} />}
         <button
           type="submit"
           name="method"
@@ -103,9 +108,12 @@ function PlanCard({
   );
 }
 
-export default async function PricingPage({ params }: PageProps<"/[lang]/pricing">) {
+export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
+
+  const { next: nextRaw } = await searchParams;
+  const next = typeof nextRaw === "string" && nextRaw.startsWith(`/${lang}/`) ? nextRaw : undefined;
 
   const dict = await getDictionary(lang);
 
@@ -120,6 +128,7 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
         <PlanCard
           lang={lang}
           planId="monthly"
+          next={next}
           name={dict.pricing.monthly.name}
           price={dict.pricing.monthly.price}
           period={dict.pricing.monthly.period}
@@ -133,6 +142,7 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
         <PlanCard
           lang={lang}
           planId="annual"
+          next={next}
           name={dict.pricing.annual.name}
           price={dict.pricing.annual.price}
           period={dict.pricing.annual.period}
@@ -148,6 +158,7 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
         <PlanCard
           lang={lang}
           planId="lifetime"
+          next={next}
           name={dict.pricing.lifetime.name}
           price={dict.pricing.lifetime.price}
           period={dict.pricing.lifetime.period}

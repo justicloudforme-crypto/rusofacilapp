@@ -6,6 +6,7 @@ import type { FlashcardLevel } from "@/lib/flashcards";
 import { flashcardLevels } from "@/lib/flashcards";
 import type { WordGameType } from "@/lib/word-games/types";
 import type { Locale } from "@/i18n/config";
+import { usePaywall } from "@/contexts/PaywallContext";
 
 export type PickerData = Record<
   WordGameType,
@@ -29,13 +30,19 @@ export default function WordGamesPicker({
   lang,
   dict,
   data,
+  isPremium,
 }: {
   lang: Locale;
   dict: WordGamesPickerDict;
   data: PickerData;
+  /** Whether the current visitor has the Premium plan — ★ (curved)
+   * puzzles are Premium-exclusive (see entitlement.ts canAccessCurvedPuzzle);
+   * everyone else taps into the paywall instead of the puzzle page. */
+  isPremium: boolean;
 }) {
   const [type, setType] = useState<WordGameType>("WORD_SEARCH");
   const [level, setLevel] = useState<FlashcardLevel>("A1");
+  const { openPaywall } = usePaywall();
 
   const { total, completed, curved } = data[type][level];
   const completedSet = new Set(completed);
@@ -93,10 +100,16 @@ export default function WordGamesPicker({
         {Array.from({ length: total }, (_, i) => i + 1).map((sequence) => {
           const isCompleted = completedSet.has(sequence);
           const isCurved = curvedSet.has(sequence);
+          const isLocked = isCurved && !isPremium;
           return (
             <Link
               key={sequence}
               href={`/${lang}/word-games/${type}/${level}/${sequence}`}
+              onClick={(e) => {
+                if (!isLocked) return;
+                e.preventDefault();
+                openPaywall("premium");
+              }}
               className={`tap relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 active:border-foreground/40 ${
                 isCurved ? "border-brand/40 bg-brand/5 dark:border-brand-light/40 dark:bg-brand-light/10" : "border-black/10 dark:border-white/10"
               }`}

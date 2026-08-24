@@ -273,6 +273,16 @@
     "confirmDeleteButton": "Eliminar cuenta definitivamente",
     "logout": "Cerrar sesión"
   },
+  "paywall": {
+    "titleFree": "Sigue aprendiendo sin límites",
+    "subtitleFree": "Ya viste la muestra gratuita. Suscríbete para desbloquear todo el contenido.",
+    "titlePremium": "Esta sección está disponible solo en el plan Premium",
+    "subtitlePremium": "Tu suscripción ya desbloquea la mayoría del contenido — el nivel C1, la biblioteca ampliada y los juegos de dificultad avanzada (★) son exclusivos del plan Premium.",
+    "closeLabel": "Cerrar",
+    "restoreButton": "Restaurar compras",
+    "restoring": "Restaurando compras…",
+    "choosePlanCta": "Elegir"
+  },
   "pricing": {
     "title": "Planes y precios",
     "subtitle": "Elige un plan para desbloquear todas las lecciones, de A1 a B2.",
