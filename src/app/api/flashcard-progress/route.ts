@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -73,7 +73,14 @@ export async function POST(request: NextRequest) {
     update: { known, ...srsFields },
     create: { userId: user.id, cardId, known, ...srsFields },
   });
-  await awardBadgesSafely(user.id);
+  // Deferred via after(): badge evaluation does several full-history table
+  // scans (see getUserStreakStats/getExamAttempts) and this route fires on
+  // every single flashcard flip during a study session — awaiting it here
+  // added that cost to every flip's response time. after() runs it once the
+  // response has already been sent, while still keeping the request alive
+  // long enough to finish (unlike a bare un-awaited call, which risks being
+  // cut off mid-write on a serverless runtime).
+  after(() => awardBadgesSafely(user.id));
 
   return NextResponse.json({ ok: true, updatedAt: row.updatedAt.getTime() });
 }

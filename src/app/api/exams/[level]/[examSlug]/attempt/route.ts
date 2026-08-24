@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { isLevelSlug } from "@/lib/courses";
@@ -72,7 +72,8 @@ export async function POST(
   }
 
   const outcome = await recordExamAttempt(user.id, level, examSlug, totalEarned, totalPoints, breakdown);
-  await awardBadgesSafely(user.id);
+  // Deferred via after() — see flashcard-progress/route.ts's comment.
+  after(() => awardBadgesSafely(user.id));
   await invalidateWeakTopicCache(user.id);
 
   return NextResponse.json({

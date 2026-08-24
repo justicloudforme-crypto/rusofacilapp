@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "./db";
+import { cached, getOrCreateGlobalSingleton, TtlCache } from "./ttl-cache";
 
 export interface StreakStats {
   /** Consecutive days up to and including today (or yesterday, if today
@@ -81,17 +82,33 @@ export function computeStreakStats(
  * daily use (any new lesson, new card review, or story progress) keeps
  * that day's date key alive. A proper fix needs a dedicated
  * daily-activity table — out of scope until schema changes are allowed. */
+// This does 3 full-table scans over every LessonProgress/FlashcardProgress/
+// StoryReadingProgress row a user has ever touched — genuinely expensive for
+// a long-tenured, active user, and called on *every* progress-affecting
+// write (via awardBadgesSafely) as well as every /profile render. A 60s TTL
+// absorbs repeated reads within that window (e.g. several exercise checks
+// in one lesson, or a badge-eval-then-profile-view sequence) without ever
+// letting the streak be more than ~60s stale — harmless for a display stat
+// that isn't used for anything security-sensitive, and streak-crossing
+// badges (see badges/index.ts) only ever need to fire once, not instantly.
+const streakStatsCache = getOrCreateGlobalSingleton(
+  "streakStatsCache",
+  () => new TtlCache<StreakStats>(60_000, "streak-stats")
+);
+
 export async function getUserStreakStats(userId: string): Promise<StreakStats> {
-  const [lessonRows, flashcardRows, storyRows] = await Promise.all([
-    db.lessonProgress.findMany({ where: { userId }, select: { completedAt: true } }),
-    db.flashcardProgress.findMany({ where: { userId }, select: { lastSeenAt: true, updatedAt: true } }),
-    db.storyReadingProgress.findMany({ where: { userId }, select: { updatedAt: true } }),
-  ]);
+  return cached(streakStatsCache, userId, async () => {
+    const [lessonRows, flashcardRows, storyRows] = await Promise.all([
+      db.lessonProgress.findMany({ where: { userId }, select: { completedAt: true } }),
+      db.flashcardProgress.findMany({ where: { userId }, select: { lastSeenAt: true, updatedAt: true } }),
+      db.storyReadingProgress.findMany({ where: { userId }, select: { updatedAt: true } }),
+    ]);
 
-  const activityDateKeys = new Set<string>();
-  for (const row of lessonRows) activityDateKeys.add(toDateKey(row.completedAt));
-  for (const row of flashcardRows) activityDateKeys.add(toDateKey(row.lastSeenAt ?? row.updatedAt));
-  for (const row of storyRows) activityDateKeys.add(toDateKey(row.updatedAt));
+    const activityDateKeys = new Set<string>();
+    for (const row of lessonRows) activityDateKeys.add(toDateKey(row.completedAt));
+    for (const row of flashcardRows) activityDateKeys.add(toDateKey(row.lastSeenAt ?? row.updatedAt));
+    for (const row of storyRows) activityDateKeys.add(toDateKey(row.updatedAt));
 
-  return computeStreakStats(activityDateKeys);
+    return computeStreakStats(activityDateKeys);
+  });
 }
