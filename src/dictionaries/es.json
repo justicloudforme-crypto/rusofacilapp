@@ -226,7 +226,8 @@
     "tagline": "Ruso para hispanohablantes, del A1 al B2.",
     "rights": "Todos los derechos reservados.",
     "termsLink": "Términos de Servicio",
-    "privacyLink": "Política de Privacidad"
+    "privacyLink": "Política de Privacidad",
+    "appLink": "Descargar la app"
   },
   "languageSwitcher": {
     "label": "Idioma"
@@ -432,7 +433,16 @@
     "examMistakeReviewHeading": "Revisión detallada de errores",
     "examMistakeYourAnswer": "Tu respuesta",
     "examMistakeCorrectAnswer": "Respuesta correcta",
-    "examMistakeExplanation": "Por qué"
+    "examMistakeExplanation": "Por qué",
+    "nativeSubscription": {
+      "heading": "Suscripción (app nativa)",
+      "proActive": "PRO activo",
+      "proInactive": "Sin PRO",
+      "manageButton": "Gestionar suscripción",
+      "upgradeButton": "Ver planes",
+      "restoreButton": "Restaurar compras",
+      "errorMessage": "No pudimos cargar tu estado de suscripción. Inténtalo de nuevo."
+    }
   },
   "publicProfile": {
     "anonymousName": "Estudiante",
@@ -660,8 +670,21 @@
     "lessonPassedTitle": "¡Lección superada!",
     "lessonPassedSubtitle": "Sigue así, cada lección te acerca a la fluidez.",
     "continueButton": "Continuar",
-    "exclamations": ["¡Increíble!", "¡Muy bien!", "¡Sigue así!", "¡Eres un genio!", "¡Excelente!", "¡Lo lograste!"],
-    "consolationExclamations": ["¡Casi!", "Sigue practicando", "La próxima será", "Un pasito más", "Nadie es perfecto"]
+    "exclamations": [
+      "¡Increíble!",
+      "¡Muy bien!",
+      "¡Sigue así!",
+      "¡Eres un genio!",
+      "¡Excelente!",
+      "¡Lo lograste!"
+    ],
+    "consolationExclamations": [
+      "¡Casi!",
+      "Sigue practicando",
+      "La próxima será",
+      "Un pasito más",
+      "Nadie es perfecto"
+    ]
   },
   "lesson": {
     "lessonLabel": "Lección",
@@ -1047,5 +1070,30 @@
   },
   "offline": {
     "bannerMessage": "Estás sin conexión. Algunos cambios se guardarán y se enviarán cuando vuelva la conexión."
+  },
+  "download": {
+    "pageTitle": "Descarga la app de RusoFácilapp",
+    "pageSubtitle": "Lleva tus lecciones de ruso contigo. El mismo curso, el mismo progreso — ahora en una app nativa para iPhone y Android.",
+    "badge": "Próximamente en las tiendas de aplicaciones",
+    "iosCta": "App Store",
+    "androidCta": "Google Play",
+    "comingSoonLabel": "Muy pronto",
+    "notifyNote": "Estamos terminando el proceso de revisión con Apple y Google. Mientras tanto, tu cuenta y tu progreso ya te esperan en el navegador — en cuanto la app esté disponible, todo se sincronizará automáticamente.",
+    "featuresTitle": "Por qué instalar la app",
+    "features": [
+      {
+        "title": "Un toque desde tu pantalla de inicio",
+        "description": "Sin escribir la dirección cada vez — el ícono de RusoFácilapp, listo para abrir tu lección."
+      },
+      {
+        "title": "Pantalla completa, sin distracciones",
+        "description": "Sin barra de navegador ni pestañas alrededor — más espacio para estudiar."
+      },
+      {
+        "title": "El mismo progreso en cualquier dispositivo",
+        "description": "Tu cuenta, tu racha y tu suscripción se sincronizan automáticamente entre la app y la versión web."
+      }
+    ],
+    "webCta": "Mientras tanto, continúa en el navegador"
   }
 }
