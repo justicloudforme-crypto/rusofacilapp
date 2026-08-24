@@ -36,6 +36,66 @@ import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
 import { TELEGRAM_INVITE_URL } from "@/components/TelegramFloatButton";
+import {
+  PersonalIcon,
+  AppearanceIcon,
+  GlobeIcon,
+  CrownIcon,
+  TrophyIcon,
+  GiftIcon,
+  LockIcon,
+  DevicesIcon,
+  TrashIcon,
+  ChartIcon,
+  ChecklistIcon,
+  GraduationCapIcon,
+  BookIcon,
+} from "@/components/profile/ProfileIcons";
+import type { ReactNode } from "react";
+
+// Icon-badge + serif heading, used for every card section on this page so
+// the dashboard reads as a real interface (icon + hierarchy per row)
+// instead of plain-text labels all sitting at body-text weight.
+function SectionHeading({
+  icon,
+  tone = "brand",
+  children,
+}: {
+  icon: ReactNode;
+  tone?: "brand" | "danger";
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span
+        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
+          tone === "danger"
+            ? "bg-red-500/10 text-red-600 dark:text-red-400"
+            : "bg-brand/10 text-brand dark:text-brand-light"
+        }`}
+      >
+        {icon}
+      </span>
+      <h2
+        className={`font-serif text-lg font-semibold ${
+          tone === "danger" ? "text-red-600 dark:text-red-400" : "text-foreground"
+        }`}
+      >
+        {children}
+      </h2>
+    </div>
+  );
+}
+
+const TAB_ICONS: Record<ProfileTab, ReactNode> = {
+  personal: <PersonalIcon className="h-4 w-4" />,
+  progress: <ChartIcon className="h-4 w-4" />,
+  badges: <TrophyIcon className="h-4 w-4" />,
+  referral: <GiftIcon className="h-4 w-4" />,
+  subscription: <CrownIcon className="h-4 w-4" />,
+  security: <LockIcon className="h-4 w-4" />,
+  language: <GlobeIcon className="h-4 w-4" />,
+};
 
 const PROFILE_TABS = ["personal", "progress", "badges", "referral", "subscription", "security", "language"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
@@ -181,12 +241,13 @@ export default async function ProfilePage({
             href={`/${lang}/profile?tab=${tab.id}`}
             role="tab"
             aria-selected={activeTab === tab.id}
-            className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            className={`tap flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "bg-foreground text-background"
-                : "text-foreground/70 hover:text-foreground"
+                : "text-foreground/70 hover:text-foreground active:text-foreground"
             }`}
           >
+            {TAB_ICONS[tab.id]}
             {tab.label}
           </Link>
         ))}
@@ -216,7 +277,7 @@ export default async function ProfilePage({
       {/* Personal data */}
       {activeTab === "personal" && (
         <section className="mt-8 flex flex-col gap-6">
-          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+          <div className="rounded-2xl border border-brand/15 bg-brand/[0.03] p-5 sm:p-6">
             <div className="flex items-center gap-4">
               <MatryoshkaAvatar id={currentAvatarId} size={56} label={avatarLabels[currentAvatarId]} />
               <div className="min-w-0">
@@ -246,7 +307,9 @@ export default async function ProfilePage({
           </div>
 
           <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <h2 className="font-medium">{dict.profile.avatarHeading}</h2>
+            <SectionHeading icon={<PersonalIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.avatarHeading}
+            </SectionHeading>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.avatarDescription}</p>
             <div className="mt-4">
               <AvatarPicker
@@ -261,7 +324,9 @@ export default async function ProfilePage({
           </div>
 
           <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <h2 className="font-medium">{dict.profile.appearanceHeading}</h2>
+            <SectionHeading icon={<AppearanceIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.appearanceHeading}
+            </SectionHeading>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.appearanceDescription}</p>
             <div className="mt-4">
               <ThemeSwitcher initialTheme={theme} options={themeOptions} />
@@ -269,7 +334,9 @@ export default async function ProfilePage({
           </div>
 
           <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <h2 className="font-medium">{dict.profile.publicProfileHeading}</h2>
+            <SectionHeading icon={<GlobeIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.publicProfileHeading}
+            </SectionHeading>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.publicProfileDescription}</p>
             <div className="mt-4">
               <PublicProfileToggle
@@ -291,14 +358,14 @@ export default async function ProfilePage({
                   <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.666 2.01-.378.15-.577.298-.595.442-.03.243.275.339.69.47l1.75.55c.392.123.845.023 1.136-.26l2.132-2.062c.168-.163.342-.056.246.075l-1.74 1.63c-.237.222-.284.542-.107.755l1.642 1.972c.288.347.79.432 1.177.197l2.25-1.383c.485-.298.796-.867.72-1.442-.078-.598-.62-1.127-1.428-1.447l-5.06-2.11z" />
                 </svg>
               </span>
-              <h2 className="font-medium">{dict.profile.telegramHeading}</h2>
+              <h2 className="font-serif text-lg font-semibold text-foreground">{dict.profile.telegramHeading}</h2>
             </div>
             <p className="mt-3 text-sm text-foreground/70">{dict.profile.telegramDescription}</p>
             <a
               href={TELEGRAM_INVITE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-block rounded-full bg-[#24A1DE] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2090c7]"
+              className="tap mt-4 inline-block rounded-full bg-[#24A1DE] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2090c7] active:bg-[#2090c7]"
             >
               {dict.profile.telegramCta}
             </a>
@@ -308,7 +375,7 @@ export default async function ProfilePage({
             <input type="hidden" name="lang" value={lang} />
             <button
               type="submit"
-              className="w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] sm:w-auto"
+              className="tap w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06] sm:w-auto"
             >
               {dict.auth.logout}
             </button>
@@ -329,9 +396,11 @@ export default async function ProfilePage({
           purchase server-side (not the case yet for a purely local
           StoreKit Testing purchase with no webhook tunnel configured). */}
       <NativeSubscriptionPanel userId={user.id} dict={dict.profile.nativeSubscription} />
-      <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+      <section className="mt-8 rounded-2xl border border-brand/15 bg-brand/[0.03] p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-medium">{dict.profile.subscriptionHeading}</h2>
+          <SectionHeading icon={<CrownIcon className="h-[18px] w-[18px]" />}>
+            {dict.profile.subscriptionHeading}
+          </SectionHeading>
           <span
             className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES[displayStatus]}`}
           >
@@ -356,7 +425,7 @@ export default async function ProfilePage({
               <input type="hidden" name="lang" value={lang} />
               <button
                 type="submit"
-                className="w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] sm:w-auto"
+                className="tap w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06] sm:w-auto"
               >
                 {dict.profile.cancelButton}
               </button>
@@ -366,7 +435,7 @@ export default async function ProfilePage({
           ) : (
             <Link
               href={`/${lang}/pricing`}
-              className="w-full rounded-full bg-foreground px-5 py-2.5 text-center text-sm font-medium text-background transition-colors hover:bg-foreground/85 sm:w-auto"
+              className="tap w-full rounded-full bg-foreground px-5 py-2.5 text-center text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 sm:w-auto"
             >
               {displayStatus === "none"
                 ? dict.profile.subscribeButton
@@ -408,7 +477,9 @@ export default async function ProfilePage({
       {activeTab === "badges" && (
         <section className="mt-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-medium">{dict.profile.badgesHeading}</h2>
+            <SectionHeading icon={<TrophyIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.badgesHeading}
+            </SectionHeading>
             <span className="text-sm tabular-nums text-foreground/60">
               {earnedBadgeCount} / {badges.length} {dict.profile.badgesUnlockedUnit}
             </span>
@@ -448,7 +519,9 @@ export default async function ProfilePage({
       {activeTab === "referral" && (
         <section className="mt-8 flex flex-col gap-6">
           <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <h2 className="font-medium">{dict.profile.referralHeading}</h2>
+            <SectionHeading icon={<GiftIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.referralHeading}
+            </SectionHeading>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.referralDescription}</p>
 
             {referralLink ? (
@@ -487,7 +560,9 @@ export default async function ProfilePage({
           )}
 
           <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <h2 className="font-medium">{dict.profile.changePasswordHeading}</h2>
+            <SectionHeading icon={<LockIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.changePasswordHeading}
+            </SectionHeading>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.changePasswordDescription}</p>
             <ChangePasswordForm
               currentPasswordLabel={dict.profile.currentPasswordLabel}
@@ -501,13 +576,15 @@ export default async function ProfilePage({
           </div>
 
           <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <h2 className="font-medium">{dict.profile.sessionsHeading}</h2>
+            <SectionHeading icon={<DevicesIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.sessionsHeading}
+            </SectionHeading>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.sessionsDescription}</p>
             <form action="/api/auth/logout-everywhere" method="POST" className="mt-3">
               <input type="hidden" name="lang" value={lang} />
               <button
                 type="submit"
-                className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+                className="tap rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
               >
                 {dict.profile.logoutEverywhereButton}
               </button>
@@ -515,7 +592,9 @@ export default async function ProfilePage({
           </div>
 
           <div className="rounded-2xl border border-red-500/20 p-5 sm:p-6">
-            <h2 className="font-medium text-red-600 dark:text-red-400">{dict.profile.deleteAccountHeading}</h2>
+            <SectionHeading tone="danger" icon={<TrashIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.deleteAccountHeading}
+            </SectionHeading>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.deleteAccountDescription}</p>
             <DeleteAccountForm
               lang={lang}
@@ -532,7 +611,9 @@ export default async function ProfilePage({
       {/* Language */}
       {activeTab === "language" && (
         <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-          <h2 className="font-medium">{dict.profile.languageHeading}</h2>
+          <SectionHeading icon={<GlobeIcon className="h-[18px] w-[18px]" />}>
+            {dict.profile.languageHeading}
+          </SectionHeading>
           <p className="mt-1 text-sm text-foreground/60">{dict.profile.languageDescription}</p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             {locales.map((locale: Locale) => (
@@ -540,10 +621,10 @@ export default async function ProfilePage({
                 key={locale}
                 href={`/${locale}/profile?tab=language`}
                 aria-current={locale === lang}
-                className={`rounded-full px-4 py-2.5 text-center text-sm font-medium transition-colors ${
+                className={`tap rounded-full px-4 py-2.5 text-center text-sm font-medium transition-colors ${
                   locale === lang
                     ? "bg-foreground text-background"
-                    : "border border-black/10 hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+                    : "border border-black/10 hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
                 }`}
               >
                 {localeNames[locale]}
@@ -629,7 +710,7 @@ export default async function ProfilePage({
           </p>
           <Link
             href={`/${lang}/courses/${weakTopic.level}/exam/${weakTopic.examSlug}`}
-            className="mt-4 inline-block rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
           >
             {dict.profile.weakTopicCta}
           </Link>
@@ -637,7 +718,9 @@ export default async function ProfilePage({
       )}
 
       <section className="mt-8">
-        <h2 className="font-medium">{dict.profile.progressHeading}</h2>
+        <SectionHeading icon={<ChartIcon className="h-[18px] w-[18px]" />}>
+          {dict.profile.progressHeading}
+        </SectionHeading>
         <div className="mt-4 flex flex-col gap-4">
           {levelSlugs.map((level) => {
             const levelDict = dict.courses.levels[level];
@@ -672,7 +755,9 @@ export default async function ProfilePage({
 
       {/* Per-lesson results: status, score, and what to review */}
       <section className="mt-8">
-        <h2 className="font-medium">{dict.profile.resultsHeading}</h2>
+        <SectionHeading icon={<ChecklistIcon className="h-[18px] w-[18px]" />}>
+          {dict.profile.resultsHeading}
+        </SectionHeading>
         {levelSlugs.every((level) => lessonResults[level].length === 0) ? (
           <p className="mt-2 text-sm text-foreground/60">
             {dict.profile.resultsEmpty}
@@ -755,7 +840,9 @@ export default async function ProfilePage({
 
       {/* Exam attempts: milestone assessments every 10 lessons */}
       <section className="mt-8">
-        <h2 className="font-medium">{dict.profile.examResultsHeading}</h2>
+        <SectionHeading icon={<GraduationCapIcon className="h-[18px] w-[18px]" />}>
+          {dict.profile.examResultsHeading}
+        </SectionHeading>
         {examAttempts.length === 0 ? (
           <p className="mt-2 text-sm text-foreground/60">
             {dict.profile.examResultsEmpty}
@@ -847,7 +934,9 @@ export default async function ProfilePage({
 
       {/* Courses list */}
       <section className="mt-8">
-        <h2 className="font-medium">{dict.profile.coursesHeading}</h2>
+        <SectionHeading icon={<BookIcon className="h-[18px] w-[18px]" />}>
+          {dict.profile.coursesHeading}
+        </SectionHeading>
         {!entitled && (
           <p className="mt-2 text-sm text-foreground/60">
             {dict.profile.lockedNotice}
@@ -882,10 +971,10 @@ export default async function ProfilePage({
                   href={
                     entitled ? `/${lang}/courses/${level}` : `/${lang}/pricing`
                   }
-                  className={`w-full rounded-full px-4 py-2 text-center text-sm font-medium transition-colors sm:w-fit ${
+                  className={`tap w-full rounded-full px-4 py-2 text-center text-sm font-medium transition-colors sm:w-fit ${
                     entitled
-                      ? "bg-foreground text-background hover:bg-foreground/85"
-                      : "border border-black/10 hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+                      ? "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/85"
+                      : "border border-black/10 hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
                   }`}
                 >
                   {entitled ? ctaLabel : dict.account.seePricing}
