@@ -376,6 +376,33 @@ export default function StoryText({
     });
   }
 
+  /** URLs already handed to the browser's own network/HTTP cache via
+   * preloadSegment() below — a plain Set is enough since we only ever need
+   * "have we already kicked this off", never to cancel it. */
+  const preloadedUrlsRef = useRef<Set<string>>(new Set());
+
+  /** Each real-audio sentence is a separate small file (a few seconds), so
+   * every auto-advance in playSegmentAt() below needs a fresh network
+   * fetch — on a real connection (not localhost) that fetch is exactly
+   * what reads as "the story restarts": a silent stall between sentences
+   * while the next clip downloads. Kicking off that fetch one sentence
+   * ahead of time (while the current one is still playing) means it's
+   * already sitting in the browser's HTTP cache by the time onended fires
+   * below, so the `audio.load()` there resolves instantly instead of
+   * stalling. A throwaway in-memory Audio object is enough to trigger the
+   * fetch — it's never attached to the DOM or played.
+   */
+  function preloadSegment(index: number) {
+    const item = queue[index];
+    if (!item) return;
+    const url = segmentUrlByKey.get(`${item.paragraphIndex}-${item.sentenceIndex}`);
+    if (!url || preloadedUrlsRef.current.has(url)) return;
+    preloadedUrlsRef.current.add(url);
+    const preload = new Audio();
+    preload.preload = "auto";
+    preload.src = url;
+  }
+
   /** `startOffset` seconds into the clip — used by skipBy() when a ±15s
    * skip lands mid-sentence rather than at its start. */
   function playSegmentAt(index: number, startOffset = 0) {
@@ -391,6 +418,7 @@ export default function StoryText({
     setReadingQueueIndex(index);
     setResumeQueueIndex(null);
     setIsCompletedBadge(false);
+    if (hasRealAudio) preloadSegment(index + 1);
     if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
 
     audio.pause();

@@ -64,20 +64,46 @@ export default function SpeakButton({
 
   if (!supported && !audioUrl) return null;
 
+  // Previously this always restarted from the top on every tap — there was
+  // no way to actually pause a clip already playing, only to make it play
+  // again from 0. Now a tap toggles: start it, pause it mid-way, or resume
+  // exactly where it left off — a still-paused (not ended) clip resumes
+  // instead of restarting.
   function speak() {
     if (audioUrl) {
       if (!audioRef.current) {
         audioRef.current = new Audio(audioUrl);
         audioRef.current.onplay = () => setSpeaking(true);
+        audioRef.current.onpause = () => setSpeaking(false);
         audioRef.current.onended = () => setSpeaking(false);
         audioRef.current.onerror = () => setSpeaking(false);
       }
-      audioRef.current.currentTime = 0;
-      void audioRef.current.play();
+      const audio = audioRef.current;
+      if (!audio.paused) {
+        audio.pause();
+        return;
+      }
+      // A clip that already reached the end (currentTime === duration)
+      // should restart, not "resume" from a position with nothing left to
+      // play — every other paused-mid-way case resumes in place.
+      if (audio.ended || audio.currentTime >= (audio.duration || Infinity)) {
+        audio.currentTime = 0;
+      }
+      void audio.play();
       return;
     }
 
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+      window.speechSynthesis.pause();
+      setSpeaking(false);
+      return;
+    }
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setSpeaking(true);
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(sanitizeTextForTTS(text));
     utterance.lang = "ru-RU";
     utterance.rate = 0.9;
