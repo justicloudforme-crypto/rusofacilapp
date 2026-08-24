@@ -1848,3 +1848,14 @@ body {
 .giant-ball-rollover {
   animation: giant-ball-rollover 1s ease-in-out infinite;
 }
+
+/* MobileMenu's bottom sheet — entrance only (it unmounts on close, same
+   convention as the celebration pieces above rather than an exit
+   transition). */
+@keyframes sheet-slide-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+.sheet-slide-up {
+  animation: sheet-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

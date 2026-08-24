@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getPuzzleById, crosswordLetterMap } from "@/lib/word-games/data";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
+import { hasContentAccess } from "@/lib/entitlement";
 
 // Tighter than /check — a hint is meant to be an occasional "I'm stuck"
 // action, not a way to solve the whole puzzle one request at a time
@@ -10,6 +11,9 @@ import { getRateLimiter, requestIp } from "@/lib/rate-limit";
 const hintLimiter = getRateLimiter("word-games-hint", 60_000, 20);
 
 export async function POST(request: NextRequest) {
+  if (!(await hasContentAccess())) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
   if (await hintLimiter.check(requestIp(request))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }

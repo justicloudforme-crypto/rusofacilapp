@@ -72,6 +72,48 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   return null;
 }
 
+// Sections that now require an active, non-expired subscription for every
+// route beneath them — including their own listing/catalog page, not just
+// individual pieces of content. Vocabulary/Media/Word games had no gate
+// at all before (open to every visitor); Stories had its own per-story
+// free/premium split (most stories were deliberately free), which this
+// supersedes — everything under /stories now needs a subscription too,
+// same bar as the other three sections.
+const GATED_SECTIONS = new Set(["vocabulary", "stories", "media", "word-games"]);
+
+/**
+ * Gate for /{lang}/vocabulary, /{lang}/stories, /{lang}/media, and
+ * /{lang}/word-games — every route under these four sections, not just
+ * individual lessons/puzzles/stories. Mirrors protectLessonRoute's shape
+ * (staff bypass, redirect to /pricing) but matches on the section name
+ * alone rather than a specific nested pattern, since the whole section is
+ * gated here rather than just its content pages.
+ */
+async function protectContentRoute(request: NextRequest, segments: string[]) {
+  const [lang, section] = segments;
+  if (!section || !GATED_SECTIONS.has(section)) return null;
+
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const parsed = token ? verifySessionToken(token) : null;
+  if (!parsed) return redirectToPricing(request, lang);
+
+  const user = await db.user.findUnique({
+    where: { id: parsed.userId },
+    select: { role: true, sessionVersion: true },
+  });
+  if (!user || user.sessionVersion !== parsed.sessionVersion) return redirectToPricing(request, lang);
+  if (isStaff(user.role)) return null;
+
+  const subscription = await db.subscription.findFirst({
+    where: { userId: parsed.userId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!isSubscriptionActive(subscription)) return redirectToPricing(request, lang);
+
+  return null;
+}
+
 /**
  * Gate for /{lang}/admin and everything under it. Only 'owner' and 'admin'
  * roles get in; everyone else (including logged-out visitors) is bounced
@@ -124,6 +166,9 @@ export async function proxy(request: NextRequest) {
 
   const lessonAccessDenied = await protectLessonRoute(request, segments);
   if (lessonAccessDenied) return lessonAccessDenied;
+
+  const contentAccessDenied = await protectContentRoute(request, segments);
+  if (contentAccessDenied) return contentAccessDenied;
 
   const adminAccessDenied = await protectAdminRoute(request, segments);
   if (adminAccessDenied) return adminAccessDenied;

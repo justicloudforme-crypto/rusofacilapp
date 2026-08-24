@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { isStaff } from "@/lib/roles";
+import { userHasActiveSubscription } from "@/lib/subscription";
 import { getPuzzleById } from "@/lib/word-games/data";
 import { db } from "@/lib/db";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
@@ -18,9 +20,10 @@ const completeLimiter = getRateLimiter("word-games-complete", 60_000, 30);
 // security boundary, just progress bookkeeping.
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
-  if (!user) {
-    // Word games are playable signed out (matches flashcards) — just
-    // nothing to persist without an account.
+  // Word games now require an active subscription (or staff), matching
+  // the rest of this route family — a signed-in user without one has
+  // nothing legitimate to record here either.
+  if (!user || !(isStaff(user.role) || (await userHasActiveSubscription(user.id)))) {
     return NextResponse.json({ recorded: false });
   }
 

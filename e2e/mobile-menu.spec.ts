@@ -31,10 +31,22 @@ test("hamburger menu opens, shows links, and closes on link/backdrop tap", async
   // Re-open, then confirm the backdrop also closes it without navigating.
   // Once open, both the toggle button and the dedicated backdrop button
   // share the "close" aria-label — target the backdrop specifically via
-  // its fixed-overlay class rather than by accessible name.
+  // its fixed-overlay class rather than by accessible name. The backdrop
+  // is a fixed-inset-0 button, but it's only actually visible (and
+  // clickable) in the strip between the sticky header and the sheet
+  // itself — the header sits above it (z-50) and the up-to-85dvh sheet
+  // sits above it too, both intercepting clicks anywhere within their own
+  // bounds, same as a real user could only tap outside both. Compute that
+  // strip's midpoint at runtime instead of a fixed coordinate, since
+  // header/sheet heights vary by content and viewport.
   await toggle.click();
   await expect(panel).toBeVisible();
-  await page.locator("button.fixed.inset-0").click();
+  const headerBox = await page.locator("header").boundingBox();
+  const sheetBox = await panel.boundingBox();
+  if (!headerBox || !sheetBox) throw new Error("could not measure header/sheet bounds");
+  await page.locator("button.fixed.inset-0").click({
+    position: { x: 20, y: (headerBox.y + headerBox.height + sheetBox.y) / 2 },
+  });
   await expect(panel).toBeHidden();
   await expect(page).toHaveURL(/\/es\/courses/);
 });

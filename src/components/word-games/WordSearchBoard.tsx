@@ -236,22 +236,24 @@ export default function WordSearchBoard({
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
+      <div className="flex flex-col items-center gap-2">
         {puzzle.curved && (
           <span className="w-fit rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand dark:bg-brand-light/15 dark:text-brand-light">
             ★ {dict.expertModeLabel}
           </span>
         )}
-        {/* minmax(18px, 2rem) columns shrink together with the container
+        {/* minmax(22px, 2.25rem) columns shrink together with the container
             (fixed-size buttons previously overlapped instead of shrinking —
             invisible here since these cells are borderless, but the same
-            bug as CrosswordBoard's, fixed the same way; see its comment). */}
-        <div className="max-w-full overflow-x-auto">
+            bug as CrosswordBoard's, fixed the same way; see its comment).
+            Framed in a card, matching CrosswordBoard, so the puzzle reads
+            as one bounded object instead of loose letters on the page. */}
+        <div className="max-w-full overflow-x-auto rounded-2xl border border-brand/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4">
           <div
             ref={gridRef}
             className="grid touch-none select-none gap-0.5"
-            style={{ gridTemplateColumns: `repeat(${cols}, minmax(18px, 2rem))` }}
+            style={{ gridTemplateColumns: `repeat(${cols}, minmax(22px, 2.25rem))` }}
             role="grid"
             aria-label="word search"
           >
@@ -270,12 +272,12 @@ export default function WordSearchBoard({
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
                     onPointerCancel={handlePointerUp}
-                    className={`flex aspect-square w-full items-center justify-center rounded text-[10px] font-semibold uppercase transition-colors sm:text-sm ${
+                    className={`flex aspect-square w-full items-center justify-center rounded text-xs font-semibold uppercase transition-colors sm:text-base ${
                       foundColorIndex !== undefined
                         ? WORD_COLORS[foundColorIndex]
                         : isSelecting
-                          ? "bg-foreground/15"
-                          : "hover:bg-foreground/5"
+                          ? "bg-brand/20"
+                          : "hover:bg-brand/5"
                     }`}
                   >
                     {letter}
@@ -289,18 +291,18 @@ export default function WordSearchBoard({
           <button
             type="button"
             onClick={() => updatePath([])}
-            className="w-fit rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:border-foreground/40 hover:text-foreground dark:border-white/15"
+            className="w-fit rounded-full border border-brand/20 px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:border-brand hover:text-brand"
           >
             ✕ {dict.resetSelectionButton}
           </button>
         )}
       </div>
 
-      <div className="flex-1">
+      <div className="w-full max-w-sm">
         <p className="text-sm font-medium text-foreground/60">
           {dict.wordsFoundLabel.replace("{found}", String(foundWords.size)).replace("{total}", String(puzzle.words.length))}
         </p>
-        <ul className="mt-3 flex flex-wrap gap-2">
+        <ul className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
           {puzzle.words.map((w) => {
             const colorIndex = wordColor.get(w.word);
             return (

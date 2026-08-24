@@ -24,12 +24,14 @@ import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
 import { levelSlugs } from "@/lib/courses";
 import { getThemePreference, type ThemePreference } from "@/lib/theme";
-import { AVATAR_IDS, isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
+import { isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
+import { getAvatarLabels, getCharacterLabels } from "@/lib/avatarLabels";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import ProfileNameForm from "@/components/profile/ProfileNameForm";
 import ThemeSwitcher from "@/components/profile/ThemeSwitcher";
 import AvatarPicker from "@/components/profile/AvatarPicker";
+import WelcomeOverlay from "@/components/profile/WelcomeOverlay";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
@@ -121,16 +123,8 @@ export default async function ProfilePage({
   const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0);
 
   const currentAvatarId = isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID;
-  const avatarLabels = {
-    matryoshka_calm: dict.profile.avatarCalm,
-    matryoshka_happy: dict.profile.avatarHappy,
-    matryoshka_wink: dict.profile.avatarWink,
-    matryoshka_surprised: dict.profile.avatarSurprised,
-    matryoshka_sleepy: dict.profile.avatarSleepy,
-    matryoshka_proud: dict.profile.avatarProud,
-    matryoshka_thinking: dict.profile.avatarThinking,
-    matryoshka_laughing: dict.profile.avatarLaughing,
-  } satisfies Record<(typeof AVATAR_IDS)[number], string>;
+  const avatarLabels = getAvatarLabels(dict);
+  const characterLabels = getCharacterLabels(dict);
 
   const themeOptions: { id: ThemePreference; label: string; description: string; swatch: string }[] = [
     { id: "light", label: dict.profile.themeLightLabel, description: dict.profile.themeLightDescription, swatch: "#fff8ec" },
@@ -150,6 +144,16 @@ export default async function ProfilePage({
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
+      <WelcomeOverlay
+        userId={user.id}
+        name={user.name}
+        currentStreak={streak.currentStreak}
+        greeting={dict.profile.welcomeGreeting}
+        subtextActive={dict.profile.welcomeSubtextActive}
+        subtextNew={dict.profile.welcomeSubtextNew}
+        streakDaysUnit={dict.profile.streakDaysUnit}
+        continueLabel={dict.profile.welcomeContinue}
+      />
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
         {dict.profile.title}
       </h1>
@@ -234,7 +238,14 @@ export default async function ProfilePage({
             <h2 className="font-medium">{dict.profile.avatarHeading}</h2>
             <p className="mt-1 text-sm text-foreground/60">{dict.profile.avatarDescription}</p>
             <div className="mt-4">
-              <AvatarPicker initialAvatarId={currentAvatarId} labels={avatarLabels} />
+              <AvatarPicker
+                initialAvatarId={currentAvatarId}
+                labels={avatarLabels}
+                characterLabels={characterLabels}
+                modalTitle={dict.profile.avatarModalTitle}
+                changeHint={dict.profile.avatarChangeHint}
+                closeLabel={dict.profile.avatarCloseLabel}
+              />
             </div>
           </div>
 
@@ -554,9 +565,19 @@ export default async function ProfilePage({
               {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
             </p>
           </div>
-          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+          <div className="rounded-2xl border border-brand-accent/15 bg-brand-accent/5 p-4">
             <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
-              {streak.currentStreak > 0 && <span aria-hidden="true">🔥</span>}
+              {streak.currentStreak > 0 && (
+                <span className="flame-flicker inline-block" style={{ width: 14, height: 20 }} aria-hidden>
+                  <svg viewBox="0 0 24 32" fill="none" width="100%" height="100%">
+                    <path
+                      d="M12 0C12 8 4 10 4 19a8 8 0 0016 0C20 12 15 11 15 6c0 4-3 5-3 8a3 3 0 01-3-3c0-4 3-5 3-11z"
+                      fill="#d63b2f"
+                    />
+                    <path d="M12 14c0 3-2 3.5-2 6.5a2.5 2.5 0 005 0c0-2-1.2-2-1.2-4.2" fill="#e0a934" />
+                  </svg>
+                </span>
+              )}
               {streak.currentStreak} {dict.profile.streakDaysUnit}
             </p>
             <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>

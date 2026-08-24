@@ -168,17 +168,19 @@ export default function CrosswordBoard({
   const activeWordCells = activeWord ? new Set(cellsOfWord(activeWord).map((c) => `${c.row},${c.col}`)) : new Set<string>();
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
       {/* overflow-x-auto is the safety net for puzzles wide enough that
-          even the shrunk 18px floor below doesn't fit the viewport — the
+          even the shrunk 22px floor below doesn't fit the viewport — the
           grid scrolls horizontally rather than squeezing cells illegibly
-          small. minmax(18px, 2.25rem) makes columns shrink together with
+          small. minmax(22px, 2.5rem) makes columns shrink together with
           the container (unlike a fixed w-9 on the cells themselves, which
-          silently overlapped instead of shrinking — the bug this replaces). */}
-      <div className="max-w-full overflow-x-auto">
+          silently overlapped instead of shrinking — the bug this replaces).
+          Framed in a card so the puzzle reads as one bounded object
+          instead of loose cells floating on the page background. */}
+      <div className="max-w-full overflow-x-auto rounded-2xl border border-brand/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4">
         <div
           className="grid gap-0.5"
-          style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(18px, 2.25rem))` }}
+          style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(22px, 2.5rem))` }}
           role="grid"
           aria-label="crossword"
         >
@@ -195,7 +197,7 @@ export default function CrosswordBoard({
               return (
                 <div key={key} className="relative aspect-square">
                   {number ? (
-                    <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] font-semibold text-foreground/40">
+                    <span className="pointer-events-none absolute left-0.5 top-0 text-[9px] font-semibold text-brand/50">
                       {number}
                     </span>
                   ) : null}
@@ -213,15 +215,15 @@ export default function CrosswordBoard({
                     onFocus={() => activateCell(row, col)}
                     onChange={(e) => handleChange(row, col, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, row, col)}
-                    className={`absolute inset-0 h-full w-full border text-center text-[10px] font-semibold uppercase focus:outline-none sm:text-sm ${
+                    className={`absolute inset-0 h-full w-full rounded-[3px] border text-center text-xs font-semibold uppercase focus:outline-none sm:text-base ${
                       status === "correct"
                         ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                         : status === "incorrect"
                           ? "border-red-400 bg-red-400/10 text-red-600 dark:text-red-400"
                           : isActive
-                            ? "border-foreground bg-foreground/5"
+                            ? "border-brand bg-brand/10"
                             : inActiveWord
-                              ? "border-foreground/40 bg-foreground/[0.03]"
+                              ? "border-brand/40 bg-brand/[0.04]"
                               : "border-black/15 dark:border-white/20"
                     }`}
                   />
@@ -232,12 +234,12 @@ export default function CrosswordBoard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-4">
+      <div className="flex w-full max-w-sm flex-col gap-4">
         <button
           type="button"
           onClick={handleHint}
           disabled={!activeCell}
-          className="w-fit rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
+          className="w-fit self-center rounded-full border border-brand px-4 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand/10 disabled:cursor-not-allowed disabled:opacity-40 md:self-start"
         >
           {dict.hintButton}
         </button>
@@ -289,7 +291,7 @@ function ClueList({
               type="button"
               onClick={() => onClick(word)}
               className={`flex w-full items-start gap-2 rounded-lg px-2 py-1 text-left transition-colors ${
-                isActive ? "bg-foreground/10" : "hover:bg-foreground/5"
+                isActive ? "bg-brand/10" : "hover:bg-brand/5"
               } ${solved ? "text-emerald-600 line-through dark:text-emerald-400" : ""}`}
             >
               <span className="font-semibold">{word.number}.</span>

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { loginWithSubscription } from "./helpers/auth";
 
 // iPad landscape — above Tailwind's `sm` (640px) breakpoint, where the
 // desktop nav should be showing and MobileMenu's hamburger should stay
@@ -24,6 +25,10 @@ test("home page uses the desktop nav, not the hamburger, and has no horizontal o
 });
 
 test("vocabulary (flashcards) page scales cleanly at tablet landscape width", async ({ page }) => {
+  // Vocabulary now requires an active subscription (see proxy.ts's
+  // protectContentRoute) — without this the page would just redirect to
+  // /pricing and the assertions below would be checking the wrong page.
+  await loginWithSubscription(page);
   await page.goto("/es/vocabulary");
 
   await expect(page.locator("nav.hidden.sm\\:flex")).toBeVisible();
