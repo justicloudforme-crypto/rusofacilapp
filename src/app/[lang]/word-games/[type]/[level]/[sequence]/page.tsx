@@ -6,9 +6,7 @@ import { isFlashcardLevel } from "@/lib/flashcards";
 import { isWordGameType } from "@/lib/word-games/types";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
 import { getCurrentUser } from "@/lib/auth";
-import { isStaff } from "@/lib/roles";
-import { userHasActiveSubscription } from "@/lib/subscription";
-import { isFreeWordGamePuzzle } from "@/lib/entitlement";
+import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 
 export default async function WordGamePuzzlePage({
@@ -36,8 +34,14 @@ export default async function WordGamePuzzlePage({
   // (see isFreeWordGamePuzzle) can be reached without a subscription —
   // this page must now check entitlement itself, the same way the story
   // reader and lesson pages already do for their own free/premium splits.
-  const entitled = Boolean(user && (isStaff(user.role) || (await userHasActiveSubscription(user.id))));
+  const tier = await getEntitlementTier();
+  const entitled = tier !== "free";
   if (!entitled && !isFreeWordGamePuzzle({ type, level, sequence })) {
+    redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
+  }
+  // ★ (curved) puzzles need Premium specifically, even for an otherwise
+  // entitled standard subscriber.
+  if (row.curved && !canAccessCurvedPuzzle(tier)) {
     redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
   }
 

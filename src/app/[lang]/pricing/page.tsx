@@ -6,6 +6,7 @@ import type { PlanId } from "@/lib/plans";
 function PlanCard({
   lang,
   planId,
+  next,
   name,
   price,
   period,
@@ -20,6 +21,9 @@ function PlanCard({
 }: {
   lang: string;
   planId: PlanId;
+  /** Page to return to after a successful card checkout — see
+   * /api/checkout's `next` handling. Undefined falls back to /profile. */
+  next?: string;
   name: string;
   price: string;
   period: string;
@@ -28,9 +32,11 @@ function PlanCard({
   features: string[];
   featuresTitle: string;
   highlighted?: boolean;
-  oxxoPrice: string;
-  oxxoCta: string;
-  oxxoNote: string;
+  // Undefined for the lifetime plan: it's card-only, no OXXO one-time-cash
+  // option (see plans.ts) — the button is simply not rendered for it.
+  oxxoPrice?: string;
+  oxxoCta?: string;
+  oxxoNote?: string;
 }) {
   return (
     <div
@@ -73,6 +79,7 @@ function PlanCard({
       <form action="/api/checkout" method="POST" className="mt-8">
         <input type="hidden" name="lang" value={lang} />
         <input type="hidden" name="plan" value={planId} />
+        {next && <input type="hidden" name="next" value={next} />}
         <button
           type="submit"
           name="method"
@@ -85,23 +92,28 @@ function PlanCard({
         >
           {cta}
         </button>
-        <button
-          type="submit"
-          name="method"
-          value="oxxo"
-          className="tap mt-3 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/10"
-        >
-          {oxxoCta} — {oxxoPrice}
-        </button>
-        <p className="mt-2 text-xs text-foreground/50">{oxxoNote}</p>
+        {oxxoPrice && oxxoCta && (
+          <button
+            type="submit"
+            name="method"
+            value="oxxo"
+            className="tap mt-3 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/10"
+          >
+            {oxxoCta} — {oxxoPrice}
+          </button>
+        )}
+        {oxxoNote && <p className="mt-2 text-xs text-foreground/50">{oxxoNote}</p>}
       </form>
     </div>
   );
 }
 
-export default async function PricingPage({ params }: PageProps<"/[lang]/pricing">) {
+export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
+
+  const { next: nextRaw } = await searchParams;
+  const next = typeof nextRaw === "string" && nextRaw.startsWith(`/${lang}/`) ? nextRaw : undefined;
 
   const dict = await getDictionary(lang);
 
@@ -112,10 +124,11 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
       </h1>
       <p className="mt-3 max-w-xl text-foreground/70">{dict.pricing.subtitle}</p>
 
-      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-start">
+      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-start lg:grid-cols-3">
         <PlanCard
           lang={lang}
           planId="monthly"
+          next={next}
           name={dict.pricing.monthly.name}
           price={dict.pricing.monthly.price}
           period={dict.pricing.monthly.period}
@@ -129,6 +142,7 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
         <PlanCard
           lang={lang}
           planId="annual"
+          next={next}
           name={dict.pricing.annual.name}
           price={dict.pricing.annual.price}
           period={dict.pricing.annual.period}
@@ -140,6 +154,18 @@ export default async function PricingPage({ params }: PageProps<"/[lang]/pricing
           oxxoPrice={dict.pricing.annual.oxxoPrice}
           oxxoCta={dict.pricing.oxxoCta}
           oxxoNote={dict.pricing.oxxoNote}
+        />
+        <PlanCard
+          lang={lang}
+          planId="lifetime"
+          next={next}
+          name={dict.pricing.lifetime.name}
+          price={dict.pricing.lifetime.price}
+          period={dict.pricing.lifetime.period}
+          cta={dict.pricing.lifetime.cta}
+          badge={dict.pricing.lifetime.badge}
+          features={dict.pricing.featuresPremium}
+          featuresTitle={dict.pricing.featuresPremiumTitle}
         />
       </div>
     </div>

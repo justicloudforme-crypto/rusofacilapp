@@ -11,6 +11,7 @@ import { getRateLimiter } from "@/lib/rate-limit";
 const PLAN_LABELS: Record<string, string> = {
   monthly: "Suscripción mensual",
   annual: "Suscripción anual",
+  lifetime: "Premium (acceso de por vida)",
 };
 
 // Every other mutating route in this app has a rate limiter — this one was
@@ -28,6 +29,12 @@ export async function POST(request: NextRequest) {
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const methodRaw = String(formData.get("method") ?? "card");
   const method = isCheckoutMethod(methodRaw) ? methodRaw : "card";
+  // Where to send the visitor back to after a successful card checkout —
+  // e.g. the word-game or story page that triggered the paywall — instead
+  // of always landing on /profile. Restricted to a same-locale in-app path
+  // so this can't be turned into an open redirect via a crafted form post.
+  const nextRaw = String(formData.get("next") ?? "");
+  const nextPath = nextRaw.startsWith(`/${lang}/`) && !nextRaw.startsWith("//") ? nextRaw : null;
 
   if (!isPlanId(planRaw)) {
     return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
@@ -50,7 +57,7 @@ export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const origin = new URL(request.url).origin;
 
-  if (stripe && (method === "oxxo" || plan.priceId)) {
+  if (stripe && ((method === "oxxo" && plan.oxxoAmountMxnCents) || plan.priceId)) {
     let stripeCustomerId = user.stripeCustomerId;
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
@@ -64,7 +71,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (method === "oxxo") {
+    if (method === "oxxo" && plan.oxxoAmountMxnCents) {
       // OXXO is a cash-voucher payment method: the customer gets a barcode
       // (shown on Stripe's own hosted checkout page, and emailed to them)
       // and pays in person at a physical OXXO store, usually within a few
@@ -104,13 +111,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (plan.priceId) {
+      // subscription_data.metadata only applies to mode: "subscription" —
+      // Stripe rejects it on a mode: "payment" session, so the lifetime
+      // (one-time) plan carries its metadata on the session itself instead,
+      // same place the OXXO one-time branch above puts it.
       const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
+        mode: plan.mode,
         customer: stripeCustomerId,
         client_reference_id: user.id,
         line_items: [{ price: plan.priceId, quantity: 1 }],
-        subscription_data: { metadata: { userId: user.id, plan: plan.id } },
-        success_url: `${origin}/${lang}/profile?checkout=success`,
+        ...(plan.mode === "subscription"
+          ? { subscription_data: { metadata: { userId: user.id, plan: plan.id } } }
+          : { metadata: { userId: user.id, plan: plan.id } }),
+        success_url: `${origin}${nextPath ?? `/${lang}/profile`}${(nextPath ?? "").includes("?") ? "&" : "?"}checkout=success`,
         cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
       });
 
@@ -141,7 +154,7 @@ export async function POST(request: NextRequest) {
   await invalidateSubscriptionCache(user.id);
 
   return NextResponse.redirect(
-    new URL(`/${lang}/profile?checkout=mock`, request.url),
+    new URL(`${nextPath ?? `/${lang}/profile`}?checkout=mock`, request.url),
     { status: 303 }
   );
 }

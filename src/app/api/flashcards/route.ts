@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
-import { isEntitled, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { canAccessLevel, getEntitlementTier, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 
 const SEARCH_RESULT_LIMIT = 50;
 
@@ -51,34 +51,48 @@ function searchIndex(index: FlashcardRow[], query: string, level: string | null)
 }
 
 // A non-entitled visitor (logged out, or logged in without an active
-// subscription) gets a fixed free sample instead of a hard 403 — the same
-// FREE_TRIAL_LIMITS.flashcards cards (the earliest-created ones, a stable
-// order) regardless of which category/level/search they try, so the trial
-// experience is consistent rather than "10 free results per query." Staff
-// and subscribers see the full bank, as before.
+// subscription) gets a free sample instead of a hard 403 — capped to
+// FREE_TRIAL_LIMITS.flashcards cards, but the cap is applied AFTER
+// category/level/search filtering, not before.
+//
+// This used to cap the raw, unfiltered index first and filter afterwards —
+// which broke the actual UX entirely: every flashcard mode here
+// (FillBlankApp/RecallApp/MatchApp/FlashcardsApp) is category-first
+// (CategoryGrid → pick a category → THEN fetch its cards), so a global
+// "earliest 10 cards site-wide" sample almost always missed whichever
+// category the visitor picked, producing a real "no words in this
+// category" bug for any category other than the lucky few landing in that
+// fixed slice. Capping per-filtered-request instead means every category
+// a free-trial visitor opens shows up to 10 real words from THAT category.
 export async function GET(request: NextRequest) {
-  const entitled = await isEntitled();
+  const tier = await getEntitlementTier();
+  const entitled = tier !== "free";
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") ?? "";
   const level = searchParams.get("level") ?? "";
   const search = (searchParams.get("search") ?? "").trim();
 
-  const fullIndex = await getFlashcardIndex();
-  const index = entitled ? fullIndex : fullIndex.slice(0, FREE_TRIAL_LIMITS.flashcards);
+  // C1 is Premium-exclusive (see entitlement.ts canAccessLevel) — filtered
+  // out of the index up front so it's excluded from every downstream path
+  // (search, category browse, and the free-trial sample alike) rather than
+  // needing a separate check in each branch.
+  const index = (await getFlashcardIndex()).filter((card) => canAccessLevel(tier, card.level));
   const levelFilter = level && isFlashcardLevel(level) ? level : null;
 
   if (search) {
+    const results = searchIndex(index, search, levelFilter);
     return NextResponse.json({
-      cards: searchIndex(index, search, levelFilter),
+      cards: entitled ? results : results.slice(0, FREE_TRIAL_LIMITS.flashcards),
       limited: !entitled,
     });
   }
 
   const categoryFilter = category && isFlashcardCategory(category) ? category : null;
-  const cards = index.filter(
+  const filtered = index.filter(
     (card) => (!categoryFilter || card.category === categoryFilter) && (!levelFilter || card.level === levelFilter)
   );
+  const cards = entitled ? filtered : filtered.slice(0, FREE_TRIAL_LIMITS.flashcards);
 
   return NextResponse.json({ cards, limited: !entitled });
 }

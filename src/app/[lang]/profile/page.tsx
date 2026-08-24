@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isLocale, locales, localeNames, type Locale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { db } from "@/lib/db";
@@ -99,6 +99,17 @@ const TAB_ICONS: Record<ProfileTab, ReactNode> = {
 
 const PROFILE_TABS = ["personal", "progress", "badges", "referral", "subscription", "security", "language"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
+// Subscription.plan stores the internal identifier ("monthly"/"annual"/
+// "lifetime") shared with Stripe/RevenueCat product mapping — display uses
+// the already-localized pricing-card names instead so a plan renders as
+// "Premium" here (and its own locale) without renaming that identifier.
+function planDisplayLabel(plan: string, dict: Dictionary): string {
+  if (plan === "monthly") return dict.pricing.monthly.name;
+  if (plan === "annual") return dict.pricing.annual.name;
+  if (plan === "lifetime") return dict.pricing.lifetime.name;
+  return plan;
+}
+
 function isProfileTab(value: string): value is ProfileTab {
   return (PROFILE_TABS as readonly string[]).includes(value);
 }
@@ -411,7 +422,7 @@ export default async function ProfilePage({
         {subscription && (
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-foreground/60">{dict.account.plan}</dt>
-            <dd className="capitalize">{subscription.plan}</dd>
+            <dd>{planDisplayLabel(subscription.plan, dict)}</dd>
             <dt className="text-foreground/60">
               {isActive ? dict.profile.expiresLabel : dict.profile.expiredLabel}
             </dt>
@@ -457,7 +468,7 @@ export default async function ProfilePage({
                   key={row.id}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-black/[.03] px-3 py-2 text-sm dark:bg-white/[.05]"
                 >
-                  <span className="capitalize">{row.plan}</span>
+                  <span>{planDisplayLabel(row.plan, dict)}</span>
                   <span className="text-foreground/60">{dateFormatter.format(row.createdAt)}</span>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE_CLASSES[getDisplayStatus(row)]}`}

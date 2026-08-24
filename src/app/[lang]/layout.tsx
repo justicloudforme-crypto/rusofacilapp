@@ -14,6 +14,9 @@ import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
 import NativeBackButtonHandler from "@/components/NativeBackButtonHandler";
 import { getThemePreference } from "@/lib/theme";
+import { getCurrentUser } from "@/lib/auth";
+import { PaywallProvider } from "@/contexts/PaywallContext";
+import type { PlanId } from "@/lib/plans";
 
 // RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
 // (body/UI), PT Serif (display headings/wordmark), PT Mono (labels/status
@@ -89,6 +92,23 @@ export default async function LangLayout({
 
   const dict = await getDictionary(lang);
   const theme = await getThemePreference();
+  const user = await getCurrentUser();
+
+  const paywallPlans: Record<PlanId, { name: string; price: string; period: string; badge?: string }> = {
+    monthly: { name: dict.pricing.monthly.name, price: dict.pricing.monthly.price, period: dict.pricing.monthly.period },
+    annual: {
+      name: dict.pricing.annual.name,
+      price: dict.pricing.annual.price,
+      period: dict.pricing.annual.period,
+      badge: dict.pricing.annual.badge,
+    },
+    lifetime: {
+      name: dict.pricing.lifetime.name,
+      price: dict.pricing.lifetime.price,
+      period: dict.pricing.lifetime.period,
+      badge: dict.pricing.lifetime.badge,
+    },
+  };
 
   return (
     <html
@@ -101,9 +121,11 @@ export default async function LangLayout({
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
         <OfflineBanner message={dict.offline.bannerMessage} />
-        <Navbar lang={lang} dict={dict} />
-        <main className="flex flex-1 flex-col">{children}</main>
-        <Footer dict={dict} lang={lang} />
+        <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans}>
+          <Navbar lang={lang} dict={dict} />
+          <main className="flex flex-1 flex-col">{children}</main>
+          <Footer dict={dict} lang={lang} />
+        </PaywallProvider>
         {/* Reading mode is meant to minimize distractions — the floating
             Telegram CTA is the one persistent, animated, non-content element
             on every page, so it's the one thing this mode hides. */}

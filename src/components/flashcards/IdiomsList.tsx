@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 
@@ -23,6 +24,8 @@ export interface IdiomsDict {
   paginationPrev: string;
   paginationNext: string;
   paginationInfo: string; // template, contains literal "{current}" and "{total}"
+  freeTrialLimitMessage: string;
+  freeTrialLimitCta: string;
 }
 
 const PAGE_SIZE = 10;
@@ -53,6 +56,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   // Fetched once from the DB instead of importing the ~7,400-line static
   // bank straight into this client component's JS bundle.
   const [idioms, setIdioms] = useState<Idiom[]>([]);
+  const [limited, setLimited] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -62,8 +66,11 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
 
   useEffect(() => {
     fetch("/api/idioms")
-      .then((res) => (res.ok ? res.json() : { idioms: [] }))
-      .then((body: { idioms?: Idiom[] }) => setIdioms(body.idioms ?? []))
+      .then((res) => (res.ok ? res.json() : { idioms: [], limited: false }))
+      .then((body: { idioms?: Idiom[]; limited?: boolean }) => {
+        setIdioms(body.idioms ?? []);
+        setLimited(Boolean(body.limited));
+      })
       .catch(() => setIdioms([]));
   }, []);
 
@@ -125,6 +132,10 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
           {dict.progressLabel.replace("{known}", String(known)).replace("{total}", String(idioms.length))}
         </span>
       </div>
+
+      {limited && (
+        <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+      )}
 
       <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/10">
         {categoryTabs.map((tab) => (
