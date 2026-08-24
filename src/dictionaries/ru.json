@@ -631,6 +631,8 @@
     "cardCountLabel": "{count} слов",
     "backToCategories": "← Категории",
     "nextLevelBadgeLabel": "Этот уровень уже освоен! Попробуй {level}",
+    "freeTrialLimitMessage": "Вы изучили бесплатный пробный набор слов. Оформите подписку, чтобы открыть весь словарь.",
+    "freeTrialLimitCta": "Оформить подписку",
     "modeVocabulary": "Словарь по категориям",
     "modeRecall": "Написать слово",
     "modeFillBlank": "Пропущенное слово",
@@ -703,7 +705,9 @@
       "noResultsMessage": "Выражения не найдены.",
       "paginationPrev": "Назад",
       "paginationNext": "Вперёд",
-      "paginationInfo": "Страница {current} из {total}"
+      "paginationInfo": "Страница {current} из {total}",
+      "freeTrialLimitMessage": "Вы изучили бесплатный пробный набор выражений. Оформите подписку, чтобы открыть все идиомы.",
+      "freeTrialLimitCta": "Оформить подписку"
     }
   },
   "wordGames": {

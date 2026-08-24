@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
+import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import MatchBoard, { type MatchResult } from "./MatchBoard";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
@@ -18,6 +19,8 @@ export interface MatchAppDict extends CategoryGridDict {
   notEnoughCardsMessage: string;
   roundCompleteLabel: string; // template, contains literal "{pairs}"
   nextRoundButton: string;
+  freeTrialLimitMessage: string;
+  freeTrialLimitCta: string;
 }
 
 const ROUND_SIZES = [4, 6, 8];
@@ -42,6 +45,7 @@ export default function MatchApp({
   // CelebrationModal, which the underlying static "complete" screen (with
   // its own back/next-round buttons) stays behind once dismissed.
   const [justCompleted, setJustCompleted] = useState(false);
+  const [limited, setLimited] = useState(false);
 
   useEffect(() => {
     const params = levelFilter === "all" ? "" : `?level=${levelFilter}`;
@@ -63,10 +67,11 @@ export default function MatchApp({
     setCategory(next);
     setSizeIndex(0);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
-      .then((res) => (res.ok ? res.json() : { cards: [] }))
-      .then((body: { cards?: FlashcardRow[] }) => {
+      .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
         const cards = body.cards ?? [];
         setCategoryCards(cards);
+        setLimited(Boolean(body.limited));
         startRound(ROUND_SIZES[0], cards, levelFilter);
       })
       .catch(() => {
@@ -80,6 +85,7 @@ export default function MatchApp({
     setRound([]);
     setComplete(false);
     setJustCompleted(false);
+    setLimited(false);
   }
 
   function handleComplete(results: MatchResult[]) {
@@ -126,6 +132,10 @@ export default function MatchApp({
           >
             {dict.backToCategories}
           </button>
+
+          {limited && (
+            <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+          )}
 
           {complete ? (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/10">

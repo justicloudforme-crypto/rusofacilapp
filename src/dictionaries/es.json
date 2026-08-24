@@ -631,6 +631,8 @@
     "cardCountLabel": "{count} palabras",
     "backToCategories": "← Categorías",
     "nextLevelBadgeLabel": "¡Ya dominas este nivel aquí! Prueba {level}",
+    "freeTrialLimitMessage": "Has visto la muestra gratuita de palabras. Suscríbete para desbloquear todo el vocabulario.",
+    "freeTrialLimitCta": "Suscribirme",
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",
     "modeFillBlank": "Completa la frase",
@@ -703,7 +705,9 @@
       "noResultsMessage": "No se encontraron expresiones.",
       "paginationPrev": "Atrás",
       "paginationNext": "Adelante",
-      "paginationInfo": "Página {current} de {total}"
+      "paginationInfo": "Página {current} de {total}",
+      "freeTrialLimitMessage": "Has visto la muestra gratuita de expresiones. Suscríbete para desbloquear todos los modismos.",
+      "freeTrialLimitCta": "Suscribirme"
     }
   },
   "wordGames": {

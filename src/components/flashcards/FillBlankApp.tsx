@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
+import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
@@ -21,6 +22,8 @@ export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   roundCompleteLabel: string; // template, contains literal "{correct}" and "{total}"
   playAgainButton: string;
   streakToastLabel: string; // template, contains literal "{count}"
+  freeTrialLimitMessage: string;
+  freeTrialLimitCta: string;
 }
 
 const ROUND_SIZE = 10;
@@ -46,6 +49,7 @@ export default function FillBlankApp({
   const [justComplete, setJustComplete] = useState(false);
   const [streak, setStreak] = useState(0);
   const [streakToast, setStreakToast] = useState<number | null>(null);
+  const [limited, setLimited] = useState(false);
   const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -78,8 +82,11 @@ export default function FillBlankApp({
   function selectCategory(next: FlashcardCategory) {
     setCategory(next);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
-      .then((res) => (res.ok ? res.json() : { cards: [] }))
-      .then((body: { cards?: FlashcardRow[] }) => startRound(body.cards ?? []))
+      .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
+        setLimited(Boolean(body.limited));
+        startRound(body.cards ?? []);
+      })
       .catch(() => startRound([]));
   }
 
@@ -88,6 +95,7 @@ export default function FillBlankApp({
     setRound([]);
     setComplete(false);
     setJustComplete(false);
+    setLimited(false);
   }
 
   function handleSubmit(answer: string) {
@@ -154,6 +162,10 @@ export default function FillBlankApp({
           >
             {dict.backToCategories}
           </button>
+
+          {limited && (
+            <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+          )}
 
           {complete ? (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/10">

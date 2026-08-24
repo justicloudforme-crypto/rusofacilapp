@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import CategoryGrid, { type CategorySummary } from "./CategoryGrid";
+import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
@@ -24,6 +25,8 @@ export interface FlashcardsDict {
   cardCountLabel: string; // template, contains literal "{count}"
   backToCategories: string;
   nextLevelBadgeLabel: string; // template, contains literal "{level}"
+  freeTrialLimitMessage: string;
+  freeTrialLimitCta: string;
 }
 
 // Debounce delay for the always-visible search box — short enough to feel
@@ -46,6 +49,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // ~2,600-card bank was bundled straight into this client component's JS.
   const [categoryCards, setCategoryCards] = useState<FlashcardRow[]>([]);
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
+  const [limited, setLimited] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -70,9 +74,12 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     if (searchQuery || !category) return; // search fetch below takes over, or nothing to fetch yet
     let cancelled = false;
     fetch(`/api/flashcards?category=${encodeURIComponent(category)}`)
-      .then((res) => (res.ok ? res.json() : { cards: [] }))
-      .then((body: { cards?: FlashcardRow[] }) => {
-        if (!cancelled) setCategoryCards(body.cards ?? []);
+      .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
+        if (!cancelled) {
+          setCategoryCards(body.cards ?? []);
+          setLimited(Boolean(body.limited));
+        }
       })
       .catch(() => {
         if (!cancelled) setCategoryCards([]);
@@ -88,10 +95,11 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     const params = new URLSearchParams({ search: searchQuery });
     if (levelFilter !== "all") params.set("level", levelFilter);
     fetch(`/api/flashcards?${params.toString()}`)
-      .then((res) => (res.ok ? res.json() : { cards: [] }))
-      .then((body: { cards?: FlashcardRow[] }) => {
+      .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
         if (!cancelled) {
           setCategoryCards(body.cards ?? []);
+          setLimited(Boolean(body.limited));
           setIndex(0);
           setFlipped(false);
         }
@@ -140,6 +148,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     setSearchQuery("");
     setIndex(0);
     setFlipped(false);
+    setLimited(false);
   }
 
   function selectLevel(next: FlashcardLevel | "all") {
@@ -205,6 +214,10 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
             >
               {dict.backToCategories}
             </button>
+          )}
+
+          {limited && (
+            <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
           )}
 
           {!card ? (

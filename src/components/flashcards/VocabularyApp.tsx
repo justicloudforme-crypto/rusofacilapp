@@ -19,9 +19,9 @@ export interface VocabularyDict extends FlashcardsDict {
   modeMatch: string;
   modeIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel">;
-  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel">;
-  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel">;
+  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
+  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
+  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -70,6 +70,8 @@ export default function VocabularyApp({
             categoryLabels: dict.categoryLabels,
             cardCountLabel: dict.cardCountLabel,
             nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+            freeTrialLimitMessage: dict.freeTrialLimitMessage,
+            freeTrialLimitCta: dict.freeTrialLimitCta,
           }}
           celebrationDict={celebrationDict}
         />
@@ -81,6 +83,8 @@ export default function VocabularyApp({
             categoryLabels: dict.categoryLabels,
             cardCountLabel: dict.cardCountLabel,
             nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+            freeTrialLimitMessage: dict.freeTrialLimitMessage,
+            freeTrialLimitCta: dict.freeTrialLimitCta,
           }}
           celebrationDict={celebrationDict}
         />
@@ -92,6 +96,8 @@ export default function VocabularyApp({
             categoryLabels: dict.categoryLabels,
             cardCountLabel: dict.cardCountLabel,
             nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+            freeTrialLimitMessage: dict.freeTrialLimitMessage,
+            freeTrialLimitCta: dict.freeTrialLimitCta,
           }}
           celebrationDict={celebrationDict}
         />
