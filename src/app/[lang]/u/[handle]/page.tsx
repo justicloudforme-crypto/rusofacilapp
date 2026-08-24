@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getPublicProfileData } from "@/lib/public-profile";
+import { getAvatarLabels } from "@/lib/avatarLabels";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 
 export default async function PublicProfilePage({
@@ -14,16 +15,7 @@ export default async function PublicProfilePage({
   const profile = await getPublicProfileData(handle);
   if (!profile) notFound();
 
-  const avatarLabels = {
-    matryoshka_calm: dict.profile.avatarCalm,
-    matryoshka_happy: dict.profile.avatarHappy,
-    matryoshka_wink: dict.profile.avatarWink,
-    matryoshka_surprised: dict.profile.avatarSurprised,
-    matryoshka_sleepy: dict.profile.avatarSleepy,
-    matryoshka_proud: dict.profile.avatarProud,
-    matryoshka_thinking: dict.profile.avatarThinking,
-    matryoshka_laughing: dict.profile.avatarLaughing,
-  };
+  const avatarLabels = getAvatarLabels(dict);
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">

@@ -28,7 +28,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(url, { status: 303 });
   };
 
-  if (await registerLimiter.check(requestIp(request))) return fail("rate_limited");
+  // The e2e suite creates a throwaway account per test (see
+  // e2e/helpers/auth.ts) — fullyParallel workers registering from the
+  // same localhost IP blow past this limiter's real-world budget almost
+  // immediately. Bypassed only when E2E_TEST_SEED is set, which is only
+  // ever true for the server playwright.config.ts's webServer spawns for
+  // a test run (see its `env`), never on a real deployment.
+  const isE2ETestRun = process.env.E2E_TEST_SEED === "1";
+  if (!isE2ETestRun && (await registerLimiter.check(requestIp(request)))) return fail("rate_limited");
   if (!email || !email.includes("@")) return fail("invalid_email");
   if (!isPasswordStrongEnough(password)) return fail("weak_password");
 

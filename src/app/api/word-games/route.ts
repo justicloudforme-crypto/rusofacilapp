@@ -3,11 +3,15 @@ import type { NextRequest } from "next/server";
 import { isWordGameType } from "@/lib/word-games/types";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
+import { hasContentAccess } from "@/lib/entitlement";
 
-// Public and unauthenticated, same reasoning as GET /api/flashcards —
-// puzzle shapes/clues are reference content, not user data (per-user
-// completion lives separately in WordGameProgress).
+// Word games now require an active subscription (or staff), matching
+// /word-games's own gate in proxy.ts.
 export async function GET(request: NextRequest) {
+  if (!(await hasContentAccess())) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") ?? "";
   const level = searchParams.get("level") ?? "";

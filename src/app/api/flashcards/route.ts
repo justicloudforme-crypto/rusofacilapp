@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
+import { hasContentAccess } from "@/lib/entitlement";
 
 const SEARCH_RESULT_LIMIT = 50;
 
@@ -49,9 +50,16 @@ function searchIndex(index: FlashcardRow[], query: string, level: string | null)
   return scored.slice(0, SEARCH_RESULT_LIMIT).map((entry) => entry.card);
 }
 
-// Public and unauthenticated: flashcards are reference content, not user
-// data (per-card "known" state lives separately in FlashcardProgress).
+// Vocabulary now requires an active subscription (or staff), matching the
+// /vocabulary page's own gate in proxy.ts — this route used to be public
+// on the theory that flashcards are reference content, not user data
+// (per-card "known" state lives separately in FlashcardProgress), but the
+// page-level gate alone doesn't stop a direct request here.
 export async function GET(request: NextRequest) {
+  if (!(await hasContentAccess())) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") ?? "";
   const level = searchParams.get("level") ?? "";

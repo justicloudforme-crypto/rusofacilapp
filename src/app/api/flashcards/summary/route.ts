@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { isStaff } from "@/lib/roles";
+import { userHasActiveSubscription } from "@/lib/subscription";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
 
@@ -25,6 +27,14 @@ interface CategoryStat {
 }
 
 export async function GET(request: NextRequest) {
+  // Vocabulary now requires an active subscription (or staff) — same gate
+  // as GET /api/flashcards, checked with the user fetched below rather
+  // than duplicating the lookup via the shared hasContentAccess() helper.
+  const user = await getCurrentUser();
+  if (!user || !(isStaff(user.role) || (await userHasActiveSubscription(user.id)))) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
+
   const levelParam = new URL(request.url).searchParams.get("level") ?? "";
   const level = levelParam && isFlashcardLevel(levelParam) ? levelParam : null;
 
@@ -36,7 +46,6 @@ export async function GET(request: NextRequest) {
     stat.total += 1;
   }
 
-  const user = await getCurrentUser();
   if (user) {
     const knownProgress = await db.flashcardProgress.findMany({
       where: { userId: user.id, known: true },

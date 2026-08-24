@@ -9,6 +9,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import StoryAudioPlayer, { READ_ALOUD_RATES } from "@/components/stories/StoryAudioPlayer";
 import { sanitizeTextForTTS } from "@/lib/speech";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
@@ -18,8 +19,6 @@ import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 // renders as plain text in between.
 const WORD_SPLIT_REGEX = /([а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*)/gu;
 const CYRILLIC_WORD_REGEX = /^[а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*$/u;
-
-const READ_ALOUD_RATES = [0.8, 1, 1.2] as const;
 
 function tokenizeParagraph(text: string): string[] {
   return text.split(WORD_SPLIT_REGEX).filter((token) => token.length > 0);
@@ -208,13 +207,24 @@ export default function StoryText({
     return map;
   }, [audioSegments]);
 
-  // Real narration only drives playback when every sentence in the queue
-  // has a matching clip — a partial set (e.g. a stale generation run) would
-  // otherwise strand playback mid-story, so it's real-audio-all or none.
+  // Real narration drives playback whenever the story has ANY matching
+  // clips, not only when every single sentence does. A story's text can
+  // drift out of sync with its once-generated audio (an edit that splits
+  // or merges a sentence shifts every later paragraphIndex-sentenceIndex
+  // key) — a real, confirmed case: 15 of 325 stories have a small number
+  // of sentences with no clip, the rest fully covered. Requiring 100%
+  // coverage here used to throw away all of a story's real audio over one
+  // missing sentence, silently downgrading the whole reader to browser
+  // TTS (with no seek/skip support and much less reliable pause/resume,
+  // especially on iOS Safari) — exactly what real playback used to look
+  // like for those 15 stories. playSegmentAt() below now narrates a
+  // missing sentence with TTS just for that one sentence and hands back to
+  // real audio at the next one, so a handful of gaps degrades a few
+  // sentences instead of the entire book.
   const hasRealAudio = useMemo(
     () =>
       queue.length > 0 &&
-      queue.every((item) => segmentUrlByKey.has(`${item.paragraphIndex}-${item.sentenceIndex}`)),
+      queue.some((item) => segmentUrlByKey.has(`${item.paragraphIndex}-${item.sentenceIndex}`)),
     [queue, segmentUrlByKey]
   );
   const canPlay = hasRealAudio || ttsSupported;
@@ -403,18 +413,74 @@ export default function StoryText({
     preload.src = url;
   }
 
+  /** Narrates a single sentence with browser TTS (no real clip for it —
+   * see hasRealAudio's comment) and hands back to playSegmentAt() for the
+   * next index once it ends, so the gap costs one sentence's worth of
+   * synthesized voice instead of derailing the rest of the real-audio
+   * queue. Mirrors speakQueueAt()'s onboundary/onend/onerror wiring
+   * (word-highlight during the utterance, generation-guarded chaining) —
+   * kept separate rather than reused because speakQueueAt() also owns the
+   * TTS-only playback mode's own state (setReadingToken(null) up front,
+   * etc.) that doesn't apply here. */
+  function speakGapSentenceThenAdvance(index: number, generation: number) {
+    const item = queue[index];
+    const advance = () => {
+      if (playbackGenRef.current !== generation) return;
+      const next = index + 1;
+      if (next < queue.length) {
+        playSegmentAt(next);
+      } else {
+        setPlaying(false);
+        setReadingQueueIndex(null);
+        setReadingToken(null);
+      }
+    };
+
+    if (!item || typeof window === "undefined" || !("speechSynthesis" in window)) {
+      advance();
+      return;
+    }
+
+    setReadingQueueIndex(index);
+    setReadingToken(null);
+    setResumeQueueIndex(null);
+    setIsCompletedBadge(false);
+    if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
+
+    const utterance = new SpeechSynthesisUtterance(sanitizeTextForTTS(item.text));
+    utterance.lang = "ru-RU";
+    utterance.rate = rateRef.current;
+    utterance.onboundary = (event) => {
+      const tokens = sentenceTokens[index];
+      const starts = tokenStarts(tokens);
+      const tokenIndex = tokenIndexAtChar(tokens, starts, event.charIndex);
+      setReadingToken(tokenIndex);
+    };
+    utterance.onend = advance;
+    utterance.onerror = (event) => {
+      if (playbackGenRef.current !== generation) return;
+      console.error("[StoryText audio] gap-sentence TTS error:", event.error);
+      advance();
+    };
+    window.speechSynthesis.speak(utterance);
+  }
+
   /** `startOffset` seconds into the clip — used by skipBy() when a ±15s
    * skip lands mid-sentence rather than at its start. */
   function playSegmentAt(index: number, startOffset = 0) {
     const item = queue[index];
-    const audio = audioRef.current;
-    const url = item ? segmentUrlByKey.get(`${item.paragraphIndex}-${item.sentenceIndex}`) : undefined;
-    if (!item || !audio || !url) {
+    if (!item) {
       setPlaying(false);
       setReadingQueueIndex(null);
       return;
     }
     const generation = playbackGenRef.current;
+    const audio = audioRef.current;
+    const url = segmentUrlByKey.get(`${item.paragraphIndex}-${item.sentenceIndex}`);
+    if (!url || !audio) {
+      speakGapSentenceThenAdvance(index, generation);
+      return;
+    }
     setReadingQueueIndex(index);
     setResumeQueueIndex(null);
     setIsCompletedBadge(false);
@@ -786,95 +852,22 @@ export default function StoryText({
       {canPlay && queue.length > 0 && (
         <>
           <div ref={playerSentinelRef} />
-          <div
-            style={{ top: navOffset }}
-            className={`sticky z-30 mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-black/10 bg-background/95 backdrop-blur transition-all dark:border-white/10 ${
-              playerSticky ? "gap-3 p-2.5 shadow-lg" : "p-4"
-            }`}
-          >
-            {hasRealAudio && (
-              <button
-                type="button"
-                onClick={() => skipBy(-15)}
-                aria-label={dict.skipBackLabel}
-                title={dict.skipBackLabel}
-                className={`flex flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:text-foreground ${
-                  playerSticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
-                }`}
-              >
-                <span aria-hidden="true">⏪</span>
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handlePlayPause}
-              aria-label={playing ? dict.pauseLabel : dict.playLabel}
-              title={playing ? dict.pauseLabel : dict.playLabel}
-              className={`flex flex-shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-all hover:opacity-85 ${
-                playerSticky ? "h-8 w-8 text-sm" : "h-10 w-10"
-              }`}
-            >
-              <span aria-hidden="true">{playing ? "⏸" : "▶"}</span>
-            </button>
-
-            {hasRealAudio && (
-              <button
-                type="button"
-                onClick={() => skipBy(15)}
-                aria-label={dict.skipForwardLabel}
-                title={dict.skipForwardLabel}
-                className={`flex flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:text-foreground ${
-                  playerSticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
-                }`}
-              >
-                <span aria-hidden="true">⏩</span>
-              </button>
-            )}
-
-            <div className="relative flex min-w-[100px] flex-1 items-center">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-                <div
-                  className="h-full rounded-full bg-foreground transition-[width] duration-300"
-                  style={{ width: `${Math.min(progress * 100, 100)}%` }}
-                />
-              </div>
-              {/* Transparent range input on top of the visual bar above —
-                  reuses its look while getting native drag/keyboard/touch
-                  seek behavior for free. React's onChange fires on every
-                  drag step (not just on release), so the text highlight
-                  and scroll follow the thumb live — the player -> text
-                  sync side of the two-way sync. */}
-              <input
-                type="range"
-                min={0}
-                max={Math.max(0, queue.length - 1)}
-                step={1}
-                value={readingQueueIndex ?? 0}
-                disabled={queue.length === 0}
-                onChange={(event) => handleSentenceClick(Number(event.target.value))}
-                aria-label={dict.seekLabel}
-                className="absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 cursor-pointer opacity-0"
-              />
-            </div>
-
-            <div className="flex items-center gap-1">
-              {READ_ALOUD_RATES.map((speed) => (
-                <button
-                  key={speed}
-                  type="button"
-                  onClick={() => handleRateChange(speed)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                    rate === speed
-                      ? "bg-foreground text-background"
-                      : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
-                  }`}
-                >
-                  {speed}x
-                </button>
-              ))}
-            </div>
-          </div>
+          <StoryAudioPlayer
+            dict={dict}
+            navOffset={navOffset}
+            sticky={playerSticky}
+            hasRealAudio={hasRealAudio}
+            playing={playing}
+            progress={progress}
+            rate={rate}
+            queueLength={queue.length}
+            readingQueueIndex={readingQueueIndex}
+            onSkipBack={() => skipBy(-15)}
+            onSkipForward={() => skipBy(15)}
+            onPlayPause={handlePlayPause}
+            onSeek={handleSentenceClick}
+            onRateChange={handleRateChange}
+          />
         </>
       )}
 

@@ -6,6 +6,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { getGroupForMember } from "@/lib/groups";
+import { getAvatarLabels } from "@/lib/avatarLabels";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 
 export default async function GroupDetailPage({
@@ -26,16 +27,7 @@ export default async function GroupDetailPage({
   const proto = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const inviteLink = `${proto}://${host}/${lang}/groups/join?code=${group.inviteCode}`;
 
-  const avatarLabels = {
-    matryoshka_calm: dict.profile.avatarCalm,
-    matryoshka_happy: dict.profile.avatarHappy,
-    matryoshka_wink: dict.profile.avatarWink,
-    matryoshka_surprised: dict.profile.avatarSurprised,
-    matryoshka_sleepy: dict.profile.avatarSleepy,
-    matryoshka_proud: dict.profile.avatarProud,
-    matryoshka_thinking: dict.profile.avatarThinking,
-    matryoshka_laughing: dict.profile.avatarLaughing,
-  };
+  const avatarLabels = getAvatarLabels(dict);
 
   const isOwner = group.ownerUserId === user.id;
 

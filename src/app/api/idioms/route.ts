@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { IDIOM_LIST_CACHE_PREFIX, isIdiomCategory, isIdiomLevel } from "@/lib/idioms";
 import { cacheGet, cacheSet } from "@/lib/cache";
+import { hasContentAccess } from "@/lib/entitlement";
 
 // IMPORTANT: only the raw idiom rows go in this cache, never the audio join
 // below — same real, confirmed bug and fix as /api/glossary/route.ts (see
@@ -13,12 +14,18 @@ import { cacheGet, cacheSet } from "@/lib/cache";
 // voice) for up to IDIOM_CACHE_TTL_MS after every generation run.
 const IDIOM_CACHE_TTL_MS = 5 * 60_000;
 
-// Public and unauthenticated, same rationale as /api/flashcards. No
-// category/level param is passed by IdiomsList today (it fetches the whole
-// set once and filters/searches/paginates client-side), but both filters
-// are supported for future callers (e.g. gating idiom exposure by student
-// level, per the content audit's level-tagging gap).
+// Idioms are part of Vocabulary (IdiomsList is one of VocabularyApp's
+// modes) and now require the same active-subscription gate as
+// /api/flashcards. No category/level param is passed by IdiomsList today
+// (it fetches the whole set once and filters/searches/paginates
+// client-side), but both filters are supported for future callers (e.g.
+// gating idiom exposure by student level, per the content audit's
+// level-tagging gap).
 export async function GET(request: NextRequest) {
+  if (!(await hasContentAccess())) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") ?? "";
   const level = searchParams.get("level") ?? "";

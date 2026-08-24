@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { loginWithSubscription } from "./helpers/auth";
 
 // Skipped in CI: word-games puzzles are generated from the FlashcardCard
 // bank (prisma/generate-word-games.ts), and FlashcardCard content is
@@ -18,6 +19,23 @@ test.skip(!!process.env.CI, "needs FlashcardCard content, which CI's ephemeral D
 // Narrow, iPhone-sized viewport, same convention as mobile-menu.spec.ts —
 // this is the width the word-games UI actually needs to work at.
 test.use({ viewport: { width: 390, height: 844 } });
+
+// Word games now require an active subscription (see proxy.ts's
+// protectContentRoute) — every test below needs to actually reach the
+// puzzle, not get redirected to /pricing.
+test.beforeEach(async ({ page }) => {
+  await loginWithSubscription(page);
+});
+
+// Serial, not parallel: every test in this file calls loginWithSubscription
+// in beforeEach, which registers a new account — /api/auth/register caps
+// at 10/min per IP (see that route's own comment), and this file alone has
+// enough tests to blow past that limit if they all fire registration
+// requests at once under fullyParallel. loginWithSubscription() already
+// retries through a transient rate-limit, but serializing this file's own
+// tests removes the self-inflicted contention at the source instead of
+// leaning on the retry to paper over it every run.
+test.describe.configure({ mode: "serial" });
 
 // A1 crossword sequence 1's real seeded content (prisma/generate-word-games.ts
 // is deterministic per (type, level, sequence), so this is stable across

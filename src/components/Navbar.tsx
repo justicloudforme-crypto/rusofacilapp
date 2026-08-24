@@ -31,17 +31,43 @@ export default async function Navbar({
     ...(staff ? [{ href: `/${lang}/admin`, label: dict.admin.title }] : []),
   ];
   const ctaHref = user ? `/${lang}/profile` : `/${lang}/login`;
-  // The desktop header shows a proper profile dropdown (ProfileMenu) instead
-  // of this label when logged in — ctaLabel/ctaHref here now only feed the
-  // mobile menu's CTA link, which stays a plain link (no dropdown at that
-  // width).
   const ctaLabel = user ? dict.nav.profile : dict.nav.cta;
+  // Mobile bottom sheet groups the same destinations by intent instead of
+  // the flat list the desktop bar shows — one glance tells you whether
+  // you're going to learn, play, or find people, rather than scanning six
+  // undifferentiated rows.
+  const mobileGroups = [
+    {
+      label: dict.nav.groupLearn,
+      links: [
+        { href: `/${lang}`, label: dict.nav.home },
+        { href: `/${lang}/courses`, label: dict.nav.courses },
+        { href: `/${lang}/stories`, label: dict.nav.stories },
+        { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary },
+      ],
+    },
+    {
+      label: dict.nav.groupPlay,
+      links: [
+        { href: `/${lang}/word-games`, label: dict.nav.wordGames },
+        { href: `/${lang}/media`, label: dict.nav.media },
+      ],
+    },
+    ...(user
+      ? [{ label: dict.nav.groupCommunity, links: [{ href: `/${lang}/groups`, label: dict.nav.groups }] }]
+      : []),
+    ...(staff
+      ? [{ label: dict.admin.title, links: [{ href: `/${lang}/admin`, label: dict.admin.title }] }]
+      : []),
+  ];
   const profileTabs = [
     { id: "personal", label: dict.profile.tabPersonal },
     { id: "progress", label: dict.profile.tabProgress },
     { id: "subscription", label: dict.profile.tabSubscription },
     { id: "language", label: dict.profile.tabLanguage },
   ];
+
+  const avatarId = user && isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID;
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-background/80 pt-safe backdrop-blur dark:border-white/10">
@@ -55,7 +81,7 @@ export default async function Navbar({
         </Link>
         <nav className="hidden flex-1 items-center gap-8 text-sm font-medium sm:flex">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-foreground/70">
+            <Link key={link.href} href={link.href} className="hover:text-brand">
               {link.label}
             </Link>
           ))}
@@ -68,7 +94,7 @@ export default async function Navbar({
               lang={lang}
               name={user.name}
               email={user.email}
-              avatarId={isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID}
+              avatarId={avatarId}
               label={dict.nav.profile}
               tabs={profileTabs}
               logoutLabel={dict.auth.logout}
@@ -76,15 +102,20 @@ export default async function Navbar({
           ) : (
             <Link
               href={ctaHref}
-              className="hidden rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 sm:inline-block"
+              className="hidden rounded-full bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-light sm:inline-block"
             >
               {ctaLabel}
             </Link>
           )}
           <MobileMenu
-            links={navLinks}
-            ctaHref={ctaHref}
-            ctaLabel={ctaLabel}
+            lang={lang}
+            user={user ? { name: user.name, email: user.email, avatarId } : null}
+            groups={mobileGroups}
+            loggedOutHref={ctaHref}
+            loggedOutLabel={ctaLabel}
+            profileLabel={dict.nav.profile}
+            profileTabs={profileTabs}
+            logoutLabel={dict.auth.logout}
             openLabel={dict.nav.openMenu}
             closeLabel={dict.nav.closeMenu}
           />

@@ -25,6 +25,8 @@ const KEY_BASE = "touch-manipulation select-none transition-colors active:bg-for
 export interface CyrillicKeyboardDict {
   backspaceLabel: string;
   spaceLabel: string;
+  showKeyboardLabel: string;
+  hideKeyboardLabel: string;
 }
 
 export default function CyrillicKeyboard({

@@ -86,6 +86,14 @@ export default function AnswerPad({
   const [correctReaction] = useState(
     () => CORRECT_REACTIONS[Math.floor(Math.random() * CORRECT_REACTIONS.length)],
   );
+  // Collapsed by default — most learners type on a physical/system
+  // keyboard (even without a Cyrillic layout installed, letters still
+  // land via CYRILLIC_LETTER's physical-keyboard handling below on some
+  // devices, and transliteration extensions are common), so leaving this
+  // on-screen keyboard permanently open ate a large chunk of vertical
+  // space in word games and card views that don't need it. A pill toggle
+  // brings it back for anyone who does.
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const isCyrillic = alphabet === "cyrillic";
   const expectedLetter = isCyrillic ? CYRILLIC_LETTER : LATIN_LETTER;
 
@@ -202,7 +210,22 @@ export default function AnswerPad({
         </button>
       ) : (
         <>
-          {isCyrillic && <CyrillicKeyboard dict={dict} onKey={appendLetter} onBackspace={backspace} onSpace={appendSpace} />}
+          {isCyrillic && (
+            <>
+              <button
+                type="button"
+                onClick={() => setKeyboardOpen((o) => !o)}
+                aria-expanded={keyboardOpen}
+                className="touch-manipulation select-none self-center rounded-full border border-brand px-4 py-1.5 text-xs font-medium text-brand transition-colors hover:bg-brand/10"
+              >
+                <span aria-hidden="true">⌨ </span>
+                {keyboardOpen ? dict.hideKeyboardLabel : dict.showKeyboardLabel}
+              </button>
+              {keyboardOpen && (
+                <CyrillicKeyboard dict={dict} onKey={appendLetter} onBackspace={backspace} onSpace={appendSpace} />
+              )}
+            </>
+          )}
           <button
             type="button"
             onClick={() => onSubmit(answer)}

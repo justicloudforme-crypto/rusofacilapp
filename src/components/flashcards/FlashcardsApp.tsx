@@ -280,8 +280,8 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-center gap-3">
-                <SpeakButton text={card.russian} label={dict.listenLabel} size="md" audioUrl={card.audioUrl ?? undefined} />
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <SpeakButton text={card.russian} label={dict.listenLabel} size="lg" audioUrl={card.audioUrl ?? undefined} />
                 <button
                   type="button"
                   onClick={() => markKnown(false)}

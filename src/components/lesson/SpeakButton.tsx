@@ -24,7 +24,11 @@ export default function SpeakButton({
 }: {
   text: string;
   label: string;
-  size?: "sm" | "md";
+  /** "lg" is a full pill with the label text visible (not just the aria
+   * label) — reserved for a card's one "primary" pronunciation button
+   * (e.g. the main word on a flashcard), since a 44px+ tap target with a
+   * legible caption doesn't scale down to every inline glyph-sized use. */
+  size?: "sm" | "md" | "lg";
   /** Pre-generated pronunciation file for `text`, if one exists in
    * the shared AudioAsset cache. Omit to always use browser synthesis. */
   audioUrl?: string;
@@ -111,6 +115,24 @@ export default function SpeakButton({
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utterance);
+  }
+
+  if (size === "lg") {
+    return (
+      <button
+        type="button"
+        onClick={speak}
+        aria-label={label}
+        className={`inline-flex min-h-11 flex-shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors disabled:opacity-50 ${
+          speaking ? "bg-brand-light text-white" : "bg-brand text-white hover:bg-brand-light"
+        }`}
+      >
+        <span aria-hidden="true" className="text-base">
+          🔊
+        </span>
+        {label}
+      </button>
+    );
   }
 
   const dimensions = size === "md" ? "h-8 w-8 text-base" : "h-6 w-6 text-xs";

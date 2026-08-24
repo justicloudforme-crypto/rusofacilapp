@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getPuzzleById, crosswordLetterMap } from "@/lib/word-games/data";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
+import { hasContentAccess } from "@/lib/entitlement";
 
 interface GuessCell {
   row: number;
@@ -19,10 +20,15 @@ function isGuessCell(value: unknown): value is GuessCell {
 // keystroke — this only stops a runaway client, not normal play.
 const checkLimiter = getRateLimiter("word-games-check", 60_000, 120);
 
-// Public and unauthenticated (matches the puzzle GET route) — this only
-// ever confirms/denies letters already visible in this same request's own
-// body, it never returns anything the caller didn't already send it.
+// Same active-subscription gate as GET /api/word-games: this endpoint
+// only ever confirms/denies letters the caller already sent, but repeated
+// calls (one letter at a time, one cell at a time) turn it into an oracle
+// that reconstructs the whole solution — a real leak vector even without
+// returning puzzle content directly.
 export async function POST(request: NextRequest) {
+  if (!(await hasContentAccess())) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
   if (await checkLimiter.check(requestIp(request))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
