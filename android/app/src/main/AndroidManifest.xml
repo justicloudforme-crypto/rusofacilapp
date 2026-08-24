@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Dev-only, same reasoning as the NSAppTransportSecurity block in
+      ios/App/App/Info.plist: Android blocks cleartext (http://) traffic
+      by default since API 28, independent of capacitor.config.ts's
+      server.cleartext flag. Without this, the WebView can't reach
+      server.url (the LAN dev IP) at all. MUST be removed (or the app
+      switched to an HTTPS-only production origin) before a real Play
+      Store submission — Play Console flags this in its pre-launch report.
+    -->
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
