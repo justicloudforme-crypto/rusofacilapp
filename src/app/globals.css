@@ -91,6 +91,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  /* Kills the default gray flash Android/iOS WebViews (Capacitor included)
+     paint on every <a>/<button> tap — replaced by the deliberate .tap
+     press-state below, so taps get *our* feedback instead of the browser's
+     generic one, not silence. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Tailwind v4 custom utilities (see globals.css safe-area vars above) —
@@ -102,6 +107,24 @@ body {
 }
 @utility pb-safe {
   padding-bottom: var(--safe-bottom);
+}
+
+/* Shared tap-feedback utility — most interactive elements in this app only
+   styled a `hover:` state, which never fires on touch (iOS/Android/Capacitor
+   WebView), so tapping showed no reaction until something actually
+   navigated. Apply `.tap` alongside existing `hover:`/`transition-colors`
+   classes to add a real, immediate press response. `touch-manipulation`
+   also removes the ~300ms tap delay browsers otherwise add to detect
+   double-tap-to-zoom. AnswerPad.tsx/MatchBoard.tsx already used this exact
+   scale+touch-manipulation pattern by hand before this utility existed —
+   this generalizes it site-wide instead of reinventing it per component. */
+@utility tap {
+  touch-action: manipulation;
+  transition-property: transform, background-color, color, opacity, border-color;
+  transition-duration: 150ms;
+  &:active {
+    transform: scale(0.96);
+  }
 }
 
 /* Gamification micro-animations — pure CSS, no JS animation library, so

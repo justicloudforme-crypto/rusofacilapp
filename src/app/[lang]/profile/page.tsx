@@ -77,10 +77,21 @@ export default async function ProfilePage({
   const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
   const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
+  // Subscription reads are wrapped defensively: a schema-drift error here
+  // (e.g. a column pushed to the Prisma schema but not yet to the prod DB,
+  // see the 2026-08-23 incident) must not take down the whole profile page
+  // — badges/progress/referral etc. are unrelated and should still render.
+  // A failure degrades to "no subscription data" rather than a raw 500.
   const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges, weakTopic, referral, publicProfile, requestHeaders] =
     await Promise.all([
-      getLatestSubscription(user.id),
-      getSubscriptionHistory(user.id),
+      getLatestSubscription(user.id).catch((error) => {
+        console.error("profile: getLatestSubscription failed", error);
+        return null;
+      }),
+      getSubscriptionHistory(user.id).catch((error) => {
+        console.error("profile: getSubscriptionHistory failed", error);
+        return [];
+      }),
       getLevelProgress(user.id),
       getLessonProgressDetails(user.id),
       getExamAttempts(user.id),

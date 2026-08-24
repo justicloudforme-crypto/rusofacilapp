@@ -24,6 +24,24 @@ function getPreferredLocale(request: NextRequest): string {
   return defaultLocale;
 }
 
+// A DB error here (e.g. schema drift between prisma/schema.prisma and the
+// prod Turso DB, see the 2026-08-23 incident) must not 500 the middleware —
+// this gate runs on nearly every route, so an unhandled throw would take
+// down the whole site, not just one page. Fails closed (treated as "no
+// subscription") so a paywalled route degrades to a pricing redirect
+// instead of a raw 500, same behavior as a genuinely unsubscribed user.
+async function lookupSubscriptionSafely(userId: string) {
+  try {
+    return await db.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("proxy: subscription lookup failed", error);
+    return null;
+  }
+}
+
 function redirectToPricing(request: NextRequest, lang: string) {
   const url = request.nextUrl.clone();
   url.pathname = `/${lang}/pricing`;
@@ -62,10 +80,7 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   if (!user || user.sessionVersion !== parsed.sessionVersion) return redirectToPricing(request, lang);
   if (isStaff(user.role)) return null;
 
-  const subscription = await db.subscription.findFirst({
-    where: { userId: parsed.userId },
-    orderBy: { createdAt: "desc" },
-  });
+  const subscription = await lookupSubscriptionSafely(parsed.userId);
 
   if (!isSubscriptionActive(subscription)) return redirectToPricing(request, lang);
 
@@ -104,10 +119,7 @@ async function protectContentRoute(request: NextRequest, segments: string[]) {
   if (!user || user.sessionVersion !== parsed.sessionVersion) return redirectToPricing(request, lang);
   if (isStaff(user.role)) return null;
 
-  const subscription = await db.subscription.findFirst({
-    where: { userId: parsed.userId },
-    orderBy: { createdAt: "desc" },
-  });
+  const subscription = await lookupSubscriptionSafely(parsed.userId);
 
   if (!isSubscriptionActive(subscription)) return redirectToPricing(request, lang);
 

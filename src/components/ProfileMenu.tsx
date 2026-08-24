@@ -63,7 +63,7 @@ export default function ProfileMenu({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10"
+        className="tap flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10 active:bg-foreground/10"
       >
         <MatryoshkaAvatar id={avatarId} size={28} />
         {label}
@@ -84,7 +84,7 @@ export default function ProfileMenu({
               key={tab.id}
               href={`/${lang}/profile?tab=${tab.id}`}
               role="menuitem"
-              className="flex min-h-10 items-center rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10"
+              className="tap flex min-h-10 items-center rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
             >
               {tab.label}
             </Link>
