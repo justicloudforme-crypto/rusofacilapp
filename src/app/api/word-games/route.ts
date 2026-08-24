@@ -3,15 +3,12 @@ import type { NextRequest } from "next/server";
 import { isWordGameType } from "@/lib/word-games/types";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
-import { hasContentAccess } from "@/lib/entitlement";
+import { isEntitled, isFreeWordGamePuzzle } from "@/lib/entitlement";
 
-// Word games now require an active subscription (or staff), matching
-// /word-games's own gate in proxy.ts.
+// A non-entitled visitor can only load one of the fixed free-trial puzzles
+// (see isFreeWordGamePuzzle) — everything else 403s, same as before, just
+// no longer an unconditional block for every puzzle.
 export async function GET(request: NextRequest) {
-  if (!(await hasContentAccess())) {
-    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
-  }
-
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") ?? "";
   const level = searchParams.get("level") ?? "";
@@ -21,10 +18,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "invalid_params" }, { status: 400 });
   }
 
+  const entitled = await isEntitled();
+  if (!entitled && !isFreeWordGamePuzzle({ type, level, sequence })) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
+
   const puzzle = await getPuzzle(type, level, sequence);
   if (!puzzle) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  return NextResponse.json({ puzzle: toPublicPuzzle(puzzle) });
+  return NextResponse.json({ puzzle: toPublicPuzzle(puzzle), limited: !entitled });
 }

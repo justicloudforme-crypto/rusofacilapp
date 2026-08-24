@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { defaultLocale, isLocale, locales } from "@/i18n/config";
-import { isLessonSlug, isLevelSlug } from "@/lib/courses";
+import { isLessonSlug, isLevelSlug, isFreeTrialLesson } from "@/lib/courses";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
 import { db } from "@/lib/db";
 import { isSubscriptionActive } from "@/lib/subscription";
@@ -79,6 +79,7 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   // gate even if the cookie itself is still a validly-signed token.
   if (!user || user.sessionVersion !== parsed.sessionVersion) return redirectToPricing(request, lang);
   if (isStaff(user.role)) return null;
+  if (isFreeTrialLesson(level, lesson)) return null;
 
   const subscription = await lookupSubscriptionSafely(parsed.userId);
 
@@ -87,22 +88,28 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   return null;
 }
 
-// Sections that now require an active, non-expired subscription for every
-// route beneath them — including their own listing/catalog page, not just
-// individual pieces of content. Vocabulary/Media/Word games had no gate
-// at all before (open to every visitor); Stories had its own per-story
-// free/premium split (most stories were deliberately free), which this
-// supersedes — everything under /stories now needs a subscription too,
-// same bar as the other three sections.
-const GATED_SECTIONS = new Set(["vocabulary", "stories", "media", "word-games"]);
+// Sections that require an active, non-expired subscription for every
+// route beneath them, no exceptions — unlike Vocabulary/Stories/Word games
+// below, Media has no free-trial sample (see FREEMIUM.md) so it keeps the
+// blanket section-wide block this gate was originally built for.
+//
+// Vocabulary/Stories/Word games moved OFF this list on 2026-08-24 when the
+// free-trial model shipped: each now has its own fixed free sample enforced
+// deeper in the stack instead of a section-wide block —
+// GET /api/flashcards and GET /api/idioms cap results to FREE_TRIAL_LIMITS
+// for a non-entitled caller (src/lib/entitlement.ts), the story reader page
+// checks Story.isPremium per row (same mechanism that existed pre-2026-08-23,
+// un-superseded down to a curated 1-2 free stories — see
+// prisma/set-free-trial-stories.ts), and the word-game puzzle page checks
+// isFreeWordGamePuzzle. A blanket block here would make all of that
+// unreachable for exactly the visitors it's meant to reach.
+const GATED_SECTIONS = new Set(["media"]);
 
 /**
- * Gate for /{lang}/vocabulary, /{lang}/stories, /{lang}/media, and
- * /{lang}/word-games — every route under these four sections, not just
- * individual lessons/puzzles/stories. Mirrors protectLessonRoute's shape
- * (staff bypass, redirect to /pricing) but matches on the section name
- * alone rather than a specific nested pattern, since the whole section is
- * gated here rather than just its content pages.
+ * Gate for /{lang}/media — every route under this section. Mirrors
+ * protectLessonRoute's shape (staff bypass, redirect to /pricing) but
+ * matches on the section name alone rather than a specific nested pattern,
+ * since the whole section is gated here rather than just its content pages.
  */
 async function protectContentRoute(request: NextRequest, segments: string[]) {
   const [lang, section] = segments;

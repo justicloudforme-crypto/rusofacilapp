@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { userHasActiveSubscription } from "@/lib/subscription";
 import { getPuzzleById } from "@/lib/word-games/data";
+import { isFreeWordGamePuzzle } from "@/lib/entitlement";
 import { db } from "@/lib/db";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
 
@@ -20,10 +21,9 @@ const completeLimiter = getRateLimiter("word-games-complete", 60_000, 30);
 // security boundary, just progress bookkeeping.
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
-  // Word games now require an active subscription (or staff), matching
-  // the rest of this route family — a signed-in user without one has
-  // nothing legitimate to record here either.
-  if (!user || !(isStaff(user.role) || (await userHasActiveSubscription(user.id)))) {
+  // Progress is always per-user, so a logged-out free-trial visitor has
+  // nothing to record here regardless of which puzzle they solved.
+  if (!user) {
     return NextResponse.json({ recorded: false });
   }
 
@@ -42,6 +42,14 @@ export async function POST(request: NextRequest) {
   const puzzle = await getPuzzleById(puzzleId);
   if (!puzzle) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  // A logged-in, not-yet-subscribed user can still get credit for a
+  // free-trial puzzle (see isFreeWordGamePuzzle) — anything beyond that
+  // needs staff or an active subscription, same as the rest of this route
+  // family.
+  if (!isFreeWordGamePuzzle(puzzle) && !isStaff(user.role) && !(await userHasActiveSubscription(user.id))) {
+    return NextResponse.json({ recorded: false });
   }
 
   await db.wordGameProgress.upsert({

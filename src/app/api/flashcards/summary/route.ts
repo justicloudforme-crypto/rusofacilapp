@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isStaff } from "@/lib/roles";
-import { userHasActiveSubscription } from "@/lib/subscription";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
 
@@ -26,14 +24,13 @@ interface CategoryStat {
   known: number;
 }
 
+// Left public (unlike GET /api/flashcards, which caps actual card content
+// to the free-trial sample for non-entitled visitors): category totals are
+// just numbers, not the underlying words, and showing the full catalog size
+// to a free-trial visitor is the point — "here's how much more is behind
+// the paywall" — not something that needs gating.
 export async function GET(request: NextRequest) {
-  // Vocabulary now requires an active subscription (or staff) — same gate
-  // as GET /api/flashcards, checked with the user fetched below rather
-  // than duplicating the lookup via the shared hasContentAccess() helper.
   const user = await getCurrentUser();
-  if (!user || !(isStaff(user.role) || (await userHasActiveSubscription(user.id)))) {
-    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
-  }
 
   const levelParam = new URL(request.url).searchParams.get("level") ?? "";
   const level = levelParam && isFlashcardLevel(levelParam) ? levelParam : null;

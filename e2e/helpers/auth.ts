@@ -52,7 +52,16 @@ export async function loginWithSubscription(page: Page): Promise<void> {
       // the request context, not a page navigation, so it doesn't count
       // as the test's own first page load) and retry the whole
       // register+grant cycle if it hasn't.
-      const check = await page.context().request.get("/es/vocabulary");
+      //
+      // Probes /es/media specifically, not /es/vocabulary — since the
+      // 2026-08-24 free-trial model shipped, /vocabulary (and /stories,
+      // /word-games) no longer hard-redirect an unentitled visitor to
+      // /pricing at all (they render a limited free sample instead, see
+      // src/lib/entitlement.ts), so they can no longer detect a failed or
+      // not-yet-propagated grant this way. /media has no free-trial sample
+      // and keeps the original blanket subscription gate, so it's still a
+      // reliable "did the grant actually take" probe.
+      const check = await page.context().request.get("/es/media");
       if (!new URL(check.url()).pathname.includes("/pricing")) return;
     }
     if (attempt === maxAttempts) {

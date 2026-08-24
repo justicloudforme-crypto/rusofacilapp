@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
-import { hasContentAccess } from "@/lib/entitlement";
+import { isEntitled, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 
 const SEARCH_RESULT_LIMIT = 50;
 
@@ -50,26 +50,29 @@ function searchIndex(index: FlashcardRow[], query: string, level: string | null)
   return scored.slice(0, SEARCH_RESULT_LIMIT).map((entry) => entry.card);
 }
 
-// Vocabulary now requires an active subscription (or staff), matching the
-// /vocabulary page's own gate in proxy.ts — this route used to be public
-// on the theory that flashcards are reference content, not user data
-// (per-card "known" state lives separately in FlashcardProgress), but the
-// page-level gate alone doesn't stop a direct request here.
+// A non-entitled visitor (logged out, or logged in without an active
+// subscription) gets a fixed free sample instead of a hard 403 — the same
+// FREE_TRIAL_LIMITS.flashcards cards (the earliest-created ones, a stable
+// order) regardless of which category/level/search they try, so the trial
+// experience is consistent rather than "10 free results per query." Staff
+// and subscribers see the full bank, as before.
 export async function GET(request: NextRequest) {
-  if (!(await hasContentAccess())) {
-    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
-  }
+  const entitled = await isEntitled();
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") ?? "";
   const level = searchParams.get("level") ?? "";
   const search = (searchParams.get("search") ?? "").trim();
 
-  const index = await getFlashcardIndex();
+  const fullIndex = await getFlashcardIndex();
+  const index = entitled ? fullIndex : fullIndex.slice(0, FREE_TRIAL_LIMITS.flashcards);
   const levelFilter = level && isFlashcardLevel(level) ? level : null;
 
   if (search) {
-    return NextResponse.json({ cards: searchIndex(index, search, levelFilter) });
+    return NextResponse.json({
+      cards: searchIndex(index, search, levelFilter),
+      limited: !entitled,
+    });
   }
 
   const categoryFilter = category && isFlashcardCategory(category) ? category : null;
@@ -77,5 +80,5 @@ export async function GET(request: NextRequest) {
     (card) => (!categoryFilter || card.category === categoryFilter) && (!levelFilter || card.level === levelFilter)
   );
 
-  return NextResponse.json({ cards });
+  return NextResponse.json({ cards, limited: !entitled });
 }

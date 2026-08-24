@@ -19,6 +19,7 @@
     "db:set-owner": "tsx prisma/set-owner.ts",
     "db:seed-lessons": "tsx prisma/seed-lessons.ts",
     "db:seed-stories": "tsx prisma/seed-stories.ts",
+    "db:set-free-trial-stories": "tsx prisma/set-free-trial-stories.ts",
     "db:seed-glossary": "tsx prisma/seed-glossary.ts",
     "db:glossary-coverage-report": "tsx prisma/glossary-coverage-report.ts",
     "db:vocabulary-audit": "tsx prisma/vocabulary-idioms-audit.ts",

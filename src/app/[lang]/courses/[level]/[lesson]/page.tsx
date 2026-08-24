@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { isLevelSlug, isLessonSlug, lessonSlugsFor } from "@/lib/courses";
+import { isLevelSlug, isLessonSlug, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { userHasActiveSubscription } from "@/lib/subscription";
 import { isStaff } from "@/lib/roles";
@@ -20,7 +20,8 @@ export default async function LessonPage({
   // access control (a matcher change elsewhere shouldn't silently expose it).
   // Staff (owner/admin) bypass the subscription requirement entirely.
   const user = await getCurrentUser();
-  if (!user || (!isStaff(user.role) && !(await userHasActiveSubscription(user.id)))) {
+  const isFreeTrial = isFreeTrialLesson(level, lesson);
+  if (!user || (!isFreeTrial && !isStaff(user.role) && !(await userHasActiveSubscription(user.id)))) {
     redirect(`/${lang}/pricing?next=/${lang}/courses/${level}/${lesson}`);
   }
 

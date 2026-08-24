@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { IDIOM_LIST_CACHE_PREFIX, isIdiomCategory, isIdiomLevel } from "@/lib/idioms";
 import { cacheGet, cacheSet } from "@/lib/cache";
-import { hasContentAccess } from "@/lib/entitlement";
+import { isEntitled, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 
 // IMPORTANT: only the raw idiom rows go in this cache, never the audio join
 // below — same real, confirmed bug and fix as /api/glossary/route.ts (see
@@ -22,9 +22,7 @@ const IDIOM_CACHE_TTL_MS = 5 * 60_000;
 // gating idiom exposure by student level, per the content audit's
 // level-tagging gap).
 export async function GET(request: NextRequest) {
-  if (!(await hasContentAccess())) {
-    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
-  }
+  const entitled = await isEntitled();
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") ?? "";
@@ -48,8 +46,13 @@ export async function GET(request: NextRequest) {
     cacheSet(cacheKey, idioms, IDIOM_CACHE_TTL_MS);
   }
 
+  // Non-entitled visitors get a fixed free sample (the earliest-created
+  // idioms, a stable order) instead of a hard 403 — same "consistent taste
+  // of the product" approach as GET /api/flashcards.
+  const visibleIdioms = entitled ? idioms : idioms.slice(0, FREE_TRIAL_LIMITS.idioms);
+
   const audioRows = await db.audioAsset.findMany({
-    where: { contentType: "idiom", contentId: { in: idioms.map((idiom) => idiom.id) } },
+    where: { contentType: "idiom", contentId: { in: visibleIdioms.map((idiom) => idiom.id) } },
     select: { contentId: true, itemKey: true, audioUrl: true },
   });
   const phraseAudioById = new Map<string, string>();
@@ -58,11 +61,11 @@ export async function GET(request: NextRequest) {
     if (row.itemKey === "phrase") phraseAudioById.set(row.contentId, row.audioUrl);
     else if (row.itemKey === "context") contextAudioById.set(row.contentId, row.audioUrl);
   }
-  const withAudio = idioms.map((idiom) => ({
+  const withAudio = visibleIdioms.map((idiom) => ({
     ...idiom,
     audioUrl: phraseAudioById.get(idiom.id),
     contextExampleAudioUrl: contextAudioById.get(idiom.id),
   }));
 
-  return NextResponse.json({ idioms: withAudio });
+  return NextResponse.json({ idioms: withAudio, limited: !entitled });
 }
