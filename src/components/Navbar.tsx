@@ -74,12 +74,20 @@ export default async function Navbar({
       <div className="relative mx-auto flex max-w-5xl items-center px-6 py-4">
         <Link
           href={`/${lang}`}
-          className="mr-8 flex flex-shrink-0 items-center gap-2 font-serif text-lg font-bold tracking-tight sm:mr-12"
+          className="mr-6 flex flex-shrink-0 items-center gap-2 font-serif text-lg font-bold tracking-tight sm:mr-8"
         >
           <MatryoshkaMark size={26} />
           RusoFácilapp
         </Link>
-        <nav className="hidden flex-1 items-center gap-8 text-sm font-medium sm:flex">
+        {/* min-w-0 lets this shrink below its content's natural width
+            instead of forcing the header row wider than the viewport —
+            the flex-1 default (min-width: auto) doesn't allow that on its
+            own. gap tightens through the tablet-landscape range (~1024px)
+            where the full link set plus the logged-in right-side cluster
+            (sound/language/profile) doesn't fit at gap-8; found via a
+            real Playwright overflow check that only logged-in users hit,
+            since the right cluster is much narrower logged out. */}
+        <nav className="hidden min-w-0 flex-1 items-center gap-4 text-sm font-medium sm:flex lg:gap-6 xl:gap-8">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-brand">
               {link.label}
