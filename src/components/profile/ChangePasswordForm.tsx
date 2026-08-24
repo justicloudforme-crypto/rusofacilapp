@@ -80,7 +80,7 @@ export default function ChangePasswordForm({
         <button
           type="submit"
           disabled={status === "saving"}
-          className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:opacity-60"
+          className="tap rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:opacity-60"
         >
           {saveLabel}
         </button>

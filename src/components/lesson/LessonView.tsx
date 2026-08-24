@@ -77,7 +77,7 @@ export default function LessonView({
     <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
       <Link
         href={`/${lang}/courses/${level}`}
-        className="text-sm font-medium text-foreground/60 hover:text-foreground"
+        className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground"
       >
         ← {dict.backToLevel}
       </Link>
@@ -113,10 +113,10 @@ export default function LessonView({
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                className={`tap flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
                   tab === t.id
                     ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground"
+                    : "text-foreground/70 hover:text-foreground active:text-foreground"
                 }`}
               >
                 {t.label}
@@ -177,7 +177,7 @@ export default function LessonView({
 
       <div className="mt-10 flex items-center justify-between border-t border-black/10 pt-6 text-sm dark:border-white/10">
         {prevHref ? (
-          <Link href={prevHref} className="font-medium hover:text-foreground/70">
+          <Link href={prevHref} className="tap font-medium hover:text-foreground/70 active:text-foreground/70">
             ← {dict.previous}
           </Link>
         ) : (
@@ -185,7 +185,7 @@ export default function LessonView({
         )}
         {nextHref ? (
           passed ? (
-            <Link href={nextHref} className="font-medium hover:text-foreground/70">
+            <Link href={nextHref} className="tap font-medium hover:text-foreground/70 active:text-foreground/70">
               {dict.next} →
             </Link>
           ) : (

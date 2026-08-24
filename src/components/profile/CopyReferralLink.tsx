@@ -33,7 +33,7 @@ export default function CopyReferralLink({ link, copyLabel, copiedLabel }: {
       <button
         type="button"
         onClick={onCopy}
-        className="flex-shrink-0 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+        className="tap flex-shrink-0 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
       >
         {copied ? copiedLabel : copyLabel}
       </button>

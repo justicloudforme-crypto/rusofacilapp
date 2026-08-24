@@ -186,6 +186,14 @@ model Story {
   translationEs String?
   audioUrl      String?
   isPremium     Boolean  @default(false)
+  // Set the moment a staff member saves this row through /admin (see
+  // src/app/api/admin/stories/save) — marks it as human-reviewed content.
+  // Null means it has only ever been written by a seed/generation script.
+  // Batch content scripts (prisma/seed-stories.ts) must treat a non-null
+  // value as "do not silently overwrite" — added after a real incident
+  // where a re-run of a seed script clobbered a good human-reviewed
+  // Spanish translation with regenerated text. See CONTENT_INTEGRITY.md.
+  reviewedAt    DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -385,6 +393,9 @@ model GlossaryTerm {
   // table, not worth a join table).
   examples          String   @default("[]")
   relatedLessons    String   @default("[]")
+  // Same human-review marker as Story.reviewedAt — set on every /admin save,
+  // checked by prisma/seed-glossary.ts before overwriting an existing row.
+  reviewedAt        DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

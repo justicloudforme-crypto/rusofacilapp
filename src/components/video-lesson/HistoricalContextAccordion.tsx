@@ -16,7 +16,7 @@ function HistoricalContextAccordion({ sections }: { sections: HistoricalSection[
               type="button"
               onClick={() => setOpenId(isOpen ? null : section.id)}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium hover:bg-black/[.03] dark:hover:bg-white/[.05]"
+              className="tap flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium hover:bg-black/[.03] active:bg-black/[.03] dark:hover:bg-white/[.05] dark:active:bg-white/[.05]"
             >
               {section.title}
               <span className={`transition-transform ${isOpen ? "rotate-180" : ""}`}>⌄</span>

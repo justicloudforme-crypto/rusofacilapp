@@ -71,7 +71,7 @@ export default function WelcomeOverlay({
         <button
           type="button"
           onClick={() => setVisible(false)}
-          className="mt-2 rounded-full bg-brand px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-light"
+          className="tap mt-2 rounded-full bg-brand px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-light active:bg-brand-light"
         >
           {continueLabel}
         </button>

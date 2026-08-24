@@ -179,7 +179,7 @@ export default function VoiceRecorder({
           <button
             type="button"
             onClick={startRecording}
-            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-1.5 text-xs font-medium transition-colors hover:border-foreground/40 dark:border-white/20"
+            className="tap inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-1.5 text-xs font-medium transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/20"
           >
             🎙️ {dict.recordLabel}
           </button>
@@ -203,7 +203,7 @@ export default function VoiceRecorder({
             <button
               type="button"
               onClick={reset}
-              className="inline-flex items-center gap-1 rounded-full border border-black/15 px-3 py-1.5 text-xs font-medium transition-colors hover:border-foreground/40 dark:border-white/20"
+              className="tap inline-flex items-center gap-1 rounded-full border border-black/15 px-3 py-1.5 text-xs font-medium transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/20"
             >
               ↻ {dict.retryLabel}
             </button>
@@ -212,7 +212,7 @@ export default function VoiceRecorder({
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitState === "submitting" || submitState === "submitted"}
-                className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-colors hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-60"
+                className="tap inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitState === "submitting"
                   ? dict.submittingLabel

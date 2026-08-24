@@ -135,10 +135,10 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
         <button
           type="button"
           onClick={() => updateCategory("all")}
-          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+          className={`tap rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
             category === "all"
               ? "border-foreground bg-foreground text-background"
-              : "border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+              : "border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
           }`}
         >
           {dict.categoryAllLabel}
@@ -148,10 +148,10 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
             key={c}
             type="button"
             onClick={() => updateCategory(c)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+            className={`tap rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
               category === c
                 ? "border-foreground bg-foreground text-background"
-                : "border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+                : "border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
             {dict.categoryLabels[c]}
@@ -163,10 +163,10 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
         <button
           type="button"
           onClick={() => updateLevel("all")}
-          className={`rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
+          className={`tap rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
             level === "all"
               ? "border-brand bg-brand text-white dark:border-brand-light dark:bg-brand-light"
-              : "border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+              : "border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
           }`}
         >
           {dict.levelAllLabel}
@@ -176,10 +176,10 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
             key={l}
             type="button"
             onClick={() => updateLevel(l)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
+            className={`tap rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
               level === l
                 ? "border-brand bg-brand text-white dark:border-brand-light dark:bg-brand-light"
-                : "border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+                : "border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
             {l}

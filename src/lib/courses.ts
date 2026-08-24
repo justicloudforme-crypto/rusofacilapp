@@ -38,3 +38,15 @@ export function isLessonSlug(level: string, value: string): boolean {
   const n = Number(value);
   return Number.isInteger(n) && n >= 1 && n <= lessonsPerLevel[level];
 }
+
+/** The one lesson every visitor can take without an active subscription —
+ * still requires a real account (lesson progress/exercise state is always
+ * per-user, see the LessonProgress model), but not a paid one. Checked in
+ * src/proxy.ts's protectLessonRoute, the lesson page itself, and
+ * POST /api/progress, which all otherwise enforce the same subscription
+ * gate. Kept here rather than in src/lib/entitlement.ts so proxy.ts (which
+ * must stay Node-runtime-light) doesn't need to pull that file's
+ * auth/subscription import graph in just for this one pure check. */
+export function isFreeTrialLesson(level: string, lesson: string): boolean {
+  return level === "a1" && lesson === "1";
+}

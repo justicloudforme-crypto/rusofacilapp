@@ -50,7 +50,7 @@ function SubtitleLineRow({
           onSeek(line);
         }
       }}
-      className={`flex cursor-pointer flex-col gap-1 rounded-xl px-3 py-2 text-left transition-colors hover:bg-foreground/5 ${
+      className={`tap flex cursor-pointer flex-col gap-1 rounded-xl px-3 py-2 text-left transition-colors hover:bg-foreground/5 active:bg-foreground/5 ${
         isActive ? "bg-foreground/10" : ""
       }`}
     >
@@ -80,7 +80,7 @@ function SubtitleLineRow({
                       event.stopPropagation();
                       onToggleWord(wordId);
                     }}
-                    className="rounded px-0.5 underline decoration-dotted decoration-2 underline-offset-4 transition-colors hover:bg-foreground/10"
+                    className="tap rounded px-0.5 underline decoration-dotted decoration-2 underline-offset-4 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
                   >
                     {token}
                   </button>

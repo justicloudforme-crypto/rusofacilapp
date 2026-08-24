@@ -48,7 +48,7 @@ export default function CategoryGrid({
               key={category}
               type="button"
               onClick={() => onSelectCategory(category)}
-              className="relative flex flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 dark:border-white/10"
+              className="tap relative flex flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
             >
               {nextLevel && (
                 <span

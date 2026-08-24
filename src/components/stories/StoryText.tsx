@@ -905,7 +905,7 @@ export default function StoryText({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => handleSentenceClick(queueIndex)}
                   onKeyDown={(event) => handleSentenceKeyDown(event, queueIndex)}
-                  className={`rounded transition-colors ${canPlay ? "cursor-pointer hover:bg-foreground/5" : ""} ${
+                  className={`rounded transition-colors ${canPlay ? "tap cursor-pointer hover:bg-foreground/5 active:bg-foreground/5" : ""} ${
                     readingQueueIndex === queueIndex ? "bg-amber-400/20 dark:bg-amber-400/10" : ""
                   } ${
                     resumeQueueIndex === queueIndex
@@ -919,7 +919,7 @@ export default function StoryText({
                         key={tokenIndex}
                         type="button"
                         onClick={(event) => handleWordClick(token, event)}
-                        className={`rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 focus:outline-none ${
+                        className={`tap rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 active:bg-foreground/10 focus:outline-none ${
                           playing && readingQueueIndex === queueIndex && readingToken === tokenIndex
                             ? "bg-amber-400/40 dark:bg-amber-400/30"
                             : ""
@@ -966,7 +966,7 @@ export default function StoryText({
                 type="button"
                 onClick={close}
                 aria-label={dict.closeLabel}
-                className="text-foreground/50 hover:text-foreground"
+                className="tap text-foreground/50 hover:text-foreground active:text-foreground"
               >
                 ✕
               </button>

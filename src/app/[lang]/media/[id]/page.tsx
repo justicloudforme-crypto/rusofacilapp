@@ -34,7 +34,7 @@ export default async function MediaDetailPage({
 
   return (
     <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
-      <Link href={`/${lang}/media`} className="text-sm font-medium text-foreground/60 hover:text-foreground">
+      <Link href={`/${lang}/media`} className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground">
         ← {dict.media.backToList}
       </Link>
 

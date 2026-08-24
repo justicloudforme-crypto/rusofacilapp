@@ -43,10 +43,10 @@ export default function ThemeSwitcher({
           type="button"
           onClick={() => selectTheme(option.id)}
           aria-pressed={theme === option.id}
-          className={`flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-colors ${
+          className={`tap flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-colors ${
             theme === option.id
               ? "border-brand bg-brand/5"
-              : "border-black/10 hover:bg-black/[.03] dark:border-white/15 dark:hover:bg-white/[.05]"
+              : "border-black/10 hover:bg-black/[.03] active:bg-black/[.03] dark:border-white/15 dark:hover:bg-white/[.05] dark:active:bg-white/[.05]"
           }`}
         >
           <span className="flex items-center gap-2">

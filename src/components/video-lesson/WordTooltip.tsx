@@ -11,7 +11,7 @@ export default function WordTooltip({ gloss, onClose }: { gloss: WordGloss; onCl
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="text-foreground/40 hover:text-foreground/70"
+          className="tap text-foreground/40 hover:text-foreground/70 active:text-foreground/70"
         >
           ×
         </button>

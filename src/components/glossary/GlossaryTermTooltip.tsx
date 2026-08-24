@@ -69,7 +69,7 @@ export default function GlossaryTermTooltip({
         type="button"
         onClick={toggle}
         aria-expanded={open}
-        className="cursor-help border-b border-dotted border-foreground/40 font-medium text-foreground underline-offset-2 hover:border-foreground/70"
+        className="tap cursor-help border-b border-dotted border-foreground/40 font-medium text-foreground underline-offset-2 hover:border-foreground/70 active:border-foreground/70"
       >
         {children}
       </button>

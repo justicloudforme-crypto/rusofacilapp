@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getLessonAttempt, saveLessonAttempt } from "@/lib/progress";
-import { isLevelSlug, isLessonSlug } from "@/lib/courses";
+import { isLevelSlug, isLessonSlug, isFreeTrialLesson } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
 import { userHasActiveSubscription } from "@/lib/subscription";
@@ -44,18 +44,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  // Same access rule as the lesson page itself (src/app/[lang]/courses/[level]/[lesson]/page.tsx)
-  // — every lesson is behind the paywall, so recording an attempt without
-  // one is either a stale session or a client bypassing the page's gate;
-  // either way, this must not let a non-subscriber fabricate lesson
-  // completions that then feed badges, streaks, and public leaderboards.
-  if (!isStaff(user.role) && !(await userHasActiveSubscription(user.id))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   const body = await request.json().catch(() => null);
   const level = typeof body?.level === "string" ? body.level : "";
   const lesson = typeof body?.lesson === "string" ? body.lesson : "";
+
+  // Same access rule as the lesson page itself (src/app/[lang]/courses/[level]/[lesson]/page.tsx)
+  // — every lesson except the free-trial one is behind the paywall, so
+  // recording an attempt elsewhere without a subscription is either a
+  // stale session or a client bypassing the page's gate; either way, this
+  // must not let a non-subscriber fabricate lesson completions that then
+  // feed badges, streaks, and public leaderboards.
+  if (!isStaff(user.role) && !isFreeTrialLesson(level, lesson) && !(await userHasActiveSubscription(user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const score =
     typeof body?.score === "number" && Number.isFinite(body.score)
       ? Math.max(0, Math.min(100, Math.round(body.score)))

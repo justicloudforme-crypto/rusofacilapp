@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getPuzzleById, crosswordLetterMap } from "@/lib/word-games/data";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
-import { hasContentAccess } from "@/lib/entitlement";
+import { isEntitled, isFreeWordGamePuzzle } from "@/lib/entitlement";
 
 interface GuessCell {
   row: number;
@@ -26,9 +26,6 @@ const checkLimiter = getRateLimiter("word-games-check", 60_000, 120);
 // that reconstructs the whole solution — a real leak vector even without
 // returning puzzle content directly.
 export async function POST(request: NextRequest) {
-  if (!(await hasContentAccess())) {
-    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
-  }
   if (await checkLimiter.check(requestIp(request))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -44,6 +41,10 @@ export async function POST(request: NextRequest) {
   const puzzle = await getPuzzleById(puzzleId);
   if (!puzzle || puzzle.type !== "CROSSWORD") {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  if (!isFreeWordGamePuzzle(puzzle) && !(await isEntitled())) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
   }
 
   const answers = crosswordLetterMap(puzzle);

@@ -13,13 +13,13 @@ export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale 
         </div>
         <p>{dict.footer.tagline}</p>
         <div className="flex items-center gap-4">
-          <Link href={`/${lang}/download`} className="hover:text-foreground/80">
+          <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.appLink}
           </Link>
-          <Link href={`/${lang}/terms`} className="hover:text-foreground/80">
+          <Link href={`/${lang}/terms`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.termsLink}
           </Link>
-          <Link href={`/${lang}/privacy`} className="hover:text-foreground/80">
+          <Link href={`/${lang}/privacy`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.privacyLink}
           </Link>
         </div>

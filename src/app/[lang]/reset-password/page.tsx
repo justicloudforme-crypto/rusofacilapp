@@ -52,7 +52,7 @@ export default async function ResetPasswordPage({
           </label>
           <button
             type="submit"
-            className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
           >
             {dict.auth.resetSubmit}
           </button>

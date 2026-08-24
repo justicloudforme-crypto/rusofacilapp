@@ -38,10 +38,10 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
           key={locale}
           href={withLocale(pathname, search, locale)}
           aria-current={locale === current}
-          className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium transition-colors ${
+          className={`tap flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium transition-colors ${
             locale === current
               ? "bg-foreground text-background"
-              : "text-foreground/70 hover:text-foreground"
+              : "text-foreground/70 hover:text-foreground active:text-foreground"
           }`}
         >
           <span aria-hidden>{localeFlags[locale]}</span>

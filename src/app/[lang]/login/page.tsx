@@ -72,7 +72,7 @@ export default async function LoginPage({
           </label>
           <button
             type="submit"
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-light"
+            className="tap rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-light active:bg-brand-light"
           >
             {dict.auth.submit}
           </button>
@@ -80,13 +80,13 @@ export default async function LoginPage({
 
         <Link
           href={`/${lang}/forgot-password`}
-          className="mt-4 block text-center text-sm text-foreground/70 hover:text-brand"
+          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-brand active:text-brand"
         >
           {dict.auth.forgotPasswordLink}
         </Link>
         <Link
           href={`/${lang}/register?redirectTo=${encodeURIComponent(redirectTo)}`}
-          className="mt-2 block text-center text-sm text-foreground/70 hover:text-brand"
+          className="tap mt-2 block text-center text-sm text-foreground/70 hover:text-brand active:text-brand"
         >
           {dict.auth.noAccountLink}
         </Link>

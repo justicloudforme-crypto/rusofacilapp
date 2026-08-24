@@ -20,9 +20,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
+  // A staff save is exactly the "human reviewed this" signal — stamping it
+  // here means seed/generation scripts (prisma/seed-stories.ts) can tell a
+  // hand-edited row apart from one that's only ever seen batch content and
+  // refuse to silently overwrite it.
+  const data = { ...result.value, reviewedAt: new Date() };
   const story = id
-    ? await db.story.update({ where: { id }, data: result.value })
-    : await db.story.create({ data: result.value });
+    ? await db.story.update({ where: { id }, data })
+    : await db.story.create({ data });
   await invalidateStoryCatalogCache();
 
   return NextResponse.json({ ok: true, id: story.id });

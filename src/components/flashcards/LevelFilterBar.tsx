@@ -32,10 +32,10 @@ export default function LevelFilterBar({
         type="button"
         onClick={() => onChange("all")}
         disabled={disabled}
-        className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+        className={`tap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
           value === "all"
             ? "bg-foreground text-background"
-            : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+            : "border border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
         }`}
       >
         {dict.levelAll}
@@ -46,10 +46,10 @@ export default function LevelFilterBar({
           type="button"
           onClick={() => onChange(lvl)}
           disabled={disabled}
-          className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+          className={`tap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
             value === lvl
               ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/60 hover:text-foreground dark:border-white/15"
+              : "border border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
           }`}
         >
           {lvl}

@@ -76,7 +76,7 @@ export default function MobileMenu({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={open ? closeLabel : openLabel}
-        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-brand/10"
+        className="tap flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-brand/10 active:bg-brand/10"
       >
         <span className="relative flex h-4 w-5 flex-col justify-between" aria-hidden>
           <span
@@ -116,7 +116,7 @@ export default function MobileMenu({
                 <>
                   <Link
                     href={`/${lang}/profile`}
-                    className="flex min-h-14 items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 px-3 transition-colors hover:bg-brand/10"
+                    className="tap flex min-h-14 items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 px-3 transition-colors hover:bg-brand/10 active:bg-brand/10"
                   >
                     <MatryoshkaAvatar id={user.avatarId} size={36} />
                     <span className="min-w-0 flex-1">
@@ -131,7 +131,7 @@ export default function MobileMenu({
                       <Link
                         key={tab.id}
                         href={`/${lang}/profile?tab=${tab.id}`}
-                        className="flex min-h-11 items-center rounded-lg px-3 text-sm text-foreground/75 transition-colors hover:bg-foreground/10"
+                        className="tap flex min-h-11 items-center rounded-lg px-3 text-sm text-foreground/75 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
                       >
                         {tab.label}
                       </Link>
@@ -141,7 +141,7 @@ export default function MobileMenu({
               ) : (
                 <Link
                   href={loggedOutHref}
-                  className="flex min-h-12 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-light"
+                  className="tap flex min-h-12 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-light active:bg-brand-light"
                 >
                   {loggedOutLabel}
                 </Link>
@@ -157,7 +157,7 @@ export default function MobileMenu({
                       <Link
                         key={link.href}
                         href={link.href}
-                        className="flex min-h-11 items-center rounded-lg px-3 text-base font-medium text-foreground/85 transition-colors hover:bg-brand/10"
+                        className="tap flex min-h-11 items-center rounded-lg px-3 text-base font-medium text-foreground/85 transition-colors hover:bg-brand/10 active:bg-brand/10"
                       >
                         {link.label}
                       </Link>
@@ -171,7 +171,7 @@ export default function MobileMenu({
                   <input type="hidden" name="lang" value={lang} />
                   <button
                     type="submit"
-                    className="flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm text-brand-accent transition-colors hover:bg-brand-accent/10"
+                    className="tap flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm text-brand-accent transition-colors hover:bg-brand-accent/10 active:bg-brand-accent/10"
                   >
                     {logoutLabel}
                   </button>

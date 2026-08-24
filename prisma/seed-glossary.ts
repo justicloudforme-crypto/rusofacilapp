@@ -7,11 +7,19 @@
  *
  * Safe to re-run: upserts by slug.
  *
+ * SAFE BY DEFAULT: a term a staff member has hand-edited through /admin
+ * (GlossaryTerm.reviewedAt set — see src/app/api/admin/glossary/save) is
+ * skipped, not overwritten, even if this file's own data disagrees. Pass
+ * --force to overwrite reviewed rows anyway. See CONTENT_INTEGRITY.md.
+ *
  *   npm run db:seed-glossary
+ *   npm run db:seed-glossary -- --force
  */
 import "dotenv/config";
 import { db } from "../src/lib/db";
 import { validateGlossaryInput, type GlossaryCategory, type GlossaryExample } from "../src/lib/glossary";
+
+const FORCE = process.argv.includes("--force");
 
 interface SeedTerm {
   slug: string;
@@ -1455,6 +1463,7 @@ const terms: SeedTerm[] = [
 ];
 
 async function main() {
+  let skipped = 0;
   for (const term of terms) {
     const result = validateGlossaryInput(term);
     if (!result.valid) {
@@ -1466,13 +1475,20 @@ async function main() {
       relatedLessons: JSON.stringify(result.value.relatedLessons),
       examples: JSON.stringify(result.value.examples),
     };
-    await db.glossaryTerm.upsert({
-      where: { slug: result.value.slug },
-      update: data,
-      create: data,
-    });
+
+    const existing = await db.glossaryTerm.findUnique({ where: { slug: result.value.slug } });
+    if (existing) {
+      if (existing.reviewedAt && !FORCE) {
+        console.warn(`⚠ Skipping "${term.term}" — hand-reviewed on ${existing.reviewedAt.toISOString()}, re-run with --force to overwrite anyway.`);
+        skipped++;
+        continue;
+      }
+      await db.glossaryTerm.update({ where: { slug: result.value.slug }, data });
+    } else {
+      await db.glossaryTerm.create({ data });
+    }
   }
-  console.log(`✔ Seeded ${terms.length} glossary term(s).`);
+  console.log(`✔ Seeded ${terms.length - skipped} glossary term(s), ${skipped} skipped (reviewed).`);
 }
 
 main()

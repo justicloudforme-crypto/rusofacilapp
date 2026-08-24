@@ -65,7 +65,7 @@ export default function DeleteAccountForm({
         <button
           type="submit"
           disabled={status === "sending"}
-          className="w-fit rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+          className="tap w-fit rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 active:bg-red-700 disabled:opacity-60"
         >
           {submitLabel}
         </button>

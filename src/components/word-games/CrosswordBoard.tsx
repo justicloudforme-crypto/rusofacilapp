@@ -239,7 +239,7 @@ export default function CrosswordBoard({
           type="button"
           onClick={handleHint}
           disabled={!activeCell}
-          className="w-fit self-center rounded-full border border-brand px-4 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand/10 disabled:cursor-not-allowed disabled:opacity-40 md:self-start"
+          className="tap w-fit self-center rounded-full border border-brand px-4 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand/10 active:bg-brand/10 disabled:cursor-not-allowed disabled:opacity-40 md:self-start"
         >
           {dict.hintButton}
         </button>
@@ -290,8 +290,8 @@ function ClueList({
             <button
               type="button"
               onClick={() => onClick(word)}
-              className={`flex w-full items-start gap-2 rounded-lg px-2 py-1 text-left transition-colors ${
-                isActive ? "bg-brand/10" : "hover:bg-brand/5"
+              className={`tap flex w-full items-start gap-2 rounded-lg px-2 py-1 text-left transition-colors ${
+                isActive ? "bg-brand/10" : "hover:bg-brand/5 active:bg-brand/5"
               } ${solved ? "text-emerald-600 line-through dark:text-emerald-400" : ""}`}
             >
               <span className="font-semibold">{word.number}.</span>

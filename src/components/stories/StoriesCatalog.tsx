@@ -65,10 +65,10 @@ export default function StoriesCatalog({
         <button
           type="button"
           onClick={() => { setFilter("all"); setVisibleCount(PAGE_SIZE); }}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             filter === "all"
               ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
           }`}
         >
           {dict.filterAll}
@@ -78,10 +78,10 @@ export default function StoriesCatalog({
             key={level}
             type="button"
             onClick={() => { setFilter(level); setVisibleCount(PAGE_SIZE); }}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               filter === level
                 ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/70 hover:text-foreground dark:border-white/15"
+                : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
             {level}
@@ -99,7 +99,7 @@ export default function StoriesCatalog({
               <Link
                 key={story.id}
                 href={`/${lang}/stories/${story.id}`}
-                className="group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 dark:border-white/10"
+                className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
               >
                 <div className="flex items-center justify-between gap-2">
                   <LevelBadge level={story.level} />
@@ -149,7 +149,7 @@ export default function StoriesCatalog({
           <button
             type="button"
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-            className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 dark:border-white/15"
+            className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/15"
           >
             {dict.loadMoreButton.replace("{count}", String(remaining))}
           </button>
