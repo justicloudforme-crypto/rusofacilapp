@@ -15,15 +15,20 @@ export default async function StoryReaderPage({
   const { lang, id } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
-  const story = await db.story.findUnique({ where: { id } });
+  // Independent reads collapsed into one round trip instead of 3 sequential
+  // ones — dict/story/user don't depend on each other, only the
+  // subscription check below depends on `user`.
+  const [dict, story, user] = await Promise.all([
+    getDictionary(lang),
+    db.story.findUnique({ where: { id } }),
+    getCurrentUser(),
+  ]);
   if (!story) notFound();
 
   // Non-premium stories are open to everyone, no login required. Premium
   // stories need either staff access or an active subscription — checked
   // here (not just via a client-side flag) so the full text/audio never
   // reaches the browser for a non-entitled reader.
-  const user = await getCurrentUser();
   const entitled =
     !story.isPremium ||
     Boolean(user && (isStaff(user.role) || (await userHasActiveSubscription(user.id))));

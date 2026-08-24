@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "../db";
 import type { MistakeDetail } from "../lessons/scoring";
+import { cached, getOrCreateGlobalSingleton, TtlCache } from "../ttl-cache";
 
 export interface ExamSkillBreakdown {
   earned: number;
@@ -34,6 +35,7 @@ export async function recordExamAttempt(
       breakdown: JSON.stringify(breakdown),
     },
   });
+  await invalidateExamAttemptsCache(userId);
   return { percentage, passed };
 }
 
@@ -49,32 +51,54 @@ export interface ExamAttemptSummary {
   completedAt: Date;
 }
 
+// Read on every /profile render AND on every progress-affecting write (via
+// awardBadgesSafely's badge evaluation) — cached like getUserStreakStats,
+// but with an explicit invalidation on write instead of relying purely on
+// TTL: a student finishing an exam and immediately checking /profile must
+// see that attempt right away, not wait out a stale window.
+const examAttemptsCache = getOrCreateGlobalSingleton(
+  "examAttemptsCache",
+  () => new TtlCache<ExamAttemptSummary[]>(60_000, "exam-attempts")
+);
+
+function reviveExamAttemptDates(rows: ExamAttemptSummary[]): ExamAttemptSummary[] {
+  return rows.map((row) => ({ ...row, completedAt: new Date(row.completedAt) }));
+}
+
+export async function invalidateExamAttemptsCache(userId: string): Promise<void> {
+  await examAttemptsCache.del(userId);
+}
+
 /** Every exam attempt a student has made, newest first — for the /profile
  * "resultados de exámenes" section. */
 export async function getExamAttempts(userId: string): Promise<ExamAttemptSummary[]> {
-  const rows = await db.examAttempt.findMany({
-    where: { userId },
-    orderBy: { completedAt: "desc" },
+  const rows = await cached(examAttemptsCache, userId, async () => {
+    const dbRows = await db.examAttempt.findMany({
+      where: { userId },
+      orderBy: { completedAt: "desc" },
+    });
+
+    return dbRows.map((row) => {
+      let breakdown: Record<string, ExamSkillBreakdown> = {};
+      try {
+        const parsed = JSON.parse(row.breakdown);
+        if (parsed && typeof parsed === "object") breakdown = parsed;
+      } catch {
+        breakdown = {};
+      }
+      return {
+        id: row.id,
+        level: row.level,
+        examSlug: row.examSlug,
+        earned: row.earned,
+        total: row.total,
+        percentage: row.percentage,
+        passed: row.passed,
+        breakdown,
+        completedAt: row.completedAt,
+      };
+    });
   });
 
-  return rows.map((row) => {
-    let breakdown: Record<string, ExamSkillBreakdown> = {};
-    try {
-      const parsed = JSON.parse(row.breakdown);
-      if (parsed && typeof parsed === "object") breakdown = parsed;
-    } catch {
-      breakdown = {};
-    }
-    return {
-      id: row.id,
-      level: row.level,
-      examSlug: row.examSlug,
-      earned: row.earned,
-      total: row.total,
-      percentage: row.percentage,
-      passed: row.passed,
-      breakdown,
-      completedAt: row.completedAt,
-    };
-  });
+  return reviveExamAttemptDates(rows);
 }

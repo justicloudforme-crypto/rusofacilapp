@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getLessonAttempt, saveLessonAttempt } from "@/lib/progress";
@@ -78,7 +78,11 @@ export async function POST(request: NextRequest) {
   }
 
   await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers);
-  await awardBadgesSafely(user.id);
+  // Deferred via after() — see flashcard-progress/route.ts's comment for
+  // why. This route fires on every "Comprobar" click, pass or fail, so
+  // awaiting the full badge-evaluation scan here added it to every single
+  // exercise check's response time.
+  after(() => awardBadgesSafely(user.id));
 
   return NextResponse.json({ ok: true });
 }

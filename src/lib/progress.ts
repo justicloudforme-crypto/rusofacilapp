@@ -42,6 +42,47 @@ export async function getLevelProgress(
   return result;
 }
 
+/** Same shape as {@link getLevelProgress}, batched for every userId in one
+ * query instead of one `findMany` per user — used by the group leaderboard
+ * (see groups.ts's getGroupForMember), which previously called
+ * getLevelProgress once per member (up to MAX_GROUP_MEMBERS = 30 sequential
+ * Turso round trips to render one page). */
+export async function getLevelProgressForUsers(
+  userIds: string[],
+): Promise<Map<string, Record<LevelSlug, LevelProgress>>> {
+  const rows = await db.lessonProgress.findMany({
+    where: { userId: { in: userIds }, passed: true },
+    select: { userId: true, level: true, lessonSlug: true },
+  });
+
+  const completedByUserLevel = new Map<string, Map<string, Set<string>>>();
+  for (const row of rows) {
+    const byLevel = completedByUserLevel.get(row.userId) ?? new Map<string, Set<string>>();
+    const set = byLevel.get(row.level) ?? new Set<string>();
+    set.add(row.lessonSlug);
+    byLevel.set(row.level, set);
+    completedByUserLevel.set(row.userId, byLevel);
+  }
+
+  const result = new Map<string, Record<LevelSlug, LevelProgress>>();
+  for (const userId of userIds) {
+    const byLevel = completedByUserLevel.get(userId);
+    const perLevel = {} as Record<LevelSlug, LevelProgress>;
+    for (const level of levelSlugs) {
+      const completed = byLevel?.get(level)?.size ?? 0;
+      const total = lessonsPerLevel[level];
+      perLevel[level] = {
+        level,
+        completed,
+        total,
+        percent: Math.round((completed / total) * 100),
+      };
+    }
+    result.set(userId, perLevel);
+  }
+  return result;
+}
+
 /** Saves an exercise attempt — called on every "Comprobar" check, pass or
  * fail, so a student who leaves mid-lesson (or fails) can pick up exactly
  * where they left off instead of losing the attempt. Upserted: only the

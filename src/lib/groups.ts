@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./db";
-import { getLevelProgress } from "./progress";
+import { getLevelProgressForUsers } from "./progress";
 import { levelSlugs } from "./courses";
 import { isAvatarId, DEFAULT_AVATAR_ID, type AvatarId } from "./avatars";
 import { generateShortCode, isPlausibleShortCode } from "./short-code";
@@ -168,21 +168,24 @@ export async function getGroupForMember(userId: string, groupId: string): Promis
   });
   if (!group) return null;
 
-  const members = await Promise.all(
-    group.members.map(async ({ user }): Promise<GroupMemberStanding> => {
-      const progress = await getLevelProgress(user.id);
-      const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0) ?? null;
-      const completedLessons = levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0);
-      return {
-        userId: user.id,
-        name: user.name,
-        avatarId: isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID,
-        isOwner: user.id === group.ownerUserId,
-        currentLevel,
-        completedLessons,
-      };
-    }),
-  );
+  // One batched query for every member's progress instead of one
+  // getLevelProgress call per member — up to MAX_GROUP_MEMBERS (30)
+  // sequential Turso round trips collapsed into a single query.
+  const progressByUser = await getLevelProgressForUsers(group.members.map(({ user }) => user.id));
+
+  const members: GroupMemberStanding[] = group.members.map(({ user }) => {
+    const progress = progressByUser.get(user.id)!;
+    const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0) ?? null;
+    const completedLessons = levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0);
+    return {
+      userId: user.id,
+      name: user.name,
+      avatarId: isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID,
+      isOwner: user.id === group.ownerUserId,
+      currentLevel,
+      completedLessons,
+    };
+  });
 
   // Most progress first — the whole point of a shared leaderboard is a
   // gentle nudge toward the top, so ordering carries real meaning here.
