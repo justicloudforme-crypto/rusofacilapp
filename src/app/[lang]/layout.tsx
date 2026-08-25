@@ -13,6 +13,7 @@ import TelegramFloatButton from "@/components/TelegramFloatButton";
 import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
 import NativeBackButtonHandler from "@/components/NativeBackButtonHandler";
+import SerwistRegister from "@/components/SerwistRegister";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { PaywallProvider } from "@/contexts/PaywallContext";
@@ -117,7 +118,9 @@ export default async function LangLayout({
       className={`${ptSans.variable} ${ptSerif.variable} ${ptMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} />
+        <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} register={false}>
+          <SerwistRegister />
+        </SerwistProvider>
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
         <OfflineBanner message={dict.offline.bannerMessage} />
