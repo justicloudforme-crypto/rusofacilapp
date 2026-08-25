@@ -6,6 +6,7 @@ import { getLevelProgress } from "./progress";
 import { levelSlugs, type LevelSlug } from "./courses";
 import { isAvatarId, DEFAULT_AVATAR_ID, type AvatarId } from "./avatars";
 import { generateShortCode, isPlausibleShortCode } from "./short-code";
+import { getLatestSubscription, isSubscriptionActive } from "./subscription";
 
 // Lowercase + digits, no ambiguous characters — this ends up in a URL
 // (/u/handle), so it should be comfortable to read and type, unlike the
@@ -78,6 +79,9 @@ export async function setPublicProfileEnabled(userId: string, enabled: boolean):
 export interface PublicProfileData {
   name: string | null;
   avatarId: AvatarId;
+  /** Active Premium (lifetime) plan — drives the gold ring/crown on this
+   * profile's avatar, see MatryoshkaAvatar.tsx's `premium` prop. */
+  isPremium: boolean;
   currentLevel: LevelSlug | null;
   currentStreak: number;
   longestStreak: number;
@@ -101,10 +105,11 @@ export async function getPublicProfileData(handle: string): Promise<PublicProfil
   });
   if (!user || !user.publicProfileEnabled) return null;
 
-  const [progress, streak, badges] = await Promise.all([
+  const [progress, streak, badges, subscription] = await Promise.all([
     getLevelProgress(user.id),
     getUserStreakStats(user.id),
     getUserBadgesForDisplay(user.id),
+    getLatestSubscription(user.id),
   ]);
 
   const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0) ?? null;
@@ -112,6 +117,7 @@ export async function getPublicProfileData(handle: string): Promise<PublicProfil
   return {
     name: user.name,
     avatarId: isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID,
+    isPremium: subscription?.plan === "lifetime" && isSubscriptionActive(subscription),
     currentLevel,
     currentStreak: streak.currentStreak,
     longestStreak: streak.longestStreak,

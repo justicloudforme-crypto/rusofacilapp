@@ -15,6 +15,8 @@ function PlanCard({
   features,
   featuresTitle,
   highlighted,
+  premium,
+  valueNote,
   oxxoPrice,
   oxxoCta,
   oxxoNote,
@@ -32,6 +34,15 @@ function PlanCard({
   features: string[];
   featuresTitle: string;
   highlighted?: boolean;
+  /** The lifetime plan's own accent (amber/crown), distinct from
+   * `highlighted` (the brand accent used to steer most visitors toward
+   * annual) — the two are mutually exclusive in practice since only one
+   * card is ever the "best value for most people" vs. "the one-time,
+   * everything-forever plan". */
+  premium?: boolean;
+  /** Short cost-comparison line shown under the price — only the lifetime
+   * plan has one (see dict.pricing.lifetime.valueNote). */
+  valueNote?: string;
   // Undefined for the lifetime plan: it's card-only, no OXXO one-time-cash
   // option (see plans.ts) — the button is simply not rendered for it.
   oxxoPrice?: string;
@@ -43,17 +54,24 @@ function PlanCard({
       className={`relative flex flex-col rounded-2xl border p-8 ${
         highlighted
           ? "border-brand bg-brand/5 shadow-lg shadow-brand/10 sm:scale-[1.03]"
-          : "border-black/10 dark:border-white/10"
+          : premium
+            ? "border-amber-500/40 bg-amber-500/5 shadow-lg shadow-amber-500/10"
+            : "border-black/10 dark:border-white/10"
       }`}
     >
-      {highlighted && badge && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-accent px-3 py-1 text-xs font-semibold text-white shadow-sm">
+      {(highlighted || premium) && badge && (
+        <span
+          className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${
+            premium ? "bg-amber-500" : "bg-brand-accent"
+          }`}
+        >
+          {premium && <span aria-hidden>👑 </span>}
           {badge}
         </span>
       )}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{name}</h2>
-        {!highlighted && badge && (
+        {!highlighted && !premium && badge && (
           <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium">
             {badge}
           </span>
@@ -63,6 +81,9 @@ function PlanCard({
         <span className="text-3xl font-semibold tracking-tight">{price}</span>
         <span className="text-sm text-foreground/60">{period}</span>
       </p>
+      {valueNote && (
+        <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">{valueNote}</p>
+      )}
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">
         {featuresTitle}
@@ -87,7 +108,9 @@ function PlanCard({
           className={`tap w-full rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
             highlighted
               ? "bg-brand text-white hover:bg-brand-light active:bg-brand-light"
-              : "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/85"
+              : premium
+                ? "bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-600"
+                : "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/85"
           }`}
         >
           {cta}
@@ -166,6 +189,8 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           badge={dict.pricing.lifetime.badge}
           features={dict.pricing.featuresPremium}
           featuresTitle={dict.pricing.featuresPremiumTitle}
+          premium
+          valueNote={dict.pricing.lifetime.valueNote}
         />
       </div>
     </div>

@@ -21,6 +21,7 @@ interface MobileMenuUser {
   name: string | null;
   email: string;
   avatarId: AvatarId;
+  isPremium: boolean;
 }
 
 // Client island for the hamburger menu shown below the `sm` breakpoint,
@@ -129,7 +130,7 @@ export default function MobileMenu({
                     onClick={() => setOpen(false)}
                     className="tap flex min-h-14 items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 px-3 transition-colors hover:bg-brand/10 active:bg-brand/10"
                   >
-                    <MatryoshkaAvatar id={user.avatarId} size={36} />
+                    <MatryoshkaAvatar id={user.avatarId} size={36} premium={user.isPremium} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">
                         {user.name?.trim() || user.email}

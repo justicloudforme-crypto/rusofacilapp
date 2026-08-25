@@ -20,7 +20,7 @@ export default async function PublicProfilePage({
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
       <div className="flex items-center gap-4">
-        <MatryoshkaAvatar id={profile.avatarId} size={64} label={avatarLabels[profile.avatarId]} />
+        <MatryoshkaAvatar id={profile.avatarId} size={64} label={avatarLabels[profile.avatarId]} premium={profile.isPremium} />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             {profile.name?.trim() || dict.publicProfile.anonymousName}
