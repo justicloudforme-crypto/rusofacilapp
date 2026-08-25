@@ -10,7 +10,7 @@ import { usePaywall } from "@/contexts/PaywallContext";
 
 export type PickerData = Record<
   WordGameType,
-  Record<FlashcardLevel, { total: number; completed: number[]; curved: number[] }>
+  Record<FlashcardLevel, { total: number; completed: number[]; curved: number[]; premiumOnly: number[] }>
 >;
 
 export interface WordGamesPickerDict {
@@ -20,6 +20,7 @@ export interface WordGamesPickerDict {
   puzzleLabel: string;
   completedBadge: string;
   expertModeLabel: string;
+  premiumTierLabel: string;
 }
 
 /** Type tab + level pill + sequence grid — self-paced, matches the rest of
@@ -44,9 +45,10 @@ export default function WordGamesPicker({
   const [level, setLevel] = useState<FlashcardLevel>("A1");
   const { openPaywall } = usePaywall();
 
-  const { total, completed, curved } = data[type][level];
+  const { total, completed, curved, premiumOnly } = data[type][level];
   const completedSet = new Set(completed);
   const curvedSet = new Set(curved);
+  const premiumOnlySet = new Set(premiumOnly);
 
   return (
     <div className="mt-8 flex flex-col gap-6">
@@ -100,7 +102,8 @@ export default function WordGamesPicker({
         {Array.from({ length: total }, (_, i) => i + 1).map((sequence) => {
           const isCompleted = completedSet.has(sequence);
           const isCurved = curvedSet.has(sequence);
-          const isLocked = isCurved && !isPremium;
+          const isPremiumOnlySeq = premiumOnlySet.has(sequence);
+          const isLocked = isPremiumOnlySeq && !isPremium;
           return (
             <Link
               key={sequence}
@@ -111,10 +114,10 @@ export default function WordGamesPicker({
                 openPaywall("premium");
               }}
               className={`tap relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 active:border-foreground/40 ${
-                isCurved ? "border-brand/40 bg-brand/5 dark:border-brand-light/40 dark:bg-brand-light/10" : "border-black/10 dark:border-white/10"
+                isPremiumOnlySeq ? "border-brand/40 bg-brand/5 dark:border-brand-light/40 dark:bg-brand-light/10" : "border-black/10 dark:border-white/10"
               }`}
             >
-              {isCurved && (
+              {isCurved ? (
                 <span
                   aria-label={dict.expertModeLabel}
                   title={dict.expertModeLabel}
@@ -122,7 +125,15 @@ export default function WordGamesPicker({
                 >
                   ★
                 </span>
-              )}
+              ) : isPremiumOnlySeq ? (
+                <span
+                  aria-label={dict.premiumTierLabel}
+                  title={dict.premiumTierLabel}
+                  className="absolute left-1.5 top-1.5 text-sm leading-none text-brand dark:text-brand-light"
+                >
+                  👑
+                </span>
+              ) : null}
               {sequence}
               {isCompleted && (
                 <span

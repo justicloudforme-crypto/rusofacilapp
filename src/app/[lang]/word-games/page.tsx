@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { flashcardLevels } from "@/lib/flashcards";
 import { wordGameTypes } from "@/lib/word-games/types";
-import { countAllSequences, getAllCurvedSequences } from "@/lib/word-games/data";
+import { countAllSequences, getAllCurvedSequences, getAllPremiumOnlySequences } from "@/lib/word-games/data";
 import { getAllCompletedSequences } from "@/lib/word-games/progress";
 import WordGamesPicker, { type PickerData } from "@/components/word-games/WordGamesPicker";
 import { notFound } from "next/navigation";
@@ -27,10 +27,11 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
   // and was the single worst offender in a production load test. Batched
   // functions return everything keyed by `${type}:${level}`, grouped here
   // in memory instead of by the database.
-  const [totals, completedByPair, curvedByPair, tier] = await Promise.all([
+  const [totals, completedByPair, curvedByPair, premiumOnlyByPair, tier] = await Promise.all([
     countAllSequences(),
     user ? getAllCompletedSequences(user.id) : Promise.resolve(new Map<string, Set<number>>()),
     getAllCurvedSequences(),
+    getAllPremiumOnlySequences(),
     getEntitlementTier(),
   ]);
 
@@ -43,6 +44,7 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
         total: totals.get(key) ?? 0,
         completed: Array.from(completedByPair.get(key) ?? []),
         curved: Array.from(curvedByPair.get(key) ?? []),
+        premiumOnly: Array.from(premiumOnlyByPair.get(key) ?? []),
       };
     }
     data[type] = levelData;

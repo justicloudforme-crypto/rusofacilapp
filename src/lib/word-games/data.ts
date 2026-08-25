@@ -9,6 +9,7 @@ export interface PuzzleRow {
   level: string;
   sequence: number;
   curved: boolean;
+  premiumOnly: boolean;
   grid: WordGameGrid;
   words: WordPlacement[];
 }
@@ -19,6 +20,7 @@ function parseRow(row: {
   level: string;
   sequence: number;
   curved: boolean;
+  premiumOnly: boolean;
   gridData: string;
   words: string;
 }): PuzzleRow {
@@ -29,6 +31,7 @@ function parseRow(row: {
     level: row.level,
     sequence: row.sequence,
     curved: row.curved,
+    premiumOnly: row.premiumOnly,
     grid: JSON.parse(row.gridData) as WordGameGrid,
     words: JSON.parse(row.words) as WordPlacement[],
   };
@@ -71,6 +74,26 @@ export async function countAllSequences(): Promise<Map<string, number>> {
 export async function getAllCurvedSequences(): Promise<Map<string, Set<number>>> {
   const rows = await db.wordGamePuzzle.findMany({
     where: { curved: true },
+    select: { type: true, level: true, sequence: true },
+  });
+  const byPair = new Map<string, Set<number>>();
+  for (const row of rows) {
+    const key = pairKey(row.type, row.level);
+    const existing = byPair.get(key);
+    if (existing) existing.add(row.sequence);
+    else byPair.set(key, new Set([row.sequence]));
+  }
+  return byPair;
+}
+
+/** Which sequences require the Premium plan specifically, for every
+ * (type, level) pair at once — always a superset of getAllCurvedSequences
+ * (every curved puzzle is also premiumOnly, see schema.prisma), plus the
+ * hardest non-curved rungs. Powers the picker's crown/lock badge the same
+ * way getAllCurvedSequences powers the star. */
+export async function getAllPremiumOnlySequences(): Promise<Map<string, Set<number>>> {
+  const rows = await db.wordGamePuzzle.findMany({
+    where: { premiumOnly: true },
     select: { type: true, level: true, sequence: true },
   });
   const byPair = new Map<string, Set<number>>();

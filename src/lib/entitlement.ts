@@ -42,10 +42,22 @@ export function canAccessLevel(tier: EntitlementTier, level: string): boolean {
   return tier === "premium";
 }
 
-/** ★ (curved) word-search puzzles are Premium-exclusive — a "harder game"
- * per the pricing grid, gated the same way as C1 content above. */
-export function canAccessCurvedPuzzle(tier: EntitlementTier): boolean {
+/** Generic "requires the Premium (lifetime) plan specifically" check —
+ * `standard` doesn't pass this even though it passes canAccessLevel/
+ * hasContentAccess. Backs Story.premiumOnly, WordGamePuzzle.premiumOnly,
+ * and curved word games below. */
+export function isPremiumTier(tier: EntitlementTier): boolean {
   return tier === "premium";
+}
+
+/** ★ (curved) word-search puzzles are Premium-exclusive — a "harder game"
+ * per the pricing grid, gated the same way as C1 content above. Every
+ * curved puzzle is also flagged `premiumOnly` (see schema.prisma), so
+ * callers should check both — this one stays as a defense-in-depth
+ * fallback in case a future puzzle-generation script sets `curved`
+ * without also setting `premiumOnly`. */
+export function canAccessCurvedPuzzle(tier: EntitlementTier): boolean {
+  return isPremiumTier(tier);
 }
 
 /**

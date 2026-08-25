@@ -39,9 +39,9 @@ export default async function WordGamePuzzlePage({
   if (!entitled && !isFreeWordGamePuzzle({ type, level, sequence })) {
     redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
   }
-  // ★ (curved) puzzles need Premium specifically, even for an otherwise
-  // entitled standard subscriber.
-  if (row.curved && !canAccessCurvedPuzzle(tier)) {
+  // ★ (curved) and premiumOnly puzzles need Premium specifically, even for
+  // an otherwise entitled standard subscriber.
+  if ((row.curved || row.premiumOnly) && !canAccessCurvedPuzzle(tier)) {
     redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
   }
 

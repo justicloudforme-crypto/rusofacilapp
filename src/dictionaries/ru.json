@@ -733,7 +733,8 @@
     "playAgainButton": "Сыграть ещё раз",
     "wrongCellHint": "Эта буква неверна, попробуй ещё раз.",
     "resetSelectionButton": "Отменить выбор",
-    "expertModeLabel": "Режим эксперта"
+    "expertModeLabel": "Режим эксперта",
+    "premiumTierLabel": "Только Premium"
   },
   "celebration": {
     "lessonPassedTitle": "Урок пройден!",
@@ -984,6 +985,8 @@
       "audioUrlLabel": "URL аудио (необязательно)",
       "premiumLabel": "Только для подписчиков (Премиум)",
       "premiumHelp": "Если включено, эта история будет доступна только пользователям с активной подпиской.",
+      "premiumOnlyLabel": "Эксклюзив тарифа Premium (lifetime)",
+      "premiumOnlyHelp": "Если включено, эта история недоступна на месячной/годовой подписке — только на пожизненном тарифе Premium.",
       "saveButton": "Сохранить",
       "savedNotice": "Сохранено.",
       "titleRequired": "Название обязательно.",

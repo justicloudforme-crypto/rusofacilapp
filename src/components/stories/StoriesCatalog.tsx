@@ -12,12 +12,14 @@ export interface StorySummary {
   author: string;
   level: StoryLevel;
   isPremium: boolean;
+  premiumOnly: boolean;
   description: string | null;
 }
 
 export interface StoriesCatalogDict {
   filterAll: string;
   premiumBadge: string;
+  premiumTierBadge: string;
   byAuthor: string;
   readButton: string;
   emptyState: string;
@@ -103,11 +105,18 @@ export default function StoriesCatalog({
               >
                 <div className="flex items-center justify-between gap-2">
                   <LevelBadge level={story.level} />
-                  {story.isPremium && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-                      ⭐ {dict.premiumBadge}
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1.5">
+                    {story.isPremium && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                        ⭐ {dict.premiumBadge}
+                      </span>
+                    )}
+                    {story.premiumOnly && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
+                        👑 {dict.premiumTierBadge}
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <h2 className="mt-3 text-lg font-medium">{story.title}</h2>
                 <p className="mt-1 text-sm text-foreground/60">
