@@ -23,6 +23,7 @@ export interface StoryCatalogRow {
   author: string;
   level: StoryLevel;
   isPremium: boolean;
+  premiumOnly: boolean;
   description: string | null;
 }
 
@@ -35,7 +36,7 @@ export async function getStoryCatalog(): Promise<StoryCatalogRow[]> {
   return cached(storyCatalogCache, "all", async () => {
     const rows = await db.story.findMany({
       orderBy: { createdAt: "desc" },
-      select: { id: true, title: true, author: true, level: true, isPremium: true, description: true },
+      select: { id: true, title: true, author: true, level: true, isPremium: true, premiumOnly: true, description: true },
     });
     return rows
       .filter((row) => isStoryLevel(row.level))

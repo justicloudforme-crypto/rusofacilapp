@@ -42,10 +42,22 @@ export function canAccessLevel(tier: EntitlementTier, level: string): boolean {
   return tier === "premium";
 }
 
-/** ★ (curved) word-search puzzles are Premium-exclusive — a "harder game"
- * per the pricing grid, gated the same way as C1 content above. */
-export function canAccessCurvedPuzzle(tier: EntitlementTier): boolean {
+/** Generic "requires the Premium (lifetime) plan specifically" check —
+ * `standard` doesn't pass this even though it passes canAccessLevel/
+ * hasContentAccess. Backs Story.premiumOnly, WordGamePuzzle.premiumOnly,
+ * and curved word games below. */
+export function isPremiumTier(tier: EntitlementTier): boolean {
   return tier === "premium";
+}
+
+/** ★ (curved) word-search puzzles are Premium-exclusive — a "harder game"
+ * per the pricing grid, gated the same way as C1 content above. Every
+ * curved puzzle is also flagged `premiumOnly` (see schema.prisma), so
+ * callers should check both — this one stays as a defense-in-depth
+ * fallback in case a future puzzle-generation script sets `curved`
+ * without also setting `premiumOnly`. */
+export function canAccessCurvedPuzzle(tier: EntitlementTier): boolean {
+  return isPremiumTier(tier);
 }
 
 /**
@@ -81,6 +93,23 @@ export const FREE_TRIAL_LIMITS = {
   idioms: 5,
   wordGamePuzzlesPerLevel: 5,
 } as const;
+
+/**
+ * The "literary" idiom category (proverbs' more advanced sibling) is
+ * Premium-exclusive beyond a small taste — unlike the rest of the idiom
+ * bank, where "standard" already means full access (minus C1). free gets
+ * one to know the category exists; standard gets a real but capped sample;
+ * only premium sees the whole thing. `null` means "no cap" (premium).
+ */
+export const LITERARY_IDIOM_LIMITS: Record<Exclude<EntitlementTier, "premium">, number> = {
+  free: 1,
+  standard: 5,
+};
+
+export function getLiteraryIdiomLimit(tier: EntitlementTier): number | null {
+  if (tier === "premium") return null;
+  return LITERARY_IDIOM_LIMITS[tier];
+}
 
 /** Same staff/subscription check as {@link hasContentAccess}, but without
  * requiring a logged-in user — a free-trial visitor is typically

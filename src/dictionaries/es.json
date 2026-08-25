@@ -707,7 +707,9 @@
       "paginationNext": "Adelante",
       "paginationInfo": "Página {current} de {total}",
       "freeTrialLimitMessage": "Has visto la muestra gratuita de expresiones. Suscríbete para desbloquear todos los modismos.",
-      "freeTrialLimitCta": "Suscribirme"
+      "freeTrialLimitCta": "Suscribirme",
+      "literaryLockedMessageStandard": "Los modismos literarios están casi completos solo en el plan Premium — tu suscripción actual solo desbloquea una pequeña parte.",
+      "literaryUpgradeCta": "Pasar a Premium"
     }
   },
   "wordGames": {
@@ -731,7 +733,8 @@
     "playAgainButton": "Jugar otro puzle",
     "wrongCellHint": "Esa letra no es correcta, inténtalo de nuevo.",
     "resetSelectionButton": "Cancelar selección",
-    "expertModeLabel": "Modo experto"
+    "expertModeLabel": "Modo experto",
+    "premiumTierLabel": "Solo Premium"
   },
   "celebration": {
     "lessonPassedTitle": "¡Lección superada!",
@@ -982,6 +985,8 @@
       "audioUrlLabel": "URL del audio (opcional)",
       "premiumLabel": "Solo para suscriptores (Premium)",
       "premiumHelp": "Si está activado, esta historia solo estará disponible para usuarios con suscripción activa.",
+      "premiumOnlyLabel": "Exclusivo del plan Premium (de por vida)",
+      "premiumOnlyHelp": "Si está activado, esta historia no estará disponible en la suscripción mensual/anual — solo en el plan Premium de por vida.",
       "saveButton": "Guardar",
       "savedNotice": "Guardado correctamente.",
       "titleRequired": "El título es obligatorio.",

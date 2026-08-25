@@ -56,13 +56,23 @@ export default async function AdminStoriesPage({
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    {story.isPremium ? (
-                      <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-                        {dict.admin.stories.premiumYes}
-                      </span>
-                    ) : (
-                      <span className="text-foreground/50">{dict.admin.stories.premiumNo}</span>
-                    )}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {story.isPremium ? (
+                        <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                          {dict.admin.stories.premiumYes}
+                        </span>
+                      ) : (
+                        <span className="text-foreground/50">{dict.admin.stories.premiumNo}</span>
+                      )}
+                      {story.premiumOnly && (
+                        <span
+                          title={dict.admin.stories.premiumOnlyHelp}
+                          className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand"
+                        >
+                          👑 {dict.admin.stories.premiumOnlyLabel}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex flex-wrap items-center justify-end gap-3">

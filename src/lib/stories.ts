@@ -18,6 +18,7 @@ export interface StoryInput {
   translationEs: string | null;
   audioUrl: string | null;
   isPremium: boolean;
+  premiumOnly: boolean;
 }
 
 export type StoryValidationResult =
@@ -155,9 +156,10 @@ export function validateStoryInput(body: unknown): StoryValidationResult {
   const audioUrl = audioUrlRaw || null;
 
   const isPremium = Boolean(v.isPremium);
+  const premiumOnly = Boolean(v.premiumOnly);
 
   return {
     valid: true,
-    value: { title, author, level, text, description, translationEs, audioUrl, isPremium },
+    value: { title, author, level, text, description, translationEs, audioUrl, isPremium, premiumOnly },
   };
 }

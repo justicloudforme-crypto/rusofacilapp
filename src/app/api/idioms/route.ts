@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { IDIOM_LIST_CACHE_PREFIX, idiomCategories, isIdiomCategory, isIdiomLevel } from "@/lib/idioms";
 import { cacheGet, cacheSet } from "@/lib/cache";
-import { canAccessLevel, getEntitlementTier, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { canAccessLevel, getEntitlementTier, getLiteraryIdiomLimit, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 
 // IMPORTANT: only the raw idiom rows go in this cache, never the audio join
 // below — same real, confirmed bug and fix as /api/glossary/route.ts (see
@@ -45,6 +45,22 @@ function buildFreeIdiomSample<T extends { category: string }>(idioms: T[], limit
     if (!addedAny) break;
   }
   return sample;
+}
+
+// "literary" is capped separately from (and on top of) the general
+// entitled/free-sample logic above — see getLiteraryIdiomLimit: it's the
+// one idiom category that's Premium-exclusive beyond a small taste, even
+// for an otherwise-full-access "standard" subscriber. Preserves order and
+// only touches literary rows, so a caller filtered to any other category
+// (or "all") is unaffected apart from literary items within it.
+function capLiteraryIdioms<T extends { category: string }>(idioms: T[], limit: number | null): T[] {
+  if (limit === null) return idioms;
+  let seen = 0;
+  return idioms.filter((idiom) => {
+    if (idiom.category !== "literary") return true;
+    seen++;
+    return seen <= limit;
+  });
 }
 
 // Idioms are part of Vocabulary (IdiomsList is one of VocabularyApp's
@@ -90,11 +106,22 @@ export async function GET(request: NextRequest) {
   // slice is correct — every row is already that one category. Otherwise
   // (IdiomsList's default fetch-everything-then-filter-client-side call),
   // spread the sample across categories so every tab has something to show.
-  const visibleIdioms = entitled
+  const sampledIdioms = entitled
     ? accessibleIdioms
     : where.category
       ? accessibleIdioms.slice(0, FREE_TRIAL_LIMITS.idioms)
       : buildFreeIdiomSample(accessibleIdioms, FREE_TRIAL_LIMITS.idioms);
+
+  const literaryLimit = getLiteraryIdiomLimit(tier);
+  const visibleIdioms = capLiteraryIdioms(sampledIdioms, literaryLimit);
+  // Whether this response actually hid any literary idioms behind the cap
+  // — used by IdiomsList to show an upgrade prompt on the literary tab
+  // specifically, distinct from (and possibly true even when) `limited`
+  // is false, since a "standard" subscriber is otherwise fully entitled.
+  const literaryLocked =
+    literaryLimit !== null && sampledIdioms.some((idiom) => idiom.category === "literary" && !visibleIdioms.includes(idiom))
+      ? tier
+      : null;
 
   const audioRows = await db.audioAsset.findMany({
     where: { contentType: "idiom", contentId: { in: visibleIdioms.map((idiom) => idiom.id) } },
@@ -112,5 +139,5 @@ export async function GET(request: NextRequest) {
     contextExampleAudioUrl: contextAudioById.get(idiom.id),
   }));
 
-  return NextResponse.json({ idioms: withAudio, limited: !entitled });
+  return NextResponse.json({ idioms: withAudio, limited: !entitled, literaryLocked });
 }

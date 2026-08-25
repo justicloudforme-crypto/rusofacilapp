@@ -186,6 +186,15 @@ model Story {
   translationEs String?
   audioUrl      String?
   isPremium     Boolean  @default(false)
+  // Reserved for the "Premium" (lifetime) plan specifically — a
+  // "standard" (monthly/annual) subscriber is otherwise fully entitled
+  // (isPremium above already covers free vs. any-paid-plan) but still
+  // can't read this one. Seeded by prisma/set-premium-only-stories.ts
+  // (all C1 + a deterministic ~half of B2, landing the Premium-exclusive
+  // share at ~30% of the catalog per the access-tier policy) and then
+  // hand-curated per-story via /admin/stories, same "script sets a
+  // default, staff corrects" pattern as CURATED_FREE_STORIES.
+  premiumOnly   Boolean  @default(false)
   // Set the moment a staff member saves this row through /admin (see
   // src/app/api/admin/stories/save) — marks it as human-reviewed content.
   // Null means it has only ever been written by a seed/generation script.
@@ -558,6 +567,18 @@ model WordGamePuzzle {
   // kept as a real column (not embedded in `words`) so the picker can
   // render it without parsing every puzzle's JSON.
   curved   Boolean             @default(false)
+  // Reserved for the "Premium" (lifetime) plan — a "standard" subscriber
+  // is otherwise fully entitled to word games. Every `curved` puzzle is
+  // always also `premiumOnly` (curved is already, by construction, the
+  // hardest tail of each [type, level] ladder — see
+  // prisma/set-premium-only-word-games.ts), plus enough of the hardest
+  // non-curved rungs (by `sequence`, the ladder's own natural difficulty
+  // order) to land the Premium-exclusive share at ~30-35% overall, per
+  // the access-tier policy. Checked in ADDITION to `curved` wherever
+  // access is gated (see entitlement.ts), not instead of it — so a future
+  // puzzle-generation script that sets `curved` without also setting this
+  // still degrades safely rather than accidentally unlocking a ★ puzzle.
+  premiumOnly Boolean            @default(false)
   // JSON-encoded { size: number, grid: string[][] } — the finished letter
   // grid, ready to render as-is.
   gridData String

@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   if (!isFreeWordGamePuzzle(puzzle) && tier === "free") {
     return NextResponse.json({ recorded: false });
   }
-  if (puzzle.curved && !canAccessCurvedPuzzle(tier)) {
+  if ((puzzle.curved || puzzle.premiumOnly) && !canAccessCurvedPuzzle(tier)) {
     return NextResponse.json({ recorded: false });
   }
 

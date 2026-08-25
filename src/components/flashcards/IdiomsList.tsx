@@ -26,6 +26,8 @@ export interface IdiomsDict {
   paginationInfo: string; // template, contains literal "{current}" and "{total}"
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
+  literaryLockedMessageStandard: string;
+  literaryUpgradeCta: string;
 }
 
 const PAGE_SIZE = 10;
@@ -57,6 +59,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   // bank straight into this client component's JS bundle.
   const [idioms, setIdioms] = useState<Idiom[]>([]);
   const [limited, setLimited] = useState(false);
+  const [literaryLocked, setLiteraryLocked] = useState<"free" | "standard" | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -66,10 +69,11 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
 
   useEffect(() => {
     fetch("/api/idioms")
-      .then((res) => (res.ok ? res.json() : { idioms: [], limited: false }))
-      .then((body: { idioms?: Idiom[]; limited?: boolean }) => {
+      .then((res) => (res.ok ? res.json() : { idioms: [], limited: false, literaryLocked: null }))
+      .then((body: { idioms?: Idiom[]; limited?: boolean; literaryLocked?: "free" | "standard" | null }) => {
         setIdioms(body.idioms ?? []);
         setLimited(Boolean(body.limited));
+        setLiteraryLocked(body.literaryLocked ?? null);
       })
       .catch(() => setIdioms([]));
   }, []);
@@ -135,6 +139,17 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
 
       {limited && (
         <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+      )}
+      {/* Free-tier visitors already see the banner above (their literary
+       * cap is just one facet of the general free-sample limit) — this one
+       * is specifically for an already-subscribed "standard" visitor, who
+       * needs Premium for literary and nothing else. */}
+      {!limited && literaryLocked === "standard" && (categoryFilter === "all" || categoryFilter === "literary") && (
+        <FreeTrialLimitBanner
+          message={dict.literaryLockedMessageStandard}
+          cta={dict.literaryUpgradeCta}
+          reason="premium"
+        />
       )}
 
       <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/10">

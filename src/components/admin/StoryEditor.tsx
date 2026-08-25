@@ -33,6 +33,7 @@ export default function StoryEditor({
     translationEs: string;
     audioUrl: string;
     isPremium: boolean;
+    premiumOnly: boolean;
   };
   /** True right after redirecting here from a successful create — the
    * "saved" confirmation would otherwise flash and vanish, since creating
@@ -51,6 +52,7 @@ export default function StoryEditor({
   const [translationEs, setTranslationEs] = useState(story.translationEs);
   const [audioUrl, setAudioUrl] = useState(story.audioUrl);
   const [isPremium, setIsPremium] = useState(story.isPremium);
+  const [premiumOnly, setPremiumOnly] = useState(story.premiumOnly);
   const [status, setStatus] = useState<
     { kind: "idle" } | { kind: "saving" } | { kind: "error"; message: string } | { kind: "saved" }
   >(initialSavedNotice ? { kind: "saved" } : { kind: "idle" });
@@ -71,6 +73,7 @@ export default function StoryEditor({
           translationEs,
           audioUrl,
           isPremium,
+          premiumOnly,
         }),
       });
       const data = await res.json();
@@ -228,6 +231,31 @@ export default function StoryEditor({
           <span>
             <span className="text-sm font-medium">{dict.premiumLabel}</span>
             <span className="mt-0.5 block text-xs text-foreground/50">{dict.premiumHelp}</span>
+          </span>
+        </label>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-black/15 p-3 dark:border-white/20">
+          <input
+            type="checkbox"
+            checked={premiumOnly}
+            onChange={(event) => setPremiumOnly(event.target.checked)}
+            className="sr-only"
+          />
+          <span
+            aria-hidden="true"
+            className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+              premiumOnly ? "bg-foreground" : "bg-foreground/20"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-background transition-transform ${
+                premiumOnly ? "translate-x-5" : "translate-x-1"
+              }`}
+            />
+          </span>
+          <span>
+            <span className="text-sm font-medium">{dict.premiumOnlyLabel}</span>
+            <span className="mt-0.5 block text-xs text-foreground/50">{dict.premiumOnlyHelp}</span>
           </span>
         </label>
       </div>

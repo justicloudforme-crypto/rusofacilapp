@@ -25,6 +25,7 @@ export default async function NewStoryPage({
         translationEs: "",
         audioUrl: "",
         isPremium: false,
+        premiumOnly: false,
       }}
     />
   );

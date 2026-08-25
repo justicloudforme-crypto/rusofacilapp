@@ -32,6 +32,7 @@ export default async function EditStoryPage({
         translationEs: story.translationEs ?? "",
         audioUrl: story.audioUrl ?? "",
         isPremium: story.isPremium,
+        premiumOnly: story.premiumOnly,
       }}
       initialSavedNotice={query.created === "1"}
     />

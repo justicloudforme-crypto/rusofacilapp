@@ -29,10 +29,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // ★ (curved) puzzles are Premium-exclusive regardless of whether the
-  // caller is otherwise entitled — a standard subscriber gets the same
-  // subscription_required response a free visitor would.
-  if (puzzle.curved && !canAccessCurvedPuzzle(tier)) {
+  // ★ (curved) and premiumOnly puzzles are Premium-exclusive regardless of
+  // whether the caller is otherwise entitled — a standard subscriber gets
+  // the same subscription_required response a free visitor would. Checked
+  // separately (not just premiumOnly) as defense-in-depth — see
+  // schema.prisma's WordGamePuzzle.premiumOnly comment.
+  if ((puzzle.curved || puzzle.premiumOnly) && !canAccessCurvedPuzzle(tier)) {
     return NextResponse.json({ error: "subscription_required" }, { status: 403 });
   }
 
