@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
-import { isPremiumTier, getEntitlementTier } from "@/lib/entitlement";
+import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
 
@@ -23,19 +23,15 @@ export default async function StoryReaderPage({
   if (!story) notFound();
 
   // Non-premium stories are open to everyone, no login required. Premium
-  // stories need any active subscription (or staff); C1 is always
-  // Premium-exclusive on top of that (kept as an explicit check here, not
-  // just via story.premiumOnly, as defense-in-depth against a C1 row that
-  // wasn't flagged) and premiumOnly stories (a curated ~30% slice, see
-  // schema.prisma) need Premium specifically too — checked here (not just
-  // via a client-side flag) so the full text/audio never reaches the
-  // browser for a non-entitled reader.
-  const hasSubscriptionAccess = !story.isPremium || tier !== "free";
-  const requiresPremiumTier = story.premiumOnly || story.level === "C1";
-  const entitled = hasSubscriptionAccess && (!requiresPremiumTier || isPremiumTier(tier));
+  // stories need any active subscription (or staff); C1 and premiumOnly
+  // stories (a curated ~30% slice, see schema.prisma) need Premium
+  // specifically — checked here (not just via a client-side flag) so the
+  // full text/audio never reaches the browser for a non-entitled reader.
+  const { entitled, reason } = getStoryAccess(tier, story);
   // Distinguishes the two lock states below: "subscribe at all" vs. "you're
   // subscribed, but this needs Premium specifically".
-  const needsPremiumUpgrade = hasSubscriptionAccess && !entitled;
+  const needsPremiumUpgrade = reason === "premium";
+  const requiresPremiumTier = story.premiumOnly || story.level === "C1";
 
   const paragraphs = splitStoryParagraphs(story.text);
   const visibleParagraphs = entitled ? paragraphs : paragraphs.slice(0, 1);

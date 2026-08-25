@@ -42,6 +42,28 @@ export function canAccessLevel(tier: EntitlementTier, level: string): boolean {
   return tier === "premium";
 }
 
+/**
+ * Full access decision for one Story row, shared by the reader page (gates
+ * the actual text/audio) and the catalog page (sorts + locks list items) —
+ * one place so the two can never drift. `reason` is what a lock UI should
+ * pass to usePaywall().openPaywall(): "free" when the visitor isn't
+ * subscribed at all yet, "premium" when they're already a "standard"
+ * subscriber but this specific story needs the Premium (lifetime) plan.
+ * `null` means the story is fully accessible.
+ */
+export function getStoryAccess(
+  tier: EntitlementTier,
+  story: { level: string; isPremium: boolean; premiumOnly: boolean }
+): { entitled: boolean; reason: "free" | "premium" | null } {
+  const hasSubscriptionAccess = !story.isPremium || tier !== "free";
+  if (!hasSubscriptionAccess) return { entitled: false, reason: "free" };
+
+  const requiresPremiumTier = story.premiumOnly || story.level === "C1";
+  if (requiresPremiumTier && !isPremiumTier(tier)) return { entitled: false, reason: "premium" };
+
+  return { entitled: true, reason: null };
+}
+
 /** Generic "requires the Premium (lifetime) plan specifically" check —
  * `standard` doesn't pass this even though it passes canAccessLevel/
  * hasContentAccess. Backs Story.premiumOnly, WordGamePuzzle.premiumOnly,
