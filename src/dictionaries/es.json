@@ -586,7 +586,11 @@
     "exercisesHeading": "Ejercicios de comprensión auditiva",
     "exercisesPassed": "¡Muy bien! Comprendiste el contenido.",
     "exercisesFailed": "Necesitas al menos 70% para aprobar. Revisa la letra/transcripción e inténtalo de nuevo.",
-    "copyrightNote": "Los videos se muestran mediante el reproductor oficial de YouTube y pertenecen a sus respectivos autores y canales; se usan aquí con fines educativos, sin descargarlos ni redistribuirlos."
+    "copyrightNote": "Los videos se muestran mediante el reproductor oficial de YouTube y pertenecen a sus respectivos autores y canales; se usan aquí con fines educativos, sin descargarlos ni redistribuirlos.",
+    "premiumBadge": "Con suscripción",
+    "premiumLockTitle": "Este video está disponible solo con suscripción",
+    "premiumLockBody": "Has visto la muestra gratuita de materiales. Suscríbete para desbloquear toda la biblioteca de audio y video.",
+    "premiumLockCta": "Ver planes"
   },
   "vocabulary": {
     "pageTitle": "Vocabulario en tarjetas",

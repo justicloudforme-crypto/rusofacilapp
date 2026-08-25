@@ -3,6 +3,7 @@ import Link from "next/link";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getMediaById } from "@/lib/media/data";
+import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import MediaPlayer from "@/components/media/MediaPlayer";
 import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
@@ -14,11 +15,17 @@ export default async function MediaDetailPage({
   const { lang, id } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const [dict, item, tier] = await Promise.all([getDictionary(lang), getMediaById(id), getEntitlementTier()]);
   if (!dict?.media) notFound();
-
-  const item = await getMediaById(id);
   if (!item) notFound();
+
+  // Free-trial-sample items (see mediaData.json) are open to everyone, no
+  // login required; everything else needs any active subscription — no
+  // Premium-exclusive slice here (unlike stories/word games), so this is
+  // the one lock reason. Checked here (not just via a client-side flag)
+  // so the actual video/subtitles/transcript/exercises never reach the
+  // browser for a non-entitled visitor.
+  const entitled = canAccessMediaItem(tier, item);
 
   const categoryLabels: Record<string, string> = {
     song: dict.media.categorySong,
@@ -50,63 +57,78 @@ export default async function MediaDetailPage({
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{item.title}</h1>
       <p className="mt-2 text-foreground/70">{item.description}</p>
 
-      {hasSubtitles ? (
-        <div className="mt-8">
-          <MediaSubtitlePlayer
-            youtubeVideoId={item.youtubeVideoId}
-            title={item.title}
-            subtitles={item.subtitles!}
-            transcriptHeading={dict.media.transcriptHeading}
-            brokenLabel={dict.media.videoBroken}
-          />
-        </div>
-      ) : (
+      {entitled ? (
         <>
-          <div className="mt-8">
-            <MediaPlayer
-              youtubeVideoId={item.youtubeVideoId}
-              title={item.title}
-              emptyLabel={dict.media.videoUnavailable}
-              brokenLabel={dict.media.videoBroken}
-            />
-          </div>
+          {hasSubtitles ? (
+            <div className="mt-8">
+              <MediaSubtitlePlayer
+                youtubeVideoId={item.youtubeVideoId}
+                title={item.title}
+                subtitles={item.subtitles!}
+                transcriptHeading={dict.media.transcriptHeading}
+                brokenLabel={dict.media.videoBroken}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="mt-8">
+                <MediaPlayer
+                  youtubeVideoId={item.youtubeVideoId}
+                  title={item.title}
+                  emptyLabel={dict.media.videoUnavailable}
+                  brokenLabel={dict.media.videoBroken}
+                />
+              </div>
+
+              <section className="mt-10">
+                <h2 className="text-lg font-medium">{dict.media.transcriptHeading}</h2>
+                <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/10">
+                  {item.lyricsOrTranscript.map((line, index) => (
+                    <div key={index} className="text-sm leading-relaxed">
+                      <p className="font-medium">{line.russian}</p>
+                      {line.translation && <p className="text-foreground/60">{line.translation}</p>}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
 
           <section className="mt-10">
-            <h2 className="text-lg font-medium">{dict.media.transcriptHeading}</h2>
-            <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/10">
-              {item.lyricsOrTranscript.map((line, index) => (
-                <div key={index} className="text-sm leading-relaxed">
-                  <p className="font-medium">{line.russian}</p>
-                  {line.translation && <p className="text-foreground/60">{line.translation}</p>}
-                </div>
-              ))}
+            <h2 className="text-lg font-medium">{dict.media.vocabularyHeading}</h2>
+            <div className="mt-4">
+              <VocabularyTab
+                vocabulary={item.vocabulary}
+                dict={dict.lesson.vocabulary}
+                listenLabel={dict.lesson.pronunciation.listenLabel ?? ""}
+              />
+            </div>
+          </section>
+
+          <section className="mt-10">
+            <h2 className="text-lg font-medium">{dict.media.exercisesHeading}</h2>
+            <div className="mt-4">
+              <MediaExercises
+                exercises={item.exercises}
+                dict={dict.lesson.exercises}
+                passedLabel={dict.media.exercisesPassed}
+                failedLabel={dict.media.exercisesFailed}
+              />
             </div>
           </section>
         </>
+      ) : (
+        <div className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
+          <h2 className="font-medium">{dict.media.premiumLockTitle}</h2>
+          <p className="mt-2 text-sm text-foreground/70">{dict.media.premiumLockBody}</p>
+          <Link
+            href={`/${lang}/pricing?next=/${lang}/media/${item.id}`}
+            className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+          >
+            {dict.media.premiumLockCta}
+          </Link>
+        </div>
       )}
-
-      <section className="mt-10">
-        <h2 className="text-lg font-medium">{dict.media.vocabularyHeading}</h2>
-        <div className="mt-4">
-          <VocabularyTab
-            vocabulary={item.vocabulary}
-            dict={dict.lesson.vocabulary}
-            listenLabel={dict.lesson.pronunciation.listenLabel ?? ""}
-          />
-        </div>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-lg font-medium">{dict.media.exercisesHeading}</h2>
-        <div className="mt-4">
-          <MediaExercises
-            exercises={item.exercises}
-            dict={dict.lesson.exercises}
-            passedLabel={dict.media.exercisesPassed}
-            failedLabel={dict.media.exercisesFailed}
-          />
-        </div>
-      </section>
     </div>
   );
 }

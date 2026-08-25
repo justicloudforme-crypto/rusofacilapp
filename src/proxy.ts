@@ -88,50 +88,16 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   return null;
 }
 
-// Sections that require an active, non-expired subscription for every
-// route beneath them, no exceptions — unlike Vocabulary/Stories/Word games
-// below, Media has no free-trial sample (see FREEMIUM.md) so it keeps the
-// blanket section-wide block this gate was originally built for.
-//
-// Vocabulary/Stories/Word games moved OFF this list on 2026-08-24 when the
-// free-trial model shipped: each now has its own fixed free sample enforced
-// deeper in the stack instead of a section-wide block —
+// No section is blanket-gated here any more as of 2026-08-24: Vocabulary/
+// Stories/Word games/Media each has its own fixed free-trial sample
+// enforced deeper in the stack instead of a section-wide block —
 // GET /api/flashcards and GET /api/idioms cap results to FREE_TRIAL_LIMITS
 // for a non-entitled caller (src/lib/entitlement.ts), the story reader page
-// checks Story.isPremium per row (same mechanism that existed pre-2026-08-23,
-// un-superseded down to a curated 1-2 free stories — see
-// prisma/set-free-trial-stories.ts), and the word-game puzzle page checks
-// isFreeWordGamePuzzle. A blanket block here would make all of that
-// unreachable for exactly the visitors it's meant to reach.
-const GATED_SECTIONS = new Set(["media"]);
-
-/**
- * Gate for /{lang}/media — every route under this section. Mirrors
- * protectLessonRoute's shape (staff bypass, redirect to /pricing) but
- * matches on the section name alone rather than a specific nested pattern,
- * since the whole section is gated here rather than just its content pages.
- */
-async function protectContentRoute(request: NextRequest, segments: string[]) {
-  const [lang, section] = segments;
-  if (!section || !GATED_SECTIONS.has(section)) return null;
-
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const parsed = token ? verifySessionToken(token) : null;
-  if (!parsed) return redirectToPricing(request, lang);
-
-  const user = await db.user.findUnique({
-    where: { id: parsed.userId },
-    select: { role: true, sessionVersion: true },
-  });
-  if (!user || user.sessionVersion !== parsed.sessionVersion) return redirectToPricing(request, lang);
-  if (isStaff(user.role)) return null;
-
-  const subscription = await lookupSubscriptionSafely(parsed.userId);
-
-  if (!isSubscriptionActive(subscription)) return redirectToPricing(request, lang);
-
-  return null;
-}
+// checks Story.isPremium per row (prisma/set-free-trial-stories.ts), the
+// word-game puzzle page checks isFreeWordGamePuzzle, and the media detail
+// page checks MediaItem.free (a curated ~7-item sample, see
+// src/lib/media/mediaData.json). A blanket section-wide block would make
+// all of that unreachable for exactly the visitors it's meant to reach.
 
 /**
  * Gate for /{lang}/admin and everything under it. Only 'owner' and 'admin'
@@ -185,9 +151,6 @@ export async function proxy(request: NextRequest) {
 
   const lessonAccessDenied = await protectLessonRoute(request, segments);
   if (lessonAccessDenied) return lessonAccessDenied;
-
-  const contentAccessDenied = await protectContentRoute(request, segments);
-  if (contentAccessDenied) return contentAccessDenied;
 
   const adminAccessDenied = await protectAdminRoute(request, segments);
   if (adminAccessDenied) return adminAccessDenied;

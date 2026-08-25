@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { mediaLevels, mediaCategories, type MediaLevel, type MediaCategory } from "@/lib/media/types";
 import LevelBadge from "@/components/LevelBadge";
+import { usePaywall } from "@/contexts/PaywallContext";
 
 export interface MediaSummary {
   id: string;
@@ -13,6 +14,10 @@ export interface MediaSummary {
   level: MediaLevel;
   category: MediaCategory;
   youtubeVideoId: string;
+  /** Whether THIS visitor needs a subscription to open it — see
+   * entitlement.ts's canAccessMediaItem. The list itself already arrives
+   * pre-sorted accessible-first (see [lang]/media/page.tsx). */
+  locked: boolean;
 }
 
 export interface MediaCatalogDict {
@@ -25,6 +30,7 @@ export interface MediaCatalogDict {
   openButton: string;
   emptyState: string;
   loadMoreButton: string; // template, contains literal "{count}"
+  premiumBadge: string;
 }
 
 const PAGE_SIZE = 24;
@@ -41,6 +47,7 @@ export default function MediaCatalog({
   const [level, setLevel] = useState<"all" | MediaLevel>("all");
   const [category, setCategory] = useState<"all" | MediaCategory>("all");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const { openPaywall } = usePaywall();
 
   const categoryLabels: Record<MediaCategory, string> = {
     song: dict.categorySong,
@@ -132,6 +139,11 @@ export default function MediaCatalog({
             <Link
               key={item.id}
               href={`/${lang}/media/${item.id}`}
+              onClick={(e) => {
+                if (!item.locked) return;
+                e.preventDefault();
+                openPaywall("free");
+              }}
               className="tap group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
             >
               <div className="relative aspect-video w-full overflow-hidden bg-foreground/5">
@@ -145,6 +157,11 @@ export default function MediaCatalog({
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover transition-transform duration-200 group-hover:scale-105"
                 />
+                {item.locked && (
+                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                    🔒 {dict.premiumBadge}
+                  </span>
+                )}
               </div>
               <div className="flex flex-1 flex-col p-6">
                 <div className="flex items-center justify-between gap-2">
