@@ -58,11 +58,21 @@ export default function MobileMenu({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  // Close automatically on navigation, so a link tap doesn't leave the
-  // panel open over the new page. Adjusted during render (React's
-  // documented pattern for "reset state when a prop changes") rather than
-  // in an effect, which would cause an extra render pass just to flip
-  // `open` back to false a tick after the real navigation.
+  // Fallback close-on-navigation for paths that don't go through one of
+  // this panel's own links below (browser back/forward, a programmatic
+  // redirect elsewhere in the app). Every in-panel Link/button already
+  // closes synchronously in its own onClick — a real, confirmed bug: when
+  // this was the ONLY close mechanism, it fired reactively off the
+  // `pathname` change itself, which raced with Next's own route-transition
+  // DOM swap (both touching this portal's document.body subtree around
+  // the same commit) and threw a genuine
+  // "Failed to execute 'removeChild' on 'Node'" crash on slower Android
+  // devices (confirmed via a Sentry event: transaction /vocabulary, URL
+  // landed on /profile — i.e. mid-tap-on-a-panel-link). Adjusted during
+  // render (React's documented pattern for "reset state when a prop
+  // changes") rather than in an effect, which would cause an extra render
+  // pass just to flip `open` back to false a tick after the real
+  // navigation.
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
@@ -116,6 +126,7 @@ export default function MobileMenu({
                 <>
                   <Link
                     href={`/${lang}/profile`}
+                    onClick={() => setOpen(false)}
                     className="tap flex min-h-14 items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 px-3 transition-colors hover:bg-brand/10 active:bg-brand/10"
                   >
                     <MatryoshkaAvatar id={user.avatarId} size={36} />
@@ -131,6 +142,7 @@ export default function MobileMenu({
                       <Link
                         key={tab.id}
                         href={`/${lang}/profile?tab=${tab.id}`}
+                        onClick={() => setOpen(false)}
                         className="tap flex min-h-11 items-center rounded-lg px-3 text-sm text-foreground/75 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
                       >
                         {tab.label}
@@ -141,6 +153,7 @@ export default function MobileMenu({
               ) : (
                 <Link
                   href={loggedOutHref}
+                  onClick={() => setOpen(false)}
                   className="tap flex min-h-12 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-light active:bg-brand-light"
                 >
                   {loggedOutLabel}
@@ -157,6 +170,7 @@ export default function MobileMenu({
                       <Link
                         key={link.href}
                         href={link.href}
+                        onClick={() => setOpen(false)}
                         className="tap flex min-h-11 items-center rounded-lg px-3 text-base font-medium text-foreground/85 transition-colors hover:bg-brand/10 active:bg-brand/10"
                       >
                         {link.label}
