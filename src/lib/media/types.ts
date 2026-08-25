@@ -29,6 +29,13 @@ export interface MediaItem {
   description: string;
   level: MediaLevel;
   category: MediaCategory;
+  /** Free-trial-sample item, visible (full player/subtitles/exercises) to
+   * anyone with no subscription — a curated ~7-item taste of the section
+   * (1 alphabet video, 4 "documentary"-style videos across history/
+   * nature/travel/culture, 1 song, 1 movie, all with generated subtitles
+   * where relevant). Absent/false for everything else, which needs any
+   * active subscription — see [lang]/media/page.tsx and [id]/page.tsx. */
+  free?: boolean;
   youtubeVideoId: string;
   /** Song lyrics or movie/scene transcript, line by line with translation. */
   lyricsOrTranscript: MediaLine[];

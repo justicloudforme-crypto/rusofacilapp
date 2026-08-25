@@ -64,6 +64,17 @@ export function getStoryAccess(
   return { entitled: true, reason: null };
 }
 
+/**
+ * Media has no Premium-exclusive slice (unlike stories/word games) — just
+ * a curated free-trial sample (MediaItem.free, see mediaData.json) vs.
+ * everything else needing any active subscription. Shared by the catalog
+ * page (sorts + locks list items) and the detail page (gates the actual
+ * player/subtitles/exercises).
+ */
+export function canAccessMediaItem(tier: EntitlementTier, item: { free?: boolean }): boolean {
+  return Boolean(item.free) || tier !== "free";
+}
+
 /** Generic "requires the Premium (lifetime) plan specifically" check —
  * `standard` doesn't pass this even though it passes canAccessLevel/
  * hasContentAccess. Backs Story.premiumOnly, WordGamePuzzle.premiumOnly,
