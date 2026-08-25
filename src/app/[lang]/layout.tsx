@@ -95,7 +95,7 @@ export default async function LangLayout({
   const theme = await getThemePreference();
   const user = await getCurrentUser();
 
-  const paywallPlans: Record<PlanId, { name: string; price: string; period: string; badge?: string }> = {
+  const paywallPlans: Record<PlanId, { name: string; price: string; period: string; badge?: string; valueNote?: string }> = {
     monthly: { name: dict.pricing.monthly.name, price: dict.pricing.monthly.price, period: dict.pricing.monthly.period },
     annual: {
       name: dict.pricing.annual.name,
@@ -108,6 +108,7 @@ export default async function LangLayout({
       price: dict.pricing.lifetime.price,
       period: dict.pricing.lifetime.period,
       badge: dict.pricing.lifetime.badge,
+      valueNote: dict.pricing.lifetime.valueNote,
     },
   };
 

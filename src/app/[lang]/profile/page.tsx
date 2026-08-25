@@ -188,6 +188,10 @@ export default async function ProfilePage({
   // regular unsubscribed student on this page (the lesson/story/exam pages
   // already had this bypass; this page didn't).
   const entitled = isStaff(user.role) || isActive;
+  // Drives the gold ring/crown on this page's own avatar (below) and the
+  // crown next to the plan name in the Subscription tab — see
+  // MatryoshkaAvatar.tsx's `premium` prop / entitlement.ts's isPremiumTier.
+  const isPremiumUser = isStaff(user.role) || (isActive && subscription?.plan === "lifetime");
   const dateFormatter = new Intl.DateTimeFormat(lang, { dateStyle: "long" });
 
   const statusLabels: Record<DisplayStatus, string> = {
@@ -290,7 +294,7 @@ export default async function ProfilePage({
         <section className="mt-8 flex flex-col gap-6">
           <div className="rounded-2xl border border-brand/15 bg-brand/[0.03] p-5 sm:p-6">
             <div className="flex items-center gap-4">
-              <MatryoshkaAvatar id={currentAvatarId} size={56} label={avatarLabels[currentAvatarId]} />
+              <MatryoshkaAvatar id={currentAvatarId} size={56} label={avatarLabels[currentAvatarId]} premium={isPremiumUser} />
               <div className="min-w-0">
                 <p className="truncate font-medium">{user.name?.trim() || dict.profile.nameEmpty}</p>
                 <p className="truncate text-sm text-foreground/60">{user.email}</p>
@@ -422,7 +426,10 @@ export default async function ProfilePage({
         {subscription && (
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-foreground/60">{dict.account.plan}</dt>
-            <dd>{planDisplayLabel(subscription.plan, dict)}</dd>
+            <dd className="flex items-center gap-1.5">
+              {subscription.plan === "lifetime" && <span aria-hidden>👑</span>}
+              {planDisplayLabel(subscription.plan, dict)}
+            </dd>
             <dt className="text-foreground/60">
               {isActive ? dict.profile.expiresLabel : dict.profile.expiredLabel}
             </dt>

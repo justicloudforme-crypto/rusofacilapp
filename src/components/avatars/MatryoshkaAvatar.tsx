@@ -367,23 +367,36 @@ export default function MatryoshkaAvatar({
   id,
   size = 40,
   label,
+  premium = false,
 }: {
   id: AvatarId;
   size?: number;
   label?: string;
+  /** Premium (lifetime) plan holders get a gold ring + crown around their
+   * avatar wherever it's shown for a real account (header, profile, public
+   * profile, group leaderboard) — the same amber accent already used for
+   * Premium-exclusive content lock badges elsewhere in the app. Never set
+   * for the celebration-catalog/flashcard-feedback illustration usages,
+   * which aren't tied to an actual user's plan. The ring/crown live on an
+   * outer wrapper rather than the circle itself, since the circle needs
+   * `overflow-hidden` to clip its painted features and would clip them too. */
+  premium?: boolean;
 }) {
   const character = characterOf(id);
   const face = FACES[id];
   const gaze = face.gazeShift ?? 0;
 
   return (
-    <span
-      className="relative inline-block flex-shrink-0 overflow-hidden rounded-full"
-      style={{ width: size, height: size, background: HEAD_BG[character] }}
-      role={label ? "img" : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
-    >
+    <span className="relative inline-block flex-shrink-0" style={{ width: size, height: size }}>
+      <span
+        className={`relative block h-full w-full overflow-hidden rounded-full ${
+          premium ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-background" : ""
+        }`}
+        style={{ background: HEAD_BG[character] }}
+        role={label ? "img" : undefined}
+        aria-label={label}
+        aria-hidden={label ? undefined : true}
+      >
       {headDecor(character)}
       {/* Face */}
       <span
@@ -415,6 +428,16 @@ export default function MatryoshkaAvatar({
       <span className="absolute inset-x-0 bottom-0" style={{ height: "34%", background: BODY_BG[character] }}>
         {bodyDecor(character)}
       </span>
+      </span>
+      {premium && (
+        <span
+          className="absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none leading-none drop-shadow-sm"
+          style={{ fontSize: Math.max(10, Math.round(size * 0.34)) }}
+          aria-hidden
+        >
+          👑
+        </span>
+      )}
     </span>
   );
 }

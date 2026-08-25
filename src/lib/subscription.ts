@@ -61,6 +61,30 @@ export async function getLatestSubscription(userId: string) {
   return row ? reviveSubscriptionDates(row) : row;
 }
 
+/** Batched counterpart to getLatestSubscription for a whole list of users
+ * at once — same "one query instead of N sequential round trips" pattern
+ * as getLevelProgressForUsers, used by the group leaderboard (up to
+ * MAX_GROUP_MEMBERS rows) to know which members' avatars get the Premium
+ * gold ring without one query per member. Not cached (unlike
+ * getLatestSubscription) since a leaderboard render is infrequent compared
+ * to the per-lesson access checks that cache exists for. */
+export async function getLatestSubscriptionsForUsers(
+  userIds: string[]
+): Promise<Map<string, Subscription | null>> {
+  const result = new Map<string, Subscription | null>();
+  if (userIds.length === 0) return result;
+  for (const id of userIds) result.set(id, null);
+
+  const rows = await db.subscription.findMany({
+    where: { userId: { in: userIds } },
+    orderBy: { createdAt: "desc" },
+  });
+  for (const row of rows) {
+    if (result.get(row.userId) === null) result.set(row.userId, row);
+  }
+  return result;
+}
+
 /** All of a user's Subscription rows, newest first — the profile page's
  * "payment history" tab, since this demo-auth setup has no separate
  * invoice/payment model and each Subscription row already stands for one

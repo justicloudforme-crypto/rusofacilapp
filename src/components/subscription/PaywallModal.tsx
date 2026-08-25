@@ -18,6 +18,10 @@ export interface PaywallPlanCopy {
   price: string;
   period: string;
   badge?: string;
+  /** Lifetime-only cost-comparison line (see dict.pricing.lifetime.valueNote),
+   * shown under its button so the "why pay more upfront" case is made right
+   * where the decision happens, not just on /pricing. */
+  valueNote?: string;
 }
 
 /**
@@ -110,12 +114,15 @@ export default function PaywallModal({
                   type="submit"
                   className={`tap flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
                     isLifetime
-                      ? "border-brand bg-brand/5 hover:bg-brand/10 active:bg-brand/10"
+                      ? "border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10 active:bg-amber-500/10"
                       : "border-black/10 hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
                   }`}
                 >
                   <span>
-                    <span className="block text-sm font-medium">{plan.name}</span>
+                    <span className="block text-sm font-medium">
+                      {isLifetime && <span aria-hidden>👑 </span>}
+                      {plan.name}
+                    </span>
                     {plan.badge && <span className="block text-xs text-foreground/50">{plan.badge}</span>}
                   </span>
                   <span className="flex items-center gap-2">
@@ -125,6 +132,9 @@ export default function PaywallModal({
                     </span>
                   </span>
                 </button>
+                {isLifetime && plan.valueNote && (
+                  <p className="mt-1.5 px-1 text-xs text-amber-600 dark:text-amber-400">{plan.valueNote}</p>
+                )}
               </form>
             );
           })}

@@ -16,6 +16,7 @@ export default function ProfileMenu({
   name,
   email,
   avatarId,
+  isPremium,
   label,
   tabs,
   logoutLabel,
@@ -24,6 +25,7 @@ export default function ProfileMenu({
   name: string | null;
   email: string;
   avatarId: AvatarId;
+  isPremium: boolean;
   label: string;
   tabs: { id: string; label: string }[];
   logoutLabel: string;
@@ -65,7 +67,7 @@ export default function ProfileMenu({
         aria-haspopup="menu"
         className="tap flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10 active:bg-foreground/10"
       >
-        <MatryoshkaAvatar id={avatarId} size={28} />
+        <MatryoshkaAvatar id={avatarId} size={28} premium={isPremium} />
         {label}
       </button>
 

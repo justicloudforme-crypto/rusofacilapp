@@ -306,7 +306,8 @@
       "price": "$169.99 USD",
       "period": "pago único",
       "cta": "Comprar Premium de por vida",
-      "badge": "Acceso para siempre"
+      "badge": "Acceso para siempre",
+      "valueNote": "Se amortiza en solo 3,5 años frente al plan anual — después, el aprendizaje es gratis para siempre."
     },
     "oxxoCta": "Pagar en efectivo (OXXO)",
     "oxxoNote": "Recibirás un código de barras por correo y en pantalla para pagar en cualquier tienda OXXO de México. Tu acceso se activa en cuanto se confirme el pago (hasta 3 días); el código vence si no se usa en ese plazo.",

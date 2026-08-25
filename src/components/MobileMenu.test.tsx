@@ -10,7 +10,9 @@ const groups = [
   { label: "Aprender", links: [{ href: "/es", label: "Inicio" }, { href: "/es/courses", label: "Cursos" }] },
 ];
 
-function renderMenu(user: { name: string | null; email: string; avatarId: "matryoshka_calm" } | null = null) {
+function renderMenu(
+  user: { name: string | null; email: string; avatarId: "matryoshka_calm"; isPremium: boolean } | null = null,
+) {
   return render(
     <MobileMenu
       lang="es"
@@ -48,7 +50,7 @@ describe("MobileMenu", () => {
 
   it("shows the profile row and logout button when logged in", async () => {
     const user = userEvent.setup();
-    renderMenu({ name: "Ana", email: "ana@example.com", avatarId: "matryoshka_calm" });
+    renderMenu({ name: "Ana", email: "ana@example.com", avatarId: "matryoshka_calm", isPremium: false });
 
     await user.click(screen.getByRole("button", { name: "Abrir menú" }));
 

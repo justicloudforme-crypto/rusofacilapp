@@ -4,6 +4,7 @@ import { getLevelProgressForUsers } from "./progress";
 import { levelSlugs } from "./courses";
 import { isAvatarId, DEFAULT_AVATAR_ID, type AvatarId } from "./avatars";
 import { generateShortCode, isPlausibleShortCode } from "./short-code";
+import { getLatestSubscriptionsForUsers, isSubscriptionActive } from "./subscription";
 
 // Same alphabet/length as referral codes — this is meant to be typed or
 // read aloud when sharing a group with classmates, not just clicked.
@@ -135,6 +136,9 @@ export interface GroupMemberStanding {
   userId: string;
   name: string | null;
   avatarId: AvatarId;
+  /** Active Premium (lifetime) plan — drives the gold ring/crown on this
+   * member's leaderboard avatar, see MatryoshkaAvatar.tsx's `premium` prop. */
+  isPremium: boolean;
   isOwner: boolean;
   currentLevel: string | null;
   /** Sum of completed lessons across every level — the leaderboard's
@@ -171,16 +175,22 @@ export async function getGroupForMember(userId: string, groupId: string): Promis
   // One batched query for every member's progress instead of one
   // getLevelProgress call per member — up to MAX_GROUP_MEMBERS (30)
   // sequential Turso round trips collapsed into a single query.
-  const progressByUser = await getLevelProgressForUsers(group.members.map(({ user }) => user.id));
+  const memberIds = group.members.map(({ user }) => user.id);
+  const [progressByUser, subscriptionByUser] = await Promise.all([
+    getLevelProgressForUsers(memberIds),
+    getLatestSubscriptionsForUsers(memberIds),
+  ]);
 
   const members: GroupMemberStanding[] = group.members.map(({ user }) => {
     const progress = progressByUser.get(user.id)!;
     const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0) ?? null;
     const completedLessons = levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0);
+    const subscription = subscriptionByUser.get(user.id);
     return {
       userId: user.id,
       name: user.name,
       avatarId: isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID,
+      isPremium: subscription?.plan === "lifetime" && isSubscriptionActive(subscription),
       isOwner: user.id === group.ownerUserId,
       currentLevel,
       completedLessons,

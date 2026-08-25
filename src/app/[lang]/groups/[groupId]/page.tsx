@@ -60,7 +60,7 @@ export default async function GroupDetailPage({
               <span className="w-5 flex-shrink-0 text-center text-xs font-semibold text-foreground/40 tabular-nums">
                 {index + 1}
               </span>
-              <MatryoshkaAvatar id={member.avatarId} size={36} label={avatarLabels[member.avatarId]} />
+              <MatryoshkaAvatar id={member.avatarId} size={36} label={avatarLabels[member.avatarId]} premium={member.isPremium} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
                   {member.name?.trim() || dict.groups.anonymousMemberName}

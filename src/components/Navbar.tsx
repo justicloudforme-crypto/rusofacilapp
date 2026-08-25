@@ -9,6 +9,7 @@ import type { Locale } from "@/i18n/config";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
+import { getEntitlementTier, isPremiumTier } from "@/lib/entitlement";
 
 export default async function Navbar({
   lang,
@@ -19,6 +20,9 @@ export default async function Navbar({
 }) {
   const user = await getCurrentUser();
   const staff = Boolean(user && isStaff(user.role));
+  // Drives the gold ring/crown on the header avatar — see
+  // MatryoshkaAvatar.tsx's `premium` prop.
+  const isPremiumUser = user ? isPremiumTier(await getEntitlementTier()) : false;
 
   const navLinks = [
     { href: `/${lang}`, label: dict.nav.home },
@@ -103,6 +107,7 @@ export default async function Navbar({
               name={user.name}
               email={user.email}
               avatarId={avatarId}
+              isPremium={isPremiumUser}
               label={dict.nav.profile}
               tabs={profileTabs}
               logoutLabel={dict.auth.logout}
@@ -117,7 +122,7 @@ export default async function Navbar({
           )}
           <MobileMenu
             lang={lang}
-            user={user ? { name: user.name, email: user.email, avatarId } : null}
+            user={user ? { name: user.name, email: user.email, avatarId, isPremium: isPremiumUser } : null}
             groups={mobileGroups}
             loggedOutHref={ctaHref}
             loggedOutLabel={ctaLabel}
