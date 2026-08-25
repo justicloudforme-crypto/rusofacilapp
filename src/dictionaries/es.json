@@ -707,7 +707,9 @@
       "paginationNext": "Adelante",
       "paginationInfo": "Página {current} de {total}",
       "freeTrialLimitMessage": "Has visto la muestra gratuita de expresiones. Suscríbete para desbloquear todos los modismos.",
-      "freeTrialLimitCta": "Suscribirme"
+      "freeTrialLimitCta": "Suscribirme",
+      "literaryLockedMessageStandard": "Los modismos literarios están casi completos solo en el plan Premium — tu suscripción actual solo desbloquea una pequeña parte.",
+      "literaryUpgradeCta": "Pasar a Premium"
     }
   },
   "wordGames": {

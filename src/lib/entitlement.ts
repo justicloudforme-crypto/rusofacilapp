@@ -82,6 +82,23 @@ export const FREE_TRIAL_LIMITS = {
   wordGamePuzzlesPerLevel: 5,
 } as const;
 
+/**
+ * The "literary" idiom category (proverbs' more advanced sibling) is
+ * Premium-exclusive beyond a small taste — unlike the rest of the idiom
+ * bank, where "standard" already means full access (minus C1). free gets
+ * one to know the category exists; standard gets a real but capped sample;
+ * only premium sees the whole thing. `null` means "no cap" (premium).
+ */
+export const LITERARY_IDIOM_LIMITS: Record<Exclude<EntitlementTier, "premium">, number> = {
+  free: 1,
+  standard: 5,
+};
+
+export function getLiteraryIdiomLimit(tier: EntitlementTier): number | null {
+  if (tier === "premium") return null;
+  return LITERARY_IDIOM_LIMITS[tier];
+}
+
 /** Same staff/subscription check as {@link hasContentAccess}, but without
  * requiring a logged-in user — a free-trial visitor is typically
  * anonymous, and the trial must work for them too. */

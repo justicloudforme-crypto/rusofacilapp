@@ -707,7 +707,9 @@
       "paginationNext": "Вперёд",
       "paginationInfo": "Страница {current} из {total}",
       "freeTrialLimitMessage": "Вы изучили бесплатный пробный набор выражений. Оформите подписку, чтобы открыть все идиомы.",
-      "freeTrialLimitCta": "Оформить подписку"
+      "freeTrialLimitCta": "Оформить подписку",
+      "literaryLockedMessageStandard": "Литературные идиомы почти полностью доступны только в плане Premium — ваша текущая подписка открывает лишь небольшую часть.",
+      "literaryUpgradeCta": "Перейти на Premium"
     }
   },
   "wordGames": {
