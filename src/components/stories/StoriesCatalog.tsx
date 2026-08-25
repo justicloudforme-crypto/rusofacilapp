@@ -5,6 +5,7 @@ import Link from "next/link";
 import { storyLevels, type StoryLevel } from "@/lib/stories";
 import LevelBadge from "@/components/LevelBadge";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
+import { usePaywall } from "@/contexts/PaywallContext";
 
 export interface StorySummary {
   id: string;
@@ -12,7 +13,11 @@ export interface StorySummary {
   author: string;
   level: StoryLevel;
   isPremium: boolean;
-  premiumOnly: boolean;
+  /** Whether (and why) THIS visitor can't open this story right now — see
+   * entitlement.ts's getStoryAccess. `null` means fully accessible. Drives
+   * the crown badge + paywall-on-click below; the list itself already
+   * arrives pre-sorted accessible-first (see [lang]/stories/page.tsx). */
+  lockReason: "free" | "premium" | null;
   description: string | null;
 }
 
@@ -47,6 +52,7 @@ export default function StoriesCatalog({
   // cards simply render without a progress badge until this fills in,
   // same hydration-safe pattern used elsewhere for client-only state.
   const [progressById, setProgressById] = useState<Record<string, StoryProgress>>({});
+  const { openPaywall } = usePaywall();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -97,10 +103,16 @@ export default function StoriesCatalog({
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((story) => {
             const progress = progressById[story.id];
+            const isLocked = story.lockReason !== null;
             return (
               <Link
                 key={story.id}
                 href={`/${lang}/stories/${story.id}`}
+                onClick={(e) => {
+                  if (!isLocked) return;
+                  e.preventDefault();
+                  openPaywall(story.lockReason ?? "free");
+                }}
                 className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
               >
                 <div className="flex items-center justify-between gap-2">
@@ -111,7 +123,7 @@ export default function StoriesCatalog({
                         ⭐ {dict.premiumBadge}
                       </span>
                     )}
-                    {story.premiumOnly && (
+                    {story.lockReason === "premium" && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
                         👑 {dict.premiumTierBadge}
                       </span>
