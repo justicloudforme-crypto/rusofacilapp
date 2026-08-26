@@ -7,6 +7,7 @@ import CyrillicKeyboard, { type CyrillicKeyboardDict } from "./CyrillicKeyboard"
 import type { RecallResult } from "@/lib/flashcards/recall-round";
 import type { AvatarId } from "@/lib/avatars";
 import { playCorrectTone, playIncorrectTone } from "@/lib/sound";
+import { hapticSuccess, hapticError } from "@/lib/haptics";
 
 // A correct answer picks one of these at random (once per card) instead of
 // always the same "happy" face — small, cheap variety so the approval
@@ -86,20 +87,34 @@ export default function AnswerPad({
   const [correctReaction] = useState(
     () => CORRECT_REACTIONS[Math.floor(Math.random() * CORRECT_REACTIONS.length)],
   );
-  // Collapsed by default — most learners type on a physical/system
-  // keyboard (even without a Cyrillic layout installed, letters still
-  // land via CYRILLIC_LETTER's physical-keyboard handling below on some
-  // devices, and transliteration extensions are common), so leaving this
-  // on-screen keyboard permanently open ate a large chunk of vertical
-  // space in word games and card views that don't need it. A pill toggle
-  // brings it back for anyone who does.
+  // A real device report found the previous "open by default" reasoning
+  // here was solving the wrong problem: the answer box used to be a plain
+  // div rather than an <input>, specifically to stop the system keyboard
+  // from popping up and fighting this one — but that also meant no system
+  // keyboard could ever be used at all, on any device, Cyrillic layout or
+  // not. Now that the box below is a real <input> (see the isCyrillic
+  // branch), the system keyboard opens on focus like any normal text
+  // field; this pill+panel is purely the backup for anyone without a
+  // Cyrillic layout installed, so it defaults closed again — most typing
+  // now happens on the system keyboard, not this one.
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const isCyrillic = alphabet === "cyrillic";
   const expectedLetter = isCyrillic ? CYRILLIC_LETTER : LATIN_LETTER;
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     onAnswerChange?.(answer);
   }, [answer, onAnswerChange]);
+
+  // hideAnswerBox mode ("completa la frase") still needs a real, focusable
+  // <input> for the system keyboard to attach to — a device report found
+  // that mode had no keyboard at all, because the box below used to be
+  // skipped from the DOM entirely rather than just hidden visually. Autofocus
+  // it as soon as the card appears so typing starts immediately, matching
+  // what a visible answer box would already do on tap.
+  useEffect(() => {
+    if (hideAnswerBox) inputRef.current?.focus();
+  }, [hideAnswerBox]);
 
   // Fires exactly once per submitted answer — `result` goes null -> a
   // result on submit, then a fresh AnswerPad instance (remounted by the
@@ -108,49 +123,16 @@ export default function AnswerPad({
   useEffect(() => {
     if (result === "correct" || result === "almost") {
       playCorrectTone();
+      hapticSuccess();
     } else if (result === "incorrect") {
       playIncorrectTone();
+      hapticError();
     }
   }, [result]);
-
-  // Read via a ref instead of listing `answer` as an effect dependency
-  // below — a dependency would tear down and re-add the window listener on
-  // every single keystroke for no benefit (setAnswer already updates off
-  // the latest value via its functional form; only the Enter-to-submit
-  // path needs to read the current answer).
-  const answerRef = useRef(answer);
-  useEffect(() => {
-    answerRef.current = answer;
-  }, [answer]);
 
   const appendLetter = useCallback((letter: string) => setAnswer((a) => a + letter), []);
   const appendSpace = useCallback(() => setAnswer((a) => a + " "), []);
   const backspace = useCallback(() => setAnswer((a) => a.slice(0, -1)), []);
-
-  // Cyrillic mode has no real focused <input> — the answer box is a plain
-  // div so tapping it doesn't fight the on-screen CyrillicKeyboard by also
-  // summoning the device's (usually Latin) system keyboard. A physical
-  // keyboard still works via this global listener. Latin mode instead uses
-  // a real <input> below (Latin letters need no custom keyboard, and a real
-  // input is what actually opens a mobile system keyboard), so this
-  // listener only attaches for Cyrillic to avoid double-typing every letter.
-  useEffect(() => {
-    if (result || !isCyrillic) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Backspace") {
-        backspace();
-      } else if (e.key === " ") {
-        e.preventDefault();
-        appendSpace();
-      } else if (e.key === "Enter") {
-        onSubmit(answerRef.current);
-      } else if (e.key.length === 1 && expectedLetter.test(e.key)) {
-        appendLetter(e.key);
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [result, isCyrillic, expectedLetter, onSubmit, appendLetter, appendSpace, backspace]);
 
   const feedbackText =
     result === "correct"
@@ -171,31 +153,37 @@ export default function AnswerPad({
         {/* A little folk-pattern reward next to a fully correct answer —
             "almost" still gets the amber near-miss treatment, not this. */}
         {result === "correct" && <FolkSpark size={22} />}
-        {!hideAnswerBox &&
-          (isCyrillic ? (
-            <div
-              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium transition-colors ${answerBoxColorClass(result)} ${answerBoxMotionClass(result)}`}
-            >
-              {answer || <span className="text-foreground/30">{dict.answerPlaceholder}</span>}
-            </div>
-          ) : (
-            <input
-              type="text"
-              inputMode="text"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              value={answer}
-              disabled={Boolean(result)}
-              placeholder={dict.answerPlaceholder}
-              onChange={(e) => setAnswer(e.target.value.split("").filter((ch) => ch === " " || LATIN_LETTER.test(ch)).join(""))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !result) onSubmit(answer);
-              }}
-              className={`min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${answerBoxColorClass(result)} ${answerBoxMotionClass(result)}`}
-            />
-          ))}
+        {/* One real <input> for both alphabets, always rendered — a device
+            report found that hideAnswerBox mode ("completa la frase", the
+            live answer is shown inline in the sentence instead) had no
+            input in the DOM at all, so no system keyboard could ever
+            attach. When hideAnswerBox is set this stays functionally
+            identical but visually hidden (sr-only-style: clipped to 1px,
+            not display:none/visibility:hidden — those would also block
+            focus and the keyboard) rather than skipped entirely.
+            CyrillicKeyboard below stays as the on-screen fallback either
+            way for anyone without a Cyrillic layout installed. */}
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="text"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          value={answer}
+          disabled={Boolean(result)}
+          placeholder={dict.answerPlaceholder}
+          onChange={(e) => setAnswer(e.target.value.split("").filter((ch) => ch === " " || expectedLetter.test(ch)).join(""))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !result) onSubmit(answer);
+          }}
+          className={
+            hideAnswerBox
+              ? "sr-only"
+              : `min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${answerBoxColorClass(result)} ${answerBoxMotionClass(result)}`
+          }
+        />
       </div>
 
       {feedbackText && <p className="-mt-3 text-sm text-foreground/70">{feedbackText}</p>}

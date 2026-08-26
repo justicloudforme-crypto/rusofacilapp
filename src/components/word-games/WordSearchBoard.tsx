@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PublicWordSearchPuzzle } from "@/lib/word-games/data";
 import { extendPath, extendPathStraight, matchSelection, type Cell } from "@/lib/word-games/word-search-select";
 import { playCorrectTone } from "@/lib/sound";
+import { hapticSuccess } from "@/lib/haptics";
 
 interface Dict {
   wordsFoundLabel: string;
@@ -178,6 +179,7 @@ export default function WordSearchBoard({
       return copy;
     });
     playCorrectTone();
+    hapticSuccess();
     updatePath([]);
     if (nextFound.size === puzzle.words.length && !solvedReported.current) {
       solvedReported.current = true;

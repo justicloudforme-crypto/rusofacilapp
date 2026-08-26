@@ -13,6 +13,7 @@ import StoryAudioPlayer, { READ_ALOUD_RATES } from "@/components/stories/StoryAu
 import { sanitizeTextForTTS } from "@/lib/speech";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
+import { setNativeMediaMetadata, setNativePlaybackState, setNativeActionHandler } from "@/lib/native-media-session";
 
 // Captures runs of Cyrillic letters (optionally hyphenated, e.g.
 // "кто-то") as clickable tokens; everything else (spaces, punctuation)
@@ -141,6 +142,17 @@ export default function StoryText({
   // monotonic counter can't get stuck: a stale utterance/clip simply never
   // matches the current generation, no reset step required.
   const playbackGenRef = useRef(0);
+  // Chromium/Android has a well-known Web Speech API quirk: the first
+  // speechSynthesis.speak() call after the engine has been idle clips the
+  // very start of the utterance while the engine spins up — a device
+  // report found exactly this ("the narrator skips the opening phrase")
+  // on a free-tier story that falls back to browser TTS. Firing one
+  // silent warm-up utterance immediately before the real first one (see
+  // handlePlayPause) absorbs that clipped fraction of a second instead of
+  // eating real content. Once per mount is enough — a new story page
+  // remounts this component and gets a fresh ref, and the engine doesn't
+  // go idle again just from a pause/seek within the same story.
+  const ttsWarmedRef = useRef(false);
 
   const [isCompletedBadge, setIsCompletedBadge] = useState(false);
   const [resumeQueueIndex, setResumeQueueIndex] = useState<number | null>(null);
@@ -528,11 +540,20 @@ export default function StoryText({
     // instead of a mystery "it just stops."
     audio.play().catch((err) => {
       if (playbackGenRef.current !== generation) return;
+      // AbortError specifically means this exact play() call was
+      // interrupted by a pause()/new src before it resolved — the
+      // browser's normal, always-benign signal for "something else took
+      // over," not a playback failure. Retrying it would either no-op or
+      // race whatever caused the interruption, so it's excluded from both
+      // the log and the retry below; every other rejection reason still
+      // gets both, unchanged.
+      if (err instanceof DOMException && err.name === "AbortError") return;
       console.error("[StoryText audio] play() rejected for", url, err);
       window.setTimeout(() => {
         if (playbackGenRef.current !== generation) return;
         audio.play().catch((retryErr) => {
           if (playbackGenRef.current !== generation) return;
+          if (retryErr instanceof DOMException && retryErr.name === "AbortError") return;
           console.error("[StoryText audio] retry also rejected for", url, retryErr);
           setPlaying(false);
         });
@@ -701,6 +722,14 @@ export default function StoryText({
     }
     const startIndex = readingQueueIndex !== null && readingQueueIndex < queue.length - 1 ? readingQueueIndex : 0;
     setPlaying(true);
+    if (!ttsWarmedRef.current) {
+      ttsWarmedRef.current = true;
+      // Silent warm-up utterance, fired synchronously in the same click
+      // gesture right before the real one — see ttsWarmedRef's comment.
+      const warmup = new SpeechSynthesisUtterance(" ");
+      warmup.volume = 0;
+      window.speechSynthesis.speak(warmup);
+    }
     speakQueueAt(startIndex);
   }
 
@@ -770,6 +799,28 @@ export default function StoryText({
       handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1))
     );
 
+    // Native half of the above — a no-op on web (see native-media-session.ts).
+    // Android's System WebView, unlike Chrome, doesn't surface
+    // navigator.mediaSession as a real OS notification/lock-screen player
+    // on its own; this drives the same metadata/state/handlers through
+    // @capgo/capacitor-media-session so the native shell gets one too.
+    void setNativeMediaMetadata({
+      title,
+      artist: author,
+      artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],
+    });
+    void setNativePlaybackState(playing);
+    void setNativeActionHandler("play", () => handlePlayPause());
+    void setNativeActionHandler("pause", () => handlePlayPause());
+    void setNativeActionHandler("seekbackward", () => skipBy(-15));
+    void setNativeActionHandler("seekforward", () => skipBy(15));
+    void setNativeActionHandler("previoustrack", () =>
+      handleSentenceClick(Math.max(0, (readingQueueIndex ?? 0) - 1))
+    );
+    void setNativeActionHandler("nexttrack", () =>
+      handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1))
+    );
+
     return () => {
       navigator.mediaSession.setActionHandler("play", null);
       navigator.mediaSession.setActionHandler("pause", null);
@@ -777,6 +828,12 @@ export default function StoryText({
       navigator.mediaSession.setActionHandler("seekforward", null);
       navigator.mediaSession.setActionHandler("previoustrack", null);
       navigator.mediaSession.setActionHandler("nexttrack", null);
+      void setNativeActionHandler("play", null);
+      void setNativeActionHandler("pause", null);
+      void setNativeActionHandler("seekbackward", null);
+      void setNativeActionHandler("seekforward", null);
+      void setNativeActionHandler("previoustrack", null);
+      void setNativeActionHandler("nexttrack", null);
     };
   });
 

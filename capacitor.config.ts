@@ -33,6 +33,15 @@ const config: CapacitorConfig = {
   server: {
     url: devServerUrl,
     cleartext: devServerUrl.startsWith("http://"),
+    // Without an explicit allowlist, Capacitor's WebViewClient can decide
+    // a same-app navigation (e.g. the 303 redirect /api/auth/login issues
+    // after a successful login/register) isn't "internal" and hand it to
+    // the system browser instead of keeping it in the WebView — a real
+    // device report on Android specifically. Both the LAN dev host and
+    // the eventual production domain are listed so this doesn't need to
+    // change again at the CAPACITOR_SERVER_URL production switch
+    // described above.
+    allowNavigation: [new URL(devServerUrl).hostname, "rusofacilapp.com", "*.rusofacilapp.com"],
     // A remote-URL Capacitor app has one native-only failure mode a
     // regular website never does: the very first request, before a
     // single byte of the real Next.js app (or its OfflineBanner

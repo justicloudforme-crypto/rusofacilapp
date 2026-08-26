@@ -6,6 +6,7 @@ import ScenarioStage from "./ScenarioStage";
 import { scenarioIdsFor, type ScenarioId } from "./catalog";
 import { createScenarioPicker, pickRandomFrom } from "./pickScenario";
 import { playSuccessJingle } from "@/lib/sound";
+import { hapticSuccess } from "@/lib/haptics";
 
 // Everyday passes (lesson/round completion) randomize across every win
 // scenario tagged "everyday" in the catalog — see catalog/index.ts for the
@@ -73,6 +74,7 @@ export default function CelebrationModal({
     setActiveScenario(variant ?? pickFreshWinScenario());
     setExclamation(exclamations.length > 0 ? pickRandomFrom(exclamations) : null);
     playSuccessJingle();
+    hapticSuccess();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 

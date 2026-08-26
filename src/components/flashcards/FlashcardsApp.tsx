@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import CategoryGrid, { type CategorySummary } from "./CategoryGrid";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
-import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
+import { isFlashcardCategory, isFlashcardLevel, type FlashcardCategory, type FlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
+import { hapticTap, hapticSuccess } from "@/lib/haptics";
 
 export interface FlashcardsDict {
   categoryLabels: Record<FlashcardCategory, string>;
@@ -50,12 +52,61 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   const [categoryCards, setCategoryCards] = useState<FlashcardRow[]>([]);
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
   const [limited, setLimited] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Swipe-to-answer (Tinder/Duolingo-style): a pure gesture layer over the
+  // already-existing markKnown(true/false) below, not new logic. dragX
+  // drives the live horizontal transform; isDragging turns off the CSS
+  // transition while the finger is down (instant tracking) and back on for
+  // the snap-back/fling-out settle. didDragRef distinguishes a real drag
+  // from a tap so the existing tap-to-flip handler isn't also triggered by
+  // a drag release.
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const didDragRef = useRef(false);
+  const DRAG_THRESHOLD = 100;
+  const TAP_THRESHOLD = 6;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setKnownWords(getKnownWords());
     syncKnownWords().then(setKnownWords);
   }, []);
+
+  // Restores which category/level the learner was browsing from the URL —
+  // closes the same gap VocabularyApp.tsx's own ?mode= restore does one
+  // level up: a locale switch is a real navigation, so any state that
+  // only ever lived in useState (never the URL) is lost, which read as
+  // "dumped back to the category grid." Same hydration-safe "start with
+  // the default, correct after mount" pattern as that sibling restore.
+  useLayoutEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlCategory = params.get("category");
+    const urlLevel = params.get("level");
+    if (urlCategory && isFlashcardCategory(urlCategory)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCategory(urlCategory);
+    }
+    if (urlLevel && isFlashcardLevel(urlLevel)) {
+      setLevelFilter(urlLevel);
+    }
+  }, []);
+
+  // replace, not push: browsing categories/levels isn't a new navigable
+  // location, same reasoning VocabularyApp.tsx's own ?mode= sync uses.
+  function syncUrl(next: { category?: FlashcardCategory | null; level?: FlashcardLevel | "all" }) {
+    const params = new URLSearchParams(window.location.search);
+    const nextCategory = next.category !== undefined ? next.category : category;
+    const nextLevel = next.level !== undefined ? next.level : levelFilter;
+    if (nextCategory) params.set("category", nextCategory);
+    else params.delete("category");
+    if (nextLevel && nextLevel !== "all") params.set("level", nextLevel);
+    else params.delete("level");
+    const query = params.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => setSearchQuery(searchInput.trim()), SEARCH_DEBOUNCE_MS);
@@ -140,6 +191,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     setSearchQuery("");
     setIndex(0);
     setFlipped(false);
+    syncUrl({ category: next });
   }
 
   function backToCategories() {
@@ -149,23 +201,79 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     setIndex(0);
     setFlipped(false);
     setLimited(false);
+    syncUrl({ category: null });
   }
 
   function selectLevel(next: FlashcardLevel | "all") {
     setLevelFilter(next);
     setIndex(0);
     setFlipped(false);
+    syncUrl({ level: next });
   }
 
   function advance() {
     setFlipped(false);
+    setDragX(0);
+    setIsDragging(false);
     setIndex((prev) => (cards.length === 0 ? 0 : (prev + 1) % cards.length));
   }
 
   function markKnown(known: boolean) {
     if (!card) return;
+    // "Sé esta palabra" gets the same success buzz as a correct answer
+    // elsewhere in the app; "Repetir" is a neutral choice, not a mistake,
+    // so a light tap rather than the error pattern.
+    if (known) hapticSuccess();
+    else hapticTap();
     setKnownWords(setWordKnown(card.id, known));
     advance();
+  }
+
+  function handleDragStart(e: React.PointerEvent) {
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    didDragRef.current = false;
+    setIsDragging(true);
+  }
+
+  function handleDragMove(e: React.PointerEvent) {
+    const start = dragStartRef.current;
+    if (!start) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    // Once a real horizontal drag starts, a mostly-vertical move (page
+    // scroll intent, not a swipe) cancels it rather than fighting the
+    // browser's own scroll handling.
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > TAP_THRESHOLD) {
+      dragStartRef.current = null;
+      setIsDragging(false);
+      setDragX(0);
+      return;
+    }
+    if (Math.abs(dx) > TAP_THRESHOLD) didDragRef.current = true;
+    setDragX(dx);
+  }
+
+  function handleDragEnd() {
+    dragStartRef.current = null;
+    setIsDragging(false);
+    if (Math.abs(dragX) > DRAG_THRESHOLD) {
+      const direction = dragX > 0 ? 1 : -1;
+      hapticTap();
+      // Fling fully off-screen first, so the swipe reads as a completed
+      // gesture, then hand off to the same markKnown() the buttons use.
+      setDragX(direction * 600);
+      window.setTimeout(() => markKnown(direction > 0), 200);
+    } else {
+      setDragX(0);
+    }
+  }
+
+  function handleCardClick() {
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
+    setFlipped((f) => !f);
   }
 
   return (
@@ -230,25 +338,57 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                 {dict.cardCounter.replace("{current}", String(index + 1)).replace("{total}", String(cards.length))}
               </p>
 
-              <div className="[perspective:1200px]">
+              <div key={card.id} className="relative [perspective:1200px]">
+                {/* Swipe-progress indicators — decorative only
+                    (pointer-events-none), so they never steal the drag
+                    from the card underneath. Opacity ramps in with drag
+                    distance so the gesture gives feedback before the
+                    ~100px commit threshold is even reached. */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-4 top-3 z-10 flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white"
+                  style={{ opacity: Math.max(0, Math.min(dragX / DRAG_THRESHOLD, 1)), justifyContent: "flex-end" }}
+                >
+                  <span>✓ {dict.knowButton}</span>
+                </div>
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-4 top-3 z-10 flex items-center gap-1.5 rounded-full bg-rose-500 px-3 py-1.5 text-sm font-semibold text-white"
+                  style={{ opacity: Math.max(0, Math.min(-dragX / DRAG_THRESHOLD, 1)) }}
+                >
+                  <span>↺ {dict.repeatButton}</span>
+                </div>
+
                 {/* A <div role="button">, not a real <button> — the example
                     sentence's SpeakButton (below) is itself a <button>, and
                     nesting <button> inside <button> is invalid HTML (React
                     warns "cannot be a descendant of"). Keyboard/AT support
-                    is preserved via tabIndex + onKeyDown. */}
+                    is preserved via tabIndex + onKeyDown. Also doubles as
+                    the swipe surface: pointer handlers track a horizontal
+                    drag, and handleCardClick (rather than a plain toggle)
+                    tells a completed drag apart from a tap so releasing a
+                    swipe doesn't also flip the card. */}
                 <div
                   role="button"
                   tabIndex={0}
-                  onClick={() => setFlipped((f) => !f)}
+                  onClick={handleCardClick}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
                       setFlipped((f) => !f);
                     }
                   }}
+                  onPointerDown={handleDragStart}
+                  onPointerMove={handleDragMove}
+                  onPointerUp={handleDragEnd}
+                  onPointerCancel={handleDragEnd}
                   aria-label={dict.tapToFlip}
-                  className="relative block h-64 w-full cursor-pointer [transform-style:preserve-3d] transition-transform duration-500"
-                  style={{ transform: flipped ? "rotateY(180deg)" : "none" }}
+                  className="relative block h-64 w-full cursor-pointer touch-manipulation select-none [transform-style:preserve-3d]"
+                  style={{
+                    transform: `translateX(${dragX}px) rotate(${dragX / 15}deg) ${flipped ? "rotateY(180deg)" : ""}`,
+                    transition: isDragging ? "none" : "transform 350ms ease-out",
+                    touchAction: "pan-y",
+                  }}
                 >
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-black/10 bg-background p-6 [backface-visibility:hidden] dark:border-white/10">
                     <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/60">

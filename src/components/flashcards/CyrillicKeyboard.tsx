@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, type MouseEvent, type TouchEvent } from "react";
+import { hapticTap } from "@/lib/haptics";
 
 // Compact on-screen Cyrillic keyboard for the recall trainer — a phone's
 // system keyboard usually isn't set to Russian, and asking a Spanish-
@@ -42,7 +43,13 @@ export default function CyrillicKeyboard({
 }) {
   // Stable handler per letter so tapping doesn't re-create (and re-bind)
   // all 33 button callbacks on every keystroke.
-  const handleKey = useCallback((e: MouseEvent<HTMLButtonElement>) => onKey(e.currentTarget.value), [onKey]);
+  const handleKey = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      hapticTap();
+      onKey(e.currentTarget.value);
+    },
+    [onKey],
+  );
 
   // Backstop behind touch-action: manipulation above, not a replacement for
   // it — every clickable element in the keyboard now has touch-action set,
@@ -100,13 +107,19 @@ export default function CyrillicKeyboard({
       <div className="grid w-full touch-manipulation grid-cols-[7fr_3fr] gap-1.5">
         <button
           type="button"
-          onClick={onSpace}
+          onClick={() => {
+            hapticTap();
+            onSpace();
+          }}
           aria-label={dict.spaceLabel}
           className={`h-11 rounded-lg border border-black/10 bg-background text-sm font-medium sm:h-12 dark:border-white/15 ${KEY_BASE}`}
         />
         <button
           type="button"
-          onClick={onBackspace}
+          onClick={() => {
+            hapticTap();
+            onBackspace();
+          }}
           aria-label={dict.backspaceLabel}
           className={`flex h-11 items-center justify-center rounded-lg border border-black/10 bg-background text-lg font-medium sm:h-12 dark:border-white/15 ${KEY_BASE}`}
         >

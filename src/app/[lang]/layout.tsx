@@ -8,11 +8,13 @@ import "../globals.css";
 import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import TelegramFloatButton from "@/components/TelegramFloatButton";
 import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
 import NativeBackButtonHandler from "@/components/NativeBackButtonHandler";
+import NativeNotifications from "@/components/NativeNotifications";
 import SerwistRegister from "@/components/SerwistRegister";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
@@ -117,19 +119,33 @@ export default async function LangLayout({
       lang={lang}
       data-theme={theme}
       className={`${ptSans.variable} ${ptSerif.variable} ${ptMono.variable} h-full antialiased`}
+      // Android WebView/Capacitor is known to inject its own attributes
+      // onto <html>/<body> before hydration runs — React then reports a
+      // mismatch for attributes it never rendered itself. Confirmed no
+      // real mismatch exists in this app's own code (theme comes from a
+      // server-read cookie with no client override; safe-area insets are
+      // applied through static CSS classes, not inline styles) — this
+      // only silences the false-positive warning, it doesn't hide an
+      // actual content difference.
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col" suppressHydrationWarning>
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} register={false}>
           <SerwistRegister />
         </SerwistProvider>
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
+        <NativeNotifications />
         <OfflineBanner message={dict.offline.bannerMessage} />
         <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans}>
           <Navbar lang={lang} dict={dict} />
-          <main className="flex flex-1 flex-col">{children}</main>
+          {/* pb-20 clears BottomNav's own height (~56px content + its own
+              pb-safe inset) below sm so page content never sits under it;
+              sm:pb-0 since BottomNav itself is sm:hidden. */}
+          <main className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</main>
           <Footer dict={dict} lang={lang} />
         </PaywallProvider>
+        <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} />
         {/* Reading mode is meant to minimize distractions — the floating
             Telegram CTA is the one persistent, animated, non-content element
             on every page, so it's the one thing this mode hides. */}

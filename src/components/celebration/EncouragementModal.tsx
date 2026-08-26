@@ -5,6 +5,7 @@ import ScenarioStage from "./ScenarioStage";
 import { scenarioIdsFor, type ScenarioId } from "./catalog";
 import { createScenarioPicker, pickRandomFrom } from "./pickScenario";
 import { playEncouragementTone } from "@/lib/sound";
+import { hapticError } from "@/lib/haptics";
 
 // A separate pool and a separate picker/history from CelebrationModal's —
 // the two outcomes never mix, and a "matryoshka" win pick shouldn't count
@@ -45,6 +46,7 @@ export default function EncouragementModal({
     setActiveScenario(pickFreshFailScenario());
     setExclamation(exclamations.length > 0 ? pickRandomFrom(exclamations) : null);
     playEncouragementTone();
+    hapticError();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
