@@ -788,6 +788,7 @@
     "freeTrialLimitMessage": "Has visto la muestra gratuita de palabras. Suscríbete para desbloquear todo el vocabulario.",
     "freeTrialLimitCta": "Suscribirme",
     "continueTitle": "Continuar",
+    "learnedProgressLabel": "Has aprendido {known} de {total} palabras",
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",
     "modeFillBlank": "Completa la frase",
@@ -818,6 +819,7 @@
       "instructionLabel": "Toca la palabra en ruso y luego su traducción",
       "notEnoughCardsMessage": "Esta categoría no tiene suficientes palabras para este filtro.",
       "roundCompleteLabel": "¡Ronda completa! {pairs} parejas",
+      "playAgainButton": "Jugar de nuevo",
       "nextRoundButton": "Siguiente ronda"
     },
     "recall": {

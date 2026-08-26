@@ -15,7 +15,7 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.vocabulary.pageTitle}</h1>
 
       <div className="mt-10">
-        <VocabularyApp dict={dict.vocabulary} celebrationDict={dict.celebration} />
+        <VocabularyApp dict={dict.vocabulary} celebrationDict={dict.celebration} resultDict={dict.gameResult} />
       </div>
     </div>
   );

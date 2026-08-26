@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
@@ -15,6 +14,7 @@ import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from 
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import StreakToast from "@/components/celebration/StreakToast";
+import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 import { playStreakFanfare } from "@/lib/sound";
 import { hapticSuccess } from "@/lib/haptics";
 import type { Dictionary } from "@/i18n/dictionaries";
@@ -29,6 +29,7 @@ export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
+  learnedProgressLabel: string; // template, contains literal "{known}" and "{total}"
 }
 
 const ROUND_SIZE = 10;
@@ -38,15 +39,19 @@ const STREAK_TOAST_MS = 1800;
 export default function FillBlankApp({
   dict,
   celebrationDict,
+  resultDict,
 }: {
   dict: FillBlankAppDict;
   celebrationDict: Dictionary["celebration"];
+  resultDict: GameResultPanelDict;
 }) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
   const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
   const [hasAnyProgress, setHasAnyProgress] = useState(false);
+  const [totalProgress, setTotalProgress] = useState({ known: 0, total: 0 });
+  const [roundTimeSeconds, setRoundTimeSeconds] = useState(0);
   const [srsMap, setSrsMap] = useState<Record<string, SrsEntry>>({});
   const [round, setRound] = useState<FlashcardRow[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
@@ -59,6 +64,7 @@ export default function FillBlankApp({
   const [limited, setLimited] = useState(false);
   const [roundLoading, setRoundLoading] = useState(false);
   const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const roundStartedAtRef = useRef(0);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -71,8 +77,9 @@ export default function FillBlankApp({
       setCategorySummary(body.categories);
       setRecentCategories(body.recent);
       setHasAnyProgress(body.hasAnyProgress);
+      setTotalProgress({ known: body.totalKnown, total: body.totalWords });
     });
-  }, [round, levelFilter]);
+  }, [round, levelFilter, complete]);
 
   const card = round[roundIndex];
 
@@ -85,6 +92,7 @@ export default function FillBlankApp({
     setComplete(false);
     setJustComplete(false);
     setStreak(0);
+    roundStartedAtRef.current = Date.now();
   }
 
   function selectCategory(next: FlashcardCategory) {
@@ -129,6 +137,7 @@ export default function FillBlankApp({
 
   function handleNext() {
     if (roundIndex + 1 >= round.length) {
+      setRoundTimeSeconds(Math.round((Date.now() - roundStartedAtRef.current) / 1000));
       setComplete(true);
       setJustComplete(true);
       return;
@@ -183,34 +192,30 @@ export default function FillBlankApp({
             {dict.backToCategories}
           </button>
 
-          {limited && (
+          {limited && !complete && (
             <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
           )}
 
-          {complete ? (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/30">
-              <MatryoshkaAvatar id={score.correct === score.total ? "matryoshka_proud" : "matryoshka_happy"} size={64} />
-              <p className="text-lg font-semibold">
-                {dict.roundCompleteLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
-              </p>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={backToCategories}
-                  className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground active:border-foreground/40 active:text-foreground dark:border-white/15"
-                >
-                  {dict.backToCategories}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => category && selectCategory(category)}
-                  className="tap touch-manipulation select-none rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-                >
-                  {dict.playAgainButton}
-                </button>
-              </div>
-            </div>
-          ) : roundLoading ? (
+          <GameResultPanel
+            open={complete}
+            onClose={backToCategories}
+            title={dict.roundCompleteLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
+            avatarId={score.correct === score.total ? "matryoshka_proud" : "matryoshka_happy"}
+            score={score}
+            timeSeconds={roundTimeSeconds}
+            dict={resultDict}
+            playAgainLabel={dict.playAgainButton}
+            onPlayAgain={() => category && selectCategory(category)}
+            nextGameLabel={dict.backToCategories}
+            onNextGame={backToCategories}
+          >
+            {limited && <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />}
+            <p className="mt-1 text-center text-sm text-foreground/60">
+              {dict.learnedProgressLabel.replace("{known}", String(totalProgress.known)).replace("{total}", String(totalProgress.total))}
+            </p>
+          </GameResultPanel>
+
+          {complete ? null : roundLoading ? (
             <div className="flex flex-col items-center gap-6">
               <Skeleton variant="rect" className="h-48 w-full" />
               <Skeleton variant="rect" className="h-11 w-full max-w-xs rounded-xl" />

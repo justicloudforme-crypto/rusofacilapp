@@ -33,6 +33,7 @@ export interface FlashcardsDict {
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
+  learnedProgressLabel: string; // template, contains literal "{known}" and "{total}" — global count (see /api/flashcards/summary), not per-category
 }
 
 // Debounce delay for the always-visible search box — short enough to feel

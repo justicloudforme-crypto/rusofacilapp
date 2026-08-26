@@ -788,6 +788,7 @@
     "freeTrialLimitMessage": "Вы изучили бесплатный пробный набор слов. Оформите подписку, чтобы открыть весь словарь.",
     "freeTrialLimitCta": "Оформить подписку",
     "continueTitle": "Продолжить",
+    "learnedProgressLabel": "Ты выучил {known} слов из {total}",
     "modeVocabulary": "Словарь по категориям",
     "modeRecall": "Написать слово",
     "modeFillBlank": "Пропущенное слово",
@@ -818,6 +819,7 @@
       "instructionLabel": "Нажми на русское слово, потом на его перевод",
       "notEnoughCardsMessage": "В этой категории недостаточно слов для этого фильтра.",
       "roundCompleteLabel": "Раунд завершён! {pairs} пар",
+      "playAgainButton": "Играть заново",
       "nextRoundButton": "Следующий раунд"
     },
     "recall": {

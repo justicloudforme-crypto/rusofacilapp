@@ -7,6 +7,7 @@ import IdiomsList, { type IdiomsDict } from "./IdiomsList";
 import RecallApp, { type RecallAppDict } from "./RecallApp";
 import MatchApp, { type MatchAppDict } from "./MatchApp";
 import FillBlankApp, { type FillBlankAppDict } from "./FillBlankApp";
+import type { GameResultPanelDict } from "@/components/games/GameResultPanel";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { hapticTap } from "@/lib/haptics";
 import { DictionaryIcon, ChecklistIcon, PuzzleIcon, BookIcon } from "@/components/profile/ProfileIcons";
@@ -34,9 +35,9 @@ export interface VocabularyDict extends FlashcardsDict {
   subtitleMatch: string;
   subtitleIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
-  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
-  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
+  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -49,9 +50,11 @@ function isMode(value: string | null): value is Mode {
 export default function VocabularyApp({
   dict,
   celebrationDict,
+  resultDict,
 }: {
   dict: VocabularyDict;
   celebrationDict: Dictionary["celebration"];
+  resultDict: GameResultPanelDict;
 }) {
   const [mode, setModeState] = useState<Mode>("vocabulary");
   const router = useRouter();
@@ -146,8 +149,10 @@ export default function VocabularyApp({
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
+              learnedProgressLabel: dict.learnedProgressLabel,
             }}
             celebrationDict={celebrationDict}
+            resultDict={resultDict}
           />
         )}
         {mode === "fillBlank" && (
@@ -160,8 +165,10 @@ export default function VocabularyApp({
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
+              learnedProgressLabel: dict.learnedProgressLabel,
             }}
             celebrationDict={celebrationDict}
+            resultDict={resultDict}
           />
         )}
         {mode === "match" && (
@@ -174,8 +181,10 @@ export default function VocabularyApp({
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
+              learnedProgressLabel: dict.learnedProgressLabel,
             }}
             celebrationDict={celebrationDict}
+            resultDict={resultDict}
           />
         )}
         {mode === "idioms" && <IdiomsList dict={dict.idioms} />}
