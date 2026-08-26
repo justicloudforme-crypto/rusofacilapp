@@ -20,7 +20,17 @@
     "soundOffLabel": "Звук выключен — нажмите, чтобы включить",
     "groupLearn": "Учиться",
     "groupPlay": "Играть",
-    "groupCommunity": "Сообщество"
+    "groupCommunity": "Сообщество",
+    "pricing": "Цены",
+    "practice": "Практика",
+    "glossary": "Глоссарий",
+    "search": "Поиск",
+    "searchTitle": "Поиск по разделам",
+    "searchPlaceholder": "Курсы, рассказы, слова…",
+    "searchEmpty": "Ничего не найдено",
+    "searchShortcutHint": "Поиск (⌘K)",
+    "streakLabel": "Серия: {days} дн.",
+    "bottomNavLabel": "Основная навигация"
   },
   "intro": {
     "title": "Перед первым уроком",

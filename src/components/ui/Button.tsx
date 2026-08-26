@@ -76,9 +76,17 @@ export default function Button(props: ButtonProps) {
   const cls = classes({ variant, size, fullWidth, className });
 
   if ("href" in props && props.href !== undefined) {
-    const { href, ...linkRest } = rest as Omit<ButtonAsLink, keyof CommonProps>;
+    const { href, onClick, ...linkRest } = rest as Omit<ButtonAsLink, keyof CommonProps>;
     return (
-      <Link href={href} className={cls} onClick={haptic ? () => hapticTap() : undefined} {...linkRest}>
+      <Link
+        href={href}
+        className={cls}
+        onClick={(e) => {
+          if (haptic) hapticTap();
+          onClick?.(e);
+        }}
+        {...linkRest}
+      >
         {icon}
         {children}
       </Link>

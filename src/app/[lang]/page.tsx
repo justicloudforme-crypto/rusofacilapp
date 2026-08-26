@@ -38,7 +38,13 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      <section id="features" className="border-t border-black/10 dark:border-white/10">
+      {/* scroll-mt-20 clears the sticky header (h-16 = 64px + a small
+          buffer) when this is reached via the #features anchor link above
+          — otherwise the header covers the section title on landing
+          (AUDIT.md's confirmed sticky-header-covers-anchor bug). The
+          header is a constant single-row height now, so a fixed value is
+          safe here (it used to be able to wrap to 2 lines). */}
+      <section id="features" className="scroll-mt-20 border-t border-black/10 dark:border-white/10">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">
             {dict.home.featuresTitle}

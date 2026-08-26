@@ -53,6 +53,7 @@ import {
 } from "@/components/profile/ProfileIcons";
 import type { ReactNode } from "react";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { getProfileTabs, isProfileTab, type ProfileTab } from "@/lib/profile-tabs";
 import Tabs from "@/components/ui/Tabs";
 
 // Icon-badge + serif heading, used for every card section on this page so
@@ -89,18 +90,6 @@ function SectionHeading({
   );
 }
 
-const TAB_ICONS: Record<ProfileTab, ReactNode> = {
-  personal: <PersonalIcon className="h-4 w-4" />,
-  progress: <ChartIcon className="h-4 w-4" />,
-  badges: <TrophyIcon className="h-4 w-4" />,
-  referral: <GiftIcon className="h-4 w-4" />,
-  subscription: <CrownIcon className="h-4 w-4" />,
-  security: <LockIcon className="h-4 w-4" />,
-  language: <GlobeIcon className="h-4 w-4" />,
-};
-
-const PROFILE_TABS = ["personal", "progress", "badges", "referral", "subscription", "security", "language"] as const;
-type ProfileTab = (typeof PROFILE_TABS)[number];
 // Subscription.plan stores the internal identifier ("monthly"/"annual"/
 // "lifetime") shared with Stripe/RevenueCat product mapping — display uses
 // the already-localized pricing-card names instead so a plan renders as
@@ -110,10 +99,6 @@ function planDisplayLabel(plan: string, dict: Dictionary): string {
   if (plan === "annual") return dict.pricing.annual.name;
   if (plan === "lifetime") return dict.pricing.lifetime.name;
   return plan;
-}
-
-function isProfileTab(value: string): value is ProfileTab {
-  return (PROFILE_TABS as readonly string[]).includes(value);
 }
 
 const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
@@ -220,15 +205,7 @@ export default async function ProfilePage({
     { id: "reading", label: dict.profile.themeReadingLabel, description: dict.profile.themeReadingDescription, swatch: "#f6efdc" },
   ];
 
-  const tabs: { id: ProfileTab; label: string }[] = [
-    { id: "personal", label: dict.profile.tabPersonal },
-    { id: "progress", label: dict.profile.tabProgress },
-    { id: "badges", label: dict.profile.tabBadges },
-    { id: "referral", label: dict.profile.tabReferral },
-    { id: "subscription", label: dict.profile.tabSubscription },
-    { id: "security", label: dict.profile.tabSecurity },
-    { id: "language", label: dict.profile.tabLanguage },
-  ];
+  const tabs = getProfileTabs(dict);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
@@ -251,7 +228,7 @@ export default async function ProfilePage({
         className="mt-6"
         label={dict.profile.title}
         activeId={activeTab}
-        items={tabs.map((tab) => ({ id: tab.id, label: tab.label, icon: TAB_ICONS[tab.id] }))}
+        items={tabs}
         getHref={(id) => `/${lang}/profile?tab=${id}`}
       />
 

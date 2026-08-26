@@ -20,7 +20,17 @@
     "soundOffLabel": "Sonido silenciado — pulsa para activar",
     "groupLearn": "Aprender",
     "groupPlay": "Jugar",
-    "groupCommunity": "Comunidad"
+    "groupCommunity": "Comunidad",
+    "pricing": "Precios",
+    "practice": "Practicar",
+    "glossary": "Glosario",
+    "search": "Buscar",
+    "searchTitle": "Buscar en el sitio",
+    "searchPlaceholder": "Cursos, cuentos, vocabulario…",
+    "searchEmpty": "No se encontraron resultados",
+    "searchShortcutHint": "Buscar (⌘K)",
+    "streakLabel": "Racha: {days} días",
+    "bottomNavLabel": "Navegación principal"
   },
   "intro": {
     "title": "Antes de tu primera lección",

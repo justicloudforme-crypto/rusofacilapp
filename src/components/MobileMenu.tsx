@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import type { AvatarId } from "@/lib/avatars";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import { hapticTap } from "@/lib/haptics";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import Button from "@/components/ui/Button";
 
 export interface MobileMenuLink {
   href: string;
@@ -31,11 +33,20 @@ interface MobileMenuUser {
   isPremium: boolean;
 }
 
-// Client island for the hamburger menu shown below the `sm` breakpoint,
-// where Navbar.tsx's own `hidden ... sm:flex` nav disappears with no
+// Client island for the drawer shown below the `sm` breakpoint, where
+// Navbar.tsx's own `hidden ... sm:flex` nav disappears with no
 // replacement. Navbar stays a server component (it awaits getCurrentUser())
 // and just passes the already-resolved, serializable links/labels down —
 // same split as LanguageSwitcher.tsx.
+//
+// Its role changed once BottomNav.tsx started covering the 5 highest-
+// traffic destinations for a logged-in user: this drawer now holds
+// "everything else" (Аудио и видео, Цены, Группы, the full 7-tab profile
+// list) rather than duplicating what the bottom bar already covers, and
+// its own trigger becomes the header's avatar rather than a hamburger for
+// that case. Logged out, there's no bottom bar at all — this is the only
+// way to browse, so `groups` (built in Navbar.tsx) carries every
+// destination and the trigger stays a hamburger icon.
 //
 // Renders as a bottom sheet (not a dropdown under the header) so the
 // touch targets sit near the user's thumb, and folds the desktop
@@ -65,6 +76,7 @@ export default function MobileMenu({
   closeLabel: string;
 }) {
   const [open, setOpen] = useState(false);
+  useBodyScrollLock(open);
   const pathname = usePathname();
   // Fallback close-on-navigation for paths that don't go through one of
   // this panel's own links below (browser back/forward, a programmatic
@@ -96,15 +108,23 @@ export default function MobileMenu({
         aria-label={open ? closeLabel : openLabel}
         className="tap flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-primary/10 active:bg-primary/10"
       >
-        <span className="relative flex h-4 w-5 flex-col justify-between" aria-hidden>
-          <span
-            className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`}
-          />
-          <span className={`h-0.5 w-full rounded-full bg-current transition-opacity ${open ? "opacity-0" : ""}`} />
-          <span
-            className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`}
-          />
-        </span>
+        {user ? (
+          // Logged in: this button doubles as the avatar (bottom nav
+          // already covers the 5 primary destinations, so the header's
+          // 3rd slot opens the drawer for everything else instead of
+          // showing a redundant hamburger).
+          <MatryoshkaAvatar id={user.avatarId} size={28} premium={user.isPremium} />
+        ) : (
+          <span className="relative flex h-4 w-5 flex-col justify-between" aria-hidden>
+            <span
+              className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`}
+            />
+            <span className={`h-0.5 w-full rounded-full bg-current transition-opacity ${open ? "opacity-0" : ""}`} />
+            <span
+              className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`}
+            />
+          </span>
+        )}
       </button>
 
       {open &&
@@ -167,13 +187,9 @@ export default function MobileMenu({
                   </div>
                 </>
               ) : (
-                <Link
-                  href={loggedOutHref}
-                  onClick={() => setOpen(false)}
-                  className="tap flex min-h-12 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-400 active:bg-primary-400"
-                >
+                <Button href={loggedOutHref} variant="primary" fullWidth onClick={() => setOpen(false)}>
                   {loggedOutLabel}
-                </Link>
+                </Button>
               )}
 
               {groups.map((group) => (

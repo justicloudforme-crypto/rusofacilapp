@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 /**
  * Bottom sheet below `sm`, centered dialog at `sm`+ — reuses the exact
@@ -20,6 +21,7 @@ export default function Modal({
   closeLabel,
   children,
   className = "",
+  fullScreenOnMobile = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -27,7 +29,13 @@ export default function Modal({
   closeLabel: string;
   children: ReactNode;
   className?: string;
+  /** Full-height panel below `sm` instead of the bottom-sheet look — for
+   * content that needs the whole screen on mobile (e.g. search), not a
+   * small dialog's worth. Still a centered dialog at `sm`+ either way. */
+  fullScreenOnMobile?: boolean;
 }) {
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -39,6 +47,10 @@ export default function Modal({
 
   if (!open || typeof document === "undefined") return null;
 
+  const panelShapeClasses = fullScreenOnMobile
+    ? "fixed inset-0 h-full rounded-none border-0 pt-safe sm:inset-0 sm:m-auto sm:h-fit sm:max-h-[85dvh] sm:w-full sm:max-w-md sm:rounded-3xl sm:border sm:pt-0"
+    : "sheet-slide-up fixed inset-x-0 bottom-0 max-h-[85dvh] rounded-t-3xl border-t sm:inset-0 sm:m-auto sm:h-fit sm:max-h-[85dvh] sm:w-full sm:max-w-md sm:rounded-3xl sm:border";
+
   return createPortal(
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
       <button
@@ -49,9 +61,11 @@ export default function Modal({
       />
 
       <div
-        className={`sheet-slide-up fixed inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl border-t border-primary/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(27,20,15,0.25)] sm:inset-0 sm:m-auto sm:h-fit sm:max-h-[85dvh] sm:w-full sm:max-w-md sm:rounded-3xl sm:border ${className}`}
+        className={`flex flex-col border-primary/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(27,20,15,0.25)] ${panelShapeClasses} ${className}`}
       >
-        <div className="mx-auto mt-2.5 h-1 w-9 flex-shrink-0 rounded-full bg-foreground/15 sm:hidden" aria-hidden />
+        {!fullScreenOnMobile && (
+          <div className="mx-auto mt-2.5 h-1 w-9 flex-shrink-0 rounded-full bg-foreground/15 sm:hidden" aria-hidden />
+        )}
 
         {title && (
           <div className="flex items-center justify-between px-5 pt-4">
