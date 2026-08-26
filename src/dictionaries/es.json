@@ -76,7 +76,57 @@
     ],
     "levelsTitle": "Nuestros niveles",
     "levelsSubtitle": "Sigue la ruta completa o entra directamente al nivel que te corresponda.",
-    "viewLevel": "Ver nivel"
+    "viewLevel": "Ver nivel",
+    "howItWorksTitle": "Cómo funciona",
+    "howItWorksSteps": [
+      {
+        "title": "Elige tu nivel",
+        "description": "Desde el alfabeto en A1 hasta temas avanzados en B2 — empieza donde te corresponda."
+      },
+      {
+        "title": "Avanza en pasos cortos",
+        "description": "Cada regla se explica comparando el ruso con el español, no con el inglés."
+      },
+      {
+        "title": "Refuerza con práctica",
+        "description": "Tarjetas, modismos, relatos y juegos de palabras — para que las palabras se queden, no solo se lean."
+      }
+    ],
+    "previewFlashcardTitle": "Tarjetas de vocabulario",
+    "previewFlashcardCta": "Ver todas las tarjetas",
+    "previewStoryTitle": "Relatos",
+    "previewStoryCta": "Leer relatos",
+    "previewGameTitle": "Juegos de palabras",
+    "previewGameCta": "Jugar",
+    "pricingStripTitle": "Tarifas",
+    "pricingStripSubtitle": "Desde acceso gratuito hasta Premium sin límites — todos los detalles en la página de tarifas.",
+    "pricingStripCta": "Ver todas las tarifas",
+    "faqTitle": "Preguntas sobre el curso",
+    "faq": [
+      {
+        "q": "¿Desde qué nivel puedo empezar?",
+        "a": "Desde cero — el nivel A1 empieza con el alfabeto cirílico y la pronunciación, sin transliteración."
+      },
+      {
+        "q": "¿Necesito saber inglés?",
+        "a": "No. Todas las explicaciones de gramática comparan el ruso con el español."
+      },
+      {
+        "q": "¿Cuánto dura una lección?",
+        "a": "Las lecciones son cortas y están divididas en pasos, fáciles de completar sin depender de un horario fijo."
+      },
+      {
+        "q": "¿Puedo estudiar desde el celular?",
+        "a": "Sí, todo el curso funciona en el navegador del celular, tablet o computadora — no necesitas una app aparte."
+      },
+      {
+        "q": "¿Qué obtengo si no me suscribo?",
+        "a": "El acceso gratuito es permanente: 1 lección, 10 tarjetas, 5 modismos, 2 relatos y los primeros crucigramas de nivel A1."
+      }
+    ],
+    "finalCtaTitle": "¿Listo para empezar?",
+    "finalCtaSubtitle": "La primera lección y parte del contenido son gratis, sin tarjeta de crédito.",
+    "finalCtaButton": "Empezar gratis"
   },
   "courses": {
     "pageTitle": "Cursos de ruso",
