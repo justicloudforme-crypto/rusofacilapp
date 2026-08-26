@@ -131,23 +131,31 @@ export default function StoriesCatalog({
                   <p className="mt-2 line-clamp-2 text-sm text-foreground/70">{story.description}</p>
                 )}
 
-                {progress?.isCompleted ? (
-                  <span className="mt-4 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    <span aria-hidden="true">✓</span> {dict.completedBadge}
-                  </span>
-                ) : progress ? (
-                  <div className="mt-4">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-                      <div
-                        className="h-full rounded-full bg-foreground"
-                        style={{ width: `${progress.percent}%` }}
-                      />
-                    </div>
-                    <span className="mt-1.5 block text-xs text-foreground/60">
-                      {dict.progressLabel.replace("{percent}", String(progress.percent))}
+                {/* Fixed-height slot regardless of which of the three states
+                    below renders — without it, cards in the same grid row
+                    end up different heights depending on whether a visitor
+                    has any reading progress for that story yet (a confirmed
+                    AUDIT.md bug: progress loads client-side after mount, so
+                    this was also flashing empty->populated on every visit). */}
+                <div className="mt-4 min-h-[38px]">
+                  {progress?.isCompleted ? (
+                    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      <span aria-hidden="true">✓</span> {dict.completedBadge}
                     </span>
-                  </div>
-                ) : null}
+                  ) : progress ? (
+                    <div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+                        <div
+                          className="h-full rounded-full bg-foreground"
+                          style={{ width: `${progress.percent}%` }}
+                        />
+                      </div>
+                      <span className="mt-1.5 block text-xs text-foreground/60">
+                        {dict.progressLabel.replace("{percent}", String(progress.percent))}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
 
                 <span className="mt-4 text-sm font-medium text-foreground/70 group-hover:text-foreground">
                   {dict.readButton} →
