@@ -891,7 +891,9 @@
     "wrongCellHint": "Эта буква неверна, попробуй ещё раз.",
     "resetSelectionButton": "Отменить выбор",
     "expertModeLabel": "Режим эксперта",
-    "premiumTierLabel": "Только Premium"
+    "premiumTierLabel": "Только Premium",
+    "checkButton": "Проверить",
+    "filledCountLabel": "Заполнено: {filled}/{total}"
   },
   "gameResult": {
     "closeLabel": "Закрыть",

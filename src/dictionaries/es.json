@@ -891,7 +891,9 @@
     "wrongCellHint": "Esa letra no es correcta, inténtalo de nuevo.",
     "resetSelectionButton": "Cancelar selección",
     "expertModeLabel": "Modo experto",
-    "premiumTierLabel": "Solo Premium"
+    "premiumTierLabel": "Solo Premium",
+    "checkButton": "Comprobar",
+    "filledCountLabel": "Completado: {filled}/{total}"
   },
   "gameResult": {
     "closeLabel": "Cerrar",

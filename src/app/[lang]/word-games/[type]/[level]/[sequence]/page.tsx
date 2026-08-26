@@ -67,6 +67,7 @@ export default async function WordGamePuzzlePage({
           lang={lang}
           puzzle={toPublicPuzzle(row)}
           dict={dict.wordGames}
+          resultDict={dict.gameResult}
           signedIn={Boolean(user)}
         />
       </div>

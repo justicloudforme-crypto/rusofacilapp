@@ -10,6 +10,8 @@ import {
   nextCellInWord,
   prevCellInWord,
   resolveDirectionOnClick,
+  shouldCountAsError,
+  sortClues,
   wordAt,
   type Direction,
 } from "@/lib/word-games/crossword-input";
@@ -22,6 +24,8 @@ interface Dict {
   acrossLabel: string;
   downLabel: string;
   wrongCellHint: string;
+  checkButton: string;
+  filledCountLabel: string; // template, contains literal "{filled}" and "{total}"
 }
 
 type CellStatus = "correct" | "incorrect" | undefined;
@@ -31,11 +35,17 @@ export default function CrosswordBoard({
   dict,
   onHintUsed,
   onSolved,
+  onErrorCountChange,
 }: {
   puzzle: PublicCrosswordPuzzle;
   dict: Dict;
   onHintUsed: () => void;
   onSolved: () => void;
+  /** Fires with the running mistake tally — every wrong letter typed into
+   * a cell counts once; the manual "Check" button never does, however
+   * many wrong cells it reveals (see shouldCountAsError). Optional: only
+   * WordGamePlayer's result screen needs this. */
+  onErrorCountChange?: (count: number) => void;
 }) {
   const cellWordMap = useMemo(() => buildCellWordMap(puzzle.words), [puzzle.words]);
   const [guesses, setGuesses] = useState<Record<string, string>>({});
@@ -44,6 +54,7 @@ export default function CrosswordBoard({
   const [activeDirection, setActiveDirection] = useState<Direction | null>(null);
   const solvedReported = useRef(false);
   const inputRefs = useRef(new Map<string, HTMLInputElement>());
+  const errorCountRef = useRef(0);
 
   function focusCell(row: number, col: number) {
     inputRefs.current.get(`${row},${col}`)?.focus();
@@ -76,6 +87,10 @@ export default function CrosswordBoard({
       } else if (status === "incorrect") {
         playIncorrectTone();
         hapticError();
+      }
+      if (shouldCountAsError(soundCell, status === "incorrect")) {
+        errorCountRef.current += 1;
+        onErrorCountChange?.(errorCountRef.current);
       }
     }
 
@@ -165,6 +180,13 @@ export default function CrosswordBoard({
       });
   }
 
+  // Manual re-check of every filled cell — deliberately calls runCheck
+  // with no soundCell, so shouldCountAsError never counts it as a
+  // mistake no matter how many wrong cells it reveals.
+  function handleCheck() {
+    void runCheck(guesses);
+  }
+
   const correctCells = useMemo(() => {
     const set = new Set<string>();
     for (const [key, status] of Object.entries(cellStatus)) if (status === "correct") set.add(key);
@@ -172,6 +194,11 @@ export default function CrosswordBoard({
   }, [cellStatus]);
   const activeWord = activeCell && activeDirection ? wordAt(cellWordMap, activeCell.row, activeCell.col, activeDirection)?.word : null;
   const activeWordCells = activeWord ? new Set(cellsOfWord(activeWord).map((c) => `${c.row},${c.col}`)) : new Set<string>();
+  // Filters defensively even though updateGuess's `delete` already keeps
+  // cleared cells out of `guesses` entirely — a stray empty-string value
+  // here would otherwise silently inflate the fill count.
+  const filledCount = Object.values(guesses).filter(Boolean).length;
+  const totalCells = cellWordMap.size;
 
   return (
     <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
@@ -241,21 +268,35 @@ export default function CrosswordBoard({
       </div>
 
       <div className="flex w-full max-w-sm flex-col gap-4">
-        <button
-          type="button"
-          onClick={handleHint}
-          disabled={!activeCell}
-          className="tap w-fit self-center rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary-text transition-colors hover:bg-primary/10 active:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 md:self-start"
-        >
-          {dict.hintButton}
-        </button>
+        <p className="self-center text-xs font-medium text-foreground/50 md:self-start">
+          {dict.filledCountLabel.replace("{filled}", String(filledCount)).replace("{total}", String(totalCells))}
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
+          <button
+            type="button"
+            onClick={handleHint}
+            disabled={!activeCell}
+            className="tap min-h-11 w-fit rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary-text transition-colors hover:bg-primary/10 active:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {dict.hintButton}
+          </button>
+          <button
+            type="button"
+            onClick={handleCheck}
+            disabled={filledCount === 0}
+            className="tap min-h-11 w-fit rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {dict.checkButton}
+          </button>
+        </div>
 
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
             {dict.acrossLabel}
           </h2>
           <ClueList
-            words={puzzle.words.filter((w) => w.direction === "E")}
+            words={sortClues(puzzle.words.filter((w) => w.direction === "E"))}
             correctCells={correctCells}
             activeWord={activeWord}
             onClick={handleClueClick}
@@ -264,7 +305,7 @@ export default function CrosswordBoard({
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">{dict.downLabel}</h2>
           <ClueList
-            words={puzzle.words.filter((w) => w.direction === "S")}
+            words={sortClues(puzzle.words.filter((w) => w.direction === "S"))}
             correctCells={correctCells}
             activeWord={activeWord}
             onClick={handleClueClick}
