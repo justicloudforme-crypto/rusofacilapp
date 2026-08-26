@@ -13,13 +13,14 @@ import {
   getDisplayStatus,
   type DisplayStatus,
 } from "@/lib/subscription";
-import { getLevelProgress, getLessonProgressDetails } from "@/lib/progress";
-import { getUserStreakStats } from "@/lib/streaks";
+import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
+import { getUserStreakStats, getUserActivityDateKeys } from "@/lib/streaks";
 import { getExamAttempts } from "@/lib/exams/progress";
 import { getUserBadgesForDisplay } from "@/lib/badges";
 import { getWeeklyWeakTopic } from "@/lib/weak-topic";
 import { getReferralStats } from "@/lib/referral";
 import { getPublicProfileToggleState } from "@/lib/public-profile";
+import { getStoryCatalog } from "@/lib/stories-catalog";
 import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
 import { levelSlugs } from "@/lib/courses";
@@ -35,6 +36,9 @@ import WelcomeOverlay from "@/components/profile/WelcomeOverlay";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
+import SettingsAccordion from "@/components/profile/SettingsAccordion";
+import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
+import FirstStepCards, { type FirstStepItem } from "@/components/profile/FirstStepCards";
 import { TELEGRAM_INVITE_URL } from "@/components/TelegramFloatButton";
 import {
   PersonalIcon,
@@ -44,15 +48,17 @@ import {
   TrophyIcon,
   GiftIcon,
   LockIcon,
-  DevicesIcon,
   TrashIcon,
   ChartIcon,
   ChecklistIcon,
   GraduationCapIcon,
   BookIcon,
+  DictionaryIcon,
 } from "@/components/profile/ProfileIcons";
 import type { ReactNode } from "react";
 import ProgressBar from "@/components/ui/ProgressBar";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 import { getProfileTabs, isProfileTab, type ProfileTab } from "@/lib/profile-tabs";
 import Tabs from "@/components/ui/Tabs";
 
@@ -132,7 +138,7 @@ export default async function ProfilePage({
   // the subscription tab in that case so the notice and the section it's
   // about are visible together, instead of the notice appearing on
   // whatever tab happens to be default.
-  const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "personal";
+  const defaultTab: ProfileTab = checkout || justCanceled ? "subscription" : "overview";
   const activeTab: ProfileTab = isProfileTab(rawTab) ? rawTab : defaultTab;
 
   // Subscription reads are wrapped defensively: a schema-drift error here
@@ -140,28 +146,45 @@ export default async function ProfilePage({
   // see the 2026-08-23 incident) must not take down the whole profile page
   // — badges/progress/referral etc. are unrelated and should still render.
   // A failure degrades to "no subscription data" rather than a raw 500.
-  const [subscription, subscriptionHistory, progress, lessonResults, examAttempts, wordsLearned, streak, theme, badges, weakTopic, referral, publicProfile, requestHeaders] =
-    await Promise.all([
-      getLatestSubscription(user.id).catch((error) => {
-        console.error("profile: getLatestSubscription failed", error);
-        return null;
-      }),
-      getSubscriptionHistory(user.id).catch((error) => {
-        console.error("profile: getSubscriptionHistory failed", error);
-        return [];
-      }),
-      getLevelProgress(user.id),
-      getLessonProgressDetails(user.id),
-      getExamAttempts(user.id),
-      db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
-      getUserStreakStats(user.id),
-      getThemePreference(),
-      getUserBadgesForDisplay(user.id),
-      getWeeklyWeakTopic(user.id),
-      getReferralStats(user.id),
-      getPublicProfileToggleState(user.id),
-      headers(),
-    ]);
+  const [
+    subscription,
+    subscriptionHistory,
+    progress,
+    lessonResults,
+    examAttempts,
+    wordsLearned,
+    streak,
+    activityDateKeys,
+    theme,
+    badges,
+    weakTopic,
+    referral,
+    publicProfile,
+    storyCatalog,
+    requestHeaders,
+  ] = await Promise.all([
+    getLatestSubscription(user.id).catch((error) => {
+      console.error("profile: getLatestSubscription failed", error);
+      return null;
+    }),
+    getSubscriptionHistory(user.id).catch((error) => {
+      console.error("profile: getSubscriptionHistory failed", error);
+      return [];
+    }),
+    getLevelProgress(user.id),
+    getLessonProgressDetails(user.id),
+    getExamAttempts(user.id),
+    db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
+    getUserStreakStats(user.id),
+    getUserActivityDateKeys(user.id),
+    getThemePreference(),
+    getUserBadgesForDisplay(user.id),
+    getWeeklyWeakTopic(user.id),
+    getReferralStats(user.id),
+    getPublicProfileToggleState(user.id),
+    getStoryCatalog().catch(() => []),
+    headers(),
+  ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
   const requestHost = requestHeaders.get("host") ?? "rusofacilapp.com";
   const requestProto = requestHeaders.get("x-forwarded-proto") ?? (requestHost.startsWith("localhost") ? "http" : "https");
@@ -207,6 +230,82 @@ export default async function ProfilePage({
 
   const tabs = getProfileTabs(dict);
 
+  // --- Empty-state logic (Problem 1) ------------------------------------
+  const totalLessonsCompleted = levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0);
+  const hasAnyProgress = wordsLearned > 0 || totalLessonsCompleted > 0 || streak.longestStreak > 0;
+  // "Early" = something's there, but not enough to be worth 9 stat tiles
+  // yet — both thresholds grow quickly from normal use (one flashcard
+  // category clears the vocab one; 3 lessons is roughly one week), so this
+  // window is short by design, not a permanent second empty state.
+  const isEarlyProgress = hasAnyProgress && wordsLearned < 20 && totalLessonsCompleted < 3;
+  const progressState: "zero" | "early" | "normal" = !hasAnyProgress ? "zero" : isEarlyProgress ? "early" : "normal";
+  const allLevelsZero = levelSlugs.every((level) => progress[level].completed === 0);
+
+  // --- "Continue" card target (Overview) ---------------------------------
+  let continueTarget: { href: string; title: string; cta: string } | null = null;
+  if (currentLevel) {
+    const nextSlug = await getFirstIncompleteLessonSlug(user.id, currentLevel);
+    if (nextSlug) {
+      const lessonTitle = dict.courses.levels[currentLevel].lessons[Number(nextSlug) - 1] ?? nextSlug;
+      continueTarget = {
+        href: `/${lang}/courses/${currentLevel}/${nextSlug}`,
+        title: lessonTitle,
+        cta: dict.profile.continueButton,
+      };
+    } else {
+      const nextLevel = levelSlugs[levelSlugs.indexOf(currentLevel) + 1];
+      if (nextLevel) {
+        continueTarget = {
+          href: `/${lang}/courses/${nextLevel}/1`,
+          title: dict.courses.levels[nextLevel].title,
+          cta: dict.profile.continueNextLevelCta,
+        };
+      }
+    }
+  }
+
+  // --- "First step" / "What's next" cards (Overview + Progress) ----------
+  const firstFreeStory = storyCatalog.find(
+    (row) => row.level === "A1" && !row.isPremium && !row.premiumOnly,
+  );
+  const lessonItem: FirstStepItem = {
+    key: "lesson",
+    icon: <GraduationCapIcon className="h-[18px] w-[18px]" />,
+    title: dict.profile.firstStepLessonTitle,
+    description: dict.profile.firstStepLessonDescription,
+    href: `/${lang}/courses/a1/1`,
+    cta: dict.profile.startButton,
+  };
+  const vocabItem: FirstStepItem = {
+    key: "vocab",
+    icon: <DictionaryIcon className="h-[18px] w-[18px]" />,
+    title: dict.profile.firstStepVocabTitle,
+    description: dict.profile.firstStepVocabDescription,
+    href: `/${lang}/vocabulary`,
+    cta: dict.profile.startButton,
+  };
+  const storyItem: FirstStepItem | null = firstFreeStory
+    ? {
+        key: "story",
+        icon: <BookIcon className="h-[18px] w-[18px]" />,
+        title: dict.profile.firstStepStoryTitle,
+        description: dict.profile.firstStepStoryDescription,
+        href: `/${lang}/stories/${firstFreeStory.id}`,
+        cta: dict.profile.startButton,
+      }
+    : null;
+  const zeroStepItems: FirstStepItem[] = [lessonItem, vocabItem, ...(storyItem ? [storyItem] : [])];
+  const whatsNextItems: FirstStepItem[] = [
+    ...(totalLessonsCompleted === 0 ? [lessonItem] : []),
+    ...(wordsLearned === 0 ? [vocabItem] : []),
+    ...(storyItem ? [storyItem] : []),
+  ].slice(0, 3);
+
+  const subscriptionCompactLabel =
+    subscription && isActive
+      ? dict.profile.subscriptionCompactPro.replace("{date}", dateFormatter.format(subscription.currentPeriodEnd))
+      : dict.profile.subscriptionCompactFree;
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
       <WelcomeOverlay
@@ -229,7 +328,7 @@ export default async function ProfilePage({
         label={dict.profile.title}
         activeId={activeTab}
         items={tabs}
-        getHref={(id) => `/${lang}/profile?tab=${id}`}
+        hrefBase={`/${lang}/profile`}
       />
 
       {checkout === "mock" && (
@@ -253,84 +352,308 @@ export default async function ProfilePage({
         </p>
       )}
 
-      {/* Personal data */}
-      {activeTab === "personal" && (
+      {/* Overview */}
+      {activeTab === "overview" && (
         <section className="mt-8 flex flex-col gap-6">
-          <div className="rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 sm:p-6">
-            <div className="flex items-center gap-4">
-              <MatryoshkaAvatar id={currentAvatarId} size={56} label={avatarLabels[currentAvatarId]} premium={isPremiumUser} />
-              <div className="min-w-0">
-                <p className="truncate font-medium">{user.name?.trim() || dict.profile.nameEmpty}</p>
-                <p className="truncate text-sm text-foreground/60">{user.email}</p>
+          {continueTarget && (
+            <Card tone="primary" padding="lg" shadow>
+              <SectionHeading icon={<BookIcon className="h-[18px] w-[18px]" />}>
+                {dict.profile.continueHeading}
+              </SectionHeading>
+              <p className="mt-3 text-lg font-medium">{continueTarget.title}</p>
+              <Button href={continueTarget.href} size="lg" fullWidth className="mt-4">
+                {continueTarget.cta}
+              </Button>
+            </Card>
+          )}
+
+          {progressState !== "zero" && (
+            <>
+              <section>
+                <SectionHeading icon={<ChartIcon className="h-[18px] w-[18px]" />}>
+                  {dict.profile.activityHeatmapHeading}
+                </SectionHeading>
+                <div className="mt-3">
+                  <ActivityHeatmap activeDateKeys={activityDateKeys} todayLabel={dict.profile.streakActiveTodayNote} />
+                </div>
+              </section>
+
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                  <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
+                  <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
+                </div>
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                  <p className="text-2xl font-semibold tabular-nums">{totalLessonsCompleted}</p>
+                  <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
+                </div>
+                <div className="rounded-2xl border border-folk-red/15 bg-folk-red/5 p-4">
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {streak.currentStreak} {dict.profile.streakDaysUnit}
+                  </p>
+                  <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
+                </div>
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                  <p className="text-2xl font-semibold uppercase">{currentLevel ?? "—"}</p>
+                  <p className="text-sm text-foreground/60">
+                    {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
+                  </p>
+                </div>
               </div>
-            </div>
+            </>
+          )}
 
-            <div className="mt-5 border-t border-black/10 pt-5 dark:border-white/10">
-              <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
-                {dict.profile.nameLabel}
+          {progressState === "zero" && (
+            <FirstStepCards heading={dict.profile.firstStepHeading} items={zeroStepItems} />
+          )}
+          {progressState === "early" && (
+            <FirstStepCards heading={dict.profile.whatNextHeading} items={whatsNextItems} />
+          )}
+
+          <Card>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <SectionHeading icon={<CrownIcon className="h-[18px] w-[18px]" />}>
+                {dict.profile.subscriptionHeading}
+              </SectionHeading>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES[displayStatus]}`}>
+                {subscriptionCompactLabel}
               </span>
-              <ProfileNameForm
-                initialName={user.name}
-                namePlaceholder={dict.profile.namePlaceholder}
-                saveLabel={dict.profile.saveButton}
-                savedLabel={dict.profile.savedNotice}
-              />
             </div>
+            {!isActive && (
+              <Link
+                href={`/${lang}/pricing`}
+                className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+              >
+                {dict.account.seePricing}
+              </Link>
+            )}
+          </Card>
 
-            <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-black/10 pt-5 text-sm dark:border-white/10">
-              <dt className="text-foreground/60">{dict.profile.emailLabel}</dt>
-              <dd>{user.email}</dd>
-              <dt className="text-foreground/60">{dict.profile.memberSinceLabel}</dt>
-              <dd>{dateFormatter.format(user.createdAt)}</dd>
-            </dl>
-          </div>
-
-          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <SectionHeading icon={<PersonalIcon className="h-[18px] w-[18px]" />}>
-              {dict.profile.avatarHeading}
+          <Card>
+            <SectionHeading icon={<GiftIcon className="h-[18px] w-[18px]" />}>
+              {dict.profile.referralHeading}
             </SectionHeading>
-            <p className="mt-1 text-sm text-foreground/60">{dict.profile.avatarDescription}</p>
-            <div className="mt-4">
-              <AvatarPicker
-                initialAvatarId={currentAvatarId}
-                labels={avatarLabels}
-                characterLabels={characterLabels}
-                modalTitle={dict.profile.avatarModalTitle}
-                changeHint={dict.profile.avatarChangeHint}
-                closeLabel={dict.profile.avatarCloseLabel}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <SectionHeading icon={<AppearanceIcon className="h-[18px] w-[18px]" />}>
-              {dict.profile.appearanceHeading}
-            </SectionHeading>
-            <p className="mt-1 text-sm text-foreground/60">{dict.profile.appearanceDescription}</p>
-            <div className="mt-4">
-              <ThemeSwitcher initialTheme={theme} options={themeOptions} />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <SectionHeading icon={<GlobeIcon className="h-[18px] w-[18px]" />}>
-              {dict.profile.publicProfileHeading}
-            </SectionHeading>
-            <p className="mt-1 text-sm text-foreground/60">{dict.profile.publicProfileDescription}</p>
-            <div className="mt-4">
-              <PublicProfileToggle
-                origin={`${requestProto}://${requestHost}`}
-                lang={lang}
-                initialEnabled={publicProfile.enabled}
-                initialHandle={publicProfile.handle}
-                toggleLabel={dict.profile.publicProfileToggleLabel}
+            <p className="mt-1 text-sm text-foreground/60">{dict.profile.referralDescription}</p>
+            {referralLink ? (
+              <CopyReferralLink
+                link={referralLink}
                 copyLabel={dict.profile.referralCopyButton}
                 copiedLabel={dict.profile.referralCopiedNotice}
               />
-            </div>
-          </div>
+            ) : (
+              <p className="mt-3 text-sm text-foreground/60">{dict.profile.referralUnavailable}</p>
+            )}
+            {referral && (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                  <p className="text-2xl font-semibold tabular-nums">{referral.referredCount}</p>
+                  <p className="text-sm text-foreground/60">{dict.profile.referralInvitedLabel}</p>
+                </div>
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                  <p className="text-2xl font-semibold tabular-nums">{referral.rewardsEarnedCount}</p>
+                  <p className="text-sm text-foreground/60">{dict.profile.referralRewardsLabel}</p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </section>
+      )}
 
-          <div className="rounded-2xl border border-[#24A1DE]/25 bg-[#24A1DE]/5 p-5 sm:p-6">
+      {/* Settings */}
+      {activeTab === "settings" && (
+        <section className="mt-8">
+          <SettingsAccordion
+            defaultOpenId="personal"
+            sections={[
+              {
+                id: "personal",
+                icon: <PersonalIcon className="h-4 w-4" />,
+                heading: dict.profile.tabPersonal,
+                content: (
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center gap-4">
+                      <MatryoshkaAvatar id={currentAvatarId} size={56} label={avatarLabels[currentAvatarId]} premium={isPremiumUser} />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{user.name?.trim() || dict.profile.nameEmpty}</p>
+                        <p className="truncate text-sm text-foreground/60">{user.email}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                        {dict.profile.nameLabel}
+                      </span>
+                      <ProfileNameForm
+                        initialName={user.name}
+                        namePlaceholder={dict.profile.namePlaceholder}
+                        saveLabel={dict.profile.saveButton}
+                        savedLabel={dict.profile.savedNotice}
+                      />
+                    </div>
+                    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-black/10 pt-5 text-sm dark:border-white/10">
+                      <dt className="text-foreground/60">{dict.profile.emailLabel}</dt>
+                      <dd>{user.email}</dd>
+                      <dt className="text-foreground/60">{dict.profile.memberSinceLabel}</dt>
+                      <dd>{dateFormatter.format(user.createdAt)}</dd>
+                    </dl>
+                    <div className="border-t border-black/10 pt-5 dark:border-white/10">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                        {dict.profile.publicProfileHeading}
+                      </span>
+                      <p className="mt-1 text-sm text-foreground/60">{dict.profile.publicProfileDescription}</p>
+                      <div className="mt-3">
+                        <PublicProfileToggle
+                          origin={`${requestProto}://${requestHost}`}
+                          lang={lang}
+                          initialEnabled={publicProfile.enabled}
+                          initialHandle={publicProfile.handle}
+                          toggleLabel={dict.profile.publicProfileToggleLabel}
+                          copyLabel={dict.profile.referralCopyButton}
+                          copiedLabel={dict.profile.referralCopiedNotice}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "avatar",
+                icon: <PersonalIcon className="h-4 w-4" />,
+                heading: dict.profile.avatarHeading,
+                content: (
+                  <div>
+                    <p className="text-sm text-foreground/60">{dict.profile.avatarDescription}</p>
+                    <div className="mt-4">
+                      <AvatarPicker
+                        initialAvatarId={currentAvatarId}
+                        labels={avatarLabels}
+                        characterLabels={characterLabels}
+                        modalTitle={dict.profile.avatarModalTitle}
+                        changeHint={dict.profile.avatarChangeHint}
+                        closeLabel={dict.profile.avatarCloseLabel}
+                      />
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "appearance",
+                icon: <AppearanceIcon className="h-4 w-4" />,
+                heading: dict.profile.appearanceHeading,
+                content: (
+                  <div>
+                    <p className="text-sm text-foreground/60">{dict.profile.appearanceDescription}</p>
+                    <div className="mt-4">
+                      <ThemeSwitcher initialTheme={theme} options={themeOptions} />
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "language",
+                icon: <GlobeIcon className="h-4 w-4" />,
+                heading: dict.profile.languageHeading,
+                content: (
+                  <div>
+                    <p className="text-sm text-foreground/60">{dict.profile.languageDescription}</p>
+                    <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                      {locales.map((locale: Locale) => (
+                        <Link
+                          key={locale}
+                          href={`/${locale}/profile?tab=settings`}
+                          aria-current={locale === lang}
+                          className={`tap rounded-full px-4 py-2.5 text-center text-sm font-medium transition-colors ${
+                            locale === lang
+                              ? "bg-foreground text-background"
+                              : "border border-black/10 hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
+                          }`}
+                        >
+                          {localeNames[locale]}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "security",
+                icon: <LockIcon className="h-4 w-4" />,
+                heading: dict.profile.tabSecurity,
+                content: (
+                  <div className="flex flex-col gap-6">
+                    {loggedOutEverywhere && (
+                      <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
+                        {dict.profile.loggedOutEverywhereNotice}
+                      </p>
+                    )}
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                        {dict.profile.changePasswordHeading}
+                      </span>
+                      <p className="mt-1 text-sm text-foreground/60">{dict.profile.changePasswordDescription}</p>
+                      <ChangePasswordForm
+                        currentPasswordLabel={dict.profile.currentPasswordLabel}
+                        newPasswordLabel={dict.profile.newPasswordLabelShort}
+                        saveLabel={dict.profile.saveButton}
+                        savedLabel={dict.profile.passwordChangedNotice}
+                        invalidCurrentPasswordLabel={dict.profile.invalidCurrentPassword}
+                        weakPasswordLabel={dict.auth.weakPassword}
+                        minLength={MIN_PASSWORD_LENGTH}
+                      />
+                    </div>
+                    <div className="border-t border-black/10 pt-5 dark:border-white/10">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                        {dict.profile.sessionsHeading}
+                      </span>
+                      <p className="mt-1 text-sm text-foreground/60">{dict.profile.sessionsDescription}</p>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <form action="/api/auth/logout-everywhere" method="POST">
+                          <input type="hidden" name="lang" value={lang} />
+                          <button
+                            type="submit"
+                            className="tap rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
+                          >
+                            {dict.profile.logoutEverywhereButton}
+                          </button>
+                        </form>
+                        <form action="/api/auth/logout" method="POST">
+                          <input type="hidden" name="lang" value={lang} />
+                          <button
+                            type="submit"
+                            className="tap rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
+                          >
+                            {dict.auth.logout}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                    <details className="rounded-2xl border border-red-500/20 p-5">
+                      <summary className="tap flex min-h-11 cursor-pointer items-center gap-2.5 [&::-webkit-details-marker]:hidden">
+                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600 dark:text-red-400">
+                          <TrashIcon className="h-[18px] w-[18px]" />
+                        </span>
+                        <span className="font-serif text-lg font-semibold text-red-600 dark:text-red-400">
+                          {dict.profile.dangerZoneHeading}
+                        </span>
+                      </summary>
+                      <div className="mt-4">
+                        <p className="text-sm text-foreground/60">{dict.profile.deleteAccountDescription}</p>
+                        <DeleteAccountForm
+                          lang={lang}
+                          warningLabel={dict.profile.deleteAccountWarning}
+                          passwordLabel={dict.profile.currentPasswordLabel}
+                          submitLabel={dict.profile.deleteAccountButton}
+                          sentLabel={dict.profile.deleteAccountEmailSent}
+                          invalidPasswordLabel={dict.profile.invalidCurrentPassword}
+                        />
+                      </div>
+                    </details>
+                  </div>
+                ),
+              },
+            ]}
+          />
+
+          <div className="mt-6 rounded-2xl border border-[#24A1DE]/25 bg-[#24A1DE]/5 p-5 sm:p-6">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#24A1DE] text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 16 16">
@@ -349,16 +672,6 @@ export default async function ProfilePage({
               {dict.profile.telegramCta}
             </a>
           </div>
-
-          <form action="/api/auth/logout" method="POST">
-            <input type="hidden" name="lang" value={lang} />
-            <button
-              type="submit"
-              className="tap w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06] sm:w-auto"
-            >
-              {dict.auth.logout}
-            </button>
-          </form>
         </section>
       )}
 
@@ -497,187 +810,78 @@ export default async function ProfilePage({
         </section>
       )}
 
-      {/* Referral */}
-      {activeTab === "referral" && (
-        <section className="mt-8 flex flex-col gap-6">
-          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <SectionHeading icon={<GiftIcon className="h-[18px] w-[18px]" />}>
-              {dict.profile.referralHeading}
-            </SectionHeading>
-            <p className="mt-1 text-sm text-foreground/60">{dict.profile.referralDescription}</p>
-
-            {referralLink ? (
-              <CopyReferralLink
-                link={referralLink}
-                copyLabel={dict.profile.referralCopyButton}
-                copiedLabel={dict.profile.referralCopiedNotice}
-              />
-            ) : (
-              <p className="mt-3 text-sm text-foreground/60">{dict.profile.referralUnavailable}</p>
-            )}
-          </div>
-
-          {referral && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
-                <p className="text-2xl font-semibold tabular-nums">{referral.referredCount}</p>
-                <p className="text-sm text-foreground/60">{dict.profile.referralInvitedLabel}</p>
-              </div>
-              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
-                <p className="text-2xl font-semibold tabular-nums">{referral.rewardsEarnedCount}</p>
-                <p className="text-sm text-foreground/60">{dict.profile.referralRewardsLabel}</p>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Security */}
-      {activeTab === "security" && (
-        <section className="mt-8 flex flex-col gap-6">
-          {loggedOutEverywhere && (
-            <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
-              {dict.profile.loggedOutEverywhereNotice}
-            </p>
-          )}
-
-          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <SectionHeading icon={<LockIcon className="h-[18px] w-[18px]" />}>
-              {dict.profile.changePasswordHeading}
-            </SectionHeading>
-            <p className="mt-1 text-sm text-foreground/60">{dict.profile.changePasswordDescription}</p>
-            <ChangePasswordForm
-              currentPasswordLabel={dict.profile.currentPasswordLabel}
-              newPasswordLabel={dict.profile.newPasswordLabelShort}
-              saveLabel={dict.profile.saveButton}
-              savedLabel={dict.profile.passwordChangedNotice}
-              invalidCurrentPasswordLabel={dict.profile.invalidCurrentPassword}
-              weakPasswordLabel={dict.auth.weakPassword}
-              minLength={MIN_PASSWORD_LENGTH}
-            />
-          </div>
-
-          <div className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-            <SectionHeading icon={<DevicesIcon className="h-[18px] w-[18px]" />}>
-              {dict.profile.sessionsHeading}
-            </SectionHeading>
-            <p className="mt-1 text-sm text-foreground/60">{dict.profile.sessionsDescription}</p>
-            <form action="/api/auth/logout-everywhere" method="POST" className="mt-3">
-              <input type="hidden" name="lang" value={lang} />
-              <button
-                type="submit"
-                className="tap rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
-              >
-                {dict.profile.logoutEverywhereButton}
-              </button>
-            </form>
-          </div>
-
-          <div className="rounded-2xl border border-red-500/20 p-5 sm:p-6">
-            <SectionHeading tone="danger" icon={<TrashIcon className="h-[18px] w-[18px]" />}>
-              {dict.profile.deleteAccountHeading}
-            </SectionHeading>
-            <p className="mt-1 text-sm text-foreground/60">{dict.profile.deleteAccountDescription}</p>
-            <DeleteAccountForm
-              lang={lang}
-              warningLabel={dict.profile.deleteAccountWarning}
-              passwordLabel={dict.profile.currentPasswordLabel}
-              submitLabel={dict.profile.deleteAccountButton}
-              sentLabel={dict.profile.deleteAccountEmailSent}
-              invalidPasswordLabel={dict.profile.invalidCurrentPassword}
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Language */}
-      {activeTab === "language" && (
-        <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
-          <SectionHeading icon={<GlobeIcon className="h-[18px] w-[18px]" />}>
-            {dict.profile.languageHeading}
-          </SectionHeading>
-          <p className="mt-1 text-sm text-foreground/60">{dict.profile.languageDescription}</p>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            {locales.map((locale: Locale) => (
-              <Link
-                key={locale}
-                href={`/${locale}/profile?tab=language`}
-                aria-current={locale === lang}
-                className={`tap rounded-full px-4 py-2.5 text-center text-sm font-medium transition-colors ${
-                  locale === lang
-                    ? "bg-foreground text-background"
-                    : "border border-black/10 hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
-                }`}
-              >
-                {localeNames[locale]}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Progress */}
       {activeTab === "progress" && (
       <>
       <section className="mt-8">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
-            <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
-            <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
-          </div>
-          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
-            <p className="text-2xl font-semibold tabular-nums">
-              {levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0)}
-            </p>
-            <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
-          </div>
-          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
-            <p className="text-2xl font-semibold uppercase">
-              {currentLevel ? currentLevel : "—"}
-            </p>
-            <p className="text-sm text-foreground/60">
-              {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-folk-red/15 bg-folk-red/5 p-4">
-            <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
-              {streak.currentStreak > 0 && (
-                <span className="flame-flicker inline-block" style={{ width: 14, height: 20 }} aria-hidden>
-                  <svg viewBox="0 0 24 32" fill="none" width="100%" height="100%">
-                    <path
-                      d="M12 0C12 8 4 10 4 19a8 8 0 0016 0C20 12 15 11 15 6c0 4-3 5-3 8a3 3 0 01-3-3c0-4 3-5 3-11z"
-                      fill="#d63b2f"
-                    />
-                    <path d="M12 14c0 3-2 3.5-2 6.5a2.5 2.5 0 005 0c0-2-1.2-2-1.2-4.2" fill="#e0a934" />
-                  </svg>
-                </span>
-              )}
-              {streak.currentStreak} {dict.profile.streakDaysUnit}
-            </p>
-            <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
-          </div>
-          <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
-            <p className="text-2xl font-semibold tabular-nums">
-              {streak.longestStreak} {dict.profile.streakDaysUnit}
-            </p>
-            <p className="text-sm text-foreground/60">{dict.profile.longestStreakLabel}</p>
-          </div>
-        </div>
-
-        {streak.currentStreak > 0 ? (
-          <p
-            className={`mt-3 rounded-lg px-3 py-2 text-sm ${
-              streak.activeToday
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-            }`}
-          >
-            {streak.activeToday ? dict.profile.streakActiveTodayNote : dict.profile.streakAtRiskNote}
-          </p>
+        {progressState === "zero" ? (
+          <FirstStepCards heading={dict.profile.firstStepHeading} items={zeroStepItems} />
         ) : (
-          <p className="mt-3 rounded-lg bg-foreground/5 px-3 py-2 text-sm text-foreground/60">
-            {dict.profile.streakNoneNote}
-          </p>
+          <>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
+                <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
+              </div>
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <p className="text-2xl font-semibold tabular-nums">{totalLessonsCompleted}</p>
+                <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
+              </div>
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <p className="text-2xl font-semibold uppercase">
+                  {currentLevel ? currentLevel : "—"}
+                </p>
+                <p className="text-sm text-foreground/60">
+                  {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-folk-red/15 bg-folk-red/5 p-4">
+                <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
+                  {streak.currentStreak > 0 && (
+                    <span className="flame-flicker inline-block" style={{ width: 14, height: 20 }} aria-hidden>
+                      <svg viewBox="0 0 24 32" fill="none" width="100%" height="100%">
+                        <path
+                          d="M12 0C12 8 4 10 4 19a8 8 0 0016 0C20 12 15 11 15 6c0 4-3 5-3 8a3 3 0 01-3-3c0-4 3-5 3-11z"
+                          fill="#d63b2f"
+                        />
+                        <path d="M12 14c0 3-2 3.5-2 6.5a2.5 2.5 0 005 0c0-2-1.2-2-1.2-4.2" fill="#e0a934" />
+                      </svg>
+                    </span>
+                  )}
+                  {streak.currentStreak} {dict.profile.streakDaysUnit}
+                </p>
+                <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
+              </div>
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <p className="text-2xl font-semibold tabular-nums">
+                  {streak.longestStreak} {dict.profile.streakDaysUnit}
+                </p>
+                <p className="text-sm text-foreground/60">{dict.profile.longestStreakLabel}</p>
+              </div>
+            </div>
+
+            {streak.currentStreak > 0 ? (
+              <p
+                className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+                  streak.activeToday
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                {streak.activeToday ? dict.profile.streakActiveTodayNote : dict.profile.streakAtRiskNote}
+              </p>
+            ) : (
+              <p className="mt-3 rounded-lg bg-foreground/5 px-3 py-2 text-sm text-foreground/60">
+                {dict.profile.streakNoneNote}
+              </p>
+            )}
+
+            {progressState === "early" && (
+              <div className="mt-8">
+                <FirstStepCards heading={dict.profile.whatNextHeading} items={whatsNextItems} />
+              </div>
+            )}
+          </>
         )}
       </section>
 
@@ -699,35 +903,46 @@ export default async function ProfilePage({
         </section>
       )}
 
+      {progressState !== "zero" && (
       <section className="mt-8">
         <SectionHeading icon={<ChartIcon className="h-[18px] w-[18px]" />}>
           {dict.profile.progressHeading}
         </SectionHeading>
-        <div className="mt-4 flex flex-col gap-4">
-          {levelSlugs.map((level) => {
-            const levelDict = dict.courses.levels[level];
-            const levelProgress = progress[level];
-            return (
-              <div key={level}>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{levelDict.title}</span>
-                  <span className="text-foreground/60">
-                    {levelProgress.percent}% · {levelProgress.completed}/
-                    {levelProgress.total} {dict.profile.lessonsCompleted}
-                  </span>
+        {allLevelsZero ? (
+          <p className="mt-4 text-sm text-foreground/60">
+            {dict.profile.coursesNotStartedNotice}{" "}
+            <Link href={`/${lang}/courses/a1`} className="font-medium text-primary underline underline-offset-2">
+              {dict.profile.coursesNotStartedCta}
+            </Link>
+          </p>
+        ) : (
+          <div className="mt-4 flex flex-col gap-4">
+            {levelSlugs.map((level) => {
+              const levelDict = dict.courses.levels[level];
+              const levelProgress = progress[level];
+              return (
+                <div key={level}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{levelDict.title}</span>
+                    <span className="text-foreground/60">
+                      {levelProgress.percent}% · {levelProgress.completed}/
+                      {levelProgress.total} {dict.profile.lessonsCompleted}
+                    </span>
+                  </div>
+                  <ProgressBar
+                    percent={levelProgress.percent}
+                    tone="success"
+                    size="md"
+                    className="mt-2 w-full"
+                    ariaLabel={levelDict.title}
+                  />
                 </div>
-                <ProgressBar
-                  percent={levelProgress.percent}
-                  tone="success"
-                  size="md"
-                  className="mt-2 w-full"
-                  ariaLabel={levelDict.title}
-                />
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
+      )}
 
       {/* Per-lesson results: status, score, and what to review */}
       <section className="mt-8">

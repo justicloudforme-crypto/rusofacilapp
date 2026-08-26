@@ -1,6 +1,6 @@
 "use client";
 
-import Link, { type LinkProps } from "next/link";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { hapticTap } from "@/lib/haptics";
 
@@ -15,8 +15,14 @@ interface TabsProps {
   activeId: string;
   label: string;
   className?: string;
-  /** Link-mode (e.g. /profile?tab=x, URL is the source of truth). Omit and pass onSelect for local-state tabs instead. */
-  getHref?: (id: string) => LinkProps["href"];
+  /**
+   * Link-mode (e.g. /profile?tab=x, URL is the source of truth): each tab
+   * links to `${hrefBase}?tab=${id}`. A plain string, not a function — Tabs
+   * is a Client Component, and a Server Component caller (profile/page.tsx)
+   * can't pass a function prop across that boundary. Omit and pass onSelect
+   * for local-state tabs instead.
+   */
+  hrefBase?: string;
   onSelect?: (id: string) => void;
 }
 
@@ -30,7 +36,7 @@ const TAB_BASE =
 const TAB_ACTIVE = "bg-primary text-white";
 const TAB_INACTIVE = "text-foreground/70 hover:text-foreground active:text-foreground";
 
-export default function Tabs({ items, activeId, label, className = "", getHref, onSelect }: TabsProps) {
+export default function Tabs({ items, activeId, label, className = "", hrefBase, onSelect }: TabsProps) {
   return (
     // The fade masks are a cheap scroll-affordance fix for AUDIT.md's
     // "profile tabs look cut off, no hint that the row scrolls" finding —
@@ -51,11 +57,11 @@ export default function Tabs({ items, activeId, label, className = "", getHref, 
         {items.map((item) => {
           const active = item.id === activeId;
           const cls = `${TAB_BASE} ${active ? TAB_ACTIVE : TAB_INACTIVE}`;
-          if (getHref) {
+          if (hrefBase) {
             return (
               <Link
                 key={item.id}
-                href={getHref(item.id)}
+                href={`${hrefBase}?tab=${item.id}`}
                 role="tab"
                 aria-selected={active}
                 className={cls}

@@ -91,13 +91,17 @@ export function computeStreakStats(
 // letting the streak be more than ~60s stale — harmless for a display stat
 // that isn't used for anything security-sensitive, and streak-crossing
 // badges (see badges/index.ts) only ever need to fire once, not instantly.
-const streakStatsCache = getOrCreateGlobalSingleton(
-  "streakStatsCache",
-  () => new TtlCache<StreakStats>(60_000, "streak-stats")
+// Same 3-table scan as getUserStreakStats, cached separately (raw date
+// keys, not the derived StreakStats) so the /profile activity heatmap can
+// reuse the exact activity signal the streak is computed from, instead of
+// inventing a second notion of "activity."
+const activityDateKeysCache = getOrCreateGlobalSingleton(
+  "activityDateKeysCache",
+  () => new TtlCache<string[]>(60_000, "activity-date-keys")
 );
 
-export async function getUserStreakStats(userId: string): Promise<StreakStats> {
-  return cached(streakStatsCache, userId, async () => {
+async function fetchActivityDateKeys(userId: string): Promise<string[]> {
+  return cached(activityDateKeysCache, userId, async () => {
     const [lessonRows, flashcardRows, storyRows] = await Promise.all([
       db.lessonProgress.findMany({ where: { userId }, select: { completedAt: true } }),
       db.flashcardProgress.findMany({ where: { userId }, select: { lastSeenAt: true, updatedAt: true } }),
@@ -109,6 +113,18 @@ export async function getUserStreakStats(userId: string): Promise<StreakStats> {
     for (const row of flashcardRows) activityDateKeys.add(toDateKey(row.lastSeenAt ?? row.updatedAt));
     for (const row of storyRows) activityDateKeys.add(toDateKey(row.updatedAt));
 
-    return computeStreakStats(activityDateKeys);
+    return [...activityDateKeys];
   });
+}
+
+export async function getUserStreakStats(userId: string): Promise<StreakStats> {
+  const activityDateKeys = await fetchActivityDateKeys(userId);
+  return computeStreakStats(activityDateKeys);
+}
+
+/** Raw "YYYY-MM-DD" activity date keys, for the /profile activity heatmap.
+ * Not a new metric — the same signal getUserStreakStats already derives
+ * currentStreak/longestStreak from, just returned before aggregation. */
+export async function getUserActivityDateKeys(userId: string): Promise<string[]> {
+  return fetchActivityDateKeys(userId);
 }
