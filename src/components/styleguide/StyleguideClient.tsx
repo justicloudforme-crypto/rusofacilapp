@@ -15,6 +15,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
 import Switch from "@/components/ui/Switch";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
+import GameResultPanel from "@/components/games/GameResultPanel";
 
 // ---------------------------------------------------------------------------
 // Layout helpers
@@ -202,6 +203,36 @@ function ModalDemo() {
           </Button>
         </div>
       </Modal>
+    </>
+  );
+}
+
+function GameResultPanelDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="secondary" haptic={false} onClick={() => setOpen(true)}>
+        Open result panel
+      </Button>
+      <GameResultPanel
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Раунд завершён"
+        avatarId="matryoshka_proud"
+        score={{ correct: 8, total: 10 }}
+        timeSeconds={95}
+        errors={2}
+        dict={{
+          closeLabel: "Закрыть",
+          resultScoreLabel: "{correct} из {total} верно",
+          resultTimeLabel: "Время: {time}",
+          resultErrorsLabel: "Ошибок: {count}",
+        }}
+        playAgainLabel="Ещё раз"
+        onPlayAgain={() => setOpen(false)}
+        nextGameLabel="Следующая игра"
+        onNextGame={() => setOpen(false)}
+      />
     </>
   );
 }
@@ -479,6 +510,9 @@ function StyleguideBody({ initialTheme }: { initialTheme: "light" | "dark" }) {
           </StateLabel>
           <StateLabel label="Toast (безопасная зона снизу)">
             <ToastDemo />
+          </StateLabel>
+          <StateLabel label="GameResultPanel (счёт/время/ошибки/конфетти)">
+            <GameResultPanelDemo />
           </StateLabel>
         </div>
       </Section>

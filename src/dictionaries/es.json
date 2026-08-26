@@ -891,6 +891,12 @@
     "expertModeLabel": "Modo experto",
     "premiumTierLabel": "Solo Premium"
   },
+  "gameResult": {
+    "closeLabel": "Cerrar",
+    "resultScoreLabel": "{correct} de {total} correctas",
+    "resultTimeLabel": "Tiempo: {time}",
+    "resultErrorsLabel": "Errores: {count}"
+  },
   "celebration": {
     "lessonPassedTitle": "¡Lección superada!",
     "lessonPassedSubtitle": "Sigue así, cada lección te acerca a la fluidez.",

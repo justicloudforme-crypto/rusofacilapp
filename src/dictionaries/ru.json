@@ -891,6 +891,12 @@
     "expertModeLabel": "Режим эксперта",
     "premiumTierLabel": "Только Premium"
   },
+  "gameResult": {
+    "closeLabel": "Закрыть",
+    "resultScoreLabel": "{correct} из {total} верно",
+    "resultTimeLabel": "Время: {time}",
+    "resultErrorsLabel": "Ошибок: {count}"
+  },
   "celebration": {
     "lessonPassedTitle": "Урок пройден!",
     "lessonPassedSubtitle": "Так держать — каждый урок приближает вас к свободному русскому.",
