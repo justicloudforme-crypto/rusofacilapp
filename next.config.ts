@@ -74,7 +74,12 @@ export default withSentryConfig(config, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: true,
+  // Temporarily false — SENTRY_AUTH_TOKEN was just added to Vercel
+  // Production and we need to see the sourcemap-upload step's own log
+  // output in the next deploy's build log to confirm it actually
+  // authenticates (silent:true hides both success and failure). Revert to
+  // true in a follow-up commit once confirmed either way.
+  silent: false,
   // Source maps are uploaded to Sentry directly, not shipped to the
   // client — keeps them out of the public bundle.
   widenClientFileUpload: true,
