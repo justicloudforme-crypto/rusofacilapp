@@ -56,7 +56,7 @@ export default function BottomNav({
       // translate-y toggle is skipped entirely (useHideOnScroll always
       // returns false) when the OS prefers-reduced-motion — see that
       // hook's own comment.
-      className={`pb-safe fixed inset-x-0 bottom-0 z-40 flex border-t border-black/10 bg-background transition-transform duration-200 sm:hidden dark:border-white/10 ${
+      className={`pb-safe fixed inset-x-0 bottom-0 z-40 flex border-t border-black/10 bg-background transition-transform duration-200 sm:hidden dark:border-white/30 ${
         hidden ? "translate-y-full" : "translate-y-0"
       }`}
     >

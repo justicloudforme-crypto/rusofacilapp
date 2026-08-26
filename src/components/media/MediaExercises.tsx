@@ -81,7 +81,7 @@ export default function MediaExercises({
         );
       })}
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/10">
+      <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/30">
         {result && (
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">

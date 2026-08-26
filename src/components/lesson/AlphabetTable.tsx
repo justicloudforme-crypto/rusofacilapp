@@ -45,7 +45,7 @@ export default function AlphabetTable({
               {letters.map((letter) => (
                 <div
                   key={letter.letter}
-                  className="flex items-start gap-3 rounded-xl border border-black/10 px-3 py-2.5 dark:border-white/10"
+                  className="flex items-start gap-3 rounded-xl border border-black/10 px-3 py-2.5 dark:border-white/30"
                 >
                   <span className="w-10 flex-shrink-0 text-2xl font-semibold leading-8">
                     {letter.letter}

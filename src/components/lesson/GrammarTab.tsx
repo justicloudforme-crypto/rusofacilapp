@@ -40,7 +40,7 @@ export default function GrammarTab({
             at a capped measure (max-w-prose) rather than justified: at
             this column width, justified text creates uneven word-spacing
             "rivers" that hurt readability more than they add polish. */}
-        <div className="flex max-w-prose flex-col gap-4 rounded-2xl border border-black/10 border-l-4 border-l-primary/50 bg-background p-5 shadow-sm dark:border-white/10">
+        <div className="flex max-w-prose flex-col gap-4 rounded-2xl border border-black/10 border-l-4 border-l-primary/50 bg-background p-5 shadow-sm dark:border-white/30">
           {grammar.paragraphs.map((paragraph) => (
             <GlossaryText key={paragraph} text={paragraph} className="leading-7 text-foreground/80" />
           ))}
@@ -48,13 +48,13 @@ export default function GrammarTab({
       </div>
 
       {grammar.examples && grammar.examples.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/10">
+        <div className="flex flex-col gap-2 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/30">
           <h3 className="text-sm font-semibold">{dict.alphabet.examplesTitle}</h3>
           <div className="flex flex-col gap-2">
             {grammar.examples.map((example, index) => (
               <div
                 key={example.russian}
-                className="flex items-center gap-3 border-t border-black/5 pt-2 first:border-t-0 first:pt-0 dark:border-white/10"
+                className="flex items-center gap-3 border-t border-black/5 pt-2 first:border-t-0 first:pt-0 dark:border-white/30"
               >
                 <SpeakButton
                   text={example.russian}

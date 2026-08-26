@@ -56,7 +56,7 @@ export default function SlidesTab({
           →
         </button>
 
-        <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/10">
+        <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/30">
           <div className="h-1.5 bg-gradient-to-r from-primary via-primary-400 to-premium-400" />
 
           <div className="p-6 sm:p-10">

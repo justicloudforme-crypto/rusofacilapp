@@ -22,7 +22,7 @@ import { ToastProvider, useToast } from "@/components/ui/Toast";
 
 function Section({ id, title, description, children }: { id: string; title: string; description?: string; children: ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-20 border-t border-black/10 py-10 first:border-t-0 first:pt-0 dark:border-white/10">
+    <section id={id} className="scroll-mt-20 border-t border-black/10 py-10 first:border-t-0 first:pt-0 dark:border-white/30">
       <h2 className="text-h2 font-serif font-bold tracking-tight">{title}</h2>
       {description && <p className="mt-1.5 max-w-2xl text-body-sm text-foreground/70">{description}</p>}
       <div className="mt-6">{children}</div>
@@ -36,7 +36,7 @@ function SubHeading({ children }: { children: ReactNode }) {
 
 function Swatch({ name, hex, textClass = "text-white" }: { name: string; hex: string; textClass?: string }) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-black/10 dark:border-white/30">
       <div className={`flex h-14 items-end p-2 text-[0.7rem] font-medium ${textClass}`} style={{ background: hex }}>
         {name}
       </div>

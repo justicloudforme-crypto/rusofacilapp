@@ -25,12 +25,12 @@ export default function ReadingPracticeBlock({
   audioMap: Record<string, string>;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/10">
+    <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/30">
       <h3 className="text-sm font-semibold">{readingPractice.title}</h3>
       {readAloudDict && <p className="text-xs text-foreground/60">{readAloudDict.instructions}</p>}
       <div className="flex flex-col gap-3">
         {readingPractice.items.map((item, index) => (
-          <div key={item.text} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/10">
+          <div key={item.text} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/30">
             <div className="flex items-center gap-3">
               <SpeakButton text={item.text} label={listenLabel} audioUrl={audioMap[readingPracticeAudioKey(index)]} />
               <div className="flex flex-col">

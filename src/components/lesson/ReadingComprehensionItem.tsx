@@ -29,7 +29,7 @@ export default function ReadingComprehensionItem({
       <p className="text-xs font-medium text-foreground/50">
         {dict.instructionReadingComprehension}
       </p>
-      <div className="flex flex-col gap-2 rounded-xl border border-black/10 bg-foreground/[.03] p-4 dark:border-white/10">
+      <div className="flex flex-col gap-2 rounded-xl border border-black/10 bg-foreground/[.03] p-4 dark:border-white/30">
         <div className="flex items-center gap-2">
           <SpeakButton
             text={exercise.text}

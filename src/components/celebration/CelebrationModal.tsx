@@ -99,7 +99,7 @@ export default function CelebrationModal({
     >
       <Confetti />
       <div
-        className="celebration-panel relative flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl border border-black/10 bg-background p-8 text-center shadow-xl dark:border-white/10"
+        className="celebration-panel relative flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl border border-black/10 bg-background p-8 text-center shadow-xl dark:border-white/30"
         onClick={(e) => e.stopPropagation()}
       >
         <ScenarioStage id={activeScenario} />

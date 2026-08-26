@@ -27,10 +27,10 @@ export default async function AdminVideoLessonsPage({ params }: PageProps<"/[lan
         {savedLessons.length === 0 ? (
           <p className="mt-2 text-sm text-foreground/50">Todavía no hay ninguna lección guardada.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/10">
+          <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/30">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
+                <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/30">
                   <th className="px-4 py-2">ID</th>
                   <th className="px-4 py-2">Título</th>
                   <th className="px-4 py-2">Nivel</th>

@@ -69,7 +69,7 @@ export default function IntroPresentation({
           →
         </button>
 
-        <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/10">
+        <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/30">
           <div className="h-1.5 bg-gradient-to-r from-primary via-primary-400 to-premium-400" />
 
           <div className="p-6 sm:p-10">
@@ -149,7 +149,7 @@ export default function IntroPresentation({
               <Link
                 key={level.slug}
                 href={`/${lang}/courses/${level.slug}/1`}
-                className="tap group flex flex-col rounded-xl border border-black/10 bg-background p-4 transition-colors hover:border-primary active:border-primary dark:border-white/10 dark:hover:border-primary-400 dark:active:border-primary-400"
+                className="tap group flex flex-col rounded-xl border border-black/10 bg-background p-4 transition-colors hover:border-primary active:border-primary dark:border-white/30 dark:hover:border-primary-400 dark:active:border-primary-400"
               >
                 <span className="text-xs font-semibold uppercase tracking-wide text-primary-text dark:text-primary-400">
                   {level.title}

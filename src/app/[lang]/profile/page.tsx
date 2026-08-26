@@ -128,7 +128,7 @@ function BadgeTile({
       className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center ${
         earned
           ? "border-premium-500/25 bg-premium-500/5"
-          : "border-black/10 opacity-60 dark:border-white/10"
+          : "border-black/10 opacity-60 dark:border-white/30"
       }`}
     >
       <span aria-hidden="true" className={`text-3xl ${earned ? "" : "grayscale opacity-70"}`}>
@@ -511,11 +511,11 @@ export default async function ProfilePage({
               </section>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
                   <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
                 </div>
-                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{totalLessonsCompleted}</p>
                   <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
                 </div>
@@ -525,7 +525,7 @@ export default async function ProfilePage({
                   </p>
                   <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
                 </div>
-                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold uppercase">{currentLevel ?? "—"}</p>
                   <p className="text-sm text-foreground/60">
                     {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
@@ -582,14 +582,39 @@ export default async function ProfilePage({
                 )}
               </span>
             </div>
-            {!isActive && (
+            {/* Per-plan upsell, same card, no separate banner — free shows
+                the existing full CTA (nothing to compare against yet, so
+                a clear "unlock everything" button is warranted); monthly/
+                annual show a small text link instead, sized like a
+                ContinueStrip tile rather than a full button, since this is
+                a nudge for someone who's already paying, not a hard sell.
+                Nothing renders for lifetime — there's nowhere left to
+                upgrade to. Never touches checkout: both links only point
+                at /pricing (annual is pre-selected there by default;
+                premium is highlighted via ?highlight=premium), the actual
+                plan change still goes through the real checkout flow. */}
+            {!isActive ? (
               <Link
                 href={`/${lang}/pricing`}
                 className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
               >
-                {dict.account.seePricing}
+                {dict.profile.profileUpsellFree}
               </Link>
-            )}
+            ) : subscription?.plan === "monthly" ? (
+              <Link
+                href={`/${lang}/pricing`}
+                className="tap mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-text"
+              >
+                {dict.profile.profileUpsellToAnnual} →
+              </Link>
+            ) : subscription?.plan === "annual" ? (
+              <Link
+                href={`/${lang}/pricing?highlight=premium#premium`}
+                className="tap mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-text"
+              >
+                {dict.profile.profileUpsellToPremium} →
+              </Link>
+            ) : null}
           </Card>
 
           <Card>
@@ -608,11 +633,11 @@ export default async function ProfilePage({
             )}
             {referral && (
               <div className="mt-4 grid grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{referral.referredCount}</p>
                   <p className="text-sm text-foreground/60">{dict.profile.referralInvitedLabel}</p>
                 </div>
-                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+                <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{referral.rewardsEarnedCount}</p>
                   <p className="text-sm text-foreground/60">{dict.profile.referralRewardsLabel}</p>
                 </div>
@@ -652,7 +677,7 @@ export default async function ProfilePage({
                         savedLabel={dict.profile.savedNotice}
                       />
                     </div>
-                    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-black/10 pt-5 text-sm dark:border-white/10">
+                    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-black/10 pt-5 text-sm dark:border-white/30">
                       <dt className="text-foreground/60">{dict.profile.emailLabel}</dt>
                       <dd>{user.email}</dd>
                       <dt className="text-foreground/60">{dict.profile.memberSinceLabel}</dt>
@@ -660,7 +685,7 @@ export default async function ProfilePage({
                         <LocalDate iso={user.createdAt.toISOString()} locale={lang} />
                       </dd>
                     </dl>
-                    <div className="border-t border-black/10 pt-5 dark:border-white/10">
+                    <div className="border-t border-black/10 pt-5 dark:border-white/30">
                       <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
                         {dict.profile.publicProfileHeading}
                       </span>
@@ -765,7 +790,7 @@ export default async function ProfilePage({
                         minLength={MIN_PASSWORD_LENGTH}
                       />
                     </div>
-                    <div className="border-t border-black/10 pt-5 dark:border-white/10">
+                    <div className="border-t border-black/10 pt-5 dark:border-white/30">
                       <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
                         {dict.profile.sessionsHeading}
                       </span>
@@ -904,7 +929,7 @@ export default async function ProfilePage({
           )}
         </div>
 
-        <div className="mt-6 border-t border-black/10 pt-5 dark:border-white/10">
+        <div className="mt-6 border-t border-black/10 pt-5 dark:border-white/30">
           <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
             {dict.profile.paymentHistoryHeading}
           </span>
@@ -1001,15 +1026,15 @@ export default async function ProfilePage({
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
                 <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
               </div>
-              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold tabular-nums">{totalLessonsCompleted}</p>
                 <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
               </div>
-              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold uppercase">
                   {currentLevel ? currentLevel : "—"}
                 </p>
@@ -1039,7 +1064,7 @@ export default async function ProfilePage({
                 </p>
                 <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
               </div>
-              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+              <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold tabular-nums">
                   {streak.longestStreak} {dict.profile.streakDaysUnit}
                 </p>
@@ -1158,7 +1183,7 @@ export default async function ProfilePage({
                     return (
                       <div
                         key={row.lessonSlug}
-                        className="flex flex-col gap-1 rounded-2xl border border-black/10 p-4 text-sm dark:border-white/10"
+                        className="flex flex-col gap-1 rounded-2xl border border-black/10 p-4 text-sm dark:border-white/30"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-medium">{lessonTitle}</span>
@@ -1176,7 +1201,7 @@ export default async function ProfilePage({
                             {dict.profile.noMistakesLabel}
                           </p>
                         ) : (
-                          <div className="mt-1 flex flex-col gap-2 border-t border-black/10 pt-2 dark:border-white/10">
+                          <div className="mt-1 flex flex-col gap-2 border-t border-black/10 pt-2 dark:border-white/30">
                             <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
                               {dict.profile.examMistakeReviewHeading}
                             </span>
@@ -1230,7 +1255,7 @@ export default async function ProfilePage({
             {examAttempts.map((attempt) => (
               <div
                 key={attempt.id}
-                className="flex flex-col gap-2 rounded-2xl border border-black/10 p-4 text-sm dark:border-white/10"
+                className="flex flex-col gap-2 rounded-2xl border border-black/10 p-4 text-sm dark:border-white/30"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium">
@@ -1265,7 +1290,7 @@ export default async function ProfilePage({
                 {Object.entries(attempt.breakdown).some(
                   ([, score]) => score.mistakes.length > 0,
                 ) && (
-                  <div className="mt-2 flex flex-col gap-3 border-t border-black/10 pt-3 dark:border-white/10">
+                  <div className="mt-2 flex flex-col gap-3 border-t border-black/10 pt-3 dark:border-white/30">
                     <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
                       {dict.profile.examMistakeReviewHeading}
                     </span>
@@ -1334,7 +1359,7 @@ export default async function ProfilePage({
             return (
               <div
                 key={level}
-                className="flex flex-col justify-between gap-4 rounded-2xl border border-black/10 p-5 dark:border-white/10"
+                className="flex flex-col justify-between gap-4 rounded-2xl border border-black/10 p-5 dark:border-white/30"
               >
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">

@@ -45,7 +45,7 @@ export default function HeroWordDeck({ words, dict }: { words: FlashcardRow[]; d
                 style={{ transform: flipped ? "rotateY(180deg)" : undefined }}
               >
                 {/* Front: Russian word */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-black/10 bg-background p-4 text-center [backface-visibility:hidden] dark:border-white/10">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-black/10 bg-background p-4 text-center [backface-visibility:hidden] dark:border-white/30">
                   <span className="text-4xl" aria-hidden>
                     {word.emoji}
                   </span>

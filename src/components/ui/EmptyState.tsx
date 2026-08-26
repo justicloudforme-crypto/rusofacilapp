@@ -20,7 +20,7 @@ export default function EmptyState({
 }) {
   return (
     <div
-      className={`flex flex-col items-center gap-2 rounded-2xl border border-black/10 px-6 py-10 text-center dark:border-white/10 ${className}`}
+      className={`flex flex-col items-center gap-2 rounded-2xl border border-black/10 px-6 py-10 text-center dark:border-white/30 ${className}`}
     >
       {icon && (
         <div className="mb-1 text-4xl" aria-hidden>

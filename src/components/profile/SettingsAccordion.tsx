@@ -28,7 +28,7 @@ export default function SettingsAccordion({
       {sections.map((section) => {
         const open = section.id === openId;
         return (
-          <div key={section.id} className="overflow-hidden rounded-2xl border border-black/10 dark:border-white/10">
+          <div key={section.id} className="overflow-hidden rounded-2xl border border-black/10 dark:border-white/30">
             <button
               type="button"
               className="tap flex min-h-11 w-full items-center gap-2.5 px-5 py-4 text-left transition-colors hover:bg-black/[.02] active:bg-black/[.02] dark:hover:bg-white/[.04] dark:active:bg-white/[.04]"
@@ -47,7 +47,7 @@ export default function SettingsAccordion({
                 <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-            {open && <div className="border-t border-black/10 p-5 dark:border-white/10 sm:p-6">{section.content}</div>}
+            {open && <div className="border-t border-black/10 p-5 dark:border-white/30 sm:p-6">{section.content}</div>}
           </div>
         );
       })}

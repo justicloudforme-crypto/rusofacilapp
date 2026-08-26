@@ -110,7 +110,7 @@ export default async function Navbar({
       // now (3 top-level items + a dropdown instead of 6 flat links) — no
       // more tablet-width wrap, so nothing downstream needs to guess at a
       // variable header height.
-      className="sticky top-0 z-50 border-b border-black/10 bg-background/95 pt-safe dark:border-white/10"
+      className="sticky top-0 z-50 border-b border-black/10 bg-background/95 pt-safe dark:border-white/30"
     >
       <div className="relative mx-auto flex h-16 max-w-5xl items-center gap-4 px-4 sm:px-6">
         <Link href={`/${lang}`} className="flex flex-shrink-0 items-center gap-2 font-serif text-lg font-bold tracking-tight">

@@ -19,7 +19,7 @@ export default function WordTooltip({ gloss, onClose }: { gloss: WordGloss; onCl
       <p className="mt-1 text-xs uppercase tracking-wide text-foreground/40">{gloss.partOfSpeech}</p>
       <p className="mt-1 text-sm text-foreground/90">{gloss.translation}</p>
       {gloss.grammarNote && (
-        <p className="mt-2 border-t border-black/10 pt-2 text-xs text-foreground/60 dark:border-white/10">
+        <p className="mt-2 border-t border-black/10 pt-2 text-xs text-foreground/60 dark:border-white/30">
           {gloss.grammarNote}
         </p>
       )}

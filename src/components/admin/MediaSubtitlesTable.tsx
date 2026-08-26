@@ -124,10 +124,10 @@ export default function MediaSubtitlesTable({ rows }: { rows: Row[] }) {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-white/10">
+      <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-white/30">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
+            <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/30">
               <th className="px-4 py-2">ID</th>
               <th className="px-4 py-2">Título</th>
               <th className="px-4 py-2">Subtítulos</th>

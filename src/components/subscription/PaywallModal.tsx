@@ -79,7 +79,7 @@ export default function PaywallModal({
       onClick={onClose}
     >
       <div
-        className="relative flex w-full max-w-sm flex-col gap-4 rounded-3xl border border-black/10 bg-background p-6 shadow-xl dark:border-white/10 sm:p-8"
+        className="relative flex w-full max-w-sm flex-col gap-4 rounded-3xl border border-black/10 bg-background p-6 shadow-xl dark:border-white/30 sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -115,7 +115,7 @@ export default function PaywallModal({
                   className={`tap flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     isLifetime
                       ? "border-primary/40 bg-primary/5 hover:bg-primary/10 active:bg-primary/10"
-                      : "border-black/10 hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
+                      : "border-black/10 hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
                   }`}
                 >
                   <span>

@@ -104,7 +104,7 @@ export default function LessonView({
 
           <div
             role="tablist"
-            className="mt-6 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/10"
+            className="mt-6 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30"
           >
             {tabs.map((t) => (
               <button
@@ -175,7 +175,7 @@ export default function LessonView({
         </>
       )}
 
-      <div className="mt-10 flex items-center justify-between border-t border-black/10 pt-6 text-sm dark:border-white/10">
+      <div className="mt-10 flex items-center justify-between border-t border-black/10 pt-6 text-sm dark:border-white/30">
         {prevHref ? (
           <Link href={prevHref} className="tap font-medium hover:text-foreground/70 active:text-foreground/70">
             ← {dict.previous}

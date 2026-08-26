@@ -114,7 +114,7 @@ export default function StoriesCatalog({
                   e.preventDefault();
                   openPaywall(story.lockReason ?? "free");
                 }}
-                className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
+                className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
               >
                 <div className="flex items-center justify-between gap-2">
                   <LevelBadge level={story.level} />

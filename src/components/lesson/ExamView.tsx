@@ -110,7 +110,7 @@ export default function ExamView({
   return (
     <div className="flex flex-col gap-10">
       {!submitted && (
-        <div className="sticky top-0 z-10 flex flex-col gap-1.5 rounded-xl border border-black/10 bg-background/95 px-3 py-2 backdrop-blur dark:border-white/10">
+        <div className="sticky top-0 z-10 flex flex-col gap-1.5 rounded-xl border border-black/10 bg-background/95 px-3 py-2 backdrop-blur dark:border-white/30">
           <div className="flex items-center justify-between text-xs font-medium text-foreground/60">
             <span>{dict.progressLabel}</span>
             <span>
@@ -132,7 +132,7 @@ export default function ExamView({
         const areaBreakdown = attempt?.breakdown[area.id];
         return (
           <section key={area.id} className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 pb-2 dark:border-white/10">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 pb-2 dark:border-white/30">
               <h2 className="text-lg font-semibold tracking-tight">
                 {area.title}
               </h2>
@@ -266,7 +266,7 @@ export default function ExamView({
         );
       })}
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/10">
+      <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/30">
         {attempt && (
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">

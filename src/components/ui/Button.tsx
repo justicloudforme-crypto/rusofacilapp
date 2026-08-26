@@ -18,7 +18,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   // as "the other primary-colored choice" (e.g. OXXO cash payment next to
   // a primary card-payment CTA).
   outline:
-    "border border-black/10 text-foreground/80 hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/10",
+    "border border-black/10 text-foreground/80 hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/30",
   ghost: "text-foreground/70 hover:bg-neutral-200/60 active:bg-neutral-200/60 dark:hover:bg-neutral-700/40",
   danger: "bg-danger text-white hover:bg-danger-strong active:bg-danger-strong",
 };

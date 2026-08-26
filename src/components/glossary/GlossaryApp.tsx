@@ -194,7 +194,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
         {terms.map((term) => {
           const earliestLevel = earliestRelatedLevel(term.relatedLessons);
           return (
-          <div key={term.id} className="rounded-xl border border-black/10 p-4 dark:border-white/10">
+          <div key={term.id} className="rounded-xl border border-black/10 p-4 dark:border-white/30">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-semibold">{term.term}</h2>

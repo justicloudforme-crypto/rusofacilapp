@@ -15,7 +15,7 @@ const PADDING_CLASSES: Record<CardPadding, string> = {
 // one shared shadow token (--shadow-md, warm-tinted) instead of each file
 // re-deriving its own rgba shadow.
 const TONE_CLASSES: Record<CardTone, string> = {
-  neutral: "border-black/10 bg-background dark:border-white/10",
+  neutral: "border-black/10 bg-background dark:border-white/30",
   primary: "border-primary/15 bg-primary/[0.03]",
   premium: "border-premium-500/25 bg-premium-500/5",
 };

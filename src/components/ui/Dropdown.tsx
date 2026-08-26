@@ -58,7 +58,7 @@ export default function Dropdown({
       {open && (
         <div
           role="menu"
-          className={`absolute top-full z-50 mt-2 rounded-2xl border border-black/10 bg-background p-2 shadow-lg dark:border-white/10 ${
+          className={`absolute top-full z-50 mt-2 rounded-2xl border border-black/10 bg-background p-2 shadow-lg dark:border-white/30 ${
             align === "right" ? "right-0" : "left-0"
           } ${panelClassName}`}
         >

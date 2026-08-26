@@ -29,7 +29,7 @@ export default function AdminNav({
   ];
 
   return (
-    <nav className="mt-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/10 sm:w-fit">
+    <nav className="mt-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30 sm:w-fit">
       {items.map((item) => {
         const active = pathname.startsWith(item.href);
         return (

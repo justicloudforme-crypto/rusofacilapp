@@ -34,20 +34,20 @@ export default async function PublicProfilePage({
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+        <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
           <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
             {profile.currentStreak > 0 && <span aria-hidden="true">🔥</span>}
             {profile.currentStreak} {dict.profile.streakDaysUnit}
           </p>
           <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
         </div>
-        <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+        <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
           <p className="text-2xl font-semibold tabular-nums">
             {profile.longestStreak} {dict.profile.streakDaysUnit}
           </p>
           <p className="text-sm text-foreground/60">{dict.profile.longestStreakLabel}</p>
         </div>
-        <div className="rounded-2xl border border-black/10 p-4 dark:border-white/10">
+        <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
           <p className="text-2xl font-semibold tabular-nums">{profile.earnedBadges.length}</p>
           <p className="text-sm text-foreground/60">{dict.publicProfile.badgeCountLabel}</p>
         </div>
@@ -62,7 +62,7 @@ export default async function PublicProfilePage({
             {profile.earnedBadges.map(({ def }) => (
               <div
                 key={def.id}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-black/10 bg-white/60 p-4 text-center dark:border-white/10 dark:bg-white/5"
+                className="flex flex-col items-center gap-2 rounded-2xl border border-black/10 bg-white/60 p-4 text-center dark:border-white/30 dark:bg-white/5"
               >
                 <span aria-hidden="true" className="text-3xl">
                   {def.icon}

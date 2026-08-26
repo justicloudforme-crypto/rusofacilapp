@@ -104,7 +104,7 @@ export default async function LevelPage({
             <li key={lesson} className="flex flex-col gap-3">
               <Link
                 href={`/${lang}/courses/${level}/${lessonNumber}`}
-                className="tap flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
+                className="tap flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
               >
                 <span
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${circleClasses}`}

@@ -48,7 +48,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           card's top edge peeks into view as a "there's something below,
           scroll" cue, per the redesign brief. sm:+ drops both constraints
           and shows the full deck beside the text instead of under it. */}
-      <section className="relative overflow-hidden border-b border-black/10 dark:border-white/10">
+      <section className="relative overflow-hidden border-b border-black/10 dark:border-white/30">
         <CyrillicWatermark letter="Я" className="-right-10 -top-16 -z-10" />
         <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-5xl flex-col gap-8 px-4 py-10 sm:min-h-0 sm:grid sm:grid-cols-2 sm:items-center sm:gap-10 sm:px-6 sm:py-24">
           <div className="flex flex-1 flex-col justify-center gap-5 sm:flex-none">
@@ -93,7 +93,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      <section className="border-t border-black/10 dark:border-white/10">
+      <section className="border-t border-black/10 dark:border-white/30">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">
             {dict.home.featuresTitle}
@@ -121,7 +121,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           buffer) when this is reached via the hero's ghost-CTA anchor link
           — otherwise the header covers the section title on landing
           (AUDIT.md's confirmed sticky-header-covers-anchor bug). */}
-      <section id="how-it-works" className="relative scroll-mt-20 overflow-hidden border-t border-black/10 dark:border-white/10">
+      <section id="how-it-works" className="relative scroll-mt-20 overflow-hidden border-t border-black/10 dark:border-white/30">
         <CyrillicWatermark letter="П" className="-left-14 top-0 -z-10" />
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">{dict.home.howItWorksTitle}</h2>
@@ -142,7 +142,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      <section className="border-t border-black/10 dark:border-white/10">
+      <section className="border-t border-black/10 dark:border-white/30">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">
             {dict.home.levelsTitle}
@@ -157,7 +157,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                 <Link
                   key={slug}
                   href={`/${lang}/courses/${slug}`}
-                  className="tap group flex flex-col justify-between rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
+                  className="tap group flex flex-col justify-between rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
                 >
                   <div>
                     <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
@@ -184,7 +184,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           tiles standing in for a crossword — deliberately NOT wired to the
           real word-game engine (buildCrossword etc.), per the redesign
           brief: a taste of the game, not a playable one on the homepage. */}
-      <section className="border-t border-black/10 dark:border-white/10">
+      <section className="border-t border-black/10 dark:border-white/30">
         <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-16">
           {preview.previewWord && (
             <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-2">
@@ -255,7 +255,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                 {preview.previewGameWords.map((word) => (
                   <span
                     key={word}
-                    className="rounded-xl border border-black/10 bg-background px-3 py-2 text-sm font-medium uppercase tracking-wide dark:border-white/10"
+                    className="rounded-xl border border-black/10 bg-background px-3 py-2 text-sm font-medium uppercase tracking-wide dark:border-white/30"
                   >
                     {word}
                   </span>
@@ -266,7 +266,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      <section className="border-t border-black/10 dark:border-white/10">
+      <section className="border-t border-black/10 dark:border-white/30">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">{dict.home.pricingStripTitle}</h2>
           <p className="mt-2 max-w-xl text-sm text-foreground/70">{dict.home.pricingStripSubtitle}</p>
@@ -293,14 +293,14 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-t border-black/10 dark:border-white/10">
+      <section className="relative overflow-hidden border-t border-black/10 dark:border-white/30">
         <CyrillicWatermark letter="Р" className="-bottom-16 -right-10 -z-10" />
         <div className="mx-auto max-w-5xl px-6 py-16">
           <PricingFaq heading={dict.home.faqTitle} items={dict.home.faq} />
         </div>
       </section>
 
-      <section className="border-t border-black/10 dark:border-white/10">
+      <section className="border-t border-black/10 dark:border-white/30">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-16 text-center">
           <h2 className="text-2xl font-semibold tracking-tight">{dict.home.finalCtaTitle}</h2>
           <p className="max-w-md text-sm text-foreground/70">{dict.home.finalCtaSubtitle}</p>

@@ -32,10 +32,10 @@ export default async function AdminStoriesPage({
       {stories.length === 0 ? (
         <p className="mt-6 text-sm text-foreground/60">{dict.admin.stories.emptyState}</p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/10">
+        <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/30">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
+              <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/30">
                 <th className="px-4 py-2">{dict.admin.stories.titleHeader}</th>
                 <th className="px-4 py-2">{dict.admin.stories.authorHeader}</th>
                 <th className="px-4 py-2">{dict.admin.stories.levelHeader}</th>

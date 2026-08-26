@@ -11,8 +11,12 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const { next: nextRaw } = await searchParams;
+  const { next: nextRaw, highlight } = await searchParams;
   const next = typeof nextRaw === "string" && nextRaw.startsWith(`/${lang}/`) ? nextRaw : undefined;
+  // Only "premium" is a real target today (the profile page's per-plan
+  // upsell link for annual subscribers) — anything else is ignored rather
+  // than silently highlighting the wrong card.
+  const highlightPremium = highlight === "premium";
 
   const dict = await getDictionary(lang);
   const p = dict.pricing;
@@ -77,6 +81,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
             features={p.featuresPremium}
             oxxoDetailsSummary={p.oxxoDetailsSummary}
             oxxoNote={p.oxxoNote}
+            highlighted={highlightPremium}
           />
         </div>
       </div>

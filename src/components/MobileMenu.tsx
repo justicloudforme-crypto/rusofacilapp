@@ -221,7 +221,7 @@ export default function MobileMenu({
               ))}
 
               {user && (
-                <form action="/api/auth/logout" method="POST" className="mt-4 border-t border-black/10 pt-3 dark:border-white/10">
+                <form action="/api/auth/logout" method="POST" className="mt-4 border-t border-black/10 pt-3 dark:border-white/30">
                   <input type="hidden" name="lang" value={lang} />
                   <button
                     type="submit"

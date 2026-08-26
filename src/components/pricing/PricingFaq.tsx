@@ -11,7 +11,7 @@ export default function PricingFaq({ heading, items }: { heading: string; items:
   return (
     <section>
       <h2 className="font-serif text-xl font-semibold text-foreground">{heading}</h2>
-      <div className="mt-4 flex flex-col divide-y divide-black/10 rounded-2xl border border-black/10 dark:divide-white/10 dark:border-white/10">
+      <div className="mt-4 flex flex-col divide-y divide-black/10 rounded-2xl border border-black/10 dark:divide-white/10 dark:border-white/30">
         {items.map((item) => (
           <details key={item.q} className="group p-5">
             <summary className="tap flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">

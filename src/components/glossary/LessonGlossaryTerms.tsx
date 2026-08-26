@@ -62,7 +62,7 @@ export default function LessonGlossaryTerms({
   if (!terms || terms.length === 0) return null;
 
   return (
-    <div className="mt-6 rounded-xl border border-black/10 p-4 dark:border-white/10">
+    <div className="mt-6 rounded-xl border border-black/10 p-4 dark:border-white/30">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">{heading}</span>
         <span className="text-xs font-medium text-foreground/50">

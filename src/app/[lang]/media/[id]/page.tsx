@@ -82,7 +82,7 @@ export default async function MediaDetailPage({
 
               <section className="mt-10">
                 <h2 className="text-lg font-medium">{dict.media.transcriptHeading}</h2>
-                <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/10">
+                <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/30">
                   {item.lyricsOrTranscript.map((line, index) => (
                     <div key={index} className="text-sm leading-relaxed">
                       <p className="font-medium">{line.russian}</p>

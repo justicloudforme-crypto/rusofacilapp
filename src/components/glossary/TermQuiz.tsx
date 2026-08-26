@@ -107,7 +107,7 @@ export default function TermQuiz({
 
   if (finished) {
     return (
-      <div className="mt-3 rounded-lg border border-black/10 p-3 text-sm dark:border-white/10">
+      <div className="mt-3 rounded-lg border border-black/10 p-3 text-sm dark:border-white/30">
         <p className="font-medium text-foreground">
           {dict.scoreLabel.replace("{score}", String(correctCount)).replace("{total}", String(questions.length))}
         </p>
@@ -158,7 +158,7 @@ export default function TermQuiz({
   const hint = question.term.russianComparison ?? question.term.definition;
 
   return (
-    <div className="mt-3 rounded-lg border border-black/10 p-3 dark:border-white/10">
+    <div className="mt-3 rounded-lg border border-black/10 p-3 dark:border-white/30">
       {/* The term itself is the single biggest, boldest thing in this
        * block — deliberately more prominent than the instruction text
        * above it, so which word the question is about is unmistakable at

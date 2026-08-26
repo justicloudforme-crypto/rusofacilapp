@@ -127,7 +127,7 @@ function MediaLiveCaption({
   const spokenText = activeLine ? (isNarrationOnly ? activeLine.es : activeLine.ru) : "";
 
   return (
-    <div className="flex min-h-[6.5rem] flex-col justify-center gap-2 rounded-2xl border border-black/10 bg-foreground/[0.03] px-4 py-4 dark:border-white/10">
+    <div className="flex min-h-[6.5rem] flex-col justify-center gap-2 rounded-2xl border border-black/10 bg-foreground/[0.03] px-4 py-4 dark:border-white/30">
       {activeLine ? (
         isNarrationOnly ? (
           <MemoCaptionLine text={spokenText} start={activeLine.start} end={activeLine.end} time={time} />

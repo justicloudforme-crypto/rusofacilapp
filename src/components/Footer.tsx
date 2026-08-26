@@ -5,7 +5,7 @@ import MatryoshkaMark from "./MatryoshkaMark";
 
 export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale }) {
   return (
-    <footer className="border-t border-black/10 dark:border-white/10">
+    <footer className="border-t border-black/10 dark:border-white/30">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-6 py-8 text-sm text-foreground/60 sm:flex-row sm:justify-between">
         <div className="flex items-center gap-2">
           <MatryoshkaMark size={20} />

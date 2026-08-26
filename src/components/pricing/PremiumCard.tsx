@@ -27,6 +27,7 @@ export default function PremiumCard({
   features,
   oxxoDetailsSummary,
   oxxoNote,
+  highlighted = false,
 }: {
   lang: string;
   methodLabel: string;
@@ -44,11 +45,23 @@ export default function PremiumCard({
   features: string[];
   oxxoDetailsSummary: string;
   oxxoNote: string;
+  /** Set via /pricing?highlight=premium — the profile page's per-plan
+   * upsell link (annual subscribers -> "unlock C1 forever") lands here.
+   * Purely a visual ring + scroll target (`id="premium"`, browsers
+   * auto-scroll to a matching URL fragment natively) — never touches
+   * checkout/Stripe, just points at this existing card. */
+  highlighted?: boolean;
 }) {
   const [method, setMethod] = useState<Method>("card");
 
   return (
-    <Card tone="premium" padding="lg" shadow className="relative flex h-full flex-col">
+    <Card
+      id="premium"
+      tone="premium"
+      padding="lg"
+      shadow
+      className={`relative flex h-full flex-col ${highlighted ? "ring-2 ring-premium-500 ring-offset-2 ring-offset-background" : ""}`}
+    >
       {badge && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-premium-500 px-3 py-1 text-xs font-semibold text-white shadow-sm">
           <span aria-hidden>👑 </span>

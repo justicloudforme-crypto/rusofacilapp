@@ -66,7 +66,7 @@ export default function MatchingItem({
               return (
                 <tr
                   key={pair.left}
-                  className="border-t border-black/5 dark:border-white/10"
+                  className="border-t border-black/5 dark:border-white/30"
                 >
                   <td className="py-2 pr-4 font-medium">{pair.left}</td>
                   <td className="py-2">
