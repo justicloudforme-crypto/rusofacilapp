@@ -47,10 +47,9 @@ export const plans: Record<PlanId, Plan> = {
     priceId: process.env.STRIPE_PRICE_LIFETIME,
     mode: "payment",
     durationDays: LIFETIME_DURATION_DAYS,
-    // Set ahead of a planned USD price drop to ~$119-129 (owner will
-    // update STRIPE_PRICE_LIFETIME separately) — 2299 MXN corresponds to
-    // that future price, not the current $169.99 one, so the two won't
-    // match until the USD side is updated in Stripe. See PROGRESS.md.
+    // $2,299 MXN at ~18.7 MXN/USD matches the $122.99 USD card price
+    // (dict.pricing.lifetime.price) — same rate the monthly/annual OXXO
+    // amounts above already use.
     oxxoAmountMxnCents: 229_900, // $2,299.00 MXN
   },
 };

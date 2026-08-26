@@ -334,12 +334,12 @@
     },
     "lifetime": {
       "name": "Premium",
-      "price": "$169.99 USD",
+      "price": "$122.99 USD",
       "period": "pago único",
       "badge": "Acceso para siempre",
       "valueNote": "Un solo pago — acceso para siempre, sin renovaciones. Además, nivel C1 y biblioteca ampliada de modismos e historias.",
       "mxnApprox": "≈2299 MXN",
-      "cardCta": "Comprar para siempre por $169.99",
+      "cardCta": "Comprar para siempre por $122.99",
       "cashCta": "Pagar en efectivo — ≈2299 MXN"
     },
     "oxxoDetailsSummary": "¿Cómo pago en efectivo?",
