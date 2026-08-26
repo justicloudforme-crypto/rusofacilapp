@@ -61,3 +61,24 @@ All UI work follows these rules:
 
 See `AUDIT.md` for the current baseline (visual inconsistencies, mobile-
 readiness gaps, missing states, confirmed bugs) this work is meant to fix.
+
+## ЗОЛОТОЕ ПРАВИЛО ПРОЕКТА — озвучка
+
+Narrate once, save to cloud, reuse the saved file. **Never** regenerate
+audio for content that already has it — the cache key is the row's `id`
+(via `AudioAsset(contentType, contentId, itemKey)`), not a hash of the
+text, so an editorial tweak to a card's wording does not need (and must
+not trigger) a re-narration. Browser `speechSynthesis` is an **emergency
+fallback only** (already wired into `SpeakButton.tsx` — used only when
+`audioUrl` is unset or fails to load), never the primary playback path
+for any new feature.
+
+Pipeline: generate locally with OpenAI `gpt-4o-mini-tts`, voice **`onyx`**
+(`prisma/generate-*-audio.ts`, Whisper-verified, ≤5 retries) → migrate to
+**Vercel Blob** (`npm run migrate:audio-to-blob`) → the permanent
+`AudioAsset.audioUrl` is the only source of truth in production.
+`public/audio/` is a local generation cache only, gitignored, never read
+by the deployed site. Before adding audio to any new surface: check
+whether the content already has a narrated `AudioAsset` row (join through
+the existing cached indexes, e.g. `getFlashcardIndex()`) before generating
+anything new.
