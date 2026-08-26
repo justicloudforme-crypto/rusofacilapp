@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
@@ -51,6 +52,11 @@ export default function MatchApp({
   // its own back/next-round buttons) stays behind once dismissed.
   const [justCompleted, setJustCompleted] = useState(false);
   const [limited, setLimited] = useState(false);
+  // True only while a category's round is being fetched — without it, the
+  // "not enough cards" message flashed for a moment on every category open
+  // (round starts at [] before the fetch resolves, which is also < the
+  // MIN_PLAYABLE floor below).
+  const [roundLoading, setRoundLoading] = useState(false);
 
   useEffect(() => {
     fetchCategorySummary(levelFilter).then((body) => {
@@ -71,6 +77,7 @@ export default function MatchApp({
   function selectCategory(next: FlashcardCategory) {
     setCategory(next);
     setSizeIndex(0);
+    setRoundLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
       .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
@@ -82,7 +89,8 @@ export default function MatchApp({
       .catch(() => {
         setCategoryCards([]);
         startRound(ROUND_SIZES[0], [], levelFilter);
-      });
+      })
+      .finally(() => setRoundLoading(false));
   }
 
   function backToCategories() {
@@ -171,6 +179,12 @@ export default function MatchApp({
                   {dict.nextRoundButton}
                 </button>
               </div>
+            </div>
+          ) : roundLoading ? (
+            <div className="grid grid-cols-2 gap-2">
+              {Array.from({ length: 8 }, (_, i) => (
+                <Skeleton key={i} variant="rect" className="h-14 rounded-xl" />
+              ))}
             </div>
           ) : round.length < MIN_PLAYABLE ? (
             <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">

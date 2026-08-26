@@ -106,12 +106,14 @@ export default function AnswerPad({
     onAnswerChange?.(answer);
   }, [answer, onAnswerChange]);
 
-  // hideAnswerBox mode ("completa la frase") still needs a real, focusable
-  // <input> for the system keyboard to attach to — a device report found
-  // that mode had no keyboard at all, because the box below used to be
-  // skipped from the DOM entirely rather than just hidden visually. Autofocus
-  // it as soon as the card appears so typing starts immediately, matching
-  // what a visible answer box would already do on tap.
+  // Best-effort autofocus for hideAnswerBox mode ("completa la frase") so
+  // a physical-keyboard user can start typing immediately without an extra
+  // click — purely a convenience now that the input itself is a real,
+  // always-visible/tappable element (see its own comment below): if this
+  // effect's focus() is ignored (e.g. a mobile browser withholding the
+  // on-screen keyboard from a non-gesture focus call), the visible input
+  // is still there as a guaranteed manual fallback, unlike the previous
+  // sr-only version.
   useEffect(() => {
     if (hideAnswerBox) inputRef.current?.focus();
   }, [hideAnswerBox]);
@@ -153,16 +155,20 @@ export default function AnswerPad({
         {/* A little folk-pattern reward next to a fully correct answer —
             "almost" still gets the amber near-miss treatment, not this. */}
         {result === "correct" && <FolkSpark size={22} />}
-        {/* One real <input> for both alphabets, always rendered — a device
-            report found that hideAnswerBox mode ("completa la frase", the
-            live answer is shown inline in the sentence instead) had no
-            input in the DOM at all, so no system keyboard could ever
-            attach. When hideAnswerBox is set this stays functionally
-            identical but visually hidden (sr-only-style: clipped to 1px,
-            not display:none/visibility:hidden — those would also block
-            focus and the keyboard) rather than skipped entirely.
-            CyrillicKeyboard below stays as the on-screen fallback either
-            way for anyone without a Cyrillic layout installed. */}
+        {/* One real, always-VISIBLE <input> for both alphabets — a previous
+            fix made this sr-only (clipped to 1px) in hideAnswerBox mode,
+            reasoning that the live answer already shows inline in the
+            sentence above. That broke manual focus entirely: a 1px clipped
+            box can't be clicked/tapped, so the only way in was a mount-time
+            autofocus() call — which iOS/Android silently refuse to promote
+            into an actual on-screen-keyboard trigger without a real user
+            gesture, and which offered no recovery if focus ever moved away
+            for any reason. Keeping the input visible (just narrower/
+            centered in hideAnswerBox mode, since the inline preview above
+            already shows the running answer) guarantees a real tappable/
+            clickable target for the system keyboard AND a physical
+            keyboard AND the on-screen Cyrillic panel, all at once — the
+            actual requirement, not just an autofocus side effect of it. */}
         <input
           ref={inputRef}
           type="text"
@@ -178,11 +184,9 @@ export default function AnswerPad({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !result) onSubmit(answer);
           }}
-          className={
-            hideAnswerBox
-              ? "sr-only"
-              : `min-h-11 flex-1 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${answerBoxColorClass(result)} ${answerBoxMotionClass(result)}`
-          }
+          className={`min-h-11 rounded-xl border px-4 py-2.5 text-lg font-medium outline-none transition-colors disabled:opacity-100 ${
+            hideAnswerBox ? "w-32 text-center" : "flex-1"
+          } ${answerBoxColorClass(result)} ${answerBoxMotionClass(result)}`}
         />
       </div>
 

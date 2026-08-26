@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import Skeleton from "@/components/ui/Skeleton";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
@@ -59,6 +60,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   // Fetched once from the DB instead of importing the ~7,400-line static
   // bank straight into this client component's JS bundle.
   const [idioms, setIdioms] = useState<Idiom[]>([]);
+  const [idiomsLoading, setIdiomsLoading] = useState(true);
   const [limited, setLimited] = useState(false);
   const [literaryLocked, setLiteraryLocked] = useState<"free" | "standard" | null>(null);
 
@@ -76,7 +78,8 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
         setLimited(Boolean(body.limited));
         setLiteraryLocked(body.literaryLocked ?? null);
       })
-      .catch(() => setIdioms([]));
+      .catch(() => setIdioms([]))
+      .finally(() => setIdiomsLoading(false));
   }, []);
 
   const known = idioms.filter((idiom) => knownIdioms[idiom.id]).length;
@@ -174,7 +177,13 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
         className="mb-6 w-full rounded-full border border-black/10 bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-foreground/40 dark:border-white/15"
       />
 
-      {pageItems.length === 0 ? (
+      {idiomsLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} variant="rect" className="h-20 w-full" />
+          ))}
+        </div>
+      ) : pageItems.length === 0 ? (
         <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
           {dict.noResultsMessage}
         </p>

@@ -806,8 +806,8 @@
     "match": {
       "levelAll": "Все",
       "backToCategories": "← Категории",
-      "instructionLabel": "Нажми на картинку, потом на её слово",
-      "notEnoughCardsMessage": "В этой категории недостаточно слов с иконкой для этого фильтра.",
+      "instructionLabel": "Нажми на русское слово, потом на его перевод",
+      "notEnoughCardsMessage": "В этой категории недостаточно слов для этого фильтра.",
       "roundCompleteLabel": "Раунд завершён! {pairs} пар",
       "nextRoundButton": "Следующий раунд"
     },

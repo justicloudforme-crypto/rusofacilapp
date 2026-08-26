@@ -806,8 +806,8 @@
     "match": {
       "levelAll": "Todos",
       "backToCategories": "← Categorías",
-      "instructionLabel": "Toca una imagen y luego su palabra",
-      "notEnoughCardsMessage": "Esta categoría no tiene suficientes palabras con icono para este filtro.",
+      "instructionLabel": "Toca la palabra en ruso y luego su traducción",
+      "notEnoughCardsMessage": "Esta categoría no tiene suficientes palabras para este filtro.",
       "roundCompleteLabel": "¡Ronda completa! {pairs} parejas",
       "nextRoundButton": "Siguiente ronda"
     },

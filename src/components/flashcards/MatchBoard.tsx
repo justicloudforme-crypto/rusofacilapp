@@ -18,7 +18,7 @@ export interface MatchResult {
   firstTryCorrect: boolean;
 }
 
-type Side = "emoji" | "word";
+type Side = "ru" | "es";
 
 function tileClass(state: "idle" | "selected" | "correct" | "wrong"): string {
   if (state === "correct") return "border-emerald-500 bg-emerald-500/10";
@@ -38,13 +38,13 @@ export default function MatchBoard({
   // RecallApp-style key={roundKey}), independently for each side — that
   // independence is what makes the puzzle a puzzle instead of two
   // parallel, trivially-aligned lists.
-  const emojiTiles = useMemo(() => shuffle(cards), [cards]);
-  const wordTiles = useMemo(() => shuffle(cards), [cards]);
+  const ruTiles = useMemo(() => shuffle(cards), [cards]);
+  const esTiles = useMemo(() => shuffle(cards), [cards]);
 
   const [matchedIds, setMatchedIds] = useState<Set<string>>(new Set());
-  const [selectedEmojiId, setSelectedEmojiId] = useState<string | null>(null);
-  const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
-  const [flash, setFlash] = useState<{ emojiId: string; wordId: string; correct: boolean } | null>(null);
+  const [selectedRuId, setSelectedRuId] = useState<string | null>(null);
+  const [selectedEsId, setSelectedEsId] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ ruId: string; esId: string; correct: boolean } | null>(null);
   // Not rendered directly (only feeds onComplete's per-card scoring), so a
   // ref avoids both an extra render per mismatch and the stale-closure trap
   // a piece of state read inside the setTimeout below would have.
@@ -69,9 +69,9 @@ export default function MatchBoard({
     onComplete(cards.map((c) => ({ cardId: c.id, firstTryCorrect: !wrongIdsRef.current.has(c.id) })));
   }, [matchedIds, cards, onComplete]);
 
-  function evaluate(emojiCardId: string, wordCardId: string) {
-    const correct = emojiCardId === wordCardId;
-    setFlash({ emojiId: emojiCardId, wordId: wordCardId, correct });
+  function evaluate(ruCardId: string, esCardId: string) {
+    const correct = ruCardId === esCardId;
+    setFlash({ ruId: ruCardId, esId: esCardId, correct });
     if (correct) {
       playCorrectTone();
       hapticSuccess();
@@ -80,17 +80,17 @@ export default function MatchBoard({
       hapticError();
     }
     if (!correct) {
-      wrongIdsRef.current.add(emojiCardId);
-      wrongIdsRef.current.add(wordCardId);
+      wrongIdsRef.current.add(ruCardId);
+      wrongIdsRef.current.add(esCardId);
     }
 
     window.setTimeout(
       () => {
         setFlash(null);
-        setSelectedEmojiId(null);
-        setSelectedWordId(null);
+        setSelectedRuId(null);
+        setSelectedEsId(null);
         if (!correct) return;
-        setMatchedIds((prev) => new Set(prev).add(emojiCardId));
+        setMatchedIds((prev) => new Set(prev).add(ruCardId));
       },
       correct ? CORRECT_FLASH_MS : WRONG_FLASH_MS
     );
@@ -99,65 +99,76 @@ export default function MatchBoard({
   function selectTile(side: Side, cardId: string) {
     if (matchedIds.has(cardId) || flash) return;
     hapticTap();
-    if (side === "emoji") {
-      if (selectedEmojiId === cardId) {
-        setSelectedEmojiId(null);
+    if (side === "ru") {
+      if (selectedRuId === cardId) {
+        setSelectedRuId(null);
         return;
       }
-      setSelectedEmojiId(cardId);
-      if (selectedWordId) evaluate(cardId, selectedWordId);
+      setSelectedRuId(cardId);
+      if (selectedEsId) evaluate(cardId, selectedEsId);
     } else {
-      if (selectedWordId === cardId) {
-        setSelectedWordId(null);
+      if (selectedEsId === cardId) {
+        setSelectedEsId(null);
         return;
       }
-      setSelectedWordId(cardId);
-      if (selectedEmojiId) evaluate(selectedEmojiId, cardId);
+      setSelectedEsId(cardId);
+      if (selectedRuId) evaluate(selectedRuId, cardId);
     }
   }
 
   function tileState(side: Side, cardId: string): "idle" | "selected" | "correct" | "wrong" {
-    if (flash && (side === "emoji" ? flash.emojiId : flash.wordId) === cardId) {
+    if (flash && (side === "ru" ? flash.ruId : flash.esId) === cardId) {
       return flash.correct ? "correct" : "wrong";
     }
-    if ((side === "emoji" ? selectedEmojiId : selectedWordId) === cardId) return "selected";
+    if ((side === "ru" ? selectedRuId : selectedEsId) === cardId) return "selected";
     return "idle";
   }
 
   // A single two-column grid instead of two independent flex columns — with
   // independent columns, a row on one side can wrap to two lines (long
-  // Russian words on a narrow mobile screen) while the row at the same
-  // index on the other side stays one line, so the two columns silently
-  // drift out of sync row-by-row the further down the list you go. CSS
-  // Grid rows size to their tallest cell automatically, so pairing each
-  // emoji tile with the word tile at the same array index inside one grid
-  // keeps every row's height in lockstep on both sides, at every screen
-  // width, with no measurement code needed.
-  const visibleEmojiTiles = emojiTiles.filter((c) => !matchedIds.has(c.id));
-  const visibleWordTiles = wordTiles.filter((c) => !matchedIds.has(c.id));
+  // Spanish translations run well past the Russian word on a narrow mobile
+  // screen — e.g. "estar de pie, estar parado (imperfectivo)" vs. "стоять")
+  // while the row at the same index on the other side stays one line, so
+  // the two columns silently drift out of sync row-by-row the further down
+  // the list you go. CSS Grid rows size to their tallest cell
+  // automatically, so pairing each Russian tile with the Spanish tile at
+  // the same array index inside one grid keeps every row's height in
+  // lockstep on both sides, at every screen width, with no measurement
+  // code needed — line-clamp-2 on each tile's text (below) caps how tall
+  // that "tallest cell" can ever get.
+  const visibleRuTiles = ruTiles.filter((c) => !matchedIds.has(c.id));
+  const visibleEsTiles = esTiles.filter((c) => !matchedIds.has(c.id));
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      {visibleEmojiTiles.map((emojiCard, i) => {
-        const wordCard = visibleWordTiles[i];
+      {visibleRuTiles.map((ruCard, i) => {
+        const esCard = visibleEsTiles[i];
         return (
-          <div key={emojiCard.id} className="contents">
+          <div key={ruCard.id} className="contents">
             <button
               type="button"
-              onClick={() => selectTile("emoji", emojiCard.id)}
-              className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-3xl transition-colors ${tileClass(tileState("emoji", emojiCard.id))}`}
+              onClick={() => selectTile("ru", ruCard.id)}
+              className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("ru", ruCard.id))}`}
             >
-              {emojiCard.emoji}
-              {tileState("emoji", emojiCard.id) === "correct" && <PatternBurst />}
+              {/* line-clamp-2 + a fixed min-h keeps every tile the same
+                  height even though Spanish translations run much longer
+                  than the Russian words on the other side (real example:
+                  "estar de pie, estar parado (imperfectivo)" vs. "стоять")
+                  — CSS grid already syncs each row's height across both
+                  columns (see the comment on the grid container below),
+                  this just stops a single long tile from growing past 2
+                  lines and throwing off the whole row. */}
+              <span className="line-clamp-2">{ruCard.russian}</span>
+              {tileState("ru", ruCard.id) === "correct" && <PatternBurst />}
             </button>
-            {wordCard && (
+            {esCard && (
               <button
                 type="button"
-                onClick={() => selectTile("word", wordCard.id)}
-                className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("word", wordCard.id))}`}
+                onClick={() => selectTile("es", esCard.id)}
+                className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("es", esCard.id))}`}
               >
-                {wordCard.russian}
-                {tileState("word", wordCard.id) === "correct" && <PatternBurst />}
+                <span className="line-clamp-2">{esCard.translationEs}</span>
+                {tileState("es", esCard.id) === "correct" && <PatternBurst />}
               </button>
             )}
           </div>

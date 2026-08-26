@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
@@ -56,6 +57,7 @@ export default function FillBlankApp({
   const [streak, setStreak] = useState(0);
   const [streakToast, setStreakToast] = useState<number | null>(null);
   const [limited, setLimited] = useState(false);
+  const [roundLoading, setRoundLoading] = useState(false);
   const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -87,13 +89,15 @@ export default function FillBlankApp({
 
   function selectCategory(next: FlashcardCategory) {
     setCategory(next);
+    setRoundLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
       .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
         setLimited(Boolean(body.limited));
         startRound(body.cards ?? []);
       })
-      .catch(() => startRound([]));
+      .catch(() => startRound([]))
+      .finally(() => setRoundLoading(false));
   }
 
   function backToCategories() {
@@ -205,6 +209,11 @@ export default function FillBlankApp({
                   {dict.playAgainButton}
                 </button>
               </div>
+            </div>
+          ) : roundLoading ? (
+            <div className="flex flex-col items-center gap-6">
+              <Skeleton variant="rect" className="h-48 w-full" />
+              <Skeleton variant="rect" className="h-11 w-full max-w-xs rounded-xl" />
             </div>
           ) : !card ? (
             <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">

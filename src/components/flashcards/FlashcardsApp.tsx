@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategorySummary } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
@@ -39,6 +40,10 @@ export interface FlashcardsDict {
 // request per keystroke.
 const SEARCH_DEBOUNCE_MS = 300;
 
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+}
+
 export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // null = showing the category grid, not studying a specific category yet.
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
@@ -53,6 +58,13 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // Only the current category's cards are fetched — previously the whole
   // ~2,600-card bank was bundled straight into this client component's JS.
   const [categoryCards, setCategoryCards] = useState<FlashcardRow[]>([]);
+  // True while a category/search fetch is in flight — without this, the
+  // "no cards" message rendered for a split second on every category open
+  // (categoryCards starts at [] before the fetch resolves), which read as
+  // "this category is empty" for a few seconds before the real cards
+  // appeared. Three real states now: loading -> skeleton, loaded+empty ->
+  // message, loaded+non-empty -> cards.
+  const [cardsLoading, setCardsLoading] = useState(false);
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
   const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
   const [hasAnyProgress, setHasAnyProgress] = useState(false);
@@ -71,8 +83,25 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const didDragRef = useRef(false);
-  const DRAG_THRESHOLD = 100;
+  const cardRef = useRef<HTMLDivElement>(null);
+  // Mirrors the card's rendered width into state — render itself can't
+  // read cardRef.current directly (React forbids ref access during
+  // render), so the opacity indicators below read this instead of the ref.
+  const [cardWidth, setCardWidth] = useState(320);
+  // Last pointermove sample, for velocity — a fast short flick should
+  // complete the swipe just as reliably as a slow drag past the distance
+  // threshold (real desktop testing found the old fixed-100px rule felt
+  // like it required dragging almost to the screen edge on a wide card).
+  const lastMoveRef = useRef<{ x: number; t: number } | null>(null);
+  const velocityRef = useRef(0);
   const TAP_THRESHOLD = 6;
+  // Fraction of the card's own width, not a fixed pixel count — scales
+  // correctly whether the card renders at 320px (small phone) or 480px
+  // (desktop), unlike the old flat DRAG_THRESHOLD = 100.
+  const COMPLETE_DISTANCE_FRACTION = 0.35;
+  // px/ms — a quick flick well short of the distance threshold still
+  // completes the swipe, matching how Tinder-style cards actually feel.
+  const COMPLETE_VELOCITY = 0.5;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -129,6 +158,8 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   useEffect(() => {
     if (searchQuery || !category) return; // search fetch below takes over, or nothing to fetch yet
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCardsLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(category)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
       .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
@@ -139,6 +170,9 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
       })
       .catch(() => {
         if (!cancelled) setCategoryCards([]);
+      })
+      .finally(() => {
+        if (!cancelled) setCardsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -148,6 +182,8 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   useEffect(() => {
     if (!searchQuery) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCardsLoading(true);
     const params = new URLSearchParams({ search: searchQuery });
     if (levelFilter !== "all") params.set("level", levelFilter);
     fetch(`/api/flashcards?${params.toString()}`)
@@ -162,6 +198,9 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
       })
       .catch(() => {
         if (!cancelled) setCategoryCards([]);
+      })
+      .finally(() => {
+        if (!cancelled) setCardsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -189,6 +228,11 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
 
   const card: FlashcardRow | undefined = cards[index];
   const inGrid = !category && !searchQuery;
+  const completeDistance = cardWidth * COMPLETE_DISTANCE_FRACTION;
+
+  useLayoutEffect(() => {
+    if (cardRef.current) setCardWidth(cardRef.current.offsetWidth);
+  }, [card?.id]);
 
   function selectCategory(next: FlashcardCategory) {
     setCategory(next);
@@ -234,13 +278,25 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     advance();
   }
 
-  function handleDragStart(e: React.PointerEvent) {
+  function handleDragStart(e: React.PointerEvent<HTMLDivElement>) {
+    // Without pointer capture, a fast or far mouse drag can carry the
+    // cursor outside this element before release — the browser then
+    // routes pointermove/pointerup to whatever's under the cursor instead
+    // (or nothing at all), so handleDragEnd never fires and the card was
+    // left stuck mid-drag ("hangs") until the pointer happened to wander
+    // back over the card. Capturing the pointer here guarantees every
+    // subsequent event for this gesture reaches this element regardless
+    // of where the cursor physically is — the same fix WordSearchBoard's
+    // drag-select already uses.
+    e.currentTarget.setPointerCapture(e.pointerId);
     dragStartRef.current = { x: e.clientX, y: e.clientY };
+    lastMoveRef.current = { x: e.clientX, t: e.timeStamp };
+    velocityRef.current = 0;
     didDragRef.current = false;
     setIsDragging(true);
   }
 
-  function handleDragMove(e: React.PointerEvent) {
+  function handleDragMove(e: React.PointerEvent<HTMLDivElement>) {
     const start = dragStartRef.current;
     if (!start) return;
     const dx = e.clientX - start.x;
@@ -255,18 +311,43 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
       return;
     }
     if (Math.abs(dx) > TAP_THRESHOLD) didDragRef.current = true;
+
+    const last = lastMoveRef.current;
+    if (last) {
+      const dt = e.timeStamp - last.t;
+      // Guard against a near-zero dt producing a wild instantaneous
+      // velocity spike from a single noisy sample.
+      if (dt > 4) velocityRef.current = (e.clientX - last.x) / dt;
+    }
+    lastMoveRef.current = { x: e.clientX, t: e.timeStamp };
     setDragX(dx);
   }
 
   function handleDragEnd() {
     dragStartRef.current = null;
+    lastMoveRef.current = null;
     setIsDragging(false);
-    if (Math.abs(dragX) > DRAG_THRESHOLD) {
-      const direction = dragX > 0 ? 1 : -1;
+
+    const pastDistance = Math.abs(dragX) > completeDistance;
+    const fastFlick = Math.abs(velocityRef.current) > COMPLETE_VELOCITY && Math.abs(dragX) > TAP_THRESHOLD;
+
+    if (pastDistance || fastFlick) {
+      // A fast flick can be in the opposite direction from a tiny residual
+      // dragX sign flip — the flick's own direction is the more honest
+      // signal for which way the card is "thrown" when it's the one that
+      // crossed the threshold, so it takes priority over dragX's sign.
+      const direction = fastFlick ? (velocityRef.current > 0 ? 1 : -1) : dragX > 0 ? 1 : -1;
       hapticTap();
+      if (prefersReducedMotion()) {
+        // No fling animation to wait out — go straight to the same
+        // markKnown() the buttons use, card resets for the next one below.
+        setDragX(0);
+        markKnown(direction > 0);
+        return;
+      }
       // Fling fully off-screen first, so the swipe reads as a completed
       // gesture, then hand off to the same markKnown() the buttons use.
-      setDragX(direction * 600);
+      setDragX(direction * (cardWidth + 100));
       window.setTimeout(() => markKnown(direction > 0), 200);
     } else {
       setDragX(0);
@@ -342,7 +423,16 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
             <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
           )}
 
-          {!card ? (
+          {cardsLoading ? (
+            <div className="flex flex-col items-center gap-6">
+              <Skeleton variant="text" className="h-3 w-24" />
+              <Skeleton variant="rect" className="h-64 w-full" />
+              <div className="flex gap-3">
+                <Skeleton variant="rect" className="h-11 w-24 rounded-full" />
+                <Skeleton variant="rect" className="h-11 w-24 rounded-full" />
+              </div>
+            </div>
+          ) : !card ? (
             <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
               {searchQuery ? dict.noSearchResultsMessage : dict.categoryDoneMessage}
             </p>
@@ -357,18 +447,19 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                     (pointer-events-none), so they never steal the drag
                     from the card underneath. Opacity ramps in with drag
                     distance so the gesture gives feedback before the
-                    ~100px commit threshold is even reached. */}
+                    commit threshold (a fraction of the card's own width,
+                    see COMPLETE_DISTANCE_FRACTION) is even reached. */}
                 <div
                   aria-hidden
                   className="pointer-events-none absolute inset-x-4 top-3 z-10 flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white"
-                  style={{ opacity: Math.max(0, Math.min(dragX / DRAG_THRESHOLD, 1)), justifyContent: "flex-end" }}
+                  style={{ opacity: Math.max(0, Math.min(dragX / completeDistance, 1)), justifyContent: "flex-end" }}
                 >
                   <span>✓ {dict.knowButton}</span>
                 </div>
                 <div
                   aria-hidden
                   className="pointer-events-none absolute inset-x-4 top-3 z-10 flex items-center gap-1.5 rounded-full bg-rose-500 px-3 py-1.5 text-sm font-semibold text-white"
-                  style={{ opacity: Math.max(0, Math.min(-dragX / DRAG_THRESHOLD, 1)) }}
+                  style={{ opacity: Math.max(0, Math.min(-dragX / completeDistance, 1)) }}
                 >
                   <span>↺ {dict.repeatButton}</span>
                 </div>
@@ -383,6 +474,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                     tells a completed drag apart from a tap so releasing a
                     swipe doesn't also flip the card. */}
                 <div
+                  ref={cardRef}
                   role="button"
                   tabIndex={0}
                   onClick={handleCardClick}
@@ -400,7 +492,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                   className="relative block h-64 w-full cursor-pointer touch-manipulation select-none [transform-style:preserve-3d]"
                   style={{
                     transform: `translateX(${dragX}px) rotate(${dragX / 15}deg) ${flipped ? "rotateY(180deg)" : ""}`,
-                    transition: isDragging ? "none" : "transform 350ms ease-out",
+                    transition: isDragging || prefersReducedMotion() ? "none" : "transform 350ms ease-out",
                     touchAction: "pan-y",
                   }}
                 >
