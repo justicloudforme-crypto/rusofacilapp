@@ -296,35 +296,58 @@
   "pricing": {
     "title": "Planes y precios",
     "subtitle": "Elige un plan para desbloquear todas las lecciones, de A1 a B2.",
+    "guaranteeNote": "¿No te convenció? Te devolvemos el dinero dentro de 14 días — solo escríbenos: support@rusofacilapp.com",
+    "freeHeading": "Gratis",
+    "freeDescription": "Prueba la plataforma sin pagar",
+    "freeFeatures": [
+      "1 lección de nivel A1",
+      "10 tarjetas de vocabulario",
+      "5 modismos",
+      "2 relatos — «Репка» y «Теремок»",
+      "Los primeros 5 crucigramas y sopas de letras de nivel A1",
+      "7 videos y canciones de la mediateca"
+    ],
+    "freeCta": "Empezar gratis",
+    "billingPeriodLabel": "Periodo de pago",
+    "monthLabel": "Mes",
+    "yearLabel": "Año",
+    "paymentMethodLabel": "Método de pago",
+    "cardLabel": "Tarjeta",
+    "cashLabel": "Efectivo",
     "monthly": {
       "name": "Mensual",
       "price": "$7.99 USD",
       "period": "/ mes",
-      "cta": "Suscribirme",
-      "oxxoPrice": "$150 MXN"
+      "mxnApprox": "≈150 MXN",
+      "cardCta": "Empezar por $7.99/mes",
+      "cashCta": "Pagar en efectivo — ≈150 MXN"
     },
     "annual": {
       "name": "Anual",
       "price": "$47.99 USD",
       "period": "/ año",
-      "cta": "Suscribirme",
-      "badge": "Ahorra 50%",
-      "oxxoPrice": "$899 MXN"
+      "badge": "−50%",
+      "perMonthNote": "≈$4/mes pagando por año",
+      "mxnApprox": "≈899 MXN",
+      "cardCta": "Ahorrar 50% — $47.99/año",
+      "cashCta": "Pagar en efectivo — ≈899 MXN"
     },
     "lifetime": {
       "name": "Premium",
       "price": "$169.99 USD",
       "period": "pago único",
-      "cta": "Comprar Premium de por vida",
       "badge": "Acceso para siempre",
-      "valueNote": "Se amortiza en solo 3,5 años frente al plan anual — después, el aprendizaje es gratis para siempre."
+      "valueNote": "Un solo pago — acceso para siempre, sin renovaciones. Además, nivel C1 y biblioteca ampliada de modismos e historias.",
+      "mxnApprox": "≈2299 MXN",
+      "cardCta": "Comprar para siempre por $169.99",
+      "cashCta": "Pagar en efectivo — ≈2299 MXN"
     },
-    "oxxoCta": "Pagar en efectivo (OXXO)",
+    "oxxoDetailsSummary": "¿Cómo pago en efectivo?",
     "oxxoNote": "Recibirás un código de barras por correo y en pantalla para pagar en cualquier tienda OXXO de México. Tu acceso se activa en cuanto se confirme el pago (hasta 3 días); el código vence si no se usa en ese plazo.",
     "featuresTitle": "Incluye",
     "features": [
-      "Acceso a los niveles A1 a B2",
-      "Tarjetas, modismos e historias (sin nivel C1)",
+      "Acceso a las lecciones de nivel A1 a B2",
+      "Tarjetas, modismos e historias de nivel A1–B2",
       "Todos los juegos de palabras estándar",
       "Cancela cuando quieras"
     ],
@@ -334,6 +357,34 @@
       "Biblioteca ampliada de modismos e historias",
       "Juegos de dificultad avanzada (★)",
       "Acceso de por vida — pago único, sin renovaciones"
+    ],
+    "paymentMethodsNote": "Aceptamos tarjetas y efectivo OXXO",
+    "faqHeading": "Preguntas frecuentes",
+    "faq": [
+      {
+        "q": "¿Puedo cancelar mi suscripción?",
+        "a": "Sí, cuando quieras — en tu cuenta, sección «Suscripción». El acceso sigue activo hasta el final del periodo ya pagado."
+      },
+      {
+        "q": "¿Se cobra automáticamente?",
+        "a": "Con tarjeta, sí — el plan mensual y el anual se renuevan automáticamente hasta que los canceles. Con efectivo (OXXO) y con Premium no hay cobros automáticos: es un pago único."
+      },
+      {
+        "q": "¿Qué pasa si no pago el código OXXO a tiempo?",
+        "a": "El código es válido por 3 días. Si no se paga en ese plazo, el pago no se completa y tendrás que generarlo de nuevo en esta página."
+      },
+      {
+        "q": "¿Puedo pedir un reembolso?",
+        "a": "Sí — si el plan no te convenció, escríbenos a support@rusofacilapp.com dentro de los 14 días posteriores al pago y te devolvemos el dinero."
+      },
+      {
+        "q": "¿Cómo cambio de plan?",
+        "a": "Contrata el nuevo plan en esta página y cancela el anterior en tu cuenta, para no pagar los dos a la vez."
+      },
+      {
+        "q": "¿El precio incluye impuestos?",
+        "a": "Sí, el precio mostrado es el precio final — los impuestos están incluidos."
+      }
     ]
   },
   "account": {
