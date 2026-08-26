@@ -17,7 +17,10 @@ test("hamburger menu opens, shows links, and closes on link/backdrop tap", async
 
   await toggle.click();
 
-  const panel = page.getByRole("navigation").filter({ hasText: "Cursos" });
+  // Scoped by class rather than role+text: BottomNav.tsx (added later)
+  // also renders a <nav> landmark containing "Cursos" (one of its 5 fixed
+  // items), which made a role+hasText locator ambiguous between the two.
+  const panel = page.locator("nav.sheet-slide-up");
   await expect(panel).toBeVisible();
   await expect(panel.getByRole("link", { name: "Cursos" })).toBeVisible();
   await expect(panel.getByRole("link", { name: "Cuentos" })).toBeVisible();
@@ -26,7 +29,7 @@ test("hamburger menu opens, shows links, and closes on link/backdrop tap", async
   // pathname change) — verify both in one interaction.
   await panel.getByRole("link", { name: "Cursos" }).click();
   await expect(page).toHaveURL(/\/es\/courses/);
-  await expect(page.getByRole("navigation").filter({ hasText: "Cursos" })).toBeHidden();
+  await expect(page.locator("nav.sheet-slide-up")).toBeHidden();
 
   // Re-open, then confirm the backdrop also closes it without navigating.
   // Once open, both the toggle button and the dedicated backdrop button

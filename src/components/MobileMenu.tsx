@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AvatarId } from "@/lib/avatars";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import { hapticTap } from "@/lib/haptics";
 
 export interface MobileMenuLink {
   href: string;
   label: string;
+  /** Rendered server-side in Navbar.tsx (a plain hand-rolled SVG from
+   * ProfileIcons.tsx, no client state) and passed down as an already-built
+   * element — same RSC-to-client-prop pattern the rest of this file uses
+   * for its other server-resolved props. Optional so a link can still be
+   * icon-less rather than every call site needing one. */
+  icon?: ReactNode;
 }
 
 export interface MobileMenuGroup {
@@ -52,7 +59,7 @@ export default function MobileMenu({
   loggedOutHref: string;
   loggedOutLabel: string;
   profileLabel: string;
-  profileTabs: { id: string; label: string }[];
+  profileTabs: { id: string; label: string; icon?: ReactNode }[];
   logoutLabel: string;
   openLabel: string;
   closeLabel: string;
@@ -143,9 +150,17 @@ export default function MobileMenu({
                       <Link
                         key={tab.id}
                         href={`/${lang}/profile?tab=${tab.id}`}
-                        onClick={() => setOpen(false)}
-                        className="tap flex min-h-11 items-center rounded-lg px-3 text-sm text-foreground/75 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
+                        onClick={() => {
+                          hapticTap();
+                          setOpen(false);
+                        }}
+                        className="tap flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-foreground/75 transition-all active:scale-[0.97] hover:bg-foreground/10 active:bg-foreground/10"
                       >
+                        {tab.icon && (
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-foreground/60">
+                            {tab.icon}
+                          </span>
+                        )}
                         {tab.label}
                       </Link>
                     ))}
@@ -171,9 +186,17 @@ export default function MobileMenu({
                       <Link
                         key={link.href}
                         href={link.href}
-                        onClick={() => setOpen(false)}
-                        className="tap flex min-h-11 items-center rounded-lg px-3 text-base font-medium text-foreground/85 transition-colors hover:bg-brand/10 active:bg-brand/10"
+                        onClick={() => {
+                          hapticTap();
+                          setOpen(false);
+                        }}
+                        className="tap flex min-h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-foreground/85 transition-all active:scale-[0.97] hover:bg-brand/10 active:bg-brand/10"
                       >
+                        {link.icon && (
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-brand">
+                            {link.icon}
+                          </span>
+                        )}
                         {link.label}
                       </Link>
                     ))}

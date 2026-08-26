@@ -13,6 +13,7 @@ import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from 
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import StreakToast from "@/components/celebration/StreakToast";
 import { playStreakFanfare } from "@/lib/sound";
+import { hapticSuccess } from "@/lib/haptics";
 import type { Dictionary } from "@/i18n/dictionaries";
 
 export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
@@ -110,6 +111,7 @@ export default function FillBlankApp({
     setStreak(newStreak);
     if (outcome === "correct" && newStreak > 0 && newStreak % STREAK_MILESTONE === 0) {
       playStreakFanfare();
+      hapticSuccess();
       setStreakToast(newStreak);
       if (streakToastTimer.current) clearTimeout(streakToastTimer.current);
       streakToastTimer.current = setTimeout(() => setStreakToast(null), STREAK_TOAST_MS);

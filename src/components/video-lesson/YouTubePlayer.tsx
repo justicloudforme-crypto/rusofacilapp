@@ -197,15 +197,31 @@ const YouTubePlayer = forwardRef<
           // explanation. If the reported state is "playing", check a few
           // seconds later whether the clock actually moved; if it didn't,
           // treat it as broken.
+          //
+          // One retry with a longer window before giving up: a real device
+          // report flagged a video as "unavailable" that a fresh
+          // `npm run check:media-embeds` run confirmed was genuinely fine
+          // (not private/removed/region-blocked) — the likely cause was a
+          // slow mobile-data iframe cold start tripping the original
+          // single 4s check. A stuck video still gets caught, just after
+          // ~8s instead of 4s.
           onStateChange: (event) => {
             clearStallTimer();
             if (cancelled || event.data !== YT_STATE_PLAYING) return;
             const startedAt = player?.getCurrentTime() ?? 0;
-            stallTimer = setTimeout(() => {
-              if (cancelled) return;
-              const now = player?.getCurrentTime() ?? 0;
-              if (now <= startedAt + 0.5) setSilentlyBroken(true);
-            }, 4000);
+            const checkStall = (attempt: number) => {
+              stallTimer = setTimeout(() => {
+                if (cancelled) return;
+                const now = player?.getCurrentTime() ?? 0;
+                if (now > startedAt + 0.5) return;
+                if (attempt < 2) {
+                  checkStall(attempt + 1);
+                } else {
+                  setSilentlyBroken(true);
+                }
+              }, 4000);
+            };
+            checkStall(1);
           },
         },
       });

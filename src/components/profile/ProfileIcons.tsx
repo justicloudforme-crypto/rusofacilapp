@@ -145,3 +145,55 @@ export function BookIcon(props: IconProps) {
     </svg>
   );
 }
+
+// Below: added for the main-nav / mobile-menu icon set (Navbar.tsx,
+// MobileMenu.tsx) — same module as the profile-tab icons above rather than
+// a second one, since this is already the app's one shared hand-rolled
+// icon set and profile/page.tsx already imports from it.
+
+export function HomeIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6 10v9.5a1 1 0 0 0 1 1h3.5v-6h3v6H17a1 1 0 0 0 1-1V10" />
+    </svg>
+  );
+}
+
+export function DictionaryIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M6 4.5h11a1.5 1.5 0 0 1 1.5 1.5v13.5H7.5A1.5 1.5 0 0 1 6 17.9V4.5Z" />
+      <path d="M6 4.5A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5" />
+      <path d="M9.5 8.5h5M9.5 11.5h5" />
+    </svg>
+  );
+}
+
+export function PuzzleIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M9 4.5h4v2.1a1.6 1.6 0 0 0 3 0V4.5h4V9h-2.1a1.6 1.6 0 0 0 0 3H20v4.5h-4v-2.1a1.6 1.6 0 0 0-3 0v2.1H9V12H6.9a1.6 1.6 0 0 1 0-3H9V4.5Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function HeadphonesIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4.5 14v-2a7.5 7.5 0 0 1 15 0v2" />
+      <rect x="3" y="14" width="4" height="6" rx="1.5" />
+      <rect x="17" y="14" width="4" height="6" rx="1.5" />
+    </svg>
+  );
+}
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="9" cy="8.5" r="3" />
+      <path d="M3 20c1-3.3 3.4-5 6-5s5 1.7 6 5" />
+      <path d="M15.5 6.5c1.5.3 2.5 1.6 2.5 3s-1 2.7-2.5 3M18 15.3c2 .4 3.3 1.9 4 4.7" />
+    </svg>
+  );
+}

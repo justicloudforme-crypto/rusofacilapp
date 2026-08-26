@@ -4,6 +4,7 @@ import { flashcardCategories, type FlashcardCategory, type FlashcardLevel } from
 import { flashcardCategoryIcons } from "@/lib/flashcards/category-icons";
 import { flashcardCategoryIconColors } from "@/lib/flashcards/category-icon-colors";
 import { getNextLevel, shouldSuggestNextLevel } from "@/lib/flashcards/level-progress";
+import { hapticTap } from "@/lib/haptics";
 
 export interface CategorySummary {
   total: number;
@@ -47,7 +48,10 @@ export default function CategoryGrid({
             <button
               key={category}
               type="button"
-              onClick={() => onSelectCategory(category)}
+              onClick={() => {
+                hapticTap();
+                onSelectCategory(category);
+              }}
               className="tap relative flex flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
             >
               {nextLevel && (

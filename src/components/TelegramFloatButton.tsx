@@ -2,12 +2,14 @@
 // truth for the invite link so the two never drift apart.
 export const TELEGRAM_INVITE_URL = "https://t.me/+-UhllZ_YI3dmYjdi";
 
-// Smaller + closer to the corner below the sm breakpoint — at 60px/30px this
-// sat squarely on top of card text in the two-column mobile grids (design
-// audit, /vocabulary at 390px: covered a category card's title and word
-// count). 44px/16px keeps it a reachable tap target (still at the usual
-// 44px minimum) while clearing content that reaches closer to the screen
-// edge on narrow viewports.
+// Hidden below the sm breakpoint entirely (not just shrunk) — on a real
+// Android device this sat over content in the two-column mobile grids and,
+// with a bottom nav bar now also occupying that screen edge
+// (BottomNav.tsx), became genuine clutter rather than a helpful shortcut.
+// The profile page has its own dedicated Telegram card
+// (profile/page.tsx, imports TELEGRAM_INVITE_URL directly) that already
+// covers the "keep the link reachable" need on mobile — this floating
+// bubble stays desktop-only, where it wasn't reported as a problem.
 export default function TelegramFloatButton() {
   return (
     <a
@@ -16,7 +18,7 @@ export default function TelegramFloatButton() {
       rel="noopener noreferrer"
       aria-label="Únete al canal de Telegram de RusoFácilapp.com"
       title="Únete al canal de Telegram de RusoFácilapp.com"
-      className="fixed z-[1000] flex h-11 w-11 items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-[0_4px_10px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-out hover:scale-110 hover:bg-[#2090c7] sm:h-[60px] sm:w-[60px]"
+      className="fixed z-[1000] hidden h-[60px] w-[60px] items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-[0_4px_10px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-out hover:scale-110 hover:bg-[#2090c7] sm:flex"
       style={{
         bottom: "calc(16px + var(--safe-bottom))",
         right: "calc(16px + var(--safe-right))",

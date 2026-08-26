@@ -14,6 +14,7 @@ import {
   type Direction,
 } from "@/lib/word-games/crossword-input";
 import { playCorrectTone, playIncorrectTone } from "@/lib/sound";
+import { hapticSuccess, hapticError } from "@/lib/haptics";
 
 interface Dict {
   hintButton: string;
@@ -69,8 +70,13 @@ export default function CrosswordBoard({
 
     if (soundCell) {
       const status = nextStatus[`${soundCell.row},${soundCell.col}`];
-      if (status === "correct") playCorrectTone();
-      else if (status === "incorrect") playIncorrectTone();
+      if (status === "correct") {
+        playCorrectTone();
+        hapticSuccess();
+      } else if (status === "incorrect") {
+        playIncorrectTone();
+        hapticError();
+      }
     }
 
     if (data.solved && !solvedReported.current) {

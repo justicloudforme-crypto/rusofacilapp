@@ -10,6 +10,19 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
 import { getEntitlementTier, isPremiumTier } from "@/lib/entitlement";
+import {
+  HomeIcon,
+  GraduationCapIcon,
+  BookIcon,
+  DictionaryIcon,
+  PuzzleIcon,
+  HeadphonesIcon,
+  UsersIcon,
+  PersonalIcon,
+  ChartIcon,
+  CrownIcon,
+  GlobeIcon,
+} from "@/components/profile/ProfileIcons";
 
 export default async function Navbar({
   lang,
@@ -40,41 +53,52 @@ export default async function Navbar({
   // the flat list the desktop bar shows — one glance tells you whether
   // you're going to learn, play, or find people, rather than scanning six
   // undifferentiated rows.
+  const iconClass = "h-5 w-5";
   const mobileGroups = [
     {
       label: dict.nav.groupLearn,
       links: [
-        { href: `/${lang}`, label: dict.nav.home },
-        { href: `/${lang}/courses`, label: dict.nav.courses },
-        { href: `/${lang}/stories`, label: dict.nav.stories },
-        { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary },
+        { href: `/${lang}`, label: dict.nav.home, icon: <HomeIcon className={iconClass} /> },
+        { href: `/${lang}/courses`, label: dict.nav.courses, icon: <GraduationCapIcon className={iconClass} /> },
+        { href: `/${lang}/stories`, label: dict.nav.stories, icon: <BookIcon className={iconClass} /> },
+        { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary, icon: <DictionaryIcon className={iconClass} /> },
       ],
     },
     {
       label: dict.nav.groupPlay,
       links: [
-        { href: `/${lang}/word-games`, label: dict.nav.wordGames },
-        { href: `/${lang}/media`, label: dict.nav.media },
+        { href: `/${lang}/word-games`, label: dict.nav.wordGames, icon: <PuzzleIcon className={iconClass} /> },
+        { href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> },
       ],
     },
     ...(user
-      ? [{ label: dict.nav.groupCommunity, links: [{ href: `/${lang}/groups`, label: dict.nav.groups }] }]
+      ? [
+          {
+            label: dict.nav.groupCommunity,
+            links: [{ href: `/${lang}/groups`, label: dict.nav.groups, icon: <UsersIcon className={iconClass} /> }],
+          },
+        ]
       : []),
     ...(staff
       ? [{ label: dict.admin.title, links: [{ href: `/${lang}/admin`, label: dict.admin.title }] }]
       : []),
   ];
   const profileTabs = [
-    { id: "personal", label: dict.profile.tabPersonal },
-    { id: "progress", label: dict.profile.tabProgress },
-    { id: "subscription", label: dict.profile.tabSubscription },
-    { id: "language", label: dict.profile.tabLanguage },
+    { id: "personal", label: dict.profile.tabPersonal, icon: <PersonalIcon className={iconClass} /> },
+    { id: "progress", label: dict.profile.tabProgress, icon: <ChartIcon className={iconClass} /> },
+    { id: "subscription", label: dict.profile.tabSubscription, icon: <CrownIcon className={iconClass} /> },
+    { id: "language", label: dict.profile.tabLanguage, icon: <GlobeIcon className={iconClass} /> },
   ];
 
   const avatarId = user && isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/10 bg-background/80 pt-safe backdrop-blur dark:border-white/10">
+    <header
+      // No backdrop-blur here either — same Android WebView repaint cost as
+      // BottomNav below, and bg-background at near-full opacity doesn't
+      // actually need the blur to look solid.
+      className="sticky top-0 z-50 border-b border-black/10 bg-background/95 pt-safe dark:border-white/10"
+    >
       <div className="relative mx-auto flex max-w-5xl items-center px-6 py-4">
         <Link
           href={`/${lang}`}
@@ -99,8 +123,18 @@ export default async function Navbar({
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-3 sm:ml-0">
-          <SoundToggle onLabel={dict.nav.soundOnLabel} offLabel={dict.nav.soundOffLabel} />
-          <LanguageSwitcher current={lang} />
+          {/* Both hidden below sm: a real device report found they crowded
+              the mobile header (every other header element already
+              collapses below this breakpoint — these two didn't). Both
+              stay reachable on mobile some other way: sound in the profile
+              settings is the next step if the user wants it back there,
+              language switching already lives in the personal-cabinet tab. */}
+          <div className="hidden sm:flex">
+            <SoundToggle onLabel={dict.nav.soundOnLabel} offLabel={dict.nav.soundOffLabel} />
+          </div>
+          <div className="hidden sm:flex">
+            <LanguageSwitcher current={lang} />
+          </div>
           {user ? (
             <ProfileMenu
               lang={lang}

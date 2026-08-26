@@ -154,6 +154,14 @@ body {
   40% { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
+/* VocabularyApp's mode-tab content swap: the old pane unmounts instantly
+   (no exit animation — matches how AnswerPad's own remount-via-`key`
+   pattern already behaves elsewhere), the new one keys in with a short
+   fade+rise so switching modes reads as a transition, not a hard cut. */
+@keyframes tab-fade-in {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
 
 .animate-celebration-fade-in {
   animation: celebration-fade-in 0.2s ease-out both;
@@ -174,6 +182,9 @@ body {
 }
 .animate-answer-pop {
   animation: answer-pop 0.35s ease-out both;
+}
+.animate-tab-fade-in {
+  animation: tab-fade-in 0.25s ease-out both;
 }
 
 /* Russian-folk celebration cast (CelebrationMatryoshka/CelebrationBear/
@@ -568,6 +579,7 @@ body {
   .confetti-piece,
   .animate-answer-shake,
   .animate-answer-pop,
+  .animate-tab-fade-in,
   .doll-cascade-piece,
   .sparkle-twinkle,
   .bear-bounce,

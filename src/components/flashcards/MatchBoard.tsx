@@ -5,6 +5,7 @@ import type { FlashcardRow } from "@/lib/flashcards";
 import { shuffle } from "@/lib/flashcards/shuffle";
 import PatternBurst from "@/components/celebration/PatternBurst";
 import { playCorrectTone, playIncorrectTone } from "@/lib/sound";
+import { hapticTap, hapticSuccess, hapticError } from "@/lib/haptics";
 
 // How long the green/red flash holds before tiles unlock again — long
 // enough to actually see the feedback, short enough not to feel like a
@@ -73,8 +74,10 @@ export default function MatchBoard({
     setFlash({ emojiId: emojiCardId, wordId: wordCardId, correct });
     if (correct) {
       playCorrectTone();
+      hapticSuccess();
     } else {
       playIncorrectTone();
+      hapticError();
     }
     if (!correct) {
       wrongIdsRef.current.add(emojiCardId);
@@ -95,6 +98,7 @@ export default function MatchBoard({
 
   function selectTile(side: Side, cardId: string) {
     if (matchedIds.has(cardId) || flash) return;
+    hapticTap();
     if (side === "emoji") {
       if (selectedEmojiId === cardId) {
         setSelectedEmojiId(null);
