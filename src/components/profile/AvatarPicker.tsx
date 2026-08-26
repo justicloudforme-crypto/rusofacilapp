@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CHARACTERS, avatarIdsForCharacter, type AvatarId, type Character } from "@/lib/avatars";
+import { CHARACTERS, avatarIdsForCharacter, characterOf, type AvatarId, type Character } from "@/lib/avatars";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 
 // Tapping the current avatar opens a modal grouped by character, rather
@@ -77,7 +77,9 @@ export default function AvatarPicker({
           <MatryoshkaAvatar id={avatarId} size={56} label={labels[avatarId]} />
         </span>
         <span className="flex flex-col items-start">
-          <span className="text-sm font-medium">{labels[avatarId]}</span>
+          <span className="text-sm font-medium">
+            {characterLabels[characterOf(avatarId)]} · {labels[avatarId]}
+          </span>
           <span className="font-mono text-xs text-primary">{changeHint}</span>
         </span>
       </button>

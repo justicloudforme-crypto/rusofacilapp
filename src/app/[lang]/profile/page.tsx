@@ -15,8 +15,9 @@ import {
 } from "@/lib/subscription";
 import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
 import { getUserStreakStats, getUserActivityDateKeys } from "@/lib/streaks";
-import { getExamAttempts } from "@/lib/exams/progress";
-import { getUserBadgesForDisplay } from "@/lib/badges";
+import { getExamAttempts, type ExamAttemptSummary } from "@/lib/exams/progress";
+import { getUserBadgesForDisplay, type DisplayBadge } from "@/lib/badges";
+import type { BadgeDef } from "@/lib/badges/catalog";
 import { getWeeklyWeakTopic } from "@/lib/weak-topic";
 import { getReferralStats } from "@/lib/referral";
 import { getPublicProfileToggleState } from "@/lib/public-profile";
@@ -36,6 +37,7 @@ import WelcomeOverlay from "@/components/profile/WelcomeOverlay";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
+import LocalDate from "@/components/profile/LocalDate";
 import SettingsAccordion from "@/components/profile/SettingsAccordion";
 import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
 import FirstStepCards, { type FirstStepItem } from "@/components/profile/FirstStepCards";
@@ -94,6 +96,119 @@ function SectionHeading({
       </h2>
     </div>
   );
+}
+
+// Earned badges render gold (the premium token) — they're a non-clickable
+// value marker, same rule as the crown/PremiumBadge everywhere else in the
+// app. Locked badges show a real fraction toward unlock when one is
+// computable from data we already have (streak/vocab/exam-count badges);
+// the rest (first-exam, perfect-score, case masters) stay a plain locked
+// label rather than a fabricated fraction — see computeBadgeProgress.
+function BadgeTile({
+  icon,
+  title,
+  description,
+  earned,
+  earnedOnText,
+  lockedLabel,
+  progressLabel,
+  compact = false,
+}: {
+  icon: string;
+  title: string;
+  description?: string;
+  earned: boolean;
+  earnedOnText?: string;
+  lockedLabel: string;
+  progressLabel: string | null;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center ${
+        earned
+          ? "border-premium-500/25 bg-premium-500/5"
+          : "border-black/10 opacity-60 dark:border-white/10"
+      }`}
+    >
+      <span aria-hidden="true" className={`text-3xl ${earned ? "" : "grayscale opacity-70"}`}>
+        {icon}
+      </span>
+      <span className="text-sm font-medium">{title}</span>
+      {!compact && description && <span className="text-xs text-foreground/60">{description}</span>}
+      <span
+        className={`text-[11px] font-semibold uppercase tracking-wide ${
+          earned ? "text-premium-700 dark:text-premium-300" : "text-foreground/40"
+        }`}
+      >
+        {earned ? earnedOnText : (progressLabel ?? lockedLabel)}
+      </span>
+    </div>
+  );
+}
+
+interface BadgeProgress {
+  ratio: number;
+  label: string | null;
+}
+
+// Pure — a real fraction toward unlock only for badge families where the
+// underlying count is unambiguous (streak length, vocab count, exams
+// passed at a level). Everything else returns ratio 0 / label null rather
+// than inventing a number ("how close" to a single 100%-on-any-block
+// mastery badge isn't a fraction the data can honestly express).
+function computeBadgeProgress(
+  def: BadgeDef,
+  ctx: { longestStreak: number; wordsLearned: number; examAttempts: ExamAttemptSummary[] },
+  dict: Dictionary,
+): BadgeProgress {
+  if (def.id.startsWith("streak-")) {
+    const threshold = Number(def.id.slice("streak-".length));
+    const current = Math.min(ctx.longestStreak, threshold);
+    return {
+      ratio: ctx.longestStreak / threshold,
+      label: dict.profile.badgeProgressStreak
+        .replace("{current}", String(current))
+        .replace("{total}", String(threshold)),
+    };
+  }
+  if (def.id.startsWith("vocab-")) {
+    const threshold = Number(def.id.slice("vocab-".length));
+    const current = Math.min(ctx.wordsLearned, threshold);
+    return {
+      ratio: ctx.wordsLearned / threshold,
+      label: dict.profile.badgeProgressVocab
+        .replace("{current}", String(current))
+        .replace("{total}", String(threshold)),
+    };
+  }
+  if (def.id.startsWith("graduate-")) {
+    // Every level has exactly 3 exams — same fixed roster badges/index.ts
+    // uses to decide the graduate badge itself.
+    const level = def.id.slice("graduate-".length);
+    const passedSlugs = new Set(
+      ctx.examAttempts.filter((a) => a.passed && a.level === level).map((a) => a.examSlug),
+    );
+    const current = Math.min(passedSlugs.size, 3);
+    return {
+      ratio: current / 3,
+      label: dict.profile.badgeProgressExam.replace("{current}", String(current)).replace("{total}", "3"),
+    };
+  }
+  return { ratio: 0, label: null };
+}
+
+function buildBadgeDisplay(
+  badges: DisplayBadge[],
+  ctx: { longestStreak: number; wordsLearned: number; examAttempts: ExamAttemptSummary[] },
+  dict: Dictionary,
+) {
+  const withProgress = badges.map((b) => ({ ...b, ...computeBadgeProgress(b.def, ctx, dict) }));
+  const earned = withProgress
+    .filter((b) => b.earnedAt !== null)
+    .sort((a, b) => (b.earnedAt as Date).getTime() - (a.earnedAt as Date).getTime());
+  const locked = withProgress.filter((b) => b.earnedAt === null).sort((a, b) => b.ratio - a.ratio);
+  return { sorted: [...earned, ...locked], topLocked: locked.slice(0, 3) };
 }
 
 // Subscription.plan stores the internal identifier ("monthly"/"annual"/
@@ -301,6 +416,13 @@ export default async function ProfilePage({
     ...(storyItem ? [storyItem] : []),
   ].slice(0, 3);
 
+  // --- Badges (Problem 4) -------------------------------------------------
+  const badgeDisplay = buildBadgeDisplay(
+    badges,
+    { longestStreak: streak.longestStreak, wordsLearned, examAttempts },
+    dict,
+  );
+
   const subscriptionCompactLabel =
     subscription && isActive
       ? dict.profile.subscriptionCompactPro.replace("{date}", dateFormatter.format(subscription.currentPeriodEnd))
@@ -410,6 +532,27 @@ export default async function ProfilePage({
             <FirstStepCards heading={dict.profile.whatNextHeading} items={whatsNextItems} />
           )}
 
+          {progressState !== "zero" && badgeDisplay.topLocked.length > 0 && (
+            <section>
+              <SectionHeading icon={<TrophyIcon className="h-[18px] w-[18px]" />}>
+                {dict.profile.upcomingBadgesHeading}
+              </SectionHeading>
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {badgeDisplay.topLocked.map((b) => (
+                  <BadgeTile
+                    key={b.def.id}
+                    icon={b.def.icon}
+                    title={b.def.title[lang]}
+                    earned={false}
+                    lockedLabel={dict.profile.badgesLockedLabel}
+                    progressLabel={b.label}
+                    compact
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           <Card>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <SectionHeading icon={<CrownIcon className="h-[18px] w-[18px]" />}>
@@ -493,7 +636,9 @@ export default async function ProfilePage({
                       <dt className="text-foreground/60">{dict.profile.emailLabel}</dt>
                       <dd>{user.email}</dd>
                       <dt className="text-foreground/60">{dict.profile.memberSinceLabel}</dt>
-                      <dd>{dateFormatter.format(user.createdAt)}</dd>
+                      <dd>
+                        <LocalDate iso={user.createdAt.toISOString()} locale={lang} />
+                      </dd>
                     </dl>
                     <div className="border-t border-black/10 pt-5 dark:border-white/10">
                       <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
@@ -781,31 +926,40 @@ export default async function ProfilePage({
           </div>
           <p className="mt-1 text-sm text-foreground/60">{dict.profile.badgesSubtitle}</p>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {badges.map(({ def, earnedAt }) => {
-              const earned = earnedAt !== null;
-              return (
-                <div
-                  key={def.id}
-                  className={`flex flex-col items-center gap-2 rounded-2xl border p-4 text-center ${
-                    earned
-                      ? "border-black/10 bg-white/60 dark:border-white/10 dark:bg-white/5"
-                      : "border-black/10 opacity-40 grayscale dark:border-white/10"
-                  }`}
-                >
-                  <span aria-hidden="true" className="text-3xl">
-                    {def.icon}
-                  </span>
-                  <span className="text-sm font-medium">{def.title[lang]}</span>
-                  <span className="text-xs text-foreground/60">{def.description[lang]}</span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/40">
-                    {earned
-                      ? `${dict.profile.badgesEarnedOnLabel} ${dateFormatter.format(earnedAt)}`
-                      : dict.profile.badgesLockedLabel}
-                  </span>
-                </div>
-              );
-            })}
+          {badgeDisplay.topLocked.length > 0 && (
+            <div className="mt-5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                {dict.profile.upcomingBadgesHeading}
+              </span>
+              <div className="mt-3 grid grid-cols-3 gap-3">
+                {badgeDisplay.topLocked.map((b) => (
+                  <BadgeTile
+                    key={b.def.id}
+                    icon={b.def.icon}
+                    title={b.def.title[lang]}
+                    earned={false}
+                    lockedLabel={dict.profile.badgesLockedLabel}
+                    progressLabel={b.label}
+                    compact
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {badgeDisplay.sorted.map((b) => (
+              <BadgeTile
+                key={b.def.id}
+                icon={b.def.icon}
+                title={b.def.title[lang]}
+                description={b.def.description[lang]}
+                earned={b.earnedAt !== null}
+                earnedOnText={b.earnedAt ? `${dict.profile.badgesEarnedOnLabel} ${dateFormatter.format(b.earnedAt)}` : undefined}
+                lockedLabel={dict.profile.badgesLockedLabel}
+                progressLabel={b.label}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -834,6 +988,11 @@ export default async function ProfilePage({
                 <p className="text-sm text-foreground/60">
                   {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
                 </p>
+                {!currentLevel && (
+                  <Button href={`/${lang}/courses/a1`} size="sm" variant="outline" className="mt-3">
+                    {dict.profile.startButton}
+                  </Button>
+                )}
               </div>
               <div className="rounded-2xl border border-folk-red/15 bg-folk-red/5 p-4">
                 <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
