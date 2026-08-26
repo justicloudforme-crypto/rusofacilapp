@@ -17,7 +17,6 @@ interface Plan {
   // static peso figure (~current USD price at ~18.7 MXN/USD), not a live
   // FX conversion like card checkout gets via Stripe Adaptive Pricing —
   // revisit it if the peso moves significantly against the dollar.
-  // Undefined for lifetime: that plan is card-only for now, no OXXO option.
   oxxoAmountMxnCents?: number;
 }
 
@@ -48,6 +47,11 @@ export const plans: Record<PlanId, Plan> = {
     priceId: process.env.STRIPE_PRICE_LIFETIME,
     mode: "payment",
     durationDays: LIFETIME_DURATION_DAYS,
+    // Set ahead of a planned USD price drop to ~$119-129 (owner will
+    // update STRIPE_PRICE_LIFETIME separately) — 2299 MXN corresponds to
+    // that future price, not the current $169.99 one, so the two won't
+    // match until the USD side is updated in Stripe. See PROGRESS.md.
+    oxxoAmountMxnCents: 229_900, // $2,299.00 MXN
   },
 };
 

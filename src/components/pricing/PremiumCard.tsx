@@ -1,30 +1,52 @@
+"use client";
+
+import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Tabs from "@/components/ui/Tabs";
+
+type Method = "card" | "cash";
 
 // Gold stays on decorative elements only (border/badge) — the button
 // itself is primary, same as every other CTA on the page, per the
 // premium-is-never-clickable rule (enforced by check:tokens).
 export default function PremiumCard({
   lang,
+  methodLabel,
+  cardLabel,
+  cashLabel,
   name,
   price,
   period,
   badge,
   valueNote,
+  mxnApprox,
   cardCta,
+  cashCta,
   featuresTitle,
   features,
+  oxxoDetailsSummary,
+  oxxoNote,
 }: {
   lang: string;
+  methodLabel: string;
+  cardLabel: string;
+  cashLabel: string;
   name: string;
   price: string;
   period: string;
   badge?: string;
   valueNote: string;
+  mxnApprox: string;
   cardCta: string;
+  cashCta: string;
   featuresTitle: string;
   features: string[];
+  oxxoDetailsSummary: string;
+  oxxoNote: string;
 }) {
+  const [method, setMethod] = useState<Method>("card");
+
   return (
     <Card tone="premium" padding="lg" shadow className="relative flex h-full flex-col">
       {badge && (
@@ -39,6 +61,7 @@ export default function PremiumCard({
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{price}</span>
         <span className="text-sm text-foreground/60">{period}</span>
       </p>
+      <p className="mt-1 text-xs text-foreground/50">{mxnApprox}</p>
       <p className="mt-1.5 text-xs text-premium-700 dark:text-premium-300">{valueNote}</p>
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">{featuresTitle}</p>
@@ -51,14 +74,33 @@ export default function PremiumCard({
         ))}
       </ul>
 
-      <form action="/api/checkout" method="POST" className="mt-auto pt-8">
-        <input type="hidden" name="lang" value={lang} />
-        <input type="hidden" name="plan" value="lifetime" />
-        <input type="hidden" name="method" value="card" />
-        <Button type="submit" variant="primary" fullWidth haptic={false}>
-          {cardCta}
-        </Button>
-      </form>
+      <div className="mt-auto pt-8">
+        <Tabs
+          label={methodLabel}
+          items={[
+            { id: "card", label: cardLabel },
+            { id: "cash", label: cashLabel },
+          ]}
+          activeId={method}
+          onSelect={(id) => setMethod(id as Method)}
+        />
+
+        {method === "cash" && (
+          <details className="mt-3 text-xs text-foreground/60">
+            <summary className="tap cursor-pointer font-medium">{oxxoDetailsSummary}</summary>
+            <p className="mt-2">{oxxoNote}</p>
+          </details>
+        )}
+
+        <form action="/api/checkout" method="POST" className="mt-4">
+          <input type="hidden" name="lang" value={lang} />
+          <input type="hidden" name="plan" value="lifetime" />
+          <input type="hidden" name="method" value={method === "cash" ? "oxxo" : "card"} />
+          <Button type="submit" variant="primary" fullWidth haptic={false}>
+            {method === "cash" ? cashCta : cardCta}
+          </Button>
+        </form>
+      </div>
     </Card>
   );
 }

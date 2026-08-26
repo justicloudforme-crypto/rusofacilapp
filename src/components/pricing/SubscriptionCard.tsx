@@ -6,13 +6,16 @@ import Button from "@/components/ui/Button";
 import Tabs from "@/components/ui/Tabs";
 
 type Period = "monthly" | "annual";
+type Method = "card" | "cash";
 
 export interface BillingOption {
   price: string;
   period: string;
   badge?: string;
   perMonthNote?: string;
+  mxnApprox: string;
   cardCta: string;
+  cashCta: string;
 }
 
 // The one recommended tile on the page (Card tone="primary" + shadow +
@@ -23,26 +26,37 @@ export default function SubscriptionCard({
   lang,
   next,
   periodLabel,
+  methodLabel,
   monthLabel,
   yearLabel,
+  cardLabel,
+  cashLabel,
   monthly,
   annual,
   featuresTitle,
   features,
+  oxxoDetailsSummary,
+  oxxoNote,
 }: {
   lang: string;
   next?: string;
   periodLabel: string;
+  methodLabel: string;
   monthLabel: string;
   yearLabel: string;
+  cardLabel: string;
+  cashLabel: string;
   monthly: BillingOption;
   annual: BillingOption;
   featuresTitle: string;
   features: string[];
+  oxxoDetailsSummary: string;
+  oxxoNote: string;
 }) {
   // Annual by default — it's the plan this card exists to steer people
   // toward (−50% badge), not a neutral middle ground.
   const [period, setPeriod] = useState<Period>("annual");
+  const [method, setMethod] = useState<Method>("card");
   const option = period === "monthly" ? monthly : annual;
 
   return (
@@ -72,6 +86,7 @@ export default function SubscriptionCard({
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{option.price}</span>
         <span className="text-sm text-foreground/60">{option.period}</span>
       </p>
+      <p className="mt-1 text-xs text-foreground/50">{option.mxnApprox}</p>
       {option.perMonthNote && <p className="mt-1 text-xs text-foreground/60">{option.perMonthNote}</p>}
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">{featuresTitle}</p>
@@ -84,15 +99,34 @@ export default function SubscriptionCard({
         ))}
       </ul>
 
-      <form action="/api/checkout" method="POST" className="mt-auto pt-8">
-        <input type="hidden" name="lang" value={lang} />
-        <input type="hidden" name="plan" value={period} />
-        <input type="hidden" name="method" value="card" />
-        {next && <input type="hidden" name="next" value={next} />}
-        <Button type="submit" variant="primary" fullWidth haptic={false}>
-          {option.cardCta}
-        </Button>
-      </form>
+      <div className="mt-auto pt-8">
+        <Tabs
+          label={methodLabel}
+          items={[
+            { id: "card", label: cardLabel },
+            { id: "cash", label: cashLabel },
+          ]}
+          activeId={method}
+          onSelect={(id) => setMethod(id as Method)}
+        />
+
+        {method === "cash" && (
+          <details className="mt-3 text-xs text-foreground/60">
+            <summary className="tap cursor-pointer font-medium">{oxxoDetailsSummary}</summary>
+            <p className="mt-2">{oxxoNote}</p>
+          </details>
+        )}
+
+        <form action="/api/checkout" method="POST" className="mt-4">
+          <input type="hidden" name="lang" value={lang} />
+          <input type="hidden" name="plan" value={period} />
+          <input type="hidden" name="method" value={method === "cash" ? "oxxo" : "card"} />
+          {next && <input type="hidden" name="next" value={next} />}
+          <Button type="submit" variant="primary" fullWidth haptic={false}>
+            {method === "cash" ? option.cashCta : option.cardCta}
+          </Button>
+        </form>
+      </div>
     </Card>
   );
 }

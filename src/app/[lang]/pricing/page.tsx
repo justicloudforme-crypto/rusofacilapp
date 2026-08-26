@@ -4,6 +4,8 @@ import { getDictionary } from "@/i18n/dictionaries";
 import FreeTierCard from "@/components/pricing/FreeTierCard";
 import SubscriptionCard from "@/components/pricing/SubscriptionCard";
 import PremiumCard from "@/components/pricing/PremiumCard";
+import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
+import PricingFaq from "@/components/pricing/PricingFaq";
 
 export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {
   const { lang } = await params;
@@ -43,28 +45,48 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
             lang={lang}
             next={next}
             periodLabel={p.billingPeriodLabel}
+            methodLabel={p.paymentMethodLabel}
             monthLabel={p.monthLabel}
             yearLabel={p.yearLabel}
+            cardLabel={p.cardLabel}
+            cashLabel={p.cashLabel}
             monthly={p.monthly}
             annual={p.annual}
             featuresTitle={p.featuresTitle}
             features={p.features}
+            oxxoDetailsSummary={p.oxxoDetailsSummary}
+            oxxoNote={p.oxxoNote}
           />
         </div>
 
         <div className="order-3">
           <PremiumCard
             lang={lang}
+            methodLabel={p.paymentMethodLabel}
+            cardLabel={p.cardLabel}
+            cashLabel={p.cashLabel}
             name={p.lifetime.name}
             price={p.lifetime.price}
             period={p.lifetime.period}
             badge={p.lifetime.badge}
             valueNote={p.lifetime.valueNote}
+            mxnApprox={p.lifetime.mxnApprox}
             cardCta={p.lifetime.cardCta}
+            cashCta={p.lifetime.cashCta}
             featuresTitle={p.featuresPremiumTitle}
             features={p.featuresPremium}
+            oxxoDetailsSummary={p.oxxoDetailsSummary}
+            oxxoNote={p.oxxoNote}
           />
         </div>
+      </div>
+
+      <div className="mt-16">
+        <PaymentMethodLogos note={p.paymentMethodsNote} />
+      </div>
+
+      <div className="mt-16">
+        <PricingFaq heading={p.faqHeading} items={p.faq} />
       </div>
     </div>
   );
