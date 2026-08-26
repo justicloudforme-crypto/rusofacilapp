@@ -156,16 +156,19 @@ export async function isEntitled(): Promise<boolean> {
 
 /**
  * The free-trial word-game sample: the first
- * {@link FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel} WORD_SEARCH rungs of
- * the A1 ladder. Checked against the puzzle itself (not just a page-level
- * gate) in every route that serves puzzle data or grades an answer — a
- * puzzleId is a plain string a client could otherwise pass directly to
- * /api/word-games/check|hint|complete to solve a locked puzzle without
- * ever fetching it through the gated GET route.
+ * {@link FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel} rungs of the A1 ladder,
+ * for both WORD_SEARCH and CROSSWORD — a real device/content report found
+ * CROSSWORD was never included here, so every crossword redirected a
+ * non-subscriber straight to /pricing with no free sample at all (looked
+ * like "crosswords don't exist" from the outside). Checked against the
+ * puzzle itself (not just a page-level gate) in every route that serves
+ * puzzle data or grades an answer — a puzzleId is a plain string a client
+ * could otherwise pass directly to /api/word-games/check|hint|complete to
+ * solve a locked puzzle without ever fetching it through the gated GET route.
  */
 export function isFreeWordGamePuzzle(puzzle: { type: string; level: string; sequence: number }): boolean {
   return (
-    puzzle.type === "WORD_SEARCH" &&
+    (puzzle.type === "WORD_SEARCH" || puzzle.type === "CROSSWORD") &&
     puzzle.level === "A1" &&
     puzzle.sequence <= FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel
   );
