@@ -78,13 +78,13 @@ export default async function LoginPage({
 
         <Link
           href={`/${lang}/forgot-password`}
-          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-primary active:text-primary"
+          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-primary-text active:text-primary-text"
         >
           {dict.auth.forgotPasswordLink}
         </Link>
         <Link
           href={`/${lang}/register?redirectTo=${encodeURIComponent(redirectTo)}`}
-          className="tap mt-2 block text-center text-sm text-foreground/70 hover:text-primary active:text-primary"
+          className="tap mt-2 block text-center text-sm text-foreground/70 hover:text-primary-text active:text-primary-text"
         >
           {dict.auth.noAccountLink}
         </Link>

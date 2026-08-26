@@ -67,7 +67,7 @@ export default function SlidesTab({
               <BrandMark size="sm" />
             </div>
 
-            <span className="mt-6 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary dark:bg-primary-400/15 dark:text-primary-400">
+            <span className="mt-6 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
               {counterLabel}
             </span>
 

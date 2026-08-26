@@ -133,7 +133,7 @@ export default async function LevelPage({
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-white">
                     ★
                   </span>
-                  <span className="text-sm font-medium leading-6 text-primary dark:text-primary-400">
+                  <span className="text-sm font-medium leading-6 text-primary-text dark:text-primary-400">
                     {milestone.exam.title}
                   </span>
                 </Link>

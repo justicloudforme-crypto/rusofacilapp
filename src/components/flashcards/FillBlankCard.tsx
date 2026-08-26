@@ -38,7 +38,7 @@ export default function FillBlankCard({
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div className="flex w-full flex-col items-center gap-3 rounded-2xl border border-black/10 bg-background p-6 text-center dark:border-white/10">
+      <div className="flex w-full flex-col items-center gap-3 rounded-2xl border border-black/10 bg-background p-6 text-center dark:border-white/30">
         <span className="text-xs font-medium uppercase tracking-wide text-foreground/50">{dict.instructionLabel}</span>
         {span ? (
           <p className="text-xl leading-relaxed">

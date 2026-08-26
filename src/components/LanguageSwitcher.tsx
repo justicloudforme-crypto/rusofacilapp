@@ -69,7 +69,7 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
           role="menuitem"
           aria-current={locale === current}
           className={`tap flex min-h-10 items-center justify-between rounded-lg px-3 text-sm transition-colors ${
-            locale === current ? "bg-primary/10 font-medium text-primary" : "text-foreground/80 hover:bg-foreground/10 active:bg-foreground/10"
+            locale === current ? "bg-primary/10 font-medium text-primary-text" : "text-foreground/80 hover:bg-foreground/10 active:bg-foreground/10"
           }`}
         >
           {localeNames[locale]}

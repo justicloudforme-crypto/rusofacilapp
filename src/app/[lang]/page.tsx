@@ -103,7 +103,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
               const Icon = FEATURE_ICONS[index];
               return (
                 <Card key={feature.title} padding="lg">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary-text">
                     <Icon className="h-6 w-6" />
                   </div>
                   <h3 className="mt-4 font-medium">{feature.title}</h3>
@@ -130,7 +130,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
               const Icon = HOW_IT_WORKS_ICONS[index];
               return (
                 <div key={step.title} className="flex flex-col gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary-text">
                     <Icon className="h-6 w-6" />
                   </div>
                   <h3 className="font-medium">{step.title}</h3>
@@ -192,7 +192,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                 <h2 className="text-xl font-semibold tracking-tight">{dict.home.previewFlashcardTitle}</h2>
                 <Link
                   href={`/${lang}/vocabulary`}
-                  className="tap mt-2 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary"
+                  className="tap mt-2 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary-text"
                 >
                   {dict.home.previewFlashcardCta} →
                 </Link>
@@ -232,7 +232,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                 <h2 className="text-xl font-semibold tracking-tight">{dict.home.previewStoryTitle}</h2>
                 <Link
                   href={`/${lang}/stories`}
-                  className="tap mt-2 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary"
+                  className="tap mt-2 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary-text"
                 >
                   {dict.home.previewStoryCta} →
                 </Link>
@@ -246,7 +246,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                 <h2 className="text-xl font-semibold tracking-tight">{dict.home.previewGameTitle}</h2>
                 <Link
                   href={`/${lang}/word-games`}
-                  className="tap mt-2 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary"
+                  className="tap mt-2 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary-text"
                 >
                   {dict.home.previewGameCta} →
                 </Link>
@@ -286,7 +286,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           </div>
           <Link
             href={`/${lang}/pricing`}
-            className="tap mt-8 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary"
+            className="tap mt-8 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary-text"
           >
             {dict.home.pricingStripCta} →
           </Link>

@@ -433,7 +433,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
               </div>
             </div>
           ) : !card ? (
-            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
+            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
               {searchQuery ? dict.noSearchResultsMessage : dict.categoryDoneMessage}
             </p>
           ) : (
@@ -442,23 +442,42 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                 {dict.cardCounter.replace("{current}", String(index + 1)).replace("{total}", String(cards.length))}
               </p>
 
-              <div key={card.id} className="relative [perspective:1200px]">
+              {/* overflow-hidden + rounded-2xl (matching the card faces'
+                  own radius) keeps the whole swipe gesture visually boxed
+                  to the card's own footprint — without it, a wide/short
+                  card rotating up to ~25° at the drag's max distance swings
+                  its corners well past its own height, overlapping the
+                  buttons row below and the sticky filter bar above it (a
+                  real device report: "flies over the whole page"). No
+                  explicit z-index needed either — overflow-hidden clips
+                  descendants regardless of any z-index they carry, so
+                  nothing inside can paint above the sticky header either. */}
+              <div key={card.id} className="relative overflow-hidden rounded-2xl [perspective:1200px]">
                 {/* Swipe-progress indicators — decorative only
                     (pointer-events-none), so they never steal the drag
-                    from the card underneath. Opacity ramps in with drag
-                    distance so the gesture gives feedback before the
+                    from the card underneath, and corner-anchored rather
+                    than a full-width bar (a real device report: the old
+                    inset-x-4 span read as "a bright bar across the whole
+                    screen," not a compact hint). Opacity ramps in with
+                    drag distance so the gesture gives feedback before the
                     commit threshold (a fraction of the card's own width,
-                    see COMPLETE_DISTANCE_FRACTION) is even reached. */}
+                    see COMPLETE_DISTANCE_FRACTION) is even reached.
+                    bg-success-strong (not raw emerald-500) so the color
+                    comes from the same semantic token ProgressBar/badges
+                    use elsewhere — success-strong specifically, not the
+                    default step, since white text on success-default is
+                    only 4.21:1 (fails AA for this small/bold label);
+                    success-strong is 9.11:1. */}
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-x-4 top-3 z-10 flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white"
-                  style={{ opacity: Math.max(0, Math.min(dragX / completeDistance, 1)), justifyContent: "flex-end" }}
+                  className="pointer-events-none absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-success-strong px-3 py-1.5 text-xs font-semibold text-white"
+                  style={{ opacity: Math.max(0, Math.min(dragX / completeDistance, 1)) }}
                 >
                   <span>✓ {dict.knowButton}</span>
                 </div>
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-x-4 top-3 z-10 flex items-center gap-1.5 rounded-full bg-rose-500 px-3 py-1.5 text-sm font-semibold text-white"
+                  className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white"
                   style={{ opacity: Math.max(0, Math.min(-dragX / completeDistance, 1)) }}
                 >
                   <span>↺ {dict.repeatButton}</span>
@@ -496,7 +515,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                     touchAction: "pan-y",
                   }}
                 >
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-black/10 bg-background p-6 [backface-visibility:hidden] dark:border-white/10">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-black/10 bg-background p-6 [backface-visibility:hidden] dark:border-white/30">
                     <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/60">
                       {card.level}
                     </span>
@@ -506,14 +525,29 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                   </div>
 
                   <div
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-y-auto rounded-2xl border border-black/10 bg-background p-6 text-center [backface-visibility:hidden] dark:border-white/10"
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-y-auto rounded-2xl border border-black/10 bg-background p-6 text-center [backface-visibility:hidden] dark:border-white/30"
                     style={{ transform: "rotateY(180deg)" }}
                   >
                     <span className="text-2xl font-semibold">{card.translationEs}</span>
                     <p className="flex items-start justify-center gap-1.5 text-sm leading-6 text-foreground/70">
-                      {/* stopPropagation so pressing play doesn't also
-                          trigger the card-flip div's onClick above it */}
-                      <span onClick={(event) => event.stopPropagation()}>
+                      {/* Stops propagation at the POINTER level, not just
+                          click — a real device report found tapping this
+                          button flipped the card straight back. The click-
+                          level stopPropagation alone (the previous fix)
+                          wasn't enough: this card's own onPointerDown
+                          (handleDragStart, added for the swipe-to-answer
+                          gesture) fires on ANY pointerdown inside the card
+                          — including one that starts on this nested button
+                          — and calls setPointerCapture on the card *before*
+                          the click event is even synthesized, which is
+                          enough to disrupt the button's own click in some
+                          browsers regardless of a same-tick stopPropagation
+                          on click. Stopping the pointerdown itself keeps it
+                          from ever reaching handleDragStart. */}
+                      <span
+                        onClick={(event) => event.stopPropagation()}
+                        onPointerDown={(event) => event.stopPropagation()}
+                      >
                         <SpeakButton text={card.exampleRu} label={dict.listenLabel} audioUrl={card.exampleAudioUrl ?? undefined} />
                       </span>
                       <span>{card.exampleRu}</span>

@@ -160,7 +160,7 @@ export default function MatchApp({
           )}
 
           {complete ? (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/10">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/30">
               <MatryoshkaAvatar id="matryoshka_laughing" size={64} />
               <p className="text-lg font-semibold">{dict.roundCompleteLabel.replace("{pairs}", String(round.length))}</p>
               <div className="flex gap-3">
@@ -187,7 +187,7 @@ export default function MatchApp({
               ))}
             </div>
           ) : round.length < MIN_PLAYABLE ? (
-            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
+            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
               {dict.notEnoughCardsMessage}
             </p>
           ) : (

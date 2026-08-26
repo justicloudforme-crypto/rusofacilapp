@@ -82,7 +82,7 @@ function SectionHeading({
         className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
           tone === "danger"
             ? "bg-red-500/10 text-red-600 dark:text-red-400"
-            : "bg-primary/10 text-primary dark:text-primary-400"
+            : "bg-primary/10 text-primary-text dark:text-primary-400"
         }`}
       >
         {icon}
@@ -425,8 +425,18 @@ export default async function ProfilePage({
   // Split around {date} instead of dateFormatter.format()-ing it into the
   // string, so the date itself can render as <LocalDate> (browser-timezone
   // aware) rather than baking in the server's UTC value — see LocalDate.tsx.
+  // Per-plan template (not a single generic "Pro" label, which named a tier
+  // that doesn't exist on /pricing — a real device report caught it): the
+  // lifetime plan has no renewal date at all, so its template carries no
+  // {date} placeholder to split on.
+  const subscriptionCompactTemplate =
+    subscription?.plan === "monthly"
+      ? dict.profile.subscriptionCompactMonthly
+      : subscription?.plan === "annual"
+        ? dict.profile.subscriptionCompactAnnual
+        : null;
   const subscriptionCompactParts =
-    subscription && isActive ? dict.profile.subscriptionCompactPro.split("{date}") : null;
+    subscription && isActive && subscriptionCompactTemplate ? subscriptionCompactTemplate.split("{date}") : null;
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
@@ -559,7 +569,9 @@ export default async function ProfilePage({
                 {dict.profile.subscriptionHeading}
               </SectionHeading>
               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES[displayStatus]}`}>
-                {subscriptionCompactParts && subscription ? (
+                {subscription && isActive && subscription.plan === "lifetime" ? (
+                  dict.profile.subscriptionCompactLifetime
+                ) : subscriptionCompactParts && subscription ? (
                   <>
                     {subscriptionCompactParts[0]}
                     <LocalDate iso={subscription.currentPeriodEnd.toISOString()} locale={lang} />
@@ -1086,7 +1098,7 @@ export default async function ProfilePage({
         {allLevelsZero ? (
           <p className="mt-4 text-sm text-foreground/60">
             {dict.profile.coursesNotStartedNotice}{" "}
-            <Link href={`/${lang}/courses/a1`} className="font-medium text-primary underline underline-offset-2">
+            <Link href={`/${lang}/courses/a1`} className="font-medium text-primary-text underline underline-offset-2">
               {dict.profile.coursesNotStartedCta}
             </Link>
           </p>

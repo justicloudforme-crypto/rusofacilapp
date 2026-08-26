@@ -13,7 +13,7 @@ export type ButtonSize = "sm" | "md" | "lg";
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-primary text-white hover:bg-primary-hover active:bg-primary-hover",
   secondary:
-    "border border-primary/30 text-primary hover:bg-primary/10 active:bg-primary/10 dark:border-primary-400/40 dark:text-primary-400",
+    "border border-primary/30 text-primary-text hover:bg-primary/10 active:bg-primary/10 dark:border-primary-400/40 dark:text-primary-400",
   // Neutral bordered button — a plain secondary action that shouldn't read
   // as "the other primary-colored choice" (e.g. OXXO cash payment next to
   // a primary card-payment CTA).

@@ -70,7 +70,7 @@ export default function StoryAudioPlayer({
             onClick={onSkipBack}
             aria-label={dict.skipBackLabel}
             title={dict.skipBackLabel}
-            className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary/70 transition-colors hover:text-primary ${
+            className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary-text/70 transition-colors hover:text-primary-text ${
               sticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
             }`}
           >
@@ -96,7 +96,7 @@ export default function StoryAudioPlayer({
             onClick={onSkipForward}
             aria-label={dict.skipForwardLabel}
             title={dict.skipForwardLabel}
-            className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary/70 transition-colors hover:text-primary ${
+            className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary-text/70 transition-colors hover:text-primary-text ${
               sticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
             }`}
           >
@@ -139,7 +139,7 @@ export default function StoryAudioPlayer({
             className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
               rate === speed
                 ? "bg-folk-red text-white"
-                : "border border-primary/15 text-foreground/60 hover:text-primary"
+                : "border border-primary/15 text-foreground/60 hover:text-primary-text"
             }`}
           >
             {speed}x

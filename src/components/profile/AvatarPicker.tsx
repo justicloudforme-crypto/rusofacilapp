@@ -80,7 +80,7 @@ export default function AvatarPicker({
           <span className="text-sm font-medium">
             {characterLabels[characterOf(avatarId)]} · {labels[avatarId]}
           </span>
-          <span className="font-mono text-xs text-primary">{changeHint}</span>
+          <span className="font-mono text-xs text-primary-text">{changeHint}</span>
         </span>
       </button>
 

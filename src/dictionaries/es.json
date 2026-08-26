@@ -485,7 +485,9 @@
     "activityHeatmapHeading": "Actividad de los últimos 30 días",
     "upcomingBadgesHeading": "Próximas insignias",
     "subscriptionCompactFree": "Plan gratuito",
-    "subscriptionCompactPro": "Pro hasta el {date}",
+    "subscriptionCompactMonthly": "Suscripción · mensual, hasta el {date}",
+    "subscriptionCompactAnnual": "Suscripción · anual, hasta el {date}",
+    "subscriptionCompactLifetime": "Premium · acceso de por vida",
     "dangerZoneHeading": "Zona de riesgo",
     "dangerZoneToggle": "Mostrar",
     "badgeProgressStreak": "{current}/{total} días",
@@ -735,7 +737,11 @@
   },
   "vocabulary": {
     "pageTitle": "Vocabulario en tarjetas",
-    "pageSubtitle": "Aprende palabras en ruso por categorías temáticas. Toca la tarjeta para ver la traducción.",
+    "subtitleVocabulary": "Toca la tarjeta para ver la traducción.",
+    "subtitleRecall": "Escribe la palabra en ruso a partir de la traducción.",
+    "subtitleFillBlank": "Completa la palabra que falta en la frase.",
+    "subtitleMatch": "Une la palabra en ruso con su traducción.",
+    "subtitleIdioms": "Expresiones fijas y refranes, con su explicación.",
     "categoryLabels": {
       "food": "Comida y restaurante",
       "shopping": "Compras y precios",

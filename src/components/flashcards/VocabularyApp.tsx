@@ -21,6 +21,18 @@ export interface VocabularyDict extends FlashcardsDict {
   modeFillBlank: string;
   modeMatch: string;
   modeIdioms: string;
+  // One short line per mode instead of one static page subtitle — the old
+  // single subtitle described only the flip-card mode ("tap a card...") and
+  // stayed on screen unchanged in the other 4 modes, where there's no card
+  // to tap at all (a real report: it actively misled Recall/FillBlank/Match/
+  // Idioms visitors). Kept short on purpose (see each dict entry) so it
+  // never wraps past 2 lines and pushes the mode chips off the first mobile
+  // screen.
+  subtitleVocabulary: string;
+  subtitleRecall: string;
+  subtitleFillBlank: string;
+  subtitleMatch: string;
+  subtitleIdioms: string;
   idioms: IdiomsDict;
   recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
   match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
@@ -81,8 +93,18 @@ export default function VocabularyApp({
     { value: "idioms", label: dict.modeIdioms, icon: <BookIcon className="h-5 w-5" /> },
   ];
 
+  const subtitle: Record<Mode, string> = {
+    vocabulary: dict.subtitleVocabulary,
+    recall: dict.subtitleRecall,
+    fillBlank: dict.subtitleFillBlank,
+    match: dict.subtitleMatch,
+    idioms: dict.subtitleIdioms,
+  };
+
   return (
     <div>
+      <p className="mb-6 max-w-xl text-foreground/70">{subtitle[mode]}</p>
+
       {/* Horizontal scroll-snap chip strip below sm: — 5 tiles in a
           grid-cols-2 wrap felt cramped/ugly at 375px (AUDIT.md-confirmed
           complaint). sm:+ has room for a proper grid, so it switches back
@@ -102,8 +124,8 @@ export default function VocabularyApp({
             onClick={() => setMode(tab.value)}
             className={`tap flex w-24 shrink-0 snap-start flex-col items-center gap-1.5 rounded-2xl border p-3 text-center text-sm font-medium transition-all active:scale-[0.97] sm:w-auto ${
               mode === tab.value
-                ? "border-primary bg-primary/10 text-primary shadow-sm"
-                : "border-black/10 text-foreground/70 hover:border-foreground/30 hover:text-foreground dark:border-white/10"
+                ? "border-primary bg-primary/10 text-primary-text shadow-sm"
+                : "border-black/10 text-foreground/70 hover:border-foreground/30 hover:text-foreground dark:border-white/30"
             }`}
           >
             {tab.icon}

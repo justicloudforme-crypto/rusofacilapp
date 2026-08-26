@@ -35,7 +35,7 @@ export default function SettingsAccordion({
               aria-expanded={open}
               onClick={() => setOpenId(open ? null : section.id)}
             >
-              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-text">
                 {section.icon}
               </span>
               <h2 className="flex-1 font-serif text-lg font-semibold text-foreground">{section.heading}</h2>

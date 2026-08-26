@@ -241,7 +241,7 @@ export default function WordSearchBoard({
     <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
       <div className="flex flex-col items-center gap-2">
         {puzzle.curved && (
-          <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary dark:bg-primary-400/15 dark:text-primary-400">
+          <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
             ★ {dict.expertModeLabel}
           </span>
         )}
@@ -293,7 +293,7 @@ export default function WordSearchBoard({
           <button
             type="button"
             onClick={() => updatePath([])}
-            className="w-fit rounded-full border border-primary/20 px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:border-primary hover:text-primary"
+            className="w-fit rounded-full border border-primary/20 px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:border-primary hover:text-primary-text"
           >
             ✕ {dict.resetSelectionButton}
           </button>

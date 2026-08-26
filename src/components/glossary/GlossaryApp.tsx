@@ -213,7 +213,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
             <p className="mt-2 text-sm leading-6 text-foreground/80">{term.definition}</p>
             {term.russianComparison && (
               <p className="mt-3 rounded-lg bg-primary/[0.05] px-3 py-2 text-sm leading-6 text-foreground/80 dark:bg-primary-400/[0.08]">
-                <span className="font-medium text-primary dark:text-primary-400">{dict.russianComparisonLabel}: </span>
+                <span className="font-medium text-primary-text dark:text-primary-400">{dict.russianComparisonLabel}: </span>
                 {term.russianComparison}
               </p>
             )}

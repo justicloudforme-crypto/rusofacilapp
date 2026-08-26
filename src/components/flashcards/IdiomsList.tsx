@@ -154,7 +154,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
         />
       )}
 
-      <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/10">
+      <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30">
         {categoryTabs.map((tab) => (
           <button
             key={tab.value}
@@ -184,7 +184,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
           ))}
         </div>
       ) : pageItems.length === 0 ? (
-        <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
+        <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
           {dict.noResultsMessage}
         </p>
       ) : (
@@ -193,7 +193,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
             const isOpen = openId === idiom.id;
             const isKnown = Boolean(knownIdioms[idiom.id]);
             return (
-              <div key={idiom.id} className="rounded-2xl border border-black/10 p-4 dark:border-white/10 sm:p-5">
+              <div key={idiom.id} className="rounded-2xl border border-black/10 p-4 dark:border-white/30 sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-2">
                     <button
@@ -220,7 +220,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
                 </div>
 
                 {isOpen && (
-                  <div className="mt-4 space-y-3 border-t border-black/10 pt-4 text-sm dark:border-white/10">
+                  <div className="mt-4 space-y-3 border-t border-black/10 pt-4 text-sm dark:border-white/30">
                     <p>
                       <span className="font-medium text-foreground/60">{dict.literalTranslationLabel}: </span>
                       {idiom.literalTranslation}

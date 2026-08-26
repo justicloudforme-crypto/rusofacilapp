@@ -31,7 +31,7 @@ export default function FirstStepCards({
         {items.map((item) => (
           <Card key={item.key} tone="primary" className="flex flex-col gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-text">
                 {item.icon}
               </span>
               <h3 className="font-medium">{item.title}</h3>

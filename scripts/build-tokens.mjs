@@ -101,7 +101,7 @@ const darkBlock = `:root[data-theme="dark"] {
   --color-premium: ${premium.dark["500"]};
   --color-folk-red: ${tokens.color.decorativeRed.dark};
   --color-background: ${neutral.dark.background};
-  --color-surface: #241c15;
+  --color-surface: ${neutral.dark.surface};
   --color-foreground: ${neutral.dark.foreground};
 }`;
 

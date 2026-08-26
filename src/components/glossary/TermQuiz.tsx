@@ -92,7 +92,7 @@ export default function TermQuiz({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="tap mt-3 rounded-full border border-primary/30 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/[0.06] active:bg-primary/[0.06] dark:border-primary-400/40 dark:text-primary-400"
+        className="tap mt-3 rounded-full border border-primary/30 px-3 py-1 text-xs font-medium text-primary-text transition-colors hover:bg-primary/[0.06] active:bg-primary/[0.06] dark:border-primary-400/40 dark:text-primary-400"
       >
         {dict.toggleLabel}
       </button>
@@ -228,7 +228,7 @@ export default function TermQuiz({
                 href={`/${lang}/glossary?slug=${encodeURIComponent(question.term.slug)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="tap mt-1.5 inline-block text-xs font-medium text-primary underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                className="tap mt-1.5 inline-block text-xs font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
               >
                 {dict.reviewInGlossaryLabel} ›
               </Link>

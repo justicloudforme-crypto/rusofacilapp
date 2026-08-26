@@ -34,8 +34,8 @@ export default function PracticeMenu({ label, links }: { label: string; links: P
           onClick={toggle}
           aria-expanded={open}
           aria-haspopup="menu"
-          className={`tap flex items-center gap-1 rounded-full px-1 py-1 text-sm font-medium transition-colors hover:text-primary active:text-primary ${
-            active ? "text-primary" : ""
+          className={`tap flex items-center gap-1 rounded-full px-1 py-1 text-sm font-medium transition-colors hover:text-primary-text active:text-primary-text ${
+            active ? "text-primary-text" : ""
           }`}
         >
           {label}

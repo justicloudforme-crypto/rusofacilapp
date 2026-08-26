@@ -174,7 +174,7 @@ export default function RecallApp({
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
         <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
 
-        <div className="ml-auto flex gap-1 rounded-full border border-black/10 p-1 dark:border-white/10">
+        <div className="ml-auto flex gap-1 rounded-full border border-black/10 p-1 dark:border-white/30">
           <button
             type="button"
             onClick={() => setDirection("esToRu")}
@@ -222,7 +222,7 @@ export default function RecallApp({
           )}
 
           {complete ? (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/10">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/30">
               <MatryoshkaAvatar id={score.correct === score.total ? "matryoshka_proud" : "matryoshka_happy"} size={64} />
               <p className="text-lg font-semibold">
                 {dict.roundCompleteLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
@@ -250,7 +250,7 @@ export default function RecallApp({
               <Skeleton variant="rect" className="h-11 w-full max-w-xs rounded-xl" />
             </div>
           ) : !card ? (
-            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
+            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
               {dict.noCategoryCardsMessage}
             </p>
           ) : (

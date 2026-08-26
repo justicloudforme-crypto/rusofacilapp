@@ -208,7 +208,7 @@ export default function AnswerPad({
                 type="button"
                 onClick={() => setKeyboardOpen((o) => !o)}
                 aria-expanded={keyboardOpen}
-                className="touch-manipulation select-none self-center rounded-full border border-primary px-4 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 active:bg-primary/10"
+                className="touch-manipulation select-none self-center rounded-full border border-primary px-4 py-1.5 text-xs font-medium text-primary-text transition-colors hover:bg-primary/10 active:bg-primary/10"
               >
                 <span aria-hidden="true">⌨ </span>
                 {keyboardOpen ? dict.hideKeyboardLabel : dict.showKeyboardLabel}

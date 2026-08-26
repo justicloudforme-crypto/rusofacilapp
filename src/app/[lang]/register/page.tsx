@@ -83,11 +83,11 @@ export default async function RegisterPage({
 
         <p className="mt-4 text-center text-xs text-foreground/50">
           {dict.auth.legalNoticeBeforeTerms}{" "}
-          <Link href={`/${lang}/terms`} className="tap underline hover:text-primary active:text-primary">
+          <Link href={`/${lang}/terms`} className="tap underline hover:text-primary-text active:text-primary-text">
             {dict.footer.termsLink}
           </Link>{" "}
           {dict.auth.legalNoticeBetween}{" "}
-          <Link href={`/${lang}/privacy`} className="tap underline hover:text-primary active:text-primary">
+          <Link href={`/${lang}/privacy`} className="tap underline hover:text-primary-text active:text-primary-text">
             {dict.footer.privacyLink}
           </Link>
           {dict.auth.legalNoticeAfterPrivacy}
@@ -95,7 +95,7 @@ export default async function RegisterPage({
 
         <Link
           href={`/${lang}/login?redirectTo=${encodeURIComponent(redirectTo)}`}
-          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-primary active:text-primary"
+          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-primary-text active:text-primary-text"
         >
           {dict.auth.haveAccountLink}
         </Link>

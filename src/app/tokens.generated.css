@@ -139,11 +139,11 @@
 :root[data-theme="dark"] {
   /* Same semantic aliases, repointed at brighter/legacy-preserved dark
      values — data-theme swap, zero duplicated component classes. */
-  --color-primary-text: #7087CD;
+  --color-primary-text: #9DADDD;
   --color-premium: #F0B84A;
   --color-folk-red: #E8574A;
-  --color-background: #1B140F;
-  --color-surface: #241c15;
+  --color-background: #171512;
+  --color-surface: #413A2F;
   --color-foreground: #F5EAD2;
 }
 

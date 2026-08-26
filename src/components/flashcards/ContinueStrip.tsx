@@ -43,7 +43,7 @@ export default function ContinueStrip({
                 hapticTap();
                 onSelectCategory(item.category);
               }}
-              className="tap flex w-48 shrink-0 flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10 sm:w-auto"
+              className="tap flex w-48 shrink-0 flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30 sm:w-auto"
             >
               <span
                 className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl ${flashcardCategoryIconColors[item.category]}`}

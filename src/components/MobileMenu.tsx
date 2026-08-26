@@ -209,7 +209,7 @@ export default function MobileMenu({
                         className="tap flex min-h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-foreground/85 transition-all active:scale-[0.97] hover:bg-primary/10 active:bg-primary/10"
                       >
                         {link.icon && (
-                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-primary">
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-primary-text">
                             {link.icon}
                           </span>
                         )}

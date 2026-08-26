@@ -485,7 +485,9 @@
     "activityHeatmapHeading": "Активность за 30 дней",
     "upcomingBadgesHeading": "Ближайшие значки",
     "subscriptionCompactFree": "Бесплатный план",
-    "subscriptionCompactPro": "Pro до {date}",
+    "subscriptionCompactMonthly": "Подписка · месяц, до {date}",
+    "subscriptionCompactAnnual": "Подписка · год, до {date}",
+    "subscriptionCompactLifetime": "Premium · доступ навсегда",
     "dangerZoneHeading": "Опасная зона",
     "dangerZoneToggle": "Показать",
     "badgeProgressStreak": "{current}/{total} дней",
@@ -735,7 +737,11 @@
   },
   "vocabulary": {
     "pageTitle": "Изучение слов",
-    "pageSubtitle": "Учи русские слова по тематическим карточкам. Нажми на карточку, чтобы увидеть перевод.",
+    "subtitleVocabulary": "Нажми на карточку, чтобы увидеть перевод.",
+    "subtitleRecall": "Напиши русское слово по переводу и проверь себя.",
+    "subtitleFillBlank": "Вставь недостающее слово во фразу.",
+    "subtitleMatch": "Соедини русское слово с его переводом.",
+    "subtitleIdioms": "Устойчивые выражения и пословицы с объяснением.",
     "categoryLabels": {
       "food": "Еда и ресторан",
       "shopping": "Покупки и цены",

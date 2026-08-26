@@ -114,14 +114,14 @@ export default function WordGamesPicker({
                 openPaywall("premium");
               }}
               className={`tap relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 active:border-foreground/40 ${
-                isPremiumOnlySeq ? "border-primary/40 bg-primary/5 dark:border-primary-400/40 dark:bg-primary-400/10" : "border-black/10 dark:border-white/10"
+                isPremiumOnlySeq ? "border-primary/40 bg-primary/5 dark:border-primary-400/40 dark:bg-primary-400/10" : "border-black/10 dark:border-white/30"
               }`}
             >
               {isCurved ? (
                 <span
                   aria-label={dict.expertModeLabel}
                   title={dict.expertModeLabel}
-                  className="absolute left-1.5 top-1.5 text-sm leading-none text-primary dark:text-primary-400"
+                  className="absolute left-1.5 top-1.5 text-sm leading-none text-primary-text dark:text-primary-400"
                 >
                   ★
                 </span>

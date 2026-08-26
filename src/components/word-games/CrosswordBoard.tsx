@@ -203,7 +203,7 @@ export default function CrosswordBoard({
               return (
                 <div key={key} className="relative aspect-square">
                   {number ? (
-                    <span className="pointer-events-none absolute left-0.5 top-0 text-[9px] font-semibold text-primary/50">
+                    <span className="pointer-events-none absolute left-0.5 top-0 text-[9px] font-semibold text-primary-text/50">
                       {number}
                     </span>
                   ) : null}
@@ -245,7 +245,7 @@ export default function CrosswordBoard({
           type="button"
           onClick={handleHint}
           disabled={!activeCell}
-          className="tap w-fit self-center rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 active:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 md:self-start"
+          className="tap w-fit self-center rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary-text transition-colors hover:bg-primary/10 active:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 md:self-start"
         >
           {dict.hintButton}
         </button>

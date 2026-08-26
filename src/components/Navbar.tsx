@@ -119,15 +119,15 @@ export default async function Navbar({
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
-          <Link href={`/${lang}/courses`} className="tap hover:text-primary active:text-primary">
+          <Link href={`/${lang}/courses`} className="tap hover:text-primary-text active:text-primary-text">
             {dict.nav.courses}
           </Link>
           <PracticeMenu label={dict.nav.practice} links={practiceLinks} />
-          <Link href={`/${lang}/pricing`} className="tap hover:text-primary active:text-primary">
+          <Link href={`/${lang}/pricing`} className="tap hover:text-primary-text active:text-primary-text">
             {dict.nav.pricing}
           </Link>
           {staff && (
-            <Link href={`/${lang}/admin`} className="tap hover:text-primary active:text-primary">
+            <Link href={`/${lang}/admin`} className="tap hover:text-primary-text active:text-primary-text">
               {dict.admin.title}
             </Link>
           )}
