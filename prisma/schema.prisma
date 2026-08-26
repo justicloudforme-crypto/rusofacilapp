@@ -203,6 +203,15 @@ model Story {
   // where a re-run of a seed script clobbered a good human-reviewed
   // Spanish translation with regenerated text. See CONTENT_INTEGRITY.md.
   reviewedAt    DateTime?
+  // Estimated minutes to read `text` (word count / reading-speed constant,
+  // rounded up, minimum 1) — computed once at write time (see
+  // src/lib/stories.ts's estimateReadingMinutes and api/admin/stories/save)
+  // rather than on every catalog request, so the deliberately lean
+  // catalog query (see stories-catalog.ts's own comment) never has to
+  // pull the full `text` column just to show a number on a card. Null
+  // only for rows written before this column existed and not yet covered
+  // by the one-time backfill script.
+  readingMinutes Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

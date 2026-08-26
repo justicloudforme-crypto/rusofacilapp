@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
-import { validateStoryInput } from "@/lib/stories";
+import { estimateReadingMinutes, validateStoryInput } from "@/lib/stories";
 import { invalidateStoryCatalogCache } from "@/lib/stories-catalog";
 
 export async function POST(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   // here means seed/generation scripts (prisma/seed-stories.ts) can tell a
   // hand-edited row apart from one that's only ever seen batch content and
   // refuse to silently overwrite it.
-  const data = { ...result.value, reviewedAt: new Date() };
+  const data = { ...result.value, reviewedAt: new Date(), readingMinutes: estimateReadingMinutes(result.value.text) };
   const story = id
     ? await db.story.update({ where: { id }, data })
     : await db.story.create({ data });

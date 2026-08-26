@@ -20,6 +20,8 @@ export interface StorySummary {
    * arrives pre-sorted accessible-first (see [lang]/stories/page.tsx). */
   lockReason: "free" | "premium" | null;
   description: string | null;
+  hasAudio: boolean;
+  readingMinutes: number | null;
 }
 
 export interface StoriesCatalogDict {
@@ -30,6 +32,10 @@ export interface StoriesCatalogDict {
   readButton: string;
   emptyState: string;
   completedBadge: string;
+  audioBadge: string;
+  searchPlaceholder: string;
+  /** Template containing the literal placeholder "{minutes}". */
+  readingTimeLabel: string;
   /** Template containing the literal placeholder "{percent}". */
   progressLabel: string;
   /** Template containing the literal placeholder "{count}". */
@@ -48,6 +54,7 @@ export default function StoriesCatalog({
   dict: StoriesCatalogDict;
 }) {
   const [filter, setFilter] = useState<"all" | StoryLevel>("all");
+  const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Empty until after mount (localStorage isn't available during SSR) —
   // cards simply render without a progress badge until this fills in,
@@ -61,16 +68,32 @@ export default function StoriesCatalog({
     syncStoryProgress().then(setProgressById);
   }, []);
 
-  const filtered = useMemo(
-    () => (filter === "all" ? stories : stories.filter((story) => story.level === filter)),
-    [stories, filter]
-  );
+  const filtered = useMemo(() => {
+    const byLevel = filter === "all" ? stories : stories.filter((story) => story.level === filter);
+    const trimmedQuery = query.trim().toLowerCase();
+    if (!trimmedQuery) return byLevel;
+    return byLevel.filter(
+      (story) =>
+        story.title.toLowerCase().includes(trimmedQuery) || story.author.toLowerCase().includes(trimmedQuery)
+    );
+  }, [stories, filter, query]);
   const visible = filtered.slice(0, visibleCount);
   const remaining = filtered.length - visible.length;
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setVisibleCount(PAGE_SIZE);
+        }}
+        placeholder={dict.searchPlaceholder}
+        className="w-full rounded-lg border border-black/10 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-foreground/40 dark:border-white/15"
+      />
+
+      <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => { setFilter("all"); setVisibleCount(PAGE_SIZE); }}
@@ -117,7 +140,18 @@ export default function StoriesCatalog({
                 className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <LevelBadge level={story.level} />
+                  <span className="flex items-center gap-1.5">
+                    <LevelBadge level={story.level} />
+                    {story.hasAudio && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary-text dark:bg-primary-400/15 dark:text-primary-400"
+                        title={dict.audioBadge}
+                        aria-label={dict.audioBadge}
+                      >
+                        <span aria-hidden="true">🔊</span>
+                      </span>
+                    )}
+                  </span>
                   <span className="flex items-center gap-1.5">
                     {story.isPremium && <PremiumBadge icon="⭐">{dict.premiumBadge}</PremiumBadge>}
                     {story.lockReason === "premium" && <PremiumBadge>{dict.premiumTierBadge}</PremiumBadge>}
@@ -126,6 +160,9 @@ export default function StoriesCatalog({
                 <h2 className="mt-3 text-lg font-medium">{story.title}</h2>
                 <p className="mt-1 text-sm text-foreground/60">
                   {dict.byAuthor} {story.author}
+                  {story.readingMinutes !== null && (
+                    <> · {dict.readingTimeLabel.replace("{minutes}", String(story.readingMinutes))}</>
+                  )}
                 </p>
                 {story.description && (
                   <p className="mt-2 line-clamp-2 text-sm text-foreground/70">{story.description}</p>

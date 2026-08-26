@@ -36,6 +36,20 @@ export function splitStoryParagraphs(text: string): string[] {
     .filter(Boolean);
 }
 
+// A slower-than-average pace on purpose — this is a learner reading a
+// second language aloud/with narration, not a native speed-reader.
+const READING_WORDS_PER_MINUTE = 130;
+
+/** Estimated minutes to read a story's `text` — word count / reading
+ * speed, rounded up, minimum 1. Computed once at write time (see
+ * api/admin/stories/save) rather than per catalog request; see
+ * Story.readingMinutes in schema.prisma for why. */
+export function estimateReadingMinutes(text: string): number {
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  if (wordCount === 0) return 1;
+  return Math.max(1, Math.ceil(wordCount / READING_WORDS_PER_MINUTE));
+}
+
 // Splits a paragraph into sentences (kept together with their trailing
 // punctuation/quotes). Shared between the reader UI (StoryText, for its
 // sentence-level playback queue) and generate-story-audio.ts (which now

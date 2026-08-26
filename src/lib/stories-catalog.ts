@@ -25,6 +25,14 @@ export interface StoryCatalogRow {
   isPremium: boolean;
   premiumOnly: boolean;
   description: string | null;
+  /** At least one sentence has a real narrated clip (AudioAsset row) —
+   * some stories are only partially narrated (see check-story-audio.ts),
+   * so this means "some audio", not "fully narrated". */
+  hasAudio: boolean;
+  /** Null only for a row written before this column existed and not yet
+   * covered by the one-time backfill script (db:backfill-reading-minutes) —
+   * callers must treat that as "unknown," not 0. */
+  readingMinutes: number | null;
 }
 
 const storyCatalogCache = getOrCreateGlobalSingleton(
@@ -34,13 +42,33 @@ const storyCatalogCache = getOrCreateGlobalSingleton(
 
 export async function getStoryCatalog(): Promise<StoryCatalogRow[]> {
   return cached(storyCatalogCache, "all", async () => {
-    const rows = await db.story.findMany({
-      orderBy: { createdAt: "desc" },
-      select: { id: true, title: true, author: true, level: true, isPremium: true, premiumOnly: true, description: true },
-    });
+    // One grouped COUNT rather than a per-story join — cheap regardless of
+    // catalog size, and keeps the "don't pull story.text into the list
+    // query" cost discipline from the comment above intact.
+    const [rows, audioCounts] = await Promise.all([
+      db.story.findMany({
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          author: true,
+          level: true,
+          isPremium: true,
+          premiumOnly: true,
+          description: true,
+          readingMinutes: true,
+        },
+      }),
+      db.audioAsset.groupBy({
+        by: ["contentId"],
+        where: { contentType: "story" },
+        _count: { _all: true },
+      }),
+    ]);
+    const storyIdsWithAudio = new Set(audioCounts.map((row) => row.contentId));
     return rows
       .filter((row) => isStoryLevel(row.level))
-      .map((row) => ({ ...row, level: row.level as StoryLevel }));
+      .map((row) => ({ ...row, level: row.level as StoryLevel, hasAudio: storyIdsWithAudio.has(row.id) }));
   });
 }
 
