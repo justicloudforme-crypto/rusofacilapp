@@ -20,6 +20,7 @@ export default async function NewStoryPage({
         title: "",
         author: "",
         level: "A1",
+        topic: "other",
         text: "",
         description: "",
         translationEs: "",

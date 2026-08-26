@@ -4,11 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Dictionary } from "@/i18n/dictionaries";
-import { storyLevels, type StoryLevel } from "@/lib/stories";
+import { storyLevels, storyTopics, type StoryLevel, type StoryTopic } from "@/lib/stories";
 
 type StoriesDict = Dictionary["admin"]["stories"];
 
-const ERROR_MESSAGE_KEYS: Record<string, keyof StoriesDict> = {
+// Narrowed to just the string-valued error keys (not `keyof StoriesDict`
+// generally) — StoriesDict also has non-string fields now (`topics`, an
+// object), and indexing with the wider type would make dict[messageKey]
+// a union that includes those, which isn't assignable to the plain
+// `string` the error-status branch expects.
+const ERROR_MESSAGE_KEYS: Record<string, "titleRequired" | "authorRequired" | "textRequired" | "invalidLevel"> = {
   title_required: "titleRequired",
   author_required: "authorRequired",
   text_required: "textRequired",
@@ -28,6 +33,7 @@ export default function StoryEditor({
     title: string;
     author: string;
     level: StoryLevel;
+    topic: StoryTopic;
     text: string;
     description: string;
     translationEs: string;
@@ -47,6 +53,7 @@ export default function StoryEditor({
   const [title, setTitle] = useState(story.title);
   const [author, setAuthor] = useState(story.author);
   const [level, setLevel] = useState<StoryLevel>(story.level);
+  const [topic, setTopic] = useState<StoryTopic>(story.topic);
   const [text, setText] = useState(story.text);
   const [description, setDescription] = useState(story.description);
   const [translationEs, setTranslationEs] = useState(story.translationEs);
@@ -68,6 +75,7 @@ export default function StoryEditor({
           title,
           author,
           level,
+          topic,
           text,
           description,
           translationEs,
@@ -147,6 +155,24 @@ export default function StoryEditor({
               {storyLevels.map((option) => (
                 <option key={option} value={option}>
                   {option}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="story-topic" className="text-sm font-medium">
+              {dict.topicLabel}
+            </label>
+            <select
+              id="story-topic"
+              value={topic}
+              onChange={(event) => setTopic(event.target.value as StoryTopic)}
+              className="mt-2 w-full rounded-xl border border-black/15 bg-transparent p-3 text-sm outline-none focus:border-foreground/50 dark:border-white/20"
+            >
+              {storyTopics.map((option) => (
+                <option key={option} value={option}>
+                  {dict.topics[option]}
                 </option>
               ))}
             </select>

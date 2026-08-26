@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
-import { isStoryLevel } from "@/lib/stories";
+import { isStoryLevel, isStoryTopic } from "@/lib/stories";
 import StoryEditor from "@/components/admin/StoryEditor";
 
 export default async function EditStoryPage({
@@ -27,6 +27,7 @@ export default async function EditStoryPage({
         title: story.title,
         author: story.author,
         level: isStoryLevel(story.level) ? story.level : "A1",
+        topic: isStoryTopic(story.topic) ? story.topic : "other",
         text: story.text,
         description: story.description ?? "",
         translationEs: story.translationEs ?? "",

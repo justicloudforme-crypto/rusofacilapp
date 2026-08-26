@@ -15,7 +15,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
-import { isStoryLevel, type StoryLevel } from "@/lib/stories";
+import { isClassicStory, isStoryLevel, isStoryTopic, type StoryLevel, type StoryTopic } from "@/lib/stories";
 
 export interface StoryCatalogRow {
   id: string;
@@ -37,6 +37,11 @@ export interface StoryCatalogRow {
    * covered by the one-time backfill script (db:backfill-reading-minutes) —
    * callers must treat that as "unknown," not 0. */
   readingMinutes: number | null;
+  topic: StoryTopic;
+  /** Retelling/adaptation of existing literature (or a folk tale) vs. an
+   * original RusoFásil story — a SOURCE distinction, not a topic. See
+   * isClassicStory in src/lib/stories.ts. */
+  isClassic: boolean;
 }
 
 const storyCatalogCache = getOrCreateGlobalSingleton(
@@ -62,6 +67,7 @@ export async function getStoryCatalog(): Promise<StoryCatalogRow[]> {
           description: true,
           descriptionRu: true,
           readingMinutes: true,
+          topic: true,
         },
       }),
       db.audioAsset.groupBy({
@@ -73,7 +79,13 @@ export async function getStoryCatalog(): Promise<StoryCatalogRow[]> {
     const storyIdsWithAudio = new Set(audioCounts.map((row) => row.contentId));
     return rows
       .filter((row) => isStoryLevel(row.level))
-      .map((row) => ({ ...row, level: row.level as StoryLevel, hasAudio: storyIdsWithAudio.has(row.id) }));
+      .map((row) => ({
+        ...row,
+        level: row.level as StoryLevel,
+        hasAudio: storyIdsWithAudio.has(row.id),
+        topic: isStoryTopic(row.topic) ? row.topic : "other",
+        isClassic: isClassicStory(row.author),
+      }));
   });
 }
 

@@ -9,6 +9,46 @@ export function isStoryLevel(value: string): value is StoryLevel {
   return (storyLevels as readonly string[]).includes(value);
 }
 
+/** Catalog filter topics — stored on Story.topic as the KEY (never a
+ * localized label; those live in the dictionaries under
+ * dict.stories.topics). "other" is the deliberate fallback bucket for
+ * anything the tagging heuristic (prisma/tag-story-topics.ts) couldn't
+ * confidently place — every story has SOME topic, so the filter never
+ * silently drops a story that didn't match a more specific one. */
+export const storyTopics = [
+  "daily_life",
+  "family",
+  "work_study",
+  "childhood",
+  "mystery",
+  "nature_travel",
+  "wisdom_morals",
+  "other",
+] as const;
+
+export type StoryTopic = (typeof storyTopics)[number];
+
+export function isStoryTopic(value: string): value is StoryTopic {
+  return (storyTopics as readonly string[]).includes(value);
+}
+
+// The one author string every original (non-retelling) RusoFásil story
+// uses — every other author value in the catalog is either a named
+// classic author ("Л.Н. Толстой", "А.П. Чехов (пересказ)", ...) or
+// "Русская народная сказка" (a traditional folk tale), both of which
+// count as "classic" for this marker. A dedicated boolean column would
+// duplicate information the `author` field already carries reliably.
+const ORIGINAL_STORY_AUTHOR = "RusoFásil (relato original)";
+
+/** Whether a story is a retelling/adaptation of existing literature (or a
+ * traditional folk tale) rather than an original RusoFásil story — a
+ * SOURCE distinction, deliberately separate from `topic` (a classic
+ * retelling about childhood is both "classic" and "childhood", and a
+ * single topic field can't hold both). */
+export function isClassicStory(author: string): boolean {
+  return author !== ORIGINAL_STORY_AUTHOR;
+}
+
 export interface StoryInput {
   title: string;
   author: string;
@@ -19,6 +59,7 @@ export interface StoryInput {
   audioUrl: string | null;
   isPremium: boolean;
   premiumOnly: boolean;
+  topic: StoryTopic;
 }
 
 export type StoryValidationResult =
@@ -172,8 +213,14 @@ export function validateStoryInput(body: unknown): StoryValidationResult {
   const isPremium = Boolean(v.isPremium);
   const premiumOnly = Boolean(v.premiumOnly);
 
+  // Defaults to "other" for anything missing/invalid rather than
+  // rejecting the save outright — topic is a catalog-filter nicety, not
+  // required data the way title/author/level/text are.
+  const topicRaw = typeof v.topic === "string" ? v.topic : "";
+  const topic = isStoryTopic(topicRaw) ? topicRaw : "other";
+
   return {
     valid: true,
-    value: { title, author, level, text, description, translationEs, audioUrl, isPremium, premiumOnly },
+    value: { title, author, level, text, description, translationEs, audioUrl, isPremium, premiumOnly, topic },
   };
 }

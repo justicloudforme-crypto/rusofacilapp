@@ -34,6 +34,7 @@
     "db:grant-subscription": "tsx prisma/grant-subscription.ts",
     "db:backfill-audio-durations": "tsx prisma/backfill-audio-durations.ts",
     "db:backfill-reading-minutes": "tsx prisma/backfill-reading-minutes.ts",
+    "db:tag-story-topics": "tsx prisma/tag-story-topics.ts",
     "generate:story-audio": "tsx prisma/generate-story-audio.ts",
     "generate:story-audio-cast": "tsx prisma/generate-story-audio-cast.ts",
     "generate:glossary-audio": "tsx prisma/generate-glossary-audio.ts",

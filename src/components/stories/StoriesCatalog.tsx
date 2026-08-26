@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { storyLevels, type StoryLevel } from "@/lib/stories";
+import { storyLevels, storyTopics, type StoryLevel, type StoryTopic } from "@/lib/stories";
 import LevelBadge from "@/components/LevelBadge";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
@@ -22,6 +22,8 @@ export interface StorySummary {
   description: string | null;
   hasAudio: boolean;
   readingMinutes: number | null;
+  topic: StoryTopic;
+  isClassic: boolean;
 }
 
 export interface StoriesCatalogDict {
@@ -34,6 +36,10 @@ export interface StoriesCatalogDict {
   completedBadge: string;
   audioBadge: string;
   searchPlaceholder: string;
+  topicFilterLabel: string;
+  topics: Record<StoryTopic, string>;
+  classicLabel: string;
+  classicOnlyLabel: string;
   /** Template containing the literal placeholder "{minutes}". */
   readingTimeLabel: string;
   /** Template containing the literal placeholder "{percent}". */
@@ -54,6 +60,8 @@ export default function StoriesCatalog({
   dict: StoriesCatalogDict;
 }) {
   const [filter, setFilter] = useState<"all" | StoryLevel>("all");
+  const [topicFilter, setTopicFilter] = useState<"all" | StoryTopic>("all");
+  const [classicOnly, setClassicOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Empty until after mount (localStorage isn't available during SSR) —
@@ -69,14 +77,19 @@ export default function StoriesCatalog({
   }, []);
 
   const filtered = useMemo(() => {
-    const byLevel = filter === "all" ? stories : stories.filter((story) => story.level === filter);
     const trimmedQuery = query.trim().toLowerCase();
-    if (!trimmedQuery) return byLevel;
-    return byLevel.filter(
-      (story) =>
-        story.title.toLowerCase().includes(trimmedQuery) || story.author.toLowerCase().includes(trimmedQuery)
-    );
-  }, [stories, filter, query]);
+    return stories.filter((story) => {
+      if (filter !== "all" && story.level !== filter) return false;
+      if (topicFilter !== "all" && story.topic !== topicFilter) return false;
+      if (classicOnly && !story.isClassic) return false;
+      if (trimmedQuery) {
+        const matches =
+          story.title.toLowerCase().includes(trimmedQuery) || story.author.toLowerCase().includes(trimmedQuery);
+        if (!matches) return false;
+      }
+      return true;
+    });
+  }, [stories, filter, topicFilter, classicOnly, query]);
   const visible = filtered.slice(0, visibleCount);
   const remaining = filtered.length - visible.length;
 
@@ -121,6 +134,44 @@ export default function StoriesCatalog({
         ))}
       </div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <label htmlFor="story-topic-filter" className="sr-only">
+          {dict.topicFilterLabel}
+        </label>
+        <select
+          id="story-topic-filter"
+          value={topicFilter}
+          onChange={(e) => {
+            setTopicFilter(e.target.value as "all" | StoryTopic);
+            setVisibleCount(PAGE_SIZE);
+          }}
+          className="min-h-11 rounded-full border border-black/10 bg-transparent px-4 py-2 text-sm font-medium outline-none focus:border-foreground/40 dark:border-white/15"
+        >
+          <option value="all">{dict.topicFilterLabel}</option>
+          {storyTopics.map((topic) => (
+            <option key={topic} value={topic}>
+              {dict.topics[topic]}
+            </option>
+          ))}
+        </select>
+
+        <button
+          type="button"
+          onClick={() => {
+            setClassicOnly((v) => !v);
+            setVisibleCount(PAGE_SIZE);
+          }}
+          aria-pressed={classicOnly}
+          className={`tap min-h-11 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            classicOnly
+              ? "bg-foreground text-background"
+              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
+          }`}
+        >
+          {dict.classicOnlyLabel}
+        </button>
+      </div>
+
       {filtered.length === 0 ? (
         <p className="mt-10 text-sm text-foreground/60">{dict.emptyState}</p>
       ) : (
@@ -142,6 +193,15 @@ export default function StoriesCatalog({
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5">
                     <LevelBadge level={story.level} />
+                    {story.isClassic && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-1 text-xs font-medium text-foreground/60"
+                        title={dict.classicLabel}
+                        aria-label={dict.classicLabel}
+                      >
+                        <span aria-hidden="true">📖</span>
+                      </span>
+                    )}
                     {story.hasAudio && (
                       <span
                         className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary-text dark:bg-primary-400/15 dark:text-primary-400"

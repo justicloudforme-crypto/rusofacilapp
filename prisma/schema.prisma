@@ -203,6 +203,17 @@ model Story {
   // hand-curated per-story via /admin/stories, same "script sets a
   // default, staff corrects" pattern as CURATED_FREE_STORIES.
   premiumOnly   Boolean  @default(false)
+  // Story topic for the catalog filter — one of storyTopics in
+  // src/lib/stories.ts, "other" as the fallback bucket for anything the
+  // tagging heuristic (prisma/tag-story-topics.ts) couldn't confidently
+  // place. Stored as the topic KEY (e.g. "daily_life"), never a
+  // localized label, which live in the dictionaries instead — so the
+  // filter reads correctly on both /es and /ru. Deliberately does NOT
+  // cover "classic retelling vs. original story" — that's a source
+  // distinction, not a theme, and a single-value topic field would force
+  // every classic retelling into one bucket regardless of its actual
+  // subject. See isClassicStory (derived from `author`) for that axis.
+  topic         String   @default("other")
   // Set the moment a staff member saves this row through /admin (see
   // src/app/api/admin/stories/save) — marks it as human-reviewed content.
   // Null means it has only ever been written by a seed/generation script.
