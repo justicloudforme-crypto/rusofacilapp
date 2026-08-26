@@ -35,6 +35,11 @@ export default async function StoryReaderPage({
   const needsPremiumUpgrade = reason === "premium";
   const requiresPremiumTier = story.premiumOnly || story.level === "C1";
 
+  // descriptionRu is null for every row today (see schema.prisma) — this
+  // fallback is what keeps /ru showing the Spanish summary instead of
+  // hiding the block, until the Russian text exists.
+  const localizedDescription = lang === "ru" ? (story.descriptionRu ?? story.description) : story.description;
+
   const paragraphs = splitStoryParagraphs(story.text);
   const visibleParagraphs = entitled ? paragraphs : paragraphs.slice(0, 1);
 
@@ -79,9 +84,7 @@ export default async function StoryReaderPage({
       <p className="mt-1 text-foreground/60">
         {dict.stories.byAuthor} {story.author}
       </p>
-      {story.description && (
-        <p className="mt-3 text-foreground/70">{story.description}</p>
-      )}
+      {localizedDescription && <p className="mt-3 text-foreground/70">{localizedDescription}</p>}
 
       <p className="mt-8 text-xs font-medium uppercase tracking-wide text-foreground/40">
         {dict.stories.translationHint}

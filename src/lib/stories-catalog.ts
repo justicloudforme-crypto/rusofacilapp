@@ -25,6 +25,10 @@ export interface StoryCatalogRow {
   isPremium: boolean;
   premiumOnly: boolean;
   description: string | null;
+  /** Null for every row as of this column's introduction (see
+   * schema.prisma) — callers must fall back to `description` (Spanish)
+   * on /ru too, never hide the summary block just because this is empty. */
+  descriptionRu: string | null;
   /** At least one sentence has a real narrated clip (AudioAsset row) —
    * some stories are only partially narrated (see check-story-audio.ts),
    * so this means "some audio", not "fully narrated". */
@@ -56,6 +60,7 @@ export async function getStoryCatalog(): Promise<StoryCatalogRow[]> {
           isPremium: true,
           premiumOnly: true,
           description: true,
+          descriptionRu: true,
           readingMinutes: true,
         },
       }),

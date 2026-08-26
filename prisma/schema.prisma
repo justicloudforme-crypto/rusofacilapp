@@ -178,8 +178,16 @@ model Story {
   text          String
   // Short intro shown on the catalog card and above the text on the
   // reader page — the "summary" a student reads before committing to
-  // the full story.
+  // the full story. Written in Spanish only for every existing row (a
+  // confirmed 325/325 data gap, not a rendering bug — see AUDIT.md).
   description   String?
+  // Russian version of `description` — null for every row as of this
+  // column's introduction; writing the actual Russian text is a
+  // separate content task (see PROGRESS.md's open items), not something
+  // this column addition does on its own. Rendering must fall back to
+  // `description` (Spanish) when this is null, on BOTH locales — never
+  // hide the summary block on /ru just because this field is empty.
+  descriptionRu String?
   // Spanish parallel translation, paragraph-aligned with `text` via the
   // same newline-per-paragraph convention (see splitStoryParagraphs) —
   // powers the "show translation" toggle on the reader page.

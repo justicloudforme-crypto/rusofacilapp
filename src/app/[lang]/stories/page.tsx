@@ -25,7 +25,14 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
   // accessible-first rule above exists to prevent.
   const levelRank = new Map(storyLevels.map((level, index) => [level, index]));
   const stories = rawStories
-    .map((story) => ({ ...story, lockReason: getStoryAccess(tier, story).reason }))
+    .map((story) => ({
+      ...story,
+      // descriptionRu is null for every row today (see schema.prisma) —
+      // this fallback is what keeps /ru showing the Spanish summary
+      // instead of hiding the block, until the Russian text exists.
+      description: lang === "ru" ? (story.descriptionRu ?? story.description) : story.description,
+      lockReason: getStoryAccess(tier, story).reason,
+    }))
     .sort((a, b) => {
       const lockDiff = Number(a.lockReason !== null) - Number(b.lockReason !== null);
       if (lockDiff !== 0) return lockDiff;
