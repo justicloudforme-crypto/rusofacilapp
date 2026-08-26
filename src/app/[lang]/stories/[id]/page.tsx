@@ -7,6 +7,7 @@ import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
 import PremiumBadge from "@/components/ui/PremiumBadge";
+import Card from "@/components/ui/Card";
 
 export default async function StoryReaderPage({
   params,
@@ -109,7 +110,7 @@ export default async function StoryReaderPage({
       </div>
 
       {!entitled && (
-        <div className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
+        <Card tone="premium" padding="lg" className="mt-10">
           <h2 className="font-medium">
             {needsPremiumUpgrade ? dict.stories.premiumTierLockTitle : dict.stories.premiumLockTitle}
           </h2>
@@ -122,7 +123,7 @@ export default async function StoryReaderPage({
           >
             {dict.stories.premiumLockCta}
           </Link>
-        </div>
+        </Card>
       )}
     </div>
   );
