@@ -27,7 +27,7 @@ export default function AccordionConductor() {
         <span
           key={note + i}
           className="note-float absolute select-none text-lg font-bold"
-          style={{ left: `${38 + i * 22}%`, bottom: "62%", color: i % 2 === 0 ? "var(--brand-accent)" : "var(--brand)", animationDelay: `${i * 0.4}s`, animationDuration: "1.7s" }}
+          style={{ left: `${38 + i * 22}%`, bottom: "62%", color: i % 2 === 0 ? "var(--color-folk-red)" : "var(--color-primary)", animationDelay: `${i * 0.4}s`, animationDuration: "1.7s" }}
         >
           {note}
         </span>

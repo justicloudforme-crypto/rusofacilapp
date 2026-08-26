@@ -93,7 +93,7 @@ export default function VocabularyApp({
             onClick={() => setMode(tab.value)}
             className={`tap flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center text-sm font-medium transition-all active:scale-[0.97] ${
               mode === tab.value
-                ? "border-brand bg-brand/10 text-brand shadow-sm"
+                ? "border-primary bg-primary/10 text-primary shadow-sm"
                 : "border-black/10 text-foreground/70 hover:border-foreground/30 hover:text-foreground dark:border-white/10"
             }`}
           >

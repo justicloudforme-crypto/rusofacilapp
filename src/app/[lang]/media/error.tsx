@@ -34,7 +34,7 @@ export default function MediaError({
         <button
           type="button"
           onClick={() => reset()}
-          className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-light)] active:scale-[0.97] active:bg-[var(--brand-light)]"
+          className="rounded-full bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary-400)] active:scale-[0.97] active:bg-[var(--color-primary-400)]"
         >
           Reintentar · Повторить
         </button>

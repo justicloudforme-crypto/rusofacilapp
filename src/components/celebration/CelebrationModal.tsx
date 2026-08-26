@@ -104,7 +104,7 @@ export default function CelebrationModal({
       >
         <ScenarioStage id={activeScenario} />
         {exclamation && (
-          <span className="text-sm font-bold uppercase tracking-wide text-brand-accent">
+          <span className="text-sm font-bold uppercase tracking-wide text-folk-red">
             {exclamation}
           </span>
         )}

@@ -77,7 +77,7 @@ export default async function GroupsPage({
             required
             maxLength={60}
             placeholder={dict.groups.namePlaceholder}
-            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm outline-none focus:border-brand dark:border-white/15 dark:bg-white/10"
+            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm outline-none focus:border-primary dark:border-white/15 dark:bg-white/10"
           />
           <button
             type="submit"
@@ -99,7 +99,7 @@ export default async function GroupsPage({
             required
             maxLength={7}
             placeholder={dict.groups.codePlaceholder}
-            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm uppercase outline-none focus:border-brand dark:border-white/15 dark:bg-white/10"
+            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm uppercase outline-none focus:border-primary dark:border-white/15 dark:bg-white/10"
           />
           <button
             type="submit"

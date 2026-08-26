@@ -63,7 +63,7 @@ export default function BottomNav({
             onClick={() => hapticTap()}
             aria-current={active}
             className={`tap flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.65rem] font-medium transition-transform active:scale-95 ${
-              active ? "text-brand" : "text-foreground/55 hover:text-foreground/80"
+              active ? "text-primary" : "text-foreground/55 hover:text-foreground/80"
             }`}
           >
             <Icon className="h-5 w-5" />

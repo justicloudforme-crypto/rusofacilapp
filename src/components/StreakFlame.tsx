@@ -30,7 +30,7 @@ export default function StreakFlame({
           />
         </svg>
       </span>
-      <span className="font-serif text-2xl font-bold text-brand-accent leading-none">{days}</span>
+      <span className="font-serif text-2xl font-bold text-folk-red leading-none">{days}</span>
     </span>
   );
 }

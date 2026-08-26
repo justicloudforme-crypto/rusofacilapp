@@ -222,7 +222,7 @@ export default function ExercisesTab({
       )}
 
       {restored && submitted && (
-        <p className="rounded-lg bg-brand/[0.06] px-3 py-2 text-sm text-foreground/70 dark:bg-brand-light/[0.08]">
+        <p className="rounded-lg bg-primary/[0.06] px-3 py-2 text-sm text-foreground/70 dark:bg-primary-400/[0.08]">
           {dict.previousAttemptBanner}
         </p>
       )}

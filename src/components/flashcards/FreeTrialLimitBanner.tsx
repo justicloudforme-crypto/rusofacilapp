@@ -21,7 +21,7 @@ export default function FreeTrialLimitBanner({
   const { openPaywall } = usePaywall();
 
   return (
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand/30 bg-brand/5 px-4 py-3 dark:border-brand-light/30 dark:bg-brand-light/10">
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 dark:border-primary-400/30 dark:bg-primary-400/10">
       <p className="text-sm text-foreground/80">{message}</p>
       <button
         type="button"

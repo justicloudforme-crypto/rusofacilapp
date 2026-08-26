@@ -32,10 +32,10 @@ export default function GlossaryHint() {
   }
 
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-brand/20 bg-brand/[0.04] px-3 py-2.5 text-xs leading-5 text-foreground/70 dark:border-brand-light/25 dark:bg-brand-light/[0.06]">
+    <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2.5 text-xs leading-5 text-foreground/70 dark:border-primary-400/25 dark:bg-primary-400/[0.06]">
       <span className="flex-1">
         Las palabras subrayadas como{" "}
-        <span className="cursor-help rounded-sm border-b border-dotted border-brand/50 font-medium text-foreground dark:border-brand-light/60">
+        <span className="cursor-help rounded-sm border-b border-dotted border-primary/50 font-medium text-foreground dark:border-primary-400/60">
           esta
         </span>{" "}
         son interactivas: tócalas para ver una explicación simple, su comparación con el ruso y en qué lecciones aparecen.

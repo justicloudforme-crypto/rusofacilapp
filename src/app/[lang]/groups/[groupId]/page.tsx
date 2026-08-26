@@ -53,7 +53,7 @@ export default async function GroupDetailPage({
               key={member.userId}
               className={`flex items-center gap-3 rounded-2xl border p-3 text-sm ${
                 member.userId === user.id
-                  ? "border-brand/40 bg-brand/5"
+                  ? "border-primary/40 bg-primary/5"
                   : "border-black/10 dark:border-white/10"
               }`}
             >

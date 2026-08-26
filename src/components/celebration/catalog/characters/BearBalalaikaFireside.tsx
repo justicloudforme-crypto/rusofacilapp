@@ -37,7 +37,7 @@ export default function BearBalalaikaFireside() {
         <span
           key={note + i}
           className="note-float absolute select-none text-base font-bold"
-          style={{ left: `${14 + i * 24}%`, bottom: "60%", color: i % 2 === 0 ? "var(--brand-accent)" : "var(--brand)", animationDelay: `${i * 0.4}s`, animationDuration: "1.7s" }}
+          style={{ left: `${14 + i * 24}%`, bottom: "60%", color: i % 2 === 0 ? "var(--color-folk-red)" : "var(--color-primary)", animationDelay: `${i * 0.4}s`, animationDuration: "1.7s" }}
         >
           {note}
         </span>

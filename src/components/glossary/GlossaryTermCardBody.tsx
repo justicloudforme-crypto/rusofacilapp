@@ -37,8 +37,8 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
       </span>
       <span className="mt-1.5 block leading-5 text-foreground/80">{term.definition}</span>
       {term.russianComparison && (
-        <span className="mt-2 block rounded-md bg-brand/[0.06] px-2.5 py-2 leading-5 text-foreground/80 dark:bg-brand-light/[0.08]">
-          <span className="font-medium text-brand dark:text-brand-light">Cómo funciona en ruso: </span>
+        <span className="mt-2 block rounded-md bg-primary/[0.06] px-2.5 py-2 leading-5 text-foreground/80 dark:bg-primary-400/[0.08]">
+          <span className="font-medium text-primary dark:text-primary-400">Cómo funciona en ruso: </span>
           {term.russianComparison}
         </span>
       )}

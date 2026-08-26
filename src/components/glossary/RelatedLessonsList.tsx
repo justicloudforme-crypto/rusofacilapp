@@ -30,7 +30,7 @@ export default function RelatedLessonsList({
         <span key={ref.slug}>
           <Link
             href={`/${lang}/courses/${ref.level}/${ref.lesson}`}
-            className="tap font-medium text-brand underline-offset-2 hover:underline active:underline dark:text-brand-light"
+            className="tap font-medium text-primary underline-offset-2 hover:underline active:underline dark:text-primary-400"
           >
             {ref.level.toUpperCase()}-{ref.lesson}
           </Link>

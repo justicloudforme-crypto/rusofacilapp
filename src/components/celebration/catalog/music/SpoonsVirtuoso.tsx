@@ -2,7 +2,7 @@
 
 const SPOON_WOOD = "#c9962e";
 const SPOON_TRIM = "#8a6a1e";
-const NOTE_COLOR = "var(--brand)";
+const NOTE_COLOR = "var(--color-primary)";
 
 // Story beats:
 //   Loop (0–0.4s, `spoons-clack`, mirrored left/right): the two ложки

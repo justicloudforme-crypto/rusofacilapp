@@ -48,7 +48,7 @@ export default function GlossaryProgress({
     <div className="mb-5">
       <div className="relative h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-brand/50 transition-[width] duration-300 dark:bg-brand-light/50"
+          className="absolute inset-y-0 left-0 rounded-full bg-primary/50 transition-[width] duration-300 dark:bg-primary-400/50"
           style={{ width: `${seenPct}%` }}
         />
         <div
@@ -62,7 +62,7 @@ export default function GlossaryProgress({
           {masteredLabel.replace("{count}", String(mastered)).replace("{total}", String(total))}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-brand/50 dark:bg-brand-light/50" aria-hidden />
+          <span className="h-2 w-2 rounded-full bg-primary/50 dark:bg-primary-400/50" aria-hidden />
           {seenLabel.replace("{count}", String(seen)).replace("{total}", String(total))}
         </span>
       </div>

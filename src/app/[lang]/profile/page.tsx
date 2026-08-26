@@ -71,7 +71,7 @@ function SectionHeading({
         className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
           tone === "danger"
             ? "bg-red-500/10 text-red-600 dark:text-red-400"
-            : "bg-brand/10 text-brand dark:text-brand-light"
+            : "bg-primary/10 text-primary dark:text-primary-400"
         }`}
       >
         {icon}
@@ -292,7 +292,7 @@ export default async function ProfilePage({
       {/* Personal data */}
       {activeTab === "personal" && (
         <section className="mt-8 flex flex-col gap-6">
-          <div className="rounded-2xl border border-brand/15 bg-brand/[0.03] p-5 sm:p-6">
+          <div className="rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 sm:p-6">
             <div className="flex items-center gap-4">
               <MatryoshkaAvatar id={currentAvatarId} size={56} label={avatarLabels[currentAvatarId]} premium={isPremiumUser} />
               <div className="min-w-0">
@@ -411,7 +411,7 @@ export default async function ProfilePage({
           purchase server-side (not the case yet for a purely local
           StoreKit Testing purchase with no webhook tunnel configured). */}
       <NativeSubscriptionPanel userId={user.id} dict={dict.profile.nativeSubscription} />
-      <section className="mt-8 rounded-2xl border border-brand/15 bg-brand/[0.03] p-5 sm:p-6">
+      <section className="mt-8 rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SectionHeading icon={<CrownIcon className="h-[18px] w-[18px]" />}>
             {dict.profile.subscriptionHeading}
@@ -675,7 +675,7 @@ export default async function ProfilePage({
               {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
             </p>
           </div>
-          <div className="rounded-2xl border border-brand-accent/15 bg-brand-accent/5 p-4">
+          <div className="rounded-2xl border border-folk-red/15 bg-folk-red/5 p-4">
             <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
               {streak.currentStreak > 0 && (
                 <span className="flame-flicker inline-block" style={{ width: 14, height: 20 }} aria-hidden>

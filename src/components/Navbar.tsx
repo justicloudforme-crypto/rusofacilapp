@@ -117,7 +117,7 @@ export default async function Navbar({
             since the right cluster is much narrower logged out. */}
         <nav className="hidden min-w-0 flex-1 items-center gap-4 text-sm font-medium sm:flex lg:gap-6 xl:gap-8">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="tap hover:text-brand active:text-brand">
+            <Link key={link.href} href={link.href} className="tap hover:text-primary active:text-primary">
               {link.label}
             </Link>
           ))}
@@ -149,7 +149,7 @@ export default async function Navbar({
           ) : (
             <Link
               href={ctaHref}
-              className="tap hidden rounded-full bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-light active:bg-brand-light sm:inline-block"
+              className="tap hidden rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-400 active:bg-primary-400 sm:inline-block"
             >
               {ctaLabel}
             </Link>

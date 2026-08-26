@@ -40,7 +40,7 @@ export default function GrammarTab({
             at a capped measure (max-w-prose) rather than justified: at
             this column width, justified text creates uneven word-spacing
             "rivers" that hurt readability more than they add polish. */}
-        <div className="flex max-w-prose flex-col gap-4 rounded-2xl border border-black/10 border-l-4 border-l-brand/50 bg-background p-5 shadow-sm dark:border-white/10">
+        <div className="flex max-w-prose flex-col gap-4 rounded-2xl border border-black/10 border-l-4 border-l-primary/50 bg-background p-5 shadow-sm dark:border-white/10">
           {grammar.paragraphs.map((paragraph) => (
             <GlossaryText key={paragraph} text={paragraph} className="leading-7 text-foreground/80" />
           ))}

@@ -9,7 +9,7 @@ export default function StreakToast({ label }: { label: string }) {
   return (
     <div
       role="status"
-      className="streak-toast pointer-events-none fixed left-1/2 top-20 z-40 rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-white shadow-lg"
+      className="streak-toast pointer-events-none fixed left-1/2 top-20 z-40 rounded-full bg-folk-red px-4 py-2 text-sm font-semibold text-white shadow-lg"
     >
       🔥 {label}
     </div>

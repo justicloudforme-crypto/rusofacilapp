@@ -67,7 +67,7 @@ export default async function AdminStoriesPage({
                       {story.premiumOnly && (
                         <span
                           title={dict.admin.stories.premiumOnlyHelp}
-                          className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand"
+                          className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
                         >
                           👑 {dict.admin.stories.premiumOnlyLabel}
                         </span>

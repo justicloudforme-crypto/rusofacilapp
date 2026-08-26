@@ -56,7 +56,7 @@ export default function GlossaryTermPopover({
         aria-expanded={open}
         className={
           className ??
-          "tap cursor-help rounded-sm border-b border-dotted border-brand/50 font-medium text-inherit underline-offset-2 hover:border-brand active:border-brand dark:border-brand-light/60 dark:hover:border-brand-light dark:active:border-brand-light"
+          "tap cursor-help rounded-sm border-b border-dotted border-primary/50 font-medium text-inherit underline-offset-2 hover:border-primary active:border-primary dark:border-primary-400/60 dark:hover:border-primary-400 dark:active:border-primary-400"
         }
       >
         {children}

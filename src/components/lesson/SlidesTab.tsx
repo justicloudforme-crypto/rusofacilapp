@@ -57,17 +57,17 @@ export default function SlidesTab({
         </button>
 
         <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/10">
-          <div className="h-1.5 bg-gradient-to-r from-brand via-brand-light to-brand-accent-light" />
+          <div className="h-1.5 bg-gradient-to-r from-primary via-primary-400 to-premium-400" />
 
           <div className="p-6 sm:p-10">
             <div className="flex items-start justify-between gap-4">
-              <div className="h-28 w-40 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-brand/[0.06] to-brand-accent-light/[0.08]">
+              <div className="h-28 w-40 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/[0.06] to-premium-400/[0.08]">
                 {illustrations[slide.id]}
               </div>
               <BrandMark size="sm" />
             </div>
 
-            <span className="mt-6 inline-block rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand dark:bg-brand-light/15 dark:text-brand-light">
+            <span className="mt-6 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary dark:bg-primary-400/15 dark:text-primary-400">
               {counterLabel}
             </span>
 
@@ -80,11 +80,11 @@ export default function SlidesTab({
             </div>
 
             {slide.highlights && slide.highlights.length > 0 && (
-              <div className="mt-6 rounded-xl border border-brand/15 bg-brand/[0.04] p-4 dark:border-brand-light/20 dark:bg-brand-light/[0.06]">
+              <div className="mt-6 rounded-xl border border-primary/15 bg-primary/[0.04] p-4 dark:border-primary-400/20 dark:bg-primary-400/[0.06]">
                 <ul className="flex flex-col gap-2.5">
                   {slide.highlights.map((item) => (
                     <li key={item} className="flex items-start gap-3 text-sm leading-6 text-foreground/85">
-                      <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-gradient-to-br from-brand-accent to-brand-accent-light" />
+                      <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-gradient-to-br from-folk-red to-premium-400" />
                       {item}
                     </li>
                   ))}
@@ -97,7 +97,7 @@ export default function SlidesTab({
                 {slide.audioExamples.map((example) => (
                   <div
                     key={example.text}
-                    className="flex items-center gap-3 rounded-2xl border border-brand-accent/20 bg-brand-accent-light/[0.06] px-4 py-3"
+                    className="flex items-center gap-3 rounded-2xl border border-folk-red/20 bg-premium-400/[0.06] px-4 py-3"
                   >
                     <SpeakButton text={example.text} label={dict.listenLabel} size="md" />
                     <div className="flex flex-col leading-tight">
@@ -120,7 +120,7 @@ export default function SlidesTab({
             aria-label={s.title}
             onClick={() => setIndex(i)}
             className={`tap h-1.5 rounded-full transition-all ${
-              i === index ? "w-6 bg-brand dark:bg-brand-light" : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
+              i === index ? "w-6 bg-primary dark:bg-primary-400" : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
             }`}
           />
         ))}

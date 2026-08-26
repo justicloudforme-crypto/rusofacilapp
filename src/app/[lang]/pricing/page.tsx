@@ -53,7 +53,7 @@ function PlanCard({
     <div
       className={`relative flex flex-col rounded-2xl border p-8 ${
         highlighted
-          ? "border-brand bg-brand/5 shadow-lg shadow-brand/10 sm:scale-[1.03]"
+          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 sm:scale-[1.03]"
           : premium
             ? "border-amber-500/40 bg-amber-500/5 shadow-lg shadow-amber-500/10"
             : "border-black/10 dark:border-white/10"
@@ -62,7 +62,7 @@ function PlanCard({
       {(highlighted || premium) && badge && (
         <span
           className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${
-            premium ? "bg-amber-500" : "bg-brand-accent"
+            premium ? "bg-amber-500" : "bg-folk-red"
           }`}
         >
           {premium && <span aria-hidden>👑 </span>}
@@ -107,7 +107,7 @@ function PlanCard({
           value="card"
           className={`tap w-full rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
             highlighted
-              ? "bg-brand text-white hover:bg-brand-light active:bg-brand-light"
+              ? "bg-primary text-white hover:bg-primary-400 active:bg-primary-400"
               : premium
                 ? "bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-600"
                 : "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/85"

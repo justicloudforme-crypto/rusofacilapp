@@ -30,7 +30,7 @@ export default function BalalaikaMusicSwirl() {
       <div className="carousel-spin absolute" style={{ width: 4, height: 4, left: "50%", top: "38%" }}>
         {NOTES.map((note, i) => (
           <span key={note + i} className="absolute" style={{ width: 0, height: 0, transform: `rotate(${i * 120}deg)` }}>
-            <span className="absolute select-none text-base font-bold" style={{ top: -46, left: -6, color: i % 2 === 0 ? "var(--brand-accent)" : "var(--brand)" }}>
+            <span className="absolute select-none text-base font-bold" style={{ top: -46, left: -6, color: i % 2 === 0 ? "var(--color-folk-red)" : "var(--color-primary)" }}>
               {note}
             </span>
           </span>

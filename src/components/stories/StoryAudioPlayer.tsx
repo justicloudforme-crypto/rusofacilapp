@@ -59,7 +59,7 @@ export default function StoryAudioPlayer({
       // called it "asymmetric/crooked") — explicit rows instead of relying
       // on wrap: transport controls + progress share one row, and only the
       // rate buttons drop to their own full-width row on narrow screens.
-      className={`sticky z-30 mb-6 flex flex-col gap-2 rounded-2xl border border-brand/15 bg-background/95 backdrop-blur transition-all sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 ${
+      className={`sticky z-30 mb-6 flex flex-col gap-2 rounded-2xl border border-primary/15 bg-background/95 backdrop-blur transition-all sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 ${
         sticky ? "p-2.5 shadow-lg" : "p-4"
       }`}
     >
@@ -70,7 +70,7 @@ export default function StoryAudioPlayer({
             onClick={onSkipBack}
             aria-label={dict.skipBackLabel}
             title={dict.skipBackLabel}
-            className={`flex flex-shrink-0 items-center justify-center rounded-full text-brand/70 transition-colors hover:text-brand ${
+            className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary/70 transition-colors hover:text-primary ${
               sticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
             }`}
           >
@@ -83,7 +83,7 @@ export default function StoryAudioPlayer({
           onClick={onPlayPause}
           aria-label={playing ? dict.pauseLabel : dict.playLabel}
           title={playing ? dict.pauseLabel : dict.playLabel}
-          className={`flex flex-shrink-0 items-center justify-center rounded-full bg-brand text-white transition-all hover:bg-brand-light ${
+          className={`flex flex-shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all hover:bg-primary-400 ${
             sticky ? "h-8 w-8 text-sm" : "h-10 w-10"
           }`}
         >
@@ -96,7 +96,7 @@ export default function StoryAudioPlayer({
             onClick={onSkipForward}
             aria-label={dict.skipForwardLabel}
             title={dict.skipForwardLabel}
-            className={`flex flex-shrink-0 items-center justify-center rounded-full text-brand/70 transition-colors hover:text-brand ${
+            className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary/70 transition-colors hover:text-primary ${
               sticky ? "h-7 w-7 text-sm" : "h-9 w-9 text-base"
             }`}
           >
@@ -105,9 +105,9 @@ export default function StoryAudioPlayer({
         )}
 
         <div className="relative flex min-w-[60px] flex-1 items-center">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-brand/10">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
             <div
-              className="h-full rounded-full bg-brand-accent-light transition-[width] duration-300"
+              className="h-full rounded-full bg-premium-400 transition-[width] duration-300"
               style={{ width: `${Math.min(progress * 100, 100)}%` }}
             />
           </div>
@@ -138,8 +138,8 @@ export default function StoryAudioPlayer({
             onClick={() => onRateChange(speed)}
             className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
               rate === speed
-                ? "bg-brand-accent text-white"
-                : "border border-brand/15 text-foreground/60 hover:text-brand"
+                ? "bg-folk-red text-white"
+                : "border border-primary/15 text-foreground/60 hover:text-primary"
             }`}
           >
             {speed}x

@@ -27,7 +27,7 @@ export default function CharacterChoirSing() {
         <span
           key={note + i}
           className="note-float absolute select-none text-base font-bold"
-          style={{ left: `${16 + i * 30}%`, bottom: "60%", color: i % 2 === 0 ? "var(--brand-accent)" : "var(--brand)", animationDelay: `${i * 0.4}s`, animationDuration: "1.8s" }}
+          style={{ left: `${16 + i * 30}%`, bottom: "60%", color: i % 2 === 0 ? "var(--color-folk-red)" : "var(--color-primary)", animationDelay: `${i * 0.4}s`, animationDuration: "1.8s" }}
         >
           {note}
         </span>
