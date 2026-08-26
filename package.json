@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
+    "build:tokens": "node scripts/build-tokens.mjs",
+    "check:tokens": "node scripts/check-tokens.mjs",
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
     "build": "next build --webpack",
