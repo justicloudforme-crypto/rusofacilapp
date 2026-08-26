@@ -74,6 +74,7 @@ ${Object.entries(level)
   --font-serif: ${tokens.typography.fontFamily.serif};
   --font-mono: ${tokens.typography.fontFamily.mono};
 ${Object.entries(tokens.typography.fontSize)
+  .filter(([name]) => !name.startsWith("_"))
   .map(([name, def]) => `  --text-${name.replace(/([A-Z])/g, "-$1").toLowerCase()}: ${def.clamp};`)
   .join("\n")}
   --leading-tight: ${tokens.typography.lineHeight.tight};
@@ -134,7 +135,10 @@ ${Object.keys(level).filter((k) => !k.startsWith("_") && k !== "contrastNote").m
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
   --font-mono: var(--font-mono);
-${Object.keys(tokens.typography.fontSize).map((name) => { const k = name.replace(/([A-Z])/g, "-$1").toLowerCase(); return `  --text-${k}: var(--text-${k});`; }).join("\n")}
+${Object.keys(tokens.typography.fontSize)
+  .filter((name) => !name.startsWith("_"))
+  .map((name) => { const k = name.replace(/([A-Z])/g, "-$1").toLowerCase(); return `  --text-${k}: var(--text-${k});`; })
+  .join("\n")}
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);

@@ -87,7 +87,6 @@
   --font-sans: var(--font-pt-sans), Arial, Helvetica, sans-serif;
   --font-serif: var(--font-pt-serif), Georgia, serif;
   --font-mono: var(--font-pt-mono), ui-monospace, monospace;
-  --text-_comment: undefined;
   --text-caption: clamp(0.75rem, 0.7241rem + 0.1105vw, 0.8125rem);
   --text-body-sm: clamp(0.875rem, 0.8491rem + 0.1105vw, 0.9375rem);
   --text-body: clamp(1rem, 0.9741rem + 0.1105vw, 1.0625rem);
@@ -219,7 +218,6 @@
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
   --font-mono: var(--font-mono);
-  --text-_comment: var(--text-_comment);
   --text-caption: var(--text-caption);
   --text-body-sm: var(--text-body-sm);
   --text-body: var(--text-body);

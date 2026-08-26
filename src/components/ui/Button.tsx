@@ -49,7 +49,11 @@ interface CommonProps {
 }
 
 type ButtonAsButton = CommonProps &
-  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & { href?: undefined };
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & {
+    href?: undefined;
+    /** Disables the button, swaps the icon slot for a spinner, sets aria-busy. Button-only — a <Link> can't be "in flight". */
+    loading?: boolean;
+  };
 
 type ButtonAsLink = CommonProps &
   Omit<ComponentProps<typeof Link>, "className" | "children"> & { href: ComponentProps<typeof Link>["href"] };
@@ -81,17 +85,26 @@ export default function Button(props: ButtonProps) {
     );
   }
 
-  const buttonRest = rest as Omit<ButtonAsButton, keyof CommonProps>;
+  const { loading, ...buttonRest } = rest as Omit<ButtonAsButton, keyof CommonProps>;
   return (
     <button
       className={cls}
+      aria-busy={loading || undefined}
+      disabled={loading || buttonRest.disabled}
       onClick={(e) => {
         if (haptic) hapticTap();
         buttonRest.onClick?.(e);
       }}
       {...buttonRest}
     >
-      {icon}
+      {loading ? (
+        <svg className="h-4 w-4 animate-spin motion-reduce:animate-none" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      ) : (
+        icon
+      )}
       {children}
     </button>
   );
