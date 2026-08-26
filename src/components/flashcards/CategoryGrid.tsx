@@ -6,11 +6,9 @@ import { flashcardCategoryIconColors } from "@/lib/flashcards/category-icon-colo
 import { getNextLevel, shouldSuggestNextLevel } from "@/lib/flashcards/level-progress";
 import { hapticTap } from "@/lib/haptics";
 import ProgressBar from "@/components/ui/ProgressBar";
+import type { CategorySummary } from "@/lib/flashcards/summary-client";
 
-export interface CategorySummary {
-  total: number;
-  known: number;
-}
+export type { CategorySummary } from "@/lib/flashcards/summary-client";
 
 export interface CategoryGridDict {
   categoryLabels: Record<FlashcardCategory, string>;
@@ -21,11 +19,19 @@ export interface CategoryGridDict {
 export default function CategoryGrid({
   dict,
   summary,
+  hasAnyProgress = true,
   levelFilter,
   onSelectCategory,
 }: {
   dict: CategoryGridDict;
   summary: Record<string, CategorySummary>;
+  // False only for a visitor with zero recorded progress anywhere (brand
+  // new guest, nothing ever marked known) — an empty bar on every single
+  // tile reads as broken, not "0%", so the whole grid shows card counts
+  // only until there's real signal to plot. Once any card is known
+  // anywhere, real per-category bars appear, including honest 0% for
+  // categories not yet touched (a legitimate value, not a placeholder).
+  hasAnyProgress?: boolean;
   // "all" (or omitted, for call sites with no level concept) suppresses
   // the next-level nudge below — there's no single current level to
   // suggest moving on from.
@@ -71,7 +77,9 @@ export default function CategoryGrid({
               </span>
               <span className="text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
               <span className="text-xs text-foreground/50">{dict.cardCountLabel.replace("{count}", String(total))}</span>
-              <ProgressBar percent={percent} tone="success" className="mt-1 w-full" ariaLabel={dict.categoryLabels[category]} />
+              {hasAnyProgress && (
+                <ProgressBar percent={percent} tone="success" className="mt-1 w-full" ariaLabel={dict.categoryLabels[category]} />
+              )}
             </button>
           );
         })}

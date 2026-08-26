@@ -13,12 +13,12 @@ const STORAGE_KEY = "rusofacil:flashcard-progress";
 // and re-serializing the known map on every recall-mode answer.
 const SRS_STORAGE_KEY = "rusofacil:flashcard-srs";
 
-interface Entry {
+export interface Entry {
   known: boolean;
   updatedAt: number;
 }
 
-type EntryMap = Record<string, Entry>;
+export type EntryMap = Record<string, Entry>;
 type KnownMap = Record<string, boolean>;
 
 /** Leitner-box progress for one card. box 0 = new/learning, 1 = review,
@@ -163,6 +163,17 @@ function syncToServer(cardId: string, known: boolean) {
 
 export function getKnownWords(): KnownMap {
   return toKnownMap(readAll());
+}
+
+/** The full local {cardId: {known, updatedAt}} map, not just the coarse
+ * known/unknown flags getKnownWords() returns — sent to POST
+ * /api/flashcards/summary so a guest's (or a not-yet-synced device's)
+ * progress can be reflected in the category grid and "Continue" strip,
+ * which the server otherwise has no way to see. Read-only export of the
+ * same map setWordKnown()/syncKnownWords() already maintain — no new
+ * storage, no new metric. */
+export function getProgressEntries(): EntryMap {
+  return readAll();
 }
 
 export function setWordKnown(cardId: string, known: boolean): KnownMap {

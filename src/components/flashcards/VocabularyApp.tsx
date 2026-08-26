@@ -22,9 +22,9 @@ export interface VocabularyDict extends FlashcardsDict {
   modeMatch: string;
   modeIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
-  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
-  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
+  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
+  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
+  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -83,7 +83,16 @@ export default function VocabularyApp({
 
   return (
     <div>
-      <div role="tablist" className="mb-8 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Horizontal scroll-snap chip strip below sm: — 5 tiles in a
+          grid-cols-2 wrap felt cramped/ugly at 375px (AUDIT.md-confirmed
+          complaint). sm:+ has room for a proper grid, so it switches back
+          there. -mx-4/px-4 lets the strip bleed to the screen edges (so the
+          first/last chip isn't flush against the content padding) while
+          the scroll-snap targets stay flush with the visible viewport. */}
+      <div
+        role="tablist"
+        className="mb-8 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5"
+      >
         {tabs.map((tab) => (
           <button
             key={tab.value}
@@ -91,7 +100,7 @@ export default function VocabularyApp({
             role="tab"
             aria-selected={mode === tab.value}
             onClick={() => setMode(tab.value)}
-            className={`tap flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center text-sm font-medium transition-all active:scale-[0.97] ${
+            className={`tap flex w-24 shrink-0 snap-start flex-col items-center gap-1.5 rounded-2xl border p-3 text-center text-sm font-medium transition-all active:scale-[0.97] sm:w-auto ${
               mode === tab.value
                 ? "border-primary bg-primary/10 text-primary shadow-sm"
                 : "border-black/10 text-foreground/70 hover:border-foreground/30 hover:text-foreground dark:border-white/10"
@@ -114,6 +123,7 @@ export default function VocabularyApp({
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
+              continueTitle: dict.continueTitle,
             }}
             celebrationDict={celebrationDict}
           />
@@ -127,6 +137,7 @@ export default function VocabularyApp({
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
+              continueTitle: dict.continueTitle,
             }}
             celebrationDict={celebrationDict}
           />
@@ -140,6 +151,7 @@ export default function VocabularyApp({
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
+              continueTitle: dict.continueTitle,
             }}
             celebrationDict={celebrationDict}
           />

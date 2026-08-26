@@ -4,10 +4,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import CategoryGrid, { type CategorySummary } from "./CategoryGrid";
+import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardCategory, type FlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
+import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
 import { hapticTap, hapticSuccess } from "@/lib/haptics";
 
 export interface FlashcardsDict {
@@ -29,6 +31,7 @@ export interface FlashcardsDict {
   nextLevelBadgeLabel: string; // template, contains literal "{level}"
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
+  continueTitle: string;
 }
 
 // Debounce delay for the always-visible search box — short enough to feel
@@ -51,6 +54,8 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // ~2,600-card bank was bundled straight into this client component's JS.
   const [categoryCards, setCategoryCards] = useState<FlashcardRow[]>([]);
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
+  const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
+  const [hasAnyProgress, setHasAnyProgress] = useState(false);
   const [limited, setLimited] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -114,11 +119,11 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   }, [searchInput]);
 
   useEffect(() => {
-    const params = levelFilter === "all" ? "" : `?level=${levelFilter}`;
-    fetch(`/api/flashcards/summary${params}`)
-      .then((res) => (res.ok ? res.json() : { categories: {} }))
-      .then((body: { categories?: Record<string, CategorySummary> }) => setCategorySummary(body.categories ?? {}))
-      .catch(() => setCategorySummary({}));
+    fetchCategorySummary(levelFilter).then((body) => {
+      setCategorySummary(body.categories);
+      setRecentCategories(body.recent);
+      setHasAnyProgress(body.hasAnyProgress);
+    });
   }, [knownWords, levelFilter]);
 
   useEffect(() => {
@@ -290,7 +295,16 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
       </div>
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
+        <>
+          <ContinueStrip dict={dict} recent={recentCategories} onSelectCategory={selectCategory} />
+          <CategoryGrid
+            dict={dict}
+            summary={categorySummary}
+            hasAnyProgress={hasAnyProgress}
+            levelFilter={levelFilter}
+            onSelectCategory={selectCategory}
+          />
+        </>
       ) : (
         <>
           {category && (

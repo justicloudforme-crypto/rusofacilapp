@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
+import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import MatchBoard, { type MatchResult } from "./MatchBoard";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { buildMatchRound } from "@/lib/flashcards/match-round";
 import { recordSrsAnswer } from "@/lib/flashcard-progress";
+import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import type { Dictionary } from "@/i18n/dictionaries";
 
@@ -21,6 +23,7 @@ export interface MatchAppDict extends CategoryGridDict {
   nextRoundButton: string;
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
+  continueTitle: string;
 }
 
 const ROUND_SIZES = [4, 6, 8];
@@ -36,6 +39,8 @@ export default function MatchApp({
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
+  const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
+  const [hasAnyProgress, setHasAnyProgress] = useState(false);
   const [categoryCards, setCategoryCards] = useState<FlashcardRow[]>([]);
   const [sizeIndex, setSizeIndex] = useState(0);
   const [round, setRound] = useState<FlashcardRow[]>([]);
@@ -48,11 +53,11 @@ export default function MatchApp({
   const [limited, setLimited] = useState(false);
 
   useEffect(() => {
-    const params = levelFilter === "all" ? "" : `?level=${levelFilter}`;
-    fetch(`/api/flashcards/summary${params}`)
-      .then((res) => (res.ok ? res.json() : { categories: {} }))
-      .then((body: { categories?: Record<string, CategorySummary> }) => setCategorySummary(body.categories ?? {}))
-      .catch(() => setCategorySummary({}));
+    fetchCategorySummary(levelFilter).then((body) => {
+      setCategorySummary(body.categories);
+      setRecentCategories(body.recent);
+      setHasAnyProgress(body.hasAnyProgress);
+    });
   }, [levelFilter, round]);
 
   function startRound(size: number, sourceCards: FlashcardRow[], level: FlashcardLevel | "all") {
@@ -122,7 +127,16 @@ export default function MatchApp({
       />
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
+        <>
+          <ContinueStrip dict={dict} recent={recentCategories} onSelectCategory={selectCategory} />
+          <CategoryGrid
+            dict={dict}
+            summary={categorySummary}
+            hasAnyProgress={hasAnyProgress}
+            levelFilter={levelFilter}
+            onSelectCategory={selectCategory}
+          />
+        </>
       ) : (
         <>
           <button

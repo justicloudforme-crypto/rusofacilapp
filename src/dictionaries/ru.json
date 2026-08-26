@@ -778,6 +778,7 @@
     "nextLevelBadgeLabel": "Этот уровень уже освоен! Попробуй {level}",
     "freeTrialLimitMessage": "Вы изучили бесплатный пробный набор слов. Оформите подписку, чтобы открыть весь словарь.",
     "freeTrialLimitCta": "Оформить подписку",
+    "continueTitle": "Продолжить",
     "modeVocabulary": "Словарь по категориям",
     "modeRecall": "Написать слово",
     "modeFillBlank": "Пропущенное слово",

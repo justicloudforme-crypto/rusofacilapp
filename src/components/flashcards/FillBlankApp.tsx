@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
+import ContinueStrip from "./ContinueStrip";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
@@ -10,6 +11,7 @@ import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flas
 import { checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { buildFillBlankRound } from "@/lib/flashcards/fill-blank-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
+import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import StreakToast from "@/components/celebration/StreakToast";
 import { playStreakFanfare } from "@/lib/sound";
@@ -25,6 +27,7 @@ export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   streakToastLabel: string; // template, contains literal "{count}"
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
+  continueTitle: string;
 }
 
 const ROUND_SIZE = 10;
@@ -41,6 +44,8 @@ export default function FillBlankApp({
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
+  const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
+  const [hasAnyProgress, setHasAnyProgress] = useState(false);
   const [srsMap, setSrsMap] = useState<Record<string, SrsEntry>>({});
   const [round, setRound] = useState<FlashcardRow[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
@@ -60,11 +65,11 @@ export default function FillBlankApp({
   }, []);
 
   useEffect(() => {
-    const params = levelFilter === "all" ? "" : `?level=${levelFilter}`;
-    fetch(`/api/flashcards/summary${params}`)
-      .then((res) => (res.ok ? res.json() : { categories: {} }))
-      .then((body: { categories?: Record<string, CategorySummary> }) => setCategorySummary(body.categories ?? {}))
-      .catch(() => setCategorySummary({}));
+    fetchCategorySummary(levelFilter).then((body) => {
+      setCategorySummary(body.categories);
+      setRecentCategories(body.recent);
+      setHasAnyProgress(body.hasAnyProgress);
+    });
   }, [round, levelFilter]);
 
   const card = round[roundIndex];
@@ -154,7 +159,16 @@ export default function FillBlankApp({
       </div>
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
+        <>
+          <ContinueStrip dict={dict} recent={recentCategories} onSelectCategory={selectCategory} />
+          <CategoryGrid
+            dict={dict}
+            summary={categorySummary}
+            hasAnyProgress={hasAnyProgress}
+            levelFilter={levelFilter}
+            onSelectCategory={selectCategory}
+          />
+        </>
       ) : (
         <>
           <button
