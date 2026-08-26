@@ -419,3 +419,106 @@ Lifetime-плана длиннее (`dict.pricing.featuresPremium` + доп. `va
 17. Провести уменьшение touch-таргетов <44px (фильтр-чипы глоссария/
     word-games, аудиоплеер-кнопки, ячейки кроссворда) — требует
     визуального ревью, не чисто механическая правка.
+
+---
+
+## 11. Незавершённая миграция: сырые `<button>` вне `Button`-компонента
+
+2026-08-26, после Шага 3 (извлечение Button/Card/Tabs/ProgressBar/
+PremiumBadge + новые Input/Select/Skeleton/EmptyState/Toast/Modal/Switch):
+осознанно НЕ выполнена массовая замена всех сырых `<button>` на общий
+`Button` — статьи из аудита (3-way конфликт на /pricing, копипаста
+PremiumBadge/ProgressBar) были заменены точечно, остальное осталось как
+было. **Правило: мигрировать файл на `Button`/`Input`/`Select` при
+следующем содержательном касании этого файла**, не отдельным проходом —
+так изменения остаются маленькими и review-able, а не одним огромным PR.
+
+76 файлов на 2026-08-26 всё ещё содержат хотя бы один сырой `<button>`
+(список ниже — не все обязательно «копии», часть — легитимно уникальная
+разметка, например drag-жесты в MatchBoard.tsx; при касании файла решать
+по месту, не мигрировать бездумно):
+
+```
+src/app/[lang]/admin/stories/page.tsx
+src/app/[lang]/admin/subscriptions/page.tsx
+src/app/[lang]/admin/users/page.tsx
+src/app/[lang]/confirm-delete-account/page.tsx
+src/app/[lang]/forgot-password/page.tsx
+src/app/[lang]/groups/[groupId]/page.tsx
+src/app/[lang]/groups/join/page.tsx
+src/app/[lang]/groups/page.tsx
+src/app/[lang]/media/error.tsx
+src/app/[lang]/profile/error.tsx
+src/app/[lang]/profile/page.tsx
+src/app/[lang]/reset-password/page.tsx
+src/app/[lang]/stories/error.tsx
+src/app/[lang]/vocabulary/error.tsx
+src/app/[lang]/word-games/error.tsx
+src/components/MobileMenu.tsx
+src/components/ProfileMenu.tsx
+src/components/SoundToggle.tsx
+src/components/admin/ExamEditor.tsx
+src/components/admin/FlashcardAdminApp.tsx
+src/components/admin/GlossaryAdminApp.tsx
+src/components/admin/IdiomAdminApp.tsx
+src/components/admin/LessonEditor.tsx
+src/components/admin/MediaEmbedStatusPanel.tsx
+src/components/admin/MediaSubtitlesTable.tsx
+src/components/admin/NewExamForm.tsx
+src/components/admin/StoryEditor.tsx
+src/components/admin/VideoLessonGenerator.tsx
+src/components/celebration/CelebrationModal.tsx
+src/components/celebration/EncouragementModal.tsx
+src/components/flashcards/AnswerPad.tsx
+src/components/flashcards/CategoryGrid.tsx
+src/components/flashcards/CyrillicKeyboard.tsx
+src/components/flashcards/FillBlankApp.tsx
+src/components/flashcards/FlashcardsApp.tsx
+src/components/flashcards/FreeTrialLimitBanner.tsx
+src/components/flashcards/IdiomsList.tsx
+src/components/flashcards/LevelFilterBar.tsx
+src/components/flashcards/MatchApp.tsx
+src/components/flashcards/MatchBoard.tsx
+src/components/flashcards/RecallApp.tsx
+src/components/flashcards/VocabularyApp.tsx
+src/components/glossary/GlossaryApp.tsx
+src/components/glossary/GlossaryHint.tsx
+src/components/glossary/GlossaryTermPopover.tsx
+src/components/glossary/GlossaryTermTooltip.tsx
+src/components/glossary/TermQuiz.tsx
+src/components/intro/IntroPresentation.tsx
+src/components/lesson/ExamView.tsx
+src/components/lesson/ExercisesTab.tsx
+src/components/lesson/LessonView.tsx
+src/components/lesson/SlidesTab.tsx
+src/components/lesson/SpeakButton.tsx
+src/components/lesson/VoiceRecorder.tsx
+src/components/lesson/WordReorderItem.tsx
+src/components/media/MediaCatalog.tsx
+src/components/media/MediaExercises.tsx
+src/components/profile/AvatarPicker.tsx
+src/components/profile/ChangePasswordForm.tsx
+src/components/profile/CopyReferralLink.tsx
+src/components/profile/DeleteAccountForm.tsx
+src/components/profile/ProfileNameForm.tsx
+src/components/profile/ThemeSwitcher.tsx
+src/components/profile/WelcomeOverlay.tsx
+src/components/stories/StoriesCatalog.tsx
+src/components/stories/StoryAudioPlayer.tsx
+src/components/stories/StoryText.tsx
+src/components/subscription/NativeSubscriptionPanel.tsx
+src/components/subscription/PaywallModal.tsx
+src/components/video-lesson/HistoricalContextAccordion.tsx
+src/components/video-lesson/SubtitleTrack.tsx
+src/components/video-lesson/VideoLessonQuiz.tsx
+src/components/video-lesson/WordTooltip.tsx
+src/components/word-games/CrosswordBoard.tsx
+src/components/word-games/WordGamesPicker.tsx
+src/components/word-games/WordSearchBoard.tsx
+```
+
+Также ещё не применены новые компоненты Input/Select к формам с
+`text-sm`-инпутами вне login/register (см. AUDIT.md §4 — groups/page.tsx,
+GlossaryApp.tsx поиск, FlashcardsApp.tsx поиск, CrosswordBoard.tsx ячейка
+ввода) — тот же принцип: мигрировать при следующем касании файла, не
+отдельным проходом.
