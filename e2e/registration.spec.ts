@@ -55,6 +55,20 @@ test("registering with an email already in use shows an error, not a silent fail
   await page.getByRole("button", { name: "Crear cuenta" }).click();
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
 
+  // WelcomeOverlay shows a full-screen "welcome back" dialog once per
+  // calendar day for every (userId, day) pair — a brand-new account
+  // landing on /profile for the very first time always hits this, since
+  // there's no localStorage entry yet. It sets its own "shown" flag inside
+  // a useEffect (fires after the commit, not synchronously with the URL
+  // change), so a plain isVisible() snapshot right after the URL assertion
+  // can still race it — actively wait for it instead of sampling once.
+  try {
+    await page.getByRole("dialog", { name: "¡Feliz nuevo día de ruso!" }).waitFor({ state: "visible", timeout: 3000 });
+    await page.getByRole("button", { name: "Continuar" }).click();
+  } catch {
+    // Didn't appear within the window — nothing to dismiss.
+  }
+
   // Log out, then try to register the same email again — this is the
   // realistic failure mode (a returning user landing on /register instead
   // of /login), and it must fail loudly with a message telling them to log
