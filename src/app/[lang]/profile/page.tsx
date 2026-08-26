@@ -118,7 +118,7 @@ function BadgeTile({
   title: string;
   description?: string;
   earned: boolean;
-  earnedOnText?: string;
+  earnedOnText?: ReactNode;
   lockedLabel: string;
   progressLabel: string | null;
   compact?: boolean;
@@ -317,7 +317,6 @@ export default async function ProfilePage({
   // crown next to the plan name in the Subscription tab — see
   // MatryoshkaAvatar.tsx's `premium` prop / entitlement.ts's isPremiumTier.
   const isPremiumUser = isStaff(user.role) || (isActive && subscription?.plan === "lifetime");
-  const dateFormatter = new Intl.DateTimeFormat(lang, { dateStyle: "long" });
 
   const statusLabels: Record<DisplayStatus, string> = {
     active: dict.profile.statusActive,
@@ -423,10 +422,11 @@ export default async function ProfilePage({
     dict,
   );
 
-  const subscriptionCompactLabel =
-    subscription && isActive
-      ? dict.profile.subscriptionCompactPro.replace("{date}", dateFormatter.format(subscription.currentPeriodEnd))
-      : dict.profile.subscriptionCompactFree;
+  // Split around {date} instead of dateFormatter.format()-ing it into the
+  // string, so the date itself can render as <LocalDate> (browser-timezone
+  // aware) rather than baking in the server's UTC value — see LocalDate.tsx.
+  const subscriptionCompactParts =
+    subscription && isActive ? dict.profile.subscriptionCompactPro.split("{date}") : null;
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
@@ -559,7 +559,15 @@ export default async function ProfilePage({
                 {dict.profile.subscriptionHeading}
               </SectionHeading>
               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES[displayStatus]}`}>
-                {subscriptionCompactLabel}
+                {subscriptionCompactParts && subscription ? (
+                  <>
+                    {subscriptionCompactParts[0]}
+                    <LocalDate iso={subscription.currentPeriodEnd.toISOString()} locale={lang} />
+                    {subscriptionCompactParts[1]}
+                  </>
+                ) : (
+                  dict.profile.subscriptionCompactFree
+                )}
               </span>
             </div>
             {!isActive && (
@@ -855,7 +863,7 @@ export default async function ProfilePage({
             <dt className="text-foreground/60">
               {isActive ? dict.profile.expiresLabel : dict.profile.expiredLabel}
             </dt>
-            <dd>{dateFormatter.format(subscription.currentPeriodEnd)}</dd>
+            <dd><LocalDate iso={subscription.currentPeriodEnd.toISOString()} locale={lang} /></dd>
           </dl>
         )}
 
@@ -898,7 +906,9 @@ export default async function ProfilePage({
                   className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-black/[.03] px-3 py-2 text-sm dark:bg-white/[.05]"
                 >
                   <span>{planDisplayLabel(row.plan, dict)}</span>
-                  <span className="text-foreground/60">{dateFormatter.format(row.createdAt)}</span>
+                  <span className="text-foreground/60">
+                    <LocalDate iso={row.createdAt.toISOString()} locale={lang} />
+                  </span>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE_CLASSES[getDisplayStatus(row)]}`}
                   >
@@ -955,7 +965,13 @@ export default async function ProfilePage({
                 title={b.def.title[lang]}
                 description={b.def.description[lang]}
                 earned={b.earnedAt !== null}
-                earnedOnText={b.earnedAt ? `${dict.profile.badgesEarnedOnLabel} ${dateFormatter.format(b.earnedAt)}` : undefined}
+                earnedOnText={
+                  b.earnedAt ? (
+                    <>
+                      {dict.profile.badgesEarnedOnLabel} <LocalDate iso={b.earnedAt.toISOString()} locale={lang} />
+                    </>
+                  ) : undefined
+                }
                 lockedLabel={dict.profile.badgesLockedLabel}
                 progressLabel={b.label}
               />
@@ -1226,7 +1242,7 @@ export default async function ProfilePage({
                   </span>
                 </div>
                 <p className="text-xs text-foreground/50">
-                  {dateFormatter.format(attempt.completedAt)}
+                  <LocalDate iso={attempt.completedAt.toISOString()} locale={lang} />
                 </p>
                 <p className="text-foreground/60">
                   {dict.profile.examBreakdownLabel}:{" "}
