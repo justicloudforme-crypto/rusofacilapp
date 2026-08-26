@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useLevelGlossaryProgress } from "@/lib/useLevelGlossaryProgress";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export interface LevelGlossaryProgressDict {
   /** "{count}/{total} dominados" */
@@ -39,12 +40,7 @@ export default function LevelGlossaryProgressBar({
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-          <div
-            className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+        <ProgressBar percent={pct} tone="success" className="flex-1" />
         <span className="whitespace-nowrap text-xs font-medium text-foreground/60">
           {dict.progressLabel.replace("{count}", String(mastered)).replace("{total}", String(total))}
         </span>

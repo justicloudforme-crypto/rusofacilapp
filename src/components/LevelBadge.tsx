@@ -2,14 +2,16 @@ import type { FlashcardLevel } from "@/lib/flashcards/types";
 
 // Warm-to-cool progression, A1 (easiest) to C1 (hardest) — reads as a
 // difficulty ramp at a glance instead of every level sharing the same
-// neutral gray pill. Each pair is tuned to stay legible on both the cream
-// light background and the dark theme's near-black one.
+// neutral gray pill. Now driven by tokens.json's color.level scale (muted
+// on purpose so none of the 5 compete visually with primary) instead of
+// raw Tailwind emerald/teal/amber/orange/rose — "strong" is AA-verified
+// (>=6.4:1, see scripts/check-tokens.mjs) against its own "default/15" tint.
 const LEVEL_COLORS: Record<FlashcardLevel, string> = {
-  A1: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  A2: "bg-teal-500/15 text-teal-700 dark:text-teal-400",
-  B1: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  B2: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
-  C1: "bg-rose-500/15 text-rose-700 dark:text-rose-400",
+  A1: "bg-level-a1-default/15 text-level-a1-strong dark:text-level-a1-default",
+  A2: "bg-level-a2-default/15 text-level-a2-strong dark:text-level-a2-default",
+  B1: "bg-level-b1-default/15 text-level-b1-strong dark:text-level-b1-default",
+  B2: "bg-level-b2-default/15 text-level-b2-strong dark:text-level-b2-default",
+  C1: "bg-level-c1-default/15 text-level-c1-strong dark:text-level-c1-default",
 };
 
 export default function LevelBadge({ level, className = "" }: { level: FlashcardLevel; className?: string }) {

@@ -5,6 +5,7 @@ import { flashcardCategoryIcons } from "@/lib/flashcards/category-icons";
 import { flashcardCategoryIconColors } from "@/lib/flashcards/category-icon-colors";
 import { getNextLevel, shouldSuggestNextLevel } from "@/lib/flashcards/level-progress";
 import { hapticTap } from "@/lib/haptics";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export interface CategorySummary {
   total: number;
@@ -70,9 +71,7 @@ export default function CategoryGrid({
               </span>
               <span className="text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
               <span className="text-xs text-foreground/50">{dict.cardCountLabel.replace("{count}", String(total))}</span>
-              <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-foreground/10">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
-              </div>
+              <ProgressBar percent={percent} tone="success" className="mt-1 w-full" ariaLabel={dict.categoryLabels[category]} />
             </button>
           );
         })}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { storyLevels, type StoryLevel } from "@/lib/stories";
 import LevelBadge from "@/components/LevelBadge";
+import PremiumBadge from "@/components/ui/PremiumBadge";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
 import { usePaywall } from "@/contexts/PaywallContext";
 
@@ -118,16 +119,8 @@ export default function StoriesCatalog({
                 <div className="flex items-center justify-between gap-2">
                   <LevelBadge level={story.level} />
                   <span className="flex items-center gap-1.5">
-                    {story.isPremium && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-                        ⭐ {dict.premiumBadge}
-                      </span>
-                    )}
-                    {story.lockReason === "premium" && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                        👑 {dict.premiumTierBadge}
-                      </span>
-                    )}
+                    {story.isPremium && <PremiumBadge icon="⭐">{dict.premiumBadge}</PremiumBadge>}
+                    {story.lockReason === "premium" && <PremiumBadge>{dict.premiumTierBadge}</PremiumBadge>}
                   </span>
                 </div>
                 <h2 className="mt-3 text-lg font-medium">{story.title}</h2>

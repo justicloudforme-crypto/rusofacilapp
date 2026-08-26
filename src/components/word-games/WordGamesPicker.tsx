@@ -129,7 +129,7 @@ export default function WordGamesPicker({
                 <span
                   aria-label={dict.premiumTierLabel}
                   title={dict.premiumTierLabel}
-                  className="absolute left-1.5 top-1.5 text-sm leading-none text-primary dark:text-primary-400"
+                  className="absolute left-1.5 top-1.5 text-sm leading-none text-premium-500 dark:text-premium-300"
                 >
                   👑
                 </span>

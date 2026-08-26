@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
+import PremiumBadge from "@/components/ui/PremiumBadge";
 
 export default async function StoryReaderPage({
   params,
@@ -69,16 +70,8 @@ export default async function StoryReaderPage({
         <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/70">
           {story.level}
         </span>
-        {story.isPremium && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-            ⭐ {dict.stories.premiumBadge}
-          </span>
-        )}
-        {requiresPremiumTier && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-            👑 {dict.stories.premiumTierBadge}
-          </span>
-        )}
+        {story.isPremium && <PremiumBadge icon="⭐">{dict.stories.premiumBadge}</PremiumBadge>}
+        {requiresPremiumTier && <PremiumBadge>{dict.stories.premiumTierBadge}</PremiumBadge>}
       </div>
 
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{story.title}</h1>

@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import type { PlanId } from "@/lib/plans";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 
 function PlanCard({
   lang,
@@ -49,20 +51,25 @@ function PlanCard({
   oxxoCta?: string;
   oxxoNote?: string;
 }) {
+  // All 3 CTAs are bg-primary now (Button variant="primary") — the old
+  // 3-way graphite/blue/amber split was AUDIT.md's headline visual-chaos
+  // finding. premium=true still gets its own gold card border/badge (a
+  // non-clickable value marker, via Card tone="premium" + PremiumBadge) but
+  // the button ITSELF converges on primary like every other CTA, per the
+  // "Кремль" direction: primary handles every interactive action including
+  // the Lifetime plan; gold never does (see CLAUDE.md, guarded by
+  // `npm run check:tokens`'s premium-on-clickable check).
   return (
-    <div
-      className={`relative flex flex-col rounded-2xl border p-8 ${
-        highlighted
-          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 sm:scale-[1.03]"
-          : premium
-            ? "border-amber-500/40 bg-amber-500/5 shadow-lg shadow-amber-500/10"
-            : "border-black/10 dark:border-white/10"
-      }`}
+    <Card
+      tone={highlighted ? "primary" : premium ? "premium" : "neutral"}
+      padding="lg"
+      shadow={highlighted || premium}
+      className={`relative flex h-full flex-col ${highlighted ? "sm:scale-[1.03]" : ""}`}
     >
       {(highlighted || premium) && badge && (
         <span
-          className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${
-            premium ? "bg-amber-500" : "bg-folk-red"
+          className={`absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${
+            premium ? "bg-premium-500" : "bg-folk-red"
           }`}
         >
           {premium && <span aria-hidden>👑 </span>}
@@ -78,12 +85,10 @@ function PlanCard({
         )}
       </div>
       <p className="mt-4 flex items-baseline gap-1">
-        <span className="text-3xl font-semibold tracking-tight">{price}</span>
+        <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{price}</span>
         <span className="text-sm text-foreground/60">{period}</span>
       </p>
-      {valueNote && (
-        <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">{valueNote}</p>
-      )}
+      {valueNote && <p className="mt-1.5 text-xs text-premium-700 dark:text-premium-300">{valueNote}</p>}
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">
         {featuresTitle}
@@ -97,37 +102,21 @@ function PlanCard({
         ))}
       </ul>
 
-      <form action="/api/checkout" method="POST" className="mt-8">
+      <form action="/api/checkout" method="POST" className="mt-auto pt-8">
         <input type="hidden" name="lang" value={lang} />
         <input type="hidden" name="plan" value={planId} />
         {next && <input type="hidden" name="next" value={next} />}
-        <button
-          type="submit"
-          name="method"
-          value="card"
-          className={`tap w-full rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
-            highlighted
-              ? "bg-primary text-white hover:bg-primary-400 active:bg-primary-400"
-              : premium
-                ? "bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-600"
-                : "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/85"
-          }`}
-        >
+        <Button type="submit" name="method" value="card" variant="primary" fullWidth haptic={false}>
           {cta}
-        </button>
+        </Button>
         {oxxoPrice && oxxoCta && (
-          <button
-            type="submit"
-            name="method"
-            value="oxxo"
-            className="tap mt-3 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/10"
-          >
+          <Button type="submit" name="method" value="oxxo" variant="outline" fullWidth haptic={false} className="mt-3">
             {oxxoCta} — {oxxoPrice}
-          </button>
+          </Button>
         )}
         {oxxoNote && <p className="mt-2 text-xs text-foreground/50">{oxxoNote}</p>}
       </form>
-    </div>
+    </Card>
   );
 }
 
@@ -147,7 +136,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
       </h1>
       <p className="mt-3 max-w-xl text-foreground/70">{dict.pricing.subtitle}</p>
 
-      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-start lg:grid-cols-3">
+      <div className="mt-14 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <PlanCard
           lang={lang}
           planId="monthly"

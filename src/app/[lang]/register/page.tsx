@@ -4,6 +4,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
+import Button from "@/components/ui/Button";
 
 export default async function RegisterPage({
   params,
@@ -75,12 +76,9 @@ export default async function RegisterPage({
               className="rounded-lg border border-primary/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </label>
-          <button
-            type="submit"
-            className="tap rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-400 active:bg-primary-400"
-          >
+          <Button type="submit" variant="primary" haptic={false}>
             {dict.auth.registerSubmit}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-xs text-foreground/50">

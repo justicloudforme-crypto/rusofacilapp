@@ -209,7 +209,7 @@ export default function MobileMenu({
                   <input type="hidden" name="lang" value={lang} />
                   <button
                     type="submit"
-                    className="tap flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm text-folk-red transition-colors hover:bg-folk-red/10 active:bg-folk-red/10"
+                    className="tap flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm text-foreground/70 transition-colors hover:bg-neutral-200/60 active:bg-neutral-200/60"
                   >
                     {logoutLabel}
                   </button>

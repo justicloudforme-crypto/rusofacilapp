@@ -5,6 +5,7 @@ import SpeakButton from "@/components/lesson/SpeakButton";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export interface IdiomsDict {
   listenLabel: string;
@@ -129,9 +130,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   return (
     <div>
       <div ref={listTopRef} className="mb-6">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
-        </div>
+        <ProgressBar percent={percent} tone="success" className="w-full" />
         <span className="mt-1 block text-xs text-foreground/60">
           {dict.progressLabel.replace("{known}", String(known)).replace("{total}", String(idioms.length))}
         </span>

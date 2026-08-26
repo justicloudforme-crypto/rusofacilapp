@@ -112,9 +112,9 @@ export default function PaywallModal({
                 <input type="hidden" name="next" value={next} />
                 <button
                   type="submit"
-                  className={`tap flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+                  className={`tap flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     isLifetime
-                      ? "border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10 active:bg-amber-500/10"
+                      ? "border-primary/40 bg-primary/5 hover:bg-primary/10 active:bg-primary/10"
                       : "border-black/10 hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
                   }`}
                 >

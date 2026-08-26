@@ -52,6 +52,8 @@ import {
   BookIcon,
 } from "@/components/profile/ProfileIcons";
 import type { ReactNode } from "react";
+import ProgressBar from "@/components/ui/ProgressBar";
+import Tabs from "@/components/ui/Tabs";
 
 // Icon-badge + serif heading, used for every card section on this page so
 // the dashboard reads as a real interface (icon + hierarchy per row)
@@ -245,28 +247,13 @@ export default async function ProfilePage({
       </h1>
       <p className="mt-1 text-sm text-foreground/70">{dict.profile.subtitle}</p>
 
-      <nav
-        role="tablist"
-        aria-label={dict.profile.title}
-        className="mt-6 flex gap-1 overflow-x-auto rounded-full border border-black/10 bg-white/60 p-1 dark:border-white/15 dark:bg-white/5"
-      >
-        {tabs.map((tab) => (
-          <Link
-            key={tab.id}
-            href={`/${lang}/profile?tab=${tab.id}`}
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`tap flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? "bg-foreground text-background"
-                : "text-foreground/70 hover:text-foreground active:text-foreground"
-            }`}
-          >
-            {TAB_ICONS[tab.id]}
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
+      <Tabs
+        className="mt-6"
+        label={dict.profile.title}
+        activeId={activeTab}
+        items={tabs.map((tab) => ({ id: tab.id, label: tab.label, icon: TAB_ICONS[tab.id] }))}
+        getHref={(id) => `/${lang}/profile?tab=${id}`}
+      />
 
       {checkout === "mock" && (
         <p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
@@ -752,19 +739,13 @@ export default async function ProfilePage({
                     {levelProgress.total} {dict.profile.lessonsCompleted}
                   </span>
                 </div>
-                <div
-                  role="progressbar"
-                  aria-valuenow={levelProgress.percent}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={levelDict.title}
-                  className="mt-2 h-2 w-full overflow-hidden rounded-full bg-foreground/10"
-                >
-                  <div
-                    className="h-full rounded-full bg-foreground transition-[width]"
-                    style={{ width: `${levelProgress.percent}%` }}
-                  />
-                </div>
+                <ProgressBar
+                  percent={levelProgress.percent}
+                  tone="success"
+                  size="md"
+                  className="mt-2 w-full"
+                  ariaLabel={levelDict.title}
+                />
               </div>
             );
           })}

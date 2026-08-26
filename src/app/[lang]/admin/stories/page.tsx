@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
+import PremiumBadge from "@/components/ui/PremiumBadge";
 
 export default async function AdminStoriesPage({
   params,
@@ -65,11 +66,8 @@ export default async function AdminStoriesPage({
                         <span className="text-foreground/50">{dict.admin.stories.premiumNo}</span>
                       )}
                       {story.premiumOnly && (
-                        <span
-                          title={dict.admin.stories.premiumOnlyHelp}
-                          className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
-                        >
-                          👑 {dict.admin.stories.premiumOnlyLabel}
+                        <span title={dict.admin.stories.premiumOnlyHelp}>
+                          <PremiumBadge>{dict.admin.stories.premiumOnlyLabel}</PremiumBadge>
                         </span>
                       )}
                     </div>
