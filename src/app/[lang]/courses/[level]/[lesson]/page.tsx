@@ -8,6 +8,8 @@ import { isStaff } from "@/lib/roles";
 import { getLessonContent } from "@/lib/lessons/content";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export default async function LessonPage({
   params,
@@ -52,18 +54,45 @@ export default async function LessonPage({
   );
 
   return (
-    <LessonView
-      lang={lang}
-      level={level}
-      lessonSlug={lesson}
-      title={title}
-      levelTitle={levelDict.title}
-      content={content}
-      slideIllustrations={slideIllustrations}
-      dict={dict.lesson}
-      celebrationDict={dict.celebration}
-      prevHref={prevSlug ? `/${lang}/courses/${level}/${prevSlug}` : null}
-      nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
-    />
+    <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "LearningResource",
+          name: title,
+          description: levelDict.description,
+          learningResourceType: "Lesson",
+          educationalLevel: level.toUpperCase(),
+          inLanguage: lang,
+          isPartOf: {
+            "@type": "Course",
+            name: levelDict.title,
+            url: `${SITE_URL}/${lang}/courses/${level}`,
+          },
+          url: `${SITE_URL}/${lang}/courses/${level}/${lesson}`,
+        }}
+      />
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.courses, url: `${SITE_URL}/${lang}/courses` },
+          { name: levelDict.title, url: `${SITE_URL}/${lang}/courses/${level}` },
+          { name: title, url: `${SITE_URL}/${lang}/courses/${level}/${lesson}` },
+        ])}
+      />
+      <LessonView
+        lang={lang}
+        level={level}
+        lessonSlug={lesson}
+        title={title}
+        levelTitle={levelDict.title}
+        content={content}
+        slideIllustrations={slideIllustrations}
+        dict={dict.lesson}
+        celebrationDict={dict.celebration}
+        prevHref={prevSlug ? `/${lang}/courses/${level}/${prevSlug}` : null}
+        nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
+      />
+    </>
   );
 }
