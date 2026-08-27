@@ -53,8 +53,13 @@ function redirectToPricing(request: NextRequest, lang: string) {
 /**
  * Gate for /{lang}/courses/{level}/{lesson} — the actual lesson content.
  * Course/level listing pages stay public; only individual lessons require
- * a paying, non-expired subscription. This runs before the route renders,
- * so an unauthenticated or lapsed user never sees the lesson at all.
+ * a paying, non-expired subscription — EXCEPT the one free-trial lesson
+ * (isFreeTrialLesson, currently A1/1), which is public to anonymous
+ * visitors too, same as free stories/media/word-game samples elsewhere.
+ * This matters for SEO/crawlability: a lesson page that 307s every
+ * logged-out request (including Googlebot) can never get indexed, and the
+ * pricing page explicitly promises "1 free A1 lesson" without saying a
+ * login is required to read it.
  *
  * 'owner' and 'admin' accounts bypass the subscription check entirely —
  * staff get full access to every lesson by default, no payment required.
@@ -64,6 +69,8 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   if (section !== "courses" || !isLevelSlug(level) || !isLessonSlug(level, lesson)) {
     return null;
   }
+
+  if (isFreeTrialLesson(level, lesson)) return null;
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const parsed = token ? verifySessionToken(token) : null;
@@ -79,7 +86,6 @@ async function protectLessonRoute(request: NextRequest, segments: string[]) {
   // gate even if the cookie itself is still a validly-signed token.
   if (!user || user.sessionVersion !== parsed.sessionVersion) return redirectToPricing(request, lang);
   if (isStaff(user.role)) return null;
-  if (isFreeTrialLesson(level, lesson)) return null;
 
   const subscription = await lookupSubscriptionSafely(parsed.userId);
 
