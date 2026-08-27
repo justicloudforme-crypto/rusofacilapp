@@ -29,59 +29,66 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
         {p.guaranteeNote}
       </p>
 
-      {/* Recommended (Subscription) tile is visually first on mobile and
-          center + elevated on desktop — order-first/lg:order-none swaps it
-          without duplicating markup. */}
-      <div className="mt-10 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="order-2 lg:order-1">
-          <FreeTierCard
-            heading={p.freeHeading}
-            description={p.freeDescription}
-            features={p.freeFeatures}
-            featuresTitle={p.featuresTitle}
-            cta={p.freeCta}
-            href={`/${lang}/register${next ? `?redirectTo=${encodeURIComponent(next)}` : ""}`}
-          />
-        </div>
+      {/* Four independent columns in ascending price order: Free, Monthly,
+          Yearly, Premium. Annual carries the "recommended" tile treatment
+          (primary tone, shadow, scale-up) via its −50% badge, same visual
+          weight the old toggle card gave it — the plans no longer share one
+          switchable card, so each needs its own checkout form. */}
+      <div className="mt-10 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <FreeTierCard
+          heading={p.freeHeading}
+          description={p.freeDescription}
+          features={p.freeFeatures}
+          featuresTitle={p.featuresTitle}
+          cta={p.freeCta}
+          href={`/${lang}/register${next ? `?redirectTo=${encodeURIComponent(next)}` : ""}`}
+        />
 
-        <div className="order-1 lg:order-2">
-          <SubscriptionCard
-            lang={lang}
-            next={next}
-            periodLabel={p.billingPeriodLabel}
-            methodLabel={p.paymentMethodLabel}
-            monthLabel={p.monthLabel}
-            yearLabel={p.yearLabel}
-            cardLabel={p.cardLabel}
-            cashLabel={p.cashLabel}
-            monthly={p.monthly}
-            annual={p.annual}
-            featuresTitle={p.featuresTitle}
-            features={p.features}
-            oxxoDict={p}
-          />
-        </div>
+        <SubscriptionCard
+          lang={lang}
+          next={next}
+          plan="monthly"
+          methodLabel={p.paymentMethodLabel}
+          cardLabel={p.cardLabel}
+          cashLabel={p.cashLabel}
+          option={p.monthly}
+          featuresTitle={p.featuresTitle}
+          features={p.features}
+          oxxoDict={p}
+        />
 
-        <div className="order-3">
-          <PremiumCard
-            lang={lang}
-            methodLabel={p.paymentMethodLabel}
-            cardLabel={p.cardLabel}
-            cashLabel={p.cashLabel}
-            name={p.lifetime.name}
-            price={p.lifetime.price}
-            period={p.lifetime.period}
-            badge={p.lifetime.badge}
-            valueNote={p.lifetime.valueNote}
-            mxnApprox={p.lifetime.mxnApprox}
-            cardCta={p.lifetime.cardCta}
-            cashCta={p.lifetime.cashCta}
-            featuresTitle={p.featuresPremiumTitle}
-            features={p.featuresPremium}
-            oxxoDict={p}
-            highlighted={highlightPremium}
-          />
-        </div>
+        <SubscriptionCard
+          lang={lang}
+          next={next}
+          plan="annual"
+          methodLabel={p.paymentMethodLabel}
+          cardLabel={p.cardLabel}
+          cashLabel={p.cashLabel}
+          option={p.annual}
+          featuresTitle={p.featuresTitle}
+          features={p.features}
+          oxxoDict={p}
+          recommended
+        />
+
+        <PremiumCard
+          lang={lang}
+          methodLabel={p.paymentMethodLabel}
+          cardLabel={p.cardLabel}
+          cashLabel={p.cashLabel}
+          name={p.lifetime.name}
+          price={p.lifetime.price}
+          period={p.lifetime.period}
+          badge={p.lifetime.badge}
+          valueNote={p.lifetime.valueNote}
+          mxnApprox={p.lifetime.mxnApprox}
+          cardCta={p.lifetime.cardCta}
+          cashCta={p.lifetime.cashCta}
+          featuresTitle={p.featuresPremiumTitle}
+          features={p.featuresPremium}
+          oxxoDict={p}
+          highlighted={highlightPremium}
+        />
       </div>
 
       <div className="mt-16">
