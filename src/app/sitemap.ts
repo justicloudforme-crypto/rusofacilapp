@@ -9,7 +9,18 @@ import { SITE_URL } from "@/lib/site";
 // same pattern as manifest.ts/robots.ts. Lives outside `[lang]` so it isn't
 // subject to locale-prefix redirecting (see proxy.ts's matcher).
 //
-// Only lists routes a signed-out visitor (and so a crawler) can actually
+// Forced dynamic (rendered per-request, never at build time): without this,
+// Next.js treats sitemap.ts as static-by-default (no Request-time API used
+// inside it) and tries to pre-render /sitemap.xml during `next build` —
+// which runs with no TURSO_DATABASE_URL on Vercel (see
+// prisma/ensure-schema-sync.ts's own build-time skip for the same reason),
+// so db.story.findMany() below hit a real prod deploy failure: "no such
+// table: main.Story" against the empty local build-time SQLite fallback.
+// The production database is only ever reachable at request time, not
+// build time, in this project's setup.
+export const dynamic = "force-dynamic";
+//
+// Also: only lists routes a signed-out visitor (and so a crawler) can actually
 // read: static public pages, all stories (non-premium ones show the full
 // text, premium ones show a snippet + paywall — both are legitimate
 // indexable pages), all media items (same free/gated split), and the
