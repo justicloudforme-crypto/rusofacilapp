@@ -186,6 +186,11 @@ export const config = {
     // (see sw.ts's `fallbacks` config), served in place of whatever page the
     // browser actually asked for while offline, so it must live at one
     // fixed, locale-independent URL that's known at precache time.
-    "/((?!api/|_next/static|_next/image|favicon.ico|sw\\.js$|.*\\.(?:svg|png|jpg|jpeg|webp|ico|webmanifest|html|mp4|webm|mov|ogv|ogg|mp3|wav|m4a)$).*)",
+    // robots.ts (→ /robots.txt) and sitemap.ts (→ /sitemap.xml) join them
+    // for the same reason — a crawler's contract URLs, not pages, so
+    // "robots\\.txt$"/"sitemap\\.xml$" are excluded by name (not by the
+    // shared extension list, since ".txt"/".xml" pages don't otherwise
+    // exist on this site and shouldn't be exempted wholesale).
+    "/((?!api/|_next/static|_next/image|favicon.ico|sw\\.js$|robots\\.txt$|sitemap\\.xml$|.*\\.(?:svg|png|jpg|jpeg|webp|ico|webmanifest|html|mp4|webm|mov|ogv|ogg|mp3|wav|m4a)$).*)",
   ],
 };

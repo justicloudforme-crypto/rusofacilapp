@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -8,6 +9,13 @@ import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
+
+export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">): Promise<Metadata> {
+  const { lang } = await params;
+  if (!isLocale(lang)) return {};
+  const dict = await getDictionary(lang);
+  return { title: `${dict.pricing.title} | RusoFácilapp`, description: dict.pricing.subtitle };
+}
 
 export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {
   const { lang } = await params;

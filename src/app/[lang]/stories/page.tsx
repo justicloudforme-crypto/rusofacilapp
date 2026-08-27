@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -7,6 +8,14 @@ import { storyLevels } from "@/lib/stories";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
+
+export async function generateMetadata({ params }: PageProps<"/[lang]/stories">): Promise<Metadata> {
+  const { lang } = await params;
+  if (!isLocale(lang)) return {};
+  const dict = await getDictionary(lang);
+  if (!dict?.stories) return {};
+  return { title: `${dict.stories.pageTitle} | RusoFácilapp`, description: dict.stories.pageSubtitle };
+}
 
 export default async function StoriesPage({ params }: PageProps<"/[lang]/stories">) {
   const { lang } = await params;

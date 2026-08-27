@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { isLocale } from "@/i18n/config";
@@ -10,6 +11,24 @@ import MediaExercises from "@/components/media/MediaExercises";
 import VocabularyTab from "@/components/lesson/VocabularyTab";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/media/[id]">): Promise<Metadata> {
+  const { lang, id } = await params;
+  if (!isLocale(lang)) return {};
+  const item = await getMediaById(id);
+  if (!item) return {};
+  const title =
+    lang === "ru"
+      ? `${item.title} — русский язык через медиа (${item.level}) | RusoFácilapp`
+      : `${item.title} — ruso con música y vídeo (${item.level}) | RusoFácilapp`;
+  const description =
+    lang === "ru"
+      ? `Изучайте русский язык через видео и музыку с субтитрами и упражнениями, уровень ${item.level}, в RusoFácilapp.`
+      : item.description;
+  return { title, description };
+}
 
 export default async function MediaDetailPage({
   params,
