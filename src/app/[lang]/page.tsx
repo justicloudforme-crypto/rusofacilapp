@@ -268,14 +268,26 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">{dict.home.pricingStripTitle}</h2>
           <p className="mt-2 max-w-xl text-sm text-foreground/70">{dict.home.pricingStripSubtitle}</p>
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <Card tone="neutral" padding="lg">
               <h3 className="font-medium">{dict.pricing.freeHeading}</h3>
               <p className="mt-2 text-2xl font-semibold">$0</p>
             </Card>
-            <Card tone="primary" padding="lg">
+            <Card tone="neutral" padding="lg">
               <h3 className="font-medium">{dict.pricing.monthly.name}</h3>
               <p className="mt-2 text-2xl font-semibold">{dict.pricing.monthly.price}</p>
+            </Card>
+            <Card tone="primary" padding="lg" className="relative">
+              {dict.pricing.annual.badge && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-folk-red px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                  {dict.pricing.annual.badge}
+                </span>
+              )}
+              <h3 className="font-medium">{dict.pricing.annual.name}</h3>
+              <p className="mt-2 text-2xl font-semibold">{dict.pricing.annual.price}</p>
+              {dict.pricing.annual.perMonthNote && (
+                <p className="mt-1 text-xs text-foreground/60">{dict.pricing.annual.perMonthNote}</p>
+              )}
             </Card>
             <Card tone="premium" padding="lg">
               <h3 className="font-medium text-premium-700 dark:text-premium-300">{dict.pricing.lifetime.name}</h3>

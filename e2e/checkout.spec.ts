@@ -39,13 +39,17 @@ test("a logged-in user can subscribe and sees the active plan immediately", asyn
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
 
   await page.goto("/es/pricing");
-  // The /pricing redesign collapsed the old 3 separate monthly/annual/
-  // lifetime cards into ONE card with a "Mes"/"Año" period tab-switcher
-  // (SubscriptionCard.tsx), defaulting to "Año" — switch to "Mes" first,
-  // then the CTA's own text is dynamic per period ("Empezar por
-  // $X/mes"), never a fixed "Suscribirme" label.
-  await page.getByRole("tab", { name: "Mes" }).click();
-  await page.getByRole("button", { name: /Empezar por/ }).click();
+  // The /pricing redesign (4 independent columns: Free, Monthly, Yearly,
+  // Premium — no more Month/Year toggle) defaults every paid card's
+  // payment-method tabs to "cash" (OXXO), not "card" — so there's no tab
+  // to switch first. In this always-Stripe-unconfigured test environment
+  // (see file header) the checkout route's mock-grant fallback activates
+  // the subscription immediately regardless of method, so clicking the
+  // Monthly card's own cash CTA works exactly like the old card CTA did.
+  // Matched by its cash-amount text (unique per plan: 150/899/2299 MXN)
+  // rather than scoping to the card by heading, since the button text
+  // itself already disambiguates which of the 3 paid cards this is.
+  await page.getByRole("button", { name: "Pagar en efectivo — ≈150 MXN" }).click();
 
   // No real Stripe configured in this environment -> mock-grant branch ->
   // redirect straight back to /profile with ?checkout=mock (see the
@@ -77,10 +81,9 @@ test("subscription status survives logging out and back in (restore-equivalent)"
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
 
   await page.goto("/es/pricing");
-  // See the test above for why "Mes" needs selecting and the CTA text is
-  // dynamic, not a fixed "Suscribirme" label.
-  await page.getByRole("tab", { name: "Mes" }).click();
-  await page.getByRole("button", { name: /Empezar por/ }).click();
+  // See the test above for why this is the Monthly card's cash CTA, not a
+  // "Mes" tab + card CTA.
+  await page.getByRole("button", { name: "Pagar en efectivo — ≈150 MXN" }).click();
   await expect(page).toHaveURL(/\/es\/profile\?checkout=mock/);
 
   // The /profile redesign collapsed the old "personal"/"security" tabs

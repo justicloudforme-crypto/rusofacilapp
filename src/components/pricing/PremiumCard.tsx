@@ -51,7 +51,9 @@ export default function PremiumCard({
    * checkout/Stripe, just points at this existing card. */
   highlighted?: boolean;
 }) {
-  const [method, setMethod] = useState<Method>("card");
+  // Cash (OXXO) open by default, same as the monthly/annual cards —
+  // see SubscriptionCard.tsx for why.
+  const [method, setMethod] = useState<Method>("cash");
 
   return (
     <Card
