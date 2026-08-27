@@ -6,10 +6,11 @@ import Button from "@/components/ui/Button";
 import Tabs from "@/components/ui/Tabs";
 import OxxoInstructions, { type OxxoInstructionsDict } from "./OxxoInstructions";
 
-type Period = "monthly" | "annual";
 type Method = "card" | "cash";
+type Plan = "monthly" | "annual";
 
 export interface BillingOption {
+  name: string;
   price: string;
   period: string;
   badge?: string;
@@ -19,51 +20,51 @@ export interface BillingOption {
   cashCta: string;
 }
 
-// The one recommended tile on the page (Card tone="primary" + shadow +
-// slight scale-up, same "highlighted" treatment the old 3-card layout
-// used) — every other CTA on the page is outline, so this is the only
-// primary button, per the "one accent color" rule.
+// One card per subscription plan (monthly or annual) — the old
+// Month/Year toggle inside a single card was replaced by two
+// independent, always-visible cards (see /docs, pricing 4-column
+// restructure) so both prices are comparable at a glance instead of
+// hidden behind a switch. `recommended` carries the old toggle
+// version's "primary" tile treatment (tone, shadow, scale-up, border)
+// over to whichever plan should stand out — the annual plan today,
+// via its −50% badge.
 export default function SubscriptionCard({
   lang,
   next,
-  periodLabel,
+  plan,
   methodLabel,
-  monthLabel,
-  yearLabel,
   cardLabel,
   cashLabel,
-  monthly,
-  annual,
+  option,
   featuresTitle,
   features,
   oxxoDict,
+  recommended = false,
 }: {
   lang: string;
   next?: string;
-  periodLabel: string;
+  plan: Plan;
   methodLabel: string;
-  monthLabel: string;
-  yearLabel: string;
   cardLabel: string;
   cashLabel: string;
-  monthly: BillingOption;
-  annual: BillingOption;
+  option: BillingOption;
   featuresTitle: string;
   features: string[];
   oxxoDict: OxxoInstructionsDict;
+  recommended?: boolean;
 }) {
-  // Annual by default — it's the plan this card exists to steer people
-  // toward (−50% badge), not a neutral middle ground.
-  const [period, setPeriod] = useState<Period>("annual");
-  const [method, setMethod] = useState<Method>("card");
-  const option = period === "monthly" ? monthly : annual;
+  // Cash (OXXO) open by default on every paid card, matching the
+  // pattern already used across the pricing page — cash requires
+  // reading a multi-step instructions block before paying, so it
+  // should never be one extra tap away from a card-only assumption.
+  const [method, setMethod] = useState<Method>("cash");
 
   return (
     <Card
-      tone="primary"
+      tone={recommended ? "primary" : "neutral"}
       padding="lg"
-      shadow
-      className="relative flex h-full flex-col border-2 sm:scale-[1.03]"
+      shadow={recommended}
+      className={`relative flex h-full flex-col ${recommended ? "border-2 sm:scale-[1.03]" : ""}`}
     >
       {option.badge && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-folk-red px-3 py-1 text-xs font-semibold text-white shadow-sm">
@@ -71,17 +72,9 @@ export default function SubscriptionCard({
         </span>
       )}
 
-      <Tabs
-        label={periodLabel}
-        items={[
-          { id: "monthly", label: monthLabel },
-          { id: "annual", label: yearLabel },
-        ]}
-        activeId={period}
-        onSelect={(id) => setPeriod(id as Period)}
-      />
+      <h2 className="text-lg font-medium">{option.name}</h2>
 
-      <p className="mt-5 flex items-baseline gap-1">
+      <p className="mt-4 flex items-baseline gap-1">
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{option.price}</span>
         <span className="text-sm text-foreground/60">{option.period}</span>
       </p>
@@ -113,7 +106,7 @@ export default function SubscriptionCard({
 
         <form action="/api/checkout" method="POST" className="mt-4">
           <input type="hidden" name="lang" value={lang} />
-          <input type="hidden" name="plan" value={period} />
+          <input type="hidden" name="plan" value={plan} />
           <input type="hidden" name="method" value={method === "cash" ? "oxxo" : "card"} />
           {next && <input type="hidden" name="next" value={next} />}
           <Button type="submit" variant="primary" fullWidth haptic={false}>
