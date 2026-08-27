@@ -42,6 +42,20 @@
  * Every new/never-narrated sentence is a separate paid TTS request either
  * way — review OpenAI's current TTS pricing before a large first pass.
  *
+ * ⚠ DO NOT run this against any story that has already been narrated by
+ * generate-story-audio-cast.ts (the multi-voice pipeline — check for
+ * AudioAsset rows with contentType="story" first). This script's default
+ * voice ("alloy") is not part of that pipeline's fixed voice map (onyx for
+ * the narrator; echo/ash/nova/shimmer for characters) — running it on a
+ * still-unnarrated sentence of an already-cast story would permanently
+ * seed a wrong, out-of-map voice into the shared AudioAsset cache, since
+ * ensureAudioAsset() never overwrites an existing cached clip. This is
+ * exactly how one line of "Теремок" ended up narrated in "alloy" instead
+ * of the narrator's "onyx" (found and documented 2026-08-27, see
+ * PROGRESS.md) — a leftover from an early single-voice run, not a defect
+ * in the cast pipeline's own logic. generate-story-audio-cast.ts is the
+ * only script that should ever touch story narration going forward.
+ *
  * USING ELEVENLABS INSTEAD
  * The OpenAI-specific parts are isolated in synthesizeSpeech() below. To
  * use ElevenLabs instead, swap that function's body for a POST to
