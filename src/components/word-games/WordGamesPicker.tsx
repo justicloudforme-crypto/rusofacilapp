@@ -7,6 +7,8 @@ import { flashcardLevels } from "@/lib/flashcards";
 import type { WordGameType } from "@/lib/word-games/types";
 import type { Locale } from "@/i18n/config";
 import { usePaywall } from "@/contexts/PaywallContext";
+import TabBar from "@/components/ui/TabBar";
+import FilterChipGroup from "@/components/ui/FilterChipGroup";
 
 export type PickerData = Record<
   WordGameType,
@@ -52,51 +54,21 @@ export default function WordGamesPicker({
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      <div className="flex gap-2" role="tablist">
-        {(
-          [
-            ["WORD_SEARCH", dict.typeWordSearch],
-            ["CROSSWORD", dict.typeCrossword],
-          ] as const
-        ).map(([t, label]) => (
-          <button
-            key={t}
-            type="button"
-            role="tab"
-            aria-selected={type === t}
-            onClick={() => setType(t)}
-            className={`tap rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-              type === t
-                ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        items={[
+          { id: "WORD_SEARCH" as const, label: dict.typeWordSearch },
+          { id: "CROSSWORD" as const, label: dict.typeCrossword },
+        ]}
+        activeId={type}
+        onSelect={setType}
+      />
 
-      <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
-          {dict.chooseLevelLabel}
-        </span>
-        <div className="flex flex-wrap gap-2">
-          {flashcardLevels.map((lvl) => (
-            <button
-              key={lvl}
-              type="button"
-              onClick={() => setLevel(lvl)}
-              className={`tap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-                level === lvl
-                  ? "bg-foreground text-background"
-                  : "border border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
-              }`}
-            >
-              {lvl}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FilterChipGroup
+        label={dict.chooseLevelLabel}
+        options={flashcardLevels.map((lvl) => ({ id: lvl, label: lvl }))}
+        activeId={level}
+        onChange={setLevel}
+      />
 
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
         {Array.from({ length: total }, (_, i) => i + 1).map((sequence) => {
