@@ -113,9 +113,9 @@ export default async function Navbar({
       className="sticky top-0 z-50 border-b border-black/10 bg-background/95 pt-safe dark:border-white/30"
     >
       <div className="relative mx-auto flex h-16 max-w-5xl items-center gap-4 px-4 sm:px-6">
-        <Link href={`/${lang}`} className="flex flex-shrink-0 items-center gap-2 font-serif text-lg font-bold tracking-tight">
+        <Link href={`/${lang}`} className="flex flex-shrink-0 items-center gap-2 font-serif text-base font-bold tracking-tight sm:text-lg">
           <MatryoshkaMark size={26} />
-          <span className="hidden sm:inline">RusoFácilapp</span>
+          <span>RusoFácilapp</span>
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
@@ -185,6 +185,7 @@ export default async function Navbar({
             logoutLabel={dict.auth.logout}
             openLabel={dict.nav.openMenu}
             closeLabel={dict.nav.closeMenu}
+            languageSwitcher={<LanguageSwitcher current={lang} />}
           />
         </div>
       </div>
