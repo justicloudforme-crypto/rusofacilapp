@@ -6,6 +6,8 @@ import { getStoryCatalog } from "@/lib/stories-catalog";
 import { getEntitlementTier, getStoryAccess } from "@/lib/entitlement";
 import { storyLevels } from "@/lib/stories";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/stories">): Promise<Metadata> {
   const { lang } = await params;
@@ -50,6 +52,12 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-16">
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.stories, url: `${SITE_URL}/${lang}/stories` },
+        ])}
+      />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict?.stories?.pageTitle}</h1>
       <p className="mt-3 max-w-xl text-foreground/70">{dict?.stories?.pageSubtitle}</p>
 

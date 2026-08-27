@@ -9,6 +9,8 @@ import IntroPresentation from "@/components/intro/IntroPresentation";
 import LevelGlossaryBadge from "@/components/glossary/LevelGlossaryBadge";
 import LevelBadge from "@/components/LevelBadge";
 import type { FlashcardLevel } from "@/lib/flashcards/types";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/courses">): Promise<Metadata> {
   const { lang } = await params;
@@ -30,6 +32,12 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-16">
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.courses, url: `${SITE_URL}/${lang}/courses` },
+        ])}
+      />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
         {dict.courses.pageTitle}
       </h1>

@@ -1014,13 +1014,8 @@ export default function StoryText({
   const progress =
     queue.length > 0 && readingQueueIndex !== null ? (readingQueueIndex + 1) / queue.length : 0;
 
-  async function handleWordClick(word: string, event: ReactMouseEvent<HTMLButtonElement>) {
-    // Deliberately doesn't stop propagation: a word is part of its
-    // sentence's clickable line, so the click also bubbles up to
-    // handleSentenceClick on the wrapping span and seeks playback there —
-    // "click any line to seek" would otherwise almost never fire, since
-    // word buttons cover nearly all of a line's clickable area.
-    const rect = event.currentTarget.getBoundingClientRect();
+  async function handleWordClick(word: string, wordEl: HTMLElement) {
+    const rect = wordEl.getBoundingClientRect();
     const spaceAbove = rect.top;
     const placeAbove = spaceAbove > POPOVER_HEIGHT_ESTIMATE + POPOVER_MARGIN;
     const top = placeAbove
@@ -1134,7 +1129,19 @@ export default function StoryText({
                   // unaffected) avoids that duplicate, competing scroll —
                   // this was the other half of the sticky-player jitter.
                   onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => handleSentenceClick(queueIndex)}
+                  onClick={(event: ReactMouseEvent<HTMLElement>) => {
+                    // Word buttons below deliberately carry no onClick of
+                    // their own (see their comment) — with hundreds of
+                    // Cyrillic words in a long story, giving each one its
+                    // own React click prop measurably adds to hydration
+                    // cost (Lighthouse TBT), so the popover lookup is
+                    // handled here instead, via one delegated listener per
+                    // sentence, matched back to the specific word element
+                    // that was actually clicked.
+                    const wordEl = (event.target as HTMLElement).closest<HTMLElement>("button[data-word]");
+                    if (wordEl?.dataset.word) void handleWordClick(wordEl.dataset.word, wordEl);
+                    handleSentenceClick(queueIndex);
+                  }}
                   onKeyDown={(event) => handleSentenceKeyDown(event, queueIndex)}
                   className={`rounded transition-colors ${canPlay ? "tap cursor-pointer hover:bg-foreground/5 active:bg-foreground/5" : ""} ${
                     readingQueueIndex === queueIndex ? "bg-amber-400/20 dark:bg-amber-400/10" : ""
@@ -1146,10 +1153,15 @@ export default function StoryText({
                 >
                   {sentenceTokens[queueIndex].map((token, tokenIndex) =>
                     CYRILLIC_WORD_REGEX.test(token) ? (
+                      // No onClick prop here on purpose — see the wrapping
+                      // sentence <span>'s onClick, which delegates word
+                      // clicks via this data attribute instead of every
+                      // single word registering its own React click
+                      // handler (hundreds per long story).
                       <button
                         key={tokenIndex}
                         type="button"
-                        onClick={(event) => handleWordClick(token, event)}
+                        data-word={token}
                         className={`tap rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 active:bg-foreground/10 focus:outline-none ${
                           playing && readingQueueIndex === queueIndex && readingToken === tokenIndex
                             ? "bg-amber-400/40 dark:bg-amber-400/30"

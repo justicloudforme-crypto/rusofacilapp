@@ -8,6 +8,8 @@ import { getExamContent } from "@/lib/exams/content";
 import { getCurrentUser } from "@/lib/auth";
 import { getLevelLessonStatuses, type LessonStatus } from "@/lib/progress";
 import LevelGlossaryProgressBar from "@/components/glossary/LevelGlossaryProgressBar";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export function generateStaticParams() {
   return locales.flatMap((lang) =>
@@ -59,6 +61,13 @@ export default async function LevelPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.courses, url: `${SITE_URL}/${lang}/courses` },
+          { name: levelDict.title, url: `${SITE_URL}/${lang}/courses/${level}` },
+        ])}
+      />
       <Link
         href={`/${lang}/courses`}
         className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground"

@@ -9,6 +9,8 @@ import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -96,6 +98,27 @@ export default async function StoryReaderPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: story.title,
+          ...(localizedDescription ? { description: localizedDescription } : {}),
+          author: { "@type": "Person", name: story.author },
+          publisher: { "@type": "Organization", name: "RusoFácilapp", url: SITE_URL },
+          inLanguage: "ru",
+          datePublished: story.createdAt.toISOString(),
+          dateModified: story.updatedAt.toISOString(),
+          url: `${SITE_URL}/${lang}/stories/${story.id}`,
+        }}
+      />
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.stories, url: `${SITE_URL}/${lang}/stories` },
+          { name: story.title, url: `${SITE_URL}/${lang}/stories/${story.id}` },
+        ])}
+      />
       <Link
         href={`/${lang}/stories`}
         className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground"
