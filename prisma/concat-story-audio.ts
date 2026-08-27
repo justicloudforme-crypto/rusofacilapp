@@ -26,9 +26,22 @@
  * backfilled — see backfill-audio-durations.ts). Any discrepancy beyond
  * a small tolerance is logged, not silently accepted.
  *
+ * ADDRESSING: every uploaded file's Blob key includes a short hash of its
+ * own bytes (audio/stories/<id>/full.<hash>.mp3), never a fixed filename —
+ * standing project rule (see PROGRESS.md, 2026-08-27): Vercel Blob's
+ * public files are served with a 30-day Cache-Control, so overwriting an
+ * already-served URL doesn't reliably reach every CDN edge/client cache
+ * quickly (confirmed the hard way on a single narration-clip fix before
+ * this script existed in its current form). Content-addressing sidesteps
+ * that entirely — re-running this on an unchanged story reproduces the
+ * exact same hash/URL (a harmless no-op re-upload), and any real change
+ * to the underlying clips naturally lands at a brand-new URL with zero
+ * chance of stale-cache ambiguity.
+ *
  * USAGE (against local dev.db, the default):
- *   npm run concat:story-audio                    # every eligible story
- *   npm run concat:story-audio -- --story=<id>     # one story (pilot run)
+ *   npm run concat:story-audio                          # every eligible story, writes for real
+ *   npm run concat:story-audio -- --story=<id>           # PILOT: dry run only (no upload/write) for the given story/stories
+ *   npm run concat:story-audio -- --story=<id> --commit  # same one/few stories, but writes for real (explicit opt-in — see PROGRESS.md's pilot-then-batch rule)
  *
  * USAGE (against production — export the same Turso + Blob credentials
  * migrate-audio-to-blob.ts uses, then run the same command):
@@ -37,6 +50,7 @@
  *   npm run concat:story-audio
  */
 import "dotenv/config";
+import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -63,7 +77,9 @@ const DURATION_TOLERANCE_SECONDS = 1.0;
 
 function parseArgs(argv: string[]) {
   const storyArg = argv.find((a) => a.startsWith("--story="));
-  return { storyIds: storyArg ? storyArg.split("=")[1].split(",").filter(Boolean) : null };
+  const storyIds = storyArg ? storyArg.split("=")[1].split(",").filter(Boolean) : null;
+  const commit = argv.includes("--commit");
+  return { storyIds, commit };
 }
 
 interface OrderedClip {
@@ -80,7 +96,13 @@ async function downloadClip(url: string, destPath: string): Promise<void> {
 }
 
 async function main() {
-  const { storyIds } = parseArgs(process.argv.slice(2));
+  const { storyIds, commit } = parseArgs(process.argv.slice(2));
+  // Scoped (--story=) runs are a dry run UNLESS --commit is also passed —
+  // an unscoped run (the real batch) always writes for real, same as
+  // before. This split exists so a pilot on a couple of stories can be
+  // promoted to a real write without touching the ~300+ untouched stories
+  // in one command — see PROGRESS.md's pilot-then-batch rule.
+  const dryRun = storyIds !== null && !commit;
 
   const ffmpeg = await resolveFfmpegBinary();
   if (!ffmpeg) {
@@ -89,7 +111,7 @@ async function main() {
     return;
   }
 
-  if (!storyIds && (!process.env.AUDIO_BLOB_READ_WRITE_TOKEN || !process.env.AUDIO_BLOB_STORE_ID)) {
+  if (!dryRun && (!process.env.AUDIO_BLOB_READ_WRITE_TOKEN || !process.env.AUDIO_BLOB_STORE_ID)) {
     console.error("Missing AUDIO_BLOB_READ_WRITE_TOKEN and/or AUDIO_BLOB_STORE_ID in the environment.");
     process.exitCode = 1;
     return;
@@ -172,20 +194,23 @@ async function main() {
         cursor += clip.durationSeconds ?? 0;
       }
 
-      if (storyIds) {
+      if (dryRun) {
         // Pilot run: report what WOULD happen, but don't upload/write —
         // the owner reviews on their phone before this touches real data.
         console.log(
           `  [${index + 1}/${stories.length}] "${story.title}" — PILOT (dry run): would upload ${outputPath} (${actualDuration.toFixed(1)}s, ${clips.length} clips), offsets computed. Not written to DB/blob.`
         );
-        console.log(`    Local file kept at: ${outputPath} (inspect/play it directly before approving the real run)`);
+        console.log(`    Local file kept at: ${outputPath} (inspect/play it directly, then re-run with --commit to write for real)`);
         // Skip cleanup for a pilot run so the file survives for listening.
         concatenated++;
         continue;
       }
 
       const bytes = await readFile(outputPath);
-      const blob = await put(`audio/stories/${story.id}/full.mp3`, bytes, {
+      // Content-addressed key — see the ADDRESSING note at the top of
+      // this file for why a fixed filename is never reused here.
+      const contentHash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+      const blob = await put(`audio/stories/${story.id}/full.${contentHash}.mp3`, bytes, {
         access: "public",
         addRandomSuffix: false,
         allowOverwrite: true,
@@ -204,7 +229,7 @@ async function main() {
       );
       concatenated++;
     } finally {
-      if (!storyIds) await rm(tmpDir, { recursive: true, force: true });
+      if (!dryRun) await rm(tmpDir, { recursive: true, force: true });
     }
   }
 
