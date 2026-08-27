@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -5,6 +6,14 @@ import { getAllMedia } from "@/lib/media/data";
 import { mediaLevels } from "@/lib/media/types";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import MediaCatalog from "@/components/media/MediaCatalog";
+
+export async function generateMetadata({ params }: PageProps<"/[lang]/media">): Promise<Metadata> {
+  const { lang } = await params;
+  if (!isLocale(lang)) return {};
+  const dict = await getDictionary(lang);
+  if (!dict?.media) return {};
+  return { title: `${dict.media.pageTitle} | RusoFácilapp`, description: dict.media.pageSubtitle };
+}
 
 export default async function MediaPage({ params }: PageProps<"/[lang]/media">) {
   const { lang } = await params;

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
@@ -8,6 +9,13 @@ import IntroPresentation from "@/components/intro/IntroPresentation";
 import LevelGlossaryBadge from "@/components/glossary/LevelGlossaryBadge";
 import LevelBadge from "@/components/LevelBadge";
 import type { FlashcardLevel } from "@/lib/flashcards/types";
+
+export async function generateMetadata({ params }: PageProps<"/[lang]/courses">): Promise<Metadata> {
+  const { lang } = await params;
+  if (!isLocale(lang)) return {};
+  const dict = await getDictionary(lang);
+  return { title: `${dict.courses.pageTitle} | RusoFácilapp`, description: dict.courses.pageSubtitle };
+}
 
 export default async function CoursesPage({ params }: PageProps<"/[lang]/courses">) {
   const { lang } = await params;

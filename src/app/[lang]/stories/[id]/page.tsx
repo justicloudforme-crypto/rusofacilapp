@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
@@ -8,6 +9,25 @@ import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/stories/[id]">): Promise<Metadata> {
+  const { lang, id } = await params;
+  if (!isLocale(lang)) return {};
+  const story = await db.story.findUnique({ where: { id }, select: { title: true, level: true, description: true, descriptionRu: true } });
+  if (!story) return {};
+  const description =
+    (lang === "ru" ? (story.descriptionRu ?? story.description) : story.description) ??
+    (lang === "ru"
+      ? `Рассказ на русском языке, уровень ${story.level}, в RusoFácilapp.`
+      : `Cuento en ruso, nivel ${story.level}, en RusoFácilapp.`);
+  const title =
+    lang === "ru"
+      ? `${story.title} — рассказ на русском (${story.level}) | RusoFácilapp`
+      : `${story.title} — cuento en ruso (${story.level}) | RusoFácilapp`;
+  return { title, description };
+}
 
 export default async function StoryReaderPage({
   params,

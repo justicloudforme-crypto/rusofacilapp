@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -8,6 +9,22 @@ import { isStaff } from "@/lib/roles";
 import { getLessonContent } from "@/lib/lessons/content";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/courses/[level]/[lesson]">): Promise<Metadata> {
+  const { lang, level, lesson } = await params;
+  if (!isLocale(lang) || !isLevelSlug(level) || !isLessonSlug(level, lesson)) return {};
+  const dict = await getDictionary(lang);
+  const levelDict = dict.courses.levels[level];
+  const lessonTitle = levelDict.lessons[Number(lesson) - 1];
+  if (!lessonTitle) return {};
+  const title =
+    lang === "ru"
+      ? `${lessonTitle} — урок ${lesson}, уровень ${level.toUpperCase()} | RusoFácilapp`
+      : `${lessonTitle} — lección ${lesson}, nivel ${level.toUpperCase()} | RusoFácilapp`;
+  return { title, description: levelDict.description };
+}
 
 export default async function LessonPage({
   params,

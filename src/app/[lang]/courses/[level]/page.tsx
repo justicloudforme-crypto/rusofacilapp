@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale, locales } from "@/i18n/config";
@@ -12,6 +13,20 @@ export function generateStaticParams() {
   return locales.flatMap((lang) =>
     levelSlugs.map((level) => ({ lang, level }))
   );
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/courses/[level]">): Promise<Metadata> {
+  const { lang, level } = await params;
+  if (!isLocale(lang) || !isLevelSlug(level)) return {};
+  const dict = await getDictionary(lang);
+  const levelDict = dict.courses.levels[level];
+  const title =
+    lang === "ru"
+      ? `Курс русского языка ${levelDict.title} | RusoFácilapp`
+      : `Curso de ruso ${levelDict.title} | RusoFácilapp`;
+  return { title, description: levelDict.description };
 }
 
 export default async function LevelPage({
