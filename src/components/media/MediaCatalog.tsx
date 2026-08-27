@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { mediaLevels, mediaCategories, type MediaLevel, type MediaCategory } from "@/lib/media/types";
 import LevelBadge from "@/components/LevelBadge";
 import { usePaywall } from "@/contexts/PaywallContext";
+import FilterChipGroup from "@/components/ui/FilterChipGroup";
 
 export interface MediaSummary {
   id: string;
@@ -23,6 +24,8 @@ export interface MediaSummary {
 export interface MediaCatalogDict {
   filterAllLevels: string;
   filterAllCategories: string;
+  levelFilterLabel: string;
+  categoryFilterLabel: string;
   categorySong: string;
   categoryMovie: string;
   categoryVideo: string;
@@ -48,6 +51,15 @@ export default function MediaCatalog({
   const [category, setCategory] = useState<"all" | MediaCategory>("all");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { openPaywall } = usePaywall();
+  // Same navOffset-below-header sticky technique as StoriesCatalog/
+  // StoryAudioPlayer — the Navbar is itself `sticky top-0 z-50`.
+  const [navOffset, setNavOffset] = useState(0);
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (header) setNavOffset(header.getBoundingClientRect().height);
+  }, []);
 
   const categoryLabels: Record<MediaCategory, string> = {
     song: dict.categorySong,
@@ -75,60 +87,33 @@ export default function MediaCatalog({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => { setLevel("all"); setVisibleCount(PAGE_SIZE); }}
-          className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            level === "all"
-              ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
-          }`}
-        >
-          {dict.filterAllLevels}
-        </button>
-        {mediaLevels.map((lvl) => (
-          <button
-            key={lvl}
-            type="button"
-            onClick={() => { setLevel(lvl); setVisibleCount(PAGE_SIZE); }}
-            className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              level === lvl
-                ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
-            }`}
-          >
-            {lvl}
-          </button>
-        ))}
-      </div>
+      {/* Sticky filter panel: pins just below the sticky Navbar once the
+          catalog scrolls past it (same navOffset + bg-background/95
+          backdrop-blur-sm sticky pattern as StoriesCatalog/StoryAudioPlayer/
+          the flashcards filter bars). z-20 stays under the Navbar's z-50. */}
+      <div
+        style={{ top: navOffset }}
+        className="sticky z-20 flex flex-col gap-3 bg-background/95 py-3 backdrop-blur-sm"
+      >
+        <FilterChipGroup
+          label={dict.levelFilterLabel}
+          options={[
+            { id: "all" as const, label: dict.filterAllLevels },
+            ...mediaLevels.map((lvl) => ({ id: lvl, label: lvl })),
+          ]}
+          activeId={level}
+          onChange={(value) => { setLevel(value); setVisibleCount(PAGE_SIZE); }}
+        />
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => { setCategory("all"); setVisibleCount(PAGE_SIZE); }}
-          className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            category === "all"
-              ? "bg-foreground/80 text-background"
-              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
-          }`}
-        >
-          {dict.filterAllCategories}
-        </button>
-        {mediaCategories.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => { setCategory(cat); setVisibleCount(PAGE_SIZE); }}
-            className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              category === cat
-                ? "bg-foreground/80 text-background"
-                : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
-            }`}
-          >
-            {categoryLabels[cat]}
-          </button>
-        ))}
+        <FilterChipGroup
+          label={dict.categoryFilterLabel}
+          options={[
+            { id: "all" as const, label: dict.filterAllCategories },
+            ...mediaCategories.map((cat) => ({ id: cat, label: categoryLabels[cat] })),
+          ]}
+          activeId={category}
+          onChange={(value) => { setCategory(value); setVisibleCount(PAGE_SIZE); }}
+        />
       </div>
 
       {filtered.length === 0 ? (
