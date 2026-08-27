@@ -100,6 +100,24 @@ body {
   }
 }
 
+/* Global "not interactive yet" state — see HydrationMarker.tsx for how
+   `data-hydrating` gets removed from <html> and why this exists (a real,
+   confirmed bug: on a slow connection, a tap on a plain button did nothing
+   for several seconds after the page visually looked ready). One rule
+   here covers every plain <button> site-wide instead of gating each one
+   individually. A <button type="submit"> inside a real <form> and a plain
+   <a href> both already work without JS (native form POST / native
+   navigation) — only dimmed, never disabled, so this can't regress that
+   working fallback into a dead end. */
+html[data-hydrating] button:not([type="submit"]):not(:disabled) {
+  opacity: 0.6;
+  cursor: wait;
+  pointer-events: none;
+}
+html[data-hydrating] button[type="submit"] {
+  opacity: 0.6;
+}
+
 /* Gamification micro-animations — pure CSS, no JS animation library, so
    there's nothing to load or run beyond GPU-composited transform/opacity.
    Used by CelebrationModal/Confetti (lesson/exam pass, streak milestones)

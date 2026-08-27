@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import TelegramFloatButton from "@/components/TelegramFloatButton";
 import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
+import HydrationMarker from "@/components/HydrationMarker";
 import NativeBackButtonHandler from "@/components/NativeBackButtonHandler";
 import NativeNotifications from "@/components/NativeNotifications";
 import SerwistRegister from "@/components/SerwistRegister";
@@ -123,6 +124,10 @@ export default async function LangLayout({
     <html
       lang={lang}
       data-theme={theme}
+      // Removed by HydrationMarker the instant hydration finishes (see its
+      // own comment) — globals.css uses this to dim/disable plain buttons
+      // site-wide until then, instead of gating each one individually.
+      data-hydrating="true"
       className={`${ptSans.variable} ${ptSerif.variable} ${ptMono.variable} h-full antialiased`}
       // Android WebView/Capacitor is known to inject its own attributes
       // onto <html>/<body> before hydration runs — React then reports a
@@ -135,6 +140,7 @@ export default async function LangLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
+        <HydrationMarker />
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} register={false}>
           <SerwistRegister />
         </SerwistProvider>
