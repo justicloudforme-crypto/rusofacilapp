@@ -5,6 +5,7 @@ import Link from "next/link";
 import { storyLevels, storyTopics, type StoryLevel, type StoryTopic } from "@/lib/stories";
 import LevelBadge from "@/components/LevelBadge";
 import PremiumBadge from "@/components/ui/PremiumBadge";
+import FilterChipGroup, { filterChipClass } from "@/components/ui/FilterChipGroup";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
 import { usePaywall } from "@/contexts/PaywallContext";
 
@@ -28,6 +29,7 @@ export interface StorySummary {
 
 export interface StoriesCatalogDict {
   filterAll: string;
+  levelFilterLabel: string;
   premiumBadge: string;
   premiumTierBadge: string;
   byAuthor: string;
@@ -69,11 +71,23 @@ export default function StoriesCatalog({
   // same hydration-safe pattern used elsewhere for client-only state.
   const [progressById, setProgressById] = useState<Record<string, StoryProgress>>({});
   const { openPaywall } = usePaywall();
+  // Same navOffset-below-header technique as StoryAudioPlayer/StoryText —
+  // the site header is itself `sticky top-0 z-50`, so this filter panel's
+  // own `sticky` needs a matching `top` offset or it would pin to y=0 and
+  // end up hidden behind the header instead of just under it. Measured at
+  // runtime since header height varies with safe-area-inset padding.
+  const [navOffset, setNavOffset] = useState(0);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgressById(getAllStoryProgress());
     syncStoryProgress().then(setProgressById);
+  }, []);
+
+  useEffect(() => {
+    const header = document.querySelector("header");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (header) setNavOffset(header.getBoundingClientRect().height);
   }, []);
 
   const filtered = useMemo(() => {
@@ -106,54 +120,36 @@ export default function StoriesCatalog({
         className="w-full rounded-lg border border-black/10 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-foreground/40 dark:border-white/15"
       />
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => { setFilter("all"); setVisibleCount(PAGE_SIZE); }}
-          className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            filter === "all"
-              ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
-          }`}
-        >
-          {dict.filterAll}
-        </button>
-        {storyLevels.map((level) => (
-          <button
-            key={level}
-            type="button"
-            onClick={() => { setFilter(level); setVisibleCount(PAGE_SIZE); }}
-            className={`tap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              filter === level
-                ? "bg-foreground text-background"
-                : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
-            }`}
-          >
-            {level}
-          </button>
-        ))}
-      </div>
+      {/* Sticky filter panel: pins just below the sticky Navbar once the
+          catalog scrolls past it (same navOffset + bg-background/95
+          backdrop-blur-sm sticky pattern as StoryAudioPlayer/ExamView/the
+          flashcards filter bars). z-20 stays under the Navbar's z-50. */}
+      <div
+        style={{ top: navOffset }}
+        className="sticky z-20 mt-4 flex flex-col gap-3 bg-background/95 py-3 backdrop-blur-sm"
+      >
+        <FilterChipGroup
+          label={dict.levelFilterLabel}
+          options={[
+            { id: "all" as const, label: dict.filterAll },
+            ...storyLevels.map((level) => ({ id: level, label: level })),
+          ]}
+          activeId={filter}
+          onChange={(value) => { setFilter(value); setVisibleCount(PAGE_SIZE); }}
+        />
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <label htmlFor="story-topic-filter" className="sr-only">
-          {dict.topicFilterLabel}
-        </label>
-        <select
-          id="story-topic-filter"
-          value={topicFilter}
-          onChange={(e) => {
-            setTopicFilter(e.target.value as "all" | StoryTopic);
-            setVisibleCount(PAGE_SIZE);
-          }}
-          className="min-h-11 rounded-full border border-black/10 bg-transparent px-4 py-2 text-sm font-medium outline-none focus:border-foreground/40 dark:border-white/15"
-        >
-          <option value="all">{dict.topicFilterLabel}</option>
-          {storyTopics.map((topic) => (
-            <option key={topic} value={topic}>
-              {dict.topics[topic]}
-            </option>
-          ))}
-        </select>
+        {/* 8 topics total (see storyTopics) — reads well as a horizontal
+            chip row, so this replaces the previous <select> dropdown
+            rather than just restyling its trigger. */}
+        <FilterChipGroup
+          label={dict.topicFilterLabel}
+          options={[
+            { id: "all" as const, label: dict.filterAll },
+            ...storyTopics.map((topic) => ({ id: topic, label: dict.topics[topic] })),
+          ]}
+          activeId={topicFilter}
+          onChange={(value) => { setTopicFilter(value); setVisibleCount(PAGE_SIZE); }}
+        />
 
         <button
           type="button"
@@ -162,11 +158,7 @@ export default function StoriesCatalog({
             setVisibleCount(PAGE_SIZE);
           }}
           aria-pressed={classicOnly}
-          className={`tap min-h-11 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            classicOnly
-              ? "bg-foreground text-background"
-              : "border border-black/10 text-foreground/70 hover:text-foreground active:text-foreground dark:border-white/15"
-          }`}
+          className={`${filterChipClass(classicOnly)} self-start`}
         >
           {dict.classicOnlyLabel}
         </button>
