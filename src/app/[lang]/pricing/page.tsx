@@ -6,6 +6,8 @@ import SubscriptionCard from "@/components/pricing/SubscriptionCard";
 import PremiumCard from "@/components/pricing/PremiumCard";
 import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {
   const { lang } = await params;
@@ -23,6 +25,23 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-16 sm:px-6">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: p.faq.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+          })),
+        }}
+      />
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.pricing, url: `${SITE_URL}/${lang}/pricing` },
+        ])}
+      />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{p.title}</h1>
       <p className="mt-3 max-w-xl text-foreground/70">{p.subtitle}</p>
       <p className="mt-4 inline-block rounded-full bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
