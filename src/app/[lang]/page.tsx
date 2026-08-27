@@ -43,11 +43,11 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   return (
     <div className="flex flex-1 flex-col">
       {/* min-h on mobile targets "fits in one screen up to the buttons"
-          (100dvh minus the h-16 sticky header) — the word-deck wrapper right
-          below is deliberately short (h-10, overflow-hidden) so only each
-          card's top edge peeks into view as a "there's something below,
-          scroll" cue, per the redesign brief. sm:+ drops both constraints
-          and shows the full deck beside the text instead of under it. */}
+          (100dvh minus the h-16 sticky header) — the word-deck cards render
+          at full height below (owner-reported bug: an earlier h-10
+          overflow-hidden wrapper clipped every card down to its top border,
+          leaving only an unreadable sliver). sm:+ shows the full deck beside
+          the text instead of under it. */}
       <section className="relative overflow-hidden border-b border-black/10 dark:border-white/30">
         <CyrillicWatermark letter="Я" className="-right-10 -top-16 -z-10" />
         <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-5xl flex-col gap-8 px-4 py-10 sm:min-h-0 sm:grid sm:grid-cols-2 sm:items-center sm:gap-10 sm:px-6 sm:py-24">
@@ -83,12 +83,10 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           </div>
 
           {words.length > 0 && (
-            <div className="h-10 overflow-hidden sm:h-auto sm:overflow-visible">
-              <HeroWordDeck
-                words={words}
-                dict={{ flipHint: dict.home.heroFlipHint, listenLabel: dict.home.heroListenLabel }}
-              />
-            </div>
+            <HeroWordDeck
+              words={words}
+              dict={{ flipHint: dict.home.heroFlipHint, listenLabel: dict.home.heroListenLabel }}
+            />
           )}
         </div>
       </section>
