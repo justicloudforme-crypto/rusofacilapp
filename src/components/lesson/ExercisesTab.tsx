@@ -178,7 +178,13 @@ export default function ExercisesTab({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(attemptPayload),
     }).then((res) => {
-      if (!res.ok) queuePendingProgress(attemptPayload);
+      // 401 means no session — never retryable (there's no logged-out ->
+      // logged-in transition that a background retry could catch), so
+      // don't queue it. Since the free-trial lesson (A1/1) is now reachable
+      // without an account, this is the common case for that lesson, not
+      // an edge case — queuing it anyway would grow localStorage forever
+      // for every anonymous visitor who checks their answers there.
+      if (!res.ok && res.status !== 401) queuePendingProgress(attemptPayload);
     }).catch(() => {
       // Offline, or the request never reached the server — queue it for a
       // background retry (see progress-client.ts) instead of losing it.

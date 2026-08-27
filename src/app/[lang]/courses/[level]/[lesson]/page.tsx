@@ -18,10 +18,12 @@ export default async function LessonPage({
   // Proxy already gates this route, but auth/subscription state is
   // re-checked here too: a page should never rely solely on the proxy for
   // access control (a matcher change elsewhere shouldn't silently expose it).
-  // Staff (owner/admin) bypass the subscription requirement entirely.
-  const user = await getCurrentUser();
+  // The free-trial lesson (A1/1) is public even to a logged-out visitor —
+  // see proxy.ts's protectLessonRoute for why this matters for SEO. Staff
+  // (owner/admin) bypass the subscription requirement entirely.
   const isFreeTrial = isFreeTrialLesson(level, lesson);
-  if (!user || (!isFreeTrial && !isStaff(user.role) && !(await userHasActiveSubscription(user.id)))) {
+  const user = await getCurrentUser();
+  if (!isFreeTrial && (!user || (!isStaff(user.role) && !(await userHasActiveSubscription(user.id))))) {
     redirect(`/${lang}/pricing?next=/${lang}/courses/${level}/${lesson}`);
   }
 

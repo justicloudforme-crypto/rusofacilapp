@@ -65,7 +65,11 @@ export async function flushPendingProgress() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) remaining.push(payload);
+        // 401 (no session) is never retryable — see ExercisesTab.tsx's own
+        // check-time skip for the same reasoning. Drop instead of keeping
+        // it queued forever (this is what would otherwise accumulate in
+        // localStorage for every anonymous visitor of the free-trial lesson).
+        if (!res.ok && res.status !== 401) remaining.push(payload);
       } catch {
         remaining.push(payload);
       }
