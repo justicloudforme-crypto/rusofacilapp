@@ -6,7 +6,6 @@ import type { PublicPuzzle } from "@/lib/word-games/data";
 import type { Locale } from "@/i18n/config";
 import CrosswordBoard from "./CrosswordBoard";
 import WordSearchBoard from "./WordSearchBoard";
-import CelebrationModal from "@/components/celebration/CelebrationModal";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 
 export interface WordGamePlayerDict {
@@ -49,7 +48,6 @@ export default function WordGamePlayer({
   const router = useRouter();
   const [usedHint, setUsedHint] = useState(false);
   const [solved, setSolved] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [roundTimeSeconds, setRoundTimeSeconds] = useState(0);
   // Bumped on "play again" and used as CrosswordBoard/WordSearchBoard's
@@ -69,7 +67,6 @@ export default function WordGamePlayer({
 
   const handleSolved = useCallback(() => {
     setSolved(true);
-    setShowCelebration(true);
     setRoundTimeSeconds(Math.round((Date.now() - startedAt) / 1000));
     if (completeReported.current) return;
     completeReported.current = true;
@@ -85,7 +82,6 @@ export default function WordGamePlayer({
     setAttempt((a) => a + 1);
     setUsedHint(false);
     setSolved(false);
-    setShowCelebration(false);
     setStartedAt(Date.now());
     setErrorCount(puzzle.type === "CROSSWORD" ? 0 : undefined);
     completeReported.current = false;
@@ -120,18 +116,11 @@ export default function WordGamePlayer({
         <WordSearchBoard key={attempt} puzzle={puzzle} dict={dict} onSolved={handleSolved} />
       )}
 
-      <CelebrationModal
-        open={showCelebration}
-        title={dict.solvedTitle}
-        subtitle={dict.solvedSubtitle}
-        ctaLabel={dict.playAgainButton}
-        onClose={() => setShowCelebration(false)}
-      />
-
       <GameResultPanel
         open={solved}
         onClose={backToList}
         title={dict.solvedTitle}
+        avatarId="matryoshka_proud"
         timeSeconds={roundTimeSeconds}
         errors={errorCount}
         dict={resultDict}
