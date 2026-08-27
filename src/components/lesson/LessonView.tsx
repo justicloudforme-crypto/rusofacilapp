@@ -11,6 +11,7 @@ import AlphabetTable from "./AlphabetTable";
 import VideoPlayer from "./VideoPlayer";
 import SlidesTab from "./SlidesTab";
 import LessonGlossaryTerms from "@/components/glossary/LessonGlossaryTerms";
+import TabBar from "@/components/ui/TabBar";
 
 type Tab = "grammar" | "vocabulary" | "alphabet" | "exercises" | "slides";
 
@@ -93,27 +94,12 @@ export default function LessonView({
         <>
           <VideoPlayer videoUrl={content.videoUrl} title={title} />
 
-          <div
-            role="tablist"
-            className="mt-6 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30"
-          >
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id}
-                onClick={() => setTab(t.id)}
-                className={`tap flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
-                  tab === t.id
-                    ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground active:text-foreground"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <TabBar
+            items={tabs}
+            activeId={tab}
+            onSelect={setTab}
+            className="mt-6"
+          />
 
           <div className="mt-8">
             {tab === "slides" && content.slides && (
