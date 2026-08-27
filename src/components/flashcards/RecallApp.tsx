@@ -229,7 +229,16 @@ export default function RecallApp({
             {dict.backToCategories}
           </button>
 
-          {limited && !complete && (
+          {/* Rendered here, outside GameResultPanel, on purpose: it used to
+              also be duplicated inside the panel via `children`, putting a
+              paywall upsell in the middle of the celebratory result modal
+              (a real reported complaint — it fought the confetti/avatar for
+              attention right when a learner should just feel good about
+              finishing). This one spot already sits behind the modal while
+              it's open and becomes visible the moment it closes — same
+              banner, no timing/state needed, just no longer duplicated
+              inside the celebration itself. */}
+          {limited && (
             <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
           )}
 
@@ -246,7 +255,6 @@ export default function RecallApp({
             nextGameLabel={dict.backToCategories}
             onNextGame={backToCategories}
           >
-            {limited && <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />}
             <p className="mt-1 text-center text-sm text-foreground/60">
               {dict.learnedProgressLabel.replace("{known}", String(totalProgress.known)).replace("{total}", String(totalProgress.total))}
             </p>
