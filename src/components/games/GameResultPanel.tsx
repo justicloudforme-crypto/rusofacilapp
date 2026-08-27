@@ -65,7 +65,11 @@ export default function GameResultPanel({
     <Modal open={open} onClose={onClose} closeLabel={dict.closeLabel}>
       {open && <Confetti />}
       <div className="flex flex-col items-center gap-4 pb-2 pt-2 text-center">
-        {avatarId && <MatryoshkaAvatar id={avatarId} size={64} />}
+        {avatarId && (
+          <span className="celebration-panel">
+            <MatryoshkaAvatar id={avatarId} size={88} />
+          </span>
+        )}
         <p className="text-lg font-semibold">{title}</p>
 
         <div className="flex flex-wrap items-center justify-center gap-2">

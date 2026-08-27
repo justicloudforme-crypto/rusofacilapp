@@ -4,6 +4,7 @@ import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Tabs from "@/components/ui/Tabs";
+import OxxoInstructions, { type OxxoInstructionsDict } from "./OxxoInstructions";
 
 type Period = "monthly" | "annual";
 type Method = "card" | "cash";
@@ -35,8 +36,7 @@ export default function SubscriptionCard({
   annual,
   featuresTitle,
   features,
-  oxxoDetailsSummary,
-  oxxoNote,
+  oxxoDict,
 }: {
   lang: string;
   next?: string;
@@ -50,8 +50,7 @@ export default function SubscriptionCard({
   annual: BillingOption;
   featuresTitle: string;
   features: string[];
-  oxxoDetailsSummary: string;
-  oxxoNote: string;
+  oxxoDict: OxxoInstructionsDict;
 }) {
   // Annual by default — it's the plan this card exists to steer people
   // toward (−50% badge), not a neutral middle ground.
@@ -110,12 +109,7 @@ export default function SubscriptionCard({
           onSelect={(id) => setMethod(id as Method)}
         />
 
-        {method === "cash" && (
-          <details className="mt-3 text-xs text-foreground/60">
-            <summary className="tap cursor-pointer font-medium">{oxxoDetailsSummary}</summary>
-            <p className="mt-2">{oxxoNote}</p>
-          </details>
-        )}
+        {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
 
         <form action="/api/checkout" method="POST" className="mt-4">
           <input type="hidden" name="lang" value={lang} />

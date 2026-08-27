@@ -192,7 +192,13 @@ export default function FillBlankApp({
             {dict.backToCategories}
           </button>
 
-          {limited && !complete && (
+          {/* Rendered here, outside GameResultPanel, on purpose — see
+              RecallApp.tsx's identical comment: this used to also be
+              duplicated inside the panel's `children`, putting a paywall
+              upsell in the middle of the celebratory result modal. This
+              spot already sits behind the modal while it's open and
+              becomes visible the moment it closes. */}
+          {limited && (
             <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
           )}
 
@@ -209,7 +215,6 @@ export default function FillBlankApp({
             nextGameLabel={dict.backToCategories}
             onNextGame={backToCategories}
           >
-            {limited && <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />}
             <p className="mt-1 text-center text-sm text-foreground/60">
               {dict.learnedProgressLabel.replace("{known}", String(totalProgress.known)).replace("{total}", String(totalProgress.total))}
             </p>

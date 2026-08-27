@@ -231,6 +231,26 @@ model Story {
   // only for rows written before this column existed and not yet covered
   // by the one-time backfill script.
   readingMinutes Int?
+  // Whole-story narration as ONE continuous file — a real <audio> element
+  // playing this plays natively in the background/with the screen locked,
+  // unlike the per-sentence clip chain (still the fallback below), which
+  // browsers/OSes don't reliably keep advancing once backgrounded (each
+  // sentence-to-sentence transition looks like starting new playback with
+  // no fresh user gesture). Built by prisma/concat-story-audio.ts via
+  // ffmpeg concatenation of the EXISTING per-sentence AudioAsset clips —
+  // never new narration/TTS. Null until that script has run for this
+  // story (or permanently, for the handful of only-partially-narrated
+  // stories it deliberately skips — see check-story-audio.ts); a null
+  // here means the reader falls back to the per-sentence chain.
+  fullAudioUrl  String?
+  // Cumulative start-second offset of every sentence within
+  // `fullAudioUrl`, JSON array in the same order buildStoryQueue()
+  // produces (src/lib/stories.ts) — e.g. [0, 3.2, 7.8, ...]. Drives the
+  // reader's sentence highlight/seek via audio.ontimeupdate once a
+  // single-file track is playing, replacing the old per-clip onended
+  // boundary. Same JSON-string-on-a-model-field pattern already used for
+  // LessonContent/exam content below.
+  sentenceOffsetsJson String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

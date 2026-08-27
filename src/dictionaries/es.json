@@ -25,10 +25,10 @@
     "practice": "Practicar",
     "glossary": "Glosario",
     "search": "Buscar",
-    "searchTitle": "Buscar en el sitio",
-    "searchPlaceholder": "Cursos, cuentos, vocabulario…",
+    "searchTitle": "Buscar por secciones",
+    "searchPlaceholder": "Buscar por secciones del sitio…",
     "searchEmpty": "No se encontraron resultados",
-    "searchShortcutHint": "Buscar (⌘K)",
+    "searchShortcutHint": "Buscar por secciones (⌘K)",
     "streakLabel": "Racha: {days} días",
     "bottomNavLabel": "Navegación principal"
   },
@@ -398,8 +398,13 @@
       "cardCta": "Comprar para siempre por $122.99",
       "cashCta": "Pagar en efectivo — ≈2299 MXN"
     },
-    "oxxoDetailsSummary": "¿Cómo pago en efectivo?",
-    "oxxoNote": "Recibirás un código de barras por correo y en pantalla para pagar en cualquier tienda OXXO de México. Tu acceso se activa en cuanto se confirme el pago (hasta 3 días); el código vence si no se usa en ese plazo.",
+    "oxxoStepsHeading": "Cómo pagar en efectivo",
+    "oxxoStep1": "Pulsa «Pagar en efectivo»",
+    "oxxoStep2": "Se abrirá una página con tu código de barras OXXO — guárdala como captura o abre el correo con el código",
+    "oxxoStep3": "Muestra el código de barras en la caja de cualquier tienda OXXO y paga el monto",
+    "oxxoStep4": "Tu acceso se activará automáticamente en cuanto la tienda confirme el pago",
+    "oxxoEmailNote": "El código también te llegará por correo",
+    "oxxoExpiryNote": "El vale es válido por 3 días — pasado ese plazo, el código vence",
     "featuresTitle": "Incluye",
     "features": [
       "Acceso a las lecciones de nivel A1 a B2",
@@ -457,7 +462,9 @@
     "goToCourses": "Ir a los cursos",
     "checkoutMock": "Suscripción activada (modo demo, sin Stripe real).",
     "checkoutSuccess": "¡Pago confirmado! Tu suscripción ya está activa.",
-    "checkoutOxxoPending": "Revisa tu correo: ahí tienes tu código de barras de OXXO. En cuanto se confirme el pago en la tienda (hasta 3 días), tu suscripción se activará automáticamente."
+    "checkoutOxxoPending": "Revisa tu correo: ahí tienes tu código de barras de OXXO. En cuanto se confirme el pago en la tienda (hasta 3 días), tu suscripción se activará automáticamente.",
+    "openOxxoVoucher": "Abrir mi código de barras",
+    "checkoutOxxoVoucherUnavailable": "Ese código ya no está disponible para volver a abrirlo (se pagó o venció) — revisa el correo con el código."
   },
   "profile": {
     "title": "Mi perfil",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Tabs from "@/components/ui/Tabs";
+import OxxoInstructions, { type OxxoInstructionsDict } from "./OxxoInstructions";
 
 type Method = "card" | "cash";
 
@@ -25,8 +26,7 @@ export default function PremiumCard({
   cashCta,
   featuresTitle,
   features,
-  oxxoDetailsSummary,
-  oxxoNote,
+  oxxoDict,
   highlighted = false,
 }: {
   lang: string;
@@ -43,8 +43,7 @@ export default function PremiumCard({
   cashCta: string;
   featuresTitle: string;
   features: string[];
-  oxxoDetailsSummary: string;
-  oxxoNote: string;
+  oxxoDict: OxxoInstructionsDict;
   /** Set via /pricing?highlight=premium — the profile page's per-plan
    * upsell link (annual subscribers -> "unlock C1 forever") lands here.
    * Purely a visual ring + scroll target (`id="premium"`, browsers
@@ -98,12 +97,7 @@ export default function PremiumCard({
           onSelect={(id) => setMethod(id as Method)}
         />
 
-        {method === "cash" && (
-          <details className="mt-3 text-xs text-foreground/60">
-            <summary className="tap cursor-pointer font-medium">{oxxoDetailsSummary}</summary>
-            <p className="mt-2">{oxxoNote}</p>
-          </details>
-        )}
+        {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
 
         <form action="/api/checkout" method="POST" className="mt-4">
           <input type="hidden" name="lang" value={lang} />

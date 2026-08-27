@@ -25,6 +25,7 @@ function renderMenu(
       logoutLabel="Cerrar sesión"
       openLabel="Abrir menú"
       closeLabel="Cerrar menú"
+      languageSwitcher={<button type="button">ES</button>}
     />,
   );
 }
@@ -90,6 +91,7 @@ describe("MobileMenu", () => {
         logoutLabel="Cerrar sesión"
         openLabel="Abrir menú"
         closeLabel="Cerrar menú"
+        languageSwitcher={<button type="button">ES</button>}
       />,
     );
 

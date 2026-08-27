@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getAllMedia } from "@/lib/media/data";
+import { mediaLevels } from "@/lib/media/types";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import MediaCatalog from "@/components/media/MediaCatalog";
 
@@ -12,11 +13,17 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
   const [dict, tier, allMedia] = await Promise.all([getDictionary(lang), getEntitlementTier(), getAllMedia()]);
   if (!dict?.media) notFound();
 
+  const levelRank = new Map(mediaLevels.map((level, index) => [level, index]));
+
   // Grammar explainer videos are the platform's standout content (see
   // media content policy) and should surface before songs/movies/video
   // in the default "all categories" view; within that, accessible-first
   // per the access-tier policy's list-ordering rule (stable sort, so
-  // neither reordering disturbs the other).
+  // neither reordering disturbs the other). Level (A1->C1) and then
+  // alphabetical-by-title break remaining ties — without them, items
+  // within each of those buckets were left in getAllMedia()'s raw
+  // (effectively arbitrary) order, which read as no order at all
+  // (reported: "материалы отсортированы хаотично").
   const items = allMedia
     // Hide items the embed-status checker (npm run check:media-embeds /
     // the admin "Verificar enlaces de YouTube" button) has confirmed are
@@ -35,7 +42,9 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
     .sort(
       (a, b) =>
         (a.category === "grammar" ? 0 : 1) - (b.category === "grammar" ? 0 : 1) ||
-        Number(a.locked) - Number(b.locked)
+        Number(a.locked) - Number(b.locked) ||
+        (levelRank.get(a.level) ?? 0) - (levelRank.get(b.level) ?? 0) ||
+        a.title.localeCompare(b.title, lang)
     );
 
   return (

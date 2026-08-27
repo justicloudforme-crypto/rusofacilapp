@@ -58,8 +58,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
             annual={p.annual}
             featuresTitle={p.featuresTitle}
             features={p.features}
-            oxxoDetailsSummary={p.oxxoDetailsSummary}
-            oxxoNote={p.oxxoNote}
+            oxxoDict={p}
           />
         </div>
 
@@ -79,8 +78,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
             cashCta={p.lifetime.cashCta}
             featuresTitle={p.featuresPremiumTitle}
             features={p.featuresPremium}
-            oxxoDetailsSummary={p.oxxoDetailsSummary}
-            oxxoNote={p.oxxoNote}
+            oxxoDict={p}
             highlighted={highlightPremium}
           />
         </div>

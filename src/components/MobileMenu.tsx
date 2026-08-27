@@ -63,6 +63,7 @@ export default function MobileMenu({
   logoutLabel,
   openLabel,
   closeLabel,
+  languageSwitcher,
 }: {
   lang: string;
   user: MobileMenuUser | null;
@@ -74,6 +75,16 @@ export default function MobileMenu({
   logoutLabel: string;
   openLabel: string;
   closeLabel: string;
+  /** Navbar.tsx's own `<LanguageSwitcher>` (a "use client" component,
+   * pre-built server-side same as the group link icons below) — this
+   * drawer is the only place it lives below `sm`, since the header itself
+   * hides it there to make room for the always-visible logo (see
+   * Navbar.tsx). Its own dropdown panel is `position: absolute` against a
+   * `relative` wrapper it renders itself, not `fixed`, so nesting it here
+   * inside this sheet's `transform`-animated panel is safe — unlike
+   * `fixed`, `absolute` was already going to resolve against the nearest
+   * positioned ancestor regardless of any transform in between. */
+  languageSwitcher: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   useBodyScrollLock(open);
@@ -149,7 +160,9 @@ export default function MobileMenu({
           <nav className="sheet-slide-up fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-3xl border-t border-primary/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(36,28,21,0.25)]">
             <div className="mx-auto mt-2.5 h-1 w-9 flex-shrink-0 rounded-full bg-foreground/15" aria-hidden />
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3">
+            <div className="flex flex-shrink-0 justify-end px-4 pt-2">{languageSwitcher}</div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-1">
               {user ? (
                 <>
                   <Link

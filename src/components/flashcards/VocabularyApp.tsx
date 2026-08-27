@@ -113,10 +113,17 @@ export default function VocabularyApp({
           complaint). sm:+ has room for a proper grid, so it switches back
           there. -mx-4/px-4 lets the strip bleed to the screen edges (so the
           first/last chip isn't flush against the content padding) while
-          the scroll-snap targets stay flush with the visible viewport. */}
+          the scroll-snap targets stay flush with the visible viewport.
+          The mask-image fade (same technique as ui/Tabs.tsx) is the scroll
+          affordance: at 375px only ~3.5 of the 5 chips fit, so the last one
+          used to just get sliced off mid-label by the container's own
+          edge with no visual hint that there was more to scroll to — read
+          as "one card is smaller" (reported). Fading the trailing edge
+          instead of hard-cutting it signals "scrollable" rather than
+          "broken layout". */}
       <div
         role="tablist"
-        className="mb-8 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5"
+        className="mb-8 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_0,black_calc(100%-28px),transparent_100%)] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0 sm:[mask-image:none] lg:grid-cols-5"
       >
         {tabs.map((tab) => (
           <button

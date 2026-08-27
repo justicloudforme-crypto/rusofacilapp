@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 const COLORS = ["var(--color-primary)", "var(--color-primary-400)", "var(--color-folk-red)", "var(--color-premium-400)"];
 const PIECE_COUNT = 36;
@@ -33,10 +34,24 @@ function makePieces(): ConfettiPiece[] {
  * compositing, cheap even on low-end phones). The piece layout is rolled
  * once via useState's lazy initializer so it doesn't reshuffle on every
  * re-render; callers control the burst's lifetime by mounting/unmounting
- * this component (e.g. gated behind CelebrationModal's `open` prop). */
+ * this component (e.g. gated behind CelebrationModal's `open` prop).
+ *
+ * Portalled straight to `document.body`: this is used inside
+ * GameResultPanel, which sits inside Modal's bottom-sheet panel — that
+ * panel animates in via a CSS `transform` (`.sheet-slide-up`), and a
+ * `transform` on an ancestor becomes the containing block for any
+ * `position: fixed` descendant (the same trap MobileMenu.tsx's own sheet
+ * already documents solving with a portal). Without this, the confetti's
+ * `fixed inset-0` resolved against the small sheet panel instead of the
+ * viewport — clipped to the panel's own bounds, effectively invisible on a
+ * phone (confirmed 2026-08-27, reported as "confetti hidden behind the
+ * result window"). Portalling here, not in GameResultPanel/Modal, keeps
+ * every other Confetti call site's simple `{open && <Confetti />}` usage
+ * unchanged. */
 export default function Confetti() {
   const [pieces] = useState(makePieces);
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden" aria-hidden="true">
       {pieces.map((p) => (
         <span
@@ -53,6 +68,7 @@ export default function Confetti() {
           }}
         />
       ))}
-    </div>
+    </div>,
+    document.body,
   );
 }

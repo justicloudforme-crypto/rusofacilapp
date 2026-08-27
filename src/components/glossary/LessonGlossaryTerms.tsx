@@ -10,13 +10,20 @@ const CHIP_CLASSNAME =
   "cursor-help rounded-full border border-primary/25 bg-primary/[0.05] px-3 py-1 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-primary/10 dark:border-primary-400/30 dark:bg-primary-400/[0.08] dark:hover:border-primary-400";
 
 /**
- * "Terms in this lesson" preview, shown before the tabs so a student can
- * skim the grammar vocabulary this lesson introduces before diving in —
- * part of the fully-self-guided-learning bar (no teacher to ask "what
- * words should I know for this lesson?"). Reuses GlossaryTermPopover
- * directly (chip-styled via its `className` prop) so tapping a chip opens
- * the exact same explanation card as an auto-linked term inside the
- * lesson text — one interaction pattern, not two to learn.
+ * "Terms in this lesson" preview, so a student can skim the grammar
+ * vocabulary this lesson introduces — part of the fully-self-guided-
+ * learning bar (no teacher to ask "what words should I know for this
+ * lesson?"). Reuses GlossaryTermPopover directly (chip-styled via its
+ * `className` prop) so tapping a chip opens the exact same explanation
+ * card as an auto-linked term inside the lesson text — one interaction
+ * pattern, not two to learn.
+ *
+ * Lives inside LessonView's "Словарь"/Vocabulary tab (see LessonView.tsx),
+ * not between the header and the tabs — it used to sit there on its own,
+ * which put two separate word-review blocks (this one, and the Vocabulary
+ * tab itself) in two different places on the page, reading as disorganized
+ * on a narrow screen (reported directly). Keeping all lesson-vocabulary
+ * content in one tab fixes that without losing the feature.
  */
 export default function LessonGlossaryTerms({
   level,

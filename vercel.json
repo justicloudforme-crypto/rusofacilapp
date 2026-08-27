@@ -1,5 +1,5 @@
 {
-  "buildCommand": "next build --webpack",
+  "buildCommand": "npx tsx prisma/ensure-schema-sync.ts && next build --webpack",
   "framework": "nextjs",
   "regions": ["pdx1"],
   "crons": [
