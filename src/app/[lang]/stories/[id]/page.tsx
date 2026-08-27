@@ -63,6 +63,17 @@ export default async function StoryReaderPage({
     (segment) => segment.paragraphIndex < visibleParagraphs.length
   );
 
+  // fullAudioUrl covers the ENTIRE story end to end — only safe to hand to
+  // the reader when the reader can see the entire story text (`entitled`).
+  // For the paywalled single-paragraph preview, `entitled` is false and
+  // visibleParagraphs is truncated to 1 — falling back to the per-sentence
+  // audioSegments above (already filtered to that same truncated preview)
+  // is what keeps playback from leaking the rest of the story's narration
+  // past the paywall.
+  const fullAudioUrl = entitled ? story.fullAudioUrl : null;
+  const sentenceOffsets =
+    entitled && story.sentenceOffsetsJson ? (JSON.parse(story.sentenceOffsetsJson) as number[]) : null;
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <Link
@@ -97,6 +108,8 @@ export default async function StoryReaderPage({
           paragraphs={visibleParagraphs}
           translationParagraphs={visibleTranslationParagraphs}
           audioSegments={audioSegments}
+          fullAudioUrl={fullAudioUrl}
+          sentenceOffsets={sentenceOffsets}
           dict={{
             translationLoading: dict.stories.translationLoading,
             translationError: dict.stories.translationError,
