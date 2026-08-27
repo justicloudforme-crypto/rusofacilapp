@@ -13,7 +13,7 @@ function CardGlyph() {
   );
 }
 
-function CashGlyph() {
+export function CashGlyph() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5 text-foreground/50" aria-hidden fill="none">
       <rect x="2.5" y="6.5" width="19" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" />

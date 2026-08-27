@@ -246,6 +246,7 @@ export default async function ProfilePage({
   const dict = await getDictionary(lang);
   const query = await searchParams;
   const checkout = typeof query.checkout === "string" ? query.checkout : null;
+  const voucherUnavailable = query.voucher === "unavailable";
   const justCanceled = query.subscription === "canceled";
   const loggedOutEverywhere = query.loggedOutEverywhere === "1";
   const rawTab = typeof query.tab === "string" ? query.tab : "";
@@ -474,9 +475,17 @@ export default async function ProfilePage({
         </p>
       )}
       {checkout === "oxxo_pending" && (
-        <p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
-          {dict.account.checkoutOxxoPending}
-        </p>
+        <div className="mt-6 flex flex-col gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
+          <p>{voucherUnavailable ? dict.account.checkoutOxxoVoucherUnavailable : dict.account.checkoutOxxoPending}</p>
+          {!voucherUnavailable && (
+            <a
+              href={`/api/subscription/oxxo-voucher?lang=${lang}`}
+              className="tap inline-flex w-fit min-h-9 items-center rounded-full bg-amber-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-amber-700 active:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 dark:active:bg-amber-600"
+            >
+              {dict.account.openOxxoVoucher}
+            </a>
+          )}
+        </div>
       )}
       {justCanceled && (
         <p className="mt-6 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
