@@ -20,6 +20,7 @@ import SerwistRegister from "@/components/SerwistRegister";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserStreakStats } from "@/lib/streaks";
+import { buildAlternates, getRequestPathname } from "@/lib/site";
 import { PaywallProvider } from "@/contexts/PaywallContext";
 import type { PlanId } from "@/lib/plans";
 
@@ -76,10 +77,18 @@ export async function generateMetadata({
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
+  const pathname = await getRequestPathname();
   return {
     title: dict.meta.title,
     description: dict.meta.description,
     manifest: "/manifest.webmanifest",
+    // Every page inherits this unless its own generateMetadata sets
+    // `alternates` itself (Next merges per-field, so a page-level title
+    // override never loses this) — canonical/hreflang computed from the
+    // real, query-stripped request path (see buildAlternates), so it stays
+    // correct without a per-route metadata function for every one of the
+    // 1226 URLs in sitemap.ts.
+    alternates: buildAlternates(pathname),
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
