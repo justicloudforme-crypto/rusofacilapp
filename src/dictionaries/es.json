@@ -25,10 +25,10 @@
     "practice": "Practicar",
     "glossary": "Glosario",
     "search": "Buscar",
-    "searchTitle": "Buscar en el sitio",
-    "searchPlaceholder": "Cursos, cuentos, vocabulario…",
+    "searchTitle": "Buscar por secciones",
+    "searchPlaceholder": "Buscar por secciones del sitio…",
     "searchEmpty": "No se encontraron resultados",
-    "searchShortcutHint": "Buscar (⌘K)",
+    "searchShortcutHint": "Buscar por secciones (⌘K)",
     "streakLabel": "Racha: {days} días",
     "bottomNavLabel": "Navegación principal"
   },

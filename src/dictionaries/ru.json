@@ -26,9 +26,9 @@
     "glossary": "Глоссарий",
     "search": "Поиск",
     "searchTitle": "Поиск по разделам",
-    "searchPlaceholder": "Курсы, рассказы, слова…",
+    "searchPlaceholder": "Поиск по разделам сайта…",
     "searchEmpty": "Ничего не найдено",
-    "searchShortcutHint": "Поиск (⌘K)",
+    "searchShortcutHint": "Поиск по разделам (⌘K)",
     "streakLabel": "Серия: {days} дн.",
     "bottomNavLabel": "Основная навигация"
   },
