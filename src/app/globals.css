@@ -108,14 +108,35 @@ body {
    individually. A <button type="submit"> inside a real <form> and a plain
    <a href> both already work without JS (native form POST / native
    navigation) — only dimmed, never disabled, so this can't regress that
-   working fallback into a dead end. */
+   working fallback into a dead end.
+
+   `pointer-events: none` applies immediately (it's invisible — disabling a
+   tap target a moment early causes no visual flicker, only a same-as-
+   before-this-fix silent no-op in the rare case someone taps within the
+   first ~200-400ms). The *visible* dimming is what was flickering, so only
+   that is delayed 300ms (measured: hydration finishes in ~170-400ms on a
+   normal connection in local testing), via a `forwards`-filling animation
+   with an animation-delay, so a normal-speed load never even reaches the
+   dimmed keyframe before `data-hydrating` is removed and the rule stops
+   matching. (A zero-duration animation was tried first and silently never
+   applied its end keyframe in Chromium — confirmed by testing — hence the
+   short 150ms fade instead of an instant 0ms jump.) A slow connection still
+   gets the full protection this rule exists for once the delay elapses. */
 html[data-hydrating] button:not([type="submit"]):not(:disabled) {
-  opacity: 0.6;
   cursor: wait;
   pointer-events: none;
+  animation: hydrating-dim 150ms 300ms forwards;
 }
 html[data-hydrating] button[type="submit"] {
-  opacity: 0.6;
+  animation: hydrating-dim 150ms 300ms forwards;
+}
+@keyframes hydrating-dim {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.6;
+  }
 }
 
 /* Gamification micro-animations — pure CSS, no JS animation library, so
