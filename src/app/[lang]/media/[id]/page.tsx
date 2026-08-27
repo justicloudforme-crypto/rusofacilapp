@@ -8,6 +8,8 @@ import MediaPlayer from "@/components/media/MediaPlayer";
 import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
 import VocabularyTab from "@/components/lesson/VocabularyTab";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export default async function MediaDetailPage({
   params,
@@ -41,6 +43,13 @@ export default async function MediaDetailPage({
 
   return (
     <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.media, url: `${SITE_URL}/${lang}/media` },
+          { name: item.title, url: `${SITE_URL}/${lang}/media/${item.id}` },
+        ])}
+      />
       <Link href={`/${lang}/media`} className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground">
         ← {dict.media.backToList}
       </Link>

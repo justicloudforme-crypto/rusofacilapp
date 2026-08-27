@@ -5,6 +5,8 @@ import { getAllMedia } from "@/lib/media/data";
 import { mediaLevels } from "@/lib/media/types";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import MediaCatalog from "@/components/media/MediaCatalog";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 export default async function MediaPage({ params }: PageProps<"/[lang]/media">) {
   const { lang } = await params;
@@ -49,6 +51,12 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-16">
+      <JsonLd
+        data={breadcrumbList([
+          { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
+          { name: dict.nav.media, url: `${SITE_URL}/${lang}/media` },
+        ])}
+      />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.media.pageTitle}</h1>
       <p className="mt-3 max-w-xl text-foreground/70">{dict.media.pageSubtitle}</p>
       <p className="mt-2 max-w-xl text-xs text-foreground/40">{dict.media.copyrightNote}</p>
