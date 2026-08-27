@@ -32,7 +32,7 @@ export default function BalalaikaSerenadeStrum() {
           <span
             key={note + i}
             className="note-float absolute select-none text-base font-bold"
-            style={{ left: `${10 + i * 40}%`, top: "-10%", color: i % 2 === 0 ? "var(--brand-accent)" : "var(--brand)", animationDelay: `${i * 0.6}s`, animationDuration: "2.2s" }}
+            style={{ left: `${10 + i * 40}%`, top: "-10%", color: i % 2 === 0 ? "var(--color-folk-red)" : "var(--color-primary)", animationDelay: `${i * 0.6}s`, animationDuration: "2.2s" }}
           >
             {note}
           </span>

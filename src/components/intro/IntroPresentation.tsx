@@ -69,18 +69,18 @@ export default function IntroPresentation({
           →
         </button>
 
-        <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/10">
-          <div className="h-1.5 bg-gradient-to-r from-brand via-brand-light to-brand-accent-light" />
+        <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/30">
+          <div className="h-1.5 bg-gradient-to-r from-primary via-primary-400 to-premium-400" />
 
           <div className="p-6 sm:p-10">
             <div className="flex items-start justify-between gap-4">
-              <div className="h-28 w-40 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-brand/[0.06] to-brand-accent-light/[0.08]">
+              <div className="h-28 w-40 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/[0.06] to-premium-400/[0.08]">
                 <IntroIllustration icon={slide.icon} className="h-full w-full" />
               </div>
               <BrandMark size="sm" />
             </div>
 
-            <span className="mt-6 inline-block rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand dark:bg-brand-light/15 dark:text-brand-light">
+            <span className="mt-6 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
               {counterLabel}
             </span>
 
@@ -95,11 +95,11 @@ export default function IntroPresentation({
             </div>
 
             {slide.highlights && slide.highlights.length > 0 && (
-              <div className="mt-6 rounded-xl border border-brand/15 bg-brand/[0.04] p-4 dark:border-brand-light/20 dark:bg-brand-light/[0.06]">
+              <div className="mt-6 rounded-xl border border-primary/15 bg-primary/[0.04] p-4 dark:border-primary-400/20 dark:bg-primary-400/[0.06]">
                 <ul className="flex flex-col gap-2.5">
                   {slide.highlights.map((item) => (
                     <li key={item} className="flex items-start gap-3 text-sm leading-6 text-foreground/85">
-                      <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-gradient-to-br from-brand-accent to-brand-accent-light" />
+                      <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-gradient-to-br from-folk-red to-premium-400" />
                       {item}
                     </li>
                   ))}
@@ -119,7 +119,7 @@ export default function IntroPresentation({
             onClick={() => setIndex(i)}
             className={`tap h-1.5 rounded-full transition-all ${
               i === index
-                ? "w-6 bg-brand dark:bg-brand-light"
+                ? "w-6 bg-primary dark:bg-primary-400"
                 : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
             }`}
           />
@@ -141,7 +141,7 @@ export default function IntroPresentation({
           confident from the intro) shouldn't have to hunt for the level
           picker elsewhere on the page. */}
       {isLastSlide && (
-        <div className="rounded-2xl border border-brand/15 bg-gradient-to-br from-brand/[0.05] to-brand-accent-light/[0.06] p-6 dark:border-brand-light/20">
+        <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.05] to-premium-400/[0.06] p-6 dark:border-primary-400/20">
           <h4 className="text-lg font-semibold tracking-tight">{dict.chooseLevelHeading}</h4>
           <p className="mt-1 text-sm text-foreground/70">{dict.chooseLevelSubtitle}</p>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -149,9 +149,9 @@ export default function IntroPresentation({
               <Link
                 key={level.slug}
                 href={`/${lang}/courses/${level.slug}/1`}
-                className="tap group flex flex-col rounded-xl border border-black/10 bg-background p-4 transition-colors hover:border-brand active:border-brand dark:border-white/10 dark:hover:border-brand-light dark:active:border-brand-light"
+                className="tap group flex flex-col rounded-xl border border-black/10 bg-background p-4 transition-colors hover:border-primary active:border-primary dark:border-white/30 dark:hover:border-primary-400 dark:active:border-primary-400"
               >
-                <span className="text-xs font-semibold uppercase tracking-wide text-brand dark:text-brand-light">
+                <span className="text-xs font-semibold uppercase tracking-wide text-primary-text dark:text-primary-400">
                   {level.title}
                 </span>
                 <span className="mt-1 text-sm font-medium leading-tight">{level.subtitle}</span>

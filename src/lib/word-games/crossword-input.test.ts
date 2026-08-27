@@ -9,6 +9,8 @@ import {
   nextCellInWord,
   prevCellInWord,
   resolveDirectionOnClick,
+  shouldCountAsError,
+  sortClues,
   wordAt,
 } from "./crossword-input";
 
@@ -113,5 +115,40 @@ describe("isWordSolved / isPuzzleSolved", () => {
     expect(isPuzzleSolved({ words }, acrossOnly)).toBe(false);
     const both = new Set(["0,0", "0,1", "0,2", "1,2", "2,2"]);
     expect(isPuzzleSolved({ words }, both)).toBe(true);
+  });
+});
+
+describe("sortClues", () => {
+  it("orders by clue number ascending regardless of input order", () => {
+    const third: PublicCrosswordWord = { number: 3, row: 4, col: 0, direction: "E", length: 2, clue: "c" };
+    const first: PublicCrosswordWord = { number: 1, row: 0, col: 0, direction: "E", length: 2, clue: "a" };
+    const second: PublicCrosswordWord = { number: 2, row: 2, col: 0, direction: "E", length: 2, clue: "b" };
+    expect(sortClues([third, first, second]).map((w) => w.number)).toEqual([1, 2, 3]);
+  });
+
+  it("does not mutate the input array", () => {
+    const a: PublicCrosswordWord = { number: 2, row: 0, col: 0, direction: "E", length: 2, clue: "a" };
+    const b: PublicCrosswordWord = { number: 1, row: 2, col: 0, direction: "E", length: 2, clue: "b" };
+    const input = [a, b];
+    sortClues(input);
+    expect(input).toEqual([a, b]);
+  });
+});
+
+describe("shouldCountAsError", () => {
+  it("counts a wrong letter typed into a specific cell as an error", () => {
+    expect(shouldCountAsError({ row: 0, col: 0 }, true)).toBe(true);
+  });
+
+  it("does not count a correct letter as an error", () => {
+    expect(shouldCountAsError({ row: 0, col: 0 }, false)).toBe(false);
+  });
+
+  it("never counts a manual 'Check' pass (no target cell) as an error, even when it reveals wrong cells", () => {
+    expect(shouldCountAsError(undefined, true)).toBe(false);
+  });
+
+  it("a manual 'Check' pass with no wrong cells is also not an error", () => {
+    expect(shouldCountAsError(undefined, false)).toBe(false);
   });
 });

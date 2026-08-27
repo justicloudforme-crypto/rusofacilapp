@@ -38,7 +38,7 @@ export default function NewExamForm({
   }
 
   return (
-    <div className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+    <div className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
       <h3 className="font-medium">{dict.newExamHeading}</h3>
       <p className="mt-1 text-sm text-foreground/60">{dict.newExamHelp}</p>
       <form onSubmit={handleSubmit} className="mt-4 flex flex-wrap items-end gap-3">

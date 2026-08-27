@@ -53,7 +53,7 @@ export default async function GroupsPage({
               <Link
                 key={group.id}
                 href={`/${lang}/groups/${group.id}`}
-                className="tap flex items-center justify-between gap-3 rounded-2xl border border-black/10 p-4 text-sm transition-colors hover:bg-black/[.03] active:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/[.05] dark:active:bg-white/[.05]"
+                className="tap flex items-center justify-between gap-3 rounded-2xl border border-black/10 p-4 text-sm transition-colors hover:bg-black/[.03] active:bg-black/[.03] dark:border-white/30 dark:hover:bg-white/[.05] dark:active:bg-white/[.05]"
               >
                 <span className="font-medium">{group.name}</span>
                 <span className="text-foreground/60">
@@ -66,7 +66,7 @@ export default async function GroupsPage({
         )}
       </section>
 
-      <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+      <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
         <h2 className="font-medium">{dict.groups.createHeading}</h2>
         <p className="mt-1 text-sm text-foreground/60">{dict.groups.createDescription}</p>
         <form action="/api/groups" method="POST" className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -77,7 +77,7 @@ export default async function GroupsPage({
             required
             maxLength={60}
             placeholder={dict.groups.namePlaceholder}
-            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm outline-none focus:border-brand dark:border-white/15 dark:bg-white/10"
+            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm outline-none focus:border-primary dark:border-white/15 dark:bg-white/10"
           />
           <button
             type="submit"
@@ -88,7 +88,7 @@ export default async function GroupsPage({
         </form>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+      <section className="mt-6 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
         <h2 className="font-medium">{dict.groups.joinHeading}</h2>
         <p className="mt-1 text-sm text-foreground/60">{dict.groups.joinDescription}</p>
         <form action="/api/groups/join" method="POST" className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -99,7 +99,7 @@ export default async function GroupsPage({
             required
             maxLength={7}
             placeholder={dict.groups.codePlaceholder}
-            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm uppercase outline-none focus:border-brand dark:border-white/15 dark:bg-white/10"
+            className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm uppercase outline-none focus:border-primary dark:border-white/15 dark:bg-white/10"
           />
           <button
             type="submit"

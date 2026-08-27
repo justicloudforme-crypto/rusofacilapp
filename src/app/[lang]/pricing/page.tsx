@@ -1,197 +1,97 @@
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import type { PlanId } from "@/lib/plans";
-
-function PlanCard({
-  lang,
-  planId,
-  next,
-  name,
-  price,
-  period,
-  cta,
-  badge,
-  features,
-  featuresTitle,
-  highlighted,
-  premium,
-  valueNote,
-  oxxoPrice,
-  oxxoCta,
-  oxxoNote,
-}: {
-  lang: string;
-  planId: PlanId;
-  /** Page to return to after a successful card checkout — see
-   * /api/checkout's `next` handling. Undefined falls back to /profile. */
-  next?: string;
-  name: string;
-  price: string;
-  period: string;
-  cta: string;
-  badge?: string;
-  features: string[];
-  featuresTitle: string;
-  highlighted?: boolean;
-  /** The lifetime plan's own accent (amber/crown), distinct from
-   * `highlighted` (the brand accent used to steer most visitors toward
-   * annual) — the two are mutually exclusive in practice since only one
-   * card is ever the "best value for most people" vs. "the one-time,
-   * everything-forever plan". */
-  premium?: boolean;
-  /** Short cost-comparison line shown under the price — only the lifetime
-   * plan has one (see dict.pricing.lifetime.valueNote). */
-  valueNote?: string;
-  // Undefined for the lifetime plan: it's card-only, no OXXO one-time-cash
-  // option (see plans.ts) — the button is simply not rendered for it.
-  oxxoPrice?: string;
-  oxxoCta?: string;
-  oxxoNote?: string;
-}) {
-  return (
-    <div
-      className={`relative flex flex-col rounded-2xl border p-8 ${
-        highlighted
-          ? "border-brand bg-brand/5 shadow-lg shadow-brand/10 sm:scale-[1.03]"
-          : premium
-            ? "border-amber-500/40 bg-amber-500/5 shadow-lg shadow-amber-500/10"
-            : "border-black/10 dark:border-white/10"
-      }`}
-    >
-      {(highlighted || premium) && badge && (
-        <span
-          className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${
-            premium ? "bg-amber-500" : "bg-brand-accent"
-          }`}
-        >
-          {premium && <span aria-hidden>👑 </span>}
-          {badge}
-        </span>
-      )}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">{name}</h2>
-        {!highlighted && !premium && badge && (
-          <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium">
-            {badge}
-          </span>
-        )}
-      </div>
-      <p className="mt-4 flex items-baseline gap-1">
-        <span className="text-3xl font-semibold tracking-tight">{price}</span>
-        <span className="text-sm text-foreground/60">{period}</span>
-      </p>
-      {valueNote && (
-        <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">{valueNote}</p>
-      )}
-
-      <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">
-        {featuresTitle}
-      </p>
-      <ul className="mt-3 flex flex-col gap-2 text-sm text-foreground/70">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-2">
-            <span aria-hidden>✓</span>
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
-
-      <form action="/api/checkout" method="POST" className="mt-8">
-        <input type="hidden" name="lang" value={lang} />
-        <input type="hidden" name="plan" value={planId} />
-        {next && <input type="hidden" name="next" value={next} />}
-        <button
-          type="submit"
-          name="method"
-          value="card"
-          className={`tap w-full rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
-            highlighted
-              ? "bg-brand text-white hover:bg-brand-light active:bg-brand-light"
-              : premium
-                ? "bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-600"
-                : "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/85"
-          }`}
-        >
-          {cta}
-        </button>
-        {oxxoPrice && oxxoCta && (
-          <button
-            type="submit"
-            name="method"
-            value="oxxo"
-            className="tap mt-3 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/10"
-          >
-            {oxxoCta} — {oxxoPrice}
-          </button>
-        )}
-        {oxxoNote && <p className="mt-2 text-xs text-foreground/50">{oxxoNote}</p>}
-      </form>
-    </div>
-  );
-}
+import FreeTierCard from "@/components/pricing/FreeTierCard";
+import SubscriptionCard from "@/components/pricing/SubscriptionCard";
+import PremiumCard from "@/components/pricing/PremiumCard";
+import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
+import PricingFaq from "@/components/pricing/PricingFaq";
 
 export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const { next: nextRaw } = await searchParams;
+  const { next: nextRaw, highlight } = await searchParams;
   const next = typeof nextRaw === "string" && nextRaw.startsWith(`/${lang}/`) ? nextRaw : undefined;
+  // Only "premium" is a real target today (the profile page's per-plan
+  // upsell link for annual subscribers) — anything else is ignored rather
+  // than silently highlighting the wrong card.
+  const highlightPremium = highlight === "premium";
 
   const dict = await getDictionary(lang);
+  const p = dict.pricing;
 
   return (
-    <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-        {dict.pricing.title}
-      </h1>
-      <p className="mt-3 max-w-xl text-foreground/70">{dict.pricing.subtitle}</p>
+    <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-16 sm:px-6">
+      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{p.title}</h1>
+      <p className="mt-3 max-w-xl text-foreground/70">{p.subtitle}</p>
+      <p className="mt-4 inline-block rounded-full bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+        {p.guaranteeNote}
+      </p>
 
-      <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-start lg:grid-cols-3">
-        <PlanCard
-          lang={lang}
-          planId="monthly"
-          next={next}
-          name={dict.pricing.monthly.name}
-          price={dict.pricing.monthly.price}
-          period={dict.pricing.monthly.period}
-          cta={dict.pricing.monthly.cta}
-          features={dict.pricing.features}
-          featuresTitle={dict.pricing.featuresTitle}
-          oxxoPrice={dict.pricing.monthly.oxxoPrice}
-          oxxoCta={dict.pricing.oxxoCta}
-          oxxoNote={dict.pricing.oxxoNote}
-        />
-        <PlanCard
-          lang={lang}
-          planId="annual"
-          next={next}
-          name={dict.pricing.annual.name}
-          price={dict.pricing.annual.price}
-          period={dict.pricing.annual.period}
-          cta={dict.pricing.annual.cta}
-          badge={dict.pricing.annual.badge}
-          features={dict.pricing.features}
-          featuresTitle={dict.pricing.featuresTitle}
-          highlighted
-          oxxoPrice={dict.pricing.annual.oxxoPrice}
-          oxxoCta={dict.pricing.oxxoCta}
-          oxxoNote={dict.pricing.oxxoNote}
-        />
-        <PlanCard
-          lang={lang}
-          planId="lifetime"
-          next={next}
-          name={dict.pricing.lifetime.name}
-          price={dict.pricing.lifetime.price}
-          period={dict.pricing.lifetime.period}
-          cta={dict.pricing.lifetime.cta}
-          badge={dict.pricing.lifetime.badge}
-          features={dict.pricing.featuresPremium}
-          featuresTitle={dict.pricing.featuresPremiumTitle}
-          premium
-          valueNote={dict.pricing.lifetime.valueNote}
-        />
+      {/* Recommended (Subscription) tile is visually first on mobile and
+          center + elevated on desktop — order-first/lg:order-none swaps it
+          without duplicating markup. */}
+      <div className="mt-10 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="order-2 lg:order-1">
+          <FreeTierCard
+            heading={p.freeHeading}
+            description={p.freeDescription}
+            features={p.freeFeatures}
+            featuresTitle={p.featuresTitle}
+            cta={p.freeCta}
+            href={`/${lang}/register${next ? `?redirectTo=${encodeURIComponent(next)}` : ""}`}
+          />
+        </div>
+
+        <div className="order-1 lg:order-2">
+          <SubscriptionCard
+            lang={lang}
+            next={next}
+            periodLabel={p.billingPeriodLabel}
+            methodLabel={p.paymentMethodLabel}
+            monthLabel={p.monthLabel}
+            yearLabel={p.yearLabel}
+            cardLabel={p.cardLabel}
+            cashLabel={p.cashLabel}
+            monthly={p.monthly}
+            annual={p.annual}
+            featuresTitle={p.featuresTitle}
+            features={p.features}
+            oxxoDetailsSummary={p.oxxoDetailsSummary}
+            oxxoNote={p.oxxoNote}
+          />
+        </div>
+
+        <div className="order-3">
+          <PremiumCard
+            lang={lang}
+            methodLabel={p.paymentMethodLabel}
+            cardLabel={p.cardLabel}
+            cashLabel={p.cashLabel}
+            name={p.lifetime.name}
+            price={p.lifetime.price}
+            period={p.lifetime.period}
+            badge={p.lifetime.badge}
+            valueNote={p.lifetime.valueNote}
+            mxnApprox={p.lifetime.mxnApprox}
+            cardCta={p.lifetime.cardCta}
+            cashCta={p.lifetime.cashCta}
+            featuresTitle={p.featuresPremiumTitle}
+            features={p.featuresPremium}
+            oxxoDetailsSummary={p.oxxoDetailsSummary}
+            oxxoNote={p.oxxoNote}
+            highlighted={highlightPremium}
+          />
+        </div>
+      </div>
+
+      <div className="mt-16">
+        <PaymentMethodLogos note={p.paymentMethodsNote} />
+      </div>
+
+      <div className="mt-16">
+        <PricingFaq heading={p.faqHeading} items={p.faq} />
       </div>
     </div>
   );

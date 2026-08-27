@@ -41,10 +41,10 @@ export default async function AdminExamsPage({
       <h2 className="font-medium">{dict.admin.exams.title}</h2>
       <p className="mt-1 text-sm text-foreground/60">{dict.admin.exams.subtitle}</p>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/10">
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/30">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
+            <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/30">
               <th className="px-4 py-2">{dict.admin.exams.level}</th>
               <th className="px-4 py-2">{dict.admin.exams.examSlugHeader}</th>
               <th className="px-4 py-2">{dict.admin.exams.titleHeader}</th>

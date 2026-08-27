@@ -938,7 +938,7 @@ export default function StoryText({
         // `position: sticky` player jitter/flicker during playback: its
         // pinned position tracks window scroll, so it was fighting our
         // own auto-scroll every single sentence.
-        className="flex max-h-[70dvh] flex-col gap-6 overflow-y-auto overscroll-contain rounded-2xl border border-black/10 p-4 text-lg leading-8 dark:border-white/10 sm:max-h-[75dvh] sm:p-6 sm:text-xl sm:leading-9"
+        className="flex max-h-[70dvh] flex-col gap-6 overflow-y-auto overscroll-contain rounded-2xl border border-black/10 p-4 text-lg leading-8 dark:border-white/30 sm:max-h-[75dvh] sm:p-6 sm:text-xl sm:leading-9"
       >
         {paragraphGroups.map((group) => (
           <div key={group.paragraphIndex}>

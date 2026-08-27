@@ -38,7 +38,7 @@ export default async function GroupDetailPage({
       </Link>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{group.name}</h1>
 
-      <div className="mt-4 rounded-2xl border border-black/10 p-4 text-sm dark:border-white/10">
+      <div className="mt-4 rounded-2xl border border-black/10 p-4 text-sm dark:border-white/30">
         <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
           {dict.groups.inviteLinkLabel}
         </span>
@@ -53,8 +53,8 @@ export default async function GroupDetailPage({
               key={member.userId}
               className={`flex items-center gap-3 rounded-2xl border p-3 text-sm ${
                 member.userId === user.id
-                  ? "border-brand/40 bg-brand/5"
-                  : "border-black/10 dark:border-white/10"
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-black/10 dark:border-white/30"
               }`}
             >
               <span className="w-5 flex-shrink-0 text-center text-xs font-semibold text-foreground/40 tabular-nums">

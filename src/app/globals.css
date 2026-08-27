@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Design tokens — generated from tokens.json by scripts/build-tokens.mjs,
+   do not hand-edit that file. Defines the full color scale (primary/
+   neutral/premium/semantic/level), typography, spacing, radius, shadow,
+   and motion vars, plus the `@theme inline` block that IS this project's
+   Tailwind v4 config (no tailwind.config.ts — CSS-first config throughout).
+   "Кремль" direction (indigo primary, warm neutral, gold-only premium),
+   approved 2026-08-26. See tokens.json's `migration` key for exactly where
+   every old --brand/--brand-accent value went. */
+@import "./tokens.generated.css";
+
 /* The brand is a warm, light "Городецкая роспись" identity by default — but
    unlike the old behavior (dark mode silently activating from the visitor's
    OS/browser color-scheme setting, which read as "gloomy" and had no way to
@@ -13,25 +23,13 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  /* RusoFácilapp brand palette — "Городецкая роспись" (Gorodets folk
-     painting): a warm cream ground with saturated folk-craft blue/red/gold,
-     flattened into plain UI color rather than literal ornament. Picked over
-     two other pitched directions (a black-lacquer "Khokhloma" treatment,
-     and a cooler teal/coral minimal mark) — see the brand-concepts session
-     for the full comparison. --brand/--brand-light is the PRIMARY
-     interactive accent used all over the app (glossary highlights, active
-     pills, progress bars — not just decorative slides, despite the narrower
-     name); --brand-accent/--brand-accent-light is the secondary/decorative
-     accent (gradient endpoints, bullet dots). Same four-token shape as
-     before the rebrand, only the hex values moved — every consumer
-     component (SlidesTab.tsx, GlossaryApp.tsx, IntroPresentation.tsx, etc.)
-     needed zero changes. */
-  --background: #fff8ec;
-  --foreground: #241c15;
-  --brand: #2d5f8a;
-  --brand-light: #4a7ba8;
-  --brand-accent: #d63b2f;
-  --brand-accent-light: #e0a934;
+  /* Back-compat aliases: 5 celebration/catalog illustration files
+     (SamovarCozySteam.tsx, SamovarBoilTea.tsx, BearBarista.tsx, Samovar.tsx,
+     MatryoshkaDefrostGlow.tsx) reference var(--background) directly in
+     inline styles (teacup-cutout color) — out of scope for the --brand/
+     --brand-accent migration, so aliased rather than touched. */
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
 
   /* Device safe-area insets (notch/status bar/home-indicator) — 0 on a
      regular browser tab, real values once this runs standalone (PWA
@@ -44,20 +42,6 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 
-/* Opt-in dark theme — same Gorodets identity, brightened for contrast on a
-   dark ground (the ground itself stays warm brown-black, not neutral gray,
-   so it still reads as the same brand). These are the exact values the
-   original rebrand shipped with when dark mode still followed the OS —
-   restored here verbatim, just re-gated behind an explicit user choice. */
-:root[data-theme="dark"] {
-  --background: #1b140f;
-  --foreground: #f5ead2;
-  --brand: #5b9bd5;
-  --brand-light: #82b8e8;
-  --brand-accent: #e8574a;
-  --brand-accent-light: #f0b84a;
-}
-
 /* Reading mode — for parsing grammar explanations and long story texts
    comfortably: a softer, lower-contrast warm paper tone instead of the
    brighter cream, more line-height, and a modest root font-size bump. Since
@@ -65,31 +49,20 @@
    font-size scales the whole interface together (not just body text) rather
    than only enlarging some elements and leaving buttons/nav cramped by
    comparison. Brand colors are left untouched — this is a comfort mode, not
-   a full retheme. */
+   a full retheme. Repointed to the new --color-background/--color-foreground
+   names; the literal values (#f6efdc / #2b2318) are unchanged. */
 :root[data-theme="reading"] {
-  --background: #f6efdc;
-  --foreground: #2b2318;
+  --color-background: #f6efdc;
+  --color-foreground: #2b2318;
   font-size: 106%;
 }
 :root[data-theme="reading"] body {
   line-height: 1.7;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-brand: var(--brand);
-  --color-brand-light: var(--brand-light);
-  --color-brand-accent: var(--brand-accent);
-  --color-brand-accent-light: var(--brand-accent-light);
-  --font-sans: var(--font-pt-sans);
-  --font-serif: var(--font-pt-serif);
-  --font-mono: var(--font-pt-mono);
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   /* Kills the default gray flash Android/iOS WebViews (Capacitor included)
      paint on every <a>/<button> tap — replaced by the deliberate .tap
@@ -580,6 +553,7 @@ body {
   .animate-answer-shake,
   .animate-answer-pop,
   .animate-tab-fade-in,
+  .sheet-slide-up,
   .doll-cascade-piece,
   .sparkle-twinkle,
   .bear-bounce,

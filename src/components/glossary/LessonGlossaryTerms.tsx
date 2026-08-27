@@ -7,7 +7,7 @@ import TermQuiz, { type TermQuizDict } from "./TermQuiz";
 import { GLOSSARY_SEEN_CHANGE_EVENT, getMasteredTermSlugs } from "@/lib/glossary-client";
 
 const CHIP_CLASSNAME =
-  "cursor-help rounded-full border border-brand/25 bg-brand/[0.05] px-3 py-1 text-sm font-medium text-foreground transition-colors hover:border-brand hover:bg-brand/10 dark:border-brand-light/30 dark:bg-brand-light/[0.08] dark:hover:border-brand-light";
+  "cursor-help rounded-full border border-primary/25 bg-primary/[0.05] px-3 py-1 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-primary/10 dark:border-primary-400/30 dark:bg-primary-400/[0.08] dark:hover:border-primary-400";
 
 /**
  * "Terms in this lesson" preview, shown before the tabs so a student can
@@ -62,7 +62,7 @@ export default function LessonGlossaryTerms({
   if (!terms || terms.length === 0) return null;
 
   return (
-    <div className="mt-6 rounded-xl border border-black/10 p-4 dark:border-white/10">
+    <div className="mt-6 rounded-xl border border-black/10 p-4 dark:border-white/30">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">{heading}</span>
         <span className="text-xs font-medium text-foreground/50">

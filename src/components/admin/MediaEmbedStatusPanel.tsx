@@ -130,7 +130,7 @@ export default function MediaEmbedStatusPanel({ rows: initialRows }: { rows: Row
                       type="button"
                       onClick={() => toggleManualOverride(row.id, false)}
                       disabled={togglingId === row.id}
-                      className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-xs font-medium transition-colors hover:bg-foreground/5 disabled:opacity-40 dark:border-white/10"
+                      className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-xs font-medium transition-colors hover:bg-foreground/5 disabled:opacity-40 dark:border-white/30"
                     >
                       Quitar protección
                     </button>
@@ -172,7 +172,7 @@ export default function MediaEmbedStatusPanel({ rows: initialRows }: { rows: Row
                       type="button"
                       onClick={() => toggleManualOverride(row.id, true)}
                       disabled={togglingId === row.id}
-                      className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-xs font-medium transition-colors hover:bg-foreground/5 disabled:opacity-40 dark:border-white/10"
+                      className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-xs font-medium transition-colors hover:bg-foreground/5 disabled:opacity-40 dark:border-white/30"
                     >
                       Proteger estado
                     </button>

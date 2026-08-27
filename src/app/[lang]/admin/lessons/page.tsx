@@ -40,10 +40,10 @@ export default async function AdminLessonsPage({
               <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
                 {levelDict.title}
               </h3>
-              <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/10">
+              <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/30">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
+                    <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/30">
                       <th className="px-4 py-2">{dict.admin.lessons.lesson}</th>
                       <th className="px-4 py-2">{dict.admin.lessons.titleHeader}</th>
                       <th className="px-4 py-2">{dict.admin.lessons.statusHeader}</th>

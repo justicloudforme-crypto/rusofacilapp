@@ -124,7 +124,7 @@ export default function SpeakButton({
         onClick={speak}
         aria-label={label}
         className={`inline-flex min-h-11 flex-shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors disabled:opacity-50 ${
-          speaking ? "bg-brand-light text-white" : "bg-brand text-white hover:bg-brand-light"
+          speaking ? "bg-primary-400 text-white" : "bg-primary text-white hover:bg-primary-400"
         }`}
       >
         <span aria-hidden="true" className="text-base">

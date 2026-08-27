@@ -21,7 +21,7 @@ export default function BalalaikaParty() {
           style={{
             left: `${18 + i * 20}%`,
             bottom: "50%",
-            color: i % 2 === 0 ? "var(--brand-accent)" : "var(--brand)",
+            color: i % 2 === 0 ? "var(--color-folk-red)" : "var(--color-primary)",
             animationDelay: `${i * 0.3}s`,
             animationDuration: `${1.6 + i * 0.15}s`,
           }}

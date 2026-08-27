@@ -11,7 +11,7 @@ export default function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
       className={`inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-background/90 shadow-sm ring-1 ring-black/5 backdrop-blur dark:ring-white/10 ${dims.pad}`}
     >
       <MatryoshkaMark size={dims.badge} />
-      <span className={`${dims.text} font-serif font-bold tracking-tight text-brand dark:text-brand-light`}>
+      <span className={`${dims.text} font-serif font-bold tracking-tight text-primary-text dark:text-primary-400`}>
         RusoFácilapp
       </span>
     </div>

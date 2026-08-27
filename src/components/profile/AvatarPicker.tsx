@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CHARACTERS, avatarIdsForCharacter, type AvatarId, type Character } from "@/lib/avatars";
+import { CHARACTERS, avatarIdsForCharacter, characterOf, type AvatarId, type Character } from "@/lib/avatars";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 
 // Tapping the current avatar opens a modal grouped by character, rather
@@ -71,14 +71,16 @@ export default function AvatarPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="tap group flex items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 p-3 pr-4 transition-colors hover:bg-brand/10 active:bg-brand/10"
+        className="tap group flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-3 pr-4 transition-colors hover:bg-primary/10 active:bg-primary/10"
       >
         <span className={justSaved ? "folk-spark-pop" : undefined}>
           <MatryoshkaAvatar id={avatarId} size={56} label={labels[avatarId]} />
         </span>
         <span className="flex flex-col items-start">
-          <span className="text-sm font-medium">{labels[avatarId]}</span>
-          <span className="font-mono text-xs text-brand">{changeHint}</span>
+          <span className="text-sm font-medium">
+            {characterLabels[characterOf(avatarId)]} · {labels[avatarId]}
+          </span>
+          <span className="font-mono text-xs text-primary-text">{changeHint}</span>
         </span>
       </button>
 
@@ -95,7 +97,7 @@ export default function AvatarPicker({
             role="dialog"
             aria-modal="true"
             aria-label={modalTitle}
-            className="celebration-panel relative flex max-h-[85dvh] w-full flex-col rounded-t-3xl border border-brand/15 bg-background p-5 shadow-[0_-8px_30px_-8px_rgba(36,28,21,0.25)] sm:max-w-md sm:rounded-3xl sm:shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.35)]"
+            className="celebration-panel relative flex max-h-[85dvh] w-full flex-col rounded-t-3xl border border-primary/15 bg-background p-5 shadow-[0_-8px_30px_-8px_rgba(36,28,21,0.25)] sm:max-w-md sm:rounded-3xl sm:shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.35)]"
           >
             <div className="mx-auto mb-3 h-1 w-9 flex-shrink-0 rounded-full bg-foreground/15 sm:hidden" aria-hidden />
             <div className="flex items-center justify-between">
@@ -127,7 +129,7 @@ export default function AvatarPicker({
                         disabled={saving !== null}
                         className={`tap flex flex-col items-center gap-1 rounded-2xl border p-2 transition-colors disabled:opacity-70 ${
                           avatarId === id
-                            ? "border-brand bg-brand/5"
+                            ? "border-primary bg-primary/5"
                             : "border-black/10 hover:bg-black/[.03] active:bg-black/[.03] dark:border-white/15 dark:hover:bg-white/[.05] dark:active:bg-white/[.05]"
                         }`}
                       >

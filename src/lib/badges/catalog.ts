@@ -21,7 +21,10 @@ export const BADGE_CATALOG: BadgeDef[] = [
   {
     id: "streak-3",
     category: "streak",
-    icon: "🔥",
+    // Streak badges progress through the metaphor of one path (sprout →
+    // flame → star → crown) rather than 4 copies of the same 🔥, which
+    // made them visually indistinguishable in a locked/earned grid.
+    icon: "🌱",
     title: { es: "Primeros pasos", ru: "Первые шаги" },
     description: {
       es: "3 días seguidos de práctica.",
@@ -41,7 +44,10 @@ export const BADGE_CATALOG: BadgeDef[] = [
   {
     id: "streak-30",
     category: "streak",
-    icon: "🔥",
+    // Not ⭐ — that's already the "premium content" marker on story cards
+    // (PremiumBadge icon="⭐"); 🌟 (glowing star) reads as a different
+    // shape/color at badge-tile size instead of colliding with that.
+    icon: "🌟",
     title: { es: "Un mes de constancia", ru: "Месяц упорства" },
     description: {
       es: "30 días seguidos de práctica.",
@@ -51,7 +57,10 @@ export const BADGE_CATALOG: BadgeDef[] = [
   {
     id: "streak-100",
     category: "streak",
-    icon: "🔥",
+    // Not 👑 — that's already the premium/subscription crown everywhere
+    // else in the app (PremiumBadge, pricing, /profile subscription tab);
+    // reusing it here would make it look like a paid-tier marker.
+    icon: "💎",
     title: { es: "Cien días", ru: "Сто дней" },
     description: {
       es: "100 días seguidos de práctica.",

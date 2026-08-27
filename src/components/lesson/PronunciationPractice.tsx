@@ -34,14 +34,14 @@ export default function PronunciationPractice({
   if (items.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/10">
+    <div className="flex flex-col gap-4 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/30">
       <div>
         <h3 className="text-sm font-semibold">{dict.title}</h3>
         <p className="mt-1 text-xs text-foreground/60">{dict.instructions}</p>
       </div>
       <div className="flex flex-col gap-4">
         {items.map((item, index) => (
-          <div key={item.word} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/10">
+          <div key={item.word} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/30">
             <div className="flex items-center gap-2">
               <SpeakButton text={item.word} label={dict.listenLabel} audioUrl={audioMap[vocabAudioKey(index)]} />
               <span className="font-medium">{item.word}</span>

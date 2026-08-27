@@ -104,7 +104,7 @@ export default async function LevelPage({
             <li key={lesson} className="flex flex-col gap-3">
               <Link
                 href={`/${lang}/courses/${level}/${lessonNumber}`}
-                className="tap flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
+                className="tap flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
               >
                 <span
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${circleClasses}`}
@@ -128,12 +128,12 @@ export default async function LevelPage({
               {milestone && (
                 <Link
                   href={`/${lang}/courses/${level}/exam/${milestone.examSlug}`}
-                  className="tap flex items-start gap-3 rounded-xl border border-dashed border-brand/40 bg-brand/5 p-4 transition-colors hover:border-brand active:border-brand dark:border-brand-light/40 dark:bg-brand-light/10"
+                  className="tap flex items-start gap-3 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 transition-colors hover:border-primary active:border-primary dark:border-primary-400/40 dark:bg-primary-400/10"
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-medium text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-white">
                     ★
                   </span>
-                  <span className="text-sm font-medium leading-6 text-brand dark:text-brand-light">
+                  <span className="text-sm font-medium leading-6 text-primary-text dark:text-primary-400">
                     {milestone.exam.title}
                   </span>
                 </Link>

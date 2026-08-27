@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const COLORS = ["var(--brand)", "var(--brand-light)", "var(--brand-accent)", "var(--brand-accent-light)"];
+const COLORS = ["var(--color-primary)", "var(--color-primary-400)", "var(--color-folk-red)", "var(--color-premium-400)"];
 const PIECE_COUNT = 36;
 
 interface ConfettiPiece {

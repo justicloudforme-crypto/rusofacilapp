@@ -20,7 +20,17 @@
     "soundOffLabel": "Sonido silenciado — pulsa para activar",
     "groupLearn": "Aprender",
     "groupPlay": "Jugar",
-    "groupCommunity": "Comunidad"
+    "groupCommunity": "Comunidad",
+    "pricing": "Precios",
+    "practice": "Practicar",
+    "glossary": "Glosario",
+    "search": "Buscar",
+    "searchTitle": "Buscar en el sitio",
+    "searchPlaceholder": "Cursos, cuentos, vocabulario…",
+    "searchEmpty": "No se encontraron resultados",
+    "searchShortcutHint": "Buscar (⌘K)",
+    "streakLabel": "Racha: {days} días",
+    "bottomNavLabel": "Navegación principal"
   },
   "intro": {
     "title": "Antes de tu primera lección",
@@ -39,6 +49,12 @@
     "heroSubtitle": "Un programa estructurado del nivel A1 al B2, con comparaciones directas entre el español y el ruso para que avances más rápido.",
     "heroCta": "Ver los cursos",
     "heroSecondaryCta": "Cómo funciona",
+    "heroFlipHint": "Toca para voltear la tarjeta",
+    "heroListenLabel": "Escuchar pronunciación",
+    "trustStories": "relatos",
+    "trustWords": "palabras",
+    "trustLevelsLabel": "Niveles",
+    "trustOxxoLabel": "Pago en efectivo",
     "featuresTitle": "¿Por qué estudiar con nosotros?",
     "features": [
       {
@@ -60,7 +76,57 @@
     ],
     "levelsTitle": "Nuestros niveles",
     "levelsSubtitle": "Sigue la ruta completa o entra directamente al nivel que te corresponda.",
-    "viewLevel": "Ver nivel"
+    "viewLevel": "Ver nivel",
+    "howItWorksTitle": "Cómo funciona",
+    "howItWorksSteps": [
+      {
+        "title": "Elige tu nivel",
+        "description": "Desde el alfabeto en A1 hasta temas avanzados en B2 — empieza donde te corresponda."
+      },
+      {
+        "title": "Avanza en pasos cortos",
+        "description": "Cada regla se explica comparando el ruso con el español, no con el inglés."
+      },
+      {
+        "title": "Refuerza con práctica",
+        "description": "Tarjetas, modismos, relatos y juegos de palabras — para que las palabras se queden, no solo se lean."
+      }
+    ],
+    "previewFlashcardTitle": "Tarjetas de vocabulario",
+    "previewFlashcardCta": "Ver todas las tarjetas",
+    "previewStoryTitle": "Relatos",
+    "previewStoryCta": "Leer relatos",
+    "previewGameTitle": "Juegos de palabras",
+    "previewGameCta": "Jugar",
+    "pricingStripTitle": "Tarifas",
+    "pricingStripSubtitle": "Desde acceso gratuito hasta Premium sin límites — todos los detalles en la página de tarifas.",
+    "pricingStripCta": "Ver todas las tarifas",
+    "faqTitle": "Preguntas sobre el curso",
+    "faq": [
+      {
+        "q": "¿Desde qué nivel puedo empezar?",
+        "a": "Desde cero — el nivel A1 empieza con el alfabeto cirílico y la pronunciación, sin transliteración."
+      },
+      {
+        "q": "¿Necesito saber inglés?",
+        "a": "No. Todas las explicaciones de gramática comparan el ruso con el español."
+      },
+      {
+        "q": "¿Cuánto dura una lección?",
+        "a": "Las lecciones son cortas y están divididas en pasos, fáciles de completar sin depender de un horario fijo."
+      },
+      {
+        "q": "¿Puedo estudiar desde el celular?",
+        "a": "Sí, todo el curso funciona en el navegador del celular, tablet o computadora — no necesitas una app aparte."
+      },
+      {
+        "q": "¿Qué obtengo si no me suscribo?",
+        "a": "El acceso gratuito es permanente: 1 lección, 10 tarjetas, 5 modismos, 2 relatos y los primeros crucigramas de nivel A1."
+      }
+    ],
+    "finalCtaTitle": "¿Listo para empezar?",
+    "finalCtaSubtitle": "La primera lección y parte del contenido son gratis, sin tarjeta de crédito.",
+    "finalCtaButton": "Empezar gratis"
   },
   "courses": {
     "pageTitle": "Cursos de ruso",
@@ -286,35 +352,58 @@
   "pricing": {
     "title": "Planes y precios",
     "subtitle": "Elige un plan para desbloquear todas las lecciones, de A1 a B2.",
+    "guaranteeNote": "¿No te convenció? Te devolvemos el dinero dentro de 14 días — solo escríbenos: support@rusofacilapp.com",
+    "freeHeading": "Gratis",
+    "freeDescription": "Prueba la plataforma sin pagar",
+    "freeFeatures": [
+      "1 lección de nivel A1",
+      "10 tarjetas de vocabulario",
+      "5 modismos",
+      "2 relatos — «Репка» y «Теремок»",
+      "Los primeros 5 crucigramas y sopas de letras de nivel A1",
+      "7 videos y canciones de la mediateca"
+    ],
+    "freeCta": "Empezar gratis",
+    "billingPeriodLabel": "Periodo de pago",
+    "monthLabel": "Mes",
+    "yearLabel": "Año",
+    "paymentMethodLabel": "Método de pago",
+    "cardLabel": "Tarjeta",
+    "cashLabel": "Efectivo",
     "monthly": {
       "name": "Mensual",
       "price": "$7.99 USD",
       "period": "/ mes",
-      "cta": "Suscribirme",
-      "oxxoPrice": "$150 MXN"
+      "mxnApprox": "≈150 MXN",
+      "cardCta": "Empezar por $7.99/mes",
+      "cashCta": "Pagar en efectivo — ≈150 MXN"
     },
     "annual": {
       "name": "Anual",
       "price": "$47.99 USD",
       "period": "/ año",
-      "cta": "Suscribirme",
-      "badge": "Ahorra 50%",
-      "oxxoPrice": "$899 MXN"
+      "badge": "−50%",
+      "perMonthNote": "≈$4/mes pagando por año",
+      "mxnApprox": "≈899 MXN",
+      "cardCta": "Ahorrar 50% — $47.99/año",
+      "cashCta": "Pagar en efectivo — ≈899 MXN"
     },
     "lifetime": {
       "name": "Premium",
-      "price": "$169.99 USD",
+      "price": "$122.99 USD",
       "period": "pago único",
-      "cta": "Comprar Premium de por vida",
       "badge": "Acceso para siempre",
-      "valueNote": "Se amortiza en solo 3,5 años frente al plan anual — después, el aprendizaje es gratis para siempre."
+      "valueNote": "Un solo pago — acceso para siempre, sin renovaciones. Además, nivel C1 y biblioteca ampliada de modismos e historias.",
+      "mxnApprox": "≈2299 MXN",
+      "cardCta": "Comprar para siempre por $122.99",
+      "cashCta": "Pagar en efectivo — ≈2299 MXN"
     },
-    "oxxoCta": "Pagar en efectivo (OXXO)",
+    "oxxoDetailsSummary": "¿Cómo pago en efectivo?",
     "oxxoNote": "Recibirás un código de barras por correo y en pantalla para pagar en cualquier tienda OXXO de México. Tu acceso se activa en cuanto se confirme el pago (hasta 3 días); el código vence si no se usa en ese plazo.",
     "featuresTitle": "Incluye",
     "features": [
-      "Acceso a los niveles A1 a B2",
-      "Tarjetas, modismos e historias (sin nivel C1)",
+      "Acceso a las lecciones de nivel A1 a B2",
+      "Tarjetas, modismos e historias de nivel A1–B2",
       "Todos los juegos de palabras estándar",
       "Cancela cuando quieras"
     ],
@@ -324,6 +413,34 @@
       "Biblioteca ampliada de modismos e historias",
       "Juegos de dificultad avanzada (★)",
       "Acceso de por vida — pago único, sin renovaciones"
+    ],
+    "paymentMethodsNote": "Aceptamos tarjetas y efectivo OXXO",
+    "faqHeading": "Preguntas frecuentes",
+    "faq": [
+      {
+        "q": "¿Puedo cancelar mi suscripción?",
+        "a": "Sí, cuando quieras — en tu cuenta, sección «Suscripción». El acceso sigue activo hasta el final del periodo ya pagado."
+      },
+      {
+        "q": "¿Se cobra automáticamente?",
+        "a": "Con tarjeta, sí — el plan mensual y el anual se renuevan automáticamente hasta que los canceles. Con efectivo (OXXO) y con Premium no hay cobros automáticos: es un pago único."
+      },
+      {
+        "q": "¿Qué pasa si no pago el código OXXO a tiempo?",
+        "a": "El código es válido por 3 días. Si no se paga en ese plazo, el pago no se completa y tendrás que generarlo de nuevo en esta página."
+      },
+      {
+        "q": "¿Puedo pedir un reembolso?",
+        "a": "Sí — si el plan no te convenció, escríbenos a support@rusofacilapp.com dentro de los 14 días posteriores al pago y te devolvemos el dinero."
+      },
+      {
+        "q": "¿Cómo cambio de plan?",
+        "a": "Contrata el nuevo plan en esta página y cancela el anterior en tu cuenta, para no pagar los dos a la vez."
+      },
+      {
+        "q": "¿El precio incluye impuestos?",
+        "a": "Sí, el precio mostrado es el precio final — los impuestos están incluidos."
+      }
     ]
   },
   "account": {
@@ -345,12 +462,40 @@
   "profile": {
     "title": "Mi perfil",
     "subtitle": "Tu suscripción, tu progreso y tus cursos, todo en un solo lugar.",
+    "tabOverview": "Resumen",
     "tabPersonal": "Datos personales",
     "tabProgress": "Progreso",
     "tabSubscription": "Suscripción",
     "tabSecurity": "Seguridad",
     "tabLanguage": "Idioma",
     "tabBadges": "Insignias",
+    "tabSettings": "Ajustes",
+    "firstStepHeading": "Tu primer paso",
+    "firstStepLessonTitle": "Hacer la primera lección",
+    "firstStepLessonDescription": "Una introducción breve al idioma ruso.",
+    "firstStepVocabTitle": "Aprender palabras",
+    "firstStepVocabDescription": "Elige una categoría de tarjetas y empieza a memorizar tus primeras palabras.",
+    "firstStepStoryTitle": "Leer tu primer relato",
+    "firstStepStoryDescription": "Un texto sencillo de nivel A1 con traducción.",
+    "whatNextHeading": "Qué sigue",
+    "coursesNotStartedNotice": "Cursos: aún no empezados",
+    "coursesNotStartedCta": "Ver cursos",
+    "continueHeading": "Continuar",
+    "continueNextLevelCta": "Pasar al siguiente nivel",
+    "activityHeatmapHeading": "Actividad de los últimos 30 días",
+    "upcomingBadgesHeading": "Próximas insignias",
+    "subscriptionCompactFree": "Plan gratuito",
+    "subscriptionCompactMonthly": "Suscripción · mensual, hasta el {date}",
+    "subscriptionCompactAnnual": "Suscripción · anual, hasta el {date}",
+    "subscriptionCompactLifetime": "Premium · acceso de por vida",
+    "profileUpsellFree": "Desbloquear todas las lecciones",
+    "profileUpsellToAnnual": "Pasar al plan anual y ahorra 50%",
+    "profileUpsellToPremium": "Desbloquea el nivel C1 para siempre",
+    "dangerZoneHeading": "Zona de riesgo",
+    "dangerZoneToggle": "Mostrar",
+    "badgeProgressStreak": "{current}/{total} días",
+    "badgeProgressVocab": "{current}/{total} palabras",
+    "badgeProgressExam": "{current}/{total} exámenes",
     "badgesHeading": "Tus insignias",
     "badgesSubtitle": "Se desbloquean con tu progreso: rachas, exámenes, dominio de casos y vocabulario.",
     "badgesUnlockedUnit": "desbloqueadas",
@@ -541,6 +686,7 @@
     "pageTitle": "Biblioteca de cuentos y lecturas",
     "pageSubtitle": "Practica tu comprensión lectora con cuentos e historias en ruso, organizados por nivel.",
     "filterAll": "Todos",
+    "searchPlaceholder": "Buscar por título o autor...",
     "premiumBadge": "Premium",
     "byAuthor": "Por",
     "readButton": "Leer",
@@ -558,6 +704,21 @@
     "seekLabel": "Buscar",
     "closeLabel": "Cerrar",
     "completedBadge": "Leído",
+    "audioBadge": "Con audio",
+    "readingTimeLabel": "{minutes} min",
+    "topicFilterLabel": "Tema",
+    "topics": {
+      "daily_life": "Vida cotidiana",
+      "family": "Familia y relaciones",
+      "work_study": "Trabajo y estudios",
+      "childhood": "Infancia",
+      "mystery": "Misterio",
+      "nature_travel": "Naturaleza y viajes",
+      "wisdom_morals": "Sabiduría y moral",
+      "other": "Otros"
+    },
+    "classicLabel": "Clásico (adaptación)",
+    "classicOnlyLabel": "Solo clásicos",
     "progressLabel": "Progreso: {percent}%",
     "notStartedLabel": "No empezado",
     "premiumLockTitle": "Esta historia es solo para suscriptores",
@@ -595,7 +756,11 @@
   },
   "vocabulary": {
     "pageTitle": "Vocabulario en tarjetas",
-    "pageSubtitle": "Aprende palabras en ruso por categorías temáticas. Toca la tarjeta para ver la traducción.",
+    "subtitleVocabulary": "Toca la tarjeta para ver la traducción.",
+    "subtitleRecall": "Escribe la palabra en ruso a partir de la traducción.",
+    "subtitleFillBlank": "Completa la palabra que falta en la frase.",
+    "subtitleMatch": "Une la palabra en ruso con su traducción.",
+    "subtitleIdioms": "Expresiones fijas y refranes, con su explicación.",
     "categoryLabels": {
       "food": "Comida y restaurante",
       "shopping": "Compras y precios",
@@ -638,6 +803,8 @@
     "nextLevelBadgeLabel": "¡Ya dominas este nivel aquí! Prueba {level}",
     "freeTrialLimitMessage": "Has visto la muestra gratuita de palabras. Suscríbete para desbloquear todo el vocabulario.",
     "freeTrialLimitCta": "Suscribirme",
+    "continueTitle": "Continuar",
+    "learnedProgressLabel": "Has aprendido {known} de {total} palabras",
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",
     "modeFillBlank": "Completa la frase",
@@ -665,9 +832,10 @@
     "match": {
       "levelAll": "Todos",
       "backToCategories": "← Categorías",
-      "instructionLabel": "Toca una imagen y luego su palabra",
-      "notEnoughCardsMessage": "Esta categoría no tiene suficientes palabras con icono para este filtro.",
+      "instructionLabel": "Toca la palabra en ruso y luego su traducción",
+      "notEnoughCardsMessage": "Esta categoría no tiene suficientes palabras para este filtro.",
       "roundCompleteLabel": "¡Ronda completa! {pairs} parejas",
+      "playAgainButton": "Jugar de nuevo",
       "nextRoundButton": "Siguiente ronda"
     },
     "recall": {
@@ -739,7 +907,15 @@
     "wrongCellHint": "Esa letra no es correcta, inténtalo de nuevo.",
     "resetSelectionButton": "Cancelar selección",
     "expertModeLabel": "Modo experto",
-    "premiumTierLabel": "Solo Premium"
+    "premiumTierLabel": "Solo Premium",
+    "checkButton": "Comprobar",
+    "filledCountLabel": "Completado: {filled}/{total}"
+  },
+  "gameResult": {
+    "closeLabel": "Cerrar",
+    "resultScoreLabel": "{correct} de {total} correctas",
+    "resultTimeLabel": "Tiempo: {time}",
+    "resultErrorsLabel": "Errores: {count}"
   },
   "celebration": {
     "lessonPassedTitle": "¡Lección superada!",
@@ -981,6 +1157,17 @@
       "authorLabel": "Autor",
       "authorPlaceholder": "Ej.: Lérmontov, Tolstói, Cuento popular ruso",
       "levelLabel": "Nivel",
+      "topicLabel": "Tema",
+      "topics": {
+        "daily_life": "Vida cotidiana",
+        "family": "Familia y relaciones",
+        "work_study": "Trabajo y estudios",
+        "childhood": "Infancia",
+        "mystery": "Misterio",
+        "nature_travel": "Naturaleza y viajes",
+        "wisdom_morals": "Sabiduría y moral",
+        "other": "Otros"
+      },
       "descriptionLabel": "Descripción / resumen (opcional)",
       "descriptionHelp": "Un resumen breve en español, se muestra en la tarjeta del catálogo y arriba del texto.",
       "textLabel": "Texto",

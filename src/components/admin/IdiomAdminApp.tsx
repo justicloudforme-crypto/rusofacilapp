@@ -196,7 +196,7 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
       </div>
 
       {form && (
-        <div className="mt-4 rounded-xl border border-black/10 p-4 dark:border-white/10">
+        <div className="mt-4 rounded-xl border border-black/10 p-4 dark:border-white/30">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block text-sm">
               <span className="mb-1 block text-foreground/70">{dict.categoryLabel}</span>
@@ -303,10 +303,10 @@ export default function IdiomAdminApp({ dict }: { dict: IdiomAdminDict }) {
       {!loading && filtered.length === 0 && <p className="mt-6 text-sm text-foreground/60">{dict.emptyState}</p>}
 
       {filtered.length > 0 && (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/10">
+        <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/30">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
+              <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/30">
                 <th className="px-4 py-2">{dict.phraseHeader}</th>
                 <th className="px-4 py-2">{dict.categoryHeader}</th>
                 <th className="px-4 py-2">{dict.levelHeader}</th>

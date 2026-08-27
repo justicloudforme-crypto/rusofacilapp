@@ -3,7 +3,7 @@
 const BERRY = "#d63b2f";
 const BERRY_SHINE = "#e88a80";
 const LEAF = "#4a7a3a";
-const NOTE_COLOR = "var(--brand)";
+const NOTE_COLOR = "var(--color-primary)";
 
 /** One of CelebrationModal's randomized scenarios: a "kalinka" (viburnum
  * berry cluster) bobbing in place with musical notes bouncing around it —

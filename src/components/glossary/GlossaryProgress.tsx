@@ -7,6 +7,7 @@ import {
   getSeenTermCount,
   loadGlossaryTerms,
 } from "@/lib/glossary-client";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 /**
  * Two-tier progress bar for the /glossary page — lightweight gamification
@@ -46,23 +47,19 @@ export default function GlossaryProgress({
 
   return (
     <div className="mb-5">
-      <div className="relative h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-brand/50 transition-[width] duration-300 dark:bg-brand-light/50"
-          style={{ width: `${seenPct}%` }}
-        />
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 transition-[width] duration-300"
-          style={{ width: `${masteredPct}%` }}
-        />
-      </div>
+      <ProgressBar
+        segments={[
+          { percent: seenPct, className: "bg-primary/50 dark:bg-primary-400/50" },
+          { percent: masteredPct, tone: "success" },
+        ]}
+      />
       <div className="mt-1.5 flex items-center gap-3 text-xs font-medium text-foreground/60">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
           {masteredLabel.replace("{count}", String(mastered)).replace("{total}", String(total))}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-brand/50 dark:bg-brand-light/50" aria-hidden />
+          <span className="h-2 w-2 rounded-full bg-primary/50 dark:bg-primary-400/50" aria-hidden />
           {seenLabel.replace("{count}", String(seen)).replace("{total}", String(total))}
         </span>
       </div>

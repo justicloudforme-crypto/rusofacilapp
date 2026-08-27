@@ -31,7 +31,7 @@ export default function VocabularyTab({
         </thead>
         <tbody>
           {vocabulary.map((item, index) => (
-            <tr key={item.word} className="border-t border-black/5 dark:border-white/10">
+            <tr key={item.word} className="border-t border-black/5 dark:border-white/30">
               <td className="py-2.5 pr-2">
                 <SpeakButton text={item.word} label={listenLabel} audioUrl={audioMap?.[vocabAudioKey(index)]} />
               </td>

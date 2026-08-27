@@ -46,7 +46,7 @@ export default function ProfileNameForm({
         }}
         placeholder={namePlaceholder}
         maxLength={100}
-        className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm outline-none focus:border-brand dark:border-white/15 dark:bg-white/10 sm:max-w-xs"
+        className="w-full rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm outline-none focus:border-primary dark:border-white/15 dark:bg-white/10 sm:max-w-xs"
       />
       <button
         type="submit"

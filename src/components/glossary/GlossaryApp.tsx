@@ -165,7 +165,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
           onClick={() => updateLevel("all")}
           className={`tap rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
             level === "all"
-              ? "border-brand bg-brand text-white dark:border-brand-light dark:bg-brand-light"
+              ? "border-primary bg-primary text-white dark:border-primary-400 dark:bg-primary-400"
               : "border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
           }`}
         >
@@ -178,7 +178,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
             onClick={() => updateLevel(l)}
             className={`tap rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
               level === l
-                ? "border-brand bg-brand text-white dark:border-brand-light dark:bg-brand-light"
+                ? "border-primary bg-primary text-white dark:border-primary-400 dark:bg-primary-400"
                 : "border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
@@ -194,7 +194,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
         {terms.map((term) => {
           const earliestLevel = earliestRelatedLevel(term.relatedLessons);
           return (
-          <div key={term.id} className="rounded-xl border border-black/10 p-4 dark:border-white/10">
+          <div key={term.id} className="rounded-xl border border-black/10 p-4 dark:border-white/30">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-semibold">{term.term}</h2>
@@ -212,8 +212,8 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
             </div>
             <p className="mt-2 text-sm leading-6 text-foreground/80">{term.definition}</p>
             {term.russianComparison && (
-              <p className="mt-3 rounded-lg bg-brand/[0.05] px-3 py-2 text-sm leading-6 text-foreground/80 dark:bg-brand-light/[0.08]">
-                <span className="font-medium text-brand dark:text-brand-light">{dict.russianComparisonLabel}: </span>
+              <p className="mt-3 rounded-lg bg-primary/[0.05] px-3 py-2 text-sm leading-6 text-foreground/80 dark:bg-primary-400/[0.08]">
+                <span className="font-medium text-primary-text dark:text-primary-400">{dict.russianComparisonLabel}: </span>
                 {term.russianComparison}
               </p>
             )}

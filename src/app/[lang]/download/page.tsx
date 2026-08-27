@@ -31,7 +31,7 @@ function PlayGlyph() {
 
 function StoreBadge({ icon, storeName, status }: { icon: React.ReactNode; storeName: string; status: string }) {
   return (
-    <div className="flex w-full items-center gap-3 rounded-2xl border border-black/10 px-5 py-3.5 text-foreground/50 dark:border-white/10 sm:w-auto">
+    <div className="flex w-full items-center gap-3 rounded-2xl border border-black/10 px-5 py-3.5 text-foreground/50 dark:border-white/30 sm:w-auto">
       {icon}
       <div className="text-left leading-tight">
         <p className="text-xs">{status}</p>
@@ -84,12 +84,12 @@ export default async function DownloadPage({ params }: PageProps<"/[lang]/downlo
         </Link>
       </section>
 
-      <section className="border-t border-black/10 dark:border-white/10">
+      <section className="border-t border-black/10 dark:border-white/30">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">{d.featuresTitle}</h2>
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
             {d.features.map((feature) => (
-              <div key={feature.title} className="rounded-2xl border border-black/10 p-6 dark:border-white/10">
+              <div key={feature.title} className="rounded-2xl border border-black/10 p-6 dark:border-white/30">
                 <h3 className="font-medium">{feature.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-foreground/70">{feature.description}</p>
               </div>

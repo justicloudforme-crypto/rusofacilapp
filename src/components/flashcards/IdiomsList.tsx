@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import Skeleton from "@/components/ui/Skeleton";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export interface IdiomsDict {
   listenLabel: string;
@@ -58,6 +60,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   // Fetched once from the DB instead of importing the ~7,400-line static
   // bank straight into this client component's JS bundle.
   const [idioms, setIdioms] = useState<Idiom[]>([]);
+  const [idiomsLoading, setIdiomsLoading] = useState(true);
   const [limited, setLimited] = useState(false);
   const [literaryLocked, setLiteraryLocked] = useState<"free" | "standard" | null>(null);
 
@@ -75,7 +78,8 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
         setLimited(Boolean(body.limited));
         setLiteraryLocked(body.literaryLocked ?? null);
       })
-      .catch(() => setIdioms([]));
+      .catch(() => setIdioms([]))
+      .finally(() => setIdiomsLoading(false));
   }, []);
 
   const known = idioms.filter((idiom) => knownIdioms[idiom.id]).length;
@@ -129,9 +133,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   return (
     <div>
       <div ref={listTopRef} className="mb-6">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
-        </div>
+        <ProgressBar percent={percent} tone="success" className="w-full" />
         <span className="mt-1 block text-xs text-foreground/60">
           {dict.progressLabel.replace("{known}", String(known)).replace("{total}", String(idioms.length))}
         </span>
@@ -152,7 +154,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
         />
       )}
 
-      <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/10">
+      <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30">
         {categoryTabs.map((tab) => (
           <button
             key={tab.value}
@@ -175,8 +177,14 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
         className="mb-6 w-full rounded-full border border-black/10 bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-foreground/40 dark:border-white/15"
       />
 
-      {pageItems.length === 0 ? (
-        <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
+      {idiomsLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} variant="rect" className="h-20 w-full" />
+          ))}
+        </div>
+      ) : pageItems.length === 0 ? (
+        <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
           {dict.noResultsMessage}
         </p>
       ) : (
@@ -185,7 +193,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
             const isOpen = openId === idiom.id;
             const isKnown = Boolean(knownIdioms[idiom.id]);
             return (
-              <div key={idiom.id} className="rounded-2xl border border-black/10 p-4 dark:border-white/10 sm:p-5">
+              <div key={idiom.id} className="rounded-2xl border border-black/10 p-4 dark:border-white/30 sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-2">
                     <button
@@ -212,7 +220,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
                 </div>
 
                 {isOpen && (
-                  <div className="mt-4 space-y-3 border-t border-black/10 pt-4 text-sm dark:border-white/10">
+                  <div className="mt-4 space-y-3 border-t border-black/10 pt-4 text-sm dark:border-white/30">
                     <p>
                       <span className="font-medium text-foreground/60">{dict.literalTranslationLabel}: </span>
                       {idiom.literalTranslation}

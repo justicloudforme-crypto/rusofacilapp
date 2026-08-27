@@ -11,7 +11,7 @@ function HistoricalContextAccordion({ sections }: { sections: HistoricalSection[
       {sections.map((section) => {
         const isOpen = openId === section.id;
         return (
-          <div key={section.id} className="overflow-hidden rounded-2xl border border-black/10 dark:border-white/10">
+          <div key={section.id} className="overflow-hidden rounded-2xl border border-black/10 dark:border-white/30">
             <button
               type="button"
               onClick={() => setOpenId(isOpen ? null : section.id)}
@@ -22,7 +22,7 @@ function HistoricalContextAccordion({ sections }: { sections: HistoricalSection[
               <span className={`transition-transform ${isOpen ? "rotate-180" : ""}`}>⌄</span>
             </button>
             {isOpen && (
-              <div className="flex flex-col gap-3 border-t border-black/10 px-4 py-4 text-sm leading-relaxed text-foreground/80 dark:border-white/10">
+              <div className="flex flex-col gap-3 border-t border-black/10 px-4 py-4 text-sm leading-relaxed text-foreground/80 dark:border-white/30">
                 {section.bodyEs.split("\n\n").map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
                 ))}

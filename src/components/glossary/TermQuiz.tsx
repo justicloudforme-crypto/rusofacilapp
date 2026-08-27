@@ -92,7 +92,7 @@ export default function TermQuiz({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="tap mt-3 rounded-full border border-brand/30 px-3 py-1 text-xs font-medium text-brand transition-colors hover:bg-brand/[0.06] active:bg-brand/[0.06] dark:border-brand-light/40 dark:text-brand-light"
+        className="tap mt-3 rounded-full border border-primary/30 px-3 py-1 text-xs font-medium text-primary-text transition-colors hover:bg-primary/[0.06] active:bg-primary/[0.06] dark:border-primary-400/40 dark:text-primary-400"
       >
         {dict.toggleLabel}
       </button>
@@ -107,7 +107,7 @@ export default function TermQuiz({
 
   if (finished) {
     return (
-      <div className="mt-3 rounded-lg border border-black/10 p-3 text-sm dark:border-white/10">
+      <div className="mt-3 rounded-lg border border-black/10 p-3 text-sm dark:border-white/30">
         <p className="font-medium text-foreground">
           {dict.scoreLabel.replace("{score}", String(correctCount)).replace("{total}", String(questions.length))}
         </p>
@@ -158,12 +158,12 @@ export default function TermQuiz({
   const hint = question.term.russianComparison ?? question.term.definition;
 
   return (
-    <div className="mt-3 rounded-lg border border-black/10 p-3 dark:border-white/10">
+    <div className="mt-3 rounded-lg border border-black/10 p-3 dark:border-white/30">
       {/* The term itself is the single biggest, boldest thing in this
        * block — deliberately more prominent than the instruction text
        * above it, so which word the question is about is unmistakable at
        * a glance rather than something read off inside a sentence. */}
-      <div className="rounded-lg border border-brand/25 bg-brand/[0.06] px-3 py-2.5 dark:border-brand-light/30 dark:bg-brand-light/[0.08]">
+      <div className="rounded-lg border border-primary/25 bg-primary/[0.06] px-3 py-2.5 dark:border-primary-400/30 dark:bg-primary-400/[0.08]">
         <p className="text-[0.7rem] font-medium uppercase tracking-wide text-foreground/45">
           {dict.questionCounter.replace("{index}", String(index + 1)).replace("{total}", String(questions.length))}
           {" · "}
@@ -228,7 +228,7 @@ export default function TermQuiz({
                 href={`/${lang}/glossary?slug=${encodeURIComponent(question.term.slug)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="tap mt-1.5 inline-block text-xs font-medium text-brand underline-offset-2 hover:underline active:underline dark:text-brand-light"
+                className="tap mt-1.5 inline-block text-xs font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
               >
                 {dict.reviewInGlossaryLabel} ›
               </Link>

@@ -58,7 +58,7 @@ export default function ChangePasswordForm({
             setCurrentPassword(event.target.value);
             setStatus("idle");
           }}
-          className="rounded-lg border border-black/15 bg-white/60 px-3 py-2 text-sm outline-none focus:border-brand dark:border-white/20 dark:bg-white/10"
+          className="rounded-lg border border-black/15 bg-white/60 px-3 py-2 text-sm outline-none focus:border-primary dark:border-white/20 dark:bg-white/10"
         />
       </label>
       <label className="flex flex-col gap-1.5 text-sm">
@@ -73,7 +73,7 @@ export default function ChangePasswordForm({
             setNewPassword(event.target.value);
             setStatus("idle");
           }}
-          className="rounded-lg border border-black/15 bg-white/60 px-3 py-2 text-sm outline-none focus:border-brand dark:border-white/20 dark:bg-white/10"
+          className="rounded-lg border border-black/15 bg-white/60 px-3 py-2 text-sm outline-none focus:border-primary dark:border-white/20 dark:bg-white/10"
         />
       </label>
       <div className="flex items-center gap-3">

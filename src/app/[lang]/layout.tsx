@@ -18,6 +18,7 @@ import NativeNotifications from "@/components/NativeNotifications";
 import SerwistRegister from "@/components/SerwistRegister";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
+import { getUserStreakStats } from "@/lib/streaks";
 import { PaywallProvider } from "@/contexts/PaywallContext";
 import type { PlanId } from "@/lib/plans";
 
@@ -96,6 +97,10 @@ export default async function LangLayout({
   const dict = await getDictionary(lang);
   const theme = await getThemePreference();
   const user = await getCurrentUser();
+  // getUserStreakStats is TTL-cached (60s, see streaks.ts) — calling it
+  // here for the header's streak badge doesn't add a real per-request DB
+  // cost. null for a logged-out visitor, who never sees the badge anyway.
+  const streak = user ? await getUserStreakStats(user.id) : null;
 
   const paywallPlans: Record<PlanId, { name: string; price: string; period: string; badge?: string; valueNote?: string }> = {
     monthly: { name: dict.pricing.monthly.name, price: dict.pricing.monthly.price, period: dict.pricing.monthly.period },
@@ -138,11 +143,13 @@ export default async function LangLayout({
         <NativeNotifications />
         <OfflineBanner message={dict.offline.bannerMessage} />
         <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans}>
-          <Navbar lang={lang} dict={dict} />
+          <Navbar lang={lang} dict={dict} streak={streak} />
           {/* pb-20 clears BottomNav's own height (~56px content + its own
-              pb-safe inset) below sm so page content never sits under it;
-              sm:pb-0 since BottomNav itself is sm:hidden. */}
-          <main className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</main>
+              pb-safe inset) below sm so page content never sits under it —
+              only when BottomNav actually renders (logged in; it returns
+              null when logged out, see BottomNav.tsx), and sm:pb-0 either
+              way since BottomNav itself is sm:hidden. */}
+          <main className={`flex flex-1 flex-col ${user ? "pb-20 sm:pb-0" : ""}`}>{children}</main>
           <Footer dict={dict} lang={lang} />
         </PaywallProvider>
         <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} />

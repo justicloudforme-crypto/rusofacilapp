@@ -22,7 +22,7 @@ export default function VideoPlayer({ videoUrl, title }: { videoUrl: string | un
   const youTubeId = extractYouTubeId(videoUrl);
 
   return (
-    <div className="mb-8 mt-6 overflow-hidden rounded-2xl border border-black/10 bg-black dark:border-white/10">
+    <div className="mb-8 mt-6 overflow-hidden rounded-2xl border border-black/10 bg-black dark:border-white/30">
       <div className="relative aspect-video w-full">
         {youTubeId ? (
           <iframe

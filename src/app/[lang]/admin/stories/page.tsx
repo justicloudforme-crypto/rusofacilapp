@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
+import PremiumBadge from "@/components/ui/PremiumBadge";
 
 export default async function AdminStoriesPage({
   params,
@@ -31,10 +32,10 @@ export default async function AdminStoriesPage({
       {stories.length === 0 ? (
         <p className="mt-6 text-sm text-foreground/60">{dict.admin.stories.emptyState}</p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/10">
+        <div className="mt-6 overflow-x-auto rounded-2xl border border-black/10 dark:border-white/30">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/10">
+              <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-wide text-foreground/50 dark:border-white/30">
                 <th className="px-4 py-2">{dict.admin.stories.titleHeader}</th>
                 <th className="px-4 py-2">{dict.admin.stories.authorHeader}</th>
                 <th className="px-4 py-2">{dict.admin.stories.levelHeader}</th>
@@ -65,11 +66,8 @@ export default async function AdminStoriesPage({
                         <span className="text-foreground/50">{dict.admin.stories.premiumNo}</span>
                       )}
                       {story.premiumOnly && (
-                        <span
-                          title={dict.admin.stories.premiumOnlyHelp}
-                          className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand"
-                        >
-                          👑 {dict.admin.stories.premiumOnlyLabel}
+                        <span title={dict.admin.stories.premiumOnlyHelp}>
+                          <PremiumBadge>{dict.admin.stories.premiumOnlyLabel}</PremiumBadge>
                         </span>
                       )}
                     </div>

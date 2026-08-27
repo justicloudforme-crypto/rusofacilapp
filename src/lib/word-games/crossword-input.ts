@@ -121,3 +121,24 @@ export function isWordSolved(word: PublicCrosswordWord, correctCells: Set<string
 export function isPuzzleSolved(puzzle: Pick<PublicCrosswordPuzzle, "words">, correctCells: Set<string>): boolean {
   return puzzle.words.every((w) => isWordSolved(w, correctCells));
 }
+
+/** Clue list order — by number ascending, not generation/placement order
+ * (a real bug: two words placed in the same pass can land in either
+ * order, so the raw array wasn't reliably 1,2,3,... top to bottom). Takes
+ * an already-direction-filtered list (across/down are rendered as two
+ * separate lists) and returns a new sorted array. */
+export function sortClues(words: PublicCrosswordWord[]): PublicCrosswordWord[] {
+  return [...words].sort((a, b) => a.number - b.number);
+}
+
+/** Whether a check result should count as a mistake toward the round's
+ * error tally. Only a keystroke on a specific cell (soundCell set) can
+ * produce a countable error — the manual "Check" button re-validates the
+ * whole grid without targeting one cell, and must never move the error
+ * counter no matter how many still-wrong cells it reveals. Pulled out as
+ * its own named, tested function rather than left as an inline `if
+ * (soundCell && ...)` at the call site, which would silently break the
+ * very first time someone passes a soundCell from a new call path. */
+export function shouldCountAsError(soundCell: unknown, incorrect: boolean): boolean {
+  return Boolean(soundCell) && incorrect;
+}

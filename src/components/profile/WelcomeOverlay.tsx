@@ -56,7 +56,7 @@ export default function WelcomeOverlay({
       onClick={() => setVisible(false)}
     >
       <div
-        className="celebration-panel flex max-w-xs flex-col items-center gap-3 rounded-3xl border border-brand/15 bg-background px-8 py-8 text-center shadow-[0_1px_2px_rgba(36,28,21,0.06),0_16px_40px_-12px_rgba(36,28,21,0.35)]"
+        className="celebration-panel flex max-w-xs flex-col items-center gap-3 rounded-3xl border border-primary/15 bg-background px-8 py-8 text-center shadow-[0_1px_2px_rgba(36,28,21,0.06),0_16px_40px_-12px_rgba(36,28,21,0.35)]"
         onClick={(event) => event.stopPropagation()}
       >
         {currentStreak > 0 && (
@@ -71,7 +71,7 @@ export default function WelcomeOverlay({
         <button
           type="button"
           onClick={() => setVisible(false)}
-          className="tap mt-2 rounded-full bg-brand px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-light active:bg-brand-light"
+          className="tap mt-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-400 active:bg-primary-400"
         >
           {continueLabel}
         </button>

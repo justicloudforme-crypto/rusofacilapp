@@ -3,7 +3,8 @@
 import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { locales, localeFlags, localeNames, type Locale } from "@/i18n/config";
+import { locales, localeNames, type Locale } from "@/i18n/config";
+import Dropdown from "@/components/ui/Dropdown";
 
 // usePathname() never includes the query string, so a page whose state
 // lives there (e.g. profile's `?tab=progress`) used to silently drop back
@@ -16,6 +17,10 @@ function withLocale(pathname: string, search: string, locale: Locale): string {
   return (segments.join("/") || "/") + search;
 }
 
+// Compact ES/RU dropdown — a flag doesn't identify a language (Spanish
+// isn't Mexico's flag or Spain's flag, and two flag pills used to burn
+// roughly half the header's useful width for a 2-way choice). Shows the
+// current locale's 2-letter code as the trigger, full names in the panel.
 export default function LanguageSwitcher({ current }: { current: Locale }) {
   const pathname = usePathname();
   // Deliberately NOT next/navigation's useSearchParams(): reading it here
@@ -42,22 +47,35 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
   }, [pathname]);
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-black/10 bg-white/60 p-1 dark:border-white/15 dark:bg-white/5">
+    <Dropdown
+      panelClassName="w-40"
+      trigger={({ open, toggle }) => (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label={localeNames[current]}
+          className="tap flex h-9 min-w-9 items-center justify-center rounded-full px-2.5 text-sm font-semibold uppercase text-foreground/80 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
+        >
+          {current}
+        </button>
+      )}
+    >
       {locales.map((locale) => (
         <Link
           key={locale}
           href={withLocale(pathname, search, locale)}
+          role="menuitem"
           aria-current={locale === current}
-          className={`tap flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium transition-colors ${
-            locale === current
-              ? "bg-foreground text-background"
-              : "text-foreground/70 hover:text-foreground active:text-foreground"
+          className={`tap flex min-h-10 items-center justify-between rounded-lg px-3 text-sm transition-colors ${
+            locale === current ? "bg-primary/10 font-medium text-primary-text" : "text-foreground/80 hover:bg-foreground/10 active:bg-foreground/10"
           }`}
         >
-          <span aria-hidden>{localeFlags[locale]}</span>
-          <span className="hidden sm:inline">{localeNames[locale]}</span>
+          {localeNames[locale]}
+          {locale === current && <span aria-hidden>✓</span>}
         </Link>
       ))}
-    </div>
+    </Dropdown>
   );
 }

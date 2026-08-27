@@ -7,6 +7,7 @@ import IdiomsList, { type IdiomsDict } from "./IdiomsList";
 import RecallApp, { type RecallAppDict } from "./RecallApp";
 import MatchApp, { type MatchAppDict } from "./MatchApp";
 import FillBlankApp, { type FillBlankAppDict } from "./FillBlankApp";
+import type { GameResultPanelDict } from "@/components/games/GameResultPanel";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { hapticTap } from "@/lib/haptics";
 import { DictionaryIcon, ChecklistIcon, PuzzleIcon, BookIcon } from "@/components/profile/ProfileIcons";
@@ -21,10 +22,22 @@ export interface VocabularyDict extends FlashcardsDict {
   modeFillBlank: string;
   modeMatch: string;
   modeIdioms: string;
+  // One short line per mode instead of one static page subtitle — the old
+  // single subtitle described only the flip-card mode ("tap a card...") and
+  // stayed on screen unchanged in the other 4 modes, where there's no card
+  // to tap at all (a real report: it actively misled Recall/FillBlank/Match/
+  // Idioms visitors). Kept short on purpose (see each dict entry) so it
+  // never wraps past 2 lines and pushes the mode chips off the first mobile
+  // screen.
+  subtitleVocabulary: string;
+  subtitleRecall: string;
+  subtitleFillBlank: string;
+  subtitleMatch: string;
+  subtitleIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
-  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
-  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta">;
+  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -37,9 +50,11 @@ function isMode(value: string | null): value is Mode {
 export default function VocabularyApp({
   dict,
   celebrationDict,
+  resultDict,
 }: {
   dict: VocabularyDict;
   celebrationDict: Dictionary["celebration"];
+  resultDict: GameResultPanelDict;
 }) {
   const [mode, setModeState] = useState<Mode>("vocabulary");
   const router = useRouter();
@@ -81,9 +96,28 @@ export default function VocabularyApp({
     { value: "idioms", label: dict.modeIdioms, icon: <BookIcon className="h-5 w-5" /> },
   ];
 
+  const subtitle: Record<Mode, string> = {
+    vocabulary: dict.subtitleVocabulary,
+    recall: dict.subtitleRecall,
+    fillBlank: dict.subtitleFillBlank,
+    match: dict.subtitleMatch,
+    idioms: dict.subtitleIdioms,
+  };
+
   return (
     <div>
-      <div role="tablist" className="mb-8 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <p className="mb-6 max-w-xl text-foreground/70">{subtitle[mode]}</p>
+
+      {/* Horizontal scroll-snap chip strip below sm: — 5 tiles in a
+          grid-cols-2 wrap felt cramped/ugly at 375px (AUDIT.md-confirmed
+          complaint). sm:+ has room for a proper grid, so it switches back
+          there. -mx-4/px-4 lets the strip bleed to the screen edges (so the
+          first/last chip isn't flush against the content padding) while
+          the scroll-snap targets stay flush with the visible viewport. */}
+      <div
+        role="tablist"
+        className="mb-8 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5"
+      >
         {tabs.map((tab) => (
           <button
             key={tab.value}
@@ -91,10 +125,10 @@ export default function VocabularyApp({
             role="tab"
             aria-selected={mode === tab.value}
             onClick={() => setMode(tab.value)}
-            className={`tap flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center text-sm font-medium transition-all active:scale-[0.97] ${
+            className={`tap flex w-24 shrink-0 snap-start flex-col items-center gap-1.5 rounded-2xl border p-3 text-center text-sm font-medium transition-all active:scale-[0.97] sm:w-auto ${
               mode === tab.value
-                ? "border-brand bg-brand/10 text-brand shadow-sm"
-                : "border-black/10 text-foreground/70 hover:border-foreground/30 hover:text-foreground dark:border-white/10"
+                ? "border-primary bg-primary/10 text-primary-text shadow-sm"
+                : "border-black/10 text-foreground/70 hover:border-foreground/30 hover:text-foreground dark:border-white/30"
             }`}
           >
             {tab.icon}
@@ -114,8 +148,11 @@ export default function VocabularyApp({
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
+              continueTitle: dict.continueTitle,
+              learnedProgressLabel: dict.learnedProgressLabel,
             }}
             celebrationDict={celebrationDict}
+            resultDict={resultDict}
           />
         )}
         {mode === "fillBlank" && (
@@ -127,8 +164,11 @@ export default function VocabularyApp({
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
+              continueTitle: dict.continueTitle,
+              learnedProgressLabel: dict.learnedProgressLabel,
             }}
             celebrationDict={celebrationDict}
+            resultDict={resultDict}
           />
         )}
         {mode === "match" && (
@@ -140,8 +180,11 @@ export default function VocabularyApp({
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
+              continueTitle: dict.continueTitle,
+              learnedProgressLabel: dict.learnedProgressLabel,
             }}
             celebrationDict={celebrationDict}
+            resultDict={resultDict}
           />
         )}
         {mode === "idioms" && <IdiomsList dict={dict.idioms} />}

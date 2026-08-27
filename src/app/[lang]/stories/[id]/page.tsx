@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import StoryText from "@/components/stories/StoryText";
+import PremiumBadge from "@/components/ui/PremiumBadge";
+import Card from "@/components/ui/Card";
 
 export default async function StoryReaderPage({
   params,
@@ -32,6 +34,11 @@ export default async function StoryReaderPage({
   // subscribed, but this needs Premium specifically".
   const needsPremiumUpgrade = reason === "premium";
   const requiresPremiumTier = story.premiumOnly || story.level === "C1";
+
+  // descriptionRu is null for every row today (see schema.prisma) — this
+  // fallback is what keeps /ru showing the Spanish summary instead of
+  // hiding the block, until the Russian text exists.
+  const localizedDescription = lang === "ru" ? (story.descriptionRu ?? story.description) : story.description;
 
   const paragraphs = splitStoryParagraphs(story.text);
   const visibleParagraphs = entitled ? paragraphs : paragraphs.slice(0, 1);
@@ -69,25 +76,15 @@ export default async function StoryReaderPage({
         <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/70">
           {story.level}
         </span>
-        {story.isPremium && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-            ⭐ {dict.stories.premiumBadge}
-          </span>
-        )}
-        {requiresPremiumTier && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
-            👑 {dict.stories.premiumTierBadge}
-          </span>
-        )}
+        {story.isPremium && <PremiumBadge icon="⭐">{dict.stories.premiumBadge}</PremiumBadge>}
+        {requiresPremiumTier && <PremiumBadge>{dict.stories.premiumTierBadge}</PremiumBadge>}
       </div>
 
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{story.title}</h1>
       <p className="mt-1 text-foreground/60">
         {dict.stories.byAuthor} {story.author}
       </p>
-      {story.description && (
-        <p className="mt-3 text-foreground/70">{story.description}</p>
-      )}
+      {localizedDescription && <p className="mt-3 text-foreground/70">{localizedDescription}</p>}
 
       <p className="mt-8 text-xs font-medium uppercase tracking-wide text-foreground/40">
         {dict.stories.translationHint}
@@ -116,7 +113,7 @@ export default async function StoryReaderPage({
       </div>
 
       {!entitled && (
-        <div className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
+        <Card tone="premium" padding="lg" className="mt-10">
           <h2 className="font-medium">
             {needsPremiumUpgrade ? dict.stories.premiumTierLockTitle : dict.stories.premiumLockTitle}
           </h2>
@@ -129,7 +126,7 @@ export default async function StoryReaderPage({
           >
             {dict.stories.premiumLockCta}
           </Link>
-        </div>
+        </Card>
       )}
     </div>
   );

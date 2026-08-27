@@ -89,10 +89,25 @@ test("crossword: full solve flow shows check feedback and the completion celebra
 
   await fillCrossword(page);
 
+  // Regression guard for a real bug (5aa9e8d): WordGamePlayer used to show
+  // BOTH the old CelebrationModal and the new GameResultPanel at once — two
+  // stacked role="dialog" elements. Exactly one now.
   await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("dialog")).toContainText("resuelto");
 
   await page.screenshot({ path: "test-results/word-games-crossword-solved.png" });
+
+  // "Play again" must actually restart the SAME puzzle, not just close the
+  // dialog — confirm the board resets to empty and is solvable again.
+  await page.getByRole("button", { name: "Jugar otro puzle" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(firstCell).toHaveValue("");
+  await fillCrossword(page);
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+
+  // "Next game" must navigate back to the word-games catalog.
+  await page.getByRole("button", { name: "← Volver a los juegos de palabras" }).click();
+  await expect(page).toHaveURL(/\/es\/word-games$/);
 });
 
 const DIRS = [
@@ -350,4 +365,46 @@ test("word search: ★ expert puzzle can be solved by clicking through a bent wo
   await expect(page.locator(`ul li[data-word="${targetWord}"]`)).toHaveClass(/line-through/);
 
   await page.screenshot({ path: "test-results/word-games-word-search-curved-click.png" });
+});
+
+test("word search: finding every word shows exactly one completion dialog", async ({ page }) => {
+  // Same regression this file's crossword test guards (5aa9e8d): the old
+  // CelebrationModal + new GameResultPanel both live in the shared
+  // WordGamePlayer, so this exact double-dialog bug applied to word
+  // search too — just with no test that ever finished a whole puzzle to
+  // catch it. A1/1 is small enough that every word is a straight line
+  // (findPath, not the bent-path finder the ★ test needs).
+  await page.goto("/es/word-games/WORD_SEARCH/A1/1");
+  const grid = await readGrid(page);
+  const words = await readWordList(page);
+  expect(words.length).toBeGreaterThan(0);
+
+  for (const word of words) {
+    const path = findPath(grid, word);
+    expect(path).not.toBeNull();
+    if (!path) continue;
+    await dragSelect(page, path);
+  }
+
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("dialog")).toContainText("resuelto");
+
+  // "Play again" must actually restart the SAME puzzle, not just close the
+  // dialog — confirm every word goes back to unfound and is findable again.
+  await page.getByRole("button", { name: "Jugar otro puzle" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.locator("ul li[data-word].line-through")).toHaveCount(0);
+  const firstPath = findPath(grid, words[0]);
+  expect(firstPath).not.toBeNull();
+  if (firstPath) await dragSelect(page, firstPath);
+  await expect(page.locator(`ul li[data-word="${words[0]}"]`)).toHaveClass(/line-through/);
+
+  // "Next game" must navigate back to the word-games catalog.
+  for (const word of words.slice(1)) {
+    const path = findPath(grid, word);
+    if (path) await dragSelect(page, path);
+  }
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "← Volver a los juegos de palabras" }).click();
+  await expect(page).toHaveURL(/\/es\/word-games$/);
 });

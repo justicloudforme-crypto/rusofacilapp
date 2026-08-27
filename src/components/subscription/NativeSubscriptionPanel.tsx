@@ -35,14 +35,14 @@ export default function NativeSubscriptionPanel({ userId, dict }: NativeSubscrip
 
   if (loading) {
     return (
-      <section className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+      <section className="rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
         <div className="h-5 w-40 animate-pulse rounded bg-black/10 dark:bg-white/10" />
       </section>
     );
   }
 
   return (
-    <section className="rounded-2xl border border-black/10 p-5 dark:border-white/10 sm:p-6">
+    <section className="rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-medium">{dict.heading}</h2>
         <span

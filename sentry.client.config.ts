@@ -19,4 +19,26 @@ Sentry.init({
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
   debug: false,
+  beforeSend(event) {
+    // Playwright's default `serviceWorkers: 'block'` context option stubs
+    // navigator.serviceWorker.register with a no-op that resolves
+    // `undefined` (playwright-core/lib/coreBundle.js) instead of a real
+    // registration or a rejection — @serwist/window then throws reading
+    // `.waiting` off that `undefined` (see SerwistRegister.tsx). Confirmed
+    // via a real prod event (Sentry 8de70b2c) whose breadcrumbs carry
+    // Playwright's own "blocked by Playwright" console warning —
+    // automation hitting the live site, not a real user, and already
+    // handled gracefully client-side. Only drop THIS specific failure
+    // (TypeError reading 'waiting') from a session that shows Playwright's
+    // fingerprint — any other error in the same session (a real bug the
+    // automation happened to also trip) still reports normally.
+    const blockedByPlaywright = event.breadcrumbs?.some(
+      (b) => b.category === "console" && typeof b.message === "string" && b.message.includes("blocked by Playwright")
+    );
+    const isWaitingOnUndefined = event.exception?.values?.some(
+      (v) => v.type === "TypeError" && typeof v.value === "string" && v.value.includes("reading 'waiting'")
+    );
+    if (blockedByPlaywright && isWaitingOnUndefined) return null;
+    return event;
+  },
 });

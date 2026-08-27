@@ -241,7 +241,7 @@ export default function WordSearchBoard({
     <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
       <div className="flex flex-col items-center gap-2">
         {puzzle.curved && (
-          <span className="w-fit rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand dark:bg-brand-light/15 dark:text-brand-light">
+          <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
             ★ {dict.expertModeLabel}
           </span>
         )}
@@ -251,7 +251,7 @@ export default function WordSearchBoard({
             bug as CrosswordBoard's, fixed the same way; see its comment).
             Framed in a card, matching CrosswordBoard, so the puzzle reads
             as one bounded object instead of loose letters on the page. */}
-        <div className="max-w-full overflow-x-auto rounded-2xl border border-brand/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4">
+        <div className="max-w-full overflow-x-auto rounded-2xl border border-primary/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4">
           <div
             ref={gridRef}
             className="grid touch-none select-none gap-0.5"
@@ -278,8 +278,8 @@ export default function WordSearchBoard({
                       foundColorIndex !== undefined
                         ? WORD_COLORS[foundColorIndex]
                         : isSelecting
-                          ? "bg-brand/20"
-                          : "hover:bg-brand/5"
+                          ? "bg-primary/20"
+                          : "hover:bg-primary/5"
                     }`}
                   >
                     {letter}
@@ -293,7 +293,7 @@ export default function WordSearchBoard({
           <button
             type="button"
             onClick={() => updatePath([])}
-            className="w-fit rounded-full border border-brand/20 px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:border-brand hover:text-brand"
+            className="w-fit rounded-full border border-primary/20 px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:border-primary hover:text-primary-text"
           >
             ✕ {dict.resetSelectionButton}
           </button>

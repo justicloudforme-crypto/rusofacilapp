@@ -177,7 +177,7 @@ function SubtitleTrack({
 
   if (subtitles.length === 0) {
     return (
-      <div className="flex min-h-[6rem] items-center justify-center rounded-2xl border border-black/10 px-4 py-6 text-center text-sm text-foreground/40 dark:border-white/10">
+      <div className="flex min-h-[6rem] items-center justify-center rounded-2xl border border-black/10 px-4 py-6 text-center text-sm text-foreground/40 dark:border-white/30">
         Esta lección todavía no tiene transcripción.
       </div>
     );
@@ -186,7 +186,7 @@ function SubtitleTrack({
   return (
     <div
       ref={containerRef}
-      className="flex max-h-96 flex-col gap-1 overflow-y-auto rounded-2xl border border-black/10 p-3 dark:border-white/10"
+      className="flex max-h-96 flex-col gap-1 overflow-y-auto rounded-2xl border border-black/10 p-3 dark:border-white/30"
     >
       {subtitles.map((line) => (
         <MemoSubtitleLineRow

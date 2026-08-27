@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import type { AvatarId } from "@/lib/avatars";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import { hapticTap } from "@/lib/haptics";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import Button from "@/components/ui/Button";
 
 export interface MobileMenuLink {
   href: string;
@@ -31,11 +33,20 @@ interface MobileMenuUser {
   isPremium: boolean;
 }
 
-// Client island for the hamburger menu shown below the `sm` breakpoint,
-// where Navbar.tsx's own `hidden ... sm:flex` nav disappears with no
+// Client island for the drawer shown below the `sm` breakpoint, where
+// Navbar.tsx's own `hidden ... sm:flex` nav disappears with no
 // replacement. Navbar stays a server component (it awaits getCurrentUser())
 // and just passes the already-resolved, serializable links/labels down —
 // same split as LanguageSwitcher.tsx.
+//
+// Its role changed once BottomNav.tsx started covering the 5 highest-
+// traffic destinations for a logged-in user: this drawer now holds
+// "everything else" (Аудио и видео, Цены, Группы, the full 7-tab profile
+// list) rather than duplicating what the bottom bar already covers, and
+// its own trigger becomes the header's avatar rather than a hamburger for
+// that case. Logged out, there's no bottom bar at all — this is the only
+// way to browse, so `groups` (built in Navbar.tsx) carries every
+// destination and the trigger stays a hamburger icon.
 //
 // Renders as a bottom sheet (not a dropdown under the header) so the
 // touch targets sit near the user's thumb, and folds the desktop
@@ -65,6 +76,7 @@ export default function MobileMenu({
   closeLabel: string;
 }) {
   const [open, setOpen] = useState(false);
+  useBodyScrollLock(open);
   const pathname = usePathname();
   // Fallback close-on-navigation for paths that don't go through one of
   // this panel's own links below (browser back/forward, a programmatic
@@ -94,17 +106,25 @@ export default function MobileMenu({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={open ? closeLabel : openLabel}
-        className="tap flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-brand/10 active:bg-brand/10"
+        className="tap flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-primary/10 active:bg-primary/10"
       >
-        <span className="relative flex h-4 w-5 flex-col justify-between" aria-hidden>
-          <span
-            className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`}
-          />
-          <span className={`h-0.5 w-full rounded-full bg-current transition-opacity ${open ? "opacity-0" : ""}`} />
-          <span
-            className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`}
-          />
-        </span>
+        {user ? (
+          // Logged in: this button doubles as the avatar (bottom nav
+          // already covers the 5 primary destinations, so the header's
+          // 3rd slot opens the drawer for everything else instead of
+          // showing a redundant hamburger).
+          <MatryoshkaAvatar id={user.avatarId} size={28} premium={user.isPremium} />
+        ) : (
+          <span className="relative flex h-4 w-5 flex-col justify-between" aria-hidden>
+            <span
+              className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`}
+            />
+            <span className={`h-0.5 w-full rounded-full bg-current transition-opacity ${open ? "opacity-0" : ""}`} />
+            <span
+              className={`h-0.5 w-full rounded-full bg-current transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`}
+            />
+          </span>
+        )}
       </button>
 
       {open &&
@@ -126,7 +146,7 @@ export default function MobileMenu({
               className="animate-celebration-fade-in fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] dark:bg-black/50"
             />
 
-          <nav className="sheet-slide-up fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-3xl border-t border-brand/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(36,28,21,0.25)]">
+          <nav className="sheet-slide-up fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-3xl border-t border-primary/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(36,28,21,0.25)]">
             <div className="mx-auto mt-2.5 h-1 w-9 flex-shrink-0 rounded-full bg-foreground/15" aria-hidden />
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3">
@@ -135,7 +155,7 @@ export default function MobileMenu({
                   <Link
                     href={`/${lang}/profile`}
                     onClick={() => setOpen(false)}
-                    className="tap flex min-h-14 items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 px-3 transition-colors hover:bg-brand/10 active:bg-brand/10"
+                    className="tap flex min-h-14 items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 px-3 transition-colors hover:bg-primary/10 active:bg-primary/10"
                   >
                     <MatryoshkaAvatar id={user.avatarId} size={36} premium={user.isPremium} />
                     <span className="min-w-0 flex-1">
@@ -167,13 +187,9 @@ export default function MobileMenu({
                   </div>
                 </>
               ) : (
-                <Link
-                  href={loggedOutHref}
-                  onClick={() => setOpen(false)}
-                  className="tap flex min-h-12 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-light active:bg-brand-light"
-                >
+                <Button href={loggedOutHref} variant="primary" fullWidth onClick={() => setOpen(false)}>
                   {loggedOutLabel}
-                </Link>
+                </Button>
               )}
 
               {groups.map((group) => (
@@ -190,10 +206,10 @@ export default function MobileMenu({
                           hapticTap();
                           setOpen(false);
                         }}
-                        className="tap flex min-h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-foreground/85 transition-all active:scale-[0.97] hover:bg-brand/10 active:bg-brand/10"
+                        className="tap flex min-h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-foreground/85 transition-all active:scale-[0.97] hover:bg-primary/10 active:bg-primary/10"
                       >
                         {link.icon && (
-                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-brand">
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-primary-text">
                             {link.icon}
                           </span>
                         )}
@@ -205,11 +221,11 @@ export default function MobileMenu({
               ))}
 
               {user && (
-                <form action="/api/auth/logout" method="POST" className="mt-4 border-t border-black/10 pt-3 dark:border-white/10">
+                <form action="/api/auth/logout" method="POST" className="mt-4 border-t border-black/10 pt-3 dark:border-white/30">
                   <input type="hidden" name="lang" value={lang} />
                   <button
                     type="submit"
-                    className="tap flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm text-brand-accent transition-colors hover:bg-brand-accent/10 active:bg-brand-accent/10"
+                    className="tap flex min-h-11 w-full items-center rounded-lg px-3 text-left text-sm text-foreground/70 transition-colors hover:bg-neutral-200/60 active:bg-neutral-200/60"
                   >
                     {logoutLabel}
                   </button>

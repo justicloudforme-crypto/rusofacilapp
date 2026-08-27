@@ -236,7 +236,7 @@ const YouTubePlayer = forwardRef<
   }, [youtubeVideoId]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/10 bg-black dark:border-white/10">
+    <div className="overflow-hidden rounded-2xl border border-black/10 bg-black dark:border-white/30">
       <div className="relative aspect-video w-full" aria-label={title}>
         <div ref={containerRef} className="absolute inset-0 h-full w-full" />
         {(errorCode !== null || silentlyBroken) && (

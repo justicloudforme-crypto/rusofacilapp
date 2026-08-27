@@ -222,13 +222,13 @@ export default function ExercisesTab({
       )}
 
       {restored && submitted && (
-        <p className="rounded-lg bg-brand/[0.06] px-3 py-2 text-sm text-foreground/70 dark:bg-brand-light/[0.08]">
+        <p className="rounded-lg bg-primary/[0.06] px-3 py-2 text-sm text-foreground/70 dark:bg-primary-400/[0.08]">
           {dict.previousAttemptBanner}
         </p>
       )}
 
       {!submitted && (
-        <div className="sticky top-0 z-10 flex flex-col gap-1.5 rounded-xl border border-black/10 bg-background/95 px-3 py-2 backdrop-blur dark:border-white/10">
+        <div className="sticky top-0 z-10 flex flex-col gap-1.5 rounded-xl border border-black/10 bg-background/95 px-3 py-2 backdrop-blur dark:border-white/30">
           <div className="flex items-center justify-between text-xs font-medium text-foreground/60">
             <span>{dict.progressLabel}</span>
             <span>
@@ -370,7 +370,7 @@ export default function ExercisesTab({
         />
       )}
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/10">
+      <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/30">
         {result && (
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">

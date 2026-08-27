@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
+import Button from "@/components/ui/Button";
 
 export default async function LoginPage({
   params,
@@ -26,7 +27,7 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-      <div className="rounded-3xl border border-brand/15 bg-background p-7 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)]">
+      <div className="rounded-3xl border border-primary/15 bg-background p-7 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)]">
         <div className="flex justify-center">
           <MatryoshkaMark size={40} />
         </div>
@@ -41,7 +42,7 @@ export default async function LoginPage({
           </p>
         )}
         {errorMessage && (
-          <p className="mt-4 rounded-lg bg-brand-accent/10 px-3 py-2 text-sm text-brand-accent">
+          <p className="mt-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
             {errorMessage}
           </p>
         )}
@@ -56,7 +57,7 @@ export default async function LoginPage({
               name="email"
               required
               placeholder={dict.auth.emailPlaceholder}
-              className="rounded-lg border border-brand/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
+              className="rounded-lg border border-primary/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
@@ -67,26 +68,23 @@ export default async function LoginPage({
               required
               autoComplete="current-password"
               placeholder={dict.auth.passwordPlaceholder}
-              className="rounded-lg border border-brand/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
+              className="rounded-lg border border-primary/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </label>
-          <button
-            type="submit"
-            className="tap rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-light active:bg-brand-light"
-          >
+          <Button type="submit" variant="primary" haptic={false}>
             {dict.auth.submit}
-          </button>
+          </Button>
         </form>
 
         <Link
           href={`/${lang}/forgot-password`}
-          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-brand active:text-brand"
+          className="tap mt-4 block text-center text-sm text-foreground/70 hover:text-primary-text active:text-primary-text"
         >
           {dict.auth.forgotPasswordLink}
         </Link>
         <Link
           href={`/${lang}/register?redirectTo=${encodeURIComponent(redirectTo)}`}
-          className="tap mt-2 block text-center text-sm text-foreground/70 hover:text-brand active:text-brand"
+          className="tap mt-2 block text-center text-sm text-foreground/70 hover:text-primary-text active:text-primary-text"
         >
           {dict.auth.noAccountLink}
         </Link>

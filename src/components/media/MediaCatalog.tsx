@@ -144,7 +144,7 @@ export default function MediaCatalog({
                 e.preventDefault();
                 openPaywall("free");
               }}
-              className="tap group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/10"
+              className="tap group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
             >
               <div className="relative aspect-video w-full overflow-hidden bg-foreground/5">
                 {/* Static YouTube-hosted thumbnail (img.youtube.com) — no

@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import { useEffect, useRef, useState } from "react";
+import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
+import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import MatchBoard, { type MatchResult } from "./MatchBoard";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { buildMatchRound } from "@/lib/flashcards/match-round";
 import { recordSrsAnswer } from "@/lib/flashcard-progress";
+import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
+import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 import type { Dictionary } from "@/i18n/dictionaries";
 
 export interface MatchAppDict extends CategoryGridDict {
@@ -18,9 +21,12 @@ export interface MatchAppDict extends CategoryGridDict {
   instructionLabel: string;
   notEnoughCardsMessage: string;
   roundCompleteLabel: string; // template, contains literal "{pairs}"
+  playAgainButton: string;
   nextRoundButton: string;
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
+  continueTitle: string;
+  learnedProgressLabel: string; // template, contains literal "{known}" and "{total}"
 }
 
 const ROUND_SIZES = [4, 6, 8];
@@ -29,31 +35,45 @@ const MIN_PLAYABLE = 4;
 export default function MatchApp({
   dict,
   celebrationDict,
+  resultDict,
 }: {
   dict: MatchAppDict;
   celebrationDict: Dictionary["celebration"];
+  resultDict: GameResultPanelDict;
 }) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
+  const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
+  const [hasAnyProgress, setHasAnyProgress] = useState(false);
+  const [totalProgress, setTotalProgress] = useState({ known: 0, total: 0 });
   const [categoryCards, setCategoryCards] = useState<FlashcardRow[]>([]);
   const [sizeIndex, setSizeIndex] = useState(0);
   const [round, setRound] = useState<FlashcardRow[]>([]);
   const [roundKey, setRoundKey] = useState(0);
   const [complete, setComplete] = useState(false);
+  const [roundErrors, setRoundErrors] = useState(0);
+  const [roundTimeSeconds, setRoundTimeSeconds] = useState(0);
+  const roundStartedAtRef = useRef(0);
   // True only right after a round just finished this visit — drives the
   // CelebrationModal, which the underlying static "complete" screen (with
   // its own back/next-round buttons) stays behind once dismissed.
   const [justCompleted, setJustCompleted] = useState(false);
   const [limited, setLimited] = useState(false);
+  // True only while a category's round is being fetched — without it, the
+  // "not enough cards" message flashed for a moment on every category open
+  // (round starts at [] before the fetch resolves, which is also < the
+  // MIN_PLAYABLE floor below).
+  const [roundLoading, setRoundLoading] = useState(false);
 
   useEffect(() => {
-    const params = levelFilter === "all" ? "" : `?level=${levelFilter}`;
-    fetch(`/api/flashcards/summary${params}`)
-      .then((res) => (res.ok ? res.json() : { categories: {} }))
-      .then((body: { categories?: Record<string, CategorySummary> }) => setCategorySummary(body.categories ?? {}))
-      .catch(() => setCategorySummary({}));
-  }, [levelFilter, round]);
+    fetchCategorySummary(levelFilter).then((body) => {
+      setCategorySummary(body.categories);
+      setRecentCategories(body.recent);
+      setHasAnyProgress(body.hasAnyProgress);
+      setTotalProgress({ known: body.totalKnown, total: body.totalWords });
+    });
+  }, [levelFilter, round, complete]);
 
   function startRound(size: number, sourceCards: FlashcardRow[], level: FlashcardLevel | "all") {
     const filtered = level === "all" ? sourceCards : sourceCards.filter((c) => c.level === level);
@@ -61,11 +81,13 @@ export default function MatchApp({
     setRoundKey((k) => k + 1);
     setComplete(false);
     setJustCompleted(false);
+    roundStartedAtRef.current = Date.now();
   }
 
   function selectCategory(next: FlashcardCategory) {
     setCategory(next);
     setSizeIndex(0);
+    setRoundLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
       .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
@@ -77,7 +99,8 @@ export default function MatchApp({
       .catch(() => {
         setCategoryCards([]);
         startRound(ROUND_SIZES[0], [], levelFilter);
-      });
+      })
+      .finally(() => setRoundLoading(false));
   }
 
   function backToCategories() {
@@ -90,8 +113,14 @@ export default function MatchApp({
 
   function handleComplete(results: MatchResult[]) {
     for (const r of results) recordSrsAnswer(r.cardId, r.firstTryCorrect);
+    setRoundErrors(results.filter((r) => !r.firstTryCorrect).length);
+    setRoundTimeSeconds(Math.round((Date.now() - roundStartedAtRef.current) / 1000));
     setComplete(true);
     setJustCompleted(true);
+  }
+
+  function replayRound() {
+    startRound(ROUND_SIZES[sizeIndex], categoryCards, levelFilter);
   }
 
   function nextRound() {
@@ -122,7 +151,16 @@ export default function MatchApp({
       />
 
       {inGrid ? (
-        <CategoryGrid dict={dict} summary={categorySummary} levelFilter={levelFilter} onSelectCategory={selectCategory} />
+        <>
+          <ContinueStrip dict={dict} recent={recentCategories} onSelectCategory={selectCategory} />
+          <CategoryGrid
+            dict={dict}
+            summary={categorySummary}
+            hasAnyProgress={hasAnyProgress}
+            levelFilter={levelFilter}
+            onSelectCategory={selectCategory}
+          />
+        </>
       ) : (
         <>
           <button
@@ -133,33 +171,37 @@ export default function MatchApp({
             {dict.backToCategories}
           </button>
 
-          {limited && (
+          {limited && !complete && (
             <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
           )}
 
-          {complete ? (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-black/10 p-10 text-center dark:border-white/10">
-              <MatryoshkaAvatar id="matryoshka_laughing" size={64} />
-              <p className="text-lg font-semibold">{dict.roundCompleteLabel.replace("{pairs}", String(round.length))}</p>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={backToCategories}
-                  className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground active:border-foreground/40 active:text-foreground dark:border-white/15"
-                >
-                  {dict.backToCategories}
-                </button>
-                <button
-                  type="button"
-                  onClick={nextRound}
-                  className="tap touch-manipulation select-none rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-                >
-                  {dict.nextRoundButton}
-                </button>
-              </div>
+          <GameResultPanel
+            open={complete}
+            onClose={backToCategories}
+            title={dict.roundCompleteLabel.replace("{pairs}", String(round.length))}
+            avatarId="matryoshka_laughing"
+            errors={roundErrors}
+            timeSeconds={roundTimeSeconds}
+            dict={resultDict}
+            playAgainLabel={dict.playAgainButton}
+            onPlayAgain={replayRound}
+            nextGameLabel={dict.nextRoundButton}
+            onNextGame={nextRound}
+          >
+            {limited && <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />}
+            <p className="mt-1 text-center text-sm text-foreground/60">
+              {dict.learnedProgressLabel.replace("{known}", String(totalProgress.known)).replace("{total}", String(totalProgress.total))}
+            </p>
+          </GameResultPanel>
+
+          {complete ? null : roundLoading ? (
+            <div className="grid grid-cols-2 gap-2">
+              {Array.from({ length: 8 }, (_, i) => (
+                <Skeleton key={i} variant="rect" className="h-14 rounded-xl" />
+              ))}
             </div>
           ) : round.length < MIN_PLAYABLE ? (
-            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/10">
+            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
               {dict.notEnoughCardsMessage}
             </p>
           ) : (

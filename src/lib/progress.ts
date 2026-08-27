@@ -42,6 +42,28 @@ export async function getLevelProgress(
   return result;
 }
 
+/** Lowest lesson number (1-indexed, as the URL slug) not yet passed at the
+ * given level, for the /profile "Continue" card — reuses the same passed-
+ * LessonProgress rows getLevelProgress already reads, just keeps the set
+ * instead of only its size. Returns null once every lesson in the level is
+ * passed (caller should offer the next level instead). */
+export async function getFirstIncompleteLessonSlug(
+  userId: string,
+  level: LevelSlug,
+): Promise<string | null> {
+  const rows = await db.lessonProgress.findMany({
+    where: { userId, level, passed: true },
+    select: { lessonSlug: true },
+  });
+  const passed = new Set(rows.map((r) => r.lessonSlug));
+  const total = lessonsPerLevel[level];
+  for (let n = 1; n <= total; n++) {
+    const slug = String(n);
+    if (!passed.has(slug)) return slug;
+  }
+  return null;
+}
+
 /** Same shape as {@link getLevelProgress}, batched for every userId in one
  * query instead of one `findMany` per user — used by the group leaderboard
  * (see groups.ts's getGroupForMember), which previously called
