@@ -8,7 +8,7 @@
     "check:tokens": "node scripts/check-tokens.mjs",
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
-    "build": "next build --webpack",
+    "build": "tsx prisma/ensure-schema-sync.ts && next build --webpack",
     "analyze": "ANALYZE=true next build --webpack",
     "start": "next start",
     "lint": "eslint",
