@@ -36,7 +36,23 @@ test("a visitor can register and lands authenticated on their profile", async ({
   // /profile with no error param is the only true signal registration
   // actually created an account and started a session.
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
-  await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
+
+  // WelcomeOverlay shows a full-screen dialog on every brand-new account's
+  // first-ever /profile landing (see the sibling test below for the full
+  // explanation) — its backdrop sits above the header and swallows the
+  // "Mi perfil" click below if still open, so dismiss it first.
+  try {
+    await page.getByRole("dialog", { name: "¡Feliz nuevo día de ruso!" }).waitFor({ state: "visible", timeout: 3000 });
+    await page.getByRole("button", { name: "Continuar" }).click();
+  } catch {
+    // Didn't appear within the window — nothing to dismiss.
+  }
+
+  // The header redesign moved logout off the page and into the "Mi
+  // perfil" dropdown (ProfileMenu.tsx) — open it first. Its items are
+  // role="menuitem" (Dropdown.tsx's panel is role="menu"), not "button".
+  await page.getByRole("button", { name: "Mi perfil" }).click();
+  await expect(page.getByRole("menuitem", { name: "Cerrar sesión" })).toBeVisible();
 });
 
 test("registering with an email already in use shows an error, not a silent failure", async ({
@@ -73,7 +89,10 @@ test("registering with an email already in use shows an error, not a silent fail
   // realistic failure mode (a returning user landing on /register instead
   // of /login), and it must fail loudly with a message telling them to log
   // in instead, never silently overwrite/duplicate the account.
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  // See the sibling test above for why "Mi perfil" needs opening first and
+  // logout is role="menuitem", not "button".
+  await page.getByRole("button", { name: "Mi perfil" }).click();
+  await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
   await expect(page).toHaveURL(/\/es\/?$/);
 
   await page.goto("/es/register");
