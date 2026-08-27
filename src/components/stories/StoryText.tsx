@@ -13,7 +13,13 @@ import StoryAudioPlayer, { READ_ALOUD_RATES } from "@/components/stories/StoryAu
 import { sanitizeTextForTTS } from "@/lib/speech";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
-import { setNativeMediaMetadata, setNativePlaybackState, setNativeActionHandler } from "@/lib/native-media-session";
+import {
+  setNativeMediaMetadata,
+  setNativePlaybackState,
+  setNativeActionHandler,
+  setNativeSeekToHandler,
+  setNativePositionState,
+} from "@/lib/native-media-session";
 
 // Captures runs of Cyrillic letters (optionally hyphenated, e.g.
 // "кто-то") as clickable tokens; everything else (spaces, punctuation)
@@ -87,6 +93,8 @@ export default function StoryText({
   paragraphs,
   translationParagraphs,
   audioSegments,
+  fullAudioUrl,
+  sentenceOffsets,
   dict,
 }: {
   /** Used as the localStorage key for per-story reading progress. Pass
@@ -102,10 +110,25 @@ export default function StoryText({
    * permanently beneath each Russian paragraph (no toggle). */
   translationParagraphs?: string[];
   /** One narration clip per sentence, produced by generate-story-audio.ts.
-   * When it doesn't cover every sentence in `paragraphs` (missing, or a
-   * truncated/preview view runs ahead of what was generated), the reader
-   * falls back to browser TTS narration with no real audio<->text sync. */
+   * Used when `fullAudioUrl` isn't available (a story concat-story-audio.ts
+   * skipped — see its ELIGIBILITY note — or the paywalled preview, which
+   * only ever gets per-sentence clips even for a fully-concatenated story,
+   * see [id]/page.tsx). When neither this nor `fullAudioUrl` covers a
+   * sentence, the reader falls back to browser TTS with no real
+   * audio<->text sync. */
   audioSegments?: StoryAudioSegment[];
+  /** One continuous mp3 for the whole story (concat-story-audio.ts) — the
+   * preferred playback source whenever present: real background/lock-
+   * screen playback (a single native <audio> element, not a chain of
+   * per-sentence src swaps) and real seek/scrubbing, including on the
+   * lock screen via Media Session's setPositionState. Must be paired with
+   * `sentenceOffsets` covering every sentence, or it's ignored — see
+   * hasFullAudio below. */
+  fullAudioUrl?: string | null;
+  /** Cumulative start offset (seconds) of each sentence within
+   * `fullAudioUrl`, same order/length as buildStoryQueue(paragraphs) —
+   * i.e. `Story.sentenceOffsetsJson`, already parsed. */
+  sentenceOffsets?: number[] | null;
   dict: StoryTextDict;
 }) {
   const [activeWord, setActiveWord] = useState<string | null>(null);
@@ -219,27 +242,56 @@ export default function StoryText({
     return map;
   }, [audioSegments]);
 
+  // One continuous file, the preferred mode — see fullAudioUrl's doc
+  // comment above. Requires an offsets entry for every sentence in the
+  // queue; a mismatch (stale data, or the paywalled preview truncating
+  // `paragraphs` shorter than the full story the offsets were computed
+  // against) falls through to the per-sentence/TTS modes below instead of
+  // seeking into the wrong part of the file.
+  const hasFullAudio = Boolean(fullAudioUrl) && sentenceOffsets != null && sentenceOffsets.length === queue.length;
+
   // Real narration drives playback whenever the story has ANY matching
-  // clips, not only when every single sentence does. A story's text can
-  // drift out of sync with its once-generated audio (an edit that splits
-  // or merges a sentence shifts every later paragraphIndex-sentenceIndex
-  // key) — a real, confirmed case: 15 of 325 stories have a small number
-  // of sentences with no clip, the rest fully covered. Requiring 100%
-  // coverage here used to throw away all of a story's real audio over one
-  // missing sentence, silently downgrading the whole reader to browser
-  // TTS (with no seek/skip support and much less reliable pause/resume,
-  // especially on iOS Safari) — exactly what real playback used to look
-  // like for those 15 stories. playSegmentAt() below now narrates a
-  // missing sentence with TTS just for that one sentence and hands back to
-  // real audio at the next one, so a handful of gaps degrades a few
-  // sentences instead of the entire book.
-  const hasRealAudio = useMemo(
+  // per-sentence clips, not only when every single sentence does. A
+  // story's text can drift out of sync with its once-generated audio (an
+  // edit that splits or merges a sentence shifts every later
+  // paragraphIndex-sentenceIndex key) — a real, confirmed case: 15 of 325
+  // stories have a small number of sentences with no clip, the rest fully
+  // covered. Requiring 100% coverage here used to throw away all of a
+  // story's real audio over one missing sentence, silently downgrading
+  // the whole reader to browser TTS (with no seek/skip support and much
+  // less reliable pause/resume, especially on iOS Safari) — exactly what
+  // real playback used to look like for those 15 stories. playSegmentAt()
+  // below now narrates a missing sentence with TTS just for that one
+  // sentence and hands back to real audio at the next one, so a handful
+  // of gaps degrades a few sentences instead of the entire book. Only
+  // relevant when hasFullAudio is false — a fully-concatenated story never
+  // has a gap by construction (concat-story-audio.ts's own eligibility
+  // check).
+  const hasPerSentenceAudio = useMemo(
     () =>
       queue.length > 0 &&
       queue.some((item) => segmentUrlByKey.has(`${item.paragraphIndex}-${item.sentenceIndex}`)),
     [queue, segmentUrlByKey]
   );
+  // "Some form of real (non-synthesized) audio is available" — drives UI
+  // flags (skip buttons, media-session enablement) that don't care which
+  // underlying mechanism is in play. Playback functions below always
+  // check hasFullAudio first, since it takes priority whenever available.
+  const hasRealAudio = hasFullAudio || hasPerSentenceAudio;
   const canPlay = hasRealAudio || ttsSupported;
+
+  /** Largest sentence index whose offset is <= `time` — i.e. which
+   * sentence `fullAudioUrl` is currently playing at that position.
+   * `sentenceOffsets` is sorted ascending by construction (cumulative
+   * durations), so a linear scan from the end is enough; queues are at
+   * most ~60 sentences long in this library, no need for a binary search. */
+  function indexAtTime(time: number): number {
+    const offsets = sentenceOffsets ?? [];
+    for (let i = offsets.length - 1; i >= 0; i--) {
+      if (offsets[i] <= time) return i;
+    }
+    return 0;
+  }
 
   // Cancels any in-flight utterance/clip and invalidates it for the queue
   // chain.
@@ -329,6 +381,45 @@ export default function StoryText({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (header) setNavOffset(header.getBoundingClientRect().height);
   }, []);
+
+  // hasFullAudio mode: the <audio> element's `src` is set exactly once
+  // here (never reassigned by a play/seek/click handler, unlike the
+  // per-sentence chain's playSegmentAt()) — it's the same physical file
+  // for the whole story, so there's nothing to swap. `timeupdate` maps
+  // the element's real playback position back to a sentence index via
+  // indexAtTime(), which is what drives the highlight/scroll/Media
+  // Session position sync during playback; `ended` marks the story
+  // complete, mirroring playSegmentAt()'s own end-of-queue handling.
+  useEffect(() => {
+    if (!hasFullAudio || !fullAudioUrl) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.src !== fullAudioUrl) audio.src = fullAudioUrl;
+
+    const handleTimeUpdate = () => {
+      const index = indexAtTime(audio.currentTime);
+      setReadingQueueIndex((prev) => {
+        if (prev === index) return prev;
+        // Only on an actual sentence change, not every ~250ms timeupdate
+        // tick — mirrors playSegmentAt()'s per-advance bookkeeping.
+        setResumeQueueIndex(null);
+        setIsCompletedBadge(false);
+        if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
+        return index;
+      });
+    };
+    const handleEnded = () => {
+      setPlaying(false);
+      setReadingQueueIndex(null);
+    };
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("ended", handleEnded);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasFullAudio, fullAudioUrl]);
 
   // Shrink the player into a compact floating bar once the reader scrolls
   // past where it originally sat, so Play/Pause/speed stay reachable.
@@ -496,7 +587,7 @@ export default function StoryText({
     setReadingQueueIndex(index);
     setResumeQueueIndex(null);
     setIsCompletedBadge(false);
-    if (hasRealAudio) preloadSegment(index + 1);
+    if (hasPerSentenceAudio) preloadSegment(index + 1);
     if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
 
     audio.pause();
@@ -561,15 +652,27 @@ export default function StoryText({
     });
   }
 
+  /** ±15s skip when a single `fullAudioUrl` is playing — trivial compared
+   * to the per-sentence version below, since there's one real seekable
+   * timeline instead of a chain of separate clips to walk across. */
+  function skipByFull(deltaSeconds: number) {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : Infinity;
+    audio.currentTime = Math.min(Math.max(0, audio.currentTime + deltaSeconds), duration);
+  }
+
   /** ±15s skip, correctly crossing sentence boundaries (each clip is one
    * sentence, commonly just a few seconds — so 15s of real audio almost
    * always spans several of them). Walks the queue accumulating each
    * crossed clip's actual duration until `deltaSeconds` is used up, then
    * seeks into whichever sentence that lands on and re-syncs the
-   * highlight/scroll there — same as any other seek. Real-audio mode only:
-   * speechSynthesis has no seekable timeline to walk. */
-  async function skipBy(deltaSeconds: number) {
-    if (!hasRealAudio || readingQueueIndex === null) return;
+   * highlight/scroll there — same as any other seek. Per-sentence mode
+   * only (no `fullAudioUrl`): speechSynthesis has no seekable timeline to
+   * walk, and skipBy() below routes a fullAudioUrl story to
+   * skipByFull() instead of this function entirely. */
+  async function skipByPerSentence(deltaSeconds: number) {
+    if (!hasPerSentenceAudio || readingQueueIndex === null) return;
     const audio = audioRef.current;
     const currentItem = queue[readingQueueIndex];
     const currentUrl = currentItem
@@ -623,6 +726,14 @@ export default function StoryText({
       setPlaying(true);
       playSegmentAt(0);
     }
+  }
+
+  function skipBy(deltaSeconds: number) {
+    if (hasFullAudio) {
+      skipByFull(deltaSeconds);
+      return;
+    }
+    void skipByPerSentence(deltaSeconds);
   }
 
   function speakQueueAt(index: number) {
@@ -690,7 +801,19 @@ export default function StoryText({
 
   function handlePlayPause() {
     if (queue.length === 0) return;
-    if (hasRealAudio) {
+    if (hasFullAudio) {
+      const audio = audioRef.current;
+      if (!audio) return;
+      if (playing) {
+        audio.pause();
+        setPlaying(false);
+        return;
+      }
+      setPlaying(true);
+      audio.play().catch(() => setPlaying(false));
+      return;
+    }
+    if (hasPerSentenceAudio) {
       const audio = audioRef.current;
       if (!audio) return;
       if (playing) {
@@ -749,7 +872,20 @@ export default function StoryText({
   // Text -> audio sync: clicking a sentence seeks playback straight to it.
   function handleSentenceClick(index: number) {
     if (!canPlay || queue.length === 0) return;
-    if (hasRealAudio) {
+    if (hasFullAudio) {
+      const audio = audioRef.current;
+      const offset = sentenceOffsets?.[index];
+      if (!audio || offset === undefined) return;
+      audio.currentTime = offset;
+      setReadingQueueIndex(index);
+      setResumeQueueIndex(null);
+      setIsCompletedBadge(false);
+      if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
+      setPlaying(true);
+      audio.play().catch(() => setPlaying(false));
+      return;
+    }
+    if (hasPerSentenceAudio) {
       setPlaying(true);
       playSegmentAt(index);
       return;
@@ -799,6 +935,28 @@ export default function StoryText({
       handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1))
     );
 
+    // Real lock-screen scrubbing — only possible with one genuine seekable
+    // timeline (fullAudioUrl); the per-sentence chain has no single
+    // duration to report and speechSynthesis has no timeline at all, so
+    // neither of those modes sets this. setPositionState is refreshed on
+    // every render (cheap, and playbackRate/position drift otherwise).
+    const audioEl = audioRef.current;
+    if (hasFullAudio && audioEl) {
+      navigator.mediaSession.setActionHandler("seekto", (details) => {
+        if (details.seekTime == null) return;
+        audioEl.currentTime = details.seekTime;
+      });
+      if (Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
+        navigator.mediaSession.setPositionState({
+          duration: audioEl.duration,
+          playbackRate: rate,
+          position: Math.min(audioEl.currentTime, audioEl.duration),
+        });
+      }
+    } else {
+      navigator.mediaSession.setActionHandler("seekto", null);
+    }
+
     // Native half of the above — a no-op on web (see native-media-session.ts).
     // Android's System WebView, unlike Chrome, doesn't surface
     // navigator.mediaSession as a real OS notification/lock-screen player
@@ -820,6 +978,20 @@ export default function StoryText({
     void setNativeActionHandler("nexttrack", () =>
       handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1))
     );
+    if (hasFullAudio && audioEl) {
+      void setNativeSeekToHandler((seekTime) => {
+        audioEl.currentTime = seekTime;
+      });
+      if (Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
+        void setNativePositionState({
+          duration: audioEl.duration,
+          playbackRate: rate,
+          position: Math.min(audioEl.currentTime, audioEl.duration),
+        });
+      }
+    } else {
+      void setNativeSeekToHandler(null);
+    }
 
     return () => {
       navigator.mediaSession.setActionHandler("play", null);
@@ -828,12 +1000,14 @@ export default function StoryText({
       navigator.mediaSession.setActionHandler("seekforward", null);
       navigator.mediaSession.setActionHandler("previoustrack", null);
       navigator.mediaSession.setActionHandler("nexttrack", null);
+      navigator.mediaSession.setActionHandler("seekto", null);
       void setNativeActionHandler("play", null);
       void setNativeActionHandler("pause", null);
       void setNativeActionHandler("seekbackward", null);
       void setNativeActionHandler("seekforward", null);
       void setNativeActionHandler("previoustrack", null);
       void setNativeActionHandler("nexttrack", null);
+      void setNativeSeekToHandler(null);
     };
   });
 
@@ -904,7 +1078,7 @@ export default function StoryText({
         </div>
       )}
 
-      {hasRealAudio && <audio ref={audioRef} preload="none" className="hidden" />}
+      {hasRealAudio && <audio ref={audioRef} preload={hasFullAudio ? "metadata" : "none"} className="hidden" />}
 
       {canPlay && queue.length > 0 && (
         <>

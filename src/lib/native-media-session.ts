@@ -48,3 +48,26 @@ export async function setNativeActionHandler(
     MediaSession.setActionHandler({ action }, handler ? () => handler() : null),
   );
 }
+
+/**
+ * "seekto" is the one native action whose handler needs a payload (the
+ * target time, in seconds, dragged on the OS's own lock-screen scrubber) —
+ * kept as its own function rather than overloading setNativeActionHandler
+ * above, whose handler shape is intentionally parameterless for the other
+ * five actions. Only meaningful for a story with `fullAudioUrl` (a real
+ * seekable single track) — see StoryText.tsx's Media Session effect.
+ */
+export async function setNativeSeekToHandler(handler: ((seekTime: number) => void) | null): Promise<void> {
+  await nativeOnly(() =>
+    MediaSession.setActionHandler({ action: "seekto" }, handler ? (details) => handler(details.seekTime ?? 0) : null),
+  );
+}
+
+/** Drives the native lock-screen/notification scrubber's position and
+ * duration — the native counterpart of navigator.mediaSession's own
+ * setPositionState, called alongside it. */
+export async function setNativePositionState(
+  options: { duration: number; playbackRate: number; position: number } | null,
+): Promise<void> {
+  await nativeOnly(() => MediaSession.setPositionState(options ?? {}));
+}
