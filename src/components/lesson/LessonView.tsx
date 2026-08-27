@@ -93,15 +93,6 @@ export default function LessonView({
         <>
           <VideoPlayer videoUrl={content.videoUrl} title={title} />
 
-          <LessonGlossaryTerms
-            level={level}
-            lessonSlug={lessonSlug}
-            heading={dict.glossaryTermsHeading}
-            masteredLabel={dict.glossaryTermsMasteredLabel}
-            quizDict={dict.termQuiz}
-            lang={lang}
-          />
-
           <div
             role="tablist"
             className="mt-6 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30"
@@ -149,12 +140,22 @@ export default function LessonView({
               />
             )}
             {tab === "vocabulary" && (
-              <VocabularyTab
-                vocabulary={content.vocabulary}
-                dict={dict.vocabulary}
-                listenLabel={dict.alphabet.listenLabel}
-                audioMap={audioMap}
-              />
+              <>
+                <LessonGlossaryTerms
+                  level={level}
+                  lessonSlug={lessonSlug}
+                  heading={dict.glossaryTermsHeading}
+                  masteredLabel={dict.glossaryTermsMasteredLabel}
+                  quizDict={dict.termQuiz}
+                  lang={lang}
+                />
+                <VocabularyTab
+                  vocabulary={content.vocabulary}
+                  dict={dict.vocabulary}
+                  listenLabel={dict.alphabet.listenLabel}
+                  audioMap={audioMap}
+                />
+              </>
             )}
             {tab === "exercises" && (
               <ExercisesTab
