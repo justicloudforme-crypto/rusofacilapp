@@ -1340,7 +1340,11 @@
     "listenLabel": "Escuchar en ruso",
     "relatedLessonsLabel": "Aparece en",
     "noResultsMessage": "No se encontraron términos.",
-    "russianComparisonLabel": "Cómo funciona en ruso"
+    "russianComparisonLabel": "Cómo funciona en ruso",
+    "introducedAtLabel": "Introducido en",
+    "relatedTermsLabel": "Términos relacionados",
+    "viewCategoryLabel": "Ver toda la categoría",
+    "backToGlossaryLabel": "Volver al glosario"
   },
   "offline": {
     "bannerMessage": "Estás sin conexión. Algunos cambios se guardarán y se enviarán cuando vuelva la conexión."

@@ -12,6 +12,7 @@ import Card from "@/components/ui/Card";
 import LevelBadge from "@/components/LevelBadge";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import PricingFaq from "@/components/pricing/PricingFaq";
+import JsonLd from "@/components/seo/JsonLd";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -42,6 +43,23 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* Text here must stay word-for-word identical to dict.home.faq below
+          (rendered visibly via PricingFaq further down this page) — Google
+          can flag/ignore FAQPage markup that doesn't match the page's own
+          visible content. A separate FAQPage already exists on /pricing
+          (different questions, different URL) — one per page is the norm,
+          not a conflict. */}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: dict.home.faq.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+          })),
+        }}
+      />
       {/* min-h on mobile targets "fits in one screen up to the buttons"
           (100dvh minus the h-16 sticky header) — the word-deck cards render
           at full height below (owner-reported bug: an earlier h-10

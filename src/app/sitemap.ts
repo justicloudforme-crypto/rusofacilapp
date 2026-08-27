@@ -72,5 +72,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // Same query shape as glossary/[slug]/page.tsx's generateStaticParams —
+  // deliberately not a hardcoded count, so this always matches whatever's
+  // actually in the DB (which is also what generateStaticParams pre-renders
+  // from at build time) rather than drifting from it.
+  const glossaryTerms = await db.glossaryTerm.findMany({ select: { slug: true } });
+  for (const term of glossaryTerms) {
+    for (const lang of locales) {
+      entries.push({ url: `${SITE_URL}/${lang}/glossary/${term.slug}`, changeFrequency: "yearly" });
+    }
+  }
+
   return entries;
 }
