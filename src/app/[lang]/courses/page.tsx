@@ -16,6 +16,19 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/courses">)
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
+  // ES copy written for actual Spanish search demand ("curso de ruso
+  // online", "aprender ruso") rather than a straight translation of the
+  // visible H1/subtitle below — deliberately doesn't touch
+  // dict.courses.pageTitle/pageSubtitle, which stay as the on-page copy for
+  // both locales. Neutral Spanish (no regionalisms) since the audience is
+  // Spanish-speakers everywhere (Latin America + Spain), not just Mexico.
+  if (lang === "es") {
+    return {
+      title: "Curso de ruso online — Niveles A1 a B2 | RusoFácilapp",
+      description:
+        "Aprende ruso paso a paso: 4 niveles, gramática explicada en español, ejercicios y audio nativo. Primera lección gratis.",
+    };
+  }
   return { title: `${dict.courses.pageTitle} | RusoFácilapp`, description: dict.courses.pageSubtitle };
 }
 

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "RusoFácilapp — Aprende ruso en español",
-    "description": "Cursos de ruso para hispanohablantes de todo el mundo, del nivel A1 al B2."
+    "title": "Aprende ruso online — RusoFácilapp",
+    "description": "Curso de ruso para hispanohablantes: alfabeto, gramática, cuentos con audio y vídeo. Empieza gratis, sin tarjeta."
   },
   "nav": {
     "home": "Inicio",
@@ -144,7 +144,7 @@
       "a1": {
         "title": "A1 · Principiante",
         "subtitle": "Primeros pasos en ruso",
-        "description": "Aprende el alfabeto cirílico, la pronunciación y las estructuras básicas para presentarte y sobrevivir en situaciones cotidianas.",
+        "description": "Empieza desde cero: el alfabeto cirílico, la pronunciación real del ruso y las primeras estructuras para presentarte, pedir en un restaurante o preguntar precios. Nivel A1 — 30 lecciones con gramática explicada en español, ejercicios interactivos y audio nativo en cada lección. Ideal si nunca has estudiado ruso antes.",
         "lessons": [
           "El alfabeto cirílico y los sonidos del ruso",
           "Saludos, despedidas y presentaciones",
@@ -181,7 +181,7 @@
       "a2": {
         "title": "A2 · Elemental",
         "subtitle": "Comunicación básica cotidiana",
-        "description": "Amplías vocabulario y gramática para hablar de tu rutina, tus planes y tu entorno con más naturalidad.",
+        "description": "Consolida las bases y empieza a comunicarte con más naturalidad: el aspecto verbal (perfectivo e imperfectivo), pasado y futuro, los casos rusos en la práctica, y vocabulario para tu rutina, tus planes y tus compras. Nivel A2 — 30 lecciones con gramática explicada en español, ejercicios interactivos y audio nativo en cada lección.",
         "lessons": [
           "El aspecto verbal: perfectivo e imperfectivo",
           "El pasado y el futuro",
@@ -218,7 +218,7 @@
       "b1": {
         "title": "B1 · Intermedio",
         "subtitle": "Autonomía en conversaciones cotidianas",
-        "description": "Ganas fluidez para conversar sobre trabajo, estudios y experiencias personales, y entiendes textos y audios más complejos.",
+        "description": "Gana autonomía para conversar sobre trabajo, estudios y experiencias personales: verbos de movimiento, los casos dativo e instrumental en contexto, y cómo expresar opiniones o estar en desacuerdo. Nivel B1 — 30 lecciones con gramática explicada en español, ejercicios interactivos y audio nativo en cada lección.",
         "lessons": [
           "Verbos de movimiento: ir y venir en ruso",
           "Casos rusos: dativo e instrumental en contexto",
@@ -255,7 +255,7 @@
       "b2": {
         "title": "B2 · Intermedio alto",
         "subtitle": "Fluidez en temas complejos y abstractos",
-        "description": "Discutes temas abstractos, argumentas tu punto de vista y comprendes literatura, noticias y conversaciones nativas sin apoyo.",
+        "description": "Alcanza fluidez para discutir temas abstractos y complejos: el modo condicional, oraciones con «si... entonces...», técnicas de argumentación y matices emocionales. Nivel B2 — 30 lecciones con gramática explicada en español, ejercicios interactivos y audio nativo, con preparación para exámenes de certificación.",
         "lessons": [
           "El modo condicional: la partícula «бы»",
           "Oraciones condicionales reales: «если... то...»",

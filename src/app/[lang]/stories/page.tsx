@@ -14,6 +14,17 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/stories">)
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
   if (!dict?.stories) return {};
+  // ES copy written for actual search demand ("cuentos en ruso con audio")
+  // rather than a translation of the visible H1/subtitle — see the same
+  // note in courses/page.tsx's generateMetadata. Neutral Spanish, no
+  // regionalisms.
+  if (lang === "es") {
+    return {
+      title: "Cuentos en ruso con audio y traducción | RusoFácilapp",
+      description:
+        "Practica ruso leyendo cuentos clásicos y originales, con audio narrado y traducción al español, por nivel (A1–C1).",
+    };
+  }
   return { title: `${dict.stories.pageTitle} | RusoFácilapp`, description: dict.stories.pageSubtitle };
 }
 
