@@ -272,6 +272,18 @@ export interface GrammarGuideRef {
  * mentioned, which is why this is a literal map and not a keyword match.
  */
 const GRAMMAR_GUIDE_FOR_LESSON: Record<string, GrammarGuideRef> = {
+  // The only entry where lesson and guide cover the SAME topic rather
+  // than the guide filling a gap the lessons leave. That overlap is why
+  // the link matters: this lesson and /es/gramatica/alfabeto-ruso are the
+  // two pages on the site most at risk of competing for the same query,
+  // and the note names the difference explicitly (ordered table here,
+  // grouped by recognition difficulty there) so a reader who wants the
+  // other shape leaves rather than bouncing between them.
+  "a1-1": {
+    href: "/es/gramatica/alfabeto-ruso",
+    title: "El alfabeto ruso: las 33 letras por dificultad",
+    note: "Esta lección presenta las letras en orden; la guía las agrupa por lo que cuesta reconocerlas y detalla los seis falsos amigos.",
+  },
   "a1-15": {
     href: "/es/gramatica/genero-sustantivos-ruso",
     title: "El género de los sustantivos en ruso",
