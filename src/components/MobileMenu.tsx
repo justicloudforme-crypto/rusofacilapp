@@ -150,8 +150,13 @@ export default function MobileMenu({
                 the header's own small box instead of the viewport, so the
                 sheet rendered pinned above the header and mostly
                 off-screen instead of docked to the bottom of the screen. */}
+            {/* data-testid, not a class hook: e2e/mobile-menu.spec.ts has
+                to tap "outside the sheet" and used to find this element by
+                its `fixed inset-0` utility classes, which are styling and
+                could be reshuffled by any visual change. */}
             <button
               type="button"
+              data-testid="mobile-menu-backdrop"
               aria-label={closeLabel}
               onClick={() => setOpen(false)}
               className="animate-celebration-fade-in fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] dark:bg-black/50"

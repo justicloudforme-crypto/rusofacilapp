@@ -25,6 +25,15 @@ export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale 
           <Link href={`/${lang}/glossary`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.nav.glossary}
           </Link>
+          {/* Same reasoning as the glossary link above, and the same
+              measured problem: the 23 per-theme vocabulary pages hang off
+              /vocabulary, whose own category picker is client-rendered
+              inside VocabularyApp and so invisible to a crawler. This
+              server-rendered footer link is what gives them an inbound
+              path from every page of the site. */}
+          <Link href={`/${lang}/vocabulary`} className="tap hover:text-foreground/80 active:text-foreground/80">
+            {dict.footer.vocabularyLink}
+          </Link>
           <Link href={`/${lang}/sobre-nosotros`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.nav.about}
           </Link>
