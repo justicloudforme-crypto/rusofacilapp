@@ -77,8 +77,47 @@ const PILOT_A1_TITLES = new Set([
   "Секретный узел",
 ]);
 
+/**
+ * The other 15 A1 stories — the control group. They deliberately have no
+ * block, and the point of a control is that nothing else about them
+ * changes either, so they must stay out of any later content work until
+ * the experiment closes (25.09.2026). Written down here, next to the
+ * pilot, so the freeze is machine-checkable rather than a list that only
+ * exists in PROGRESS.md: `story-culture.test.ts` asserts against it.
+ */
+const CONTROL_A1_TITLES = new Set([
+  "Сколько тарелок?",
+  "Слишком много воды",
+  "Слишком солёный суп",
+  "Снегурочка",
+  "Сортировка мусора дома",
+  "Соседский кот",
+  "Стол по инструкции",
+  "Считаем секунды",
+  "Теремок",
+  "Три медведя",
+  "Трудная задача",
+  "Уборка в субботу",
+  "Урок рисования",
+  "Чтение перед сном",
+  "Шнурки на ботинках",
+]);
+
 export const STORY_PILOT_SIZE = PILOT_A1_TITLES.size;
+export const STORY_CONTROL_SIZE = CONTROL_A1_TITLES.size;
 
 export function isPilotStory(story: { title: string; level: string }): boolean {
   return story.level === "A1" && PILOT_A1_TITLES.has(story.title);
+}
+
+export function isControlStory(story: { title: string; level: string }): boolean {
+  return story.level === "A1" && CONTROL_A1_TITLES.has(story.title);
+}
+
+/** Pilot or control — i.e. off limits to any content change until the
+ * experiment closes. Three of the library's classic tales (Три медведя,
+ * Теремок, Снегурочка) land in the control group, which is why they get
+ * no cultural note. */
+export function isFrozenStory(story: { title: string; level: string }): boolean {
+  return isPilotStory(story) || isControlStory(story);
 }

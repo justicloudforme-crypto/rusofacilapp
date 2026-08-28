@@ -8,9 +8,11 @@ import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import { getContentInsights, getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
 import { isPilotStory } from "@/lib/story-pilot";
+import { getCulturalNote } from "@/lib/story-culture";
 import { getAllMedia } from "@/lib/media/data";
 import StoryText from "@/components/stories/StoryText";
 import ContentInsights from "@/components/stories/ContentInsights";
+import CulturalNote from "@/components/stories/CulturalNote";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
@@ -82,6 +84,12 @@ export default async function StoryReaderPage({
   // untouched. Pilot-gated (see src/lib/story-pilot.ts): 50 A1 stories,
   // with 15 more A1 stories deliberately left as an untouched control.
   const insights = isPilotStory(story) ? await getContentInsights(story.text) : null;
+
+  // Hand-written origin note, for the 40 classic (non-original) stories
+  // outside the frozen experiment — see src/lib/story-culture.ts. Written
+  // from sources about the text, not derived from the text, so it says
+  // nothing the paywall is protecting.
+  const culturalNote = getCulturalNote(story, lang);
 
   const translationParagraphs = story.translationEs ? splitStoryParagraphs(story.translationEs) : [];
   const visibleTranslationParagraphs = entitled
@@ -186,6 +194,10 @@ export default async function StoryReaderPage({
           }}
         />
       </div>
+
+      {culturalNote && (
+        <CulturalNote heading={dict.stories.culturalNoteHeading} text={culturalNote} />
+      )}
 
       {!entitled && (
         <Card tone="premium" padding="lg" className="paywall-lock mt-10">
