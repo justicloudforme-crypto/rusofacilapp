@@ -14,12 +14,39 @@
  *
  *   npm run db:seed-glossary
  *   npm run db:seed-glossary -- --force
+ *
+ * Two flags exist for running this against the PRODUCTION database, where
+ * "re-run the whole seed" is a much bigger promise than it is locally:
+ *
+ *   --dry-run          Touches nothing. Reads each row and prints a
+ *                      field-by-field diff of what a real run would
+ *                      change, so the change can be reviewed before it
+ *                      happens rather than reconstructed afterwards.
+ *   --only=a,b,c       Restricts the run to those slugs. Without it,
+ *                      --force means "overwrite EVERY hand-reviewed row",
+ *                      which is almost never what's intended when the
+ *                      goal is to push one corrected entry; with it,
+ *                      --force is scoped to the slugs actually named.
+ *
+ *   npm run db:seed-glossary -- --dry-run
+ *   npm run db:seed-glossary -- --only=arcaismo --force
  */
 import "dotenv/config";
 import { db } from "../src/lib/db";
 import { validateGlossaryInput, type GlossaryCategory, type GlossaryExample } from "../src/lib/glossary";
 
 const FORCE = process.argv.includes("--force");
+const DRY_RUN = process.argv.includes("--dry-run");
+const ONLY = (() => {
+  const arg = process.argv.find((a) => a.startsWith("--only="));
+  if (!arg) return null;
+  const slugs = arg
+    .slice("--only=".length)
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return slugs.length > 0 ? new Set(slugs) : null;
+})();
 
 interface SeedTerm {
   slug: string;
@@ -1161,7 +1188,17 @@ const terms: SeedTerm[] = [
       { es: "Sus ojos (poético: sus «ojos» arcaicos) brillaban de emoción.", ru: "Её очи сияли от волнения." },
       { es: "En este (arcaico: «este mismo») lugar nació el poeta.", ru: "На сём месте родился поэт." },
     ],
-    relatedLessons: ["c1-3"],
+    // Was ["c1-3"] — a dead link: there is no C1 level (levelSlugs is
+    // ["a1","a2","b1","b2"], 120 lessons total), so this term rendered no
+    // lesson links at all. b2-4 is the one lesson that actually teaches
+    // this: it names the archaic vocabulary layer (очи/уста/чело/ланиты)
+    // and frames it as a recognition-only skill — the same очи/уста this
+    // entry uses as its own examples. Deliberately just one lesson: b1-21
+    // calls the gerund «будучи» arcaic in passing and b2-11/b2-25 deal
+    // with formal register (which is not the same as archaic), so linking
+    // them would pad the block with lessons a reader would open and not
+    // find the concept in.
+    relatedLessons: ["b2-4"],
   },
   {
     slug: "par-nesti-nosit",
@@ -1451,7 +1488,14 @@ const terms: SeedTerm[] = [
       { es: "¡Te amo, oh patria mía!", ru: "Люблю тебя, о родина моя!" },
       { es: "El viento cantaba entre los árboles.", ru: "Пел ветер меж деревьев." },
     ],
-    relatedLessons: ["c1-1"],
+    // Was ["c1-1"] — same dead C1 link as `arcaismo` above. b2-4 is again
+    // the real lesson: it teaches the inverted word order used for poetic
+    // emphasis («Тихо шумел лес»), the elevated vocabulary, and the four
+    // stylistic figures — i.e. exactly the register this entry defines.
+    // b2-28 was considered and rejected: it teaches how to JUDGE a work
+    // (гениальный/посредственный), not the literary register itself, and
+    // the lesson text itself draws that line against b2-4.
+    relatedLessons: ["b2-4"],
   },
   {
     slug: "caso-vocativo",
@@ -1471,9 +1515,25 @@ const terms: SeedTerm[] = [
   },
 ];
 
+/** Fields compared in --dry-run. Deliberately the exact key set written
+ * below, so a new column can't silently drop out of the preview and land
+ * as an unannounced change in production. */
+function diffFields(existing: Record<string, unknown>, data: Record<string, unknown>): string[] {
+  return Object.keys(data).filter((key) => String(existing[key] ?? "") !== String(data[key] ?? ""));
+}
+
 async function main() {
   let skipped = 0;
+  let changed = 0;
+  let identical = 0;
+  let created = 0;
+  let filteredOut = 0;
+
   for (const term of terms) {
+    if (ONLY && !ONLY.has(term.slug)) {
+      filteredOut++;
+      continue;
+    }
     const result = validateGlossaryInput(term);
     if (!result.valid) {
       console.error(`Skipping "${term.term}": ${result.error}`);
@@ -1492,12 +1552,37 @@ async function main() {
         skipped++;
         continue;
       }
+      const changedFields = diffFields(existing as unknown as Record<string, unknown>, data);
+      if (changedFields.length === 0) {
+        identical++;
+        continue;
+      }
+      changed++;
+      if (DRY_RUN) {
+        console.log(`~ ${result.value.slug} — would UPDATE ${changedFields.length} field(s)${existing.reviewedAt ? " (reviewed, needs --force)" : ""}`);
+        for (const key of changedFields) {
+          console.log(`    ${key}:\n      before: ${String((existing as unknown as Record<string, unknown>)[key] ?? "")}\n      after:  ${String(data[key as keyof typeof data] ?? "")}`);
+        }
+        continue;
+      }
       await db.glossaryTerm.update({ where: { slug: result.value.slug }, data });
     } else {
+      created++;
+      if (DRY_RUN) {
+        console.log(`+ ${result.value.slug} — would CREATE`);
+        continue;
+      }
       await db.glossaryTerm.create({ data });
     }
   }
-  console.log(`✔ Seeded ${terms.length - skipped} glossary term(s), ${skipped} skipped (reviewed).`);
+
+  const scope = ONLY ? `${ONLY.size} slug(s) selected, ${filteredOut} not selected` : `all ${terms.length} term(s)`;
+  if (DRY_RUN) {
+    console.log(`\n— DRY RUN, nothing written. Scope: ${scope}.`);
+    console.log(`  would update ${changed}, would create ${created}, identical ${identical}, skipped as reviewed ${skipped}.`);
+    return;
+  }
+  console.log(`✔ Scope: ${scope}. Updated ${changed}, created ${created}, identical ${identical}, skipped (reviewed) ${skipped}.`);
 }
 
 main()
