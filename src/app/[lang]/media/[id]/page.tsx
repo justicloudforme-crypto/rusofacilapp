@@ -5,7 +5,8 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
-import { getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
+import { getMediaGrammarLinks, getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
+import ContentInsights from "@/components/stories/ContentInsights";
 import MediaPlayer from "@/components/media/MediaPlayer";
 import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
@@ -42,6 +43,10 @@ export default async function MediaDetailPage({
   if (!item) notFound();
 
   const relatedStories = await getRelatedStoriesForMedia(item);
+  // Which grammar topics this item's transcript actually contains, as
+  // crawlable links to the glossary. No example words: unlike a story's
+  // free preview, the transcript is gated in full (see `entitled` below).
+  const grammarLinks = await getMediaGrammarLinks(item.lyricsOrTranscript);
   const relatedLesson = getRelatedLessonForMedia(item);
   const relatedLessonTitle = relatedLesson
     ? dict.courses.levels[relatedLesson.level].lessons[Number(relatedLesson.lesson) - 1]
@@ -149,6 +154,21 @@ export default async function MediaDetailPage({
             </div>
           )}
         </section>
+      )}
+
+      {grammarLinks.length > 0 && (
+        <ContentInsights
+          lang={lang}
+          insights={{ vocabulary: [], grammar: grammarLinks }}
+          dict={{
+            vocabHeading: "",
+            vocabNote: "",
+            grammarHeading: dict.stories.insightsGrammarHeading,
+            grammarNote: dict.media.insightsGrammarNote,
+            exampleLabel: dict.stories.insightsExampleLabel,
+            glossaryAllLink: dict.crossLinks.glossaryAllLink,
+          }}
+        />
       )}
 
       {entitled ? (
