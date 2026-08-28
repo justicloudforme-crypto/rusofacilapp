@@ -741,7 +741,8 @@
     "insightsVocabNote": "Todas aparecen en este cuento. Cada una viene con su transcripción y su traducción — son palabras sueltas del vocabulario del curso, no un resumen de la historia.",
     "insightsGrammarHeading": "Gramática que aparece en este cuento",
     "insightsGrammarNote": "Cada punto enlaza a su ficha del glosario, con ejemplos tomados de este mismo texto.",
-    "insightsExampleLabel": "en el texto:"
+    "insightsExampleLabel": "en el texto:",
+    "culturalNoteHeading": "De dónde viene este texto"
   },
   "media": {
     "pageTitle": "Biblioteca de audio y video",
