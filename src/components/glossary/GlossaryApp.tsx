@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { earliestRelatedLevel, glossaryCategories, type GlossaryCategory, type GlossaryExample } from "@/lib/glossary";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { earliestRelatedLevel, glossaryCategories, isGlossaryCategory, type GlossaryCategory, type GlossaryExample } from "@/lib/glossary";
 import { levelSlugs, type LevelSlug } from "@/lib/courses";
 import RelatedLessonsList from "./RelatedLessonsList";
 import GlossaryProgress from "./GlossaryProgress";
@@ -22,6 +23,7 @@ export interface GlossaryDict {
   relatedLessonsLabel: string;
   listenLabel: string;
   noResultsMessage: string;
+  introducedAtLabel: string;
 }
 
 export interface GlossaryTermData {
@@ -41,69 +43,65 @@ export interface GlossaryTermData {
   audioUrl?: string;
 }
 
-export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: string }) {
+export default function GlossaryApp({
+  dict,
+  lang,
+  initialTerms,
+}: {
+  dict: GlossaryDict;
+  lang: string;
+  /** All terms, fetched once server-side (with audio already attached) by
+   * the /glossary page — filtering below runs entirely in memory over this
+   * array instead of re-fetching /api/glossary on every keystroke/filter
+   * change. This is what makes the full term list (and its /glossary/[slug]
+   * links) present in the server-rendered HTML on first load: there's no
+   * client-only fetch gating it, so a crawler (or curl) sees the same
+   * complete list a browser does. The /api/glossary routes themselves are
+   * untouched — GlossaryAdminApp, LessonGlossaryTerms, GlossaryTermTooltip,
+   * and useLevelGlossaryProgress still call them directly. */
+  initialTerms: GlossaryTermData[];
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<GlossaryCategory | "all">("all");
   const [level, setLevel] = useState<LevelSlug | "all">("all");
-  const [terms, setTerms] = useState<GlossaryTermData[]>([]);
-  const [loading, setLoading] = useState(true);
   // Set from a `?slug=` deep link (e.g. TermQuiz's "review in glossary"
-  // link after a wrong answer) — an exact slug lookup, so a term whose name
+  // link after a wrong answer, or the "back to category" link on a
+  // /glossary/[slug] page) — an exact slug lookup, so a term whose name
   // happens to be a substring of another term's name (or vice versa) can't
   // resolve to the wrong card the way a `?q=` text search could.
   const [slugFocus, setSlugFocus] = useState<string | null>(null);
 
-  // Picks up `?slug=` or `?q=` from the URL without pulling in
-  // useSearchParams/Suspense — this only needs to run once, client-side,
+  // Picks up `?slug=`, `?q=`, or `?category=` from the URL without pulling
+  // in useSearchParams/Suspense — this only needs to run once, client-side,
   // after hydration.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
     const initialQuery = params.get("q");
+    const initialCategory = params.get("category");
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (slug) setSlugFocus(slug);
     else if (initialQuery) setQuery(initialQuery);
+    if (initialCategory && isGlossaryCategory(initialCategory)) setCategory(initialCategory);
   }, []);
 
-  useEffect(() => {
-    if (!slugFocus) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    const controller = new AbortController();
-    fetch(`/api/glossary/${encodeURIComponent(slugFocus)}`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : { term: null }))
-      .then((body: { term?: GlossaryTermData | null }) => {
-        setTerms(body.term ? [body.term] : []);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [slugFocus]);
-
-  useEffect(() => {
-    if (slugFocus) return;
-    const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    if (category !== "all") params.set("category", category);
-    if (level !== "all") params.set("level", level);
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    const controller = new AbortController();
-    fetch(`/api/glossary?${params.toString()}`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : { terms: [] }))
-      .then((body: { terms?: GlossaryTermData[] }) => {
-        setTerms(body.terms ?? []);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [query, category, level, slugFocus]);
+  // Same filter semantics as the /api/glossary route this replaces
+  // (case-sensitive substring match — a SQLite `contains` limitation there,
+  // just naturally preserved here by not lowercasing either side; "level"
+  // still means "relatedLessons has an entry for this level").
+  const terms = useMemo(() => {
+    if (slugFocus) {
+      const match = initialTerms.find((t) => t.slug === slugFocus);
+      return match ? [match] : [];
+    }
+    const q = query.trim();
+    return initialTerms.filter((t) => {
+      if (category !== "all" && t.category !== category) return false;
+      if (level !== "all" && !t.relatedLessons.some((l) => l.startsWith(`${level}-`))) return false;
+      if (q && !t.term.includes(q) && !t.russianEquivalent.includes(q) && !t.definition.includes(q)) return false;
+      return true;
+    });
+  }, [initialTerms, slugFocus, category, level, query]);
 
   // Any manual interaction with search/filters exits the slug-focused deep
   // link and returns to normal browsing.
@@ -188,7 +186,7 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
       </div>
 
       <div className="mt-8 flex flex-col gap-4">
-        {!loading && terms.length === 0 && (
+        {terms.length === 0 && (
           <p className="text-sm text-foreground/60">{dict.noResultsMessage}</p>
         )}
         {terms.map((term) => {
@@ -197,10 +195,17 @@ export default function GlossaryApp({ dict, lang }: { dict: GlossaryDict; lang: 
           <div key={term.id} className="rounded-xl border border-black/10 p-4 dark:border-white/30">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold">{term.term}</h2>
+                <h2 className="text-lg font-semibold">
+                  <Link
+                    href={`/${lang}/glossary/${term.slug}`}
+                    className="tap underline-offset-4 hover:underline active:underline"
+                  >
+                    {term.term}
+                  </Link>
+                </h2>
                 {earliestLevel && (
                   <span className="rounded-full border border-black/10 px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-foreground/50 dark:border-white/15">
-                    Introducido en {earliestLevel}
+                    {dict.introducedAtLabel} {earliestLevel}
                   </span>
                 )}
               </span>
