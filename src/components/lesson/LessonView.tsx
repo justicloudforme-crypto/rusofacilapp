@@ -99,10 +99,49 @@ export default function LessonView({
   // today, but this stays correct if that ever isn't true for a future
   // lesson.
   const hasSlides = isLocked ? (lockedCounts?.slides ?? 0) > 0 : Boolean(content?.slides && content.slides.length > 0);
-  // A locked lesson always lands on the one tab that has real content —
-  // never defaults into a paywall card before the visitor sees anything.
-  const [tab, setTab] = useState<Tab>(isLocked ? "grammar" : hasSlides ? "slides" : hasAlphabet ? "alphabet" : "grammar");
+  // Every lesson — locked or not — lands on "grammar". A locked one has
+  // nothing else to show anyway (never default into a paywall card), and
+  // an OPEN one used to default to "slides", which measured as a real SEO
+  // regression: SlidesTab is a carousel rendering 1 of 8 slides, so the
+  // 8 open lessons served ~936 chars of text to a crawler against ~4373
+  // for a locked one — opening a lesson made it *less* indexable, the
+  // opposite of what PR #36 was for (full numbers in PROGRESS.md's
+  // "БАЗОВЫЕ ЦИФРЫ ИНДЕКСИРУЕМОСТИ" block). Owner's call: the grammar
+  // explanation being findable beats the presentation's softer intro.
+  const [tab, setTab] = useState<Tab>("grammar");
   const [passed, setPassed] = useState(content ? false : true);
+  // ExercisesTab is the one panel NOT rendered up front (see the render
+  // block below): its mount effect fires a GET /api/progress for every
+  // visitor, which would be a wasted request on every lesson view — and
+  // for a signed-out visitor or a crawler it can never return anything.
+  // Mounted on the first click of the Ejercicios tab and kept mounted
+  // afterwards, so a student's graded state still survives tab switching.
+  const [exercisesEverOpened, setExercisesEverOpened] = useState(false);
+  // Because ExercisesTab is now lazily mounted (above) and it is the only
+  // thing that flips `passed`, a student who already completed this lesson
+  // would have found the "next lesson" link disabled until they clicked
+  // Ejercicios again. ExercisesTab decides the same thing from the same
+  // localStorage key, so read it here too — cheap, no request, and it
+  // restores the pre-lazy-mount behaviour. (A student on a NEW device
+  // whose pass only exists server-side still has to open the Ejercicios
+  // tab once; they would be opening it anyway to see their graded
+  // attempt, which is restored by ExercisesTab's own GET /api/progress.)
+  useEffect(() => {
+    if (!content) return;
+    try {
+      // Reading localStorage is only possible after mount (it doesn't
+      // exist during SSR), so this has to happen in an effect rather than
+      // during render — same reasoning and same rule override as
+      // ExercisesTab's own copy of this check.
+      if (content.exercises.length === 0 || window.localStorage.getItem(`lesson-passed:${level}:${lessonSlug}`) === "1") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPassed(true);
+      }
+    } catch {
+      // localStorage unavailable (private mode / disabled) — the gate just
+      // stays closed until the student opens Ejercicios, same as before.
+    }
+  }, [content, level, lessonSlug]);
   // Pre-generated pronunciation audio for this lesson's items (see
   // prisma/generate-lesson-audio.ts), keyed by the Russian text itself.
   // Empty until this resolves — SpeakButton just falls back to browser
@@ -153,7 +192,10 @@ export default function LessonView({
           <TabBar
             items={tabs}
             activeId={tab}
-            onSelect={setTab}
+            onSelect={(id) => {
+              if (id === "exercises") setExercisesEverOpened(true);
+              setTab(id);
+            }}
             className="mt-6"
           />
 
@@ -204,19 +246,32 @@ export default function LessonView({
                 </div>
               </>
             )}
-            {!isLocked && tab === "slides" && content.slides && (
-              <SlidesTab
-                slides={content.slides}
-                illustrations={slideIllustrations}
-                level={level}
-                lessonSlug={lessonSlug}
-                dict={dict.slides}
-              />
+            {/* Open-lesson panels follow the same rule as the lock cards
+                above: rendered into the DOM up front, shown/hidden with a
+                `hidden` class rather than skipped entirely. A crawler
+                never clicks a tab, so the old `tab === "x" && ...` form
+                meant only ONE panel was ever in the served HTML — which
+                is what made the 8 open lessons the 8 thinnest pages in
+                the whole sitemap (see the tab-default comment above).
+                Same visible behaviour for a human: one panel showing,
+                the rest hidden. */}
+            {!isLocked && content.slides && (
+              <div className={tab === "slides" ? undefined : "hidden"}>
+                <SlidesTab
+                  slides={content.slides}
+                  illustrations={slideIllustrations}
+                  level={level}
+                  lessonSlug={lessonSlug}
+                  dict={dict.slides}
+                />
+              </div>
             )}
-            {tab === "alphabet" && content.alphabet && (
-              <AlphabetTable alphabet={content.alphabet} dict={dict.alphabet} audioMap={audioMap} />
+            {content.alphabet && (
+              <div className={tab === "alphabet" ? undefined : "hidden"}>
+                <AlphabetTable alphabet={content.alphabet} dict={dict.alphabet} audioMap={audioMap} />
+              </div>
             )}
-            {tab === "grammar" && (
+            <div className={tab === "grammar" ? undefined : "hidden"}>
               <GrammarTab
                 grammar={content.grammar}
                 readingPractice={content.readingPractice}
@@ -226,9 +281,9 @@ export default function LessonView({
                 lessonSlug={lessonSlug}
                 audioMap={audioMap}
               />
-            )}
-            {!isLocked && tab === "vocabulary" && (
-              <>
+            </div>
+            {!isLocked && (
+              <div className={tab === "vocabulary" ? undefined : "hidden"}>
                 <LessonGlossaryTerms
                   level={level}
                   lessonSlug={lessonSlug}
@@ -243,22 +298,29 @@ export default function LessonView({
                   listenLabel={dict.alphabet.listenLabel}
                   audioMap={audioMap}
                 />
-              </>
+              </div>
             )}
-            {!isLocked && tab === "exercises" && (
-              <ExercisesTab
-                exercises={content.exercises}
-                vocabulary={content.vocabulary}
-                dict={dict.exercises}
-                pronunciationDict={dict.pronunciation}
-                celebrationDict={celebrationDict}
-                level={level}
-                lessonSlug={lessonSlug}
-                storageKey={`lesson-passed:${level}:${lessonSlug}`}
-                onPassChange={setPassed}
-                enableAudioRecording={content.enableAudioRecording}
-                audioMap={audioMap}
-              />
+            {/* The one panel deliberately NOT pre-rendered — see
+                exercisesEverOpened's own comment. Exercises are graded
+                interaction, not readable prose, so leaving them out of
+                the crawler's view costs nothing for SEO while saving a
+                GET /api/progress on every single lesson view. */}
+            {!isLocked && exercisesEverOpened && (
+              <div className={tab === "exercises" ? undefined : "hidden"}>
+                <ExercisesTab
+                  exercises={content.exercises}
+                  vocabulary={content.vocabulary}
+                  dict={dict.exercises}
+                  pronunciationDict={dict.pronunciation}
+                  celebrationDict={celebrationDict}
+                  level={level}
+                  lessonSlug={lessonSlug}
+                  storageKey={`lesson-passed:${level}:${lessonSlug}`}
+                  onPassChange={setPassed}
+                  enableAudioRecording={content.enableAudioRecording}
+                  audioMap={audioMap}
+                />
+              </div>
             )}
           </div>
         </>
