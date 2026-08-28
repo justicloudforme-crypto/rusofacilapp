@@ -40,10 +40,29 @@ async function getTermBySlug(slug: string) {
   return withAudio;
 }
 
-export function generateStaticParams() {
-  return db.glossaryTerm.findMany({ select: { slug: true } }).then((rows) =>
-    locales.flatMap((lang) => rows.map((row) => ({ lang, slug: row.slug })))
-  );
+// Runs at BUILD time, not request time — force-dynamic (the fix used for
+// sitemap.ts's identical symptom) doesn't apply here, since this function
+// IS the build-time mechanism that decides which paths to pre-render.
+// TURSO_DATABASE_URL/TURSO_AUTH_TOKEN are scoped to the Production
+// environment only (confirmed via `vercel env ls`) — a Preview build (any
+// open PR) has neither, so db.glossaryTerm.findMany() falls through to
+// src/lib/db.ts's local-file fallback, which doesn't exist on Vercel's
+// build container: a real deploy failure (PR #34, 2026-08-27), not a
+// hypothetical one. Falling back to an empty array here is safe precisely
+// because dynamicParams/revalidate above already handle "this slug wasn't
+// pre-rendered" — every page still renders correctly on first real
+// request in an environment that DOES have Turso (i.e. Production).
+export async function generateStaticParams() {
+  try {
+    const rows = await db.glossaryTerm.findMany({ select: { slug: true } });
+    return locales.flatMap((lang) => rows.map((row) => ({ lang, slug: row.slug })));
+  } catch (error) {
+    console.log(
+      "[glossary/[slug]] generateStaticParams: DB unreachable at build time (expected on Preview, which has no Turso credentials) — falling back to on-demand rendering for every slug.",
+      error
+    );
+    return [];
+  }
 }
 
 /** Meta descriptions cap out around 155–160 chars in Google's SERP display
