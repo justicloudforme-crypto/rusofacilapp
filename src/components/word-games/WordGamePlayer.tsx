@@ -71,11 +71,15 @@ export default function WordGamePlayer({
     if (completeReported.current) return;
     completeReported.current = true;
     const timeSeconds = Math.round((Date.now() - startedAt) / 1000);
+    // Fire-and-forget by design (see the route's own comment: it 200s
+    // `{recorded:false}` even for an unknown puzzleId) — but a network
+    // failure still rejects the fetch promise itself, which `void` alone
+    // doesn't catch. Same unhandled-rejection class as SerwistRegister.tsx.
     void fetch("/api/word-games/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ puzzleId: puzzle.id, timeSeconds, usedHint }),
-    });
+    }).catch(() => {});
   }, [puzzle.id, usedHint, startedAt]);
 
   function playAgain() {

@@ -22,7 +22,10 @@ export default function NativeBackButtonHandler() {
       if (canGoBack) {
         window.history.back();
       } else {
-        void App.exitApp();
+        // `void` alone doesn't catch a rejection — same bug class as
+        // SerwistRegister.tsx. The app is exiting either way; nothing
+        // useful to do with a failure here.
+        void App.exitApp().catch(() => {});
       }
     });
 
