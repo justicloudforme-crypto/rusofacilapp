@@ -12,7 +12,7 @@ import StoryText from "@/components/stories/StoryText";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, paywallJsonLd } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -119,6 +119,7 @@ export default async function StoryReaderPage({
           datePublished: story.createdAt.toISOString(),
           dateModified: story.updatedAt.toISOString(),
           url: `${SITE_URL}/${lang}/stories/${story.id}`,
+          ...paywallJsonLd(entitled, ".paywall-lock"),
         }}
       />
       <JsonLd
@@ -178,7 +179,7 @@ export default async function StoryReaderPage({
       </div>
 
       {!entitled && (
-        <Card tone="premium" padding="lg" className="mt-10">
+        <Card tone="premium" padding="lg" className="paywall-lock mt-10">
           <h2 className="font-medium">
             {needsPremiumUpgrade ? dict.stories.premiumTierLockTitle : dict.stories.premiumLockTitle}
           </h2>

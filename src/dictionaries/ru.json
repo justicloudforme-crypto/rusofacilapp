@@ -960,6 +960,12 @@
       "alphabet": "Алфавит",
       "slides": "Презентация"
     },
+    "locked": {
+      "vocabularyLabel": "В этом модуле — {count} слов с озвучкой.",
+      "exercisesLabel": "В этом модуле — {count} заданий с автоматической проверкой.",
+      "slidesLabel": "В этом модуле — {count} слайдов презентации.",
+      "cta": "Смотреть тарифы"
+    },
     "grammarSpanishNote": "Объяснение грамматики и упражнения даются на испанском языке — курс напрямую сравнивает русский с испанским.",
     "glossaryTermsHeading": "Термины этого урока",
     "glossaryTermsMasteredLabel": "{count}/{total} усвоено",

@@ -11,7 +11,7 @@ import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
 import VocabularyTab from "@/components/lesson/VocabularyTab";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, paywallJsonLd } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -69,6 +69,19 @@ export default async function MediaDetailPage({
 
   return (
     <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "LearningResource",
+          name: item.title,
+          description: item.description,
+          learningResourceType: categoryLabels[item.category],
+          educationalLevel: item.level,
+          inLanguage: lang,
+          url: `${SITE_URL}/${lang}/media/${item.id}`,
+          ...paywallJsonLd(entitled, ".paywall-lock"),
+        }}
+      />
       <JsonLd
         data={breadcrumbList([
           { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
@@ -199,7 +212,7 @@ export default async function MediaDetailPage({
           </section>
         </>
       ) : (
-        <div className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
+        <div className="paywall-lock mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
           <h2 className="font-medium">{dict.media.premiumLockTitle}</h2>
           <p className="mt-2 text-sm text-foreground/70">{dict.media.premiumLockBody}</p>
           <Link
