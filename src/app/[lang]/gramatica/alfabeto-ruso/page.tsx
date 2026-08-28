@@ -37,7 +37,7 @@ export async function generateMetadata({
   return {
     title: "El alfabeto ruso para hispanohablantes: las 33 letras por dificultad",
     description:
-      "Las 33 letras del cirílico ordenadas por lo que te cuesta reconocerlas: las que ya sabes leer, los seis falsos amigos que se leen mal (В, Н, Р, С, У, Х) y las nuevas de verdad.",
+      "No es la tabla en orden alfabético: son las 33 letras agrupadas por lo que cuesta reconocerlas — las cinco que ya sabes leer, los seis falsos amigos que se leen mal (В, Н, Р, С, У, Х) y las nuevas de verdad.",
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },
@@ -62,7 +62,7 @@ export default async function AlfabetoRusoPage({
           "@type": "Article",
           headline: "El alfabeto ruso para hispanohablantes: las 33 letras por dificultad",
           description:
-            "Las 33 letras del cirílico agrupadas por dificultad de reconocimiento para un hispanohablante, con los falsos amigos, los sonidos que el español no tiene y las dos letras mudas.",
+            "Las 33 letras del cirílico agrupadas por dificultad de reconocimiento para un hispanohablante — no en orden alfabético — con los falsos amigos, los sonidos que el español no tiene y las dos letras mudas.",
           inLanguage: "es",
           isAccessibleForFree: true,
           url,
@@ -96,7 +96,15 @@ export default async function AlfabetoRusoPage({
         El cirílico asusta menos de lo que parece. De sus 33 letras, varias ya sabes leerlas sin
         haber estudiado nada, y el verdadero problema no son las que te resultan raras — esas se
         aprenden en una tarde — sino las seis que se parecen a letras latinas y suenan distinto.
-        Esta guía las ordena por eso, no por el orden del abecedario.
+        Esta guía las ordena por eso, no por el orden del abecedario. Si lo que buscas es la
+        tabla completa en orden, con audio de cada letra, está en la{" "}
+        <Link
+          href="/es/courses/a1/1"
+          className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+        >
+          primera lección del curso
+        </Link>
+        .
       </p>
 
       <h2 className="mt-10 text-xl font-semibold tracking-tight">
