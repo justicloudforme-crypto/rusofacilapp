@@ -1376,7 +1376,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es la conjunción que introduce una finalidad o propósito, equivalente a «para que» en español. Cuando el sujeto de las dos acciones es el mismo, «чтобы» va seguida de un infinitivo; cuando los sujetos son distintos, va seguida de un verbo en pasado (aunque la acción se refiera al futuro).",
     russianEquivalent: "целевой союз",
-    transcription: "tsilyevóy sayúz",
+    transcription: "tsylyevóy sayús",
     category: "conjunciones",
     russianComparison:
       "El español usa el subjuntivo después de «para que» cuando cambia el sujeto («para que lo leyera»). El ruso no tiene subjuntivo: en su lugar usa siempre el verbo en PASADO después de «чтобы», sin importar si la acción es futura — el mismo mecanismo que se usa en el modo condicional con «бы».",
@@ -1392,7 +1392,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es la conjunción que introduce una idea que contrasta con la principal sin anularla, equivalente a «aunque» en español. La más común es «хотя».",
     russianEquivalent: "уступительный союз",
-    transcription: "ustupítyel'nyy sayúz",
+    transcription: "ustupítyel'nyy sayús",
     category: "conjunciones",
     examples: [
       { es: "Aunque llovía, salimos a caminar.", ru: "Хотя шёл дождь, мы пошли гулять." },
@@ -1422,7 +1422,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es el sufijo que se añade a un sustantivo para indicar que algo es grande, exagerado o intenso, a veces con un matiz tosco o cómico — lo contrario del diminutivo. El más común es «-ище»/«-ища»: «дом» (casa) → «домище» (casona enorme), «рука» (mano) → «ручища» (manaza).",
     russianEquivalent: "увеличительный суффикс",
-    transcription: "uvyelíchityel'nyy súfiks",
+    transcription: "uvyelichítyel'nyy súfiks",
     category: "otros",
     examples: [
       { es: "Vive en una casona enorme.", ru: "Он живёт в домище." },
@@ -1468,7 +1468,7 @@ const terms: SeedTerm[] = [
     definition:
       "En pasado, el IMPERFECTIVO se usa para acciones repetidas o habituales, sin destacar un resultado concreto («solía llamarme»), mientras que el PERFECTIVO se usa para una acción única y completada, con un resultado visible («me llamó [una vez] y me contó la noticia»).",
     russianEquivalent: "вид глагола в прошедшем времени при повторяющемся действии",
-    transcription: "vid glagóla v prashédshim vryémini pri pavtaryáyushchimsya dyéystvii",
+    transcription: "vid glagóla v prashédshym vryémini pri pavtaryáyushchimsya dyéystvii",
     category: "aspecto",
     examples: [
       { es: "De niño, iba a la playa todos los veranos.", ru: "В детстве я каждое лето ездил на пляж." },
@@ -1503,7 +1503,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es un caso antiguo, ya casi desaparecido del ruso moderno, que se conserva en un puñado de formas fijas y arcaicas de invocación religiosa o poética («Господи!» — ¡Dios mío!, «Боже!» — ¡Dios!). De forma informal, el ruso coloquial actual también crea un «vocativo truncado»: se corta la vocal final de un nombre al dirigirse directamente a alguien («Кать!» de Катя, «Маш!» de Маша, «Пап!» de папа).",
     russianEquivalent: "звательный падеж",
-    transcription: "zvátyel'nyy padyézh",
+    transcription: "zvátyel'nyy padyésh",
     category: "casos",
     russianComparison:
       "El español no tiene una forma morfológica distinta para el vocativo: el nombre no cambia, solo se marca con entonación o coma («¡Katia, ven aquí!»). El ruso históricamente sí tenía una forma de caso dedicada a esto, y de manera informal conserva ese impulso hoy en el habla coloquial.",
