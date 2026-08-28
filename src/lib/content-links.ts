@@ -205,3 +205,39 @@ export function getRelatedMediaForStory(story: { title: string; level: string },
     (item.relatedStories ?? []).some((ref) => ref.title === story.title && ref.level === story.level),
   );
 }
+
+export interface RelatedGlossaryTermRef {
+  slug: string;
+  term: string;
+}
+
+/**
+ * The glossary terms a given lesson introduces, as REAL links rendered
+ * server-side — the crawlable counterpart to LessonGlossaryTerms.tsx,
+ * which shows the same terms as chips that open a popover, is a client
+ * component fetching `/api/glossary?lesson=...` after mount, and lives
+ * inside the Vocabulary tab. None of that reaches a crawler: measured
+ * across the whole sitemap on 2026-08-28, all 240 lesson pages served
+ * exactly zero crawlable links to /glossary, and outside the glossary
+ * section itself only 6 pages linked to it at all (the 4 game landing
+ * pages via GameLandingLinks). The 182 glossary URLs were effectively an
+ * island. This function exists to fix that, not to duplicate the chips'
+ * interaction — the popover stays where it is for students, this is the
+ * href a crawler (and a keyboard user opening a link in a new tab) can
+ * actually follow.
+ *
+ * Matches on GlossaryTerm.relatedLessons, the same `contains "a1-1"`
+ * predicate /api/glossary already uses, so the two never disagree about
+ * which terms belong to a lesson.
+ */
+export async function getGlossaryTermsForLesson(
+  level: LevelSlug,
+  lessonSlug: string,
+): Promise<RelatedGlossaryTermRef[]> {
+  const rows = await db.glossaryTerm.findMany({
+    where: { relatedLessons: { contains: `"${level}-${lessonSlug}"` } },
+    orderBy: { term: "asc" },
+    select: { slug: true, term: true },
+  });
+  return rows;
+}

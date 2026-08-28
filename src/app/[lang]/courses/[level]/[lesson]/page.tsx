@@ -6,7 +6,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { getLessonContent } from "@/lib/lessons/content";
-import { getRelatedStoriesForLesson, getRelatedMediaForLesson } from "@/lib/content-links";
+import { getRelatedStoriesForLesson, getRelatedMediaForLesson, getGlossaryTermsForLesson } from "@/lib/content-links";
 import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
@@ -51,11 +51,12 @@ export default async function LessonPage({
   const slugs = lessonSlugsFor(level);
   const prevSlug = index > 0 ? slugs[index - 1] : null;
   const nextSlug = index < slugs.length - 1 ? slugs[index + 1] : null;
-  const [fullContent, tier, relatedStoriesResult, allMedia] = await Promise.all([
+  const [fullContent, tier, relatedStoriesResult, allMedia, glossaryTerms] = await Promise.all([
     getLessonContent(level, lesson),
     getEntitlementTier(),
     getRelatedStoriesForLesson(level, lesson),
     getAllMedia(),
+    getGlossaryTermsForLesson(level, lesson),
   ]);
   const relatedMediaResult = getRelatedMediaForLesson(level, lesson, allMedia);
 
@@ -166,10 +167,51 @@ export default async function LessonPage({
         nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
       />
 
-      {(relatedStoriesResult.stories.length > 0 || relatedMediaResult.items.length > 0) && (
+      {(relatedStoriesResult.stories.length > 0 || relatedMediaResult.items.length > 0 || glossaryTerms.length > 0) && (
         <div className="mx-auto w-full max-w-2xl flex-1 px-6 pb-16">
-          {relatedStoriesResult.stories.length > 0 && (
+          {/* Real server-rendered links to the glossary terms this lesson
+              introduces. LessonGlossaryTerms.tsx already shows the same
+              terms inside the Vocabulary tab, but as popover-opening chips
+              in a client component that fetches after mount — so a crawler
+              saw none of them: all 240 lesson pages served zero crawlable
+              links to /glossary (measured across the whole sitemap on
+              2026-08-28). This is a curated relation (GlossaryTerm.
+              relatedLessons is hand-maintained), so it gets its own
+              specific heading rather than the generic "topic vs level"
+              pair the story/media blocks below choose between — those two
+              have a real fallback mode to be honest about, this one
+              doesn't: it either has curated terms or renders nothing. */}
+          {glossaryTerms.length > 0 && (
             <section className="border-t border-black/10 pt-6 dark:border-white/30">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+                {dict.crossLinks.glossaryHeading}
+              </h2>
+              <ul className="mt-3 flex flex-col gap-1.5">
+                {glossaryTerms.map((term) => (
+                  <li key={term.slug}>
+                    <Link
+                      href={`/${lang}/glossary/${term.slug}`}
+                      className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                    >
+                      <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
+                        {dict.crossLinks.glossaryLabel}
+                      </span>
+                      {term.term}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={`/${lang}/glossary`}
+                className="tap mt-3 inline-block text-sm font-medium text-foreground/60 underline-offset-2 hover:underline hover:text-foreground active:underline"
+              >
+                {dict.crossLinks.glossaryAllLink} →
+              </Link>
+            </section>
+          )}
+
+          {relatedStoriesResult.stories.length > 0 && (
+            <section className={`border-t border-black/10 pt-6 dark:border-white/30 ${glossaryTerms.length > 0 ? "mt-6" : ""}`}>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
                 {relatedStoriesResult.kind === "topic"
                   ? dict.crossLinks.topicHeading
