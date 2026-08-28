@@ -405,7 +405,7 @@ const terms: SeedTerm[] = [
       { es: "Creo que va a llover.", ru: "Я думаю, что пойдёт дождь." },
       { es: "Salimos cuando terminó la clase.", ru: "Мы вышли, когда закончился урок." },
     ],
-    relatedLessons: ["b1-23", "b1-24"],
+    relatedLessons: ["b1-23", "b1-24", "b1-26"],
   },
   {
     slug: "caso-nominativo",
@@ -472,7 +472,7 @@ const terms: SeedTerm[] = [
       { es: "la persona que trabaja aquí", ru: "человек, работающий здесь" },
       { es: "los estudiantes que estudian ruso", ru: "студенты, изучающие русский язык" },
     ],
-    relatedLessons: ["b1-19", "b2-9"],
+    relatedLessons: ["b1-19", "b2-9", "b2-12"],
   },
   {
     slug: "participio-pasivo",
@@ -894,7 +894,7 @@ const terms: SeedTerm[] = [
       { es: "El tren llegó a las tres.", ru: "Поезд пришёл в три часа." },
       { es: "Ella salió de la habitación.", ru: "Она вышла из комнаты." },
     ],
-    relatedLessons: ["b1-9", "b1-10", "b1-12"],
+    relatedLessons: ["b1-9", "b1-10", "b1-12", "b1-13"],
   },
   {
     slug: "genitivo-de-negacion",
@@ -1036,7 +1036,7 @@ const terms: SeedTerm[] = [
       { es: "Tengo frío, cierra la ventana, por favor.", ru: "Мне холодно, закрой окно, пожалуйста." },
       { es: "A mi hermano le gusta este libro.", ru: "Моему брату нравится эта книга." },
     ],
-    relatedLessons: ["a2-8"],
+    relatedLessons: ["a2-8", "b1-29"],
   },
   {
     slug: "conjuncion-adversativa",
@@ -1066,7 +1066,7 @@ const terms: SeedTerm[] = [
       { es: "No fui a la fiesta porque estaba enfermo.", ru: "Я не пошёл на вечеринку, потому что был болен." },
       { es: "Como llovía mucho, cancelaron el partido.", ru: "Так как шёл сильный дождь, матч отменили." },
     ],
-    relatedLessons: ["a2-5"],
+    relatedLessons: ["a2-5", "b2-16"],
   },
   {
     slug: "conjuncion-condicional",
@@ -1098,7 +1098,7 @@ const terms: SeedTerm[] = [
       { es: "¡Si ya te lo había dicho!", ru: "Я же тебе говорил!" },
       { es: "Alguien llamó, no sé quién.", ru: "Кто-то звонил, не знаю кто." },
     ],
-    relatedLessons: ["b1-1"],
+    relatedLessons: ["b1-1", "b2-29"],
   },
   {
     slug: "interjeccion",
@@ -1144,7 +1144,7 @@ const terms: SeedTerm[] = [
       { es: "El estudiante que escribe la carta es mi amigo.", ru: "Студент, пишущий письмо, — мой друг." },
       { es: "Vimos la casa construida el año pasado.", ru: "Мы увидели дом, построенный в прошлом году." },
     ],
-    relatedLessons: ["b2-10"],
+    relatedLessons: ["b2-10", "b2-12"],
   },
   {
     slug: "construccion-de-gerundio",
@@ -1384,7 +1384,7 @@ const terms: SeedTerm[] = [
       { es: "Estudio ruso para viajar a Rusia.", ru: "Я учу русский, чтобы поехать в Россию." },
       { es: "Le di el libro para que lo leyera.", ru: "Я дал ему книгу, чтобы он её прочитал." },
     ],
-    relatedLessons: ["b1-8"],
+    relatedLessons: ["b1-8", "b2-17"],
   },
   {
     slug: "conjuncion-concesiva",
@@ -1460,7 +1460,7 @@ const terms: SeedTerm[] = [
       { es: "No des portazos (prohibición general).", ru: "Не хлопай дверью!" },
       { es: "¡Cuidado, no rompas el jarrón! (advertencia ante un accidente)", ru: "Осторожно, не разбей вазу!" },
     ],
-    relatedLessons: ["a1-9"],
+    relatedLessons: ["a1-9", "b1-18"],
   },
   {
     slug: "aspecto-en-pasado-habitual",
@@ -1599,7 +1599,7 @@ const terms: SeedTerm[] = [
       { es: "Hace frío afuera.", ru: "На улице холодно." },
       { es: "Ayer hacía calor.", ru: "Вчера было жарко." },
     ],
-    relatedLessons: ["a2-4"],
+    relatedLessons: ["a2-4", "b1-7"],
   },
   {
     slug: "preposicion-v-na",
