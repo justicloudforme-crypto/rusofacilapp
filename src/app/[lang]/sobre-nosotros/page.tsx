@@ -42,7 +42,7 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/sobre-nos
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
-      <JsonLd data={organizationJsonLd()} />
+      <JsonLd data={organizationJsonLd(lang)} />
       <JsonLd
         data={breadcrumbList([
           { name: dict.nav.home, url: `${SITE_URL}/${lang}` },

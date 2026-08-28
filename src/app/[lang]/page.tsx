@@ -50,8 +50,8 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           term (no Organization markup existed anywhere on the site
           before this). Homepage only, not every page — same "one per
           entity" placement Google recommends. */}
-      <JsonLd data={organizationJsonLd()} />
-      <JsonLd data={websiteJsonLd()} />
+      <JsonLd data={organizationJsonLd(lang)} />
+      <JsonLd data={websiteJsonLd(lang)} />
       {/* Text here must stay word-for-word identical to dict.home.faq below
           (rendered visibly via PricingFaq further down this page) — Google
           can flag/ignore FAQPage markup that doesn't match the page's own
