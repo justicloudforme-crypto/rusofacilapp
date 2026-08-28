@@ -6,6 +6,7 @@ import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 import { db } from "@/lib/db";
 import { getAllMedia } from "@/lib/media/data";
 import { SITE_URL } from "@/lib/site";
+import { VOCABULARY_CATEGORY_PAGES } from "@/lib/vocabulary-categories";
 
 // Next.js Metadata Route convention — served automatically at /sitemap.xml,
 // same pattern as manifest.ts/robots.ts. Lives outside `[lang]` so it isn't
@@ -86,6 +87,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const path of esOnlyPaths) {
     entries.push({ url: `${SITE_URL}/es${path}`, changeFrequency: "monthly" });
+  }
+
+  // The 23 per-theme vocabulary pages, ES-only for the same reason as the
+  // grammar guides above. Taken from the list rather than hardcoded as a
+  // count, so adding a category can't leave its page out of the map. They
+  // publish A1-B2 cards only; C1 stays paywalled in full, which is a
+  // property of the page, not of this listing.
+  for (const page of VOCABULARY_CATEGORY_PAGES) {
+    entries.push({ url: `${SITE_URL}/es/vocabulary/${page.slug}`, changeFrequency: "weekly" });
   }
 
   for (const level of flashcardLevels.filter((l) => l !== "C1")) {
