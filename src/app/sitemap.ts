@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { locales } from "@/i18n/config";
-import { levelSlugs } from "@/lib/courses";
+import { levelSlugs, lessonSlugsFor } from "@/lib/courses";
 import { db } from "@/lib/db";
 import { getAllMedia } from "@/lib/media/data";
 import { SITE_URL } from "@/lib/site";
@@ -23,11 +23,17 @@ export const dynamic = "force-dynamic";
 // Also: only lists routes a signed-out visitor (and so a crawler) can actually
 // read: static public pages, all stories (non-premium ones show the full
 // text, premium ones show a snippet + paywall — both are legitimate
-// indexable pages), all media items (same free/gated split), and the
-// course level listings. Individual lesson pages are gated behind a
-// subscription except the single free-trial lesson (A1/1, see
-// isFreeTrialLesson in lib/courses.ts) — every other lesson would just
-// redirect an anonymous crawler to /pricing, so only that one is listed.
+// indexable pages), all media items (same free/gated split), the course
+// level listings, and — since 2026-08-28 — every individual lesson page:
+// each one now shows its real grammar explanation to every visitor
+// regardless of subscription (only vocabulary/exercises/slides are
+// locked, see [lesson]/page.tsx), so all 120 are genuine, indexable pages
+// now, not just each level's lesson 1. Milestone exams and word-game
+// puzzles are NOT listed — those still redirect an anonymous visitor to
+// /pricing with no free-content exception worth indexing (robots.txt
+// disallows crawling them too, except the 10 free word-game puzzles,
+// which don't need a sitemap entry to be found — the /word-games page
+// itself links to them).
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPaths = [
     "",
@@ -54,8 +60,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  for (const lang of locales) {
-    entries.push({ url: `${SITE_URL}/${lang}/courses/a1/1`, changeFrequency: "monthly" });
+  for (const level of levelSlugs) {
+    for (const lessonSlug of lessonSlugsFor(level)) {
+      for (const lang of locales) {
+        entries.push({ url: `${SITE_URL}/${lang}/courses/${level}/${lessonSlug}`, changeFrequency: "monthly" });
+      }
+    }
   }
 
   const stories = await db.story.findMany({ select: { id: true } });

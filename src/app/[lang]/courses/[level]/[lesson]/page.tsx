@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
-import { getCurrentUser } from "@/lib/auth";
-import { userHasActiveSubscription } from "@/lib/subscription";
-import { isStaff } from "@/lib/roles";
+import { getEntitlementTier } from "@/lib/entitlement";
 import { getLessonContent } from "@/lib/lessons/content";
 import { getRelatedStoriesForLesson, getRelatedMediaForLesson } from "@/lib/content-links";
 import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, truncateForMeta, paywallJsonLd } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -28,7 +26,14 @@ export async function generateMetadata({
     lang === "ru"
       ? `${lessonTitle} — урок ${lesson}, уровень ${level.toUpperCase()} | RusoFácilapp`
       : `${lessonTitle} — lección ${lesson}, nivel ${level.toUpperCase()} | RusoFácilapp`;
-  return { title, description: levelDict.description };
+  // The grammar intro is real per-lesson text (unlike levelDict.description,
+  // which is the same 4 sentences repeated across all 30 lessons of a
+  // level) and is now genuinely visible to every visitor regardless of
+  // subscription (see the page component below) — so it's an honest
+  // description, not a description of content the reader can't see.
+  const content = await getLessonContent(level, lesson);
+  const description = content ? truncateForMeta(content.grammar.paragraphs.join(" ")) : levelDict.description;
+  return { title, description };
 }
 
 export default async function LessonPage({
@@ -36,18 +41,6 @@ export default async function LessonPage({
 }: PageProps<"/[lang]/courses/[level]/[lesson]">) {
   const { lang, level, lesson } = await params;
   if (!isLocale(lang) || !isLevelSlug(level) || !isLessonSlug(level, lesson)) notFound();
-
-  // Proxy already gates this route, but auth/subscription state is
-  // re-checked here too: a page should never rely solely on the proxy for
-  // access control (a matcher change elsewhere shouldn't silently expose it).
-  // The free-trial lesson (A1/1) is public even to a logged-out visitor —
-  // see proxy.ts's protectLessonRoute for why this matters for SEO. Staff
-  // (owner/admin) bypass the subscription requirement entirely.
-  const isFreeTrial = isFreeTrialLesson(level, lesson);
-  const user = await getCurrentUser();
-  if (!isFreeTrial && (!user || (!isStaff(user.role) && !(await userHasActiveSubscription(user.id))))) {
-    redirect(`/${lang}/pricing?next=/${lang}/courses/${level}/${lesson}`);
-  }
 
   const dict = await getDictionary(lang);
   const levelDict = dict.courses.levels[level];
@@ -58,25 +51,76 @@ export default async function LessonPage({
   const slugs = lessonSlugsFor(level);
   const prevSlug = index > 0 ? slugs[index - 1] : null;
   const nextSlug = index < slugs.length - 1 ? slugs[index + 1] : null;
-  const [content, relatedStoriesResult, allMedia] = await Promise.all([
+  const [fullContent, tier, relatedStoriesResult, allMedia] = await Promise.all([
     getLessonContent(level, lesson),
+    getEntitlementTier(),
     getRelatedStoriesForLesson(level, lesson),
     getAllMedia(),
   ]);
   const relatedMediaResult = getRelatedMediaForLesson(level, lesson, allMedia);
+
+  // Every level's first lesson is fully open, no subscription required —
+  // lets a visitor try the actual exercise/audio mechanic before paying
+  // (see isFreeTrialLesson's own comment). Every other lesson still shows
+  // its grammar explanation for free (below), but locks vocabulary,
+  // exercises, slides, and video behind a subscription — checked by
+  // subscription tier, not by login state, so a logged-out visitor (and
+  // Googlebot) sees exactly the same thing a logged-in-but-unsubscribed
+  // visitor does. This used to be a middleware redirect in proxy.ts for
+  // every non-free-trial lesson; moved to page-level content locking so
+  // the page itself is always a real, indexable 200 — same pattern as
+  // stories (Story.isPremium) and media (MediaItem.free) already use.
+  const isFreeTrial = isFreeTrialLesson(level, lesson);
+  const entitled = isFreeTrial || tier !== "free";
+
+  // The counts shown in the locked tabs' placeholder cards come from the
+  // REAL content, computed here before it gets stripped below — every
+  // lesson in the DB has a nonzero vocabulary/exercises/slides count
+  // (verified against all 120 rows before shipping this), so there is no
+  // "can't compute a number" case to fall back on.
+  const lockedCounts = fullContent
+    ? {
+        vocabulary: fullContent.vocabulary.length,
+        exercises: fullContent.exercises.length,
+        slides: fullContent.slides?.length ?? 0,
+      }
+    : null;
+
+  // Only the entitled path (or the always-free lesson 1) actually gets
+  // vocabulary/exercises/slides/video/alphabet in the payload sent to the
+  // browser — this is a real data cut, not a CSS hide: a non-entitled
+  // visitor's HTML/RSC response never contains that content at all, same
+  // principle as the story reader's visibleParagraphs truncation.
+  const content =
+    entitled || !fullContent
+      ? fullContent
+      : {
+          grammar: fullContent.grammar,
+          readingPractice: fullContent.readingPractice,
+          enableAudioRecording: fullContent.enableAudioRecording,
+          vocabulary: [],
+          exercises: [],
+        };
 
   // Rendered server-side, once per slide, and handed down as already-built
   // markup — SlideIllustration's shape data (src/lib/lessons/slideIcons.ts,
   // ~10,700 lines) would otherwise have to ship in the client JS bundle for
   // every lesson page, just so the "use client" SlidesTab could pick a
   // shape by icon key at render time. A slide's icon never changes at
-  // runtime, so there's nothing for the client to compute here.
+  // runtime, so there's nothing for the client to compute here. Built from
+  // `content` (already stripped when locked), never `fullContent` — a
+  // locked lesson's slide shapes must not leak into the client bundle
+  // either.
   const slideIllustrations = Object.fromEntries(
     (content?.slides ?? []).map((slide) => [
       slide.id,
       <SlideIllustration key={slide.id} icon={slide.icon} className="h-full w-full" />,
     ])
   );
+
+  const description = fullContent
+    ? truncateForMeta(fullContent.grammar.paragraphs.join(" "))
+    : levelDict.description;
 
   return (
     <>
@@ -85,7 +129,7 @@ export default async function LessonPage({
           "@context": "https://schema.org",
           "@type": "LearningResource",
           name: title,
-          description: levelDict.description,
+          description,
           learningResourceType: "Lesson",
           educationalLevel: level.toUpperCase(),
           inLanguage: lang,
@@ -95,6 +139,7 @@ export default async function LessonPage({
             url: `${SITE_URL}/${lang}/courses/${level}`,
           },
           url: `${SITE_URL}/${lang}/courses/${level}/${lesson}`,
+          ...paywallJsonLd(entitled, ".paywall-lock"),
         }}
       />
       <JsonLd
@@ -112,6 +157,8 @@ export default async function LessonPage({
         title={title}
         levelTitle={levelDict.title}
         content={content}
+        isLocked={!entitled}
+        lockedCounts={lockedCounts}
         slideIllustrations={slideIllustrations}
         dict={dict.lesson}
         celebrationDict={dict.celebration}

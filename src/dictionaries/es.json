@@ -960,6 +960,12 @@
       "alphabet": "Alfabeto",
       "slides": "Presentación"
     },
+    "locked": {
+      "vocabularyLabel": "Este módulo incluye {count} palabras con audio.",
+      "exercisesLabel": "Este módulo incluye {count} ejercicios con corrección automática.",
+      "slidesLabel": "Este módulo incluye {count} diapositivas de presentación.",
+      "cta": "Ver planes de suscripción"
+    },
     "grammarSpanishNote": "",
     "glossaryTermsHeading": "Términos de esta lección",
     "glossaryTermsMasteredLabel": "{count}/{total} dominados",

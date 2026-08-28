@@ -15,7 +15,7 @@ import { attachGlossaryAudio } from "@/lib/glossary-audio";
 import RelatedLessonsList from "@/components/glossary/RelatedLessonsList";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, truncateForMeta } from "@/lib/site";
 
 // Content changes rarely (admin edits, occasional seed batch — see
 // GlossaryTerm.reviewedAt's own comment) and generateStaticParams below
@@ -63,16 +63,6 @@ export async function generateStaticParams() {
     );
     return [];
   }
-}
-
-/** Meta descriptions cap out around 155–160 chars in Google's SERP display
- * — cut at the last word boundary before that so it never ends mid-word,
- * same convention as trimming a card excerpt anywhere else on the web. */
-function truncateForMeta(text: string, maxLen = 155): string {
-  if (text.length <= maxLen) return text;
-  const cut = text.slice(0, maxLen);
-  const lastSpace = cut.lastIndexOf(" ");
-  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
 }
 
 export async function generateMetadata({

@@ -59,3 +59,47 @@ export function breadcrumbList(items: { name: string; url: string }[]) {
     })),
   };
 }
+
+/** Meta descriptions cap out around 155-160 chars in Google's SERP display
+ * — cut at the last word boundary before that so it never ends mid-word,
+ * same convention as trimming a card excerpt anywhere else on the web.
+ * Shared by every page that builds its own description from a longer
+ * body of text (glossary term definitions, lesson grammar intros) rather
+ * than a hand-written summary field. */
+export function truncateForMeta(text: string, maxLen = 155): string {
+  if (text.length <= maxLen) return text;
+  const cut = text.slice(0, maxLen);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
+}
+
+/**
+ * `isAccessibleForFree` + `hasPart` fields (schema.org's documented paywall
+ * markup: https://developers.google.com/search/docs/appearance/structured-
+ * data/paywalled-content) to merge into a page's own JSON-LD object.
+ *
+ * Every paywalled page on this site (stories, media, non-intro lessons)
+ * server-truncates the actual restricted content rather than sending it to
+ * the browser and hiding it with CSS (see each page's own comment on why —
+ * paragraph 2+ of a locked story, the vocabulary/exercises of a locked
+ * lesson, etc. are simply never in the HTML at all for a non-entitled
+ * visitor). That means there is no DOM node representing the restricted
+ * content itself to point `hasPart.cssSelector` at — Google's own example
+ * assumes the opposite (a real region of the page that's visually hidden).
+ * The next best, still-accurate anchor is the paywall/upsell block that
+ * DOES render in its place — it's the one element on the page that
+ * genuinely marks "the paid part starts here" from the reader's
+ * perspective, so `lockSelector` should be the CSS class already on that
+ * block's wrapper element, e.g. ".paywall-lock".
+ */
+export function paywallJsonLd(isFullyOpen: boolean, lockSelector: string) {
+  if (isFullyOpen) return { isAccessibleForFree: true };
+  return {
+    isAccessibleForFree: false,
+    hasPart: {
+      "@type": "WebPageElement",
+      isAccessibleForFree: false,
+      cssSelector: lockSelector,
+    },
+  };
+}

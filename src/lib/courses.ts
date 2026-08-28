@@ -39,14 +39,18 @@ export function isLessonSlug(level: string, value: string): boolean {
   return Number.isInteger(n) && n >= 1 && n <= lessonsPerLevel[level];
 }
 
-/** The one lesson every visitor can take without an active subscription —
- * still requires a real account (lesson progress/exercise state is always
- * per-user, see the LessonProgress model), but not a paid one. Checked in
- * src/proxy.ts's protectLessonRoute, the lesson page itself, and
- * POST /api/progress, which all otherwise enforce the same subscription
- * gate. Kept here rather than in src/lib/entitlement.ts so proxy.ts (which
- * must stay Node-runtime-light) doesn't need to pull that file's
- * auth/subscription import graph in just for this one pure check. */
+/** The first lesson of every level — fully open, without an active
+ * subscription, without even an account. Every other lesson still shows
+ * its grammar explanation for free (see [lesson]/page.tsx) but locks
+ * vocabulary/exercises/slides behind a subscription; this is the one
+ * lesson per level where nothing is locked at all, so a visitor can try
+ * the actual exercise/audio mechanic before subscribing. Checked in the
+ * lesson page itself and POST /api/progress (saving an attempt), which
+ * otherwise enforce the same subscription gate. Kept here rather than in
+ * src/lib/entitlement.ts so callers that must stay lean (this used to
+ * include src/proxy.ts, before the lesson route's gate moved from a
+ * middleware redirect to page-level content locking) don't need that
+ * file's auth/subscription import graph just for this one pure check. */
 export function isFreeTrialLesson(level: string, lesson: string): boolean {
-  return level === "a1" && lesson === "1";
+  return lesson === "1";
 }
