@@ -15,11 +15,19 @@
  *
  *  1. The block never contains a sentence from the story. It lists
  *     individual dictionary words and grammar topics, so it can describe
- *     a paywalled story without becoming a substitute for reading it —
- *     and every word it lists is a flashcard that already has its own
- *     public page under /vocabulary, so nothing here is newly disclosed.
- *     A plot summary would remove the reason to subscribe and is exactly
+ *     a paywalled story without becoming a substitute for reading it. A
+ *     plot summary would remove the reason to subscribe and is exactly
  *     what this must never produce.
+ *
+ *     CORRECTION (2026-08-28, checked rather than assumed): an earlier
+ *     version of this comment justified the block by claiming each word
+ *     "already has its own public page under /vocabulary". That is false.
+ *     /vocabulary is a single client-rendered page whose words are not in
+ *     the served HTML at all, and GET /api/flashcards returns only 10
+ *     sample cards to an anonymous visitor. So the block does disclose a
+ *     handful of otherwise-gated words — up to 12 of roughly 5700. The
+ *     defence is the first sentence above (isolated words, never a
+ *     sentence, never the plot), not a "these were public anyway" claim.
  *  2. Nothing is templated. Vocabulary comes from this story's own words;
  *     every grammar feature is shown with example words taken from this
  *     story. A block that read the same on all 650 pages would be worse
