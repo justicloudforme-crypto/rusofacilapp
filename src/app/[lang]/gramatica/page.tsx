@@ -19,8 +19,8 @@ const PAGE_PATH = "/gramatica";
  * is comparison against Spanish, so a Russian-interface copy would be
  * the same Spanish text at a second URL for nobody.
  *
- * Currently one guide. Two more (plural, verbos reflexivos en -ся) are
- * planned in the same shape once the owner has reviewed this one's tone.
+ * Three guides, matching the three topics the coverage audit found
+ * unowned by any lesson title.
  */
 const GUIDES = [
   {
@@ -28,6 +28,18 @@ const GUIDES = [
     title: "El género de los sustantivos",
     description:
       "Tres géneros en vez de dos, y una regla que el español no tiene: la última letra de la palabra casi siempre te dice cuál es.",
+  },
+  {
+    href: "/es/gramatica/plural-sustantivos-ruso",
+    title: "El plural de los sustantivos",
+    description:
+      "Depende del género y, en cuanto aparece un número, también del caso: один стол, два стола, пять столов. Por qué contar lo cambia todo.",
+  },
+  {
+    href: "/es/gramatica/verbos-reflexivos-ruso",
+    title: "Los verbos en -ся",
+    description:
+      "El postfijo hace cuatro trabajos distintos, no solo el reflexivo — casi los mismos que el «se» español, y dos que no se le parecen en nada.",
   },
 ];
 
