@@ -8,21 +8,34 @@ import { SITE_URL, breadcrumbList } from "@/lib/site";
 const PAGE_PATH = "/gramatica";
 
 /**
- * Index of the /es/gramatica guides. These explain a grammar topic the
- * course assumes you already know: measured across all 120 lessons, no
- * lesson has "género", "plural" or "verbos reflexivos" in its title —
- * they only ever appear in passing inside lessons about something else
- * (see PROGRESS.md's coverage audit). The glossary defines the terms;
+ * Index of the /es/gramatica guides. The first three explain a grammar
+ * topic the course assumes you already know: measured across all 120
+ * lessons, no lesson has "género", "plural" or "verbos reflexivos" in its
+ * title — they only ever appear in passing inside lessons about something
+ * else (see PROGRESS.md's coverage audit). The glossary defines the terms;
  * these pages explain how they work.
+ *
+ * The alphabet guide is the exception and breaks that rule deliberately:
+ * A1 lesson 1 IS "El alfabeto cirílico y los sonidos del ruso" and already
+ * serves the full 33-letter table anonymously. It is here because the
+ * search intent differs, not because the topic was unowned — see the long
+ * comment in alfabeto-ruso/page.tsx. Do not use it as precedent for adding
+ * a guide that merely repeats a lesson.
  *
  * ES-only, like the sopa-de-letras landing pages: the whole method here
  * is comparison against Spanish, so a Russian-interface copy would be
  * the same Spanish text at a second URL for nobody.
  *
- * Three guides, matching the three topics the coverage audit found
- * unowned by any lesson title.
+ * Three guides matching the topics the coverage audit found unowned by
+ * any lesson title, plus the alphabet guide described above.
  */
 const GUIDES = [
+  {
+    href: "/es/gramatica/alfabeto-ruso",
+    title: "El alfabeto ruso, por dificultad",
+    description:
+      "Las 33 letras ordenadas por lo que cuesta reconocerlas: las cinco que ya sabes leer, los seis falsos amigos que se leen mal y las nuevas de verdad.",
+  },
   {
     href: "/es/gramatica/genero-sustantivos-ruso",
     title: "El género de los sustantivos",

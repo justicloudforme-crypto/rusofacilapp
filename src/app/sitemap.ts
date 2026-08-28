@@ -70,6 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // these explain Russian grammar BY comparing it to Spanish, so a
     // Russian-interface copy would be the same Spanish text twice.
     "/gramatica",
+    "/gramatica/alfabeto-ruso",
     "/gramatica/genero-sustantivos-ruso",
     "/gramatica/plural-sustantivos-ruso",
     "/gramatica/verbos-reflexivos-ruso",
