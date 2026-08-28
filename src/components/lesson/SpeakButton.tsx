@@ -93,7 +93,12 @@ export default function SpeakButton({
       if (audio.ended || audio.currentTime >= (audio.duration || Infinity)) {
         audio.currentTime = 0;
       }
-      void audio.play();
+      // .play() rejects on a broken/missing audioUrl or an AbortError from
+      // a rapid double-tap (pause() racing this call) — `void` alone
+      // doesn't catch a promise rejection, same bug class as
+      // SerwistRegister.tsx. Matches the .catch(() => setPlaying(false))
+      // pattern StoryText.tsx already uses for the same API.
+      audio.play().catch(() => setSpeaking(false));
       return;
     }
 

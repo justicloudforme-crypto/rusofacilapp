@@ -177,7 +177,11 @@ export default function CrosswordBoard({
         if (!data) return;
         onHintUsed();
         updateGuess(data.row, data.col, data.letter);
-      });
+      })
+      // A network failure here (offline, DNS, etc.) used to reject with no
+      // handler — same class of unhandled-rejection bug as
+      // SerwistRegister.tsx. No hint appears; the player can just tap again.
+      .catch(() => {});
   }
 
   // Manual re-check of every filled cell — deliberately calls runCheck

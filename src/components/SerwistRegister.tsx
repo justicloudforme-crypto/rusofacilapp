@@ -37,11 +37,28 @@ import { useSerwist } from "@serwist/next/react";
  */
 let hasRegistered = false;
 
+// Google's own crawling tools (confirmed via Sentry: "Google-InspectionTool"
+// UA, used by URL Inspection / Rich Results Test) run a sandboxed Chrome
+// that deliberately makes `navigator.serviceWorker.register()` reject —
+// same intent as Playwright's `serviceWorkers: 'block'` (see
+// sentry.client.config.ts's beforeSend), but rejecting instead of
+// resolving `undefined`, a different failure shape that still reached
+// Sentry as a genuine `onunhandledrejection` event despite the `.catch()`
+// below already existing (confirmed: that catch predates this bot report,
+// see git history). Rather than chase why this specific harness's
+// rejection evades a promise chain that looks complete, skip the register
+// call entirely for it — "should quietly not happen" rather than "happen
+// and get caught," which is also strictly safer (one less place a new,
+// not-yet-seen crawler quirk could slip past the `.catch()` again).
+function isKnownNonInteractiveCrawler(): boolean {
+  return /Google-InspectionTool/i.test(navigator.userAgent);
+}
+
 export default function SerwistRegister() {
   const { serwist } = useSerwist();
 
   useEffect(() => {
-    if (!serwist || hasRegistered) return;
+    if (!serwist || hasRegistered || isKnownNonInteractiveCrawler()) return;
     hasRegistered = true;
     serwist.register().catch((error: unknown) => {
       console.warn("[serwist] Service worker registration failed — continuing without offline caching.", error);
