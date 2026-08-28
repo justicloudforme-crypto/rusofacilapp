@@ -241,3 +241,44 @@ export async function getGlossaryTermsForLesson(
   });
   return rows;
 }
+
+export interface GrammarGuideRef {
+  href: string;
+  title: string;
+  note: string;
+}
+
+/**
+ * Lessons that lean on a grammar concept the course never teaches as a
+ * topic of its own, mapped to the /es/gramatica guide that does. Measured
+ * across all 120 lessons: no lesson title contains "género", "plural" or
+ * "verbos reflexivos" — they surface only in passing, inside lessons
+ * about something else (a1-15 is about the past tense and happens to
+ * need gender; a2-21 is about superlatives and happens to need it too).
+ * A student who hits gender agreement in a1-15 without knowing what
+ * gender is in Russian has, until now, had nowhere on the site to go.
+ *
+ * Spanish-only by construction: the guides are ES-only (see their own
+ * page comments), so callers must not render this for the /ru locale.
+ * Hand-maintained and deliberately short — a lesson gets an entry only
+ * if the guide's topic is genuinely load-bearing there, not merely
+ * mentioned, which is why this is a literal map and not a keyword match.
+ */
+const GRAMMAR_GUIDE_FOR_LESSON: Record<string, GrammarGuideRef> = {
+  "a1-15": {
+    href: "/es/gramatica/genero-sustantivos-ruso",
+    title: "El género de los sustantivos en ruso",
+    note: "El pasado ruso concuerda en género — esta guía explica cómo se reconoce el género de una palabra.",
+  },
+};
+
+/** The grammar guide a lesson should point at, if any. Returns null for
+ * the /ru locale: the guides don't exist there. */
+export function getGrammarGuideForLesson(
+  lang: string,
+  level: LevelSlug,
+  lessonSlug: string,
+): GrammarGuideRef | null {
+  if (lang !== "es") return null;
+  return GRAMMAR_GUIDE_FOR_LESSON[`${level}-${lessonSlug}`] ?? null;
+}

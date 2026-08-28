@@ -66,6 +66,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/crucigramas-ruso-principiantes",
     "/sopa-de-letras-alfabeto-cirilico",
     "/juegos-para-aprender-ruso",
+    // Grammar guides + their index. Same ES-only reasoning as above:
+    // these explain Russian grammar BY comparing it to Spanish, so a
+    // Russian-interface copy would be the same Spanish text twice.
+    "/gramatica",
+    "/gramatica/genero-sustantivos-ruso",
   ];
 
   const entries: MetadataRoute.Sitemap = [];
