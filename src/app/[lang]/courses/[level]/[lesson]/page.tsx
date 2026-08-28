@@ -6,7 +6,12 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { getLessonContent } from "@/lib/lessons/content";
-import { getRelatedStoriesForLesson, getRelatedMediaForLesson, getGlossaryTermsForLesson } from "@/lib/content-links";
+import {
+  getRelatedStoriesForLesson,
+  getRelatedMediaForLesson,
+  getGlossaryTermsForLesson,
+  getGrammarGuideForLesson,
+} from "@/lib/content-links";
 import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
@@ -59,6 +64,7 @@ export default async function LessonPage({
     getGlossaryTermsForLesson(level, lesson),
   ]);
   const relatedMediaResult = getRelatedMediaForLesson(level, lesson, allMedia);
+  const grammarGuide = getGrammarGuideForLesson(lang, level, lesson);
 
   // Every level's first lesson is fully open, no subscription required —
   // lets a visitor try the actual exercise/audio mechanic before paying
@@ -167,8 +173,27 @@ export default async function LessonPage({
         nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
       />
 
-      {(relatedStoriesResult.stories.length > 0 || relatedMediaResult.items.length > 0 || glossaryTerms.length > 0) && (
+      {(relatedStoriesResult.stories.length > 0 ||
+        relatedMediaResult.items.length > 0 ||
+        glossaryTerms.length > 0 ||
+        grammarGuide !== null) && (
         <div className="mx-auto w-full max-w-2xl flex-1 px-6 pb-16">
+          {/* Sits above the term links on purpose: this lesson needs the
+              concept explained, and the guide explains it, whereas the
+              glossary links below are reference lookups. Only a handful
+              of lessons have one — see GRAMMAR_GUIDE_FOR_LESSON. */}
+          {grammarGuide && (
+            <section className="rounded-2xl border border-primary/30 bg-primary/[0.04] p-5 dark:border-primary-400/30 dark:bg-primary-400/[0.06]">
+              <Link
+                href={grammarGuide.href}
+                className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+              >
+                {grammarGuide.title} →
+              </Link>
+              <p className="mt-1.5 text-sm leading-6 text-foreground/70">{grammarGuide.note}</p>
+            </section>
+          )}
+
           {/* Real server-rendered links to the glossary terms this lesson
               introduces. LessonGlossaryTerms.tsx already shows the same
               terms inside the Vocabulary tab, but as popover-opening chips
@@ -182,7 +207,7 @@ export default async function LessonPage({
               have a real fallback mode to be honest about, this one
               doesn't: it either has curated terms or renders nothing. */}
           {glossaryTerms.length > 0 && (
-            <section className="border-t border-black/10 pt-6 dark:border-white/30">
+            <section className={`border-t border-black/10 pt-6 dark:border-white/30 ${grammarGuide ? "mt-6" : ""}`}>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
                 {dict.crossLinks.glossaryHeading}
               </h2>
