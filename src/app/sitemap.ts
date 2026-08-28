@@ -55,12 +55,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/word-games",
     "/glossary",
     "/vocabulary",
+    "/sobre-nosotros",
   ];
 
   // Spanish-search-intent landing pages — no Russian-language equivalent
   // query behavior expected, so "es" only (see [lang]!=="es" -> notFound()
   // in each page.tsx).
-  const esOnlyPaths = ["/sopa-de-letras-ruso", "/crucigramas-ruso-principiantes", "/sopa-de-letras-alfabeto-cirilico"];
+  const esOnlyPaths = [
+    "/sopa-de-letras-ruso",
+    "/crucigramas-ruso-principiantes",
+    "/sopa-de-letras-alfabeto-cirilico",
+    "/juegos-para-aprender-ruso",
+  ];
 
   const entries: MetadataRoute.Sitemap = [];
 

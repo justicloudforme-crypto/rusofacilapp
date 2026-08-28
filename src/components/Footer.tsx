@@ -16,6 +16,9 @@ export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale 
           <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.appLink}
           </Link>
+          <Link href={`/${lang}/sobre-nosotros`} className="tap hover:text-foreground/80 active:text-foreground/80">
+            {dict.nav.about}
+          </Link>
           <Link href={`/${lang}/terms`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.termsLink}
           </Link>

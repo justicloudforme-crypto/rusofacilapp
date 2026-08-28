@@ -13,6 +13,7 @@ import LevelBadge from "@/components/LevelBadge";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/site";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -43,6 +44,14 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* Organization + WebSite JSON-LD — establishes RusoFácilapp's own
+          identity for Google (name/url/logo/description), fixing AI
+          Overviews describing an unrelated app under the same search
+          term (no Organization markup existed anywhere on the site
+          before this). Homepage only, not every page — same "one per
+          entity" placement Google recommends. */}
+      <JsonLd data={organizationJsonLd()} />
+      <JsonLd data={websiteJsonLd()} />
       {/* Text here must stay word-for-word identical to dict.home.faq below
           (rendered visibly via PricingFaq further down this page) — Google
           can flag/ignore FAQPage markup that doesn't match the page's own

@@ -103,3 +103,50 @@ export function paywallJsonLd(isFullyOpen: boolean, lockSelector: string) {
     },
   };
 }
+
+/** Neutral Spanish brand description for Organization JSON-LD — kept as a
+ * single fixed string rather than routed through dict.meta.description,
+ * because this is brand-identity data (who RusoFácilapp is), not
+ * page-specific UI copy, and stays the same regardless of which locale a
+ * given page happens to render in — same treatment as the brand name
+ * itself (never translated). */
+const ORGANIZATION_DESCRIPTION =
+  "RusoFácilapp es una plataforma web para aprender ruso pensada para hispanohablantes, con lecciones estructuradas de los niveles A1 a B2, historias de lectura, vocabulario, juegos de palabras y una biblioteca de audio y video.";
+
+/** Organization JSON-LD — the fix for AI Overviews/knowledge panels
+ * describing a different, unrelated app under this same search term (see
+ * PROGRESS.md's brand-identity entry). No `sameAs` field: the only
+ * existing external link is a private Telegram group invite (not a
+ * public brand profile), and neither app store listing is live yet (see
+ * src/app/[lang]/download/page.tsx's own comment) — adding either would
+ * assert an identity link that doesn't genuinely exist yet. Add `sameAs`
+ * here once a real public profile (app store listing, public social
+ * account) exists. */
+export function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "RusoFácilapp",
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon.png`,
+    description: ORGANIZATION_DESCRIPTION,
+  };
+}
+
+/** WebSite JSON-LD, paired with organizationJsonLd() via `publisher`. No
+ * `potentialAction: SearchAction` — the only search UI on the site
+ * (GlobalSearch.tsx) is a client-side filter over a hardcoded list of nav
+ * destinations, not a real query-param route Google could link to (see
+ * that component's own comment on what a real content search would
+ * need). Claiming a SearchAction against a URL that doesn't actually
+ * search anything would be the same kind of dishonest markup this
+ * project has avoided elsewhere (see paywallJsonLd's own reasoning). */
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "RusoFácilapp",
+    url: SITE_URL,
+    publisher: organizationJsonLd(),
+  };
+}
