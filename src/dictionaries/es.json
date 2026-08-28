@@ -736,7 +736,12 @@
     "premiumLockCta": "Ver planes de suscripción",
     "premiumTierBadge": "Solo Premium",
     "premiumTierLockTitle": "Esta historia está disponible solo en el plan Premium",
-    "premiumTierLockBody": "Tu suscripción actual da acceso a la mayoría de las historias, pero esta forma parte de la biblioteca ampliada de nivel C1, exclusiva para el plan Premium."
+    "premiumTierLockBody": "Tu suscripción actual da acceso a la mayoría de las historias, pero esta forma parte de la biblioteca ampliada de nivel C1, exclusiva para el plan Premium.",
+    "insightsVocabHeading": "Palabras de este cuento que ya están en el curso",
+    "insightsVocabNote": "Todas aparecen en este cuento. Cada una viene con su transcripción y su traducción — son palabras sueltas del vocabulario del curso, no un resumen de la historia.",
+    "insightsGrammarHeading": "Gramática que aparece en este cuento",
+    "insightsGrammarNote": "Cada punto enlaza a su ficha del glosario, con ejemplos tomados de este mismo texto.",
+    "insightsExampleLabel": "en el texto:"
   },
   "media": {
     "pageTitle": "Biblioteca de audio y video",
@@ -764,7 +769,8 @@
     "premiumBadge": "Con suscripción",
     "premiumLockTitle": "Este video está disponible solo con suscripción",
     "premiumLockBody": "Has visto la muestra gratuita de materiales. Suscríbete para desbloquear toda la biblioteca de audio y video.",
-    "premiumLockCta": "Ver planes"
+    "premiumLockCta": "Ver planes",
+    "insightsGrammarNote": "Cada punto enlaza a su ficha del glosario. Son los temas de gramática que aparecen en la letra o el guion de este video."
   },
   "vocabulary": {
     "pageTitle": "Vocabulario en tarjetas",
