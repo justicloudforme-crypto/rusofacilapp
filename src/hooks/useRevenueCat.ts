@@ -110,6 +110,54 @@ export function useRevenueCat(userId: string | null | undefined): UseRevenueCatR
     };
   }, [isNative]);
 
+  // presentPaywall/presentPaywallIfNeeded/presentCustomerCenter/
+  // restorePurchases (src/lib/revenuecat-client.ts) all directly `await`
+  // a native Capacitor bridge call with no try/catch of their own — a
+  // rejection (store connection issue, plugin unavailable, etc.) used to
+  // propagate straight out of these three call sites (NativeSubscriptionPanel's
+  // `onClick={() => void restore()}` and friends, PaywallContext's
+  // `void (async () => { await presentNativePaywall(); ... })()`), which
+  // `void` does NOT catch — a real unhandled-rejection source, same class
+  // of bug as the service-worker one this file's sibling components hit
+  // (see SerwistRegister.tsx). Routing every rejection through the
+  // `error` state already rendered by NativeSubscriptionPanel means a
+  // real native purchase-flow failure now shows the existing error
+  // message there instead of silently reaching Sentry as unhandled.
+  const openPaywall = useCallback(async () => {
+    try {
+      return await presentPaywall();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to present paywall"));
+      return false;
+    }
+  }, []);
+
+  const openPaywallIfNeeded = useCallback(async () => {
+    try {
+      return await presentPaywallIfNeeded();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to present paywall"));
+      return false;
+    }
+  }, []);
+
+  const openCustomerCenter = useCallback(async () => {
+    try {
+      await presentCustomerCenter();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to open customer center"));
+    }
+  }, []);
+
+  const restore = useCallback(async () => {
+    try {
+      const info = await restorePurchases();
+      setCustomerInfo(info);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Failed to restore purchases"));
+    }
+  }, []);
+
   return {
     isNative,
     loading,
@@ -117,13 +165,10 @@ export function useRevenueCat(userId: string | null | undefined): UseRevenueCatR
     customerInfo,
     error,
     refresh,
-    openPaywall: presentPaywall,
-    openPaywallIfNeeded: presentPaywallIfNeeded,
-    openCustomerCenter: presentCustomerCenter,
-    restore: async () => {
-      const info = await restorePurchases();
-      setCustomerInfo(info);
-    },
+    openPaywall,
+    openPaywallIfNeeded,
+    openCustomerCenter,
+    restore,
   };
 }
 

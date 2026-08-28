@@ -18,7 +18,10 @@ function getAudioContext(): AudioContext | null {
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!Ctor) return null;
   if (!audioContext) audioContext = new Ctor();
-  if (audioContext.state === "suspended") void audioContext.resume();
+  // resume() can reject (context already closed, browser policy) — `void`
+  // alone doesn't catch that, same bug class as SerwistRegister.tsx. A
+  // failed resume just means this one sound effect stays silent.
+  if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
   return audioContext;
 }
 
