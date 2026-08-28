@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { locales } from "@/i18n/config";
 import { levelSlugs, lessonSlugsFor } from "@/lib/courses";
+import { flashcardLevels } from "@/lib/flashcards/types";
+import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 import { db } from "@/lib/db";
 import { getAllMedia } from "@/lib/media/data";
 import { SITE_URL } from "@/lib/site";
@@ -28,12 +30,21 @@ export const dynamic = "force-dynamic";
 // each one now shows its real grammar explanation to every visitor
 // regardless of subscription (only vocabulary/exercises/slides are
 // locked, see [lesson]/page.tsx), so all 120 are genuine, indexable pages
-// now, not just each level's lesson 1. Milestone exams and word-game
-// puzzles are NOT listed — those still redirect an anonymous visitor to
-// /pricing with no free-content exception worth indexing (robots.txt
-// disallows crawling them too, except the 10 free word-game puzzles,
-// which don't need a sitemap entry to be found — the /word-games page
-// itself links to them).
+// now, not just each level's lesson 1. Milestone exams are NOT listed —
+// those still redirect an anonymous visitor to /pricing with no
+// free-content exception worth indexing.
+//
+// The 80 free word-game puzzles (see FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel)
+// ARE listed, also since 2026-08-28 — they don't redirect, but the
+// /word-games picker only server-renders links for whichever (type, level)
+// tab is selected by default (a client-side "use client" picker — see its
+// own comment), so 7 of the 8 (type, level) combinations among the free
+// puzzles have no other discoverable path at all without this.
+//
+// The 3 game landing pages (/sopa-de-letras-ruso, etc. — see their own
+// page.tsx files) are Spanish-search-intent pages with no Russian
+// equivalent query behavior, so they're only listed for "es", not looped
+// over `locales` like everything else here.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPaths = [
     "",
@@ -46,11 +57,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/vocabulary",
   ];
 
+  // Spanish-search-intent landing pages — no Russian-language equivalent
+  // query behavior expected, so "es" only (see [lang]!=="es" -> notFound()
+  // in each page.tsx).
+  const esOnlyPaths = ["/sopa-de-letras-ruso", "/crucigramas-ruso-principiantes", "/sopa-de-letras-alfabeto-cirilico"];
+
   const entries: MetadataRoute.Sitemap = [];
 
   for (const path of staticPaths) {
     for (const lang of locales) {
       entries.push({ url: `${SITE_URL}/${lang}${path}`, changeFrequency: "weekly" });
+    }
+  }
+
+  for (const path of esOnlyPaths) {
+    entries.push({ url: `${SITE_URL}/es${path}`, changeFrequency: "monthly" });
+  }
+
+  for (const level of flashcardLevels.filter((l) => l !== "C1")) {
+    for (const type of ["WORD_SEARCH", "CROSSWORD"] as const) {
+      for (let sequence = 1; sequence <= FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel; sequence++) {
+        for (const lang of locales) {
+          entries.push({ url: `${SITE_URL}/${lang}/word-games/${type}/${level}/${sequence}`, changeFrequency: "yearly" });
+        }
+      }
     }
   }
 

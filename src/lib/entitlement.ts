@@ -124,7 +124,16 @@ export async function hasContentAccess(): Promise<boolean> {
 export const FREE_TRIAL_LIMITS = {
   flashcards: 10,
   idioms: 5,
-  wordGamePuzzlesPerLevel: 5,
+  // Raised from 5 (A1-only) to 10 across every level except C1 — 80
+  // free puzzles total (2 types x 4 levels x 10) — 2026-08-28, per an
+  // explicit owner call: word games barely compete with the
+  // subscription (people pay for lessons, not crosswords), so a bigger
+  // free sample here is close to free marginal cost while giving a
+  // curious, not-yet-decided visitor much more to try. See
+  // isFreeWordGamePuzzle, which applies this per (type, level) with no
+  // per-URL exception list — every puzzle at sequence <= this number,
+  // any level but C1, is free.
+  wordGamePuzzlesPerLevel: 10,
 } as const;
 
 /**
@@ -169,7 +178,7 @@ export async function isEntitled(): Promise<boolean> {
 export function isFreeWordGamePuzzle(puzzle: { type: string; level: string; sequence: number }): boolean {
   return (
     (puzzle.type === "WORD_SEARCH" || puzzle.type === "CROSSWORD") &&
-    puzzle.level === "A1" &&
+    puzzle.level !== "C1" &&
     puzzle.sequence <= FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel
   );
 }
