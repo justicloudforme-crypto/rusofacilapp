@@ -326,8 +326,10 @@ export interface ContentInsights {
  * measurement and the two rules this obeys).
  *
  * Takes the story's full text on purpose: a vocabulary list is only
- * useful if it covers the story, and every word it can produce is a
- * flashcard that already has its own public page. What it must never do
+ * useful if it covers the story. Note that this DOES surface a handful of
+ * otherwise-gated flashcard words — see the correction in
+ * story-insights.ts; the earlier "they were public anyway" justification
+ * was checked and turned out to be wrong. What it must never do
  * is emit a SENTENCE — that is enforced in story-insights.ts, which only
  * ever returns single words, so the paywalled text itself stays
  * truncated exactly as before (see the story page's visibleParagraphs).
@@ -370,8 +372,24 @@ export async function getContentInsights(text: string): Promise<ContentInsights>
  * song touches is metadata about it, like its level or category, while a
  * quoted line would be a piece of the paid content.
  */
-export async function getMediaGrammarLinks(lines: { russian: string }[]): Promise<StoryGrammarRef[]> {
-  const text = lines.map((line) => line.russian).join("\n");
+export async function getMediaGrammarLinks(item: {
+  lyricsOrTranscript: { russian: string }[];
+  subtitles?: { ru: string }[];
+  vocabulary: { word: string }[];
+}): Promise<StoryGrammarRef[]> {
+  // All three Russian-language fields, not just the transcript. Many
+  // entries carry only a short excerpt — the shortest is 56 characters —
+  // and a text that small often contains none of the seven features at
+  // all: measured 2026-08-28, 89 of 275 items produced no link from the
+  // transcript alone. Adding subtitles and the item's own vocabulary
+  // words recovers 6 of those 89. The remaining 83 are a data limit, not
+  // a detector bug, and inventing a feature to fill the gap is exactly
+  // the false-positive failure this detector was trimmed to avoid.
+  const text = [
+    ...item.lyricsOrTranscript.map((line) => line.russian),
+    ...(item.subtitles ?? []).map((line) => line.ru),
+    ...item.vocabulary.map((v) => v.word),
+  ].join("\n");
   if (!text.trim()) return [];
 
   const features = detectGrammarFeatures(text);
