@@ -7,6 +7,7 @@ import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import { getMediaGrammarLinks, getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
 import ContentInsights from "@/components/stories/ContentInsights";
+import { isPilotMedia } from "@/lib/media-pilot";
 import MediaPlayer from "@/components/media/MediaPlayer";
 import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
@@ -46,7 +47,7 @@ export default async function MediaDetailPage({
   // Which grammar topics this item's transcript actually contains, as
   // crawlable links to the glossary. No example words: unlike a story's
   // free preview, the transcript is gated in full (see `entitled` below).
-  const grammarLinks = await getMediaGrammarLinks(item.lyricsOrTranscript);
+  const grammarLinks = await getMediaGrammarLinks(item);
   const relatedLesson = getRelatedLessonForMedia(item);
   const relatedLessonTitle = relatedLesson
     ? dict.courses.levels[relatedLesson.level].lessons[Number(relatedLesson.lesson) - 1]
@@ -59,6 +60,24 @@ export default async function MediaDetailPage({
   // so the actual video/subtitles/transcript/exercises never reach the
   // browser for a non-entitled visitor.
   const entitled = canAccessMediaItem(tier, item);
+
+  // The item's own key vocabulary, shown to a LOCKED visitor so the page
+  // says something concrete about this song rather than only "subscribe".
+  // Isolated dictionary words with their translation — the transcript
+  // itself stays gated below, and nothing here can produce a line of it.
+  // Not rendered for an entitled visitor: they already get the full
+  // "Ключевая лексика" section further down, and repeating it would just
+  // duplicate the same rows on one page. Pilot-gated — see
+  // src/lib/media-pilot.ts for the rule and its control group.
+  const insightsVocabulary =
+    !entitled && isPilotMedia(item)
+      ? item.vocabulary.slice(0, 10).map((v) => ({
+          surface: v.word,
+          russian: v.word,
+          transcription: v.transcription,
+          translationEs: v.translation,
+        }))
+      : [];
 
   const categoryLabels: Record<string, string> = {
     song: dict.media.categorySong,
@@ -156,13 +175,13 @@ export default async function MediaDetailPage({
         </section>
       )}
 
-      {grammarLinks.length > 0 && (
+      {(grammarLinks.length > 0 || insightsVocabulary.length > 0) && (
         <ContentInsights
           lang={lang}
-          insights={{ vocabulary: [], grammar: grammarLinks }}
+          insights={{ vocabulary: insightsVocabulary, grammar: grammarLinks }}
           dict={{
-            vocabHeading: "",
-            vocabNote: "",
+            vocabHeading: dict.media.insightsVocabHeading,
+            vocabNote: dict.media.insightsVocabNote,
             grammarHeading: dict.stories.insightsGrammarHeading,
             grammarNote: dict.media.insightsGrammarNote,
             exampleLabel: dict.stories.insightsExampleLabel,

@@ -770,7 +770,9 @@
     "premiumLockTitle": "Este video está disponible solo con suscripción",
     "premiumLockBody": "Has visto la muestra gratuita de materiales. Suscríbete para desbloquear toda la biblioteca de audio y video.",
     "premiumLockCta": "Ver planes",
-    "insightsGrammarNote": "Cada punto enlaza a su ficha del glosario. Son los temas de gramática que aparecen en la letra o el guion de este video."
+    "insightsGrammarNote": "Cada punto enlaza a su ficha del glosario. Son los temas de gramática que aparecen en la letra o el guion de este video.",
+    "insightsVocabHeading": "Vocabulario clave de este video",
+    "insightsVocabNote": "Palabras sueltas que aparecen en este material, con transcripción y traducción. La letra o el guion completo siguen siendo para suscriptores."
   },
   "vocabulary": {
     "pageTitle": "Vocabulario en tarjetas",
