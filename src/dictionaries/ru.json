@@ -1346,6 +1346,13 @@
     "viewCategoryLabel": "Ver toda la categoría",
     "backToGlossaryLabel": "Volver al glosario"
   },
+  "crossLinks": {
+    "topicHeading": "Продолжай заниматься",
+    "levelHeadingPrefix": "Ещё материалы уровня",
+    "storyLabel": "Рассказ",
+    "lessonLabel": "Урок",
+    "mediaLabel": "Видео или песня"
+  },
   "offline": {
     "bannerMessage": "Нет подключения к интернету. Некоторые изменения сохранятся и отправятся, когда связь восстановится."
   },

@@ -1346,6 +1346,13 @@
     "viewCategoryLabel": "Ver toda la categoría",
     "backToGlossaryLabel": "Volver al glosario"
   },
+  "crossLinks": {
+    "topicHeading": "Sigue practicando",
+    "levelHeadingPrefix": "Más contenido de nivel",
+    "storyLabel": "Cuento",
+    "lessonLabel": "Lección",
+    "mediaLabel": "Video o canción"
+  },
   "offline": {
     "bannerMessage": "Estás sin conexión. Algunos cambios se guardarán y se enviarán cuando vuelva la conexión."
   },

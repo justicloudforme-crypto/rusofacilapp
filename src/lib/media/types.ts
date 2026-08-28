@@ -47,8 +47,16 @@ export interface MediaItem {
   subtitles?: SubtitleLine[];
   vocabulary: VocabularyItem[];
   exercises: Exercise[];
-  /** Related story IDs from the reading library (`Story.id`), for cross-linking similar themes/plots. */
-  relatedStoryIds?: string[];
+  /**
+   * Related stories from the reading library, for cross-linking similar
+   * themes/plots. Stored as (title, level) rather than `Story.id` —
+   * Story.id drifts between `dev.db` and Turso for most rows (see
+   * PROGRESS.md's Story-transfer rule), so an id captured against one
+   * database silently points at the wrong story (or nothing) on the
+   * other. (title, level) is the same safe lookup key used everywhere
+   * else a Story needs to survive a dev.db<->Turso boundary.
+   */
+  relatedStories?: { title: string; level: string }[];
   /** Result of the last `yt-dlp` embed/copyright check (see rusofasil_media_content_policy memory). Defaults to "unchecked" when absent. */
   embedStatus?: EmbedStatus;
   /** ISO date of the last embed-status check. */

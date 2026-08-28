@@ -6,6 +6,8 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
+import { getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
+import { getAllMedia } from "@/lib/media/data";
 import StoryText from "@/components/stories/StoryText";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
@@ -37,14 +39,21 @@ export default async function StoryReaderPage({
   const { lang, id } = await params;
   if (!isLocale(lang)) notFound();
 
-  // Independent reads collapsed into one round trip instead of 3 sequential
-  // ones — dict/story/tier don't depend on each other.
-  const [dict, story, tier] = await Promise.all([
+  // Independent reads collapsed into one round trip instead of sequential
+  // ones — dict/story/tier/allMedia don't depend on each other.
+  const [dict, story, tier, allMedia] = await Promise.all([
     getDictionary(lang),
     db.story.findUnique({ where: { id } }),
     getEntitlementTier(),
+    getAllMedia(),
   ]);
   if (!story) notFound();
+
+  const relatedLesson = getRelatedLessonForStory(story);
+  const relatedLessonTitle = relatedLesson
+    ? dict.courses.levels[relatedLesson.level].lessons[Number(relatedLesson.lesson) - 1]
+    : null;
+  const relatedMedia = getRelatedMediaForStory(story, allMedia);
 
   // Non-premium stories are open to everyone, no login required. Premium
   // stories need any active subscription (or staff); C1 and premiumOnly
@@ -183,6 +192,50 @@ export default async function StoryReaderPage({
             {dict.stories.premiumLockCta}
           </Link>
         </Card>
+      )}
+
+      {relatedLesson && relatedLessonTitle && (
+        <section className="mt-10 border-t border-black/10 pt-6 dark:border-white/30">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+            {relatedLesson.kind === "topic"
+              ? dict.crossLinks.topicHeading
+              : `${dict.crossLinks.levelHeadingPrefix} ${relatedLesson.level.toUpperCase()}`}
+          </h2>
+          <Link
+            href={`/${lang}/courses/${relatedLesson.level}/${relatedLesson.lesson}`}
+            className="tap mt-3 block font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+          >
+            <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
+              {dict.crossLinks.lessonLabel}
+            </span>
+            {relatedLessonTitle}
+          </Link>
+        </section>
+      )}
+
+      {relatedMedia.length > 0 && (
+        <section className="mt-6">
+          {!relatedLesson && (
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+              {dict.crossLinks.topicHeading}
+            </h2>
+          )}
+          <ul className="mt-3 flex flex-col gap-2">
+            {relatedMedia.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={`/${lang}/media/${item.id}`}
+                  className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                >
+                  <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
+                    {dict.crossLinks.mediaLabel}
+                  </span>
+                  {item.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

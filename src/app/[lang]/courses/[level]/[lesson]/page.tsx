@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -7,6 +8,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { userHasActiveSubscription } from "@/lib/subscription";
 import { isStaff } from "@/lib/roles";
 import { getLessonContent } from "@/lib/lessons/content";
+import { getRelatedStoriesForLesson, getRelatedMediaForLesson } from "@/lib/content-links";
+import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
@@ -55,7 +58,12 @@ export default async function LessonPage({
   const slugs = lessonSlugsFor(level);
   const prevSlug = index > 0 ? slugs[index - 1] : null;
   const nextSlug = index < slugs.length - 1 ? slugs[index + 1] : null;
-  const content = await getLessonContent(level, lesson);
+  const [content, relatedStoriesResult, allMedia] = await Promise.all([
+    getLessonContent(level, lesson),
+    getRelatedStoriesForLesson(level, lesson),
+    getAllMedia(),
+  ]);
+  const relatedMediaResult = getRelatedMediaForLesson(level, lesson, allMedia);
 
   // Rendered server-side, once per slide, and handed down as already-built
   // markup — SlideIllustration's shape data (src/lib/lessons/slideIcons.ts,
@@ -110,6 +118,60 @@ export default async function LessonPage({
         prevHref={prevSlug ? `/${lang}/courses/${level}/${prevSlug}` : null}
         nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
       />
+
+      {(relatedStoriesResult.stories.length > 0 || relatedMediaResult.items.length > 0) && (
+        <div className="mx-auto w-full max-w-2xl flex-1 px-6 pb-16">
+          {relatedStoriesResult.stories.length > 0 && (
+            <section className="border-t border-black/10 pt-6 dark:border-white/30">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+                {relatedStoriesResult.kind === "topic"
+                  ? dict.crossLinks.topicHeading
+                  : `${dict.crossLinks.levelHeadingPrefix} ${level.toUpperCase()}`}
+              </h2>
+              <ul className="mt-3 flex flex-col gap-1.5">
+                {relatedStoriesResult.stories.map((story) => (
+                  <li key={story.id}>
+                    <Link
+                      href={`/${lang}/stories/${story.id}`}
+                      className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                    >
+                      <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
+                        {dict.crossLinks.storyLabel}
+                      </span>
+                      {story.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {relatedMediaResult.items.length > 0 && (
+            <section className="mt-6">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+                {relatedMediaResult.kind === "curriculum"
+                  ? dict.crossLinks.topicHeading
+                  : `${dict.crossLinks.levelHeadingPrefix} ${level.toUpperCase()}`}
+              </h2>
+              <ul className="mt-3 flex flex-col gap-1.5">
+                {relatedMediaResult.items.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={`/${lang}/media/${item.id}`}
+                      className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                    >
+                      <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
+                        {dict.crossLinks.mediaLabel}
+                      </span>
+                      {item.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+      )}
     </>
   );
 }
