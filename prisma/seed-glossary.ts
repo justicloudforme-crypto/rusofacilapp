@@ -1376,7 +1376,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es la conjunción que introduce una finalidad o propósito, equivalente a «para que» en español. Cuando el sujeto de las dos acciones es el mismo, «чтобы» va seguida de un infinitivo; cuando los sujetos son distintos, va seguida de un verbo en pasado (aunque la acción se refiera al futuro).",
     russianEquivalent: "целевой союз",
-    transcription: "tsilyevóy sayúz",
+    transcription: "tsylyevóy sayús",
     category: "conjunciones",
     russianComparison:
       "El español usa el subjuntivo después de «para que» cuando cambia el sujeto («para que lo leyera»). El ruso no tiene subjuntivo: en su lugar usa siempre el verbo en PASADO después de «чтобы», sin importar si la acción es futura — el mismo mecanismo que se usa en el modo condicional con «бы».",
@@ -1392,7 +1392,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es la conjunción que introduce una idea que contrasta con la principal sin anularla, equivalente a «aunque» en español. La más común es «хотя».",
     russianEquivalent: "уступительный союз",
-    transcription: "ustupítyel'nyy sayúz",
+    transcription: "ustupítyel'nyy sayús",
     category: "conjunciones",
     examples: [
       { es: "Aunque llovía, salimos a caminar.", ru: "Хотя шёл дождь, мы пошли гулять." },
@@ -1422,7 +1422,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es el sufijo que se añade a un sustantivo para indicar que algo es grande, exagerado o intenso, a veces con un matiz tosco o cómico — lo contrario del diminutivo. El más común es «-ище»/«-ища»: «дом» (casa) → «домище» (casona enorme), «рука» (mano) → «ручища» (manaza).",
     russianEquivalent: "увеличительный суффикс",
-    transcription: "uvyelíchityel'nyy súfiks",
+    transcription: "uvyelichítyel'nyy súfiks",
     category: "otros",
     examples: [
       { es: "Vive en una casona enorme.", ru: "Он живёт в домище." },
@@ -1468,7 +1468,7 @@ const terms: SeedTerm[] = [
     definition:
       "En pasado, el IMPERFECTIVO se usa para acciones repetidas o habituales, sin destacar un resultado concreto («solía llamarme»), mientras que el PERFECTIVO se usa para una acción única y completada, con un resultado visible («me llamó [una vez] y me contó la noticia»).",
     russianEquivalent: "вид глагола в прошедшем времени при повторяющемся действии",
-    transcription: "vid glagóla v prashédshim vryémini pri pavtaryáyushchimsya dyéystvii",
+    transcription: "vid glagóla v prashédshym vryémini pri pavtaryáyushchimsya dyéystvii",
     category: "aspecto",
     examples: [
       { es: "De niño, iba a la playa todos los veranos.", ru: "В детстве я каждое лето ездил на пляж." },
@@ -1503,7 +1503,7 @@ const terms: SeedTerm[] = [
     definition:
       "Es un caso antiguo, ya casi desaparecido del ruso moderno, que se conserva en un puñado de formas fijas y arcaicas de invocación religiosa o poética («Господи!» — ¡Dios mío!, «Боже!» — ¡Dios!). De forma informal, el ruso coloquial actual también crea un «vocativo truncado»: se corta la vocal final de un nombre al dirigirse directamente a alguien («Кать!» de Катя, «Маш!» de Маша, «Пап!» de папа).",
     russianEquivalent: "звательный падеж",
-    transcription: "zvátyel'nyy padyézh",
+    transcription: "zvátyel'nyy padyésh",
     category: "casos",
     russianComparison:
       "El español no tiene una forma morfológica distinta para el vocativo: el nombre no cambia, solo se marca con entonación o coma («¡Katia, ven aquí!»). El ruso históricamente sí tenía una forma de caso dedicada a esto, y de manera informal conserva ese impulso hoy en el habla coloquial.",
@@ -1512,6 +1512,314 @@ const terms: SeedTerm[] = [
       { es: "¡Kate, ven aquí!", ru: "Кать, иди сюда!" },
     ],
     relatedLessons: ["a1-1"],
+  },
+  // ── Bloque A1/A2 (2026-08-28) ──────────────────────────────────────
+  // Written for the A1/A2 lessons that had no glossary term at all. Each
+  // entry below corresponds to a lesson that actually TEACHES the concept,
+  // not one that merely mentions the word — the same bar applied to
+  // `diminutivo`, which stays empty because no lesson teaches it.
+  // Transcriptions follow the standard recorded in PROGRESS.md: actual
+  // pronunciation, not the letters (final devoicing, reduction after hard
+  // hushing consonants, live-speech stress).
+  {
+    slug: "verbo-modal",
+    term: "verbo modal",
+    definition:
+      "Es un verbo que no describe una acción por sí mismo, sino la actitud del hablante hacia otra acción — querer, poder, saber hacer algo — y por eso va seguido de un infinitivo. Los tres básicos del ruso son «хотеть» (querer), «мочь» (poder) y «уметь» (saber hacer, tener la destreza).",
+    russianEquivalent: "модальный глагол",
+    transcription: "madál'nyy glagól",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "La construcción es paralela a la española: verbo modal conjugado + infinitivo invariable («quiero comer» / «Я хочу есть»). La diferencia aparece más adelante: en ruso también hay que elegir el ASPECTO del infinitivo que sigue, algo que el español no pide nunca.",
+    examples: [
+      { es: "Quiero beber agua.", ru: "Я хочу пить воду." },
+      { es: "No puedo ayudarte hoy.", ru: "Я не могу тебе помочь сегодня." },
+    ],
+    relatedLessons: ["a1-10", "b1-17"],
+  },
+  {
+    slug: "verbo-irregular",
+    term: "verbo irregular",
+    definition:
+      "Es un verbo cuya conjugación no sigue ninguno de los dos modelos regulares del ruso, de modo que sus formas deben aprenderse de memoria una por una. Los casos más frecuentes del nivel inicial son «хотеть» (querer), que además cambia de modelo entre singular y plural, y «мочь» (poder), con alternancia de consonante en la raíz.",
+    russianEquivalent: "неправильный глагол",
+    transcription: "nyepravíl'nyy glagól",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "El español también tiene verbos irregulares muy frecuentes (ser, ir, tener), así que la idea no es nueva. Lo que sí es nuevo es el tipo de irregularidad: el ruso suele alterar la CONSONANTE final de la raíz (могу / можешь), mientras que el español altera sobre todo la vocal (puedo / podemos).",
+    examples: [
+      { es: "Yo quiero, pero nosotros queremos: la raíz cambia.", ru: "Я хочу, но мы хотим." },
+      { es: "Yo puedo, tú puedes: г se convierte en ж.", ru: "Я могу, ты можешь." },
+    ],
+    relatedLessons: ["a1-5", "a1-10"],
+  },
+  {
+    slug: "acusativo-de-tiempo",
+    term: "acusativo de tiempo",
+    definition:
+      "Es el uso del caso acusativo, tras la preposición «в», para decir EN QUÉ día ocurre algo. Afecta sobre todo a los días femeninos, que cambian su terminación -а por -у: среда → в среду (el miércoles), суббота → в субботу (el sábado).",
+    russianEquivalent: "винительный падеж времени",
+    transcription: "vinítyel'nyy padyésh vryémini",
+    category: "casos",
+    russianComparison:
+      "En español la palabra no cambia nunca: «el lunes», «el miércoles» — solo se añade el artículo. El ruso usa la misma preposición «в» para todos los días, pero obliga a poner el nombre del día en acusativo. Y ojo: para los meses NO se usa acusativo sino preposicional (в январе), así que la preposición «в» sola no basta para saber qué caso toca.",
+    examples: [
+      { es: "El miércoles voy al médico.", ru: "В среду я иду к врачу." },
+      { es: "Trabajo el sábado.", ru: "Я работаю в субботу." },
+    ],
+    relatedLessons: ["a1-19"],
+  },
+  {
+    slug: "adjetivo-corto",
+    term: "adjetivo corto",
+    definition:
+      "Es la forma reducida del adjetivo, sin la terminación completa, que en ruso solo puede funcionar como predicado — nunca delante del sustantivo. Concuerda en género y número con aquello de lo que se habla: рад/рада/рады (contento), нужен/нужна/нужно/нужны (necesario), согласен/согласна/согласны (de acuerdo).",
+    russianEquivalent: "краткое прилагательное",
+    transcription: "krátkaye prilagátyel'naye",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "El español no tiene nada equivalente: «contento» es la misma palabra en «un niño contento» y en «el niño está contento». En ruso son dos formas distintas y no son intercambiables. La trampa mayor está en «нужен»: concuerda con la COSA necesitada, no con quien la necesita («Мне нужен билет» — literalmente «a mí es-necesario un billete»), justo al revés que el español, donde «necesito» se conjuga según quien necesita.",
+    examples: [
+      { es: "Necesito un billete.", ru: "Мне нужен билет." },
+      { es: "Estoy de acuerdo contigo.", ru: "Я согласен с тобой." },
+    ],
+    relatedLessons: ["a1-30", "b1-3", "b2-8"],
+  },
+  {
+    slug: "adverbio-predicativo",
+    term: "adverbio predicativo",
+    definition:
+      "Es una palabra terminada en -о que funciona como el núcleo de una oración sin sujeto ni verbo: холодно (hace frío), жарко (hace calor), трудно (es difícil), интересно (es interesante). Es la forma normal de hablar del clima, del entorno y de los estados en ruso.",
+    russianEquivalent: "предикативное наречие",
+    transcription: "pryedikatívnaye naryéchiye",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "Aquí el contraste es máximo: el español necesita siempre un verbo, casi siempre «hacer» o «ser» («hace frío», «es difícil»). El ruso no pone ningún verbo en presente — «Холодно» es una oración completa de una sola palabra. El verbo solo reaparece en pasado o futuro, en forma neutra: «Было холодно» (hacía frío), «Будет холодно» (hará frío).",
+    examples: [
+      { es: "Hace frío afuera.", ru: "На улице холодно." },
+      { es: "Ayer hacía calor.", ru: "Вчера было жарко." },
+    ],
+    relatedLessons: ["a2-4"],
+  },
+  {
+    slug: "preposicion-v-na",
+    term: "preposiciones «в» y «на» de lugar",
+    definition:
+      "Son las dos preposiciones básicas de ubicación, ambas seguidas de caso preposicional. «В» sitúa algo DENTRO de un espacio cerrado (в доме, en la casa) y «на» sobre una superficie o en un espacio abierto, un evento o una actividad (на улице, en la calle; на работе, en el trabajo; на концерте, en el concierto).",
+    russianEquivalent: "предлоги «в» и «на»",
+    transcription: "predlógi «v» i «na»",
+    category: "casos",
+    russianComparison:
+      "El español resuelve ambas con un solo «en»: «en la casa», «en la calle», «en el trabajo». Por eso la elección no se puede deducir traduciendo — hay que aprenderla palabra por palabra, y algunas asignaciones no tienen ninguna lógica visible desde fuera (на почте, en la oficina de correos, pero в банке, en el banco).",
+    examples: [
+      { es: "Vivo en una casa nueva.", ru: "Я живу в новом доме." },
+      { es: "Hoy trabajo en casa, no en el trabajo.", ru: "Сегодня я работаю дома, а не на работе." },
+    ],
+    relatedLessons: ["a2-6"],
+  },
+  {
+    slug: "tema-duro-y-blando",
+    term: "tema duro y tema blando",
+    definition:
+      "Es la división básica de adjetivos y sustantivos rusos en dos grupos según cómo termina su raíz, y de ella depende cuál de las dos series de terminaciones se usa en TODOS los casos. Los adjetivos de tema duro toman -ый/-ым/-ого (новый → новым), los de tema blando toman -ий/-им/-его (синий → синим).",
+    russianEquivalent: "твёрдая и мягкая основа",
+    transcription: "tvyórdaya i myáhkaya asnóva",
+    category: "otros",
+    russianComparison:
+      "El español no tiene nada parecido: un adjetivo español no cambia según cómo suene su raíz. Conviene aprender la pareja de terminaciones a la vez (-ым/-им, -ого/-его, -ому/-ему) en lugar de memorizar dos sistemas separados: es una sola regla que se repite en todos los casos.",
+    examples: [
+      { es: "con el amigo nuevo (tema duro)", ru: "с новым другом" },
+      { es: "con el bolígrafo azul (tema blando)", ru: "с синим карандашом" },
+    ],
+    relatedLessons: ["a2-11"],
+  },
+  {
+    slug: "regimen-preposicional",
+    term: "régimen preposicional",
+    definition:
+      "Es la regla, fija para cada preposición, de qué caso debe llevar el sustantivo que va detrás. No se deduce del significado: «благодаря» (gracias a) pide dativo, «из-за» (por culpa de) pide genitivo, «между» (entre) pide instrumental. La preposición y su caso se aprenden siempre como un solo bloque.",
+    russianEquivalent: "предложное управление",
+    transcription: "predlózhnaye upravlyéniye",
+    category: "casos",
+    russianComparison:
+      "En español ninguna preposición cambia la forma del sustantivo: «según él», «entre la casa y la escuela». Por eso el hispanohablante tiende a fijarse solo en el significado de la preposición y a olvidar el caso. Dos atajos útiles: la mayoría de las preposiciones compuestas piden genitivo (вокруг, напротив, после), y el pequeño grupo espacial над/под/между/перед pide siempre instrumental.",
+    examples: [
+      { es: "Gracias a tu ayuda (dativo).", ru: "Благодаря твоей помощи." },
+      { es: "Por culpa del mal tiempo (genitivo).", ru: "Из-за плохой погоды." },
+    ],
+    relatedLessons: ["a2-12"],
+  },
+  {
+    slug: "orden-de-palabras",
+    term: "orden de palabras",
+    definition:
+      "Es la posición de las palabras dentro de la oración. En ruso no marca quién es el sujeto y quién el objeto — de eso se encargan los casos — así que queda libre para otra función: colocar al final lo que se quiere destacar como información nueva.",
+    russianEquivalent: "порядок слов",
+    transcription: "paryádak slof",
+    category: "otros",
+    russianComparison:
+      "En español el orden es la principal marca de función: «Mamá quiere al hijo» y «Al hijo quiere mamá» no se pueden intercambiar sin más. En ruso «Мама любит сына» y «Сына любит мама» significan exactamente lo mismo, porque la terminación -а de «сына» ya dice que es el objeto. Lo que cambia entre las dos versiones no es el sentido, sino el énfasis.",
+    examples: [
+      { es: "Mamá quiere al hijo. / Al hijo lo quiere mamá.", ru: "Мама любит сына. / Сына любит мама." },
+      { es: "El bosque susurraba en silencio (orden invertido, énfasis poético).", ru: "Тихо шумел лес." },
+    ],
+    relatedLessons: ["a2-13", "b2-4"],
+  },
+  {
+    slug: "par-letet-letat",
+    term: "лететь / летать",
+    definition:
+      "Es el par de verbos de movimiento para «volar»: «лететь» describe un vuelo concreto, ahora y en una sola dirección (unidireccional); «летать» describe volar de forma habitual, repetida o como capacidad general (multidireccional). Se conjugan de forma distinta: лечу, летишь, летит frente a летаю, летаешь, летает.",
+    russianEquivalent: "лететь / летать",
+    transcription: "lyetyét' / lyetát'",
+    category: "verbos-movimiento",
+    examples: [
+      { es: "El avión vuela a Moscú (ahora).", ru: "Самолёт летит в Москву." },
+      { es: "Vuelo a Moscú a menudo (hábito).", ru: "Я часто летаю в Москву." },
+    ],
+    relatedLessons: ["a2-17", "a2-18"],
+  },
+  {
+    slug: "par-plyt-plavat",
+    term: "плыть / плавать",
+    definition:
+      "Es el par de verbos de movimiento para «nadar» y «navegar»: «плыть» describe el desplazamiento concreto, ahora y en una dirección (unidireccional); «плавать» describe nadar de forma habitual o saber nadar como capacidad (multidireccional). Sirve tanto para personas como para embarcaciones.",
+    russianEquivalent: "плыть / плавать",
+    transcription: "plyt' / plávat'",
+    category: "verbos-movimiento",
+    examples: [
+      { es: "Nada hacia la orilla (ahora).", ru: "Он плывёт к берегу." },
+      { es: "Nado por las mañanas (hábito).", ru: "Я плаваю по утрам." },
+    ],
+    relatedLessons: ["a2-17", "a2-18"],
+  },
+  {
+    slug: "pronombre-indefinido",
+    term: "pronombre indefinido",
+    definition:
+      "Es el pronombre que señala a alguien o algo sin identificarlo: кто-то (alguien), что-то (algo), какой-то (algún, cierto). Se forman añadiendo una partícula invariable a un interrogativo, y solo la parte pronominal se declina — la partícula queda siempre al final: кого-то, кому-то, кем-то.",
+    russianEquivalent: "неопределённое местоимение",
+    transcription: "nyeapryedyelyónnaye myestaimyéniye",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "«Alguien», «algo» y «algún» no cambian de forma en español. En ruso sí se declinan, y además existe toda una familia paralela de adverbios formados igual (где-то, куда-то, когда-то, почему-то) que el español solo puede traducir con frases de varias palabras: «en algún lugar», «por alguna razón».",
+    examples: [
+      { es: "Alguien está llamando a la puerta.", ru: "Кто-то звонит в дверь." },
+      { es: "Hablé con alguien interesante.", ru: "Я разговаривал с кем-то интересным." },
+    ],
+    relatedLessons: ["a2-23", "a2-24"],
+  },
+  {
+    slug: "contraste-to-nibud",
+    term: "«-то» frente a «-нибудь»",
+    definition:
+      "Es la regla que decide cuál de las dos partículas indefinidas se usa. «-то» marca algo que EXISTE de verdad aunque no se sepa cuál: se usa para hechos concretos, en pasado o presente. «-нибудь» marca algo cuya existencia todavía está en el aire: preguntas, condiciones, peticiones y futuro.",
+    russianEquivalent: "частицы «-то» и «-нибудь»",
+    transcription: "chastítsy «-ta» i «-nibút'»",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "El español no distingue nada de esto: «alguien llamó» y «¿llamó alguien?» usan la misma palabra. Por eso es una categoría genuinamente nueva, y el error típico es usar «-то» en una pregunta. La comprobación rápida: si la frase es una pregunta, una condición con «если», una petición o habla del futuro, toca «-нибудь».",
+    examples: [
+      { es: "Alguien llamó (hecho: sí ocurrió).", ru: "Кто-то звонил." },
+      { es: "¿Llamó alguien? (no se sabe si ocurrió).", ru: "Кто-нибудь звонил?" },
+    ],
+    relatedLessons: ["a2-23", "a2-24"],
+  },
+  {
+    slug: "pronombre-negativo",
+    term: "pronombre negativo",
+    definition:
+      "Es el pronombre formado con el prefijo «ни-» que niega la existencia de alguien o algo: никто (nadie), ничто/ничего (nada), никакой (ninguno). Se declina en todos los casos (никого, никому, никем) y exige siempre la partícula «не» junto al verbo.",
+    russianEquivalent: "отрицательное местоимение",
+    transcription: "atritsátyel'naye myestaimyéniye",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "La trampa está en las preposiciones. El español mantiene la palabra entera y pone la preposición delante: «con nadie», «de nada». El ruso parte el pronombre en dos y mete la preposición en medio: «ни с кем», «ни о чём» — nunca «с никем». Es el error más frecuente en este tema.",
+    examples: [
+      { es: "No se lo dijo a nadie.", ru: "Он никому не сказал." },
+      { es: "No hablé con nadie.", ru: "Я ни с кем не говорил." },
+    ],
+    relatedLessons: ["a2-25"],
+  },
+  {
+    slug: "adverbio-negativo",
+    term: "adverbio negativo",
+    definition:
+      "Es el adverbio formado con el prefijo «ни-» a partir de un interrogativo: нигде (en ningún lugar), никуда (a ningún lugar), никогда (nunca), никак (de ninguna manera). Son invariables y, como los pronombres negativos, exigen «не» junto al verbo.",
+    russianEquivalent: "отрицательное наречие",
+    transcription: "atritsátyel'naye naryéchiye",
+    category: "partes-de-la-oracion",
+    russianComparison:
+      "El español necesita varias palabras («en ningún lugar», «de ninguna manera»); el ruso lo condensa en una sola con «ни-». El más difícil de captar es «никак»: no significa un simple «no», sino «de ninguna manera posible, por más que lo intente», y suele acompañar a «мочь» (poder).",
+    examples: [
+      { es: "Nunca he estado en Rusia.", ru: "Я никогда не был в России." },
+      { es: "No consigo resolver este problema de ninguna manera.", ru: "Я никак не могу решить эту задачу." },
+    ],
+    relatedLessons: ["a2-26"],
+  },
+  {
+    slug: "doble-negacion",
+    term: "doble negación",
+    definition:
+      "Es la regla que obliga a mantener «не» junto al verbo aunque la oración ya tenga una palabra negativa. En ruso no es un refuerzo opcional ni un error: «Я ничего не знаю» lleva dos marcas de negación y es la única forma correcta de decir «no sé nada».",
+    russianEquivalent: "двойное отрицание",
+    transcription: "dvaynóye atritsániye",
+    category: "otros",
+    russianComparison:
+      "Aquí el español ayuda en lugar de estorbar: «no sé nada», «no vino nadie» también llevan dos marcas. La estructura coincide casi punto por punto, así que este es uno de los pocos temas donde la intuición del hispanohablante funciona directamente — a diferencia de un anglohablante, que tiene que desaprender la regla contraria.",
+    examples: [
+      { es: "No sé nada.", ru: "Я ничего не знаю." },
+      { es: "Nadie vino.", ru: "Никто не пришёл." },
+    ],
+    relatedLessons: ["a1-21", "a2-25", "a2-26"],
+  },
+  {
+    slug: "regimen-verbal",
+    term: "régimen verbal",
+    definition:
+      "Es la exigencia, propia de cada verbo, de que su complemento vaya en un caso concreto. No se deduce del significado y forma parte de lo que hay que aprender junto con el verbo: «владеть» (dominar un idioma) pide instrumental, «помогать» (ayudar) pide dativo, «ждать» (esperar) pide acusativo o genitivo según el matiz.",
+    russianEquivalent: "глагольное управление",
+    transcription: "glagól'naye upravlyéniye",
+    category: "otros",
+    russianComparison:
+      "El español tiene algo comparable con las preposiciones que rigen ciertos verbos («soñar CON», «depender DE»), y se aprenden igual: en bloque con el verbo. La diferencia es que el ruso lo marca con una terminación en vez de una preposición. Un mismo verbo puede además tener dos regímenes con sentidos distintos: «У меня болит горло» (me duele la garganta) frente a «Я болею гриппом» (tengo gripe).",
+    examples: [
+      { es: "Domino el idioma inglés (instrumental).", ru: "Я владею английским языком." },
+      { es: "Tengo gripe (instrumental).", ru: "Я болею гриппом." },
+    ],
+    relatedLessons: ["a2-27", "b1-27"],
+  },
+  {
+    slug: "plurale-tantum",
+    term: "sustantivo solo en plural",
+    definition:
+      "Es el sustantivo que existe únicamente en plural y no tiene forma de singular: брюки (pantalones), джинсы (vaqueros), очки (gafas), часы (reloj), деньги (dinero). Todo lo que lo acompaña — adjetivos, verbos, numerales — va también en plural.",
+    russianEquivalent: "существительные только множественного числа",
+    transcription: "sushchyestvítyel'nyye tól'ka mnózhystvyennava chislá",
+    category: "otros",
+    russianComparison:
+      "El español también dice «pantalones» o «gafas» en plural, así que el punto de partida es familiar. La diferencia es que en español el singular existe y es válido («un pantalón», «una gafa»), mientras que en ruso simplemente no hay tal forma. Y algunos casos no coinciden: «часы» (reloj) y «деньги» (dinero) son plurales en ruso y singulares en español.",
+    examples: [
+      { es: "Estos pantalones me quedan grandes.", ru: "Эти брюки мне велики." },
+      { es: "¿Dónde están mis gafas?", ru: "Где мои очки?" },
+    ],
+    relatedLessons: ["a2-28"],
+  },
+  {
+    slug: "oracion-indefinido-personal",
+    term: "oración indefinido-personal",
+    definition:
+      "Es la oración cuyo verbo va en tercera persona del plural sin ningún sujeto expreso, porque quién hace la acción no importa o no se conoce: «Обещают дождь» (pronostican lluvia), «Говорят, что...» (dicen que...), «Здесь не курят» (aquí no se fuma).",
+    russianEquivalent: "неопределённо-личное предложение",
+    transcription: "nyeapryedyelyónna-líchnaye pryedlazhéniye",
+    category: "otros",
+    russianComparison:
+      "El español tiene dos recursos para esto: el plural impersonal («dicen que») y la construcción con «se» («aquí no se fuma»). El ruso usa el mismo plural sin sujeto para ambos casos, así que la primera de las dos opciones españolas es la que mejor guía la traducción — «se dice» corresponde a «говорят», no a una construcción reflexiva.",
+    examples: [
+      { es: "Pronostican lluvia para el fin de semana.", ru: "Обещают дождь на выходных." },
+      { es: "Dicen que mañana hará frío.", ru: "Говорят, что завтра будет холодно." },
+    ],
+    relatedLessons: ["a2-29"],
   },
 ];
 
