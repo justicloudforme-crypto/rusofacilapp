@@ -32,24 +32,52 @@ test("hamburger menu opens, shows links, and closes on link/backdrop tap", async
   await expect(page.locator("nav.sheet-slide-up")).toBeHidden();
 
   // Re-open, then confirm the backdrop also closes it without navigating.
-  // Once open, both the toggle button and the dedicated backdrop button
-  // share the "close" aria-label — target the backdrop specifically via
-  // its fixed-overlay class rather than by accessible name. The backdrop
-  // is a fixed-inset-0 button, but it's only actually visible (and
-  // clickable) in the strip between the sticky header and the sheet
-  // itself — the header sits above it (z-50) and the up-to-85dvh sheet
-  // sits above it too, both intercepting clicks anywhere within their own
-  // bounds, same as a real user could only tap outside both. Compute that
-  // strip's midpoint at runtime instead of a fixed coordinate, since
-  // header/sheet heights vary by content and viewport.
+  //
+  // The backdrop covers the whole viewport, but only the strip between the
+  // sticky header (z-50, above it) and the sheet itself is actually
+  // tappable — exactly as for a real user. Two things make picking a point
+  // in that strip reliable:
+  //
+  //  1. WAIT FOR THE SHEET TO STOP MOVING. `.sheet-slide-up` animates
+  //     translateY(100%) -> 0 over 0.28s, and toBeVisible() resolves as
+  //     soon as it is painted, i.e. while it is still sliding. Measuring
+  //     then returns a transient position — observed here between y=339
+  //     and y=590 for a sheet that settles at y=246 — and a point derived
+  //     from it lands *inside* the settled sheet. On a fast machine the
+  //     click also happens early enough to hit the moving sheet's gap and
+  //     passes; on a slower one (CI) the click lands after the sheet has
+  //     settled and is intercepted by <nav class="sheet-slide-up">. That
+  //     was a real, reproducible flake, not a product bug.
+  //
+  //  2. DERIVE THE POINT FROM THE LAYOUT INVARIANT, NOT FROM TODAY'S
+  //     HEIGHT. The sheet is docked to the bottom and capped at
+  //     max-h-[85dvh], so its top can never be higher than 15% of the
+  //     viewport, whatever ends up inside it. Tapping between the header
+  //     and that 15% line therefore stays correct if the menu grows.
+  //
+  // The assertions below keep the test able to fail for a real reason: if
+  // the sheet ever does cover that strip, they fail rather than quietly
+  // picking some other point.
   await toggle.click();
   await expect(panel).toBeVisible();
+  await panel.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+
   const headerBox = await page.locator("header").boundingBox();
   const sheetBox = await panel.boundingBox();
   if (!headerBox || !sheetBox) throw new Error("could not measure header/sheet bounds");
-  await page.locator("button.fixed.inset-0").click({
-    position: { x: 20, y: (headerBox.y + headerBox.height + sheetBox.y) / 2 },
-  });
+
+  const viewport = page.viewportSize()!;
+  const headerBottom = headerBox.y + headerBox.height;
+  const highestPossibleSheetTop = viewport.height * 0.15; // the max-h-[85dvh] cap
+  expect(
+    headerBottom,
+    "no tappable strip left between the header and an 85dvh sheet",
+  ).toBeLessThan(highestPossibleSheetTop);
+
+  const tapY = (headerBottom + highestPossibleSheetTop) / 2;
+  expect(tapY, "tap point is not outside the open sheet").toBeLessThan(sheetBox.y);
+
+  await page.getByTestId("mobile-menu-backdrop").click({ position: { x: 20, y: tapY } });
   await expect(panel).toBeHidden();
   await expect(page).toHaveURL(/\/es\/courses/);
 });
