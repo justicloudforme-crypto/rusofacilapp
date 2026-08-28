@@ -4,6 +4,13 @@ import { lessonSlugsFor, type LevelSlug } from "@/lib/courses";
 import { normalizeLevel } from "@/lib/level";
 import { type StoryTopic } from "@/lib/stories";
 import type { MediaItem } from "@/lib/media/types";
+import { getFlashcardIndex } from "@/lib/flashcards/cache";
+import {
+  buildVocabularyIndex,
+  detectGrammarFeatures,
+  matchVocabulary,
+  type VocabularyMatch,
+} from "@/lib/story-insights";
 
 /**
  * Deterministic string hash (FNV-1a-ish) used everywhere below to pick a
@@ -296,4 +303,87 @@ export function getGrammarGuideForLesson(
 ): GrammarGuideRef | null {
   if (lang !== "es") return null;
   return GRAMMAR_GUIDE_FOR_LESSON[`${level}-${lessonSlug}`] ?? null;
+}
+
+export interface StoryGrammarRef {
+  slug: string;
+  /** The glossary entry's Spanish name, read from the DB so the block and
+   * the linked page can never disagree about what the term is called. */
+  term: string;
+  /** Words from this text that show the feature. */
+  examples: string[];
+}
+
+export interface ContentInsights {
+  vocabulary: VocabularyMatch[];
+  grammar: StoryGrammarRef[];
+}
+
+/**
+ * Builds the "what's in this text" block for a story or a media item — the
+ * body given to pages that were otherwise ~1000 characters of title,
+ * description and a paywall card (see src/lib/story-insights.ts for the
+ * measurement and the two rules this obeys).
+ *
+ * Takes the story's full text on purpose: a vocabulary list is only
+ * useful if it covers the story, and every word it can produce is a
+ * flashcard that already has its own public page. What it must never do
+ * is emit a SENTENCE — that is enforced in story-insights.ts, which only
+ * ever returns single words, so the paywalled text itself stays
+ * truncated exactly as before (see the story page's visibleParagraphs).
+ *
+ * Returns empty lists rather than throwing when there's nothing to say;
+ * callers render nothing in that case.
+ */
+export async function getContentInsights(text: string): Promise<ContentInsights> {
+  if (!text.trim()) return { vocabulary: [], grammar: [] };
+
+  const features = detectGrammarFeatures(text);
+  const [cards, terms] = await Promise.all([
+    getFlashcardIndex(),
+    features.length > 0
+      ? db.glossaryTerm.findMany({
+          where: { slug: { in: features.map((f) => f.slug) } },
+          select: { slug: true, term: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const termBySlug = new Map(terms.map((t) => [t.slug, t.term]));
+  const grammar: StoryGrammarRef[] = [];
+  for (const feature of features) {
+    const term = termBySlug.get(feature.slug);
+    // A feature whose glossary entry doesn't exist (or was renamed) is
+    // skipped rather than rendered as a dead link.
+    if (term) grammar.push({ slug: feature.slug, term, examples: feature.examples });
+  }
+
+  const vocabulary = matchVocabulary(text, buildVocabularyIndex(cards));
+  return { vocabulary, grammar };
+}
+
+/**
+ * The grammar-topic links for a media item. Media differs from a story in
+ * one important way: the transcript is fully gated, so there is no
+ * "already visible" text to quote from. Features are therefore detected
+ * over the transcript but rendered WITHOUT example words — which topics a
+ * song touches is metadata about it, like its level or category, while a
+ * quoted line would be a piece of the paid content.
+ */
+export async function getMediaGrammarLinks(lines: { russian: string }[]): Promise<StoryGrammarRef[]> {
+  const text = lines.map((line) => line.russian).join("\n");
+  if (!text.trim()) return [];
+
+  const features = detectGrammarFeatures(text);
+  if (features.length === 0) return [];
+
+  const terms = await db.glossaryTerm.findMany({
+    where: { slug: { in: features.map((f) => f.slug) } },
+    select: { slug: true, term: true },
+  });
+  const termBySlug = new Map(terms.map((t) => [t.slug, t.term]));
+
+  return features
+    .filter((f) => termBySlug.has(f.slug))
+    .map((f) => ({ slug: f.slug, term: termBySlug.get(f.slug) as string, examples: [] }));
 }

@@ -6,9 +6,11 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
-import { getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
+import { getContentInsights, getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
+import { isPilotStory } from "@/lib/story-pilot";
 import { getAllMedia } from "@/lib/media/data";
 import StoryText from "@/components/stories/StoryText";
+import ContentInsights from "@/components/stories/ContentInsights";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
@@ -73,6 +75,13 @@ export default async function StoryReaderPage({
 
   const paragraphs = splitStoryParagraphs(story.text);
   const visibleParagraphs = entitled ? paragraphs : paragraphs.slice(0, 1);
+
+  // Reads the whole story, but can only ever emit single dictionary words
+  // and grammar-topic links — never a sentence, and never a summary. The
+  // paywalled text itself stays truncated to visibleParagraphs above,
+  // untouched. Pilot-gated (see src/lib/story-pilot.ts): 50 A1 stories,
+  // with 15 more A1 stories deliberately left as an untouched control.
+  const insights = isPilotStory(story) ? await getContentInsights(story.text) : null;
 
   const translationParagraphs = story.translationEs ? splitStoryParagraphs(story.translationEs) : [];
   const visibleTranslationParagraphs = entitled
@@ -193,6 +202,21 @@ export default async function StoryReaderPage({
             {dict.stories.premiumLockCta}
           </Link>
         </Card>
+      )}
+
+      {insights && (
+        <ContentInsights
+          lang={lang}
+          insights={insights}
+          dict={{
+            vocabHeading: dict.stories.insightsVocabHeading,
+            vocabNote: dict.stories.insightsVocabNote,
+            grammarHeading: dict.stories.insightsGrammarHeading,
+            grammarNote: dict.stories.insightsGrammarNote,
+            exampleLabel: dict.stories.insightsExampleLabel,
+            glossaryAllLink: dict.crossLinks.glossaryAllLink,
+          }}
+        />
       )}
 
       {relatedLesson && relatedLessonTitle && (
