@@ -1448,17 +1448,19 @@ const terms: SeedTerm[] = [
   },
   {
     slug: "aspecto-en-negacion",
-    term: "aspecto en la negación (imperativo)",
+    term: "aspecto en la negación",
     definition:
-      "En una orden negativa, el aspecto cambia el sentido: el IMPERFECTIVO expresa una prohibición general de la acción en sí («no hagas esto [en general]»), mientras que el PERFECTIVO expresa una advertencia contra hacer algo por accidente o sin querer. «Не хлопай дверью!» (¡No [andes] dando portazos!, prohibición general, imperfectivo) frente a «Не разбей вазу!» (¡Cuidado, no [vayas a] romper el jarrón!, advertencia ante un accidente, perfectivo).",
+      "Al negar, la elección de aspecto cambia el sentido, y funciona de dos maneras distintas según el modo. EN EL IMPERATIVO: el imperfectivo prohíbe la acción en general («Не хлопай дверью!», no des portazos), mientras que el perfectivo advierte contra un accidente («Не разбей вазу!», cuidado, no vayas a romper el jarrón). EN EL INDICATIVO: el imperfectivo es la opción neutra, la que simplemente dice que algo no ocurrió («Я не читал эту книгу», no he leído este libro); el perfectivo añade un matiz — un intento que no llegó a su resultado («Я не прочитал книгу до конца», no llegué a terminar el libro) o una expectativa incumplida («Автобус не пришёл», el autobús no llegó, aunque se le esperaba).",
     russianEquivalent: "вид глагола в отрицании",
     transcription: "vit glagóla v atritsánii",
     category: "aspecto",
     russianComparison:
-      "El español no distingue gramaticalmente entre «prohibir algo en general» y «advertir contra un accidente» — ambas ideas se expresan igual con el imperativo negativo más el tono o «cuidado». El ruso sí tiene una herramienta morfológica dedicada a esta distinción: la elección de aspecto.",
+      "El español no distingue gramaticalmente ninguna de las dos cosas: «prohibir en general» y «advertir contra un accidente» se dicen igual con el imperativo negativo más el tono o un «cuidado», y «no leí el libro» sirve tanto para el hecho neutro como para el intento fallido. El ruso marca ambas distinciones con la misma herramienta, la elección de aspecto. Regla práctica al negar en indicativo: si solo estás diciendo que algo no pasó, imperfectivo; si quieres dar a entender que se intentó y no salió, o que se esperaba y no ocurrió, perfectivo.",
     examples: [
-      { es: "No des portazos (prohibición general).", ru: "Не хлопай дверью!" },
-      { es: "¡Cuidado, no rompas el jarrón! (advertencia ante un accidente)", ru: "Осторожно, не разбей вазу!" },
+      { es: "No des portazos (prohibición general, imperativo).", ru: "Не хлопай дверью!" },
+      { es: "¡Cuidado, no rompas el jarrón! (advertencia, imperativo).", ru: "Осторожно, не разбей вазу!" },
+      { es: "No he leído este libro (hecho neutro, indicativo).", ru: "Я не читал эту книгу." },
+      { es: "No llegué a terminar el libro (intento sin resultado, indicativo).", ru: "Я не прочитал книгу до конца." },
     ],
     relatedLessons: ["a1-9", "b1-18"],
   },
