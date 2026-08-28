@@ -103,6 +103,24 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
           );
         })}
       </div>
+
+      {/* The catalog is where a learner picks a level and first meets the
+          grammar vocabulary the lessons are named after ("Caso
+          instrumental", "Aspecto verbal"), so this is where a pointer to
+          the glossary is actually useful rather than decorative — and it
+          sits one hop above all 240 lesson pages in the site hierarchy.
+          The navbar entry added alongside this already gives /glossary a
+          link from every page including the homepage, so this block is
+          for context, not for link equity on its own. */}
+      <section className="mt-12 rounded-2xl border border-black/10 p-6 dark:border-white/30">
+        <p className="text-sm leading-6 text-foreground/70">{dict.courses.glossaryNote}</p>
+        <Link
+          href={`/${lang}/glossary`}
+          className="tap mt-3 inline-block font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+        >
+          {dict.courses.glossaryCta} →
+        </Link>
+      </section>
     </div>
   );
 }

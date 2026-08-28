@@ -794,7 +794,16 @@ const terms: SeedTerm[] = [
       { es: "Me lavo por la mañana.", ru: "Я умываюсь по утрам." },
       { es: "La casa se está construyendo.", ru: "Дом строится." },
     ],
-    relatedLessons: [],
+    // Was the only term in this file with an empty list. No lesson is
+    // ABOUT -ся (no lesson title mentions it), so these five were picked
+    // by reading the grammar text of every candidate rather than by
+    // keyword count, and each teaches a different one of the meanings
+    // this entry lists: b1-12 reciprocity (переписываться), b1-21/b1-22
+    // the gerund forms reflexives take (-ясь / -вшись), b2-6 the
+    // impersonal use that matches Spanish "se", b2-22 the reflexive
+    // passive (Проблема исследуется). b2-20 was rejected on purpose: it
+    // covers "вести себя", which is the pronoun себя, not the -ся postfix.
+    relatedLessons: ["b1-12", "b1-21", "b1-22", "b2-6", "b2-22"],
   },
   {
     slug: "diminutivo",

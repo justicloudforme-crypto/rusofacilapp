@@ -20,6 +20,7 @@ import {
   GraduationCapIcon,
   BookIcon,
   DictionaryIcon,
+  ChecklistIcon,
   PuzzleIcon,
   HeadphonesIcon,
   UsersIcon,
@@ -54,6 +55,12 @@ export default async function Navbar({
     { href: `/${lang}/stories`, label: dict.nav.stories, icon: <BookIcon className={iconClass} /> },
     { href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> },
     { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary, icon: <DictionaryIcon className={iconClass} /> },
+    // The glossary had no entry point in the navigation at all until now —
+    // reachable only through Cmd+K search and the game landing pages'
+    // footer, which measured as 0 crawlable inbound links from the
+    // homepage, the course catalog, every level page and all 240 lesson
+    // pages (whole-sitemap crawl, 2026-08-28). 182 URLs sat as an island.
+    { href: `/${lang}/glossary`, label: dict.nav.glossary, icon: <ChecklistIcon className={iconClass} /> },
     { href: `/${lang}/word-games`, label: dict.nav.wordGames, icon: <PuzzleIcon className={iconClass} /> },
     ...(user ? [{ href: `/${lang}/groups`, label: dict.nav.groups, icon: <UsersIcon className={iconClass} /> }] : []),
   ];
@@ -70,7 +77,13 @@ export default async function Navbar({
     ? [
         {
           label: dict.nav.groupPlay,
-          links: [{ href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> }],
+          links: [
+            { href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> },
+            // Not covered by BottomNav either (it carries Cuentos/Cursos/
+            // Vocabulario/Juegos/Perfil), so without this a logged-in
+            // visitor on mobile has no path to the glossary at all.
+            { href: `/${lang}/glossary`, label: dict.nav.glossary, icon: <ChecklistIcon className={iconClass} /> },
+          ],
         },
         {
           label: dict.nav.groupCommunity,
@@ -87,6 +100,7 @@ export default async function Navbar({
             { href: `/${lang}/courses`, label: dict.nav.courses, icon: <GraduationCapIcon className={iconClass} /> },
             { href: `/${lang}/stories`, label: dict.nav.stories, icon: <BookIcon className={iconClass} /> },
             { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary, icon: <DictionaryIcon className={iconClass} /> },
+            { href: `/${lang}/glossary`, label: dict.nav.glossary, icon: <ChecklistIcon className={iconClass} /> },
           ],
         },
         {

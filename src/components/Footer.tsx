@@ -16,6 +16,15 @@ export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale 
           <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.appLink}
           </Link>
+          {/* The navbar's own Glosario entry (added alongside this) lives
+              inside the Practicar dropdown, whose panel only renders once
+              opened — so it gives a human a path but a crawler nothing.
+              This footer link is the crawlable one: the footer is server-
+              rendered on every page, which is what takes /glossary from
+              6 inbound pages to the whole site. */}
+          <Link href={`/${lang}/glossary`} className="tap hover:text-foreground/80 active:text-foreground/80">
+            {dict.nav.glossary}
+          </Link>
           <Link href={`/${lang}/sobre-nosotros`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.nav.about}
           </Link>

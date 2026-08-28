@@ -289,7 +289,9 @@
           "Preparación para exámenes de certificación"
         ]
       }
-    }
+    },
+    "glossaryNote": "¿Te encuentras con un término gramatical que no conoces («caso instrumental», «aspecto perfectivo»)? El glosario los explica todos en español, con su equivalente ruso y ejemplos.",
+    "glossaryCta": "Consultar el glosario de gramática"
   },
   "footer": {
     "tagline": "Ruso para hispanohablantes, del A1 al B2.",
@@ -1357,7 +1359,10 @@
     "levelHeadingPrefix": "Más contenido de nivel",
     "storyLabel": "Cuento",
     "lessonLabel": "Lección",
-    "mediaLabel": "Video o canción"
+    "mediaLabel": "Video o canción",
+    "glossaryHeading": "Términos de gramática de esta lección",
+    "glossaryLabel": "Glosario",
+    "glossaryAllLink": "Ver todos los términos del glosario"
   },
   "offline": {
     "bannerMessage": "Estás sin conexión. Algunos cambios se guardarán y se enviarán cuando vuelva la conexión."
