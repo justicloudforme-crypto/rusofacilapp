@@ -1379,9 +1379,15 @@
     ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "relatedStoryIds": [
-      "cmss81j1b0003tqnckp9cs4hu",
-      "cmsuahtjv0001u4ncwp2xbm8g"
+    "relatedStories": [
+      {
+        "title": "Дедушкин огород",
+        "level": "A1"
+      },
+      {
+        "title": "Собака с характером",
+        "level": "A2"
+      }
     ]
   },
   "movie-irony-of-fate": {
@@ -6668,9 +6674,15 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
     "sourceNote": "Canal oficial FSUE Mosfilm cinema concern.",
-    "relatedStoryIds": [
-      "cmsv0thwe0001pinchtyaaelc",
-      "cmssa8gku0002l9nc0gzwp1xq"
+    "relatedStories": [
+      {
+        "title": "Чужое место в поезде",
+        "level": "A2"
+      },
+      {
+        "title": "Последний поезд",
+        "level": "B1"
+      }
     ]
   },
   "movie-ezhik-v-tumane": {
@@ -6772,8 +6784,11 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
     "sourceNote": "Canal 'Советские мультфильмы - Золотая коллекция СССР'.",
-    "relatedStoryIds": [
-      "cmsjur3bf000560ncnoxvx239"
+    "relatedStories": [
+      {
+        "title": "Маша и медведь",
+        "level": "A2"
+      }
     ]
   },
   "song-zemlya-v-illuminatore": {
@@ -6954,12 +6969,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsjur3be000260ncnxt8qxls"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'Студия Диафильм', versión de 1971."
+    "sourceNote": "Canal 'Студия Диафильм', versión de 1971.",
+    "relatedStories": [
+      {
+        "title": "Репка",
+        "level": "A1"
+      }
+    ]
   },
   "movie-teremok": {
     "id": "movie-teremok",
@@ -7031,12 +7049,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsjur3be000160ncimavidij"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'lelik'."
+    "sourceNote": "Canal 'lelik'.",
+    "relatedStories": [
+      {
+        "title": "Теремок",
+        "level": "A1"
+      }
+    ]
   },
   "movie-kurochka-ryaba": {
     "id": "movie-kurochka-ryaba",
@@ -7121,12 +7142,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsjur3bf000360nc5f0z8jmj"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'Multiteka'."
+    "sourceNote": "Canal 'Multiteka'.",
+    "relatedStories": [
+      {
+        "title": "Курочка Ряба",
+        "level": "A1"
+      }
+    ]
   },
   "movie-zayushkina-izbushka": {
     "id": "movie-zayushkina-izbushka",
@@ -7215,12 +7239,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsjvsy3c0001senc6lz7s4iy"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'БОЛЬШАЯ МЕДВЕДИЦА'."
+    "sourceNote": "Canal 'БОЛЬШАЯ МЕДВЕДИЦА'.",
+    "relatedStories": [
+      {
+        "title": "Заюшкина избушка",
+        "level": "A1"
+      }
+    ]
   },
   "movie-kot-petukh-i-lisa": {
     "id": "movie-kot-petukh-i-lisa",
@@ -7305,12 +7332,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsjvsy3c0002senceu30zm8q"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'ТНБ', dirigido por T. N. Binevskaya."
+    "sourceNote": "Canal 'ТНБ', dirigido por T. N. Binevskaya.",
+    "relatedStories": [
+      {
+        "title": "Кот, петух и лиса",
+        "level": "A1"
+      }
+    ]
   },
   "movie-kolobok": {
     "id": "movie-kolobok",
@@ -7395,12 +7425,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsjur3bd000060ncvq1d5nrk"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'Советские мультфильмы - Золотая коллекция СССР'."
+    "sourceNote": "Canal 'Советские мультфильмы - Золотая коллекция СССР'.",
+    "relatedStories": [
+      {
+        "title": "Колобок",
+        "level": "A1"
+      }
+    ]
   },
   "song-zemfira-khochesh": {
     "id": "song-zemfira-khochesh",
@@ -7659,12 +7692,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsto81rr0000igncstwgummo"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal oficial ЧАЙФ. La grabación incluye una breve aclamación final del público que no se ha incluido en el fragmento seleccionado por evitar cualquier connotación patriótica ajena al tema central (fútbol)."
+    "sourceNote": "Canal oficial ЧАЙФ. La grabación incluye una breve aclamación final del público que no se ha incluido en el fragmento seleccionado por evitar cualquier connotación patriótica ajena al tema central (fútbol).",
+    "relatedStories": [
+      {
+        "title": "Мяч на крыше",
+        "level": "A1"
+      }
+    ]
   },
   "movie-vinni-pukh": {
     "id": "movie-vinni-pukh",
@@ -7840,12 +7876,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsurkfy5000c2encfg27ifq4"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal oficial FSUE Mosfilm cinema concern."
+    "sourceNote": "Canal oficial FSUE Mosfilm cinema concern.",
+    "relatedStories": [
+      {
+        "title": "Собеседование на новую работу",
+        "level": "B1"
+      }
+    ]
   },
   "video-baikal": {
     "id": "video-baikal",
@@ -8105,12 +8144,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsjur3bf000460ncvatmaxvi"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'Советские Мультфильмы. Из СССР.'"
+    "sourceNote": "Canal 'Советские Мультфильмы. Из СССР.'",
+    "relatedStories": [
+      {
+        "title": "Гуси-лебеди",
+        "level": "A2"
+      }
+    ]
   },
   "movie-malysh-i-karlson": {
     "id": "movie-malysh-i-karlson",
@@ -8788,12 +8830,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsqzwumf00000wnc792dqnvd"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'Рецепты в гостях у Вани'."
+    "sourceNote": "Canal 'Рецепты в гостях у Вани'.",
+    "relatedStories": [
+      {
+        "title": "Секрет бабушкиного пирога",
+        "level": "A1"
+      }
+    ]
   },
   "video-alfabeto-ruso": {
     "id": "video-alfabeto-ruso",
@@ -9216,12 +9261,15 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmstgnw4u0000knncbefap2jg"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'Mark & Lika'."
+    "sourceNote": "Canal 'Mark & Lika'.",
+    "relatedStories": [
+      {
+        "title": "Считаем секунды",
+        "level": "A1"
+      }
+    ]
   },
   "video-tsveta": {
     "id": "video-tsveta",
@@ -10069,13 +10117,19 @@
         ]
       }
     ],
-    "relatedStoryIds": [
-      "cmsqq25g90002clncqu5elocc",
-      "cmss477700001manct544z26w"
-    ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "Canal 'Riki STUDY', con los personajes de Смешарики."
+    "sourceNote": "Canal 'Riki STUDY', con los personajes de Смешарики.",
+    "relatedStories": [
+      {
+        "title": "Дождливый день",
+        "level": "A1"
+      },
+      {
+        "title": "Первый снег",
+        "level": "A1"
+      }
+    ]
   },
   "video-dialog-magazin-slovari": {
     "id": "video-dialog-magazin-slovari",
@@ -14080,10 +14134,13 @@
     ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "relatedStoryIds": [
-      "cmsjcjx6s0003gvncjoxsn2nu"
-    ],
-    "sourceNote": "YouTube video dbPZTjrH2mA, canal 'Советские мультфильмы - Золотая коллекция СССР' (1950, Союзмультфильм). Texto de Pushkin de dominio público, confirmado mediante subtítulos automáticos reales; se usó el fragmento inicial de la fábula del pez de oro (a partir del minuto en que empieza la historia), evitando el prólogo poético de 'Руслан и Людмила' que la misma grabación incluye al principio."
+    "sourceNote": "YouTube video dbPZTjrH2mA, canal 'Советские мультфильмы - Золотая коллекция СССР' (1950, Союзмультфильм). Texto de Pushkin de dominio público, confirmado mediante subtítulos automáticos reales; se usó el fragmento inicial de la fábula del pez de oro (a partir del minuto en que empieza la historia), evitando el prólogo poético de 'Руслан и Людмила' que la misma grabación incluye al principio.",
+    "relatedStories": [
+      {
+        "title": "Сказка о рыбаке и рыбке",
+        "level": "B1"
+      }
+    ]
   },
   "movie-noch-pered-rozhdestvom": {
     "id": "movie-noch-pered-rozhdestvom",
@@ -14176,8 +14233,11 @@
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
     "sourceNote": "YouTube video gswytJq4U0c, canal 'Советские мультфильмы - Золотая коллекция СССР' (1951, Союзмультфильм). Texto de Gógol de dominio público, confirmado mediante subtítulos automáticos reales del párrafo inicial. Contenido folclórico/navideño tradicional (brujas, diablo), sin ninguna referencia política, militar o estatal.",
-    "relatedStoryIds": [
-      "cmsqukbpu000101ncvo0fjbx1"
+    "relatedStories": [
+      {
+        "title": "Ночь перед Рождеством",
+        "level": "C1"
+      }
     ]
   },
   "movie-khameleon": {
@@ -18673,9 +18733,6 @@
     "level": "B2",
     "category": "movie",
     "youtubeVideoId": "tc_2Mi-iYFU",
-    "relatedStoryIds": [
-      "cmsjcjx6t0005gvncqmf7o0xq"
-    ],
     "lyricsOrTranscript": [
       {
         "russian": "Ванька Жуков, девятилетний мальчик, отданный три месяца тому назад в учение к сапожнику Аляхину, в ночь под Рождество не ложился спать.",
@@ -18750,7 +18807,13 @@
     ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "YouTube video tc_2Mi-iYFU, canal 'Почитаем?' (lectura íntegra, no re-narración ni resumen). Texto confirmado como el relato original de Chéjov palabra por palabra mediante subtítulos automáticos reales (ru), excepcionalmente claros. Vinculado a la historia ya existente en la biblioteca de 315 relatos, «Ванька» (id cmsjcjx6t0005gvncqmf7o0xq, nivel B2) — mismo patrón que otras adaptaciones de literatura clásica de dominio público de esta biblioteca."
+    "sourceNote": "YouTube video tc_2Mi-iYFU, canal 'Почитаем?' (lectura íntegra, no re-narración ni resumen). Texto confirmado como el relato original de Chéjov palabra por palabra mediante subtítulos automáticos reales (ru), excepcionalmente claros. Vinculado a la historia ya existente en la biblioteca de 315 relatos, «Ванька» (id cmsjcjx6t0005gvncqmf7o0xq, nivel B2) — mismo patrón que otras adaptaciones de literatura clásica de dominio público de esta biblioteca.",
+    "relatedStories": [
+      {
+        "title": "Ванька",
+        "level": "B2"
+      }
+    ]
   },
   "movie-baryshnya-krestyanka": {
     "id": "movie-baryshnya-krestyanka",
@@ -18759,9 +18822,6 @@
     "level": "C1",
     "category": "movie",
     "youtubeVideoId": "kPgmIqNA7lY",
-    "relatedStoryIds": [
-      "cmsqukbpu000001ncn151vhb2"
-    ],
     "lyricsOrTranscript": [
       {
         "russian": "В одной из отдалённых наших губерний находилось имение Ивана Петровича Берестова.",
@@ -18836,7 +18896,13 @@
     ],
     "embedStatus": "ok",
     "lastCheckedAt": "2026-08-26",
-    "sourceNote": "YouTube video kPgmIqNA7lY, canal 'Читаем Ушами' (audiolibro completo, ~46 min, no re-narración ni resumen). Texto confirmado como el original de Pushkin palabra por palabra mediante subtítulos automáticos reales (ru). Transcripción completa escaneada íntegramente en busca de contenido sensible (siguiendo la regla del batch 33 para vídeos largos) — la única mención de tipo 'пистолетного выстрела' resultó ser el modismo de época para una unidad de distancia durante una escena de caza, sin violencia real. Vinculado a la historia ya existente en la biblioteca de 315 relatos, «Барышня-крестьянка» (id cmsqukbpu000001ncn151vhb2, nivel C1)."
+    "sourceNote": "YouTube video kPgmIqNA7lY, canal 'Читаем Ушами' (audiolibro completo, ~46 min, no re-narración ni resumen). Texto confirmado como el original de Pushkin palabra por palabra mediante subtítulos automáticos reales (ru). Transcripción completa escaneada íntegramente en busca de contenido sensible (siguiendo la regla del batch 33 para vídeos largos) — la única mención de tipo 'пистолетного выстрела' resultó ser el modismo de época para una unidad de distancia durante una escena de caza, sin violencia real. Vinculado a la historia ya existente en la biblioteca de 315 relatos, «Барышня-крестьянка» (id cmsqukbpu000001ncn151vhb2, nivel C1).",
+    "relatedStories": [
+      {
+        "title": "Барышня-крестьянка",
+        "level": "C1"
+      }
+    ]
   },
   "video-particula-by": {
     "id": "video-particula-by",

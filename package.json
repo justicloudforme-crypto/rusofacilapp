@@ -35,6 +35,8 @@
     "db:backfill-audio-durations": "tsx prisma/backfill-audio-durations.ts",
     "db:backfill-reading-minutes": "tsx prisma/backfill-reading-minutes.ts",
     "db:tag-story-topics": "tsx prisma/tag-story-topics.ts",
+    "db:migrate-related-story-ids": "tsx prisma/migrate-related-story-ids-to-titles.ts",
+    "db:verify-related-story-links": "tsx prisma/verify-related-story-links.ts",
     "concat:story-audio": "tsx prisma/concat-story-audio.ts",
     "generate:story-audio": "tsx prisma/generate-story-audio.ts",
     "generate:story-audio-cast": "tsx prisma/generate-story-audio-cast.ts",

@@ -5,6 +5,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
+import { getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
 import MediaPlayer from "@/components/media/MediaPlayer";
 import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
@@ -39,6 +40,12 @@ export default async function MediaDetailPage({
   const [dict, item, tier] = await Promise.all([getDictionary(lang), getMediaById(id), getEntitlementTier()]);
   if (!dict?.media) notFound();
   if (!item) notFound();
+
+  const relatedStories = await getRelatedStoriesForMedia(item);
+  const relatedLesson = getRelatedLessonForMedia(item);
+  const relatedLessonTitle = relatedLesson
+    ? dict.courses.levels[relatedLesson.level].lessons[Number(relatedLesson.lesson) - 1]
+    : null;
 
   // Free-trial-sample items (see mediaData.json) are open to everyone, no
   // login required; everything else needs any active subscription — no
@@ -84,6 +91,52 @@ export default async function MediaDetailPage({
 
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{item.title}</h1>
       <p className="mt-2 text-foreground/70">{item.description}</p>
+
+      {(relatedStories.length > 0 || relatedLessonTitle) && (
+        <section className="mt-6 flex flex-col gap-4 sm:flex-row sm:gap-8">
+          {relatedStories.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+                {dict.crossLinks.topicHeading}
+              </h2>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {relatedStories.map((story) => (
+                  <li key={story.id}>
+                    <Link
+                      href={`/${lang}/stories/${story.id}`}
+                      className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                    >
+                      <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
+                        {dict.crossLinks.storyLabel}
+                      </span>
+                      {story.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {relatedLessonTitle && relatedLesson && (
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+                {relatedLesson.kind === "curriculum"
+                  ? dict.crossLinks.topicHeading
+                  : `${dict.crossLinks.levelHeadingPrefix} ${relatedLesson.level.toUpperCase()}`}
+              </h2>
+              <Link
+                href={`/${lang}/courses/${relatedLesson.level}/${relatedLesson.lesson}`}
+                className="tap mt-2 block font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+              >
+                <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
+                  {dict.crossLinks.lessonLabel}
+                </span>
+                {relatedLessonTitle}
+              </Link>
+            </div>
+          )}
+        </section>
+      )}
 
       {entitled ? (
         <>
