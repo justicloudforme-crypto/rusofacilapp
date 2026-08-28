@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
@@ -74,7 +75,14 @@ export default async function AlfabetoCirilicoPage({
         <strong>Х</strong> es una &quot;j&quot; aspirada. El resto —{" "}
         <strong>Б, Г, Д, Ж, З, Л, П, Ф, Ц, Ч, Ш, Щ, Э, Ю, Я</strong> y algunas más— no existen en
         el alfabeto latino y hay que aprenderlas desde cero. Esta sopa de letras usa las 22
-        palabras de la lista para que las veas en contexto real, no como una tabla suelta.
+        palabras de la lista para que las veas en contexto real, no como una tabla suelta.{" "}
+        <Link
+          href="/es/gramatica/alfabeto-ruso"
+          className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+        >
+          La guía completa del alfabeto, grupo por grupo
+        </Link>{" "}
+        desarrolla esta misma división con ejemplos de cada letra.
       </p>
 
       <h2 className="mt-8 text-lg font-medium">La letra que falta en el juego: ъ</h2>
