@@ -71,6 +71,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Russian-interface copy would be the same Spanish text twice.
     "/gramatica",
     "/gramatica/genero-sustantivos-ruso",
+    "/gramatica/plural-sustantivos-ruso",
+    "/gramatica/verbos-reflexivos-ruso",
   ];
 
   const entries: MetadataRoute.Sitemap = [];

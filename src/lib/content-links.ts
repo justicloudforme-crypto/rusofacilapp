@@ -270,6 +270,21 @@ const GRAMMAR_GUIDE_FOR_LESSON: Record<string, GrammarGuideRef> = {
     title: "El género de los sustantivos en ruso",
     note: "El pasado ruso concuerda en género — esta guía explica cómo se reconoce el género de una palabra.",
   },
+  "a1-22": {
+    href: "/es/gramatica/plural-sustantivos-ruso",
+    title: "El plural de los sustantivos en ruso",
+    note: "Esta lección cuenta cosas, y ahí el sustantivo deja de usar el plural normal — la guía explica por qué.",
+  },
+  "b1-21": {
+    href: "/es/gramatica/verbos-reflexivos-ruso",
+    title: "Los verbos en -ся en ruso",
+    note: "Los verbos en -ся forman el gerundio de otra manera — la guía explica qué son y qué significan.",
+  },
+  "b2-22": {
+    href: "/es/gramatica/verbos-reflexivos-ruso",
+    title: "Los verbos en -ся en ruso",
+    note: "El pasivo con -ся es una de las cuatro funciones del postfijo — la guía repasa las cuatro.",
+  },
 };
 
 /** The grammar guide a lesson should point at, if any. Returns null for
