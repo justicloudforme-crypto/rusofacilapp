@@ -18,6 +18,15 @@
  *
  * Usage (against production — same Turso credentials src/lib/db.ts uses):
  *   TURSO_DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npm run generate:word-games
+ *
+ * Scoping and safety flags:
+ *   --dry-run    report every row that WOULD be written, write nothing
+ *   --only=free  restrict the run to the 80 free puzzles (A1-B2, rungs
+ *                1-10, both types) — the only ones this project themes
+ *
+ * Against production, always --dry-run first, then --only=. A full
+ * unscoped production run rewrites all ~3000 rows and is not what a
+ * content change to the free tier needs.
  */
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -28,6 +37,16 @@ import { buildCrossword } from "../src/lib/word-games/crossword";
 import { buildWordSearchWithGrowth } from "../src/lib/word-games/word-search";
 import { buildSnakeWordSearchWithGrowth } from "../src/lib/word-games/snake-word-search";
 import { buildClue } from "../src/lib/word-games/clue";
+import { categoryForTopic, topicForPuzzle } from "../src/lib/word-games/topics";
+import { WORD_GAME_FREE_RUNGS_PER_LEVEL, isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
+
+const DRY_RUN = process.argv.includes("--dry-run");
+const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length) ?? null;
+if (ONLY !== null && ONLY !== "free") {
+  console.error(`Unknown --only=${ONLY}. Supported: --only=free`);
+  process.exit(1);
+}
+const FREE_ONLY = ONLY === "free";
 
 const adapter = new PrismaLibSql({
   url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
@@ -303,13 +322,24 @@ function computeLevelTargets(): Record<Level, LevelTarget> {
 }
 const LEVEL_TARGETS = computeLevelTargets();
 
+/**
+ * Writes one puzzle.
+ *
+ * Always an UPDATE of the existing row when there is one — never a delete
+ * and recreate. WordGameProgress.puzzleId is a foreign key with
+ * `onDelete: Cascade` and `@@unique([userId, puzzleId])`, so recreating a
+ * row to change its words would silently erase every player's completion
+ * of that puzzle. The row's id, and therefore all progress attached to it,
+ * survives a regeneration; only `topic`, `gridData` and `words` change.
+ */
 async function upsertPuzzle(
   type: "WORD_SEARCH" | "CROSSWORD",
   level: string,
   sequence: number,
   curved: boolean,
+  topic: string | null,
   built: { grid: WordGameGrid; words: WordPlacement[] },
-  counters: { created: number; unchanged: number }
+  counters: { created: number; unchanged: number; wouldWrite: string[] }
 ): Promise<void> {
   const gridData = JSON.stringify(built.grid);
   const words = JSON.stringify(built.words);
@@ -317,15 +347,32 @@ async function upsertPuzzle(
   const existing = await db.wordGamePuzzle.findUnique({
     where: { type_level_sequence: { type, level, sequence } },
   });
-  if (existing && existing.curved === curved && existing.gridData === gridData && existing.words === words) {
+  if (
+    existing &&
+    existing.curved === curved &&
+    existing.topic === topic &&
+    existing.gridData === gridData &&
+    existing.words === words
+  ) {
     counters.unchanged++;
+    return;
+  }
+
+  if (DRY_RUN) {
+    counters.wouldWrite.push(
+      `${type}/${level}/${sequence}` +
+        (existing
+          ? ` (update, id ${existing.id}, topic ${existing.topic ?? "—"} -> ${topic ?? "—"})`
+          : " (create)")
+    );
+    counters.created++;
     return;
   }
 
   await db.wordGamePuzzle.upsert({
     where: { type_level_sequence: { type, level, sequence } },
-    create: { type, level, sequence, curved, gridData, words },
-    update: { curved, gridData, words },
+    create: { type, level, sequence, curved, topic, gridData, words },
+    update: { curved, topic, gridData, words },
   });
   counters.created++;
 }
@@ -368,14 +415,16 @@ async function cleanupStaleSequences(): Promise<number> {
 }
 
 async function main() {
-  const counters = { created: 0, unchanged: 0 };
+  const counters = { created: 0, unchanged: 0, wouldWrite: [] as string[] };
+  if (DRY_RUN) console.log("--dry-run: nothing will be written.\n");
+  if (FREE_ONLY) console.log(`--only=free: restricted to the ${WORD_GAME_FREE_RUNGS_PER_LEVEL} free rungs of each ladder, A1-B2, both types.\n`);
   const problems: string[] = [];
 
   for (const level of LEVELS) {
     const target = LEVEL_TARGETS[level];
     const cards = await db.flashcardCard.findMany({
       where: { level },
-      select: { russian: true, translationEs: true, exampleEs: true },
+      select: { russian: true, translationEs: true, exampleEs: true, category: true },
     });
     // Real content gap found by direct measurement (not assumption): C1's
     // own word bank has only 3 eligible 4-letter words and ZERO 3-letter
@@ -429,6 +478,31 @@ async function main() {
       return pool;
     }
 
+    /**
+     * The pool for a THEMED rung: one category, and no supplementation
+     * from a lower level.
+     *
+     * Supplementation exists to rescue a thin length band by borrowing
+     * words from the level below. Borrowing here would quietly break the
+     * promise the title makes — a "sopa de letras de comida, nivel B1"
+     * padded with A2 words is no longer a B1 puzzle. A themed rung that
+     * cannot fill itself from its own category at its own level is not
+     * eligible in the first place; topics.ts decides that by building the
+     * puzzle for real, so reaching this function with too few words means
+     * the word bank has changed since the table was frozen, and the run
+     * falls back to the mixed pool rather than shipping a short puzzle.
+     */
+    function topicPool(
+      topic: string,
+      maxLen: number,
+      clueFn: (card: { translationEs: string; exampleEs: string }, word: string) => string | null,
+      minLen = 3
+    ) {
+      const category = categoryForTopic(topic);
+      if (!category) return [];
+      return candidateWords(cards.filter((c) => c.category === category), maxLen, clueFn, minLen);
+    }
+
     // Tracks how many times each word has already been placed across this
     // level's rungs so far — shared between the straight and star tiers
     // (both draw from the same word-search word bank) but a separate map
@@ -447,6 +521,7 @@ async function main() {
 
     for (let rungIndex = 0; rungIndex < target.straight; rungIndex++) {
       const sequence = rungIndex + 1;
+      if (FREE_ONLY && !isFreeWordGamePuzzle({ type: "WORD_SEARCH", level, sequence })) continue;
       const rung = WORD_SEARCH_RUNGS[rungIndex];
       // Capped at size-2 (not size) so a word can never span the grid's
       // full row/column/diagonal on its own — a word exactly as long as
@@ -464,24 +539,67 @@ async function main() {
         continue;
       }
 
-      const built = buildWordSearchWithGrowth(pool, rung.size, rung.wordCount, `WORD_SEARCH-${level}-${sequence}`, wordSearchUsage);
-      if (!built) {
+      const mixed = buildWordSearchWithGrowth(pool, rung.size, rung.wordCount, `WORD_SEARCH-${level}-${sequence}`, wordSearchUsage);
+      if (!mixed) {
         problems.push(`WORD_SEARCH ${level} seq ${sequence}: generator could not place enough words, skipped`);
         continue;
       }
+
+      // The mixed build always happens, and it is always what feeds the
+      // usage map — even when the rung ships a themed puzzle instead.
+      //
+      // This is what keeps the ~5900 paid puzzles byte-identical. The
+      // usage map is shared across a level's whole ladder so later rungs
+      // can avoid words the earlier ones already used; if the themed
+      // rungs 1-10 wrote their own (much narrower) word sets into it,
+      // every paid rung from 11 up would draw a different selection and a
+      // full rerun would silently rewrite thousands of rows nobody asked
+      // to change. Feeding the map the words rung 1-10 WOULD have used
+      // leaves the paid ladder exactly where it was. Verified by
+      // generating the whole ladder before and after and diffing.
+      recordUsage(wordSearchUsage, mixed.words);
+
+      const topic = topicForPuzzle("WORD_SEARCH", level, sequence);
+      let built = mixed;
+      let appliedTopic: string | null = null;
+      if (topic) {
+        const themedPool = topicPool(topic, wordSearchMaxLen, wordSearchClue);
+        // A themed rung uses its own empty usage map: each category is
+        // used at most once per (type, level), so there is no earlier rung
+        // of the same topic to remember, and inheriting the mixed map's
+        // history would make the themed output depend on a pipeline it has
+        // nothing to do with.
+        const themed =
+          themedPool.length >= rung.wordCount
+            ? buildWordSearchWithGrowth(themedPool, rung.size, rung.wordCount, `WORD_SEARCH-${level}-${sequence}`, new Map())
+            : null;
+        if (themed && themed.words.length >= rung.wordCount) {
+          built = themed;
+          appliedTopic = topic;
+        } else {
+          problems.push(
+            `WORD_SEARCH ${level} seq ${sequence}: topic "${topic}" no longer fills this rung (pool ${themedPool.length}, placed ${themed?.words.length ?? 0}/${rung.wordCount}) — shipped the mixed puzzle instead`
+          );
+        }
+      }
+
       if (built.words.length < rung.wordCount) {
         problems.push(
           `WORD_SEARCH ${level} seq ${sequence}: only fit ${built.words.length}/${rung.wordCount} target words even after growing to ${built.grid.size}x${built.grid.size} (word list itself is still fully consistent with the grid)`
         );
       }
 
-      recordUsage(wordSearchUsage, built.words);
-      await upsertPuzzle("WORD_SEARCH", level, sequence, false, built, counters);
-      console.log(`  [WORD_SEARCH/${level}/${sequence}] ${built.words.length} words in a ${built.grid.size}x${built.grid.size} grid`);
+      await upsertPuzzle("WORD_SEARCH", level, sequence, false, appliedTopic, built, counters);
+      console.log(
+        `  [WORD_SEARCH/${level}/${sequence}] ${built.words.length} words in a ${built.grid.size}x${built.grid.size} grid${appliedTopic ? ` · ${appliedTopic}` : ""}`
+      );
     }
 
     for (let starIndex = 0; starIndex < target.star; starIndex++) {
       const sequence = target.straight + starIndex + 1;
+      // The star tier is always paid (its sequences start well past the
+      // free rungs), so --only=free skips it entirely.
+      if (FREE_ONLY) continue;
       const rung = WORD_SEARCH_STAR_RUNGS[starIndex];
       // Curved words need real segments to bend through — a word shorter
       // than 5 letters is too cramped to produce an interesting curve
@@ -513,12 +631,13 @@ async function main() {
       }
 
       recordUsage(wordSearchUsage, built.words);
-      await upsertPuzzle("WORD_SEARCH", level, sequence, true, built, counters);
+      await upsertPuzzle("WORD_SEARCH", level, sequence, true, null, built, counters);
       console.log(`  [WORD_SEARCH★/${level}/${sequence}] ${built.words.length} curved words in a ${built.grid.size}x${built.grid.size} grid`);
     }
 
     for (let rungIndex = 0; rungIndex < target.crossword; rungIndex++) {
       const sequence = rungIndex + 1;
+      if (FREE_ONLY && !isFreeWordGamePuzzle({ type: "CROSSWORD", level, sequence })) continue;
       const rung = CROSSWORD_RUNGS[rungIndex];
       const rng = makeRng(`CROSSWORD-${level}-${sequence}`);
       const pool = poolWithSupplement(rung.maxLen, crosswordClueForLevel, rung.wordCount);
@@ -529,24 +648,58 @@ async function main() {
       }
 
       const minWords = Math.min(rung.wordCount, 6);
-      const built = buildCrossword(pool, rung.wordCount, minWords, rng, 6, crosswordUsage);
-      if (!built) {
+      const mixed = buildCrossword(pool, rung.wordCount, minWords, rng, 6, crosswordUsage);
+      if (!mixed) {
         problems.push(`CROSSWORD ${level} seq ${sequence}: generator could not reach ${minWords} intersecting words, skipped`);
         continue;
       }
 
-      recordUsage(crosswordUsage, built.words);
-      await upsertPuzzle("CROSSWORD", level, sequence, false, built, counters);
+      // Same rule as WORD_SEARCH above: the mixed build is what feeds the
+      // usage map, so the paid rungs draw exactly what they drew before.
+      recordUsage(crosswordUsage, mixed.words);
+
+      const topic = topicForPuzzle("CROSSWORD", level, sequence);
+      let built = mixed;
+      let appliedTopic: string | null = null;
+      if (topic) {
+        const themedPool = topicPool(topic, rung.maxLen, crosswordClueForLevel);
+        const themed =
+          themedPool.length >= rung.wordCount
+            ? buildCrossword(themedPool, rung.wordCount, minWords, makeRng(`CROSSWORD-${level}-${sequence}`), 6, new Map())
+            : null;
+        if (themed && themed.words.length >= rung.wordCount) {
+          built = themed;
+          appliedTopic = topic;
+        } else {
+          problems.push(
+            `CROSSWORD ${level} seq ${sequence}: topic "${topic}" no longer fills this rung (pool ${themedPool.length}, placed ${themed?.words.length ?? 0}/${rung.wordCount}) — shipped the mixed puzzle instead`
+          );
+        }
+      }
+
+      await upsertPuzzle("CROSSWORD", level, sequence, false, appliedTopic, built, counters);
       console.log(
-        `  [CROSSWORD/${level}/${sequence}] ${built.words.length} words in a ${built.grid.grid.length}x${built.grid.grid[0].length} grid`
+        `  [CROSSWORD/${level}/${sequence}] ${built.words.length} words in a ${built.grid.grid.length}x${built.grid.grid[0].length} grid${appliedTopic ? ` · ${appliedTopic}` : ""}`
       );
     }
   }
 
-  const deleted = await cleanupStaleSequences();
-  if (deleted > 0) console.log(`\nDeleted ${deleted} stale puzzle row(s) past the current rung tables' range.`);
+  // Never in a scoped or dry run: the cleanup pass reasons about the FULL
+  // ladder, and deleting "everything past the last sequence I wrote" while
+  // only the first ten were generated would wipe every paid puzzle.
+  if (FREE_ONLY || DRY_RUN) {
+    console.log("\nSkipping the stale-sequence cleanup (only valid for a full, non-dry run).");
+  } else {
+    const deleted = await cleanupStaleSequences();
+    if (deleted > 0) console.log(`\nDeleted ${deleted} stale puzzle row(s) past the current rung tables' range.`);
+  }
 
-  console.log(`\n${counters.created} puzzle(s) written, ${counters.unchanged} already up to date.`);
+  if (DRY_RUN) {
+    console.log(`\n${counters.created} puzzle(s) WOULD be written, ${counters.unchanged} already up to date. Nothing was written.`);
+    for (const w of counters.wouldWrite) console.log(`  - ${w}`);
+  } else {
+    console.log(`\n${counters.created} puzzle(s) written, ${counters.unchanged} already up to date.`);
+  }
   if (problems.length > 0) {
     console.log(`\n${problems.length} rung(s) skipped:`);
     for (const p of problems) console.log(`  - ${p}`);

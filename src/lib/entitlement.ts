@@ -2,6 +2,11 @@ import "server-only";
 import { getCurrentUser } from "./auth";
 import { isStaff } from "./roles";
 import { getLatestSubscription, isSubscriptionActive, userHasActiveSubscription } from "./subscription";
+// The free word-game rule lives outside this module because robots.ts and
+// the offline generator need it and cannot import a `server-only` file.
+// Re-exported below so every existing `from "@/lib/entitlement"` import
+// keeps working and there is still exactly one definition.
+import { WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./word-games/free-tier";
 
 /**
  * Three-tier content model (replaces the old binary entitled/not-entitled
@@ -133,7 +138,7 @@ export const FREE_TRIAL_LIMITS = {
   // isFreeWordGamePuzzle, which applies this per (type, level) with no
   // per-URL exception list — every puzzle at sequence <= this number,
   // any level but C1, is free.
-  wordGamePuzzlesPerLevel: 10,
+  wordGamePuzzlesPerLevel: WORD_GAME_FREE_RUNGS_PER_LEVEL,
 } as const;
 
 /**
@@ -175,10 +180,4 @@ export async function isEntitled(): Promise<boolean> {
  * could otherwise pass directly to /api/word-games/check|hint|complete to
  * solve a locked puzzle without ever fetching it through the gated GET route.
  */
-export function isFreeWordGamePuzzle(puzzle: { type: string; level: string; sequence: number }): boolean {
-  return (
-    (puzzle.type === "WORD_SEARCH" || puzzle.type === "CROSSWORD") &&
-    puzzle.level !== "C1" &&
-    puzzle.sequence <= FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel
-  );
-}
+export { isFreeWordGamePuzzle } from "./word-games/free-tier";

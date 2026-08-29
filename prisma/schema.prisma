@@ -627,6 +627,16 @@ model WordGamePuzzle {
   // puzzle-generation script that sets `curved` without also setting this
   // still degrades safely rather than accidentally unlocking a ★ puzzle.
   premiumOnly Boolean            @default(false)
+  // Vocabulary-category slug this puzzle's words were drawn from
+  // ("comida", "ropa" — the /es/vocabulary/<slug> segment), or null when
+  // the puzzle draws from the level-wide mixed pool. Only the 80 free
+  // puzzles are ever themed; see src/lib/word-games/topics.ts for the
+  // frozen rung -> category table and how it was derived. Stored on the
+  // row rather than recomputed at request time so a page can be titled
+  // from what its words ACTUALLY are: if a future rerun leaves a rung
+  // mixed because its category no longer has enough words, the title
+  // follows the data instead of a stale lookup table.
+  topic    String?
   // JSON-encoded { size: number, grid: string[][] } — the finished letter
   // grid, ready to render as-is.
   gridData String

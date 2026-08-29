@@ -7,6 +7,7 @@ import {
   VOCABULARY_CATEGORY_PAGES,
   getVocabularyCategoryPage,
 } from "@/lib/vocabulary-categories";
+import { puzzlesForTopic } from "@/lib/word-games/topics";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
 
@@ -63,6 +64,12 @@ export default async function VocabularyCategoryPage({
   })).filter((group) => group.cards.length > 0);
 
   const url = `${SITE_URL}/es/vocabulary/${page.slug}`;
+  // The free puzzles built entirely from this category's words (02.09.2026
+  // — see word-games/topics.ts). Read from the frozen table rather than by
+  // querying WordGamePuzzle: the table is the same source the generator
+  // uses, so the two sides of this link cannot disagree, and this page
+  // avoids a second DB round trip. Empty for a category no rung could use.
+  const puzzles = puzzlesForTopic(page.slug);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -165,6 +172,37 @@ export default async function VocabularyCategoryPage({
             </Link>
             <span className="text-sm text-foreground/60"> · las 23 categorías, con audio</span>
           </li>
+          {puzzles.length > 0 && (
+            <li>
+              <Link
+                href={`/es/word-games/${puzzles[0].type}/${puzzles[0].level}/${puzzles[0].sequence}`}
+                className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+              >
+                Jugar con estas palabras
+              </Link>
+              <span className="text-sm text-foreground/60">
+                {" "}
+                · {puzzles.length === 1 ? "un puzle gratis hecho" : `${puzzles.length} puzles gratis hechos`} solo con
+                vocabulario de este tema
+                {puzzles.length > 1 && (
+                  <>
+                    :{" "}
+                    {puzzles.map((puzzle, index) => (
+                      <span key={`${puzzle.type}-${puzzle.level}-${puzzle.sequence}`}>
+                        {index > 0 && ", "}
+                        <Link
+                          href={`/es/word-games/${puzzle.type}/${puzzle.level}/${puzzle.sequence}`}
+                          className="tap underline-offset-2 hover:underline active:underline"
+                        >
+                          {puzzle.type === "CROSSWORD" ? "crucigrama" : "sopa de letras"} {puzzle.level}
+                        </Link>
+                      </span>
+                    ))}
+                  </>
+                )}
+              </span>
+            </li>
+          )}
           <li>
             <Link
               href="/es/glossary"
