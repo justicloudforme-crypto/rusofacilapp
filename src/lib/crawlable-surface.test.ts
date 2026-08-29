@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { TOPIC_LANDING_PATHS } from "./word-games/topic-landings";
 
 /**
  * The lesson of 30-31.08.2026, as a test: **a sitemap crawl is not a site
@@ -58,6 +59,13 @@ function sitemapStaticPaths(): string[] {
     if (!block) throw new Error(`could not find ${name} in sitemap.ts`);
     for (const m of block[1].matchAll(/"([^"]*)"/g)) out.push(m[1]);
   }
+  // The six themed landings are spread in from a table rather than typed
+  // as literals, so reading the file as text cannot see them — this test
+  // caught them as orphans the moment they were added, which is the check
+  // working, not failing. The same constant is imported here so the two
+  // sides cannot disagree; that sitemap.ts really spreads it is asserted
+  // separately below, so deleting the spread still fails this file.
+  out.push(...TOPIC_LANDING_PATHS);
   return out;
 }
 
@@ -148,6 +156,11 @@ describe("every crawlable static route is accounted for", () => {
     expect(inSitemap.has("/pricing")).toBe(true);
     expect(disallows).toContain("/admin");
     expect(allows).toContain("/");
+    // The table-driven paths are only in the sitemap because of this
+    // spread; without asserting it, importing the constant above would
+    // make the orphan check pass on a sitemap that never lists them.
+    expect(sitemapSource).toContain("...TOPIC_LANDING_PATHS");
+    expect(TOPIC_LANDING_PATHS.length).toBe(6);
   });
 
   it("leaves no static route indexable, unlisted and unmanaged", () => {

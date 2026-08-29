@@ -655,6 +655,19 @@ model WordGamePuzzle {
   progress WordGameProgress[]
 
   createdAt DateTime @default(now())
+  // When this row was last written. Feeds `lastmod` in sitemap.xml, which
+  // is this site's only mass-recrawl signal: Search Console's manual
+  // "request indexing" is capped at ~10 URLs a day, so the 138 URLs the
+  // 02.09.2026 regeneration changed could never be submitted by hand.
+  //
+  // Optional, not required, on purpose. It is added to the production
+  // database by prisma/ensure-schema-sync.ts, which can only ever ADD a
+  // nullable column — a required DateTime would be null on all 3000
+  // existing rows and Prisma would fail reading them. Rows with no date
+  // are emitted without lastmod rather than with a fallback: an invented
+  // date on an unchanged URL teaches a crawler to distrust every lastmod
+  // in the file.
+  updatedAt DateTime? @updatedAt
 
   @@unique([type, level, sequence])
   @@index([type, level])

@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { getAllMedia } from "@/lib/media/data";
 import { SITE_URL } from "@/lib/site";
 import { VOCABULARY_CATEGORY_PAGES } from "@/lib/vocabulary-categories";
+import { TOPIC_LANDING_PATHS } from "@/lib/word-games/topic-landings";
 
 // Next.js Metadata Route convention — served automatically at /sitemap.xml,
 // same pattern as manifest.ts/robots.ts. Lives outside `[lang]` so it isn't
@@ -87,6 +88,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/gramatica/genero-sustantivos-ruso",
     "/gramatica/plural-sustantivos-ruso",
     "/gramatica/verbos-reflexivos-ruso",
+    // The six themed sopa-de-letras landings (02.09.2026). Taken from the
+    // table rather than retyped, so adding a seventh cannot leave it out
+    // of the map — the crawlable-surface test enumerates the same routes
+    // from the filesystem and would fail if the two ever disagreed.
+    ...TOPIC_LANDING_PATHS,
   ];
 
   const entries: MetadataRoute.Sitemap = [];
@@ -110,11 +116,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${SITE_URL}/es/vocabulary/${page.slug}`, changeFrequency: "weekly" });
   }
 
+  // `lastModified` on the puzzle URLs, and only where it is a REAL date.
+  //
+  // Why this matters here more than anywhere else: on 02.09.2026 the 80
+  // free puzzles were regenerated and 138 of their URLs changed title and
+  // content. Search Console's manual "request indexing" is capped at ~10
+  // URLs a day, so a 138-URL queue is not a mechanism. The sitemap is —
+  // but only if it says when each URL actually changed. Before this
+  // change the file emitted no lastmod at all, so nothing told a crawler
+  // that anything had moved.
+  //
+  // The date comes from the row's own `updatedAt`, which Prisma stamps on
+  // every write (see schema.prisma). Rows written before that column
+  // existed have no date and are emitted WITHOUT lastmod rather than with
+  // a fallback: a made-up date on an unchanged URL is worse than silence,
+  // because a sitemap whose lastmod is not trustworthy gets its lastmod
+  // ignored wholesale.
+  const puzzleRows = await db.wordGamePuzzle.findMany({
+    where: { level: { not: "C1" }, sequence: { lte: FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel } },
+    select: { type: true, level: true, sequence: true, updatedAt: true },
+  });
+  const puzzleUpdatedAt = new Map(
+    puzzleRows.map((r) => [`${r.type}/${r.level}/${r.sequence}`, r.updatedAt ?? null]),
+  );
+
   for (const level of flashcardLevels.filter((l) => l !== "C1")) {
     for (const type of ["WORD_SEARCH", "CROSSWORD"] as const) {
       for (let sequence = 1; sequence <= FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel; sequence++) {
+        const updatedAt = puzzleUpdatedAt.get(`${type}/${level}/${sequence}`) ?? null;
         for (const lang of locales) {
-          entries.push({ url: `${SITE_URL}/${lang}/word-games/${type}/${level}/${sequence}`, changeFrequency: "yearly" });
+          entries.push({
+            url: `${SITE_URL}/${lang}/word-games/${type}/${level}/${sequence}`,
+            changeFrequency: "yearly",
+            ...(updatedAt ? { lastModified: updatedAt } : {}),
+          });
         }
       }
     }
@@ -134,6 +169,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // Stories deliberately get NO lastmod until 25.09.2026.
+  //
+  // Story has carried a real `updatedAt` all along and the sitemap could
+  // use it — but 65 stories are the frozen half of a live experiment (see
+  // PROGRESS.md section 6), and lastmod is a recrawl signal. Handing all
+  // of them a fresh one mid-experiment changes how often the measured
+  // pages are fetched, which is exactly the kind of side effect "do not
+  // touch the frozen pages with anything" exists to prevent. It would hit
+  // pilot and control alike, so it probably would not bias the result —
+  // "probably" is not a good enough reason to perturb a measurement that
+  // has three weeks left to run. Revisit when the freeze lifts.
   const stories = await db.story.findMany({ select: { id: true } });
   for (const story of stories) {
     for (const lang of locales) {
@@ -152,10 +198,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // deliberately not a hardcoded count, so this always matches whatever's
   // actually in the DB (which is also what generateStaticParams pre-renders
   // from at build time) rather than drifting from it.
-  const glossaryTerms = await db.glossaryTerm.findMany({ select: { slug: true } });
+  // Glossary terms are not part of the experiment, carry a real
+  // `updatedAt`, and are edited one at a time — so their dates differ per
+  // row and are a genuine signal rather than one batch timestamp.
+  const glossaryTerms = await db.glossaryTerm.findMany({ select: { slug: true, updatedAt: true } });
   for (const term of glossaryTerms) {
     for (const lang of locales) {
-      entries.push({ url: `${SITE_URL}/${lang}/glossary/${term.slug}`, changeFrequency: "yearly" });
+      entries.push({
+        url: `${SITE_URL}/${lang}/glossary/${term.slug}`,
+        changeFrequency: "yearly",
+        lastModified: term.updatedAt,
+      });
     }
   }
 
