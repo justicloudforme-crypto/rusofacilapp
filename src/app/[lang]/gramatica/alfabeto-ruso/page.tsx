@@ -37,7 +37,7 @@ export async function generateMetadata({
   return {
     title: "El alfabeto ruso para hispanohablantes: las 33 letras por dificultad",
     description:
-      "No es la tabla en orden alfabético: son las 33 letras agrupadas por lo que cuesta reconocerlas — las cinco que ya sabes leer, los seis falsos amigos que se leen mal (В, Н, Р, С, У, Х) y las nuevas de verdad.",
+      "Las 33 letras agrupadas por lo que cuesta reconocerlas: las cinco que ya sabes leer, los seis falsos amigos (В, Н, Р, С, У, Х) y las nuevas de verdad.",
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },

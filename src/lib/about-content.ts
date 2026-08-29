@@ -37,7 +37,7 @@ export const ABOUT_CONTENT: Record<Locale, AboutContent> = {
   es: {
     title: "Sobre RusoFácilapp",
     metaDescription:
-      "RusoFácilapp es un sitio web (no una app de tienda) para aprender ruso desde cero si hablas español: quién lo hace, para quién es y qué incluye cada nivel, de A1 a B2.",
+      "RusoFácilapp es un sitio web para aprender ruso desde cero si hablas español: quién lo hace, para quién es y qué incluye cada nivel, de A1 a B2.",
     intro:
       "RusoFácilapp (rusofacilapp.com) es una plataforma web para aprender ruso pensada específicamente para hispanohablantes. No es una aplicación de App Store o Google Play — es un sitio al que entras directamente desde el navegador, en el celular o la computadora, sin instalar nada.",
     sections: [
@@ -71,7 +71,7 @@ export const ABOUT_CONTENT: Record<Locale, AboutContent> = {
   ru: {
     title: "О проекте RusoFácilapp",
     metaDescription:
-      "RusoFácilapp — сайт (не приложение из магазина) для изучения русского языка испаноговорящими: кто его делает, для кого он и что входит в каждый уровень, от A1 до B2.",
+      "RusoFácilapp — сайт для изучения русского языка испаноговорящими: кто его делает, для кого он и что входит в каждый уровень, от A1 до B2.",
     intro:
       "RusoFácilapp (rusofacilapp.com) — веб-платформа для изучения русского языка, созданная специально для испаноговорящих. Это не приложение из App Store или Google Play — сайт открывается прямо в браузере, на телефоне или компьютере, без установки.",
     sections: [
