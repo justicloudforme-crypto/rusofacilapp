@@ -87,6 +87,18 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["what should the next round do", "### 7.22."],
   ["what would be premature to build next", "три из четырёх крупных направлений упираются в календарь"],
   ["why did local data disagree with production on dates", "Хвост этой же ошибки"],
+  // Added 29.08.2026, the round that got read-only Turso credentials and
+  // closed the column audit directly instead of by inference.
+  ["are any columns missing on production", "**недостающих колонок на проде** | **0**"],
+  ["how was that proven, and with what control", "### 7.23."],
+  ["can running the test suite touch production", "гейтом на точку входа"],
+  ["which database reads may fail without killing a page", "### 7.24."],
+  ["which reads must keep failing loudly, and why", "MUST_FAIL_LOUDLY"],
+  ["why is the story insights block left alone", "измеряемая\n  переменная"],
+  ["where does the robots.txt matcher live now", "src/lib/robots-matcher.ts"],
+  ["how many URLs may a crawler actually fetch", "**итого разрешённое множество** | **1904**"],
+  ["do local and production dates agree", "### 7.26."],
+  ["has the glossary seed been run against production", "Прогон сида глоссария против прода НЕ ВЫПОЛНЕН"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {
