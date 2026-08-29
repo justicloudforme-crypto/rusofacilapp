@@ -44,9 +44,9 @@ describe("escapeRegExp", () => {
     // backslash may only precede a character the spec lists, `-` is not one
     // of them outside a class, and `new RegExp` throws at CONSTRUCTION.
     // GlossaryText builds one alternation over all 119 glossary terms with
-    // flags "giu"; three of them contain a hyphen, so all 240 lesson pages
-    // in both locales rendered "Something went wrong" while still answering
-    // HTTP 200 with complete HTML.
+    // flags "giu"; three of them contain a hyphen, so all 120 lessons in
+    // both locales — 240 URLs — rendered "Something went wrong" while still
+    // answering HTTP 200 with complete HTML.
     expect(escapeRegExp("A-F")).toBe("A\\x2dF");
     expect(escapeRegExp("A-F")).not.toContain("\\-");
   });

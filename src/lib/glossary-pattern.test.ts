@@ -11,9 +11,9 @@ import { escapeRegExp } from "./regex";
  * term, with flags "giu". Three of the 119 live terms contain a hyphen, and
  * escapeRegExp emitted `\-`, which the `u` flag rejects as an invalid
  * escape. `new RegExp` therefore threw at construction, during render, in a
- * client component with no error boundary above it — so all 240 lesson
- * pages in both locales showed nothing but "Something went wrong", while
- * every one of them still answered HTTP 200 with complete, correct HTML.
+ * client component with no error boundary above it — so all 120 lessons
+ * in both locales (240 URLs) showed nothing but "Something went wrong",
+ * while every one still answered HTTP 200 with complete, correct HTML.
  *
  * regex.test.ts now covers escapeRegExp itself. This file covers the other
  * half: the terms are editorial content, added by hand and by seed script,

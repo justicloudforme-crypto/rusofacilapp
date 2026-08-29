@@ -129,6 +129,18 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["are there users in the local dev.db", "**333 пользователя**"],
   ["was the entry-point gate fully verified", "по всем пяти"],
   ["can a test reach production through DATABASE_URL", "0 соединений"],
+  // Added 29.08.2026, after the fix was confirmed on production.
+  ["how long was the site broken for", "СКОЛЬКО ЭТО ДЛИЛОСЬ"],
+  ["were search engines affected", "Google исполняет JavaScript"],
+  ["is the fix confirmed on production, not just locally", "подтверждена на живом проде"],
+  ["how many lessons are there really", "Уроков 120, URL 240"],
+  ["does the service worker serve a pre-deploy build", "пред-деплойную"],
+  ["which cache actually held the stale page", "все документы падают в общий `others`"],
+  ["what runs before a merge", "check:rendered:local"],
+  ["is the freeze still intact", "Заморозка цела"],
+  ["which pages change with user progress", "Структурно** различаются"],
+  ["why is the ru glossary in Spanish", "остался испанской копией"],
+  ["do the landing pages need an h2", "ровно шесть тематических лендингов"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {

@@ -34,9 +34,9 @@
  * hyphen — "oración indefinido-personal", "verbo reflexivo (con -ся)",
  * "«-то» frente a «-нибудь»". GlossaryText builds ONE alternation over all
  * 119 with flags "giu", so any one of them poisoned the whole pattern, and
- * with it every page that auto-links glossary terms: all 240 lesson pages
- * in both locales rendered nothing but "Something went wrong". Every one of
- * them answered HTTP 200 with complete, correct HTML the entire time — the
+ * with it every page that auto-links glossary terms: all 120 lessons in
+ * both locales, 240 URLs, rendered nothing but "Something went wrong".
+ * Every one of them answered HTTP 200 with complete, correct HTML — the
  * failure was in the browser, after hydration, which is why an anonymous
  * crawl of 1908 URLs reported them all healthy.
  *
