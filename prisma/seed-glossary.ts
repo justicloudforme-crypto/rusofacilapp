@@ -293,7 +293,11 @@ const terms: SeedTerm[] = [
       { es: "Las casas blancas son bonitas.", ru: "Белые дома красивые." },
       { es: "Un hombre alto camina despacio.", ru: "Высокий мужчина идёт медленно." },
     ],
-    relatedLessons: ["a2-9"],
+    // a2-10 and a2-11 teach exactly this concept in the dative and the
+    // instrumental. A separate "declinación del adjetivo" entry would be a
+    // second term on a concept this one already states outright ("también
+    // deben coincidir en CASO"), so the lessons join the term instead.
+    relatedLessons: ["a2-9", "a2-10", "a2-11"],
   },
   {
     slug: "tiempo-verbal",
@@ -894,7 +898,11 @@ const terms: SeedTerm[] = [
       { es: "El tren llegó a las tres.", ru: "Поезд пришёл в три часа." },
       { es: "Ella salió de la habitación.", ru: "Она вышла из комнаты." },
     ],
-    relatedLessons: ["b1-9", "b1-10", "b1-12", "b1-13"],
+    // b1-11 (под-/от-) and b1-14 (the full recap of the prefix system) were
+    // missing: b1-11's only link was `pronombre-reflexivo`, which has
+    // nothing to do with what that lesson teaches. No new term — the prefix
+    // system is one concept, not one concept per prefix pair.
+    relatedLessons: ["b1-9", "b1-10", "b1-11", "b1-12", "b1-13", "b1-14"],
   },
   {
     slug: "genitivo-de-negacion",
@@ -1036,7 +1044,10 @@ const terms: SeedTerm[] = [
       { es: "Tengo frío, cierra la ventana, por favor.", ru: "Мне холодно, закрой окно, пожалуйста." },
       { es: "A mi hermano le gusta este libro.", ru: "Моему брату нравится эта книга." },
     ],
-    relatedLessons: ["a2-8", "b1-29"],
+    // a1-25 («мне нравится» and the state adverbs) and b1-2 (нужно/надо/
+    // можно/нельзя + infinitive) are the same construction this definition
+    // already names, taught earlier and later than a2-8.
+    relatedLessons: ["a1-25", "a2-8", "b1-2", "b1-29"],
   },
   {
     slug: "conjuncion-adversativa",
@@ -1213,6 +1224,27 @@ const terms: SeedTerm[] = [
       { es: "Ella siempre lleva puesto un abrigo azul.", ru: "Она всегда носит синее пальто." },
     ],
     relatedLessons: ["a2-20"],
+  },
+  {
+    // The base pair, and the one entry this series was missing: ехать/
+    // ездить, бежать/бегать, лететь/летать, плыть/плавать and нести/носить
+    // each had a lexical entry, while идти/ходить — the pair a learner
+    // meets first, in a2-14 — had none. par-ehat-ezdit's own comparison
+    // already sends the reader to "идти/ходить" and had nowhere to point.
+    slug: "par-idti-hodit",
+    term: "идти / ходить",
+    definition:
+      "Es el par de verbos de movimiento del que salen todos los demás: «идти» describe un desplazamiento a pie en una sola dirección, en curso o hacia un destino concreto; «ходить» describe ese mismo desplazamiento a pie cuando es habitual, repetido o de ida y vuelta. Los dos se usan solo para moverse sin vehículo.",
+    russianEquivalent: "идти / ходить",
+    transcription: "idtí / khadít'",
+    category: "verbos-movimiento",
+    russianComparison:
+      "El español reparte con un solo verbo, «ir», lo que el ruso obliga a dividir en dos: «voy a la escuela» sirve igual para ahora mismo y para todos los días. Dos atajos prácticos: si cabe «estoy de camino ahora», es «идти»; si cabe «suelo ir», es «ходить». En pasado la diferencia se nota aún más — «я ходил в магазин» significa que fui y ya volví, mientras que «я шёл в магазин» describe estar de camino en aquel momento.",
+    examples: [
+      { es: "Voy a la escuela (ahora, de camino).", ru: "Я иду в школу." },
+      { es: "Voy a la escuela todos los días.", ru: "Я хожу в школу каждый день." },
+    ],
+    relatedLessons: ["a2-14", "a2-18"],
   },
   {
     slug: "genitivo-de-cantidad",
@@ -1477,6 +1509,26 @@ const terms: SeedTerm[] = [
       { es: "Ayer me llamó y me contó la noticia.", ru: "Вчера он позвонил мне и рассказал новость." },
     ],
     relatedLessons: ["a2-1"],
+  },
+  {
+    // b1-17 is a whole lesson on this and had no term in its own category:
+    // its only link was `verbo-modal`, which is about modality, not aspect.
+    // verbo-modal's comparison even points forward at "hay que elegir el
+    // ASPECTO del infinitivo" with nothing to point to.
+    slug: "aspecto-del-infinitivo",
+    term: "aspecto del infinitivo",
+    definition:
+      "Es la elección de aspecto del infinitivo que sigue a otro verbo — y no es libre, la rige el verbo de delante. Los verbos de fase (начать, продолжать, перестать) piden SIEMPRE infinitivo imperfectivo; los de logro puntual (успеть, решить, удаться) piden casi siempre perfectivo; y los modales propios (мочь, хотеть, уметь) admiten los dos, cambiando el sentido de la frase.",
+    russianEquivalent: "вид инфинитива после другого глагола",
+    transcription: "vit infinitíva pósli drugóva glagóla",
+    category: "aspecto",
+    russianComparison:
+      "El infinitivo español no marca aspecto: en «empezar a leer» y «conseguir leer» lo que cambia es el verbo de delante, nunca la forma de «leer». En ruso cambia el infinitivo, y a veces es lo único que cambia: «Я не мог поднять чемодан» dice que no tenía fuerza en general, «Я не смог поднять чемодан» dice que aquella vez lo intenté y no pude. Con los verbos de fase no hay elección posible — «начал прочитать» es agramatical, mientras que en español «empezar a terminar de leer» solo suena raro.",
+    examples: [
+      { es: "Empezó a leer el libro.", ru: "Он начал читать книгу." },
+      { es: "Conseguí terminar el trabajo a tiempo.", ru: "Я успел закончить работу вовремя." },
+    ],
+    relatedLessons: ["b1-17"],
   },
   {
     slug: "estilo-poetico",
