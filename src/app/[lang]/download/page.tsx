@@ -57,6 +57,20 @@ export async function generateMetadata({
   return {
     title: `${dict.download.pageTitle} | RusoFácilapp`,
     description: truncateForMeta(dict.download.pageSubtitle),
+    // noindex, decided 31.08.2026. The title says "Descarga la app" but
+    // both store badges on the page read "Muy pronto" and the note below
+    // them says the review with Apple and Google is still running — there
+    // is nothing to download yet. A search result that promises a download
+    // and delivers "coming soon" earns the click and disappoints, which is
+    // the one thing a landing page must not do. The page stays reachable
+    // and useful for a visitor who follows the link from /pricing; it just
+    // does not compete in search until there is a real store listing.
+    //
+    // REMOVE THIS the day either store URL becomes real — see the comment
+    // on AppleGlyph above and src/lib/site.ts's organizationJsonLd, which
+    // is waiting on the same event to gain a `sameAs`. follow:true so the
+    // links out of the page still pass through.
+    robots: { index: false, follow: true },
     alternates,
   };
 }
