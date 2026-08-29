@@ -57,6 +57,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/glossary",
     "/vocabulary",
     "/sobre-nosotros",
+    // Added 31.08.2026. These were the inconsistency a link crawl found
+    // that a sitemap crawl could not: robots.txt allows them, the footer
+    // links to them from every page, they render real content and carry
+    // their own title and description — but they were absent here, so the
+    // sitemap disagreed with the site about what is public. Legal pages
+    // are also a standard trust signal for a site that takes payments, so
+    // the resolution is to list them rather than to disallow them.
+    //
+    // /download is deliberately NOT here: it is noindex until the app is
+    // actually in a store (see its own generateMetadata).
+    "/terms",
+    "/privacy",
   ];
 
   // Spanish-search-intent landing pages — no Russian-language equivalent

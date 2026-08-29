@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
 import { canAccessLevel, getEntitlementTier, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { escapeRegExp } from "@/lib/regex";
 
 const SEARCH_RESULT_LIMIT = 50;
 
@@ -12,10 +13,6 @@ const SEARCH_RESULT_LIMIT = 50;
 // identical on screen but fail a naive .includes() against each other.
 function normalize(value: string): string {
   return value.toLowerCase().normalize("NFC");
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // Plain substring .includes() ranks a match buried mid-word (e.g. "mil"
