@@ -47,6 +47,7 @@ import type { EmbedStatus, MediaItem } from "../src/lib/media/types";
 // through Next's build and doesn't hit it.) Duplicating the tiny amount
 // of file I/O here keeps this script runnable standalone without
 // touching that module.
+import { isEntryPoint } from "../src/lib/entry-point";
 const MEDIA_DATA_FILE = path.join(__dirname, "../src/lib/media/mediaData.json");
 
 async function readMediaStore(): Promise<Record<string, MediaItem>> {
@@ -147,7 +148,11 @@ async function main() {
   console.log(`Saved embedStatus for ${updates.length} items.`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

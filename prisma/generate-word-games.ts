@@ -40,9 +40,12 @@ import { buildClue } from "../src/lib/word-games/clue";
 import { categoryForTopic, topicForPuzzle } from "../src/lib/word-games/topics";
 import { WORD_GAME_FREE_RUNGS_PER_LEVEL, isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const DRY_RUN = process.argv.includes("--dry-run");
 const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length) ?? null;
-if (ONLY !== null && ONLY !== "free") {
+// Argument validation exits the process, so it must not run on import
+// either — see src/lib/entry-point.ts.
+if (isEntryPoint(import.meta.url) && ONLY !== null && ONLY !== "free") {
   console.error(`Unknown --only=${ONLY}. Supported: --only=free`);
   process.exit(1);
 }
@@ -706,9 +709,13 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exitCode = 1;
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exitCode = 1;
+    })
+    .finally(() => db.$disconnect());
+}

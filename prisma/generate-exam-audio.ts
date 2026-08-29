@@ -41,6 +41,7 @@ import type { ExamContent } from "../src/lib/exams/types";
 import rawExamContent from "../src/lib/exams/content.json";
 import { examAudioKey } from "../src/lib/lessons/audioKeys";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const staticExamContent = rawExamContent as unknown as Record<string, ExamContent>;
 
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
@@ -272,9 +273,13 @@ async function main() {
   );
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

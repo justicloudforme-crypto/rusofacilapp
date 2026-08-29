@@ -14,9 +14,12 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const url = process.env.PROD_TURSO_DATABASE_URL;
-const authToken = process.env.PROD_TURSO_AUTH_TOKEN;
-if (!url || !authToken) {
+import { isEntryPoint } from "../src/lib/entry-point";
+const url = process.env.PROD_TURSO_DATABASE_URL ?? "";
+const authToken = process.env.PROD_TURSO_AUTH_TOKEN ?? "";
+// Argument validation exits the process, so it must not run on import
+// either — see src/lib/entry-point.ts.
+if (isEntryPoint(import.meta.url) && (!url || !authToken)) {
   console.error("Set PROD_TURSO_DATABASE_URL and PROD_TURSO_AUTH_TOKEN.");
   process.exit(1);
 }
@@ -39,9 +42,13 @@ async function main() {
   console.log("Production MediaOverride row:", row);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .then(() => process.exit(0))
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+}

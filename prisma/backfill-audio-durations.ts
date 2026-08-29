@@ -28,6 +28,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { parseFile } from "music-metadata";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const SITE_ORIGIN = process.env.BACKFILL_SITE_ORIGIN ?? "https://rusofacilapp.com";
 
 // Mirrors src/lib/db.ts's own adapter selection — Turso when its env vars
@@ -98,9 +99,13 @@ async function main() {
   console.log(`\n✔ Updated ${updated} row(s)${failed ? `, ${failed} failed (see errors above)` : ""}.`);
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

@@ -23,6 +23,7 @@ import { estimateReadingMinutes } from "../src/lib/stories";
 // Mirrors src/lib/db.ts's own adapter selection — Turso when its env vars
 // are set, otherwise the local file, so the same script works against
 // either without a separate "prod mode" flag.
+import { isEntryPoint } from "../src/lib/entry-point";
 const adapter = new PrismaLibSql({
   url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
   authToken: process.env.TURSO_AUTH_TOKEN,
@@ -46,9 +47,13 @@ async function main() {
   console.log(`Done — backfilled readingMinutes for ${updated} stories.`);
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => db.$disconnect());
+}

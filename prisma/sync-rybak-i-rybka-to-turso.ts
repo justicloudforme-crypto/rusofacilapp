@@ -23,6 +23,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient as TursoClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const TITLE = "Сказка о рыбаке и рыбке";
 const LEVEL = "B1";
 const FRAGMENT_KEYS = ["8-1", "10-1"];
@@ -87,7 +88,11 @@ async function main() {
   await turso.$disconnect();
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

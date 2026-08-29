@@ -42,6 +42,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { storyTopics, type StoryTopic } from "../src/lib/stories";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const adapter = new PrismaLibSql({
   url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
   authToken: process.env.TURSO_AUTH_TOKEN,
@@ -213,9 +214,13 @@ async function main() {
   }
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => db.$disconnect());
+}

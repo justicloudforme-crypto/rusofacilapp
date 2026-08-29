@@ -30,6 +30,7 @@ import "dotenv/config";
 import Database from "better-sqlite3";
 import { createClient, type InStatement } from "@libsql/client";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const BATCH_SIZE = 200;
 
 interface LocalRow {
@@ -119,4 +120,8 @@ async function main() {
   console.log(`\nDone. Synced ${synced} row(s). Turso now has ${(after.rows[0] as unknown as { c: number }).c} row(s) with subtitles.`);
 }
 
-main();
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main();
+}

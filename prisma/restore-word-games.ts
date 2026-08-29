@@ -25,6 +25,7 @@ import { readFileSync } from "node:fs";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const adapter = new PrismaLibSql({
   url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
   authToken: process.env.TURSO_AUTH_TOKEN,
@@ -34,7 +35,9 @@ const db = new PrismaClient({ adapter });
 const file = process.argv[2];
 const DRY_RUN = process.argv.includes("--dry-run");
 const ONLY_ID = process.argv.find((a) => a.startsWith("--only-id="))?.slice("--only-id=".length) ?? null;
-if (!file) {
+// Argument validation exits the process, so it must not run on import
+// either — see src/lib/entry-point.ts.
+if (isEntryPoint(import.meta.url) && !file) {
   console.error("Usage: tsx prisma/restore-word-games.ts <backup.json> [--dry-run] [--only-id=<id>]");
   process.exit(1);
 }
@@ -105,9 +108,13 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exitCode = 1;
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exitCode = 1;
+    })
+    .finally(() => db.$disconnect());
+}

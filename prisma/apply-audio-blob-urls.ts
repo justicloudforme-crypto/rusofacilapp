@@ -21,6 +21,7 @@ import path from "node:path";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const MAP_FILE = path.join(process.cwd(), "prisma", "audio-blob-map.json");
 const BATCH_SIZE = 500;
 
@@ -75,4 +76,8 @@ async function main() {
   console.log(`Done. Updated ${updated} row(s) with their Blob URL.`);
 }
 
-main();
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main();
+}

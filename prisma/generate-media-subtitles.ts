@@ -64,6 +64,7 @@ import { transcribeAudioWithWhisper } from "../src/lib/media/whisperTranscribe";
 import { generateSubtitlesWithClaude } from "../src/lib/media/generateSubtitlesWithClaude";
 import type { MediaItem } from "../src/lib/media/types";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const MEDIA_DATA_FILE = path.join(__dirname, "../src/lib/media/mediaData.json");
 
 const dbUrl = process.env.PROD_TURSO_DATABASE_URL ?? process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db";
@@ -234,9 +235,13 @@ async function main() {
   console.log("\nDone.");
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}

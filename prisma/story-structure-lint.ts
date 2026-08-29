@@ -20,6 +20,7 @@
  */
 import { stories } from "./stories-data";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const RUSSIAN_STOPWORDS = new Set([
   "и", "в", "на", "с", "у", "к", "о", "об", "за", "по", "из", "от", "для", "не", "но",
   "а", "что", "как", "это", "его", "её", "их", "он", "она", "они", "мы", "вы", "я",
@@ -103,4 +104,8 @@ function main() {
   if (issues > 0) process.exitCode = 1;
 }
 
-main();
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main();
+}
