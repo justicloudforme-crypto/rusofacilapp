@@ -27,7 +27,7 @@ export async function generateMetadata({
   return {
     title: "Los verbos en -ся en ruso: qué significan de verdad",
     description:
-      "El postfijo -ся hace cuatro trabajos distintos: reflexivo, recíproco, pasivo y verbos que solo existen así. Casi los mismos que el «se» español — y los dos sitios donde esa comparación deja de servir.",
+      "El postfijo -ся hace cuatro trabajos: reflexivo, recíproco, pasivo y verbos que solo existen así. Casi como el «se» español, salvo en dos sitios.",
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },

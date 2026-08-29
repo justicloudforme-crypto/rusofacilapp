@@ -29,7 +29,7 @@ export async function generateMetadata({
   return {
     title: "El plural de los sustantivos en ruso: cómo se forma",
     description:
-      "El plural ruso depende del género de la palabra y, en cuanto aparece un número, también del caso: один стол, два стола, пять столов. La regla base, los irregulares y por qué contar lo cambia todo.",
+      "El plural ruso depende del género y, si hay un número, también del caso: один стол, два стола, пять столов. La regla base y los irregulares.",
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },
