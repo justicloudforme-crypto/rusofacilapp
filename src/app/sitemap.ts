@@ -197,7 +197,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // pilot and control alike, so it probably would not bias the result —
   // "probably" is not a good enough reason to perturb a measurement that
   // has three weeks left to run. Revisit when the freeze lifts.
-  const stories = await db.story.findMany({ select: { id: true } });
+  // Wrapped for the same reason as the puzzle read above, and added
+  // 29.08.2026 after the post-compact audit found that only ONE of this
+  // file's three database reads was protected. A failure here used to take
+  // the whole sitemap off the air; now it costs this family's URLs and
+  // leaves the other ~1250 in the file. Losing 650 entries is bad; losing
+  // 1902 because of 650 is worse.
+  let stories: { id: string }[] = [];
+  try {
+    stories = await db.story.findMany({ select: { id: true } });
+  } catch (error) {
+    console.error("[sitemap] could not read Story; serving without story URLs", error);
+  }
   for (const story of stories) {
     for (const lang of locales) {
       entries.push({ url: `${SITE_URL}/${lang}/stories/${story.id}`, changeFrequency: "monthly" });
@@ -218,7 +229,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Glossary terms are not part of the experiment, carry a real
   // `updatedAt`, and are edited one at a time — so their dates differ per
   // row and are a genuine signal rather than one batch timestamp.
-  const glossaryTerms = await db.glossaryTerm.findMany({ select: { slug: true, updatedAt: true } });
+  //
+  // Wrapped too, 29.08.2026 — and this one was the sharpest remaining edge:
+  // it selects `updatedAt`, exactly the kind of column whose absence
+  // produced the outage in the first place, and it was the last unprotected
+  // read in the file.
+  let glossaryTerms: { slug: string; updatedAt: Date }[] = [];
+  try {
+    glossaryTerms = await db.glossaryTerm.findMany({ select: { slug: true, updatedAt: true } });
+  } catch (error) {
+    console.error("[sitemap] could not read GlossaryTerm; serving without glossary URLs", error);
+  }
   for (const term of glossaryTerms) {
     for (const lang of locales) {
       entries.push({

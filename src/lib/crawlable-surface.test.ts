@@ -222,4 +222,41 @@ describe("every crawlable static route is accounted for", () => {
     expect(isDisallowed("/admin/users", disallows, allows)).toBe(true);
     expect(isDisallowed("/terms", disallows, allows)).toBe(false);
   });
+
+  it("every database read in sitemap.ts degrades instead of taking the file down", () => {
+    // On 29.08.2026 a single missing column made /sitemap.xml return HTTP
+    // 500 in production — a sitemap that 500s is invisible to every
+    // crawler, so one absent column silently switched off the whole
+    // recrawl mechanism. The fix was to let a failed read cost only the
+    // URLs it would have produced. That only holds while EVERY read is
+    // wrapped: the post-compact audit found the puzzle read protected and
+    // the story and glossary reads not, so this counts them rather than
+    // trusting that whoever adds the next one remembers.
+    const reads = [...sitemapSource.matchAll(/await db\.(\w+)\./g)].map((m) => m[1]);
+    expect(reads.length).toBeGreaterThanOrEqual(3);
+
+    const unprotected = reads.filter((model) => {
+      // the read must sit inside a try { ... } catch that logs
+      const re = new RegExp(`try\\s*\\{[^}]*await db\\.${model}\\.[\\s\\S]*?\\}\\s*catch`);
+      return !re.test(sitemapSource);
+    });
+    expect(unprotected).toEqual([]);
+
+    // and each catch must log rather than swallow — a sitemap quietly
+    // serving 650 fewer URLs for weeks is its own kind of outage
+    const catches = [...sitemapSource.matchAll(/catch \(error\) \{\s*console\.error\(/g)];
+    expect(catches.length).toBe(reads.length);
+  });
+
+  it("positive control: an unwrapped read is reported", () => {
+    // Without this, the check above could be passing because the regex
+    // matches nothing rather than because every read is wrapped.
+    const withBareRead = sitemapSource + "\n// const x = await db.exam.findMany();\nawait db.exam.findMany();\n";
+    const reads = [...withBareRead.matchAll(/await db\.(\w+)\./g)].map((m) => m[1]);
+    const unprotected = reads.filter((model) => {
+      const re = new RegExp(`try\\s*\\{[^}]*await db\\.${model}\\.[\\s\\S]*?\\}\\s*catch`);
+      return !re.test(withBareRead);
+    });
+    expect(unprotected).toContain("exam");
+  });
 });
