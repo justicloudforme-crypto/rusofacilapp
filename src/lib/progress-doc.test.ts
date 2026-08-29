@@ -34,7 +34,7 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["is my local main up to date", "git merge --ff-only origin/main"],
   ["why do half the pages not render locally", "prisma/dev.db"],
   ["how do I render a DB page without credentials", "migrate diff --from-empty"],
-  ["what state is it in, measured when", "## 2. ТЕКУЩЕЕ СОСТОЯНИЕ — ЦИФРЫ"],
+  ["what state is it in, measured when", "## 2. ТЕКУЩЕЕ СОСТОЯНИЕ"],
   ["is prod running the code I am looking at", "sentry-release"],
   ["is the sitemap the whole site", "## 3. ОБХОД ПО SITEMAP ≠ ОБХОД САЙТА"],
   ["how is the URL list built now", "статические маршруты из кода"],
@@ -58,6 +58,19 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["what is the experiment", "ЭКСПЕРИМЕНТЫ «ТЕЛО ТОНКИМ СТРАНИЦАМ»"],
   ["how is the experiment read out", "docs/experiment-readout-2026-09-25.md"],
   ["never write a file while reading it", "одним проходом"],
+  // Added 29.08.2026, the round that stamped lastmod on production and
+  // recovered a sitemap outage. Each of these is something a cold reader
+  // would otherwise have to reconstruct from the code.
+  ["which date is in lastmod and why that one", "часы сервера — единственный источник правды"],
+  ["how many puzzle URLs carry a lastmod", "URL пазлов с `lastmod` | **138**"],
+  ["how many carry none, and why", "URL пазлов без `lastmod` | **22**"],
+  ["why stories have no lastmod yet", "рассказы с `lastmod` | **0 из 650**"],
+  ["what limits manual Search Console submission", "Лимит Search Console — **10 URL в сутки**"],
+  ["which reindex batches were already sent", "СТАТУС ОТПРАВКИ"],
+  ["what keeps the other URLs crawled", "Остальные 124 изменённых URL вручную не отправляются"],
+  ["what took the sitemap down and how it was fixed", "### 7.17. АВАРИЯ"],
+  ["how are open debts written down", "условие → триггер → следствие"],
+  ["was a seventh landing page decided", "РЕШЕНИЕ: ждать данных"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {
