@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
@@ -5,7 +6,28 @@ import { getDictionary } from "@/i18n/dictionaries";
 import VocabularyApp from "@/components/flashcards/VocabularyApp";
 import JsonLd from "@/components/seo/JsonLd";
 import { VOCABULARY_CATEGORY_PAGES } from "@/lib/vocabulary-categories";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/vocabulary">): Promise<Metadata> {
+  const { lang } = await params;
+  const alternates = routeAlternates(lang, "/vocabulary");
+  // Measured on the live site 28.08.2026: this page had no metadata of its
+  // own, so it served the layout's fallback — byte-identical <title> and
+  // description to the home page and to /es/glossary. It is the entry point
+  // to the 23 category pages, and a crawler saw three different pages
+  // announcing themselves as the same one. ES only: the /ru copy has no
+  // category index below (see showCategoryIndex), so the Russian fallback
+  // still describes it correctly.
+  if (lang !== "es") return { alternates };
+  return {
+    title: "Vocabulario ruso por temas, con traducción | RusoFácilapp",
+    description:
+      "23 listas de vocabulario ruso por tema, del A1 al B2, con transcripción, traducción al español y una frase de ejemplo en cada palabra.",
+    alternates,
+  };
+}
 
 export default async function VocabularyPage({ params }: PageProps<"/[lang]/vocabulary">) {
   const { lang } = await params;

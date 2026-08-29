@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -5,6 +6,24 @@ import { db } from "@/lib/db";
 import { isGlossaryCategory, parseExamplesJson, parseRelatedLessonsJson } from "@/lib/glossary";
 import { attachGlossaryAudio } from "@/lib/glossary-audio";
 import GlossaryApp from "@/components/glossary/GlossaryApp";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/glossary">): Promise<Metadata> {
+  const { lang } = await params;
+  const alternates = routeAlternates(lang, "/glossary");
+  // Same fallback-metadata problem the vocabulary hub had (see its own
+  // comment): 117 term pages each carry a hand-written title, but the hub
+  // they all link back to announced itself with the home page's title.
+  if (lang !== "es") return { alternates };
+  return {
+    title: "Glosario de gramática rusa en español | RusoFácilapp",
+    description:
+      "Los términos de la gramática rusa explicados en español: caso, aspecto, declinación, verbos de movimiento y más, con su equivalente ruso y ejemplos.",
+    alternates,
+  };
+}
 
 export default async function GlossaryPage({ params }: PageProps<"/[lang]/glossary">) {
   const { lang } = await params;

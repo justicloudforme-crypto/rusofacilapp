@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/forgot-password">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/forgot-password") };
+}
 
 export default async function ForgotPasswordPage({
   params,

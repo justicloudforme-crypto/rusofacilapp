@@ -7,14 +7,18 @@ import { mediaLevels } from "@/lib/media/types";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import MediaCatalog from "@/components/media/MediaCatalog";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/media">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
   if (!dict?.media) return {};
-  return { title: `${dict.media.pageTitle} | RusoFácilapp`, description: dict.media.pageSubtitle };
+  return {
+    title: `${dict.media.pageTitle} | RusoFácilapp`,
+    description: dict.media.pageSubtitle,
+    alternates: routeAlternates(lang, "/media"),
+  };
 }
 
 export default async function MediaPage({ params }: PageProps<"/[lang]/media">) {

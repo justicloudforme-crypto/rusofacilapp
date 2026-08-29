@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
@@ -5,6 +6,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserGroups } from "@/lib/groups";
+import { routeAlternates } from "@/lib/site";
 
 const ERROR_KEYS = {
   empty_name: "groupErrorEmptyName",
@@ -14,6 +16,13 @@ const ERROR_KEYS = {
   group_full: "groupErrorFull",
   rate_limited: "groupErrorRateLimited",
 } as const;
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/groups">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/groups") };
+}
 
 export default async function GroupsPage({
   params,

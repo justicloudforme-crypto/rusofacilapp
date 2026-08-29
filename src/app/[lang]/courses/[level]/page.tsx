@@ -9,7 +9,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getLevelLessonStatuses, type LessonStatus } from "@/lib/progress";
 import LevelGlossaryProgressBar from "@/components/glossary/LevelGlossaryProgressBar";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 
 export function generateStaticParams() {
   return locales.flatMap((lang) =>
@@ -28,7 +28,11 @@ export async function generateMetadata({
     lang === "ru"
       ? `Курс русского языка ${levelDict.title} | RusoFácilapp`
       : `Curso de ruso ${levelDict.title} | RusoFácilapp`;
-  return { title, description: levelDict.description };
+  return {
+    title,
+    description: levelDict.description,
+    alternates: routeAlternates(lang, `/courses/${encodeURIComponent(level)}`),
+  };
 }
 
 export default async function LevelPage({

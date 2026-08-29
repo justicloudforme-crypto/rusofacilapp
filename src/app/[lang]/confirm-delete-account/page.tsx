@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/confirm-delete-account">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/confirm-delete-account") };
+}
 
 export default async function ConfirmDeleteAccountPage({
   params,

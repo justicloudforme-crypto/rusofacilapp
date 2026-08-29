@@ -1,10 +1,19 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { requireOwnerUser } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
+import { routeAlternates } from "@/lib/site";
 
 const ROLE_OPTIONS = ["owner", "admin", "student"] as const;
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/users">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/admin/users") };
+}
 
 export default async function AdminUsersPage({
   params,

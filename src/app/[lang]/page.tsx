@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
@@ -13,7 +14,7 @@ import LevelBadge from "@/components/LevelBadge";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
-import { organizationJsonLd, websiteJsonLd } from "@/lib/site";
+import { organizationJsonLd, websiteJsonLd, routeAlternates } from "@/lib/site";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -30,6 +31,13 @@ import {
 // id field, and this list only ever has these 4 fixed entries.
 const FEATURE_ICONS = [GlobeIcon, DictionaryIcon, ChartIcon, HeadphonesIcon];
 const HOW_IT_WORKS_ICONS = [GraduationCapIcon, ChecklistIcon, BookIcon];
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "") };
+}
 
 export default async function HomePage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;

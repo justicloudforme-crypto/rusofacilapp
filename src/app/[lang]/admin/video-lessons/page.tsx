@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getAllSavedVideoLessons } from "@/lib/video-lesson/lessonStore";
 import VideoLessonGenerator from "@/components/admin/VideoLessonGenerator";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/video-lessons">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/admin/video-lessons") };
+}
 
 export default async function AdminVideoLessonsPage({ params }: PageProps<"/[lang]/admin/video-lessons">) {
   const { lang } = await params;

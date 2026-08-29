@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -63,6 +64,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { getProfileTabs, isProfileTab, type ProfileTab } from "@/lib/profile-tabs";
 import Tabs from "@/components/ui/Tabs";
+import { routeAlternates } from "@/lib/site";
 
 // Icon-badge + serif heading, used for every card section on this page so
 // the dashboard reads as a real interface (icon + hierarchy per row)
@@ -230,6 +232,13 @@ const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
   expired: "bg-red-500/10 text-red-600 dark:text-red-400",
   none: "bg-foreground/10 text-foreground/60",
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/profile">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/profile") };
+}
 
 export default async function ProfilePage({
   params,

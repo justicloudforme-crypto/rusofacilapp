@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { loadFindings, loadDecisions, decisionKey } from "@/lib/audio-review";
 import AudioReviewTable from "@/components/admin/AudioReviewTable";
+import { routeAlternates } from "@/lib/site";
 
 /**
  * Local-only story-audio QA tool. Lists everything
@@ -23,6 +25,13 @@ import AudioReviewTable from "@/components/admin/AudioReviewTable";
  * admin account could open it; this check makes the page 404 on any
  * production build no matter what, independent of auth.
  */
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/audio-review">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/admin/audio-review") };
+}
+
 export default async function AudioReviewPage({ params }: PageProps<"/[lang]/admin/audio-review">) {
   if (process.env.NODE_ENV === "production") notFound();
 

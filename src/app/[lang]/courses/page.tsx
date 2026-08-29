@@ -10,12 +10,13 @@ import LevelGlossaryBadge from "@/components/glossary/LevelGlossaryBadge";
 import LevelBadge from "@/components/LevelBadge";
 import type { FlashcardLevel } from "@/lib/flashcards/types";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/courses">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
+  const alternates = routeAlternates(lang, "/courses");
   // ES copy written for actual Spanish search demand ("curso de ruso
   // online", "aprender ruso") rather than a straight translation of the
   // visible H1/subtitle below — deliberately doesn't touch
@@ -27,9 +28,14 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/courses">)
       title: "Curso de ruso online — Niveles A1 a B2 | RusoFácilapp",
       description:
         "Aprende ruso paso a paso: 4 niveles, gramática explicada en español, ejercicios y audio nativo. Primera lección gratis.",
+      alternates,
     };
   }
-  return { title: `${dict.courses.pageTitle} | RusoFácilapp`, description: dict.courses.pageSubtitle };
+  return {
+    title: `${dict.courses.pageTitle} | RusoFácilapp`,
+    description: dict.courses.pageSubtitle,
+    alternates,
+  };
 }
 
 export default async function CoursesPage({ params }: PageProps<"/[lang]/courses">) {

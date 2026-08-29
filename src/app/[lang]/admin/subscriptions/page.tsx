@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -5,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isOwner } from "@/lib/roles";
 import { getDisplayStatus, type DisplayStatus } from "@/lib/subscription";
 import { db } from "@/lib/db";
+import { routeAlternates } from "@/lib/site";
 
 const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
   active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
@@ -14,6 +16,13 @@ const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
   expired: "bg-red-500/10 text-red-600 dark:text-red-400",
   none: "bg-foreground/10 text-foreground/60",
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/subscriptions">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/admin/subscriptions") };
+}
 
 export default async function AdminSubscriptionsPage({
   params,

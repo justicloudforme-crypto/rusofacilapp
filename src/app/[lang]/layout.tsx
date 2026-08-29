@@ -20,7 +20,6 @@ import SerwistRegister from "@/components/SerwistRegister";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserStreakStats } from "@/lib/streaks";
-import { buildAlternates, getRequestPathname } from "@/lib/site";
 import { PaywallProvider } from "@/contexts/PaywallContext";
 import type { PlanId } from "@/lib/plans";
 
@@ -77,18 +76,27 @@ export async function generateMetadata({
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
-  const pathname = await getRequestPathname();
+  // No `alternates` here on purpose. This used to build canonical/hreflang
+  // for every route at once from the request's own path (the `x-pathname`
+  // header proxy.ts set, read via getRequestPathname). That worked, but it
+  // meant this layout's generateMetadata called headers() — and a layout
+  // that reads headers() forces every descendant route to render
+  // dynamically. Canonical now comes from each route's own params instead
+  // (routeAlternates in lib/site.ts); `site.test.ts` asserts the URLs come
+  // out identical, and `route-metadata.test.ts` asserts no page route is
+  // left without one, since there is no longer a fallback here to cover a
+  // route someone forgets.
+  //
+  // This alone does NOT make the site static: getThemePreference() and
+  // getCurrentUser() below are two further cookie reads in this same
+  // layout, and both are real product behaviour (server-rendered theme
+  // with no flash of the wrong one; the header's logged-in state). See
+  // PROGRESS.md's dynamic-render diagnosis for what removing those would
+  // cost.
   return {
     title: dict.meta.title,
     description: dict.meta.description,
     manifest: "/manifest.webmanifest",
-    // Every page inherits this unless its own generateMetadata sets
-    // `alternates` itself (Next merges per-field, so a page-level title
-    // override never loses this) — canonical/hreflang computed from the
-    // real, query-stripped request path (see buildAlternates), so it stays
-    // correct without a per-route metadata function for every one of the
-    // 1226 URLs in sitemap.ts.
-    alternates: buildAlternates(pathname),
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",

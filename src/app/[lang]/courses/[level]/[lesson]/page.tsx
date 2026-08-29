@@ -16,7 +16,7 @@ import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList, truncateForMeta, paywallJsonLd } from "@/lib/site";
+import { SITE_URL, breadcrumbList, truncateForMeta, paywallJsonLd, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -38,7 +38,11 @@ export async function generateMetadata({
   // description, not a description of content the reader can't see.
   const content = await getLessonContent(level, lesson);
   const description = content ? truncateForMeta(content.grammar.paragraphs.join(" ")) : levelDict.description;
-  return { title, description };
+  return {
+    title,
+    description,
+    alternates: routeAlternates(lang, `/courses/${encodeURIComponent(level)}/${encodeURIComponent(lesson)}`),
+  };
 }
 
 export default async function LessonPage({

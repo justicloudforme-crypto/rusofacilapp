@@ -1,15 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { levelSlugs, lessonSlugsFor } from "@/lib/courses";
 import { getAllLessonStatuses } from "@/lib/lessons/content";
+import { routeAlternates } from "@/lib/site";
 
 const STATUS_CLASSES: Record<string, string> = {
   custom: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   example: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   empty: "bg-foreground/10 text-foreground/50",
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/lessons">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/admin/lessons") };
+}
 
 export default async function AdminLessonsPage({
   params,

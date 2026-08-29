@@ -15,7 +15,7 @@ import { attachGlossaryAudio } from "@/lib/glossary-audio";
 import RelatedLessonsList from "@/components/glossary/RelatedLessonsList";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList, truncateForMeta } from "@/lib/site";
+import { SITE_URL, breadcrumbList, truncateForMeta, routeAlternates } from "@/lib/site";
 
 // Content changes rarely (admin edits, occasional seed batch — see
 // GlossaryTerm.reviewedAt's own comment) and generateStaticParams below
@@ -94,7 +94,7 @@ export async function generateMetadata({
   // intact and visible, per the "term matters more than brand" call.
   const title = titleWithSuffix.length > 60 ? titleBase : titleWithSuffix;
 
-  return { title, description };
+  return { title, description, alternates: routeAlternates(lang, `/glossary/${encodeURIComponent(slug)}`) };
 }
 
 export default async function GlossaryTermPage({
