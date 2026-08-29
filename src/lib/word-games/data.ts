@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
 import type { WordGameGrid, WordGameType, WordPlacement } from "./types";
 import { isWordGameType } from "./types";
+import { GENERIC_SOPA_PUZZLE } from "./topic-landings";
 
 export interface PuzzleRow {
   id: string;
@@ -135,6 +136,37 @@ export async function getThemedPuzzlesByTopic(): Promise<Map<string, Array<{ typ
   }
   return byTopic;
 }
+
+/**
+ * The WORD_SEARCH puzzle a `/es/sopa-de-letras-ruso-<tema>` landing
+ * embeds: lowest level first, then lowest rung, and never the one the
+ * generic `/es/sopa-de-letras-ruso` already shows.
+ *
+ * Selected by querying `topic`, not by hardcoding a coordinate. The point
+ * of the page is that its puzzle IS the theme, so the puzzle has to be
+ * found by the theme; a hardcoded rung would keep claiming a topic after
+ * a regeneration moved it, which is the same defect the vocabulary pages
+ * had before 02.09.2026.
+ *
+ * Returns null when the theme has no themed WORD_SEARCH left — the page
+ * then 404s rather than embedding an unrelated grid under a themed title.
+ */
+export const getLandingPuzzleForTopic = cache(async (topic: string): Promise<PuzzleRow | null> => {
+  const rows = await db.wordGamePuzzle.findMany({
+    where: { topic, type: "WORD_SEARCH" },
+    orderBy: [{ level: "asc" }, { sequence: "asc" }],
+  });
+  const usable = rows.filter(
+    (r) =>
+      !(
+        r.type === GENERIC_SOPA_PUZZLE.type &&
+        r.level === GENERIC_SOPA_PUZZLE.level &&
+        r.sequence === GENERIC_SOPA_PUZZLE.sequence
+      ),
+  );
+  const chosen = usable[0] ?? null;
+  return chosen ? parseRow(chosen) : null;
+});
 
 /** Which sequences are the curved/★ expert tier, for every (type, level)
  * pair at once — powers the picker's star badge without parsing every
