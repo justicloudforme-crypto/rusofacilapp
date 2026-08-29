@@ -30,7 +30,22 @@ function getMatcher(terms: GlossaryTermData[]): Matcher | null {
 
   // \p{L} (Unicode letter) rather than \w, so the boundary check also
   // works right against accented Spanish letters (á, ñ...) at the edges.
-  const pattern = new RegExp(`(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])`, "giu");
+  //
+  // Wrapped because this line took the whole site's lesson pages down on
+  // 29.08.2026 (incident №1): escapeRegExp emitted `\-`, which the `u` flag
+  // rejects, so `new RegExp` threw — during render, in a client component,
+  // with no error boundary above it. The cause is fixed in regex.ts, but
+  // this pattern is assembled from 119 rows of editable database content
+  // and there is no reason a single bad row should ever cost the reader the
+  // page. Auto-linking glossary terms is decoration; the lesson is the
+  // product. Degrade, exactly as PROGRESS.md 7.24 argues for DB reads.
+  let pattern: RegExp;
+  try {
+    pattern = new RegExp(`(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])`, "giu");
+  } catch (error) {
+    console.error("[glossary] term pattern is not a valid regex — terms will not be auto-linked", error);
+    return null;
+  }
   cachedMatcher = { pattern, bySurface };
   cachedMatcherTerms = terms;
   return cachedMatcher;

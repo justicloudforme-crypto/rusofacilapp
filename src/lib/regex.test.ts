@@ -31,12 +31,66 @@ describe("escapeRegExp", () => {
   });
 
   it("escapes the dash, which only matters inside a character class", () => {
-    // Outside a class "\-" is just "-", so escaping it costs nothing; inside
-    // one it is the difference between three literals and a range. This is
-    // the exact bug isPlausibleShortCode had.
-    expect(escapeRegExp("A-F")).toBe("A\\-F");
+    // Inside a class the dash is the difference between three literals and
+    // a range. This is the exact bug isPlausibleShortCode had.
     expect(new RegExp(`^[${escapeRegExp("A-F")}]$`).test("B")).toBe(false);
     expect(new RegExp(`^[${escapeRegExp("A-F")}]$`).test("-")).toBe(true);
+  });
+
+  it("escapes the dash as \\x2d, because \\- is illegal under the u flag", () => {
+    // Incident №1, 29.08.2026. This function used to emit "A\\-F". Without
+    // `u` that is accepted and harmless, which is why it stood from the
+    // initial commit — every test here used the default flags. With `u` a
+    // backslash may only precede a character the spec lists, `-` is not one
+    // of them outside a class, and `new RegExp` throws at CONSTRUCTION.
+    // GlossaryText builds one alternation over all 119 glossary terms with
+    // flags "giu"; three of them contain a hyphen, so all 240 lesson pages
+    // in both locales rendered "Something went wrong" while still answering
+    // HTTP 200 with complete HTML.
+    expect(escapeRegExp("A-F")).toBe("A\\x2dF");
+    expect(escapeRegExp("A-F")).not.toContain("\\-");
+  });
+
+  it("every metacharacter survives the u flag, in and out of a class", () => {
+    // The dimension the original sweep missed. `u` is not exotic here: it is
+    // required by \p{L}, which every Unicode-aware pattern in this app uses
+    // because \b and \w are ASCII-only and never fire between Cyrillic
+    // letters. So `u` is the normal case, not the edge case.
+    for (const char of METACHARACTERS) {
+      expect(() => new RegExp(`^${escapeRegExp(char)}$`, "u"), `${char} outside a class`).not.toThrow();
+      expect(new RegExp(`^${escapeRegExp(char)}$`, "u").test(char), `${char} matches itself`).toBe(true);
+      expect(new RegExp(`^${escapeRegExp(char)}$`, "u").test("x"), `${char} matches only itself`).toBe(false);
+    }
+    // Inside a class, `]`, `\` and `^` are the ones that can break the class
+    // itself rather than the escape.
+    for (const char of METACHARACTERS) {
+      expect(() => new RegExp(`^[${escapeRegExp(char)}]$`, "u"), `${char} inside a class`).not.toThrow();
+    }
+  });
+
+  it("the real production strings that broke build a valid pattern", () => {
+    // The three live glossary terms, verbatim, and the shape GlossaryText
+    // actually builds — an alternation with the flags it actually uses.
+    const terms = ["oración indefinido-personal", "verbo reflexivo (con -ся)", "«-то» frente a «-нибудь»"];
+    for (const term of terms) {
+      expect(() => new RegExp(`(?<![\\p{L}])(${escapeRegExp(term)})(?![\\p{L}])`, "giu"), term).not.toThrow();
+      expect(new RegExp(`(?<![\\p{L}])(${escapeRegExp(term)})(?![\\p{L}])`, "giu").test(term), term).toBe(true);
+    }
+    const alternation = terms.map(escapeRegExp).join("|");
+    expect(() => new RegExp(`(?<![\\p{L}])(${alternation})(?![\\p{L}])`, "giu")).not.toThrow();
+  });
+
+  it("positive control: the old implementation throws on those same strings", () => {
+    // Demonstrated, not asserted — otherwise the four tests above would
+    // still pass if escapeRegExp stopped escaping the dash at all, which
+    // would reintroduce the character-class range bug instead.
+    const oldEscapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\\-]/g, "\\$&");
+    expect(() => new RegExp(`(${oldEscapeRegExp("oración indefinido-personal")})`, "giu")).toThrow(SyntaxError);
+    expect(() => new RegExp(`(${oldEscapeRegExp("«-то» frente a «-нибудь»")})`, "giu")).toThrow(SyntaxError);
+    // …and passes without `u`, which is precisely how it went unnoticed.
+    expect(() => new RegExp(`(${oldEscapeRegExp("oración indefinido-personal")})`, "gi")).not.toThrow();
+    // The current implementation still blocks the range it was written for.
+    expect(new RegExp(`^[${escapeRegExp("A-F")}]$`, "u").test("B")).toBe(false);
   });
 
   it("positive control: without escaping these same cases go wrong", () => {

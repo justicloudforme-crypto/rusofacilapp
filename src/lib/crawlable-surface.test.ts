@@ -12,13 +12,19 @@ import { isDisallowed, isDisallowedIgnoringAllow } from "./robots-matcher";
  * were serving the home page's title, because the audit never looked at
  * them.
  *
- * A page reachable by a crawler has to be in exactly one of three states,
+ * A page reachable by a crawler has to be in at least one of three states,
  * and this file is what keeps that true:
  *   1. listed in sitemap.xml, or
  *   2. disallowed in robots.txt, or
  *   3. explicitly noindex.
- * Anything else is a page that can be indexed but that nobody is looking
- * after.
+ * A page in none of them can be indexed and nobody is looking after it.
+ *
+ * "At least one", not "exactly one" — being in two is belt and braces, not
+ * a fault: /es|ru/styleguide is both disallowed in robots and noindex. The
+ * assertion below has always been an orphan check (in NO state), so this
+ * comment used to say something stricter than the code it introduces, and
+ * stricter than the data. PROGRESS.md's prose said the same and has been
+ * corrected with it (debt 7.12 №11).
  */
 
 const APP = join(process.cwd(), "src", "app");
