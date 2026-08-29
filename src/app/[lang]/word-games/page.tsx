@@ -9,6 +9,7 @@ import { countAllSequences, getAllCurvedSequences, getAllPremiumOnlySequences } 
 import { getAllCompletedSequences } from "@/lib/word-games/progress";
 import WordGamesPicker, { type PickerData } from "@/components/word-games/WordGamesPicker";
 import { notFound } from "next/navigation";
+import { hubMetadata } from "@/lib/word-games/metadata";
 import { routeAlternates } from "@/lib/site";
 
 export function generateStaticParams() {
@@ -19,7 +20,11 @@ export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/word-games">): Promise<Metadata> {
   const { lang } = await params;
-  return { alternates: routeAlternates(lang, "/word-games") };
+  const alternates = routeAlternates(lang, "/word-games");
+  // Same fallback-metadata problem the 160 puzzle pages had: this hub
+  // announced itself with the home page's title and description.
+  if (!isLocale(lang)) return { alternates };
+  return { ...hubMetadata(lang), alternates };
 }
 
 export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-games">) {
