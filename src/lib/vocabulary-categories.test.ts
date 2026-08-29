@@ -77,6 +77,32 @@ describe("public vocabulary category pages", () => {
     expect(getVocabularyCategoryPage("no-existe")).toBeUndefined();
   });
 
+  it("keeps every title short enough to survive Google's SERP truncation", () => {
+    // Measured on the live pages 28.08.2026: 12 of the 23 titles were
+    // 71–79 characters, so the part that carries the query ("vocabulario
+    // ruso de política") survived but the tail was cut mid-phrase in the
+    // result snippet. Google truncates on pixel width, not characters —
+    // ~70 characters is the usual safe ceiling for Spanish, and the fixed
+    // " | RusoFácilapp" suffix already eats 15 of them.
+    for (const page of VOCABULARY_CATEGORY_PAGES) {
+      expect(page.metaTitle.length, `${page.slug}: ${page.metaTitle}`).toBeLessThanOrEqual(70);
+    }
+    // Descriptions were already inside the ~155-character display limit
+    // (measured min 113 / max 150); assert it so they stay there.
+    for (const page of VOCABULARY_CATEGORY_PAGES) {
+      expect(page.metaDescription.length, page.slug).toBeLessThanOrEqual(155);
+      expect(page.metaDescription.length, page.slug).toBeGreaterThanOrEqual(70);
+    }
+    // Distinct titles are what keep 23 sibling pages from looking like one
+    // page to a crawler — the whole reason they exist separately.
+    expect(new Set(VOCABULARY_CATEGORY_PAGES.map((p) => p.metaTitle)).size).toBe(
+      VOCABULARY_CATEGORY_PAGES.length,
+    );
+    expect(new Set(VOCABULARY_CATEGORY_PAGES.map((p) => p.metaDescription)).size).toBe(
+      VOCABULARY_CATEGORY_PAGES.length,
+    );
+  });
+
   it("splits titles by intent — a word list, not a definition or a lesson", () => {
     // Point of the split: the glossary answers "what does this term mean",
     // a lesson answers "how do I use it", these answer "which words".

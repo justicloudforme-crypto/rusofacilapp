@@ -55,7 +55,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "food",
     slug: "comida",
     h1: "Vocabulario ruso de comida y restaurante",
-    metaTitle: "Vocabulario ruso de comida: lista de palabras con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de comida, con traducción y ejemplos | RusoFácilapp",
     metaDescription:
       "Lista de palabras rusas de comida, bebida y restaurante, cada una con transcripción, traducción al español y una frase de ejemplo. Niveles A1 a B2.",
     intro: [
@@ -68,7 +68,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "shopping",
     slug: "compras",
     h1: "Vocabulario ruso de compras y precios",
-    metaTitle: "Vocabulario ruso de compras y precios: palabras con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de compras y precios, con traducción | RusoFácilapp",
     metaDescription:
       "Palabras rusas para comprar, preguntar precios y pagar, con transcripción, traducción al español y frase de ejemplo. Niveles A1 a B2.",
     intro: [
@@ -81,7 +81,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "city",
     slug: "ciudad-y-transporte",
     h1: "Vocabulario ruso de la ciudad y el transporte",
-    metaTitle: "Vocabulario ruso de ciudad y transporte: lista con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de ciudad y transporte, con traducción | RusoFácilapp",
     metaDescription:
       "Palabras rusas de la ciudad, calles, edificios y transporte público, con transcripción, traducción al español y ejemplo. Niveles A1 a B2.",
     intro: [
@@ -94,7 +94,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "work",
     slug: "trabajo",
     h1: "Vocabulario ruso de trabajo y estudios",
-    metaTitle: "Vocabulario ruso de trabajo y estudios: palabras con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de trabajo y estudios, con traducción | RusoFácilapp",
     metaDescription:
       "Palabras rusas de profesiones, oficina, estudios y búsqueda de empleo, con transcripción, traducción y ejemplo. Niveles A1 a B2.",
     intro: [
@@ -107,7 +107,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "family",
     slug: "familia",
     h1: "Vocabulario ruso de familia y hogar",
-    metaTitle: "Vocabulario ruso de familia y casa: lista con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de familia y casa, con traducción | RusoFácilapp",
     metaDescription:
       "Palabras rusas de familia, parentesco y casa, con transcripción, traducción al español y frase de ejemplo. Niveles A1 a B2.",
     intro: [
@@ -146,7 +146,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "motionVerbs",
     slug: "verbos-de-movimiento",
     h1: "Verbos de movimiento en ruso: lista de palabras",
-    metaTitle: "Verbos de movimiento en ruso: lista con traducción y ejemplos | RusoFácilapp",
+    metaTitle: "Verbos de movimiento en ruso, con traducción y ejemplos | RusoFácilapp",
     metaDescription:
       "Lista de verbos de movimiento rusos con transcripción, traducción al español y frase de ejemplo: идти, ходить, ехать, ездить y sus derivados. A1 a B2.",
     intro: [
@@ -185,7 +185,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "travel",
     slug: "viajes",
     h1: "Vocabulario ruso de viajes y hoteles",
-    metaTitle: "Vocabulario ruso de viajes y hoteles: lista con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de viajes y hoteles, con traducción | RusoFácilapp",
     metaDescription:
       "Palabras rusas de viaje, aeropuerto, hotel y reservas, con transcripción, traducción al español y ejemplo. Niveles A1 a B2.",
     intro: [
@@ -211,7 +211,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "clothing",
     slug: "ropa",
     h1: "Vocabulario ruso de ropa y apariencia",
-    metaTitle: "Vocabulario ruso de ropa: lista de palabras con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de ropa, con traducción y ejemplos | RusoFácilapp",
     metaDescription:
       "Palabras rusas de ropa, calzado y descripción física, con transcripción, traducción al español y ejemplo. Niveles A1 a B2.",
     intro: [
@@ -263,7 +263,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "connectors",
     slug: "palabras-basicas",
     h1: "Palabras básicas del ruso: pronombres, preposiciones y conectores",
-    metaTitle: "Palabras básicas en ruso: pronombres, preposiciones y conectores | RusoFácilapp",
+    metaTitle: "Palabras básicas en ruso: pronombres y preposiciones | RusoFácilapp",
     metaDescription:
       "Las palabras que sostienen cualquier frase rusa — pronombres, preposiciones, conjunciones — con transcripción, traducción y ejemplo. A1 a B2.",
     intro: [
@@ -276,7 +276,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "science",
     slug: "ciencia",
     h1: "Vocabulario ruso de ciencia",
-    metaTitle: "Vocabulario ruso de ciencia: lista de palabras con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de ciencia, con traducción y ejemplos | RusoFácilapp",
     metaDescription:
       "Palabras rusas de ciencia, investigación y disciplinas académicas, con transcripción, traducción al español y ejemplo. Niveles A1 a B2.",
     intro: [
@@ -289,7 +289,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "politics",
     slug: "politica",
     h1: "Vocabulario ruso de política",
-    metaTitle: "Vocabulario ruso de política: lista de palabras con traducción | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de política, con traducción y ejemplos | RusoFácilapp",
     metaDescription:
       "Palabras rusas de política, instituciones y actualidad, con transcripción, traducción al español y frase de ejemplo. Niveles A1 a B2.",
     intro: [
@@ -302,7 +302,7 @@ export const VOCABULARY_CATEGORY_PAGES: VocabularyCategoryPage[] = [
     category: "psychology",
     slug: "psicologia",
     h1: "Vocabulario ruso de psicología",
-    metaTitle: "Vocabulario ruso de psicología con traducción y ejemplos | RusoFácilapp",
+    metaTitle: "Vocabulario ruso de psicología, con traducción | RusoFácilapp",
     metaDescription:
       "Palabras rusas de psicología, carácter y estados mentales, con transcripción, traducción al español y ejemplo. Niveles A1 a B2.",
     intro: [
