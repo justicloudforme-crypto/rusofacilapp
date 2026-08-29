@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { createClient } from "@libsql/client";
 
 // Guards against the outage from 2026-08-27: this project has no
@@ -155,7 +156,25 @@ async function main() {
   client.close();
 }
 
-main().catch((error) => {
-  console.error("[ensure-schema-sync] Failed:", error);
-  process.exit(1);
-});
+// Only when this file is the process entry point.
+//
+// It used to run on import, and src/lib/schema-sync.test.ts imports it for
+// parseSchema/modelBodies — so `npm run test` in a shell that happened to
+// carry TURSO_DATABASE_URL would have pointed the production schema
+// migrator at production. Idempotent and ADD-COLUMN-only, so the damage
+// would have been bounded, but "the unit suite writes DDL to prod" is not
+// a property to leave to luck. Caught 29.08.2026 when a read-only audit
+// script imported this module and the connection banner appeared in its
+// output.
+//
+// This is the same rule as VERCEL_ENV vs NODE_ENV in
+// src/lib/deploy-environment.ts: the signal has to be something a
+// bystander cannot accidentally satisfy.
+const isEntryPoint = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isEntryPoint) {
+  main().catch((error) => {
+    console.error("[ensure-schema-sync] Failed:", error);
+    process.exit(1);
+  });
+}

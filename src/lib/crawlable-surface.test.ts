@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { TOPIC_LANDING_PATHS } from "./word-games/topic-landings";
+import { isDisallowed, isDisallowedIgnoringAllow } from "./robots-matcher";
 
 /**
  * The lesson of 30-31.08.2026, as a test: **a sitemap crawl is not a site
@@ -85,56 +86,13 @@ function robotsAllows(): string[] {
   return [...block[1].matchAll(/"([^"]*)"/g)].map((m) => m[1]);
 }
 
-/** robots.txt path pattern -> matcher. `*` is any run of characters, a
- * trailing `$` anchors the end, everything else is a prefix match. */
-function matches(path: string, pattern: string): boolean {
-  const anchored = pattern.endsWith("$");
-  const body = anchored ? pattern.slice(0, -1) : pattern;
-  const source =
-    "^" +
-    body
-      .split("*")
-      .map((part) => part.replace(/[.*+?^${}()|[\]\\-]/g, "\\$&"))
-      .join(".*") +
-    (anchored ? "$" : "");
-  return new RegExp(source).test(path);
-}
-
-/**
- * True if a crawler obeying robots.txt is kept off `path`.
- *
- * Allow and Disallow have to be weighed against each other, not checked in
- * isolation: Google resolves a conflict by the LENGTH of the path pattern,
- * longest wins, and Allow wins an exact tie. `Allow: "/"` is length 1 and
- * therefore overrides nothing.
- *
- * Modelled rather than approximated because the approximation was wrong in
- * a way that fails silently. An audit script here treated every `Allow:` as
- * absent and so counted all 160 free puzzle URLs — pages robots.txt opens
- * on purpose — as blocked. In this test the same shortcut is worse than a
- * wrong number: a route covered by a blanket Disallow AND re-opened by a
- * narrower Allow would be filed under "disallowed, nothing to check" and
- * would then be free to sit outside the sitemap with nobody watching it,
- * which is the precise failure this file exists to prevent.
- */
-function isDisallowed(path: string, disallows: string[], allows: string[] = []): boolean {
-  const candidates = [
-    ...disallows.map((pattern) => ({ pattern, allow: false })),
-    ...allows.map((pattern) => ({ pattern, allow: true })),
-  ].filter(({ pattern }) => pattern !== "" && matches(path, pattern));
-
-  let best: { pattern: string; allow: boolean } | null = null;
-  for (const rule of candidates) {
-    if (
-      best === null ||
-      rule.pattern.length > best.pattern.length ||
-      (rule.pattern.length === best.pattern.length && rule.allow && !best.allow)
-    ) {
-      best = rule;
-    }
-  }
-  return best !== null && !best.allow;
-}
+/* The robots.txt matcher used to be defined here. It moved to
+ * src/lib/robots-matcher.ts on 29.08.2026 so audit scripts can import the
+ * same code instead of rewriting it from PROGRESS.md's description — one
+ * such rewrite dropped Allow precedence and silently counted 160 open
+ * pages as blocked. Its own behaviour is pinned in robots-matcher.test.ts;
+ * what this file still asserts is that the three-state rule holds when
+ * that matcher is applied to the real robots.ts. */
 
 function declaresNoindex(path: string): boolean {
   const file = join(APP, "[lang]", ...path.split("/").filter(Boolean), "page.tsx");
@@ -204,7 +162,7 @@ describe("every crawlable static route is accounted for", () => {
     // it has to be shown that the old presence-only logic and the new
     // length-weighted logic actually disagree on a real robots.txt path.
     const path = "/es/word-games/CROSSWORD/B2/10";
-    const ignoringAllow = isDisallowed(path, ["/*/word-games/"], []);
+    const ignoringAllow = isDisallowedIgnoringAllow(path, ["/*/word-games/"]);
     const weighingAllow = isDisallowed(path, ["/*/word-games/"], ["/*/word-games/CROSSWORD/B2/10$"]);
     expect(ignoringAllow).toBe(true);
     expect(weighingAllow).toBe(false);
