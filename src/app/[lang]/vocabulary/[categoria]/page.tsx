@@ -7,7 +7,7 @@ import {
   VOCABULARY_CATEGORY_PAGES,
   getVocabularyCategoryPage,
 } from "@/lib/vocabulary-categories";
-import { puzzlesForTopic } from "@/lib/word-games/topics";
+import { getThemedPuzzlesByTopic } from "@/lib/word-games/data";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
 
@@ -64,12 +64,16 @@ export default async function VocabularyCategoryPage({
   })).filter((group) => group.cards.length > 0);
 
   const url = `${SITE_URL}/es/vocabulary/${page.slug}`;
-  // The free puzzles built entirely from this category's words (02.09.2026
-  // — see word-games/topics.ts). Read from the frozen table rather than by
-  // querying WordGamePuzzle: the table is the same source the generator
-  // uses, so the two sides of this link cannot disagree, and this page
-  // avoids a second DB round trip. Empty for a category no rung could use.
-  const puzzles = puzzlesForTopic(page.slug);
+  // The free puzzles built entirely from this category's words. Read from
+  // the DATABASE, not from the frozen table in word-games/topics.ts: the
+  // table says which rungs are meant to be themed, the rows say which ones
+  // are, and until the generator has actually run against production those
+  // two disagree. While they did, this block claimed "6 puzles gratis
+  // hechos solo con vocabulario de este tema" on all 16 pages and linked to
+  // puzzles still built from a level-wide mix. Empty list = no block, which
+  // is the correct thing to show before the regeneration and for any
+  // category no rung could use.
+  const puzzles = (await getThemedPuzzlesByTopic()).get(page.slug) ?? [];
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">

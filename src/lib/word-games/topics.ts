@@ -149,8 +149,16 @@ export function allTopicSlugs(): string[] {
   return [...out].sort();
 }
 
-/** Every free puzzle built from `slug`, in ladder order — used by the
- * vocabulary page to link to the puzzles made of its own words. */
+/**
+ * Every free puzzle the table INTENDS to build from `slug`, in ladder
+ * order.
+ *
+ * Not what the vocabulary page links to — that reads the stored rows
+ * through getThemedPuzzlesByTopic, because the intent and the data
+ * disagree until the generator has run. This is the intent side: the
+ * generator consults it, and topics.test.ts uses it to prove the table is
+ * self-consistent in both directions.
+ */
 export function puzzlesForTopic(slug: string): Array<{ type: WordGameType; level: string; sequence: number }> {
   const out: Array<{ type: WordGameType; level: string; sequence: number }> = [];
   for (const [key, ladder] of Object.entries(FREE_RUNG_TOPICS)) {

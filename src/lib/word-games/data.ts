@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
+import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
 import type { WordGameGrid, WordGameType, WordPlacement } from "./types";
 import { isWordGameType } from "./types";
 
@@ -81,6 +82,58 @@ function pairKey(type: string, level: string): string {
 export async function countAllSequences(): Promise<Map<string, number>> {
   const rows = await db.wordGamePuzzle.groupBy({ by: ["type", "level"], _count: true });
   return new Map(rows.map((r) => [pairKey(r.type, r.level), r._count]));
+}
+
+// 5 minutes. The themed-puzzle map changes only when the offline
+// generator runs — a rare, deliberate act — so this could be cached far
+// longer; it is kept short so that the first thing anyone does after a
+// production regeneration (reload a vocabulary page to see the links
+// appear) does not look like a failed deploy for an hour.
+const themedPuzzleCache = getOrCreateGlobalSingleton(
+  "themedPuzzleCache",
+  () => new TtlCache<Array<{ topic: string; type: string; level: string; sequence: number }>>(300_000, "themedPuzzles"),
+);
+
+/**
+ * Every puzzle that ACTUALLY carries a topic, grouped by topic slug.
+ *
+ * Read from the database, deliberately, even though
+ * word-games/topics.ts already holds the frozen rung -> category table and
+ * answering from it would need no query at all.
+ *
+ * The reason is a real defect this replaced. The table says which rungs
+ * are MEANT to be themed; the rows say which ones ARE. Between the code
+ * deploying and the generator being run against production those two
+ * disagree, and for that whole window every vocabulary page told visitors
+ * "6 puzles gratis hechos solo con vocabulario de este tema" and linked to
+ * six puzzles still built from a level-wide mix. Measured on the live site
+ * 02.09.2026, when it had been true for every one of the 16 pages.
+ *
+ * The puzzle side of the link already followed the row rather than the
+ * table (see puzzleTitle's `topic` argument). This is the same rule
+ * applied to the other side: a page may only claim a theme the stored
+ * puzzle actually has.
+ */
+export async function getThemedPuzzlesByTopic(): Promise<Map<string, Array<{ type: WordGameType; level: string; sequence: number }>>> {
+  const rows = await cached(themedPuzzleCache, "all", async () =>
+    db.wordGamePuzzle.findMany({
+      where: { topic: { not: null } },
+      select: { topic: true, type: true, level: true, sequence: true },
+      orderBy: [{ level: "asc" }, { type: "asc" }, { sequence: "asc" }],
+    }).then((found) =>
+      found.map((r) => ({ topic: r.topic as string, type: r.type, level: r.level, sequence: r.sequence })),
+    ),
+  );
+
+  const byTopic = new Map<string, Array<{ type: WordGameType; level: string; sequence: number }>>();
+  for (const row of rows) {
+    if (!isWordGameType(row.type)) continue;
+    const list = byTopic.get(row.topic);
+    const entry = { type: row.type, level: row.level, sequence: row.sequence };
+    if (list) list.push(entry);
+    else byTopic.set(row.topic, [entry]);
+  }
+  return byTopic;
 }
 
 /** Which sequences are the curved/★ expert tier, for every (type, level)
