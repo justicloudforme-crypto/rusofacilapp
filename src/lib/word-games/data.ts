@@ -11,6 +11,10 @@ export interface PuzzleRow {
   sequence: number;
   curved: boolean;
   premiumOnly: boolean;
+  /** Vocabulary-category slug the words came from, or null for a puzzle
+   * built from the level-wide mixed pool. Read from the row rather than
+   * looked up, so a page describes the words it actually has. */
+  topic: string | null;
   grid: WordGameGrid;
   words: WordPlacement[];
 }
@@ -22,6 +26,7 @@ function parseRow(row: {
   sequence: number;
   curved: boolean;
   premiumOnly: boolean;
+  topic: string | null;
   gridData: string;
   words: string;
 }): PuzzleRow {
@@ -33,6 +38,7 @@ function parseRow(row: {
     sequence: row.sequence,
     curved: row.curved,
     premiumOnly: row.premiumOnly,
+    topic: row.topic,
     grid: JSON.parse(row.gridData) as WordGameGrid,
     words: JSON.parse(row.words) as WordPlacement[],
   };
