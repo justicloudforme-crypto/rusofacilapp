@@ -53,6 +53,7 @@ import { splitStoryParagraphs, splitSentences, storyAudioItemKey } from "../src/
 import { ensureAudioAsset } from "../src/lib/audio-assets";
 import { transcribeAudioWithWhisper } from "../src/lib/media/whisperTranscribe";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
 const db = new PrismaClient({ adapter });
 
@@ -477,9 +478,13 @@ async function processStory(
   console.log(`  Story done: ${generated} generated, ${cached} already cached.`);
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

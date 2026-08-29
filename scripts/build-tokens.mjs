@@ -13,6 +13,15 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
+import { pathToFileURL } from "node:url";
+
+// Only when this file is the process entry point. This script has its
+// effect at module scope, so importing it used to DO that work — see
+// src/lib/entry-point.ts for the incident behind this rule. Inlined rather
+// than imported because plain .mjs run by node cannot import the .ts helper.
+const IS_ENTRY_POINT = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
+
+
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const tokens = JSON.parse(readFileSync(path.join(root, "tokens.json"), "utf8"));
 
@@ -164,5 +173,7 @@ ${darkBlock}
 ${themeBlock}
 `;
 
-writeFileSync(path.join(root, "src/app/tokens.generated.css"), output);
-console.log("Wrote src/app/tokens.generated.css");
+if (IS_ENTRY_POINT) {
+  writeFileSync(path.join(root, "src/app/tokens.generated.css"), output);
+  console.log("Wrote src/app/tokens.generated.css");
+}

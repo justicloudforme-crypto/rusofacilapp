@@ -28,6 +28,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { sanitizeTextForTTS } from "../src/lib/speech";
 import { transcribeAudioWithWhisper } from "../src/lib/media/whisperTranscribe";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const STORY_ID = "cmsjur3be000160ncimavidij"; // Теремок
 const ITEM_KEY = "1-1";
 const NARRATOR_VOICE = "onyx";
@@ -157,7 +158,11 @@ async function main() {
   await db.$disconnect();
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

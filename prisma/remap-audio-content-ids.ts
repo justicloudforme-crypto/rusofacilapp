@@ -28,6 +28,7 @@ import "dotenv/config";
 import Database from "better-sqlite3";
 import { createClient, type InStatement } from "@libsql/client";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const BATCH_SIZE = 200;
 
 async function main() {
@@ -114,4 +115,8 @@ async function main() {
   console.log(`\nDone. ${rowsUpdated} AudioAsset row(s) updated across ${updates.length} content item(s).`);
 }
 
-main();
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main();
+}

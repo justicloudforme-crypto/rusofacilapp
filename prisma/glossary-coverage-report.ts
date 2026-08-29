@@ -22,6 +22,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { glossaryCategories } from "../src/lib/glossary";
 import content from "../src/lib/lessons/content.json";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
 const db = new PrismaClient({ adapter });
 
@@ -89,9 +90,13 @@ async function main() {
   console.log("");
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => db.$disconnect());
+}

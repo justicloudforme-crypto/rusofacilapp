@@ -24,6 +24,7 @@ import { db } from "../src/lib/db";
 // Two short, appealing, beginner-level (A1) folk tales — easy enough that
 // a brand-new visitor can actually read the whole thing and feel the
 // product working, not just see a locked wall of text.
+import { isEntryPoint } from "../src/lib/entry-point";
 const CURATED_FREE_STORIES: { title: string; author: string }[] = [
   { title: "Репка", author: "Русская народная сказка" },
   { title: "Теремок", author: "Русская народная сказка" },
@@ -62,9 +63,13 @@ async function main() {
   );
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

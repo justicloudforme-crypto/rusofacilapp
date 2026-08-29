@@ -44,11 +44,14 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { invalidateFlashcardIndex } from "../src/lib/flashcards/cache";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const APPLY = process.argv.includes("--apply");
 
-const prodUrl = process.env.PROD_TURSO_DATABASE_URL;
-const prodToken = process.env.PROD_TURSO_AUTH_TOKEN;
-if (!prodUrl || !prodToken) {
+const prodUrl = process.env.PROD_TURSO_DATABASE_URL ?? "";
+const prodToken = process.env.PROD_TURSO_AUTH_TOKEN ?? "";
+// Argument validation exits the process, so it must not run on import
+// either — see src/lib/entry-point.ts.
+if (isEntryPoint(import.meta.url) && (!prodUrl || !prodToken)) {
   console.error("Set PROD_TURSO_DATABASE_URL and PROD_TURSO_AUTH_TOKEN (production Turso credentials) before running this.");
   process.exit(1);
 }
@@ -186,9 +189,13 @@ async function main() {
   console.log(`Done — ${totalMissing} row(s) synced to production.`);
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exitCode = 1;
-  })
-  .finally(() => Promise.all([localDb.$disconnect(), prodDb.$disconnect()]));
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exitCode = 1;
+    })
+    .finally(() => Promise.all([localDb.$disconnect(), prodDb.$disconnect()]));
+}

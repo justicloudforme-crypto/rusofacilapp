@@ -14,6 +14,15 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
+import { pathToFileURL } from "node:url";
+
+// Only when this file is the process entry point. This script has its
+// effect at module scope, so importing it used to DO that work — see
+// src/lib/entry-point.ts for the incident behind this rule. Inlined rather
+// than imported because plain .mjs run by node cannot import the .ts helper.
+const IS_ENTRY_POINT = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
+
+
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const tokens = JSON.parse(readFileSync(path.join(root, "tokens.json"), "utf8"));
 
@@ -65,55 +74,57 @@ const pairs = [
 ];
 
 let contrastFailures = 0;
-console.log("--- contrast check ---");
-for (const p of pairs) {
-  const ratio = contrast(p.fg, p.bg);
-  const passes = ratio >= p.min;
-  const ok = p.expectFail ? !passes : passes;
-  if (!ok) contrastFailures++;
-  const label = p.expectFail ? (passes ? "FAIL" : "OK  ") : (passes ? "OK  " : "FAIL");
-  console.log(`${label} ${p.name}: ${ratio.toFixed(2)}:1 (needs ${p.min}:1)`);
-}
-
-// --- 2. Premium-on-clickable guard -----------------------------------------
-
-function listFiles(dir, out = []) {
-  for (const entry of readdirSync(dir)) {
-    if (entry === "node_modules" || entry === ".next" || entry === "generated") continue;
-    const p = path.join(dir, entry);
-    const s = statSync(p);
-    if (s.isDirectory()) listFiles(p, out);
-    else if (/\.tsx$/.test(entry)) out.push(p);
+if (IS_ENTRY_POINT) {
+  console.log("--- contrast check ---");
+  for (const p of pairs) {
+    const ratio = contrast(p.fg, p.bg);
+    const passes = ratio >= p.min;
+    const ok = p.expectFail ? !passes : passes;
+    if (!ok) contrastFailures++;
+    const label = p.expectFail ? (passes ? "FAIL" : "OK  ") : (passes ? "OK  " : "FAIL");
+    console.log(`${label} ${p.name}: ${ratio.toFixed(2)}:1 (needs ${p.min}:1)`);
   }
-  return out;
-}
 
-const premiumClassRe = /(bg-premium|text-premium|border-premium|var\(--color-premium)/;
-const clickableRe = /(onClick=|onPress=|href=|<Button\b)/;
+  // --- 2. Premium-on-clickable guard -----------------------------------------
 
-let premiumViolations = [];
-for (const file of listFiles(path.join(root, "src"))) {
-  const src = readFileSync(file, "utf8");
-  const lines = src.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (premiumClassRe.test(line) && clickableRe.test(line)) {
-      premiumViolations.push(`${path.relative(root, file)}:${i + 1}: ${line.trim()}`);
+  function listFiles(dir, out = []) {
+    for (const entry of readdirSync(dir)) {
+      if (entry === "node_modules" || entry === ".next" || entry === "generated") continue;
+      const p = path.join(dir, entry);
+      const s = statSync(p);
+      if (s.isDirectory()) listFiles(p, out);
+      else if (/\.tsx$/.test(entry)) out.push(p);
+    }
+    return out;
+  }
+
+  const premiumClassRe = /(bg-premium|text-premium|border-premium|var\(--color-premium)/;
+  const clickableRe = /(onClick=|onPress=|href=|<Button\b)/;
+
+  let premiumViolations = [];
+  for (const file of listFiles(path.join(root, "src"))) {
+    const src = readFileSync(file, "utf8");
+    const lines = src.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (premiumClassRe.test(line) && clickableRe.test(line)) {
+        premiumViolations.push(`${path.relative(root, file)}:${i + 1}: ${line.trim()}`);
+      }
     }
   }
-}
 
-console.log("\n--- premium-on-clickable guard ---");
-if (premiumViolations.length === 0) {
-  console.log("OK  no premium token found on a clickable element");
-} else {
-  for (const v of premiumViolations) console.log(`FAIL ${v}`);
-}
+  console.log("\n--- premium-on-clickable guard ---");
+  if (premiumViolations.length === 0) {
+    console.log("OK  no premium token found on a clickable element");
+  } else {
+    for (const v of premiumViolations) console.log(`FAIL ${v}`);
+  }
 
-console.log("\n--- summary ---");
-console.log(`contrast: ${pairs.length - contrastFailures}/${pairs.length} pairs pass`);
-console.log(`premium misuse: ${premiumViolations.length} violation(s)`);
+  console.log("\n--- summary ---");
+  console.log(`contrast: ${pairs.length - contrastFailures}/${pairs.length} pairs pass`);
+  console.log(`premium misuse: ${premiumViolations.length} violation(s)`);
 
-if (contrastFailures > 0 || premiumViolations.length > 0) {
-  process.exitCode = 1;
+  if (contrastFailures > 0 || premiumViolations.length > 0) {
+    process.exitCode = 1;
+  }
 }

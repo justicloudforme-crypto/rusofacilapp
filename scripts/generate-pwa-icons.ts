@@ -29,6 +29,7 @@ import sharp from "sharp";
 // Icon canvas background: bold brand blue (not the site's cream page
 // background) — a small home-screen icon needs to read clearly among
 // other apps, and cream-on-cream would wash the doll out at 48px.
+import { isEntryPoint } from "../src/lib/entry-point";
 const CANVAS_BG = "#2d5f8a";
 const DOLL_SKIN = "#fbe3c0";
 const DOLL_SCARF = "#e0a934";
@@ -147,7 +148,11 @@ async function main() {
   console.log("✔ PWA + Capacitor icons generated.");
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

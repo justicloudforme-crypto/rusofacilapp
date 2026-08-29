@@ -35,6 +35,7 @@ import "dotenv/config";
 import { db } from "../src/lib/db";
 import { validateGlossaryInput, type GlossaryCategory, type GlossaryExample } from "../src/lib/glossary";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const FORCE = process.argv.includes("--force");
 const DRY_RUN = process.argv.includes("--dry-run");
 const ONLY = (() => {
@@ -2064,9 +2065,13 @@ async function main() {
   console.log(`✔ Scope: ${scope}. Updated ${changed}, created ${created}, identical ${identical}, skipped (reviewed) ${skipped}.`);
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

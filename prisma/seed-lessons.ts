@@ -11,6 +11,7 @@ import { db } from "../src/lib/db";
 import content from "../src/lib/lessons/content.json";
 import { validateLessonContent } from "../src/lib/lessons/validate";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 async function main() {
   let ok = 0;
   let failed = 0;
@@ -35,9 +36,13 @@ async function main() {
   console.log(`✔ Seeded ${ok} lesson(s) into the database${failed ? `, ${failed} failed validation` : ""}.`);
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

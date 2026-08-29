@@ -25,6 +25,7 @@ import {
   type Readout,
 } from "../src/lib/experiment-readout";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 type Groups = {
   storyPilot: string[];
   storyControl: string[];
@@ -90,4 +91,8 @@ function main(): void {
   );
 }
 
-main();
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main();
+}

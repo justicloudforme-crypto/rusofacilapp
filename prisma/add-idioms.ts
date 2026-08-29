@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { db } from "../src/lib/db";
 import { validateIdiomInput } from "../src/lib/idioms";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 async function main() {
   const batchPath = join(__dirname, "idioms-batch.json");
   const raw = JSON.parse(readFileSync(batchPath, "utf-8"));
@@ -36,4 +37,8 @@ async function main() {
   if (failed > 0) process.exitCode = 1;
 }
 
-main().finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main().finally(() => db.$disconnect());
+}

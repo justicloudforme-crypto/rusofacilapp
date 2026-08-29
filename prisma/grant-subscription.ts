@@ -16,6 +16,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 // Mirrors MANUAL_GRANT_DAYS / isSubscriptionActive from src/lib/subscription.ts.
 // Not imported directly: that module is marked "server-only", which only
 // resolves inside the Next.js build, not under a plain tsx script.
+import { isEntryPoint } from "../src/lib/entry-point";
 const MANUAL_GRANT_DAYS = 30;
 const INACTIVE_STATUSES = new Set(["canceled", "past_due", "incomplete_expired"]);
 
@@ -26,9 +27,11 @@ function isSubscriptionActive(subscription: { status: string; currentPeriodEnd: 
   return subscription.status === "active" || subscription.status === "trialing";
 }
 
-const email = process.argv[2]?.trim().toLowerCase();
+const email = process.argv[2]?.trim().toLowerCase() ?? "";
 
-if (!email || !email.includes("@")) {
+// Argument validation exits the process, so it must not run on import
+// either — see src/lib/entry-point.ts.
+if (isEntryPoint(import.meta.url) && (!email || !email.includes("@"))) {
   console.error("Usage: npm run db:grant-subscription -- <email>");
   process.exit(1);
 }
@@ -71,9 +74,13 @@ async function main() {
   console.log(`✔ ${user.email} now has an active subscription (id: ${user.id})`);
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

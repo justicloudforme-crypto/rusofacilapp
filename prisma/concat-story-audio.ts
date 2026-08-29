@@ -62,6 +62,7 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { splitSentences, splitStoryParagraphs, storyAudioItemKey } from "../src/lib/stories";
 import { resolveFfmpegBinary } from "../src/lib/video-lesson/youtubeCaptions";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const execFileAsync = promisify(execFile);
 
 const adapter = new PrismaLibSql({
@@ -238,9 +239,13 @@ async function main() {
   );
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => db.$disconnect());
+}

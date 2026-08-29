@@ -23,24 +23,30 @@ import { resolve } from "node:path";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
+import { isEntryPoint } from "../src/lib/entry-point";
 const adapter = new PrismaLibSql({
   url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 const db = new PrismaClient({ adapter });
 
-const out = process.argv[2];
-if (!out) {
-  console.error("Usage: tsx prisma/backup-word-games.ts <output.json>");
-  process.exit(1);
+// Argument validation exits the process, so it must not run on import
+// either — see src/lib/entry-point.ts.
+if (isEntryPoint(import.meta.url)) {
+  const target = process.argv[2];
+  if (!target) {
+    console.error("Usage: tsx prisma/backup-word-games.ts <output.json>");
+    process.exit(1);
+  }
+  // A backup inside the working tree is one `git clean` away from being
+  // gone, and would also be a candidate for accidental commit.
+  if (resolve(target).startsWith(resolve(process.cwd()))) {
+    console.error(`Refusing to write the backup inside the repository: ${resolve(target)}`);
+    console.error("Pass a path outside the working tree.");
+    process.exit(1);
+  }
 }
-// A backup inside the working tree is one `git clean` away from being
-// gone, and would also be a candidate for accidental commit.
-if (resolve(out).startsWith(resolve(process.cwd()))) {
-  console.error(`Refusing to write the backup inside the repository: ${resolve(out)}`);
-  console.error("Pass a path outside the working tree.");
-  process.exit(1);
-}
+const out = process.argv[2] as string;
 
 async function main() {
   const puzzles = await db.wordGamePuzzle.findMany({
@@ -71,9 +77,13 @@ async function main() {
   console.log(`  distinct puzzle ids: ${new Set(puzzles.map((p) => p.id)).size}`);
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exitCode = 1;
-  })
-  .finally(() => db.$disconnect());
+// Only when this file is the process entry point — importing it must not
+// run it. See src/lib/entry-point.ts for the incident behind this.
+if (isEntryPoint(import.meta.url)) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exitCode = 1;
+    })
+    .finally(() => db.$disconnect());
+}
