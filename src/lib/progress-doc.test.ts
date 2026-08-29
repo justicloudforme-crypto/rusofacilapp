@@ -28,6 +28,10 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["what is the stack", "Next.js 16.3"],
   ["where does production data live", "Turso"],
   ["how do I run and check it", "## 1. КАК ЗАПУСТИТЬ И ПРОВЕРИТЬ"],
+  // Added 01.09.2026 after a real cold start: the very first action of the
+  // session — noticing local main was three merges behind prod — was the
+  // one thing the file did not tell anyone to do.
+  ["is my local main up to date", "git merge --ff-only origin/main"],
   ["why do half the pages not render locally", "prisma/dev.db"],
   ["how do I render a DB page without credentials", "migrate diff --from-empty"],
   ["what state is it in, measured when", "## 2. ТЕКУЩЕЕ СОСТОЯНИЕ — ЦИФРЫ"],
@@ -39,6 +43,8 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["why case-insensitive attributes", "hrefLang"],
   ["what went wrong with regexes built from data", "isPlausibleShortCode"],
   ["where is the shared escape", "src/lib/regex.ts"],
+  ["can the filter I apply before measuring be wrong too", "### 4.5."],
+  ["how does robots.txt resolve Allow against Disallow", "Order of precedence for rules"],
   ["what did the title change break and why", "## 5. ЗАГОЛОВКИ: ЧТО СЛОМАЛОСЬ"],
   ["why was the simple reorder rejected", "174 заголовка вместо 69"],
   ["what may I not touch", "## 6. ЗАМОРОЖЕННЫЕ СТРАНИЦЫ"],
