@@ -92,6 +92,67 @@ export function truncateForMeta(text: string, maxLen = 155): string {
 }
 
 /**
+ * Google truncates a SERP title on pixel width, not characters; ~70 is the
+ * safe ceiling for Spanish and Russian alike. The fixed " | RusoFácilapp"
+ * suffix spends 15 of them.
+ *
+ * Measured across the whole live sitemap on 29.08.2026: 739 of 1892 URLs
+ * had a title over this, median 110 characters on the media pages and 159
+ * at the worst. Those titles were being cut mid-phrase in the result
+ * snippet — often mid-parenthesis, sometimes before the level ever
+ * appeared.
+ */
+export const TITLE_MAX = 70;
+
+/** Cuts a title down to `max` while keeping it readable.
+ *
+ * Two steps, in order. First drop a trailing parenthetical the budget
+ * cannot hold: these titles are written as "Name (what it is)", so the part
+ * before the bracket is a complete phrase on its own and cutting there
+ * reads like a title rather than like an accident. Only then fall back to a
+ * word-boundary cut with an ellipsis.
+ *
+ * Deliberately NOT cutting at the first ":" or "—": measured on the real
+ * media titles, that collapses "Verbos de movimiento con prefijos: salir"
+ * and "…: repaso" into the same string, and two pages with one title is
+ * the problem this whole change is fixing. */
+export function shortenTitle(title: string, max = TITLE_MAX): string {
+  if (title.length <= max) return title;
+  const paren = title.indexOf(" (");
+  if (paren > 0 && paren <= max) return title.slice(0, paren);
+  const cut = title.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:—-]+$/, "") + "…";
+}
+
+/**
+ * Builds "<base> — <qualifier> | RusoFácilapp" and gives up the least
+ * valuable part first when it doesn't fit: the brand suffix, then the
+ * qualifier, then (only then) length from the base itself.
+ *
+ * The order encodes what each part is worth in a search result. The base is
+ * the thing someone searched for — a song title, a story title, a lesson
+ * name. The qualifier ("cuento en ruso (A1)") says what kind of page it is.
+ * The brand is what a reader can infer from the domain anyway.
+ */
+export function fitTitle(base: string, qualifier: string, max = TITLE_MAX): string {
+  const brand = " | RusoFácilapp";
+  // Second pass runs on the base with its trailing parenthetical dropped —
+  // shortening the base can free enough room to put the qualifier back,
+  // which is worth more than the bracketed aside it replaces.
+  for (const candidate of [base, shortenTitle(base, max)]) {
+    const full = `${candidate} — ${qualifier}${brand}`;
+    if (full.length <= max) return full;
+    const noBrand = `${candidate} — ${qualifier}`;
+    if (noBrand.length <= max) return noBrand;
+    const noQualifier = `${candidate}${brand}`;
+    if (noQualifier.length <= max) return noQualifier;
+    if (candidate.length <= max) return candidate;
+  }
+  return shortenTitle(shortenTitle(base, max), max);
+}
+
+/**
  * `isAccessibleForFree` + `hasPart` fields (schema.org's documented paywall
  * markup: https://developers.google.com/search/docs/appearance/structured-
  * data/paywalled-content) to merge into a page's own JSON-LD object.

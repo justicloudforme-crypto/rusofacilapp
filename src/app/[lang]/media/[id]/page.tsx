@@ -13,6 +13,7 @@ import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
 import VocabularyTab from "@/components/lesson/VocabularyTab";
 import JsonLd from "@/components/seo/JsonLd";
+import { contentPageTitle } from "@/lib/frozen-pages";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
@@ -22,10 +23,22 @@ export async function generateMetadata({
   if (!isLocale(lang)) return {};
   const item = await getMediaById(id);
   if (!item) return {};
-  const title =
+  // Measured across the live sitemap 29.08.2026: every one of the 550
+  // media URLs had a title over Google's ~70-character display ceiling,
+  // median 110 and 159 at the worst, so the snippet was cut mid-phrase and
+  // often before the level ever appeared. fitTitle gives up the brand
+  // suffix, then the qualifier, then a trailing parenthetical, in that
+  // order — see its own comment for why the order is that way round.
+  //
+  // The 100 songs in the experiment keep the old, too-long title, byte for
+  // byte: <title> is what Google shows and part of what it ranks on, and
+  // changing it on half a measured group would move the thing being
+  // measured. They are queued for after the 25.09 readout (PROGRESS.md).
+  const qualifier =
     lang === "ru"
-      ? `${item.title} — русский язык через медиа (${item.level}) | RusoFácilapp`
-      : `${item.title} — ruso con música y vídeo (${item.level}) | RusoFácilapp`;
+      ? `русский язык через медиа (${item.level})`
+      : `ruso con música y vídeo (${item.level})`;
+  const title = contentPageTitle(item.id, item.title, qualifier);
   const description =
     lang === "ru"
       ? `Изучайте русский язык через видео и музыку с субтитрами и упражнениями, уровень ${item.level}, в RusoFácilapp.`
