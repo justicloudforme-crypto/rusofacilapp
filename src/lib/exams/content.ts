@@ -54,13 +54,10 @@ export async function invalidateExamContentCache(level: string, examSlug: string
   await examContentCache.del(examContentCacheKey(level, examSlug));
 }
 
-/** Exam slugs follow "{level}-exam-{n}" (e.g. "a1-exam-2") — unlike lesson
- * slugs there's no fixed catalog to check against (new exams are created
- * on demand through /admin/exams, not pre-seeded), so this only checks the
- * shape, not that the exam actually exists yet. */
-export function isExamSlugFormat(level: string, examSlug: string): boolean {
-  return new RegExp(`^${level}-exam-[1-9][0-9]*$`).test(examSlug);
-}
+// Moved to ./slug.ts on 31.08.2026 so the admin form (a client component)
+// can use the same rule — this module is server-only. Re-exported so the
+// existing importers keep working unchanged.
+export { isExamSlugFormat } from "./slug";
 
 export type ExamStatus = "custom" | "example" | "empty";
 

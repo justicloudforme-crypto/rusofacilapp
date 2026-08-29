@@ -4,6 +4,7 @@ import { useEffect, useState, type ElementType, type ReactNode } from "react";
 import type { GlossaryTermData } from "./GlossaryApp";
 import GlossaryTermPopover from "./GlossaryTermPopover";
 import { getCachedGlossaryTerms, loadGlossaryTerms } from "@/lib/glossary-client";
+import { escapeRegExp } from "@/lib/regex";
 
 interface Matcher {
   pattern: RegExp;
@@ -12,10 +13,6 @@ interface Matcher {
 
 let cachedMatcher: Matcher | null = null;
 let cachedMatcherTerms: GlossaryTermData[] | null = null;
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 /** Builds one alternation regex from every term, longest surface form
  * first, so "adverbio de lugar" wins over the shorter "adverbio" when both

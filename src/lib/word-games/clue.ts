@@ -9,12 +9,10 @@
 // Built once, offline, at generation time — see prisma/generate-word-games.ts.
 // No LLM call, no schema change: exampleEs already exists on every card.
 
+import { escapeRegExp } from "@/lib/regex";
+
 function stripAccents(value: string): string {
   return value.normalize("NFD").replace(/[̀-ͯ]/g, "");
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // translationEs sometimes lists several synonyms ("coraje, arrojo,
