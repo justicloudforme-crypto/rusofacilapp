@@ -105,8 +105,16 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
             <div className="pt-6">
               <TrustStrip
                 items={[
-                  { value: String(stats.storyCount), label: dict.home.trustStories },
-                  { value: String(stats.wordCount), label: dict.home.trustWords },
+                  // Dropped, not zeroed, when the counts are unreadable —
+                  // getHomepageStats returns null rather than let the front
+                  // page 500 over a decorative number. The two static items
+                  // below still carry the strip.
+                  ...(stats
+                    ? [
+                        { value: String(stats.storyCount), label: dict.home.trustStories },
+                        { value: String(stats.wordCount), label: dict.home.trustWords },
+                      ]
+                    : []),
                   {
                     value: `${levelSlugs[0].toUpperCase()}–${levelSlugs[levelSlugs.length - 1].toUpperCase()}`,
                     label: dict.home.trustLevelsLabel,

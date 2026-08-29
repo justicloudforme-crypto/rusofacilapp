@@ -116,15 +116,33 @@ const themedPuzzleCache = getOrCreateGlobalSingleton(
  * puzzle actually has.
  */
 export async function getThemedPuzzlesByTopic(): Promise<Map<string, Array<{ type: WordGameType; level: string; sequence: number }>>> {
-  const rows = await cached(themedPuzzleCache, "all", async () =>
-    db.wordGamePuzzle.findMany({
-      where: { topic: { not: null } },
-      select: { topic: true, type: true, level: true, sequence: true },
-      orderBy: [{ level: "asc" }, { type: "asc" }, { sequence: "asc" }],
-    }).then((found) =>
-      found.map((r) => ({ topic: r.topic as string, type: r.type, level: r.level, sequence: r.sequence })),
-    ),
-  );
+  // Degrades to "no themed puzzles" instead of throwing (29.08.2026).
+  //
+  // The callers are the 23 /es/vocabulary/[categoria] pages — 8 355 to
+  // 42 209 characters of real content each — and the six themed landings,
+  // where this only feeds the "Más puzles de este tema" list. On every one
+  // of them the block is an extra, and an empty map is a state the callers
+  // already handle correctly: no themed puzzle in the data means no block
+  // and no promise, which is exactly the rule established on 02.09.2026
+  // when these pages were advertising themes the rows did not have.
+  //
+  // So a failure here costs the link block, not 29 pages. It does NOT
+  // cover getLandingPuzzleForTopic below: there the puzzle IS the page,
+  // and a landing with no grid should 404 rather than pretend.
+  let rows: Array<{ topic: string; type: string; level: string; sequence: number }> = [];
+  try {
+    rows = await cached(themedPuzzleCache, "all", async () =>
+      db.wordGamePuzzle.findMany({
+        where: { topic: { not: null } },
+        select: { topic: true, type: true, level: true, sequence: true },
+        orderBy: [{ level: "asc" }, { type: "asc" }, { sequence: "asc" }],
+      }).then((found) =>
+        found.map((r) => ({ topic: r.topic as string, type: r.type, level: r.level, sequence: r.sequence })),
+      ),
+    );
+  } catch (error) {
+    console.error("[word-games] could not read themed puzzles; serving pages without the puzzle block", error);
+  }
 
   const byTopic = new Map<string, Array<{ type: WordGameType; level: string; sequence: number }>>();
   for (const row of rows) {
@@ -173,10 +191,22 @@ export const getLandingPuzzleForTopic = cache(async (topic: string): Promise<Puz
  * puzzle's `words` JSON just to check. See countAllSequences for why this
  * is batched instead of one query per pair. */
 export async function getAllCurvedSequences(): Promise<Map<string, Set<number>>> {
-  const rows = await db.wordGamePuzzle.findMany({
-    where: { curved: true },
-    select: { type: true, level: true, sequence: true },
-  });
+  // Degrades to "no stars" (29.08.2026). The ★ badge is a hint about
+  // difficulty; /es/word-games is in the sitemap and hands a crawler 196
+  // links, and losing all of them because a decorative badge could not be
+  // computed is the sitemap outage in miniature.
+  //
+  // Its two neighbours below and above deliberately do NOT degrade — see
+  // db-read-resilience.test.ts for which, and why.
+  let rows: Array<{ type: string; level: string; sequence: number }> = [];
+  try {
+    rows = await db.wordGamePuzzle.findMany({
+      where: { curved: true },
+      select: { type: true, level: true, sequence: true },
+    });
+  } catch (error) {
+    console.error("[word-games] could not read curved rungs; serving the picker without ★ badges", error);
+  }
   const byPair = new Map<string, Set<number>>();
   for (const row of rows) {
     const key = pairKey(row.type, row.level);
@@ -191,7 +221,13 @@ export async function getAllCurvedSequences(): Promise<Map<string, Set<number>>>
  * (type, level) pair at once — always a superset of getAllCurvedSequences
  * (every curved puzzle is also premiumOnly, see schema.prisma), plus the
  * hardest non-curved rungs. Powers the picker's crown/lock badge the same
- * way getAllCurvedSequences powers the star. */
+ * way getAllCurvedSequences powers the star.
+ *
+ * Deliberately NOT wrapped in try/catch, unlike its neighbour. Degrading
+ * this to an empty map would mark every paid rung as free in the picker —
+ * a read that decides what is behind the paywall has to fail closed. The
+ * page 500ing is the correct outcome here, and db-read-resilience.test.ts
+ * asserts it stays that way. */
 export async function getAllPremiumOnlySequences(): Promise<Map<string, Set<number>>> {
   const rows = await db.wordGamePuzzle.findMany({
     where: { premiumOnly: true },

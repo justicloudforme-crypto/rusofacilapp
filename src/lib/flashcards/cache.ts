@@ -56,10 +56,32 @@ const localLayer = getOrCreateGlobalSingleton<{ entry: LocalEntry | null }>(
 
 async function fetchFlashcardIndex(): Promise<FlashcardRow[]> {
   const cards = await db.flashcardCard.findMany({ orderBy: { createdAt: "asc" } });
-  const audioRows = await db.audioAsset.findMany({
-    where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
-    select: { contentId: true, itemKey: true, audioUrl: true },
-  });
+
+  // The narration join degrades; the card read above deliberately does not.
+  //
+  // Found by experiment on 29.08.2026, not by reading this file: a
+  // production build was run against a database with AudioAsset renamed
+  // away, and /es/vocabulary/comida returned 500 — a page carrying 8 355 to
+  // 42 209 characters of cards, transcriptions and examples, lost because a
+  // play-button URL could not be looked up. And these pages have no audio
+  // player at all by design (the narration is what interactive flashcards
+  // are for), so they were paying with everything for something they never
+  // show.
+  //
+  // The blast radius made it the worst instance of the pattern found: this
+  // one array backs all 23 vocabulary pages, /api/flashcards,
+  // /api/flashcards/summary and the homepage previews. Cards without audio
+  // is a state every consumer already handles — `audioUrl` is nullable and
+  // SpeakButton falls back to speechSynthesis when it is unset.
+  let audioRows: Array<{ contentId: string; itemKey: string; audioUrl: string }> = [];
+  try {
+    audioRows = await db.audioAsset.findMany({
+      where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
+      select: { contentId: true, itemKey: true, audioUrl: true },
+    });
+  } catch (error) {
+    console.error("[flashcards] could not read AudioAsset; serving the card bank without narration", error);
+  }
   const wordAudioByCardId = new Map<string, string>();
   const exampleAudioByCardId = new Map<string, string>();
   for (const row of audioRows) {
