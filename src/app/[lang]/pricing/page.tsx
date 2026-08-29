@@ -16,7 +16,14 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">)
   const dict = await getDictionary(lang);
   return {
     title: `${dict.pricing.title} | RusoFácilapp`,
-    description: dict.pricing.subtitle,
+    // Not dict.pricing.subtitle: that is the VISIBLE subtitle on the page,
+    // 60-63 characters, which is too thin for a snippet — and lengthening
+    // it would change what a reader sees. Measured 30.08.2026, these were
+    // the only two descriptions on the whole site under 70 characters.
+    description:
+      lang === "ru"
+        ? "Тарифы RusoFácilapp: месячный, годовой и пожизненный доступ ко всем урокам A1–B2, рассказам, видео и играм. Оплата картой или наличными в OXXO."
+        : "Planes de RusoFácilapp: mensual, anual o de por vida, con acceso a todas las lecciones de A1 a B2, cuentos, vídeos y juegos. Tarjeta o pago en OXXO.",
     // Canonical is the query-free /pricing even when the visitor arrived at
     // /pricing?next=…&highlight=premium — same as the header-based version
     // it replaces, which read a pathname that never carried a query string.

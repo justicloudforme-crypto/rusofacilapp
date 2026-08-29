@@ -13,7 +13,8 @@ import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
 import VocabularyTab from "@/components/lesson/VocabularyTab";
 import JsonLd from "@/components/seo/JsonLd";
-import { contentPageTitle } from "@/lib/frozen-pages";
+import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
+import { frozenMediaDescription, mediaDescription } from "@/lib/media/metadata";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
@@ -38,11 +39,22 @@ export async function generateMetadata({
     lang === "ru"
       ? `русский язык через медиа (${item.level})`
       : `ruso con música y vídeo (${item.level})`;
-  const title = contentPageTitle(item.id, item.title, qualifier);
-  const description =
-    lang === "ru"
-      ? `Изучайте русский язык через видео и музыку с субтитрами и упражнениями, уровень ${item.level}, в RusoFácilapp.`
-      : item.description;
+  // Short form, used when the long one will not fit. Before it existed, a
+  // title that overflowed dropped the qualifier entirely and fell back to
+  // "base | brand" — which collided with the LESSON of the same name, since
+  // the grammar videos mirror the lesson topics on purpose. Caught by the
+  // live crawl of 30.08.2026; see fitTitle's own comment.
+  const shortQualifier = lang === "ru" ? `видео (${item.level})` : `vídeo (${item.level})`;
+  const title = contentPageTitle(item.id, item.title, qualifier, shortQualifier);
+  // The /ru description used to be one sentence with only the level
+  // substituted in, so all 275 Russian media pages shared five strings
+  // between them — measured on the live site 30.08.2026. Naming the item
+  // makes each one describe its own page. The Spanish side already had a
+  // per-item description; both are now capped at the 155 characters Google
+  // shows, the same cap truncateForMeta already applies in the glossary.
+  const description = isFrozenPage(item.id)
+    ? frozenMediaDescription(lang, item)
+    : mediaDescription(lang, item);
   return { title, description, alternates: routeAlternates(lang, `/media/${encodeURIComponent(id)}`) };
 }
 

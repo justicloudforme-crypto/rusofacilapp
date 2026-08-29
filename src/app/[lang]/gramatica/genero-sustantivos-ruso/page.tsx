@@ -32,7 +32,7 @@ export async function generateMetadata({
   return {
     title: "El género de los sustantivos en ruso: cómo reconocerlo",
     description:
-      "El ruso tiene tres géneros y, a diferencia del español, casi siempre se adivinan por la última letra de la palabra. La regla, las excepciones que importan y por qué el género cambia el verbo en pasado.",
+      "El ruso tiene tres géneros y casi siempre se adivinan por la última letra. La regla, las excepciones que importan y por qué cambian el verbo en pasado.",
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },

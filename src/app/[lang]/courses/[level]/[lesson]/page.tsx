@@ -36,7 +36,15 @@ export async function generateMetadata({
     lang === "ru"
       ? `урок ${lesson}, уровень ${level.toUpperCase()}`
       : `lección ${lesson}, nivel ${level.toUpperCase()}`;
-  const title = fitTitle(lessonTitle, qualifier);
+  // Short form for when the long one will not fit. Without it a lesson
+  // whose name overflowed fell back to "name | brand" — identical to the
+  // grammar VIDEO of the same name, which the live crawl of 30.08.2026
+  // caught on /courses/a2/23 and /courses/b1/16.
+  const shortQualifier =
+    lang === "ru"
+      ? `урок ${lesson} (${level.toUpperCase()})`
+      : `lección ${lesson} (${level.toUpperCase()})`;
+  const title = fitTitle(lessonTitle, qualifier, shortQualifier);
   // The grammar intro is real per-lesson text (unlike levelDict.description,
   // which is the same 4 sentences repeated across all 30 lessons of a
   // level) and is now genuinely visible to every visitor regardless of
