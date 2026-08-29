@@ -4,6 +4,14 @@ import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Baked into the client bundle at build time, because the browser has no
+  // way to read VERCEL_ENV at runtime. Empty string on any build that is
+  // not running on Vercel (a laptop, CI), which is what disables the
+  // browser Sentry SDK there — see src/lib/deploy-environment.ts for why
+  // NODE_ENV cannot be used for this.
+  env: {
+    NEXT_PUBLIC_DEPLOY_ENV: process.env.VERCEL_ENV ?? "",
+  },
   // Next.js's dev server blocks cross-origin requests for its own JS
   // chunks/HMR websocket by default (a DNS-rebinding protection) — only
   // "localhost" is allowed out of the box. That silently 403s every JS

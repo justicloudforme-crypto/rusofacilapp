@@ -1,12 +1,27 @@
 import * as Sentry from "@sentry/nextjs";
 
+// The browser cannot read VERCEL_ENV, so next.config.ts bakes it in at
+// build time as NEXT_PUBLIC_DEPLOY_ENV (empty string off Vercel). Same
+// gate as the server/edge configs — see src/lib/deploy-environment.ts.
+const isDeployed = Boolean(process.env.NEXT_PUBLIC_DEPLOY_ENV);
+// NOTE: `environment` is deliberately NOT set here. On Vercel the SDK
+// derives it itself as "vercel-production" / "vercel-preview" — verified
+// against the live site, whose HTML carries
+// `sentry-environment=vercel-production` in its baggage meta tag. Setting
+// it explicitly to VERCEL_ENV would rename the environment to
+// "production" and split the project's history in two. Off Vercel the SDK
+// would fall back to NODE_ENV, but nothing is sent there at all, so the
+// value is moot.
+
+
 // Runs in the browser. NEXT_PUBLIC_SENTRY_DSN (not SENTRY_DSN) because this
 // file ships to the client bundle — a server-only env var would be
 // undefined here. Leaving it unset disables the SDK entirely (Sentry.init
 // with dsn: undefined is a documented no-op), so this is safe to deploy
 // before a Sentry project/DSN exists.
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: isDeployed ? process.env.NEXT_PUBLIC_SENTRY_DSN : undefined,
+  enabled: isDeployed,
   // Low sample rate: this is a content-heavy app (lessons/flashcards/media),
   // not a few critical checkout flows — full tracing on every page view
   // would mostly capture noise. Revisit upward once real traffic volume is
