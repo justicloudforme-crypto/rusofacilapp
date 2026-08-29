@@ -6,6 +6,8 @@
     "postinstall": "prisma generate",
     "build:tokens": "node scripts/build-tokens.mjs",
     "check:tokens": "node scripts/check-tokens.mjs",
+    "check:rendered": "node scripts/check-rendered-surface.mjs --control",
+    "check:no-db-in-tests": "node scripts/check-tests-touch-no-database.mjs",
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
     "build": "tsx prisma/ensure-schema-sync.ts && next build --webpack",

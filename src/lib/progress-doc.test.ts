@@ -114,6 +114,21 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["do scripts run when imported", "### 7.30."],
   ["how do I stop a script running on import", "isEntryPoint(import.meta.url)"],
   ["can the test suite reach production", "указывающим на несуществующий хост"],
+  // Added 29.08.2026 with the first production incident, and rewritten the
+  // same day when it was diagnosed and fixed. These exist so a cold reader
+  // learns what the audit numbers cannot see BEFORE quoting them.
+  ["is anything broken in production right now", "## 2.1. ИНЦИДЕНТЫ НА ПРОДЕ"],
+  ["what is incident 1", "### ИНЦИДЕНТ №1"],
+  ["what actually broke, and what caused it", "Причина, в одну строку"],
+  ["why did the audit not catch it", "Почему этого не увидел ни один замер в этом файле"],
+  ["what do the 1908 URLs actually prove", "Не называть анонимный обход «проверкой сайта»"],
+  ["how do I tell a client failure from a server one", "даёт **500**, а не 200"],
+  ["how do I check what a browser really sees", "check-rendered-surface.mjs"],
+  ["which pages render differently when signed in", "Меняются все девять"],
+  ["how do I log in locally without a password", "HMAC-SHA256 по `SESSION_SECRET`"],
+  ["are there users in the local dev.db", "**333 пользователя**"],
+  ["was the entry-point gate fully verified", "по всем пяти"],
+  ["can a test reach production through DATABASE_URL", "0 соединений"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {
