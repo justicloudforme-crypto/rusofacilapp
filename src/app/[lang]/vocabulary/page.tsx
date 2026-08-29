@@ -20,7 +20,20 @@ export async function generateMetadata({
   // announcing themselves as the same one. ES only: the /ru copy has no
   // category index below (see showCategoryIndex), so the Russian fallback
   // still describes it correctly.
-  if (lang !== "es") return { alternates };
+  //
+  // Follow-up 29.08.2026: "correctly" was too generous — the sitewide
+  // audit found /ru/vocabulary still serving the /ru home page's title and
+  // description verbatim, which is the same duplicate the /es copy was
+  // fixed for. It gets its own, describing what the Russian page actually
+  // is: the card trainer, without the category index.
+  if (lang !== "es") {
+    return {
+      title: "Русские слова по темам: карточки с озвучкой | RusoFácilapp",
+      description:
+        "Тренажёр русской лексики для испаноговорящих: карточки с транскрипцией, переводом и примером, по темам и уровням от A1 до C1, с интервальным повторением.",
+      alternates,
+    };
+  }
   return {
     title: "Vocabulario ruso por temas, con traducción | RusoFácilapp",
     description:

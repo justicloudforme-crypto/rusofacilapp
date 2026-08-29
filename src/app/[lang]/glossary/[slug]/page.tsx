@@ -15,7 +15,7 @@ import { attachGlossaryAudio } from "@/lib/glossary-audio";
 import RelatedLessonsList from "@/components/glossary/RelatedLessonsList";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList, truncateForMeta, routeAlternates } from "@/lib/site";
+import { SITE_URL, breadcrumbList, shortenTitle, truncateForMeta, routeAlternates } from "@/lib/site";
 
 // Content changes rarely (admin edits, occasional seed batch — see
 // GlossaryTerm.reviewedAt's own comment) and generateStaticParams below
@@ -92,7 +92,15 @@ export async function generateMetadata({
   // Term text varies a lot in length (5–52 chars) — for a long term, the
   // brand suffix is what has to give so the actual search term stays
   // intact and visible, per the "term matters more than brand" call.
-  const title = titleWithSuffix.length > 60 ? titleBase : titleWithSuffix;
+  // The 60-character rule above is the deliberate "term matters more than
+  // brand" call and is left alone — it already keeps 221 of the 234
+  // glossary titles inside the ceiling. What it cannot do is help a term
+  // whose own name is long ("gerundio de pasado (деепричастие прошедшего
+  // времени)"): 13 titles were still 71-84 characters on the live site
+  // (measured 29.08.2026). shortenTitle drops the bracketed Russian
+  // equivalent in exactly those cases and leaves every other title
+  // byte-identical.
+  const title = shortenTitle(titleWithSuffix.length > 60 ? titleBase : titleWithSuffix);
 
   return { title, description, alternates: routeAlternates(lang, `/glossary/${encodeURIComponent(slug)}`) };
 }

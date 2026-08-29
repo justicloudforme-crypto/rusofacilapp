@@ -16,7 +16,7 @@ import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList, truncateForMeta, paywallJsonLd, routeAlternates } from "@/lib/site";
+import { SITE_URL, breadcrumbList, fitTitle, truncateForMeta, paywallJsonLd, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -27,10 +27,16 @@ export async function generateMetadata({
   const levelDict = dict.courses.levels[level];
   const lessonTitle = levelDict.lessons[Number(lesson) - 1];
   if (!lessonTitle) return {};
-  const title =
+  // 168 of the 240 lesson URLs were over Google's ~70-character title
+  // ceiling (measured on the live sitemap 29.08.2026), the worst at 110 —
+  // lesson names quote Russian conjunctions inline ("Causales: 'потому
+  // что', 'так как', 'поскольку'"), which is exactly the part a reader
+  // needs and exactly the part that was being cut off.
+  const qualifier =
     lang === "ru"
-      ? `${lessonTitle} — урок ${lesson}, уровень ${level.toUpperCase()} | RusoFácilapp`
-      : `${lessonTitle} — lección ${lesson}, nivel ${level.toUpperCase()} | RusoFácilapp`;
+      ? `урок ${lesson}, уровень ${level.toUpperCase()}`
+      : `lección ${lesson}, nivel ${level.toUpperCase()}`;
+  const title = fitTitle(lessonTitle, qualifier);
   // The grammar intro is real per-lesson text (unlike levelDict.description,
   // which is the same 4 sentences repeated across all 30 lessons of a
   // level) and is now genuinely visible to every visitor regardless of

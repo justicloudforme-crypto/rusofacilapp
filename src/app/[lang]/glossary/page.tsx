@@ -16,7 +16,17 @@ export async function generateMetadata({
   // Same fallback-metadata problem the vocabulary hub had (see its own
   // comment): 117 term pages each carry a hand-written title, but the hub
   // they all link back to announced itself with the home page's title.
-  if (lang !== "es") return { alternates };
+  //
+  // Follow-up 29.08.2026: the sitewide audit found /ru/glossary doing the
+  // same against the /ru home page, so it gets its own too.
+  if (lang !== "es") {
+    return {
+      title: "Глоссарий русской грамматики на испанском | RusoFácilapp",
+      description:
+        "Термины русской грамматики, объяснённые по-испански: падеж, вид глагола, склонение, глаголы движения — с русским эквивалентом и примерами.",
+      alternates,
+    };
+  }
   return {
     title: "Glosario de gramática rusa en español | RusoFácilapp",
     description:
