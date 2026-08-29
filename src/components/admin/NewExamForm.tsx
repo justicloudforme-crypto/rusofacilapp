@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { LevelSlug } from "@/lib/courses";
+import { isExamSlugFormat } from "@/lib/exams/slug";
 
 export default function NewExamForm({
   lang,
@@ -29,7 +30,7 @@ export default function NewExamForm({
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const trimmed = examSlug.trim();
-    if (!new RegExp(`^${level}-exam-[1-9][0-9]*$`).test(trimmed)) {
+    if (!isExamSlugFormat(level, trimmed)) {
       setError(dict.invalidExamSlug);
       return;
     }
