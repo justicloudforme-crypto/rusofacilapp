@@ -44,13 +44,45 @@ interface ModelDef {
   fields: FieldDef[];
 }
 
+/** Reads one model body by COUNTING BRACES rather than by matching up to
+ * the next "}".
+ *
+ * The previous version used /model\s+(\w+)\s*{([^}]*)}/ and truncated a
+ * model at the first closing brace that appeared anywhere inside it —
+ * including inside a doc comment. WordGamePuzzle documents its JSON
+ * columns as `{ size: number, grid: string[][] }` and `{ word, clue, row,
+ * col, ... }`, so this script could only ever see 7 of that model's 11
+ * scalar fields. Every field declared after those comments was invisible,
+ * which meant a new column there was silently never added to production.
+ *
+ * That is not hypothetical: `updatedAt` was added to WordGamePuzzle at the
+ * end of the model on 02.09.2026, this script skipped it, and sitemap.ts —
+ * which selects it — returned HTTP 500 for the whole file on production
+ * until the column was added by hand. A sitemap that 500s is invisible to
+ * a crawler, so the fix for THAT outage is this parser, not the one
+ * column. */
+function modelBodies(schemaText: string): Array<{ name: string; body: string }> {
+  const out: Array<{ name: string; body: string }> = [];
+  const header = /model\s+(\w+)\s*\{/g;
+  let match: RegExpExecArray | null;
+  while ((match = header.exec(schemaText))) {
+    let depth = 1;
+    let i = header.lastIndex;
+    while (i < schemaText.length && depth > 0) {
+      if (schemaText[i] === "{") depth++;
+      else if (schemaText[i] === "}") depth--;
+      i++;
+    }
+    out.push({ name: match[1], body: schemaText.slice(header.lastIndex, i - 1) });
+    header.lastIndex = i;
+  }
+  return out;
+}
+
 function parseSchema(schemaText: string): ModelDef[] {
   const models: ModelDef[] = [];
-  const modelBlockRe = /model\s+(\w+)\s*{([^}]*)}/g;
-  let modelMatch: RegExpExecArray | null;
 
-  while ((modelMatch = modelBlockRe.exec(schemaText))) {
-    const [, modelName, body] = modelMatch;
+  for (const { name: modelName, body } of modelBodies(schemaText)) {
     const fields: FieldDef[] = [];
 
     for (const rawLine of body.split("\n")) {
@@ -76,6 +108,8 @@ function parseSchema(schemaText: string): ModelDef[] {
 
   return models;
 }
+
+export { parseSchema, modelBodies };
 
 async function main() {
   const url = process.env.TURSO_DATABASE_URL;

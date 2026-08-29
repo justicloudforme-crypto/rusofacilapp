@@ -132,13 +132,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // a fallback: a made-up date on an unchanged URL is worse than silence,
   // because a sitemap whose lastmod is not trustworthy gets its lastmod
   // ignored wholesale.
-  const puzzleRows = await db.wordGamePuzzle.findMany({
-    where: { level: { not: "C1" }, sequence: { lte: FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel } },
-    select: { type: true, level: true, sequence: true, updatedAt: true },
-  });
-  const puzzleUpdatedAt = new Map(
-    puzzleRows.map((r) => [`${r.type}/${r.level}/${r.sequence}`, r.updatedAt ?? null]),
-  );
+  // Wrapped, and deliberately so. On 29.08.2026 this exact select brought
+  // the WHOLE sitemap down with a 500 in production: `updatedAt` was in
+  // schema.prisma but not in the database, because ensure-schema-sync.ts
+  // could not see the field (its model parser stopped at the first "}" in
+  // a comment — fixed, with a test, in prisma/ensure-schema-sync.ts).
+  //
+  // A sitemap that 500s is invisible to every crawler, which is a far
+  // worse outcome than a sitemap without lastmod. So a failure to read the
+  // dates degrades this file to the state it was in before lastmod existed
+  // instead of taking it off the air. The error is logged rather than
+  // swallowed, because silently serving a sitemap with no dates for weeks
+  // is its own kind of failure.
+  let puzzleUpdatedAt = new Map<string, Date | null>();
+  try {
+    const puzzleRows = await db.wordGamePuzzle.findMany({
+      where: { level: { not: "C1" }, sequence: { lte: FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel } },
+      select: { type: true, level: true, sequence: true, updatedAt: true },
+    });
+    puzzleUpdatedAt = new Map(
+      puzzleRows.map((r) => [`${r.type}/${r.level}/${r.sequence}`, r.updatedAt ?? null]),
+    );
+  } catch (error) {
+    console.error("[sitemap] could not read WordGamePuzzle.updatedAt; serving without lastmod", error);
+  }
 
   for (const level of flashcardLevels.filter((l) => l !== "C1")) {
     for (const type of ["WORD_SEARCH", "CROSSWORD"] as const) {
