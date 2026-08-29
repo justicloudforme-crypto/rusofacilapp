@@ -9,13 +9,36 @@ import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
+import { puzzleDescription, puzzleTitle } from "@/lib/word-games/metadata";
 import { routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/word-games/[type]/[level]/[sequence]">): Promise<Metadata> {
   const { lang, type, level, sequence } = await params;
-  return { alternates: routeAlternates(lang, `/word-games/${encodeURIComponent(type)}/${encodeURIComponent(level)}/${encodeURIComponent(sequence)}`) };
+  const alternates = routeAlternates(
+    lang,
+    `/word-games/${encodeURIComponent(type)}/${encodeURIComponent(level)}/${encodeURIComponent(sequence)}`,
+  );
+  // Measured 29.08.2026: all 160 puzzle URLs served the home page's title
+  // and description, because this route had none of its own. The title is
+  // built from the puzzle's own row — type, level, rung and the number of
+  // words it really contains. There is no topic field to name here and the
+  // word lists have no dominant theme either; see word-games/metadata.ts
+  // for the measurement behind that.
+  const seq = Number(sequence);
+  if (!isLocale(lang) || !isWordGameType(type) || !isFlashcardLevel(level) || !Number.isInteger(seq) || seq < 1) {
+    return { alternates };
+  }
+  // getPuzzle is React-cached, so this does not add a second DB round trip
+  // on top of the component's own read.
+  const row = await getPuzzle(type, level, seq);
+  if (!row) return { alternates };
+  return {
+    title: puzzleTitle(lang, type, level, seq, row.words.length),
+    description: puzzleDescription(lang, type, level, seq, row.words.length),
+    alternates,
+  };
 }
 
 export default async function WordGamePuzzlePage({
