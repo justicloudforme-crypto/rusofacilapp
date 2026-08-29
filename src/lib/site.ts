@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
 
@@ -11,19 +10,38 @@ import { defaultLocale, locales, type Locale } from "@/i18n/config";
 // of the request that happens to build them.
 export const SITE_URL = "https://rusofacilapp.com";
 
-// Set by proxy.ts on every request that reaches a page (see its own
-// comment) so canonical/hreflang can be computed from the real request path
-// without every route needing its own generateMetadata. Absent outside a
-// request (e.g. a build-time-only call) — callers must handle null.
-export async function getRequestPathname(): Promise<string | null> {
-  const h = await headers();
-  return h.get("x-pathname");
+/**
+ * canonical + hreflang for one route, built from that route's OWN params.
+ *
+ * This replaced a request-header lookup (`getRequestPathname()` reading the
+ * `x-pathname` header that proxy.ts used to set) on 28.08.2026. The header
+ * version let `[lang]/layout.tsx` produce canonical for all ~1892 URLs from
+ * a single place, at the cost of calling `headers()` inside the layout's
+ * generateMetadata — which opts the entire route tree out of static
+ * rendering. It was one of three such dependencies in that layout; the
+ * other two (`getThemePreference()` and `getCurrentUser()`, both cookie
+ * reads) are genuine product features and stay. Removing this one alone
+ * does NOT make the site static — see PROGRESS.md's dynamic-render
+ * diagnosis — it just removes the one dependency that had a clean
+ * alternative, so less stands in the way later.
+ *
+ * `path` is the part after the locale prefix, with a leading slash and no
+ * trailing one: "/vocabulary/comida", "/stories/abc123", "" for the home
+ * page. Dynamic segments must be passed through `encodeURIComponent` by
+ * the caller, because the header this replaces carried the raw (encoded)
+ * request path while route params arrive decoded — for an ASCII slug the
+ * two are identical, for a handle with an accent they are not.
+ *
+ * Output is byte-for-byte what buildAlternates() produced for the same URL;
+ * `site.test.ts` asserts that over every path shape in the sitemap.
+ */
+export function routeAlternates(lang: string, path: string): Metadata["alternates"] | undefined {
+  return buildAlternates(`/${lang}${path}`);
 }
 
 // Builds { canonical, languages } for the given locale-prefixed pathname
-// (as reported by proxy.ts's x-pathname header, e.g. "/es/stories/abc" or
-// just "/es" for the homepage) — canonical strips nothing else (the
-// pathname already excludes the query string, see proxy.ts), and every
+// (e.g. "/es/stories/abc" or just "/es" for the homepage) — canonical
+// strips nothing else (the caller passes a query-free path), and every
 // locale gets an alternate link plus x-default pointing at defaultLocale,
 // per Google's hreflang requirements. Returns undefined when the pathname
 // isn't available (falls back to no alternates rather than a wrong one).

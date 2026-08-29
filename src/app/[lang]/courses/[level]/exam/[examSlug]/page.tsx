@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -7,6 +8,14 @@ import { userHasActiveSubscription } from "@/lib/subscription";
 import { isStaff } from "@/lib/roles";
 import { getExamContent } from "@/lib/exams/content";
 import ExamView from "@/components/lesson/ExamView";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/courses/[level]/exam/[examSlug]">): Promise<Metadata> {
+  const { lang, level, examSlug } = await params;
+  return { alternates: routeAlternates(lang, `/courses/${encodeURIComponent(level)}/exam/${encodeURIComponent(examSlug)}`) };
+}
 
 export default async function ExamPage({
   params,

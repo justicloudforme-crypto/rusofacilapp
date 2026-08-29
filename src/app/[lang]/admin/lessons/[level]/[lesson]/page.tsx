@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -5,6 +6,7 @@ import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { db } from "@/lib/db";
 import { staticContentFor } from "@/lib/lessons/content";
 import LessonEditor from "@/components/admin/LessonEditor";
+import { routeAlternates } from "@/lib/site";
 
 const GENERIC_TEMPLATE = {
   // Opcional: enlace de YouTube o a un archivo de video directo, se muestra
@@ -77,6 +79,13 @@ const GENERIC_TEMPLATE = {
     },
   ],
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/lessons/[level]/[lesson]">): Promise<Metadata> {
+  const { lang, level, lesson } = await params;
+  return { alternates: routeAlternates(lang, `/admin/lessons/${encodeURIComponent(level)}/${encodeURIComponent(lesson)}`) };
+}
 
 export default async function AdminLessonEditorPage({
   params,

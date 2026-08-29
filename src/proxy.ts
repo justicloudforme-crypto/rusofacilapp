@@ -88,18 +88,14 @@ export async function proxy(request: NextRequest) {
   const adminAccessDenied = await protectAdminRoute(request, segments);
   if (adminAccessDenied) return adminAccessDenied;
 
-  // Forwarded so [lang]/layout.tsx's generateMetadata can build a correct
-  // canonical + hreflang set per request (see getRequestPathname in
-  // lib/site.ts) without every route needing its own generateMetadata.
-  // request.nextUrl.pathname never includes the query string, which is
-  // exactly what's wanted: canonical must point at the parameter-free URL
-  // (e.g. /pricing?next=... → canonical /pricing), never a per-visit
-  // variant. Free to do — [lang]/layout.tsx already reads cookies() via
-  // getCurrentUser(), so the route tree is already fully dynamic; this
-  // adds no new opt-out of static rendering.
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  // No `x-pathname` header any more. It existed so [lang]/layout.tsx could
+  // build canonical/hreflang for every route from one place; reading it
+  // there meant calling headers() inside a layout's generateMetadata, which
+  // opts the whole route tree out of static rendering. Each route now
+  // derives its own canonical from its own params (routeAlternates in
+  // lib/site.ts), so nothing reads this header — setting it would only
+  // rebuild the request headers on every request for no reader.
+  return NextResponse.next();
 }
 
 export const config = {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
@@ -5,6 +6,14 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
 import Button from "@/components/ui/Button";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/register">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/register") };
+}
 
 export default async function RegisterPage({
   params,

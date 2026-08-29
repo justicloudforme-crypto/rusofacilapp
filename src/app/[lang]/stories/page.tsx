@@ -7,13 +7,14 @@ import { getEntitlementTier, getStoryAccess } from "@/lib/entitlement";
 import { storyLevels } from "@/lib/stories";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/stories">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
   if (!dict?.stories) return {};
+  const alternates = routeAlternates(lang, "/stories");
   // ES copy written for actual search demand ("cuentos en ruso con audio")
   // rather than a translation of the visible H1/subtitle — see the same
   // note in courses/page.tsx's generateMetadata. Neutral Spanish, no
@@ -23,9 +24,14 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/stories">)
       title: "Cuentos en ruso con audio y traducción | RusoFácilapp",
       description:
         "Practica ruso leyendo cuentos clásicos y originales, con audio narrado y traducción al español, por nivel (A1–C1).",
+      alternates,
     };
   }
-  return { title: `${dict.stories.pageTitle} | RusoFácilapp`, description: dict.stories.pageSubtitle };
+  return {
+    title: `${dict.stories.pageTitle} | RusoFácilapp`,
+    description: dict.stories.pageSubtitle,
+    alternates,
+  };
 }
 
 export default async function StoriesPage({ params }: PageProps<"/[lang]/stories">) {

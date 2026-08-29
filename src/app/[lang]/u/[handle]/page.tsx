@@ -1,9 +1,18 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getPublicProfileData } from "@/lib/public-profile";
 import { getAvatarLabels } from "@/lib/avatarLabels";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/u/[handle]">): Promise<Metadata> {
+  const { lang, handle } = await params;
+  return { alternates: routeAlternates(lang, `/u/${encodeURIComponent(handle)}`) };
+}
 
 export default async function PublicProfilePage({
   params,

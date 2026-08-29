@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getAllMedia, getOverrideMeta } from "@/lib/media/data";
 import MediaSubtitlesTable from "@/components/admin/MediaSubtitlesTable";
 import MediaEmbedStatusPanel from "@/components/admin/MediaEmbedStatusPanel";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/media">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/admin/media") };
+}
 
 export default async function AdminMediaPage({ params }: PageProps<"/[lang]/admin/media">) {
   const { lang } = await params;

@@ -8,13 +8,20 @@ import PremiumCard from "@/components/pricing/PremiumCard";
 import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
-  return { title: `${dict.pricing.title} | RusoFácilapp`, description: dict.pricing.subtitle };
+  return {
+    title: `${dict.pricing.title} | RusoFácilapp`,
+    description: dict.pricing.subtitle,
+    // Canonical is the query-free /pricing even when the visitor arrived at
+    // /pricing?next=…&highlight=premium — same as the header-based version
+    // it replaces, which read a pathname that never carried a query string.
+    alternates: routeAlternates(lang, "/pricing"),
+  };
 }
 
 export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {

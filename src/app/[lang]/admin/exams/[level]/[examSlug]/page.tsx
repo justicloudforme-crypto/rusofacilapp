@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -5,6 +6,7 @@ import { isLevelSlug } from "@/lib/courses";
 import { db } from "@/lib/db";
 import { isExamSlugFormat, staticExamContent } from "@/lib/exams/content";
 import ExamEditor from "@/components/admin/ExamEditor";
+import { routeAlternates } from "@/lib/site";
 
 const TEMPLATE = {
   title: "Examen A1 · Lecciones 11 a 20",
@@ -32,6 +34,13 @@ const TEMPLATE = {
     },
   ],
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/exams/[level]/[examSlug]">): Promise<Metadata> {
+  const { lang, level, examSlug } = await params;
+  return { alternates: routeAlternates(lang, `/admin/exams/${encodeURIComponent(level)}/${encodeURIComponent(examSlug)}`) };
+}
 
 export default async function AdminExamEditorPage({
   params,

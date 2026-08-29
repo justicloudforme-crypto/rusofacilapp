@@ -16,7 +16,7 @@ import CulturalNote from "@/components/stories/CulturalNote";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList, paywallJsonLd } from "@/lib/site";
+import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -34,7 +34,7 @@ export async function generateMetadata({
     lang === "ru"
       ? `${story.title} — рассказ на русском (${story.level}) | RusoFácilapp`
       : `${story.title} — cuento en ruso (${story.level}) | RusoFácilapp`;
-  return { title, description };
+  return { title, description, alternates: routeAlternates(lang, `/stories/${encodeURIComponent(id)}`) };
 }
 
 export default async function StoryReaderPage({

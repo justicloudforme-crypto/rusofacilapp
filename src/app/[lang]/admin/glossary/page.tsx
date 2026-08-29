@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import GlossaryAdminApp from "@/components/admin/GlossaryAdminApp";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/admin/glossary">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/admin/glossary") };
+}
 
 export default async function AdminGlossaryPage({ params }: PageProps<"/[lang]/admin/glossary">) {
   const { lang } = await params;

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
@@ -8,9 +9,17 @@ import { countAllSequences, getAllCurvedSequences, getAllPremiumOnlySequences } 
 import { getAllCompletedSequences } from "@/lib/word-games/progress";
 import WordGamesPicker, { type PickerData } from "@/components/word-games/WordGamesPicker";
 import { notFound } from "next/navigation";
+import { routeAlternates } from "@/lib/site";
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/word-games">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/word-games") };
 }
 
 export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-games">) {

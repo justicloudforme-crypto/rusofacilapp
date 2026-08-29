@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
@@ -8,6 +9,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { getGroupForMember } from "@/lib/groups";
 import { getAvatarLabels } from "@/lib/avatarLabels";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/groups/[groupId]">): Promise<Metadata> {
+  const { lang, groupId } = await params;
+  return { alternates: routeAlternates(lang, `/groups/${encodeURIComponent(groupId)}`) };
+}
 
 export default async function GroupDetailPage({
   params,

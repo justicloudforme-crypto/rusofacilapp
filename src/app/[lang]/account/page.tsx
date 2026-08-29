@@ -1,10 +1,19 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
+import { routeAlternates } from "@/lib/site";
 
 // /account was superseded by /profile (subscription status + course
 // progress + course list in one dashboard). Kept as a redirect so old
 // bookmarks/links don't 404.
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/account">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/account") };
+}
+
 export default async function AccountRedirectPage({
   params,
   searchParams,

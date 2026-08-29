@@ -3,16 +3,27 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getThemePreference } from "@/lib/theme";
 import StyleguideClient from "@/components/styleguide/StyleguideClient";
+import { routeAlternates } from "@/lib/site";
 
 // Internal dev tool, not app content — no dictionary/translation needed
 // (the typography section deliberately shows RU and ES side by side
 // regardless of the URL locale). noindex/nofollow so it never surfaces in
 // search even though the route stays reachable at any deployed URL for
 // review purposes.
-export const metadata: Metadata = {
-  title: "Style guide — RusoFácilapp (internal)",
-  robots: { index: false, follow: false },
-};
+// This was a static `export const metadata` until 28.08.2026; it had to
+// become a function because canonical now depends on the route's own
+// params, and Next refuses to accept both exports from one file.
+// noindex/nofollow and the title are unchanged.
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/styleguide">): Promise<Metadata> {
+  const { lang } = await params;
+  return {
+    title: "Style guide — RusoFácilapp (internal)",
+    robots: { index: false, follow: false },
+    alternates: routeAlternates(lang, "/styleguide"),
+  };
+}
 
 export default async function StyleguidePage({ params }: PageProps<"/[lang]/styleguide">) {
   const { lang } = await params;

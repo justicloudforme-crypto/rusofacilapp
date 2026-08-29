@@ -13,7 +13,7 @@ import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
 import VocabularyTab from "@/components/lesson/VocabularyTab";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList, paywallJsonLd } from "@/lib/site";
+import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -30,7 +30,7 @@ export async function generateMetadata({
     lang === "ru"
       ? `Изучайте русский язык через видео и музыку с субтитрами и упражнениями, уровень ${item.level}, в RusoFácilapp.`
       : item.description;
-  return { title, description };
+  return { title, description, alternates: routeAlternates(lang, `/media/${encodeURIComponent(id)}`) };
 }
 
 export default async function MediaDetailPage({

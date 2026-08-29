@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { routeAlternates } from "@/lib/site";
 
 // Simple line-icon badges instead of Apple/Google's official artwork —
 // this page ships before either store listing is actually live, so a
@@ -39,6 +41,13 @@ function StoreBadge({ icon, storeName, status }: { icon: React.ReactNode; storeN
       </div>
     </div>
   );
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/download">): Promise<Metadata> {
+  const { lang } = await params;
+  return { alternates: routeAlternates(lang, "/download") };
 }
 
 export default async function DownloadPage({ params }: PageProps<"/[lang]/download">) {

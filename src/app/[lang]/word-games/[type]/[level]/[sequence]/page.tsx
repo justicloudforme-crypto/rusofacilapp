@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { isLocale } from "@/i18n/config";
@@ -8,6 +9,14 @@ import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
+import { routeAlternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[lang]/word-games/[type]/[level]/[sequence]">): Promise<Metadata> {
+  const { lang, type, level, sequence } = await params;
+  return { alternates: routeAlternates(lang, `/word-games/${encodeURIComponent(type)}/${encodeURIComponent(level)}/${encodeURIComponent(sequence)}`) };
+}
 
 export default async function WordGamePuzzlePage({
   params,
