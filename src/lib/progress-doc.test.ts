@@ -71,6 +71,22 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["what took the sitemap down and how it was fixed", "### 7.17. АВАРИЯ"],
   ["how are open debts written down", "условие → триггер → следствие"],
   ["was a seventh landing page decided", "РЕШЕНИЕ: ждать данных"],
+  // Added 29.08.2026 after the SECOND real cold start — the one that began
+  // straight after a compaction, with this file as the only input. Each of
+  // these is a question that round had to answer and the file could not,
+  // or answered with a number that had gone stale.
+  ["how many sitemap URLs carry a lastmod in total", "из них с `lastmod` / без | **372 / 1530**"],
+  ["which release is production on right now", "`ac60b709a83dc74d49060aed10e45cd3af535a64`"],
+  ["how do I re-check that release myself", "grep -o 'sentry-release=[a-f0-9]*'"],
+  ["has the reindex batch actually been sent", "НЕТ, ещё не отправлена"],
+  ["did the file survive a compaction", "### 1.3."],
+  ["is the sitemap resilient, and how was that shown", "### 7.21."],
+  ["how big was the schema-parser bug really", "**25, в 6 моделях**"],
+  ["is every database read in sitemap.ts protected", "защищено было только ОДНО чтение из"],
+  ["what is left that needs Turso credentials", "PRAGMA table_info"],
+  ["what should the next round do", "### 7.22."],
+  ["what would be premature to build next", "три из четырёх крупных направлений упираются в календарь"],
+  ["why did local data disagree with production on dates", "Хвост этой же ошибки"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {
