@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { routeAlternates } from "@/lib/site";
+import { routeAlternates, truncateForMeta } from "@/lib/site";
 
 // Simple line-icon badges instead of Apple/Google's official artwork —
 // this page ships before either store listing is actually live, so a
@@ -47,7 +47,18 @@ export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/download">): Promise<Metadata> {
   const { lang } = await params;
-  return { alternates: routeAlternates(lang, "/download") };
+  const alternates = routeAlternates(lang, "/download");
+  // Found by the live audit of 30.08.2026: this page is not in the sitemap,
+  // but robots.txt does not disallow it either, so a crawler that follows
+  // the footer link reaches a page announcing itself with the HOME PAGE's
+  // title and description. Its own title costs one line.
+  if (!isLocale(lang)) return { alternates };
+  const dict = await getDictionary(lang);
+  return {
+    title: `${dict.download.pageTitle} | RusoFácilapp`,
+    description: truncateForMeta(dict.download.pageSubtitle),
+    alternates,
+  };
 }
 
 export default async function DownloadPage({ params }: PageProps<"/[lang]/download">) {

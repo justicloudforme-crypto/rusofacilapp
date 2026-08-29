@@ -25,7 +25,7 @@ export async function generateMetadata({
   return {
     title: "Sopa de letras en ruso, gratis y sin registro | RusoFácilapp",
     description:
-      "Juega una sopa de letras en ruso directamente en el navegador, sin crear cuenta. Palabras básicas en cirílico con su traducción, ideal para dar tus primeros pasos en el idioma.",
+      "Juega una sopa de letras en ruso en el navegador, sin crear cuenta. Palabras básicas en cirílico con su traducción, para dar tus primeros pasos.",
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },

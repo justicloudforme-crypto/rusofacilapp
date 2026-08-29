@@ -9,7 +9,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getLevelLessonStatuses, type LessonStatus } from "@/lib/progress";
 import LevelGlossaryProgressBar from "@/components/glossary/LevelGlossaryProgressBar";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
+import { SITE_URL, breadcrumbList, routeAlternates, truncateForMeta } from "@/lib/site";
 
 export function generateStaticParams() {
   return locales.flatMap((lang) =>
@@ -30,7 +30,10 @@ export async function generateMetadata({
       : `Curso de ruso ${levelDict.title} | RusoFácilapp`;
   return {
     title,
-    description: levelDict.description,
+    // levelDict.description is the four-sentence blurb also shown on the
+    // page; measured 30.08.2026 it runs to 332 characters, more than twice
+    // what Google shows. Same cap the glossary and the lessons use.
+    description: truncateForMeta(levelDict.description),
     alternates: routeAlternates(lang, `/courses/${encodeURIComponent(level)}`),
   };
 }

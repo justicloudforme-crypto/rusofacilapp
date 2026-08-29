@@ -16,8 +16,8 @@ import CulturalNote from "@/components/stories/CulturalNote";
 import PremiumBadge from "@/components/ui/PremiumBadge";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
-import { contentPageTitle } from "@/lib/frozen-pages";
-import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
+import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
+import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates, truncateForMeta } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -26,11 +26,17 @@ export async function generateMetadata({
   if (!isLocale(lang)) return {};
   const story = await db.story.findUnique({ where: { id }, select: { title: true, level: true, description: true, descriptionRu: true } });
   if (!story) return {};
-  const description =
+  const rawDescription =
     (lang === "ru" ? (story.descriptionRu ?? story.description) : story.description) ??
     (lang === "ru"
       ? `Рассказ на русском языке, уровень ${story.level}, в RusoFácilapp.`
       : `Cuento en ruso, nivel ${story.level}, en RusoFácilapp.`);
+  // 190 of the 650 story descriptions ran past the ~155 characters Google
+  // shows in a snippet, up to 283 (measured on the live site 30.08.2026).
+  // truncateForMeta is the same cap the glossary and the lessons already
+  // use. Frozen stories keep the untruncated string: 10 of them are over
+  // the cap and are queued with the rest of that backlog.
+  const description = isFrozenPage(id) ? rawDescription : truncateForMeta(rawDescription);
   // 17 of the 520 non-frozen story URLs were over Google's ~70-character
   // title ceiling (measured on the live sitemap 29.08.2026), the worst at
   // 95. The 65 stories in the experiment keep their old title byte for
@@ -38,7 +44,8 @@ export async function generateMetadata({
   // readout, see PROGRESS.md and lib/frozen-pages.ts.
   const qualifier =
     lang === "ru" ? `рассказ на русском (${story.level})` : `cuento en ruso (${story.level})`;
-  const title = contentPageTitle(id, story.title, qualifier);
+  const shortQualifier = lang === "ru" ? `рассказ (${story.level})` : `cuento (${story.level})`;
+  const title = contentPageTitle(id, story.title, qualifier, shortQualifier);
   return { title, description, alternates: routeAlternates(lang, `/stories/${encodeURIComponent(id)}`) };
 }
 

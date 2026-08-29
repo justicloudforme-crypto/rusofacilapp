@@ -127,15 +127,32 @@ export function shortenTitle(title: string, max = TITLE_MAX): string {
 
 /**
  * Builds "<base> — <qualifier> | RusoFácilapp" and gives up the least
- * valuable part first when it doesn't fit: the brand suffix, then the
- * qualifier, then (only then) length from the base itself.
+ * valuable part first when it doesn't fit: the brand suffix, then the long
+ * qualifier for a short one, then the qualifier entirely, then (only then)
+ * length from the base itself.
  *
  * The order encodes what each part is worth in a search result. The base is
  * the thing someone searched for — a song title, a story title, a lesson
  * name. The qualifier ("cuento en ruso (A1)") says what kind of page it is.
- * The brand is what a reader can infer from the domain anyway.
+ * The brand is the same 15 characters on all 1892 pages.
+ *
+ * `shortQualifier` was added on 30.08.2026 after the live crawl caught a
+ * collision this function had CREATED: /es/courses/a2/23 and
+ * /es/media/video-pronombres-indefinidos-to have the same base ("Pronombres
+ * indefinidos: кто-то, что-то, какой-то"), both overflowed with their long
+ * qualifier, both fell through to "base | brand", and two different pages
+ * ended up announcing themselves identically. The grammar videos mirror the
+ * lesson topics by design, so that overlap is systematic, not a one-off —
+ * which makes the qualifier the one part that must survive. Measured over
+ * every non-frozen title in both locales: 0 collisions afterwards, and only
+ * 69 titles change, each of them gaining the level it had lost.
  */
-export function fitTitle(base: string, qualifier: string, max = TITLE_MAX): string {
+export function fitTitle(
+  base: string,
+  qualifier: string,
+  shortQualifier?: string,
+  max = TITLE_MAX,
+): string {
   const brand = " | RusoFácilapp";
   // Second pass runs on the base with its trailing parenthetical dropped —
   // shortening the base can free enough room to put the qualifier back,
@@ -145,6 +162,10 @@ export function fitTitle(base: string, qualifier: string, max = TITLE_MAX): stri
     if (full.length <= max) return full;
     const noBrand = `${candidate} — ${qualifier}`;
     if (noBrand.length <= max) return noBrand;
+    if (shortQualifier) {
+      const short = `${candidate} — ${shortQualifier}`;
+      if (short.length <= max) return short;
+    }
     const noQualifier = `${candidate}${brand}`;
     if (noQualifier.length <= max) return noQualifier;
     if (candidate.length <= max) return candidate;

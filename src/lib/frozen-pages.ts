@@ -52,7 +52,12 @@ export function isFrozenPage(id: string): boolean {
  * so "what a frozen page serves" is one string in one place and a test can
  * assert it against the fitted version instead of against a copy of itself.
  */
-export function contentPageTitle(id: string, base: string, qualifier: string): string {
+export function contentPageTitle(
+  id: string,
+  base: string,
+  qualifier: string,
+  shortQualifier?: string,
+): string {
   if (isFrozenPage(id)) return `${base} — ${qualifier} | RusoFácilapp`;
-  return fitTitle(base, qualifier);
+  return fitTitle(base, qualifier, shortQualifier);
 }
