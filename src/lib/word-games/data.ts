@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { db } from "@/lib/db";
 import type { WordGameGrid, WordGameType, WordPlacement } from "./types";
 import { isWordGameType } from "./types";
@@ -37,10 +38,19 @@ function parseRow(row: {
   };
 }
 
-export async function getPuzzle(type: WordGameType, level: string, sequence: number): Promise<PuzzleRow | null> {
-  const row = await db.wordGamePuzzle.findUnique({ where: { type_level_sequence: { type, level, sequence } } });
-  return row ? parseRow(row) : null;
-}
+/** React-cached: the puzzle page now reads the row twice per request —
+ * once in generateMetadata (the title says how many words the puzzle
+ * actually holds) and once in the component. cache() collapses that back
+ * to a single query per render, which matters here because every Turso
+ * round trip is cross-region (see the load-test notes in
+ * PROJECT_SUMMARY.md; this section was already the worst offender once).
+ * The cache is per-render, so two visitors never share a result. */
+export const getPuzzle = cache(
+  async (type: WordGameType, level: string, sequence: number): Promise<PuzzleRow | null> => {
+    const row = await db.wordGamePuzzle.findUnique({ where: { type_level_sequence: { type, level, sequence } } });
+    return row ? parseRow(row) : null;
+  },
+);
 
 export async function getPuzzleById(id: string): Promise<PuzzleRow | null> {
   const row = await db.wordGamePuzzle.findUnique({ where: { id } });

@@ -67,9 +67,16 @@ describe("every page route declares its own canonical", () => {
   it("passes each route its own path, matching its folder", () => {
     const wrong: string[] = [];
     for (const file of files) {
-      const src = readFileSync(file, "utf8");
+      // Whitespace and a trailing comma are stripped on both sides: what
+      // has to match is the path expression, not how the call happens to be
+      // wrapped across lines. Matching raw text made this fail on
+      // 29.08.2026 for a call that was correct and had only been split over
+      // three lines by an added argument. Nothing meaningful is lost —
+      // neither the expected call nor a route path contains a space.
+      const normalise = (s: string) => s.replace(/\s/g, "").replace(/,\)/g, ")");
+      const src = normalise(readFileSync(file, "utf8"));
       if (!src.includes("routeAlternates(")) continue; // hand-written, checked below
-      const expected = expectedCall(file);
+      const expected = normalise(expectedCall(file));
       if (!src.includes(expected)) wrong.push(`${file.slice(APP.length + 1)} — expected ${expected}`);
     }
     expect(wrong).toEqual([]);
