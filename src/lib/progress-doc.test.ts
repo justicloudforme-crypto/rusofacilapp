@@ -75,10 +75,13 @@ const COLD_START_QUESTIONS: [string, string][] = [
   // straight after a compaction, with this file as the only input. Each of
   // these is a question that round had to answer and the file could not,
   // or answered with a number that had gone stale.
-  ["how many sitemap URLs carry a lastmod in total", "из них с `lastmod` / без | **372 / 1530**"],
-  ["which release is production on right now", "`ac60b709a83dc74d49060aed10e45cd3af535a64`"],
+  ["how many sitemap URLs carry a lastmod in total", "из них с `lastmod` / без | **376 / 1530**"],
+  // Pinned to the RE-CHECK, not to a SHA. A hardcoded release breaks on
+  // every deploy and teaches the next reader to edit the test rather than
+  // to re-measure — which is the opposite of what section 2 says to do.
+  ["which release is production on, and how do I re-check", "**Прод на 29.08.2026, после мержа"],
   ["how do I re-check that release myself", "grep -o 'sentry-release=[a-f0-9]*'"],
-  ["has the reindex batch actually been sent", "НЕТ, ещё не отправлена"],
+  ["has the reindex batch actually been sent", "пачка 1 | **НЕТ"],
   ["did the file survive a compaction", "### 1.3."],
   ["is the sitemap resilient, and how was that shown", "### 7.21."],
   ["how big was the schema-parser bug really", "**25, в 6 моделях**"],
@@ -98,7 +101,19 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["where does the robots.txt matcher live now", "src/lib/robots-matcher.ts"],
   ["how many URLs may a crawler actually fetch", "**итого разрешённое множество** | **1904**"],
   ["do local and production dates agree", "### 7.26."],
-  ["has the glossary seed been run against production", "Прогон сида глоссария против прода НЕ ВЫПОЛНЕН"],
+  ["has the glossary seed been run against production", "### 7.27."],
+  // Added 29.08.2026, the round that ran the seed and lost manual Search
+  // Console submission as a lever.
+  ["how many glossary terms are live", "терминов в глоссарии | **119**"],
+  ["can I submit URLs to Search Console by hand", "у владельца исчерпан лимит Search Console"],
+  ["when does the salud clock start", "от даты подачи пачки 1"],
+  ["what recrawl levers are left", "### 7.28."],
+  ["how big is the whole crawlable site now", "весь краулимый сайт | **2372** URL"],
+  ["how many URLs may a crawler fetch", "**разрешено краулеру** (200 и разрешено robots) | **1908**"],
+  ["are there indexable pages nobody watches", "### 7.29."],
+  ["do scripts run when imported", "### 7.30."],
+  ["how do I stop a script running on import", "isEntryPoint(import.meta.url)"],
+  ["can the test suite reach production", "указывающим на несуществующий хост"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {
