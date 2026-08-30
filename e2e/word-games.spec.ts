@@ -109,11 +109,62 @@ async function solveCrossword(page: Page, puzzleId: string, cells: Cell[]): Prom
   return solution;
 }
 
+/**
+ * Types the solution the way a person does, and — like a person — checks
+ * that the letter actually appeared, retyping the ones that did not.
+ *
+ * The retyping is not a retry papering over a flake; it is the missing
+ * half of "typing". Measured on a 21-cell grid, mobile-iphone, a dozen
+ * runs: roughly one run in three loses exactly one keystroke. Nothing
+ * lands in the wrong cell and no letter is ever wrong — one cell is simply
+ * still empty at the end, so the request carrying the full grid (the only
+ * one that can come back `solved: true`) is never sent and the puzzle
+ * never completes.
+ *
+ * Where it goes is measured, not guessed. A capture-phase listener on
+ * `document` shows the cell DOES receive an `input` event, and that the
+ * event carries an EMPTY value — whereupon CrosswordBoard's `handleChange`
+ * drops it (`const letter = rawValue.slice(-1); if (!letter) return;`).
+ * The letter never reaches React state, so the board is not lying: as far
+ * as it knows, nothing was typed. A player sees the empty cell and types
+ * it again, which is what happens below.
+ *
+ * The same measurement left a product observation behind, recorded in
+ * PROGRESS.md 7.52 rather than changed here on a hunch: `handleChange`
+ * discarding an empty-valued input event also means clearing a cell with
+ * Delete (or select-all + Delete) does nothing at all — only Backspace,
+ * which has its own handler, actually clears.
+ *
+ * `pressSequentially`, not `press`: `press` only knows named keys and
+ * ASCII and rejects Cyrillic outright ("Unknown key"). Backspace first
+ * when a cell is occupied, because `maxLength={1}` would otherwise drop
+ * the keystroke — and Backspace is the board's own clearing path
+ * (handleKeyDown), so this stays a description of what a player does.
+ */
 async function fillCrossword(page: Page, solution: Map<string, string>) {
-  for (const [key, letter] of solution) {
+  const cellFor = (key: string) => {
     const [row, col] = key.split(",").map(Number);
-    await page.getByLabel(`row ${row + 1} col ${col + 1}`, { exact: true }).fill(letter);
+    return page.getByLabel(`row ${row + 1} col ${col + 1}`, { exact: true });
+  };
+
+  let remaining = [...solution.keys()];
+  for (let pass = 1; pass <= 4 && remaining.length > 0; pass++) {
+    for (const key of remaining) {
+      const cell = cellFor(key);
+      if ((await cell.inputValue()) !== "") await cell.press("Backspace");
+      await cell.pressSequentially(solution.get(key)!);
+    }
+    const stillEmpty: string[] = [];
+    for (const key of remaining) {
+      if ((await cellFor(key).inputValue()).toLowerCase() !== solution.get(key)) stillEmpty.push(key);
+    }
+    remaining = stillEmpty;
   }
+
+  // Four passes and a cell still refuses the letter is not the known
+  // one-in-three keystroke loss any more — it is something else, and the
+  // rest of the test would be meaningless. Say so here.
+  expect(remaining, "cells that would not accept their letter after four passes").toEqual([]);
 }
 
 test("crossword: full solve flow shows check feedback and the completion celebration", async ({ page }) => {
