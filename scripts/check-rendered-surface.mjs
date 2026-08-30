@@ -24,12 +24,23 @@
 //   node scripts/check-rendered-surface.mjs --base=http://localhost:3111
 //   node scripts/check-rendered-surface.mjs --email=… --password=…
 //   node scripts/check-rendered-surface.mjs --control   (see below)
+//   node scripts/check-rendered-surface.mjs --base=http://localhost:3123 \
+//        --email=… --password=… --expect-subscription --grant-subscription
+//
+// --grant-subscription makes the paid-surface run self-contained locally:
+// the check gives the account an active subscription for the length of the
+// run and takes it away again in a `finally`. It replaced a permanently
+// subscribed test account sitting in the local database — standing state
+// that made a run pass for a reason nobody could see.
 //
 // --control is mandatory before believing a clean run. It re-runs one family
 // with the page's own markup broken in three different ways and requires the
 // checker to fail on each. A green run with no control is not a result.
 import { chromium, devices } from "@playwright/test";
 import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -57,6 +68,29 @@ const EXPECT_PROGRESS = argv.includes("--expect-progress");
  */
 const CI_MODE = argv.includes("--ci");
 const EXPECT_SUBSCRIPTION = argv.includes("--expect-subscription");
+/**
+ * Grant the account named by --email an active subscription for the length
+ * of this run, and take it away again afterwards.
+ *
+ * Why the check does this itself. The paid families (the lesson and the
+ * story reader, debts 17 and 20) can only be measured by an account that
+ * is entitled, and the previous way to get one was to leave a permanently
+ * subscribed test account lying in the local database — which is exactly
+ * what was found there on 30.08.2026 and removed: a standing grant is
+ * invisible state that makes a run pass for a reason nobody can see, and
+ * the next reader cannot tell a real pass from a leftover.
+ *
+ * Guards, because this writes to a database:
+ *   - only against localhost. A --base pointing at production is refused;
+ *   - only against a local SQLite file (DATABASE_URL file:… ). A Turso URL
+ *     is refused;
+ *   - it removes exactly the row it created, by id, in a `finally` — never
+ *     "delete this user's subscriptions", which would take away a grant
+ *     the owner made by hand;
+ *   - if the account already has an active subscription, it grants
+ *     nothing and removes nothing, and says so.
+ */
+const GRANT_SUBSCRIPTION = argv.includes("--grant-subscription");
 
 /**
  * Debt 17. 119 of the 120 lessons are paid, and so are the full story text
@@ -329,6 +363,84 @@ async function inspect(ctx, family, breakIt, signedIn = false) {
   return { problems, fingerprint };
 }
 
+/**
+ * Opens the local SQLite file directly. Not Prisma: the generated client
+ * is TypeScript and this is a plain .mjs script, and the two statements
+ * below do not need an ORM. better-sqlite3 is already a dependency (it is
+ * what the Prisma adapter uses).
+ */
+async function openLocalDatabase() {
+  // Loaded here and nowhere else: importing dotenv at the top would give
+  // this file an environment side effect on import, which is the class
+  // 7.30 closed. Only a --grant-subscription run needs it.
+  if (!process.env.DATABASE_URL) await import("dotenv/config");
+  const url = process.env.DATABASE_URL ?? "";
+  if (!url.startsWith("file:")) {
+    throw new Error(
+      `--grant-subscription refuses to run: DATABASE_URL is not a local file (${url.slice(0, 24)}…).`
+    );
+  }
+  if (!/^https?:\/\/localhost[:/]|^https?:\/\/127\.0\.0\.1[:/]/.test(BASE)) {
+    throw new Error(`--grant-subscription refuses to run against ${BASE} — localhost only.`);
+  }
+  const file = path.resolve(process.cwd(), url.slice("file:".length));
+  if (!existsSync(file)) throw new Error(`--grant-subscription: no database at ${file}`);
+  const require_ = createRequire(import.meta.url);
+  const Database = require_("better-sqlite3");
+  return new Database(file);
+}
+
+const INACTIVE_STATUSES = new Set(["canceled", "past_due", "incomplete_expired"]);
+
+/** Grants for the length of the run. Returns what to undo afterwards. */
+async function grantSubscriptionForRun() {
+  const db = await openLocalDatabase();
+  try {
+    const user = db.prepare("SELECT id FROM User WHERE email = ?").get(EMAIL.toLowerCase());
+    if (!user) throw new Error(`--grant-subscription: no account with email ${EMAIL}`);
+
+    const existing = db
+      .prepare("SELECT id, status, currentPeriodEnd FROM Subscription WHERE userId = ? ORDER BY createdAt DESC")
+      .all(user.id);
+    const alreadyActive = existing.some(
+      (row) => !INACTIVE_STATUSES.has(row.status) && new Date(row.currentPeriodEnd).getTime() > Date.now()
+    );
+    if (alreadyActive) {
+      console.log("\n  --grant-subscription: this account is already subscribed — granting nothing, removing nothing");
+      db.close();
+      return null;
+    }
+
+    // Same shape as prisma/grant-subscription.ts's manual grant, and the
+    // same shape /admin/subscriptions writes.
+    const id = `run-grant-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+    const now = new Date().toISOString();
+    const end = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    db.prepare(
+      "INSERT INTO Subscription (id, userId, plan, status, currentPeriodEnd, provider, createdAt, updatedAt)" +
+        " VALUES (?, ?, 'manual', 'active', ?, 'stripe', ?, ?)"
+    ).run(id, user.id, end, now, now);
+    console.log(`\n  --grant-subscription: granted for this run only (row ${id}), valid one hour`);
+    db.close();
+    return { id, email: EMAIL };
+  } catch (error) {
+    db.close();
+    throw error;
+  }
+}
+
+/** Removes exactly the row the run created — never anything else. */
+async function revokeRunGrant(grant) {
+  if (!grant) return;
+  const db = await openLocalDatabase();
+  const removed = db.prepare("DELETE FROM Subscription WHERE id = ?").run(grant.id).changes;
+  db.close();
+  console.log(`  --grant-subscription: removed ${removed} row(s) granted for this run`);
+  if (removed !== 1) {
+    console.log("  WARNING: the grant this run made was not there to remove — check the database by hand");
+  }
+}
+
 async function signedInContext(browser) {
   const ctx = await browser.newContext({ ...devices["Pixel 5"] });
   const page = await ctx.newPage();
@@ -345,85 +457,92 @@ async function signedInContext(browser) {
 async function main() {
   const browser = await chromium.launch();
   let failures = 0;
+  // Granted before anything is measured and removed in the `finally` at
+  // the bottom, so a crashed run does not leave an entitlement behind.
+  const runGrant = GRANT_SUBSCRIPTION ? await grantSubscriptionForRun() : null;
+  try {
 
-  const anon = await browser.newContext({ ...devices["Pixel 5"] });
+    const anon = await browser.newContext({ ...devices["Pixel 5"] });
 
-  // Resolved before anything is measured, so both passes see the same list.
-  const families = [...FAMILIES];
-  if (!CI_MODE) {
-    const storyReader = await resolveStoryReaderFamily(anon);
-    if (storyReader) {
-      families.push(storyReader);
-      console.log(
-        `\n  story reader resolved from the catalogue: ${storyReader.path} (locked when anonymous, so the subscription assertion can fail)`
-      );
-    } else {
-      console.log(
-        "\n  NOT CHECKED: no PAID story found among the first links on /es/stories, so the story reader is unverified this run"
-      );
-      failures += 1;
+    // Resolved before anything is measured, so both passes see the same list.
+    const families = [...FAMILIES];
+    if (!CI_MODE) {
+      const storyReader = await resolveStoryReaderFamily(anon);
+      if (storyReader) {
+        families.push(storyReader);
+        console.log(
+          `\n  story reader resolved from the catalogue: ${storyReader.path} (locked when anonymous, so the subscription assertion can fail)`
+        );
+      } else {
+        console.log(
+          "\n  NOT CHECKED: no PAID story found among the first links on /es/stories, so the story reader is unverified this run"
+        );
+        failures += 1;
+      }
     }
-  }
 
-  console.log(`\n=== ${BASE} — anonymous, real browser, after hydration ===`);
-  const anonPrints = {};
-  for (const f of families) {
-    const { problems, fingerprint } = await inspect(anon, f);
-    anonPrints[f.name] = fingerprint;
-    failures += problems.length ? 1 : 0;
-    console.log(`  ${problems.length ? "FAIL" : "ok  "}  ${f.name.padEnd(16)} ${f.path}`);
-    problems.forEach((p) => console.log(`          → ${p}`));
-  }
-
-  if (EMAIL && PASSWORD) {
-    const ctx = await signedInContext(browser);
-    console.log(`\n=== ${BASE} — SIGNED IN, real browser, after hydration ===`);
-    const differing = [];
+    console.log(`\n=== ${BASE} — anonymous, real browser, after hydration ===`);
+    const anonPrints = {};
     for (const f of families) {
-      const { problems, fingerprint } = await inspect(ctx, f, undefined, true);
+      const { problems, fingerprint } = await inspect(anon, f);
+      anonPrints[f.name] = fingerprint;
       failures += problems.length ? 1 : 0;
-      const before = anonPrints[f.name];
-      // "Renders differently with a session" — the families that an
-      // anonymous crawl cannot speak for at all.
-      const changed = before.bottomNav !== fingerprint.bottomNav || Math.abs(before.chars - fingerprint.chars) > 40 || before.found !== fingerprint.found;
-      if (changed) differing.push(f.name);
-      console.log(`  ${problems.length ? "FAIL" : "ok  "}  ${f.name.padEnd(16)} ${f.path}${changed ? "   [renders differently with a session]" : ""}`);
+      console.log(`  ${problems.length ? "FAIL" : "ok  "}  ${f.name.padEnd(16)} ${f.path}`);
       problems.forEach((p) => console.log(`          → ${p}`));
     }
-    console.log(`\n  families an anonymous crawl cannot speak for: ${differing.length ? differing.join(", ") : "(none detected)"}`);
-    await ctx.close();
-  } else {
-    console.log("\n  (no --email/--password: the signed-in surface was NOT checked — it is the surface incident №1 happened on)");
-  }
 
-  if (RUN_CONTROL) {
-    console.log(`\n=== positive control: the checker must FAIL on a broken render ===`);
-    const breakages = [
-      // Detected by the content-count assertion, which --ci switches off —
-      // so in CI this control would MISS and fail the run for the wrong
-      // reason. Dropped there rather than kept as a decorative pass: a
-      // control that cannot fire is not a control.
-      ...(CI_MODE ? [] : [["content stripped after hydration", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.querySelectorAll("a").forEach((a) => a.remove()), 300)); }); }]]),
-      ["h1 replaced", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.querySelectorAll("h1").forEach((h) => (h.textContent = "—")), 300)); }); }],
-      ["error boundary text present", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.body.append("Something went wrong"), 300)); }); }],
-    ];
-    let caught = 0;
-    for (const [label, breakIt] of breakages) {
-      const { problems } = await inspect(anon, families.find((f) => f.name === "es/courses"), breakIt);
-      const ok = problems.length > 0;
-      caught += ok ? 1 : 0;
-      console.log(`  ${ok ? "caught " : "MISSED "} ${label}${ok ? ` → ${problems[0]}` : ""}`);
+    if (EMAIL && PASSWORD) {
+      const ctx = await signedInContext(browser);
+      console.log(`\n=== ${BASE} — SIGNED IN, real browser, after hydration ===`);
+      const differing = [];
+      for (const f of families) {
+        const { problems, fingerprint } = await inspect(ctx, f, undefined, true);
+        failures += problems.length ? 1 : 0;
+        const before = anonPrints[f.name];
+        // "Renders differently with a session" — the families that an
+        // anonymous crawl cannot speak for at all.
+        const changed = before.bottomNav !== fingerprint.bottomNav || Math.abs(before.chars - fingerprint.chars) > 40 || before.found !== fingerprint.found;
+        if (changed) differing.push(f.name);
+        console.log(`  ${problems.length ? "FAIL" : "ok  "}  ${f.name.padEnd(16)} ${f.path}${changed ? "   [renders differently with a session]" : ""}`);
+        problems.forEach((p) => console.log(`          → ${p}`));
+      }
+      console.log(`\n  families an anonymous crawl cannot speak for: ${differing.length ? differing.join(", ") : "(none detected)"}`);
+      await ctx.close();
+    } else {
+      console.log("\n  (no --email/--password: the signed-in surface was NOT checked — it is the surface incident №1 happened on)");
     }
-    console.log(`  planted ${breakages.length}, caught ${caught}`);
-    if (caught !== breakages.length) failures += 1;
-  } else {
-    console.log("\n  (no --control: this run has NOT shown it can detect a broken render — see PROGRESS.md 4.1)");
-  }
 
-  await anon.close();
-  await browser.close();
-  console.log(`\nfamilies with problems: ${failures}`);
-  process.exitCode = failures ? 1 : 0;
+    if (RUN_CONTROL) {
+      console.log(`\n=== positive control: the checker must FAIL on a broken render ===`);
+      const breakages = [
+        // Detected by the content-count assertion, which --ci switches off —
+        // so in CI this control would MISS and fail the run for the wrong
+        // reason. Dropped there rather than kept as a decorative pass: a
+        // control that cannot fire is not a control.
+        ...(CI_MODE ? [] : [["content stripped after hydration", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.querySelectorAll("a").forEach((a) => a.remove()), 300)); }); }]]),
+        ["h1 replaced", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.querySelectorAll("h1").forEach((h) => (h.textContent = "—")), 300)); }); }],
+        ["error boundary text present", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.body.append("Something went wrong"), 300)); }); }],
+      ];
+      let caught = 0;
+      for (const [label, breakIt] of breakages) {
+        const { problems } = await inspect(anon, families.find((f) => f.name === "es/courses"), breakIt);
+        const ok = problems.length > 0;
+        caught += ok ? 1 : 0;
+        console.log(`  ${ok ? "caught " : "MISSED "} ${label}${ok ? ` → ${problems[0]}` : ""}`);
+      }
+      console.log(`  planted ${breakages.length}, caught ${caught}`);
+      if (caught !== breakages.length) failures += 1;
+    } else {
+      console.log("\n  (no --control: this run has NOT shown it can detect a broken render — see PROGRESS.md 4.1)");
+    }
+
+    await anon.close();
+    console.log(`\nfamilies with problems: ${failures}`);
+    process.exitCode = failures ? 1 : 0;
+  } finally {
+    await browser.close();
+    await revokeRunGrant(runGrant);
+  }
 }
 
 // Only when this file is the process entry point — importing it must not
