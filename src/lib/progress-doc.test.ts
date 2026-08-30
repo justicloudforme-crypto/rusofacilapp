@@ -151,7 +151,8 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["why does CI need a glossary fixture", "не воспроизвёлся бы в CI"],
   ["how long does the CI render check take", "около 2 минут"],
   ["what does a subscriber see that a free account does not", "настоящая отрезка данных"],
-  ["what do I need to do about the subscriber check", "ЧТО ТРЕБУЕТСЯ ОТ ВЛАДЕЛЬЦА"],
+  ["is the paid surface actually checked on production", "ПРОГОН НА ПРОДЕ СОСТОЯЛСЯ"],
+  ["what is still not covered for a subscriber", "Что осталось непокрытым и почему"],
   ["which URLs do I check in Search Console", "Список URL для проверки"],
   ["how do I tell the outage from ordinary noise", "6 контрольных незатронутых"],
 ];
