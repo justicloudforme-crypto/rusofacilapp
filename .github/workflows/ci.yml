@@ -110,10 +110,19 @@ jobs:
       # term containing a hyphen.
       - name: Seed the render fixture
         if: github.event.pull_request.base.ref == 'main' || github.ref == 'refs/heads/main'
+        timeout-minutes: 5
         run: npx tsx scripts/seed-ci-render-fixture.mjs
 
+      # timeout-minutes is the fuse, not the fix. On 29.08.2026 this step
+      # finished its work in a second and then hung for 56 minutes because
+      # verify-rendered.mjs killed `npx` instead of the server npx had
+      # started, and the surviving grandchild's inherited pipes kept the
+      # process alive (see that file's header). That is fixed; this cap is
+      # here so the NEXT way it could hang costs minutes instead of an hour.
+      # The check itself takes about a minute, so 10 is generous.
       - name: Rendered surface (real browser, after hydration)
         if: github.event.pull_request.base.ref == 'main' || github.ref == 'refs/heads/main'
+        timeout-minutes: 10
         run: npm run check:rendered:ci
 
       - name: Upload Playwright report

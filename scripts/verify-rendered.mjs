@@ -11,7 +11,32 @@
 //
 // Starts `next start` on its own port, waits for it to answer, runs the
 // check with its positive control, and stops the server whatever happens.
+//
+// "Stops the server" is harder than it looks, and getting it wrong cost a
+// CI run 56 minutes on 29.08.2026. The check itself finished in a second —
+// 17 families ok, control 2/2, 0 problems — and then the step simply never
+// returned, so "Upload Playwright report" and "Post Run" never started.
+//
+// Reproduced and measured rather than guessed. The old code did
+// `spawn("npx", ["next", "start", …])` and `child.kill("SIGKILL")`. That
+// kills npx, not the server npx started: after the kill the grandchild was
+// still alive with PPID 1, still answering 200 on the port, and this
+// process still held two open Socket handles — the stdout/stderr pipes the
+// grandchild had inherited. Node cannot exit while those are open, so the
+// step hung forever.
+//
+// Three changes, each pulling in the same direction:
+//   1. spawn the local `next` binary directly, one process layer fewer
+//   2. `detached: true` makes the child a process-group leader, so
+//      `process.kill(-pid)` reaches every process it started
+//   3. exit explicitly with the check's status instead of waiting for the
+//      event loop to drain, and destroy the pipes first
+// The third alone would have fixed the hang; the first two are what
+// actually stop the server, which is the part that matters on a machine
+// that keeps running afterwards.
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 // Deliberately not 3000/3100/3111: those are dev, the e2e webServer, and the
@@ -34,23 +59,58 @@ async function waitForServer(timeoutMs = 90_000) {
   return false;
 }
 
+/** Kill the child AND everything it started, then let go of its pipes. */
+function stopServer(server) {
+  if (!server || server.exitCode !== null || server.signalCode !== null) return;
+  // Negative pid = the whole process group, which is why the child is
+  // spawned detached. SIGTERM first so Next can close its listener; SIGKILL
+  // straight after, because a graceful shutdown is not worth waiting on
+  // here and a lingering listener is exactly what we are preventing.
+  for (const signal of ["SIGTERM", "SIGKILL"]) {
+    try {
+      process.kill(-server.pid, signal);
+    } catch {
+      // Already gone, or no such group — either way there is nothing to kill.
+    }
+  }
+  // The pipes are what kept the event loop alive after the old kill.
+  for (const stream of [server.stdout, server.stderr]) {
+    try {
+      stream?.destroy();
+    } catch {
+      // nothing to do
+    }
+  }
+}
+
 async function main() {
-  const server = spawn("npx", ["next", "start", "-p", String(PORT)], {
+  // The local binary, not npx: one fewer process between us and the server.
+  const nextBin = join(process.cwd(), "node_modules", ".bin", "next");
+  if (!existsSync(nextBin)) {
+    console.error(`cannot find ${nextBin} — run npm ci first`);
+    return 1;
+  }
+  const server = spawn(nextBin, ["start", "-p", String(PORT)], {
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env },
+    // Its own process group, so one kill reaches every process it forks.
+    detached: true,
   });
   let serverLog = "";
   server.stdout.on("data", (d) => { serverLog += d.toString(); });
   server.stderr.on("data", (d) => { serverLog += d.toString(); });
 
-  const stop = () => { if (!server.killed) server.kill("SIGKILL"); };
+  const stop = () => stopServer(server);
+  // Covers a cancelled run too: a killed step must not leave a server behind.
   process.on("exit", stop);
+  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+    process.on(signal, () => { stop(); process.exit(130); });
+  }
 
   try {
     if (!(await waitForServer())) {
       console.error(`could not start next start on ${PORT}. Server output:\n${serverLog.slice(-800)}`);
-      process.exitCode = 1;
-      return;
+      return 1;
     }
     // --control is not optional here. A gate that cannot demonstrate it
     // finds a broken render is a gate that passes everything.
@@ -63,7 +123,7 @@ async function main() {
       ["scripts/check-rendered-surface.mjs", `--base=${BASE}`, "--control", ...passthrough],
       { stdio: "inherit" }
     );
-    process.exitCode = run.status ?? 1;
+    return run.status ?? 1;
   } finally {
     stop();
   }
@@ -73,8 +133,15 @@ async function main() {
 // run it. See src/lib/entry-point.ts for the incident behind this.
 const IS_ENTRY_POINT = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
 if (IS_ENTRY_POINT) {
-  main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  main()
+    .then((code) => {
+      // Explicit exit, not a drained event loop. This is the belt to the
+      // process-group kill's braces: even if some handle outlives the
+      // server, the step still ends and CI moves on.
+      process.exit(code);
+    })
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
 }
