@@ -355,7 +355,6 @@
   "pricing": {
     "title": "Planes y precios",
     "subtitle": "Elige un plan para desbloquear todas las lecciones, de A1 a B2.",
-    "guaranteeNote": "¿No te convenció? Te devolvemos el dinero dentro de 14 días — solo escríbenos: support@rusofacilapp.com",
     "freeHeading": "Gratis",
     "freeDescription": "Prueba la plataforma sin pagar",
     "freeFeatures": [
@@ -436,10 +435,6 @@
       {
         "q": "¿Qué pasa si no pago el código OXXO a tiempo?",
         "a": "El código es válido por 3 días. Si no se paga en ese plazo, el pago no se completa y tendrás que generarlo de nuevo en esta página."
-      },
-      {
-        "q": "¿Puedo pedir un reembolso?",
-        "a": "Sí — si el plan no te convenció, escríbenos a support@rusofacilapp.com dentro de los 14 días posteriores al pago y te devolvemos el dinero."
       },
       {
         "q": "¿Cómo cambio de plan?",
