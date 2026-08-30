@@ -14,6 +14,7 @@ import {
 } from "@/lib/content-links";
 import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
+import { getRecordingsOwnerScope } from "@/lib/recordings-owner";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, fitTitle, truncateForMeta, paywallJsonLd, routeAlternates } from "@/lib/site";
@@ -74,9 +75,14 @@ export default async function LessonPage({
   const slugs = lessonSlugsFor(level);
   const prevSlug = index > 0 ? slugs[index - 1] : null;
   const nextSlug = index < slugs.length - 1 ? slugs[index + 1] : null;
-  const [fullContent, tier, relatedStoriesResult, allMedia, glossaryTerms] = await Promise.all([
+  const [fullContent, tier, ownerScope, relatedStoriesResult, allMedia, glossaryTerms] = await Promise.all([
     getLessonContent(level, lesson),
     getEntitlementTier(),
+    // Names the browser-storage bucket the page's practice recordings go
+    // into. Reads the signed session cookie, not the database — see
+    // src/lib/recordings-owner.ts for why this page in particular must not
+    // grow a second user lookup.
+    getRecordingsOwnerScope(),
     getRelatedStoriesForLesson(level, lesson),
     getAllMedia(),
     getGlossaryTermsForLesson(level, lesson),
@@ -179,6 +185,7 @@ export default async function LessonPage({
         lang={lang}
         level={level}
         lessonSlug={lesson}
+        ownerScope={ownerScope}
         title={title}
         levelTitle={levelDict.title}
         content={content}

@@ -36,7 +36,9 @@ import ThemeSwitcher from "@/components/profile/ThemeSwitcher";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import WelcomeOverlay from "@/components/profile/WelcomeOverlay";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
+import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
+import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
 import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
 import LocalDate from "@/components/profile/LocalDate";
 import SettingsAccordion from "@/components/profile/SettingsAccordion";
@@ -834,6 +836,18 @@ export default async function ProfilePage({
                         </form>
                       </div>
                     </div>
+                    <VoiceRecordingsPanel
+                      ownerScope={ownerScopeFor(user.id)}
+                      locale={lang}
+                      heading={dict.profile.voiceRecordingsHeading}
+                      description={dict.profile.voiceRecordingsDescription}
+                      deviceNote={dict.profile.voiceRecordingsDeviceNote}
+                      usageLabel={dict.profile.voiceRecordingsUsage}
+                      emptyLabel={dict.profile.voiceRecordingsEmpty}
+                      deleteLabel={dict.profile.voiceRecordingsDelete}
+                      deletedLabel={dict.profile.voiceRecordingsDeleted}
+                      unavailableLabel={dict.profile.voiceRecordingsUnavailable}
+                    />
                     <details className="rounded-2xl border border-red-500/20 p-5">
                       <summary className="tap flex min-h-11 cursor-pointer items-center gap-2.5 [&::-webkit-details-marker]:hidden">
                         <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600 dark:text-red-400">

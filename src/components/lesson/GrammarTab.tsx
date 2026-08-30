@@ -13,6 +13,7 @@ export default function GrammarTab({
   dict,
   level,
   lessonSlug,
+  ownerScope,
   audioMap,
 }: {
   grammar: LessonContent["grammar"];
@@ -21,6 +22,9 @@ export default function GrammarTab({
   dict: Dictionary["lesson"];
   level: string;
   lessonSlug: string;
+  /** Browser-storage bucket for the read-aloud recordings (they never
+   * leave the device) — see src/lib/recordings-owner.ts. */
+  ownerScope: string;
   /** Pre-generated pronunciation audio (see prisma/generate-lesson-audio.ts),
    * keyed by item position (see src/lib/lessons/audioKeys.ts). */
   audioMap: Record<string, string>;
@@ -79,6 +83,7 @@ export default function GrammarTab({
           level={level}
           lessonSlug={lessonSlug}
           audioMap={audioMap}
+          ownerScope={ownerScope}
         />
       )}
     </div>
