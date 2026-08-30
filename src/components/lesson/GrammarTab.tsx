@@ -27,7 +27,7 @@ export default function GrammarTab({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <GlossaryHint />
+      <GlossaryHint dict={dict.glossaryHint} />
       {spanishNote && (
         <p className="rounded-lg bg-foreground/5 px-3 py-2 text-xs text-foreground/60">
           {spanishNote}

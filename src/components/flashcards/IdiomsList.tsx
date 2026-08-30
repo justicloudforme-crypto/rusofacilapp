@@ -258,7 +258,7 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
               disabled={safePage === 1}
               className="tap rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground active:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
             >
-              {dict?.paginationPrev ?? "Back"}
+              {dict.paginationPrev}
             </button>
             {getPageNumbers(safePage, totalPages).map((p, i) =>
               p === "..." ? (
@@ -287,11 +287,16 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
               disabled={safePage === totalPages}
               className="tap rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground active:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15"
             >
-              {dict?.paginationNext ?? "Next"}
+              {dict.paginationNext}
             </button>
           </div>
           <span className="text-xs text-foreground/50">
-            {(dict?.paginationInfo ?? "Página {current} de {total}")
+            {/* No `?? "Página {current} de {total}"` fallback any more:
+                `dict` is required and every key above is a required string,
+                so the fallbacks were unreachable English and Spanish sitting
+                in a component that renders in both locales — the exact shape
+                src/lib/ui-strings.test.ts exists to stop. */}
+            {dict.paginationInfo
               .replace("{current}", String(safePage))
               .replace("{total}", String(totalPages))}
           </span>
