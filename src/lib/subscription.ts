@@ -164,6 +164,78 @@ export async function extendOrGrantSubscription(userId: string, days: number, pl
   await invalidateSubscriptionCache(userId);
 }
 
+/** The tier a stored row grants, decided by exactly the two rules the read
+ * side uses (isSubscriptionActive, then isPremiumPlan — see
+ * getEntitlementTier in src/lib/entitlement.ts), minus the session lookup
+ * and the staff bypass, because a webhook has neither a request nor a
+ * reason to let a staff role hide a failed purchase. */
+export function tierOfStoredSubscription(
+  subscription: Pick<Subscription, "plan" | "status" | "currentPeriodEnd"> | null | undefined
+): "free" | "standard" | "premium" {
+  if (!isSubscriptionActive(subscription)) return "free";
+  return isPremiumPlan(subscription!.plan) ? "premium" : "standard";
+}
+
+/**
+ * Reads back what a paid Premium grant actually stored, and reports the
+ * mismatch to Sentry when the money arrived and the tier did not.
+ *
+ * This exists because of a defect that ran in production from 24.08.2026
+ * to 30.08.2026 (PROGRESS.md 7.55): a Premium purchase on top of an
+ * already-active row extended the period and left `plan` alone, so the
+ * buyer stayed on "standard". Nothing failed anywhere — Stripe reported a
+ * successful payment, the webhook returned 200, no exception was thrown,
+ * and the only trace was a person who could not open the content they had
+ * just bought. The fix stops it happening; this stops it happening
+ * *silently*, which is the part that let it live six days.
+ *
+ * Deliberately a read-back rather than an assertion inside the writer: the
+ * question is what the database ends up holding, and a writer that checks
+ * its own intent would have agreed with itself in the broken version too.
+ *
+ * Never throws. A webhook that throws is a webhook Stripe retries, and
+ * retrying a grant that already succeeded is worse than losing one report.
+ */
+export async function reportPremiumPaymentNotApplied(
+  userId: string,
+  paidPlan: string,
+  context: { source: string; reference?: string | null }
+): Promise<"free" | "standard" | "premium" | null> {
+  if (!isPremiumPlan(paidPlan)) return null;
+
+  // Fresh, not the 30s cache: extendOrGrantSubscription invalidates this
+  // user's entry as its last step, so the read below sees the write.
+  const stored = await getLatestSubscription(userId);
+  const tier = tierOfStoredSubscription(stored);
+  if (tier === "premium") return tier;
+
+  try {
+    const error = new Error(
+      `Paid "${paidPlan}" did not grant Premium: user ${userId} is on tier "${tier}" ` +
+        `after the payment was processed (stored plan: ${stored?.plan ?? "no row"})`
+    );
+    error.name = "PremiumEntitlementMismatch";
+    const Sentry = await import("@sentry/nextjs");
+    Sentry.captureException(error, {
+      level: "error",
+      tags: { defect: "premium-entitlement-mismatch", source: context.source },
+      extra: {
+        userId,
+        paidPlan,
+        observedTier: tier,
+        storedPlan: stored?.plan ?? null,
+        storedStatus: stored?.status ?? null,
+        storedPeriodEnd: stored?.currentPeriodEnd?.toISOString() ?? null,
+        subscriptionRowId: stored?.id ?? null,
+        reference: context.reference ?? null,
+      },
+    });
+  } catch {
+    // Reporting the problem must never become a second problem.
+  }
+  return tier;
+}
+
 export async function userHasActiveSubscription(userId: string): Promise<boolean> {
   const subscription = await getLatestSubscription(userId);
   return isSubscriptionActive(subscription);

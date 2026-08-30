@@ -119,3 +119,91 @@ describe("extendOrGrantSubscription and the stored plan", () => {
     expect(update.mock.calls[0]?.[0]?.data?.currentPeriodEnd).toBeInstanceOf(Date);
   });
 });
+
+// ---------------------------------------------------------------------------
+// reportPremiumPaymentNotApplied: the failure the fix above prevents used to
+// be COMPLETELY silent — successful payment, 200 from the webhook, no
+// exception, no log line, and a customer with no Premium access. These tests
+// are about the alarm, not the fix: they check that a mismatch reaches Sentry
+// as an error, and — just as important — that a normal payment does not.
+// ---------------------------------------------------------------------------
+
+describe("reportPremiumPaymentNotApplied", () => {
+  const DAY = 86_400_000;
+
+  /** Runs the read-back against a database that returns `stored` as the
+   * user's latest row, with Sentry replaced by a spy. `stored` is what the
+   * grant LEFT BEHIND, which is the whole point: the check reads the
+   * database back rather than trusting what the writer meant to do. */
+  async function run(
+    stored: { id: string; plan: string; status: string; currentPeriodEnd: Date } | null,
+    paidPlan: string
+  ) {
+    const captureException = vi.fn();
+    const findFirst = vi.fn(async () => stored);
+    vi.resetModules();
+    vi.doMock("./db", () => ({ db: { subscription: { findFirst } } }));
+    vi.doMock("@sentry/nextjs", () => ({ captureException }));
+    const mod = await import("./subscription");
+    // Fresh user id per run for the same reason the block above needs one:
+    // the 30s cache in front of getLatestSubscription is a global singleton.
+    const tier = await mod.reportPremiumPaymentNotApplied(`user-${Math.random()}`, paidPlan, {
+      source: "test",
+      reference: "cs_test_1",
+    });
+    return { captureException, tier };
+  }
+
+  const row = (plan: string, status = "active", endInDays = 10) => ({
+    id: "sub-1",
+    plan,
+    status,
+    currentPeriodEnd: new Date(Date.now() + endInDays * DAY),
+  });
+
+  // POSITIVE CONTROL. This is the exact shape production held between
+  // 24.08.2026 and 30.08.2026: a paid "lifetime" webhook, and a row that
+  // still says "monthly" afterwards.
+  it("reports a paid Premium that left the user on standard", async () => {
+    const { captureException, tier } = await run(row("monthly"), "lifetime");
+    expect(tier).toBe("standard");
+    expect(captureException).toHaveBeenCalledTimes(1);
+    const [error, options] = captureException.mock.calls[0] as [Error, { level: string; extra: Record<string, unknown> }];
+    expect(error.name).toBe("PremiumEntitlementMismatch");
+    expect(options.level).toBe("error");
+    expect(options.extra.storedPlan).toBe("monthly");
+    expect(options.extra.observedTier).toBe("standard");
+  });
+
+  it("reports the other shapes of the same failure too", async () => {
+    for (const [stored, expected] of [
+      [row("referral"), "standard"],
+      [row("manual"), "standard"],
+      // Granted, then immediately canceled or already expired: the money
+      // arrived and the access still is not there.
+      [row("lifetime", "canceled"), "free"],
+      [row("lifetime", "active", -1), "free"],
+      [null, "free"],
+    ] as const) {
+      const { captureException, tier } = await run(stored, "lifetime");
+      expect(tier, `stored ${stored?.plan ?? "nothing"}/${stored?.status ?? "-"}`).toBe(expected);
+      expect(captureException).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  // NEGATIVE CONTROL, and the reason the positive one means something: an
+  // alarm that fires on healthy payments would be turned off within a week.
+  it("stays silent when the Premium payment actually granted Premium", async () => {
+    const { captureException, tier } = await run(row("lifetime"), "lifetime");
+    expect(tier).toBe("premium");
+    expect(captureException).not.toHaveBeenCalled();
+  });
+
+  it("stays silent for monthly and annual payments — they are not Premium and never were", async () => {
+    for (const plan of ["monthly", "annual", "referral", "manual"]) {
+      const { captureException, tier } = await run(row(plan), plan);
+      expect(tier, `paid ${plan}`).toBeNull();
+      expect(captureException, `paid ${plan}`).not.toHaveBeenCalled();
+    }
+  });
+});
