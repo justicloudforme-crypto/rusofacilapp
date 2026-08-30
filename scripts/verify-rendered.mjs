@@ -123,7 +123,20 @@ async function main() {
       ["scripts/check-rendered-surface.mjs", `--base=${BASE}`, "--control", ...passthrough],
       { stdio: "inherit" }
     );
-    return run.status ?? 1;
+    // Layout runs on the SAME server, in the same step, and both statuses
+    // are reported. Rendered-surface answers "is the page there"; this one
+    // answers "is it the right shape" — two defects found on production
+    // 29.08.2026 (a see-through sticky header, a footer row 428px wide in a
+    // 320px viewport) were invisible to the first check and are exactly
+    // what the second measures. Running it second and not short-circuiting
+    // means one verify run names every problem it can see, rather than
+    // hiding the layout ones behind a content failure.
+    const layout = spawnSync(
+      process.execPath,
+      ["scripts/check-layout-geometry.mjs", `--base=${BASE}`, "--control", ...passthrough],
+      { stdio: "inherit" }
+    );
+    return (run.status ?? 1) || (layout.status ?? 1);
   } finally {
     stop();
   }
