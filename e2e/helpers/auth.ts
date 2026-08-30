@@ -26,9 +26,18 @@ import type { Page } from "@playwright/test";
  * request API follows and reports as a plain 200 OK, so response.ok()
  * alone doesn't catch it — only the final URL's error= param does.
  */
-export async function loginWithSubscription(page: Page): Promise<void> {
+export async function loginWithSubscription(
+  page: Page,
+  options: { tier?: "standard" | "premium" } = {},
+): Promise<void> {
   const password = "TestPass123!";
   const maxAttempts = 5;
+  // "premium" means the lifetime plan, the only one src/lib/entitlement.ts
+  // resolves to the premium tier — needed by anything gated on ★ (curved)
+  // puzzles, WordGamePuzzle.premiumOnly or C1 content. Default stays
+  // standard so specs that only need "an active subscription" keep
+  // testing that, and not a stronger entitlement than the product asks for.
+  const plan = options.tier === "premium" ? "lifetime" : undefined;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
@@ -37,7 +46,9 @@ export async function loginWithSubscription(page: Page): Promise<void> {
     });
     const landedOnError = new URL(registerResponse.url()).searchParams.has("error");
     if (registerResponse.ok() && !landedOnError) {
-      const grantResponse = await page.context().request.post("/api/test/grant-subscription");
+      const grantResponse = await page.context().request.post("/api/test/grant-subscription", {
+        data: plan ? { plan } : {},
+      });
       if (!grantResponse.ok()) {
         throw new Error(`e2e subscription grant failed: ${grantResponse.status()} ${await grantResponse.text()}`);
       }
