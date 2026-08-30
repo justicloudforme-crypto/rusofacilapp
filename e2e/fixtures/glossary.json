@@ -1,0 +1,46 @@
+[
+  {
+    "slug": "aspecto-en-imperativo",
+    "term": "aspecto en el imperativo",
+    "definition": "Al dar una orden o petición en ruso, la elección entre aspecto perfectivo e imperfectivo cambia el matiz: el IMPERFECTIVO se usa para invitaciones amables o para pedir que se empiece/continúe una acción en general («Заходи!» — ¡Entra! como invitación cordial), mientras que el PERFECTIVO se usa para una orden concreta, puntual, o más urgente/enfática («Зайди!» — ¡Entra! como orden específica y directa).",
+    "russianEquivalent": "вид глагола в повелительном наклонении",
+    "transcription": "vid glagóla v pavyelítyel'nam naklanyénii",
+    "category": "aspecto",
+    "russianComparison": "El español no distingue el matiz de urgencia o cordialidad mediante un cambio morfológico del verbo en el imperativo (se hace con entonación o palabras como «por favor»). El ruso sí tiene una herramienta gramatical específica para esto: la elección de aspecto, que un hispanohablante debe aprender a manejar activamente y no solo con el tono de voz.",
+    "examples": "[{\"es\":\"¡Pasa, pasa! (invitación cordial)\",\"ru\":\"Заходи, заходи!\"},{\"es\":\"¡Cierra la puerta! (orden concreta y directa)\",\"ru\":\"Закрой дверь!\"}]",
+    "relatedLessons": "[\"a1-9\"]"
+  },
+  {
+    "slug": "caso-nominativo",
+    "term": "caso nominativo",
+    "definition": "La forma 'de diccionario' de un sustantivo: la que se usa para nombrar algo o cuando es el sujeto de la frase.",
+    "russianEquivalent": "именительный падеж",
+    "transcription": "imyenítyel'nyy padyézh",
+    "category": "casos",
+    "russianComparison": null,
+    "examples": "[{\"es\":\"Esto es una mesa.\",\"ru\":\"Это стол.\"},{\"es\":\"María es médica.\",\"ru\":\"Мария — врач.\"}]",
+    "relatedLessons": "[\"a1-3\"]"
+  },
+  {
+    "slug": "sustantivo",
+    "term": "sustantivo",
+    "definition": "Es la palabra que nombra a una persona, un animal, una cosa, un lugar o una idea. Por ejemplo: niño, perro, mesa, ciudad, amor. Casi siempre puedes poner «el» o «la» delante de un sustantivo.",
+    "russianEquivalent": "имя существительное",
+    "transcription": "ímya sushestvítyel'noye",
+    "category": "partes-de-la-oracion",
+    "russianComparison": "En español el sustantivo casi nunca cambia de forma (solo entre singular y plural: mesa / mesas). En ruso, en cambio, la TERMINACIÓN del sustantivo cambia según el papel que cumple en la frase — eso son los «casos» (para más detalle, busca ese término en este glosario). Además, en ruso todo sustantivo tiene un género fijo: masculino, femenino o NEUTRO (el español solo tiene masculino y femenino).",
+    "examples": "[{\"es\":\"El perro corre en el parque.\",\"ru\":\"Собака бежит в парке.\"},{\"es\":\"Mi hermana estudia medicina.\",\"ru\":\"Моя сестра изучает медицину.\"}]",
+    "relatedLessons": "[\"a1-1\"]"
+  },
+  {
+    "slug": "verbo-reflexivo-sya",
+    "term": "verbo reflexivo (con -ся)",
+    "definition": "Es el verbo que lleva el postfijo -ся/-сь pegado al final, y que puede indicar una acción reflexiva, recíproca, pasiva, o simplemente ser un verbo distinto sin ese matiz — depende del verbo concreto.",
+    "russianEquivalent": "возвратный глагол",
+    "transcription": "vazvrátnyy glagól",
+    "category": "otros",
+    "russianComparison": "El postfijo -ся en ruso no siempre significa lo mismo que un verbo reflexivo en español. A veces sí es reflexivo puro (мыться — «lavarse»), pero también puede marcar reciprocidad (обниматься — «abrazarse mutuamente»), un significado pasivo (строиться — «ser construido») o incluso cambiar totalmente el significado del verbo, sin equivalente reflexivo en español (нравиться — «gustar», que sin «-ся» no existe con ese sentido). No hay que traducir automáticamente cada verbo en -ся como reflexivo.",
+    "examples": "[{\"es\":\"Me lavo por la mañana.\",\"ru\":\"Я умываюсь по утрам.\"},{\"es\":\"La casa se está construyendo.\",\"ru\":\"Дом строится.\"}]",
+    "relatedLessons": "[]"
+  }
+]

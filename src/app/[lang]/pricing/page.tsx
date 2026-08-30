@@ -66,9 +66,6 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
       />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{p.title}</h1>
       <p className="mt-3 max-w-xl text-foreground/70">{p.subtitle}</p>
-      <p className="mt-4 inline-block rounded-full bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-        {p.guaranteeNote}
-      </p>
 
       {/* Four independent columns in ascending price order: Free, Monthly,
           Yearly, Premium. Annual carries the "recommended" tile treatment

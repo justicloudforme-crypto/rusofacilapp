@@ -104,20 +104,51 @@ export async function invalidateSubscriptionCache(userId: string) {
   await subscriptionCache.del(userId);
 }
 
+/** The single plan id that means the Premium tier. Lives here, next to the
+ * only writer of `Subscription.plan`, so the write side and the read side
+ * (src/lib/entitlement.ts) cannot drift into two different opinions about
+ * what "Premium" is stored as. */
+export const PREMIUM_PLAN_ID = "lifetime";
+
+export function isPremiumPlan(plan: string): boolean {
+  return plan === PREMIUM_PLAN_ID;
+}
+
 /** Extends the user's current subscription period if it's still active, or
- * grants a fresh one if not — shared by every "add N free days" path
- * (admin manual grant, referral rewards) so they can't drift into two
- * different extend-vs-create rules. */
+ * grants a fresh one if not — shared by every "add N days" path (the Stripe
+ * webhook's lifetime and OXXO branches, admin manual grant, referral
+ * rewards) so they can't drift into two different extend-vs-create rules.
+ *
+ * The extend branch deliberately keeps the stored `plan` rather than
+ * overwriting it with the caller's, with ONE exception: a grant that raises
+ * the entitlement tier. Both halves of that matter.
+ *
+ * Keeping it is why a referral bonus or a manual admin grant — both of
+ * which pass their own plan id ("referral", "manual", neither of them
+ * Premium) — cannot quietly demote a paying Premium customer to standard.
+ *
+ * Raising it is a production bug fix, not tidying (PROGRESS.md 7.55). This
+ * function is what the Stripe webhook calls when a Lifetime/Premium
+ * purchase is paid, by card and by OXXO alike. Before this, a customer who
+ * already had ANY active subscription row — a monthly plan, referral days,
+ * an admin grant — had only their period extended: the row still said
+ * "monthly", getEntitlementTier still answered "standard", and the person
+ * who had just paid for Premium got none of the Premium content. Nothing in
+ * the system reported a failure; the money arrived and the entitlement did
+ * not.
+ */
 export async function extendOrGrantSubscription(userId: string, days: number, plan: string) {
   const extraMs = days * 24 * 60 * 60 * 1000;
   const existing = await getLatestSubscription(userId);
 
   if (existing && isSubscriptionActive(existing)) {
+    const raisesTier = isPremiumPlan(plan) && !isPremiumPlan(existing.plan);
     await db.subscription.update({
       where: { id: existing.id },
       data: {
         status: "active",
         currentPeriodEnd: new Date(existing.currentPeriodEnd.getTime() + extraMs),
+        ...(raisesTier ? { plan } : {}),
       },
     });
   } else {
@@ -131,6 +162,78 @@ export async function extendOrGrantSubscription(userId: string, days: number, pl
     });
   }
   await invalidateSubscriptionCache(userId);
+}
+
+/** The tier a stored row grants, decided by exactly the two rules the read
+ * side uses (isSubscriptionActive, then isPremiumPlan — see
+ * getEntitlementTier in src/lib/entitlement.ts), minus the session lookup
+ * and the staff bypass, because a webhook has neither a request nor a
+ * reason to let a staff role hide a failed purchase. */
+export function tierOfStoredSubscription(
+  subscription: Pick<Subscription, "plan" | "status" | "currentPeriodEnd"> | null | undefined
+): "free" | "standard" | "premium" {
+  if (!isSubscriptionActive(subscription)) return "free";
+  return isPremiumPlan(subscription!.plan) ? "premium" : "standard";
+}
+
+/**
+ * Reads back what a paid Premium grant actually stored, and reports the
+ * mismatch to Sentry when the money arrived and the tier did not.
+ *
+ * This exists because of a defect that ran in production from 24.08.2026
+ * to 30.08.2026 (PROGRESS.md 7.55): a Premium purchase on top of an
+ * already-active row extended the period and left `plan` alone, so the
+ * buyer stayed on "standard". Nothing failed anywhere — Stripe reported a
+ * successful payment, the webhook returned 200, no exception was thrown,
+ * and the only trace was a person who could not open the content they had
+ * just bought. The fix stops it happening; this stops it happening
+ * *silently*, which is the part that let it live six days.
+ *
+ * Deliberately a read-back rather than an assertion inside the writer: the
+ * question is what the database ends up holding, and a writer that checks
+ * its own intent would have agreed with itself in the broken version too.
+ *
+ * Never throws. A webhook that throws is a webhook Stripe retries, and
+ * retrying a grant that already succeeded is worse than losing one report.
+ */
+export async function reportPremiumPaymentNotApplied(
+  userId: string,
+  paidPlan: string,
+  context: { source: string; reference?: string | null }
+): Promise<"free" | "standard" | "premium" | null> {
+  if (!isPremiumPlan(paidPlan)) return null;
+
+  // Fresh, not the 30s cache: extendOrGrantSubscription invalidates this
+  // user's entry as its last step, so the read below sees the write.
+  const stored = await getLatestSubscription(userId);
+  const tier = tierOfStoredSubscription(stored);
+  if (tier === "premium") return tier;
+
+  try {
+    const error = new Error(
+      `Paid "${paidPlan}" did not grant Premium: user ${userId} is on tier "${tier}" ` +
+        `after the payment was processed (stored plan: ${stored?.plan ?? "no row"})`
+    );
+    error.name = "PremiumEntitlementMismatch";
+    const Sentry = await import("@sentry/nextjs");
+    Sentry.captureException(error, {
+      level: "error",
+      tags: { defect: "premium-entitlement-mismatch", source: context.source },
+      extra: {
+        userId,
+        paidPlan,
+        observedTier: tier,
+        storedPlan: stored?.plan ?? null,
+        storedStatus: stored?.status ?? null,
+        storedPeriodEnd: stored?.currentPeriodEnd?.toISOString() ?? null,
+        subscriptionRowId: stored?.id ?? null,
+        reference: context.reference ?? null,
+      },
+    });
+  } catch {
+    // Reporting the problem must never become a second problem.
+  }
+  return tier;
 }
 
 export async function userHasActiveSubscription(userId: string): Promise<boolean> {

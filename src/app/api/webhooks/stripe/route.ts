@@ -3,7 +3,11 @@ import type { NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
-import { extendOrGrantSubscription, invalidateSubscriptionCache } from "@/lib/subscription";
+import {
+  extendOrGrantSubscription,
+  invalidateSubscriptionCache,
+  reportPremiumPaymentNotApplied,
+} from "@/lib/subscription";
 import { LIFETIME_DURATION_DAYS } from "@/lib/plans";
 import { awardReferralRewardSafely } from "@/lib/referral";
 import { isPlanId, plans } from "@/lib/plans";
@@ -122,6 +126,12 @@ export async function POST(request: NextRequest) {
         const userId = session.client_reference_id;
         if (userId && session.payment_status === "paid") {
           await extendOrGrantSubscription(userId, LIFETIME_DURATION_DAYS, "lifetime");
+          // Money in, tier out — checked, not assumed. See
+          // reportPremiumPaymentNotApplied and PROGRESS.md 7.55.
+          await reportPremiumPaymentNotApplied(userId, "lifetime", {
+            source: "checkout.session.completed",
+            reference: session.id,
+          });
           await awardReferralRewardSafely(userId);
         }
       }
@@ -142,6 +152,12 @@ export async function POST(request: NextRequest) {
       const planId = session.metadata?.plan;
       if (userId && planId && isPlanId(planId)) {
         await extendOrGrantSubscription(userId, plans[planId].durationDays, planId);
+        // Same read-back as the card branch above. A no-op for the monthly
+        // and annual voucher plans — it only speaks up for a premium one.
+        await reportPremiumPaymentNotApplied(userId, planId, {
+          source: "checkout.session.async_payment_succeeded",
+          reference: session.id,
+        });
         // Same "only on a real payment" rule as the card path's
         // checkout.session.completed handler above — the voucher being
         // generated proves nothing, only it being paid does.

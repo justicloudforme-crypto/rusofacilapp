@@ -1,20 +1,19 @@
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
 
-// Skipped in CI: word-games puzzles are generated from the FlashcardCard
-// bank (prisma/generate-word-games.ts), and FlashcardCard content is
-// DB-backed only — there is no committed source file for it anywhere in
-// the repo (see prisma/add-flashcards.ts's own docstring), so a fresh CI
-// database has zero eligible words and `npm run generate:word-games`
-// writes zero puzzles no matter what runs before it. Confirmed directly:
-// running the generator against an empty-but-schema-pushed SQLite file
-// prints "0 eligible words... skipped" for every single rung. Every test
-// below needs real puzzle content to exist, so there's currently no way
-// to make this suite pass in CI without a real content-seeding story
-// (e.g. a committed FlashcardCard fixture) — a bigger decision than this
-// file should make unilaterally. Keeps running locally against dev.db,
-// which does have real content, as part of the normal verification ritual.
-test.skip(!!process.env.CI, "needs FlashcardCard content, which CI's ephemeral DB has no way to seed yet");
+// Runs everywhere, CI included. It used to self-skip under CI because
+// word-game puzzles are generated from the FlashcardCard bank and that bank
+// is DB-backed only, so a fresh CI database had no puzzles and nothing here
+// could pass. That is now solved by seeding four real puzzle rows —
+// e2e/fixtures/word-games.json, loaded by scripts/seed-e2e-fixture.mjs —
+// instead of trying to reconstruct the card bank and re-run the generator.
+// See PROGRESS.md 7.52.
+//
+// Nothing below may depend on WHICH puzzle it gets: locally these tests run
+// against dev.db's real generated content, in CI against the fixture, and
+// the generator rewrites the local rows whenever it runs. Read the grid,
+// the word list and (for the crossword) the answers from the running app.
 
 // Narrow, iPhone-sized viewport, same convention as mobile-menu.spec.ts —
 // this is the width the word-games UI actually needs to work at.
@@ -27,67 +26,180 @@ test.beforeEach(async ({ page }) => {
   await loginWithSubscription(page);
 });
 
-// Serial, not parallel: every test in this file calls loginWithSubscription
-// in beforeEach, which registers a new account — /api/auth/register caps
-// at 10/min per IP (see that route's own comment), and this file alone has
-// enough tests to blow past that limit if they all fire registration
-// requests at once under fullyParallel. loginWithSubscription() already
-// retries through a transient rate-limit, but serializing this file's own
-// tests removes the self-inflicted contention at the source instead of
-// leaning on the retry to paper over it every run.
+// Serial, not parallel. The original reason given here — /api/auth/register's
+// 10/min cap — has not applied since 12da466 bypassed that limiter under
+// E2E_TEST_SEED, and each test now carries its own client IP anyway
+// (e2e/helpers/test.ts). The reason that does apply: these tests each drive
+// a whole puzzle, which means one POST /api/word-games/check per keystroke
+// against a 120/min budget. Serial keeps each test's traffic inside its own
+// minute instead of stacking two solves into one window.
 test.describe.configure({ mode: "serial" });
 
-// A1 crossword sequence 1's real seeded content (prisma/generate-word-games.ts
-// is deterministic per (type, level, sequence), so this is stable across
-// re-runs of `npm run generate:word-games` as long as the A1 word bank
-// itself doesn't change). Row/col are 0-indexed to match the grid; the DOM
-// exposes 1-indexed `row N col M` aria-labels (see CrosswordBoard.tsx).
-//
-// Re-derived 2026-08-23 after the cognate-exclusion/clue-collision fixes
-// (clue.ts/generation.ts) changed which words this exact seed produces —
-// the previous hardcoded fixture ("завтра"/"язык"/... ) stopped matching
-// dev.db's actual content and broke this test in CI (the first time CI
-// ever actually ran against a real GitHub remote surfaced it). Verified
-// directly against `WordGamePuzzle` for (CROSSWORD, A1, 1) rather than
-// against the UI, so this reflects the real seeded grid, not a guess.
-const CROSSWORD_WORDS: { word: string; row: number; col: number; direction: "E" | "S" }[] = [
-  { word: "среда", row: 0, col: 1, direction: "E" },
-  { word: "сын", row: 0, col: 1, direction: "S" },
-  { word: "нос", row: 2, col: 1, direction: "E" },
-  { word: "стул", row: 2, col: 3, direction: "S" },
-  { word: "арбуз", row: 0, col: 5, direction: "S" },
-  { word: "школа", row: 5, col: 0, direction: "E" },
-];
+/** Cyrillic, ordered by how often a letter turns up in Russian text. The
+ * order is a cost control, not a correctness one: the oracle below stops
+ * the moment every cell is known, so putting the common letters first
+ * usually ends it a third of the way through the alphabet. */
+const CYRILLIC_BY_FREQUENCY = "оеаинтсрвлкмдпуяызъьбгчйхжшюцщэфё".split("");
 
-async function fillCrossword(page: Page) {
-  for (const { word, row, col, direction } of CROSSWORD_WORDS) {
-    const [dr, dc] = direction === "S" ? [1, 0] : [0, 1];
-    for (let i = 0; i < word.length; i++) {
-      const r = row + dr * i;
-      const c = col + dc * i;
-      await page.getByLabel(`row ${r + 1} col ${c + 1}`, { exact: true }).fill(word[i]);
-    }
+interface Cell {
+  row: number;
+  col: number;
+}
+
+/** Every answer cell of the crossword currently on screen, read from the
+ * DOM. CrosswordBoard renders a plain `<div>` for a blocked square and an
+ * `<input aria-label="row N col M">` (1-indexed) for an answer square, so
+ * the inputs ARE the answer cells — no need to know the grid's shape. */
+async function readCrosswordCells(page: Page): Promise<Cell[]> {
+  const labels = await page
+    .locator("input[aria-label^='row']")
+    .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
+  return labels.map((label) => {
+    const m = /^row (\d+) col (\d+)$/.exec(label);
+    if (!m) throw new Error(`unexpected crossword cell label: ${label}`);
+    return { row: Number(m[1]) - 1, col: Number(m[2]) - 1 };
+  });
+}
+
+/**
+ * The puzzle's answers, obtained from the running application rather than
+ * written down here.
+ *
+ * Why not a fixture. This test used to carry the six words of
+ * CROSSWORD/A1/1 with their row/col hardcoded. `prisma/generate-word-games.ts`
+ * regenerated that rung, "среда" at row 0 col 1 stopped existing, and the
+ * test failed on a cell that isn't there — a data drift, not a regression,
+ * and the second time this exact fixture had rotted (see the comment it
+ * replaces). Any re-derived fixture rots the same way on the next
+ * regeneration, and a fixture also cannot travel between two different
+ * databases: dev.db locally, the seeded fixture in CI.
+ *
+ * How. POST /api/word-games/check grades a batch of guesses per cell and
+ * reports each one correct or not. Send every unresolved cell the same
+ * candidate letter, keep the cells it says are correct, move to the next
+ * candidate. That route's own comment already names this property ("repeated
+ * calls turn it into an oracle that reconstructs the whole solution") as the
+ * reason it sits behind the subscription gate — the gate is satisfied here,
+ * by the same logged-in, subscribed session the test plays with.
+ *
+ * Cost: one request per distinct letter in the solution, not one per cell.
+ * A 429 from the limiter is failed loudly instead of shrugged off: a
+ * silently-truncated oracle would look like a puzzle with unknown cells.
+ */
+async function solveCrossword(page: Page, puzzleId: string, cells: Cell[]): Promise<Map<string, string>> {
+  const solution = new Map<string, string>();
+  let unresolved = cells;
+
+  for (const letter of CYRILLIC_BY_FREQUENCY) {
+    if (unresolved.length === 0) break;
+    const response = await page.request.post("/api/word-games/check", {
+      data: { puzzleId, guesses: unresolved.map((c) => ({ row: c.row, col: c.col, letter })) },
+    });
+    expect(response.status(), `POST /api/word-games/check while reading the solution (letter "${letter}")`).toBe(200);
+    const { results } = (await response.json()) as { results: { row: number; col: number; correct: boolean }[] };
+    const correct = new Set(results.filter((r) => r.correct).map((r) => `${r.row},${r.col}`));
+    for (const cell of unresolved) if (correct.has(`${cell.row},${cell.col}`)) solution.set(`${cell.row},${cell.col}`, letter);
+    unresolved = unresolved.filter((c) => !correct.has(`${c.row},${c.col}`));
   }
+
+  // A cell no candidate matched means the alphabet above lost a letter, or
+  // the grid holds something that isn't a Cyrillic letter at all. Either way
+  // the rest of the test would be meaningless.
+  expect(unresolved, "crossword cells the alphabet could not account for").toEqual([]);
+  return solution;
+}
+
+/**
+ * Types the solution the way a person does: one key press per cell, once.
+ *
+ * It used to type each cell, check whether the letter had actually appeared,
+ * and retype the ones that had not, up to four passes. That was a workaround
+ * for a real defect in the product, not a property of typing: a controlled
+ * cell could lose a keystroke outright when a re-render landed between the
+ * browser's edit and the input event (PROGRESS.md 7.54). The board no longer
+ * does that, so the retyping is gone and this is a single honest pass.
+ *
+ * The check at the end stays. If a letter ever goes missing again, this
+ * fails naming the cell, instead of the test limping on to fail ten lines
+ * later on a celebration that could not possibly have appeared.
+ *
+ * `pressSequentially`, not `press`: `press` only knows named keys and ASCII
+ * and rejects Cyrillic outright ("Unknown key"). Backspace first when a cell
+ * is occupied, because `maxLength={1}` would otherwise drop the keystroke —
+ * and Backspace is the board's own clearing path, so this stays a
+ * description of what a player does.
+ */
+async function fillCrossword(page: Page, solution: Map<string, string>) {
+  const cellFor = (key: string) => {
+    const [row, col] = key.split(",").map(Number);
+    return page.getByLabel(`row ${row + 1} col ${col + 1}`, { exact: true });
+  };
+
+  for (const [key, letter] of solution) {
+    const cell = cellFor(key);
+    if ((await cell.inputValue()) !== "") await cell.press("Backspace");
+    await cell.pressSequentially(letter);
+  }
+
+  const missing: string[] = [];
+  for (const [key, letter] of solution) {
+    if ((await cellFor(key).inputValue()).toLowerCase() !== letter) missing.push(key);
+  }
+  expect(missing, "cells that did not keep the letter that was typed into them").toEqual([]);
 }
 
 test("crossword: full solve flow shows check feedback and the completion celebration", async ({ page }) => {
+  // CrosswordBoard POSTs /api/word-games/check on every keystroke, against
+  // a 120/min budget. A 429 makes runCheck bail out silently — no red cell,
+  // no celebration — and the test would then fail on a timeout that names
+  // the dialog instead of the cause. Name the cause. (This is also why the
+  // test drives rung 1, six words: the big rungs at the top of a ladder
+  // hold eighteen, and solving one of those twice does not fit in the
+  // application's own per-minute budget. Measured: PROGRESS.md 7.52.)
+  const rateLimited: string[] = [];
+  page.on("response", (r) => {
+    if (r.status() === 429 && r.url().includes("/api/word-games/")) rateLimited.push(r.url());
+  });
+
   await page.goto("/es/word-games/CROSSWORD/A1/1");
 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Crucigrama");
-  const cellCount = await page.locator("input[aria-label^='row']").count();
-  expect(cellCount).toBeGreaterThan(0);
+  const cells = await readCrosswordCells(page);
+  expect(cells.length).toBeGreaterThan(0);
 
-  // Type one wrong letter first — confirms the red incorrect-cell styling
-  // actually round-trips through POST /check before we type the real
-  // answers over it.
-  // (0,1) 0-indexed — the start of "среда" (row 0, col 1, direction E) in
-  // the current seeded content; not (0,0), which isn't an active cell in
-  // this grid.
-  const firstCell = page.getByLabel("row 1 col 2", { exact: true });
-  await firstCell.fill("ю");
+  // The puzzle's id is never printed on the page, and it is what /check
+  // and /hint are addressed by. Take it from the board's own first call:
+  // typing into any cell makes CrosswordBoard POST /api/word-games/check
+  // with the id in its body. Reading it from the application means the test
+  // cannot address a puzzle the page isn't actually showing.
+  const firstCell = page.getByLabel(`row ${cells[0].row + 1} col ${cells[0].col + 1}`, { exact: true });
+  const [checkRequest] = await Promise.all([
+    page.waitForRequest((r) => r.url().includes("/api/word-games/check") && r.method() === "POST"),
+    firstCell.fill("а"),
+  ]);
+  const puzzleId = (JSON.parse(checkRequest.postData() ?? "{}") as { puzzleId?: string }).puzzleId;
+  expect(puzzleId, "puzzleId from the board's own /check call").toBeTruthy();
+
+  const solution = await solveCrossword(page, puzzleId!, cells);
+  expect(solution.size).toBe(cells.length);
+
+  // A deliberately wrong letter first — this is what confirms the red
+  // incorrect-cell styling really round-trips through POST /check, and it
+  // has to be a letter this cell's answer is NOT, which is only knowable
+  // now. (The old version typed a fixed "ю" and would have silently
+  // stopped testing anything the day "ю" became the right answer.)
+  const firstKey = `${cells[0].row},${cells[0].col}`;
+  const wrongLetter = CYRILLIC_BY_FREQUENCY.find((l) => l !== solution.get(firstKey))!;
+  await firstCell.fill(wrongLetter);
   await expect(firstCell).toHaveClass(/border-red-400/);
 
-  await fillCrossword(page);
+  await fillCrossword(page, solution);
+
+  // Before the celebration, not after: a 429 makes CrosswordBoard's runCheck
+  // return early, so the last graded keystroke never arrives and the puzzle
+  // is never reported solved. Asserted here so that failure says "rate
+  // limited" instead of "no dialog appeared".
+  expect(rateLimited, "the board's own /check calls were rate-limited mid-solve").toEqual([]);
 
   // Regression guard for a real bug (5aa9e8d): WordGamePlayer used to show
   // BOTH the old CelebrationModal and the new GameResultPanel at once — two
@@ -102,12 +214,14 @@ test("crossword: full solve flow shows check feedback and the completion celebra
   await page.getByRole("button", { name: "Jugar otro puzle" }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
   await expect(firstCell).toHaveValue("");
-  await fillCrossword(page);
+  await fillCrossword(page, solution);
   await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
 
   // "Next game" must navigate back to the word-games catalog.
   await page.getByRole("button", { name: "← Volver a los juegos de palabras" }).click();
   await expect(page).toHaveURL(/\/es\/word-games$/);
+
+  expect(rateLimited, "the board's own /check calls were rate-limited during the run").toEqual([]);
 });
 
 const DIRS = [
@@ -317,6 +431,15 @@ test("word search: diagonal words are findable and each found word gets a distin
 test("word search: ★ expert puzzle can be solved by clicking through a bent word, and a wrong click can be canceled", async ({
   page,
 }) => {
+  // ★ puzzles are Premium-exclusive: the puzzle page redirects
+  // curved/premiumOnly rows to /pricing for anything below the premium tier
+  // (src/lib/entitlement.ts canAccessCurvedPuzzle). beforeEach's account is
+  // standard-tier, so this test needs its own premium one — without it the
+  // page below is /pricing and the word list is empty. It was, on every run
+  // since the three-tier model shipped; nobody saw it because this file is
+  // serial and the crossword test above it failed first.
+  await loginWithSubscription(page, { tier: "premium" });
+
   // Discover the star tier's first sequence number from the picker UI
   // itself rather than hardcoding it — WORD_SEARCH_RUNGS.length (and so
   // where the star tier's numbering starts) has changed three times

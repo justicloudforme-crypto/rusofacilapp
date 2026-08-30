@@ -1,4 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/test";
+import { openLogoutControl } from "./helpers/nav";
+import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
 
 // Registration is the top of the whole revenue funnel — nobody can ever
 // subscribe without it working first. These tests drive the real
@@ -11,19 +13,16 @@ function uniqueEmail(): string {
   return `e2e-register-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
 }
 
-test("a visitor can register and lands authenticated on their profile", async ({ page, browserName }) => {
-  // Real bug found while writing this suite, not a flaw in the test: the
-  // session cookie is set with `secure: process.env.NODE_ENV === "production"`
-  // (src/lib/auth.ts), and playwright.config.ts's webServer always runs
-  // `next start`, which forces NODE_ENV=production even for this plain-HTTP
-  // localhost server (see that file's own comment on why). Chromium grants
-  // `localhost` a Secure-cookie exception, so it works there; WebKit
-  // (the "mobile-iphone" project) does not, and silently drops the cookie —
-  // every subsequent page load looks logged-out. This is a test-environment
-  // artifact only (a real deploy is always HTTPS, where `secure: true` is
-  // correct and required) — skip here rather than mask it, and fix the
-  // cookie logic itself as its own deliberate change.
-  test.skip(browserName === "webkit", "Secure cookie dropped over plain-HTTP localhost in WebKit — see comment above");
+test("a visitor can register and lands authenticated on their profile", async ({ page }) => {
+  // This is the "deliberate change" the skip that used to stand here asked
+  // for. The session cookie was Secure-flagged on the e2e server (which is
+  // `next start`, so NODE_ENV=production even over plain-HTTP localhost),
+  // WebKit silently dropped it, and every WebKit page load looked logged
+  // out. Skipping the four tests that noticed left the rest of the WebKit
+  // projects running logged out and passing anyway wherever a page had a
+  // free-tier fallback — green for the wrong reason. Fixed in
+  // shouldUseSecureSessionCookie (src/lib/session-token.ts), which is
+  // exercised by both engines from here on.
 
   await page.goto("/es/register");
 
@@ -38,30 +37,19 @@ test("a visitor can register and lands authenticated on their profile", async ({
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
 
   // WelcomeOverlay shows a full-screen dialog on every brand-new account's
-  // first-ever /profile landing (see the sibling test below for the full
-  // explanation) — its backdrop sits above the header and swallows the
-  // "Mi perfil" click below if still open, so dismiss it first.
-  try {
-    await page.getByRole("dialog", { name: "¡Feliz nuevo día de ruso!" }).waitFor({ state: "visible", timeout: 3000 });
-    await page.getByRole("button", { name: "Continuar" }).click();
-  } catch {
-    // Didn't appear within the window — nothing to dismiss.
-  }
+  // first-ever /profile landing — its backdrop sits above the header and
+  // swallows the "Mi perfil" click below if still open. This used to be a
+  // waitFor-in-a-try/catch, which passed whether or not it ever saw the
+  // overlay; the helper asserts instead. See e2e/helpers/welcome-overlay.ts.
+  await dismissWelcomeOverlay(page);
 
-  // The header redesign moved logout off the page and into the "Mi
-  // perfil" dropdown (ProfileMenu.tsx) — open it first. Its items are
-  // role="menuitem" (Dropdown.tsx's panel is role="menu"), not "button".
-  await page.getByRole("button", { name: "Mi perfil" }).click();
-  await expect(page.getByRole("menuitem", { name: "Cerrar sesión" })).toBeVisible();
+  // Logout is not on the page: it is behind the header's profile menu on a
+  // wide viewport and behind the hamburger sheet on a narrow one. The
+  // helper opens whichever this viewport has — see e2e/helpers/nav.ts.
+  await expect(await openLogoutControl(page)).toBeVisible();
 });
 
-test("registering with an email already in use shows an error, not a silent failure", async ({
-  page,
-  browserName,
-}) => {
-  // See the sibling test above for why WebKit is skipped here.
-  test.skip(browserName === "webkit", "Secure cookie dropped over plain-HTTP localhost in WebKit");
-
+test("registering with an email already in use shows an error, not a silent failure", async ({ page }) => {
   const email = uniqueEmail();
   const password = "TestPass123!";
 
@@ -71,28 +59,16 @@ test("registering with an email already in use shows an error, not a silent fail
   await page.getByRole("button", { name: "Crear cuenta" }).click();
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
 
-  // WelcomeOverlay shows a full-screen "welcome back" dialog once per
-  // calendar day for every (userId, day) pair — a brand-new account
-  // landing on /profile for the very first time always hits this, since
-  // there's no localStorage entry yet. It sets its own "shown" flag inside
-  // a useEffect (fires after the commit, not synchronously with the URL
-  // change), so a plain isVisible() snapshot right after the URL assertion
-  // can still race it — actively wait for it instead of sampling once.
-  try {
-    await page.getByRole("dialog", { name: "¡Feliz nuevo día de ruso!" }).waitFor({ state: "visible", timeout: 3000 });
-    await page.getByRole("button", { name: "Continuar" }).click();
-  } catch {
-    // Didn't appear within the window — nothing to dismiss.
-  }
+  // Same greeting overlay as the sibling test above — guaranteed on a
+  // brand-new account's first /profile landing, so the helper waits for it
+  // and fails if it never comes.
+  await dismissWelcomeOverlay(page);
 
   // Log out, then try to register the same email again — this is the
   // realistic failure mode (a returning user landing on /register instead
   // of /login), and it must fail loudly with a message telling them to log
   // in instead, never silently overwrite/duplicate the account.
-  // See the sibling test above for why "Mi perfil" needs opening first and
-  // logout is role="menuitem", not "button".
-  await page.getByRole("button", { name: "Mi perfil" }).click();
-  await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
+  await (await openLogoutControl(page)).click();
   await expect(page).toHaveURL(/\/es\/?$/);
 
   await page.goto("/es/register");

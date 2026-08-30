@@ -1,12 +1,12 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/test";
 
-// Skipped in CI for the same reason as e2e/word-games.spec.ts:
-// GlossaryTerm is DB-backed only (no committed seed fixture CI's ephemeral,
-// schema-only database gets loaded with — see prisma/seed-glossary.ts,
-// which is a manual/local script, not part of the CI pipeline), so these
-// slugs simply don't exist against a fresh CI database. Keeps running
-// locally against dev.db, which has the real 91-term catalog.
-test.skip(!!process.env.CI, "needs GlossaryTerm content, which CI's ephemeral DB has no way to seed yet");
+// Runs everywhere, CI included. It used to self-skip under CI because
+// GlossaryTerm is DB-backed only and CI's database is created empty by
+// `prisma db push`, so these four slugs did not exist there. They do now:
+// e2e/fixtures/glossary.json holds the same four production rows, loaded by
+// scripts/seed-e2e-fixture.mjs. The rows are the real ones, so the three
+// shapes the comment below names are the real shapes, not invented ones.
+// See PROGRESS.md 7.52.
 
 test.use({ viewport: { width: 390, height: 844 } });
 

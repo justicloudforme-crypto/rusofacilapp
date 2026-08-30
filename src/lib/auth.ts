@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { db } from "./db";
-import { SESSION_COOKIE, signUserId, verifySessionToken } from "./session-token";
+import { SESSION_COOKIE, shouldUseSecureSessionCookie, signUserId, verifySessionToken } from "./session-token";
 
 /**
  * Real email+password authentication (see /api/auth/login and
@@ -20,7 +20,9 @@ export async function createSession(userId: string, sessionVersion: number) {
   store.set(SESSION_COOKIE, signUserId(userId, sessionVersion), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // True on every real deployment. See shouldUseSecureSessionCookie for
+    // the single exception (the e2e server) and why it exists.
+    secure: shouldUseSecureSessionCookie(),
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
