@@ -1,4 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/test";
+import { openLogoutControl } from "./helpers/nav";
+import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
 
 // The paid funnel end-to-end: subscribe, then prove the subscription
 // actually survives a real session boundary (log out, log back in) rather
@@ -21,13 +23,13 @@ function uniqueEmail(): string {
   return `e2e-checkout-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
 }
 
-test("a logged-in user can subscribe and sees the active plan immediately", async ({ page, browserName }) => {
-  // See e2e/registration.spec.ts for the full explanation: the session
-  // cookie is Secure-flagged in this always-production (`next start`)
-  // test server, which WebKit drops over plain HTTP localhost. Both tests
-  // here register via the real browser form (not the API-level
-  // loginWithSubscription helper), so they hit the same issue.
-  test.skip(browserName === "webkit", "Secure cookie dropped over plain-HTTP localhost in WebKit");
+test("a logged-in user can subscribe and sees the active plan immediately", async ({ page }) => {
+  // Both tests here used to skip WebKit: the session cookie was
+  // Secure-flagged on this always-production (`next start`) test server and
+  // WebKit drops a Secure cookie over plain-HTTP localhost. Fixed at the
+  // source — the e2e server alone issues the cookie without Secure now, see
+  // shouldUseSecureSessionCookie in src/lib/session-token.ts — so the paid
+  // funnel is finally exercised on both engines.
 
   const email = uniqueEmail();
   const password = "TestPass123!";
@@ -37,6 +39,14 @@ test("a logged-in user can subscribe and sees the active plan immediately", asyn
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: "Crear cuenta" }).click();
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
+
+  // A brand-new account's first /profile landing always raises the daily
+  // greeting overlay. This test never clicks on /profile, so the backdrop
+  // could not hurt it — but leaving it up means the flag it writes is
+  // never written, and the overlay resurfaces on the /profile?checkout=mock
+  // landing below, over the text this test asserts on. Dismiss it here for
+  // the same reason the sibling test does. See e2e/helpers/welcome-overlay.ts.
+  await dismissWelcomeOverlay(page);
 
   await page.goto("/es/pricing");
   // The /pricing redesign (4 independent columns: Free, Monthly, Yearly,
@@ -64,13 +74,7 @@ test("a logged-in user can subscribe and sees the active plan immediately", asyn
   await expect(page.getByText("Mensual", { exact: true }).first()).toBeVisible();
 });
 
-test("subscription status survives logging out and back in (restore-equivalent)", async ({
-  page,
-  browserName,
-}) => {
-  // See the test above / e2e/registration.spec.ts for why WebKit is skipped.
-  test.skip(browserName === "webkit", "Secure cookie dropped over plain-HTTP localhost in WebKit");
-
+test("subscription status survives logging out and back in (restore-equivalent)", async ({ page }) => {
   const email = uniqueEmail();
   const password = "TestPass123!";
 
@@ -79,6 +83,13 @@ test("subscription status survives logging out and back in (restore-equivalent)"
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: "Crear cuenta" }).click();
   await expect(page).toHaveURL(/\/es\/profile(?:\?.*)?$/);
+
+  // THE fix for this test's flake, and the whole of it. Nothing about the
+  // /api/auth/register rate limit was ever involved (that limiter has been
+  // bypassed under E2E_TEST_SEED since 12da466, well before this test
+  // started flaking) — the timeout was the greeting overlay's full-screen
+  // backdrop eating the "Mi perfil" click 40 lines below. PROGRESS.md 7.52.
+  await dismissWelcomeOverlay(page);
 
   await page.goto("/es/pricing");
   // See the test above for why this is the Monthly card's cash CTA, not a
@@ -93,10 +104,9 @@ test("subscription status survives logging out and back in (restore-equivalent)"
 
   // Log out — this is the moment a purely client-side "I just paid" flag
   // would be lost; only a real server-side subscription row survives it.
-  // Logout now lives in the header's "Mi perfil" dropdown (role="menuitem",
-  // see e2e/registration.spec.ts), not a plain page button.
-  await page.getByRole("button", { name: "Mi perfil" }).click();
-  await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
+  // Logout is behind the profile menu on a wide viewport and behind the
+  // hamburger on a narrow one — see e2e/helpers/nav.ts.
+  await (await openLogoutControl(page)).click();
   await expect(page).toHaveURL(/\/es\/?$/);
 
   // Log back in as the same user and go straight to the subscription tab

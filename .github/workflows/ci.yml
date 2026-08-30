@@ -72,17 +72,26 @@ jobs:
       - name: Push database schema
         run: npx prisma db push
 
-      # No seed step here on purpose: `db push` only creates the schema, and
-      # there is currently no committed source of FlashcardCard content (or
-      # most other content tables) to load into it — everything is DB-backed
-      # only, authored directly against dev.db/Turso, never as files in this
-      # repo. This is why e2e/word-games.spec.ts self-skips under CI (see
-      # its own top-of-file comment) — running `generate:word-games` here
-      # was tried and confirmed to write zero puzzles against an empty
-      # FlashcardCard table, so it isn't worth the CI minutes. Other
-      # content-dependent tests that pass today do so via each feature's
-      # own bundled content.json fallback (lessons/exams), not real seed
-      # data — don't assume this job exercises the DB-backed content paths.
+      # This job used to have no seed step, and said so at length: there was
+      # no committed source of FlashcardCard content, re-running
+      # generate:word-games against an empty bank writes zero puzzles, and
+      # so e2e/word-games.spec.ts and e2e/glossary.spec.ts both self-skipped
+      # under CI. The cost of that was 16 of the suite's tests — a third of
+      # it — not running here while the job reported green.
+      #
+      # The fixture below is the answer, and it deliberately does NOT try to
+      # rebuild the card bank: it loads four real WordGamePuzzle rows and
+      # four real GlossaryTerm rows straight from e2e/fixtures/*.json. It
+      # refuses to write to any database that already holds content it did
+      # not put there, so it can only ever touch an empty CI one. See
+      # PROGRESS.md 7.52 and the script's own header.
+      #
+      # Still true, and still worth knowing: lessons and exams pass here via
+      # each feature's bundled content.json fallback, not via real seed
+      # data. Everything else DB-backed is either seeded above or absent.
+      - name: Seed the e2e content fixture
+        run: npx tsx scripts/seed-e2e-fixture.mjs
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
 

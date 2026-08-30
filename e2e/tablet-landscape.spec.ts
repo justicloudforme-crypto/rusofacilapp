@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
 
 // iPad landscape — above Tailwind's `sm` (640px) breakpoint, where the

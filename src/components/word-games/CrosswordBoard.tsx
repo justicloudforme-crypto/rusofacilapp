@@ -52,6 +52,8 @@ export default function CrosswordBoard({
 }) {
   const cellWordMap = useMemo(() => buildCellWordMap(puzzle.words), [puzzle.words]);
   const [guesses, setGuesses] = useState<Record<string, string>>({});
+  // Mirror of `guesses` that is up to date synchronously — see updateGuess.
+  const guessesRef = useRef<Record<string, string>>({});
   const [cellStatus, setCellStatus] = useState<Record<string, CellStatus>>({});
   const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(null);
   const [activeDirection, setActiveDirection] = useState<Direction | null>(null);
@@ -103,15 +105,32 @@ export default function CrosswordBoard({
     }
   }
 
+  // The grading request is fired HERE, not from inside a setState updater.
+  // It used to live inside `setGuesses(prev => { … runCheck(next) … })`, and
+  // an updater has to be pure: React is free to call it more than once, or
+  // to discard and replay it, so a fetch in there is guaranteed neither to
+  // happen exactly once nor to happen at all.
+  //
+  // Honest scope: this is a correctness fix against React's contract, NOT
+  // the explanation for anything observed. It was written while chasing a
+  // crossword that occasionally never completed, and the run afterwards
+  // showed the same failure — that turned out to be the e2e suite's own
+  // `fill()` racing a controlled input, fixed in the test, PROGRESS.md 7.52.
+  // Kept because the pattern is wrong on its own terms and the next thing
+  // to trip on it (a StrictMode double-invoke, a replayed render) would
+  // send the same grading POST twice.
+  //
+  // `guessesRef` rather than the `guesses` state because this function is
+  // called several times before React re-renders; the ref is what makes each
+  // call see the previous one's letter.
   function updateGuess(row: number, col: number, letter: string | undefined, soundCell?: { row: number; col: number }) {
-    setGuesses((prev) => {
-      const next = { ...prev };
-      const key = `${row},${col}`;
-      if (letter) next[key] = letter;
-      else delete next[key];
-      void runCheck(next, soundCell);
-      return next;
-    });
+    const next = { ...guessesRef.current };
+    const key = `${row},${col}`;
+    if (letter) next[key] = letter;
+    else delete next[key];
+    guessesRef.current = next;
+    setGuesses(next);
+    void runCheck(next, soundCell);
   }
 
   function activateCell(row: number, col: number) {

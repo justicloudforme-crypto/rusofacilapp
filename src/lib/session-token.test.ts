@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { signUserId, verifySessionToken } from "./session-token";
+import { shouldUseSecureSessionCookie, signUserId, verifySessionToken } from "./session-token";
 
 describe("session-token", () => {
   const originalSecret = process.env.SESSION_SECRET;
@@ -71,5 +71,31 @@ describe("session-token", () => {
   it("throws if SESSION_SECRET is not set", () => {
     delete process.env.SESSION_SECRET;
     expect(() => signUserId("user-123", 0)).toThrow("SESSION_SECRET");
+  });
+});
+
+describe("shouldUseSecureSessionCookie", () => {
+  // The only case that actually protects anyone. Everything below it is
+  // there so that a future edit which "simplifies" the rule has to notice
+  // it broke this one.
+  it("is true on a real production deployment", () => {
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "production" })).toBe(true);
+  });
+
+  it("is false only for the e2e server, which is production-mode over plain-HTTP localhost", () => {
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "production", E2E_TEST_SEED: "1" })).toBe(false);
+  });
+
+  // Positive control for the exception itself: the gate is the exact string
+  // "1", the same comparison /api/test/grant-subscription makes. A truthy-ish
+  // value must NOT open it, or an unrelated "E2E_TEST_SEED=true" somewhere
+  // would drop Secure on a live deployment without anyone noticing.
+  it("does not accept a merely truthy E2E_TEST_SEED", () => {
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "production", E2E_TEST_SEED: "true" })).toBe(true);
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "production", E2E_TEST_SEED: "0" })).toBe(true);
+  });
+
+  it("is false in development, where there is no HTTPS to be secure over", () => {
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "development" })).toBe(false);
   });
 });

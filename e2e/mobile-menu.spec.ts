@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/test";
 
 // Narrow, iPhone-sized viewport — below Tailwind's `sm` (640px) breakpoint,
 // where Navbar's own `hidden ... sm:flex` desktop nav disappears with no
