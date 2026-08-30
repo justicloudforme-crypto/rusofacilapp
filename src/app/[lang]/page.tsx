@@ -15,6 +15,7 @@ import SpeakButton from "@/components/lesson/SpeakButton";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { organizationJsonLd, websiteJsonLd, routeAlternates } from "@/lib/site";
+import { localizeStoryAuthor } from "@/lib/story-author";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -262,7 +263,13 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
               <Card className="order-2 flex flex-col gap-2 sm:order-1">
                 <div className="flex items-center gap-2">
                   <LevelBadge level={preview.previewStory.level} />
-                  <span className="text-xs text-foreground/50">{preview.previewStory.author}</span>
+                  {/* The byline the owner saw as «Por Русская народная
+                      сказка» on a phone, 30.08.2026 — see
+                      story-author.ts for why the Russian was in the data
+                      rather than in a dictionary or a hard-coded string. */}
+                  <span className="text-xs text-foreground/50">
+                    {localizeStoryAuthor(preview.previewStory.author, lang)}
+                  </span>
                 </div>
                 <h3 className="mt-1 font-medium">{preview.previewStory.title}</h3>
                 {preview.previewStory.description && (
