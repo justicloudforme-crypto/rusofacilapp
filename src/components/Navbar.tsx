@@ -119,12 +119,21 @@ export default async function Navbar({
   return (
     <header
       // No backdrop-blur — same Android WebView repaint cost as BottomNav
-      // (see that file's comment) — and bg-background at near-full opacity
-      // doesn't need the blur to look solid. Constant single-row height
-      // now (3 top-level items + a dropdown instead of 6 flat links) — no
-      // more tablet-width wrap, so nothing downstream needs to guess at a
-      // variable header height.
-      className="sticky top-0 z-50 border-b border-black/10 bg-background/95 pt-safe dark:border-white/30"
+      // (see that file's comment). The background is therefore FULLY
+      // opaque, not bg-background/95: every other pinned bar in this app
+      // (StoryAudioPlayer, the four flashcard mode bars, ExamView,
+      // ExercisesTab, StoriesCatalog, MediaCatalog) pairs that 95% with a
+      // backdrop-blur, and the blur is what made the remaining 5% read as
+      // "solid". Without it, 5% of a large bold section heading scrolling
+      // underneath is plainly legible through the bar — measured on a
+      // 610px-wide Android viewport, reported from production: the words
+      // "¿Por qué estudiar con nosotros?" sat readable right under the
+      // logo. An opaque bar is the fix; padding was never the problem.
+      // Enforced by scripts/check-layout-geometry.mjs.
+      // Constant single-row height now (3 top-level items + a dropdown
+      // instead of 6 flat links) — no more tablet-width wrap, so nothing
+      // downstream needs to guess at a variable header height.
+      className="sticky top-0 z-50 border-b border-black/10 bg-background pt-safe dark:border-white/30"
     >
       <div className="relative mx-auto flex h-16 max-w-5xl items-center gap-4 px-4 sm:px-6">
         <Link href={`/${lang}`} className="flex flex-shrink-0 items-center gap-2 font-serif text-base font-bold tracking-tight sm:text-lg">
