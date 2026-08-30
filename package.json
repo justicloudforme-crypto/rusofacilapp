@@ -70,7 +70,8 @@
     "sync:to-production": "tsx prisma/sync-to-production.ts",
     "cap:sync": "cap sync",
     "cap:ios": "cap open ios",
-    "cap:android": "cap open android"
+    "cap:android": "cap open android",
+    "test:scenarios": "vitest run --config vitest.scenarios.config.mts"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

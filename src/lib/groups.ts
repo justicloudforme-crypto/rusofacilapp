@@ -4,7 +4,7 @@ import { getLevelProgressForUsers } from "./progress";
 import { levelSlugs } from "./courses";
 import { isAvatarId, DEFAULT_AVATAR_ID, type AvatarId } from "./avatars";
 import { generateShortCode, isPlausibleShortCode } from "./short-code";
-import { getLatestSubscriptionsForUsers, isSubscriptionActive } from "./subscription";
+import { getEntitlementTiersForUsers } from "./subscription";
 
 // Same alphabet/length as referral codes — this is meant to be typed or
 // read aloud when sharing a group with classmates, not just clicked.
@@ -176,21 +176,20 @@ export async function getGroupForMember(userId: string, groupId: string): Promis
   // getLevelProgress call per member — up to MAX_GROUP_MEMBERS (30)
   // sequential Turso round trips collapsed into a single query.
   const memberIds = group.members.map(({ user }) => user.id);
-  const [progressByUser, subscriptionByUser] = await Promise.all([
+  const [progressByUser, tierByUser] = await Promise.all([
     getLevelProgressForUsers(memberIds),
-    getLatestSubscriptionsForUsers(memberIds),
+    getEntitlementTiersForUsers(memberIds),
   ]);
 
   const members: GroupMemberStanding[] = group.members.map(({ user }) => {
     const progress = progressByUser.get(user.id)!;
     const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0) ?? null;
     const completedLessons = levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0);
-    const subscription = subscriptionByUser.get(user.id);
     return {
       userId: user.id,
       name: user.name,
       avatarId: isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID,
-      isPremium: subscription?.plan === "lifetime" && isSubscriptionActive(subscription),
+      isPremium: tierByUser.get(user.id) === "premium",
       isOwner: user.id === group.ownerUserId,
       currentLevel,
       completedLessons,

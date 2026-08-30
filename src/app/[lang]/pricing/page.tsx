@@ -35,7 +35,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const { next: nextRaw, highlight } = await searchParams;
+  const { next: nextRaw, highlight, checkout } = await searchParams;
   const next = typeof nextRaw === "string" && nextRaw.startsWith(`/${lang}/`) ? nextRaw : undefined;
   // Only "premium" is a real target today (the profile page's per-plan
   // upsell link for annual subscribers) — anything else is ignored rather
@@ -66,6 +66,21 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
       />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{p.title}</h1>
       <p className="mt-3 max-w-xl text-foreground/70">{p.subtitle}</p>
+
+      {/* /api/checkout sends people back here when it cannot open a payment
+          — the rate limiter, or (on a deployment) a Stripe configuration
+          that would otherwise have granted the plan for free. Both used to
+          redirect to this page silently, so the button simply appeared not
+          to work. Saying "you were not charged" is the part that matters:
+          the alternative is somebody paying twice out of doubt. */}
+      {(checkout === "unavailable" || checkout === "rate_limited") && (
+        <p
+          role="alert"
+          className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400"
+        >
+          {checkout === "rate_limited" ? p.checkoutRateLimited : p.checkoutUnavailable}
+        </p>
+      )}
 
       {/* Four independent columns in ascending price order: Free, Monthly,
           Yearly, Premium. Annual carries the "recommended" tile treatment

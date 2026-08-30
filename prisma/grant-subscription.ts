@@ -47,12 +47,27 @@ async function main() {
   }
 
   const extraMs = MANUAL_GRANT_DAYS * 24 * 60 * 60 * 1000;
-  const existing = await db.subscription.findFirst({
+  const rows = await db.subscription.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
   });
 
-  if (existing && isSubscriptionActive(existing)) {
+  // The same row-choosing rule as extendOrGrantSubscription in
+  // src/lib/subscription.ts, and mirrored here for the same reason the
+  // helpers above are: this script cannot import a "server-only" module.
+  // Days added to a row Stripe or RevenueCat owns are erased by that
+  // provider's next event, and a manual grant has no business landing on
+  // somebody's Premium purchase, so neither kind of row is extended — a
+  // grant that finds none of its own opens one.
+  const existing = rows.find(
+    (row) =>
+      row.stripeSubscriptionId === null &&
+      row.rcOriginalTransactionId === null &&
+      row.plan !== "lifetime" &&
+      isSubscriptionActive(row)
+  );
+
+  if (existing) {
     await db.subscription.update({
       where: { id: existing.id },
       data: {

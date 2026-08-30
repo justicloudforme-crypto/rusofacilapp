@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { destroySession } from "@/lib/auth";
-import { getLatestSubscription } from "@/lib/subscription";
+import { getSubscriptionsForUser } from "@/lib/subscription";
 import { getStripe } from "@/lib/stripe";
 import { decodeVerificationToken, matchesCurrentPassword } from "@/lib/verification-token";
 import { deleteAllVoiceSubmissionsForUser } from "@/lib/voice-storage";
@@ -33,10 +33,18 @@ export async function POST(request: NextRequest) {
   // (already canceled, Stripe unreachable), the deletion still proceeds;
   // an orphaned Stripe subscription with no matching user is a billing
   // problem to reconcile manually, not a reason to block account deletion.
-  const subscription = await getLatestSubscription(user.id);
+  // Every Stripe-backed row, not just the newest one: a user who bought
+  // Premium on top of a monthly plan has two rows, the Premium one is
+  // newer, and cancelling "the newest" would leave the monthly plan
+  // billing a card that no longer has an account behind it.
+  const subscriptions = await getSubscriptionsForUser(user.id);
   const stripe = getStripe();
-  if (stripe && subscription?.stripeSubscriptionId) {
-    await stripe.subscriptions.cancel(subscription.stripeSubscriptionId).catch(() => {});
+  if (stripe) {
+    for (const row of subscriptions) {
+      if (row.stripeSubscriptionId) {
+        await stripe.subscriptions.cancel(row.stripeSubscriptionId).catch(() => {});
+      }
+    }
   }
 
   // All of the user's rows (subscriptions, progress, flashcard/story

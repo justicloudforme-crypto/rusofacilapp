@@ -9,9 +9,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { db } from "@/lib/db";
 import {
-  getLatestSubscription,
-  getSubscriptionHistory,
+  getSubscriptionsForUser,
   getDisplayStatus,
+  pickEffectiveSubscription,
+  tierOfSubscriptions,
   type DisplayStatus,
 } from "@/lib/subscription";
 import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
@@ -26,6 +27,12 @@ import { getStoryCatalog } from "@/lib/stories-catalog";
 import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
 import { levelSlugs } from "@/lib/courses";
+import { isPlanId } from "@/lib/plans";
+import { SUPPORT_EMAIL } from "@/lib/support";
+import {
+  CheckoutOutcomeNotice,
+  checkoutDeliveredWhatWasPaidFor,
+} from "@/components/subscription/CheckoutOutcomeNotice";
 import { getThemePreference, type ThemePreference } from "@/lib/theme";
 import { isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
 import { getAvatarLabels, getCharacterLabels } from "@/lib/avatarLabels";
@@ -257,6 +264,11 @@ export default async function ProfilePage({
   const dict = await getDictionary(lang);
   const query = await searchParams;
   const checkout = typeof query.checkout === "string" ? query.checkout : null;
+  // What the buyer just paid for, carried back from Stripe by
+  // /api/checkout's success_url. Anything else (including it being absent,
+  // which is what a bookmarked ?checkout=success looks like) is read as
+  // "some paid plan", whose promise is simply an active subscription.
+  const paidPlan = typeof query.plan === "string" && isPlanId(query.plan) ? query.plan : null;
   const voucherUnavailable = query.voucher === "unavailable";
   const justCanceled = query.subscription === "canceled";
   const loggedOutEverywhere = query.loggedOutEverywhere === "1";
@@ -274,7 +286,6 @@ export default async function ProfilePage({
   // — badges/progress/referral etc. are unrelated and should still render.
   // A failure degrades to "no subscription data" rather than a raw 500.
   const [
-    subscription,
     subscriptionHistory,
     progress,
     lessonResults,
@@ -290,12 +301,8 @@ export default async function ProfilePage({
     storyCatalog,
     requestHeaders,
   ] = await Promise.all([
-    getLatestSubscription(user.id).catch((error) => {
-      console.error("profile: getLatestSubscription failed", error);
-      return null;
-    }),
-    getSubscriptionHistory(user.id).catch((error) => {
-      console.error("profile: getSubscriptionHistory failed", error);
+    getSubscriptionsForUser(user.id).catch((error) => {
+      console.error("profile: getSubscriptionsForUser failed", error);
       return [];
     }),
     getLevelProgress(user.id),
@@ -317,8 +324,15 @@ export default async function ProfilePage({
   const requestProto = requestHeaders.get("x-forwarded-proto") ?? (requestHost.startsWith("localhost") ? "http" : "https");
   const referralLink = referral ? `${requestProto}://${requestHost}/${lang}/register?ref=${referral.code}` : null;
 
+  // One row to describe, but every row to decide by. The two used to be
+  // the same read (the newest row), and that is exactly what let a Premium
+  // purchase made on top of a monthly plan disappear from this page the
+  // moment the monthly plan renewed. See pickEffectiveSubscription and
+  // tierOfSubscriptions in src/lib/subscription.ts.
+  const subscription = pickEffectiveSubscription(subscriptionHistory);
+  const tier = tierOfSubscriptions(subscriptionHistory);
   const displayStatus = getDisplayStatus(subscription);
-  const isActive = displayStatus === "active" || displayStatus === "trialing";
+  const isActive = tier !== "free";
   // Staff/owner accounts have full access regardless of whether they've
   // ever had a paid Subscription row — without this, an owner who never
   // went through checkout would see the same "subscribe now" upsells as a
@@ -328,7 +342,7 @@ export default async function ProfilePage({
   // Drives the gold ring/crown on this page's own avatar (below) and the
   // crown next to the plan name in the Subscription tab — see
   // MatryoshkaAvatar.tsx's `premium` prop / entitlement.ts's isPremiumTier.
-  const isPremiumUser = isStaff(user.role) || (isActive && subscription?.plan === "lifetime");
+  const isPremiumUser = isStaff(user.role) || tier === "premium";
 
   const statusLabels: Record<DisplayStatus, string> = {
     active: dict.profile.statusActive,
@@ -481,9 +495,19 @@ export default async function ProfilePage({
         </p>
       )}
       {checkout === "success" && (
-        <p className="mt-6 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
-          {dict.account.checkoutSuccess}
-        </p>
+        <CheckoutOutcomeNotice
+          // The banner states a fact about the account, so it is decided
+          // by the account: "your subscription is active" is only printed
+          // when it is.
+          granted={checkoutDeliveredWhatWasPaidFor(paidPlan, tier)}
+          strings={{
+            success: dict.account.checkoutSuccess,
+            verifying: dict.account.checkoutVerifying,
+            notApplied: dict.account.checkoutNotApplied,
+            supportEmail: SUPPORT_EMAIL,
+            supportEmailLabel: dict.account.checkoutSupportEmailLabel,
+          }}
+        />
       )}
       {checkout === "oxxo_pending" && (
         <div className="mt-6 flex flex-col gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">

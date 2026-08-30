@@ -3,7 +3,11 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isOwner } from "@/lib/roles";
-import { getLatestSubscription, invalidateSubscriptionCache } from "@/lib/subscription";
+import {
+  getSubscriptionsForUser,
+  invalidateSubscriptionCache,
+  isSubscriptionActive,
+} from "@/lib/subscription";
 import { getStripe } from "@/lib/stripe";
 import { defaultLocale, isLocale } from "@/i18n/config";
 
@@ -18,14 +22,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const subscription = await getLatestSubscription(targetUserId);
-  if (subscription) {
+  // Every live row, not just the newest one. Revoke is the owner saying
+  // "this account should not have access" — leaving a second live row
+  // behind (an admin grant under a cancelled monthly plan, a Premium
+  // purchase under a referral bonus) would make the button silently not do
+  // what it says, and the access check reads every row.
+  const rows = await getSubscriptionsForUser(targetUserId);
+  const live = rows.filter((row) => isSubscriptionActive(row));
+  if (live.length > 0) {
     const stripe = getStripe();
-    if (stripe && subscription.stripeSubscriptionId) {
-      await stripe.subscriptions.cancel(subscription.stripeSubscriptionId).catch(() => {});
+    for (const row of live) {
+      if (stripe && row.stripeSubscriptionId) {
+        await stripe.subscriptions.cancel(row.stripeSubscriptionId).catch(() => {});
+      }
     }
-    await db.subscription.update({
-      where: { id: subscription.id },
+    await db.subscription.updateMany({
+      where: { id: { in: live.map((row) => row.id) } },
       data: { status: "canceled" },
     });
     await invalidateSubscriptionCache(targetUserId);

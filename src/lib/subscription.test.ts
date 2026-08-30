@@ -6,7 +6,9 @@ import { describe, expect, it, vi } from "vitest";
 // implicit integration test against whatever dev.db happens to exist.
 vi.mock("./db", () => ({ db: {} }));
 
-const { isSubscriptionActive } = await import("./subscription");
+const { isSubscriptionActive, tierOfSubscriptions, pickEffectiveSubscription } = await import(
+  "./subscription"
+);
 
 function subscription(overrides: { status: string; currentPeriodEnd: Date }) {
   return overrides;
@@ -49,74 +51,193 @@ describe("isSubscriptionActive", () => {
 });
 
 // ---------------------------------------------------------------------------
-// extendOrGrantSubscription: what a grant does to the STORED PLAN, which is
-// the only thing getEntitlementTier reads to decide Premium vs standard.
+// tierOfSubscriptions: the tier is the BEST live ground for access a person
+// holds, not the plan on their newest row. Everything below is the read half
+// of "a Premium purchase lives on its own record".
 // ---------------------------------------------------------------------------
 
-describe("extendOrGrantSubscription and the stored plan", () => {
+describe("tierOfSubscriptions", () => {
+  const DAY = 86_400_000;
+  const row = (plan: string, status = "active", endInDays = 10) => ({
+    plan,
+    status,
+    currentPeriodEnd: new Date(Date.now() + endInDays * DAY),
+  });
+
+  it("is free with no rows at all", () => {
+    expect(tierOfSubscriptions([])).toBe("free");
+  });
+
+  it("is premium when ANY live row is Premium, whatever order the rows are in", () => {
+    expect(tierOfSubscriptions([row("monthly"), row("lifetime")])).toBe("premium");
+    expect(tierOfSubscriptions([row("lifetime"), row("monthly")])).toBe("premium");
+  });
+
+  // The three shapes debt 28 was about, stated as data: whatever happens to
+  // the monthly row, the Premium row is a separate answer to the question.
+  it("keeps premium when the monthly row renews, is canceled, or expires", () => {
+    for (const monthly of [row("monthly", "active", 30), row("monthly", "canceled"), row("monthly", "active", -1)]) {
+      expect(tierOfSubscriptions([monthly, row("lifetime", "active", 36_500)])).toBe("premium");
+    }
+  });
+
+  it("ignores rows that are not live", () => {
+    expect(tierOfSubscriptions([row("lifetime", "canceled"), row("monthly")])).toBe("standard");
+    expect(tierOfSubscriptions([row("lifetime", "active", -1)])).toBe("free");
+  });
+});
+
+describe("pickEffectiveSubscription", () => {
+  const DAY = 86_400_000;
+  const row = (id: string, plan: string, status = "active", endInDays = 10) => ({
+    id,
+    plan,
+    status,
+    currentPeriodEnd: new Date(Date.now() + endInDays * DAY),
+  });
+
+  it("describes the Premium purchase, not the newer monthly row", () => {
+    const rows = [row("new", "monthly"), row("old", "lifetime", "active", 36_500)];
+    expect(pickEffectiveSubscription(rows)?.id).toBe("old");
+  });
+
+  it("falls back to the longest-lasting live row when tiers are equal", () => {
+    const rows = [row("short", "monthly", "active", 3), row("long", "annual", "active", 300)];
+    expect(pickEffectiveSubscription(rows)?.id).toBe("long");
+  });
+
+  it("still names the newest dead row when nothing is live, so the page can say why", () => {
+    const rows = [row("newest", "monthly", "canceled"), row("older", "manual", "active", -5)];
+    expect(pickEffectiveSubscription(rows)?.id).toBe("newest");
+    expect(pickEffectiveSubscription([])).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extendOrGrantSubscription: WHICH ROW a grant is written onto. That is the
+// whole subject — a grant written onto a row Stripe owns is not stored, it is
+// borrowed until Stripe's next event (PROGRESS.md debt 28).
+// ---------------------------------------------------------------------------
+
+describe("extendOrGrantSubscription and the row it writes to", () => {
   const DAY = 86_400_000;
 
-  async function run(existing: { id: string; plan: string; status: string; currentPeriodEnd: Date } | null, plan: string) {
+  type StoredRow = {
+    id: string;
+    plan: string;
+    status: string;
+    currentPeriodEnd: Date;
+    stripeSubscriptionId: string | null;
+    rcOriginalTransactionId: string | null;
+  };
+
+  async function run(existing: StoredRow[], plan: string) {
     // Typed through vi.fn's type parameter rather than left bare: without a
     // signature `mock.calls` is an empty tuple and reading `[0][0].data`
     // does not typecheck (`npm run verify` runs tsc over the tests too).
     type Write = (args: { where?: unknown; data: Record<string, unknown> }) => Promise<unknown>;
     const update = vi.fn<Write>(async () => ({}));
     const create = vi.fn<Write>(async () => ({}));
-    const findFirst = vi.fn(async () => existing);
+    const findMany = vi.fn(async () => existing);
     vi.resetModules();
-    vi.doMock("./db", () => ({ db: { subscription: { findFirst, update, create } } }));
-    // The 30s TtlCache in front of getLatestSubscription is a globalThis
-    // singleton, so a fresh module registry is not enough on its own — a
-    // second case would read the first case's row. Give each run its own
-    // user id instead of trying to reach into the cache.
+    vi.doMock("./db", () => ({ db: { subscription: { findMany, update, create } } }));
+    // The 30s TtlCache in front of the row read is a globalThis singleton,
+    // so a fresh module registry is not enough on its own — a second case
+    // would read the first case's rows. Give each run its own user id
+    // instead of trying to reach into the cache.
     const mod = await import("./subscription");
     await mod.extendOrGrantSubscription(`user-${Math.random()}`, 30, plan);
     return { update, create };
   }
 
-  function active(plan: string) {
-    return { id: "sub-1", plan, status: "active", currentPeriodEnd: new Date(Date.now() + 10 * DAY) };
-  }
-
-  it("raises a live standard subscription to Premium when a lifetime purchase is granted", async () => {
-    // THE PRODUCTION BUG this guards. The Stripe webhook calls this helper
-    // with "lifetime" when a Premium purchase is paid — by card and by OXXO
-    // alike. A customer who already had an active monthly plan used to keep
-    // `plan: "monthly"`, so getEntitlementTier kept answering "standard" and
-    // the Premium content they had just paid for stayed locked, with nothing
-    // anywhere reporting a failure. PROGRESS.md 7.55.
-    const { update, create } = await run(active("monthly"), "lifetime");
-    expect(create).not.toHaveBeenCalled();
-    expect(update.mock.calls[0]?.[0]?.data?.plan).toBe("lifetime");
+  const local = (plan: string, overrides: Partial<StoredRow> = {}): StoredRow => ({
+    id: `local-${plan}`,
+    plan,
+    status: "active",
+    currentPeriodEnd: new Date(Date.now() + 10 * DAY),
+    stripeSubscriptionId: null,
+    rcOriginalTransactionId: null,
+    ...overrides,
   });
 
-  it("raises it from any other live plan too — referral days and admin grants included", async () => {
-    for (const from of ["annual", "referral", "manual", "e2e-test"]) {
-      const { update } = await run(active(from), "lifetime");
-      expect(update.mock.calls[0]?.[0]?.data?.plan, `upgrading from ${from}`).toBe("lifetime");
-    }
-  });
+  const stripeRow = (plan: string, overrides: Partial<StoredRow> = {}): StoredRow =>
+    local(plan, { id: `stripe-${plan}`, stripeSubscriptionId: "sub_123", ...overrides });
 
-  // The other half of the rule, and the reason this is not just "always
-  // overwrite the plan": everything that adds days carries its own plan id,
-  // and none of them may demote somebody who paid for Premium.
-  it("never demotes a live Premium subscription when days are added to it", async () => {
-    for (const grant of ["referral", "manual", "monthly", "annual"]) {
-      const { update } = await run(active("lifetime"), grant);
-      expect(update.mock.calls[0]?.[0]?.data, `granting ${grant} on top of lifetime`).not.toHaveProperty("plan");
-    }
-  });
-
-  it("still writes the plan it was given when there is nothing active to extend", async () => {
-    const { create, update } = await run(null, "lifetime");
+  // THE DEFECT THIS GUARDS (debt 28). A Premium purchase used to be written
+  // onto whatever row was live, including the one Stripe rewrites on every
+  // renewal and marks canceled on cancellation. A hundred years of paid-for
+  // access lived there until Stripe's next event, and then did not.
+  it("opens its own row for a Premium purchase instead of writing onto the Stripe subscription", async () => {
+    const { update, create } = await run([stripeRow("monthly")], "lifetime");
     expect(update).not.toHaveBeenCalled();
     expect(create.mock.calls[0]?.[0]?.data?.plan).toBe("lifetime");
   });
 
-  it("extends the period in every case", async () => {
-    const { update } = await run(active("monthly"), "referral");
+  it("does the same for every other live plan a buyer might already hold", async () => {
+    for (const from of ["annual", "referral", "manual", "e2e-test"]) {
+      const { update, create } = await run([local(from)], "lifetime");
+      expect(update, `Premium bought on top of ${from}`).not.toHaveBeenCalled();
+      expect(create.mock.calls[0]?.[0]?.data?.plan, `Premium bought on top of ${from}`).toBe("lifetime");
+    }
+  });
+
+  // The same rule read from the other side: a grant that is not Premium
+  // never lands on the Premium row, so nothing that adds days can demote
+  // somebody who paid for Premium.
+  it("never writes a non-Premium grant onto a live Premium row", async () => {
+    for (const grant of ["referral", "manual", "monthly", "annual"]) {
+      const { update, create } = await run([local("lifetime")], grant);
+      expect(update, `granting ${grant} on top of Premium`).not.toHaveBeenCalled();
+      expect(create.mock.calls[0]?.[0]?.data?.plan, `granting ${grant} on top of Premium`).toBe(grant);
+    }
+  });
+
+  // Same class as debt 28, and it was never only about Premium: referral
+  // days and admin grants added onto a Stripe-owned row were erased by the
+  // next renewal just as thoroughly.
+  it("keeps referral and admin days off the Stripe-owned row too", async () => {
+    for (const grant of ["referral", "manual"]) {
+      const { update, create } = await run([stripeRow("monthly")], grant);
+      expect(update, `granting ${grant} over a Stripe subscription`).not.toHaveBeenCalled();
+      expect(create.mock.calls[0]?.[0]?.data?.plan, `granting ${grant} over a Stripe subscription`).toBe(grant);
+    }
+  });
+
+  it("leaves a native store row alone as well — RevenueCat rewrites it the same way", async () => {
+    const rc = local("monthly", { id: "rc-1", stripeSubscriptionId: null, rcOriginalTransactionId: "1000000123" });
+    const { update, create } = await run([rc], "referral");
+    expect(update).not.toHaveBeenCalled();
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  // The rows this app does own are still extended rather than multiplied —
+  // otherwise every referral bonus would leave a new row behind.
+  it("extends the row it owns when the grant is of the same kind", async () => {
+    const { update, create } = await run([local("manual")], "referral");
+    expect(create).not.toHaveBeenCalled();
     expect(update.mock.calls[0]?.[0]?.data?.currentPeriodEnd).toBeInstanceOf(Date);
+    // Extending never rewrites the plan: the row keeps standing for the
+    // ground it was opened on.
+    expect(update.mock.calls[0]?.[0]?.data).not.toHaveProperty("plan");
+  });
+
+  it("extends an existing Premium row rather than opening a second one", async () => {
+    const { update, create } = await run([local("lifetime")], "lifetime");
+    expect(create).not.toHaveBeenCalled();
+    expect(update.mock.calls[0]?.[0]?.where).toEqual({ id: "local-lifetime" });
+  });
+
+  it("skips rows that are no longer live and opens a fresh one", async () => {
+    const dead = local("manual", { status: "canceled" });
+    const { update, create } = await run([dead], "manual");
+    expect(update).not.toHaveBeenCalled();
+    expect(create.mock.calls[0]?.[0]?.data?.plan).toBe("manual");
+  });
+
+  it("writes the plan it was given when there is nothing at all to extend", async () => {
+    const { create, update } = await run([], "lifetime");
+    expect(update).not.toHaveBeenCalled();
+    expect(create.mock.calls[0]?.[0]?.data?.plan).toBe("lifetime");
   });
 });
 
@@ -131,8 +252,8 @@ describe("extendOrGrantSubscription and the stored plan", () => {
 describe("reportPremiumPaymentNotApplied", () => {
   const DAY = 86_400_000;
 
-  /** Runs the read-back against a database that returns `stored` as the
-   * user's latest row, with Sentry replaced by a spy. `stored` is what the
+  /** Runs the read-back against a database that holds `stored` as the
+   * user's only row, with Sentry replaced by a spy. `stored` is what the
    * grant LEFT BEHIND, which is the whole point: the check reads the
    * database back rather than trusting what the writer meant to do. */
   async function run(
@@ -140,13 +261,13 @@ describe("reportPremiumPaymentNotApplied", () => {
     paidPlan: string
   ) {
     const captureException = vi.fn();
-    const findFirst = vi.fn(async () => stored);
+    const findMany = vi.fn(async () => (stored ? [stored] : []));
     vi.resetModules();
-    vi.doMock("./db", () => ({ db: { subscription: { findFirst } } }));
+    vi.doMock("./db", () => ({ db: { subscription: { findMany } } }));
     vi.doMock("@sentry/nextjs", () => ({ captureException }));
     const mod = await import("./subscription");
     // Fresh user id per run for the same reason the block above needs one:
-    // the 30s cache in front of getLatestSubscription is a global singleton.
+    // the 30s cache in front of the row read is a global singleton.
     const tier = await mod.reportPremiumPaymentNotApplied(`user-${Math.random()}`, paidPlan, {
       source: "test",
       reference: "cs_test_1",
