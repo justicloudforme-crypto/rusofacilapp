@@ -97,6 +97,40 @@ async function main() {
   for (const [userId, bucket] of [...byUser].sort((a, b) => b[1].bytes - a[1].bytes)) {
     console.log(`  ${userId}  ${String(bucket.count).padStart(4)} objects  ${String(bucket.bytes).padStart(10)} B`);
   }
+
+  // The three things the decision actually needs and the old output did not
+  // give: over what period this accumulated, what the files are, and what
+  // holding them costs. A decision is taken on numbers, so print numbers.
+  if (blobs.length > 0) {
+    const dates = blobs.map((b) => new Date(b.uploadedAt)).sort((a, b) => a - b);
+    const ext = new Map();
+    for (const b of blobs) {
+      const m = /\.([a-z0-9]+)$/i.exec(b.pathname);
+      const key = m ? `.${m[1].toLowerCase()}` : "(no extension)";
+      ext.set(key, (ext.get(key) ?? 0) + 1);
+    }
+    console.log(`\n  period: ${dates[0].toISOString()} … ${dates[dates.length - 1].toISOString()}`);
+    console.log(`  by extension: ${[...ext].map(([k, n]) => `${n} × ${k}`).join(", ")}`);
+    console.log("  every object, oldest first:");
+    for (const b of [...blobs].sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt))) {
+      console.log(`    ${b.uploadedAt}  ${String(b.size ?? 0).padStart(8)} B  ${b.pathname}`);
+    }
+
+    // Vercel Blob bills data storage per GB-month. The rate below is the
+    // published marginal one and is worth re-checking on the pricing page
+    // before quoting it anywhere — what does not need re-checking is the
+    // order of magnitude: this is four hundredths of a byte-percent of the
+    // 1 GB the Hobby plan already includes.
+    const RATE_USD_PER_GB_MONTH = 0.023;
+    const gb = totalBytes / 1024 ** 3;
+    console.log(
+      `\n  storage: ${gb.toExponential(3)} GB = ${((gb / 1) * 100).toFixed(4)}% of the 1 GB included in Hobby`,
+    );
+    console.log(
+      `  cost at $${RATE_USD_PER_GB_MONTH}/GB-month: $${(gb * RATE_USD_PER_GB_MONTH).toExponential(3)} per month` +
+        " — zero to the nearest cent, and inside the included allowance regardless",
+    );
+  }
   if (unexpected.length) {
     console.log(`\n  ${unexpected.length} object(s) not shaped like submissions/<userId>/… — never in scope:`);
     unexpected.slice(0, 10).forEach((p) => console.log(`    ${p}`));
