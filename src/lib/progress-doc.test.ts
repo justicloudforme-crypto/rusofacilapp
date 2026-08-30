@@ -153,6 +153,8 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["what does a subscriber see that a free account does not", "настоящая отрезка данных"],
   ["is the paid surface actually checked on production", "ПРОГОН НА ПРОДЕ СОСТОЯЛСЯ"],
   ["what is still not covered for a subscriber", "Что осталось непокрытым и почему"],
+  ["where is the test account password", "ТЕСТОВЫЙ АККАУНТ: где лежит пароль"],
+  ["how do I run the subscriber check next time", "RUSOFACIL_TEST_PASSWORD"],
   ["which URLs do I check in Search Console", "Список URL для проверки"],
   ["how do I tell the outage from ordinary noise", "6 контрольных незатронутых"],
 ];
