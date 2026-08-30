@@ -1,7 +1,8 @@
 import "server-only";
 import { getCurrentUser } from "./auth";
 import { isStaff } from "./roles";
-import { getLatestSubscription, isPremiumPlan, isSubscriptionActive, userHasActiveSubscription } from "./subscription";
+import { getEntitlementTierForUser, userHasActiveSubscription } from "./subscription";
+import type { EntitlementTierValue } from "./subscription";
 // The free word-game rule lives outside this module because robots.ts and
 // the offline generator need it and cannot import a `server-only` file.
 // Re-exported below so every existing `from "@/lib/entitlement"` import
@@ -23,19 +24,18 @@ import { WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./word-games/free-tier";
  * Staff always resolve to "premium" (same bypass-everything rule as
  * isEntitled/hasContentAccess elsewhere in this file).
  */
-export type EntitlementTier = "free" | "standard" | "premium";
+export type EntitlementTier = EntitlementTierValue;
 
 export async function getEntitlementTier(): Promise<EntitlementTier> {
   const user = await getCurrentUser();
   if (!user) return "free";
   if (isStaff(user.role)) return "premium";
 
-  const subscription = await getLatestSubscription(user.id);
-  if (!isSubscriptionActive(subscription)) return "free";
-  // isPremiumPlan, not an inline "lifetime" here: the write side
-  // (extendOrGrantSubscription) has to decide whether a purchase raises the
-  // tier, and it must be reading the same rule this line reads.
-  return isPremiumPlan(subscription!.plan) ? "premium" : "standard";
+  // The maximum over every live row, not the newest row's plan: a person
+  // can hold a Premium purchase and a monthly subscription at the same
+  // time, and those are two independent grounds for access with two
+  // independent lifecycles. See tierOfSubscriptions in subscription.ts.
+  return getEntitlementTierForUser(user.id);
 }
 
 /**

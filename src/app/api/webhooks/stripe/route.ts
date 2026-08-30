@@ -6,6 +6,7 @@ import { getStripe } from "@/lib/stripe";
 import {
   extendOrGrantSubscription,
   invalidateSubscriptionCache,
+  isPremiumPlan,
   reportPremiumPaymentNotApplied,
 } from "@/lib/subscription";
 import { LIFETIME_DURATION_DAYS } from "@/lib/plans";
@@ -33,6 +34,61 @@ function periodEndOf(subscription: Stripe.Subscription): Date {
   return new Date(seconds * 1000);
 }
 
+/**
+ * Makes sure the row Stripe is about to rewrite is not also the row that
+ * holds somebody's Premium purchase, and splits them apart if it is.
+ *
+ * Every handler below addresses a row by `stripeSubscriptionId` and then
+ * overwrites its period wholesale, or marks it `canceled`, or marks it
+ * `past_due` — correct for a subscription Stripe owns, and destructive for
+ * a one-time purchase that merely happens to share the row. Between
+ * 24.08.2026 and this fix, a Premium purchase made on top of an active
+ * monthly plan did share it: the grant raised `plan` in place instead of
+ * opening a row of its own (PROGRESS.md 7.55 and debt 28). Such a row can
+ * no longer be created — extendOrGrantSubscription never writes a grant
+ * onto a Stripe-owned row — but a row created before the fix would still
+ * be out there, and it would lose a hundred years of paid-for access at
+ * the next renewal or cancellation, quietly, exactly as before.
+ *
+ * So a legacy row is repaired the first time Stripe touches it: the
+ * Premium half moves to its own record with the period it was granted, and
+ * the original row goes back to being the subscription Stripe thinks it
+ * is. After that the two lifecycles are independent, which is the whole
+ * point of the fix.
+ *
+ * On production this has nothing to do: the affected-row count was
+ * measured on the live database as zero (7.58). It is here so that
+ * "measured zero on one day" does not have to be the only thing standing
+ * between a buyer and their purchase.
+ */
+async function detachPremiumFromStripeRow(
+  stripeSubscriptionId: string,
+  stripePlan: string
+): Promise<void> {
+  const existing = await db.subscription.findUnique({
+    where: { stripeSubscriptionId },
+  });
+  if (!existing || !isPremiumPlan(existing.plan)) return;
+
+  await db.subscription.create({
+    data: {
+      userId: existing.userId,
+      plan: existing.plan,
+      status: "active",
+      currentPeriodEnd: existing.currentPeriodEnd,
+    },
+  });
+  await db.subscription.update({
+    where: { id: existing.id },
+    // Not isPremiumPlan-able by construction: the caller passes the plan
+    // Stripe's own metadata says this subscription is, and a Premium
+    // purchase is never a Stripe subscription in the first place (it is
+    // mode: "payment", see src/lib/plans.ts).
+    data: { plan: isPremiumPlan(stripePlan) ? "unknown" : stripePlan },
+  });
+  await invalidateSubscriptionCache(existing.userId);
+}
+
 async function upsertFromStripeSubscription(subscription: Stripe.Subscription) {
   const existing = await db.subscription.findUnique({
     where: { stripeSubscriptionId: subscription.id },
@@ -41,7 +97,11 @@ async function upsertFromStripeSubscription(subscription: Stripe.Subscription) {
   const userId = existing?.userId ?? subscription.metadata?.userId;
   if (!userId) return; // nothing we can link this event to
 
-  const plan = existing?.plan ?? subscription.metadata?.plan ?? "unknown";
+  const metadataPlan = subscription.metadata?.plan ?? "unknown";
+  if (existing && isPremiumPlan(existing.plan)) {
+    await detachPremiumFromStripeRow(subscription.id, metadataPlan);
+  }
+  const plan = existing && !isPremiumPlan(existing.plan) ? existing.plan : metadataPlan;
   const customerId =
     typeof subscription.customer === "string"
       ? subscription.customer
@@ -186,6 +246,10 @@ export async function POST(request: NextRequest) {
     // effect at period end) — close access right away.
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
+      // A cancellation is the most destructive of the three (it revokes,
+      // it does not merely rewrite), so a legacy shared row is split apart
+      // before it lands — see detachPremiumFromStripeRow.
+      await detachPremiumFromStripeRow(subscription.id, subscription.metadata?.plan ?? "unknown");
       const existing = await db.subscription.findUnique({
         where: { stripeSubscriptionId: subscription.id },
         select: { userId: true },
@@ -208,6 +272,7 @@ export async function POST(request: NextRequest) {
         typeof subscriptionRef === "string" ? subscriptionRef : subscriptionRef?.id;
 
       if (subscriptionId) {
+        await detachPremiumFromStripeRow(subscriptionId, "unknown");
         const existing = await db.subscription.findUnique({
           where: { stripeSubscriptionId: subscriptionId },
           select: { userId: true },

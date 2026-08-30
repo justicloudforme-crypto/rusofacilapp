@@ -7,6 +7,7 @@ import { invalidateSubscriptionCache } from "@/lib/subscription";
 import { isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter } from "@/lib/rate-limit";
+import { isDeployedEnvironment } from "@/lib/deploy-environment";
 
 const PLAN_LABELS: Record<string, string> = {
   monthly: "Suscripción mensual",
@@ -123,7 +124,12 @@ export async function POST(request: NextRequest) {
         ...(plan.mode === "subscription"
           ? { subscription_data: { metadata: { userId: user.id, plan: plan.id } } }
           : { metadata: { userId: user.id, plan: plan.id } }),
-        success_url: `${origin}${nextPath ?? `/${lang}/profile`}${(nextPath ?? "").includes("?") ? "&" : "?"}checkout=success`,
+        // `plan` rides along so the page a buyer lands on can check that
+        // the account actually holds what was just paid for, instead of
+        // congratulating them on a purchase that did not take effect —
+        // which is what it did throughout the 7.55 defect. See
+        // CheckoutOutcomeNotice.
+        success_url: `${origin}${nextPath ?? `/${lang}/profile`}${(nextPath ?? "").includes("?") ? "&" : "?"}checkout=success&plan=${plan.id}`,
         cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
       });
 
@@ -134,9 +140,52 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Stripe isn't configured for this environment (no secret key / price id):
-  // activate the subscription directly so the access-control flow can still
-  // be exercised end-to-end in local/dev use without real Stripe credentials.
+  // Everything below is the no-Stripe fallback, and it grants access
+  // without anyone paying. On a laptop that is the point; on a deployment
+  // it is the paywall switching itself off.
+  //
+  // It is reachable there by one missing environment variable — an unset
+  // STRIPE_SECRET_KEY skips the whole branch above, and an unset
+  // STRIPE_PRICE_LIFETIME skips it for the Premium plan alone (see
+  // src/lib/plans.ts: the price ids come from the environment and are
+  // `undefined` when absent). Either way the visitor would land here, be
+  // handed the plan they asked for, and be redirected to a page reading
+  // "subscription activated" — with no payment, no Stripe object, and
+  // nothing in any log saying anything unusual happened. Exactly the shape
+  // of failure that let 7.55 live for six days: every part reports success.
+  //
+  // So on a real deployment this is refused instead. The visitor gets the
+  // pricing page back with an error flag rather than free Premium, and the
+  // misconfiguration reports itself to Sentry, where a checkout that cannot
+  // charge anybody is worth waking up for. The gate is VERCEL_ENV, for the
+  // reasons in src/lib/deploy-environment.ts — NODE_ENV cannot tell a
+  // deployment from `next start` on this laptop, and the e2e suite runs
+  // under NODE_ENV=production too.
+  if (isDeployedEnvironment()) {
+    try {
+      const error = new Error(
+        `Checkout for plan "${plan.id}" (${method}) fell through to the no-Stripe fallback on a deployment: ` +
+          `${stripe ? "STRIPE_SECRET_KEY is set" : "STRIPE_SECRET_KEY is MISSING"}, ` +
+          `price id ${plan.priceId ? "present" : "MISSING"}. No payment was taken and no access was granted.`
+      );
+      error.name = "CheckoutFellThroughToFreeGrant";
+      const Sentry = await import("@sentry/nextjs");
+      Sentry.captureException(error, {
+        level: "error",
+        tags: { defect: "checkout-free-grant-fallback" },
+        extra: { plan: plan.id, method, hasStripe: Boolean(stripe), hasPriceId: Boolean(plan.priceId) },
+      });
+    } catch {
+      // Reporting the problem must never become a second problem.
+    }
+    return NextResponse.redirect(new URL(`/${lang}/pricing?checkout=unavailable`, request.url), {
+      status: 303,
+    });
+  }
+
+  // Local/dev only: activate the subscription directly so the
+  // access-control flow can still be exercised end-to-end without real
+  // Stripe credentials.
   // Deliberately does NOT call awardReferralRewardSafely — unlike the real
   // Stripe path, nothing here proves money changed hands, so treating it as
   // a qualifying "first checkout" would let anyone farm unlimited referral

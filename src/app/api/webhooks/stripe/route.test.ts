@@ -5,6 +5,8 @@ import type Stripe from "stripe";
 const findUnique = vi.fn();
 const upsert = vi.fn();
 const updateMany = vi.fn();
+const create = vi.fn();
+const update = vi.fn();
 const constructEvent = vi.fn();
 const subscriptionsRetrieve = vi.fn();
 const getStripe = vi.fn();
@@ -16,6 +18,8 @@ vi.mock("@/lib/db", () => ({
       findUnique: (...args: unknown[]) => findUnique(...args),
       upsert: (...args: unknown[]) => upsert(...args),
       updateMany: (...args: unknown[]) => updateMany(...args),
+      create: (...args: unknown[]) => create(...args),
+      update: (...args: unknown[]) => update(...args),
     },
   },
 }));
@@ -26,6 +30,9 @@ vi.mock("@/lib/stripe", () => ({
 
 vi.mock("@/lib/subscription", () => ({
   invalidateSubscriptionCache: (...args: unknown[]) => invalidateSubscriptionCache(...args),
+  // Not a spy: the real predicate is one comparison, and the point of the
+  // tests below is what the route does with its answer.
+  isPremiumPlan: (plan: string) => plan === "lifetime",
 }));
 
 const { POST } = await import("./route");
@@ -177,6 +184,83 @@ describe("POST /api/webhooks/stripe", () => {
       data: { status: "past_due" },
     });
     expect(invalidateSubscriptionCache).toHaveBeenCalledWith("user_4");
+  });
+
+  // A row created before the "Premium lives on its own record" fix can be
+  // both a Stripe subscription and somebody's Premium purchase. Stripe's
+  // lifecycle events rewrite such a row wholesale, which is how a
+  // bought-forever access used to disappear at the next renewal or
+  // cancellation (PROGRESS.md debt 28). The route splits the two apart the
+  // first time it sees one.
+  describe("a legacy row that is both a Stripe subscription and a Premium purchase", () => {
+    const legacy = {
+      id: "row_legacy",
+      userId: "user_legacy",
+      plan: "lifetime",
+      currentPeriodEnd: new Date("2126-01-01T00:00:00.000Z"),
+    };
+
+    it("moves the Premium half onto its own row before a cancellation lands", async () => {
+      findUnique.mockResolvedValue(legacy);
+      constructEvent.mockReturnValue(
+        stripeEvent("customer.subscription.deleted", { id: "sub_legacy", metadata: { plan: "monthly" } })
+      );
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      // The new row carries the Premium plan and the period it was granted,
+      // and is NOT tied to the Stripe subscription being canceled.
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(create.mock.calls[0]![0].data).toMatchObject({
+        userId: "user_legacy",
+        plan: "lifetime",
+        status: "active",
+        currentPeriodEnd: legacy.currentPeriodEnd,
+      });
+      expect(create.mock.calls[0]![0].data).not.toHaveProperty("stripeSubscriptionId");
+      // ...and the original row goes back to being the subscription Stripe
+      // thinks it is, so the cancellation below cancels a monthly plan.
+      expect(update).toHaveBeenCalledWith({ where: { id: "row_legacy" }, data: { plan: "monthly" } });
+      expect(updateMany).toHaveBeenCalledWith({
+        where: { stripeSubscriptionId: "sub_legacy" },
+        data: { status: "canceled" },
+      });
+    });
+
+    it("does the same before a renewal overwrites the period", async () => {
+      findUnique.mockResolvedValue(legacy);
+      constructEvent.mockReturnValue(
+        stripeEvent("customer.subscription.updated", {
+          id: "sub_legacy",
+          status: "active",
+          customer: "cus_legacy",
+          metadata: { plan: "monthly", userId: "user_legacy" },
+          items: { data: [{ current_period_end: 1_800_000_000 }] },
+        })
+      );
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(create.mock.calls[0]![0].data).toMatchObject({ plan: "lifetime" });
+      // The upsert that follows writes the Stripe plan, never "lifetime".
+      expect(upsert.mock.calls[0]![0].create).toMatchObject({ plan: "monthly" });
+    });
+
+    // NEGATIVE CONTROL: an ordinary Stripe row must not be split, or every
+    // renewal would leave a spurious row behind.
+    it("leaves an ordinary Stripe subscription row alone", async () => {
+      findUnique.mockResolvedValue({ id: "row_1", userId: "user_1", plan: "monthly" });
+      constructEvent.mockReturnValue(
+        stripeEvent("customer.subscription.deleted", { id: "sub_1", metadata: {} })
+      );
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(create).not.toHaveBeenCalled();
+      expect(update).not.toHaveBeenCalled();
+    });
   });
 
   it("acknowledges unhandled event types without touching the database", async () => {

@@ -370,6 +370,8 @@
     "monthLabel": "Mes",
     "yearLabel": "Año",
     "paymentMethodLabel": "Método de pago",
+    "checkoutUnavailable": "Ahora mismo no podemos abrir el pago. No se te cobró nada. Vuelve a intentarlo en unos minutos o escríbenos a support@rusofacilapp.com.",
+    "checkoutRateLimited": "Abriste el pago demasiadas veces seguidas. Espera un minuto y vuelve a intentarlo — no se te cobró nada.",
     "cardLabel": "Tarjeta",
     "cashLabel": "Efectivo",
     "monthly": {
@@ -460,6 +462,9 @@
     "goToCourses": "Ir a los cursos",
     "checkoutMock": "Suscripción activada (modo demo, sin Stripe real).",
     "checkoutSuccess": "¡Pago confirmado! Tu suscripción ya está activa.",
+    "checkoutVerifying": "Estamos confirmando tu pago con el banco. Esto tarda unos segundos — no cierres esta página.",
+    "checkoutNotApplied": "Tu pago se realizó, pero tu acceso todavía no se activó en la cuenta. No vuelvas a pagar: escríbenos con el correo de tu cuenta y te lo activamos a mano.",
+    "checkoutSupportEmailLabel": "Escribir a support@rusofacilapp.com",
     "checkoutOxxoPending": "Revisa tu correo: ahí tienes tu código de barras de OXXO. En cuanto se confirme el pago en la tienda (hasta 3 días), tu suscripción se activará automáticamente.",
     "openOxxoVoucher": "Abrir mi código de barras",
     "checkoutOxxoVoucherUnavailable": "Ese código ya no está disponible para volver a abrirlo (se pagó o venció) — revisa el correo con el código."
