@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit",
     "verify": "npm run lint && npm run typecheck && npm run build && npm run check:rendered:local",
     "check:rendered:local": "node scripts/verify-rendered.mjs",
+    "check:rendered:ci": "node scripts/verify-rendered.mjs --ci",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

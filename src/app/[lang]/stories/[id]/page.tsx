@@ -49,6 +49,24 @@ export async function generateMetadata({
   return { title, description, alternates: routeAlternates(lang, `/stories/${encodeURIComponent(id)}`) };
 }
 
+/** `Story.sentenceOffsetsJson` -> offsets, or null if the row is unusable.
+ * Returns null rather than throwing: without offsets the reader loses
+ * sentence highlighting and keeps the story. */
+function parseSentenceOffsets(json: string | null): number[] | null {
+  if (!json) return null;
+  try {
+    const parsed: unknown = JSON.parse(json);
+    if (!Array.isArray(parsed) || !parsed.every((n) => typeof n === "number" && Number.isFinite(n))) {
+      console.error("[story] sentenceOffsetsJson is not an array of numbers — highlighting disabled");
+      return null;
+    }
+    return parsed;
+  } catch (error) {
+    console.error("[story] sentenceOffsetsJson is not valid JSON — highlighting disabled", error);
+    return null;
+  }
+}
+
 export default async function StoryReaderPage({
   params,
 }: PageProps<"/[lang]/stories/[id]">) {
@@ -131,8 +149,12 @@ export default async function StoryReaderPage({
   // is what keeps playback from leaking the rest of the story's narration
   // past the paywall.
   const fullAudioUrl = entitled ? story.fullAudioUrl : null;
-  const sentenceOffsets =
-    entitled && story.sentenceOffsetsJson ? (JSON.parse(story.sentenceOffsetsJson) as number[]) : null;
+  // Guarded because this is DB content and the story is the product: the
+  // offsets only drive per-sentence audio highlighting, so a malformed row
+  // must cost the highlighting, not the page. Same class as incident №1 —
+  // a value from the database reaching a parser that can throw during
+  // render, with the whole page downstream of it. See PROGRESS.md 7.40.
+  const sentenceOffsets = parseSentenceOffsets(entitled ? story.sentenceOffsetsJson : null);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">

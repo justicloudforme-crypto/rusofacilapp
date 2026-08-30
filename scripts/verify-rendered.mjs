@@ -54,9 +54,13 @@ async function main() {
     }
     // --control is not optional here. A gate that cannot demonstrate it
     // finds a broken render is a gate that passes everything.
+    // --ci is passed straight through: it drops the content-count
+    // assertions, which CI's empty database cannot satisfy, and keeps
+    // everything that identifies a broken render.
+    const passthrough = process.argv.slice(2).filter((a) => a === "--ci");
     const run = spawnSync(
       process.execPath,
-      ["scripts/check-rendered-surface.mjs", `--base=${BASE}`, "--control"],
+      ["scripts/check-rendered-surface.mjs", `--base=${BASE}`, "--control", ...passthrough],
       { stdio: "inherit" }
     );
     process.exitCode = run.status ?? 1;
