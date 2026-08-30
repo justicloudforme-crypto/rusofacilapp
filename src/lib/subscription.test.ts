@@ -47,3 +47,75 @@ describe("isSubscriptionActive", () => {
     expect(isSubscriptionActive(sub)).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// extendOrGrantSubscription: what a grant does to the STORED PLAN, which is
+// the only thing getEntitlementTier reads to decide Premium vs standard.
+// ---------------------------------------------------------------------------
+
+describe("extendOrGrantSubscription and the stored plan", () => {
+  const DAY = 86_400_000;
+
+  async function run(existing: { id: string; plan: string; status: string; currentPeriodEnd: Date } | null, plan: string) {
+    // Typed through vi.fn's type parameter rather than left bare: without a
+    // signature `mock.calls` is an empty tuple and reading `[0][0].data`
+    // does not typecheck (`npm run verify` runs tsc over the tests too).
+    type Write = (args: { where?: unknown; data: Record<string, unknown> }) => Promise<unknown>;
+    const update = vi.fn<Write>(async () => ({}));
+    const create = vi.fn<Write>(async () => ({}));
+    const findFirst = vi.fn(async () => existing);
+    vi.resetModules();
+    vi.doMock("./db", () => ({ db: { subscription: { findFirst, update, create } } }));
+    // The 30s TtlCache in front of getLatestSubscription is a globalThis
+    // singleton, so a fresh module registry is not enough on its own — a
+    // second case would read the first case's row. Give each run its own
+    // user id instead of trying to reach into the cache.
+    const mod = await import("./subscription");
+    await mod.extendOrGrantSubscription(`user-${Math.random()}`, 30, plan);
+    return { update, create };
+  }
+
+  function active(plan: string) {
+    return { id: "sub-1", plan, status: "active", currentPeriodEnd: new Date(Date.now() + 10 * DAY) };
+  }
+
+  it("raises a live standard subscription to Premium when a lifetime purchase is granted", async () => {
+    // THE PRODUCTION BUG this guards. The Stripe webhook calls this helper
+    // with "lifetime" when a Premium purchase is paid — by card and by OXXO
+    // alike. A customer who already had an active monthly plan used to keep
+    // `plan: "monthly"`, so getEntitlementTier kept answering "standard" and
+    // the Premium content they had just paid for stayed locked, with nothing
+    // anywhere reporting a failure. PROGRESS.md 7.55.
+    const { update, create } = await run(active("monthly"), "lifetime");
+    expect(create).not.toHaveBeenCalled();
+    expect(update.mock.calls[0]?.[0]?.data?.plan).toBe("lifetime");
+  });
+
+  it("raises it from any other live plan too — referral days and admin grants included", async () => {
+    for (const from of ["annual", "referral", "manual", "e2e-test"]) {
+      const { update } = await run(active(from), "lifetime");
+      expect(update.mock.calls[0]?.[0]?.data?.plan, `upgrading from ${from}`).toBe("lifetime");
+    }
+  });
+
+  // The other half of the rule, and the reason this is not just "always
+  // overwrite the plan": everything that adds days carries its own plan id,
+  // and none of them may demote somebody who paid for Premium.
+  it("never demotes a live Premium subscription when days are added to it", async () => {
+    for (const grant of ["referral", "manual", "monthly", "annual"]) {
+      const { update } = await run(active("lifetime"), grant);
+      expect(update.mock.calls[0]?.[0]?.data, `granting ${grant} on top of lifetime`).not.toHaveProperty("plan");
+    }
+  });
+
+  it("still writes the plan it was given when there is nothing active to extend", async () => {
+    const { create, update } = await run(null, "lifetime");
+    expect(update).not.toHaveBeenCalled();
+    expect(create.mock.calls[0]?.[0]?.data?.plan).toBe("lifetime");
+  });
+
+  it("extends the period in every case", async () => {
+    const { update } = await run(active("monthly"), "referral");
+    expect(update.mock.calls[0]?.[0]?.data?.currentPeriodEnd).toBeInstanceOf(Date);
+  });
+});

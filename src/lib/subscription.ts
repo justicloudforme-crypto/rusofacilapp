@@ -104,20 +104,51 @@ export async function invalidateSubscriptionCache(userId: string) {
   await subscriptionCache.del(userId);
 }
 
+/** The single plan id that means the Premium tier. Lives here, next to the
+ * only writer of `Subscription.plan`, so the write side and the read side
+ * (src/lib/entitlement.ts) cannot drift into two different opinions about
+ * what "Premium" is stored as. */
+export const PREMIUM_PLAN_ID = "lifetime";
+
+export function isPremiumPlan(plan: string): boolean {
+  return plan === PREMIUM_PLAN_ID;
+}
+
 /** Extends the user's current subscription period if it's still active, or
- * grants a fresh one if not — shared by every "add N free days" path
- * (admin manual grant, referral rewards) so they can't drift into two
- * different extend-vs-create rules. */
+ * grants a fresh one if not — shared by every "add N days" path (the Stripe
+ * webhook's lifetime and OXXO branches, admin manual grant, referral
+ * rewards) so they can't drift into two different extend-vs-create rules.
+ *
+ * The extend branch deliberately keeps the stored `plan` rather than
+ * overwriting it with the caller's, with ONE exception: a grant that raises
+ * the entitlement tier. Both halves of that matter.
+ *
+ * Keeping it is why a referral bonus or a manual admin grant — both of
+ * which pass their own plan id ("referral", "manual", neither of them
+ * Premium) — cannot quietly demote a paying Premium customer to standard.
+ *
+ * Raising it is a production bug fix, not tidying (PROGRESS.md 7.55). This
+ * function is what the Stripe webhook calls when a Lifetime/Premium
+ * purchase is paid, by card and by OXXO alike. Before this, a customer who
+ * already had ANY active subscription row — a monthly plan, referral days,
+ * an admin grant — had only their period extended: the row still said
+ * "monthly", getEntitlementTier still answered "standard", and the person
+ * who had just paid for Premium got none of the Premium content. Nothing in
+ * the system reported a failure; the money arrived and the entitlement did
+ * not.
+ */
 export async function extendOrGrantSubscription(userId: string, days: number, plan: string) {
   const extraMs = days * 24 * 60 * 60 * 1000;
   const existing = await getLatestSubscription(userId);
 
   if (existing && isSubscriptionActive(existing)) {
+    const raisesTier = isPremiumPlan(plan) && !isPremiumPlan(existing.plan);
     await db.subscription.update({
       where: { id: existing.id },
       data: {
         status: "active",
         currentPeriodEnd: new Date(existing.currentPeriodEnd.getTime() + extraMs),
+        ...(raisesTier ? { plan } : {}),
       },
     });
   } else {

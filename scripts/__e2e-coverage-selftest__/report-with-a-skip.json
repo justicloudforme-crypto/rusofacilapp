@@ -1,0 +1,17 @@
+{
+  "suites": [
+    {
+      "title": "e2e/example.spec.ts",
+      "specs": [
+        { "title": "runs", "tests": [{ "projectName": "chromium", "status": "expected" }] },
+        { "title": "was skipped", "tests": [{ "projectName": "mobile-iphone", "status": "skipped" }] }
+      ],
+      "suites": [
+        {
+          "title": "a nested describe",
+          "specs": [{ "title": "also runs", "tests": [{ "projectName": "chromium", "status": "expected" }] }]
+        }
+      ]
+    }
+  ]
+}

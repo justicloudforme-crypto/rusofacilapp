@@ -1,7 +1,7 @@
 import "server-only";
 import { getCurrentUser } from "./auth";
 import { isStaff } from "./roles";
-import { getLatestSubscription, isSubscriptionActive, userHasActiveSubscription } from "./subscription";
+import { getLatestSubscription, isPremiumPlan, isSubscriptionActive, userHasActiveSubscription } from "./subscription";
 // The free word-game rule lives outside this module because robots.ts and
 // the offline generator need it and cannot import a `server-only` file.
 // Re-exported below so every existing `from "@/lib/entitlement"` import
@@ -32,7 +32,10 @@ export async function getEntitlementTier(): Promise<EntitlementTier> {
 
   const subscription = await getLatestSubscription(user.id);
   if (!isSubscriptionActive(subscription)) return "free";
-  return subscription!.plan === "lifetime" ? "premium" : "standard";
+  // isPremiumPlan, not an inline "lifetime" here: the write side
+  // (extendOrGrantSubscription) has to decide whether a purchase raises the
+  // tier, and it must be reading the same rule this line reads.
+  return isPremiumPlan(subscription!.plan) ? "premium" : "standard";
 }
 
 /**

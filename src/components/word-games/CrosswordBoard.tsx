@@ -130,7 +130,50 @@ export default function CrosswordBoard({
     else delete next[key];
     guessesRef.current = next;
     setGuesses(next);
+    syncCell(row, col, letter);
     void runCheck(next, soundCell);
+  }
+
+  /**
+   * Puts one cell's DOM value where `guesses` says it should be — the whole
+   * of what the removed `value={…}` prop used to do, minus the part that was
+   * losing keystrokes.
+   *
+   * The defect it replaces. Each cell was a controlled input, so React
+   * rewrote its `value` on every render of the board, and the board
+   * re-renders far more often than the typist touches it: every keystroke
+   * changes `guesses`, and every grading response changes `cellStatus` at
+   * some arbitrary later moment. React also keeps a private "value tracker"
+   * per input and fires `onChange` only when the value it sees at event time
+   * differs from the last value it wrote itself. So if one of those renders
+   * lands in the window between the browser editing the field and the
+   * `input` event being dispatched, React has already put "" back — the
+   * event arrives with an empty value, the tracker sees no change, and
+   * **`onChange` is never called at all.** The letter is gone, and nothing
+   * anywhere reports a failure.
+   *
+   * Measured twice over, not deduced. A capture listener above React saw the
+   * raw `input` event carrying an empty value; a probe inside `handleChange`
+   * showed it was never invoked for that cell. One mechanism, two views of
+   * it. It needs the edit and the event to be in separate tasks, which is
+   * why it surfaced under WebKit driven at speed and not under a person.
+   *
+   * Writing one cell instead of all of them is the point: an unrelated
+   * render can no longer touch a field somebody is typing into, because no
+   * render touches any field any more. Everything that is not the typist —
+   * a hint, a clear, a reset — comes through updateGuess and lands here.
+   *
+   * (The rejected fix, recorded so it is not tried again: React's
+   * `onBeforeInput`. It never fires at all in WebKit, and in Chromium it is
+   * a synthesised event whose `preventDefault` does not stop the edit, so it
+   * was inert on the one engine that had the bug and double-applied on the
+   * other. PROGRESS.md 7.54.)
+   */
+  function syncCell(row: number, col: number, letter: string | undefined) {
+    const el = inputRefs.current.get(`${row},${col}`);
+    if (!el) return;
+    const want = letter ? letter.toUpperCase() : "";
+    if (el.value !== want) el.value = want;
   }
 
   function activateCell(row: number, col: number) {
@@ -147,7 +190,13 @@ export default function CrosswordBoard({
 
   function handleChange(row: number, col: number, rawValue: string) {
     const letter = rawValue.slice(-1);
-    if (!letter) return;
+    // An empty value is a real edit, not nothing to do: cut, select-all +
+    // Delete, and several on-screen keyboards clear a field this way.
+    // Discarding it is what made Delete look like a dead key.
+    if (!letter) {
+      updateGuess(row, col, undefined);
+      return;
+    }
     updateGuess(row, col, letter.toLowerCase(), { row, col });
 
     const word = activeDirection ? wordAt(cellWordMap, row, col, activeDirection)?.word : null;
@@ -161,7 +210,13 @@ export default function CrosswordBoard({
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>, row: number, col: number) {
-    if (e.key !== "Backspace") return;
+    // Delete does exactly what Backspace does. A cell holds a single
+    // character, so there is no "forward" left for Delete to mean, and
+    // before this it did nothing at all: its default action produces an
+    // input event with an empty value, which handleChange used to discard.
+    // Two keys that both look like "erase this" must not disagree about
+    // whether erasing works.
+    if (e.key !== "Backspace" && e.key !== "Delete") return;
     e.preventDefault();
     const key = `${row},${col}`;
     if (guesses[key]) {
@@ -265,7 +320,15 @@ export default function CrosswordBoard({
                       if (el) inputRefs.current.set(key, el);
                       else inputRefs.current.delete(key);
                     }}
-                    value={guesses[key]?.toUpperCase() ?? ""}
+                    // Uncontrolled on purpose, and this is a fix, not a
+                    // shortcut — see syncCell. `value={guesses[key]}` made
+                    // React rewrite this field on EVERY render, including
+                    // renders caused by another cell's grading response, and
+                    // a rewrite that lands between the browser's edit and the
+                    // input event's dispatch eats the keystroke silently.
+                    // The board still owns the letter: `guesses` is the only
+                    // source of truth, and syncCell writes it here.
+                    defaultValue=""
                     maxLength={1}
                     inputMode="text"
                     aria-label={`row ${row + 1} col ${col + 1}`}

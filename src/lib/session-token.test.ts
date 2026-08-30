@@ -98,4 +98,21 @@ describe("shouldUseSecureSessionCookie", () => {
   it("is false in development, where there is no HTTPS to be secure over", () => {
     expect(shouldUseSecureSessionCookie({ NODE_ENV: "development" })).toBe(false);
   });
+
+  // The live case, spelled out as the thing a real visitor gets. iOS Safari
+  // is the reason this matters most: it is the engine that drops a
+  // non-Secure cookie's sibling — and the engine the e2e exception was
+  // written for — so "did the exception leak onto the real site" has to be
+  // an assertion, not a belief.
+  it("is true on a real Vercel deployment even if E2E_TEST_SEED is somehow set there", () => {
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "production", VERCEL: "1" })).toBe(true);
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "production", VERCEL: "1", E2E_TEST_SEED: "1" })).toBe(true);
+    expect(
+      shouldUseSecureSessionCookie({ NODE_ENV: "production", VERCEL: "1", VERCEL_ENV: "production", E2E_TEST_SEED: "1" }),
+    ).toBe(true);
+  });
+
+  it("still lifts Secure for the e2e server, which is production-mode localhost and not Vercel", () => {
+    expect(shouldUseSecureSessionCookie({ NODE_ENV: "production", E2E_TEST_SEED: "1" })).toBe(false);
+  });
 });
