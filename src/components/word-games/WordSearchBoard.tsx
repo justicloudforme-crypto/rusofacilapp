@@ -242,7 +242,22 @@ export default function WordSearchBoard({
 
   return (
     <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
-      <div className="flex flex-col items-center gap-2">
+      {/* max-w-full/min-w-0 is what makes the scroller below actually work,
+          and it is not decoration. This wrapper is a flex ITEM of the
+          column above (align-items: center), so its cross-axis width is
+          fit-content and it is allowed to grow past the container — which
+          it did: a 16-column grid can shrink no further than its 22px
+          floor (16 × 22 + 15 gaps + 2 × 13px card padding = 408px), so the
+          wrapper became 408px inside a 312px column. The scroller's own
+          `max-w-full` then resolved against THAT 408px and never engaged,
+          and the whole document went 25px wide of a 360px viewport.
+          Measured on production 30.08.2026: /es/sopa-de-letras-ruso,
+          -clima, -comida, -compras (16 columns) failed at 360/375/390/393
+          in both engines; -ciudad, -familia, -ropa (12 columns) fit and
+          did not. Bounding this wrapper to the column gives the scroller a
+          real limit, so a too-wide puzzle scrolls inside its own card —
+          which is what the card was for. */}
+      <div className="flex min-w-0 max-w-full flex-col items-center gap-2">
         {puzzle.curved && (
           <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
             ★ {dict.expertModeLabel}
