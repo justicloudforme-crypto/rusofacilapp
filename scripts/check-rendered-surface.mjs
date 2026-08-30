@@ -91,12 +91,33 @@ const EXPECT_SUBSCRIPTION = argv.includes("--expect-subscription");
  * version of this assertion did exactly that).
  */
 const LOCKED_MODULE_SUMMARY = /incluye\s+\d+\s+(?:palabras|ejercicios|diapositivas)/;
-// Only the paid lesson: its URL is the same in every environment. The
-// story reader is just as paywalled (125 kB -> 186 kB in the same
-// measurement) but its URL carries a story id that differs between the
-// local database and production, so it cannot be a fixed entry here. Left
-// out deliberately rather than hard-coded to an id that 404s elsewhere.
-const SUBSCRIBER_ONLY = new Set(["es/lesson-paid"]);
+// Debt 20, closed. The paid lesson's URL is the same in every environment,
+// so it has always been here. The story reader is just as paywalled (125 kB
+// -> 186 kB in the same measurement) but its URL carries a story id that
+// differs between the local database and production — 650 rows on
+// production, a different set locally — so it cannot be a fixed entry.
+// Hard-coding an id that 404s in the other environment would be worse than
+// the gap it filled.
+//
+// It is resolved at run time instead, from the first story the /es/stories
+// index actually links to: the app's own query against whichever database
+// this run is pointed at, which is the only source that is right in both.
+// A story id is never typed into this file.
+const SUBSCRIBER_ONLY = new Set(["es/lesson-paid", "es/story-reader"]);
+
+/**
+ * How each paywalled family proves a subscriber is really seeing the paid
+ * surface. The lesson has to be read out of the DOCUMENT (its content
+ * hides behind tabs, so innerText passed happily for a free account — see
+ * above). The story reader has a structural marker instead: the lock card
+ * carries `.paywall-lock`, which the page also points its JSON-LD
+ * `paywalledContent` at, so it cannot quietly drift away from the thing
+ * being measured.
+ */
+const LOCK_MARKERS = {
+  "es/lesson-paid": { kind: "document", pattern: LOCKED_MODULE_SUMMARY },
+  "es/story-reader": { kind: "selector", selector: ".paywall-lock" },
+};
 
 /**
  * Debt 13. The signed-in pass used to run on a throwaway account with an
@@ -188,6 +209,54 @@ function familiesFor(lang) {
 
 const FAMILIES = [...familiesFor("es"), ...familiesFor("ru")].filter((f) => !(CI_MODE && f.contentOnly));
 
+/**
+ * Debt 20. Finds a story to check by asking the catalogue, never by
+ * carrying an id in this file: story ids differ between the local database
+ * and production, and a hard-coded one 404s in the other environment.
+ *
+ * It has to be a PAID story, and that is the part worth being careful
+ * about. The first link on /es/stories is "Теремок", which is one of the
+ * free-trial stories — measured: `.paywall-lock` count 0 for an anonymous
+ * visitor. Pointing the subscription assertion at it would have passed for
+ * a free account and a subscriber alike, which is the exact shape of the
+ * mistake 7.43 records (the first lesson of every level is free, and the
+ * a1/1 row is in that table to prove the discriminator can tell the two
+ * apart). So candidates are opened anonymously in order and the first one
+ * that actually shows the lock card is taken.
+ *
+ * In catalogue order, not at random: two runs against the same database
+ * then check the same page, so a failure is reproducible.
+ */
+async function resolveStoryReaderFamily(ctx) {
+  const page = await ctx.newPage();
+  try {
+    await page.goto(`${BASE}/es/stories`, { waitUntil: "networkidle", timeout: 60_000 });
+    const hrefs = (await page.locator('a[href^="/es/stories/"]').evaluateAll((links) => links.map((a) => a.getAttribute("href"))))
+      .filter(Boolean)
+      .filter((href, index, all) => all.indexOf(href) === index)
+      .slice(0, 12);
+
+    for (const href of hrefs) {
+      await page.goto(BASE + href, { waitUntil: "networkidle", timeout: 60_000 });
+      await page.waitForTimeout(400);
+      const locked = await page.locator(".paywall-lock").count().catch(() => 0);
+      if (locked > 0) {
+        return {
+          name: "es/story-reader",
+          path: href,
+          contentOnly: true,
+          expect: { h1: /\S/, min: 1, sel: "article, section, h2" },
+        };
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    await page.close();
+  }
+}
+
 /** The one string that means an error boundary rendered instead of a page.
  * Both spellings: global-error's and the localized boundaries'. */
 const BOUNDARY_TEXT = /Something went wrong|Algo salió mal|Что-то пошло не так/;
@@ -231,12 +300,21 @@ async function inspect(ctx, family, breakIt, signedIn = false) {
   // behaving code. The first version of this check ran it on both passes and
   // reported the anonymous run as broken.
   if (signedIn && EXPECT_SUBSCRIPTION && SUBSCRIBER_ONLY.has(family.name)) {
-    const html = await page
-      .evaluate(() => fetch(location.href, { cache: "no-store" }).then((r) => r.text()))
-      .catch(() => "");
-    if (!html) problems.push("could not re-fetch the document to check entitlement");
-    else if (LOCKED_MODULE_SUMMARY.test(html)) {
-      problems.push("the lesson is still locked — this account is NOT a subscriber, so the paid surface is unchecked");
+    const marker = LOCK_MARKERS[family.name];
+    if (marker.kind === "document") {
+      const html = await page
+        .evaluate(() => fetch(location.href, { cache: "no-store" }).then((r) => r.text()))
+        .catch(() => "");
+      if (!html) problems.push("could not re-fetch the document to check entitlement");
+      else if (marker.pattern.test(html)) {
+        problems.push("the lesson is still locked — this account is NOT a subscriber, so the paid surface is unchecked");
+      }
+    } else {
+      const locks = await page.locator(marker.selector).count().catch(() => -1);
+      if (locks < 0) problems.push(`could not look for ${marker.selector} to check entitlement`);
+      else if (locks > 0) {
+        problems.push(`the story is still locked (${marker.selector}) — this account is NOT a subscriber, so the paid surface is unchecked`);
+      }
     }
   }
 
@@ -269,9 +347,27 @@ async function main() {
   let failures = 0;
 
   const anon = await browser.newContext({ ...devices["Pixel 5"] });
+
+  // Resolved before anything is measured, so both passes see the same list.
+  const families = [...FAMILIES];
+  if (!CI_MODE) {
+    const storyReader = await resolveStoryReaderFamily(anon);
+    if (storyReader) {
+      families.push(storyReader);
+      console.log(
+        `\n  story reader resolved from the catalogue: ${storyReader.path} (locked when anonymous, so the subscription assertion can fail)`
+      );
+    } else {
+      console.log(
+        "\n  NOT CHECKED: no PAID story found among the first links on /es/stories, so the story reader is unverified this run"
+      );
+      failures += 1;
+    }
+  }
+
   console.log(`\n=== ${BASE} — anonymous, real browser, after hydration ===`);
   const anonPrints = {};
-  for (const f of FAMILIES) {
+  for (const f of families) {
     const { problems, fingerprint } = await inspect(anon, f);
     anonPrints[f.name] = fingerprint;
     failures += problems.length ? 1 : 0;
@@ -283,7 +379,7 @@ async function main() {
     const ctx = await signedInContext(browser);
     console.log(`\n=== ${BASE} — SIGNED IN, real browser, after hydration ===`);
     const differing = [];
-    for (const f of FAMILIES) {
+    for (const f of families) {
       const { problems, fingerprint } = await inspect(ctx, f, undefined, true);
       failures += problems.length ? 1 : 0;
       const before = anonPrints[f.name];
@@ -313,7 +409,7 @@ async function main() {
     ];
     let caught = 0;
     for (const [label, breakIt] of breakages) {
-      const { problems } = await inspect(anon, FAMILIES.find((f) => f.name === "es/courses"), breakIt);
+      const { problems } = await inspect(anon, families.find((f) => f.name === "es/courses"), breakIt);
       const ok = problems.length > 0;
       caught += ok ? 1 : 0;
       console.log(`  ${ok ? "caught " : "MISSED "} ${label}${ok ? ` → ${problems[0]}` : ""}`);
