@@ -13,6 +13,7 @@ export default function ReadingPracticeBlock({
   level,
   lessonSlug,
   audioMap,
+  ownerScope,
 }: {
   readingPractice: NonNullable<LessonContent["readingPractice"]>;
   listenLabel: Dictionary["lesson"]["alphabet"]["listenLabel"];
@@ -23,6 +24,9 @@ export default function ReadingPracticeBlock({
   /** Pre-generated pronunciation audio (see prisma/generate-lesson-audio.ts),
    * keyed by item position (see src/lib/lessons/audioKeys.ts). */
   audioMap: Record<string, string>;
+  /** Which browser-storage bucket this student's recordings belong to —
+   * see src/lib/recordings-owner.ts. Recordings never leave the device. */
+  ownerScope: string;
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-background p-4 dark:border-white/30">
@@ -51,15 +55,13 @@ export default function ReadingPracticeBlock({
                   recordingFailed: readAloudDict.recordingFailed,
                   playbackFailed: readAloudDict.playbackFailed,
                   yourRecording: readAloudDict.yourRecording,
-                  submitLabel: readAloudDict.submitLabel,
-                  submittingLabel: readAloudDict.submittingLabel,
-                  submittedLabel: readAloudDict.submittedLabel,
-                  submitError: readAloudDict.submitError,
-                  submitRateLimited: readAloudDict.submitRateLimited,
-                  submitUnsupportedType: readAloudDict.submitUnsupportedType,
-                  previousRecordingLabel: readAloudDict.previousRecordingLabel,
+                  storageUnavailable: readAloudDict.storageUnavailable,
+                  storageFull: readAloudDict.storageFull,
+                  savedRecordingLabel: readAloudDict.savedRecordingLabel,
+                  deleteRecordingLabel: readAloudDict.deleteRecordingLabel,
                 }}
-                submission={{ level, lessonSlug, itemKey: item.text }}
+                target={{ level, lessonSlug, itemKey: item.text }}
+                ownerScope={ownerScope}
               />
             )}
           </div>

@@ -17,11 +17,15 @@ export default function PronunciationPractice({
   lessonSlug,
   dict,
   audioMap,
+  ownerScope,
 }: {
   vocabulary: VocabularyItem[];
   level: string;
   lessonSlug: string;
   dict: PronunciationDict;
+  /** Which browser-storage bucket this student's recordings belong to —
+   * see src/lib/recordings-owner.ts. Recordings never leave the device. */
+  ownerScope: string;
   /** Pre-generated pronunciation audio (see prisma/generate-lesson-audio.ts),
    * keyed by the word's position in the lesson's full vocabulary array
    * (see src/lib/lessons/audioKeys.ts) — these are the same vocabulary
@@ -57,15 +61,13 @@ export default function PronunciationPractice({
                 recordingFailed: dict.recordingFailed,
                 playbackFailed: dict.playbackFailed,
                 yourRecording: dict.yourRecording,
-                submitLabel: dict.submitLabel,
-                submittingLabel: dict.submittingLabel,
-                submittedLabel: dict.submittedLabel,
-                submitError: dict.submitError,
-                submitRateLimited: dict.submitRateLimited,
-                submitUnsupportedType: dict.submitUnsupportedType,
-                previousRecordingLabel: dict.previousRecordingLabel,
+                storageUnavailable: dict.storageUnavailable,
+                storageFull: dict.storageFull,
+                savedRecordingLabel: dict.savedRecordingLabel,
+                deleteRecordingLabel: dict.deleteRecordingLabel,
               }}
-              submission={{ level, lessonSlug, itemKey: item.word }}
+              target={{ level, lessonSlug, itemKey: item.word }}
+              ownerScope={ownerScope}
             />
           </div>
         ))}

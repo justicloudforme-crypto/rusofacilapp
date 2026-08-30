@@ -15,11 +15,52 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // The mic permission the voice spec's fake microphone is asked
+        // for, plus Chromium's own fake capture device as a second layer:
+        // the spec replaces getUserMedia, so nothing should ever reach a
+        // real device, and these flags mean a change that stopped
+        // replacing it would still not open the machine's microphone.
+        permissions: ["microphone"],
+        launchOptions: {
+          args: [
+            "--use-fake-device-for-media-capture",
+            "--use-fake-ui-for-media-stream",
+            "--autoplay-policy=no-user-gesture-required",
+          ],
+        },
+      },
     },
     {
       name: "mobile-iphone",
       use: { ...devices["iPhone 13"] },
+    },
+    /**
+     * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
+     * viewport, and MediaRecorder.isTypeSupported answering false for
+     * every WebM type — which is what real iOS Safari does and what
+     * Playwright's WebKit, on its own, does NOT (it claims WebM support
+     * iOS has never had; measured in PROGRESS.md 7.47). With webm off the
+     * table the recorder falls through to audio/mp4, the format iOS
+     * actually produces, and the run measures whether the clip stores and
+     * plays back locally in that format.
+     *
+     * It is a shape, not a device. Debt 22 stays open until the owner
+     * opens a lesson on a real iPhone — see PROGRESS.md.
+     */
+    {
+      name: "voice-ios-shape",
+      testMatch: /voice-recording-local\.spec\.ts/,
+      use: {
+        ...devices["iPhone 13"],
+        contextOptions: {
+          // The lesson page's own recorder asks for the mic; the fake
+          // microphone in the spec answers, but WebKit still checks the
+          // permission first.
+          permissions: ["microphone"],
+        },
+      },
     },
   ],
   // Reuses a server already running on PORT during local dev; CI always

@@ -52,6 +52,7 @@ export default function LessonView({
   lang,
   level,
   lessonSlug,
+  ownerScope,
   title,
   levelTitle,
   content,
@@ -66,6 +67,10 @@ export default function LessonView({
   lang: string;
   level: string;
   lessonSlug: string;
+  /** Which browser-storage bucket the practice recordings on this page
+   * belong to. They never leave the device — see
+   * src/lib/voice-recordings-store.ts. */
+  ownerScope: string;
   title: string;
   levelTitle: string;
   // Already stripped of vocabulary/exercises/slides/video by the page when
@@ -280,6 +285,7 @@ export default function LessonView({
                 level={level}
                 lessonSlug={lessonSlug}
                 audioMap={audioMap}
+                ownerScope={ownerScope}
               />
             </div>
             {!isLocked && (
@@ -315,6 +321,7 @@ export default function LessonView({
                   celebrationDict={celebrationDict}
                   level={level}
                   lessonSlug={lessonSlug}
+                  ownerScope={ownerScope}
                   storageKey={`lesson-passed:${level}:${lessonSlug}`}
                   onPassChange={setPassed}
                   enableAudioRecording={content.enableAudioRecording}

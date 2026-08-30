@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PREFERRED_RECORDING_TYPES, voiceExtensionFor } from "@/lib/voice-formats";
+import { PREFERRED_RECORDING_TYPES } from "@/lib/voice-formats";
+import {
+  VoiceStorageError,
+  blobOf,
+  deleteRecording,
+  getRecording,
+  saveRecording,
+  type VoiceStorageFailure,
+} from "@/lib/voice-recordings-store";
 
 type RecordState = "idle" | "recording" | "recorded" | "denied" | "unsupported" | "failed";
-type SubmitState = "idle" | "submitting" | "submitted" | "error";
 
 type Dict = {
   recordLabel: string;
@@ -17,27 +24,23 @@ type Dict = {
   recordingFailed: string;
   /** Shown when the clip exists but this browser will not play it back. */
   playbackFailed: string;
-  submitLabel?: string;
-  submittingLabel?: string;
-  submittedLabel?: string;
-  submitError?: string;
-  submitRateLimited?: string;
-  submitUnsupportedType?: string;
-  previousRecordingLabel?: string;
+  /** The clip is fine and playing, but this device would not keep it. */
+  storageUnavailable: string;
+  /** Same, with the specific reason a student can act on: no room left. */
+  storageFull: string;
+  /** Label over a clip restored from this device after a reload. */
+  savedRecordingLabel: string;
+  /** Removes this one item's stored clip. */
+  deleteRecordingLabel: string;
 };
 
-/** Identifies which lesson practice item a recording belongs to — see
- * VoiceSubmission in prisma/schema.prisma. */
-export interface VoiceSubmissionTarget {
+/** Identifies which lesson practice item a recording belongs to. Since
+ * 30.08.2026 this addresses a row in the browser's own IndexedDB, not a
+ * row in our database — see src/lib/voice-recordings-store.ts. */
+export interface VoiceRecordingTarget {
   level: string;
   lessonSlug: string;
   itemKey: string;
-}
-
-interface StoredSubmission {
-  id: string;
-  audioUrl: string;
-  createdAt: string;
 }
 
 /**
@@ -59,42 +62,54 @@ function pickRecordingType(): string {
 }
 
 /**
- * Records a short clip from the mic (MediaRecorder API), then lets the
- * student play it back or re-record. When `submission` is provided, adds a
- * "send" step that uploads the clip to /api/voice-submissions (server-side
- * storage, visible only to the student who recorded it — see that route);
- * without it, the recording stays purely local and nothing is uploaded.
+ * Records a short clip from the mic (MediaRecorder API), plays it straight
+ * back, and keeps it on this device between sessions.
  *
- * Every format decision here comes from the recorder, never from a
- * constant: this component used to build its Blob as `audio/webm` no
- * matter what, which on iOS Safari mislabelled MP4 bytes and left the
- * student staring at the native <audio> element's own error text instead
- * of a player. See src/lib/voice-formats.ts.
+ * **Nothing here touches the network.** Playback in the current session is
+ * a Blob through URL.createObjectURL; persistence is IndexedDB. There is
+ * no upload, no route to upload to, and no cloud object written — the
+ * owner's decision of 30.08.2026, because the feature is "record, listen,
+ * compare" and all three happen on the phone that recorded it.
+ * e2e/voice-recording-local.spec.ts fails the build if a single request to
+ * our API or to storage happens while recording or playing.
+ *
+ * Every format decision comes from the recorder, never from a constant:
+ * this component used to build its Blob as `audio/webm` no matter what,
+ * which on iOS Safari mislabelled MP4 bytes and left the student staring
+ * at the native <audio> element's own error text instead of a player. That
+ * fix is still load-bearing — the reported type is what gets stored and
+ * what the player is handed back after a reload. See
+ * src/lib/voice-formats.ts.
  *
  * A failure is contained to this one item. Each practice item renders its
  * own VoiceRecorder, and inside it every failure path — permission,
- * recorder error, empty clip, playback refused, upload rejected — ends in
- * a sentence from the dictionary plus a working "record again" button,
- * never in a dead control.
+ * recorder error, empty clip, playback refused, device storage full or
+ * missing — ends in a sentence from the dictionary plus a working "record
+ * again" button, never in a dead control.
  */
 export default function VoiceRecorder({
   dict,
-  submission,
+  target,
+  ownerScope,
 }: {
   dict: Dict;
-  submission?: VoiceSubmissionTarget;
+  /** Omit to get a recorder that does not persist anything — the clip
+   * lives for as long as the page does. */
+  target?: VoiceRecordingTarget;
+  ownerScope?: string;
 }) {
   const [state, setState] = useState<RecordState>("idle");
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [playbackFailed, setPlaybackFailed] = useState(false);
-  const [previousPlaybackFailed, setPreviousPlaybackFailed] = useState(false);
-  const [submitState, setSubmitState] = useState<SubmitState>("idle");
-  const [submitErrorMessage, setSubmitErrorMessage] = useState<string | undefined>(undefined);
-  const [previous, setPrevious] = useState<StoredSubmission | null>(null);
+  const [storageProblem, setStorageProblem] = useState<VoiceStorageFailure | null>(null);
+  /** True while what is on screen came out of IndexedDB rather than out of
+   * the microphone just now — the only difference is the label above it. */
+  const [restored, setRestored] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const blobRef = useRef<Blob | null>(null);
+  const startedAtRef = useRef<number>(0);
+  const persists = Boolean(target && ownerScope);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -104,32 +119,40 @@ export default function VoiceRecorder({
     }
     return () => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Object URLs are revoked when they are replaced and when the component
+  // goes away — held in state rather than in a ref so this effect is the
+  // single place that frees them, whichever path created them.
   useEffect(() => {
-    if (!submission) return;
-    const params = new URLSearchParams({
-      level: submission.level,
-      lesson: submission.lessonSlug,
-      itemKey: submission.itemKey,
-    });
-    fetch(`/api/voice-submissions?${params}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const latest = data?.submissions?.[0] as StoredSubmission | undefined;
-        if (latest) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setPrevious(latest);
-        }
+    if (!audioUrl) return;
+    return () => URL.revokeObjectURL(audioUrl);
+  }, [audioUrl]);
+
+  // Bring back this item's clip, if the device still has it. A local
+  // IndexedDB read, not a fetch: there is no server to ask.
+  useEffect(() => {
+    if (!target || !ownerScope) return;
+    let cancelled = false;
+    getRecording(ownerScope, target)
+      .then((found) => {
+        if (cancelled || !found) return;
+        setAudioUrl(URL.createObjectURL(blobOf(found)));
+        setRestored(true);
+        setState("recorded");
       })
-      .catch(() => {
-        // No previous-submission indicator is not worth surfacing an error for.
+      .catch((error) => {
+        if (cancelled) return;
+        // Storage that will not open is worth saying out loud, because it
+        // also means the next recording will not survive a reload.
+        setStorageProblem(error instanceof VoiceStorageError ? error.reason : "unavailable");
       });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submission?.level, submission?.lessonSlug, submission?.itemKey]);
+  }, [ownerScope, target?.level, target?.lessonSlug, target?.itemKey]);
 
   function releaseStream() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -138,6 +161,7 @@ export default function VoiceRecorder({
 
   async function startRecording() {
     setPlaybackFailed(false);
+    setStorageProblem(null);
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -155,6 +179,12 @@ export default function VoiceRecorder({
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = recorder;
 
+      // The clock starts in the recorder's own callback, not next to
+      // recorder.start(): the duration is derived state and reading the
+      // clock from the component's body is what react-hooks/purity flags.
+      recorder.onstart = () => {
+        startedAtRef.current = Date.now();
+      };
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
@@ -173,17 +203,13 @@ export default function VoiceRecorder({
         if (blob.size === 0) {
           // A tap so short nothing was captured, or a recorder that
           // produced no data. An empty clip plays as an error everywhere.
-          blobRef.current = null;
           setState("failed");
           return;
         }
-        blobRef.current = blob;
-        setAudioUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return URL.createObjectURL(blob);
-        });
+        setAudioUrl(URL.createObjectURL(blob));
+        setRestored(false);
         setState("recorded");
-        setSubmitState("idle");
+        void persist(blob, type, Date.now() - startedAtRef.current);
       };
 
       recorder.start();
@@ -193,6 +219,33 @@ export default function VoiceRecorder({
       // exotic browser, most likely. The mic is already open, so let it go.
       releaseStream();
       setState("failed");
+    }
+  }
+
+  /** Writing to the device is best-effort by design: a student who cannot
+   * store anything still gets to record, hear themselves and compare,
+   * which is the whole feature. Only the "still there tomorrow" half is
+   * lost, and the sentence saying so comes from the dictionary. */
+  async function persist(blob: Blob, mimeType: string, durationMs: number) {
+    if (!target || !ownerScope) return;
+    try {
+      // The bytes, not the Blob itself — see StoredRecording.data for the
+      // WebKit measurement behind that.
+      const data = await blob.arrayBuffer();
+      await saveRecording({
+        ownerScope,
+        level: target.level,
+        lessonSlug: target.lessonSlug,
+        itemKey: target.itemKey,
+        data,
+        mimeType,
+        bytes: blob.size,
+        durationMs,
+        createdAt: Date.now(),
+      });
+      setStorageProblem(null);
+    } catch (error) {
+      setStorageProblem(error instanceof VoiceStorageError ? error.reason : "unavailable");
     }
   }
 
@@ -206,54 +259,18 @@ export default function VoiceRecorder({
   }
 
   function reset() {
-    setAudioUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
-    blobRef.current = null;
+    setAudioUrl(null);
     setPlaybackFailed(false);
-    setSubmitState("idle");
+    setRestored(false);
     setState("idle");
   }
 
-  async function handleSubmit() {
-    if (!submission || !blobRef.current) return;
-    setSubmitState("submitting");
-    try {
-      const blob = blobRef.current;
-      // Same extension the server will store it under; sending
-      // "recording.webm" for an MP4 clip is how the wrong name got into
-      // the database in the first place.
-      const extension = voiceExtensionFor(blob.type) ?? "webm";
-      const form = new FormData();
-      form.append("level", submission.level);
-      form.append("lesson", submission.lessonSlug);
-      form.append("itemKey", submission.itemKey);
-      form.append("file", blob, `recording.${extension}`);
-      const res = await fetch("/api/voice-submissions", { method: "POST", body: form });
-      if (!res.ok) {
-        const reason = await res
-          .json()
-          .then((body) => (typeof body?.error === "string" ? body.error : ""))
-          .catch(() => "");
-        setSubmitErrorMessage(
-          res.status === 429
-            ? dict.submitRateLimited
-            : reason === "unsupported_type"
-              ? (dict.submitUnsupportedType ?? dict.submitError)
-              : dict.submitError
-        );
-        setSubmitState("error");
-        return;
-      }
-      const saved = (await res.json()) as StoredSubmission;
-      setPrevious(saved);
-      setPreviousPlaybackFailed(false);
-      setSubmitState("submitted");
-    } catch {
-      setSubmitErrorMessage(dict.submitError);
-      setSubmitState("error");
-    }
+  async function forget() {
+    reset();
+    if (!target || !ownerScope) return;
+    // A delete that fails is not worth a message: the clip is off screen,
+    // and the profile's "delete my recordings" button is the real broom.
+    await deleteRecording(ownerScope, target).catch(() => {});
   }
 
   if (state === "unsupported") {
@@ -262,26 +279,6 @@ export default function VoiceRecorder({
 
   return (
     <div className="flex flex-col gap-2">
-      {previous && state !== "recorded" && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-foreground/50">{dict.previousRecordingLabel}</span>
-          {previousPlaybackFailed ? (
-            // The stored clip will not decode here. Saying so in the
-            // student's own language beats leaving the browser's broken
-            // control on screen with its own word for "error" in whatever
-            // language the phone is set to.
-            <span className="text-xs text-foreground/60">{dict.playbackFailed}</span>
-          ) : (
-            <audio
-              controls
-              src={previous.audioUrl}
-              onError={() => setPreviousPlaybackFailed(true)}
-              className="h-8 max-w-[220px]"
-            />
-          )}
-        </div>
-      )}
-
       <div className="flex flex-wrap items-center gap-3">
         {state !== "recording" && state !== "recorded" && (
           <button
@@ -306,8 +303,14 @@ export default function VoiceRecorder({
 
         {state === "recorded" && audioUrl && (
           <>
-            <span className="text-xs text-foreground/50">{dict.yourRecording}</span>
+            <span className="text-xs text-foreground/50">
+              {restored ? dict.savedRecordingLabel : dict.yourRecording}
+            </span>
             {playbackFailed ? (
+              // The clip will not decode here. Saying so in the student's
+              // own language beats leaving the browser's broken control on
+              // screen with its own word for "error" in whatever language
+              // the phone is set to.
               <span className="text-xs text-foreground/60">{dict.playbackFailed}</span>
             ) : (
               <audio
@@ -324,21 +327,13 @@ export default function VoiceRecorder({
             >
               ↻ {dict.retryLabel}
             </button>
-            {/* Still offered when playback failed: the clip may well be
-                fine and only this browser unable to play it back, and the
-                student's work should not be thrown away over that. */}
-            {submission && dict.submitLabel && (
+            {persists && (
               <button
                 type="button"
-                onClick={handleSubmit}
-                disabled={submitState === "submitting" || submitState === "submitted"}
-                className="tap inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={forget}
+                className="tap inline-flex items-center gap-1 rounded-full border border-black/15 px-3 py-1.5 text-xs font-medium text-foreground/70 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/20"
               >
-                {submitState === "submitting"
-                  ? dict.submittingLabel
-                  : submitState === "submitted"
-                    ? `✓ ${dict.submittedLabel}`
-                    : dict.submitLabel}
+                {dict.deleteRecordingLabel}
               </button>
             )}
           </>
@@ -346,10 +341,15 @@ export default function VoiceRecorder({
 
         {state === "denied" && <p className="text-xs text-red-600 dark:text-red-400">{dict.permissionDenied}</p>}
         {state === "failed" && <p className="text-xs text-red-600 dark:text-red-400">{dict.recordingFailed}</p>}
-        {submitState === "error" && (
-          <p className="text-xs text-red-600 dark:text-red-400">{submitErrorMessage ?? dict.submitError}</p>
-        )}
       </div>
+
+      {storageProblem && (
+        // Not red and not in place of the player: the recording works, it
+        // just will not outlive the page. Told once, under the controls.
+        <p className="text-xs text-foreground/60">
+          {storageProblem === "quota" ? dict.storageFull : dict.storageUnavailable}
+        </p>
+      )}
     </div>
   );
 }
