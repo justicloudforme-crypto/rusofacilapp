@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { deleteVoiceSubmission, saveVoiceSubmission } from "@/lib/voice-storage";
+import { resolveUploadMime, voiceExtensionFor } from "@/lib/voice-formats";
 
 // Vercel serverless functions reject any request body over ~4.5MB before
 // it ever reaches this handler (a platform-level limit, not something
@@ -89,12 +90,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "file_too_large" }, { status: 400 });
   }
 
+  // The format comes from the upload, never from a constant. This route
+  // used to name every file `.webm` and store it as audio/webm, which was
+  // simply false for anything recorded on iOS Safari (audio/mp4) — and a
+  // mislabelled file does not play back anywhere, including for the
+  // student who made it. See src/lib/voice-formats.ts.
+  const contentType = resolveUploadMime(file.type, file.name || "");
+  const extension = contentType ? voiceExtensionFor(contentType) : null;
+  if (!contentType || !extension) {
+    // A rejection, not a default: storing an unknown type under `.webm` is
+    // exactly the bug above. The client turns this into a sentence telling
+    // the student to record again.
+    return NextResponse.json({ error: "unsupported_type" }, { status: 400 });
+  }
+
   // randomUUID (not just Date.now()) so two uploads for the same item in
   // the same millisecond — two browser tabs, a double-click — never
   // collide on the filename and silently overwrite each other.
-  const filename = `${keyHash(itemKey)}-${Date.now()}-${randomUUID()}.webm`;
+  const filename = `${keyHash(itemKey)}-${Date.now()}-${randomUUID()}.${extension}`;
   const bytes = Buffer.from(await file.arrayBuffer());
-  const audioUrl = await saveVoiceSubmission(user.id, `${level}-${lessonSlug}`, filename, bytes);
+  const audioUrl = await saveVoiceSubmission(user.id, `${level}-${lessonSlug}`, filename, bytes, contentType);
 
   const submission = await db.voiceSubmission.create({
     data: { userId: user.id, level, lessonSlug, itemKey, audioUrl },

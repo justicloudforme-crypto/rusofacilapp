@@ -5,6 +5,7 @@ import type { GlossaryTermData } from "./GlossaryApp";
 import RelatedLessonsList from "./RelatedLessonsList";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import { earliestRelatedLevel } from "@/lib/glossary";
+import { useUiStrings } from "@/lib/use-ui-strings";
 
 /** The actual card content (term header, simple definition, Russian
  * comparison, example) shared by GlossaryTermPopover (preloaded data, used
@@ -18,6 +19,11 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
   // GrammarTab → SlidesTab → GlossaryText → GlossaryTermPopover.
   const pathname = usePathname();
   const lang = pathname.split("/")[1] || "es";
+  // Its five labels used to be Spanish literals here, so this card came up
+  // in Spanish on every /ru lesson and story page. Same source of locale as
+  // the link above — see src/lib/ui-strings.ts for why they are not in the
+  // JSON dictionaries.
+  const t = useUiStrings().glossary;
   const earliestLevel = earliestRelatedLevel(term.relatedLessons);
 
   return (
@@ -28,17 +34,17 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
           — {term.russianEquivalent}
           {term.transcription ? ` [${term.transcription}]` : ""}
         </span>
-        <SpeakButton text={term.russianEquivalent} label="Escuchar en ruso" audioUrl={term.audioUrl} />
+        <SpeakButton text={term.russianEquivalent} label={t.listenInRussian} audioUrl={term.audioUrl} />
         {earliestLevel && (
           <span className="rounded-full border border-black/10 px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-foreground/50 dark:border-white/15">
-            Introducido en {earliestLevel}
+            {t.introducedIn} {earliestLevel}
           </span>
         )}
       </span>
       <span className="mt-1.5 block leading-5 text-foreground/80">{term.definition}</span>
       {term.russianComparison && (
         <span className="mt-2 block rounded-md bg-primary/[0.06] px-2.5 py-2 leading-5 text-foreground/80 dark:bg-primary-400/[0.08]">
-          <span className="font-medium text-primary-text dark:text-primary-400">Cómo funciona en ruso: </span>
+          <span className="font-medium text-primary-text dark:text-primary-400">{t.howItWorksInRussian} </span>
           {term.russianComparison}
         </span>
       )}
@@ -46,7 +52,7 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
         <span className="mt-2 flex flex-col gap-1.5">
           {term.examples.map((example) => (
             <span key={example.ru} className="flex items-start gap-1.5 leading-5 text-foreground/70">
-              <SpeakButton text={example.ru} label="Escuchar en ruso" audioUrl={example.audioUrl} />
+              <SpeakButton text={example.ru} label={t.listenInRussian} audioUrl={example.audioUrl} />
               <span>
                 {example.ru}
                 <span className="text-foreground/50"> — {example.es}</span>
@@ -58,7 +64,7 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
       <RelatedLessonsList
         lessons={term.relatedLessons}
         lang={lang}
-        label="Aparece en"
+        label={t.appearsIn}
         className="mt-2 block leading-5 text-foreground/70"
       />
     </>

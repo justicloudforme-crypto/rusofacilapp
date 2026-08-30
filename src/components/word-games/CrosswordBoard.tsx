@@ -20,6 +20,9 @@ import { hapticSuccess, hapticError } from "@/lib/haptics";
 
 interface Dict {
   hintButton: string;
+  /** Accessible name of the grid. Was the English literal "crossword" on a
+   * site whose interface is only ever Spanish or Russian. */
+  crosswordGridLabel: string;
   cluesTitle: string;
   acrossLabel: string;
   downLabel: string;
@@ -219,7 +222,7 @@ export default function CrosswordBoard({
           className="grid gap-0.5"
           style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(22px, 2.5rem))` }}
           role="grid"
-          aria-label="crossword"
+          aria-label={dict.crosswordGridLabel}
         >
           {puzzle.blocked.map((rowCells, row) =>
             rowCells.map((isBlocked, col) => {

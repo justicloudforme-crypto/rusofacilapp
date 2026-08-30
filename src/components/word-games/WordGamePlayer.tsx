@@ -25,6 +25,8 @@ export interface WordGamePlayerDict {
   backToWordGames: string;
   checkButton: string;
   filledCountLabel: string; // template, contains literal "{filled}" and "{total}"
+  wordSearchGridLabel: string;
+  crosswordGridLabel: string;
 }
 
 /** Orchestrates one puzzle attempt: picks the right board (crossword vs

@@ -931,7 +931,9 @@
     "expertModeLabel": "Modo experto",
     "premiumTierLabel": "Solo Premium",
     "checkButton": "Comprobar",
-    "filledCountLabel": "Completado: {filled}/{total}"
+    "filledCountLabel": "Completado: {filled}/{total}",
+    "wordSearchGridLabel": "Sopa de letras",
+    "crosswordGridLabel": "Crucigrama"
   },
   "gameResult": {
     "closeLabel": "Cerrar",
@@ -1050,6 +1052,9 @@
       "retryLabel": "Grabar de nuevo",
       "permissionDenied": "No se pudo acceder al micrófono. Revisa los permisos del navegador.",
       "recordingNotSupported": "Tu navegador no admite grabación de audio.",
+      "recordingFailed": "No se pudo guardar la grabación. Vuelve a intentarlo.",
+      "playbackFailed": "Este navegador no puede reproducir la grabación. Grábala de nuevo.",
+      "submitUnsupportedType": "Este formato de audio no se admite. Grábala de nuevo.",
       "yourRecording": "Tu grabación:",
       "submitLabel": "Enviar",
       "submittingLabel": "Enviando…",
@@ -1057,6 +1062,12 @@
       "submitError": "No se pudo enviar la grabación.",
       "submitRateLimited": "Has enviado demasiadas grabaciones muy rápido. Espera un minuto e inténtalo de nuevo.",
       "previousRecordingLabel": "Tu última grabación enviada:"
+    },
+    "glossaryHint": {
+      "intro": "Las palabras subrayadas como",
+      "sample": "esta",
+      "rest": "son interactivas: tócalas para ver una explicación simple, su comparación con el ruso y en qué lecciones aparecen.",
+      "dismissLabel": "Cerrar aviso"
     },
     "alphabet": {
       "title": "Alfabeto cirílico completo",
@@ -1076,6 +1087,9 @@
       "retryLabel": "Grabar de nuevo",
       "permissionDenied": "No se pudo acceder al micrófono. Revisa los permisos del navegador.",
       "recordingNotSupported": "Tu navegador no admite grabación de audio.",
+      "recordingFailed": "No se pudo guardar la grabación. Vuelve a intentarlo.",
+      "playbackFailed": "Este navegador no puede reproducir la grabación. Grábala de nuevo.",
+      "submitUnsupportedType": "Este formato de audio no se admite. Grábala de nuevo.",
       "yourRecording": "Tu grabación:",
       "submitLabel": "Enviar",
       "submittingLabel": "Enviando…",

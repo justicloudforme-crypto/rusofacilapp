@@ -48,12 +48,15 @@ export default function ReadingPracticeBlock({
                   retryLabel: readAloudDict.retryLabel,
                   permissionDenied: readAloudDict.permissionDenied,
                   unsupported: readAloudDict.recordingNotSupported,
+                  recordingFailed: readAloudDict.recordingFailed,
+                  playbackFailed: readAloudDict.playbackFailed,
                   yourRecording: readAloudDict.yourRecording,
                   submitLabel: readAloudDict.submitLabel,
                   submittingLabel: readAloudDict.submittingLabel,
                   submittedLabel: readAloudDict.submittedLabel,
                   submitError: readAloudDict.submitError,
                   submitRateLimited: readAloudDict.submitRateLimited,
+                  submitUnsupportedType: readAloudDict.submitUnsupportedType,
                   previousRecordingLabel: readAloudDict.previousRecordingLabel,
                 }}
                 submission={{ level, lessonSlug, itemKey: item.text }}

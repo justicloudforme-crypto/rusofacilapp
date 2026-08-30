@@ -209,7 +209,14 @@ export default function GlossaryApp({
                   </span>
                 )}
               </span>
-              <span className="flex items-center gap-1.5 text-sm text-foreground/50">
+              {/* flex-wrap for the same reason as the footer's link row:
+                  a non-wrapping flex row of content whose width nothing
+                  bounds. The label, a long Russian term
+                  ("разнонаправленный глагол движения"), its transcription
+                  and the speak button add up to 362px, which overhangs a
+                  320px phone and scrolls the whole document sideways.
+                  Measured by scripts/check-layout-geometry.mjs. */}
+              <span className="flex flex-wrap items-center gap-1.5 text-sm text-foreground/50">
                 {dict.russianEquivalentLabel}: <span className="font-medium text-foreground/80">{term.russianEquivalent}</span>
                 {term.transcription ? <span className="text-foreground/50"> [{term.transcription}]</span> : null}
                 <SpeakButton text={term.russianEquivalent} label={dict.listenLabel} audioUrl={term.audioUrl} />

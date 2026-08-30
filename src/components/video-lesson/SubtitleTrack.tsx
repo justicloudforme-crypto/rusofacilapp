@@ -6,6 +6,7 @@ import type { SubtitleLine, WordGloss } from "@/lib/video-lesson/types";
 import { normalizeToken } from "@/lib/video-lesson/normalizeToken";
 import WordTooltip from "./WordTooltip";
 import type { YouTubePlayerHandle } from "./YouTubePlayer";
+import { useUiStrings } from "@/lib/use-ui-strings";
 
 function findActiveLineId(subtitles: SubtitleLine[], time: number): string | null {
   for (const line of subtitles) {
@@ -115,6 +116,7 @@ function SubtitleTrack({
   glossary?: Record<string, WordGloss>;
   playerRef: RefObject<YouTubePlayerHandle | null>;
 }) {
+  const t = useUiStrings().videoLesson;
   const [openWord, setOpenWord] = useState<string | null>(null);
   const [activeLineId, setActiveLineId] = useState<string | null>(null);
   const activeLineIdRef = useRef<string | null>(null);
@@ -178,7 +180,7 @@ function SubtitleTrack({
   if (subtitles.length === 0) {
     return (
       <div className="flex min-h-[6rem] items-center justify-center rounded-2xl border border-black/10 px-4 py-6 text-center text-sm text-foreground/40 dark:border-white/30">
-        Esta lección todavía no tiene transcripción.
+        {t.noTranscript}
       </div>
     );
   }

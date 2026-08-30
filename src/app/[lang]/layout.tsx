@@ -179,7 +179,7 @@ export default async function LangLayout({
         {/* Reading mode is meant to minimize distractions — the floating
             Telegram CTA is the one persistent, animated, non-content element
             on every page, so it's the one thing this mode hides. */}
-        {theme !== "reading" && <TelegramFloatButton />}
+        {theme !== "reading" && <TelegramFloatButton label={dict.profile.telegramCta} />}
         {/* Both are no-ops until Web Analytics / Speed Insights are turned
             on for this project in the Vercel dashboard — see
             vercel.com/rusofacilappcom/rusofacilapp → Analytics /

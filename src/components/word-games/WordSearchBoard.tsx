@@ -8,6 +8,9 @@ import { hapticSuccess } from "@/lib/haptics";
 
 interface Dict {
   wordsFoundLabel: string;
+  /** Accessible name of the letter grid. Was the English literal "word
+   * search" on a site with no English interface at all. */
+  wordSearchGridLabel: string;
   resetSelectionButton: string;
   expertModeLabel: string;
 }
@@ -257,7 +260,7 @@ export default function WordSearchBoard({
             className="grid touch-none select-none gap-0.5"
             style={{ gridTemplateColumns: `repeat(${cols}, minmax(22px, 2.25rem))` }}
             role="grid"
-            aria-label="word search"
+            aria-label={dict.wordSearchGridLabel}
           >
             {puzzle.grid.map((rowCells, row) =>
               rowCells.map((letter, col) => {
