@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useMemo, useState } from "react";
 import type { QuizQuestion } from "@/lib/video-lesson/types";
+import { useUiStrings } from "@/lib/use-ui-strings";
 
 const QuestionBlock = memo(function QuestionBlock({
   question,
@@ -70,6 +71,7 @@ const QuestionBlock = memo(function QuestionBlock({
 });
 
 function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
+  const t = useUiStrings().videoLesson;
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -90,7 +92,7 @@ function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
       {contexto.length > 0 && (
         <div className="flex flex-col gap-6">
           <h4 className="text-sm font-semibold uppercase tracking-wide text-foreground/40">
-            Parte 1 · Contexto histórico y cultural
+            {t.quizPartOne}
           </h4>
           {contexto.map((question, index) => (
             <QuestionBlock
@@ -108,7 +110,7 @@ function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
       {vocabulario.length > 0 && (
         <div className="flex flex-col gap-6">
           <h4 className="text-sm font-semibold uppercase tracking-wide text-foreground/40">
-            Parte 2 · Vocabulario
+            {t.quizPartTwo}
           </h4>
           {vocabulario.map((question, index) => (
             <QuestionBlock
@@ -127,14 +129,14 @@ function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
         {submitted && (
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">
-              Puntuación: {correctCount}/{questions.length} ({percentage}%)
+              {t.scoreLabel} {correctCount}/{questions.length} ({percentage}%)
             </span>
             <span
               className={`font-medium ${
                 passed ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
               }`}
             >
-              {passed ? "Aprobado" : "No aprobado"}
+              {passed ? t.passedLabel : t.failedLabel}
             </span>
           </div>
         )}
@@ -146,7 +148,7 @@ function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
               disabled={!allAnswered}
               className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Comprobar
+              {t.checkButton}
             </button>
           ) : (
             <button
@@ -157,7 +159,7 @@ function VideoLessonQuiz({ questions }: { questions: QuizQuestion[] }) {
               }}
               className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
             >
-              Reintentar
+              {t.retryButton}
             </button>
           )}
         </div>

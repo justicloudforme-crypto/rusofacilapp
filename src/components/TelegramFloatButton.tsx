@@ -10,14 +10,19 @@ export const TELEGRAM_INVITE_URL = "https://t.me/+-UhllZ_YI3dmYjdi";
 // (profile/page.tsx, imports TELEGRAM_INVITE_URL directly) that already
 // covers the "keep the link reachable" need on mobile — this floating
 // bubble stays desktop-only, where it wasn't reported as a problem.
-export default function TelegramFloatButton() {
+export default function TelegramFloatButton({ label }: { label: string }) {
   return (
     <a
       href={TELEGRAM_INVITE_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Únete al canal de Telegram de RusoFácilapp.com"
-      title="Únete al canal de Telegram de RusoFácilapp.com"
+      // Was a Spanish literal, on a button the locale layout renders on
+      // every page of BOTH locales — so a screen reader on /ru announced
+      // the site's one floating action in Spanish. The label now comes from
+      // the dictionary, the same string the profile page's Telegram card
+      // already uses.
+      aria-label={label}
+      title={label}
       className="fixed z-[1000] hidden h-[60px] w-[60px] items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-[0_4px_10px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-out hover:scale-110 hover:bg-[#2090c7] sm:flex"
       style={{
         bottom: "calc(16px + var(--safe-bottom))",

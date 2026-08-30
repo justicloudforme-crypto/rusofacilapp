@@ -5,6 +5,7 @@ import type { GlossaryTermData } from "./GlossaryApp";
 import GlossaryTermCardBody from "./GlossaryTermCardBody";
 import GlossaryPopoverCard from "./GlossaryPopoverCard";
 import { broadcastPopoverOpen, markTermSeen } from "@/lib/glossary-client";
+import { useUiStrings } from "@/lib/use-ui-strings";
 
 /**
  * Wraps a piece of text (e.g. "aspecto perfectivo" inside a grammar
@@ -28,6 +29,7 @@ export default function GlossaryTermTooltip({
   slug: string;
   children: React.ReactNode;
 }) {
+  const t = useUiStrings().glossary;
   const id = useId();
   const [term, setTerm] = useState<GlossaryTermData | null>(null);
   const [open, setOpen] = useState(false);
@@ -78,7 +80,7 @@ export default function GlossaryTermTooltip({
           {loading && <span className="text-foreground/50">…</span>}
           {!loading && term && <GlossaryTermCardBody term={term} />}
           {!loading && !term && fetched && (
-            <span className="text-foreground/50">Sin definición todavía.</span>
+            <span className="text-foreground/50">{t.noDefinitionYet}</span>
           )}
         </GlossaryPopoverCard>
       )}

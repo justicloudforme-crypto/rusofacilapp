@@ -1,6 +1,7 @@
 import "server-only";
 import { mkdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { voiceMimeFromUrl } from "./voice-formats";
 
 // Vercel's serverless functions have a read-only filesystem outside a
 // single request's own /tmp — a write to public/ at request time never
@@ -27,7 +28,11 @@ export async function saveVoiceSubmission(
   userId: string,
   itemDir: string,
   filename: string,
-  bytes: Buffer
+  bytes: Buffer,
+  /** The recording's real MIME type, as sent by the browser. Not a default:
+   * this used to be hard-coded to audio/webm, which mislabelled every clip
+   * recorded on iOS Safari (audio/mp4) and made it unplayable. */
+  contentType: string
 ): Promise<string> {
   if (hasBlobToken()) {
     const { put } = await import("@vercel/blob");
@@ -39,7 +44,7 @@ export async function saveVoiceSubmission(
     // checking the requester actually owns the recording.
     const blob = await put(`submissions/${userId}/${itemDir}/${filename}`, bytes, {
       access: "private",
-      contentType: "audio/webm",
+      contentType,
     });
     return blob.url;
   }
@@ -66,11 +71,14 @@ export async function readVoiceSubmission(
       throw new Error(`Failed to fetch voice submission blob: ${res.status}`);
     }
     const body = Buffer.from(await res.arrayBuffer());
-    return { body, contentType: res.headers.get("content-type") ?? "audio/webm" };
+    // The store's own header first (it is what `put` was told); the
+    // filename second, because a row written before formats were carried
+    // properly can still be read back correctly from its extension.
+    return { body, contentType: res.headers.get("content-type") ?? voiceMimeFromUrl(audioUrl) };
   }
 
   const body = await readFile(path.join(process.cwd(), "public", audioUrl));
-  return { body, contentType: "audio/webm" };
+  return { body, contentType: voiceMimeFromUrl(audioUrl) };
 }
 
 /** Deletes one recording by the URL stored in VoiceSubmission.audioUrl —

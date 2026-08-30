@@ -54,12 +54,15 @@ export default function PronunciationPractice({
                 retryLabel: dict.retryLabel,
                 permissionDenied: dict.permissionDenied,
                 unsupported: dict.recordingNotSupported,
+                recordingFailed: dict.recordingFailed,
+                playbackFailed: dict.playbackFailed,
                 yourRecording: dict.yourRecording,
                 submitLabel: dict.submitLabel,
                 submittingLabel: dict.submittingLabel,
                 submittedLabel: dict.submittedLabel,
                 submitError: dict.submitError,
                 submitRateLimited: dict.submitRateLimited,
+                submitUnsupportedType: dict.submitUnsupportedType,
                 previousRecordingLabel: dict.previousRecordingLabel,
               }}
               submission={{ level, lessonSlug, itemKey: item.word }}
