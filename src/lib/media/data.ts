@@ -22,6 +22,18 @@ async function readStore(): Promise<Record<string, MediaItem>> {
   return JSON.parse(raw) as Record<string, MediaItem>;
 }
 
+/** A MediaOverride's subtitles column, or null if it is unusable. */
+function parseSubtitles(json: string | null): SubtitleLine[] | null {
+  if (!json) return null;
+  try {
+    const parsed: unknown = JSON.parse(json);
+    return Array.isArray(parsed) ? (parsed as SubtitleLine[]) : null;
+  } catch (error) {
+    console.error("[media] subtitle override is not valid JSON — falling back to the static baseline", error);
+    return null;
+  }
+}
+
 function applyOverride(
   item: MediaItem,
   override: { subtitles: string | null; embedStatus: string | null; lastCheckedAt: string | null; sourceNoteAppend: string | null } | undefined,
@@ -29,7 +41,11 @@ function applyOverride(
   if (!override) return item;
   return {
     ...item,
-    subtitles: override.subtitles ? (JSON.parse(override.subtitles) as SubtitleLine[]) : item.subtitles,
+    // Admin-written DB content reaching a parser during render — the class
+    // behind incident №1. Subtitles are an enhancement on top of a media
+    // item that is complete without them, so a malformed override falls
+    // back to the static baseline instead of taking the page down.
+    subtitles: parseSubtitles(override.subtitles) ?? item.subtitles,
     embedStatus: (override.embedStatus as EmbedStatus | null) ?? item.embedStatus,
     lastCheckedAt: override.lastCheckedAt ?? item.lastCheckedAt,
     sourceNote: override.sourceNoteAppend

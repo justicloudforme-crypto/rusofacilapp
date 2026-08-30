@@ -31,8 +31,27 @@ function parseRow(row: {
   topic: string | null;
   gridData: string;
   words: string;
-}): PuzzleRow {
+}): PuzzleRow | null {
   if (!isWordGameType(row.type)) throw new Error(`invalid word game type in DB: ${row.type}`);
+  // Unlike the story offsets (see the stories page), these two are not
+  // decoration — a puzzle without its grid and words IS NOT A PUZZLE, and
+  // rendering an empty board would be a silent lie. So this degrades to
+  // `null`, which every caller already handles by showing 404: "this puzzle
+  // does not exist" is wrong but harmless, "here is a blank puzzle" is not.
+  // What it must not do is what it did before — throw a bare SyntaxError
+  // mid-render and take the page down with no indication of which row.
+  // parseRow is only ever called for a single puzzle (getPuzzle,
+  // getPuzzleById, and the random pick), never over a list, so one bad row
+  // cannot affect any other puzzle. Same class as incident №1, PROGRESS.md 7.40.
+  let grid: WordGameGrid;
+  let words: WordPlacement[];
+  try {
+    grid = JSON.parse(row.gridData) as WordGameGrid;
+    words = JSON.parse(row.words) as WordPlacement[];
+  } catch (error) {
+    console.error(`[word-games] puzzle ${row.id} has unparseable gridData/words — treated as missing`, error);
+    return null;
+  }
   return {
     id: row.id,
     type: row.type,
@@ -41,8 +60,8 @@ function parseRow(row: {
     curved: row.curved,
     premiumOnly: row.premiumOnly,
     topic: row.topic,
-    grid: JSON.parse(row.gridData) as WordGameGrid,
-    words: JSON.parse(row.words) as WordPlacement[],
+    grid,
+    words,
   };
 }
 

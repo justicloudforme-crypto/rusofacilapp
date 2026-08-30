@@ -141,6 +141,19 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["which pages change with user progress", "Структурно** различаются"],
   ["why is the ru glossary in Spanish", "остался испанской копией"],
   ["do the landing pages need an h2", "ровно шесть тематических лендингов"],
+  // Added 29.08.2026, second round after the incident.
+  ["is the ru dictionary fully translated now", "переведён целиком, 25 ключей"],
+  ["should Cyrillic in es.json be treated as a bug", "ложным классом"],
+  ["where else can database content break a render", "где ещё данные попадают в парсер"],
+  ["was there a second live bug of the same kind", "ВТОРАЯ ЖИВАЯ АВАРИЯ"],
+  ["does the flashcard search break on a hyphen", "любом запросе с дефисом"],
+  ["does check:rendered run in CI", "внутри существующей задачи `e2e`"],
+  ["why does CI need a glossary fixture", "не воспроизвёлся бы в CI"],
+  ["how long does the CI render check take", "около 2 минут"],
+  ["what does a subscriber see that a free account does not", "настоящая отрезка данных"],
+  ["what do I need to do about the subscriber check", "ЧТО ТРЕБУЕТСЯ ОТ ВЛАДЕЛЬЦА"],
+  ["which URLs do I check in Search Console", "Список URL для проверки"],
+  ["how do I tell the outage from ordinary noise", "6 контрольных незатронутых"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {

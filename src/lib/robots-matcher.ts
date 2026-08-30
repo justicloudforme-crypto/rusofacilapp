@@ -19,6 +19,8 @@
 
 /** One parsed rule. `pattern` is kept verbatim because its LENGTH is what
  * decides precedence — a normalised or expanded form would rank wrong. */
+import { escapeRegExp } from "./regex";
+
 export interface RobotsRule {
   pattern: string;
   allow: boolean;
@@ -31,6 +33,13 @@ export interface RobotsRule {
  * Every literal chunk goes through escaping before it reaches `RegExp` —
  * a pattern is data (it comes out of a served robots.txt), and data in a
  * pattern is the rule from PROGRESS.md 4.4.
+ *
+ * Uses the shared escapeRegExp rather than its own copy. It used to inline
+ * the same character class, and after incident №1 that copy was the OLD,
+ * broken escaping (`\-`) living on beside the fixed one — harmless only
+ * because there is no `u` flag here, which is a property of this line
+ * today, not of the code. regex.ts exists precisely so there is one of
+ * these, not four.
  */
 export function matchesRobotsPattern(path: string, pattern: string): boolean {
   const anchored = pattern.endsWith("$");
@@ -39,7 +48,7 @@ export function matchesRobotsPattern(path: string, pattern: string): boolean {
     "^" +
     body
       .split("*")
-      .map((part) => part.replace(/[.*+?^${}()|[\]\\-]/g, "\\$&"))
+      .map((part) => escapeRegExp(part))
       .join(".*") +
     (anchored ? "$" : "");
   return new RegExp(source).test(path);
