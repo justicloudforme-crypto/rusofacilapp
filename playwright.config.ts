@@ -7,7 +7,12 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: "html",
+  // The JSON report is not a nicety: scripts/check-e2e-coverage.mjs reads it
+  // to answer "how many tests did this run actually execute, and did any of
+  // them skip?" — the question nobody was asking on 30.08.2026, when CI ran
+  // 25 of 49 and reported green (PROGRESS.md 7.52). The HTML report stays
+  // for humans.
+  reporter: [["html"], ["json", { outputFile: "playwright-report/results.json" }]],
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",

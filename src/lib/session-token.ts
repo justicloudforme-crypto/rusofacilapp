@@ -25,9 +25,24 @@ function getSecret(): string {
  * A pure function rather than an inline expression so it can be asserted
  * on directly — see session-token.test.ts. The one thing that must never
  * regress is the production case.
+ *
+ * Two conditions have to agree before Secure comes off, not one. Relying on
+ * E2E_TEST_SEED alone put a live deployment one stray environment variable
+ * away from issuing session cookies over plain HTTP: nothing about that
+ * name says "never set this in production", and nothing would have
+ * complained if somebody had. `VERCEL` is set to "1" by the platform in
+ * every Vercel runtime and cannot be true on the localhost server
+ * playwright.config.ts spawns, so requiring its absence makes the exception
+ * unreachable on a deployment by construction rather than by convention.
+ * Verified read-only against production on 30.08.2026 as well: POST
+ * /api/test/grant-subscription answers 404 there, which is that route's
+ * first check on the same E2E_TEST_SEED — so the flag is unset in the live
+ * environment too (PROGRESS.md 7.56).
  */
 export function shouldUseSecureSessionCookie(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.NODE_ENV === "production" && env.E2E_TEST_SEED !== "1";
+  if (env.NODE_ENV !== "production") return false;
+  const isE2EServer = env.E2E_TEST_SEED === "1" && !env.VERCEL;
+  return !isE2EServer;
 }
 
 export interface SessionTokenPayload {
