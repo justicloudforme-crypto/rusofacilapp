@@ -1,4 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  SUBSTITUTED_MIME,
+  harnessFor,
+  harnessReport,
+  installVoiceHarness,
+} from "./helpers/voice-harness";
 
 /**
  * The claim this file exists to prove: **a practice recording never leaves
@@ -16,9 +22,22 @@ import { expect, test, type Page } from "@playwright/test";
  * A zero without a positive control is not a result (PROGRESS.md 4.1), so
  * "the network guard catches an upload" below re-introduces exactly the
  * request that was removed, at the same point in the same flow, and
- * requires the guard to fail on it. If that test stops failing to detect
- * it, the guard has stopped guarding and every "0 requests" above it is
- * worthless.
+ * requires the guard to catch it — in every project, not just one.
+ *
+ * **The recorder is not the same in every project, and that is stated
+ * rather than hidden** (see e2e/helpers/voice-harness.ts):
+ *
+ *   chromium         real MediaRecorder, real encoder — the whole path
+ *   mobile-iphone    WebKit, substituted recorder — application logic
+ *   voice-ios-shape  the same, with WebM refused as iOS refuses it
+ *
+ * WebKit needs the substitution because Playwright's **Linux** WebKit has
+ * no `MediaRecorder` at all, which is what turned CI red on 30.08.2026:
+ * with it undefined the component correctly renders "your browser cannot
+ * record audio" and no buttons, and this spec sat clicking a button that
+ * was deliberately not there. Every run now prints what the engine
+ * actually had, so a future failure of that kind names itself instead of
+ * timing out.
  *
  * The lesson used is /es/courses/a1/1: level 1 of every level is free, so
  * the read-aloud block renders for an anonymous visitor and the test needs
@@ -26,9 +45,6 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const LESSON = "/es/courses/a1/1";
-/** From src/dictionaries/es.json — lesson.readAloud. Matched as text on
- * purpose: if a label changes, this test should be updated with it, not
- * silently match a different button. */
 // The buttons carry an emoji before the word ("🎙️ Grabar", "↻ Grabar de
 // nuevo"), so these anchor on the end of the accessible name rather than
 // matching it whole — and "Grabar$" therefore cannot pick up the
@@ -37,62 +53,39 @@ const RECORD = /Grabar$/;
 const STOP = /Detener$/;
 const RE_RECORD = /Grabar de nuevo$/;
 const SAVED_LABEL = "Tu grabación guardada en este dispositivo:";
+/** The one line the component shows when the browser cannot record at all.
+ * Asserted against, so "no record button" can never again be reported as a
+ * click timeout with no explanation. */
+const UNSUPPORTED = "Tu navegador no admite grabación de audio.";
 
 /**
- * A microphone made of an oscillator.
- *
- * `getUserMedia` is replaced; **nothing downstream of it is**. MediaRecorder
- * is the browser's own, so is the encoder, the Blob, IndexedDB and the
- * <audio> element that plays the result — which is the point: the format
- * the recorder chooses (WebM/Opus in Chromium, MP4/AAC in WebKit) is real,
- * and so is whether the clip decodes.
- *
- * Chromium's --use-fake-device-for-media-capture would do the same job in
- * Chromium alone. This works in WebKit too, and the iOS-shaped run below
- * is the one that matters most, so both projects use the same fake rather
- * than two different ones.
+ * Installs the bench for this project and states, in the run's own output,
+ * what the engine had and what was replaced. Two runs of this spec are not
+ * the same measurement, and the log has to say which one it was.
  */
 async function prepare(page: Page, testInfo: { project: { name: string } }) {
-  await installFakeMicrophone(page);
-  if (testInfo.project.name === "voice-ios-shape") await shapeLikeIos(page);
+  const options = harnessFor(testInfo.project.name);
+  await installVoiceHarness(page, options);
+  return options;
 }
 
-async function installFakeMicrophone(page: Page) {
-  await page.addInitScript(() => {
-    const make = () => {
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      osc.frequency.value = 220;
-      const dest = ctx.createMediaStreamDestination();
-      osc.connect(dest);
-      osc.start();
-      return dest.stream;
-    };
-    const devices = navigator.mediaDevices ?? ({} as MediaDevices);
-    Object.defineProperty(navigator, "mediaDevices", {
-      configurable: true,
-      value: Object.assign(devices, { getUserMedia: async () => make() }),
-    });
-  });
-}
-
-/**
- * The "iOS shape" half of the run, applied only in the voice-ios-shape
- * project: WebKit with `MediaRecorder.isTypeSupported` answering false for
- * every WebM type. Playwright's WebKit claims WebM support that real iOS
- * Safari has never had (measured, PROGRESS.md 7.47), so without this the
- * WebKit run would record WebM and never exercise the format an iPhone
- * actually produces. With it, the recorder falls through to audio/mp4.
- *
- * This makes the run iOS-SHAPED. It is not an iPhone, and the spec says so
- * where it asserts, so that a pass here is not mistaken for debt 22 being
- * closed.
- */
-async function shapeLikeIos(page: Page) {
-  await page.addInitScript(() => {
-    const real = MediaRecorder.isTypeSupported.bind(MediaRecorder);
-    MediaRecorder.isTypeSupported = (type: string) => (/webm/i.test(type) ? false : real(type));
-  });
+/** Reads the bench back after the page has loaded, prints it, and fails
+ * the run — loudly and in one line — if the page could not record at all. */
+async function reportEngine(page: Page, projectName: string) {
+  const report = await harnessReport(page);
+  console.log(
+    `  [${projectName}] recorder=${report.mode} ` +
+      `native MediaRecorder=${report.nativeMediaRecorder} ` +
+      `native getUserMedia=${report.nativeGetUserMedia}`
+  );
+  const unsupported = await page.getByText(UNSUPPORTED).count();
+  expect(
+    unsupported,
+    `the page says it cannot record at all (native MediaRecorder=${report.nativeMediaRecorder}, ` +
+      `native getUserMedia=${report.nativeGetUserMedia}, bench mode=${report.mode}) — ` +
+      "this is the CI failure of 30.08.2026, not a slow button"
+  ).toBe(0);
+  return report;
 }
 
 /** Every request the page makes, from the moment it is armed. */
@@ -198,10 +191,11 @@ async function expectPlayable(page: Page) {
 
 test.describe("voice practice recordings stay on the device", () => {
   test("record, play, reload, still there — and not one request out", async ({ page }, testInfo) => {
-    await prepare(page, testInfo);
+    const bench = await prepare(page, testInfo);
     const net = watchRequests(page);
 
     await page.goto(LESSON, { waitUntil: "networkidle" });
+    await reportEngine(page, testInfo.project.name);
     await expect(page.getByRole("button", { name: RECORD }).first()).toBeVisible();
 
     net.arm();
@@ -223,10 +217,30 @@ test.describe("voice practice recordings stay on the device", () => {
     expect(stored[0].mimeType, "the recorder's own format has to be carried, not assumed").toMatch(
       /^audio\//
     );
-    if (testInfo.project.name === "voice-ios-shape") {
-      // With WebM refused, the branch real iOS Safari takes is the one
-      // that ran — and the clip above already played back from it.
-      expect(stored[0].mimeType, "iOS-shaped run must produce the iOS format").toMatch(/^audio\/mp4/);
+
+    const engine = await harnessReport(page);
+    if (bench.mode === "real") {
+      // A real encoder chose this, and the clip above decoded from it.
+      expect(engine.requestedMimeType, "the bench must not have touched the real recorder").toBeNull();
+      expect(stored[0].mimeType).toMatch(/^audio\/(webm|mp4|ogg)/);
+    } else {
+      // The substituted recorder answers "audio/wav" NO MATTER what it was
+      // asked for. So finding audio/wav in IndexedDB is the direct proof
+      // that the app stored `recorder.mimeType` and not the type it
+      // requested, nor a constant — the exact rule 7.47 exists for, and
+      // the one the original iOS bug broke.
+      expect(
+        stored[0].mimeType,
+        "the app stored the type it asked for (or a constant) instead of the one the recorder reported"
+      ).toBe(SUBSTITUTED_MIME);
+    }
+    if (bench.refuseWebm) {
+      // The iOS-shaped part: with every WebM type refused, the app's own
+      // picker has to fall through to the format an iPhone produces.
+      expect(
+        engine.requestedMimeType,
+        "with WebM refused the app must ask for audio/mp4 — the format real iOS records"
+      ).toMatch(/^audio\/mp4/);
     }
 
     // The half that a Blob URL alone cannot do: survive a reload.
@@ -277,6 +291,7 @@ test.describe("voice practice recordings stay on the device", () => {
     const net = watchRequests(page);
 
     await page.goto(LESSON, { waitUntil: "networkidle" });
+    await reportEngine(page, testInfo.project.name);
     net.arm();
     await recordOnce(page);
     await expect(page.locator("audio").first()).toBeVisible({ timeout: 15_000 });
@@ -311,6 +326,7 @@ test.describe("voice practice recordings stay on the device", () => {
     });
 
     await page.goto(LESSON, { waitUntil: "networkidle" });
+    await reportEngine(page, testInfo.project.name);
     await recordOnce(page);
     await expectPlayable(page);
     await expect(

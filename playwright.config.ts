@@ -17,11 +17,13 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        // The mic permission the voice spec's fake microphone is asked
-        // for, plus Chromium's own fake capture device as a second layer:
-        // the spec replaces getUserMedia, so nothing should ever reach a
-        // real device, and these flags mean a change that stopped
-        // replacing it would still not open the machine's microphone.
+        // The mic permission the bench's fake microphone is asked for,
+        // plus Chromium's own fake capture device as a belt-and-braces
+        // second layer. Note what these flags are NOT: the bench replaces
+        // getUserMedia itself, in every engine, so the fake microphone has
+        // never depended on them — which is why the WebKit projects worked
+        // locally without them and why they were not the cause of the CI
+        // failure of 30.08.2026 either.
         permissions: ["microphone"],
         launchOptions: {
           args: [
@@ -38,16 +40,20 @@ export default defineConfig({
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
-     * viewport, and MediaRecorder.isTypeSupported answering false for
-     * every WebM type — which is what real iOS Safari does and what
-     * Playwright's WebKit, on its own, does NOT (it claims WebM support
-     * iOS has never had; measured in PROGRESS.md 7.47). With webm off the
-     * table the recorder falls through to audio/mp4, the format iOS
-     * actually produces, and the run measures whether the clip stores and
-     * plays back locally in that format.
+     * viewport, and a recorder that refuses every WebM type the way real
+     * iOS Safari refuses it — which Playwright's WebKit does NOT do on its
+     * own (it claims WebM support iOS has never had; PROGRESS.md 7.47).
+     * With WebM off the table the app's own picker has to fall through to
+     * audio/mp4, the format an iPhone actually produces.
+     *
+     * The recorder here is SUBSTITUTED by the bench in
+     * e2e/helpers/voice-harness.ts, because Playwright's Linux WebKit has
+     * no MediaRecorder at all — that is what turned CI red on 30.08.2026.
+     * So this project measures the application's logic, and the run with a
+     * real encoder is the chromium one.
      *
      * It is a shape, not a device. Debt 22 stays open until the owner
-     * opens a lesson on a real iPhone — see PROGRESS.md.
+     * opens a lesson on a real iPhone — see PROGRESS.md 7.49.
      */
     {
       name: "voice-ios-shape",
