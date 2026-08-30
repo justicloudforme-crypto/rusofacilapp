@@ -34,6 +34,7 @@ export default function ExercisesTab({
   celebrationDict,
   level,
   lessonSlug,
+  ownerScope,
   storageKey,
   onPassChange,
   enableAudioRecording = true,
@@ -46,6 +47,9 @@ export default function ExercisesTab({
   celebrationDict: Dictionary["celebration"];
   level: string;
   lessonSlug: string;
+  /** Browser-storage bucket for the pronunciation recordings (they never
+   * leave the device) — see src/lib/recordings-owner.ts. */
+  ownerScope: string;
   storageKey: string;
   onPassChange: (passed: boolean) => void;
   enableAudioRecording?: boolean;
@@ -373,6 +377,7 @@ export default function ExercisesTab({
           lessonSlug={lessonSlug}
           dict={pronunciationDict}
           audioMap={audioMap}
+          ownerScope={ownerScope}
         />
       )}
 

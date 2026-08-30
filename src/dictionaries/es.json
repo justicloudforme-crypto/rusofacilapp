@@ -654,7 +654,15 @@
       "upgradeButton": "Ver planes",
       "restoreButton": "Restaurar compras",
       "errorMessage": "No pudimos cargar tu estado de suscripción. Inténtalo de nuevo."
-    }
+    },
+    "voiceRecordingsHeading": "Tus grabaciones de voz",
+    "voiceRecordingsDescription": "Las grabaciones de las prácticas de pronunciación no se envían a ningún servidor: se quedan en el navegador donde las hiciste.",
+    "voiceRecordingsDeviceNote": "Por eso esta cifra corresponde solo a este dispositivo. Si grabaste en el teléfono, aquí no aparecerán.",
+    "voiceRecordingsUsage": "{count} de {max} grabaciones · {size}",
+    "voiceRecordingsEmpty": "En este dispositivo no hay ninguna grabación guardada.",
+    "voiceRecordingsDelete": "Borrar mis grabaciones",
+    "voiceRecordingsDeleted": "Se borraron {count} grabaciones de este dispositivo.",
+    "voiceRecordingsUnavailable": "Este navegador no permite guardar grabaciones, así que no hay nada que borrar aquí."
   },
   "publicProfile": {
     "anonymousName": "Estudiante",
@@ -1054,14 +1062,11 @@
       "recordingNotSupported": "Tu navegador no admite grabación de audio.",
       "recordingFailed": "No se pudo guardar la grabación. Vuelve a intentarlo.",
       "playbackFailed": "Este navegador no puede reproducir la grabación. Grábala de nuevo.",
-      "submitUnsupportedType": "Este formato de audio no se admite. Grábala de nuevo.",
       "yourRecording": "Tu grabación:",
-      "submitLabel": "Enviar",
-      "submittingLabel": "Enviando…",
-      "submittedLabel": "Enviado",
-      "submitError": "No se pudo enviar la grabación.",
-      "submitRateLimited": "Has enviado demasiadas grabaciones muy rápido. Espera un minuto e inténtalo de nuevo.",
-      "previousRecordingLabel": "Tu última grabación enviada:"
+      "storageUnavailable": "Tu grabación se reproduce ahora, pero este navegador no puede guardarla en el dispositivo: se perderá al recargar la página.",
+      "storageFull": "No queda espacio en este dispositivo para guardar la grabación. Puedes escucharla ahora; para conservarla, borra tus grabaciones anteriores desde tu perfil.",
+      "savedRecordingLabel": "Tu grabación guardada en este dispositivo:",
+      "deleteRecordingLabel": "Borrar"
     },
     "glossaryHint": {
       "intro": "Las palabras subrayadas como",
@@ -1089,14 +1094,11 @@
       "recordingNotSupported": "Tu navegador no admite grabación de audio.",
       "recordingFailed": "No se pudo guardar la grabación. Vuelve a intentarlo.",
       "playbackFailed": "Este navegador no puede reproducir la grabación. Grábala de nuevo.",
-      "submitUnsupportedType": "Este formato de audio no se admite. Grábala de nuevo.",
       "yourRecording": "Tu grabación:",
-      "submitLabel": "Enviar",
-      "submittingLabel": "Enviando…",
-      "submittedLabel": "Enviado",
-      "submitError": "No se pudo enviar la grabación.",
-      "submitRateLimited": "Has enviado demasiadas grabaciones muy rápido. Espera un minuto e inténtalo de nuevo.",
-      "previousRecordingLabel": "Tu última grabación enviada:"
+      "storageUnavailable": "Tu grabación se reproduce ahora, pero este navegador no puede guardarla en el dispositivo: se perderá al recargar la página.",
+      "storageFull": "No queda espacio en este dispositivo para guardar la grabación. Puedes escucharla ahora; para conservarla, borra tus grabaciones anteriores desde tu perfil.",
+      "savedRecordingLabel": "Tu grabación guardada en este dispositivo:",
+      "deleteRecordingLabel": "Borrar"
     }
   },
   "admin": {

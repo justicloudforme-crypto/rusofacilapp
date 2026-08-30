@@ -15,11 +15,58 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // The mic permission the bench's fake microphone is asked for,
+        // plus Chromium's own fake capture device as a belt-and-braces
+        // second layer. Note what these flags are NOT: the bench replaces
+        // getUserMedia itself, in every engine, so the fake microphone has
+        // never depended on them — which is why the WebKit projects worked
+        // locally without them and why they were not the cause of the CI
+        // failure of 30.08.2026 either.
+        permissions: ["microphone"],
+        launchOptions: {
+          args: [
+            "--use-fake-device-for-media-capture",
+            "--use-fake-ui-for-media-stream",
+            "--autoplay-policy=no-user-gesture-required",
+          ],
+        },
+      },
     },
     {
       name: "mobile-iphone",
       use: { ...devices["iPhone 13"] },
+    },
+    /**
+     * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
+     * viewport, and a recorder that refuses every WebM type the way real
+     * iOS Safari refuses it — which Playwright's WebKit does NOT do on its
+     * own (it claims WebM support iOS has never had; PROGRESS.md 7.47).
+     * With WebM off the table the app's own picker has to fall through to
+     * audio/mp4, the format an iPhone actually produces.
+     *
+     * The recorder here is SUBSTITUTED by the bench in
+     * e2e/helpers/voice-harness.ts, because Playwright's Linux WebKit has
+     * no MediaRecorder at all — that is what turned CI red on 30.08.2026.
+     * So this project measures the application's logic, and the run with a
+     * real encoder is the chromium one.
+     *
+     * It is a shape, not a device. Debt 22 stays open until the owner
+     * opens a lesson on a real iPhone — see PROGRESS.md 7.49.
+     */
+    {
+      name: "voice-ios-shape",
+      testMatch: /voice-recording-local\.spec\.ts/,
+      use: {
+        ...devices["iPhone 13"],
+        contextOptions: {
+          // The lesson page's own recorder asks for the mic; the fake
+          // microphone in the spec answers, but WebKit still checks the
+          // permission first.
+          permissions: ["microphone"],
+        },
+      },
     },
   ],
   // Reuses a server already running on PORT during local dev; CI always
