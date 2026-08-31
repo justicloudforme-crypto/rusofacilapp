@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "../db";
-import { cached, getOrCreateGlobalSingleton, TtlCache } from "../ttl-cache";
+import { cached, getOrCreateGlobalSingleton, isPlainObject, TtlCache } from "../ttl-cache";
 import type { LevelSlug } from "../courses";
 import type { ExamContent } from "./types";
 import raw from "./content.json";
@@ -26,7 +26,7 @@ function staticExamFor(level: LevelSlug, examSlug: string): ExamContent | null {
 // the rare admin save/delete — see invalidateExamContentCache.
 const examContentCache = getOrCreateGlobalSingleton(
   "examContentCache",
-  () => new TtlCache<ExamContent | null>(60_000, "examContent")
+  () => new TtlCache<ExamContent | null>(60_000, "examContent", isPlainObject)
 );
 
 function examContentCacheKey(level: string, examSlug: string): string {

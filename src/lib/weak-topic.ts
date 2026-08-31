@@ -2,7 +2,7 @@ import "server-only";
 import { getExamAttempts, type ExamAttemptSummary } from "./exams/progress";
 import { getExamContent } from "./exams/content";
 import { isLevelSlug } from "./courses";
-import { getOrCreateGlobalSingleton, TtlCache, cached } from "./ttl-cache";
+import { getOrCreateGlobalSingleton, TtlCache, isPlainObject, cached } from "./ttl-cache";
 
 export interface WeakTopicResult {
   areaId: string;
@@ -65,7 +65,7 @@ async function computeWeakTopic(userId: string): Promise<WeakTopicResult | null>
 // changes the nudge within a few days rather than going stale for a month.
 const weakTopicCache = getOrCreateGlobalSingleton(
   "weakTopicCache",
-  () => new TtlCache<WeakTopicResult | null>(7 * 24 * 60 * 60 * 1000, "weakTopic"),
+  () => new TtlCache<WeakTopicResult | null>(7 * 24 * 60 * 60 * 1000, "weakTopic", isPlainObject),
 );
 
 /** The student's single weakest exam topic this week, cached per user for

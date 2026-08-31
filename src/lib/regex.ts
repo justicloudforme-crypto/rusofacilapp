@@ -17,32 +17,64 @@
  * regex source on purpose.
  */
 
-/** Escapes every character with a special meaning in a regular expression,
- * so `value` matches itself literally. Covers the character-class specials
- * too (`^`, `]`, `\`, `-`), which matters because the failure mode inside
- * `[...]` is a silently wrong match rather than a thrown error.
+/** The only ASCII characters that can never carry syntax in a pattern. */
+const INERT_ASCII = /[A-Za-z0-9_]/;
+
+/** Non-ASCII whitespace and line separators. Legal unescaped, but a
+ * pattern is also a string that gets logged and diffed, and U+2028/U+2029
+ * inside one are worth seeing rather than losing to a line break. */
+const NEEDS_UNICODE_ESCAPE = /\s/u;
+
+/** Escapes `value` so it matches itself literally, under every flag set
+ * this codebase uses or might use — no flags, `u`, `v` — and both inside
+ * and outside a character class.
  *
- * `-` is escaped as `\x2d`, not as `\-`, and that detail is the whole point
- * of incident №1 (29.08.2026). Under the `u` flag a backslash may only
- * precede a character the spec actually lists; `-` is not one of them
- * outside a character class, so `\-` is an *invalid escape* and the whole
- * `new RegExp(...)` throws at construction. Without `u` it is accepted and
- * means the same thing, which is why this survived from the initial commit:
- * every unit test of this function used the default flags.
+ * **Why a whitelist and not a list of metacharacters.** The blacklist form
+ * (`value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")`) has now been wrong
+ * twice, and both times the wrongness was invisible until a specific row
+ * reached production:
  *
- * What it cost. Three of the 119 glossary terms in production contain a
- * hyphen — "oración indefinido-personal", "verbo reflexivo (con -ся)",
- * "«-то» frente a «-нибудь»". GlossaryText builds ONE alternation over all
- * 119 with flags "giu", so any one of them poisoned the whole pattern, and
- * with it every page that auto-links glossary terms: all 120 lessons in
- * both locales, 240 URLs, rendered nothing but "Something went wrong".
- * Every one of them answered HTTP 200 with complete, correct HTML — the
- * failure was in the browser, after hydration, which is why an anonymous
- * crawl of 1908 URLs reported them all healthy.
+ *  - `-` was added to the class, which emits `\-`. Valid with no flags,
+ *    an **invalid escape** under `u`, so `new RegExp` throws at
+ *    construction. That is incident №1 (29.08.2026): three glossary terms
+ *    with a hyphen took all 120 lessons in both locales — 240 URLs — down
+ *    to "Something went wrong", every one of them still answering HTTP 200
+ *    with complete HTML.
+ *  - The fix for it (`-` → `\x2d`) is correct under `u` but still leaves
+ *    `/` unescaped, which is a **reserved** character inside a class under
+ *    the `v` flag, and leaves ASCII double punctuators (`&&`, `::`, `~~`,
+ *    `<<`…) intact, which `v` also rejects inside a class. Measured, not
+ *    assumed: see regex.test.ts.
  *
- * `\x2d` is a hex escape: valid under both flag sets, and valid inside a
- * character class too, so it keeps the range-injection protection above.
- */
+ * A blacklist asks "which characters are special?", and the answer changes
+ * with the flag set and with each edition of the specification. A
+ * whitelist asks "which characters are provably inert?", and that answer
+ * does not change. So: ASCII letters, digits and `_` pass through, and
+ * **every other ASCII character** becomes a hex escape — `\x` plus two
+ * digits — which is legal in every flag set, in and out of a class, and
+ * cannot combine with a neighbour into a range or a double punctuator.
+ * Non-ASCII characters are literal everywhere and are left as they are, so
+ * that «чем... тем...», `-ся` and `señor` still read as themselves in a
+ * pattern one has to debug by eye; the two exceptions are non-ASCII
+ * whitespace and lone surrogates, which are escaped by code point because
+ * a pattern is also a string that gets logged, concatenated and compared.
+ *
+ * This is the same rule as the ES2025 `RegExp.escape`. It is spelled out
+ * here rather than delegated to it, because the output must be identical
+ * on every runtime this pattern can be built on — Node on the server, and
+ * whatever browser a student happens to bring — and `RegExp.escape` is not
+ * in all of them yet. */
 export function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/-/g, "\\x2d");
+  let out = "";
+  for (const char of value) {
+    const codePoint = char.codePointAt(0) as number;
+    if (codePoint < 0x80) {
+      out += INERT_ASCII.test(char) ? char : "\\x" + codePoint.toString(16).padStart(2, "0");
+    } else if (NEEDS_UNICODE_ESCAPE.test(char) || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+      out += "\\u" + codePoint.toString(16).padStart(4, "0");
+    } else {
+      out += char;
+    }
+  }
+  return out;
 }

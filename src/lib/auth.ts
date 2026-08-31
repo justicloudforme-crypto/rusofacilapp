@@ -2,6 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { db } from "./db";
 import { SESSION_COOKIE, shouldUseSecureSessionCookie, signUserId, verifySessionToken } from "./session-token";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Real email+password authentication (see /api/auth/login and
@@ -47,6 +48,14 @@ export async function getCurrentUser() {
   // like no session at all, rather than a distinct error, since from the
   // caller's perspective it is one.
   if (!user || user.sessionVersion !== parsed.sessionVersion) return null;
+
+  // Every server-side Sentry event from this request now carries who it
+  // happened to. Only the id — never the email — see SentryUser.tsx for the
+  // reasoning and for the browser half of this. Sentry gives each request
+  // its own isolation scope, so this does not leak between concurrent
+  // requests on the same instance; it is a no-op when the SDK is disabled,
+  // which it is everywhere except a Vercel deploy.
+  Sentry.setUser({ id: user.id });
 
   return user;
 }

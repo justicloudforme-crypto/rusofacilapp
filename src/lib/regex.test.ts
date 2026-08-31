@@ -146,3 +146,101 @@ describe("isExamSlugFormat", () => {
     expect(isExamSlugFormat("a[", "a[-exam-1")).toBe(true);
   });
 });
+
+/**
+ * The whitelist rewrite of 31.08.2026 (round three of the same defect).
+ *
+ * Rounds one and two both patched a single character of a blacklist:
+ * `-` was added to it, then `-` was moved to `\x2d`. Both patches were
+ * right about the character in front of them and wrong about the method,
+ * and the second one was still wrong when this suite was written — under
+ * the `v` flag it leaves `/` and every ASCII double punctuator illegal
+ * inside a character class. These tests check the METHOD: they enumerate
+ * characters instead of naming them, so the next character nobody thought
+ * of is covered before it reaches the database.
+ */
+describe("escapeRegExp is safe by construction, not by enumeration", () => {
+  /** Every code point below the astral planes, plus a sample above them.
+   * Dense where content actually lives (ASCII, Latin-1, Cyrillic, general
+   * punctuation), sampled above that — a full sweep of 0x10FFFF takes
+   * ~90s and buys nothing this does not already say. */
+  function codePoints(): number[] {
+    const out: number[] = [];
+    for (let cp = 0; cp <= 0x30ff; cp++) out.push(cp);
+    for (let cp = 0x3100; cp < 0x10000; cp += 7) out.push(cp);
+    for (let cp = 0x10000; cp <= 0x10ffff; cp += 997) out.push(cp);
+    return out;
+  }
+
+  it("every code point survives every flag set, in and out of a class", () => {
+    const broken: string[] = [];
+    for (const cp of codePoints()) {
+      const char = String.fromCodePoint(cp);
+      const escaped = escapeRegExp(char);
+      const attempts: Array<[string, string, string]> = [
+        ["u", `^${escaped}$`, "u"],
+        ["u in class", `[${escaped}]`, "u"],
+        ["v", `^${escaped}$`, "v"],
+        ["v in class", `[${escaped}]`, "v"],
+        ["no flags", `^${escaped}$`, ""],
+        ["no flags in class", `[${escaped}]`, ""],
+      ];
+      for (const [label, source, flags] of attempts) {
+        try {
+          new RegExp(source, flags);
+        } catch {
+          broken.push(`U+${cp.toString(16)} (${label})`);
+        }
+      }
+    }
+    expect(broken).toEqual([]);
+  });
+
+  it("every code point still matches itself and nothing else", () => {
+    // A pattern that compiles but no longer matches is the silent half of
+    // this failure family — the glossary would just stop highlighting.
+    const wrong: string[] = [];
+    for (const cp of codePoints()) {
+      const char = String.fromCodePoint(cp);
+      const re = new RegExp(`^${escapeRegExp(char)}$`, "u");
+      if (!re.test(char)) wrong.push(`U+${cp.toString(16)} does not match itself`);
+      if (char !== "x" && re.test("x")) wrong.push(`U+${cp.toString(16)} also matches x`);
+    }
+    expect(wrong).toEqual([]);
+  });
+
+  it("positive control: the escaping this replaced fails that same sweep", () => {
+    // Round two's implementation, verbatim. It passes under `u` — that is
+    // why it shipped — and fails under `v`, which is the dimension the
+    // sweep adds. Without this the test above would pass on the old code
+    // and prove nothing.
+    const roundTwo = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/-/g, "\\x2d");
+    expect(() => new RegExp(`[${roundTwo("/")}]`, "v")).toThrow(SyntaxError);
+    expect(() => new RegExp(`[${roundTwo(",,")}]`, "v")).toThrow(SyntaxError);
+    // `&&` under `v` is worse than a throw: it is the set-intersection
+    // operator, so the class compiles and quietly matches nothing.
+    expect(new RegExp(`^[${roundTwo("a&&b")}]$`, "v").test("a")).toBe(false);
+    expect(new RegExp(`^[${escapeRegExp("a&&b")}]$`, "v").test("a")).toBe(true);
+    // …and round one's, which is the incident itself.
+    const roundOne = (v: string) => v.replace(/[.*+?^${}()|[\]\\\-]/g, "\\$&");
+    expect(() => new RegExp(`^${roundOne("кто-то")}$`, "u")).toThrow(SyntaxError);
+    // Both of them are accepted by the current implementation.
+    expect(() => new RegExp(`[${escapeRegExp("/")}]`, "v")).not.toThrow();
+    expect(() => new RegExp(`^${escapeRegExp("кто-то")}$`, "u")).not.toThrow();
+  });
+
+  it("positive control: a comma and a hyphen in a term are ordinary, not fatal", () => {
+    // The two characters named in the report of 31.08.2026. Both are
+    // escaped now (`,` → \x2c, `-` → \x2d), and a term carrying either one
+    // compiles and matches. Asserted with the exact strings so that a
+    // future narrowing of the escape set fails here rather than in a
+    // student's browser.
+    for (const term of ["конструкция «чем..., тем...»", "«-то» frente a «-нибудь»"]) {
+      const pattern = `(?<![\\p{L}])(${escapeRegExp(term.toLowerCase())})(?![\\p{L}])`;
+      expect(() => new RegExp(pattern, "giu"), term).not.toThrow();
+      expect(new RegExp(pattern, "giu").test(term.toLowerCase()), term).toBe(true);
+    }
+    expect(escapeRegExp(",")).toBe("\\x2c");
+    expect(escapeRegExp("-")).toBe("\\x2d");
+  });
+});

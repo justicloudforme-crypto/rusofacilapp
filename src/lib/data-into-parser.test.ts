@@ -47,9 +47,17 @@ const FILES = sourceFiles(SRC);
 /** Comments blanked, offsets kept — several of these files quote patterns
  * and parser calls in prose. */
 function withoutComments(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
-    .replace(/\/\/[^\n]*/g, (m) => " ".repeat(m.length));
+  return (
+    source
+      .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+      // The `[^:]` is not decoration. Without it the `//` in
+      // "https://api.openai.com/v1/audio/speech" starts a line comment and
+      // blanks the rest of the line — which is exactly how the first draft
+      // of this scanner passed with a planted TTS call sitting in src/.
+      // Caught by the positive control, which is the only reason it is not
+      // still passing.
+      .replace(/(^|[^:])\/\/[^\n]*/g, (m, before: string) => before + " ".repeat(m.length - before.length))
+  );
 }
 
 describe("data that reaches a regular expression", () => {

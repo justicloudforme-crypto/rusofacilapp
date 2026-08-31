@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./db";
-import { cached, getOrCreateGlobalSingleton, TtlCache } from "./ttl-cache";
+import { cached, getOrCreateGlobalSingleton, isPlainObject, TtlCache } from "./ttl-cache";
 import { getFlashcardIndex } from "./flashcards/cache";
 import type { FlashcardRow } from "./flashcards";
 import { getStoryCatalog, type StoryCatalogRow } from "./stories-catalog";
@@ -15,7 +15,7 @@ export interface HomepageStats {
 // added. Same 5-minute TTL pattern as stories-catalog.ts/streaks.ts.
 const homepageStatsCache = getOrCreateGlobalSingleton(
   "homepageStatsCache",
-  () => new TtlCache<HomepageStats>(5 * 60_000, "homepage-stats")
+  () => new TtlCache<HomepageStats>(5 * 60_000, "homepage-stats", isPlainObject)
 );
 
 /**

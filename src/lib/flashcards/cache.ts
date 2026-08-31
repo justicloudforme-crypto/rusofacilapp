@@ -41,7 +41,7 @@ const LOCAL_LAYER_TTL_MS = 30_000;
 
 export const flashcardIndexCache = getOrCreateGlobalSingleton(
   "flashcardIndexCache",
-  () => new TtlCache<FlashcardRow[]>(FLASHCARD_INDEX_TTL_MS, "flashcards")
+  () => new TtlCache<FlashcardRow[]>(FLASHCARD_INDEX_TTL_MS, "flashcards", Array.isArray)
 );
 
 interface LocalEntry {

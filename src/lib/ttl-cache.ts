@@ -30,6 +30,14 @@ export function getOrCreateGlobalSingleton<T>(key: string, create: () => T): T {
   return registry[globalKey] as T;
 }
 
+/** Shape guard for the caches that store one object (lesson content, exam
+ * content, homepage stats, weak topic). Its counterpart for the caches that
+ * store a list is `Array.isArray` itself — passed directly, since that is
+ * exactly the check the crash of 30.08.2026 needed and did not have. */
+export function isPlainObject(value: unknown): boolean {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 interface Entry<T> {
   value: T;
   expiresAt: number;
@@ -45,9 +53,30 @@ export class TtlCache<T> {
    * to use the same inner key string. Public (not just used internally) so
    * `cached()` below can build a matching de-dupe key for stampede
    * protection without needing its own copy of the namespace. */
+  /** `isValidValue` is the shape guard, and it is not optional paranoia —
+   * it is the fix for a real production crash (30.08.2026, Sentry
+   * JAVASCRIPT-NEXTJS-K, 19 events).
+   *
+   * The Redis half of this cache is shared by every running instance AND by
+   * every DEPLOY. PR #110 changed what `getSubscriptionsForUser` stores
+   * under `ttlcache:subscription:<userId>` from one `Subscription | null`
+   * to a `Subscription[]`, keeping the namespace and the key. For the 30
+   * seconds it took the pre-deploy entries to expire, the new code read the
+   * old shape back and ran `.map` on an object — `TypeError: (intermediate
+   * value).map is not a function`, thrown inside Navbar, which renders on
+   * every page.
+   *
+   * `redis.get<T>()` is a cast, not a check: T is erased at build time, so
+   * nothing in the type system can see across a deploy boundary. Only a
+   * runtime predicate can. A value that fails it is treated exactly like a
+   * miss — dropped, logged once, and re-read from the database — which is
+   * the only safe direction: silently returning `[]` for a subscription
+   * would quietly downgrade a paying student to the free tier.
+   */
   constructor(
     private readonly ttlMs: number,
     public readonly namespace: string,
+    private readonly isValidValue?: (value: unknown) => boolean,
   ) {}
 
   private redisKey(key: string): string {
@@ -63,11 +92,27 @@ export class TtlCache<T> {
   // Redis error, unlike RateLimiter — a half-populated local Map would be
   // inconsistent with what other instances see, whereas "always re-read
   // from the DB" is simply always correct, just uncached.
+  /** A cached value that is not the shape this cache stores today. Treated
+   * as a miss, so the caller reads through to the database. Logged, not
+   * swallowed: an entry of the wrong shape means a deploy changed a payload
+   * without changing its key, and that is worth seeing once. */
+  private accept(key: string, value: unknown): T | undefined {
+    if (value === null || value === undefined) return undefined;
+    if (this.isValidValue && !this.isValidValue(value)) {
+      console.error(
+        `[ttl-cache] ${this.redisKey(key)} holds a value of the wrong shape (${
+          Array.isArray(value) ? "array" : typeof value
+        }) — discarding it and reading through. A deploy changed this payload without changing its key.`
+      );
+      return undefined;
+    }
+    return value as T;
+  }
+
   async get(key: string): Promise<T | undefined> {
     if (redis) {
       try {
-        const value = await redis.get<T>(this.redisKey(key));
-        return value ?? undefined;
+        return this.accept(key, await redis.get<T>(this.redisKey(key)));
       } catch (error) {
         console.error(`[ttl-cache] Redis get failed for ${this.redisKey(key)}, treating as a miss`, error);
         return undefined;
@@ -79,7 +124,7 @@ export class TtlCache<T> {
       this.store.delete(key);
       return undefined;
     }
-    return entry.value;
+    return this.accept(key, entry.value);
   }
 
   async set(key: string, value: T): Promise<void> {

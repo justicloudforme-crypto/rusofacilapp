@@ -31,7 +31,7 @@ export const MANUAL_GRANT_DAYS = 30;
 // every call — only the read is cached, not the answer.
 const subscriptionCache = getOrCreateGlobalSingleton(
   "subscriptionCache",
-  () => new TtlCache<Subscription[]>(30_000, "subscription")
+  () => new TtlCache<Subscription[]>(30_000, "subscription", Array.isArray)
 );
 
 // The Redis path stores/reads T through JSON (see ttl-cache.ts), which

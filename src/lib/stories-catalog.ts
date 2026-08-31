@@ -46,7 +46,7 @@ export interface StoryCatalogRow {
 
 const storyCatalogCache = getOrCreateGlobalSingleton(
   "storyCatalogCache",
-  () => new TtlCache<StoryCatalogRow[]>(60_000, "storyCatalog")
+  () => new TtlCache<StoryCatalogRow[]>(60_000, "storyCatalog", Array.isArray)
 );
 
 export async function getStoryCatalog(): Promise<StoryCatalogRow[]> {
