@@ -149,6 +149,17 @@ export default async function Navbar({
           <Link href={`/${lang}/pricing`} className="tap hover:text-primary-text active:text-primary-text">
             {dict.nav.pricing}
           </Link>
+          {/* NOT TOUCHED, deliberately — see PROGRESS.md 7.70. A staff
+              account gets a fourth link here, and measured 31.08.2026 that
+              pushes /es/profile 86px past a 640px viewport and /ru/profile
+              115px, and still 12px and 41px past 768. That is a bigger
+              overflow than debt 37's, and it is NOT fixable the way debt 37
+              was: hiding this link below md leaves a staff account with no
+              route to /admin at all between 640 and 767, because MobileMenu
+              (which carries the admin group) is `sm:hidden`. Every repair
+              that does not lose the link changes the shared header for
+              everyone, which this repair was explicitly not allowed to do.
+              Left alone and written down instead. */}
           {staff && (
             <Link href={`/${lang}/admin`} className="tap hover:text-primary-text active:text-primary-text">
               {dict.admin.title}
@@ -163,9 +174,27 @@ export default async function Navbar({
             <SoundToggle onLabel={dict.nav.soundOnLabel} offLabel={dict.nav.soundOffLabel} />
           </div>
 
+          {/* Debt 37, fixed 31.08.2026. `sm:flex` put the streak badge on
+              screen at 640px, where the row already held the logo, three
+              nav links, search, the sound toggle, the language switcher and
+              the profile menu — and /es/profile came out 27px wider than
+              the viewport, /ru/profile 45px. Measured, not guessed: the
+              badge is ~60px with its gap, which covers both.
+
+              `md:flex` is the narrowest possible fix, and narrow is the
+              point. This branch renders ONLY for a signed-in learner with a
+              live streak, so no anonymous page and no signed-out visitor
+              can see a pixel of difference — the frame of every other page
+              is untouched, which is the condition this repair was allowed
+              under. Nothing is lost: the number is on /profile, and the
+              mobile menu carries it below md.
+
+              check:layout still cannot see this: it browses anonymously and
+              has no way to log in. The measurement lives in
+              e2e/page-width.spec.ts instead, which can. */}
           {user && streak && streak.currentStreak > 0 && (
             <span
-              className="hidden items-center gap-1 rounded-full px-2 text-sm font-semibold text-folk-red sm:flex"
+              className="hidden items-center gap-1 rounded-full px-2 text-sm font-semibold text-folk-red md:flex"
               role="img"
               aria-label={dict.nav.streakLabel.replace("{days}", String(streak.currentStreak))}
             >

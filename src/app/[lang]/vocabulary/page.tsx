@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import VocabularyApp from "@/components/flashcards/VocabularyApp";
 import JsonLd from "@/components/seo/JsonLd";
 import { VOCABULARY_CATEGORY_PAGES } from "@/lib/vocabulary-categories";
@@ -58,6 +59,10 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
   // which a crawler never executes. Same reasoning as the footer glossary
   // link added in PR #44.
   //
+  // Opening the card trainer is the study action — answering a card is not
+  // required, and before this the whole day could go unrecorded.
+  await markStudyDayVisit("flashcards");
+
   // ES-only, because the category pages themselves are ES-only.
   const showCategoryIndex = lang === "es";
 

@@ -7,6 +7,7 @@ import { isFlashcardLevel } from "@/lib/flashcards";
 import { isWordGameType } from "@/lib/word-games/types";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
 import { getCurrentUser } from "@/lib/auth";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import { puzzleDescription, puzzleTitle } from "@/lib/word-games/metadata";
@@ -109,6 +110,11 @@ export default async function WordGamePuzzlePage({
   if ((row.curved || row.premiumOnly) && !canAccessCurvedPuzzle(tier)) {
     redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
   }
+
+  // Opening the puzzle is the study action — finishing it is not required.
+  // A logged-out visitor on a free-trial puzzle marks nothing, because
+  // there is no account to mark it on.
+  await markStudyDayVisit("word-game", user);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">

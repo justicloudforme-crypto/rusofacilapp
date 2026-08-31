@@ -108,6 +108,49 @@ model User {
   ownedGroups          Group[]                @relation("GroupOwner")
   groupMemberships     GroupMember[]
   wordGameProgress     WordGameProgress[]
+  studyDays            StudyDay[]
+}
+
+// One row per (learner, calendar day they studied). The day a learner
+// studied is a fact about them, so it is stored as a fact — not inferred
+// from whatever progress row happened to survive an upsert.
+//
+// Why this table exists (PROGRESS.md 7.68 → 7.70). Until 31.08.2026 the
+// streak was derived from five progress tables, and every one of them
+// records a RESULT, not a visit: LessonProgress is written when an
+// exercise is checked, FlashcardProgress when a card is answered,
+// StoryReadingProgress when a page is turned, WordGameProgress when a
+// puzzle is finished, ExamAttempt when an exam is submitted. A learner who
+// opened a lesson, read a story and looked through the cards without
+// finishing anything therefore left NO trace at all, and their day did not
+// count. Measured in a real browser on the owner's own account on
+// 31.08.2026: eight page loads across both locales — lesson, story, cards,
+// game, exam — moved exactly zero rows.
+//
+// The five progress tables are still read as well, so the history that
+// existed before this table did is not lost.
+model StudyDay {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // "YYYY-MM-DD" in the LEARNER's zone at the moment the day was marked —
+  // the same key shape everything else in the streak uses, produced by
+  // dateKeyIn (src/lib/timezone.ts). Deliberately not a DateTime: an
+  // instant would put the UTC day-boundary ambiguity fixed on 31.08.2026
+  // straight back in.
+  dateKey String
+  // Which surface marked the day first — "lesson" | "story" | "flashcards"
+  // | "word-game" | "exam". Only the first mark of a day is kept (the
+  // unique below), so this says what the learner opened first that day,
+  // not everything they did. Kept because a day mark with no provenance is
+  // impossible to argue with when a learner says "but I did study".
+  source  String
+  markedAt DateTime @default(now())
+
+  // The whole idempotency guarantee of the day mark, in one line: two marks
+  // on one calendar day are one row, whatever renders twice.
+  @@unique([userId, dateKey])
+  @@index([userId])
 }
 
 // status is one of: active | trialing | past_due | canceled | incomplete_expired

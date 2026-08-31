@@ -4,6 +4,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLevelSlug } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { userHasActiveSubscription } from "@/lib/subscription";
 import { isStaff } from "@/lib/roles";
 import { getExamContent } from "@/lib/exams/content";
@@ -32,6 +33,11 @@ export default async function ExamPage({
   }
 
   const dict = await getDictionary(lang);
+
+  // Opening the exam is the study action. Reached only past the guard
+  // above, so `user` is non-null here; passed in so the zone comes from the
+  // account rather than the cookie.
+  await markStudyDayVisit("exam", user);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">

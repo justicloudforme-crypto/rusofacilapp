@@ -15,6 +15,7 @@ import {
 import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import { getRecordingsOwnerScope } from "@/lib/recordings-owner";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, fitTitle, truncateForMeta, paywallJsonLd, routeAlternates } from "@/lib/site";
@@ -89,6 +90,11 @@ export default async function LessonPage({
   ]);
   const relatedMediaResult = getRelatedMediaForLesson(level, lesson, allMedia);
   const grammarGuide = getGrammarGuideForLesson(lang, level, lesson);
+
+  // Opening the lesson is the study action — the day counts from here, not
+  // from finishing an exercise. Costs no user lookup and no time on the
+  // response; see markStudyDayVisit.
+  await markStudyDayVisit("lesson");
 
   // Every level's first lesson is fully open, no subscription required —
   // lets a visitor try the actual exercise/audio mechanic before paying

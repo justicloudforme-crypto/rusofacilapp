@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import {
   PUBLIC_VOCABULARY_LEVELS,
   VOCABULARY_CATEGORY_PAGES,
@@ -52,6 +53,11 @@ export default async function VocabularyCategoryPage({
 
   const page = getVocabularyCategoryPage(categoria);
   if (!page) notFound();
+
+  // A signed-in learner reading a category word list is studying cards,
+  // even though this page exists mainly for anonymous search traffic —
+  // which marks nothing, having no account to mark.
+  await markStudyDayVisit("flashcards");
 
   const publicLevels = new Set<string>(PUBLIC_VOCABULARY_LEVELS);
   const cards = (await getFlashcardIndex()).filter(
