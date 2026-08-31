@@ -97,7 +97,7 @@ export function computeStreakStats(
 // inventing a second notion of "activity."
 const activityDateKeysCache = getOrCreateGlobalSingleton(
   "activityDateKeysCache",
-  () => new TtlCache<string[]>(60_000, "activity-date-keys")
+  () => new TtlCache<string[]>(60_000, "activity-date-keys", Array.isArray)
 );
 
 async function fetchActivityDateKeys(userId: string): Promise<string[]> {

@@ -37,21 +37,33 @@ import { useSerwist } from "@serwist/next/react";
  */
 let hasRegistered = false;
 
-// Google's own crawling tools (confirmed via Sentry: "Google-InspectionTool"
-// UA, used by URL Inspection / Rich Results Test) run a sandboxed Chrome
-// that deliberately makes `navigator.serviceWorker.register()` reject —
-// same intent as Playwright's `serviceWorkers: 'block'` (see
-// sentry.client.config.ts's beforeSend), but rejecting instead of
-// resolving `undefined`, a different failure shape that still reached
-// Sentry as a genuine `onunhandledrejection` event despite the `.catch()`
-// below already existing (confirmed: that catch predates this bot report,
-// see git history). Rather than chase why this specific harness's
-// rejection evades a promise chain that looks complete, skip the register
-// call entirely for it — "should quietly not happen" rather than "happen
-// and get caught," which is also strictly safer (one less place a new,
-// not-yet-seen crawler quirk could slip past the `.catch()` again).
+// Search-engine renderers run a sandboxed Chrome whose
+// `navigator.serviceWorker.register` is stubbed out. Two shapes of stub
+// have been seen in production, and NEITHER can be caught from here:
+//
+//  - Google-InspectionTool (URL Inspection / Rich Results Test) hands back
+//    a rejection that reaches Sentry as a genuine `onunhandledrejection`
+//    even though the `.catch()` below already existed at the time.
+//  - GoogleOther — 1000 events in three days, issue JAVASCRIPT-NEXTJS-9,
+//    93% of them from one crawler on a Nexus 5X / Android 6.0.1 profile.
+//    Same story: the stack's top frame is an `<anonymous>` script that is
+//    not ours, called from @serwist/window's `_registerScript`.
+//
+// The reason a `.catch()` cannot help is in the stack: the rejected promise
+// belongs to the stub, which creates it and keeps it. Our chain never
+// receives that object, so nothing we attach to what `register()` returns
+// can mark it handled. The only move available on this side is not to make
+// the call — which is also what a crawler wants, since a service worker
+// gives an indexer nothing at all.
+//
+// Listed by name rather than by a general "is this a bot" test, so a real
+// browser is never quietly denied offline support because its user agent
+// happened to contain a word.
+const NON_INTERACTIVE_CRAWLERS =
+  /Google-InspectionTool|GoogleOther|Googlebot|AdsBot-Google|Mediapartners-Google|Google-Site-Verification|Chrome-Lighthouse|Bingbot|YandexBot|DuckDuckBot|Applebot/i;
+
 function isKnownNonInteractiveCrawler(): boolean {
-  return /Google-InspectionTool/i.test(navigator.userAgent);
+  return NON_INTERACTIVE_CRAWLERS.test(navigator.userAgent);
 }
 
 export default function SerwistRegister() {
@@ -59,10 +71,28 @@ export default function SerwistRegister() {
 
   useEffect(() => {
     if (!serwist || hasRegistered || isKnownNonInteractiveCrawler()) return;
+    // Firefox and Chrome in private browsing, and any profile with service
+    // workers switched off, do not expose `navigator.serviceWorker` at all.
+    // Reading `.controller` off it — the first thing @serwist/window's
+    // register() does — would throw synchronously, before there is a
+    // promise for the `.catch()` below to be attached to. Not crawler-only:
+    // this is the ordinary private-window case for a real reader.
+    if (!("serviceWorker" in navigator)) {
+      console.warn("[serwist] Service workers are unavailable here — continuing without offline caching.");
+      return;
+    }
     hasRegistered = true;
-    serwist.register().catch((error: unknown) => {
-      console.warn("[serwist] Service worker registration failed — continuing without offline caching.", error);
-    });
+    // try/catch AND .catch(): register() is an async function, so a throw
+    // before its first await surfaces as a rejection — but the surrounding
+    // try also covers a synchronous throw from the library's own setup,
+    // which is one fewer way for this to reach the page as a crash.
+    try {
+      serwist.register().catch((error: unknown) => {
+        console.warn("[serwist] Service worker registration failed — continuing without offline caching.", error);
+      });
+    } catch (error) {
+      console.warn("[serwist] Service worker registration threw — continuing without offline caching.", error);
+    }
   }, [serwist]);
 
   return null;

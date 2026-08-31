@@ -54,6 +54,32 @@ Sentry.init({
       (v) => v.type === "TypeError" && typeof v.value === "string" && v.value.includes("reading 'waiting'")
     );
     if (blockedByPlaywright && isWaitingOnUndefined) return null;
+
+    // Issue JAVASCRIPT-NEXTJS-9: 1000 events in three days, 93% from
+    // GoogleOther, all of them an unhandled `Error: Rejected` whose stack is
+    // an `<anonymous>` script calling into @serwist/window's
+    // `_registerScript`. A crawler's sandboxed Chrome stubs
+    // `navigator.serviceWorker.register` with a promise it creates and
+    // keeps, so the rejection is unhandled before our code ever sees a
+    // promise to attach to — SerwistRegister.tsx explains this at length and
+    // now declines to call register() for the crawlers we can name.
+    //
+    // This is the net under that, for the crawler we cannot name yet.
+    // Deliberately narrow: it matches ONE frame, in ONE library function,
+    // for an event that is a promise rejection. Any other error in the same
+    // session, and any other failure inside Serwist, still reports. The
+    // browser-side console.warn in SerwistRegister.tsx stays either way —
+    // this drops the crash report, not the record.
+    const isServiceWorkerRegistration = event.exception?.values?.some((v) =>
+      v.stacktrace?.frames?.some(
+        (f) => typeof f.function === "string" && f.function.includes("_registerScript")
+      )
+    );
+    const isUnhandledRejection = event.exception?.values?.some(
+      (v) => v.mechanism?.type === "onunhandledrejection"
+    );
+    if (isServiceWorkerRegistration && isUnhandledRejection) return null;
+
     return event;
   },
 });

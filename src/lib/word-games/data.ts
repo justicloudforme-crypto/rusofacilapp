@@ -111,7 +111,7 @@ export async function countAllSequences(): Promise<Map<string, number>> {
 // appear) does not look like a failed deploy for an hour.
 const themedPuzzleCache = getOrCreateGlobalSingleton(
   "themedPuzzleCache",
-  () => new TtlCache<Array<{ topic: string; type: string; level: string; sequence: number }>>(300_000, "themedPuzzles"),
+  () => new TtlCache<Array<{ topic: string; type: string; level: string; sequence: number }>>(300_000, "themedPuzzles", Array.isArray),
 );
 
 /**

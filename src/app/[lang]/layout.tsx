@@ -17,6 +17,7 @@ import HydrationMarker from "@/components/HydrationMarker";
 import NativeBackButtonHandler from "@/components/NativeBackButtonHandler";
 import NativeNotifications from "@/components/NativeNotifications";
 import SerwistRegister from "@/components/SerwistRegister";
+import SentryUser from "@/components/SentryUser";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserStreakStats } from "@/lib/streaks";
@@ -161,6 +162,7 @@ export default async function LangLayout({
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} register={false}>
           <SerwistRegister />
         </SerwistProvider>
+        <SentryUser userId={user?.id ?? null} />
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
         <NativeNotifications />

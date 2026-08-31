@@ -10,6 +10,7 @@
     "check:layout": "node scripts/check-layout-geometry.mjs --control",
     "check:lesson-pages": "node scripts/check-every-lesson-renders.mjs --control",
     "check:frozen": "node scripts/check-frozen-delta.mjs",
+    "check:glossary-pattern": "node --experimental-strip-types scripts/check-glossary-pattern.mjs",
     "check:no-db-in-tests": "node scripts/check-tests-touch-no-database.mjs",
     "check:e2e-coverage": "node scripts/check-e2e-coverage.mjs",
     "check:e2e-coverage:run": "node scripts/check-e2e-coverage.mjs --report=playwright-report/results.json",

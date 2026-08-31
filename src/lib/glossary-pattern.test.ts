@@ -40,10 +40,10 @@ function seedTerms(): string[] {
 
 /** Exactly what getMatcher() in GlossaryText.tsx builds. Kept in step with
  * it by the assertion below, which reads that file and checks the flags. */
-function buildPattern(terms: string[]): RegExp {
+function buildPattern(terms: string[], escape: (value: string) => string = escapeRegExp): RegExp {
   const alternatives = [...new Set(terms.map((t) => t.toLowerCase()))]
     .sort((a, b) => b.length - a.length)
-    .map(escapeRegExp);
+    .map(escape);
   return new RegExp(`(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])`, "giu");
 }
 
@@ -109,5 +109,53 @@ describe("glossary term pattern", () => {
     // …and a failure to compile must not be allowed to take the page down
     // a second time, whatever the cause.
     expect(component).toMatch(/try\s*\{[\s\S]*new RegExp[\s\S]*\}\s*catch/);
+  });
+});
+
+/**
+ * 31.08.2026. A production Sentry issue (JAVASCRIPT-NEXTJS-F, 20 events)
+ * reported this pattern throwing again, and the term visible in the failing
+ * pattern body was `конструкция «чем..., тем...»` — a comma, not a hyphen.
+ * It turned out to be incident №1 itself: every event carries a release
+ * (249b0265, 4c59b088) that predates the fix commit by hours, and the
+ * message's head matches the pre-fix escaping character for character. The
+ * comma is innocent, and no live term contains one.
+ *
+ * "Innocent today" is not a property worth relying on, though: the terms
+ * are edited from the admin screen, and the reason to look at a comma at
+ * all was that it plausibly could have been the next `-`. So both
+ * characters are pinned here by name, and the check that runs against the
+ * real database rather than the seed file is scripts/check-glossary-pattern.mjs.
+ */
+describe("a term with punctuation nobody planned for", () => {
+  const PLANTED = [
+    "конструкция «чем..., тем...»", // the comma from the 31.08 report
+    "по-русски", // the hyphen from incident №1
+    "modo «que»/«qué»", // a slash — illegal in a class under the v flag
+    "sufijo -ся && -сь", // ASCII double punctuator
+  ];
+
+  it("compiles, alone and inside the full alternation", () => {
+    for (const term of PLANTED) {
+      expect(() => buildPattern([term]), term).not.toThrow();
+      expect(buildPattern([term]).test(term.toLowerCase()), term).toBe(true);
+    }
+    expect(() => buildPattern([...seedTerms(), ...PLANTED])).not.toThrow();
+  });
+
+  it("positive control: the pre-fix escaping throws on the hyphen and passes the comma", () => {
+    // This is the whole diagnosis in two assertions. The escaping that was
+    // live on releases 249b0265/4c59b088 rejects the hyphen — that is the
+    // reported crash — and accepts the comma, which is why the comma was
+    // never the cause.
+    const preFix = (v: string) => v.replace(/[.*+?^${}()|[\]\\\-]/g, "\\$&");
+    const withEscape = (term: string, escape: (v: string) => string) =>
+      new RegExp(`(?<![\\p{L}])(${escape(term.toLowerCase())})(?![\\p{L}])`, "giu");
+    expect(() => withEscape("по-русски", preFix)).toThrow(SyntaxError);
+    expect(() => withEscape("конструкция «чем..., тем...»", preFix)).not.toThrow();
+    // And the real alternation the report showed: the live term list under
+    // the pre-fix escaping does not compile, under the current one it does.
+    expect(() => buildPattern(seedTerms(), preFix)).toThrow(SyntaxError);
+    expect(() => buildPattern(seedTerms())).not.toThrow();
   });
 });

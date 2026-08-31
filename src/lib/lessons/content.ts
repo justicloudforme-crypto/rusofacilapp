@@ -3,7 +3,7 @@ import type { LessonContent } from "./types";
 import rawLessonContent from "./content.json";
 import { db } from "@/lib/db";
 import { levelSlugs, lessonSlugsFor } from "@/lib/courses";
-import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
+import { cached, getOrCreateGlobalSingleton, isPlainObject, TtlCache } from "@/lib/ttl-cache";
 
 /**
  * Lesson content (grammar explanations and exercises) is always authored in
@@ -32,7 +32,7 @@ export function staticContentFor(level: string, lessonSlug: string): LessonConte
 // that forgets to invalidate.
 const lessonContentCache = getOrCreateGlobalSingleton(
   "lessonContentCache",
-  () => new TtlCache<LessonContent | null>(60_000, "lessonContent")
+  () => new TtlCache<LessonContent | null>(60_000, "lessonContent", isPlainObject)
 );
 
 function lessonContentCacheKey(level: string, lessonSlug: string): string {

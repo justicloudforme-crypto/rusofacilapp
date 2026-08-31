@@ -58,7 +58,7 @@ export interface ExamAttemptSummary {
 // see that attempt right away, not wait out a stale window.
 const examAttemptsCache = getOrCreateGlobalSingleton(
   "examAttemptsCache",
-  () => new TtlCache<ExamAttemptSummary[]>(60_000, "exam-attempts")
+  () => new TtlCache<ExamAttemptSummary[]>(60_000, "exam-attempts", Array.isArray)
 );
 
 function reviveExamAttemptDates(rows: ExamAttemptSummary[]): ExamAttemptSummary[] {

@@ -27,8 +27,11 @@
  *  - Subprocessors: Stripe (payments), Resend (transactional email),
  *    Turso/libSQL (database), Vercel (hosting), Upstash (Redis — rate
  *    limiting and caching; sees email/IP as cache keys transiently, no
- *    persistent profile), OpenAI (text-to-speech for course narration —
- *    processes course text, not user personal data), YouTube (embedded
+ *    persistent profile), OpenAI (text-to-speech, used ONCE per clip to
+ *    produce the course narration — see "narration is generated once"
+ *    in PROGRESS.md and src/lib/no-runtime-tts.test.ts, which fails if a
+ *    speech call ever appears in runtime code; a listener's browser never
+ *    reaches OpenAI), YouTube (embedded
  *    videos in the media library, governed by Google's own policies for
  *    any interaction with an embed).
  *  - Account deletion is genuinely self-service and already built:
@@ -58,7 +61,12 @@ export interface LegalDocument {
   sections: LegalSection[];
 }
 
-const LAST_UPDATED = "2026-08-18";
+// 31.08.2026: only the OpenAI line changed, and only to say the same
+// thing more precisely — the narration is pre-generated, so listening
+// sends nothing to OpenAI. The old wording was in the present tense
+// ("genera el audio…") and read as if a clip were synthesised while the
+// student pressed play. Nothing about what is collected changed.
+const LAST_UPDATED = "2026-08-31";
 
 export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   es: {
@@ -252,7 +260,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• Turso — alojamiento de la base de datos.",
           "• Vercel — alojamiento del sitio y las funciones del servidor.",
           "• Upstash — límite de intentos de inicio de sesión y caché de contenido; puede ver tu correo o dirección IP de forma transitoria, sin construir un perfil sobre ti.",
-          "• OpenAI — genera el audio de narración del contenido del curso a partir del texto de las lecciones; no procesa datos personales tuyos.",
+          "• OpenAI — la narración de las lecciones fue generada de antemano con su servicio de síntesis de voz, a partir del texto del curso. Los archivos de audio resultantes están guardados en nuestro propio almacenamiento: al escuchar una lección no se envía nada a OpenAI, ni texto tuyo ni datos personales.",
           "• YouTube/Google — cuando reproduces un video incrustado en nuestra biblioteca, YouTube puede recopilar datos según su propia política de privacidad, independiente de la nuestra.",
           "No compartimos tus datos con ningún otro tercero salvo que la ley nos obligue a ello.",
         ],
@@ -337,7 +345,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• Turso — хостинг базы данных.",
           "• Vercel — хостинг сайта и серверных функций.",
           "• Upstash — ограничение попыток входа и кэширование контента; может видеть ваш email или IP-адрес кратковременно, без построения профиля о вас.",
-          "• OpenAI — генерирует аудио-озвучку учебного контента на основе текста уроков; не обрабатывает ваши персональные данные.",
+          "• OpenAI — озвучка уроков была создана заранее его синтезатором речи на основе текста курса. Готовые аудиофайлы хранятся в нашем собственном хранилище: при прослушивании урока в OpenAI не уходит ничего — ни ваш текст, ни персональные данные.",
           "• YouTube/Google — при просмотре встроенного видео из нашей медиатеки YouTube может собирать данные согласно своей собственной политике конфиденциальности, независимой от нашей.",
           "Мы не передаём ваши данные никаким другим третьим лицам, кроме случаев, когда этого требует закон.",
         ],
