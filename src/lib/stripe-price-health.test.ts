@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyProductInvariant,
   checkStripePrices,
   expectedPrices,
   formatPriceHealth,
   verdictFor,
+  type PriceHealthResult,
   type StripePriceFacts,
 } from "./stripe-price-health";
 import { plans } from "./plans";
@@ -142,6 +144,33 @@ describe("checkStripePrices — the whole table", () => {
     expect(report.results.map((r) => r.verdict)).toEqual(["NOT_FOUND", "NOT_FOUND", "NOT_FOUND"]);
   });
 
+  it("fails when one plan sells a live, correctly priced price of another product", async () => {
+    // Nothing wrong with this price except the thing it sells: active, USD,
+    // 122,99 exactly as advertised. Every per-plan test passes it.
+    const report = await checkStripePrices(clean, async (id) =>
+      id === "price_lifetime"
+        ? { ...LIVE_LIFETIME, product: "prod_somewhere_else" }
+        : catalogue[id] ?? null
+    );
+    expect(report.ok).toBe(false);
+    expect(report.failing).toEqual(["STRIPE_PRICE_LIFETIME"]);
+    expect(report.results.find((r) => r.envVar === "STRIPE_PRICE_LIFETIME")?.verdict).toBe(
+      "PRODUCT_MISMATCH"
+    );
+  });
+
+  it("passes a set that is entirely from a foreign product — the documented blind spot", async () => {
+    // Asserted, not assumed: the invariant asks whether the plans agree with
+    // EACH OTHER, so a uniformly wrong set is self-consistent and passes.
+    // Catching this needs a hardcoded product id, which is the thing this
+    // check was built to avoid.
+    const report = await checkStripePrices(clean, async (id) => {
+      const facts = catalogue[id];
+      return facts ? { ...facts, product: "prod_someone_elses" } : null;
+    });
+    expect(report.ok).toBe(true);
+  });
+
   it("never prints the value of a variable, in any verdict", async () => {
     const secretish = "price_THIS_VALUE_MUST_NOT_APPEAR";
     const report = await checkStripePrices(
@@ -153,6 +182,96 @@ describe("checkStripePrices — the whole table", () => {
     // Positive control on the assertion itself: the report does name the
     // variable, so a search that finds nothing at all would be broken.
     expect(text).toContain("STRIPE_PRICE_LIFETIME");
+  });
+});
+
+
+/**
+ * The cross-plan invariant: all plans must sell the same Stripe Product.
+ * It is derived from the answers, not from a table of product ids — see the
+ * comment on applyProductInvariant for why a table was rejected.
+ */
+describe("applyProductInvariant — the plans must agree on one product", () => {
+  function ok(envVar: string, product: string | null): PriceHealthResult {
+    return {
+      plan: "monthly",
+      envVar,
+      verdict: "OK",
+      expectedUsdCents: 799,
+      expectedCurrency: "usd",
+      actual: { active: true, unitAmount: 799, currency: "usd", recurringInterval: "month", product },
+      detail: `${envVar}: live Price, 7.99 USD, as advertised.`,
+    };
+  }
+
+  const verdicts = (rs: PriceHealthResult[]) =>
+    Object.fromEntries(applyProductInvariant(rs).map((r) => [r.envVar, r.verdict]));
+
+  it("leaves a set that agrees on one product untouched", () => {
+    // Production, as the owner measured it on 2026-08-31: all three plans
+    // answered prod_V686OIEKpWeTGX.
+    expect(verdicts([ok("A", "prod_one"), ok("B", "prod_one"), ok("C", "prod_one")])).toEqual({
+      A: "OK",
+      B: "OK",
+      C: "OK",
+    });
+  });
+
+  it("flags the plan whose price was taken from a different product", () => {
+    expect(verdicts([ok("A", "prod_one"), ok("B", "prod_one"), ok("C", "prod_other")])).toEqual({
+      A: "OK",
+      B: "OK",
+      C: "PRODUCT_MISMATCH",
+    });
+  });
+
+  it("names the two products in the detail, so the reader can go and look", () => {
+    const flagged = applyProductInvariant([
+      ok("A", "prod_one"),
+      ok("B", "prod_one"),
+      ok("C", "prod_other"),
+    ]).find((r) => r.verdict === "PRODUCT_MISMATCH")!;
+    expect(flagged.detail).toContain("prod_other");
+    expect(flagged.detail).toContain("prod_one");
+  });
+
+  it("flags every plan when no product holds a strict majority", () => {
+    // One against one names no odd one out. Picking a side here would be the
+    // check inventing an expectation it does not have.
+    expect(verdicts([ok("A", "prod_one"), ok("B", "prod_other")])).toEqual({
+      A: "PRODUCT_MISMATCH",
+      B: "PRODUCT_MISMATCH",
+    });
+    const tied = applyProductInvariant([ok("A", "prod_one"), ok("B", "prod_other")])[0];
+    expect(tied.detail).toContain("no majority");
+  });
+
+  it("does not let a broken plan vote on what the majority product is", () => {
+    // Two healthy plans of prod_one, plus an ARCHIVED price of prod_other.
+    // If the archived one counted, the vote would be 2:1 and unchanged here
+    // — but with a second archived one it would tie and redden the healthy
+    // plans. Broken plans keep their own, more specific verdict and stay out
+    // of the count entirely.
+    const archived: PriceHealthResult = {
+      ...ok("C", "prod_other"),
+      verdict: "INACTIVE",
+      detail: "The Price in C exists but is ARCHIVED.",
+    };
+    const archived2: PriceHealthResult = { ...archived, envVar: "D" };
+    expect(verdicts([ok("A", "prod_one"), ok("B", "prod_one"), archived, archived2])).toEqual({
+      A: "OK",
+      B: "OK",
+      C: "INACTIVE",
+      D: "INACTIVE",
+    });
+  });
+
+  it("says nothing when there is nothing to compare", () => {
+    // One plan cannot disagree with itself, and a plan whose product Stripe
+    // did not report cannot be judged: silence, not a red verdict invented
+    // out of a missing field.
+    expect(verdicts([ok("A", "prod_one")])).toEqual({ A: "OK" });
+    expect(verdicts([ok("A", "prod_one"), ok("B", null)])).toEqual({ A: "OK", B: "OK" });
   });
 });
 

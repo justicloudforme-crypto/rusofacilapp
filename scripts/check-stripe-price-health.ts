@@ -142,6 +142,23 @@ const PLANTED: PlantedCase[] = [
     expectVar: "STRIPE_PRICE_MONTHLY",
     expectVerdict: "MISSING_ENV",
   },
+  {
+    // The case the product invariant exists for: nothing wrong with this
+    // Price except the thing it sells. Live, USD, exactly the advertised
+    // amount — every per-plan test says OK.
+    label:
+      "a live, correctly priced price belonging to a DIFFERENT product (the other two agree)",
+    env: CLEAN_ENV,
+    catalogue: {
+      ...CLEAN_CATALOGUE,
+      price_selftest_lifetime: {
+        ...CLEAN_CATALOGUE.price_selftest_lifetime,
+        product: "prod_selftest_other",
+      },
+    },
+    expectVar: "STRIPE_PRICE_LIFETIME",
+    expectVerdict: "PRODUCT_MISMATCH",
+  },
 ];
 
 function lookupFrom(catalogue: Record<string, StripePriceFacts>) {
@@ -161,6 +178,49 @@ async function selfTest(): Promise<void> {
     );
   }
   console.log("  ✓ a clean set of live prices passes (3 plans, 0 problems)");
+
+  // The clean set is a single-product set, which is the state production was
+  // measured in on 2026-08-31. Asserted by name rather than left to `ok`, so
+  // that an invariant which reddens on a legitimate set cannot hide behind a
+  // generic "clean set passed".
+  if (cleanReport.results.some((r) => r.verdict === "PRODUCT_MISMATCH")) {
+    fail(
+      "CONTROL BROKEN: three plans sharing one product were reported as PRODUCT_MISMATCH. " +
+        "The invariant must pass exactly the shape production is in."
+    );
+  }
+  console.log("  ✓ three plans of ONE product raise no PRODUCT_MISMATCH");
+
+  // Stated as an assertion, not as a comment, because it is the boundary of
+  // what this invariant can promise: it asks whether the plans AGREE, so a
+  // set taken wholesale from a foreign product agrees with itself and
+  // passes. Catching that needs a hardcoded product id (rejected — see
+  // applyProductInvariant) or the owner reading the Stripe dashboard. If
+  // this line ever starts failing, somebody has introduced that hardcode,
+  // and this control is where they should come to argue for it.
+  const allForeign = await checkStripePrices(
+    CLEAN_ENV,
+    lookupFrom(
+      Object.fromEntries(
+        Object.entries(CLEAN_CATALOGUE).map(([id, facts]) => [
+          id,
+          { ...facts, product: "prod_selftest_someone_elses" },
+        ])
+      )
+    )
+  );
+  if (!allForeign.ok) {
+    console.error(formatPriceHealth(allForeign));
+    fail(
+      "The blind spot is documented as passing, and this run did not pass it. Either the " +
+        "invariant now compares against something outside the data (a hardcoded product id), " +
+        "or a per-plan verdict changed. Both need a decision, not a green tick."
+    );
+  }
+  console.log(
+    "  ✓ KNOWN BLIND SPOT: all three plans from one FOREIGN product still pass — " +
+      "the invariant compares plans with each other, not with Stripe's dashboard"
+  );
 
   for (const plantedCase of PLANTED) {
     const report = await checkStripePrices(plantedCase.env, lookupFrom(plantedCase.catalogue));

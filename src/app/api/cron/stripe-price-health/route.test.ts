@@ -88,4 +88,35 @@ describe("GET /api/cron/stripe-price-health — the hourly watch", () => {
     // is the failure mode this whole area is about.
     expect(JSON.stringify(context.extra)).not.toContain("price_");
   });
+
+  it("alerts on a product mismatch too — the plan is sellable and still wrong", async () => {
+    // The cross-plan verdict reaches Sentry by the same road as every other
+    // one: `ok: false`. Asserted rather than assumed, because this is the
+    // one verdict no single plan could have produced.
+    runStripePriceHealth.mockResolvedValue({
+      ok: false,
+      failing: ["STRIPE_PRICE_LIFETIME"],
+      results: [
+        {
+          ...OK_RESULT,
+          verdict: "PRODUCT_MISMATCH",
+          detail:
+            "STRIPE_PRICE_LIFETIME points at a live, correctly priced Price of product " +
+            "prod_other, while the other plans sell prod_one.",
+        },
+      ],
+    });
+
+    await GET(request("Bearer cron-secret-value"));
+
+    expect(captureMessage).toHaveBeenCalledTimes(1);
+    const [message, context] = captureMessage.mock.calls[0] as [
+      string,
+      { level: string; tags: Record<string, string>; extra: Record<string, unknown> },
+    ];
+    expect(message).toContain("PRODUCT_MISMATCH");
+    expect(context.level).toBe("error");
+    expect(context.tags.defect).toBe("stripe-price-health");
+    expect(JSON.stringify(context.extra)).not.toContain("price_");
+  });
 });
