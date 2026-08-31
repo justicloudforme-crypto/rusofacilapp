@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "../db";
 import { getUserStreakStats } from "../streaks";
+import { DEFAULT_TIME_ZONE } from "../timezone";
 import { getExamAttempts, type ExamAttemptSummary } from "../exams/progress";
 import { BADGE_CATALOG, getBadgeDef, type BadgeDef } from "./catalog";
 
@@ -84,8 +85,15 @@ export function computeEarnedBadgeIds(ctx: BadgeContext): Set<string> {
  * the underlying stat (e.g. a broken streak) later drops. Returns just the
  * badges newly earned by THIS call, for an optional "you unlocked X" toast. */
 export async function evaluateAndAwardBadges(userId: string): Promise<BadgeDef[]> {
+  // The user's own zone, read from the account row rather than a request
+  // cookie: this runs inside after(), where there is no request to read.
+  // Unknown zone falls back to UTC — the same value every reader used
+  // before 31.08.2026, so a null here can only ever under-count a streak
+  // badge, never award one that wasn't earned.
+  const owner = await db.user.findUnique({ where: { id: userId }, select: { timezone: true } });
+
   const [streak, examAttempts, vocabKnownCount, existing] = await Promise.all([
-    getUserStreakStats(userId),
+    getUserStreakStats(userId, owner?.timezone ?? DEFAULT_TIME_ZONE),
     getExamAttempts(userId),
     db.flashcardProgress.count({ where: { userId, known: true } }),
     db.userBadge.findMany({ where: { userId }, select: { badgeId: true } }),
