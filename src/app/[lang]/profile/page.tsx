@@ -18,6 +18,7 @@ import {
 import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
 import { getUserStreakStats, getUserActivityDateKeys } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
+import { dateKeyIn } from "@/lib/timezone";
 import { getExamAttempts, type ExamAttemptSummary } from "@/lib/exams/progress";
 import { getUserBadgesForDisplay, type DisplayBadge } from "@/lib/badges";
 import type { BadgeDef } from "@/lib/badges/catalog";
@@ -50,7 +51,7 @@ import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
 import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
 import LocalDate from "@/components/profile/LocalDate";
 import SettingsAccordion from "@/components/profile/SettingsAccordion";
-import ActivityHeatmap from "@/components/profile/ActivityHeatmap";
+import ActivityCalendar from "@/components/profile/ActivityCalendar";
 import FirstStepCards, { type FirstStepItem } from "@/components/profile/FirstStepCards";
 import { TELEGRAM_INVITE_URL } from "@/components/TelegramFloatButton";
 import {
@@ -290,6 +291,14 @@ export default async function ProfilePage({
   // Resolved before the batch below because both the streak and the
   // activity heatmap have to be derived in the same zone.
   const timeZone = await getRequestTimeZone(user.timezone);
+
+  // Both derived here, in the learner's zone, and handed to the calendar as
+  // strings. The calendar is a client component and must not build a second
+  // notion of "today" from the browser's clock: the streak, the freeze
+  // ledger and the grid have to be one calendar or the whole picture shifts
+  // by a day for anyone whose device disagrees with their account.
+  const todayKey = dateKeyIn(new Date(), timeZone);
+  const registeredDateKey = dateKeyIn(user.createdAt, timeZone);
 
   const [
     subscriptionHistory,
@@ -553,32 +562,39 @@ export default async function ProfilePage({
             <>
               <section>
                 <SectionHeading icon={<ChartIcon className="h-[18px] w-[18px]" />}>
-                  {dict.profile.activityHeatmapHeading}
+                  {dict.profile.activityCalendarHeading}
                 </SectionHeading>
+                {/* A real month grid, not the 30-day strip it replaced. The
+                    strip showed the same four facts in a shape that could
+                    not say which Tuesday a day was, and keeping both would
+                    have drawn one history twice in two visual languages.
+                    Every day it can show is already in hand here; paging
+                    months costs no request. */}
                 <div className="mt-3">
-                  <ActivityHeatmap
+                  <ActivityCalendar
                     activeDateKeys={activityDateKeys}
                     frozenDateKeys={streak.frozenDateKeys}
-                    todayLabel={dict.profile.streakActiveTodayNote}
-                    frozenDayLabel={dict.profile.streakFrozenDayNote}
-                    timeZone={timeZone}
+                    todayKey={todayKey}
+                    firstDateKey={registeredDateKey}
+                    dict={{
+                      prevMonth: dict.profile.calendarPrevMonth,
+                      nextMonth: dict.profile.calendarNextMonth,
+                      legendActive: dict.profile.calendarLegendActive,
+                      legendFrozen: dict.profile.calendarLegendFrozen,
+                      legendMissed: dict.profile.calendarLegendMissed,
+                      legendOutside: dict.profile.calendarLegendOutside,
+                      legendToday: dict.profile.calendarLegendToday,
+                      months: dict.profile.calendarMonths,
+                      weekdays: dict.profile.calendarWeekdays,
+                      weekdaysFull: dict.profile.calendarWeekdaysFull,
+                    }}
                   />
-                  {/* The legend, not a tooltip. `title` is hover-only and
-                      hover does not exist on the Capacitor build (CLAUDE.md),
-                      so without this line a frozen day is a colour nobody can
-                      look up on a phone. The balance sits here too because
-                      this is the tab a learner actually lands on — the stat
-                      tile further down lives on the Progress tab. */}
-                  <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
-                    {streak.frozenDateKeys.length > 0 && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          aria-hidden
-                          className="h-3 w-3 flex-shrink-0 rounded border-2 border-dashed border-sky-500/70 bg-sky-400/25 dark:border-sky-300/70 dark:bg-sky-300/25"
-                        />
-                        {dict.profile.streakFrozenDayNote}
-                      </span>
-                    )}
+                  {/* The freeze balance sits under the calendar because this
+                      is the tab a learner actually lands on — the stat tile
+                      further down lives on the Progress tab. Shown always,
+                      including at zero: "none left" is exactly the number
+                      that changes what tomorrow costs. */}
+                  <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
                     <span className="inline-flex items-center gap-1.5">
                       <span aria-hidden>❄️</span>
                       {dict.profile.streakFreezesLeftLabel}: <b className="tabular-nums">{streak.freezesLeft}</b>

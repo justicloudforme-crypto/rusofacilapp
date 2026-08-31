@@ -3,8 +3,8 @@ import { addDateKeyDays } from "./timezone";
 // Streak freezes: a missed day does not have to end a streak.
 //
 // The rule, as agreed (PROGRESS.md 7.68 → 7.69):
-//   - 2 in hand to start, +1 for every 7 studied days in the current chain,
-//     never more than 3;
+//   - 2 in hand to start, +1 for every 14 studied days in the current
+//     chain, never more than 3;
 //   - one missed day costs one freeze and the chain survives;
 //   - TWO missed days in a row end the chain no matter what is in hand —
 //     otherwise the number stops meaning anything;
@@ -34,8 +34,17 @@ import { addDateKeyDays } from "./timezone";
 
 export const INITIAL_STREAK_FREEZES = 2;
 export const MAX_STREAK_FREEZES = 3;
-/** Studied days in the current chain that earn one more freeze. */
-export const DAYS_PER_EARNED_FREEZE = 7;
+/** Studied days in the current chain that earn one more freeze.
+ *
+ * Was 7 until 31.08.2026, changed to 14 by the owner after the arithmetic
+ * was written down: at one grant per seven days, a month of near-daily
+ * study earns THREE freezes while three missed days spend three, so earning
+ * outran spending and the streak effectively stopped being breakable. At
+ * one per fourteen the same month earns one, the budget for the month is
+ * three instead of five, and a fourth missed day ends the chain. The test
+ * "три дыры за МЕСЯЦ" carries those numbers so that changing this constant
+ * has to change a failing assertion. */
+export const DAYS_PER_EARNED_FREEZE = 14;
 
 /** How far back the replay is willing to walk from today.
  *

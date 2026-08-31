@@ -109,25 +109,31 @@ describe("streak freezes — spending", () => {
     expect(noFreezes(oneHole).currentStreak).toBe(4);
   });
 
-  it("7 дней подряд — остаток плюс один, но не выше 3", () => {
-    const seven = run(DAYS_PER_EARNED_FREEZE, 0);
-    expect(withFreezes(seven).currentStreak).toBe(7);
-    expect(withFreezes(seven).freezesLeft).toBe(INITIAL_STREAK_FREEZES + 1);
+  it("14 дней подряд — остаток плюс один, но не выше 3", () => {
+    // The interval was 7 until 31.08.2026 and is 14 now. Pinned here as a
+    // number as well as read from the constant, so that changing the rule
+    // has to come here and say so.
+    expect(DAYS_PER_EARNED_FREEZE).toBe(14);
 
-    // Six is not enough.
-    expect(withFreezes(run(6, 0)).freezesLeft).toBe(INITIAL_STREAK_FREEZES);
-
-    // Fourteen would be +2, but the cap holds.
-    const fourteen = run(14, 0);
+    const fourteen = run(DAYS_PER_EARNED_FREEZE, 0);
     expect(withFreezes(fourteen).currentStreak).toBe(14);
-    expect(withFreezes(fourteen).freezesLeft).toBe(MAX_STREAK_FREEZES);
+    expect(withFreezes(fourteen).freezesLeft).toBe(INITIAL_STREAK_FREEZES + 1);
+
+    // Thirteen is not enough — and seven, which used to be, is not either.
+    expect(withFreezes(run(13, 0)).freezesLeft).toBe(INITIAL_STREAK_FREEZES);
+    expect(withFreezes(run(7, 0)).freezesLeft).toBe(INITIAL_STREAK_FREEZES);
+
+    // Twenty-eight would be +2, but the cap holds.
+    const twentyEight = run(28, 0);
+    expect(withFreezes(twentyEight).currentStreak).toBe(28);
+    expect(withFreezes(twentyEight).freezesLeft).toBe(MAX_STREAK_FREEZES);
     expect(INITIAL_STREAK_FREEZES + 2).toBeGreaterThan(MAX_STREAK_FREEZES); // the cap is doing work
 
-    // Twenty-eight days: four grants, still capped.
-    expect(withFreezes(run(28, 0)).freezesLeft).toBe(MAX_STREAK_FREEZES);
+    // Fifty-six days: four grants, still capped.
+    expect(withFreezes(run(56, 0)).freezesLeft).toBe(MAX_STREAK_FREEZES);
 
     // Control: without the era, none of this is earned.
-    expect(noFreezes(fourteen).freezesLeft).toBe(INITIAL_STREAK_FREEZES);
+    expect(noFreezes(twentyEight).freezesLeft).toBe(INITIAL_STREAK_FREEZES);
   });
 
   it("три дыры вразбивку при остатке 2 — третья рвёт", () => {
@@ -159,14 +165,19 @@ describe("streak freezes — spending", () => {
     expect(before.frozenDateKeys).not.toEqual(after.frozenDateKeys);
   });
 
-  it("три дыры за МЕСЯЦ третья не рвёт — и это следствие правила, а не дефект", () => {
-    // The literal wording of the brief was "three holes over a month, the
-    // third breaks". Over a real month it does NOT, and the arithmetic says
-    // why: a month of near-daily study is ~25 studied days, which earns
-    // three grants at one per seven, while three holes spend three. Earning
-    // outruns spending. This is recorded as a test rather than a comment so
-    // that changing the rule has to change a failing assertion, not a
-    // sentence nobody reads.
+  it("три дыры за МЕСЯЦ третья не рвёт, но запас уходит в ноль — и четвёртая рвёт", () => {
+    // Recomputed 31.08.2026 for the new interval. Under the old rule (one
+    // grant per SEVEN days) a month of near-daily study earned three
+    // freezes while three holes spent three: earning outran spending, the
+    // learner finished the month with the same two in hand they started
+    // with, and the chain had become effectively unbreakable. That is the
+    // reason the owner moved the interval to fourteen.
+    //
+    // Under the new rule the same month earns ONE. Three holes are still
+    // survived — the budget for the month is 2 + 1 = 3 — but the balance
+    // ends at zero instead of two, which is the whole point: the next miss
+    // costs the streak. The case below and the four-hole case after it are
+    // the two halves of that statement.
     //
     // 25 days of history, single-day holes 20, 12 and 4 days ago.
     const holes = [20, 12, 4];
@@ -177,17 +188,44 @@ describe("streak freezes — spending", () => {
     const after = withFreezes(keys);
     expect(after.frozenDateKeys).toEqual(daysAgo(20, 12, 4)); // all three survived
     expect(after.currentStreak).toBe(22); // unbroken across the whole month
-    // 2 to start, three grants earned at days 7/14/21 of the chain, three
-    // spent on the holes — and the cap never bites because a spend always
-    // lands between two grants.
-    expect(after.freezesLeft).toBe(2);
+    // 2 to start, ONE grant earned at day 14 of the chain, three spent on
+    // the holes. Under the old rule this line read `toBe(2)`.
+    expect(after.freezesLeft).toBe(0);
 
-    // The control that the grants are what did it: with the grant rule
+    // The control that the grant is what did it: with the grant rule
     // switched off there would be nothing left after the second hole. The
     // no-freeze run shows the same history torn into short pieces.
     const before = noFreezes(keys);
     expect(before.currentStreak).toBe(4);
     expect(before.longestStreak).toBe(7);
+  });
+
+  it("четвёртая дыра за тот же месяц рвёт серию — новое правило кусается", () => {
+    // The same month with a fourth single-day hole. Three are covered, the
+    // fourth meets an empty balance and ends the chain.
+    //
+    // Under the OLD rule (one per seven) this same history earned four
+    // grants and all four holes survived with a streak of 21 — which is
+    // exactly the complaint: at some point the counter stopped being able
+    // to go wrong.
+    const holes = [20, 12, 8, 4];
+    const keys = Array.from({ length: 25 }, (_, i) => 24 - i)
+      .filter((offset) => !holes.includes(offset))
+      .map((offset) => addDateKeyDays(TODAY, -offset));
+
+    const after = withFreezes(keys);
+    expect(after.frozenDateKeys).toEqual(daysAgo(20, 12, 8)); // the first three
+    expect(after.frozenDateKeys).not.toContain(addDateKeyDays(TODAY, -4));
+    expect(after.freezesLeft).toBe(0);
+    expect(after.currentStreak).toBe(4); // only the days since the fourth hole
+
+    // Control: the same four holes with freezes switched off leave the
+    // chain even shorter, so "4" is not simply what a broken feature
+    // returns.
+    expect(noFreezes(keys).currentStreak).toBe(4);
+    expect(noFreezes(keys).longestStreak).toBe(7);
+    expect(noFreezes(keys).frozenDateKeys).toEqual([]);
+    expect(after.frozenDateKeys).not.toEqual(noFreezes(keys).frozenDateKeys);
   });
 
   it("пользователь без заморозок вообще (старая строка с null) ведёт себя как раньше", () => {

@@ -32,17 +32,21 @@ const E2E_DIR = join(repoRoot, "e2e");
 
 /**
  * How many tests the suite is known to execute, counting one test per
- * project (57 = 27 in chromium + 27 in mobile-iphone + 3 in
+ * project (61 = 29 in chromium + 29 in mobile-iphone + 3 in
  * voice-ios-shape). Raised from 49 to 53 on 30.08.2026 by
  * e2e/page-width.spec.ts — one test per locale — and from 53 to 57 when
  * that spec gained its second viewport width (320 alongside 360), which
- * doubles it to one test per locale per width. Raise it when tests are
+ * doubles it to one test per locale per width. Raised from 57 to 61 on
+ * 31.08.2026 by e2e/navbar-signed-in.spec.ts (one test per locale), which
+ * measures the header of a SIGNED-IN learner at 640–660 — the surface debt
+ * 37 existed for, and the one check:layout cannot reach because it browses
+ * anonymously. Raise it when tests are
  * added; it must never be
  * lowered to make a run pass. Lowering it is the exact move this file
  * exists to prevent, so if you are here to do that, the thing to fix is
  * the run.
  */
-const MIN_EXECUTED_TESTS = 57;
+const MIN_EXECUTED_TESTS = 61;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.

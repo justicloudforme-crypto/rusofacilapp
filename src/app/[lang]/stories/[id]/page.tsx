@@ -5,6 +5,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import { getContentInsights, getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
 import { isPilotStory } from "@/lib/story-pilot";
@@ -82,6 +83,10 @@ export default async function StoryReaderPage({
     getAllMedia(),
   ]);
   if (!story) notFound();
+
+  // Opening the story is the study action — the day counts from here, not
+  // from turning a page far enough for StoryReadingProgress to be written.
+  await markStudyDayVisit("story");
 
   const relatedLesson = getRelatedLessonForStory(story);
   const relatedLessonTitle = relatedLesson

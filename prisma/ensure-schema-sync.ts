@@ -110,7 +110,44 @@ function parseSchema(schemaText: string): ModelDef[] {
   return models;
 }
 
-export { parseSchema, modelBodies };
+/** Tables this script is allowed to CREATE, with the DDL written out by
+ * hand.
+ *
+ * The column diff above cannot help with a brand-new model: it reads
+ * `PRAGMA table_info`, sees a table with no columns, and skips — which
+ * means a new Prisma model reaches production as "no such table" on every
+ * query that touches it. That is the same shape of outage as 27.08.2026,
+ * one level up.
+ *
+ * Deliberately an explicit, hand-written list rather than a general
+ * "generate CREATE TABLE from schema.prisma". A generated DDL would have
+ * to get defaults, relation columns, indexes and constraints right for all
+ * 23 models, and any mistake in it would run against production
+ * unsupervised. A list of statements a human wrote and a human reviewed
+ * can only ever create the tables named in it, and `IF NOT EXISTS` makes
+ * every one of them a no-op on the second build. src/lib/schema-sync.test.ts
+ * checks the two halves agree: every model in schema.prisma is either
+ * already in production's shape or named here.
+ */
+const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string[] }> = [
+  {
+    table: "StudyDay",
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "StudyDay" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "userId" TEXT NOT NULL,
+         "dateKey" TEXT NOT NULL,
+         "source" TEXT NOT NULL,
+         "markedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+         CONSTRAINT "StudyDay_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+       )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "StudyDay_userId_dateKey_key" ON "StudyDay"("userId", "dateKey")`,
+      `CREATE INDEX IF NOT EXISTS "StudyDay_userId_idx" ON "StudyDay"("userId")`,
+    ],
+  },
+];
+
+export { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS };
 
 async function main() {
   const url = process.env.TURSO_DATABASE_URL;
@@ -125,6 +162,17 @@ async function main() {
 
   const client = createClient({ url, authToken });
   let addedCount = 0;
+  let createdCount = 0;
+
+  // Tables first: a model that does not exist at all cannot be column-diffed,
+  // and the loop below would silently skip it forever.
+  for (const { table, statements } of CREATE_TABLE_STATEMENTS) {
+    const info = await client.execute(`PRAGMA table_info("${table}")`);
+    if (info.rows.length > 0) continue;
+    console.log(`[ensure-schema-sync] Creating missing table ${table}...`);
+    for (const statement of statements) await client.execute(statement);
+    createdCount++;
+  }
 
   for (const model of models) {
     let existingColumns: Set<string>;
@@ -149,9 +197,9 @@ async function main() {
   }
 
   console.log(
-    addedCount > 0
-      ? `[ensure-schema-sync] Added ${addedCount} missing column(s).`
-      : "[ensure-schema-sync] Schema already in sync — no columns added."
+    addedCount > 0 || createdCount > 0
+      ? `[ensure-schema-sync] Created ${createdCount} missing table(s), added ${addedCount} missing column(s).`
+      : "[ensure-schema-sync] Schema already in sync — no tables or columns added."
   );
   client.close();
 }

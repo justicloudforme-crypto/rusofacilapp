@@ -1,7 +1,9 @@
 import "server-only";
 import { db } from "./db";
-import { cached, getOrCreateGlobalSingleton, TtlCache } from "./ttl-cache";
+import { cached } from "./ttl-cache";
+import { activityCacheKey, activityDateKeysCache } from "./activity-cache";
 import { DEFAULT_TIME_ZONE, dateKeyIn } from "./timezone";
+import { getStudyDayKeys } from "./study-day";
 import {
   INITIAL_STREAK_FREEZES,
   nextFreezeRecord,
@@ -66,44 +68,28 @@ function statsFrom(
   };
 }
 
-/** Derives the user's activity streak from the progress tables the app
- * already writes to — no dedicated activity-log table exists yet, so this
- * is a best-effort proxy, not a full history.
+/** Every calendar day this learner has been active on, in their own zone.
  *
- * Five sources, and the last two were added 31.08.2026: a finished word
- * game and a submitted exam are study, and leaving them out meant a day
- * spent entirely on either left no trace in the counter at all. (Measured
- * on the owner's own rows: an exam on 11.08 and word games on 19–20.08 sat
- * in the database while the streak ignored them.)
+ * SIX sources, and they are not equivalent. The first is the day mark
+ * (StudyDay): one row per learner per day, written when they OPEN a lesson,
+ * a story, a game, the cards or an exam. The other five are the progress
+ * tables, which record a RESULT — an exercise checked, a card answered, a
+ * page turned, a puzzle finished, an exam submitted.
  *
- * Caveat that remains: every one of these tables is upserted (one row per
- * lesson/card/story/puzzle, not one row per attempt), so only the MOST
- * RECENT touch of each item is kept. A day where the user revisits only
- * items they'd already touched on a later day leaves no trace here — its
- * timestamp gets overwritten. Measured on the owner's account: 47 of 410
- * flashcard rows were created on one day and last touched on another, and
- * five days survive on a single row each; no day was lost outright, but
- * nothing guarantees that. A proper fix needs a dedicated daily-activity
- * table — out of scope until schema changes for it are agreed. */
-// This does 5 full-table scans over every progress row a user has ever
-// touched — genuinely expensive for a long-tenured, active user, and
-// called on *every* progress-affecting write (via awardBadgesSafely) as
-// well as every /profile render. A 60s TTL absorbs repeated reads within
-// that window (e.g. several exercise checks in one lesson, or a
-// badge-eval-then-profile-view sequence) without ever letting the streak
-// be more than ~60s stale — harmless for a display stat that isn't used
-// for anything security-sensitive, and streak-crossing badges (see
-// badges/index.ts) only ever need to fire once, not instantly.
-// Cached as raw date keys, not the derived StreakStats, so the /profile
-// activity heatmap can reuse the exact activity signal the streak is
-// computed from, instead of inventing a second notion of "activity."
-// The cache key carries the time zone: the same user's keys are DIFFERENT
-// strings in two zones, and a shared entry would hand one zone's keys to
-// the other for up to 60s.
-const activityDateKeysCache = getOrCreateGlobalSingleton(
-  "activityDateKeysCache",
-  () => new TtlCache<string[]>(60_000, "activity-date-keys", Array.isArray)
-);
+ * Until 31.08.2026 there were only the five, and that was the owner's
+ * complaint: a day spent studying without finishing anything did not exist
+ * for the counter. The day mark is the fix; the five stay because they hold
+ * every day from before it existed, and they are the only record of those.
+ *
+ * The old caveat still applies to the five and NOT to the mark. Each of
+ * those tables is upserted — one row per lesson/card/story/puzzle, not per
+ * attempt — so only the most recent touch of an item survives, and a day
+ * spent revisiting items later touched again leaves no trace. Measured on
+ * the owner's account: 47 of 410 flashcard rows were created on one day and
+ * last touched on another. StudyDay does not have this problem: its row is
+ * the day itself, and nothing overwrites it. Days from before the mark
+ * shipped keep the caveat forever — they cannot be rebuilt. */
+
 
 /** The instant a flashcard row last represents.
  *
@@ -119,8 +105,21 @@ function flashcardTouchedAt(row: { lastSeenAt: Date | null; updatedAt: Date }): 
 }
 
 async function fetchActivityDateKeys(userId: string, timeZone: string): Promise<string[]> {
-  return cached(activityDateKeysCache, `${userId}|${timeZone}`, async () => {
-    const [lessonRows, flashcardRows, storyRows, wordGameRows, examRows] = await Promise.all([
+  return cached(activityDateKeysCache, activityCacheKey(userId, timeZone), async () => {
+    const [studyDayKeys, lessonRows, flashcardRows, storyRows, wordGameRows, examRows] = await Promise.all([
+      // The explicit day mark (src/lib/study-day.ts) — the only source here
+      // that records the learner having STUDIED rather than having finished
+      // something. It is a first-class source, not a replacement: the five
+      // below still carry every day from before the mark existed, and
+      // deleting them would erase that history.
+      //
+      // These keys are already date keys, built in the learner's zone at
+      // the moment they were marked, so they are NOT re-derived here. The
+      // consequence, stated rather than hidden: a learner who moves zone
+      // keeps their old days on the old calendar. Re-deriving them is not
+      // possible — the instant is deliberately not stored — and guessing
+      // would be worse than a day that sits where the learner was standing.
+      getStudyDayKeys(userId),
       db.lessonProgress.findMany({ where: { userId }, select: { completedAt: true } }),
       db.flashcardProgress.findMany({ where: { userId }, select: { lastSeenAt: true, updatedAt: true } }),
       db.storyReadingProgress.findMany({ where: { userId }, select: { updatedAt: true } }),
@@ -128,7 +127,7 @@ async function fetchActivityDateKeys(userId: string, timeZone: string): Promise<
       db.examAttempt.findMany({ where: { userId }, select: { completedAt: true } }),
     ]);
 
-    const activityDateKeys = new Set<string>();
+    const activityDateKeys = new Set<string>(studyDayKeys);
     for (const row of lessonRows) activityDateKeys.add(dateKeyIn(row.completedAt, timeZone));
     for (const row of flashcardRows) activityDateKeys.add(dateKeyIn(flashcardTouchedAt(row), timeZone));
     for (const row of storyRows) activityDateKeys.add(dateKeyIn(row.updatedAt, timeZone));

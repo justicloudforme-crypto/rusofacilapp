@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseSchema, modelBodies } from "../../prisma/ensure-schema-sync";
+import { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS } from "../../prisma/ensure-schema-sync";
 
 /**
  * The production outage of 29.08.2026, as a test.
@@ -90,5 +90,85 @@ describe("ensure-schema-sync parses the whole model", () => {
     // and the types it does map are the SQLite ones
     expect(wordGame.fields.find((f) => f.name === "updatedAt")?.sqlType).toBe("TEXT");
     expect(wordGame.fields.find((f) => f.name === "sequence")?.sqlType).toBe("INTEGER");
+  });
+});
+
+/**
+ * The second half of the migrator, added 31.08.2026 with the StudyDay
+ * table.
+ *
+ * The column diff above cannot create a table: it reads PRAGMA table_info,
+ * gets nothing back for a model production has never seen, and skips. So a
+ * brand-new Prisma model reaches production as "no such table" on every
+ * query that touches it — the 27.08.2026 outage one level up. The fix is a
+ * short, hand-written list of CREATE TABLE statements, and the risk it
+ * carries is drift: a column added to schema.prisma later, and not to the
+ * DDL, would exist for everyone whose database was migrated but not for
+ * anyone whose table this statement built.
+ *
+ * These cases close that by comparing the two texts to each other, with no
+ * database involved (`npm run test` opens no connections — see
+ * check:no-db-in-tests).
+ */
+describe("ensure-schema-sync can create a table it has never seen", () => {
+  /** Column names out of a hand-written CREATE TABLE, ignoring the table
+   * constraints at the end. */
+  function ddlColumns(statement: string): string[] {
+    const body = statement.slice(statement.indexOf("(") + 1, statement.lastIndexOf(")"));
+    return body
+      .split("\n")
+      .map((line) => line.trim())
+      .map((line) => /^"(\w+)"/.exec(line)?.[1])
+      .filter((name): name is string => Boolean(name));
+  }
+
+  it("every table it may create matches its model in schema.prisma, column for column", () => {
+    const models = new Map(parseSchema(SCHEMA).map((model) => [model.name, model]));
+    expect(CREATE_TABLE_STATEMENTS.length).toBeGreaterThan(0);
+
+    for (const { table, statements } of CREATE_TABLE_STATEMENTS) {
+      const model = models.get(table);
+      expect(model, `${table} has a CREATE TABLE but no model in schema.prisma`).toBeDefined();
+      const inSchema = model!.fields.map((f) => f.name).sort();
+      const inDdl = ddlColumns(statements[0]).sort();
+      expect(inDdl, `${table}: the DDL and schema.prisma disagree about columns`).toEqual(inSchema);
+    }
+  });
+
+  it("control: the comparison notices a column the DDL is missing", () => {
+    // Rule 4.1. The case above answers "they agree"; this shows it can say
+    // otherwise, using the exact shape of the drift it guards against.
+    const truncated = `CREATE TABLE IF NOT EXISTS "StudyDay" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "userId" TEXT NOT NULL,
+         "dateKey" TEXT NOT NULL
+       )`;
+    const model = parseSchema(SCHEMA).find((m) => m.name === "StudyDay");
+    expect(model).toBeDefined();
+    expect(ddlColumns(truncated).sort()).not.toEqual(model!.fields.map((f) => f.name).sort());
+  });
+
+  it("every statement is re-runnable: a second build must not fail on an existing table", () => {
+    // The migrator runs at the start of EVERY build, and the guard in front
+    // of it (PRAGMA table_info) is a check, not a lock. IF NOT EXISTS is
+    // what makes a re-run a no-op instead of an error that fails the deploy.
+    for (const { table, statements } of CREATE_TABLE_STATEMENTS) {
+      for (const statement of statements) {
+        expect(statement, `${table}: "${statement.slice(0, 40)}…" is not re-runnable`).toMatch(/IF NOT EXISTS/);
+      }
+    }
+  });
+
+  it("a created table carries its own indexes, not just its columns", () => {
+    // A unique index is not decoration here: StudyDay's whole idempotency
+    // guarantee — one row per learner per day, whatever renders twice — is
+    // that index. A table created without it would accept a row per page
+    // view and nobody would notice until a streak read six copies of one
+    // day.
+    const studyDay = CREATE_TABLE_STATEMENTS.find((t) => t.table === "StudyDay");
+    expect(studyDay).toBeDefined();
+    const joined = studyDay!.statements.join("\n");
+    expect(joined).toMatch(/CREATE UNIQUE INDEX[^\n]*"StudyDay"\("userId", "dateKey"\)/);
+    expect(joined).toMatch(/FOREIGN KEY \("userId"\) REFERENCES "User"[^\n]*ON DELETE CASCADE/);
   });
 });
