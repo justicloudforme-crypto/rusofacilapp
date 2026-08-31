@@ -90,10 +90,13 @@ export async function evaluateAndAwardBadges(userId: string): Promise<BadgeDef[]
   // Unknown zone falls back to UTC — the same value every reader used
   // before 31.08.2026, so a null here can only ever under-count a streak
   // badge, never award one that wasn't earned.
-  const owner = await db.user.findUnique({ where: { id: userId }, select: { timezone: true } });
+  const owner = await db.user.findUnique({
+    where: { id: userId },
+    select: { timezone: true, streakFreezesLeft: true, streakFreezesSince: true },
+  });
 
   const [streak, examAttempts, vocabKnownCount, existing] = await Promise.all([
-    getUserStreakStats(userId, owner?.timezone ?? DEFAULT_TIME_ZONE),
+    getUserStreakStats(userId, owner?.timezone ?? DEFAULT_TIME_ZONE, owner),
     getExamAttempts(userId),
     db.flashcardProgress.count({ where: { userId, known: true } }),
     db.userBadge.findMany({ where: { userId }, select: { badgeId: true } }),

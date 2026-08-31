@@ -1,7 +1,13 @@
 import "server-only";
 import { db } from "./db";
 import { cached, getOrCreateGlobalSingleton, TtlCache } from "./ttl-cache";
-import { DEFAULT_TIME_ZONE, addDateKeyDays, dateKeyIn } from "./timezone";
+import { DEFAULT_TIME_ZONE, dateKeyIn } from "./timezone";
+import {
+  INITIAL_STREAK_FREEZES,
+  nextFreezeRecord,
+  resolveStreakWithFreezes,
+  type FreezeState,
+} from "./streak-freezes";
 
 export interface StreakStats {
   /** Consecutive days up to and including today (or yesterday, if today
@@ -16,52 +22,48 @@ export interface StreakStats {
   lastActiveDate: string | null;
   /** Whether today already counts as an active day. */
   activeToday: boolean;
+  /** Streak freezes in hand, derived (src/lib/streak-freezes.ts). */
+  freezesLeft: number;
+  /** Days a freeze was spent on — what the activity heatmap paints as its
+   * own third state so a saved day is visible, not silent. */
+  frozenDateKeys: string[];
 }
 
-/** Pure function over a set of "YYYY-MM-DD" activity date keys, kept
- * separate from the DB fetch below so streak math is unit-testable without
- * a database. `today` is injectable for the same reason.
+/** The streak with no freezes at all — the behaviour every account had
+ * before 31.08.2026, kept as a named entry point because it is exactly what
+ * an account with no freeze state must still do.
  *
- * `timeZone` decides where "today" and "yesterday" fall, and it must be the
- * SAME zone the keys themselves were derived in — mixing them (keys in the
- * learner's zone, "today" in UTC) is the bug this parameter exists to
- * prevent, not a knob to tune. */
+ * Not a second implementation: it calls the one replay in
+ * streak-freezes.ts with a null epoch, which means freezes start today and
+ * therefore no past gap is ever forgiven. Its own test file
+ * (streaks.test.ts) is thereby also a regression guard on the freeze
+ * machinery — if the replay ever started forgiving history, those cases
+ * would fail. */
 export function computeStreakStats(
   activityDateKeys: Iterable<string>,
   today: Date = new Date(),
   timeZone: string = DEFAULT_TIME_ZONE,
 ): StreakStats {
-  const dates = new Set(activityDateKeys);
-  if (dates.size === 0) {
-    return { currentStreak: 0, longestStreak: 0, lastActiveDate: null, activeToday: false };
-  }
+  return statsFrom(activityDateKeys, dateKeyIn(today, timeZone), {
+    freezesLeft: null,
+    freezesSince: null,
+  });
+}
 
-  // ISO "YYYY-MM-DD" keys sort chronologically as plain strings.
-  const sorted = [...dates].sort();
-
-  let longestStreak = 1;
-  let run = 1;
-  for (let i = 1; i < sorted.length; i++) {
-    run = sorted[i] === addDateKeyDays(sorted[i - 1], 1) ? run + 1 : 1;
-    longestStreak = Math.max(longestStreak, run);
-  }
-
-  const todayKey = dateKeyIn(today, timeZone);
-  const activeToday = dates.has(todayKey);
-  const yesterdayKey = addDateKeyDays(todayKey, -1);
-
-  // A streak that hasn't been extended today is still "alive" through the
-  // end of today as long as yesterday was active; it only resets to 0 once
-  // a full day passes with no activity at all.
-  let cursor: string | null = activeToday ? todayKey : dates.has(yesterdayKey) ? yesterdayKey : null;
-
-  let currentStreak = 0;
-  while (cursor !== null && dates.has(cursor)) {
-    currentStreak += 1;
-    cursor = addDateKeyDays(cursor, -1);
-  }
-
-  return { currentStreak, longestStreak, lastActiveDate: sorted[sorted.length - 1], activeToday };
+function statsFrom(
+  activityDateKeys: Iterable<string>,
+  todayKey: string,
+  freezeState: FreezeState,
+): StreakStats {
+  const resolution = resolveStreakWithFreezes(activityDateKeys, todayKey, freezeState);
+  return {
+    currentStreak: resolution.currentStreak,
+    longestStreak: resolution.longestStreak,
+    lastActiveDate: resolution.lastActiveDate,
+    activeToday: resolution.activeToday,
+    freezesLeft: resolution.freezesLeft,
+    frozenDateKeys: resolution.frozenDateKeys,
+  };
 }
 
 /** Derives the user's activity streak from the progress tables the app
@@ -137,13 +139,64 @@ async function fetchActivityDateKeys(userId: string, timeZone: string): Promise<
   });
 }
 
+/** Freeze state as it sits on the User row. Every caller already has the
+ * row (getCurrentUser returns it whole), so this is a shape, not a fetch. */
+export interface UserFreezeColumns {
+  streakFreezesLeft?: number | null;
+  streakFreezesSince?: string | null;
+}
+
+function freezeStateOf(user: UserFreezeColumns | null | undefined): FreezeState {
+  return {
+    freezesLeft: user?.streakFreezesLeft ?? null,
+    freezesSince: user?.streakFreezesSince ?? null,
+  };
+}
+
 export async function getUserStreakStats(
   userId: string,
   timeZone: string = DEFAULT_TIME_ZONE,
+  user?: UserFreezeColumns | null,
 ): Promise<StreakStats> {
   const activityDateKeys = await fetchActivityDateKeys(userId, timeZone);
-  return computeStreakStats(activityDateKeys, new Date(), timeZone);
+  return statsFrom(activityDateKeys, dateKeyIn(new Date(), timeZone), freezeStateOf(user));
 }
+
+/** Writes the freeze mirror and the epoch back, and ONLY when one of them
+ * actually moved — see nextFreezeRecord.
+ *
+ * Reading the streak must not cost a write. In practice this fires once per
+ * account ever (stamping the epoch) and then at most once on any day the
+ * balance changes; rendering the same page twice writes nothing, which is
+ * the property streak-freezes.test.ts proves directly.
+ *
+ * Fail-soft on purpose: this is bookkeeping behind a display number, and it
+ * runs inside after(). A failed write means the next read derives the same
+ * answer again and tries again — never a broken page. */
+export async function persistFreezeState(
+  userId: string,
+  user: UserFreezeColumns | null | undefined,
+  timeZone: string = DEFAULT_TIME_ZONE,
+): Promise<void> {
+  try {
+    const activityDateKeys = await fetchActivityDateKeys(userId, timeZone);
+    const state = freezeStateOf(user);
+    const resolution = resolveStreakWithFreezes(
+      activityDateKeys,
+      dateKeyIn(new Date(), timeZone),
+      state,
+    );
+    const record = nextFreezeRecord(state, resolution);
+    if (!record) return;
+    await db.user.update({ where: { id: userId }, data: record });
+  } catch (error) {
+    console.error("persistFreezeState failed", error);
+  }
+}
+
+/** The starting grant, re-exported so a surface that has no streak in hand
+ * (a brand-new account) can still show the right number. */
+export { INITIAL_STREAK_FREEZES };
 
 /** Raw "YYYY-MM-DD" activity date keys, for the /profile activity heatmap.
  * Not a new metric — the same signal getUserStreakStats already derives

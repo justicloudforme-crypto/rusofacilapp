@@ -10,6 +10,10 @@ describe("computeStreakStats", () => {
       longestStreak: 0,
       lastActiveDate: null,
       activeToday: false,
+      // An account with nothing in it still gets shown its starting grant —
+      // the two freeze fields are part of the shape now (PROGRESS.md 7.69).
+      freezesLeft: 2,
+      frozenDateKeys: [],
     });
   });
 
