@@ -34,6 +34,20 @@ model User {
   // store or clean up.
   sessionVersion       Int                    @default(0)
   stripeCustomerId     String?                @unique
+  // IANA time zone name reported by the browser (e.g. "America/Tijuana"),
+  // written by POST /api/timezone. Null until the user's first page load
+  // after this column existed — every reader falls back to UTC, which is
+  // exactly the behaviour that was wrong before, so a null here is a
+  // "not known yet", never a preference.
+  //
+  // It exists because the day boundary of the activity streak has to be
+  // the LEARNER's midnight, not the server's: a Tijuana evening (UTC-7)
+  // is already the next UTC day, so two adjacent study days collapsed or
+  // split and the streak reset for no visible reason (see PROGRESS.md
+  // 7.68). A cookie alone would not do — badge evaluation runs in
+  // after(), and a public profile is rendered for a visitor whose time
+  // zone is not the profile owner's.
+  timezone             String?
   createdAt            DateTime               @default(now())
   subscriptions        Subscription[]
   lessonProgress       LessonProgress[]

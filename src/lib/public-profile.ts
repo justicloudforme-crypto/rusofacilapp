@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { getUserStreakStats } from "./streaks";
+import { DEFAULT_TIME_ZONE } from "./timezone";
 import { getUserBadgesForDisplay, type DisplayBadge } from "./badges";
 import { getLevelProgress } from "./progress";
 import { levelSlugs, type LevelSlug } from "./courses";
@@ -101,13 +102,16 @@ export async function getPublicProfileData(handle: string): Promise<PublicProfil
 
   const user = await db.user.findUnique({
     where: { publicHandle: handle },
-    select: { id: true, name: true, avatarId: true, publicProfileEnabled: true },
+    select: { id: true, name: true, avatarId: true, publicProfileEnabled: true, timezone: true },
   });
   if (!user || !user.publicProfileEnabled) return null;
 
   const [progress, streak, badges, tier] = await Promise.all([
     getLevelProgress(user.id),
-    getUserStreakStats(user.id),
+    // The PROFILE OWNER's zone, deliberately not the visitor's: this page
+    // is rendered for someone else, so a request cookie here would be the
+    // wrong person's midnight. Falls back to UTC when unknown.
+    getUserStreakStats(user.id, user.timezone ?? DEFAULT_TIME_ZONE),
     getUserBadgesForDisplay(user.id),
     getEntitlementTierForUser(user.id),
   ]);

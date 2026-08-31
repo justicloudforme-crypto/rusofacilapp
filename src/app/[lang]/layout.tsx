@@ -21,6 +21,8 @@ import SentryUser from "@/components/SentryUser";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserStreakStats } from "@/lib/streaks";
+import { getRequestTimeZone } from "@/lib/timezone-server";
+import TimeZoneSync from "@/components/TimeZoneSync";
 import { PaywallProvider } from "@/contexts/PaywallContext";
 import type { PlanId } from "@/lib/plans";
 
@@ -119,7 +121,9 @@ export default async function LangLayout({
   // getUserStreakStats is TTL-cached (60s, see streaks.ts) — calling it
   // here for the header's streak badge doesn't add a real per-request DB
   // cost. null for a logged-out visitor, who never sees the badge anyway.
-  const streak = user ? await getUserStreakStats(user.id) : null;
+  // The learner's own midnight, not the server's — see src/lib/timezone.ts.
+  const timeZone = await getRequestTimeZone(user?.timezone);
+  const streak = user ? await getUserStreakStats(user.id, timeZone) : null;
 
   const paywallPlans: Record<PlanId, { name: string; price: string; period: string; badge?: string; valueNote?: string }> = {
     monthly: { name: dict.pricing.monthly.name, price: dict.pricing.monthly.price, period: dict.pricing.monthly.period },
@@ -163,6 +167,7 @@ export default async function LangLayout({
           <SerwistRegister />
         </SerwistProvider>
         <SentryUser userId={user?.id ?? null} />
+        <TimeZoneSync storedTimeZone={user?.timezone ?? null} />
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
         <NativeNotifications />

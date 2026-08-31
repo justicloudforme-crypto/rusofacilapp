@@ -1,3 +1,5 @@
+import { addDateKeyDays, dateKeyIn } from "@/lib/timezone";
+
 // 30-day activity heatmap for the /profile Overview tab. Pure display over
 // the same "YYYY-MM-DD" activity date keys getUserStreakStats already
 // derives currentStreak/longestStreak from (see getUserActivityDateKeys in
@@ -5,17 +7,18 @@
 export default function ActivityHeatmap({
   activeDateKeys,
   todayLabel,
+  timeZone,
 }: {
   activeDateKeys: string[];
   todayLabel: string;
+  /** The zone the keys were derived in. The strip has to be built in the
+   * SAME zone, or its 30 slots and the keys they are matched against are
+   * two different calendars and the whole row shifts by a day. */
+  timeZone: string;
 }) {
   const active = new Set(activeDateKeys);
-  const today = new Date();
-  const days = Array.from({ length: 30 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - (29 - i));
-    return d.toISOString().slice(0, 10);
-  });
+  const todayKey = dateKeyIn(new Date(), timeZone);
+  const days = Array.from({ length: 30 }, (_, i) => addDateKeyDays(todayKey, i - 29));
 
   return (
     <div className="overflow-x-auto">

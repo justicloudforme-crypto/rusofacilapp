@@ -17,6 +17,7 @@ import {
 } from "@/lib/subscription";
 import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
 import { getUserStreakStats, getUserActivityDateKeys } from "@/lib/streaks";
+import { getRequestTimeZone } from "@/lib/timezone-server";
 import { getExamAttempts, type ExamAttemptSummary } from "@/lib/exams/progress";
 import { getUserBadgesForDisplay, type DisplayBadge } from "@/lib/badges";
 import type { BadgeDef } from "@/lib/badges/catalog";
@@ -285,6 +286,11 @@ export default async function ProfilePage({
   // see the 2026-08-23 incident) must not take down the whole profile page
   // — badges/progress/referral etc. are unrelated and should still render.
   // A failure degrades to "no subscription data" rather than a raw 500.
+  // The learner's own midnight, not the server's — see src/lib/timezone.ts.
+  // Resolved before the batch below because both the streak and the
+  // activity heatmap have to be derived in the same zone.
+  const timeZone = await getRequestTimeZone(user.timezone);
+
   const [
     subscriptionHistory,
     progress,
@@ -309,8 +315,8 @@ export default async function ProfilePage({
     getLessonProgressDetails(user.id),
     getExamAttempts(user.id),
     db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
-    getUserStreakStats(user.id),
-    getUserActivityDateKeys(user.id),
+    getUserStreakStats(user.id, timeZone),
+    getUserActivityDateKeys(user.id, timeZone),
     getThemePreference(),
     getUserBadgesForDisplay(user.id),
     getWeeklyWeakTopic(user.id),
@@ -550,7 +556,7 @@ export default async function ProfilePage({
                   {dict.profile.activityHeatmapHeading}
                 </SectionHeading>
                 <div className="mt-3">
-                  <ActivityHeatmap activeDateKeys={activityDateKeys} todayLabel={dict.profile.streakActiveTodayNote} />
+                  <ActivityHeatmap activeDateKeys={activityDateKeys} todayLabel={dict.profile.streakActiveTodayNote} timeZone={timeZone} />
                 </div>
               </section>
 
