@@ -32,11 +32,13 @@ describe("checkStripeEnvShapes", () => {
     expect(checkStripeEnvShapes({ ...OK, DATABASE_URL: "file:./dev.db", SENTRY_DSN: "https://x" })).toEqual([]);
   });
 
-  // THE DEFECT ITSELF, reproduced. 2026-08-24 → 2026-08-31: STRIPE_PRICE_LIFETIME
-  // on Vercel Production held a copy of the live secret key. Everything else
-  // was correct, the deployment was Ready, and no purchase could complete.
-  // If this test ever goes green with the guard removed, the guard is a decoration.
-  it("catches the 2026-08-24 defect: a secret key sitting in STRIPE_PRICE_LIFETIME", () => {
+  // A secret key copied into a price slot: the case this guard was built for,
+  // on a reading of the 2026-08-24 incident that turned out to be wrong (the
+  // variable actually held an ARCHIVED Price id — PROGRESS.md 7.66, and
+  // src/lib/stripe-price-health.test.ts for the check that catches THAT).
+  // Still a real way to break a checkout, and still worth a test: if this goes
+  // green with the guard removed, the guard is a decoration.
+  it("catches a secret key sitting in STRIPE_PRICE_LIFETIME", () => {
     const problems = checkStripeEnvShapes({
       ...OK,
       STRIPE_PRICE_LIFETIME: "sk_live_notarealkeyCCCCCCCCCCCC",

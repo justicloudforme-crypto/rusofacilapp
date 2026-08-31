@@ -159,6 +159,16 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["how do I run the subscriber check next time", "RUSOFACIL_TEST_PASSWORD"],
   ["which URLs do I check in Search Console", "Список URL для проверки"],
   ["how do I tell the outage from ordinary noise", "6 контрольных незатронутых"],
+  // Added 31.08.2026, the round that overturned its predecessor's diagnosis.
+  // The first of these matters most: 7.63 is still in the file and still
+  // states the wrong cause, so a cold reader must meet the correction before
+  // acting on it.
+  ["why could nobody buy Premium for six days", "### 7.66."],
+  ["can I trust what 7.63 says the cause was", "ЭТОТ РАЗДЕЛ СОДЕРЖИТ ОШИБОЧНЫЙ ДИАГНОЗ"],
+  ["must the Stripe secret key be rolled", "не перевыпускался и не нуждается в этом"],
+  ["does anything check that a price id is alive", "/api/admin/stripe-health"],
+  ["what does the price check fail to catch", "Чего эта проверка НЕ ловит"],
+  ["what happens when Stripe refuses the checkout", "checkout-blocked"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {

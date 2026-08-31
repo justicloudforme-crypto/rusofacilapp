@@ -48,10 +48,19 @@ jobs:
       # The positive control for the Stripe env-shape guard. CI has no Stripe
       # variables at all, so the guard's real run here is vacuously green —
       # which is exactly the kind of green PROGRESS.md 4.1 says proves
-      # nothing. This step plants eight malformed values (including the real
-      # 2026-08-24 one) and fails unless the guard goes red on every one.
+      # nothing. This step plants eight malformed values and fails unless the
+      # guard goes red on every one.
       - name: Stripe env guard — positive control
         run: npm run check:stripe-env:self-test
+
+      # The same control for the AUTHENTICITY check (PROGRESS.md 7.66): the
+      # shape guard above would have passed the real 2026-08-24 defect, which
+      # was a properly formed Price id pointing at an ARCHIVED price. This
+      # step plants an archived price, a nonexistent one, a wrong amount and a
+      # wrong currency, and fails unless each is caught. No Stripe key is
+      # needed: the single Stripe call is injected.
+      - name: Stripe price authenticity — positive control
+        run: npm run check:stripe-prices:self-test
 
       - name: Build
         run: npm run build

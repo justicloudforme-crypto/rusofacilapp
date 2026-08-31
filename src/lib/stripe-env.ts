@@ -1,33 +1,35 @@
 /**
  * Shape check for the Stripe environment variables.
  *
- * Why this file exists. On 2026-08-24 22:36 UTC the Production variable
- * `STRIPE_PRICE_LIFETIME` was created on Vercel holding, instead of a Price
- * id, a copy of the live Stripe secret key (`sk_live_…`). The key itself was
- * not lost — `STRIPE_SECRET_KEY` still held it, so cards, subscriptions and
- * webhooks all kept working — it was *duplicated into the wrong slot*. The
- * effect was narrow and total: every lifetime checkout asked Stripe for a
- * Price whose id was a secret key, and no such Price exists, so the Premium
- * purchase could not complete even once. It ran that way for 6 days 6 hours,
- * until 2026-08-31 04:38 UTC.
+ * READ THIS FIRST: the story this file was written from was wrong, and the
+ * correction matters for what you should expect of it.
  *
- * Nothing caught it, and nothing could have. The variable is marked
- * Sensitive: `vercel env pull` returns `[SENSITIVE]`, the Vercel dashboard
+ * It was built on 2026-08-31 in the belief that `STRIPE_PRICE_LIFETIME` had
+ * held a copy of the live secret key (`sk_live_…`). It had not. The Stripe
+ * request log, read the same day, shows the failing POST /v1/checkout/sessions
+ * carrying `"price": "price_1U86EtDP0jFvlr1mH1ANUlOE"` — the id of the 169,99
+ * Price, archived on 26.08 — and Stripe answering `400 — The price specified
+ * is inactive`. A properly formed Price id for a dead price. The earlier
+ * reading came from one look at the Vercel dashboard, where the greyed
+ * `sk_live_…` in an empty Edit field is a placeholder, not the stored value.
+ * PROGRESS.md 7.66 has the whole correction.
+ *
+ * So: EVERY RULE IN THIS FILE WOULD HAVE PASSED THE DEFECT IT WAS WRITTEN
+ * FOR. It is still worth keeping — a secret or a Product id in a price slot
+ * is a real way to break a checkout, and this is the only check that can run
+ * where the values are legible — but it is a shape check and nothing more.
+ * Authenticity (live? right amount? right currency?) can only be answered by
+ * Stripe, and is answered in src/lib/stripe-price-health.ts.
+ *
+ * Why the check has to live inside the process at all. The variables are
+ * marked Sensitive: `vercel env pull` returns `[SENSITIVE]`, the dashboard
  * shows `Hidden`, and the value is in no file in this repository. Every audit
- * this project ran could see the variable's NAME and its timestamps and
- * nothing else — which is exactly what PROGRESS.md 7.12 №27 recorded, and
- * why it recorded the wrong suspect (an archived 169,99 Price).
+ * this project ran could see a variable's NAME and its timestamps and nothing
+ * else. The only place a value is legible is a process it was injected into.
  *
- * The only place the value is legible is inside a process that has it in
- * `process.env`. So the check lives there, and it checks the one property
- * that can be verified without ever reading the secret out loud: the prefix
- * Stripe puts on every identifier it issues.
- *
- * DELIBERATELY NOT VALIDATED: anything past the prefix. This is a shape
- * check, not a credential check — it cannot tell a live key from a test one,
- * a real Price from a deleted one, or 122,99 from 169,99. Those need Stripe
- * itself. What it *can* do is refuse a value that is categorically the wrong
- * kind of thing, which is the entire failure above.
+ * DELIBERATELY NOT VALIDATED: anything past the prefix. It cannot tell a live
+ * key from a test one, a live Price from an archived one, or 122,99 from
+ * 169,99.
  *
  * NEVER PRINTS A VALUE. The reports below name the variable, the prefix that
  * was expected, and — when the value carries a prefix Stripe is known to
@@ -143,13 +145,12 @@ export function checkStripeEnvShapes(env: Record<string, string | undefined>): S
     }
   }
 
-  // Second net, aimed at the failure that actually happened rather than at
-  // its symptom. The 24.08 defect was a value COPIED from one variable into
-  // another; the prefix rule catches it because a secret key and a Price id
-  // happen to have different prefixes. Two variables of the same family
-  // would not be so lucky — STRIPE_PRICE_MONTHLY and STRIPE_PRICE_LIFETIME
-  // holding the same Price id both pass every prefix rule and would silently
-  // sell the wrong plan. Values are compared to each other, never printed.
+  // Second net: a value COPIED from one variable into another. The prefix
+  // rule only catches such a copy when the two slots expect different
+  // prefixes. Two variables of the same family are not so lucky —
+  // STRIPE_PRICE_MONTHLY and STRIPE_PRICE_LIFETIME holding the same Price id
+  // pass every prefix rule and would silently sell the wrong plan. Values are
+  // compared to each other, never printed.
   const byValue = new Map<string, string>();
   for (const key of keys) {
     const value = (env[key] ?? "").trim();
@@ -213,10 +214,9 @@ export function formatStripeEnvProblems(problems: readonly StripeEnvProblem[]): 
     "message goes to build logs and to Sentry. Fix them in the Vercel dashboard",
     "(Project → Settings → Environment Variables) and redeploy.",
     "",
-    "This check exists because on 2026-08-24 STRIPE_PRICE_LIFETIME was given a copy",
-    "of the live secret key instead of a Price id. Every lifetime purchase failed for",
-    "six days and no audit could see it: the value is unreadable from the repository",
-    "and from the dashboard alike. See PROGRESS.md 7.63."
+    "This is a SHAPE check only — it cannot tell a live Price from an archived one.",
+    "That question is answered by GET /api/admin/stripe-health and by the hourly cron",
+    "(src/lib/stripe-price-health.ts), which ask Stripe itself. See PROGRESS.md 7.66."
   );
 
   return lines.join("\n");

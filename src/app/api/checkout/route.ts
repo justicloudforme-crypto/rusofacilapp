@@ -8,6 +8,8 @@ import { isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { isDeployedEnvironment } from "@/lib/deploy-environment";
+import { getDictionary } from "@/i18n/dictionaries";
+import type { Locale } from "@/i18n/config";
 
 const PLAN_LABELS: Record<string, string> = {
   monthly: "Suscripción mensual",
@@ -22,6 +24,83 @@ const PLAN_LABELS: Record<string, string> = {
 // student retrying after closing the Stripe tab, or comparing monthly vs.
 // annual, is normal use — this only stops a runaway retry loop or script.
 const checkoutLimiter = getRateLimiter("checkout", 60_000, 10);
+
+/**
+ * Is this the Stripe API refusing the request we sent it?
+ *
+ * Checked by `type` rather than with `instanceof Stripe.errors.*` so this
+ * file does not have to import the Stripe SDK's error classes, and so a test
+ * can plant the error without constructing one. Stripe sets `.type` on every
+ * error it raises; `StripeInvalidRequestError` is the 4xx family — "no such
+ * price", "the price specified is inactive", a parameter we got wrong. It is
+ * the shape of failure the 2026-08-24 defect produced for six days, and it is
+ * a configuration fault on our side, never the buyer's.
+ */
+function isStripeInvalidRequest(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { type?: unknown }).type === "StripeInvalidRequestError"
+  );
+}
+
+/**
+ * What a person sees when Stripe refuses to open the payment.
+ *
+ * Until now nothing caught this: the exception escaped the route handler,
+ * Next answered 500, `onRequestError` filed it in Sentry as UNHANDLED, and
+ * the buyer got a browser error page. 503 says "shut, not broken forever",
+ * the message is in the visitor's own language, and it states the one fact
+ * that matters to them — nothing was charged.
+ *
+ * Deliberately a self-contained page rather than a redirect to /pricing: a
+ * redirect answers 303, and a checkout that cannot charge anybody must not
+ * be recorded as a successful request.
+ *
+ * The body carries NO detail from Stripe — not the message, not the Price id,
+ * not the parameter name. Stripe quotes the offending value back inside its
+ * error text, and that value comes from an environment variable.
+ */
+async function checkoutBlockedResponse(lang: Locale, origin: string): Promise<NextResponse> {
+  const dict = await getDictionary(lang);
+  const message = dict.pricing.checkoutUnavailable;
+  const backLabel = dict.nav.pricing;
+  const escape = (text: string) =>
+    text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const html = `<!doctype html>
+<html lang="${lang}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>${escape(backLabel)}</title>
+<style>body{font-family:system-ui,sans-serif;margin:0;padding:2rem;line-height:1.6;max-width:36rem}</style>
+</head>
+<body>
+<p>${escape(message)}</p>
+<p><a href="${origin}/${lang}/pricing">${escape(backLabel)}</a></p>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
+    status: 503,
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+/** Files the refusal in Sentry as HANDLED — we caught it, we answered it, and
+ * the buyer was told. The tag is what an alert keys off. */
+async function reportCheckoutBlocked(error: unknown, plan: string, method: string): Promise<void> {
+  try {
+    const Sentry = await import("@sentry/nextjs");
+    Sentry.captureException(error, {
+      level: "error",
+      tags: { defect: "checkout-blocked" },
+      extra: { plan, method },
+    });
+  } catch {
+    // Reporting the problem must never become a second problem.
+  }
+}
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -59,84 +138,94 @@ export async function POST(request: NextRequest) {
   const origin = new URL(request.url).origin;
 
   if (stripe && ((method === "oxxo" && plan.oxxoAmountMxnCents) || plan.priceId)) {
-    let stripeCustomerId = user.stripeCustomerId;
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { userId: user.id },
-      });
-      stripeCustomerId = customer.id;
-      await db.user.update({
-        where: { id: user.id },
-        data: { stripeCustomerId },
-      });
-    }
+    try {
+      let stripeCustomerId = user.stripeCustomerId;
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user.id },
+        });
+        stripeCustomerId = customer.id;
+        await db.user.update({
+          where: { id: user.id },
+          data: { stripeCustomerId },
+        });
+      }
 
-    if (method === "oxxo" && plan.oxxoAmountMxnCents) {
-      // OXXO is a cash-voucher payment method: the customer gets a barcode
-      // (shown on Stripe's own hosted checkout page, and emailed to them)
-      // and pays in person at a physical OXXO store, usually within a few
-      // days. There is no reusable off-session payment instrument behind
-      // it, so — unlike the card branch below — this can never be a
-      // recurring Stripe Subscription; it's a one-time payment that grants
-      // a fixed period of access once the voucher is actually paid. Access
-      // is NOT granted here: see the checkout.session.async_payment_succeeded
-      // handler in /api/webhooks/stripe, which fires only once the store
-      // payment clears (checkout.session.completed fires immediately on
-      // voucher creation, before any money has moved).
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        customer: stripeCustomerId,
-        client_reference_id: user.id,
-        payment_method_types: ["oxxo"],
-        payment_method_options: { oxxo: { expires_after_days: 3 } },
-        line_items: [
-          {
-            price_data: {
-              currency: "mxn",
-              unit_amount: plan.oxxoAmountMxnCents,
-              product_data: { name: `RusoFácilapp — ${PLAN_LABELS[plan.id]}` },
+      if (method === "oxxo" && plan.oxxoAmountMxnCents) {
+        // OXXO is a cash-voucher payment method: the customer gets a barcode
+        // (shown on Stripe's own hosted checkout page, and emailed to them)
+        // and pays in person at a physical OXXO store, usually within a few
+        // days. There is no reusable off-session payment instrument behind
+        // it, so — unlike the card branch below — this can never be a
+        // recurring Stripe Subscription; it's a one-time payment that grants
+        // a fixed period of access once the voucher is actually paid. Access
+        // is NOT granted here: see the checkout.session.async_payment_succeeded
+        // handler in /api/webhooks/stripe, which fires only once the store
+        // payment clears (checkout.session.completed fires immediately on
+        // voucher creation, before any money has moved).
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer: stripeCustomerId,
+          client_reference_id: user.id,
+          payment_method_types: ["oxxo"],
+          payment_method_options: { oxxo: { expires_after_days: 3 } },
+          line_items: [
+            {
+              price_data: {
+                currency: "mxn",
+                unit_amount: plan.oxxoAmountMxnCents,
+                product_data: { name: `RusoFácilapp — ${PLAN_LABELS[plan.id]}` },
+              },
+              quantity: 1,
             },
-            quantity: 1,
-          },
-        ],
-        metadata: { userId: user.id, plan: plan.id },
-        success_url: `${origin}/${lang}/profile?checkout=oxxo_pending`,
-        cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
-      });
+          ],
+          metadata: { userId: user.id, plan: plan.id },
+          success_url: `${origin}/${lang}/profile?checkout=oxxo_pending`,
+          cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
+        });
 
-      if (!session.url) {
-        return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+        if (!session.url) {
+          return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+        }
+        return NextResponse.redirect(session.url, { status: 303 });
       }
-      return NextResponse.redirect(session.url, { status: 303 });
-    }
 
-    if (plan.priceId) {
-      // subscription_data.metadata only applies to mode: "subscription" —
-      // Stripe rejects it on a mode: "payment" session, so the lifetime
-      // (one-time) plan carries its metadata on the session itself instead,
-      // same place the OXXO one-time branch above puts it.
-      const session = await stripe.checkout.sessions.create({
-        mode: plan.mode,
-        customer: stripeCustomerId,
-        client_reference_id: user.id,
-        line_items: [{ price: plan.priceId, quantity: 1 }],
-        ...(plan.mode === "subscription"
-          ? { subscription_data: { metadata: { userId: user.id, plan: plan.id } } }
-          : { metadata: { userId: user.id, plan: plan.id } }),
-        // `plan` rides along so the page a buyer lands on can check that
-        // the account actually holds what was just paid for, instead of
-        // congratulating them on a purchase that did not take effect —
-        // which is what it did throughout the 7.55 defect. See
-        // CheckoutOutcomeNotice.
-        success_url: `${origin}${nextPath ?? `/${lang}/profile`}${(nextPath ?? "").includes("?") ? "&" : "?"}checkout=success&plan=${plan.id}`,
-        cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
-      });
+      if (plan.priceId) {
+        // subscription_data.metadata only applies to mode: "subscription" —
+        // Stripe rejects it on a mode: "payment" session, so the lifetime
+        // (one-time) plan carries its metadata on the session itself instead,
+        // same place the OXXO one-time branch above puts it.
+        const session = await stripe.checkout.sessions.create({
+          mode: plan.mode,
+          customer: stripeCustomerId,
+          client_reference_id: user.id,
+          line_items: [{ price: plan.priceId, quantity: 1 }],
+          ...(plan.mode === "subscription"
+            ? { subscription_data: { metadata: { userId: user.id, plan: plan.id } } }
+            : { metadata: { userId: user.id, plan: plan.id } }),
+          // `plan` rides along so the page a buyer lands on can check that
+          // the account actually holds what was just paid for, instead of
+          // congratulating them on a purchase that did not take effect —
+          // which is what it did throughout the 7.55 defect. See
+          // CheckoutOutcomeNotice.
+          success_url: `${origin}${nextPath ?? `/${lang}/profile`}${(nextPath ?? "").includes("?") ? "&" : "?"}checkout=success&plan=${plan.id}`,
+          cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
+        });
 
-      if (!session.url) {
-        return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+        if (!session.url) {
+          return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+        }
+        return NextResponse.redirect(session.url, { status: 303 });
       }
-      return NextResponse.redirect(session.url, { status: 303 });
+    } catch (error) {
+      // Only Stripe's own refusals become a page. Anything else — a database
+      // write failing, a bug of ours — keeps rising, because dressing an
+      // unknown fault up as "try again in a few minutes" would hide it from
+      // the one place that would have shown it.
+      if (!isStripeInvalidRequest(error)) throw error;
+      await reportCheckoutBlocked(error, plan.id, method);
+      return checkoutBlockedResponse(lang, origin);
     }
   }
 

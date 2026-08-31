@@ -6,6 +6,23 @@ export type CheckoutMethod = "card" | "oxxo";
 interface Plan {
   id: PlanId;
   priceId: string | undefined;
+  /**
+   * The environment variable the Price id above is read from. Named here
+   * rather than inline at the call site so a checker can walk the plan list
+   * and report by variable name — see src/lib/stripe-price-health.ts, which
+   * asks Stripe whether each of these actually points at a live Price.
+   */
+  priceEnvVar: string;
+  /**
+   * What that Price is supposed to cost, in US cents, for card checkout.
+   *
+   * This is the ONLY place the figure is written down as a number. The
+   * pricing page prints it as text (`dict.pricing.<plan>.price`) and
+   * src/lib/plans-price-parity.test.ts holds the two together, so the
+   * amount a buyer is promised and the amount the health check demands of
+   * Stripe cannot drift apart into two independent hardcodes.
+   */
+  expectedUsdCents: number;
   // "subscription" creates a recurring Stripe Subscription (monthly/annual);
   // "lifetime" is a single one-time Checkout Session (see /api/checkout) —
   // there's no Stripe Subscription object behind it at all.
@@ -34,14 +51,18 @@ export const LIFETIME_DURATION_DAYS = 100 * 365;
 // into the refusal /api/checkout already has (pricing page + a Sentry event)
 // instead of into a Stripe API call that throws.
 //
-// This is not belt-and-braces over the build-time check — it closes something
-// the build-time check cannot. Between 2026-08-24 and 2026-08-31
-// STRIPE_PRICE_LIFETIME held a copy of the live secret key, so every Premium
-// checkout sent `line_items: [{ price: "sk_live_…" }]` to Stripe, and Stripe
-// answers that with `No such price: 'sk_live_…'` — the secret quoted back
-// inside an exception message, which onRequestError then files into Sentry.
-// A malformed price id is therefore not only a sale that cannot complete, it
-// is a credential leaving the process. It stops here.
+// This is not belt-and-braces over the build-time check — it closes the case
+// where a value reaches the runtime without passing a build of this repo.
+//
+// It is a SHAPE gate and nothing more, and the incident it was written for
+// turned out not to be a shape problem at all: between 2026-08-24 and
+// 2026-08-31 STRIPE_PRICE_LIFETIME held `price_1U86EtDP0jFvlr1mH1ANUlOE` —
+// a correctly shaped Price id belonging to the ARCHIVED 169,99 price. Every
+// rule here passed it, and Stripe answered every Premium checkout with
+// "The price specified is inactive" (see PROGRESS.md 7.66). Authenticity —
+// live, right amount, right currency — is checked against Stripe itself in
+// src/lib/stripe-price-health.ts. This gate only keeps a categorically wrong
+// kind of value from being handed to the Stripe API.
 function priceIdFromEnv(name: string): string | undefined {
   const value = process.env[name];
   return hasStripeShape(name, value) ? value : undefined;
@@ -51,6 +72,8 @@ export const plans: Record<PlanId, Plan> = {
   monthly: {
     id: "monthly",
     priceId: priceIdFromEnv("STRIPE_PRICE_MONTHLY"),
+    priceEnvVar: "STRIPE_PRICE_MONTHLY",
+    expectedUsdCents: 799, // $7.99 USD
     mode: "subscription",
     durationDays: 30,
     oxxoAmountMxnCents: 15_000, // $150.00 MXN
@@ -58,6 +81,8 @@ export const plans: Record<PlanId, Plan> = {
   annual: {
     id: "annual",
     priceId: priceIdFromEnv("STRIPE_PRICE_ANNUAL"),
+    priceEnvVar: "STRIPE_PRICE_ANNUAL",
+    expectedUsdCents: 4799, // $47.99 USD
     mode: "subscription",
     durationDays: 365,
     oxxoAmountMxnCents: 89_900, // $899.00 MXN
@@ -65,6 +90,8 @@ export const plans: Record<PlanId, Plan> = {
   lifetime: {
     id: "lifetime",
     priceId: priceIdFromEnv("STRIPE_PRICE_LIFETIME"),
+    priceEnvVar: "STRIPE_PRICE_LIFETIME",
+    expectedUsdCents: 12_299, // $122.99 USD
     mode: "payment",
     durationDays: LIFETIME_DURATION_DAYS,
     // $2,299 MXN at ~18.7 MXN/USD matches the $122.99 USD card price

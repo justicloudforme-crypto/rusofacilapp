@@ -23,8 +23,12 @@
  *
  * `--self-test` is the control PROGRESS.md 4.1 requires: a green run proves
  * nothing unless the same code has been seen going red. It feeds the checker
- * an environment carrying the real 2026-08-24 defect and fails loudly if the
- * checker calls it clean.
+ * eight malformed environments and fails loudly if any is called clean.
+ *
+ * What it does NOT cover, and no shape check can: a correctly formed Price id
+ * pointing at an archived or wrongly priced Price — which is what actually
+ * broke Premium checkout for six days (PROGRESS.md 7.66). That is
+ * `npm run check:stripe-prices:self-test` and the live endpoints behind it.
  */
 import { pathToFileURL } from "node:url";
 import {
@@ -43,7 +47,9 @@ function fail(message: string): never {
 
 /**
  * The positive control. Everything here is invented; the shapes are what
- * matter. Case 1 is the defect exactly as it happened on production.
+ * matter. Case 1 is a secret key in a price slot — the defect this guard was
+ * originally, and mistakenly, believed to have been built for; it remains a
+ * real way to break checkout, just not the one that happened.
  */
 function selfTest(): void {
   const clean = {
@@ -57,7 +63,7 @@ function selfTest(): void {
 
   const planted: Array<{ label: string; env: Record<string, string>; expect: string }> = [
     {
-      label: "the 2026-08-24 defect — the live secret key in STRIPE_PRICE_LIFETIME",
+      label: "a live secret key sitting in STRIPE_PRICE_LIFETIME",
       env: { ...clean, STRIPE_PRICE_LIFETIME: clean.STRIPE_SECRET_KEY },
       expect: "STRIPE_PRICE_LIFETIME",
     },
