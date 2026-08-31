@@ -48,6 +48,35 @@ model User {
   // after(), and a public profile is rendered for a visitor whose time
   // zone is not the profile owner's.
   timezone             String?
+  // ——— Заморозки серии (PROGRESS.md 7.69) ———
+  //
+  // Both nullable ON PURPOSE. prisma/ensure-schema-sync.ts adds a missing
+  // column with a bare `ALTER TABLE ... ADD COLUMN name TYPE` — no DEFAULT
+  // clause — so every row that already exists in production reads back as
+  // NULL. A non-nullable column here would make Prisma reject every single
+  // User select the moment it deployed; that is the 27.08.2026 outage.
+  // The @default below therefore only ever applies to a database built by
+  // `prisma db push`: the real default lives in code as
+  // INITIAL_STREAK_FREEZES, and NULL is read as "not initialised yet".
+  //
+  // freezesLeft is a MIRROR, never an input to the computation. The balance
+  // is re-derived from the activity history on every read (see
+  // src/lib/streak-freezes.ts); feeding the stored number back in is
+  // exactly how a "spend on read" scheme double-spends. This column exists
+  // so a surface that must not run the five-table replay can still show the
+  // number, and so there is a record of what the learner was last told.
+  streakFreezesLeft    Int?                   @default(2)
+  // The date key ("YYYY-MM-DD", in the learner's own zone) from which
+  // freezes apply to this account. Written once, on the first read after
+  // the feature shipped, and never moved. This is the load-bearing column:
+  // without it the first read would replay the whole pre-feature history
+  // and hand out freezes for gaps that happened before freezes existed —
+  // i.e. rebuild the past, which the owner ruled out.
+  //
+  // A date key rather than a DateTime deliberately: every other date in
+  // this system is a key in the learner's zone, and storing an instant here
+  // would reintroduce the UTC-boundary ambiguity fixed on 31.08.2026.
+  streakFreezesSince   String?
   createdAt            DateTime               @default(now())
   subscriptions        Subscription[]
   lessonProgress       LessonProgress[]

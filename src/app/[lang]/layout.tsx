@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import type { Metadata, Viewport } from "next";
 import { PT_Sans, PT_Serif, PT_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
@@ -20,7 +21,7 @@ import SerwistRegister from "@/components/SerwistRegister";
 import SentryUser from "@/components/SentryUser";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
-import { getUserStreakStats } from "@/lib/streaks";
+import { getUserStreakStats, persistFreezeState } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
 import TimeZoneSync from "@/components/TimeZoneSync";
 import { PaywallProvider } from "@/contexts/PaywallContext";
@@ -123,7 +124,17 @@ export default async function LangLayout({
   // cost. null for a logged-out visitor, who never sees the badge anyway.
   // The learner's own midnight, not the server's — see src/lib/timezone.ts.
   const timeZone = await getRequestTimeZone(user?.timezone);
-  const streak = user ? await getUserStreakStats(user.id, timeZone) : null;
+  const streak = user ? await getUserStreakStats(user.id, timeZone, user) : null;
+  // The freeze ledger is derived on read; this only writes the mirror and
+  // the epoch back, and only when one of them moved. after() keeps it off
+  // the render path — nothing on the page waits for it, and the same page
+  // rendered twice still writes at most once (nextFreezeRecord returns null
+  // the second time).
+  if (user) {
+    const userId = user.id;
+    const freezeColumns = { streakFreezesLeft: user.streakFreezesLeft, streakFreezesSince: user.streakFreezesSince };
+    after(() => persistFreezeState(userId, freezeColumns, timeZone));
+  }
 
   const paywallPlans: Record<PlanId, { name: string; price: string; period: string; badge?: string; valueNote?: string }> = {
     monthly: { name: dict.pricing.monthly.name, price: dict.pricing.monthly.price, period: dict.pricing.monthly.period },

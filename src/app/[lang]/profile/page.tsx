@@ -315,7 +315,7 @@ export default async function ProfilePage({
     getLessonProgressDetails(user.id),
     getExamAttempts(user.id),
     db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
-    getUserStreakStats(user.id, timeZone),
+    getUserStreakStats(user.id, timeZone, user),
     getUserActivityDateKeys(user.id, timeZone),
     getThemePreference(),
     getUserBadgesForDisplay(user.id),
@@ -556,7 +556,34 @@ export default async function ProfilePage({
                   {dict.profile.activityHeatmapHeading}
                 </SectionHeading>
                 <div className="mt-3">
-                  <ActivityHeatmap activeDateKeys={activityDateKeys} todayLabel={dict.profile.streakActiveTodayNote} timeZone={timeZone} />
+                  <ActivityHeatmap
+                    activeDateKeys={activityDateKeys}
+                    frozenDateKeys={streak.frozenDateKeys}
+                    todayLabel={dict.profile.streakActiveTodayNote}
+                    frozenDayLabel={dict.profile.streakFrozenDayNote}
+                    timeZone={timeZone}
+                  />
+                  {/* The legend, not a tooltip. `title` is hover-only and
+                      hover does not exist on the Capacitor build (CLAUDE.md),
+                      so without this line a frozen day is a colour nobody can
+                      look up on a phone. The balance sits here too because
+                      this is the tab a learner actually lands on — the stat
+                      tile further down lives on the Progress tab. */}
+                  <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
+                    {streak.frozenDateKeys.length > 0 && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          aria-hidden
+                          className="h-3 w-3 flex-shrink-0 rounded border-2 border-dashed border-sky-500/70 bg-sky-400/25 dark:border-sky-300/70 dark:bg-sky-300/25"
+                        />
+                        {dict.profile.streakFrozenDayNote}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1.5">
+                      <span aria-hidden>❄️</span>
+                      {dict.profile.streakFreezesLeftLabel}: <b className="tabular-nums">{streak.freezesLeft}</b>
+                    </span>
+                  </p>
                 </div>
               </section>
 
@@ -1087,7 +1114,7 @@ export default async function ProfilePage({
           <FirstStepCards heading={dict.profile.firstStepHeading} items={zeroStepItems} />
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
                 <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
@@ -1132,6 +1159,16 @@ export default async function ProfilePage({
                 </p>
                 <p className="text-sm text-foreground/60">{dict.profile.longestStreakLabel}</p>
               </div>
+              {/* The freeze balance is shown unconditionally, including at
+                  zero: "you have none left" is the number that changes what
+                  the learner does tomorrow. */}
+              <div className="rounded-2xl border border-sky-500/20 bg-sky-400/5 p-4">
+                <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
+                  <span aria-hidden>❄️</span>
+                  {streak.freezesLeft}
+                </p>
+                <p className="text-sm text-foreground/60">{dict.profile.streakFreezesLeftLabel}</p>
+              </div>
             </div>
 
             {streak.currentStreak > 0 ? (
@@ -1149,6 +1186,8 @@ export default async function ProfilePage({
                 {dict.profile.streakNoneNote}
               </p>
             )}
+
+            <p className="mt-2 text-sm text-foreground/60">{dict.profile.streakFreezeExplainer}</p>
 
             {progressState === "early" && (
               <div className="mt-8">
