@@ -45,6 +45,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # The positive control for the Stripe env-shape guard. CI has no Stripe
+      # variables at all, so the guard's real run here is vacuously green —
+      # which is exactly the kind of green PROGRESS.md 4.1 says proves
+      # nothing. This step plants eight malformed values (including the real
+      # 2026-08-24 one) and fails unless the guard goes red on every one.
+      - name: Stripe env guard — positive control
+        run: npm run check:stripe-env:self-test
+
       - name: Build
         run: npm run build
 
