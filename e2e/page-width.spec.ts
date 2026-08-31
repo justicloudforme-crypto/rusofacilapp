@@ -32,10 +32,27 @@ import { loginWithSubscription } from "./helpers/auth";
  * document once it appears.
  */
 
-// 360px: the narrowest width still common on Android, and the one where the
-// word-search overflow measured worst (24px past the viewport, against 8px
-// at 393). A page that fits here fits the iPhones too.
-test.use({ viewport: { width: 360, height: 780 } });
+/**
+ * Two widths, and 320 is not decoration.
+ *
+ * 360 is the narrowest width still common on Android and the one where the
+ * word-search overflow measured worst against a modern phone (25px past the
+ * viewport, against 9px at 393 — PROGRESS.md 7.60). 320 is where the same
+ * defect is actually WORST, and it is the width `scripts/check-layout-
+ * geometry.mjs` had been sweeping all along: on production that check
+ * reported `-comida` failing at 320 and 375. So the guard written to stop
+ * this class from escaping again was watching a strictly milder case than
+ * the hand-run check it was meant to back up. Measured by taking the fix
+ * back out and rebuilding (30.08.2026): the same board overflows by 24px at
+ * 360 and by 44px at 320 — the 408px wrapper is a fixed intrinsic width, so
+ * every pixel the viewport loses is a pixel of overflow gained. 320 is a
+ * real device too, not a paranoid margin — iPhone SE (1st gen) and Galaxy
+ * S9+ both report it.
+ *
+ * Ordered widest-first so a failure report reads as "already broken at 360"
+ * before "and worse at 320".
+ */
+const WIDTHS = [360, 320] as const;
 
 /**
  * Page SHAPES — one per way a page in this app is built — restricted to
@@ -91,8 +108,12 @@ async function measure(page: import("@playwright/test").Page) {
   });
 }
 
-for (const lang of ["es", "ru"] as const) {
-  test(`/${lang}: no page is wider than a 360px phone`, async ({ page }) => {
+for (const width of WIDTHS) {
+  test.describe(`${width}px`, () => {
+    test.use({ viewport: { width, height: 780 } });
+
+    for (const lang of ["es", "ru"] as const) {
+      test(`/${lang}: no page is wider than a ${width}px phone`, async ({ page }) => {
     // Premium, not standard: /word-games and C1 content are both gated
     // (see helpers/auth.ts), and a redirect to /pricing would measure the
     // pricing page twice instead of the puzzle board once — a check that
@@ -125,6 +146,8 @@ for (const lang of ["es", "ru"] as const) {
         }
       }
     }
-    expect(tooWide, `pages wider than the viewport:\n${tooWide.join("\n")}`).toEqual([]);
+        expect(tooWide, `pages wider than the viewport:\n${tooWide.join("\n")}`).toEqual([]);
+      });
+    }
   });
 }
