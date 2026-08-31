@@ -99,6 +99,23 @@ const ALL_PAGES = [
   { path: "/es/stories", contentOnly: true },
   { path: "/es/glossary", contentOnly: true },
   { path: "/es/word-games", contentOnly: true },
+  /**
+   * The game landing pages, added 30.08.2026 — the shape this check had
+   * never looked at, and the one that was broken on production the whole
+   * time it was reporting `ok`. They embed a real puzzle board, so their
+   * width is decided by DATA (the puzzle's column count) rather than by
+   * the template: 16-column puzzles overflowed and 12-column ones did not,
+   * on the same page component. `-comida` is the failing one measured on
+   * 30.08.2026; `-familia` is kept beside it deliberately, as the page
+   * that fit — so a regression that widens every board is told apart from
+   * one that only widens the big ones.
+   *
+   * contentOnly: both need a WordGamePuzzle row, which CI's empty database
+   * has not got.
+   */
+  { path: "/es/sopa-de-letras-ruso-comida", contentOnly: true },
+  { path: "/es/sopa-de-letras-ruso-familia", contentOnly: true },
+  { path: "/es/crucigramas-ruso-principiantes", contentOnly: true },
 ];
 const PAGES = ALL_PAGES.filter((p) => !(CI_MODE && p.contentOnly));
 

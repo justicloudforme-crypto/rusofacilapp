@@ -5,6 +5,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getStoryCatalog } from "@/lib/stories-catalog";
 import { getEntitlementTier, getStoryAccess } from "@/lib/entitlement";
 import { storyLevels } from "@/lib/stories";
+import { localizeStoryAuthor } from "@/lib/story-author";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
@@ -59,6 +60,12 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
       // this fallback is what keeps /ru showing the Spanish summary
       // instead of hiding the block, until the Russian text exists.
       description: lang === "ru" ? (story.descriptionRu ?? story.description) : story.description,
+      // Same idea one column over: `author` is a single column read by both
+      // locales, and on /es it was rendering «Por Русская народная сказка»
+      // (see story-author.ts). Applied HERE rather than in
+      // getStoryCatalog() so the catalog cache stays locale-independent,
+      // and after `isClassic` has already been derived from the raw value.
+      author: localizeStoryAuthor(story.author, lang),
       lockReason: getStoryAccess(tier, story).reason,
     }))
     .sort((a, b) => {

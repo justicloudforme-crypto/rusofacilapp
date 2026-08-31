@@ -905,102 +905,117 @@ export default function StoryText({
   // browsers use to decide a backgrounded tab's audio should keep playing
   // instead of being suspended — this is what "background playback" (play
   // with the app minimized or the screen locked) actually runs on, there's
-  // no separate "enable background mode" switch to flip. No dependency
-  // array: re-runs every render so the handlers always close over the
-  // latest playback state, cheap enough not to bother memoizing.
+  // no separate "enable background mode" switch to flip.
+  //
+  // This used to be ONE effect with no dependency array, so that the
+  // handlers always closed over the latest playback state. That worked,
+  // and it also meant the effect's CLEANUP ran before every single render:
+  // each render set all seven action handlers to null, reassigned
+  // `metadata`, and put the handlers back. The OS rebuilds its
+  // notification / lock-screen player when either of those happens, and
+  // that is what the owner saw on a phone on 30.08.2026 — the rewind
+  // button on the pulled-down player blinking on and off for the whole
+  // story. Measured on production before the fix, over 15s of playback:
+  // metadata reassigned 4×, and every one of the seven handlers removed
+  // and re-added 4× (once per sentence advance); after it, 1 and 1.
+  //
+  // The split below keeps what the no-deps version was buying and drops
+  // what it was costing. The registered function is stable; it reads the
+  // current implementation out of a ref when the OS calls it, so the
+  // handlers still see the latest state without being re-registered.
+  const mediaActionsRef = useRef<{
+    play: () => void;
+    pause: () => void;
+    seekBackward: () => void;
+    seekForward: () => void;
+    previousTrack: () => void;
+    nextTrack: () => void;
+    seekTo: (seekTime: number) => void;
+  }>({
+    play: () => {},
+    pause: () => {},
+    seekBackward: () => {},
+    seekForward: () => {},
+    previousTrack: () => {},
+    nextTrack: () => {},
+    seekTo: () => {},
+  });
+
+  // No dependency array on purpose — this one is meant to run every
+  // render, and it is now the ONLY thing that does. It writes to a ref and
+  // touches no browser or OS state, so re-running it rebuilds nothing.
+  useEffect(() => {
+    mediaActionsRef.current = {
+      play: () => handlePlayPause(),
+      pause: () => handlePlayPause(),
+      seekBackward: () => skipBy(-15),
+      seekForward: () => skipBy(15),
+      previousTrack: () => handleSentenceClick(Math.max(0, (readingQueueIndex ?? 0) - 1)),
+      nextTrack: () => handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1)),
+      seekTo: (seekTime: number) => {
+        const audioEl = audioRef.current;
+        if (audioEl) audioEl.currentTime = seekTime;
+      },
+    };
+  });
+
+  const hasMediaSessionTarget = canPlay && queue.length > 0;
+
+  // Handlers: registered once per (can we play at all, is there a
+  // seekable timeline) and left alone after that.
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
-    if (!canPlay || queue.length === 0) return;
+    if (!hasMediaSessionTarget) return;
+    const ms = navigator.mediaSession;
 
-    // Mutating the browser's global MediaSession object is the API's only
-    // interface — it's namespaced under `navigator` rather than a
-    // local/ref, which the compiler's mutation check doesn't recognize as
-    // effect-safe.
-    // eslint-disable-next-line react-hooks/immutability
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title,
-      artist: author,
-      artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],
-    });
-    // eslint-disable-next-line react-hooks/immutability
-    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
-    navigator.mediaSession.setActionHandler("play", () => handlePlayPause());
-    navigator.mediaSession.setActionHandler("pause", () => handlePlayPause());
-    navigator.mediaSession.setActionHandler("seekbackward", () => skipBy(-15));
-    navigator.mediaSession.setActionHandler("seekforward", () => skipBy(15));
-    navigator.mediaSession.setActionHandler("previoustrack", () =>
-      handleSentenceClick(Math.max(0, (readingQueueIndex ?? 0) - 1))
-    );
-    navigator.mediaSession.setActionHandler("nexttrack", () =>
-      handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1))
-    );
+    const play = () => mediaActionsRef.current.play();
+    const pause = () => mediaActionsRef.current.pause();
+    const seekBackward = () => mediaActionsRef.current.seekBackward();
+    const seekForward = () => mediaActionsRef.current.seekForward();
+    const previousTrack = () => mediaActionsRef.current.previousTrack();
+    const nextTrack = () => mediaActionsRef.current.nextTrack();
 
+    ms.setActionHandler("play", play);
+    ms.setActionHandler("pause", pause);
+    ms.setActionHandler("seekbackward", seekBackward);
+    ms.setActionHandler("seekforward", seekForward);
+    ms.setActionHandler("previoustrack", previousTrack);
+    ms.setActionHandler("nexttrack", nextTrack);
     // Real lock-screen scrubbing — only possible with one genuine seekable
     // timeline (fullAudioUrl); the per-sentence chain has no single
     // duration to report and speechSynthesis has no timeline at all, so
-    // neither of those modes sets this. setPositionState is refreshed on
-    // every render (cheap, and playbackRate/position drift otherwise).
-    const audioEl = audioRef.current;
-    if (hasFullAudio && audioEl) {
-      navigator.mediaSession.setActionHandler("seekto", (details) => {
-        if (details.seekTime == null) return;
-        audioEl.currentTime = details.seekTime;
-      });
-      if (Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
-        navigator.mediaSession.setPositionState({
-          duration: audioEl.duration,
-          playbackRate: rate,
-          position: Math.min(audioEl.currentTime, audioEl.duration),
-        });
-      }
-    } else {
-      navigator.mediaSession.setActionHandler("seekto", null);
-    }
+    // neither of those modes offers this action.
+    ms.setActionHandler(
+      "seekto",
+      hasFullAudio
+        ? (details) => {
+            if (details.seekTime == null) return;
+            mediaActionsRef.current.seekTo(details.seekTime);
+          }
+        : null
+    );
 
     // Native half of the above — a no-op on web (see native-media-session.ts).
     // Android's System WebView, unlike Chrome, doesn't surface
     // navigator.mediaSession as a real OS notification/lock-screen player
-    // on its own; this drives the same metadata/state/handlers through
+    // on its own; this drives the same handlers through
     // @capgo/capacitor-media-session so the native shell gets one too.
-    void setNativeMediaMetadata({
-      title,
-      artist: author,
-      artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],
-    });
-    void setNativePlaybackState(playing);
-    void setNativeActionHandler("play", () => handlePlayPause());
-    void setNativeActionHandler("pause", () => handlePlayPause());
-    void setNativeActionHandler("seekbackward", () => skipBy(-15));
-    void setNativeActionHandler("seekforward", () => skipBy(15));
-    void setNativeActionHandler("previoustrack", () =>
-      handleSentenceClick(Math.max(0, (readingQueueIndex ?? 0) - 1))
-    );
-    void setNativeActionHandler("nexttrack", () =>
-      handleSentenceClick(Math.min(queue.length - 1, (readingQueueIndex ?? 0) + 1))
-    );
-    if (hasFullAudio && audioEl) {
-      void setNativeSeekToHandler((seekTime) => {
-        audioEl.currentTime = seekTime;
-      });
-      if (Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
-        void setNativePositionState({
-          duration: audioEl.duration,
-          playbackRate: rate,
-          position: Math.min(audioEl.currentTime, audioEl.duration),
-        });
-      }
-    } else {
-      void setNativeSeekToHandler(null);
-    }
+    void setNativeActionHandler("play", play);
+    void setNativeActionHandler("pause", pause);
+    void setNativeActionHandler("seekbackward", seekBackward);
+    void setNativeActionHandler("seekforward", seekForward);
+    void setNativeActionHandler("previoustrack", previousTrack);
+    void setNativeActionHandler("nexttrack", nextTrack);
+    void setNativeSeekToHandler(hasFullAudio ? (seekTime) => mediaActionsRef.current.seekTo(seekTime) : null);
 
     return () => {
-      navigator.mediaSession.setActionHandler("play", null);
-      navigator.mediaSession.setActionHandler("pause", null);
-      navigator.mediaSession.setActionHandler("seekbackward", null);
-      navigator.mediaSession.setActionHandler("seekforward", null);
-      navigator.mediaSession.setActionHandler("previoustrack", null);
-      navigator.mediaSession.setActionHandler("nexttrack", null);
-      navigator.mediaSession.setActionHandler("seekto", null);
+      ms.setActionHandler("play", null);
+      ms.setActionHandler("pause", null);
+      ms.setActionHandler("seekbackward", null);
+      ms.setActionHandler("seekforward", null);
+      ms.setActionHandler("previoustrack", null);
+      ms.setActionHandler("nexttrack", null);
+      ms.setActionHandler("seekto", null);
       void setNativeActionHandler("play", null);
       void setNativeActionHandler("pause", null);
       void setNativeActionHandler("seekbackward", null);
@@ -1009,7 +1024,46 @@ export default function StoryText({
       void setNativeActionHandler("nexttrack", null);
       void setNativeSeekToHandler(null);
     };
-  });
+  }, [hasMediaSessionTarget, hasFullAudio]);
+
+  // Metadata: only when the story itself changes. Reassigning it is what
+  // makes the OS re-read the artwork.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (!hasMediaSessionTarget) return;
+    const artwork = [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }];
+    // Mutating the browser's global MediaSession object is the API's only
+    // interface — it's namespaced under `navigator` rather than a
+    // local/ref.
+    navigator.mediaSession.metadata = new MediaMetadata({ title, artist: author, artwork });
+    void setNativeMediaMetadata({ title, artist: author, artwork });
+  }, [hasMediaSessionTarget, title, author]);
+
+  // Playback state: only when it actually flips.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (!hasMediaSessionTarget) return;
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    void setNativePlaybackState(playing);
+  }, [hasMediaSessionTarget, playing]);
+
+  // Position: this one genuinely has to follow playback, and unlike the
+  // two above it does not rebuild anything — it updates the scrubber the
+  // OS already drew.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (!hasMediaSessionTarget || !hasFullAudio) return;
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+    if (!Number.isFinite(audioEl.duration) || audioEl.duration <= 0) return;
+    const state = {
+      duration: audioEl.duration,
+      playbackRate: rate,
+      position: Math.min(audioEl.currentTime, audioEl.duration),
+    };
+    navigator.mediaSession.setPositionState(state);
+    void setNativePositionState(state);
+  }, [hasMediaSessionTarget, hasFullAudio, playing, rate, readingQueueIndex]);
 
   const progress =
     queue.length > 0 && readingQueueIndex !== null ? (readingQueueIndex + 1) / queue.length : 0;
