@@ -1,10 +1,10 @@
 import "server-only";
 import { getOrCreateGlobalSingleton, TtlCache } from "./ttl-cache";
 
-// The cache of a learner's activity date keys, in its own file so that both
-// the reader (streaks.ts) and the writer (study-day.ts) can reach it
-// without importing each other. streaks.ts already imports study-day.ts;
-// putting the invalidation on streaks.ts would close that into a cycle.
+// The cache of a learner's activity, in its own file so that both the
+// reader (streaks.ts) and the writer (study-day.ts) can reach it without
+// importing each other. streaks.ts already imports study-day.ts; putting
+// the invalidation on streaks.ts would close that into a cycle.
 //
 // The 60s TTL absorbs repeated reads within one page load and one
 // badge-evaluation pass — this is read on every /profile render AND on
@@ -14,16 +14,38 @@ import { getOrCreateGlobalSingleton, TtlCache } from "./ttl-cache";
 // The key carries the ZONE as well as the user: the same learner's keys are
 // different strings in two zones, and a shared entry would hand one zone's
 // calendar to the other for up to a minute.
-export const activityDateKeysCache = getOrCreateGlobalSingleton(
-  "activityDateKeysCache",
-  () => new TtlCache<string[]>(60_000, "activity-date-keys", Array.isArray),
+
+/** What a learner did on one day, as source names — "lesson", "story",
+ * "flashcards", "word-game", "exam", "media". Never empty for a day that is
+ * present, and deduplicated. */
+export type ActivityDaySources = Record<string, string[]>;
+
+/** True for the shape this cache stores TODAY.
+ *
+ * Not optional paranoia. The Redis half of a TtlCache is shared across
+ * deploys, and on 30.08.2026 changing a payload's shape while keeping its
+ * key crashed Navbar on every page for the 30 seconds the old entries took
+ * to expire (see ttl-cache.ts). This cache's payload changed on 31.08.2026
+ * from `string[]` to this map — which is why the NAMESPACE below changed
+ * too, from "activity-date-keys" to "activity-day-sources". Two defences,
+ * because the first one alone is what failed last time. */
+function isDaySourceMap(value: unknown): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  return Object.values(value as Record<string, unknown>).every(
+    (v) => Array.isArray(v) && v.every((item) => typeof item === "string"),
+  );
+}
+
+export const activityDaySourcesCache = getOrCreateGlobalSingleton(
+  "activityDaySourcesCache",
+  () => new TtlCache<ActivityDaySources>(60_000, "activity-day-sources", isDaySourceMap),
 );
 
 export function activityCacheKey(userId: string, timeZone: string): string {
   return `${userId}|${timeZone}`;
 }
 
-/** Drops the cached day list so the very next read sees a day that was just
+/** Drops the cached day map so the very next read sees a day that was just
  * marked.
  *
  * Without this the streak would be up to 60 seconds behind the learner:
@@ -37,5 +59,5 @@ export function activityCacheKey(userId: string, timeZone: string): string {
  * zone passed here is the one the mark was written in, i.e. the learner's
  * own, and it is the entry their own pages read. */
 export async function invalidateActivityDateKeys(userId: string, timeZone: string): Promise<void> {
-  await activityDateKeysCache.del(activityCacheKey(userId, timeZone));
+  await activityDaySourcesCache.del(activityCacheKey(userId, timeZone));
 }

@@ -5,6 +5,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { getMediaGrammarLinks, getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
 import ContentInsights from "@/components/stories/ContentInsights";
 import { isPilotMedia } from "@/lib/media-pilot";
@@ -67,6 +68,11 @@ export default async function MediaDetailPage({
   const [dict, item, tier] = await Promise.all([getDictionary(lang), getMediaById(id), getEntitlementTier()]);
   if (!dict?.media) notFound();
   if (!item) notFound();
+
+  // A song or a grammar video is study, decided 31.08.2026 — it was the
+  // one substantive surface left that gave no day. Same rule as the other
+  // six: OPENING it counts, finishing it is not required.
+  await markStudyDayVisit("media");
 
   const relatedStories = await getRelatedStoriesForMedia(item);
   // Which grammar topics this item's transcript actually contains, as

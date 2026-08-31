@@ -147,11 +147,26 @@ describe("every TtlCache declares what shape it holds", () => {
       for (const match of readFileSync(file, "utf8").matchAll(/new TtlCache<[\s\S]*?>\(([\s\S]*?)\)[,;\s)]/g)) {
         found++;
         const args = match[1];
-        if (!/Array\.isArray|isPlainObject/.test(args)) offenders.push(`${relative(SRC, file)}: ${args.trim().slice(0, 60)}`);
+        // Any named predicate counts, not only the two the app happened to
+        // use when this was written: activity-cache.ts holds a map rather
+        // than a list and passes `isDaySourceMap`, which is exactly the
+        // guard this test exists to require. What is still rejected is a
+        // constructor with no third argument at all — the shape the
+        // 30.08.2026 crash came out of.
+        if (!/Array\.isArray|\bis[A-Z]\w*/.test(args)) offenders.push(`${relative(SRC, file)}: ${args.trim().slice(0, 60)}`);
       }
     }
     // Without this the scan could match nothing and pass vacuously.
     expect(found).toBeGreaterThan(8);
     expect(offenders).toEqual([]);
+
+    // Positive control for the matcher itself: the two-argument form this
+    // test exists to forbid must be reported, and a named predicate must
+    // not be. Rule 4.1 — the loop above answers "no offenders" every time,
+    // so the thing deciding that has to be shown working.
+    const judge = (args: string) => /Array\.isArray|\bis[A-Z]\w*/.test(args);
+    expect(judge('60_000, "rows"')).toBe(false);
+    expect(judge('60_000, "rows", Array.isArray')).toBe(true);
+    expect(judge('60_000, "day-sources", isDaySourceMap')).toBe(true);
   });
 });

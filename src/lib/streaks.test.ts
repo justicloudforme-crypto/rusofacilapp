@@ -14,6 +14,11 @@ describe("computeStreakStats", () => {
       // the two freeze fields are part of the shape now (PROGRESS.md 7.69).
       freezesLeft: 2,
       frozenDateKeys: [],
+      // And since 7.71, where the chain starts and what ended the one
+      // before it. Both null here, which is the case that matters: an empty
+      // account must not hand /profile half a sentence to print.
+      chainStartedOn: null,
+      brokenOn: null,
     });
   });
 

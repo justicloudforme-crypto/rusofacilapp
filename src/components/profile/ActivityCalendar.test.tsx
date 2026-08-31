@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ActivityCalendar from "./ActivityCalendar";
 
@@ -23,8 +23,23 @@ const ES = {
   legendOutside: "fuera de tu periodo",
   legendToday: "hoy",
   months: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+  monthsInDate: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+  datePattern: "{day} de {month}",
   weekdays: ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"],
   weekdaysFull: ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
+  summaryStudied: "Días de estudio este mes",
+  summarySaved: "Salvados con una congelación",
+  dayOpenLabel: "Ver qué hiciste este día",
+  dayCloseLabel: "Cerrar el detalle del día",
+  dayDetailHeading: "Qué hiciste el {date}",
+  sourceLabels: {
+    lesson: "una lección",
+    story: "un relato",
+    flashcards: "tarjetas de vocabulario",
+    "word-game": "un juego de palabras",
+    exam: "un examen",
+    media: "una canción o un vídeo",
+  },
 };
 
 const RU = {
@@ -36,17 +51,39 @@ const RU = {
   legendOutside: "вне периода",
   legendToday: "сегодня",
   months: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
+  monthsInDate: ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
+  datePattern: "{day} {month}",
   weekdays: ["пн", "вт", "ср", "чт", "пт", "сб", "вс"],
   weekdaysFull: ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"],
+  summaryStudied: "Дней занятий в этом месяце",
+  summarySaved: "Спасено заморозкой",
+  dayOpenLabel: "Посмотреть, чем занимался в этот день",
+  dayCloseLabel: "Закрыть подробности дня",
+  dayDetailHeading: "Чем ты занимался {date}",
+  sourceLabels: {
+    lesson: "урок",
+    story: "рассказ",
+    flashcards: "карточки",
+    "word-game": "игра в слова",
+    exam: "экзамен",
+    media: "песня или видео",
+  },
 };
 
 const TODAY = "2026-08-31";
+
+const SOURCES: Record<string, string[]> = {
+  "2026-08-10": ["lesson", "flashcards", "media"],
+  "2026-08-12": ["story"],
+  "2026-07-20": ["exam"],
+};
 
 function renderCalendar(dict = ES, over: Record<string, unknown> = {}) {
   return render(
     <ActivityCalendar
       activeDateKeys={["2026-08-10", "2026-08-12", "2026-07-20"]}
       frozenDateKeys={["2026-08-11"]}
+      daySources={SOURCES}
       todayKey={TODAY}
       firstDateKey="2026-06-15"
       dict={dict}
@@ -94,21 +131,21 @@ describe("календарь занятий — что видит ученик",
     expect(cell("2026-08-10")!.getAttribute("aria-label")).toContain("día de estudio");
   });
 
-  it("легенда — строка на странице, не подсказка по наведению", () => {
-    renderCalendar(ES);
-    // All five kinds are readable as text in the document. `title` would
-    // not satisfy this, and on the Capacitor build there is no hover at all
-    // (CLAUDE.md) — that is why this assertion exists.
-    for (const label of [
-      ES.legendActive,
-      ES.legendFrozen,
-      ES.legendMissed,
-      ES.legendOutside,
-      ES.legendToday,
-    ]) {
-      const list = screen.getByRole("list");
-      expect(within(list).getByText(label)).toBeTruthy();
+  it("все пять видов клетки объяснены ТЕКСТОМ на странице, не по наведению", () => {
+    const { container } = renderCalendar(ES);
+    // The wording lives in two lines now — the month summary carries the
+    // flame and the blue square with a count, the legend carries the rest —
+    // so this asserts the PROPERTY (every kind is explained in text on the
+    // page) rather than one particular list. `title` would not satisfy it,
+    // and on the Capacitor build there is no hover at all (CLAUDE.md).
+    const text = container.textContent ?? "";
+    for (const label of [ES.summaryStudied, ES.summarySaved, ES.legendMissed, ES.legendOutside, ES.legendToday]) {
+      expect(text).toContain(label);
     }
+    // And the two that moved really did move, rather than vanishing: their
+    // words are still what the cells announce to a screen reader.
+    expect(cell("2026-08-10")!.getAttribute("aria-label")).toContain(ES.legendActive);
+    expect(cell("2026-08-11")!.getAttribute("aria-label")).toContain(ES.legendFrozen);
   });
 
   it("назад — не дальше месяца регистрации, вперёд — не дальше текущего", async () => {
@@ -144,6 +181,160 @@ describe("календарь занятий — что видит ученик",
     expect(cell("2026-07-20")).toBeNull(); // not on the August grid
     await user.click(screen.getByLabelText(ES.prevMonth));
     expect(cell("2026-07-20")!.getAttribute("data-state")).toBe("active");
+  });
+});
+
+describe("клетка: число не двигается и не меняет размер", () => {
+  it("день с занятием и день без — число в одном и том же месте и одного кегля", () => {
+    renderCalendar(ES);
+    const active = cell("2026-08-10")!;
+    const plain = cell("2026-08-13")!;
+
+    // The number is the FIRST child of both, with the same classes. It used
+    // to move to the bottom-right corner and drop to 10px on a studied day,
+    // so a column of dates zig-zagged: the flame was moving the date.
+    const num = (el: Element) => el.querySelector("span:not([class*='absolute'])");
+    expect(num(active)!.textContent).toBe("10");
+    expect(num(plain)!.textContent).toBe("13");
+    expect(num(active)!.className).toBe(num(plain)!.className);
+    expect(num(active)!.className).toContain("text-xs");
+
+    // The flame is present on the studied day, positioned out of the
+    // number's way, and cannot take a tap of its own.
+    const flame = active.querySelector("span[class*='absolute']");
+    expect(flame!.textContent).toBe("🔥");
+    expect(flame!.className).toContain("pointer-events-none");
+    expect(plain.querySelector("span[class*='absolute']")).toBeNull();
+  });
+
+  it("дни вне периода — почти невидимая клетка, без пунктирной рамки", () => {
+    renderCalendar(ES);
+    // June is the registration month (15.06), so 1–14 June are outside.
+    // Check on the July grid instead: nothing before 15.06 is reachable
+    // from August, so page back twice.
+    const august = cell("2026-08-13")!;
+    expect(august.className).not.toContain("border-dashed"); // control: neither is a plain day
+
+    const { container } = renderCalendar(ES, { firstDateKey: "2026-08-10", todayKey: "2026-08-20" });
+    const outside = container.querySelectorAll('[data-state="outside"]');
+    expect(outside.length).toBeGreaterThan(0);
+    for (const el of outside) {
+      expect(el.className).not.toContain("border-dashed");
+      expect(el.className).not.toContain("border-foreground");
+    }
+    // The legend swatch matches the square, so the line explains what is
+    // actually drawn.
+    const legendSwatch = [...container.querySelectorAll("li")].find((li) =>
+      li.textContent?.includes(ES.legendOutside),
+    );
+    expect(legendSwatch!.querySelector("span")!.className).not.toContain("border-dashed");
+  });
+});
+
+describe("итог месяца под сеткой", () => {
+  it("считает дни занятий и спасённые дни ИМЕННО этого месяца", () => {
+    const { container, unmount } = renderCalendar(ES);
+    // August in the fixture: two studied days (10, 12) and one frozen (11).
+    // July's studied day (20.07) must not leak in.
+    const summary = container.textContent ?? "";
+    expect(summary).toContain(`${ES.summaryStudied}: 2`);
+    expect(summary).toContain(`${ES.summarySaved}: 1`);
+    // The control that the month filter is real: the counts come from the
+    // grid, and the grid has exactly those squares.
+    expect(container.querySelectorAll('[data-state="active"]').length).toBe(2);
+    expect(container.querySelectorAll('[data-state="frozen"]').length).toBe(1);
+    unmount();
+  });
+
+  it("пересчитывается при переходе на другой месяц", async () => {
+    const user = userEvent.setup();
+    const { container } = renderCalendar(ES);
+    await user.click(screen.getByLabelText(ES.prevMonth));
+    expect(container.textContent).toContain(`${ES.summaryStudied}: 1`); // 20.07
+    expect(container.textContent).toContain(`${ES.summarySaved}: 0`);
+  });
+
+  it("месяц без занятий говорит «0», а не молчит", async () => {
+    const user = userEvent.setup();
+    const { container } = renderCalendar(ES);
+    await user.click(screen.getByLabelText(ES.prevMonth));
+    await user.click(screen.getByLabelText(ES.prevMonth)); // June — nothing at all
+    expect(container.textContent).toContain(`${ES.summaryStudied}: 0`);
+    expect(container.textContent).toContain(`${ES.summarySaved}: 0`);
+  });
+});
+
+describe("тап по дню раскрывает, чем человек занимался", () => {
+  it("день с занятием — кнопка; раскрытие показывает ВСЕ источники", async () => {
+    const user = userEvent.setup();
+    const { container } = renderCalendar(ES);
+
+    const day = cell("2026-08-10")!;
+    expect(day.tagName).toBe("BUTTON");
+    expect(day.getAttribute("aria-expanded")).toBe("false");
+    // Nothing is disclosed before the tap.
+    expect(container.textContent).not.toContain("Qué hiciste el 10 de agosto");
+
+    await user.click(day);
+    expect(cell("2026-08-10")!.getAttribute("aria-expanded")).toBe("true");
+    expect(container.textContent).toContain("Qué hiciste el 10 de agosto");
+    // Three sources on that day, all three shown — not just the first.
+    for (const label of [ES.sourceLabels.lesson, ES.sourceLabels.flashcards, ES.sourceLabels.media]) {
+      expect(container.textContent).toContain(label);
+    }
+    // And not one that did not happen that day.
+    expect(container.textContent).not.toContain(ES.sourceLabels.exam);
+  });
+
+  it("второй тап закрывает, тап по другому дню переключает", async () => {
+    const user = userEvent.setup();
+    const { container } = renderCalendar(ES);
+
+    await user.click(cell("2026-08-10") as HTMLElement);
+    await user.click(cell("2026-08-10") as HTMLElement);
+    expect(container.textContent).not.toContain("Qué hiciste el 10 de agosto");
+
+    await user.click(cell("2026-08-12") as HTMLElement);
+    expect(container.textContent).toContain("Qué hiciste el 12 de agosto");
+    expect(container.textContent).toContain(ES.sourceLabels.story);
+    expect(container.textContent).not.toContain("Qué hiciste el 10 de agosto");
+  });
+
+  it("день без занятия по нажатию не открывает ничего — это не кнопка", async () => {
+    const user = userEvent.setup();
+    const { container } = renderCalendar(ES);
+
+    const plain = cell("2026-08-13")!;
+    const frozen = cell("2026-08-11")!;
+    expect(plain.tagName).toBe("SPAN");
+    expect(frozen.tagName).toBe("SPAN"); // a saved day is not a studied day
+    expect(container.querySelectorAll("button[data-date]").length).toBe(2); // only 10 and 12
+
+    await user.click(plain);
+    await user.click(frozen);
+    expect(container.textContent).not.toContain("Qué hiciste el");
+  });
+
+  it("смена месяца закрывает раскрытый день", async () => {
+    const user = userEvent.setup();
+    const { container } = renderCalendar(ES);
+    await user.click(cell("2026-08-10") as HTMLElement);
+    expect(container.textContent).toContain("Qué hiciste el 10 de agosto");
+    await user.click(screen.getByLabelText(ES.prevMonth));
+    expect(container.textContent).not.toContain("Qué hiciste el");
+  });
+
+  it("русская дата в родительном падеже, испанская — с «de»", async () => {
+    const user = userEvent.setup();
+    const { container, unmount } = renderCalendar(ES);
+    await user.click(cell("2026-08-10") as HTMLElement);
+    expect(container.textContent).toContain("10 de agosto");
+    unmount();
+
+    const ru = renderCalendar(RU);
+    await user.click(cell("2026-08-10") as HTMLElement);
+    expect(ru.container.textContent).toContain("Чем ты занимался 10 августа");
+    expect(ru.container.textContent).not.toContain("август 10");
   });
 });
 
@@ -184,9 +375,15 @@ describe("календарь только читает", () => {
     const user = userEvent.setup();
     renderCalendar(ES);
 
-    // Everything the learner can do here: page back to the floor and
-    // forward to the ceiling, twice over.
+    // Everything the learner can do here: open a day, close it, open
+    // another, and page back to the floor and forward to the ceiling, twice
+    // over. Tapping a day is new since 31.08.2026 and is the one thing in
+    // this component that could plausibly want to talk to a server, which
+    // is exactly why it belongs inside this walk and not beside it.
     for (let round = 0; round < 2; round++) {
+      await user.click(cell("2026-08-10") as HTMLElement);
+      await user.click(cell("2026-08-10") as HTMLElement);
+      await user.click(cell("2026-08-12") as HTMLElement);
       for (let i = 0; i < 3; i++) await user.click(screen.getByLabelText(ES.prevMonth));
       for (let i = 0; i < 3; i++) await user.click(screen.getByLabelText(ES.nextMonth));
     }

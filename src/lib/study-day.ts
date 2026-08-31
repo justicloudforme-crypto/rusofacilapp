@@ -25,9 +25,14 @@ import { invalidateActivityDateKeys } from "./activity-cache";
 // of "what day is it" in this file on purpose: two of them is precisely the
 // defect fixed on 31.08.2026 (PROGRESS.md 7.68).
 
-/** The surfaces that count as study. Kept as a closed union so adding a
- * sixth is a deliberate edit here, not an ad-hoc string at a call site. */
-export type StudyDaySource = "lesson" | "story" | "flashcards" | "word-game" | "exam";
+/** The surfaces that count as study. Kept as a closed union so adding one
+ * is a deliberate edit here, not an ad-hoc string at a call site.
+ *
+ * "media" joined on 31.08.2026 by the owner's decision: a song or a grammar
+ * video is study, and it was the last substantive surface that gave no day.
+ * Nothing about the column changed — `source` is a plain String, so a new
+ * member costs no migration. */
+export type StudyDaySource = "lesson" | "story" | "flashcards" | "word-game" | "exam" | "media";
 
 /** Records that `userId` studied on the calendar day `at` falls on, as seen
  * in `timeZone`.
@@ -82,16 +87,20 @@ export async function markStudyDay(
   }
 }
 
-/** Every day this learner has been marked as studying, as "YYYY-MM-DD"
- * keys. Degrades to an empty list rather than throwing (see 7.24): the
- * streak still has its five derived sources, so a missing table costs
- * accuracy, not the profile page. */
-export async function getStudyDayKeys(userId: string): Promise<string[]> {
+/** Every marked day of this learner, as `{ dateKey, source }`. Degrades to
+ * an empty list rather than throwing (see 7.24): the streak still has its
+ * five derived sources, so a missing table costs accuracy, not the profile
+ * page. */
+export async function getStudyDayRows(userId: string): Promise<Array<{ dateKey: string; source: string }>> {
   try {
-    const rows = await db.studyDay.findMany({ where: { userId }, select: { dateKey: true } });
-    return rows.map((row) => row.dateKey);
+    return await db.studyDay.findMany({ where: { userId }, select: { dateKey: true, source: true } });
   } catch (error) {
-    console.error("getStudyDayKeys failed", error);
+    console.error("getStudyDayRows failed", error);
     return [];
   }
+}
+
+/** Just the keys, for callers that only need the calendar. */
+export async function getStudyDayKeys(userId: string): Promise<string[]> {
+  return (await getStudyDayRows(userId)).map((row) => row.dateKey);
 }

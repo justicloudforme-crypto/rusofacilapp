@@ -20,6 +20,7 @@ export default function ProfileMenu({
   isPremium,
   label,
   tabs,
+  adminLink,
   logoutLabel,
 }: {
   lang: string;
@@ -29,6 +30,15 @@ export default function ProfileMenu({
   isPremium: boolean;
   label: string;
   tabs: { id: string; label: string; icon?: ReactNode }[];
+  /** Staff only, and null for everyone else.
+   *
+   * It is here because of a gap, not for symmetry. Navbar hides the header's
+   * "Administración" link below `md` (it is what pushed a staff account's
+   * /profile 86px past a 640px viewport, PROGRESS.md 7.70), and MobileMenu —
+   * which carries the admin group — is `sm:hidden`. That leaves 640–767 with
+   * no route to /admin at all. This dropdown is `hidden sm:block`, so it
+   * covers exactly that band and every width above it. */
+  adminLink?: { href: string; label: string } | null;
   logoutLabel: string;
 }) {
   return (
@@ -66,6 +76,18 @@ export default function ProfileMenu({
           {tab.label}
         </Link>
       ))}
+      {adminLink && (
+        <>
+          <div className="my-1 h-px bg-black/10 dark:bg-white/10" />
+          <Link
+            href={adminLink.href}
+            role="menuitem"
+            className="tap flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
+          >
+            {adminLink.label}
+          </Link>
+        </>
+      )}
       <div className="my-1 h-px bg-black/10 dark:bg-white/10" />
       <form action="/api/auth/logout" method="POST">
         <input type="hidden" name="lang" value={lang} />
