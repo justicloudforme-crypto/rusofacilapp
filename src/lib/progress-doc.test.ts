@@ -169,6 +169,12 @@ const COLD_START_QUESTIONS: [string, string][] = [
   ["does anything check that a price id is alive", "/api/admin/stripe-health"],
   ["what does the price check fail to catch", "Чего эта проверка НЕ ловит"],
   ["what happens when Stripe refuses the checkout", "checkout-blocked"],
+  // The invariant switched on the same day, after the owner's measurement.
+  // A cold reader who meets PRODUCT_MISMATCH on a dashboard needs the
+  // caveat — a legitimately new product makes it red — before deciding what
+  // to do about it.
+  ["do all the plans have to sell one Stripe product", "### 7.67."],
+  ["what if a plan legitimately gets its own product", "пересмотреть правило"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {

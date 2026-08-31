@@ -18,8 +18,13 @@
  *
  * WHAT IT CANNOT DO — read this before trusting a green run:
  *   - It cannot tell that the RIGHT price is on the RIGHT plan when the
- *     amounts happen to agree. Two live 47,99 prices are interchangeable
- *     here and are not interchangeable to a buyer.
+ *     amounts happen to agree. Two live 47,99 prices of the same Product are
+ *     interchangeable here and are not interchangeable to a buyer. The
+ *     product invariant below narrows this but does not close it.
+ *   - It cannot tell that the whole set was taken from the wrong account or
+ *     the wrong product, as long as it was taken from ONE of them. The
+ *     invariant compares the plans with each other, and a uniformly wrong
+ *     set is self-consistent. See applyProductInvariant.
  *   - It does not replace the owner reading the amounts on Stripe's own
  *     dashboard. `expectedUsdCents` in src/lib/plans.ts is a number a human
  *     typed; if that number is wrong, this check enforces the wrong number
@@ -40,6 +45,7 @@ export type PriceVerdict =
   | "NOT_FOUND"
   | "AMOUNT_MISMATCH"
   | "CURRENCY_MISMATCH"
+  | "PRODUCT_MISMATCH"
   | "MISSING_ENV";
 
 /** The currency every card plan is billed in. OXXO is MXN and is priced
@@ -192,6 +198,80 @@ export function verdictFor(
 }
 
 /**
+ * The one property that no single plan can be judged on: every plan must
+ * sell the SAME Stripe Product.
+ *
+ * Why derived and not written down. The obvious form of this check is a
+ * table — "lifetime belongs to prod_…" — and that table is a hardcode typed
+ * by a human, of exactly the class this whole file exists because of
+ * (PROGRESS.md 7.66). It would also rot silently the day the Product is
+ * recreated in Stripe. So nothing is hardcoded here: the expectation is read
+ * off the answers Stripe just gave. Measured by the owner on production on
+ * 2026-08-31, all three plans answered prod_V686OIEKpWeTGX — one product —
+ * which is what makes the invariant true today and safe to switch on.
+ *
+ * What it catches: one price dragged in from a different Product — a test
+ * product, an old product, a neighbouring project — while live, in USD and at
+ * the advertised amount. That set is `OK` on every per-plan test and wrong.
+ *
+ * What it CANNOT catch, by construction: all plans pointing at prices of one
+ * FOREIGN product. The invariant asks whether the plans agree, and a
+ * uniformly wrong set agrees with itself. Only a hardcoded product id or a
+ * human looking at the dashboard sees that, and neither is free. The
+ * positive control asserts this blind spot out loud rather than leaving it
+ * to be discovered.
+ *
+ * Applied only to plans that are otherwise OK, and only when at least two of
+ * them answered with a product. A plan already reported INACTIVE or
+ * AMOUNT_MISMATCH keeps that verdict: it is the more specific and more
+ * actionable one, the report is already `ok: false`, and a broken plan's
+ * product must not get a vote on what the majority product is.
+ *
+ * The majority is a STRICT plurality. Two plans against two — or one against
+ * one — names no odd one out, so every disagreeing plan is flagged and the
+ * detail says the check cannot tell which side is right. Silently picking a
+ * winner there would be the check inventing an expectation it does not have.
+ */
+export function applyProductInvariant(results: PriceHealthResult[]): PriceHealthResult[] {
+  const eligible = new Set(
+    results.filter((r) => r.verdict === "OK" && r.actual?.product)
+  );
+  if (eligible.size < 2) return results;
+
+  const counts = new Map<string, number>();
+  for (const r of eligible) {
+    const product = r.actual!.product as string;
+    counts.set(product, (counts.get(product) ?? 0) + 1);
+  }
+  if (counts.size === 1) return results;
+
+  const top = Math.max(...counts.values());
+  const leaders = [...counts.entries()].filter(([, n]) => n === top).map(([product]) => product);
+  const majority = leaders.length === 1 ? leaders[0] : null;
+  const seen = [...counts.keys()].sort().join(", ");
+
+  return results.map((result) => {
+    if (!eligible.has(result)) return result;
+    const product = result.actual!.product as string;
+    if (majority !== null && product === majority) return result;
+
+    return {
+      ...result,
+      verdict: "PRODUCT_MISMATCH" as const,
+      detail:
+        majority === null
+          ? `${result.envVar} points at a live, correctly priced Price of product ${product}, ` +
+            `but the plans do not agree on one product (${seen}) and no majority names the odd one out. ` +
+            `All plans must sell the same product; which of these is the intended one has to be read off Stripe.`
+          : `${result.envVar} points at a live, correctly priced Price of product ${product}, ` +
+            `while the other plans sell ${majority}. All plans must sell the same product, so this Price ` +
+            `was most likely taken from a different (or test) product — it passes every per-plan test and ` +
+            `would still charge for the wrong thing.`,
+    };
+  });
+}
+
+/**
  * Runs the whole table. `env` and `lookup` are injected so the positive
  * control can plant an archived and a nonexistent price without touching
  * Stripe, and so the route can pass the real client.
@@ -221,8 +301,12 @@ export async function checkStripePrices(
     results.push(verdictFor(expected, raw, facts ?? "not-found"));
   }
 
-  const failing = results.filter((r) => r.verdict !== "OK").map((r) => r.envVar);
-  return { ok: failing.length === 0, results, failing };
+  // Cross-plan last: it needs every answer before it can say anything, and
+  // it may only downgrade a verdict that is otherwise OK.
+  const judged = applyProductInvariant(results);
+
+  const failing = judged.filter((r) => r.verdict !== "OK").map((r) => r.envVar);
+  return { ok: failing.length === 0, results: judged, failing };
 }
 
 /** One-line-per-plan summary for a log or a Sentry message. Values never
