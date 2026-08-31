@@ -3,6 +3,7 @@
   "framework": "nextjs",
   "regions": ["pdx1"],
   "crons": [
-    { "path": "/api/cron/backup", "schedule": "0 8 * * *" }
+    { "path": "/api/cron/backup", "schedule": "0 8 * * *" },
+    { "path": "/api/cron/stripe-price-health", "schedule": "0 * * * *" }
   ]
 }
