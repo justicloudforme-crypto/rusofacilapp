@@ -16,6 +16,7 @@ import GameResultPanel, { type GameResultPanelDict } from "@/components/games/Ga
 import { playStreakFanfare } from "@/lib/sound";
 import { hapticSuccess } from "@/lib/haptics";
 import { plural, type PluralForms } from "@/lib/plural";
+import { learnedProgressText } from "@/lib/flashcards/learned-progress";
 
 export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   levelAll: string;
@@ -29,7 +30,10 @@ export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
+  /** The "you've learned N of M" line. Two forms — see
+   * lib/flashcards/learned-progress.ts for which one prints when. */
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
+  learnedProgressAvailableLabel: PluralForms; // adds literal "{locked}". Inflects with {total}.
 }
 
 const ROUND_SIZE = 10;
@@ -52,7 +56,9 @@ export default function RecallApp({
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
   const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
   const [hasAnyProgress, setHasAnyProgress] = useState(false);
-  const [totalProgress, setTotalProgress] = useState({ known: 0, total: 0 });
+  // `total` is what THIS visitor can open, `locked` is what Premium
+  // would add — the API sends both, and neither is ever computed here.
+  const [totalProgress, setTotalProgress] = useState({ known: 0, total: 0, locked: 0 });
   // Frozen once, when the round completes — not recomputed from Date.now()
   // on every render, or the displayed time would keep creeping forward for
   // as long as the result panel stays open.
@@ -85,7 +91,7 @@ export default function RecallApp({
       setCategorySummary(body.categories);
       setRecentCategories(body.recent);
       setHasAnyProgress(body.hasAnyProgress);
-      setTotalProgress({ known: body.totalKnown, total: body.totalWords });
+      setTotalProgress({ known: body.totalKnown, total: body.availableWords, locked: body.premiumOnlyWords });
     });
   }, [round, levelFilter, complete]);
 
@@ -238,9 +244,10 @@ export default function RecallApp({
             onNextGame={backToCategories}
           >
             <p className="mt-1 text-center text-sm text-foreground/60">
-              {plural(dict.locale, totalProgress.total, dict.learnedProgressLabel, {
+              {learnedProgressText(dict.locale, dict, {
                 known: totalProgress.known,
-                total: totalProgress.total,
+                available: totalProgress.total,
+                locked: totalProgress.locked,
               })}
             </p>
           </GameResultPanel>

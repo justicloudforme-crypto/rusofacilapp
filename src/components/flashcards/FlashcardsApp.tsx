@@ -37,6 +37,7 @@ export interface FlashcardsDict {
   freeTrialLimitCta: string;
   continueTitle: string;
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}" — global count (see /api/flashcards/summary), not per-category. Inflects with {total}.
+  learnedProgressAvailableLabel: PluralForms; // the same line for a visitor with Premium-locked cards; adds literal "{locked}".
 }
 
 // Debounce delay for the always-visible search box — short enough to feel

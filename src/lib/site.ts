@@ -213,8 +213,8 @@ export function paywallJsonLd(isFullyOpen: boolean, lockSelector: string) {
  * different one) — so it's keyed by locale like ABOUT_CONTENT rather than
  * fixed to one language regardless of where it renders. */
 const ORGANIZATION_DESCRIPTION: Record<Locale, string> = {
-  es: "RusoFácilapp es una plataforma web para aprender ruso pensada para hispanohablantes, con lecciones estructuradas de los niveles A1 a B2, historias de lectura, vocabulario, juegos de palabras y una biblioteca de audio y video.",
-  ru: "RusoFácilapp — веб-платформа для изучения русского языка, созданная для испаноговорящих: структурированные уроки уровней A1–B2, рассказы для чтения, словарь, игры со словами и библиотека аудио и видео.",
+  es: "RusoFácilapp es una plataforma web para aprender ruso pensada para hispanohablantes: un curso estructurado de los niveles A1 a B2, y vocabulario, cuentos y juegos de palabras que llegan hasta el nivel C1, además de una biblioteca de audio y vídeo.",
+  ru: "RusoFácilapp — веб-платформа для изучения русского языка, созданная для испаноговорящих: структурированный курс уровней A1–B2, а словарь, рассказы и игры со словами — до уровня C1, плюс библиотека аудио и видео.",
 };
 
 /** Organization JSON-LD — the fix for AI Overviews/knowledge panels
