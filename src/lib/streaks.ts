@@ -29,6 +29,17 @@ export interface StreakStats {
   /** Days a freeze was spent on — what the calendar paints as its own kind
    * of square so a saved day is visible, not silent. */
   frozenDateKeys: string[];
+  /** The day freezes started applying to this account ("YYYY-MM-DD" in the
+   * learner's zone).
+   *
+   * On the page because of a real report (PROGRESS.md 7.72): an account with
+   * three separate missed days, both freezes untouched and "saved: 0" is
+   * CORRECT — every one of those gaps fell before the epoch, where the
+   * balance is deliberately zero — but the page promised, in plain words,
+   * that a freeze covers a missed day and the streak goes on. The rule was
+   * never wrong; it was never stated. Surfacing the epoch is what lets the
+   * sentence, the code and the colour of the square say one thing. */
+  freezesSince: string;
   /** First studied day of the live chain, null when there is none. */
   chainStartedOn: string | null;
   /** The missed day that ended the previous chain, null when the chain has
@@ -72,6 +83,7 @@ function statsFrom(
     activeToday: resolution.activeToday,
     freezesLeft: resolution.freezesLeft,
     frozenDateKeys: resolution.frozenDateKeys,
+    freezesSince: resolution.freezesSince,
     chainStartedOn: resolution.chainStartedOn,
     brokenOn: resolution.brokenOn,
   };

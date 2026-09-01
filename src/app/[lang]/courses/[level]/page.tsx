@@ -10,6 +10,7 @@ import { getLevelLessonStatuses, type LessonStatus } from "@/lib/progress";
 import LevelGlossaryProgressBar from "@/components/glossary/LevelGlossaryProgressBar";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates, truncateForMeta } from "@/lib/site";
+import { plural } from "@/lib/plural";
 
 export function generateStaticParams() {
   return locales.flatMap((lang) =>
@@ -95,7 +96,7 @@ export default async function LevelPage({
 
       <div className="mt-6 flex items-center gap-3 text-sm text-foreground/60">
         <span>
-          {meta.weeks} {dict.courses.weeks}
+          {meta.weeks} {plural(lang, meta.weeks, dict.courses.weeks)}
         </span>
         <span aria-hidden>·</span>
         <span>
@@ -106,6 +107,7 @@ export default async function LevelPage({
       <LevelGlossaryProgressBar
         level={level}
         dict={{
+          locale: lang,
           progressLabel: dict.courses.levelProgressLabel,
           celebrationMessage: dict.courses.levelMasteredCelebration,
         }}

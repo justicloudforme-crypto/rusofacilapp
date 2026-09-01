@@ -1,12 +1,16 @@
 "use client";
 
 import { useLevelGlossaryProgress } from "@/lib/useLevelGlossaryProgress";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export interface LevelGlossaryBadgeDict {
   /** Shown once every term for the level is mastered, e.g. "Vocabulario gramatical dominado". */
   completeLabel: string;
   /** Shown while in progress, with {count}/{total} placeholders, e.g. "{count}/{total} dominados". */
-  progressLabel: string;
+  locale: Locale;
+  /** Agrees with {total} — the number it stands next to. */
+  progressLabel: PluralForms;
 }
 
 /**
@@ -44,7 +48,7 @@ export default function LevelGlossaryBadge({ level, dict }: { level: string; dic
   return (
     <span className="inline-flex flex-col items-end gap-1">
       <span className="text-xs font-medium text-foreground/50">
-        {dict.progressLabel.replace("{count}", String(mastered)).replace("{total}", String(total))}
+        {plural(dict.locale, total, dict.progressLabel, { count: mastered, total })}
       </span>
       <span className="h-1 w-16 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
         <span className="block h-full rounded-full bg-emerald-500 transition-[width] duration-300" style={{ width: `${pct}%` }} />

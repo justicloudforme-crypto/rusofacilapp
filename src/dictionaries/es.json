@@ -29,7 +29,11 @@
     "searchPlaceholder": "Buscar por secciones del sitio…",
     "searchEmpty": "No se encontraron resultados",
     "searchShortcutHint": "Buscar por secciones (⌘K)",
-    "streakLabel": "Racha: {days} días",
+    "streakLabel": {
+      "one": "Racha: {days} día",
+      "few": "Racha: {days} días",
+      "many": "Racha: {days} días"
+    },
     "bottomNavLabel": "Navegación principal"
   },
   "intro": {
@@ -131,10 +135,18 @@
   "courses": {
     "pageTitle": "Cursos de ruso",
     "pageSubtitle": "Cuatro niveles, del principiante absoluto hasta la conversación fluida sobre temas complejos.",
-    "weeks": "semanas",
+    "weeks": {
+      "one": "semana",
+      "few": "semanas",
+      "many": "semanas"
+    },
     "hoursPerWeek": "h / semana",
     "levelMasteredBadge": "Vocabulario gramatical dominado",
-    "levelProgressLabel": "{count}/{total} dominados",
+    "levelProgressLabel": {
+      "one": "{count}/{total} dominado",
+      "few": "{count}/{total} dominados",
+      "many": "{count}/{total} dominados"
+    },
     "levelMasteredCelebration": "¡Enhorabuena! Has dominado todo el vocabulario gramatical de este nivel.",
     "lessonStatusPassed": "Lección aprobada",
     "lessonStatusAttempted": "Intentada, todavía no aprobada",
@@ -498,7 +510,8 @@
     "calendarLegendActive": "día de estudio",
     "calendarLegendFrozen": "día salvado con una congelación",
     "calendarLegendMissed": "día sin estudiar",
-    "calendarLegendOutside": "fuera de tu periodo",
+    "calendarLegendBeforeStart": "antes de registrarte",
+    "calendarLegendFuture": "aún por llegar",
     "calendarLegendToday": "hoy",
     "calendarMonths": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
     "calendarWeekdays": ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"],
@@ -506,7 +519,7 @@
     "calendarMonthsInDate": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
     "calendarDatePattern": "{day} de {month}",
     "calendarSummaryStudied": "Días de estudio este mes",
-    "calendarSummarySaved": "Salvados con una congelación",
+    "calendarSummarySaved": "Días salvados este mes",
     "calendarDayOpenLabel": "Ver qué hiciste este día",
     "calendarDayCloseLabel": "Cerrar el detalle del día",
     "calendarDayDetailHeading": "Qué hiciste el {date}",
@@ -528,12 +541,28 @@
     "profileUpsellToPremium": "Desbloquea el nivel C1 para siempre",
     "dangerZoneHeading": "Zona de riesgo",
     "dangerZoneToggle": "Mostrar",
-    "badgeProgressStreak": "{current}/{total} días",
-    "badgeProgressVocab": "{current}/{total} palabras",
-    "badgeProgressExam": "{current}/{total} exámenes",
+    "badgeProgressStreak": {
+      "one": "{current}/{total} día",
+      "few": "{current}/{total} días",
+      "many": "{current}/{total} días"
+    },
+    "badgeProgressVocab": {
+      "one": "{current}/{total} palabra",
+      "few": "{current}/{total} palabras",
+      "many": "{current}/{total} palabras"
+    },
+    "badgeProgressExam": {
+      "one": "{current}/{total} examen",
+      "few": "{current}/{total} exámenes",
+      "many": "{current}/{total} exámenes"
+    },
     "badgesHeading": "Tus insignias",
     "badgesSubtitle": "Se desbloquean con tu progreso: rachas, exámenes, dominio de casos y vocabulario.",
-    "badgesUnlockedUnit": "desbloqueadas",
+    "badgesUnlockedUnit": {
+      "one": "desbloqueada",
+      "few": "desbloqueadas",
+      "many": "desbloqueadas"
+    },
     "badgesLockedLabel": "Bloqueada",
     "badgesEarnedOnLabel": "Obtenida el",
     "weakTopicHeading": "Enfoque de la semana",
@@ -545,8 +574,16 @@
     "referralCopyButton": "Copiar enlace",
     "referralCopiedNotice": "¡Copiado!",
     "referralUnavailable": "No se pudo generar tu enlace ahora mismo. Vuelve a intentarlo más tarde.",
-    "referralInvitedLabel": "personas invitadas",
-    "referralRewardsLabel": "meses gratis ganados",
+    "referralInvitedLabel": {
+      "one": "persona invitada",
+      "few": "personas invitadas",
+      "many": "personas invitadas"
+    },
+    "referralRewardsLabel": {
+      "one": "mes gratis ganado",
+      "few": "meses gratis ganados",
+      "many": "meses gratis ganados"
+    },
     "publicProfileHeading": "Perfil público",
     "publicProfileDescription": "Muestra tu racha e insignias en un enlace público que puedes compartir.",
     "publicProfileToggleLabel": "Hacer mi perfil público",
@@ -575,18 +612,27 @@
     "savedNotice": "Cambios guardados.",
     "emailLabel": "Email",
     "memberSinceLabel": "En la plataforma desde",
-    "wordsLearnedLabel": "palabras aprendidas",
+    "wordsLearnedLabel": {
+      "one": "palabra aprendida",
+      "few": "palabras aprendidas",
+      "many": "palabras aprendidas"
+    },
     "currentLevelLabel": "Nivel actual",
     "noLevelStarted": "sin lección aprobada",
     "currentStreakLabel": "racha actual",
     "longestStreakLabel": "mejor racha",
-    "streakDaysUnit": "días",
+    "streakDaysUnit": {
+      "one": "día",
+      "few": "días",
+      "many": "días"
+    },
     "streakActiveTodayNote": "¡Ya practicaste hoy! Vuelve mañana para seguir la racha.",
     "streakAtRiskNote": "Practica algo hoy para no perder tu racha.",
     "streakNoneNote": "Completa una lección, repasa tarjetas o lee una historia para empezar tu racha.",
-    "streakFreezesLeftLabel": "Congelaciones restantes",
+    "streakFreezesLeftLabel": "Congelaciones en tu reserva",
     "streakFrozenDayNote": "día salvado con una congelación",
     "streakFreezeExplainer": "Una congelación cubre un día perdido y tu racha sigue. Empiezas con 2, ganas una más cada 14 días seguidos y nunca tienes más de 3. Dos días perdidos seguidos cortan la racha aunque te queden congelaciones.",
+    "streakFreezeSinceNote": "Las congelaciones se aplican desde el {date}: los días perdidos antes de esa fecha no se cubren.",
     "welcomeGreeting": "¡Feliz nuevo día de ruso!",
     "welcomeSubtextActive": "Cada día que practicas, el ruso te resulta más cercano y más fácil de entender.",
     "welcomeSubtextNew": "Hoy es un buen día para empezar a acercarte al ruso.",
@@ -652,7 +698,11 @@
     "subscribeButton": "Suscribirme",
     "staffAccessNotice": "Acceso completo de por vida a todas las funciones como propietario/miembro del equipo — no necesitas suscribirte.",
     "progressHeading": "Tu progreso",
-    "lessonsCompleted": "lecciones aprobadas",
+    "lessonsCompleted": {
+      "one": "lección aprobada",
+      "few": "lecciones aprobadas",
+      "many": "lecciones aprobadas"
+    },
     "coursesHeading": "Cursos disponibles",
     "lockedNotice": "Necesitas una suscripción activa para acceder a las lecciones.",
     "openButton": "Abrir nivel",
@@ -686,15 +736,27 @@
     "voiceRecordingsHeading": "Tus grabaciones de voz",
     "voiceRecordingsDescription": "Las grabaciones de las prácticas de pronunciación no se envían a ningún servidor: se quedan en el navegador donde las hiciste.",
     "voiceRecordingsDeviceNote": "Por eso esta cifra corresponde solo a este dispositivo. Si grabaste en el teléfono, aquí no aparecerán.",
-    "voiceRecordingsUsage": "{count} de {max} grabaciones · {size}",
+    "voiceRecordingsUsage": {
+      "one": "{count} de {max} grabación · {size}",
+      "few": "{count} de {max} grabaciones · {size}",
+      "many": "{count} de {max} grabaciones · {size}"
+    },
     "voiceRecordingsEmpty": "En este dispositivo no hay ninguna grabación guardada.",
     "voiceRecordingsDelete": "Borrar mis grabaciones",
-    "voiceRecordingsDeleted": "Se borraron {count} grabaciones de este dispositivo.",
+    "voiceRecordingsDeleted": {
+      "one": "Se borró {count} grabación de este dispositivo.",
+      "few": "Se borraron {count} grabaciones de este dispositivo.",
+      "many": "Se borraron {count} grabaciones de este dispositivo."
+    },
     "voiceRecordingsUnavailable": "Este navegador no permite guardar grabaciones, así que no hay nada que borrar aquí."
   },
   "publicProfile": {
     "anonymousName": "Estudiante",
-    "badgeCountLabel": "insignias",
+    "badgeCountLabel": {
+      "one": "insignia",
+      "few": "insignias",
+      "many": "insignias"
+    },
     "badgesHeading": "Insignias",
     "noBadgesYet": "Todavía no hay insignias que mostrar."
   },
@@ -703,7 +765,11 @@
     "pageSubtitle": "Estudia acompañado — compara tu racha y tu nivel con tu grupo.",
     "myGroupsHeading": "Mis grupos",
     "noGroupsYet": "Todavía no perteneces a ningún grupo.",
-    "membersUnit": "miembros",
+    "membersUnit": {
+      "one": "miembro",
+      "few": "miembros",
+      "many": "miembros"
+    },
     "ownerLabel": "Administrador",
     "createHeading": "Crear un grupo",
     "createDescription": "Crea un grupo y comparte el código de invitación con tus compañeros.",
@@ -738,7 +804,11 @@
     "byAuthor": "Por",
     "readButton": "Leer",
     "emptyState": "Todavía no hay historias disponibles.",
-    "loadMoreButton": "Cargar más ({count} restantes)",
+    "loadMoreButton": {
+      "one": "Cargar más ({count} restante)",
+      "few": "Cargar más ({count} restantes)",
+      "many": "Cargar más ({count} restantes)"
+    },
     "backToList": "Volver a la biblioteca",
     "translationHint": "Toca cualquier palabra para ver su traducción. Toca una línea para saltar el audio a ella.",
     "translationLoading": "Traduciendo…",
@@ -794,7 +864,11 @@
     "categoryGrammar": "Gramática",
     "openButton": "Ver",
     "emptyState": "Todavía no hay materiales disponibles para este filtro.",
-    "loadMoreButton": "Cargar más ({count} restantes)",
+    "loadMoreButton": {
+      "one": "Cargar más ({count} restante)",
+      "few": "Cargar más ({count} restantes)",
+      "many": "Cargar más ({count} restantes)"
+    },
     "backToList": "Volver a la biblioteca",
     "videoUnavailable": "Video pendiente de agregar.",
     "videoBroken": "Este video ya no está disponible en YouTube. Ya lo hemos reportado — prueba con otro material mientras tanto.",
@@ -856,13 +930,21 @@
     "synonymsLabel": "Sinónimos",
     "antonymsLabel": "Antónimos",
     "searchPlaceholder": "Buscar una palabra...",
-    "cardCountLabel": "{count} palabras",
+    "cardCountLabel": {
+      "one": "{count} palabra",
+      "few": "{count} palabras",
+      "many": "{count} palabras"
+    },
     "backToCategories": "← Categorías",
     "nextLevelBadgeLabel": "¡Ya dominas este nivel aquí! Prueba {level}",
     "freeTrialLimitMessage": "Has visto la muestra gratuita de palabras. Suscríbete para desbloquear todo el vocabulario.",
     "freeTrialLimitCta": "Suscribirme",
     "continueTitle": "Continuar",
-    "learnedProgressLabel": "Has aprendido {known} de {total} palabras",
+    "learnedProgressLabel": {
+      "one": "Has aprendido {known} de {total} palabra",
+      "few": "Has aprendido {known} de {total} palabras",
+      "many": "Has aprendido {known} de {total} palabras"
+    },
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",
     "modeFillBlank": "Completa la frase",
@@ -872,7 +954,11 @@
       "levelAll": "Todos",
       "backToCategories": "← Categorías",
       "noCategoryCardsMessage": "No hay frases para este filtro.",
-      "roundCompleteLabel": "¡Ronda completa! {correct} de {total} correctas",
+      "roundCompleteLabel": {
+        "one": "¡Ronda completa! {correct} de {total} correcta",
+        "few": "¡Ronda completa! {correct} de {total} correctas",
+        "many": "¡Ronda completa! {correct} de {total} correctas"
+      },
       "playAgainButton": "Otra ronda",
       "streakToastLabel": "¡{count} seguidas!",
       "instructionLabel": "Completa la frase",
@@ -892,7 +978,11 @@
       "backToCategories": "← Categorías",
       "instructionLabel": "Toca la palabra en ruso y luego su traducción",
       "notEnoughCardsMessage": "Esta categoría no tiene suficientes palabras para este filtro.",
-      "roundCompleteLabel": "¡Ronda completa! {pairs} parejas",
+      "roundCompleteLabel": {
+        "one": "¡Ronda completa! {pairs} pareja",
+        "few": "¡Ronda completa! {pairs} parejas",
+        "many": "¡Ronda completa! {pairs} parejas"
+      },
       "playAgainButton": "Jugar de nuevo",
       "nextRoundButton": "Siguiente ronda"
     },
@@ -902,7 +992,11 @@
       "directionRuToEsLabel": "RU → ES",
       "backToCategories": "← Categorías",
       "noCategoryCardsMessage": "No hay tarjetas para este filtro.",
-      "roundCompleteLabel": "¡Ronda completa! {correct} de {total} correctas",
+      "roundCompleteLabel": {
+        "one": "¡Ronda completa! {correct} de {total} correcta",
+        "few": "¡Ronda completa! {correct} de {total} correctas",
+        "many": "¡Ronda completa! {correct} de {total} correctas"
+      },
       "playAgainButton": "Otra ronda",
       "streakToastLabel": "¡{count} seguidas!",
       "promptEsToRu": "Escribe la palabra en ruso",
@@ -973,7 +1067,11 @@
   },
   "gameResult": {
     "closeLabel": "Cerrar",
-    "resultScoreLabel": "{correct} de {total} correctas",
+    "resultScoreLabel": {
+      "one": "{correct} de {total} correcta",
+      "few": "{correct} de {total} correctas",
+      "many": "{correct} de {total} correctas"
+    },
     "resultTimeLabel": "Tiempo: {time}",
     "resultErrorsLabel": "Errores: {count}"
   },
@@ -1011,14 +1109,30 @@
       "slides": "Presentación"
     },
     "locked": {
-      "vocabularyLabel": "Este módulo incluye {count} palabras con audio.",
-      "exercisesLabel": "Este módulo incluye {count} ejercicios con corrección automática.",
-      "slidesLabel": "Este módulo incluye {count} diapositivas de presentación.",
+      "vocabularyLabel": {
+        "one": "Este módulo incluye {count} palabra con audio.",
+        "few": "Este módulo incluye {count} palabras con audio.",
+        "many": "Este módulo incluye {count} palabras con audio."
+      },
+      "exercisesLabel": {
+        "one": "Este módulo incluye {count} ejercicio con corrección automática.",
+        "few": "Este módulo incluye {count} ejercicios con corrección automática.",
+        "many": "Este módulo incluye {count} ejercicios con corrección automática."
+      },
+      "slidesLabel": {
+        "one": "Este módulo incluye {count} diapositiva de presentación.",
+        "few": "Este módulo incluye {count} diapositivas de presentación.",
+        "many": "Este módulo incluye {count} diapositivas de presentación."
+      },
       "cta": "Ver planes de suscripción"
     },
     "grammarSpanishNote": "",
     "glossaryTermsHeading": "Términos de esta lección",
-    "glossaryTermsMasteredLabel": "{count}/{total} dominados",
+    "glossaryTermsMasteredLabel": {
+      "one": "{count}/{total} dominado",
+      "few": "{count}/{total} dominados",
+      "many": "{count}/{total} dominados"
+    },
     "termQuiz": {
       "toggleLabel": "¿Ya los conoces? Ponte a prueba",
       "loadingLabel": "Preparando la prueba…",
@@ -1070,7 +1184,11 @@
       "instructionReadingComprehension": "Lee el texto y responde las preguntas.",
       "explanationLabel": "Explicación",
       "progressLabel": "Progreso",
-      "answeredLabel": "respondidos"
+      "answeredLabel": {
+        "one": "respondido",
+        "few": "respondidos",
+        "many": "respondidos"
+      }
     },
     "slides": {
       "downloadPdfButton": "Descargar presentación en PDF",
@@ -1382,8 +1500,16 @@
   "glossary": {
     "pageTitle": "Glosario de términos lingüísticos",
     "pageSubtitle": "Busca los términos gramaticales del curso: qué significan y cómo se llaman en ruso.",
-    "progressSeenLabel": "{count}/{total} vistos",
-    "progressMasteredLabel": "{count}/{total} dominados",
+    "progressSeenLabel": {
+      "one": "{count}/{total} visto",
+      "few": "{count}/{total} vistos",
+      "many": "{count}/{total} vistos"
+    },
+    "progressMasteredLabel": {
+      "one": "{count}/{total} dominado",
+      "few": "{count}/{total} dominados",
+      "many": "{count}/{total} dominados"
+    },
     "searchPlaceholder": "Buscar un término...",
     "categoryAllLabel": "Todos",
     "categoryLabels": {

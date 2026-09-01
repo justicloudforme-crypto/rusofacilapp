@@ -6,6 +6,7 @@ import { getPublicProfileData } from "@/lib/public-profile";
 import { getAvatarLabels } from "@/lib/avatarLabels";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import { routeAlternates } from "@/lib/site";
+import { plural } from "@/lib/plural";
 
 export async function generateMetadata({
   params,
@@ -46,19 +47,21 @@ export default async function PublicProfilePage({
         <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
           <p className="flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
             {profile.currentStreak > 0 && <span aria-hidden="true">🔥</span>}
-            {profile.currentStreak} {dict.profile.streakDaysUnit}
+            {profile.currentStreak} {plural(lang, profile.currentStreak, dict.profile.streakDaysUnit)}
           </p>
           <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
         </div>
         <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
           <p className="text-2xl font-semibold tabular-nums">
-            {profile.longestStreak} {dict.profile.streakDaysUnit}
+            {profile.longestStreak} {plural(lang, profile.longestStreak, dict.profile.streakDaysUnit)}
           </p>
           <p className="text-sm text-foreground/60">{dict.profile.longestStreakLabel}</p>
         </div>
         <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
           <p className="text-2xl font-semibold tabular-nums">{profile.earnedBadges.length}</p>
-          <p className="text-sm text-foreground/60">{dict.publicProfile.badgeCountLabel}</p>
+          <p className="text-sm text-foreground/60">
+            {plural(lang, profile.earnedBadges.length, dict.publicProfile.badgeCountLabel)}
+          </p>
         </div>
       </div>
 

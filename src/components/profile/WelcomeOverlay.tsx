@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import StreakFlame from "@/components/StreakFlame";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 // Shown once per calendar day when the learner lands on their profile
 // (the page every post-login redirect and the header's logged-in CTA both
@@ -16,6 +18,7 @@ export default function WelcomeOverlay({
   greeting,
   subtextActive,
   subtextNew,
+  locale,
   streakDaysUnit,
   continueLabel,
 }: {
@@ -25,7 +28,8 @@ export default function WelcomeOverlay({
   greeting: string;
   subtextActive: string;
   subtextNew: string;
-  streakDaysUnit: string;
+  locale: Locale;
+  streakDaysUnit: PluralForms;
   continueLabel: string;
 }) {
   const [visible, setVisible] = useState(false);
@@ -60,7 +64,7 @@ export default function WelcomeOverlay({
         onClick={(event) => event.stopPropagation()}
       >
         {currentStreak > 0 && (
-          <StreakFlame days={currentStreak} size={52} label={`${currentStreak} ${streakDaysUnit}`} />
+          <StreakFlame days={currentStreak} size={52} label={`${currentStreak} ${plural(locale, currentStreak, streakDaysUnit)}`} />
         )}
         <h2 className="font-serif text-xl font-bold text-balance">
           {name?.trim() ? `${greeting.replace(/!$/, "")}, ${name.trim()}!` : greeting}

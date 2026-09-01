@@ -5,11 +5,21 @@ import Modal from "@/components/ui/Modal";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import Confetti from "@/components/celebration/Confetti";
 import type { AvatarId } from "@/lib/avatars";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export interface GameResultPanelDict {
   closeLabel: string;
-  resultScoreLabel: string; // template, contains literal "{correct}" and "{total}"
+  /** The learner's locale, carried inside the dict rather than as a prop of
+   * its own: every one of the six places that builds this object is a server
+   * page that already has `lang` in hand, and the five wrappers in between
+   * (RecallApp, MatchApp, FillBlankApp, WordGamePlayer, VocabularyApp) pass
+   * the object straight through without unpacking it. */
+  locale: Locale;
+  /** Inflects with {total} — "1 de 1 correcta", "2 de 5 correctas". */
+  resultScoreLabel: PluralForms; // templates, contain literal "{correct}" and "{total}"
   resultTimeLabel: string; // template, contains literal "{time}"
+  /** Written as "noun: number", so it never has to agree with the count. */
   resultErrorsLabel: string; // template, contains literal "{count}"
 }
 
@@ -75,7 +85,10 @@ export default function GameResultPanel({
         <div className="flex flex-wrap items-center justify-center gap-2">
           {score && (
             <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-              {dict.resultScoreLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
+              {plural(dict.locale, score.total, dict.resultScoreLabel, {
+                correct: score.correct,
+                total: score.total,
+              })}
             </span>
           )}
           <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary-text">

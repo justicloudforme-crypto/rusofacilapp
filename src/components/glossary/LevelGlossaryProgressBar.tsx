@@ -3,10 +3,14 @@
 import { useEffect } from "react";
 import { useLevelGlossaryProgress } from "@/lib/useLevelGlossaryProgress";
 import ProgressBar from "@/components/ui/ProgressBar";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export interface LevelGlossaryProgressDict {
   /** "{count}/{total} dominados" */
-  progressLabel: string;
+  locale: Locale;
+  /** Agrees with {total} — the number it stands next to. */
+  progressLabel: PluralForms;
   /** Shown once, as a toast, the moment mastery first reaches 100%. */
   celebrationMessage: string;
 }
@@ -42,7 +46,7 @@ export default function LevelGlossaryProgressBar({
       <div className="flex items-center justify-between gap-3">
         <ProgressBar percent={pct} tone="success" className="flex-1" />
         <span className="whitespace-nowrap text-xs font-medium text-foreground/60">
-          {dict.progressLabel.replace("{count}", String(mastered)).replace("{total}", String(total))}
+          {plural(dict.locale, total, dict.progressLabel, { count: mastered, total })}
         </span>
       </div>
       {justCompleted && (

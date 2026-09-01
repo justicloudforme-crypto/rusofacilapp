@@ -7,6 +7,8 @@ import { mediaLevels, mediaCategories, type MediaLevel, type MediaCategory } fro
 import LevelBadge from "@/components/LevelBadge";
 import { usePaywall } from "@/contexts/PaywallContext";
 import FilterChipGroup from "@/components/ui/FilterChipGroup";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export interface MediaSummary {
   id: string;
@@ -32,7 +34,7 @@ export interface MediaCatalogDict {
   categoryGrammar: string;
   openButton: string;
   emptyState: string;
-  loadMoreButton: string; // template, contains literal "{count}"
+  loadMoreButton: PluralForms; // templates, contain literal "{count}"
   premiumBadge: string;
 }
 
@@ -43,7 +45,7 @@ export default function MediaCatalog({
   items,
   dict,
 }: {
-  lang: string;
+  lang: Locale;
   items: MediaSummary[];
   dict: MediaCatalogDict;
 }) {
@@ -173,7 +175,7 @@ export default function MediaCatalog({
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
             className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/15"
           >
-            {dict.loadMoreButton.replace("{count}", String(remaining))}
+            {plural(lang, remaining, dict.loadMoreButton, { count: remaining })}
           </button>
         </div>
       )}

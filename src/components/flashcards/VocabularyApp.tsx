@@ -35,9 +35,9 @@ export interface VocabularyDict extends FlashcardsDict {
   subtitleMatch: string;
   subtitleIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
-  match: Omit<MatchAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
-  fillBlank: Omit<FillBlankAppDict, "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -150,6 +150,7 @@ export default function VocabularyApp({
           <RecallApp
             dict={{
               ...dict.recall,
+              locale: dict.locale,
               categoryLabels: dict.categoryLabels,
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
@@ -166,6 +167,7 @@ export default function VocabularyApp({
           <FillBlankApp
             dict={{
               ...dict.fillBlank,
+              locale: dict.locale,
               categoryLabels: dict.categoryLabels,
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
@@ -182,6 +184,7 @@ export default function VocabularyApp({
           <MatchApp
             dict={{
               ...dict.match,
+              locale: dict.locale,
               categoryLabels: dict.categoryLabels,
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,

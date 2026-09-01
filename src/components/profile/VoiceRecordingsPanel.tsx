@@ -8,6 +8,8 @@ import {
   usageFor,
   type StorageUsage,
 } from "@/lib/voice-recordings-store";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 /**
  * How much of THIS device the student's practice recordings are using, and
@@ -37,16 +39,19 @@ export default function VoiceRecordingsPanel({
   unavailableLabel,
 }: {
   ownerScope: string;
-  locale: string;
+  locale: Locale;
   heading: string;
   description: string;
   deviceNote: string;
   /** Carries {count}, {max} and {size}. */
-  usageLabel: string;
+  /** "{count} de {max} grabaciones" — agrees with {max}, the number the
+   * noun stands next to. */
+  usageLabel: PluralForms;
   emptyLabel: string;
   deleteLabel: string;
   /** Carries {count}. */
-  deletedLabel: string;
+  /** Agrees with {count}. */
+  deletedLabel: PluralForms;
   unavailableLabel: string;
 }) {
   const [usage, setUsage] = useState<StorageUsage | null>(null);
@@ -96,16 +101,17 @@ export default function VoiceRecordingsPanel({
         <p className="mt-3 text-sm text-foreground/60">{emptyLabel}</p>
       ) : (
         <p className="mt-3 text-sm">
-          {usageLabel
-            .replace("{count}", String(usage.count))
-            .replace("{max}", String(MAX_RECORDINGS))
-            .replace("{size}", formatBytes(usage.bytes, locale))}
+          {plural(locale, MAX_RECORDINGS, usageLabel, {
+            count: usage.count,
+            max: MAX_RECORDINGS,
+            size: formatBytes(usage.bytes, locale),
+          })}
         </p>
       )}
 
       {deleted !== null && (
         <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
-          {deletedLabel.replace("{count}", String(deleted))}
+          {plural(locale, deleted, deletedLabel, { count: deleted })}
         </p>
       )}
 

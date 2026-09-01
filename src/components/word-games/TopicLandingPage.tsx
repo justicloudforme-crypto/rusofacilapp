@@ -87,7 +87,7 @@ export default async function TopicLandingPage({ landing }: { landing: TopicLand
           lang="es"
           puzzle={toPublicPuzzle(puzzle)}
           dict={dict.wordGames}
-          resultDict={dict.gameResult}
+          resultDict={{ ...dict.gameResult, locale: "es" }}
           signedIn={Boolean(user)}
         />
       </div>

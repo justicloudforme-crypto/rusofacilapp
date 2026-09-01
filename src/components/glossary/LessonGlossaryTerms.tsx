@@ -5,6 +5,8 @@ import type { GlossaryTermData } from "./GlossaryApp";
 import GlossaryTermPopover from "./GlossaryTermPopover";
 import TermQuiz, { type TermQuizDict } from "./TermQuiz";
 import { GLOSSARY_SEEN_CHANGE_EVENT, getMasteredTermSlugs } from "@/lib/glossary-client";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 const CHIP_CLASSNAME =
   "cursor-help rounded-full border border-primary/25 bg-primary/[0.05] px-3 py-1 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-primary/10 dark:border-primary-400/30 dark:bg-primary-400/[0.08] dark:hover:border-primary-400";
@@ -37,9 +39,10 @@ export default function LessonGlossaryTerms({
   lessonSlug: string;
   heading: string;
   /** Template with {count}/{total} placeholders, e.g. "{count}/{total} dominados". */
-  masteredLabel: string;
+  /** Agrees with the total number of terms it is printed next to. */
+  masteredLabel: PluralForms;
   quizDict: TermQuizDict;
-  lang: string;
+  lang: Locale;
 }) {
   const [terms, setTerms] = useState<GlossaryTermData[] | null>(null);
   const [masteredCount, setMasteredCount] = useState(0);
@@ -73,7 +76,7 @@ export default function LessonGlossaryTerms({
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">{heading}</span>
         <span className="text-xs font-medium text-foreground/50">
-          {masteredLabel.replace("{count}", String(masteredCount)).replace("{total}", String(terms.length))}
+          {plural(lang, terms.length, masteredLabel, { count: masteredCount, total: terms.length })}
         </span>
       </div>
       {/* Fixed max-height + scroll rather than truncating: lessons that

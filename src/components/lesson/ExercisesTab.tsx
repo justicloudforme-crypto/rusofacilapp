@@ -23,6 +23,8 @@ import type { VocabularyItem } from "@/lib/lessons/types";
 import { flushPendingProgress, queuePendingProgress } from "@/lib/progress-client";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import EncouragementModal from "@/components/celebration/EncouragementModal";
+import type { Locale } from "@/i18n/config";
+import { plural } from "@/lib/plural";
 
 type ExercisesDict = Dictionary["lesson"]["exercises"];
 
@@ -33,6 +35,7 @@ export default function ExercisesTab({
   pronunciationDict,
   celebrationDict,
   level,
+  locale,
   lessonSlug,
   ownerScope,
   storageKey,
@@ -46,6 +49,7 @@ export default function ExercisesTab({
   pronunciationDict: Dictionary["lesson"]["pronunciation"];
   celebrationDict: Dictionary["celebration"];
   level: string;
+  locale: Locale;
   lessonSlug: string;
   /** Browser-storage bucket for the pronunciation recordings (they never
    * leave the device) — see src/lib/recordings-owner.ts. */
@@ -242,7 +246,7 @@ export default function ExercisesTab({
           <div className="flex items-center justify-between text-xs font-medium text-foreground/60">
             <span>{dict.progressLabel}</span>
             <span>
-              {answeredCount} / {exercises.length} {dict.answeredLabel}
+              {answeredCount} / {exercises.length} {plural(locale, exercises.length, dict.answeredLabel)}
             </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">

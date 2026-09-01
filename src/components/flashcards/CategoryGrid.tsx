@@ -7,12 +7,18 @@ import { getNextLevel, shouldSuggestNextLevel } from "@/lib/flashcards/level-pro
 import { hapticTap } from "@/lib/haptics";
 import ProgressBar from "@/components/ui/ProgressBar";
 import type { CategorySummary } from "@/lib/flashcards/summary-client";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export type { CategorySummary } from "@/lib/flashcards/summary-client";
 
 export interface CategoryGridDict {
+  /** Carried in the dict rather than as a prop because every dict here is
+   * built once, in the one component that has the locale, and passed down
+   * whole. Any label that has to agree with a number needs it. */
+  locale: Locale;
   categoryLabels: Record<FlashcardCategory, string>;
-  cardCountLabel: string; // template, contains literal "{count}"
+  cardCountLabel: PluralForms; // templates, contain literal "{count}"
   nextLevelBadgeLabel: string; // template, contains literal "{level}"
 }
 
@@ -76,7 +82,7 @@ export default function CategoryGrid({
                 {flashcardCategoryIcons[category]}
               </span>
               <span className="text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
-              <span className="text-xs text-foreground/50">{dict.cardCountLabel.replace("{count}", String(total))}</span>
+              <span className="text-xs text-foreground/50">{plural(dict.locale, total, dict.cardCountLabel, { count: total })}</span>
               {hasAnyProgress && (
                 <ProgressBar percent={percent} tone="success" className="mt-1 w-full" ariaLabel={dict.categoryLabels[category]} />
               )}

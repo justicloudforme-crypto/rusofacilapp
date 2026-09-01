@@ -224,7 +224,12 @@ function GameResultPanelDemo() {
         errors={2}
         dict={{
           closeLabel: "Закрыть",
-          resultScoreLabel: "{correct} из {total} верно",
+          locale: "ru",
+          resultScoreLabel: {
+            one: "{correct} из {total} верно",
+            few: "{correct} из {total} верно",
+            many: "{correct} из {total} верно",
+          },
           resultTimeLabel: "Время: {time}",
           resultErrorsLabel: "Ошибок: {count}",
         }}

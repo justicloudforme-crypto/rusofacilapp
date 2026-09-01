@@ -7,12 +7,14 @@ import { levelSlugs, type LevelSlug } from "@/lib/courses";
 import RelatedLessonsList from "./RelatedLessonsList";
 import GlossaryProgress from "./GlossaryProgress";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import type { Locale } from "@/i18n/config";
+import type { PluralForms } from "@/lib/plural";
 
 export interface GlossaryDict {
   pageTitle: string;
   pageSubtitle: string;
-  progressSeenLabel: string;
-  progressMasteredLabel: string;
+  progressSeenLabel: PluralForms;
+  progressMasteredLabel: PluralForms;
   searchPlaceholder: string;
   categoryAllLabel: string;
   categoryLabels: Record<GlossaryCategory, string>;
@@ -49,7 +51,7 @@ export default function GlossaryApp({
   initialTerms,
 }: {
   dict: GlossaryDict;
-  lang: string;
+  lang: Locale;
   /** All terms, fetched once server-side (with audio already attached) by
    * the /glossary page — filtering below runs entirely in memory over this
    * array instead of re-fetching /api/glossary on every keystroke/filter
@@ -120,7 +122,11 @@ export default function GlossaryApp({
 
   return (
     <div>
-      <GlossaryProgress seenLabel={dict.progressSeenLabel} masteredLabel={dict.progressMasteredLabel} />
+      <GlossaryProgress
+        locale={lang}
+        seenLabel={dict.progressSeenLabel}
+        masteredLabel={dict.progressMasteredLabel}
+      />
       <input
         type="search"
         value={query}
