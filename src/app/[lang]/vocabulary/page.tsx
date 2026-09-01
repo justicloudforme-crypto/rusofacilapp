@@ -78,7 +78,7 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.vocabulary.pageTitle}</h1>
 
       <div className="mt-10">
-        <VocabularyApp dict={{ ...dict.vocabulary, locale: lang }} celebrationDict={dict.celebration} resultDict={{ ...dict.gameResult, locale: lang }} />
+        <VocabularyApp dict={{ ...dict.vocabulary, locale: lang }} resultDict={{ ...dict.gameResult, locale: lang }} />
       </div>
 
       {showCategoryIndex && (

@@ -61,6 +61,8 @@ export default function CategoryGrid({
             <button
               key={category}
               type="button"
+              data-testid="category-tile"
+              data-total={total}
               onClick={() => {
                 hapticTap();
                 onSelectCategory(category);

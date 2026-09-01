@@ -8,7 +8,6 @@ import RecallApp, { type RecallAppDict } from "./RecallApp";
 import MatchApp, { type MatchAppDict } from "./MatchApp";
 import FillBlankApp, { type FillBlankAppDict } from "./FillBlankApp";
 import type { GameResultPanelDict } from "@/components/games/GameResultPanel";
-import type { Dictionary } from "@/i18n/dictionaries";
 import { hapticTap } from "@/lib/haptics";
 import { DictionaryIcon, ChecklistIcon, PuzzleIcon, BookIcon } from "@/components/profile/ProfileIcons";
 
@@ -49,11 +48,9 @@ function isMode(value: string | null): value is Mode {
 
 export default function VocabularyApp({
   dict,
-  celebrationDict,
   resultDict,
 }: {
   dict: VocabularyDict;
-  celebrationDict: Dictionary["celebration"];
   resultDict: GameResultPanelDict;
 }) {
   const [mode, setModeState] = useState<Mode>("vocabulary");
@@ -159,7 +156,6 @@ export default function VocabularyApp({
               continueTitle: dict.continueTitle,
               learnedProgressLabel: dict.learnedProgressLabel,
             }}
-            celebrationDict={celebrationDict}
             resultDict={resultDict}
           />
         )}
@@ -176,7 +172,6 @@ export default function VocabularyApp({
               continueTitle: dict.continueTitle,
               learnedProgressLabel: dict.learnedProgressLabel,
             }}
-            celebrationDict={celebrationDict}
             resultDict={resultDict}
           />
         )}
@@ -193,7 +188,6 @@ export default function VocabularyApp({
               continueTitle: dict.continueTitle,
               learnedProgressLabel: dict.learnedProgressLabel,
             }}
-            celebrationDict={celebrationDict}
             resultDict={resultDict}
           />
         )}

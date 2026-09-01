@@ -69,6 +69,14 @@ async function main() {
   try {
     const puzzles = readFixture("word-games.json");
     const terms = readFixture("glossary.json");
+    // Eight real A1 "greetings" cards. e2e/match-result-panel.spec.ts plays
+    // a Match round to the end, and a round needs at least MIN_PLAYABLE (4)
+    // cards in one category; CI's FlashcardCard table is empty, so without
+    // these the spec would only ever see "not enough words in this
+    // category" and could never reach the result panel it exists to count.
+    // Same rule as the puzzles above: real exported rows, e2e-only, and it
+    // must not grow to make some other check pass.
+    const cards = readFixture("flashcards.json");
 
     assertSafeToSeed(
       "WordGamePuzzle",
@@ -80,6 +88,16 @@ async function main() {
       await db.glossaryTerm.findMany({ select: { id: true, slug: true } }),
       (r) => r.id,
     );
+
+    assertSafeToSeed(
+      "FlashcardCard",
+      await db.flashcardCard.findMany({ select: { id: true } }),
+      (r) => r.id,
+    );
+
+    for (const c of cards) {
+      await db.flashcardCard.upsert({ where: { id: c.id }, update: { ...c }, create: { ...c } });
+    }
 
     for (const p of puzzles) {
       const { id, type, level, sequence, ...rest } = p;
@@ -103,11 +121,13 @@ async function main() {
     // failing for a reason nobody would look for here.
     const curved = puzzles.filter((p) => p.curved).length;
     const withRelatedLessons = terms.filter((t) => JSON.parse(t.relatedLessons).length > 0).length;
+    const cardCategories = new Set(cards.map((c) => c.category));
     console.log(
       `e2e fixture: ${puzzles.length} puzzles (${curved} curved/★), ` +
-        `${terms.length} glossary terms (${withRelatedLessons} with a related lesson)`,
+        `${terms.length} glossary terms (${withRelatedLessons} with a related lesson), ` +
+        `${cards.length} flashcards in ${cardCategories.size} category/-ies`,
     );
-    if (curved === 0 || withRelatedLessons === 0) {
+    if (curved === 0 || withRelatedLessons === 0 || cards.length < 4) {
       console.error("the fixture lost a shape the suite asserts on — see e2e/fixtures/");
       process.exitCode = 1;
     }
