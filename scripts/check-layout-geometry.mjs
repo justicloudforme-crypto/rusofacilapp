@@ -416,6 +416,67 @@ async function runControl(browser, engineName, contextOptions) {
       // plant.
       /content fills .*planted hole/,
     ],
+    [
+      "a 2-track grid whose TRACKS are too narrow, both filled (measurement C keeps this)",
+      // The frame/content line, from the frame side. Two items in a
+      // two-track grid — every track filled, so nothing is missing — but
+      // the tracks are 200px inside 1000px. That is the grid being built
+      // wrong, and the rule that stopped reporting under-filled grids on
+      // 02.09.2026 must not have stopped reporting this one too.
+      async (p) => {
+        await p.addInitScript(() => {
+          addEventListener("load", () =>
+            setTimeout(() => {
+              const outer = document.createElement("div");
+              outer.style.cssText =
+                "width:1000px;max-width:100%;display:grid;grid-template-columns:200px 200px;gap:8px";
+              for (const n of [1, 2]) {
+                const cell = document.createElement("div");
+                cell.style.cssText = "height:80px";
+                const part = document.createElement("p");
+                part.textContent = `narrow track ${n}`;
+                cell.append(part);
+                outer.append(cell);
+              }
+              document.body.append(outer);
+            }, 300)
+          );
+        });
+      },
+      /content fills .*narrow track/,
+    ],
+  ];
+
+  /**
+   * The other half of the same question, and it has to be checked in the
+   * same breath: a grid with FEWER items than tracks must NOT be reported.
+   * A control that only ever proves the checker can go red proves nothing
+   * about whether it goes red on the right things — and the twelve CI
+   * failures of 02.09.2026 were all this shape.
+   */
+  const MUST_NOT_FIRE = [
+    [
+      "a 2-track grid holding one item (the /es hero with an empty card bank)",
+      async (p) => {
+        await p.addInitScript(() => {
+          addEventListener("load", () =>
+            setTimeout(() => {
+              const outer = document.createElement("div");
+              outer.style.cssText =
+                "width:1000px;max-width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px";
+              const cell = document.createElement("div");
+              cell.style.cssText = "height:80px";
+              const part = document.createElement("p");
+              part.textContent = "lonely grid item";
+              cell.append(part);
+              outer.append(cell);
+              document.body.append(outer);
+            }, 300)
+          );
+        });
+      },
+      /content fills .*lonely grid item/,
+    ],
   ];
   console.log(`\n=== positive control (${engineName}): the checker must FAIL on a planted defect ===`);
   const ctx = await browser.newContext(contextOptions);
@@ -427,8 +488,18 @@ async function runControl(browser, engineName, contextOptions) {
     console.log(`  ${hit ? "caught " : "MISSED "} ${label}${hit ? ` → ${hit.slice(0, 110)}` : ""}`);
   }
   console.log(`  planted ${PLANTS.length}, caught ${caught}`);
+
+  console.log(`  --- and must NOT fire on these ---`);
+  let quiet = 0;
+  for (const [label, plant, forbidden] of MUST_NOT_FIRE) {
+    const { problems } = await inspect(ctx, "/es", plant);
+    const hit = problems.find((p) => forbidden.test(p));
+    quiet += hit ? 0 : 1;
+    console.log(`  ${hit ? "WRONGLY REPORTED " : "quiet            "} ${label}${hit ? ` → ${hit.slice(0, 110)}` : ""}`);
+  }
+  console.log(`  checked ${MUST_NOT_FIRE.length}, quiet ${quiet}`);
   await ctx.close();
-  return caught === PLANTS.length;
+  return caught === PLANTS.length && quiet === MUST_NOT_FIRE.length;
 }
 
 async function main() {

@@ -29,6 +29,11 @@
 // cover, against the container's content box. Without that, the first
 // version of this scan reported every third card of a three-across grid.
 //
+// And measured against the FRAME, not against the amount of content in it:
+// a grid row with fewer members than the grid has tracks is a missing item,
+// not a mis-sized block. See the long note at the track check below — that
+// distinction is the whole of PROGRESS.md 7.74.
+//
 // Lives in a plain .mjs so that BOTH runs use the same source: the hand-run
 // check imports it, and so does e2e/page-width.spec.ts, which is the one
 // that can log in and therefore the only one that ever sees /profile.
@@ -48,6 +53,16 @@ export function findUnderfilledRows(opts) {
   const threshold = opts.threshold;
   const minContainer = opts.minContainer;
   const rows = [];
+  /** How many column tracks a grid was actually given. The USED value of
+   * `grid-template-columns` is a space-separated list of pixel lengths in
+   * both engines; line names arrive in [brackets] and are not tracks. An
+   * implicit grid answers "none" and gets 0, which the caller treats as
+   * "no declared frame to measure against". */
+  const countTracks = (value) => {
+    if (!value || value === "none") return 0;
+    const tokens = value.replace(/\[[^\]]*\]/g, " ").trim().split(/\s+/).filter(Boolean);
+    return tokens.length;
+  };
   const describe = (el) => {
     const cls = String(el.className || "").replace(/\s+/g, " ").trim();
     return `<${el.tagName.toLowerCase()}${cls ? ` class="${cls.slice(0, 90)}"` : ""}>`;
@@ -125,8 +140,40 @@ export function findUnderfilledRows(opts) {
       }
       // A one-line strip of chrome is not what the rule is about.
       if (height < 40) continue;
-      // A multi-row grid's incomplete last row is normal.
-      if (/grid/.test(pcs.display) && row.length < kids.length) continue;
+
+      // A GRID IS MEASURED AGAINST ITS OWN TRACKS, NOT AGAINST HOW MANY
+      // ITEMS HAPPEN TO EXIST. This is the frame/content line, and getting
+      // it wrong is what turned CI red on 02.09.2026 (PROGRESS.md 7.74):
+      // twelve failures, all from two containers, both of them grids that
+      // declare more columns than CI's empty fixture gives them items to
+      // put in.
+      //
+      //   /es           <div … sm:grid sm:grid-cols-2>   tracks 468px 468px
+      //                 items 1 with an empty card bank, 2 with a real one
+      //   /es/profile   <div … sm:grid-cols-3>           tracks 229.328px ×3
+      //                 items 2 with no stories, 3 with stories
+      //
+      // Measured on ONE build against two databases: the track list, the
+      // track widths and the container width are identical in both — only
+      // the item count moves. So the frame was right and the rule was
+      // counting content, which is a defect of the rule.
+      //
+      // The test is now "does the row fill every track it was given". Fewer
+      // members than tracks → the shortfall is a missing item, and the
+      // checker cannot tell "nothing is rendered here right now" from
+      // "nothing is ever rendered here"; that is a content question and it
+      // is honestly out of scope. Members filling every track and STILL
+      // under threshold → the tracks themselves are too narrow, which IS a
+      // frame defect and is still reported (the negative control below
+      // plants exactly that).
+      const gridTracks = /grid/.test(pcs.display) ? countTracks(pcs.gridTemplateColumns) : 0;
+      if (gridTracks > 0) {
+        if (row.length < gridTracks) continue;
+      } else if (/grid/.test(pcs.display) && row.length < kids.length) {
+        // Implicit grid (`grid-template-columns: none`): fall back to the
+        // old shape — a multi-row grid's incomplete last row is normal.
+        continue;
+      }
 
       const coverage = (maxRight - minLeft) / contentWidth;
       if (coverage >= threshold) continue;
