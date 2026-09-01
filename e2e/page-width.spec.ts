@@ -1,5 +1,11 @@
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import {
+  FILL_THRESHOLD,
+  MIN_CONTAINER_WIDTH,
+  findUnderfilledRows,
+  formatUnderfilled,
+} from "../scripts/layout-fill.mjs";
 
 /**
  * A page must never be wider than the phone it is on.
@@ -30,6 +36,18 @@ import { loginWithSubscription } from "./helpers/auth";
  * Each page is measured twice, at the top and after a scroll: a block that
  * only exists below the fold is exactly the kind of thing that widens a
  * document once it appears.
+ *
+ * Since 02.09.2026 the same pass also asserts the OPPOSITE number, on the
+ * same loaded pages: that no row of content covers under 70% of a container
+ * wider than 700px (`scripts/layout-fill.mjs`, shared verbatim with
+ * `check:layout`). The two questions are one visit apart and neither can
+ * fire where the other does, so they ride together rather than doubling the
+ * suite's logins.
+ *
+ * This run is the one that matters for the fill rule, because it is the one
+ * that LOGS IN. `check:layout` is anonymous by construction, so /profile —
+ * where the calendar sat at 53.3% of its column at 768, 820, 834 and 1024
+ * alike — is invisible to it.
  */
 
 /**
@@ -52,7 +70,21 @@ import { loginWithSubscription } from "./helpers/auth";
  * Ordered widest-first so a failure report reads as "already broken at 360"
  * before "and worse at 320".
  */
-const WIDTHS = [360, 320] as const;
+const WIDTHS = [1024, 834, 820, 360, 320] as const;
+
+/**
+ * The four tablet widths the fill rule was reported for, plus the two phone
+ * widths that were already here. 820 (iPad Air), 834 (iPad Air 10.9) and
+ * 1024 (iPad Pro 11", and the `lg` breakpoint) all measured the same defect
+ * at the same size — the calendar was a flat 384px inside a 720px column at
+ * every one of them — and 768 is already swept by `check:layout`. They are
+ * all kept anyway: 1024 is the only one where the `lg:` column ladders move,
+ * and 820/834 are the only ones that would catch a fix that solved 1024 by
+ * a breakpoint rather than by making the block a column.
+ *
+ * Ordered widest-first: a failure report then reads top-down from the
+ * roomiest layout to the tightest.
+ */
 
 /**
  * Page SHAPES — one per way a page in this app is built — restricted to
@@ -113,14 +145,25 @@ for (const width of WIDTHS) {
     test.use({ viewport: { width, height: 780 } });
 
     for (const lang of ["es", "ru"] as const) {
-      test(`/${lang}: no page is wider than a ${width}px phone`, async ({ page }) => {
+      test(`/${lang}: at ${width}px no page is wider than the viewport, and no container is left half empty`, async ({
+        page,
+      }) => {
     // Premium, not standard: /word-games and C1 content are both gated
     // (see helpers/auth.ts), and a redirect to /pricing would measure the
     // pricing page twice instead of the puzzle board once — a check that
     // passes for the wrong reason.
     await loginWithSubscription(page, { tier: "premium" });
 
+    // /profile renders its empty state — no calendar, no stat tiles — until
+    // the account has done something, and measuring that is measuring a
+    // different page than the one this rule is about. One GET to
+    // /vocabulary is enough: it marks the study day (markStudyDayVisit),
+    // which is what `hasAnyProgress` reads. No fixture rows needed, so this
+    // works against CI's empty database exactly as it does locally.
+    await page.context().request.get(`/${lang}/vocabulary`);
+
     const tooWide: string[] = [];
+    const underfilled: string[] = [];
     for (const path of PATHS) {
       const url = `/${lang}${path}`;
       const response = await page.goto(url);
@@ -132,6 +175,22 @@ for (const width of WIDTHS) {
       if (status === 404) continue;
       expect(status, `${url} did not answer 200`).toBe(200);
       await page.waitForLoadState("networkidle");
+      // The once-a-day greeting is a modal over the whole page. It is
+      // position:fixed, so the fill rule skips it — but it also covers what
+      // is underneath, and a page measured through a dialog is not the
+      // page. Dismissed by its backdrop's own corner: the panel inside
+      // swallows a centre click.
+      const greeting = page.locator('[role="dialog"][aria-modal="true"]');
+      if (await greeting.count()) {
+        await greeting.click({ position: { x: 4, y: 4 } }).catch(() => {});
+        await greeting.waitFor({ state: "detached", timeout: 3000 }).catch(() => {});
+      }
+      for (const row of await page.evaluate(findUnderfilledRows, {
+        threshold: FILL_THRESHOLD,
+        minContainer: MIN_CONTAINER_WIDTH,
+      })) {
+        underfilled.push(`${url}: ${formatUnderfilled(row)}`);
+      }
       for (const scrollY of [0, 900]) {
         await page.evaluate((y) => window.scrollTo(0, y), scrollY);
         await page.waitForTimeout(150);
@@ -147,6 +206,11 @@ for (const width of WIDTHS) {
       }
     }
         expect(tooWide, `pages wider than the viewport:\n${tooWide.join("\n")}`).toEqual([]);
+        expect(
+          underfilled,
+          `containers wider than ${MIN_CONTAINER_WIDTH}px whose content covers under ` +
+            `${FILL_THRESHOLD * 100}% of them:\n${underfilled.join("\n")}`
+        ).toEqual([]);
       });
     }
   });

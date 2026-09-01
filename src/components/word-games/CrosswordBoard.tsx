@@ -282,7 +282,16 @@ export default function CrosswordBoard({
   const totalCells = cellWordMap.size;
 
   return (
-    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
+    /* From `md` up this is two COLUMNS that share the row, not two
+       intrinsically-sized boxes centred as a pair. Measured before the
+       change: the board card and the clue/word list came to 668–696px
+       inside a 720px container and stood centred with the leftover split
+       into two dead margins, and the pair stayed exactly that wide as the
+       page grew — the list is capped at max-w-sm (384px) and the board is
+       fit-content, so neither followed the container. `flex-1 min-w-0`
+       gives each half the column, and the board keeps its own card
+       centred inside its half so a small puzzle does not stretch. */
+    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-6">
       {/* overflow-x-auto is the safety net for puzzles wide enough that
           even the shrunk 22px floor below doesn't fit the viewport — the
           grid scrolls horizontally rather than squeezing cells illegibly
@@ -291,9 +300,9 @@ export default function CrosswordBoard({
           silently overlapped instead of shrinking — the bug this replaces).
           Framed in a card so the puzzle reads as one bounded object
           instead of loose cells floating on the page background. */}
-      <div className="max-w-full overflow-x-auto rounded-2xl border border-primary/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4">
+      <div className="max-w-full overflow-x-auto rounded-2xl border border-primary/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4 md:mx-auto md:min-w-0 md:flex-1">
         <div
-          className="grid gap-0.5"
+          className="grid w-fit gap-0.5 md:mx-auto"
           style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(22px, 2.5rem))` }}
           role="grid"
           aria-label={dict.crosswordGridLabel}
@@ -356,7 +365,7 @@ export default function CrosswordBoard({
         </div>
       </div>
 
-      <div className="flex w-full max-w-sm flex-col gap-4">
+      <div className="flex w-full max-w-sm flex-col gap-4 md:min-w-0 md:max-w-none md:flex-1">
         <p className="self-center text-xs font-medium text-foreground/50 md:self-start">
           {dict.filledCountLabel.replace("{filled}", String(filledCount)).replace("{total}", String(totalCells))}
         </p>

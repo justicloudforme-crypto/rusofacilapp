@@ -6,6 +6,7 @@ import {
   formatDateKey,
   monthGrid,
   monthKeyOf,
+  monthStates,
   monthSummary,
   navigableMonths,
   shiftMonth,
@@ -101,6 +102,8 @@ export default function ActivityCalendar({
 
   const weeks = monthGrid(monthKey, { activeDateKeys, frozenDateKeys, todayKey, firstDateKey });
   const summary = monthSummary(weeks);
+  // Only the squares this month actually has get a line in the key below.
+  const drawn = monthStates(weeks);
   const monthIndex = Number(monthKey.slice(5, 7)) - 1;
   const year = monthKey.slice(0, 4);
   const canGoBack = monthKey > min;
@@ -109,12 +112,21 @@ export default function ActivityCalendar({
   const openSources = openDay ? daySources[openDay] ?? [] : [];
 
   return (
-    // Capped so the squares stay squares a person can read rather than a
-    // wall: the Overview column is 768px wide on a desktop, and seven
-    // aspect-square cells across it are 100px each. At this cap a cell is
-    // ~48px at every width from 320 up, which is also the touch-target
+    // The cap exists so the squares stay squares a person can read rather
+    // than a wall: seven aspect-square cells across a 720px column are
+    // 100px each. Below `md` the calendar is still the full width of the
+    // page, so the cap is what keeps a cell near 48px — the touch-target
     // floor the project keeps (CLAUDE.md).
-    <div className="max-w-sm">
+    //
+    // From `md` up it is REMOVED, because from there the Overview page puts
+    // the calendar in its own column beside the tiles and the column is
+    // already the right size: the cap was measured holding the grid at
+    // 384px inside a 720px container at 768, 820, 834 and 1024 alike —
+    // 53.3% of the container, with 336px of bare page to its right — and a
+    // fixed 384px inside a ~348px column would be the same defect pointing
+    // the other way. Inside the column the cells follow the column, which
+    // is the whole point of having one.
+    <div className="max-w-sm md:max-w-none">
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
@@ -220,7 +232,7 @@ export default function ActivityCalendar({
       {/* A LINE ON THE PAGE, not a tooltip. Hover does not exist on the
           Capacitor build (CLAUDE.md), so a colour explained only by `title`
           is a colour a learner on a phone can never look up. */}
-      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-foreground/60">
+      <ul className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-foreground/60 md:flex-nowrap md:gap-x-3 md:whitespace-nowrap md:text-xs">
         {/* The flame and the blue square are NOT repeated here: the summary
             line directly above already shows each of them next to the words
             for what it means, with a count. Saying it twice, two lines
@@ -228,29 +240,59 @@ export default function ActivityCalendar({
             all looked like the same sentence. Every one of the five kinds is
             still named in text on this page — which is the property the
             legend exists for, and the one the test asserts. */}
-        <LegendItem label={dict.legendMissed}>
-          <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/10 dark:bg-foreground/15" />
-        </LegendItem>
+        {drawn.states.has("missed") && (
+          <LegendItem label={dict.legendMissed}>
+            {/* Three greys stood on this line and two of them were the SAME
+                value: beforeStart and future were both bg-foreground/[0.04],
+                byte for byte, and "missed" at /10 differed from them by six
+                hundredths of an alpha on a 14px square. So they are now told
+                apart by SHAPE — solid here, a hairline outline for "before
+                you registered", a dotted one for "hasn't happened yet" —
+                with every fill left exactly as 7.71 tuned it.
+                The same three shapes are on the squares themselves (see
+                `tone` below), because a key that does not look like the
+                thing it explains is not a key. A 1px hairline is not the
+                2px dashed border 7.71 took off: that one drew a frame
+                around every day of the first half of the month and was the
+                loudest thing in the grid; this one is the quietest mark
+                that makes two identical squares two squares. */}
+            <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/10 dark:bg-foreground/15" />
+          </LegendItem>
+        )}
         {/* The two faint squares. They look alike on purpose — neither is
             a day the learner could have studied — but they are named apart,
             because "fuera de tu periodo" had to stand for both "before you
             existed here" and "hasn't happened yet", and it told the learner
             neither. */}
-        <LegendItem label={dict.legendBeforeStart}>
-          {/* Matches the square itself: no border, just the faintest wash.
-              A dashed outline here put a frame on a frame across half of
-              August for an account that registered mid-month. */}
-          <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/[0.04] dark:bg-foreground/[0.06]" />
-        </LegendItem>
-        <LegendItem label={dict.legendFuture}>
-          <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/[0.04] dark:bg-foreground/[0.06]" />
-        </LegendItem>
-        <LegendItem label={dict.legendToday}>
-          <span
-            aria-hidden
-            className="h-3.5 w-3.5 rounded ring-2 ring-primary/60 ring-offset-1 ring-offset-background"
-          />
-        </LegendItem>
+        {drawn.states.has("beforeStart") && (
+          <LegendItem label={dict.legendBeforeStart}>
+            <span
+              aria-hidden
+              className="h-3.5 w-3.5 rounded border border-foreground/15 bg-foreground/[0.04] dark:border-foreground/25 dark:bg-foreground/[0.06]"
+            />
+          </LegendItem>
+        )}
+        {drawn.states.has("future") && (
+          <LegendItem label={dict.legendFuture}>
+            <span
+              aria-hidden
+              className="h-3.5 w-3.5 rounded border border-dotted border-foreground/30 bg-foreground/[0.04] dark:border-foreground/40 dark:bg-foreground/[0.06]"
+            />
+          </LegendItem>
+        )}
+        {/* Today keeps its place at the END of the line and is never
+            dropped: the ring is drawn on top of whatever state the square
+            already has, so it is the one entry that is not a colour of its
+            own. Before this the line wrapped to two rows at every tablet
+            width and "hoy" was the orphan on the second one. */}
+        {drawn.today && (
+          <LegendItem label={dict.legendToday}>
+            <span
+              aria-hidden
+              className="h-3.5 w-3.5 flex-shrink-0 rounded ring-2 ring-primary/60 ring-offset-1 ring-offset-background"
+            />
+          </LegendItem>
+        )}
       </ul>
     </div>
   );
@@ -258,7 +300,7 @@ export default function ActivityCalendar({
 
 function LegendItem({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <li className="inline-flex items-center gap-1.5">
+    <li className="inline-flex flex-shrink-0 items-center gap-1.5">
       {children}
       {label}
     </li>
@@ -304,14 +346,18 @@ function Day({
         "bg-folk-red/10 text-foreground"
       : cell.state === "frozen"
         ? "border-2 border-dashed border-sky-500/70 bg-sky-400/25 text-foreground dark:border-sky-300/70 dark:bg-sky-300/25"
-        : cell.state === "beforeStart" || cell.state === "future"
-          ? // Barely there. It was a dashed outline until 31.08.2026, and on
-            // an account that registered mid-month that drew a frame around
-            // every day of the first half — a frame on a frame, and the
-            // loudest thing in the grid was the part that means "nothing to
-            // see here".
-            "bg-foreground/[0.04] text-foreground/25 dark:bg-foreground/[0.06]"
-          : "bg-foreground/10 text-foreground/60 dark:bg-foreground/15";
+        : cell.state === "beforeStart"
+          ? // Barely there, and the fill is exactly what 7.71 tuned it to:
+            // a dashed 2px outline used to draw a frame around every day of
+            // the first half of the month for an account registered
+            // mid-month, and it was the loudest thing in the grid. The
+            // hairline added here is a tenth of that weight, and it is what
+            // makes this square tellable from "future" at all — the two
+            // were the same declaration, character for character.
+            "border border-foreground/15 bg-foreground/[0.04] text-foreground/25 dark:border-foreground/25 dark:bg-foreground/[0.06]"
+          : cell.state === "future"
+            ? "border border-dotted border-foreground/30 bg-foreground/[0.04] text-foreground/25 dark:border-foreground/40 dark:bg-foreground/[0.06]"
+            : "bg-foreground/10 text-foreground/60 dark:bg-foreground/15";
 
   // The number is in the SAME place and at the SAME size in every square,
   // whatever else the square carries. It used to move to the corner and

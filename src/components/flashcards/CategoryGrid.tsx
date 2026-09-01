@@ -65,7 +65,12 @@ export default function CategoryGrid({
                 hapticTap();
                 onSelectCategory(category);
               }}
-              className="tap relative flex flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
+              // `h-full` and the `mt-auto` on the bar below: see
+              // ContinueStrip. A grid item already stretches to its row, but
+              // the button's own column did not, so the bar sat under
+              // whatever the label happened to be and two tiles in one row
+              // had their bars 19px apart on /es at 1024.
+              className="tap relative flex h-full flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
             >
               {nextLevel && (
                 <span
@@ -81,10 +86,17 @@ export default function CategoryGrid({
               >
                 {flashcardCategoryIcons[category]}
               </span>
-              <span className="text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
+              {/* Two lines' worth of room (44px: 14px text at leading-snug
+                  wraps to 38.5px, and the box is never smaller than that)
+                  whether the label needs it or not, so a one-word category
+                  and a four-word one are the same height — the same
+                  reservation ContinueStrip makes. A MINIMUM, not a clamp: a
+                  label that genuinely needs three lines still gets them
+                  rather than being cut, and `h-full` keeps its row square. */}
+              <span className="min-h-11 text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
               <span className="text-xs text-foreground/50">{plural(dict.locale, total, dict.cardCountLabel, { count: total })}</span>
               {hasAnyProgress && (
-                <ProgressBar percent={percent} tone="success" className="mt-1 w-full" ariaLabel={dict.categoryLabels[category]} />
+                <ProgressBar percent={percent} tone="success" className="mt-auto w-full pt-1" ariaLabel={dict.categoryLabels[category]} />
               )}
             </button>
           );

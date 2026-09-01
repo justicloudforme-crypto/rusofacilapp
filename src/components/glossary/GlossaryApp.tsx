@@ -163,11 +163,19 @@ export default function GlossaryApp({
         ))}
       </div>
 
+      {/* No `uppercase` on this row any more, and that is the point: the
+          two filter rows are the same control in the same page, and the word
+          "Todos" / "Все" appears in BOTH of them. With `uppercase` here it
+          read "Todos" above and "TODOS" below — the same word twice, in two
+          cases, one line apart. The level slugs still print as A1…C1: they
+          are lower-case in the data, so the case now comes from the value
+          (`toUpperCase()`), which is where it belongs, instead of from a
+          class that also caught the label beside them. */}
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => updateLevel("all")}
-          className={`tap rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
+          className={`tap rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
             level === "all"
               ? "border-primary bg-primary text-white dark:border-primary-400 dark:bg-primary-400"
               : "border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
@@ -180,13 +188,13 @@ export default function GlossaryApp({
             key={l}
             type="button"
             onClick={() => updateLevel(l)}
-            className={`tap rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide transition-colors ${
+            className={`tap rounded-full border px-3 py-1 text-xs font-medium tracking-wide transition-colors ${
               level === l
                 ? "border-primary bg-primary text-white dark:border-primary-400 dark:bg-primary-400"
                 : "border-black/10 text-foreground/60 hover:text-foreground active:text-foreground dark:border-white/15"
             }`}
           >
-            {l}
+            {l.toUpperCase()}
           </button>
         ))}
       </div>

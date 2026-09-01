@@ -17,12 +17,33 @@ export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale 
           scripts/check-layout-geometry.mjs, which now fails the build if
           any document scrolls horizontally again. Not overflow-hidden:
           that hides the links instead of fitting them. */}
-      <div className="mx-auto flex max-w-5xl flex-col flex-wrap items-center justify-center gap-3 px-6 py-8 text-sm text-foreground/60 sm:flex-row sm:justify-between">
-        <div className="flex items-center gap-2">
-          <MatryoshkaMark size={20} />
-          <p className="font-serif font-bold text-foreground/80">RusoFácilapp.com</p>
+      {/* `justify-between` is gone, and that is the whole tablet fix.
+          Four items in a WRAPPING row are justified line by line, so between
+          768 and 1024 the first line held the brand and the tagline alone
+          and pushed them to opposite edges: measured at 768/es the brand
+          ended at x=166 and the tagline ran 495→744, i.e. it sat hard
+          against the right edge, one line above a left-aligned link row —
+          which is what reads as the tagline sitting on top of the links.
+          In `/ru` the same line ran 380→744 against 690px of links below it.
+          Centring every line instead keeps the wrapped lines stacked and
+          grouped, at every width, and it is the SAME rule for all of them.
+
+          The change is style-only: not one string, link, href or element of
+          content changes, so the 165 pages of the frozen experiment get the
+          same footer they had, and both of its groups get the identical
+          change — this footer is one component with no reference to
+          isFrozenPage / isFrozenStory / isPilotMedia anywhere in it or above
+          it. */}
+      <div className="mx-auto flex max-w-5xl flex-col flex-wrap items-center justify-center gap-x-6 gap-y-3 px-6 py-8 text-sm text-foreground/60 sm:flex-row">
+        {/* The brand and the line that says what the brand is stay one
+            unit. Split across a wrapping row they were the two ends of it. */}
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <span className="flex items-center gap-2">
+            <MatryoshkaMark size={20} />
+            <span className="font-serif font-bold text-foreground/80">RusoFácilapp.com</span>
+          </span>
+          <span>{dict.footer.tagline}</span>
         </div>
-        <p>{dict.footer.tagline}</p>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.appLink}

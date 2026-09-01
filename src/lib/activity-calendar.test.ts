@@ -5,6 +5,7 @@ import {
   monthGrid,
   monthKeyOf,
   formatDateKey,
+  monthStates,
   monthSummary,
   navigableMonths,
   shiftMonth,
@@ -266,5 +267,68 @@ describe("итог месяца и дата словами", () => {
     expect(formatDateKey("2026-08-30", "{day} de {month}", es)).not.toBe(
       formatDateKey("2026-08-30", "{day} {month}", ru),
     );
+  });
+
+  // --- monthStates: what the legend is allowed to name -------------------
+  //
+  // The legend used to print all five kinds on every month. In August 2026,
+  // whose last day IS today, that meant a line explaining "aún por llegar"
+  // beside a grid with no future square in it. The rule is now "name what
+  // is drawn", and these cases pin it against the month that showed the
+  // defect and against its mirror.
+
+  it("monthStates: у месяца, который кончается сегодня, «ещё впереди» НЕТ", () => {
+    // The owner's month: registered 07.08, today 31.08 — the last day of it.
+    const weeks = grid("2026-08", {
+      activeDateKeys: ["2026-08-10"],
+      frozenDateKeys: ["2026-08-11"],
+      todayKey: "2026-08-31",
+      firstDateKey: "2026-08-07",
+    });
+    const { states, today } = monthStates(weeks);
+    expect(states.has("future")).toBe(false);
+    expect(today).toBe(true);
+    // Everything else this month really does have is named, so "no future"
+    // is not passing because the function returns nothing.
+    expect([...states].sort()).toEqual(["active", "beforeStart", "frozen", "missed"]);
+  });
+
+  it("monthStates: у месяца, который ещё идёт, «ещё впереди» ЕСТЬ — контроль", () => {
+    // The same month with today moved back one day. This is the control:
+    // without it the case above would also pass on a function that never
+    // reports "future" at all.
+    const weeks = grid("2026-08", {
+      activeDateKeys: ["2026-08-10"],
+      todayKey: "2026-08-30",
+      firstDateKey: "2026-08-07",
+    });
+    expect(monthStates(weeks).states.has("future")).toBe(true);
+  });
+
+  it("monthStates: клетки соседнего месяца не попадают в легенду", () => {
+    // A grid whose padding leans into July and September. Padding squares
+    // are aria-hidden in the component, so naming them in the key would be
+    // explaining a square nobody can see.
+    const weeks = grid("2026-08", { todayKey: "2026-09-30", firstDateKey: "2026-01-01" });
+    expect(weeks.flat().filter((c) => c.dateKey === null).length).toBeGreaterThan(0);
+    expect(monthStates(weeks).states.has("padding" as never)).toBe(false);
+  });
+
+  it("monthStates: «сегодня» отделено от состояния клетки", () => {
+    // today is a ring drawn ON a square, not a kind of square: a month that
+    // contains today still reports whatever that square's own state is.
+    const weeks = grid("2026-08", {
+      activeDateKeys: ["2026-08-31"],
+      todayKey: "2026-08-31",
+      firstDateKey: "2026-08-01",
+    });
+    const { states, today } = monthStates(weeks);
+    expect(today).toBe(true);
+    expect(states.has("active")).toBe(true);
+
+    // Control: a month the learner is not in reports no today at all.
+    expect(
+      monthStates(grid("2026-07", { todayKey: "2026-08-31", firstDateKey: "2026-01-01" })).today,
+    ).toBe(false);
   });
 });

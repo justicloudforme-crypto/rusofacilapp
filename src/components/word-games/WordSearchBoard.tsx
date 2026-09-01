@@ -241,7 +241,16 @@ export default function WordSearchBoard({
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-center">
+    /* From `md` up this is two COLUMNS that share the row, not two
+       intrinsically-sized boxes centred as a pair. Measured before the
+       change: the board card and the clue/word list came to 668–696px
+       inside a 720px container and stood centred with the leftover split
+       into two dead margins, and the pair stayed exactly that wide as the
+       page grew — the list is capped at max-w-sm (384px) and the board is
+       fit-content, so neither followed the container. `flex-1 min-w-0`
+       gives each half the column, and the board keeps its own card
+       centred inside its half so a small puzzle does not stretch. */
+    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-6">
       {/* max-w-full/min-w-0 is what makes the scroller below actually work,
           and it is not decoration. This wrapper is a flex ITEM of the
           column above (align-items: center), so its cross-axis width is
@@ -257,7 +266,7 @@ export default function WordSearchBoard({
           did not. Bounding this wrapper to the column gives the scroller a
           real limit, so a too-wide puzzle scrolls inside its own card —
           which is what the card was for. */}
-      <div className="flex min-w-0 max-w-full flex-col items-center gap-2">
+      <div className="flex min-w-0 max-w-full flex-col items-center gap-2 md:flex-1">
         {puzzle.curved && (
           <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
             ★ {dict.expertModeLabel}
@@ -318,7 +327,7 @@ export default function WordSearchBoard({
         )}
       </div>
 
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm md:min-w-0 md:max-w-none md:flex-1">
         <p className="text-sm font-medium text-foreground/60">
           {dict.wordsFoundLabel.replace("{found}", String(foundWords.size)).replace("{total}", String(puzzle.words.length))}
         </p>

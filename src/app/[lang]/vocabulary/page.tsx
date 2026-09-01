@@ -67,7 +67,14 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
   const showCategoryIndex = lang === "es";
 
   return (
-    <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
+    <div
+      // max-w-3xl, not 2xl: measured at 1024 this column was 672px of
+      // content inside a 1024px <main> — 65.6%, i.e. the same "narrow block
+      // in a stretched container" this pass is about, just centred instead
+      // of left-hugging. 3xl is what /profile and /word-games already use,
+      // so this is the site's own column and not a new number.
+      className="mx-auto w-full max-w-3xl flex-1 px-6 py-16"
+    >
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.vocabulary.pageTitle}</h1>
 
       <div className="mt-10">

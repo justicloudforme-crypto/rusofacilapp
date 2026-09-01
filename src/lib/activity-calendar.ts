@@ -175,6 +175,34 @@ export function monthSummary(weeks: CalendarCell[][]): { active: number; frozen:
   return { active, frozen };
 }
 
+/** Which kinds of square are actually DRAWN in the month on screen.
+ *
+ * The legend used to list all five kinds on every month, so a learner
+ * looking at August — a month with no day left in it — was told what "aún
+ * por llegar" means while no square on the grid was that colour. A key
+ * explaining a colour that is not in the picture is not a key; it is one
+ * more line to read past.
+ *
+ * Counted from the same `weeks` the grid is rendered from, for the same
+ * reason `monthSummary` is: a legend derived from anything else can drift
+ * from the squares above it. Padding squares belong to a neighbouring month
+ * and are `aria-hidden` in the grid, so they name nothing here either.
+ * `today` is separate from the states because it is a ring drawn ON a
+ * square, not a state of its own. */
+export function monthStates(weeks: CalendarCell[][]): {
+  states: Set<Exclude<CalendarCellState, "padding">>;
+  today: boolean;
+} {
+  const states = new Set<Exclude<CalendarCellState, "padding">>();
+  let today = false;
+  for (const cell of weeks.flat()) {
+    if (cell.dateKey === null || cell.state === "padding") continue;
+    states.add(cell.state);
+    if (cell.isToday) today = true;
+  }
+  return { states, today };
+}
+
 /** A date key as a person reads it, in their own language.
  *
  * Built from the dictionary rather than from `Intl.DateTimeFormat` for the

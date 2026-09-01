@@ -30,8 +30,17 @@ interface TabsProps {
 // was one of the three competing "primary" accents the audit flagged (see
 // AUDIT.md §2); every active/selected state in the app should converge on
 // the one primary color.
+// `grow` next to `flex-shrink-0` is the whole fix for the empty tail on the
+// right of the strip, and the two flags do not fight: shrink-0 keeps every
+// pill at its intrinsic width when the row does not fit (so the strip
+// scrolls, exactly as before), and grow hands out the LEFTOVER space when it
+// does. Measured on /profile before the change: the bar is 710px of inner
+// width, the five pills come to 548 (ru) / 557 (es), and the last 154–163px
+// were bare bar at 768, 820, 834 and 1024 alike — the strip was drawn full
+// width and filled to content. There is no width at which both apply, so
+// nothing about the narrow behaviour changes.
 const TAB_BASE =
-  "tap flex min-h-11 flex-shrink-0 scroll-mx-4 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors " +
+  "tap flex min-h-11 grow flex-shrink-0 scroll-mx-4 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 const TAB_ACTIVE = "bg-primary text-white";
 const TAB_INACTIVE = "text-foreground/70 hover:text-foreground active:text-foreground";
