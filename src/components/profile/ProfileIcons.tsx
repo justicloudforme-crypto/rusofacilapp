@@ -117,6 +117,20 @@ export function ChartIcon(props: IconProps) {
   );
 }
 
+export function CalendarIcon(props: IconProps) {
+  // Replaced ChartIcon on the "Calendario de estudio" heading on
+  // 31.08.2026: the bar chart was the 30-day heatmap's icon and outlived it
+  // by one release, so the section was announcing itself as a chart while
+  // showing a month grid.
+  return (
+    <svg {...base(props)}>
+      <rect x="3.25" y="5" width="17.5" height="15.5" rx="2.5" />
+      <path d="M3.25 9.5h17.5M8 3.5v3M16 3.5v3" />
+      <path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.75h2M11 16.75h2" />
+    </svg>
+  );
+}
+
 export function ChecklistIcon(props: IconProps) {
   return (
     <svg {...base(props)}>

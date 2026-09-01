@@ -419,3 +419,84 @@ describe("streak freezes — guards", () => {
     expect(r.lastActiveDate).toBe(TODAY);
   });
 });
+
+describe("откуда серия начала считаться", () => {
+  // Added 31.08.2026. The owner's own profile showed nine flames on the
+  // August calendar and "racha actual: 2 días" beside them — both correct,
+  // and together they read as a broken counter. /profile can only say why
+  // if the replay tells it WHERE the chain starts and WHAT ended the one
+  // before it. These two fields are outputs of that same single walk; no
+  // rule, epoch or stored value depends on them.
+
+  it("девять дней с огнём и серия 2: называет и старт цепочки, и день пропуска", () => {
+    // The owner's shape, reduced: three runs and a tail, holes between them.
+    const keys = [
+      ...run(3, 28), // 28..26 days ago
+      ...run(3, 21), // 21..19
+      ...daysAgo(11),
+      ...run(2, 0), // yesterday and today
+    ];
+    const after = withFreezes(keys);
+
+    expect(keys).toHaveLength(9); // nine flames on the calendar
+    expect(after.currentStreak).toBe(2); // and a two-day chain
+    expect(after.chainStartedOn).toBe(addDateKeyDays(TODAY, -1));
+    expect(after.brokenOn).toBe(addDateKeyDays(TODAY, -2));
+
+    // The day it names really is a day with no activity, and the day after
+    // it really is the first of the chain — the two halves of the sentence
+    // the page prints.
+    expect(keys).not.toContain(after.brokenOn);
+    expect(keys).toContain(after.chainStartedOn);
+  });
+
+  it("цепочка, которая ни разу не рвалась, не выдумывает день пропуска", () => {
+    const keys = run(5, 0);
+    const after = withFreezes(keys);
+    expect(after.currentStreak).toBe(5);
+    expect(after.chainStartedOn).toBe(keys[0]);
+    expect(after.brokenOn).toBeNull(); // nothing behind the first day to break it
+  });
+
+  it("нет живой цепочки — оба поля пустые, фразе не из чего собраться", () => {
+    // Two holes in a row three days back: the chain is over and today is
+    // not started yet.
+    const keys = daysAgo(6, 5, 4);
+    const after = withFreezes(keys);
+    expect(after.currentStreak).toBe(0);
+    expect(after.chainStartedOn).toBeNull();
+    expect(after.brokenOn).toBeNull();
+
+    // Empty history says the same thing rather than something half-built.
+    expect(withFreezes([])).toMatchObject({ chainStartedOn: null, brokenOn: null });
+  });
+
+  it("день, названный «пропуском», никогда не бывает замороженным", () => {
+    // Studied 8, 5, 4, 2, 1 and 0 days ago. Two holes in a row at 7 and 6
+    // end the first chain; the single hole at 3 is bridged by a freeze, so
+    // the live chain runs THROUGH it and starts at 5.
+    const keys = daysAgo(8, 5, 4, 2, 1, 0);
+    const after = withFreezes(keys);
+
+    expect(after.frozenDateKeys).toEqual(daysAgo(7, 3));
+    expect(after.chainStartedOn).toBe(addDateKeyDays(TODAY, -5));
+    expect(after.currentStreak).toBe(5); // 5,4,2,1,0 — the frozen day is not counted
+    // The named break is the second of the two holes, and it is NOT one of
+    // the days a freeze paid for. That distinction is the whole reason the
+    // page can say "you missed the 6th" without contradicting a blue square.
+    expect(after.brokenOn).toBe(addDateKeyDays(TODAY, -6));
+    expect(after.frozenDateKeys).not.toContain(after.brokenOn);
+    expect(keys).not.toContain(after.brokenOn);
+  });
+
+  it("контроль: без заморозок та же история называет ДРУГОЙ день старта", () => {
+    // If the two fields were computed from the keys alone, ignoring the
+    // freeze ledger, both implementations would answer the same — and the
+    // sentence on the page would contradict the calendar next to it.
+    const keys = daysAgo(5, 4, 2, 1, 0);
+    expect(withFreezes(keys).chainStartedOn).toBe(addDateKeyDays(TODAY, -5));
+    expect(noFreezes(keys).chainStartedOn).toBe(addDateKeyDays(TODAY, -2));
+    expect(withFreezes(keys).chainStartedOn).not.toBe(noFreezes(keys).chainStartedOn);
+    expect(noFreezes(keys).brokenOn).toBe(addDateKeyDays(TODAY, -3));
+  });
+});

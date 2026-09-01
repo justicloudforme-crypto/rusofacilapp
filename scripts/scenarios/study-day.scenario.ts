@@ -40,6 +40,8 @@ let markStudyDay: (
 ) => Promise<void>;
 let getStudyDayKeys: (userId: string) => Promise<string[]>;
 let getUserActivityDateKeys: (userId: string, timeZone?: string) => Promise<string[]>;
+let getUserActivityDaySources: (userId: string, timeZone?: string) => Promise<Record<string, string[]>>;
+let getLevelProgress: (userId: string) => Promise<Record<string, { completed: number; total: number }>>;
 let getUserStreakStats: (
   userId: string,
   timeZone?: string,
@@ -106,7 +108,8 @@ beforeAll(async () => {
   if (created.rows.length !== 1) throw new Error("StudyDay is not in the generated schema");
 
   ({ markStudyDay, getStudyDayKeys } = await import("@/lib/study-day"));
-  ({ getUserActivityDateKeys, getUserStreakStats } = await import("@/lib/streaks"));
+  ({ getUserActivityDateKeys, getUserActivityDaySources, getUserStreakStats } = await import("@/lib/streaks"));
+  ({ getLevelProgress } = await import("@/lib/progress"));
 });
 
 afterAll(() => {
@@ -264,5 +267,110 @@ describe("отметка дня — полноценный источник се
       args: [user],
     });
     expect(Number(progress.rows[0].n)).toBe(0);
+  });
+});
+
+describe("плитки «Обзора» считают ровно то, что написано на них", () => {
+  // The owner's complaint of 31.08.2026, as a fixture: nine days with a
+  // flame on the calendar, and beside them "0 palabras aprendidas",
+  // "0 lecciones", "— / aún no empezado". Every one of those numbers is
+  // correct; what was wrong was two captions. This case pins the meaning of
+  // all four against a real database so a future edit cannot quietly change
+  // what a caption counts.
+  it("девять дней занятий и ни одной сданной строки прогресса — все четыре числа нули, и это верно", async () => {
+    const user = await newUser("tiles-nine-days");
+    const days = ["2026-08-03","2026-08-04","2026-08-05","2026-08-10","2026-08-11",
+                  "2026-08-12","2026-08-20","2026-08-30","2026-08-31"];
+    for (const [i, day] of days.entries()) {
+      await raw.execute({
+        sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES (?, ?, ?, 'lesson', ?)`,
+        args: [`tile-${i}`, user, day, i],
+      });
+    }
+
+    // Tile 1 — "palabras aprendidas": cards the learner marked as known.
+    const known = await raw.execute({
+      sql: `SELECT COUNT(*) AS n FROM "FlashcardProgress" WHERE userId = ? AND known = 1`,
+      args: [user],
+    });
+    expect(Number(known.rows[0].n)).toBe(0);
+
+    // Tile 2 — "lecciones aprobadas": distinct lessons with a PASSING
+    // attempt. Not "lessons opened", which is what the calendar counts, and
+    // the caption used to say "completadas".
+    const progress = await getLevelProgress(user);
+    const lessons = Object.values(progress).reduce((sum, level) => sum + level.completed, 0);
+    expect(lessons).toBe(0);
+
+    // Tile 4 — the level: the highest level with a passed lesson, hence "—".
+    const currentLevel = Object.entries(progress).find(([, p]) => p.completed > 0)?.[0] ?? null;
+    expect(currentLevel).toBeNull();
+
+    // Tile 3 — the streak, and the calendar beside it.
+    const keys = await getUserActivityDateKeys(user, TIJUANA);
+    expect(keys.sort()).toEqual(days);
+    const stats = await getUserStreakStats(user, TIJUANA, {
+      streakFreezesLeft: null,
+      streakFreezesSince: "2026-08-01",
+    });
+    console.log(
+      `    девять дней на календаре -> palabras ${known.rows[0].n}, lecciones ${lessons}, ` +
+        `nivel ${currentLevel ?? "—"}, racha ${stats.currentStreak}`,
+    );
+
+    // POSITIVE CONTROL: a passed lesson moves tiles 2 and 4 and nothing
+    // else, which is what makes the four zeros above a real measurement of
+    // those two queries rather than of an empty account.
+    await raw.execute({
+      sql: `INSERT INTO "LessonProgress" (id, userId, level, lessonSlug, score, passed, mistakes, answers, completedAt)
+            VALUES ('tile-lesson', ?, 'a1', '1', 90, 1, '[]', '{}', ?)`,
+      args: [user, Date.now()],
+    });
+    const after = await getLevelProgress(user);
+    const lessonsAfter = Object.values(after).reduce((sum, level) => sum + level.completed, 0);
+    expect(lessonsAfter).toBe(1);
+    expect(Object.entries(after).find(([, p]) => p.completed > 0)?.[0]).toBe("a1");
+    console.log(`    контроль: сданный урок -> lecciones ${lessonsAfter}, nivel a1`);
+
+    // ...and a FAILED attempt does not, which is precisely the gap between
+    // the old caption ("completadas") and the number under it.
+    await raw.execute({
+      sql: `INSERT INTO "LessonProgress" (id, userId, level, lessonSlug, score, passed, mistakes, answers, completedAt)
+            VALUES ('tile-failed', ?, 'a2', '1', 40, 0, '[]', '{}', ?)`,
+      args: [user, Date.now()],
+    });
+    const withFail = await getLevelProgress(user);
+    expect(Object.values(withFail).reduce((sum, level) => sum + level.completed, 0)).toBe(1);
+    console.log("    контроль: НЕсданный урок -> lecciones по-прежнему 1");
+  });
+
+  it("источники дня: несколько в один день, и все возвращаются", async () => {
+    const user = await newUser("tiles-sources");
+    await raw.execute({
+      sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('src-1', ?, '2026-08-10', 'media', 1)`,
+      args: [user],
+    });
+    // The mark keeps ONE row per day, so the extra sources have to come
+    // from the progress tables — which is exactly how the day disclosure
+    // can honestly list more than one thing.
+    await raw.execute({
+      sql: `INSERT INTO "LessonProgress" (id, userId, level, lessonSlug, score, passed, mistakes, answers, completedAt)
+            VALUES ('src-lesson', ?, 'a1', '2', 90, 1, '[]', '{}', ?)`,
+      args: [user, Date.parse("2026-08-10T18:00:00.000Z")],
+    });
+    await raw.execute({
+      sql: `INSERT INTO "ExamAttempt" (id, userId, level, examSlug, earned, total, percentage, passed, breakdown, completedAt)
+            VALUES ('src-exam', ?, 'a1', 'a1-exam-1', 9, 10, 90, 1, '{}', ?)`,
+      args: [user, Date.parse("2026-08-10T19:00:00.000Z")],
+    });
+
+    const sources = await getUserActivityDaySources(user, TIJUANA);
+    console.log(`    один день, три источника -> ${JSON.stringify(sources["2026-08-10"])}`);
+    expect([...sources["2026-08-10"]].sort()).toEqual(["exam", "lesson", "media"]);
+    // Sorted into the product's own order, not the order the queries
+    // happened to return.
+    expect(sources["2026-08-10"]).toEqual(["lesson", "exam", "media"]);
+    // And a day nobody touched is simply absent, never an empty list.
+    expect(sources["2026-08-09"]).toBeUndefined();
   });
 });

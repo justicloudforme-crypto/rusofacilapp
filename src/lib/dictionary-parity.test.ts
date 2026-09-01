@@ -76,6 +76,11 @@ const NO_CYRILLIC_IS_CORRECT = new Map<string, string>([
   ["admin.exams.examSlugPlaceholder", "an example slug"],
   ["download.iosCta", "store name, not translated by Apple's own guidelines"],
   ["download.androidCta", "store name"],
+  [
+    "profile.calendarDatePattern",
+    "a format string, not prose: the only words in it are the {day} and {month} placeholders, " +
+      "and the two locales differ in the shape around them (\"30 de agosto\" against \"30 августа\")",
+  ],
 ]);
 
 describe("dictionary parity", () => {

@@ -16,7 +16,7 @@ import {
   type DisplayStatus,
 } from "@/lib/subscription";
 import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
-import { getUserStreakStats, getUserActivityDateKeys } from "@/lib/streaks";
+import { getUserStreakStats, getUserActivityDateKeys, getUserActivityDaySources } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
 import { dateKeyIn } from "@/lib/timezone";
 import { getExamAttempts, type ExamAttemptSummary } from "@/lib/exams/progress";
@@ -52,6 +52,7 @@ import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptio
 import LocalDate from "@/components/profile/LocalDate";
 import SettingsAccordion from "@/components/profile/SettingsAccordion";
 import ActivityCalendar from "@/components/profile/ActivityCalendar";
+import StreakExplanation from "@/components/profile/StreakExplanation";
 import FirstStepCards, { type FirstStepItem } from "@/components/profile/FirstStepCards";
 import { TELEGRAM_INVITE_URL } from "@/components/TelegramFloatButton";
 import {
@@ -63,6 +64,7 @@ import {
   GiftIcon,
   LockIcon,
   TrashIcon,
+  CalendarIcon,
   ChartIcon,
   ChecklistIcon,
   GraduationCapIcon,
@@ -298,6 +300,16 @@ export default async function ProfilePage({
   // ledger and the grid have to be one calendar or the whole picture shifts
   // by a day for anyone whose device disagrees with their account.
   const todayKey = dateKeyIn(new Date(), timeZone);
+  // The one sentence that keeps "nine flames" and "racha actual: 2 días"
+  // from reading as a contradiction. Built once; the Overview tiles and the
+  // Progress tab show the same line, because they show the same number.
+  const streakExplanationDict = {
+    sinceBreak: dict.profile.streakSinceBreakNote,
+    neverBroken: dict.profile.streakNeverBrokenNote,
+    none: dict.profile.streakNoneNote,
+    monthsInDate: dict.profile.calendarMonthsInDate,
+    datePattern: dict.profile.calendarDatePattern,
+  };
   const registeredDateKey = dateKeyIn(user.createdAt, timeZone);
 
   const [
@@ -308,6 +320,7 @@ export default async function ProfilePage({
     wordsLearned,
     streak,
     activityDateKeys,
+    activityDaySources,
     theme,
     badges,
     weakTopic,
@@ -326,6 +339,7 @@ export default async function ProfilePage({
     db.flashcardProgress.count({ where: { userId: user.id, known: true } }),
     getUserStreakStats(user.id, timeZone, user),
     getUserActivityDateKeys(user.id, timeZone),
+    getUserActivityDaySources(user.id, timeZone),
     getThemePreference(),
     getUserBadgesForDisplay(user.id),
     getWeeklyWeakTopic(user.id),
@@ -561,7 +575,7 @@ export default async function ProfilePage({
           {progressState !== "zero" && (
             <>
               <section>
-                <SectionHeading icon={<ChartIcon className="h-[18px] w-[18px]" />}>
+                <SectionHeading icon={<CalendarIcon className="h-[18px] w-[18px]" />}>
                   {dict.profile.activityCalendarHeading}
                 </SectionHeading>
                 {/* A real month grid, not the 30-day strip it replaced. The
@@ -574,6 +588,7 @@ export default async function ProfilePage({
                   <ActivityCalendar
                     activeDateKeys={activityDateKeys}
                     frozenDateKeys={streak.frozenDateKeys}
+                    daySources={activityDaySources}
                     todayKey={todayKey}
                     firstDateKey={registeredDateKey}
                     dict={{
@@ -585,8 +600,23 @@ export default async function ProfilePage({
                       legendOutside: dict.profile.calendarLegendOutside,
                       legendToday: dict.profile.calendarLegendToday,
                       months: dict.profile.calendarMonths,
+                      monthsInDate: dict.profile.calendarMonthsInDate,
+                      datePattern: dict.profile.calendarDatePattern,
                       weekdays: dict.profile.calendarWeekdays,
                       weekdaysFull: dict.profile.calendarWeekdaysFull,
+                      summaryStudied: dict.profile.calendarSummaryStudied,
+                      summarySaved: dict.profile.calendarSummarySaved,
+                      dayOpenLabel: dict.profile.calendarDayOpenLabel,
+                      dayCloseLabel: dict.profile.calendarDayCloseLabel,
+                      dayDetailHeading: dict.profile.calendarDayDetailHeading,
+                      sourceLabels: {
+                        lesson: dict.profile.calendarSourceLesson,
+                        story: dict.profile.calendarSourceStory,
+                        flashcards: dict.profile.calendarSourceFlashcards,
+                        "word-game": dict.profile.calendarSourceWordGame,
+                        exam: dict.profile.calendarSourceExam,
+                        media: dict.profile.calendarSourceMedia,
+                      },
                     }}
                   />
                   {/* The freeze balance sits under the calendar because this
@@ -625,6 +655,17 @@ export default async function ProfilePage({
                   </p>
                 </div>
               </div>
+
+              {/* Directly under the streak tile, because this is where the
+                  calendar above and the number in the tile stop agreeing to
+                  the eye. */}
+              <StreakExplanation
+                currentStreak={streak.currentStreak}
+                chainStartedOn={streak.chainStartedOn}
+                brokenOn={streak.brokenOn}
+                dict={streakExplanationDict}
+                className="-mt-1"
+              />
             </>
           )}
 
@@ -1201,6 +1242,20 @@ export default async function ProfilePage({
               <p className="mt-3 rounded-lg bg-foreground/5 px-3 py-2 text-sm text-foreground/60">
                 {dict.profile.streakNoneNote}
               </p>
+            )}
+
+            {/* Only when there IS a chain: the zero case is already spelled
+                out by streakNoneNote in the box just above, and printing it
+                twice in a row reads as a stutter. On the Overview tab, where
+                that box does not exist, the component prints it itself. */}
+            {streak.currentStreak > 0 && (
+              <StreakExplanation
+                currentStreak={streak.currentStreak}
+                chainStartedOn={streak.chainStartedOn}
+                brokenOn={streak.brokenOn}
+                dict={streakExplanationDict}
+                className="mt-2"
+              />
             )}
 
             <p className="mt-2 text-sm text-foreground/60">{dict.profile.streakFreezeExplainer}</p>

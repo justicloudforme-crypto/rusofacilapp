@@ -1,9 +1,9 @@
 import "server-only";
 import { db } from "./db";
 import { cached } from "./ttl-cache";
-import { activityCacheKey, activityDateKeysCache } from "./activity-cache";
+import { activityCacheKey, activityDaySourcesCache, type ActivityDaySources } from "./activity-cache";
 import { DEFAULT_TIME_ZONE, dateKeyIn } from "./timezone";
-import { getStudyDayKeys } from "./study-day";
+import { getStudyDayRows } from "./study-day";
 import {
   INITIAL_STREAK_FREEZES,
   nextFreezeRecord,
@@ -26,9 +26,16 @@ export interface StreakStats {
   activeToday: boolean;
   /** Streak freezes in hand, derived (src/lib/streak-freezes.ts). */
   freezesLeft: number;
-  /** Days a freeze was spent on — what the activity heatmap paints as its
-   * own third state so a saved day is visible, not silent. */
+  /** Days a freeze was spent on — what the calendar paints as its own kind
+   * of square so a saved day is visible, not silent. */
   frozenDateKeys: string[];
+  /** First studied day of the live chain, null when there is none. */
+  chainStartedOn: string | null;
+  /** The missed day that ended the previous chain, null when the chain has
+   * never been broken. Together with chainStartedOn this is what lets
+   * /profile explain why nine days on the calendar can sit next to "racha
+   * actual: 2 días" — a pairing that is correct and reads as a defect. */
+  brokenOn: string | null;
 }
 
 /** The streak with no freezes at all — the behaviour every account had
@@ -65,6 +72,8 @@ function statsFrom(
     activeToday: resolution.activeToday,
     freezesLeft: resolution.freezesLeft,
     frozenDateKeys: resolution.frozenDateKeys,
+    chainStartedOn: resolution.chainStartedOn,
+    brokenOn: resolution.brokenOn,
   };
 }
 
@@ -104,9 +113,13 @@ function flashcardTouchedAt(row: { lastSeenAt: Date | null; updatedAt: Date }): 
   return row.lastSeenAt > row.updatedAt ? row.lastSeenAt : row.updatedAt;
 }
 
-async function fetchActivityDateKeys(userId: string, timeZone: string): Promise<string[]> {
-  return cached(activityDateKeysCache, activityCacheKey(userId, timeZone), async () => {
-    const [studyDayKeys, lessonRows, flashcardRows, storyRows, wordGameRows, examRows] = await Promise.all([
+/** The order sources are shown in, so a day never lists them in whatever
+ * order the queries happened to return. */
+const SOURCE_ORDER = ["lesson", "story", "flashcards", "word-game", "exam", "media"];
+
+async function fetchActivityDaySources(userId: string, timeZone: string): Promise<ActivityDaySources> {
+  return cached(activityDaySourcesCache, activityCacheKey(userId, timeZone), async () => {
+    const [studyDayRows, lessonRows, flashcardRows, storyRows, wordGameRows, examRows] = await Promise.all([
       // The explicit day mark (src/lib/study-day.ts) — the only source here
       // that records the learner having STUDIED rather than having finished
       // something. It is a first-class source, not a replacement: the five
@@ -119,7 +132,7 @@ async function fetchActivityDateKeys(userId: string, timeZone: string): Promise<
       // keeps their old days on the old calendar. Re-deriving them is not
       // possible — the instant is deliberately not stored — and guessing
       // would be worse than a day that sits where the learner was standing.
-      getStudyDayKeys(userId),
+      getStudyDayRows(userId),
       db.lessonProgress.findMany({ where: { userId }, select: { completedAt: true } }),
       db.flashcardProgress.findMany({ where: { userId }, select: { lastSeenAt: true, updatedAt: true } }),
       db.storyReadingProgress.findMany({ where: { userId }, select: { updatedAt: true } }),
@@ -127,15 +140,42 @@ async function fetchActivityDateKeys(userId: string, timeZone: string): Promise<
       db.examAttempt.findMany({ where: { userId }, select: { completedAt: true } }),
     ]);
 
-    const activityDateKeys = new Set<string>(studyDayKeys);
-    for (const row of lessonRows) activityDateKeys.add(dateKeyIn(row.completedAt, timeZone));
-    for (const row of flashcardRows) activityDateKeys.add(dateKeyIn(flashcardTouchedAt(row), timeZone));
-    for (const row of storyRows) activityDateKeys.add(dateKeyIn(row.updatedAt, timeZone));
-    for (const row of wordGameRows) activityDateKeys.add(dateKeyIn(row.completedAt, timeZone));
-    for (const row of examRows) activityDateKeys.add(dateKeyIn(row.completedAt, timeZone));
+    // Per day, WHAT the learner did — not just that they did something.
+    //
+    // StudyDay keeps one row per day (that unique index is the whole
+    // idempotency guarantee), so it can only ever name the surface they
+    // opened FIRST. The other five fill the rest in: they record results,
+    // and a result is also something worth telling the learner they did.
+    // Together they are why a day can honestly list more than one thing.
+    const sources: ActivityDaySources = {};
+    const add = (key: string, source: string) => {
+      const list = (sources[key] ??= []);
+      if (!list.includes(source)) list.push(source);
+    };
 
-    return [...activityDateKeys];
+    for (const row of studyDayRows) add(row.dateKey, row.source);
+    for (const row of lessonRows) add(dateKeyIn(row.completedAt, timeZone), "lesson");
+    for (const row of flashcardRows) add(dateKeyIn(flashcardTouchedAt(row), timeZone), "flashcards");
+    for (const row of storyRows) add(dateKeyIn(row.updatedAt, timeZone), "story");
+    for (const row of wordGameRows) add(dateKeyIn(row.completedAt, timeZone), "word-game");
+    for (const row of examRows) add(dateKeyIn(row.completedAt, timeZone), "exam");
+
+    for (const key of Object.keys(sources)) {
+      // A source the union does not know (an old row, a future surface) is
+      // kept rather than dropped — it still says the day happened — and
+      // sorted to the end.
+      sources[key].sort((a, b) => {
+        const ai = SOURCE_ORDER.indexOf(a);
+        const bi = SOURCE_ORDER.indexOf(b);
+        return (ai === -1 ? SOURCE_ORDER.length : ai) - (bi === -1 ? SOURCE_ORDER.length : bi);
+      });
+    }
+    return sources;
   });
+}
+
+async function fetchActivityDateKeys(userId: string, timeZone: string): Promise<string[]> {
+  return Object.keys(await fetchActivityDaySources(userId, timeZone));
 }
 
 /** Freeze state as it sits on the User row. Every caller already has the
@@ -205,4 +245,18 @@ export async function getUserActivityDateKeys(
   timeZone: string = DEFAULT_TIME_ZONE,
 ): Promise<string[]> {
   return fetchActivityDateKeys(userId, timeZone);
+}
+
+/** The same signal one level less aggregated: for each active day, WHAT the
+ * learner did on it. Feeds the calendar's day disclosure, which answers
+ * "what did I do on the 12th?" without a hover — there is no hover on the
+ * Capacitor build.
+ *
+ * Costs nothing extra: it is the very map getUserActivityDateKeys takes its
+ * keys from, out of one cached six-table read. */
+export async function getUserActivityDaySources(
+  userId: string,
+  timeZone: string = DEFAULT_TIME_ZONE,
+): Promise<ActivityDaySources> {
+  return fetchActivityDaySources(userId, timeZone);
 }

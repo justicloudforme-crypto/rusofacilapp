@@ -149,19 +149,21 @@ export default async function Navbar({
           <Link href={`/${lang}/pricing`} className="tap hover:text-primary-text active:text-primary-text">
             {dict.nav.pricing}
           </Link>
-          {/* NOT TOUCHED, deliberately — see PROGRESS.md 7.70. A staff
-              account gets a fourth link here, and measured 31.08.2026 that
-              pushes /es/profile 86px past a 640px viewport and /ru/profile
-              115px, and still 12px and 41px past 768. That is a bigger
-              overflow than debt 37's, and it is NOT fixable the way debt 37
-              was: hiding this link below md leaves a staff account with no
-              route to /admin at all between 640 and 767, because MobileMenu
-              (which carries the admin group) is `sm:hidden`. Every repair
-              that does not lose the link changes the shared header for
-              everyone, which this repair was explicitly not allowed to do.
-              Left alone and written down instead. */}
+          {/* Hidden below md since 31.08.2026 (7.71). This fourth link is
+              what pushed a staff account's /es/profile 86px past a 640px
+              viewport and /ru/profile 115px. Like the streak badge above, it
+              renders only inside a `staff` branch, so no other account's
+              frame moves a pixel.
+
+              The reason it could not simply be hidden before is that doing
+              so left 640–767 with no route to /admin at all: MobileMenu,
+              which carries the admin group, is `sm:hidden`. That gap is now
+              covered by ProfileMenu's own admin entry (`adminLink` below),
+              which is `hidden sm:block` — so the path exists at every width,
+              through the mobile menu under 640 and through the profile
+              dropdown from 640 up. */}
           {staff && (
-            <Link href={`/${lang}/admin`} className="tap hover:text-primary-text active:text-primary-text">
+            <Link href={`/${lang}/admin`} className="tap hidden md:inline hover:text-primary-text active:text-primary-text">
               {dict.admin.title}
             </Link>
           )}
@@ -216,6 +218,7 @@ export default async function Navbar({
               isPremium={isPremiumUser}
               label={dict.nav.profile}
               tabs={profileTabs}
+              adminLink={staff ? { href: `/${lang}/admin`, label: dict.admin.title } : null}
               logoutLabel={dict.auth.logout}
             />
           ) : (

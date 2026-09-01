@@ -144,6 +144,41 @@ export function navigableMonths(firstDateKey: string, todayKey: string): { min: 
   return { min: min > max ? max : min, max };
 }
 
+/** How the month that is on screen went: studied days and days a freeze
+ * covered, counted from the grid itself so the number under the calendar can
+ * never disagree with the squares above it.
+ *
+ * Padding squares carry `dateKey: null` and are skipped, so a month whose
+ * grid leans into its neighbours is still counted correctly. */
+export function monthSummary(weeks: CalendarCell[][]): { active: number; frozen: number } {
+  let active = 0;
+  let frozen = 0;
+  for (const cell of weeks.flat()) {
+    if (cell.dateKey === null) continue;
+    if (cell.state === "active") active++;
+    else if (cell.state === "frozen") frozen++;
+  }
+  return { active, frozen };
+}
+
+/** A date key as a person reads it, in their own language.
+ *
+ * Built from the dictionary rather than from `Intl.DateTimeFormat` for the
+ * same reason the grid's month names are: locale data is not a contract, the
+ * two locales need different shapes ("30 de agosto" against "30 августа"),
+ * and Russian needs the genitive form of the month, which the nominative
+ * list used by the calendar header cannot supply. Both come from the
+ * dictionaries, so what a translator sees is what a reader gets.
+ *
+ * `pattern` carries {day} and {month}; `months` is January-first and in
+ * whatever form the pattern needs. */
+export function formatDateKey(dateKey: string, pattern: string, months: string[]): string {
+  const day = Number(dateKey.slice(8, 10));
+  const monthIndex = Number(dateKey.slice(5, 7)) - 1;
+  const month = months[monthIndex] ?? "";
+  return pattern.replace("{day}", String(day)).replace("{month}", month);
+}
+
 /** Re-exported so a caller building a grid never reaches for a second
  * day-arithmetic helper. */
 export { addDateKeyDays };

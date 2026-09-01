@@ -84,6 +84,25 @@ export interface StreakResolution {
   /** The epoch this resolution used. Equals `state.freezesSince` when that
    * was set, and today's key when it was null (first ever read). */
   freezesSince: string;
+  /** The first studied day of the live chain, or null when there is no live
+   * chain. Read-only output of the same single replay — nothing about the
+   * freeze rule, the epoch or any stored value depends on it.
+   *
+   * It exists because "nine flames on the calendar, racha actual: 2 días"
+   * is correct and reads as a defect. The page can only explain the gap
+   * between those two numbers if it knows WHERE the count starts, and the
+   * one place that knows is this walk. Deriving it a second time from the
+   * same keys would be a second implementation of the chain rule, which is
+   * exactly the duplication this file refuses to have. */
+  chainStartedOn: string | null;
+  /** The missed day immediately before `chainStartedOn` — the day that ended
+   * the previous chain. Null when the chain has never been broken (it runs
+   * from the learner's first recorded day) or when there is no live chain.
+   *
+   * Always a genuinely missed day, never a frozen one: had the day before
+   * the chain's start been frozen, the chain would have continued through it
+   * and started earlier. */
+  brokenOn: string | null;
 }
 
 /** Replays the learner's calendar and returns the streak together with the
@@ -114,6 +133,8 @@ export function resolveStreakWithFreezes(
     freezesLeft: INITIAL_STREAK_FREEZES,
     frozenDateKeys: [],
     freezesSince: since,
+    chainStartedOn: null,
+    brokenOn: null,
   };
   if (sorted.length === 0) return empty;
 
@@ -134,6 +155,10 @@ export function resolveStreakWithFreezes(
   let longest = 0;
   let gapRun = 0;
   const frozenDateKeys: string[] = [];
+  // The first studied day of whatever chain is currently running. Set when a
+  // chain goes from nothing to one day, cleared whenever a chain ends. Purely
+  // an observation of the walk: no branch below reads it.
+  let chainStartedOn: string | null = null;
 
   for (let cursor = first; cursor <= todayKey; cursor = addDateKeyDays(cursor, 1)) {
     if (!eraStarted && cursor >= since) {
@@ -142,6 +167,7 @@ export function resolveStreakWithFreezes(
     }
 
     if (dates.has(cursor)) {
+      if (chain === 0) chainStartedOn = cursor;
       chain += 1;
       gapRun = 0;
       if (eraStarted) {
@@ -168,12 +194,14 @@ export function resolveStreakWithFreezes(
       // spent for nothing.
       chain = 0;
       eraChain = 0;
+      chainStartedOn = null;
     } else if (balance > 0) {
       balance -= 1;
       frozenDateKeys.push(cursor);
     } else {
       chain = 0;
       eraChain = 0;
+      chainStartedOn = null;
     }
   }
 
@@ -185,6 +213,12 @@ export function resolveStreakWithFreezes(
     freezesLeft: eraStarted ? balance : INITIAL_STREAK_FREEZES,
     frozenDateKeys,
     freezesSince: since,
+    chainStartedOn,
+    // A chain that starts on the learner's first recorded day was never
+    // broken — there is nothing behind it to have broken it. Otherwise the
+    // day before it is the one they missed, by construction.
+    brokenOn:
+      chainStartedOn === null || chainStartedOn === sorted[0] ? null : addDateKeyDays(chainStartedOn, -1),
   };
 }
 

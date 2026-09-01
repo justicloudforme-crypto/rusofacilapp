@@ -4,6 +4,8 @@ import {
   daysInMonth,
   monthGrid,
   monthKeyOf,
+  formatDateKey,
+  monthSummary,
   navigableMonths,
   shiftMonth,
   weekdayIndex,
@@ -215,5 +217,47 @@ describe("календарь и часовой пояс ученика", () => {
     // ...and for the Auckland learner the 31st is already behind them, so
     // it is a real missed day rather than an unfinished one.
     expect(cellFor(east, "2026-08-31")!.state).toBe("missed");
+  });
+});
+
+describe("итог месяца и дата словами", () => {
+  it("monthSummary считает только клетки ЭТОГО месяца", () => {
+    const weeks = grid("2026-08", {
+      activeDateKeys: ["2026-07-31", "2026-08-10", "2026-08-12", "2026-09-01"],
+      frozenDateKeys: ["2026-08-11"],
+      todayKey: "2026-09-30",
+      firstDateKey: "2026-01-01",
+    });
+    // 31.07 and 01.09 are in the grid's padding, which carries no dateKey —
+    // exactly the case a naive "count the flames I can see" would get wrong.
+    expect(monthSummary(weeks)).toEqual({ active: 2, frozen: 1 });
+
+    // Control: the neighbouring days really are in this grid's rows and
+    // really are excluded, rather than simply absent.
+    expect(weeks.flat()).toHaveLength(6 * 7);
+    expect(weeks.flat().filter((c) => c.dateKey === null).length).toBeGreaterThan(0);
+  });
+
+  it("monthSummary на пустом месяце — нули, а не пустота", () => {
+    expect(monthSummary(grid("2026-08", { todayKey: "2026-09-30", firstDateKey: "2026-01-01" }))).toEqual({
+      active: 0,
+      frozen: 0,
+    });
+  });
+
+  it("formatDateKey: испанское «de» и русский родительный падеж", () => {
+    const es = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+    const ru = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+
+    expect(formatDateKey("2026-08-30", "{day} de {month}", es)).toBe("30 de agosto");
+    expect(formatDateKey("2026-08-30", "{day} {month}", ru)).toBe("30 августа");
+    // Leading zeros are a date-key artefact, not something a person says.
+    expect(formatDateKey("2026-01-05", "{day} de {month}", es)).toBe("5 de enero");
+    expect(formatDateKey("2026-12-31", "{day} {month}", ru)).toBe("31 декабря");
+    // The two locales really do differ — otherwise one list could be
+    // serving both and nobody would notice the Russian was in the wrong case.
+    expect(formatDateKey("2026-08-30", "{day} de {month}", es)).not.toBe(
+      formatDateKey("2026-08-30", "{day} {month}", ru),
+    );
   });
 });
