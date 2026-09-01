@@ -44,6 +44,11 @@
 //      scrolls underneath must actually HIDE it: an opaque background, or
 //      a backdrop-filter (which is what the app's other ten pinned bars
 //      use, and why only the header was affected).
+//   C. the empty container — the mirror of A, added 02.09.2026 for the
+//      tablet band: a row of content covering under 70% of a container
+//      wider than 700px. See scripts/layout-fill.mjs for the rule and for
+//      what it was measured on. A and C cannot both fire on one box, which
+//      is why one check can carry both.
 //
 //   node scripts/check-layout-geometry.mjs
 //   node scripts/check-layout-geometry.mjs --base=http://localhost:3123
@@ -56,6 +61,12 @@
 // control is not a result.
 import { chromium, devices, webkit } from "@playwright/test";
 import { pathToFileURL } from "node:url";
+import {
+  FILL_THRESHOLD,
+  MIN_CONTAINER_WIDTH,
+  findUnderfilledRows,
+  formatUnderfilled,
+} from "./layout-fill.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -128,7 +139,7 @@ const PAGES = ALL_PAGES.filter((p) => !(CI_MODE && p.contentOnly));
  * different reason than the inner one — a single width would have found
  * one of the two and called the other fixed.
  */
-const WIDTHS = [320, 375, 610, 768];
+const WIDTHS = [320, 375, 610, 768, 820, 1024];
 
 /**
  * Real phones, and the engine each one actually runs. Chosen to cover the
@@ -229,6 +240,19 @@ function measure() {
   return { vw, scrollWidth: de.scrollWidth, widest, bars };
 }
 
+/**
+ * Measurement C, run in the page as its own evaluate: the shared rule is a
+ * separate module, and Playwright serialises a function's SOURCE, so it
+ * cannot be called from inside `measure` above — it would arrive at the
+ * browser as an undefined free variable. Two evaluates on the same settled
+ * page is the honest way to do it.
+ */
+async function measureFill(page) {
+  return page
+    .evaluate(findUnderfilledRows, { threshold: FILL_THRESHOLD, minContainer: MIN_CONTAINER_WIDTH })
+    .catch(() => []);
+}
+
 async function inspect(ctx, page_, plant) {
   const path = typeof page_ === "string" ? page_ : page_.path;
   const tab = typeof page_ === "string" ? null : page_.tab;
@@ -268,6 +292,8 @@ async function inspect(ctx, page_, plant) {
     problems.push(`measure failed: ${String(e).slice(0, 90)}`);
     return null;
   });
+  const underfilled = await measureFill(page);
+  if (m) m.underfilled = underfilled;
 
   if (m) {
     if (m.scrollWidth > m.vw + 1) {
@@ -278,6 +304,9 @@ async function inspect(ctx, page_, plant) {
             ? ` — widest offender <${w.tag} class="${w.cls}"> ${w.width}px at [${w.left}, ${w.right}] "${w.text}"`
             : " — no single element to blame; check a parent's min-width")
       );
+    }
+    for (const row of m.underfilled) {
+      problems.push(formatUnderfilled(row));
     }
     for (const bar of m.bars) {
       if (bar.alpha < 0.99 && !bar.blur) {
@@ -306,13 +335,18 @@ async function runControl(browser, engineName, contextOptions) {
    */
   const PLANTS = [
     [
-      "an element 900px wide in a 320px viewport",
+      "an element 400px wider than the viewport",
+      // Sized off the viewport rather than at a literal 900px: the control
+      // context moved to 1024 on 02.09.2026 so that measurement C has a
+      // container in scope, and a fixed 900px stopped overflowing there —
+      // it would have turned MISSED for a reason that says nothing about
+      // whether the checker works.
       async (p) => {
         await p.addInitScript(() => {
           addEventListener("load", () =>
             setTimeout(() => {
               const d = document.createElement("div");
-              d.style.cssText = "width:900px;height:20px";
+              d.style.cssText = `width:${window.innerWidth + 400}px;height:20px`;
               d.textContent = "planted overflow";
               document.body.append(d);
             }, 300)
@@ -345,6 +379,104 @@ async function runControl(browser, engineName, contextOptions) {
       },
       /see-through/,
     ],
+    [
+      "a 300px block alone inside a 1000px container (measurement C)",
+      // A container the page does not otherwise have, so the control
+      // cannot pass by finding a defect that is already there — the exact
+      // trap the header control fell into (see the note above it). 300 of
+      // 1000 is 30%, well under the 70% the rule draws the line at, and
+      // 1000 is over the 700px floor: both halves of the rule have to hold
+      // for this to be caught, so a control that fires proves both.
+      async (p) => {
+        await p.addInitScript(() => {
+          addEventListener("load", () =>
+            setTimeout(() => {
+              const outer = document.createElement("div");
+              outer.style.cssText = "width:1000px;max-width:100%";
+              const inner = document.createElement("div");
+              inner.style.cssText = "width:300px;height:80px";
+              // A CHILD, not just text: the rule ignores a lone member with
+              // no parts, because one link or one paragraph sized to itself
+              // is right at any width. A plant that the rule is entitled to
+              // ignore proves nothing.
+              const part = document.createElement("p");
+              part.textContent = "planted hole";
+              inner.append(part);
+              outer.append(inner);
+              document.body.append(outer);
+            }, 300)
+          );
+        });
+      },
+      // Matches the plant's own TEXT, not just the shape of the message.
+      // The first run of this control reported "caught" while pointing at a
+      // real finding on the page it happened to load — passing by finding
+      // somebody else's defect is the exact failure PROGRESS.md 4.1 was
+      // written about, and it is only visible if the pattern names the
+      // plant.
+      /content fills .*planted hole/,
+    ],
+    [
+      "a 2-track grid whose TRACKS are too narrow, both filled (measurement C keeps this)",
+      // The frame/content line, from the frame side. Two items in a
+      // two-track grid — every track filled, so nothing is missing — but
+      // the tracks are 200px inside 1000px. That is the grid being built
+      // wrong, and the rule that stopped reporting under-filled grids on
+      // 02.09.2026 must not have stopped reporting this one too.
+      async (p) => {
+        await p.addInitScript(() => {
+          addEventListener("load", () =>
+            setTimeout(() => {
+              const outer = document.createElement("div");
+              outer.style.cssText =
+                "width:1000px;max-width:100%;display:grid;grid-template-columns:200px 200px;gap:8px";
+              for (const n of [1, 2]) {
+                const cell = document.createElement("div");
+                cell.style.cssText = "height:80px";
+                const part = document.createElement("p");
+                part.textContent = `narrow track ${n}`;
+                cell.append(part);
+                outer.append(cell);
+              }
+              document.body.append(outer);
+            }, 300)
+          );
+        });
+      },
+      /content fills .*narrow track/,
+    ],
+  ];
+
+  /**
+   * The other half of the same question, and it has to be checked in the
+   * same breath: a grid with FEWER items than tracks must NOT be reported.
+   * A control that only ever proves the checker can go red proves nothing
+   * about whether it goes red on the right things — and the twelve CI
+   * failures of 02.09.2026 were all this shape.
+   */
+  const MUST_NOT_FIRE = [
+    [
+      "a 2-track grid holding one item (the /es hero with an empty card bank)",
+      async (p) => {
+        await p.addInitScript(() => {
+          addEventListener("load", () =>
+            setTimeout(() => {
+              const outer = document.createElement("div");
+              outer.style.cssText =
+                "width:1000px;max-width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px";
+              const cell = document.createElement("div");
+              cell.style.cssText = "height:80px";
+              const part = document.createElement("p");
+              part.textContent = "lonely grid item";
+              cell.append(part);
+              outer.append(cell);
+              document.body.append(outer);
+            }, 300)
+          );
+        });
+      },
+      /content fills .*lonely grid item/,
+    ],
   ];
   console.log(`\n=== positive control (${engineName}): the checker must FAIL on a planted defect ===`);
   const ctx = await browser.newContext(contextOptions);
@@ -356,8 +488,18 @@ async function runControl(browser, engineName, contextOptions) {
     console.log(`  ${hit ? "caught " : "MISSED "} ${label}${hit ? ` → ${hit.slice(0, 110)}` : ""}`);
   }
   console.log(`  planted ${PLANTS.length}, caught ${caught}`);
+
+  console.log(`  --- and must NOT fire on these ---`);
+  let quiet = 0;
+  for (const [label, plant, forbidden] of MUST_NOT_FIRE) {
+    const { problems } = await inspect(ctx, "/es", plant);
+    const hit = problems.find((p) => forbidden.test(p));
+    quiet += hit ? 0 : 1;
+    console.log(`  ${hit ? "WRONGLY REPORTED " : "quiet            "} ${label}${hit ? ` → ${hit.slice(0, 110)}` : ""}`);
+  }
+  console.log(`  checked ${MUST_NOT_FIRE.length}, quiet ${quiet}`);
   await ctx.close();
-  return caught === PLANTS.length;
+  return caught === PLANTS.length && quiet === MUST_NOT_FIRE.length;
 }
 
 async function main() {
@@ -425,14 +567,18 @@ async function main() {
     // nothing about whether the same measurement works in WebKit, where
     // computed styles and lazy layout differ — and half this run is now
     // WebKit.
+    // 1024, not 320. Measurement C needs a container over 700px to be in
+    // scope at all, so at 320 its control would report MISSED for a reason
+    // that says nothing about whether the checker works. The overflow
+    // plant is sized off the viewport (see PLANTS) so it still overflows
+    // here, and the header plant never depended on width.
     const okChrome = await runControl(chrome, "chromium", {
-      viewport: { width: 320, height: 800 },
-      isMobile: true,
-      hasTouch: true,
+      viewport: { width: 1024, height: 800 },
+      deviceScaleFactor: 1,
     });
     if (!okChrome) failures += 1;
     if (kit) {
-      const okKit = await runControl(kit, "webkit", { ...devices["iPhone SE"] });
+      const okKit = await runControl(kit, "webkit", { ...devices["iPad Mini"] });
       if (!okKit) failures += 1;
     }
   } else {

@@ -139,26 +139,40 @@ describe("календарь занятий — что видит ученик",
     expect(cell("2026-08-10")!.getAttribute("aria-label")).toContain("día de estudio");
   });
 
-  it("все пять видов клетки объяснены ТЕКСТОМ на странице, не по наведению", () => {
+  it("каждый ВИД, который нарисован в этом месяце, объяснён ТЕКСТОМ на странице", () => {
     const { container } = renderCalendar(ES);
-    // The wording lives in two lines now — the month summary carries the
-    // flame and the blue square with a count, the legend carries the rest —
-    // so this asserts the PROPERTY (every kind is explained in text on the
-    // page) rather than one particular list. `title` would not satisfy it,
+    // The property, not a fixed list. The wording lives in two lines — the
+    // month summary carries the flame and the blue square with a count, the
+    // legend carries the rest — and since 02.09.2026 the legend names only
+    // the kinds this month actually draws. `title` would not satisfy this,
     // and on the Capacitor build there is no hover at all (CLAUDE.md).
     const text = container.textContent ?? "";
-    for (const label of [
-      ES.summaryStudied,
-      ES.summarySaved,
-      ES.legendMissed,
-      ES.legendBeforeStart,
-      ES.legendFuture,
-      ES.legendToday,
-    ]) {
-      expect(text).toContain(label);
+    const drawn = new Set([...container.querySelectorAll("[data-state]")].map((el) => el.getAttribute("data-state")));
+    const wordFor: Record<string, string> = {
+      active: ES.summaryStudied,
+      frozen: ES.summarySaved,
+      missed: ES.legendMissed,
+      beforeStart: ES.legendBeforeStart,
+      future: ES.legendFuture,
+    };
+    for (const state of drawn) {
+      expect(text, `state "${state}" is drawn but not named in text`).toContain(wordFor[state!]);
     }
-    // And the two that moved really did move, rather than vanishing: their
-    // words are still what the cells announce to a screen reader.
+    expect(text).toContain(ES.legendToday);
+
+    // Control, and it is the whole point of the change: today is 31.08, the
+    // LAST day of the month, so no square is "future" — and the legend must
+    // not offer a line for it. Without this the assertion above would pass
+    // on the old component, which printed all five unconditionally.
+    expect(drawn.has("future")).toBe(false);
+    expect(text).not.toContain(ES.legendFuture);
+
+    // And the mirror: a month that is still running does get the line.
+    const running = renderCalendar(ES, { todayKey: "2026-08-20" });
+    expect(running.container.textContent).toContain(ES.legendFuture);
+
+    // The two that moved to the summary line really did move rather than
+    // vanish: their words are still what the cells announce to a reader.
     expect(cell("2026-08-10")!.getAttribute("aria-label")).toContain(ES.legendActive);
     expect(cell("2026-08-11")!.getAttribute("aria-label")).toContain(ES.legendFrozen);
   });
@@ -232,17 +246,40 @@ describe("клетка: число не двигается и не меняет 
 
     const { container } = renderCalendar(ES, { firstDateKey: "2026-08-10", todayKey: "2026-08-20" });
     const outside = container.querySelectorAll('[data-state="beforeStart"]');
+    const future = container.querySelectorAll('[data-state="future"]');
     expect(outside.length).toBeGreaterThan(0);
+    expect(future.length).toBeGreaterThan(0);
     for (const el of outside) {
+      // Still no DASHED frame — that is the 2px outline 7.71 removed,
+      // which drew a box around every day of the first half of the month.
       expect(el.className).not.toContain("border-dashed");
-      expect(el.className).not.toContain("border-foreground");
+      // But a hairline, added 02.09.2026, and it is required rather than
+      // tolerated: "before you registered" and "hasn't happened yet" were
+      // the same declaration character for character, so the two squares
+      // were one square with two names.
+      expect(el.className).toContain("border-foreground/15");
     }
+    for (const el of future) {
+      expect(el.className).toContain("border-dotted");
+    }
+    // Three greys, three shapes — asserted as "no two are alike" rather
+    // than against three literals, so a future retune cannot quietly make
+    // two of them equal again the way it already did once.
+    const missed = container.querySelector('[data-state="missed"]');
+    const shapes = new Set(
+      [missed, outside[0], future[0]].map((el) =>
+        (el!.className.match(/(bg-foreground[^\s]*|border-\S+)/g) ?? []).sort().join(" "),
+      ),
+    );
+    expect(shapes.size).toBe(3);
+
     // The legend swatch matches the square, so the line explains what is
     // actually drawn.
     const legendSwatch = [...container.querySelectorAll("li")].find((li) =>
       li.textContent?.includes(ES.legendBeforeStart),
     );
     expect(legendSwatch!.querySelector("span")!.className).not.toContain("border-dashed");
+    expect(legendSwatch!.querySelector("span")!.className).toContain("border-foreground/15");
   });
 });
 

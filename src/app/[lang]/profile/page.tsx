@@ -603,7 +603,19 @@ export default async function ProfilePage({
           )}
 
           {progressState !== "zero" && (
-            <>
+            /* Two columns from `md` up: the calendar on the left, the stat
+               tiles, the streak sentence and the freeze balance on the
+               right. Below `md` this is one column in the same order it has
+               always been — the wrapper is `contents` there, so the stack
+               is byte-for-byte the page that shipped.
+
+               Measured before the change, on all four tablet widths and in
+               both locales: the calendar was 384px inside a 720px container
+               (53.3%, 336px of bare page to its right) at 768, 820, 834 and
+               1024 alike, and the freeze box was a 720px-wide band under it.
+               The page had one column of content and a second column of
+               nothing. */
+            <div className="contents md:grid md:grid-cols-2 md:items-start md:gap-6">
               <section>
                 <SectionHeading icon={<CalendarIcon className="h-[18px] w-[18px]" />}>
                   {dict.profile.activityCalendarHeading}
@@ -650,33 +662,15 @@ export default async function ProfilePage({
                       },
                     }}
                   />
-                  {/* The freeze balance sits under the calendar because this
-                      is the tab a learner actually lands on — the stat tile
-                      further down lives on the Progress tab. Shown always,
-                      including at zero: "none left" is exactly the number
-                      that changes what tomorrow costs.
-
-                      It is a BOX, not a third grey line, and it carries the
-                      only ❄️ on the page. The month summary directly above it
-                      counts days on this calendar and wears the calendar's own
-                      swatches; this counts a stock that has nothing to do with
-                      the month on screen. Until 01.09.2026 both were small grey
-                      lines with a snowflake each, and the difference between
-                      "saved 0" and "2 left" was not readable at a glance. */}
-                  <div className="mt-3 flex flex-col gap-1 rounded-2xl border border-sky-500/20 bg-sky-400/5 px-4 py-3">
-                    <p className="flex items-center gap-2 text-sm">
-                      <span aria-hidden className="text-base leading-none">
-                        ❄️
-                      </span>
-                      <span className="text-foreground/70">{dict.profile.streakFreezesLeftLabel}:</span>
-                      <b className="text-lg tabular-nums">{streak.freezesLeft}</b>
-                    </p>
-                    {freezeSinceNote && <p className="text-xs text-foreground/60">{freezeSinceNote}</p>}
-                  </div>
                 </div>
               </section>
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {/* The right column. `contents` below `md` again: with no
+                  wrapper box of its own the three blocks stay direct
+                  children of the page's own column stack and keep the
+                  spacing they had. */}
+              <div className="contents md:flex md:flex-col md:gap-6">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
                   <p className="text-sm text-foreground/60">
@@ -711,9 +705,42 @@ export default async function ProfilePage({
                 chainStartedOn={streak.chainStartedOn}
                 brokenOn={streak.brokenOn}
                 dict={streakExplanationDict}
-                className="-mt-1"
+                className="-mt-1 md:mt-0"
               />
-            </>
+
+              {/* The freeze balance. Shown always, including at zero: "none
+                  left" is exactly the number that changes what tomorrow
+                  costs.
+
+                  It is a BOX, not a third grey line, and it carries the only
+                  ❄️ on the page. The month summary under the calendar counts
+                  days on that grid and wears the grid's own swatches; this
+                  counts a stock that has nothing to do with the month on
+                  screen. Until 01.09.2026 both were small grey lines with a
+                  snowflake each, and the difference between "saved 0" and "2
+                  left" was not readable at a glance.
+
+                  It sat directly under the calendar until 02.09.2026 and now
+                  sits at the foot of the right-hand column, which is where
+                  the streak numbers it belongs to already are. It is also
+                  sized by its content: it used to be a full-width band —
+                  720 of 720px at every tablet width — around one short line
+                  and a number, and a box that wide reads as a section rather
+                  than as the one small fact it carries. `max-w-full` keeps
+                  it inside a narrow phone column, where the epoch note below
+                  it does wrap. */}
+              <div className="flex w-fit max-w-full flex-col gap-1 rounded-2xl border border-sky-500/20 bg-sky-400/5 px-4 py-3">
+                <p className="flex items-center gap-2 text-sm">
+                  <span aria-hidden className="text-base leading-none">
+                    ❄️
+                  </span>
+                  <span className="text-foreground/70">{dict.profile.streakFreezesLeftLabel}:</span>
+                  <b className="text-lg tabular-nums">{streak.freezesLeft}</b>
+                </p>
+                {freezeSinceNote && <p className="text-xs text-foreground/60">{freezeSinceNote}</p>}
+              </div>
+              </div>
+            </div>
           )}
 
           {progressState === "zero" && (

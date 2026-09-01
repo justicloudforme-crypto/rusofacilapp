@@ -74,7 +74,17 @@ export default function SubscriptionCard({
 
       <h2 className="text-lg font-medium">{option.name}</h2>
 
-      <p className="mt-4 flex items-baseline gap-1">
+      {/* flex-WRAP, and it is not decoration. At 1024 the pricing grid goes
+          to four columns, which leaves each card 178px of content; the price
+          is `whitespace-nowrap` (rightly — "169,99 US$" must not break), and
+          in Russian the period beside it is long enough that the two
+          together do not fit. Without wrapping the period span was pushed
+          out of the card and out of the page: /ru/pricing measured 1063px of
+          document in a 1024px viewport, with that 89px span sitting at
+          x=974–1063. Found 02.09.2026 by the widened width sweep — it is
+          older than this pass, and every width the sweep had before stopped
+          at 768, where the grid is only two columns wide. */}
+      <p className="mt-4 flex flex-wrap items-baseline gap-x-1">
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{option.price}</span>
         <span className="text-sm text-foreground/60">{option.period}</span>
       </p>
