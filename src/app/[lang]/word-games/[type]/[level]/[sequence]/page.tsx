@@ -138,7 +138,7 @@ export default async function WordGamePuzzlePage({
           lang={lang}
           puzzle={toPublicPuzzle(row)}
           dict={dict.wordGames}
-          resultDict={dict.gameResult}
+          resultDict={{ ...dict.gameResult, locale: lang }}
           signedIn={Boolean(user)}
         />
       </div>

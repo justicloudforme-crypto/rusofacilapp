@@ -11,6 +11,7 @@ import LevelBadge from "@/components/LevelBadge";
 import type { FlashcardLevel } from "@/lib/flashcards/types";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
+import { plural } from "@/lib/plural";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/courses">): Promise<Metadata> {
   const { lang } = await params;
@@ -87,6 +88,7 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
                 <LevelGlossaryBadge
                   level={slug}
                   dict={{
+                    locale: lang,
                     completeLabel: dict.courses.levelMasteredBadge,
                     progressLabel: dict.courses.levelProgressLabel,
                   }}
@@ -98,7 +100,7 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
               </p>
               <div className="mt-4 flex items-center gap-3 text-sm text-foreground/60">
                 <span>
-                  {meta.weeks} {dict.courses.weeks}
+                  {meta.weeks} {plural(lang, meta.weeks, dict.courses.weeks)}
                 </span>
                 <span aria-hidden>·</span>
                 <span>

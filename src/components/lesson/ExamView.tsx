@@ -17,6 +17,8 @@ import ListeningItem from "./ListeningItem";
 import ReadingComprehensionItem from "./ReadingComprehensionItem";
 import ListeningTranscriptionItem from "./ListeningTranscriptionItem";
 import { examAudioKey } from "@/lib/lessons/audioKeys";
+import type { Locale } from "@/i18n/config";
+import { plural } from "@/lib/plural";
 
 type ExercisesDict = Dictionary["lesson"]["exercises"];
 type ExamDict = Dictionary["profile"];
@@ -35,11 +37,13 @@ interface AttemptResult {
 export default function ExamView({
   exam,
   level,
+  locale,
   dict,
   examDict,
 }: {
   exam: ExamContent;
   level: string;
+  locale: Locale;
   dict: ExercisesDict;
   examDict: ExamDict;
 }) {
@@ -114,7 +118,7 @@ export default function ExamView({
           <div className="flex items-center justify-between text-xs font-medium text-foreground/60">
             <span>{dict.progressLabel}</span>
             <span>
-              {answeredCount} / {allExercises.length} {dict.answeredLabel}
+              {answeredCount} / {allExercises.length} {plural(locale, allExercises.length, dict.answeredLabel)}
             </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">

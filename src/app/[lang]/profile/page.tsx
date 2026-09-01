@@ -78,6 +78,9 @@ import Button from "@/components/ui/Button";
 import { getProfileTabs, isProfileTab, type ProfileTab } from "@/lib/profile-tabs";
 import Tabs from "@/components/ui/Tabs";
 import { routeAlternates } from "@/lib/site";
+import { plural } from "@/lib/plural";
+import { formatDateKey } from "@/lib/activity-calendar";
+import { freezesCoverWholeHistory } from "@/lib/streak-freezes";
 
 // Icon-badge + serif heading, used for every card section on this page so
 // the dashboard reads as a real interface (icon + hierarchy per row)
@@ -176,15 +179,17 @@ function computeBadgeProgress(
   def: BadgeDef,
   ctx: { longestStreak: number; wordsLearned: number; examAttempts: ExamAttemptSummary[] },
   dict: Dictionary,
+  locale: Locale,
 ): BadgeProgress {
   if (def.id.startsWith("streak-")) {
     const threshold = Number(def.id.slice("streak-".length));
     const current = Math.min(ctx.longestStreak, threshold);
     return {
       ratio: ctx.longestStreak / threshold,
-      label: dict.profile.badgeProgressStreak
-        .replace("{current}", String(current))
-        .replace("{total}", String(threshold)),
+      label: plural(locale, threshold, dict.profile.badgeProgressStreak, {
+        current,
+        total: threshold,
+      }),
     };
   }
   if (def.id.startsWith("vocab-")) {
@@ -192,9 +197,10 @@ function computeBadgeProgress(
     const current = Math.min(ctx.wordsLearned, threshold);
     return {
       ratio: ctx.wordsLearned / threshold,
-      label: dict.profile.badgeProgressVocab
-        .replace("{current}", String(current))
-        .replace("{total}", String(threshold)),
+      label: plural(locale, threshold, dict.profile.badgeProgressVocab, {
+        current,
+        total: threshold,
+      }),
     };
   }
   if (def.id.startsWith("graduate-")) {
@@ -207,7 +213,7 @@ function computeBadgeProgress(
     const current = Math.min(passedSlugs.size, 3);
     return {
       ratio: current / 3,
-      label: dict.profile.badgeProgressExam.replace("{current}", String(current)).replace("{total}", "3"),
+      label: plural(locale, 3, dict.profile.badgeProgressExam, { current, total: 3 }),
     };
   }
   return { ratio: 0, label: null };
@@ -217,8 +223,9 @@ function buildBadgeDisplay(
   badges: DisplayBadge[],
   ctx: { longestStreak: number; wordsLearned: number; examAttempts: ExamAttemptSummary[] },
   dict: Dictionary,
+  locale: Locale,
 ) {
-  const withProgress = badges.map((b) => ({ ...b, ...computeBadgeProgress(b.def, ctx, dict) }));
+  const withProgress = badges.map((b) => ({ ...b, ...computeBadgeProgress(b.def, ctx, dict, locale) }));
   const earned = withProgress
     .filter((b) => b.earnedAt !== null)
     .sort((a, b) => (b.earnedAt as Date).getTime() - (a.earnedAt as Date).getTime());
@@ -349,6 +356,27 @@ export default async function ProfilePage({
     headers(),
   ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
+  // "Freezes apply from <date>" — printed only when there is history the
+  // freeze rule was never allowed to touch, i.e. when the epoch is later than
+  // the learner's first day. An account that registered after freezes shipped
+  // gets no such sentence, because for them the plain rule IS the whole truth.
+  //
+  // This is the half that was missing on 01.09.2026 (PROGRESS.md 7.72): the
+  // rule spends a freeze on a single missed day and paints that square icy,
+  // exactly as promised — but only from the epoch onward, and the page never
+  // said so. Three separate gaps before the epoch with both freezes untouched
+  // read as a dead feature.
+  const freezeSinceNote = !freezesCoverWholeHistory(streak.freezesSince, registeredDateKey)
+    ? dict.profile.streakFreezeSinceNote.replace(
+        "{date}",
+        formatDateKey(
+          streak.freezesSince,
+          dict.profile.calendarDatePattern,
+          dict.profile.calendarMonthsInDate,
+        ),
+      )
+    : null;
+
   const requestHost = requestHeaders.get("host") ?? "rusofacilapp.com";
   const requestProto = requestHeaders.get("x-forwarded-proto") ?? (requestHost.startsWith("localhost") ? "http" : "https");
   const referralLink = referral ? `${requestProto}://${requestHost}/${lang}/register?ref=${referral.code}` : null;
@@ -475,6 +503,7 @@ export default async function ProfilePage({
     badges,
     { longestStreak: streak.longestStreak, wordsLearned, examAttempts },
     dict,
+    lang,
   );
 
   // Split around {date} instead of dateFormatter.format()-ing it into the
@@ -502,6 +531,7 @@ export default async function ProfilePage({
         greeting={dict.profile.welcomeGreeting}
         subtextActive={dict.profile.welcomeSubtextActive}
         subtextNew={dict.profile.welcomeSubtextNew}
+        locale={lang}
         streakDaysUnit={dict.profile.streakDaysUnit}
         continueLabel={dict.profile.welcomeContinue}
       />
@@ -597,7 +627,8 @@ export default async function ProfilePage({
                       legendActive: dict.profile.calendarLegendActive,
                       legendFrozen: dict.profile.calendarLegendFrozen,
                       legendMissed: dict.profile.calendarLegendMissed,
-                      legendOutside: dict.profile.calendarLegendOutside,
+                      legendBeforeStart: dict.profile.calendarLegendBeforeStart,
+                      legendFuture: dict.profile.calendarLegendFuture,
                       legendToday: dict.profile.calendarLegendToday,
                       months: dict.profile.calendarMonths,
                       monthsInDate: dict.profile.calendarMonthsInDate,
@@ -623,28 +654,44 @@ export default async function ProfilePage({
                       is the tab a learner actually lands on — the stat tile
                       further down lives on the Progress tab. Shown always,
                       including at zero: "none left" is exactly the number
-                      that changes what tomorrow costs. */}
-                  <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span aria-hidden>❄️</span>
-                      {dict.profile.streakFreezesLeftLabel}: <b className="tabular-nums">{streak.freezesLeft}</b>
-                    </span>
-                  </p>
+                      that changes what tomorrow costs.
+
+                      It is a BOX, not a third grey line, and it carries the
+                      only ❄️ on the page. The month summary directly above it
+                      counts days on this calendar and wears the calendar's own
+                      swatches; this counts a stock that has nothing to do with
+                      the month on screen. Until 01.09.2026 both were small grey
+                      lines with a snowflake each, and the difference between
+                      "saved 0" and "2 left" was not readable at a glance. */}
+                  <div className="mt-3 flex flex-col gap-1 rounded-2xl border border-sky-500/20 bg-sky-400/5 px-4 py-3">
+                    <p className="flex items-center gap-2 text-sm">
+                      <span aria-hidden className="text-base leading-none">
+                        ❄️
+                      </span>
+                      <span className="text-foreground/70">{dict.profile.streakFreezesLeftLabel}:</span>
+                      <b className="text-lg tabular-nums">{streak.freezesLeft}</b>
+                    </p>
+                    {freezeSinceNote && <p className="text-xs text-foreground/60">{freezeSinceNote}</p>}
+                  </div>
                 </div>
               </section>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
-                  <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
+                  <p className="text-sm text-foreground/60">
+                    {plural(lang, wordsLearned, dict.profile.wordsLearnedLabel)}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{totalLessonsCompleted}</p>
-                  <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
+                  <p className="text-sm text-foreground/60">
+                    {plural(lang, totalLessonsCompleted, dict.profile.lessonsCompleted)}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-folk-red/15 bg-folk-red/5 p-4">
                   <p className="text-2xl font-semibold tabular-nums">
-                    {streak.currentStreak} {dict.profile.streakDaysUnit}
+                    {streak.currentStreak} {plural(lang, streak.currentStreak, dict.profile.streakDaysUnit)}
                   </p>
                   <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
                 </div>
@@ -769,11 +816,15 @@ export default async function ProfilePage({
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{referral.referredCount}</p>
-                  <p className="text-sm text-foreground/60">{dict.profile.referralInvitedLabel}</p>
+                  <p className="text-sm text-foreground/60">
+                    {plural(lang, referral.referredCount, dict.profile.referralInvitedLabel)}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold tabular-nums">{referral.rewardsEarnedCount}</p>
-                  <p className="text-sm text-foreground/60">{dict.profile.referralRewardsLabel}</p>
+                  <p className="text-sm text-foreground/60">
+                    {plural(lang, referral.rewardsEarnedCount, dict.profile.referralRewardsLabel)}
+                  </p>
                 </div>
               </div>
             )}
@@ -1114,7 +1165,7 @@ export default async function ProfilePage({
               {dict.profile.badgesHeading}
             </SectionHeading>
             <span className="text-sm tabular-nums text-foreground/60">
-              {earnedBadgeCount} / {badges.length} {dict.profile.badgesUnlockedUnit}
+              {earnedBadgeCount} / {badges.length} {plural(lang, badges.length, dict.profile.badgesUnlockedUnit)}
             </span>
           </div>
           <p className="mt-1 text-sm text-foreground/60">{dict.profile.badgesSubtitle}</p>
@@ -1174,11 +1225,15 @@ export default async function ProfilePage({
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold tabular-nums">{wordsLearned}</p>
-                <p className="text-sm text-foreground/60">{dict.profile.wordsLearnedLabel}</p>
+                <p className="text-sm text-foreground/60">
+                  {plural(lang, wordsLearned, dict.profile.wordsLearnedLabel)}
+                </p>
               </div>
               <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold tabular-nums">{totalLessonsCompleted}</p>
-                <p className="text-sm text-foreground/60">{dict.profile.lessonsCompleted}</p>
+                <p className="text-sm text-foreground/60">
+                  {plural(lang, totalLessonsCompleted, dict.profile.lessonsCompleted)}
+                </p>
               </div>
               <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold uppercase">
@@ -1206,13 +1261,13 @@ export default async function ProfilePage({
                       </svg>
                     </span>
                   )}
-                  {streak.currentStreak} {dict.profile.streakDaysUnit}
+                  {streak.currentStreak} {plural(lang, streak.currentStreak, dict.profile.streakDaysUnit)}
                 </p>
                 <p className="text-sm text-foreground/60">{dict.profile.currentStreakLabel}</p>
               </div>
               <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                 <p className="text-2xl font-semibold tabular-nums">
-                  {streak.longestStreak} {dict.profile.streakDaysUnit}
+                  {streak.longestStreak} {plural(lang, streak.longestStreak, dict.profile.streakDaysUnit)}
                 </p>
                 <p className="text-sm text-foreground/60">{dict.profile.longestStreakLabel}</p>
               </div>
@@ -1258,7 +1313,10 @@ export default async function ProfilePage({
               />
             )}
 
-            <p className="mt-2 text-sm text-foreground/60">{dict.profile.streakFreezeExplainer}</p>
+            <p className="mt-2 text-sm text-foreground/60">
+              {dict.profile.streakFreezeExplainer}
+              {freezeSinceNote ? ` ${freezeSinceNote}` : ""}
+            </p>
 
             {progressState === "early" && (
               <div className="mt-8">
@@ -1310,7 +1368,7 @@ export default async function ProfilePage({
                     <span className="font-medium">{levelDict.title}</span>
                     <span className="text-foreground/60">
                       {levelProgress.percent}% · {levelProgress.completed}/
-                      {levelProgress.total} {dict.profile.lessonsCompleted}
+                      {levelProgress.total} {plural(lang, levelProgress.total, dict.profile.lessonsCompleted)}
                     </span>
                   </div>
                   <ProgressBar

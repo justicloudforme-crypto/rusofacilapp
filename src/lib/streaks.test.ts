@@ -14,6 +14,11 @@ describe("computeStreakStats", () => {
       // the two freeze fields are part of the shape now (PROGRESS.md 7.69).
       freezesLeft: 2,
       frozenDateKeys: [],
+      // Since 7.72: the day freezes started applying. With a null epoch that
+      // is today, which is exactly what "no freeze forgives a past gap"
+      // means — and it is the field /profile needs in order to say so out
+      // loud instead of promising unconditional cover.
+      freezesSince: "2026-08-17",
       // And since 7.71, where the chain starts and what ended the one
       // before it. Both null here, which is the case that matters: an empty
       // account must not hand /profile half a sentence to print.

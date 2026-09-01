@@ -116,7 +116,7 @@ describe("сетка месяца", () => {
     }
   });
 
-  it("четыре вида клетки, и ни один не подменяет другой", () => {
+  it("пять видов клетки, и ни один не подменяет другой", () => {
     const weeks = grid("2026-08", {
       activeDateKeys: ["2026-08-10", "2026-08-12"],
       frozenDateKeys: ["2026-08-11"],
@@ -125,28 +125,35 @@ describe("сетка месяца", () => {
     expect(cellFor(weeks, "2026-08-10")!.state).toBe("active");
     expect(cellFor(weeks, "2026-08-11")!.state).toBe("frozen");
     expect(cellFor(weeks, "2026-08-13")!.state).toBe("missed");
-    // Before registration (07.08) and after today (31.08).
-    expect(cellFor(weeks, "2026-08-06")!.state).toBe("outside");
-    expect(cellFor(weeks, "2026-08-05")!.state).toBe("outside");
+    // Before registration (07.08). Two states, not one: until 01.09.2026
+    // "before you existed here" and "hasn't happened yet" shared the name
+    // "outside", which is why the legend could only call them "вне периода".
+    expect(cellFor(weeks, "2026-08-06")!.state).toBe("beforeStart");
+    expect(cellFor(weeks, "2026-08-05")!.state).toBe("beforeStart");
     // The registration day itself is inside.
     expect(cellFor(weeks, "2026-08-07")!.state).toBe("missed");
     // Today is inside, and marked.
     expect(cellFor(weeks, "2026-08-31")!.isToday).toBe(true);
     expect(weeks.flat().filter((cell) => cell.isToday)).toHaveLength(1);
 
-    // All four kinds actually occur in this fixture — otherwise the four
-    // assertions above could all be passing on one default value.
+    // Every kind actually occurs in this fixture — otherwise the
+    // assertions above could all be passing on one default value. August
+    // 2026 ends on today, so there is no `future` square in this month; the
+    // padding of the first row supplies the fifth.
     expect(new Set(weeks.flat().map((cell) => cell.state))).toEqual(
-      new Set(["active", "frozen", "missed", "outside"]),
+      new Set(["active", "frozen", "missed", "beforeStart", "padding"]),
     );
   });
 
-  it("день будущего месяца — вне периода, а не пропуск", () => {
+  it("день будущего месяца — «ещё впереди», а не пропуск", () => {
     const weeks = grid("2026-08", {});
     // The whole month is navigable, but only up to today.
     expect(cellFor(weeks, "2026-08-30")!.state).toBe("missed");
     const september = grid("2026-09", {});
-    expect(september.flat().filter((c) => c.dateKey !== null).every((c) => c.state === "outside")).toBe(true);
+    expect(september.flat().filter((c) => c.dateKey !== null).every((c) => c.state === "future")).toBe(true);
+    // And it is NOT the same state as a day before registration, which is
+    // the whole reason the legend can name them separately.
+    expect(cellFor(september, "2026-09-01")!.state).not.toBe("beforeStart");
   });
 
   it("занятие побеждает заморозку, если данные противоречат сами себе", () => {
@@ -164,7 +171,7 @@ describe("сетка месяца", () => {
     const weeks = grid("2026-08", {});
     const padding = weeks[0].slice(0, 5);
     expect(padding.every((cell) => cell.dateKey === null && cell.day === null)).toBe(true);
-    expect(padding.every((cell) => cell.state === "outside")).toBe(true);
+    expect(padding.every((cell) => cell.state === "padding")).toBe(true);
   });
 
   it("сетка одинакова в обеих локалях — она не знает про язык", () => {

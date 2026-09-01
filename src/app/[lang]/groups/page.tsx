@@ -7,6 +7,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserGroups } from "@/lib/groups";
 import { routeAlternates } from "@/lib/site";
+import { plural } from "@/lib/plural";
 
 const ERROR_KEYS = {
   empty_name: "groupErrorEmptyName",
@@ -66,7 +67,7 @@ export default async function GroupsPage({
               >
                 <span className="font-medium">{group.name}</span>
                 <span className="text-foreground/60">
-                  {group.memberCount} {dict.groups.membersUnit}
+                  {group.memberCount} {plural(lang, group.memberCount, dict.groups.membersUnit)}
                   {group.isOwner && ` · ${dict.groups.ownerLabel}`}
                 </span>
               </Link>

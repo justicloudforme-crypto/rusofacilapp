@@ -25,6 +25,7 @@ import {
   HeadphonesIcon,
   UsersIcon,
 } from "@/components/profile/ProfileIcons";
+import { plural } from "@/lib/plural";
 
 export default async function Navbar({
   lang,
@@ -198,7 +199,9 @@ export default async function Navbar({
             <span
               className="hidden items-center gap-1 rounded-full px-2 text-sm font-semibold text-folk-red md:flex"
               role="img"
-              aria-label={dict.nav.streakLabel.replace("{days}", String(streak.currentStreak))}
+              aria-label={plural(lang, streak.currentStreak, dict.nav.streakLabel, {
+                days: streak.currentStreak,
+              })}
             >
               <span aria-hidden>🔥</span>
               {streak.currentStreak}

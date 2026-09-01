@@ -14,19 +14,20 @@ import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summ
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export interface MatchAppDict extends CategoryGridDict {
   levelAll: string;
   backToCategories: string;
   instructionLabel: string;
   notEnoughCardsMessage: string;
-  roundCompleteLabel: string; // template, contains literal "{pairs}"
+  roundCompleteLabel: PluralForms; // templates, contain literal "{pairs}"
   playAgainButton: string;
   nextRoundButton: string;
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
-  learnedProgressLabel: string; // template, contains literal "{known}" and "{total}"
+  learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
 }
 
 const ROUND_SIZES = [4, 6, 8];
@@ -144,7 +145,7 @@ export default function MatchApp({
 
       <CelebrationModal
         open={justCompleted}
-        title={dict.roundCompleteLabel.replace("{pairs}", String(round.length))}
+        title={plural(dict.locale, round.length, dict.roundCompleteLabel, { pairs: round.length })}
         ctaLabel={celebrationDict.continueButton}
         exclamations={celebrationDict.exclamations}
         onClose={() => setJustCompleted(false)}
@@ -184,7 +185,7 @@ export default function MatchApp({
           <GameResultPanel
             open={complete}
             onClose={backToCategories}
-            title={dict.roundCompleteLabel.replace("{pairs}", String(round.length))}
+            title={plural(dict.locale, round.length, dict.roundCompleteLabel, { pairs: round.length })}
             avatarId="matryoshka_laughing"
             errors={roundErrors}
             timeSeconds={roundTimeSeconds}
@@ -195,7 +196,10 @@ export default function MatchApp({
             onNextGame={nextRound}
           >
             <p className="mt-1 text-center text-sm text-foreground/60">
-              {dict.learnedProgressLabel.replace("{known}", String(totalProgress.known)).replace("{total}", String(totalProgress.total))}
+              {plural(dict.locale, totalProgress.total, dict.learnedProgressLabel, {
+                known: totalProgress.known,
+                total: totalProgress.total,
+              })}
             </p>
           </GameResultPanel>
 

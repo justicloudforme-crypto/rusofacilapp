@@ -222,6 +222,23 @@ export function resolveStreakWithFreezes(
   };
 }
 
+/** Whether the freeze rule has applied to this learner's WHOLE history.
+ *
+ * False means there is a stretch — everything before the epoch — where a
+ * missed day broke the chain and no freeze was ever spent, because freezes
+ * did not exist for this account yet. That stretch is deliberate (the owner
+ * ruled out rebuilding the past, PROGRESS.md 7.69), and it is exactly what
+ * made the feature look dead on 01.09.2026: three separate gaps, both
+ * freezes untouched, "saved: 0", and a paragraph promising that a freeze
+ * covers a missed day.
+ *
+ * The page asks this to decide whether to name the epoch. An account created
+ * after freezes shipped never sees that sentence — for them the plain rule
+ * is the whole truth, and an extra clause would be noise. */
+export function freezesCoverWholeHistory(freezesSince: string, firstDateKey: string): boolean {
+  return freezesSince <= firstDateKey;
+}
+
 /** What to write back to the User row, or null when nothing changed.
  *
  * The whole persistence story is this function: a write happens on the

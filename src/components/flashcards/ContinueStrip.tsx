@@ -6,11 +6,14 @@ import { flashcardCategoryIcons } from "@/lib/flashcards/category-icons";
 import { flashcardCategoryIconColors } from "@/lib/flashcards/category-icon-colors";
 import { hapticTap } from "@/lib/haptics";
 import ProgressBar from "@/components/ui/ProgressBar";
+import type { Locale } from "@/i18n/config";
+import type { PluralForms } from "@/lib/plural";
 
 export interface ContinueStripDict {
+  locale: Locale;
   continueTitle: string;
   categoryLabels: Record<FlashcardCategory, string>;
-  cardCountLabel: string; // template, contains literal "{count}"
+  cardCountLabel: PluralForms; // templates, contain literal "{count}"
 }
 
 /** Up to 3 most-recently-studied categories, from POST /api/flashcards/

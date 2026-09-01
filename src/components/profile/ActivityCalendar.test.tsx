@@ -20,7 +20,8 @@ const ES = {
   legendActive: "día de estudio",
   legendFrozen: "día salvado con una congelación",
   legendMissed: "día sin estudiar",
-  legendOutside: "fuera de tu periodo",
+  legendBeforeStart: "antes de registrarte",
+  legendFuture: "aún por llegar",
   legendToday: "hoy",
   months: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
   monthsInDate: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
@@ -28,7 +29,7 @@ const ES = {
   weekdays: ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"],
   weekdaysFull: ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
   summaryStudied: "Días de estudio este mes",
-  summarySaved: "Salvados con una congelación",
+  summarySaved: "Días salvados este mes",
   dayOpenLabel: "Ver qué hiciste este día",
   dayCloseLabel: "Cerrar el detalle del día",
   dayDetailHeading: "Qué hiciste el {date}",
@@ -48,7 +49,8 @@ const RU = {
   legendActive: "день занятия",
   legendFrozen: "день спасён заморозкой",
   legendMissed: "пропуск",
-  legendOutside: "вне периода",
+  legendBeforeStart: "до регистрации",
+  legendFuture: "ещё впереди",
   legendToday: "сегодня",
   months: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
   monthsInDate: ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
@@ -56,7 +58,7 @@ const RU = {
   weekdays: ["пн", "вт", "ср", "чт", "пт", "сб", "вс"],
   weekdaysFull: ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"],
   summaryStudied: "Дней занятий в этом месяце",
-  summarySaved: "Спасено заморозкой",
+  summarySaved: "Спасено дней в этом месяце",
   dayOpenLabel: "Посмотреть, чем занимался в этот день",
   dayCloseLabel: "Закрыть подробности дня",
   dayDetailHeading: "Чем ты занимался {date}",
@@ -118,14 +120,20 @@ describe("календарь занятий — что видит ученик",
     expect(document.querySelectorAll("abbr")[6].textContent).toBe("вс");
   });
 
-  it("четыре вида клетки различимы без наведения — по data-state и по подписи", () => {
+  it("виды клетки различимы без наведения — по data-state и по подписи", () => {
     renderCalendar(ES);
     expect(cell("2026-08-10")!.getAttribute("data-state")).toBe("active");
     expect(cell("2026-08-11")!.getAttribute("data-state")).toBe("frozen");
     expect(cell("2026-08-13")!.getAttribute("data-state")).toBe("missed");
     expect(cell("2026-08-31")!.getAttribute("data-state")).toBe("missed");
-    // Tomorrow is outside the period — the learner has not missed it yet.
-    expect(cell("2026-09-01")).toBeNull(); // not in this month's grid at all
+    // Tomorrow is not in this month's grid at all. A day that HAS not
+    // happened yet is its own state, and it is not the state of a day
+    // before the learner registered — the two shared one word until
+    // 01.09.2026, and the legend could only describe them as "вне периода".
+    expect(cell("2026-09-01")).toBeNull();
+    const { container: july } = renderCalendar(ES, { todayKey: "2026-08-13" });
+    expect(july.querySelector('[data-date="2026-08-20"]')!.getAttribute("data-state")).toBe("future");
+    expect(july.querySelector('[data-date="2026-06-10"]')).toBeNull();
     // Today carries its own label on top of its state.
     expect(cell("2026-08-31")!.getAttribute("aria-label")).toContain("hoy");
     expect(cell("2026-08-10")!.getAttribute("aria-label")).toContain("día de estudio");
@@ -139,7 +147,14 @@ describe("календарь занятий — что видит ученик",
     // page) rather than one particular list. `title` would not satisfy it,
     // and on the Capacitor build there is no hover at all (CLAUDE.md).
     const text = container.textContent ?? "";
-    for (const label of [ES.summaryStudied, ES.summarySaved, ES.legendMissed, ES.legendOutside, ES.legendToday]) {
+    for (const label of [
+      ES.summaryStudied,
+      ES.summarySaved,
+      ES.legendMissed,
+      ES.legendBeforeStart,
+      ES.legendFuture,
+      ES.legendToday,
+    ]) {
       expect(text).toContain(label);
     }
     // And the two that moved really did move, rather than vanishing: their
@@ -207,7 +222,7 @@ describe("клетка: число не двигается и не меняет 
     expect(plain.querySelector("span[class*='absolute']")).toBeNull();
   });
 
-  it("дни вне периода — почти невидимая клетка, без пунктирной рамки", () => {
+  it("дни до регистрации — почти невидимая клетка, без пунктирной рамки", () => {
     renderCalendar(ES);
     // June is the registration month (15.06), so 1–14 June are outside.
     // Check on the July grid instead: nothing before 15.06 is reachable
@@ -216,7 +231,7 @@ describe("клетка: число не двигается и не меняет 
     expect(august.className).not.toContain("border-dashed"); // control: neither is a plain day
 
     const { container } = renderCalendar(ES, { firstDateKey: "2026-08-10", todayKey: "2026-08-20" });
-    const outside = container.querySelectorAll('[data-state="outside"]');
+    const outside = container.querySelectorAll('[data-state="beforeStart"]');
     expect(outside.length).toBeGreaterThan(0);
     for (const el of outside) {
       expect(el.className).not.toContain("border-dashed");
@@ -225,7 +240,7 @@ describe("клетка: число не двигается и не меняет 
     // The legend swatch matches the square, so the line explains what is
     // actually drawn.
     const legendSwatch = [...container.querySelectorAll("li")].find((li) =>
-      li.textContent?.includes(ES.legendOutside),
+      li.textContent?.includes(ES.legendBeforeStart),
     );
     expect(legendSwatch!.querySelector("span")!.className).not.toContain("border-dashed");
   });

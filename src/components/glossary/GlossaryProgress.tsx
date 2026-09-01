@@ -8,6 +8,8 @@ import {
   loadGlossaryTerms,
 } from "@/lib/glossary-client";
 import ProgressBar from "@/components/ui/ProgressBar";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 /**
  * Two-tier progress bar for the /glossary page — lightweight gamification
@@ -19,11 +21,14 @@ import ProgressBar from "@/components/ui/ProgressBar";
  * custom event, since the native `storage` event only fires in other tabs.
  */
 export default function GlossaryProgress({
+  locale,
   seenLabel,
   masteredLabel,
 }: {
-  seenLabel: string;
-  masteredLabel: string;
+  locale: Locale;
+  /** Both agree with {total} — the number they stand next to. */
+  seenLabel: PluralForms;
+  masteredLabel: PluralForms;
 }) {
   const [total, setTotal] = useState<number | null>(null);
   const [seen, setSeen] = useState(0);
@@ -56,11 +61,11 @@ export default function GlossaryProgress({
       <div className="mt-1.5 flex items-center gap-3 text-xs font-medium text-foreground/60">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-          {masteredLabel.replace("{count}", String(mastered)).replace("{total}", String(total))}
+          {plural(locale, total, masteredLabel, { count: mastered, total })}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-primary/50 dark:bg-primary-400/50" aria-hidden />
-          {seenLabel.replace("{count}", String(seen)).replace("{total}", String(total))}
+          {plural(locale, total, seenLabel, { count: seen, total })}
         </span>
       </div>
     </div>

@@ -101,7 +101,7 @@ export default async function SopaDeLetrasRusoPage({
           lang="es"
           puzzle={toPublicPuzzle(row)}
           dict={dict.wordGames}
-          resultDict={dict.gameResult}
+          resultDict={{ ...dict.gameResult, locale: lang }}
           signedIn={Boolean(user)}
         />
       </div>

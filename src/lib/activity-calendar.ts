@@ -17,15 +17,23 @@ import { addDateKeyDays } from "./timezone";
 
 /** What a single square of the grid is.
  *
- * Four kinds, and they are the four the learner is told about in the legend:
- *   active  — a day they studied
- *   frozen  — a day a streak freeze covered
- *   missed  — a day inside their period with nothing on it
- *   outside — a day that is not theirs to have studied: before they
- *             registered, still in the future, or a square belonging to a
- *             neighbouring month (those carry `dateKey: null`).
- */
-export type CalendarCellState = "active" | "frozen" | "missed" | "outside";
+ * Five kinds a learner can see, plus one they cannot:
+ *   active      — a day they studied
+ *   frozen      — a day a streak freeze covered
+ *   missed      — a day inside their period with nothing on it
+ *   beforeStart — a day before they registered: not theirs to have missed
+ *   future      — a day that has not happened yet
+ *   padding     — a square belonging to a neighbouring month, kept only so
+ *                 every row is seven wide. Carries `dateKey: null` and is
+ *                 rendered `aria-hidden`, so it never needs a legend.
+ *
+ * `beforeStart` and `future` were ONE state ("outside") until 01.09.2026,
+ * and that is why the legend could only call it "fuera de tu periodo" /
+ * "вне периода" — a phrase that had to cover two opposite things at once.
+ * Splitting them is what lets the legend say "antes de registrarte" /
+ * "до регистрации" without lying about the days after today, which wear the
+ * same faint wash. */
+export type CalendarCellState = "active" | "frozen" | "missed" | "beforeStart" | "future" | "padding";
 
 export interface CalendarCell {
   /** null only for the padding squares of a neighbouring month. */
@@ -107,7 +115,7 @@ export function monthGrid(monthKey: string, input: MonthGridInput): CalendarCell
 
   const cells: CalendarCell[] = [];
   for (let i = 0; i < leadingBlanks; i++) {
-    cells.push({ dateKey: null, day: null, state: "outside", isToday: false });
+    cells.push({ dateKey: null, day: null, state: "padding", isToday: false });
   }
 
   for (let day = 1; day <= total; day++) {
@@ -115,18 +123,24 @@ export function monthGrid(monthKey: string, input: MonthGridInput): CalendarCell
     // Order matters and is checked in the tests: a day can only be frozen
     // if nothing was studied on it, so `active` is asked first and a data
     // change can never paint a studied day as frozen.
+    // Order matters and the tests pin it. `active` is asked first, so a data
+    // change can never paint a studied day as frozen. The two "not theirs"
+    // cases are asked next and kept apart, because the learner is told two
+    // different things about them.
     const state: CalendarCellState = active.has(dateKey)
       ? "active"
-      : dateKey < input.firstDateKey || dateKey > input.todayKey
-        ? "outside"
-        : frozen.has(dateKey)
-          ? "frozen"
-          : "missed";
+      : dateKey < input.firstDateKey
+        ? "beforeStart"
+        : dateKey > input.todayKey
+          ? "future"
+          : frozen.has(dateKey)
+            ? "frozen"
+            : "missed";
     cells.push({ dateKey, day, state, isToday: dateKey === input.todayKey });
   }
 
   while (cells.length % 7 !== 0) {
-    cells.push({ dateKey: null, day: null, state: "outside", isToday: false });
+    cells.push({ dateKey: null, day: null, state: "padding", isToday: false });
   }
 
   const weeks: CalendarCell[][] = [];

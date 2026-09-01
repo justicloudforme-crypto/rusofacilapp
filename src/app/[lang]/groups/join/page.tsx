@@ -6,6 +6,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { getGroupPreviewByInviteCode } from "@/lib/groups";
 import { routeAlternates } from "@/lib/site";
+import { plural } from "@/lib/plural";
 
 export async function generateMetadata({
   params,
@@ -37,7 +38,7 @@ export default async function JoinGroupPage({
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">{dict.groups.joinPreviewTitle}</h1>
       <p className="mt-2 text-foreground/70">
-        {preview.name} · {preview.memberCount} {dict.groups.membersUnit}
+        {preview.name} · {preview.memberCount} {plural(lang, preview.memberCount, dict.groups.membersUnit)}
       </p>
       <form action="/api/groups/join" method="POST" className="mt-6">
         <input type="hidden" name="lang" value={lang} />

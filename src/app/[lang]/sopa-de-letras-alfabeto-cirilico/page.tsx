@@ -102,7 +102,7 @@ export default async function AlfabetoCirilicoPage({
           lang="es"
           puzzle={ALPHABET_SHOWCASE_PUZZLE}
           dict={dict.wordGames}
-          resultDict={dict.gameResult}
+          resultDict={{ ...dict.gameResult, locale: lang }}
           signedIn={Boolean(user)}
         />
       </div>

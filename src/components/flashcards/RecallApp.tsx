@@ -17,6 +17,7 @@ import GameResultPanel, { type GameResultPanelDict } from "@/components/games/Ga
 import { playStreakFanfare } from "@/lib/sound";
 import { hapticSuccess } from "@/lib/haptics";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   levelAll: string;
@@ -24,13 +25,13 @@ export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   directionRuToEsLabel: string;
   backToCategories: string;
   noCategoryCardsMessage: string;
-  roundCompleteLabel: string; // template, contains literal "{correct}" and "{total}"
+  roundCompleteLabel: PluralForms; // templates, contain literal "{correct}" and "{total}". Inflects with {total}.
   playAgainButton: string;
   streakToastLabel: string; // template, contains literal "{count}"
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
-  learnedProgressLabel: string; // template, contains literal "{known}" and "{total}"
+  learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
 }
 
 const ROUND_SIZE = 10;
@@ -177,7 +178,7 @@ export default function RecallApp({
       )}
       <CelebrationModal
         open={justComplete}
-        title={dict.roundCompleteLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
+        title={plural(dict.locale, score.total, dict.roundCompleteLabel, { correct: score.correct, total: score.total })}
         ctaLabel={celebrationDict.continueButton}
         exclamations={celebrationDict.exclamations}
         onClose={() => setJustComplete(false)}
@@ -245,7 +246,7 @@ export default function RecallApp({
           <GameResultPanel
             open={complete}
             onClose={backToCategories}
-            title={dict.roundCompleteLabel.replace("{correct}", String(score.correct)).replace("{total}", String(score.total))}
+            title={plural(dict.locale, score.total, dict.roundCompleteLabel, { correct: score.correct, total: score.total })}
             avatarId={score.correct === score.total ? "matryoshka_proud" : "matryoshka_happy"}
             score={score}
             timeSeconds={roundTimeSeconds}
@@ -256,7 +257,10 @@ export default function RecallApp({
             onNextGame={backToCategories}
           >
             <p className="mt-1 text-center text-sm text-foreground/60">
-              {dict.learnedProgressLabel.replace("{known}", String(totalProgress.known)).replace("{total}", String(totalProgress.total))}
+              {plural(dict.locale, totalProgress.total, dict.learnedProgressLabel, {
+                known: totalProgress.known,
+                total: totalProgress.total,
+              })}
             </p>
           </GameResultPanel>
 

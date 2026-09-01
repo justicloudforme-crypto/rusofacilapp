@@ -36,7 +36,10 @@ export interface ActivityCalendarDict {
   legendActive: string;
   legendFrozen: string;
   legendMissed: string;
-  legendOutside: string;
+  /** Two separate words for what used to be one faint square. See
+   * CalendarCellState in src/lib/activity-calendar.ts. */
+  legendBeforeStart: string;
+  legendFuture: string;
   legendToday: string;
   /** January first, twelve of them, nominative — the header's form. */
   months: string[];
@@ -191,7 +194,13 @@ export default function ActivityCalendar({
           line can never disagree with the squares above it. Written as
           label-then-number, the same shape as the freeze balance below the
           calendar — which also means neither locale has to inflect a noun
-          against a count it cannot know in advance. */}
+          against a count it cannot know in advance.
+          NO SNOWFLAKE HERE, deliberately. Both items wear the swatch of the
+          square they count, and the ❄️ is reserved for the one thing that is
+          not a day on this grid: the balance below. Until 01.09.2026 a
+          snowflake stood next to "Спасено заморозкой" here and next to
+          "Осталось заморозок" two lines down, in the same small grey type,
+          and the two read as one repeated fact. */}
       <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
         <span className="inline-flex items-center gap-1.5">
           <span aria-hidden className="text-[13px] leading-none">
@@ -222,10 +231,18 @@ export default function ActivityCalendar({
         <LegendItem label={dict.legendMissed}>
           <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/10 dark:bg-foreground/15" />
         </LegendItem>
-        <LegendItem label={dict.legendOutside}>
+        {/* The two faint squares. They look alike on purpose — neither is
+            a day the learner could have studied — but they are named apart,
+            because "fuera de tu periodo" had to stand for both "before you
+            existed here" and "hasn't happened yet", and it told the learner
+            neither. */}
+        <LegendItem label={dict.legendBeforeStart}>
           {/* Matches the square itself: no border, just the faintest wash.
               A dashed outline here put a frame on a frame across half of
               August for an account that registered mid-month. */}
+          <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/[0.04] dark:bg-foreground/[0.06]" />
+        </LegendItem>
+        <LegendItem label={dict.legendFuture}>
           <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/[0.04] dark:bg-foreground/[0.06]" />
         </LegendItem>
         <LegendItem label={dict.legendToday}>
@@ -261,7 +278,7 @@ function Day({
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  if (cell.dateKey === null) {
+  if (cell.state === "padding" || cell.dateKey === null) {
     // A square belonging to a neighbouring month. Kept in the flow so the
     // grid stays seven wide, and empty so it never reads as a missed day.
     return <span aria-hidden className="aspect-square" />;
@@ -272,9 +289,11 @@ function Day({
       ? dict.legendActive
       : cell.state === "frozen"
         ? dict.legendFrozen
-        : cell.state === "outside"
-          ? dict.legendOutside
-          : dict.legendMissed;
+        : cell.state === "beforeStart"
+          ? dict.legendBeforeStart
+          : cell.state === "future"
+            ? dict.legendFuture
+            : dict.legendMissed;
 
   const tone =
     cell.state === "active"
@@ -285,7 +304,7 @@ function Day({
         "bg-folk-red/10 text-foreground"
       : cell.state === "frozen"
         ? "border-2 border-dashed border-sky-500/70 bg-sky-400/25 text-foreground dark:border-sky-300/70 dark:bg-sky-300/25"
-        : cell.state === "outside"
+        : cell.state === "beforeStart" || cell.state === "future"
           ? // Barely there. It was a dashed outline until 31.08.2026, and on
             // an account that registered mid-month that drew a frame around
             // every day of the first half — a frame on a frame, and the

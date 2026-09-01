@@ -12,6 +12,8 @@ import VideoPlayer from "./VideoPlayer";
 import SlidesTab from "./SlidesTab";
 import LessonGlossaryTerms from "@/components/glossary/LessonGlossaryTerms";
 import TabBar from "@/components/ui/TabBar";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 type Tab = "grammar" | "vocabulary" | "alphabet" | "exercises" | "slides";
 
@@ -25,19 +27,23 @@ type Tab = "grammar" | "vocabulary" | "alphabet" | "exercises" | "slides";
  * paywallJsonLd), shared with the same class on the story/media lock
  * cards, not just a styling class. */
 function LockedModuleCard({
+  locale,
   label,
   count,
   cta,
   pricingHref,
 }: {
-  label: string;
+  locale: Locale;
+  /** "Este módulo incluye {count} palabra(s)" — the noun agrees with the
+   * count, so the dictionary carries all three forms. */
+  label: PluralForms;
   count: number;
   cta: string;
   pricingHref: string;
 }) {
   return (
     <div className="paywall-lock rounded-2xl border border-primary/30 bg-primary/[0.04] p-6 dark:border-primary-400/30 dark:bg-primary-400/[0.06]">
-      <p className="text-sm leading-6 text-foreground/80">{label.replace("{count}", String(count))}</p>
+      <p className="text-sm leading-6 text-foreground/80">{plural(locale, count, label, { count })}</p>
       <Link
         href={pricingHref}
         className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
@@ -64,7 +70,7 @@ export default function LessonView({
   prevHref,
   nextHref,
 }: {
-  lang: string;
+  lang: Locale;
   level: string;
   lessonSlug: string;
   /** Which browser-storage bucket the practice recordings on this page
@@ -219,6 +225,7 @@ export default function LessonView({
               <>
                 <div className={tab === "slides" ? undefined : "hidden"}>
                   <LockedModuleCard
+                    locale={lang}
                     label={dict.locked.slidesLabel}
                     count={lockedCounts?.slides ?? 0}
                     cta={dict.locked.cta}
@@ -235,6 +242,7 @@ export default function LessonView({
                     lang={lang}
                   />
                   <LockedModuleCard
+                    locale={lang}
                     label={dict.locked.vocabularyLabel}
                     count={lockedCounts?.vocabulary ?? 0}
                     cta={dict.locked.cta}
@@ -243,6 +251,7 @@ export default function LessonView({
                 </div>
                 <div className={tab === "exercises" ? undefined : "hidden"}>
                   <LockedModuleCard
+                    locale={lang}
                     label={dict.locked.exercisesLabel}
                     count={lockedCounts?.exercises ?? 0}
                     cta={dict.locked.cta}
@@ -320,6 +329,7 @@ export default function LessonView({
                   pronunciationDict={dict.pronunciation}
                   celebrationDict={celebrationDict}
                   level={level}
+                  locale={lang}
                   lessonSlug={lessonSlug}
                   ownerScope={ownerScope}
                   storageKey={`lesson-passed:${level}:${lessonSlug}`}

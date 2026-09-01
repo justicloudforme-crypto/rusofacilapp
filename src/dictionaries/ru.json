@@ -29,7 +29,11 @@
     "searchPlaceholder": "Поиск по разделам сайта…",
     "searchEmpty": "Ничего не найдено",
     "searchShortcutHint": "Поиск по разделам (⌘K)",
-    "streakLabel": "Серия: {days} дн.",
+    "streakLabel": {
+      "one": "Серия: {days} день",
+      "few": "Серия: {days} дня",
+      "many": "Серия: {days} дней"
+    },
     "bottomNavLabel": "Основная навигация"
   },
   "intro": {
@@ -131,10 +135,18 @@
   "courses": {
     "pageTitle": "Курсы русского языка",
     "pageSubtitle": "Четыре уровня — от полного новичка до свободного разговора на сложные темы.",
-    "weeks": "недель",
+    "weeks": {
+      "one": "неделя",
+      "few": "недели",
+      "many": "недель"
+    },
     "hoursPerWeek": "ч / нед.",
     "levelMasteredBadge": "Грамматический словарь усвоен",
-    "levelProgressLabel": "{count}/{total} усвоено",
+    "levelProgressLabel": {
+      "one": "{count}/{total} усвоено",
+      "few": "{count}/{total} усвоено",
+      "many": "{count}/{total} усвоено"
+    },
     "levelMasteredCelebration": "Поздравляем! Ты усвоил(а) весь грамматический словарь этого уровня.",
     "lessonStatusPassed": "Урок пройден",
     "lessonStatusAttempted": "Есть попытка, ещё не пройден",
@@ -498,7 +510,8 @@
     "calendarLegendActive": "день занятия",
     "calendarLegendFrozen": "день спасён заморозкой",
     "calendarLegendMissed": "пропуск",
-    "calendarLegendOutside": "вне периода",
+    "calendarLegendBeforeStart": "до регистрации",
+    "calendarLegendFuture": "ещё впереди",
     "calendarLegendToday": "сегодня",
     "calendarMonths": ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
     "calendarWeekdays": ["пн", "вт", "ср", "чт", "пт", "сб", "вс"],
@@ -506,7 +519,7 @@
     "calendarMonthsInDate": ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
     "calendarDatePattern": "{day} {month}",
     "calendarSummaryStudied": "Дней занятий в этом месяце",
-    "calendarSummarySaved": "Спасено заморозкой",
+    "calendarSummarySaved": "Спасено дней в этом месяце",
     "calendarDayOpenLabel": "Посмотреть, чем занимался в этот день",
     "calendarDayCloseLabel": "Закрыть подробности дня",
     "calendarDayDetailHeading": "Чем ты занимался {date}",
@@ -528,12 +541,28 @@
     "profileUpsellToPremium": "Открыть уровень C1 навсегда",
     "dangerZoneHeading": "Опасная зона",
     "dangerZoneToggle": "Показать",
-    "badgeProgressStreak": "{current}/{total} дней",
-    "badgeProgressVocab": "{current}/{total} слов",
-    "badgeProgressExam": "{current}/{total} экзаменов",
+    "badgeProgressStreak": {
+      "one": "{current}/{total} день",
+      "few": "{current}/{total} дня",
+      "many": "{current}/{total} дней"
+    },
+    "badgeProgressVocab": {
+      "one": "{current}/{total} слово",
+      "few": "{current}/{total} слова",
+      "many": "{current}/{total} слов"
+    },
+    "badgeProgressExam": {
+      "one": "{current}/{total} экзамен",
+      "few": "{current}/{total} экзамена",
+      "many": "{current}/{total} экзаменов"
+    },
     "badgesHeading": "Твои значки",
     "badgesSubtitle": "Открываются по мере прогресса: серии занятий, экзамены, владение падежами и словарный запас.",
-    "badgesUnlockedUnit": "открыто",
+    "badgesUnlockedUnit": {
+      "one": "открыто",
+      "few": "открыто",
+      "many": "открыто"
+    },
     "badgesLockedLabel": "Заблокировано",
     "badgesEarnedOnLabel": "Получено",
     "weakTopicHeading": "Фокус недели",
@@ -545,8 +574,16 @@
     "referralCopyButton": "Скопировать ссылку",
     "referralCopiedNotice": "Скопировано!",
     "referralUnavailable": "Не удалось создать ссылку прямо сейчас. Попробуйте позже.",
-    "referralInvitedLabel": "приглашено человек",
-    "referralRewardsLabel": "бесплатных месяцев получено",
+    "referralInvitedLabel": {
+      "one": "человек приглашён",
+      "few": "человека приглашено",
+      "many": "человек приглашено"
+    },
+    "referralRewardsLabel": {
+      "one": "бесплатный месяц получен",
+      "few": "бесплатных месяца получено",
+      "many": "бесплатных месяцев получено"
+    },
     "publicProfileHeading": "Публичный профиль",
     "publicProfileDescription": "Показывай свою серию занятий и значки по публичной ссылке, которой можно поделиться.",
     "publicProfileToggleLabel": "Сделать мой профиль публичным",
@@ -575,18 +612,27 @@
     "savedNotice": "Изменения сохранены.",
     "emailLabel": "Email",
     "memberSinceLabel": "На платформе с",
-    "wordsLearnedLabel": "слов изучено",
+    "wordsLearnedLabel": {
+      "one": "слово изучено",
+      "few": "слова изучено",
+      "many": "слов изучено"
+    },
     "currentLevelLabel": "Текущий уровень",
     "noLevelStarted": "нет сданных уроков",
     "currentStreakLabel": "текущая серия",
     "longestStreakLabel": "лучшая серия",
-    "streakDaysUnit": "дней",
+    "streakDaysUnit": {
+      "one": "день",
+      "few": "дня",
+      "many": "дней"
+    },
     "streakActiveTodayNote": "Сегодня вы уже занимались! Возвращайтесь завтра, чтобы продолжить серию.",
     "streakAtRiskNote": "Позанимайтесь сегодня, чтобы не потерять серию.",
     "streakNoneNote": "Пройдите урок, повторите карточки или прочитайте историю, чтобы начать серию.",
-    "streakFreezesLeftLabel": "Осталось заморозок",
+    "streakFreezesLeftLabel": "Заморозок в запасе",
     "streakFrozenDayNote": "день спасён заморозкой",
     "streakFreezeExplainer": "Заморозка закрывает один пропущенный день, и серия продолжается. В начале их две, ещё одна начисляется за каждые 14 дней подряд, больше трёх не бывает. Два пропуска подряд обрывают серию, даже если заморозки остались.",
+    "streakFreezeSinceNote": "Заморозки действуют с {date}: пропуски до этой даты серию не спасают.",
     "welcomeGreeting": "С новым днём изучения русского!",
     "welcomeSubtextActive": "С каждым днём практики русский язык становится тебе ближе и понятнее.",
     "welcomeSubtextNew": "Сегодня отличный день, чтобы сделать русский язык ближе.",
@@ -652,7 +698,11 @@
     "subscribeButton": "Оформить подписку",
     "staffAccessNotice": "Полный пожизненный доступ ко всем функциям как владельцу/сотруднику платформы — оформлять подписку не нужно.",
     "progressHeading": "Ваш прогресс",
-    "lessonsCompleted": "уроков сдано",
+    "lessonsCompleted": {
+      "one": "урок сдан",
+      "few": "урока сдано",
+      "many": "уроков сдано"
+    },
     "coursesHeading": "Доступные курсы",
     "lockedNotice": "Для доступа к урокам нужна активная подписка.",
     "openButton": "Открыть уровень",
@@ -686,15 +736,27 @@
     "voiceRecordingsHeading": "Ваши голосовые записи",
     "voiceRecordingsDescription": "Записи из упражнений на произношение не отправляются ни на какой сервер: они остаются в том браузере, где вы их сделали.",
     "voiceRecordingsDeviceNote": "Поэтому число относится только к этому устройству. Если вы записывали на телефоне, здесь их не будет.",
-    "voiceRecordingsUsage": "{count} из {max} записей · {size}",
+    "voiceRecordingsUsage": {
+      "one": "{count} из {max} записи · {size}",
+      "few": "{count} из {max} записей · {size}",
+      "many": "{count} из {max} записей · {size}"
+    },
     "voiceRecordingsEmpty": "На этом устройстве нет сохранённых записей.",
     "voiceRecordingsDelete": "Удалить мои записи",
-    "voiceRecordingsDeleted": "С этого устройства удалено записей: {count}.",
+    "voiceRecordingsDeleted": {
+      "one": "С этого устройства удалена {count} запись.",
+      "few": "С этого устройства удалено {count} записи.",
+      "many": "С этого устройства удалено {count} записей."
+    },
     "voiceRecordingsUnavailable": "Этот браузер не сохраняет записи, поэтому удалять здесь нечего."
   },
   "publicProfile": {
     "anonymousName": "Студент",
-    "badgeCountLabel": "значков",
+    "badgeCountLabel": {
+      "one": "значок",
+      "few": "значка",
+      "many": "значков"
+    },
     "badgesHeading": "Значки",
     "noBadgesYet": "Пока нет значков для показа."
   },
@@ -703,7 +765,11 @@
     "pageSubtitle": "Учись вместе с другими — сравнивай серию занятий и уровень со своей группой.",
     "myGroupsHeading": "Мои группы",
     "noGroupsYet": "Вы пока не состоите ни в одной группе.",
-    "membersUnit": "участников",
+    "membersUnit": {
+      "one": "участник",
+      "few": "участника",
+      "many": "участников"
+    },
     "ownerLabel": "Администратор",
     "createHeading": "Создать группу",
     "createDescription": "Создайте группу и поделитесь кодом приглашения с одногруппниками.",
@@ -738,7 +804,11 @@
     "byAuthor": "Автор:",
     "readButton": "Читать",
     "emptyState": "Пока нет доступных историй.",
-    "loadMoreButton": "Показать ещё (осталось {count})",
+    "loadMoreButton": {
+      "one": "Показать ещё (осталось {count})",
+      "few": "Показать ещё (осталось {count})",
+      "many": "Показать ещё (осталось {count})"
+    },
     "backToList": "Назад в библиотеку",
     "translationHint": "Нажмите на любое слово, чтобы увидеть перевод. Нажмите на строку, чтобы перемотать аудио на неё.",
     "translationLoading": "Перевод…",
@@ -794,7 +864,11 @@
     "categoryGrammar": "Грамматика",
     "openButton": "Открыть",
     "emptyState": "Пока нет материалов по этому фильтру.",
-    "loadMoreButton": "Показать ещё (осталось {count})",
+    "loadMoreButton": {
+      "one": "Показать ещё (осталось {count})",
+      "few": "Показать ещё (осталось {count})",
+      "many": "Показать ещё (осталось {count})"
+    },
     "backToList": "Вернуться в библиотеку",
     "videoUnavailable": "Видео пока не добавлено.",
     "videoBroken": "Это видео больше недоступно на YouTube. Мы уже получили сигнал об этом — попробуйте другой материал.",
@@ -856,13 +930,21 @@
     "synonymsLabel": "Синонимы",
     "antonymsLabel": "Антонимы",
     "searchPlaceholder": "Найти слово...",
-    "cardCountLabel": "{count} слов",
+    "cardCountLabel": {
+      "one": "{count} слово",
+      "few": "{count} слова",
+      "many": "{count} слов"
+    },
     "backToCategories": "← Категории",
     "nextLevelBadgeLabel": "Этот уровень уже освоен! Попробуй {level}",
     "freeTrialLimitMessage": "Вы изучили бесплатный пробный набор слов. Оформите подписку, чтобы открыть весь словарь.",
     "freeTrialLimitCta": "Оформить подписку",
     "continueTitle": "Продолжить",
-    "learnedProgressLabel": "Ты выучил {known} слов из {total}",
+    "learnedProgressLabel": {
+      "one": "Ты выучил {known} из {total} слова",
+      "few": "Ты выучил {known} из {total} слов",
+      "many": "Ты выучил {known} из {total} слов"
+    },
     "modeVocabulary": "Словарь по категориям",
     "modeRecall": "Написать слово",
     "modeFillBlank": "Пропущенное слово",
@@ -872,7 +954,11 @@
       "levelAll": "Все",
       "backToCategories": "← Категории",
       "noCategoryCardsMessage": "Нет фраз для этого фильтра.",
-      "roundCompleteLabel": "Раунд завершён! {correct} из {total} правильно",
+      "roundCompleteLabel": {
+        "one": "Раунд завершён! {correct} из {total} правильно",
+        "few": "Раунд завершён! {correct} из {total} правильно",
+        "many": "Раунд завершён! {correct} из {total} правильно"
+      },
       "playAgainButton": "Ещё раунд",
       "streakToastLabel": "{count} подряд!",
       "instructionLabel": "Впиши пропущенное слово",
@@ -892,7 +978,11 @@
       "backToCategories": "← Категории",
       "instructionLabel": "Нажми на русское слово, потом на его перевод",
       "notEnoughCardsMessage": "В этой категории недостаточно слов для этого фильтра.",
-      "roundCompleteLabel": "Раунд завершён! {pairs} пар",
+      "roundCompleteLabel": {
+        "one": "Раунд завершён! {pairs} пара",
+        "few": "Раунд завершён! {pairs} пары",
+        "many": "Раунд завершён! {pairs} пар"
+      },
       "playAgainButton": "Играть заново",
       "nextRoundButton": "Следующий раунд"
     },
@@ -902,7 +992,11 @@
       "directionRuToEsLabel": "RU → ES",
       "backToCategories": "← Категории",
       "noCategoryCardsMessage": "Нет карточек для этого фильтра.",
-      "roundCompleteLabel": "Раунд завершён! {correct} из {total} правильно",
+      "roundCompleteLabel": {
+        "one": "Раунд завершён! {correct} из {total} правильно",
+        "few": "Раунд завершён! {correct} из {total} правильно",
+        "many": "Раунд завершён! {correct} из {total} правильно"
+      },
       "playAgainButton": "Ещё раунд",
       "streakToastLabel": "{count} подряд!",
       "promptEsToRu": "Напиши слово по-русски",
@@ -973,7 +1067,11 @@
   },
   "gameResult": {
     "closeLabel": "Закрыть",
-    "resultScoreLabel": "{correct} из {total} верно",
+    "resultScoreLabel": {
+      "one": "{correct} из {total} верно",
+      "few": "{correct} из {total} верно",
+      "many": "{correct} из {total} верно"
+    },
     "resultTimeLabel": "Время: {time}",
     "resultErrorsLabel": "Ошибок: {count}"
   },
@@ -1011,14 +1109,30 @@
       "slides": "Презентация"
     },
     "locked": {
-      "vocabularyLabel": "В этом модуле — {count} слов с озвучкой.",
-      "exercisesLabel": "В этом модуле — {count} заданий с автоматической проверкой.",
-      "slidesLabel": "В этом модуле — {count} слайдов презентации.",
+      "vocabularyLabel": {
+        "one": "В этом модуле — {count} слово с озвучкой.",
+        "few": "В этом модуле — {count} слова с озвучкой.",
+        "many": "В этом модуле — {count} слов с озвучкой."
+      },
+      "exercisesLabel": {
+        "one": "В этом модуле — {count} задание с автоматической проверкой.",
+        "few": "В этом модуле — {count} задания с автоматической проверкой.",
+        "many": "В этом модуле — {count} заданий с автоматической проверкой."
+      },
+      "slidesLabel": {
+        "one": "В этом модуле — {count} слайд презентации.",
+        "few": "В этом модуле — {count} слайда презентации.",
+        "many": "В этом модуле — {count} слайдов презентации."
+      },
       "cta": "Смотреть тарифы"
     },
     "grammarSpanishNote": "Объяснение грамматики и упражнения даются на испанском языке — курс напрямую сравнивает русский с испанским.",
     "glossaryTermsHeading": "Термины этого урока",
-    "glossaryTermsMasteredLabel": "{count}/{total} усвоено",
+    "glossaryTermsMasteredLabel": {
+      "one": "{count}/{total} усвоено",
+      "few": "{count}/{total} усвоено",
+      "many": "{count}/{total} усвоено"
+    },
     "termQuiz": {
       "toggleLabel": "Уже знаешь эти термины? Проверь себя",
       "loadingLabel": "Готовим проверку…",
@@ -1070,7 +1184,11 @@
       "instructionReadingComprehension": "Прочитайте текст и ответьте на вопросы.",
       "explanationLabel": "Объяснение",
       "progressLabel": "Прогресс",
-      "answeredLabel": "отвечено"
+      "answeredLabel": {
+        "one": "отвечено",
+        "few": "отвечено",
+        "many": "отвечено"
+      }
     },
     "slides": {
       "downloadPdfButton": "Скачать презентацию в PDF",
@@ -1382,8 +1500,16 @@
   "glossary": {
     "pageTitle": "Глоссарий грамматических терминов",
     "pageSubtitle": "Ищи грамматические термины курса: что они значат и как называются по-русски.",
-    "progressSeenLabel": "{count}/{total} просмотрено",
-    "progressMasteredLabel": "{count}/{total} усвоено",
+    "progressSeenLabel": {
+      "one": "{count}/{total} просмотрено",
+      "few": "{count}/{total} просмотрено",
+      "many": "{count}/{total} просмотрено"
+    },
+    "progressMasteredLabel": {
+      "one": "{count}/{total} усвоено",
+      "few": "{count}/{total} усвоено",
+      "many": "{count}/{total} усвоено"
+    },
     "searchPlaceholder": "Найти термин...",
     "categoryAllLabel": "Все",
     "categoryLabels": {

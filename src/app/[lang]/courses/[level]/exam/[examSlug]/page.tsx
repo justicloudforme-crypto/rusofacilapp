@@ -46,7 +46,7 @@ export default async function ExamPage({
       </p>
       <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{exam.title}</h1>
       <div className="mt-8">
-        <ExamView exam={exam} level={level} dict={dict.lesson.exercises} examDict={dict.profile} />
+        <ExamView exam={exam} level={level} locale={lang} dict={dict.lesson.exercises} examDict={dict.profile} />
       </div>
     </div>
   );

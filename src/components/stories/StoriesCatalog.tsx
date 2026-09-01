@@ -8,6 +8,8 @@ import PremiumBadge from "@/components/ui/PremiumBadge";
 import FilterChipGroup, { filterChipClass } from "@/components/ui/FilterChipGroup";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
 import { usePaywall } from "@/contexts/PaywallContext";
+import type { Locale } from "@/i18n/config";
+import { plural, type PluralForms } from "@/lib/plural";
 
 export interface StorySummary {
   id: string;
@@ -47,7 +49,7 @@ export interface StoriesCatalogDict {
   /** Template containing the literal placeholder "{percent}". */
   progressLabel: string;
   /** Template containing the literal placeholder "{count}". */
-  loadMoreButton: string;
+  loadMoreButton: PluralForms;
 }
 
 const PAGE_SIZE = 24;
@@ -57,7 +59,7 @@ export default function StoriesCatalog({
   stories,
   dict,
 }: {
-  lang: string;
+  lang: Locale;
   stories: StorySummary[];
   dict: StoriesCatalogDict;
 }) {
@@ -262,7 +264,7 @@ export default function StoriesCatalog({
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
             className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-foreground/5 active:bg-foreground/5 dark:border-white/15"
           >
-            {dict.loadMoreButton.replace("{count}", String(remaining))}
+            {plural(lang, remaining, dict.loadMoreButton, { count: remaining })}
           </button>
         </div>
       )}

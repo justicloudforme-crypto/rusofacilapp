@@ -12,8 +12,11 @@ import { isFlashcardCategory, isFlashcardLevel, type FlashcardCategory, type Fla
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
 import { hapticTap, hapticSuccess } from "@/lib/haptics";
+import type { Locale } from "@/i18n/config";
+import type { PluralForms } from "@/lib/plural";
 
 export interface FlashcardsDict {
+  locale: Locale;
   categoryLabels: Record<FlashcardCategory, string>;
   levelAll: string;
   tapToFlip: string;
@@ -27,13 +30,13 @@ export interface FlashcardsDict {
   synonymsLabel: string;
   antonymsLabel: string;
   searchPlaceholder: string;
-  cardCountLabel: string; // template, contains literal "{count}"
+  cardCountLabel: PluralForms; // templates, contain literal "{count}"
   backToCategories: string;
   nextLevelBadgeLabel: string; // template, contains literal "{level}"
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
-  learnedProgressLabel: string; // template, contains literal "{known}" and "{total}" — global count (see /api/flashcards/summary), not per-category
+  learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}" — global count (see /api/flashcards/summary), not per-category. Inflects with {total}.
 }
 
 // Debounce delay for the always-visible search box — short enough to feel
