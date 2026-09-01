@@ -11,12 +11,10 @@ import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flas
 import { buildRecallRound, checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
-import CelebrationModal from "@/components/celebration/CelebrationModal";
 import StreakToast from "@/components/celebration/StreakToast";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 import { playStreakFanfare } from "@/lib/sound";
 import { hapticSuccess } from "@/lib/haptics";
-import type { Dictionary } from "@/i18n/dictionaries";
 import { plural, type PluralForms } from "@/lib/plural";
 
 export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
@@ -43,11 +41,9 @@ const STREAK_TOAST_MS = 1800;
 
 export default function RecallApp({
   dict,
-  celebrationDict,
   resultDict,
 }: {
   dict: RecallAppDict;
-  celebrationDict: Dictionary["celebration"];
   resultDict: GameResultPanelDict;
 }) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
@@ -67,10 +63,6 @@ export default function RecallApp({
   const [result, setResult] = useState<RecallResult | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [complete, setComplete] = useState(false);
-  // True only right after a round just finished this visit — drives the
-  // CelebrationModal, which the underlying static "complete" screen (with
-  // its own back/play-again buttons) stays behind once dismissed.
-  const [justComplete, setJustComplete] = useState(false);
   const [streak, setStreak] = useState(0);
   const [streakToast, setStreakToast] = useState<number | null>(null);
   const [limited, setLimited] = useState(false);
@@ -106,7 +98,6 @@ export default function RecallApp({
     setResult(null);
     setScore({ correct: 0, total: 0 });
     setComplete(false);
-    setJustComplete(false);
     setStreak(0);
     roundStartedAtRef.current = Date.now();
   }
@@ -128,7 +119,6 @@ export default function RecallApp({
     setCategory(null);
     setRound([]);
     setComplete(false);
-    setJustComplete(false);
     setLimited(false);
   }
 
@@ -156,7 +146,6 @@ export default function RecallApp({
     if (roundIndex + 1 >= round.length) {
       setRoundTimeSeconds(Math.round((Date.now() - roundStartedAtRef.current) / 1000));
       setComplete(true);
-      setJustComplete(true);
       return;
     }
     setRoundIndex((i) => i + 1);
@@ -176,14 +165,6 @@ export default function RecallApp({
       {streakToast !== null && (
         <StreakToast label={dict.streakToastLabel.replace("{count}", String(streakToast))} />
       )}
-      <CelebrationModal
-        open={justComplete}
-        title={plural(dict.locale, score.total, dict.roundCompleteLabel, { correct: score.correct, total: score.total })}
-        ctaLabel={celebrationDict.continueButton}
-        exclamations={celebrationDict.exclamations}
-        onClose={() => setJustComplete(false)}
-      />
-
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
         <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
 

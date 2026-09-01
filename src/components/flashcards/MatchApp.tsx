@@ -11,9 +11,7 @@ import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flas
 import { buildMatchRound } from "@/lib/flashcards/match-round";
 import { recordSrsAnswer } from "@/lib/flashcard-progress";
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
-import CelebrationModal from "@/components/celebration/CelebrationModal";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
-import type { Dictionary } from "@/i18n/dictionaries";
 import { plural, type PluralForms } from "@/lib/plural";
 
 export interface MatchAppDict extends CategoryGridDict {
@@ -35,11 +33,9 @@ const MIN_PLAYABLE = 4;
 
 export default function MatchApp({
   dict,
-  celebrationDict,
   resultDict,
 }: {
   dict: MatchAppDict;
-  celebrationDict: Dictionary["celebration"];
   resultDict: GameResultPanelDict;
 }) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
@@ -56,10 +52,6 @@ export default function MatchApp({
   const [roundErrors, setRoundErrors] = useState(0);
   const [roundTimeSeconds, setRoundTimeSeconds] = useState(0);
   const roundStartedAtRef = useRef(0);
-  // True only right after a round just finished this visit — drives the
-  // CelebrationModal, which the underlying static "complete" screen (with
-  // its own back/next-round buttons) stays behind once dismissed.
-  const [justCompleted, setJustCompleted] = useState(false);
   const [limited, setLimited] = useState(false);
   // True only while a category's round is being fetched — without it, the
   // "not enough cards" message flashed for a moment on every category open
@@ -81,7 +73,6 @@ export default function MatchApp({
     setRound(buildMatchRound(filtered, size));
     setRoundKey((k) => k + 1);
     setComplete(false);
-    setJustCompleted(false);
     roundStartedAtRef.current = Date.now();
   }
 
@@ -108,7 +99,6 @@ export default function MatchApp({
     setCategory(null);
     setRound([]);
     setComplete(false);
-    setJustCompleted(false);
     setLimited(false);
   }
 
@@ -117,7 +107,6 @@ export default function MatchApp({
     setRoundErrors(results.filter((r) => !r.firstTryCorrect).length);
     setRoundTimeSeconds(Math.round((Date.now() - roundStartedAtRef.current) / 1000));
     setComplete(true);
-    setJustCompleted(true);
   }
 
   function replayRound() {
@@ -142,14 +131,6 @@ export default function MatchApp({
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
         <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
       </div>
-
-      <CelebrationModal
-        open={justCompleted}
-        title={plural(dict.locale, round.length, dict.roundCompleteLabel, { pairs: round.length })}
-        ctaLabel={celebrationDict.continueButton}
-        exclamations={celebrationDict.exclamations}
-        onClose={() => setJustCompleted(false)}
-      />
 
       {inGrid ? (
         <>

@@ -1,12 +1,14 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import Modal from "@/components/ui/Modal";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import Confetti from "@/components/celebration/Confetti";
 import type { AvatarId } from "@/lib/avatars";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
+import { playSuccessJingle } from "@/lib/sound";
+import { hapticSuccess } from "@/lib/haptics";
 
 export interface GameResultPanelDict {
   closeLabel: string;
@@ -41,6 +43,14 @@ function formatTime(totalSeconds: number): string {
  * `children` is an open slot for mode-specific content below the stats —
  * e.g. Recall/FillBlank/Match's free-trial paywall banner + personalized
  * progress message.
+ *
+ * This is the ONLY panel a finished round may draw. Recall, FillBlank and
+ * Match used to open a CelebrationModal on the same state transition, so
+ * a finished round drew two overlays at once carrying the same sentence —
+ * on a phone the celebration dialog sat centred and this sheet sat under
+ * it, both visible. The stats sheet won because it is the one with the
+ * numbers and the two next-step buttons; the jingle and the haptic below
+ * are what came across from the modal so the win still sounds like one.
  */
 export default function GameResultPanel({
   open,
@@ -71,6 +81,14 @@ export default function GameResultPanel({
   onNextGame: () => void;
   children?: ReactNode;
 }) {
+  // On the open transition only — not on every re-render while the panel
+  // stays open, which is why this watches `open` and nothing else.
+  useEffect(() => {
+    if (!open) return;
+    playSuccessJingle();
+    hapticSuccess();
+  }, [open]);
+
   return (
     <Modal open={open} onClose={onClose} closeLabel={dict.closeLabel}>
       {open && <Confetti />}

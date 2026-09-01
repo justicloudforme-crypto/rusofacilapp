@@ -71,6 +71,7 @@
     "check:grammar": "tsx prisma/check-grammar.ts",
     "check:lessons": "tsx prisma/check-lessons-grammar.ts",
     "check:wordgames-clues": "tsx prisma/check-wordgames-clues.ts",
+    "check:word-search": "tsx prisma/check-word-search.ts",
     "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts",
     "sync:to-production": "tsx prisma/sync-to-production.ts",
     "cap:sync": "cap sync",

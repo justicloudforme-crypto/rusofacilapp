@@ -148,6 +148,7 @@ export default function MatchBoard({
             <button
               type="button"
               onClick={() => selectTile("ru", ruCard.id)}
+              data-testid="match-tile-ru"
               className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("ru", ruCard.id))}`}
             >
               {/* line-clamp-2 + a fixed min-h keeps every tile the same
@@ -165,6 +166,7 @@ export default function MatchBoard({
               <button
                 type="button"
                 onClick={() => selectTile("es", esCard.id)}
+                data-testid="match-tile-es"
                 className={`relative flex min-h-14 touch-manipulation select-none items-center justify-center rounded-xl border p-2 text-center text-sm font-medium leading-tight transition-colors ${tileClass(tileState("es", esCard.id))}`}
               >
                 <span className="line-clamp-2">{esCard.translationEs}</span>

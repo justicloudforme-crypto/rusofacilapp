@@ -12,12 +12,10 @@ import { checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-ro
 import { buildFillBlankRound } from "@/lib/flashcards/fill-blank-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
-import CelebrationModal from "@/components/celebration/CelebrationModal";
 import StreakToast from "@/components/celebration/StreakToast";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 import { playStreakFanfare } from "@/lib/sound";
 import { hapticSuccess } from "@/lib/haptics";
-import type { Dictionary } from "@/i18n/dictionaries";
 import { plural, type PluralForms } from "@/lib/plural";
 
 export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
@@ -39,11 +37,9 @@ const STREAK_TOAST_MS = 1800;
 
 export default function FillBlankApp({
   dict,
-  celebrationDict,
   resultDict,
 }: {
   dict: FillBlankAppDict;
-  celebrationDict: Dictionary["celebration"];
   resultDict: GameResultPanelDict;
 }) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
@@ -59,7 +55,6 @@ export default function FillBlankApp({
   const [result, setResult] = useState<RecallResult | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [complete, setComplete] = useState(false);
-  const [justComplete, setJustComplete] = useState(false);
   const [streak, setStreak] = useState(0);
   const [streakToast, setStreakToast] = useState<number | null>(null);
   const [limited, setLimited] = useState(false);
@@ -91,7 +86,6 @@ export default function FillBlankApp({
     setResult(null);
     setScore({ correct: 0, total: 0 });
     setComplete(false);
-    setJustComplete(false);
     setStreak(0);
     roundStartedAtRef.current = Date.now();
   }
@@ -113,7 +107,6 @@ export default function FillBlankApp({
     setCategory(null);
     setRound([]);
     setComplete(false);
-    setJustComplete(false);
     setLimited(false);
   }
 
@@ -140,7 +133,6 @@ export default function FillBlankApp({
     if (roundIndex + 1 >= round.length) {
       setRoundTimeSeconds(Math.round((Date.now() - roundStartedAtRef.current) / 1000));
       setComplete(true);
-      setJustComplete(true);
       return;
     }
     setRoundIndex((i) => i + 1);
@@ -160,14 +152,6 @@ export default function FillBlankApp({
       {streakToast !== null && (
         <StreakToast label={dict.streakToastLabel.replace("{count}", String(streakToast))} />
       )}
-      <CelebrationModal
-        open={justComplete}
-        title={plural(dict.locale, score.total, dict.roundCompleteLabel, { correct: score.correct, total: score.total })}
-        ctaLabel={celebrationDict.continueButton}
-        exclamations={celebrationDict.exclamations}
-        onClose={() => setJustComplete(false)}
-      />
-
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
         <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
       </div>
