@@ -72,6 +72,7 @@
     "check:lessons": "tsx prisma/check-lessons-grammar.ts",
     "check:wordgames-clues": "tsx prisma/check-wordgames-clues.ts",
     "check:word-search": "tsx prisma/check-word-search.ts",
+    "db:redistribute-word-search": "tsx prisma/redistribute-word-search.ts",
     "check:word-search:plant": "tsx prisma/check-word-search.ts --plant",
     "check:word-search:self-test": "tsx prisma/check-word-search.ts --self-test",
     "generate:media-subtitles": "tsx prisma/generate-media-subtitles.ts",

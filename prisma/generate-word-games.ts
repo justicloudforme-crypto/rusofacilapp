@@ -39,6 +39,7 @@ import { buildSnakeWordSearchWithGrowth } from "../src/lib/word-games/snake-word
 import { buildClue } from "../src/lib/word-games/clue";
 import { categoryForTopic, topicForPuzzle } from "../src/lib/word-games/topics";
 import { WORD_GAME_FREE_RUNGS_PER_LEVEL, isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
+import { densityTailCount, isDensityOwnedRung } from "../src/lib/word-games/density-rungs";
 
 import { isEntryPoint } from "../src/lib/entry-point";
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -386,7 +387,13 @@ async function upsertPuzzle(
 // (levels no longer share one flat count — see LEVEL_TARGETS' doc
 // comment). Used purely for the cleanup pass below.
 function maxWordSearchSequence(level: Level): number {
-  return LEVEL_TARGETS[level].straight + LEVEL_TARGETS[level].star;
+  // Plus the tail the density redistribution appended (density-rungs.ts).
+  // Those rungs are past everything this script writes, which is exactly
+  // what cleanupStaleSequences() below is built to delete — so without
+  // this term, the first full regeneration after the redistribution would
+  // quietly wipe the puzzles the leftover words live in, and the words
+  // would be gone from the level for good.
+  return LEVEL_TARGETS[level].straight + LEVEL_TARGETS[level].star + densityTailCount(level);
 }
 function maxCrosswordSequence(level: Level): number {
   return LEVEL_TARGETS[level].crossword;
@@ -590,6 +597,18 @@ async function main() {
         problems.push(
           `WORD_SEARCH ${level} seq ${sequence}: only fit ${built.words.length}/${rung.wordCount} target words even after growing to ${built.grid.size}x${built.grid.size} (word list itself is still fully consistent with the grid)`
         );
+      }
+
+      // Owned by the density redistribution (density-rungs.ts): this
+      // rung's words were spread across several grids, and rebuilding it
+      // from the rung table would pack them all back into one. The build
+      // above still ran, and recordUsage() above still consumed it, so
+      // every LATER rung draws exactly the words it drew before — the
+      // skip changes this row and nothing else.
+      if (isDensityOwnedRung("WORD_SEARCH", level, sequence)) {
+        counters.unchanged++;
+        console.log(`  [WORD_SEARCH/${level}/${sequence}] skipped — owned by the density redistribution`);
+        continue;
       }
 
       await upsertPuzzle("WORD_SEARCH", level, sequence, false, appliedTopic, built, counters);
