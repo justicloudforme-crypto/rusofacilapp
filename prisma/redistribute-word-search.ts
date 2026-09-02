@@ -1,13 +1,16 @@
 /**
- * Разгружает десять переполненных филвордов: те же слова, разложенные по
- * большему числу сеток.
+ * Разгружает переполненные филворды: те же слова — на доске подходящего
+ * размера и, если надо, на большем числе досок.
  *
  * Что делает ровно:
  *   · читает пазл (type=WORD_SEARCH, level, sequence) из манифеста
  *     src/lib/word-games/density-rungs.ts;
  *   · берёт ЕГО СОБСТВЕННЫЕ слова и подсказки — новых слов не появляется,
  *     старые не выбрасываются, лексика не трогается;
- *   · делит их на части и укладывает каждую в свою сетку 16×16;
+ *   · ВЫБИРАЕТ размер доски под длину слов и целевую занятость
+ *     (src/lib/word-games/quality.ts) — из шести, которые держит банк
+ *     (8/10/12/14/16/18), и делит слова на части, если одной сетки мало;
+ *     размер источника при этом может смениться, зашитой константы нет;
  *   · первую часть записывает В СУЩЕСТВУЮЩУЮ строку (UPDATE по id):
  *     URL, id и весь WordGameProgress игроков сохраняются;
  *   · остальные части — новые строки в хвосте нумерации уровня, номера
@@ -21,7 +24,11 @@
  *   · множество слов «до» и «после» совпадает поэлементно;
  *   · каждое слово реально лежит в своей новой сетке (солвер, а не
  *     координаты);
- *   · каждая часть укладывается в порог density.ts;
+ *   · каждая часть попадает в КОРИДОР quality.ts (не только под порог
+ *     density.ts) — иначе прогон останавливается, а не пишет «лучшее из
+ *     возможного» молча;
+ *   · стороны, выбранные планировщиком, совпадают с теми, что записаны в
+ *     манифесте: то, что показано до записи, и есть то, что пишется;
  *   · номер хвостовой строки взят из манифеста, а не придуман;
  *   · в хвостовом номере ещё нет чужой строки.
  *
@@ -47,22 +54,25 @@ import {
   ladderGaps,
   type DensitySplit,
 } from "../src/lib/word-games/density-rungs";
-import { boardSize, boardSizeMismatches, splitPuzzle } from "../src/lib/word-games/redistribute";
+import { boardSize, boardSizeMismatches, planLayout } from "../src/lib/word-games/redistribute";
 import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-search-audit";
 import { exceedsThreshold, severity } from "../src/lib/word-games/density";
+import { judge } from "../src/lib/word-games/quality";
 import type { WordPlacement } from "../src/lib/word-games/types";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length) ?? null;
 /**
- * ПОДСАДКА для сторожа размера доски: части собираются на две клетки
- * меньше исходной сетки. Прогон обязан упасть на сторожe и не записать
- * ничего. Без флага подсадки нет.
+ * ПОДСАДКА для сторожа размера доски: манифесту подменяется сторона
+ * первой части (на две клетки меньше), а планировщик придёт к своей.
+ * Прогон обязан упасть на сторожe и не записать ничего. Без флага
+ * подсадки нет.
  *
- * Нужна потому, что размер доски раньше был зашит константой 16, а банк
- * держит шесть размеров (8/10/12/14/16/18). «Читаем размер из строки» —
- * утверждение, которое обязано иметь свой красный прогон, иначе оно
- * ничем не отличается от прежней константы, просто написанной иначе.
+ * Нужна потому, что размер доски теперь ВЫБИРАЕТСЯ, а не наследуется, и
+ * банк держит шесть размеров (8/10/12/14/16/18). «Стороны из манифеста и
+ * стороны планировщика обязаны совпасть» — утверждение, которое обязано
+ * иметь свой красный прогон, иначе оно ничем не отличается от прежней
+ * зашитой константы, просто написанной иначе.
  */
 const PLANT_SIZE = process.argv.includes("--plant-size");
 /**
@@ -75,7 +85,12 @@ const PLANT_SIZE = process.argv.includes("--plant-size");
 const SYNC_TAIL_FLAGS = process.argv.includes("--sync-tail-flags");
 
 function selected(): DensitySplit[] {
-  if (!ONLY) return [...DENSITY_SPLITS];
+  // По умолчанию — только НЕприменённые записи. Применённые остаются в
+  // манифесте навсегда (на них держится защита хвостов от чистки
+  // генератора), но их источники уже в коридоре: повторный прогон по ним
+  // либо ничего не даст, либо разойдётся с числом частей и остановит
+  // весь прогон. Назвать их через --only= по-прежнему можно.
+  if (!ONLY) return DENSITY_SPLITS.filter((s) => !s.applied);
   const wanted = ONLY.split(",").map((s) => s.trim()).filter(Boolean);
   const out: DensitySplit[] = [];
   for (const w of wanted) {
@@ -213,6 +228,15 @@ async function main() {
         return;
       }
 
+      if (row.curved) {
+        console.error(
+          `${label}: это ★-рунг. Части собираются ПРЯМЫМ укладчиком (buildWordSearch), ` +
+            `и разложить гнутый рунг им значит молча превратить его в другой тип игры. Прогон остановлен.`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+
       const input = puzzleInputFromRow(row);
       if (!input) {
         console.error(`${label}: JSON строки не читается — прогон остановлен.`);
@@ -233,14 +257,36 @@ async function main() {
         process.exitCode = 1;
         return;
       }
-      const buildSize = PLANT_SIZE ? source.rows - 2 : source.rows;
-      if (PLANT_SIZE) {
-        console.log(`${label}: --plant-size, части собираются ${buildSize}×${buildSize} вместо ${source.rows}×${source.rows} — сторож обязан это поймать.`);
-      }
-
-      const result = splitPuzzle(words, buildSize, `redistribute-WORD_SEARCH-${split.level}-${split.sequence}`);
+      const result = planLayout(words, `redistribute-WORD_SEARCH-${split.level}-${split.sequence}`, {
+        curved: row.curved,
+      });
       if (!result) {
-        console.error(`${label}: разложить не удалось ни на 2, ни на ${split.parts}+ частей — прогон остановлен.`);
+        console.error(`${label}: уложить не удалось ни при каком наборе сторон — прогон остановлен.`);
+        process.exitCode = 1;
+        return;
+      }
+      if (!result.inCorridor) {
+        console.error(
+          `${label}: лучший достижимый план всё равно вне коридора (${result.parts.map((p) => pct(p.occupancy)).join(" / ")}) — ` +
+            `записывать такое молча нельзя, прогон остановлен.`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      // Стороны берутся ИЗ МАНИФЕСТА, а планировщик обязан прийти к тем
+      // же. Манифест — это то, что показали до записи; расхождение
+      // означает, что база или правило сдвинулись между замером и
+      // записью, и тогда пишется не то, что одобрено.
+      const plannedSizes = PLANT_SIZE ? split.sizes.map((s, i) => (i === 0 ? s - 2 : s)) : split.sizes;
+      if (PLANT_SIZE) {
+        console.log(`${label}: --plant-size, манифесту подсажена сторона ${plannedSizes[0]} вместо ${split.sizes[0]} — сторож обязан это поймать.`);
+      }
+      const builtSizes = result.parts.map((p) => p.size);
+      if (builtSizes.join(",") !== plannedSizes.join(",")) {
+        console.error(
+          `${label}: манифест обещает стороны ${plannedSizes.join("+")}, планировщик выбрал ${builtSizes.join("+")} — ` +
+            `прогон остановлен. Пересчитайте density-rungs.ts через npm run db:build-density-manifest.`,
+        );
         process.exitCode = 1;
         return;
       }
@@ -271,19 +317,22 @@ async function main() {
           id: `${row.id}-part${i}`,
           level: split.level,
           sequence: i === 0 ? split.sequence : split.tailSequences[i - 1],
-          curved: false,
+          curved: row.curved,
           grid: part.grid.grid,
           words: part.words,
         }),
       );
       const badPart = partAudits.find(
-        (a) => a.missing.length > 0 || a.placementMismatches.length > 0 || exceedsThreshold(a),
+        (a) =>
+          a.missing.length > 0 ||
+          a.placementMismatches.length > 0 ||
+          exceedsThreshold(a) ||
+          !judge(a).ok,
       );
-      const sizeProblems = boardSizeMismatches(source, result.parts);
+      const sizeProblems = boardSizeMismatches(plannedSizes, result.parts);
       if (sizeProblems.length > 0) {
         console.error(
-          `${label}: разгрузка изменила бы размер доски — ${sizeProblems.join("; ")}. ` +
-            `Разгрузка раскладывает те же слова по большему числу сеток, а не перекраивает доску. Прогон остановлен.`,
+          `${label}: собранные части не совпали с выбранными сторонами — ${sizeProblems.join("; ")}. Прогон остановлен.`,
         );
         process.exitCode = 1;
         return;
@@ -299,12 +348,14 @@ async function main() {
       }
 
       console.log(
-        `${label}: ${before.wordCount} слов, доска ${source.rows}×${source.cols}, занято ${pct(before.occupancy)}, слов на клетку ${before.maxOverlap}, тяжесть ${severity(before).toFixed(3)}`,
+        `${label}: ${before.wordCount} слов, доска ${source.rows}×${source.cols}, занято ${pct(before.occupancy)}, слов на клетку ${before.maxOverlap}, тяжесть ${severity(before).toFixed(3)}, ` +
+          `длиннейшее/сторона ${before.longestOverMinSide.toFixed(2)} — «${judge(before).zone}»${judge(before).longWord ? ", длинное слово" : ""}`,
       );
       partAudits.forEach((a, i) => {
         const where = i === 0 ? `в ту же строку (id ${row.id}, sequence ${split.sequence})` : `новая строка sequence ${split.tailSequences[i - 1]}`;
         console.log(
-          `   → часть ${i + 1}/${result.parts.length}: ${a.wordCount} слов, занято ${pct(a.occupancy)}, слов на клетку ${a.maxOverlap}, заполнителей ${pct(a.fillerShare)} — ${where}`,
+          `   → часть ${i + 1}/${result.parts.length}: доска ${a.rows}×${a.cols}, ${a.wordCount} слов, занято ${pct(a.occupancy)}, ` +
+            `слов на клетку ${a.maxOverlap}, заполнителей ${pct(a.fillerShare)}, длиннейшее/сторона ${a.longestOverMinSide.toFixed(2)} — ${where}`,
         );
       });
 
