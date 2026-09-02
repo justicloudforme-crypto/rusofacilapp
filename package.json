@@ -82,7 +82,9 @@
     "cap:ios": "cap open ios",
     "cap:android": "cap open android",
     "test:scenarios": "vitest run --config vitest.scenarios.config.mts",
-    "check:story-audio-joins": "node scripts/check-story-audio-joins.mjs --control"
+    "check:story-audio-joins": "node scripts/check-story-audio-joins.mjs --control",
+    "db:build-density-manifest": "tsx prisma/build-density-manifest.ts",
+    "check:word-search:plant-size": "tsx prisma/redistribute-word-search.ts --dry-run --plant-size"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

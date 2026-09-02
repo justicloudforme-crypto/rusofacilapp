@@ -3,7 +3,7 @@
  *
  * Разгрузка (7.78, 7.80) применяется к боевой базе, которую этот заход
  * видит впервые. Манифест `src/lib/word-games/density-rungs.ts` и снимок
- * `docs/word-search-baseline-2026-09-01.json` сняты с ЛОКАЛЬНОЙ копии
+ * `docs/word-search-baseline-dev-2026-09-02.json` сняты с ЛОКАЛЬНОЙ копии
  * банка, а расхождение локальной копии с продом в этом проекте —
  * известный, уже случавшийся класс (PROGRESS.md, правило №7). Поэтому
  * прежде чем `redistribute-word-search.ts` тронет прод, надо доказать,
@@ -47,8 +47,9 @@ import {
 import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-search-audit";
 import { WORD_GAME_FREE_RUNGS_PER_LEVEL } from "../src/lib/word-games/free-tier";
 import { readFileSync } from "node:fs";
+import type { BaselineFile } from "../src/lib/word-games/bank-fingerprint";
 
-const BASELINE = "docs/word-search-baseline-2026-09-01.json";
+const BASELINE = "docs/word-search-baseline-dev-2026-09-02.json";
 const ROUND_SIZE = 10;
 
 function arg(name: string): string | undefined {
@@ -78,9 +79,11 @@ async function main() {
   const db = client(prodUrl, process.env.TURSO_AUTH_TOKEN);
   const local = wordsFrom ? client(wordsFrom) : null;
 
-  const baseline: Record<string, { occupancy: number; maxOverlap: number }> = JSON.parse(
-    readFileSync(BASELINE, "utf8"),
-  );
+  const baselineFile = JSON.parse(readFileSync(BASELINE, "utf8")) as BaselineFile<{
+    occupancy: number;
+    maxOverlap: number;
+  }>;
+  const baseline = baselineFile.puzzles;
 
   let problems = 0;
   const complain = (msg: string) => {
