@@ -889,6 +889,9 @@
   },
   "vocabulary": {
     "pageTitle": "Vocabulario en tarjetas",
+    "c1PremiumHeading": "El nivel C1 está en Premium",
+    "c1PremiumBody": "Aquí se listan los niveles A1–B2. El vocabulario de nivel C1 no se publica en abierto: forma parte del plan Premium y se estudia en las tarjetas. El curso es A1–B2; el vocabulario, los cuentos y los juegos llegan hasta el C1.",
+    "c1PremiumCta": "Ver los planes",
     "subtitleVocabulary": "Toca la tarjeta para ver la traducción.",
     "subtitleRecall": "Escribe la palabra en ruso a partir de la traducción.",
     "subtitleFillBlank": "Completa la palabra que falta en la frase.",

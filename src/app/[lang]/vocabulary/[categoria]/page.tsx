@@ -60,9 +60,18 @@ export default async function VocabularyCategoryPage({
   await markStudyDayVisit("flashcards");
 
   const publicLevels = new Set<string>(PUBLIC_VOCABULARY_LEVELS);
-  const cards = (await getFlashcardIndex()).filter(
+  const index = await getFlashcardIndex();
+  const cards = index.filter(
     (card) => card.category === page.category && publicLevels.has(card.level),
   );
+  // Только ЧИСЛО, ни одного слова. Страница по-прежнему перечисляет A1-B2:
+  // фильтр выше не тронут, C1-карточки отсутствуют в отданном HTML, а не
+  // спрятаны стилями. Счётчик нужен, чтобы подпись ниже была проверяемой
+  // ("46 palabras"), а не общим обещанием — и он берётся из уже
+  // загруженного индекса, без второго обращения к базе.
+  const c1Count = index.filter(
+    (card) => card.category === page.category && card.level === "C1",
+  ).length;
 
   const byLevel = PUBLIC_VOCABULARY_LEVELS.map((level) => ({
     level,
@@ -165,6 +174,24 @@ export default async function VocabularyCategoryPage({
           </ul>
         </section>
       ))}
+
+      {c1Count > 0 && (
+        <aside className="mt-12 rounded-2xl border border-black/10 p-5 dark:border-white/30">
+          <h2 className="text-base font-semibold tracking-tight">El nivel C1 está en Premium</h2>
+          <p className="mt-2 text-sm leading-6 text-foreground/70">
+            Esta lista llega hasta el B2. De este tema hay además{" "}
+            {c1Count === 1 ? "una palabra" : `${c1Count} palabras`} de nivel C1 que no se publican
+            en abierto: forman parte del plan Premium y se estudian en las tarjetas. El curso es
+            A1–B2; el vocabulario, los cuentos y los juegos llegan hasta el C1.
+          </p>
+          <Link
+            href="/es/pricing"
+            className="tap mt-3 inline-block text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+          >
+            Ver los planes
+          </Link>
+        </aside>
+      )}
 
       <div className="mt-12 rounded-2xl border border-black/10 p-5 dark:border-white/30">
         <h2 className="text-base font-semibold tracking-tight">Seguir por aquí</h2>
