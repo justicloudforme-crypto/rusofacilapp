@@ -272,17 +272,37 @@ export default function WordSearchBoard({
             ★ {dict.expertModeLabel}
           </span>
         )}
-        {/* minmax(22px, 2.25rem) columns shrink together with the container
-            (fixed-size buttons previously overlapped instead of shrinking —
-            invisible here since these cells are borderless, but the same
-            bug as CrosswordBoard's, fixed the same way; see its comment).
-            Framed in a card, matching CrosswordBoard, so the puzzle reads
-            as one bounded object instead of loose letters on the page. */}
-        <div className="max-w-full overflow-x-auto rounded-2xl border border-primary/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4">
+        {/* No lower bound on the column track, and that is the fix, not a
+            tidy-up. With `minmax(22px, …)` a 16-column grid could shrink no
+            further than 16 × 22 + gaps ≈ 394px, so inside a 340px scroller
+            at a 390px viewport only THIRTEEN columns were on screen —
+            measured from the DOM, both engines: 10 of 16 at 320px, 12 at
+            360px, 13 at 390px. The remaining columns were not merely
+            awkward, they were unreachable: every cell carries
+            `touch-none` (it has to — a horizontal drag IS how you select a
+            horizontal word), so a finger on the board cannot pan the
+            scroller, and a horizontal word ending in column 14+ could not
+            be selected at all on a phone.
+
+            Panning and horizontal selection cannot share one surface —
+            `touch-action: pan-x` would hand every horizontal drag to the
+            scroller and break selection outright — so the board has to
+            FIT instead. `minmax(0, …)` plus the tighter gap and card
+            padding below `sm` puts all 16 columns on screen at 320/360/390
+            (cells ≈ 15/17/19px there, still 36px from `sm` up). The
+            scroller stays as the backstop for a future grid wider than 16.
+
+            The columns still shrink together with the container, which was
+            the original reason for minmax at all: fixed-size buttons used
+            to overlap instead of shrinking (same bug as CrosswordBoard's,
+            fixed the same way — see its comment). Framed in a card,
+            matching CrosswordBoard, so the puzzle reads as one bounded
+            object instead of loose letters on the page. */}
+        <div className="max-w-full overflow-x-auto rounded-2xl border border-primary/15 bg-background p-2 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4">
           <div
             ref={gridRef}
-            className="grid touch-none select-none gap-0.5"
-            style={{ gridTemplateColumns: `repeat(${cols}, minmax(22px, 2.25rem))` }}
+            className="grid touch-none select-none gap-px sm:gap-0.5"
+            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 2.25rem))` }}
             role="grid"
             aria-label={dict.wordSearchGridLabel}
           >
@@ -301,7 +321,7 @@ export default function WordSearchBoard({
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
                     onPointerCancel={handlePointerUp}
-                    className={`flex aspect-square w-full items-center justify-center rounded text-xs font-semibold uppercase transition-colors sm:text-base ${
+                    className={`flex aspect-square w-full items-center justify-center rounded text-[11px] font-semibold uppercase leading-none transition-colors sm:text-base ${
                       foundColorIndex !== undefined
                         ? WORD_COLORS[foundColorIndex]
                         : isSelecting

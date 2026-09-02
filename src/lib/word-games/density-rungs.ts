@@ -1,0 +1,67 @@
+// The ten over-packed WORD_SEARCH rungs that prisma/redistribute-word-search.ts
+// spreads across more grids, and the tail sequences the leftovers live in.
+//
+// ONE manifest, read by two scripts that must agree:
+//
+//  · prisma/redistribute-word-search.ts writes these rows (the data PR).
+//  · prisma/generate-word-games.ts must NOT overwrite them on its next
+//    full run, and must not delete the tail as "stale" either — its
+//    cleanup pass deletes every sequence past the ladder's computed max,
+//    and the tail is by construction past it.
+//
+// Why the rungs are pinned here rather than recomputed as "the worst ten"
+// at run time: the redistribution runs against production, and a list
+// that recomputes itself is a list nobody can review before it writes.
+// The numbers below were measured on 2026-09-01 — see PROGRESS.md 7.77.
+//
+// Every entry is a PAID rung (sequence > 10) on purpose. The free rungs
+// 1-10 are themed (topics.ts) and are the ones in sitemap.xml; splitting a
+// themed rung would break the promise its title makes, and the tail rungs
+// are all far past 10, so isFreeWordGamePuzzle stays exactly as it was and
+// no new URL enters the sitemap.
+import type { FlashcardLevel } from "@/lib/flashcards/types";
+
+export interface DensitySplit {
+  level: FlashcardLevel;
+  /** The rung that is over-packed. Regenerated IN PLACE — same row id,
+   * same URL, same WordGameProgress. */
+  sequence: number;
+  /** Total grids the words end up in, including the one above. */
+  parts: number;
+  /** Where the leftover parts go: `parts - 1` new rungs at the tail of
+   * this level's WORD_SEARCH ladder. */
+  tailSequences: number[];
+}
+
+/** Worst-first, by the severity in density.ts as measured on 2026-09-01. */
+export const DENSITY_SPLITS: readonly DensitySplit[] = [
+  { level: "B2", sequence: 44, parts: 2, tailSequences: [328] },
+  { level: "B2", sequence: 12, parts: 2, tailSequences: [329] },
+  { level: "B2", sequence: 115, parts: 2, tailSequences: [330] },
+  { level: "B1", sequence: 91, parts: 2, tailSequences: [563] },
+  { level: "B2", sequence: 163, parts: 2, tailSequences: [331] },
+  { level: "C1", sequence: 162, parts: 2, tailSequences: [241] },
+  { level: "C1", sequence: 92, parts: 2, tailSequences: [242] },
+  { level: "C1", sequence: 139, parts: 3, tailSequences: [243, 244] },
+  { level: "B2", sequence: 65, parts: 2, tailSequences: [332] },
+  { level: "B2", sequence: 164, parts: 2, tailSequences: [333] },
+];
+
+/** How many sequences each level's WORD_SEARCH ladder gains beyond what
+ * generate-word-games.ts itself writes. */
+export function densityTailCount(level: string): number {
+  return DENSITY_SPLITS.filter((s) => s.level === level).reduce((n, s) => n + s.tailSequences.length, 0);
+}
+
+/** True for a rung the redistribution owns — either a split source or one
+ * of its tail rungs. generate-word-games.ts leaves both alone. */
+export function isDensityOwnedRung(type: string, level: string, sequence: number): boolean {
+  if (type !== "WORD_SEARCH") return false;
+  return DENSITY_SPLITS.some(
+    (s) => s.level === level && (s.sequence === sequence || s.tailSequences.includes(sequence)),
+  );
+}
+
+export function findDensitySplit(level: string, sequence: number): DensitySplit | undefined {
+  return DENSITY_SPLITS.find((s) => s.level === level && s.sequence === sequence);
+}

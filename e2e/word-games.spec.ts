@@ -531,3 +531,56 @@ test("word search: finding every word shows exactly one completion dialog", asyn
   await page.getByRole("button", { name: "← Volver a los juegos de palabras" }).click();
   await expect(page).toHaveURL(/\/es\/word-games$/);
 });
+
+/**
+ * Every column of the widest puzzle must be ON SCREEN at a phone width —
+ * not merely present in the DOM.
+ *
+ * The defect this closes, measured from the DOM in both engines before
+ * the fix: a 16-column grid could shrink no further than its 22px column
+ * floor (16 × 22 + gaps ≈ 394px), so inside the board's own horizontal
+ * scroller only 10 of 16 columns were visible at 320px, 12 at 360 and 13
+ * at 390 — which is exactly the "13 columns" a player counted on a phone
+ * while the audit reported 16×16. Both numbers were right.
+ *
+ * It was not a scrolling inconvenience. Every cell carries `touch-none`
+ * (it must: a horizontal drag IS how a horizontal word is selected), so a
+ * finger on the board cannot pan that scroller, and a word ending in
+ * column 14+ could not be selected at all.
+ *
+ * Asserted against the grid's own column count rather than the literal
+ * 16, so the test still means something if the widest rung ever changes.
+ */
+test("word search: every column is on screen at a phone width, not just in the DOM", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/es/word-games/WORD_SEARCH/C1/5");
+  await page.waitForSelector('[role="grid"] button[data-row]');
+
+  const geometry = await page.evaluate(() => {
+    const grid = document.querySelector('[role="grid"]')!;
+    const cells = [...grid.querySelectorAll<HTMLElement>("button[data-row]")];
+    const scroller = grid.parentElement!;
+    const box = scroller.getBoundingClientRect();
+    const visible = new Set(
+      cells
+        .filter((c) => {
+          const r = c.getBoundingClientRect();
+          return r.left >= box.left - 0.5 && r.right <= box.right + 0.5;
+        })
+        .map((c) => c.dataset.col),
+    );
+    return {
+      cols: new Set(cells.map((c) => c.dataset.col)).size,
+      visibleCols: visible.size,
+      overflows: scroller.scrollWidth > scroller.clientWidth + 1,
+      documentWidth: document.documentElement.scrollWidth,
+    };
+  });
+
+  // The fixture's widest puzzle is 16 columns; if that ever stops being
+  // true the assertion below would pass vacuously on a narrow grid.
+  expect(geometry.cols).toBeGreaterThanOrEqual(16);
+  expect(geometry.visibleCols).toBe(geometry.cols);
+  expect(geometry.overflows).toBe(false);
+  expect(geometry.documentWidth).toBeLessThanOrEqual(390);
+});
