@@ -36,12 +36,32 @@
  * просматриваемый набор пазл с перекрытием 4 и нулём заполнителей:
  * прогон обязан его поймать, а прогон БЕЗ флага обязан о нём молчать.
  *
+ * ДВЕ КОМАНДЫ, И ЭТО РАЗНЫЕ ВОПРОСЫ (разведено 02.09.2026, PROGRESS 7.84):
+ *
+ *   npm run check:word-search          — «цел ли банк, который лежит вот
+ *       здесь»: солвер, координаты, геометрия. Читает ту базу, на которую
+ *       указывает окружение (без ключа — локальная `dev.db`). Со снимком
+ *       НЕ сравнивается вовсе, поэтому зелёная без боевого ключа. Входит
+ *       в `npm run verify`.
+ *
+ *   npm run check:word-search:prod     — «совпадает ли банк с продовым
+ *       снимком»: отпечаток плюс «ни один пазл не стал хуже». Вопрос про
+ *       ПРОД, поэтому без `TURSO_DATABASE_URL` он не «пропускается» и не
+ *       «зелёный вакуумно», а падает вслух. В `verify` НЕ входит.
+ *
+ * Так разведено потому, что после 7.83 снимок описывает прод, а `dev.db`
+ * держал другой банк — и `verify` на машине без ключа был красным всегда,
+ * то есть переставал быть сигналом. Целостность банка от наличия ключа не
+ * зависит; сверка с продом зависит целиком.
+ *
  * Использование:
  *   npm run check:word-search
  *   npm run check:word-search -- --plant        # подсадка, обязана быть поймана
  *   npm run check:word-search -- --self-test    # только контроль, без банка
  *   npm run check:word-search -- --write-baseline=docs/…json
  *   npm run check:word-search -- --baseline=docs/…json
+ *   npm run check:word-search:prod              # требует ключ, иначе падает
+ *   npm run check:word-search:prod -- --plant   # подсадка в прод-прогоне
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" npm run check:word-search
  */
 import "dotenv/config";
@@ -74,16 +94,14 @@ import {
 import type { WordPlacement } from "../src/lib/word-games/types";
 
 /**
- * Снимок по умолчанию снят С ПРОДА — с той базы, которую видят игроки, и
- * которая объявлена эталоном. Временный локальный снимок
- * (`word-search-baseline-dev-2026-09-02.json`) удалён: он описывал другой
- * банк (PROGRESS.md 7.81-7.83), и сторожить прод по нему было нельзя.
+ * Снимок ПРОДА — с той базы, которую видят игроки, и которая объявлена
+ * эталоном. Он больше не подставляется по умолчанию: его берёт только
+ * прод-прогон (`--against-prod`, он же `npm run check:word-search:prod`)
+ * либо явный `--baseline=`.
  *
- * Следствие, и оно намеренное: прогон против `dev.db` теперь падает со
- * словами «СРАВНЕНИЕ С ДРУГИМ БАНКОМ». Это не поломка, а ровно тот
- * позитивный контроль, который отпечаток и вводился ловить — два банка
- * действительно разные, и молчать об этом хуже, чем падать. Локальную
- * проверку гоняют с явным снимком:
+ * Прогон против чужого банка по-прежнему падает со словами «СРАВНЕНИЕ С
+ * ДРУГИМ БАНКОМ» — это ровно тот контроль, ради которого отпечаток и
+ * вводился. Локальный банк со своим снимком сверяют явно:
  *   npm run check:word-search -- --baseline=<снимок с dev.db>
  *
  * Перезаписывать этот снимок — только с прода и только после успешной
@@ -91,7 +109,7 @@ import type { WordPlacement } from "../src/lib/word-games/types";
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" \
  *     npm run check:word-search -- --write-baseline=docs/word-search-baseline-prod-2026-09-02.json
  */
-const DEFAULT_BASELINE = "docs/word-search-baseline-prod-2026-09-02.json";
+const PROD_BASELINE = "docs/word-search-baseline-prod-2026-09-02.json";
 
 function arg(name: string): string | undefined {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -101,7 +119,21 @@ function arg(name: string): string | undefined {
 const PLANT = process.argv.includes("--plant");
 const SELF_TEST_ONLY = process.argv.includes("--self-test");
 const WRITE_BASELINE = arg("write-baseline");
-const BASELINE = arg("baseline") ?? (WRITE_BASELINE ? null : DEFAULT_BASELINE);
+/**
+ * Прогон «против прода»: сверка с продовым снимком плюс требование ключа.
+ * Отдельный флаг, а не просто `--baseline=`, потому что вопрос «совпадает
+ * ли банк с продом» без ключа не имеет ответа — и молчаливый пропуск здесь
+ * хуже красного: он выглядит как «сошлось».
+ */
+const AGAINST_PROD = process.argv.includes("--against-prod");
+/**
+ * Снимок берётся ТОЛЬКО когда его попросили явно (`--baseline=`) или когда
+ * идёт прод-прогон. Умолчания нет намеренно: снимок описывает прод, а
+ * обычный прогон читает ту базу, что под рукой, и сравнивать их по
+ * умолчанию — это и есть тот красный `verify` без ключа, ради которого
+ * команды и разведены.
+ */
+const BASELINE = arg("baseline") ?? (AGAINST_PROD ? PROD_BASELINE : null);
 const SHOW_GRIDS = process.argv.includes("--grids");
 const WORST_COUNT = Number(arg("worst") ?? 10);
 
@@ -434,6 +466,22 @@ async function main() {
     return;
   }
 
+  // Прод-прогон без ключа обязан падать ВСЛУХ. Пропустить сверку с продом
+  // молча — значит выдать «нечего было сравнивать» за «сошлось»; ровно
+  // этого разведение команд и избегает.
+  if (AGAINST_PROD && !process.env.TURSO_DATABASE_URL) {
+    console.error(
+      "\nСВЕРКА С ПРОДОМ НЕВОЗМОЖНА: не задан TURSO_DATABASE_URL.\n" +
+        "  Эта команда отвечает на вопрос «совпадает ли банк с продовым снимком»,\n" +
+        "  и без боевого ключа у него нет ответа. Она не пропускается и не\n" +
+        "  считается зелёной — она падает.\n" +
+        "  Целостность локального банка (солвер, координаты, геометрия) меряет\n" +
+        "  другая команда, и ключ ей не нужен: npm run check:word-search",
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const dbUrl = process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db";
   const adapter = new PrismaLibSql({ url: dbUrl, authToken: process.env.TURSO_AUTH_TOKEN });
   const db = new PrismaClient({ adapter });
@@ -549,6 +597,14 @@ async function main() {
       }
       for (const w of worse) console.error(`  ХУЖЕ  ${w}`);
       if (worse.length > 0) process.exitCode = 1;
+    } else {
+      // Сказать вслух, чего этот прогон НЕ делал. Молчание здесь читалось
+      // бы как «со снимком сошлось».
+      console.log(
+        `\nСо снимком НЕ сравнивалось: это прогон целостности банка (${sourceLabel(dbUrl)}), ` +
+          `отпечаток ${fingerprint.idsSha256.slice(0, 12)}….\n` +
+          `  Сверка с продовым снимком — отдельная команда: npm run check:word-search:prod (нужен ключ).`,
+      );
     }
 
     if (!ok || unreadable.length > 0) process.exitCode = 1;
