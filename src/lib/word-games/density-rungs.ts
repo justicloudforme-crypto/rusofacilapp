@@ -88,3 +88,40 @@ export function isDensityOwnedRung(type: string, level: string, sequence: number
 export function findDensitySplit(level: string, sequence: number): DensitySplit | undefined {
   return DENSITY_SPLITS.find((s) => s.level === level && s.sequence === sequence);
 }
+
+/** Every tail sequence the manifest will create on one level, ascending. */
+export function densityTails(level: string): number[] {
+  return DENSITY_SPLITS.filter((s) => s.level === level)
+    .flatMap((s) => s.tailSequences)
+    .sort((a, b) => a - b);
+}
+
+/** Levels the manifest touches at all. */
+export function densityLevels(): string[] {
+  return [...new Set(DENSITY_SPLITS.map((s) => s.level))].sort();
+}
+
+/**
+ * Why a gap in the ladder is a defect and not a cosmetic complaint.
+ *
+ * WordGamesPicker renders `Array.from({length: total}, (_, i) => i + 1)` —
+ * it asks the database how MANY rows a (type, level) pair has and then
+ * links sequences 1…count. It never asks WHICH sequences exist. So a
+ * ladder of 333 rows numbered 1…332 plus 340 renders links 1…333: the
+ * row at 340 is unreachable, and 333 is a link to a 404. Both halves of
+ * that are silent — nothing throws, nothing logs.
+ *
+ * Every level's WORD_SEARCH ladder is contiguous 1…N today (verified over
+ * all 1738 rows of the 2026-09-01 baseline), and the redistribution is
+ * the first thing that ever appends rows by hand, so it is the first
+ * thing that can break it. Hence this: given the sequences a level
+ * already has plus the ones the manifest would add, the union must still
+ * be exactly 1…N.
+ */
+export function ladderGaps(existing: number[], added: number[]): number[] {
+  const all = new Set([...existing, ...added]);
+  const max = Math.max(0, ...all);
+  const gaps: number[] = [];
+  for (let n = 1; n <= max; n++) if (!all.has(n)) gaps.push(n);
+  return gaps;
+}
