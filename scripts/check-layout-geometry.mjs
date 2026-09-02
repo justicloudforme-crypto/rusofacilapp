@@ -60,6 +60,7 @@
 // caught, in each engine that ran. See PROGRESS.md 4.1 — a zero without a
 // control is not a result.
 import { chromium, devices, webkit } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import {
   FILL_THRESHOLD,
@@ -87,6 +88,24 @@ const WIDTHS_ONLY = argv.includes("--widths-only");
  * site. Both positive controls still run: they need no content either.
  */
 const CI_MODE = argv.includes("--ci");
+
+/**
+ * Сокращённый прогон: свой список путей и свои ширины. Появился
+ * 02.09.2026 (PROGRESS 7.84), когда понадобилось померить 40 URL,
+ * затронутых разгрузкой, на трёх телефонных ширинах — полный свип из 13
+ * страниц × 11 конфигураций отвечает на другой вопрос и стоит семь минут.
+ *
+ *   --paths=/es/a,/es/b        пути через запятую
+ *   --paths-file=<файл>        по одному пути на строку (# — комментарий)
+ *   --widths=320,360,390       ширины вместо шести умолчательных
+ *   --cookie=session=…         cookie для КАЖДОГО контекста: страницы
+ *                              платных игр анонимному отдают 307, и
+ *                              измерять там нечего
+ */
+const PATHS_ARG = arg("paths", null);
+const PATHS_FILE = arg("paths-file", null);
+const WIDTHS_ARG = arg("widths", null);
+const COOKIE_ARG = arg("cookie", null);
 
 /**
  * Shapes, not rows — the footer is on every page and the header is the
@@ -128,7 +147,20 @@ const ALL_PAGES = [
   { path: "/es/sopa-de-letras-ruso-familia", contentOnly: true },
   { path: "/es/crucigramas-ruso-principiantes", contentOnly: true },
 ];
-const PAGES = ALL_PAGES.filter((p) => !(CI_MODE && p.contentOnly));
+function overriddenPaths() {
+  if (PATHS_ARG) return PATHS_ARG.split(",").map((p) => p.trim()).filter(Boolean);
+  if (PATHS_FILE) {
+    return readFileSync(PATHS_FILE, "utf8")
+      .split("\n")
+      .map((line) => line.replace(/#.*$/, "").trim())
+      .filter(Boolean);
+  }
+  return null;
+}
+const OVERRIDE = overriddenPaths();
+const PAGES = OVERRIDE
+  ? OVERRIDE.map((path) => ({ path }))
+  : ALL_PAGES.filter((p) => !(CI_MODE && p.contentOnly));
 
 /**
  * 320 is the narrowest phone still in use and the width the footer row
@@ -139,7 +171,18 @@ const PAGES = ALL_PAGES.filter((p) => !(CI_MODE && p.contentOnly));
  * different reason than the inner one — a single width would have found
  * one of the two and called the other fixed.
  */
-const WIDTHS = [320, 375, 610, 768, 820, 1024];
+const DEFAULT_WIDTHS = [320, 375, 610, 768, 820, 1024];
+const WIDTHS = WIDTHS_ARG ? WIDTHS_ARG.split(",").map(Number).filter((n) => n > 0) : DEFAULT_WIDTHS;
+
+/** Cookie, одинаковый для всех контекстов прогона. */
+function cookiesForBase() {
+  if (!COOKIE_ARG) return [];
+  const eq = COOKIE_ARG.indexOf("=");
+  const name = COOKIE_ARG.slice(0, eq);
+  const value = COOKIE_ARG.slice(eq + 1);
+  const url = new URL(BASE);
+  return [{ name, value, domain: url.hostname, path: "/", httpOnly: true, secure: url.protocol === "https:" }];
+}
 
 /**
  * Real phones, and the engine each one actually runs. Chosen to cover the
@@ -253,6 +296,56 @@ async function measureFill(page) {
     .catch(() => []);
 }
 
+/**
+ * Дождаться, пока ГЕОМЕТРИЯ перестанет двигаться — вместо ожидания, пока
+ * замолчит сеть.
+ *
+ * Почему не `networkidle` (замерено 02.09.2026, PROGRESS 7.84). Прод
+ * отвечает за 0,3-1,2 с, а `networkidle` ждёт ещё 500 мс тишины ПОСЛЕ
+ * последнего запроса — и на живых страницах эта тишина всё время
+ * откладывается: Sentry, префетч ссылок App Router'ом, ленивые шрифты.
+ * Замер по трём страницам: `load` 0,3 / 0,6 / 1,2 с против `networkidle`
+ * 2,9 / 5,3 / 2,2 с — то есть ожидание сети стоило вчетверо больше самой
+ * загрузки и ничего не добавляло к измерению: сеть — не то, что здесь
+ * меряют. К этому сверху лежали два глухих ожидания (600 мс + 200 мс),
+ * которые тратились и на странице, которая давно устоялась.
+ *
+ * Что вместо. Шрифты (`document.fonts.ready` — они двигают ширину текста,
+ * то есть прямо ту величину, которую проверка и меряет), затем подпись
+ * геометрии: ширина и высота документа плюс число элементов. Подпись
+ * снимается каждые 100 мс, и страница считается устоявшейся после трёх
+ * одинаковых подряд. Нижняя граница 500 мс оставлена НАМЕРЕННО: обе
+ * подсадки в контроле появляются через 300 мс после `load`, и прогон,
+ * который успел бы измерить страницу раньше, был бы быстрым и слепым.
+ * Изменение подписи сбрасывает счётчик, поэтому подсадка не просто
+ * дожидается — она заново запускает ожидание.
+ */
+const SETTLE_POLL_MS = 100;
+const SETTLE_STABLE_READINGS = 3;
+const SETTLE_MIN_MS = 500;
+const SETTLE_MAX_MS = 6000;
+
+async function settle(page) {
+  await page.evaluate(() => document.fonts?.ready).catch(() => {});
+  const started = Date.now();
+  let last = null;
+  let stable = 0;
+  for (;;) {
+    const sig = await page
+      .evaluate(() => {
+        const de = document.documentElement;
+        return `${de.scrollWidth}x${de.scrollHeight}:${document.querySelectorAll("body *").length}`;
+      })
+      .catch(() => null);
+    stable = sig !== null && sig === last ? stable + 1 : 0;
+    last = sig;
+    const elapsed = Date.now() - started;
+    if (stable >= SETTLE_STABLE_READINGS && elapsed >= SETTLE_MIN_MS) return;
+    if (elapsed >= SETTLE_MAX_MS) return;
+    await page.waitForTimeout(SETTLE_POLL_MS);
+  }
+}
+
 async function inspect(ctx, page_, plant) {
   const path = typeof page_ === "string" ? page_ : page_.path;
   const tab = typeof page_ === "string" ? null : page_.tab;
@@ -260,12 +353,12 @@ async function inspect(ctx, page_, plant) {
   if (plant) await plant(page);
   const problems = [];
   const res = await page
-    .goto(BASE + path, { waitUntil: "networkidle", timeout: 60_000 })
+    .goto(BASE + path, { waitUntil: "load", timeout: 60_000 })
     .catch((e) => {
       problems.push(`navigation: ${e.message.slice(0, 90)}`);
       return null;
     });
-  await page.waitForTimeout(600);
+  await settle(page);
   const status = res?.status() ?? 0;
   if (status !== 200) problems.push(`http ${status}`);
 
@@ -279,14 +372,17 @@ async function inspect(ctx, page_, plant) {
       .then(() => true)
       .catch(() => false);
     if (!opened) problems.push(`could not open the "${tab}" tab — this page's practice block was NOT measured`);
-    await page.waitForTimeout(700);
+    await settle(page);
   }
 
   // Scroll a screenful down before measuring the bars: `position: sticky`
   // only pins once its container has scrolled, and a bar measured at
   // scrollY=0 can be sitting in normal flow with nothing underneath it.
   await page.evaluate(() => window.scrollTo(0, 700));
-  await page.waitForTimeout(200);
+  // Один кадр после прокрутки: `position: sticky` пересчитывается в
+  // layout, а не по таймеру, поэтому двух rAF достаточно и 200 мс глухого
+  // ожидания здесь были платой ни за что.
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 
   const m = await page.evaluate(measure).catch((e) => {
     problems.push(`measure failed: ${String(e).slice(0, 90)}`);
@@ -323,6 +419,15 @@ async function inspect(ctx, page_, plant) {
 
   await page.close();
   return { problems, measured: m };
+}
+
+/** Контекст с cookie прогона, если он задан. Одна точка, чтобы контроль
+ * не оказался случайно анонимным там, где сам прогон вошёл. */
+async function newContextWithCookie(browser, options) {
+  const ctx = await browser.newContext(options);
+  const cookies = cookiesForBase();
+  if (cookies.length > 0) await ctx.addCookies(cookies);
+  return ctx;
 }
 
 async function runControl(browser, engineName, contextOptions) {
@@ -479,7 +584,7 @@ async function runControl(browser, engineName, contextOptions) {
     ],
   ];
   console.log(`\n=== positive control (${engineName}): the checker must FAIL on a planted defect ===`);
-  const ctx = await browser.newContext(contextOptions);
+  const ctx = await newContextWithCookie(browser, contextOptions);
   let caught = 0;
   for (const [label, plant, expected] of PLANTS) {
     const { problems } = await inspect(ctx, "/es", plant);
@@ -509,7 +614,7 @@ async function main() {
 
   // --- Half one: the original width sweep, Chromium. ---
   for (const width of WIDTHS) {
-    const ctx = await chrome.newContext({
+    const ctx = await newContextWithCookie(chrome, {
       viewport: { width, height: 800 },
       deviceScaleFactor: 1,
       isMobile: width < 768,
@@ -541,7 +646,7 @@ async function main() {
       const wantsWebkit = profile.defaultBrowserType === "webkit";
       if (wantsWebkit && !kit) kit = await webkit.launch();
       const browser = wantsWebkit ? kit : chrome;
-      const ctx = await browser.newContext({ ...profile });
+      const ctx = await newContextWithCookie(browser, { ...profile });
       console.log(
         `\n=== ${BASE} — ${name} (${profile.defaultBrowserType}, ${profile.viewport.width}×${profile.viewport.height}, dpr ${profile.deviceScaleFactor}) ===`
       );
