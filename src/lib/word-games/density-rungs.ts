@@ -29,9 +29,28 @@ export interface DensitySplit {
   sequence: number;
   /** Total grids the words end up in, including the one above. */
   parts: number;
+  /** Стороны сеток, по одной на часть, в том же порядке: первая — сторона
+   * строки-источника, остальные — хвостовых строк. Размер доски теперь
+   * ВЫБИРАЕТСЯ под длину слов и целевую занятость (quality.ts), а не
+   * наследуется, поэтому он часть манифеста: то, что показано до записи,
+   * и есть то, что записывается — планировщик обязан прийти к этим же
+   * сторонам, иначе прогон останавливается. */
+  sizes: number[];
   /** Where the leftover parts go: `parts - 1` new rungs at the tail of
    * this level's WORD_SEARCH ladder. */
   tailSequences: number[];
+  /**
+   * Дата, когда запись УЖЕ применена к проду. Такие строки остаются в
+   * манифесте навсегда и не удаляются: на них держится
+   * `isDensityOwnedRung`, а на нём — защита хвостовых строк от чистки
+   * `generate-word-games.ts` (она удаляет всё, что старше расчётного
+   * максимума лестницы, а хвост по построению именно там).
+   *
+   * По умолчанию прогон разгрузки их пропускает: их источники уже в
+   * коридоре, и повторная раскладка либо ничего не даст, либо разойдётся
+   * с числом частей манифеста.
+   */
+  applied?: string;
 }
 
 /**
@@ -62,30 +81,82 @@ export interface DensitySplit {
  * is untouched and no new URL enters the sitemap.
  */
 export const DENSITY_SPLITS: readonly DensitySplit[] = [
-  { level: "C1", sequence: 114, parts: 2, tailSequences: [241] },
-  { level: "C1", sequence: 68, parts: 2, tailSequences: [242] },
-  { level: "B2", sequence: 141, parts: 2, tailSequences: [328] },
-  { level: "B2", sequence: 44, parts: 2, tailSequences: [329] },
-  { level: "B2", sequence: 163, parts: 2, tailSequences: [330] },
-  { level: "C1", sequence: 10, parts: 2, tailSequences: [243] },
-  { level: "B2", sequence: 67, parts: 2, tailSequences: [331] },
-  { level: "B2", sequence: 113, parts: 2, tailSequences: [332] },
-  { level: "C1", sequence: 164, parts: 2, tailSequences: [244] },
-  { level: "B2", sequence: 232, parts: 2, tailSequences: [333] },
+  { level: "C1", sequence: 114, parts: 2, sizes: [16, 16], tailSequences: [241], applied: "2026-09-02" },
+  { level: "C1", sequence: 68, parts: 2, sizes: [16, 16], tailSequences: [242], applied: "2026-09-02" },
+  { level: "B2", sequence: 141, parts: 2, sizes: [16, 16], tailSequences: [328], applied: "2026-09-02" },
+  { level: "B2", sequence: 44, parts: 2, sizes: [16, 16], tailSequences: [329], applied: "2026-09-02" },
+  { level: "B2", sequence: 163, parts: 2, sizes: [16, 16], tailSequences: [330], applied: "2026-09-02" },
+  { level: "C1", sequence: 10, parts: 2, sizes: [16, 16], tailSequences: [243], applied: "2026-09-02" },
+  { level: "B2", sequence: 67, parts: 2, sizes: [16, 16], tailSequences: [331], applied: "2026-09-02" },
+  { level: "B2", sequence: 113, parts: 2, sizes: [16, 16], tailSequences: [332], applied: "2026-09-02" },
+  { level: "C1", sequence: 164, parts: 2, sizes: [16, 16], tailSequences: [244], applied: "2026-09-02" },
+  { level: "B2", sequence: 232, parts: 2, sizes: [16, 16], tailSequences: [333], applied: "2026-09-02" },
 
   // Второй круг. Порядок в файле и есть порядок применения: хвостовые
   // номера первого круга идут раньше, и круг 2, запущенный первым,
   // немедленно объявит дыру в лестнице (сторож ladderGaps, 7.79).
-  { level: "B2", sequence: 43, parts: 2, tailSequences: [334] },
-  { level: "B2", sequence: 42, parts: 2, tailSequences: [335] },
-  { level: "C1", sequence: 138, parts: 2, tailSequences: [245] },
-  { level: "C1", sequence: 27, parts: 2, tailSequences: [246] },
-  { level: "B1", sequence: 400, parts: 2, tailSequences: [563] },
-  { level: "C1", sequence: 24, parts: 2, tailSequences: [247] },
-  { level: "C1", sequence: 165, parts: 2, tailSequences: [248] },
-  { level: "B2", sequence: 211, parts: 2, tailSequences: [336] },
-  { level: "B2", sequence: 65, parts: 2, tailSequences: [337] },
-  { level: "C1", sequence: 90, parts: 2, tailSequences: [249] },
+  { level: "B2", sequence: 43, parts: 2, sizes: [16, 16], tailSequences: [334], applied: "2026-09-02" },
+  { level: "B2", sequence: 42, parts: 2, sizes: [16, 16], tailSequences: [335], applied: "2026-09-02" },
+  { level: "C1", sequence: 138, parts: 2, sizes: [16, 16], tailSequences: [245], applied: "2026-09-02" },
+  { level: "C1", sequence: 27, parts: 2, sizes: [16, 16], tailSequences: [246], applied: "2026-09-02" },
+  { level: "B1", sequence: 400, parts: 2, sizes: [16, 16], tailSequences: [563], applied: "2026-09-02" },
+  { level: "C1", sequence: 24, parts: 2, sizes: [16, 16], tailSequences: [247], applied: "2026-09-02" },
+  { level: "C1", sequence: 165, parts: 2, sizes: [16, 16], tailSequences: [248], applied: "2026-09-02" },
+  { level: "B2", sequence: 211, parts: 2, sizes: [16, 16], tailSequences: [336], applied: "2026-09-02" },
+  { level: "B2", sequence: 65, parts: 2, sizes: [16, 16], tailSequences: [337], applied: "2026-09-02" },
+  { level: "C1", sequence: 90, parts: 2, sizes: [16, 16], tailSequences: [249], applied: "2026-09-02" },
+
+  // ── Круг 3 (02.09.2026), сорок рунгов. Отобран УЖЕ ПО КОРИДОРУ quality.ts, а не
+  // только по порогу density.ts: сорок худших по тяжести из тех, кого
+  // новое правило действительно приводит в коридор. Четверых пришлось
+  // пропустить — их лучший достижимый план всё равно вне коридора
+  // (B2/9 → 18×18 78,1%; B2/230 → 14+18 47,4/43,8%; C1/122 → 18×18 71,6%;
+  // B1/14 → 18×18 71,0%), их места заняли следующие по тяжести.
+  //
+  // Здесь впервые появляются РАЗНЫЕ стороны: `sizes` — это выбор
+  // планировщика под длину слов и целевую занятость, а не сторона
+  // источника. Два рунга (A2/162 и B2/49) чинятся ОДНОЙ сменой размера:
+  // parts: 1, новых строк ноль.
+  { level: "C1", sequence: 140, parts: 2, sizes: [14, 18], tailSequences: [250], applied: "2026-09-02" },
+  { level: "B2", sequence: 139, parts: 2, sizes: [16, 18], tailSequences: [338], applied: "2026-09-02" },
+  { level: "C1", sequence: 69, parts: 2, sizes: [14, 18], tailSequences: [251], applied: "2026-09-02" },
+  { level: "C1", sequence: 70, parts: 2, sizes: [14, 18], tailSequences: [252], applied: "2026-09-02" },
+  { level: "C1", sequence: 9, parts: 2, sizes: [14, 18], tailSequences: [253], applied: "2026-09-02" },
+  { level: "B2", sequence: 17, parts: 2, sizes: [14, 18], tailSequences: [339], applied: "2026-09-02" },
+  { level: "B2", sequence: 209, parts: 2, sizes: [14, 18], tailSequences: [340], applied: "2026-09-02" },
+  { level: "C1", sequence: 166, parts: 2, sizes: [14, 18], tailSequences: [254], applied: "2026-09-02" },
+  { level: "B1", sequence: 67, parts: 2, sizes: [14, 18], tailSequences: [564], applied: "2026-09-02" },
+  { level: "B2", sequence: 164, parts: 2, sizes: [16, 16], tailSequences: [341], applied: "2026-09-02" },
+  { level: "B2", sequence: 236, parts: 2, sizes: [14, 18], tailSequences: [342], applied: "2026-09-02" },
+  { level: "B2", sequence: 41, parts: 2, sizes: [12, 18], tailSequences: [343], applied: "2026-09-02" },
+  { level: "C1", sequence: 12, parts: 2, sizes: [14, 18], tailSequences: [255], applied: "2026-09-02" },
+  { level: "C1", sequence: 143, parts: 2, sizes: [12, 18], tailSequences: [256], applied: "2026-09-02" },
+  { level: "B1", sequence: 259, parts: 2, sizes: [14, 18], tailSequences: [565], applied: "2026-09-02" },
+  { level: "B1", sequence: 306, parts: 2, sizes: [14, 18], tailSequences: [566], applied: "2026-09-02" },
+  { level: "B2", sequence: 165, parts: 2, sizes: [14, 18], tailSequences: [344], applied: "2026-09-02" },
+  { level: "B1", sequence: 188, parts: 2, sizes: [14, 18], tailSequences: [567], applied: "2026-09-02" },
+  { level: "B1", sequence: 355, parts: 2, sizes: [14, 18], tailSequences: [568], applied: "2026-09-02" },
+  { level: "C1", sequence: 135, parts: 2, sizes: [14, 18], tailSequences: [257], applied: "2026-09-02" },
+  { level: "C1", sequence: 118, parts: 2, sizes: [14, 18], tailSequences: [258], applied: "2026-09-02" },
+  { level: "C1", sequence: 46, parts: 2, sizes: [14, 18], tailSequences: [259], applied: "2026-09-02" },
+  { level: "B2", sequence: 38, parts: 2, sizes: [10, 18], tailSequences: [345], applied: "2026-09-02" },
+  { level: "A2", sequence: 162, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-02" },
+  { level: "C1", sequence: 116, parts: 2, sizes: [14, 18], tailSequences: [260], applied: "2026-09-02" },
+  { level: "B2", sequence: 136, parts: 2, sizes: [14, 18], tailSequences: [346], applied: "2026-09-02" },
+  { level: "C1", sequence: 160, parts: 2, sizes: [14, 18], tailSequences: [261], applied: "2026-09-02" },
+  { level: "C1", sequence: 93, parts: 2, sizes: [14, 18], tailSequences: [262], applied: "2026-09-02" },
+  { level: "C1", sequence: 14, parts: 2, sizes: [10, 18], tailSequences: [263], applied: "2026-09-02" },
+  { level: "B2", sequence: 162, parts: 2, sizes: [14, 18], tailSequences: [347], applied: "2026-09-02" },
+  { level: "C1", sequence: 162, parts: 2, sizes: [14, 18], tailSequences: [264], applied: "2026-09-02" },
+  { level: "B2", sequence: 116, parts: 2, sizes: [14, 18], tailSequences: [348], applied: "2026-09-02" },
+  { level: "B2", sequence: 210, parts: 2, sizes: [14, 18], tailSequences: [349], applied: "2026-09-02" },
+  { level: "B1", sequence: 282, parts: 2, sizes: [14, 18], tailSequences: [569], applied: "2026-09-02" },
+  { level: "B1", sequence: 356, parts: 2, sizes: [12, 18], tailSequences: [570], applied: "2026-09-02" },
+  { level: "C1", sequence: 67, parts: 2, sizes: [12, 18], tailSequences: [265], applied: "2026-09-02" },
+  { level: "C1", sequence: 40, parts: 2, sizes: [12, 18], tailSequences: [266], applied: "2026-09-02" },
+  { level: "B2", sequence: 49, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-02" },
+  { level: "B1", sequence: 238, parts: 2, sizes: [12, 18], tailSequences: [571], applied: "2026-09-02" },
+  { level: "C1", sequence: 47, parts: 2, sizes: [12, 18], tailSequences: [267], applied: "2026-09-02" },
 ];
 
 /** How many sequences each level's WORD_SEARCH ladder gains beyond what

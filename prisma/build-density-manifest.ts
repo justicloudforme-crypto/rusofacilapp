@@ -31,8 +31,9 @@ import { isEntryPoint } from "../src/lib/entry-point";
 import { auditPuzzle, puzzleInputFromRow, type PuzzleAudit } from "../src/lib/word-games/word-search-audit";
 import { exceedsThreshold, severity, worstFirst } from "../src/lib/word-games/density";
 import { medianOccupancy, selectSplits, classifyRung, type RungClass } from "../src/lib/word-games/rung-class";
-import { boardSize, boardSizeMismatches, splitPuzzle } from "../src/lib/word-games/redistribute";
+import { boardSize, boardSizeMismatches, planLayout } from "../src/lib/word-games/redistribute";
 import { bankFingerprint } from "../src/lib/word-games/bank-fingerprint";
+import { DENSITY_SPLITS } from "../src/lib/word-games/density-rungs";
 import type { WordPlacement } from "../src/lib/word-games/types";
 
 function arg(name: string): string | undefined {
@@ -100,7 +101,30 @@ async function main() {
     );
 
     /* ---- отбор ---- */
-    const selection = selectSplits(audits, COUNT);
+    // Рунг берётся в манифест, только если новое правило действительно
+    // приводит его в коридор (quality.ts). Не приводит — он не «плохо
+    // разложится», он не разложится вовсе, и место обязан занять
+    // следующий по тяжести. План считается здесь один раз и переиспользуется ниже.
+    const planCache = new Map<string, ReturnType<typeof planLayout>>();
+    const planOf = (a: PuzzleAudit) => {
+      const key = `${a.level}/${a.sequence}`;
+      if (!planCache.has(key)) {
+        const row = byKey.get(key)!;
+        const input = puzzleInputFromRow(row)!;
+        const words = (input.words as WordPlacement[]).map((w) => ({ word: w.word, clue: w.clue ?? "" }));
+        planCache.set(key, planLayout(words, `redistribute-WORD_SEARCH-${a.level}-${a.sequence}`, { curved: row.curved }));
+      }
+      return planCache.get(key)!;
+    };
+    const applied = new Set(
+      DENSITY_SPLITS.filter((s) => s.applied).map((s) => `${s.level}/${s.sequence}`),
+    );
+    const selection = selectSplits(audits, COUNT, (a) => {
+      if (applied.has(`${a.level}/${a.sequence}`)) return false;
+      if (byKey.get(`${a.level}/${a.sequence}`)!.curved) return false;
+      const plan = planOf(a);
+      return Boolean(plan?.inCorridor);
+    });
     console.log(`\nОтбор: ${selection.chosen.length} рунгов класса «разгрузка», вытеснено ${selection.skipped.length}.\n`);
 
     /* ---- число частей и хвостовые номера — считаются, не берутся ---- */
@@ -120,6 +144,10 @@ async function main() {
       severity: number;
       board: string;
       parts: number | null;
+      /** Стороны, ВЫБРАННЫЕ планировщиком, по одной на часть. Первая —
+       * сторона строки-источника (её доска может смениться), остальные —
+       * хвостовых строк. */
+      sizes: number[];
       tailSequences: number[];
       note: string;
       /** Id строки-источника и её слова НА МОМЕНТ ЗАМЕРА, по порядку.
@@ -136,16 +164,19 @@ async function main() {
       const input = puzzleInputFromRow(row)!;
       const source = boardSize(input.grid);
       const words = (input.words as WordPlacement[]).map((w) => ({ word: w.word, clue: w.clue ?? "" }));
-      const split = source.rows === source.cols
-        ? splitPuzzle(words, source.rows, `redistribute-WORD_SEARCH-${a.level}-${a.sequence}`)
-        : null;
+      // Размер доски НЕ наследуется у источника: планировщик выбирает
+      // сторону под длину слов и целевую занятость (quality.ts). Поэтому
+      // здесь planLayout, а не «разложить на той же стороне».
+      const split = planOf(a);
       let note = "";
-      if (!split) note = source.rows === source.cols ? "разложить не удалось" : "доска не квадратная";
+      if (!split) note = "уложить не удалось ни при каком наборе сторон";
       else {
-        const bad = boardSizeMismatches(source, split.parts);
-        if (bad.length > 0) note = `размер доски: ${bad.join("; ")}`;
+        if (!split.inCorridor) note = "в коридор не приводится — лучший достижимый план";
+        const bad = boardSizeMismatches(split.parts.map((p) => p.size), split.parts);
+        if (bad.length > 0) note = `${note ? `${note}; ` : ""}размер доски: ${bad.join("; ")}`;
       }
       const parts = split ? split.parts.length : null;
+      const sizes = split ? split.parts.map((p) => p.size) : [];
       const tails: number[] = [];
       if (parts) {
         let cursor = tailCursor.get(a.level)!;
@@ -162,6 +193,7 @@ async function main() {
         severity: Number(c.severity.toFixed(4)),
         board: `${source.rows}×${source.cols}`,
         parts,
+        sizes,
         tailSequences: tails,
         note,
         rowId: row.id,
@@ -169,15 +201,30 @@ async function main() {
       });
     }
 
-    console.log("№  рунг        ранг  доска   слов  занято  клетка  тяжесть  частей  хвосты");
+    console.log("№  рунг        ранг  доска   слов  занято  клетка  тяжесть  частей  стороны  хвосты");
     manifest.forEach((m, i) => {
       const a = selection.chosen[i].audit;
       console.log(
         `${String(i + 1).padStart(2)} ${`${m.level}/${m.sequence}`.padEnd(11)} ${String(m.rank).padEnd(5)} ` +
           `${m.board.padEnd(7)} ${String(a.wordCount).padEnd(5)} ${pct(m.occupancy).padEnd(7)} ${String(m.maxOverlap).padEnd(7)} ` +
-          `${m.severity.toFixed(3).padEnd(8)} ${String(m.parts ?? "—").padEnd(7)} ${m.tailSequences.join(", ") || "—"}${m.note ? `  ⚠ ${m.note}` : ""}`,
+          `${m.severity.toFixed(3).padEnd(8)} ${String(m.parts ?? "—").padEnd(7)} ${(m.sizes.join("+") || "—").padEnd(8)} ${m.tailSequences.join(", ") || "—"}${m.note ? `  ⚠ ${m.note}` : ""}`,
       );
     });
+
+    if (selection.rejected.length > 0) {
+      console.log("\nОтвергнуты правилом (в коридор не приводятся или уже разложены — их места заняли следующие):");
+      for (const r of selection.rejected) {
+        const plan = planOf(r.audit);
+        const why = applied.has(`${r.audit.level}/${r.audit.sequence}`)
+          ? "уже разложен"
+          : !plan
+            ? "уложить не удалось"
+            : `лучший достижимый ${plan.parts.map((p) => `${p.size}×${p.size} ${pct(p.occupancy)}`).join(" + ")}`;
+        console.log(
+          `  ранг ${String(r.rank).padStart(3)}  ${`${r.audit.level}/${r.audit.sequence}`.padEnd(11)} занято ${pct(r.audit.occupancy)} — ${why}`,
+        );
+      }
+    }
 
     if (selection.skipped.length > 0) {
       console.log("\nВытеснены классом (в разгрузку не идут):");
@@ -216,7 +263,7 @@ async function main() {
     for (const m of manifest) {
       if (!m.parts) continue;
       console.log(
-        `  { level: "${m.level}", sequence: ${m.sequence}, parts: ${m.parts}, tailSequences: [${m.tailSequences.join(", ")}] },`,
+        `  { level: "${m.level}", sequence: ${m.sequence}, parts: ${m.parts}, sizes: [${m.sizes.join(", ")}], tailSequences: [${m.tailSequences.join(", ")}] },`,
       );
     }
 

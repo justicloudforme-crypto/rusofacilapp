@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { boardSizeMismatches, dealWords, splitPuzzle, SPLIT_TARGET_OCCUPANCY, MIN_PART_OCCUPANCY } from "./redistribute";
+import { boardSizeMismatches, dealWords, dealWordsToSizes, planLayout, sizeCombinations } from "./redistribute";
+import { BOARD_SIZES, corridorFor, judge, LONGEST_OVER_SIDE_LIMIT } from "./quality";
 import { DENSITY_SPLITS, densityTailCount, isDensityOwnedRung, findDensitySplit } from "./density-rungs";
 import { occupancyStats } from "./word-search-audit";
 import { isFreeWordGamePuzzle } from "./free-tier";
@@ -21,13 +22,15 @@ describe("splitting an over-packed puzzle", () => {
     expect(Math.max(...letters) - Math.min(...letters)).toBeLessThanOrEqual(14);
   });
 
-  it("keeps every word and lands every part under the split target", () => {
-    const result = splitPuzzle(WORDS, 16, "test-seed");
+  it("keeps every word and lands every part inside the corridor", () => {
+    const result = planLayout(WORDS, "test-seed");
     expect(result).not.toBeNull();
     expect([...result!.wordsOut].sort()).toEqual(WORDS.map((w) => w.word).sort());
+    expect(result!.inCorridor).toBe(true);
+    const { floor, ceiling } = corridorFor(false);
     for (const part of result!.parts) {
-      expect(part.occupancy).toBeLessThanOrEqual(SPLIT_TARGET_OCCUPANCY);
-      expect(part.occupancy).toBeGreaterThanOrEqual(MIN_PART_OCCUPANCY);
+      expect(part.occupancy).toBeLessThanOrEqual(ceiling);
+      expect(part.occupancy).toBeGreaterThanOrEqual(floor);
       expect(part.maxOverlap).toBeLessThanOrEqual(3);
       // Every stored placement in a part really spells its word.
       expect(occupancyStats(part.grid.grid, part.words).placementMismatches).toEqual([]);
@@ -35,22 +38,51 @@ describe("splitting an over-packed puzzle", () => {
   });
 
   it("is deterministic — the same seed gives the same grids", () => {
-    const a = splitPuzzle(WORDS, 16, "same-seed")!;
-    const b = splitPuzzle(WORDS, 16, "same-seed")!;
-    expect(JSON.stringify(a.parts.map((p) => p.grid))).toBe(JSON.stringify(b.parts.map((p) => p.grid)));
+    const a = planLayout(WORDS, "same-seed")!;
+    const b = planLayout(WORDS, "same-seed")!;
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 
   it("refuses rather than dropping a word it cannot place", () => {
-    // A grid this small cannot hold these words; the splitter must return
+    // A grid this small cannot hold these words; the planner must return
     // null, not a part with words missing.
-    expect(splitPuzzle(WORDS, 4, "tiny")).toBeNull();
+    expect(planLayout(WORDS, "tiny", { sizes: [8] })).toBeNull();
+  });
+
+  it("раздаёт слова по ПЛОЩАДИ сеток, а не поровну", () => {
+    const buckets = dealWordsToSizes(WORDS, [10, 18])!;
+    const letters = buckets.map((b) => b.reduce((n, w) => n + w.word.length, 0));
+    // 100 клеток против 324 — доля букв обязана идти в той же пропорции,
+    // иначе меньшая сетка гарантированно перегружена.
+    expect(letters[1] / letters[0]).toBeGreaterThan(2);
+    expect(buckets.flat()).toHaveLength(WORDS.length);
+  });
+
+  it("не кладёт длинное слово в маленькую сетку, как бы та ни была пуста", () => {
+    const buckets = dealWordsToSizes(WORDS, [10, 18])!;
+    for (const w of buckets[0]) expect(w.word.length / 10).toBeLessThanOrEqual(LONGEST_OVER_SIDE_LIMIT);
+  });
+
+  it("наборы сторон перебираются от ровных к разнобойным", () => {
+    const combos = sizeCombinations([8, 10, 12], 2);
+    expect(combos).toHaveLength(6);
+    // Сначала ровные, по возрастанию площади; разнобойные — после.
+    expect(combos.slice(0, 3)).toEqual([[8, 8], [10, 10], [12, 12]]);
+    expect(combos.at(-1)).toEqual([8, 12]);
+    // Порядок фиксирован — это часть детерминированности плана.
+    expect(sizeCombinations([8, 10, 12], 2)).toEqual(combos);
   });
 });
 
 describe("the redistribution manifest", () => {
-  it("names twenty paid rungs, none of them free or themed", () => {
-    // Two rounds of ten, measured on production 2026-09-02 (PROGRESS.md 7.83).
-    expect(DENSITY_SPLITS).toHaveLength(20);
+  it("names only paid, unthemed rungs — in every round", () => {
+    // Двадцать рунгов кругов 1-2 (PROGRESS 7.83) плюс сорок круга 3
+    // (7.85, 7.86). Все шестьдесят помечены применёнными: манифест
+    // остаётся в файле навсегда, потому что на нём держится
+    // isDensityOwnedRung, а на нём — защита хвостовых строк от чистки
+    // генератора.
+    expect(DENSITY_SPLITS).toHaveLength(60);
+    expect(DENSITY_SPLITS.filter((s) => s.applied)).toHaveLength(60);
     // Не `sequence > 10`: C1/10 платный (у C1 бесплатных рунгов нет), и
     // повтор правила своими словами именно на нём и ошибался.
     for (const s of DENSITY_SPLITS) {
@@ -69,11 +101,33 @@ describe("the redistribution manifest", () => {
   });
 
   it("counts the tail per level the way the generator's cleanup needs", () => {
-    expect(densityTailCount("B2")).toBe(10);
-    expect(densityTailCount("B1")).toBe(1);
-    expect(densityTailCount("C1")).toBe(9);
+    // Считается ИЗ манифеста, а не переписывается литералом: чистка
+    // генератора удаляет всё, что старше расчётного максимума лестницы, и
+    // ей нужно ровно это число, каким бы ни был очередной круг.
+    for (const level of ["A1", "A2", "B1", "B2", "C1"]) {
+      const expected = DENSITY_SPLITS.filter((s) => s.level === level).reduce(
+        (n, s) => n + s.tailSequences.length,
+        0,
+      );
+      expect(densityTailCount(level)).toBe(expected);
+    }
+    // Круги 1-2 дописали в хвост B2 десять строк, B1 одну, C1 девять;
+    // круг 3 — ещё B2 двенадцать, B1 восемь, C1 восемнадцать.
+    expect(densityTailCount("B2")).toBe(22);
+    expect(densityTailCount("B1")).toBe(9);
+    expect(densityTailCount("C1")).toBe(27);
     expect(densityTailCount("A1")).toBe(0);
+    // A2 попал в манифест впервые — и ровно одной сменой размера доски,
+    // без единой новой строки (A2/162, parts: 1). Второй такой — B2/49.
     expect(densityTailCount("A2")).toBe(0);
+    expect(DENSITY_SPLITS.filter((s) => s.parts === 1)).toHaveLength(2);
+  });
+
+  it("у каждой записи сторон ровно столько же, сколько частей, и все из шести", () => {
+    for (const s of DENSITY_SPLITS) {
+      expect(s.sizes).toHaveLength(s.parts);
+      for (const size of s.sizes) expect(BOARD_SIZES).toContain(size);
+    }
   });
 
   it("claims ownership of both a split source and its tail, and of nothing else", () => {
@@ -88,29 +142,142 @@ describe("the redistribution manifest", () => {
   });
 });
 
+describe("planLayout — размер доски выбирается, а не наследуется", () => {
+  const shortWords = ["кот", "дом", "лес", "сад", "мир", "сыр", "рис", "лук"].map((word) => ({
+    word,
+    clue: `clue for ${word}`,
+  }));
+
+  it("короткому списку даёт МАЛЕНЬКУЮ доску, а не 16×16", () => {
+    const plan = planLayout(shortWords, "short-list")!;
+    expect(plan).not.toBeNull();
+    // 8 слов по 3 буквы — это 24 буквы; на 16×16 (256 клеток) занятость
+    // была бы ниже 10%. Восьмёрка — самая маленькая доска банка, и даже на
+    // ней такой список в коридор не попадает: 24/64 = 37,5%. Правильный
+    // ответ здесь — «наименьшая доска и честное inCorridor: false», а не
+    // «16×16 и молчание».
+    expect(plan.parts).toHaveLength(1);
+    expect(plan.parts[0].size).toBe(8);
+    expect(plan.inCorridor).toBe(false);
+  });
+
+  it("список, который в коридор попадает, кладётся в коридор и на маленькой доске", () => {
+    // Девять слов по 5-6 букв: на 16×16 это 20% занятости, на 10×10 — как
+    // раз коридор.
+    const words = ["сахар", "чайник", "молоко", "кухня", "ножницы", "полка", "сумка", "лампа", "ковёр"].map(
+      (word) => ({ word, clue: `clue for ${word}` }),
+    );
+    const plan = planLayout(words, "small-list")!;
+    expect(plan.inCorridor).toBe(true);
+    expect(plan.parts[0].size).toBeLessThanOrEqual(12);
+    const { floor, ceiling } = corridorFor(false);
+    expect(plan.parts[0].occupancy).toBeGreaterThanOrEqual(floor);
+    expect(plan.parts[0].occupancy).toBeLessThanOrEqual(ceiling);
+  });
+
+  it("длинному слову не даёт доску, на которой оно ляжет через всю сторону", () => {
+    const plan = planLayout(WORDS, "long-words")!;
+    for (const part of plan.parts) {
+      const longest = Math.max(...part.words.map((w) => w.word.length));
+      expect(longest / part.size).toBeLessThanOrEqual(LONGEST_OVER_SIDE_LIMIT);
+    }
+    // 14 букв ⇒ сторона 18: 14/16 = 0.875 выше потолка.
+    expect(Math.max(...plan.parts.map((p) => p.size))).toBe(18);
+  });
+
+  it("выбирает размер из шести разрешённых и никакой другой", () => {
+    for (const seed of ["a", "b", "c", "d"]) {
+      const plan = planLayout(WORDS.slice(0, 12), seed)!;
+      for (const part of plan.parts) expect(BOARD_SIZES).toContain(part.size);
+    }
+  });
+
+  it("сначала пробует обойтись без деления — одна сетка дешевле новой строки", () => {
+    // Двенадцать слов средней длины: в коридор попадают и одной сеткой, и
+    // двумя. Взята обязана быть одна — новая часть стоит новой строки в
+    // базе и нового URL, больший размер доски не стоит ничего.
+    const words = [
+      "молоко", "кухня", "полка", "сумка", "лампа", "ковёр",
+      "чайник", "сахар", "ножницы", "тарелка", "кофейник", "занавеска",
+    ].map((word) => ({ word, clue: `clue for ${word}` }));
+    const plan = planLayout(words, "one-part")!;
+    expect(plan.parts).toHaveLength(1);
+    expect(plan.inCorridor).toBe(true);
+  });
+
+  it("список из одних длинных слов в коридор не кладётся — и это говорится вслух", () => {
+    // Десять слов по 13–14 букв: сторона обязана быть 18 (14/16 выше
+    // потолка), а десять таких слов на 324 клетках дают 41% — ниже пола.
+    // Делить дальше только хуже. Честный ответ — лучший достижимый план и
+    // inCorridor: false, а не молчаливая запись.
+    const plan = planLayout(WORDS.slice(0, 10), "long-only")!;
+    expect(plan.parts).toHaveLength(1);
+    expect(plan.parts[0].size).toBe(18);
+    expect(plan.inCorridor).toBe(false);
+  });
+
+  it("части одного рунга могут лежать на РАЗНЫХ сторонах — это разные строки", () => {
+    // 27 слов с длиннейшим в 14 букв: одной сеткой это 81% (перегруз), а
+    // двумя одинаковыми — либо снова перегруз, либо разрежённость. Ответ,
+    // который перебор обязан найти, — две РАЗНЫЕ стороны.
+    const plan = planLayout(WORDS, "mixed")!;
+    expect(plan.inCorridor).toBe(true);
+    expect(plan.parts).toHaveLength(2);
+    expect(new Set(plan.parts.map((p) => p.size)).size).toBe(2);
+    for (const part of plan.parts) expect(BOARD_SIZES).toContain(part.size);
+  });
+
+  it("★ судится по своему коридору", () => {
+    const straight = corridorFor(false);
+    const curved = corridorFor(true);
+    expect(curved.ceiling).toBeLessThan(straight.ceiling);
+    expect(judge({ occupancy: 0.6, longestOverMinSide: 0.5, curved: true }).zone).toBe("перегружен");
+    expect(judge({ occupancy: 0.6, longestOverMinSide: 0.5, curved: false }).zone).toBe("коридор");
+  });
+
+  it("детерминирован: два прогона подряд дают побайтово одно и то же", () => {
+    const a = planLayout(WORDS, "same-seed")!;
+    const b = planLayout(WORDS, "same-seed")!;
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+
+  it("отказывается, а не роняет слово, если уложить не удалось нигде", () => {
+    // Единственная разрешённая сторона — 8, а слова по 14 букв: на такой
+    // доске они не помещаются ни при каком делении.
+    expect(planLayout(WORDS, "impossible", { sizes: [8] })).toBeNull();
+  });
+});
+
 describe("boardSizeMismatches", () => {
   const grid = (rows: number, cols: number) => ({
     grid: { grid: Array.from({ length: rows }, () => Array.from({ length: cols }, () => "а")) },
   });
 
-  it("молчит, когда все части того же размера, что источник", () => {
-    expect(boardSizeMismatches({ rows: 18, cols: 18 }, [grid(18, 18), grid(18, 18)])).toEqual([]);
+  it("молчит, когда все части лежат на выбранной стороне", () => {
+    expect(boardSizeMismatches(18, [grid(18, 18), grid(18, 18)])).toEqual([]);
   });
 
-  it("ловит уменьшенную доску — случай 18×18, пересобранной в 16×16", () => {
-    const out = boardSizeMismatches({ rows: 18, cols: 18 }, [grid(18, 18), grid(16, 16)]);
+  it("ловит часть не того размера, что выбранная сторона", () => {
+    const out = boardSizeMismatches(18, [grid(18, 18), grid(16, 16)]);
     expect(out).toHaveLength(1);
     expect(out[0]).toContain("часть 2");
     expect(out[0]).toContain("16×16");
   });
 
-  it("ловит раздутую доску — лёгкий рунг 10×10, пересобранный в 16×16", () => {
-    expect(boardSizeMismatches({ rows: 10, cols: 10 }, [grid(16, 16)])).toHaveLength(1);
-  });
-
   it("ловит подмену в ПЕРВОЙ части — она пишется в существующую строку", () => {
-    const out = boardSizeMismatches({ rows: 16, cols: 16 }, [grid(14, 14), grid(16, 16)]);
+    const out = boardSizeMismatches(16, [grid(14, 14), grid(16, 16)]);
     expect(out).toHaveLength(1);
     expect(out[0]).toContain("часть 1");
+  });
+
+  it("ловит сторону вне шести разрешённых", () => {
+    // 20×20 не помещается на телефон, и никакой пазл банка так не лежит.
+    const out = boardSizeMismatches(20, [grid(20, 20)]);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toContain("не из разрешённых");
+  });
+
+  it("ловит неквадратную часть", () => {
+    expect(boardSizeMismatches(16, [grid(16, 14)])).toHaveLength(1);
   });
 });

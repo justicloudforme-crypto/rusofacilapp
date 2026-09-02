@@ -512,6 +512,20 @@ test("word search: finding every word shows exactly one completion dialog", asyn
   await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("dialog")).toContainText("resuelto");
 
+  // Статистика в панели, а не только «решено» и время: сколько слов
+  // найдено из скольких. Число берётся из самого списка слов, чтобы
+  // проверка не проходила вакуумно, если панель напечатает «0 из 0».
+  await expect(page.getByRole("dialog")).toContainText(`${words.length}/${words.length}`);
+  // И строка про выученные слова — та же, что под панелью режимов
+  // словаря. Знаменатель у анонима — доступные слова, а не весь банк
+  // (PROGRESS 7.76), поэтому проверяется наличие строки и то, что она
+  // не рапортует пустой знаменатель.
+  // Именно эта строка, а не любая со словом «palabra»: пилюля «Palabras
+  // encontradas» выше содержит то же слово.
+  const learned = page.getByRole("dialog").getByText(/(Has aprendido|Llevas) \d+ de \d+ palabra/);
+  await expect(learned).toBeVisible();
+  await expect(learned).not.toContainText(/de 0 palabra/);
+
   // "Play again" must actually restart the SAME puzzle, not just close the
   // dialog — confirm every word goes back to unfound and is findable again.
   await page.getByRole("button", { name: "Jugar otro puzle" }).click();

@@ -88,7 +88,9 @@
     "check:story-audio-joins": "node scripts/check-story-audio-joins.mjs --control",
     "db:build-density-manifest": "tsx prisma/build-density-manifest.ts",
     "db:pull-bank-from-prod": "tsx prisma/pull-bank-from-prod.ts",
-    "check:word-search:plant-size": "tsx prisma/redistribute-word-search.ts --dry-run --plant-size"
+    "check:word-search:plant-size": "tsx prisma/redistribute-word-search.ts --dry-run --plant-size --only=C1/140",
+    "report:word-search-quality": "tsx prisma/word-search-quality-report.ts",
+    "report:word-search-quality:plan": "tsx prisma/word-search-quality-report.ts --plan --twice"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

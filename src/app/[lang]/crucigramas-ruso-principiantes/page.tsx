@@ -8,6 +8,7 @@ import WhyLearnRussianBlurb from "@/components/word-games/WhyLearnRussianBlurb";
 import GameLandingLinks from "@/components/word-games/GameLandingLinks";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { wordGamePlayerDict } from "@/lib/word-games/player-dict";
 
 const PAGE_PATH = "/crucigramas-ruso-principiantes";
 
@@ -82,7 +83,7 @@ export default async function CrucigramasRusoPrincipiantesPage({
         <WordGamePlayer
           lang="es"
           puzzle={toPublicPuzzle(row)}
-          dict={dict.wordGames}
+          dict={wordGamePlayerDict(dict)}
           resultDict={{ ...dict.gameResult, locale: lang }}
           signedIn={Boolean(user)}
         />

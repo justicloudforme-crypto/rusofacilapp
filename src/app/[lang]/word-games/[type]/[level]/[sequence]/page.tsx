@@ -13,6 +13,7 @@ import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import { puzzleDescription, puzzleTitle } from "@/lib/word-games/metadata";
 import { getTopicInfo, vocabularyPathForTopic } from "@/lib/word-games/topics";
 import { routeAlternates } from "@/lib/site";
+import { wordGamePlayerDict } from "@/lib/word-games/player-dict";
 
 /**
  * The link from a themed puzzle to the vocabulary page its words come
@@ -137,7 +138,7 @@ export default async function WordGamePuzzlePage({
         <WordGamePlayer
           lang={lang}
           puzzle={toPublicPuzzle(row)}
-          dict={dict.wordGames}
+          dict={wordGamePlayerDict(dict)}
           resultDict={{ ...dict.gameResult, locale: lang }}
           signedIn={Boolean(user)}
         />

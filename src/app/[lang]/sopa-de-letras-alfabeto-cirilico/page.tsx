@@ -9,6 +9,7 @@ import WhyLearnRussianBlurb from "@/components/word-games/WhyLearnRussianBlurb";
 import GameLandingLinks from "@/components/word-games/GameLandingLinks";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { wordGamePlayerDict } from "@/lib/word-games/player-dict";
 
 const PAGE_PATH = "/sopa-de-letras-alfabeto-cirilico";
 
@@ -101,7 +102,7 @@ export default async function AlfabetoCirilicoPage({
         <WordGamePlayer
           lang="es"
           puzzle={ALPHABET_SHOWCASE_PUZZLE}
-          dict={dict.wordGames}
+          dict={wordGamePlayerDict(dict)}
           resultDict={{ ...dict.gameResult, locale: lang }}
           signedIn={Boolean(user)}
         />
