@@ -21,6 +21,13 @@
  * клетки за 100% выйти не могут по построению; перекрытия вынесены в
  * отдельное распределение, а не размазаны по одному числу.
  *
+ * Снимок несёт ОТПЕЧАТОК БАНКА (хэш отсортированных id строк). Прогон
+ * начинается со сверки отпечатка: снимок, снятый с другого банка,
+ * останавливает проверку со словами «сравнение с другим банком» и не
+ * печатает ни строки про «стало хуже» — сравнивать пазл с чужим тёзкой
+ * под тем же номером бессмысленно. Дыра, которую это закрывает, стоила
+ * 918 ложных регрессий (PROGRESS.md 7.81).
+ *
  * Порог — src/lib/word-games/density.ts, там же обоснование цифрами.
  * Порог ОТЧЁТНЫЙ. Падает проверка не по нему, а по снимку: пазл не имеет
  * права стать хуже, чем он уже есть (--baseline).
@@ -49,6 +56,13 @@ import {
   type PuzzleInput,
 } from "../src/lib/word-games/word-search-audit";
 import {
+  bankFingerprint,
+  fingerprintMismatch,
+  isLegacyBaseline,
+  type BankFingerprint,
+  type BaselineFile,
+} from "../src/lib/word-games/bank-fingerprint";
+import {
   MAX_WORDS_PER_CELL,
   OCCUPANCY_LIMIT,
   SEVERE_OCCUPANCY,
@@ -59,7 +73,21 @@ import {
 } from "../src/lib/word-games/density";
 import type { WordPlacement } from "../src/lib/word-games/types";
 
-const DEFAULT_BASELINE = "docs/word-search-baseline-2026-09-01.json";
+/**
+ * Снимок по умолчанию. Он ВРЕМЕННЫЙ и снят с локальной копии — это
+ * видно в самом файле (`"source": "file:./dev.db"`), и именно поэтому
+ * рядом живёт отпечаток банка: прогон против прода с этим снимком
+ * теперь падает со словами «сравнение с другим банком», а не выдаёт
+ * 918 ложных «стало хуже», как было до отпечатка.
+ *
+ * Целевое состояние — снимок прода:
+ *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" \
+ *     npm run check:word-search -- --write-baseline=docs/word-search-baseline-prod-2026-09-02.json
+ * после чего эта константа указывает на него, а локальный снимок
+ * удаляется. Пока боевого ключа нет, сторожем остаётся локальный
+ * снимок: без снимка вообще проверка не сторожит ничего.
+ */
+const DEFAULT_BASELINE = "docs/word-search-baseline-dev-2026-09-02.json";
 
 function arg(name: string): string | undefined {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -279,6 +307,17 @@ function toBaseline(audits: PuzzleAudit[]): Record<string, BaselineEntry> {
   return out;
 }
 
+/** Куда снят снимок — только для чтения человеком. Токен сюда попасть
+ * не может: из URL берётся хост, из локального пути — сам путь. */
+function sourceLabel(url: string): string {
+  if (!url.startsWith("libsql://") && !url.startsWith("https://")) return url;
+  try {
+    return new URL(url).host;
+  } catch {
+    return "libsql";
+  }
+}
+
 /** Пазл стал ХУЖЕ снимка. Допуск 0.5 п.п. занятости — снимок хранит
  * округлённые числа, и пазл, который никто не трогал, не должен падать на
  * четвёртом знаке. Перекрытие целое, поэтому сравнивается точно. */
@@ -391,10 +430,8 @@ async function main() {
     return;
   }
 
-  const adapter = new PrismaLibSql({
-    url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
-    authToken: process.env.TURSO_AUTH_TOKEN,
-  });
+  const dbUrl = process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db";
+  const adapter = new PrismaLibSql({ url: dbUrl, authToken: process.env.TURSO_AUTH_TOKEN });
   const db = new PrismaClient({ adapter });
   try {
     const rows = await db.wordGamePuzzle.findMany({
@@ -445,19 +482,60 @@ async function main() {
       return;
     }
 
+    const fingerprint = bankFingerprint(rows);
+
     if (WRITE_BASELINE) {
-      writeFileSync(WRITE_BASELINE, `${JSON.stringify(toBaseline(audits), null, 1)}\n`, "utf8");
-      console.log(`\nСнимок записан: ${WRITE_BASELINE} (${audits.length} пазлов).`);
+      const file: BaselineFile<BaselineEntry> = {
+        source: sourceLabel(dbUrl),
+        takenAt: new Date().toISOString().slice(0, 10),
+        bank: fingerprint,
+        puzzles: toBaseline(audits),
+      };
+      writeFileSync(WRITE_BASELINE, `${JSON.stringify(file, null, 1)}\n`, "utf8");
+      console.log(
+        `\nСнимок записан: ${WRITE_BASELINE} (${audits.length} пазлов, банк ${file.source}, ` +
+          `отпечаток ${fingerprint.idsSha256.slice(0, 12)}…).`,
+      );
     } else if (BASELINE) {
-      let baseline: Record<string, BaselineEntry>;
+      let parsed: unknown;
       try {
-        baseline = JSON.parse(readFileSync(BASELINE, "utf8")) as Record<string, BaselineEntry>;
+        parsed = JSON.parse(readFileSync(BASELINE, "utf8"));
       } catch {
         console.error(`\nСнимок ${BASELINE} не читается — сравнивать не с чем.`);
         process.exitCode = 1;
         return;
       }
+      if (isLegacyBaseline(parsed)) {
+        console.error(
+          `\nСнимок ${BASELINE} старого формата: в нём нет отпечатка банка, ` +
+            `поэтому он не умеет отличить свой банк от чужого — ровно та дыра, ` +
+            `которая один раз уже выдала 918 ложных «стало хуже». ` +
+            `Переснимите: npm run check:word-search -- --write-baseline=${BASELINE}`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      const file = parsed as BaselineFile<BaselineEntry>;
+      const reasons = fingerprintMismatch(file.bank as BankFingerprint, fingerprint);
+      if (reasons.length > 0) {
+        console.error(`\nСРАВНЕНИЕ С ДРУГИМ БАНКОМ — снимок ${BASELINE} снят не с этой базы.`);
+        console.error(`  снимок: ${file.source}, снят ${file.takenAt}`);
+        console.error(`  база:   ${sourceLabel(dbUrl)}`);
+        for (const r of reasons) console.error(`  · ${r}`);
+        console.error(
+          `  Пазлы НЕ сравнивались: под одним номером в снимке и в базе разные пазлы, ` +
+            `и «стало хуже» про них было бы ложью. Возьмите снимок того банка, ` +
+            `против которого идёт прогон.`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      const baseline = file.puzzles;
       const { worse, unknown } = regressions(audits, baseline);
+      console.log(
+        `\nОтпечаток банка сошёлся со снимком ${BASELINE} (${file.source}, ${file.takenAt}, ` +
+          `${fingerprint.puzzles} строк, ${fingerprint.idsSha256.slice(0, 12)}…).`,
+      );
       console.log(`\nСравнение со снимком ${BASELINE} (${Object.keys(baseline).length} пазлов):`);
       console.log(`  стало хуже: ${worse.length}`);
       console.log(`  нет в снимке (появились после него): ${unknown.length}`);

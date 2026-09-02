@@ -112,3 +112,42 @@ export function splitPuzzle(
   }
   return null;
 }
+
+/** Размер доски одной сетки. */
+export interface BoardSize {
+  rows: number;
+  cols: number;
+}
+
+export function boardSize(grid: string[][]): BoardSize {
+  return { rows: grid.length, cols: grid[0]?.length ?? 0 };
+}
+
+/**
+ * Разгрузка не имеет права менять размер доски — ни у источника, ни у
+ * хвостов.
+ *
+ * Почему это отдельный сторож, а не «и так очевидно». Размер сетки в
+ * скрипте был зашит числом 16, а банк держит шесть разных размеров
+ * (8, 10, 12, 14, 16 и 18 столбцов). Зашитая константа означала бы два
+ * молчаливых дефекта сразу и в разные стороны: сетка 18×18 ужалась бы
+ * до 16×16 (доска уменьшилась, чего никто не просил), а сетка 10×10
+ * раздулась бы до 16×16 (рунг перестал бы быть тем лёгким рунгом,
+ * которым он был). Ни то, ни другое не ловится ни солвером (слова
+ * лежат правильно), ни порогом занятости (он только упадёт).
+ *
+ * Проверяется КАЖДАЯ часть, включая первую: первая пишется в
+ * существующую строку, и подмена размера доски там видна игроку сразу.
+ */
+export function boardSizeMismatches(source: BoardSize, parts: { grid: { grid: string[][] } }[]): string[] {
+  const out: string[] = [];
+  parts.forEach((p, i) => {
+    const got = boardSize(p.grid.grid);
+    if (got.rows !== source.rows || got.cols !== source.cols) {
+      out.push(
+        `часть ${i + 1}: доска ${got.rows}×${got.cols}, а у источника ${source.rows}×${source.cols}`,
+      );
+    }
+  });
+  return out;
+}

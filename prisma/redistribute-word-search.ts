@@ -47,14 +47,24 @@ import {
   ladderGaps,
   type DensitySplit,
 } from "../src/lib/word-games/density-rungs";
-import { splitPuzzle } from "../src/lib/word-games/redistribute";
+import { boardSize, boardSizeMismatches, splitPuzzle } from "../src/lib/word-games/redistribute";
 import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-search-audit";
 import { exceedsThreshold, severity } from "../src/lib/word-games/density";
 import type { WordPlacement } from "../src/lib/word-games/types";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length) ?? null;
-const GRID_SIZE = 16;
+/**
+ * ПОДСАДКА для сторожа размера доски: части собираются на две клетки
+ * меньше исходной сетки. Прогон обязан упасть на сторожe и не записать
+ * ничего. Без флага подсадки нет.
+ *
+ * Нужна потому, что размер доски раньше был зашит константой 16, а банк
+ * держит шесть размеров (8/10/12/14/16/18). «Читаем размер из строки» —
+ * утверждение, которое обязано иметь свой красный прогон, иначе оно
+ * ничем не отличается от прежней константы, просто написанной иначе.
+ */
+const PLANT_SIZE = process.argv.includes("--plant-size");
 
 function selected(): DensitySplit[] {
   if (!ONLY) return [...DENSITY_SPLITS];
@@ -165,7 +175,23 @@ async function main() {
       const before = auditPuzzle(input);
       const words = (input.words as WordPlacement[]).map((w) => ({ word: w.word, clue: w.clue ?? "" }));
 
-      const result = splitPuzzle(words, GRID_SIZE, `redistribute-WORD_SEARCH-${split.level}-${split.sequence}`);
+      // Размер доски берётся ИЗ СТРОКИ, а не из константы: банк держит
+      // 8×8, 10×10, 12×12, 14×14, 16×16 и 18×18, и разгрузка не имеет
+      // права ни ужать 18 до 16, ни раздуть 10 до 16.
+      const source = boardSize(input.grid);
+      if (source.rows !== source.cols || source.rows === 0) {
+        console.error(
+          `${label}: доска ${source.rows}×${source.cols} — не квадрат, укладчик умеет только квадратные. Прогон остановлен.`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      const buildSize = PLANT_SIZE ? source.rows - 2 : source.rows;
+      if (PLANT_SIZE) {
+        console.log(`${label}: --plant-size, части собираются ${buildSize}×${buildSize} вместо ${source.rows}×${source.rows} — сторож обязан это поймать.`);
+      }
+
+      const result = splitPuzzle(words, buildSize, `redistribute-WORD_SEARCH-${split.level}-${split.sequence}`);
       if (!result) {
         console.error(`${label}: разложить не удалось ни на 2, ни на ${split.parts}+ частей — прогон остановлен.`);
         process.exitCode = 1;
@@ -206,6 +232,16 @@ async function main() {
       const badPart = partAudits.find(
         (a) => a.missing.length > 0 || a.placementMismatches.length > 0 || exceedsThreshold(a),
       );
+      const sizeProblems = boardSizeMismatches(source, result.parts);
+      if (sizeProblems.length > 0) {
+        console.error(
+          `${label}: разгрузка изменила бы размер доски — ${sizeProblems.join("; ")}. ` +
+            `Разгрузка раскладывает те же слова по большему числу сеток, а не перекраивает доску. Прогон остановлен.`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+
       if (badPart) {
         console.error(
           `${label}: часть ${badPart.sequence} не проходит проверку — ненайденных ${badPart.missing.length}, ` +
@@ -216,7 +252,7 @@ async function main() {
       }
 
       console.log(
-        `${label}: ${before.wordCount} слов, занято ${pct(before.occupancy)}, слов на клетку ${before.maxOverlap}, тяжесть ${severity(before).toFixed(3)}`,
+        `${label}: ${before.wordCount} слов, доска ${source.rows}×${source.cols}, занято ${pct(before.occupancy)}, слов на клетку ${before.maxOverlap}, тяжесть ${severity(before).toFixed(3)}`,
       );
       partAudits.forEach((a, i) => {
         const where = i === 0 ? `в ту же строку (id ${row.id}, sequence ${split.sequence})` : `новая строка sequence ${split.tailSequences[i - 1]}`;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { dealWords, splitPuzzle, SPLIT_TARGET_OCCUPANCY, MIN_PART_OCCUPANCY } from "./redistribute";
+import { boardSizeMismatches, dealWords, splitPuzzle, SPLIT_TARGET_OCCUPANCY, MIN_PART_OCCUPANCY } from "./redistribute";
 import { DENSITY_SPLITS, densityTailCount, isDensityOwnedRung, findDensitySplit } from "./density-rungs";
 import { occupancyStats } from "./word-search-audit";
 
@@ -75,5 +75,32 @@ describe("the redistribution manifest", () => {
     // Same numbers on the other game type must not be claimed.
     expect(isDensityOwnedRung("CROSSWORD", "B2", 44)).toBe(false);
     expect(findDensitySplit("C1", 139)?.parts).toBe(3);
+  });
+});
+
+describe("boardSizeMismatches", () => {
+  const grid = (rows: number, cols: number) => ({
+    grid: { grid: Array.from({ length: rows }, () => Array.from({ length: cols }, () => "а")) },
+  });
+
+  it("молчит, когда все части того же размера, что источник", () => {
+    expect(boardSizeMismatches({ rows: 18, cols: 18 }, [grid(18, 18), grid(18, 18)])).toEqual([]);
+  });
+
+  it("ловит уменьшенную доску — случай 18×18, пересобранной в 16×16", () => {
+    const out = boardSizeMismatches({ rows: 18, cols: 18 }, [grid(18, 18), grid(16, 16)]);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toContain("часть 2");
+    expect(out[0]).toContain("16×16");
+  });
+
+  it("ловит раздутую доску — лёгкий рунг 10×10, пересобранный в 16×16", () => {
+    expect(boardSizeMismatches({ rows: 10, cols: 10 }, [grid(16, 16)])).toHaveLength(1);
+  });
+
+  it("ловит подмену в ПЕРВОЙ части — она пишется в существующую строку", () => {
+    const out = boardSizeMismatches({ rows: 16, cols: 16 }, [grid(14, 14), grid(16, 16)]);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toContain("часть 1");
   });
 });
