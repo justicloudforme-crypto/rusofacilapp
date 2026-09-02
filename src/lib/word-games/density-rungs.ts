@@ -1,4 +1,4 @@
-// The ten over-packed WORD_SEARCH rungs that prisma/redistribute-word-search.ts
+// The twenty over-packed WORD_SEARCH rungs that prisma/redistribute-word-search.ts
 // spreads across more grids, and the tail sequences the leftovers live in.
 //
 // ONE manifest, read by two scripts that must agree:
@@ -33,7 +33,8 @@ export interface DensitySplit {
   tailSequences: number[];
 }
 
-/** Worst-first, by the severity in density.ts as measured on 2026-09-01. */
+/** Worst-first, by the severity in density.ts as measured on 2026-09-01.
+ * Two rounds of ten; the second round's ordering caveat is at its head. */
 export const DENSITY_SPLITS: readonly DensitySplit[] = [
   { level: "B2", sequence: 44, parts: 2, tailSequences: [328] },
   { level: "B2", sequence: 12, parts: 2, tailSequences: [329] },
@@ -45,6 +46,28 @@ export const DENSITY_SPLITS: readonly DensitySplit[] = [
   { level: "C1", sequence: 139, parts: 3, tailSequences: [243, 244] },
   { level: "B2", sequence: 65, parts: 2, tailSequences: [332] },
   { level: "B2", sequence: 164, parts: 2, tailSequences: [333] },
+
+  // Второй десяток, замерено 02.09.2026 по тому же снимку — см.
+  // PROGRESS.md 7.80 и docs/word-search-redistribute-round2-2026-09-01.md.
+  //
+  // Первым идёт B2/42, и это НЕ одиннадцатый по severity(): по тяжести он
+  // 51-й, потому что severity складывает занятость с надбавкой за третье
+  // и четвёртое слово на клетке, а B2/42 не кладёт на клетку больше двух.
+  // Зато по чистой занятости он ПЕРВЫЙ во всём банке — 96,9%, восемь
+  // клеток-заполнителей на всю сетку 16×16, плотнее любого из десяти уже
+  // разгруженных. Ранжирование по тяжести отправило его вниз за девять
+  // рунгов с перекрытием 3 и занятостью 92–94%; здесь он взят первым
+  // сознательно, а вытеснённый им B2/137 (91,8%) ждёт следующего круга.
+  { level: "B2", sequence: 42, parts: 3, tailSequences: [334, 335] },
+  { level: "B2", sequence: 236, parts: 2, tailSequences: [336] },
+  { level: "C1", sequence: 138, parts: 3, tailSequences: [245, 246] },
+  { level: "B2", sequence: 237, parts: 2, tailSequences: [337] },
+  { level: "C1", sequence: 165, parts: 2, tailSequences: [247] },
+  { level: "C1", sequence: 161, parts: 2, tailSequences: [248] },
+  { level: "B2", sequence: 43, parts: 3, tailSequences: [338, 339] },
+  { level: "C1", sequence: 113, parts: 2, tailSequences: [249] },
+  { level: "C1", sequence: 141, parts: 2, tailSequences: [250] },
+  { level: "B2", sequence: 233, parts: 2, tailSequences: [340] },
 ];
 
 /** How many sequences each level's WORD_SEARCH ladder gains beyond what
