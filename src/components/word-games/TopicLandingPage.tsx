@@ -8,6 +8,7 @@ import { landingPath, type TopicLanding } from "@/lib/word-games/topic-landings"
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { wordGamePlayerDict } from "@/lib/word-games/player-dict";
 
 /**
  * One `/es/sopa-de-letras-ruso-<tema>` page. Six thin route files call
@@ -86,7 +87,7 @@ export default async function TopicLandingPage({ landing }: { landing: TopicLand
         <WordGamePlayer
           lang="es"
           puzzle={toPublicPuzzle(puzzle)}
-          dict={dict.wordGames}
+          dict={wordGamePlayerDict(dict)}
           resultDict={{ ...dict.gameResult, locale: "es" }}
           signedIn={Boolean(user)}
         />
