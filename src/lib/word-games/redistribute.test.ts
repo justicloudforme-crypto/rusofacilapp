@@ -46,8 +46,9 @@ describe("splitting an over-packed puzzle", () => {
 });
 
 describe("the redistribution manifest", () => {
-  it("names ten paid rungs, none of them free or themed", () => {
-    expect(DENSITY_SPLITS).toHaveLength(10);
+  it("names twenty paid rungs, none of them free or themed", () => {
+    // Two rounds of ten: 7.78 and 7.80.
+    expect(DENSITY_SPLITS).toHaveLength(20);
     for (const s of DENSITY_SPLITS) expect(s.sequence).toBeGreaterThan(10);
   });
 
@@ -61,9 +62,9 @@ describe("the redistribution manifest", () => {
   });
 
   it("counts the tail per level the way the generator's cleanup needs", () => {
-    expect(densityTailCount("B2")).toBe(6);
+    expect(densityTailCount("B2")).toBe(13);
     expect(densityTailCount("B1")).toBe(1);
-    expect(densityTailCount("C1")).toBe(4);
+    expect(densityTailCount("C1")).toBe(10);
     expect(densityTailCount("A1")).toBe(0);
   });
 
