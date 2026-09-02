@@ -65,6 +65,14 @@ const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".
  * ничем не отличается от прежней константы, просто написанной иначе.
  */
 const PLANT_SIZE = process.argv.includes("--plant-size");
+/**
+ * Только приводит флаги доступа хвостовых строк к флагам их источника и
+ * ничего больше — ни одной сетки не пересобирает. Нужен потому, что
+ * первый прогон по проду записал хвосты с `premiumOnly: false`, а четыре
+ * источника Premium-эксклюзивные. Идемпотентен: печатает, что расходится,
+ * и трогает только такие строки.
+ */
+const SYNC_TAIL_FLAGS = process.argv.includes("--sync-tail-flags");
 
 function selected(): DensitySplit[] {
   if (!ONLY) return [...DENSITY_SPLITS];
@@ -151,6 +159,45 @@ async function main() {
   let created = 0;
   try {
     const chosen = selected();
+
+    if (SYNC_TAIL_FLAGS) {
+      let fixed = 0;
+      for (const split of chosen) {
+        const src = await db.wordGamePuzzle.findUnique({
+          where: { type_level_sequence: { type: "WORD_SEARCH", level: split.level, sequence: split.sequence } },
+          select: { premiumOnly: true, curved: true },
+        });
+        if (!src) {
+          console.error(`WORD_SEARCH/${split.level}/${split.sequence}: источника нет — пропущен.`);
+          continue;
+        }
+        for (const seq of split.tailSequences) {
+          const tail = await db.wordGamePuzzle.findUnique({
+            where: { type_level_sequence: { type: "WORD_SEARCH", level: split.level, sequence: seq } },
+            select: { id: true, premiumOnly: true, curved: true },
+          });
+          if (!tail) {
+            console.error(`WORD_SEARCH/${split.level}/${seq}: хвостовой строки нет — пропущена.`);
+            continue;
+          }
+          if (tail.premiumOnly === src.premiumOnly && tail.curved === src.curved) continue;
+          console.log(
+            `WORD_SEARCH/${split.level}/${seq}: premiumOnly ${tail.premiumOnly} → ${src.premiumOnly}, ` +
+              `curved ${tail.curved} → ${src.curved} (у источника ${split.level}/${split.sequence})`,
+          );
+          if (!DRY_RUN) {
+            await db.wordGamePuzzle.update({
+              where: { id: tail.id },
+              data: { premiumOnly: src.premiumOnly, curved: src.curved },
+            });
+          }
+          fixed += 1;
+        }
+      }
+      console.log(`\n${DRY_RUN ? "БЫЛО БЫ приведено" : "Приведено"} к флагам источника: ${fixed} хвостовых строк.`);
+      return;
+    }
+
     if (!(await assertLadderStaysContiguous(db, chosen))) {
       process.exitCode = 1;
       return;
@@ -305,7 +352,14 @@ async function main() {
             level: split.level,
             sequence: seq,
             curved: false,
-            premiumOnly: false,
+            // Наследуется у источника, а не false. Хвост — это вторая
+            // половина ТОГО ЖЕ пазла: если источник Premium-эксклюзивный,
+            // а хвост нет, разгрузка молча отдаёт «стандартному»
+            // подписчику половину слов платного пазла. Жёсткий false
+            // сделал ровно это на четырёх рунгах (C1/164, C1/165,
+            // B2/232, B1/400) — поймано сверкой после записи, исправлено
+            // прогоном --sync-tail-flags.
+            premiumOnly: row.premiumOnly,
             // Тема остаётся пустой намеренно: тема — это обещание
             // «филворд про еду», и хвостовая часть разложенного рунга
             // такого обещания не даёт. getTopicInfo(null) уже возвращает
@@ -316,6 +370,7 @@ async function main() {
           },
           update: {
             curved: false,
+            premiumOnly: row.premiumOnly,
             topic: null,
             gridData: JSON.stringify(result.parts[i].grid),
             words: JSON.stringify(result.parts[i].words),

@@ -1,13 +1,13 @@
 /**
  * СВЕРКА ПЕРЕД ЗАПИСЬЮ. Ничего не пишет и писать не умеет.
  *
- * Разгрузка (7.78, 7.80) применяется к боевой базе, которую этот заход
- * видит впервые. Манифест `src/lib/word-games/density-rungs.ts` и снимок
- * `docs/word-search-baseline-dev-2026-09-02.json` сняты с ЛОКАЛЬНОЙ копии
- * банка, а расхождение локальной копии с продом в этом проекте —
- * известный, уже случавшийся класс (PROGRESS.md, правило №7). Поэтому
- * прежде чем `redistribute-word-search.ts` тронет прод, надо доказать,
- * что прод — та же база, для которой манифест считался.
+ * Разгрузка применяется к боевой базе. Манифест
+ * `src/lib/word-games/density-rungs.ts` и снимок
+ * `docs/word-search-baseline-prod-2026-09-02.json` теперь сняты С ПРОДА —
+ * с той же базы, в которую пойдёт запись, — и сверка доказывает не
+ * «это та же база», а «база не сдвинулась между замером и записью».
+ * Раньше и манифест, и снимок были локальными, и именно эта сверка
+ * поймала, что прод держит другой банк (PROGRESS.md 7.81-7.83).
  *
  * Что сверяется по каждому из 20 рунгов манифеста:
  *   · строка существует;
@@ -45,11 +45,16 @@ import {
   type DensitySplit,
 } from "../src/lib/word-games/density-rungs";
 import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-search-audit";
-import { WORD_GAME_FREE_RUNGS_PER_LEVEL } from "../src/lib/word-games/free-tier";
+import { boardSize } from "../src/lib/word-games/redistribute";
+import { isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
 import { readFileSync } from "node:fs";
 import type { BaselineFile } from "../src/lib/word-games/bank-fingerprint";
 
-const BASELINE = "docs/word-search-baseline-dev-2026-09-02.json";
+function baselineArg(): string | undefined {
+  const hit = process.argv.find((a) => a.startsWith("--baseline="));
+  return hit ? hit.slice("--baseline=".length) : undefined;
+}
+const BASELINE = baselineArg() ?? "docs/word-search-baseline-prod-2026-09-02.json";
 const ROUND_SIZE = 10;
 
 function arg(name: string): string | undefined {
@@ -74,6 +79,27 @@ async function main() {
   const round = roundArg ? (Number(roundArg) as 1 | 2) : null;
   const chosen = round ? roundOf(DENSITY_SPLITS, round) : [...DENSITY_SPLITS];
   const wordsFrom = arg("words-from");
+  // Слова, размер доски и id строки НА МОМЕНТ ЗАМЕРА — из того самого
+  // JSON, по которому манифест и составлен (--json= у
+  // build-density-manifest). Это единственная сверка слов, которая
+  // теперь что-то значит: локальная копия держит другой банк, и
+  // --words-from=file:./dev.db гарантированно покажет расхождение,
+  // не относящееся к делу.
+  const manifestFile = arg("words-from-manifest");
+  interface ManifestEntry {
+    level: string;
+    sequence: number;
+    board: string;
+    parts: number | null;
+    tailSequences: number[];
+    rowId?: string;
+    words?: string[];
+  }
+  const measured = new Map<string, ManifestEntry>();
+  if (manifestFile) {
+    const parsed = JSON.parse(readFileSync(manifestFile, "utf8")) as { manifest: ManifestEntry[] };
+    for (const e of parsed.manifest) measured.set(`${e.level}/${e.sequence}`, e);
+  }
 
   const prodUrl = process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db";
   const db = client(prodUrl, process.env.TURSO_AUTH_TOKEN);
@@ -94,7 +120,11 @@ async function main() {
   try {
     console.log(
       `База: ${prodUrl.replace(/^(libsql:\/\/[^.]{0,8}).*$/, "$1…")}${
-        wordsFrom ? `, слова сверяются с ${wordsFrom}` : ", слова НЕ сверяются (нет --words-from=)"
+        manifestFile
+          ? `, слова/доска сверяются с замером ${manifestFile}`
+          : wordsFrom
+            ? `, слова сверяются с ${wordsFrom}`
+            : ", слова НЕ сверяются (нет --words-from-manifest=)"
       }`,
     );
     console.log(`Рунгов к сверке: ${chosen.length}${round ? ` (круг ${round})` : " (весь манифест)"}\n`);
@@ -123,20 +153,72 @@ async function main() {
       if (!want) {
         complain(`${key}: в снимке ${BASELINE} такого ключа нет.`);
       } else {
-        if (Math.abs(a.occupancy - want.occupancy) > 1e-9) {
+        // Снимок хранит занятость округлённой до 4 знаков
+        // (check-word-search.ts: `Number(a.occupancy.toFixed(4))`), а
+        // живое значение — полное. Сравнение «до девятого знака»
+        // объявляло расхождением 87.1% против 87.1% на каждой второй
+        // строке: сторож, который всегда красный, ничего не сторожит.
+        // Допуск — ровно половина последнего хранимого знака.
+        const ROUNDING = 5e-5;
+        if (Math.abs(a.occupancy - want.occupancy) > ROUNDING) {
           complain(
-            `${key}: занятость на проде ${pct(a.occupancy)}, в снимке ${pct(want.occupancy)}.`,
+            `${key}: занятость на проде ${(a.occupancy * 100).toFixed(3)}%, в снимке ${(want.occupancy * 100).toFixed(3)}%.`,
           );
         }
         if (a.maxOverlap !== want.maxOverlap) {
           complain(`${key}: слов на клетку на проде ${a.maxOverlap}, в снимке ${want.maxOverlap}.`);
         }
       }
-      if (split.sequence <= WORD_GAME_FREE_RUNGS_PER_LEVEL) {
+      // Через ту же функцию, что и пейволл с robots.txt, а не через
+      // `sequence <= 10`: бесплатность — это `level !== "C1" && sequence
+      // <= 10`, и голое сравнение по номеру объявляло бесплатным C1/10,
+      // который бесплатным никогда не был (у C1 бесплатных рунгов нет
+      // вовсе). Дубль правила ровно тот, ради устранения которого
+      // free-tier.ts и выделяли.
+      if (isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: split.level, sequence: split.sequence })) {
         complain(`${key}: это БЕСПЛАТНЫЙ рунг — манифест не имеет права его трогать.`);
       }
       if (a.missing.length > 0) {
         complain(`${key}: солвер не находит в сетке ${a.missing.length} слов: ${a.missing.join(", ")}`);
+      }
+
+      const m = measured.get(`${split.level}/${split.sequence}`);
+      if (manifestFile) {
+        if (!m) {
+          complain(`${key}: в замере ${manifestFile} такого рунга нет.`);
+        } else {
+          if (m.rowId && m.rowId !== row.id) {
+            complain(`${key}: id строки ${row.id}, в замере ${m.rowId} — строку пересоздали.`);
+          }
+          const size = boardSize(input.grid);
+          const board = `${size.rows}×${size.cols}`;
+          if (m.board && m.board !== board) {
+            complain(`${key}: доска ${board}, в замере ${m.board}.`);
+          }
+          if (m.parts !== null && m.parts !== split.parts) {
+            complain(`${key}: манифест обещает ${split.parts} част(и), замер дал ${m.parts}.`);
+          }
+          if (JSON.stringify(m.tailSequences) !== JSON.stringify(split.tailSequences)) {
+            complain(
+              `${key}: хвосты манифеста [${split.tailSequences.join(", ")}] ≠ хвостам замера [${m.tailSequences.join(", ")}].`,
+            );
+          }
+          if (m.words) {
+            const now = input.words.map((w) => w.word);
+            const same = now.length === m.words.length && now.every((w, i) => w === m.words![i]);
+            if (!same) {
+              const lost = m.words.filter((w) => !now.includes(w));
+              const extra = now.filter((w) => !m.words!.includes(w));
+              complain(
+                `${key}: слова разошлись с замером. Было и нет: ${lost.join(", ") || "—"}; ` +
+                  `есть и не было: ${extra.join(", ") || "—"}` +
+                  (lost.length === 0 && extra.length === 0 ? " (тот же набор, другой ПОРЯДОК)" : ""),
+              );
+            } else {
+              notes.push(`слова ${now.length}/${now.length} совпали поэлементно и по порядку, доска ${board}`);
+            }
+          }
+        }
       }
 
       if (local) {
