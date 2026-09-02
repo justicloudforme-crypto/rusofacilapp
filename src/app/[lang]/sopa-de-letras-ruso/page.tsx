@@ -10,6 +10,7 @@ import GameLandingLinks from "@/components/word-games/GameLandingLinks";
 import { TOPIC_LANDINGS, GENERIC_SOPA_PUZZLE, landingPath } from "@/lib/word-games/topic-landings";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
+import { wordGamePlayerDict } from "@/lib/word-games/player-dict";
 
 const PAGE_PATH = "/sopa-de-letras-ruso";
 
@@ -100,7 +101,7 @@ export default async function SopaDeLetrasRusoPage({
         <WordGamePlayer
           lang="es"
           puzzle={toPublicPuzzle(row)}
-          dict={dict.wordGames}
+          dict={wordGamePlayerDict(dict)}
           resultDict={{ ...dict.gameResult, locale: lang }}
           signedIn={Boolean(user)}
         />

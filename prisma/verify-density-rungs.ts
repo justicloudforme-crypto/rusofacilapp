@@ -9,7 +9,7 @@
  * Раньше и манифест, и снимок были локальными, и именно эта сверка
  * поймала, что прод держит другой банк (PROGRESS.md 7.81-7.83).
  *
- * Что сверяется по каждому из 20 рунгов манифеста:
+ * Что сверяется по каждому ещё не применённому рунгу манифеста:
  *   · строка существует;
  *   · её занятость и максимум слов на клетку совпадают со снимком
  *     (то есть рунг ещё НЕ разгружен и не изменился с 01.09.2026);
@@ -21,7 +21,7 @@
  *     расхождение на ровном месте;
  *   · рунг платный (sequence за пределом бесплатного лимита).
  *
- * И по каждому из 24 хвостовых номеров: в базе его нет вовсе — иначе
+ * И по каждому хвостовому номеру: в базе его нет вовсе — иначе
  * лестница уровня уже выросла и манифест разошёлся с базой.
  *
  * Плюс лестница каждого затронутого уровня печатается как есть: сколько
@@ -31,7 +31,8 @@
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" \
  *     npx tsx prisma/verify-density-rungs.ts
  *   … --words-from=file:./dev.db      # ещё и поэлементная сверка слов
- *   … --round=1 | --round=2           # только один круг
+ *   … --round=1 | --round=2 | …        # только один десяток из ещё
+ *                                      # неприменённых записей манифеста
  */
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -62,10 +63,22 @@ function arg(name: string): string | undefined {
   return hit ? hit.slice(name.length + 3) : undefined;
 }
 
-/** Круг — это просто половина манифеста: первые десять записей и вторые
- * десять. Порядок в файле и есть порядок применения (7.80). */
-export function roundOf(splits: readonly DensitySplit[], round: 1 | 2): DensitySplit[] {
-  return round === 1 ? splits.slice(0, ROUND_SIZE) : splits.slice(ROUND_SIZE, ROUND_SIZE * 2);
+/**
+ * Круг — десяток НЕПРИМЕНЁННЫХ записей манифеста по порядку файла;
+ * порядок в файле и есть порядок применения (7.80).
+ *
+ * Применённые записи из счёта исключаются: их источники уже разгружены,
+ * их занятость со снимком «до» не сходится по построению, и сверять их
+ * перед следующей записью — значит красить прогон в красный тем, что уже
+ * сделано. Раньше кругов было ровно два, и оба были половинами файла.
+ */
+export function pendingSplits(splits: readonly DensitySplit[]): DensitySplit[] {
+  return splits.filter((s) => !s.applied);
+}
+
+export function roundOf(splits: readonly DensitySplit[], round: number): DensitySplit[] {
+  const pending = pendingSplits(splits);
+  return pending.slice((round - 1) * ROUND_SIZE, round * ROUND_SIZE);
 }
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
@@ -76,8 +89,8 @@ function client(url: string, authToken?: string) {
 
 async function main() {
   const roundArg = arg("round");
-  const round = roundArg ? (Number(roundArg) as 1 | 2) : null;
-  const chosen = round ? roundOf(DENSITY_SPLITS, round) : [...DENSITY_SPLITS];
+  const round = roundArg ? Number(roundArg) : null;
+  const chosen = round ? roundOf(DENSITY_SPLITS, round) : pendingSplits(DENSITY_SPLITS);
   const wordsFrom = arg("words-from");
   // Слова, размер доски и id строки НА МОМЕНТ ЗАМЕРА — из того самого
   // JSON, по которому манифест и составлен (--json= у
@@ -91,6 +104,7 @@ async function main() {
     sequence: number;
     board: string;
     parts: number | null;
+    sizes?: number[];
     tailSequences: number[];
     rowId?: string;
     words?: string[];
@@ -197,6 +211,15 @@ async function main() {
           }
           if (m.parts !== null && m.parts !== split.parts) {
             complain(`${key}: манифест обещает ${split.parts} част(и), замер дал ${m.parts}.`);
+          }
+          // Стороны — такая же часть обещания, как число частей: размер
+          // доски теперь ВЫБИРАЕТСЯ (quality.ts), и «14+18» в манифесте
+          // против «16+16» в замере значит, что записана будет не та
+          // доска, которую показывали.
+          if (m.sizes && JSON.stringify(m.sizes) !== JSON.stringify(split.sizes)) {
+            complain(
+              `${key}: стороны манифеста [${split.sizes.join(", ")}] ≠ сторонам замера [${m.sizes.join(", ")}].`,
+            );
           }
           if (JSON.stringify(m.tailSequences) !== JSON.stringify(split.tailSequences)) {
             complain(

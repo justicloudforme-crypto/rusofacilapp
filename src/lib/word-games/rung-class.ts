@@ -61,6 +61,11 @@ export interface SplitSelection {
   /** Рунги, которых тяжесть подняла в верх списка, но класс отправил в
    * другую работу — их места заняли следующие по тяжести. */
   skipped: ClassifiedRung[];
+  /** Рунги правильного класса, которые отверг ВЫЗЫВАЮЩИЙ (`accept`) —
+   * например, потому что новое правило не приводит их в коридор ни одним
+   * набором сеток. Отдельный список, а не молчаливый пропуск: «его
+   * вытеснили» и «его нельзя починить» — разные факты. */
+  rejected: ClassifiedRung[];
 }
 
 /**
@@ -69,10 +74,15 @@ export interface SplitSelection {
  * возвращаются отдельным списком, потому что «его вытеснили» — это
  * решение, а не побочный эффект сортировки.
  */
-export function selectSplits(audits: PuzzleAudit[], count: number): SplitSelection {
+export function selectSplits(
+  audits: PuzzleAudit[],
+  count: number,
+  accept: (audit: PuzzleAudit) => boolean = () => true,
+): SplitSelection {
   const median = medianOccupancy(audits);
   const chosen: ClassifiedRung[] = [];
   const skipped: ClassifiedRung[] = [];
+  const rejected: ClassifiedRung[] = [];
   worstFirst(audits).forEach((audit, i) => {
     if (chosen.length >= count) return;
     const entry: ClassifiedRung = {
@@ -81,8 +91,15 @@ export function selectSplits(audits: PuzzleAudit[], count: number): SplitSelecti
       severity: severity(audit),
       klass: classifyRung(audit, median),
     };
-    if (entry.klass === "разгрузка") chosen.push(entry);
-    else skipped.push(entry);
+    if (entry.klass !== "разгрузка") {
+      skipped.push(entry);
+      return;
+    }
+    if (!accept(audit)) {
+      rejected.push(entry);
+      return;
+    }
+    chosen.push(entry);
   });
-  return { median, chosen, skipped };
+  return { median, chosen, skipped, rejected };
 }
