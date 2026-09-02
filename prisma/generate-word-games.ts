@@ -43,6 +43,21 @@ import { densityTailCount, isDensityOwnedRung } from "../src/lib/word-games/dens
 
 import { isEntryPoint } from "../src/lib/entry-point";
 const DRY_RUN = process.argv.includes("--dry-run");
+/**
+ * Rewrite rows that already exist but whose content differs from what this
+ * run built. OFF by default, and that default is the safety property this
+ * script leans on.
+ *
+ * Before the `orderBy` fix above, "already up to date" was true only by
+ * luck: the generator compared content and quietly UPDATED any row that no
+ * longer matched. Pinning the card order changes what a rung builds, so a
+ * plain rerun would have rewritten 2979 of 3000 rows — including every
+ * puzzle players already hold progress on, and including the production
+ * bank, which is the reference copy (PROGRESS.md 7.83). Missing rows are
+ * still created: that is what the script is for. Replacing an existing
+ * puzzle is a deliberate act and now needs this flag.
+ */
+const REWRITE = process.argv.includes("--rewrite");
 const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length) ?? null;
 // Argument validation exits the process, so it must not run on import
 // either — see src/lib/entry-point.ts.
@@ -343,7 +358,7 @@ async function upsertPuzzle(
   curved: boolean,
   topic: string | null,
   built: { grid: WordGameGrid; words: WordPlacement[] },
-  counters: { created: number; unchanged: number; wouldWrite: string[] }
+  counters: { created: number; unchanged: number; kept: string[]; wouldWrite: string[] }
 ): Promise<void> {
   const gridData = JSON.stringify(built.grid);
   const words = JSON.stringify(built.words);
@@ -359,6 +374,17 @@ async function upsertPuzzle(
     existing.words === words
   ) {
     counters.unchanged++;
+    return;
+  }
+
+  // The row is there and holds something else. Without --rewrite that is
+  // not a job for this script: the existing puzzle is live content with
+  // player progress attached, and this run's version of it is merely
+  // "what today's card order builds", not a correction of anything. It is
+  // counted and listed, never silently skipped.
+  if (existing && !REWRITE) {
+    counters.unchanged++;
+    counters.kept.push(`${type}/${level}/${sequence}`);
     return;
   }
 
@@ -425,16 +451,30 @@ async function cleanupStaleSequences(): Promise<number> {
 }
 
 async function main() {
-  const counters = { created: 0, unchanged: 0, wouldWrite: [] as string[] };
+  const counters = { created: 0, unchanged: 0, kept: [] as string[], wouldWrite: [] as string[] };
   if (DRY_RUN) console.log("--dry-run: nothing will be written.\n");
   if (FREE_ONLY) console.log(`--only=free: restricted to the ${WORD_GAME_FREE_RUNGS_PER_LEVEL} free rungs of each ladder, A1-B2, both types.\n`);
   const problems: string[] = [];
 
   for (const level of LEVELS) {
     const target = LEVEL_TARGETS[level];
+    // orderBy is NOT decoration. Without it SQLite hands rows back in
+    // storage (rowid) order, which is an artefact of the order rows
+    // happened to be inserted into THIS file — and `candidateWords()`
+    // dedupes first-wins over that order while `buildWordSearch` /
+    // `buildCrossword` shuffle the pool with a seeded RNG. A seeded
+    // shuffle is a permutation OF THE INPUT ARRAY: the same seed over a
+    // differently ordered pool picks different words. That is the whole
+    // reason production and dev.db hold two different banks under the
+    // same rung numbers (PROGRESS.md 7.82/7.83) — the generator's
+    // "re-running reproduces byte-identical puzzles" promise silently
+    // held only within one database file. `id` is a stable human slug
+    // ("v6-fridge"), identical on both databases, so ordering by it makes
+    // the pool — and therefore the puzzle — the same everywhere.
     const cards = await db.flashcardCard.findMany({
       where: { level },
       select: { russian: true, translationEs: true, exampleEs: true, category: true },
+      orderBy: { id: "asc" },
     });
     // Real content gap found by direct measurement (not assumption): C1's
     // own word bank has only 3 eligible 4-letter words and ZERO 3-letter
@@ -452,7 +492,11 @@ async function main() {
     // bands that need it.
     const lower = lowerLevel(level);
     const lowerCards = lower
-      ? await db.flashcardCard.findMany({ where: { level: lower }, select: { russian: true, translationEs: true, exampleEs: true } })
+      ? await db.flashcardCard.findMany({
+          where: { level: lower },
+          select: { russian: true, translationEs: true, exampleEs: true },
+          orderBy: { id: "asc" },
+        })
       : [];
 
     const crosswordClueForLevel = (card: { translationEs: string; exampleEs: string }, word: string) => buildClue(level, card, word);
@@ -721,6 +765,14 @@ async function main() {
     for (const w of counters.wouldWrite) console.log(`  - ${w}`);
   } else {
     console.log(`\n${counters.created} puzzle(s) written, ${counters.unchanged} already up to date.`);
+  }
+  if (counters.kept.length > 0) {
+    console.log(
+      `\n${counters.kept.length} existing puzzle(s) left as they are — this run would build them differently. ` +
+        `Pass --rewrite to replace them (this rewrites live content; see the flag's comment).`
+    );
+    for (const k of counters.kept.slice(0, 20)) console.log(`  - ${k}`);
+    if (counters.kept.length > 20) console.log(`  … и ещё ${counters.kept.length - 20}`);
   }
   if (problems.length > 0) {
     console.log(`\n${problems.length} rung(s) skipped:`);

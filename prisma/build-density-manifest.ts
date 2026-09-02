@@ -122,6 +122,12 @@ async function main() {
       parts: number | null;
       tailSequences: number[];
       note: string;
+      /** Id строки-источника и её слова НА МОМЕНТ ЗАМЕРА, по порядку.
+       * Сверка перед записью (prisma/verify-density-rungs.ts) сравнивает
+       * их с тем, что лежит в базе прямо сейчас. Сравнивать слова с
+       * локальной копией больше нельзя: это другой банк. */
+      rowId: string;
+      words: string[];
     }
     const manifest: Entry[] = [];
     for (const c of selection.chosen) {
@@ -158,6 +164,8 @@ async function main() {
         parts,
         tailSequences: tails,
         note,
+        rowId: row.id,
+        words: words.map((w) => w.word),
       });
     }
 

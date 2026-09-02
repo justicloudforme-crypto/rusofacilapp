@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import { boardSizeMismatches, dealWords, splitPuzzle, SPLIT_TARGET_OCCUPANCY, MIN_PART_OCCUPANCY } from "./redistribute";
 import { DENSITY_SPLITS, densityTailCount, isDensityOwnedRung, findDensitySplit } from "./density-rungs";
 import { occupancyStats } from "./word-search-audit";
+import { isFreeWordGamePuzzle } from "./free-tier";
+import { topicForPuzzle } from "./topics";
 
 const WORDS = [
   "жаропонижающее","обескураженный","госпитализация","самоуправление","плиссированный",
@@ -47,9 +49,14 @@ describe("splitting an over-packed puzzle", () => {
 
 describe("the redistribution manifest", () => {
   it("names twenty paid rungs, none of them free or themed", () => {
-    // Two rounds of ten: 7.78 and 7.80.
+    // Two rounds of ten, measured on production 2026-09-02 (PROGRESS.md 7.83).
     expect(DENSITY_SPLITS).toHaveLength(20);
-    for (const s of DENSITY_SPLITS) expect(s.sequence).toBeGreaterThan(10);
+    // Не `sequence > 10`: C1/10 платный (у C1 бесплатных рунгов нет), и
+    // повтор правила своими словами именно на нём и ошибался.
+    for (const s of DENSITY_SPLITS) {
+      expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: s.sequence })).toBe(false);
+      expect(topicForPuzzle("WORD_SEARCH", s.level, s.sequence)).toBeNull();
+    }
   });
 
   it("gives every leftover part its own tail sequence, with no collisions", () => {
@@ -62,10 +69,11 @@ describe("the redistribution manifest", () => {
   });
 
   it("counts the tail per level the way the generator's cleanup needs", () => {
-    expect(densityTailCount("B2")).toBe(13);
+    expect(densityTailCount("B2")).toBe(10);
     expect(densityTailCount("B1")).toBe(1);
-    expect(densityTailCount("C1")).toBe(10);
+    expect(densityTailCount("C1")).toBe(9);
     expect(densityTailCount("A1")).toBe(0);
+    expect(densityTailCount("A2")).toBe(0);
   });
 
   it("claims ownership of both a split source and its tail, and of nothing else", () => {
@@ -74,7 +82,9 @@ describe("the redistribution manifest", () => {
     expect(isDensityOwnedRung("WORD_SEARCH", "B2", 45)).toBe(false);
     // Same numbers on the other game type must not be claimed.
     expect(isDensityOwnedRung("CROSSWORD", "B2", 44)).toBe(false);
-    expect(findDensitySplit("C1", 139)?.parts).toBe(3);
+    expect(findDensitySplit("C1", 114)?.parts).toBe(2);
+    expect(findDensitySplit("C1", 114)?.tailSequences).toEqual([241]);
+    expect(findDensitySplit("C1", 139)).toBeUndefined();
   });
 });
 

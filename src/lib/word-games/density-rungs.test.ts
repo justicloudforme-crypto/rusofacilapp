@@ -13,6 +13,7 @@ import {
   ladderGaps,
 } from "./density-rungs";
 import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { isFreeWordGamePuzzle } from "./free-tier";
 
 describe("density-rungs manifest", () => {
   it("promises exactly as many tail rungs as it promises parts", () => {
@@ -21,17 +22,29 @@ describe("density-rungs manifest", () => {
     }
   });
 
+  // Через isFreeWordGamePuzzle, а не через `sequence > лимит`. Бесплатность
+  // — это `level !== "C1" && sequence <= 10`, и сравнение по одному номеру
+  // объявляло бы бесплатным C1/10, который бесплатным не был никогда: у C1
+  // бесплатных рунгов нет вовсе. Тест, повторяющий правило своими словами,
+  // сторожит свою копию правила, а не правило.
   it("never splits a free rung — the sitemap and robots rule must not move", () => {
     for (const s of DENSITY_SPLITS) {
-      expect(s.sequence, `${s.level}/${s.sequence} is a free rung`).toBeGreaterThan(
-        FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel,
-      );
-      for (const tail of s.tailSequences) {
-        expect(tail, `${s.level}/${tail} is a free rung`).toBeGreaterThan(
-          FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel,
-        );
+      for (const seq of [s.sequence, ...s.tailSequences]) {
+        expect(
+          isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: seq }),
+          `${s.level}/${seq} is a free rung`,
+        ).toBe(false);
       }
     }
+  });
+
+  // Та же проверка с другой стороны: правило не должно молчать, если рунг
+  // ДЕЙСТВИТЕЛЬНО бесплатный. Без этого предыдущий тест зелен и на пустом
+  // манифесте, и на сломанной isFreeWordGamePuzzle.
+  it("would catch a genuinely free rung", () => {
+    expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: "B2", sequence: 10 })).toBe(true);
+    expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: "C1", sequence: 10 })).toBe(false);
+    expect(FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel).toBe(10);
   });
 
   it("names no rung twice — neither as a source nor as a tail", () => {
