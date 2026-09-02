@@ -16,7 +16,7 @@
 // Ignoring the coordinates is the point: a puzzle whose stored placement
 // disagrees with its own grid is precisely the defect this has to catch,
 // and a check that trusts the coordinates cannot see it.
-import type { WordGamePuzzle } from "./types";
+import type { WordGamePuzzle, WordPlacement, WordSearchDirection } from "./types";
 
 const DIRS = [
   [0, 1],
@@ -106,6 +106,113 @@ export function findCurved(
   return { found: false, exhausted: steps > maxSteps };
 }
 
+const DIRECTION_DELTA: Record<WordSearchDirection, [number, number]> = {
+  E: [0, 1],
+  W: [0, -1],
+  S: [1, 0],
+  N: [-1, 0],
+  SE: [1, 1],
+  SW: [1, -1],
+  NE: [-1, 1],
+  NW: [-1, -1],
+};
+
+/** The cells one stored placement claims: `path` when the word bends
+ * (curved/★), otherwise the ray from row/col in `direction`. */
+export function placementCells(placement: WordPlacement): { row: number; col: number }[] {
+  if (placement.path && placement.path.length > 0) return placement.path;
+  const [dr, dc] = DIRECTION_DELTA[placement.direction] ?? [0, 1];
+  const length = norm(placement.word).length;
+  return Array.from({ length }, (_, i) => ({ row: placement.row + dr * i, col: placement.col + dc * i }));
+}
+
+/** Does the stored placement actually spell its word in this grid? */
+export function placementAgrees(grid: string[][], placement: WordPlacement): boolean {
+  const target = norm(placement.word);
+  const cells = placementCells(placement);
+  if (cells.length !== target.length) return false;
+  return cells.every((c, i) => norm(grid[c.row]?.[c.col] ?? "") === target[i]);
+}
+
+export interface OccupancyStats {
+  /** Distinct cells claimed by at least one word. */
+  occupiedCells: number;
+  /** occupiedCells ÷ cells. Cannot exceed 1, which is the whole point:
+   * the old `density` counted a shared cell once per word and so ran past
+   * 100% on a perfectly ordinary puzzle. */
+  occupancy: number;
+  /** Cells no word touches — pure filler letters. `fillerShare` is
+   * 1 − occupancy by construction; both are reported because they answer
+   * two different questions a reader actually asks ("how full is it" and
+   * "how much of what I see is noise"). */
+  fillerCells: number;
+  fillerShare: number;
+  /** How many cells are claimed by exactly 1, exactly 2, exactly 3, and
+   * 4 or more words. A cell shared by four words is where a grid stops
+   * being a word search and starts being a letter soup that happens to
+   * contain the list. */
+  overlap: { one: number; two: number; three: number; fourPlus: number };
+  /** The largest number of words sharing any single cell. */
+  maxOverlap: number;
+}
+
+/** Occupancy/overlap from the STORED placements — deliberately not from
+ * the solver.
+ *
+ * The solver answers "can this word be found at all" and must ignore the
+ * stored coordinates to do it (see this file's header). Packing is a
+ * different question: it asks how the generator actually laid the words
+ * down, and only the stored placement knows that. A short word like «кот»
+ * often appears in the filler by accident, so a solver-found position
+ * would attribute overlap to cells the generator never chose.
+ *
+ * Placements that do NOT agree with the grid are excluded and reported by
+ * `placementMismatches` rather than silently folded in — a cell count
+ * built partly on coordinates that spell something else is not a
+ * measurement of anything. */
+export function occupancyStats(
+  grid: string[][],
+  placements: WordPlacement[],
+): OccupancyStats & { placementMismatches: string[] } {
+  const rows = grid.length;
+  const cols = grid[0]?.length ?? 0;
+  const cells = rows * cols;
+  const counts = new Map<number, number>();
+  const placementMismatches: string[] = [];
+
+  for (const placement of placements) {
+    if (!placementAgrees(grid, placement)) {
+      placementMismatches.push(placement.word);
+      continue;
+    }
+    for (const c of placementCells(placement)) {
+      const key = c.row * cols + c.col;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+
+  const overlap = { one: 0, two: 0, three: 0, fourPlus: 0 };
+  let maxOverlap = 0;
+  for (const n of counts.values()) {
+    if (n >= 4) overlap.fourPlus++;
+    else if (n === 3) overlap.three++;
+    else if (n === 2) overlap.two++;
+    else overlap.one++;
+    if (n > maxOverlap) maxOverlap = n;
+  }
+
+  const occupiedCells = counts.size;
+  return {
+    occupiedCells,
+    occupancy: cells > 0 ? occupiedCells / cells : 0,
+    fillerCells: cells - occupiedCells,
+    fillerShare: cells > 0 ? (cells - occupiedCells) / cells : 0,
+    overlap,
+    maxOverlap,
+    placementMismatches,
+  };
+}
+
 export interface PuzzleAudit {
   id: string;
   level: string;
@@ -134,6 +241,17 @@ export interface PuzzleAudit {
   /** Words whose curved search hit the step bound — neither confirmed nor
    * refuted. Kept separate so they can never be silently counted clean. */
   undecided: string[];
+  /** Words whose STORED row/col/direction (or `path`) does not spell them
+   * in the grid. Distinct from `missing`: the word may still be findable
+   * elsewhere, but the generator's own record of where it put it is
+   * wrong, and every occupancy number below excludes it. */
+  placementMismatches: string[];
+  occupiedCells: number;
+  occupancy: number;
+  fillerCells: number;
+  fillerShare: number;
+  overlap: { one: number; two: number; three: number; fourPlus: number };
+  maxOverlap: number;
 }
 
 export interface PuzzleInput {
@@ -142,7 +260,12 @@ export interface PuzzleInput {
   sequence: number;
   curved: boolean;
   grid: string[][];
-  words: { word: string }[];
+  /** Full placements, not just the strings: `occupancyStats` needs the
+   * coordinates the generator wrote, and the solver deliberately ignores
+   * them. A caller that only has the words can pass them with any
+   * coordinates — the placement check will then simply report every one
+   * as a mismatch, which is the honest outcome, not a silent zero. */
+  words: WordPlacement[];
 }
 
 export function auditPuzzle(puzzle: PuzzleInput): PuzzleAudit {
@@ -169,6 +292,7 @@ export function auditPuzzle(puzzle: PuzzleInput): PuzzleAudit {
   const minSide = Math.min(rows, cols);
   const maxSide = Math.max(rows, cols);
   const longestLength = norm(longest).length;
+  const occupancy = occupancyStats(puzzle.grid, puzzle.words);
 
   return {
     id: puzzle.id,
@@ -189,6 +313,13 @@ export function auditPuzzle(puzzle: PuzzleInput): PuzzleAudit {
     impossibleByLength: longestLength > maxSide,
     missing,
     undecided,
+    placementMismatches: occupancy.placementMismatches,
+    occupiedCells: occupancy.occupiedCells,
+    occupancy: occupancy.occupancy,
+    fillerCells: occupancy.fillerCells,
+    fillerShare: occupancy.fillerShare,
+    overlap: occupancy.overlap,
+    maxOverlap: occupancy.maxOverlap,
   };
 }
 
@@ -212,7 +343,7 @@ export function puzzleInputFromRow(row: {
 }): PuzzleInput | null {
   try {
     const gridData = JSON.parse(row.gridData) as Pick<WordGamePuzzle["gridData"], "grid">;
-    const words = JSON.parse(row.words) as { word: string }[];
+    const words = JSON.parse(row.words) as WordPlacement[];
     if (!Array.isArray(gridData?.grid) || !Array.isArray(words)) return null;
     return {
       id: row.id,

@@ -32,7 +32,7 @@ const E2E_DIR = join(repoRoot, "e2e");
 
 /**
  * How many tests the suite is known to execute, counting one test per
- * project (77 = 37 in chromium + 37 in mobile-iphone + 3 in
+ * project (79 = 38 in chromium + 38 in mobile-iphone + 3 in
  * voice-ios-shape). Raised from 49 to 53 on 30.08.2026 by
  * e2e/page-width.spec.ts — one test per locale — and from 53 to 57 when
  * that spec gained its second viewport width (320 alongside 360), which
@@ -40,7 +40,9 @@ const E2E_DIR = join(repoRoot, "e2e");
  * 31.08.2026 by e2e/navbar-signed-in.spec.ts (one test per locale), which
  * measures the header of a SIGNED-IN learner at 640–660 — the surface debt
  * 37 existed for, and the one check:layout cannot reach because it browses
- * anonymously. Raised from 73 to 77 on 02.09.2026, when
+ * anonymously. Raised from 77 to 79 on 01.09.2026, when
+ * word-games.spec.ts gained the mobile-column test (PROGRESS.md 7.77);
+ * from 73 to 77, when
  * match-result-panel.spec.ts added one test per locale; from 61 to 73, when
  * e2e/page-width.spec.ts went from two viewport widths to five — 1024, 834
  * and 820 join 360 and 320 — and each of those tests also began asserting
@@ -52,7 +54,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * exists to prevent, so if you are here to do that, the thing to fix is
  * the run.
  */
-const MIN_EXECUTED_TESTS = 77;
+const MIN_EXECUTED_TESTS = 79;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.
