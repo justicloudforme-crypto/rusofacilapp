@@ -1,7 +1,1352 @@
 [
-  { "category": "clothing", "level": "B1", "emoji": "🎒", "russian": "рюкзак-переноска", "transcription": "ryukzák-pirinóska", "translationEs": "mochila portabebés", "exampleRu": "Она носит малыша в рюкзаке-переноске.", "exampleEs": "Lleva al bebé en la mochila portabebés." },
-  { "category": "clothing", "level": "A2", "emoji": "🍼", "russian": "слюнявчик", "transcription": "slyunyávchik", "translationEs": "babero", "exampleRu": "Наденьте слюнявчик перед кормлением.", "exampleEs": "Ponle el babero antes de darle de comer." },
-  { "category": "clothing", "level": "A2", "emoji": "👶", "russian": "пинетки", "transcription": "pinyétki", "translationEs": "patucos, botitas de bebé", "exampleRu": "Бабушка связала пинетки для внучки.", "exampleEs": "La abuela tejió unos patucos para su nieta." },
-  { "category": "clothing", "level": "B1", "emoji": "👕", "russian": "детская распашонка", "transcription": "dyétskaya raspashónka", "translationEs": "camisita cruzada de bebé", "exampleRu": "Распашонка легко надевается на новорождённого.", "exampleEs": "La camisita cruzada se pone fácilmente al recién nacido." },
-  { "category": "clothing", "level": "A2", "emoji": "👶", "russian": "чепчик", "transcription": "chyépchik", "translationEs": "gorrito de bebé", "exampleRu": "На малыше был тёплый чепчик.", "exampleEs": "El bebé llevaba un gorrito abrigado." }
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🕯️",
+    "russian": "скончаться",
+    "transcription": "skanchát'sya",
+    "translationEs": "fallecer (registro formal y libresco; el neutro es «умереть»)",
+    "exampleRu": "Академик скончался после долгой болезни.",
+    "exampleEs": "El académico falleció tras una larga enfermedad.",
+    "synonyms": [
+      {
+        "word": "умереть",
+        "translation": "morir (neutro)"
+      },
+      {
+        "word": "помереть",
+        "translation": "morirse (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "💀",
+    "russian": "помереть",
+    "transcription": "pamiryét'",
+    "translationEs": "morirse (registro coloquial y rústico; el neutro es «умереть»)",
+    "exampleRu": "Дед у нас помер ещё до войны.",
+    "exampleEs": "Nuestro abuelo se murió antes de la guerra.",
+    "synonyms": [
+      {
+        "word": "умереть",
+        "translation": "morir (neutro)"
+      },
+      {
+        "word": "скончаться",
+        "translation": "fallecer (formal)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🍽️",
+    "russian": "вкушать",
+    "transcription": "fkushát'",
+    "translationEs": "degustar, saborear (registro libresco y elevado; el neutro es «есть»)",
+    "exampleRu": "В повести герои неспешно вкушают простую деревенскую пищу.",
+    "exampleEs": "En la novela los personajes degustan sin prisa la sencilla comida del campo.",
+    "synonyms": [
+      {
+        "word": "есть",
+        "translation": "comer (neutro)"
+      },
+      {
+        "word": "уплетать",
+        "translation": "zamparse (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "😋",
+    "russian": "уплетать",
+    "transcription": "uplitát'",
+    "translationEs": "zamparse, comer con muchas ganas (registro coloquial; el neutro es «есть»)",
+    "exampleRu": "Дети уплетали блины за обе щёки.",
+    "exampleEs": "Los niños se zampaban los blinis con muchísimas ganas.",
+    "synonyms": [
+      {
+        "word": "есть",
+        "translation": "comer (neutro)"
+      },
+      {
+        "word": "вкушать",
+        "translation": "degustar (libresco)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "📜",
+    "russian": "изречь",
+    "transcription": "izryéch'",
+    "translationEs": "proferir, sentenciar (registro libresco, a menudo irónico; el neutro es «сказать»)",
+    "exampleRu": "Он выдержал паузу и изрёк что-то очень глубокомысленное.",
+    "exampleEs": "Hizo una pausa y profirió algo muy solemne.",
+    "synonyms": [
+      {
+        "word": "сказать",
+        "translation": "decir (neutro)"
+      },
+      {
+        "word": "брякнуть",
+        "translation": "soltar (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🤭",
+    "russian": "брякнуть",
+    "transcription": "bryáknut'",
+    "translationEs": "soltar algo inoportuno (registro coloquial; el neutro es «сказать»)",
+    "exampleRu": "Я сгоряча брякнул лишнее и потом жалел.",
+    "exampleEs": "Solté algo de más en caliente y luego me arrepentí.",
+    "synonyms": [
+      {
+        "word": "сказать",
+        "translation": "decir (neutro)"
+      },
+      {
+        "word": "изречь",
+        "translation": "proferir (libresco)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🥱",
+    "russian": "утомиться",
+    "transcription": "utamít'sya",
+    "translationEs": "fatigarse (registro formal y libresco; el neutro es «устать»)",
+    "exampleRu": "Путники утомились и остановились на ночлег.",
+    "exampleEs": "Los viajeros se fatigaron y se detuvieron a pasar la noche.",
+    "synonyms": [
+      {
+        "word": "устать",
+        "translation": "cansarse (neutro)"
+      },
+      {
+        "word": "вымотаться",
+        "translation": "quedar agotado (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "😩",
+    "russian": "вымотаться",
+    "transcription": "výmatat'sya",
+    "translationEs": "quedar agotado del todo (registro coloquial; el neutro es «устать»)",
+    "exampleRu": "За смену я так вымотался, что заснул одетым.",
+    "exampleEs": "Con el turno quedé tan agotado que me dormí vestido.",
+    "synonyms": [
+      {
+        "word": "устать",
+        "translation": "cansarse (neutro)"
+      },
+      {
+        "word": "утомиться",
+        "translation": "fatigarse (formal)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🖼️",
+    "russian": "лик",
+    "transcription": "lik",
+    "translationEs": "rostro, faz (registro elevado y libresco; también el rostro de un icono; el neutro es «лицо»)",
+    "exampleRu": "На старой иконе едва различим лик святого.",
+    "exampleEs": "En el icono antiguo apenas se distingue el rostro del santo.",
+    "synonyms": [
+      {
+        "word": "лицо",
+        "translation": "cara (neutro)"
+      },
+      {
+        "word": "физиономия",
+        "translation": "jeta (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "😐",
+    "russian": "физиономия",
+    "transcription": "fizianómiya",
+    "translationEs": "jeta, careto (registro coloquial, algo despectivo; el neutro es «лицо»)",
+    "exampleRu": "У него была очень недовольная физиономия.",
+    "exampleEs": "Tenía cara de muy pocos amigos.",
+    "synonyms": [
+      {
+        "word": "лицо",
+        "translation": "cara (neutro)"
+      },
+      {
+        "word": "лик",
+        "translation": "faz (elevado)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "💼",
+    "russian": "средства",
+    "transcription": "sryédstva",
+    "translationEs": "fondos, recursos (registro formal y oficial; el neutro es «деньги»)",
+    "exampleRu": "Средства на ремонт выделят из городского бюджета.",
+    "exampleEs": "Los fondos para la reforma saldrán del presupuesto municipal.",
+    "synonyms": [
+      {
+        "word": "деньги",
+        "translation": "dinero (neutro)"
+      },
+      {
+        "word": "бабки",
+        "translation": "pasta (muy coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "💸",
+    "russian": "бабки",
+    "transcription": "bápki",
+    "translationEs": "pasta, guita (registro coloquial y bajo; el neutro es «деньги»)",
+    "exampleRu": "Он всё время говорит только про бабки.",
+    "exampleEs": "No para de hablar de la pasta.",
+    "synonyms": [
+      {
+        "word": "деньги",
+        "translation": "dinero (neutro)"
+      },
+      {
+        "word": "средства",
+        "translation": "fondos (formal)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "⚒️",
+    "russian": "трудиться",
+    "transcription": "trudít'sya",
+    "translationEs": "laborar, afanarse (registro libresco y elevado; el neutro es «работать»)",
+    "exampleRu": "Реставраторы трудились над рукописью не один год.",
+    "exampleEs": "Los restauradores se afanaron sobre el manuscrito durante años.",
+    "synonyms": [
+      {
+        "word": "работать",
+        "translation": "trabajar (neutro)"
+      },
+      {
+        "word": "вкалывать",
+        "translation": "currar (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🛠️",
+    "russian": "вкалывать",
+    "transcription": "fkályvat'",
+    "translationEs": "currar, deslomarse (registro coloquial; el neutro es «работать»)",
+    "exampleRu": "Он вкалывает по двенадцать часов без выходных.",
+    "exampleEs": "Se desloma doce horas al día sin descansar.",
+    "synonyms": [
+      {
+        "word": "работать",
+        "translation": "trabajar (neutro)"
+      },
+      {
+        "word": "трудиться",
+        "translation": "laborar (libresco)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🏚️",
+    "russian": "жилище",
+    "transcription": "zhylíshche",
+    "translationEs": "vivienda, morada (registro formal y libresco; el neutro es «жильё»)",
+    "exampleRu": "Закон защищает неприкосновенность жилища.",
+    "exampleEs": "La ley protege la inviolabilidad de la vivienda.",
+    "synonyms": [
+      {
+        "word": "жильё",
+        "translation": "vivienda (neutro)"
+      },
+      {
+        "word": "хата",
+        "translation": "casa, cuchitril (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🏠",
+    "russian": "хата",
+    "transcription": "kháta",
+    "translationEs": "casa, choza (registro coloquial; el neutro es «жильё»)",
+    "exampleRu": "Сегодня собираемся у меня на хате.",
+    "exampleEs": "Hoy quedamos en mi casa.",
+    "synonyms": [
+      {
+        "word": "жильё",
+        "translation": "vivienda (neutro)"
+      },
+      {
+        "word": "жилище",
+        "translation": "morada (formal)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "👘",
+    "russian": "одеяние",
+    "transcription": "adiyániye",
+    "translationEs": "atuendo, vestidura (registro libresco y elevado; el neutro es «одежда»)",
+    "exampleRu": "Актёры вышли на сцену в старинных одеяниях.",
+    "exampleEs": "Los actores salieron a escena con atuendos antiguos.",
+    "synonyms": [
+      {
+        "word": "одежда",
+        "translation": "ropa (neutro)"
+      },
+      {
+        "word": "шмотки",
+        "translation": "trapos (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "👕",
+    "russian": "шмотки",
+    "transcription": "shmótki",
+    "translationEs": "trapos, ropa (registro coloquial; el neutro es «одежда»)",
+    "exampleRu": "Она полдня разбирала старые шмотки.",
+    "exampleEs": "Se pasó media tarde ordenando la ropa vieja.",
+    "synonyms": [
+      {
+        "word": "одежда",
+        "translation": "ropa (neutro)"
+      },
+      {
+        "word": "одеяние",
+        "translation": "atuendo (libresco)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🛌",
+    "russian": "почивать",
+    "transcription": "pachivát'",
+    "translationEs": "reposar, dormir (registro libresco y arcaico, hoy casi siempre irónico; el neutro es «спать»)",
+    "exampleRu": "Барин ещё почивает, будить его не велено.",
+    "exampleEs": "El señor todavía reposa; han prohibido despertarlo.",
+    "synonyms": [
+      {
+        "word": "спать",
+        "translation": "dormir (neutro)"
+      },
+      {
+        "word": "дрыхнуть",
+        "translation": "sobar (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "😴",
+    "russian": "дрыхнуть",
+    "transcription": "drýkhnut'",
+    "translationEs": "sobar, dormir a pierna suelta (registro coloquial; el neutro es «спать»)",
+    "exampleRu": "Он дрыхнет до полудня каждое воскресенье.",
+    "exampleEs": "Duerme a pierna suelta hasta el mediodía todos los domingos.",
+    "synonyms": [
+      {
+        "word": "спать",
+        "translation": "dormir (neutro)"
+      },
+      {
+        "word": "почивать",
+        "translation": "reposar (libresco)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "📢",
+    "russian": "порицать",
+    "transcription": "paritsát'",
+    "translationEs": "censurar, reprobar (registro formal y libresco; el neutro es «ругать»)",
+    "exampleRu": "Комиссия порицает подобные методы работы.",
+    "exampleEs": "La comisión censura semejantes métodos de trabajo.",
+    "synonyms": [
+      {
+        "word": "ругать",
+        "translation": "regañar, criticar (neutro)"
+      },
+      {
+        "word": "костерить",
+        "translation": "poner verde (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🤬",
+    "russian": "костерить",
+    "transcription": "kastirít'",
+    "translationEs": "poner verde, echar pestes de alguien (registro coloquial; el neutro es «ругать»)",
+    "exampleRu": "Водитель костерил пробку на весь салон.",
+    "exampleEs": "El conductor echaba pestes del atasco a voz en grito.",
+    "synonyms": [
+      {
+        "word": "ругать",
+        "translation": "regañar, criticar (neutro)"
+      },
+      {
+        "word": "порицать",
+        "translation": "censurar (formal)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "😨",
+    "russian": "страшиться",
+    "transcription": "strashýt'sya",
+    "translationEs": "temer (registro libresco; el neutro es «бояться»)",
+    "exampleRu": "Он не страшился ни критики, ни забвения.",
+    "exampleEs": "No temía ni la crítica ni el olvido.",
+    "synonyms": [
+      {
+        "word": "бояться",
+        "translation": "tener miedo (neutro)"
+      },
+      {
+        "word": "дрейфить",
+        "translation": "achantarse (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "😰",
+    "russian": "дрейфить",
+    "transcription": "dryéyfit'",
+    "translationEs": "achantarse, acobardarse (registro coloquial; el neutro es «бояться»)",
+    "exampleRu": "Не дрейфь, всё у тебя получится.",
+    "exampleEs": "No te achantes, todo te va a salir bien.",
+    "synonyms": [
+      {
+        "word": "бояться",
+        "translation": "tener miedo (neutro)"
+      },
+      {
+        "word": "страшиться",
+        "translation": "temer (libresco)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "👁️",
+    "russian": "взирать",
+    "transcription": "vzirát'",
+    "translationEs": "contemplar (registro libresco y elevado; el neutro es «смотреть»)",
+    "exampleRu": "С холма мы взирали на спящий город.",
+    "exampleEs": "Desde la colina contemplábamos la ciudad dormida.",
+    "synonyms": [
+      {
+        "word": "смотреть",
+        "translation": "mirar (neutro)"
+      },
+      {
+        "word": "пялиться",
+        "translation": "quedarse mirando (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "👀",
+    "russian": "пялиться",
+    "transcription": "pyálit'sya",
+    "translationEs": "quedarse mirando fijamente (registro coloquial; el neutro es «смотреть»)",
+    "exampleRu": "Хватит пялиться в телефон.",
+    "exampleEs": "Deja ya de quedarte mirando el teléfono.",
+    "synonyms": [
+      {
+        "word": "смотреть",
+        "translation": "mirar (neutro)"
+      },
+      {
+        "word": "взирать",
+        "translation": "contemplar (libresco)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "💬",
+    "russian": "беседовать",
+    "transcription": "bisyédavat'",
+    "translationEs": "conversar, departir (registro formal y libresco; el neutro es «разговаривать»)",
+    "exampleRu": "Мы больше часа беседовали о литературе.",
+    "exampleEs": "Conversamos más de una hora sobre literatura.",
+    "synonyms": [
+      {
+        "word": "разговаривать",
+        "translation": "hablar, conversar (neutro)"
+      },
+      {
+        "word": "трепаться",
+        "translation": "charlar (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🗣️",
+    "russian": "трепаться",
+    "transcription": "tripát'sya",
+    "translationEs": "charlar, darle a la lengua (registro coloquial; el neutro es «разговаривать»)",
+    "exampleRu": "Они полночи трепались на кухне.",
+    "exampleEs": "Estuvieron charlando media noche en la cocina.",
+    "synonyms": [
+      {
+        "word": "разговаривать",
+        "translation": "hablar, conversar (neutro)"
+      },
+      {
+        "word": "беседовать",
+        "translation": "conversar (formal)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "👶",
+    "russian": "дитя",
+    "transcription": "dityá",
+    "translationEs": "criatura (registro elevado y libresco; el neutro es «ребёнок»)",
+    "exampleRu": "Дитя своего времени, он искренне верил в прогресс.",
+    "exampleEs": "Criatura de su época, creía sinceramente en el progreso.",
+    "synonyms": [
+      {
+        "word": "ребёнок",
+        "translation": "niño (neutro)"
+      },
+      {
+        "word": "пацан",
+        "translation": "chaval (coloquial)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "synonymsAntonyms",
+    "level": "C1",
+    "emoji": "🧒",
+    "russian": "пацан",
+    "transcription": "patsán",
+    "translationEs": "chaval, chico (registro coloquial; el neutro es «ребёнок», «мальчик»)",
+    "exampleRu": "Во дворе носились пацаны с мячом.",
+    "exampleEs": "En el patio corrían unos chicos con un balón.",
+    "synonyms": [
+      {
+        "word": "ребёнок",
+        "translation": "niño (neutro)"
+      },
+      {
+        "word": "дитя",
+        "translation": "criatura (elevado)"
+      }
+    ],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🚗",
+    "russian": "разъехаться",
+    "transcription": "razyékhat'sya",
+    "translationEs": "irse cada uno por su lado (en vehículo); dicho de una pareja: separarse",
+    "exampleRu": "После конференции участники разъехались по своим городам.",
+    "exampleEs": "Tras el congreso los participantes se fueron cada uno a su ciudad.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🚙",
+    "russian": "съехаться",
+    "transcription": "syékhat'sya",
+    "translationEs": "reunirse viniendo de sitios distintos; también: irse a vivir juntos",
+    "exampleRu": "На юбилей съехалась вся родня.",
+    "exampleEs": "Para el aniversario se reunió toda la familia, venida de todas partes.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🚚",
+    "russian": "наехать",
+    "transcription": "nayékhat'",
+    "translationEs": "chocar contra algo avanzando; en registro coloquial: meterse con alguien",
+    "exampleRu": "Грузовик наехал на столб.",
+    "exampleEs": "El camión chocó contra un poste.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🧗",
+    "russian": "выбраться",
+    "transcription": "výbrat'sya",
+    "translationEs": "conseguir salir de un sitio difícil; también: hacerse un hueco para ir a algún lado",
+    "exampleRu": "Из этого леса мы выбрались только к вечеру.",
+    "exampleEs": "De aquel bosque solo conseguimos salir al anochecer.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🗺️",
+    "russian": "изъездить",
+    "transcription": "izyézdit'",
+    "translationEs": "recorrer entero un país o una región viajando mucho",
+    "exampleRu": "Он изъездил всю страну с концертами.",
+    "exampleEs": "Recorrió el país entero dando conciertos.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🧭",
+    "russian": "объездить",
+    "transcription": "abyézdit'",
+    "translationEs": "recorrer muchos lugares uno tras otro",
+    "exampleRu": "За лето они объездили полдюжины городов.",
+    "exampleEs": "Durante el verano recorrieron media docena de ciudades.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🚶",
+    "russian": "разбрестись",
+    "transcription": "razbristís'",
+    "translationEs": "dispersarse caminando, cada uno sin rumbo fijo",
+    "exampleRu": "После лекции студенты разбрелись по коридорам.",
+    "exampleEs": "Tras la clase los estudiantes se dispersaron por los pasillos.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🏃",
+    "russian": "сбежаться",
+    "transcription": "sbizhát'sya",
+    "translationEs": "acudir corriendo de todas partes a un mismo punto",
+    "exampleRu": "На шум сбежались соседи.",
+    "exampleEs": "Al ruido acudieron corriendo los vecinos.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🏃‍♀️",
+    "russian": "набегаться",
+    "transcription": "nabigát'sya",
+    "translationEs": "correr hasta hartarse, quedar agotado de tanto ir de un lado a otro",
+    "exampleRu": "Дети набегались и уснули мгновенно.",
+    "exampleEs": "Los niños corrieron hasta hartarse y se durmieron al instante.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "👣",
+    "russian": "исходить",
+    "transcription": "iskhadít'",
+    "translationEs": "recorrer a pie de punta a punta",
+    "exampleRu": "Он исходил этот город вдоль и поперёк.",
+    "exampleEs": "Recorrió esta ciudad a pie de punta a punta.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🐌",
+    "russian": "доплестись",
+    "transcription": "daplistís'",
+    "translationEs": "llegar a duras penas, arrastrando los pies",
+    "exampleRu": "К полуночи мы еле доплелись до гостиницы.",
+    "exampleEs": "Hacia medianoche llegamos a duras penas al hotel.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🚶‍♂️",
+    "russian": "приплестись",
+    "transcription": "priplistís'",
+    "translationEs": "llegar arrastrando los pies, tarde y sin ganas",
+    "exampleRu": "Он приплёлся на работу с опозданием на час.",
+    "exampleEs": "Llegó al trabajo arrastrando los pies, con una hora de retraso.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🚌",
+    "russian": "отъехать",
+    "transcription": "atyékhat'",
+    "translationEs": "alejarse un trecho (en vehículo)",
+    "exampleRu": "Автобус отъехал от остановки и сразу встал.",
+    "exampleEs": "El autobús se alejó de la parada y enseguida se detuvo.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🐦",
+    "russian": "слетаться",
+    "transcription": "slitát'sya",
+    "translationEs": "acudir volando de todas partes; en sentido figurado: acudir en masa",
+    "exampleRu": "К кормушке слетаются синицы со всего двора.",
+    "exampleEs": "Al comedero acuden volando los herrerillos de todo el patio.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "motionVerbs",
+    "level": "C1",
+    "emoji": "🕊️",
+    "russian": "разлетаться",
+    "transcription": "razlitát'sya",
+    "translationEs": "dispersarse volando; en sentido figurado: propagarse muy rápido",
+    "exampleRu": "Слухи разлетаются по редакции за считаные минуты.",
+    "exampleEs": "Los rumores se propagan por la redacción en cuestión de minutos.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "😬",
+    "russian": "доиграться",
+    "transcription": "daigrát'sya",
+    "translationEs": "acabar mal por seguir tentando a la suerte",
+    "exampleRu": "Он доигрался: доступ к системе у него отобрали.",
+    "exampleEs": "Acabó mal por tentar a la suerte: le quitaron el acceso al sistema.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "🫥",
+    "russian": "отсидеться",
+    "transcription": "atsidyét'sya",
+    "translationEs": "quedarse aparte y a resguardo hasta que pase lo peor",
+    "exampleRu": "Он предпочёл отсидеться дома, пока шёл спор.",
+    "exampleEs": "Prefirió quedarse en casa a resguardo mientras duró la discusión.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "🎮",
+    "russian": "заиграться",
+    "transcription": "zaigrát'sya",
+    "translationEs": "enfrascarse tanto en el juego que se pierde la noción del tiempo",
+    "exampleRu": "Дети заигрались и забыли про ужин.",
+    "exampleEs": "Los niños se enfrascaron en el juego y se olvidaron de la cena.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "👓",
+    "russian": "недоглядеть",
+    "transcription": "nidaglidyét'",
+    "translationEs": "no vigilar lo suficiente, dejar escapar algo por descuido",
+    "exampleRu": "Редактор недоглядел, и опечатка ушла в печать.",
+    "exampleEs": "El editor no estuvo lo bastante atento y la errata llegó a imprenta.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "😤",
+    "russian": "переусердствовать",
+    "transcription": "piriusyérdstvavat'",
+    "translationEs": "excederse en el celo, pasarse de la raya esforzándose",
+    "exampleRu": "С правками он явно переусердствовал.",
+    "exampleEs": "Con las correcciones se pasó claramente de la raya.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "health",
+    "level": "C1",
+    "emoji": "🛏️",
+    "russian": "отлежаться",
+    "transcription": "atlizhát'sya",
+    "translationEs": "guardar cama hasta reponerse",
+    "exampleRu": "Врач советует отлежаться пару дней.",
+    "exampleEs": "El médico aconseja guardar cama un par de días.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "🤐",
+    "russian": "отмолчаться",
+    "transcription": "atmalchát'sya",
+    "translationEs": "salir del paso callando",
+    "exampleRu": "На прямой вопрос он предпочёл отмолчаться.",
+    "exampleEs": "Ante la pregunta directa prefirió salir del paso callando.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "📞",
+    "russian": "дозвониться",
+    "transcription": "dazvanít'sya",
+    "translationEs": "conseguir comunicarse por teléfono tras varios intentos",
+    "exampleRu": "До поддержки я дозвонился только с третьего раза.",
+    "exampleEs": "Solo conseguí comunicarme con el soporte al tercer intento.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "📣",
+    "russian": "докричаться",
+    "transcription": "dakrichát'sya",
+    "translationEs": "conseguir que a uno lo oigan gritando; en sentido figurado: lograr hacerse escuchar",
+    "exampleRu": "До него не докричишься: он всегда в наушниках.",
+    "exampleEs": "No hay manera de que te oiga: siempre lleva auriculares.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "🚪",
+    "russian": "достучаться",
+    "transcription": "dastuchát'sya",
+    "translationEs": "conseguir que abran llamando a la puerta; en sentido figurado: llegar de verdad a alguien",
+    "exampleRu": "Учителю удалось достучаться до самого замкнутого ученика.",
+    "exampleEs": "El profesor consiguió llegar de verdad al alumno más cerrado.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "🕰️",
+    "russian": "засидеться",
+    "transcription": "zasidyét'sya",
+    "translationEs": "quedarse más tiempo del previsto en un sitio",
+    "exampleRu": "Мы засиделись в гостях до глубокой ночи.",
+    "exampleEs": "Nos quedamos de visita hasta bien entrada la noche.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "📖",
+    "russian": "зачитаться",
+    "transcription": "zachitát'sya",
+    "translationEs": "enfrascarse en la lectura y perder la noción del tiempo",
+    "exampleRu": "Я зачитался и пропустил свою остановку.",
+    "exampleEs": "Me enfrasqué en la lectura y me pasé de parada.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "psychology",
+    "level": "C1",
+    "emoji": "🗨️",
+    "russian": "наговориться",
+    "transcription": "nagavarít'sya",
+    "translationEs": "hablar hasta quedarse a gusto",
+    "exampleRu": "Сёстры не виделись год и никак не могли наговориться.",
+    "exampleEs": "Las hermanas llevaban un año sin verse y no había forma de que se saciaran de hablar.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "health",
+    "level": "C1",
+    "emoji": "😪",
+    "russian": "отоспаться",
+    "transcription": "ataspát'sya",
+    "translationEs": "recuperar el sueño atrasado",
+    "exampleRu": "В отпуске первым делом надо отоспаться.",
+    "exampleEs": "En vacaciones lo primero es recuperar el sueño atrasado.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "health",
+    "level": "C1",
+    "emoji": "😮‍💨",
+    "russian": "отдышаться",
+    "transcription": "addyshát'sya",
+    "translationEs": "recobrar el aliento",
+    "exampleRu": "Он поднялся на пятый этаж и долго не мог отдышаться.",
+    "exampleEs": "Subió al quinto piso y tardó en recobrar el aliento.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "politics",
+    "level": "C1",
+    "emoji": "⚖️",
+    "russian": "принять меры",
+    "transcription": "prinyát' myéry",
+    "translationEs": "tomar medidas",
+    "exampleRu": "Администрация обещала принять меры до конца недели.",
+    "exampleEs": "La administración prometió tomar medidas antes del fin de semana.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "politics",
+    "level": "C1",
+    "emoji": "❓",
+    "russian": "поставить вопрос",
+    "transcription": "pastávit' vaprós",
+    "translationEs": "plantear formalmente una cuestión",
+    "exampleRu": "Депутат поставил вопрос о пересмотре бюджета.",
+    "exampleEs": "El diputado planteó la cuestión de revisar el presupuesto.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "abstract",
+    "level": "C1",
+    "emoji": "🌐",
+    "russian": "оказать влияние",
+    "transcription": "akazát' vliyániye",
+    "translationEs": "ejercer influencia",
+    "exampleRu": "Эта книга оказала влияние на целое поколение.",
+    "exampleEs": "Este libro ejerció influencia sobre toda una generación.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "society",
+    "level": "C1",
+    "emoji": "🤝",
+    "russian": "оказать поддержку",
+    "transcription": "akazát' padyérshku",
+    "translationEs": "prestar apoyo",
+    "exampleRu": "Фонд оказал поддержку молодым учёным.",
+    "exampleEs": "La fundación prestó apoyo a los científicos jóvenes.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "🎯",
+    "russian": "уделить внимание",
+    "transcription": "udilít' vnimániye",
+    "translationEs": "dedicar atención",
+    "exampleRu": "Отдельное внимание стоит уделить безопасности данных.",
+    "exampleEs": "Conviene dedicar una atención aparte a la seguridad de los datos.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "abstract",
+    "level": "C1",
+    "emoji": "⭐",
+    "russian": "придавать значение",
+    "transcription": "pridavát' znachyéniye",
+    "translationEs": "dar importancia",
+    "exampleRu": "Он не придаёт значения мелочам.",
+    "exampleEs": "No da importancia a los detalles.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "abstract",
+    "level": "C1",
+    "emoji": "🎭",
+    "russian": "играть роль",
+    "transcription": "igrát' ról'",
+    "translationEs": "desempeñar un papel",
+    "exampleRu": "Опыт играет здесь решающую роль.",
+    "exampleEs": "La experiencia desempeña aquí un papel decisivo.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "law",
+    "level": "C1",
+    "emoji": "🧾",
+    "russian": "нести ответственность",
+    "transcription": "nistí atvyétstvinnast'",
+    "translationEs": "asumir la responsabilidad",
+    "exampleRu": "Подрядчик несёт ответственность за сроки.",
+    "exampleEs": "El contratista asume la responsabilidad de los plazos.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "🤝",
+    "russian": "вести переговоры",
+    "transcription": "vistí pirigavóry",
+    "translationEs": "llevar negociaciones",
+    "exampleRu": "Стороны ведут переговоры уже третий месяц.",
+    "exampleEs": "Las partes llevan negociando ya tres meses.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "✍️",
+    "russian": "заключить сделку",
+    "transcription": "zaklyuchít' sdyélku",
+    "translationEs": "cerrar un trato",
+    "exampleRu": "Компании заключили сделку на рекордную сумму.",
+    "exampleEs": "Las empresas cerraron un trato por una cifra récord.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "law",
+    "level": "C1",
+    "emoji": "👨‍⚖️",
+    "russian": "вынести приговор",
+    "transcription": "výnisti prigavór",
+    "translationEs": "dictar sentencia",
+    "exampleRu": "Суд вынес приговор после трёх заседаний.",
+    "exampleEs": "El tribunal dictó sentencia tras tres sesiones.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "📊",
+    "russian": "подвести итоги",
+    "transcription": "padvistí itógi",
+    "translationEs": "hacer balance",
+    "exampleRu": "В конце года принято подводить итоги.",
+    "exampleEs": "A final de año se acostumbra a hacer balance.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "society",
+    "level": "C1",
+    "emoji": "🌟",
+    "russian": "произвести впечатление",
+    "transcription": "praizvistí fpichitlyéniye",
+    "translationEs": "causar impresión",
+    "exampleRu": "Кандидат произвёл на комиссию сильное впечатление.",
+    "exampleEs": "El candidato causó una fuerte impresión en el tribunal.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "politics",
+    "level": "C1",
+    "emoji": "🪨",
+    "russian": "оказать давление",
+    "transcription": "akazát' davlyéniye",
+    "translationEs": "ejercer presión",
+    "exampleRu": "На редакцию пытались оказать давление.",
+    "exampleEs": "Intentaron ejercer presión sobre la redacción.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "society",
+    "level": "C1",
+    "emoji": "🧱",
+    "russian": "внести вклад",
+    "transcription": "vnistí fklat",
+    "translationEs": "aportar una contribución",
+    "exampleRu": "Она внесла заметный вклад в изучение языка.",
+    "exampleEs": "Aportó una contribución notable al estudio de la lengua.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "📝",
+    "russian": "дать оценку",
+    "transcription": "dat' atsénku",
+    "translationEs": "dar una valoración",
+    "exampleRu": "Эксперт дал оценку ущербу.",
+    "exampleEs": "El perito dio una valoración de los daños.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "society",
+    "level": "C1",
+    "emoji": "🙋",
+    "russian": "принять участие",
+    "transcription": "prinyát' uchástiye",
+    "translationEs": "tomar parte",
+    "exampleRu": "В олимпиаде приняли участие сорок школ.",
+    "exampleEs": "En la olimpiada tomaron parte cuarenta colegios.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "society",
+    "level": "C1",
+    "emoji": "📣",
+    "russian": "привлечь внимание",
+    "transcription": "privlyéch' vnimániye",
+    "translationEs": "llamar la atención",
+    "exampleRu": "Заголовок должен привлечь внимание читателя.",
+    "exampleEs": "El titular debe llamar la atención del lector.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "abstract",
+    "level": "C1",
+    "emoji": "💡",
+    "russian": "сделать вывод",
+    "transcription": "sdyélat' vývat",
+    "translationEs": "sacar una conclusión",
+    "exampleRu": "Из этих данных трудно сделать однозначный вывод.",
+    "exampleEs": "De estos datos es difícil sacar una conclusión unívoca.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "health",
+    "level": "C1",
+    "emoji": "🚑",
+    "russian": "оказать помощь",
+    "transcription": "akazát' pómashch'",
+    "translationEs": "prestar ayuda",
+    "exampleRu": "Пострадавшим оказали помощь на месте.",
+    "exampleEs": "A los afectados les prestaron ayuda en el lugar.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "⏳",
+    "russian": "соблюдать сроки",
+    "transcription": "sablyudát' sróki",
+    "translationEs": "respetar los plazos",
+    "exampleRu": "Подрядчик обязан соблюдать сроки.",
+    "exampleEs": "El contratista está obligado a respetar los plazos.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "law",
+    "level": "C1",
+    "emoji": "🚫",
+    "russian": "нарушить закон",
+    "transcription": "narúshyt' zakón",
+    "translationEs": "infringir la ley",
+    "exampleRu": "Компанию обвинили в том, что она нарушила закон.",
+    "exampleEs": "Acusaron a la empresa de haber infringido la ley.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "society",
+    "level": "C1",
+    "emoji": "🌱",
+    "russian": "принести пользу",
+    "transcription": "prinistí pól'zu",
+    "translationEs": "reportar un beneficio",
+    "exampleRu": "Эта мера принесёт пользу небольшим хозяйствам.",
+    "exampleEs": "Esta medida reportará un beneficio a las explotaciones pequeñas.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "law",
+    "level": "C1",
+    "emoji": "⚠️",
+    "russian": "причинить вред",
+    "transcription": "prichinít' vryet",
+    "translationEs": "causar daño",
+    "exampleRu": "Штраф грозит тем, кто причинил вред имуществу.",
+    "exampleEs": "Se enfrentan a una multa quienes causaron daño a la propiedad.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "work",
+    "level": "C1",
+    "emoji": "🏁",
+    "russian": "добиться результата",
+    "transcription": "dabít'sya rizul'táta",
+    "translationEs": "conseguir un resultado",
+    "exampleRu": "Без системной работы добиться результата не выйдет.",
+    "exampleEs": "Sin un trabajo sistemático no se consigue ningún resultado.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "abstract",
+    "level": "C1",
+    "emoji": "🧠",
+    "russian": "прийти к выводу",
+    "transcription": "priytí k vývadu",
+    "translationEs": "llegar a la conclusión",
+    "exampleRu": "Комиссия пришла к выводу, что данных недостаточно.",
+    "exampleEs": "La comisión llegó a la conclusión de que los datos son insuficientes.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "abstract",
+    "level": "C1",
+    "emoji": "✅",
+    "russian": "отдавать предпочтение",
+    "transcription": "atdavát' pritpachtyéniye",
+    "translationEs": "dar preferencia",
+    "exampleRu": "Заказчик отдаёт предпочтение проверенным поставщикам.",
+    "exampleEs": "El cliente da preferencia a los proveedores de confianza.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "connectors",
+    "level": "C1",
+    "emoji": "💭",
+    "russian": "иметь в виду",
+    "transcription": "imyét' v vidú",
+    "translationEs": "tener presente; referirse a",
+    "exampleRu": "Я имел в виду совсем другое.",
+    "exampleEs": "Me refería a algo completamente distinto.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "abstract",
+    "level": "C1",
+    "emoji": "❔",
+    "russian": "ставить под сомнение",
+    "transcription": "stávit' pat samnyéniye",
+    "translationEs": "poner en duda",
+    "exampleRu": "Никто не ставит под сомнение его компетентность.",
+    "exampleEs": "Nadie pone en duda su competencia.",
+    "synonyms": [],
+    "antonyms": []
+  },
+  {
+    "category": "society",
+    "level": "C1",
+    "emoji": "🫱",
+    "russian": "идти навстречу",
+    "transcription": "idtí nafstryéchu",
+    "translationEs": "hacer una concesión, salir al encuentro de alguien",
+    "exampleRu": "Банк пошёл навстречу и продлил срок.",
+    "exampleEs": "El banco hizo una concesión y prolongó el plazo.",
+    "synonyms": [],
+    "antonyms": []
+  }
 ]
