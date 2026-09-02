@@ -34,9 +34,9 @@ export interface VocabularyDict extends FlashcardsDict {
   subtitleMatch: string;
   subtitleIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
-  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
-  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel">;
+  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -155,6 +155,7 @@ export default function VocabularyApp({
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
               learnedProgressLabel: dict.learnedProgressLabel,
+              learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
             }}
             resultDict={resultDict}
           />
@@ -171,6 +172,7 @@ export default function VocabularyApp({
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
               learnedProgressLabel: dict.learnedProgressLabel,
+              learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
             }}
             resultDict={resultDict}
           />
@@ -187,6 +189,7 @@ export default function VocabularyApp({
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
               learnedProgressLabel: dict.learnedProgressLabel,
+              learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
             }}
             resultDict={resultDict}
           />

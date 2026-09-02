@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">)
     // the only two descriptions on the whole site under 70 characters.
     description:
       lang === "ru"
-        ? "Тарифы RusoFácilapp: месячный, годовой и пожизненный доступ ко всем урокам A1–B2, рассказам, видео и играм. Оплата картой или наличными в OXXO."
-        : "Planes de RusoFácilapp: mensual, anual o de por vida, con acceso a todas las lecciones de A1 a B2, cuentos, vídeos y juegos. Tarjeta o pago en OXXO.",
+        ? "Тарифы RusoFácilapp: месячный, годовой и пожизненный доступ к курсу A1–B2, а со словарём, рассказами и играми — до уровня C1. Карта или наличные в OXXO."
+        : "Planes de RusoFácilapp: mensual, anual o de por vida. Curso de A1 a B2; con Premium, vocabulario, cuentos y juegos hasta el C1. Tarjeta o efectivo OXXO.",
     // Canonical is the query-free /pricing even when the visitor arrived at
     // /pricing?next=…&highlight=premium — same as the header-based version
     // it replaces, which read a pathname that never carried a query string.
@@ -139,6 +139,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           cashCta={p.lifetime.cashCta}
           featuresTitle={p.featuresPremiumTitle}
           features={p.featuresPremium}
+          featuresNote={p.featuresPremiumNote}
           oxxoDict={p}
           highlighted={highlightPremium}
         />

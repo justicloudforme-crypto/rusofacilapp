@@ -111,5 +111,29 @@ for (const lang of ["ru", "es"] as const) {
     // catches a future second panel that forgets role="dialog".
     const heading = page.getByText(/Раунд завершён|Ronda completa/i);
     await expect(heading).toHaveCount(1);
+
+    // The progress line under the stats must print the denominator the API
+    // actually sent — what this visitor can open — and name the locked
+    // remainder only when there is one. Asserted against the live response
+    // rather than a literal: locally the bank has 896 C1 cards behind
+    // Premium, in CI the fixture has none, and a hardcoded number would
+    // pin this test to one of the two. See PROGRESS.md 7.76.
+    const summary = (await page.evaluate(async () => {
+      const res = await fetch("/api/flashcards/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      return res.json();
+    })) as { availableWords: number; premiumOnlyWords: number };
+
+    const panelText = (await panel.textContent()) ?? "";
+    expect(panelText).toContain(String(summary.availableWords));
+    if (summary.premiumOnlyWords > 0) {
+      expect(panelText).toMatch(/Premium/);
+      expect(panelText).toContain(String(summary.premiumOnlyWords));
+    } else {
+      expect(panelText).not.toMatch(/Premium/);
+    }
   });
 }

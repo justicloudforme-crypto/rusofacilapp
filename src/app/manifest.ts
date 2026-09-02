@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "RusoFácilapp",
     short_name: "RusoFácilapp",
-    description: "Cursos de ruso para hispanohablantes, del nivel A1 al B2.",
+    description: "Ruso para hispanohablantes: curso A1–B2; vocabulario, cuentos y juegos hasta C1.",
     start_url: "/",
     display: "standalone",
     background_color: "#fff8ec",

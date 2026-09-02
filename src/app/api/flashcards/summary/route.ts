@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
+import { canAccessLevel, getEntitlementTier } from "@/lib/entitlement";
 
 // Powers the category grid + "Continue" strip on /vocabulary: total card
 // count per category (public) plus, per visitor, how many of those cards
@@ -45,12 +46,23 @@ interface ProgressEntry {
   updatedAt: number;
 }
 
-function parseEntries(raw: unknown, validCardIds: Set<string>): Map<string, ProgressEntry> {
+// `maxEntries` is the size of the WHOLE bank, not of `validCardIds`.
+// The two stopped being the same number when this endpoint began answering
+// per tier: `validCardIds` is what this visitor can open (no C1 unless
+// Premium), while a real device can legitimately hold "known" entries for
+// cards it can no longer open — a lapsed Premium period leaves exactly
+// that behind. Sizing the ceiling by the accessible set would 400 those
+// visitors outright and blank every progress bar on the page.
+function parseEntries(
+  raw: unknown,
+  validCardIds: Set<string>,
+  maxEntries: number,
+): Map<string, ProgressEntry> {
   const out = new Map<string, ProgressEntry>();
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
 
   const keys = Object.keys(raw as Record<string, unknown>);
-  if (keys.length > validCardIds.size) return out; // caller rejects the whole request in this case
+  if (keys.length > maxEntries) return out; // caller rejects the whole request in this case
 
   for (const cardId of keys) {
     if (cardId.length > MAX_ENTRY_ID_LENGTH || !validCardIds.has(cardId)) continue;
@@ -86,17 +98,32 @@ export async function POST(request: NextRequest) {
   const levelValue = (body as { level?: unknown } | null)?.level;
   const level = typeof levelValue === "string" && isFlashcardLevel(levelValue) ? levelValue : null;
 
-  const index = await getFlashcardIndex();
+  // Everything below counts ONE set: the cards this visitor's tier can
+  // actually reach. `GET /api/flashcards` has always filtered its answer
+  // through canAccessLevel, so a non-premium learner is handed a bank
+  // without C1 — but this endpoint used to answer with the whole bank's
+  // size, and the result panel printed it ("6 из 5683") as if all 5683
+  // were reachable. 896 of them were not, at any price short of Premium.
+  //
+  // The fix is not a smaller number, it is a HONEST pair: how many are
+  // available now, and how many are behind Premium. The second number is
+  // what makes the first one truthful instead of merely smaller — a
+  // learner who sees "4787 available" and nothing else has been told the
+  // bank is 4787 cards, which is its own lie.
+  const wholeIndex = await getFlashcardIndex();
+  const tier = await getEntitlementTier();
+  const index = wholeIndex.filter((c) => canAccessLevel(tier, c.level));
+  const premiumOnlyWords = wholeIndex.length - index.length;
   const cardById = new Map(index.map((c) => [c.id, c]));
   const validCardIds = new Set(cardById.keys());
 
   const entriesRaw = (body as { entries?: unknown } | null)?.entries;
   if (entriesRaw && typeof entriesRaw === "object" && !Array.isArray(entriesRaw)) {
-    if (Object.keys(entriesRaw as object).length > validCardIds.size) {
+    if (Object.keys(entriesRaw as object).length > wholeIndex.length) {
       return NextResponse.json({ error: "too_many_entries" }, { status: 400 });
     }
   }
-  const clientEntries = parseEntries(entriesRaw, validCardIds);
+  const clientEntries = parseEntries(entriesRaw, validCardIds, wholeIndex.length);
 
   const user = await getCurrentUser();
 
@@ -161,13 +188,31 @@ export async function POST(request: NextRequest) {
       lastActivityAt,
     }));
 
-  // Level-independent total, for "you've learned N of 5678 words" style
-  // copy (the paywall offer on the games result screen) — resolvedKnownIds
-  // already spans every card regardless of the `level` filter applied to
-  // `categories` above, so this is a real, whole-bank count, not derived
-  // from the (possibly level-filtered) per-category numbers.
-  const totalKnown = resolvedKnownIds.size;
+  // Level-independent, but NOT tier-independent: the numerator has to be
+  // counted over exactly the set the denominator counts, or the fraction
+  // stops meaning anything. Two ways it could drift, both closed here by
+  // intersecting with the accessible index:
+  //   - a `flashcardProgress` row for a card that no longer exists at all
+  //     (deleted card, id changed) — those were already being counted;
+  //   - a row for a C1 card, left behind by a Premium period that has
+  //     since lapsed — real, and it would show a learner "12 of 4787"
+  //     where some of the 12 are cards they can no longer open.
+  // `resolvedKnownIds` is still built from every source first (server rows
+  // win over client entries) and narrowed only at the end, so the trust
+  // order above is untouched.
+  const totalKnown = [...resolvedKnownIds].filter((id) => validCardIds.has(id)).length;
   const hasAnyProgress = lastActivityByCardId.size > 0;
 
-  return NextResponse.json({ categories, recent, totalKnown, totalWords: index.length, hasAnyProgress });
+  return NextResponse.json({
+    categories,
+    recent,
+    totalKnown,
+    // Cards this visitor can open right now, at their current tier.
+    availableWords: index.length,
+    // Cards that exist but need the Premium plan — 0 for a premium/staff
+    // visitor, which is what tells the UI to drop the second half of the
+    // sentence rather than print "and 0 more in Premium".
+    premiumOnlyWords,
+    hasAnyProgress,
+  });
 }

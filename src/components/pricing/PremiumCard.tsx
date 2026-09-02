@@ -26,6 +26,7 @@ export default function PremiumCard({
   cashCta,
   featuresTitle,
   features,
+  featuresNote,
   oxxoDict,
   highlighted = false,
 }: {
@@ -43,6 +44,11 @@ export default function PremiumCard({
   cashCta: string;
   featuresTitle: string;
   features: string[];
+  /** One line under the feature list saying what Premium does NOT add.
+   * The card sells "nivel C1", and the course stops at B2 — without this
+   * sentence a buyer can reasonably read the C1 bullet as "there are C1
+   * lessons too". See PROGRESS.md 7.76. */
+  featuresNote: string;
   oxxoDict: OxxoInstructionsDict;
   /** Set via /pricing?highlight=premium — the profile page's per-plan
    * upsell link (annual subscribers -> "unlock C1 forever") lands here.
@@ -97,6 +103,7 @@ export default function PremiumCard({
           </li>
         ))}
       </ul>
+      <p className="mt-3 text-xs leading-5 text-foreground/60">{featuresNote}</p>
 
       <div className="mt-auto pt-8">
         <Tabs

@@ -306,7 +306,7 @@
     "glossaryCta": "Consultar el glosario de gramática"
   },
   "footer": {
-    "tagline": "Ruso para hispanohablantes, del A1 al B2.",
+    "tagline": "Ruso para hispanohablantes: curso A1–B2; vocabulario, cuentos y juegos hasta C1.",
     "rights": "Todos los derechos reservados.",
     "termsLink": "Términos de Servicio",
     "privacyLink": "Política de Privacidad",
@@ -358,7 +358,7 @@
     "titleFree": "Sigue aprendiendo sin límites",
     "subtitleFree": "Ya viste la muestra gratuita. Suscríbete para desbloquear todo el contenido.",
     "titlePremium": "Esta sección está disponible solo en el plan Premium",
-    "subtitlePremium": "Tu suscripción ya desbloquea la mayoría del contenido — el nivel C1, la biblioteca ampliada y los juegos de dificultad avanzada (★) son exclusivos del plan Premium.",
+    "subtitlePremium": "Tu suscripción ya desbloquea la mayoría del contenido. El plan Premium añade el material de nivel C1 — vocabulario, modismos, cuentos y juegos —, la biblioteca ampliada y los juegos de dificultad avanzada (★). El curso es el mismo en todos los planes: A1–B2.",
     "closeLabel": "Cerrar",
     "restoreButton": "Restaurar compras",
     "restoring": "Restaurando compras…",
@@ -409,7 +409,7 @@
       "price": "$122.99 USD",
       "period": "pago único",
       "badge": "Acceso para siempre",
-      "valueNote": "Un solo pago — acceso para siempre, sin renovaciones. Además, nivel C1 y biblioteca ampliada de modismos e historias.",
+      "valueNote": "Un solo pago, sin renovaciones. Suma el material de nivel C1 y la biblioteca ampliada de modismos e historias.",
       "mxnApprox": "≈2299 MXN",
       "cardCta": "Comprar para siempre por $122.99",
       "cashCta": "Pagar en efectivo — ≈2299 MXN"
@@ -429,8 +429,9 @@
       "Cancela cuando quieras"
     ],
     "featuresPremiumTitle": "Todo lo anterior, más",
+    "featuresPremiumNote": "El curso es A1–B2 en todos los planes. Premium amplía el material de estudio —vocabulario, modismos, cuentos y juegos— hasta el nivel C1; no añade lecciones de nivel C.",
     "featuresPremium": [
-      "Nivel C1: palabras, modismos e historias",
+      "Vocabulario, modismos, cuentos y juegos de nivel C1",
       "Biblioteca ampliada de modismos e historias",
       "Juegos de dificultad avanzada (★)",
       "Acceso de por vida — pago único, sin renovaciones"
@@ -538,7 +539,7 @@
     "subscriptionCompactLifetime": "Premium · acceso de por vida",
     "profileUpsellFree": "Desbloquear todas las lecciones",
     "profileUpsellToAnnual": "Pasar al plan anual y ahorra 50%",
-    "profileUpsellToPremium": "Desbloquea el nivel C1 para siempre",
+    "profileUpsellToPremium": "Desbloquea el material de nivel C1 para siempre",
     "dangerZoneHeading": "Zona de riesgo",
     "dangerZoneToggle": "Mostrar",
     "badgeProgressStreak": {
@@ -944,6 +945,11 @@
       "one": "Has aprendido {known} de {total} palabra",
       "few": "Has aprendido {known} de {total} palabras",
       "many": "Has aprendido {known} de {total} palabras"
+    },
+    "learnedProgressAvailableLabel": {
+      "one": "Llevas {known} de {total} palabra disponible · {locked} más con Premium",
+      "few": "Llevas {known} de {total} palabras disponibles · {locked} más con Premium",
+      "many": "Llevas {known} de {total} palabras disponibles · {locked} más con Premium"
     },
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",

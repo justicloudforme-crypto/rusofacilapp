@@ -19,7 +19,14 @@ export interface CategorySummaryResponse {
   categories: Record<string, CategorySummary>;
   recent: RecentCategory[];
   totalKnown: number;
-  totalWords: number;
+  /** Cards this visitor can open at their current tier — the denominator
+   * the result panel prints. NOT the whole bank: 896 C1 cards are behind
+   * the Premium plan, and counting them here is what made "6 of 5683"
+   * dishonest for everyone who is not Premium. See PROGRESS.md 7.76. */
+  availableWords: number;
+  /** Cards that exist but need Premium. 0 for a Premium/staff visitor,
+   * which is how the UI knows to print the short sentence. */
+  premiumOnlyWords: number;
   hasAnyProgress: boolean;
 }
 
@@ -27,7 +34,8 @@ const EMPTY_RESPONSE: CategorySummaryResponse = {
   categories: {},
   recent: [],
   totalKnown: 0,
-  totalWords: 0,
+  availableWords: 0,
+  premiumOnlyWords: 0,
   hasAnyProgress: false,
 };
 
@@ -55,7 +63,8 @@ export async function fetchCategorySummary(level: FlashcardLevel | "all"): Promi
       categories: body.categories ?? {},
       recent: body.recent ?? [],
       totalKnown: body.totalKnown ?? 0,
-      totalWords: body.totalWords ?? 0,
+      availableWords: body.availableWords ?? 0,
+      premiumOnlyWords: body.premiumOnlyWords ?? 0,
       hasAnyProgress: body.hasAnyProgress ?? false,
     };
   } catch {
