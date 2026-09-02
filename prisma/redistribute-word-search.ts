@@ -40,7 +40,13 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { isEntryPoint } from "../src/lib/entry-point";
-import { DENSITY_SPLITS, type DensitySplit } from "../src/lib/word-games/density-rungs";
+import {
+  DENSITY_SPLITS,
+  densityLevels,
+  densityTails,
+  ladderGaps,
+  type DensitySplit,
+} from "../src/lib/word-games/density-rungs";
 import { splitPuzzle } from "../src/lib/word-games/redistribute";
 import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-search-audit";
 import { exceedsThreshold, severity } from "../src/lib/word-games/density";
@@ -68,6 +74,57 @@ function selected(): DensitySplit[] {
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
+/**
+ * Перед любой записью: останется ли лестница уровня сплошной 1…N.
+ *
+ * WordGamesPicker рисует ссылки `1…count`, где count — ЧИСЛО строк пары
+ * (type, level), а не их номера. Дыра в нумерации поэтому не «некрасиво»,
+ * а два молчаливых дефекта сразу: строка за дырой недостижима, и на
+ * последнюю нарисованную ссылку приходит 404. Все пять лестниц сегодня
+ * сплошные (проверено по всем 1738 строкам снимка), и разгрузка — первое,
+ * что дописывает строки руками, то есть первое, что способно это сломать.
+ *
+ * Проверяется ВЕСЬ манифест, а не выбранные --only= рунги: манифест — это
+ * обещание конечного состояния, и дыра в нём остаётся дырой независимо от
+ * того, какой рунг запускают сегодня. Про --only= печатается отдельное
+ * предупреждение: до прогона остальных рунгов лестница будет с дырой, и
+ * это нормально ровно до конца прогона.
+ */
+async function assertLadderStaysContiguous(
+  db: PrismaClient,
+  selectedNow: DensitySplit[],
+): Promise<boolean> {
+  let ok = true;
+  for (const level of densityLevels()) {
+    const rows = await db.wordGamePuzzle.findMany({
+      where: { type: "WORD_SEARCH", level },
+      select: { sequence: true },
+    });
+    const existing = rows.map((r) => r.sequence);
+    const gaps = ladderGaps(existing, densityTails(level));
+    if (gaps.length > 0) {
+      console.error(
+        `${level}: после всего манифеста в лестнице WORD_SEARCH остаются дыры ${gaps.join(", ")} — ` +
+          `WordGamesPicker рисует ссылки 1…N по ЧИСЛУ строк, поэтому дыра делает хвост недостижимым, ` +
+          `а последнюю ссылку — 404. Поправьте tailSequences в density-rungs.ts.`,
+      );
+      ok = false;
+      continue;
+    }
+    const partialGaps = ladderGaps(
+      existing,
+      selectedNow.filter((s) => s.level === level).flatMap((s) => s.tailSequences),
+    );
+    if (partialGaps.length > 0) {
+      console.log(
+        `${level}: предупреждение — в этом прогоне пишутся не все хвосты манифеста, ` +
+          `до конца остальных рунгов лестница будет с дырой ${partialGaps.join(", ")}.`,
+      );
+    }
+  }
+  return ok;
+}
+
 async function main() {
   if (!DRY_RUN) {
     console.log("ЗАПИСЬ. Ожидается, что --dry-run уже был показан и одобрен.\n");
@@ -83,7 +140,12 @@ async function main() {
   let updated = 0;
   let created = 0;
   try {
-    for (const split of selected()) {
+    const chosen = selected();
+    if (!(await assertLadderStaysContiguous(db, chosen))) {
+      process.exitCode = 1;
+      return;
+    }
+    for (const split of chosen) {
       const label = `WORD_SEARCH/${split.level}/${split.sequence}`;
       const row = await db.wordGamePuzzle.findUnique({
         where: { type_level_sequence: { type: "WORD_SEARCH", level: split.level, sequence: split.sequence } },
