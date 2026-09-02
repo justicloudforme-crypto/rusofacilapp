@@ -122,12 +122,24 @@ async function main() {
     const curved = puzzles.filter((p) => p.curved).length;
     const withRelatedLessons = terms.filter((t) => JSON.parse(t.relatedLessons).length > 0).length;
     const cardCategories = new Set(cards.map((c) => c.category));
+    // The board-width test asserts every column of the WIDEST shape the
+    // bank holds is on screen at 390px, and it opens the fixture's 18x18
+    // row to do it. 18 is the real maximum over all 1738 production
+    // WORD_SEARCH rows (2026-09-02); a fixture that quietly lost that row
+    // would leave the guard measuring an ordinary 16-column grid.
+    const widestGrid = Math.max(
+      ...puzzles.map((p) => {
+        const parsed = JSON.parse(p.gridData);
+        const grid = parsed.grid ?? parsed;
+        return grid[0]?.length ?? 0;
+      }),
+    );
     console.log(
-      `e2e fixture: ${puzzles.length} puzzles (${curved} curved/★), ` +
+      `e2e fixture: ${puzzles.length} puzzles (${curved} curved/★, widest grid ${widestGrid} columns), ` +
         `${terms.length} glossary terms (${withRelatedLessons} with a related lesson), ` +
         `${cards.length} flashcards in ${cardCategories.size} category/-ies`,
     );
-    if (curved === 0 || withRelatedLessons === 0 || cards.length < 4) {
+    if (curved === 0 || withRelatedLessons === 0 || cards.length < 4 || widestGrid < 18) {
       console.error("the fixture lost a shape the suite asserts on — see e2e/fixtures/");
       process.exitCode = 1;
     }

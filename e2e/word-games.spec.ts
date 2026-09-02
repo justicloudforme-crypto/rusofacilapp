@@ -548,12 +548,22 @@ test("word search: finding every word shows exactly one completion dialog", asyn
  * finger on the board cannot pan that scroller, and a word ending in
  * column 14+ could not be selected at all.
  *
- * Asserted against the grid's own column count rather than the literal
- * 16, so the test still means something if the widest rung ever changes.
+ * Asserted against the grid's own column count rather than a literal, so
+ * the test still means something if the widest rung ever changes.
+ *
+ * The rung it opens is the WIDEST shape the bank actually holds, not the
+ * common one. 16x16 is the usual grid, but four production rows are 18x18
+ * (B2/10, C1/91, C1/141, C1/163 — counted over all 1738 WORD_SEARCH rows
+ * on 2026-09-02; dev.db has eight of them, C1/91 among both). Pinning the
+ * test to a 16-column puzzle left the two widest columns of the real
+ * worst case unmeasured: 18 x 22px + gaps is ~40px wider than 16, which
+ * is most of a 320px viewport's margin. So the fixture carries C1/91
+ * (18x18, exported from dev.db the same way the other four rows were) and
+ * the floor below is 18, the real maximum in the bank.
  */
 test("word search: every column is on screen at a phone width, not just in the DOM", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/es/word-games/WORD_SEARCH/C1/5");
+  await page.goto("/es/word-games/WORD_SEARCH/C1/91");
   await page.waitForSelector('[role="grid"] button[data-row]');
 
   const geometry = await page.evaluate(() => {
@@ -577,9 +587,9 @@ test("word search: every column is on screen at a phone width, not just in the D
     };
   });
 
-  // The fixture's widest puzzle is 16 columns; if that ever stops being
-  // true the assertion below would pass vacuously on a narrow grid.
-  expect(geometry.cols).toBeGreaterThanOrEqual(16);
+  // The bank's widest puzzle is 18 columns; if this rung ever stops being
+  // one of them the assertion below would pass vacuously on a narrow grid.
+  expect(geometry.cols).toBeGreaterThanOrEqual(18);
   expect(geometry.visibleCols).toBe(geometry.cols);
   expect(geometry.overflows).toBe(false);
   expect(geometry.documentWidth).toBeLessThanOrEqual(390);
