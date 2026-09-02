@@ -81,6 +81,26 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
         <VocabularyApp dict={{ ...dict.vocabulary, locale: lang }} resultDict={{ ...dict.gameResult, locale: lang }} />
       </div>
 
+      {/* C1 подписан, но НЕ опубликован. Списки на этой странице и на 23
+          категорийных как показывали A1-B2, так и показывают: фильтр
+          PUBLIC_VOCABULARY_LEVELS не тронут, C1-карточки по-прежнему
+          отсутствуют в отданном HTML, а не спрятаны стилями, и ни одного
+          нового URL здесь не появляется. Единственное, что меняется, —
+          посетитель больше не должен догадываться, почему списки кончаются
+          на B2. Формулировка — действующая формула уровней (PROGRESS 7.76):
+          курс A1-B2; словарь, рассказы и игры — до C1. Обе локали: эта
+          страница существует и на /ru, в отличие от категорийных. */}
+      <aside className="mt-10 rounded-2xl border border-black/10 p-5 dark:border-white/30">
+        <h2 className="text-base font-semibold tracking-tight">{dict.vocabulary.c1PremiumHeading}</h2>
+        <p className="mt-2 text-sm leading-6 text-foreground/70">{dict.vocabulary.c1PremiumBody}</p>
+        <Link
+          href={`/${lang}/pricing`}
+          className="tap mt-3 inline-block text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+        >
+          {dict.vocabulary.c1PremiumCta}
+        </Link>
+      </aside>
+
       {showCategoryIndex && (
         <>
           <JsonLd
