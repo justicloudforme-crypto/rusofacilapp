@@ -27,8 +27,18 @@ interface Dict {
   acrossLabel: string;
   downLabel: string;
   wrongCellHint: string;
-  checkButton: string;
-  filledCountLabel: string; // template, contains literal "{filled}" and "{total}"
+  /** Раскрыть/убрать разбор по направлениям. Две подписи, а не одна:
+   * кнопка-переключатель обязана говорить, что сделает следующее
+   * нажатие. */
+  breakdownButton: string;
+  hideBreakdownButton: string;
+  /** Разбор. Шаблон, содержит "{across}", "{acrossTotal}", "{down}",
+   * "{downTotal}". */
+  breakdownLabel: string;
+  /** Счётчик над кнопками. Шаблон, содержит "{solved}", "{words}",
+   * "{filled}" и "{cells}" — СЛОВА впереди, клетки позади: см. комментарий
+   * у solvedWords. */
+  progressCountLabel: string;
 }
 
 type CellStatus = "correct" | "incorrect" | undefined;
@@ -58,6 +68,27 @@ export default function CrosswordBoard({
   const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(null);
   const [activeDirection, setActiveDirection] = useState<Direction | null>(null);
   const solvedReported = useRef(false);
+  /**
+   * Номер последнего ОТПРАВЛЕННОГО запроса на проверку.
+   *
+   * Зачем. `updateGuess` шлёт POST /check на каждое нажатие и не ждёт
+   * предыдущего ответа, а `setCellStatus` заменял подсветку целиком тем,
+   * что пришло последним ПО ВРЕМЕНИ, а не последним по смыслу. Ответы
+   * приходят не в том порядке, в каком уехали, и тогда доска
+   * перекрашивается СТАРЫМ состоянием — на экране остаётся картина букв,
+   * которых там уже нет.
+   *
+   * Раньше это было почти невидимо: подсветка отставала на клетку-другую и
+   * догоняла со следующим нажатием, а «решено» приходит из тела ответа, а
+   * не из подсветки, поэтому празднование срабатывало правильно. Счётчик
+   * слов сделал отставание видимым числом — и оно поймано замером, а не
+   * рассуждением: WebKit, набор всех 21 клетки A1/1 подряд, доска
+   * заполнена целиком, а счётчик стоял на **«3 из 6»** и не двигался.
+   *
+   * Ответ, отправленный раньше самого свежего запроса, отбрасывается
+   * целиком — и подсветку, и звук, и «решено» он не трогает.
+   */
+  const checkSeq = useRef(0);
   const inputRefs = useRef(new Map<string, HTMLInputElement>());
   const errorCountRef = useRef(0);
 
@@ -293,15 +324,20 @@ export default function CrosswordBoard({
       const [row, col] = key.split(",").map(Number);
       return { row, col, letter };
     });
-    if (guessList.length === 0) return;
+    if (guessList.length === 0) return null;
+    checkSeq.current += 1;
+    const seq = checkSeq.current;
 
     const res = await fetch("/api/word-games/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ puzzleId: puzzle.id, guesses: guessList }),
     }).catch(() => null);
-    if (!res || !res.ok) return;
+    if (!res || !res.ok) return null;
     const data = (await res.json()) as { results: { row: number; col: number; correct: boolean }[]; solved: boolean };
+    // Обгон: пока этот ответ ехал, уехал более свежий запрос. Всё, что
+    // ниже, относится к состоянию доски, которого уже нет.
+    if (seq !== checkSeq.current) return null;
 
     const nextStatus: Record<string, CellStatus> = {};
     for (const r of data.results) nextStatus[`${r.row},${r.col}`] = r.correct ? "correct" : "incorrect";
@@ -326,6 +362,7 @@ export default function CrosswordBoard({
       solvedReported.current = true;
       onSolved();
     }
+    return nextStatus;
   }
 
   // The grading request is fired HERE, not from inside a setState updater.
@@ -491,11 +528,48 @@ export default function CrosswordBoard({
       .catch(() => {});
   }
 
-  // Manual re-check of every filled cell — deliberately calls runCheck
-  // with no soundCell, so shouldCountAsError never counts it as a
-  // mistake no matter how many wrong cells it reveals.
+  /**
+   * Кнопка раскрывает РАЗБОР ПО НАПРАВЛЕНИЯМ — и это её единственная
+   * работа, потому что прежняя не была работой вовсе.
+   *
+   * Что она делала до этой правки, названо замером, а не по памяти
+   * (03.09.2026, прод-сборка, A1/1 при 390×844). Подсветка мгновенная:
+   * каждое нажатие клавиши уходит в `updateGuess` → `runCheck`, то есть
+   * POST /api/word-games/check со ВСЕМИ буквами доски. Кнопка звала тот же
+   * `runCheck` с теми же буквами — тело запроса кнопки СОВПАЛО побайтово с
+   * телом последнего запроса печати, а вид доски после ответа не изменился
+   * НИ В ОДНОЙ клетке: 0 из 21 (сравнивались `className` и `value` каждой
+   * клетки до и после). Она не «проверяла слабо» — она не делала ничего
+   * видимого.
+   *
+   * Один невидимый смысл у повторного запроса всё же есть, и он здесь
+   * сохранён: обрыв сети на каком-то из промежуточных ответов оставляет
+   * подсветку от более раннего состояния (`runCheck` при `!res.ok` молча
+   * выходит), и повторный запрос её чинит. Это починка, а не обратная
+   * связь, и одной её на кнопку не хватает.
+   *
+   * Почему разбор, а не «проверить». Игрок и так видит цвета — решение
+   * владельца, менять его не надо. Чего он НЕ видит: сколько слов уже
+   * закрыто целиком и с какой стороны он отстаёт. Разбор по горизонтали и
+   * вертикали — единственное число на этой странице, которого нет больше
+   * нигде.
+   *
+   * Переключатель, а не одностороннее раскрытие: у кнопки, второе нажатие
+   * которой ничего не меняет, ровно тот же дефект, что и у прежней. Обе
+   * подписи — из словаря, потому что кнопка обязана говорить, что сделает
+   * СЛЕДУЮЩЕЕ нажатие, а не что сделало прошлое.
+   */
+  const [breakdownShown, setBreakdownShown] = useState(false);
+
   function handleCheck() {
-    void runCheck(guesses);
+    if (breakdownShown) {
+      setBreakdownShown(false);
+      return;
+    }
+    setBreakdownShown(true);
+    // Без soundCell: `shouldCountAsError` не засчитает ошибку, сколько бы
+    // красных клеток ответ ни принёс.
+    void runCheck(guessesRef.current);
   }
 
   const correctCells = useMemo(() => {
@@ -510,6 +584,39 @@ export default function CrosswordBoard({
   // here would otherwise silently inflate the fill count.
   const filledCount = Object.values(guesses).filter(Boolean).length;
   const totalCells = cellWordMap.size;
+
+  /**
+   * Прогресс в СЛОВАХ — то, что игрок считает своим результатом.
+   *
+   * Почему клетки наверх не годятся, замерено, а не выведено из вкуса
+   * (03.09.2026, прод-сборка): пять ЗАВЕДОМО НЕВЕРНЫХ букв в пустую доску
+   * A1/1 дали «Completado: 5/21» при пяти красных клетках на экране.
+   * Счётчик клеток не отличает пять угаданных букв от пяти неугаданных —
+   * он считает нажатия, а не результат. Слово, закрытое целиком, приходит
+   * из `cellStatus`, то есть с сервера, и подделать его нажатием нельзя.
+   *
+   * Число клеток НЕ выкинуто, а сдвинуто во вторую половину строки: оно
+   * отвечает на другой вопрос — сколько доски ещё не тронуто, — и на
+   * широком кроссворде это отдельная полезная величина.
+   *
+   * Чего этой заменой НЕ достигается, и это стоит сказать прямо: доля
+   * прогресса в словах не «щедрее». По всему банку прода (1262 кроссворда)
+   * два собранных слова — это в среднем 12,6% слов против 15,1% клеток,
+   * то есть счёт по словам в 0,83× СТРОЖЕ. Замена сделана ради честности
+   * единицы, а не ради большего процента.
+   */
+  const solvedWords = useMemo(() => {
+    let across = 0;
+    let down = 0;
+    for (const word of puzzle.words) {
+      if (!isWordSolved(word, correctCells)) continue;
+      if (word.direction === "E") across += 1;
+      else down += 1;
+    }
+    return { across, down, total: across + down };
+  }, [puzzle.words, correctCells]);
+  const acrossTotal = puzzle.words.filter((w) => w.direction === "E").length;
+  const downTotal = puzzle.words.length - acrossTotal;
 
   return (
     /* From `md` up this is two COLUMNS that share the row, not two
@@ -598,8 +705,15 @@ export default function CrosswordBoard({
       </div>
 
       <div className="flex w-full max-w-sm flex-col gap-4 md:min-w-0 md:max-w-none md:flex-1">
-        <p className="self-center text-xs font-medium text-foreground/50 md:self-start">
-          {dict.filledCountLabel.replace("{filled}", String(filledCount)).replace("{total}", String(totalCells))}
+        <p
+          data-crossword-progress
+          className="self-center text-xs font-medium text-foreground/50 md:self-start"
+        >
+          {dict.progressCountLabel
+            .replace("{solved}", String(solvedWords.total))
+            .replace("{words}", String(puzzle.words.length))
+            .replace("{filled}", String(filledCount))
+            .replace("{cells}", String(totalCells))}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
@@ -611,15 +725,33 @@ export default function CrosswordBoard({
           >
             {dict.hintButton}
           </button>
+          {/* Не отключается на пустой доске: «0 из 10 и 0 из 12» — такой
+              же честный ответ, как любой другой, а отключённая кнопка —
+              ещё одно состояние, в котором нажатие ничего не делает. */}
           <button
             type="button"
             onClick={handleCheck}
-            disabled={filledCount === 0}
-            className="tap min-h-11 w-fit rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-expanded={breakdownShown}
+            aria-controls="crossword-breakdown"
+            className="tap min-h-11 w-fit rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
           >
-            {dict.checkButton}
+            {breakdownShown ? dict.hideBreakdownButton : dict.breakdownButton}
           </button>
         </div>
+
+        {breakdownShown && (
+          <p
+            id="crossword-breakdown"
+            data-crossword-breakdown
+            className="self-center text-xs font-medium text-foreground/60 md:self-start"
+          >
+            {dict.breakdownLabel
+              .replace("{across}", String(solvedWords.across))
+              .replace("{acrossTotal}", String(acrossTotal))
+              .replace("{down}", String(solvedWords.down))
+              .replace("{downTotal}", String(downTotal))}
+          </p>
+        )}
 
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">

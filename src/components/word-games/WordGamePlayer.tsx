@@ -26,8 +26,10 @@ export interface WordGamePlayerDict {
   resetSelectionButton: string;
   expertModeLabel: string;
   backToWordGames: string;
-  checkButton: string;
-  filledCountLabel: string; // template, contains literal "{filled}" and "{total}"
+  breakdownButton: string;
+  hideBreakdownButton: string;
+  breakdownLabel: string; // {across} {acrossTotal} {down} {downTotal}
+  progressCountLabel: string; // {solved} {words} {filled} {cells}
   wordSearchGridLabel: string;
   crosswordGridLabel: string;
   /** Строка «выучено N из M» под панелью результата. Те же два ключа, что

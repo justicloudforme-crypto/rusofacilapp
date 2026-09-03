@@ -1071,8 +1071,10 @@
     "resetSelectionButton": "Отменить выбор",
     "expertModeLabel": "Режим эксперта",
     "premiumTierLabel": "Только Premium",
-    "checkButton": "Проверить",
-    "filledCountLabel": "Заполнено: {filled}/{total}",
+    "breakdownButton": "Показать разбор",
+    "hideBreakdownButton": "Скрыть разбор",
+    "breakdownLabel": "По горизонтали: {across} из {acrossTotal} · по вертикали: {down} из {downTotal}",
+    "progressCountLabel": "Слова целиком: {solved} из {words} · клетки: {filled} из {cells}",
     "wordSearchGridLabel": "Филворд",
     "crosswordGridLabel": "Кроссворд"
   },
