@@ -55,3 +55,65 @@ export function yoCollisions<T>(items: T[], keyFn: (item: T) => string): YoColli
     .filter(([key, variants]) => variants.size > 1 && !KNOWN_KEYS.has(key))
     .map(([key, variants]) => ({ key, variants: [...variants].sort() }));
 }
+
+/**
+ * Узаконенные пары карточек с ОДИНАКОВЫМ написанием русского слова —
+ * омонимы («карта» = tarjeta и mapa) и пары «базовое слово + его карточка
+ * в блоке синонимов/антонимов». Разобраны построчно в PROGRESS.md 7.89:
+ * все двадцать строк созданы одним прогоном сида 14.08.2026, ни одна не
+ * является копией другой, внутри пары различается от 5 до 8 полей.
+ *
+ * Список — ПО ПАРЕ id, а не по слову, и это главное в нём. Строка здесь
+ * означает «вот эти две конкретные записи — не дубль», а НЕ «слово „карта“
+ * разрешено дублировать». Поэтому третья строка с тем же словом ломает
+ * совпадение множества id и ловится воротами как настоящий дубль.
+ */
+export const KNOWN_HOMONYM_ID_PAIRS: { word: string; ids: string[]; why: string }[] = [
+  { word: "рецепт", ids: ["food3-retsept", "health-prescription"], why: "receta de cocina (A2 food) / receta médica (B1 health)" },
+  { word: "карта", ids: ["shop-card", "city-map"], why: "tarjeta (A2 shopping) / mapa (A2 city)" },
+  { word: "рынок", ids: ["shop-market", "work2-market"], why: "mercado (A1 shopping) / mercado económico (B1 work)" },
+  { word: "облако", ids: ["tech-cloud", "weather-cloud"], why: "la nube — almacenamiento (B2 technology) / nube (A2 weather)" },
+  { word: "доказательство", ids: ["abs2-evidence", "sci-dokazatelstvo"], why: "pruebas (B2 abstract) / demostración (B2 science)" },
+  { word: "высокий", ids: ["cloth-tall", "syn-vysokiy"], why: "alto de estatura (A2 clothing) / карточка блока синонимов (A2 synonymsAntonyms)" },
+  { word: "красивый", ids: ["cloth-beautiful", "syn-krasivyy"], why: "bonito о вещи (A1 clothing) / карточка блока синонимов (A2 synonymsAntonyms)" },
+  { word: "правда", ids: ["abs-truth", "syn-pravda"], why: "verdad (B1 abstract) / карточка блока синонимов (B1 synonymsAntonyms)" },
+  { word: "счастливый", ids: ["feel-happy", "syn-schastlivyy"], why: "feliz (A1 feelings) / карточка блока синонимов (B1 synonymsAntonyms)" },
+  { word: "уверенный", ids: ["feel-confident", "syn-uverennyy"], why: "seguro de sí mismo (B1 feelings) / карточка блока синонимов (B2 synonymsAntonyms)" },
+];
+
+/** Множества id узаконенных пар в стабильном порядке — для сравнения целиком. */
+const KNOWN_ID_SETS = new Set(KNOWN_HOMONYM_ID_PAIRS.map((p) => [...p.ids].sort().join(" ")));
+
+export interface ExactCollision {
+  key: string;
+  ids: string[];
+  count: number;
+}
+
+/**
+ * Записи с совпадающим (с точностью до регистра и краёв) написанием — за
+ * вычетом узаконенных пар выше.
+ *
+ * Группа пропускается ТОЛЬКО если множество её id совпадает с узаконенным
+ * ЦЕЛИКОМ. Не «содержит» и не «пересекается»: появление третьей строки с
+ * тем же словом меняет множество, совпадение теряется, и группа снова
+ * красная. Исключение по слову ослепило бы ворота навсегда — ровно то,
+ * чего допускать нельзя.
+ */
+export function exactCollisions<T>(
+  items: T[],
+  keyFn: (item: T) => string,
+  idFn: (item: T) => string,
+): ExactCollision[] {
+  const groups = new Map<string, string[]>();
+  for (const item of items) {
+    const key = keyFn(item).trim().toLowerCase();
+    const list = groups.get(key) ?? [];
+    list.push(idFn(item));
+    groups.set(key, list);
+  }
+  return [...groups.entries()]
+    .filter(([, ids]) => ids.length > 1)
+    .filter(([, ids]) => !KNOWN_ID_SETS.has([...ids].sort().join(" ")))
+    .map(([key, ids]) => ({ key, ids: [...ids].sort(), count: ids.length }));
+}

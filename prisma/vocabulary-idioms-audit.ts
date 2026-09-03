@@ -19,7 +19,12 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 import { isEntryPoint } from "../src/lib/entry-point";
-import { KNOWN_YO_PAIRS, yoCollisions } from "../src/lib/flashcards/duplicate-key";
+import {
+  KNOWN_HOMONYM_ID_PAIRS,
+  KNOWN_YO_PAIRS,
+  exactCollisions,
+  yoCollisions,
+} from "../src/lib/flashcards/duplicate-key";
 
 // Вопрос «нет ли дублей» задают банку прода, а не копии на ноутбуке:
 // пары, ради которых эта проверка и правилась, живут именно там. С ключом
@@ -37,6 +42,28 @@ const SELF_TEST = process.argv.includes("--self-test");
  * исключений обязан не проглатывать всё подряд.
  */
 function selfTest(): boolean {
+  // Подсадка к списку узаконенных пар: обе законные строки «карта» лежат
+  // рядом с ТРЕТЬЕЙ, только что появившейся. Настоящий дубль обязан быть
+  // пойман, а сама узаконенная пара — пропущена.
+  const legitPair = [
+    { id: "shop-card", russian: "карта" },
+    { id: "city-map", russian: "карта" },
+  ];
+  const sanctionedOnly = exactCollisions(legitPair, (x) => x.russian, (x) => x.id).map((c) => c.key);
+  const withThird = exactCollisions(
+    [...legitPair, { id: "cmt-new-fake-card", russian: "Карта" }],
+    (x) => x.russian,
+    (x) => x.id,
+  );
+  const otherWord = exactCollisions(
+    [
+      { id: "x1", russian: "стол" },
+      { id: "x2", russian: "стол" },
+    ],
+    (x) => x.russian,
+    (x) => x.id,
+  ).map((c) => c.key);
+
   const planted = yoCollisions(
     [
       { id: "a", russian: "ёлка" },
@@ -54,6 +81,15 @@ function selfTest(): boolean {
     ["известная пара «все / всё» пропущена", !keys.includes("все")],
     ["пара, различающаяся только регистром, ловится прежним правилом, не этим", !keys.includes("стол")],
     ["список исключений не пуст и не бесконечен", KNOWN_YO_PAIRS.length > 0 && KNOWN_YO_PAIRS.length < 20],
+    ["узаконенная пара «карта» (shop-card / city-map) пропущена", sanctionedOnly.length === 0],
+    ["ТРЕТЬЯ строка «карта» ловится — исключение по паре id, а не по слову", withThird.length === 1 && withThird[0].count === 3],
+    ["слово вне списка («стол» ×2) ловится по-прежнему", otherWord.includes("стол")],
+    [
+      "список узаконенных пар не пуст, не бесконечен и состоит ровно из пар",
+      KNOWN_HOMONYM_ID_PAIRS.length > 0 &&
+        KNOWN_HOMONYM_ID_PAIRS.length < 30 &&
+        KNOWN_HOMONYM_ID_PAIRS.every((p) => new Set(p.ids).size === 2),
+    ],
   ];
   let ok = true;
   console.log("ПОЗИТИВНЫЙ КОНТРОЛЬ (--self-test)");
@@ -81,6 +117,31 @@ function reportDuplicates<T>(
   }
   console.log(`  ⚠ ${duplicates.length} duplicate ${label} found:`);
   for (const [key, count] of duplicates) console.log(`    - "${key}" ×${count}`);
+  return true;
+}
+
+/**
+ * То же, что reportDuplicates, но с поимённым списком узаконенных пар —
+ * по паре id, не по слову (см. KNOWN_HOMONYM_ID_PAIRS и PROGRESS.md 7.89).
+ * Отдельная функция, а не флаг у предыдущей: у дублей id и у дублей фраз
+ * идиом исключений нет и быть не должно.
+ */
+function reportSanctionedDuplicates<T>(
+  items: T[],
+  keyFn: (item: T) => string,
+  idFn: (item: T) => string,
+  label: string,
+): boolean {
+  const collisions = exactCollisions(items, keyFn, idFn);
+  const sanctioned = KNOWN_HOMONYM_ID_PAIRS.length;
+  if (collisions.length === 0) {
+    console.log(
+      `  OK — no duplicate ${label} (${items.length} total, ${sanctioned} узаконенных пары-омонима пропущены поимённо).`,
+    );
+    return false;
+  }
+  console.log(`  ⚠ ${collisions.length} duplicate ${label} found:`);
+  for (const c of collisions) console.log(`    - "${c.key}" ×${c.count} → ${c.ids.join(", ")}`);
   return true;
 }
 
@@ -122,7 +183,12 @@ async function main() {
     `=== Flashcards (FlashcardCard) === (${process.env.TURSO_DATABASE_URL ? "ПРОД" : process.env.DATABASE_URL ?? "file:./dev.db"})`,
   );
   const flashcardIdDupes = reportDuplicates(flashcards, (c) => c.id, "flashcard ids");
-  const flashcardWordDupes = reportDuplicates(flashcards, (c) => c.russian, "flashcard Russian words");
+  const flashcardWordDupes = reportSanctionedDuplicates(
+    flashcards,
+    (c) => c.russian,
+    (c) => c.id,
+    "flashcard Russian words",
+  );
   // «ё» и регистр. Прежнее правило сравнивало посимвольно и потому не
   // видело ни «свёкровь / свекровь», ни «сёрфинг / серфинг»: это ОДНО
   // слово, написанное двумя способами, и в банке оно лежало дважды.
