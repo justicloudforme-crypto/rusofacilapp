@@ -1,6 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
+import { isCancelledByLeaving } from "@/lib/report-boundary-error";
 import { useEffect } from "react";
 import Link from "next/link";
 
@@ -17,7 +18,10 @@ export default function VocabularyError({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    // Запрос, оборванный уходом со страницы, — не отказ сайта, и на
+    // квоту Sentry он тратится зря. Настоящий отказ сети или API
+    // остаётся видимым: правило и его тест — src/lib/report-boundary-error.ts.
+    if (!isCancelledByLeaving(error)) Sentry.captureException(error);
   }, [error]);
 
   return (

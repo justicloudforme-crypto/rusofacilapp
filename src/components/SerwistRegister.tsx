@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { useSerwist } from "@serwist/next/react";
+import * as Sentry from "@sentry/nextjs";
+import { isExpectedServiceWorkerFailure } from "@/lib/sw-registration-failure";
 
 /**
  * `SerwistProvider` (see [lang]/layout.tsx) is mounted with `register={false}`
@@ -66,6 +68,26 @@ function isKnownNonInteractiveCrawler(): boolean {
   return NON_INTERACTIVE_CRAWLERS.test(navigator.userAgent);
 }
 
+/**
+ * Один обработчик на оба пути отказа. Ожидаемый класс (приватное окно,
+ * выключенные worker'ы, блокировщик, сеть) остаётся в консоли и в Sentry
+ * НЕ уходит — квота 5000 событий в месяц, а это событие ничего не значит.
+ * Неожиданный — уходит явным вызовом, с тегом и как handled=true: это
+ * уже дефект, а не обстоятельство. Правило и его тест —
+ * src/lib/sw-registration-failure.ts.
+ */
+function report(error: unknown): void {
+  if (isExpectedServiceWorkerFailure(error)) {
+    console.warn("[serwist] Service worker registration failed — continuing without offline caching.", error);
+    return;
+  }
+  console.warn("[serwist] Service worker registration failed unexpectedly.", error);
+  Sentry.captureException(error, {
+    level: "warning",
+    tags: { area: "service-worker-registration" },
+  });
+}
+
 export default function SerwistRegister() {
   const { serwist } = useSerwist();
 
@@ -87,11 +109,9 @@ export default function SerwistRegister() {
     // try also covers a synchronous throw from the library's own setup,
     // which is one fewer way for this to reach the page as a crash.
     try {
-      serwist.register().catch((error: unknown) => {
-        console.warn("[serwist] Service worker registration failed — continuing without offline caching.", error);
-      });
+      serwist.register().catch(report);
     } catch (error) {
-      console.warn("[serwist] Service worker registration threw — continuing without offline caching.", error);
+      report(error);
     }
   }, [serwist]);
 

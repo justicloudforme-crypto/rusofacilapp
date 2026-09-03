@@ -62,6 +62,33 @@ const config =
     ? withSerwistInit({
         swSrc: "src/app/sw.ts",
         swDest: "public/sw.js",
+        // РЕГИСТРАЦИЯ ПРИНАДЛЕЖИТ SerwistRegister.tsx, И ТОЛЬКО ЕМУ.
+        //
+        // Опция по умолчанию `true`, и это НЕ то же самое, что
+        // `register={false}` у <SerwistProvider> в [lang]/layout.tsx: тот
+        // флаг гасит вызов внутри React-провайдера, а этот — вебпак-плагин,
+        // который подшивает в начало входных чанков `main`/`main-app` свой
+        // модуль sw-entry:
+        //
+        //   window.serwist = new Serwist(origin + "/sw.js", { scope });
+        //   if (register && !isCurrentPageOutOfScope(scope))
+        //     window.serwist.register();          // <- без .catch()
+        //
+        // Замерено 02.09.2026 на собранном бандле и в WebKit: в приватном
+        // окне Safari `navigator.serviceWorker` существует, а register()
+        // отвергает промис с SecurityError «Script …/sw.js load failed» —
+        // и этот отказ уходил в окно как НЕОБРАБОТАННЫЙ (Sentry:
+        // handled=no, mechanism onunhandledrejection), потому что промис
+        // sw-entry никто не ловит. Обработчик в SerwistRegister.tsx при
+        // этом отрабатывал: в том же замере рядом стояло его
+        // console.warn. То есть ловили мы ВТОРУЮ регистрацию, а в Sentry
+        // уходила первая.
+        //
+        // С `register: false` sw-entry по-прежнему создаёт синглтон
+        // window.serwist (провайдер его переиспользует — поведение
+        // регистрации не меняется), но сам не регистрирует. Единственный
+        // вызов register() остаётся один, и он с обработчиком.
+        register: false,
         // public/offline.html isn't reachable through Next's own link graph
         // (it's a static file, not a route), so it needs to be added to the
         // precache list by hand — sw.ts's `fallbacks` config is what

@@ -16,10 +16,53 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 import { isEntryPoint } from "../src/lib/entry-point";
-const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
+import { KNOWN_YO_PAIRS, yoCollisions } from "../src/lib/flashcards/duplicate-key";
+
+// Вопрос «нет ли дублей» задают банку прода, а не копии на ноутбуке:
+// пары, ради которых эта проверка и правилась, живут именно там. С ключом
+// читается прод (только чтение), без ключа — локальная база, как раньше.
+const adapter = process.env.TURSO_DATABASE_URL
+  ? new PrismaLibSql({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN })
+  : new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
 const db = new PrismaClient({ adapter });
+
+const SELF_TEST = process.argv.includes("--self-test");
+
+/**
+ * Позитивный контроль к новому правилу: подсаженная пара «ёлка / елка»
+ * обязана быть поймана, известная пара «все / всё» — пропущена, и список
+ * исключений обязан не проглатывать всё подряд.
+ */
+function selfTest(): boolean {
+  const planted = yoCollisions(
+    [
+      { id: "a", russian: "ёлка" },
+      { id: "b", russian: "елка" },
+      { id: "c", russian: "все" },
+      { id: "d", russian: "всё" },
+      { id: "e", russian: "Стол" },
+      { id: "f", russian: "стол" },
+    ],
+    (x) => x.russian,
+  );
+  const keys = planted.map((c) => c.key);
+  const checks: [string, boolean][] = [
+    ["подсаженная пара «ёлка / елка» поймана", keys.includes("елка")],
+    ["известная пара «все / всё» пропущена", !keys.includes("все")],
+    ["пара, различающаяся только регистром, ловится прежним правилом, не этим", !keys.includes("стол")],
+    ["список исключений не пуст и не бесконечен", KNOWN_YO_PAIRS.length > 0 && KNOWN_YO_PAIRS.length < 20],
+  ];
+  let ok = true;
+  console.log("ПОЗИТИВНЫЙ КОНТРОЛЬ (--self-test)");
+  for (const [name, passed] of checks) {
+    ok &&= passed;
+    console.log(`  ${passed ? "ok  " : "ПРОВАЛ"} ${name}`);
+  }
+  return ok;
+}
 
 function reportDuplicates<T>(
   items: T[],
@@ -41,6 +84,20 @@ function reportDuplicates<T>(
   return true;
 }
 
+/** То же, но по ключу с нормализацией «ё» и регистра, за вычетом
+ * известных настоящих пар. Отдельная функция, а не флаг у предыдущей:
+ * это другой вопрос и другой список исключений. */
+function reportYoCollisions<T>(items: T[], keyFn: (item: T) => string, label: string): boolean {
+  const collisions = yoCollisions(items, keyFn);
+  if (collisions.length === 0) {
+    console.log(`  OK — no «ё»/case collisions among ${label}.`);
+    return false;
+  }
+  console.log(`  ⚠ ${collisions.length} «ё»/case collision(s) among ${label}:`);
+  for (const c of collisions) console.log(`    - "${c.key}" ← ${c.variants.join(" / ")}`);
+  return true;
+}
+
 function tally<T>(items: T[], keyFn: (item: T) => string): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const item of items) {
@@ -51,21 +108,36 @@ function tally<T>(items: T[], keyFn: (item: T) => string): Record<string, number
 }
 
 async function main() {
+  if (SELF_TEST) {
+    const ok = selfTest();
+    if (!ok) process.exitCode = 1;
+    return;
+  }
   let hadDuplicates = false;
 
   const flashcards = await db.flashcardCard.findMany();
   const idioms = await db.idiom.findMany();
 
-  console.log("=== Flashcards (FlashcardCard) ===");
+  console.log(
+    `=== Flashcards (FlashcardCard) === (${process.env.TURSO_DATABASE_URL ? "ПРОД" : process.env.DATABASE_URL ?? "file:./dev.db"})`,
+  );
   const flashcardIdDupes = reportDuplicates(flashcards, (c) => c.id, "flashcard ids");
   const flashcardWordDupes = reportDuplicates(flashcards, (c) => c.russian, "flashcard Russian words");
-  hadDuplicates = hadDuplicates || flashcardIdDupes || flashcardWordDupes;
+  // «ё» и регистр. Прежнее правило сравнивало посимвольно и потому не
+  // видело ни «свёкровь / свекровь», ни «сёрфинг / серфинг»: это ОДНО
+  // слово, написанное двумя способами, и в банке оно лежало дважды.
+  // Настоящих минимальных пар, различающихся только «ё», в русском
+  // немного, и они перечислены поимённо в KNOWN_YO_PAIRS — иначе ворота
+  // были бы красными вечно из-за «все / всё» (todo / todos).
+  const flashcardYoDupes = reportYoCollisions(flashcards, (c) => c.russian, "flashcard Russian words");
+  hadDuplicates = hadDuplicates || flashcardIdDupes || flashcardWordDupes || flashcardYoDupes;
   console.log("  By level:", tally(flashcards, (c) => c.level));
   console.log("  By category:", tally(flashcards, (c) => c.category));
 
   console.log("\n=== Idioms (Idiom) ===");
   const idiomIdDupes = reportDuplicates(idioms, (i) => i.id, "idiom ids");
   const idiomPhraseDupes = reportDuplicates(idioms, (i) => i.phrase, "idiom phrases");
+  const idiomYoDupes = reportYoCollisions(idioms, (i) => i.phrase, "idiom phrases");
   // Reuse of a Spanish equivalent by two DIFFERENT Russian phrases is not always
   // wrong (two idioms can legitimately share a real equivalent), but it has
   // repeatedly flagged genuine near-duplicate Russian concepts in practice
@@ -87,7 +159,7 @@ async function main() {
       console.log(`    - "${eq}" used by: ${phrases.join(" / ")}`);
     }
   }
-  hadDuplicates = hadDuplicates || idiomIdDupes || idiomPhraseDupes;
+  hadDuplicates = hadDuplicates || idiomIdDupes || idiomPhraseDupes || idiomYoDupes;
   console.log("  By category:", tally(idioms, (i) => i.category));
 
   console.log("");
