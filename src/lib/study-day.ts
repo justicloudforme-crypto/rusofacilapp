@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
-import { dateKeyIn } from "./timezone";
+import { DEFAULT_TIME_ZONE, dateKeyIn } from "./timezone";
+import { studyDayKeyIn } from "./study-day-key";
 import { invalidateActivityDateKeys } from "./activity-cache";
 
 // The day mark: "this learner studied today".
@@ -65,11 +66,43 @@ export async function markStudyDay(
     // single lesson, story, card and puzzle view for nothing.
     const existing = await db.studyDay.findUnique({
       where: { userId_dateKey: { userId, dateKey } },
-      select: { id: true },
+      select: { id: true, markedAt: true },
     });
-    if (existing) return;
+    if (existing) {
+      const belongsTo = studyDayKeyIn({ dateKey, markedAt: existing.markedAt }, timeZone);
+      if (belongsTo === dateKey) return; // the ordinary case: today is marked
 
-    await db.studyDay.create({ data: { userId, dateKey, source } });
+      // The row sitting on today's key was written for another day: it was
+      // stamped in a zone the server did not know at the time — UTC on a
+      // first page load — and for an evening learner west of Greenwich that
+      // is TOMORROW's key. Left alone it does two things at once: it hides
+      // the day it really belongs to, and it blocks the mark for today,
+      // because the unique index has no room for a second row.
+      //
+      // So it is moved to its own day, and today is then marked normally.
+      // Nothing is invented here: the day it moves to is the one its own
+      // instant names, in the zone we now know.
+      const occupied = await db.studyDay.findUnique({
+        where: { userId_dateKey: { userId, dateKey: belongsTo } },
+        select: { id: true },
+      });
+      if (occupied) {
+        // That day is already marked by a row of its own, so this one is a
+        // duplicate of it and nothing is lost by removing it. This is the
+        // only delete in the day-mark path, and it can only ever run when
+        // the day it would preserve is already on the calendar.
+        await db.studyDay.delete({ where: { id: existing.id } });
+      } else {
+        await db.studyDay.update({ where: { id: existing.id }, data: { dateKey: belongsTo } });
+      }
+    }
+
+    // `markedAt` is written explicitly rather than left to the column
+    // default, because it is no longer bookkeeping: the reader derives the
+    // calendar day from it (src/lib/study-day-key.ts). Defaulting to now()
+    // would be identical in production — `at` IS now — and wrong for every
+    // caller that passes an instant, which is how the scenarios plant days.
+    await db.studyDay.create({ data: { userId, dateKey, source, markedAt: at } });
 
     // Only ever reached when the day really was new, i.e. at most once a
     // day per learner. Without it the streak lags the learner by up to the
@@ -91,16 +124,29 @@ export async function markStudyDay(
  * an empty list rather than throwing (see 7.24): the streak still has its
  * five derived sources, so a missing table costs accuracy, not the profile
  * page. */
-export async function getStudyDayRows(userId: string): Promise<Array<{ dateKey: string; source: string }>> {
+export async function getStudyDayRows(
+  userId: string,
+): Promise<Array<{ dateKey: string; source: string; markedAt: Date | null }>> {
   try {
-    return await db.studyDay.findMany({ where: { userId }, select: { dateKey: true, source: true } });
+    // `markedAt` comes along because the day a mark belongs to is derived
+    // from the instant in the READER's zone, not read off the stored key —
+    // see src/lib/study-day-key.ts for why.
+    return await db.studyDay.findMany({
+      where: { userId },
+      select: { dateKey: true, source: true, markedAt: true },
+    });
   } catch (error) {
     console.error("getStudyDayRows failed", error);
     return [];
   }
 }
 
-/** Just the keys, for callers that only need the calendar. */
-export async function getStudyDayKeys(userId: string): Promise<string[]> {
-  return (await getStudyDayRows(userId)).map((row) => row.dateKey);
+/** Just the keys, for callers that only need the calendar. Derived in
+ * `timeZone` for the same reason streaks.ts derives them there — see
+ * src/lib/study-day-key.ts. */
+export async function getStudyDayKeys(
+  userId: string,
+  timeZone: string = DEFAULT_TIME_ZONE,
+): Promise<string[]> {
+  return (await getStudyDayRows(userId)).map((row) => studyDayKeyIn(row, timeZone));
 }

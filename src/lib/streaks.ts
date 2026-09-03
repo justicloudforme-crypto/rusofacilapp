@@ -4,6 +4,7 @@ import { cached } from "./ttl-cache";
 import { activityCacheKey, activityDaySourcesCache, type ActivityDaySources } from "./activity-cache";
 import { DEFAULT_TIME_ZONE, dateKeyIn } from "./timezone";
 import { getStudyDayRows } from "./study-day";
+import { studyDayKeyIn } from "./study-day-key";
 import {
   INITIAL_STREAK_FREEZES,
   nextFreezeRecord,
@@ -138,12 +139,12 @@ async function fetchActivityDaySources(userId: string, timeZone: string): Promis
       // below still carry every day from before the mark existed, and
       // deleting them would erase that history.
       //
-      // These keys are already date keys, built in the learner's zone at
-      // the moment they were marked, so they are NOT re-derived here. The
-      // consequence, stated rather than hidden: a learner who moves zone
-      // keeps their old days on the old calendar. Re-deriving them is not
-      // possible — the instant is deliberately not stored — and guessing
-      // would be worse than a day that sits where the learner was standing.
+      // Its keys ARE re-derived, from `markedAt`, in the zone this read is
+      // happening in — exactly what the five below do with their own
+      // timestamps. Until 02.09.2026 the stored key was used as-is, which
+      // left one source frozen in whatever zone the server happened to know
+      // at write time (UTC on a first page load, before the browser has
+      // reported anything). See src/lib/study-day-key.ts.
       getStudyDayRows(userId),
       db.lessonProgress.findMany({ where: { userId }, select: { completedAt: true } }),
       db.flashcardProgress.findMany({ where: { userId }, select: { lastSeenAt: true, updatedAt: true } }),
@@ -165,7 +166,7 @@ async function fetchActivityDaySources(userId: string, timeZone: string): Promis
       if (!list.includes(source)) list.push(source);
     };
 
-    for (const row of studyDayRows) add(row.dateKey, row.source);
+    for (const row of studyDayRows) add(studyDayKeyIn(row, timeZone), row.source);
     for (const row of lessonRows) add(dateKeyIn(row.completedAt, timeZone), "lesson");
     for (const row of flashcardRows) add(dateKeyIn(flashcardTouchedAt(row), timeZone), "flashcards");
     for (const row of storyRows) add(dateKeyIn(row.updatedAt, timeZone), "story");
