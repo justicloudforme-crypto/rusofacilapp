@@ -64,7 +64,21 @@ export default function CrosswordBoard({
   function focusCell(row: number, col: number) {
     const el = inputRefs.current.get(`${row},${col}`);
     if (!el) return;
-    el.focus();
+    // `preventScroll` is the point, not a detail. Whatever reveal the engine
+    // performs on focus is ITS decision, taken against the LAYOUT viewport,
+    // and it is not the same decision twice: Chromium centres the cell
+    // synchronously inside `focus()`, WebKit defers the same work, and CI's
+    // Linux WebKit did not do it at all — which is exactly how a green local
+    // run turned red on the build that matters (PROGRESS.md 7.96). Asking
+    // the engine not to scroll makes the reveal below the ONLY thing that
+    // moves the page or the board, so the outcome is the product's own
+    // guarantee rather than a bet on the engine.
+    //
+    // An engine that does not know the option ignores it and reveals the
+    // cell itself; the reveal below then finds a fully visible cell and
+    // leaves it alone. So the fallback is "correct, by someone else's
+    // arithmetic", never "hidden".
+    el.focus({ preventScroll: true });
     revealCell(el);
   }
 
@@ -132,35 +146,46 @@ export default function CrosswordBoard({
    * of 780 is on screen, and it does nothing. `window.visualViewport` is
    * the only thing in the page that knows otherwise.
    *
-   * Measured on the bench, 03.09.2026, both engines, 320×780, typing a
-   * 10-letter word down column 12 of B1/91 (PROGRESS.md 7.95):
+   * Why this axis has to move the PAGE and not the board. Measured
+   * 03.09.2026 on B1/91 at 320px, both engines, both keyboard models — the
+   * board's own scroller is horizontal ONLY:
    *
-   *   layout 780 / visual 444 (iOS shape)   steps 8,9,10 at 446..492 — under
-   *                                          the keyboard, engine scrolls 0px
-   *   layout 444 / visual 444 (Android)     engine scrolls itself at step 8
-   *                                          (scrollY 0 → 235), nothing hidden
+   *   scrollWidth 1126 − clientWidth 270 = 856px of sideways travel
+   *   scrollHeight 286 − clientHeight 286 =   0px of vertical travel
+   *   probe: `scroller.scrollTop = 50` leaves scrollTop at 0
    *
-   * Hence the guard below, and it is the point of this function rather than
-   * a shortcut past it: this correction exists ONLY for the strip the
-   * engine cannot see. While the visual viewport still matches the layout
-   * one, the engine's reveal is the right one and a second reveal here
-   * would fight it — so it does nothing at all, and is measured doing
-   * nothing (0 scroll calls in the second row above).
+   * (`overflow-y` COMPUTES to `auto` — a non-visible `overflow-x` forces it
+   * — so the element looks vertically scrollable and is not. The document
+   * is: 1810–2146px of page travel in the same measurement.) So a word
+   * typed down is the page's business, and the correction below is the only
+   * thing that moves it, because `focusCell` takes the engine's own reveal
+   * off the table with `preventScroll`.
+   *
+   * That is the lesson of 7.96 and it is worth stating plainly. The first
+   * edition of this function did the opposite: it stood down whenever the
+   * visual viewport matched the layout one, on the grounds that the engine's
+   * reveal was then the right one and a second reveal would fight it. Locally
+   * that was true and measured (WebKit scrolled itself 0 → 235px at step 8).
+   * On CI's Linux WebKit the same build scrolled 0px and the cell stayed
+   * under the fold — a red PR from a green bench, because the product's
+   * guarantee had been delegated to a decision the engine takes differently
+   * in different builds.
    *
    * Bounds come from `visualViewport` (`offsetTop` included: pinch-zoom
    * moves the visual viewport inside the layout one, and the rect this is
-   * compared against is in layout coordinates). With no such API there is
-   * no second bound to know — `innerHeight` is exactly what the engine
-   * already used — so the fallback deliberately amounts to doing nothing.
+   * compared against is in layout coordinates). With no such API the page's
+   * own `innerHeight` is the only bound there is — which is right for every
+   * engine that also has no keyboard shrinking the visual viewport, and is
+   * still a real reveal rather than a stand-down.
    */
   function revealBelowKeyboard(el: HTMLInputElement) {
     const vv = typeof window === "undefined" ? null : window.visualViewport;
     const top = vv ? vv.offsetTop : 0;
     const bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
-    if (bottom >= window.innerHeight - 1 && top <= 1) return;
     // Nearest edge, never centred — same rule as the horizontal branch, and
-    // a cell already fully inside is left alone so the engine's own later
-    // reveal finds nothing to do.
+    // a cell already fully inside is left alone. That is also what keeps an
+    // engine that ignored `preventScroll` from being fought: it revealed the
+    // cell already, so there is nothing here left to do.
     //
     // Rounded AWAY from the cell, and that is a fix rather than a detail.
     // The distance asked for here is fractional (the grid's rows do not
