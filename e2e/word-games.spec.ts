@@ -909,6 +909,203 @@ test("crossword: палец попадает в клетку 22px, буква ч
 });
 
 /**
+ * Слово, набираемое ВНИЗ, с открытой клавиатурой: клетка с фокусом обязана
+ * остаться над её верхним краем — и обязана вставать ТУДА ЖЕ независимо от
+ * того, увёз ли страницу движок сам (PROGRESS.md 7.96, было 7.95).
+ *
+ * Чего не мерил ни один тест до этого. Соседний тест 7.94 проходит слово
+ * вниз и требует видимости на каждом шаге — но только ПО СТОЛБЦУ, то есть
+ * по горизонтали. Клавиатуры в замере не было вовсе, а по вертикали
+ * `revealCell` не делал ничего. Это записано числом ниже, в контроле на
+ * слепоту.
+ *
+ * ДВЕ МОДЕЛИ, и правильным результат обязан быть при обеих — какая из них
+ * описывает настоящий iPhone, отсюда не видно и здесь не решается:
+ *
+ *   `blind`  — окно 320×780, `visualViewport.height` подменён на 444.
+ *              Форма iOS: клавиатура сжимает ВИЗУАЛЬНЫЙ вьюпорт, а
+ *              layout-вьюпорт (`innerHeight`) остаётся 780, поэтому
+ *              собственная доводка движка к фокусу считает клетку на
+ *              экране и не делает ничего.
+ *   `shrunk` — окно 320×444 по-настоящему. Форма Android: клавиатура
+ *              ужимает и layout-вьюпорт, и движок про это знает.
+ *
+ * ПОЧЕМУ ЭТОТ ТЕСТ ПЕРЕПИСАН. Его первая редакция требовала от модели
+ * `shrunk` ровно НОЛЬ прокруток страницы: там движок увозил её сам
+ * (`scrollY` 0 → 235 на шаге 8), и доводке полагалось молчать. Локально это
+ * было так в обоих движках; на Linux-сборке WebKit в CI тот же движок не
+ * увёз НИЧЕГО, клетка осталась под сгибом, и требование видимости упало
+ * (`word-games.spec.ts`, модель `shrunk`, `cellBottom <= viewBottom`).
+ * Ошибка была не в числе, а в том, ЧТО им закреплено: тест закреплял
+ * поведение движка. Теперь закреплено поведение продукта — `focusCell`
+ * просит `focus({ preventScroll: true })`, и всё, что двигает страницу, —
+ * это доводка.
+ *
+ * Отсюда главное утверждение ниже: таблицы двух моделей обязаны СОВПАСТЬ
+ * по шагам. Совпадение и есть «результат не зависит от движка», записанное
+ * числом, а не словами.
+ *
+ * ЧТО ИЗМЕРЕНО ЭТИМ ЖЕ СТЕНДОМ (03.09.2026, слово из 10 букв вниз по
+ * столбцу 12 пазла B1/91):
+ *
+ *   до правки, blind:  шаги 8, 9, 10 на 446..492 при границе 444 — три
+ *                      скрытых из одиннадцати, движок не двигал страницу;
+ *   до правки, shrunk: скрытых 0, но всю работу сделал движок
+ *                      (`scrollY` 0 → 235, наших вызовов 0);
+ *   после правки:      обе модели, оба движка — `scrollY`
+ *                      0,0,0,0,0,0,0,0,24,48,48, клетка 422..444, наших
+ *                      вызовов 2, оба сдвинули.
+ *
+ * ЧЕМ ЭТО КОНТРОЛИРУЕТСЯ (каждая половина — со своей прод-сборкой):
+ *
+ *  — вертикальная ветка `revealCell` снята целиком → красный в обоих
+ *    движках и в обеих моделях;
+ *  — возвращена → зелёный;
+ *  — возвращён `el.focus()` без `preventScroll` (то есть доводка снова
+ *    делит работу с движком) → красный: таблицы моделей расходятся, в
+ *    `shrunk` страницу увозит движок на 235 вместо наших 24.
+ *
+ * И контроль на слепоту, ради того чтобы «зелёный» соседнего теста не
+ * приняли за покрытие вертикали: при снятой вертикальной доводке тест 7.94
+ * обязан остаться ЗЕЛЁНЫМ. Он и остаётся — вертикали он не мерил.
+ */
+const KEYBOARD_BOTTOM = 444; // 780 минус клавиатура iOS ≈ 336px
+
+test("crossword: слово вниз не уходит под клавиатуру, и встаёт туда же независимо от движка", async ({ page }) => {
+  // Подмена `visualViewport.height` включается ПАРАМЕТРОМ АДРЕСА, а не
+  // переменной: init-скрипт исполняется в свежем контексте на каждой
+  // навигации, и обе модели живут в одном тесте.
+  await page.addInitScript(`
+    (() => {
+      const want = new URLSearchParams(location.search).get("e2eKeyboardTop");
+      const vv = window.visualViewport;
+      if (!want || !vv) return;
+      Object.defineProperty(vv, "height", { get: () => Number(want), configurable: true });
+      Object.defineProperty(vv, "offsetTop", { get: () => 0, configurable: true });
+    })();
+  `);
+  // Счётчик прокруток СТРАНИЦЫ. Ничто на этой странице, кроме доводки,
+  // окно не прокручивает — что и подтверждается нулём в модели shrunk
+  // ниже: будь тут посторонний прокручиватель, ноль был бы недостижим.
+  await page.addInitScript(`
+    (() => {
+      window.__pageScrolls = [];
+      const by = window.scrollBy.bind(window);
+      window.scrollBy = (...a) => {
+        const before = window.scrollY;
+        by(...a);
+        window.__pageScrolls.push({ before, after: window.scrollY });
+      };
+    })();
+  `);
+
+  const walkDown = async (model: "blind" | "shrunk") => {
+    if (model === "blind") await page.setViewportSize({ width: 320, height: 780 });
+    else await page.setViewportSize({ width: 320, height: KEYBOARD_BOTTOM });
+    const query = model === "blind" ? `?e2eKeyboardTop=${KEYBOARD_BOTTOM}` : "";
+    await page.goto(`/es/word-games/CROSSWORD/B1/91${query}`);
+    await page.waitForSelector('[role="grid"] input');
+
+    // Тот же выбор слова, что и в тесте 7.94: клетка без горизонтальных
+    // соседей, чтобы направление S было однозначным.
+    const down = await page.evaluate(() => {
+      const has = (r: number, c: number) => !!document.querySelector(`[role="grid"] input[aria-label="row ${r} col ${c}"]`);
+      const all = [...document.querySelectorAll('[role="grid"] input')].map((i) => {
+        const m = /row (\d+) col (\d+)/.exec(i.getAttribute("aria-label") ?? "")!;
+        return { r: Number(m[1]), c: Number(m[2]) };
+      });
+      let best: { r: number; c: number; len: number } | null = null;
+      for (const { r, c } of all) {
+        if (has(r, c - 1) || has(r, c + 1)) continue;
+        if (has(r - 1, c)) continue;
+        let len = 1;
+        while (has(r + len, c)) len += 1;
+        if (len >= 3 && (!best || len > best.len)) best = { r, c, len };
+      }
+      return best;
+    });
+    expect(down, `${model}: в пазле не нашлось однозначно вертикального хода`).not.toBeNull();
+    // Вакуумная защита: короткое слово уместилось бы над клавиатурой само
+    // собой, и «ничего не скрылось» стало бы правдой по причине, к доводке
+    // отношения не имеющей.
+    expect(down!.len, `${model}: слово вниз должно быть длинным`).toBeGreaterThanOrEqual(8);
+
+    const sel = (r: number, c: number) => `[role="grid"] input[aria-label="row ${r} col ${c}"]`;
+    await page.locator(sel(down!.r, down!.c)).scrollIntoViewIfNeeded();
+    await page.locator(sel(down!.r, down!.c)).click();
+
+    const steps = [await settledFocusGeometry(page)];
+    for (let i = 0; i < down!.len; i += 1) {
+      await page.keyboard.type("а");
+      const shot = await settledFocusGeometry(page);
+      steps.push(shot);
+      if (shot.label !== `row ${down!.r + i + 1} col ${down!.c}` && i + 1 < down!.len) {
+        await page.locator(sel(down!.r + i + 1, down!.c)).click();
+      }
+    }
+    const scrolls = await page.evaluate(
+      () => (window as unknown as { __pageScrolls: { before: number; after: number }[] }).__pageScrolls
+    );
+    return { steps, calls: scrolls.length, moved: scrolls.filter((s) => s.before !== s.after).length };
+  };
+
+  // МОДЕЛЬ 1 — движок о клавиатуре не знает. Видимость обязана держаться
+  // доводкой, и только ею.
+  const blind = await walkDown("blind");
+  // Вакуумная защита самой модели: подмена обязана дать границу ВЫШЕ окна,
+  // иначе «под клавиатурой» не наступает и проверка ниже пуста.
+  expect(blind.steps[0].viewBottom, "модель blind: граница видимой области не поднялась").toBe(KEYBOARD_BOTTOM);
+  expect(blind.steps[0].innerHeight, "модель blind: окно обязано остаться высоким").toBeGreaterThan(KEYBOARD_BOTTOM);
+
+  // МОДЕЛЬ 2 — движок знает про клавиатуру и, вообще говоря, может увезти
+  // страницу сам. Может — но результат обязан быть тем же самым.
+  const shrunk = await walkDown("shrunk");
+  expect(shrunk.steps[0].viewBottom, "модель shrunk: видимая область обязана совпасть с окном").toBe(
+    shrunk.steps[0].innerHeight
+  );
+
+  for (const [model, run] of [
+    ["blind", blind],
+    ["shrunk", shrunk],
+  ] as const) {
+    for (const s of run.steps) {
+      expect(
+        s.cellBottom <= s.viewBottom + 0.5,
+        `${model}, ${s.label}: клетка ${s.cellTop}..${s.cellBottom} ниже границы видимой области ${s.viewBottom} при scrollY ${s.scrollY}`
+      ).toBe(true);
+    }
+    // Вакуумная защита к результату: если страница не сдвинулась ни разу,
+    // значит слово целиком уместилось над клавиатурой и зелёный получен не
+    // доводкой. Требуется в ОБЕИХ моделях — в этом и правка: страницу
+    // двигаем мы, а не движок.
+    expect(run.moved, `модель ${model}: доводка не сдвинула страницу ни разу`).toBeGreaterThan(0);
+    expect(
+      run.steps[run.steps.length - 1].scrollY,
+      `модель ${model}: страница осталась на месте`
+    ).toBeGreaterThan(0);
+    // И лишних прокруток быть не должно: каждый вызов обязан был сдвинуть
+    // страницу. Вызов, не сдвинувший ничего, — это либо просьба на ноль,
+    // либо просьба, усечённая движком (так и выглядел дефект дробного
+    // смещения в WebKit), и то и другое здесь дефект.
+    expect(run.calls, `модель ${model}: доводка звала прокрутку впустую`).toBe(run.moved);
+  }
+
+  // ГЛАВНОЕ УТВЕРЖДЕНИЕ. Обе модели обязаны дать одну и ту же таблицу: тот
+  // же шаг — та же клетка, тот же `scrollY`, то же число сдвигов. Пока это
+  // так, ответ на вопрос «увёз ли движок сам» не входит в результат — а
+  // именно на этом ответе первая редакция и сломалась в CI.
+  expect(shrunk.moved, "модели разошлись числом сдвигов").toBe(blind.moved);
+  for (let i = 0; i < blind.steps.length; i += 1) {
+    const b = blind.steps[i];
+    const k = shrunk.steps[i];
+    expect(
+      `${k.label} ${k.cellTop}..${k.cellBottom} scrollY ${k.scrollY}`,
+      `шаг ${i}: модели разошлись — доводка снова зависит от движка`
+    ).toBe(`${b.label} ${b.cellTop}..${b.cellBottom} scrollY ${b.scrollY}`);
+  }
+});
+
+/**
  * Прямоугольник клетки с фокусом, снятый после того, как геометрия встала.
  *
  * Та же схема, что у `check:layout`: величина снимается на каждом кадре и
@@ -925,7 +1122,21 @@ test("crossword: палец попадает в клетку 22px, буква ч
 async function settledFocusGeometry(page: Page) {
   return page.evaluate(
     () =>
-      new Promise<{ label: string | null; cellLeft: number; cellRight: number; boxLeft: number; boxRight: number; scrollLeft: number }>(
+      new Promise<{
+        label: string | null;
+        cellLeft: number;
+        cellRight: number;
+        boxLeft: number;
+        boxRight: number;
+        scrollLeft: number;
+        cellTop: number;
+        cellBottom: number;
+        // Нижняя граница ВИДИМОЙ области, а не окна: под клавиатурой это
+        // разные величины, и в этом вся задача (PROGRESS.md 7.95).
+        viewBottom: number;
+        innerHeight: number;
+        scrollY: number;
+      }>(
         (resolve) => {
           const scroller = document.querySelector('[role="grid"]')!.parentElement as HTMLElement;
           let same = 0;
@@ -936,6 +1147,7 @@ async function settledFocusGeometry(page: Page) {
             const active = document.activeElement as HTMLElement;
             const r = active.getBoundingClientRect();
             const box = scroller.getBoundingClientRect();
+            const vv = window.visualViewport;
             const shot = {
               label: active.getAttribute("aria-label"),
               cellLeft: Math.round(r.left * 10) / 10,
@@ -943,6 +1155,11 @@ async function settledFocusGeometry(page: Page) {
               boxLeft: Math.round(box.left * 10) / 10,
               boxRight: Math.round(box.right * 10) / 10,
               scrollLeft: Math.round(scroller.scrollLeft),
+              cellTop: Math.round(r.top * 10) / 10,
+              cellBottom: Math.round(r.bottom * 10) / 10,
+              viewBottom: vv ? Math.round((vv.offsetTop + vv.height) * 10) / 10 : window.innerHeight,
+              innerHeight: window.innerHeight,
+              scrollY: Math.round(window.scrollY),
             };
             const key = JSON.stringify(shot);
             if (key === prev) same += 1;

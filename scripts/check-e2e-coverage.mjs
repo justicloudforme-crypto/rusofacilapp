@@ -50,6 +50,10 @@ const E2E_DIR = join(repoRoot, "e2e");
  * word-games.spec.ts gained the crossword playability test — finger tap
  * into a 22px cell, letter legibility and the walk DOWN a word
  * (PROGRESS.md 7.94) — one test in each of the two projects it runs in.
+ * Raised from 91 to 93 on 03.09.2026, when word-games.spec.ts gained the
+ * keyboard test — a word typed DOWN must stay above the on-screen
+ * keyboard, and the reveal must not touch the page when the engine scrolls
+ * for itself (PROGRESS.md 7.95) — again one test per project.
  * Raised from 77 to 79 on 01.09.2026, when
  * word-games.spec.ts gained the mobile-column test (PROGRESS.md 7.77);
  * from 73 to 77, when
@@ -64,7 +68,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * exists to prevent, so if you are here to do that, the thing to fix is
  * the run.
  */
-const MIN_EXECUTED_TESTS = 91;
+const MIN_EXECUTED_TESTS = 93;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.
