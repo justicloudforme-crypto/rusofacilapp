@@ -41,7 +41,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * measures the header of a SIGNED-IN learner at 640–660 — the surface debt
  * 37 existed for, and the one check:layout cannot reach because it browses
  * anonymously. Raised from 79 to 81 on 02.09.2026, when word-games.spec.ts
- * gained the crossword board-width test (PROGRESS.md 7.91) — one test in
+ * gained the crossword board-width test (PROGRESS.md 7.92) — one test in
  * each of the two projects it runs in. Raised from 77 to 79 on 01.09.2026, when
  * word-games.spec.ts gained the mobile-column test (PROGRESS.md 7.77);
  * from 73 to 77, when
