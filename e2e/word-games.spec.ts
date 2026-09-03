@@ -691,26 +691,100 @@ test("crossword: the board is wider than the phone on purpose — the page is no
 
   // 3 (продолжение). «полуостров» — строка 4, столбцы 7..16 — переходит
   // через правый край видимой части при 320px. Набираем его вслепую и
-  // смотрим, оказывается ли клетка с фокусом в поле зрения.
+  // смотрим на КАЖДЫЙ шаг, а не только на последний.
+  //
+  // Почему на каждый. Прежняя редакция смотрела только на клетку в конце
+  // слова, и была зелена локально по случайности: WebKit сам увозит доску
+  // только тогда, когда клетка скрыта ЦЕЛИКОМ (столбец 12), и один такой
+  // рывок затаскивал внутрь и весь остаток слова — с запасом 29px, то есть
+  // 1,2 клетки. Столбец 11, скрытый ЧАСТИЧНО (277..299 при видимой части
+  // 25..295), при этом оставался снаружи и там же и оставался: в частичном
+  // случае WebKit не делает ничего. Утверждение о видимости было верно на
+  // шаге 9 и ложно на шаге 4 — просто никто не смотрел на шаг 4. В CI на
+  // Linux-сборке WebKit граница проходила иначе, и наружу выпадал уже
+  // последний шаг: 88 из 89 зелёных, три попытки из трёх красные
+  // (PROGRESS.md 7.92).
+  //
+  // Поэтому доводкой занят сам CrosswordBoard (revealCell), а тест требует
+  // её на каждом шаге. Замер берётся не по таймеру, а по устоявшейся
+  // геометрии — как в check:layout: прямоугольник подписывается на каждом
+  // кадре, и годится только тот, что повторился три раза подряд. Это не
+  // «щедрый таймаут»: ожидание кончается само, как только картинка встала.
   await page.setViewportSize({ width: 320, height: 780 });
   await page.goto("/es/word-games/CROSSWORD/B1/91");
   await page.waitForSelector('[role="grid"] input');
   await page.locator('[role="grid"] input[aria-label="row 4 col 7"]').scrollIntoViewIfNeeded();
   await page.locator('[role="grid"] input[aria-label="row 4 col 7"]').focus();
-  for (let i = 0; i < 9; i += 1) await page.keyboard.type("а");
-  await page.waitForTimeout(300);
-  const followed = await page.evaluate(() => {
-    const active = document.activeElement as HTMLElement;
-    const scroller = document.querySelector('[role="grid"]')!.parentElement as HTMLElement;
-    const r = active.getBoundingClientRect();
-    const box = scroller.getBoundingClientRect();
-    return {
-      label: active.getAttribute("aria-label"),
-      visible: r.left >= box.left - 1 && r.right <= box.right + 1,
-      scrollLeft: Math.round(scroller.scrollLeft),
-    };
-  });
-  expect(followed.label, "автопротяжка не дошла до правого края").toBe("row 4 col 16");
-  expect(followed.scrollLeft, "доска не поехала за фокусом").toBeGreaterThan(0);
-  expect(followed.visible, "клетка с фокусом оказалась вне видимой части доски").toBe(true);
+
+  const steps: { label: string | null; cellLeft: number; cellRight: number; boxLeft: number; boxRight: number; scrollLeft: number }[] = [];
+  for (let i = 0; i < 9; i += 1) {
+    await page.keyboard.type("а");
+    steps.push(await settledFocusGeometry(page));
+  }
+
+  const last = steps[steps.length - 1];
+  expect(last.label, "автопротяжка не дошла до правого края").toBe("row 4 col 16");
+  expect(last.scrollLeft, "доска не поехала за фокусом").toBeGreaterThan(0);
+  // Каждый шаг, а не только последний: слово длиннее видимой части доски
+  // можно набрать только если клетка с фокусом видна ВСЮ дорогу.
+  for (const s of steps) {
+    expect(
+      s.cellLeft >= s.boxLeft - 1 && s.cellRight <= s.boxRight + 1,
+      `${s.label}: клетка ${s.cellLeft}..${s.cellRight} вне видимой части доски ${s.boxLeft}..${s.boxRight} при scrollLeft ${s.scrollLeft}`
+    ).toBe(true);
+  }
 });
+
+/**
+ * Прямоугольник клетки с фокусом, снятый после того, как геометрия встала.
+ *
+ * Та же схема, что у `check:layout`: величина снимается на каждом кадре и
+ * принимается только тогда, когда три подряд совпали. Ждать по таймеру
+ * здесь нельзя — доводка до видимой области в WebKit откладывается до
+ * следующего обновления отрисовки, и «подождать 300мс» отвечает на вопрос
+ * «успело ли», а не на вопрос «куда встало».
+ *
+ * Потолок в 120 кадров — предохранитель от бесконечного ожидания на
+ * странице, которая перерисовывается непрерывно; он не удлиняет ожидание в
+ * нормальном случае (три кадра) и не делает проверку мягче: вернувшаяся по
+ * потолку геометрия проверяется теми же неравенствами.
+ */
+async function settledFocusGeometry(page: Page) {
+  return page.evaluate(
+    () =>
+      new Promise<{ label: string | null; cellLeft: number; cellRight: number; boxLeft: number; boxRight: number; scrollLeft: number }>(
+        (resolve) => {
+          const scroller = document.querySelector('[role="grid"]')!.parentElement as HTMLElement;
+          let same = 0;
+          let prev = "";
+          let frames = 0;
+          const sample = () => {
+            frames += 1;
+            const active = document.activeElement as HTMLElement;
+            const r = active.getBoundingClientRect();
+            const box = scroller.getBoundingClientRect();
+            const shot = {
+              label: active.getAttribute("aria-label"),
+              cellLeft: Math.round(r.left * 10) / 10,
+              cellRight: Math.round(r.right * 10) / 10,
+              boxLeft: Math.round(box.left * 10) / 10,
+              boxRight: Math.round(box.right * 10) / 10,
+              scrollLeft: Math.round(scroller.scrollLeft),
+            };
+            const key = JSON.stringify(shot);
+            if (key === prev) same += 1;
+            else {
+              same = 1;
+              prev = key;
+            }
+            if (same >= 3 || frames > 120) {
+              resolve(shot);
+              return;
+            }
+            requestAnimationFrame(sample);
+          };
+          requestAnimationFrame(sample);
+        }
+      )
+  );
+}
