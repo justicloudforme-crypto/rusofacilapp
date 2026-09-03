@@ -12,17 +12,25 @@ import { loginWithSubscription } from "./helpers/auth";
  *   3. does anything on that page scroll sideways at 320.
  *
  * Every assertion below prints the number it asserted on, because "the
- * calendar fits" is not a result and "each day is 41.7 × 44.0 px inside a
- * 288px content column" is.
+ * calendar fits" is not a result and "each day is 39.4 × 44.0 px inside a
+ * 288px content column, overlapping its neighbour by 0.0px" is.
+ *
+ * What this file does NOT measure: the cold flame on a day WITHOUT study.
+ * The account it builds registers seconds earlier, so every day before today
+ * is "before you registered" and there is no missed day on the grid at all —
+ * the branch is asserted in src/components/profile/ActivityCalendar.test.tsx,
+ * where the fixture can have a history. The check below runs when a missed
+ * day happens to exist and says so when it does not, rather than passing
+ * silently on nothing.
  */
 
 const NARROW = { width: 320, height: 780 };
 
 /** WCAG 2.5.8 AA, the floor that actually applies to a seven-column month
  * grid. The project's own 44px rule (CLAUDE.md) is what a BUTTON gets when
- * the page can afford it; seven 44px squares plus their gaps need 332px of
- * content width and there are 288 at this viewport, so the rule that can be
- * met here is this one — see the arithmetic printed by the test. */
+ * the page can afford it; seven 44px squares plus their 2px gaps need 320px
+ * of content width and there are 288 at this viewport, so the rule that can
+ * be met here is this one — see the arithmetic printed by the test. */
 const WCAG_MIN_TARGET = 24;
 
 /** What the vertical size is held to instead: height is not scarce, so the
@@ -71,7 +79,7 @@ for (const lang of ["es", "ru"] as const) {
     const boxes = await days.evaluateAll((els) =>
       els.map((el) => {
         const b = el.getBoundingClientRect();
-        return { date: el.getAttribute("data-date")!, w: b.width, h: b.height };
+        return { date: el.getAttribute("data-date")!, w: b.width, h: b.height, l: b.left, r: b.right, t: b.top };
       }),
     );
     const smallest = boxes.reduce((min, b) => (b.w * b.h < min.w * min.h ? b : min));
@@ -84,6 +92,21 @@ for (const lang of ["es", "ru"] as const) {
       expect(b.w, `${b.date} is ${b.w.toFixed(1)}px wide`).toBeGreaterThanOrEqual(WCAG_MIN_TARGET);
       expect(b.h, `${b.date} is ${b.h.toFixed(1)}px tall`).toBeGreaterThanOrEqual(MIN_TARGET_HEIGHT);
     }
+
+    // No day may cover its neighbour. This is not decoration: raising the
+    // cell to 44px WITH `aspect-square` still in place made every square
+    // 44px wide inside a 41.4px column, so seven of them overlapped by
+    // 2.6px each and the last hung 4.6px past the grid — measured, and the
+    // reason the square is dropped below `sm` rather than the column
+    // widened. A target that covers its neighbour's edge is worse than a
+    // slightly narrow one.
+    const sameRow = boxes.filter((b) => Math.abs(b.t - boxes[0].t) < 1).sort((a, b) => a.l - b.l);
+    let worstOverlap = 0;
+    for (let i = 1; i < sameRow.length; i++) {
+      worstOverlap = Math.max(worstOverlap, sameRow[i - 1].r - sameRow[i].l);
+    }
+    console.log(`  /${lang}: worst overlap between neighbouring days ${worstOverlap.toFixed(1)}px`);
+    expect(worstOverlap).toBeLessThanOrEqual(0.5);
 
     // The arithmetic that says why 44 wide is not on the table here, printed
     // so the number above is read as a ceiling and not as a shrug.
@@ -133,6 +156,8 @@ for (const lang of ["es", "ru"] as const) {
         expect(cell.glyph).toContain("ice-flame");
       }
       console.log(`  /${lang}: ${missedCount} day(s) without study, each carrying the cold flame`);
+    } else {
+      console.log(`  /${lang}: no day without study on this grid — the cold flame is not measured here`);
     }
   });
 }

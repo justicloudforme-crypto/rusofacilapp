@@ -334,7 +334,7 @@ function Day({
   if (cell.state === "padding" || cell.dateKey === null) {
     // A square belonging to a neighbouring month. Kept in the flow so the
     // grid stays seven wide, and empty so it never reads as a missed day.
-    return <span aria-hidden className="aspect-square" />;
+    return <span aria-hidden className="h-11 sm:h-auto sm:aspect-square" />;
   }
 
   const legend =
@@ -404,12 +404,19 @@ function Day({
       )}
     </>
   );
-  // `min-h-11` = 44px, the project's touch-target floor (CLAUDE.md), and it
-  // is a floor on HEIGHT only because height is the dimension that is free.
-  // Width at 320px is 288/7 minus gaps ≈ 41px and cannot be 44 without a
-  // grid wider than the phone — the arithmetic is printed by
-  // e2e/activity-calendar.spec.ts, which asserts on both numbers.
-  const shape = `relative flex aspect-square min-h-11 items-center justify-center rounded-lg ${tone} ${
+  // Below `sm` the square gives way to a fixed 44px HEIGHT, the project's
+  // touch-target floor (CLAUDE.md), because height is the dimension that is
+  // free: the width of a day is 288/7 minus gaps ≈ 41px at a 320px viewport
+  // and cannot be 44 without a grid wider than the phone (the arithmetic is
+  // printed by e2e/activity-calendar.spec.ts).
+  //
+  // `aspect-square` was tried here WITH a min-height and measured: the ratio
+  // then drove the width off the height, every cell became 44px wide inside a
+  // 41.4px column, and the seven of them overlapped by 2.6px each with the
+  // last one hanging 4.6px past the grid. A target that covers its
+  // neighbour's edge is worse than a slightly narrow one, so the square is
+  // dropped rather than the column widened.
+  const shape = `relative flex h-11 w-full items-center justify-center rounded-lg sm:h-auto sm:aspect-square ${tone} ${
     cell.isToday ? "ring-2 ring-primary/60 ring-offset-1 ring-offset-background" : ""
   }`;
 
