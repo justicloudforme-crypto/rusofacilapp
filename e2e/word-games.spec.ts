@@ -1106,6 +1106,281 @@ test("crossword: слово вниз не уходит под клавиатур
 });
 
 /**
+ * Оба теста ниже требуют НАСТОЯЩЕГО касания, поэтому у них свой контекст с
+ * `hasTouch`. Проект `chromium` — это Desktop Chrome, у которого тачскрина
+ * нет вовсе, и `page.touchscreen.tap` там просто отказывается работать;
+ * без этой строки половина замера была бы не «зелёной», а несуществующей.
+ * Это настройка контекста, а не исключение по проекту: оба движка гоняют
+ * оба теста.
+ */
+test.describe("тап и поздняя клавиатура", () => {
+  test.use({ hasTouch: true });
+
+  /**
+   * Клетка, накрытая клавиатурой ПОСЛЕ того, как её выбрали пальцем — и
+   * клетка, получившая фокус БЕЗ клика. Два пути под клавиатуру, которых не
+   * закрывал никто (PROGRESS.md 7.97; список «что осталось недоказанным» в
+   * 7.96 назвал их последним оставшимся способом там оказаться).
+   *
+   * Чего не мерил соседний тест. Тест 7.96 («слово вниз … независимо от
+   * движка») проходит слово вниз ПРИ УЖЕ ПОДНЯТОЙ клавиатуре и фокусом,
+   * который ставит сам компонент. Оба пути ниже он не трогает: клавиатура у
+   * него уже стоит к моменту первого фокуса, а фокус всегда приходит из
+   * `focusCell`. Это записано числом — контроль на слепоту при снятых
+   * правках этого захода оставляет 7.96 зелёным.
+   *
+   * ЧТО ИЗМЕРЕНО ДО ПРАВКИ (03.09.2026, B1/91, 320×780, оба движка, числа
+   * совпали до пикселя):
+   *
+   *   тап + поздняя клавиатура: тап по клетке 446..468 при полном вьюпорте
+   *     (видна) — доводка сработала 1 раз и НИЧЕГО не сдвинула, правильно;
+   *     затем клавиатура поднялась (`vv.height` 780 → 420, `vv.offsetTop`
+   *     0 → 24, граница 444, `innerHeight` те же 780) — обработчик доводки
+   *     не сработал НИ РАЗУ, клетка осталась на 446..468, на 24px под
+   *     клавиатурой;
+   *   фокус без клика: клетка 430..452 при границе 444 — обработчик не
+   *     сработал ни разу, страница не сдвинулась.
+   *
+   *   после правки, оба движка: 422..444 в обоих случаях, ровно один вызов
+   *   доводки и ровно один сдвиг на каждое событие.
+   *
+   * ПОЧЕМУ МОДЕЛЬ ИМЕННО ТАКАЯ. Порядок здесь — половина задачи, поэтому
+   * стенд не подменяет высоту заранее: сначала страница живёт при ПОЛНОМ
+   * визуальном вьюпорте (780) и фокус ставится там, и только потом
+   * визуальный вьюпорт ужимается и съезжает внутри layout-вьюпорта
+   * (`offsetTop` 24, `height` 420), а `innerHeight` остаётся 780 — это и
+   * есть форма iOS. Подмена, включённая до навигации, отвечала бы на другой
+   * вопрос: на тот, который уже закрыт тестом 7.96.
+   *
+   * `offsetTop` в модели не для красоты: граница видимой области — это
+   * `offsetTop + height`, и модель, оставляющая `offsetTop` нулём, не
+   * отличила бы правильную арифметику от `height` в одиночку.
+   */
+  test("crossword: тап и поздняя клавиатура — клетка поднимается, подписка снимается", async ({ page }) => {
+    // Одна подмена на весь тест, и она УМЕЕТ МЕНЯТЬСЯ во времени: `__vvSet`
+    // ставит новые значения и посылает `resize`, как это делает движок при
+    // подъёме клавиатуры. До первого вызова отдаются настоящие величины —
+    // то есть страница стартует при полном вьюпорте.
+    //
+    // `__vvReads` считает обращения к `visualViewport.height`. В приложении
+    // к этому объекту обращается ровно одно место — `revealBelowKeyboard`, —
+    // поэтому счётчик и есть «сколько раз сработал обработчик доводки».
+    // `__vvSilent` даёт те же величины замеру, не трогая счётчик.
+    //
+    // `__vvListeners` считает подписки и отписки: разность и есть число
+    // живых подписок, а ноль после размонтирования — доказательство, что
+    // очистка отработала.
+    await page.addInitScript(`
+      (() => {
+        const vv = window.visualViewport;
+        window.__vvReads = 0;
+        window.__vvListeners = { added: 0, removed: 0 };
+        if (!vv) return;
+        const proto = Object.getPrototypeOf(vv);
+        const rawH = Object.getOwnPropertyDescriptor(proto, "height").get;
+        const rawO = Object.getOwnPropertyDescriptor(proto, "offsetTop").get;
+        const state = { height: null, offsetTop: null };
+        Object.defineProperty(vv, "height", {
+          configurable: true,
+          get() { window.__vvReads += 1; return state.height === null ? rawH.call(vv) : state.height; },
+        });
+        Object.defineProperty(vv, "offsetTop", {
+          configurable: true,
+          get() { return state.offsetTop === null ? rawO.call(vv) : state.offsetTop; },
+        });
+        const add = vv.addEventListener.bind(vv);
+        const remove = vv.removeEventListener.bind(vv);
+        vv.addEventListener = (...a) => { window.__vvListeners.added += 1; return add(...a); };
+        vv.removeEventListener = (...a) => { window.__vvListeners.removed += 1; return remove(...a); };
+        window.__vvSilent = () => ({
+          height: state.height === null ? rawH.call(vv) : state.height,
+          offsetTop: state.offsetTop === null ? rawO.call(vv) : state.offsetTop,
+        });
+        window.__vvSet = (h, o) => { state.height = h; state.offsetTop = o; vv.dispatchEvent(new Event("resize")); };
+      })();
+    `);
+    await page.addInitScript(`
+      (() => {
+        window.__pageScrolls = [];
+        const by = window.scrollBy.bind(window);
+        window.scrollBy = (...a) => {
+          const before = window.scrollY;
+          by(...a);
+          window.__pageScrolls.push({ before, after: window.scrollY });
+        };
+      })();
+    `);
+
+    await page.setViewportSize({ width: 320, height: 780 });
+    await page.goto("/es/word-games/CROSSWORD/B1/91");
+    await page.waitForSelector('[role="grid"] input');
+
+    // Клетка нижней трети доски, выбранная ЗАМЕРОМ, а не координатой: она
+    // обязана быть видна сейчас (полный вьюпорт 780) и обязана оказаться под
+    // клавиатурой потом (ниже 444), и палец обязан в неё попасть —
+    // `elementFromPoint` в точке касания должен вернуть саму клетку, иначе
+    // тап уедет в накрывающий её элемент (нижняя навигация, например).
+    const target = await page.evaluate((kb) => {
+      for (const el of [...document.querySelectorAll<HTMLElement>('[role="grid"] input')]) {
+        const r = el.getBoundingClientRect();
+        if (r.bottom <= kb || r.bottom > window.innerHeight) continue;
+        const x = Math.round(r.left + r.width / 2);
+        const y = Math.round(r.top + r.height / 2);
+        if (x < 0 || x > window.innerWidth) continue;
+        if (document.elementFromPoint(x, y) !== el) continue;
+        return { label: el.getAttribute("aria-label"), top: r.top, bottom: r.bottom, x, y };
+      }
+      return null;
+    }, KEYBOARD_BOTTOM);
+    expect(target, "в нижней трети доски не нашлось клетки, по которой попадает палец").not.toBeNull();
+
+    const readStats = () =>
+      page.evaluate(() => {
+        const w = window as unknown as {
+          __vvReads: number;
+          __pageScrolls: { before: number; after: number }[];
+          __vvListeners: { added: number; removed: number };
+        };
+        const out = {
+          reveals: w.__vvReads,
+          calls: w.__pageScrolls.length,
+          moved: w.__pageScrolls.filter((s) => s.before !== s.after).length,
+          listeners: w.__vvListeners.added - w.__vvListeners.removed,
+        };
+        w.__vvReads = 0;
+        w.__pageScrolls.length = 0;
+        return out;
+      });
+
+    await readStats();
+    // Настоящее касание, а не `click()` в геометрический центр: touchstart и
+    // touchend в точке внутри клетки. Фокус браузер ставит именно на нём.
+    await page.touchscreen.tap(target!.x, target!.y);
+    const tapped = await settledFocusGeometry(page);
+    const tapStats = await readStats();
+    expect(tapped.label, "тап не выбрал ту клетку, по которой попал палец").toBe(target!.label);
+    // Доводка ОБЯЗАНА была сработать на тапе — это и есть «та же гарантия,
+    // что и при вводе»…
+    expect(tapStats.reveals, "тап: доводка не сработала ни разу").toBeGreaterThan(0);
+    // …и ОБЯЗАНА была ничего не сделать: клетка видна, двигать нечего.
+    expect(
+      tapStats.calls,
+      `тап: доводка звала прокрутку по уже видимой клетке (${tapped.cellTop}..${tapped.cellBottom} при границе ${tapped.viewBottom})`
+    ).toBe(0);
+    expect(tapped.cellBottom, "тап сам по себе сдвинул страницу").toBeGreaterThan(KEYBOARD_BOTTOM);
+
+    // КЛАВИАТУРА ПОДНИМАЕТСЯ — после фокуса, а не до него.
+    await page.evaluate(() => (window as unknown as { __vvSet: (h: number, o: number) => void }).__vvSet(420, 24));
+    const lifted = await settledFocusGeometry(page);
+    const kbStats = await readStats();
+    expect(lifted.viewBottom, "модель: граница видимой области не опустилась на 444").toBe(KEYBOARD_BOTTOM);
+    expect(lifted.innerHeight, "модель: layout-вьюпорт обязан остаться прежним").toBeGreaterThan(KEYBOARD_BOTTOM);
+    expect(lifted.label, "поздняя клавиатура: активная клетка сменилась").toBe(target!.label);
+    expect(
+      lifted.cellBottom <= lifted.viewBottom + 0.5,
+      `поздняя клавиатура: клетка ${lifted.cellTop}..${lifted.cellBottom} осталась ниже границы ${lifted.viewBottom} при scrollY ${lifted.scrollY}`
+    ).toBe(true);
+    expect(kbStats.moved, "поздняя клавиатура: доводка не сдвинула страницу").toBeGreaterThan(0);
+    // Один вызов — один сдвиг. Вызов, ничего не сдвинувший, — это либо
+    // просьба на ноль, либо просьба, усечённая движком: ровно так выглядел
+    // дефект дробного смещения в WebKit, из-за которого округление здесь
+    // делается ОТ клетки (7.95).
+    expect(kbStats.calls, "поздняя клавиатура: доводка звала прокрутку впустую").toBe(kbStats.moved);
+    // Ровно две живых подписки — `resize` и `scroll`. Число, а не «больше
+    // нуля»: подписаться нужно на оба события, и лишних быть не должно.
+    // Стоит ПОСЛЕ геометрии намеренно: при снятой правке красным обязана
+    // становиться клетка под клавиатурой, а не счётчик подписок — иначе
+    // структурная проверка перехватывала бы содержательную.
+    expect(kbStats.listeners, "подписаны не оба события visualViewport").toBe(2);
+
+    // Клавиатура убирается — доводка обязана промолчать: клетка видна.
+    await page.evaluate(() => (window as unknown as { __vvSet: (h: number, o: number) => void }).__vvSet(null as never, null as never));
+    const dropped = await settledFocusGeometry(page);
+    const dropStats = await readStats();
+    expect(dropped.viewBottom, "модель: вьюпорт не вернулся к полному").toBe(dropped.innerHeight);
+    expect(dropStats.calls, "спуск клавиатуры: доводка дёрнула страницу без нужды").toBe(0);
+
+    // ФОКУС БЕЗ КЛИКА — Tab с внешней клавиатуры, восстановление фокуса
+    // движком, любой `focus()` со стороны. До правки доводка висела на
+    // `click`, и такой фокус не получал её вовсе.
+    await page.evaluate(() => (window as unknown as { __vvSet: (h: number, o: number) => void }).__vvSet(420, 24));
+    // Панорамируем так, чтобы граница клавиатуры пришлась НА клетку: строки
+    // сетки не ложатся на целые пиксели, и это же проверяет округление.
+    const straddler = await page.evaluate((kb) => {
+      // Перебор фиксированный и потому воспроизводимый: страница
+      // ставится на 0, 4, 8 … 20 пикселей, пока граница не придётся
+      // ВНУТРЬ клетки. На нуле строки сетки ложатся так, что 444 попадает
+      // ровно в шов между строками, и «наполовину скрытой» клетки нет.
+      for (const y of [0, 4, 8, 12, 16, 20]) {
+        window.scrollTo(0, y);
+        for (const el of [...document.querySelectorAll<HTMLElement>('[role="grid"] input')]) {
+          // Клетку, которая УЖЕ в фокусе, брать нельзя: `focus()` на
+          // активном элементе события не рождает, и «доводка не
+          // сработала» стало бы правдой по причине, к правке отношения не
+          // имеющей.
+          if (el === document.activeElement) continue;
+          const r = el.getBoundingClientRect();
+          if (r.top < kb && r.bottom > kb) return { label: el.getAttribute("aria-label"), top: r.top, bottom: r.bottom, pan: y };
+        }
+      }
+      return null;
+    }, KEYBOARD_BOTTOM);
+    expect(straddler, "не нашлось клетки, которую граница клавиатуры режет пополам").not.toBeNull();
+    await readStats();
+    await page.locator(`[role="grid"] input[aria-label="${straddler!.label}"]`).focus();
+    const focused = await settledFocusGeometry(page);
+    const focusStats = await readStats();
+    expect(focused.label, "фокус без клика не встал на клетку").toBe(straddler!.label);
+    expect(focusStats.reveals, "фокус без клика: доводка не сработала ни разу").toBeGreaterThan(0);
+    expect(
+      focused.cellBottom <= focused.viewBottom + 0.5,
+      `фокус без клика: клетка ${focused.cellTop}..${focused.cellBottom} осталась ниже границы ${focused.viewBottom} при scrollY ${focused.scrollY}`
+    ).toBe(true);
+    expect(focusStats.moved, "фокус без клика: доводка не сдвинула страницу").toBeGreaterThan(0);
+    expect(focusStats.calls, "фокус без клика: доводка звала прокрутку впустую").toBe(focusStats.moved);
+
+    // ПОДПИСКА СНИМАЕТСЯ. Уход с пазла — клиентский переход по ссылке на хаб,
+    // то есть настоящее размонтирование доски в живом JS-контексте (полная
+    // навигация обнулила бы и счётчики вместе с контекстом, и доказывать
+    // было бы нечем).
+    await page.locator('a[href="/es/word-games"]').first().click();
+    await page.waitForURL("**/es/word-games");
+    const after = await readStats();
+    expect(after.listeners, "подписка на visualViewport пережила размонтирование доски").toBe(0);
+  });
+
+  /**
+   * Движок без `visualViewport` — доска обязана работать, а не падать.
+   *
+   * `visualViewport` есть во всех движках стенда, поэтому его отсутствие
+   * ПОДСАЖЕНО: свойство окна отдаёт `undefined` ещё до того, как загрузится
+   * приложение. Без этого утверждение «ничего не ломается» осталось бы
+   * словами.
+   */
+  test("crossword: без visualViewport доска работает и не падает", async ({ page }) => {
+    await page.addInitScript(`
+      Object.defineProperty(window, "visualViewport", { configurable: true, get: () => undefined });
+    `);
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 780 });
+    await page.goto("/es/word-games/CROSSWORD/B1/91");
+    await page.waitForSelector('[role="grid"] input');
+    expect(await page.evaluate(() => window.visualViewport), "подсадка не сработала").toBeUndefined();
+    const first = page.locator('[role="grid"] input').first();
+    await first.click();
+    await page.keyboard.type("а");
+    // Буква дошла до клетки — значит доска жива, а не просто отрисована.
+    const typed = await page.evaluate(
+      () => [...document.querySelectorAll<HTMLInputElement>('[role="grid"] input')].filter((i) => i.value).length
+    );
+    expect(typed, "без visualViewport буква не дошла до клетки").toBeGreaterThan(0);
+    expect(errors, `без visualViewport страница уронила ошибку: ${errors.join(" | ")}`).toEqual([]);
+  });
+
+});
+
+/**
  * Прямоугольник клетки с фокусом, снятый после того, как геометрия встала.
  *
  * Та же схема, что у `check:layout`: величина снимается на каждом кадре и
@@ -1147,7 +1422,12 @@ async function settledFocusGeometry(page: Page) {
             const active = document.activeElement as HTMLElement;
             const r = active.getBoundingClientRect();
             const box = scroller.getBoundingClientRect();
-            const vv = window.visualViewport;
+            // `__vvSilent` — щадящее чтение тех же величин: тест «тап и
+            // поздняя клавиатура» считает обращения к `visualViewport`
+            // как срабатывания доводки, и замер не должен их подделывать.
+            // Где подмены нет, читается сам объект.
+            const silent = (window as unknown as { __vvSilent?: () => { height: number; offsetTop: number } }).__vvSilent;
+            const vv = silent ? silent() : window.visualViewport;
             const shot = {
               label: active.getAttribute("aria-label"),
               cellLeft: Math.round(r.left * 10) / 10,

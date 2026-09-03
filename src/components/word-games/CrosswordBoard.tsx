@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PublicCrosswordPuzzle, PublicCrosswordWord } from "@/lib/word-games/data";
 import {
   buildCellWordMap,
@@ -78,7 +78,46 @@ export default function CrosswordBoard({
     // cell itself; the reveal below then finds a fully visible cell and
     // leaves it alone. So the fallback is "correct, by someone else's
     // arithmetic", never "hidden".
+    // Уже сфокусированная клетка события `focus` не получает, а значит и
+    // доводки из `onFocus` не получит: `focus()` на активном элементе —
+    // тишина во всех движках. Единственный случай, когда её надо позвать
+    // отсюда, — этот; во всех остальных доводка приезжает по событию, и
+    // звать её дважды означало бы холостой вызов.
+    const wasFocused = typeof document !== "undefined" && document.activeElement === el;
     el.focus({ preventScroll: true });
+    if (wasFocused) revealCell(el);
+  }
+
+  /**
+   * Доводка привязана к ФОКУСУ, а не к клику — и это правка, а не деталь.
+   *
+   * Как было. `revealCell` звался только из `focusCell`, то есть только на
+   * фокусе, который поставил сам компонент: следующая буква слова, шаг
+   * назад по Backspace, клик по подсказке. Фокус, пришедший ИЗВНЕ, доводки
+   * не получал вовсе. Тап пальцем сюда попадал по касательной: браузер
+   * ставит фокус на touchstart, а `onClick` приходит следом и через
+   * `handleCellClick` → `focusCell` доводку всё-таки зовёт. Замерено
+   * 03.09.2026, оба движка, клавиатура уже поднята, клетка 430..452 при
+   * границе 444 — доводка сработала 1 раз, сдвинула страницу 1 раз, клетка
+   * встала на 422..444. То есть у тапа гарантия БЫЛА, но держалась она на
+   * клике.
+   *
+   * Чего это стоило. Фокус без клика — обычное дело: Tab с внешней
+   * клавиатуры, восстановление фокуса движком, любой `focus()` со стороны.
+   * Замерено там же и теми же числами: `input.focus()` без клика —
+   * **обработчик доводки не сработал ни разу**, клетка осталась на
+   * 430..452 при границе 444, под клавиатурой. Гарантия, висящая на
+   * событии, которого может не быть, — это не гарантия, и это ровно тот
+   * класс, что разбирает 7.96: там её делегировали движку, здесь — тому,
+   * пришлёт ли движок второе событие.
+   *
+   * Поэтому доводка живёт здесь. Любой путь к фокусу — палец, клавиша,
+   * движок, наш собственный `focusCell` — проходит через `onFocus`, и
+   * каждый из них даёт одну и ту же гарантию. Холостых вызовов это не
+   * добавляет: по уже видимой клетке `revealCell` не двигает ничего.
+   */
+  function handleCellFocus(row: number, col: number, el: HTMLInputElement) {
+    activateCell(row, col);
     revealCell(el);
   }
 
@@ -202,6 +241,53 @@ export default function CrosswordBoard({
     else if (cell.top < top) window.scrollBy(0, Math.floor(cell.top - top));
   }
 
+  /**
+   * Клавиатура, поднявшаяся ПОЗЖЕ фокуса, накрывает стоящую клетку — и
+   * никто её не поднимал.
+   *
+   * Почему одного фокуса мало. Доводка выше срабатывает в момент, когда
+   * клетка получает фокус, и меряет видимую область такой, какая она в этот
+   * момент есть. На телефоне порядок ровно обратный: палец ставит фокус
+   * ПЕРВЫМ, клавиатура выезжает ПОСЛЕ — визуальный вьюпорт ужимается через
+   * десятые доли секунды, когда доводка уже отработала и больше не
+   * позовётся. Замерено 03.09.2026 на B1/91 при 320×780, оба движка: тап по
+   * клетке нижней трети доски (446..468 при полном вьюпорте — видна),
+   * затем подъём клавиатуры (`vv.height` 780 → 420, `vv.offsetTop` 0 → 24,
+   * `innerHeight` не меняется, как на iOS) — граница видимой области 444,
+   * клетка так и осталась на 446..468, обработчик доводки не сработал НИ
+   * РАЗУ, страница не сдвинулась.
+   *
+   * Что здесь подписано. `resize` — сам подъём и спуск клавиатуры;
+   * `scroll` — сдвиг визуального вьюпорта внутри layout-вьюпорта, которым
+   * iOS сопровождает и клавиатуру, и pinch-zoom. Обычная прокрутка
+   * страницы не даёт НИ ОДНОГО из этих событий (замерено там же, в обоих
+   * движках: `scrollTo` и `scrollBy` — ноль событий), поэтому подписка не
+   * возвращает клетку на место, когда её увёл сам игрок пальцем.
+   *
+   * Доводка та же самая и с тем же правилом округления ОТ клетки
+   * (`ceil`/`floor`): WebKit усекает дробное смещение, и без этого клетка
+   * остаётся под клавиатурой на строку пикселей (7.95). Холостых вызовов
+   * не добавляет: по видимой клетке `revealBelowKeyboard` не двигает
+   * ничего.
+   *
+   * Отсутствие `visualViewport` — не отказ: подписываться не на что,
+   * доводка на фокусе остаётся, ничего не ломается.
+   */
+  useEffect(() => {
+    const vv = typeof window === "undefined" ? null : window.visualViewport;
+    if (!vv || !activeCell) return;
+    const onViewportChange = () => {
+      const el = inputRefs.current.get(`${activeCell.row},${activeCell.col}`);
+      if (el) revealBelowKeyboard(el);
+    };
+    vv.addEventListener("resize", onViewportChange);
+    vv.addEventListener("scroll", onViewportChange);
+    return () => {
+      vv.removeEventListener("resize", onViewportChange);
+      vv.removeEventListener("scroll", onViewportChange);
+    };
+  }, [activeCell]);
+
   async function runCheck(nextGuesses: Record<string, string>, soundCell?: { row: number; col: number }) {
     const guessList = Object.entries(nextGuesses).map(([key, letter]) => {
       const [row, col] = key.split(",").map(Number);
@@ -322,6 +408,13 @@ export default function CrosswordBoard({
   function handleCellClick(row: number, col: number) {
     if (puzzle.blocked[row]?.[col]) return;
     activateCell(row, col);
+    // Палец ставит фокус на touchstart, а `click` приходит следом — то есть
+    // к этому моменту `onFocus` уже отработал и доводка уже сделала своё.
+    // Звать её отсюда второй раз — холостой вызов: замерено, второй заход
+    // ничего не двигает, потому что клетка уже видима. `focusCell` остаётся
+    // для движка, который на клик фокус не ставит.
+    const el = inputRefs.current.get(`${row},${col}`);
+    if (el && typeof document !== "undefined" && document.activeElement === el) return;
     focusCell(row, col);
   }
 
@@ -482,7 +575,7 @@ export default function CrosswordBoard({
                     aria-label={`row ${row + 1} col ${col + 1}`}
                     title={status === "incorrect" ? dict.wrongCellHint : undefined}
                     onClick={() => handleCellClick(row, col)}
-                    onFocus={() => activateCell(row, col)}
+                    onFocus={(e) => handleCellFocus(row, col, e.currentTarget)}
                     onChange={(e) => handleChange(row, col, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, row, col)}
                     className={`absolute inset-0 h-full w-full rounded-[3px] border text-center text-xs font-semibold uppercase focus:outline-none sm:text-base ${
