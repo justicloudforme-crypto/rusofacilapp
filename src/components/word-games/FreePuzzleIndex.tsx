@@ -51,14 +51,22 @@ export default function FreePuzzleIndex({
             <h3 className="text-sm font-semibold text-foreground/70">
               {(ladder.type === "CROSSWORD" ? dict.typeCrossword : dict.typeWordSearch)} · {ladder.level}
             </h3>
-            <ul className="mt-2 flex flex-wrap gap-2">
+            {/* A grid with declared tracks, not `flex flex-wrap`. The fill
+                rule (scripts/layout-fill.mjs, PROGRESS.md 7.73/7.74)
+                measures a wrapped row against the container and a last row
+                holding one chip covered 10.7% of 720px — a real hole, and
+                check:rendered caught it. Declared tracks make every full
+                row cover the width, and a short ladder's partial row is
+                skipped by the same rule instead of reading as a defect. */}
+            <ul className="mt-2 grid grid-cols-5 gap-2 sm:grid-cols-10">
               {ladder.rungs.map((rung) => (
                 <li key={rung.sequence}>
                   <Link
                     href={rung.href}
-                    className="tap flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-black/10 px-3 text-sm font-medium transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
+                    aria-label={dict.puzzleLabel.replace("{n}", String(rung.sequence))}
+                    className="tap flex min-h-11 w-full items-center justify-center rounded-xl border border-black/10 text-sm font-medium transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
                   >
-                    {dict.puzzleLabel.replace("{n}", String(rung.sequence))}
+                    {rung.sequence}
                   </Link>
                 </li>
               ))}
