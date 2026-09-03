@@ -24,6 +24,9 @@ type KnownMap = Record<string, boolean>;
 /** Leitner-box progress for one card. box 0 = new/learning, 1 = review,
  * 2 = mastered. See prisma/schema.prisma's FlashcardProgress comment for
  * the full promotion rule. */
+
+import { postReliably } from "./reliable-post";
+
 export interface SrsEntry {
   box: number;
   correctStreak: number;
@@ -73,12 +76,16 @@ function writeSrsAll(map: SrsMap) {
 }
 
 function syncSrsToServer(cardId: string, known: boolean, entry: SrsEntry) {
-  fetch("/api/flashcard-progress", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cardId, known, box: entry.box, correctStreak: entry.correctStreak }),
-  }).catch(() => {
-    // Offline or logged out — same fire-and-forget reasoning as syncToServer.
+  // keepalive + повтор + маячок: ответ, данный последним перед уходом со
+  // страницы, терялся чаще всего, а именно он и интереснее прочих.
+  // Локальная копия в localStorage остаётся первым источником правды,
+  // поэтому неудача здесь — не потеря для ученика, но и молчаливой она
+  // быть не должна (src/lib/reliable-post.ts).
+  void postReliably("/api/flashcard-progress", {
+    cardId,
+    known,
+    box: entry.box,
+    correctStreak: entry.correctStreak,
   });
 }
 
@@ -151,14 +158,10 @@ function writeAll(map: EntryMap) {
 }
 
 function syncToServer(cardId: string, known: boolean) {
-  fetch("/api/flashcard-progress", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cardId, known }),
-  }).catch(() => {
-    // Offline or logged out — the local write already happened, that's
-    // enough for this session; the next syncKnownWords() call reconciles.
-  });
+  // То же, что и в syncSrsToServer: keepalive, повтор, маячок. Локальная
+  // запись уже произошла, и syncKnownWords() сверит их позже — но терять
+  // отправку из-за одного обрыва сети незачем (src/lib/reliable-post.ts).
+  void postReliably("/api/flashcard-progress", { cardId, known });
 }
 
 export function getKnownWords(): KnownMap {

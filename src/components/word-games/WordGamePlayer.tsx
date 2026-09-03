@@ -8,6 +8,7 @@ import CrosswordBoard from "./CrosswordBoard";
 import WordSearchBoard from "./WordSearchBoard";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 import { fetchCategorySummary } from "@/lib/flashcards/summary-client";
+import { postReliably } from "@/lib/reliable-post";
 import { learnedProgressText, type LearnedProgressDict } from "@/lib/flashcards/learned-progress";
 
 export interface WordGamePlayerDict {
@@ -100,15 +101,23 @@ export default function WordGamePlayer({
     if (completeReported.current) return;
     completeReported.current = true;
     const timeSeconds = Math.round((Date.now() - startedAt) / 1000);
-    // Fire-and-forget by design (see the route's own comment: it 200s
-    // `{recorded:false}` even for an unknown puzzleId) — but a network
-    // failure still rejects the fetch promise itself, which `void` alone
-    // doesn't catch. Same unhandled-rejection class as SerwistRegister.tsx.
-    void fetch("/api/word-games/complete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ puzzleId: puzzle.id, timeSeconds, usedHint }),
-    }).catch(() => {});
+    // Это ЗАПИСЬ, а не чтение: сюда уезжает единственное свидетельство
+    // того, что пазл решён (WordGameProgress — галочка на лестнице и
+    // отметка дня занятия). Раньше стояло `fetch(...).catch(() => {})` —
+    // один обрыв сети, и запись терялась молча, а как раз в этот момент
+    // ученик и уходит со страницы кнопкой «к играм». postReliably даёт
+    // keepalive (запрос доживает после выгрузки документа), повтор с
+    // паузой и маячок последним рубежом — src/lib/reliable-post.ts.
+    void postReliably("/api/word-games/complete", {
+      puzzleId: puzzle.id,
+      timeSeconds,
+      usedHint,
+    }).then((outcome) => {
+      if (outcome === "ok") return;
+      // Ни fetch, ни маячок не прошли. Молчать здесь нельзя: это
+      // потерянная запись, а не шум, — но и падать некуда, пазл уже решён.
+      console.warn(`[word-games] Результат пазла ${puzzle.id} не записан (${outcome}).`);
+    });
   }, [puzzle.id, usedHint, startedAt]);
 
   function playAgain() {
