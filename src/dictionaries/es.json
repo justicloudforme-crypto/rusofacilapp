@@ -1049,6 +1049,8 @@
   "wordGames": {
     "title": "Juegos de palabras",
     "subtitle": "Practica el vocabulario que ya conoces con la sopa de letras y el crucigrama.",
+    "freeSampleTitle": "Prueba gratis, sin cuenta",
+    "freeSampleIntro": "Estos puzles se juegan sin registrarse y sin suscripción: los diez primeros de cada nivel, en sopa de letras y en crucigrama.",
     "typeWordSearch": "Sopa de letras",
     "typeCrossword": "Crucigrama",
     "chooseLevelLabel": "Nivel",

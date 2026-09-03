@@ -5,9 +5,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { flashcardLevels } from "@/lib/flashcards";
 import { wordGameTypes } from "@/lib/word-games/types";
-import { countAllSequences, getAllCurvedSequences, getAllPremiumOnlySequences } from "@/lib/word-games/data";
+import { countAllSequences, getAllCurvedSequences, getAllPremiumOnlySequences, getFreeSequences } from "@/lib/word-games/data";
 import { getAllCompletedSequences } from "@/lib/word-games/progress";
 import WordGamesPicker, { type PickerData } from "@/components/word-games/WordGamesPicker";
+import FreePuzzleIndex from "@/components/word-games/FreePuzzleIndex";
 import { notFound } from "next/navigation";
 import { hubMetadata } from "@/lib/word-games/metadata";
 import { routeAlternates } from "@/lib/site";
@@ -41,11 +42,12 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
   // and was the single worst offender in a production load test. Batched
   // functions return everything keyed by `${type}:${level}`, grouped here
   // in memory instead of by the database.
-  const [totals, completedByPair, curvedByPair, premiumOnlyByPair, tier] = await Promise.all([
+  const [totals, completedByPair, curvedByPair, premiumOnlyByPair, freeByPair, tier] = await Promise.all([
     countAllSequences(),
     user ? getAllCompletedSequences(user.id) : Promise.resolve(new Map<string, Set<number>>()),
     getAllCurvedSequences(),
     getAllPremiumOnlySequences(),
+    getFreeSequences(),
     getEntitlementTier(),
   ]);
 
@@ -69,6 +71,18 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.wordGames.title}</h1>
       <p className="mt-2 text-lg text-foreground/70">{dict.wordGames.subtitle}</p>
       <WordGamesPicker lang={lang} dict={dict.wordGames} data={data} isPremium={tier === "premium"} />
+      {/* Server-rendered links to the whole free sample. The picker above
+          is a client component whose grid follows React state, so the
+          server emits links for its initial tab only — measured on
+          production 02.09.2026, that left 78 of the 160 free puzzle URLs
+          with no inbound link anywhere on the site, in the sitemap and
+          allowed by robots.txt but reachable by no link at all. See
+          src/lib/word-games/free-index.ts. */}
+      <FreePuzzleIndex
+        lang={lang}
+        dict={dict.wordGames}
+        available={(type, level) => freeByPair.get(`${type}:${level}`)}
+      />
     </div>
   );
 }

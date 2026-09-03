@@ -42,7 +42,11 @@ const E2E_DIR = join(repoRoot, "e2e");
  * 37 existed for, and the one check:layout cannot reach because it browses
  * anonymously. Raised from 79 to 81 on 02.09.2026, when word-games.spec.ts
  * gained the crossword board-width test (PROGRESS.md 7.92) — one test in
- * each of the two projects it runs in. Raised from 77 to 79 on 01.09.2026, when
+ * each of the two projects it runs in. Raised from 81 to 89 on 02.09.2026
+ * by e2e/free-word-game-links.spec.ts (PROGRESS.md 7.93): two tests per
+ * locale — the hub's no-JavaScript links to the free sample, and that each
+ * of those links opens for a signed-out visitor — again in each of the two
+ * projects, so 2 × 2 × 2 = 8. Raised from 77 to 79 on 01.09.2026, when
  * word-games.spec.ts gained the mobile-column test (PROGRESS.md 7.77);
  * from 73 to 77, when
  * match-result-panel.spec.ts added one test per locale; from 61 to 73, when
@@ -56,7 +60,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * exists to prevent, so if you are here to do that, the thing to fix is
  * the run.
  */
-const MIN_EXECUTED_TESTS = 81;
+const MIN_EXECUTED_TESTS = 89;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.
