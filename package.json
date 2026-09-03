@@ -44,6 +44,7 @@
     "db:vocabulary-audit": "tsx prisma/vocabulary-idioms-audit.ts",
     "db:check-typos": "tsx prisma/check-typos.ts",
     "db:add-flashcards": "tsx prisma/add-flashcards.ts",
+    "db:remove-flashcards": "tsx prisma/remove-flashcards.ts",
     "db:add-flashcards:self-test": "tsx prisma/add-flashcards.ts --self-test",
     "db:add-idioms": "tsx prisma/add-idioms.ts",
     "lint:stories": "tsx prisma/story-structure-lint.ts",
