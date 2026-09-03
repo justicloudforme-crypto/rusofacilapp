@@ -17,6 +17,13 @@
  * User.timezone is not filled in yet) still gets their own midnight. */
 export const TIMEZONE_COOKIE = "rusofacil-tz";
 
+/** The zone Vercel attaches to every incoming request, derived from its IP
+ * (documented platform header, present on preview and production; absent in
+ * `next dev`, where the fallback chain simply carries on to UTC). Read
+ * server-side only — see src/lib/timezone-server.ts for why it sits third
+ * behind the account column and the cookie. */
+export const VERCEL_TIMEZONE_HEADER = "x-vercel-ip-timezone";
+
 /** What every reader falls back to when the user's zone is unknown. This
  * is the OLD behaviour, kept deliberately as the fallback: it can be
  * wrong, but it is never inconsistent between two readers. */

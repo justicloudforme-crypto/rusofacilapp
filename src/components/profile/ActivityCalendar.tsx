@@ -153,7 +153,11 @@ export default function ActivityCalendar({
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs text-foreground/50">
+      {/* 2px gaps below `sm` and 4px from there up. Measured, not guessed:
+          at a 320px viewport the grid has 288px to divide by seven, and every
+          pixel spent on a gap comes straight out of the finger target — the
+          two saved per gap are 1.7px added to each day. */}
+      <div className="mt-3 grid grid-cols-7 gap-0.5 text-center text-xs text-foreground/50 sm:gap-1">
         {dict.weekdays.map((label, i) => (
           <abbr key={label} title={dict.weekdaysFull[i]} className="no-underline">
             {label}
@@ -161,7 +165,7 @@ export default function ActivityCalendar({
         ))}
       </div>
 
-      <div className="mt-1 grid grid-cols-7 gap-1">
+      <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-1">
         {weeks.flat().map((cell, index) => (
           <Day
             key={cell.dateKey ?? `pad-${index}`}
@@ -256,7 +260,14 @@ export default function ActivityCalendar({
                 around every day of the first half of the month and was the
                 loudest thing in the grid; this one is the quietest mark
                 that makes two identical squares two squares. */}
-            <span aria-hidden className="h-3.5 w-3.5 rounded bg-foreground/10 dark:bg-foreground/15" />
+            {/* The swatch carries the cold flame for the same reason the
+                studied day's line carries a hot one two lines up: a key that
+                does not look like the thing it explains is not a key. */}
+            <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded bg-foreground/10 dark:bg-foreground/15">
+              <span aria-hidden className="ice-flame text-[9px] leading-none">
+                🔥
+              </span>
+            </span>
           </LegendItem>
         )}
         {/* The two faint squares. They look alike on purpose — neither is
@@ -323,7 +334,7 @@ function Day({
   if (cell.state === "padding" || cell.dateKey === null) {
     // A square belonging to a neighbouring month. Kept in the flow so the
     // grid stays seven wide, and empty so it never reads as a missed day.
-    return <span aria-hidden className="aspect-square" />;
+    return <span aria-hidden className="h-11 sm:h-auto sm:aspect-square" />;
   }
 
   const legend =
@@ -370,19 +381,42 @@ function Day({
       <span aria-hidden className="text-xs leading-none tabular-nums">
         {cell.day}
       </span>
-      {cell.state === "active" && (
+      {/* Today is not a day without study until it is over — the same grace
+          the streak itself gives it (src/lib/streak-freezes.ts) — so it wears
+          its ring and no cold flame. */}
+      {(cell.state === "active" || (cell.state === "missed" && !cell.isToday)) && (
         <span
           aria-hidden
+          // ONE glyph for both kinds of day, and the difference between them
+          // is that the missed one is cold (`.ice-flame`, src/app/globals.css).
+          // A day without study used to be a bare grey square, which reads as
+          // "nothing was drawn here" rather than as "the fire went out"; the
+          // pair only says that if it is visibly the same fire.
+          //
           // The glyph paints a little above its own box, so the box sits
           // lower than the corner it looks like it is in.
-          className="pointer-events-none absolute right-[3px] top-[5px] text-[9px] leading-none"
+          className={`pointer-events-none absolute right-[3px] top-[5px] text-[9px] leading-none${
+            cell.state === "missed" ? " ice-flame" : ""
+          }`}
         >
           🔥
         </span>
       )}
     </>
   );
-  const shape = `relative flex aspect-square items-center justify-center rounded-lg ${tone} ${
+  // Below `sm` the square gives way to a fixed 44px HEIGHT, the project's
+  // touch-target floor (CLAUDE.md), because height is the dimension that is
+  // free: the width of a day is 288/7 minus gaps ≈ 41px at a 320px viewport
+  // and cannot be 44 without a grid wider than the phone (the arithmetic is
+  // printed by e2e/activity-calendar.spec.ts).
+  //
+  // `aspect-square` was tried here WITH a min-height and measured: the ratio
+  // then drove the width off the height, every cell became 44px wide inside a
+  // 41.4px column, and the seven of them overlapped by 2.6px each with the
+  // last one hanging 4.6px past the grid. A target that covers its
+  // neighbour's edge is worse than a slightly narrow one, so the square is
+  // dropped rather than the column widened.
+  const shape = `relative flex h-11 w-full items-center justify-center rounded-lg sm:h-auto sm:aspect-square ${tone} ${
     cell.isToday ? "ring-2 ring-primary/60 ring-offset-1 ring-offset-background" : ""
   }`;
 

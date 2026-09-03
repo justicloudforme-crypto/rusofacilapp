@@ -59,6 +59,12 @@ async function newUser(id: string): Promise<string> {
   return id;
 }
 
+// Every planted row carries a `markedAt` that really falls inside its own
+// `dateKey` for the learner's zone, because that is the invariant production
+// writes (src/lib/study-day.ts) and because the reader derives the day from
+// the instant (src/lib/study-day-key.ts). A fixture with the two disagreeing
+// describes a row the product cannot produce — except for the one case that
+// is exactly the point of the last describe() in this file.
 async function dayRows(userId: string): Promise<Array<{ dateKey: string; source: string }>> {
   const result = await raw.execute({
     sql: `SELECT dateKey, source FROM "StudyDay" WHERE userId = ? ORDER BY dateKey`,
@@ -202,7 +208,7 @@ describe("чтение календаря ничего не пишет", () => {
     for (const day of ["2026-09-01", "2026-09-02", "2026-09-04"]) {
       await raw.execute({
         sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES (?, ?, ?, 'lesson', ?)`,
-        args: [`ro-${day}`, user, day, Date.now()],
+        args: [`ro-${day}`, user, day, Date.parse(`${day}T18:00:00.000Z`)],
       });
     }
 
@@ -228,7 +234,7 @@ describe("чтение календаря ничего не пишет", () => {
     // MUST notice a row that really did appear.
     await raw.execute({
       sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('ro-control', ?, '2026-09-09', 'lesson', ?)`,
-      args: [user, Date.now()],
+      args: [user, Date.parse("2026-09-09T18:00:00.000Z")],
     });
     const control = await raw.execute({
       sql: `SELECT id, dateKey, source FROM "StudyDay" WHERE userId = ? ORDER BY dateKey`,
@@ -247,7 +253,7 @@ describe("отметка дня — полноценный источник се
     for (const day of ["2026-09-08", "2026-09-09", "2026-09-10"]) {
       await raw.execute({
         sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES (?, ?, ?, 'lesson', ?)`,
-        args: [`st-${day}`, user, day, Date.now()],
+        args: [`st-${day}`, user, day, Date.parse(`${day}T18:00:00.000Z`)],
       });
     }
 
@@ -284,7 +290,7 @@ describe("плитки «Обзора» считают ровно то, что �
     for (const [i, day] of days.entries()) {
       await raw.execute({
         sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES (?, ?, ?, 'lesson', ?)`,
-        args: [`tile-${i}`, user, day, i],
+        args: [`tile-${i}`, user, day, Date.parse(`${day}T18:00:00.000Z`)],
       });
     }
 
@@ -347,8 +353,8 @@ describe("плитки «Обзора» считают ровно то, что �
   it("источники дня: несколько в один день, и все возвращаются", async () => {
     const user = await newUser("tiles-sources");
     await raw.execute({
-      sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('src-1', ?, '2026-08-10', 'media', 1)`,
-      args: [user],
+      sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('src-1', ?, '2026-08-10', 'media', ?)`,
+      args: [user, Date.parse("2026-08-10T18:00:00.000Z")],
     });
     // The mark keeps ONE row per day, so the extra sources have to come
     // from the progress tables — which is exactly how the day disclosure
@@ -372,5 +378,71 @@ describe("плитки «Обзора» считают ровно то, что �
     expect(sources["2026-08-10"]).toEqual(["lesson", "exam", "media"]);
     // And a day nobody touched is simply absent, never an empty list.
     expect(sources["2026-08-09"]).toBeUndefined();
+  });
+});
+
+describe("отметка, поставленная до того, как браузер сообщил зону", () => {
+  const MEXICO = "America/Mexico_City"; // UTC-6 круглый год
+
+  it("день читается по мгновению, а не по штампу", async () => {
+    const user = await newUser("sd-utc-stamped");
+    const { dateKeyIn } = await import("@/lib/timezone");
+    const evening = new Date(Date.parse(`${dateKeyIn(new Date(Date.now() - 2 * 86_400_000), MEXICO)}T01:00:00.000Z`));
+    // The instant above is 19:00 Mexico City on the day BEFORE the key it is
+    // built from; take the local day it really is and pin everything to it.
+    const trueDay = dateKeyIn(evening, MEXICO);
+    const utcStamp = dateKeyIn(evening, "UTC");
+    expect(utcStamp).not.toBe(trueDay); // POSITIVE CONTROL: the stamp is a day off
+
+    await raw.execute({
+      sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('utc-only', ?, ?, 'lesson', ?)`,
+      args: [user, utcStamp, evening.getTime()],
+    });
+
+    const keys = await getUserActivityDateKeys(user, MEXICO);
+    console.log(`    штамп ${utcStamp}, мгновение -> ${JSON.stringify(keys)}`);
+    expect(keys).toEqual([trueDay]);
+  });
+
+  it("следующий заход чинит уехавшую строку и всё-таки отмечает сегодня", async () => {
+    // The collision the wrong stamp causes: the mark for the 10th was
+    // stamped 2026-09-11, so when the learner comes back on the 11th — this
+    // time with a known zone — the unique index already has that key and the
+    // old code wrote nothing at all. Two evenings, one row, one lost day.
+    const user = await newUser("sd-utc-repair");
+    const { dateKeyIn } = await import("@/lib/timezone");
+    const firstEvening = new Date(Date.parse(`${dateKeyIn(new Date(Date.now() - 86_400_000), MEXICO)}T01:00:00.000Z`));
+    const firstDay = dateKeyIn(firstEvening, MEXICO);
+    const secondEvening = new Date(firstEvening.getTime() + 86_400_000);
+    const secondDay = dateKeyIn(secondEvening, MEXICO);
+    expect(dateKeyIn(firstEvening, "UTC")).toBe(secondDay); // the collision, stated
+
+    await raw.execute({
+      sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('rep-1', ?, ?, 'lesson', ?)`,
+      args: [user, secondDay, firstEvening.getTime()],
+    });
+
+    await markStudyDay(user, MEXICO, "flashcards", secondEvening);
+
+    const rows = await dayRows(user);
+    console.log(`    после починки -> ${JSON.stringify(rows)}`);
+    expect(rows).toEqual([
+      { dateKey: firstDay, source: "lesson" },
+      { dateKey: secondDay, source: "flashcards" },
+    ]);
+
+    const keys = await getUserActivityDateKeys(user, MEXICO);
+    expect(keys.sort()).toEqual([firstDay, secondDay]);
+  });
+
+  it("починка идемпотентна: повторный заход в тот же день ничего не меняет", async () => {
+    const user = await newUser("sd-utc-repeat");
+    const { dateKeyIn } = await import("@/lib/timezone");
+    const evening = new Date(Date.parse(`${dateKeyIn(new Date(), MEXICO)}T01:00:00.000Z`));
+    const day = dateKeyIn(evening, MEXICO);
+    for (let i = 0; i < 5; i++) await markStudyDay(user, MEXICO, "lesson", evening);
+    const rows = await dayRows(user);
+    console.log(`    пять заходов -> ${rows.length} запись(и)`);
+    expect(rows).toEqual([{ dateKey: day, source: "lesson" }]);
   });
 });

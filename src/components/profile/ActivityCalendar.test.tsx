@@ -233,7 +233,21 @@ describe("клетка: число не двигается и не меняет 
     const flame = active.querySelector("span[class*='absolute']");
     expect(flame!.textContent).toBe("🔥");
     expect(flame!.className).toContain("pointer-events-none");
-    expect(plain.querySelector("span[class*='absolute']")).toBeNull();
+    expect(flame!.className).not.toContain("ice-flame");
+
+    // A day without study carries the SAME glyph, cold. It used to carry
+    // nothing at all, and an empty square reads as "nothing drawn here"
+    // rather than as "the fire went out".
+    const cold = plain.querySelector("span[class*='absolute']");
+    expect(cold!.textContent).toBe("🔥");
+    expect(cold!.className).toContain("ice-flame");
+    expect(cold!.className).toContain("pointer-events-none");
+    // Same box, same corner, same size — only the temperature differs.
+    expect(cold!.className.replace(" ice-flame", "")).toBe(flame!.className);
+
+    // Today stays bare: the day is not over, so it is not a day without
+    // study yet — the same grace the streak gives it.
+    expect(cell(TODAY)!.querySelector("span[class*='absolute']")).toBeNull();
   });
 
   it("дни до регистрации — почти невидимая клетка, без пунктирной рамки", () => {
