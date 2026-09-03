@@ -30,7 +30,15 @@
  *  5. ИЗОЛИРОВАННЫЕ СЛОВА. Слово, не делящее ни одной клетки ни с одним
  *     другим словом. В кроссворде это дыра в связности: такое слово
  *     нельзя вывести из пересечений, и на доске оно висит отдельно.
- *  6. РАСКЛАД: по уровням, по размерам сеток (высота×ширина, не только
+ *  6. ОБЗОР НА ТЕЛЕФОНЕ. Метрика играбельности «протягиваний до дальнего
+ *     края» (`src/lib/word-games/phone-fit.ts`): сколько прицельных
+ *     движений пальцем нужно при вьюпорте 320px, чтобы увидеть правый
+ *     край доски. Порог — 1. Все слагаемые взяты из вёрстки и перемерены
+ *     в браузере; обоснование порога — в шапке того модуля и в
+ *     PROGRESS.md 7.94. По умолчанию метрика ТОЛЬКО СЧИТАЕТСЯ: правка
+ *     данных — отдельное решение владельца. `--enforce` делает её
+ *     красной.
+ *  7. РАСКЛАД: по уровням, по размерам сеток (высота×ширина, не только
  *     `size`: сетка кроссворда прямоугольная — см. crossword.ts, где
  *     `size = max(height, width)`), платность по `isFreeWordGamePuzzle`
  *     (а не по «sequence <= 10»: правило дополнительно исключает C1
@@ -45,6 +53,7 @@
  * Использование:
  *   npm run check:crosswords                     # база из окружения
  *   npm run check:crosswords -- --self-test      # только контроль
+ *   npm run check:crosswords -- --enforce        # обзор — не отчёт, а ворота
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" npm run check:crosswords
  */
 import "dotenv/config";
@@ -52,6 +61,16 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { isEntryPoint } from "../src/lib/entry-point";
 import { isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
+import {
+  MAX_COLS_FULLY_VISIBLE,
+  MAX_COLS_WITHIN_LIMIT,
+  PAN_STEP_LIMIT,
+  cellSize,
+  hiddenWidth,
+  panSteps,
+  scrollWidth,
+  withinPhoneLimit,
+} from "../src/lib/word-games/phone-fit";
 import {
   auditCrossword,
   crosswordInputFromRow,
@@ -70,6 +89,8 @@ const SELF_TEST_ONLY = process.argv.includes("--self-test");
  * разваливается. Прогон БЕЗ флага обязан о подсадке молчать.
  */
 const PLANT = process.argv.includes("--plant");
+/** Обзор перестаёт быть отчётом и становится воротами. */
+const ENFORCE = process.argv.includes("--enforce");
 const SHOW = Number((process.argv.find((a) => a.startsWith("--show=")) ?? "--show=15").slice(7));
 
 /* ------------------------------------------------------------------ */
@@ -138,6 +159,40 @@ function orphanLetterControl(): CrosswordInput {
   return { ...base, id: "control-orphan-letter", grid };
 }
 
+/**
+ * ПОДСАДКА ПОД МЕТРИКУ ОБЗОРА — заведомо плохой и заведомо хороший пазл.
+ *
+ * Без обеих половин число «533 за порогом» ничего не значит: правило,
+ * которое не умеет сказать «этот плохой», и правило, которое всех зовёт
+ * плохими, дают одинаково бесполезный отчёт. Поэтому контроль тут в обе
+ * стороны и печатается всегда, как и геометрический контроль выше.
+ *
+ * Ширины взяты не с потолка: 46 — самая широкая строка живого банка
+ * (B1/91), 10 — наибольшее число столбцов, при котором доска помещается
+ * целиком, и оно СЧИТАЕТСЯ модулем, а не зашито здесь.
+ */
+const PLAYABILITY_CONTROLS: { name: string; cols: number; mustBeFlagged: boolean }[] = [
+  { name: `заведомо плохой: ${46} столбцов (ширина B1/91) — обязан быть за порогом`, cols: 46, mustBeFlagged: true },
+  { name: `заведомо плохой: ${MAX_COLS_WITHIN_LIMIT + 1} столбец — первый за порогом`, cols: MAX_COLS_WITHIN_LIMIT + 1, mustBeFlagged: true },
+  { name: `заведомо хороший: ${MAX_COLS_WITHIN_LIMIT} столбец — ровно в порог`, cols: MAX_COLS_WITHIN_LIMIT, mustBeFlagged: false },
+  { name: `заведомо хороший: ${MAX_COLS_FULLY_VISIBLE} столбцов — доска видна целиком`, cols: MAX_COLS_FULLY_VISIBLE, mustBeFlagged: false },
+];
+
+function runPlayabilityControls(): boolean {
+  console.log("\nПОЗИТИВНЫЙ КОНТРОЛЬ МЕТРИКИ ОБЗОРА");
+  let allOk = true;
+  for (const c of PLAYABILITY_CONTROLS) {
+    const flagged = !withinPhoneLimit(c.cols);
+    const ok = flagged === c.mustBeFlagged;
+    allOk &&= ok;
+    console.log(
+      `  ${ok ? "ok  " : "ПРОВАЛ"} ${c.name} — клетка ${cellSize(c.cols).toFixed(1)}px, ` +
+        `за краем ${hiddenWidth(c.cols).toFixed(0)}px, протягиваний ${panSteps(c.cols)}`,
+    );
+  }
+  return allOk;
+}
+
 interface ControlCase {
   name: string;
   input: CrosswordInput;
@@ -193,7 +248,7 @@ async function main(): Promise<void> {
   // Слова контролей в банк карточек не входят: контроль проверяет
   // геометрию, а не словарь, и «нет в банке» у него ожидаемо.
   const controlBank = new Set(["кот", "окно", "акно"].map(normalizeBankWord));
-  const controlsOk = runControls(controlBank);
+  const controlsOk = runControls(controlBank) && runPlayabilityControls();
   if (!controlsOk) {
     console.error("\nКОНТРОЛЬ НЕ ПРОЙДЕН — результатам прогона верить нельзя.");
     process.exitCode = 1;
@@ -289,8 +344,70 @@ async function main(): Promise<void> {
     console.log(`  кроссвордов с изолированным словом         ${withIsolated.length}`);
     console.log(`  изолированных слов всего                   ${audits.reduce((s, a) => s + a.isolatedWords.length, 0)}`);
 
-    console.log("\nПО УРОВНЯМ");
     const levels = [...new Set(rows.map((r) => r.level))].sort();
+
+    // ОБЗОР НА ТЕЛЕФОНЕ. Считается по ЧИСЛУ СТОЛБЦОВ, а не по длинной
+    // стороне: вертикаль прокручивает страница и ничем не ограничена, а
+    // упирается в край карточки только ширина.
+    console.log(`\nОБЗОР НА ТЕЛЕФОНЕ 320px (порог — ${PAN_STEP_LIMIT} протягивание, то есть ${MAX_COLS_WITHIN_LIMIT} столбец)`);
+    const pan = (a: CrosswordAudit) => panSteps(a.width);
+    console.log("  уровень  всего  видна целиком  1 движение  2  3  4+  за порогом   доля");
+    for (const level of [...levels, "ИТОГО"]) {
+      const at = level === "ИТОГО" ? audits : audits.filter((a) => a.level === level);
+      const n = (f: (p: number) => boolean) => at.filter((a) => f(pan(a))).length;
+      const bad = n((p) => p > PAN_STEP_LIMIT);
+      console.log(
+        `  ${level.padEnd(8)} ${String(at.length).padStart(5)}  ${String(n((p) => p === 0)).padStart(13)}  ` +
+          `${String(n((p) => p === 1)).padStart(10)}  ${String(n((p) => p === 2)).padStart(2)}  ` +
+          `${String(n((p) => p === 3)).padStart(2)}  ${String(n((p) => p >= 4)).padStart(2)}  ` +
+          `${String(bad).padStart(10)}  ${pct(bad, at.length)}`,
+      );
+    }
+    const overLimit = audits.filter((a) => !withinPhoneLimit(a.width));
+    const freeIds = new Set(rows.filter((r) => isFreeWordGamePuzzle(r)).map((r) => r.id));
+    const overFree = overLimit.filter((a) => freeIds.has(a.id));
+    console.log(`  за порогом среди ${freeIds.size} бесплатных             ${overFree.length}`);
+    for (const a of overFree.sort((x, y) => y.width - x.width)) {
+      console.log(`    ${a.level}/${a.sequence}  ${a.height}×${a.width}  протягиваний ${pan(a)}  ${a.id}`);
+    }
+    if (overLimit.length > 0) {
+      const worst = [...overLimit].sort((x, y) => y.width - x.width || y.height * y.width - x.height * x.width);
+      console.log(`  худшие ${Math.min(SHOW, worst.length)} по ширине:`);
+      for (const a of worst.slice(0, SHOW)) {
+        console.log(
+          `    ${a.level}/${a.sequence}  ${a.height}×${a.width}  клетка ${cellSize(a.width).toFixed(1)}px  ` +
+            `scrollWidth ${scrollWidth(a.width).toFixed(0)}px  за краем ${hiddenWidth(a.width).toFixed(0)}px  ` +
+            `протягиваний ${pan(a)}  ${a.id}`,
+        );
+      }
+    }
+    // Подсадка метрики в ЖИВЫЕ строки, а не только в синтетику: самая
+    // широкая строка банка обязана быть за порогом, самая узкая — нет.
+    // Иначе «533» получено правилом, которое живых строк не разбирает.
+    {
+      const byWidth = [...audits].sort((x, y) => x.width - y.width);
+      const narrow = byWidth[0];
+      const wide = byWidth[byWidth.length - 1];
+      const narrowOk = withinPhoneLimit(narrow.width);
+      const wideOk = !withinPhoneLimit(wide.width);
+      console.log(
+        `  контроль на живых строках: самая узкая ${narrow.level}/${narrow.sequence} (${narrow.width} столбцов) — ` +
+          `${narrowOk ? "в порог, ok" : "ПРОВАЛ"}; самая широкая ${wide.level}/${wide.sequence} (${wide.width}) — ` +
+          `${wideOk ? "за порогом, ok" : "ПРОВАЛ"}`,
+      );
+      if (!narrowOk || !wideOk) {
+        console.error("  КОНТРОЛЬ МЕТРИКИ НА ЖИВЫХ СТРОКАХ НЕ ПРОЙДЕН — числу обзора верить нельзя.");
+        process.exitCode = 1;
+      }
+    }
+    if (ENFORCE && overLimit.length > 0) {
+      console.error(`  --enforce: ${overLimit.length} кроссвордов за порогом обзора.`);
+      process.exitCode = 1;
+    } else if (overLimit.length > 0) {
+      console.log("  (метрика посчитана, но не является воротами: добавьте --enforce)");
+    }
+
+    console.log("\nПО УРОВНЯМ");
     console.log("  уровень  всего  бесплатных  premiumOnly  макс.sequence");
     for (const level of levels) {
       const at = rows.filter((r) => r.level === level);
