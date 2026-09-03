@@ -46,6 +46,8 @@
     "db:check-typos": "tsx prisma/check-typos.ts",
     "db:add-flashcards": "tsx prisma/add-flashcards.ts",
     "db:remove-flashcards": "tsx prisma/remove-flashcards.ts",
+    "db:fix-crossword-words": "tsx prisma/fix-crossword-words.ts",
+    "db:fix-crossword-words:self-test": "tsx prisma/fix-crossword-words.ts --self-test",
     "db:add-flashcards:self-test": "tsx prisma/add-flashcards.ts --self-test",
     "db:add-idioms": "tsx prisma/add-idioms.ts",
     "lint:stories": "tsx prisma/story-structure-lint.ts",
