@@ -62,7 +62,55 @@ export default function CrosswordBoard({
   const errorCountRef = useRef(0);
 
   function focusCell(row: number, col: number) {
-    inputRefs.current.get(`${row},${col}`)?.focus();
+    const el = inputRefs.current.get(`${row},${col}`);
+    if (!el) return;
+    el.focus();
+    revealCell(el);
+  }
+
+  /**
+   * Brings the just-focused cell fully inside the board's scroller.
+   *
+   * Why the board has to do this itself. The board is deliberately wider
+   * than a phone (PROGRESS.md 7.92: 1071 of 1262 puzzles do not fit at
+   * 320px, and a column cannot shrink below 22px without becoming
+   * unreadable), so typing a word walks the caret straight off the right
+   * edge. Until now nothing here scrolled at all — `focusCell` was a bare
+   * `.focus()` — and the board leaned on the browser's own "reveal the
+   * focused element" behaviour. That behaviour is not a guarantee, and it
+   * is not the same in two engines:
+   *
+   *   measured, WebKit, iPhone 13 viewport at 320px, geometry settled to
+   *   three identical frames — typing across row 4 of B1/91:
+   *     col 11  cell 277..299  scrollport 25..295  scrollLeft 0   ← OUTSIDE
+   *     col 12  cell 148..170  scrollport 25..295  scrollLeft 153
+   *
+   * Column 11 is PARTLY visible, and WebKit's focus reveal
+   * (`alignCenterIfNeeded`) does nothing at all in the partial case — so a
+   * cell 4px past the edge just stays there. Column 12 is fully hidden, so
+   * it gets centred, and that one sweep happens to drag the rest of the
+   * word inside with 29px to spare. Which cells end up on which side of
+   * that line is decided by the engine and by how many keystrokes fit
+   * between two rendering updates, not by anything this component does.
+   *
+   * So the reveal is done here, minimally (the cell moves to the nearest
+   * edge, never gets centred), and synchronously with the focus rather
+   * than a frame later. A cell that is already fully inside is left alone,
+   * which also means the browser's own deferred reveal afterwards sees a
+   * fully-visible element and does nothing.
+   */
+  function revealCell(el: HTMLInputElement) {
+    const scroller = el.closest<HTMLElement>("[data-crossword-scroller]");
+    if (!scroller) return;
+    const cell = el.getBoundingClientRect();
+    const box = scroller.getBoundingClientRect();
+    // The scrollport is the PADDING box: clientLeft is the border, and
+    // clientWidth already excludes both borders. Using the border box here
+    // would leave the cell one border-width outside.
+    const portLeft = box.left + scroller.clientLeft;
+    const portRight = portLeft + scroller.clientWidth;
+    if (cell.right > portRight) scroller.scrollLeft += cell.right - portRight;
+    else if (cell.left < portLeft) scroller.scrollLeft -= portLeft - cell.left;
   }
 
   async function runCheck(nextGuesses: Record<string, string>, soundCell?: { row: number; col: number }) {
@@ -300,7 +348,9 @@ export default function CrosswordBoard({
           silently overlapped instead of shrinking — the bug this replaces).
           Framed in a card so the puzzle reads as one bounded object
           instead of loose cells floating on the page background. */}
-      <div className="max-w-full overflow-x-auto rounded-2xl border border-primary/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4 md:mx-auto md:min-w-0 md:flex-1">
+      <div
+        data-crossword-scroller
+        className="max-w-full overflow-x-auto rounded-2xl border border-primary/15 bg-background p-3 shadow-[0_1px_2px_rgba(36,28,21,0.06),0_8px_24px_-12px_rgba(36,28,21,0.18)] sm:p-4 md:mx-auto md:min-w-0 md:flex-1">
         <div
           className="grid w-fit gap-0.5 md:mx-auto"
           style={{ gridTemplateColumns: `repeat(${puzzle.cols}, minmax(22px, 2.5rem))` }}

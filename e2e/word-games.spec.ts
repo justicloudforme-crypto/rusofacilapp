@@ -608,3 +608,183 @@ test("word search: every column is on screen at a phone width, not just in the D
   expect(geometry.overflows).toBe(false);
   expect(geometry.documentWidth).toBeLessThanOrEqual(390);
 });
+
+/**
+ * Кроссворд на телефоне: доска НЕ помещается и помещаться не может — но
+ * до каждой клетки можно дойти, и страница вбок не едет.
+ *
+ * Почему правило другое, чем у филворда. У филворда доска обязана
+ * ПОМЕЩАТЬСЯ целиком (тест выше): каждая его клетка несёт `touch-none`,
+ * потому что горизонтальный свайп там — это способ выделить слово, и
+ * поэтому палец на доске скроллер не двигает. Кроссворд свайпом не
+ * играют: буква вводится тапом и клавиатурой, `touch-action` у сетки
+ * остаётся `auto`, и скроллер карточки прокручивается пальцем как
+ * обычно.
+ *
+ * И помещаться кроссворд не может по арифметике. При 320px внутренняя
+ * ширина карточки — 272px, а колонка не сжимается ниже 22px
+ * (`minmax(22px, 2.5rem)`), то есть на экран влезает 11 столбцов из
+ * 46 у самого широкого пазла банка. Опустить пол так, чтобы 46 колонок
+ * поместились, значит сделать клетку 3,9px: в неё не попасть и в ней
+ * ничего не прочитать. Замер по всему банку прода 02.09.2026: не
+ * помещается 1071 кроссворд из 1262 при 320px, 978 при 360, 918 при 390
+ * (PROGRESS.md 7.92).
+ *
+ * Поэтому проверяются три вещи, которые обязаны быть верны ИМЕННО
+ * потому, что доска шире экрана:
+ *
+ *  1. Документ вбок не едет — прокручивается только карточка.
+ *  2. Сетке не запрещено панорамирование (`touch-action` не `none`), а
+ *     скроллеру есть что прокручивать.
+ *  3. Клетка, до которой довела автопротяжка, оказывается видимой: слово
+ *     длиннее видимой части доски всё равно можно набрать.
+ *
+ * Открывается B1/91 — 46×11, самая широкая строка банка (и в фикстуре,
+ * и в dev.db). Пазл поуже сделал бы тест зелёным вакуумно.
+ */
+test("crossword: the board is wider than the phone on purpose — the page is not, and every cell is reachable", async ({
+  page,
+}) => {
+  for (const width of [320, 360, 390]) {
+    await page.setViewportSize({ width, height: 780 });
+    await page.goto("/es/word-games/CROSSWORD/B1/91");
+    await page.waitForSelector('[role="grid"] input');
+
+    const geometry = await page.evaluate(() => {
+      const grid = document.querySelector('[role="grid"]') as HTMLElement;
+      const scroller = grid.parentElement as HTMLElement;
+      const cells = [...grid.querySelectorAll<HTMLInputElement>("input")];
+      const box = scroller.getBoundingClientRect();
+      return {
+        cols: getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length,
+        cellPx: Math.round((cells[0]?.getBoundingClientRect().width ?? 0) * 10) / 10,
+        touchAction: getComputedStyle(grid).touchAction,
+        scrollableBy: scroller.scrollWidth - scroller.clientWidth,
+        visibleCells: cells.filter((c) => {
+          const r = c.getBoundingClientRect();
+          return r.left >= box.left - 0.5 && r.right <= box.right + 0.5;
+        }).length,
+        totalCells: cells.length,
+        documentWidth: document.documentElement.scrollWidth,
+        viewport: document.documentElement.clientWidth,
+      };
+    });
+
+    // 1. Едет карточка, а не страница. Первым: это самый тяжёлый отказ
+    // класса, и подсадка обязана сообщать именно о нём, а не о вакуумной
+    // защите ниже, которая на той же подсадке тоже сработала бы.
+    expect(geometry.documentWidth, `${width}px: страница поехала вбок`).toBeLessThanOrEqual(geometry.viewport);
+    // Вакуумная защита: если банк когда-нибудь потеряет широкий пазл,
+    // «всё видно» стало бы правдой по причине, к вёрстке отношения не
+    // имеющей, и тест перестал бы что-либо утверждать.
+    expect(geometry.cols, `${width}px: пазл должен быть широким`).toBeGreaterThanOrEqual(40);
+    expect(geometry.visibleCells, `${width}px: доска шире экрана, часть клеток вне карточки`).toBeLessThan(
+      geometry.totalCells
+    );
+    // 2. Пальцем доску можно провезти: панорамирование не запрещено и
+    //    прокручивать есть что.
+    expect(geometry.touchAction, `${width}px: сетке запрещено панорамирование`).not.toBe("none");
+    expect(geometry.scrollableBy, `${width}px: скроллеру нечего прокручивать`).toBeGreaterThan(0);
+    // 3. Клетка читаемого размера — пол 22px, а не сжатие в ничто.
+    expect(geometry.cellPx, `${width}px: клетка сжалась ниже пола`).toBeGreaterThanOrEqual(22);
+  }
+
+  // 3 (продолжение). «полуостров» — строка 4, столбцы 7..16 — переходит
+  // через правый край видимой части при 320px. Набираем его вслепую и
+  // смотрим на КАЖДЫЙ шаг, а не только на последний.
+  //
+  // Почему на каждый. Прежняя редакция смотрела только на клетку в конце
+  // слова, и была зелена локально по случайности: WebKit сам увозит доску
+  // только тогда, когда клетка скрыта ЦЕЛИКОМ (столбец 12), и один такой
+  // рывок затаскивал внутрь и весь остаток слова — с запасом 29px, то есть
+  // 1,2 клетки. Столбец 11, скрытый ЧАСТИЧНО (277..299 при видимой части
+  // 25..295), при этом оставался снаружи и там же и оставался: в частичном
+  // случае WebKit не делает ничего. Утверждение о видимости было верно на
+  // шаге 9 и ложно на шаге 4 — просто никто не смотрел на шаг 4. В CI на
+  // Linux-сборке WebKit граница проходила иначе, и наружу выпадал уже
+  // последний шаг: 88 из 89 зелёных, три попытки из трёх красные
+  // (PROGRESS.md 7.92).
+  //
+  // Поэтому доводкой занят сам CrosswordBoard (revealCell), а тест требует
+  // её на каждом шаге. Замер берётся не по таймеру, а по устоявшейся
+  // геометрии — как в check:layout: прямоугольник подписывается на каждом
+  // кадре, и годится только тот, что повторился три раза подряд. Это не
+  // «щедрый таймаут»: ожидание кончается само, как только картинка встала.
+  await page.setViewportSize({ width: 320, height: 780 });
+  await page.goto("/es/word-games/CROSSWORD/B1/91");
+  await page.waitForSelector('[role="grid"] input');
+  await page.locator('[role="grid"] input[aria-label="row 4 col 7"]').scrollIntoViewIfNeeded();
+  await page.locator('[role="grid"] input[aria-label="row 4 col 7"]').focus();
+
+  const steps: { label: string | null; cellLeft: number; cellRight: number; boxLeft: number; boxRight: number; scrollLeft: number }[] = [];
+  for (let i = 0; i < 9; i += 1) {
+    await page.keyboard.type("а");
+    steps.push(await settledFocusGeometry(page));
+  }
+
+  const last = steps[steps.length - 1];
+  expect(last.label, "автопротяжка не дошла до правого края").toBe("row 4 col 16");
+  expect(last.scrollLeft, "доска не поехала за фокусом").toBeGreaterThan(0);
+  // Каждый шаг, а не только последний: слово длиннее видимой части доски
+  // можно набрать только если клетка с фокусом видна ВСЮ дорогу.
+  for (const s of steps) {
+    expect(
+      s.cellLeft >= s.boxLeft - 1 && s.cellRight <= s.boxRight + 1,
+      `${s.label}: клетка ${s.cellLeft}..${s.cellRight} вне видимой части доски ${s.boxLeft}..${s.boxRight} при scrollLeft ${s.scrollLeft}`
+    ).toBe(true);
+  }
+});
+
+/**
+ * Прямоугольник клетки с фокусом, снятый после того, как геометрия встала.
+ *
+ * Та же схема, что у `check:layout`: величина снимается на каждом кадре и
+ * принимается только тогда, когда три подряд совпали. Ждать по таймеру
+ * здесь нельзя — доводка до видимой области в WebKit откладывается до
+ * следующего обновления отрисовки, и «подождать 300мс» отвечает на вопрос
+ * «успело ли», а не на вопрос «куда встало».
+ *
+ * Потолок в 120 кадров — предохранитель от бесконечного ожидания на
+ * странице, которая перерисовывается непрерывно; он не удлиняет ожидание в
+ * нормальном случае (три кадра) и не делает проверку мягче: вернувшаяся по
+ * потолку геометрия проверяется теми же неравенствами.
+ */
+async function settledFocusGeometry(page: Page) {
+  return page.evaluate(
+    () =>
+      new Promise<{ label: string | null; cellLeft: number; cellRight: number; boxLeft: number; boxRight: number; scrollLeft: number }>(
+        (resolve) => {
+          const scroller = document.querySelector('[role="grid"]')!.parentElement as HTMLElement;
+          let same = 0;
+          let prev = "";
+          let frames = 0;
+          const sample = () => {
+            frames += 1;
+            const active = document.activeElement as HTMLElement;
+            const r = active.getBoundingClientRect();
+            const box = scroller.getBoundingClientRect();
+            const shot = {
+              label: active.getAttribute("aria-label"),
+              cellLeft: Math.round(r.left * 10) / 10,
+              cellRight: Math.round(r.right * 10) / 10,
+              boxLeft: Math.round(box.left * 10) / 10,
+              boxRight: Math.round(box.right * 10) / 10,
+              scrollLeft: Math.round(scroller.scrollLeft),
+            };
+            const key = JSON.stringify(shot);
+            if (key === prev) same += 1;
+            else {
+              same = 1;
+              prev = key;
+            }
+            if (same >= 3 || frames > 120) {
+              resolve(shot);
+              return;
+            }
+            requestAnimationFrame(sample);
+          };
+          requestAnimationFrame(sample);
+        }
+      )
+  );
+}
