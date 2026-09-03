@@ -736,6 +736,179 @@ test("crossword: the board is wider than the phone on purpose — the page is no
 });
 
 /**
+ * Играбельность доски на 320px, замером: попадание пальца, видимость на
+ * каждом шаге по СТОЛБЦУ и читаемость буквы.
+ *
+ * Что здесь нового против теста выше. Тот доказывает, что доска шире
+ * экрана НАМЕРЕННО и что слово по СТРОКЕ можно набрать. Он ничего не
+ * говорит ни о том, попадает ли палец в клетку 22px, ни о том, что
+ * происходит при ходе ВНИЗ, ни о том, читается ли буква в такой клетке —
+ * а это ровно те три величины, из которых складывается «в это можно
+ * играть» (PROGRESS.md 7.94).
+ *
+ * Тап — настоящий `touchscreen.tap`, а не `click()` по координате: у
+ * `click()` нет ни фазы касания, ни подгонки цели, и он отвечает на другой
+ * вопрос. Прицел смещается по восьми направлениям на 10px — это половина
+ * шага сетки без одного пикселя (шаг 24px = клетка 22 + зазор 2), то есть
+ * самый большой промах, который ещё обязан попасть в свою клетку.
+ *
+ * ЧЕМ ЭТО КОНТРОЛИРУЕТСЯ (каждая подсадка — со своей прод-сборкой,
+ * 03.09.2026):
+ *
+ *  — поле ввода ужато до 12px внутри клетки 22px → красный на ТАПЕ
+ *    (Chromium, «прицел row 1 col 5 со смещением (0,-8) → никуда»);
+ *  — `text-xs` заменён на `text-[6px]` → красный на ЧИТАЕМОСТИ в обоих
+ *    движках (кегль 6px, «Ш» высотой 4,19px);
+ *  — `revealCell` теряет положение доски (`scrollLeft = 0` на каждом
+ *    шаге) → красный на ХОДЕ ВНИЗ (Chromium);
+ *  — `sm:text-base` → `sm:text-2xl` (на 320px не действует) → всё
+ *    остаётся зелёным, то есть проверка не красит что попало.
+ *
+ * Одна подсадка красным НЕ становится, и это записано, а не спрятано:
+ * при полностью отключённом `revealCell` ход ВНИЗ остаётся зелёным. Так
+ * и должно быть — вертикальное слово не двигает доску вбок, доводка ему
+ * не нужна, — и горизонтальную доводку ловит отдельный тест выше,
+ * который на той же подсадке краснеет.
+ *
+ * ОГОВОРКА, которую нашёл позитивный контроль. Подсадка «поле ввода
+ * ужато до 12px внутри клетки 22px» краснеет в Chromium (280/320) и
+ * остаётся ЗЕЛЁНОЙ в WebKit: WebKit подгоняет тап к ближайшей цели, и
+ * размер поля перестаёт быть виден замеру. То есть чувствительна к этому
+ * классу только половина прогона, и это записано здесь, а не забыто.
+ */
+// hasTouch включается ЗДЕСЬ, а не берётся из проекта: проект `chromium` —
+// это Desktop Chrome, у него сенсора нет вовсе, и `touchscreen.tap` там
+// падает. А именно Chromium с сенсором и оказался единственной половиной
+// прогона, чувствительной к размеру цели (см. оговорку выше), так что
+// выкинуть его нельзя — надо включить ему касание.
+test.describe(() => {
+  test.use({ hasTouch: true });
+
+test("crossword: палец попадает в клетку 22px, буква читается, ход вниз не теряет клетку", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 780 });
+  await page.goto("/es/word-games/CROSSWORD/B1/91");
+  await page.waitForSelector('[role="grid"] input');
+
+  // Вакуумная защита: пазл обязан быть широким, иначе клетка не 22px и
+  // тест утверждает что-то другое.
+  const grid = await page.evaluate(() => {
+    const g = document.querySelector('[role="grid"]') as HTMLElement;
+    // Меряется ДОРОЖКА сетки, а не поле ввода внутри неё: иначе подсадка
+    // «поле ужато внутри клетки» валила бы вакуумную защиту вместо того,
+    // чтобы дойти до проверки тапа, ради которой она и сажается.
+    const cells = [...g.children].filter((el) => (el as HTMLElement).className.includes("aspect-square"));
+    const first = cells[0].getBoundingClientRect();
+    const second = cells[1].getBoundingClientRect();
+    return {
+      cols: getComputedStyle(g).gridTemplateColumns.split(" ").filter(Boolean).length,
+      cell: Math.round(first.width * 100) / 100,
+      pitch: Math.round((second.left - first.left) * 100) / 100,
+    };
+  });
+  expect(grid.cols, "пазл должен быть широким, иначе клетка не на полу 22px").toBeGreaterThanOrEqual(40);
+  expect(grid.cell, "клетка должна стоять на полу 22px").toBeCloseTo(22, 1);
+  expect(grid.pitch, "шаг сетки — клетка плюс зазор gap-0.5").toBeCloseTo(24, 1);
+
+  // 1. ТАП. Восемь направлений на 10px вокруг центра — и центр.
+  const targets = await page.evaluate(() => {
+    const g = document.querySelector('[role="grid"]') as HTMLElement;
+    const scroller = g.closest("[data-crossword-scroller]") as HTMLElement;
+    const box = scroller.getBoundingClientRect();
+    const portLeft = box.left + scroller.clientLeft;
+    const portRight = portLeft + scroller.clientWidth;
+    return [...g.querySelectorAll<HTMLInputElement>("input")]
+      .map((c) => {
+        const r = c.getBoundingClientRect();
+        return { label: c.getAttribute("aria-label"), cx: r.left + r.width / 2, cy: r.top + r.height / 2, left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+      })
+      .filter((c) => c.left >= portLeft - 0.5 && c.right <= portRight + 0.5 && c.top >= 0 && c.bottom <= 780)
+      .slice(0, 5);
+  });
+  expect(targets.length, "не нашлось видимых клеток для тапа").toBe(5);
+  // Не одно кольцо, а свип по радиусам. Одного кольца в 10px мало, и это
+  // показала подсадка: при ужатом до 12px поле тап со смещением ровно 10px
+  // всё равно попадал — Chromium подгонял его к ближайшей цели, — а
+  // промахивался на 6 и 8px, у самой кромки ужатого поля. Кольцо, мимо
+  // которого подсадка проходит, — это фильтр, выбрасывающий цель из
+  // замера (правило 4.5).
+  const D = 0.70710678;
+  const OFFSETS: [number, number][] = [[0, 0]];
+  for (const r of [4, 6, 8, 10]) {
+    OFFSETS.push([r, 0], [-r, 0], [0, r], [0, -r], [r * D, r * D], [-r * D, -r * D], [r * D, -r * D], [-r * D, r * D]);
+  }
+  const misses: string[] = [];
+  for (const t of targets) {
+    for (const [dx, dy] of OFFSETS) {
+      await page.touchscreen.tap(t.cx + dx, t.cy + dy);
+      const got = await page.evaluate(() => document.activeElement?.getAttribute?.("aria-label") ?? null);
+      if (got !== t.label) misses.push(`прицел ${t.label} со смещением (${Math.round(dx)},${Math.round(dy)}) → ${got ?? "никуда"}`);
+    }
+  }
+  expect(misses, `тап промахнулся мимо своей клетки: ${misses.join("; ")}`).toEqual([]);
+
+  // 2. ЧИТАЕМОСТЬ. Не заявленный класс, а вычисленный кегль и настоящая
+  //    высота глифа кириллической заглавной в том же самом шрифте.
+  const type = await page.evaluate(() => {
+    const input = document.querySelector('[role="grid"] input') as HTMLInputElement;
+    const cs = getComputedStyle(input);
+    const ctx = document.createElement("canvas").getContext("2d")!;
+    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} / ${cs.lineHeight} ${cs.fontFamily}`;
+    const m = ctx.measureText("Ш");
+    return {
+      fontPx: parseFloat(cs.fontSize),
+      transform: cs.textTransform,
+      glyphHeight: Math.round((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) * 100) / 100,
+      glyphWidth: Math.round(m.width * 100) / 100,
+      // снова ДОРОЖКА, а не поле: читаемость — свойство клетки сетки
+      cell: Math.round((input.parentElement as HTMLElement).getBoundingClientRect().width * 100) / 100,
+    };
+  });
+  // Замер 03.09.2026 в обоих движках: 12px, «Ш» высотой 8,39–8,40px и
+  // шириной 10,33px в клетке 22px. Нижние границы, а не равенства: шрифт
+  // может смениться, но не имеет права стать нечитаемым.
+  expect(type.fontPx, `кегль ${type.fontPx}px в клетке ${type.cell}px`).toBeGreaterThanOrEqual(12);
+  expect(type.glyphHeight, `высота глифа «Ш» ${type.glyphHeight}px`).toBeGreaterThanOrEqual(8);
+  expect(type.glyphWidth, `ширина глифа «Ш» ${type.glyphWidth}px не помещается в клетку`).toBeLessThan(type.cell - 2);
+
+  // 3. ХОД ВНИЗ. Берём клетку без горизонтальных соседей — тогда
+  //    направление S однозначно, — и идём вниз по слову, требуя видимости
+  //    клетки с фокусом на КАЖДОМ шаге, как и для хода по строке.
+  const down = await page.evaluate(() => {
+    const has = (r: number, c: number) => !!document.querySelector(`[role="grid"] input[aria-label="row ${r} col ${c}"]`);
+    const all = [...document.querySelectorAll('[role="grid"] input')].map((i) => {
+      const m = /row (\d+) col (\d+)/.exec(i.getAttribute("aria-label") ?? "")!;
+      return { r: Number(m[1]), c: Number(m[2]) };
+    });
+    let best: { r: number; c: number; len: number } | null = null;
+    for (const { r, c } of all) {
+      if (has(r, c - 1) || has(r, c + 1)) continue;
+      if (has(r - 1, c)) continue;
+      let len = 1;
+      while (has(r + len, c)) len += 1;
+      if (len >= 3 && (!best || len > best.len)) best = { r, c, len };
+    }
+    return best;
+  });
+  expect(down, "в пазле не нашлось однозначно вертикального хода").not.toBeNull();
+  const sel = (r: number, c: number) => `[role="grid"] input[aria-label="row ${r} col ${c}"]`;
+  await page.locator(sel(down!.r, down!.c)).scrollIntoViewIfNeeded();
+  await page.locator(sel(down!.r, down!.c)).click();
+  for (let i = 0; i < down!.len; i += 1) {
+    await page.keyboard.type("а");
+    const shot = await settledFocusGeometry(page);
+    expect(
+      shot.cellLeft >= shot.boxLeft - 1 && shot.cellRight <= shot.boxRight + 1,
+      `ход вниз, шаг ${i + 1} (${shot.label}): клетка ${shot.cellLeft}..${shot.cellRight} вне видимой части доски ${shot.boxLeft}..${shot.boxRight}`
+    ).toBe(true);
+    if (shot.label !== `row ${down!.r + i + 1} col ${down!.c}` && i + 1 < down!.len) {
+      await page.locator(sel(down!.r + i + 1, down!.c)).click();
+    }
+  }
+});
+
+});
+
+/**
  * Прямоугольник клетки с фокусом, снятый после того, как геометрия встала.
  *
  * Та же схема, что у `check:layout`: величина снимается на каждом кадре и
