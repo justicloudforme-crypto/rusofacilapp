@@ -5,6 +5,7 @@ import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
 import type { WordGameGrid, WordGameType, WordPlacement } from "./types";
 import { isWordGameType } from "./types";
 import { GENERIC_SOPA_PUZZLE } from "./topic-landings";
+import { isFreeWordGamePuzzle, WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./free-tier";
 
 export interface PuzzleRow {
   id: string;
@@ -204,6 +205,36 @@ export const getLandingPuzzleForTopic = cache(async (topic: string): Promise<Puz
   const chosen = usable[0] ?? null;
   return chosen ? parseRow(chosen) : null;
 });
+
+/**
+ * Which of the free rungs REALLY exist, for every (type, level) pair at
+ * once — the row numbers, not a count.
+ *
+ * countAllSequences answers "how many", and the picker treats that as
+ * 1..total; that is safe only while no ladder has a gap, which is what the
+ * `ladderGaps` guard exists to keep true (PROGRESS.md 7.79). The free
+ * index rendered on the hub is read by crawlers, so it asks the stronger
+ * question and lists the sequences the bank actually holds — a link to a
+ * missing rung would be a 404 handed to Googlebot on purpose.
+ *
+ * One query, bounded to the free window, so it costs a fraction of the
+ * page's existing reads.
+ */
+export async function getFreeSequences(): Promise<Map<string, Set<number>>> {
+  const rows = await db.wordGamePuzzle.findMany({
+    where: { sequence: { lte: WORD_GAME_FREE_RUNGS_PER_LEVEL } },
+    select: { type: true, level: true, sequence: true },
+  });
+  const byPair = new Map<string, Set<number>>();
+  for (const row of rows) {
+    if (!isFreeWordGamePuzzle(row)) continue;
+    const key = pairKey(row.type, row.level);
+    const existing = byPair.get(key);
+    if (existing) existing.add(row.sequence);
+    else byPair.set(key, new Set([row.sequence]));
+  }
+  return byPair;
+}
 
 /** Which sequences are the curved/★ expert tier, for every (type, level)
  * pair at once — powers the picker's star badge without parsing every
