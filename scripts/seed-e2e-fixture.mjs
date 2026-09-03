@@ -134,12 +134,26 @@ async function main() {
         return grid[0]?.length ?? 0;
       }),
     );
+    // То же и для кроссворда: тест ширины кроссворда открывает 46-колоночную
+    // строку — самую широкую в банке прода на 02.09.2026 — и на пазле поуже
+    // стал бы зелёным вакуумно (PROGRESS.md 7.91).
+    const widestCrossword = Math.max(
+      ...puzzles
+        .filter((p) => p.type === "CROSSWORD")
+        .map((p) => {
+          const parsed = JSON.parse(p.gridData);
+          const grid = parsed.grid ?? parsed;
+          return grid[0]?.length ?? 0;
+        }),
+      0,
+    );
     console.log(
-      `e2e fixture: ${puzzles.length} puzzles (${curved} curved/★, widest grid ${widestGrid} columns), ` +
+      `e2e fixture: ${puzzles.length} puzzles (${curved} curved/★, widest grid ${widestGrid} columns, ` +
+        `widest crossword ${widestCrossword}), ` +
         `${terms.length} glossary terms (${withRelatedLessons} with a related lesson), ` +
         `${cards.length} flashcards in ${cardCategories.size} category/-ies`,
     );
-    if (curved === 0 || withRelatedLessons === 0 || cards.length < 4 || widestGrid < 18) {
+    if (curved === 0 || withRelatedLessons === 0 || cards.length < 4 || widestGrid < 18 || widestCrossword < 40) {
       console.error("the fixture lost a shape the suite asserts on — see e2e/fixtures/");
       process.exitCode = 1;
     }
