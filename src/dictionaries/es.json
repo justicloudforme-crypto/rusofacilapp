@@ -1071,8 +1071,10 @@
     "resetSelectionButton": "Cancelar selección",
     "expertModeLabel": "Modo experto",
     "premiumTierLabel": "Solo Premium",
-    "checkButton": "Comprobar",
-    "filledCountLabel": "Completado: {filled}/{total}",
+    "breakdownButton": "Ver el detalle",
+    "hideBreakdownButton": "Ocultar el detalle",
+    "breakdownLabel": "Horizontales: {across} de {acrossTotal} · verticales: {down} de {downTotal}",
+    "progressCountLabel": "Palabras completas: {solved} de {words} · casillas: {filled} de {cells}",
     "wordSearchGridLabel": "Sopa de letras",
     "crosswordGridLabel": "Crucigrama"
   },

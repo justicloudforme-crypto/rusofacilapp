@@ -1458,3 +1458,176 @@ async function settledFocusGeometry(page: Page) {
       )
   );
 }
+
+/**
+ * СЧЁТЧИК ПРОГРЕССА, КНОПКА РАЗБОРА И ЧЕСТНОСТЬ ЗАЧЁТА — на настоящей
+ * странице, прод-сборкой, а не на стенде.
+ *
+ * ЧТО ИЗМЕРЕНО ДО ПРАВКИ (03.09.2026, A1/1 при 390×844, прод-сборка):
+ *
+ *   кнопка «Comprobar»: тело её POST /api/word-games/check СОВПАЛО
+ *   побайтово с телом запроса, который отправила последняя нажатая
+ *   клавиша, а вид доски после ответа не изменился ни в одной клетке —
+ *   0 из 21 (сравнивались `className` и `value` каждой клетки);
+ *
+ *   счётчик после пяти ЗАВЕДОМО НЕВЕРНЫХ букв: «Completado: 5/21» при
+ *   пяти красных клетках на экране — единица измерения не отличала
+ *   угаданную букву от неугаданной;
+ *
+ *   день занятия: открыть кроссворд, не набрав НИ ОДНОЙ буквы, — на
+ *   календаре /profile 1 день «занимался»;
+ *
+ *   решение ПЕРЕБОРОМ (170 проб на 21 клетку, ни одного слова игрок не
+ *   знал): `totalKnown` остался 0 из 5771, `GET /api/flashcard-progress`
+ *   вернул пустой `{"progress":{}}` — ни карточек, ни коробок Лейтнера.
+ *
+ * Ниже — те же три величины, закреплённые как правило.
+ */
+test("crossword: наверх выходят слова, а не нажатия, и кнопка раскрывает разбор", async ({ page }) => {
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
+  const inputs = page.locator("input[aria-label^='row']");
+  const cells = await readCrosswordCells(page);
+  expect(cells.length).toBeGreaterThan(0);
+
+  const progress = page.locator("[data-crossword-progress]");
+  const breakdown = page.locator("[data-crossword-breakdown]");
+
+  await expect(progress).toHaveText(`Palabras completas: 0 de 6 · casillas: 0 de ${cells.length}`);
+
+  // Пять ЗАВЕДОМО НЕВЕРНЫХ букв. «ъ» не бывает первой буквой русского
+  // слова и не стоит подряд, так что все пять обязаны стать красными —
+  // это и проверяется, а не предполагается.
+  const wrong = Math.min(5, cells.length);
+  for (let i = 0; i < wrong; i++) await inputs.nth(i).fill("ъ");
+  await expect(page.locator("input.border-red-400")).toHaveCount(wrong);
+
+  // ЭТО И ЕСТЬ ЗАМЕНЁННЫЙ ДЕФЕКТ: клеток заполнено пять, слов — ноль.
+  await expect(progress).toHaveText(`Palabras completas: 0 de 6 · casillas: ${wrong} de ${cells.length}`);
+
+  // Кнопка. До нажатия разбора на странице нет вовсе.
+  await expect(breakdown).toHaveCount(0);
+  const button = page.getByRole("button", { name: "Ver el detalle" });
+  await expect(button).toHaveAttribute("aria-expanded", "false");
+  await button.click();
+  await expect(breakdown).toHaveText(/Horizontales: 0 de \d+ · verticales: 0 de \d+/);
+
+  // Второе нажатие тоже обязано что-то менять — иначе это ровно та кнопка,
+  // которую эта правка и убирает.
+  const hide = page.getByRole("button", { name: "Ocultar el detalle" });
+  await hide.click();
+  await expect(breakdown).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ver el detalle" })).toHaveAttribute("aria-expanded", "false");
+});
+
+test("crossword: одно собранное слово поднимает счётчик слов и попадает в свою половину разбора", async ({
+  page,
+}) => {
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
+  const cells = await readCrosswordCells(page);
+  const firstCell = page.getByLabel(`row ${cells[0].row + 1} col ${cells[0].col + 1}`, { exact: true });
+  const [checkRequest] = await Promise.all([
+    page.waitForRequest((r) => r.url().includes("/api/word-games/check") && r.method() === "POST"),
+    firstCell.fill("а"),
+  ]);
+  const puzzleId = (JSON.parse(checkRequest.postData() ?? "{}") as { puzzleId?: string }).puzzleId;
+  const solution = await solveCrossword(page, puzzleId!, cells);
+
+  // Слова доски читаются из списка подсказок: номер и направление известны
+  // из разметки, координаты — из решения. Берётся ПЕРВОЕ горизонтальное.
+  const across = await page.evaluate(() => {
+    const lists = document.querySelectorAll("h2 + ol");
+    return lists[0].querySelectorAll("li").length;
+  });
+  const down = await page.evaluate(() => {
+    const lists = document.querySelectorAll("h2 + ol");
+    return lists[1].querySelectorAll("li").length;
+  });
+  expect(across + down).toBe(6);
+
+  await page.getByRole("button", { name: "Ver el detalle" }).click();
+  const breakdown = page.locator("[data-crossword-breakdown]");
+  await expect(breakdown).toHaveText(`Horizontales: 0 de ${across} · verticales: 0 de ${down}`);
+
+  // Собираем ВСЕ слова: разбор обязан прийти к полному счёту с обеих
+  // сторон, а счётчик — к «6 из 6». Частичное состояние проверяет
+  // модульный тест (CrosswordBoard.test.tsx), у которого доска — 2×2 и
+  // сервер подменён; здесь важнее, что живой /check даёт те же числа.
+  await fillCrossword(page, solution);
+  await expect(page.locator("[data-crossword-progress]")).toHaveText(
+    `Palabras completas: 6 de 6 · casillas: ${cells.length} de ${cells.length}`,
+  );
+  await expect(breakdown).toHaveText(`Horizontales: ${across} de ${across} · verticales: ${down} de ${down}`);
+});
+
+/**
+ * ЧЕСТНОСТЬ ЗАЧЁТА — замер, а не запрет.
+ *
+ * Букву в кроссворде можно подобрать перебором, глядя на красное. Этот
+ * тест не мешает этому и ничего не чинит: он ЗАКРЕПЛЯЕТ ЧИСЛАМИ, что
+ * именно засчитывается и в какой момент, чтобы следующая правка не
+ * изменила ответ молча.
+ *
+ * Что он утверждает:
+ *   1. день занятия ставится ОТКРЫТИЕМ страницы, до первой буквы —
+ *      `markStudyDayVisit("word-game")` в теле серверного компонента
+ *      (src/app/[lang]/word-games/[type]/[level]/[sequence]/page.tsx);
+ *   2. ни решение, ни перебор не трогают ни статистику выученных слов
+ *      (`totalKnown`), ни интервальное повторение (`FlashcardProgress`,
+ *      коробки Лейтнера) — единственный писатель этих строк
+ *      /api/flashcard-progress, и кроссворд его не зовёт.
+ */
+test("crossword: открытие засчитывает день, а перебор не трогает ни выученные слова, ни карточки", async ({
+  page,
+}) => {
+  const summaryBefore = await (
+    await page.context().request.post("/api/flashcards/summary", { data: { category: "all", entries: [] } })
+  ).json();
+  const progressBefore = await (await page.context().request.get("/api/flashcard-progress")).json();
+  expect(progressBefore.progress, "аккаунт заведён только что — карточек быть не должно").toEqual({});
+
+  // 1. Открыть и НЕ НАБРАТЬ НИ ОДНОЙ БУКВЫ.
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
+  await expect(page.locator("input[aria-label^='row']").first()).toBeVisible();
+  const typed = await page
+    .locator("input[aria-label^='row']")
+    .evaluateAll((els) => els.filter((el) => (el as HTMLInputElement).value !== "").length);
+  expect(typed, "тест обязан не набрать ничего — иначе он мерит не то").toBe(0);
+
+  await page.goto("/es/profile");
+  await page.waitForLoadState("networkidle");
+  const greeting = page.locator('[role="dialog"][aria-modal="true"]');
+  if (await greeting.count()) {
+    await greeting.click({ position: { x: 4, y: 4 } }).catch(() => {});
+    await greeting.waitFor({ state: "detached", timeout: 3000 }).catch(() => {});
+  }
+  const activeDays = await page
+    .locator("[data-date][data-state='active']")
+    .evaluateAll((els) => els.map((el) => el.getAttribute("data-date")));
+  expect(activeDays, "день занятия ставится ОТКРЫТИЕМ, до первой буквы").toHaveLength(1);
+  console.log(`  день занятия после открытия без единой буквы: ${JSON.stringify(activeDays)}`);
+
+  // 2. Решить ПЕРЕБОРОМ — ровно то, что делает игрок, глядя на красное.
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
+  const cells = await readCrosswordCells(page);
+  const firstCell = page.getByLabel(`row ${cells[0].row + 1} col ${cells[0].col + 1}`, { exact: true });
+  const [checkRequest] = await Promise.all([
+    page.waitForRequest((r) => r.url().includes("/api/word-games/check") && r.method() === "POST"),
+    firstCell.fill("а"),
+  ]);
+  const puzzleId = (JSON.parse(checkRequest.postData() ?? "{}") as { puzzleId?: string }).puzzleId;
+  const solution = await solveCrossword(page, puzzleId!, cells);
+  await fillCrossword(page, solution);
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+
+  const summaryAfter = await (
+    await page.context().request.post("/api/flashcards/summary", { data: { category: "all", entries: [] } })
+  ).json();
+  const progressAfter = await (await page.context().request.get("/api/flashcard-progress")).json();
+  console.log(
+    `  выученных слов до/после решения перебором: ${summaryBefore.totalKnown} → ${summaryAfter.totalKnown} из ${summaryAfter.availableWords}`,
+  );
+  expect(summaryAfter.totalKnown, "решённый перебором кроссворд не делает слово выученным").toBe(
+    summaryBefore.totalKnown,
+  );
+  expect(progressAfter.progress, "и не заводит карточек в интервальном повторении").toEqual({});
+});
