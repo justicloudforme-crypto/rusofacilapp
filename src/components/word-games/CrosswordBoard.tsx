@@ -111,6 +111,70 @@ export default function CrosswordBoard({
     const portRight = portLeft + scroller.clientWidth;
     if (cell.right > portRight) scroller.scrollLeft += cell.right - portRight;
     else if (cell.left < portLeft) scroller.scrollLeft -= portLeft - cell.left;
+    revealBelowKeyboard(el);
+  }
+
+  /**
+   * The same minimal reveal, on the other axis — for the strip of the page
+   * that the on-screen keyboard covers.
+   *
+   * Why the horizontal reveal above is not enough. It moves the BOARD
+   * inside its own scroller, which is the whole story for a word typed
+   * across a row. A word typed DOWN never moves the board sideways at all;
+   * it walks the caret down the page, straight under the keyboard. Nothing
+   * scrolls, nothing errors, and the letters keep landing in cells the
+   * typist cannot see.
+   *
+   * Why the engine's own reveal does not cover it. On iOS the keyboard does
+   * NOT resize the layout viewport — it shrinks the VISUAL viewport and
+   * leaves `innerHeight` alone. The engine reveals a focused element into
+   * the layout viewport, so as far as it is concerned a cell at y = 460 out
+   * of 780 is on screen, and it does nothing. `window.visualViewport` is
+   * the only thing in the page that knows otherwise.
+   *
+   * Measured on the bench, 03.09.2026, both engines, 320×780, typing a
+   * 10-letter word down column 12 of B1/91 (PROGRESS.md 7.95):
+   *
+   *   layout 780 / visual 444 (iOS shape)   steps 8,9,10 at 446..492 — under
+   *                                          the keyboard, engine scrolls 0px
+   *   layout 444 / visual 444 (Android)     engine scrolls itself at step 8
+   *                                          (scrollY 0 → 235), nothing hidden
+   *
+   * Hence the guard below, and it is the point of this function rather than
+   * a shortcut past it: this correction exists ONLY for the strip the
+   * engine cannot see. While the visual viewport still matches the layout
+   * one, the engine's reveal is the right one and a second reveal here
+   * would fight it — so it does nothing at all, and is measured doing
+   * nothing (0 scroll calls in the second row above).
+   *
+   * Bounds come from `visualViewport` (`offsetTop` included: pinch-zoom
+   * moves the visual viewport inside the layout one, and the rect this is
+   * compared against is in layout coordinates). With no such API there is
+   * no second bound to know — `innerHeight` is exactly what the engine
+   * already used — so the fallback deliberately amounts to doing nothing.
+   */
+  function revealBelowKeyboard(el: HTMLInputElement) {
+    const vv = typeof window === "undefined" ? null : window.visualViewport;
+    const top = vv ? vv.offsetTop : 0;
+    const bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    if (bottom >= window.innerHeight - 1 && top <= 1) return;
+    // Nearest edge, never centred — same rule as the horizontal branch, and
+    // a cell already fully inside is left alone so the engine's own later
+    // reveal finds nothing to do.
+    //
+    // Rounded AWAY from the cell, and that is a fix rather than a detail.
+    // The distance asked for here is fractional (the grid's rows do not
+    // land on whole pixels), and WebKit TRUNCATES a fractional scroll
+    // offset — probed directly: `scrollTop = 150.5` leaves `scrollY` at
+    // 150. Passing the raw 23.5 therefore moved 23, the cell stopped at
+    // 423..445 against a bound of 444, and it was still under the keyboard
+    // by one row of pixels; a follow-up pass asking for the remaining 0.5
+    // was truncated to 0 and moved nothing at all. `ceil`/`floor` overshoot
+    // by less than a pixel and land the cell inside in one move, in both
+    // engines.
+    const cell = el.getBoundingClientRect();
+    if (cell.bottom > bottom) window.scrollBy(0, Math.ceil(cell.bottom - bottom));
+    else if (cell.top < top) window.scrollBy(0, Math.floor(cell.top - top));
   }
 
   async function runCheck(nextGuesses: Record<string, string>, soundCell?: { row: number; col: number }) {
