@@ -7,7 +7,7 @@
 //   ·  20 — разгрузка по порогу 80%/3 (PROGRESS 7.83), записаны 02.09;
 //   ·  40 — сорок худших по коридору (PROGRESS 7.86), записаны 02.09;
 //   · 124 — порция 1 коридора (PROGRESS 7.101), записаны 03.09;
-//   ·  20 — пилот порции 2 (PROGRESS 7.105), ЕЩЁ НЕ ЗАПИСАН.
+//   ·  20 — пилот порции 2 (PROGRESS 7.105), записан 04.09.
 //
 // ONE manifest, read by two scripts that must agree:
 //
@@ -334,7 +334,7 @@ export const DENSITY_SPLITS: readonly DensitySplit[] = [
   { level: "C1", sequence: 3, parts: 1, sizes: [14], tailSequences: [], applied: "2026-09-03" },
   { level: "C1", sequence: 4, parts: 1, sizes: [16], tailSequences: [], applied: "2026-09-03" },
 
-  // ---- ПИЛОТ ПОРЦИИ 2 коридора (PROGRESS 7.105), ЕЩЁ НЕ ЗАПИСАН ----
+  // ---- ПИЛОТ ПОРЦИИ 2 коридора (PROGRESS 7.105), ЗАПИСАН В ПРОД 04.09.2026 ----
   //
   // Порция 2 целиком — 421 рунг: пазл чинится ОДНОЙ сменой размера доски
   // (parts: 1), новая сторона 18, рунг вне того, что видит аноним и
@@ -355,26 +355,34 @@ export const DENSITY_SPLITS: readonly DensitySplit[] = [
   // Вышло: занятость 76,6–83,2% -> 60,8–64,8%, весь топ-10 банка внутри,
   // одиннадцать со словом в 14 букв, то есть с отношением 14/18 = 0,778,
   // у самого края потолка 0,80, где доска шире всего относительно слова.
-  { level: "A1", sequence: 43, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "A1", sequence: 114, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "A1", sequence: 115, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "A2", sequence: 66, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "A2", sequence: 94, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "A2", sequence: 163, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B1", sequence: 62, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B1", sequence: 181, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B1", sequence: 327, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B1", sequence: 350, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B1", sequence: 378, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B1", sequence: 379, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B2", sequence: 15, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B2", sequence: 35, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B2", sequence: 37, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B2", sequence: 119, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "B2", sequence: 181, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "C1", sequence: 30, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "C1", sequence: 74, parts: 1, sizes: [18], tailSequences: [] },
-  { level: "C1", sequence: 170, parts: 1, sizes: [18], tailSequences: [] },
+  //
+  // Записано 04.09.2026 двумя кругами по десять, без --force: обновлено на
+  // месте 20, новых строк 0. Порог 80%/3 нарушали 15 из 20 до записи и 0
+  // из 20 после; все двадцать внутри коридора quality.ts. Семь из них
+  // сменили слов на клетку 2 -> 3 при занятости 81% -> 63%, и снимок до
+  // пересъёма честно называл это «стало хуже» — порог нарушают >3, а не
+  // 3, поэтому по вердикту это переход из «нарушен» в «в норме»
+  // (PROGRESS 7.106).
+  { level: "A1", sequence: 43, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "A1", sequence: 114, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "A1", sequence: 115, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "A2", sequence: 66, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "A2", sequence: 94, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "A2", sequence: 163, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B1", sequence: 62, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B1", sequence: 181, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B1", sequence: 327, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B1", sequence: 350, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B1", sequence: 378, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B1", sequence: 379, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B2", sequence: 15, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B2", sequence: 35, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B2", sequence: 37, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B2", sequence: 119, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "B2", sequence: 181, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "C1", sequence: 30, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "C1", sequence: 74, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
+  { level: "C1", sequence: 170, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-04" },
 ];
 
 /** How many sequences each level's WORD_SEARCH ladder gains beyond what
