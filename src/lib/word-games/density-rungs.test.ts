@@ -108,11 +108,39 @@ describe("density-rungs manifest", () => {
   // намеренно.
   it("describes every row already written to production", () => {
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
-    expect(applied).toHaveLength(60);
+    expect(applied).toHaveLength(184);
     expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(58);
     expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(9);
     expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(22);
     expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(27);
+  });
+
+  // Порция 1 (124 рунга, записана 03.09) хвостов не создаёт вовсе:
+  // parts: 1 — это UPDATE существующей строки и ничего больше. Число
+  // хвостов выше поэтому осталось 58, хотя применённых записей стало
+  // 184, — и именно это здесь и проверяется, чтобы «184 против 58» не
+  // выглядело опечаткой в следующем заходе.
+  it("counts the 03.09 portion as applied without adding a single tail", () => {
+    const p1 = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-03");
+    expect(p1).toHaveLength(124);
+    expect(p1.every((s) => s.parts === 1 && s.tailSequences.length === 0)).toBe(true);
+    expect(p1.filter((s) => s.sizes.includes(18))).toHaveLength(0);
+    expect(Object.entries(
+      p1.reduce<Record<string, number>>((a, s) => ({ ...a, [s.level]: (a[s.level] ?? 0) + 1 }), {}),
+    ).sort()).toEqual([["A1", 39], ["A2", 51], ["B1", 24], ["B2", 6], ["C1", 4]]);
+  });
+
+  // Пилот порции 2: двадцать рунгов, каждый — одна доска 18×18 и ноль
+  // новых строк. Сторож ровно на цену порции: если сюда однажды заедет
+  // запись с parts > 1, порция перестанет быть бесплатной по строкам и
+  // URL, а таблица в PROGRESS 7.105 будет врать молча.
+  it("keeps the portion-2 pilot at zero new rows and one board each", () => {
+    const pending = DENSITY_SPLITS.filter((s) => !s.applied);
+    expect(pending).toHaveLength(20);
+    expect(pending.every((s) => s.parts === 1)).toBe(true);
+    expect(pending.every((s) => s.tailSequences.length === 0)).toBe(true);
+    expect(pending.every((s) => s.sizes.length === 1 && s.sizes[0] === 18)).toBe(true);
+    expect(new Set(pending.map((s) => s.level))).toEqual(new Set(["A1", "A2", "B1", "B2", "C1"]));
   });
 
   it("owns exactly the rungs it names, and only for WORD_SEARCH", () => {
