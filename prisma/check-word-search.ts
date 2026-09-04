@@ -104,12 +104,20 @@ import type { WordPlacement } from "../src/lib/word-games/types";
  * вводился. Локальный банк со своим снимком сверяют явно:
  *   npm run check:word-search -- --baseline=<снимок с dev.db>
  *
+ * Дата в имени файла — это дата СНИМКА, а не дата какой-либо записи, и
+ * она обязана двигаться вместе с ним: снимок от 02.09 пережил запись
+ * порции 1 коридора (03.09) и три дня подряд называл «стало хуже» ровно
+ * те 115 строк, которые порция и привела в коридор 45–65%. Имя, которое
+ * отстаёт от содержимого, — это и есть та мина; поэтому файл переименован
+ * вместе с пересъёмом, а константа ниже прибита к пути и переименована с
+ * ним (04.09.2026).
+ *
  * Перезаписывать этот снимок — только с прода и только после успешной
  * записи в прод:
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" \
- *     npm run check:word-search -- --write-baseline=docs/word-search-baseline-prod-2026-09-02.json
+ *     npm run check:word-search -- --write-baseline=docs/word-search-baseline-prod-2026-09-04.json
  */
-const PROD_BASELINE = "docs/word-search-baseline-prod-2026-09-02.json";
+const PROD_BASELINE = "docs/word-search-baseline-prod-2026-09-04.json";
 
 function arg(name: string): string | undefined {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));

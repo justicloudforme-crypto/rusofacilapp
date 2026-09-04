@@ -88,9 +88,32 @@ for (const lang of ["es", "ru"] as const) {
       `  /${lang}: day target — smallest ${smallest.w.toFixed(1)}×${smallest.h.toFixed(1)}px ` +
         `(${smallest.date}), widest ${widest.w.toFixed(1)}px`,
     );
+    /**
+     * Что несёт в себе сообщение об ошибке, и почему именно это.
+     *
+     * В CI этот цикл один раз упал с «2026-09-01 is 0.0px wide» — и на
+     * этом след обрывался: 0,0px у клетки означает ЛИБО «сетка ещё не
+     * получила layout-бокс к моменту замера», либо «одна клетка сломана
+     * вёрсткой», а первая клетка месяца попадает в сообщение просто как
+     * первая в порядке DOM, для обеих причин одинаково. Локально это
+     * состояние не воспроизвелось ни разу (0 падений на 60 исполнениях,
+     * 04.09.2026), так что различить их может только сам красный прогон.
+     *
+     * Различает их одно число — сколько клеток из count имеют ненулевой
+     * бокс. `withBox 0/30` — это вся сетка без раскладки, то есть замер
+     * пришёл раньше неё; `withBox 29/30` — это настоящий дефект вёрстки
+     * ровно в одной клетке. `widest` печатается рядом как вторая половина
+     * того же ответа: 0,0 у самой широкой клетки не оставляет места для
+     * толкования.
+     *
+     * Ожиданий не добавлено НАМЕРЕННО: механизм не назван, а ожидание,
+     * выбранное вслепую, закрыло бы не дефект, а его симптом.
+     */
+    const withBox = boxes.filter((b) => b.w > 0 && b.h > 0).length;
+    const context = `widest ${widest.w.toFixed(1)}px (${widest.date}), ${withBox}/${boxes.length} cells have a non-zero box`;
     for (const b of boxes) {
-      expect(b.w, `${b.date} is ${b.w.toFixed(1)}px wide`).toBeGreaterThanOrEqual(WCAG_MIN_TARGET);
-      expect(b.h, `${b.date} is ${b.h.toFixed(1)}px tall`).toBeGreaterThanOrEqual(MIN_TARGET_HEIGHT);
+      expect(b.w, `${b.date} is ${b.w.toFixed(1)}px wide — ${context}`).toBeGreaterThanOrEqual(WCAG_MIN_TARGET);
+      expect(b.h, `${b.date} is ${b.h.toFixed(1)}px tall — ${context}`).toBeGreaterThanOrEqual(MIN_TARGET_HEIGHT);
     }
 
     // No day may cover its neighbour. This is not decoration: raising the
