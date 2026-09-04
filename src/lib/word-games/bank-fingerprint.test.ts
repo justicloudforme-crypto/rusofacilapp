@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
 import {
+  PROD_BASELINE_PATH,
   bankFingerprint,
   fingerprintMismatch,
   isLegacyBaseline,
@@ -58,5 +60,40 @@ describe("isLegacyBaseline", () => {
     expect(
       isLegacyBaseline({ source: "prod", takenAt: "2026-09-02", bank: bankFingerprint(bankA), puzzles: {} }),
     ).toBe(false);
+  });
+});
+
+/**
+ * Сторож против того, что уже случилось однажды: путь к продовому снимку
+ * был литералом в двух скриптах сразу, снимок переименовали, поправили
+ * один — и `prisma/verify-density-rungs.ts` три дня держал умолчанием
+ * путь к удалённому файлу. Дефект молчал, потому что скрипт всегда звали
+ * с явным `--baseline=`.
+ *
+ * Проверяется не «путь равен такой-то строке» — это переписывало бы
+ * литерал в тест и ловило бы факт правки, а не дефект. Проверяется, что
+ * файл по этому пути СУЩЕСТВУЕТ и читается как снимок, и что литерала с
+ * этим путём в скриптах больше нет.
+ */
+describe("PROD_BASELINE_PATH", () => {
+  it("указывает на снимок, который действительно лежит в репозитории", () => {
+    expect(existsSync(PROD_BASELINE_PATH), `${PROD_BASELINE_PATH} не существует`).toBe(true);
+    const parsed = JSON.parse(readFileSync(PROD_BASELINE_PATH, "utf8"));
+    expect(parsed.bank?.idsSha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(Object.keys(parsed.puzzles ?? {}).length).toBeGreaterThan(0);
+  });
+
+  it("позитивный контроль: несуществующий путь эта проверка обязана поймать", () => {
+    expect(existsSync("docs/word-search-baseline-prod-2026-09-02.json")).toBe(false);
+  });
+
+  it("остаётся единственным местом, где путь записан строкой", () => {
+    // Оба скрипта обязаны ехать за константой, а не носить свою копию.
+    for (const file of ["prisma/check-word-search.ts", "prisma/verify-density-rungs.ts"]) {
+      const src = readFileSync(file, "utf8");
+      const literals = src.match(/"docs\/word-search-baseline-prod-[^"]*"/g) ?? [];
+      expect(literals, `${file} держит свою копию пути: ${literals.join(", ")}`).toEqual([]);
+      expect(src, `${file} не импортирует PROD_BASELINE_PATH`).toContain("PROD_BASELINE_PATH");
+    }
   });
 });
