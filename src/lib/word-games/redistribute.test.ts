@@ -76,13 +76,16 @@ describe("splitting an over-packed puzzle", () => {
 
 describe("the redistribution manifest", () => {
   it("names only paid, unthemed rungs — in every round", () => {
-    // Числом проверяется только применённое: двадцать рунгов кругов 1-2
-    // (02.09.2026, PROGRESS 7.83). Длина всего манифеста НЕ фиксируется
-    // литералом намеренно — новые круги приезжают правкой ДАННЫХ, и
-    // тест, который надо править вместе с ними, ловил бы не дефект, а
-    // сам факт правки.
-    expect(DENSITY_SPLITS.filter((s) => s.applied)).toHaveLength(20);
-    expect(DENSITY_SPLITS.length).toBeGreaterThanOrEqual(20);
+    // Числом проверяется только ПРИМЕНЁННОЕ, то есть то, что уже лежит
+    // в проде: двадцать рунгов кругов 1-2 (PROGRESS 7.83) плюс сорок
+    // рунгов коридора (7.86) — шестьдесят. Длина всего манифеста НЕ
+    // фиксируется литералом намеренно — новые порции приезжают правкой
+    // ДАННЫХ, и тест, который надо править вместе с ними, ловил бы не
+    // дефект, а сам факт правки. А вот применённое обязано совпадать с
+    // продом: расхождение здесь однажды уже стоило бы 38 удалённых
+    // строк (PROGRESS 7.101).
+    expect(DENSITY_SPLITS.filter((s) => s.applied)).toHaveLength(60);
+    expect(DENSITY_SPLITS.length).toBeGreaterThanOrEqual(60);
     // Не `sequence > 10`: C1/10 платный (у C1 бесплатных рунгов нет), и
     // повтор правила своими словами именно на нём и ошибался.
     for (const s of DENSITY_SPLITS) {
@@ -111,11 +114,15 @@ describe("the redistribution manifest", () => {
       );
       expect(densityTailCount(level)).toBe(expected);
     }
-    // Круги 1-2 дописали в хвост B2 десять строк, B1 одну, C1 девять.
+    // Круги 1-2 дописали в хвост B2 десять строк, B1 одну, C1 девять;
+    // сорок рунгов коридора (7.86) — ещё B2 двенадцать, B1 восемь,
+    // C1 восемнадцать. Итого 58 хвостов на 60 применённых записей: два
+    // рунга починились одной сменой размера доски и не дали ни строки.
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
-    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(10);
-    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(1);
-    expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(9);
+    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(22);
+    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(9);
+    expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(27);
+    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(58);
     expect(densityTailCount("A1")).toBe(0);
   });
 

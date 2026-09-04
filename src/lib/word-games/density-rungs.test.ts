@@ -14,6 +14,7 @@ import {
 } from "./density-rungs";
 import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 import { isFreeWordGamePuzzle } from "./free-tier";
+import { BOARD_SIZES } from "./quality";
 
 describe("density-rungs manifest", () => {
   it("promises exactly as many tail rungs as it promises parts", () => {
@@ -74,6 +75,44 @@ describe("density-rungs manifest", () => {
       expect(densityTailCount(level)).toBe(densityTails(level).length);
     }
     expect(densityTailCount("A1")).toBe(0);
+  });
+
+  // Добавлено 03.09.2026 (PROGRESS 7.101). Размер доски перестал быть
+  // наследством и стал ЧАСТЬЮ манифеста (7.85), а сторож на него так и
+  // не завели: `sizes` мог разойтись с `parts` или назвать сторону,
+  // которой банк не держит, и поймалось бы это только у прода.
+  it("gives every part a side, and only a side the bank actually has", () => {
+    for (const s of DENSITY_SPLITS) {
+      expect(s.sizes, `${s.level}/${s.sequence}`).toHaveLength(s.parts);
+      for (const size of s.sizes) {
+        expect(BOARD_SIZES, `${s.level}/${s.sequence}`).toContain(size);
+      }
+    }
+  });
+
+  // Смена размера доски — часть, не создающая строки (7.85). Раньше
+  // такой записи в манифесте не бывало, и `parts: 1` с непустым хвостом
+  // ничем не отлавливался.
+  it("asks for no tail when one board is enough", () => {
+    const sizeOnly = DENSITY_SPLITS.filter((s) => s.parts === 1);
+    expect(sizeOnly.length).toBeGreaterThan(0);
+    for (const s of sizeOnly) expect(s.tailSequences, `${s.level}/${s.sequence}`).toEqual([]);
+  });
+
+  // Сторож против ровно того расхождения, которое уже случилось:
+  // код-PR захода 7.85/7.86 не был смёржен, `DENSITY_SPLITS` в main
+  // описывал 20 записей при 78 строках, тронутых в проде, и первый
+  // полный прогон генератора удалил бы 38 из них как «устаревшие»
+  // (PROGRESS 7.101). Числа тут — про ПРИМЕНЁННОЕ, то есть про то, что
+  // прод носит прямо сейчас; неприменённые порции сюда не входят
+  // намеренно.
+  it("describes every row already written to production", () => {
+    const applied = DENSITY_SPLITS.filter((s) => s.applied);
+    expect(applied).toHaveLength(60);
+    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(58);
+    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(9);
+    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(22);
+    expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(27);
   });
 
   it("owns exactly the rungs it names, and only for WORD_SEARCH", () => {

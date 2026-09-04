@@ -1,5 +1,12 @@
-// The twenty over-packed WORD_SEARCH rungs that prisma/redistribute-word-search.ts
-// spreads across more grids, and the tail sequences the leftovers live in.
+// The WORD_SEARCH rungs prisma/redistribute-word-search.ts re-lays — on a
+// board of a different size, and across more boards when one is not
+// enough — plus the tail sequences the leftovers live in.
+//
+// Three groups, in the order they were decided (all of them stay here
+// forever, applied or not — see `applied`):
+//   ·  20 — разгрузка по порогу 80%/3 (PROGRESS 7.83), записаны 02.09;
+//   ·  40 — сорок худших по коридору (PROGRESS 7.86), записаны 02.09;
+//   · 124 — порция 1 коридора (PROGRESS 7.101), ЕЩЁ НЕ ЗАПИСАНА.
 //
 // ONE manifest, read by two scripts that must agree:
 //
@@ -15,11 +22,15 @@
 // The numbers below were measured ON PRODUCTION on 2026-09-02 by
 // prisma/build-density-manifest.ts — see PROGRESS.md 7.83.
 //
-// Every entry is a PAID rung (sequence > 10) on purpose. The free rungs
-// 1-10 are themed (topics.ts) and are the ones in sitemap.xml; splitting a
-// themed rung would break the promise its title makes, and the tail rungs
-// are all far past 10, so isFreeWordGamePuzzle stays exactly as it was and
-// no new URL enters the sitemap.
+// НИ ОДНА запись не трогает рунг из бесплатной десятки (sequence <= 10
+// при уровне не C1). Это не свойство отбора «так вышло», а инвариант со
+// своим тестом (density-rungs.test.ts), и держится он на двух разных
+// причинах сразу: такие рунги тематические (topics.ts), и деление
+// сломало бы обещание заголовка; и они же — единственные, чей
+// `updatedAt` попадает в <lastmod> sitemap.xml, то есть единственные,
+// после которых файл перестаёт быть побайтово тем же. Набор URL в
+// sitemap при этом не меняется никогда: он выведен из констант
+// (free-tier.ts), а не из базы, и хвостовые номера все далеко за 10.
 import type { FlashcardLevel } from "@/lib/flashcards/types";
 
 export interface DensitySplit {
@@ -105,6 +116,213 @@ export const DENSITY_SPLITS: readonly DensitySplit[] = [
   { level: "B2", sequence: 211, parts: 2, sizes: [16, 16], tailSequences: [336], applied: "2026-09-02" },
   { level: "B2", sequence: 65, parts: 2, sizes: [16, 16], tailSequences: [337], applied: "2026-09-02" },
   { level: "C1", sequence: 90, parts: 2, sizes: [16, 16], tailSequences: [249], applied: "2026-09-02" },
+
+  // Сорок рунгов коридора (PROGRESS 7.86), УЖЕ ЗАПИСАННЫЕ В ПРОД 02.09.2026.
+  //
+  // Почему их здесь не было и почему это была дыра, а не косметика.
+  // Заход 7.85/7.86 разошёлся на два PR: код (правило коридора, выбор
+  // размера доски, эти сорок записей) и данные (снимок банка «после»).
+  // Смёржен был ТОЛЬКО второй. В итоге прод носит 78 строк, которых
+  // манифест не описывает, а `maxWordSearchSequence` в
+  // prisma/generate-word-games.ts считается как straight + star +
+  // densityTailCount(level) — то есть первый же полный прогон генератора
+  // удалил бы как «устаревшие» B1 564–571, B2 338–349 и C1 250–267,
+  // ровно 38 строк, и слова из них исчезли бы с уровня насовсем. Это та
+  // самая ловушка, ради которой densityTailCount вообще написан.
+  //
+  // Числа взяты не из головы: docs/density-manifest-prod-2026-09-02-round3.json
+  // (замер, по которому шла запись), и каждая строка сверена с боевой
+  // базой 03.09.2026 — 40 из 40 источников совпали по id и по стороне
+  // доски, 38 из 38 хвостов совпали по стороне и по флагам
+  // (premiumOnly/curved) со своим источником.
+  { level: "C1", sequence: 140, parts: 2, sizes: [14, 18], tailSequences: [250], applied: "2026-09-02" },
+  { level: "B2", sequence: 139, parts: 2, sizes: [16, 18], tailSequences: [338], applied: "2026-09-02" },
+  { level: "C1", sequence: 69, parts: 2, sizes: [14, 18], tailSequences: [251], applied: "2026-09-02" },
+  { level: "C1", sequence: 70, parts: 2, sizes: [14, 18], tailSequences: [252], applied: "2026-09-02" },
+  { level: "C1", sequence: 9, parts: 2, sizes: [14, 18], tailSequences: [253], applied: "2026-09-02" },
+  { level: "B2", sequence: 17, parts: 2, sizes: [14, 18], tailSequences: [339], applied: "2026-09-02" },
+  { level: "B2", sequence: 209, parts: 2, sizes: [14, 18], tailSequences: [340], applied: "2026-09-02" },
+  { level: "C1", sequence: 166, parts: 2, sizes: [14, 18], tailSequences: [254], applied: "2026-09-02" },
+  { level: "B1", sequence: 67, parts: 2, sizes: [14, 18], tailSequences: [564], applied: "2026-09-02" },
+  { level: "B2", sequence: 164, parts: 2, sizes: [16, 16], tailSequences: [341], applied: "2026-09-02" },
+  { level: "B2", sequence: 236, parts: 2, sizes: [14, 18], tailSequences: [342], applied: "2026-09-02" },
+  { level: "B2", sequence: 41, parts: 2, sizes: [12, 18], tailSequences: [343], applied: "2026-09-02" },
+  { level: "C1", sequence: 12, parts: 2, sizes: [14, 18], tailSequences: [255], applied: "2026-09-02" },
+  { level: "C1", sequence: 143, parts: 2, sizes: [12, 18], tailSequences: [256], applied: "2026-09-02" },
+  { level: "B1", sequence: 259, parts: 2, sizes: [14, 18], tailSequences: [565], applied: "2026-09-02" },
+  { level: "B1", sequence: 306, parts: 2, sizes: [14, 18], tailSequences: [566], applied: "2026-09-02" },
+  { level: "B2", sequence: 165, parts: 2, sizes: [14, 18], tailSequences: [344], applied: "2026-09-02" },
+  { level: "B1", sequence: 188, parts: 2, sizes: [14, 18], tailSequences: [567], applied: "2026-09-02" },
+  { level: "B1", sequence: 355, parts: 2, sizes: [14, 18], tailSequences: [568], applied: "2026-09-02" },
+  { level: "C1", sequence: 135, parts: 2, sizes: [14, 18], tailSequences: [257], applied: "2026-09-02" },
+  { level: "C1", sequence: 118, parts: 2, sizes: [14, 18], tailSequences: [258], applied: "2026-09-02" },
+  { level: "C1", sequence: 46, parts: 2, sizes: [14, 18], tailSequences: [259], applied: "2026-09-02" },
+  { level: "B2", sequence: 38, parts: 2, sizes: [10, 18], tailSequences: [345], applied: "2026-09-02" },
+  { level: "A2", sequence: 162, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-02" },
+  { level: "C1", sequence: 116, parts: 2, sizes: [14, 18], tailSequences: [260], applied: "2026-09-02" },
+  { level: "B2", sequence: 136, parts: 2, sizes: [14, 18], tailSequences: [346], applied: "2026-09-02" },
+  { level: "C1", sequence: 160, parts: 2, sizes: [14, 18], tailSequences: [261], applied: "2026-09-02" },
+  { level: "C1", sequence: 93, parts: 2, sizes: [14, 18], tailSequences: [262], applied: "2026-09-02" },
+  { level: "C1", sequence: 14, parts: 2, sizes: [10, 18], tailSequences: [263], applied: "2026-09-02" },
+  { level: "B2", sequence: 162, parts: 2, sizes: [14, 18], tailSequences: [347], applied: "2026-09-02" },
+  { level: "C1", sequence: 162, parts: 2, sizes: [14, 18], tailSequences: [264], applied: "2026-09-02" },
+  { level: "B2", sequence: 116, parts: 2, sizes: [14, 18], tailSequences: [348], applied: "2026-09-02" },
+  { level: "B2", sequence: 210, parts: 2, sizes: [14, 18], tailSequences: [349], applied: "2026-09-02" },
+  { level: "B1", sequence: 282, parts: 2, sizes: [14, 18], tailSequences: [569], applied: "2026-09-02" },
+  { level: "B1", sequence: 356, parts: 2, sizes: [12, 18], tailSequences: [570], applied: "2026-09-02" },
+  { level: "C1", sequence: 67, parts: 2, sizes: [12, 18], tailSequences: [265], applied: "2026-09-02" },
+  { level: "C1", sequence: 40, parts: 2, sizes: [12, 18], tailSequences: [266], applied: "2026-09-02" },
+  { level: "B2", sequence: 49, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-02" },
+  { level: "B1", sequence: 238, parts: 2, sizes: [12, 18], tailSequences: [571], applied: "2026-09-02" },
+  { level: "C1", sequence: 47, parts: 2, sizes: [12, 18], tailSequences: [267], applied: "2026-09-02" },
+
+  // ---- ПОРЦИЯ 1 коридора (PROGRESS 7.101), ЕЩЁ НЕ ЗАПИСАНА ----
+  //
+  // Признак порции: пазл чинится ОДНОЙ сменой размера доски (parts: 1),
+  // новая сторона не больше 16, и рунг не входит в те, что видит аноним
+  // и Google (isFreeWordGamePuzzle: sequence <= 10 при уровне не C1).
+  //
+  // Почему именно она первая — числом, а не по вкусу:
+  //   · новых строк 0, новых URL 0, доля Premium не двигается вовсе
+  //     (31,3% до и после);
+  //   · ни одна доска не становится шире 16, а таких банк держит 1396
+  //     штук уже сегодня — нового вида игры на телефоне не появляется;
+  //   · 115 досок из 124 УМЕНЬШАЮТСЯ (16→14, 16→12, 16→10), 4 растут,
+  //     5 остаются той же стороны и перекладываются;
+  //   · sitemap.xml и robots.txt после неё обязаны остаться побайтово
+  //     теми же файлами — ни один затронутый рунг в sitemap не входит.
+  //
+  // Медиана занятости порции 39,8% → 56,1%: это НЕ перегруженные пазлы,
+  // а разрежённые — доска велика для списка слов, и лечится это именно
+  // размером доски, а не добавлением слов (PROGRESS 7.85, обоснование
+  // нижней границы коридора 45%).
+  //
+  // Пересчитывается `npm run report:word-search-portions -- --emit=1`
+  // по той базе, против которой запущен.
+  { level: "A1", sequence: 11, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 13, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 16, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 18, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 19, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 20, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 21, parts: 1, sizes: [10], tailSequences: [] },
+  { level: "A1", sequence: 26, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 31, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 33, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 34, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 37, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 39, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 53, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 54, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 55, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 56, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 57, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 72, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 73, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 74, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 75, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 77, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 78, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 79, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 89, parts: 1, sizes: [16], tailSequences: [] },
+  { level: "A1", sequence: 101, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 103, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 104, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 111, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 122, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 124, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 126, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 127, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 128, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 129, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A1", sequence: 130, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 131, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A1", sequence: 137, parts: 1, sizes: [16], tailSequences: [] },
+  { level: "A2", sequence: 31, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 32, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 33, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 34, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 35, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 36, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 37, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 41, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 53, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 54, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 75, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 78, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 79, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 80, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 81, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 82, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 101, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 103, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 105, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 110, parts: 1, sizes: [16], tailSequences: [] },
+  { level: "A2", sequence: 111, parts: 1, sizes: [16], tailSequences: [] },
+  { level: "A2", sequence: 119, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 120, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 125, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 126, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 127, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 128, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 149, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 150, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 152, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 155, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 175, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 195, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 196, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 197, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 198, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 199, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 200, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 202, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 204, parts: 1, sizes: [16], tailSequences: [] },
+  { level: "A2", sequence: 222, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 223, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "A2", sequence: 239, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 240, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 246, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 247, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 270, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 271, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 272, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 280, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "A2", sequence: 293, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 50, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 51, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 52, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 53, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 54, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 55, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 56, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 57, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 79, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 102, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 103, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 105, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 126, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 127, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 152, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 221, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 223, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 247, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 270, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 271, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B1", sequence: 366, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 367, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 388, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B1", sequence: 389, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "B2", sequence: 31, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B2", sequence: 32, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B2", sequence: 33, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B2", sequence: 103, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B2", sequence: 125, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "B2", sequence: 126, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "C1", sequence: 1, parts: 1, sizes: [10], tailSequences: [] },
+  { level: "C1", sequence: 2, parts: 1, sizes: [12], tailSequences: [] },
+  { level: "C1", sequence: 3, parts: 1, sizes: [14], tailSequences: [] },
+  { level: "C1", sequence: 4, parts: 1, sizes: [16], tailSequences: [] },
 ];
 
 /** How many sequences each level's WORD_SEARCH ladder gains beyond what
