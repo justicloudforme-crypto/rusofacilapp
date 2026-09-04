@@ -1559,40 +1559,13 @@ test("crossword: одно собранное слово поднимает сч�
   await expect(breakdown).toHaveText(`Horizontales: ${across} de ${across} · verticales: ${down} de ${down}`);
 });
 
+
 /**
- * ЧЕСТНОСТЬ ЗАЧЁТА — замер, а не запрет.
- *
- * Букву в кроссворде можно подобрать перебором, глядя на красное. Этот
- * тест не мешает этому и ничего не чинит: он ЗАКРЕПЛЯЕТ ЧИСЛАМИ, что
- * именно засчитывается и в какой момент, чтобы следующая правка не
- * изменила ответ молча.
- *
- * Что он утверждает:
- *   1. день занятия ставится ОТКРЫТИЕМ страницы, до первой буквы —
- *      `markStudyDayVisit("word-game")` в теле серверного компонента
- *      (src/app/[lang]/word-games/[type]/[level]/[sequence]/page.tsx);
- *   2. ни решение, ни перебор не трогают ни статистику выученных слов
- *      (`totalKnown`), ни интервальное повторение (`FlashcardProgress`,
- *      коробки Лейтнера) — единственный писатель этих строк
- *      /api/flashcard-progress, и кроссворд его не зовёт.
+ * Дни «занимался» на календаре /profile — сколько их у этого аккаунта
+ * прямо сейчас. Читается со страницы, а не из базы: тест обязан видеть то
+ * же, что видит игрок.
  */
-test("crossword: открытие засчитывает день, а перебор не трогает ни выученные слова, ни карточки", async ({
-  page,
-}) => {
-  const summaryBefore = await (
-    await page.context().request.post("/api/flashcards/summary", { data: { category: "all", entries: [] } })
-  ).json();
-  const progressBefore = await (await page.context().request.get("/api/flashcard-progress")).json();
-  expect(progressBefore.progress, "аккаунт заведён только что — карточек быть не должно").toEqual({});
-
-  // 1. Открыть и НЕ НАБРАТЬ НИ ОДНОЙ БУКВЫ.
-  await page.goto("/es/word-games/CROSSWORD/A1/1");
-  await expect(page.locator("input[aria-label^='row']").first()).toBeVisible();
-  const typed = await page
-    .locator("input[aria-label^='row']")
-    .evaluateAll((els) => els.filter((el) => (el as HTMLInputElement).value !== "").length);
-  expect(typed, "тест обязан не набрать ничего — иначе он мерит не то").toBe(0);
-
+async function activeStudyDays(page: Page): Promise<string[]> {
   await page.goto("/es/profile");
   await page.waitForLoadState("networkidle");
   const greeting = page.locator('[role="dialog"][aria-modal="true"]');
@@ -1600,24 +1573,82 @@ test("crossword: открытие засчитывает день, а переб
     await greeting.click({ position: { x: 4, y: 4 } }).catch(() => {});
     await greeting.waitFor({ state: "detached", timeout: 3000 }).catch(() => {});
   }
-  const activeDays = await page
+  return page
     .locator("[data-date][data-state='active']")
-    .evaluateAll((els) => els.map((el) => el.getAttribute("data-date")));
-  expect(activeDays, "день занятия ставится ОТКРЫТИЕМ, до первой буквы").toHaveLength(1);
-  console.log(`  день занятия после открытия без единой буквы: ${JSON.stringify(activeDays)}`);
+    .evaluateAll((els) => els.map((el) => el.getAttribute("data-date") ?? ""));
+}
 
-  // 2. Решить ПЕРЕБОРОМ — ровно то, что делает игрок, глядя на красное.
+/**
+ * ЧЕСТНОСТЬ ЗАЧЁТА: день занятия ставит ПЕРВАЯ БУКВА, а не открытие.
+ *
+ * До 03.09.2026 день ставился в теле серверного компонента страницы
+ * (`markStudyDayVisit("word-game")`), то есть открытие пазла без единого
+ * нажатия давало полный день на календаре — замерено разделом 7.98.
+ * Решение владельца: зачёт переносится на первую введённую букву. Второй
+ * путь — зачёт при решении (`WordGameProgress.completedAt` как источник
+ * активности, src/lib/streaks.ts) — не менялся, и третий шаг ниже это
+ * закрепляет: решение НЕ добавляет второй день.
+ *
+ * Три числа, ради которых тест написан: 0 → 1 → 1.
+ *
+ * Заодно (не менялось, замер закреплён из 7.98): ни решение, ни перебор не
+ * трогают ни статистику выученных слов (`totalKnown`), ни интервальное
+ * повторение — единственный писатель этих строк /api/flashcard-progress, и
+ * кроссворд его не зовёт.
+ */
+test("crossword: день ставит первая буква, а не открытие; решение не добавляет второй день", async ({ page }) => {
+  const summaryBefore = await (
+    await page.context().request.post("/api/flashcards/summary", { data: { category: "all", entries: [] } })
+  ).json();
+  const progressBefore = await (await page.context().request.get("/api/flashcard-progress")).json();
+  expect(progressBefore.progress, "аккаунт заведён только что — карточек быть не должно").toEqual({});
+
+  // 1. Открыть и НЕ НАБРАТЬ НИ ОДНОЙ БУКВЫ → 0 дней.
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
+  await expect(page.locator("input[aria-label^='row']").first()).toBeVisible();
+  const typed = await page
+    .locator("input[aria-label^='row']")
+    .evaluateAll((els) => els.filter((el) => (el as HTMLInputElement).value !== "").length);
+  expect(typed, "тест обязан не набрать ничего — иначе он мерит не то").toBe(0);
+
+  const afterOpen = await activeStudyDays(page);
+  expect(afterOpen, "открытие без единой буквы днём занятия НЕ является").toHaveLength(0);
+  console.log(`  дней после открытия без единой буквы: ${afterOpen.length}`);
+
+  // 2. Одна буква — любая, хоть неверная → 1 день.
   await page.goto("/es/word-games/CROSSWORD/A1/1");
   const cells = await readCrosswordCells(page);
   const firstCell = page.getByLabel(`row ${cells[0].row + 1} col ${cells[0].col + 1}`, { exact: true });
-  const [checkRequest] = await Promise.all([
-    page.waitForRequest((r) => r.url().includes("/api/word-games/check") && r.method() === "POST"),
+  // waitForResponse, НЕ waitForRequest: запрос, который только уехал, можно
+  // оборвать навигацией на /profile, и тогда отметка дня не случится
+  // вообще. Так оно и вышло на WebKit при первом прогоне этого теста —
+  // Chromium успевал, WebKit нет. Ждём ответ и проверяем его код.
+  const [checkResponse] = await Promise.all([
+    page.waitForResponse((r) => r.url().includes("/api/word-games/check") && r.request().method() === "POST"),
     firstCell.fill("а"),
   ]);
-  const puzzleId = (JSON.parse(checkRequest.postData() ?? "{}") as { puzzleId?: string }).puzzleId;
+  expect(checkResponse.status(), "первая буква обязана быть принята сервером").toBe(200);
+  const puzzleId = (JSON.parse(checkResponse.request().postData() ?? "{}") as { puzzleId?: string }).puzzleId;
+  expect(puzzleId, "puzzleId from the board's own /check call").toBeTruthy();
+
+  // Отметка дня отложена через after() — она уезжает ПОСЛЕ того, как ответ
+  // /check уже у игрока (иначе каждое нажатие ждало бы Turso). Поэтому
+  // опрос с потолком, а не фиксированная пауза: тест ждёт события, а не
+  // времени, и падает, если события не будет.
+  await expect
+    .poll(async () => (await activeStudyDays(page)).length, { timeout: 15_000 })
+    .toBe(1);
+  console.log(`  дней после ОДНОЙ буквы: 1`);
+
+  // 3. Решить целиком → всё ещё 1 день, не 2.
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
   const solution = await solveCrossword(page, puzzleId!, cells);
   await fillCrossword(page, solution);
   await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+
+  const afterSolve = await activeStudyDays(page);
+  expect(afterSolve, "решение того же дня не заводит второй день").toHaveLength(1);
+  console.log(`  дней после полного решения: ${afterSolve.length} (${JSON.stringify(afterSolve)})`);
 
   const summaryAfter = await (
     await page.context().request.post("/api/flashcards/summary", { data: { category: "all", entries: [] } })
@@ -1630,4 +1661,109 @@ test("crossword: открытие засчитывает день, а переб
     summaryBefore.totalKnown,
   );
   expect(progressAfter.progress, "и не заводит карточек в интервальном повторении").toEqual({});
+});
+
+/**
+ * ЖИВАЯ ИГРА НЕ УПИРАЕТСЯ В ЛИМИТ — прогон, а не рассуждение.
+ *
+ * /api/word-games/check ограничен 120 запросами в минуту с одного
+ * источника (src/app/api/word-games/check/route.ts). Этот тест играет
+ * ЦЕЛУЮ доску руками, с исправлением каждой клетки — то есть тратит вдвое
+ * больше запросов, чем нужно на решение, и делает это со скоростью
+ * машины, а не человека, — и утверждает, что ни один запрос не отбит.
+ *
+ * Живой замер на проде для сравнения (03.09.2026, 4 настоящих решения
+ * кроссвордов в WordGameProgress): 14,2–26,7 запроса в минуту. Всё, что
+ * ниже, идёт быстрее любого из них.
+ */
+test("crossword: живая игра с исправлениями не получает ни одного отказа по частоте", async ({ page }) => {
+  const refused: number[] = [];
+  let sent = 0;
+  page.on("response", (r) => {
+    if (!r.url().includes("/api/word-games/check")) return;
+    sent += 1;
+    if (r.status() === 429) refused.push(sent);
+  });
+
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
+  const cells = await readCrosswordCells(page);
+  const firstCell = page.getByLabel(`row ${cells[0].row + 1} col ${cells[0].col + 1}`, { exact: true });
+  const [checkRequest] = await Promise.all([
+    page.waitForRequest((r) => r.url().includes("/api/word-games/check") && r.method() === "POST"),
+    firstCell.fill("а"),
+  ]);
+  const puzzleId = (JSON.parse(checkRequest.postData() ?? "{}") as { puzzleId?: string }).puzzleId;
+  const solution = await solveCrossword(page, puzzleId!, cells);
+
+  // Сначала заведомо неверная буква в каждую клетку, потом верная — это и
+  // есть «набор нескольких слов подряд, включая исправления».
+  const started = Date.now();
+  const wrongFor = (right: string) => CYRILLIC_BY_FREQUENCY.find((l) => l !== right)!;
+  const wrongPass = new Map([...solution].map(([key, letter]) => [key, wrongFor(letter)]));
+  await fillCrossword(page, wrongPass);
+  await fillCrossword(page, solution);
+  const elapsedMs = Date.now() - started;
+
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+  console.log(
+    `  живая игра: ${sent} запросов /check за ${(elapsedMs / 1000).toFixed(1)} с ` +
+      `(${Math.round((sent / elapsedMs) * 60_000)}/мин), отказов: ${refused.length}`,
+  );
+  expect(refused, "живая игра не должна упираться в лимит ни разу").toEqual([]);
+  expect(sent, "тест обязан реально сходить на /check дважды на клетку").toBeGreaterThan(cells.length);
+});
+
+/**
+ * СКРИПТ, ВЫЧЕРПЫВАЮЩИЙ ПАЗЛ ПЕРЕБОРОМ, УПИРАЕТСЯ — прогон.
+ *
+ * Перебор по одной клетке (то, что делает скрипт, а не игрок: одна клетка,
+ * буквы алфавита подряд) на пазле из 21 клетки стоит около 170 запросов —
+ * замерено разделом 7.98 и подтверждено на проде 03.09.2026, где отказ
+ * пришёл на 150-м запросе, а восстановить успели 18 клеток из 21.
+ *
+ * Здесь тот же перебор и то же утверждение: отказ ПРИХОДИТ. Число запросов
+ * до него печатается. Потолок 241 — это худший случай ограничителя с
+ * фиксированным окном (два соседних окна по 120), а не оценка на глаз.
+ *
+ * Чего этот тест НЕ утверждает, и это важно: ограничитель частоты не
+ * закрывает оракульность. Пакетный вариант того же скрипта — все клетки в
+ * одном запросе, по одной букве алфавита за запрос — снимает решение за 26
+ * запросов (замерено на проде), то есть НИКОГДА не доходит до лимита,
+ * который живая игра пережила бы. См. отчёт 7.99.
+ */
+test("crossword: перебор по одной клетке получает отказ по частоте", async ({ page }) => {
+  await page.goto("/es/word-games/CROSSWORD/A1/1");
+  const cells = await readCrosswordCells(page);
+  const firstCell = page.getByLabel(`row ${cells[0].row + 1} col ${cells[0].col + 1}`, { exact: true });
+  const [checkRequest] = await Promise.all([
+    page.waitForRequest((r) => r.url().includes("/api/word-games/check") && r.method() === "POST"),
+    firstCell.fill("а"),
+  ]);
+  const puzzleId = (JSON.parse(checkRequest.postData() ?? "{}") as { puzzleId?: string }).puzzleId;
+
+  let sent = 1; // клавиша выше — тоже запрос с этого же адреса
+  let firstRefusal: number | null = null;
+  let recovered = 0;
+  outer: for (const cell of cells) {
+    for (const letter of CYRILLIC_BY_FREQUENCY) {
+      const response = await page.request.post("/api/word-games/check", {
+        data: { puzzleId, guesses: [{ row: cell.row, col: cell.col, letter }] },
+      });
+      sent += 1;
+      if (response.status() === 429) {
+        firstRefusal = sent;
+        break outer;
+      }
+      const { results } = (await response.json()) as { results: { correct: boolean }[] };
+      if (results[0].correct) {
+        recovered += 1;
+        break;
+      }
+    }
+  }
+
+  console.log(`  перебор: отказ на запросе №${firstRefusal}, восстановлено клеток ${recovered} из ${cells.length}`);
+  expect(firstRefusal, "перебор по одной клетке обязан упереться в ограничитель").not.toBeNull();
+  expect(firstRefusal!, "не позже двух полных окон ограничителя").toBeLessThanOrEqual(241);
+  expect(recovered, "и упереться ДО того, как решение восстановлено целиком").toBeLessThan(cells.length);
 });
