@@ -26,6 +26,39 @@ import type { Page } from "@playwright/test";
  * request API follows and reports as a plain 200 OK, so response.ok()
  * alone doesn't catch it — only the final URL's error= param does.
  */
+/**
+ * Registers a fresh throwaway account and stops there — signed in, no
+ * subscription of any kind. The other half of the entitlement matrix that
+ * loginWithSubscription covers.
+ *
+ * It exists so that "signed in, but not a subscriber" never again has to be
+ * checked by hand against the LIVE database. It was, twice: production
+ * still carries the `e2e-manual-check-*@example.test` rows those checks
+ * left behind, because the only way anyone had to produce that state was to
+ * create a real account on the real site. A throwaway account here produces
+ * exactly the same state against the suite's own database, and Playwright
+ * throws it away with the browser context.
+ *
+ * No retry loop and no grant, deliberately. The retry in
+ * loginWithSubscription is there for the subscription write's visibility
+ * lag, and there is no write here to wait for; /api/auth/register's 10/min
+ * cap is bypassed under E2E_TEST_SEED (playwright.config.ts), which is the
+ * only environment this runs in.
+ */
+export async function loginWithoutSubscription(page: Page): Promise<void> {
+  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
+  const response = await page.context().request.post("/api/auth/register", {
+    form: { email, password: "TestPass123!", lang: "es", redirectTo: "/es" },
+  });
+  // Same trap as above: a refused registration answers 303 to
+  // /register?error=…, which the request context follows and reports as a
+  // plain 200 — only the final URL tells the truth.
+  const error = new URL(response.url()).searchParams.get("error");
+  if (!response.ok() || error) {
+    throw new Error(`e2e register (no subscription) failed: ${response.status()} ${error ?? response.url()}`);
+  }
+}
+
 export async function loginWithSubscription(
   page: Page,
   options: { tier?: "standard" | "premium" } = {},
