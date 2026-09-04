@@ -108,7 +108,7 @@ describe("density-rungs manifest", () => {
   // намеренно.
   it("describes every row already written to production", () => {
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
-    expect(applied).toHaveLength(204);
+    expect(applied).toHaveLength(605);
     expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(58);
     expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(9);
     expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(22);
@@ -130,26 +130,36 @@ describe("density-rungs manifest", () => {
     ).sort()).toEqual([["A1", 39], ["A2", 51], ["B1", 24], ["B2", 6], ["C1", 4]]);
   });
 
-  // Пилот порции 2: двадцать рунгов, каждый — одна доска 18×18 и ноль
-  // новых строк. Сторож ровно на цену порции: если сюда однажды заедет
-  // запись с parts > 1, порция перестанет быть бесплатной по строкам и
-  // URL, а таблица в PROGRESS 7.106 будет врать молча. Утверждение
+  // Порция 2 целиком: 421 рунг, каждый — одна доска 18×18 и ноль новых
+  // строк. Сторож ровно на цену порции: если сюда однажды заедет запись
+  // с parts > 1, порция перестанет быть бесплатной по строкам и URL, а
+  // таблицы в PROGRESS 7.106 и 7.107 будут врать молча. Утверждение
   // адресуется группе по дате, а не «всем неприменённым»: с записью
   // 04.09 неприменённых не осталось вовсе, и версия «через !applied»
   // проходила бы на пустом множестве — тот самый ноль без контроля.
-  it("keeps the portion-2 pilot at zero new rows and one board each", () => {
-    const pilot = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-04");
-    expect(pilot).toHaveLength(20);
-    expect(pilot.every((s) => s.parts === 1)).toBe(true);
-    expect(pilot.every((s) => s.tailSequences.length === 0)).toBe(true);
-    expect(pilot.every((s) => s.sizes.length === 1 && s.sizes[0] === 18)).toBe(true);
-    expect(new Set(pilot.map((s) => s.level))).toEqual(new Set(["A1", "A2", "B1", "B2", "C1"]));
+  // Поэтому непустота группы проверяется отдельной строкой, ПЕРЕД
+  // утверждениями «каждый из них такой-то»: без неё все три `every`
+  // зелены на пустом массиве.
+  it("keeps all of portion 2 at zero new rows and one board each", () => {
+    const portion2 = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-04");
+    expect(portion2.length).toBeGreaterThan(0);
+    expect(portion2).toHaveLength(421);
+    expect(portion2.every((s) => s.parts === 1)).toBe(true);
+    expect(portion2.every((s) => s.tailSequences.length === 0)).toBe(true);
+    expect(portion2.every((s) => s.sizes.length === 1 && s.sizes[0] === 18)).toBe(true);
+    expect(new Set(portion2.map((s) => s.level))).toEqual(new Set(["A1", "A2", "B1", "B2", "C1"]));
+    // Разбивка по уровням — перемер против живого прода 04.09 (7.107):
+    // пилот A1 3 / A2 3 / B1 6 / B2 5 / C1 3 плюс остаток
+    // A1 20 / A2 86 / B1 140 / B2 95 / C1 60.
+    expect(Object.entries(
+      portion2.reduce<Record<string, number>>((a, s) => ({ ...a, [s.level]: (a[s.level] ?? 0) + 1 }), {}),
+    ).sort()).toEqual([["A1", 23], ["A2", 89], ["B1", 146], ["B2", 100], ["C1", 63]]);
   });
 
   // Весь манифест применён — значит прогон разгрузки без --only= сейчас
-  // не выбрал бы ни одного рунга, и это НАМЕРЕННО: остальные 401 рунг
-  // порции 2 в манифест не внесены и ждут решения владельца (7.106).
-  it("has nothing pending — the remaining 401 rungs are deliberately absent", () => {
+  // не выбрал бы ни одного рунга. Порции 3–5 в манифест НЕ внесены
+  // намеренно и ждут решения владельца (7.107).
+  it("has nothing pending — portions 3-5 are deliberately absent", () => {
     expect(DENSITY_SPLITS.filter((s) => !s.applied)).toHaveLength(0);
   });
 
