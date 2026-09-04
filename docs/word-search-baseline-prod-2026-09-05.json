@@ -2,15 +2,15 @@
  "source": "rusofacilapp-prod-vasilii-petrov-01.aws-us-west-2.turso.io",
  "takenAt": "2026-09-04",
  "bank": {
-  "puzzles": 2012,
+  "puzzles": 2015,
   "byLevel": {
    "A1": 198,
    "A2": 436,
-   "B1": 667,
-   "B2": 404,
+   "B1": 669,
+   "B2": 405,
    "C1": 307
   },
-  "idsSha256": "fb487533bd461b503b0c2620172121d026ad34fb9cc002b71b4e8a7f9d92008a"
+  "idsSha256": "e28b1e597499e3be3856035c9f716199dd854ac80cdf3af85d0a804ebe9e61f6"
  },
  "puzzles": {
   "WORD_SEARCH/B2/9": {
@@ -42,11 +42,6 @@
    "occupancy": 0.8438,
    "maxOverlap": 3,
    "severity": 0.9437
-  },
-  "WORD_SEARCH/B1/10": {
-   "occupancy": 0.8359,
-   "maxOverlap": 3,
-   "severity": 0.9359
   },
   "WORD_SEARCH/B2/133": {
    "occupancy": 0.8359,
@@ -108,11 +103,6 @@
    "maxOverlap": 2,
    "severity": 0.8906
   },
-  "WORD_SEARCH/A2/10": {
-   "occupancy": 0.7891,
-   "maxOverlap": 3,
-   "severity": 0.8891
-  },
   "WORD_SEARCH/B2/73": {
    "occupancy": 0.7891,
    "maxOverlap": 3,
@@ -147,11 +137,6 @@
    "occupancy": 0.8789,
    "maxOverlap": 2,
    "severity": 0.8789
-  },
-  "WORD_SEARCH/A2/9": {
-   "occupancy": 0.7656,
-   "maxOverlap": 3,
-   "severity": 0.8656
   },
   "WORD_SEARCH/C1/48": {
    "occupancy": 0.8633,
@@ -188,11 +173,6 @@
    "maxOverlap": 2,
    "severity": 0.8555
   },
-  "WORD_SEARCH/B2/10": {
-   "occupancy": 0.8549,
-   "maxOverlap": 2,
-   "severity": 0.8549
-  },
   "WORD_SEARCH/B2/143": {
    "occupancy": 0.8516,
    "maxOverlap": 2,
@@ -227,11 +207,6 @@
    "occupancy": 0.8438,
    "maxOverlap": 2,
    "severity": 0.8438
-  },
-  "WORD_SEARCH/B1/2": {
-   "occupancy": 0.74,
-   "maxOverlap": 3,
-   "severity": 0.84
   },
   "WORD_SEARCH/C1/144": {
    "occupancy": 0.8398,
@@ -288,11 +263,6 @@
    "maxOverlap": 2,
    "severity": 0.8125
   },
-  "WORD_SEARCH/B2/7": {
-   "occupancy": 0.8125,
-   "maxOverlap": 2,
-   "severity": 0.8125
-  },
   "WORD_SEARCH/C1/36": {
    "occupancy": 0.8086,
    "maxOverlap": 2,
@@ -308,50 +278,15 @@
    "maxOverlap": 2,
    "severity": 0.8008
   },
-  "WORD_SEARCH/B1/9": {
-   "occupancy": 0.7969,
-   "maxOverlap": 2,
-   "severity": 0.7969
-  },
   "WORD_SEARCH/C1/75": {
    "occupancy": 0.793,
    "maxOverlap": 2,
    "severity": 0.793
   },
-  "WORD_SEARCH/B1/7": {
-   "occupancy": 0.7852,
-   "maxOverlap": 2,
-   "severity": 0.7852
-  },
-  "WORD_SEARCH/B1/6": {
-   "occupancy": 0.6797,
-   "maxOverlap": 3,
-   "severity": 0.7797
-  },
-  "WORD_SEARCH/A1/10": {
-   "occupancy": 0.7695,
-   "maxOverlap": 1,
-   "severity": 0.7695
-  },
-  "WORD_SEARCH/B1/4": {
-   "occupancy": 0.6684,
-   "maxOverlap": 3,
-   "severity": 0.7684
-  },
   "WORD_SEARCH/C1/28": {
    "occupancy": 0.7617,
    "maxOverlap": 2,
    "severity": 0.7617
-  },
-  "WORD_SEARCH/A2/2": {
-   "occupancy": 0.66,
-   "maxOverlap": 3,
-   "severity": 0.76
-  },
-  "WORD_SEARCH/B1/8": {
-   "occupancy": 0.7539,
-   "maxOverlap": 2,
-   "severity": 0.7539
   },
   "WORD_SEARCH/A2/258": {
    "occupancy": 0.6481,
@@ -383,6 +318,11 @@
    "maxOverlap": 3,
    "severity": 0.742
   },
+  "WORD_SEARCH/A2/10": {
+   "occupancy": 0.6389,
+   "maxOverlap": 3,
+   "severity": 0.7389
+  },
   "WORD_SEARCH/B2/191": {
    "occupancy": 0.6389,
    "maxOverlap": 3,
@@ -408,27 +348,12 @@
    "maxOverlap": 3,
    "severity": 0.7367
   },
-  "WORD_SEARCH/B2/3": {
-   "occupancy": 0.7361,
-   "maxOverlap": 2,
-   "severity": 0.7361
-  },
   "WORD_SEARCH/B1/255": {
    "occupancy": 0.6358,
    "maxOverlap": 3,
    "severity": 0.7358
   },
-  "WORD_SEARCH/B2/1": {
-   "occupancy": 0.7344,
-   "maxOverlap": 2,
-   "severity": 0.7344
-  },
   "WORD_SEARCH/C1/11": {
-   "occupancy": 0.7305,
-   "maxOverlap": 2,
-   "severity": 0.7305
-  },
-  "WORD_SEARCH/B2/5": {
    "occupancy": 0.7305,
    "maxOverlap": 2,
    "severity": 0.7305
@@ -463,11 +388,6 @@
    "maxOverlap": 3,
    "severity": 0.7204
   },
-  "WORD_SEARCH/B1/1": {
-   "occupancy": 0.7188,
-   "maxOverlap": 2,
-   "severity": 0.7188
-  },
   "WORD_SEARCH/A2/208": {
    "occupancy": 0.6173,
    "maxOverlap": 3,
@@ -477,16 +397,6 @@
    "occupancy": 0.6173,
    "maxOverlap": 3,
    "severity": 0.7173
-  },
-  "WORD_SEARCH/B1/3": {
-   "occupancy": 0.7153,
-   "maxOverlap": 2,
-   "severity": 0.7153
-  },
-  "WORD_SEARCH/B2/4": {
-   "occupancy": 0.7143,
-   "maxOverlap": 2,
-   "severity": 0.7143
   },
   "WORD_SEARCH/B1/374": {
    "occupancy": 0.6111,
@@ -538,25 +448,10 @@
    "maxOverlap": 3,
    "severity": 0.7049
   },
-  "WORD_SEARCH/A2/4": {
-   "occupancy": 0.7041,
-   "maxOverlap": 2,
-   "severity": 0.7041
-  },
-  "WORD_SEARCH/B2/6": {
-   "occupancy": 0.7031,
-   "maxOverlap": 2,
-   "severity": 0.7031
-  },
   "WORD_SEARCH/B1/422": {
    "occupancy": 0.602,
    "maxOverlap": 3,
    "severity": 0.702
-  },
-  "WORD_SEARCH/B2/2": {
-   "occupancy": 0.7,
-   "maxOverlap": 2,
-   "severity": 0.7
   },
   "WORD_SEARCH/A2/46": {
    "occupancy": 0.5977,
@@ -588,16 +483,6 @@
    "maxOverlap": 2,
    "severity": 0.6875
   },
-  "WORD_SEARCH/A2/1": {
-   "occupancy": 0.6875,
-   "maxOverlap": 2,
-   "severity": 0.6875
-  },
-  "WORD_SEARCH/A1/9": {
-   "occupancy": 0.6875,
-   "maxOverlap": 1,
-   "severity": 0.6875
-  },
   "WORD_SEARCH/C1/101": {
    "occupancy": 0.5864,
    "maxOverlap": 3,
@@ -627,11 +512,6 @@
    "occupancy": 0.5802,
    "maxOverlap": 3,
    "severity": 0.6802
-  },
-  "WORD_SEARCH/A2/8": {
-   "occupancy": 0.6797,
-   "maxOverlap": 2,
-   "severity": 0.6797
   },
   "WORD_SEARCH/A2/167": {
    "occupancy": 0.5781,
@@ -692,11 +572,6 @@
    "occupancy": 0.5663,
    "maxOverlap": 3,
    "severity": 0.6663
-  },
-  "WORD_SEARCH/A2/3": {
-   "occupancy": 0.6597,
-   "maxOverlap": 2,
-   "severity": 0.6597
   },
   "WORD_SEARCH/C1/198": {
    "occupancy": 0.6597,
@@ -796,6 +671,11 @@
   "WORD_SEARCH/C1/110": {
    "occupancy": 0.6481,
    "maxOverlap": 1,
+   "severity": 0.6481
+  },
+  "WORD_SEARCH/B2/7": {
+   "occupancy": 0.6481,
+   "maxOverlap": 2,
    "severity": 0.6481
   },
   "WORD_SEARCH/B2/171": {
@@ -1488,6 +1368,11 @@
    "maxOverlap": 2,
    "severity": 0.6173
   },
+  "WORD_SEARCH/B1/8": {
+   "occupancy": 0.6173,
+   "maxOverlap": 2,
+   "severity": 0.6173
+  },
   "WORD_SEARCH/B1/361": {
    "occupancy": 0.6173,
    "maxOverlap": 1,
@@ -1504,6 +1389,11 @@
    "severity": 0.6173
   },
   "WORD_SEARCH/B2/170": {
+   "occupancy": 0.6173,
+   "maxOverlap": 2,
+   "severity": 0.6173
+  },
+  "WORD_SEARCH/B1/7": {
    "occupancy": 0.6173,
    "maxOverlap": 2,
    "severity": 0.6173
@@ -1562,6 +1452,11 @@
    "occupancy": 0.6172,
    "maxOverlap": 2,
    "severity": 0.6172
+  },
+  "WORD_SEARCH/B1/3": {
+   "occupancy": 0.5153,
+   "maxOverlap": 3,
+   "severity": 0.6153
   },
   "WORD_SEARCH/A2/163": {
    "occupancy": 0.6142,
@@ -1674,6 +1569,11 @@
    "severity": 0.6111
   },
   "WORD_SEARCH/B1/381": {
+   "occupancy": 0.6111,
+   "maxOverlap": 2,
+   "severity": 0.6111
+  },
+  "WORD_SEARCH/A2/9": {
    "occupancy": 0.6111,
    "maxOverlap": 2,
    "severity": 0.6111
@@ -2043,6 +1943,11 @@
    "maxOverlap": 1,
    "severity": 0.5988
   },
+  "WORD_SEARCH/B2/5": {
+   "occupancy": 0.5988,
+   "maxOverlap": 2,
+   "severity": 0.5988
+  },
   "WORD_SEARCH/A2/29": {
    "occupancy": 0.5977,
    "maxOverlap": 2,
@@ -2114,6 +2019,11 @@
    "severity": 0.5957
   },
   "WORD_SEARCH/A2/284": {
+   "occupancy": 0.5957,
+   "maxOverlap": 2,
+   "severity": 0.5957
+  },
+  "WORD_SEARCH/A1/10": {
    "occupancy": 0.5957,
    "maxOverlap": 2,
    "severity": 0.5957
@@ -2239,6 +2149,11 @@
    "severity": 0.5907
   },
   "WORD_SEARCH/B1/608": {
+   "occupancy": 0.4907,
+   "maxOverlap": 3,
+   "severity": 0.5907
+  },
+  "WORD_SEARCH/B1/669": {
    "occupancy": 0.4907,
    "maxOverlap": 3,
    "severity": 0.5907
@@ -2434,6 +2349,11 @@
    "severity": 0.5859
   },
   "WORD_SEARCH/C1/21": {
+   "occupancy": 0.5859,
+   "maxOverlap": 2,
+   "severity": 0.5859
+  },
+  "WORD_SEARCH/B1/4": {
    "occupancy": 0.5859,
    "maxOverlap": 2,
    "severity": 0.5859
@@ -3208,6 +3128,11 @@
    "maxOverlap": 2,
    "severity": 0.5664
   },
+  "WORD_SEARCH/B2/4": {
+   "occupancy": 0.5664,
+   "maxOverlap": 2,
+   "severity": 0.5664
+  },
   "WORD_SEARCH/C1/4": {
    "occupancy": 0.5664,
    "maxOverlap": 2,
@@ -3673,6 +3598,11 @@
    "maxOverlap": 2,
    "severity": 0.5556
   },
+  "WORD_SEARCH/B1/6": {
+   "occupancy": 0.5556,
+   "maxOverlap": 2,
+   "severity": 0.5556
+  },
   "WORD_SEARCH/C1/129": {
    "occupancy": 0.5556,
    "maxOverlap": 2,
@@ -4063,6 +3993,11 @@
    "maxOverlap": 2,
    "severity": 0.5463
   },
+  "WORD_SEARCH/B2/6": {
+   "occupancy": 0.5463,
+   "maxOverlap": 2,
+   "severity": 0.5463
+  },
   "WORD_SEARCH/C1/292": {
    "occupancy": 0.5463,
    "maxOverlap": 2,
@@ -4114,6 +4049,11 @@
    "severity": 0.5453
   },
   "WORD_SEARCH/B1/332": {
+   "occupancy": 0.5432,
+   "maxOverlap": 2,
+   "severity": 0.5432
+  },
+  "WORD_SEARCH/A2/8": {
    "occupancy": 0.5432,
    "maxOverlap": 2,
    "severity": 0.5432
@@ -4213,6 +4153,11 @@
    "maxOverlap": 2,
    "severity": 0.5417
   },
+  "WORD_SEARCH/B1/2": {
+   "occupancy": 0.5417,
+   "maxOverlap": 1,
+   "severity": 0.5417
+  },
   "WORD_SEARCH/C1/218": {
    "occupancy": 0.5417,
    "maxOverlap": 2,
@@ -4231,6 +4176,11 @@
   "WORD_SEARCH/B2/32": {
    "occupancy": 0.5408,
    "maxOverlap": 1,
+   "severity": 0.5408
+  },
+  "WORD_SEARCH/B2/3": {
+   "occupancy": 0.5408,
+   "maxOverlap": 2,
    "severity": 0.5408
   },
   "WORD_SEARCH/B2/272": {
@@ -4318,6 +4268,11 @@
    "maxOverlap": 2,
    "severity": 0.5391
   },
+  "WORD_SEARCH/A2/4": {
+   "occupancy": 0.5391,
+   "maxOverlap": 2,
+   "severity": 0.5391
+  },
   "WORD_SEARCH/B1/494": {
    "occupancy": 0.5391,
    "maxOverlap": 2,
@@ -4344,6 +4299,11 @@
    "severity": 0.5375
   },
   "WORD_SEARCH/B1/45": {
+   "occupancy": 0.537,
+   "maxOverlap": 2,
+   "severity": 0.537
+  },
+  "WORD_SEARCH/A1/9": {
    "occupancy": 0.537,
    "maxOverlap": 2,
    "severity": 0.537
@@ -5548,6 +5508,11 @@
    "maxOverlap": 2,
    "severity": 0.5069
   },
+  "WORD_SEARCH/B2/2": {
+   "occupancy": 0.5069,
+   "maxOverlap": 1,
+   "severity": 0.5069
+  },
   "WORD_SEARCH/A1/156": {
    "occupancy": 0.5069,
    "maxOverlap": 2,
@@ -6258,6 +6223,11 @@
    "maxOverlap": 1,
    "severity": 0.4931
   },
+  "WORD_SEARCH/B1/10": {
+   "occupancy": 0.4931,
+   "maxOverlap": 2,
+   "severity": 0.4931
+  },
   "WORD_SEARCH/B1/17": {
    "occupancy": 0.4931,
    "maxOverlap": 2,
@@ -6359,6 +6329,11 @@
    "severity": 0.4922
   },
   "WORD_SEARCH/B2/164": {
+   "occupancy": 0.4922,
+   "maxOverlap": 1,
+   "severity": 0.4922
+  },
+  "WORD_SEARCH/B2/10": {
    "occupancy": 0.4922,
    "maxOverlap": 1,
    "severity": 0.4922
@@ -6683,6 +6658,11 @@
    "maxOverlap": 2,
    "severity": 0.4861
   },
+  "WORD_SEARCH/A2/2": {
+   "occupancy": 0.4861,
+   "maxOverlap": 1,
+   "severity": 0.4861
+  },
   "WORD_SEARCH/B1/190": {
    "occupancy": 0.4861,
    "maxOverlap": 2,
@@ -6779,6 +6759,11 @@
    "severity": 0.4847
   },
   "WORD_SEARCH/C1/166": {
+   "occupancy": 0.4847,
+   "maxOverlap": 2,
+   "severity": 0.4847
+  },
+  "WORD_SEARCH/B1/9": {
    "occupancy": 0.4847,
    "maxOverlap": 2,
    "severity": 0.4847
@@ -7303,6 +7288,11 @@
    "maxOverlap": 2,
    "severity": 0.4784
   },
+  "WORD_SEARCH/B2/405": {
+   "occupancy": 0.4784,
+   "maxOverlap": 2,
+   "severity": 0.4784
+  },
   "WORD_SEARCH/A2/40": {
    "occupancy": 0.4766,
    "maxOverlap": 1,
@@ -7356,6 +7346,11 @@
   "WORD_SEARCH/B1/544": {
    "occupancy": 0.4766,
    "maxOverlap": 2,
+   "severity": 0.4766
+  },
+  "WORD_SEARCH/B1/668": {
+   "occupancy": 0.4766,
+   "maxOverlap": 1,
    "severity": 0.4766
   },
   "WORD_SEARCH/B2/337": {
@@ -7669,6 +7664,11 @@
    "severity": 0.47
   },
   "WORD_SEARCH/B1/367": {
+   "occupancy": 0.4694,
+   "maxOverlap": 2,
+   "severity": 0.4694
+  },
+  "WORD_SEARCH/A2/3": {
    "occupancy": 0.4694,
    "maxOverlap": 2,
    "severity": 0.4694
@@ -8252,6 +8252,21 @@
    "occupancy": 0.4609,
    "maxOverlap": 2,
    "severity": 0.4609
+  },
+  "WORD_SEARCH/A2/1": {
+   "occupancy": 0.46,
+   "maxOverlap": 2,
+   "severity": 0.46
+  },
+  "WORD_SEARCH/B1/1": {
+   "occupancy": 0.46,
+   "maxOverlap": 2,
+   "severity": 0.46
+  },
+  "WORD_SEARCH/B2/1": {
+   "occupancy": 0.46,
+   "maxOverlap": 2,
+   "severity": 0.46
   },
   "WORD_SEARCH/B1/87": {
    "occupancy": 0.46,

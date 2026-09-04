@@ -41,7 +41,7 @@ import { createHash } from "node:crypto";
  * «стало хуже» ровно те строки, которые порция и привела в коридор).
  * Поэтому путь меняется здесь, в одном месте, и оба скрипта едут за ним.
  */
-export const PROD_BASELINE_PATH = "docs/word-search-baseline-prod-2026-09-04.json";
+export const PROD_BASELINE_PATH = "docs/word-search-baseline-prod-2026-09-05.json";
 
 export interface BankFingerprint {
   /** Сколько строк WORD_SEARCH было в банке на момент снимка. */
