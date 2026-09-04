@@ -10,7 +10,17 @@
 // not translated UI chrome, same precedent as lesson grammar text
 // (src/lib/lessons/content.ts's own comment on why that's Spanish-only
 // regardless of interface language).
-export default function WhyLearnRussianBlurb() {
+/**
+ * `plural` — para el hub /juegos-para-aprender-ruso. El texto se escribió
+ * para las tres landings de UN juego, donde «como en este juego» señala la
+ * página en la que está el lector. En el hub no hay un juego al que
+ * señalar: la página lista tres juegos y seis cuadrículas temáticas, y el
+ * singular se queda sin referente. No es una errata de concordancia — la
+ * frase es correcta en las tres landings y solo falla aquí —, así que la
+ * variante viaja como prop y las otras tres páginas no cambian ni una
+ * letra.
+ */
+export default function WhyLearnRussianBlurb({ plural = false }: { plural?: boolean }) {
   return (
     <p className="mt-4 leading-7 text-foreground/70">
       El ruso es la lengua materna de más de 150 millones de personas y la
@@ -18,8 +28,9 @@ export default function WhyLearnRussianBlurb() {
       vez llegan traducidos. También abre puertas concretas: estudios,
       trabajo remoto y viajes por un territorio que cruza dos continentes.
       El alfabeto cirílico, que parece la primera barrera, en realidad se
-      aprende en pocas horas — y reconocer sus letras, como en este juego,
-      es el primer paso real hacia leer ruso de verdad.
+      aprende en pocas horas — y reconocer sus letras, como en{" "}
+      {plural ? "estos juegos" : "este juego"}, es el primer paso real hacia
+      leer ruso de verdad.
     </p>
   );
 }
