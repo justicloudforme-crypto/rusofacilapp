@@ -79,17 +79,18 @@ describe("the redistribution manifest", () => {
     // Числом проверяется только ПРИМЕНЁННОЕ, то есть то, что уже лежит
     // в проде: двадцать рунгов кругов 1-2 (PROGRESS 7.83), сорок рунгов
     // коридора (7.86), сто двадцать четыре рунга порции 1 (7.101,
-    // записана 03.09) и вся порция 2 целиком — двадцать пилота (7.106)
-    // плюс оставшийся четыреста один (7.107), оба записаны 04.09, —
-    // шестьсот пять. Длина всего манифеста НЕ фиксируется литералом
+    // записана 03.09), вся порция 2 целиком — двадцать пилота (7.106)
+    // плюс оставшийся четыреста один (7.107), — и порции 3 и 4 одним
+    // заходом (7.108, 34 + 182), все четыре группы 04.09: восемьсот
+    // двадцать один. Длина всего манифеста НЕ фиксируется литералом
     // намеренно: новые порции приезжают правкой ДАННЫХ, и тест, который
     // надо править вместе с ними, ловил бы не дефект, а сам факт
     // правки. А вот применённое обязано совпадать с продом: расхождение
     // здесь однажды уже стоило бы 38 удалённых строк (PROGRESS 7.101),
     // и оно же три дня держало порцию 1 непомеченной, хотя прод её уже
     // носил (7.105).
-    expect(DENSITY_SPLITS.filter((s) => s.applied)).toHaveLength(605);
-    expect(DENSITY_SPLITS.length).toBeGreaterThanOrEqual(605);
+    expect(DENSITY_SPLITS.filter((s) => s.applied)).toHaveLength(821);
+    expect(DENSITY_SPLITS.length).toBeGreaterThanOrEqual(821);
     // Не `sequence > 10`: C1/10 платный (у C1 бесплатных рунгов нет), и
     // повтор правила своими словами именно на нём и ошибался.
     for (const s of DENSITY_SPLITS) {
@@ -120,14 +121,20 @@ describe("the redistribution manifest", () => {
     }
     // Круги 1-2 дописали в хвост B2 десять строк, B1 одну, C1 девять;
     // сорок рунгов коридора (7.86) — ещё B2 двенадцать, B1 восемь,
-    // C1 восемнадцать. Итого 58 хвостов на 60 применённых записей: два
+    // C1 восемнадцать. Это 58 хвостов на 60 применённых записей: два
     // рунга починились одной сменой размера доски и не дали ни строки.
+    // Порции 1 и 2 (124 + 421) хвостов не дали вовсе — там parts: 1.
+    // Порции 3 и 4 (7.108) дали ещё 216, по одному на запись:
+    // A1 2, A2 23, B1 96, B2 55, C1 40. Итого 274 хвоста на 821
+    // применённую запись.
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
-    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(22);
-    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(9);
-    expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(27);
-    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(58);
-    expect(densityTailCount("A1")).toBe(0);
+    expect(applied.filter((s) => s.level === "A1").flatMap((s) => s.tailSequences)).toHaveLength(2);
+    expect(applied.filter((s) => s.level === "A2").flatMap((s) => s.tailSequences)).toHaveLength(23);
+    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(105);
+    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(77);
+    expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(67);
+    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(274);
+    expect(densityTailCount("A1")).toBe(2);
   });
 
   it("у каждой записи сторон ровно столько же, сколько частей, и все из шести", () => {
@@ -140,12 +147,19 @@ describe("the redistribution manifest", () => {
   it("claims ownership of both a split source and its tail, and of nothing else", () => {
     expect(isDensityOwnedRung("WORD_SEARCH", "B2", 44)).toBe(true);
     expect(isDensityOwnedRung("WORD_SEARCH", "B2", 328)).toBe(true);
-    expect(isDensityOwnedRung("WORD_SEARCH", "B2", 45)).toBe(false);
+    // Соседний номер, которого в манифесте нет ни источником, ни
+    // хвостом. Был B2/45 — он заехал в манифест порцией 4 (7.108), и
+    // пример перестал быть отрицательным. Заменён на B2/48, а не снят:
+    // без него утверждение «и ничего больше» некому проверять.
+    expect(isDensityOwnedRung("WORD_SEARCH", "B2", 48)).toBe(false);
     // Same numbers on the other game type must not be claimed.
     expect(isDensityOwnedRung("CROSSWORD", "B2", 44)).toBe(false);
     expect(findDensitySplit("C1", 114)?.parts).toBe(2);
     expect(findDensitySplit("C1", 114)?.tailSequences).toEqual([241]);
-    expect(findDensitySplit("C1", 139)).toBeUndefined();
+    // Тот же ремонт примера, что и строкой выше: C1/139 заехал в
+    // манифест порцией 4. Отрицательный пример — C1/144, которого в
+    // манифесте нет.
+    expect(findDensitySplit("C1", 144)).toBeUndefined();
   });
 });
 
