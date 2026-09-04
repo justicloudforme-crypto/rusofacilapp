@@ -240,6 +240,24 @@ function familiesFor(lang) {
     // page could emit by accident. `contentOnly` for the same reason as
     // the topic landing above — the free sample comes from the database.
     ...(es ? [{ name: "games-hub", contentOnly: true, path: "/es/juegos-para-aprender-ruso", expect: { h1: /\S/, min: 20, sel: 'a[href^="/es/word-games/"]' } }] : []),
+    // Three free rungs, the surface the whole 04.09.2026 round is about.
+    // Everything else already measured on them is a response code — 160 of
+    // 160 answer 200 to an anonymous request — and a response code cannot
+    // see the class this file exists for: HTTP 200, correct HTML, blank
+    // screen. What a puzzle page is FOR is its board, so the board's own
+    // cells are what is counted, per engine:
+    //   WORD_SEARCH  [data-row][data-col]      A1/1 = 64, A1/10 = 256 live
+    //   CROSSWORD    input[aria-label^="row "] B1/10 = 138 live
+    // The minima sit far below those and far above what a broken render
+    // could emit. Both ends of the free ladder, because rung 10 is the one
+    // the neighbour rule stops at.
+    // `contentOnly` for the same reason as the topic landing: these URLs do
+    // not exist unless the database holds the puzzles, and CI's does not.
+    ...[
+      { name: "rung-ws-first", path: `/${lang}/word-games/WORD_SEARCH/A1/1`,  min: 36, sel: "[data-row][data-col]" },
+      { name: "rung-ws-last",  path: `/${lang}/word-games/WORD_SEARCH/A1/10`, min: 36, sel: "[data-row][data-col]" },
+      { name: "rung-cw-last",  path: `/${lang}/word-games/CROSSWORD/B1/10`,   min: 40, sel: 'input[aria-label^="row "]' },
+    ].map((r) => ({ name: r.name, contentOnly: true, path: r.path, expect: { h1: /\S/, min: r.min, sel: r.sel } })),
     // Paid surface, only meaningful with --expect-subscription. Lesson 2 of
     // A1 rather than lesson 1: lesson 1 of every level is the free trial.
     ...(es && EXPECT_SUBSCRIPTION

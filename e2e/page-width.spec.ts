@@ -107,6 +107,59 @@ const PATHS = [
   "/glossary/caso-nominativo",
 ];
 
+/**
+ * Дождаться, пока ГЕОМЕТРИЯ перестанет двигаться — вместо ожидания, пока
+ * замолчит сеть.
+ *
+ * Почему не `networkidle` (замер 04.09.2026, PROGRESS 7.103 и 7.104). Все
+ * падения этого файла в CI — не провал утверждения о ширине, а
+ * `Test timeout of 30000ms exceeded` на самом `waitForLoadState`: в одном
+ * красном окне упало 10 из 20 тестов файла разом, то есть подпись пика
+ * нагрузки. `networkidle` ждёт 500 мс тишины ПОСЛЕ последнего запроса, а
+ * тишина здесь всё время откладывается — префетч ссылок App Router'ом,
+ * Sentry, ленивые шрифты; на занятой машине она может не наступить за
+ * 30 с вообще. И ждёт он не то: ширина документа — это не сеть.
+ *
+ * Что вместо — тот же способ, что уже стоит в `check:layout`
+ * (scripts/check-layout-geometry.mjs, `settle`): сначала шрифты
+ * (`document.fonts.ready` двигают ширину текста, то есть ровно ту
+ * величину, которую этот файл и меряет), затем подпись геометрии —
+ * ширина и высота документа плюс число элементов — снимается каждые
+ * 100 мс, и страница считается устоявшейся после трёх одинаковых подряд.
+ * Изменение подписи сбрасывает счётчик, поэтому появившийся с задержкой
+ * блок не проскакивает мимо замера, а заново запускает ожидание.
+ *
+ * Ожидание не ослаблено, а сужено: верхняя граница 6 с меньше 30 с
+ * таймаута теста, поэтому исчерпание бюджета здесь даёт замер (и, если
+ * вёрстка сломана, красное утверждение о ширине), а не таймаут без
+ * единого числа.
+ */
+const SETTLE_POLL_MS = 100;
+const SETTLE_STABLE_READINGS = 3;
+const SETTLE_MIN_MS = 300;
+const SETTLE_MAX_MS = 6000;
+
+async function settleGeometry(page: import("@playwright/test").Page) {
+  await page.evaluate(() => document.fonts?.ready).catch(() => {});
+  const started = Date.now();
+  let last: string | null = null;
+  let stable = 0;
+  for (;;) {
+    const sig = await page
+      .evaluate(() => {
+        const de = document.documentElement;
+        return `${de.scrollWidth}x${de.scrollHeight}:${document.querySelectorAll("body *").length}`;
+      })
+      .catch(() => null);
+    stable = sig !== null && sig === last ? stable + 1 : 0;
+    last = sig;
+    const elapsed = Date.now() - started;
+    if (stable >= SETTLE_STABLE_READINGS && elapsed >= SETTLE_MIN_MS) return;
+    if (elapsed >= SETTLE_MAX_MS) return;
+    await page.waitForTimeout(SETTLE_POLL_MS);
+  }
+}
+
 async function measure(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
     const de = document.documentElement;
@@ -174,7 +227,7 @@ for (const width of WIDTHS) {
       const status = response?.status() ?? 0;
       if (status === 404) continue;
       expect(status, `${url} did not answer 200`).toBe(200);
-      await page.waitForLoadState("networkidle");
+      await settleGeometry(page);
       // The once-a-day greeting is a modal over the whole page. It is
       // position:fixed, so the fill rule skips it — but it also covers what
       // is underneath, and a page measured through a dialog is not the
@@ -184,6 +237,10 @@ for (const width of WIDTHS) {
       if (await greeting.count()) {
         await greeting.click({ position: { x: 4, y: 4 } }).catch(() => {});
         await greeting.waitFor({ state: "detached", timeout: 3000 }).catch(() => {});
+        // Снятие модалки — это само по себе изменение раскладки: пока она
+        // висела, страница под ней не двигалась. Замер сразу после неё
+        // мерил бы геометрию, которая ещё едет.
+        await settleGeometry(page);
       }
       for (const row of await page.evaluate(findUnderfilledRows, {
         threshold: FILL_THRESHOLD,
