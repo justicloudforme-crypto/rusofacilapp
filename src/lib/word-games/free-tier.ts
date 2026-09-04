@@ -17,6 +17,41 @@
 export const WORD_GAME_FREE_RUNGS_PER_LEVEL = 10;
 
 /**
+ * Рунги, бесплатные ИМЕНЕМ, а не номером.
+ *
+ * Правило выше — вычисляемое: «первые десять номеров любой лестницы,
+ * кроме C1». Оно и есть основной признак бесплатности, и оно не
+ * трогается. Но правило по номеру не умеет сказать «вот эта конкретная
+ * страница тоже открыта», а такая нужда возникает: разгрузка филвордов
+ * (density-rungs.ts) уносит половину слов бесплатного тематического
+ * рунга на новую строку, номер которой по построению стоит в конце
+ * лестницы — далеко за десяткой. Слова остаются те же, страница-источник
+ * остаётся в индексе, а вторая половина её содержимого оказывается за
+ * пейволлом.
+ *
+ * Поэтому исключение названо ПЕРЕЧИСЛЕНИЕМ координат, а не расширением
+ * условия: список видно в дифе, его длину сторожит тест, и он не
+ * открывает ничего, кроме того, что в нём написано. Условие вида
+ * «sequence <= 10 ИЛИ это хвост» открыло бы 277 страниц разом.
+ *
+ * Пустой список — это НЕ мёртвый код: он держит форму, в которой
+ * исключение единственно возможно. Каждый ключ обязан быть хвостом
+ * манифеста разгрузки, и это сверяется в обе стороны в
+ * density-rungs.test.ts.
+ */
+export interface WordGameRungRef {
+  type: string;
+  level: string;
+  sequence: number;
+}
+
+export const EXTRA_FREE_WORD_GAME_RUNGS: readonly WordGameRungRef[] = [];
+
+const EXTRA_FREE_KEYS = new Set(
+  EXTRA_FREE_WORD_GAME_RUNGS.map((r) => `${r.type}/${r.level}/${r.sequence}`),
+);
+
+/**
  * Free-trial word games: the first N rungs of every (type, level) ladder
  * except C1 — 80 puzzles, 2 types x 4 levels x N.
  *
@@ -27,11 +62,58 @@ export const WORD_GAME_FREE_RUNGS_PER_LEVEL = 10;
  * ever fetching it through the gated GET route.
  */
 export function isFreeWordGamePuzzle(puzzle: { type: string; level: string; sequence: number }): boolean {
-  return (
-    (puzzle.type === "WORD_SEARCH" || puzzle.type === "CROSSWORD") &&
-    puzzle.level !== "C1" &&
-    puzzle.sequence <= WORD_GAME_FREE_RUNGS_PER_LEVEL
-  );
+  if (puzzle.type !== "WORD_SEARCH" && puzzle.type !== "CROSSWORD") return false;
+  if (EXTRA_FREE_KEYS.has(`${puzzle.type}/${puzzle.level}/${puzzle.sequence}`)) return true;
+  return puzzle.level !== "C1" && puzzle.sequence <= WORD_GAME_FREE_RUNGS_PER_LEVEL;
+}
+
+/**
+ * Все бесплатные номера одной лестницы (type, level), по возрастанию.
+ *
+ * Зачем. До 05.09.2026 правило бесплатности жило в ЧЕТЫРЁХ местах, и
+ * только одно из них звало функцию выше: sitemap.ts крутил
+ * `for (let sequence = 1; sequence <= LIMIT; sequence++)`, robots.ts —
+ * `Array.from({ length: LIMIT })`, data.ts — `where: { sequence: { lte:
+ * LIMIT } }`. Общая КОНСТАНТА у них была, общего ПРАВИЛА не было: три
+ * пересказа «первые LIMIT номеров» своими словами. Пересказ переживает
+ * любое изменение правила молча — ровно то, ради чего free-tier.ts и
+ * выделяли из entitlement.ts.
+ *
+ * Здесь номера не перечисляются заново, а ПРОСЕИВАЮТСЯ через
+ * `isFreeWordGamePuzzle`: если правило завтра изменится, изменится и
+ * этот список, и ни одна поверхность не отстанет.
+ */
+export function freeSequencesFor(type: string, level: string): number[] {
+  const out: number[] = [];
+  for (let sequence = 1; sequence <= WORD_GAME_FREE_RUNGS_PER_LEVEL; sequence += 1) {
+    if (isFreeWordGamePuzzle({ type, level, sequence })) out.push(sequence);
+  }
+  for (const rung of EXTRA_FREE_WORD_GAME_RUNGS) {
+    if (rung.type !== type || rung.level !== level) continue;
+    // Через то же правило, а не «раз в списке — значит бесплатен»:
+    // список и функция обязаны согласоваться, и если они разойдутся,
+    // молчать об этом здесь нельзя.
+    if (isFreeWordGamePuzzle(rung) && !out.includes(rung.sequence)) out.push(rung.sequence);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+/**
+ * `where` для запросов, которые не умеют выразить `isFreeWordGamePuzzle`
+ * на SQL. Заведомо НАДмножество: точный ответ всё равно даёт правило,
+ * применённое к прочитанным строкам (см. getFreeSequences в data.ts).
+ */
+export type FreeWordGameWhereClause =
+  | { level: { not: string }; sequence: { lte: number } }
+  | { type: string; level: string; sequence: number };
+
+export function freeWordGameWhere(): { OR: FreeWordGameWhereClause[] } {
+  return {
+    OR: [
+      { level: { not: "C1" }, sequence: { lte: WORD_GAME_FREE_RUNGS_PER_LEVEL } },
+      ...EXTRA_FREE_WORD_GAME_RUNGS.map((r) => ({ type: r.type, level: r.level, sequence: r.sequence })),
+    ],
+  };
 }
 
 /**

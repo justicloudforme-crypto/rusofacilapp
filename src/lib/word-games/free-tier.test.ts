@@ -3,7 +3,14 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { flashcardLevels } from "@/lib/flashcards/types";
 import { wordGameTypes } from "./types";
-import { WORD_GAME_FREE_RUNGS_PER_LEVEL, isFreeWordGamePuzzle, isPubliclyOpenableWordGamePuzzle } from "./free-tier";
+import {
+  EXTRA_FREE_WORD_GAME_RUNGS,
+  WORD_GAME_FREE_RUNGS_PER_LEVEL,
+  freeSequencesFor,
+  isFreeWordGamePuzzle,
+  isPubliclyOpenableWordGamePuzzle,
+} from "./free-tier";
+import robots from "@/app/robots";
 import { topicForPuzzle } from "./topics";
 
 /**
@@ -34,7 +41,11 @@ function freeCoordinates() {
   const out: Array<{ type: string; level: string; sequence: number }> = [];
   for (const type of wordGameTypes) {
     for (const level of flashcardLevels) {
-      for (let sequence = 1; sequence <= 40; sequence++) {
+      // 700, а не 40: бесплатным может быть не только номер из первого
+      // десятка (EXTRA_FREE_WORD_GAME_RUNGS), и диапазон, обрывающийся
+      // раньше самой длинной лестницы банка (B1 — 669), пропустил бы
+      // ровно те координаты, ради которых список и заведён.
+      for (let sequence = 1; sequence <= 700; sequence++) {
         if (isFreeWordGamePuzzle({ type, level, sequence })) out.push({ type, level, sequence });
       }
     }
@@ -45,30 +56,83 @@ function freeCoordinates() {
 describe("the free word-game tier means the same 80 URLs everywhere", () => {
   const free = freeCoordinates();
 
-  it("is 80 puzzles: both types, every level but C1, rungs 1..N", () => {
-    expect(free.length).toBe(80);
+  it("is 80 puzzles by number, plus whatever is free by name", () => {
+    expect(free.length).toBe(80 + EXTRA_FREE_WORD_GAME_RUNGS.length);
     expect(new Set(free.map((c) => c.level))).toEqual(new Set(["A1", "A2", "B1", "B2"]));
     expect(new Set(free.map((c) => c.type))).toEqual(new Set(["WORD_SEARCH", "CROSSWORD"]));
-    expect(Math.max(...free.map((c) => c.sequence))).toBe(WORD_GAME_FREE_RUNGS_PER_LEVEL);
+    // Правило по номеру не двинулось: за десяткой бесплатны РОВНО те
+    // координаты, что перечислены поимённо, и ни одной больше.
+    const byNumber = free.filter((c) => c.sequence <= WORD_GAME_FREE_RUNGS_PER_LEVEL);
+    expect(byNumber).toHaveLength(80);
+    const byName = free.filter((c) => c.sequence > WORD_GAME_FREE_RUNGS_PER_LEVEL);
+    expect(byName.map((c) => `${c.type}/${c.level}/${c.sequence}`).sort()).toEqual(
+      EXTRA_FREE_WORD_GAME_RUNGS.map((r) => `${r.type}/${r.level}/${r.sequence}`).sort(),
+    );
+    // И каждый перечисленный обязан пройти само правило — список,
+    // который правило не признаёт, открыл бы страницу только на одной
+    // поверхности из четырёх.
+    for (const r of EXTRA_FREE_WORD_GAME_RUNGS) {
+      expect(isFreeWordGamePuzzle(r), `${r.type}/${r.level}/${r.sequence}`).toBe(true);
+    }
   });
 
-  it("sitemap.ts derives its puzzle URLs from the same rule", () => {
+  it("freeSequencesFor answers exactly what the paywall rule answers", () => {
+    // Единственный признак бесплатности на всех поверхностях — эта пара.
+    // Просеиваются номера ЗАВЕДОМО шире любого предела и любого хвоста,
+    // иначе согласие проверялось бы только там, где ответ и так «нет».
+    for (const type of [...wordGameTypes, "STORY"]) {
+      for (const level of flashcardLevels) {
+        const listed = new Set(freeSequencesFor(type, level));
+        for (let sequence = 1; sequence <= 700; sequence += 1) {
+          expect(
+            listed.has(sequence),
+            `${type}/${level}/${sequence}: freeSequencesFor и isFreeWordGamePuzzle разошлись`,
+          ).toBe(isFreeWordGamePuzzle({ type, level, sequence }));
+        }
+      }
+    }
+  });
+
+  it("sitemap.ts derives its puzzle URLs from that rule and restates none of it", () => {
     // Read as text: importing sitemap.ts pulls in the database client, and
     // this has to run in the unit suite with no Turso.
-    expect(sitemapSource).toContain("wordGamePuzzlesPerLevel");
-    expect(sitemapSource).toMatch(/sequence <= FREE_TRIAL_LIMITS\.wordGamePuzzlesPerLevel/);
-    // and it must not have grown a hardcoded number alongside it
+    expect(sitemapSource).toContain("freeSequencesFor(type, level)");
+    expect(sitemapSource).toContain("freeWordGameWhere()");
+    // И ни одного пересказа правила рядом: ни предела номером, ни
+    // отдельного отсева C1 — оба уже внутри правила.
     expect(sitemapSource).not.toMatch(/sequence <= 10\b/);
+    expect(sitemapSource).not.toContain("wordGamePuzzlesPerLevel");
+    expect(sitemapSource).not.toMatch(/l !== "C1"/);
   });
 
   it("robots.ts opens exactly the free coordinates and no others", () => {
-    // The Allow lines are generated, so rebuild what they expand to and
-    // compare against the paywall's own answer.
-    expect(robotsSource).toContain("FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel");
-    expect(robotsSource).toMatch(/level !== "C1"/);
-    expect(robotsSource).toMatch(/\["WORD_SEARCH", "CROSSWORD"\]/);
-    // The anchored form is what stops /A1/1 from also opening /A1/10.
-    expect(robotsSource).toContain("/${type}/${level}/${i + 1}$");
+    // Не текстом, а вызовом: robots.ts не трогает базу, поэтому его можно
+    // просто выполнить и сравнить выданные Allow с ответом правила.
+    const rules = robots().rules;
+    const rule = Array.isArray(rules) ? rules[0] : rules;
+    const allow = ([] as string[]).concat(rule.allow ?? []);
+    const puzzleAllow = allow.filter((a) => a.includes("/word-games/"));
+    expect([...puzzleAllow].sort()).toEqual(
+      free.map((c) => `/*/word-games/${c.type}/${c.level}/${c.sequence}$`).sort(),
+    );
+    // Якорь `$` — это то, что не даёт /A1/1 открыть заодно /A1/10.
+    expect(puzzleAllow.every((a) => a.endsWith("$"))).toBe(true);
+    expect(robotsSource).toContain("freeSequencesFor(type, level)");
+    expect(robotsSource).not.toMatch(/level !== "C1"/);
+  });
+
+  it("control: robots.ts would notice a rule that opened one rung too many", () => {
+    // Позитивный контроль к сравнению выше: если бы robots.ts крутил
+    // `length: LIMIT + 1`, вот чем бы это отличалось. Без этого равенство
+    // могло бы держаться на том, что обе стороны считаются одинаково
+    // неправильно.
+    const drifted = free
+      .map((c) => `/*/word-games/${c.type}/${c.level}/${c.sequence}$`)
+      .concat("/*/word-games/WORD_SEARCH/A1/11$");
+    const rules = robots().rules;
+    const rule = Array.isArray(rules) ? rules[0] : rules;
+    const allow = ([] as string[]).concat(rule.allow ?? []).filter((a) => a.includes("/word-games/"));
+    expect([...drifted].sort()).not.toEqual([...allow].sort());
   });
 
   it("never themes a puzzle the paywall would redirect away", () => {

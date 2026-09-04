@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { locales } from "@/i18n/config";
 import { levelSlugs, lessonSlugsFor } from "@/lib/courses";
 import { flashcardLevels } from "@/lib/flashcards/types";
-import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { freeSequencesFor, freeWordGameWhere } from "@/lib/word-games/free-tier";
 import { db } from "@/lib/db";
 import { getAllMedia } from "@/lib/media/data";
 import { SITE_URL } from "@/lib/site";
@@ -36,8 +36,9 @@ export const dynamic = "force-dynamic";
 // those still redirect an anonymous visitor to /pricing with no
 // free-content exception worth indexing.
 //
-// The 80 free word-game puzzles (see FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel)
-// ARE listed, also since 2026-08-28 — they don't redirect, but the
+// The free word-game puzzles (see freeSequencesFor in word-games/free-tier.ts,
+// which is the same rule the paywall applies) ARE listed, also since
+// 2026-08-28 — they don't redirect, but the
 // /word-games picker only server-renders links for whichever (type, level)
 // tab is selected by default (a client-side "use client" picker — see its
 // own comment), so 7 of the 8 (type, level) combinations among the free
@@ -147,7 +148,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let puzzleUpdatedAt = new Map<string, Date | null>();
   try {
     const puzzleRows = await db.wordGamePuzzle.findMany({
-      where: { level: { not: "C1" }, sequence: { lte: FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel } },
+      // Заведомо надмножество бесплатных: точный ответ даёт
+      // freeSequencesFor ниже, а не этот запрос (free-tier.ts).
+      where: freeWordGameWhere(),
       select: { type: true, level: true, sequence: true, updatedAt: true },
     });
     puzzleUpdatedAt = new Map(
@@ -157,9 +160,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] could not read WordGamePuzzle.updatedAt; serving without lastmod", error);
   }
 
-  for (const level of flashcardLevels.filter((l) => l !== "C1")) {
+  // Уровни НЕ фильтруются по C1, и номера не считаются от 1 до предела:
+  // и то и другое — пересказ правила бесплатности своими словами, а
+  // правило живёт в free-tier.ts и умеет отвечать за себя само. C1 даёт
+  // пустой список, и цикл по нему просто ничего не кладёт.
+  for (const level of flashcardLevels) {
     for (const type of ["WORD_SEARCH", "CROSSWORD"] as const) {
-      for (let sequence = 1; sequence <= FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel; sequence++) {
+      for (const sequence of freeSequencesFor(type, level)) {
         const updatedAt = puzzleUpdatedAt.get(`${type}/${level}/${sequence}`) ?? null;
         for (const lang of locales) {
           entries.push({
