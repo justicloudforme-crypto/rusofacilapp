@@ -74,7 +74,9 @@ describe("density-rungs manifest", () => {
     for (const level of densityLevels()) {
       expect(densityTailCount(level)).toBe(densityTails(level).length);
     }
-    expect(densityTailCount("A1")).toBe(0);
+    // Было 0 до 04.09.2026: до порции 3 ни одна запись A1 не делилась на
+    // части. Порция 3 дала уровню два хвоста — 197 и 198.
+    expect(densityTailCount("A1")).toBe(2);
   });
 
   // Добавлено 03.09.2026 (PROGRESS 7.101). Размер доски перестал быть
@@ -108,11 +110,13 @@ describe("density-rungs manifest", () => {
   // намеренно.
   it("describes every row already written to production", () => {
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
-    expect(applied).toHaveLength(605);
-    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(58);
-    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(9);
-    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(22);
-    expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(27);
+    expect(applied).toHaveLength(821);
+    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(274);
+    expect(applied.filter((s) => s.level === "A1").flatMap((s) => s.tailSequences)).toHaveLength(2);
+    expect(applied.filter((s) => s.level === "A2").flatMap((s) => s.tailSequences)).toHaveLength(23);
+    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(105);
+    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(77);
+    expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(67);
   });
 
   // Порция 1 (124 рунга, записана 03.09) хвостов не создаёт вовсе:
@@ -130,21 +134,30 @@ describe("density-rungs manifest", () => {
     ).sort()).toEqual([["A1", 39], ["A2", 51], ["B1", 24], ["B2", 6], ["C1", 4]]);
   });
 
-  // Порция 2 целиком: 421 рунг, каждый — одна доска 18×18 и ноль новых
-  // строк. Сторож ровно на цену порции: если сюда однажды заедет запись
-  // с parts > 1, порция перестанет быть бесплатной по строкам и URL, а
-  // таблицы в PROGRESS 7.106 и 7.107 будут врать молча. Утверждение
-  // адресуется группе по дате, а не «всем неприменённым»: с записью
-  // 04.09 неприменённых не осталось вовсе, и версия «через !applied»
-  // проходила бы на пустом множестве — тот самый ноль без контроля.
-  // Поэтому непустота группы проверяется отдельной строкой, ПЕРЕД
-  // утверждениями «каждый из них такой-то»: без неё все три `every`
-  // зелены на пустом массиве.
-  it("keeps all of portion 2 at zero new rows and one board each", () => {
-    const portion2 = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-04");
-    expect(portion2.length).toBeGreaterThan(0);
+  // Записи 04.09.2026 — это ТРИ порции сразу: 2 (421 рунг, одна доска
+  // 18×18 и ноль новых строк), 3 (34 рунга, деление надвое, вторая
+  // сторона не больше 16) и 4 (182 рунга, деление надвое со второй
+  // стороной 18). Утверждение адресуется группе по ДАТЕ, а не «всем
+  // неприменённым»: неприменённых не осталось вовсе, и версия «через
+  // !applied» проходила бы на пустом множестве — тот самый ноль без
+  // контроля. Непустота группы проверяется отдельной строкой ПЕРЕД
+  // всеми `every`: без неё они зелены на пустом массиве.
+  //
+  // Внутри группы порции разводятся по числу частей — по той самой
+  // величине, которая и есть цена порции (parts: 1 — UPDATE строки и
+  // ничего больше; parts: 2 — новая строка и два новых URL). Строка
+  // «третьего вида не бывает» стоит здесь именно затем, чтобы запись с
+  // parts: 3 не провалилась мимо обеих проверок молча.
+  it("splits the 04.09 day into portion 2 and portions 3-4 by what each costs", () => {
+    const day = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-04");
+    expect(day.length).toBeGreaterThan(0);
+    expect(day).toHaveLength(637);
+    const portion2 = day.filter((s) => s.parts === 1);
+    const portions34 = day.filter((s) => s.parts === 2);
+    expect(portion2.length + portions34.length).toBe(day.length);
+
+    // Порция 2: ноль новых строк, одна доска 18×18 на запись.
     expect(portion2).toHaveLength(421);
-    expect(portion2.every((s) => s.parts === 1)).toBe(true);
     expect(portion2.every((s) => s.tailSequences.length === 0)).toBe(true);
     expect(portion2.every((s) => s.sizes.length === 1 && s.sizes[0] === 18)).toBe(true);
     expect(new Set(portion2.map((s) => s.level))).toEqual(new Set(["A1", "A2", "B1", "B2", "C1"]));
@@ -154,12 +167,33 @@ describe("density-rungs manifest", () => {
     expect(Object.entries(
       portion2.reduce<Record<string, number>>((a, s) => ({ ...a, [s.level]: (a[s.level] ?? 0) + 1 }), {}),
     ).sort()).toEqual([["A1", 23], ["A2", 89], ["B1", 146], ["B2", 100], ["C1", 63]]);
+
+    // Порции 3 и 4: ровно один хвост на запись — это и есть новая строка
+    // и два новых URL, по одному на локаль.
+    expect(portions34).toHaveLength(216);
+    expect(portions34.every((s) => s.tailSequences.length === 1)).toBe(true);
+    expect(portions34.every((s) => s.sizes.length === 2)).toBe(true);
+    // Порция 3 — потолок стороны 16, порция 4 — вторая часть на 18.
+    // Разводятся именно так, а не по дате: дата у них одна.
+    const p3 = portions34.filter((s) => Math.max(...s.sizes) <= 16);
+    const p4 = portions34.filter((s) => s.sizes[1] === 18);
+    expect(p3.length + p4.length).toBe(portions34.length);
+    expect(p3).toHaveLength(34);
+    expect(p4).toHaveLength(182);
+    // Перемер против живого прода 04.09 (7.108).
+    expect(Object.entries(
+      p3.reduce<Record<string, number>>((a, s) => ({ ...a, [s.level]: (a[s.level] ?? 0) + 1 }), {}),
+    ).sort()).toEqual([["A1", 2], ["A2", 4], ["B1", 22], ["B2", 3], ["C1", 3]]);
+    expect(Object.entries(
+      p4.reduce<Record<string, number>>((a, s) => ({ ...a, [s.level]: (a[s.level] ?? 0) + 1 }), {}),
+    ).sort()).toEqual([["A2", 19], ["B1", 74], ["B2", 52], ["C1", 37]]);
   });
 
   // Весь манифест применён — значит прогон разгрузки без --only= сейчас
-  // не выбрал бы ни одного рунга. Порции 3–5 в манифест НЕ внесены
-  // намеренно и ждут решения владельца (7.107).
-  it("has nothing pending — portions 3-5 are deliberately absent", () => {
+  // не выбрал бы ни одного рунга. Порция 5 в манифест НЕ внесена
+  // намеренно: она единственная трогает бесплатную десятку и sitemap, и
+  // идёт отдельным заходом (7.108).
+  it("has nothing pending — portion 5 is deliberately absent", () => {
     expect(DENSITY_SPLITS.filter((s) => !s.applied)).toHaveLength(0);
   });
 
