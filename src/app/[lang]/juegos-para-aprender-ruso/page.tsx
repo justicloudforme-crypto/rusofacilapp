@@ -93,8 +93,9 @@ export default async function JuegosParaAprenderRusoPage({
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Juegos para aprender ruso</h1>
       <p className="mt-3 text-lg leading-8 text-foreground/70">
         Dos tipos de juego, ochenta puzles gratuitos y ningún registro: se abren en el navegador y
-        se juegan en el momento. Todos usan vocabulario ruso real, agrupado por nivel (A1 a B2) y,
-        en la mayoría de los casos, por tema.
+        se juegan en el momento. Todos usan vocabulario ruso real, agrupado por nivel y, en la
+        mayoría de los casos, por tema. Los gratuitos van de A1 a B2; con Premium el catálogo
+        llega hasta el C1.
       </p>
 
       <p className="mt-4 leading-7 text-foreground/70">
@@ -164,8 +165,13 @@ export default async function JuegosParaAprenderRusoPage({
         lang="es"
         dict={{
           freeSampleTitle: "Los 80 puzles gratuitos, uno por uno",
+          // «de cada nivel» era falso: los niveles del sitio son cinco y
+          // el C1 no tiene ni un solo puzle gratuito
+          // (isFreeWordGamePuzzle: level !== "C1" && sequence <= 10). Diez
+          // por tipo y por nivel en cuatro niveles son exactamente los 80
+          // que anuncia el título de al lado.
           freeSampleIntro:
-            "Los diez primeros de cada nivel, en sopa de letras y en crucigrama, se juegan sin cuenta y sin suscripción. Aquí están todos, por tipo y por nivel.",
+            "Los diez primeros de cada uno de los cuatro niveles de A1 a B2, en sopa de letras y en crucigrama, se juegan sin cuenta y sin suscripción. Aquí están todos, por tipo y por nivel.",
           typeWordSearch: dict.wordGames.typeWordSearch,
           typeCrossword: dict.wordGames.typeCrossword,
           puzzleLabel: dict.wordGames.puzzleLabel,
@@ -173,7 +179,7 @@ export default async function JuegosParaAprenderRusoPage({
         available={(type, level) => freeByPair.get(`${type}:${level}`)}
       />
 
-      <WhyLearnRussianBlurb />
+      <WhyLearnRussianBlurb plural />
 
       <GameLandingLinks current="hub" />
     </div>
