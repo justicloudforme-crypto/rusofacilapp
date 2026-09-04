@@ -43,6 +43,7 @@ import {
   densityLevels,
   densityTails,
   ladderGaps,
+  PORTION_5_SOURCES,
   type DensitySplit,
 } from "../src/lib/word-games/density-rungs";
 import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-search-audit";
@@ -183,14 +184,26 @@ async function main() {
           complain(`${key}: слов на клетку на проде ${a.maxOverlap}, в снимке ${want.maxOverlap}.`);
         }
       }
+      const key5 = `${split.level}/${split.sequence}`;
       // Через ту же функцию, что и пейволл с robots.txt, а не через
       // `sequence <= 10`: бесплатность — это `level !== "C1" && sequence
       // <= 10`, и голое сравнение по номеру объявляло бесплатным C1/10,
       // который бесплатным никогда не был (у C1 бесплатных рунгов нет
       // вовсе). Дубль правила ровно тот, ради устранения которого
       // free-tier.ts и выделяли.
+      //
+      // 05.09.2026 (PROGRESS 7.109) у этого запрета появилось РОВНО ОДНО
+      // исключение — порция 5, которая и есть «рунги 1-10 не-C1», и она
+      // названа перечислением в `PORTION_5_SOURCES`, а не условием.
+      // Разница принципиальная: «кроме бесплатных» отменило бы проверку
+      // целиком, а список из двадцати шести ключей оставляет её строгой
+      // для всех остальных 821 записи и для любой будущей порции.
       if (isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: split.level, sequence: split.sequence })) {
-        complain(`${key}: это БЕСПЛАТНЫЙ рунг — манифест не имеет права его трогать.`);
+        if (PORTION_5_SOURCES.includes(key5)) {
+          console.log(`  · ${key}: бесплатный рунг порции 5 — разрешён списком PORTION_5_SOURCES.`);
+        } else {
+          complain(`${key}: это БЕСПЛАТНЫЙ рунг вне порции 5 — манифест не имеет права его трогать.`);
+        }
       }
       if (a.missing.length > 0) {
         complain(`${key}: солвер не находит в сетке ${a.missing.length} слов: ${a.missing.join(", ")}`);
@@ -299,6 +312,12 @@ async function main() {
         where: { type_level_sequence: { type: "WORD_SEARCH", level, sequence: seq } },
       });
       if (existing) complain(`WORD_SEARCH/${level}/${seq}: номер УЖЕ занят строкой id ${existing.id}.`);
+      // Исключений у этого запрета нет и у порции 5 тоже: хвост в
+      // бесплатной десятке добавил бы страницу в sitemap.xml, набор URL
+      // которого выведен из констант free-tier.ts, а не из базы.
+      if (isFreeWordGamePuzzle({ type: "WORD_SEARCH", level, sequence: seq })) {
+        complain(`WORD_SEARCH/${level}/${seq}: хвост попал в БЕСПЛАТНУЮ десятку — это добавило бы URL в sitemap.`);
+      }
     }
     console.log(`  ${tails.length} номеров проверено: ${tails.map((t) => `${t.level}/${t.seq}`).join(", ")}`);
 

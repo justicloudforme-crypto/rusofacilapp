@@ -8,7 +8,9 @@
 //   ·  40 — сорок худших по коридору (PROGRESS 7.86), записаны 02.09;
 //   · 124 — порция 1 коридора (PROGRESS 7.101), записаны 03.09;
 //   ·  20 — пилот порции 2 (PROGRESS 7.105), записан 04.09;
-//   · 401 — остаток порции 2 (PROGRESS 7.107), записан 04.09.
+//   · 401 — остаток порции 2 (PROGRESS 7.107), записан 04.09;
+//   · 216 — порции 3 и 4 (PROGRESS 7.108), записаны 04.09;
+//   ·  26 — порция 5, бесплатная десятка (PROGRESS 7.109), записана 05.09.
 //
 // ONE manifest, read by two scripts that must agree:
 //
@@ -24,15 +26,26 @@
 // The numbers below were measured ON PRODUCTION on 2026-09-02 by
 // prisma/build-density-manifest.ts — see PROGRESS.md 7.83.
 //
-// НИ ОДНА запись не трогает рунг из бесплатной десятки (sequence <= 10
-// при уровне не C1). Это не свойство отбора «так вышло», а инвариант со
-// своим тестом (density-rungs.test.ts), и держится он на двух разных
-// причинах сразу: такие рунги тематические (topics.ts), и деление
-// сломало бы обещание заголовка; и они же — единственные, чей
-// `updatedAt` попадает в <lastmod> sitemap.xml, то есть единственные,
-// после которых файл перестаёт быть побайтово тем же. Набор URL в
-// sitemap при этом не меняется никогда: он выведен из констант
-// (free-tier.ts), а не из базы, и хвостовые номера все далеко за 10.
+// До 05.09.2026 ни одна запись не трогала рунг из бесплатной десятки
+// (sequence <= 10 при уровне не C1), и это был безусловный инвариант со
+// своим тестом. Порция 5 (PROGRESS 7.109) — это ровно бесплатная
+// десятка, поэтому инвариант заменён более узким, а не снят:
+//
+//   · ХВОСТ не бывает бесплатным НИКОГДА, без исключений. Это то, что
+//     держит набор URL в sitemap.xml неизменным: набор выведен из
+//     констант (free-tier.ts), а не из базы, и новая строка добавила бы
+//     файлу страницу только попав в десятку. Все 277 хвостов — далеко
+//     за 10;
+//   · ИСТОЧНИК бывает бесплатным только среди двадцати шести ключей,
+//     перечисленных ниже в `PORTION_5_SOURCES`, и список сверяется с
+//     манифестом в обе стороны.
+//
+// Цена, которую порция 5 заплатила осознанно: <lastmod> этих строк
+// сдвинулся, то есть sitemap.xml впервые перестал быть побайтово тем же
+// файлом (52 URL из 1906; ни одного добавленного, ни одного убранного).
+// Три из двадцати шести делятся надвое, и вторая половина уезжает на
+// платную страницу вне sitemap — B1/9 → B1/668, B1/10 → B1/669,
+// B2/10 → B2/405.
 import type { FlashcardLevel } from "@/lib/flashcards/types";
 
 export interface DensitySplit {
@@ -1066,6 +1079,64 @@ export const DENSITY_SPLITS: readonly DensitySplit[] = [
   { level: "C1", sequence: 163, parts: 2, sizes: [16, 18], tailSequences: [305], applied: "2026-09-04" },
   { level: "C1", sequence: 167, parts: 2, sizes: [14, 18], tailSequences: [306], applied: "2026-09-04" },
   { level: "C1", sequence: 168, parts: 2, sizes: [10, 18], tailSequences: [307], applied: "2026-09-04" },
+
+  // ПОРЦИЯ 5 — рунги 1–10 не-C1, то есть ровно те, что видит аноним и
+  // Google (PROGRESS 7.109). Единственная порция, после которой
+  // sitemap.xml перестаёт быть побайтово тем же файлом: <lastmod> берётся
+  // из updatedAt, и updatedAt этих строк сдвигается. Набор URL sitemap при
+  // этом НЕ меняется — он выведен из констант free-tier.ts, а три хвоста
+  // (B1/668, B1/669, B2/405) далеко за десяткой и в файл не попадают.
+  { level: "A1", sequence: 9, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "A1", sequence: 10, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "A2", sequence: 1, parts: 1, sizes: [10], tailSequences: [], applied: "2026-09-05" },
+  { level: "A2", sequence: 2, parts: 1, sizes: [12], tailSequences: [], applied: "2026-09-05" },
+  { level: "A2", sequence: 3, parts: 1, sizes: [14], tailSequences: [], applied: "2026-09-05" },
+  { level: "A2", sequence: 4, parts: 1, sizes: [16], tailSequences: [], applied: "2026-09-05" },
+  { level: "A2", sequence: 8, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "A2", sequence: 9, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "A2", sequence: 10, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 1, parts: 1, sizes: [10], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 2, parts: 1, sizes: [12], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 3, parts: 1, sizes: [14], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 4, parts: 1, sizes: [16], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 6, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 7, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 8, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "B1", sequence: 9, parts: 2, sizes: [14, 16], tailSequences: [668], applied: "2026-09-05" },
+  { level: "B1", sequence: 10, parts: 2, sizes: [12, 18], tailSequences: [669], applied: "2026-09-05" },
+  { level: "B2", sequence: 1, parts: 1, sizes: [10], tailSequences: [], applied: "2026-09-05" },
+  { level: "B2", sequence: 2, parts: 1, sizes: [12], tailSequences: [], applied: "2026-09-05" },
+  { level: "B2", sequence: 3, parts: 1, sizes: [14], tailSequences: [], applied: "2026-09-05" },
+  { level: "B2", sequence: 4, parts: 1, sizes: [16], tailSequences: [], applied: "2026-09-05" },
+  { level: "B2", sequence: 5, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "B2", sequence: 6, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "B2", sequence: 7, parts: 1, sizes: [18], tailSequences: [], applied: "2026-09-05" },
+  { level: "B2", sequence: 10, parts: 2, sizes: [16, 18], tailSequences: [405], applied: "2026-09-05" },
+];
+
+
+/**
+ * Порция 5 коридора (PROGRESS 7.109) — её источники поимённо.
+ *
+ * Зачем список руками, а не фильтром по манифесту. До 05.09.2026
+ * инвариант «ни одна запись не трогает бесплатную десятку» был
+ * безусловным и проверялся одной строкой. Порция 5 — это и есть
+ * бесплатная десятка, и превратить проверку в «кроме тех, что бесплатны»
+ * значило бы стереть её вовсе. Поэтому исключение названо перечислением:
+ * бесплатный источник в манифесте допустим ровно для этих двадцати шести
+ * ключей, и тест падает и на бесплатном рунге вне списка, и на записи из
+ * списка, которой в манифесте нет.
+ *
+ * Хвостов здесь нет и быть не может: все три (B1/668, B1/669, B2/405)
+ * далеко за десяткой, и «хвост никогда не бесплатен» остаётся правилом
+ * без исключений — именно оно держит набор URL в sitemap неизменным.
+ */
+export const PORTION_5_SOURCES: readonly string[] = [
+  "A1/9", "A1/10", "A2/1", "A2/2", "A2/3", "A2/4",
+  "A2/8", "A2/9", "A2/10", "B1/1", "B1/2", "B1/3",
+  "B1/4", "B1/6", "B1/7", "B1/8", "B1/9", "B1/10",
+  "B2/1", "B2/2", "B2/3", "B2/4", "B2/5", "B2/6",
+  "B2/7", "B2/10",
 ];
 
 /** How many sequences each level's WORD_SEARCH ladder gains beyond what

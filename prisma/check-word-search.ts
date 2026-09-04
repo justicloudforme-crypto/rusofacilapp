@@ -116,7 +116,7 @@ import type { WordPlacement } from "../src/lib/word-games/types";
  * Перезаписывать этот снимок — только с прода и только после успешной
  * записи в прод:
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" \
- *     npm run check:word-search -- --write-baseline=docs/word-search-baseline-prod-2026-09-04.json
+ *     npm run check:word-search -- --write-baseline=docs/word-search-baseline-prod-2026-09-05.json
  */
 const PROD_BASELINE = PROD_BASELINE_PATH;
 
