@@ -3,7 +3,7 @@
  *
  * Разгрузка применяется к боевой базе. Манифест
  * `src/lib/word-games/density-rungs.ts` и снимок
- * `docs/word-search-baseline-prod-2026-09-02.json` теперь сняты С ПРОДА —
+ * продовый снимок (`PROD_BASELINE_PATH`) теперь сняты С ПРОДА —
  * с той же базы, в которую пойдёт запись, — и сверка доказывает не
  * «это та же база», а «база не сдвинулась между замером и записью».
  * Раньше и манифест, и снимок были локальными, и именно эта сверка
@@ -49,13 +49,13 @@ import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-sear
 import { boardSize } from "../src/lib/word-games/redistribute";
 import { isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
 import { readFileSync } from "node:fs";
-import type { BaselineFile } from "../src/lib/word-games/bank-fingerprint";
+import { PROD_BASELINE_PATH, type BaselineFile } from "../src/lib/word-games/bank-fingerprint";
 
 function baselineArg(): string | undefined {
   const hit = process.argv.find((a) => a.startsWith("--baseline="));
   return hit ? hit.slice("--baseline=".length) : undefined;
 }
-const BASELINE = baselineArg() ?? "docs/word-search-baseline-prod-2026-09-02.json";
+const BASELINE = baselineArg() ?? PROD_BASELINE_PATH;
 const ROUND_SIZE = 10;
 
 function arg(name: string): string | undefined {

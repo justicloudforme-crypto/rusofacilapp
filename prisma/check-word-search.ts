@@ -76,6 +76,7 @@ import {
   type PuzzleInput,
 } from "../src/lib/word-games/word-search-audit";
 import {
+  PROD_BASELINE_PATH,
   bankFingerprint,
   fingerprintMismatch,
   isLegacyBaseline,
@@ -117,7 +118,7 @@ import type { WordPlacement } from "../src/lib/word-games/types";
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" \
  *     npm run check:word-search -- --write-baseline=docs/word-search-baseline-prod-2026-09-04.json
  */
-const PROD_BASELINE = "docs/word-search-baseline-prod-2026-09-04.json";
+const PROD_BASELINE = PROD_BASELINE_PATH;
 
 function arg(name: string): string | undefined {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
