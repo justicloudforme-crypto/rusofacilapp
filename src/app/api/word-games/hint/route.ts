@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getPuzzleById, crosswordLetterMap } from "@/lib/word-games/data";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
-import { isEntitled, isFreeWordGamePuzzle } from "@/lib/entitlement";
+import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 
 // Tighter than /check — a hint is meant to be an occasional "I'm stuck"
 // action, not a way to solve the whole puzzle one request at a time
@@ -30,8 +30,14 @@ export async function POST(request: NextRequest) {
 
   // Checked against the puzzle itself, not just a page-level gate — see
   // isFreeWordGamePuzzle's doc comment for why puzzleId alone isn't safe
-  // to trust.
-  if (!isFreeWordGamePuzzle(puzzle) && !(await isEntitled())) {
+  // to trust. Both clauses of the page's rule, same as /check: a hint hands
+  // over a letter outright, so it must never answer for a puzzle the page
+  // would have redirected this caller away from.
+  const tier = await getEntitlementTier();
+  if (tier === "free" && !isFreeWordGamePuzzle(puzzle)) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
+  if ((puzzle.curved || puzzle.premiumOnly) && !canAccessCurvedPuzzle(tier)) {
     return NextResponse.json({ error: "subscription_required" }, { status: 403 });
   }
 

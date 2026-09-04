@@ -14,10 +14,18 @@ import { markStudyDay, type StudyDaySource } from "./study-day";
 /** Marks today as a study day for whoever is signed in, and does nothing at
  * all for a signed-out visitor.
  *
- * Call it from the page's Server Component body — not from a client
- * component, and not from an API route. The rule is that OPENING the page
- * is the study action, and a mark that needs JavaScript to fire is a mark a
- * slow phone, a dead battery or an ad blocker can lose.
+ * Call it from the page's Server Component body. The rule is that OPENING
+ * the page is the study action, and a mark that needs JavaScript to fire is
+ * a mark a slow phone, a dead battery or an ad blocker can lose.
+ *
+ * ONE surface is deliberately different, and it is the exception that
+ * states the rule rather than a loophole: the crossword marks its day from
+ * POST /api/word-games/check, on the first letter entered, because opening
+ * a puzzle and typing nothing is not study (owner's decision, 03.09.2026 —
+ * measured: a page open with 0 keystrokes used to put a full day on the
+ * calendar). It stays a server-side mark on a request the product already
+ * sends for its own reasons, so nothing here depends on an extra fetch that
+ * a flaky network could lose.
  *
  * **Costs no database read to identify the learner.** The session cookie is
  * HMAC-signed, so verifySessionToken already establishes that the id is

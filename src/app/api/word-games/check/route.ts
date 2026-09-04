@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getPuzzleById, crosswordLetterMap } from "@/lib/word-games/data";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
-import { isEntitled, isFreeWordGamePuzzle } from "@/lib/entitlement";
+import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 
 interface GuessCell {
   row: number;
@@ -43,9 +44,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  if (!isFreeWordGamePuzzle(puzzle) && !(await isEntitled())) {
+  // EXACTLY the puzzle page's rule, both clauses (see
+  // src/app/[lang]/word-games/[type]/[level]/[sequence]/page.tsx). The
+  // first one was already here; the second was not, and that was a real
+  // gap: 404 of the 1262 crosswords in production are `premiumOnly`, and a
+  // `standard` subscriber the page redirects to /pricing could still grade
+  // every one of their letters through this route. A route that decides
+  // access must not answer a question the page refuses to show.
+  const tier = await getEntitlementTier();
+  if (tier === "free" && !isFreeWordGamePuzzle(puzzle)) {
     return NextResponse.json({ error: "subscription_required" }, { status: 403 });
   }
+  if ((puzzle.curved || puzzle.premiumOnly) && !canAccessCurvedPuzzle(tier)) {
+    return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+  }
+
+  // The study day is marked HERE — on the first letter actually entered —
+  // and no longer when the page opens. Owner's decision, 03.09.2026: a
+  // puzzle page that was opened and left untouched is not a day of study.
+  // This is the first graded letter by construction: CrosswordBoard POSTs
+  // here on every keystroke and nowhere else, so the first request of a
+  // session IS the first letter. Idempotent and read-only after the first
+  // mark of the day (see markStudyDay), and deferred with after(), so the
+  // remaining keystrokes cost one indexed lookup off the response path.
+  await markStudyDayVisit("word-game");
 
   const answers = crosswordLetterMap(puzzle);
   const results = guesses.map((g) => ({

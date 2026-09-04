@@ -7,7 +7,6 @@ import { isFlashcardLevel } from "@/lib/flashcards";
 import { isWordGameType } from "@/lib/word-games/types";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
 import { getCurrentUser } from "@/lib/auth";
-import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import { puzzleDescription, puzzleTitle } from "@/lib/word-games/metadata";
@@ -112,10 +111,20 @@ export default async function WordGamePuzzlePage({
     redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
   }
 
-  // Opening the puzzle is the study action — finishing it is not required.
-  // A logged-out visitor on a free-trial puzzle marks nothing, because
-  // there is no account to mark it on.
-  await markStudyDayVisit("word-game", user);
+  // NO day mark here — deliberately, since 03.09.2026 (owner's decision).
+  //
+  // Opening this page used to count as a day of study on its own, before a
+  // single letter: measured 03.09.2026, a page open with 0 keystrokes put
+  // one "studied" day on /profile. For a crossword the day is now marked by
+  // POST /api/word-games/check instead, i.e. by the first letter actually
+  // entered — see that route.
+  //
+  // The consequence for WORD_SEARCH, stated rather than hidden: it has no
+  // per-move server call at all (its grid and word list are public, so the
+  // whole game is graded in the browser), so opening one now marks nothing
+  // and its day comes from finishing it — WordGameProgress.completedAt,
+  // already a streak source in src/lib/streaks.ts. This is the same rule,
+  // not a second one: a puzzle nobody touched is not a day of study.
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
