@@ -1,4 +1,5 @@
 import { test, expect } from "./helpers/test";
+import { isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
 
 /**
  * The free puzzles must be reachable by a LINK, not only by a sitemap
@@ -38,9 +39,11 @@ for (const lang of ["es", "ru"] as const) {
     // paywall, robots.ts and sitemap.ts read. A link to a locked rung
     // would send a crawler to a 307 into /pricing.
     for (const href of indexed) {
-      const [, , , level, sequence] = PUZZLE_HREF.exec(href)!;
-      expect(level, href).not.toBe("C1");
-      expect(Number(sequence), href).toBeLessThanOrEqual(10);
+      const [, , type, level, sequence] = PUZZLE_HREF.exec(href)!;
+      // Спрашивается само правило, а не его пересказ числом: с
+      // 05.09.2026 бесплатным бывает и номер за десяткой, названный
+      // поимённо (EXTRA_FREE_WORD_GAME_RUNGS, PROGRESS 7.110).
+      expect(isFreeWordGamePuzzle({ type, level, sequence: Number(sequence) }), href).toBe(true);
     }
 
     // The point of the section: it covers ladders the picker's initial tab

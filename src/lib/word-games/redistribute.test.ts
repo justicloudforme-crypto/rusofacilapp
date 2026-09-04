@@ -3,7 +3,7 @@ import { boardSizeMismatches, dealWords, dealWordsToSizes, planLayout, sizeCombi
 import { BOARD_SIZES, corridorFor, judge, LONGEST_OVER_SIDE_LIMIT } from "./quality";
 import { DENSITY_SPLITS, PORTION_5_SOURCES, densityTailCount, isDensityOwnedRung, findDensitySplit } from "./density-rungs";
 import { occupancyStats } from "./word-search-audit";
-import { isFreeWordGamePuzzle } from "./free-tier";
+import { EXTRA_FREE_WORD_GAME_RUNGS, isFreeWordGamePuzzle } from "./free-tier";
 import { topicForPuzzle } from "./topics";
 
 const WORDS = [
@@ -110,12 +110,22 @@ describe("the redistribution manifest", () => {
     // манифест заедет бесплатный рунг, которого нет в списке порции 5,
     // цикл выше на нём и упадёт.
     expect(DENSITY_SPLITS.filter((s) => isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: s.sequence }))).toHaveLength(26);
-    // А хвосты не бывают бесплатными НИКОГДА — ни в порции 5, ни в любой
-    // будущей. Это и есть то, что держит набор URL в sitemap неизменным:
-    // хвост, попавший в десятку, добавил бы файлу страницу.
+    // Хвост бесплатен только ИМЕНЕМ и только если назван в
+    // EXTRA_FREE_WORD_GAME_RUNGS — три ключа, 7.110. Всё остальное
+    // по-прежнему платно: именно это держит набор URL в sitemap под
+    // контролем, потому что хвост, попавший в бесплатную десятку,
+    // добавил бы файлу страницу молча.
+    //
+    // Темы у хвоста нет ни у одного, включая названные: тематический
+    // заголовок принадлежит источнику, хвост его не наследует.
+    const freed = new Set(EXTRA_FREE_WORD_GAME_RUNGS.map((r) => `${r.type}/${r.level}/${r.sequence}`));
+    expect(freed.size).toBe(3);
     for (const s of DENSITY_SPLITS) {
       for (const seq of s.tailSequences) {
-        expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: seq }), `${s.level}/${seq}`).toBe(false);
+        const key = `WORD_SEARCH/${s.level}/${seq}`;
+        expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: seq }), key).toBe(
+          freed.has(key),
+        );
         expect(topicForPuzzle("WORD_SEARCH", s.level, seq)).toBeNull();
       }
     }

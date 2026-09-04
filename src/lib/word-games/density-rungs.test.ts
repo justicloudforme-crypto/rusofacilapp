@@ -14,8 +14,9 @@ import {
   PORTION_5_SOURCES,
 } from "./density-rungs";
 import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
-import { isFreeWordGamePuzzle } from "./free-tier";
+import { EXTRA_FREE_WORD_GAME_RUNGS, isFreeWordGamePuzzle } from "./free-tier";
 import { BOARD_SIZES } from "./quality";
+import { topicForPuzzle } from "./topics";
 
 describe("density-rungs manifest", () => {
   it("promises exactly as many tail rungs as it promises parts", () => {
@@ -30,21 +31,75 @@ describe("density-rungs manifest", () => {
   // бесплатных рунгов нет вовсе. Тест, повторяющий правило своими словами,
   // сторожит свою копию правила, а не правило.
   //
-  // ХВОСТ — правило без исключений, и оно здесь главное. Набор URL в
-  // sitemap.xml выведен из констант free-tier.ts, а не из базы, поэтому
-  // новая строка добавляет файлу страницу ровно в одном случае: если её
-  // номер попал в бесплатную десятку. Ни одна порция такого не делает и
-  // не имеет права сделать — порция 5 (7.109) в том числе: три её хвоста
-  // (B1/668, B1/669, B2/405) стоят в конце лестниц.
-  it("never puts a tail on a free rung — the sitemap URL set must not move", () => {
+  // ХВОСТ и набор URL в sitemap.xml. Набор выведен из free-tier.ts, а не
+  // из базы, поэтому новая строка добавляет файлу страницу ровно в двух
+  // случаях: её номер попал в бесплатную десятку — этого не делает и не
+  // имеет права сделать ни одна порция, — либо координата названа
+  // поимённо в EXTRA_FREE_WORD_GAME_RUNGS.
+  //
+  // 05.09.2026 (7.110) названы три: хвосты B1/668, B1/669 и B2/405, куда
+  // порция 5 унесла половину слов трёх бесплатных тематических страниц.
+  // Утверждение от этого не ослабло, а разошлось надвое: неназванный
+  // хвост бесплатным быть не может по-прежнему, а названный обязан быть
+  // настоящим хвостом манифеста и стоять ЗА десяткой — то есть имя не
+  // прикрывает попадание в неё.
+  const FREED_TAILS = new Set(
+    EXTRA_FREE_WORD_GAME_RUNGS.map((r) => `${r.type}/${r.level}/${r.sequence}`),
+  );
+
+  it("never puts a tail on a free rung, except the ones freed by name", () => {
     for (const s of DENSITY_SPLITS) {
       for (const seq of s.tailSequences) {
+        if (FREED_TAILS.has(`WORD_SEARCH/${s.level}/${seq}`)) continue;
         expect(
           isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: seq }),
           `${s.level}/${seq} is a free rung`,
         ).toBe(false);
       }
     }
+  });
+
+  it("names only real tails, only WORD_SEARCH, and only past the free ten", () => {
+    const tails = new Set(
+      DENSITY_SPLITS.flatMap((s) => s.tailSequences.map((seq) => `WORD_SEARCH/${s.level}/${seq}`)),
+    );
+    expect(EXTRA_FREE_WORD_GAME_RUNGS).toHaveLength(3);
+    for (const r of EXTRA_FREE_WORD_GAME_RUNGS) {
+      const key = `${r.type}/${r.level}/${r.sequence}`;
+      // Сверка в обе стороны: имя, которого нет среди хвостов манифеста,
+      // открывало бы страницу, за которую манифест не отвечает.
+      expect(tails.has(key), `${key} — не хвост манифеста`).toBe(true);
+      expect(r.type).toBe("WORD_SEARCH");
+      expect(r.sequence, key).toBeGreaterThan(FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel);
+      // И у названного хвоста темы нет — тематический заголовок на
+      // странице без темы был бы обещанием, которого она не держит.
+      expect(topicForPuzzle("WORD_SEARCH", r.level, r.sequence), key).toBeNull();
+    }
+    // Ровно те три, о которых 7.110, и ни одной больше.
+    expect([...FREED_TAILS].sort()).toEqual([
+      "WORD_SEARCH/B1/668",
+      "WORD_SEARCH/B1/669",
+      "WORD_SEARCH/B2/405",
+    ]);
+  });
+
+  it("control: a tail landing in the free ten is still caught, list or no list", () => {
+    // Позитивный контроль в обе стороны к двум тестам выше.
+    //
+    // 1. Хвост, попавший в бесплатную десятку, правило признаёт
+    //    бесплатным, а список его не покрывает — значит цикл выше на нём
+    //    и упал бы. Без этого «кроме названных» проходило бы на функции,
+    //    которая бесплатных вообще не видит.
+    const planted = { type: "WORD_SEARCH", level: "B2", sequence: 9 };
+    expect(isFreeWordGamePuzzle(planted)).toBe(true);
+    expect(FREED_TAILS.has("WORD_SEARCH/B2/9")).toBe(false);
+    // 2. А названный хвост правило ДЕЙСТВИТЕЛЬНО пускает — иначе
+    //    исключение было бы мёртвым, и тесты выше зеленели бы впустую.
+    expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: "B1", sequence: 668 })).toBe(true);
+    // 3. И соседний по номеру хвост, которого в списке нет, остаётся
+    //    платным: список не расползается на диапазон.
+    expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: "B1", sequence: 667 })).toBe(false);
+    expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: "B2", sequence: 404 })).toBe(false);
   });
 
   // ИСТОЧНИК бесплатным быть может — но только в порции 5, и только тем,

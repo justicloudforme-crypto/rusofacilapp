@@ -1,4 +1,5 @@
 import { test, expect } from "./helpers/test";
+import { isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
 
 /**
  * The games have one entry page, and no game page is a dead end.
@@ -78,9 +79,12 @@ test("es: the hub serves the whole free sample and both game types with no JavaS
   // Every puzzle it names is genuinely free — a link to a locked rung
   // would be a 307 into /pricing handed to a crawler on purpose.
   for (const href of hubPuzzles) {
-    const [, , , level, sequence] = PUZZLE_HREF.exec(href)!;
-    expect(level, href).not.toBe("C1");
-    expect(Number(sequence), href).toBeLessThanOrEqual(10);
+    const [, , type, level, sequence] = PUZZLE_HREF.exec(href)!;
+    // Через само правило, а не через `<= 10` и `!== "C1"`: с 05.09.2026
+    // бесплатным бывает и номер за десяткой, названный поимённо
+    // (EXTRA_FREE_WORD_GAME_RUNGS, PROGRESS 7.110). Пересказ правила
+    // здесь объявил бы такую страницу дефектом ссылки.
+    expect(isFreeWordGamePuzzle({ type, level, sequence: Number(sequence) }), href).toBe(true);
   }
 
   // The same set the catalogue's own server-rendered index publishes: one

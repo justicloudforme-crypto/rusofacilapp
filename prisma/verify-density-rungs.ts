@@ -48,7 +48,7 @@ import {
 } from "../src/lib/word-games/density-rungs";
 import { auditPuzzle, puzzleInputFromRow } from "../src/lib/word-games/word-search-audit";
 import { boardSize } from "../src/lib/word-games/redistribute";
-import { isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
+import { EXTRA_FREE_WORD_GAME_RUNGS, isFreeWordGamePuzzle } from "../src/lib/word-games/free-tier";
 import { readFileSync } from "node:fs";
 import { PROD_BASELINE_PATH, type BaselineFile } from "../src/lib/word-games/bank-fingerprint";
 
@@ -312,11 +312,30 @@ async function main() {
         where: { type_level_sequence: { type: "WORD_SEARCH", level, sequence: seq } },
       });
       if (existing) complain(`WORD_SEARCH/${level}/${seq}: номер УЖЕ занят строкой id ${existing.id}.`);
-      // Исключений у этого запрета нет и у порции 5 тоже: хвост в
-      // бесплатной десятке добавил бы страницу в sitemap.xml, набор URL
-      // которого выведен из констант free-tier.ts, а не из базы.
+      // Запрет прежний по силе, но названный точнее (05.09.2026, 7.110).
+      //
+      // Он всегда охранял одно: НЕЗАМЕЧЕННОЕ пополнение sitemap. Пока
+      // бесплатность была только номером, «хвост не бесплатен» и «хвост
+      // не в десятке» были одним и тем же утверждением, и оно стояло в
+      // первой форме. Теперь бесплатным можно стать ещё и ИМЕНЕМ, и
+      // первая форма покраснела бы на трёх хвостах, открытых осознанно.
+      //
+      // Поэтому исключение — перечисление тех же трёх координат, что
+      // открыты в free-tier.ts, и ничего больше. Для любого хвоста, не
+      // названного там, условие ровно то же, что было: попал в
+      // бесплатную десятку — красный. Ослабить это исключение нельзя,
+      // потому что оно не условие: список из трёх ключей не растягивается.
       if (isFreeWordGamePuzzle({ type: "WORD_SEARCH", level, sequence: seq })) {
-        complain(`WORD_SEARCH/${level}/${seq}: хвост попал в БЕСПЛАТНУЮ десятку — это добавило бы URL в sitemap.`);
+        const named = EXTRA_FREE_WORD_GAME_RUNGS.some(
+          (r) => r.type === "WORD_SEARCH" && r.level === level && r.sequence === seq,
+        );
+        if (named) {
+          console.log(
+            `  · WORD_SEARCH/${level}/${seq}: бесплатен ИМЕНЕМ (EXTRA_FREE_WORD_GAME_RUNGS) — его страница в sitemap осознанно.`,
+          );
+        } else {
+          complain(`WORD_SEARCH/${level}/${seq}: хвост попал в БЕСПЛАТНУЮ десятку — это добавило бы URL в sitemap.`);
+        }
       }
     }
     console.log(`  ${tails.length} номеров проверено: ${tails.map((t) => `${t.level}/${t.seq}`).join(", ")}`);
