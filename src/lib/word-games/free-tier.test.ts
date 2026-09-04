@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { flashcardLevels } from "@/lib/flashcards/types";
 import { wordGameTypes } from "./types";
-import { WORD_GAME_FREE_RUNGS_PER_LEVEL, isFreeWordGamePuzzle } from "./free-tier";
+import { WORD_GAME_FREE_RUNGS_PER_LEVEL, isFreeWordGamePuzzle, isPubliclyOpenableWordGamePuzzle } from "./free-tier";
 import { topicForPuzzle } from "./topics";
 
 /**
@@ -98,5 +98,41 @@ describe("the free word-game tier means the same 80 URLs everywhere", () => {
     ).length;
     expect(driftedCount).toBe(100);
     expect(driftedCount).not.toBe(free.length);
+  });
+});
+
+describe("isPubliclyOpenableWordGamePuzzle", () => {
+  const base = { type: "WORD_SEARCH", level: "A1", sequence: 2 };
+
+  it("accepts an ordinary free rung", () => {
+    expect(isPubliclyOpenableWordGamePuzzle({ ...base, curved: false, premiumOnly: false })).toBe(true);
+    expect(isPubliclyOpenableWordGamePuzzle(base)).toBe(true);
+  });
+
+  it("refuses a free rung that the SECOND gate closes", () => {
+    // The puzzle page's own order: isFreeWordGamePuzzle first, then
+    // `(curved || premiumOnly) && !canAccessCurvedPuzzle(tier)`, and that
+    // second one is Premium-only. Both of these answer an anonymous
+    // visitor with a 307 into /pricing.
+    expect(isPubliclyOpenableWordGamePuzzle({ ...base, curved: true })).toBe(false);
+    expect(isPubliclyOpenableWordGamePuzzle({ ...base, premiumOnly: true })).toBe(false);
+    expect(isPubliclyOpenableWordGamePuzzle({ ...base, curved: true, premiumOnly: true })).toBe(false);
+  });
+
+  it("still refuses what the first rule refuses, flags or no flags", () => {
+    expect(isPubliclyOpenableWordGamePuzzle({ type: "WORD_SEARCH", level: "C1", sequence: 1 })).toBe(false);
+    expect(isPubliclyOpenableWordGamePuzzle({ type: "WORD_SEARCH", level: "A1", sequence: 11 })).toBe(false);
+  });
+
+  /**
+   * Positive control: the rule this replaced — free-by-rule alone — must
+   * be visibly different on the exact row the e2e fixture holds. Without
+   * this the three tests above could be passing on a function that
+   * ignores the flags entirely, which is precisely what shipped.
+   */
+  it("control: the free rule alone really does disagree, on the real row that exposed it", () => {
+    const fixtureStar = { type: "WORD_SEARCH", level: "A1", sequence: 2, curved: true, premiumOnly: true };
+    expect(isFreeWordGamePuzzle(fixtureStar)).toBe(true);
+    expect(isPubliclyOpenableWordGamePuzzle(fixtureStar)).toBe(false);
   });
 });

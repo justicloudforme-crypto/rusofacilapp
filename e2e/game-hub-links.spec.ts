@@ -41,11 +41,26 @@ const GAME_PAGES = [
   "/es/word-games",
 ];
 
-async function paths(page: import("@playwright/test").Page) {
+async function paths(page: import("@playwright/test").Page, within = "") {
   return page
-    .locator("a")
+    .locator(`${within} a`.trim())
     .evaluateAll((els) => els.map((el) => new URL((el as HTMLAnchorElement).href).pathname));
 }
+
+/**
+ * The rungs a page PUBLISHES, read from the server-rendered index and not
+ * from every <a> on the page.
+ *
+ * The distinction is the whole point on /[lang]/word-games, which also
+ * renders WordGamesPicker's own grid: that grid lists a ladder in full,
+ * paywalled rungs included, so counting every link there answers a
+ * different question than "what did we publish as free". Measured
+ * 04.09.2026 on the e2e fixture, the two differ by exactly the ★ rung.
+ */
+const publishedRungs = async (page: import("@playwright/test").Page, path: string) => {
+  await page.goto(path);
+  return puzzlesOf(await paths(page, "section:has(h2)"));
+};
 
 const puzzlesOf = (hrefs: string[]) => hrefs.filter((h) => PUZZLE_HREF.test(h));
 
@@ -68,12 +83,9 @@ test("es: the hub serves the whole free sample and both game types with no JavaS
     expect(Number(sequence), href).toBeLessThanOrEqual(10);
   }
 
-  // The same set the catalogue's own server-rendered index emits: one rule
-  // (isFreeWordGamePuzzle), one bank, two pages.
-  await page.goto("/es/word-games");
-  const catalogue = puzzlesOf(await paths(page));
-  const indexed = new Set(catalogue.filter((h) => Number(PUZZLE_HREF.exec(h)![4]) <= 10 && !h.includes("/C1/")));
-  expect(new Set(hubPuzzles)).toEqual(indexed);
+  // The same set the catalogue's own server-rendered index publishes: one
+  // rule (isPubliclyOpenableWordGamePuzzle), one bank, two pages.
+  expect(new Set(hubPuzzles)).toEqual(new Set(await publishedRungs(page, "/es/word-games")));
 
   // Positive control for the extractor itself: run it on a page that has
   // no puzzle links at all. If this ever returns something, the counts
@@ -127,20 +139,20 @@ test("es: no Spanish game page is a dead end", async ({ page }) => {
 
 for (const lang of ["es", "ru"] as const) {
   test(`${lang}: a free puzzle links its neighbour rungs and never past the free ladder`, async ({ page }) => {
-    await page.goto(`/${lang}/word-games`);
-    // Deduplicated: the catalogue renders the picker's own grid AND the
-    // free index, so every free rung appears twice in the HTML.
+    // The ladder is read from what the catalogue PUBLISHES, not from every
+    // link on it — see publishedRungs. Deduplicated because the index and
+    // the picker can name the same rung.
     const ladder = [
       ...new Set(
-        puzzlesOf(await paths(page))
+        (await publishedRungs(page, `/${lang}/word-games`))
           .filter((h) => h.includes("/WORD_SEARCH/A1/"))
-          .map((h) => Number(PUZZLE_HREF.exec(h)![4]))
-          .filter((n) => n <= 10),
+          .map((h) => Number(PUZZLE_HREF.exec(h)![4])),
       ),
     ].sort((a, b) => a - b);
-    // Locally the bank holds rungs 1..10; the CI fixture holds two. Both
-    // are enough for a first and a last, and neither number is hardcoded.
-    expect(ladder.length).toBeGreaterThanOrEqual(2);
+    // Locally the bank holds rungs 1..10; the CI fixture holds 1, 3, 4 —
+    // rung 2 is the ★ sample and is deliberately NOT published. Both are
+    // enough for a first, a middle and a last, and no number is hardcoded.
+    expect(ladder.length).toBeGreaterThanOrEqual(3);
     const [first] = ladder;
     const last = ladder[ladder.length - 1];
 
@@ -158,10 +170,27 @@ for (const lang of ["es", "ru"] as const) {
     // green because nothing was ever found.
     expect(await rungLinks(first)).toContain(ladder[1]);
 
+    // A rung in the middle reaches BOTH ways.
+    const middle = ladder[1];
+    const around = await rungLinks(middle);
+    expect(around, `puzzle ${middle} must link back to ${ladder[0]}`).toContain(ladder[0]);
+    expect(around, `puzzle ${middle} must link on to ${ladder[2]}`).toContain(ladder[2]);
+
+    const topLinks = await rungLinks(last);
     // The top of the FREE ladder links nothing above it. Rung 11 is
     // paywalled and a link to it is a 307 into /pricing.
-    for (const seq of await rungLinks(last)) {
+    for (const seq of topLinks) {
       expect(seq, `puzzle ${last} must not link past the free ladder`).toBeLessThanOrEqual(last);
+    }
+
+    // And no neighbour link may name a rung the catalogue did not publish.
+    // This is the assertion the ★ rung would trip: WORD_SEARCH/A1/2 is
+    // free by the sequence rule, is Premium-gated, and answers an
+    // anonymous visitor with a 307 — so it is absent from `ladder`, and a
+    // walk that stepped onto it would be caught here rather than three
+    // pages later.
+    for (const seq of [...(await rungLinks(first)), ...around, ...topLinks]) {
+      expect(ladder, `rung ${seq} is linked as a neighbour but not published as free`).toContain(seq);
     }
   });
 }

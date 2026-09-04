@@ -33,3 +33,39 @@ export function isFreeWordGamePuzzle(puzzle: { type: string; level: string; sequ
     puzzle.sequence <= WORD_GAME_FREE_RUNGS_PER_LEVEL
   );
 }
+
+/**
+ * Which puzzles a signed-out visitor — and therefore a crawler — can
+ * actually OPEN. Free by the rule above, and not behind the second gate.
+ *
+ * The two are not the same rule, and treating them as one was a real
+ * defect. `isFreeWordGamePuzzle` is only the FIRST of two checks the
+ * puzzle page makes: after it comes
+ *
+ *   if ((row.curved || row.premiumOnly) && !canAccessCurvedPuzzle(tier))
+ *     redirect(`/${lang}/pricing?next=…`)
+ *
+ * and `canAccessCurvedPuzzle` is Premium-only (entitlement.ts). So a row
+ * with `curved` or `premiumOnly` set inside rungs 1…10 passes the free
+ * rule and still answers an anonymous visitor with a 307 into /pricing.
+ * Every link surface built for crawlers — the free index on
+ * /[lang]/word-games and on /es/juegos-para-aprender-ruso, and the
+ * neighbour rungs on a puzzle page — must ask THIS question, not the one
+ * above, or it publishes links that redirect.
+ *
+ * Found on 04.09.2026 by the e2e fixture, which holds exactly such a row
+ * (WORD_SEARCH/A1/2, curved + premiumOnly) as its ★ sample. Production
+ * has none today — measured 02.09.2026, `premiumOnly` inside 1…10 was 0
+ * for all ten (type, level) pairs — so this was true by data, not by
+ * code, and one `db:set-premium-only-word-games` run away from being
+ * false. See PROGRESS.md 7.103.
+ */
+export function isPubliclyOpenableWordGamePuzzle(puzzle: {
+  type: string;
+  level: string;
+  sequence: number;
+  curved?: boolean | null;
+  premiumOnly?: boolean | null;
+}): boolean {
+  return isFreeWordGamePuzzle(puzzle) && !puzzle.curved && !puzzle.premiumOnly;
+}

@@ -5,7 +5,7 @@ import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
 import type { WordGameGrid, WordGameType, WordPlacement } from "./types";
 import { isWordGameType } from "./types";
 import { GENERIC_SOPA_PUZZLE } from "./topic-landings";
-import { isFreeWordGamePuzzle, WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./free-tier";
+import { isPubliclyOpenableWordGamePuzzle, WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./free-tier";
 
 export interface PuzzleRow {
   id: string;
@@ -223,11 +223,15 @@ export const getLandingPuzzleForTopic = cache(async (topic: string): Promise<Puz
 export async function getFreeSequences(): Promise<Map<string, Set<number>>> {
   const rows = await db.wordGamePuzzle.findMany({
     where: { sequence: { lte: WORD_GAME_FREE_RUNGS_PER_LEVEL } },
-    select: { type: true, level: true, sequence: true },
+    // curved and premiumOnly are read, not assumed: a rung that carries
+    // either answers an anonymous visitor with a 307 into /pricing even
+    // though the free rule accepts it, so publishing its link would be
+    // handing a crawler a redirect. See isPubliclyOpenableWordGamePuzzle.
+    select: { type: true, level: true, sequence: true, curved: true, premiumOnly: true },
   });
   const byPair = new Map<string, Set<number>>();
   for (const row of rows) {
-    if (!isFreeWordGamePuzzle(row)) continue;
+    if (!isPubliclyOpenableWordGamePuzzle(row)) continue;
     const key = pairKey(row.type, row.level);
     const existing = byPair.get(key);
     if (existing) existing.add(row.sequence);
