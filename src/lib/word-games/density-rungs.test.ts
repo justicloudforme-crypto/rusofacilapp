@@ -11,6 +11,7 @@ import {
   findDensitySplit,
   isDensityOwnedRung,
   ladderGaps,
+  PORTION_5_SOURCES,
 } from "./density-rungs";
 import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 import { isFreeWordGamePuzzle } from "./free-tier";
@@ -28,14 +29,43 @@ describe("density-rungs manifest", () => {
   // объявляло бы бесплатным C1/10, который бесплатным не был никогда: у C1
   // бесплатных рунгов нет вовсе. Тест, повторяющий правило своими словами,
   // сторожит свою копию правила, а не правило.
-  it("never splits a free rung — the sitemap and robots rule must not move", () => {
+  //
+  // ХВОСТ — правило без исключений, и оно здесь главное. Набор URL в
+  // sitemap.xml выведен из констант free-tier.ts, а не из базы, поэтому
+  // новая строка добавляет файлу страницу ровно в одном случае: если её
+  // номер попал в бесплатную десятку. Ни одна порция такого не делает и
+  // не имеет права сделать — порция 5 (7.109) в том числе: три её хвоста
+  // (B1/668, B1/669, B2/405) стоят в конце лестниц.
+  it("never puts a tail on a free rung — the sitemap URL set must not move", () => {
     for (const s of DENSITY_SPLITS) {
-      for (const seq of [s.sequence, ...s.tailSequences]) {
+      for (const seq of s.tailSequences) {
         expect(
           isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: seq }),
           `${s.level}/${seq} is a free rung`,
         ).toBe(false);
       }
+    }
+  });
+
+  // ИСТОЧНИК бесплатным быть может — но только в порции 5, и только тем,
+  // что названы поимённо. Это не ослабление прежнего безусловного
+  // запрета, а его замена на более узкое утверждение: прежнее «ни один»
+  // проверялось одной строкой и после порции 5 стало бы ложным, а
+  // «кроме бесплатных» не проверяло бы ничего. Список сверяется в ОБЕ
+  // стороны, поэтому ни лишний бесплатный рунг в манифесте, ни
+  // выпавшая из манифеста запись списка мимо теста не пройдут.
+  it("allows a free source only for the 26 rungs portion 5 names", () => {
+    const freeSources = DENSITY_SPLITS
+      .filter((s) => isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: s.sequence }))
+      .map((s) => `${s.level}/${s.sequence}`);
+    expect(PORTION_5_SOURCES).toHaveLength(26);
+    expect([...freeSources].sort()).toEqual([...PORTION_5_SOURCES].sort());
+    // И каждый ключ списка обязан быть в манифесте — иначе список
+    // разрешал бы то, чего нет, и молча пережил бы удаление записи.
+    for (const key of PORTION_5_SOURCES) {
+      const [level, seq] = key.split("/");
+      expect(findDensitySplit(level, Number(seq)), key).toBeDefined();
+      expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level, sequence: Number(seq) }), key).toBe(true);
     }
   });
 
@@ -110,12 +140,12 @@ describe("density-rungs manifest", () => {
   // намеренно.
   it("describes every row already written to production", () => {
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
-    expect(applied).toHaveLength(821);
-    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(274);
+    expect(applied).toHaveLength(847);
+    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(277);
     expect(applied.filter((s) => s.level === "A1").flatMap((s) => s.tailSequences)).toHaveLength(2);
     expect(applied.filter((s) => s.level === "A2").flatMap((s) => s.tailSequences)).toHaveLength(23);
-    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(105);
-    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(77);
+    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(107);
+    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(78);
     expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(67);
   });
 
@@ -190,11 +220,45 @@ describe("density-rungs manifest", () => {
   });
 
   // Весь манифест применён — значит прогон разгрузки без --only= сейчас
-  // не выбрал бы ни одного рунга. Порция 5 в манифест НЕ внесена
-  // намеренно: она единственная трогает бесплатную десятку и sitemap, и
-  // идёт отдельным заходом (7.108).
-  it("has nothing pending — portion 5 is deliberately absent", () => {
+  // не выбрал бы ни одного рунга. С порцией 5 (05.09.2026) коридор
+  // закрыт целиком: пятой очереди больше нет.
+  //
+  // Само по себе «неприменённых 0» — это ноль на пустом множестве, и
+  // доказывать им нечего. Поэтому рядом стоит группа по ДАТЕ 05.09,
+  // непустота которой проверяется ПЕРЕД любым `every`: если запись
+  // порции 5 потеряет `applied`, упадёт первая строка; если потеряется
+  // вся порция, упадёт вторая.
+  it("has nothing pending — the corridor is closed", () => {
     expect(DENSITY_SPLITS.filter((s) => !s.applied)).toHaveLength(0);
+    const portion5 = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-05");
+    expect(portion5.length).toBeGreaterThan(0);
+    expect(portion5).toHaveLength(26);
+  });
+
+  // Порция 5 — рунги 1-10 не-C1 (7.109). Разводится по цене ровно так
+  // же, как группа 04.09: parts: 1 — смена размера доски и ничего
+  // больше, parts: 2 — новая строка и два новых URL. Строка «третьего
+  // вида не бывает» стоит здесь по той же причине, что и там: запись с
+  // parts: 3 иначе провалилась бы мимо обеих проверок молча.
+  it("splits the 05.09 portion into a resize half and a split half", () => {
+    const day = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-05");
+    expect(day.length).toBeGreaterThan(0);
+    expect(day).toHaveLength(26);
+    const resize = day.filter((s) => s.parts === 1);
+    const split = day.filter((s) => s.parts === 2);
+    expect(resize.length + split.length).toBe(day.length);
+    expect(resize).toHaveLength(23);
+    expect(resize.every((s) => s.tailSequences.length === 0)).toBe(true);
+    expect(split).toHaveLength(3);
+    expect(split.every((s) => s.tailSequences.length === 1)).toBe(true);
+    expect(split.map((s) => `${s.level}/${s.sequence}`).sort()).toEqual(["B1/10", "B1/9", "B2/10"]);
+    expect(split.flatMap((s) => s.tailSequences).sort((a, b) => a - b)).toEqual([405, 668, 669]);
+    // Перемер против живого прода 05.09 (7.109): A1 2 / A2 7 / B1 9 / B2 8,
+    // и ни одного C1 — у C1 бесплатных рунгов нет вовсе.
+    expect(Object.entries(
+      day.reduce<Record<string, number>>((a, s) => ({ ...a, [s.level]: (a[s.level] ?? 0) + 1 }), {}),
+    ).sort()).toEqual([["A1", 2], ["A2", 7], ["B1", 9], ["B2", 8]]);
+    expect(day.some((s) => s.level === "C1")).toBe(false);
   });
 
   it("owns exactly the rungs it names, and only for WORD_SEARCH", () => {

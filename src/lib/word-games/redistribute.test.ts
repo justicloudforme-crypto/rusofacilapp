@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { boardSizeMismatches, dealWords, dealWordsToSizes, planLayout, sizeCombinations } from "./redistribute";
 import { BOARD_SIZES, corridorFor, judge, LONGEST_OVER_SIDE_LIMIT } from "./quality";
-import { DENSITY_SPLITS, densityTailCount, isDensityOwnedRung, findDensitySplit } from "./density-rungs";
+import { DENSITY_SPLITS, PORTION_5_SOURCES, densityTailCount, isDensityOwnedRung, findDensitySplit } from "./density-rungs";
 import { occupancyStats } from "./word-search-audit";
 import { isFreeWordGamePuzzle } from "./free-tier";
 import { topicForPuzzle } from "./topics";
@@ -89,13 +89,35 @@ describe("the redistribution manifest", () => {
     // здесь однажды уже стоило бы 38 удалённых строк (PROGRESS 7.101),
     // и оно же три дня держало порцию 1 непомеченной, хотя прод её уже
     // носил (7.105).
-    expect(DENSITY_SPLITS.filter((s) => s.applied)).toHaveLength(821);
-    expect(DENSITY_SPLITS.length).toBeGreaterThanOrEqual(821);
+    expect(DENSITY_SPLITS.filter((s) => s.applied)).toHaveLength(847);
+    expect(DENSITY_SPLITS.length).toBeGreaterThanOrEqual(847);
     // Не `sequence > 10`: C1/10 платный (у C1 бесплатных рунгов нет), и
     // повтор правила своими словами именно на нём и ошибался.
+    //
+    // Порция 5 (7.109) — первая и единственная, чьи источники бесплатны и
+    // тематичны по построению: она и есть «рунги 1-10 не-C1». Поэтому
+    // утверждение разведено надвое, а не ослаблено: ВСЁ, что не порция 5,
+    // обязано остаться платным и нетематическим, а порция 5 названа
+    // отдельным списком в density-rungs.test.ts, где каждый её рунг
+    // перечислен поимённо.
+    const portion5 = new Set(PORTION_5_SOURCES);
     for (const s of DENSITY_SPLITS) {
+      if (portion5.has(`${s.level}/${s.sequence}`)) continue;
       expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: s.sequence })).toBe(false);
       expect(topicForPuzzle("WORD_SEARCH", s.level, s.sequence)).toBeNull();
+    }
+    // Исключение стоит ровно 26 записей и ни одной больше: если завтра в
+    // манифест заедет бесплатный рунг, которого нет в списке порции 5,
+    // цикл выше на нём и упадёт.
+    expect(DENSITY_SPLITS.filter((s) => isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: s.sequence }))).toHaveLength(26);
+    // А хвосты не бывают бесплатными НИКОГДА — ни в порции 5, ни в любой
+    // будущей. Это и есть то, что держит набор URL в sitemap неизменным:
+    // хвост, попавший в десятку, добавил бы файлу страницу.
+    for (const s of DENSITY_SPLITS) {
+      for (const seq of s.tailSequences) {
+        expect(isFreeWordGamePuzzle({ type: "WORD_SEARCH", level: s.level, sequence: seq }), `${s.level}/${seq}`).toBe(false);
+        expect(topicForPuzzle("WORD_SEARCH", s.level, seq)).toBeNull();
+      }
     }
   });
 
@@ -125,15 +147,15 @@ describe("the redistribution manifest", () => {
     // рунга починились одной сменой размера доски и не дали ни строки.
     // Порции 1 и 2 (124 + 421) хвостов не дали вовсе — там parts: 1.
     // Порции 3 и 4 (7.108) дали ещё 216, по одному на запись:
-    // A1 2, A2 23, B1 96, B2 55, C1 40. Итого 274 хвоста на 821
-    // применённую запись.
+    // A1 2, A2 23, B1 96, B2 55, C1 40. Порция 5 (7.109) — ещё три:
+    // B1 два, B2 один. Итого 277 хвостов на 847 применённых записей.
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
     expect(applied.filter((s) => s.level === "A1").flatMap((s) => s.tailSequences)).toHaveLength(2);
     expect(applied.filter((s) => s.level === "A2").flatMap((s) => s.tailSequences)).toHaveLength(23);
-    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(105);
-    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(77);
+    expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(107);
+    expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(78);
     expect(applied.filter((s) => s.level === "C1").flatMap((s) => s.tailSequences)).toHaveLength(67);
-    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(274);
+    expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(277);
     expect(densityTailCount("A1")).toBe(2);
   });
 
