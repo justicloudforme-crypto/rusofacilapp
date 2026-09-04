@@ -108,7 +108,7 @@ describe("density-rungs manifest", () => {
   // намеренно.
   it("describes every row already written to production", () => {
     const applied = DENSITY_SPLITS.filter((s) => s.applied);
-    expect(applied).toHaveLength(184);
+    expect(applied).toHaveLength(204);
     expect(applied.reduce((n, s) => n + s.tailSequences.length, 0)).toBe(58);
     expect(applied.filter((s) => s.level === "B1").flatMap((s) => s.tailSequences)).toHaveLength(9);
     expect(applied.filter((s) => s.level === "B2").flatMap((s) => s.tailSequences)).toHaveLength(22);
@@ -133,14 +133,24 @@ describe("density-rungs manifest", () => {
   // Пилот порции 2: двадцать рунгов, каждый — одна доска 18×18 и ноль
   // новых строк. Сторож ровно на цену порции: если сюда однажды заедет
   // запись с parts > 1, порция перестанет быть бесплатной по строкам и
-  // URL, а таблица в PROGRESS 7.105 будет врать молча.
+  // URL, а таблица в PROGRESS 7.106 будет врать молча. Утверждение
+  // адресуется группе по дате, а не «всем неприменённым»: с записью
+  // 04.09 неприменённых не осталось вовсе, и версия «через !applied»
+  // проходила бы на пустом множестве — тот самый ноль без контроля.
   it("keeps the portion-2 pilot at zero new rows and one board each", () => {
-    const pending = DENSITY_SPLITS.filter((s) => !s.applied);
-    expect(pending).toHaveLength(20);
-    expect(pending.every((s) => s.parts === 1)).toBe(true);
-    expect(pending.every((s) => s.tailSequences.length === 0)).toBe(true);
-    expect(pending.every((s) => s.sizes.length === 1 && s.sizes[0] === 18)).toBe(true);
-    expect(new Set(pending.map((s) => s.level))).toEqual(new Set(["A1", "A2", "B1", "B2", "C1"]));
+    const pilot = DENSITY_SPLITS.filter((s) => s.applied === "2026-09-04");
+    expect(pilot).toHaveLength(20);
+    expect(pilot.every((s) => s.parts === 1)).toBe(true);
+    expect(pilot.every((s) => s.tailSequences.length === 0)).toBe(true);
+    expect(pilot.every((s) => s.sizes.length === 1 && s.sizes[0] === 18)).toBe(true);
+    expect(new Set(pilot.map((s) => s.level))).toEqual(new Set(["A1", "A2", "B1", "B2", "C1"]));
+  });
+
+  // Весь манифест применён — значит прогон разгрузки без --only= сейчас
+  // не выбрал бы ни одного рунга, и это НАМЕРЕННО: остальные 401 рунг
+  // порции 2 в манифест не внесены и ждут решения владельца (7.106).
+  it("has nothing pending — the remaining 401 rungs are deliberately absent", () => {
+    expect(DENSITY_SPLITS.filter((s) => !s.applied)).toHaveLength(0);
   });
 
   it("owns exactly the rungs it names, and only for WORD_SEARCH", () => {
