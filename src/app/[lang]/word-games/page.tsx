@@ -9,6 +9,7 @@ import { countAllSequences, getAllCurvedSequences, getAllPremiumOnlySequences, g
 import { getAllCompletedSequences } from "@/lib/word-games/progress";
 import WordGamesPicker, { type PickerData } from "@/components/word-games/WordGamesPicker";
 import FreePuzzleIndex from "@/components/word-games/FreePuzzleIndex";
+import SpanishGamesHubLink from "@/components/word-games/SpanishGamesHubLink";
 import { notFound } from "next/navigation";
 import { hubMetadata } from "@/lib/word-games/metadata";
 import { routeAlternates } from "@/lib/site";
@@ -83,6 +84,12 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
         dict={dict.wordGames}
         available={(type, level) => freeByPair.get(`${type}:${level}`)}
       />
+
+      {/* The Spanish entry page. Spanish-only, so it lives in its own
+          component — every string on this bilingual page comes from a
+          dictionary, and this one cannot (see SpanishGamesHubLink for the
+          measurement that put it here). */}
+      {lang === "es" && <SpanishGamesHubLink />}
     </div>
   );
 }

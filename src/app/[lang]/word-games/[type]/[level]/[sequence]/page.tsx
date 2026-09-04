@@ -5,7 +5,8 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { isWordGameType } from "@/lib/word-games/types";
-import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
+import { getFreeSequences, getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
+import { freeNeighbours } from "@/lib/word-games/free-index";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
@@ -96,13 +97,31 @@ export default async function WordGamePuzzlePage({
   const user = await getCurrentUser();
   const topicPage = buildTopicLink(lang, row.topic);
 
+  // Neighbour rungs, and only for a free puzzle.
+  //
+  // Measured on production 03.09.2026 over 1912 crawled pages: the 160
+  // free puzzle URLs had exactly one kind of outgoing edge between them —
+  // none. Every one of them pointed back at /word-games (and, when themed,
+  // at one vocabulary page), so the free sample was a star with no path
+  // through it: a crawler that lands on rung 4 learns about rung 5 only by
+  // going back up to the hub. These two links are that path.
+  //
+  // The read is skipped entirely for a paywalled rung, which is both the
+  // cheap case and the honest one: see freeNeighbours on why rung 10 must
+  // not link to rung 11.
+  const free = isFreeWordGamePuzzle({ type, level, sequence });
+  const freeByPair = free ? await getFreeSequences() : null;
+  const neighbours = freeByPair
+    ? freeNeighbours(lang, type, level, sequence, (t, l) => freeByPair.get(`${t}:${l}`))
+    : { prev: null, next: null };
+
   // The section-wide proxy.ts gate was removed so the free-trial sample
   // (see isFreeWordGamePuzzle) can be reached without a subscription —
   // this page must now check entitlement itself, the same way the story
   // reader and lesson pages already do for their own free/premium splits.
   const tier = await getEntitlementTier();
   const entitled = tier !== "free";
-  if (!entitled && !isFreeWordGamePuzzle({ type, level, sequence })) {
+  if (!entitled && !free) {
     redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
   }
   // ★ (curved) and premiumOnly puzzles need Premium specifically, even for
@@ -161,6 +180,32 @@ export default async function WordGamePuzzlePage({
           puzzle really is themed and the category really has a page, so it
           can never point at a 404. The page is Spanish-only, which is why
           the Russian label says so rather than pretending otherwise. */}
+      {/* The path through the free sample. Server-rendered <a>, no
+          JavaScript: this is the crawler's surface and also the visitor's
+          — "next puzzle" should not need the hub. Rendered only when a
+          neighbour really exists and really is free, so it can never be a
+          link into the paywall. */}
+      {(neighbours.prev || neighbours.next) && (
+        <nav aria-label={dict.wordGames.freeLadderNavLabel} className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+          {neighbours.prev && (
+            <Link
+              href={neighbours.prev.href}
+              className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+            >
+              {dict.wordGames.prevPuzzle.replace("{n}", String(neighbours.prev.sequence))}
+            </Link>
+          )}
+          {neighbours.next && (
+            <Link
+              href={neighbours.next.href}
+              className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+            >
+              {dict.wordGames.nextPuzzle.replace("{n}", String(neighbours.next.sequence))}
+            </Link>
+          )}
+        </nav>
+      )}
+
       {topicPage && (
         <p className="mt-8 rounded-2xl border border-black/10 p-5 text-sm leading-6 text-foreground/70 dark:border-white/30">
           <Link

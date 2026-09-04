@@ -233,6 +233,13 @@ function familiesFor(lang) {
     // permanently red; it is covered by the run against production.
     ...(es ? [{ name: "landing", contentOnly: true, path: "/es/sopa-de-letras-ruso-comida", expect: { h1: /\S/, min: 3, sel: 'a[href^="/es/word-games/"]' } }] : []),
     { name: "puzzle",     path: `/${lang}/word-games`,       expect: { h1: /\S/, min: 3, sel: `a[href^="/${lang}/word-games/"]` } },
+    // The games entry page, /es only (it 404s on /ru by design). What it
+    // is FOR since 04.09.2026 is the links: the three game pages, the six
+    // themed boards and the whole free sample, all server-rendered. 20 is
+    // far below the 80 the production bank yields and far above what the
+    // page could emit by accident. `contentOnly` for the same reason as
+    // the topic landing above — the free sample comes from the database.
+    ...(es ? [{ name: "games-hub", contentOnly: true, path: "/es/juegos-para-aprender-ruso", expect: { h1: /\S/, min: 20, sel: 'a[href^="/es/word-games/"]' } }] : []),
     // Paid surface, only meaningful with --expect-subscription. Lesson 2 of
     // A1 rather than lesson 1: lesson 1 of every level is the free trial.
     ...(es && EXPECT_SUBSCRIPTION

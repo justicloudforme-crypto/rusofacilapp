@@ -62,7 +62,23 @@ for (const lang of ["es", "ru"] as const) {
     const indexed = await puzzleLinks(page, "section:has(h2)");
     // Locally the bank holds all 80; in CI the fixture holds a handful.
     // Sampling keeps the run bounded without ever sampling nothing.
-    const sample = indexed.filter((_, i) => i % 13 === 0).slice(0, 6);
+    //
+    // The LAST link is always in the sample, and that is not tidiness.
+    // Until 04.09.2026 this was `i % 13 === 0` alone, which in CI selects
+    // index 0 and nothing else — so the fixture's ★ rung (WORD_SEARCH/A1/2,
+    // `curved` + `premiumOnly`, free by the rule and a 307 into /pricing
+    // for anyone below Premium) sat in the index, was published as a link,
+    // and was never opened by this test. A sample that never reaches the
+    // tail of the list is a sample that cannot find the row at the tail.
+    // A short list is opened in full — in CI that is four links and costs
+    // nothing. Only the 80-link local bank is sampled, and there the last
+    // index is always included.
+    let sample = indexed;
+    if (indexed.length > 12) {
+      const wanted = new Set(indexed.map((_, i) => i).filter((i) => i % 13 === 0));
+      wanted.add(indexed.length - 1);
+      sample = [...wanted].sort((a, b) => a - b).map((i) => indexed[i]);
+    }
     expect(sample.length).toBeGreaterThan(0);
     for (const href of sample) {
       const response = await page.goto(href);

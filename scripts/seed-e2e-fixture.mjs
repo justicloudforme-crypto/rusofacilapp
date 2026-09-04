@@ -147,13 +147,50 @@ async function main() {
         }),
       0,
     );
+    // The free LADDER, added 04.09.2026. e2e/game-hub-links.spec.ts walks
+    // from one free rung to the next, so the fixture has to hold a ladder
+    // to walk: several consecutive rungs of ONE (type, level) pair that a
+    // signed-out visitor can really open. Production holds eight such
+    // ladders of ten; before this the fixture held none — its only pair
+    // with two free rungs was WORD_SEARCH/A1 = [1, 2], and rung 2 is the
+    // ★ sample, `curved` + `premiumOnly`, which answers an anonymous
+    // visitor with a 307 into /pricing. That is what turned the spec red
+    // in CI and green locally, and the defect it exposed is real: the free
+    // index published that link (see isPubliclyOpenableWordGamePuzzle).
+    //
+    // Both numbers below are shapes, not counts to satisfy: the openable
+    // ladder is what the walk needs, and the trap row is what proves the
+    // second gate is still being applied. Losing either would make a
+    // passing suite mean less than it does.
+    const freeByPair = new Map();
+    let freeButLocked = 0;
+    for (const p of puzzles) {
+      if (p.level === "C1" || p.sequence > 10) continue;
+      if (p.curved || p.premiumOnly) {
+        freeButLocked++;
+        continue;
+      }
+      const key = `${p.type}/${p.level}`;
+      freeByPair.set(key, (freeByPair.get(key) ?? 0) + 1);
+    }
+    const longestOpenableLadder = Math.max(0, ...freeByPair.values());
+
     console.log(
       `e2e fixture: ${puzzles.length} puzzles (${curved} curved/★, widest grid ${widestGrid} columns, ` +
-        `widest crossword ${widestCrossword}), ` +
+        `widest crossword ${widestCrossword}, longest openable free ladder ${longestOpenableLadder}, ` +
+        `${freeButLocked} free-by-rule but Premium-gated), ` +
         `${terms.length} glossary terms (${withRelatedLessons} with a related lesson), ` +
         `${cards.length} flashcards in ${cardCategories.size} category/-ies`,
     );
-    if (curved === 0 || withRelatedLessons === 0 || cards.length < 4 || widestGrid < 18 || widestCrossword < 40) {
+    if (
+      curved === 0 ||
+      withRelatedLessons === 0 ||
+      cards.length < 4 ||
+      widestGrid < 18 ||
+      widestCrossword < 40 ||
+      longestOpenableLadder < 3 ||
+      freeButLocked === 0
+    ) {
       console.error("the fixture lost a shape the suite asserts on — see e2e/fixtures/");
       process.exitCode = 1;
     }

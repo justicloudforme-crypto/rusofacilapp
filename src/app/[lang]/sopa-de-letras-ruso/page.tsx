@@ -130,7 +130,7 @@ export default async function SopaDeLetrasRusoPage({
         </ul>
       </section>
 
-      <GameLandingLinks />
+      <GameLandingLinks current="sopa" />
     </div>
   );
 }

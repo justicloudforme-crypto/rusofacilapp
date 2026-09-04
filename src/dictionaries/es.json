@@ -1076,7 +1076,10 @@
     "breakdownLabel": "Horizontales: {across} de {acrossTotal} · verticales: {down} de {downTotal}",
     "progressCountLabel": "Palabras completas: {solved} de {words} · casillas: {filled} de {cells}",
     "wordSearchGridLabel": "Sopa de letras",
-    "crosswordGridLabel": "Crucigrama"
+    "crosswordGridLabel": "Crucigrama",
+    "freeLadderNavLabel": "Otros puzles gratis de este nivel",
+    "prevPuzzle": "← Puzle {n}",
+    "nextPuzzle": "Puzle {n} →"
   },
   "gameResult": {
     "closeLabel": "Cerrar",

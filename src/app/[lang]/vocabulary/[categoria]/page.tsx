@@ -240,6 +240,25 @@ export default async function VocabularyCategoryPage({
               </span>
             </li>
           )}
+          {/* The games entry page. These 23 category pages are in the
+              sitemap, are linked from every other one of them, and already
+              hand a crawler the themed puzzles — so they are the widest
+              crawlable surface the site has that is not the frozen header
+              or footer. Measured on production 04.09.2026,
+              /es/juegos-para-aprender-ruso had six inbound links in total;
+              this line is 23 more. */}
+          <li>
+            <Link
+              href="/es/juegos-para-aprender-ruso"
+              className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+            >
+              Juegos para aprender ruso
+            </Link>
+            <span className="text-sm text-foreground/60">
+              {" "}
+              · sopas de letras y crucigramas gratis, por nivel y por tema
+            </span>
+          </li>
           <li>
             <Link
               href="/es/glossary"
