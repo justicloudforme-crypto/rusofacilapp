@@ -81,3 +81,47 @@ export function freeRungPaths(
 ): string[] {
   return freeLadders(lang, available).flatMap((ladder) => ladder.rungs.map((rung) => rung.href));
 }
+
+export interface FreeNeighbours {
+  prev: FreeRung | null;
+  next: FreeRung | null;
+}
+
+/**
+ * The free rungs immediately before and after one puzzle, inside its own
+ * (type, level) ladder.
+ *
+ * Why the free ladder and not the whole one. Measured on production
+ * 03.09.2026, a free puzzle page was a dead end for a crawler: its only
+ * outgoing edges were the hub and (for a themed puzzle) its vocabulary
+ * page, so the 160 free URLs formed a star around /word-games with no
+ * edges between them. Neighbour links turn that star into a path.
+ *
+ * Deliberately NOT the adjacent sequence number: rung 10 is the last free
+ * one, and linking 10 -> 11 would hand a crawler a 307 into /pricing —
+ * exactly the "link to a page the visitor cannot have" that /word-games
+ * already produces 186 times through the picker's own grid. Neighbours are
+ * chosen from the numbers the bank really holds AND that pass
+ * isFreeWordGamePuzzle, which is the same rule the paywall reads.
+ *
+ * Returns {null, null} for a puzzle that is not itself free: a subscriber
+ * reading rung 57 has the picker's full grid one click away, and a crawler
+ * never gets there at all.
+ */
+export function freeNeighbours(
+  lang: string,
+  type: WordGameType,
+  level: FlashcardLevel,
+  sequence: number,
+  available: (type: WordGameType, level: FlashcardLevel) => Iterable<number> | undefined,
+): FreeNeighbours {
+  if (!isFreeWordGamePuzzle({ type, level, sequence })) return { prev: null, next: null };
+  const ladder = freeLadders(lang, (t, l) => (t === type && l === level ? available(t, l) : undefined))[0];
+  if (!ladder) return { prev: null, next: null };
+  const index = ladder.rungs.findIndex((rung) => rung.sequence === sequence);
+  if (index === -1) return { prev: null, next: null };
+  return {
+    prev: index > 0 ? ladder.rungs[index - 1] : null,
+    next: index < ladder.rungs.length - 1 ? ladder.rungs[index + 1] : null,
+  };
+}

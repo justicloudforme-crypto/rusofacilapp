@@ -89,7 +89,7 @@ export default async function CrucigramasRusoPrincipiantesPage({
         />
       </div>
 
-      <GameLandingLinks />
+      <GameLandingLinks current="crucigrama" />
     </div>
   );
 }

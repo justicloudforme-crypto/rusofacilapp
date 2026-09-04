@@ -146,6 +146,19 @@ const ALL_PAGES = [
   { path: "/es/sopa-de-letras-ruso-comida", contentOnly: true },
   { path: "/es/sopa-de-letras-ruso-familia", contentOnly: true },
   { path: "/es/crucigramas-ruso-principiantes", contentOnly: true },
+  /**
+   * The games entry page, added 04.09.2026 with the free-sample grid it
+   * now carries. That grid is the exact shape this check's sibling
+   * (scripts/layout-fill.mjs) caught on /es|ru/word-games on 02.09.2026: a
+   * wrapped row holding one chip covered 10.7% of a 720px container. The
+   * same component is now on a second page, so the second page has to be
+   * measured too — otherwise the rule protects one of its two callers.
+   *
+   * contentOnly: the grid needs WordGamePuzzle rows, which CI's empty
+   * database has not got; without them the page renders, but without the
+   * shape this entry exists to measure.
+   */
+  { path: "/es/juegos-para-aprender-ruso", contentOnly: true },
 ];
 function overriddenPaths() {
   if (PATHS_ARG) return PATHS_ARG.split(",").map((p) => p.trim()).filter(Boolean);

@@ -54,6 +54,11 @@ const E2E_DIR = join(repoRoot, "e2e");
  * keyboard test — a word typed DOWN must stay above the on-screen
  * keyboard, and the reveal must not touch the page when the engine scrolls
  * for itself (PROGRESS.md 7.95) — again one test per project.
+ * Raised from 103 to 111 on 04.09.2026 by e2e/game-hub-links.spec.ts:
+ * four tests — the hub serving the whole free sample without JavaScript,
+ * no Spanish game page being a dead end, and the neighbour rungs of a free
+ * puzzle in each locale — in each of the two projects they run in, so
+ * 4 x 2 = 8.
  * Raised from 93 to 97 on 03.09.2026, when word-games.spec.ts gained the
  * tap-and-late-keyboard pair (PROGRESS.md 7.97): a cell chosen by finger
  * and then covered by a keyboard that rises AFTER the focus, and a board
@@ -73,7 +78,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * exists to prevent, so if you are here to do that, the thing to fix is
  * the run.
  */
-const MIN_EXECUTED_TESTS = 103;
+const MIN_EXECUTED_TESTS = 111;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.

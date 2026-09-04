@@ -4,7 +4,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { getLandingPuzzleForTopic, getThemedPuzzlesByTopic, toPublicPuzzle } from "@/lib/word-games/data";
 import { getVocabularyCategoryPage } from "@/lib/vocabulary-categories";
-import { landingPath, type TopicLanding } from "@/lib/word-games/topic-landings";
+import { TOPIC_LANDINGS, landingPath, type TopicLanding } from "@/lib/word-games/topic-landings";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
@@ -139,6 +139,30 @@ export default async function TopicLandingPage({ landing }: { landing: TopicLand
           Todos los juegos para aprender ruso →
         </Link>
       </section>
+
+      {/* The other five themed boards. Measured on production 04.09.2026,
+          each of these six pages had exactly ONE inbound link in the whole
+          site — /es/sopa-de-letras-ruso — so they were six leaves hanging
+          off one branch with nothing between them. Linking sideways is
+          also the useful thing on the page: a reader who just did the food
+          board is the reader most likely to want the shopping one. */}
+      <nav className="mt-10 border-t border-black/10 pt-6 dark:border-white/30">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
+          Otros temas
+        </h2>
+        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          {TOPIC_LANDINGS.filter((other) => other.slug !== landing.slug).map((other) => (
+            <li key={other.slug}>
+              <Link
+                href={`/es${landingPath(other)}`}
+                className="tap text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+              >
+                {other.h1.replace(/^Sopa de letras /, "")}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }

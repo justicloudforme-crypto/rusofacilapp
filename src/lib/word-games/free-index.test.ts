@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { freeLadders, freeRungPaths } from "./free-index";
+import { freeLadders, freeNeighbours, freeRungPaths } from "./free-index";
 import { isFreeWordGamePuzzle, WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./free-tier";
 
 /** A production-shaped bank: every ladder holds rungs 1..10 and far beyond. */
@@ -64,5 +64,55 @@ describe("freeLadders", () => {
     expect(unclipped.length - clipped.length).toBe(2 * (WORD_GAME_FREE_RUNGS_PER_LEVEL - 3));
     expect(unclipped).toContain("/es/word-games/CROSSWORD/B2/10");
     expect(clipped).not.toContain("/es/word-games/CROSSWORD/B2/10");
+  });
+});
+
+describe("freeNeighbours", () => {
+  it("walks the free ladder in both directions", () => {
+    const middle = freeNeighbours("es", "CROSSWORD", "B1", 5, deep);
+    expect(middle.prev?.href).toBe("/es/word-games/CROSSWORD/B1/4");
+    expect(middle.next?.href).toBe("/es/word-games/CROSSWORD/B1/6");
+  });
+
+  it("has no previous rung at the bottom and no next rung at the top of the FREE ladder", () => {
+    expect(freeNeighbours("ru", "WORD_SEARCH", "A1", 1, deep).prev).toBeNull();
+    const last = freeNeighbours("ru", "WORD_SEARCH", "A1", WORD_GAME_FREE_RUNGS_PER_LEVEL, deep);
+    expect(last.next, "rung 11 is paywalled; linking it hands a crawler a 307").toBeNull();
+    expect(last.prev?.sequence).toBe(WORD_GAME_FREE_RUNGS_PER_LEVEL - 1);
+  });
+
+  it("stays inside its own (type, level) ladder", () => {
+    const only = (type: string, level: string) =>
+      type === "CROSSWORD" && level === "A2" ? deep() : [];
+    const n = freeNeighbours("es", "CROSSWORD", "A2", 3, only as never);
+    expect(n.prev?.href).toBe("/es/word-games/CROSSWORD/A2/2");
+    expect(n.next?.href).toBe("/es/word-games/CROSSWORD/A2/4");
+    expect(freeNeighbours("es", "WORD_SEARCH", "A2", 3, only as never)).toEqual({ prev: null, next: null });
+  });
+
+  it("jumps a gap rather than linking a rung the bank does not hold", () => {
+    const gapped = (_type: string, level: string) => (level === "B2" ? [1, 2, 5, 9] : deep());
+    const n = freeNeighbours("es", "CROSSWORD", "B2", 2, gapped as never);
+    expect(n.next?.sequence).toBe(5);
+  });
+
+  it("says nothing for a puzzle that is not free itself", () => {
+    expect(freeNeighbours("es", "CROSSWORD", "C1", 3, deep)).toEqual({ prev: null, next: null });
+    expect(freeNeighbours("es", "CROSSWORD", "B1", 11, deep)).toEqual({ prev: null, next: null });
+  });
+
+  /**
+   * Positive control: the obvious wrong implementation — sequence +/- 1,
+   * with no ladder and no free rule — must be visibly different on the
+   * same input, otherwise the assertions above pass on anything.
+   */
+  it("control: sequence +/- 1 really does produce different output", () => {
+    const naive = (sequence: number) => ({ prev: sequence - 1, next: sequence + 1 });
+    const top = WORD_GAME_FREE_RUNGS_PER_LEVEL;
+    expect(naive(top).next).toBe(top + 1);
+    expect(freeNeighbours("es", "CROSSWORD", "B1", top, deep).next).toBeNull();
+    const gapped = (_type: string, level: string) => (level === "B2" ? [1, 2, 5, 9] : deep());
+    expect(naive(2).next).toBe(3);
+    expect(freeNeighbours("es", "CROSSWORD", "B2", 2, gapped as never).next?.sequence).toBe(5);
   });
 });

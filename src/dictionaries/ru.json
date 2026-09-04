@@ -1076,7 +1076,10 @@
     "breakdownLabel": "По горизонтали: {across} из {acrossTotal} · по вертикали: {down} из {downTotal}",
     "progressCountLabel": "Слова целиком: {solved} из {words} · клетки: {filled} из {cells}",
     "wordSearchGridLabel": "Филворд",
-    "crosswordGridLabel": "Кроссворд"
+    "crosswordGridLabel": "Кроссворд",
+    "freeLadderNavLabel": "Другие бесплатные головоломки этого уровня",
+    "prevPuzzle": "← Головоломка {n}",
+    "nextPuzzle": "Головоломка {n} →"
   },
   "gameResult": {
     "closeLabel": "Закрыть",

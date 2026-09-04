@@ -108,7 +108,7 @@ export default async function AlfabetoCirilicoPage({
         />
       </div>
 
-      <GameLandingLinks />
+      <GameLandingLinks current="alfabeto" />
     </div>
   );
 }
