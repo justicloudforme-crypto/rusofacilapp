@@ -5,7 +5,7 @@ import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
 import type { WordGameGrid, WordGameType, WordPlacement } from "./types";
 import { isWordGameType } from "./types";
 import { GENERIC_SOPA_PUZZLE } from "./topic-landings";
-import { isPubliclyOpenableWordGamePuzzle, WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./free-tier";
+import { freeWordGameWhere, isPubliclyOpenableWordGamePuzzle } from "./free-tier";
 
 export interface PuzzleRow {
   id: string;
@@ -222,7 +222,10 @@ export const getLandingPuzzleForTopic = cache(async (topic: string): Promise<Puz
  */
 export async function getFreeSequences(): Promise<Map<string, Set<number>>> {
   const rows = await db.wordGamePuzzle.findMany({
-    where: { sequence: { lte: WORD_GAME_FREE_RUNGS_PER_LEVEL } },
+    // Надмножество бесплатных, а не «первые N номеров»: точный ответ
+    // ниже даёт isPubliclyOpenableWordGamePuzzle по прочитанной строке,
+    // и запрос обязан лишь не потерять ни одной подходящей (free-tier.ts).
+    where: freeWordGameWhere(),
     // curved and premiumOnly are read, not assumed: a rung that carries
     // either answers an anonymous visitor with a 307 into /pricing even
     // though the free rule accepts it, so publishing its link would be

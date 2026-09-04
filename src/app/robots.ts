@@ -1,29 +1,28 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { flashcardLevels } from "@/lib/flashcards/types";
-import { FREE_TRIAL_LIMITS } from "@/lib/entitlement";
+import { freeSequencesFor } from "@/lib/word-games/free-tier";
 
 // Next.js Metadata Route convention — served automatically at /robots.txt,
 // same pattern as manifest.ts. Lives outside `[lang]` so it isn't subject to
 // locale-prefix redirecting (see proxy.ts's matcher, which excludes this
 // path by extension).
-// The 80 free-trial word-game puzzles (2 types x every level except C1 x
-// FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel — see isFreeWordGamePuzzle in
-// src/lib/entitlement.ts, raised from 10 to 80 on 2026-08-28) are real,
-// fully playable pages, same class of exception as the 2 free stories/7
-// free media items — worth keeping crawlable even though the remaining
-// ~2920 puzzles below are disallowed. Derived from the same constants
-// isFreeWordGamePuzzle itself reads, rather than a separately maintained
-// URL list, so this can't drift out of sync with the actual free-tier
-// rule. `$` anchors the end of the path so e.g. "/A1/1$" matches only
-// sequence 1, not 10/15/etc.
-const FREE_WORD_GAME_ALLOW = flashcardLevels
-  .filter((level) => level !== "C1")
-  .flatMap((level) =>
-    ["WORD_SEARCH", "CROSSWORD"].flatMap((type) =>
-      Array.from({ length: FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel }, (_, i) => `/*/word-games/${type}/${level}/${i + 1}$`)
-    )
-  );
+// The free-trial word-game puzzles are real, fully playable pages, same
+// class of exception as the 2 free stories/7 free media items — worth
+// keeping crawlable even though the remaining ~2920 puzzles below are
+// disallowed. `$` anchors the end of the path so e.g. "/A1/1$" matches
+// only sequence 1, not 10/15/etc.
+//
+// 05.09.2026: раньше здесь стояло `Array.from({ length: LIMIT })` и
+// отдельный отсев старшего уровня — то есть правило бесплатности,
+// пересказанное своими словами рядом с функцией, которая его знает.
+// Теперь номера спрашиваются у самого правила (freeSequencesFor), и
+// старший уровень отваливается сам: бесплатных номеров у него нет.
+const FREE_WORD_GAME_ALLOW = flashcardLevels.flatMap((level) =>
+  ["WORD_SEARCH", "CROSSWORD"].flatMap((type) =>
+    freeSequencesFor(type, level).map((sequence) => `/*/word-games/${type}/${level}/${sequence}$`),
+  ),
+);
 
 export default function robots(): MetadataRoute.Robots {
   return {
