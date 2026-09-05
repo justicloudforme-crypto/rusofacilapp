@@ -436,6 +436,7 @@
     ],
     "paymentMethodsNote": "Aceptamos tarjetas y efectivo OXXO",
     "paymentMethodsNoteCardOnly": "Aceptamos tarjetas de crédito y débito",
+    "approxNote": "Los importes en tu moneda son aproximados: el tipo de cambio exacto lo fija la página de pago. El cobro siempre es en pesos mexicanos (MXN).",
     "faqHeading": "Preguntas frecuentes",
     "faqAutoChargeCardOnly": "Con tarjeta, sí — el plan mensual y el anual se renuevan automáticamente hasta que los canceles. Premium no se renueva: es un pago único.",
     "faq": [
