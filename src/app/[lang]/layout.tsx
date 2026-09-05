@@ -25,9 +25,9 @@ import { getUserStreakStats, persistFreezeState } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
 import TimeZoneSync from "@/components/TimeZoneSync";
 import { PaywallProvider } from "@/contexts/PaywallContext";
-import { plans, type PlanId } from "@/lib/plans";
+import { type PlanId } from "@/lib/plans";
 import { getLocalPriceContext } from "@/lib/country-server";
-import { formatApproximate } from "@/lib/currency";
+import { basePricesText, marked, priceCopy, withBasePrices } from "@/lib/pricing-display";
 
 // RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
 // (body/UI), PT Serif (display headings/wordmark), PT Mono (labels/status
@@ -140,39 +140,47 @@ export default async function LangLayout({
 
   // The paywall modal is the third place a price is shown, and the one
   // where a decision is actually being made — a locked lesson, three plans,
-  // a button. It gets the same "≈ in your money" second line /pricing and
-  // the front page get; null (Mexico, an unlisted or unknown country, no
-  // rate) leaves it exactly as it was. See src/lib/currency.ts.
+  // a button. It follows the same rule /pricing and the front page follow
+  // since 09.09.2026: ONE figure per plan, in the visitor's own currency
+  // where there is one to quote, and the peso base price in a single
+  // footnote — here, at the foot of the modal, because the modal is the
+  // whole surface a reader can see while it is open. In Mexico, in an
+  // unlisted or unknown country, and whenever the rate feed stayed silent,
+  // `converted` is false and this is the peso copy it always was.
   const localPrice = await getLocalPriceContext();
-  const approx = (plan: PlanId) =>
-    formatApproximate(plans[plan].amountMxnCents, localPrice, lang) ?? undefined;
+  const paywallPriceCopy = priceCopy(localPrice, lang, {
+    monthly: dict.pricing.monthly.price,
+    annual: dict.pricing.annual.price,
+    lifetime: dict.pricing.lifetime.price,
+    annualPerMonth: dict.pricing.annual.perMonthPrice,
+  });
 
   const paywallPlans: Record<
     PlanId,
-    { name: string; price: string; approxPrice?: string; period: string; badge?: string; valueNote?: string }
+    { name: string; price: string; period: string; badge?: string; valueNote?: string }
   > = {
     monthly: {
       name: dict.pricing.monthly.name,
-      price: dict.pricing.monthly.price,
-      approxPrice: approx("monthly"),
+      price: marked(paywallPriceCopy.monthly, paywallPriceCopy),
       period: dict.pricing.monthly.period,
     },
     annual: {
       name: dict.pricing.annual.name,
-      price: dict.pricing.annual.price,
-      approxPrice: approx("annual"),
+      price: marked(paywallPriceCopy.annual, paywallPriceCopy),
       period: dict.pricing.annual.period,
       badge: dict.pricing.annual.badge,
     },
     lifetime: {
       name: dict.pricing.lifetime.name,
-      price: dict.pricing.lifetime.price,
-      approxPrice: approx("lifetime"),
+      price: marked(paywallPriceCopy.lifetime, paywallPriceCopy),
       period: dict.pricing.lifetime.period,
       badge: dict.pricing.lifetime.badge,
       valueNote: dict.pricing.lifetime.valueNote,
     },
   };
+  const paywallPriceNote = paywallPriceCopy.converted
+    ? withBasePrices(dict.pricing.approxNote, basePricesText(lang))
+    : undefined;
 
   return (
     <html
@@ -204,7 +212,7 @@ export default async function LangLayout({
         <NativeBackButtonHandler />
         <NativeNotifications />
         <OfflineBanner message={dict.offline.bannerMessage} />
-        <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans}>
+        <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans} priceNote={paywallPriceNote}>
           <Navbar lang={lang} dict={dict} streak={streak} />
           {/* pb-20 clears BottomNav's own height (~56px content + its own
               pb-safe inset) below sm so page content never sits under it —

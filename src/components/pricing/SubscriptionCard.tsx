@@ -11,11 +11,21 @@ type Plan = "monthly" | "annual";
 
 export interface BillingOption {
   name: string;
+  /** The ONE figure on the card. Since 09.09.2026 that is the visitor's own
+   * currency where there is one to quote — "≈ 11,70 SGD*", asterisk and all
+   * — and the peso price everywhere else (Mexico, an unlisted or unknown
+   * country, a rate feed that did not answer). Composed on the server in
+   * /pricing; see src/lib/pricing-display.ts. */
   price: string;
   period: string;
   badge?: string;
   perMonthNote?: string;
+  /** Already carries the figure above it — the dictionary holds
+   * "Empezar por {price}/mes" and the page fills the slot, so the button and
+   * the price cannot name two different currencies. */
   cardCta: string;
+  /** Always in pesos, and correctly so: cash is an OXXO voucher, and an
+   * OXXO voucher is only ever offered to a buyer in Mexico. */
   cashCta: string;
 }
 
@@ -35,7 +45,6 @@ export default function SubscriptionCard({
   cardLabel,
   cashLabel,
   option,
-  approxPrice,
   featuresTitle,
   features,
   oxxoDict,
@@ -49,12 +58,6 @@ export default function SubscriptionCard({
   cardLabel: string;
   cashLabel: string;
   option: BillingOption;
-  /** "≈ 13 900 ARS" — roughly what this costs in the visitor's own money,
-   * or undefined when there is nothing honest to say (Mexico, an unlisted
-   * country, an unknown one, or a rate feed that did not answer). Secondary
-   * by construction: small, grey, and under the peso figure, which stays
-   * the price. Built on the server in /pricing — see src/lib/currency.ts. */
-  approxPrice?: string;
   featuresTitle: string;
   features: string[];
   oxxoDict: OxxoInstructionsDict;
@@ -100,9 +103,6 @@ export default function SubscriptionCard({
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{option.price}</span>
         <span className="text-sm text-foreground/60">{option.period}</span>
       </p>
-      {approxPrice && (
-        <p className="mt-1 text-xs tabular-nums text-foreground/50">{approxPrice}</p>
-      )}
       {option.perMonthNote && <p className="mt-1 text-xs text-foreground/60">{option.perMonthNote}</p>}
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">{featuresTitle}</p>

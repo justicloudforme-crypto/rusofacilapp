@@ -28,7 +28,17 @@ const CASH_TAB: Record<string, string> = { es: "Efectivo", ru: "Наличные
 const CARD_TAB: Record<string, string> = { es: "Tarjeta", ru: "Карта" };
 const CASH_STEPS: Record<string, string> = { es: "Cómo pagar en efectivo", ru: "Как оплатить наличными" };
 const CASH_CTA: Record<string, string> = { es: "Pagar en efectivo — $150 MXN", ru: "Оплатить наличными — $150 MXN" };
-const CARD_CTA: Record<string, string> = { es: "Empezar por $150 MXN/mes", ru: "Начать за $150 MXN/мес." };
+/** The card CTA now carries whatever figure the card shows, so it depends
+ * on where the buyer is (PROGRESS.md 7.120). In Mexico that is pesos; in
+ * Spain it is the euro estimate this suite's fixed rate table produces —
+ * 150 MXN x 0.050958 x 1.04 = 7.9494 -> 7,95 EUR (playwright.config.ts,
+ * FX_RATES_MXN). The button naming the same currency as the price above it
+ * is the point, so it is asserted here rather than pinned to pesos. */
+const CARD_CTA_MX: Record<string, string> = { es: "Empezar por $150 MXN/mes", ru: "Начать за $150 MXN/мес." };
+const CARD_CTA_ES: Record<string, string> = {
+  es: "Empezar por ≈ 7,95 EUR/mes",
+  ru: "Начать за ≈ 7,95 EUR/мес.",
+};
 const CASH_CAPTION: Record<string, string> = { es: "efectivo OXXO", ru: "наличные OXXO" };
 const CARD_ONLY_CAPTION: Record<string, string> = {
   es: "Aceptamos tarjetas de crédito y débito",
@@ -76,7 +86,7 @@ for (const lang of ["es", "ru"] as const) {
     // The switch has to have changed something, or both snapshots are the
     // same screen and the assertions below are worth nothing.
     expect(onCard).not.toBe(asShown);
-    expect(onCard).toContain(CARD_CTA[lang]);
+    expect(onCard).toContain(CARD_CTA_MX[lang]);
     expect(onCard).not.toContain(CASH_STEPS[lang]);
   });
 
@@ -91,8 +101,8 @@ for (const lang of ["es", "ru"] as const) {
     // The card CTA is on screen with nothing to tap first — the whole point
     // of the change, and the assertion a hidden-behind-a-tab check would
     // have missed.
-    expect(outsideMexico).toContain(CARD_CTA[lang]);
-    await expect(page.getByRole("button", { name: CARD_CTA[lang], exact: true })).toBeVisible();
+    expect(outsideMexico).toContain(CARD_CTA_ES[lang]);
+    await expect(page.getByRole("button", { name: CARD_CTA_ES[lang], exact: true })).toBeVisible();
 
     // No tab strip at all: not cash-behind-a-tap, no method choice.
     await expect(page.getByRole("tab")).toHaveCount(0);

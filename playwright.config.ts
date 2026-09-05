@@ -98,6 +98,13 @@ export default defineConfig({
       // Singapore exit that day (11.70 SGD for the 150 MXN plan), which is
       // what e2e/pricing-local-estimate.spec.ts reproduces on the page.
       // See src/lib/exchange-rates.ts.
+      //
+      // BRL is deliberately NOT here, and its absence is load-bearing:
+      // Brazil is in the allowlist, so a BR request asks for a rate and
+      // gets none — the same null every failure path of the feed returns
+      // (refusal, timeout, bad JSON, a missing currency). That is how
+      // e2e/pricing-local-estimate.spec.ts exercises a dead source through
+      // a real render without stubbing anything (PROGRESS.md 7.120).
       FX_RATES_MXN: JSON.stringify({ SGD: 0.074971, ARS: 89.221548, EUR: 0.050958 }),
     },
   },
