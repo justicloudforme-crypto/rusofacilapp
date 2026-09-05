@@ -88,6 +88,59 @@ async function checkoutBlockedResponse(lang: Locale, origin: string): Promise<Ne
   });
 }
 
+/**
+ * Meses sin intereses — the interest-free monthly plans a Mexican credit
+ * card can split a purchase into. Added 10.09.2026, PROGRESS.md 7.121.
+ *
+ * FOUR facts decide where it may be asked for, and all four come from
+ * Stripe's own documentation (docs.stripe.com/payments/mx-installments and
+ * .../meses-sin-intereses/accept-a-payment?payment-ui=checkout):
+ *
+ *   1. "Las cuotas solamente funcionan con el modo `payment`, no `setup` ni
+ *      `subscription`." So this rides on the Premium plan and on nothing
+ *      else — monthly and annual are `mode: "subscription"` and are not
+ *      eligible, no matter what the Dashboard says.
+ *   2. The currency must be MXN. That is BASE_CURRENCY, and the condition
+ *      below reads it rather than assuming it, so a future currency change
+ *      switches this off instead of quietly asking for the impossible.
+ *   3. The amount must clear a per-plan minimum: 300 MXN for 3 months, 600
+ *      for 6, 900 for 9, 1 200 for 12, 1 800 for 18, 2 400 for 24. Premium
+ *      is 2 299 MXN, so it clears every plan except 24 months. We do not
+ *      implement any of that — Stripe applies the thresholds itself.
+ *   4. The rest is the buyer's, not ours: a consumer CREDIT card issued in
+ *      Mexico by a supported issuer. Stripe only shows the plans after the
+ *      card number is typed, which is why this is not promised anywhere on
+ *      /pricing.
+ *
+ * The Dashboard switch alone already covers Checkout (Stripe: the payment-
+ * methods settings page "te permite habilitar los meses sin intereses para
+ * los métodos de pago sin codificación, incluidos Payment Links y
+ * Checkout"), and this route sends no `payment_method_types` on the card
+ * branch, so it gets dynamic payment methods. Asking explicitly is
+ * belt-and-braces of the same kind as everything else in this file: it
+ * makes the offer a property of the code that can be read and tested, not
+ * of a toggle somebody can flip without a commit.
+ */
+function installmentsApply(mode: string): boolean {
+  return mode === "payment" && BASE_CURRENCY === "mxn";
+}
+
+/** Files "Stripe refused the installments parameter" in Sentry. Distinct
+ * tag from checkout-blocked on purpose: the buyer got their payment page
+ * either way, so this is a configuration report and NOT an outage. */
+async function reportInstallmentsRefused(error: unknown, plan: string): Promise<void> {
+  try {
+    const Sentry = await import("@sentry/nextjs");
+    Sentry.captureException(error, {
+      level: "warning",
+      tags: { defect: "checkout-installments-refused" },
+      extra: { plan },
+    });
+  } catch {
+    // Reporting the problem must never become a second problem.
+  }
+}
+
 /** Files the refusal in Sentry as HANDLED — we caught it, we answered it, and
  * the buyer was told. The tag is what an alert keys off. */
 async function reportCheckoutBlocked(error: unknown, plan: string, method: string): Promise<void> {
@@ -215,7 +268,7 @@ export async function POST(request: NextRequest) {
         // Stripe rejects it on a mode: "payment" session, so the lifetime
         // (one-time) plan carries its metadata on the session itself instead,
         // same place the OXXO one-time branch above puts it.
-        const session = await stripe.checkout.sessions.create({
+        const params = {
           mode: plan.mode,
           customer: stripeCustomerId,
           client_reference_id: user.id,
@@ -230,7 +283,30 @@ export async function POST(request: NextRequest) {
           // CheckoutOutcomeNotice.
           success_url: `${origin}${nextPath ?? `/${lang}/profile`}${(nextPath ?? "").includes("?") ? "&" : "?"}checkout=success&plan=${plan.id}`,
           cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
-        });
+        };
+
+        // If Stripe ever refuses the installments parameter — the account
+        // stops being a Mexican one, the feature is withdrawn, the
+        // parameter is renamed — the buyer must still get their payment
+        // page. Without this the refusal would land in the catch below and
+        // become a 503 "checkout unavailable" for every Premium purchase,
+        // i.e. an OFFER would have taken the SALE down with it. So the
+        // session is created a second time without it, and the refusal is
+        // reported instead of shown. Nothing was created by the failed
+        // call, so there is no half-made object to clean up.
+        const wantsInstallments = installmentsApply(plan.mode);
+        let session;
+        try {
+          session = await stripe.checkout.sessions.create(
+            wantsInstallments
+              ? { ...params, payment_method_options: { card: { installments: { enabled: true } } } }
+              : params
+          );
+        } catch (error) {
+          if (!wantsInstallments || !isStripeInvalidRequest(error)) throw error;
+          await reportInstallmentsRefused(error, plan.id);
+          session = await stripe.checkout.sessions.create(params);
+        }
 
         if (!session.url) {
           return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
