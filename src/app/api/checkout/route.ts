@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
-import { isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
+import { BASE_CURRENCY, isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { isDeployedEnvironment } from "@/lib/deploy-environment";
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const origin = new URL(request.url).origin;
 
-  if (stripe && ((method === "oxxo" && plan.oxxoAmountMxnCents) || plan.priceId)) {
+  if (stripe && (method === "oxxo" || plan.priceId)) {
     try {
       let stripeCustomerId = user.stripeCustomerId;
       if (!stripeCustomerId) {
@@ -152,14 +152,19 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      if (method === "oxxo" && plan.oxxoAmountMxnCents) {
+      if (method === "oxxo") {
         // OXXO is a cash-voucher payment method: the customer gets a barcode
         // (shown on Stripe's own hosted checkout page, and emailed to them)
         // and pays in person at a physical OXXO store, usually within a few
         // days. There is no reusable off-session payment instrument behind
         // it, so — unlike the card branch below — this can never be a
         // recurring Stripe Subscription; it's a one-time payment that grants
-        // a fixed period of access once the voucher is actually paid. Access
+        // a fixed period of access once the voucher is actually paid.
+        //
+        // The amount is the plan's own `amountMxnCents` and the currency is
+        // the same BASE_CURRENCY the card Price is in — since 2026-09-06
+        // there is one price per plan, not a peso figure for cash beside a
+        // dollar figure for cards (PROGRESS.md 7.116). Access
         // is NOT granted here: see the checkout.session.async_payment_succeeded
         // handler in /api/webhooks/stripe, which fires only once the store
         // payment clears (checkout.session.completed fires immediately on
@@ -173,8 +178,8 @@ export async function POST(request: NextRequest) {
           line_items: [
             {
               price_data: {
-                currency: "mxn",
-                unit_amount: plan.oxxoAmountMxnCents,
+                currency: BASE_CURRENCY,
+                unit_amount: plan.amountMxnCents,
                 product_data: { name: `RusoFácilapp — ${PLAN_LABELS[plan.id]}` },
               },
               quantity: 1,

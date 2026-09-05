@@ -45,22 +45,22 @@ const CLEAN_ENV = {
 const CLEAN_CATALOGUE: Record<string, StripePriceFacts> = {
   price_selftest_monthly: {
     active: true,
-    unitAmount: 799,
-    currency: "usd",
+    unitAmount: 15_000,
+    currency: "mxn",
     recurringInterval: "month",
     product: "prod_selftest",
   },
   price_selftest_annual: {
     active: true,
-    unitAmount: 4_799,
-    currency: "usd",
+    unitAmount: 89_900,
+    currency: "mxn",
     recurringInterval: "year",
     product: "prod_selftest",
   },
   price_selftest_lifetime: {
     active: true,
-    unitAmount: 12_299,
-    currency: "usd",
+    unitAmount: 229_900,
+    currency: "mxn",
     recurringInterval: null,
     product: "prod_selftest",
   },
@@ -79,6 +79,9 @@ const ARCHIVED_LIFETIME: StripePriceFacts = {
   recurringInterval: null,
   product: "prod_selftest",
 };
+// Deliberately BOTH wrong (archived and, since 2026-09-06, in the wrong
+// currency): the planted case asserts INACTIVE, which is the more
+// actionable verdict, so this also pins the order the two tests run in.
 
 interface PlantedCase {
   label: string;
@@ -105,27 +108,36 @@ const PLANTED: PlantedCase[] = [
     expectVerdict: "NOT_FOUND",
   },
   {
-    label: "a live price at the OLD amount (169,99 instead of 122,99)",
+    label: "a live price at the wrong amount (1699 instead of 2299 MXN)",
     env: CLEAN_ENV,
     catalogue: {
       ...CLEAN_CATALOGUE,
-      price_selftest_lifetime: { ...ARCHIVED_LIFETIME, active: true },
+      price_selftest_lifetime: {
+        ...CLEAN_CATALOGUE.price_selftest_lifetime,
+        unitAmount: 169_900,
+      },
     },
     expectVar: "STRIPE_PRICE_LIFETIME",
     expectVerdict: "AMOUNT_MISMATCH",
   },
   {
-    label: "a live price billed in the wrong currency",
+    // The exact mistake the 2026-09-06 currency move can produce: the
+    // variable left holding the old USD Price, which is still live, still
+    // belongs to this product, and is still what two existing subscriptions
+    // renew on. Nothing about it is dead — it is simply not the currency
+    // this account settles in (PROGRESS.md 7.116).
+    label:
+      "a live price billed in the wrong currency — the old 122,99 USD price left in the variable",
     env: CLEAN_ENV,
     catalogue: {
       ...CLEAN_CATALOGUE,
-      price_selftest_annual: {
-        ...CLEAN_CATALOGUE.price_selftest_annual,
-        currency: "mxn",
-        unitAmount: 89_900,
+      price_selftest_lifetime: {
+        ...CLEAN_CATALOGUE.price_selftest_lifetime,
+        currency: "usd",
+        unitAmount: 12_299,
       },
     },
-    expectVar: "STRIPE_PRICE_ANNUAL",
+    expectVar: "STRIPE_PRICE_LIFETIME",
     expectVerdict: "CURRENCY_MISMATCH",
   },
   {
@@ -144,7 +156,7 @@ const PLANTED: PlantedCase[] = [
   },
   {
     // The case the product invariant exists for: nothing wrong with this
-    // Price except the thing it sells. Live, USD, exactly the advertised
+    // Price except the thing it sells. Live, MXN, exactly the advertised
     // amount — every per-plan test says OK.
     label:
       "a live, correctly priced price belonging to a DIFFERENT product (the other two agree)",

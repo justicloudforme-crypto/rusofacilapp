@@ -15,7 +15,6 @@ export interface BillingOption {
   period: string;
   badge?: string;
   perMonthNote?: string;
-  mxnApprox: string;
   cardCta: string;
   cashCta: string;
 }
@@ -88,7 +87,6 @@ export default function SubscriptionCard({
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{option.price}</span>
         <span className="text-sm text-foreground/60">{option.period}</span>
       </p>
-      <p className="mt-1 text-xs text-foreground/50">{option.mxnApprox}</p>
       {option.perMonthNote && <p className="mt-1 text-xs text-foreground/60">{option.perMonthNote}</p>}
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">{featuresTitle}</p>

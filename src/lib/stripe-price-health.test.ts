@@ -4,11 +4,12 @@ import {
   checkStripePrices,
   expectedPrices,
   formatPriceHealth,
+  EXPECTED_CURRENCY,
   verdictFor,
   type PriceHealthResult,
   type StripePriceFacts,
 } from "./stripe-price-health";
-import { plans } from "./plans";
+import { formatMoney, plans } from "./plans";
 import es from "../dictionaries/es.json";
 import ru from "../dictionaries/ru.json";
 
@@ -22,8 +23,8 @@ import ru from "../dictionaries/ru.json";
 
 const LIVE_LIFETIME: StripePriceFacts = {
   active: true,
-  unitAmount: 12_299,
-  currency: "usd",
+  unitAmount: 229_900,
+  currency: "mxn",
   recurringInterval: null,
   product: "prod_live",
 };
@@ -31,7 +32,7 @@ const LIVE_LIFETIME: StripePriceFacts = {
 const expectedLifetime = {
   plan: "lifetime" as const,
   envVar: "STRIPE_PRICE_LIFETIME",
-  expectedUsdCents: 12_299,
+  expectedAmountCents: 229_900,
 };
 
 describe("verdictFor — one variable at a time", () => {
@@ -42,9 +43,12 @@ describe("verdictFor — one variable at a time", () => {
 
   it("catches the real defect: a correctly shaped id pointing at an ARCHIVED price", () => {
     // price_1U86EtDP0jFvlr1mH1ANUlOE, the 169,99 price archived on 26.08.
+    // Kept in USD deliberately: the archived price really was a dollar one,
+    // and INACTIVE must be reported ahead of the currency, not instead of it.
     const archived: StripePriceFacts = {
       ...LIVE_LIFETIME,
       active: false,
+      currency: "usd",
       unitAmount: 16_999,
     };
     const result = verdictFor(expectedLifetime, "price_archived", archived);
@@ -62,20 +66,27 @@ describe("verdictFor — one variable at a time", () => {
   it("catches a live price at the wrong amount", () => {
     const result = verdictFor(expectedLifetime, "price_live", {
       ...LIVE_LIFETIME,
-      unitAmount: 16_999,
+      unitAmount: 169_900,
     });
     expect(result.verdict).toBe("AMOUNT_MISMATCH");
-    expect(result.detail).toContain("169.99");
-    expect(result.detail).toContain("122.99");
+    expect(result.detail).toContain("$1,699 MXN");
+    expect(result.detail).toContain("$2,299 MXN");
   });
 
   it("catches a live price in the wrong currency before comparing amounts", () => {
+    // The shape this now has on the real account: STRIPE_PRICE_LIFETIME left
+    // pointing at the old, still-live 122,99 USD Price after the base moved
+    // to pesos (PROGRESS.md 7.116). Live, right product, wrong money — and
+    // the amount comparison would be meaningless across currencies, so the
+    // currency is decided first.
     const result = verdictFor(expectedLifetime, "price_live", {
       ...LIVE_LIFETIME,
-      currency: "mxn",
-      unitAmount: 229_900,
+      currency: "usd",
+      unitAmount: 12_299,
     });
     expect(result.verdict).toBe("CURRENCY_MISMATCH");
+    expect(result.detail).toContain("USD");
+    expect(result.detail).toContain("MXN");
   });
 
   it("reports an unset variable as MISSING_ENV, not as a Stripe problem", () => {
@@ -102,15 +113,15 @@ describe("checkStripePrices — the whole table", () => {
   const catalogue: Record<string, StripePriceFacts> = {
     price_monthly: {
       active: true,
-      unitAmount: 799,
-      currency: "usd",
+      unitAmount: 15_000,
+      currency: "mxn",
       recurringInterval: "month",
       product: "prod_live",
     },
     price_annual: {
       active: true,
-      unitAmount: 4_799,
-      currency: "usd",
+      unitAmount: 89_900,
+      currency: "mxn",
       recurringInterval: "year",
       product: "prod_live",
     },
@@ -145,8 +156,8 @@ describe("checkStripePrices — the whole table", () => {
   });
 
   it("fails when one plan sells a live, correctly priced price of another product", async () => {
-    // Nothing wrong with this price except the thing it sells: active, USD,
-    // 122,99 exactly as advertised. Every per-plan test passes it.
+    // Nothing wrong with this price except the thing it sells: active, MXN,
+    // 2299 exactly as advertised. Every per-plan test passes it.
     const report = await checkStripePrices(clean, async (id) =>
       id === "price_lifetime"
         ? { ...LIVE_LIFETIME, product: "prod_somewhere_else" }
@@ -197,10 +208,10 @@ describe("applyProductInvariant — the plans must agree on one product", () => 
       plan: "monthly",
       envVar,
       verdict: "OK",
-      expectedUsdCents: 799,
-      expectedCurrency: "usd",
-      actual: { active: true, unitAmount: 799, currency: "usd", recurringInterval: "month", product },
-      detail: `${envVar}: live Price, 7.99 USD, as advertised.`,
+      expectedAmountCents: 15_000,
+      expectedCurrency: "mxn",
+      actual: { active: true, unitAmount: 15_000, currency: "mxn", recurringInterval: "month", product },
+      detail: `${envVar}: live Price, $150 MXN, as advertised.`,
     };
   }
 
@@ -283,15 +294,29 @@ describe("the expected table has exactly one source", () => {
   /**
    * The amount lives in plans.ts as a number and on the pricing page as
    * text. Two hardcodes of the same fact drift; this holds them together,
-   * so `expectedUsdCents` cannot be corrected without the page a buyer
-   * reads being corrected in the same commit, and vice versa.
+   * so `amountMxnCents` cannot be corrected without the page a buyer reads
+   * being corrected in the same commit, and vice versa.
+   *
+   * Written through formatMoney rather than re-deriving the wording here:
+   * a second formatter is a second hardcode, which is the thing this test
+   * exists to prevent.
    */
   it.each(["monthly", "annual", "lifetime"] as const)(
     "the %s amount matches what both pricing pages promise",
     (plan) => {
-      const asText = `$${(plans[plan].expectedUsdCents / 100).toFixed(2)} USD`;
+      const asText = formatMoney(plans[plan].amountMxnCents);
       expect(es.pricing[plan].price).toBe(asText);
       expect(ru.pricing[plan].price).toBe(asText);
     }
   );
+
+  /** The three figures, spelled out once, so a silent edit of BOTH plans.ts
+   * and the dictionaries in one commit still has to face a number a human
+   * read off the Stripe dashboard on 2026-09-06. */
+  it("holds the three peso amounts the Stripe Prices were created at", () => {
+    expect(plans.monthly.amountMxnCents).toBe(15_000);
+    expect(plans.annual.amountMxnCents).toBe(89_900);
+    expect(plans.lifetime.amountMxnCents).toBe(229_900);
+    expect(EXPECTED_CURRENCY).toBe("mxn");
+  });
 });

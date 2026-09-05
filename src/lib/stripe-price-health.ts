@@ -26,9 +26,14 @@
  *     invariant compares the plans with each other, and a uniformly wrong
  *     set is self-consistent. See applyProductInvariant.
  *   - It does not replace the owner reading the amounts on Stripe's own
- *     dashboard. `expectedUsdCents` in src/lib/plans.ts is a number a human
+ *     dashboard. `amountMxnCents` in src/lib/plans.ts is a number a human
  *     typed; if that number is wrong, this check enforces the wrong number
  *     with great confidence.
+ *   - It says nothing about the prices LIVE SUBSCRIPTIONS are still billed
+ *     on. Two subscriptions created before 2026-09-06 renew on the old USD
+ *     Prices, which are deliberately left live and are not in any
+ *     environment variable; nothing here reads them, and the webhook that
+ *     receives their renewals never looks at a currency (PROGRESS.md 7.116).
  *
  * NO SECRETS LEAVE THIS MODULE. Reports carry the variable NAME, the verdict,
  * the expected amount and what Stripe answered — never the value of an
@@ -36,7 +41,7 @@
  * Sensitive on Vercel, and this report goes to an HTTP response, a server log
  * and a Sentry event.
  */
-import { plans, type PlanId } from "./plans";
+import { BASE_CURRENCY, formatMoney, plans, type PlanId } from "./plans";
 import { hasStripeShape } from "./stripe-env";
 
 export type PriceVerdict =
@@ -48,10 +53,12 @@ export type PriceVerdict =
   | "PRODUCT_MISMATCH"
   | "MISSING_ENV";
 
-/** The currency every card plan is billed in. OXXO is MXN and is priced
- * inline in plans.ts (`oxxoAmountMxnCents`), not through a Stripe Price, so
- * it has no Price id to check and is out of scope here. */
-export const EXPECTED_CURRENCY = "usd";
+/** The currency every plan is billed in — card and OXXO alike, since
+ * 2026-09-06. Not written down a second time here: it is the same constant
+ * /api/checkout stamps on the OXXO `price_data`, so a Price in one currency
+ * and a voucher in another is not expressible. See plans.ts BASE_CURRENCY
+ * for why it is MXN and not USD. */
+export const EXPECTED_CURRENCY = BASE_CURRENCY;
 
 /** What Stripe answered about one Price. Only the fields that decide a
  * verdict, plus the two that make a wrong verdict diagnosable. */
@@ -72,7 +79,7 @@ export interface PriceHealthResult {
   /** The environment variable, by name. Never its value. */
   envVar: string;
   verdict: PriceVerdict;
-  expectedUsdCents: number;
+  expectedAmountCents: number;
   expectedCurrency: string;
   /** What Stripe said, when it was asked and answered. */
   actual: StripePriceFacts | null;
@@ -99,17 +106,21 @@ export interface PriceLookup {
 export function expectedPrices(): Array<{
   plan: PlanId;
   envVar: string;
-  expectedUsdCents: number;
+  expectedAmountCents: number;
 }> {
   return (Object.keys(plans) as PlanId[]).map((plan) => ({
     plan,
     envVar: plans[plan].priceEnvVar,
-    expectedUsdCents: plans[plan].expectedUsdCents,
+    expectedAmountCents: plans[plan].amountMxnCents,
   }));
 }
 
+/** Same wording a buyer sees on /pricing — formatMoney is the one formatter
+ * (plans.ts), so a report cannot describe an amount differently from the
+ * page that promises it. `null` is what Stripe returns for a Price with no
+ * fixed unit amount. */
 function money(cents: number | null): string {
-  return cents === null ? "no amount" : `${(cents / 100).toFixed(2)}`;
+  return cents === null ? "no amount" : formatMoney(cents);
 }
 
 /**
@@ -124,14 +135,14 @@ function money(cents: number | null): string {
  *   AMOUNT_MISMATCH   live, right currency, wrong money
  */
 export function verdictFor(
-  expected: { plan: PlanId; envVar: string; expectedUsdCents: number },
+  expected: { plan: PlanId; envVar: string; expectedAmountCents: number },
   rawEnvValue: string | undefined,
   facts: StripePriceFacts | null | "not-found"
 ): PriceHealthResult {
   const base = {
     plan: expected.plan,
     envVar: expected.envVar,
-    expectedUsdCents: expected.expectedUsdCents,
+    expectedAmountCents: expected.expectedAmountCents,
     expectedCurrency: EXPECTED_CURRENCY,
   };
 
@@ -177,14 +188,14 @@ export function verdictFor(
     };
   }
 
-  if (facts.unitAmount !== expected.expectedUsdCents) {
+  if (facts.unitAmount !== expected.expectedAmountCents) {
     return {
       ...base,
       verdict: "AMOUNT_MISMATCH",
       actual: facts,
       detail:
-        `${expected.envVar} points at a live Price of ${money(facts.unitAmount)} USD, ` +
-        `but this plan is advertised at ${money(expected.expectedUsdCents)} USD. ` +
+        `${expected.envVar} points at a live Price of ${money(facts.unitAmount)}, ` +
+        `but this plan is advertised at ${money(expected.expectedAmountCents)}. ` +
         `Someone would be charged the wrong amount.`,
     };
   }
@@ -193,7 +204,7 @@ export function verdictFor(
     ...base,
     verdict: "OK",
     actual: facts,
-    detail: `${expected.envVar}: live Price, ${money(facts.unitAmount)} USD, as advertised.`,
+    detail: `${expected.envVar}: live Price, ${money(facts.unitAmount)}, as advertised.`,
   };
 }
 
@@ -211,7 +222,7 @@ export function verdictFor(
  * which is what makes the invariant true today and safe to switch on.
  *
  * What it catches: one price dragged in from a different Product — a test
- * product, an old product, a neighbouring project — while live, in USD and at
+ * product, an old product, a neighbouring project — while live, in MXN and at
  * the advertised amount. That set is `OK` on every per-plan test and wrong.
  *
  * What it CANNOT catch, by construction: all plans pointing at prices of one

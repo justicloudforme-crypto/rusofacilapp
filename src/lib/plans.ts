@@ -14,29 +14,59 @@ interface Plan {
    */
   priceEnvVar: string;
   /**
-   * What that Price is supposed to cost, in US cents, for card checkout.
+   * What this plan costs, in Mexican peso centavos. ONE amount per plan,
+   * for every payment method — the card Price in Stripe, the OXXO voucher,
+   * and the text a buyer reads all come from this number.
+   *
+   * Why pesos are the base and not dollars (changed 2026-09-06, PROGRESS.md
+   * 7.116). The Stripe account settles in MXN and MXN only — "all available
+   * settlement currencies have been enabled" and USD is not among them.
+   * Adaptive Pricing, which is what showed a Mexican buyer a peso figure at
+   * the card form, requires the Price's own currency to be a settlement
+   * currency; with a USD Price it was not, so every peso charge went through
+   * a conversion we paid for. Pricing in the currency we are paid in removes
+   * that conversion instead of hiding it.
    *
    * This is the ONLY place the figure is written down as a number. The
    * pricing page prints it as text (`dict.pricing.<plan>.price`) and
-   * src/lib/plans-price-parity.test.ts holds the two together, so the
-   * amount a buyer is promised and the amount the health check demands of
-   * Stripe cannot drift apart into two independent hardcodes.
+   * src/lib/stripe-price-health.test.ts holds the two together via
+   * formatMoney below, so the amount a buyer is promised and the amount the
+   * health check demands of Stripe cannot drift apart into two independent
+   * hardcodes.
    */
-  expectedUsdCents: number;
+  amountMxnCents: number;
   // "subscription" creates a recurring Stripe Subscription (monthly/annual);
   // "lifetime" is a single one-time Checkout Session (see /api/checkout) —
   // there's no Stripe Subscription object behind it at all.
   mode: "subscription" | "payment";
   durationDays: number;
-  // OXXO is a cash-voucher payment method with no reusable off-session
-  // payment instrument — it cannot be attached to a recurring Stripe
-  // Subscription, only to a one-time Checkout Session (see
-  // /api/checkout's oxxo branch). So instead of a recurring Stripe Price,
-  // OXXO checkout uses a fixed MXN amount defined here directly. This is a
-  // static peso figure (~current USD price at ~18.7 MXN/USD), not a live
-  // FX conversion like card checkout gets via Stripe Adaptive Pricing —
-  // revisit it if the peso moves significantly against the dollar.
-  oxxoAmountMxnCents?: number;
+}
+
+/** The currency every plan is priced and billed in, everywhere: the Stripe
+ * Prices behind card checkout, the inline `price_data` behind an OXXO
+ * voucher, and the health check that asks Stripe whether those Prices are
+ * the ones we advertise. Written once so those three cannot disagree. */
+export const BASE_CURRENCY = "mxn";
+
+/**
+ * How an amount from `amountMxnCents` is written for a person to read.
+ *
+ * Mexican convention: the peso sign is the same `$` as the dollar's, so the
+ * MXN suffix is not decoration — it is the only thing that says which
+ * currency this is, and it is what the "no dollar figures left on the public
+ * pages" check keys off (src/lib/pricing-currency.test.ts).
+ *
+ * Centavos are printed only when there are any. All three plans today are
+ * whole pesos, and "$150.00 MXN" reads as a converted figure rather than a
+ * price.
+ */
+export function formatMoney(cents: number): string {
+  const pesos = Math.trunc(cents / 100);
+  const centavos = cents % 100;
+  const whole = pesos.toLocaleString("en-US");
+  return centavos === 0
+    ? `$${whole} MXN`
+    : `$${whole}.${String(centavos).padStart(2, "0")} MXN`;
 }
 
 // Lifetime access is modeled as a Subscription row with a currentPeriodEnd
@@ -73,31 +103,25 @@ export const plans: Record<PlanId, Plan> = {
     id: "monthly",
     priceId: priceIdFromEnv("STRIPE_PRICE_MONTHLY"),
     priceEnvVar: "STRIPE_PRICE_MONTHLY",
-    expectedUsdCents: 799, // $7.99 USD
+    amountMxnCents: 15_000, // $150 MXN
     mode: "subscription",
     durationDays: 30,
-    oxxoAmountMxnCents: 15_000, // $150.00 MXN
   },
   annual: {
     id: "annual",
     priceId: priceIdFromEnv("STRIPE_PRICE_ANNUAL"),
     priceEnvVar: "STRIPE_PRICE_ANNUAL",
-    expectedUsdCents: 4799, // $47.99 USD
+    amountMxnCents: 89_900, // $899 MXN
     mode: "subscription",
     durationDays: 365,
-    oxxoAmountMxnCents: 89_900, // $899.00 MXN
   },
   lifetime: {
     id: "lifetime",
     priceId: priceIdFromEnv("STRIPE_PRICE_LIFETIME"),
     priceEnvVar: "STRIPE_PRICE_LIFETIME",
-    expectedUsdCents: 12_299, // $122.99 USD
+    amountMxnCents: 229_900, // $2,299 MXN
     mode: "payment",
     durationDays: LIFETIME_DURATION_DAYS,
-    // $2,299 MXN at ~18.7 MXN/USD matches the $122.99 USD card price
-    // (dict.pricing.lifetime.price) — same rate the monthly/annual OXXO
-    // amounts above already use.
-    oxxoAmountMxnCents: 229_900, // $2,299.00 MXN
   },
 };
 

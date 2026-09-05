@@ -134,7 +134,6 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           period={p.lifetime.period}
           badge={p.lifetime.badge}
           valueNote={p.lifetime.valueNote}
-          mxnApprox={p.lifetime.mxnApprox}
           cardCta={p.lifetime.cardCta}
           cashCta={p.lifetime.cashCta}
           featuresTitle={p.featuresPremiumTitle}

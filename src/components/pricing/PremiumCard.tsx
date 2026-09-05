@@ -21,7 +21,6 @@ export default function PremiumCard({
   period,
   badge,
   valueNote,
-  mxnApprox,
   cardCta,
   cashCta,
   featuresTitle,
@@ -39,7 +38,6 @@ export default function PremiumCard({
   period: string;
   badge?: string;
   valueNote: string;
-  mxnApprox: string;
   cardCta: string;
   cashCta: string;
   featuresTitle: string;
@@ -91,7 +89,6 @@ export default function PremiumCard({
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{price}</span>
         <span className="text-sm text-foreground/60">{period}</span>
       </p>
-      <p className="mt-1 text-xs text-foreground/50">{mxnApprox}</p>
       <p className="mt-1.5 text-xs text-premium-700 dark:text-premium-300">{valueNote}</p>
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">{featuresTitle}</p>
