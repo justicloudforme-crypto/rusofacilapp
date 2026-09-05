@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NextRequest } from "next/server";
 import type Stripe from "stripe";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 const findUnique = vi.fn();
 const upsert = vi.fn();
@@ -260,6 +262,90 @@ describe("POST /api/webhooks/stripe", () => {
 
       expect(create).not.toHaveBeenCalled();
       expect(update).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * The two subscriptions bought before 2026-09-06 are billed on the old USD
+   * Prices, which stay live on purpose (PROGRESS.md 7.116). Their renewals
+   * keep arriving here forever, in a currency this app no longer sells in.
+   * If anything in this handler had an opinion about currency or amount,
+   * those two people would quietly stop being subscribers.
+   */
+  describe("a renewal in the old currency is handled exactly like any other", () => {
+    // A real Stripe subscription item as it arrives for one of those rows:
+    // the embedded Price is the archived-from-sale-but-live 7,99 USD one.
+    const usdItem = {
+      current_period_end: Math.floor(Date.now() / 1000) + 86_400,
+      price: {
+        id: "price_old_usd_monthly",
+        currency: "usd",
+        unit_amount: 799,
+        product: "prod_V686OIEKpWeTGX",
+      },
+    };
+
+    it("renews a USD subscription without rejecting it", async () => {
+      const subscription = {
+        id: "sub_legacy_usd",
+        status: "active",
+        customer: "cus_legacy",
+        currency: "usd",
+        metadata: { userId: "user_usd", plan: "monthly" },
+        items: { data: [usdItem] },
+      };
+      constructEvent.mockReturnValue(stripeEvent("customer.subscription.updated", subscription));
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(upsert).toHaveBeenCalledTimes(1);
+      expect(upsert.mock.calls[0]![0].create).toMatchObject({
+        userId: "user_usd",
+        plan: "monthly",
+        status: "active",
+      });
+      expect(invalidateSubscriptionCache).toHaveBeenCalledWith("user_usd");
+    });
+
+    it("still cancels a USD subscription when Stripe says it ended", async () => {
+      findUnique.mockResolvedValue({ userId: "user_usd", plan: "monthly" });
+      constructEvent.mockReturnValue(
+        stripeEvent("customer.subscription.deleted", { id: "sub_legacy_usd", currency: "usd" })
+      );
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(updateMany).toHaveBeenCalledWith({
+        where: { stripeSubscriptionId: "sub_legacy_usd" },
+        data: { status: "canceled" },
+      });
+    });
+
+    /**
+     * The behavioural tests above pass for a handler that ignores currency
+     * AND for one that happens to accept "usd" specifically. This is what
+     * separates them: the handler has no currency concept at all. Read off
+     * the source rather than asserted about behaviour, because the property
+     * is an absence, and an absence has no observable behaviour to test.
+     *
+     * The control is the second half: the very same reader, pointed at a
+     * planted copy, must find the field. Without it "0 matches" would also
+     * be what a broken reader returns (PROGRESS.md 4.1).
+     */
+    it("the handler never reads a currency or an amount off a Stripe event", () => {
+      const source = readFileSync(path.join(process.cwd(), "src/app/api/webhooks/stripe/route.ts"), "utf8");
+      // Comments talk about money in prose; the rule is about code.
+      const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      const moneyFields = /\b(currency|unit_amount|amount_total|amount_paid|amount_due)\b/g;
+      expect(code.match(moneyFields)).toBeNull();
+
+      const planted = code.replace(
+        "switch (event.type) {",
+        'if (event.data.object.currency !== "mxn") return NextResponse.json({}, { status: 400 });\n  switch (event.type) {'
+      );
+      expect(planted.match(moneyFields)).toEqual(["currency"]);
     });
   });
 

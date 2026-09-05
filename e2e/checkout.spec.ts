@@ -56,10 +56,12 @@ test("a logged-in user can subscribe and sees the active plan immediately", asyn
   // (see file header) the checkout route's mock-grant fallback activates
   // the subscription immediately regardless of method, so clicking the
   // Monthly card's own cash CTA works exactly like the old card CTA did.
-  // Matched by its cash-amount text (unique per plan: 150/899/2299 MXN)
+  // Matched by its cash-amount text (unique per plan: 150/899/2299 MXN —
+  // an exact price since 2026-09-06, no longer an "≈" conversion of a USD
+  // one, see PROGRESS.md 7.116)
   // rather than scoping to the card by heading, since the button text
   // itself already disambiguates which of the 3 paid cards this is.
-  await page.getByRole("button", { name: "Pagar en efectivo — ≈150 MXN" }).click();
+  await page.getByRole("button", { name: "Pagar en efectivo — $150 MXN" }).click();
 
   // No real Stripe configured in this environment -> mock-grant branch ->
   // redirect straight back to /profile with ?checkout=mock (see the
@@ -94,7 +96,7 @@ test("subscription status survives logging out and back in (restore-equivalent)"
   await page.goto("/es/pricing");
   // See the test above for why this is the Monthly card's cash CTA, not a
   // "Mes" tab + card CTA.
-  await page.getByRole("button", { name: "Pagar en efectivo — ≈150 MXN" }).click();
+  await page.getByRole("button", { name: "Pagar en efectivo — $150 MXN" }).click();
   await expect(page).toHaveURL(/\/es\/profile\?checkout=mock/);
 
   // The /profile redesign collapsed the old "personal"/"security" tabs

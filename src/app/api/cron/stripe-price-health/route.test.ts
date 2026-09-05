@@ -24,10 +24,10 @@ const OK_RESULT = {
   plan: "lifetime",
   envVar: "STRIPE_PRICE_LIFETIME",
   verdict: "OK",
-  expectedUsdCents: 12_299,
-  expectedCurrency: "usd",
+  expectedAmountCents: 229_900,
+  expectedCurrency: "mxn",
   actual: null,
-  detail: "STRIPE_PRICE_LIFETIME: live Price, 122.99 USD, as advertised.",
+  detail: "STRIPE_PRICE_LIFETIME: live Price, $2,299 MXN, as advertised.",
 };
 
 describe("GET /api/cron/stripe-price-health — the hourly watch", () => {

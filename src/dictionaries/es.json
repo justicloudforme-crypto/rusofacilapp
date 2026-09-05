@@ -388,31 +388,28 @@
     "cashLabel": "Efectivo",
     "monthly": {
       "name": "Mensual",
-      "price": "$7.99 USD",
+      "price": "$150 MXN",
       "period": "/ mes",
-      "mxnApprox": "≈150 MXN",
-      "cardCta": "Empezar por $7.99/mes",
-      "cashCta": "Pagar en efectivo — ≈150 MXN"
+      "cardCta": "Empezar por $150 MXN/mes",
+      "cashCta": "Pagar en efectivo — $150 MXN"
     },
     "annual": {
       "name": "Anual",
-      "price": "$47.99 USD",
+      "price": "$899 MXN",
       "period": "/ año",
       "badge": "−50%",
-      "perMonthNote": "≈$4/mes pagando por año",
-      "mxnApprox": "≈899 MXN",
-      "cardCta": "Ahorrar 50% — $47.99/año",
-      "cashCta": "Pagar en efectivo — ≈899 MXN"
+      "perMonthNote": "≈$75 MXN/mes pagando por año",
+      "cardCta": "Ahorrar 50% — $899 MXN/año",
+      "cashCta": "Pagar en efectivo — $899 MXN"
     },
     "lifetime": {
       "name": "Premium",
-      "price": "$122.99 USD",
+      "price": "$2,299 MXN",
       "period": "pago único",
       "badge": "Acceso para siempre",
       "valueNote": "Un solo pago, sin renovaciones. Suma el material de nivel C1 y la biblioteca ampliada de modismos e historias.",
-      "mxnApprox": "≈2299 MXN",
-      "cardCta": "Comprar para siempre por $122.99",
-      "cashCta": "Pagar en efectivo — ≈2299 MXN"
+      "cardCta": "Comprar para siempre por $2,299 MXN",
+      "cashCta": "Pagar en efectivo — $2,299 MXN"
     },
     "oxxoStepsHeading": "Cómo pagar en efectivo",
     "oxxoStep1": "Pulsa «Pagar en efectivo»",

@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         plan: r.plan,
         envVar: r.envVar,
         verdict: r.verdict,
-        expectedUsdCents: r.expectedUsdCents,
+        expectedAmountCents: r.expectedAmountCents,
         expectedCurrency: r.expectedCurrency,
         actual: r.actual,
         detail: r.detail,
