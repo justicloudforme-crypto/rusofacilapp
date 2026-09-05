@@ -384,6 +384,7 @@
     "paymentMethodLabel": "Método de pago",
     "checkoutUnavailable": "Ahora mismo no podemos abrir el pago. No se te cobró nada. Vuelve a intentarlo en unos minutos o escríbenos a support@rusofacilapp.com.",
     "checkoutRateLimited": "Abriste el pago demasiadas veces seguidas. Espera un minuto y vuelve a intentarlo — no se te cobró nada.",
+    "checkoutCashUnavailable": "El pago en efectivo (OXXO) solo está disponible en México. No se te cobró nada — elige el pago con tarjeta.",
     "cardLabel": "Tarjeta",
     "cashLabel": "Efectivo",
     "monthly": {
@@ -434,25 +435,32 @@
       "Acceso de por vida — pago único, sin renovaciones"
     ],
     "paymentMethodsNote": "Aceptamos tarjetas y efectivo OXXO",
+    "paymentMethodsNoteCardOnly": "Aceptamos tarjetas de crédito y débito",
     "faqHeading": "Preguntas frecuentes",
+    "faqAutoChargeCardOnly": "Con tarjeta, sí — el plan mensual y el anual se renuevan automáticamente hasta que los canceles. Premium no se renueva: es un pago único.",
     "faq": [
       {
+        "id": "cancel",
         "q": "¿Puedo cancelar mi suscripción?",
         "a": "Sí, cuando quieras — en tu cuenta, sección «Suscripción». El acceso sigue activo hasta el final del periodo ya pagado."
       },
       {
+        "id": "autoCharge",
         "q": "¿Se cobra automáticamente?",
         "a": "Con tarjeta, sí — el plan mensual y el anual se renuevan automáticamente hasta que los canceles. Con efectivo (OXXO) y con Premium no hay cobros automáticos: es un pago único."
       },
       {
+        "id": "oxxoExpiry",
         "q": "¿Qué pasa si no pago el código OXXO a tiempo?",
         "a": "El código es válido por 3 días. Si no se paga en ese plazo, el pago no se completa y tendrás que generarlo de nuevo en esta página."
       },
       {
+        "id": "changePlan",
         "q": "¿Cómo cambio de plan?",
         "a": "Contrata el nuevo plan en esta página y cancela el anterior en tu cuenta, para no pagar los dos a la vez."
       },
       {
+        "id": "taxes",
         "q": "¿El precio incluye impuestos?",
         "a": "Sí, el precio mostrado es el precio final — los impuestos están incluidos."
       }

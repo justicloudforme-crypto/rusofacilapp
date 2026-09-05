@@ -73,6 +73,17 @@ const NO_CYRILLIC_IS_CORRECT = new Map<string, string>([
   ["admin.exams.examSlugPlaceholder", "an example slug"],
   ["download.iosCta", "store name, not translated by Apple's own guidelines"],
   ["download.androidCta", "store name"],
+  // Added 07.09.2026 with the country gate: /pricing drops the OXXO
+  // question outside Mexico and swaps the auto-renewal answer, and it
+  // picks them out by a stable id rather than by position, since the
+  // questions are content and get reordered. An id is an identifier the
+  // code matches on — the same five bytes in both files on purpose, and
+  // never shown to anybody.
+  ["pricing.faq.0.id", "FAQ identifier, not copy — see PROGRESS.md 7.117"],
+  ["pricing.faq.1.id", "FAQ identifier, not copy"],
+  ["pricing.faq.2.id", "FAQ identifier, not copy"],
+  ["pricing.faq.3.id", "FAQ identifier, not copy"],
+  ["pricing.faq.4.id", "FAQ identifier, not copy"],
   [
     "profile.calendarDatePattern",
     "a format string, not prose: the only words in it are the {day} and {month} placeholders, " +

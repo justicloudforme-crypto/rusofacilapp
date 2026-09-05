@@ -16,6 +16,7 @@ import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { organizationJsonLd, websiteJsonLd, routeAlternates } from "@/lib/site";
 import { localizeStoryAuthor } from "@/lib/story-author";
+import { isCashAvailableForRequest } from "@/lib/country-server";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -45,10 +46,11 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   if (!isLocale(lang)) notFound();
 
   const dict = await getDictionary(lang);
-  const [stats, words, preview] = await Promise.all([
+  const [stats, words, preview, cashAvailable] = await Promise.all([
     getHomepageStats(),
     getHomepageWordSample(),
     getHomepagePreviewData(),
+    isCashAvailableForRequest(),
   ]);
 
   return (
@@ -120,7 +122,15 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                     value: `${levelSlugs[0].toUpperCase()}–${levelSlugs[levelSlugs.length - 1].toUpperCase()}`,
                     label: dict.home.trustLevelsLabel,
                   },
-                  { value: "OXXO", label: dict.home.trustOxxoLabel },
+                  // The front page's promise of a Mexican corner shop, made
+                  // to every country until 07.09.2026. It is the same claim
+                  // /pricing makes in its caption, so it lives and dies by
+                  // the same rule — see src/lib/country.ts, PROGRESS.md
+                  // 7.117. Dropped rather than replaced: the strip already
+                  // renders a short row when the counts above are
+                  // unreadable, and inventing a substitute claim would be a
+                  // new promise nobody measured.
+                  ...(cashAvailable ? [{ value: "OXXO", label: dict.home.trustOxxoLabel }] : []),
                 ]}
               />
             </div>

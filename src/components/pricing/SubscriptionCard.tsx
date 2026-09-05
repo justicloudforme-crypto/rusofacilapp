@@ -38,6 +38,7 @@ export default function SubscriptionCard({
   featuresTitle,
   features,
   oxxoDict,
+  cashAvailable,
   recommended = false,
 }: {
   lang: string;
@@ -50,13 +51,18 @@ export default function SubscriptionCard({
   featuresTitle: string;
   features: string[];
   oxxoDict: OxxoInstructionsDict;
+  /** Whether this visitor is in the one country where an OXXO voucher can
+   * be paid. False hides the method tabs and the instructions entirely
+   * rather than leaving them one tap away — see PROGRESS.md 7.117. */
+  cashAvailable: boolean;
   recommended?: boolean;
 }) {
-  // Cash (OXXO) open by default on every paid card, matching the
-  // pattern already used across the pricing page — cash requires
-  // reading a multi-step instructions block before paying, so it
-  // should never be one extra tap away from a card-only assumption.
-  const [method, setMethod] = useState<Method>("cash");
+  // Cash (OXXO) open by default WHERE IT CAN BE PAID — cash requires
+  // reading a multi-step instructions block before paying, so in Mexico
+  // it should never be one extra tap away from a card-only assumption.
+  // Everywhere else there is no cash tab at all and the card is the whole
+  // control (PROGRESS.md 7.117).
+  const [method, setMethod] = useState<Method>(cashAvailable ? "cash" : "card");
 
   return (
     <Card
@@ -100,17 +106,21 @@ export default function SubscriptionCard({
       </ul>
 
       <div className="mt-auto pt-8">
-        <Tabs
-          label={methodLabel}
-          items={[
-            { id: "card", label: cardLabel },
-            { id: "cash", label: cashLabel },
-          ]}
-          activeId={method}
-          onSelect={(id) => setMethod(id as Method)}
-        />
+        {cashAvailable && (
+          <>
+            <Tabs
+              label={methodLabel}
+              items={[
+                { id: "card", label: cardLabel },
+                { id: "cash", label: cashLabel },
+              ]}
+              activeId={method}
+              onSelect={(id) => setMethod(id as Method)}
+            />
 
-        {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+            {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+          </>
+        )}
 
         <form action="/api/checkout" method="POST" className="mt-4">
           <input type="hidden" name="lang" value={lang} />

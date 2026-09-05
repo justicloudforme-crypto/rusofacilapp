@@ -9,6 +9,7 @@ import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
+import { isCashAvailableForRequest } from "@/lib/country-server";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">): Promise<Metadata> {
   const { lang } = await params;
@@ -45,13 +46,32 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   const dict = await getDictionary(lang);
   const p = dict.pricing;
 
+  // Cash means OXXO, and OXXO means a shop in Mexico. Outside it the tab,
+  // the "how to pay in cash" steps, the caption under the price table and
+  // the OXXO question in the FAQ are all promises this page cannot keep —
+  // so none of them are rendered. See src/lib/country.ts and PROGRESS.md
+  // 7.117; /api/checkout refuses the same request on the same rule, so a
+  // page that offered cash here would be offering a button that 303s back.
+  const cashAvailable = await isCashAvailableForRequest();
+
+  // Two edits, not one: the OXXO-expiry question disappears whole, and the
+  // auto-renewal answer loses its "with cash (OXXO)… " clause. Filtering by
+  // `id` rather than by position — the questions are content and get
+  // reordered; an index would silently drop the wrong one.
+  const faq = (cashAvailable ? p.faq : p.faq.filter((item) => item.id !== "oxxoExpiry")).map((item) =>
+    !cashAvailable && item.id === "autoCharge" ? { ...item, a: p.faqAutoChargeCardOnly } : item
+  );
+
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-16 sm:px-6">
       <JsonLd
         data={{
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: p.faq.map((item) => ({
+          // The same list the page shows below, not the dictionary's — a
+          // FAQPage block advertising a question the page does not display
+          // is exactly what Google's structured-data rules forbid.
+          mainEntity: faq.map((item) => ({
             "@type": "Question",
             name: item.q,
             acceptedAnswer: { "@type": "Answer", text: item.a },
@@ -73,12 +93,16 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           redirect to this page silently, so the button simply appeared not
           to work. Saying "you were not charged" is the part that matters:
           the alternative is somebody paying twice out of doubt. */}
-      {(checkout === "unavailable" || checkout === "rate_limited") && (
+      {(checkout === "unavailable" || checkout === "rate_limited" || checkout === "cash_unavailable") && (
         <p
           role="alert"
           className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400"
         >
-          {checkout === "rate_limited" ? p.checkoutRateLimited : p.checkoutUnavailable}
+          {checkout === "rate_limited"
+            ? p.checkoutRateLimited
+            : checkout === "cash_unavailable"
+              ? p.checkoutCashUnavailable
+              : p.checkoutUnavailable}
         </p>
       )}
 
@@ -108,6 +132,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
+          cashAvailable={cashAvailable}
         />
 
         <SubscriptionCard
@@ -121,6 +146,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
+          cashAvailable={cashAvailable}
           recommended
         />
 
@@ -140,16 +166,20 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           features={p.featuresPremium}
           featuresNote={p.featuresPremiumNote}
           oxxoDict={p}
+          cashAvailable={cashAvailable}
           highlighted={highlightPremium}
         />
       </div>
 
       <div className="mt-16">
-        <PaymentMethodLogos note={p.paymentMethodsNote} />
+        <PaymentMethodLogos
+          note={cashAvailable ? p.paymentMethodsNote : p.paymentMethodsNoteCardOnly}
+          cashAvailable={cashAvailable}
+        />
       </div>
 
       <div className="mt-16">
-        <PricingFaq heading={p.faqHeading} items={p.faq} />
+        <PricingFaq heading={p.faqHeading} items={faq} />
       </div>
     </div>
   );

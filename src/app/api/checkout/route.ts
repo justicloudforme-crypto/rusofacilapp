@@ -8,6 +8,7 @@ import { BASE_CURRENCY, isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { isDeployedEnvironment } from "@/lib/deploy-environment";
+import { countryFromHeaders, isCashAvailableForCountry } from "@/lib/country";
 import { getDictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 
@@ -125,6 +126,19 @@ export async function POST(request: NextRequest) {
     const url = new URL(`/${lang}/login`, request.url);
     url.searchParams.set("redirectTo", `/${lang}/pricing`);
     return NextResponse.redirect(url, { status: 303 });
+  }
+
+  // The cash branch below creates an OXXO voucher, and an OXXO voucher can
+  // only be paid at a shop in Mexico (Stripe: MX account, MX buyer, MXN).
+  // /pricing does not offer the cash tab elsewhere — but the tab is the
+  // only thing that stopped the request, and a hidden control is not a
+  // closed door: this endpoint takes a plain form POST. Refused here with
+  // the buyer told why, rather than handed a barcode nobody near them
+  // accepts. PROGRESS.md 7.117.
+  if (method === "oxxo" && !isCashAvailableForCountry(countryFromHeaders(request.headers), isDeployedEnvironment())) {
+    return NextResponse.redirect(new URL(`/${lang}/pricing?checkout=cash_unavailable`, request.url), {
+      status: 303,
+    });
   }
 
   if (await checkoutLimiter.check(user.id)) {
