@@ -88,6 +88,17 @@ export default defineConfig({
     // forces NODE_ENV=production regardless of how the build was made, so
     // a NODE_ENV check can't distinguish "real prod" from "e2e run
     // against a prod build" the way it can for `next dev`.
-    env: { E2E_TEST_SEED: "1" },
+    env: {
+      E2E_TEST_SEED: "1",
+      // A fixed rate table, so the browser tests quote a number this repo
+      // chose rather than whatever the currency market did this morning —
+      // and so the e2e run never reaches open.er-api.com at all. The three
+      // values are the real mid-market rates of 08.09.2026; the SGD one is
+      // there because the owner measured a live Stripe checkout through a
+      // Singapore exit that day (11.70 SGD for the 150 MXN plan), which is
+      // what e2e/pricing-local-estimate.spec.ts reproduces on the page.
+      // See src/lib/exchange-rates.ts.
+      FX_RATES_MXN: JSON.stringify({ SGD: 0.074971, ARS: 89.221548, EUR: 0.050958 }),
+    },
   },
 });

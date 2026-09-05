@@ -25,7 +25,9 @@ import { getUserStreakStats, persistFreezeState } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
 import TimeZoneSync from "@/components/TimeZoneSync";
 import { PaywallProvider } from "@/contexts/PaywallContext";
-import type { PlanId } from "@/lib/plans";
+import { plans, type PlanId } from "@/lib/plans";
+import { getLocalPriceContext } from "@/lib/country-server";
+import { formatApproximate } from "@/lib/currency";
 
 // RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
 // (body/UI), PT Serif (display headings/wordmark), PT Mono (labels/status
@@ -136,17 +138,36 @@ export default async function LangLayout({
     after(() => persistFreezeState(userId, freezeColumns, timeZone));
   }
 
-  const paywallPlans: Record<PlanId, { name: string; price: string; period: string; badge?: string; valueNote?: string }> = {
-    monthly: { name: dict.pricing.monthly.name, price: dict.pricing.monthly.price, period: dict.pricing.monthly.period },
+  // The paywall modal is the third place a price is shown, and the one
+  // where a decision is actually being made — a locked lesson, three plans,
+  // a button. It gets the same "≈ in your money" second line /pricing and
+  // the front page get; null (Mexico, an unlisted or unknown country, no
+  // rate) leaves it exactly as it was. See src/lib/currency.ts.
+  const localPrice = await getLocalPriceContext();
+  const approx = (plan: PlanId) =>
+    formatApproximate(plans[plan].amountMxnCents, localPrice, lang) ?? undefined;
+
+  const paywallPlans: Record<
+    PlanId,
+    { name: string; price: string; approxPrice?: string; period: string; badge?: string; valueNote?: string }
+  > = {
+    monthly: {
+      name: dict.pricing.monthly.name,
+      price: dict.pricing.monthly.price,
+      approxPrice: approx("monthly"),
+      period: dict.pricing.monthly.period,
+    },
     annual: {
       name: dict.pricing.annual.name,
       price: dict.pricing.annual.price,
+      approxPrice: approx("annual"),
       period: dict.pricing.annual.period,
       badge: dict.pricing.annual.badge,
     },
     lifetime: {
       name: dict.pricing.lifetime.name,
       price: dict.pricing.lifetime.price,
+      approxPrice: approx("lifetime"),
       period: dict.pricing.lifetime.period,
       badge: dict.pricing.lifetime.badge,
       valueNote: dict.pricing.lifetime.valueNote,

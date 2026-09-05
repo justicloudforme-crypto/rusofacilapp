@@ -18,6 +18,7 @@ export default function PremiumCard({
   cashLabel,
   name,
   price,
+  approxPrice,
   period,
   badge,
   valueNote,
@@ -36,6 +37,12 @@ export default function PremiumCard({
   cashLabel: string;
   name: string;
   price: string;
+  /** "≈ 13 900 ARS" — roughly what this costs in the visitor's own money,
+   * or undefined when there is nothing honest to say (Mexico, an unlisted
+   * country, an unknown one, or a rate feed that did not answer). Secondary
+   * by construction: small, grey, and under the peso figure, which stays
+   * the price. Built on the server in /pricing — see src/lib/currency.ts. */
+  approxPrice?: string;
   period: string;
   badge?: string;
   valueNote: string;
@@ -94,6 +101,9 @@ export default function PremiumCard({
         <span className="whitespace-nowrap text-3xl font-semibold tracking-tight">{price}</span>
         <span className="text-sm text-foreground/60">{period}</span>
       </p>
+      {approxPrice && (
+        <p className="mt-1 text-xs tabular-nums text-foreground/50">{approxPrice}</p>
+      )}
       <p className="mt-1.5 text-xs text-premium-700 dark:text-premium-300">{valueNote}</p>
 
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-foreground/50">{featuresTitle}</p>

@@ -9,7 +9,9 @@ import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
-import { isCashAvailableForRequest } from "@/lib/country-server";
+import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
+import { formatApproximate } from "@/lib/currency";
+import { plans } from "@/lib/plans";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">): Promise<Metadata> {
   const { lang } = await params;
@@ -17,14 +19,22 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">)
   const dict = await getDictionary(lang);
   return {
     title: `${dict.pricing.title} | RusoFácilapp`,
+    // "Tarjeta o efectivo OXXO." until 08.09.2026 (debt 43): the snippet
+    // promised a Mexican corner shop to every reader of every search
+    // result, months after the page itself stopped offering one outside
+    // Mexico (PROGRESS.md 7.117). generateMetadata cannot be made
+    // country-aware the way the body is — a description is written once
+    // per locale and cached by the search engine, not per visitor — so the
+    // fix is a sentence that is TRUE everywhere rather than one that is
+    // true in one country: card everywhere, cash where cash exists.
     // Not dict.pricing.subtitle: that is the VISIBLE subtitle on the page,
     // 60-63 characters, which is too thin for a snippet — and lengthening
     // it would change what a reader sees. Measured 30.08.2026, these were
     // the only two descriptions on the whole site under 70 characters.
     description:
       lang === "ru"
-        ? "Тарифы RusoFácilapp: месячный, годовой и пожизненный доступ к курсу A1–B2, а со словарём, рассказами и играми — до уровня C1. Карта или наличные в OXXO."
-        : "Planes de RusoFácilapp: mensual, anual o de por vida. Curso de A1 a B2; con Premium, vocabulario, cuentos y juegos hasta el C1. Tarjeta o efectivo OXXO.",
+        ? "Тарифы RusoFácilapp: месячный, годовой и пожизненный доступ к курсу A1–B2, а со словарём, рассказами и играми — до уровня C1. Оплата картой; в Мексике — ещё и наличными в OXXO."
+        : "Planes de RusoFácilapp: mensual, anual o de por vida. Curso de A1 a B2; con Premium, vocabulario, cuentos y juegos hasta el C1. Pago con tarjeta; en México, también en efectivo OXXO.",
     // Canonical is the query-free /pricing even when the visitor arrived at
     // /pricing?next=…&highlight=premium — same as the header-based version
     // it replaces, which read a pathname that never carried a query string.
@@ -53,6 +63,17 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   // 7.117; /api/checkout refuses the same request on the same rule, so a
   // page that offered cash here would be offering a button that 303s back.
   const cashAvailable = await isCashAvailableForRequest();
+
+  // The peso price is the price; this is the second, smaller line under it
+  // that tells a reader in Buenos Aires or Singapore roughly what they are
+  // about to spend. Null — no country, a country outside the allowlist,
+  // Mexico itself, or a rate feed that did not answer — means the page
+  // simply shows pesos, exactly as it did before 08.09.2026. See
+  // src/lib/currency.ts for why the figure carries Stripe's own conversion
+  // markup instead of a footnote about it.
+  const localPrice = await getLocalPriceContext();
+  const approx = (plan: "monthly" | "annual" | "lifetime") =>
+    formatApproximate(plans[plan].amountMxnCents, localPrice, lang) ?? undefined;
 
   // Two edits, not one: the OXXO-expiry question disappears whole, and the
   // auto-renewal answer loses its "with cash (OXXO)… " clause. Filtering by
@@ -129,6 +150,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           cardLabel={p.cardLabel}
           cashLabel={p.cashLabel}
           option={p.monthly}
+          approxPrice={approx("monthly")}
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
@@ -143,6 +165,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           cardLabel={p.cardLabel}
           cashLabel={p.cashLabel}
           option={p.annual}
+          approxPrice={approx("annual")}
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
@@ -157,6 +180,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           cashLabel={p.cashLabel}
           name={p.lifetime.name}
           price={p.lifetime.price}
+          approxPrice={approx("lifetime")}
           period={p.lifetime.period}
           badge={p.lifetime.badge}
           valueNote={p.lifetime.valueNote}
@@ -176,6 +200,10 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           note={cashAvailable ? p.paymentMethodsNote : p.paymentMethodsNoteCardOnly}
           cashAvailable={cashAvailable}
         />
+        {/* Shown only when there is an approximate figure on the page to
+            explain. In Mexico, and wherever no rate could be had, this
+            sentence would be describing something the reader cannot see. */}
+        {localPrice && <p className="mt-3 text-center text-xs text-foreground/50">{p.approxNote}</p>}
       </div>
 
       <div className="mt-16">

@@ -16,6 +16,11 @@ export interface PaywallModalDict {
 export interface PaywallPlanCopy {
   name: string;
   price: string;
+  /** "≈ 13 900 ARS" — the same secondary figure /pricing shows, built on
+   * the server from the visitor's country (src/lib/currency.ts). Undefined
+   * in Mexico, in an unlisted or unknown country, and whenever the rate
+   * feed did not answer; the peso price never depends on it. */
+  approxPrice?: string;
   period: string;
   badge?: string;
   /** Lifetime-only cost-comparison line (see dict.pricing.lifetime.valueNote),
@@ -126,9 +131,14 @@ export default function PaywallModal({
                     {plan.badge && <span className="block text-xs text-foreground/50">{plan.badge}</span>}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="text-sm font-semibold tracking-tight">
+                    <span className="text-right text-sm font-semibold tracking-tight">
                       {plan.price}
                       <span className="ml-1 text-xs font-normal text-foreground/50">{plan.period}</span>
+                      {plan.approxPrice && (
+                        <span className="block text-xs font-normal tabular-nums text-foreground/50">
+                          {plan.approxPrice}
+                        </span>
+                      )}
                     </span>
                   </span>
                 </button>

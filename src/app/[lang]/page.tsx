@@ -16,7 +16,9 @@ import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { organizationJsonLd, websiteJsonLd, routeAlternates } from "@/lib/site";
 import { localizeStoryAuthor } from "@/lib/story-author";
-import { isCashAvailableForRequest } from "@/lib/country-server";
+import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
+import { formatApproximate } from "@/lib/currency";
+import { plans } from "@/lib/plans";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -46,12 +48,19 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   if (!isLocale(lang)) notFound();
 
   const dict = await getDictionary(lang);
-  const [stats, words, preview, cashAvailable] = await Promise.all([
+  const [stats, words, preview, cashAvailable, localPrice] = await Promise.all([
     getHomepageStats(),
     getHomepageWordSample(),
     getHomepagePreviewData(),
     isCashAvailableForRequest(),
+    // The price strip below repeats all three peso figures, so it repeats
+    // the same second line /pricing shows — a visitor who never scrolls
+    // past the front page should not have to open another page to find out
+    // what the number means to them. Null everywhere it is null there.
+    getLocalPriceContext(),
   ]);
+  const approx = (plan: "monthly" | "annual" | "lifetime") =>
+    formatApproximate(plans[plan].amountMxnCents, localPrice, lang);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -336,6 +345,9 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
             <Card tone="neutral" padding="lg">
               <h3 className="font-medium">{dict.pricing.monthly.name}</h3>
               <p className="mt-2 text-2xl font-semibold">{dict.pricing.monthly.price}</p>
+              {approx("monthly") && (
+                <p className="mt-1 text-xs tabular-nums text-foreground/50">{approx("monthly")}</p>
+              )}
             </Card>
             <Card tone="primary" padding="lg" className="relative">
               {dict.pricing.annual.badge && (
@@ -345,6 +357,9 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
               )}
               <h3 className="font-medium">{dict.pricing.annual.name}</h3>
               <p className="mt-2 text-2xl font-semibold">{dict.pricing.annual.price}</p>
+              {approx("annual") && (
+                <p className="mt-1 text-xs tabular-nums text-foreground/50">{approx("annual")}</p>
+              )}
               {dict.pricing.annual.perMonthNote && (
                 <p className="mt-1 text-xs text-foreground/60">{dict.pricing.annual.perMonthNote}</p>
               )}
@@ -352,8 +367,14 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
             <Card tone="premium" padding="lg">
               <h3 className="font-medium text-premium-700 dark:text-premium-300">{dict.pricing.lifetime.name}</h3>
               <p className="mt-2 text-2xl font-semibold">{dict.pricing.lifetime.price}</p>
+              {approx("lifetime") && (
+                <p className="mt-1 text-xs tabular-nums text-foreground/50">{approx("lifetime")}</p>
+              )}
             </Card>
           </div>
+          {/* One explanation for all three tiles, and only when there is
+              something to explain — same rule as on /pricing. */}
+          {localPrice && <p className="mt-4 text-xs text-foreground/50">{dict.pricing.approxNote}</p>}
           <Link
             href={`/${lang}/pricing`}
             className="tap mt-8 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary-text"

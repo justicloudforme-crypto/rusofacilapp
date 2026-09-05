@@ -17,6 +17,16 @@
  *    Mexico (see the rebrand note in the marketing copy — those are two
  *    separate decisions: legal domicile vs. target audience).
  *  - Contact: support@rusofacilapp.com.
+ *  - Money, as of 08.09.2026: three plans — monthly and annual are
+ *    Stripe Subscriptions, Premium is a ONE-TIME payment and not a
+ *    subscription at all (src/lib/plans.ts, mode "payment"). Every plan is
+ *    priced and charged in MXN and only MXN (BASE_CURRENCY); what a buyer
+ *    in another currency actually pays is set by Stripe's Adaptive Pricing
+ *    at the checkout, and the figures this site shows in other currencies
+ *    are approximate by construction (src/lib/currency.ts). Cash means an
+ *    OXXO voucher, valid 3 days, offered to buyers in Mexico and refused
+ *    to everyone else by /api/checkout itself (src/lib/country.ts). All
+ *    four facts are stated in section 3 of the Terms — keep them in step.
  *  - Data actually collected: email, optional display name, avatarId
  *    (a string like "matryoshka_calm", never a photo/file — see
  *    src/lib/avatars.ts), bcrypt password hash, session cookie,
@@ -66,12 +76,22 @@ export interface LegalDocument {
 // sends nothing to OpenAI. The old wording was in the present tense
 // ("genera el audio…") and read as if a clip were synthesised while the
 // student pressed play. Nothing about what is collected changed.
-const LAST_UPDATED = "2026-08-31";
+const PRIVACY_LAST_UPDATED = "2026-08-31";
+
+// 08.09.2026: section 3 of the Terms gained the three things it had never
+// said out loud — that cash (an OXXO voucher) is offered to buyers in
+// Mexico and to nobody else, that Premium is a one-time payment and not a
+// subscription, and that the charge is always in MXN while any other
+// currency shown on the site is approximate. That is a change to what a
+// buyer is being promised, so it carries its own date; the Privacy Policy
+// did not change and keeps the old one, which is why these are two
+// constants and not one.
+const TERMS_LAST_UPDATED = "2026-09-08";
 
 export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   es: {
     title: "Términos de Servicio",
-    lastUpdated: LAST_UPDATED,
+    lastUpdated: TERMS_LAST_UPDATED,
     intro:
       "Estos Términos de Servicio ('Términos') regulan el uso de RusoFácilapp.com y de la aplicación asociada (el 'Servicio'), operado por Vasilii Petrov ('nosotros', 'el operador'). Al crear una cuenta o usar el Servicio, aceptas estos Términos. Si no estás de acuerdo, no uses el Servicio.",
     sections: [
@@ -93,9 +113,12 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "3. Suscripciones y pagos",
         paragraphs: [
-          "Ofrecemos planes de suscripción mensual y anual. Los pagos se procesan a través de Stripe; nunca almacenamos los datos de tu tarjeta en nuestros servidores.",
-          "Las suscripciones se renuevan automáticamente al final de cada periodo, salvo que las canceles antes de la fecha de renovación.",
-          "Puedes cancelar tu suscripción en cualquier momento desde tu perfil. La cancelación surte efecto de inmediato: perderás el acceso a las funciones de pago en el momento de cancelar, no al final del periodo ya pagado. Salvo que la ley aplicable exija lo contrario, no ofrecemos reembolsos por el tiempo restante de un periodo ya iniciado.",
+          "Ofrecemos dos planes de suscripción —mensual y anual— y un plan Premium de pago único. Los pagos se procesan a través de Stripe; nunca almacenamos los datos de tu tarjeta en nuestros servidores.",
+          "Las suscripciones mensual y anual se renuevan automáticamente al final de cada periodo, salvo que las canceles antes de la fecha de renovación.",
+          "El plan Premium no es una suscripción: es un pago único. No se renueva, no genera cobros posteriores y no hay nada que cancelar; el acceso que otorga se mantiene mientras el Servicio siga en funcionamiento.",
+          "Además del pago con tarjeta, aceptamos pago en efectivo mediante un vale OXXO, y únicamente para compradores en México: OXXO es una cadena de tiendas mexicana y su vale no puede pagarse fuera del país. El vale es válido durante 3 días; si vence sin pagarse no se te cobra nada y puedes generar otro. El acceso se activa automáticamente en cuanto la tienda confirma el pago. Un pago en efectivo cubre un solo periodo y nunca genera cobros automáticos: para continuar hay que repetirlo.",
+          "Todos los planes se cobran en pesos mexicanos (MXN). Si tu tarjeta está denominada en otra moneda, el importe exacto lo fija la página de pago o tu banco en el momento del cobro; los importes que mostramos en otras monedas dentro del sitio son aproximados y pueden diferir del cargo final por el tipo de cambio y las comisiones de conversión.",
+          "Puedes cancelar tu suscripción mensual o anual en cualquier momento desde tu perfil. La cancelación surte efecto de inmediato: perderás el acceso a las funciones de pago en el momento de cancelar, no al final del periodo ya pagado. Salvo que la ley aplicable exija lo contrario, no ofrecemos reembolsos por el tiempo restante de un periodo ya iniciado.",
           "Nos reservamos el derecho de modificar los precios de las suscripciones. Cualquier cambio se aplicará a partir del siguiente ciclo de renovación, nunca de forma retroactiva.",
         ],
       },
@@ -146,7 +169,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   },
   ru: {
     title: "Условия использования",
-    lastUpdated: LAST_UPDATED,
+    lastUpdated: TERMS_LAST_UPDATED,
     intro:
       "Эти Условия использования («Условия») регулируют использование сайта RusoFácilapp.com и связанного с ним приложения («Сервис»), которым управляет Василий Петров («мы», «оператор»). Создавая аккаунт или используя Сервис, вы соглашаетесь с этими Условиями. Если вы не согласны — пожалуйста, не используйте Сервис.",
     sections: [
@@ -168,9 +191,12 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "3. Подписки и оплата",
         paragraphs: [
-          "Мы предлагаем месячную и годовую подписку. Платежи обрабатываются через Stripe; данные вашей карты никогда не хранятся на наших серверах.",
-          "Подписка продлевается автоматически в конце каждого периода, если вы не отменили её заранее.",
-          "Отменить подписку можно в любой момент в личном профиле. Отмена вступает в силу немедленно: доступ к платным функциям прекращается в момент отмены, а не в конце уже оплаченного периода. Если иное не требуется применимым законодательством, возврат средств за оставшуюся часть уже начавшегося периода не производится.",
+          "Мы предлагаем две подписки — месячную и годовую — и тариф Premium с разовым платежом. Платежи обрабатываются через Stripe; данные вашей карты никогда не хранятся на наших серверах.",
+          "Месячная и годовая подписки продлеваются автоматически в конце каждого периода, если вы не отменили их заранее.",
+          "Premium — не подписка, а разовый платёж. Он не продлевается, не порождает последующих списаний и его нечего отменять; выданный им доступ сохраняется, пока Сервис продолжает работать.",
+          "Кроме оплаты картой мы принимаем наличные — по ваучеру OXXO, и только для покупателей в Мексике: OXXO это сеть магазинов в Мексике, и оплатить её ваучер за пределами страны негде. Ваучер действует 3 дня; если срок истёк, с вас ничего не списано и можно выпустить новый. Доступ включается автоматически, как только магазин подтвердит оплату. Оплата наличными покрывает один период и никогда не приводит к автосписаниям: чтобы продолжить, платёж нужно повторить.",
+          "Все тарифы списываются в мексиканских песо (MXN). Если ваша карта выпущена в другой валюте, точную сумму определяет платёжная страница или ваш банк в момент списания; суммы в других валютах, которые мы показываем на сайте, — приблизительные и могут отличаться от итогового списания из-за курса и комиссии за конвертацию.",
+          "Отменить месячную или годовую подписку можно в любой момент в личном профиле. Отмена вступает в силу немедленно: доступ к платным функциям прекращается в момент отмены, а не в конце уже оплаченного периода. Если иное не требуется применимым законодательством, возврат средств за оставшуюся часть уже начавшегося периода не производится.",
           "Мы оставляем за собой право менять стоимость подписки. Любое изменение применяется начиная со следующего цикла продления, никогда задним числом.",
         ],
       },
@@ -224,7 +250,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
 export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
   es: {
     title: "Política de Privacidad",
-    lastUpdated: LAST_UPDATED,
+    lastUpdated: PRIVACY_LAST_UPDATED,
     intro:
       "Esta Política de Privacidad explica qué datos personales recopila RusoFácilapp.com, cómo los usamos y qué derechos tienes sobre ellos. La escribimos en un lenguaje directo, evitando jerga legal innecesaria.",
     sections: [
@@ -309,7 +335,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
   },
   ru: {
     title: "Политика конфиденциальности",
-    lastUpdated: LAST_UPDATED,
+    lastUpdated: PRIVACY_LAST_UPDATED,
     intro:
       "Эта Политика конфиденциальности объясняет, какие личные данные собирает RusoFácilapp.com, как мы их используем и какие права у вас есть в отношении них. Мы старались писать простым языком, без лишнего юридического жаргона.",
     sections: [
