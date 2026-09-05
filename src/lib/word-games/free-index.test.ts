@@ -164,7 +164,27 @@ describe("freeIndexLastModified", () => {
 
   it("says nothing rather than inventing a date", () => {
     expect(freeIndexLastModified([])).toBeUndefined();
-    expect(freeIndexLastModified([row("CROSSWORD", "B2", 1, null)])).toBeUndefined();
+    expect(freeIndexLastModified([{ ...row("CROSSWORD", "B2", 1, null), createdAt: null }])).toBeUndefined();
+  });
+
+  it("бесплатная строка без updatedAt датируется своим createdAt", () => {
+    // Девять строк банка написаны до появления колонки `updatedAt`
+    // (29.08.2026) — среди них CROSSWORD/B2/1. До 05.09 они не давали
+    // даты ни своему URL, ни этой странице.
+    expect(
+      freeIndexLastModified([
+        { ...row("CROSSWORD", "B2", 1, null), createdAt: new Date("2026-08-20T22:54:07.247Z") },
+      ]),
+    ).toEqual(new Date("2026-08-20T22:54:07.247Z"));
+  });
+
+  it("control: createdAt ПЛАТНОЙ строки дату не двигает", () => {
+    const free = [{ ...row("WORD_SEARCH", "B1", 9, new Date("2026-08-29T12:00:00.000Z")), createdAt: null }];
+    const paid = { ...row("WORD_SEARCH", "B1", 667, null), createdAt: new Date("2027-01-01T00:00:00.000Z") };
+    expect(freeIndexLastModified([...free, paid])).toEqual(new Date("2026-08-29T12:00:00.000Z"));
+    // Контроль контроля: та же дата на названном бесплатном хвосте — двигает.
+    const freeTail = { ...row("WORD_SEARCH", "B1", 668, null), createdAt: new Date("2027-01-01T00:00:00.000Z") };
+    expect(freeIndexLastModified([...free, freeTail])).toEqual(new Date("2027-01-01T00:00:00.000Z"));
   });
 });
 
