@@ -235,6 +235,19 @@ export default async function AlfabetoRusoPage({
         <ul className="mt-3 flex flex-col gap-2">
           <li>
             <Link
+              href="/es/alfabeto-cirilico"
+              className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+            >
+              Las 33 letras con sonido y ejemplos
+            </Link>
+            <span className="text-sm text-foreground/60">
+              {" "}
+              · cómo suena cada letra dentro de una palabra real, con audio y la transcripción de
+              su pronunciación de verdad
+            </span>
+          </li>
+          <li>
+            <Link
               href="/es/courses/a1/1"
               className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
             >

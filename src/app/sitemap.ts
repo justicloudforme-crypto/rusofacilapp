@@ -17,6 +17,8 @@ import { TOPIC_LANDINGS, TOPIC_LANDING_PATHS, landingPath } from "@/lib/word-gam
 import { isFrozenStory } from "@/lib/story-pilot";
 import { PUBLIC_VOCABULARY_LEVELS } from "@/lib/vocabulary-categories";
 import { lastModifiedField, latestLastModified, rowLastModified } from "@/lib/sitemap-lastmod";
+import { ALPHABET_PAGE_PATH } from "@/lib/alphabet/cyrillic-alphabet";
+import { getAlphabetAudio } from "@/lib/alphabet/alphabet-audio";
 
 // Next.js Metadata Route convention — served automatically at /sitemap.xml,
 // same pattern as manifest.ts/robots.ts. Lives outside `[lang]` so it isn't
@@ -86,6 +88,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // query behavior expected, so "es" only (see [lang]!=="es" -> notFound()
   // in each page.tsx).
   const esOnlyPaths = [
+    "/alfabeto-cirilico",
     "/sopa-de-letras-ruso",
     "/crucigramas-ruso-principiantes",
     "/sopa-de-letras-alfabeto-cirilico",
@@ -251,12 +254,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // Дата страницы `/es/alfabeto-cirilico` — самая поздняя `updatedAt`
+  // среди 66 клипов `AudioAsset`, которые она печатает (33 названия букв
+  // и 33 слова-примера). Это её ЕДИНСТВЕННОЕ чтение базы, поэтому и
+  // единственный честный источник даты: испанский текст страницы лежит в
+  // коде и источника даты не имеет вовсе — ровно как у четырёх гидов
+  // `/es/gramatica`, которые поэтому здесь молчат. Не прочиталось —
+  // `undefined`, и поля `<lastmod>` не будет, как и везде в этом файле.
+  const alphabetLastMod = (await getAlphabetAudio()).lastModified;
+
   for (const path of esOnlyPaths) {
     const isFreeIndexPage = (FREE_INDEX_PATHS_ES_ONLY as readonly string[]).includes(path);
+    const lastMod = isFreeIndexPage
+      ? freeIndexLastMod
+      : path === ALPHABET_PAGE_PATH
+        ? alphabetLastMod
+        : topicLastMod.get(path);
     entries.push({
       url: `${SITE_URL}/es${path}`,
       changeFrequency: "monthly",
-      ...lastModifiedField(isFreeIndexPage ? freeIndexLastMod : topicLastMod.get(path)),
+      ...lastModifiedField(lastMod),
     });
   }
 

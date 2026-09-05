@@ -116,6 +116,18 @@ export default async function JuegosParaAprenderRusoPage({
         sabes por dónde empezar, empieza por arriba.
       </p>
 
+      <p className="mt-4 leading-7 text-foreground/70">
+        Y si el tablero del alfabeto se te hace cuesta arriba porque todavía no sabes qué suena
+        cada letra, mira antes{" "}
+        <Link
+          href="/es/alfabeto-cirilico"
+          className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+        >
+          el alfabeto cirílico con sonido y ejemplos
+        </Link>
+        : las 33 letras, a qué se parece cada una en español y una palabra donde escucharla.
+      </p>
+
       <div className="mt-8 flex flex-col gap-4">
         {GAMES.map((game) => (
           <Link

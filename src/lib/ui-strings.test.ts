@@ -163,7 +163,7 @@ const ALLOWED: { match: RegExp; reason: string }[] = [
     reason: "the internal design-system page: disallowed in robots.txt AND noindex (PROGRESS 7.29), a tool, not a screen.",
   },
   {
-    match: /^src\/app\/\[lang\]\/(gramatica|crucigramas-ruso-principiantes|juegos-para-aprender-ruso|sopa-de-letras)/,
+    match: /^src\/app\/\[lang\]\/(alfabeto-cirilico|gramatica|crucigramas-ruso-principiantes|juegos-para-aprender-ruso|sopa-de-letras)/,
     reason:
       "Spanish-only routes by design — they explain Russian THROUGH Spanish and return 404 on /ru (PROGRESS section 0). Their prose is the article, not an interface label.",
   },
