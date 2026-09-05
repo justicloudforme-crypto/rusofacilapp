@@ -4,6 +4,7 @@ import { defaultLocale, isLocale, locales } from "@/i18n/config";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
 import { db } from "@/lib/db";
 import { isStaff } from "@/lib/roles";
+import { APEX_REDIRECT_STATUS, apexRedirectTarget } from "@/lib/canonical-host";
 
 function getPreferredLocale(request: NextRequest): string {
   const header = request.headers.get("accept-language");
@@ -71,6 +72,29 @@ async function protectAdminRoute(request: NextRequest, segments: string[]) {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Сведение www к апексу — ПЕРВЫМ, до всего остального.
+  //
+  // Порядок здесь и есть смысл правки: если бы проверка хоста стояла
+  // после локального редиректа, запрос на `www.…/pricing` сначала уехал
+  // бы на `www.…/es/pricing` и только потом на апекс — две «постоянные»
+  // ссылки вместо одной, и обе на несуществующем каноническом хосте.
+  // Сейчас цепочка ровно одна, и её конец совпадает с тем, что написано
+  // в `rel=canonical` этой же страницы (обе строки из `SITE_URL`).
+  //
+  // Рама не тронута: ни один заголовок ответа, ни один рендер, ни одна
+  // страница отсюда не меняется. Для запроса на апекс функция ниже
+  // возвращает null, и ветка не выполняется вовсе — 330 замороженных
+  // URL живут на апексе и в неё не попадают по построению.
+  //
+  // Чего эта правка НЕ покрывает, в отличие от настройки домена в
+  // Vercel: matcher ниже нарочно исключает `/robots.txt`, `/sitemap.xml`
+  // и статику, так что `www.…/sitemap.xml` останется отвечать 200. Это
+  // осознанно и безвредно — оба файла на обоих хостах побайтово
+  // одинаковы и называют только апекс, — но полное сведение хоста
+  // делается на границе, а не здесь.
+  const apex = apexRedirectTarget(request.headers.get("host"), pathname, request.nextUrl.search);
+  if (apex) return NextResponse.redirect(apex, APEX_REDIRECT_STATUS);
 
   const pathnameHasLocale = locales.some(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
