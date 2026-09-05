@@ -50,12 +50,17 @@ export function PaywallProvider({
   userId,
   dict,
   plans,
+  priceNote,
   children,
 }: {
   lang: Locale;
   userId: string | null;
   dict: PaywallModalDict;
   plans: Record<PlanId, PaywallPlanCopy>;
+  /** The conversion footnote, or undefined when the prices above it are
+   * already in the reader's own money (Mexico) or could not be converted.
+   * Built on the server — see src/lib/pricing-display.ts. */
+  priceNote?: string;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -94,6 +99,7 @@ export function PaywallProvider({
         next={pathname}
         dict={dict}
         plans={plans}
+        priceNote={priceNote}
         onClose={() => setOpen(false)}
       />
     </PaywallContext.Provider>

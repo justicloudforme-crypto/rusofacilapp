@@ -15,12 +15,12 @@ export interface PaywallModalDict {
 
 export interface PaywallPlanCopy {
   name: string;
+  /** The ONE figure shown for this plan — the visitor's own currency with
+   * "≈" and a footnote asterisk where there is one to quote, the peso price
+   * otherwise (Mexico, an unlisted or unknown country, a silent rate feed).
+   * Built on the server; see src/lib/pricing-display.ts and PROGRESS.md
+   * 7.120. */
   price: string;
-  /** "≈ 13 900 ARS" — the same secondary figure /pricing shows, built on
-   * the server from the visitor's country (src/lib/currency.ts). Undefined
-   * in Mexico, in an unlisted or unknown country, and whenever the rate
-   * feed did not answer; the peso price never depends on it. */
-  approxPrice?: string;
   period: string;
   badge?: string;
   /** Lifetime-only cost-comparison line (see dict.pricing.lifetime.valueNote),
@@ -51,6 +51,7 @@ export default function PaywallModal({
   next,
   dict,
   plans,
+  priceNote,
   onClose,
 }: {
   lang: Locale;
@@ -60,6 +61,10 @@ export default function PaywallModal({
   next: string;
   dict: PaywallModalDict;
   plans: Record<PlanId, PaywallPlanCopy>;
+  /** The single conversion footnote, at the foot of the modal because the
+   * modal is the whole surface while it is open. Undefined when the figures
+   * above are not conversions. */
+  priceNote?: string;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -134,11 +139,6 @@ export default function PaywallModal({
                     <span className="text-right text-sm font-semibold tracking-tight">
                       {plan.price}
                       <span className="ml-1 text-xs font-normal text-foreground/50">{plan.period}</span>
-                      {plan.approxPrice && (
-                        <span className="block text-xs font-normal tabular-nums text-foreground/50">
-                          {plan.approxPrice}
-                        </span>
-                      )}
                     </span>
                   </span>
                 </button>
@@ -149,6 +149,8 @@ export default function PaywallModal({
             );
           })}
         </div>
+
+        {priceNote && <p className="text-xs leading-5 text-foreground/50">{priceNote}</p>}
       </div>
     </div>
   );

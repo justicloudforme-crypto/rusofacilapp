@@ -12,9 +12,15 @@
  * looking at the checkout form. This module fills the gap between the two
  * screens with a secondary, explicitly approximate figure.
  *
- * THE PESO STAYS THE PRICE. The peso amount is the large one, the local
- * amount is small and always carries "≈". A Mexican visitor sees no second
- * figure at all: converting MXN to MXN is noise.
+ * THE VISITOR'S CURRENCY IS THE PRICE (changed 09.09.2026, PROGRESS.md
+ * 7.120). For one day this figure sat small and grey UNDER a large peso
+ * price. That was backwards for exactly the reader it was written for: the
+ * number they cannot act on was given the size that says "this is the
+ * price". Now there is one figure per card and this is it, with the "≈" it
+ * has always carried; the peso base price is named once, in a footnote at
+ * the bottom of the page. A Mexican visitor still sees no conversion at
+ * all — converting MXN to MXN is noise — and neither does anyone whose
+ * country or rate we do not have.
  *
  * NOTE FOR THE "no dollar figures" RULE (src/lib/pricing-currency.test.ts,
  * e2e/pricing-currency.spec.ts). That rule bans a `$` that is not followed

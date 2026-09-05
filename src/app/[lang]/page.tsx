@@ -17,8 +17,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { organizationJsonLd, websiteJsonLd, routeAlternates } from "@/lib/site";
 import { localizeStoryAuthor } from "@/lib/story-author";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
-import { formatApproximate } from "@/lib/currency";
-import { plans } from "@/lib/plans";
+import { basePricesText, marked, priceCopy, withBasePrices, withPrice } from "@/lib/pricing-display";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -53,14 +52,21 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
     getHomepageWordSample(),
     getHomepagePreviewData(),
     isCashAvailableForRequest(),
-    // The price strip below repeats all three peso figures, so it repeats
-    // the same second line /pricing shows — a visitor who never scrolls
+    // The price strip below repeats all three figures, so it repeats them
+    // in the same currency /pricing quotes — a visitor who never scrolls
     // past the front page should not have to open another page to find out
-    // what the number means to them. Null everywhere it is null there.
+    // what they are about to spend. Null everywhere it is null there.
     getLocalPriceContext(),
   ]);
-  const approx = (plan: "monthly" | "annual" | "lifetime") =>
-    formatApproximate(plans[plan].amountMxnCents, localPrice, lang);
+  // One figure per tile, in the visitor's money, and the peso base price in
+  // the single footnote under the strip — same rule as /pricing, same
+  // module (PROGRESS.md 7.120).
+  const priceText = priceCopy(localPrice, lang, {
+    monthly: dict.pricing.monthly.price,
+    annual: dict.pricing.annual.price,
+    lifetime: dict.pricing.lifetime.price,
+    annualPerMonth: dict.pricing.annual.perMonthPrice,
+  });
 
   return (
     <div className="flex flex-1 flex-col">
@@ -344,10 +350,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
             </Card>
             <Card tone="neutral" padding="lg">
               <h3 className="font-medium">{dict.pricing.monthly.name}</h3>
-              <p className="mt-2 text-2xl font-semibold">{dict.pricing.monthly.price}</p>
-              {approx("monthly") && (
-                <p className="mt-1 text-xs tabular-nums text-foreground/50">{approx("monthly")}</p>
-              )}
+              <p className="mt-2 text-2xl font-semibold">{marked(priceText.monthly, priceText)}</p>
             </Card>
             <Card tone="primary" padding="lg" className="relative">
               {dict.pricing.annual.badge && (
@@ -356,25 +359,26 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                 </span>
               )}
               <h3 className="font-medium">{dict.pricing.annual.name}</h3>
-              <p className="mt-2 text-2xl font-semibold">{dict.pricing.annual.price}</p>
-              {approx("annual") && (
-                <p className="mt-1 text-xs tabular-nums text-foreground/50">{approx("annual")}</p>
-              )}
+              <p className="mt-2 text-2xl font-semibold">{marked(priceText.annual, priceText)}</p>
               {dict.pricing.annual.perMonthNote && (
-                <p className="mt-1 text-xs text-foreground/60">{dict.pricing.annual.perMonthNote}</p>
+                <p className="mt-1 text-xs text-foreground/60">
+                  {withPrice(dict.pricing.annual.perMonthNote, priceText.annualPerMonth)}
+                </p>
               )}
             </Card>
             <Card tone="premium" padding="lg">
               <h3 className="font-medium text-premium-700 dark:text-premium-300">{dict.pricing.lifetime.name}</h3>
-              <p className="mt-2 text-2xl font-semibold">{dict.pricing.lifetime.price}</p>
-              {approx("lifetime") && (
-                <p className="mt-1 text-xs tabular-nums text-foreground/50">{approx("lifetime")}</p>
-              )}
+              <p className="mt-2 text-2xl font-semibold">{marked(priceText.lifetime, priceText)}</p>
             </Card>
           </div>
-          {/* One explanation for all three tiles, and only when there is
-              something to explain — same rule as on /pricing. */}
-          {localPrice && <p className="mt-4 text-xs text-foreground/50">{dict.pricing.approxNote}</p>}
+          {/* One footnote for all three tiles, naming the peso base price,
+              and only when there is something to explain — same rule and
+              same sentence as on /pricing. */}
+          {priceText.converted && (
+            <p className="mt-4 text-xs text-foreground/50">
+              {withBasePrices(dict.pricing.approxNote, basePricesText(lang))}
+            </p>
+          )}
           <Link
             href={`/${lang}/pricing`}
             className="tap mt-8 flex min-h-11 w-fit items-center gap-1 text-sm font-medium text-primary-text"

@@ -3,15 +3,14 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import FreeTierCard from "@/components/pricing/FreeTierCard";
-import SubscriptionCard from "@/components/pricing/SubscriptionCard";
+import SubscriptionCard, { type BillingOption } from "@/components/pricing/SubscriptionCard";
 import PremiumCard from "@/components/pricing/PremiumCard";
 import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
-import { formatApproximate } from "@/lib/currency";
-import { plans } from "@/lib/plans";
+import { basePricesText, marked, priceCopy, withBasePrices, withPrice } from "@/lib/pricing-display";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">): Promise<Metadata> {
   const { lang } = await params;
@@ -64,16 +63,33 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   // page that offered cash here would be offering a button that 303s back.
   const cashAvailable = await isCashAvailableForRequest();
 
-  // The peso price is the price; this is the second, smaller line under it
-  // that tells a reader in Buenos Aires or Singapore roughly what they are
-  // about to spend. Null — no country, a country outside the allowlist,
-  // Mexico itself, or a rate feed that did not answer — means the page
-  // simply shows pesos, exactly as it did before 08.09.2026. See
-  // src/lib/currency.ts for why the figure carries Stripe's own conversion
-  // markup instead of a footnote about it.
+  // ONE figure per card, in the visitor's own money, with "≈" on it — the
+  // peso base price lives in a single footnote at the bottom of the page
+  // (PROGRESS.md 7.120). In Mexico, in a country outside the allowlist, in
+  // an unknown one, and whenever the rate feed did not answer, `converted`
+  // is false and every figure here is the peso string from the dictionary,
+  // exactly as the page read before 09.09.2026. See src/lib/pricing-display.ts
+  // for why it is all four amounts or none.
   const localPrice = await getLocalPriceContext();
-  const approx = (plan: "monthly" | "annual" | "lifetime") =>
-    formatApproximate(plans[plan].amountMxnCents, localPrice, lang) ?? undefined;
+  const copy = priceCopy(localPrice, lang, {
+    monthly: p.monthly.price,
+    annual: p.annual.price,
+    lifetime: p.lifetime.price,
+    annualPerMonth: p.annual.perMonthPrice,
+  });
+
+  // The button names the same currency as the figure above it because it is
+  // handed the same string — the dictionary carries "Empezar por {price}/mes"
+  // and nothing else.
+  const subscriptionOption = (plan: "monthly" | "annual"): BillingOption => ({
+    name: p[plan].name,
+    price: marked(copy[plan], copy),
+    period: p[plan].period,
+    badge: plan === "annual" ? p.annual.badge : undefined,
+    perMonthNote: plan === "annual" ? withPrice(p.annual.perMonthNote, copy.annualPerMonth) : undefined,
+    cardCta: withPrice(p[plan].cardCta, copy[plan]),
+    cashCta: p[plan].cashCta,
+  });
 
   // Two edits, not one: the OXXO-expiry question disappears whole, and the
   // auto-renewal answer loses its "with cash (OXXO)… " clause. Filtering by
@@ -149,8 +165,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           methodLabel={p.paymentMethodLabel}
           cardLabel={p.cardLabel}
           cashLabel={p.cashLabel}
-          option={p.monthly}
-          approxPrice={approx("monthly")}
+          option={subscriptionOption("monthly")}
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
@@ -164,8 +179,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           methodLabel={p.paymentMethodLabel}
           cardLabel={p.cardLabel}
           cashLabel={p.cashLabel}
-          option={p.annual}
-          approxPrice={approx("annual")}
+          option={subscriptionOption("annual")}
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
@@ -179,12 +193,11 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           cardLabel={p.cardLabel}
           cashLabel={p.cashLabel}
           name={p.lifetime.name}
-          price={p.lifetime.price}
-          approxPrice={approx("lifetime")}
+          price={marked(copy.lifetime, copy)}
           period={p.lifetime.period}
           badge={p.lifetime.badge}
           valueNote={p.lifetime.valueNote}
-          cardCta={p.lifetime.cardCta}
+          cardCta={withPrice(p.lifetime.cardCta, copy.lifetime)}
           cashCta={p.lifetime.cashCta}
           featuresTitle={p.featuresPremiumTitle}
           features={p.featuresPremium}
@@ -200,10 +213,18 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           note={cashAvailable ? p.paymentMethodsNote : p.paymentMethodsNoteCardOnly}
           cashAvailable={cashAvailable}
         />
-        {/* Shown only when there is an approximate figure on the page to
-            explain. In Mexico, and wherever no rate could be had, this
-            sentence would be describing something the reader cannot see. */}
-        {localPrice && <p className="mt-3 text-center text-xs text-foreground/50">{p.approxNote}</p>}
+        {/* The one footnote. It carries the whole conversion story — the
+            peso base price, who sets the exact amount, that pesos can still
+            be chosen at the till, and that a subscription's later charges
+            move with the rate — and it is shown only when the figures above
+            are conversions. In Mexico, and wherever no rate could be had,
+            this sentence would be describing something the reader cannot
+            see. */}
+        {copy.converted && (
+          <p className="mt-3 text-center text-xs text-foreground/50">
+            {withBasePrices(p.approxNote, basePricesText(lang))}
+          </p>
+        )}
       </div>
 
       <div className="mt-16">

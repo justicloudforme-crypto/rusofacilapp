@@ -102,18 +102,39 @@ describe("what section 3 of the Terms has to state, in both locales", () => {
     expect(text).toMatch(/no se renueva|не продлевается/i);
   });
 
-  it.each(locales)("%s: the currency actually charged is named", (locale) => {
+  it.each(locales)("%s: the currency is named, as a BASE price and not as the charge", (locale) => {
     const text = paymentSection(locale);
     expect(text).toContain("MXN");
     expect(text).toMatch(/aproximad|приблизительн/);
+
+    // Added 09.09.2026 (PROGRESS.md 7.120). The paragraph written on 08.09
+    // said the charge is always in pesos. It is not: with Adaptive Pricing
+    // the checkout bills the buyer in their own currency and offers pesos
+    // as a choice beside it — pesos are what the SELLER is settled in.
+    // Three things have to be said instead, and each is a term of the deal:
+    expect(text).toMatch(/precio base|Базовая цена/);
+    // the buyer may be charged in their own money, and may choose pesos;
+    expect(text).toMatch(/pagar en pesos|оплату в песо/);
+    // and a subscription's later charges move with the rate.
+    expect(text).toMatch(/renovaciones|следующих списаний/);
+  });
+
+  it.each(locales)("%s: the Terms no longer claim every charge is in pesos", (locale) => {
+    // The exact sentence that was there, and the shape of it. Written as a
+    // pattern rather than a literal so a re-worded version of the same
+    // false claim is caught too.
+    const text = paymentSection(locale);
+    expect(text).not.toMatch(/se cobran en pesos mexicanos/);
+    expect(text).not.toMatch(/списываются в мексиканских песо/);
   });
 
   it("carries its own date, separate from the Privacy Policy's", () => {
-    // The Terms changed on 08.09.2026 and the Privacy Policy did not. One
-    // shared constant would have back-dated this change or falsely
-    // re-dated that document.
+    // The Terms changed on 08.09.2026 and again on 09.09.2026, when the
+    // currency paragraph was corrected; the Privacy Policy changed on
+    // neither day. One shared constant would have back-dated these changes
+    // or falsely re-dated that document.
     for (const locale of locales) {
-      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-09-08");
+      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-09-09");
     }
   });
 
@@ -126,6 +147,21 @@ describe("what section 3 of the Terms has to state, in both locales", () => {
       expect(before).not.toContain("OXXO");
       expect(before).not.toMatch(/pago único/);
       expect(before).not.toContain("MXN");
+    });
+
+    it("catches the currency sentence this replaced, in both languages", () => {
+      // The 08.09.2026 wording. It reads as careful and precise, which is
+      // why it survived a day: it names the currency, it disclaims the
+      // approximation, and the one thing it asserts outright is false.
+      const planted = [
+        "Todos los planes se cobran en pesos mexicanos (MXN). Los importes en otras monedas son aproximados.",
+        "Все тарифы списываются в мексиканских песо (MXN). Суммы в других валютах приблизительные.",
+      ];
+      for (const text of planted) {
+        expect(text).toMatch(/se cobran en pesos mexicanos|списываются в мексиканских песо/);
+        expect(text).not.toMatch(/precio base|Базовая цена/);
+        expect(text).not.toMatch(/pagar en pesos|оплату в песо/);
+      }
     });
   });
 });

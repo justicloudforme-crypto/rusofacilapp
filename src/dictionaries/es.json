@@ -391,7 +391,7 @@
       "name": "Mensual",
       "price": "$150 MXN",
       "period": "/ mes",
-      "cardCta": "Empezar por $150 MXN/mes",
+      "cardCta": "Empezar por {price}/mes",
       "cashCta": "Pagar en efectivo — $150 MXN"
     },
     "annual": {
@@ -399,8 +399,9 @@
       "price": "$899 MXN",
       "period": "/ año",
       "badge": "−50%",
-      "perMonthNote": "≈$75 MXN/mes pagando por año",
-      "cardCta": "Ahorrar 50% — $899 MXN/año",
+      "perMonthPrice": "≈$75 MXN",
+      "perMonthNote": "{price}/mes pagando por año",
+      "cardCta": "Ahorrar 50% — {price}/año",
       "cashCta": "Pagar en efectivo — $899 MXN"
     },
     "lifetime": {
@@ -409,7 +410,7 @@
       "period": "pago único",
       "badge": "Acceso para siempre",
       "valueNote": "Un solo pago, sin renovaciones. Suma el material de nivel C1 y la biblioteca ampliada de modismos e historias.",
-      "cardCta": "Comprar para siempre por $2,299 MXN",
+      "cardCta": "Comprar para siempre por {price}",
       "cashCta": "Pagar en efectivo — $2,299 MXN"
     },
     "oxxoStepsHeading": "Cómo pagar en efectivo",
@@ -436,7 +437,7 @@
     ],
     "paymentMethodsNote": "Aceptamos tarjetas y efectivo OXXO",
     "paymentMethodsNoteCardOnly": "Aceptamos tarjetas de crédito y débito",
-    "approxNote": "Los importes en tu moneda son aproximados: el tipo de cambio exacto lo fija la página de pago. El cobro siempre es en pesos mexicanos (MXN).",
+    "approxNote": "* El precio base está en pesos mexicanos ({prices}); lo de arriba es una conversión al cambio de hoy, para darte una idea. El importe exacto te lo dirá la página de pago, y ahí también puedes pagar en pesos. En los planes que se renuevan, los cobros siguientes pueden variar un poco si cambia el tipo de cambio.",
     "faqHeading": "Preguntas frecuentes",
     "faqAutoChargeCardOnly": "Con tarjeta, sí — el plan mensual y el anual se renuevan automáticamente hasta que los canceles. Premium no se renueva: es un pago único.",
     "faq": [

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { formatMoney, plans, BASE_CURRENCY } from "./plans";
+import { withPrice } from "./pricing-display";
 import es from "../dictionaries/es.json";
 import ru from "../dictionaries/ru.json";
 
@@ -111,12 +112,55 @@ describe("no dollar figures on the public pricing surface", () => {
       expect(ru.pricing[plan].price).toBe(asText);
       // The call-to-action a buyer actually presses names the same figure —
       // the price above the fold and the price on the button cannot differ.
+      //
+      // Since 09.09.2026 the card CTA does not hold the figure at all: it
+      // holds a `{price}` slot that /pricing fills with whatever it just put
+      // on the card, which is how the button and the price are kept in the
+      // same currency by construction rather than by two matching literals
+      // (PROGRESS.md 7.120). So what is checked is that the slot exists and
+      // that filling it with the peso price reproduces the old string. The
+      // CASH CTA still carries the peso figure outright, and rightly: an
+      // OXXO voucher is only ever offered to a buyer in Mexico, where the
+      // peso price is the only price.
       for (const dict of [es, ru]) {
-        expect(dict.pricing[plan].cardCta).toContain(asText);
+        expect(dict.pricing[plan].cardCta).toContain("{price}");
+        expect(withPrice(dict.pricing[plan].cardCta, asText)).toContain(asText);
         expect(dict.pricing[plan].cashCta).toContain(asText);
       }
     }
     expect(BASE_CURRENCY).toBe("mxn");
+  });
+
+  it("the annual plan's per-month figure is the peso fallback, and is marked MXN", () => {
+    // Shown under the annual card when nothing was converted, and replaced
+    // by the visitor's own currency when something was. It is deliberately
+    // hand-written rather than derived — 89 900 / 12 is 74.92, and
+    // "$74.92 MXN/mes" reads as a converted figure rather than a price —
+    // so the only thing to hold it to is the currency rule and the size of
+    // the number.
+    for (const dict of [es, ru]) {
+      expect(dict.pricing.annual.perMonthPrice).toBe("≈$75 MXN");
+      expect(unmarkedMoney(dict.pricing.annual.perMonthPrice)).toEqual([]);
+      expect(dict.pricing.annual.perMonthNote).toContain("{price}");
+    }
+    const exact = plans.annual.amountMxnCents / 12 / 100;
+    expect(Math.abs(exact - 75)).toBeLessThan(1);
+  });
+
+  it("the conversion footnote names the base prices through a slot, not a literal", () => {
+    // The footnote is now the ONLY place on the page a peso figure appears
+    // for a visitor who is being quoted in their own money. It must not
+    // hardcode those figures: they are filled in from plans.ts at render
+    // time (basePricesText), so a price change cannot leave the footnote
+    // quoting a price the site no longer charges.
+    for (const dict of [es, ru]) {
+      expect(dict.pricing.approxNote).toContain("{prices}");
+      expect(dict.pricing.approxNote.startsWith("*")).toBe(true);
+      expect(unmarkedMoney(dict.pricing.approxNote)).toEqual([]);
+      // And the thing this footnote replaced: it used to say the charge is
+      // always in pesos, which Adaptive Pricing makes false.
+      expect(dict.pricing.approxNote).not.toMatch(/cobro siempre|Списание всегда/);
+    }
   });
 
   /**
