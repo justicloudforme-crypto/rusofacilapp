@@ -7,12 +7,16 @@ import { db } from "@/lib/db";
 import { getAllMedia } from "@/lib/media/data";
 import { SITE_URL } from "@/lib/site";
 import { VOCABULARY_CATEGORY_PAGES } from "@/lib/vocabulary-categories";
-import { TOPIC_LANDING_PATHS } from "@/lib/word-games/topic-landings";
+
 import {
   FREE_INDEX_PATHS_ES_ONLY,
   FREE_INDEX_PATHS_EVERY_LOCALE,
   freeIndexLastModified,
 } from "@/lib/word-games/free-index";
+import { TOPIC_LANDINGS, TOPIC_LANDING_PATHS, landingPath } from "@/lib/word-games/topic-landings";
+import { isFrozenStory } from "@/lib/story-pilot";
+import { PUBLIC_VOCABULARY_LEVELS } from "@/lib/vocabulary-categories";
+import { lastModifiedField, latestLastModified, rowLastModified } from "@/lib/sitemap-lastmod";
 
 // Next.js Metadata Route convention — served automatically at /sitemap.xml,
 // same pattern as manifest.ts/robots.ts. Lives outside `[lang]` so it isn't
@@ -129,17 +133,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // instead of taking it off the air. The error is logged rather than
   // swallowed, because silently serving a sitemap with no dates for weeks
   // is its own kind of failure.
-  let puzzleUpdatedAt = new Map<string, Date | null>();
-  let puzzleRows: Array<{ type: string; level: string; sequence: number; updatedAt: Date | null }> = [];
+  let puzzleLastMod = new Map<string, Date | undefined>();
+  let puzzleRows: Array<{
+    type: string;
+    level: string;
+    sequence: number;
+    topic: string | null;
+    updatedAt: Date | null;
+    createdAt: Date;
+  }> = [];
   try {
     puzzleRows = await db.wordGamePuzzle.findMany({
       // Заведомо надмножество бесплатных: точный ответ даёт
       // freeSequencesFor ниже, а не этот запрос (free-tier.ts).
       where: freeWordGameWhere(),
-      select: { type: true, level: true, sequence: true, updatedAt: true },
+      // `createdAt` читается ради 18 URL, у которых `<lastmod>` не было:
+      // девять строк банка написаны до того, как колонка `updatedAt`
+      // появилась (29.08.2026), и молчали не потому, что даты нет, а
+      // потому, что она лежит в соседнем столбце. Правило подстановки и
+      // доказательство, что она не выдуманная — в sitemap-lastmod.ts.
+      // `topic` — ради шести тематических лендингов ниже.
+      select: { type: true, level: true, sequence: true, topic: true, updatedAt: true, createdAt: true },
     });
-    puzzleUpdatedAt = new Map(
-      puzzleRows.map((r) => [`${r.type}/${r.level}/${r.sequence}`, r.updatedAt ?? null]),
+    puzzleLastMod = new Map(
+      puzzleRows.map((r) => [`${r.type}/${r.level}/${r.sequence}`, rowLastModified(r)]),
     );
   } catch (error) {
     console.error("[sitemap] could not read WordGamePuzzle.updatedAt; serving without lastmod", error);
@@ -165,6 +182,62 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // будет вовсе, ровно как у самих пазлов.
   const freeIndexLastMod = freeIndexLastModified(puzzleRows);
 
+  // Дата шести тематических лендингов `/es/sopa-de-letras-ruso-<тема>`:
+  // самая поздняя среди строк ИМЕННО ЭТОЙ темы. Тот же приём, что у
+  // страниц-источников выше, и по той же причине — страница печатает эти
+  // строки, значит меняется вместе с ними. Три общих лендинга
+  // (`/es/sopa-de-letras-ruso`, `/es/crucigramas-ruso-principiantes`,
+  // `/es/sopa-de-letras-alfabeto-cirilico`) сюда НЕ входят: у первых двух
+  // встроен один жёстко выбранный пазл, не связанный с тем, что страница
+  // обещает, а у третьего сетка вообще лежит константой в коде
+  // (alphabetShowcasePuzzle.ts) и даты не имеет ни в каком столбце.
+  const topicLastMod = new Map<string, Date | undefined>();
+  for (const landing of TOPIC_LANDINGS) {
+    topicLastMod.set(
+      landingPath(landing),
+      latestLastModified(puzzleRows.filter((row) => row.topic === landing.topic)),
+    );
+  }
+
+  // Обёрнуто по тому же правилу, что и чтение пазлов выше, и добавлено
+  // 29.08.2026 после того, как аудит нашёл: из трёх обращений к базе в
+  // этом файле защищено было ОДНО. Отказ здесь стоил всей карты; теперь
+  // он стоит URL этого семейства, а не 1912.
+  let stories: { id: string; title: string; level: string; updatedAt: Date }[] = [];
+  try {
+    stories = await db.story.findMany({ select: { id: true, title: true, level: true, updatedAt: true } });
+  } catch (error) {
+    console.error("[sitemap] could not read Story; serving without story URLs", error);
+  }
+
+  // Обёрнуто тоже, 29.08.2026, и это был самый острый из оставшихся
+  // краёв: запрос выбирает `updatedAt` — ровно ту колонку, чьё
+  // отсутствие когда-то и уронило карту.
+  let glossaryTerms: { slug: string; updatedAt: Date }[] = [];
+  try {
+    glossaryTerms = await db.glossaryTerm.findMany({ select: { slug: true, updatedAt: true } });
+  } catch (error) {
+    console.error("[sitemap] could not read GlossaryTerm; serving without glossary URLs", error);
+  }
+
+  // Даты двух страниц-каталогов. Каталог перечисляет строки, поэтому
+  // меняется вместе с ними — это тот же признак, что у страниц-источников
+  // бесплатного индекса, и та же функция его считает.
+  //
+  // Замороженные рассказы дату каталога двигать МОГУТ и это не нарушение:
+  // трогать нельзя замороженную страницу, а `/es/stories` в эксперименте
+  // не участвует ни одной стороной. На практике двинуть её они и не могут
+  // — в них по определению никто не пишет до 25.09.
+  //
+  // `/media` и `/vocabulary` сюда не входят, и по разным причинам:
+  // у медиа нет честной даты ни у одного элемента (см. ниже), а
+  // `/vocabulary` — клиентский пикер категорий, в его серверном HTML нет
+  // ни одной карточки, так что дата карточек к нему отношения не имеет.
+  const catalogLastMod = new Map<string, Date | undefined>([
+    ["/stories", latestLastModified(stories)],
+    ["/glossary", latestLastModified(glossaryTerms)],
+  ]);
+
   const entries: MetadataRoute.Sitemap = [];
 
   for (const path of staticPaths) {
@@ -173,7 +246,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push({
         url: `${SITE_URL}/${lang}${path}`,
         changeFrequency: "weekly",
-        ...(isFreeIndexPage && freeIndexLastMod ? { lastModified: freeIndexLastMod } : {}),
+        ...lastModifiedField(isFreeIndexPage ? freeIndexLastMod : catalogLastMod.get(path)),
       });
     }
   }
@@ -183,7 +256,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({
       url: `${SITE_URL}/es${path}`,
       changeFrequency: "monthly",
-      ...(isFreeIndexPage && freeIndexLastMod ? { lastModified: freeIndexLastMod } : {}),
+      ...lastModifiedField(isFreeIndexPage ? freeIndexLastMod : topicLastMod.get(path)),
     });
   }
 
@@ -192,8 +265,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // count, so adding a category can't leave its page out of the map. They
   // publish A1-B2 cards only; C1 stays paywalled in full, which is a
   // property of the page, not of this listing.
+  // `lastmod` у 23 страниц категорий: самая поздняя `updatedAt` среди
+  // карточек, которые страница ПЕЧАТАЕТ, — своей категории и только
+  // публичных уровней. C1 в счёт не идёт по той же причине, по которой
+  // его нет в HTML: этих карточек на странице физически нет, и правка
+  // C1-карточки страницу не меняет. Фильтр берётся из
+  // PUBLIC_VOCABULARY_LEVELS, того же списка, что и у самой страницы, —
+  // не из пересказа «A1..B2».
+  //
+  // Встроенный блок тематических пазлов дату не двигает намеренно: он
+  // необязателен (пустой список = блока нет), а его строки уже датируют
+  // и свои URL, и лендинг темы.
+  let vocabularyLastMod = new Map<string, Date | null>();
+  try {
+    const grouped = await db.flashcardCard.groupBy({
+      by: ["category"],
+      where: { level: { in: [...PUBLIC_VOCABULARY_LEVELS] } },
+      _max: { updatedAt: true },
+    });
+    vocabularyLastMod = new Map(grouped.map((g) => [g.category, g._max.updatedAt]));
+  } catch (error) {
+    console.error("[sitemap] could not read FlashcardCard.updatedAt; serving vocabulary URLs without lastmod", error);
+  }
   for (const page of VOCABULARY_CATEGORY_PAGES) {
-    entries.push({ url: `${SITE_URL}/es/vocabulary/${page.slug}`, changeFrequency: "weekly" });
+    entries.push({
+      url: `${SITE_URL}/es/vocabulary/${page.slug}`,
+      changeFrequency: "weekly",
+      ...lastModifiedField(vocabularyLastMod.get(page.category) ?? undefined),
+    });
   }
 
   // Уровни НЕ фильтруются по C1, и номера не считаются от 1 до предела:
@@ -203,12 +302,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const level of flashcardLevels) {
     for (const type of ["WORD_SEARCH", "CROSSWORD"] as const) {
       for (const sequence of freeSequencesFor(type, level)) {
-        const updatedAt = puzzleUpdatedAt.get(`${type}/${level}/${sequence}`) ?? null;
+        const lastMod = puzzleLastMod.get(`${type}/${level}/${sequence}`);
         for (const lang of locales) {
           entries.push({
             url: `${SITE_URL}/${lang}/word-games/${type}/${level}/${sequence}`,
             changeFrequency: "yearly",
-            ...(updatedAt ? { lastModified: updatedAt } : {}),
+            ...lastModifiedField(lastMod),
           });
         }
       }
@@ -221,43 +320,90 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // `lastmod` у 240 страниц уроков — там, где у урока есть строка.
+  //
+  // Источник назван точно, потому что их два и они не равны. Страница
+  // урока читает `getLessonContent` (lessons/content.ts): сперва строку
+  // `Lesson`, и только если её нет — статический `content.json`, который
+  // лежит рядом с кодом и даты на запись не имеет. Значит честная дата
+  // есть ровно у тех уроков, у кого есть строка, и её отсутствие — это
+  // «содержимое пришло из файла», а не «дата потерялась».
+  //
+  // Отсюда и форма: не «у всех 240», а «у скольких нашлась строка».
+  // Локально это 120 из 120 слотов; сколько на проде — скажет карта
+  // сайта после выката, и никакая подстановка этого не подменяет.
+  //
+  // Обёрнуто по тому же правилу, что и остальные три чтения файла: отказ
+  // стоит дат у этого семейства, а не 1912 URL.
+  let lessonLastMod = new Map<string, Date>();
+  try {
+    const lessonRows = await db.lesson.findMany({
+      select: { level: true, lessonSlug: true, updatedAt: true },
+    });
+    lessonLastMod = new Map(lessonRows.map((r) => [`${r.level}/${r.lessonSlug}`, r.updatedAt]));
+  } catch (error) {
+    console.error("[sitemap] could not read Lesson.updatedAt; serving lesson URLs without lastmod", error);
+  }
+
   for (const level of levelSlugs) {
     for (const lessonSlug of lessonSlugsFor(level)) {
+      const lastMod = lessonLastMod.get(`${level}/${lessonSlug}`);
       for (const lang of locales) {
-        entries.push({ url: `${SITE_URL}/${lang}/courses/${level}/${lessonSlug}`, changeFrequency: "monthly" });
+        entries.push({
+          url: `${SITE_URL}/${lang}/courses/${level}/${lessonSlug}`,
+          changeFrequency: "monthly",
+          ...lastModifiedField(lastMod),
+        });
       }
     }
   }
 
-  // Stories deliberately get NO lastmod until 25.09.2026.
+  // `lastmod` у рассказов: у всех, КРОМЕ 65 замороженных.
   //
-  // Story has carried a real `updatedAt` all along and the sitemap could
-  // use it — but 65 stories are the frozen half of a live experiment (see
-  // PROGRESS.md section 6), and lastmod is a recrawl signal. Handing all
-  // of them a fresh one mid-experiment changes how often the measured
-  // pages are fetched, which is exactly the kind of side effect "do not
-  // touch the frozen pages with anything" exists to prevent. It would hit
-  // pilot and control alike, so it probably would not bias the result —
-  // "probably" is not a good enough reason to perturb a measurement that
-  // has three weeks left to run. Revisit when the freeze lifts.
-  // Wrapped for the same reason as the puzzle read above, and added
-  // 29.08.2026 after the post-compact audit found that only ONE of this
-  // file's three database reads was protected. A failure here used to take
-  // the whole sitemap off the air; now it costs this family's URLs and
-  // leaves the other ~1250 in the file. Losing 650 entries is bad; losing
-  // 1902 because of 650 is worse.
-  let stories: { id: string }[] = [];
-  try {
-    stories = await db.story.findMany({ select: { id: true } });
-  } catch (error) {
-    console.error("[sitemap] could not read Story; serving without story URLs", error);
-  }
+  // Было (29.08–05.09.2026): поля не было ни у одного из 650 URL, и
+  // формулировка звучала как «рассказы не получают дату до 25.09». Это
+  // больше, чем требует заморозка. `lastmod` — сигнал переобхода, и
+  // трогать им измеряемую группу нельзя; но измеряемая группа — это
+  // ровно 65 рассказов (50 пилот + 15 контроль, и то и другое внутри
+  // заморозки, см. PROGRESS.md «ЭКСПЕРИМЕНТЫ»), то есть 130 URL из 650.
+  // Остальные 520 в эксперименте не участвуют ни одной стороной, их
+  // частота обхода ничего не измеряет, и молчали они не по правилу
+  // заморозки, а заодно.
+  //
+  // Принадлежность спрашивается у кода, а не у списка: `isFrozenStory`
+  // — та же функция, которой пользуются сами страницы рассказов, и она
+  // покрывает обе группы. Ни один замороженный URL от этой правки не
+  // получает поля; проверка — сверка «до/после» и check:frozen.
+  //
+  // Снимается это 25.09.2026 удалением одной ветки — вместе с остальными
+  // пунктами очереди на снятие заморозки.
   for (const story of stories) {
+    const frozen = isFrozenStory(story);
     for (const lang of locales) {
-      entries.push({ url: `${SITE_URL}/${lang}/stories/${story.id}`, changeFrequency: "monthly" });
+      entries.push({
+        url: `${SITE_URL}/${lang}/stories/${story.id}`,
+        changeFrequency: "monthly",
+        ...lastModifiedField(frozen ? undefined : story.updatedAt),
+      });
     }
   }
 
+  // Медиа — единственное семейство карты, у которого честной даты нет
+  // НИ У ОДНОГО из 550 URL, и это не упущение, а свойство хранилища.
+  // Каталог (заголовок, описание, лексика, упражнения) лежит в
+  // `src/lib/media/mediaData.json` рядом с кодом и колонки с датой не
+  // имеет вовсе. Единственная дата поблизости — `MediaOverride.updatedAt`,
+  // и она не про содержимое: `saveEmbedStatuses` переписывает
+  // `embedStatus`/`lastCheckedAt` пачкой по всему каталогу при каждой
+  // автоматической проверке встраивания, ничего не меняя на странице.
+  // Замер по локальной копии: 233 строки на двух соседних датах,
+  // 120 и 113 — след двух прогонов проверки, а не 233 правок.
+  // Такой `lastmod` обещал бы свежесть, которой нет, — а это ровно то,
+  // из-за чего краулер перестаёт верить всей карте.
+  //
+  // Дата появится, когда появится источник: колонка на самом элементе
+  // (правка схемы + перенос JSON в базу) — отдельная работа, названа
+  // числом в отчёте, здесь не делается.
   const media = await getAllMedia();
   for (const item of media) {
     for (const lang of locales) {
@@ -273,16 +419,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // `updatedAt`, and are edited one at a time — so their dates differ per
   // row and are a genuine signal rather than one batch timestamp.
   //
-  // Wrapped too, 29.08.2026 — and this one was the sharpest remaining edge:
-  // it selects `updatedAt`, exactly the kind of column whose absence
-  // produced the outage in the first place, and it was the last unprotected
-  // read in the file.
-  let glossaryTerms: { slug: string; updatedAt: Date }[] = [];
-  try {
-    glossaryTerms = await db.glossaryTerm.findMany({ select: { slug: true, updatedAt: true } });
-  } catch (error) {
-    console.error("[sitemap] could not read GlossaryTerm; serving without glossary URLs", error);
-  }
   for (const term of glossaryTerms) {
     for (const lang of locales) {
       entries.push({

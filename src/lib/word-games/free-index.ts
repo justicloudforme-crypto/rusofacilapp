@@ -31,6 +31,7 @@
 import { flashcardLevels, type FlashcardLevel } from "@/lib/flashcards";
 import { wordGameTypes, type WordGameType } from "@/lib/word-games/types";
 import { isFreeWordGamePuzzle } from "@/lib/word-games/free-tier";
+import { latestLastModified, type DatedRow } from "@/lib/sitemap-lastmod";
 
 export interface FreeRung {
   type: WordGameType;
@@ -171,14 +172,17 @@ export const FREE_INDEX_PATHS_ES_ONLY = ["/juegos-para-aprender-ruso"] as const;
  * (та же политика, что у самих страниц-пазлов в sitemap.ts).
  */
 export function freeIndexLastModified(
-  rows: Iterable<{ type: string; level: string; sequence: number; updatedAt?: Date | null }>,
+  rows: Iterable<{ type: string; level: string; sequence: number } & DatedRow>,
 ): Date | undefined {
-  let latest: Date | undefined;
+  const free: DatedRow[] = [];
   for (const row of rows) {
     if (!isFreeWordGamePuzzle(row)) continue;
-    const at = row.updatedAt;
-    if (!at) continue;
-    if (!latest || at.getTime() > latest.getTime()) latest = at;
+    free.push(row);
   }
-  return latest;
+  // Дата строки — через общее правило (`updatedAt`, иначе `createdAt`), а
+  // не через прямое чтение поля: 9 строк банка написаны до появления
+  // колонки `updatedAt`, и до 05.09.2026 они молчали здесь так же, как
+  // молчали на своих собственных URL. Фильтр правилом остаётся выше и не
+  // меняется — платная строка дату не двигает, даже самая свежая.
+  return latestLastModified(free);
 }
