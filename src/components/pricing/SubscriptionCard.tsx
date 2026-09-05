@@ -3,10 +3,9 @@
 import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import Tabs from "@/components/ui/Tabs";
 import OxxoInstructions, { type OxxoInstructionsDict } from "./OxxoInstructions";
+import PaymentMethodTabs, { type Method } from "./PaymentMethodTabs";
 
-type Method = "card" | "cash";
 type Plan = "monthly" | "annual";
 
 export interface BillingOption {
@@ -67,12 +66,16 @@ export default function SubscriptionCard({
   cashAvailable: boolean;
   recommended?: boolean;
 }) {
-  // Cash (OXXO) open by default WHERE IT CAN BE PAID — cash requires
-  // reading a multi-step instructions block before paying, so in Mexico
-  // it should never be one extra tap away from a card-only assumption.
-  // Everywhere else there is no cash tab at all and the card is the whole
-  // control (PROGRESS.md 7.117).
-  const [method, setMethod] = useState<Method>(cashAvailable ? "cash" : "card");
+  // The CARD is what opens, in every country including Mexico — changed
+  // 10.09.2026, PROGRESS.md 7.121. Cash used to open in Mexico, which meant
+  // every Mexican buyer met four steps about walking to a shop before the
+  // button they were most likely to press. The instructions are long
+  // BECAUSE cash needs them, and that is an argument for showing them when
+  // cash is chosen, not for choosing cash for everybody.
+  //
+  // What did NOT change: whether the cash tab is there and how visible it
+  // is. See PaymentMethodTabs.
+  const [method, setMethod] = useState<Method>("card");
 
   return (
     <Card
@@ -118,14 +121,12 @@ export default function SubscriptionCard({
       <div className="mt-auto pt-8">
         {cashAvailable && (
           <>
-            <Tabs
+            <PaymentMethodTabs
               label={methodLabel}
-              items={[
-                { id: "card", label: cardLabel },
-                { id: "cash", label: cashLabel },
-              ]}
-              activeId={method}
-              onSelect={(id) => setMethod(id as Method)}
+              cardLabel={cardLabel}
+              cashLabel={cashLabel}
+              method={method}
+              onSelect={setMethod}
             />
 
             {method === "cash" && <OxxoInstructions dict={oxxoDict} />}

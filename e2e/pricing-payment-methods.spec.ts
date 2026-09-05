@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
 
 /**
@@ -6,7 +7,10 @@ import { test, expect } from "./helpers/test";
  * OXXO is a shop in Mexico. Until 07.09.2026 the cash tab was not merely
  * offered everywhere — it was the tab every paid card OPENED on, in every
  * country, and the page also promised OXXO in its caption and its FAQ
- * (PROGRESS.md 7.115, 7.117).
+ * (PROGRESS.md 7.115, 7.117). Since 10.09.2026 it does not open even in
+ * Mexico: the card is the default there too, and cash is a tab that has to
+ * be tapped — but a tab that stayed exactly as big and as findable as it
+ * was (PROGRESS.md 7.121, measured in the first test below).
  *
  * The rule this spec is written under comes from 7.116, where a browser
  * check said "clean" about a page carrying a planted dollar price: a
@@ -59,8 +63,26 @@ function headers(country?: string): Record<string, string> {
   };
 }
 
+/** The rendered DOM with every <script> removed.
+ *
+ * `page.content()` is NOT usable for "this text is not on the page": the
+ * OXXO strings are props of a client component, so React's own flight
+ * payload carries all of them inside a <script> whether the block is
+ * rendered or not — measured 10.09.2026, it is why the first draft of this
+ * check failed on a correct page. What a reader, a screen reader or a
+ * Ctrl+F can reach is the element tree, so that is what is asked. */
+async function domHtml(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const clone = document.body.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll("script").forEach((node) => node.remove());
+    return clone.innerHTML;
+  });
+}
+
 for (const lang of ["es", "ru"] as const) {
-  test(`/${lang}/pricing: a Mexican visitor gets cash first, and can still reach the card`, async ({ page }) => {
+  test(`/${lang}/pricing: a Mexican visitor gets the CARD first, and cash is one tap away and no smaller for it`, async ({
+    page,
+  }) => {
     await page.setExtraHTTPHeaders(headers("MX"));
     await page.goto(`/${lang}/pricing`);
 
@@ -70,24 +92,69 @@ for (const lang of ["es", "ru"] as const) {
     // having no text at all — PROGRESS.md 4.1.
     expect(asShown.length).toBeGreaterThan(500);
 
-    // Three paid cards, three cash tabs, three copies of the instructions:
-    // cash is the state the page opens in.
-    await expect(page.getByRole("tab", { name: CASH_TAB[lang], exact: true })).toHaveCount(3);
-    expect(asShown).toContain(CASH_STEPS[lang]);
-    expect(asShown).toContain(CASH_CTA[lang]);
-    expect(asShown).toContain(CASH_CAPTION[lang]);
-    expect(asShown).toContain(OXXO_QUESTION[lang]);
+    // What the page opens on, since 10.09.2026: the card CTA, on all three
+    // paid cards, with nothing to tap first.
+    expect(asShown).toContain(CARD_CTA_MX[lang]);
+    await expect(page.getByRole("button", { name: CARD_CTA_MX[lang], exact: true })).toBeVisible();
 
+    // And the four steps about walking to a shop are not merely unpainted —
+    // they are NOT IN THE DOM. innerText would report the same for a block
+    // that is present and hidden, and a screen-reader or a Ctrl+F would not.
+    expect(asShown).not.toContain(CASH_STEPS[lang]);
+    expect(asShown).not.toContain(CASH_CTA[lang]);
+    expect(await domHtml(page)).not.toContain(CASH_STEPS[lang]);
+    await expect(page.getByText(CASH_STEPS[lang])).toHaveCount(0);
+
+    // The tab itself is untouched by any of that: still there, three times,
+    // one per paid card.
+    const cashTabs = page.getByRole("tab", { name: CASH_TAB[lang], exact: true });
     const cardTabs = page.getByRole("tab", { name: CARD_TAB[lang], exact: true });
+    await expect(cashTabs).toHaveCount(3);
     await expect(cardTabs).toHaveCount(3);
-    for (let i = 0; i < 3; i += 1) await cardTabs.nth(i).click();
-    const onCard = await body.innerText();
+    await expect(cashTabs.first()).toBeVisible();
+    await expect(cashTabs.first()).toBeEnabled();
+    // aria-selected is the machine-readable half of "the card is what is
+    // open": a sighted user sees the filled pill, everyone else reads this.
+    await expect(cardTabs.first()).toHaveAttribute("aria-selected", "true");
+    await expect(cashTabs.first()).toHaveAttribute("aria-selected", "false");
+
+    // HOW VISIBLE the unselected cash tab is, measured rather than argued.
+    // The change was meant to move what OPENS, not to shrink the tab, so:
+    // it is a full 44px touch target, it is not a sliver next to the card
+    // tab, and it carries a glyph — a mark that survives losing the fill,
+    // for a tab that no longer has colour to announce it. See
+    // src/components/pricing/PaymentMethodTabs.tsx.
+    const cashBoxBefore = (await cashTabs.first().boundingBox())!;
+    const cardBox = (await cardTabs.first().boundingBox())!;
+    expect(cashBoxBefore.height).toBeGreaterThanOrEqual(44);
+    expect(cashBoxBefore.width).toBeGreaterThan(cardBox.width * 0.8);
+    expect(await cashTabs.first().locator("svg").count()).toBe(1);
+
+    for (let i = 0; i < 3; i += 1) await cashTabs.nth(i).click();
+    const onCash = await body.innerText();
 
     // The switch has to have changed something, or both snapshots are the
-    // same screen and the assertions below are worth nothing.
-    expect(onCard).not.toBe(asShown);
-    expect(onCard).toContain(CARD_CTA_MX[lang]);
-    expect(onCard).not.toContain(CASH_STEPS[lang]);
+    // same screen and the assertions are worth nothing.
+    expect(onCash).not.toBe(asShown);
+    expect(onCash).toContain(CASH_STEPS[lang]);
+    expect(onCash).toContain(CASH_CTA[lang]);
+    expect(onCash).not.toContain(CARD_CTA_MX[lang]);
+    await expect(cashTabs.first()).toHaveAttribute("aria-selected", "true");
+
+    // ...and being selected did not change the tab's size either, which is
+    // the other half of "as visible as before": the box a Mexican buyer had
+    // to hit when cash was the default is the box they have now.
+    const cashBoxAfter = (await cashTabs.first().boundingBox())!;
+    expect(Math.abs(cashBoxAfter.width - cashBoxBefore.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(cashBoxAfter.height - cashBoxBefore.height)).toBeLessThanOrEqual(1);
+
+    // And back: the card tab still works from the cash state, so this is a
+    // switch and not a one-way door.
+    for (let i = 0; i < 3; i += 1) await cardTabs.nth(i).click();
+    const backOnCard = await body.innerText();
+    expect(backOnCard).not.toBe(onCash);
+    expect(backOnCard).toContain(CARD_CTA_MX[lang]);
+    expect(await domHtml(page)).not.toContain(CASH_STEPS[lang]);
   });
 
   test(`/${lang}/pricing: outside Mexico there is no cash anywhere on the page`, async ({ page }) => {
@@ -134,7 +201,11 @@ for (const lang of ["es", "ru"] as const) {
     await page.goto(`/${lang}/pricing?control=in-mexico`);
     const inMexico = await body.innerText();
     expect(inMexico).not.toBe(outsideMexico);
-    expect(inMexico).toContain(CASH_STEPS[lang]);
+    // The control asks for the TAB, not for the instructions: since
+    // 10.09.2026 the instructions are behind that tab even in Mexico
+    // (PROGRESS.md 7.121), so demanding them here would be demanding the
+    // old default back.
+    await expect(page.getByRole("tab", { name: CASH_TAB[lang], exact: true })).toHaveCount(3);
     expect(inMexico).toContain(CASH_CAPTION[lang]);
     await expect(page.locator("details")).toHaveCount(5);
   });

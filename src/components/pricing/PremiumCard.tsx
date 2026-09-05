@@ -3,10 +3,8 @@
 import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import Tabs from "@/components/ui/Tabs";
 import OxxoInstructions, { type OxxoInstructionsDict } from "./OxxoInstructions";
-
-type Method = "card" | "cash";
+import PaymentMethodTabs, { type Method } from "./PaymentMethodTabs";
 
 // Gold stays on decorative elements only (border/badge) — the button
 // itself is primary, same as every other CTA on the page, per the
@@ -59,10 +57,10 @@ export default function PremiumCard({
    * checkout/Stripe, just points at this existing card. */
   highlighted?: boolean;
 }) {
-  // Cash (OXXO) open by default where it can be paid, and absent
-  // everywhere else — same as the monthly/annual cards, see
-  // SubscriptionCard.tsx for why.
-  const [method, setMethod] = useState<Method>(cashAvailable ? "cash" : "card");
+  // The card opens; cash is one tap away and no less visible for it —
+  // same as the monthly/annual cards, see SubscriptionCard.tsx and
+  // PaymentMethodTabs.tsx for why (PROGRESS.md 7.121).
+  const [method, setMethod] = useState<Method>("card");
 
   return (
     <Card
@@ -110,14 +108,12 @@ export default function PremiumCard({
       <div className="mt-auto pt-8">
         {cashAvailable && (
           <>
-            <Tabs
+            <PaymentMethodTabs
               label={methodLabel}
-              items={[
-                { id: "card", label: cardLabel },
-                { id: "cash", label: cashLabel },
-              ]}
-              activeId={method}
-              onSelect={(id) => setMethod(id as Method)}
+              cardLabel={cardLabel}
+              cashLabel={cashLabel}
+              method={method}
+              onSelect={setMethod}
             />
 
             {method === "cash" && <OxxoInstructions dict={oxxoDict} />}

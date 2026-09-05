@@ -50,18 +50,20 @@ test("a logged-in user can subscribe and sees the active plan immediately", asyn
 
   await page.goto("/es/pricing");
   // The /pricing redesign (4 independent columns: Free, Monthly, Yearly,
-  // Premium — no more Month/Year toggle) defaults every paid card's
-  // payment-method tabs to "cash" (OXXO), not "card" — so there's no tab
-  // to switch first. In this always-Stripe-unconfigured test environment
-  // (see file header) the checkout route's mock-grant fallback activates
-  // the subscription immediately regardless of method, so clicking the
-  // Monthly card's own cash CTA works exactly like the old card CTA did.
-  // Matched by its cash-amount text (unique per plan: 150/899/2299 MXN —
-  // an exact price since 2026-09-06, no longer an "≈" conversion of a USD
-  // one, see PROGRESS.md 7.116)
-  // rather than scoping to the card by heading, since the button text
-  // itself already disambiguates which of the 3 paid cards this is.
-  await page.getByRole("button", { name: "Pagar en efectivo — $150 MXN" }).click();
+  // Premium — no more Month/Year toggle) leaves every paid card open on
+  // the CARD method — since 10.09.2026 that is true in Mexico too
+  // (PROGRESS.md 7.121; before it, the cash tab was the one that opened
+  // here and this click was the cash CTA). So there is no tab to switch
+  // first. In this always-Stripe-unconfigured test environment (see file
+  // header) the checkout route's mock-grant fallback activates the
+  // subscription immediately, so this exercises the same flow either way.
+  // Matched by its amount (unique per plan: 150/899/2299 MXN — an exact
+  // price since 2026-09-06, no longer an "≈" conversion of a USD one, see
+  // PROGRESS.md 7.116) rather than scoping to the card by heading, since
+  // the button text itself already disambiguates which of the 3 paid cards
+  // this is. No country header is sent, which off a deployment means
+  // Mexico (src/lib/country.ts) — hence pesos, not a conversion.
+  await page.getByRole("button", { name: "Empezar por $150 MXN/mes" }).click();
 
   // No real Stripe configured in this environment -> mock-grant branch ->
   // redirect straight back to /profile with ?checkout=mock (see the
@@ -94,9 +96,9 @@ test("subscription status survives logging out and back in (restore-equivalent)"
   await dismissWelcomeOverlay(page);
 
   await page.goto("/es/pricing");
-  // See the test above for why this is the Monthly card's cash CTA, not a
-  // "Mes" tab + card CTA.
-  await page.getByRole("button", { name: "Pagar en efectivo — $150 MXN" }).click();
+  // See the test above for why this is the Monthly card's card CTA, and
+  // why no tab has to be switched first.
+  await page.getByRole("button", { name: "Empezar por $150 MXN/mes" }).click();
   await expect(page).toHaveURL(/\/es\/profile\?checkout=mock/);
 
   // The /profile redesign collapsed the old "personal"/"security" tabs

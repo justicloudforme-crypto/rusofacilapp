@@ -31,7 +31,12 @@ function unmarkedMoney(text: string): string[] {
   return found;
 }
 
-const CARD_TAB: Record<string, string> = { es: "Tarjeta", ru: "Карта" };
+/** The tab that is NOT open when the page loads, and therefore the half of
+ * the page this scan would otherwise never see. Until 10.09.2026 that was
+ * the card tab (every paid card opened on cash); since 7.121 the card is
+ * the default and CASH is the hidden half — the instructions block, the
+ * cash CTA and its price live behind it. */
+const HIDDEN_TAB: Record<string, string> = { es: "Efectivo", ru: "Наличные" };
 
 for (const lang of ["es", "ru"] as const) {
   test(`/${lang}/pricing shows prices in pesos and no dollar figure`, async ({ page }) => {
@@ -56,17 +61,17 @@ for (const lang of ["es", "ru"] as const) {
     expect(asShown).toContain("$899 MXN");
     expect(asShown).toContain("$2,299 MXN");
 
-    // THE HALF THAT WAS NEARLY MISSED. Every paid card opens on its "cash"
-    // tab, so the card CTA — one of the three strings that carries a price —
-    // is not in the DOM at all until the tab is switched. A first version of
-    // this spec scanned only the default view and passed with "$7.99/mes"
-    // planted in es.json: the string was in the dictionary, in the bundle,
-    // and one tap away from a buyer, and the browser check said clean.
-    // Both views are scanned, and the assertion below proves the second one
-    // actually reached different text.
-    const cardTabs = page.getByRole("tab", { name: CARD_TAB[lang], exact: true });
-    await expect(cardTabs).toHaveCount(3);
-    for (let i = 0; i < 3; i += 1) await cardTabs.nth(i).click();
+    // THE HALF THAT WOULD OTHERWISE BE MISSED. Whatever is behind the
+    // unopened tab — today the cash CTA and its price, before 7.121 the
+    // card CTA and its price — is not in the DOM at all until the tab is
+    // switched. A first version of this spec scanned only the default view
+    // and passed with "$7.99/mes" planted in es.json: the string was in the
+    // dictionary, in the bundle, and one tap away from a buyer, and the
+    // browser check said clean. Both views are scanned, and the assertion
+    // below proves the second one actually reached different text.
+    const hiddenTabs = page.getByRole("tab", { name: HIDDEN_TAB[lang], exact: true });
+    await expect(hiddenTabs).toHaveCount(3);
+    for (let i = 0; i < 3; i += 1) await hiddenTabs.nth(i).click();
     const withCardCtas = await pageText();
     expect(withCardCtas).not.toBe(asShown);
 
