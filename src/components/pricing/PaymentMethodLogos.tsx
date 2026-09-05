@@ -23,12 +23,21 @@ export function CashGlyph() {
   );
 }
 
-export default function PaymentMethodLogos({ note }: { note: string }) {
+export default function PaymentMethodLogos({
+  note,
+  cashAvailable,
+}: {
+  note: string;
+  /** The banknote glyph is a claim about what we accept, same as the
+   * caption beside it — outside Mexico there is no cash method to claim
+   * (PROGRESS.md 7.117), so the glyph goes with the sentence. */
+  cashAvailable: boolean;
+}) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
       <div className="flex items-center gap-3">
         <CardGlyph />
-        <CashGlyph />
+        {cashAvailable && <CashGlyph />}
       </div>
       <p className="text-sm text-foreground/60">{note}</p>
     </div>

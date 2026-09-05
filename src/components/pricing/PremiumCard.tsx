@@ -27,6 +27,7 @@ export default function PremiumCard({
   features,
   featuresNote,
   oxxoDict,
+  cashAvailable,
   highlighted = false,
 }: {
   lang: string;
@@ -48,6 +49,9 @@ export default function PremiumCard({
    * lessons too". See PROGRESS.md 7.76. */
   featuresNote: string;
   oxxoDict: OxxoInstructionsDict;
+  /** Whether this visitor is in the one country where an OXXO voucher can
+   * be paid — see SubscriptionCard.tsx and PROGRESS.md 7.117. */
+  cashAvailable: boolean;
   /** Set via /pricing?highlight=premium — the profile page's per-plan
    * upsell link (annual subscribers -> "unlock C1 forever") lands here.
    * Purely a visual ring + scroll target (`id="premium"`, browsers
@@ -55,9 +59,10 @@ export default function PremiumCard({
    * checkout/Stripe, just points at this existing card. */
   highlighted?: boolean;
 }) {
-  // Cash (OXXO) open by default, same as the monthly/annual cards —
-  // see SubscriptionCard.tsx for why.
-  const [method, setMethod] = useState<Method>("cash");
+  // Cash (OXXO) open by default where it can be paid, and absent
+  // everywhere else — same as the monthly/annual cards, see
+  // SubscriptionCard.tsx for why.
+  const [method, setMethod] = useState<Method>(cashAvailable ? "cash" : "card");
 
   return (
     <Card
@@ -103,17 +108,21 @@ export default function PremiumCard({
       <p className="mt-3 text-xs leading-5 text-foreground/60">{featuresNote}</p>
 
       <div className="mt-auto pt-8">
-        <Tabs
-          label={methodLabel}
-          items={[
-            { id: "card", label: cardLabel },
-            { id: "cash", label: cashLabel },
-          ]}
-          activeId={method}
-          onSelect={(id) => setMethod(id as Method)}
-        />
+        {cashAvailable && (
+          <>
+            <Tabs
+              label={methodLabel}
+              items={[
+                { id: "card", label: cardLabel },
+                { id: "cash", label: cashLabel },
+              ]}
+              activeId={method}
+              onSelect={(id) => setMethod(id as Method)}
+            />
 
-        {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+            {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+          </>
+        )}
 
         <form action="/api/checkout" method="POST" className="mt-4">
           <input type="hidden" name="lang" value={lang} />

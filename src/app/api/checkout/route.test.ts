@@ -33,13 +33,18 @@ process.env.STRIPE_PRICE_MONTHLY = "price_test_monthly";
 
 const { POST } = await import("./route");
 
-function checkoutRequest(plan: string, method = "card"): NextRequest {
+function checkoutRequest(plan: string, method = "card", country?: string): NextRequest {
   const form = new FormData();
   form.set("plan", plan);
   form.set("lang", "es");
   form.set("method", method);
+  // Real requests always carry headers; the country one is what the OXXO
+  // gate reads (src/lib/country.ts). Absent here unless a test names it,
+  // which is exactly the shape of a request off a deployment.
+  const headers = new Headers(country ? { "x-vercel-ip-country": country } : {});
   return {
     url: "https://rusofacilapp.com/api/checkout",
+    headers,
     formData: async () => form,
   } as unknown as NextRequest;
 }
@@ -224,5 +229,75 @@ describe("POST /api/checkout — Stripe refuses to open the session", () => {
     );
 
     await expect(POST(checkoutRequest("monthly"))).rejects.toThrow("database is on fire");
+  });
+});
+
+/**
+ * The cash branch creates an OXXO voucher, and an OXXO voucher is paid at
+ * a shop in Mexico or not at all. /pricing stopped offering the tab
+ * elsewhere on 07.09.2026 — but a hidden control is not a closed door:
+ * this endpoint takes a plain form POST, and the tab was the only thing in
+ * the way. See PROGRESS.md 7.117.
+ */
+describe("POST /api/checkout — cash is refused outside Mexico", () => {
+  const originalVercelEnv = process.env.VERCEL_ENV;
+  const sessionCreate = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getCurrentUser.mockResolvedValue({ id: "user_1", email: "a@b.c", stripeCustomerId: "cus_1" });
+    getStripe.mockReturnValue({
+      customers: { create: vi.fn() },
+      checkout: { sessions: { create: sessionCreate } },
+    });
+    sessionCreate.mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/test" });
+    process.env.VERCEL_ENV = "production";
+  });
+
+  afterEach(() => {
+    if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = originalVercelEnv;
+  });
+
+  it("turns a Spanish buyer's cash request back with a reason, and creates nothing", async () => {
+    const response = await POST(checkoutRequest("monthly", "oxxo", "ES"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toContain("/es/pricing?checkout=cash_unavailable");
+    // The point of the gate: no Stripe object of any kind was made. A
+    // created-then-abandoned voucher is a real object in a real account.
+    expect(sessionCreate).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("refuses when a deployment did not say where the buyer is", async () => {
+    await POST(checkoutRequest("monthly", "oxxo"));
+    expect(sessionCreate).not.toHaveBeenCalled();
+  });
+
+  // POSITIVE CONTROL for the two assertions above: with everything else
+  // identical and only the country changed, the voucher IS created. Without
+  // this, "sessionCreate was not called" would pass just as well against a
+  // route that never reaches Stripe at all.
+  it("still sells a voucher to a Mexican buyer", async () => {
+    const response = await POST(checkoutRequest("monthly", "oxxo", "MX"));
+
+    expect(sessionCreate).toHaveBeenCalledTimes(1);
+    const [args] = sessionCreate.mock.calls[0] as [{ payment_method_types: string[] }];
+    expect(args.payment_method_types).toEqual(["oxxo"]);
+    expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/pay/test");
+  });
+
+  // The card branch is not gated by country and must not become gated:
+  // dynamic payment-method selection (no payment_method_types at all) is
+  // what shows a buyer their own local methods, and it works everywhere.
+  it("leaves the card branch alone, in every country", async () => {
+    for (const country of ["ES", "MX", "CO"]) {
+      sessionCreate.mockClear();
+      await POST(checkoutRequest("monthly", "card", country));
+      expect(sessionCreate).toHaveBeenCalledTimes(1);
+      const [args] = sessionCreate.mock.calls[0] as [Record<string, unknown>];
+      expect(args).not.toHaveProperty("payment_method_types");
+    }
   });
 });
