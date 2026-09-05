@@ -175,6 +175,13 @@ const COLD_START_QUESTIONS: [string, string][] = [
   // to do about it.
   ["do all the plans have to sell one Stripe product", "### 7.67."],
   ["what if a plan legitimately gets its own product", "пересмотреть правило"],
+  // Added 11.09.2026, the round that re-counted the orphans and found none
+  // left. Both markers are phrases, not numbers: a count goes stale the
+  // next time a debt is opened, and a stale assertion teaches the next
+  // reader to edit the test instead of the file.
+  ["where is every debt listed in one place", "единственное место в файле, где список долгов сведён целиком"],
+  ["how do I measure which URLs nothing links to", "npm run check:reachability"],
+  ["was the 516-orphan number ever intersected with the freeze", "Пересечение множества 516 недостижимых URL с 330 замороженными"],
 ];
 
 describe("PROGRESS.md is usable from a cold start", () => {
