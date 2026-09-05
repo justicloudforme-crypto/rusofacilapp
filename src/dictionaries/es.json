@@ -798,6 +798,8 @@
   "stories": {
     "pageTitle": "Biblioteca de cuentos y lecturas",
     "pageSubtitle": "Practica tu comprensión lectora con cuentos e historias en ruso, organizados por nivel.",
+    "indexTitle": "Todos los cuentos, uno por uno",
+    "indexIntro": "La lista completa con un enlace a cada cuento. No hace falta JavaScript ni pulsar «cargar más».",
     "filterAll": "Todos",
     "levelFilterLabel": "Nivel",
     "searchPlaceholder": "Buscar por título o autor...",
@@ -855,6 +857,8 @@
   "media": {
     "pageTitle": "Biblioteca de audio y video",
     "pageSubtitle": "Practica tu comprensión auditiva con canciones, escenas de películas y videos en ruso, organizados por nivel y categoría.",
+    "indexTitle": "Todo el material, uno por uno",
+    "indexIntro": "La lista completa con un enlace a cada canción, película y vídeo. No hace falta JavaScript ni pulsar «cargar más».",
     "filterAllLevels": "Todos los niveles",
     "filterAllCategories": "Todas las categorías",
     "levelFilterLabel": "Nivel",

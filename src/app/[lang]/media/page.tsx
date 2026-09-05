@@ -6,6 +6,7 @@ import { getAllMedia } from "@/lib/media/data";
 import { mediaLevels } from "@/lib/media/types";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import MediaCatalog from "@/components/media/MediaCatalog";
+import MediaLinkIndex from "@/components/media/MediaLinkIndex";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 
@@ -77,6 +78,16 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
       <div className="mt-10">
         <MediaCatalog lang={lang} items={items} dict={dict.media} />
       </div>
+
+      {/* Пара к StoryLinkIndex — см. его комментарий. `allMedia`, а не
+          `items`: во втором вырезаны элементы со сломанным встраиванием и
+          порядок зависит от тарифа, а список ссылок обязан покрывать ровно
+          то множество URL, которое стоит в карте сайта (все 275). */}
+      <MediaLinkIndex
+        lang={lang}
+        items={allMedia.map((item) => ({ id: item.id, title: item.title, level: item.level }))}
+        dict={{ indexTitle: dict.media.indexTitle, indexIntro: dict.media.indexIntro }}
+      />
     </div>
   );
 }
