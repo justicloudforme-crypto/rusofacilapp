@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { freeLadders, freeNeighbours, freeRungPaths } from "./free-index";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative, sep } from "node:path";
+import {
+  FREE_INDEX_PATHS_ES_ONLY,
+  FREE_INDEX_PATHS_EVERY_LOCALE,
+  freeIndexLastModified,
+  freeLadders,
+  freeNeighbours,
+  freeRungPaths,
+} from "./free-index";
 import { isFreeWordGamePuzzle, WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./free-tier";
 
 /** A production-shaped bank: every ladder holds rungs 1..10 and far beyond. */
@@ -114,5 +123,85 @@ describe("freeNeighbours", () => {
     const gapped = (_type: string, level: string) => (level === "B2" ? [1, 2, 5, 9] : deep());
     expect(naive(2).next).toBe(3);
     expect(freeNeighbours("es", "CROSSWORD", "B2", 2, gapped as never).next?.sequence).toBe(5);
+  });
+});
+
+describe("freeIndexLastModified", () => {
+  const row = (
+    type: string,
+    level: string,
+    sequence: number,
+    updatedAt: Date | null,
+  ) => ({ type, level, sequence, updatedAt });
+
+  it("takes the latest date among the free rows", () => {
+    expect(
+      freeIndexLastModified([
+        row("CROSSWORD", "B1", 2, new Date("2026-08-29T12:00:00.000Z")),
+        row("WORD_SEARCH", "B2", 405, new Date("2026-09-04T21:03:17.832Z")),
+        row("WORD_SEARCH", "A1", 1, new Date("2026-08-28T00:00:00.000Z")),
+      ]),
+    ).toEqual(new Date("2026-09-04T21:03:17.832Z"));
+  });
+
+  it("control: a NEWER row the rule calls paid does not move the date", () => {
+    const free = [row("WORD_SEARCH", "B1", 9, new Date("2026-08-29T12:00:00.000Z"))];
+    // Соседние по номеру платные рунги и C1 — ровно те строки, которые
+    // приносит надмножественный `where` sitemap.ts; если бы дата бралась
+    // по прочитанным строкам, а не по правилу, она уехала бы вперёд.
+    const paid = [
+      row("WORD_SEARCH", "B1", 667, new Date("2027-01-01T00:00:00.000Z")),
+      row("WORD_SEARCH", "C1", 1, new Date("2027-01-01T00:00:00.000Z")),
+      row("CROSSWORD", "B1", 11, new Date("2027-01-01T00:00:00.000Z")),
+    ];
+    expect(freeIndexLastModified([...free, ...paid])).toEqual(new Date("2026-08-29T12:00:00.000Z"));
+    // И контроль самого контроля: подсадка действительно новее — если
+    // считать её бесплатной, дата обязана измениться.
+    expect(freeIndexLastModified([...free, row("WORD_SEARCH", "B1", 668, new Date("2027-01-01T00:00:00.000Z"))])).toEqual(
+      new Date("2027-01-01T00:00:00.000Z"),
+    );
+  });
+
+  it("says nothing rather than inventing a date", () => {
+    expect(freeIndexLastModified([])).toBeUndefined();
+    expect(freeIndexLastModified([row("CROSSWORD", "B2", 1, null)])).toBeUndefined();
+  });
+});
+
+describe("страницы-источники бесплатного индекса", () => {
+  /** Все page.tsx под src/app/[lang], которые импортируют FreePuzzleIndex. */
+  function pagesRenderingTheIndex(): string[] {
+    const root = join(process.cwd(), "src", "app", "[lang]");
+    const found: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name === "page.tsx" && readFileSync(full, "utf8").includes("FreePuzzleIndex")) {
+          found.push("/" + relative(root, dir).split(sep).join("/"));
+        }
+      }
+    };
+    walk(root);
+    return found.sort();
+  }
+
+  it("список совпадает с настоящими страницами в обе стороны", () => {
+    // Сверка в обе стороны, а не «каждая объявленная существует»: иначе
+    // четвёртая страница с индексом молча осталась бы без `<lastmod>` —
+    // ровно тот отказ, из-за которого 04.09 три источника промолчали.
+    expect(pagesRenderingTheIndex()).toEqual(
+      [...FREE_INDEX_PATHS_EVERY_LOCALE, ...FREE_INDEX_PATHS_ES_ONLY].sort(),
+    );
+  });
+
+  it("control: проверка умеет увидеть незаявленную страницу", () => {
+    const declared = [...FREE_INDEX_PATHS_EVERY_LOCALE] as string[];
+    expect(pagesRenderingTheIndex()).not.toEqual(declared.sort());
+  });
+
+  it("ни один путь не повторяется между двумя списками", () => {
+    const all = [...FREE_INDEX_PATHS_EVERY_LOCALE, ...FREE_INDEX_PATHS_ES_ONLY];
+    expect(new Set(all).size).toBe(all.length);
   });
 });

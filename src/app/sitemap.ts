@@ -8,6 +8,11 @@ import { getAllMedia } from "@/lib/media/data";
 import { SITE_URL } from "@/lib/site";
 import { VOCABULARY_CATEGORY_PAGES } from "@/lib/vocabulary-categories";
 import { TOPIC_LANDING_PATHS } from "@/lib/word-games/topic-landings";
+import {
+  FREE_INDEX_PATHS_ES_ONLY,
+  FREE_INDEX_PATHS_EVERY_LOCALE,
+  freeIndexLastModified,
+} from "@/lib/word-games/free-index";
 
 // Next.js Metadata Route convention — served automatically at /sitemap.xml,
 // same pattern as manifest.ts/robots.ts. Lives outside `[lang]` so it isn't
@@ -96,27 +101,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...TOPIC_LANDING_PATHS,
   ];
 
-  const entries: MetadataRoute.Sitemap = [];
-
-  for (const path of staticPaths) {
-    for (const lang of locales) {
-      entries.push({ url: `${SITE_URL}/${lang}${path}`, changeFrequency: "weekly" });
-    }
-  }
-
-  for (const path of esOnlyPaths) {
-    entries.push({ url: `${SITE_URL}/es${path}`, changeFrequency: "monthly" });
-  }
-
-  // The 23 per-theme vocabulary pages, ES-only for the same reason as the
-  // grammar guides above. Taken from the list rather than hardcoded as a
-  // count, so adding a category can't leave its page out of the map. They
-  // publish A1-B2 cards only; C1 stays paywalled in full, which is a
-  // property of the page, not of this listing.
-  for (const page of VOCABULARY_CATEGORY_PAGES) {
-    entries.push({ url: `${SITE_URL}/es/vocabulary/${page.slug}`, changeFrequency: "weekly" });
-  }
-
   // `lastModified` on the puzzle URLs, and only where it is a REAL date.
   //
   // Why this matters here more than anywhere else: on 02.09.2026 the 80
@@ -146,8 +130,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // swallowed, because silently serving a sitemap with no dates for weeks
   // is its own kind of failure.
   let puzzleUpdatedAt = new Map<string, Date | null>();
+  let puzzleRows: Array<{ type: string; level: string; sequence: number; updatedAt: Date | null }> = [];
   try {
-    const puzzleRows = await db.wordGamePuzzle.findMany({
+    puzzleRows = await db.wordGamePuzzle.findMany({
       // Заведомо надмножество бесплатных: точный ответ даёт
       // freeSequencesFor ниже, а не этот запрос (free-tier.ts).
       where: freeWordGameWhere(),
@@ -158,6 +143,57 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
   } catch (error) {
     console.error("[sitemap] could not read WordGamePuzzle.updatedAt; serving without lastmod", error);
+  }
+
+  // Страницы-источники бесплатного индекса получают ту же дату.
+  //
+  // Замер на живом проде 05.09.2026: все 166 бесплатных игровых URL стоят
+  // в этом файле, разрешены robots.txt и имеют входящую ссылку из
+  // СЕРВЕРНОГО HTML — недостижимых 0, глубина от корня локали 2. Но 73 из
+  // 83 рунгов каждой локали висят ровно на одной странице-источнике
+  // (пикер клиентский и печатает только пару по умолчанию — на
+  // /es/word-games это 198 ссылок из 281, остальные 83 даёт
+  // FreePuzzleIndex), и у этих страниц `<lastmod>` не было НИ ОДНОГО.
+  // Набор бесплатных рунгов менялся 04.09: HTML всех трёх источников
+  // изменился, sitemap промолчал. Переобход страницы-пазла зовут два
+  // рычага — её собственная дата и ребро, которое к ней ведёт; второй
+  // рычаг был выключен.
+  //
+  // Дата настоящая: самая поздняя `updatedAt` среди строк, которые
+  // ПРАВИЛО зовёт бесплатными, а не среди всех прочитанных (запрос —
+  // надмножество). Не прочиталось — `undefined`, и записи `<lastmod>` не
+  // будет вовсе, ровно как у самих пазлов.
+  const freeIndexLastMod = freeIndexLastModified(puzzleRows);
+
+  const entries: MetadataRoute.Sitemap = [];
+
+  for (const path of staticPaths) {
+    const isFreeIndexPage = (FREE_INDEX_PATHS_EVERY_LOCALE as readonly string[]).includes(path);
+    for (const lang of locales) {
+      entries.push({
+        url: `${SITE_URL}/${lang}${path}`,
+        changeFrequency: "weekly",
+        ...(isFreeIndexPage && freeIndexLastMod ? { lastModified: freeIndexLastMod } : {}),
+      });
+    }
+  }
+
+  for (const path of esOnlyPaths) {
+    const isFreeIndexPage = (FREE_INDEX_PATHS_ES_ONLY as readonly string[]).includes(path);
+    entries.push({
+      url: `${SITE_URL}/es${path}`,
+      changeFrequency: "monthly",
+      ...(isFreeIndexPage && freeIndexLastMod ? { lastModified: freeIndexLastMod } : {}),
+    });
+  }
+
+  // The 23 per-theme vocabulary pages, ES-only for the same reason as the
+  // grammar guides above. Taken from the list rather than hardcoded as a
+  // count, so adding a category can't leave its page out of the map. They
+  // publish A1-B2 cards only; C1 stays paywalled in full, which is a
+  // property of the page, not of this listing.
+  for (const page of VOCABULARY_CATEGORY_PAGES) {
+    entries.push({ url: `${SITE_URL}/es/vocabulary/${page.slug}`, changeFrequency: "weekly" });
   }
 
   // Уровни НЕ фильтруются по C1, и номера не считаются от 1 до предела:
