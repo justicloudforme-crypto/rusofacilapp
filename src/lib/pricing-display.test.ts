@@ -4,7 +4,9 @@ import {
   basePricesText,
   marked,
   perMonthCents,
+  pesoOffer,
   priceCopy,
+  pricingOffersJsonLd,
   withBasePrices,
   withPrice,
 } from "./pricing-display";
@@ -65,7 +67,10 @@ describe("what goes on the card", () => {
       // All three arrive here as a null context — the distinction is made
       // upstream in src/lib/currency.ts and src/lib/country-server.ts.
       const copy = priceCopy(null, "es", PESO);
-      expect(copy).toEqual({ ...PESO, converted: false });
+      // `offers` — the machine-readable half added for debt 44 — carries
+      // the same pesos here (PROGRESS.md 7.122).
+      expect(copy).toEqual({ ...PESO, converted: false, offers: copy.offers });
+      expect(copy.offers.monthly).toEqual({ price: "150", currency: "MXN" });
     });
 
     /**
@@ -163,5 +168,108 @@ describe("the button names the currency above it", () => {
       expect(withPrice("Empezar por {price}/mes", "≈ 11,70 SGD")).toBe("Empezar por ≈ 11,70 SGD/mes");
       expect(withPrice("Empezar por {precio}/mes", "≈ 11,70 SGD")).toContain("{precio}");
     });
+  });
+});
+
+/**
+ * DEBT 44 (PROGRESS.md 7.122): the Offer in the page's structured data
+ * names the figure THIS response rendered.
+ *
+ * The assertions below are deliberately written as "the markup against the
+ * card string", never as "the markup against a constant" — a constant
+ * would agree with a second, independently computed number just as happily
+ * as with the right one, which is the whole failure mode being guarded.
+ */
+describe("the Offer names the number on the card", () => {
+  /** The digits of a figure as a human reads it: "≈ 13.900 ARS" → "13900",
+   * "≈ 11,70 SGD" → "11.70", "$2,299 MXN" → "2299". Grouping separators
+   * differ by locale (a dot in Spanish, U+00A0 in Russian, a comma in
+   * formatMoney's en-US grouping) and the decimal separator is a comma in
+   * both site locales, so the two are told apart by POSITION: a run of
+   * exactly three digits after a separator is grouping, anything else is
+   * the decimal part. */
+  function digitsOf(figure: string): string {
+    const bare = figure.replace(/[^0-9.,   ]/g, "").trim();
+    const parts = bare.split(/[.,   ]/).filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (parts.length > 1 && last.length !== 3) {
+      return `${parts.slice(0, -1).join("")}.${last}`;
+    }
+    return parts.join("");
+  }
+
+  it("reads a figure the way a reader does — the control on the reader above", () => {
+    expect(digitsOf("≈ 13.900 ARS")).toBe("13900");
+    expect(digitsOf("≈ 13 900 ARS")).toBe("13900");
+    expect(digitsOf("≈ 11,70 SGD")).toBe("11.70");
+    expect(digitsOf("$2,299 MXN")).toBe("2299");
+    expect(digitsOf("$150 MXN")).toBe("150");
+  });
+
+  it.each(["es", "ru"] as const)("%s: converted — same number, same currency, on all three plans", (locale) => {
+    for (const currency of ["SGD", "EUR", "ARS"] as const) {
+      const copy = priceCopy(ctx(currency), locale, PESO);
+      expect(copy.converted).toBe(true);
+      for (const plan of ["monthly", "annual", "lifetime"] as const) {
+        expect(copy.offers[plan].currency).toBe(currency);
+        expect(digitsOf(copy[plan])).toBe(copy.offers[plan].price);
+      }
+    }
+  });
+
+  it.each(["es", "ru"] as const)("%s: pesos — the base prices, in MXN", (locale) => {
+    const copy = priceCopy(null, locale, PESO);
+    expect(copy.converted).toBe(false);
+    for (const plan of ["monthly", "annual", "lifetime"] as const) {
+      expect(copy.offers[plan].currency).toBe("MXN");
+      expect(digitsOf(copy[plan])).toBe(copy.offers[plan].price);
+      expect(digitsOf(formatMoney(plans[plan].amountMxnCents))).toBe(copy.offers[plan].price);
+    }
+  });
+
+  it("prices with centavos keep them — formatMoney's rule, not a second one", () => {
+    expect(pesoOffer(15_000)).toEqual({ price: "150", currency: "MXN" });
+    expect(pesoOffer(15_050)).toEqual({ price: "150.50", currency: "MXN" });
+    expect(digitsOf(formatMoney(15_050))).toBe(pesoOffer(15_050).price);
+  });
+
+  it("a dead rate feed puts pesos in the markup too, not a stale conversion", () => {
+    const copy = priceCopy({ currency: "EUR", rate: 0 }, "es", PESO);
+    expect(copy.converted).toBe(false);
+    expect(copy.offers.monthly).toEqual({ price: "150", currency: "MXN" });
+  });
+
+  it("is a plain machine number: no grouping, no sign, no code", () => {
+    const copy = priceCopy(ctx("ARS"), "ru", PESO);
+    for (const plan of ["monthly", "annual", "lifetime"] as const) {
+      expect(copy.offers[plan].price).toMatch(/^\d+(\.\d+)?$/);
+    }
+  });
+
+  it("the block itself carries them, one Offer per paid plan", () => {
+    const copy = priceCopy(ctx("EUR"), "es", PESO);
+    const block = pricingOffersJsonLd({
+      lang: "es",
+      url: "https://rusofacilapp.com/es/pricing",
+      name: es.pricing.title,
+      description: es.pricing.subtitle,
+      planNames: {
+        monthly: es.pricing.monthly.name,
+        annual: es.pricing.annual.name,
+        lifetime: es.pricing.lifetime.name,
+      },
+      copy,
+    });
+    expect(block["@type"]).toBe("Product");
+    expect(block.offers).toHaveLength(3);
+    expect(block.offers.map((offer) => offer.priceCurrency)).toEqual(["EUR", "EUR", "EUR"]);
+    expect(block.offers.map((offer) => offer.price)).toEqual([
+      copy.offers.monthly.price,
+      copy.offers.annual.price,
+      copy.offers.lifetime.price,
+    ]);
+    // The free tier is not sold and is not an Offer — see the helper's
+    // own comment.
+    expect(block.offers.map((offer) => offer.name)).not.toContain(es.pricing.freeHeading);
   });
 });

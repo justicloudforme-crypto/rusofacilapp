@@ -10,7 +10,14 @@ import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
-import { basePricesText, marked, priceCopy, withBasePrices, withPrice } from "@/lib/pricing-display";
+import {
+  basePricesText,
+  marked,
+  priceCopy,
+  pricingOffersJsonLd,
+  withBasePrices,
+  withPrice,
+} from "@/lib/pricing-display";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">): Promise<Metadata> {
   const { lang } = await params;
@@ -114,6 +121,23 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
             acceptedAnswer: { "@type": "Answer", text: item.a },
           })),
         }}
+      />
+      {/* The price, for a machine, and it is the price THIS response
+          rendered — debt 44, PROGRESS.md 7.122. The figures come from the
+          same `copy` the cards below print, so a reader in Madrid who
+          arrives from a search result showing €45,80 finds €45,80 on the
+          card. Written from copy.offers rather than from plans.ts: the
+          peso constants are the right answer only for the visitors who are
+          actually shown pesos. */}
+      <JsonLd
+        data={pricingOffersJsonLd({
+          lang,
+          url: `${SITE_URL}/${lang}/pricing`,
+          name: p.title,
+          description: p.subtitle,
+          planNames: { monthly: p.monthly.name, annual: p.annual.name, lifetime: p.lifetime.name },
+          copy,
+        })}
       />
       <JsonLd
         data={breadcrumbList([

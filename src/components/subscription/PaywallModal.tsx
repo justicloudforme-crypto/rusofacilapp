@@ -137,7 +137,13 @@ export default function PaywallModal({
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="text-right text-sm font-semibold tracking-tight">
-                      {plan.price}
+                      {/* The figure in its own element, so it can be read
+                          back whole. e2e/paywall-modal.spec.ts compares it
+                          character for character with the figure on
+                          /pricing for the same country (PROGRESS.md
+                          7.122); with the price and the period sharing one
+                          node there was nothing to compare but a substring. */}
+                      <span data-plan-price>{plan.price}</span>
                       <span className="ml-1 text-xs font-normal text-foreground/50">{plan.period}</span>
                     </span>
                   </span>
