@@ -137,6 +137,16 @@ export default async function GramaticaHubPage({ params }: PageProps<"/[lang]/gr
           </Link>
           , con su equivalente en ruso y ejemplos.
         </p>
+        <p className="mt-4 leading-7 text-foreground/70">
+          ¿Y si lo que falta no es gramática sino saber cómo suenan las letras? Está en{" "}
+          <Link
+            href="/es/alfabeto-cirilico"
+            className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+          >
+            el alfabeto cirílico, las 33 letras con sonido y ejemplos
+          </Link>
+          : cada letra con una palabra real donde escucharla y su pronunciación transcrita.
+        </p>
       </section>
     </div>
   );

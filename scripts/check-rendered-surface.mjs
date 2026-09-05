@@ -233,6 +233,15 @@ function familiesFor(lang) {
     // permanently red; it is covered by the run against production.
     ...(es ? [{ name: "landing", contentOnly: true, path: "/es/sopa-de-letras-ruso-comida", expect: { h1: /\S/, min: 3, sel: 'a[href^="/es/word-games/"]' } }] : []),
     { name: "puzzle",     path: `/${lang}/word-games`,       expect: { h1: /\S/, min: 3, sel: `a[href^="/${lang}/word-games/"]` } },
+    // /es/alfabeto-cirilico, /es only (404 на /ru по устройству). То, ради
+    // чего страница существует, — 66 кнопок звука: 33 названия буквы и 33
+    // слова-примера. Именно они, а не текст: текст статичен и его увидел бы
+    // и обычный запрос, а кнопка появляется только после гидратации и
+    // только если URL клипа доехал из базы. 60 — заметно ниже 66 (чтобы
+    // отсутствие пары строк в локальной копии не красило прогон) и
+    // недостижимо случайно. `contentOnly`: клипы лежат в базе, а у CI база
+    // пустая.
+    ...(es ? [{ name: "alfabeto", contentOnly: true, path: "/es/alfabeto-cirilico", expect: { h1: /alfabeto cir/i, min: 60, sel: 'button[aria-label="Escuchar"]' } }] : []),
     // The games entry page, /es only (it 404s on /ru by design). What it
     // is FOR since 04.09.2026 is the links: the three game pages, the six
     // themed boards and the whole free sample, all server-rendered. 20 is

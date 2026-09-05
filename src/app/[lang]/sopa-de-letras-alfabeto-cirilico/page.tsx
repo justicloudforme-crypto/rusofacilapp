@@ -83,7 +83,14 @@ export default async function AlfabetoCirilicoPage({
         >
           La guía completa del alfabeto, grupo por grupo
         </Link>{" "}
-        desarrolla esta misma división con ejemplos de cada letra.
+        desarrolla esta misma división con ejemplos de cada letra, y{" "}
+        <Link
+          href="/es/alfabeto-cirilico"
+          className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+        >
+          la tabla de las 33 letras con sonido
+        </Link>{" "}
+        deja escuchar cada una dentro de una palabra real.
       </p>
 
       <h2 className="mt-8 text-lg font-medium">La letra que falta en el juego: ъ</h2>
