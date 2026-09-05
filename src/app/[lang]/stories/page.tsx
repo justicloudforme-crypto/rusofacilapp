@@ -7,6 +7,7 @@ import { getEntitlementTier, getStoryAccess } from "@/lib/entitlement";
 import { storyLevels } from "@/lib/stories";
 import { localizeStoryAuthor } from "@/lib/story-author";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
+import StoryLinkIndex from "@/components/stories/StoryLinkIndex";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 
@@ -88,6 +89,18 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
       <div className="mt-10">
         <StoriesCatalog lang={lang} stories={stories} dict={dict.stories} />
       </div>
+
+      {/* Под каталогом, а не вместо него: каталог остаётся клиентским со
+          своими фильтрами и «показать ещё», а это — ребро графа на каждый
+          из 325 рассказов, которого без JavaScript не существовало (замер
+          прода 05.09.2026: 24 якоря на странице, PROGRESS.md 7.112).
+          `rawStories`, а не `stories`: во втором порядок зависит от тарифа
+          посетителя, и HTML страницы менялся бы от того, кто её открыл. */}
+      <StoryLinkIndex
+        lang={lang}
+        stories={rawStories.map((story) => ({ id: story.id, title: story.title, level: story.level }))}
+        dict={{ indexTitle: dict.stories.indexTitle, indexIntro: dict.stories.indexIntro }}
+      />
     </div>
   );
 }
