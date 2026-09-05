@@ -158,6 +158,73 @@ export function roundApproximate(value: number, digits: number): number {
 }
 
 /**
+ * The converted figure as a NUMBER, before it is written out for a reader.
+ *
+ * WHY THIS IS SEPARATE FROM formatApproximate (added 10.09.2026, PROGRESS.md
+ * 7.122). /pricing now carries an Offer in its JSON-LD, and a search engine
+ * needs `price` as a machine number while a visitor needs "≈ 13 900 ARS".
+ * Those two must be the SAME amount — with Adaptive Pricing the page is
+ * personalised, so markup that named a different figure (or a different
+ * currency) than the card above it would be a price the reader never saw.
+ * The only way to guarantee that is to compute the amount ONCE, here, and
+ * derive both the sentence and the number from it — never to convert a
+ * second time down a second path.
+ *
+ * `digits` is how many decimals the figure is WRITTEN with, which is not
+ * always the currency's own precision: above 100 units the value is cut to
+ * three significant figures and printing ".00" after it would only add two
+ * fake zeros.
+ */
+export interface ApproximateAmount {
+  /** Already rounded exactly as the reader will see it. */
+  value: number;
+  /** Decimals the figure is printed with — 2 under 100 units, 0 above. */
+  digits: number;
+  /** ISO 4217, never "MXN". */
+  currency: string;
+}
+
+export function approximateAmount(
+  amountMxnCents: number,
+  context: LocalPriceContext | null,
+  locale: string
+): ApproximateAmount | null {
+  if (!context) return null;
+  const { currency, rate } = context;
+  if (!Number.isFinite(rate) || rate <= 0) return null;
+
+  const raw = (amountMxnCents / 100) * rate * (1 + ADAPTIVE_PRICING_MARKUP);
+  const digits = fractionDigits(currency, locale);
+  const rounded = roundApproximate(raw, digits);
+  if (rounded <= 0) return null;
+
+  // Three significant figures leave nothing after the point above 100, so
+  // printing the currency's decimals there would only add two fake zeros.
+  return { value: rounded, digits: rounded < 100 ? digits : 0, currency };
+}
+
+/** "≈ 13 900 ARS" — the amount above, written for a person. */
+export function formatAmount(amount: ApproximateAmount, locale: string): string {
+  const number = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: amount.digits,
+    maximumFractionDigits: amount.digits,
+    // Explicit, because the default ("auto") leaves four-digit numbers
+    // ungrouped in both of this site's locales: "8600 CLP" beside a
+    // grouped "$2,299 MXN" looks like two different kinds of number.
+    useGrouping: true,
+  }).format(amount.value);
+  return `≈ ${number} ${amount.currency}`;
+}
+
+/** "13900" / "11.70" — the same amount for a machine: a plain decimal with
+ * a dot, no grouping and no sign, which is the only form schema.org's
+ * `price` accepts. Same decimals as the printed figure, so the two cannot
+ * read as different numbers. */
+export function machineAmount(amount: ApproximateAmount): string {
+  return amount.value.toFixed(amount.digits);
+}
+
+/**
  * "≈ 13 900 ARS" — or null when there is nothing honest to say.
  *
  * Never a `$`, never a bare number: the ISO code is the whole point. The
@@ -170,25 +237,6 @@ export function formatApproximate(
   context: LocalPriceContext | null,
   locale: string
 ): string | null {
-  if (!context) return null;
-  const { currency, rate } = context;
-  if (!Number.isFinite(rate) || rate <= 0) return null;
-
-  const raw = (amountMxnCents / 100) * rate * (1 + ADAPTIVE_PRICING_MARKUP);
-  const digits = fractionDigits(currency, locale);
-  const rounded = roundApproximate(raw, digits);
-  if (rounded <= 0) return null;
-
-  // Three significant figures leave nothing after the point above 100, so
-  // printing the currency's decimals there would only add two fake zeros.
-  const shown = rounded < 100 ? digits : 0;
-  const number = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: shown,
-    maximumFractionDigits: shown,
-    // Explicit, because the default ("auto") leaves four-digit numbers
-    // ungrouped in both of this site's locales: "8600 CLP" beside a
-    // grouped "$2,299 MXN" looks like two different kinds of number.
-    useGrouping: true,
-  }).format(rounded);
-  return `≈ ${number} ${currency}`;
+  const amount = approximateAmount(amountMxnCents, context, locale);
+  return amount ? formatAmount(amount, locale) : null;
 }

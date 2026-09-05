@@ -80,6 +80,16 @@ export default function WordGamesPicker({
             <Link
               key={sequence}
               href={`/${lang}/word-games/${type}/${level}/${sequence}`}
+              // What this tile DOES, in the DOM. A locked tile looks like
+              // any other (the ★/👑 glyph marks "Premium content", not
+              // "locked for you" — a Premium subscriber sees the same
+              // glyph on a tile that opens), so from outside there was no
+              // way to tell a tile that navigates from one that opens the
+              // paywall. e2e/paywall-modal.spec.ts needs exactly that
+              // distinction, and it must not be guessed from a sequence
+              // number: the premium-only rungs sit at different numbers in
+              // dev.db and in the CI fixture.
+              data-locked={isLocked ? "true" : undefined}
               onClick={(e) => {
                 if (!isLocked) return;
                 e.preventDefault();
