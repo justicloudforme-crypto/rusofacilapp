@@ -55,15 +55,15 @@ export type IntroIllustrationShape =
 
 export type IntroIconKey =
   | "globalReach"
-  | "russiaMap"
-  | "spaceFirst"
+  | "openDoors"
+  | "easierThanItLooks"
+  | "alphabetEvening"
   | "literaryClassics"
-  | "keyboardWindows"
-  | "keyboardMac"
+  | "keyboardSetup"
   | "dailyHabit"
   | "methodMix"
-  | "interactiveDictionary"
-  | "communityChat";
+  | "platformContents"
+  | "firstWeekPlan";
 
 export const introSlideIllustrations: Record<IntroIconKey, IntroIllustrationShape[]> = {
   // Alcance global — a globe with latitude/longitude arcs and a speaker count badge.
@@ -83,38 +83,58 @@ export const introSlideIllustrations: Record<IntroIconKey, IntroIllustrationShap
     { kind: "text", x: 128, y: 92, size: 12, fill: "white", content: "4", bold: true, anchor: "middle" },
   ],
 
-  // Rusia, 11 husos horarios — a wide landmass silhouette with time-zone pins.
-  russiaMap: [
-    { kind: "circle", cx: 80, cy: 64, r: 50, fill: "brand", opacity: 0.05 },
-    { kind: "path", d: "M10 58 L26 46 L46 50 L60 40 L78 46 L96 38 L114 46 L132 40 L150 52 L146 70 L128 76 L108 68 L88 78 L66 72 L46 80 L24 74 L10 58 Z", fill: "brandLight" },
-    { kind: "circle", cx: 24, cy: 58, r: 3.2, fill: "accentLight" },
-    { kind: "circle", cx: 48, cy: 60, r: 3.2, fill: "accentLight" },
-    { kind: "circle", cx: 72, cy: 58, r: 3.2, fill: "accentLight" },
-    { kind: "circle", cx: 96, cy: 56, r: 3.2, fill: "accentLight" },
-    { kind: "circle", cx: 120, cy: 56, r: 3.2, fill: "accentLight" },
-    { kind: "circle", cx: 142, cy: 58, r: 3.2, fill: "accentLight" },
-    { kind: "circle", cx: 132, cy: 22, r: 18, fill: "accent" },
-    { kind: "circle", cx: 132, cy: 22, r: 12.5, stroke: "white", strokeWidth: 1.6 },
-    { kind: "path", d: "M132 14 V22 L138 26", stroke: "white", strokeWidth: 1.8, round: true },
-    { kind: "text", x: 132, y: 44, size: 7, fill: "brand", content: "11 husos", bold: true, anchor: "middle" },
+  // Qué puertas te abre — an open door with light spilling out, a suitcase
+  // and a small globe: work, travel, and a skill few people around have.
+  openDoors: [
+    { kind: "circle", cx: 74, cy: 60, r: 48, fill: "brand", opacity: 0.06 },
+    { kind: "path", d: "M96 18 L146 30 L146 106 L96 100 Z", fill: "accentLight", opacity: 0.22 },
+    { kind: "rect", x: 30, y: 16, w: 66, h: 92, rx: 5, fill: "brand" },
+    { kind: "rect", x: 38, y: 24, w: 50, h: 76, rx: 3, fill: "muted" },
+    { kind: "path", d: "M38 24 L88 12 L88 112 L38 100 Z", fill: "brandLight" },
+    { kind: "circle", cx: 80, cy: 62, r: 3.4, fill: "accentLight" },
+    { kind: "rect", x: 104, y: 62, w: 30, h: 22, rx: 3, fill: "accent" },
+    { kind: "rect", x: 114, y: 56, w: 10, h: 6, rx: 2, fill: "accent" },
+    { kind: "path", d: "M104 72 H134", stroke: "white", strokeWidth: 1.6 },
+    { kind: "circle", cx: 122, cy: 34, r: 13, fill: "brandLight" },
+    { kind: "path", d: "M109 34 H135 M122 21 V47 M113 25 Q122 34 113 43 M131 25 Q122 34 131 43", stroke: "white", strokeWidth: 1.4, opacity: 0.75 },
   ],
 
-  // Gagarin y la carrera espacial — a rocket arcing past a ringed planet.
-  spaceFirst: [
+  // Es más fácil de lo que parece — a short checklist: three things the
+  // language does NOT have, and one honest line for what it does.
+  easierThanItLooks: [
     { kind: "circle", cx: 80, cy: 60, r: 48, fill: "brand", opacity: 0.06 },
-    { kind: "circle", cx: 46, cy: 82, r: 4, fill: "accentLight", opacity: 0.9 },
-    { kind: "circle", cx: 120, cy: 30, r: 2.4, fill: "brandLight" },
-    { kind: "circle", cx: 132, cy: 90, r: 2.4, fill: "brandLight" },
-    { kind: "circle", cx: 30, cy: 34, r: 2, fill: "brandLight" },
-    { kind: "path", d: "M70 96 C70 60 84 34 100 20 C104 40 100 66 82 88 Z", fill: "brand" },
-    { kind: "path", d: "M100 20 C112 26 116 38 112 50 L94 40 Z", fill: "accentLight" },
-    { kind: "circle", cx: 92, cy: 40, r: 6, fill: "white", opacity: 0.85 },
-    { kind: "path", d: "M76 82 L64 96 L80 92 Z", fill: "accentLight" },
-    { kind: "path", d: "M82 88 L86 104 L96 90 Z", fill: "accentLight" },
-    { kind: "path", d: "M70 96 C62 104 58 112 56 118 C64 116 72 110 78 100", fill: "accent", opacity: 0.8 },
-    { kind: "circle", cx: 128, cy: 66, r: 15, stroke: "brandLight", strokeWidth: 2, fill: "muted", opacity: 0.6 },
-    { kind: "path", d: "M112 66 H144", stroke: "brandLight", strokeWidth: 2, opacity: 0.5 },
+    { kind: "rect", x: 18, y: 18, w: 124, h: 84, rx: 14, fill: "muted" },
+    { kind: "rect", x: 22, y: 22, w: 116, h: 76, rx: 12, fill: "white" },
+    { kind: "circle", cx: 38, cy: 40, r: 7, fill: "accentLight" },
+    { kind: "path", d: "M35 40 L37 42.5 L41.5 36.5", stroke: "white", strokeWidth: 2, round: true },
+    { kind: "rect", x: 52, y: 37, w: 72, h: 6, rx: 3, fill: "muted" },
+    { kind: "circle", cx: 38, cy: 60, r: 7, fill: "accentLight" },
+    { kind: "path", d: "M35 60 L37 62.5 L41.5 56.5", stroke: "white", strokeWidth: 2, round: true },
+    { kind: "rect", x: 52, y: 57, w: 58, h: 6, rx: 3, fill: "muted" },
+    { kind: "circle", cx: 38, cy: 80, r: 7, fill: "accentLight" },
+    { kind: "path", d: "M35 80 L37 82.5 L41.5 76.5", stroke: "white", strokeWidth: 2, round: true },
+    { kind: "rect", x: 52, y: 77, w: 66, h: 6, rx: 3, fill: "muted" },
+    { kind: "circle", cx: 130, cy: 96, r: 15, fill: "brandLight" },
+    { kind: "text", x: 130, y: 101, size: 14, fill: "white", content: "!", bold: true, anchor: "middle" },
   ],
+
+  // El alfabeto en una tarde — three Cyrillic letters and a crescent moon.
+  alphabetEvening: [
+    { kind: "circle", cx: 74, cy: 60, r: 48, fill: "brand", opacity: 0.06 },
+    { kind: "rect", x: 16, y: 34, w: 40, h: 40, rx: 8, fill: "brandLight" },
+    { kind: "text", x: 36, y: 62, size: 22, fill: "white", content: "А", bold: true, anchor: "middle" },
+    { kind: "rect", x: 60, y: 34, w: 40, h: 40, rx: 8, fill: "accent" },
+    { kind: "text", x: 80, y: 62, size: 22, fill: "white", content: "Б", bold: true, anchor: "middle" },
+    { kind: "rect", x: 104, y: 34, w: 40, h: 40, rx: 8, fill: "brand" },
+    { kind: "text", x: 124, y: 62, size: 22, fill: "white", content: "В", bold: true, anchor: "middle" },
+    { kind: "path", d: "M126 88 A14 14 0 1 0 140 102 A11 11 0 1 1 126 88 Z", fill: "accentLight" },
+    { kind: "circle", cx: 30, cy: 92, r: 2.6, fill: "brandLight" },
+    { kind: "circle", cx: 48, cy: 100, r: 2, fill: "brandLight" },
+    { kind: "circle", cx: 66, cy: 92, r: 2.6, fill: "brandLight" },
+    { kind: "text", x: 88, y: 100, size: 8, fill: "inkSoft", content: "una tarde", anchor: "middle" },
+  ],
+
+
 
   // Los clásicos — a stack of open books with a quill.
   literaryClassics: [
@@ -130,54 +150,23 @@ export const introSlideIllustrations: Record<IntroIconKey, IntroIllustrationShap
     { kind: "text", x: 72, y: 86, size: 7, fill: "white", content: "Пушкин", bold: true, anchor: "middle" },
   ],
 
-  // Teclado Windows — a keyboard with the Space bar and Win key highlighted.
-  keyboardWindows: [
-    { kind: "circle", cx: 80, cy: 60, r: 50, fill: "brand", opacity: 0.05 },
-    { kind: "rect", x: 16, y: 30, w: 128, h: 60, rx: 10, fill: "ink" },
-    { kind: "rect", x: 24, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 40, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 56, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 72, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 88, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 104, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 120, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 24, y: 54, w: 20, h: 12, rx: 3, fill: "accentLight" },
-    { kind: "path", d: "M28 58 H30 M28 61 H30 M32 58 H34 M32 61 H34", stroke: "white", strokeWidth: 1.2 },
-    { kind: "rect", x: 48, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 64, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 80, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 96, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 112, y: 54, w: 22, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 40, y: 70, w: 68, h: 12, rx: 3, fill: "accent" },
-    { kind: "text", x: 74, y: 79, size: 7, fill: "white", content: "Win + Espacio", bold: true, anchor: "middle" },
-    { kind: "rect", x: 112, y: 70, w: 22, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "circle", cx: 132, cy: 26, r: 12, fill: "brandLight" },
-    { kind: "text", x: 132, y: 30, size: 12, fill: "white", content: "Я", bold: true, anchor: "middle" },
-  ],
 
-  // Teclado Mac — same recipe, Control key highlighted.
-  keyboardMac: [
+
+  // Cómo escribir en ruso — el celular primero, la computadora después.
+  keyboardSetup: [
     { kind: "circle", cx: 80, cy: 60, r: 50, fill: "brand", opacity: 0.05 },
-    { kind: "rect", x: 16, y: 30, w: 128, h: 60, rx: 10, fill: "ink" },
-    { kind: "rect", x: 24, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 40, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 56, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 72, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 88, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 104, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 120, y: 38, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 24, y: 54, w: 24, h: 12, rx: 3, fill: "accentLight" },
-    { kind: "text", x: 36, y: 63, size: 6, fill: "white", content: "control", bold: true, anchor: "middle" },
-    { kind: "rect", x: 52, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 68, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 84, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 100, y: 54, w: 14, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 116, y: 54, w: 18, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "rect", x: 40, y: 70, w: 68, h: 12, rx: 3, fill: "accent" },
-    { kind: "text", x: 74, y: 79, size: 7, fill: "white", content: "Control + Espacio", bold: true, anchor: "middle" },
-    { kind: "rect", x: 112, y: 70, w: 22, h: 12, rx: 3, fill: "inkSoft" },
-    { kind: "circle", cx: 132, cy: 26, r: 12, fill: "brandLight" },
-    { kind: "text", x: 132, y: 30, size: 12, fill: "white", content: "Ф", bold: true, anchor: "middle" },
+    { kind: "rect", x: 12, y: 14, w: 48, h: 92, rx: 9, fill: "ink" },
+    { kind: "rect", x: 17, y: 22, w: 38, h: 62, rx: 4, fill: "brandLight" },
+    { kind: "text", x: 36, y: 58, size: 24, fill: "white", content: "Я", bold: true, anchor: "middle" },
+    { kind: "rect", x: 17, y: 88, w: 10, h: 6, rx: 2, fill: "inkSoft" },
+    { kind: "rect", x: 30, y: 88, w: 25, h: 6, rx: 2, fill: "accentLight" },
+    { kind: "rect", x: 17, y: 97, w: 38, h: 5, rx: 2, fill: "inkSoft" },
+    { kind: "rect", x: 72, y: 30, w: 78, h: 50, rx: 6, fill: "ink" },
+    { kind: "rect", x: 77, y: 35, w: 68, h: 40, rx: 3, fill: "brandLight" },
+    { kind: "text", x: 111, y: 60, size: 18, fill: "white", content: "ЙЦУКЕН", bold: true, anchor: "middle" },
+    { kind: "rect", x: 66, y: 82, w: 90, h: 7, rx: 3, fill: "inkSoft" },
+    { kind: "rect", x: 96, y: 96, w: 44, h: 10, rx: 4, fill: "accent" },
+    { kind: "text", x: 118, y: 104, size: 6.5, fill: "white", content: "cambiar idioma", bold: true, anchor: "middle" },
   ],
 
   // Constancia diaria — a small calendar with checked days and a streak flame.
@@ -215,31 +204,49 @@ export const introSlideIllustrations: Record<IntroIconKey, IntroIllustrationShap
     { kind: "rect", x: 114, y: 83, w: 5, h: 2, rx: 1, fill: "accentLight" },
   ],
 
-  // Diccionario interactivo — a speech/word bubble with an underlined word and a magnifier.
-  interactiveDictionary: [
-    { kind: "circle", cx: 78, cy: 58, r: 48, fill: "brand", opacity: 0.06 },
-    { kind: "rect", x: 22, y: 24, w: 108, h: 54, rx: 16, fill: "brand" },
-    { kind: "path", d: "M46 78 L36 96 L62 78 Z", fill: "brand" },
-    { kind: "text", x: 76, y: 48, size: 10, fill: "white", content: "чтобы", bold: true, anchor: "middle" },
-    { kind: "path", d: "M56 54 H96", stroke: "accentLight", strokeWidth: 2.5, round: true },
-    { kind: "text", x: 76, y: 66, size: 7, fill: "white", content: "para que · con el fin de", opacity: 0.85, anchor: "middle" },
-    { kind: "circle", cx: 128, cy: 90, r: 16, fill: "white" },
-    { kind: "circle", cx: 128, cy: 90, r: 16, stroke: "accentLight", strokeWidth: 5 },
-    { kind: "path", d: "M139 101 L150 112", stroke: "accentLight", strokeWidth: 6, round: true },
-    { kind: "text", x: 128, y: 94, size: 12, fill: "brand", content: "?", bold: true, anchor: "middle" },
+  // Qué hay adentro — a grid of content tiles, one per family.
+  platformContents: [
+    { kind: "circle", cx: 80, cy: 60, r: 50, fill: "brand", opacity: 0.05 },
+    { kind: "rect", x: 16, y: 20, w: 42, h: 30, rx: 6, fill: "brand" },
+    { kind: "rect", x: 22, y: 28, w: 24, h: 3.5, rx: 1.75, fill: "white", opacity: 0.85 },
+    { kind: "rect", x: 22, y: 35, w: 30, h: 3.5, rx: 1.75, fill: "white", opacity: 0.5 },
+    { kind: "rect", x: 22, y: 42, w: 18, h: 3.5, rx: 1.75, fill: "white", opacity: 0.5 },
+    { kind: "rect", x: 62, y: 20, w: 42, h: 30, rx: 6, fill: "brandLight" },
+    { kind: "path", d: "M76 28 L92 35 L76 42 Z", fill: "white" },
+    { kind: "rect", x: 108, y: 20, w: 36, h: 30, rx: 6, fill: "accent" },
+    { kind: "path", d: "M118 28 V42 M126 24 V46 M134 30 V40", stroke: "white", strokeWidth: 2.6, round: true },
+    { kind: "rect", x: 16, y: 56, w: 36, h: 30, rx: 6, fill: "accentLight" },
+    { kind: "text", x: 34, y: 77, size: 15, fill: "white", content: "Аа", bold: true, anchor: "middle" },
+    { kind: "rect", x: 56, y: 56, w: 48, h: 30, rx: 6, fill: "muted" },
+    { kind: "rect", x: 62, y: 62, w: 8, h: 8, rx: 1.5, fill: "brand" },
+    { kind: "rect", x: 74, y: 62, w: 8, h: 8, rx: 1.5, fill: "brandLight" },
+    { kind: "rect", x: 86, y: 62, w: 8, h: 8, rx: 1.5, fill: "brand" },
+    { kind: "rect", x: 62, y: 73, w: 8, h: 8, rx: 1.5, fill: "brandLight" },
+    { kind: "rect", x: 74, y: 73, w: 8, h: 8, rx: 1.5, fill: "accent" },
+    { kind: "rect", x: 86, y: 73, w: 8, h: 8, rx: 1.5, fill: "brandLight" },
+    { kind: "rect", x: 108, y: 56, w: 36, h: 30, rx: 6, fill: "brand" },
+    { kind: "path", d: "M118 66 L124 72 L136 62", stroke: "white", strokeWidth: 2.6, round: true },
+    { kind: "rect", x: 16, y: 92, w: 128, h: 12, rx: 6, fill: "muted" },
+    { kind: "rect", x: 16, y: 92, w: 92, h: 12, rx: 6, fill: "accentLight" },
+    { kind: "text", x: 62, y: 101, size: 7, fill: "white", content: "A1 · A2 · B1 · B2", bold: true, anchor: "middle" },
+    { kind: "text", x: 126, y: 101, size: 7, fill: "inkSoft", content: "C1", bold: true, anchor: "middle" },
   ],
 
-  // Comunidad en Telegram — a paper-plane message with two chat bubbles.
-  communityChat: [
-    { kind: "circle", cx: 78, cy: 60, r: 48, fill: "brand", opacity: 0.06 },
-    { kind: "circle", cx: 60, cy: 58, r: 36, fill: "brandLight" },
-    { kind: "path", d: "M38 58 L88 40 L68 82 L60 66 L46 68 Z", fill: "white" },
-    { kind: "path", d: "M68 82 L60 66 L88 40", stroke: "brandLight", strokeWidth: 2, opacity: 0.4, round: true },
-    { kind: "circle", cx: 126, cy: 32, r: 16, fill: "accentLight" },
-    { kind: "path", d: "M112 40 L120 50 L136 40 Z", fill: "accentLight" },
-    { kind: "text", x: 126, y: 36, size: 13, fill: "white", content: "✓", bold: true, anchor: "middle" },
-    { kind: "circle", cx: 132, cy: 90, r: 13, fill: "accent" },
-    { kind: "path", d: "M120 96 L112 104 L122 100 Z", fill: "accent" },
-    { kind: "path", d: "M126 86 H138 M126 90 H136 M126 94 H132", stroke: "white", strokeWidth: 1.6, round: true },
+  // Tu primera semana — a week strip with today marked and a flag at the end.
+  firstWeekPlan: [
+    { kind: "circle", cx: 80, cy: 60, r: 50, fill: "brand", opacity: 0.05 },
+    { kind: "rect", x: 10, y: 44, w: 140, h: 34, rx: 10, fill: "muted" },
+    { kind: "circle", cx: 27, cy: 61, r: 12, fill: "accent" },
+    { kind: "text", x: 27, y: 65, size: 9, fill: "white", content: "hoy", bold: true, anchor: "middle" },
+    { kind: "circle", cx: 51, cy: 61, r: 8, fill: "brandLight" },
+    { kind: "circle", cx: 71, cy: 61, r: 8, fill: "brandLight", opacity: 0.75 },
+    { kind: "circle", cx: 91, cy: 61, r: 8, fill: "brandLight", opacity: 0.55 },
+    { kind: "circle", cx: 111, cy: 61, r: 8, fill: "brandLight", opacity: 0.4 },
+    { kind: "circle", cx: 131, cy: 61, r: 8, fill: "brandLight", opacity: 0.28 },
+    { kind: "path", d: "M139 44 V22", stroke: "ink", strokeWidth: 2.4, round: true },
+    { kind: "path", d: "M139 22 L118 27 L139 33 Z", fill: "accentLight" },
+    { kind: "path", d: "M20 92 H140", stroke: "muted", strokeWidth: 3, round: true },
+    { kind: "path", d: "M20 92 H60", stroke: "accentLight", strokeWidth: 3, round: true },
+    { kind: "text", x: 80, y: 108, size: 7.5, fill: "inkSoft", content: "alfabeto · lección · tarjetas · relato · juego", anchor: "middle" },
   ],
 };

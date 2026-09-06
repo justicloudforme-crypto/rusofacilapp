@@ -1,13 +1,35 @@
 import type { IntroIconKey } from "./slideIcons";
+import { ALPHABET_PAGE_PATH } from "@/lib/alphabet/cyrillic-alphabet";
+import { TELEGRAM_INVITE_URL } from "@/components/TelegramFloatButton";
+import type { IntroStats } from "./stats";
 
 /**
  * Contenido de la presentación de Introducción — igual que el contenido de
  * las lecciones (ver src/lib/lessons/content.ts), se escribe siempre en
  * español, sin importar el idioma de la interfaz. Se muestra como una serie
- * de diapositivas tanto en la página de inicio (src/components/intro/IntroPresentation.tsx)
- * como en el PDF descargable (src/lib/intro/pdf.tsx) — un único origen de
- * verdad para ambos.
+ * de diapositivas en el catálogo de cursos
+ * (/[lang]/courses, src/components/intro/IntroPresentation.tsx) y en el PDF
+ * descargable (src/lib/intro/pdf.tsx) — un único origen de verdad para
+ * ambos. Español neutro para toda Hispanoamérica: sin regionalismos y sin
+ * dar por hecho de qué país es quien lee.
+ *
+ * NINGUNA CIFRA SE ESCRIBE A MANO AQUÍ. Todas las cantidades del producto
+ * — lecciones, ejercicios, tarjetas, temas, relatos, medios, modismos,
+ * términos de glosario, juegos por tipo, exámenes, letras del alfabeto y la
+ * composición exacta de lo gratuito — llegan en `stats`
+ * (src/lib/intro/stats.ts), contadas de las mismas fuentes que lee el sitio.
+ * `npm run check:intro-numbers` construye estas diapositivas con valores
+ * centinela y falla si aparece cualquier dígito que no venga de ahí; la
+ * única excepción, anotada en ese guardián, son los 258 millones de
+ * hablantes, que son un dato del mundo y no del producto.
  */
+
+export interface IntroSlideLink {
+  /** Ruta sin prefijo de idioma (`/alfabeto-cirilico`) o URL completa. */
+  href: string;
+  label: string;
+  external?: boolean;
+}
 
 export interface IntroSlide {
   id: string;
@@ -16,152 +38,231 @@ export interface IntroSlide {
   body: string[];
   /** Optional short bullet list, rendered under `body`. */
   highlights?: string[];
+  /** Optional links rendered under the bullets (and printed as plain URLs
+   * in the PDF, which cannot be clicked in every reader). */
+  links?: IntroSlideLink[];
 }
 
-export const introSlides: IntroSlide[] = [
-  {
-    id: "intro-1-scale",
-    icon: "globalReach",
-    title: "Un idioma de alcance verdaderamente global",
-    body: [
-      "El ruso no es un idioma regional: lo hablan cerca de 258 millones de personas en el mundo, entre hablantes nativos y como segunda lengua. Con unos 150 millones de hablantes nativos, es el idioma nativo más hablado de toda Europa.",
-      "Es idioma oficial en cuatro países — Rusia, Bielorrusia, Kazajistán y Kirguistán — y sigue siendo ampliamente usado en toda la antigua Unión Soviética, desde el Cáucaso hasta Asia Central.",
-    ],
-    highlights: [
-      "≈ 258 millones de hablantes en total",
-      "Idioma nativo más hablado de Europa",
-      "Oficial en 4 países: Rusia, Bielorrusia, Kazajistán, Kirguistán",
-      "Uno de los 6 idiomas oficiales de la ONU",
-    ],
-  },
-  {
-    id: "intro-2-geography",
-    icon: "russiaMap",
-    title: "El país más grande del planeta",
-    body: [
-      "Rusia no tiene comparación en tamaño: cubre más de 17 millones de km², casi el doble que el segundo país más grande, y se extiende a lo largo de dos continentes, Europa y Asia.",
-      "Esa escala se nota hasta en el reloj: Rusia abarca 11 husos horarios distintos. Cuando en Kaliningrado, al oeste, apenas empieza el día, en Kamchatka, al este, ya casi termina.",
-    ],
-    highlights: [
-      "Más de 17 millones de km² de territorio",
-      "11 husos horarios — el país con más del mundo",
-      "Se extiende sobre dos continentes: Europa y Asia",
-    ],
-  },
-  {
-    id: "intro-3-space",
-    icon: "spaceFirst",
-    title: "Una gran potencia histórica y científica",
-    body: [
-      "Más allá del tamaño, Rusia es una potencia histórica con siglos de peso en la política, la ciencia y la cultura mundiales. Fue cuna de algunos de los mayores hitos científicos del siglo XX.",
-      "El 12 de abril de 1961, el cosmonauta soviético Yuri Gagarin se convirtió en el primer ser humano en viajar al espacio, a bordo del Vostok 1 — un logro que abrió la era espacial para toda la humanidad. Años antes, en 1957, el Sputnik 1 había sido el primer satélite artificial en orbitar la Tierra.",
-    ],
-    highlights: [
-      "Yuri Gagarin (1961): primer humano en el espacio",
-      "Sputnik 1 (1957): primer satélite artificial de la historia",
-      "Siglos de influencia en la ciencia, la política y las artes",
-    ],
-  },
-  {
-    id: "intro-4-literature",
-    icon: "literaryClassics",
-    title: "La verdadera meta: leer a los grandes clásicos en su idioma original",
-    body: [
-      "Esta es, en el fondo, la razón más poderosa para aprender ruso: poder leer en el idioma original algunas de las obras más importantes de toda la literatura universal. Ninguna traducción, por buena que sea, conserva del todo el ritmo, la ironía o los matices exactos que un autor eligió palabra por palabra.",
-      "El ruso te abre la puerta a Fiódor Dostoievski, Lev Tolstói, Antón Chéjov, Alexánder Pushkin y Nikolái Gógol — autores que no solo definieron la literatura rusa, sino que cambiaron la forma en que el mundo entero entiende la novela, el cuento y el alma humana.",
-      "Más allá de la literatura, el pensamiento ruso dejó huella profunda en la filosofía (Dostoievski influyó directamente en el existencialismo del siglo XX, desde Nietzsche hasta Sartre) y en disciplinas enteras como el ballet, el ajedrez y la música clásica, donde compositores como Chaikovski o Rachmáninov son referencia mundial.",
-    ],
-    highlights: [
-      "Fiódor Dostoievski — «Crimen y castigo»",
-      "Lev Tolstói — «Guerra y paz» y «Anna Karénina»",
-      "Antón Chéjov — maestro universal del cuento y el teatro",
-      "Alexánder Pushkin — padre de la literatura rusa moderna",
-      "Nikolái Gógol — «Almas muertas», raíz de la sátira rusa",
-    ],
-  },
-  {
-    id: "intro-5-keyboard-windows",
-    icon: "keyboardWindows",
-    title: "Prepara tu teclado: Windows",
-    body: [
-      "No necesitas comprar nada ni pegar letras nuevas en tu teclado físico: Windows te permite agregar el ruso (ЙЦУКЕН) como idioma de escritura en un par de pasos, y alternar entre español y ruso al instante.",
-      "Ve a Configuración › Hora e idioma › Idioma y región › Agregar un idioma, busca «Русский» (ruso) e instálalo. Windows agrega automáticamente la distribución de teclado cirílica estándar.",
-    ],
-    highlights: [
-      "Configuración › Hora e idioma › Idioma › Agregar idioma › Русский",
-      "Atajo para alternar el idioma: Windows + Barra espaciadora",
-      "También puedes usar Alt izquierdo + Shift si así lo tienes configurado",
-    ],
-  },
-  {
-    id: "intro-6-keyboard-mac",
-    icon: "keyboardMac",
-    title: "Prepara tu teclado: Mac",
-    body: [
-      "En macOS el proceso es igual de sencillo. Ve a Preferencias del Sistema (o Ajustes del Sistema) › Teclado › Fuentes de entrada, pulsa el botón «+» y busca «Russian» (ruso) en la lista de idiomas.",
-      "Una vez agregado, verás el ícono de idioma en la barra de menú arriba a la derecha, desde donde puedes cambiar de teclado con el mouse — o con el teclado, usando Control + Barra espaciadora para alternar entre tus fuentes de entrada instaladas.",
-    ],
-    highlights: [
-      "Ajustes del Sistema › Teclado › Fuentes de entrada › «+» › Russian",
-      "Atajo para alternar el idioma: Control + Barra espaciadora",
-      "Consejo: si escribes mucho a mano, unas calcomanías cirílicas para las teclas (o un teclado virtual en pantalla) ayudan muchísimo al principio",
-    ],
-  },
-  {
-    id: "intro-7-consistency",
-    icon: "dailyHabit",
-    title: "El secreto del éxito: constancia, no maratones",
-    body: [
-      "La clave del éxito no es la plataforma en sí, sino tu constancia. Quince minutos al día, todos los días, valen mucho más que una sesión de tres horas una vez por semana — el cerebro fija un idioma nuevo con repetición espaciada y frecuente, no con sesiones intensas y esporádicas.",
-      "RusoFácilapp está diseñado para acompañarte a tu ritmo: puedes avanzar, repasar o volver atrás sin presión. Pero la herramienta la ponemos nosotros; el hábito lo pones tú.",
-    ],
-    highlights: [
-      "Mejor 15 minutos diarios que una maratón semanal",
-      "La repetición frecuente es lo que fija el idioma en la memoria",
-      "Avanza a tu ritmo — no hay carreras ni fechas límite",
-    ],
-  },
-  {
-    id: "intro-8-variety",
-    icon: "methodMix",
-    title: "Combate el desgaste: cambia de método",
-    body: [
-      "Aprender un idioma nuevo cansa, y está bien: la solución no es forzarte a seguir con lo mismo, sino cambiar de formato para mantener el interés vivo. RusoFácilapp está pensado precisamente para eso — varias formas distintas de tocar el mismo idioma.",
-      "¿Cansado de la gramática? Mira un video o una canción con subtítulos traducidos. ¿Cansado de leer? Escucha uno de los cuentos narrados en voz alta. Alternar formatos «alimenta» tu interés desde varios ángulos a la vez, en vez de agotar siempre el mismo.",
-    ],
-    highlights: [
-      "¿Cansado de la gramática? › mira un video o canción con traducción",
-      "¿Cansado de leer? › escucha un cuento narrado en audio",
-      "¿Cansado de escuchar? › practica con el vocabulario interactivo",
-    ],
-  },
-  {
-    id: "intro-9-platform-tour",
-    icon: "interactiveDictionary",
-    title: "Un recorrido rápido por RusoFácilapp",
-    body: [
-      "El diccionario interactivo está integrado en todo el sitio: cualquier palabra en español que te resulte compleja dentro de una explicación de gramática puede mostrarte al instante su definición, sin salir de la lección.",
-      "Los cursos están organizados por niveles (A1 a B2) y cada nivel avanza lección por lección, con gramática, vocabulario y ejercicios de corrección instantánea. En la sección de Cuentos vas a encontrar textos paralelos — ruso y español lado a lado — narrados en voz alta por nivel, ideales para practicar lectura y oído a la vez. Y cada bloque de lecciones cierra con un examen para comprobar de verdad lo que ya dominas.",
-    ],
-    highlights: [
-      "Diccionario interactivo con explicaciones al instante",
-      "120 lecciones organizadas por niveles A1–B2",
-      "Textos paralelos ruso–español narrados en voz alta, por nivel",
-      "Exámenes de repaso después de cada bloque de lecciones",
-    ],
-  },
-  {
-    id: "intro-10-community",
-    icon: "communityChat",
-    title: "Únete al club de conversación",
-    body: [
-      "RusoFácilapp no termina en la pantalla: súmate a nuestro canal y grupo de Telegram para recibir novedades, resolver dudas y — sobre todo — practicar conversación real con hablantes nativos de ruso en el club de conversación.",
-      "Vas a encontrar el enlace al canal en el botón flotante de Telegram, siempre visible en la esquina de la pantalla, en cualquier página del sitio.",
-    ],
-    highlights: [
-      "Canal y grupo de Telegram con la comunidad de RusoFácilapp",
-      "Club de conversación con hablantes nativos",
-      "Botón flotante de Telegram, siempre a un clic de distancia",
-    ],
-  },
-];
+/**
+ * The PDF's page count: one cover plus one page per slide.
+ *
+ * It lives here rather than in ./pdf.tsx because that file is
+ * `server-only` and react-pdf, and the e2e spec that asserts the served
+ * PDF has exactly this many pages cannot import either — the same reason
+ * ./stats.ts is not server-only.
+ */
+export function introPdfPageCount(slides: readonly IntroSlide[]): number {
+  return slides.length + 1;
+}
+
+/** Une una lista en español: «a, b y c». */
+function list(items: readonly string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
+
+export function buildIntroSlides(stats: IntroStats): IntroSlide[] {
+  const { bank, free } = stats;
+  const traps = list(stats.alphabetTraps);
+
+  // El banco de contenido: una fila por familia, y cada fila desaparece
+  // entera si la base de datos no se pudo leer (bank === null). No hay
+  // número de reserva escrito aquí: mostrar «0 relatos» sería peor que no
+  // decir nada, y una constante de reserva es exactamente el defecto que
+  // este módulo existe para quitar (ver el encabezado de ./stats.ts).
+  const bankHighlights = bank
+    ? [
+        `${bank.flashcards} tarjetas de vocabulario en ${stats.flashcardTopics} temas`,
+        `${bank.stories} relatos con audio`,
+        `${stats.media} videos y canciones, de los cuales ${stats.mediaSongs} son canciones y ${stats.mediaGrammarVideos} explican gramática`,
+        `${bank.idioms} modismos y refranes`,
+        `${bank.glossaryTerms} términos de glosario gramatical`,
+        `${bank.wordSearchPuzzles} sopas de letras y ${bank.crosswordPuzzles} crucigramas`,
+      ]
+    : [];
+
+  const bankParagraph = bank
+    ? `Alrededor del curso está el banco de contenido: ${bank.flashcards} tarjetas de vocabulario repartidas en ${stats.flashcardTopics} temas, ${bank.stories} relatos narrados en voz alta, ${stats.media} videos y canciones con traducción línea por línea, ${bank.idioms} modismos y refranes, ${bank.glossaryTerms} términos de glosario gramatical, ${bank.wordSearchPuzzles} sopas de letras y ${bank.crosswordPuzzles} crucigramas.`
+    : null;
+
+  // Las dos cantidades gratuitas que dependen de la base — relatos
+  // abiertos y el glosario, que es gratuito entero — se leen de `bank` y
+  // desaparecen con él, igual que las filas del banco de arriba.
+  const freeItems = [
+    `${free.lessons} lecciones completas, la primera de cada nivel`,
+    `la explicación de gramática de las ${free.lessonsWithFreeGrammar} lecciones`,
+    `${free.flashcards} tarjetas de vocabulario`,
+    `${free.idioms} modismos`,
+    ...(bank ? [`${bank.freeStories} relatos con su audio`] : []),
+    `${free.wordGamePuzzles} juegos de palabras, de los dos tipos y de todos los niveles menos C1`,
+    `${free.media} videos y canciones`,
+    ...(bank ? [`el glosario completo, ${bank.glossaryTerms} términos`] : []),
+    "la página del alfabeto entera",
+  ];
+
+  return [
+    {
+      id: "intro-1-reach",
+      icon: "globalReach",
+      title: "Un idioma que se habla en medio mundo",
+      body: [
+        "El ruso lo hablan cerca de 258 millones de personas, entre quienes lo tienen como lengua materna y quienes lo aprendieron después. Es el idioma materno más hablado de toda Europa y uno de los seis idiomas oficiales de la ONU.",
+        "Es idioma oficial en cuatro países, y sigue siendo la lengua en la que la gente se entiende en un espacio enorme, del Cáucaso a Asia Central. Aprender ruso es poder hablar con personas de decenas de nacionalidades distintas sin cambiar de idioma.",
+      ],
+      highlights: [
+        "Cerca de 258 millones de hablantes en total",
+        "El idioma materno más hablado de Europa",
+        "Uno de los seis idiomas oficiales de la ONU",
+        "Oficial en cuatro países y de uso corriente del Cáucaso a Asia Central",
+      ],
+    },
+    {
+      id: "intro-2-doors",
+      icon: "openDoors",
+      title: "Qué puertas te abre",
+      body: [
+        "Los turistas rusoparlantes llegan por miles a México y al Caribe, y casi nadie los atiende en su idioma. En hotelería, turismo, restaurantes y guías de viaje, poder decir «hablo ruso» te pone en una lista muy corta de candidatos.",
+        "Fuera del turismo, el ruso abre trabajo remoto y traducción, que no dependen de dónde vivas. Y abre viajes: en buena parte del espacio postsoviético te entienden en ruso, y viajar ahí sale mucho más barato que a Europa occidental.",
+        "Está además la razón más simple de todas: es una habilidad rara. En un currículum latinoamericano el inglés se da por hecho y el francés no sorprende a nadie; el ruso casi no aparece nunca.",
+      ],
+      highlights: [
+        "Turismo y hotelería: atender en ruso a quien no encuentra quién lo atienda",
+        "Trabajo remoto y traducción, sin depender de dónde vivas",
+        "Viajes a donde el ruso se entiende y el costo es bajo",
+        "Una habilidad rara: casi no aparece en un currículum de la región",
+      ],
+    },
+    {
+      id: "intro-3-easier",
+      icon: "easierThanItLooks",
+      title: "Es más fácil de lo que parece",
+      body: [
+        "Empecemos por lo que el ruso no tiene. No hay artículos: ni «el», ni «la», ni «un». Y en presente el verbo «ser» simplemente no se dice — «Я студент» es, palabra por palabra, «yo estudiante», y así la oración ya está completa.",
+        "Los tiempos verbales son tres: pasado, presente y futuro. Nada del laberinto de subjuntivos y tiempos compuestos del español. Y se lee casi como se escribe: aprendida la letra, la palabra suena sola.",
+        "Lo difícil también se dice de frente. Los casos cambian la terminación de las palabras según su papel en la oración, y el aspecto verbal obliga a elegir entre dos verbos donde el español usa uno solo. No son imposibles: son largos. Por eso el curso los reparte en pasos, un caso a la vez, comparando siempre contra el español.",
+      ],
+      highlights: [
+        "Sin artículos",
+        "Sin verbo «ser» en presente",
+        "Tres tiempos verbales, y ninguno compuesto",
+        "Se lee casi como se escribe",
+        "Los casos y el aspecto, repartidos en pasos del curso",
+      ],
+    },
+    {
+      id: "intro-4-alphabet",
+      icon: "alphabetEvening",
+      title: "El alfabeto se aprende en una tarde",
+      body: [
+        `Son ${stats.alphabetLetters} letras, y no hay que memorizarlas de golpe. Varias se leen igual que en español y se reconocen al instante; otras son griegas que ya conoces de las matemáticas; y solo quedan unas pocas realmente nuevas.`,
+        `El trabajo de verdad son las letras que engañan al ojo acostumbrado al alfabeto latino — ${traps} —: unas se leen como otra cosa, otras parecen adornos y no lo son. La «Р» no es «pe», es «erre». La «С» no es «ce», es «ese». Verlas una vez con calma ahorra semanas de leer mal.`,
+        "La página del alfabeto está abierta para cualquiera, sin cuenta y sin suscripción: cada letra con su sonido, el sonido español más cercano y una palabra de ejemplo que puedes escuchar.",
+      ],
+      highlights: [
+        `${stats.alphabetLetters} letras, y varias ya las reconoces`,
+        `Las letras que engañan al ojo: ${traps}`,
+        "Cada letra con su sonido y una palabra de ejemplo",
+        "Página abierta gratis, sin cuenta",
+      ],
+      links: [{ href: ALPHABET_PAGE_PATH, label: "Abrir el alfabeto cirílico" }],
+    },
+    {
+      id: "intro-5-literature",
+      icon: "literaryClassics",
+      title: "Leer a los clásicos en su idioma",
+      body: [
+        "Una de las recompensas de aprender ruso — una recompensa del camino, no el requisito para empezar — es poder leer a Dostoievski, Tolstói, Chéjov, Pushkin y Gógol tal como escribieron. Ninguna traducción, por buena que sea, conserva del todo el ritmo y la ironía que el autor eligió palabra por palabra.",
+        "Alrededor de esa literatura hay una cultura entera que se disfruta mejor desde adentro: el ballet, el ajedrez, la música clásica de Chaikovski y Rachmáninov, los logros espaciales del siglo XX. Es un patrimonio cultural, y el idioma es su puerta de entrada más directa.",
+      ],
+      highlights: [
+        "Dostoievski, Tolstói, Chéjov, Pushkin, Gógol — en original",
+        "Ballet, ajedrez y música clásica",
+        "Los logros espaciales del siglo XX",
+        "Una recompensa del camino, no la condición para empezar",
+      ],
+    },
+    {
+      id: "intro-6-typing",
+      icon: "keyboardSetup",
+      title: "Cómo escribir en ruso",
+      body: [
+        "Empieza por el celular, que es donde más vas a escribir. En Android: Ajustes › Sistema › Idiomas › Teclado en pantalla › agregar «Русский». En iPhone: Ajustes › General › Teclado › Teclados › Agregar teclado › Ruso. Después se cambia de idioma con el globo terráqueo que aparece junto a la barra espaciadora.",
+        "En la computadora es igual de corto. En Windows: Configuración › Hora e idioma › Idioma y región › Agregar un idioma › «Русский», y se alterna con Windows + Barra espaciadora. En Mac: Ajustes del Sistema › Teclado › Fuentes de entrada › «+» › Russian, y se alterna con Control + Barra espaciadora.",
+        "No hace falta comprar nada ni cambiar tu teclado físico. Al principio ayuda tener el teclado en pantalla a la vista; en pocos días los dedos encuentran solos las letras que más usas.",
+      ],
+      highlights: [
+        "Primero el celular: es donde de verdad vas a escribir",
+        "Android: Ajustes › Sistema › Idiomas › Teclado en pantalla › Русский",
+        "iPhone: Ajustes › General › Teclado › Teclados › Ruso",
+        "Windows: Windows + Barra espaciadora · Mac: Control + Barra espaciadora",
+      ],
+    },
+    {
+      id: "intro-7-consistency",
+      icon: "dailyHabit",
+      title: "Quince minutos al día le ganan a tres horas el domingo",
+      body: [
+        "Un idioma se fija con repetición frecuente, no con esfuerzos aislados. Quince minutos diarios rinden más que una sesión larga una vez por semana — y además se sostienen: casi nadie abandona por quince minutos, mucha gente abandona por tres horas.",
+        `La plataforma trae la herramienta para eso. Hay una racha de días con calendario, que marca cada día en que estudiaste algo. Si un día no puedes, la racha no se rompe de inmediato: hay hasta ${stats.streakFreezes} congelaciones que la protegen. Y hay ${stats.badges} insignias que se ganan por constancia, por exámenes aprobados y por vocabulario dominado.`,
+      ],
+      highlights: [
+        "Mejor quince minutos diarios que una maratón semanal",
+        "Racha de días, con calendario de lo que ya estudiaste",
+        `Hasta ${stats.streakFreezes} congelaciones para el día que no puedas`,
+        `${stats.badges} insignias por constancia, exámenes y vocabulario`,
+      ],
+    },
+    {
+      id: "intro-8-variety",
+      icon: "methodMix",
+      title: "Cuando te canses, cambia de formato",
+      body: [
+        "Cansarse es normal y no significa que el idioma no sea para ti: significa que llevas demasiado rato haciendo lo mismo. La salida no es apretar los dientes, es cambiar de formato y seguir en ruso.",
+        "El recorrido natural va así: una lección, luego tarjetas y ejercicio de recuerdo activo, luego un relato narrado en voz alta, luego un video o una canción con traducción línea por línea, y al final un juego de palabras. Cada formato toca el idioma por un lado distinto, y ninguno se parece al anterior.",
+      ],
+      highlights: [
+        "Lección › tarjetas y recuerdo activo",
+        "Relato narrado en voz alta, con el texto en ruso y en español",
+        "Video o canción con traducción línea por línea",
+        "Sopa de letras o crucigrama",
+      ],
+    },
+    {
+      id: "intro-9-inside",
+      icon: "platformContents",
+      title: "Qué hay adentro",
+      body: [
+        `El curso son ${stats.levels} niveles, ${stats.lessons} lecciones y ${stats.exercises} ejercicios de corrección instantánea, con ${stats.exams} exámenes que cierran cada bloque de lecciones.`,
+        ...(bankParagraph ? [bankParagraph] : []),
+        "El límite, dicho sin adornos: el curso llega de A1 a B2. El vocabulario, los relatos, los juegos y los materiales de video llegan hasta C1. Una parte de todo esto está abierta gratis y el resto entra con la suscripción — la lista exacta de lo gratuito está en la diapositiva siguiente.",
+      ],
+      highlights: [
+        `${stats.lessons} lecciones en ${stats.levels} niveles, con ${stats.exercises} ejercicios`,
+        `${stats.exams} exámenes, uno al final de cada bloque de lecciones`,
+        ...bankHighlights,
+        "Curso de A1 a B2; vocabulario, relatos, juegos y videos hasta C1",
+      ],
+    },
+    {
+      id: "intro-10-first-week",
+      icon: "firstWeekPlan",
+      title: "Tu primer día y tu primera semana",
+      body: [
+        "Hoy: la página del alfabeto y la primera lección. Nada más. Con eso ya habrás leído tus primeras palabras en ruso y habrás visto cómo funciona una lección completa, de principio a fin.",
+        "Esta semana: dos lecciones, un repaso de tarjetas, un relato con audio y un juego. Cuatro formatos distintos en siete días — suficiente para saber si esto es para ti, y lo bastante liviano para no abandonarlo.",
+        "Sin pagar nada, y sin dar una tarjeta, tienes una parte real de cada sección — la lista completa está aquí abajo, punto por punto. Todo lo demás entra con la suscripción.",
+        "En Telegram hay un canal y un grupo de la comunidad, por si quieres enterarte de lo nuevo y preguntar dudas. Y ahora, elige tu nivel y empieza.",
+      ],
+      highlights: [
+        "Hoy: el alfabeto y la primera lección",
+        "Esta semana: dos lecciones, tarjetas, un relato y un juego",
+        ...freeItems.map((item) => `Gratis: ${item}`),
+        "Canal y grupo de Telegram para novedades y dudas",
+      ],
+      links: [
+        { href: ALPHABET_PAGE_PATH, label: "Empezar por el alfabeto" },
+        { href: TELEGRAM_INVITE_URL, label: "Canal y grupo de Telegram", external: true },
+      ],
+    },
+  ];
+}
