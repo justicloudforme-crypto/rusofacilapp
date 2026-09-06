@@ -1,7 +1,9 @@
 import "server-only";
 import path from "node:path";
+import { SITE_URL } from "@/lib/site";
 import { Document, Page, Text, View, Svg, Path, Circle, Rect, StyleSheet, Font } from "@react-pdf/renderer";
-import { introSlides } from "./content";
+import { buildIntroSlides, introPdfPageCount } from "./content";
+import type { IntroStats } from "./stats";
 import { INTRO_ILLUSTRATION_VIEWBOX, introSlideIllustrations, type IntroIconKey, type IntroIllustrationColorRole } from "./slideIcons";
 
 // Same brand palette as src/lib/lessons/pdf.tsx (and src/app/globals.css'
@@ -139,6 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   footerText: { fontSize: 8, color: "#8a8ba0" },
+  linkLine: { marginTop: 8, fontSize: 9.5, color: BRAND },
 });
 
 /** Renders the same shape recipe as IntroIllustration.tsx (web) using
@@ -227,7 +230,12 @@ function BrandMarkPdf() {
 function FooterPdf({ page, total }: { page: number; total: number }) {
   return (
     <View style={styles.footerBar} fixed>
-      <Text style={styles.footerText}>RusoFácilapp — aprende ruso desde México</Text>
+      {/* Was "aprende ruso desde México". The audience is Spanish speakers
+          everywhere — the same reasoning already written down for the
+          /courses metadata in src/app/[lang]/courses/page.tsx — and a
+          Colombian or Argentine reader of this PDF was being told the
+          product is somebody else's. */}
+      <Text style={styles.footerText}>RusoFácilapp — aprender ruso en español</Text>
       <Text style={styles.footerText}>
         {page} / {total}
       </Text>
@@ -235,8 +243,9 @@ function FooterPdf({ page, total }: { page: number; total: number }) {
   );
 }
 
-export function IntroDocument() {
-  const totalPages = introSlides.length + 1;
+export function IntroDocument({ stats }: { stats: IntroStats }) {
+  const introSlides = buildIntroSlides(stats);
+  const totalPages = introPdfPageCount(introSlides);
 
   return (
     <Document title="RusoFácilapp — Introducción">
@@ -277,6 +286,16 @@ export function IntroDocument() {
                 {paragraph}
               </Text>
             ))}
+
+            {slide.links && slide.links.length > 0 && (
+              <View>
+                {slide.links.map((link) => (
+                  <Text key={link.href} style={styles.linkLine}>
+                    {link.label}: {link.external ? link.href : `${SITE_URL}/es${link.href}`}
+                  </Text>
+                ))}
+              </View>
+            )}
 
             {slide.highlights && slide.highlights.length > 0 && (
               <View style={styles.highlightsBox}>
