@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { IDIOM_LIST_CACHE_PREFIX, validateIdiomInput } from "@/lib/idioms";
+import { invalidateSearchIndex } from "@/lib/search/index-server";
 import { cacheInvalidate } from "@/lib/cache";
 
 export async function POST(request: NextRequest) {
@@ -25,6 +26,9 @@ export async function POST(request: NextRequest) {
       ? await db.idiom.update({ where: { id }, data: result.value })
       : await db.idiom.create({ data: result.value });
     cacheInvalidate(IDIOM_LIST_CACHE_PREFIX);
+    // Индекс поиска печатает название этого объекта — правка названия
+    // без сброса означала бы, что поиск до пяти минут находит старое.
+    await invalidateSearchIndex();
     return NextResponse.json({ ok: true, id: idiom.id });
   } catch {
     return NextResponse.json({ error: "save_failed" }, { status: 409 });

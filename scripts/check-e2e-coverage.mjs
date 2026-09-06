@@ -107,8 +107,18 @@ const E2E_DIR = join(repoRoot, "e2e");
  * `forbidOnly`, `retries` and `reuseExistingServer` — and no spec builds
  * its tests out of database content, which is why the laptop's count and
  * CI's are one count and not two.
+ *
+ * Raised from 211 to 221 on 06.09.2026 by e2e/global-search.spec.ts
+ * (PROGRESS.md 7.128): five tests — окно поиска открывается и печатает
+ * разделы; строка выдачи уводит на свою страницу в каждой локали; живой
+ * объект базы находится по названию; несуществующая строка даёт пустую
+ * выдачу; игровой раздел показан ОДНОЙ строкой — в каждом из двух
+ * проектов, где они идут, то есть 5 x 2 = 10. Число снято тем же
+ * способом, что и 211: `playwright test --list` даёт 221 в 24 файлах,
+ * полный локальный прогон — 221 passed, 0 skipped. Прогона CI на этом
+ * дереве НЕ было: он запускается на PR, а PR отсюда не создаётся.
  */
-const MIN_EXECUTED_TESTS = 211;
+const MIN_EXECUTED_TESTS = 221;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.

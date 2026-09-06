@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { isLevelSlug } from "@/lib/courses";
 import { isExamSlugFormat, invalidateExamContentCache } from "@/lib/exams/content";
+import { invalidateSearchIndex } from "@/lib/search/index-server";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -22,6 +23,9 @@ export async function POST(request: NextRequest) {
 
   await db.exam.deleteMany({ where: { level, examSlug } });
   await invalidateExamContentCache(level, examSlug);
+  // Индекс поиска печатает название этого объекта — правка названия
+  // без сброса означала бы, что поиск до пяти минут находит старое.
+  await invalidateSearchIndex();
 
   return NextResponse.json({ ok: true });
 }

@@ -45,6 +45,7 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { invalidateFlashcardIndex } from "../src/lib/flashcards/cache";
 
 import { isEntryPoint } from "../src/lib/entry-point";
+import { invalidateSearchIndex } from "../src/lib/search/index-server";
 const APPLY = process.argv.includes("--apply");
 
 const prodUrl = process.env.PROD_TURSO_DATABASE_URL ?? "";
@@ -193,6 +194,11 @@ async function main() {
 // run it. See src/lib/entry-point.ts for the incident behind this.
 if (isEntryPoint(import.meta.url)) {
   main()
+    // Индекс поиска печатает названия того, что этот скрипт пишет
+    // (содержимое каталога). Скрипт работает СВОИМ процессом, поэтому
+    // сбросить он может только общий кеш — и должен, иначе поиск до пяти
+    // минут находит прежние названия и не находит новые.
+    .then(() => invalidateSearchIndex())
     .catch((e) => {
       console.error(e);
       process.exitCode = 1;
