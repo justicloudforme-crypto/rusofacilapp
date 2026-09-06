@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { isLocale, locales, localeNames, type Locale } from "@/i18n/config";
 import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
+import { localizeSkillAreaTitle } from "@/lib/exams/localize";
 import { isStaff } from "@/lib/roles";
 import { db } from "@/lib/db";
 import {
@@ -1359,7 +1360,7 @@ export default async function ProfilePage({
           <span className="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
             {dict.profile.weakTopicHeading}
           </span>
-          <p className="mt-1 font-medium">{weakTopic.title}</p>
+          <p className="mt-1 font-medium">{localizeSkillAreaTitle(weakTopic.title, lang, dict.courses.skillAreaNames)}</p>
           <p className="mt-1 text-sm text-foreground/60">
             {dict.profile.weakTopicScoreLabel}: {weakTopic.percentage}%
           </p>
