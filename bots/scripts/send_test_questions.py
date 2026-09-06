@@ -1,10 +1,10 @@
 """
-RusoFásil — envío de preguntas de prueba al grupo
+RusoFácilapp — envío de preguntas de prueba al grupo
 ====================================================
 
 Script de un solo uso para verificar en la práctica (randomización de
 opciones, botones, formato) los tres bots que publican en el canal de
-RusoFásil: history_bot, vocabulary_bot y testing_bot.
+RusoFácilapp: history_bot, vocabulary_bot y testing_bot.
 
 history_bot y vocabulary_bot envían UNA pregunta usando exactamente la
 misma función que usa su publicación diaria real (send_history_quiz,

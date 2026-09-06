@@ -48,7 +48,7 @@ export async function GET(
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="rusofasil-${level}-${lesson}.pdf"`,
+      "Content-Disposition": `attachment; filename="rusofacilapp-${level}-${lesson}.pdf"`,
     },
   });
 }

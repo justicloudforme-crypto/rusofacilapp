@@ -1,10 +1,10 @@
 """
-RusoFásil — Testing bot (quiz de nivel)
+RusoFácilapp — Testing bot (quiz de nivel)
 ========================================
 
 Bot que aplica un test de nivel de ruso adaptativo en aiogram 3.x.
 
-Publica diariamente (ANNOUNCE_TIME) un anuncio en el canal de RusoFásil con
+Publica diariamente (ANNOUNCE_TIME) un anuncio en el canal de RusoFácilapp con
 un botón inline que abre un deep link (t.me/<bot>?start=test) al chat
 privado del bot — el test en sí es un diálogo con estado (FSM) y no puede
 vivir como poll nativo del canal, así que solo corre en privado.
@@ -72,7 +72,7 @@ from common.scheduler import start_daily_jobs  # noqa: E402
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 BOT_TOKEN = os.environ["TESTING_BOT_TOKEN"]
 
-# id del canal de RusoFásil donde se publica el anuncio diario invitando a
+# id del canal de RusoFácilapp donde se publica el anuncio diario invitando a
 # hacer el test (el test en sí sigue corriendo solo en privado — es un
 # diálogo con estado, no se puede hacer como poll nativo del canal).
 GROUP_CHAT_ID = -1003668895078
@@ -299,7 +299,7 @@ async def begin_test(message: Message, state: FSMContext, *, greet: bool) -> Non
     )
     if greet:
         await message.answer(
-            f"¡Bienvenido/a al test de nivel de RusoFásil! 📝\n"
+            f"¡Bienvenido/a al test de nivel de RusoFácilapp! 📝\n"
             f"Son {NUM_QUESTIONS} preguntas que se adaptan a tus respuestas — "
             f"empezamos por un nivel intermedio y ajustamos según aciertes o no. "
             f"Responde con honestidad — es solo para ubicar tu nivel actual."
@@ -365,7 +365,7 @@ async def handle_answer(callback: CallbackQuery, state: FSMContext):
             f"🎓 Test terminado.\n\n"
             f"Aciertos: {correct_count}/{NUM_QUESTIONS} ({percentage}%)\n"
             f"Tu nivel estimado es: <b>{level}</b>\n{LEVEL_DESCRIPTIONS[level]}\n\n"
-            f"Puedes revisar los cursos y lecciones de nivel {level} en RusoFásil "
+            f"Puedes revisar los cursos y lecciones de nivel {level} en RusoFácilapp "
             f"para seguir practicando exactamente donde te toca.",
             reply_markup=restart_keyboard,
         )

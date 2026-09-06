@@ -219,7 +219,7 @@ function BrandMarkPdf() {
           <Path d={SPARKLE_PATH} fill="#ffffff" />
         </Svg>
       </View>
-      <Text style={styles.brandMarkWordmark}>RusoFásil</Text>
+      <Text style={styles.brandMarkWordmark}>RusoFácilapp</Text>
     </View>
   );
 }
@@ -227,7 +227,7 @@ function BrandMarkPdf() {
 function FooterPdf({ page, total }: { page: number; total: number }) {
   return (
     <View style={styles.footerBar} fixed>
-      <Text style={styles.footerText}>RusoFásil — aprende ruso desde México</Text>
+      <Text style={styles.footerText}>RusoFácilapp — aprende ruso desde México</Text>
       <Text style={styles.footerText}>
         {page} / {total}
       </Text>
@@ -239,7 +239,7 @@ export function IntroDocument() {
   const totalPages = introSlides.length + 1;
 
   return (
-    <Document title="RusoFásil — Introducción">
+    <Document title="RusoFácilapp — Introducción">
       <Page size="A4" style={styles.page}>
         <View style={{ ...styles.topBar, backgroundColor: BRAND_ACCENT_LIGHT }} />
         <View style={styles.coverBrandMark}>
@@ -247,7 +247,7 @@ export function IntroDocument() {
         </View>
         <View style={styles.coverBody}>
           <Text style={styles.coverEyebrow}>Presentación de introducción</Text>
-          <Text style={styles.coverTitle}>Bienvenido a RusoFásil</Text>
+          <Text style={styles.coverTitle}>Bienvenido a RusoFácilapp</Text>
           <Text style={{ ...styles.coverSubtitle, color: BRAND_ACCENT }}>
             El idioma ruso y todo lo que la plataforma tiene para ti
           </Text>
