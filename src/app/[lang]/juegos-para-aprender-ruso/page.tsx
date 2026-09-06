@@ -8,9 +8,32 @@ import FreePuzzleIndex from "@/components/word-games/FreePuzzleIndex";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
 import { getFreeSequences } from "@/lib/word-games/data";
+import { WORD_GAME_FREE_RUNGS_PER_LEVEL } from "@/lib/word-games/free-tier";
 import { TOPIC_LANDINGS, landingPath } from "@/lib/word-games/topic-landings";
 
 const PAGE_PATH = "/juegos-para-aprender-ruso";
+
+/** Cuántos puzles gratuitos hay en total, sumando las escaleras. */
+function countFree(freeByPair: Map<string, Set<number>>): number {
+  let total = 0;
+  for (const sequences of freeByPair.values()) total += sequences.size;
+  return total;
+}
+
+/** Cuántos de ellos están fuera de la primera decena — las colas de los
+ * tableros que hubo que partir en dos (EXTRA_FREE_WORD_GAME_RUNGS). Se
+ * cuentan en vez de darse por sentadas: un banco sin esas colas (el
+ * dev.db local, la fixture de CI) daría 0, y la frase que las menciona no
+ * debe aparecer entonces. */
+function countFreeTails(freeByPair: Map<string, Set<number>>): number {
+  let tails = 0;
+  for (const sequences of freeByPair.values()) {
+    for (const sequence of sequences) {
+      if (sequence > WORD_GAME_FREE_RUNGS_PER_LEVEL) tails += 1;
+    }
+  }
+  return tails;
+}
 
 // The entry page for "juegos para aprender ruso" and the queries around it.
 //
@@ -30,10 +53,17 @@ export async function generateMetadata({
   const { lang } = await params;
   if (lang !== "es") return {};
   const url = `${SITE_URL}/es${PAGE_PATH}`;
+  // Counted, not written down. The literal used to say 80 — two types by
+  // four levels by ten — and it went stale the day three free boards were
+  // split in two and their tails opened as well (free-tier.ts,
+  // EXTRA_FREE_WORD_GAME_RUNGS): production has served 83 since 05.09.2026
+  // while three surfaces still promised 80.
+  const freeTotal = countFree(await getFreeSequences());
   return {
     title: "Juegos para aprender ruso, gratis y sin registro | RusoFácilapp",
     description:
-      "Sopas de letras y crucigramas en ruso para jugar en el navegador, gratis y sin cuenta: 80 puzles por niveles A1-B2 y seis tableros temáticos.",
+      `Sopas de letras y crucigramas en ruso para jugar en el navegador, gratis y sin cuenta: ` +
+      `${freeTotal} puzles gratuitos de A1 a B2, y con Premium hasta el C1.`,
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },
@@ -69,6 +99,8 @@ export default async function JuegosParaAprenderRusoPage({
   if (lang !== "es") notFound();
 
   const [dict, freeByPair] = await Promise.all([getDictionary("es"), getFreeSequences()]);
+  const freeTotal = countFree(freeByPair);
+  const freeTails = countFreeTails(freeByPair);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -92,10 +124,11 @@ export default async function JuegosParaAprenderRusoPage({
 
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Juegos para aprender ruso</h1>
       <p className="mt-3 text-lg leading-8 text-foreground/70">
-        Dos tipos de juego, ochenta puzles gratuitos y ningún registro: se abren en el navegador y
-        se juegan en el momento. Todos usan vocabulario ruso real, agrupado por nivel y, en la
-        mayoría de los casos, por tema. Los gratuitos van de A1 a B2; con Premium el catálogo
-        llega hasta el C1.
+        Dos tipos de juego, {freeTotal} puzles gratuitos y ningún registro: se abren en el
+        navegador y se juegan en el momento. Todos usan vocabulario ruso real, agrupado por nivel
+        y, en la mayoría de los casos, por tema. El curso del sitio va de A1 a B2; el vocabulario,
+        los cuentos y los juegos llegan hasta el C1 — los puzles gratuitos son los de A1 a B2, y
+        el C1 entra con Premium.
       </p>
 
       <p className="mt-4 leading-7 text-foreground/70">
@@ -176,14 +209,20 @@ export default async function JuegosParaAprenderRusoPage({
       <FreePuzzleIndex
         lang="es"
         dict={{
-          freeSampleTitle: "Los 80 puzles gratuitos, uno por uno",
+          freeSampleTitle: `Los ${freeTotal} puzles gratuitos, uno por uno`,
           // «de cada nivel» era falso: los niveles del sitio son cinco y
           // el C1 no tiene ni un solo puzle gratuito
-          // (isFreeWordGamePuzzle: level !== "C1" && sequence <= 10). Diez
-          // por tipo y por nivel en cuatro niveles son exactamente los 80
-          // que anuncia el título de al lado.
+          // (isFreeWordGamePuzzle: level !== "C1" && sequence <= 10).
+          // Tampoco son exactamente diez por escalera: el 05.09.2026 tres
+          // tableros gratuitos se partieron en dos y sus colas se abrieron
+          // también (EXTRA_FREE_WORD_GAME_RUNGS), así que el total se
+          // cuenta en vez de escribirse.
           freeSampleIntro:
-            "Los diez primeros de cada uno de los cuatro niveles de A1 a B2, en sopa de letras y en crucigrama, se juegan sin cuenta y sin suscripción. Aquí están todos, por tipo y por nivel.",
+            `Los diez primeros de cada uno de los cuatro niveles de A1 a B2, en sopa de letras y en crucigrama` +
+            (freeTails > 0
+              ? `, más ${freeTails === 1 ? "la cola de un tablero que hubo" : `las colas de ${freeTails} tableros que hubo`} que partir en dos`
+              : "") +
+            `: ${freeTotal} en total, sin cuenta y sin suscripción. En C1 no hay ninguno gratuito. Aquí están todos, por tipo y por nivel.`,
           typeWordSearch: dict.wordGames.typeWordSearch,
           typeCrossword: dict.wordGames.typeCrossword,
           puzzleLabel: dict.wordGames.puzzleLabel,

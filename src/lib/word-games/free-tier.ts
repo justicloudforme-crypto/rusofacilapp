@@ -74,7 +74,9 @@ const EXTRA_FREE_KEYS = new Set(
 
 /**
  * Free-trial word games: the first N rungs of every (type, level) ladder
- * except C1 — 80 puzzles, 2 types x 4 levels x N.
+ * except C1 — 2 types x 4 levels x N = 80 — plus the coordinates listed in
+ * EXTRA_FREE_WORD_GAME_RUNGS above, which is why the live total is 83 and
+ * why no copy on the site writes the number down any more.
  *
  * Checked against the puzzle itself rather than a page-level gate in every
  * route that serves puzzle data or grades an answer: a puzzleId is a plain
