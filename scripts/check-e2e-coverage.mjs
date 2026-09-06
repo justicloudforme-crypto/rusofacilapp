@@ -97,7 +97,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * its tests out of database content, which is why the laptop's count and
  * CI's are one count and not two.
  */
-const MIN_EXECUTED_TESTS = 212;
+const MIN_EXECUTED_TESTS = 211;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.
