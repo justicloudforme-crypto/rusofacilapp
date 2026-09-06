@@ -329,7 +329,6 @@ async function runAgainstLive(base: string, records: readonly SearchRecord[], pl
   console.log("\nПерепись разделов (живой сайт против локального индекса):");
   const localCounts = new Map<SearchSection, number>();
   for (const r of records) localCounts.set(r.section, (localCounts.get(r.section) ?? 0) + 1);
-  let liveTotal = 0;
   let censusComplete = true;
   for (const section of SEARCH_SECTIONS) {
     const probe = CENSUS_PROBES[section];
@@ -353,7 +352,6 @@ async function runAgainstLive(base: string, records: readonly SearchRecord[], pl
       continue;
     }
     const live = sectionTotal(await askLive(base, probe.query, probe.lang), section);
-    liveTotal += live;
     const delta = live - local;
     console.log(`  ${section.padEnd(16)} локально ${String(local).padStart(5)}  живой ${String(live).padStart(5)}  ${delta === 0 ? "совпало" : (delta > 0 ? `+${delta}` : String(delta))}`);
   }
