@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { settleGeometry } from "./helpers/geometry";
 
 /**
  * The activity calendar on /profile, MEASURED — not looked at.
@@ -48,17 +49,53 @@ for (const lang of ["es", "ru"] as const) {
     // and an empty state has no calendar to measure. One GET marks the day.
     await page.context().request.get(`/${lang}/vocabulary`);
 
-    const response = await page.goto(`/${lang}/profile`);
+    const response = await page.goto(`/${lang}/profile`, { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBe(200);
-    await page.waitForLoadState("networkidle");
 
+    // Модалка приветствия — УТВЕРЖДЕНИЕ, а не подсматривание. На первом в
+    // жизни свежего контекста заходе на /profile она гарантирована:
+    // `localStorage` пуст, а гейт стоит на паре (userId, календарный день)
+    // — см. e2e/helpers/welcome-overlay.ts. Прежняя форма (`if (await
+    // count())` плюс `waitFor(...).catch()`) отвечала «модалки нет»
+    // одинаково и когда её нет, и когда её эффект ещё не отработал после
+    // гидратации, то есть на медленной машине превращала «сняли» в
+    // «не заметили».
     const greeting = page.locator('[role="dialog"][aria-modal="true"]');
-    if (await greeting.count()) {
-      await greeting.click({ position: { x: 4, y: 4 } }).catch(() => {});
-      await greeting.waitFor({ state: "detached", timeout: 3000 }).catch(() => {});
-    }
+    // Ждём конца гидратации по признаку, который приложение сообщает само
+    // (`data-hydrating` на <html>, HydrationMarker.tsx): модалка
+    // монтируется в эффекте, то есть ПОСЛЕ неё. Без этого утверждение
+    // ниже упирается в свой пятисекундный потолок на загруженной машине.
+    await page.waitForFunction(() => !document.documentElement.hasAttribute("data-hydrating"));
+    await expect(greeting).toBeVisible();
+    await greeting.click({ position: { x: 4, y: 4 } });
+    await expect(greeting).toBeHidden();
 
+    // ЗДЕСЬ БЫЛ ФЛАК, и вот его число. Прежде на этом месте стоял
+    // `waitForLoadState("networkidle")`, после чего клетки мерились сразу.
+    // 05.09.2026 (заход 7.124) он воспроизведён под нагрузкой — 1 падение
+    // на 40 исполнений, WebKit, — и встроенное 04.09 сообщение назвало
+    // причину числом:
+    //
+    //   2026-09-01 is 0.0px wide — widest 0.0px (2026-09-01),
+    //   0/30 cells have a non-zero box
+    //
+    // `0/30` — это ВСЯ сетка без layout-бокса, то есть замер пришёл раньше
+    // раскладки, а не дефект вёрстки в одной клетке (для того и печатается
+    // `withBox`). Иначе и быть не могло: `networkidle` — условие ПРО СЕТЬ,
+    // и оно ничего не говорит о том, построил ли движок дерево отрисовки.
+    //
+    // Поэтому ожидание переехало на СОСТОЯНИЕ: каждая клетка получила
+    // ненулевой бокс. Бюджет ограничен сверху, и его исчерпание не прячет
+    // дефект: цикл выходит, замер делается, и настоящая сломанная клетка
+    // краснеет тем же утверждением с тем же числом.
     const days = page.locator("[data-date]");
+    const laidOut = await waitForCalendarLayout(page);
+    console.log(
+      `  /${lang}: сетка получила раскладку за ${laidOut.waitedMs} мс ` +
+        `(${laidOut.boxed}/${laidOut.total} клеток с ненулевым боксом)`,
+    );
+    await settleGeometry(page);
+
     const count = await days.count();
 
     // 1. Real days of a real month. The grid is built from the learner's own
@@ -183,4 +220,32 @@ for (const lang of ["es", "ru"] as const) {
       console.log(`  /${lang}: no day without study on this grid — the cold flame is not measured here`);
     }
   });
+}
+
+/**
+ * Дождаться, пока у КАЖДОЙ клетки календаря появится layout-бокс.
+ *
+ * Возвращает то, чем всё кончилось, а не бросает: исчерпанный бюджет
+ * должен давать ЗАМЕР с числом, а не таймаут без него. Само утверждение о
+ * размере клетки стоит ниже и краснеет с тем же сообщением.
+ */
+async function waitForCalendarLayout(
+  page: import("@playwright/test").Page,
+  budgetMs = 10_000,
+): Promise<{ total: number; boxed: number; waitedMs: number }> {
+  const started = Date.now();
+  for (;;) {
+    const state = await page.evaluate(() => {
+      const els = [...document.querySelectorAll("[data-date]")];
+      const boxed = els.filter((el) => {
+        const b = el.getBoundingClientRect();
+        return b.width > 0 && b.height > 0;
+      }).length;
+      return { total: els.length, boxed };
+    });
+    const waitedMs = Date.now() - started;
+    if (state.total > 0 && state.boxed === state.total) return { ...state, waitedMs };
+    if (waitedMs >= budgetMs) return { ...state, waitedMs };
+    await page.waitForTimeout(50);
+  }
 }

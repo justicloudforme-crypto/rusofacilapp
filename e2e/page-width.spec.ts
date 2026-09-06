@@ -1,5 +1,6 @@
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { SETTLE_MAX_MS, settleGeometry } from "./helpers/geometry";
 import {
   FILL_THRESHOLD,
   MIN_CONTAINER_WIDTH,
@@ -108,57 +109,31 @@ const PATHS = [
 ];
 
 /**
- * Дождаться, пока ГЕОМЕТРИЯ перестанет двигаться — вместо ожидания, пока
- * замолчит сеть.
+ * Бюджет теста, а не «таймаут на всякий случай».
  *
- * Почему не `networkidle` (замер 04.09.2026, PROGRESS 7.103 и 7.104). Все
- * падения этого файла в CI — не провал утверждения о ширине, а
- * `Test timeout of 30000ms exceeded` на самом `waitForLoadState`: в одном
- * красном окне упало 10 из 20 тестов файла разом, то есть подпись пика
- * нагрузки. `networkidle` ждёт 500 мс тишины ПОСЛЕ последнего запроса, а
- * тишина здесь всё время откладывается — префетч ссылок App Router'ом,
- * Sentry, ленивые шрифты; на занятой машине она может не наступить за
- * 30 с вообще. И ждёт он не то: ширина документа — это не сеть.
+ * Каждое исполнение этого теста — один логин и СЕМЬ загрузок страниц, и
+ * всё это лежит под ОДНИМ таймаутом Playwright, который по умолчанию
+ * равен 30 000 мс. Работа здесь ограничена сверху и известна заранее, а
+ * потолок — нет: он никогда не выводился из этой работы.
  *
- * Что вместо — тот же способ, что уже стоит в `check:layout`
- * (scripts/check-layout-geometry.mjs, `settle`): сначала шрифты
- * (`document.fonts.ready` двигают ширину текста, то есть ровно ту
- * величину, которую этот файл и меряет), затем подпись геометрии —
- * ширина и высота документа плюс число элементов — снимается каждые
- * 100 мс, и страница считается устоявшейся после трёх одинаковых подряд.
- * Изменение подписи сбрасывает счётчик, поэтому появившийся с задержкой
- * блок не проскакивает мимо замера, а заново запускает ожидание.
+ * Числа, на которых это посчитано (05.09.2026, заход 7.124, эта машина):
  *
- * Ожидание не ослаблено, а сужено: верхняя граница 6 с меньше 30 с
- * таймаута теста, поэтому исчерпание бюджета здесь даёт замер (и, если
- * вёрстка сломана, красное утверждение о ширине), а не таймаут без
- * единого числа.
+ *   — на СВОБОДНОЙ машине самое долгое исполнение файла в полном прогоне
+ *     заняло 14 878 мс из 30 000. Запас — ровно 2,0×;
+ *   — на загруженной втрое (8 воркеров + 4 счётчика на 8 ядрах) КРАСНЫМИ
+ *     стали все 20 тестов файла из 20, и ни один из них — не провал
+ *     утверждения о ширине: во всех `Test timeout of 30000ms exceeded` на
+ *     `page.goto` или на ожидании.
+ *
+ * То есть потолок срабатывал раньше, чем проверка успевала что-либо
+ * сказать. Здесь он выводится из работы: логин плюс бюджет на страницу,
+ * где бюджет страницы — это её загрузка, два ожидания устоявшейся
+ * геометрии (модалка приветствия снимается между ними) и два замера.
+ * Ни одно ожидание при этом НЕ ослаблено и ни одно утверждение не
+ * тронуто — растёт только фитиль.
  */
-const SETTLE_POLL_MS = 100;
-const SETTLE_STABLE_READINGS = 3;
-const SETTLE_MIN_MS = 300;
-const SETTLE_MAX_MS = 6000;
-
-async function settleGeometry(page: import("@playwright/test").Page) {
-  await page.evaluate(() => document.fonts?.ready).catch(() => {});
-  const started = Date.now();
-  let last: string | null = null;
-  let stable = 0;
-  for (;;) {
-    const sig = await page
-      .evaluate(() => {
-        const de = document.documentElement;
-        return `${de.scrollWidth}x${de.scrollHeight}:${document.querySelectorAll("body *").length}`;
-      })
-      .catch(() => null);
-    stable = sig !== null && sig === last ? stable + 1 : 0;
-    last = sig;
-    const elapsed = Date.now() - started;
-    if (stable >= SETTLE_STABLE_READINGS && elapsed >= SETTLE_MIN_MS) return;
-    if (elapsed >= SETTLE_MAX_MS) return;
-    await page.waitForTimeout(SETTLE_POLL_MS);
-  }
-}
+const LOGIN_BUDGET_MS = 30_000;
+const PER_PAGE_BUDGET_MS = 2 * SETTLE_MAX_MS + 5_000;
 
 async function measure(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
@@ -201,6 +176,8 @@ for (const width of WIDTHS) {
       test(`/${lang}: at ${width}px no page is wider than the viewport, and no container is left half empty`, async ({
         page,
       }) => {
+    test.setTimeout(LOGIN_BUDGET_MS + PATHS.length * PER_PAGE_BUDGET_MS);
+
     // Premium, not standard: /word-games and C1 content are both gated
     // (see helpers/auth.ts), and a redirect to /pricing would measure the
     // pricing page twice instead of the puzzle board once — a check that
@@ -219,7 +196,14 @@ for (const width of WIDTHS) {
     const underfilled: string[] = [];
     for (const path of PATHS) {
       const url = `/${lang}${path}`;
-      const response = await page.goto(url);
+      // `domcontentloaded`, а не `load`, и это не послабление, а перенос
+      // ожидания на то, что меряется. `load` ждёт КАЖДЫЙ подресурс, включая
+      // те, что геометрии не касаются вовсе (Sentry, регистрация и
+      // предзагрузка service worker'а на прод-сборке) — и именно на нём
+      // тест падал по таймауту. `settleGeometry` ниже ждёт строго то, от
+      // чего ширина зависит: шрифты, догрузку КАЖДОЙ картинки и три
+      // одинаковых подряд снимка геометрии.
+      const response = await page.goto(url, { waitUntil: "domcontentloaded" });
       // Several routes exist only on /es and answer 404 on /ru by design;
       // that is not a width problem. A 500 is, and quietly measuring an
       // error page instead of the real one is how a check comes to pass
@@ -234,6 +218,24 @@ for (const width of WIDTHS) {
       // page. Dismissed by its backdrop's own corner: the panel inside
       // swallows a centre click.
       const greeting = page.locator('[role="dialog"][aria-modal="true"]');
+      // На /profile модалка гарантирована, и потому её появление здесь
+      // ЖДУТ, а не подсматривают. Контекст свежий, `localStorage` пуст, а
+      // гейт стоит на паре (userId, календарный день) — см.
+      // e2e/helpers/welcome-overlay.ts. `count()` сразу после навигации
+      // отвечает «нет» и когда модалки нет, и когда она ещё не
+      // смонтирована (эффект приходит после гидратации), а во втором
+      // случае замер уезжал под диалог.
+      //
+      // Ждём при этом ТО, ЧТО ПРИЛОЖЕНИЕ САМО СООБЩАЕТ: `data-hydrating`
+      // снимается с <html> ровно тогда, когда React догидратировал всё
+      // дерево (HydrationMarker.tsx). Голое `toBeVisible()` с его
+      // пятисекундным потолком этого не заменяет — при тройной нагрузке
+      // гидратация в Chromium в него не укладывалась, и утверждение
+      // краснело шесть раз из двадцати четырёх (замер 05.09.2026).
+      if (path === "/profile") {
+        await page.waitForFunction(() => !document.documentElement.hasAttribute("data-hydrating"));
+        await expect(greeting).toBeVisible();
+      }
       if (await greeting.count()) {
         await greeting.click({ position: { x: 4, y: 4 } }).catch(() => {});
         await greeting.waitFor({ state: "detached", timeout: 3000 }).catch(() => {});
