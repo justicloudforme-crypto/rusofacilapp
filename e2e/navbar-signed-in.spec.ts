@@ -1,5 +1,6 @@
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { SETTLE_MAX_MS, settleGeometry } from "./helpers/geometry";
 
 /**
  * The navbar a SIGNED-IN learner sees, at the widths where it broke.
@@ -34,9 +35,15 @@ const STREAK_BADGE = "header span.text-folk-red";
  * opening a lesson. Nothing is submitted — that is the point of the rule
  * changed on 31.08.2026, and it is why this helper is two lines. */
 async function studySomething(page: import("@playwright/test").Page, lang: string) {
-  const response = await page.goto(`/${lang}/courses/a1/1`);
+  // `domcontentloaded` + отсутствие `networkidle`: отметка дня ставится на
+  // СЕРВЕРЕ, при рендере страницы урока (markStudyDayVisit), то есть она
+  // уже случилась к моменту, когда пришёл ответ 200. Ждать после этого
+  // тишины в сети — ждать не того; на загруженной машине эта тишина не
+  // наступала за 30 с и красила тест таймаутом (замер 05.09.2026, заход
+  // 7.124: 4 исполнения из 4 при тройной нагрузке, все —
+  // `Test timeout of 30000ms exceeded`, ни одного провала утверждения).
+  const response = await page.goto(`/${lang}/courses/a1/1`, { waitUntil: "domcontentloaded" });
   expect(response?.status(), "the lesson page must answer 200 for the mark to happen").toBe(200);
-  await page.waitForLoadState("networkidle");
 }
 
 async function overflow(page: import("@playwright/test").Page) {
@@ -48,6 +55,12 @@ async function overflow(page: import("@playwright/test").Page) {
 
 for (const lang of ["es", "ru"] as const) {
   test(`/${lang}/profile: шапка вошедшего не шире вьюпорта на 640–660`, async ({ page }) => {
+    // Бюджет выведен из работы теста: логин плюс шесть загрузок страниц
+    // (по две на каждую из трёх ширин) с ожиданием устоявшейся геометрии
+    // после каждой. Тот же счёт, что в e2e/page-width.spec.ts, и по той же
+    // причине — см. комментарий к бюджету там.
+    test.setTimeout(30_000 + 6 * (SETTLE_MAX_MS + 5_000));
+
     await loginWithSubscription(page);
 
     const tooWide: string[] = [];
@@ -55,14 +68,16 @@ for (const lang of ["es", "ru"] as const) {
       await page.setViewportSize({ width, height: 780 });
       await studySomething(page, lang);
 
-      const response = await page.goto(`/${lang}/profile`);
+      const response = await page.goto(`/${lang}/profile`, { waitUntil: "domcontentloaded" });
       expect(response?.status(), `/${lang}/profile did not answer 200`).toBe(200);
-      await page.waitForLoadState("networkidle");
 
       // The badge must be hidden here — that is the fix, and its absence is
       // the reason the row now fits.
       await expect(page.locator(STREAK_BADGE)).toBeHidden();
 
+      // Ширину меряем по УСТОЯВШЕЙСЯ геометрии, а не по «сеть замолчала»:
+      // ширину двигают шрифты и картинки, а не сеть вообще.
+      await settleGeometry(page);
       const m = await overflow(page);
       if (m.scrollWidth > m.vw + 1) {
         tooWide.push(`${width}px: document ${m.scrollWidth}px in a ${m.vw}px viewport`);
@@ -77,8 +92,9 @@ for (const lang of ["es", "ru"] as const) {
     // Part 1 rule, checked here end to end through a real browser).
     await page.setViewportSize({ width: WIDE, height: 780 });
     await studySomething(page, lang);
-    await page.goto(`/${lang}/profile`);
-    await page.waitForLoadState("networkidle");
+    await page.goto(`/${lang}/profile`, { waitUntil: "domcontentloaded" });
+    // Ожидание здесь и так по состоянию: `toBeVisible` сам ждёт появления
+    // элемента, а `networkidle` перед ним ждал не его.
     await expect(page.locator(STREAK_BADGE)).toBeVisible();
     await expect(page.locator(STREAK_BADGE)).toContainText("1");
   });

@@ -59,6 +59,46 @@ export async function loginWithoutSubscription(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Обрыв соединения на подготовке — это НЕ результат теста.
+ *
+ * Замер 05.09.2026 (заход 7.124): один полный прогон из пяти покраснел
+ * так —
+ *
+ *   Error: apiRequestContext.post: read ECONNRESET
+ *     → POST http://localhost:3100/api/auth/register
+ *
+ * и вместе с упавшим тестом с ним ушли **12 тестов, которые не
+ * запустились вовсе** (файл идёт в одном воркере). Ту же подпись 7.104
+ * уже видела и назвала «не тем, что чинилось этим заходом».
+ *
+ * Что здесь происходит и почему это не дефект продукта. `next start` на
+ * перегруженной машине сбрасывает соединение до ответа; на боевом
+ * развёртывании перед приложением стоит Vercel, и такого клиента там нет.
+ * Утверждение при этом не проваливается — запрос вообще не получил
+ * ответа, проверять нечего.
+ *
+ * Почему это не «замазать ретраем». Повторяется ПОДГОТОВКА, а не замер:
+ * ни одно утверждение теста сюда не попадает, и цикл ниже уже повторял
+ * регистрацию — но только по ОТВЕТУ сервера (303 на `?error=`), а
+ * брошенная сетевая ошибка мимо него пролетала и убивала тест. Обрывы
+ * при этом не проглатываются: их считают, и если попытки кончились,
+ * текст ошибки называет каждую поимённо.
+ */
+type Attempt<T> = { ok: true; value: T } | { ok: false; error: string };
+
+async function tryRequest<T>(run: () => Promise<T>): Promise<Attempt<T>> {
+  try {
+    return { ok: true, value: await run() };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // Только сетевой класс. Всё остальное — настоящая ошибка, и она
+    // обязана лететь дальше, а не тонуть в повторе.
+    if (!/ECONNRESET|ECONNREFUSED|ECONNABORTED|EPIPE|socket hang up/i.test(message)) throw error;
+    return { ok: false, error: message };
+  }
+}
+
 export async function loginWithSubscription(
   page: Page,
   options: { tier?: "standard" | "premium" } = {},
@@ -72,16 +112,36 @@ export async function loginWithSubscription(
   // testing that, and not a stronger entitlement than the product asks for.
   const plan = options.tier === "premium" ? "lifetime" : undefined;
 
+  const networkFailures: string[] = [];
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
-    const registerResponse = await page.context().request.post("/api/auth/register", {
-      form: { email, password, lang: "es", redirectTo: "/es" },
-    });
+    const registered = await tryRequest(() =>
+      page.context().request.post("/api/auth/register", {
+        form: { email, password, lang: "es", redirectTo: "/es" },
+      }),
+    );
+    if (!registered.ok) {
+      networkFailures.push(`попытка ${attempt}: register — ${registered.error}`);
+      if (attempt === maxAttempts) break;
+      await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+      continue;
+    }
+    const registerResponse = registered.value;
     const landedOnError = new URL(registerResponse.url()).searchParams.has("error");
     if (registerResponse.ok() && !landedOnError) {
-      const grantResponse = await page.context().request.post("/api/test/grant-subscription", {
-        data: plan ? { plan } : {},
-      });
+      const granted = await tryRequest(() =>
+        page.context().request.post("/api/test/grant-subscription", {
+          data: plan ? { plan } : {},
+        }),
+      );
+      if (!granted.ok) {
+        networkFailures.push(`попытка ${attempt}: grant — ${granted.error}`);
+        if (attempt === maxAttempts) break;
+        await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+        continue;
+      }
+      const grantResponse = granted.value;
       if (!grantResponse.ok()) {
         throw new Error(`e2e subscription grant failed: ${grantResponse.status()} ${await grantResponse.text()}`);
       }
@@ -105,14 +165,27 @@ export async function loginWithSubscription(
       // not-yet-propagated grant this way. /media has no free-trial sample
       // and keeps the original blanket subscription gate, so it's still a
       // reliable "did the grant actually take" probe.
-      const check = await page.context().request.get("/es/media");
-      if (!new URL(check.url()).pathname.includes("/pricing")) return;
+      const checked = await tryRequest(() => page.context().request.get("/es/media"));
+      if (!checked.ok) {
+        networkFailures.push(`попытка ${attempt}: probe — ${checked.error}`);
+        if (attempt === maxAttempts) break;
+        await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+        continue;
+      }
+      if (!new URL(checked.value.url()).pathname.includes("/pricing")) return;
     }
     if (attempt === maxAttempts) {
       throw new Error(
-        `e2e register failed after ${maxAttempts} attempts: ${registerResponse.status()} ${registerResponse.url()}`
+        `e2e register failed after ${maxAttempts} attempts: ${registerResponse.status()} ${registerResponse.url()}` +
+          (networkFailures.length ? `; обрывов соединения: ${networkFailures.length} — ${networkFailures.join("; ")}` : "")
       );
     }
     await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
   }
+
+  // Досюда доходят только те попытки, что кончились обрывом соединения:
+  // ветка с ответом сервера бросает внутри цикла.
+  throw new Error(
+    `e2e register: все ${maxAttempts} попыток кончились обрывом соединения — ${networkFailures.join("; ")}`
+  );
 }

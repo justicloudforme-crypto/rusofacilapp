@@ -1344,7 +1344,28 @@ test.describe("тап и поздняя клавиатура", () => {
     // навигация обнулила бы и счётчики вместе с контекстом, и доказывать
     // было бы нечем).
     await page.locator('a[href="/es/word-games"]').first().click();
-    await page.waitForURL("**/es/word-games");
+    // ЖДЁМ СОСТОЯНИЯ — доски больше нет в документе, — а НЕ события `load`
+    // у страницы, которую этот тест не меряет. Здесь и был флак, и вот его
+    // число: `page.waitForURL("**/es/word-games")` ждёт по умолчанию до
+    // `load`, а хаб — самая тяжёлая страница раздела (281 якорь, PROGRESS
+    // 7.111, часть 2). Под нагрузкой 05.09.2026 (заход 7.124) этот тест
+    // покраснел 9 раз из 80 исполнений, и КАЖДЫЙ раз одинаково:
+    //
+    //   Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    //   waiting for navigation to "**/es/word-games" until "load"
+    //
+    // Ни одного провала утверждения. А проверяемое — снятие подписки —
+    // происходит в момент РАЗМОНТИРОВАНИЯ доски, то есть до `load` хаба и
+    // независимо от него.
+    await page.locator('[role="grid"]').waitFor({ state: "detached" });
+    await expect(page).toHaveURL(/\/es\/word-games$/);
+    // Контроль на вакуумный зелёный: счётчики живут на `window`, и полная
+    // навигация обнулила бы их вместе с контекстом — тогда «подписок 0»
+    // означало бы «страница другая», а не «отписались». Значит переход
+    // обязан быть клиентским, и это проверяется тем, что накопленное число
+    // подписок пережило его.
+    const added = await page.evaluate(() => (window as unknown as { __vvListeners: { added: number } }).__vvListeners.added);
+    expect(added, "переход оказался полной навигацией — счётчики обнулились, доказывать нечем").toBeGreaterThan(0);
     const after = await readStats();
     expect(after.listeners, "подписка на visualViewport пережила размонтирование доски").toBe(0);
   });
