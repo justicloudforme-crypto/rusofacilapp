@@ -1288,6 +1288,7 @@
       "subscriptions": "Suscripciones",
       "users": "Usuarios y roles",
       "videoLessons": "Lecciones de video",
+      "searchDemand": "Demanda de búsqueda",
       "media": "Catálogo de medios",
       "glossary": "Glosario",
       "flashcards": "Vocabulario",
@@ -1489,6 +1490,25 @@
       "russianRequired": "La palabra en ruso es obligatoria.",
       "translationEsRequired": "La traducción al español es obligatoria.",
       "genericError": "No se pudo guardar. Inténtalo de nuevo."
+    },
+    "searchDemand": {
+      "title": "Demanda de búsqueda",
+      "subtitle": "Qué escribe la gente en el buscador del sitio, cuántos resultados vio y si abrió alguno.",
+      "total": "Búsquedas registradas",
+      "distinct": "Cadenas distintas",
+      "zeroResult": "Sin ningún resultado",
+      "followed": "Terminaron en un clic",
+      "byLang": "Por idioma de la página",
+      "topQueries": "Cadenas más buscadas",
+      "topZero": "Cadenas que no encontraron nada",
+      "columnQuery": "Cadena",
+      "columnCount": "Veces",
+      "columnZero": "Con 0 resultados",
+      "columnFollowed": "Con clic",
+      "empty": "Todavía no hay ni un registro.",
+      "unavailable": "La tabla SearchQuery aún no existe en esta base de datos: se crea al desplegar. Los números de arriba son de cero registros, no de cero búsquedas.",
+      "privacyNote": "Ningún registro guarda quién buscó: no hay usuario, ni dirección IP, ni sesión, ni hora exacta — solo la hora redondeada. Dos búsquedas de la misma persona son indistinguibles de dos personas.",
+      "readCap": "Resumen calculado sobre las últimas {max} filas como máximo."
     },
     "idioms": {
       "title": "Expresiones y refranes",

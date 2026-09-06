@@ -25,6 +25,7 @@ export default function AdminNav({
     { href: `/${lang}/admin/flashcards`, label: dict.nav.flashcards },
     { href: `/${lang}/admin/idioms`, label: dict.nav.idioms },
     { href: `/${lang}/admin/subscriptions`, label: dict.nav.subscriptions },
+    { href: `/${lang}/admin/search-demand`, label: dict.nav.searchDemand },
     ...(isOwner ? [{ href: `/${lang}/admin/users`, label: dict.nav.users }] : []),
   ];
 

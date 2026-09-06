@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { logSearchDemand } from "@/lib/search/log-client";
 
 interface Destination {
   href: string;
@@ -66,7 +67,17 @@ export default function GlobalSearch({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // Одна запись спроса на один ЗАХОД, а не на нажатие клавиши: строка на
+  // каждое нажатие превратила бы сессию в упорядоченную цепочку «р», «ра»,
+  // «рас» — а такая цепочка опознаёт посетителя надёжнее любого поля,
+  // которого в таблице намеренно нет (см. src/lib/search/demand.ts).
+  // Поэтому пишем в момент закрытия окна: то, что человек в итоге набрал,
+  // сколько увидел и ушёл ли по результату.
+  const followedRef = useRef(false);
+
   function close() {
+    logSearchDemand({ query, resultCount: results.length, lang, followed: followedRef.current });
+    followedRef.current = false;
     setOpen(false);
     setQuery("");
   }
@@ -100,7 +111,10 @@ export default function GlobalSearch({
             <li key={d.href}>
               <Link
                 href={d.href}
-                onClick={close}
+                onClick={() => {
+                  followedRef.current = true;
+                  close();
+                }}
                 className="tap flex min-h-11 items-center rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
               >
                 {d.label}
