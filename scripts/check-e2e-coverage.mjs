@@ -88,10 +88,19 @@ const E2E_DIR = join(repoRoot, "e2e");
  * has nothing to do with the code.
  *
  * That number now exists, measured the only way a public repo allows
- * without a token: set this constant to 211, push, and read whether the CI
- * run goes green. Green means the run executed at least 211; the suite
- * declares exactly 211 (`playwright test --list`: 211 tests in 23 files),
- * so CI executed all of them. Nothing in playwright.config.ts varies the
+ * without a token — a run's conclusion is public, its log is not. Two runs,
+ * on this same tree:
+ *
+ *   floor 211 -> actions/runs/34015699937 GREEN  (CI executed >= 211)
+ *   floor 212 -> actions/runs/34016234700 RED, and red on this step ALONE:
+ *                "Run Playwright tests" was green, "Check the e2e suite
+ *                actually ran in full" was the only failure
+ *                                          (CI executed < 212)
+ *
+ * >= 211 and < 212 is 211 exactly. The second run is the positive control
+ * this project requires of any answer: without it, green at 211 would only
+ * bound the number from below, and a floor that is merely a lower bound is
+ * how this one drifted 94 executions out of date in the first place. Nothing in playwright.config.ts varies the
  * SET of tests by environment — `process.env.CI` there changes only
  * `forbidOnly`, `retries` and `reuseExistingServer` — and no spec builds
  * its tests out of database content, which is why the laptop's count and
