@@ -145,6 +145,26 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
       `CREATE INDEX IF NOT EXISTS "StudyDay_userId_idx" ON "StudyDay"("userId")`,
     ],
   },
+  {
+    // Журнал спроса на поиск (PROGRESS.md 7.128, долг 50). Ни одной
+    // колонки, связывающей строку с человеком: ни userId, ни адреса, ни
+    // сессии, ни точного времени — см. комментарий к модели в
+    // schema.prisma. Поэтому и внешнего ключа здесь нет ни одного, в
+    // отличие от StudyDay выше.
+    table: "SearchQuery",
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "SearchQuery" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "query" TEXT NOT NULL,
+         "resultCount" INTEGER NOT NULL,
+         "lang" TEXT NOT NULL,
+         "followed" INTEGER NOT NULL DEFAULT 0,
+         "hourBucket" DATETIME NOT NULL
+       )`,
+      `CREATE INDEX IF NOT EXISTS "SearchQuery_hourBucket_idx" ON "SearchQuery"("hourBucket")`,
+      `CREATE INDEX IF NOT EXISTS "SearchQuery_query_idx" ON "SearchQuery"("query")`,
+    ],
+  },
 ];
 
 export { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS };

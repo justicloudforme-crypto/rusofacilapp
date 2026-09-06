@@ -29,6 +29,7 @@ import { validateStoryInput } from "../src/lib/stories";
 import { stories } from "./stories-data";
 
 import { isEntryPoint } from "../src/lib/entry-point";
+import { invalidateSearchIndex } from "../src/lib/search/index-server";
 const FORCE = process.argv.includes("--force");
 
 async function main() {
@@ -72,6 +73,11 @@ async function main() {
 // run it. See src/lib/entry-point.ts for the incident behind this.
 if (isEntryPoint(import.meta.url)) {
   main()
+    // Индекс поиска печатает названия того, что этот скрипт пишет
+    // (рассказы). Скрипт работает СВОИМ процессом, поэтому
+    // сбросить он может только общий кеш — и должен, иначе поиск до пяти
+    // минут находит прежние названия и не находит новые.
+    .then(() => invalidateSearchIndex())
     .catch((error) => {
       console.error(error);
       process.exit(1);

@@ -41,6 +41,7 @@ import { validateFlashcardInput, serializeFlashcardData } from "../src/lib/flash
 import { invalidateFlashcardIndex } from "../src/lib/flashcards/cache";
 
 import { isEntryPoint } from "../src/lib/entry-point";
+import { invalidateSearchIndex } from "../src/lib/search/index-server";
 
 export interface BatchEntry {
   id?: unknown;
@@ -205,5 +206,11 @@ async function main() {
 // Only when this file is the process entry point — importing it must not
 // run it. See src/lib/entry-point.ts for the incident behind this.
 if (isEntryPoint(import.meta.url)) {
-  main().finally(() => db.$disconnect());
+  main()
+    // Индекс поиска печатает названия того, что этот скрипт пишет
+    // (карточки словаря). Скрипт работает СВОИМ процессом, поэтому
+    // сбросить он может только общий кеш — и должен, иначе поиск до пяти
+    // минут находит прежние названия и не находит новые.
+    .then(() => invalidateSearchIndex())
+    .finally(() => db.$disconnect());
 }

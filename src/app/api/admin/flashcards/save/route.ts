@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { serializeFlashcardData, validateFlashcardInput } from "@/lib/flashcards";
 import { invalidateFlashcardIndex } from "@/lib/flashcards/cache";
+import { invalidateSearchIndex } from "@/lib/search/index-server";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -27,6 +28,9 @@ export async function POST(request: NextRequest) {
       ? await db.flashcardCard.update({ where: { id }, data })
       : await db.flashcardCard.create({ data });
     await invalidateFlashcardIndex();
+    // Индекс поиска печатает название этого объекта — правка названия
+    // без сброса означала бы, что поиск до пяти минут находит старое.
+    await invalidateSearchIndex();
     return NextResponse.json({ ok: true, id: card.id });
   } catch {
     return NextResponse.json({ error: "save_failed" }, { status: 409 });
