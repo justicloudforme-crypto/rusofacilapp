@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { logSearchDemand } from "@/lib/search/log-client";
+import { MAX_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from "@/lib/search/query";
+import type { SearchResponse, SearchSection } from "@/lib/search/types";
 
 interface Destination {
   href: string;
@@ -14,12 +16,25 @@ interface Destination {
 }
 
 /**
- * Cmd/Ctrl+K on desktop, a 🔍 tap on any breakpoint — scoped deliberately
- * to static navigation destinations, not full-text content search. A real
- * content search (stories/glossary/lessons) would need a new aggregating
- * API route querying the DB; that's a data/business-logic decision on its
- * own, out of scope for a navigation-layer change. This can grow into that
- * later without changing where it's triggered from.
+ * Поиск по сайту. Cmd/Ctrl+K или 🔍 в шапке.
+ *
+ * Чем он был до 06.09.2026 и почему это чинилось. Замер 05.09.2026
+ * (PROGRESS.md 7.127) прошёл по каждому разделу сайта, взял оттуда один
+ * живой объект и ввёл его точное название: **0 из 13 разделов**. Искал
+ * компонент по массиву из восьми пунктов меню, собранному прямо здесь, —
+ * одной строкой `label.toLowerCase().includes(q)`. Ни ранжирования, ни
+ * нормализации, ни объектов: `Три медведя`, `Катюша`, `sustantivo`,
+ * `Planes y precios` не находились ни один.
+ *
+ * Что изменилось. Пустая строка по-прежнему печатает разделы сайта — и
+ * по-прежнему без единого запроса: это навигация, и платить за неё сетью
+ * незачем. Набранная строка уходит в `/api/search`, который ищет по
+ * названиям всего каталога, группирует по разделам и говорит «показано N
+ * из M».
+ *
+ * Адреса у поиска нет: `?q=` в строку браузера не пишется. Это не
+ * недоделка — новых URL 0, и запись в `src/lib/site.ts` про намеренное
+ * отсутствие `potentialAction: SearchAction` остаётся верной.
  */
 export default function GlobalSearch({
   lang,
@@ -32,6 +47,8 @@ export default function GlobalSearch({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [response, setResponse] = useState<SearchResponse | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const destinations = useMemo<Destination[]>(() => {
     const base: Destination[] = [
@@ -50,11 +67,47 @@ export default function GlobalSearch({
     return base;
   }, [lang, dict, isLoggedIn]);
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return destinations;
-    return destinations.filter((d) => d.label.toLowerCase().includes(q));
-  }, [destinations, query]);
+  const trimmed = query.trim();
+
+  // Задержка ввода и отмена устаревшего ответа. Без отмены выдача на
+  // «рас» могла бы прийти ПОСЛЕ выдачи на «рассказ» и затереть её —
+  // гонка, которую видно только на медленной сети и которую поэтому
+  // проще не допустить, чем поймать.
+  //
+  // Состояние переключается в обработчике ввода, а не внутри эффекта:
+  // ввод — это событие, и «набрали букву → показываем ожидание» описывает
+  // его честнее, чем эффект, который вычисляет то же самое задним числом.
+  useEffect(() => {
+    if (!open || !trimmed) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(trimmed)}&lang=${lang}`, { signal: controller.signal })
+        .then((r) => (r.ok ? (r.json() as Promise<SearchResponse>) : null))
+        .then((data) => {
+          if (data) setResponse(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          // Отменённый запрос — не ошибка; сетевой отказ оставляет
+          // прежнюю выдачу вместо пустого экрана.
+          if (!controller.signal.aborted) setLoading(false);
+        });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [open, trimmed, lang]);
+
+  function onQueryChange(value: string) {
+    setQuery(value);
+    if (value.trim()) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+      setResponse(null);
+    }
+  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -71,16 +124,30 @@ export default function GlobalSearch({
   // каждое нажатие превратила бы сессию в упорядоченную цепочку «р», «ра»,
   // «рас» — а такая цепочка опознаёт посетителя надёжнее любого поля,
   // которого в таблице намеренно нет (см. src/lib/search/demand.ts).
-  // Поэтому пишем в момент закрытия окна: то, что человек в итоге набрал,
-  // сколько увидел и ушёл ли по результату.
   const followedRef = useRef(false);
 
-  function close() {
-    logSearchDemand({ query, resultCount: results.length, lang, followed: followedRef.current });
+  const close = useCallback(() => {
+    logSearchDemand({
+      query,
+      resultCount: response?.total ?? 0,
+      lang,
+      followed: followedRef.current,
+    });
     followedRef.current = false;
     setOpen(false);
     setQuery("");
+    setResponse(null);
+  }, [query, response, lang]);
+
+  function follow() {
+    followedRef.current = true;
+    close();
   }
+
+  const t = dict.search;
+  const sectionLabel = (section: SearchSection) => t.sections[section];
+  const showDestinations = trimmed.length === 0;
+  const nothingFound = !showDestinations && !loading && response !== null && response.total === 0;
 
   return (
     <>
@@ -102,27 +169,107 @@ export default function GlobalSearch({
           autoFocus
           type="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          maxLength={MAX_QUERY_LENGTH}
+          onChange={(e) => onQueryChange(e.target.value)}
           placeholder={dict.nav.searchPlaceholder}
           aria-label={dict.nav.searchTitle}
         />
-        <ul className="mt-3 flex flex-col gap-0.5">
-          {results.map((d) => (
-            <li key={d.href}>
-              <Link
-                href={d.href}
-                onClick={() => {
-                  followedRef.current = true;
-                  close();
-                }}
-                className="tap flex min-h-11 items-center rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
-              >
-                {d.label}
-              </Link>
-            </li>
-          ))}
-          {results.length === 0 && <li className="px-3 py-4 text-sm text-foreground/50">{dict.nav.searchEmpty}</li>}
-        </ul>
+
+        <div data-testid="global-search-results" className="mt-3">
+          {showDestinations && (
+            <ul className="flex flex-col gap-0.5">
+              {destinations.map((d) => (
+                <li key={d.href}>
+                  <Link
+                    href={d.href}
+                    onClick={follow}
+                    data-testid="search-result"
+                    className="tap flex min-h-11 items-center rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
+                  >
+                    {d.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {!showDestinations && loading && response === null && (
+            <p className="px-3 py-4 text-sm text-foreground/50">{t.loading}</p>
+          )}
+
+          {nothingFound && <p className="px-3 py-4 text-sm text-foreground/50">{dict.nav.searchEmpty}</p>}
+
+          {!showDestinations && response !== null && response.total > 0 && (
+            <div className="flex flex-col gap-4">
+              {response.fuzzy && <p className="px-3 text-xs text-foreground/50">{t.fuzzyNote}</p>}
+
+              {response.sections.map((section) => (
+                <section key={section.section} data-testid={`search-section-${section.section}`}>
+                  <h3 className="px-3 text-xs font-medium uppercase tracking-wide text-foreground/50">
+                    {sectionLabel(section.section)}
+                  </h3>
+
+                  {section.collapsed ? (
+                    // Раздел игр — одной строкой. 3277 пазлов носят
+                    // шаблонные названия, и поштучно они вытеснили бы из
+                    // выдачи все остальные разделы сразу.
+                    <Link
+                      href={section.collapsedHref ?? `/${lang}/word-games`}
+                      onClick={follow}
+                      data-testid="search-result"
+                      data-collapsed="true"
+                      className="tap mt-1 flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
+                    >
+                      <span>{t.gameCollapsed.replace("{count}", String(section.total))}</span>
+                      <span className="flex-shrink-0 text-xs text-foreground/50">{t.gameCollapsedCta}</span>
+                    </Link>
+                  ) : (
+                    <>
+                      <ul className="mt-1 flex flex-col gap-0.5">
+                        {section.hits.map((hit) => (
+                          <li key={`${hit.section}:${hit.id}`}>
+                            <Link
+                              href={hit.href}
+                              onClick={follow}
+                              data-testid="search-result"
+                              className="tap flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm text-foreground/85 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
+                            >
+                              <span className="min-w-0">
+                                <span className="block truncate">{hit.title}</span>
+                                {hit.subtitle && (
+                                  <span className="block truncate text-xs text-foreground/50">{hit.subtitle}</span>
+                                )}
+                              </span>
+                              {hit.locked && (
+                                <span
+                                  data-testid="search-result-locked"
+                                  className="flex-shrink-0 rounded-full border border-black/10 px-2 py-0.5 text-[11px] text-foreground/60 dark:border-white/20"
+                                >
+                                  {hit.lockReason === "premium" ? t.lockedPremium : t.lockedFree}
+                                </span>
+                              )}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                      {section.total > section.hits.length && (
+                        <p className="px-3 pt-1 text-xs text-foreground/50">
+                          {t.shownOf
+                            .replace("{shown}", String(section.hits.length))
+                            .replace("{total}", String(section.total))}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </section>
+              ))}
+
+              <p className="px-3 text-xs text-foreground/50">
+                {t.totalLine.replace("{total}", String(response.total))}
+              </p>
+            </div>
+          )}
+        </div>
       </Modal>
     </>
   );

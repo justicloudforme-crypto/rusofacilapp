@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { invalidateStoryCatalogCache } from "@/lib/stories-catalog";
+import { invalidateSearchIndex } from "@/lib/search/index-server";
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -22,6 +23,9 @@ export async function POST(request: NextRequest) {
   if (id) {
     await db.story.deleteMany({ where: { id } });
     await invalidateStoryCatalogCache();
+    // Индекс поиска печатает название этого объекта — правка названия
+    // без сброса означала бы, что поиск до пяти минут находит старое.
+    await invalidateSearchIndex();
   }
 
   return NextResponse.redirect(storiesUrl, { status: 303 });

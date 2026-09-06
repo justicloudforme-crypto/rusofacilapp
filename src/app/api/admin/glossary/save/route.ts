@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { GLOSSARY_LIST_CACHE_PREFIX, validateGlossaryInput } from "@/lib/glossary";
+import { invalidateSearchIndex } from "@/lib/search/index-server";
 import { cacheInvalidate } from "@/lib/cache";
 
 export async function POST(request: NextRequest) {
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest) {
       ? await db.glossaryTerm.update({ where: { id }, data })
       : await db.glossaryTerm.create({ data });
     cacheInvalidate(GLOSSARY_LIST_CACHE_PREFIX);
+    // Индекс поиска печатает название этого объекта — правка названия
+    // без сброса означала бы, что поиск до пяти минут находит старое.
+    await invalidateSearchIndex();
     return NextResponse.json({ ok: true, id: term.id });
   } catch {
     // Most likely a unique-slug collision with another entry.

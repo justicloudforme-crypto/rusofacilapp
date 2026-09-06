@@ -25,10 +25,10 @@
     "practice": "Практика",
     "glossary": "Глоссарий",
     "search": "Поиск",
-    "searchTitle": "Поиск по разделам",
-    "searchPlaceholder": "Поиск по разделам сайта…",
+    "searchTitle": "Поиск по сайту",
+    "searchPlaceholder": "Уроки, рассказы, слова, игры…",
     "searchEmpty": "Ничего не найдено",
-    "searchShortcutHint": "Поиск по разделам (⌘K)",
+    "searchShortcutHint": "Поиск по сайту (⌘K)",
     "streakLabel": {
       "one": "Серия: {days} день",
       "few": "Серия: {days} дня",
@@ -1580,6 +1580,30 @@
     "relatedTermsLabel": "Связанные термины",
     "viewCategoryLabel": "Показать всю категорию",
     "backToGlossaryLabel": "Назад к глоссарию"
+  },
+  "search": {
+  "sections": {
+    "page": "Страницы сайта",
+    "lesson": "Уроки",
+    "exam": "Экзамены",
+    "story": "Рассказы",
+    "media": "Аудио и видео",
+    "flashcard": "Слова словаря",
+    "vocabularyTopic": "Словарь по темам",
+    "idiom": "Выражения",
+    "glossary": "Глоссарий",
+    "grammar": "Гиды по грамматике",
+    "alphabet": "Алфавит",
+    "game": "Игры со словами"
+  },
+  "shownOf": "Показано {shown} из {total}",
+  "gameCollapsed": "Совпало пазлов: {count}",
+  "gameCollapsedCta": "Открыть игры со словами",
+  "lockedFree": "По подписке",
+  "lockedPremium": "По плану Premium",
+  "fuzzyNote": "Точных совпадений нет: показано по похожему написанию.",
+  "loading": "Ищем…",
+  "totalLine": "Всего результатов: {total}"
   },
   "crossLinks": {
     "topicHeading": "Продолжай заниматься",

@@ -25,10 +25,10 @@
     "practice": "Practicar",
     "glossary": "Glosario",
     "search": "Buscar",
-    "searchTitle": "Buscar por secciones",
-    "searchPlaceholder": "Buscar por secciones del sitio…",
+    "searchTitle": "Buscar en el sitio",
+    "searchPlaceholder": "Lecciones, cuentos, palabras, juegos…",
     "searchEmpty": "No se encontraron resultados",
-    "searchShortcutHint": "Buscar por secciones (⌘K)",
+    "searchShortcutHint": "Buscar en el sitio (⌘K)",
     "streakLabel": {
       "one": "Racha: {days} día",
       "few": "Racha: {days} días",
@@ -1580,6 +1580,30 @@
     "relatedTermsLabel": "Términos relacionados",
     "viewCategoryLabel": "Ver toda la categoría",
     "backToGlossaryLabel": "Volver al glosario"
+  },
+  "search": {
+  "sections": {
+    "page": "Páginas del sitio",
+    "lesson": "Lecciones",
+    "exam": "Exámenes",
+    "story": "Cuentos",
+    "media": "Audio y video",
+    "flashcard": "Palabras del vocabulario",
+    "vocabularyTopic": "Vocabulario por temas",
+    "idiom": "Expresiones",
+    "glossary": "Glosario",
+    "grammar": "Guías de gramática",
+    "alphabet": "Alfabeto",
+    "game": "Juegos de palabras"
+  },
+  "shownOf": "Mostrados {shown} de {total}",
+  "gameCollapsed": "{count} puzles coinciden",
+  "gameCollapsedCta": "Abrir los juegos de palabras",
+  "lockedFree": "Con suscripción",
+  "lockedPremium": "Con Premium",
+  "fuzzyNote": "Sin coincidencias exactas: resultados por escritura parecida.",
+  "loading": "Buscando…",
+  "totalLine": "{total} resultados en total"
   },
   "crossLinks": {
     "topicHeading": "Sigue practicando",
