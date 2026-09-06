@@ -1,4 +1,5 @@
 import { test, expect } from "./helpers/test";
+import { loginWithSubscription, loginWithoutSubscription } from "./helpers/auth";
 
 /**
  * Поиск по сайту: открытие, ввод, переход по результату.
@@ -93,4 +94,69 @@ test("игры показаны одной свёрнутой строкой, с
     page.waitForURL("**/es/word-games"),
     gameSection.locator('[data-testid="search-result"]').click(),
   ]);
+});
+
+/**
+ * Вошедший пользователь. Пробел, названный в 7.128 частью 5 №7: все
+ * десять прогонов этой спеки шли анонимно, а обещание «состав выдачи не
+ * зависит от уровня доступа» до сих пор держал только юнит-тест.
+ *
+ * Проверяются оба обещания сразу, и второе — это позитивный контроль к
+ * первому:
+ *
+ *   1. состав выдачи одинаков у анонима, у вошедшего без подписки и у
+ *      вошедшего с подпиской: то же число совпадений, те же строки, те же
+ *      адреса;
+ *   2. закрытый объект в выдаче ЕСТЬ и помечен — у первых двух, и НЕ
+ *      помечен у третьего.
+ *
+ * Без второго пункта первый прошёл бы и на выдаче, в которой пометки нет
+ * ни у кого вовсе. Подопытный объект — второй урок A1: бесплатен только
+ * первый урок уровня (isFreeTrialLesson), название приходит из словаря,
+ * поэтому случай работает и в пустой базе CI.
+ */
+const LOCKED_LESSON = "Saludos, despedidas y presentaciones";
+
+async function searchSnapshot(page: import("@playwright/test").Page) {
+  await openSearch(page, "es");
+  await page.getByRole("searchbox").fill(LOCKED_LESSON);
+
+  const section = page.locator('[data-testid="search-section-lesson"]');
+  await expect(section).toBeVisible();
+  const results = page.locator(`${RESULTS} [data-testid="search-result"]`);
+  await expect(results.first()).toBeVisible();
+
+  const hrefs = await results.evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href") ?? ""));
+  // Название строки, а не весь её текст: пометка «нужна подписка» — тоже
+  // текст внутри ссылки, и сравнивать её здесь значило бы объявить
+  // разным состав выдачи, который не изменился.
+  const titles = await results.evaluateAll((nodes) =>
+    nodes.map((n) => (n.querySelector("span.block") ?? n).textContent?.trim() ?? ""),
+  );
+  const locked = await page.locator(`${RESULTS} [data-testid="search-result-locked"]`).count();
+  return { hrefs, titles, locked };
+}
+
+test("состав выдачи не зависит от уровня доступа; закрытый объект помечен и адрес тот же", async ({ page }) => {
+  const anonymous = await searchSnapshot(page);
+  // Без этой строки всё сравнение ниже прошло бы на пустой выдаче.
+  expect(anonymous.hrefs.length).toBeGreaterThan(0);
+  expect(anonymous.hrefs).toContain("/es/courses/a1/2");
+  expect(anonymous.locked).toBeGreaterThan(0);
+
+  await loginWithoutSubscription(page);
+  const signedInFree = await searchSnapshot(page);
+  expect(signedInFree.hrefs).toEqual(anonymous.hrefs);
+  expect(signedInFree.titles).toEqual(anonymous.titles);
+  expect(signedInFree.locked).toBe(anonymous.locked);
+
+  await loginWithSubscription(page);
+  const subscriber = await searchSnapshot(page);
+  // Состав тот же — то же число строк и те же адреса.
+  expect(subscriber.hrefs).toEqual(anonymous.hrefs);
+  expect(subscriber.titles).toEqual(anonymous.titles);
+  // …и ровно одна разница: пометки у подписчика нет. Это и есть
+  // доказательство, что пометка вообще умеет пропадать, а «совпало» выше
+  // не совпадение двух пустот.
+  expect(subscriber.locked).toBe(0);
 });
