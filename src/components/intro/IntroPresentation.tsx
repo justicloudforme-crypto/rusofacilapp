@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { track } from "@vercel/analytics/react";
 import type { IntroSlide } from "@/lib/intro/content";
 import IntroIllustration from "./IntroIllustration";
 import BrandMark from "@/components/lesson/BrandMark";
@@ -36,6 +37,38 @@ export default function IntroPresentation({
   const [index, setIndex] = useState(0);
   const slide = slides[index];
   const isLastSlide = index === slides.length - 1;
+
+  /**
+   * Three events, and nothing else: the deck was opened, somebody reached
+   * its last slide, somebody downloaded the PDF. That is the whole
+   * question this presentation could not answer before — is it read, and
+   * is it read to the end.
+   *
+   * NOTHING PERSONAL IS SENT. The only property is `lang`, which is
+   * already the first segment of the URL Vercel Analytics records anyway;
+   * no user id, no email, no progress, no tier. `track` is a no-op until
+   * Web Analytics is enabled for the project (see the comment beside
+   * <Analytics /> in src/app/[lang]/layout.tsx), so shipping this ahead of
+   * that toggle costs nothing and breaks nothing.
+   *
+   * Each fires at most once per mount — the "reached the end" event in
+   * particular must not fire again every time somebody steps back one
+   * slide and forward again.
+   */
+  const opened = useRef(false);
+  const completed = useRef(false);
+
+  useEffect(() => {
+    if (opened.current) return;
+    opened.current = true;
+    track("intro_opened", { lang });
+  }, [lang]);
+
+  useEffect(() => {
+    if (!isLastSlide || completed.current) return;
+    completed.current = true;
+    track("intro_completed", { lang });
+  }, [isLastSlide, lang]);
   const counterLabel = dict.slideCounter
     .replace("{current}", String(index + 1))
     .replace("{total}", String(slides.length));
@@ -106,6 +139,32 @@ export default function IntroPresentation({
                 </ul>
               </div>
             )}
+
+            {slide.links && slide.links.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+                {slide.links.map((link) =>
+                  link.external ? (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tap text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                    >
+                      {link.label} →
+                    </a>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={`/${lang}${link.href}`}
+                      className="tap text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                    >
+                      {link.label} →
+                    </Link>
+                  ),
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -129,6 +188,7 @@ export default function IntroPresentation({
       <div className="flex flex-wrap items-center gap-4">
         <a
           href={`/api/intro/pdf`}
+          onClick={() => track("intro_pdf_downloaded", { lang })}
           className="tap inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
         >
           {dict.downloadPdfButton}

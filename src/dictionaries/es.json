@@ -125,7 +125,7 @@
       },
       {
         "q": "¿Qué obtengo si no me suscribo?",
-        "a": "El acceso gratuito es permanente: 1 lección, 10 tarjetas, 5 modismos, 2 relatos y los primeros crucigramas de nivel A1."
+        "a": "El acceso gratuito es permanente: 4 lecciones completas (la primera de cada nivel), la explicación de gramática de las 120 lecciones, 10 tarjetas de vocabulario, 5 modismos, 83 juegos de palabras de los dos tipos y de todos los niveles menos C1, 7 videos y canciones, los relatos de muestra y el glosario completo."
       }
     ],
     "finalCtaTitle": "¿Listo para empezar?",
@@ -1575,13 +1575,13 @@
     "bannerMessage": "Estás sin conexión. Algunos cambios se guardarán y se enviarán cuando vuelva la conexión."
   },
   "download": {
-    "pageTitle": "Descarga la app de RusoFácilapp",
-    "pageSubtitle": "Lleva tus lecciones de ruso contigo. El mismo curso, el mismo progreso — ahora en una app nativa para iPhone y Android.",
-    "badge": "Próximamente en las tiendas de aplicaciones",
-    "iosCta": "App Store",
-    "androidCta": "Google Play",
-    "comingSoonLabel": "Muy pronto",
-    "notifyNote": "Estamos terminando el proceso de revisión con Apple y Google. Mientras tanto, tu cuenta y tu progreso ya te esperan en el navegador — en cuanto la app esté disponible, todo se sincronizará automáticamente.",
+    "pageTitle": "La app de RusoFácilapp",
+    "pageSubtitle": "Estamos preparando una app para iPhone y Android. Será el mismo curso y el mismo progreso que ya tienes en el navegador.",
+    "badge": "Próximamente",
+    "iosCta": "iPhone",
+    "androidCta": "Android",
+    "comingSoonLabel": "Próximamente",
+    "notifyNote": "Todavía no hay nada que instalar y no tenemos una fecha que prometerte. Mientras tanto no te falta nada: el sitio funciona completo en el navegador del celular, y tu cuenta, tu racha y tu suscripción te esperan ahí.",
     "featuresTitle": "Por qué instalar la app",
     "features": [
       {

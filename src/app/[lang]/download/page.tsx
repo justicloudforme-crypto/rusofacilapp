@@ -13,6 +13,15 @@ import { routeAlternates, truncateForMeta } from "@/lib/site";
 // display before the app is published. These reuse the same
 // rounded-full / border treatment as every other button on the site
 // (see PlanCard in the pricing page) rather than imitating store chrome.
+//
+// 05.09.2026: the labels beside the glyphs are now PLATFORM names
+// ("iPhone", "Android") rather than store names. The page used to say
+// "Muy pronto — App Store" and, below it, that the review with Apple and
+// Google was being completed. There is no review: nothing has been
+// submitted to either store, so both statements were promises the project
+// had not made good on and could not date. What is left is the honest
+// shape of it — an app is being prepared, for these two platforms, with no
+// date and no store named as a fact.
 function AppleGlyph() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden>
@@ -57,11 +66,11 @@ export async function generateMetadata({
   return {
     title: `${dict.download.pageTitle} | RusoFácilapp`,
     description: truncateForMeta(dict.download.pageSubtitle),
-    // noindex, decided 31.08.2026. The title says "Descarga la app" but
-    // both store badges on the page read "Muy pronto" and the note below
-    // them says the review with Apple and Google is still running — there
-    // is nothing to download yet. A search result that promises a download
-    // and delivers "coming soon" earns the click and disappoints, which is
+    // noindex, decided 31.08.2026, and still right for the same reason:
+    // there is nothing to download. The copy no longer promises one — the
+    // title dropped "Descarga" and the note says outright that there is
+    // nothing to install and no date — but a search result for a page whose
+    // whole answer is "not yet" earns the click and disappoints, which is
     // the one thing a landing page must not do. The page stays reachable
     // and useful for a visitor who follows the link from /pricing; it just
     // does not compete in search until there is a real store listing.
