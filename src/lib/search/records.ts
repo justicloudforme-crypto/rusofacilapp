@@ -7,6 +7,7 @@ import { ALPHABET_PAGE_PATH } from "@/lib/alphabet/cyrillic-alphabet";
 import { ABOUT_CONTENT } from "@/lib/about-content";
 import { TERMS_CONTENT, PRIVACY_CONTENT } from "@/lib/legal/content";
 import { puzzleTitle } from "@/lib/word-games/metadata";
+import { localizeExamText } from "@/lib/exams/localize";
 import type { WordGameType } from "@/lib/word-games/types";
 import type { SearchRecord } from "./types";
 
@@ -149,20 +150,29 @@ function lessonRecords(dict: Record<"es" | "ru", Dictionary>): SearchRecord[] {
   return records;
 }
 
-function examRecords(exams: SearchSources["exams"]): SearchRecord[] {
-  return exams.map((exam) => ({
-    section: "exam" as const,
-    id: `${exam.level}-${exam.slug}`,
-    path: `/courses/${exam.level}/exam/${exam.slug}`,
-    // Названия экзаменов написаны по-испански и во второй локали не
-    // существуют вовсе. Пустая русская подпись превратила бы запись в
-    // невидимую на `/ru`; повторить испанскую — честнее, чем выдумать
-    // перевод, которого в содержимом нет.
-    title: exam.title,
-    subtitle: exam.level.toUpperCase(),
-    level: exam.level.toUpperCase(),
-    requires: "free" as const,
-  }));
+function examRecords(exams: SearchSources["exams"], dict: Record<"es" | "ru", Dictionary>): SearchRecord[] {
+  return exams.map((exam) => {
+    // Названия экзаменов написаны по-испански — одно поле на обе локали
+    // (PROGRESS.md 7.129, часть 4). Русская подпись собирается из того же
+    // шаблона словаря, которым названа испанская, и ТОЛЬКО когда
+    // испанская строка этому шаблону отвечает: переименованный через
+    // админку экзамен проходит насквозь и остаётся собой.
+    const titleRu = localizeExamText(exam.title, "ru", dict.ru.courses.examNames);
+    return {
+      section: "exam" as const,
+      id: `${exam.level}-${exam.slug}`,
+      path: `/courses/${exam.level}/exam/${exam.slug}`,
+      title: exam.title,
+      // `titleRu` задаётся только когда он ДРУГОЙ — общее правило индекса
+      // (см. types.ts). Испанское название при этом остаётся строкой
+      // поиска и на `/ru`: человек, видевший его на странице курса до
+      // этой правки, найдёт экзамен и по нему.
+      ...(titleRu === exam.title ? {} : { titleRu, terms: [exam.title] }),
+      subtitle: exam.level.toUpperCase(),
+      level: exam.level.toUpperCase(),
+      requires: "free" as const,
+    };
+  });
 }
 
 function storyRecords(stories: SearchSources["stories"]): SearchRecord[] {
@@ -322,7 +332,7 @@ export function buildSearchRecords(sources: SearchSources): SearchRecord[] {
   return [
     ...pageRecords(sources.dictionaries),
     ...lessonRecords(sources.dictionaries),
-    ...examRecords(sources.exams),
+    ...examRecords(sources.exams, sources.dictionaries),
     ...storyRecords(sources.stories),
     ...mediaRecords(sources.media),
     ...flashcardRecords(sources.flashcards),
