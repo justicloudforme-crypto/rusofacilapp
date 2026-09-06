@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # TEMPORARY, reverted in the next commit on this branch: the only way to
+    # get a CI run for a branch without a pull request. It is here to measure
+    # how many e2e tests CI actually executes (PROGRESS.md 7.126 №4).
+    branches: [main, chore/e2e-coverage-floor-from-ci-2026-09-05]
   pull_request:
 
 # A second push to the same branch/PR makes the previous run's checks moot.
