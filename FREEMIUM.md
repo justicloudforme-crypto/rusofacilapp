@@ -31,8 +31,20 @@ Staff accounts (`isStaff(user.role)`) always resolve to `"premium"`.
 | Idioms (non-literary) | `FREE_TRIAL_LIMITS.idioms` (5) idioms | 100% except C1* | 100% |
 | Idioms, `literary` category | 1 idiom | max 5 (`LITERARY_IDIOM_LIMITS.standard`) | 100% |
 | Stories | 2 curated (`Репка`, `Теремок`) | 100% except `premiumOnly` rows | 100% |
-| Word games | first 5 A1 WORD_SEARCH puzzles | 100% except `premiumOnly` (curved ★ + top ~32% by sequence per ladder) | 100% |
+| Word games | the first `FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel` (10) rungs of every (type, level) ladder except C1, plus the rungs listed by name in `EXTRA_FREE_WORD_GAME_RUNGS` — **83 puzzles** today, both types, A1–B2 | 100% except `premiumOnly` (curved ★ + top ~32% by sequence per ladder) | 100% |
 | Media | curated 7-item free sample (`MediaItem.free`) | 100% (no separate Premium slice) | 100% |
+
+The word-games row said "first 5 A1 WORD_SEARCH puzzles" until 05.09.2026.
+That was the rule as it shipped in August; it was widened on 2026-08-28 to
+ten rungs of every ladder but C1 and to both game types (see the comment on
+`FREE_TRIAL_LIMITS.wordGamePuzzlesPerLevel`), and three more rungs were
+opened by name on 05.09.2026 when the density split moved half of a free
+themed board onto a new, paywalled row (`EXTRA_FREE_WORD_GAME_RUNGS`). This
+doc was never swept, so it understated the free sample by a factor of
+sixteen. The number is not written down anywhere in the product any more —
+`src/lib/intro/stats.ts` counts it by sifting candidate rungs through
+`isFreeWordGamePuzzle` — and it is quoted here only as "today", with the
+rule beside it.
 
 \* Idiom `level` is currently a non-functional placeholder — every row in the
 DB is tagged `"A2"` (a known temporary stand-in, see the schema comment on

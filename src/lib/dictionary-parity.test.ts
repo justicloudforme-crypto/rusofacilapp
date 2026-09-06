@@ -71,8 +71,10 @@ const NO_CYRILLIC_IS_CORRECT = new Map<string, string>([
   ["vocabulary.recall.directionEsToRuLabel", "language codes"],
   ["vocabulary.recall.directionRuToEsLabel", "language codes"],
   ["admin.exams.examSlugPlaceholder", "an example slug"],
-  ["download.iosCta", "store name, not translated by Apple's own guidelines"],
-  ["download.androidCta", "store name"],
+  // Platform names, not store names — the page no longer asserts which
+  // store the app will appear in (05.09.2026, PROGRESS.md 7.127).
+  ["download.iosCta", "platform name, the same word in both locales"],
+  ["download.androidCta", "platform name, the same word in both locales"],
   // Added 07.09.2026 with the country gate: /pricing drops the OXXO
   // question outside Mexico and swaps the auto-renewal answer, and it
   // picks them out by a stable id rather than by position, since the
