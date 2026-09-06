@@ -2,12 +2,8 @@ import "server-only";
 import { getCurrentUser } from "./auth";
 import { isStaff } from "./roles";
 import { getEntitlementTierForUser, userHasActiveSubscription } from "./subscription";
+import { LITERARY_IDIOM_LIMITS } from "./free-trial-limits";
 import type { EntitlementTierValue } from "./subscription";
-// The free word-game rule lives outside this module because robots.ts and
-// the offline generator need it and cannot import a `server-only` file.
-// Re-exported below so every existing `from "@/lib/entitlement"` import
-// keeps working and there is still exactly one definition.
-import { WORD_GAME_FREE_RUNGS_PER_LEVEL } from "./word-games/free-tier";
 
 /**
  * Three-tier content model (replaces the old binary entitled/not-entitled
@@ -122,39 +118,14 @@ export async function hasContentAccess(): Promise<boolean> {
 }
 
 /**
- * Free-trial sample sizes — how much of each section a non-entitled
- * visitor (logged out, or logged in without an active subscription) gets
- * to try before hitting a paywall. Deliberately small, fixed numbers
- * rather than a percentage: the point is a taste of the product, not a
- * meaningfully usable free tier. See FREEMIUM.md for the full policy
- * (which sections/items are free and why).
+ * The two free-trial constants live in src/lib/free-trial-limits.ts and are
+ * re-exported here, unchanged, for the same reason isFreeWordGamePuzzle is
+ * re-exported at the bottom of this file: the numbers are needed by callers
+ * that cannot import a `server-only` module — src/lib/intro/stats.ts, which
+ * is the introduction deck's only source of numbers, and the guard that
+ * reads it under tsx. One definition, every existing import untouched.
  */
-export const FREE_TRIAL_LIMITS = {
-  flashcards: 10,
-  idioms: 5,
-  // Raised from 5 (A1-only) to 10 across every level except C1 — 80
-  // free puzzles total (2 types x 4 levels x 10) — 2026-08-28, per an
-  // explicit owner call: word games barely compete with the
-  // subscription (people pay for lessons, not crosswords), so a bigger
-  // free sample here is close to free marginal cost while giving a
-  // curious, not-yet-decided visitor much more to try. See
-  // isFreeWordGamePuzzle, which applies this per (type, level) with no
-  // per-URL exception list — every puzzle at sequence <= this number,
-  // any level but C1, is free.
-  wordGamePuzzlesPerLevel: WORD_GAME_FREE_RUNGS_PER_LEVEL,
-} as const;
-
-/**
- * The "literary" idiom category (proverbs' more advanced sibling) is
- * Premium-exclusive beyond a small taste — unlike the rest of the idiom
- * bank, where "standard" already means full access (minus C1). free gets
- * one to know the category exists; standard gets a real but capped sample;
- * only premium sees the whole thing. `null` means "no cap" (premium).
- */
-export const LITERARY_IDIOM_LIMITS: Record<Exclude<EntitlementTier, "premium">, number> = {
-  free: 1,
-  standard: 5,
-};
+export { FREE_TRIAL_LIMITS, LITERARY_IDIOM_LIMITS } from "./free-trial-limits";
 
 export function getLiteraryIdiomLimit(tier: EntitlementTier): number | null {
   if (tier === "premium") return null;

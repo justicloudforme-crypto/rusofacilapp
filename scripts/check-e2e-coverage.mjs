@@ -78,7 +78,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * exists to prevent, so if you are here to do that, the thing to fix is
  * the run.
  */
-const MIN_EXECUTED_TESTS = 111;
+const MIN_EXECUTED_TESTS = 117;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.

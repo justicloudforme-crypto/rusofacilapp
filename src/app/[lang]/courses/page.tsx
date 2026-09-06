@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { levelMeta, levelSlugs } from "@/lib/courses";
-import { introSlides } from "@/lib/intro/content";
+import { buildIntroSlides } from "@/lib/intro/content";
+import { getIntroStats } from "@/lib/intro/bank";
 import IntroPresentation from "@/components/intro/IntroPresentation";
 import LevelGlossaryBadge from "@/components/glossary/LevelGlossaryBadge";
 import LevelBadge from "@/components/LevelBadge";
@@ -44,6 +45,10 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
   if (!isLocale(lang)) notFound();
 
   const dict = await getDictionary(lang);
+  // Every quantity the deck states, counted from the same sources the site
+  // reads — see src/lib/intro/stats.ts. Nothing on a slide is written by
+  // hand any more.
+  const introSlides = buildIntroSlides(await getIntroStats());
   const levels = levelSlugs.map((slug) => ({
     slug,
     title: dict.courses.levels[slug].title,
