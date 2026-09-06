@@ -100,8 +100,10 @@ const E2E_DIR = join(repoRoot, "e2e");
  * >= 211 and < 212 is 211 exactly. The second run is the positive control
  * this project requires of any answer: without it, green at 211 would only
  * bound the number from below, and a floor that is merely a lower bound is
- * how this one drifted 94 executions out of date in the first place. Nothing in playwright.config.ts varies the
- * SET of tests by environment — `process.env.CI` there changes only
+ * how this one drifted 94 executions out of date in the first place.
+ *
+ * Nothing in playwright.config.ts varies the SET of tests by
+ * environment — `process.env.CI` there changes only
  * `forbidOnly`, `retries` and `reuseExistingServer` — and no spec builds
  * its tests out of database content, which is why the laptop's count and
  * CI's are one count and not two.
