@@ -1,5 +1,5 @@
 """
-RusoFásil — validación/carga compartida de bancos de preguntas de opción
+RusoFácilapp — validación/carga compartida de bancos de preguntas de opción
 múltiple guardados en JSON (formato {question, options, correct_option_id,
 explanation?}).
 

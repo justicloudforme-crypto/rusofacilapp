@@ -1,5 +1,5 @@
 """
-RusoFásil — exportación única del contenido del sitio a bots/data/
+RusoFácilapp — exportación única del contenido del sitio a bots/data/
 ======================================================================
 
 Lee, en modo SOLO LECTURA, el contenido real del sitio y lo vuelca a JSON

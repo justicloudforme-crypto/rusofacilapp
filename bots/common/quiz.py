@@ -1,5 +1,5 @@
 """
-RusoFásil — utilidades compartidas para armar preguntas de opción múltiple
+RusoFácilapp — utilidades compartidas para armar preguntas de opción múltiple
 =============================================================================
 
 Los límites de longitud son los que impone la Bot API de Telegram para

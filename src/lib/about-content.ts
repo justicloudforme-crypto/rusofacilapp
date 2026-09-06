@@ -39,7 +39,7 @@ export const ABOUT_CONTENT: Record<Locale, AboutContent> = {
     metaDescription:
       "RusoFácilapp: aprender ruso desde cero si hablas español. Quién lo hace, para quién es, y por qué el curso llega al B2 y el material al C1.",
     intro:
-      "RusoFácilapp (rusofacilapp.com) es una plataforma web para aprender ruso pensada específicamente para hispanohablantes. No es una aplicación de App Store o Google Play — es un sitio al que entras directamente desde el navegador, en el celular o la computadora, sin instalar nada.",
+      "RusoFácilapp (rusofacilapp.com) es una plataforma web para aprender ruso pensada específicamente para hispanohablantes. Hoy no es una aplicación de App Store o Google Play — es un sitio al que entras directamente desde el navegador, en el celular o la computadora, sin instalar nada. Las aplicaciones nativas llegarán más adelante; cuando estén, la cuenta y el progreso serán los mismos que ya tienes aquí.",
     sections: [
       {
         heading: "¿Quién lo hace?",
@@ -73,7 +73,7 @@ export const ABOUT_CONTENT: Record<Locale, AboutContent> = {
     metaDescription:
       "RusoFácilapp — сайт для изучения русского языка испаноговорящими: кто его делает, для кого он, и почему курс идёт до B2, а материалы для занятий — до C1.",
     intro:
-      "RusoFácilapp (rusofacilapp.com) — веб-платформа для изучения русского языка, созданная специально для испаноговорящих. Это не приложение из App Store или Google Play — сайт открывается прямо в браузере, на телефоне или компьютере, без установки.",
+      "RusoFácilapp (rusofacilapp.com) — веб-платформа для изучения русского языка, созданная специально для испаноговорящих. Сегодня это не приложение из App Store или Google Play — сайт открывается прямо в браузере, на телефоне или компьютере, без установки. Приложения появятся позже; аккаунт и прогресс в них будут те же, что уже есть здесь.",
     sections: [
       {
         heading: "Кто это делает",

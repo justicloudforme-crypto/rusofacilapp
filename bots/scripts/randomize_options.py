@@ -1,5 +1,5 @@
 """
-RusoFásil — randomiza la posición de la respuesta correcta en un banco de
+RusoFácilapp — randomiza la posición de la respuesta correcta en un banco de
 preguntas de opción múltiple
 ================================================================================
 
