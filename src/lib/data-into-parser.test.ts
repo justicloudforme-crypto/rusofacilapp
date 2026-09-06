@@ -84,8 +84,26 @@ describe("data that reaches a regular expression", () => {
     }
     // `alternatives` in GlossaryText is a list already mapped through
     // escapeRegExp; `body` in story-insights is hand-written pattern source,
+    // and `out` in exams/localize is an accumulator whose every literal
+    // piece went through escapeRegExp one line earlier — all three are
     // asserted separately below.
-    expect(offenders.filter((o) => !o.includes("${body}"))).toEqual([]);
+    const namedElsewhere = ["${body}", "${out}"];
+    expect(offenders.filter((o) => !namedElsewhere.some((n) => o.includes(n)))).toEqual([]);
+  });
+
+  it("exams/localize собирает выражение только из экранированных кусков", () => {
+    // Оговорка выше стоит ровно столько, сколько это утверждение. `out`
+    // растёт двумя способами и обоими — через escapeRegExp; всё остальное,
+    // что в него попадает, это собственный текст файла (группа `(?<имя>…)`
+    // из таблицы SLOT_PATTERNS).
+    const source = withoutComments(readFileSync(join(SRC, "lib", "exams", "localize.ts"), "utf8"));
+    const growth = [...source.matchAll(/\bout \+?= ([^;]+);/g)].map((m) => m[1].trim());
+    expect(growth.length).toBeGreaterThan(1);
+    for (const expression of growth) {
+      const literalPart = expression.includes("escapeRegExp(");
+      const ownText = expression === '""';
+      expect(literalPart || ownText, `«${expression}» кладёт в выражение неэкранированное`).toBe(true);
+    }
   });
 
   it("story-insights' patterns really are hand-written, not data", () => {
