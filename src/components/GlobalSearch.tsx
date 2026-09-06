@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { SearchDemandSession } from "@/lib/search/demand-session";
 import { logSearchDemand } from "@/lib/search/log-client";
 import { MAX_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from "@/lib/search/query";
 import type { SearchResponse, SearchSection } from "@/lib/search/types";
@@ -49,6 +51,7 @@ export default function GlobalSearch({
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const pathname = usePathname();
 
   const destinations = useMemo<Destination[]>(() => {
     const base: Destination[] = [
@@ -109,38 +112,124 @@ export default function GlobalSearch({
     }
   }
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setOpen(true);
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   // Одна запись спроса на один ЗАХОД, а не на нажатие клавиши: строка на
   // каждое нажатие превратила бы сессию в упорядоченную цепочку «р», «ра»,
   // «рас» — а такая цепочка опознаёт посетителя надёжнее любого поля,
   // которого в таблице намеренно нет (см. src/lib/search/demand.ts).
-  const followedRef = useRef(false);
+  //
+  // ЧТО ЗДЕСЬ ИЗМЕНИЛОСЬ 06.09.2026 (долг 52). До этого дня запись жила
+  // ровно в `close()`, то есть существовала только для тех выходов, у
+  // которых `close()` вызывается: Escape, крестик, тап по затемнению и
+  // переход по строке выдачи. Выходы, которых `close()` не видит, давали
+  // НОЛЬ записей: уход на другой адрес с открытым окном и закрытие
+  // вкладки. Перекос односторонний — «искал, не нашёл и ушёл» кончается
+  // уходом со страницы чаще, чем аккуратным Escape, — поэтому журнал
+  // недосчитывал именно те заходы, ради которых заводился.
+  //
+  // Теперь решение «пора писать» вынесено в `SearchDemandSession` и
+  // сделано однократным, а поводов его принять — четыре семейства, и
+  // каждый из них отправляет запись сам:
+  //
+  //   1. `close()` — Escape, крестик, затемнение (Modal.tsx);
+  //   2. `follow()` — переход по строке выдачи;
+  //   3. `pagehide` / `visibilitychange` — закрытие вкладки, уход на
+  //      другой адрес, сворачивание приложения на телефоне;
+  //   4. смена `pathname` — уход БЕЗ перезагрузки документа: аппаратная
+  //      «назад» на Android (NativeBackButtonHandler → history.back()),
+  //      «назад» браузера, любой router.push. Шапка живёт в раме и не
+  //      размонтируется, pagehide при этом не наступает вовсе.
+  //
+  // Двух строк на один заход это не даёт: `flush()` отдаёт запись ровно
+  // один раз за открытие окна, и Escape, за которым следом закрыли
+  // вкладку, — это по-прежнему одна строка.
+  // `useState` с ленивым инициализатором, а не `useRef`: экземпляр нужен
+  // один на всё время жизни компонента, а читать `ref.current` во время
+  // рендера правило проекта запрещает (и правильно — это чтение
+  // изменяемого состояния в момент, когда React считает рендер чистым).
+  const [demand] = useState(() => new SearchDemandSession());
+
+  /** Отправить запись, если этот заход её ещё не отправил. Идемпотентна
+   * намеренно: её зовут четыре разных выхода, и какой из них наступит
+   * первым — неизвестно. */
+  const send = useCallback(() => {
+    const record = demand.flush();
+    if (record) logSearchDemand(record);
+  }, [demand]);
+
+  const openWindow = useCallback(() => {
+    demand.open(lang);
+    setOpen(true);
+  }, [demand, lang]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openWindow();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [openWindow]);
+
+  // Что человек видел в момент ухода — последнее значение, а не то, что
+  // было на момент подписки обработчика.
+  useEffect(() => {
+    demand.update({ query, resultCount: response?.total ?? 0 });
+  }, [demand, query, response]);
+
+  // Выходы, которых `close()` не видит. Подписка только на время
+  // открытого окна: закрытие вкладки без открытого поиска — не заход.
+  useEffect(() => {
+    if (!open) return;
+    function onPageHide() {
+      send();
+    }
+    function onVisibilityChange() {
+      if (document.visibilityState === "hidden") send();
+    }
+    // `pagehide`, а не `beforeunload`: второй не наступает на iOS вовсе и
+    // отменяет bfcache там, где наступает. `visibilitychange` — вторая
+    // половина того же: на телефоне вкладку чаще сворачивают, чем
+    // закрывают, и до `pagehide` дело может не дойти никогда.
+    window.addEventListener("pagehide", onPageHide);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [open, send]);
+
+  // Уход на другой адрес без перезагрузки документа. На первом рендере
+  // отправлять нечего — `flush()` у неоткрытого захода отдаёт `null`, —
+  // поэтому отдельного «пропустить первый раз» здесь не нужно.
+  //
+  // Окно при этом НЕ закрывается: оно живёт в шапке, шапка переживает
+  // клиентский переход, и закрывать его тут значило бы менять поведение
+  // продукта заодно с журналом. Вместо этого начинается новый заход —
+  // человек остался в поиске, но уже на другой странице, и всё, что он
+  // наберёт дальше, снова будет записано.
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  useEffect(() => {
+    send();
+    if (openRef.current) demand.open(lang);
+  }, [pathname, send, demand, lang]);
 
   const close = useCallback(() => {
-    logSearchDemand({
-      query,
-      resultCount: response?.total ?? 0,
-      lang,
-      followed: followedRef.current,
-    });
-    followedRef.current = false;
+    send();
     setOpen(false);
     setQuery("");
     setResponse(null);
-  }, [query, response, lang]);
+  }, [send]);
 
   function follow() {
-    followedRef.current = true;
+    // Порядок обязателен: признак ставится ДО отправки, потому что
+    // переход и есть выход — второго повода записать не будет.
+    demand.markFollowed();
     close();
   }
 
@@ -153,7 +242,7 @@ export default function GlobalSearch({
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openWindow}
         aria-label={dict.nav.search}
         title={dict.nav.searchShortcutHint}
         className="tap flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-black/[.04] hover:text-foreground active:bg-black/[.04] active:text-foreground dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
