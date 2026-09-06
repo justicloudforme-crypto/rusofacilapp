@@ -354,7 +354,7 @@ async function inspect(ctx, family, breakIt, signedIn = false) {
   // it took a human noticing to find it the first time. Asserted for every
   // /ru family at once rather than per-family, because the next occurrence
   // will be in whichever block nobody is looking at. Cyrillic is required
-  // rather than "no Spanish orthography": the brand name RusoFacilapp
+  // rather than "no Spanish orthography": the brand name RusoFácilapp
   // carries an accent and appears inside correct Russian headings.
   if (family.path.startsWith("/ru") && h1 && !/[\u0430-\u044f\u0451\u0410-\u042f\u0401]/.test(h1)) {
     problems.push(`h1 on a /ru page has no Cyrillic at all: "${h1.slice(0, 50)}"`);

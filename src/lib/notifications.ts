@@ -2,6 +2,9 @@
 
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import type { Locale } from "@/i18n/config";
+import { pickNotificationCopy } from "./notification-copy";
+import { dateKeyIn } from "./timezone";
 
 // Same no-op-on-web convention as src/lib/haptics.ts and
 // src/lib/revenuecat-client.ts — the plugin isn't implemented for the
@@ -27,21 +30,47 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
- * Schedules (or re-schedules) a daily reminder to keep the user's practice
- * streak going. `hour`/`minute` are in the device's local time. No-op on
- * web and if permission hasn't been granted.
+ * Schedules (or re-schedules) the daily reminder. `hour`/`minute` are in
+ * the device's local time. No-op on web and if permission hasn't been
+ * granted.
+ *
+ * Neither the time nor the frequency changed on 05.09.2026: still one
+ * notification, still 19:00 device-local, still `repeats: true` under the
+ * one fixed id, so a re-schedule replaces the previous one instead of
+ * stacking. What changed is the TEXT — it now comes from a rotation keyed
+ * on (learner, day) and it is written in the interface language instead of
+ * always Spanish (src/lib/notification-copy.ts).
+ *
+ * The limitation, stated rather than hidden: the OS owns the repeat, so a
+ * device whose app is not opened for a week repeats the text that was
+ * scheduled last. Rotation advances whenever the app is launched, which is
+ * every launch (NativeNotifications.tsx). Scheduling several days ahead as
+ * separate notifications would advance it without a launch, but it would
+ * also turn a reminder that repeats forever into one that stops after N
+ * days on a device that goes quiet — a worse trade, and it would change
+ * the schedule, which this pass is not allowed to do.
  */
-export async function scheduleStreakReminder(hour = 19, minute = 0): Promise<void> {
+export async function scheduleStreakReminder(
+  locale: Locale,
+  userId: string | null,
+  hour = 19,
+  minute = 0,
+): Promise<void> {
   const granted = await requestNotificationPermission();
   if (!granted) return;
+
+  // The learner's own calendar day, in the device's zone — the same rule
+  // every other day-shaped value on this site follows (PROGRESS.md 7.68).
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const { title, body } = pickNotificationCopy(locale, userId, dateKeyIn(new Date(), timeZone));
 
   await nativeOnly(() =>
     LocalNotifications.schedule({
       notifications: [
         {
           id: STREAK_REMINDER_ID,
-          title: "¡No pierdas tu racha! 🔥",
-          body: "Unos minutos de práctica hoy mantienen vivo tu progreso en ruso.",
+          title,
+          body,
           schedule: { on: { hour, minute }, repeats: true, allowWhileIdle: true },
         },
       ],

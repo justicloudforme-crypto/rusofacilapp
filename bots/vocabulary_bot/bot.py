@@ -1,5 +1,5 @@
 """
-RusoFásil — Vocabulary bot (rusofasil_vocabulary_bot)
+RusoFácilapp — Vocabulary bot (rusofasil_vocabulary_bot)
 ========================================================
 
 Bot que enseña vocabulario y gramática rusa mediante dos mini-trivias
@@ -20,7 +20,7 @@ sitio corriendo; si el snapshot no existe, local_content lanza un error
 claro pidiendo correr el script de exportación primero.
 
 Configura el token en bots/.env bajo VOCABULARY_BOT_TOKEN. Antes de
-arrancar, completa GROUP_CHAT_ID abajo con el id del grupo de RusoFásil.
+arrancar, completa GROUP_CHAT_ID abajo con el id del grupo de RusoFácilapp.
 
 Para ejecutar:
     pip install -r ../requirements.txt
@@ -56,7 +56,7 @@ from common.scheduler import start_daily_jobs  # noqa: E402
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 BOT_TOKEN = os.environ["VOCABULARY_BOT_TOKEN"]
 
-# id del grupo de RusoFásil donde se publican la palabra y la gramática del
+# id del grupo de RusoFácilapp donde se publican la palabra y la gramática del
 # día (número negativo, para supergrupos empieza con -100...). Complétalo
 # antes de arrancar el bot: sin esto, los jobs programados fallarán al
 # enviar el poll.
@@ -169,7 +169,7 @@ async def send_grammar_quiz(bot: Bot, chat_id: int):
 @router.message(Command("start"), F.chat.type == ChatType.PRIVATE)
 async def start_handler(message: Message):
     await message.answer(
-        "¡Hola! Soy el bot de vocabulario y gramática de RusoFásil 📖🇷🇺\n"
+        "¡Hola! Soy el bot de vocabulario y gramática de RusoFácilapp 📖🇷🇺\n"
         "Cada día publico una palabra y un punto de gramática en el grupo.\n"
         "Aquí en privado: /palabra para una palabra al azar, /gramatica para un punto de gramática."
     )

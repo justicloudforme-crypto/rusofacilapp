@@ -1,5 +1,5 @@
 """
-RusoFásil — acceso al snapshot local del contenido del sitio
+RusoFácilapp — acceso al snapshot local del contenido del sitio
 =================================================================
 
 vocabulary_bot y testing_bot ya no hacen ninguna llamada de red: leen una

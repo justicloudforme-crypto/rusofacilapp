@@ -1,4 +1,4 @@
-// RusoFásil — configuración de PM2 para mantener los 5 bots corriendo de
+// RusoFácilapp — configuración de PM2 para mantener los 5 bots corriendo de
 // forma permanente (reinicio automático si se caen, arranque automático al
 // reiniciar la máquina vía `pm2 startup` + `pm2 save`).
 //

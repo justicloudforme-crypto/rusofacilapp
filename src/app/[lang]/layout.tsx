@@ -210,7 +210,7 @@ export default async function LangLayout({
         <TimeZoneSync storedTimeZone={user?.timezone ?? null} />
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
-        <NativeNotifications />
+        <NativeNotifications lang={lang} userId={user?.id ?? null} />
         <OfflineBanner message={dict.offline.bannerMessage} />
         <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans} priceNote={paywallPriceNote}>
           <Navbar lang={lang} dict={dict} streak={streak} />
