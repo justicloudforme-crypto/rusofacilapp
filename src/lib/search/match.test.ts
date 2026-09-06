@@ -145,6 +145,31 @@ describe("нестрогая ступень", () => {
   it("контроль: пустой запрос — не «найдено всё»", () => {
     expect(searchRecords(INDEX, "   ", OPTIONS).total).toBe(0);
   });
+
+  it("строка из одних знаков препинания — не «найдено всё»", () => {
+    // Замер на живом проде 06.09.2026 (PROGRESS.md 7.129): `***`
+    // возвращала ВЕСЬ индекс — 10 720 записей и `fuzzy: true`. Ни одна
+    // из этих строк не содержит ни одного слова, сравнивать не с чем.
+    for (const query of ["***", "...", "?", "«»", "—", "!!!", "/"]) {
+      const res = searchRecords(INDEX, query, OPTIONS);
+      expect(res.total, `«${query}» вернула ${res.total} записей`).toBeLessThan(INDEX.length);
+      expect(res.fuzzy, `«${query}» ушла в нестрогую ступень`).toBe(false);
+    }
+  });
+
+  it("позитивный контроль: подстрочное совпадение по тому же знаку осталось", () => {
+    // Половина, которую правка НЕ должна была унести: у карточек словаря
+    // название построено как «слово — traducción», и подстрока «—»
+    // обязана их находить строго, а не через нестрогую ступень.
+    const records: SearchRecord[] = [
+      { section: "flashcard", id: "a", path: "/vocabulary", title: "хлеб — pan" },
+      { section: "story", id: "b", path: "/stories/b", title: "Репка" },
+    ];
+    const res = searchRecords(records, "—", OPTIONS);
+    expect(res.total).toBe(1);
+    expect(res.fuzzy).toBe(false);
+    expect(res.sections[0].hits[0].id).toBe("a");
+  });
 });
 
 describe("ранжирование", () => {
