@@ -245,7 +245,7 @@ export default function GlobalSearch({
         onClick={openWindow}
         aria-label={dict.nav.search}
         title={dict.nav.searchShortcutHint}
-        className="tap flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-black/[.04] hover:text-foreground active:bg-black/[.04] active:text-foreground dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
+        className="tap flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-black/[.04] hover:text-foreground active:bg-black/[.04] active:text-foreground dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
       >
         <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
           <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.6" />
