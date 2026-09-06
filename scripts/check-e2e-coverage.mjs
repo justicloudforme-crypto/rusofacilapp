@@ -77,8 +77,27 @@ const E2E_DIR = join(repoRoot, "e2e");
  * lowered to make a run pass. Lowering it is the exact move this file
  * exists to prevent, so if you are here to do that, the thing to fix is
  * the run.
+ *
+ * Raised from 117 to 211 on 05.09.2026, and this raise is not like the ones
+ * above it: no spec was added. The floor had drifted 94 executions BELOW
+ * what the suite runs (PROGRESS.md 7.126, «чего заход не сделал» №4) — a
+ * gate that would not have noticed losing 94 of 211 tests, which is a
+ * larger version of the failure this file was written for. It stayed low
+ * because nobody had a number for what CI executes, only for what a laptop
+ * executes, and a floor above CI's real figure reddens CI for a reason that
+ * has nothing to do with the code.
+ *
+ * That number now exists, measured the only way a public repo allows
+ * without a token: set this constant to 211, push, and read whether the CI
+ * run goes green. Green means the run executed at least 211; the suite
+ * declares exactly 211 (`playwright test --list`: 211 tests in 23 files),
+ * so CI executed all of them. Nothing in playwright.config.ts varies the
+ * SET of tests by environment — `process.env.CI` there changes only
+ * `forbidOnly`, `retries` and `reuseExistingServer` — and no spec builds
+ * its tests out of database content, which is why the laptop's count and
+ * CI's are one count and not two.
  */
-const MIN_EXECUTED_TESTS = 117;
+const MIN_EXECUTED_TESTS = 211;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.
