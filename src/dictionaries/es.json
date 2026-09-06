@@ -152,6 +152,12 @@
     "lessonStatusAttempted": "Intentada, todavía no aprobada",
     "lessonsTitle": "Contenido del nivel",
     "backToCourses": "Volver a los cursos",
+    "examNames": {
+      "range": "Examen {level} · Lecciones {from} a {to}",
+      "final": "Examen final del nivel {level}",
+      "rangeLabel": "Lecciones {from}-{to}",
+      "finalLabel": "Lecciones {from}-{to} (nivel {level} completo)"
+    },
     "levels": {
       "a1": {
         "title": "A1 · Principiante",
