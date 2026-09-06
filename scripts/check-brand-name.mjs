@@ -38,6 +38,15 @@
 // disappears fails too, so a fixed file cannot quietly keep its exemption.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+// Only when this file is the process entry point. Everything below the
+// definitions writes files and exits; importing it must do neither. Same
+// rule and same inlined form as scripts/check-tokens.mjs — see
+// src/lib/entry-point.ts for the incident behind it.
+const IS_ENTRY_POINT = process.argv[1]
+  ? import.meta.url === pathToFileURL(process.argv[1]).href
+  : false;
 
 const CORRECT = "RusoFácilapp";
 const NAME = /Ruso ?F[áa][cs]il[A-Za-z]*/g;
@@ -141,10 +150,18 @@ const ALLOWED = new Map([
 const BINARY =
   /\.(png|jpg|jpeg|gif|webp|ico|mp3|wav|m4a|pdf|zip|ttf|otf|woff2?|jar|keystore|xcuserstate)$/i;
 
+// This file is skipped entirely, and it is the one exemption that needs no
+// pinned count: a checker for wrong spellings has to WRITE the wrong
+// spellings — in the pattern, in the reasons, and in the three plants
+// below. Checking itself would mean it can never be clean. Stated plainly
+// rather than hidden: a genuine mistake in this file's own prose is the one
+// place nothing catches.
+const SELF = "scripts/check-brand-name.mjs";
+
 function scan() {
   const files = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
     .split("\0")
-    .filter((f) => f && !BINARY.test(f));
+    .filter((f) => f && f !== SELF && !BINARY.test(f));
 
   /** [{file, line, text, context}] for every hit that is not the correct spelling. */
   const wrong = [];
@@ -231,7 +248,7 @@ function report({ failures, unexpected, scanned, allowedTotal }) {
 // inside an allowlisted file (the exemption must not absorb new mistakes),
 // and in a file NAME — and requires the scan to catch each one and to come
 // back clean afterwards.
-if (process.argv.includes("--plant")) {
+function plantControls() {
   const PLANTED = "scripts/__brand-plant__.generated.ts";
   const controls = [
     {
@@ -289,7 +306,10 @@ if (process.argv.includes("--plant")) {
   console.log(`  ${cleanAgain ? "clean" : "STILL DIRTY"} — after undoing all three plants`);
   ok &&= cleanAgain;
   console.log(ok ? "check:brand --plant — 4 of 4" : "check:brand --plant — FAILED");
-  process.exit(ok ? 0 : 1);
+  return ok;
 }
 
-process.exit(report(scan()) ? 0 : 1);
+if (IS_ENTRY_POINT) {
+  const ok = process.argv.includes("--plant") ? plantControls() : report(scan());
+  process.exitCode = ok ? 0 : 1;
+}
