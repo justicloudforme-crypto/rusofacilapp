@@ -158,6 +158,12 @@
       "rangeLabel": "Lecciones {from}-{to}",
       "finalLabel": "Lecciones {from}-{to} (nivel {level} completo)"
     },
+    "skillAreaNames": {
+      "lesson": "{base} (lección {list})",
+      "lessons": "{base} (lecciones {list})",
+      "lessonWholeLevel": "{base} (lección {list} y nivel {level} completo)",
+      "lessonsWholeLevel": "{base} (lecciones {list} y nivel {level} completo)"
+    },
     "levels": {
       "a1": {
         "title": "A1 · Principiante",

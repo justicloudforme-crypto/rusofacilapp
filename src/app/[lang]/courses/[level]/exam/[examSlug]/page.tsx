@@ -8,7 +8,7 @@ import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { userHasActiveSubscription } from "@/lib/subscription";
 import { isStaff } from "@/lib/roles";
 import { getExamContent } from "@/lib/exams/content";
-import { localizeExamText } from "@/lib/exams/localize";
+import { localizeExamText, localizeSkillAreaTitle } from "@/lib/exams/localize";
 import ExamView from "@/components/lesson/ExamView";
 import { routeAlternates } from "@/lib/site";
 
@@ -40,6 +40,14 @@ export default async function ExamPage({
   // account rather than the cookie.
   await markStudyDayVisit("exam", user);
 
+  const localizedExam = {
+    ...exam,
+    skillAreas: exam.skillAreas.map((area) => ({
+      ...area,
+      title: localizeSkillAreaTitle(area.title, lang, dict.courses.skillAreaNames),
+    })),
+  };
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
@@ -49,7 +57,11 @@ export default async function ExamPage({
         {localizeExamText(exam.title, lang, dict.courses.examNames)}
       </h1>
       <div className="mt-8">
-        <ExamView exam={exam} level={level} locale={lang} dict={dict.lesson.exercises} examDict={dict.profile} />
+        {/* Названия блоков локализуются ЗДЕСЬ, а не внутри ExamView: правка
+            презентационная, а `ExamView` — клиентский компонент, который
+            считает по `area.id` и о названиях не знает ничего. Так таблица
+            переводов не уезжает в бандл к каждому посетителю. */}
+        <ExamView exam={localizedExam} level={level} locale={lang} dict={dict.lesson.exercises} examDict={dict.profile} />
       </div>
     </div>
   );

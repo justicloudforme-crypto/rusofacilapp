@@ -2,6 +2,7 @@ import { escapeRegExp } from "@/lib/regex";
 import esDictionary from "@/dictionaries/es.json";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { SKILL_AREA_TITLES_RU } from "./skill-area-titles";
 
 /**
  * Названия экзаменов — одно поле на обе локали, и на `/ru` оно
@@ -55,9 +56,17 @@ const SLOT_PATTERNS: Record<string, string> = {
   level: "[A-Za-z][A-Za-z0-9]{0,3}",
   from: "\\d{1,3}",
   to: "\\d{1,3}",
+  // Названия тематических блоков внутри экзамена (см.
+  // `localizeSkillAreaTitle` ниже). `list` — перечисление уроков в скобках
+  // во всех формах, которые встречаются в содержимом: `7`, `1-2`, `5, 10`,
+  // `8, 9, 29`. `base` — сама тема, и она НЕнасытная намеренно: скобочный
+  // хвост шаблона обязателен и стоит справа, поэтому кратчайший префикс —
+  // это ровно тема и есть.
+  list: "\\d{1,3}(?:\\s*[-,]\\s*\\d{1,3})*",
+  base: ".+?",
 };
 
-const SLOT = /\{(level|from|to)\}/g;
+const SLOT = /\{(level|from|to|list|base)\}/g;
 
 /** Шаблон → регулярное выражение с именованными группами. Литеральная
  * часть шаблона экранируется: в ней есть и точка, и скобки, и `·`. */
@@ -106,6 +115,70 @@ export function localizeExamText(value: string, lang: Locale, target: ExamNameTe
     const match = re.exec(trimmed);
     if (!match?.groups) continue;
     return fill(replacement, match.groups as Record<string, string>);
+  }
+  return value;
+}
+
+/* ------------------------------------------------------------------ *
+ * Названия тематических блоков внутри экзамена (долг 53)
+ * ------------------------------------------------------------------ */
+
+/** Ключи шаблонов названия блока. Порядок не важен: скобочные хвосты
+ * различаются литеральной частью и пересечься не могут. */
+const SKILL_AREA_TEMPLATE_KEYS = ["lesson", "lessons", "lessonWholeLevel", "lessonsWholeLevel"] as const;
+
+export type SkillAreaNameTemplates = Dictionary["courses"]["skillAreaNames"];
+
+const SKILL_AREA_SOURCE_TEMPLATES: SkillAreaNameTemplates = esDictionary.courses.skillAreaNames;
+
+/**
+ * Как название тематического блока экзамена должно читаться посетителю
+ * локали `lang`.
+ *
+ * Приём тот же, что у `localizeExamText`, но задача другая, и разница
+ * важна. У экзамена всё название целиком — шаблон («Examen A1 · Lecciones
+ * 1 a 10»), поэтому там достаточно подстановки. У блока шаблонная только
+ * скобка со ссылкой на уроки, а тема внутри — свободный текст, и её
+ * переводит таблица точных совпадений
+ * (`SKILL_AREA_TITLES_RU`, 138 записей на 139 блоков).
+ *
+ * Правило целиком, включая то, чего оно НЕ делает:
+ *
+ *   * `es` возвращает значение нетронутым — язык источника;
+ *   * тема, которой нет в таблице, останавливает перевод ЦЕЛИКОМ:
+ *     возвращается исходная строка, а не наполовину русская. Половинчатая
+ *     строка («Aspecto verbal (урок 3)») хуже испанской: она выглядит
+ *     как опечатка, а не как непереведённое содержимое;
+ *   * скобочный хвост переводится только в паре с темой, по той же
+ *     причине;
+ *   * ни одно поле данных не меняется — правка живёт в отдаче.
+ */
+export function localizeSkillAreaTitle(
+  value: string,
+  lang: Locale,
+  target: SkillAreaNameTemplates,
+  table: Record<string, string> = SKILL_AREA_TITLES_RU,
+): string {
+  if (lang === "es") return value;
+  const trimmed = value.trim();
+  if (!trimmed) return value;
+
+  // Название без скобочного хвоста — ищется целиком.
+  const whole = table[trimmed];
+  if (whole) return whole;
+
+  for (const key of SKILL_AREA_TEMPLATE_KEYS) {
+    const source = SKILL_AREA_SOURCE_TEMPLATES[key];
+    const replacement = target[key];
+    if (!source || !replacement) continue;
+    const re = templateToRegExp(source);
+    if (!re) continue;
+    const match = re.exec(trimmed);
+    if (!match?.groups) continue;
+    const base = table[match.groups.base];
+    // Тема не опознана — не переводим ничего. См. правило выше.
+    if (!base) return value;
+    return fill(replacement, { ...(match.groups as Record<string, string>), base });
   }
   return value;
 }
