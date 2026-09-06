@@ -8,6 +8,7 @@ import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { userHasActiveSubscription } from "@/lib/subscription";
 import { isStaff } from "@/lib/roles";
 import { getExamContent } from "@/lib/exams/content";
+import { localizeExamText } from "@/lib/exams/localize";
 import ExamView from "@/components/lesson/ExamView";
 import { routeAlternates } from "@/lib/site";
 
@@ -42,9 +43,11 @@ export default async function ExamPage({
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
-        {exam.lessonRangeLabel}
+        {localizeExamText(exam.lessonRangeLabel, lang, dict.courses.examNames)}
       </p>
-      <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{exam.title}</h1>
+      <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+        {localizeExamText(exam.title, lang, dict.courses.examNames)}
+      </h1>
       <div className="mt-8">
         <ExamView exam={exam} level={level} locale={lang} dict={dict.lesson.exercises} examDict={dict.profile} />
       </div>

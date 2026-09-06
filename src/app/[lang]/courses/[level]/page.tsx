@@ -5,6 +5,7 @@ import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLevelSlug, levelMeta, levelSlugs } from "@/lib/courses";
 import { getExamContent } from "@/lib/exams/content";
+import { localizeExamText } from "@/lib/exams/localize";
 import { getCurrentUser } from "@/lib/auth";
 import { getLevelLessonStatuses, type LessonStatus } from "@/lib/progress";
 import LevelGlossaryProgressBar from "@/components/glossary/LevelGlossaryProgressBar";
@@ -167,7 +168,7 @@ export default async function LevelPage({
                     ★
                   </span>
                   <span className="text-sm font-medium leading-6 text-primary-text dark:text-primary-400">
-                    {milestone.exam.title}
+                    {localizeExamText(milestone.exam.title, lang, dict.courses.examNames)}
                   </span>
                 </Link>
               )}

@@ -152,6 +152,12 @@
     "lessonStatusAttempted": "Есть попытка, ещё не пройден",
     "lessonsTitle": "Содержание уровня",
     "backToCourses": "Назад к курсам",
+    "examNames": {
+      "range": "Экзамен {level} · Уроки {from}–{to}",
+      "final": "Итоговый экзамен уровня {level}",
+      "rangeLabel": "Уроки {from}-{to}",
+      "finalLabel": "Уроки {from}-{to} (весь уровень {level})"
+    },
     "levels": {
       "a1": {
         "title": "A1 · Начальный",

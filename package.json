@@ -112,7 +112,9 @@
     "report:search-demand": "tsx scripts/report-search-demand.ts",
     "report:search-demand:self-test": "tsx scripts/report-search-demand.ts --self-test",
     "check:reachability": "tsx scripts/check-reachability.ts",
-    "check:reachability:plant": "tsx scripts/check-reachability.ts --plant"
+    "check:reachability:plant": "tsx scripts/check-reachability.ts --plant",
+    "check:search-coverage:prod": "tsx scripts/check-search-coverage.ts --base=https://rusofacilapp.com",
+    "check:search-coverage:prod:plant": "tsx scripts/check-search-coverage.ts --base=https://rusofacilapp.com --base-plant"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

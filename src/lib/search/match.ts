@@ -85,6 +85,19 @@ function scoreStrict(queryFolded: string, queryTokens: string[], haystacks: stri
 }
 
 function scoreFuzzy(queryTokens: string[], haystacks: string[]): number {
+  // Запрос без единого слова — это не «похоже на всё», а «сравнивать
+  // нечем».
+  //
+  // Замер на живом проде 06.09.2026 (PROGRESS.md 7.129, часть 1):
+  // строка `***` возвращала ВЕСЬ индекс — 10 720 записей, все двенадцать
+  // разделов, `fuzzy: true`. Механизм: `tokenize("***")` даёт пустой
+  // массив, строгая ступень на нём не находит ничего, а `every` на пустом
+  // массиве истинен для любой записи. То есть человек, набравший `?` или
+  // `...`, получал 24 случайные строки и подпись «найдено 10 720», а
+  // сервер — полный нечёткий проход по всему каталогу на каждый такой
+  // ввод.
+  if (queryTokens.length === 0) return 0;
+
   for (const raw of haystacks) {
     const tokens = tokenize(fold(raw));
     if (tokens.length === 0) continue;
