@@ -1,5 +1,5 @@
 """
-RusoFásil — helper compartido para programar publicaciones diarias en el grupo
+RusoFácilapp — helper compartido para programar publicaciones diarias en el grupo
 =================================================================================
 
 Centraliza el patrón que vocabulary_bot y history_bot ya usaban por separado

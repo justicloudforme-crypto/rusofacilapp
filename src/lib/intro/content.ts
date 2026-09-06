@@ -113,7 +113,7 @@ export const introSlides: IntroSlide[] = [
     title: "El secreto del éxito: constancia, no maratones",
     body: [
       "La clave del éxito no es la plataforma en sí, sino tu constancia. Quince minutos al día, todos los días, valen mucho más que una sesión de tres horas una vez por semana — el cerebro fija un idioma nuevo con repetición espaciada y frecuente, no con sesiones intensas y esporádicas.",
-      "RusoFásil está diseñado para acompañarte a tu ritmo: puedes avanzar, repasar o volver atrás sin presión. Pero la herramienta la ponemos nosotros; el hábito lo pones tú.",
+      "RusoFácilapp está diseñado para acompañarte a tu ritmo: puedes avanzar, repasar o volver atrás sin presión. Pero la herramienta la ponemos nosotros; el hábito lo pones tú.",
     ],
     highlights: [
       "Mejor 15 minutos diarios que una maratón semanal",
@@ -126,7 +126,7 @@ export const introSlides: IntroSlide[] = [
     icon: "methodMix",
     title: "Combate el desgaste: cambia de método",
     body: [
-      "Aprender un idioma nuevo cansa, y está bien: la solución no es forzarte a seguir con lo mismo, sino cambiar de formato para mantener el interés vivo. RusoFásil está pensado precisamente para eso — varias formas distintas de tocar el mismo idioma.",
+      "Aprender un idioma nuevo cansa, y está bien: la solución no es forzarte a seguir con lo mismo, sino cambiar de formato para mantener el interés vivo. RusoFácilapp está pensado precisamente para eso — varias formas distintas de tocar el mismo idioma.",
       "¿Cansado de la gramática? Mira un video o una canción con subtítulos traducidos. ¿Cansado de leer? Escucha uno de los cuentos narrados en voz alta. Alternar formatos «alimenta» tu interés desde varios ángulos a la vez, en vez de agotar siempre el mismo.",
     ],
     highlights: [
@@ -138,7 +138,7 @@ export const introSlides: IntroSlide[] = [
   {
     id: "intro-9-platform-tour",
     icon: "interactiveDictionary",
-    title: "Un recorrido rápido por RusoFásil",
+    title: "Un recorrido rápido por RusoFácilapp",
     body: [
       "El diccionario interactivo está integrado en todo el sitio: cualquier palabra en español que te resulte compleja dentro de una explicación de gramática puede mostrarte al instante su definición, sin salir de la lección.",
       "Los cursos están organizados por niveles (A1 a B2) y cada nivel avanza lección por lección, con gramática, vocabulario y ejercicios de corrección instantánea. En la sección de Cuentos vas a encontrar textos paralelos — ruso y español lado a lado — narrados en voz alta por nivel, ideales para practicar lectura y oído a la vez. Y cada bloque de lecciones cierra con un examen para comprobar de verdad lo que ya dominas.",
@@ -155,11 +155,11 @@ export const introSlides: IntroSlide[] = [
     icon: "communityChat",
     title: "Únete al club de conversación",
     body: [
-      "RusoFásil no termina en la pantalla: súmate a nuestro canal y grupo de Telegram para recibir novedades, resolver dudas y — sobre todo — practicar conversación real con hablantes nativos de ruso en el club de conversación.",
+      "RusoFácilapp no termina en la pantalla: súmate a nuestro canal y grupo de Telegram para recibir novedades, resolver dudas y — sobre todo — practicar conversación real con hablantes nativos de ruso en el club de conversación.",
       "Vas a encontrar el enlace al canal en el botón flotante de Telegram, siempre visible en la esquina de la pantalla, en cualquier página del sitio.",
     ],
     highlights: [
-      "Canal y grupo de Telegram con la comunidad de RusoFásil",
+      "Canal y grupo de Telegram con la comunidad de RusoFácilapp",
       "Club de conversación con hablantes nativos",
       "Botón flotante de Telegram, siempre a un clic de distancia",
     ],

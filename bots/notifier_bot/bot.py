@@ -1,8 +1,8 @@
 """
-RusoFásil — Notifier bot (rusofasil_alert_bot)
+RusoFácilapp — Notifier bot (rusofasil_alert_bot)
 =================================================
 
-Bot para avisar a la comunidad de RusoFásil sobre novedades: lecciones
+Bot para avisar a la comunidad de RusoFácilapp sobre novedades: lecciones
 nuevas, actualizaciones del sitio, anuncios generales, etc.
 
 Funcionamiento:
@@ -10,7 +10,7 @@ Funcionamiento:
     suscrito a las notificaciones (puede darse de baja con /baja).
   - Solo los administradores configurados en ADMIN_IDS pueden usar
     /anunciar <texto> (en chat privado con el bot) para difundir un
-    mensaje: se publica en el grupo de RusoFásil y se envía por DM a
+    mensaje: se publica en el grupo de RusoFácilapp y se envía por DM a
     cada suscriptor.
 
 La lista de suscriptores se guarda en data/subscribers.json para que
@@ -48,7 +48,7 @@ BOT_TOKEN = os.environ["NOTIFIER_BOT_TOKEN"]
 # Telegram user id de quienes pueden enviar anuncios con /anunciar
 ADMIN_IDS: list[int] = [7290127856]
 
-# id del grupo de RusoFásil donde también se publican los anuncios (además
+# id del grupo de RusoFácilapp donde también se publican los anuncios (además
 # de enviarlos por DM a cada suscriptor). Déjalo en 0 para desactivar la
 # publicación en grupo y avisar solo por DM.
 GROUP_CHAT_ID = -1003668895078
@@ -95,12 +95,12 @@ async def start_handler(message: Message):
 
     if is_new:
         await message.answer(
-            "¡Hola! Soy el bot de notificaciones de RusoFásil 🔔\n"
+            "¡Hola! Soy el bot de notificaciones de RusoFácilapp 🔔\n"
             "Te avisaré aquí cuando haya lecciones nuevas o novedades del sitio.\n"
             "Si en algún momento quieres dejar de recibir avisos, usa /baja."
         )
     else:
-        await message.answer("Ya estabas suscrito/a a las notificaciones de RusoFásil 🔔")
+        await message.answer("Ya estabas suscrito/a a las notificaciones de RusoFácilapp 🔔")
 
 
 @router.message(Command("baja"), F.chat.type == ChatType.PRIVATE)
@@ -108,7 +108,7 @@ async def unsubscribe_handler(message: Message):
     if message.from_user.id in subscribers:
         subscribers.discard(message.from_user.id)
         save_subscribers(subscribers)
-        await message.answer("Listo, ya no recibirás notificaciones de RusoFásil. Puedes volver con /start cuando quieras.")
+        await message.answer("Listo, ya no recibirás notificaciones de RusoFácilapp. Puedes volver con /start cuando quieras.")
     else:
         await message.answer("No estabas suscrito/a a las notificaciones.")
 
@@ -123,7 +123,7 @@ async def announce_handler(message: Message, command: CommandObject, bot: Bot):
         await message.answer("Uso: /anunciar <texto del anuncio>")
         return
 
-    announcement = f"📢 <b>RusoFásil</b>\n\n{text}"
+    announcement = f"📢 <b>RusoFácilapp</b>\n\n{text}"
 
     sent, failed = 0, 0
     for user_id in list(subscribers):

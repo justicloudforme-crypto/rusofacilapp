@@ -1,6 +1,6 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// RusoFásil runs server components, API routes, a DB, cookie auth, and
+// RusoFácilapp runs server components, API routes, a DB, cookie auth, and
 // Stripe — it cannot be statically exported (`output: "export"` would break
 // all of that). Capacitor instead wraps a REMOTE URL in a native WebView
 // (a standard, documented Capacitor mode, not a workaround): the app is a

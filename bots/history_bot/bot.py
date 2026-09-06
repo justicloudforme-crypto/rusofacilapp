@@ -1,5 +1,5 @@
 """
-RusoFásil — History bot (rusofasil_history_bot)
+RusoFácilapp — History bot (rusofasil_history_bot)
 =================================================
 
 Bot que enseña historia y cultura rusa a través de una mini-trivia diaria
@@ -15,7 +15,7 @@ falta tocar el código. Todo el contenido cubre historia rusa hasta 1991
 inclusive; nada de la Rusia contemporánea de los últimos ~20 años.
 
 Configura el token en bots/.env bajo HISTORY_BOT_TOKEN. Antes de arrancar,
-completa GROUP_CHAT_ID abajo con el id del grupo de RusoFásil (usa
+completa GROUP_CHAT_ID abajo con el id del grupo de RusoFácilapp (usa
 @userinfobot reenviando un mensaje del grupo, o getUpdates).
 
 Para ejecutar:
@@ -50,7 +50,7 @@ from common.scheduler import start_daily_jobs  # noqa: E402
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 BOT_TOKEN = os.environ["HISTORY_BOT_TOKEN"]
 
-# id del grupo de RusoFásil donde se publica la trivia diaria (número
+# id del grupo de RusoFácilapp donde se publica la trivia diaria (número
 # negativo, para supergrupos empieza con -100...). Complétalo antes de
 # arrancar el bot: sin esto, el job programado fallará al enviar el poll.
 GROUP_CHAT_ID = -1003668895078
@@ -117,7 +117,7 @@ async def send_history_quiz(bot: Bot, chat_id: int):
 @router.message(Command("start"), F.chat.type == ChatType.PRIVATE)
 async def start_handler(message: Message):
     await message.answer(
-        "¡Hola! Soy el bot de historia y cultura de RusoFásil 📜🇷🇺\n"
+        "¡Hola! Soy el bot de historia y cultura de RusoFácilapp 📜🇷🇺\n"
         "Cada día publico una mini-trivia en el grupo. "
         "Aquí en privado, usa /dato para recibir una pregunta al azar cuando quieras."
     )

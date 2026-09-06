@@ -1,8 +1,8 @@
 """
-RusoFásil — Moderator bot
+RusoFácilapp — Moderator bot
 =========================
 
-Bot de moderación para el grupo de RusoFásil, en aiogram 3.x. Hace dos cosas:
+Bot de moderación para el grupo de RusoFácilapp, en aiogram 3.x. Hace dos cosas:
 
   1. Da la bienvenida a cada nuevo miembro que se une al grupo.
   2. Filtra spam automáticamente: exceso de enlaces, palabras típicas de
@@ -69,7 +69,7 @@ SPAM_KEYWORDS = [
 ]
 
 WELCOME_TEXT = (
-    "¡Bienvenido/a a RusoFásil, {mention}! 🇷🇺\n\n"
+    "¡Bienvenido/a a RusoFácilapp, {mention}! 🇷🇺\n\n"
     "Aquí aprendemos ruso juntos. Antes de empezar:\n"
     "• Preséntate si quieres — nadie muerde 🙂\n"
     "• Nada de spam, publicidad o enlaces no solicitados.\n"
