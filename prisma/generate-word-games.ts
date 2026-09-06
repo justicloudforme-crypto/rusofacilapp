@@ -42,6 +42,7 @@ import { WORD_GAME_FREE_RUNGS_PER_LEVEL, isFreeWordGamePuzzle } from "../src/lib
 import { densityTailCount, isDensityOwnedRung } from "../src/lib/word-games/density-rungs";
 
 import { isEntryPoint } from "../src/lib/entry-point";
+import { invalidateSearchIndex } from "../src/lib/search/index-server";
 const DRY_RUN = process.argv.includes("--dry-run");
 /**
  * Rewrite rows that already exist but whose content differs from what this
@@ -784,6 +785,11 @@ async function main() {
 // run it. See src/lib/entry-point.ts for the incident behind this.
 if (isEntryPoint(import.meta.url)) {
   main()
+    // Индекс поиска печатает названия того, что этот скрипт пишет
+    // (игровые пазлы). Скрипт работает СВОИМ процессом, поэтому
+    // сбросить он может только общий кеш — и должен, иначе поиск до пяти
+    // минут находит прежние названия и не находит новые.
+    .then(() => invalidateSearchIndex())
     .catch((e) => {
       console.error(e);
       process.exitCode = 1;

@@ -1,4 +1,3 @@
-import "server-only";
 import { cached, getOrCreateGlobalSingleton, TtlCache } from "@/lib/ttl-cache";
 import { buildSearchRecords } from "./records";
 import { loadSearchSources } from "./sources";
@@ -6,6 +5,15 @@ import type { SearchRecord } from "./types";
 
 /**
  * Кеш индекса поиска.
+ *
+ * Пометки `server-only` здесь нет, и намеренно. Сброс обязаны звать не
+ * только админские маршруты, но и CLI-скрипты, которые пишут содержимое
+ * своим процессом (`db:add-flashcards`, `generate:word-games`, сиды,
+ * `sync:to-production`), — а модуль с `import "server-only"` под `tsx` не
+ * разрешается вовсе. Ровно этот барьер и породил в своё время «новая
+ * пачка карточек не появляется на живом сайте»: сбросить общий кеш было
+ * некому. Ничего запросного (куки, сессия, секрет) модуль не трогает —
+ * только Redis и публичный каталог.
  *
  * Устройство списано с `src/lib/flashcards/cache.ts` не из подражания, а
  * потому, что там уже оплачены два урока, которые иначе пришлось бы
