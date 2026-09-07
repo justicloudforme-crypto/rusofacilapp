@@ -154,11 +154,18 @@ test("закрытый пазл: пометка про подписку, сво�
   let href: string | null = null;
   for (const probe of probes) {
     await openSearch(page, "es");
-    await page.getByRole("searchbox").fill(probe);
-    const locked = page.locator('[data-testid="search-section-game"] [data-testid="search-result"]').filter({
-      has: page.locator('[data-testid="search-result-locked"]'),
-    });
-    if ((await locked.count()) === 0) continue;
+    // Ждать ОТВЕТ, а не таймер: счёт строк сразу после `fill` вернул бы
+    // ноль просто потому, что задержка ввода (300 мс) ещё не истекла, — и
+    // «пазл не найден» было бы неотличимо от «я спросил слишком рано».
+    const [response] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/api/search") && r.status() === 200),
+      page.getByRole("searchbox").fill(probe),
+    ]);
+    if (((await response.json()) as { total: number }).total === 0) continue;
+
+    const locked = page
+      .locator('[data-testid="search-section-game"] [data-testid="search-result"]')
+      .filter({ has: page.locator('[data-testid="search-result-locked"]') });
     await expect(locked.first()).toBeVisible();
     href = await locked.first().getAttribute("href");
     break;
