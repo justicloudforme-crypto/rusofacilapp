@@ -10,6 +10,8 @@ import {
 } from "@/lib/vocabulary-categories";
 import { getThemedPuzzlesByTopic } from "@/lib/word-games/data";
 import JsonLd from "@/components/seo/JsonLd";
+import DeepLinkFocus from "@/components/search/DeepLinkFocus";
+import { cardAnchor, CARD_ANCHOR_PREFIX } from "@/lib/deep-link-anchors";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
 
 // Forced dynamic, same reason as src/app/sitemap.ts: the card bank only
@@ -92,6 +94,7 @@ export default async function VocabularyCategoryPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
+      <DeepLinkFocus prefix={CARD_ANCHOR_PREFIX} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -153,7 +156,12 @@ export default async function VocabularyCategoryPage({
           </h2>
           <ul className="mt-4 flex flex-col divide-y divide-black/10 dark:divide-white/20">
             {group.cards.map((card) => (
-              <li key={card.id} className="flex gap-3 py-3">
+              // `id` — адрес карточки внутри страницы, по которому её
+              // находит строка выдачи поиска. Своего URL у карточки нет и
+              // не заводится (решение владельца 07.09.2026): якорь на
+              // сервер не уходит, поэтому ни sitemap, ни canonical, ни
+              // краулимое множество от него не меняются.
+              <li key={card.id} id={cardAnchor(card.id)} className="-mx-2 flex scroll-mt-24 gap-3 px-2 py-3">
                 <span aria-hidden className="text-xl leading-7">
                   {card.emoji}
                 </span>

@@ -3,6 +3,8 @@ import es from "../../dictionaries/es.json";
 import ru from "../../dictionaries/ru.json";
 import { buildSearchRecords, type SearchSources } from "./records";
 import { SEARCH_SECTIONS, type SearchSection } from "./types";
+import { hrefFor } from "./match";
+import { cardAnchor, idiomAnchor } from "@/lib/deep-link-anchors";
 import type { Dictionary } from "@/i18n/dictionaries";
 
 /**
@@ -29,7 +31,10 @@ const SOURCES: SearchSources = {
     { id: "f1", russian: "хлеб", translationEs: "pan", transcription: "jlep", category: "food", level: "A1" },
     { id: "f2", russian: "мироздание", translationEs: "cosmos", transcription: "mirozdanie", category: "food", level: "C1" },
   ],
-  idioms: [{ id: "i1", phrase: "На воре и шапка горит", spanishEquivalent: "El que se pica, ajos come", level: "B2" }],
+  idioms: [
+    { id: "i1", phrase: "На воре и шапка горит", spanishEquivalent: "El que se pica, ajos come", level: "B2", category: "proverbs" },
+    { id: "i2", phrase: "Лишний человек", spanishEquivalent: "El hombre superfluo", level: "B2", category: "literary" },
+  ],
   glossary: [{ slug: "sustantivo", term: "sustantivo", russianEquivalent: "существительное" }],
   puzzles: [
     { type: "WORD_SEARCH", level: "A1", sequence: 1, topic: "comida", wordCount: 8, premiumOnly: false, curved: false },
@@ -111,15 +116,79 @@ describe("текста в индексе нет", () => {
 });
 
 describe("карточка словаря ведёт туда, где она напечатана", () => {
-  it("A1 — на страницу своей темы по-испански, в словарь по-русски", () => {
+  it("A1 — на СВОЮ строку страницы своей темы по-испански, в словарь по-русски", () => {
     const card = bySection("flashcard").find((r) => r.id === "f1")!;
-    expect(card.path).toBe("/vocabulary/comida");
+    expect(card.path).toBe("/vocabulary/comida#card-f1");
+    // На /ru тематических страниц нет вовсе (`if (lang !== "es")
+    // notFound()`), поэтому цеплять якорь не к чему — и вписывать его
+    // туда значило бы обещать доводку, которой в русской локали не
+    // существует.
     expect(card.pathRu).toBe("/vocabulary");
   });
 
-  it("C1 — в словарь: на тематической странице этой карточки физически нет", () => {
+  it("C1 — в словарь БЕЗ якоря: на тематической странице этой карточки физически нет", () => {
     const card = bySection("flashcard").find((r) => r.id === "f2")!;
     expect(card.path).toBe("/vocabulary");
+    expect(card.path).not.toContain("#");
+  });
+
+  it("якорь собран той же функцией, что печатает `id` на странице", () => {
+    const card = bySection("flashcard").find((r) => r.id === "f1")!;
+    expect(card.path.endsWith(`#${cardAnchor("f1")}`)).toBe(true);
+  });
+
+  it("ссылка выдачи несёт якорь целиком", () => {
+    const card = bySection("flashcard").find((r) => r.id === "f1")!;
+    expect(hrefFor(card, "es")).toBe("/es/vocabulary/comida#card-f1");
+    expect(hrefFor(card, "ru")).toBe("/ru/vocabulary");
+  });
+});
+
+describe("идиома ведёт на саму фразу, а не на вкладку", () => {
+  it("путь — существующая вкладка плюс якорь, без нового маршрута", () => {
+    const idiom = bySection("idiom").find((r) => r.id === "i1")!;
+    expect(idiom.path).toBe(`/vocabulary?mode=idioms#${idiomAnchor("i1")}`);
+    // Ни одного нового маршрута: всё, что стоит до «?», — адрес, который
+    // существовал и до правки.
+    expect(idiom.path.split("?")[0]).toBe("/vocabulary");
+  });
+
+  it("работает в обеих локалях: вкладка идиом есть и на /ru", () => {
+    const idiom = bySection("idiom").find((r) => r.id === "i1")!;
+    expect(hrefFor(idiom, "es")).toBe("/es/vocabulary?mode=idioms#idiom-i1");
+    expect(hrefFor(idiom, "ru")).toBe("/ru/vocabulary?mode=idioms#idiom-i1");
+  });
+
+  it("пометка платного повторяет гейт /api/idioms, а не уровень", () => {
+    const map = new Map(bySection("idiom").map((r) => [r.id, r.requires]));
+    // Неоплатившему страница отдаёт 5 фраз из 771 — значит закрыта
+    // практически любая, хотя уровень у них не C1.
+    expect(map.get("i1")).toBe("free");
+    // `literary` режется отдельно и у подписчика `standard` тоже.
+    expect(map.get("i2")).toBe("premium");
+  });
+});
+
+describe("глубокие ссылки не заводят ни одного нового адреса", () => {
+  it("якорь стоит только у карточек и идиом и всегда после существующего пути", () => {
+    for (const record of RECORDS) {
+      for (const path of [record.path, record.pathRu ?? ""]) {
+        if (!path.includes("#")) continue;
+        expect(["flashcard", "idiom"]).toContain(record.section);
+        const [base] = path.split("#");
+        expect(base.split("?")[0], `${record.section}/${record.id}`).toMatch(
+          /^\/vocabulary(\/[a-z0-9-]+)?$/,
+        );
+      }
+    }
+  });
+
+  it("контроль: у разделов со своим адресом якоря нет ни одного", () => {
+    for (const section of ["story", "media", "lesson", "glossary", "game", "page"] as const) {
+      for (const record of bySection(section)) {
+        expect(record.path.includes("#"), `${section}/${record.id}`).toBe(false);
+      }
+    }
   });
 });
 

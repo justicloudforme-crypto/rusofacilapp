@@ -77,6 +77,17 @@ async function main() {
     // Same rule as the puzzles above: real exported rows, e2e-only, and it
     // must not grow to make some other check pass.
     const cards = readFixture("flashcards.json");
+    // Двенадцать настоящих строк идиом, по четыре на каждую из трёх
+    // категорий. Причина та же, что у карточек выше, и она не «чтобы
+    // проверка позеленела»: с 07.09.2026 строка выдачи идиомы ведёт на
+    // саму фразу внутри вкладки словаря, и сторож
+    // e2e/search-deep-link.spec.ts обязан проверить, что она туда
+    // доводит. В базе CI таблица `Idiom` пуста, то есть без этих строк
+    // сторож проверял бы пустой список и был бы зелёным вакуумно.
+    // Категория `literary` здесь обязательна отдельно: она режется
+    // сильнее прочих (LITERARY_IDIOM_LIMITS), и без неё платная половина
+    // проверки не имела бы на чём сработать.
+    const idioms = readFixture("idioms.json");
 
     assertSafeToSeed(
       "WordGamePuzzle",
@@ -94,6 +105,16 @@ async function main() {
       await db.flashcardCard.findMany({ select: { id: true } }),
       (r) => r.id,
     );
+
+    assertSafeToSeed(
+      "Idiom",
+      await db.idiom.findMany({ select: { id: true } }),
+      (r) => r.id,
+    );
+
+    for (const i of idioms) {
+      await db.idiom.upsert({ where: { id: i.id }, update: { ...i }, create: { ...i } });
+    }
 
     for (const c of cards) {
       await db.flashcardCard.upsert({ where: { id: c.id }, update: { ...c }, create: { ...c } });
@@ -122,6 +143,7 @@ async function main() {
     const curved = puzzles.filter((p) => p.curved).length;
     const withRelatedLessons = terms.filter((t) => JSON.parse(t.relatedLessons).length > 0).length;
     const cardCategories = new Set(cards.map((c) => c.category));
+    const idiomCategories = new Set(idioms.map((i) => i.category));
     // The board-width test asserts every column of the WIDEST shape the
     // bank holds is on screen at 390px, and it opens the fixture's 18x18
     // row to do it. 18 is the real maximum over all 1738 production
@@ -180,12 +202,15 @@ async function main() {
         `widest crossword ${widestCrossword}, longest openable free ladder ${longestOpenableLadder}, ` +
         `${freeButLocked} free-by-rule but Premium-gated), ` +
         `${terms.length} glossary terms (${withRelatedLessons} with a related lesson), ` +
-        `${cards.length} flashcards in ${cardCategories.size} category/-ies`,
+        `${cards.length} flashcards in ${cardCategories.size} category/-ies, ` +
+        `${idioms.length} idioms in ${idiomCategories.size} category/-ies`,
     );
     if (
       curved === 0 ||
       withRelatedLessons === 0 ||
       cards.length < 4 ||
+      idioms.length < 12 ||
+      !idiomCategories.has("literary") ||
       widestGrid < 18 ||
       widestCrossword < 40 ||
       longestOpenableLadder < 3 ||

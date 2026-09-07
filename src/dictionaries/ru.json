@@ -1066,7 +1066,8 @@
       "freeTrialLimitMessage": "Вы изучили бесплатный пробный набор выражений. Оформите подписку, чтобы открыть все идиомы.",
       "freeTrialLimitCta": "Оформить подписку",
       "literaryLockedMessageStandard": "Литературные идиомы почти полностью доступны только в плане Premium — ваша текущая подписка открывает лишь небольшую часть.",
-      "literaryUpgradeCta": "Перейти на Premium"
+      "literaryUpgradeCta": "Перейти на Premium",
+      "deepLinkLockedMessage": "Эта фраза открывается по подписке: без неё в списке показаны только несколько идиом для пробы."
     }
   },
   "wordGames": {
