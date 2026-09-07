@@ -9,6 +9,7 @@ import type { Locale } from "@/i18n/config";
 import { usePaywall } from "@/contexts/PaywallContext";
 import TabBar from "@/components/ui/TabBar";
 import FilterChipGroup from "@/components/ui/FilterChipGroup";
+import { ACCESS_MARK_ICON, accessMarkFor, wordGameRequirement, type ViewerTier } from "@/lib/access-marks";
 
 export type PickerData = Record<
   WordGameType,
@@ -23,6 +24,7 @@ export interface WordGamesPickerDict {
   completedBadge: string;
   expertModeLabel: string;
   premiumTierLabel: string;
+  subscriptionLabel: string;
 }
 
 /** Type tab + level pill + sequence grid — self-paced, matches the rest of
@@ -34,6 +36,7 @@ export default function WordGamesPicker({
   dict,
   data,
   isPremium,
+  isSubscriber,
 }: {
   lang: Locale;
   dict: WordGamesPickerDict;
@@ -42,6 +45,17 @@ export default function WordGamesPicker({
    * puzzles are Premium-exclusive (see entitlement.ts canAccessCurvedPuzzle);
    * everyone else taps into the paywall instead of the puzzle page. */
   isPremium: boolean;
+  /**
+   * Есть ли у посетителя ЛЮБАЯ активная подписка.
+   *
+   * Отдельно от `isPremium`, потому что рунгов за десяткой — большинство,
+   * и анониму они отвечают 307 в `/pricing`. До 07.09.2026 плитка такого
+   * рунга выглядела как открытая: числом по боевой базе — 984 пазла из
+   * 3277 требуют плана Premium, и корона стояла лишь у 505 из них
+   * (у 479 `curved` вместо короны была одна звезда), а «нужна подписка»
+   * не отмечалось вовсе ни у одного из 2210 остальных платных.
+   */
+  isSubscriber: boolean;
 }) {
   const [type, setType] = useState<WordGameType>("WORD_SEARCH");
   const [level, setLevel] = useState<FlashcardLevel>("A1");
@@ -75,7 +89,24 @@ export default function WordGamesPicker({
           const isCompleted = completedSet.has(sequence);
           const isCurved = curvedSet.has(sequence);
           const isPremiumOnlySeq = premiumOnlySet.has(sequence);
-          const isLocked = isPremiumOnlySeq && !isPremium;
+          /**
+           * Требование берётся у общего признака, а не собирается здесь
+           * заново. Прежнее `isPremiumOnlySeq && !isPremium` совпадало с
+           * воротами страницы пазла только по данным: те смотрят
+           * `row.curved || row.premiumOnly`, и `curved` без `premiumOnly`
+           * на проде сегодня 0 из 479 — одна запись генератора отменяет
+           * это молча (см. free-tier.ts про isPubliclyOpenableWordGamePuzzle).
+           */
+          const requirement = wordGameRequirement({
+            type,
+            level,
+            sequence,
+            curved: isCurved,
+            premiumOnly: isPremiumOnlySeq,
+          });
+          const tier: ViewerTier = isPremium ? "premium" : isSubscriber ? "standard" : "free";
+          const mark = accessMarkFor(requirement, tier);
+          const isLocked = mark !== null;
           return (
             <Link
               key={sequence}
@@ -93,13 +124,19 @@ export default function WordGamesPicker({
               onClick={(e) => {
                 if (!isLocked) return;
                 e.preventDefault();
-                openPaywall("premium");
+                openPaywall(mark === "premium-tier" ? "premium" : "free");
               }}
               className={`tap relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 active:border-foreground/40 ${
                 isPremiumOnlySeq ? "border-primary/40 bg-primary/5 dark:border-primary-400/40 dark:bg-primary-400/10" : "border-black/10 dark:border-white/30"
               }`}
             >
-              {isCurved ? (
+              {/* ★ — про СЛОЖНОСТЬ, значок платности — про доступ. Это две
+                  независимые вещи, и до 07.09.2026 они делили одно место:
+                  у `curved`-пазла звезда вытесняла корону, хотя он тоже
+                  открывается только плану Premium. Теперь звезда слева,
+                  значок платности справа от неё, и ни один не прячет
+                  другой. */}
+              {isCurved && (
                 <span
                   aria-label={dict.expertModeLabel}
                   title={dict.expertModeLabel}
@@ -107,15 +144,18 @@ export default function WordGamesPicker({
                 >
                   ★
                 </span>
-              ) : isPremiumOnlySeq ? (
+              )}
+              {mark && (
                 <span
-                  aria-label={dict.premiumTierLabel}
-                  title={dict.premiumTierLabel}
-                  className="absolute left-1.5 top-1.5 text-sm leading-none text-premium-500 dark:text-premium-300"
+                  aria-label={mark === "premium-tier" ? dict.premiumTierLabel : dict.subscriptionLabel}
+                  title={mark === "premium-tier" ? dict.premiumTierLabel : dict.subscriptionLabel}
+                  className={`absolute top-1.5 text-sm leading-none ${isCurved ? "left-5" : "left-1.5"} ${
+                    mark === "premium-tier" ? "text-premium-500 dark:text-premium-300" : "text-foreground/45"
+                  }`}
                 >
-                  👑
+                  {ACCESS_MARK_ICON[mark]}
                 </span>
-              ) : null}
+              )}
               {sequence}
               {isCompleted && (
                 <span

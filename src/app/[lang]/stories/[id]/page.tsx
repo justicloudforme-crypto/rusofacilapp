@@ -14,7 +14,8 @@ import { getAllMedia } from "@/lib/media/data";
 import StoryText from "@/components/stories/StoryText";
 import ContentInsights from "@/components/stories/ContentInsights";
 import CulturalNote from "@/components/stories/CulturalNote";
-import PremiumBadge from "@/components/ui/PremiumBadge";
+import AccessMark from "@/components/ui/AccessMark";
+import { accessMarkFor, storyRequirement } from "@/lib/access-marks";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
@@ -103,7 +104,10 @@ export default async function StoryReaderPage({
   // Distinguishes the two lock states below: "subscribe at all" vs. "you're
   // subscribed, but this needs Premium specifically".
   const needsPremiumUpgrade = reason === "premium";
-  const requiresPremiumTier = story.premiumOnly || story.level === "C1";
+  // Значок платности — через общий признак, а не через ещё одно
+  // повторение правила: `storyRequirement` и `getStoryAccess` сверены
+  // друг с другом тестом по всем восьми сочетаниям колонок.
+  const storyMark = accessMarkFor(storyRequirement(story), tier);
 
   // descriptionRu is null for every row today (see schema.prisma) — this
   // fallback is what keeps /ru showing the Spanish summary instead of
@@ -196,8 +200,14 @@ export default async function StoryReaderPage({
         <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/70">
           {story.level}
         </span>
-        {story.isPremium && <PremiumBadge icon="⭐">{dict.stories.premiumBadge}</PremiumBadge>}
-        {requiresPremiumTier && <PremiumBadge>{dict.stories.premiumTierBadge}</PremiumBadge>}
+        {/* Тот же один признак, что на карточке в каталоге: значок видит
+            только тот, кто не может открыть, и он всегда один. */}
+        {storyMark && (
+          <AccessMark
+            mark={storyMark}
+            label={storyMark === "premium-tier" ? dict.stories.premiumTierBadge : dict.stories.subscriptionBadge}
+          />
+        )}
       </div>
 
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{story.title}</h1>

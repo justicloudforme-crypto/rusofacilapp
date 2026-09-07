@@ -39,6 +39,15 @@ jobs:
       - name: Push database schema
         run: npx prisma db push
 
+      # Значок платности пишется в одном месте, а не пересказывается
+      # (PROGRESS 7.137 часть 3). Дешёвая статическая проверка, поэтому
+      # рядом с lint, а не в браузерной задаче.
+      - name: Значок платности — один признак на весь сайт
+        run: npm run check:access-marks
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:access-marks:plant
+
       - name: Lint
         run: npm run lint
 
