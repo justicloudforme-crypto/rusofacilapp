@@ -1,0 +1,19 @@
+{
+ "note": "Строки SearchQuery, записанные в БОЕВУЮ базу самим замером захода 7.131 (06.09.2026, часть 1: четыре выхода из окна поиска, проверенные браузером против прода). Каждая пара — id строки и ТОЧНАЯ строка запроса, которую набирал прогон. Основанием «строка моя» служит именно запрос, а не отпечаток процесса в cuid: отпечаток принадлежит серверному процессу, и в непрерывную последовательность счётчиков попадают строки живых посетителей (замерено, PROGRESS.md 7.131 часть 1). Удалять — scripts/delete-own-search-demand-rows.ts.",
+ "takenAt": "2026-09-06T22:00:00Z",
+ "rows": {
+  "cmtqcl1ao000004jmtz5cqw6p": "zzq7131c-escape",
+  "cmtqcmbjj000104jmjw79coaz": "zzq7131d-escape",
+  "cmtqcmfky000204jmjh8sanzv": "zzq7131d-cruz",
+  "cmtqcmm84000304jm1prejo2z": "MaTrIoSkA",
+  "cmtqcn4aa000404jmxmadlrch": "zzq7131d-salida",
+  "cmtqcolmf000504jm60np27rk": "zzq7131e-escape",
+  "cmtqcoq2j000604jm6sxar9rb": "zzq7131e-cruz",
+  "cmtqcovyj000704jmo9cqwnpt": "MaTrIoSkA",
+  "cmtqcp28y000904jmxfu72vvy": "zzq7131e-salida",
+  "cmtqcpsfo000004i5krh9f0sd": "zzq7131w-escape",
+  "cmtqcpy0i000104i5p549384m": "zzq7131w-cruz",
+  "cmtqcq37s000a04jm7nnq4qoc": "MaTrIoSkA",
+  "cmtqcq95d000b04jmap0iqk8n": "zzq7131w-salida"
+ }
+}
