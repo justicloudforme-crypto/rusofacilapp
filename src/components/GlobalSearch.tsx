@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import type { Locale } from "@/i18n/config";
@@ -37,6 +37,14 @@ interface Destination {
  * Адреса у поиска нет: `?q=` в строку браузера не пишется. Это не
  * недоделка — новых URL 0, и запись в `src/lib/site.ts` про намеренное
  * отсутствие `potentialAction: SearchAction` остаётся верной.
+ *
+ * Enter — с 07.09.2026 (PROGRESS.md 7.133, часть 1). До этого дня на поле
+ * не висело НИ ОДНОГО обработчика `keydown` (замерено на живом проде
+ * инструментированным `addEventListener`: 0 из 64 конфигураций), формы
+ * вокруг поля не было тоже — то есть Enter не ломался, он не был написан
+ * вовсе, и человек, набравший слово и нажавший Enter, получал молчание.
+ * Теперь Enter уводит на первый результат выдачи; подробности и границы —
+ * у `onSearchKeyDown` ниже.
  */
 export default function GlobalSearch({
   lang,
@@ -52,6 +60,16 @@ export default function GlobalSearch({
   const [response, setResponse] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Enter, нажатый до того, как пришла выдача на ЭТУ строку. Хранится как
+  // намерение, а не как действие: человек уже сказал «веди», отвечать
+  // молчанием только потому, что задержка ввода ещё не истекла, — это тот
+  // же отказ, с которого начался заход.
+  const [enterPending, setEnterPending] = useState(false);
+  // Пропустить задержку ввода один раз: Enter — это конец набора, ждать
+  // после него нечего.
+  const [flushNow, setFlushNow] = useState(false);
 
   const destinations = useMemo<Destination[]>(() => {
     const base: Destination[] = [
@@ -95,15 +113,19 @@ export default function GlobalSearch({
           // прежнюю выдачу вместо пустого экрана.
           if (!controller.signal.aborted) setLoading(false);
         });
-    }, SEARCH_DEBOUNCE_MS);
+    }, flushNow ? 0 : SEARCH_DEBOUNCE_MS);
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [open, trimmed, lang]);
+  }, [open, trimmed, lang, flushNow]);
 
   function onQueryChange(value: string) {
     setQuery(value);
+    // Новая буква отменяет и намерение уйти, и разовую отмену задержки:
+    // человек продолжает набирать, а не подтверждает набранное.
+    setEnterPending(false);
+    setFlushNow(false);
     if (value.trim()) {
       setLoading(true);
     } else {
@@ -224,14 +246,95 @@ export default function GlobalSearch({
     setOpen(false);
     setQuery("");
     setResponse(null);
+    setEnterPending(false);
+    setFlushNow(false);
   }, [send]);
 
-  function follow() {
+  const follow = useCallback(() => {
     // Порядок обязателен: признак ставится ДО отправки, потому что
     // переход и есть выход — второго повода записать не будет.
     demand.markFollowed();
     close();
+  }, [demand, close]);
+
+  /**
+   * Адрес ПЕРВОЙ напечатанной строки выдачи — той самой, на которую
+   * человек нажал бы мышью. Разделы уже отсортированы (`SECTION_ORDER` в
+   * match.ts), поэтому первая строка первого непустого раздела и есть
+   * первый результат; свёрнутый раздел занимает ровно одну строку и ведёт
+   * на свою подборку.
+   *
+   * `null` означает «идти некуда» — и это законный ответ, а не ошибка:
+   * пустая выдача не должна никуда уводить.
+   */
+  const firstHrefOf = useCallback(
+    (data: SearchResponse): string | null => {
+      for (const section of data.sections) {
+        if (section.collapsed) return section.collapsedHref ?? `/${lang}/word-games`;
+        if (section.hits.length > 0) return section.hits[0].href;
+      }
+      return null;
+    },
+    [lang],
+  );
+
+  // Отвечает ли выдача на ТУ строку, что сейчас в поле. Без этой сверки
+  // Enter, нажатый сразу после правки строки, уводил бы по прежней выдаче
+  // — то есть не туда, что видно на экране.
+  const answersCurrent = response !== null && response.query === trimmed;
+
+  const goToFirst = useCallback(
+    (data: SearchResponse) => {
+      const href = firstHrefOf(data);
+      if (!href) return;
+      // Тот же путь, что у нажатия мышью: сначала отметить переход и
+      // закрыть окно, потом уйти. Порядок важен по той же причине, что и в
+      // `follow` — переход и есть выход.
+      follow();
+      router.push(href);
+    },
+    [firstHrefOf, follow, router],
+  );
+
+  /**
+   * Enter в поле поиска.
+   *
+   * Чего он НЕ делает, и это половина правки. Поле не завёрнуто в `<form>`
+   * (проверено на живом проде: `input.closest("form")` — `null` во всех 64
+   * замеренных конфигурациях), поэтому неявной отправки формы здесь нет и
+   * страница не перезагружается. `preventDefault` стоит не от сегодняшнего
+   * поведения, а от завтрашнего: обёртка полем в форму — обычная правка
+   * вёрстки, и она молча вернула бы перезагрузку.
+   *
+   * Пустая строка не уводит никуда намеренно: на пустой строке выдачи нет,
+   * есть список разделов — то есть меню. Enter, уносящий на главную сразу
+   * после открытия окна, был бы неожиданностью, а не удобством.
+   *
+   * Пустая выдача тоже не уводит никуда: окно остаётся открытым, строка —
+   * на месте, «ничего не найдено» — на экране.
+   */
+  function onSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    if (!trimmed) return;
+    if (answersCurrent && response) {
+      goToFirst(response);
+      return;
+    }
+    // Выдача ещё не пришла. Не ждать её сложа руки: запрос отправляется
+    // немедленно, а переход состоится, как только она придёт.
+    setEnterPending(true);
+    setFlushNow(true);
   }
+
+  // Отложенный Enter: выдача пришла — уходим. Одноразово, поэтому признак
+  // снимается здесь же.
+  useEffect(() => {
+    if (!enterPending || !answersCurrent || !response) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEnterPending(false);
+    goToFirst(response);
+  }, [enterPending, answersCurrent, response, goToFirst]);
 
   const t = dict.search;
   const sectionLabel = (section: SearchSection) => t.sections[section];
@@ -285,6 +388,7 @@ export default function GlobalSearch({
           value={query}
           maxLength={MAX_QUERY_LENGTH}
           onChange={(e) => onQueryChange(e.target.value)}
+          onKeyDown={onSearchKeyDown}
           placeholder={dict.nav.searchPlaceholder}
           aria-label={dict.nav.searchTitle}
         />
