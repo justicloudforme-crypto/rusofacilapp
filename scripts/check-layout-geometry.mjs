@@ -53,7 +53,19 @@
 //   node scripts/check-layout-geometry.mjs
 //   node scripts/check-layout-geometry.mjs --base=http://localhost:3123
 //   node scripts/check-layout-geometry.mjs --control
-//   node scripts/check-layout-geometry.mjs --widths-only   (skip devices)
+//   node scripts/check-layout-geometry.mjs --widths-only     (skip devices)
+//   node scripts/check-layout-geometry.mjs --require-content (every page must render)
+//
+// ТРИ ИСХОДА, А НЕ ДВА — 07.09.2026. До этой даты прогон отвечал одним
+// числом «pages with problems», и в это число попадала страница, которая
+// просто не существует в текущей базе: `http 404` лежал в том же списке,
+// что и «документ шире вьюпорта». Цена названа числом в PROGRESS 7.136
+// и 7.137: одна и та же проверка на одной и той же сборке и одной и той
+// же базе давала 22 без `--ci` и 0 с ним, и оба ответа были неправдой —
+// первый называл отсутствие страницы дефектом вида, второй выбрасывал
+// страницу из списка молча. Теперь исходов три: измерена, измерена и
+// плоха, не измерена (нет строк в базе) — и все три печатаются числом
+// всегда, вместе с полом «сколько страниц обязано было измериться».
 //
 // --control is mandatory before believing a clean run: it plants one
 // over-wide element and one translucent header and requires both to be
@@ -88,6 +100,13 @@ const WIDTHS_ONLY = argv.includes("--widths-only");
  * site. Both positive controls still run: they need no content either.
  */
 const CI_MODE = argv.includes("--ci");
+/**
+ * «Каждая страница списка обязана была отдать 200».
+ *
+ * Для прогона против прода, где строки в базе есть все: там пропуск
+ * `contentOnly`-страницы — не свойство базы, а настоящая пропажа.
+ */
+const REQUIRE_CONTENT = argv.includes("--require-content");
 
 /**
  * Сокращённый прогон: свой список путей и свои ширины. Появился
@@ -373,7 +392,24 @@ async function inspect(ctx, page_, plant) {
     });
   await settle(page);
   const status = res?.status() ?? 0;
-  if (status !== 200) problems.push(`http ${status}`);
+  /**
+   * НЕ `problems.push("http 404")`.
+   *
+   * 07.09.2026 (PROGRESS 7.136 часть 4 и 7.137 часть 2). Один и тот же
+   * прогон против одной и той же сборки на одной и той же базе давал
+   * ДВА разных ответа: 22 страницы с проблемами без `--ci` и 0 с ним.
+   * Оба ответа неверны, и оба — про одно: пять страниц списка требуют
+   * строк в базе (`contentOnly`), а на базе в форме CI двух из них нет,
+   * поэтому маршрут честно отвечает 404. Без флага это считалось
+   * проблемой ВИДА (её тут нет — измерять было нечего), с флагом
+   * страница выбрасывалась из списка молча (и настоящее падение на ней
+   * тоже было бы выброшено).
+   *
+   * Поэтому «страница не отдала 200» — третий исход рядом с «померена»
+   * и «померена и плоха», и он всегда назван числом в итоге. Что с ним
+   * делать, решает вызывающий: для `contentOnly` это «не померена», для
+   * всех прочих — падение.
+   */
 
   if (tab) {
     // The practice block does not exist until its tab is opened. A miss
@@ -431,7 +467,7 @@ async function inspect(ctx, page_, plant) {
   }
 
   await page.close();
-  return { problems, measured: m };
+  return { problems, measured: m, status };
 }
 
 /** Контекст с cookie прогона, если он задан. Одна точка, чтобы контроль
@@ -620,7 +656,45 @@ async function runControl(browser, engineName, contextOptions) {
   return caught === PLANTS.length && quiet === MUST_NOT_FIRE.length;
 }
 
+/**
+ * Один замер одной страницы, одинаково в обеих половинах прогона.
+ *
+ * Возвращает исход одним словом, чтобы «22 или 0» больше не зависело от
+ * того, какая из двух половин как печатает.
+ */
+async function inspectAndReport(ctx, page, tally) {
+  const { problems, measured, status } = await inspect(ctx, page);
+  const name = page.label ?? page.path;
+  const contentOnly = Boolean(page.contentOnly);
+  if (status !== 200) {
+    if (contentOnly) {
+      tally.notMeasured += 1;
+      tally.notMeasuredPaths.add(`${name} (http ${status})`);
+      console.log(`  skip  ${name.padEnd(28)} http ${status} — страница требует строк в базе, измерять нечего`);
+      return;
+    }
+    tally.missing += 1;
+    tally.missingPaths.add(`${name} (http ${status})`);
+    console.log(`  FAIL  ${name.padEnd(28)} http ${status} — страница обязана рендериться на любой базе`);
+    return;
+  }
+  tally.measured += 1;
+  tally.problems += problems.length ? 1 : 0;
+  console.log(
+    `  ${problems.length ? "FAIL" : "ok  "}  ${name.padEnd(28)} scrollWidth ${measured?.scrollWidth ?? "?"} / viewport ${measured?.vw ?? "?"}`
+  );
+  problems.forEach((p) => console.log(`          → ${p}`));
+}
+
 async function main() {
+  const tally = {
+    measured: 0,
+    problems: 0,
+    notMeasured: 0,
+    notMeasuredPaths: new Set(),
+    missing: 0,
+    missingPaths: new Set(),
+  };
   let failures = 0;
   const covered = [];
   const chrome = await chromium.launch();
@@ -635,13 +709,7 @@ async function main() {
     });
     console.log(`\n=== ${BASE} — chromium, ${width}px viewport ===`);
     for (const page of PAGES) {
-      const { problems, measured } = await inspect(ctx, page);
-      failures += problems.length ? 1 : 0;
-      const name = page.label ?? page.path;
-      console.log(
-        `  ${problems.length ? "FAIL" : "ok  "}  ${name.padEnd(28)} scrollWidth ${measured?.scrollWidth ?? "?"} / viewport ${measured?.vw ?? "?"}`
-      );
-      problems.forEach((p) => console.log(`          → ${p}`));
+      await inspectAndReport(ctx, page, tally);
     }
     await ctx.close();
   }
@@ -665,13 +733,7 @@ async function main() {
       );
       covered.push(`${name} / ${profile.defaultBrowserType}`);
       for (const page of PAGES) {
-        const { problems, measured } = await inspect(ctx, page);
-        failures += problems.length ? 1 : 0;
-        const label = page.label ?? page.path;
-        console.log(
-          `  ${problems.length ? "FAIL" : "ok  "}  ${label.padEnd(28)} scrollWidth ${measured?.scrollWidth ?? "?"} / viewport ${measured?.vw ?? "?"}`
-        );
-        problems.forEach((p) => console.log(`          → ${p}`));
+        await inspectAndReport(ctx, page, tally);
       }
       await ctx.close();
     }
@@ -705,7 +767,36 @@ async function main() {
 
   await chrome.close();
   if (kit) await kit.close();
-  console.log(`\npages with problems: ${failures}`);
+
+  /**
+   * Три числа, а не одно, и печатаются они всегда.
+   *
+   * «pages with problems: 0» само по себе не отличает «померено
+   * тринадцать страниц, дефектов нет» от «померено ноль страниц».
+   * Поэтому рядом стоит, сколько страниц реально измерено, и floor:
+   * прогон, измеривший меньше страниц, чем в списке не-`contentOnly`,
+   * красный, даже если проблем 0. Это тот же приём, что у
+   * `check:e2e-coverage`: зелёный код выхода не говорит, сколько работы
+   * за ним стоит, если рядом не написано число.
+   */
+  failures += tally.problems + tally.missing;
+  console.log(`\nстраниц измерено: ${tally.measured}`);
+  console.log(`страниц с проблемами вида: ${tally.problems}`);
+  console.log(`страниц НЕ измерено (нужны строки в базе): ${tally.notMeasured}` +
+    (tally.notMeasured ? ` — ${[...tally.notMeasuredPaths].join(", ")}` : ""));
+  if (tally.missing) {
+    console.log(`страниц, обязанных рендериться и не отдавших 200: ${tally.missing} — ${[...tally.missingPaths].join(", ")}`);
+  }
+  if (REQUIRE_CONTENT && tally.notMeasured) {
+    console.log(`--require-content: ${tally.notMeasured} измерений пропущено, а прогон обязан быть полным`);
+    failures += tally.notMeasured;
+  }
+  const floor = PAGES.filter((p) => !p.contentOnly).length;
+  if (tally.measured < floor) {
+    console.log(`пол измерений не взят: ${tally.measured} < ${floor}`);
+    failures += 1;
+  }
+  console.log(`pages with problems: ${tally.problems}`);
   process.exitCode = failures ? 1 : 0;
 }
 

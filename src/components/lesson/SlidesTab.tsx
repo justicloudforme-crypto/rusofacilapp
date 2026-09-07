@@ -14,6 +14,7 @@ export default function SlidesTab({
   illustrations,
   level,
   lessonSlug,
+  canDownloadPdf,
   dict,
 }: {
   slides: Slide[];
@@ -21,6 +22,19 @@ export default function SlidesTab({
   illustrations: Record<string, ReactNode>;
   level: string;
   lessonSlug: string;
+  /**
+   * Отдаст ли `/api/lessons/<level>/<lesson>/pdf` этому посетителю файл.
+   *
+   * Не то же самое, что `isLocked` у `LessonView`: первый урок каждого
+   * уровня открыт всем, а PDF — нет. Маршрут просит АКТИВНУЮ подписку
+   * (или сотрудника) и всем остальным отвечает `403 {"error":"Forbidden"}`.
+   * До 07.09.2026 кнопка печаталась всё равно, и на четырёх открытых
+   * уроках (`a1/1`, `a2/1`, `b1/1`, `b2/1`) в обеих локалях анонимный
+   * посетитель, нажав её, получал json с ошибкой вместо файла — 4 из 5
+   * не-200 целей всего обхода прода. Правило: ссылка либо ведёт туда,
+   * где 200, либо не печатается.
+   */
+  canDownloadPdf: boolean;
   dict: SlidesDict;
 }) {
   const [index, setIndex] = useState(0);
@@ -126,12 +140,14 @@ export default function SlidesTab({
         ))}
       </div>
 
-      <a
-        href={`/api/lessons/${level}/${lessonSlug}/pdf`}
-        className="tap inline-flex w-fit items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-      >
-        {dict.downloadPdfButton}
-      </a>
+      {canDownloadPdf && (
+        <a
+          href={`/api/lessons/${level}/${lessonSlug}/pdf`}
+          className="tap inline-flex w-fit items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+        >
+          {dict.downloadPdfButton}
+        </a>
+      )}
     </div>
   );
 }

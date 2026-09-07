@@ -196,6 +196,11 @@ export default async function LessonPage({
         levelTitle={levelDict.title}
         content={content}
         isLocked={!entitled}
+        /* НЕ `entitled`: у первого урока каждого уровня `entitled` истинно
+           для всех (`isFreeTrial`), а маршрут PDF всё равно требует
+           подписки и анониму отдаёт 403. Признак здесь — тот же, что
+           читает сам маршрут: активная подписка или сотрудник. */
+        canDownloadPdf={tier !== "free"}
         lockedCounts={lockedCounts}
         slideIllustrations={slideIllustrations}
         dict={dict.lesson}

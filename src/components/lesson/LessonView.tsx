@@ -63,6 +63,7 @@ export default function LessonView({
   levelTitle,
   content,
   isLocked,
+  canDownloadPdf,
   lockedCounts,
   slideIllustrations,
   dict,
@@ -89,6 +90,12 @@ export default function LessonView({
   // themselves, so a visitor can see what the lesson includes before
   // subscribing.
   isLocked: boolean;
+  /**
+   * Отдаст ли маршрут PDF этому посетителю. Отдельно от `isLocked`: у
+   * первого урока каждого уровня `isLocked` — false для всех, а PDF
+   * всё равно требует подписки и без неё отвечает 403 (см. SlidesTab).
+   */
+  canDownloadPdf: boolean;
   // Real counts from the FULL (unstripped) content, computed server-side
   // before stripping — lets the locked placeholder say "24 palabras" isntead
   // of a vague "content available with subscription". Null when the lesson
@@ -276,6 +283,7 @@ export default function LessonView({
                   illustrations={slideIllustrations}
                   level={level}
                   lessonSlug={lessonSlug}
+                  canDownloadPdf={canDownloadPdf}
                   dict={dict.slides}
                 />
               </div>
