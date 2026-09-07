@@ -17,6 +17,17 @@
  * seed-stories.ts.
  *
  *   npm run db:set-free-trial-stories
+ *   npm run db:set-free-trial-stories -- --dry-run
+ *
+ * `--dry-run` writes nothing and prints the exact rows a real run would
+ * touch: every `Story.isPremium` flip by (id, title, author, level, старое
+ * значение → новое), and — рядом с ними — сколько строк `AudioAsset`
+ * висит на каждом из этих рассказов, потому что смысл этой правки не в
+ * колонке, а в том, чью озвучку слышит человек без подписки. Ни одна
+ * строка `AudioAsset` этим скриптом НЕ трогается ни в каком режиме: он
+ * их только считает и печатает. Проверять раскатку надо обходом живого
+ * прода, а не этим выводом — вывод говорит, что скрипт СОБИРАЕТСЯ
+ * сделать, а не что увидел анонимный читатель.
  */
 import "dotenv/config";
 import { db } from "../src/lib/db";
@@ -50,9 +61,12 @@ const CURATED_FREE_STORIES: { title: string; author: string }[] = [
 ];
 
 async function main() {
+  const dryRun = process.argv.includes("--dry-run");
   const freeSet = new Set(CURATED_FREE_STORIES.map((s) => `${s.title}::${s.author}`));
 
-  const all = await db.story.findMany({ select: { id: true, title: true, author: true, isPremium: true } });
+  const all = await db.story.findMany({
+    select: { id: true, title: true, author: true, level: true, isPremium: true },
+  });
 
   let madeFree = 0;
   let madePremium = 0;
@@ -66,15 +80,48 @@ async function main() {
     }
   }
 
+  const planned: { story: (typeof all)[number]; to: boolean }[] = [];
   for (const story of all) {
     const shouldBeFree = freeSet.has(`${story.title}::${story.author}`);
     if (shouldBeFree && story.isPremium) {
-      await db.story.update({ where: { id: story.id }, data: { isPremium: false } });
+      planned.push({ story, to: false });
       madeFree++;
     } else if (!shouldBeFree && !story.isPremium) {
-      await db.story.update({ where: { id: story.id }, data: { isPremium: true } });
+      planned.push({ story, to: true });
       madePremium++;
     }
+  }
+
+  if (planned.length > 0) {
+    // Сколько клипов висит на каждом задетом рассказе — одним запросом,
+    // не по строке на рассказ.
+    const audio = await db.audioAsset.groupBy({
+      by: ["contentId"],
+      where: { contentType: "story", contentId: { in: planned.map((p) => p.story.id) } },
+      _count: { _all: true },
+    });
+    const clipsById = new Map(audio.map((a) => [a.contentId, a._count._all]));
+
+    console.log(`${dryRun ? "DRY-RUN — записи не будет." : "Запись."} Строк Story.isPremium к правке: ${planned.length}`);
+    for (const { story, to } of planned) {
+      console.log(
+        `  ${story.id}  «${story.title}» / ${story.author} (${story.level})  isPremium ${story.isPremium ? "true" : "false"} → ${to ? "true" : "false"}  ` +
+          `[${to ? "звук уходит за пейволл" : "звук открывается"}: audioAssetRows=${clipsById.get(story.id) ?? 0}]`
+      );
+    }
+  } else {
+    console.log(`${dryRun ? "DRY-RUN — " : ""}правок нет: база уже совпадает с CURATED_FREE_STORIES.`);
+  }
+
+  if (dryRun) {
+    console.log(
+      `✔ DRY-RUN: было бы ${madeFree} открыто, ${madePremium} закрыто${missing ? `, ${missing} curated title(s) not found` : ""}. Ничего не записано.`
+    );
+    return;
+  }
+
+  for (const { story, to } of planned) {
+    await db.story.update({ where: { id: story.id }, data: { isPremium: to } });
   }
 
   console.log(
