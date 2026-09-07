@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, TouchEvent as ReactTouchEvent } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics/react";
 import type { IntroSlide } from "@/lib/intro/content";
@@ -12,6 +13,7 @@ export interface IntroPresentationDict {
   prevSlide: string;
   nextSlide: string;
   slideCounter: string;
+  slideNavLabel: string;
   chooseLevelHeading: string;
   chooseLevelSubtitle: string;
   startLevelLabel: string;
@@ -73,12 +75,76 @@ export default function IntroPresentation({
     .replace("{current}", String(index + 1))
     .replace("{total}", String(slides.length));
 
-  const goPrev = () => setIndex((i) => Math.max(0, i - 1));
-  const goNext = () => setIndex((i) => Math.min(slides.length - 1, i + 1));
+  const goPrev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), []);
+  const goNext = useCallback(() => setIndex((i) => Math.min(slides.length - 1, i + 1)), [slides.length]);
+
+  /**
+   * Полоса точек больше НЕ переносится — она прокручивается, — а значит
+   * активная точка может оказаться за её краем. Довозим её сами, а не
+   * через `scrollIntoView`: тот у обоих движков имеет право подвинуть и
+   * страницу по вертикали, то есть увести карточку слайда из-под пальца.
+   * Здесь двигается ровно одно число — `scrollLeft` полосы.
+   */
+  const stripRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const strip = stripRef.current;
+    const dot = strip?.children[0]?.children[index] as HTMLElement | undefined;
+    if (!strip || !dot) return;
+    const left = dot.offsetLeft - (strip.clientWidth - dot.offsetWidth) / 2;
+    strip.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [index]);
+
+  /**
+   * ←/→ на клавиатуре: замер 07.09.2026 на живом проде — 0 из 8
+   * конфигураций, стрелки не делали ничего. Слушатель висит на самой
+   * деке (`role="region"`, `tabIndex={0}`), а НЕ на окне: перехватывать
+   * стрелки на всю страницу нельзя — на `/courses` есть и шапка с
+   * поиском, и прокрутка.
+   */
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      goPrev();
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      goNext();
+    }
+  };
+
+  /**
+   * Свайп пальцем: до этой правки его не было вовсе (замер: 0 из 8).
+   * Порог 40 px по горизонтали и требование, чтобы горизонталь была
+   * длиннее вертикали, — иначе обычная прокрутка страницы пальцем через
+   * карточку листала бы слайды.
+   */
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (event: ReactTouchEvent) => {
+    const t = event.touches[0];
+    touchStart.current = t ? { x: t.clientX, y: t.clientY } : null;
+  };
+  const onTouchEnd = (event: ReactTouchEvent) => {
+    const start = touchStart.current;
+    const t = event.changedTouches[0];
+    touchStart.current = null;
+    if (!start || !t) return;
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 40 || Math.abs(dx) <= Math.abs(dy)) return;
+    if (dx < 0) goNext();
+    else goPrev();
+  };
 
   return (
-    <div className="flex flex-col gap-6" data-testid="intro-presentation">
-      <div className="relative">
+    <div
+      className="flex flex-col gap-6 outline-none"
+      data-testid="intro-presentation"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={dict.slideNavLabel}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+    >
+      <div className="relative" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         {/* Side arrows overlap the card edges, carousel-style, so a slide
             can be flipped without reaching for the buttons below. Same
             pattern as the lesson deck (SlidesTab.tsx), for a consistent
@@ -191,32 +257,66 @@ export default function IntroPresentation({
         </div>
       </div>
 
-      {/* The dot is 6×6 on purpose — a pager should read as a hint, not as
-          a toolbar — but 6×6 is not a touch target. So the DOT stays the
-          visual and the BUTTON around it is 44×44, which is the project's
-          minimum. Ten of those need 440px and a phone has 320–393, so the
-          strip is allowed to wrap: `max-w-[224px]` breaks it into 5 + 5 below
-          `sm`, and one row of ten returns at `sm` and up where it fits. */}
-      <div className="mx-auto flex max-w-[224px] flex-wrap items-center justify-center sm:max-w-none">
-        {slides.map((s, i) => (
-          <button
-            key={s.id}
-            type="button"
-            aria-label={s.title}
-            data-testid="intro-dot"
-            onClick={() => setIndex(i)}
-            className="tap flex h-11 w-11 items-center justify-center"
-          >
-            <span
-              aria-hidden
-              className={`block h-1.5 rounded-full transition-all ${
-                i === index
-                  ? "w-6 bg-primary dark:bg-primary-400"
-                  : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
-              }`}
-            />
-          </button>
-        ))}
+      {/* ПОЧЕМУ ПОЛОСА ПРОКРУЧИВАЕТСЯ, А НЕ ПЕРЕНОСИТСЯ.
+          Точка — 6×6 намеренно (пейджер должен читаться как подсказка, а
+          не как панель), но 6×6 — не зона нажатия, поэтому кнопка вокруг
+          неё 44×44 (h-11/w-11). Десять таких кнопок требуют 440 px, а
+          телефон даёт 320–393, и до 07.09.2026 полоса ПЕРЕНОСИЛАСЬ:
+          `max-w-[224px]` давал 5 + 5.
+
+          Дефект был не в переносе как таком, а в том, что потолок задан в
+          ПИКСЕЛЯХ, а кнопка — в rem. У человека с увеличенным системным
+          шрифтом (Android «крупный», корневой кегль 18–20 px вместо 16)
+          кнопка вырастает до 49,5–55 px, в 224 px их влезает четыре, и
+          десять точек ложатся в ТРИ ряда 4 + 4 + 2. Замерено 07.09.2026 на
+          живом проде: 16 px → 5 + 5 (6 из 6 конфигураций), 18 и 20 px →
+          4 + 4 + 2 (12 из 12), 24 px → 3 + 3 + 3 + 1 — одинаково в обоих
+          движках.
+
+          Поэтому переноса здесь больше нет ни при каком кегле: полоса —
+          одна строка (`flex-nowrap`) с горизонтальной прокруткой и
+          привязкой, активная точка довозится в видимую часть. Слева от
+          неё — положение ЧИСЛОМ («4 / 10»), потому что по десяти
+          одинаковым точкам, половина которых за краем полосы, «где я»
+          не читается. `role="status"` — чтобы это же число объявлял
+          скринридер: до правки о смене слайда он не сообщал ничего. */}
+      <div className="flex items-center gap-3">
+        <span
+          role="status"
+          aria-live="polite"
+          data-testid="intro-counter"
+          className="flex-shrink-0 text-xs font-semibold tabular-nums text-foreground/60"
+        >
+          {index + 1} / {slides.length}
+        </span>
+        <div
+          ref={stripRef}
+          data-testid="intro-dots"
+          className="intro-pager-strip flex min-w-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
+        >
+          <div className="mx-auto flex flex-shrink-0 flex-nowrap items-center">
+            {slides.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                aria-label={s.title}
+                aria-current={i === index ? "true" : undefined}
+                data-testid="intro-dot"
+                onClick={() => setIndex(i)}
+                className="tap flex h-11 w-11 flex-shrink-0 snap-center items-center justify-center"
+              >
+                <span
+                  aria-hidden
+                  className={`block h-1.5 rounded-full transition-all ${
+                    i === index
+                      ? "w-6 bg-primary dark:bg-primary-400"
+                      : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
