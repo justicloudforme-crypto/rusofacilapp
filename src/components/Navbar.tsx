@@ -136,13 +136,31 @@ export default async function Navbar({
       // downstream needs to guess at a variable header height.
       className="sticky top-0 z-50 border-b border-black/10 bg-background pt-safe dark:border-white/30"
     >
-      <div className="relative mx-auto flex h-16 max-w-5xl items-center gap-4 px-4 sm:px-6">
+      {/* Бюджет ширины ряда в полосе 640–767 (7.132, долги 55 и 56).
+          Замер на проде и на базе в форме CI: при вьюпорте 640 у вошедшего
+          на `/ru` правый край кластера стоял на 631.48 при контентной
+          коробке, кончающейся на 616, — ряд жил на 15.48 px ЗА своей
+          коробкой, за счёт правого паддинга. Из-за этих 15.48 px кнопка
+          поиска не могла вернуться к 44×44: её +8 px забирали 8 из 8.52 px
+          запаса до вьюпорта (7.131, часть 7).
+
+          Пиксели взяты у ГЭПОВ, а не у элементов: 16 px здесь (два гэпа по
+          8) и 24 px у списка ссылок ниже (два гэпа по 12) — 40 px в полосе
+          до `md`. Скрыть элемент было бы дешевле по коду и дороже по
+          продукту: и переключатель звука, и переключатель языка живут в
+          этой полосе ТОЛЬКО здесь — `MobileMenu`, который носит их копии,
+          сам `sm:hidden`, то есть `md:hidden` на любом из них оставил бы
+          640–767 без пути к нему вовсе. Ровно эта ошибка разбиралась в
+          7.71 на ссылке «Админ».
+
+          От `md` и выше гэпы прежние: там запаса и так 24 px. */}
+      <div className="relative mx-auto flex h-16 max-w-5xl items-center gap-2 px-4 sm:px-6 md:gap-4">
         <Link href={`/${lang}`} className="flex flex-shrink-0 items-center gap-2 font-serif text-base font-bold tracking-tight sm:text-lg">
           <MatryoshkaMark size={26} />
           <span>RusoFácilapp</span>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
+        <nav className="hidden items-center gap-3 text-sm font-medium sm:flex md:gap-6">
           <Link href={`/${lang}/courses`} className="tap hover:text-primary-text active:text-primary-text">
             {dict.nav.courses}
           </Link>
