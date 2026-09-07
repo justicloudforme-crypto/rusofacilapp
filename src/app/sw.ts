@@ -131,8 +131,30 @@ const serwist = new Serwist({
  * лишь заставляет воркер взять запрос себе сразу, вместо того чтобы
  * оставить его без владельца в момент, когда документ уже уезжает.
  */
+/**
+ * Дописано 07.09.2026 сторожем `check:dying-posts` (долг 59).
+ *
+ * Правило было записано выше словами и не закреплено ничем. Сторож,
+ * заведённый в этом же заходе, прошёл `src/` и нашёл, что таких отправок
+ * не одна, а ТРИ: кроме маячка журнала спроса через общий транспорт
+ * `postReliably` (`src/lib/reliable-post.ts`, `keepalive: true` плюс
+ * `sendBeacon` последним рубежом) уходят ещё «пазл решён»
+ * (`/api/word-games/complete`) и «карточка выучена»
+ * (`/api/flashcard-progress`). У обеих не было своей строки здесь — то
+ * есть обе стояли ровно в том положении, в котором у Chromium замерена
+ * потеря 6 и 8 доставок из 16.
+ *
+ * Список, а не три отдельных вызова: правило одно на все такие отправки,
+ * и следующая обязана попасть сюда же — за этим и следит сторож.
+ */
+const DYING_DOCUMENT_POST_PATHS = [
+  "/api/search/log",
+  "/api/word-games/complete",
+  "/api/flashcard-progress",
+];
+
 serwist.registerCapture(
-  ({ url, sameOrigin }) => sameOrigin && url.pathname === "/api/search/log",
+  ({ url, sameOrigin }) => sameOrigin && DYING_DOCUMENT_POST_PATHS.includes(url.pathname),
   new NetworkOnly(),
   "POST"
 );

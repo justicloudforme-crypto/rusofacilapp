@@ -1,0 +1,134 @@
+[
+  {
+    "id": "e2e-fixture-idiom-01",
+    "category": "daily",
+    "level": "A2",
+    "phrase": "На воре и шапка горит",
+    "literalTranslation": "Al ladrón hasta el gorro le arde",
+    "spanishEquivalent": "Quien se pica, ajos come",
+    "explanation": "Se usa cuando alguien se delata solo por su propio nerviosismo o reacción culpable, sin que nadie lo haya acusado directamente.",
+    "contextExampleRu": "Никто его не обвинял, а он уже оправдывается — на воре и шапка горит.",
+    "contextExampleEs": "Nadie lo había acusado y ya se estaba justificando — quien se pica, ajos come."
+  },
+  {
+    "id": "e2e-fixture-idiom-02",
+    "category": "daily",
+    "level": "A2",
+    "phrase": "Заварить кашу",
+    "literalTranslation": "Cocinar unas gachas",
+    "spanishEquivalent": "Armar un lío / meter la pata",
+    "explanation": "Se usa cuando alguien inicia un problema complicado o un conflicto, a menudo por descuido o mala planificación.",
+    "contextExampleRu": "Ты сам заварил эту кашу, теперь сам и разбирайся.",
+    "contextExampleEs": "Tú mismo armaste este lío, ahora arréglatelas tú solo."
+  },
+  {
+    "id": "e2e-fixture-idiom-03",
+    "category": "daily",
+    "level": "A2",
+    "phrase": "Расхлёбывать кашу",
+    "literalTranslation": "Terminarse las gachas de otro",
+    "spanishEquivalent": "Cargar con las consecuencias",
+    "explanation": "Se usa cuando alguien tiene que resolver un problema que otra persona (o él mismo) creó — es la pareja natural de 'заварить кашу'.",
+    "contextExampleRu": "Он наделал долгов, а расхлёбывать кашу пришлось всей семье.",
+    "contextExampleEs": "Él hizo deudas, y toda la familia tuvo que cargar con las consecuencias."
+  },
+  {
+    "id": "e2e-fixture-idiom-04",
+    "category": "daily",
+    "level": "A2",
+    "phrase": "Положить зубы на полку",
+    "literalTranslation": "Poner los dientes en el estante",
+    "spanishEquivalent": "Apretarse el cinturón",
+    "explanation": "Se usa para describir una situación de pobreza o escasez, cuando no queda dinero ni siquiera para comer bien.",
+    "contextExampleRu": "После потери работы нам пришлось положить зубы на полку.",
+    "contextExampleEs": "Después de perder el trabajo tuvimos que apretarnos el cinturón."
+  },
+  {
+    "id": "e2e-fixture-idiom-05",
+    "category": "proverbs",
+    "level": "A2",
+    "phrase": "Не пойман — не вор",
+    "literalTranslation": "No atrapado, no es ladrón",
+    "spanishEquivalent": "De lo que no hay pruebas no hay culpa",
+    "explanation": "Se usa para decir que sin evidencia clara no se puede culpar a alguien de algo, aunque haya sospechas.",
+    "contextExampleRu": "Все думают, что это он взял деньги, но не пойман — не вор.",
+    "contextExampleEs": "Todos creen que él tomó el dinero, pero sin pruebas no hay culpa."
+  },
+  {
+    "id": "e2e-fixture-idiom-06",
+    "category": "proverbs",
+    "level": "A2",
+    "phrase": "Мал золотник, да дорог",
+    "literalTranslation": "Pequeño el granito de oro, pero valioso",
+    "spanishEquivalent": "Bueno y breve, dos veces bueno",
+    "explanation": "Se usa para decir que algo o alguien pequeño en tamaño puede tener mucho valor o importancia.",
+    "contextExampleRu": "Наша команда маленькая, но мал золотник, да дорог — мы выигрываем турниры.",
+    "contextExampleEs": "Nuestro equipo es pequeño, pero pequeño y valioso — ganamos torneos."
+  },
+  {
+    "id": "e2e-fixture-idiom-07",
+    "category": "proverbs",
+    "level": "A2",
+    "phrase": "Овчинка выделки не стоит",
+    "literalTranslation": "La piel de oveja no vale la curtiembre",
+    "spanishEquivalent": "No vale la pena el esfuerzo",
+    "explanation": "Se usa cuando el esfuerzo o el costo de hacer algo es mayor que el beneficio que se obtendrá.",
+    "contextExampleRu": "Чинить этот старый телевизор — овчинка выделки не стоит, проще купить новый.",
+    "contextExampleEs": "Arreglar esta tele vieja no vale la pena, es más fácil comprar una nueva."
+  },
+  {
+    "id": "e2e-fixture-idiom-08",
+    "category": "proverbs",
+    "level": "A2",
+    "phrase": "На ловца и зверь бежит",
+    "literalTranslation": "Al cazador hasta la presa le llega corriendo",
+    "spanishEquivalent": "Hablando del rey de Roma",
+    "explanation": "Se usa cuando algo o alguien que estabas buscando aparece justo en el momento oportuno, casi como coincidencia.",
+    "contextExampleRu": "Я как раз искал тебя — на ловца и зверь бежит!",
+    "contextExampleEs": "Justo te estaba buscando — hablando del rey de Roma."
+  },
+  {
+    "id": "e2e-fixture-idiom-09",
+    "category": "literary",
+    "level": "A2",
+    "phrase": "Собака на сене",
+    "literalTranslation": "El perro sobre el heno",
+    "spanishEquivalent": "El perro del hortelano",
+    "explanation": "Se refiere a alguien que no usa algo él mismo, pero tampoco deja que otros lo usen — por pura envidia o egoísmo.",
+    "contextExampleRu": "Он не пользуется этой машиной, но и продавать не хочет — прямо собака на сене.",
+    "contextExampleEs": "Él no usa ese coche, pero tampoco quiere venderlo — como el perro del hortelano."
+  },
+  {
+    "id": "e2e-fixture-idiom-10",
+    "category": "literary",
+    "level": "A2",
+    "phrase": "Пятое колесо в телеге",
+    "literalTranslation": "La quinta rueda de la carreta",
+    "spanishEquivalent": "Estar de más / sobrar",
+    "explanation": "Se usa para describir a alguien o algo completamente innecesario en una situación, que estorba más que ayuda.",
+    "contextExampleRu": "На этой встрече я чувствовал себя пятым колесом в телеге.",
+    "contextExampleEs": "En esa reunión me sentí completamente de más."
+  },
+  {
+    "id": "e2e-fixture-idiom-11",
+    "category": "literary",
+    "level": "A2",
+    "phrase": "Первая ласточка",
+    "literalTranslation": "La primera golondrina",
+    "spanishEquivalent": "La primera señal",
+    "explanation": "Se usa para hablar del primer indicio o señal temprana de un cambio mayor que está por venir.",
+    "contextExampleRu": "Этот успешный проект — только первая ласточка больших перемен в компании.",
+    "contextExampleEs": "Este proyecto exitoso es solo la primera señal de grandes cambios en la empresa."
+  },
+  {
+    "id": "e2e-fixture-idiom-12",
+    "category": "literary",
+    "level": "A2",
+    "phrase": "Сидеть на двух стульях",
+    "literalTranslation": "Sentarse en dos sillas",
+    "spanishEquivalent": "Nadar entre dos aguas",
+    "explanation": "Se usa cuando alguien intenta mantener dos posiciones, lealtades o proyectos opuestos al mismo tiempo, sin comprometerse con ninguno.",
+    "contextExampleRu": "Нельзя сидеть на двух стульях — выбери одну работу.",
+    "contextExampleEs": "No se puede nadar entre dos aguas — elige un solo trabajo."
+  }
+]

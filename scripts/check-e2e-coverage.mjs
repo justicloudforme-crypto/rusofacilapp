@@ -154,6 +154,10 @@ const E2E_DIR = join(repoRoot, "e2e");
  * не ряд со своей рамой (долг 56).
  * `playwright test --list` — 279 в 27 файлах.
  *
+ * Поднят 291 -> 343 на 07.09.2026 (PROGRESS.md 7.135): 52 прогона
+ * добавила e2e/search-deep-link.spec.ts — 26 случаев на двух движках, из
+ * них 20 контрольных запросов «строка выдачи доводит до самого объекта».
+ *
  * Поднят 279 -> 291 на 07.09.2026 (PROGRESS.md 7.133), двумя правками
  * сразу, +12:
  *
@@ -168,9 +172,9 @@ const E2E_DIR = join(repoRoot, "e2e");
  *       и закрытый пазл несёт пометку про подписку при собственном
  *       адресе. 2 x 2 = 4.
  *
- * `playwright test --list` — 291 в 28 файлах.
+ * `playwright test --list` — 343 в 29 файлах.
  */
-const MIN_EXECUTED_TESTS = 291;
+const MIN_EXECUTED_TESTS = 343;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.

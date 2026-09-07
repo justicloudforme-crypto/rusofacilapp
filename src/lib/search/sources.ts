@@ -178,7 +178,14 @@ export async function loadSearchSources(): Promise<SearchSources> {
         }),
       [],
     ),
-    soften("идиомы", () => db.idiom.findMany({ select: { id: true, phrase: true, spanishEquivalent: true, level: true } }), []),
+    soften(
+      "идиомы",
+      () =>
+        db.idiom.findMany({
+          select: { id: true, phrase: true, spanishEquivalent: true, level: true, category: true },
+        }),
+      [],
+    ),
     soften("глоссарий", () => db.glossaryTerm.findMany({ select: { slug: true, term: true, russianEquivalent: true } }), []),
     soften("игры", loadPuzzles, []),
   ]);

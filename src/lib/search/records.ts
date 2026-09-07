@@ -7,6 +7,7 @@ import { ALPHABET_PAGE_PATH } from "@/lib/alphabet/cyrillic-alphabet";
 import { ABOUT_CONTENT } from "@/lib/about-content";
 import { TERMS_CONTENT, PRIVACY_CONTENT } from "@/lib/legal/content";
 import { puzzleTitle } from "@/lib/word-games/metadata";
+import { cardAnchor, idiomAnchor } from "@/lib/deep-link-anchors";
 import { localizeExamText } from "@/lib/exams/localize";
 import type { WordGameType } from "@/lib/word-games/types";
 import type { SearchRecord } from "./types";
@@ -34,7 +35,7 @@ export interface SearchSources {
   stories: Array<{ id: string; title: string; level: string; isPremium: boolean; premiumOnly: boolean }>;
   media: Array<{ id: string; title: string; level: string; free?: boolean }>;
   flashcards: Array<{ id: string; russian: string; translationEs: string; transcription: string; category: string; level: string }>;
-  idioms: Array<{ id: string; phrase: string; spanishEquivalent: string; level: string }>;
+  idioms: Array<{ id: string; phrase: string; spanishEquivalent: string; level: string; category: string }>;
   glossary: Array<{ slug: string; term: string; russianEquivalent: string }>;
   puzzles: Array<{ type: string; level: string; sequence: number; topic: string | null; wordCount: number; premiumOnly: boolean; curved: boolean }>;
 }
@@ -212,10 +213,17 @@ function flashcardRecords(cards: SearchSources["flashcards"]): SearchRecord[] {
     // Всё, что под это не подходит, ведёт на сам словарь — туда же, куда
     // человек попал бы, нажав раздел в меню.
     const onTopicPage = slug !== undefined && PUBLIC_LEVELS.has(card.level);
+    // Якорь на саму карточку, а не на начало страницы. Новых адресов он
+    // не заводит: хеш браузер на сервер не отправляет, поэтому ни
+    // sitemap, ни canonical, ни краулимое множество от него не меняются
+    // ни на строку (решение владельца 07.09.2026, вариант Б из 7.133).
+    // Там, где тематической страницы нет — на `/ru` и у 988 карточек C1,
+    // которых нет в её HTML, — якорю не за что зацепиться, и строка
+    // ведёт на словарь ровно как раньше.
     return {
       section: "flashcard" as const,
       id: card.id,
-      path: onTopicPage ? `/vocabulary/${slug}` : "/vocabulary",
+      path: onTopicPage ? `/vocabulary/${slug}#${cardAnchor(card.id)}` : "/vocabulary",
       pathRu: "/vocabulary",
       title: `${card.russian} — ${card.translationEs}`,
       subtitle: card.level,
@@ -245,13 +253,27 @@ function idiomRecords(idioms: SearchSources["idioms"]): SearchRecord[] {
     section: "idiom" as const,
     id: idiom.id,
     // Отдельного адреса у идиомы нет ни одного: они живут вкладкой
-    // словаря. Ведём на эту вкладку — то есть туда же, куда ведёт сайт
-    // сегодня, а не на выдуманный URL.
-    path: "/vocabulary?mode=idioms",
+    // словаря. Ведём на эту вкладку — и на саму фразу внутри неё: якорь
+    // раскрывает карточку идиомы и прокручивает к ней, перелистнув
+    // страницу списка. Ни нового маршрута, ни нового параметра:
+    // `?mode=idioms` вкладка читала и до этой правки, а хеш на сервер не
+    // уходит вовсе.
+    path: `/vocabulary?mode=idioms#${idiomAnchor(idiom.id)}`,
     title: idiom.phrase,
     subtitle: idiom.spanishEquivalent,
     level: idiom.level,
-    requires: idiom.level === "C1" ? ("premium" as const) : null,
+    // Пометка «нужна подписка» до 07.09.2026 стояла только у C1, то есть
+    // НИ У ОДНОЙ идиомы: все 771 уровня A2. Но страница отдаёт неоплатившему
+    // ровно `FREE_TRIAL_LIMITS.idioms` = 5 фраз из 771, а категорию
+    // `literary` режет отдельно и даже подписчику `standard`
+    // (`LITERARY_IDIOM_LIMITS`). То есть выдача обещала открытым то, что
+    // почти всегда закрыто, — и с глубокой ссылкой это стало видно сразу:
+    // человек уходил бы на вкладку, где его фразы нет. Правило здесь —
+    // пересказ того же гейта, который применяет `/api/idioms`.
+    requires:
+      idiom.level === "C1" || idiom.category === "literary"
+        ? ("premium" as const)
+        : ("free" as const),
   }));
 }
 

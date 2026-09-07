@@ -1066,7 +1066,8 @@
       "freeTrialLimitMessage": "Has visto la muestra gratuita de expresiones. Suscríbete para desbloquear todos los modismos.",
       "freeTrialLimitCta": "Suscribirme",
       "literaryLockedMessageStandard": "Los modismos literarios están casi completos solo en el plan Premium — tu suscripción actual solo desbloquea una pequeña parte.",
-      "literaryUpgradeCta": "Pasar a Premium"
+      "literaryUpgradeCta": "Pasar a Premium",
+      "deepLinkLockedMessage": "Esta expresión se abre con la suscripción: sin ella la lista solo muestra unos pocos modismos de muestra."
     }
   },
   "wordGames": {
