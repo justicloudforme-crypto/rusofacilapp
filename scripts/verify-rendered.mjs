@@ -136,7 +136,31 @@ async function main() {
       ["scripts/check-layout-geometry.mjs", `--base=${BASE}`, "--control", ...passthrough],
       { stdio: "inherit" }
     );
-    return (run.status ?? 1) || (layout.status ?? 1);
+    // Третьей на том же сервере — «ни одна внутренняя ссылка не ведёт в
+    // не-200». Здесь, а не отдельным шагом, по той же причине, по какой
+    // здесь стоит layout: сервер уже поднят, браузер уже установлен, а
+    // отдельная задача заплатила бы за npm ci, prisma generate, сборку и
+    // установку движка ещё раз.
+    //
+    // Проверка обязана видеть КЛИЕНТСКИЕ ссылки: дефект, ради которого
+    // она написана (`/ru/alfabeto-cirilico`, 404), в серверном HTML
+    // отсутствует вовсе — вводная дека печатает его только после
+    // гидрации, и только на четвёртом слайде.
+    const links = spawnSync(
+      process.execPath,
+      [join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs"), "scripts/check-internal-links.ts", `--base=${BASE}`],
+      { stdio: "inherit" }
+    );
+    // Обязательная вторая половина: сторож, который не краснеет от
+    // подсадки, зелёный ни о чём не говорит (PROGRESS.md 4.1). Две
+    // страницы вместо тридцати трёх — подсадка живёт на КАЖДОЙ, и
+    // проверять её тридцать три раза значит платить за одно и то же.
+    const linksPlant = spawnSync(
+      process.execPath,
+      [join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs"), "scripts/check-internal-links.ts", `--base=${BASE}`, "--plant", "--paths=/es,/ru"],
+      { stdio: "inherit" }
+    );
+    return (run.status ?? 1) || (layout.status ?? 1) || (links.status ?? 1) || (linksPlant.status ?? 1);
   } finally {
     stop();
   }
