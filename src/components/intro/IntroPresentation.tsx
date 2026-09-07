@@ -77,7 +77,7 @@ export default function IntroPresentation({
   const goNext = () => setIndex((i) => Math.min(slides.length - 1, i + 1));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6" data-testid="intro-presentation">
       <div className="relative">
         {/* Side arrows overlap the card edges, carousel-style, so a slide
             can be flipped without reaching for the buttons below. Same
@@ -88,7 +88,8 @@ export default function IntroPresentation({
           onClick={goPrev}
           disabled={index === 0}
           aria-label={dict.prevSlide}
-          className="tap absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
+          data-testid="intro-prev"
+          className="tap absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
         >
           ←
         </button>
@@ -97,20 +98,35 @@ export default function IntroPresentation({
           onClick={goNext}
           disabled={index === slides.length - 1}
           aria-label={dict.nextSlide}
-          className="tap absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
+          data-testid="intro-next"
+          className="tap absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-background text-foreground shadow-md transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-0 dark:border-white/15"
         >
           →
         </button>
 
-        <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/30">
+        <div
+          data-testid="intro-slide-card"
+          className="relative overflow-hidden rounded-2xl border border-black/10 bg-background shadow-sm dark:border-white/30"
+        >
           <div className="h-1.5 bg-gradient-to-r from-primary via-primary-400 to-premium-400" />
 
           <div className="p-6 sm:p-10">
-            <div className="flex items-start justify-between gap-4">
-              <div className="h-28 w-40 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/[0.06] to-premium-400/[0.08]">
+            {/* Both children are flex-shrink-0 by design — the brand plate
+                must not squash its wordmark, and the illustration has a fixed
+                aspect. At 320px they do not fit on one line side by side
+                (measured 06.09.2026: the plate's right edge landed at 335 and
+                the card's `overflow-hidden` cut 40px of it off, unreachable),
+                so the row is allowed to WRAP instead of overflow: the plate
+                drops under the illustration and keeps its right alignment
+                through `ml-auto`. Below `sm` the illustration is also one step
+                smaller, which is what keeps 360px and up on a single line. */}
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="h-24 w-32 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/[0.06] to-premium-400/[0.08] sm:h-28 sm:w-40">
                 <IntroIllustration icon={slide.icon} className="h-full w-full" />
               </div>
-              <BrandMark size="sm" />
+              <div className="ml-auto">
+                <BrandMark size="sm" />
+              </div>
             </div>
 
             <span className="mt-6 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
@@ -140,8 +156,14 @@ export default function IntroPresentation({
               </div>
             )}
 
+            {/* Ссылки слайда — тоже элементы деки, и у них была высота 20px
+                (кегль 14 без своей высоты строки): текстовая ссылка внутри
+                абзаца этим правилом не накрыта, а отдельно стоящая под
+                текстом — накрыта, палец целится именно в неё. Поэтому
+                `min-h-11` и `inline-flex`, а не увеличение кегля: надпись
+                выглядит как была, попадание — 44 px. */}
             {slide.links && slide.links.length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+              <div className="mt-5 flex flex-wrap gap-x-5">
                 {slide.links.map((link) =>
                   link.external ? (
                     <a
@@ -149,7 +171,7 @@ export default function IntroPresentation({
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="tap text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                      className="tap inline-flex min-h-11 items-center text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
                     >
                       {link.label} →
                     </a>
@@ -157,7 +179,7 @@ export default function IntroPresentation({
                     <Link
                       key={link.href}
                       href={`/${lang}${link.href}`}
-                      className="tap text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
+                      className="tap inline-flex min-h-11 items-center text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
                     >
                       {link.label} →
                     </Link>
@@ -169,19 +191,31 @@ export default function IntroPresentation({
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-2">
+      {/* The dot is 6×6 on purpose — a pager should read as a hint, not as
+          a toolbar — but 6×6 is not a touch target. So the DOT stays the
+          visual and the BUTTON around it is 44×44, which is the project's
+          minimum. Ten of those need 440px and a phone has 320–393, so the
+          strip is allowed to wrap: `max-w-[224px]` breaks it into 5 + 5 below
+          `sm`, and one row of ten returns at `sm` and up where it fits. */}
+      <div className="mx-auto flex max-w-[224px] flex-wrap items-center justify-center sm:max-w-none">
         {slides.map((s, i) => (
           <button
             key={s.id}
             type="button"
             aria-label={s.title}
+            data-testid="intro-dot"
             onClick={() => setIndex(i)}
-            className={`tap h-1.5 rounded-full transition-all ${
-              i === index
-                ? "w-6 bg-primary dark:bg-primary-400"
-                : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
-            }`}
-          />
+            className="tap flex h-11 w-11 items-center justify-center"
+          >
+            <span
+              aria-hidden
+              className={`block h-1.5 rounded-full transition-all ${
+                i === index
+                  ? "w-6 bg-primary dark:bg-primary-400"
+                  : "w-1.5 bg-foreground/15 hover:bg-foreground/30 active:bg-foreground/30"
+              }`}
+            />
+          </button>
         ))}
       </div>
 
@@ -189,7 +223,8 @@ export default function IntroPresentation({
         <a
           href={`/api/intro/pdf`}
           onClick={() => track("intro_pdf_downloaded", { lang })}
-          className="tap inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
+          data-testid="intro-pdf"
+          className="tap inline-flex min-h-11 items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
         >
           {dict.downloadPdfButton}
         </a>
