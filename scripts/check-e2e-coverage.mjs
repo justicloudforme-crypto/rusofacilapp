@@ -144,8 +144,17 @@ const E2E_DIR = join(repoRoot, "e2e");
  * Обрезку внутри элемента с `overflow-hidden` не видит ни одна из трёх
  * мер `check:layout` — страница при ней вбок не едет.
  * `playwright test --list` — 275 в 26 файлах.
+ *
+ * Поднят 275 -> 279 на 06.09.2026 (PROGRESS.md 7.132, часть 4): новая
+ * спека e2e/navbar-row-fits-its-box.spec.ts — сторож «ряд шапки не
+ * выезжает за свою контентную коробку» на 640/720/768, анонимом и
+ * вошедшим, по тесту на локаль: 2 теста в каждом из двух проектов,
+ * 2 x 2 = 4. До неё этого не видела ни одна проверка: check:layout
+ * ходит анонимно, а обе спеки ширины сравнивают документ с вьюпортом, а
+ * не ряд со своей рамой (долг 56).
+ * `playwright test --list` — 279 в 27 файлах.
  */
-const MIN_EXECUTED_TESTS = 275;
+const MIN_EXECUTED_TESTS = 279;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.
