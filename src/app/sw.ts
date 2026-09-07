@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
-import { NetworkFirst, Serwist } from "serwist";
+import { NetworkFirst, NetworkOnly, Serwist } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
 import { buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
 
@@ -100,5 +100,41 @@ const serwist = new Serwist({
     entries: [{ url: "/offline.html", matcher: ({ request }) => request.destination === "document" }],
   },
 });
+
+/**
+ * Маячок журнала спроса — единственный маршрут, у которого здесь есть своя
+ * строка, и заведена она замером, а не осторожностью (PROGRESS.md 7.134).
+ *
+ * Что измерено. `POST /api/search/log` уходит из `pagehide` умирающего
+ * документа (`src/lib/search/log-client.ts`). Метода `POST` не совпадает
+ * ни с одним маршрутом `defaultCache` — все они про `GET`, — поэтому
+ * Serwist на него не отвечал вовсе и запрос уходил «мимо» воркера. Мимо —
+ * только на словах: страницей владеет воркер, значит запрос всё равно
+ * обязан пройти через его `fetch`, и Chromium этого перехода умирающему
+ * документу не прощает. Числа, снятые на сборке этой ветки, 16 попыток на
+ * столбец:
+ *
+ *   | конфигурация                        | дошло до сервера |
+ *   |-------------------------------------|------------------|
+ *   | Chromium, воркер контролирует       | **6 и 8 из 16**  |
+ *   | Chromium, воркер заблокирован       | 16 из 16         |
+ *   | WebKit, воркер контролирует         | 16 из 16         |
+ *   | Chromium, эта строка на месте       | **16 из 16**     |
+ *
+ * Прогрев отдельно проверен: потеря не объясняется «воркер как раз
+ * ставится» — 8 из 16 потеряно и тогда, когда `navigator.serviceWorker
+ * .controller` был непустым до начала замера (16 из 16 попыток).
+ *
+ * То есть журнал спроса терял у Chromium больше половины выходов «ушёл на
+ * другой адрес» — ровно тот перекос, ради устранения которого долг 52
+ * вообще чинился. `NetworkOnly` не кеширует ничего и не меняет ответ; она
+ * лишь заставляет воркер взять запрос себе сразу, вместо того чтобы
+ * оставить его без владельца в момент, когда документ уже уезжает.
+ */
+serwist.registerCapture(
+  ({ url, sameOrigin }) => sameOrigin && url.pathname === "/api/search/log",
+  new NetworkOnly(),
+  "POST"
+);
 
 serwist.addEventListeners();
