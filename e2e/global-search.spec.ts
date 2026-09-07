@@ -97,6 +97,84 @@ test("игры показаны одной свёрнутой строкой, с
 });
 
 /**
+ * Строка выдачи ведёт на САМ объект там, где адрес объекта существует.
+ *
+ * Что чинилось. Замер на живом проде 07.09.2026 (PROGRESS.md 7.133,
+ * часть 4): восемь запросов, каждый — ПОЛНОЕ название одного пазла,
+ * совпало 1–2 объекта, и все восемь раз выдача отдавала одну свёрнутую
+ * строку на `/es|ru/word-games`. Адрес у пазла есть, лежит в том же
+ * индексе — а поиск уводил в общее меню раздела. Своих адресов это
+ * касалось 3277 записей из 10 720 (30,6%).
+ *
+ * Тест выше («игры показаны одной свёрнутой строкой») — не соперник этому,
+ * а его позитивный контроль: он показывает, что свёртка ЖИВА там, где она
+ * и заводилась, — на запросе, совпадающем с сотнями шаблонных названий.
+ * Оба случая обязаны стоять рядом, иначе починка одного молча отменяет
+ * другой.
+ *
+ * CROSSWORD A1/1 есть и в dev.db, и в e2e/fixtures/word-games.json с одной
+ * и той же темой (`ciencia`), поэтому его название совпадает локально и в
+ * CI.
+ */
+test("полное название одного пазла уводит на сам пазл, а не на хаб игр", async ({ page }) => {
+  await openSearch(page, "es");
+  await page.getByRole("searchbox").fill("Crucigrama de ciencia en ruso (A1)");
+
+  const gameSection = page.locator('[data-testid="search-section-game"]');
+  await expect(gameSection).toBeVisible();
+  const rows = gameSection.locator('[data-testid="search-result"]');
+  await expect(rows).toHaveCount(1);
+  // Свёрнутая строка носит свою пометку — здесь её быть не должно.
+  await expect(rows.first()).not.toHaveAttribute("data-collapsed", "true");
+  await expect(rows.first()).toHaveAttribute("href", "/es/word-games/CROSSWORD/A1/1");
+
+  await Promise.all([page.waitForURL("**/es/word-games/CROSSWORD/A1/1"), rows.first().click()]);
+});
+
+/**
+ * Платное остаётся платным: у закрытого пазла в выдаче есть пометка про
+ * подписку, адрес — его собственный, и без подписки он не открывается.
+ *
+ * Почему проб две. КАКОЙ пазл закрыт — свойство базы, а не правила:
+ * в фикстуре CI закрыт `WORD_SEARCH A1 №2`, а в полной `dev.db` тот же
+ * номер бесплатен (у него есть тема) и первый закрытый — `№134`. Обе
+ * строки спрашиваются, и хотя бы одна ОБЯЗАНА дать закрытую строку —
+ * иначе тест прошёл бы на пустоте, ничего не проверив. Скобка в запросе
+ * не украшение: без неё «nº 2» совпало бы ещё и с «nº 20», «nº 21» и так
+ * далее, и раздел свернулся бы по числу совпадений.
+ */
+test("закрытый пазл: пометка про подписку, свой адрес, и без подписки не открывается", async ({
+  page,
+}) => {
+  const probes = [
+    "Sopa de letras en ruso, nivel A1 nº 2 (",
+    "Sopa de letras en ruso, nivel A1 nº 134 (",
+  ];
+
+  let href: string | null = null;
+  for (const probe of probes) {
+    await openSearch(page, "es");
+    await page.getByRole("searchbox").fill(probe);
+    const locked = page.locator('[data-testid="search-section-game"] [data-testid="search-result"]').filter({
+      has: page.locator('[data-testid="search-result-locked"]'),
+    });
+    if ((await locked.count()) === 0) continue;
+    await expect(locked.first()).toBeVisible();
+    href = await locked.first().getAttribute("href");
+    break;
+  }
+
+  // Без этой строки цикл выше при двух пустых пробах «прошёл» бы молча.
+  expect(href, "ни одна проба не дала закрытого пазла — тест проверил бы пустоту").not.toBeNull();
+  expect(href).toMatch(/^\/es\/word-games\/WORD_SEARCH\/A1\/\d+$/);
+
+  // …и без подписки он действительно не открывается: страница пазла сама
+  // отправляет анонима на пейволл, унося с собой адрес возврата.
+  await page.goto(href!);
+  await expect(page).toHaveURL(new RegExp(`/es/pricing\\?next=${href!.replace(/\//g, "\\/")}$`));
+});
+
+/**
  * Вошедший пользователь. Пробел, названный в 7.128 частью 5 №7: все
  * десять прогонов этой спеки шли анонимно, а обещание «состав выдачи не
  * зависит от уровня доступа» до сих пор держал только юнит-тест.
