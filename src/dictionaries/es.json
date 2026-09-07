@@ -43,6 +43,7 @@
     "prevSlide": "Anterior",
     "nextSlide": "Siguiente",
     "slideCounter": "Diapositiva {current} de {total}",
+    "slideNavLabel": "Presentación de introducción",
     "chooseLevelHeading": "Elige tu nivel y empieza",
     "chooseLevelSubtitle": "Puedes empezar directamente en el nivel que te corresponda — no hace falta seguir el orden si ya tienes bases.",
     "startLevelLabel": "Empezar"

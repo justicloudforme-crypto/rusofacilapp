@@ -43,6 +43,7 @@
     "prevSlide": "Назад",
     "nextSlide": "Далее",
     "slideCounter": "Слайд {current} из {total}",
+    "slideNavLabel": "Презентация-знакомство",
     "chooseLevelHeading": "Выберите уровень и начните",
     "chooseLevelSubtitle": "Можно начать сразу с подходящего вам уровня — не обязательно идти по порядку, если у вас уже есть база.",
     "startLevelLabel": "Начать"
