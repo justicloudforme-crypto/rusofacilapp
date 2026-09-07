@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { localeHref } from "@/lib/spanish-only-routes";
 import type { KeyboardEvent as ReactKeyboardEvent, TouchEvent as ReactTouchEvent } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics/react";
@@ -244,7 +245,19 @@ export default function IntroPresentation({
                   ) : (
                     <Link
                       key={link.href}
-                      href={`/${lang}${link.href}`}
+                      /**
+                       * `localeHref`, а НЕ `/${lang}${link.href}`.
+                       *
+                       * 07.09.2026 человек нашёл с телефона: на `/ru`
+                       * ссылка «Открыть кириллицу» вела в
+                       * `/ru/alfabeto-cirilico` — 404. Страница живёт
+                       * только на `/es` (одна из семнадцати таких, см.
+                       * `SPANISH_ONLY_ROUTES`), а префикс приклеивался
+                       * к пути молча. Правило проекта: из русской
+                       * локали ссылка либо ведёт на существующий
+                       * адрес, либо не печатается вовсе.
+                       */
+                      href={localeHref(lang, link.href)}
                       className="tap inline-flex min-h-11 items-center text-sm font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
                     >
                       {link.label} →
