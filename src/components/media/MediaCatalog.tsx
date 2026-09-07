@@ -9,6 +9,7 @@ import { usePaywall } from "@/contexts/PaywallContext";
 import FilterChipGroup from "@/components/ui/FilterChipGroup";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
+import { ACCESS_MARK_ICON } from "@/lib/access-marks";
 
 export interface MediaSummary {
   id: string;
@@ -144,9 +145,14 @@ export default function MediaCatalog({
                   sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover transition-transform duration-200 group-hover:scale-105"
                 />
+                {/* Глиф больше не пишется здесь руками: он один на весь
+                    сайт и живёт в `ACCESS_MARK_ICON`. Разметка своя —
+                    значок лежит поверх обложки, и ему нужен тёмный фон
+                    (белым по кадру видео иначе не прочитать); общий
+                    `AccessMark` рисует для светлой карточки. */}
                 {item.locked && (
                   <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                    🔒 {dict.premiumBadge}
+                    <span aria-hidden>{ACCESS_MARK_ICON.subscription}</span> {dict.premiumBadge}
                   </span>
                 )}
               </div>
