@@ -11,7 +11,7 @@
     "check:intro-numbers": "tsx scripts/check-intro-numbers.ts",
     "check:intro-numbers:plant": "tsx scripts/check-intro-numbers.ts --plant",
     "check:rendered": "node scripts/check-rendered-surface.mjs --control",
-    "check:layout": "node scripts/check-layout-geometry.mjs --control",
+    "check:layout": "node scripts/check-layout-geometry.mjs --control --require-content",
     "check:lesson-pages": "node scripts/check-every-lesson-renders.mjs --control",
     "check:frozen": "node scripts/check-frozen-delta.mjs",
     "check:sitemap-delta": "node scripts/check-sitemap-delta.mjs",
