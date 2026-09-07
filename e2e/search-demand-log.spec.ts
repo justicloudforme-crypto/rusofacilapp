@@ -1,5 +1,4 @@
-import { DatabaseSync } from "node:sqlite";
-import type { Page, Request } from "@playwright/test";
+import type { APIRequestContext, Page, Request } from "@playwright/test";
 import { test, expect } from "./helpers/test";
 
 /**
@@ -36,6 +35,20 @@ import { test, expect } from "./helpers/test";
  * прогоном, ни с чужой спекой, и убираются за собой. Это же делает
  * замер честнее: доказывается весь путь целиком (браузер → маячок →
  * маршрут → база), а не одна его браузерная половина.
+ *
+ * ТАБЛИЦА СПРАШИВАЕТСЯ У СЕРВЕРА, А НЕ ОТКРЫВАЕТСЯ ФАЙЛОМ, и это долг 58
+ * (PROGRESS.md 7.134). До 07.09.2026 обе функции ниже открывали `dev.db`
+ * своим `node:sqlite`-соединением — вторым процессом поверх файла,
+ * который в эту же секунду пишет сервер. База в форме CI живёт в
+ * журнальном режиме `delete`, где второе соединение исключает пишущего
+ * ЛЮБОЕ: читатель держит SHARED и не даёт поднять запись до EXCLUSIVE,
+ * писатель держит RESERVED и не даёт её начать. libSQL под Prisma не
+ * ждёт (отказ за 30 мс, `busy_timeout` фактически нулевой), а на
+ * столкновении «писатель против писателя» не откатывает начатую
+ * транзакцию — `dev.db-journal` остаётся, файл заблокирован навсегда, и
+ * `DELETE` из теста падает с «database is locked», сколько ему ни ставь
+ * `timeout`. Поэтому лечение — не таймаут, а изоляция: базу e2e трогает
+ * ровно один процесс. Тестовый маршрут — `/api/test/search-log`.
  */
 
 interface LoggedRecord {
@@ -68,32 +81,24 @@ async function collectDemandLog(page: Page): Promise<LoggedRecord[]> {
   return records;
 }
 
-/** Строки журнала с данной меткой, прочитанные прямо из базы, в которую
- * пишет поднятый этим прогоном сервер. */
-function rowsFor(marker: string): LoggedRecord[] {
-  const db = new DatabaseSync("dev.db", { readOnly: true, timeout: 10_000 });
-  try {
-    return db
-      .prepare("SELECT query, resultCount, lang, followed FROM SearchQuery WHERE query = ?")
-      .all(marker)
-      .map((row) => {
-        const r = row as { query: string; resultCount: number; lang: string; followed: number };
-        return { query: r.query, resultCount: r.resultCount, lang: r.lang, followed: r.followed === 1 };
-      });
-  } finally {
-    db.close();
+/** Строки журнала с данной меткой, прочитанные из той же таблицы, в
+ * которую пишет поднятый этим прогоном сервер, — но его же руками. См.
+ * шапку файла: своего соединения с файлом у теста больше нет. */
+async function rowsFor(api: APIRequestContext, marker: string): Promise<LoggedRecord[]> {
+  const response = await api.get(`/api/test/search-log?query=${encodeURIComponent(marker)}`);
+  if (!response.ok()) {
+    // Молчаливый ноль здесь был бы худшим из исходов: «строк нет» и
+    // «спросить не удалось» — разные вещи, и вторая обязана быть видна.
+    throw new Error(`/api/test/search-log ответил ${response.status()}: ${await response.text()}`);
   }
+  const body = (await response.json()) as { rows: LoggedRecord[] };
+  return body.rows;
 }
 
-function dropRows(marker: string): void {
-  // `timeout` здесь не украшение: спеки идут параллельно, база одна, и без
-  // ожидания занятости прогон падал с «database is locked» — то есть по
-  // причине, не имеющей отношения к тому, что он мерит.
-  const db = new DatabaseSync("dev.db", { timeout: 10_000 });
-  try {
-    db.prepare("DELETE FROM SearchQuery WHERE query = ?").run(marker);
-  } finally {
-    db.close();
+async function dropRows(api: APIRequestContext, marker: string): Promise<void> {
+  const response = await api.delete(`/api/test/search-log?query=${encodeURIComponent(marker)}`);
+  if (!response.ok()) {
+    throw new Error(`/api/test/search-log DELETE ответил ${response.status()}: ${await response.text()}`);
   }
 }
 
@@ -104,8 +109,40 @@ function marker(name: string, project: string): string {
   return `zz-demand-${name}-${project}`;
 }
 
-async function openSearchAndType(page: Page, query: string) {
+/**
+ * Открыть страницу так, как её видит ВЕРНУВШИЙСЯ посетитель: service
+ * worker уже стоит и уже владеет адресом. Это не косметика ожидания, а
+ * устранение состояния, которое стенд создаёт сам (PROGRESS.md 7.134).
+ *
+ * У живого посетителя воркер стоит и владеет страницей задолго до того, как
+ * он что-то ищет; состояние «воркер как раз перехватывает эту страницу»
+ * (`clientsClaim`) случается у него один раз — на визите сразу после
+ * выката. У Playwright контекст каждого теста чистый, поэтому этот редкий
+ * переход происходит в КАЖДОМ тесте, и маячок умирающего документа
+ * попадает ровно в него. Замерено на сборке этой ветки: 32 холодных
+ * попытки — потеряна одна, и единственная потерянная была ровно из тех,
+ * где владение появилось посреди жизни страницы; 32 из 32 страниц,
+ * загруженных под уже готовым воркером, — потерь нет.
+ *
+ * Ждём мягко и с потолком: WebKit в Playwright до владения доходит не
+ * всегда, а терять из-за этого весь замер незачем — потерь у WebKit не
+ * измерено ни одной (16 из 16 в обеих конфигурациях).
+ */
+async function openControlledPage(page: Page) {
   await page.goto("/es");
+  await page
+    .waitForFunction(() => !!navigator.serviceWorker?.controller, null, { timeout: 15_000 })
+    .catch(() => {});
+  // ВТОРАЯ загрузка — и она здесь главная. Ждать владения на той же
+  // странице мало и даже вредно: страница, которую воркер перехватил
+  // ПОСРЕДИ жизни, маячок теряет — 0 доставок из 12 прогонов, замерено.
+  // Доставляет надёжно та, что загружалась, когда воркер уже владел
+  // адресом, — 32 из 32. Это и есть вернувшийся посетитель.
+  await page.goto("/es");
+}
+
+async function openSearchAndType(page: Page, query: string) {
+  await openControlledPage(page);
   await page.getByRole("button", { name: "Buscar" }).click();
   await expect(page.locator(RESULTS)).toBeVisible();
   await page.getByRole("searchbox").fill(query);
@@ -159,9 +196,9 @@ test("выход 2 — переход по строке выдачи: одна �
   expect(records.length).toBe(1);
 });
 
-test("выход 3 — ушёл на другой адрес с открытым окном: одна строка", async ({ page }, testInfo) => {
+test("выход 3 — ушёл на другой адрес с открытым окном: одна строка", async ({ page, request }, testInfo) => {
   const q = marker("goto", testInfo.project.name);
-  dropRows(q);
+  await dropRows(request, q);
   try {
     await openSearchAndType(page, q);
     await awaitEmpty(page);
@@ -170,16 +207,16 @@ test("выход 3 — ушёл на другой адрес с открытым
     // браузера, по внешней ссылке и по кнопке «назад».
     await page.goto("/es/pricing");
 
-    await expect.poll(() => rowsFor(q).length, { timeout: 10_000 }).toBe(1);
-    expect(rowsFor(q)[0]).toMatchObject({ resultCount: 0, lang: "es", followed: false });
+    await expect.poll(() => rowsFor(request, q).then((r) => r.length), { timeout: 10_000 }).toBe(1);
+    expect((await rowsFor(request, q))[0]).toMatchObject({ resultCount: 0, lang: "es", followed: false });
   } finally {
-    dropRows(q);
+    await dropRows(request, q);
   }
 });
 
-test("выход 4 — закрыл вкладку: одна строка", async ({ page }, testInfo) => {
+test("выход 4 — закрыл вкладку: одна строка", async ({ page, request }, testInfo) => {
   const q = marker("close", testInfo.project.name);
-  dropRows(q);
+  await dropRows(request, q);
   try {
     await openSearchAndType(page, q);
     await awaitEmpty(page);
@@ -192,32 +229,32 @@ test("выход 4 — закрыл вкладку: одна строка", asyn
     // оказывается пропущенный `pagehide`.
     await page.close();
 
-    await expect.poll(() => rowsFor(q).length, { timeout: 10_000 }).toBe(1);
-    expect(rowsFor(q)[0]).toMatchObject({ resultCount: 0, lang: "es", followed: false });
+    await expect.poll(() => rowsFor(request, q).then((r) => r.length), { timeout: 10_000 }).toBe(1);
+    expect((await rowsFor(request, q))[0]).toMatchObject({ resultCount: 0, lang: "es", followed: false });
   } finally {
-    dropRows(q);
+    await dropRows(request, q);
   }
 });
 
-test("Escape и следом закрытие вкладки — по-прежнему ОДНА строка", async ({ page }, testInfo) => {
+test("Escape и следом закрытие вкладки — по-прежнему ОДНА строка", async ({ page, request }, testInfo) => {
   // Отрицательный контроль к четырём выходам выше: четыре повода записать
   // не должны превращаться в четыре записи. Без этого случая заход,
   // закрывший долг 52, мог бы закрыть его удвоением журнала.
   const q = marker("twice", testInfo.project.name);
-  dropRows(q);
+  await dropRows(request, q);
   try {
     await openSearchAndType(page, q);
     await awaitEmpty(page);
 
     await page.keyboard.press("Escape");
     await expect(page.locator(RESULTS)).toBeHidden();
-    await expect.poll(() => rowsFor(q).length, { timeout: 10_000 }).toBe(1);
+    await expect.poll(() => rowsFor(request, q).then((r) => r.length), { timeout: 10_000 }).toBe(1);
 
     await page.close();
     await new Promise((resolve) => setTimeout(resolve, 1_500));
-    expect(rowsFor(q).length).toBe(1);
+    expect((await rowsFor(request, q)).length).toBe(1);
   } finally {
-    dropRows(q);
+    await dropRows(request, q);
   }
 });
 
