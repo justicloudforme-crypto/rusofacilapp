@@ -45,6 +45,17 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Долг 59 (PROGRESS.md 7.134, часть 4): всякий POST, уходящий из
+      # умирающего документа, обязан иметь свой маршрут в service worker.
+      # Нарушение этого правила съедало у Chromium 6 и 8 доставок из 16.
+      - name: POST из умирающего документа имеет маршрут в SW
+        run: npm run check:dying-posts
+
+      # Обязательная вторая половина: сторож, который не краснеет от
+      # подсадки, зелёный ни о чём не говорит (PROGRESS.md 4.1).
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:dying-posts:plant
+
       # The positive control for the Stripe env-shape guard. CI has no Stripe
       # variables at all, so the guard's real run here is vacuously green —
       # which is exactly the kind of green PROGRESS.md 4.1 says proves

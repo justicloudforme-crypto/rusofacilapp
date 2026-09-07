@@ -10,6 +10,7 @@ import FillBlankApp, { type FillBlankAppDict } from "./FillBlankApp";
 import type { GameResultPanelDict } from "@/components/games/GameResultPanel";
 import { hapticTap } from "@/lib/haptics";
 import { DictionaryIcon, ChecklistIcon, PuzzleIcon, BookIcon } from "@/components/profile/ProfileIcons";
+import { anchorTarget, IDIOM_ANCHOR_PREFIX } from "@/lib/deep-link-anchors";
 
 // recall/match/fillBlank's dicts omit categoryLabels/cardCountLabel — those
 // are reused from the top-level FlashcardsDict below rather than
@@ -54,6 +55,11 @@ export default function VocabularyApp({
   resultDict: GameResultPanelDict;
 }) {
   const [mode, setModeState] = useState<Mode>("vocabulary");
+  // Идиома, за которой человек пришёл из поиска. Читается из хеша —
+  // `?mode=idioms#idiom-<id>`, — а не из параметра: хеш браузер на сервер
+  // не отправляет, поэтому глубокая ссылка не заводит ни нового адреса,
+  // ни второго canonical (решение владельца 07.09.2026).
+  const [focusIdiomId, setFocusIdiomId] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -72,11 +78,27 @@ export default function VocabularyApp({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setModeState(urlMode);
     }
+    // Якорь идиомы сам по себе означает вкладку идиом: строка выдачи
+    // несёт и параметр, и хеш, но полагаться на один параметр нельзя —
+    // ссылку пересылают руками, и тогда без этого условия человек попал
+    // бы на карточки, а найденная фраза осталась бы за вкладкой.
+    const anchored = anchorTarget(window.location.hash, IDIOM_ANCHOR_PREFIX);
+    if (anchored) {
+      setModeState("idioms");
+      setFocusIdiomId(anchored);
+    }
   }, []);
 
   function setMode(next: Mode) {
     hapticTap();
     setModeState(next);
+    // Человек, переключивший вкладку руками, больше не «пришёл за одной
+    // фразой»: подсветка снимается вместе с хешем, иначе она вернулась бы
+    // при следующем возврате на вкладку идиом.
+    setFocusIdiomId(null);
+    if (window.location.hash) {
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    }
     const params = new URLSearchParams(window.location.search);
     params.set("mode", next);
     // replace, not push: this is a tab switch within one page, not a new
@@ -194,7 +216,7 @@ export default function VocabularyApp({
             resultDict={resultDict}
           />
         )}
-        {mode === "idioms" && <IdiomsList dict={dict.idioms} />}
+        {mode === "idioms" && <IdiomsList dict={dict.idioms} focusId={focusIdiomId} />}
       </div>
     </div>
   );

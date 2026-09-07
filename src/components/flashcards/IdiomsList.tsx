@@ -7,6 +7,7 @@ import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { idiomAnchor } from "@/lib/deep-link-anchors";
 
 export interface IdiomsDict {
   listenLabel: string;
@@ -30,6 +31,12 @@ export interface IdiomsDict {
   freeTrialLimitCta: string;
   literaryLockedMessageStandard: string;
   literaryUpgradeCta: string;
+  /** Что видит человек, пришедший из поиска за фразой, которой в его
+   * выдаче нет: неоплатившему страница отдаёт 5 идиом из 771, а
+   * категорию `literary` режет даже подписчику `standard`. Без этой
+   * строки глубокая ссылка молча открывала бы первую страницу списка —
+   * то есть ровно тот отказ, ради которого весь заход и делался. */
+  deepLinkLockedMessage: string;
 }
 
 const PAGE_SIZE = 10;
@@ -48,7 +55,14 @@ function getPageNumbers(current: number, total: number): (number | "...")[] {
   return result;
 }
 
-export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
+export default function IdiomsList({
+  dict,
+  focusId = null,
+}: {
+  dict: IdiomsDict;
+  /** Идиома, за которой пришли из поиска (`#idiom-<id>`). */
+  focusId?: string | null;
+}) {
   const [openId, setOpenId] = useState<string | null>(null);
   // Empty until after mount (localStorage isn't available during SSR) —
   // same hydration-safe pattern used by FlashcardsApp.
@@ -63,6 +77,12 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   const [idiomsLoading, setIdiomsLoading] = useState(true);
   const [limited, setLimited] = useState(false);
   const [literaryLocked, setLiteraryLocked] = useState<"free" | "standard" | null>(null);
+  // Фраза из ссылки, которой в отданном списке нет вовсе. Отдельное
+  // состояние, а не вычисление на лету: до ответа `/api/idioms` список
+  // пуст у всех, и «не нашлась» на пустом списке значило бы «не нашлась»
+  // у каждого.
+  const [focusMissing, setFocusMissing] = useState(false);
+  const focusAppliedRef = useRef<string | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -81,6 +101,32 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
       .catch(() => setIdioms([]))
       .finally(() => setIdiomsLoading(false));
   }, []);
+
+  // Довести глубокую ссылку до фразы: снять фильтры, перелистнуть на её
+  // страницу списка и раскрыть карточку. Фильтры снимаются намеренно —
+  // человек пришёл за конкретной фразой, и оставить её за вкладкой
+  // «Refranes» значило бы не довести.
+  useEffect(() => {
+    if (!focusId || idiomsLoading) return;
+    if (focusAppliedRef.current === focusId) return;
+    focusAppliedRef.current = focusId;
+    const index = idioms.findIndex((idiom) => idiom.id === focusId);
+    if (index < 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFocusMissing(true);
+      return;
+    }
+    // Единственный источник этого состояния — адрес, который приходит
+    // снаружи React вместе с уже загруженным списком; правило про
+    // каскадные перерисовки здесь не про экономию, а про привычку, и
+    // отменяется тем же способом, что и восстановление вкладки из адреса
+    // в VocabularyApp.
+    setFocusMissing(false);
+    setCategoryFilter("all");
+    setSearch("");
+    setPage(Math.floor(index / PAGE_SIZE) + 1);
+    setOpenId(focusId);
+  }, [focusId, idioms, idiomsLoading]);
 
   const known = idioms.filter((idiom) => knownIdioms[idiom.id]).length;
   const percent = idioms.length === 0 ? 0 : Math.round((known / idioms.length) * 100);
@@ -102,6 +148,15 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // Прокрутка отдельным проходом, ПОСЛЕ отрисовки нужной страницы
+  // списка: до неё элемента с этим `id` в документе просто нет.
+  useEffect(() => {
+    if (!focusId) return;
+    const element = document.getElementById(idiomAnchor(focusId));
+    if (!element) return;
+    element.scrollIntoView({ block: "center", behavior: "auto" });
+  }, [focusId, safePage, pageItems.length]);
 
   function goToPage(next: number) {
     const clamped = Math.min(Math.max(1, next), totalPages);
@@ -146,6 +201,13 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
        * cap is just one facet of the general free-sample limit) — this one
        * is specifically for an already-subscribed "standard" visitor, who
        * needs Premium for literary and nothing else. */}
+      {focusMissing && (
+        <FreeTrialLimitBanner
+          message={dict.deepLinkLockedMessage}
+          cta={dict.literaryUpgradeCta}
+          reason="premium"
+        />
+      )}
       {!limited && literaryLocked === "standard" && (categoryFilter === "all" || categoryFilter === "literary") && (
         <FreeTrialLimitBanner
           message={dict.literaryLockedMessageStandard}
@@ -192,8 +254,16 @@ export default function IdiomsList({ dict }: { dict: IdiomsDict }) {
           {pageItems.map((idiom) => {
             const isOpen = openId === idiom.id;
             const isKnown = Boolean(knownIdioms[idiom.id]);
+            const isFocused = idiom.id === focusId;
             return (
-              <div key={idiom.id} className="rounded-2xl border border-black/10 p-4 dark:border-white/30 sm:p-5">
+              <div
+                key={idiom.id}
+                id={idiomAnchor(idiom.id)}
+                {...(isFocused ? { "data-deep-link-focus": "true" } : {})}
+                className={`rounded-2xl border border-black/10 p-4 dark:border-white/30 sm:p-5 ${
+                  isFocused ? "deep-link-focus" : ""
+                }`}
+              >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-2">
                     <button
