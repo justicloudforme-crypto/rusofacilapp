@@ -53,6 +53,73 @@ describe("свёртка игрового раздела", () => {
     expect(stories?.collapsed).toBe(false);
     expect(stories!.hits.length).toBeGreaterThan(1);
   });
+
+  /**
+   * Свёртка — лекарство от вытеснения, и с 07.09.2026 она включается по
+   * ЧИСЛУ совпадений, а не по имени раздела (PROGRESS.md 7.133, часть 4).
+   *
+   * Что чинилось. Замер на живом проде: восемь запросов, каждый — полное
+   * название ОДНОГО пазла, совпало 1–2 объекта — и все восемь раз выдача
+   * отдавала одну свёрнутую строку на `/es|ru/word-games`, хотя свой адрес
+   * у пазла есть и лежит в этом же индексе.
+   */
+  it("полное название одного пазла ведёт на сам пазл, а не на хаб игр", () => {
+    const res = searchRecords(INDEX, "Sopa de letras en ruso, nivel A1 nº 7 (10 palabras)", OPTIONS);
+    const game = res.sections.find((s) => s.section === "game")!;
+    expect(game.total).toBe(1);
+    expect(game.collapsed).toBe(false);
+    expect(game.hits).toHaveLength(1);
+    expect(game.hits[0].href).toBe("/es/word-games/WORD_SEARCH/A1/7");
+    expect(game.collapsedHref).toBeUndefined();
+  });
+
+  it("порог — ровно та пятёрка, которую раздел и так печатает", () => {
+    // Пять совпадений — раздел печатает их сам и не вытесняет никого.
+    const five = searchRecords(games(5), "sopa de letras", OPTIONS).sections[0];
+    expect(five.total).toBe(5);
+    expect(five.collapsed).toBe(false);
+    expect(five.hits).toHaveLength(5);
+    expect(new Set(five.hits.map((h) => h.href)).size).toBe(5);
+
+    // Шесть — уже больше своего бюджета, и раздел сворачивается.
+    const six = searchRecords(games(6), "sopa de letras", OPTIONS).sections[0];
+    expect(six.total).toBe(6);
+    expect(six.collapsed).toBe(true);
+    expect(six.hits).toHaveLength(0);
+    expect(six.collapsedHref).toBe("/es/word-games");
+
+    // Порог назван не числом, а тем же ограничением: если однажды
+    // изменится PER_SECTION_LIMIT, эти два случая обязаны переехать вместе
+    // с ним, а не разойтись молча.
+    expect(PER_SECTION_LIMIT).toBe(5);
+  });
+
+  it("платность у поштучной строки пазла на месте — и адрес тот же", () => {
+    const premium: SearchRecord[] = [
+      {
+        section: "game",
+        id: "WORD_SEARCH/A1/2",
+        path: "/word-games/WORD_SEARCH/A1/2",
+        title: "Sopa de letras en ruso, nivel A1 nº 2 (12 palabras)",
+        requires: "premium",
+      },
+    ];
+    const anonymous = searchRecords(premium, "Sopa de letras en ruso, nivel A1 nº 2 (12 palabras)", OPTIONS);
+    const hit = anonymous.sections[0].hits[0];
+    expect(anonymous.sections[0].collapsed).toBe(false);
+    expect(hit.href).toBe("/es/word-games/WORD_SEARCH/A1/2");
+    expect(hit.locked).toBe(true);
+    expect(hit.lockReason).toBe("premium");
+
+    // Контроль: пометка умеет пропадать — иначе строка выше доказывала бы
+    // только то, что locked прибит к true.
+    const paid = searchRecords(premium, "Sopa de letras en ruso, nivel A1 nº 2 (12 palabras)", {
+      ...OPTIONS,
+      tier: "premium",
+    });
+    expect(paid.sections[0].hits[0].locked).toBe(false);
+    expect(paid.sections[0].hits[0].href).toBe(hit.href);
+  });
 });
 
 describe("платное не раздаётся, но и не прячется", () => {

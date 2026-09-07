@@ -52,7 +52,6 @@ import { searchRecords, hrefFor, titleOf } from "../src/lib/search/match";
 import { collapsedHrefsFor } from "../src/lib/search/query";
 import {
   SEARCH_SECTIONS,
-  COLLAPSED_SECTIONS,
   type SearchRecord,
   type SearchResponse,
   type SearchSection,
@@ -91,9 +90,15 @@ function probe(records: readonly SearchRecord[], section: SearchSection, lang: L
     collapsedHrefs: collapsedHrefsFor(lang),
   });
 
+  // Свёрнут ли раздел — свойство ЭТОЙ выдачи, а не раздела: с 07.09.2026
+  // свёртка включается только когда совпадений больше, чем раздел и так
+  // печатает (PROGRESS.md 7.133). Спрашивать про это статический список
+  // значило бы объявить ненайденным пазл, который выдача честно напечатала
+  // отдельной строкой со своим адресом.
+  const collapsedHere = response.sections.find((s) => s.section === section)?.collapsed ?? false;
   // Свёрнутый раздел поштучных строк не печатает по построению — от него
   // требуется, чтобы он вообще попал в выдачу и назвал число.
-  if (COLLAPSED_SECTIONS.includes(section)) {
+  if (collapsedHere) {
     let place = 0;
     for (const s of response.sections) {
       if (s.collapsed) {
@@ -270,7 +275,8 @@ async function runAgainstLive(base: string, records: readonly SearchRecord[], pl
       }
       const response = await askLive(base, query, lang);
       const total = sectionTotal(response, section);
-      const collapsed = COLLAPSED_SECTIONS.includes(section);
+      // См. ту же оговорку в `probe`: свёрнутость — свойство выдачи.
+      const collapsed = response.sections.find((s) => s.section === section)?.collapsed ?? false;
       const place = placeOf(response, section, collapsed ? null : query);
       const found = total > 0 && (collapsed || place !== null);
       rows.push([section, lang, query.length > 52 ? `${query.slice(0, 51)}…` : query, found ? "да" : "НЕТ", place === null ? "—" : String(place)]);
