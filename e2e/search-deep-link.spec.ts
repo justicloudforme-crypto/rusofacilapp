@@ -118,10 +118,30 @@ test("контроль: чужой якорь не подсвечивает ни
   await expect(page.locator(FOCUSED)).toHaveCount(0);
 });
 
+/**
+ * Какая именно фраза закрыта — свойство ПРАВИЛА, а не выдумка теста.
+ *
+ * Неоплатившему `/api/idioms` собирает образец по кругу — по одной фразе
+ * из каждой категории по порядку (`buildFreeIdiomSample`), — а категорию
+ * `literary` режет отдельно до одной штуки (`LITERARY_IDIOM_LIMITS.free`).
+ * Значит ПЕРВАЯ литературная фраза фикстуры анониму видна, а последняя —
+ * нет. Обе половины проверяются ниже, и порознь ни одна ничего не значит:
+ * «не открылось» без «открывается» — это и сломанная доводка тоже.
+ */
+const literaryIdioms = idiomFixture.filter((idiom) => idiom.category === "literary");
+const FREE_SAMPLE_IDIOM = literaryIdioms[0];
+const LOCKED_IDIOM = literaryIdioms[literaryIdioms.length - 1];
+
+test("контроль пары: фраза, попавшая в бесплатный образец, доводится до себя и без подписки", async ({
+  page,
+}) => {
+  await expectLeadsToObject(page, "idiom", FREE_SAMPLE_IDIOM.phrase, "idiom-");
+});
+
 test("платное остаётся платным: закрытая идиома помечена в выдаче и без подписки не открывается", async ({
   page,
 }) => {
-  const literary = idiomFixture.find((idiom) => idiom.category === "literary")!;
+  const literary = LOCKED_IDIOM;
   await openSearch(page, "es");
   await page.getByRole("searchbox").fill(literary.phrase);
 
@@ -141,11 +161,8 @@ test("платное остаётся платным: закрытая идио�
 });
 
 test("та же закрытая идиома с подпиской открывается по тому же адресу", async ({ page }) => {
-  // Вторая половина пары. Порознь ни одна из них ничего не доказывает:
-  // «не открылось» без «открывается» — это и сломанная доводка тоже.
-  const literary = idiomFixture.find((idiom) => idiom.category === "literary")!;
   await loginWithSubscription(page, { tier: "premium" });
-  await expectLeadsToObject(page, "idiom", literary.phrase, "idiom-");
+  await expectLeadsToObject(page, "idiom", LOCKED_IDIOM.phrase, "idiom-");
 });
 
 test("на /ru идиома доводится до себя, а карточка словаря — нет, и это видно по адресу", async ({
