@@ -71,7 +71,13 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.wordGames.title}</h1>
       <p className="mt-2 text-lg text-foreground/70">{dict.wordGames.subtitle}</p>
-      <WordGamesPicker lang={lang} dict={dict.wordGames} data={data} isPremium={tier === "premium"} />
+      <WordGamesPicker
+        lang={lang}
+        dict={dict.wordGames}
+        data={data}
+        isPremium={tier === "premium"}
+        isSubscriber={tier !== "free"}
+      />
       {/* Server-rendered links to the whole free sample. The picker above
           is a client component whose grid follows React state, so the
           server emits links for its initial tab only — measured on

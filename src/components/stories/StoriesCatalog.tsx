@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { storyLevels, storyTopics, type StoryLevel, type StoryTopic } from "@/lib/stories";
 import LevelBadge from "@/components/LevelBadge";
-import PremiumBadge from "@/components/ui/PremiumBadge";
+import AccessMark from "@/components/ui/AccessMark";
 import FilterChipGroup, { filterChipClass } from "@/components/ui/FilterChipGroup";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
 import { usePaywall } from "@/contexts/PaywallContext";
@@ -32,7 +32,7 @@ export interface StorySummary {
 export interface StoriesCatalogDict {
   filterAll: string;
   levelFilterLabel: string;
-  premiumBadge: string;
+  subscriptionBadge: string;
   premiumTierBadge: string;
   byAuthor: string;
   readButton: string;
@@ -207,8 +207,19 @@ export default function StoriesCatalog({
                     )}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    {story.isPremium && <PremiumBadge icon="⭐">{dict.premiumBadge}</PremiumBadge>}
-                    {story.lockReason === "premium" && <PremiumBadge>{dict.premiumTierBadge}</PremiumBadge>}
+                    {/* ОДИН значок, и только тому, кто не может открыть.
+                        До 07.09.2026 их печаталось до двух сразу — «⭐
+                        Premium» по колонке `isPremium` (то есть у 225
+                        рассказов из 323, которым никакого Premium не
+                        нужно) плюс «👑 Solo Premium» у ещё 98. Что
+                        рисовать, решает один признак на весь сайт, см.
+                        src/lib/access-marks.ts. */}
+                    {story.lockReason && (
+                      <AccessMark
+                        mark={story.lockReason === "premium" ? "premium-tier" : "subscription"}
+                        label={story.lockReason === "premium" ? dict.premiumTierBadge : dict.subscriptionBadge}
+                      />
+                    )}
                   </span>
                 </div>
                 <h2 className="mt-3 text-lg font-medium">{story.title}</h2>
