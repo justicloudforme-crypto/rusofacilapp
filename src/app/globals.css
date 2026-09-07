@@ -1954,3 +1954,23 @@ html[data-hydrating] button[type="submit"] {
     animation: none;
   }
 }
+
+/* Полоса точек вводной деки. Она ПРОКРУЧИВАЕТСЯ, а не переносится (см.
+   комментарий в IntroPresentation.tsx: перенос ломался на увеличенном
+   системном шрифте — 4 + 4 + 2 в три ряда). Собственная полоса прокрутки
+   ей не нужна: элементов десять, положение сказано числом рядом, а
+   видимая планка съела бы половину высоты ряда на телефоне. Прокрутка при
+   этом остаётся настоящей — пальцем, колесом и кареткой. */
+.intro-pager-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+}
+.intro-pager-strip::-webkit-scrollbar {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-pager-strip {
+    scroll-behavior: auto;
+  }
+}
