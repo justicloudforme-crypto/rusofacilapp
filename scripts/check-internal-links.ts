@@ -40,6 +40,15 @@
  *   npx tsx scripts/check-internal-links.ts --plant            # позитивный контроль
  *   npx tsx scripts/check-internal-links.ts --base=https://rusofacilapp.com --from-sitemap
  *   npx tsx scripts/check-internal-links.ts --server-only      # без браузера (быстро, половина сайта)
+ *   npx tsx scripts/check-internal-links.ts --plant-render-failure  # контроль отчёта об отказах
+ *
+ * ОТКАЗЫ РЕНДЕРА печатаются поимённо, с причиной и временем — всегда, в
+ * том числе когда их ноль. До 07.09.2026 здесь стоял счётчик и
+ * `catch { return null }`, и два захода подряд нельзя было назвать ни одну
+ * из 39, а затем 93 не отрендерившихся страниц (долг 66). Ждём `load`, а не
+ * `networkidle`: на сайте с постоянным префетчем тишины не бывает, и
+ * ожидание тишины давало 3–5 % неосмотренных страниц случайным составом и
+ * прогон в 2 ч 40 мин (долг 67).
  */
 import { chromium, type Browser, type Page } from "@playwright/test";
 import { writeFileSync } from "node:fs";
@@ -57,9 +66,26 @@ const flag = (name: string) => argv.includes(`--${name}`);
 const BASE = arg("base", "http://localhost:3000").replace(/\/$/, "");
 const ORIGIN = new URL(BASE).origin;
 const CONCURRENCY = Number(arg("concurrency", "8"));
+/**
+ * Сколько ждать страницу. Ждём `load`, а не `networkidle` (см. большой
+ * комментарий у `renderedHrefs`), поэтому 30 с — это запас на порядок, а
+ * не впритык: замер 07.09.2026 дал 0,9–1,4 с на страницу.
+ */
+const RENDER_TIMEOUT = Number(arg("render-timeout", "30000"));
+/** Сколько контекстов браузера одновременно. Отдельно от `--concurrency`
+ * (тот про HTTP): рендер дороже, и раньше это число было зашито. */
+const RENDER_CONCURRENCY = Number(arg("render-concurrency", "6"));
 const FROM_SITEMAP = flag("from-sitemap");
 const SERVER_ONLY = flag("server-only");
 const PLANT = flag("plant");
+/**
+ * Позитивный контроль для отчёта об отказах рендера: первой живой
+ * странице обхода документ отдаётся `abort`, то есть она заведомо не
+ * рендерится. Сторож обязан назвать её адрес и причину, а не только
+ * посчитать. Без такого контроля строка «не отрендерилось: 0» не значит
+ * ничего (правило замера 4.1).
+ */
+const PLANT_RENDER_FAILURE = flag("plant-render-failure");
 const OUT = arg("out", "");
 const MAX_PER_FAMILY = Number(arg("max-per-family", "0"));
 /** Свой список путей вместо набора по умолчанию — для позитивного
@@ -133,6 +159,13 @@ interface Expansion {
  * работа, которую делает импорт.
  */
 async function expandIntroDeck(page: Page): Promise<void> {
+  // Кнопка деки появляется только после гидрации, а ждём мы теперь `load`,
+  // который наступает раньше неё. Без этого ожидания первый же `count()`
+  // вернул бы 0, дека осталась бы нелистанной — и сторож молча потерял бы
+  // ровно тот класс ссылок, ради которого он написан. Отказ ожидания не
+  // фатален: страница просто меряется без раскрытия, и она попадёт в
+  // число страниц без раскрытия.
+  await page.waitForSelector('[data-testid="intro-next"]', { timeout: 15_000 }).catch(() => undefined);
   // Дека держит в DOM ровно один слайд. Ссылка на алфавит стоит на
   // четвёртом — обход без листания её не видит (замерено 07.09.2026).
   for (let i = 0; i < 20; i += 1) {
@@ -268,7 +301,34 @@ async function seedPages(): Promise<string[]> {
   });
 }
 
-async function renderedHrefs(browser: Browser, url: string): Promise<string[] | null> {
+/** Отказ рендера, названный поимённо: адрес, причина, сколько ждали. */
+interface RenderFailure { url: string; reason: string; ms: number }
+
+/**
+ * Дождаться, пока список ссылок перестанет расти.
+ *
+ * Зачем это вместо `networkidle`. `load` наступает до гидрации, а часть
+ * ссылок печатают клиентские компоненты. Ждать тишины в сети для этого
+ * нельзя: сайт непрерывно префетчит маршруты, и окно тишины не наступает
+ * вовсе (замер 07.09.2026: одна и та же страница — 5 успехов по ~2 с и
+ * 1 отказ по полному таймауту из 6 попыток, промежуточных значений нет).
+ * Поэтому ждём не сеть, а сам ответ на наш вопрос: число `<a href>`.
+ * Условие ограничено сверху и всегда завершается.
+ */
+async function waitForLinksToSettle(page: Page): Promise<void> {
+  let previous = -1;
+  let stable = 0;
+  for (let i = 0; i < 15; i += 1) {
+    const n = await page.evaluate(() => document.querySelectorAll("a[href]").length).catch(() => -1);
+    if (n < 0) return;
+    stable = n === previous ? stable + 1 : 0;
+    previous = n;
+    if (stable >= 2) return;
+    await page.waitForTimeout(200);
+  }
+}
+
+async function renderedHrefs(browser: Browser, url: string, plantFailure = false): Promise<string[] | RenderFailure> {
   const ctx = await browser.newContext({ userAgent: "rusofacilapp-linkcheck-rendered/1.0" });
   if (PLANT) {
     // Подсадка живёт в самой странице, а не в разборе: контроль обязан
@@ -286,11 +346,21 @@ async function renderedHrefs(browser: Browser, url: string): Promise<string[] | 
   const page = await ctx.newPage();
   await page.route("**/*", (route) => {
     const t = route.request().resourceType();
+    // Подсадка позитивного контроля: документ этой страницы не доедет
+    // никогда, значит она заведомо не отрендерится. Отказ приходит по
+    // тому же пути, что настоящий, — через `goto`, а не мимо него.
+    if (plantFailure && t === "document") return route.abort("failed");
     if (t === "image" || t === "font" || t === "media") return route.abort();
     return route.continue();
   });
+  const started = Date.now();
   try {
-    await page.goto(url, { waitUntil: "networkidle", timeout: 45_000 });
+    // `load`, а НЕ `networkidle`. Полное обоснование — в комментарии
+    // `waitForLinksToSettle` выше и в PROGRESS 7.138 (долг 67): на этом
+    // сайте тишины в сети не бывает, поэтому `networkidle` — не «дольше
+    // ждать», а лотерея, в которой 3–5 % страниц не осматриваются вовсе.
+    await page.goto(url, { waitUntil: "load", timeout: RENDER_TIMEOUT });
+    await waitForLinksToSettle(page);
     const collected = new Set<string>();
     const grab = async () => {
       const hrefs = await page.evaluate(() =>
@@ -309,18 +379,29 @@ async function renderedHrefs(browser: Browser, url: string): Promise<string[] | 
       void before;
     }
     return [...collected];
-  } catch {
-    return null;
+  } catch (error) {
+    // ДОЛГ 66 закрыт здесь. Раньше стояло `catch { return null }`, наверх
+    // шёл только счётчик, и назвать не отрендерившиеся страницы было
+    // нельзя в принципе — два захода подряд оговорка оставалась
+    // неснимаемой не потому, что причина сложная, а потому, что её
+    // выбрасывали в этой строке.
+    const reason = String(error instanceof Error ? error.message : error)
+      .split("\n")[0]
+      .replace(/\s+/g, " ")
+      .slice(0, 160);
+    return { url, reason, ms: Date.now() - started };
   } finally {
     await ctx.close();
   }
 }
 
+const isRenderFailure = (r: string[] | RenderFailure): r is RenderFailure => !Array.isArray(r);
+
 async function main() {
   const pages = await seedPages();
   const edges: Edge[] = [];
   const pageStatus = new Map<string, number>();
-  let renderFailures = 0;
+  const renderFailures: RenderFailure[] = [];
 
   process.stderr.write(`страниц к обходу: ${pages.length}\n`);
 
@@ -335,13 +416,15 @@ async function main() {
 
   // --- Источник 2: отрендеренный DOM. ---
   const expanded = new Set<string>();
+  let plantedRenderFailurePage: string | undefined;
   if (!SERVER_ONLY) {
     const browser = await chromium.launch();
     const live = pages.filter((u) => pageStatus.get(u) === 200);
-    await pool(live, Math.min(CONCURRENCY, 6), async (url) => {
-      const hrefs = await renderedHrefs(browser, url);
-      if (hrefs === null) {
-        renderFailures += 1;
+    plantedRenderFailurePage = PLANT_RENDER_FAILURE ? live[0] : undefined;
+    await pool(live, RENDER_CONCURRENCY, async (url) => {
+      const hrefs = await renderedHrefs(browser, url, url === plantedRenderFailurePage);
+      if (isRenderFailure(hrefs)) {
+        renderFailures.push(hrefs);
         return;
       }
       if (EXPANSIONS.some((e) => e.match.test(url))) expanded.add(url);
@@ -385,7 +468,13 @@ async function main() {
   console.log(`различных целей: ${targets.length}`);
   console.log(`целей, которых нет в серверном HTML (только после гидрации): ${onlyAfterHydration.length}`);
   console.log(`страниц с раскрытием (${EXPANSIONS.map((e) => e.name).join("; ")}): ${expanded.size}`);
-  if (renderFailures) console.log(`страниц, которые не отрендерились: ${renderFailures}`);
+  console.log(`страниц, которые не отрендерились: ${renderFailures.length}`);
+  // Поимённо и с причиной — всегда, а не «в отладочном режиме». Число без
+  // состава не позволяет ни проверить гипотезу о причине, ни сравнить два
+  // прогона между собой.
+  for (const f of [...renderFailures].sort((a, b) => a.url.localeCompare(b.url))) {
+    console.log(`  ✗ ${f.url.slice(ORIGIN.length)}  (${(f.ms / 1000).toFixed(1)} с)  ${f.reason}`);
+  }
   console.log(`\nцелей с конечным кодом НЕ 200: ${broken.length}`);
   console.log(`из них разбор не выдерживают: ${fatal.length}; отложено «нет строк в этой базе»: ${excused.length}`);
   for (const b of [...fatal, ...excused].sort((a, b2) => b2.from.length - a.from.length)) {
@@ -399,6 +488,17 @@ async function main() {
   }
 
   if (OUT) writeFileSync(OUT, JSON.stringify({ broken, targets: targets.length, edges: edges.length }, null, 1));
+
+  if (PLANT_RENDER_FAILURE) {
+    const named = renderFailures.filter((f) => f.url === plantedRenderFailurePage);
+    console.log(`\nпозитивный контроль отказа рендера: подсажена 1 страница (${(plantedRenderFailurePage ?? "").slice(ORIGIN.length)})`);
+    console.log(`названо ${named.length} из 1${named.length ? `: ${named[0].url.slice(ORIGIN.length)} — ${named[0].reason}` : ""}`);
+    // Негативная половина: кроме подсадки не должно отказать ничего, иначе
+    // «поймали 1 из 1» уживается с молчаливой потерей соседних страниц.
+    console.log(`кроме подсадки не отрендерилось: ${renderFailures.length - named.length}`);
+    process.exitCode = named.length === 1 && named[0].reason.length > 0 ? 0 : 1;
+    return;
+  }
 
   if (PLANT) {
     const caught = fatal.filter((b) => b.target.endsWith(PLANTED_HREF)).length;
