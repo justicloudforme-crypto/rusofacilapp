@@ -38,6 +38,16 @@ const SCALAR_TYPE_TO_SQLITE: Record<string, string> = {
 interface FieldDef {
   name: string;
   sqlType: string;
+  /** `false` when the field is declared with `?`. Не используется самим
+   * добавлением колонок (оно всегда добавляет nullable — см. комментарий
+   * к ALTER TABLE ниже), но именно на этом поле стоит сверка
+   * `scripts/check-schema-drift.ts`: расхождение «в схеме NOT NULL, в базе
+   * nullable» не видел никто, и `Story.topic` прожил так до 08.09.2026
+   * с 325 строками NULL при `String @default("other")`. */
+  nullable: boolean;
+  /** Содержимое `@default(...)` как оно написано в схеме, или null.
+   * Сырой текст, не разобранный: разбор — дело сверки, а не парсера. */
+  defaultRaw: string | null;
 }
 
 interface ModelDef {
@@ -80,6 +90,26 @@ function modelBodies(schemaText: string): Array<{ name: string; body: string }> 
   return out;
 }
 
+/** Содержимое `@default(...)` со СЧЁТОМ скобок, а не первой закрывающей.
+ * `@default(now())` и `@default(cuid())` — самые обычные значения в этой
+ * схеме, и регулярка `\(([^)]*)\)` обрывала их на «now(» и «cuid(», после
+ * чего сверка дефолтов рапортовала 21 ложное расхождение подряд. Ровно та
+ * же ошибка, что уже стоила этому файлу четырёх невидимых полей
+ * (см. modelBodies выше). */
+function readDefault(attributes: string): string | null {
+  const at = attributes.indexOf("@default(");
+  if (at === -1) return null;
+  let depth = 1;
+  let i = at + "@default(".length;
+  const start = i;
+  while (i < attributes.length && depth > 0) {
+    if (attributes[i] === "(") depth += 1;
+    else if (attributes[i] === ")") depth -= 1;
+    i += 1;
+  }
+  return depth === 0 ? attributes.slice(start, i - 1).trim() : null;
+}
+
 function parseSchema(schemaText: string): ModelDef[] {
   const models: ModelDef[] = [];
 
@@ -101,7 +131,17 @@ function parseSchema(schemaText: string): ModelDef[] {
       const sqlType = SCALAR_TYPE_TO_SQLITE[prismaType];
       if (!sqlType) continue;
 
-      fields.push({ name: fieldName, sqlType });
+      // Атрибуты берутся из части строки ПОСЛЕ типа: иначе `@default` из
+      // соседнего поля, попавшего в ту же строку комментария, приписался
+      // бы этому.
+      const attributes = line.slice(fieldMatch[0].length);
+
+      fields.push({
+        name: fieldName,
+        sqlType,
+        nullable: modifier === "?",
+        defaultRaw: readDefault(attributes),
+      });
     }
 
     models.push({ name: modelName, fields });
@@ -168,6 +208,7 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
 ];
 
 export { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS };
+export type { FieldDef, ModelDef };
 
 async function main() {
   const url = process.env.TURSO_DATABASE_URL;
