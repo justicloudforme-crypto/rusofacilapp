@@ -41,6 +41,10 @@ import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
 import path from "node:path";
+// Формат даты — общий для всех, кто пишет в базу мимо Prisma
+// (stored-datetime.mjs, PROGRESS.md 7.147 долг 91). Строка ниже кладётся в
+// ту же колонку, что и Prisma, и читается тем же сравнением.
+import { storedDateTime } from "./stored-datetime.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -448,8 +452,8 @@ async function grantSubscriptionForRun() {
     // Same shape as prisma/grant-subscription.ts's manual grant, and the
     // same shape /admin/subscriptions writes.
     const id = `run-grant-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-    const now = new Date().toISOString();
-    const end = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const now = storedDateTime(new Date());
+    const end = storedDateTime(new Date(Date.now() + 60 * 60 * 1000));
     db.prepare(
       "INSERT INTO Subscription (id, userId, plan, status, currentPeriodEnd, provider, createdAt, updatedAt)" +
         " VALUES (?, ?, 'manual', 'active', ?, 'stripe', ?, ?)"

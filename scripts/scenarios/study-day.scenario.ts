@@ -27,6 +27,13 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createClient, type Client } from "@libsql/client";
+// Формат даты — тот же, в каком её хранит Prisma (scripts/stored-datetime.mjs).
+// До 08.09.2026 этот стенд клал в колонки DateTime ЧИСЛО миллисекунд: читалось
+// оно через Prisma верно (разбор идёт в JS), а сравнение в SQL с такой строкой
+// не работает вовсе — SQLite ставит все числа ниже любой строки. Стенд,
+// пишущий не тем форматом, проверяет не то, что живёт на проде
+// (PROGRESS.md 7.147, долг 91; сторож — npm run check:raw-datetime).
+import { storedDateTime } from "../stored-datetime.mjs";
 
 let dbDir: string;
 let dbFile: string;
@@ -54,7 +61,7 @@ const AUCKLAND = "Pacific/Auckland"; // UTC+12
 async function newUser(id: string): Promise<string> {
   await raw.execute({
     sql: `INSERT INTO "User" (id, email, name, role, createdAt) VALUES (?, ?, ?, 'student', ?)`,
-    args: [id, `${id}@scenario.invalid`, id, Date.now()],
+    args: [id, `${id}@scenario.invalid`, id, storedDateTime(new Date())],
   });
   return id;
 }
@@ -160,7 +167,7 @@ describe("одна отметка на календарный день", () => {
     for (let i = 0; i < 10; i++) {
       await raw.execute({
         sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES (?, ?, ?, 'lesson', ?)`,
-        args: [`naive-${i}`, "sd-naive-control", `2026-09-10-visit-${i}`, Date.now()],
+        args: [`naive-${i}`, "sd-naive-control", `2026-09-10-visit-${i}`, storedDateTime(new Date())],
       });
     }
     const naive = await raw.execute({
@@ -330,7 +337,7 @@ describe("плитки «Обзора» считают ровно то, что �
     await raw.execute({
       sql: `INSERT INTO "LessonProgress" (id, userId, level, lessonSlug, score, passed, mistakes, answers, completedAt)
             VALUES ('tile-lesson', ?, 'a1', '1', 90, 1, '[]', '{}', ?)`,
-      args: [user, Date.now()],
+      args: [user, storedDateTime(new Date())],
     });
     const after = await getLevelProgress(user);
     const lessonsAfter = Object.values(after).reduce((sum, level) => sum + level.completed, 0);
@@ -343,7 +350,7 @@ describe("плитки «Обзора» считают ровно то, что �
     await raw.execute({
       sql: `INSERT INTO "LessonProgress" (id, userId, level, lessonSlug, score, passed, mistakes, answers, completedAt)
             VALUES ('tile-failed', ?, 'a2', '1', 40, 0, '[]', '{}', ?)`,
-      args: [user, Date.now()],
+      args: [user, storedDateTime(new Date())],
     });
     const withFail = await getLevelProgress(user);
     expect(Object.values(withFail).reduce((sum, level) => sum + level.completed, 0)).toBe(1);
@@ -396,7 +403,7 @@ describe("отметка, поставленная до того, как бра�
 
     await raw.execute({
       sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('utc-only', ?, ?, 'lesson', ?)`,
-      args: [user, utcStamp, evening.getTime()],
+      args: [user, utcStamp, storedDateTime(evening)],
     });
 
     const keys = await getUserActivityDateKeys(user, MEXICO);
@@ -419,7 +426,7 @@ describe("отметка, поставленная до того, как бра�
 
     await raw.execute({
       sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES ('rep-1', ?, ?, 'lesson', ?)`,
-      args: [user, secondDay, firstEvening.getTime()],
+      args: [user, secondDay, storedDateTime(firstEvening)],
     });
 
     await markStudyDay(user, MEXICO, "flashcards", secondEvening);

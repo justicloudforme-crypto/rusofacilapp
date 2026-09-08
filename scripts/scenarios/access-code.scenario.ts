@@ -35,31 +35,17 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createClient, type Client } from "@libsql/client";
+// Формат даты — общий для всех, кто ходит в базу мимо Prisma
+// (scripts/stored-datetime.mjs). Раньше эта функция лежала копией в каждом
+// сценарии; копия — это второй формат, ждущий своего часа
+// (PROGRESS.md 7.147, долг 91; сторож — npm run check:raw-datetime).
+import {
+  storedDateTime,
+  readStoredDateTime as readInstant,
+  STORED_DATETIME_SHAPE,
+} from "../stored-datetime.mjs";
 
 const DAY = 24 * 60 * 60 * 1000;
-
-/**
- * Дата в том виде, в каком её хранит Prisma на SQLite/libSQL: ТЕКСТ вида
- * `2026-09-08T12:00:00.000+00:00`, а не число миллисекунд.
- *
- * Это не косметика, и цена ошибки здесь измерена прямо в этом заходе:
- * строка, положенная сырым клиентом числом, читается через Prisma как
- * правильная дата (потому что разбор идёт в JS), но СРАВНЕНИЕ в SQL
- * (`expiresAt > ?`) с ней не работает — SQLite ставит все числа ниже любой
- * строки. Из-за этого случай [A6] сначала показал «код неизвестен» там, где
- * код был жив ещё час. Формат один на записи и на чтении, иначе стенд
- * проверяет не то, что живёт на проде.
- */
-function asStored(date: Date): string {
-  return date.toISOString().replace("Z", "+00:00");
-}
-
-/** Обратное преобразование: строка Prisma или число сырой вставки. */
-function readInstant(value: unknown): number {
-  const text = String(value);
-  const asNumber = Number(text);
-  return Number.isFinite(asNumber) ? asNumber : Date.parse(text);
-}
 
 let dbDir: string;
 let dbFile: string;
@@ -85,7 +71,7 @@ let currentUserId = "";
 async function newUser(id: string): Promise<Account> {
   await raw.execute({
     sql: `INSERT INTO "User" (id, email, name, role, createdAt) VALUES (?, ?, ?, 'student', ?)`,
-    args: [id, `${id}@scenario.invalid`, id, asStored(new Date())],
+    args: [id, `${id}@scenario.invalid`, id, storedDateTime(new Date())],
   });
   currentUserId = id;
   return { id, role: "student" };
@@ -112,9 +98,9 @@ async function putCode(input: {
       input.code,
       input.tier ?? "standard",
       input.days ?? 90,
-      input.expiresAt ? asStored(input.expiresAt) : null,
+      input.expiresAt ? storedDateTime(input.expiresAt) : null,
       input.batch ?? "SCENARIO",
-      asStored(new Date()),
+      storedDateTime(new Date()),
     ],
   });
 }
@@ -327,7 +313,7 @@ describe("одноразовость под гонкой", () => {
       await new Promise((resolve) => setTimeout(resolve, 5));
       await raw.execute({
         sql: `UPDATE "AccessCode" SET redeemedAt = ?, redeemedById = ? WHERE code = ?`,
-        args: [asStored(new Date()), userId, "AMIGONAIVE0001"],
+        args: [storedDateTime(new Date()), userId, "AMIGONAIVE0001"],
       });
       return true;
     };
@@ -375,7 +361,7 @@ describe("срок годности кода и срок доступа — ра
     // Граница ровно как в 7.145: строго в будущем — доступ есть.
     await raw.execute({
       sql: `UPDATE "Subscription" SET currentPeriodEnd = ? WHERE userId = ?`,
-      args: [asStored(new Date(Date.now() + 1000)), user.id],
+      args: [storedDateTime(new Date(Date.now() + 1000)), user.id],
     });
     await step("срок в одной секунде впереди", user);
     expect(await tierOf(user)).toBe("standard");
@@ -383,7 +369,7 @@ describe("срок годности кода и срок доступа — ра
     // Ровно сейчас — доступа уже нет. Никакого события не приходило.
     await raw.execute({
       sql: `UPDATE "Subscription" SET currentPeriodEnd = ? WHERE userId = ?`,
-      args: [asStored(new Date()), user.id],
+      args: [storedDateTime(new Date()), user.id],
     });
     await step("срок ровно сейчас", user);
     expect(await tierOf(user)).toBe("free");
@@ -430,5 +416,70 @@ describe("отзыв кода", () => {
 
   it("[A10] отзыв кода, которого нет", async () => {
     expect(await revokeAccessCode("AMIGO-NOPE-00000", null)).toEqual({ ok: false, reason: "unknown" });
+  });
+});
+
+/**
+ * ФОРМАТ ДАТЫ — ПОСЫЛКА, НА КОТОРОЙ СТОИТ ВСЁ ОСТАЛЬНОЕ (долг 91, PROGRESS.md 7.147).
+ *
+ * Сторож `npm run check:raw-datetime` запрещает сырому SQL сравнивать
+ * `DateTime` и требует, чтобы запись шла через `storedDateTime`. Оба правила
+ * держатся на одном утверждении о мире: «Prisma хранит дату текстом вида
+ * `2026-09-08T12:00:00.000+00:00`». Утверждение, которое никто не проверял, —
+ * это не правило, а поверье, поэтому оно проверяется здесь, на настоящей
+ * базе и на строке, которую написала САМА Prisma.
+ */
+describe("формат даты, в котором пишет Prisma", () => {
+  it("[A11] строка, написанная Prisma, совпадает с общим форматтером знак в знак", async () => {
+    scenario("[A11] Prisma пишет дату -> её текст читают сырым клиентом");
+    const user = await newUser("ac-format");
+    await putCode({ code: "AMIGOFORMAT0001", days: 90 });
+    expect(await redeemAccessCode(user, "AMIGO-FORMAT-0001")).toMatchObject({ ok: true });
+
+    // Строку `Subscription` написала Prisma (через extendOrGrantSubscription).
+    // Читаем её ТЕКСТ, а не разобранную дату: разбор в JS одинаково прощает
+    // и число, и текст, и потому о формате хранения не говорит ничего.
+    const result = await raw.execute({
+      sql: `SELECT currentPeriodEnd, createdAt FROM "Subscription" WHERE userId = ?`,
+      args: [user.id],
+    });
+    const stored = String(result.rows[0].currentPeriodEnd);
+    console.log(`    Prisma записала -> ${stored}`);
+    expect(stored).toMatch(STORED_DATETIME_SHAPE);
+    expect(String(result.rows[0].createdAt)).toMatch(STORED_DATETIME_SHAPE);
+    // И главное: наш форматтер даёт РОВНО этот текст, а не «похожий».
+    expect(storedDateTime(new Date(stored))).toBe(stored);
+    // Позитивный контроль к самой сверке: `toISOString()` — почти то же
+    // самое и всё-таки не то. Без этой строки совпадение выше проходило бы
+    // и с форматтером, который ничего не меняет.
+    expect(new Date(stored).toISOString()).not.toBe(stored);
+  });
+
+  it("[A12] код, положенный числом миллисекунд, живым не выглядит — замер, а не пожелание", async () => {
+    scenario("[A12] тот же код двумя форматами срока годности");
+    const hour = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Правильный формат: код годен ещё час и погашается.
+    const good = await newUser("ac-format-good");
+    await putCode({ code: "AMIGOFORMATOK01", expiresAt: hour });
+    expect(await redeemAccessCode(good, "AMIGO-FORMAT-OK01")).toMatchObject({ ok: true });
+
+    // Тот же срок, положенный ЧИСЛОМ. Сравнение `expiresAt > ?` идёт в SQL,
+    // а SQLite ставит любое число ниже любой строки — живой код становится
+    // неизвестным. Это ИЗМЕРЕНИЕ сегодняшнего поведения, а не требование к
+    // нему: перенеси кто-нибудь сравнение в JS, этот случай покраснеет, и
+    // покраснеет он правильно — поведение изменилось.
+    const bad = await newUser("ac-format-bad");
+    await raw.execute({
+      sql: `INSERT INTO "AccessCode" (id, code, tier, durationDays, expiresAt, batch, createdAt)
+            VALUES (?, ?, 'standard', 90, ?, 'SCENARIO', ?)`,
+      // Подсадка ровно того формата, который сторож запрещает. Сторож молчит
+      // на этом файле не по слепоте: он спрашивает у ФАЙЛА, есть ли в нём
+      // общий форматтер, а здесь он есть — см. заголовок check-raw-datetime.mjs.
+      args: ["ac_format_bad", "AMIGOFORMATBAD1", hour.getTime(), storedDateTime(new Date())],
+    });
+    expect(await redeemAccessCode(bad, "AMIGO-FORMAT-BAD1")).toEqual({ ok: false, reason: "unknown" });
+    console.log("    число миллисекунд -> код выглядит неизвестным (та самая находка 7.146)");
+    expect(await tierOf(bad)).toBe("free");
   });
 });

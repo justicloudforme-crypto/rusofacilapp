@@ -3,8 +3,18 @@
  *
  * Отзывается либо один код, либо партия целиком:
  *
- *     npm run access-codes:revoke -- --code=AMIGO-K7M2-QW9F --dry-run
- *     npm run access-codes:revoke -- --batch=AMIGO-2026-09-08 --commit
+ *     npm run access-codes:revoke -- --code=AMIGO-K7M2-QW9F --by=вы@почта --dry-run
+ *     npm run access-codes:revoke -- --batch=AMIGO-2026-09-08 --by=вы@почта --commit
+ *
+ * `--by=` ОБЯЗАТЕЛЕН, и без него скрипт не работает вовсе (PROGRESS.md
+ * 7.147, долг 89). До 08.09.2026 отзыв скриптом писал в `revokedById` `null`:
+ * колонка в схеме есть, вопрос «кто отозвал» задан — и ответа на него не
+ * было ни у одной строки, отозванной единственным существующим способом.
+ * Это хуже, чем отсутствие колонки: отсутствие видно, а `null` выглядит как
+ * ответ «никто». Признак принимается почтой или идентификатором аккаунта и
+ * ПРОВЕРЯЕТСЯ по таблице `User` — выдуманное значение не пройдёт, потому что
+ * на колонке настоящий внешний ключ, и запись упала бы уже в базе, посреди
+ * партии.
  *
  * ПОГАШЕННЫЙ КОД ОТОЗВАТЬ НЕЛЬЗЯ, и это продуктовое правило, а не
  * техническое ограничение: отзыв кода означает «бумажка не сработает», а уже
@@ -59,10 +69,29 @@ async function main() {
     fail("нужен ровно один из --code=… или --batch=….");
   }
 
+  const by = flag("by");
+  if (by === undefined || by.trim() === "") {
+    fail(
+      "--by=<почта или id аккаунта> обязателен: отзыв обязан знать, кто его сделал. " +
+        "Колонка revokedById для этого и заведена, а null в ней выглядит как ответ «никто» " +
+        "и неотличим от отзыва, сделанного кем угодно."
+    );
+  }
+
   const where = codeRaw !== undefined ? { code: normalizeAccessCode(codeRaw) } : { batch: batch! };
 
   const db = makeClient();
   try {
+    // Исполнитель проверяется ДО чтения кодов и до любой записи. На колонке
+    // настоящий внешний ключ: выдуманный идентификатор уронил бы UPDATE уже
+    // внутри базы — то есть посреди партии, отозвав часть её.
+    const needle = by.trim();
+    const actor =
+      (await db.user.findUnique({ where: { email: needle.toLowerCase() }, select: { id: true, email: true, role: true } })) ??
+      (await db.user.findUnique({ where: { id: needle }, select: { id: true, email: true, role: true } }));
+    if (!actor) fail(`--by="${needle}": такого аккаунта нет ни по почте, ни по идентификатору.`);
+    console.log(`Отзыв делает:       ${actor.email} (${actor.role}, ${actor.id})`);
+
     const rows = await db.accessCode.findMany({
       where,
       select: { code: true, batch: true, redeemedAt: true, revokedAt: true },
@@ -88,10 +117,10 @@ async function main() {
     // Условие повторено в самом UPDATE: чтение выше — только для отчёта.
     const { count } = await db.accessCode.updateMany({
       where: { ...where, redeemedAt: null, revokedAt: null },
-      data: { revokedAt: new Date(), revokedById: null },
+      data: { revokedAt: new Date(), revokedById: actor.id },
     });
     console.log("");
-    console.log(`Отозвано строк: ${count}.`);
+    console.log(`Отозвано строк: ${count}, отзыв записан за ${actor.email}.`);
   } finally {
     await db.$disconnect();
   }

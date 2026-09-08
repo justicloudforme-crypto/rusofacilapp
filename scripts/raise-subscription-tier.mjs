@@ -44,6 +44,9 @@
 import "dotenv/config";
 import { pathToFileURL } from "node:url";
 import { createClient } from "@libsql/client";
+// Формат даты — общий для всех, кто пишет в базу мимо Prisma
+// (stored-datetime.mjs, PROGRESS.md 7.147 долг 91).
+import { storedDateTime } from "./stored-datetime.mjs";
 
 // Same constant as src/lib/subscription.ts. Not imported: that module is
 // `server-only` and pulls in Prisma, Redis and the Next runtime.
@@ -183,7 +186,7 @@ async function main() {
     // row changed between the read and this write, it updates nothing.
     const res = await db.execute({
       sql: `UPDATE Subscription SET plan = ?, updatedAt = ? WHERE id = ? AND plan = ?`,
-      args: [PREMIUM_PLAN_ID, new Date().toISOString(), row.id, EXPECT_PLAN],
+      args: [PREMIUM_PLAN_ID, storedDateTime(new Date()), row.id, EXPECT_PLAN],
     });
     console.log(`  ${row.id}: ${res.rowsAffected} row(s) updated`);
     if (res.rowsAffected !== 1) {
