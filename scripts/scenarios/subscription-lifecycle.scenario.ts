@@ -36,6 +36,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import Stripe from "stripe";
 import { createClient, type Client } from "@libsql/client";
+// Формат даты — общий для всех, кто ходит в базу мимо Prisma
+// (scripts/stored-datetime.mjs). Раньше эта функция лежала копией в каждом
+// сценарии; копия — это второй формат, ждущий своего часа
+// (PROGRESS.md 7.147, долг 91; сторож — npm run check:raw-datetime).
+import { storedDateTime } from "../stored-datetime.mjs";
 
 const WEBHOOK_SECRET = "whsec_scenario_only_not_a_real_secret";
 const DAY = 24 * 60 * 60 * 1000;
@@ -125,7 +130,7 @@ const premiumOxxoPaid = (userId: string) => ({
 async function newUser(id: string): Promise<string> {
   await raw.execute({
     sql: `INSERT INTO "User" (id, email, name, role, createdAt) VALUES (?, ?, ?, 'student', ?)`,
-    args: [id, `${id}@scenario.invalid`, id, Date.now()],
+    args: [id, `${id}@scenario.invalid`, id, storedDateTime(new Date())],
   });
   currentUserId = id;
   return id;
@@ -143,9 +148,12 @@ async function rows(userId: string) {
   return result.rows.map((row) => ({
     plan: String(row.plan),
     status: String(row.status),
-    // Prisma stores DateTime in SQLite as epoch millis, but a row written
-    // by the raw client in this file carries whatever it was given — read
-    // both shapes rather than assuming one.
+    // ЗДЕСЬ СТОЯЛА НЕПРАВДА, и она же — причина долга 91: «Prisma хранит
+    // DateTime в SQLite числом миллисекунд». Нет: она хранит его ТЕКСТОМ
+    // (`2026-09-08T12:00:00.000+00:00`), и именно поэтому строка, положенная
+    // сырым клиентом числом, ломает сравнение в SQL. Все записи этого файла
+    // идут через общий форматтер (scripts/stored-datetime.mjs), а читатель
+    // ниже терпит обе формы намеренно — на случай строки, положенной раньше.
     endsAt: String(row.currentPeriodEnd).slice(0, 24),
     stripe: row.stripeSubscriptionId === null ? "—" : "stripe",
   }));
@@ -157,7 +165,7 @@ async function rows(userId: string) {
 async function backdateMonthlyRow(userId: string) {
   await raw.execute({
     sql: `UPDATE "Subscription" SET currentPeriodEnd = ? WHERE userId = ? AND stripeSubscriptionId IS NOT NULL`,
-    args: [Date.now() - DAY, userId],
+    args: [storedDateTime(new Date(Date.now() - DAY)), userId],
   });
   await invalidateSubscriptionCache(userId);
 }
@@ -382,7 +390,13 @@ describe("money going back", () => {
     await raw.execute({
       sql: `INSERT INTO "Subscription" (id, userId, plan, status, currentPeriodEnd, provider, createdAt, updatedAt)
             VALUES (?, ?, 'manual', 'active', ?, 'stripe', ?, ?)`,
-      args: [`sub_manual_${user}`, user, Date.now() + 30 * DAY, Date.now(), Date.now()],
+      args: [
+        `sub_manual_${user}`,
+        user,
+        storedDateTime(new Date(Date.now() + 30 * DAY)),
+        storedDateTime(new Date()),
+        storedDateTime(new Date()),
+      ],
     });
     await invalidateSubscriptionCache(user);
     await step("30 days granted by hand");
@@ -432,7 +446,7 @@ describe("money going back", () => {
     await raw.execute({
       sql: `INSERT INTO "AccessCode" (id, code, tier, durationDays, batch, createdAt)
             VALUES (?, 'AMIGOSCENARIO11', 'standard', 90, 'SCENARIO', ?)`,
-      args: [`ac_${user}`, new Date().toISOString().replace("Z", "+00:00")],
+      args: [`ac_${user}`, storedDateTime(new Date())],
     });
     const { redeemAccessCode } = await import("@/lib/access-code");
     expect(await redeemAccessCode({ id: user, role: "student" }, "amigo-scenario-11")).toMatchObject({

@@ -46,17 +46,46 @@ import type { Page } from "@playwright/test";
  * only environment this runs in.
  */
 export async function loginWithoutSubscription(page: Page): Promise<void> {
-  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
-  const response = await page.context().request.post("/api/auth/register", {
-    form: { email, password: "TestPass123!", lang: "es", redirectTo: "/es" },
-  });
-  // Same trap as above: a refused registration answers 303 to
-  // /register?error=…, which the request context follows and reports as a
-  // plain 200 — only the final URL tells the truth.
-  const error = new URL(response.url()).searchParams.get("error");
-  if (!response.ok() || error) {
-    throw new Error(`e2e register (no subscription) failed: ${response.status()} ${error ?? response.url()}`);
+  // ПОВТОР ТОЛЬКО ПО ОБРЫВУ СОЕДИНЕНИЯ, и он здесь не «на всякий случай»:
+  // 08.09.2026 (заход 7.147) полный прогон на `origin/main` покраснел ровно
+  // так — `apiRequestContext.post: read ECONNRESET` на POST /api/auth/register
+  // из этой самой строки, и с ним ушёл тест paywall-modal.spec.ts:68. Ни
+  // одно утверждение теста при этом не провалилось: запрос не получил
+  // ответа, проверять было нечего. Повторяется ПОДГОТОВКА, а не замер —
+  // тот же разбор, что у tryRequest ниже, и то же правило: всё, что не
+  // сетевой класс, летит дальше немедленно.
+  //
+  // Чего здесь по-прежнему нет и не будет: повтора по ОТВЕТУ сервера. Отказ
+  // регистрации — это результат, и заминать его повтором значило бы
+  // проверять что-то другое.
+  const maxAttempts = 3;
+  const networkFailures: string[] = [];
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
+    const attempted = await tryRequest(() =>
+      page.context().request.post("/api/auth/register", {
+        form: { email, password: "TestPass123!", lang: "es", redirectTo: "/es" },
+      }),
+    );
+    if (!attempted.ok) {
+      networkFailures.push(`попытка ${attempt}: ${attempted.error}`);
+      if (attempt === maxAttempts) break;
+      await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+      continue;
+    }
+    const response = attempted.value;
+    // Same trap as above: a refused registration answers 303 to
+    // /register?error=…, which the request context follows and reports as a
+    // plain 200 — only the final URL tells the truth.
+    const error = new URL(response.url()).searchParams.get("error");
+    if (!response.ok() || error) {
+      throw new Error(`e2e register (no subscription) failed: ${response.status()} ${error ?? response.url()}`);
+    }
+    return;
   }
+  throw new Error(
+    `e2e register (no subscription): все ${maxAttempts} попыток кончились обрывом соединения — ${networkFailures.join("; ")}`,
+  );
 }
 
 /**
@@ -157,22 +186,28 @@ export async function loginWithSubscription(
       // as the test's own first page load) and retry the whole
       // register+grant cycle if it hasn't.
       //
-      // Probes /es/media specifically, not /es/vocabulary — since the
-      // 2026-08-24 free-trial model shipped, /vocabulary (and /stories,
-      // /word-games) no longer hard-redirect an unentitled visitor to
-      // /pricing at all (they render a limited free sample instead, see
-      // src/lib/entitlement.ts), so they can no longer detect a failed or
-      // not-yet-propagated grant this way. /media has no free-trial sample
-      // and keeps the original blanket subscription gate, so it's still a
-      // reliable "did the grant actually take" probe.
-      const checked = await tryRequest(() => page.context().request.get("/es/media"));
+      // ЗДЕСЬ БЫЛА ПРОБА, КОТОРАЯ ПЕРЕСТАЛА ЧТО-ЛИБО ПРОВЕРЯТЬ, и вот
+      // замер (08.09.2026, заход 7.147): `GET /es/media` аккаунтом БЕЗ
+      // подписки отдаёт 200 и свой список — страница решает платность
+      // позамочно (`canAccessMediaItem`, src/app/[lang]/media/page.tsx) и
+      // на /pricing не уводит уже давно. Значит условие ниже было истинно
+      // ВСЕГДА, и цикл повторов «проверь, что выдача действительно
+      // подействовала» ничего не проверял. Найдено новой спекой
+      // e2e/access-code.spec.ts, у которой на этой же посылке упало 20
+      // случаев из 24.
+      //
+      // Спрашиваем теперь единую точку решения напрямую: она отвечает
+      // уровнем, а не вёрсткой, и не зависит от того, есть ли в базе этого
+      // прогона хоть один платный материал.
+      const checked = await tryRequest(() => page.context().request.get("/api/subscription/status"));
       if (!checked.ok) {
         networkFailures.push(`попытка ${attempt}: probe — ${checked.error}`);
         if (attempt === maxAttempts) break;
         await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
         continue;
       }
-      if (!new URL(checked.value.url()).pathname.includes("/pricing")) return;
+      const tier = checked.value.ok() ? ((await checked.value.json()) as { tier?: string }).tier : undefined;
+      if (tier !== undefined && tier !== "free") return;
     }
     if (attempt === maxAttempts) {
       throw new Error(

@@ -36,6 +36,9 @@ import { sanitizeTextForTTS } from "../src/lib/speech";
 import { transcribeAudioWithWhisper } from "../src/lib/media/whisperTranscribe";
 
 import { isEntryPoint } from "../src/lib/entry-point";
+// Формат даты — общий для всех, кто пишет в базу мимо Prisma
+// (scripts/stored-datetime.mjs, PROGRESS.md 7.147 долг 91).
+import { storedDateTime } from "../scripts/stored-datetime.mjs";
 const STORY_ID = "cmsjur3be000160ncimavidij"; // Теремок
 const ITEM_KEY = "0-1";
 const NARRATOR_VOICE = "onyx";
@@ -183,7 +186,7 @@ async function main() {
           NARRATOR_VOICE,
           durationSeconds,
           blob.url,
-          new Date().toISOString(),
+          storedDateTime(new Date()),
           "story",
           STORY_ID,
           ITEM_KEY,
