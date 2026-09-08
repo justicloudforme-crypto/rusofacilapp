@@ -26,6 +26,7 @@ export default function PremiumCard({
   featuresNote,
   oxxoDict,
   cashAvailable,
+  owned,
   highlighted = false,
 }: {
   lang: string;
@@ -50,6 +51,11 @@ export default function PremiumCard({
   /** Whether this visitor is in the one country where an OXXO voucher can
    * be paid — see SubscriptionCard.tsx and PROGRESS.md 7.117. */
   cashAvailable: boolean;
+  /** Set when the visitor already stands at or above the tier this plan
+   * grants — see planAddsNothing in src/lib/entitlement.ts. The payment
+   * controls are then replaced by a plain statement instead of being
+   * disabled: a greyed-out button still reads as "pay again, but broken". */
+  owned?: { label: string; note: string };
   /** Set via /pricing?highlight=premium — the profile page's per-plan
    * upsell link (annual subscribers -> "unlock C1 forever") lands here.
    * Purely a visual ring + scroll target (`id="premium"`, browsers
@@ -106,28 +112,45 @@ export default function PremiumCard({
       <p className="mt-3 text-xs leading-5 text-foreground/60">{featuresNote}</p>
 
       <div className="mt-auto pt-8">
-        {cashAvailable && (
+        {owned ? (
+          /* DEBT 33. A plan the visitor already holds is not offered — no
+             method tabs, no form, no button. /api/checkout refuses the same
+             purchase on the same rule (planAddsNothing), so this is the
+             half that keeps a person from meeting a button that 303s back,
+             not the half that keeps their money safe. */
+          <p
+            className="mt-4 rounded-lg bg-foreground/5 px-3 py-2 text-center text-sm text-foreground/70"
+            data-testid="plan-already-owned"
+          >
+            <span className="font-medium">{owned.label}</span>
+            <span className="block text-xs text-foreground/60">{owned.note}</span>
+          </p>
+        ) : (
           <>
-            <PaymentMethodTabs
-              label={methodLabel}
-              cardLabel={cardLabel}
-              cashLabel={cashLabel}
-              method={method}
-              onSelect={setMethod}
-            />
+          {cashAvailable && (
+            <>
+              <PaymentMethodTabs
+                label={methodLabel}
+                cardLabel={cardLabel}
+                cashLabel={cashLabel}
+                method={method}
+                onSelect={setMethod}
+              />
 
-            {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+              {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+            </>
+          )}
+
+          <form action="/api/checkout" method="POST" className="mt-4">
+            <input type="hidden" name="lang" value={lang} />
+            <input type="hidden" name="plan" value="lifetime" />
+            <input type="hidden" name="method" value={method === "cash" ? "oxxo" : "card"} />
+            <Button type="submit" variant="primary" fullWidth haptic={false}>
+              {method === "cash" ? cashCta : cardCta}
+            </Button>
+          </form>
           </>
         )}
-
-        <form action="/api/checkout" method="POST" className="mt-4">
-          <input type="hidden" name="lang" value={lang} />
-          <input type="hidden" name="plan" value="lifetime" />
-          <input type="hidden" name="method" value={method === "cash" ? "oxxo" : "card"} />
-          <Button type="submit" variant="primary" fullWidth haptic={false}>
-            {method === "cash" ? cashCta : cardCta}
-          </Button>
-        </form>
       </div>
     </Card>
   );

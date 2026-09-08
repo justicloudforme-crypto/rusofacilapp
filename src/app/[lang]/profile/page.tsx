@@ -13,9 +13,9 @@ import {
   getSubscriptionsForUser,
   getDisplayStatus,
   pickEffectiveSubscription,
-  tierOfSubscriptions,
   type DisplayStatus,
 } from "@/lib/subscription";
+import { getEntitlementTierFor, hasAnyAccess, isPremiumTier } from "@/lib/entitlement";
 import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
 import { getUserStreakStats, getUserActivityDateKeys, getUserActivityDaySources } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
@@ -26,6 +26,7 @@ import type { BadgeDef } from "@/lib/badges/catalog";
 import { getWeeklyWeakTopic } from "@/lib/weak-topic";
 import { getReferralStats } from "@/lib/referral";
 import { getPublicProfileToggleState } from "@/lib/public-profile";
+import { getOpenPendingCheckout } from "@/lib/pending-checkout";
 import { getStoryCatalog } from "@/lib/stories-catalog";
 import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
@@ -336,6 +337,7 @@ export default async function ProfilePage({
     publicProfile,
     storyCatalog,
     requestHeaders,
+    openVoucher,
   ] = await Promise.all([
     getSubscriptionsForUser(user.id).catch((error) => {
       console.error("profile: getSubscriptionsForUser failed", error);
@@ -355,6 +357,16 @@ export default async function ProfilePage({
     getPublicProfileToggleState(user.id),
     getStoryCatalog().catch(() => []),
     headers(),
+    // DEBT 30. The voucher banner used to be driven by `?checkout=oxxo_pending`
+    // in the URL and by nothing else, so it existed for exactly one page view
+    // — the one Stripe bounced the buyer to. Close the tab, come back, and
+    // this page said "no subscription" with a buy button under it, to somebody
+    // holding a payable barcode. Now the outstanding voucher is a stored fact
+    // and the banner asks the database, not the query string.
+    getOpenPendingCheckout(user.id).catch((error) => {
+      console.error("profile: getOpenPendingCheckout failed", error);
+      return null;
+    }),
   ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
   // "Freezes apply from <date>" — printed only when there is history the
@@ -385,22 +397,24 @@ export default async function ProfilePage({
   // One row to describe, but every row to decide by. The two used to be
   // the same read (the newest row), and that is exactly what let a Premium
   // purchase made on top of a monthly plan disappear from this page the
-  // moment the monthly plan renewed. See pickEffectiveSubscription and
-  // tierOfSubscriptions in src/lib/subscription.ts.
+  // moment the monthly plan renewed. See pickEffectiveSubscription in
+  // src/lib/subscription.ts.
   const subscription = pickEffectiveSubscription(subscriptionHistory);
-  const tier = tierOfSubscriptions(subscriptionHistory);
   const displayStatus = getDisplayStatus(subscription);
-  const isActive = tier !== "free";
-  // Staff/owner accounts have full access regardless of whether they've
-  // ever had a paid Subscription row — without this, an owner who never
-  // went through checkout would see the same "subscribe now" upsells as a
-  // regular unsubscribed student on this page (the lesson/story/exam pages
-  // already had this bypass; this page didn't).
-  const entitled = isStaff(user.role) || isActive;
+  // Two different questions, and this page needs both. `isActive` is about
+  // the STORED SUBSCRIPTION — it drives the plan card, the renewal date and
+  // the cancel button, and a staff account with no row must not be
+  // described as having one. `tier`/`entitled` is about ACCESS, and that
+  // one question has exactly one answer in this app: tierOfAccount, reached
+  // here through getEntitlementTierFor. Until 08.09.2026 this page derived
+  // the second from the first and re-applied the staff bypass itself.
+  const isActive = displayStatus === "active" || displayStatus === "trialing";
+  const tier = await getEntitlementTierFor(user);
+  const entitled = hasAnyAccess(tier);
   // Drives the gold ring/crown on this page's own avatar (below) and the
   // crown next to the plan name in the Subscription tab — see
   // MatryoshkaAvatar.tsx's `premium` prop / entitlement.ts's isPremiumTier.
-  const isPremiumUser = isStaff(user.role) || tier === "premium";
+  const isPremiumUser = isPremiumTier(tier);
 
   const statusLabels: Record<DisplayStatus, string> = {
     active: dict.profile.statusActive,
@@ -569,7 +583,7 @@ export default async function ProfilePage({
           }}
         />
       )}
-      {checkout === "oxxo_pending" && (
+      {(openVoucher !== null || checkout === "oxxo_pending") && (
         <div className="mt-6 flex flex-col gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
           <p>{voucherUnavailable ? dict.account.checkoutOxxoVoucherUnavailable : dict.account.checkoutOxxoPending}</p>
           {!voucherUnavailable && (

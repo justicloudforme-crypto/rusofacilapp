@@ -10,6 +10,7 @@ import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
+import { getEntitlementTier, planAddsNothing } from "@/lib/entitlement";
 import {
   basePricesText,
   marked,
@@ -98,6 +99,17 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
     cashCta: p[plan].cashCta,
   });
 
+  // DEBT 33, the page half. Until 08.09.2026 this page did not know who was
+  // reading it: the owner of a Premium purchase — a plan with a hundred-year
+  // period — was shown the same "Buy forever for $2,299 MXN" button as a
+  // visitor with nothing, and pressing it charged them again. The tier is
+  // asked once and the answer is read three times by the same rule the
+  // checkout endpoint refuses on, so a card that is shown can always be
+  // bought and a card that is hidden could never have been.
+  const tier = await getEntitlementTier();
+  const owned = (plan: "monthly" | "annual" | "lifetime") =>
+    planAddsNothing(tier, plan) ? { label: p.alreadyOwnedLabel, note: p.alreadyOwnedNote } : undefined;
+
   // Two edits, not one: the OXXO-expiry question disappears whole, and the
   // auto-renewal answer loses its "with cash (OXXO)… " clause. Filtering by
   // `id` rather than by position — the questions are content and get
@@ -154,7 +166,10 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           redirect to this page silently, so the button simply appeared not
           to work. Saying "you were not charged" is the part that matters:
           the alternative is somebody paying twice out of doubt. */}
-      {(checkout === "unavailable" || checkout === "rate_limited" || checkout === "cash_unavailable") && (
+      {(checkout === "unavailable" ||
+        checkout === "rate_limited" ||
+        checkout === "cash_unavailable" ||
+        checkout === "already_owned") && (
         <p
           role="alert"
           className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400"
@@ -163,7 +178,9 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
             ? p.checkoutRateLimited
             : checkout === "cash_unavailable"
               ? p.checkoutCashUnavailable
-              : p.checkoutUnavailable}
+              : checkout === "already_owned"
+                ? p.checkoutAlreadyOwned
+                : p.checkoutUnavailable}
         </p>
       )}
 
@@ -190,6 +207,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           cardLabel={p.cardLabel}
           cashLabel={p.cashLabel}
           option={subscriptionOption("monthly")}
+          owned={owned("monthly")}
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
@@ -204,6 +222,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           cardLabel={p.cardLabel}
           cashLabel={p.cashLabel}
           option={subscriptionOption("annual")}
+          owned={owned("annual")}
           featuresTitle={p.featuresTitle}
           features={p.features}
           oxxoDict={p}
@@ -228,6 +247,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           featuresNote={p.featuresPremiumNote}
           oxxoDict={p}
           cashAvailable={cashAvailable}
+          owned={owned("lifetime")}
           highlighted={highlightPremium}
         />
       </div>

@@ -48,6 +48,7 @@ export default function SubscriptionCard({
   features,
   oxxoDict,
   cashAvailable,
+  owned,
   recommended = false,
 }: {
   lang: string;
@@ -64,6 +65,11 @@ export default function SubscriptionCard({
    * be paid. False hides the method tabs and the instructions entirely
    * rather than leaving them one tap away — see PROGRESS.md 7.117. */
   cashAvailable: boolean;
+  /** Set when the visitor already stands at or above the tier this plan
+   * grants — see planAddsNothing in src/lib/entitlement.ts. The payment
+   * controls are then replaced by a plain statement instead of being
+   * disabled: a greyed-out button still reads as "pay again, but broken". */
+  owned?: { label: string; note: string };
   recommended?: boolean;
 }) {
   // The CARD is what opens, in every country including Mexico — changed
@@ -119,29 +125,46 @@ export default function SubscriptionCard({
       </ul>
 
       <div className="mt-auto pt-8">
-        {cashAvailable && (
+        {owned ? (
+          /* DEBT 33. A plan the visitor already holds is not offered — no
+             method tabs, no form, no button. /api/checkout refuses the same
+             purchase on the same rule (planAddsNothing), so this is the
+             half that keeps a person from meeting a button that 303s back,
+             not the half that keeps their money safe. */
+          <p
+            className="mt-4 rounded-lg bg-foreground/5 px-3 py-2 text-center text-sm text-foreground/70"
+            data-testid="plan-already-owned"
+          >
+            <span className="font-medium">{owned.label}</span>
+            <span className="block text-xs text-foreground/60">{owned.note}</span>
+          </p>
+        ) : (
           <>
-            <PaymentMethodTabs
-              label={methodLabel}
-              cardLabel={cardLabel}
-              cashLabel={cashLabel}
-              method={method}
-              onSelect={setMethod}
-            />
+          {cashAvailable && (
+            <>
+              <PaymentMethodTabs
+                label={methodLabel}
+                cardLabel={cardLabel}
+                cashLabel={cashLabel}
+                method={method}
+                onSelect={setMethod}
+              />
 
-            {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+              {method === "cash" && <OxxoInstructions dict={oxxoDict} />}
+            </>
+          )}
+
+          <form action="/api/checkout" method="POST" className="mt-4">
+            <input type="hidden" name="lang" value={lang} />
+            <input type="hidden" name="plan" value={plan} />
+            <input type="hidden" name="method" value={method === "cash" ? "oxxo" : "card"} />
+            {next && <input type="hidden" name="next" value={next} />}
+            <Button type="submit" variant="primary" fullWidth haptic={false}>
+              {method === "cash" ? option.cashCta : option.cardCta}
+            </Button>
+          </form>
           </>
         )}
-
-        <form action="/api/checkout" method="POST" className="mt-4">
-          <input type="hidden" name="lang" value={lang} />
-          <input type="hidden" name="plan" value={plan} />
-          <input type="hidden" name="method" value={method === "cash" ? "oxxo" : "card"} />
-          {next && <input type="hidden" name="next" value={next} />}
-          <Button type="submit" variant="primary" fullWidth haptic={false}>
-            {method === "cash" ? option.cashCta : option.cardCta}
-          </Button>
-        </form>
       </div>
     </Card>
   );

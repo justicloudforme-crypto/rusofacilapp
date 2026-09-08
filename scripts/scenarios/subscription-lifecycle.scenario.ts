@@ -85,7 +85,20 @@ const premiumCardSession = (userId: string) => ({
   mode: "payment",
   payment_status: "paid",
   client_reference_id: userId,
+  // The PaymentIntent is what a later refund is addressed by — see
+  // Subscription.stripePaymentIntentId and debt 29. A real card session
+  // always carries one; the scenarios below refund exactly this id.
+  payment_intent: `pi_card_${userId}`,
   metadata: { userId, plan: "lifetime" },
+});
+
+/** The Charge Stripe sends with `charge.refunded`. `refunded: true` means
+ * the WHOLE charge went back — a partial refund sends the same event with
+ * this false, and must not take anybody's access away. */
+const refundedCharge = (userId: string, full = true) => ({
+  id: `ch_${userId}`,
+  payment_intent: `pi_card_${userId}`,
+  refunded: full,
 });
 
 /** The SAME session object OXXO produces at voucher time: mode "payment",
@@ -293,6 +306,103 @@ describe("a Premium purchase made on top of an active monthly subscription", () 
     await backdateMonthlyRow(user);
     await step("monthly period ran out (no webhook)");
     expect(await tier()).toBe("premium");
+  });
+});
+
+/**
+ * DEBT 29, as a sequence. Money going back is an EVENT, and what matters is
+ * what the product's own gate answers after it — which is exactly the shape
+ * of question no unit test of a handler can settle.
+ */
+describe("money going back", () => {
+  it("takes Premium away when the purchase is refunded in full", async () => {
+    const user = await newUser("u-refund");
+    scenario("[7] buys Premium -> refunded in full");
+
+    expect(await deliver("checkout.session.completed", premiumCardSession(user))).toBe(200);
+    await step("bought Premium (card)");
+    expect(await tier()).toBe("premium");
+
+    expect(await deliver("charge.refunded", refundedCharge(user))).toBe(200);
+    await step("charge refunded in full");
+    expect(await tier()).toBe("free");
+  });
+
+  // NEGATIVE CONTROL. Someone refunded a few pesos of a 2 299 one keeps
+  // what they bought — without this case, "access is gone" would pass just
+  // as well against a handler that revokes on any refund at all.
+  it("leaves Premium standing when only part of the charge is refunded", async () => {
+    const user = await newUser("u-refund-partial");
+    scenario("[8] buys Premium -> PARTIAL refund");
+
+    await deliver("checkout.session.completed", premiumCardSession(user));
+    await step("bought Premium (card)");
+    expect(await tier()).toBe("premium");
+
+    expect(await deliver("charge.refunded", refundedCharge(user, false))).toBe(200);
+    await step("part of the charge refunded");
+    expect(await tier()).toBe("premium");
+  });
+
+  it("takes it away on a chargeback the moment the dispute opens", async () => {
+    const user = await newUser("u-dispute");
+    scenario("[9] buys Premium -> chargeback opened");
+
+    await deliver("checkout.session.completed", premiumCardSession(user));
+    await step("bought Premium (card)");
+    expect(await tier()).toBe("premium");
+
+    expect(
+      await deliver("charge.dispute.created", {
+        id: `dp_${user}`,
+        charge: `ch_${user}`,
+        payment_intent: `pi_card_${user}`,
+        status: "needs_response",
+      })
+    ).toBe(200);
+    await step("dispute opened, funds withdrawn by Stripe");
+    expect(await tier()).toBe("free");
+  });
+
+  /**
+   * THE CASE THE NEXT PASS NEEDS, and the reason the revocation is
+   * addressed by the payment rather than by the person.
+   *
+   * A learner can hold two independent grounds at once — days somebody
+   * granted them by hand (an admin grant is this app's own row, with no
+   * Stripe reference on it at all) and a Stripe purchase beside it.
+   * Refunding the purchase must leave the granted one standing, and it must
+   * leave it standing at ITS OWN tier, not at the refunded one.
+   */
+  it("refunding a purchase does not touch a hand-granted access the same person holds", async () => {
+    const user = await newUser("u-refund-and-grant");
+    scenario("[10] hand-granted month + bought Premium -> Premium refunded");
+
+    // The grant, written the way /api/admin/subscriptions/grant writes it.
+    await raw.execute({
+      sql: `INSERT INTO "Subscription" (id, userId, plan, status, currentPeriodEnd, provider, createdAt, updatedAt)
+            VALUES (?, ?, 'manual', 'active', ?, 'stripe', ?, ?)`,
+      args: [`sub_manual_${user}`, user, Date.now() + 30 * DAY, Date.now(), Date.now()],
+    });
+    await invalidateSubscriptionCache(user);
+    await step("30 days granted by hand");
+    expect(await tier()).toBe("standard");
+
+    await deliver("checkout.session.completed", premiumCardSession(user));
+    await step("bought Premium (card) on top of it");
+    expect(await tier()).toBe("premium");
+
+    expect(await deliver("charge.refunded", refundedCharge(user))).toBe(200);
+    await step("Premium refunded");
+    // NOT "free". The granted days were never paid for through Stripe and
+    // have nothing to do with this refund.
+    expect(await tier()).toBe("standard");
+
+    const stored = await rows(user);
+    const manual = stored.find((r) => r.plan === "manual");
+    const bought = stored.find((r) => r.plan === "lifetime");
+    expect(manual?.status).toBe("active");
+    expect(bought?.status).toBe("canceled");
   });
 });
 

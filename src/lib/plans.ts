@@ -125,6 +125,22 @@ export const plans: Record<PlanId, Plan> = {
   },
 };
 
+/**
+ * The entitlement tier each plan grants once it is paid for. Written here,
+ * next to `mode` and `durationDays`, because it is a property OF THE PLAN —
+ * and because the alternative (a second table somewhere near the paywall)
+ * is exactly how "lifetime means Premium" ends up written down twice.
+ *
+ * Read by the one refusal that stands between a Premium owner and a second
+ * full charge: see planAddsNothing in src/lib/entitlement.ts and the gate
+ * at the top of /api/checkout (PROGRESS.md debt 33).
+ */
+export const PLAN_TIER: Record<PlanId, "standard" | "premium"> = {
+  monthly: "standard",
+  annual: "standard",
+  lifetime: "premium",
+};
+
 export function isPlanId(value: string): value is PlanId {
   return value === "monthly" || value === "annual" || value === "lifetime";
 }

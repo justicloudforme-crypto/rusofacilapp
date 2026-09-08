@@ -84,45 +84,44 @@ export async function getSubscriptionsForUser(userId: string): Promise<Subscript
 /** The newest row, for the places that legitimately mean "the most recent
  * thing that happened to this account" (payment-history header, the
  * Stripe id to cancel). NOT the place to decide access — that is
- * getEntitlementTierForUser, which looks at every row. */
+ * tierOfAccount (src/lib/entitlement.ts), which looks at every row. */
 export async function getLatestSubscription(userId: string) {
   const rows = await getSubscriptionsForUser(userId);
   return rows[0] ?? null;
 }
 
-/** Batched counterpart to getEntitlementTierForUser for a whole list of
- * users at once — same "one query instead of N sequential round trips"
- * pattern as getLevelProgressForUsers, used by the group leaderboard (up
- * to MAX_GROUP_MEMBERS rows) to know which members' avatars get the
- * Premium gold ring without one query per member. Not cached (unlike
- * getSubscriptionsForUser) since a leaderboard render is infrequent
- * compared to the per-lesson access checks that cache exists for.
+/**
+ * Every Subscription row for a whole list of users, in ONE query — the
+ * batched counterpart to getSubscriptionsForUser, used by the group
+ * leaderboard (up to MAX_GROUP_MEMBERS rows) to know which members' avatars
+ * get the Premium gold ring without one query per member. Same "one query
+ * instead of N sequential round trips" pattern as getLevelProgressForUsers.
  *
- * Returns a tier rather than a row for the same reason getEntitlementTier
- * stopped reading one row: a member holding a Premium purchase AND a
- * monthly subscription has two rows, and whichever is newer is not the
- * answer to "does this person get the gold ring". */
-export async function getEntitlementTiersForUsers(
-  userIds: string[]
-): Promise<Map<string, EntitlementTierValue>> {
-  const result = new Map<string, EntitlementTierValue>();
-  if (userIds.length === 0) return result;
-  for (const id of userIds) result.set(id, "free");
+ * Returns ROWS, not tiers. Until 08.09.2026 it returned tiers, and that was
+ * the whole reason a staff account was premium everywhere in the app except
+ * a group leaderboard: the rule lives in tierOfAccount (src/lib/entitlement.ts)
+ * and needs a role, which this reader has no business knowing about. Handing
+ * back rows keeps the decision in the one place that makes it.
+ *
+ * Not cached (unlike getSubscriptionsForUser) since a leaderboard render is
+ * infrequent compared to the per-lesson access checks that cache exists for.
+ */
+export async function getSubscriptionRowsForUsers(
+  userIds: readonly string[]
+): Promise<Map<string, Subscription[]>> {
+  const byUser = new Map<string, Subscription[]>();
+  if (userIds.length === 0) return byUser;
 
   const rows = await db.subscription.findMany({
-    where: { userId: { in: userIds } },
+    where: { userId: { in: [...userIds] } },
     orderBy: { createdAt: "desc" },
   });
-  const byUser = new Map<string, Subscription[]>();
   for (const row of rows) {
     const list = byUser.get(row.userId);
     if (list) list.push(row);
     else byUser.set(row.userId, [row]);
   }
-  for (const [userId, userRows] of byUser) {
-    result.set(userId, tierOfSubscriptions(userRows));
-  }
-  return result;
+  return byUser;
 }
 
 /** Call after any write to a user's Subscription rows (checkout, cancel,
@@ -148,6 +147,11 @@ export function isPremiumPlan(plan: string): boolean {
  * other — a mismatch is a type error, not a runtime surprise. */
 export type EntitlementTierValue = "free" | "standard" | "premium";
 
+/** The three columns — and the only three — that decide access. Named so
+ * the one decision function (tierOfAccount, src/lib/entitlement.ts) can
+ * take rows from any reader without importing Prisma's full row type. */
+export type StoredEntitlementRow = Pick<Subscription, "plan" | "status" | "currentPeriodEnd">;
+
 const TIER_RANK: Record<EntitlementTierValue, number> = { free: 0, standard: 1, premium: 2 };
 
 export function higherTier(a: EntitlementTierValue, b: EntitlementTierValue): EntitlementTierValue {
@@ -169,7 +173,7 @@ export function higherTier(a: EntitlementTierValue, b: EntitlementTierValue): En
  * taken Premium away.
  */
 export function tierOfSubscriptions(
-  rows: readonly Pick<Subscription, "plan" | "status" | "currentPeriodEnd">[]
+  rows: readonly StoredEntitlementRow[]
 ): EntitlementTierValue {
   let tier: EntitlementTierValue = "free";
   for (const row of rows) {
@@ -177,11 +181,6 @@ export function tierOfSubscriptions(
     if (tier === "premium") return tier; // nothing outranks it
   }
   return tier;
-}
-
-/** The one place the app asks "what may this user open". */
-export async function getEntitlementTierForUser(userId: string): Promise<EntitlementTierValue> {
-  return tierOfSubscriptions(await getSubscriptionsForUser(userId));
 }
 
 /**
@@ -243,11 +242,22 @@ export function pickEffectiveSubscription<T extends Pick<Subscription, "plan" | 
  * Premium customer because it is not written to their Premium row at all,
  * and a Premium purchase does not have to overwrite somebody's monthly
  * plan to take effect because it no longer shares a row with it. What
- * makes that safe is the read side: getEntitlementTierForUser takes the
+ * makes that safe is the read side: tierOfSubscriptions takes the
  * best tier across every live row, so two rows mean two live grounds for
  * access, not a contest between them.
  */
-export async function extendOrGrantSubscription(userId: string, days: number, plan: string) {
+export async function extendOrGrantSubscription(
+  userId: string,
+  days: number,
+  plan: string,
+  /**
+   * The Stripe PaymentIntent this grant was paid for with, when there was
+   * one. Stored on the row so a later refund or chargeback has something to
+   * revoke — debt 29, PROGRESS.md 7.145. Absent for the grants nobody paid
+   * for: admin grants, referral rewards, the e2e route.
+   */
+  stripePaymentIntentId?: string | null
+) {
   const extraMs = days * 24 * 60 * 60 * 1000;
   const rows = await getSubscriptionsForUser(userId);
   const premiumGrant = isPremiumPlan(plan);
@@ -266,6 +276,12 @@ export async function extendOrGrantSubscription(userId: string, days: number, pl
       data: {
         status: "active",
         currentPeriodEnd: new Date(target.currentPeriodEnd.getTime() + extraMs),
+        // The LATEST payment wins the column. A row extended by two
+        // payments can only name one of them, and the newer one is the one
+        // a refund is most likely to be about; the older is unreachable and
+        // is reported rather than silently dropped — see
+        // revokeAccessForPayment.
+        ...(stripePaymentIntentId ? { stripePaymentIntentId } : {}),
       },
     });
   } else {
@@ -275,10 +291,61 @@ export async function extendOrGrantSubscription(userId: string, days: number, pl
         plan,
         status: "active",
         currentPeriodEnd: new Date(Date.now() + extraMs),
+        stripePaymentIntentId: stripePaymentIntentId ?? null,
       },
     });
   }
   await invalidateSubscriptionCache(userId);
+}
+
+/**
+ * Takes access back when the money goes back.
+ *
+ * DEBT 29, open since the three-tier model shipped: the webhook listened to
+ * eight event types and not one of them was a refund or a chargeback, so
+ * every row in the outcome table of PROGRESS.md 7.59 had an empty "возврат"
+ * cell. The worst case was not hypothetical arithmetic — a refunded Premium
+ * purchase is a row with `currentPeriodEnd` in 2126, i.e. money returned and
+ * access kept for a hundred years.
+ *
+ * Scoped by the payment, never by the person. That is the whole safety
+ * property here and it is why this takes a reference rather than a userId:
+ * a refund of one Stripe charge must not touch an admin grant, a referral
+ * reward, a native store purchase relayed by RevenueCat, or a second
+ * subscription the same person is still paying for. Every one of those is
+ * its own row with `stripePaymentIntentId` and `stripeSubscriptionId` both
+ * null, and a null reference here revokes NOTHING — asserted below rather
+ * than assumed, because `updateMany({ where: { x: null } })` is one typo
+ * away from cancelling every hand-granted row in the database.
+ *
+ * Revoked as `canceled` with the period cut to now: the status alone would
+ * be enough for isSubscriptionActive, and the period is cut as well so a
+ * row that is somehow read without the status still reads as over.
+ */
+export async function revokeAccessForPayment(reference: {
+  paymentIntentId?: string | null;
+  stripeSubscriptionId?: string | null;
+}): Promise<{ revoked: number; userIds: string[] }> {
+  const or: Array<Record<string, string>> = [];
+  if (reference.paymentIntentId) or.push({ stripePaymentIntentId: reference.paymentIntentId });
+  if (reference.stripeSubscriptionId) or.push({ stripeSubscriptionId: reference.stripeSubscriptionId });
+  // No reference is not "match everything" — it is "match nothing".
+  if (or.length === 0) return { revoked: 0, userIds: [] };
+
+  const targets = await db.subscription.findMany({
+    where: { OR: or },
+    select: { id: true, userId: true },
+  });
+  if (targets.length === 0) return { revoked: 0, userIds: [] };
+
+  await db.subscription.updateMany({
+    where: { id: { in: targets.map((row) => row.id) } },
+    data: { status: "canceled", currentPeriodEnd: new Date() },
+  });
+
+  const userIds = [...new Set(targets.map((row) => row.userId))];
+  for (const userId of userIds) await invalidateSubscriptionCache(userId);
+  return { revoked: targets.length, userIds };
 }
 
 /** The tier a stored row grants, decided by exactly the two rules the read
@@ -287,7 +354,7 @@ export async function extendOrGrantSubscription(userId: string, days: number, pl
  * and the staff bypass, because a webhook has neither a request nor a
  * reason to let a staff role hide a failed purchase. */
 export function tierOfStoredSubscription(
-  subscription: Pick<Subscription, "plan" | "status" | "currentPeriodEnd"> | null | undefined
+  subscription: StoredEntitlementRow | null | undefined
 ): EntitlementTierValue {
   if (!isSubscriptionActive(subscription)) return "free";
   return isPremiumPlan(subscription!.plan) ? "premium" : "standard";
@@ -356,15 +423,6 @@ export async function reportPremiumPaymentNotApplied(
     // Reporting the problem must never become a second problem.
   }
   return tier;
-}
-
-/** Any live ground for access at all — the "free vs. not free" question,
- * as opposed to getEntitlementTierForUser's "which tier". Reads every row
- * for the same reason: an expired monthly row sitting in front of a live
- * admin grant must not answer for it. */
-export async function userHasActiveSubscription(userId: string): Promise<boolean> {
-  const rows = await getSubscriptionsForUser(userId);
-  return rows.some((row) => isSubscriptionActive(row));
 }
 
 export type DisplayStatus =

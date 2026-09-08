@@ -5,8 +5,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { isLevelSlug } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
-import { userHasActiveSubscription } from "@/lib/subscription";
-import { isStaff } from "@/lib/roles";
+import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
 import { getExamContent } from "@/lib/exams/content";
 import { localizeExamText, localizeSkillAreaTitle } from "@/lib/exams/localize";
 import ExamView from "@/components/lesson/ExamView";
@@ -29,7 +28,7 @@ export default async function ExamPage({
   if (!exam) notFound();
 
   const user = await getCurrentUser();
-  if (!user || (!isStaff(user.role) && !(await userHasActiveSubscription(user.id)))) {
+  if (!user || !hasAnyAccess(await getEntitlementTierFor(user))) {
     redirect(`/${lang}/pricing?next=/${lang}/courses/${level}/exam/${examSlug}`);
   }
 

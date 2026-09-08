@@ -131,7 +131,7 @@ describe("extendOrGrantSubscription and the row it writes to", () => {
     rcOriginalTransactionId: string | null;
   };
 
-  async function run(existing: StoredRow[], plan: string) {
+  async function run(existing: StoredRow[], plan: string, paymentIntentId?: string) {
     // Typed through vi.fn's type parameter rather than left bare: without a
     // signature `mock.calls` is an empty tuple and reading `[0][0].data`
     // does not typecheck (`npm run verify` runs tsc over the tests too).
@@ -146,7 +146,7 @@ describe("extendOrGrantSubscription and the row it writes to", () => {
     // would read the first case's rows. Give each run its own user id
     // instead of trying to reach into the cache.
     const mod = await import("./subscription");
-    await mod.extendOrGrantSubscription(`user-${Math.random()}`, 30, plan);
+    await mod.extendOrGrantSubscription(`user-${Math.random()}`, 30, plan, paymentIntentId);
     return { update, create };
   }
 
@@ -238,6 +238,131 @@ describe("extendOrGrantSubscription and the row it writes to", () => {
     const { create, update } = await run([], "lifetime");
     expect(update).not.toHaveBeenCalled();
     expect(create.mock.calls[0]?.[0]?.data?.plan).toBe("lifetime");
+  });
+
+  // DEBT 29's other half. A refund can only revoke what it can find, and
+  // what it finds by is this column — written here, at the one moment the
+  // app learns which payment paid for which row.
+  it("records the payment that paid for a new row", async () => {
+    const { create } = await run([], "lifetime", "pi_new");
+    expect(create.mock.calls[0]?.[0]?.data?.stripePaymentIntentId).toBe("pi_new");
+  });
+
+  it("records the payment on an extended row too — the newest payment wins the column", async () => {
+    const { update } = await run([local("lifetime")], "lifetime", "pi_second");
+    expect(update.mock.calls[0]?.[0]?.data?.stripePaymentIntentId).toBe("pi_second");
+  });
+
+  it("leaves the column null for the grants nobody paid for", async () => {
+    // Admin grants, referral rewards and the e2e route call this without a
+    // payment. Writing `undefined` into the column would be a silent
+    // difference from writing null; writing a stale id would be worse.
+    const { create } = await run([], "manual");
+    expect(create.mock.calls[0]?.[0]?.data?.stripePaymentIntentId).toBeNull();
+  });
+
+  it("does not blank an existing payment id when a later grant has none", async () => {
+    const { update } = await run([local("manual")], "referral");
+    expect(update.mock.calls[0]?.[0]?.data).not.toHaveProperty("stripePaymentIntentId");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// revokeAccessForPayment — DEBT 29. Money went back; take the access with it.
+//
+// The whole safety property here is SCOPE. A refund of one Stripe charge must
+// take down the row that charge paid for and nothing else: not the admin
+// grant somebody was given, not the referral days they earned, not a second
+// subscription they are still paying for, not a native store purchase. Every
+// one of those is its own row (see extendOrGrantSubscription above), and the
+// cases below are what says so.
+// ---------------------------------------------------------------------------
+
+describe("revokeAccessForPayment", () => {
+  type Row = { id: string; userId: string };
+
+  async function revoke(
+    reference: { paymentIntentId?: string | null; stripeSubscriptionId?: string | null },
+    matched: Row[] = []
+  ) {
+    type Where = { where?: Record<string, unknown>; data?: Record<string, unknown>; select?: unknown };
+    const findMany = vi.fn<(args: Where) => Promise<Row[]>>(async () => matched);
+    const updateMany = vi.fn<(args: Where) => Promise<{ count: number }>>(async () => ({
+      count: matched.length,
+    }));
+    const del = vi.fn(async () => undefined);
+    vi.resetModules();
+    vi.doMock("./db", () => ({ db: { subscription: { findMany, updateMany } } }));
+    vi.doMock("./ttl-cache", async () => {
+      const actual = await vi.importActual<typeof import("./ttl-cache")>("./ttl-cache");
+      return { ...actual };
+    });
+    const mod = await import("./subscription");
+    const result = await mod.revokeAccessForPayment(reference);
+    return { result, findMany, updateMany, del };
+  }
+
+  it("revokes the row the refunded payment paid for", async () => {
+    const { result, findMany, updateMany } = await revoke({ paymentIntentId: "pi_1" }, [
+      { id: "row_paid", userId: "user_1" },
+    ]);
+
+    expect(findMany.mock.calls[0]![0].where).toEqual({ OR: [{ stripePaymentIntentId: "pi_1" }] });
+    expect(updateMany.mock.calls[0]![0].where).toEqual({ id: { in: ["row_paid"] } });
+    // Both halves: the status a dead row has, and a period that is over.
+    // Either alone would do; together, a reader that somehow ignores one
+    // still gets the right answer.
+    expect(updateMany.mock.calls[0]![0].data!.status).toBe("canceled");
+    expect(updateMany.mock.calls[0]![0].data!.currentPeriodEnd).toBeInstanceOf(Date);
+    expect(result).toEqual({ revoked: 1, userIds: ["user_1"] });
+  });
+
+  it("can also be addressed by the Stripe subscription, and by both at once", async () => {
+    const { findMany } = await revoke({ paymentIntentId: "pi_2", stripeSubscriptionId: "sub_2" }, []);
+    expect(findMany.mock.calls[0]![0].where).toEqual({
+      OR: [{ stripePaymentIntentId: "pi_2" }, { stripeSubscriptionId: "sub_2" }],
+    });
+  });
+
+  /**
+   * THE CASE THAT MATTERS MOST, and the reason this function takes a payment
+   * reference rather than a person.
+   *
+   * A learner can hold two independent grounds for access at once: an admin
+   * grant or a referral reward (this app's own rows, `stripePaymentIntentId`
+   * and `stripeSubscriptionId` both null) and a Stripe purchase beside it.
+   * Refunding the purchase must leave the granted one standing — and the
+   * query is what guarantees it, because a null-carrying row cannot match a
+   * `stripePaymentIntentId: "pi_…"` clause at all.
+   */
+  it("cannot touch a hand-granted row: an empty reference matches nothing", async () => {
+    const { result, findMany, updateMany } = await revoke({ paymentIntentId: null, stripeSubscriptionId: null });
+    // Not "found nothing" — never asked. `updateMany({ where: { x: null } })`
+    // is one typo away from cancelling every granted row in the database.
+    expect(findMany).not.toHaveBeenCalled();
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(result).toEqual({ revoked: 0, userIds: [] });
+  });
+
+  it("asks only for rows carrying that exact payment — never for the person's rows", async () => {
+    const { findMany } = await revoke({ paymentIntentId: "pi_3" }, []);
+    const where = findMany.mock.calls[0]![0].where!;
+    // No userId, no customer, no status filter that could widen it.
+    expect(JSON.stringify(where)).not.toMatch(/userId|customer/);
+  });
+
+  it("writes nothing when the payment matches no row, and says so", async () => {
+    const { result, updateMany } = await revoke({ paymentIntentId: "pi_4" }, []);
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(result).toEqual({ revoked: 0, userIds: [] });
+  });
+
+  it("revokes every row one payment paid for, and names each owner once", async () => {
+    const { result } = await revoke({ paymentIntentId: "pi_5" }, [
+      { id: "a", userId: "user_5" },
+      { id: "b", userId: "user_5" },
+    ]);
+    expect(result).toEqual({ revoked: 2, userIds: ["user_5"] });
   });
 });
 

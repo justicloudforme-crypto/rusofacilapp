@@ -7,7 +7,7 @@ import { getLevelProgress } from "./progress";
 import { levelSlugs, type LevelSlug } from "./courses";
 import { isAvatarId, DEFAULT_AVATAR_ID, type AvatarId } from "./avatars";
 import { generateShortCode, isPlausibleShortCode } from "./short-code";
-import { getEntitlementTierForUser } from "./subscription";
+import { getEntitlementTierFor } from "./entitlement";
 
 // Lowercase + digits, no ambiguous characters — this ends up in a URL
 // (/u/handle), so it should be comfortable to read and type, unlike the
@@ -105,6 +105,11 @@ export async function getPublicProfileData(handle: string): Promise<PublicProfil
     select: {
       id: true,
       name: true,
+      // The access rule is one function and it reads the role — a staff
+      // account is "premium" without a stored row. Selected here so this
+      // page asks the same question as every other surface rather than a
+      // narrower one. See tierOfAccount in src/lib/entitlement.ts.
+      role: true,
       avatarId: true,
       publicProfileEnabled: true,
       timezone: true,
@@ -125,7 +130,7 @@ export async function getPublicProfileData(handle: string): Promise<PublicProfil
     // wrong person's midnight. Falls back to UTC when unknown.
     getUserStreakStats(user.id, user.timezone ?? DEFAULT_TIME_ZONE, user),
     getUserBadgesForDisplay(user.id),
-    getEntitlementTierForUser(user.id),
+    getEntitlementTierFor(user),
   ]);
 
   const currentLevel = [...levelSlugs].reverse().find((level) => progress[level].completed > 0) ?? null;

@@ -5,8 +5,7 @@ import { getLessonAttempt, saveLessonAttempt } from "@/lib/progress";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
-import { userHasActiveSubscription } from "@/lib/subscription";
-import { isStaff } from "@/lib/roles";
+import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
 import type { AnswerMap, MistakeDetail } from "@/lib/lessons/scoring";
 
 function isMistakeDetail(value: unknown): value is MistakeDetail {
@@ -54,7 +53,7 @@ export async function POST(request: NextRequest) {
   // stale session or a client bypassing the page's gate; either way, this
   // must not let a non-subscriber fabricate lesson completions that then
   // feed badges, streaks, and public leaderboards.
-  if (!isStaff(user.role) && !isFreeTrialLesson(level, lesson) && !(await userHasActiveSubscription(user.id))) {
+  if (!isFreeTrialLesson(level, lesson) && !hasAnyAccess(await getEntitlementTierFor(user))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const score =

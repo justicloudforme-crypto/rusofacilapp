@@ -5,10 +5,16 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 const findUnique = vi.fn();
+const findMany = vi.fn();
 const upsert = vi.fn();
 const updateMany = vi.fn();
 const create = vi.fn();
 const update = vi.fn();
+const revokeAccessForPayment = vi.fn();
+const settlePendingCheckout = vi.fn();
+const extendOrGrantSubscription = vi.fn();
+const reportPremiumPaymentNotApplied = vi.fn();
+const captureException = vi.fn();
 const constructEvent = vi.fn();
 const subscriptionsRetrieve = vi.fn();
 const getStripe = vi.fn();
@@ -18,6 +24,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     subscription: {
       findUnique: (...args: unknown[]) => findUnique(...args),
+      findMany: (...args: unknown[]) => findMany(...args),
       upsert: (...args: unknown[]) => upsert(...args),
       updateMany: (...args: unknown[]) => updateMany(...args),
       create: (...args: unknown[]) => create(...args),
@@ -35,7 +42,16 @@ vi.mock("@/lib/subscription", () => ({
   // Not a spy: the real predicate is one comparison, and the point of the
   // tests below is what the route does with its answer.
   isPremiumPlan: (plan: string) => plan === "lifetime",
+  extendOrGrantSubscription: (...args: unknown[]) => extendOrGrantSubscription(...args),
+  reportPremiumPaymentNotApplied: (...args: unknown[]) => reportPremiumPaymentNotApplied(...args),
+  revokeAccessForPayment: (...args: unknown[]) => revokeAccessForPayment(...args),
 }));
+
+vi.mock("@/lib/pending-checkout", () => ({
+  settlePendingCheckout: (...args: unknown[]) => settlePendingCheckout(...args),
+}));
+
+vi.mock("@sentry/nextjs", () => ({ captureException: (...args: unknown[]) => captureException(...args) }));
 
 const { POST } = await import("./route");
 
@@ -63,6 +79,9 @@ describe("POST /api/webhooks/stripe", () => {
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_test";
     getStripe.mockReturnValue(fakeStripe);
     findUnique.mockResolvedValue(null);
+    findMany.mockResolvedValue([]);
+    revokeAccessForPayment.mockResolvedValue({ revoked: 0, userIds: [] });
+    settlePendingCheckout.mockResolvedValue(0);
   });
 
   afterEach(() => {
@@ -346,6 +365,162 @@ describe("POST /api/webhooks/stripe", () => {
         'if (event.data.object.currency !== "mxn") return NextResponse.json({}, { status: 400 });\n  switch (event.type) {'
       );
       expect(planted.match(moneyFields)).toEqual(["currency"]);
+    });
+  });
+
+  /**
+   * DEBT 29 — the refund nobody was listening for.
+   *
+   * Until 08.09.2026 this handler knew eight event types and not one of
+   * them was a refund or a chargeback. Every "возврат" cell of the outcome
+   * table in PROGRESS.md 7.59 was empty, and the worst case is not
+   * arithmetic: a refunded Premium purchase is a row whose period runs to
+   * 2126, so money went back and access stayed for a hundred years.
+   */
+  describe("money going back takes the access with it", () => {
+    it("revokes on a FULL refund, addressed by the payment and nothing wider", async () => {
+      revokeAccessForPayment.mockResolvedValue({ revoked: 1, userIds: ["user_9"] });
+      constructEvent.mockReturnValue(
+        stripeEvent("charge.refunded", { id: "ch_1", payment_intent: "pi_1", refunded: true })
+      );
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(revokeAccessForPayment).toHaveBeenCalledWith({ paymentIntentId: "pi_1" });
+      // Nothing person-shaped is passed: no userId, no customer. A refund of
+      // one charge must not reach an admin grant or a second subscription.
+      const [reference] = revokeAccessForPayment.mock.calls[0] as [Record<string, unknown>];
+      expect(Object.keys(reference)).toEqual(["paymentIntentId"]);
+      expect(captureException).not.toHaveBeenCalled();
+    });
+
+    it("expands an expanded PaymentIntent object to its id", async () => {
+      revokeAccessForPayment.mockResolvedValue({ revoked: 1, userIds: ["user_9"] });
+      constructEvent.mockReturnValue(
+        stripeEvent("charge.refunded", { id: "ch_2", payment_intent: { id: "pi_2" }, refunded: true })
+      );
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+      expect(revokeAccessForPayment).toHaveBeenCalledWith({ paymentIntentId: "pi_2" });
+    });
+
+    // NEGATIVE CONTROL. A partial refund is not a cancelled purchase —
+    // somebody refunded 50 pesos of a 2 299 one keeps what they bought.
+    it("leaves access alone on a PARTIAL refund", async () => {
+      constructEvent.mockReturnValue(
+        stripeEvent("charge.refunded", { id: "ch_3", payment_intent: "pi_3", refunded: false })
+      );
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(revokeAccessForPayment).not.toHaveBeenCalled();
+      expect(captureException).not.toHaveBeenCalled();
+    });
+
+    it("revokes on a chargeback the moment the dispute is opened, not when it closes", async () => {
+      // Stripe withdraws the funds at `dispute.created`. Waiting for
+      // `dispute.closed` would leave the content open for the weeks a
+      // dispute takes, on money we no longer hold.
+      revokeAccessForPayment.mockResolvedValue({ revoked: 1, userIds: ["user_9"] });
+      constructEvent.mockReturnValue(
+        stripeEvent("charge.dispute.created", { charge: "ch_4", payment_intent: "pi_4" })
+      );
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(revokeAccessForPayment).toHaveBeenCalledWith({ paymentIntentId: "pi_4" });
+    });
+
+    it("acknowledges charge.dispute.closed and restores nothing", async () => {
+      constructEvent.mockReturnValue(stripeEvent("charge.dispute.closed", { charge: "ch_5", status: "won" }));
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(revokeAccessForPayment).not.toHaveBeenCalled();
+      expect(update).not.toHaveBeenCalled();
+      expect(updateMany).not.toHaveBeenCalled();
+    });
+
+    it("reports a refund that matched no row instead of swallowing it", async () => {
+      // This is the shape a refunded RECURRING invoice arrives in: a Stripe
+      // Charge carries no invoice reference in this API version, so nothing
+      // links it to a Subscription row. Someone has their money back and may
+      // still be reading — the one thing worse than that is nobody knowing.
+      revokeAccessForPayment.mockResolvedValue({ revoked: 0, userIds: [] });
+      constructEvent.mockReturnValue(
+        stripeEvent("charge.refunded", { id: "ch_6", payment_intent: "pi_6", refunded: true })
+      );
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      // Still 200: a webhook that throws is a webhook Stripe retries.
+      expect(response.status).toBe(200);
+      expect(captureException).toHaveBeenCalledTimes(1);
+      const [error] = captureException.mock.calls[0] as [Error];
+      expect(error.name).toBe("RefundLeftAccessOpen");
+    });
+
+    it("stores the payment behind a Premium purchase, so a refund has something to find", async () => {
+      // The other half of the fix, and the one without which none of the
+      // cases above could ever match: the grant records its PaymentIntent.
+      constructEvent.mockReturnValue(
+        stripeEvent("checkout.session.completed", {
+          id: "cs_1",
+          mode: "payment",
+          payment_status: "paid",
+          client_reference_id: "user_10",
+          payment_intent: "pi_10",
+          metadata: { plan: "lifetime" },
+        })
+      );
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(extendOrGrantSubscription).toHaveBeenCalledWith("user_10", 36_500, "lifetime", "pi_10");
+    });
+
+    it("stores the payment behind an OXXO purchase too, and settles the voucher", async () => {
+      constructEvent.mockReturnValue(
+        stripeEvent("checkout.session.async_payment_succeeded", {
+          id: "cs_2",
+          client_reference_id: "user_11",
+          payment_intent: "pi_11",
+          metadata: { plan: "monthly" },
+        })
+      );
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(extendOrGrantSubscription).toHaveBeenCalledWith("user_11", 30, "monthly", "pi_11");
+      expect(settlePendingCheckout).toHaveBeenCalledWith("cs_2", "paid");
+    });
+  });
+
+  /**
+   * DEBT 30 — the voucher that left no trace.
+   */
+  describe("an OXXO voucher that was never paid stops being outstanding", () => {
+    it("settles the record as expired when the voucher runs out", async () => {
+      constructEvent.mockReturnValue(stripeEvent("checkout.session.expired", { id: "cs_3" }));
+
+      const response = await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(response.status).toBe(200);
+      expect(settlePendingCheckout).toHaveBeenCalledWith("cs_3", "expired");
+      // …and grants nothing on the way past.
+      expect(extendOrGrantSubscription).not.toHaveBeenCalled();
+    });
+
+    it("settles it as failed when the async payment failed", async () => {
+      constructEvent.mockReturnValue(stripeEvent("checkout.session.async_payment_failed", { id: "cs_4" }));
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(settlePendingCheckout).toHaveBeenCalledWith("cs_4", "failed");
+      expect(extendOrGrantSubscription).not.toHaveBeenCalled();
     });
   });
 
