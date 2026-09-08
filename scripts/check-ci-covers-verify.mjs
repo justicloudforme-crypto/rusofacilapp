@@ -60,6 +60,10 @@ function main() {
    * имени команды, никогда по файлу. */
   const EXTERNAL_TARGET_FLAGS = ["--base", "--against-prod", "--from-sitemap"];
 
+  /** Флаги позитивного контроля: прогон с ними доказывает, что проверка
+   * умеет краснеть, но САМОЙ проверкой не является. */
+  const CONTROL_FLAGS = ["--plant", "--self-test"];
+
   /** Все имена npm-скриптов, которые исполнятся, если запустить `command`.
    *
    * Три способа попасть в множество, и они не равны по строгости:
@@ -93,7 +97,16 @@ function main() {
       const nameFlags = inv.flags.map((f) => f.split("=")[0]);
       if (nameFlags.some((f) => EXTERNAL_TARGET_FLAGS.includes(f))) continue;
       if (wrapped.has(inv.file)) { seen.add(name); continue; }
-      if (direct.includes(inv.file) && nameFlags.every((f) => invokedFlags.has(f))) seen.add(name);
+      // Подмножества флагов мало: запуск с флагом КОНТРОЛЯ — это не
+      // прогон проверки. Стоит поставить в CI один `npm run x:plant` — и
+      // `x` с пустым набором флагов оказывался подмножеством `{--plant}`,
+      // то есть засчитывался за прогнанный, ни разу не прогнавшись.
+      // Найдено 08.09.2026 при попытке поставить в CI только контроль.
+      // Флаги, меняющие лишь форму отчёта (`--report=`, `--ci`), такой
+      // силы не имеют и покрытие по-прежнему дают: `check:e2e-coverage:run`
+      // и `check:rendered:ci` — те же проверки, а не их контроли.
+      const controlOnly = [...invokedFlags].some((f) => CONTROL_FLAGS.includes(f) && !nameFlags.includes(f));
+      if (direct.includes(inv.file) && !controlOnly && nameFlags.every((f) => invokedFlags.has(f))) seen.add(name);
     }
     return seen;
   }

@@ -101,6 +101,17 @@ jobs:
       - name: Тот же сторож — позитивный контроль
         run: npm run check:dying-posts:plant
 
+      # Сам `check:story-topics` здесь стоять НЕ может: база CI держит
+      # ноль строк `Story`, и проверка о чипах каталога на пустом
+      # каталоге вакуумна (она это и говорит вслух, красным). Поэтому в
+      # CI стоит только её позитивный контроль: он идёт по ЗАВЕДОМО
+      # здоровой выборке в памяти и базы не спрашивает вовсе, то есть
+      # правило «чип темы, отдающий 0 карточек, — падение» здесь
+      # проверяется целиком. Сама проверка — в `npm run verify` и в
+      # списке исключений PROGRESS.md.
+      - name: Чип темы с нулём карточек — падение (позитивный контроль)
+        run: npm run check:story-topics:plant
+
       # The positive control for the Stripe env-shape guard. CI has no Stripe
       # variables at all, so the guard's real run here is vacuously green —
       # which is exactly the kind of green PROGRESS.md 4.1 says proves

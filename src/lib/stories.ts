@@ -28,8 +28,12 @@ export const storyTopics = [
 
 export type StoryTopic = (typeof storyTopics)[number];
 
-export function isStoryTopic(value: string): value is StoryTopic {
-  return (storyTopics as readonly string[]).includes(value);
+/** Принимает и `null`: колонка `Story.topic` на проде nullable и без
+ * дефолта (см. schema.prisma), поэтому «темы нет» — законное состояние
+ * строки, а не ошибка вызывающего. Каждый читатель приводит его к
+ * `"other"` сам и в одном месте. */
+export function isStoryTopic(value: string | null | undefined): value is StoryTopic {
+  return typeof value === "string" && (storyTopics as readonly string[]).includes(value);
 }
 
 // The one author string every original (non-retelling) RusoFásil story
