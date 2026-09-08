@@ -66,6 +66,23 @@ const ALLOWED = new Map([
     },
   ],
   [
+    // Найдено 08.09.2026: этот файл приехал в main с PR #220 и сделал
+    // `npm run check:brand` — а значит и весь `npm run verify` — КРАСНЫМ,
+    // и никто этого не заметил, потому что check:brand в ci.yml не входит.
+    // Оба попадания — цитата боевого значения `Story.author`
+    // («RusoFásil (relato original)», 277 строк, долг 49), то есть ровно
+    // тот класс, ради которого список исключений и существует. Число
+    // закреплено: третья цитата в этом файле снова уронит проверку.
+    "docs/audit-2026-09-07-A.md",
+    {
+      hits: 2,
+      why:
+        "Quotes the production Story.author literal twice while reporting debt 49. " +
+        "The value cannot be rewritten before 25.09.2026 (frozen-page byline), so " +
+        "the report that names it cannot spell it any other way.",
+    },
+  ],
+  [
     "src/lib/stories.ts",
     {
       hits: 3,
