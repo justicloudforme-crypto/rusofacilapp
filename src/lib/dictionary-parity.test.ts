@@ -71,6 +71,11 @@ const NO_CYRILLIC_IS_CORRECT = new Map<string, string>([
   ["vocabulary.recall.directionEsToRuLabel", "language codes"],
   ["vocabulary.recall.directionRuToEsLabel", "language codes"],
   ["admin.exams.examSlugPlaceholder", "an example slug"],
+  // Пример кода доступа в поле ввода (PROGRESS.md 7.146). Коды печатаются
+  // одним алфавитом на обе локали — латиница и цифры, — потому что их
+  // переписывают с бумаги, и кириллическая подсказка обещала бы кириллический
+  // код, которого не существует.
+  ["profile.accessCodePlaceholder", "an example code: access codes are Latin+digits in both locales"],
   // Platform names, not store names — the page no longer asserts which
   // store the app will appear in (05.09.2026, PROGRESS.md 7.127).
   ["download.iosCta", "platform name, the same word in both locales"],

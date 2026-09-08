@@ -122,6 +122,12 @@ model User {
   groupMemberships     GroupMember[]
   wordGameProgress     WordGameProgress[]
   studyDays            StudyDay[]
+  // Коды доступа, которые этот человек погасил и которые он отозвал
+  // (PROGRESS.md 7.146). Обе связи — SetNull, а не Cascade: погашенный
+  // код остаётся израсходованным, даже если аккаунт удалён; иначе
+  // удаление аккаунта возвращало бы код в оборот.
+  redeemedAccessCodes  AccessCode[]           @relation("AccessCodeRedeemer")
+  revokedAccessCodes   AccessCode[]           @relation("AccessCodeRevoker")
 }
 
 // One row per (learner, calendar day they studied). The day a learner
@@ -984,4 +990,56 @@ model PendingCheckout {
   updatedAt       DateTime  @updatedAt
 
   @@index([userId])
+}
+
+// Код доступа для первых учеников (PROGRESS.md 7.146).
+//
+// Строка здесь — это НЕ доступ. Доступ живёт там же, где он жил всегда, —
+// строкой `Subscription`, которую пишет `extendOrGrantSubscription`, та же
+// функция, что обслуживает путь Stripe и ручную выдачу администратора.
+// Правило доступа (`tierOfAccount`, src/lib/entitlement.ts) в эту таблицу
+// не смотрит вовсе, и сторож `check:access-code-path` это стережёт: второй
+// путь к доступу был бы прямой регрессией 7.145, где десять мест принятия
+// решения о доступе сведены к одному.
+//
+// Чего здесь СОЗНАТЕЛЬНО нет: колонки «одноразовый ли код». Одноразовость
+// хранится парой (`redeemedAt`, `redeemedById`) и держится условным
+// UPDATE с проверкой числа затронутых строк (см. redeemAccessCode), а не
+// булевым признаком: булев признак, у которого ветка `false` нигде не
+// реализована, — это неправда в схеме, а не гибкость.
+model AccessCode {
+  id           String    @id @default(cuid())
+  // Всегда в ВЕРХНЕМ регистре и без пробелов — нормализация одна на всех
+  // (normalizeAccessCode, src/lib/access-code.ts), и она же применена в
+  // момент записи, поэтому уникальность здесь настоящая, а не
+  // «уникальность с точностью до регистра».
+  code         String    @unique
+  // Уровень, который код выдаёт. Сегодня допустимое значение ровно одно —
+  // "standard": premium продаётся за 2 299 MXN и через код не выдаётся.
+  // Список известных значений — ACCESS_CODE_TIERS в src/lib/access-code.ts;
+  // строка с незнакомым уровнем не выдаёт ничего и уходит в Sentry.
+  tier         String    @default("standard")
+  // Сколько дней доступа даёт погашение. Отсюда берётся срок строки
+  // Subscription, и ничего кроме него.
+  durationDays Int       @default(90)
+  // Срок годности САМОГО кода — до какого момента его можно ввести. Это не
+  // срок доступа: код, погашенный в последний день, даёт полные
+  // durationDays. NULL — этого ограничения у кода нет.
+  expiresAt    DateTime?
+  // Метка партии ("AMIGO-2026-09"), чтобы выпущенную пачку можно было
+  // найти и отозвать целиком.
+  batch        String?
+
+  redeemedAt   DateTime?
+  redeemedById String?
+  redeemedBy   User?     @relation("AccessCodeRedeemer", fields: [redeemedById], references: [id], onDelete: SetNull)
+
+  revokedAt    DateTime?
+  revokedById  String?
+  revokedBy    User?     @relation("AccessCodeRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime  @default(now())
+
+  @@index([batch])
+  @@index([redeemedById])
 }

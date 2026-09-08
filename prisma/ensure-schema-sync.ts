@@ -229,6 +229,34 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
       `CREATE INDEX IF NOT EXISTS "PendingCheckout_userId_idx" ON "PendingCheckout"("userId")`,
     ],
   },
+  {
+    // Код доступа для первых учеников (PROGRESS.md 7.146). Строка здесь —
+    // НЕ доступ: доступ выдаётся строкой `Subscription` через
+    // `extendOrGrantSubscription`, ту же, что пишет путь Stripe. Внешние
+    // ключи на User — SET NULL, а не CASCADE: удаление аккаунта не должно
+    // возвращать погашенный код в оборот.
+    table: "AccessCode",
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "AccessCode" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "code" TEXT NOT NULL,
+         "tier" TEXT NOT NULL DEFAULT 'standard',
+         "durationDays" INTEGER NOT NULL DEFAULT 90,
+         "expiresAt" DATETIME,
+         "batch" TEXT,
+         "redeemedAt" DATETIME,
+         "redeemedById" TEXT,
+         "revokedAt" DATETIME,
+         "revokedById" TEXT,
+         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+         CONSTRAINT "AccessCode_redeemedById_fkey" FOREIGN KEY ("redeemedById") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+         CONSTRAINT "AccessCode_revokedById_fkey" FOREIGN KEY ("revokedById") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+       )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "AccessCode_code_key" ON "AccessCode"("code")`,
+      `CREATE INDEX IF NOT EXISTS "AccessCode_batch_idx" ON "AccessCode"("batch")`,
+      `CREATE INDEX IF NOT EXISTS "AccessCode_redeemedById_idx" ON "AccessCode"("redeemedById")`,
+    ],
+  },
 ];
 
 export { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS };
