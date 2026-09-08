@@ -562,22 +562,35 @@ test("word search: finding every word shows exactly one completion dialog", asyn
  * finger on the board cannot pan that scroller, and a word ending in
  * column 14+ could not be selected at all.
  *
- * Asserted against the grid's own column count rather than a literal, so
- * the test still means something if the widest rung ever changes.
- *
- * The rung it opens is the WIDEST shape the bank actually holds, not the
- * common one. 16x16 is the usual grid, but four production rows are 18x18
- * (B2/10, C1/91, C1/141, C1/163 — counted over all 1738 WORD_SEARCH rows
- * on 2026-09-02; dev.db has eight of them, C1/91 among both). Pinning the
- * test to a 16-column puzzle left the two widest columns of the real
- * worst case unmeasured: 18 x 22px + gaps is ~40px wider than 16, which
- * is most of a 320px viewport's margin. So the fixture carries C1/91
- * (18x18, exported from dev.db the same way the other four rows were) and
- * the floor below is 18, the real maximum in the bank.
+ * WHICH board is measured is asked of the running app, not written down
+ * here. Until 08.09.2026 this test opened `WORD_SEARCH/C1/91` and required
+ * `cols >= 18`, and both numbers were a snapshot of one database: the
+ * density corridor re-laid the bank on 04.09.2026 and `C1/91` became 16
+ * columns at 19:44 (its 18-column half moved to the newly created
+ * `C1/287`), while `C1/5` went 16 → 18 at 18:36 the same evening. The
+ * result was a test that measured a board production does not serve — red
+ * on a prod-shaped database, green in CI, and neither verdict about the
+ * rule. The rule ("every column of the widest board is on screen") names
+ * no number, so this test names none either: /api/test/widest-word-search
+ * answers from whatever database the server is on, the fixture keeps
+ * defining the SHAPE (its ladder still carries an 18-column board, so CI
+ * still measures a wide one), and the assertion below is about the board
+ * that was actually rendered. See PROGRESS.md 7.141.
  */
-test("word search: every column is on screen at a phone width, not just in the DOM", async ({ page }) => {
+test("word search: every column is on screen at a phone width, not just in the DOM", async ({ page, request }) => {
+  const widest = (await (await request.get("/api/test/widest-word-search")).json()) as {
+    widest: { level: string; sequence: number; cols: number } | null;
+    considered: number;
+  };
+  // An empty bank must be a failure, not a quiet pass on nothing: in CI
+  // the fixture guarantees rows, locally dev.db does. "No board to
+  // measure" means the run is not measuring what it claims.
+  expect(widest.considered, "в банке нет ни одного читаемого филворда — мерить нечего").toBeGreaterThan(0);
+  expect(widest.widest).not.toBeNull();
+  const target = widest.widest!;
+
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/es/word-games/WORD_SEARCH/C1/91");
+  await page.goto(`/es/word-games/WORD_SEARCH/${target.level}/${target.sequence}`);
   await page.waitForSelector('[role="grid"] button[data-row]');
 
   const geometry = await page.evaluate(() => {
@@ -601,9 +614,11 @@ test("word search: every column is on screen at a phone width, not just in the D
     };
   });
 
-  // The bank's widest puzzle is 18 columns; if this rung ever stops being
-  // one of them the assertion below would pass vacuously on a narrow grid.
-  expect(geometry.cols).toBeGreaterThanOrEqual(18);
+  // The board on screen must be the board that was asked for. Without
+  // this the run could silently measure a narrower rung — e.g. if the
+  // route fell back to a sample puzzle — and the geometry assertions
+  // below would pass vacuously.
+  expect(geometry.cols).toBe(target.cols);
   expect(geometry.visibleCols).toBe(geometry.cols);
   expect(geometry.overflows).toBe(false);
   expect(geometry.documentWidth).toBeLessThanOrEqual(390);

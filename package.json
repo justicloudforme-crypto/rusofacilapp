@@ -35,7 +35,7 @@
     "lint": "eslint",
     "pretypecheck": "next typegen",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run lint && npm run typecheck && npm run check:brand && npm run check:access-marks && npm run check:access-marks:plant && npm run check:intro-numbers && npm run check:dying-posts && npm run check:e2e-coverage && npm run check:stripe-env:self-test && npm run check:stripe-prices:self-test && npm run check:word-search && npm run build && npm run check:rendered:local",
+    "verify": "npm run lint && npm run typecheck && npm run check:ci-covers-verify && npm run check:brand && npm run check:access-marks && npm run check:access-marks:plant && npm run check:intro-numbers && npm run check:dying-posts && npm run check:e2e-coverage && npm run check:stripe-env:self-test && npm run check:stripe-prices:self-test && npm run check:word-search && npm run build && npm run check:rendered:local",
     "check:rendered:local": "node scripts/verify-rendered.mjs",
     "check:rendered:ci": "node scripts/verify-rendered.mjs --ci",
     "test": "vitest run",
@@ -123,7 +123,12 @@
     "check:reachability": "tsx scripts/check-reachability.ts",
     "check:reachability:plant": "tsx scripts/check-reachability.ts --plant",
     "check:search-coverage:prod": "tsx scripts/check-search-coverage.ts --base=https://rusofacilapp.com",
-    "check:search-coverage:prod:plant": "tsx scripts/check-search-coverage.ts --base=https://rusofacilapp.com --base-plant"
+    "check:search-coverage:prod:plant": "tsx scripts/check-search-coverage.ts --base=https://rusofacilapp.com --base-plant",
+    "check:schema-drift": "tsx scripts/check-schema-drift.ts",
+    "check:schema-drift:plant": "tsx scripts/check-schema-drift.ts --plant",
+    "check:ci-covers-verify": "node scripts/check-ci-covers-verify.mjs",
+    "check:ci-covers-verify:map": "node scripts/check-ci-covers-verify.mjs --map",
+    "check:ci-covers-verify:plant": "node scripts/check-ci-covers-verify.mjs --plant"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",
