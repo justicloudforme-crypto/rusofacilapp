@@ -4,7 +4,7 @@ import { getLevelProgressForUsers } from "./progress";
 import { levelSlugs } from "./courses";
 import { isAvatarId, DEFAULT_AVATAR_ID, type AvatarId } from "./avatars";
 import { generateShortCode, isPlausibleShortCode } from "./short-code";
-import { getEntitlementTiersForUsers } from "./subscription";
+import { getEntitlementTiersFor } from "./entitlement";
 
 // Same alphabet/length as referral codes — this is meant to be typed or
 // read aloud when sharing a group with classmates, not just clicked.
@@ -178,7 +178,11 @@ export async function getGroupForMember(userId: string, groupId: string): Promis
   const memberIds = group.members.map(({ user }) => user.id);
   const [progressByUser, tierByUser] = await Promise.all([
     getLevelProgressForUsers(memberIds),
-    getEntitlementTiersForUsers(memberIds),
+    // Roles as well as ids: the access rule is one function and it reads
+    // the role (tierOfAccount, src/lib/entitlement.ts). Passing ids alone
+    // is what made this the one surface in the app where a staff account
+    // was not premium.
+    getEntitlementTiersFor(group.members.map(({ user }) => ({ id: user.id, role: user.role }))),
   ]);
 
   const members: GroupMemberStanding[] = group.members.map(({ user }) => {

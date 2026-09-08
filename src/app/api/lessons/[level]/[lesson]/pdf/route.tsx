@@ -4,8 +4,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { getLessonContent } from "@/lib/lessons/content";
 import { getCurrentUser } from "@/lib/auth";
-import { userHasActiveSubscription } from "@/lib/subscription";
-import { isStaff } from "@/lib/roles";
+import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
 import { getDictionary } from "@/i18n/dictionaries";
 import { LessonSlidesDocument } from "@/lib/lessons/pdf";
 
@@ -21,7 +20,7 @@ export async function GET(
   // Same access rule as the lesson page itself (src/app/[lang]/courses/[level]/[lesson]/page.tsx)
   // — the PDF must not be a way to read paywalled content without a subscription.
   const user = await getCurrentUser();
-  if (!user || (!isStaff(user.role) && !(await userHasActiveSubscription(user.id)))) {
+  if (!user || !hasAnyAccess(await getEntitlementTierFor(user))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

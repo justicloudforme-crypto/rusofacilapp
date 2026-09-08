@@ -8,7 +8,9 @@ import {
   invalidateSubscriptionCache,
   isPremiumPlan,
   reportPremiumPaymentNotApplied,
+  revokeAccessForPayment,
 } from "@/lib/subscription";
+import { settlePendingCheckout } from "@/lib/pending-checkout";
 import { LIFETIME_DURATION_DAYS } from "@/lib/plans";
 import { awardReferralRewardSafely } from "@/lib/referral";
 import { isPlanId, plans } from "@/lib/plans";
@@ -125,6 +127,73 @@ async function upsertFromStripeSubscription(subscription: Stripe.Subscription) {
   await invalidateSubscriptionCache(userId);
 }
 
+/** The PaymentIntent id off a Charge or a Dispute, whichever shape arrived. */
+function paymentIntentIdOf(object: { payment_intent?: string | { id: string } | null }): string | null {
+  const ref = object.payment_intent;
+  if (!ref) return null;
+  return typeof ref === "string" ? ref : ref.id;
+}
+
+/**
+ * Money went back; take the access back with it.
+ *
+ * Resolution is by PAYMENT and by nothing else: the row whose
+ * `stripePaymentIntentId` is the PaymentIntent being refunded. That column
+ * exists for this (added 08.09.2026, debt 29) and it is written by the two
+ * grants that take a one-time payment — the Premium card purchase and every
+ * OXXO voucher. That is where the damage was worst: a refunded Premium row
+ * carries a period running to 2126, and nothing else in this app would ever
+ * close it.
+ *
+ * What this deliberately does NOT do is widen the search to the person. A
+ * refund of one charge must not touch an admin grant, a referral reward, a
+ * RevenueCat purchase, or a second subscription somebody is still paying
+ * for — and "find this customer's live rows and cancel them" would do all
+ * four. The narrow version is why the OTHER grounds for access survive a
+ * refund, which is the property src/lib/subscription.test.ts pins down.
+ *
+ * A refund that matches no row is REPORTED, not swallowed: it means someone
+ * has their money back and may still be reading, and the one thing worse
+ * than that is nobody knowing. A REFUNDED RECURRING INVOICE lands here too
+ * and matches nothing — a Stripe Charge carries no invoice reference in this
+ * API version, so a monthly or annual refund cannot be traced to its
+ * Subscription row from this event alone. It is a Sentry report today and a
+ * written debt, not a silent gap (PROGRESS.md 7.145).
+ */
+async function revokeForRefundedCharge(
+  charge: Pick<Stripe.Charge, "id" | "payment_intent">,
+  event: string
+): Promise<void> {
+  const paymentIntentId = paymentIntentIdOf(charge);
+  const { revoked } = await revokeAccessForPayment({ paymentIntentId });
+  if (revoked > 0) return;
+  await reportRefundNotApplied(event, { chargeId: charge.id, paymentIntentId });
+}
+
+/** Files "the money went back and we found nothing to revoke" in Sentry.
+ * Never throws: a webhook that throws is a webhook Stripe retries, and
+ * retrying a revocation that already happened is worse than losing a
+ * report — the same rule as reportPremiumPaymentNotApplied. */
+async function reportRefundNotApplied(
+  event: string,
+  extra: Record<string, unknown>
+): Promise<void> {
+  try {
+    const error = new Error(
+      `${event}: money was returned and no access row matched the payment — access may still be open`
+    );
+    error.name = "RefundLeftAccessOpen";
+    const Sentry = await import("@sentry/nextjs");
+    Sentry.captureException(error, {
+      level: "error",
+      tags: { defect: "refund-left-access-open", source: event },
+      extra,
+    });
+  } catch {
+    // Reporting the problem must never become a second problem.
+  }
+}
+
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -185,7 +254,12 @@ export async function POST(request: NextRequest) {
         // OXXO sessions instead of double-granting access for them.
         const userId = session.client_reference_id;
         if (userId && session.payment_status === "paid") {
-          await extendOrGrantSubscription(userId, LIFETIME_DURATION_DAYS, "lifetime");
+          await extendOrGrantSubscription(
+            userId,
+            LIFETIME_DURATION_DAYS,
+            "lifetime",
+            paymentIntentIdOf(session)
+          );
           // Money in, tier out — checked, not assumed. See
           // reportPremiumPaymentNotApplied and PROGRESS.md 7.55.
           await reportPremiumPaymentNotApplied(userId, "lifetime", {
@@ -211,7 +285,16 @@ export async function POST(request: NextRequest) {
       const userId = session.client_reference_id;
       const planId = session.metadata?.plan;
       if (userId && planId && isPlanId(planId)) {
-        await extendOrGrantSubscription(userId, plans[planId].durationDays, planId);
+        await extendOrGrantSubscription(
+          userId,
+          plans[planId].durationDays,
+          planId,
+          paymentIntentIdOf(session)
+        );
+        // The voucher is no longer outstanding — debt 30. Settled before
+        // anything else that can fail, so /profile stops telling this person
+        // to go and pay even if a later step of this handler throws.
+        await settlePendingCheckout(session.id, "paid");
         // Same read-back as the card branch above. A no-op for the monthly
         // and annual voucher plans — it only speaks up for a premium one.
         await reportPremiumPaymentNotApplied(userId, planId, {
@@ -228,12 +311,19 @@ export async function POST(request: NextRequest) {
 
     // The voucher expired unpaid, or the async payment otherwise failed.
     // Nothing was ever granted for this session (see
-    // async_payment_succeeded above), so there's nothing to revert here —
-    // this case exists so the event type is explicitly acknowledged
-    // instead of silently falling through to `default`.
+    // async_payment_succeeded above), so there is no access to revert — but
+    // there IS a pending row saying a voucher is outstanding, and leaving it
+    // standing would make /profile promise a payment that can no longer be
+    // made (debt 30).
     case "checkout.session.async_payment_failed":
-    case "checkout.session.expired":
+    case "checkout.session.expired": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      await settlePendingCheckout(
+        session.id,
+        event.type === "checkout.session.expired" ? "expired" : "failed"
+      );
       break;
+    }
 
     case "customer.subscription.updated":
     case "customer.subscription.created": {
@@ -285,6 +375,46 @@ export async function POST(request: NextRequest) {
       }
       break;
     }
+
+    /**
+     * DEBT 29. The money went back to the buyer.
+     *
+     * `charge.refunded` fires for a partial refund too, and a partial refund
+     * is not a cancelled purchase — someone refunded a few pesos of a 2 299
+     * one keeps what they bought. Stripe's own `charge.refunded` boolean is
+     * the difference, and it is read instead of any amount so this handler
+     * keeps its property of having no concept of money at all (there is a
+     * case at the bottom of route.test.ts that holds it to that).
+     */
+    case "charge.refunded": {
+      const charge = event.data.object as Stripe.Charge;
+      if (!charge.refunded) break; // partial refund — access stands
+      await revokeForRefundedCharge(charge, event.type);
+      break;
+    }
+
+    /**
+     * A chargeback. Stripe withdraws the funds the moment a dispute is
+     * opened, so this is treated exactly like a refund and not deferred to
+     * `charge.dispute.closed`: waiting would leave the content open for the
+     * weeks a dispute takes to resolve, on money we no longer hold.
+     */
+    case "charge.dispute.created": {
+      const dispute = event.data.object as Stripe.Dispute;
+      const charge = typeof dispute.charge === "string" ? dispute.charge : dispute.charge.id;
+      await revokeForRefundedCharge({ id: charge, payment_intent: dispute.payment_intent }, event.type);
+      break;
+    }
+
+    // A dispute ended. Won means the money came back to us — and the access
+    // is NOT restored automatically: this handler revoked rows it can no
+    // longer tell apart from rows that were cancelled for other reasons, and
+    // guessing would hand access back to somebody who never had it. An admin
+    // grant (/api/admin/subscriptions/grant) is the deliberate way back.
+    // Acknowledged rather than left to `default` so the omission is a
+    // written decision. PROGRESS.md 7.145, new debt.
+    case "charge.dispute.closed":
+      break;
 
     default:
       break;

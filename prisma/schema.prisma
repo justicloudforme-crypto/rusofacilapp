@@ -91,6 +91,7 @@ model User {
   streakFreezesSince   String?
   createdAt            DateTime               @default(now())
   subscriptions        Subscription[]
+  pendingCheckouts     PendingCheckout[]
   lessonProgress       LessonProgress[]
   voiceSubmissions     VoiceSubmission[]
   examAttempts         ExamAttempt[]
@@ -181,6 +182,24 @@ model Subscription {
 
   stripeSubscriptionId String?  @unique
   stripeCustomerId     String?
+
+  // The Stripe PaymentIntent that most recently paid FOR this row.
+  //
+  // Added 08.09.2026 for debt 29. Until then a paid Premium purchase — the
+  // 2 299 MXN one-time charge, and every OXXO voucher — landed as a plain
+  // Subscription row with no link back to the payment at all, so a refund
+  // had nothing to revoke: the money went back and the access stayed. The
+  // debt says as much in PROGRESS.md 7.12: "чинить обработчиком, но для
+  // этого надо начать сохранять сессию покупки".
+  //
+  // Deliberately NOT @unique. This holds the LATEST payment on the row, and
+  // extendOrGrantSubscription may extend one row from several payments over
+  // time; a refund of a payment this column no longer names cannot be
+  // traced, is reported to Sentry rather than silently ignored, and is
+  // written down as its own debt. Nullable and absent on every row that was
+  // never paid for through Stripe (admin grants, referral rewards, the
+  // local no-Stripe fallback).
+  stripePaymentIntentId String?
 
   // RevenueCat/native-store fields. original_transaction_id is the stable
   // per-purchase key both Apple and Google keep across renewals, so it's
@@ -915,4 +934,54 @@ model SearchQuery {
 
   @@index([hourBucket])
   @@index([query])
+}
+
+/**
+ * A checkout a person started and has not finished paying for.
+ *
+ * Exists for exactly one payment method: OXXO. An OXXO voucher is a barcode
+ * the buyer carries to a shop and pays in cash, and Stripe gives them up to
+ * three days to do it (`expires_after_days` in /api/checkout). Between the
+ * two moments nothing was stored anywhere — debt 30: the only trace of a
+ * taken voucher was `?checkout=oxxo_pending` in the URL of the page Stripe
+ * bounced them to, so a person who closed the tab and came back to /profile
+ * was told they had no subscription, with a "buy" button under it. The most
+ * likely next thing they do is pay a second time.
+ *
+ * A row here is NOT access and must never be read as such: it carries no
+ * period and no plan tier, only the fact that a voucher is outstanding. The
+ * access rule (tierOfAccount, src/lib/entitlement.ts) does not look at this
+ * table at all.
+ *
+ * The row is opened when the voucher is created and settled by the Stripe
+ * webhook — `checkout.session.async_payment_succeeded` (paid),
+ * `checkout.session.expired` / `async_payment_failed` (not paid). It is
+ * settled rather than deleted so a support question about a voucher from
+ * last week has an answer.
+ */
+model PendingCheckout {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /** The plan the voucher is for — "monthly" | "annual" | "lifetime". */
+  plan            String
+  /** Always "oxxo" today. A column rather than an assumption so a second
+   * asynchronous method does not have to reshape the table. */
+  method          String    @default("oxxo")
+  stripeSessionId String    @unique
+
+  /** When the voucher stops being payable, as Stripe set it. */
+  expiresAt       DateTime
+  /** Null while the voucher is outstanding; the moment it stopped being so
+   * otherwise. The pair (settledAt, outcome) is what makes this table a
+   * record instead of a queue. */
+  settledAt       DateTime?
+  /** "paid" | "expired" | "failed", set with settledAt. */
+  outcome         String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
 }

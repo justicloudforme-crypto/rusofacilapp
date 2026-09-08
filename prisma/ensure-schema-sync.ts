@@ -205,6 +205,30 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
       `CREATE INDEX IF NOT EXISTS "SearchQuery_query_idx" ON "SearchQuery"("query")`,
     ],
   },
+  {
+    // Незакрытый талон OXXO (PROGRESS.md 7.145, долг 30). Строка здесь —
+    // НЕ доступ: ни срока, ни уровня, правило доступа сюда не смотрит
+    // вовсе. Внешний ключ на User есть — в отличие от SearchQuery выше,
+    // эта строка про конкретного человека и обязана уезжать вместе с ним.
+    table: "PendingCheckout",
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "PendingCheckout" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "userId" TEXT NOT NULL,
+         "plan" TEXT NOT NULL,
+         "method" TEXT NOT NULL DEFAULT 'oxxo',
+         "stripeSessionId" TEXT NOT NULL,
+         "expiresAt" DATETIME NOT NULL,
+         "settledAt" DATETIME,
+         "outcome" TEXT,
+         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+         "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+         CONSTRAINT "PendingCheckout_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+       )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "PendingCheckout_stripeSessionId_key" ON "PendingCheckout"("stripeSessionId")`,
+      `CREATE INDEX IF NOT EXISTS "PendingCheckout_userId_idx" ON "PendingCheckout"("userId")`,
+    ],
+  },
 ];
 
 export { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS };

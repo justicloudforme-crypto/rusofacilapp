@@ -1,14 +1,20 @@
 import "server-only";
 import { getCurrentUser } from "./auth";
 import { isStaff } from "./roles";
-import { getEntitlementTierForUser, userHasActiveSubscription } from "./subscription";
+import {
+  getSubscriptionsForUser,
+  getSubscriptionRowsForUsers,
+  higherTier,
+  tierOfSubscriptions,
+} from "./subscription";
 import { LITERARY_IDIOM_LIMITS } from "./free-trial-limits";
-import type { EntitlementTierValue } from "./subscription";
+import { PLAN_TIER, type PlanId } from "./plans";
+import type { EntitlementTierValue, StoredEntitlementRow } from "./subscription";
 
 /**
  * Three-tier content model (replaces the old binary entitled/not-entitled
  * check for C1-level vocabulary/stories and ★ word games — everything else
- * still only cares about "free" vs "not free", see {@link isEntitled}):
+ * still only cares about "free" vs "not free", see {@link hasAnyAccess}):
  *
  * - "free": no active subscription (or staff-free anonymous visitor) — gets
  *   the free-trial sample only.
@@ -17,21 +23,130 @@ import type { EntitlementTierValue } from "./subscription";
  * - "premium": an active lifetime subscription ("Premium" plan) — full
  *   access, no restrictions.
  *
- * Staff always resolve to "premium" (same bypass-everything rule as
- * isEntitled/hasContentAccess elsewhere in this file).
+ * Staff always resolve to "premium".
  */
 export type EntitlementTier = EntitlementTierValue;
 
-export async function getEntitlementTier(): Promise<EntitlementTier> {
-  const user = await getCurrentUser();
+/**
+ * THE decision. One function, and the only one in this app that answers
+ * "what may this person open" — everything else either feeds it rows or
+ * reads its answer.
+ *
+ * Until 08.09.2026 this was not true, and the audit of window C measured
+ * how untrue: seven call sites outside this module assembled the answer
+ * themselves (four routes repeating `!isStaff(role) && !(await
+ * userHasActiveSubscription(id))` verbatim, `/profile` calling
+ * `tierOfSubscriptions` on its own history read, `groups.ts` and
+ * `public-profile.ts` going straight to the batched/per-user readers), and
+ * three exported functions in this very file each carried their own copy of
+ * the session lookup and the staff bypass. Ten places, one question.
+ * Nothing had drifted yet; nothing was stopping it either.
+ *
+ * Two rules, in this order, and they are the whole rule:
+ *
+ *   1. Staff — owner or admin — are "premium" without any stored row.
+ *      A staff account that never went through checkout must not be shown
+ *      the same upsells as an unsubscribed student.
+ *   2. Otherwise the tier is the BEST live ground for access the person
+ *      holds, over every row, not the newest one. See tierOfSubscriptions
+ *      in subscription.ts for why that is a maximum and not a lookup.
+ *
+ * Synchronous and pure on purpose: the rows come from the caller, so the
+ * batched form below applies exactly the same rule as the session form
+ * without either of them re-deriving it.
+ *
+ * Held to this by `npm run check:entitlement-point`, which fails on any
+ * file outside this module that reaches for the internals instead.
+ */
+export function tierOfAccount(
+  user: { role: string } | null | undefined,
+  rows: readonly StoredEntitlementRow[]
+): EntitlementTier {
   if (!user) return "free";
   if (isStaff(user.role)) return "premium";
+  return tierOfSubscriptions(rows);
+}
 
-  // The maximum over every live row, not the newest row's plan: a person
-  // can hold a Premium purchase and a monthly subscription at the same
-  // time, and those are two independent grounds for access with two
-  // independent lifecycles. See tierOfSubscriptions in subscription.ts.
-  return getEntitlementTierForUser(user.id);
+/** The visitor of the current request. Front door #1 — fetches, then asks
+ * {@link tierOfAccount}. */
+export async function getEntitlementTier(): Promise<EntitlementTier> {
+  return getEntitlementTierFor(await getCurrentUser());
+}
+
+/** One named person, when the caller already holds their row (a page that
+ * loaded the user itself, a public profile). Front door #2. */
+export async function getEntitlementTierFor(
+  user: { id: string; role: string } | null | undefined
+): Promise<EntitlementTier> {
+  if (!user) return "free";
+  // Staff never need a database read to be "premium", and asking for one
+  // would be the only difference between the two front doors.
+  if (isStaff(user.role)) return tierOfAccount(user, []);
+  return tierOfAccount(user, await getSubscriptionsForUser(user.id));
+}
+
+/**
+ * A list of people at once — the group leaderboard's gold rings. Front
+ * door #3: ONE query for every member's rows instead of one round trip per
+ * member, and then the same {@link tierOfAccount} per person.
+ *
+ * It takes the roles as well as the ids since 08.09.2026: reading rows
+ * alone made this the one place in the app where a staff account was NOT
+ * premium, purely because the batched reader had no role to look at.
+ */
+export async function getEntitlementTiersFor(
+  users: ReadonlyArray<{ id: string; role: string }>
+): Promise<Map<string, EntitlementTier>> {
+  const rowsByUser = await getSubscriptionRowsForUsers(users.map((u) => u.id));
+  const result = new Map<string, EntitlementTier>();
+  for (const user of users) {
+    result.set(user.id, tierOfAccount(user, rowsByUser.get(user.id) ?? []));
+  }
+  return result;
+}
+
+/**
+ * "Any live ground for access at all" — the free-vs-paid question, as
+ * opposed to which tier. A reading of {@link tierOfAccount}'s answer, not a
+ * second decision: `tierOfStoredSubscription` returns "free" for exactly
+ * the rows `isSubscriptionActive` rejects, so `tier !== "free"` and "some
+ * row is live" are the same predicate.
+ *
+ * Replaces `hasContentAccess()` and `isEntitled()`, which were two
+ * identical copies of the session lookup plus the staff bypass plus the
+ * binary read, and which had zero callers between them by 08.09.2026.
+ */
+export function hasAnyAccess(tier: EntitlementTier): boolean {
+  return tier !== "free";
+}
+
+/**
+ * Would buying `planId` give this person anything they do not already have?
+ *
+ * DEBT 33, and it cost real money to leave open: `/pricing` did not know
+ * the visitor's tier and `/api/checkout` did not look at what they already
+ * held, so the owner of a Premium purchase — a plan with a hundred-year
+ * period that can never lapse — could press "buy" and be charged the full
+ * 2 299 MXN a second time, with no refund path behind it (debt 29). The
+ * same held one tier down: a live monthly subscriber pressing "buy" on the
+ * annual plan opened a SECOND concurrent subscription rather than changing
+ * the first.
+ *
+ * The rule is the tier ladder and nothing else: a purchase is refused when
+ * the buyer already stands at or above the tier the plan grants. So
+ * standard → Premium is allowed (it is a real upgrade), Premium → anything
+ * is refused (nothing outranks Premium), and standard → monthly/annual is
+ * refused (a second concurrent subscription at the same tier is two charges
+ * for one thing; this app offers no plan-switch flow, only cancel).
+ *
+ * Deliberately reads {@link tierOfAccount}'s answer rather than the stored
+ * rows, which means a STAFF account is refused every checkout — staff are
+ * premium by rule, so a purchase would add nothing to them either. Live
+ * payment testing therefore has to happen on a non-staff account, which is
+ * how it already happens (PROGRESS.md 7.106).
+ */
+export function planAddsNothing(tier: EntitlementTier, planId: PlanId): boolean {
+  return higherTier(tier, PLAN_TIER[planId]) === tier;
 }
 
 /**
@@ -80,8 +195,8 @@ export function canAccessMediaItem(tier: EntitlementTier, item: { free?: boolean
 }
 
 /** Generic "requires the Premium (lifetime) plan specifically" check —
- * `standard` doesn't pass this even though it passes canAccessLevel/
- * hasContentAccess. Backs Story.premiumOnly, WordGamePuzzle.premiumOnly,
+ * `standard` doesn't pass this even though it passes canAccessLevel and
+ * hasAnyAccess. Backs Story.premiumOnly, WordGamePuzzle.premiumOnly,
  * and curved word games below. */
 export function isPremiumTier(tier: EntitlementTier): boolean {
   return tier === "premium";
@@ -98,26 +213,6 @@ export function canAccessCurvedPuzzle(tier: EntitlementTier): boolean {
 }
 
 /**
- * Gate for the API routes backing Vocabulary/Word games (Stories and
- * Media need no separate check here — their content is embedded directly
- * into the server-rendered page, which proxy.ts's protectContentRoute
- * already blocks before it ever renders for a non-entitled visitor).
- * Vocabulary and word-game puzzle data, by contrast, load through a
- * client-side fetch AFTER the page has rendered — proxy.ts's matcher
- * explicitly excludes `/api/*`, so without this check a page-level
- * redirect alone would still leave the raw content one direct request
- * away for anyone who knew (or guessed) the endpoint. Mirrors
- * protectLessonRoute in proxy.ts: staff bypass, everyone else needs an
- * active, non-expired subscription.
- */
-export async function hasContentAccess(): Promise<boolean> {
-  const user = await getCurrentUser();
-  if (!user) return false;
-  if (isStaff(user.role)) return true;
-  return userHasActiveSubscription(user.id);
-}
-
-/**
  * The two free-trial constants live in src/lib/free-trial-limits.ts and are
  * re-exported here, unchanged, for the same reason isFreeWordGamePuzzle is
  * re-exported at the bottom of this file: the numbers are needed by callers
@@ -130,16 +225,6 @@ export { FREE_TRIAL_LIMITS, LITERARY_IDIOM_LIMITS } from "./free-trial-limits";
 export function getLiteraryIdiomLimit(tier: EntitlementTier): number | null {
   if (tier === "premium") return null;
   return LITERARY_IDIOM_LIMITS[tier];
-}
-
-/** Same staff/subscription check as {@link hasContentAccess}, but without
- * requiring a logged-in user — a free-trial visitor is typically
- * anonymous, and the trial must work for them too. */
-export async function isEntitled(): Promise<boolean> {
-  const user = await getCurrentUser();
-  if (!user) return false;
-  if (isStaff(user.role)) return true;
-  return userHasActiveSubscription(user.id);
 }
 
 /**

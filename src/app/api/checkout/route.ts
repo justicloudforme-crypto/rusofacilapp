@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
+import { getEntitlementTierFor, planAddsNothing } from "@/lib/entitlement";
+import { getOpenPendingCheckout, openPendingCheckout } from "@/lib/pending-checkout";
 import { BASE_CURRENCY, isCheckoutMethod, isPlanId, plans } from "@/lib/plans";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter } from "@/lib/rate-limit";
@@ -25,6 +27,11 @@ const PLAN_LABELS: Record<string, string> = {
 // student retrying after closing the Stripe tab, or comparing monthly vs.
 // annual, is normal use — this only stops a runaway retry loop or script.
 const checkoutLimiter = getRateLimiter("checkout", 60_000, 10);
+
+/** How long an OXXO voucher stays payable. One number, read twice: once by
+ * Stripe (`expires_after_days`) and once by the PendingCheckout row that
+ * records the voucher, so the record cannot outlive the barcode. */
+const OXXO_VOUCHER_DAYS = 3;
 
 /**
  * Is this the Stripe API refusing the request we sent it?
@@ -181,6 +188,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(url, { status: 303 });
   }
 
+  // DEBT 33 — the refusal that stands between a person and a second full
+  // charge, and it stands BEFORE the rate limiter, before the Stripe
+  // Customer is created and before any Checkout Session exists: once a
+  // session is open, the money can move, and nothing in this codebase gives
+  // it back (debt 29 is the other half of the same hole).
+  //
+  // The two sides of the fix are this and /pricing, which no longer renders
+  // a buy button for a level the visitor already holds. Both are needed and
+  // neither is enough: the page can be bypassed with a plain form POST to
+  // this endpoint (the same argument as the OXXO country gate below), and a
+  // gate that only refuses here would leave a button that 303s back.
+  if (planAddsNothing(await getEntitlementTierFor(user), planRaw)) {
+    return NextResponse.redirect(
+      new URL(`/${lang}/pricing?checkout=already_owned`, request.url),
+      { status: 303 }
+    );
+  }
+
   // The cash branch below creates an OXXO voucher, and an OXXO voucher can
   // only be paid at a shop in Mexico (Stripe: MX account, MX buyer, MXN).
   // /pricing does not offer the cash tab elsewhere — but the tab is the
@@ -220,6 +245,26 @@ export async function POST(request: NextRequest) {
       }
 
       if (method === "oxxo") {
+        // DEBT 30, first half: one outstanding voucher per person.
+        //
+        // A voucher is payable for three days, and nothing about it was
+        // stored, so this endpoint would happily print a second barcode for
+        // the same person — and both are payable. Someone who took a
+        // voucher, lost the tab, came back and pressed the button again
+        // could walk into the shop with two and be charged twice, with no
+        // refund path behind it (debt 29).
+        //
+        // Sent back to /profile rather than refused outright: the voucher
+        // they already have is exactly what they came for, and /profile is
+        // where the banner and the "open my barcode" link live.
+        const open = await getOpenPendingCheckout(user.id);
+        if (open) {
+          return NextResponse.redirect(
+            new URL(`/${lang}/profile?checkout=oxxo_pending&voucher=existing`, request.url),
+            { status: 303 }
+          );
+        }
+
         // OXXO is a cash-voucher payment method: the customer gets a barcode
         // (shown on Stripe's own hosted checkout page, and emailed to them)
         // and pays in person at a physical OXXO store, usually within a few
@@ -241,7 +286,7 @@ export async function POST(request: NextRequest) {
           customer: stripeCustomerId,
           client_reference_id: user.id,
           payment_method_types: ["oxxo"],
-          payment_method_options: { oxxo: { expires_after_days: 3 } },
+          payment_method_options: { oxxo: { expires_after_days: OXXO_VOUCHER_DAYS } },
           line_items: [
             {
               price_data: {
@@ -260,6 +305,23 @@ export async function POST(request: NextRequest) {
         if (!session.url) {
           return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
         }
+
+        // DEBT 30, second half: the voucher leaves a trace.
+        //
+        // Written AFTER the session exists and BEFORE the buyer is sent to
+        // it, so the record can never name a voucher Stripe did not make.
+        // The expiry mirrors `expires_after_days` above; Stripe's own
+        // `expires_at` on the session is the session's, not the voucher's.
+        //
+        // This row is not access and grants none — see src/lib/pending-checkout.ts.
+        await openPendingCheckout({
+          userId: user.id,
+          plan: plan.id,
+          method: "oxxo",
+          stripeSessionId: session.id,
+          expiresAt: new Date(Date.now() + OXXO_VOUCHER_DAYS * 24 * 60 * 60 * 1000),
+        });
+
         return NextResponse.redirect(session.url, { status: 303 });
       }
 

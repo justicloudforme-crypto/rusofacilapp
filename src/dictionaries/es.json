@@ -398,6 +398,9 @@
     "checkoutUnavailable": "Ahora mismo no podemos abrir el pago. No se te cobró nada. Vuelve a intentarlo en unos minutos o escríbenos a support@rusofacilapp.com.",
     "checkoutRateLimited": "Abriste el pago demasiadas veces seguidas. Espera un minuto y vuelve a intentarlo — no se te cobró nada.",
     "checkoutCashUnavailable": "El pago en efectivo (OXXO) solo está disponible en México. No se te cobró nada — elige el pago con tarjeta.",
+    "checkoutAlreadyOwned": "Ya tienes ese acceso, así que no abrimos el pago y no se te cobró nada. Puedes ver tu plan en tu perfil.",
+    "alreadyOwnedLabel": "Ya lo tienes",
+    "alreadyOwnedNote": "Este plan ya está incluido en el acceso que tienes.",
     "cardLabel": "Tarjeta",
     "cashLabel": "Efectivo",
     "monthly": {

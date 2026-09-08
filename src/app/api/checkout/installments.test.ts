@@ -34,7 +34,21 @@ vi.mock("@/lib/db", () => ({
 }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: (...args: unknown[]) => getCurrentUser(...args) }));
 vi.mock("@/lib/stripe", () => ({ getStripe: (...args: unknown[]) => getStripe(...args) }));
-vi.mock("@/lib/subscription", () => ({ invalidateSubscriptionCache: vi.fn() }));
+vi.mock("@/lib/subscription", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/subscription")>("@/lib/subscription");
+  return { ...actual, invalidateSubscriptionCache: vi.fn() };
+});
+// The debt-33 gate at the top of the route asks who the buyer is. Every
+// case in this file is somebody with nothing yet, which is the only kind of
+// visitor who reaches the installments code at all.
+vi.mock("@/lib/entitlement", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/entitlement")>("@/lib/entitlement");
+  return { ...actual, getEntitlementTierFor: async () => "free" as const };
+});
+vi.mock("@/lib/pending-checkout", () => ({
+  getOpenPendingCheckout: async () => null,
+  openPendingCheckout: async () => ({}),
+}));
 vi.mock("@/lib/rate-limit", () => ({ getRateLimiter: () => ({ check: async () => false }) }));
 vi.mock("@sentry/nextjs", () => ({ captureException: (...args: unknown[]) => captureException(...args) }));
 
