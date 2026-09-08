@@ -31,6 +31,26 @@
  * `--plant` обязателен всякий раз, когда ответ «недостижимых 0»: проверка,
  * которая ничего не нашла, сначала обязана доказать, что умеет находить
  * (правило замера 4.5).
+ *
+ * ВТОРОЙ ВОПРОС, добавленный 07.09.2026: не только «дошли ли мы до всего,
+ * что заявлено в карте», но и «заявлено ли всё, до чего мы дошли».
+ *
+ * Почему этого не хватало. Перепись 7.131 проверяла шесть противоречий, и
+ * все шесть начинались словами «адрес В КАРТЕ и при этом…». Односторонний
+ * набор: страница, которой в карте нет, не могла попасть ни в одну из
+ * шести проверок вообще — её «0 противоречий» описывало только карту.
+ * Обратную сторону — «краулимо, но не заявлено» — считали руками, таблицей
+ * дельты в отчёте, и переписывали заново каждый заход. Правило раздела 3
+ * («каждый маршрут хотя бы в одном из трёх состояний: карта, `Disallow`,
+ * `noindex`») со стороны кода держал только `crawlable-surface.test.ts`, а
+ * он читает ИСХОДНИКИ и умеет видеть лишь СТАТИЧЕСКИЕ маршруты: динамику
+ * (рассказы, медиа, пазлы, глоссарий) он не проверяет ни одной страницей,
+ * и о проде не знает ничего.
+ *
+ * Здесь тот же вопрос задаётся живой поверхности: у каждой страницы, до
+ * которой обход дошёл, есть код ответа, вердикт `robots.txt` и её
+ * собственная мета-строка `robots`. Сирота — 200 + разрешена + нет в карте
+ * + без `noindex`.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { isDisallowed, parseRobotsTxt } from "../src/lib/robots-matcher";
@@ -72,6 +92,26 @@ async function getText(url: string): Promise<{ status: number; body: string }> {
   }
 }
 
+/**
+ * Объявляет ли страница `noindex` в мете `robots`.
+ *
+ * Регистронезависимо и по общей функции, а не регуляркой на месте: Next
+ * печатает атрибуты в форме React-пропа, и регистрозависимая регулярка уже
+ * стоила проекту вывода «hreflang нет ни на одной из 1892 страниц»
+ * (правило замера 4.2). Значение бывает `noindex`, `noindex, follow`,
+ * `noindex,nofollow` — ищем слово, а не строку целиком.
+ */
+function declaresNoindex(html: string): boolean {
+  for (const tag of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const t = tag[0];
+    if (!/name\s*=\s*["']?robots["']?/i.test(t)) continue;
+    const content = t.match(/content\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+    const value = content ? (content[1] ?? content[2] ?? content[3] ?? "") : "";
+    if (/\bnoindex\b/i.test(value)) return true;
+  }
+  return false;
+}
+
 async function main() {
   const robotsRes = await fetch(`${BASE}/robots.txt`);
   const rules = parseRobotsTxt(await robotsRes.text());
@@ -101,6 +141,7 @@ async function main() {
   const depth = new Map<string, number>();
   const inCount = new Map<string, number>();
   const status = new Map<string, number>();
+  const noindex = new Set<string>();
   const queue: string[] = [];
   for (const r of roots) {
     depth.set(r, 0);
@@ -129,6 +170,7 @@ async function main() {
         fetched += 1;
         if (fetched % 200 === 0) process.stderr.write(`  … ${fetched} страниц, очередь ${queue.length}\n`);
         if (code === 200) {
+          if (declaresNoindex(body)) noindex.add(url);
           const here = depth.get(url) ?? 0;
           for (const target of anchorTargets(body, url, BASE, DROP_SECTIONS)) {
             inCount.set(target, (inCount.get(target) ?? 0) + 1);
@@ -146,6 +188,22 @@ async function main() {
   await Promise.all(workers);
 
   const unreachable = [...sitemap].filter((u) => !depth.has(u)).sort();
+
+  /**
+   * Сироты: краулер до страницы дошёл, `robots.txt` её не закрывает, в
+   * карте её нет и `noindex` она не объявляет. Такая страница может быть
+   * проиндексирована, и за ней никто не смотрит.
+   *
+   * Функцией от множества карты, а не выражением на месте: позитивный
+   * контроль ниже прогоняет ровно эту функцию на карте с вычеркнутой
+   * страницей. Контроль, считающий сирот своей копией логики, проверяет
+   * копию.
+   */
+  const orphansGiven = (map: Set<string>) =>
+    [...status.keys()]
+      .filter((u) => status.get(u) === 200 && allowed(u) && !map.has(u) && !noindex.has(u))
+      .sort();
+  const orphans = orphansGiven(sitemap);
   const byFamily = new Map<string, number>();
   for (const u of unreachable) byFamily.set(urlFamily(u, BASE), (byFamily.get(urlFamily(u, BASE)) ?? 0) + 1);
 
@@ -155,7 +213,13 @@ async function main() {
   console.log(`НЕДОСТИЖИМЫХ ОТ КОРНЕЙ: ${unreachable.length}`);
   for (const [fam, n] of [...byFamily].sort((a, b) => b[1] - a[1])) console.log(`  — ${fam}: ${n}`);
 
+  console.log(`\nстраниц 200 и разрешённых robots.txt: ${[...status.keys()].filter((u) => status.get(u) === 200 && allowed(u)).length}`);
+  console.log(`из них с собственным noindex: ${noindex.size}`);
+  console.log(`СИРОТ (200 + разрешена + НЕ в карте + БЕЗ noindex): ${orphans.length}`);
+  for (const u of orphans) console.log(`  — ${u.slice(BASE.length)}`);
+
   let failed = false;
+  if (orphans.length) failed = true;
   if (PLANT) {
     const caught = [...planted].filter((p) => unreachable.includes(p));
     console.log(`\nподсадка: ${caught.length} из ${planted.size} названы недостижимыми`);
@@ -163,6 +227,30 @@ async function main() {
     const controlOk = depth.has(control);
     console.log(`контроль на ложное срабатывание: ${control} — ${controlOk ? `достижим, глубина ${depth.get(control)}, входящих ${inCount.get(control) ?? 0}` : "НЕ ДОСТИЖИМ"}`);
     if (caught.length !== planted.size || !controlOk) failed = true;
+
+    /**
+     * Позитивный контроль проверки сирот. Подсадка — не выдуманный адрес
+     * (его никто не отдаст 200), а живая страница, ВЫЧЕРКНУТАЯ из карты:
+     * ровно то состояние, в котором `/es/terms` был до 31.08.2026.
+     *
+     * И отрицательная половина, без которой контроль бессмыслен: страница
+     * с намеренным `noindex` не должна попадать в сироты никогда. Это тот
+     * самый класс, на котором аудит 07.09.2026 объявил нарушение правила,
+     * посмотрев только карту и `robots.txt` и не посмотрев мету.
+     */
+    const orphanPlant = `${BASE}/es/terms`;
+    const withoutTerms = new Set(sitemap);
+    withoutTerms.delete(orphanPlant);
+    const orphanCaught = orphansGiven(withoutTerms).includes(orphanPlant);
+    const noindexNegative = `${BASE}/es/download`;
+    const noindexSeen = status.get(noindexNegative) === 200;
+    const noindexQuiet = noindexSeen && !orphansGiven(withoutTerms).includes(noindexNegative);
+    console.log(`\nподсадка сироты: ${orphanPlant.slice(BASE.length)} вычеркнут из карты — ${orphanCaught ? "назван сиротой (1 из 1)" : "НЕ НАЗВАН"}`);
+    console.log(
+      `отрицательный контроль: ${noindexNegative.slice(BASE.length)} (200, не в карте, noindex) — ` +
+        (!noindexSeen ? "НЕ ВИДЕН ОБХОДОМ, контроль пуст" : noindexQuiet ? "сиротой не назван, верно" : "НАЗВАН СИРОТОЙ, ЛОЖНОЕ СРАБАТЫВАНИЕ"),
+    );
+    if (!orphanCaught || !noindexSeen || !noindexQuiet) failed = true;
   }
 
   if (FROZEN) {
@@ -189,6 +277,8 @@ async function main() {
           fetched,
           sitemap: [...sitemap].sort(),
           unreachable,
+          orphans,
+          noindex: [...noindex].sort(),
           depth: Object.fromEntries([...depth].sort()),
           inCount: Object.fromEntries([...inCount].sort()),
         },
@@ -200,7 +290,7 @@ async function main() {
   }
 
   if (failed) {
-    console.log("\nFAIL — подсадка не поймана");
+    console.log(orphans.length ? "\nFAIL — есть сироты, либо подсадка не поймана" : "\nFAIL — подсадка не поймана");
     process.exit(1);
   }
 }
