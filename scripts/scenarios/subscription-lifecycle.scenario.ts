@@ -404,6 +404,66 @@ describe("money going back", () => {
     expect(manual?.status).toBe("active");
     expect(bought?.status).toBe("canceled");
   });
+
+  /**
+   * СЛУЧАЙ [11] — код доступа рядом с покупкой (PROGRESS.md 7.146).
+   *
+   * Это случай [10] ещё раз, но входом служит не рука администратора, а
+   * ПОГАШЕННЫЙ КОД, и именно поэтому он стоит здесь, а не в
+   * `access-code.scenario.ts`: вопрос про возврат денег, и отвечает на него
+   * только настоящий вебхук с настоящей подписью.
+   *
+   * Проверяются ровно три вещи, названные в задании захода:
+   *
+   *   · долг 26 — «столетний срок»: покупка Premium поверх кода не
+   *     сваливается в одну строку с ним, у каждой своя;
+   *   · долг 28 — уровень читается как МАКСИМУМ по живым строкам, поэтому
+   *     код не понижает купившего Premium и не повышается сам;
+   *   · сценарий [10] — возврат Premium оставляет человека на `standard`,
+   *     а не роняет в `free`, потому что отзыв адресован ПЛАТЕЖОМ, а строка
+   *     кода несёт `null` в обеих колонках связи и совпасть с ним не может.
+   */
+  it("a redeemed access code survives a Premium purchase and its refund", async () => {
+    const user = await newUser("u-code-and-premium");
+    scenario("[11] погашенный код + купленный Premium -> Premium возвращён");
+
+    // Строка кода — та же, что кладёт redeemAccessCode: план "manual",
+    // ссылок на Stripe нет ни одной.
+    await raw.execute({
+      sql: `INSERT INTO "AccessCode" (id, code, tier, durationDays, batch, createdAt)
+            VALUES (?, 'AMIGOSCENARIO11', 'standard', 90, 'SCENARIO', ?)`,
+      args: [`ac_${user}`, new Date().toISOString().replace("Z", "+00:00")],
+    });
+    const { redeemAccessCode } = await import("@/lib/access-code");
+    expect(await redeemAccessCode({ id: user, role: "student" }, "amigo-scenario-11")).toMatchObject({
+      ok: true,
+      days: 90,
+    });
+    await invalidateSubscriptionCache(user);
+    await step("код погашен, 90 дней");
+    expect(await tier()).toBe("standard");
+
+    await deliver("checkout.session.completed", premiumCardSession(user));
+    await step("сверху куплен Premium");
+    // Долг 28: максимум по живым строкам, а не уровень новейшей строки.
+    expect(await tier()).toBe("premium");
+
+    // Долг 26: две отдельные строки, а не одна перезаписанная. Иначе
+    // столетний срок Premium наехал бы на 90 дней кода (или наоборот).
+    const afterPurchase = await rows(user);
+    expect(afterPurchase).toHaveLength(2);
+    expect(afterPurchase.map((r) => r.plan).sort()).toEqual(["lifetime", "manual"]);
+
+    expect(await deliver("charge.refunded", refundedCharge(user))).toBe(200);
+    await step("Premium возвращён");
+    // НЕ "free": за код деньги через Stripe не платились, и этот возврат к
+    // нему отношения не имеет.
+    expect(await tier()).toBe("standard");
+
+    const stored = await rows(user);
+    expect(stored.find((r) => r.plan === "manual")?.status).toBe("active");
+    expect(stored.find((r) => r.plan === "lifetime")?.status).toBe("canceled");
+  });
 });
 
 describe("the same purchase made through OXXO, which is paid in cash days later", () => {

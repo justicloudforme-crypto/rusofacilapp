@@ -211,3 +211,16 @@ export function UsersIcon(props: IconProps) {
     </svg>
   );
 }
+
+// Ключ — карточка «Код доступа» на вкладке подписки (PROGRESS.md 7.146).
+// Отличается от LockIcon намеренно: замок означает «закрыто», а здесь
+// речь о том, чем открывают.
+export function KeyIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="8" cy="12" r="3.5" />
+      <path d="M11.5 12H20" />
+      <path d="M17 12v3M20 12v2.5" />
+    </svg>
+  );
+}

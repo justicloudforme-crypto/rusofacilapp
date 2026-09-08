@@ -72,6 +72,7 @@ import {
   GraduationCapIcon,
   BookIcon,
   DictionaryIcon,
+  KeyIcon,
 } from "@/components/profile/ProfileIcons";
 import type { ReactNode } from "react";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -243,6 +244,11 @@ function planDisplayLabel(plan: string, dict: Dictionary): string {
   if (plan === "monthly") return dict.pricing.monthly.name;
   if (plan === "annual") return dict.pricing.annual.name;
   if (plan === "lifetime") return dict.pricing.lifetime.name;
+  // "manual" — выдача не через кассу: ручная выдача администратора и
+  // погашенный код доступа (PROGRESS.md 7.146) кладут одну и ту же строку.
+  // До 08.09.2026 в истории платежей у таких строк печаталось сырое слово
+  // "manual".
+  if (plan === "manual") return dict.profile.planManualLabel;
   return plan;
 }
 
@@ -283,6 +289,12 @@ export default async function ProfilePage({
   // "some paid plan", whose promise is simply an active subscription.
   const paidPlan = typeof query.plan === "string" && isPlanId(query.plan) ? query.plan : null;
   const voucherUnavailable = query.voucher === "unavailable";
+  // Исход погашения кода доступа, принесённый редиректом
+  // /api/access-code/redeem (PROGRESS.md 7.146). Строка из адресной строки
+  // НИЧЕГО не решает: она выбирает, какую фразу показать, а «доступ открыт»
+  // печатается только тогда, когда доступ у аккаунта действительно есть, —
+  // тот же приём, что у CheckoutOutcomeNotice выше.
+  const accessCodeOutcome = typeof query.accessCode === "string" ? query.accessCode : null;
   const justCanceled = query.subscription === "canceled";
   const loggedOutEverywhere = query.loggedOutEverywhere === "1";
   const rawTab = typeof query.tab === "string" ? query.tab : "";
@@ -415,6 +427,33 @@ export default async function ProfilePage({
   // crown next to the plan name in the Subscription tab — see
   // MatryoshkaAvatar.tsx's `premium` prop / entitlement.ts's isPremiumTier.
   const isPremiumUser = isPremiumTier(tier);
+
+  // Что сказать про введённый код (PROGRESS.md 7.146).
+  //
+  // Успех решает АККАУНТ, а не адресная строка: `accessCode=redeemed` —
+  // это лишь то, что маршрут погашения написал в редиректе, а «доступ
+  // открыт» — утверждение о человеке, и печатается оно только когда
+  // `entitled` действительно истинно. Закладка на такой адрес поэтому
+  // ничего не наобещает. Тот же приём, что у CheckoutOutcomeNotice.
+  const accessCodeSucceeded = accessCodeOutcome === "redeemed" && entitled;
+  const accessCodeMessage =
+    accessCodeOutcome === "redeemed"
+      ? entitled
+        ? dict.profile.accessCodeRedeemed
+        : dict.profile.accessCodeNotApplied
+      : accessCodeOutcome === "already_redeemed"
+        ? dict.profile.accessCodeAlreadyRedeemed
+        : accessCodeOutcome === "expired"
+          ? dict.profile.accessCodeExpired
+          : accessCodeOutcome === "revoked"
+            ? dict.profile.accessCodeRevoked
+            : accessCodeOutcome === "already_has_access"
+              ? dict.profile.accessCodeAlreadyHasAccess
+              : accessCodeOutcome === "rate_limited"
+                ? dict.profile.accessCodeRateLimited
+                : // "unknown" и всё, что мог написать в адрес человек сам:
+                  // общий отказ, а не выдуманная причина.
+                  dict.profile.accessCodeUnknown;
 
   const statusLabels: Record<DisplayStatus, string> = {
     active: dict.profile.statusActive,
@@ -1195,6 +1234,61 @@ export default async function ProfilePage({
             </div>
           )}
         </div>
+      </section>
+
+      {/* Код доступа для первых учеников (PROGRESS.md 7.146).
+
+          Отдельной карточкой под подпиской, а не полем внутри неё: код —
+          это НЕ способ оплаты и не второй тариф, а разовое приглашение, и
+          соседство с кнопкой «Оформить подписку» именно это и говорит.
+
+          Форма обычная, с редиректом 303 — как отмена подписки рядом. У
+          страницы профиля нет клиентского состояния, и заводить его ради
+          одного поля значило бы завести второй способ узнать, что доступ
+          появился. */}
+      <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
+        <SectionHeading icon={<KeyIcon className="h-[18px] w-[18px]" />}>
+          {dict.profile.accessCodeHeading}
+        </SectionHeading>
+        <p className="mt-2 text-sm text-foreground/70">{dict.profile.accessCodeIntro}</p>
+
+        {accessCodeOutcome !== null && (
+          <p
+            className={`mt-4 rounded-lg px-3 py-2 text-sm ${
+              accessCodeSucceeded
+                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                : "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+            }`}
+          >
+            {accessCodeMessage}
+          </p>
+        )}
+
+        <form action="/api/access-code/redeem" method="POST" className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <input type="hidden" name="lang" value={lang} />
+          <label className="sr-only" htmlFor="access-code">
+            {dict.profile.accessCodeLabel}
+          </label>
+          <input
+            id="access-code"
+            name="code"
+            type="text"
+            required
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            maxLength={40}
+            placeholder={dict.profile.accessCodePlaceholder}
+            aria-label={dict.profile.accessCodeLabel}
+            className="min-h-11 flex-1 rounded-full border border-black/10 bg-background px-4 text-sm uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal placeholder:text-foreground/40 dark:border-white/20"
+          />
+          <button
+            type="submit"
+            className="tap min-h-11 w-full rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 sm:w-auto"
+          >
+            {dict.profile.accessCodeSubmit}
+          </button>
+        </form>
       </section>
       </>
       )}
