@@ -102,9 +102,9 @@ function compareStories(prod: StoryRow[], local: StoryRow[]): Divergence[] {
       });
     }
     if (p.text.length !== l.text.length) out.push({ kind: "разная длина текста", detail: `${p.title}: ${p.text.length} ≠ ${l.text.length}` });
-    // `topic` намеренно НЕ сводится — см. TOPIC_NOTE ниже: на проде колонка
-    // nullable и пуста во всех строках, локально она NOT NULL DEFAULT 'other'.
-    // Расхождение названо отдельным числом, а не спрятано в общем счёте.
+    // `topic` сверяется наравне с остальными полями с 08.09.2026: до этого
+    // он был единственным, что пересев не сводил (см. TOPIC_NOTE ниже).
+    if ((p.topic ?? "") !== (l.topic ?? "")) out.push({ kind: "разная тема", detail: `${p.title}: прод ${p.topic ?? "NULL"} ≠ лок ${l.topic ?? "NULL"}` });
     if ((p.audioUrl ?? "") !== (l.audioUrl ?? "")) out.push({ kind: "разный audioUrl", detail: p.title });
     if ((p.fullAudioUrl ?? "") !== (l.fullAudioUrl ?? "")) out.push({ kind: "разный fullAudioUrl", detail: p.title });
   }
@@ -265,21 +265,22 @@ async function main() {
     }
     console.log("Ссылки перенесены.");
 
-    // TOPIC_NOTE. `Story.topic` объявлен в схеме как `String @default("other")`,
-    // то есть NOT NULL, и локальная таблица (её строит `prisma db push`)
-    // именно такая. На ПРОДЕ та же колонка nullable и пуста во ВСЕХ строках:
-    // её добавил `ensure-schema-sync.ts`, а он делает голый
-    // `ALTER TABLE … ADD COLUMN` без NOT NULL и без DEFAULT (7.8). Записать
-    // сюда NULL нельзя, не сломав локальную схему, поэтому единственное поле,
-    // которое пересев НЕ сводит, — это `topic`, и его число печатается вслух.
+    // TOPIC_NOTE (переписано 08.09.2026, заход 7.142). Раньше здесь стояло
+    // `topic: s.topic ?? "other"`: колонка была объявлена
+    // `String @default("other")`, локальная таблица от `prisma db push`
+    // выходила NOT NULL, и NULL с прода записать было физически нельзя —
+    // единственное поле, которое пересев НЕ сводил. Теперь схема говорит
+    // правду (`topic String?`), локальная таблица перестроена под неё, и
+    // `topic` переезжает как есть. Число пустых печатается вслух: на проде
+    // их 0 с момента раскатки разметки, и вернувшееся ненулевое число
+    // означало бы новые строки без темы, а не старый долг.
     const nullTopics = prodStories.filter((s) => s.topic == null).length;
     await local.story.deleteMany({});
     for (const s of prodStories) {
-      await local.story.create({ data: { ...s, topic: s.topic ?? "other" } });
+      await local.story.create({ data: s });
     }
     console.log(
-      `Рассказы записаны: ${await local.story.count()}. ` +
-        `topic НЕ сведён у ${nullTopics} строк (на проде NULL, локально 'other') — колонка на проде nullable, в схеме NOT NULL.`,
+      `Рассказы записаны: ${await local.story.count()}. Из них topic пуст на проде: ${nullTopics}.`,
     );
 
     await local.exam.deleteMany({});

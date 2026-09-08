@@ -116,7 +116,7 @@ export interface RelatedLessonRef {
 /** The reverse direction: which lesson a story links to. Returns null for
  * C1 stories — there is no C1 course, so there is honestly nothing to link
  * to (see normalizeLevel). */
-export function getRelatedLessonForStory(story: { id: string; level: string; topic: string }): RelatedLessonRef | null {
+export function getRelatedLessonForStory(story: { id: string; level: string; topic: string | null }): RelatedLessonRef | null {
   const level = normalizeLevel(story.level);
   if (!level) return null;
 
