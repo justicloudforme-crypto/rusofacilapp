@@ -6,6 +6,7 @@ import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./Cat
 import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
+import { resumeRoundAt } from "@/lib/flashcards/resume-round";
 import MatchBoard, { type MatchResult } from "./MatchBoard";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { buildMatchRound } from "@/lib/flashcards/match-round";
@@ -17,6 +18,8 @@ import { learnedProgressText } from "@/lib/flashcards/learned-progress";
 
 export interface MatchAppDict extends CategoryGridDict {
   levelAll: string;
+  /** Подпись значка «нужен план Premium» — одна на весь сайт. */
+  premiumTierBadge: string;
   backToCategories: string;
   instructionLabel: string;
   notEnoughCardsMessage: string;
@@ -26,6 +29,8 @@ export interface MatchAppDict extends CategoryGridDict {
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
+  /** Шаблон «Продолжить со слова «{word}»» — содержит литерал "{word}". */
+  continueWithWord: string;
   /** The "you've learned N of M" line. Two forms — see
    * lib/flashcards/learned-progress.ts for which one prints when. */
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
@@ -74,15 +79,17 @@ export default function MatchApp({
     });
   }, [levelFilter, round, complete]);
 
-  function startRound(size: number, sourceCards: FlashcardRow[], level: FlashcardLevel | "all") {
+  function startRound(size: number, sourceCards: FlashcardRow[], level: FlashcardLevel | "all", startCardId?: string | null) {
     const filtered = level === "all" ? sourceCards : sourceCards.filter((c) => c.level === level);
-    setRound(buildMatchRound(filtered, size));
+    // «Продолжить» кладёт то самое слово НА ДОСКУ (первой парой), а не
+    // надеется, что оно попадёт туда случайно. Размер доски не меняется.
+    setRound(resumeRoundAt(buildMatchRound(filtered, size), filtered, startCardId));
     setRoundKey((k) => k + 1);
     setComplete(false);
     roundStartedAtRef.current = Date.now();
   }
 
-  function selectCategory(next: FlashcardCategory) {
+  function selectCategory(next: FlashcardCategory, startCardId?: string | null) {
     setCategory(next);
     setSizeIndex(0);
     setRoundLoading(true);
@@ -92,7 +99,7 @@ export default function MatchApp({
         const cards = body.cards ?? [];
         setCategoryCards(cards);
         setLimited(Boolean(body.limited));
-        startRound(ROUND_SIZES[0], cards, levelFilter);
+        startRound(ROUND_SIZES[0], cards, levelFilter, startCardId);
       })
       .catch(() => {
         setCategoryCards([]);
@@ -135,7 +142,7 @@ export default function MatchApp({
           same condition. To play a different level, back out to the
           category grid first, same as changing category. */}
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
-        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} premiumLockedLevel={totalProgress.locked > 0 ? "C1" : null} />
       </div>
 
       {inGrid ? (

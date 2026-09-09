@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/config";
+import { accessMarkFor, type AccessRequirement } from "@/lib/access-marks";
 import { fold, tokenize, tokensAreClose } from "./normalize";
 import {
   COLLAPSED_SECTIONS,
@@ -127,10 +128,20 @@ export interface SearchOptions {
   totalLimit?: number;
 }
 
-function lockOf(record: SearchRecord, tier: SearchOptions["tier"]): { locked: boolean; lockReason?: "free" | "premium" } {
-  if (!record.requires) return { locked: false };
-  if (record.requires === "free") return tier === "free" ? { locked: true, lockReason: "free" } : { locked: false };
-  return tier === "premium" ? { locked: false } : { locked: true, lockReason: "premium" };
+/**
+ * Значок строки выдачи — тем же вызовом, каким его берут каталоги.
+ *
+ * Своего правила здесь больше нет. Раньше их было два — это и
+ * `accessMarkFor` — и различались они не только формой: «значок видит
+ * только тот, кто не может открыть» здесь соблюдалось, а вот ЧТО
+ * требуется, каждый раздел индекса решал сам (см. types.ts).
+ */
+function lockOf(
+  record: SearchRecord,
+  tier: SearchOptions["tier"],
+): { locked: boolean; lockReason?: Exclude<AccessRequirement, "free"> } {
+  const mark = accessMarkFor(record.requires ?? "free", tier);
+  return mark ? { locked: true, lockReason: mark } : { locked: false };
 }
 
 export function searchRecords(

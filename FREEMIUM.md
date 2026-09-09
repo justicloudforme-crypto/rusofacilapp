@@ -103,6 +103,36 @@ level or a puzzle ladder, so unlike stories/word games it doesn't get a
 second, Premium-only cut. This may change if the section grows a difficulty
 dimension worth gating on.
 
+## Where the paid badge comes from
+
+One place, for every kind of content: `AccessRequirement` in
+`src/lib/access-marks.ts` — `"free"` / `"subscription"` / `"premium-tier"`,
+one `*Requirement()` function per kind, one component (`AccessMark`), one
+glyph per value (🔒 and 👑), and one pair of labels
+(`dict.access.subscriptionBadge` / `dict.access.premiumTierBadge`, both
+locales). What to draw for a given visitor is `accessMarkFor(requirement,
+tier)`, and the rule is "a mark is shown to whoever cannot open the thing" —
+a subscriber who has access is told nothing.
+
+Surfaces that print it: the story catalog, the story page, the word-game
+picker, the media catalog, the search results window, and the lesson list.
+The C1 pill on `/vocabulary` carries the crown too.
+
+Two things this deliberately does NOT model, both because free-ness there is
+POSITIONAL rather than a property of the row: flashcards and idioms. The
+free sample is "the first N of the list", so no single card can be called
+free, and `flashcardRequirement` / `idiomRequirement` therefore never return
+`"free"`. That over-marks 230 cards and 5 idioms (PROGRESS.md 7.153, debt
+104) and under-marks nothing — the opposite direction was the defect: until
+09.09.2026 the search index called 4553 cards and 2210 puzzles open when
+they were not.
+
+`npm run check:mark-truth` holds the line: a record marked "open" must be
+open to an anonymous visitor by the FREE-SAMPLE rule (`isFreeWordGamePuzzle`,
+`isFreeTrialLesson`, `MediaItem.free`, `Story.isPremium`) — a different code
+path from the one that sets the mark, which is what makes it a check rather
+than a restatement.
+
 ## List-ordering rule
 
 Catalog pages that mix accessible and locked items sort accessible-first

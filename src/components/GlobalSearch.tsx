@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
+import AccessMark from "@/components/ui/AccessMark";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { SearchDemandSession } from "@/lib/search/demand-session";
@@ -458,12 +459,18 @@ export default function GlobalSearch({
                                   <span className="block truncate text-xs text-foreground/50">{hit.subtitle}</span>
                                 )}
                               </span>
-                              {hit.locked && (
-                                <span
-                                  data-testid="search-result-locked"
-                                  className="flex-shrink-0 rounded-full border border-black/10 px-2 py-0.5 text-[11px] text-foreground/60 dark:border-white/20"
-                                >
-                                  {hit.lockReason === "premium" ? t.lockedPremium : t.lockedFree}
+                              {/* Тот же значок, что на карточке рассказа и
+                                  на плитке филворда: один глиф, один цвет,
+                                  одна разметка (`AccessMark`). До
+                                  09.09.2026 выдача печатала свою серую
+                                  пилюлю без глифа — четвёртый вид значка
+                                  платности на сайте. */}
+                              {hit.locked && hit.lockReason && (
+                                <span data-testid="search-result-locked" className="flex-shrink-0">
+                                  <AccessMark
+                                    mark={hit.lockReason}
+                                    label={hit.lockReason === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                                  />
                                 </span>
                               )}
                             </Link>

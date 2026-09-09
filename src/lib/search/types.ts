@@ -7,6 +7,8 @@
  * (PROGRESS.md 7.127), и молча он это делал именно потому, что «раздел»
  * нигде не был назван списком.
  */
+import type { AccessRequirement } from "@/lib/access-marks";
+
 export const SEARCH_SECTIONS = [
   "lesson",
   "exam",
@@ -93,10 +95,20 @@ export interface SearchRecord {
    */
   terms?: string[];
   level?: string;
-  /** Что нужно, чтобы объект открылся: `null` — ничего, `"free"` — любая
-   * подписка, `"premium"` — план Premium. Считается при сборке индекса из
-   * тех же правил, что применяет сама страница (entitlement.ts). */
-  requires?: "free" | "premium" | null;
+  /**
+   * Что нужно, чтобы объект открылся. Три значения — те же, что на всём
+   * сайте (`AccessRequirement` в src/lib/access-marks.ts): `"free"` —
+   * ничего, `"subscription"` — любая активная подписка, `"premium-tier"`
+   * — именно план Premium. Отсутствие поля читается как `"free"`.
+   *
+   * До 09.09.2026 у поиска был СВОЙ словарь из двух слов — `"free"`
+   * значило «нужна подписка», а `"premium"` — «нужен план Premium», — и
+   * своя копия правила у каждого раздела. Копии разошлись с воротами
+   * числом: 2210 пазлов из 3277 и 4553 карточки из 5771 печатались
+   * открытыми, будучи закрытыми. Теперь значение приходит от тех же
+   * функций признака, которыми рисуют значок каталоги.
+   */
+  requires?: AccessRequirement;
 }
 
 /** Одна строка выдачи. */
@@ -109,7 +121,9 @@ export interface SearchHit {
   /** Закрыт ли объект ДЛЯ ЭТОГО посетителя. Ведёт туда же, куда вёл бы
    * открытый, — на страницу, которая сама покажет пейволл. */
   locked: boolean;
-  lockReason?: "free" | "premium";
+  /** Тот же значок, что печатают каталоги: `"subscription"` — 🔒,
+   * `"premium-tier"` — 👑. Приходит от `accessMarkFor`. */
+  lockReason?: Exclude<AccessRequirement, "free">;
 }
 
 export interface SearchSectionResult {

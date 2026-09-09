@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   accessMarkFor,
+  examRequirement,
+  flashcardRequirement,
+  idiomRequirement,
+  lessonRequirement,
   meetsRequirement,
   mediaRequirement,
   storyRequirement,
@@ -88,6 +92,45 @@ describe("accessMarkFor", () => {
       const mark = accessMarkFor(storyRequirement({ level: "B2", isPremium: true, premiumOnly: true }), tier);
       expect(mark === null || typeof mark === "string").toBe(true);
     }
+  });
+});
+
+describe("flashcardRequirement", () => {
+  it("C1 — план Premium, остальное — подписка, а НЕ «открыто»", () => {
+    expect(flashcardRequirement({ level: "C1" })).toBe("premium-tier");
+    for (const level of ["A1", "A2", "B1", "B2"]) {
+      // Ключевая строка захода 09.09.2026: не "free". Бесплатный образец
+      // у карточек позиционный (первые FREE_TRIAL_LIMITS.flashcards на
+      // тему), и «открыта» про отдельную строку — враньё: индекс поиска
+      // печатал так 4783 карточки, из которых аноним открывает 230.
+      expect(flashcardRequirement({ level })).toBe("subscription");
+    }
+  });
+});
+
+describe("idiomRequirement", () => {
+  it("literary и C1 — план Premium, остальное — подписка", () => {
+    expect(idiomRequirement({ level: "A2", category: "literary" })).toBe("premium-tier");
+    expect(idiomRequirement({ level: "C1", category: "proverbs" })).toBe("premium-tier");
+    expect(idiomRequirement({ level: "A2", category: "proverbs" })).toBe("subscription");
+  });
+});
+
+describe("lessonRequirement", () => {
+  it("первый урок каждого уровня открыт, остальные — по подписке", () => {
+    for (const level of ["a1", "a2", "b1", "b2"]) {
+      expect(lessonRequirement({ level, slug: "1" })).toBe("free");
+      expect(lessonRequirement({ level, slug: "2" })).toBe("subscription");
+      expect(lessonRequirement({ level, slug: "30" })).toBe("subscription");
+    }
+  });
+
+  it("слоя Premium у уроков и экзаменов нет ни одного", () => {
+    expect(examRequirement()).toBe("subscription");
+    const marks = new Set(
+      ["1", "2", "30"].map((slug) => lessonRequirement({ level: "b2", slug })),
+    );
+    expect(marks.has("premium-tier")).toBe(false);
   });
 });
 

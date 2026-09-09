@@ -7,6 +7,7 @@ import ContinueStrip from "./ContinueStrip";
 import RecallCard, { type RecallCardDict, type RecallDirection } from "./RecallCard";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
+import { resumeRoundAt } from "@/lib/flashcards/resume-round";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { buildRecallRound, checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
@@ -20,6 +21,8 @@ import { learnedProgressText } from "@/lib/flashcards/learned-progress";
 
 export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   levelAll: string;
+  /** Подпись значка «нужен план Premium» — одна на весь сайт. */
+  premiumTierBadge: string;
   directionEsToRuLabel: string;
   directionRuToEsLabel: string;
   backToCategories: string;
@@ -30,6 +33,8 @@ export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
+  /** Шаблон «Продолжить со слова «{word}»» — содержит литерал "{word}". */
+  continueWithWord: string;
   /** The "you've learned N of M" line. Two forms — see
    * lib/flashcards/learned-progress.ts for which one prints when. */
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
@@ -97,9 +102,12 @@ export default function RecallApp({
 
   const card = round[roundIndex];
 
-  function startRound(sourceCards: FlashcardRow[]) {
+  function startRound(sourceCards: FlashcardRow[], startCardId?: string | null) {
     const pool = levelFilter === "all" ? sourceCards : sourceCards.filter((c) => c.level === levelFilter);
-    setRound(buildRecallRound(pool, srsMap, ROUND_SIZE));
+    // «Продолжить» открывает то самое слово: у круга нет позиции, поэтому
+    // слово ставится ПЕРВЫМ. Состав круга при этом не растёт — см.
+    // resumeRoundAt.
+    setRound(resumeRoundAt(buildRecallRound(pool, srsMap, ROUND_SIZE), pool, startCardId));
     setRoundIndex(0);
     setResult(null);
     setScore({ correct: 0, total: 0 });
@@ -108,14 +116,14 @@ export default function RecallApp({
     roundStartedAtRef.current = Date.now();
   }
 
-  function selectCategory(next: FlashcardCategory) {
+  function selectCategory(next: FlashcardCategory, startCardId?: string | null) {
     setCategory(next);
     setRoundLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
       .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
         setLimited(Boolean(body.limited));
-        startRound(body.cards ?? []);
+        startRound(body.cards ?? [], startCardId);
       })
       .catch(() => startRound([]))
       .finally(() => setRoundLoading(false));
@@ -172,7 +180,7 @@ export default function RecallApp({
         <StreakToast label={dict.streakToastLabel.replace("{count}", String(streakToast))} />
       )}
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
-        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} premiumLockedLevel={totalProgress.locked > 0 ? "C1" : null} />
 
         <div className="ml-auto flex gap-1 rounded-full border border-black/10 p-1 dark:border-white/30">
           <button

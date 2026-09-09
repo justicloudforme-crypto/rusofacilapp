@@ -3,7 +3,6 @@
 import type { FlashcardCategory } from "@/lib/flashcards";
 import type { RecentCategory } from "@/lib/flashcards/summary-client";
 import { flashcardCategoryIcons } from "@/lib/flashcards/category-icons";
-import { flashcardCategoryIconColors } from "@/lib/flashcards/category-icon-colors";
 import { hapticTap } from "@/lib/haptics";
 import ProgressBar from "@/components/ui/ProgressBar";
 import type { Locale } from "@/i18n/config";
@@ -14,13 +13,39 @@ export interface ContinueStripDict {
   continueTitle: string;
   categoryLabels: Record<FlashcardCategory, string>;
   cardCountLabel: PluralForms; // templates, contain literal "{count}"
+  /** «Продолжить со слова «{word}»» — шаблон, содержит литерал "{word}". */
+  continueWithWord: string;
 }
 
-/** Up to 3 most-recently-studied categories, from POST /api/flashcards/
- * summary's `recent` (real FlashcardProgress/local-progress activity, no
- * new metric) — lets a returning visitor jump back into where they left
- * off instead of re-picking from all 23 categories every time. Reuses the
- * same tile look as CategoryGrid's own cards, just above the grid. */
+/**
+ * «Продолжить» — до трёх тем, в которых человек недавно занимался.
+ *
+ * ЧЕМ ЭТОТ БЛОК ОТЛИЧАЕТСЯ ОТ СЕТКИ КАТЕГОРИЙ ПОД НИМ, и почему это
+ * пришлось менять. До 09.09.2026 отличий не было ни одного — и не по
+ * недосмотру: прежний комментарий здесь прямо требовал, чтобы плитка
+ * «Продолжить» и плитка каталога были «одним и тем же», вплоть до
+ * совпадения высоты (139 px против 151) и лесенки колонок. По
+ * скриншоту человека 06.09.2026 это и читалось: два одинаковых ряда
+ * плиток с одной иконкой и одним заголовком, второй похож на дубль
+ * первого.
+ *
+ * Теперь это не плитки, а СТРОКИ, и различие держится на четырёх
+ * независимых признаках сразу, а не на одном оттенке:
+ *
+ *   1. форма — строка во всю ширину против квадратной плитки в сетке
+ *      2/3/4 колонок; на телефоне тоже строка, без горизонтальной
+ *      прокрутки, которая была здесь раньше;
+ *   2. рамка — левая полоса цвета акцента (`border-l-4 border-primary`)
+ *      и подложка `bg-primary/5`, каких у карточек каталога нет;
+ *   3. содержимое — названо СЛОВО, на котором человек остановился;
+ *      сетка категорий про слова не говорит ничего;
+ *   4. стрелка «→» справа: это продолжение занятия, а не вход в раздел.
+ *
+ * И главное — нажатие. Оно открывает не начало темы, а ту самую
+ * карточку (`item.lastCardId`, максимум `updatedAt` внутри темы, см.
+ * /api/flashcards/summary). Если её нет — тема открывается с начала,
+ * ровно как раньше.
+ */
 export default function ContinueStrip({
   dict,
   recent,
@@ -28,55 +53,54 @@ export default function ContinueStrip({
 }: {
   dict: ContinueStripDict;
   recent: RecentCategory[];
-  onSelectCategory: (category: FlashcardCategory) => void;
+  onSelectCategory: (category: FlashcardCategory, startCardId?: string | null) => void;
 }) {
   if (recent.length === 0) return null;
 
   return (
-    <div className="mb-6">
+    <div className="mb-8" data-testid="continue-strip">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/50">{dict.continueTitle}</h2>
-      {/* The same column ladder as CategoryGrid below it, `lg:grid-cols-4`
-          included. It stopped at three, so from 1024 up the two blocks on
-          one page were a 3-wide row of 200px tiles above a 4-wide grid of
-          147px tiles — measured in both locales. They are the same kind of
-          tile for the same kind of thing; they now break at the same
-          widths. */}
-      <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-4">
+      <div className="flex flex-col gap-2">
         {recent.map((item) => {
           const percent = item.total === 0 ? 0 : Math.round((item.known / item.total) * 100);
           return (
             <button
               key={item.category}
               type="button"
+              data-testid="continue-row"
+              data-category={item.category}
+              data-card={item.lastCardId ?? undefined}
               onClick={() => {
                 hapticTap();
-                onSelectCategory(item.category);
+                onSelectCategory(item.category, item.lastCardId);
               }}
-              // `h-full` + `mt-auto` on the bar is what puts the progress
-              // bars of a row on one line: a tile is as tall as the tallest
-              // in its row, and without it the bar floated up under a
-              // one-line label while its neighbour's sat under two. Measured
-              // on /es at 1024 before the change: bars in one grid row at
-              // y=818 and y=837, 19px apart.
-              className="tap flex h-full w-48 shrink-0 flex-col items-start gap-2 rounded-2xl border border-black/10 bg-background p-4 text-left transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30 sm:w-auto"
+              // min-h-14 (56px), не 44: строка несёт две строки текста и
+              // полосу прогресса, и 44 их не вмещают. Тап-таргет заведомо
+              // больше минимума и на 320 px, и на 768.
+              className="tap flex min-h-14 w-full items-center gap-3 rounded-2xl border border-l-4 border-black/10 border-l-primary bg-primary/5 p-3 text-left transition-colors hover:bg-primary/10 active:bg-primary/10 dark:border-white/20 dark:border-l-primary-400 dark:bg-primary-400/10 dark:hover:bg-primary-400/15"
             >
-              {/* Icon, label box and count are the same sizes as
-                  CategoryGrid's, so a "Continue" tile and a catalogue tile
-                  are the same height — 139px against 151px before this. The
-                  two blocks show the same categories on purpose (started
-                  ones above, all of them below), which is exactly why they
-                  must not be two different-looking things. */}
-              <span
-                className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${flashcardCategoryIconColors[item.category]}`}
-                aria-hidden
-              >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-lg" aria-hidden>
                 {flashcardCategoryIcons[item.category]}
               </span>
-              <span className="min-h-11 text-sm font-medium leading-snug">{dict.categoryLabels[item.category]}</span>
-              <span className="text-xs text-foreground/50">
-                {item.known}/{item.total} · {percent}%
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">
+                  {item.lastCardWord
+                    ? dict.continueWithWord.replace("{word}", item.lastCardWord)
+                    : dict.categoryLabels[item.category]}
+                </span>
+                <span className="mt-0.5 block truncate text-xs text-foreground/60">
+                  {dict.categoryLabels[item.category]} · {item.known}/{item.total} · {percent}%
+                </span>
+                <ProgressBar
+                  percent={percent}
+                  tone="success"
+                  className="mt-1.5 w-full"
+                  ariaLabel={dict.categoryLabels[item.category]}
+                />
               </span>
-              <ProgressBar percent={percent} tone="success" className="mt-auto w-full pt-1" ariaLabel={dict.categoryLabels[item.category]} />
+              <span aria-hidden className="shrink-0 text-lg text-primary-text dark:text-primary-400">
+                →
+              </span>
             </button>
           );
         })}

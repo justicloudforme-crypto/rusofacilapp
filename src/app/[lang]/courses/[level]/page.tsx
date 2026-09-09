@@ -7,6 +7,9 @@ import { isLevelSlug, levelMeta, levelSlugs } from "@/lib/courses";
 import { getExamContent } from "@/lib/exams/content";
 import { localizeExamText } from "@/lib/exams/localize";
 import { getCurrentUser } from "@/lib/auth";
+import { getEntitlementTierFor } from "@/lib/entitlement";
+import { accessMarkFor, examRequirement, lessonRequirement } from "@/lib/access-marks";
+import AccessMark from "@/components/ui/AccessMark";
 import { getLevelLessonStatuses, type LessonStatus } from "@/lib/progress";
 import LevelGlossaryProgressBar from "@/components/glossary/LevelGlossaryProgressBar";
 import JsonLd from "@/components/seo/JsonLd";
@@ -54,6 +57,12 @@ export default async function LevelPage({
   // itself stays browsable without an account, same as before.
   const user = await getCurrentUser();
   const lessonStatuses = user ? await getLevelLessonStatuses(user.id, level) : {};
+  // Значок платности. До 09.09.2026 его здесь не было вовсе: 116 уроков
+  // из 120 отдают словарь, упражнения и слайды только по подписке, а
+  // список уроков об этом молчал — «платность есть, знака нет». Правило
+  // и глиф те же, что у рассказов и филвордов; свой уровень посетителя
+  // читается тем же `tierOfAccount`, что и везде (7.145).
+  const tier = await getEntitlementTierFor(user);
 
   // Milestone exams (one per 10 lessons) — resolved up front (not inside
   // the render loop below, since getExamContent is now async: it checks
@@ -128,6 +137,8 @@ export default async function LevelPage({
               : status === "attempted"
                 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
                 : "bg-foreground/10";
+          const lessonMark = accessMarkFor(lessonRequirement({ level, slug: String(lessonNumber) }), tier);
+          const examMark = accessMarkFor(examRequirement(), tier);
           const statusLabel =
             status === "passed"
               ? dict.courses.lessonStatusPassed
@@ -158,6 +169,14 @@ export default async function LevelPage({
                   )}
                 </span>
                 <span className="text-sm leading-6">{lesson}</span>
+                {lessonMark && (
+                  <span className="ml-auto shrink-0">
+                    <AccessMark
+                      mark={lessonMark}
+                      label={lessonMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                    />
+                  </span>
+                )}
               </Link>
               {milestone && (
                 <Link
@@ -170,6 +189,14 @@ export default async function LevelPage({
                   <span className="text-sm font-medium leading-6 text-primary-text dark:text-primary-400">
                     {localizeExamText(milestone.exam.title, lang, dict.courses.examNames)}
                   </span>
+                  {examMark && (
+                    <span className="ml-auto shrink-0">
+                      <AccessMark
+                        mark={examMark}
+                        label={examMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                      />
+                    </span>
+                  )}
                 </Link>
               )}
             </li>

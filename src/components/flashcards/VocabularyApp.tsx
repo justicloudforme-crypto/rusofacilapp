@@ -35,9 +35,9 @@ export interface VocabularyDict extends FlashcardsDict {
   subtitleMatch: string;
   subtitleIdioms: string;
   idioms: IdiomsDict;
-  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
-  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
-  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -173,9 +173,11 @@ export default function VocabularyApp({
               categoryLabels: dict.categoryLabels,
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+              premiumTierBadge: dict.premiumTierBadge,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
+              continueWithWord: dict.continueWithWord,
               learnedProgressLabel: dict.learnedProgressLabel,
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
             }}
@@ -190,9 +192,11 @@ export default function VocabularyApp({
               categoryLabels: dict.categoryLabels,
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+              premiumTierBadge: dict.premiumTierBadge,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
+              continueWithWord: dict.continueWithWord,
               learnedProgressLabel: dict.learnedProgressLabel,
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
             }}
@@ -207,9 +211,11 @@ export default function VocabularyApp({
               categoryLabels: dict.categoryLabels,
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
+              premiumTierBadge: dict.premiumTierBadge,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
+              continueWithWord: dict.continueWithWord,
               learnedProgressLabel: dict.learnedProgressLabel,
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
             }}

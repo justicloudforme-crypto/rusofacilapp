@@ -7,6 +7,7 @@ import ContinueStrip from "./ContinueStrip";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
+import { resumeRoundAt } from "@/lib/flashcards/resume-round";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
 import { checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { buildFillBlankRound } from "@/lib/flashcards/fill-blank-round";
@@ -21,6 +22,8 @@ import { learnedProgressText } from "@/lib/flashcards/learned-progress";
 
 export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   levelAll: string;
+  /** Подпись значка «нужен план Premium» — одна на весь сайт. */
+  premiumTierBadge: string;
   backToCategories: string;
   noCategoryCardsMessage: string;
   roundCompleteLabel: PluralForms; // templates, contain literal "{correct}" and "{total}". Inflects with {total}.
@@ -29,6 +32,8 @@ export interface FillBlankAppDict extends CategoryGridDict, FillBlankCardDict {
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
+  /** Шаблон «Продолжить со слова «{word}»» — содержит литерал "{word}". */
+  continueWithWord: string;
   /** The "you've learned N of M" line. Two forms — see
    * lib/flashcards/learned-progress.ts for which one prints when. */
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
@@ -85,9 +90,10 @@ export default function FillBlankApp({
 
   const card = round[roundIndex];
 
-  function startRound(sourceCards: FlashcardRow[]) {
+  function startRound(sourceCards: FlashcardRow[], startCardId?: string | null) {
     const pool = levelFilter === "all" ? sourceCards : sourceCards.filter((c) => c.level === levelFilter);
-    setRound(buildFillBlankRound(pool, srsMap, ROUND_SIZE));
+    // См. RecallApp: слово, на котором остановились, идёт первым.
+    setRound(resumeRoundAt(buildFillBlankRound(pool, srsMap, ROUND_SIZE), pool, startCardId));
     setRoundIndex(0);
     setResult(null);
     setScore({ correct: 0, total: 0 });
@@ -96,14 +102,14 @@ export default function FillBlankApp({
     roundStartedAtRef.current = Date.now();
   }
 
-  function selectCategory(next: FlashcardCategory) {
+  function selectCategory(next: FlashcardCategory, startCardId?: string | null) {
     setCategory(next);
     setRoundLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
       .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
         setLimited(Boolean(body.limited));
-        startRound(body.cards ?? []);
+        startRound(body.cards ?? [], startCardId);
       })
       .catch(() => startRound([]))
       .finally(() => setRoundLoading(false));
@@ -159,7 +165,7 @@ export default function FillBlankApp({
         <StreakToast label={dict.streakToastLabel.replace("{count}", String(streakToast))} />
       )}
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
-        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} premiumLockedLevel={totalProgress.locked > 0 ? "C1" : null} />
       </div>
 
       {inGrid ? (

@@ -26,8 +26,8 @@ function games(count: number): SearchRecord[] {
 const INDEX: SearchRecord[] = [
   { section: "page", id: "stories", path: "/stories", title: "Cuentos", titleRu: "Рассказы", terms: ["/stories"] },
   { section: "page", id: "pricing", path: "/pricing", title: "Precios", titleRu: "Цены", terms: ["Planes y precios"] },
-  { section: "story", id: "s1", path: "/stories/s1", title: "Три медведя", subtitle: "A1", requires: "free" },
-  { section: "story", id: "s2", path: "/stories/s2", title: "Тихий Дон", subtitle: "C1", requires: "premium" },
+  { section: "story", id: "s1", path: "/stories/s1", title: "Три медведя", subtitle: "A1", requires: "subscription" },
+  { section: "story", id: "s2", path: "/stories/s2", title: "Тихий Дон", subtitle: "C1", requires: "premium-tier" },
   { section: "grammar", id: "/gramatica", path: "/gramatica", esOnly: true, title: "Gramática rusa explicada en español" },
   { section: "flashcard", id: "c1", path: "/vocabulary/comida", pathRu: "/vocabulary", title: "хлеб — pan", subtitle: "A1" },
   ...games(30),
@@ -101,7 +101,7 @@ describe("свёртка игрового раздела", () => {
         id: "WORD_SEARCH/A1/2",
         path: "/word-games/WORD_SEARCH/A1/2",
         title: "Sopa de letras en ruso, nivel A1 nº 2 (12 palabras)",
-        requires: "premium",
+        requires: "premium-tier",
       },
     ];
     const anonymous = searchRecords(premium, "Sopa de letras en ruso, nivel A1 nº 2 (12 palabras)", OPTIONS);
@@ -109,7 +109,7 @@ describe("свёртка игрового раздела", () => {
     expect(anonymous.sections[0].collapsed).toBe(false);
     expect(hit.href).toBe("/es/word-games/WORD_SEARCH/A1/2");
     expect(hit.locked).toBe(true);
-    expect(hit.lockReason).toBe("premium");
+    expect(hit.lockReason).toBe("premium-tier");
 
     // Контроль: пометка умеет пропадать — иначе строка выше доказывала бы
     // только то, что locked прибит к true.
@@ -128,7 +128,7 @@ describe("платное не раздаётся, но и не прячется"
     const hit = res.sections.find((s) => s.section === "story")!.hits[0];
     expect(hit.href).toBe("/es/stories/s2");
     expect(hit.locked).toBe(true);
-    expect(hit.lockReason).toBe("premium");
+    expect(hit.lockReason).toBe("premium-tier");
   });
 
   it("состав выдачи от уровня доступа не зависит — меняется только пометка", () => {
@@ -138,7 +138,7 @@ describe("платное не раздаётся, но и не прячется"
     expect(premium.sections[0].hits[0].locked).toBe(false);
     // …а у подписчика без Premium — по-прежнему закрыт.
     const standard = searchRecords(INDEX, "Тихий Дон", { ...OPTIONS, tier: "standard" });
-    expect(standard.sections[0].hits[0].lockReason).toBe("premium");
+    expect(standard.sections[0].hits[0].lockReason).toBe("premium-tier");
     // Рассказ, которому хватает любой подписки, у него открыт.
     const bear = searchRecords(INDEX, "Три медведя", { ...OPTIONS, tier: "standard" });
     expect(bear.sections[0].hits[0].locked).toBe(false);

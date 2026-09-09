@@ -1,9 +1,13 @@
 "use client";
 
 import { flashcardLevels, type FlashcardLevel } from "@/lib/flashcards";
+import { ACCESS_MARK_ICON } from "@/lib/access-marks";
 
 export interface LevelFilterDict {
   levelAll: string;
+  /** Подпись значка «нужен план Premium» — одна на весь сайт
+   * (`dict.access.premiumTierBadge`). */
+  premiumTierBadge: string;
 }
 
 /** The ВСЕ/A1/A2/B1 pill row shared by every vocabulary study mode.
@@ -20,11 +24,26 @@ export default function LevelFilterBar({
   value,
   onChange,
   disabled = false,
+  premiumLockedLevel = null,
 }: {
   dict: LevelFilterDict;
   value: FlashcardLevel | "all";
   onChange: (level: FlashcardLevel | "all") => void;
   disabled?: boolean;
+  /**
+   * Уровень, который этому посетителю НЕ откроется без плана Premium.
+   *
+   * До 09.09.2026 значка здесь не было вовсе: кнопка C1 стояла в ряду
+   * наравне с A1–B2, а за ней у неоплатившего лежала пустая сетка — 988
+   * карточек из 5771 отдаются только плану Premium, и страница об этом
+   * молчала. «Платность есть — знака нет», ровно тот класс.
+   *
+   * Признак приходит от вызывающего, а не собирается здесь: кто именно
+   * закрыт, знает только ответ `/api/flashcards/summary`
+   * (`premiumOnlyWords` — разность целого банка и доступного этому
+   * тарифу), то есть тот же гейт, который режет выдачу.
+   */
+  premiumLockedLevel?: FlashcardLevel | null;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -53,6 +72,11 @@ export default function LevelFilterBar({
           }`}
         >
           {lvl}
+          {premiumLockedLevel === lvl && (
+            <span aria-hidden className="ml-1" title={dict.premiumTierBadge}>
+              {ACCESS_MARK_ICON["premium-tier"]}
+            </span>
+          )}
         </button>
       ))}
     </div>

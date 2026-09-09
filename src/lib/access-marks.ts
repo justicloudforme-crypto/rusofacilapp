@@ -30,6 +30,7 @@
  * `free-tier.ts` и `free-trial-limits.ts`.
  */
 import { isFreeWordGamePuzzle } from "./word-games/free-tier";
+import { isFreeTrialLesson } from "./courses";
 
 /** Что нужно, чтобы открыть эту единицу содержимого. */
 export type AccessRequirement =
@@ -73,6 +74,54 @@ export function wordGameRequirement(puzzle: {
 }): AccessRequirement {
   if (puzzle.curved || puzzle.premiumOnly) return "premium-tier";
   return isFreeWordGamePuzzle(puzzle) ? "free" : "subscription";
+}
+
+/**
+ * Карточка словаря. Уровень C1 — план Premium (то же правило, что у
+ * `canAccessLevel`); всё остальное — подписка.
+ *
+ * «Подписка», а не «открыто»: бесплатный образец у карточек — это
+ * `FREE_TRIAL_LIMITS.flashcards` штук на тему, то есть 230 карточек из
+ * 5771 на 09.09.2026, и какие именно, решает ПОРЯДОК выдачи, а не
+ * свойство строки. Значит про отдельную карточку «открыта всем» сказать
+ * нельзя, и поле `free` у неё было бы враньём — ровно тем, из-за
+ * которого поиск печатал 4783 карточки как открытые, когда открыто 230.
+ * Кто попал в образец, знает только тот, кто режет список; здесь
+ * известно лишь требование строки.
+ */
+export function flashcardRequirement(card: { level: string }): AccessRequirement {
+  return card.level === "C1" ? "premium-tier" : "subscription";
+}
+
+/**
+ * Идиома. `literary` закрыта сверх маленькой пробы даже подписчику
+ * `standard` (`LITERARY_IDIOM_LIMITS`), то есть требует плана Premium;
+ * остальные — подписки. Уровень C1 у идиом сегодня не встречается ни
+ * разу (все 771 строки помечены A2, см. схему), но правило записано
+ * рядом с остальными, а не «по данным».
+ */
+export function idiomRequirement(idiom: { level?: string | null; category?: string | null }): AccessRequirement {
+  if (idiom.level === "C1" || idiom.category === "literary") return "premium-tier";
+  return "subscription";
+}
+
+/**
+ * Урок курса. Первый урок каждого уровня открыт целиком
+ * (`isFreeTrialLesson`); у остальных грамматика видна всем, а словарь,
+ * упражнения и слайды — по подписке. Слоя Premium у уроков нет.
+ *
+ * Признак зовёт `isFreeTrialLesson`, а не повторяет «lesson === "1"»:
+ * это ровно тот приём, каким `wordGameRequirement` зовёт
+ * `isFreeWordGamePuzzle`.
+ */
+export function lessonRequirement(lesson: { level: string; slug: string }): AccessRequirement {
+  return isFreeTrialLesson(lesson.level, lesson.slug) ? "free" : "subscription";
+}
+
+/** Экзамен уровня. Открыт любому подписчику и никому больше
+ * (`hasAnyAccess` на странице экзамена), слоя Premium нет. */
+export function examRequirement(): AccessRequirement {
+  return "subscription";
 }
 
 /** Медиа: бесплатная витрина против всего остального. Отдельного слоя Premium у медиа нет. */

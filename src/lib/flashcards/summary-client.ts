@@ -13,6 +13,12 @@ export interface RecentCategory {
   total: number;
   known: number;
   lastActivityAt: number;
+  /** Карточка, на которой человек остановился в этой теме, — строка с
+   * наибольшим `updatedAt`. `null`, если под текущим фильтром уровня её
+   * нет; тогда «Продолжить» открывает тему с начала. */
+  lastCardId: string | null;
+  /** Русское слово этой карточки, чтобы блок мог его назвать. */
+  lastCardWord: string | null;
 }
 
 export interface CategorySummaryResponse {
