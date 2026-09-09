@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { storyLevels } from "@/lib/stories";
 import { groupByLevel } from "@/lib/catalog-link-index";
+import StoryTitle from "@/components/stories/StoryTitle";
+import type { StoryTitleView } from "@/lib/story-title";
 
 export interface CatalogLinkIndexDict {
   indexTitle: string;
@@ -9,7 +11,7 @@ export interface CatalogLinkIndexDict {
 
 export interface StoryLinkIndexRow {
   id: string;
-  title: string;
+  titles: StoryTitleView;
   level: string;
 }
 
@@ -45,7 +47,14 @@ export default function StoryLinkIndex({
   stories: readonly StoryLinkIndexRow[];
   dict: CatalogLinkIndexDict;
 }) {
-  const groups = groupByLevel(stories, storyLevels, lang);
+  // Сортировка — по той строке, которую читатель ВИДИТ крупно: на `/es`
+  // список, упорядоченный по русским названиям, для него выглядит
+  // неупорядоченным вовсе.
+  const groups = groupByLevel(
+    stories.map((story) => ({ ...story, title: story.titles.primary })),
+    storyLevels,
+    lang,
+  );
   if (groups.length === 0) return null;
 
   return (
@@ -69,7 +78,7 @@ export default function StoryLinkIndex({
                     href={`/${lang}/stories/${story.id}`}
                     className="block py-1 text-sm leading-6 text-foreground/80 underline-offset-4 hover:underline"
                   >
-                    {story.title}
+                    <StoryTitle titles={story.titles} />
                   </Link>
                 </li>
               ))}

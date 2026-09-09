@@ -159,7 +159,10 @@ export async function loadSearchSources(): Promise<SearchSources> {
     soften("экзамены", loadExams, []),
     soften(
       "рассказы",
-      () => db.story.findMany({ select: { id: true, title: true, level: true, isPremium: true, premiumOnly: true } }),
+      () =>
+        db.story.findMany({
+          select: { id: true, title: true, titleEs: true, level: true, isPremium: true, premiumOnly: true },
+        }),
       [],
     ),
     soften(

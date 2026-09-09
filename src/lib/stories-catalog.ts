@@ -20,6 +20,13 @@ import { isClassicStory, isStoryLevel, isStoryTopic, type StoryLevel, type Story
 export interface StoryCatalogRow {
   id: string;
   title: string;
+  /** Название для испаноговорящего читателя. Null — испанского названия
+   * ещё нет, и тогда везде печатается только `title` (см.
+   * src/lib/story-title.ts). Локаль-независимо намеренно: каталог
+   * кешируется один раз на обе локали, а выбор строки делает
+   * `storyTitles` в момент рендера — тот же приём, что у `author` и
+   * `localizeStoryAuthor` ниже. */
+  titleEs: string | null;
   author: string;
   level: StoryLevel;
   isPremium: boolean;
@@ -60,6 +67,7 @@ export async function getStoryCatalog(): Promise<StoryCatalogRow[]> {
         select: {
           id: true,
           title: true,
+          titleEs: true,
           author: true,
           level: true,
           isPremium: true,

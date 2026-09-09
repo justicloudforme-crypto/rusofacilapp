@@ -17,6 +17,8 @@ import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
 import { frozenMediaDescription, mediaDescription } from "@/lib/media/metadata";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
+import StoryTitle from "@/components/stories/StoryTitle";
+import { storyTitles } from "@/lib/story-title";
 
 export async function generateMetadata({
   params,
@@ -177,7 +179,7 @@ export default async function MediaDetailPage({
                       <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
                         {dict.crossLinks.storyLabel}
                       </span>
-                      {story.title}
+                      <StoryTitle titles={storyTitles(story, lang)} />
                     </Link>
                   </li>
                 ))}

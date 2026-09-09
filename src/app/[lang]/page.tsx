@@ -16,6 +16,8 @@ import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { organizationJsonLd, websiteJsonLd, routeAlternates } from "@/lib/site";
 import { localizeStoryAuthor } from "@/lib/story-author";
+import { storyTitles } from "@/lib/story-title";
+import StoryTitle from "@/components/stories/StoryTitle";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
 import { basePricesText, marked, priceCopy, withBasePrices, withPrice } from "@/lib/pricing-display";
 import {
@@ -296,7 +298,11 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
                     {localizeStoryAuthor(preview.previewStory.author, lang)}
                   </span>
                 </div>
-                <h3 className="mt-1 font-medium">{preview.previewStory.title}</h3>
+                <StoryTitle
+                  as="h3"
+                  titles={storyTitles(preview.previewStory, lang)}
+                  className="mt-1 font-medium"
+                />
                 {preview.previewStory.description && (
                   <p className="text-sm leading-6 text-foreground/70">{preview.previewStory.description}</p>
                 )}

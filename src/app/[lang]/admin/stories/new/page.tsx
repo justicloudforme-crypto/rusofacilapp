@@ -27,6 +27,7 @@ export default async function NewStoryPage({
       story={{
         id: null,
         title: "",
+        titleEs: "",
         author: "",
         level: "A1",
         topic: "other",

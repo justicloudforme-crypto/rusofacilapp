@@ -55,6 +55,7 @@ export function isClassicStory(author: string): boolean {
 
 export interface StoryInput {
   title: string;
+  titleEs: string | null;
   author: string;
   level: StoryLevel;
   text: string;
@@ -196,6 +197,14 @@ export function validateStoryInput(body: unknown): StoryValidationResult {
   const title = typeof v.title === "string" ? v.title.trim() : "";
   if (!title) return { valid: false, error: "title_required" };
 
+  // Испанское название необязательно: пусто — рассказ везде печатается
+  // ровно так, как печатался до появления колонки (src/lib/story-title.ts).
+  // Пустая строка ложится в базу как NULL, а не как "": «нет названия» —
+  // это отсутствие значения, и сторож check:story-title-es краснеет на
+  // записанной пустоте.
+  const titleEsRaw = typeof v.titleEs === "string" ? v.titleEs.trim() : "";
+  const titleEs = titleEsRaw || null;
+
   const author = typeof v.author === "string" ? v.author.trim() : "";
   if (!author) return { valid: false, error: "author_required" };
 
@@ -225,6 +234,6 @@ export function validateStoryInput(body: unknown): StoryValidationResult {
 
   return {
     valid: true,
-    value: { title, author, level, text, description, translationEs, audioUrl, isPremium, premiumOnly, topic },
+    value: { title, titleEs, author, level, text, description, translationEs, audioUrl, isPremium, premiumOnly, topic },
   };
 }

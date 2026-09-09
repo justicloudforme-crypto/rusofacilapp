@@ -31,9 +31,12 @@
 // Telegram account that does not exist. They are out of scope by
 // construction, not by exception.
 //
-// THE ALLOWLIST IS PINNED BY COUNT. Four files are allowed to keep the old
-// spelling, each for a reason written next to it, and each with the exact
-// number of hits expected. A new mistake in an allowlisted file therefore
+// THE ALLOWLIST IS PINNED BY COUNT. The files in ALLOWED below are allowed
+// to keep the old spelling, each for a reason written next to it, and each
+// with the exact number of hits expected. (This line used to say "Four
+// files" while the map already held seventeen — a number in prose that
+// nobody reruns. It is deliberately not a number any more: the run prints
+// the real count, and the map is the list.) A new mistake in an allowlisted file therefore
 // still fails the check: the count no longer matches. A hit that
 // disappears fails too, so a fixed file cannot quietly keep its exemption.
 import { execFileSync } from "node:child_process";
@@ -80,6 +83,26 @@ const ALLOWED = new Map([
         "Quotes the production Story.author literal twice while reporting debt 49. " +
         "The value cannot be rewritten before 25.09.2026 (frozen-page byline), so " +
         "the report that names it cannot spell it any other way.",
+    },
+  ],
+  [
+    // Заведено 08.09.2026 (PROGRESS.md 7.150). Фикстура рассказов —
+    // побайтовая выгрузка НАСТОЯЩИХ строк прода, и `author` в ней тот же
+    // самый литерал `Story.author`, что и в двух исключениях выше (долг
+    // 49, 277 живых строк). Переписать его здесь значило бы держать в
+    // фикстуре значение, которого на проде нет, — то есть проверять
+    // страницу, которой не существует. Два попадания: два из трёх
+    // рассказов фикстуры — оригиналы проекта, третий («Хамелеон») —
+    // Чехов. Число закреплено: третий оригинал в фикстуре снова уронит
+    // проверку.
+    "e2e/fixtures/stories.json",
+    {
+      hits: 2,
+      why:
+        "Byte-for-byte export of two real production Story rows whose author column " +
+        "still holds «RusoFásil (relato original)» (debt 49). The value cannot be " +
+        "rewritten before 25.09.2026, and a fixture that spells it differently would " +
+        "no longer be a copy of production.",
     },
   ],
   [

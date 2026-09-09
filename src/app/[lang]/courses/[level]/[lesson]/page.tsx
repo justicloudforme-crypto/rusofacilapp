@@ -19,6 +19,8 @@ import { markStudyDayVisit } from "@/lib/study-day-visit";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, fitTitle, truncateForMeta, paywallJsonLd, routeAlternates } from "@/lib/site";
+import StoryTitle from "@/components/stories/StoryTitle";
+import { storyTitles } from "@/lib/story-title";
 
 export async function generateMetadata({
   params,
@@ -288,7 +290,7 @@ export default async function LessonPage({
                       <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
                         {dict.crossLinks.storyLabel}
                       </span>
-                      {story.title}
+                      <StoryTitle titles={storyTitles(story, lang)} />
                     </Link>
                   </li>
                 ))}

@@ -32,7 +32,7 @@ import type { SearchRecord } from "./types";
 export interface SearchSources {
   dictionaries: Record<"es" | "ru", Dictionary>;
   exams: Array<{ level: string; slug: string; title: string }>;
-  stories: Array<{ id: string; title: string; level: string; isPremium: boolean; premiumOnly: boolean }>;
+  stories: Array<{ id: string; title: string; titleEs: string | null; level: string; isPremium: boolean; premiumOnly: boolean }>;
   media: Array<{ id: string; title: string; level: string; free?: boolean }>;
   flashcards: Array<{ id: string; russian: string; translationEs: string; transcription: string; category: string; level: string }>;
   idioms: Array<{ id: string; phrase: string; spanishEquivalent: string; level: string; category: string }>;
@@ -177,18 +177,37 @@ function examRecords(exams: SearchSources["exams"], dict: Record<"es" | "ru", Di
 }
 
 function storyRecords(stories: SearchSources["stories"]): SearchRecord[] {
-  return stories.map((story) => ({
+  return stories.map((story) => {
+    // Общее правило индекса (types.ts): `title` — то, что видит
+    // испаноговорящий, `titleRu` задаётся ТОЛЬКО когда оно другое. У
+    // рассказа с испанским названием это ровно те две строки, что
+    // страница печатает одна под другой; у рассказа без него — одна, и
+    // тогда `titleRu` не пишется вовсе и индекс не растёт ни на байт.
+    //
+    // Замороженные 65 здесь НЕ выделяются намеренно: заморозка держит
+    // ВИД страницы (`<title>`, `<h1>`, карточка), а окно поиска — не
+    // страница и в Search Console не попадает. Строкой поиска русское
+    // название остаётся у всех: `terms` печатается никогда, но искать
+    // по нему можно на обеих локалях.
+    const titleEs = story.titleEs?.trim() ?? "";
+    const primary = titleEs || story.title;
+    return {
     section: "story" as const,
     id: story.id,
     path: `/stories/${story.id}`,
-    title: story.title,
+    title: primary,
+    ...(primary === story.title ? {} : { titleRu: story.title, terms: [story.title] }),
     subtitle: story.level,
     level: story.level,
     // Ровно то же правило, что применяет сама страница рассказа
     // (getStoryAccess в entitlement.ts), пересказанное не словами, а
     // теми же двумя условиями.
-    requires: story.premiumOnly || story.level === "C1" ? "premium" : story.isPremium ? "free" : null,
-  }));
+    requires: (story.premiumOnly || story.level === "C1" ? "premium" : story.isPremium ? "free" : null) as
+      | "premium"
+      | "free"
+      | null,
+    };
+  });
 }
 
 function mediaRecords(media: SearchSources["media"]): SearchRecord[] {

@@ -62,6 +62,11 @@ const TOPIC_TAGGED_LESSONS: { level: LevelSlug; lesson: string; topic: StoryTopi
 export interface RelatedStoryRef {
   id: string;
   title: string;
+  /** Испанское название, если оно у рассказа есть. Ссылка на рассказ,
+   * напечатанная по-русски посреди испанской страницы урока, — тот же
+   * дефект, что и в каталоге, только в меньшем шрифте; правило выбора
+   * строки одно на весь сайт, см. src/lib/story-title.ts. */
+  titleEs: string | null;
   level: string;
 }
 
@@ -87,7 +92,7 @@ export async function getRelatedStoriesForLesson(
       where: { level: storyLevel, topic: topicMatch.topic },
       orderBy: { title: "asc" },
       take: 3,
-      select: { id: true, title: true, level: true },
+      select: { id: true, title: true, titleEs: true, level: true },
     });
     return { kind: "topic", stories };
   }
@@ -95,7 +100,7 @@ export async function getRelatedStoriesForLesson(
   const candidates = await db.story.findMany({
     where: { level: storyLevel },
     orderBy: { id: "asc" },
-    select: { id: true, title: true, level: true },
+    select: { id: true, title: true, titleEs: true, level: true },
   });
   if (candidates.length === 0) return { kind: "level", stories: [] };
 
@@ -200,7 +205,10 @@ export async function getRelatedStoriesForMedia(item: MediaItem): Promise<Relate
   if (!item.relatedStories || item.relatedStories.length === 0) return [];
   const results = await Promise.all(
     item.relatedStories.map((ref) =>
-      db.story.findFirst({ where: { title: ref.title, level: ref.level }, select: { id: true, title: true, level: true } }),
+      db.story.findFirst({
+        where: { title: ref.title, level: ref.level },
+        select: { id: true, title: true, titleEs: true, level: true },
+      }),
     ),
   );
   return results.filter((row): row is RelatedStoryRef => row !== null);

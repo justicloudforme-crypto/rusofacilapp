@@ -31,6 +31,7 @@ export default function StoryEditor({
   story: {
     id: string | null;
     title: string;
+    titleEs: string;
     author: string;
     level: StoryLevel;
     topic: StoryTopic;
@@ -51,6 +52,7 @@ export default function StoryEditor({
   const router = useRouter();
   const [id, setId] = useState(story.id);
   const [title, setTitle] = useState(story.title);
+  const [titleEs, setTitleEs] = useState(story.titleEs);
   const [author, setAuthor] = useState(story.author);
   const [level, setLevel] = useState<StoryLevel>(story.level);
   const [topic, setTopic] = useState<StoryTopic>(story.topic);
@@ -73,6 +75,7 @@ export default function StoryEditor({
         body: JSON.stringify({
           id,
           title,
+          titleEs,
           author,
           level,
           topic,
@@ -125,6 +128,21 @@ export default function StoryEditor({
             onChange={(event) => setTitle(event.target.value)}
             className="mt-2 w-full rounded-xl border border-black/15 bg-transparent p-3 text-sm outline-none focus:border-foreground/50 dark:border-white/20"
           />
+        </div>
+
+        <div>
+          <label htmlFor="story-title-es" className="text-sm font-medium">
+            {dict.titleEsLabel}
+          </label>
+          <input
+            id="story-title-es"
+            type="text"
+            lang="es"
+            value={titleEs}
+            onChange={(event) => setTitleEs(event.target.value)}
+            className="mt-2 w-full rounded-xl border border-black/15 bg-transparent p-3 text-sm outline-none focus:border-foreground/50 dark:border-white/20"
+          />
+          <p className="mt-1.5 text-xs text-foreground/60">{dict.titleEsHint}</p>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">

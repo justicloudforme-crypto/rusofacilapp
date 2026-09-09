@@ -19,6 +19,8 @@ import { accessMarkFor, storyRequirement } from "@/lib/access-marks";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
+import { storyTitles } from "@/lib/story-title";
+import StoryTitle from "@/components/stories/StoryTitle";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates, truncateForMeta } from "@/lib/site";
 
 export async function generateMetadata({
@@ -26,7 +28,10 @@ export async function generateMetadata({
 }: PageProps<"/[lang]/stories/[id]">): Promise<Metadata> {
   const { lang, id } = await params;
   if (!isLocale(lang)) return {};
-  const story = await db.story.findUnique({ where: { id }, select: { title: true, level: true, description: true, descriptionRu: true } });
+  const story = await db.story.findUnique({
+    where: { id },
+    select: { title: true, titleEs: true, level: true, description: true, descriptionRu: true },
+  });
   if (!story) return {};
   const rawDescription =
     (lang === "ru" ? (story.descriptionRu ?? story.description) : story.description) ??
@@ -47,7 +52,15 @@ export async function generateMetadata({
   const qualifier =
     lang === "ru" ? `рассказ на русском (${story.level})` : `cuento en ruso (${story.level})`;
   const shortQualifier = lang === "ru" ? `рассказ (${story.level})` : `cuento (${story.level})`;
-  const title = contentPageTitle(id, story.title, qualifier, shortQualifier);
+  // База заголовка — та же строка, что напечатана в `<h1>` крупно: на
+  // `/es` испанская, когда она есть, иначе русская. Русский оригинал в
+  // `<title>` не добавляется: потолок SERP — 70 знаков (`fitTitle`), и
+  // второе название вытеснило бы из выдачи уровень, то есть заплатило бы
+  // тем, ради чего заголовок и подгоняется. У замороженных страниц
+  // `storyTitles` и без того отдаёт русское название, а
+  // `contentPageTitle` — старую форму строки; так две ветки заморозки
+  // говорят одно и то же.
+  const title = contentPageTitle(id, storyTitles(story, lang).primary, qualifier, shortQualifier);
   return { title, description, alternates: routeAlternates(lang, `/stories/${encodeURIComponent(id)}`) };
 }
 
@@ -88,6 +101,8 @@ export default async function StoryReaderPage({
   // Opening the story is the study action — the day counts from here, not
   // from turning a page far enough for StoryReadingProgress to be written.
   await markStudyDayVisit("story");
+
+  const titles = storyTitles(story, lang);
 
   const relatedLesson = getRelatedLessonForStory(story);
   const relatedLessonTitle = relatedLesson
@@ -171,7 +186,12 @@ export default async function StoryReaderPage({
         data={{
           "@context": "https://schema.org",
           "@type": "Article",
-          headline: story.title,
+          headline: titles.primary,
+          // Русское название — второе имя того же объекта, а не другой
+          // объект. `alternateName` печатается только когда оно ДРУГОЕ,
+          // иначе на `/ru` и у рассказов без испанского названия
+          // разметка носила бы одну строку дважды.
+          ...(titles.secondary ? { alternateName: titles.secondary } : {}),
           ...(localizedDescription ? { description: localizedDescription } : {}),
           author: { "@type": "Person", name: story.author },
           publisher: { "@type": "Organization", name: "RusoFácilapp", url: SITE_URL },
@@ -186,7 +206,7 @@ export default async function StoryReaderPage({
         data={breadcrumbList([
           { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
           { name: dict.nav.stories, url: `${SITE_URL}/${lang}/stories` },
-          { name: story.title, url: `${SITE_URL}/${lang}/stories/${story.id}` },
+          { name: titles.primary, url: `${SITE_URL}/${lang}/stories/${story.id}` },
         ])}
       />
       <Link
@@ -210,7 +230,7 @@ export default async function StoryReaderPage({
         )}
       </div>
 
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">{story.title}</h1>
+      <StoryTitle as="h1" titles={titles} className="mt-3 text-3xl font-semibold tracking-tight" />
       <p className="mt-1 text-foreground/60">
         {dict.stories.byAuthor} {story.author}
       </p>
@@ -222,7 +242,7 @@ export default async function StoryReaderPage({
       <div className="mt-3">
         <StoryText
           storyId={entitled ? story.id : null}
-          title={story.title}
+          title={titles.primary}
           author={story.author}
           paragraphs={visibleParagraphs}
           translationParagraphs={visibleTranslationParagraphs}

@@ -171,6 +171,18 @@ jobs:
       - name: Чип темы с нулём карточек — падение (позитивный контроль)
         run: npm run check:story-topics:plant
 
+      # Заход 7.150: у рассказа появилось испанское название. Здесь стоит
+      # только позитивный контроль — база этой задачи пуста, а «нарушений
+      # 0» на нуле строк правило 4.1 результатом не считает (проверка
+      # честно краснеет строкой «в базе нет ни одного рассказа»). Контроль
+      # идёт по заведомо здоровой выборке в памяти и базы не спрашивает:
+      # семь подсадок, из них две — в САМО правило подачи (заморозка и
+      # пропавший оригинал), потому что «замороженная страница получила
+      # новую подачу» строкой данных не изображается. Сама проверка стоит
+      # в задаче Playwright — там база держит фикстуру рассказов.
+      - name: Испанское название рассказа — позитивный контроль сторожа
+        run: npm run check:story-title-es:plant
+
       # The positive control for the Stripe env-shape guard. CI has no Stripe
       # variables at all, so the guard's real run here is vacuously green —
       # which is exactly the kind of green PROGRESS.md 4.1 says proves
@@ -234,6 +246,12 @@ jobs:
       # data. Everything else DB-backed is either seeded above or absent.
       - name: Seed the e2e content fixture
         run: npx tsx scripts/seed-e2e-fixture.mjs
+
+      # Тот же сторож, но по НАСТОЯЩИМ строкам: фикстура выше держит три
+      # рассказа — с испанским названием, без него и замороженный. Три
+      # состояния подачи, то есть проверка здесь не вакуумна.
+      - name: Испанское название рассказа — по строкам фикстуры
+        run: npm run check:story-title-es
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit

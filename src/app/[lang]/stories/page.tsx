@@ -6,6 +6,7 @@ import { getStoryCatalog } from "@/lib/stories-catalog";
 import { getEntitlementTier, getStoryAccess } from "@/lib/entitlement";
 import { storyLevels } from "@/lib/stories";
 import { localizeStoryAuthor } from "@/lib/story-author";
+import { storyTitles } from "@/lib/story-title";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
 import StoryLinkIndex from "@/components/stories/StoryLinkIndex";
 import JsonLd from "@/components/seo/JsonLd";
@@ -57,6 +58,12 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
   const stories = rawStories
     .map((story) => ({
       ...story,
+      // Испанское название крупно, русский оригинал под ним мельче —
+      // одно правило на весь сайт, см. src/lib/story-title.ts. Считается
+      // ЗДЕСЬ, на сервере, по той же причине, что и `author` ниже:
+      // кеш каталога остаётся локаль-независимым, а список заморозки не
+      // уезжает в браузерный бандл.
+      titles: storyTitles(story, lang),
       // descriptionRu is null for every row today (see schema.prisma) —
       // this fallback is what keeps /ru showing the Spanish summary
       // instead of hiding the block, until the Russian text exists.
@@ -98,7 +105,11 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
           посетителя, и HTML страницы менялся бы от того, кто её открыл. */}
       <StoryLinkIndex
         lang={lang}
-        stories={rawStories.map((story) => ({ id: story.id, title: story.title, level: story.level }))}
+        stories={rawStories.map((story) => ({
+          id: story.id,
+          titles: storyTitles(story, lang),
+          level: story.level,
+        }))}
         dict={{ indexTitle: dict.stories.indexTitle, indexIntro: dict.stories.indexIntro }}
       />
     </div>

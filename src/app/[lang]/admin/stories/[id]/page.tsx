@@ -34,6 +34,7 @@ export default async function EditStoryPage({
       story={{
         id: story.id,
         title: story.title,
+        titleEs: story.titleEs ?? "",
         author: story.author,
         level: isStoryLevel(story.level) ? story.level : "A1",
         topic: isStoryTopic(story.topic) ? story.topic : "other",
