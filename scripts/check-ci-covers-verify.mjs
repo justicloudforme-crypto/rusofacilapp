@@ -20,6 +20,24 @@
 // (команды нет в verify), — тоже падение. Список исключений, в котором
 // лежит неправда, хуже отсутствующего.
 //
+// ВТОРОЕ НАПРАВЛЕНИЕ, ЗАВЕДЁННОЕ 09.09.2026 (долг 106). Правило выше
+// проверяло ОДНО направление — что CI покрывает `verify`. Обратное
+// (шаги CI, которых в `verify` нет) не печаталось нигде, и цена этому
+// названа числом: PR #238 прошёл `npm run verify` зелёным локально и
+// покраснел в CI на юнит-тесте, потому что `verify` юнит-тестов не
+// запускал вовсе. Замер до правки: в CI гонялось 8 команд, которых нет
+// в `verify` (`test`, `test:e2e`, `check:tokens`, `check:rendered:ci`,
+// `check:e2e-coverage:run` и три `:plant`), и ни одна из них не была
+// названа нигде. Отсюда симметричное правило:
+//
+//   команда, которую запускает `.github/workflows/ci.yml`, обязана либо
+//   запускаться в `npm run verify`, либо стоять во ВТОРОМ списке
+//   исключений в PROGRESS.md — с причиной.
+//
+// Обе половины обратного списка тоже стерегутся: исключение на команду,
+// которая уже гоняется в `verify`, и исключение на команду, которой нет
+// в CI, — падение.
+//
 //   node scripts/check-ci-covers-verify.mjs            # гейт
 //   node scripts/check-ci-covers-verify.mjs --map      # вся карта проверок
 //   node scripts/check-ci-covers-verify.mjs --plant    # позитивный контроль
@@ -28,6 +46,10 @@ import { pathToFileURL } from "node:url";
 
 const PROGRESS_MARKER_START = "<!-- ci-verify-exceptions:start -->";
 const PROGRESS_MARKER_END = "<!-- ci-verify-exceptions:end -->";
+// Второй список — обратного направления: шаги CI, которых намеренно нет
+// в `npm run verify`.
+const VERIFY_MARKER_START = "<!-- verify-ci-exceptions:start -->";
+const VERIFY_MARKER_END = "<!-- verify-ci-exceptions:end -->";
 
 function main() {
   const pkg = JSON.parse(readFileSync("package.json", "utf-8"));
@@ -119,12 +141,17 @@ function main() {
   for (const command of ciCommands) for (const name of expand(command)) ciRuns.add(name);
 
   const progress = readFileSync("PROGRESS.md", "utf-8");
-  const block = progress.split(PROGRESS_MARKER_START)[1]?.split(PROGRESS_MARKER_END)[0] ?? "";
-  const exceptions = new Map();
-  for (const line of block.split("\n")) {
-    const m = line.match(/^\s*[-*]\s*`([\w:-]+)`\s*[—-]\s*(.+?)\s*$/);
-    if (m) exceptions.set(m[1], m[2]);
+  function exceptionsBetween(start, end) {
+    const block = progress.split(start)[1]?.split(end)[0] ?? "";
+    const map = new Map();
+    for (const line of block.split("\n")) {
+      const m = line.match(/^\s*[-*]\s*`([\w:-]+)`\s*[—-]\s*(.+?)\s*$/);
+      if (m) map.set(m[1], m[2]);
+    }
+    return map;
   }
+  const exceptions = exceptionsBetween(PROGRESS_MARKER_START, PROGRESS_MARKER_END);
+  const verifyExceptions = exceptionsBetween(VERIFY_MARKER_START, VERIFY_MARKER_END);
 
   const checkNames = Object.keys(scripts).filter((n) => n.startsWith("check:"));
   const VARIANT_SUFFIXES = [":plant", ":self-test", ":map"];
@@ -141,12 +168,25 @@ function main() {
     console.log(
       `\nвсего check:* (без :plant/:self-test): ${named.length}; в verify: ${named.filter((n) => verifyRuns.has(n)).length}; в CI: ${named.filter((n) => ciRuns.has(n)).length}; нигде: ${named.filter((n) => !verifyRuns.has(n) && !ciRuns.has(n)).length}`,
     );
+    // Второе направление печатается ЦЕЛИКОМ, а не по префиксу check:, —
+    // ровно потому, что долг 106 был про `npm run test`, у которого
+    // такого префикса нет.
+    const ciOnly = [...ciRuns].filter((n) => !verifyRuns.has(n)).sort();
+    console.log(`\n| в CI, нет в verify | исключение |`);
+    console.log(`|---|---|`);
+    for (const name of ciOnly) console.log(`| \`${name}\` | ${verifyExceptions.get(name) ?? "—"} |`);
+    console.log(`\nвсего команд: verify ${verifyRuns.size}, CI ${ciRuns.size}; в CI и не в verify: ${ciOnly.length}, из них названо исключениями: ${ciOnly.filter((n) => verifyExceptions.has(n)).length}`);
   }
 
-  function audit(verifySet, ciSet, exceptionMap) {
+  function audit(verifySet, ciSet, exceptionMap, ciOnlyExceptionMap = verifyExceptions) {
     const uncovered = [...verifySet].filter((n) => !ciSet.has(n) && !exceptionMap.has(n)).sort();
     const stale = [...exceptionMap.keys()].filter((n) => ciSet.has(n) || !verifySet.has(n)).sort();
-    return { uncovered, stale };
+    // Второе направление, симметрично первому.
+    const unverified = [...ciSet].filter((n) => !verifySet.has(n) && !ciOnlyExceptionMap.has(n)).sort();
+    const staleCiOnly = [...ciOnlyExceptionMap.keys()]
+      .filter((n) => verifySet.has(n) || !ciSet.has(n))
+      .sort();
+    return { uncovered, stale, unverified, staleCiOnly };
   }
 
   if (process.argv.includes("--plant")) {
@@ -179,6 +219,38 @@ function main() {
           return { hit: audit(verifyRuns, ciRuns, ex).stale.includes("check:media-embeds"), what: "check:media-embeds" };
         },
       },
+      // Три подсадки ниже — второе направление (долг 106). Первая из них
+      // изображает ровно то, что 09.09.2026 стоило красного CI на PR #238:
+      // шаг CI, которого в `verify` нет и который нигде не назван.
+      {
+        name: "шаг CI вынут из verify и не внесён во второй список исключений",
+        run: () => {
+          const victim = [...ciRuns].find((n) => verifyRuns.has(n) && !verifyExceptions.has(n));
+          const v = new Set(verifyRuns);
+          v.delete(victim);
+          return { hit: audit(v, ciRuns, exceptions).unverified.includes(victim), what: victim };
+        },
+      },
+      {
+        name: "исключение второго списка на команду, которая уже в verify",
+        run: () => {
+          const victim = [...ciRuns].find((n) => verifyRuns.has(n));
+          const ex = new Map(verifyExceptions);
+          ex.set(victim, "выдуманная причина");
+          return { hit: audit(verifyRuns, ciRuns, exceptions, ex).staleCiOnly.includes(victim), what: victim };
+        },
+      },
+      {
+        name: "исключение второго списка на команду, которой в CI нет вовсе",
+        run: () => {
+          const ex = new Map(verifyExceptions);
+          ex.set("check:media-embeds", "выдуманная причина");
+          return {
+            hit: audit(verifyRuns, ciRuns, exceptions, ex).staleCiOnly.includes("check:media-embeds"),
+            what: "check:media-embeds",
+          };
+        },
+      },
     ];
     for (const p of plants) {
       const { hit, what } = p.run();
@@ -188,16 +260,23 @@ function main() {
     // Отрицательная половина: без подсадки прогон обязан быть чистым, иначе
     // «поймано» выше означало бы просто вечно красную проверку.
     const clean = audit(verifyRuns, ciRuns, exceptions);
-    const quiet = clean.uncovered.length === 0 && clean.stale.length === 0;
+    const quiet =
+      clean.uncovered.length === 0 &&
+      clean.stale.length === 0 &&
+      clean.unverified.length === 0 &&
+      clean.staleCiOnly.length === 0;
     console.log(`  ${quiet ? "отрицательный контроль: без подсадки чисто" : "ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ КРАСЕН — сначала почини настоящее расхождение"}`);
     console.log(`  поймано ${caught} из ${plants.length}`);
     process.exit(caught === plants.length && quiet ? 0 : 1);
   }
 
-  const { uncovered, stale } = audit(verifyRuns, ciRuns, exceptions);
-  if (uncovered.length === 0 && stale.length === 0) {
+  const { uncovered, stale, unverified, staleCiOnly } = audit(verifyRuns, ciRuns, exceptions);
+  if (uncovered.length === 0 && stale.length === 0 && unverified.length === 0 && staleCiOnly.length === 0) {
     console.log(
-      `check:ci-covers-verify — verify запускает ${verifyRuns.size} команд, CI ${ciRuns.size}, исключений ${exceptions.size}, непокрытых 0.`,
+      `check:ci-covers-verify — verify запускает ${verifyRuns.size} команд, CI ${ciRuns.size}; ` +
+        `в CI и не в verify ${[...ciRuns].filter((n) => !verifyRuns.has(n)).length} (все названы), ` +
+        `в verify и не в CI ${[...verifyRuns].filter((n) => !ciRuns.has(n)).length} (все названы); ` +
+        `исключений ${exceptions.size} + ${verifyExceptions.size}, непокрытых 0 в обе стороны.`,
     );
     process.exit(0);
   }
@@ -209,8 +288,19 @@ function main() {
       `ИСКЛЮЧЕНИЕ ПРОТУХЛО: \`${name}\` — ${ciRuns.has(name) ? "команда уже гоняется в CI" : "команды нет в verify"}`,
     );
   }
+  for (const name of unverified) {
+    console.error(
+      `НЕ В VERIFY: \`${name}\` гоняется в ci.yml, не гоняется в npm run verify и не назван во втором списке исключений PROGRESS.md`,
+    );
+  }
+  for (const name of staleCiOnly) {
+    console.error(
+      `ИСКЛЮЧЕНИЕ ВТОРОГО СПИСКА ПРОТУХЛО: \`${name}\` — ${verifyRuns.has(name) ? "команда уже гоняется в verify" : "команды нет в CI"}`,
+    );
+  }
   console.error(
-    `\nСписок исключений живёт в PROGRESS.md между ${PROGRESS_MARKER_START} и ${PROGRESS_MARKER_END}, строкой вида "- \`check:имя\` — причина".`,
+    `\nСписок исключений живёт в PROGRESS.md между ${PROGRESS_MARKER_START} и ${PROGRESS_MARKER_END}, ` +
+      `обратный — между ${VERIFY_MARKER_START} и ${VERIFY_MARKER_END}; строка вида "- \`имя\` — причина".`,
   );
   process.exit(1);
 
