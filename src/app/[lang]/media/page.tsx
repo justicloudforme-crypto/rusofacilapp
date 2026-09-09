@@ -4,7 +4,8 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getAllMedia } from "@/lib/media/data";
 import { mediaLevels } from "@/lib/media/types";
-import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
+import { getEntitlementTier } from "@/lib/entitlement";
+import { accessMarkFor, mediaRequirement } from "@/lib/access-marks";
 import MediaCatalog from "@/components/media/MediaCatalog";
 import MediaLinkIndex from "@/components/media/MediaLinkIndex";
 import JsonLd from "@/components/seo/JsonLd";
@@ -53,12 +54,16 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
       level: item.level,
       category: item.category,
       youtubeVideoId: item.youtubeVideoId,
-      locked: !canAccessMediaItem(tier, item),
+      // Значок берётся у общего признака, а не у гейта: гейт отвечает
+      // «пускать ли», признак — «что нужно». Совпадение этих двух
+      // ответов у медиа проверяется тестом (access-marks.test.ts), а не
+      // подразумевается тем, что оба выражения похожи.
+      mark: accessMarkFor(mediaRequirement(item), tier),
     }))
     .sort(
       (a, b) =>
         (a.category === "grammar" ? 0 : 1) - (b.category === "grammar" ? 0 : 1) ||
-        Number(a.locked) - Number(b.locked) ||
+        Number(a.mark !== null) - Number(b.mark !== null) ||
         (levelRank.get(a.level) ?? 0) - (levelRank.get(b.level) ?? 0) ||
         a.title.localeCompare(b.title, lang)
     );
@@ -76,7 +81,7 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
       <p className="mt-2 max-w-xl text-xs text-foreground/40">{dict.media.copyrightNote}</p>
 
       <div className="mt-10">
-        <MediaCatalog lang={lang} items={items} dict={dict.media} />
+        <MediaCatalog lang={lang} items={items} dict={{ ...dict.media, ...dict.access }} />
       </div>
 
       {/* Пара к StoryLinkIndex — см. его комментарий. `allMedia`, а не

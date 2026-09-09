@@ -9,7 +9,7 @@ import { usePaywall } from "@/contexts/PaywallContext";
 import FilterChipGroup from "@/components/ui/FilterChipGroup";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
-import { ACCESS_MARK_ICON } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, type AccessRequirement } from "@/lib/access-marks";
 
 export interface MediaSummary {
   id: string;
@@ -21,7 +21,9 @@ export interface MediaSummary {
   /** Whether THIS visitor needs a subscription to open it — see
    * entitlement.ts's canAccessMediaItem. The list itself already arrives
    * pre-sorted accessible-first (see [lang]/media/page.tsx). */
-  locked: boolean;
+  /** Что печатать поверх обложки: `null` — ничего. Решает страница
+   * одним общим вызовом `accessMarkFor(mediaRequirement(item), tier)`. */
+  mark: Exclude<AccessRequirement, "free"> | null;
 }
 
 export interface MediaCatalogDict {
@@ -36,7 +38,8 @@ export interface MediaCatalogDict {
   openButton: string;
   emptyState: string;
   loadMoreButton: PluralForms; // templates, contain literal "{count}"
-  premiumBadge: string;
+  subscriptionBadge: string;
+  premiumTierBadge: string;
 }
 
 const PAGE_SIZE = 24;
@@ -128,9 +131,9 @@ export default function MediaCatalog({
               key={item.id}
               href={`/${lang}/media/${item.id}`}
               onClick={(e) => {
-                if (!item.locked) return;
+                if (item.mark === null) return;
                 e.preventDefault();
-                openPaywall("free");
+                openPaywall(item.mark === "premium-tier" ? "premium" : "free");
               }}
               className="tap group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
             >
@@ -150,9 +153,10 @@ export default function MediaCatalog({
                     значок лежит поверх обложки, и ему нужен тёмный фон
                     (белым по кадру видео иначе не прочитать); общий
                     `AccessMark` рисует для светлой карточки. */}
-                {item.locked && (
+                {item.mark && (
                   <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                    <span aria-hidden>{ACCESS_MARK_ICON.subscription}</span> {dict.premiumBadge}
+                    <span aria-hidden>{ACCESS_MARK_ICON[item.mark]}</span>{" "}
+                    {item.mark === "premium-tier" ? dict.premiumTierBadge : dict.subscriptionBadge}
                   </span>
                 )}
               </div>

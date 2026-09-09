@@ -201,9 +201,17 @@ const E2E_DIR = join(repoRoot, "e2e");
  *       обеих локалях) x две локали x два проекта = 4. Число снято
  *       ПРОГОНОМ, а не сложением.
  *
- * `playwright test --list` — 419 в 32 файлах.
+ *   419 -> 431 (09.09.2026, PROGRESS.md 7.153): две пробы захода про
+ *       значки платности и блок «Продолжить» —
+ *       `e2e/vocabulary-continue.spec.ts` (одна проба x две локали x две
+ *       ширины — телефон 375 и планшет 768 — x два проекта = 8) и
+ *       `e2e/lesson-access-mark.spec.ts` (одна проба x две локали x два
+ *       проекта = 4). Число снято ПРОГОНОМ, а не сложением: отчёт дал
+ *       431 исполнение при 0 пропусков.
+ *
+ * `playwright test --list` — 431 в 34 файлах.
  */
-const MIN_EXECUTED_TESTS = 419;
+const MIN_EXECUTED_TESTS = 431;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.

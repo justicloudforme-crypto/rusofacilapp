@@ -3,6 +3,10 @@
     "title": "Aprende ruso online — RusoFácilapp",
     "description": "Curso de ruso para hispanohablantes: alfabeto, gramática, cuentos con audio y vídeo. Empieza gratis, sin tarjeta."
   },
+  "access": {
+    "subscriptionBadge": "Con suscripción",
+    "premiumTierBadge": "Solo Premium"
+  },
   "nav": {
     "home": "Inicio",
     "courses": "Cursos",
@@ -841,7 +845,6 @@
     "filterAll": "Todos",
     "levelFilterLabel": "Nivel",
     "searchPlaceholder": "Buscar por título o autor...",
-    "premiumBadge": "Premium",
     "byAuthor": "Por",
     "readButton": "Leer",
     "emptyState": "Todavía no hay historias disponibles.",
@@ -882,8 +885,6 @@
     "premiumLockTitle": "Esta historia es solo para suscriptores",
     "premiumLockBody": "Estás viendo una vista previa gratuita con el primer párrafo. Suscríbete para leer la historia completa y escuchar el audio.",
     "premiumLockCta": "Ver planes de suscripción",
-    "subscriptionBadge": "Con suscripción",
-    "premiumTierBadge": "Solo Premium",
     "premiumTierLockTitle": "Esta historia está disponible solo en el plan Premium",
     "premiumTierLockBody": "Tu suscripción actual da acceso a la mayoría de las historias, pero esta forma parte de la biblioteca ampliada de nivel C1, exclusiva para el plan Premium.",
     "insightsVocabHeading": "Palabras de este cuento que ya están en el curso",
@@ -922,7 +923,6 @@
     "exercisesPassed": "¡Muy bien! Comprendiste el contenido.",
     "exercisesFailed": "Necesitas al menos 70% para aprobar. Revisa la letra/transcripción e inténtalo de nuevo.",
     "copyrightNote": "Los videos se muestran mediante el reproductor oficial de YouTube y pertenecen a sus respectivos autores y canales; se usan aquí con fines educativos, sin descargarlos ni redistribuirlos.",
-    "premiumBadge": "Con suscripción",
     "premiumLockTitle": "Este video está disponible solo con suscripción",
     "premiumLockBody": "Has visto la muestra gratuita de materiales. Suscríbete para desbloquear toda la biblioteca de audio y video.",
     "premiumLockCta": "Ver planes",
@@ -987,6 +987,7 @@
     "freeTrialLimitMessage": "Has visto la muestra gratuita de palabras. Suscríbete para desbloquear todo el vocabulario.",
     "freeTrialLimitCta": "Suscribirme",
     "continueTitle": "Continuar",
+    "continueWithWord": "Seguir con «{word}»",
     "learnedProgressLabel": {
       "one": "Has aprendido {known} de {total} palabra",
       "few": "Has aprendido {known} de {total} palabras",
@@ -1635,8 +1636,6 @@
   "shownOf": "Mostrados {shown} de {total}",
   "gameCollapsed": "{count} puzles coinciden",
   "gameCollapsedCta": "Abrir los juegos de palabras",
-  "lockedFree": "Con suscripción",
-  "lockedPremium": "Con Premium",
   "fuzzyNote": "Sin coincidencias exactas: resultados por escritura parecida.",
   "loading": "Buscando…",
   "totalLine": "{total} resultados en total"

@@ -94,7 +94,7 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
       <p className="mt-3 max-w-xl text-foreground/70">{dict?.stories?.pageSubtitle}</p>
 
       <div className="mt-10">
-        <StoriesCatalog lang={lang} stories={stories} dict={dict.stories} />
+        <StoriesCatalog lang={lang} stories={stories} dict={{ ...dict.stories, ...dict.access }} />
       </div>
 
       {/* Под каталогом, а не вместо него: каталог остаётся клиентским со

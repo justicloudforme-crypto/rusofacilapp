@@ -1,5 +1,5 @@
 import type { Dictionary } from "@/i18n/dictionaries";
-import { levelSlugs, lessonSlugsFor, isFreeTrialLesson, type LevelSlug } from "@/lib/courses";
+import { levelSlugs, lessonSlugsFor, type LevelSlug } from "@/lib/courses";
 import { VOCABULARY_CATEGORY_PAGES, PUBLIC_VOCABULARY_LEVELS } from "@/lib/vocabulary-categories";
 import { GRAMMAR_GUIDES, GRAMMAR_INDEX_PATH } from "@/lib/gramatica/guides";
 import { TOPIC_LANDINGS, landingPath } from "@/lib/word-games/topic-landings";
@@ -10,6 +10,15 @@ import { puzzleTitle } from "@/lib/word-games/metadata";
 import { cardAnchor, idiomAnchor } from "@/lib/deep-link-anchors";
 import { localizeExamText } from "@/lib/exams/localize";
 import type { WordGameType } from "@/lib/word-games/types";
+import {
+  examRequirement,
+  flashcardRequirement,
+  idiomRequirement,
+  lessonRequirement,
+  mediaRequirement,
+  storyRequirement,
+  wordGameRequirement,
+} from "@/lib/access-marks";
 import type { SearchRecord } from "./types";
 
 /**
@@ -144,7 +153,7 @@ function lessonRecords(dict: Record<"es" | "ru", Dictionary>): SearchRecord[] {
         level: level.toUpperCase(),
         // Первый урок каждого уровня открыт целиком; у остальных
         // грамматика видна всем, а упражнения и слайды — по подписке.
-        requires: isFreeTrialLesson(level, slug) ? null : "free",
+        requires: lessonRequirement({ level, slug }),
       });
     }
   }
@@ -171,7 +180,7 @@ function examRecords(exams: SearchSources["exams"], dict: Record<"es" | "ru", Di
       ...(titleRu === exam.title ? {} : { titleRu, terms: [exam.title] }),
       subtitle: exam.level.toUpperCase(),
       level: exam.level.toUpperCase(),
-      requires: "free" as const,
+      requires: examRequirement(),
     };
   });
 }
@@ -199,13 +208,10 @@ function storyRecords(stories: SearchSources["stories"]): SearchRecord[] {
     ...(primary === story.title ? {} : { titleRu: story.title, terms: [story.title] }),
     subtitle: story.level,
     level: story.level,
-    // Ровно то же правило, что применяет сама страница рассказа
-    // (getStoryAccess в entitlement.ts), пересказанное не словами, а
-    // теми же двумя условиями.
-    requires: (story.premiumOnly || story.level === "C1" ? "premium" : story.isPremium ? "free" : null) as
-      | "premium"
-      | "free"
-      | null,
+    // Ровно то же правило, что применяет сама страница рассказа, и
+    // взятое у него же: `storyRequirement` — единственное место, где
+    // читаются обе колонки сразу (src/lib/access-marks.ts).
+    requires: storyRequirement(story),
     };
   });
 }
@@ -218,7 +224,7 @@ function mediaRecords(media: SearchSources["media"]): SearchRecord[] {
     title: item.title,
     subtitle: item.level,
     level: item.level,
-    requires: item.free ? null : ("free" as const),
+    requires: mediaRequirement(item),
   }));
 }
 
@@ -251,7 +257,11 @@ function flashcardRecords(cards: SearchSources["flashcards"]): SearchRecord[] {
       // большой раздел индекса ради нуля. Транскрипции в подписи нет.
       terms: [card.transcription],
       level: card.level,
-      requires: card.level === "C1" ? ("premium" as const) : null,
+      // «По подписке», а не «открыта»: бесплатный образец у карточек —
+      // первые FREE_TRIAL_LIMITS.flashcards на тему, то есть 230 из 5771
+      // на 09.09.2026. До этой правки индекс печатал открытыми 4783
+      // карточки, из которых аноним открывает 230 — расхождение 4553.
+      requires: flashcardRequirement(card),
     };
   });
 }
@@ -289,10 +299,7 @@ function idiomRecords(idioms: SearchSources["idioms"]): SearchRecord[] {
     // почти всегда закрыто, — и с глубокой ссылкой это стало видно сразу:
     // человек уходил бы на вкладку, где его фразы нет. Правило здесь —
     // пересказ того же гейта, который применяет `/api/idioms`.
-    requires:
-      idiom.level === "C1" || idiom.category === "literary"
-        ? ("premium" as const)
-        : ("free" as const),
+    requires: idiomRequirement(idiom),
   }));
 }
 
@@ -362,7 +369,11 @@ function gameRecords(puzzles: SearchSources["puzzles"]): SearchRecord[] {
       title: stripBrand(puzzleTitle("es", type, puzzle.level, puzzle.sequence, puzzle.wordCount, puzzle.topic)),
       titleRu: stripBrand(puzzleTitle("ru", type, puzzle.level, puzzle.sequence, puzzle.wordCount, puzzle.topic)),
       level: puzzle.level,
-      requires: puzzle.premiumOnly || puzzle.curved ? ("premium" as const) : null,
+      // Бесплатность берётся у `isFreeWordGamePuzzle` (через общий
+      // признак), а не у одного только `premiumOnly`. До этой правки
+      // индекс печатал открытыми 2293 пазла, из которых аноним
+      // открывает 83, — расхождение 2210 из 3277.
+      requires: wordGameRequirement(puzzle),
     };
   });
 }

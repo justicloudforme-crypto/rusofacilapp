@@ -178,15 +178,43 @@ export async function POST(request: NextRequest) {
     const prev = lastActivityByCategory.get(card.category);
     if (!prev || updatedAt > prev) lastActivityByCategory.set(card.category, updatedAt);
   }
+  // …и, для каждой из них, ТА САМАЯ карточка, на которой человек
+  // остановился: строка с наибольшим `updatedAt` внутри категории.
+  //
+  // Ничего нового не считается и не хранится. Число `lastActivityByCardId`
+  // уже собрано выше (оно и есть источник строки «Продолжить»), и до
+  // 09.09.2026 оно сворачивалось до категории и выбрасывалось — из-за
+  // чего нажатие на «Продолжить» открывало ПЕРВУЮ карточку темы, а не ту,
+  // где человек стоял. Здесь тот же максимум берётся на шаг раньше.
+  const lastCardByCategory = new Map<string, { cardId: string; updatedAt: number }>();
+  for (const [cardId, updatedAt] of lastActivityByCardId) {
+    const card = cardById.get(cardId);
+    if (!card) continue;
+    if (level && card.level !== level) continue;
+    const prev = lastCardByCategory.get(card.category);
+    if (!prev || updatedAt > prev.updatedAt) lastCardByCategory.set(card.category, { cardId, updatedAt });
+  }
+
   const recent = [...lastActivityByCategory.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(([category, lastActivityAt]) => ({
-      category,
-      total: categories[category]?.total ?? 0,
-      known: categories[category]?.known ?? 0,
-      lastActivityAt,
-    }));
+    .map(([category, lastActivityAt]) => {
+      const last = lastCardByCategory.get(category);
+      const card = last ? cardById.get(last.cardId) : undefined;
+      return {
+        category,
+        total: categories[category]?.total ?? 0,
+        known: categories[category]?.known ?? 0,
+        lastActivityAt,
+        // `null`, а не выдуманный id: под фильтром уровня последняя
+        // тронутая карточка темы может оказаться другого уровня, и тогда
+        // продолжать не с чего — блок откроет тему с начала, как раньше.
+        lastCardId: last?.cardId ?? null,
+        // Само слово, чтобы блок мог назвать его человеку. Русское —
+        // одно на обе локали, как и на самой карточке.
+        lastCardWord: card?.russian ?? null,
+      };
+    });
 
   // Level-independent, but NOT tier-independent: the numerator has to be
   // counted over exactly the set the denominator counts, or the fraction

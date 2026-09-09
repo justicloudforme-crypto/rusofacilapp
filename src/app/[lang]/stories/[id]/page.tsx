@@ -225,7 +225,7 @@ export default async function StoryReaderPage({
         {storyMark && (
           <AccessMark
             mark={storyMark}
-            label={storyMark === "premium-tier" ? dict.stories.premiumTierBadge : dict.stories.subscriptionBadge}
+            label={storyMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
           />
         )}
       </div>

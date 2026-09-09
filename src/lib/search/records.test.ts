@@ -68,36 +68,41 @@ describe("индекс покрывает каждый раздел", () => {
   });
 });
 
-describe("правило платности повторяет entitlement.ts, а не пересказывает его", () => {
+describe("правило платности берётся у общего признака, а не пересказывается", () => {
   it("рассказы: бесплатный, C1 и premiumOnly", () => {
     const map = new Map(bySection("story").map((r) => [r.id, r.requires]));
-    expect(map.get("s1")).toBe(null);
-    expect(map.get("s2")).toBe("premium");
-    expect(map.get("s3")).toBe("premium");
+    expect(map.get("s1")).toBe("free");
+    expect(map.get("s2")).toBe("premium-tier");
+    expect(map.get("s3")).toBe("premium-tier");
   });
 
   it("медиа: бесплатный образец открыт, остальное — по подписке", () => {
     const map = new Map(bySection("media").map((r) => [r.id, r.requires]));
-    expect(map.get("song-katyusha")).toBe(null);
-    expect(map.get("movie-x")).toBe("free");
+    expect(map.get("song-katyusha")).toBe("free");
+    expect(map.get("movie-x")).toBe("subscription");
   });
 
-  it("карточки: C1 — Premium, остальное открыто", () => {
+  it("карточки: C1 — Premium, остальное — по подписке, а не «открыто»", () => {
     const map = new Map(bySection("flashcard").map((r) => [r.id, r.requires]));
-    expect(map.get("f1")).toBe(null);
-    expect(map.get("f2")).toBe("premium");
+    // НЕ "free": бесплатный образец у карточек — первые
+    // FREE_TRIAL_LIMITS.flashcards на тему, то есть 230 из 5771. До
+    // 09.09.2026 здесь стоял null, и выдача печатала открытыми 4783
+    // карточки, из которых аноним открывает 230.
+    expect(map.get("f1")).toBe("subscription");
+    expect(map.get("f2")).toBe("premium-tier");
   });
 
   it("первый урок уровня открыт, второй — нет", () => {
     const map = new Map(bySection("lesson").map((r) => [r.id, r.requires]));
-    expect(map.get("a1-1")).toBe(null);
-    expect(map.get("a1-2")).toBe("free");
+    expect(map.get("a1-1")).toBe("free");
+    expect(map.get("a1-2")).toBe("subscription");
   });
 
-  it("игры: ★ и premiumOnly — Premium", () => {
+  it("игры: ★ и premiumOnly — Premium, платный рунг — по подписке", () => {
     const map = new Map(bySection("game").map((r) => [r.id, r.requires]));
-    expect(map.get("WORD_SEARCH/A1/1")).toBe(null);
-    expect(map.get("CROSSWORD/C1/40")).toBe("premium");
+    // Первая десятка любой лестницы, кроме C1, — бесплатна.
+    expect(map.get("WORD_SEARCH/A1/1")).toBe("free");
+    expect(map.get("CROSSWORD/C1/40")).toBe("premium-tier");
   });
 });
 
@@ -163,9 +168,9 @@ describe("идиома ведёт на саму фразу, а не на вкл�
     const map = new Map(bySection("idiom").map((r) => [r.id, r.requires]));
     // Неоплатившему страница отдаёт 5 фраз из 771 — значит закрыта
     // практически любая, хотя уровень у них не C1.
-    expect(map.get("i1")).toBe("free");
+    expect(map.get("i1")).toBe("subscription");
     // `literary` режется отдельно и у подписчика `standard` тоже.
-    expect(map.get("i2")).toBe("premium");
+    expect(map.get("i2")).toBe("premium-tier");
   });
 });
 

@@ -19,6 +19,8 @@ export interface FlashcardsDict {
   locale: Locale;
   categoryLabels: Record<FlashcardCategory, string>;
   levelAll: string;
+  /** Подпись значка «нужен план Premium» — одна на весь сайт. */
+  premiumTierBadge: string;
   tapToFlip: string;
   listenLabel: string;
   knowButton: string;
@@ -36,6 +38,8 @@ export interface FlashcardsDict {
   freeTrialLimitMessage: string;
   freeTrialLimitCta: string;
   continueTitle: string;
+  /** Шаблон «Продолжить со слова «{word}»» — содержит литерал "{word}". */
+  continueWithWord: string;
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}" — global count (see /api/flashcards/summary), not per-category. Inflects with {total}.
   learnedProgressAvailableLabel: PluralForms; // the same line for a visitor with Premium-locked cards; adds literal "{locked}".
 }
@@ -73,6 +77,16 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
   const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
   const [hasAnyProgress, setHasAnyProgress] = useState(false);
+  // Сколько карточек существует, но требует плана Premium. 0 у премиума и
+  // у сотрудника — то есть это и есть ответ «закрыт ли C1 ЭТОМУ
+  // посетителю», посчитанный тем же гейтом, который режет выдачу.
+  const [premiumOnlyWords, setPremiumOnlyWords] = useState(0);
+  // Карточка, на которую надо встать, когда придут карточки темы. Это
+  // и есть «то самое слово, на котором человек остановился»: приходит из
+  // блока «Продолжить» (`RecentCategory.lastCardId`) или из адреса
+  // (`?card=`). До 09.09.2026 такого состояния не было вовсе, и нажатие
+  // на «Продолжить» всегда открывало ПЕРВУЮ карточку темы.
+  const [pendingCardId, setPendingCardId] = useState<string | null>(null);
   const [limited, setLimited] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -131,14 +145,28 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     if (urlLevel && isFlashcardLevel(urlLevel)) {
       setLevelFilter(urlLevel);
     }
+    // `?card=` — то же место остановки, но пережившее перезагрузку и
+    // смену локали. Адрес не новый: параметр висит на той же странице
+    // рядом с уже существующими `category`/`level`, canonical не
+    // меняется, в карту сайта ничего не добавляется.
+    const urlCard = params.get("card");
+    if (urlCard) {
+      setPendingCardId(urlCard);
+    }
   }, []);
 
   // replace, not push: browsing categories/levels isn't a new navigable
   // location, same reasoning VocabularyApp.tsx's own ?mode= sync uses.
-  function syncUrl(next: { category?: FlashcardCategory | null; level?: FlashcardLevel | "all" }) {
+  function syncUrl(next: {
+    category?: FlashcardCategory | null;
+    level?: FlashcardLevel | "all";
+    card?: string | null;
+  }) {
     const params = new URLSearchParams(window.location.search);
     const nextCategory = next.category !== undefined ? next.category : category;
     const nextLevel = next.level !== undefined ? next.level : levelFilter;
+    if (next.card) params.set("card", next.card);
+    else params.delete("card");
     if (nextCategory) params.set("category", nextCategory);
     else params.delete("category");
     if (nextLevel && nextLevel !== "all") params.set("level", nextLevel);
@@ -157,6 +185,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
       setCategorySummary(body.categories);
       setRecentCategories(body.recent);
       setHasAnyProgress(body.hasAnyProgress);
+      setPremiumOnlyWords(body.premiumOnlyWords);
     });
   }, [knownWords, levelFilter]);
 
@@ -231,6 +260,30 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     return { known, total, percent: total === 0 ? 0 : Math.round((known / total) * 100) };
   }, [categoryCards, knownWords]);
 
+  // Встать на нужную карточку, когда список темы уже пришёл. Отдельным
+  // эффектом, а не внутри fetch: список ещё режет фильтр уровня
+  // (`cards`, useMemo выше), и позиция считается по тому же массиву,
+  // который печатает счётчик «N из M» — иначе счётчик и карточка
+  // разошлись бы.
+  useEffect(() => {
+    if (!pendingCardId || cards.length === 0) return;
+    const at = cards.findIndex((c) => c.id === pendingCardId);
+    // Не нашли — тема открывается с начала. Правило проекта
+    // (`react-hooks/set-state-in-effect`) запрещает синхронный setState в
+    // эффекте, и оно здесь по делу: до прихода карточек вставать некуда,
+    // а сразу после — это уже вторая отрисовка. Микрозадача снимает
+    // каскад, а `cancelled` не даёт ей выстрелить после смены темы.
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (at >= 0) setIndex(at);
+      setPendingCardId(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingCardId, cards]);
+
   const card: FlashcardRow | undefined = cards[index];
   const inGrid = !category && !searchQuery;
   const completeDistance = cardWidth * COMPLETE_DISTANCE_FRACTION;
@@ -239,13 +292,16 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     if (cardRef.current) setCardWidth(cardRef.current.offsetWidth);
   }, [card?.id]);
 
-  function selectCategory(next: FlashcardCategory) {
+  function selectCategory(next: FlashcardCategory, startCardId?: string | null) {
     setCategory(next);
     setSearchInput("");
     setSearchQuery("");
+    // Индекс всё равно сбрасывается в 0: карточки темы ещё не пришли, и
+    // встать на нужную нельзя, пока их нет. Доводит эффект ниже.
     setIndex(0);
     setFlipped(false);
-    syncUrl({ category: next });
+    setPendingCardId(startCardId ?? null);
+    syncUrl({ category: next, card: startCardId ?? null });
   }
 
   function backToCategories() {
@@ -255,7 +311,8 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     setIndex(0);
     setFlipped(false);
     setLimited(false);
-    syncUrl({ category: null });
+    setPendingCardId(null);
+    syncUrl({ category: null, card: null });
   }
 
   function selectLevel(next: FlashcardLevel | "all") {
@@ -377,7 +434,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
           placeholder={dict.searchPlaceholder}
           className="mb-3 w-full rounded-full border border-black/10 bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-foreground/40 dark:border-white/15"
         />
-        <LevelFilterBar dict={dict} value={levelFilter} onChange={selectLevel} />
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={selectLevel} premiumLockedLevel={premiumOnlyWords > 0 ? "C1" : null} />
       </div>
 
       {inGrid ? (
