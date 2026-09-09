@@ -19,6 +19,12 @@
 //   3. В схеме нет колонки уровня «у пользователя есть доступ» — то есть
 //      `model User` не обзавёлся полем с именем вида `hasAccess`,
 //      `accessCode`, `isPremium`, `entitled`.
+//   4. Скрипт состояния партии (`scripts/access-codes-status.ts`) НИЧЕГО не
+//      пишет. Он объявлен read-only, и это утверждение проверяется чтением
+//      его исходника, а не обещанием в его же комментарии: ни одного вызова
+//      записи Prisma (`create`, `update`, `updateMany`, `upsert`, `delete`,
+//      `deleteMany`, `createMany`, `$executeRaw`, `$transaction`) в нём быть
+//      не должно (PROGRESS.md 7.151).
 //
 // Исключения закреплены ЧИСЛОМ, как у `check:brand` и `check:entitlement-point`.
 //
@@ -62,6 +68,27 @@ const ALLOWED_COUNT = 1;
 
 /** Признак, без которого исключение недействительно. */
 const E2E_GATE = /process\.env\.E2E_TEST_SEED/;
+
+/** Скрипт, объявленный «только чтение». Путь от корня репозитория, а не от
+ * `src/`: сторож ходит по `src/`, а этот файл лежит рядом с ним. */
+const READONLY_SCRIPT = "scripts/access-codes-status.ts";
+
+/** Вызовы, которых в read-only скрипте быть не может. Проверяется имя метода
+ * после точки, а не подстрока целиком: `db.accessCode.updateMany` и
+ * `client.user.update` обязаны ловиться оба. */
+const WRITE_CALLS = [
+  "create",
+  "createMany",
+  "update",
+  "updateMany",
+  "upsert",
+  "delete",
+  "deleteMany",
+  "$executeRaw",
+  "$executeRawUnsafe",
+  "$transaction",
+];
+const WRITE_CALL_RE = new RegExp(`\\.(?:${WRITE_CALLS.map((c) => c.replace("$", "\\$")).join("|")})\\s*\\(`);
 
 /** Записи в `Subscription`, которые в `access-code.ts` были бы вторым путём
  * выдачи в обход `extendOrGrantSubscription`. */
@@ -146,6 +173,25 @@ function grantCalls(read) {
   return (stripComments(read(HOME)).match(/extendOrGrantSubscription\s*\(/g) ?? []).length;
 }
 
+/** Записи в скрипте, объявленном «только чтение». Половина, без которой
+ * сторож зеленел бы на пустоте, — `readonlyScriptReads`: чтения там обязаны
+ * БЫТЬ, иначе файл переименован или выпотрошен, и «записей 0» ничего не
+ * значит. */
+function readonlyScriptWrites(readScript) {
+  const source = stripComments(readScript(READONLY_SCRIPT));
+  const hits = [];
+  source.split("\n").forEach((line, i) => {
+    if (WRITE_CALL_RE.test(line)) {
+      hits.push({ file: READONLY_SCRIPT, line: i + 1, text: line.trim().slice(0, 90) });
+    }
+  });
+  return hits;
+}
+
+function readonlyScriptReads(readScript) {
+  return (stripComments(readScript(READONLY_SCRIPT)).match(/\.findMany\s*\(/g) ?? []).length;
+}
+
 /** Исключение без гейта — не исключение. Проверяется у КАЖДОГО файла списка,
  * а не только у тех, что нашлись при обходе: файл, который исчез или
  * переименован, тоже обязан быть замечен. */
@@ -161,7 +207,7 @@ function ungatedAllowed(files, read) {
   return out;
 }
 
-function audit(files, read, schemaText) {
+function audit(files, read, schemaText, readScript) {
   const touches = tableTouches(files, read).filter((h) => !ALLOWED.has(h.file));
   return {
     touches,
@@ -169,6 +215,8 @@ function audit(files, read, schemaText) {
     userFlags: userFlagFields(schemaText),
     grantCalls: grantCalls(read),
     ungated: ungatedAllowed(files, read),
+    scriptWrites: readonlyScriptWrites(readScript),
+    scriptReads: readonlyScriptReads(readScript),
   };
 }
 
@@ -189,12 +237,21 @@ function problems(result) {
   if (result.grantCalls === 0) {
     out.push(`ВЫДАЧИ НЕТ ВОВСЕ: в ${HOME} нет ни одного вызова extendOrGrantSubscription`);
   }
+  for (const hit of result.scriptWrites) {
+    out.push(`READ-ONLY НАРУШЕН: ${hit.file}:${hit.line} пишет в базу — ${hit.text}`);
+  }
+  if (result.scriptReads === 0) {
+    out.push(
+      `ЧТЕНИЙ НЕТ ВОВСЕ: в ${READONLY_SCRIPT} нет ни одного findMany — «записей 0» на пустом файле ничего не значит`
+    );
+  }
   return out;
 }
 
 function main() {
   const files = sourceFiles();
   const read = (file) => readFileSync(join(ROOT, file), "utf-8");
+  const readScript = (file) => readFileSync(join(process.cwd(), file), "utf-8");
   const schemaText = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf-8");
 
   if (ALLOWED.size !== ALLOWED_COUNT) {
@@ -222,7 +279,7 @@ function main() {
               ? `const row = await db.accessCode.findUnique({ where: { code } });\n`
               : read(file);
           const planted = [...files, "app/api/checkout/route.ts"];
-          return problems(audit([...new Set(planted)], plantedRead, schemaText)).some((p) => p.startsWith("ВТОРОЙ ПУТЬ"));
+          return problems(audit([...new Set(planted)], plantedRead, schemaText, readScript)).some((p) => p.startsWith("ВТОРОЙ ПУТЬ"));
         },
       },
       {
@@ -235,14 +292,14 @@ function main() {
                   "await db.subscription.create({ data: {} }); await extendOrGrantSubscription("
                 )
               : read(file);
-          return problems(audit(files, plantedRead, schemaText)).some((p) => p.startsWith("ВЫДАЧА В ОБХОД"));
+          return problems(audit(files, plantedRead, schemaText, readScript)).some((p) => p.startsWith("ВЫДАЧА В ОБХОД"));
         },
       },
       {
         name: "на User заведён флаг доступа",
         run: () => {
           const planted = schemaText.replace("\nmodel User {", "\nmodel User {\n  hasAccessCode Boolean @default(false)");
-          return problems(audit(files, read, planted)).some((p) => p.startsWith("ФЛАГ НА USER"));
+          return problems(audit(files, read, planted, readScript)).some((p) => p.startsWith("ФЛАГ НА USER"));
         },
       },
       {
@@ -251,7 +308,28 @@ function main() {
           const gated = [...ALLOWED.keys()][0];
           const plantedRead = (file) =>
             file === gated ? read(file).replaceAll("process.env.E2E_TEST_SEED", "process.env.SOMETHING_ELSE") : read(file);
-          return problems(audit(files, plantedRead, schemaText)).some((p) => p.startsWith("ИСКЛЮЧЕНИЕ БЕЗ ГЕЙТА"));
+          return problems(audit(files, plantedRead, schemaText, readScript)).some((p) => p.startsWith("ИСКЛЮЧЕНИЕ БЕЗ ГЕЙТА"));
+        },
+      },
+      {
+        name: "read-only скрипт состояния научился писать в базу",
+        run: () => {
+          const plantedScript = (file) =>
+            file === READONLY_SCRIPT
+              ? readScript(file).replace(
+                  "const rows = await db.accessCode.findMany({",
+                  "await db.accessCode.updateMany({ where: {}, data: {} });\n    const rows = await db.accessCode.findMany({"
+                )
+              : readScript(file);
+          return problems(audit(files, read, schemaText, plantedScript)).some((p) => p.startsWith("READ-ONLY НАРУШЕН"));
+        },
+      },
+      {
+        name: "read-only скрипт перестал читать вовсе — «записей 0» на пустоте не считается",
+        run: () => {
+          const plantedScript = (file) =>
+            file === READONLY_SCRIPT ? readScript(file).replaceAll(".findMany(", ".nothingAtAll(") : readScript(file);
+          return problems(audit(files, read, schemaText, plantedScript)).some((p) => p.startsWith("ЧТЕНИЙ НЕТ"));
         },
       },
       {
@@ -259,7 +337,7 @@ function main() {
         run: () => {
           const plantedRead = (file) =>
             file === HOME ? read(file).replaceAll("extendOrGrantSubscription(", "nothingAtAll(") : read(file);
-          return problems(audit(files, plantedRead, schemaText)).some((p) => p.startsWith("ВЫДАЧИ НЕТ"));
+          return problems(audit(files, plantedRead, schemaText, readScript)).some((p) => p.startsWith("ВЫДАЧИ НЕТ"));
         },
       },
     ];
@@ -268,7 +346,7 @@ function main() {
       console.log(`  ${hit ? "поймано" : "ПРОПУЩЕНО"}: ${plant.name}`);
       if (hit) caught += 1;
     }
-    const clean = problems(audit(files, read, schemaText));
+    const clean = problems(audit(files, read, schemaText, readScript));
     const quiet = clean.length === 0;
     console.log(
       `  ${quiet ? "отрицательный контроль: без подсадки чисто" : "ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ КРАСЕН — сначала почини настоящее нарушение"}`
@@ -277,12 +355,13 @@ function main() {
     process.exit(caught === plants.length && quiet ? 0 : 1);
   }
 
-  const found = problems(audit(files, read, schemaText));
+  const found = problems(audit(files, read, schemaText, readScript));
   if (found.length === 0) {
     console.log(
       `check:access-code-path — ${files.length} файлов, таблица AccessCode читается только из src/${HOME} ` +
         `(исключений ${ALLOWED.size}, все с гейтом E2E_TEST_SEED), ` +
-        `выдача идёт ${grantCalls(read)} вызовом extendOrGrantSubscription, флагов доступа на User 0, нарушений 0.`
+        `выдача идёт ${grantCalls(read)} вызовом extendOrGrantSubscription, флагов доступа на User 0, ` +
+        `${READONLY_SCRIPT} читает ${readonlyScriptReads(readScript)} раз(а) и не пишет ни разу, нарушений 0.`
     );
     process.exit(0);
   }

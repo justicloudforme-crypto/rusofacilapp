@@ -320,4 +320,64 @@ for (const lang of ["es", "ru"] as const) {
     expect(row.redeemedAt, "код не сожжён за доступ, который и так был").toBeNull();
     expect(row.revokedAt).toBeNull();
   });
+
+  /**
+   * КОД, ВСТАВЛЕННЫЙ ИЗ МЕССЕНДЖЕРА (PROGRESS.md 7.151).
+   *
+   * Ровно тот вход, на котором 08.09.2026 споткнулся владелец: код прилетел
+   * сообщением, вставился в поле — и получил «код не найден», хотя тот же
+   * код, набранный руками без дефисов, погасился с первого раза. Разница
+   * была в знаках, которых не видно ни на экране, ни в поле: типографское
+   * тире вместо дефиса-минуса, неразрывный дефис, мягкий перенос, нулевая
+   * ширина в хвосте.
+   *
+   * Вводится строка `fill()`-ом, то есть тем же путём, что и вставка: поле
+   * получает значение целиком, а не по нажатию клавиш. Юнит-тесты
+   * нормализации проверяют функцию; здесь проверяется, что ничто между
+   * полем и базой — ни `type="text"`, ни `uppercase` в CSS, ни `maxLength`
+   * — эту строку не портит и не режет.
+   *
+   * ВТОРОЕ УТВЕРЖДЕНИЕ ТОГО ЖЕ СЛУЧАЯ — подпись тарифа. Погасивший
+   * приглашение читает в карточке подписки «доступ по коду-приглашению», а
+   * не «доступ выдан вручную»: до 7.151 обе выдачи писали один план
+   * "manual", и ученику показывалась фраза про чужое событие. Старая фраза
+   * проверяется на ОТСУТСТВИЕ — иначе «новая на месте» проходило бы и
+   * тогда, когда на экране обе.
+   */
+  test(`/${lang}: код, вставленный из мессенджера, погашается — и подписан как приглашение`, async ({ page }) => {
+    await loginWithoutSubscription(page);
+    expect(await paidMaterialIsOpen(page, lang), "до погашения платный пазл закрыт").toBe(false);
+
+    const code = await createCode(page);
+    // Мягкий перенос, тире U+2013 по группам, неразрывный дефис U+2011,
+    // нижний регистр и нулевая ширина в хвосте — всё сразу, одной строкой.
+    const pasted =
+      "\u00AD" + code.slice(0, 3) + "\u2013" + code.slice(3, 8).toLowerCase() +
+      "\u2011" + code.slice(8) + "\u200B";
+    expect(pasted, "вставленная строка обязана ОТЛИЧАТЬСЯ от набранной руками").not.toBe(code);
+
+    await submitCode(page, lang, pasted);
+
+    expect(new URL(page.url()).searchParams.get("accessCode")).toBe("redeemed");
+    await expectNotice(page, lang, "accessCodeRedeemed");
+    expect(await tierOf(page), "после погашения — standard").toBe("standard");
+    expect((await showCode(page, code)).redeemedAt, "код помечен погашенным").not.toBeNull();
+
+    // Подпись тарифа — на той же вкладке, куда вернул редирект.
+    const mine = DICTS[lang].profile.planAccessCodeLabel;
+    const theirs = DICTS[OTHER[lang]].profile.planAccessCodeLabel;
+    expect(mine, "подписи в двух локалях обязаны различаться").not.toBe(theirs);
+    // Подпись стоит В ДВУХ местах, и оба названы заданием: карточка подписки
+    // (`<dd>` под словом «Тариф») и история платежей (`<span>` в строке).
+    // Утверждать «видна» без числа здесь нельзя — Playwright в strict-режиме
+    // упадёт на двух совпадениях, и падение выглядело бы как отсутствие
+    // подписи, хотя она на месте дважды.
+    const label = page.getByText(mine, { exact: true });
+    await expect(label, "карточка подписки и история платежей").toHaveCount(2);
+    await expect(label.first()).toBeVisible();
+    await expect(label.last()).toBeVisible();
+    await expect(page.getByText(theirs, { exact: true })).toHaveCount(0);
+    // И старой фразы про ручную выдачу на экране нет вовсе.
+    await expect(page.getByText(DICTS[lang].profile.planManualLabel, { exact: true })).toHaveCount(0);
+  });
 }

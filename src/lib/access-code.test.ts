@@ -103,6 +103,16 @@ describe("уровень кода", () => {
     const { isPremiumPlan } = await import("./subscription");
     expect(isPremiumPlan(ACCESS_CODE_PLAN.standard)).toBe(false);
   });
+
+  it("план кода — своё слово, а не «manual»: иначе ученик читает в кабинете про чужое событие (7.151)", async () => {
+    expect(ACCESS_CODE_PLAN.standard).toBe("access_code");
+    // Ровно то, ради чего значение разведено: подпись у двух выдач не через
+    // кассу разная. Совпади они — этот случай упал бы.
+    expect(ACCESS_CODE_PLAN.standard).not.toBe("manual");
+    // И это НЕ про доступ: обе строки читаются одинаково.
+    const { isPremiumPlan } = await import("./subscription");
+    expect(isPremiumPlan("manual")).toBe(isPremiumPlan(ACCESS_CODE_PLAN.standard));
+  });
 });
 
 describe("redeemAccessCode — порядок вопросов", () => {
@@ -140,7 +150,7 @@ describe("redeemAccessCode — успех", () => {
 
     expect(result).toEqual({ ok: true, days: 90, tier: "standard" });
     expect(extendOrGrantSubscription).toHaveBeenCalledTimes(1);
-    expect(extendOrGrantSubscription).toHaveBeenCalledWith("u1", 90, "manual");
+    expect(extendOrGrantSubscription).toHaveBeenCalledWith("u1", 90, "access_code");
     // Ни одной ссылки на платёж: код никто не оплачивал через Stripe, и
     // возврат денег (7.145, долг 29) не должен на него натыкаться.
     expect(extendOrGrantSubscription.mock.calls[0]).toHaveLength(3);
@@ -150,7 +160,17 @@ describe("redeemAccessCode — успех", () => {
     updateMany.mockResolvedValue({ count: 1 });
     findUnique.mockResolvedValue(row({ durationDays: 14 }));
     await redeemAccessCode(USER, "AMIGOK7M2QW9F");
-    expect(extendOrGrantSubscription).toHaveBeenCalledWith("u1", 14, "manual");
+    expect(extendOrGrantSubscription).toHaveBeenCalledWith("u1", 14, "access_code");
+  });
+
+  it("код, ВСТАВЛЕННЫЙ из мессенджера, доходит до того же WHERE, что и набранный руками (7.151)", async () => {
+    updateMany.mockResolvedValue({ count: 1 });
+    findUnique.mockResolvedValue(row());
+    // Типографское тире, неразрывный дефис, мягкий перенос, нулевая ширина в
+    // хвосте и кириллическая А в начале — ровно то, что приносит вставка.
+    await redeemAccessCode(USER, "\u00ADАMIGO\u2013K7M2\u2011qw9f\u200B");
+    expect(updateMany.mock.calls[0][0].where.code).toBe("AMIGOK7M2QW9F");
+    expect(extendOrGrantSubscription).toHaveBeenCalledTimes(1);
   });
 
   it("условие UPDATE — это и есть одноразовость: погашен, отозван, просрочен", async () => {
@@ -200,6 +220,25 @@ describe("redeemAccessCode — отказы называются своим им
 
     expect(result).toEqual({ ok: false, reason });
     expect(extendOrGrantSubscription).not.toHaveBeenCalled();
+  });
+
+  it("КОНТРОЛЬ: заведомо несуществующий код по-прежнему unknown, и это не тавтология", async () => {
+    // Половина первая — утверждение. Строки в базе нет, отказ обязан быть
+    // именно `unknown`, а не «просрочен» и не «уже погашен».
+    updateMany.mockResolvedValue({ count: 0 });
+    findUnique.mockResolvedValue(null);
+    const result = await redeemAccessCode(USER, "AMIGO-XXXX-XXXX");
+    expect(result).toEqual({ ok: false, reason: "unknown" });
+    expect(extendOrGrantSubscription).not.toHaveBeenCalled();
+
+    // Половина вторая, без которой первая ничего не значит: этот случай
+    // ОБЯЗАН отличать несуществующий код от существующего. Тот же вход при
+    // строке в базе даёт другой ответ — значит проверка не проходит просто
+    // потому, что «отказ всегда unknown».
+    updateMany.mockResolvedValue({ count: 0 });
+    findUnique.mockResolvedValue(row({ redeemedAt: new Date() }));
+    const other = await redeemAccessCode(USER, "AMIGO-XXXX-XXXX");
+    expect(other).toEqual({ ok: false, reason: "already_redeemed" });
   });
 
   it("строка и с отзывом, и с погашением называется отозванной — отзыв разбирается первым", async () => {

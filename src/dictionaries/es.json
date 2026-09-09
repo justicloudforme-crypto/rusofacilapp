@@ -733,6 +733,7 @@
     "accessCodeRevoked": "Ese código fue anulado y ya no sirve. Escríbenos si crees que es un error.",
     "accessCodeAlreadyHasAccess": "Ya tienes acceso activo, así que no hace falta usar el código. Guárdalo: sigue sin usarse.",
     "accessCodeRateLimited": "Demasiados intentos seguidos. Espera un minuto y vuelve a probar.",
+    "planAccessCodeLabel": "Acceso con código de invitación",
     "planManualLabel": "Acceso otorgado a mano",
     "staffAccessNotice": "Acceso completo de por vida a todas las funciones como propietario/miembro del equipo — no necesitas suscribirte.",
     "progressHeading": "Tu progreso",
