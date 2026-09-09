@@ -1,0 +1,1627 @@
+[
+  {
+    "level": "A1",
+    "title": "Аквариум в гостиной",
+    "titleEs": "El acuario del salón"
+  },
+  {
+    "level": "A1",
+    "title": "Бабочка для праздника",
+    "titleEs": "Una pajarita para la fiesta"
+  },
+  {
+    "level": "A1",
+    "title": "Бумажный кораблик",
+    "titleEs": "El barquito de papel"
+  },
+  {
+    "level": "A1",
+    "title": "Бутерброд для Ромы",
+    "titleEs": "Un sándwich para Roma"
+  },
+  {
+    "level": "A1",
+    "title": "Воздушный змей на дереве",
+    "titleEs": "La cometa en el árbol"
+  },
+  {
+    "level": "A1",
+    "title": "Воздушный шарик",
+    "titleEs": "El globo que se escapó"
+  },
+  {
+    "level": "A1",
+    "title": "Гаммы перед ужином",
+    "titleEs": "Escalas antes de cenar"
+  },
+  {
+    "level": "A1",
+    "title": "Даша учится плавать",
+    "titleEs": "Dasha aprende a nadar"
+  },
+  {
+    "level": "A1",
+    "title": "Два одинаковых завтрака",
+    "titleEs": "Dos almuerzos iguales"
+  },
+  {
+    "level": "A1",
+    "title": "Дедушкин огород",
+    "titleEs": "El huerto del abuelo"
+  },
+  {
+    "level": "A1",
+    "title": "День стирки",
+    "titleEs": "Día de colada"
+  },
+  {
+    "level": "A1",
+    "title": "Дождливый день",
+    "titleEs": "Un día de lluvia"
+  },
+  {
+    "level": "A1",
+    "title": "Жаркий день",
+    "titleEs": "Un día de calor"
+  },
+  {
+    "level": "A1",
+    "title": "Завтрак в семье",
+    "titleEs": "El desayuno en familia"
+  },
+  {
+    "level": "A1",
+    "title": "Занятия гончарным делом по средам",
+    "titleEs": "Cerámica los miércoles"
+  },
+  {
+    "level": "A1",
+    "title": "Занятия йогой в парке",
+    "titleEs": "Yoga en el parque"
+  },
+  {
+    "level": "A1",
+    "title": "Запасной ключ",
+    "titleEs": "La llave de repuesto"
+  },
+  {
+    "level": "A1",
+    "title": "Заюшкина избушка",
+    "titleEs": "La cabaña de la liebre"
+  },
+  {
+    "level": "A1",
+    "title": "Зёрнышко в горшке",
+    "titleEs": "Una semilla en la maceta"
+  },
+  {
+    "level": "A1",
+    "title": "Колобок",
+    "titleEs": "Kolobok, el panecillo rodante"
+  },
+  {
+    "level": "A1",
+    "title": "Копилка Тимура",
+    "titleEs": "La alcancía de Timur"
+  },
+  {
+    "level": "A1",
+    "title": "Кот, петух и лиса",
+    "titleEs": "El gato, el gallo y la zorra"
+  },
+  {
+    "level": "A1",
+    "title": "Кружок вязания по вторникам",
+    "titleEs": "Club de tejido los martes"
+  },
+  {
+    "level": "A1",
+    "title": "Кружок оригами по понедельникам",
+    "titleEs": "Taller de origami los lunes"
+  },
+  {
+    "level": "A1",
+    "title": "Куда положить бутылку?",
+    "titleEs": "¿Dónde va la botella?"
+  },
+  {
+    "level": "A1",
+    "title": "Курочка Ряба",
+    "titleEs": "La gallinita Riaba"
+  },
+  {
+    "level": "A1",
+    "title": "Мамина шляпа",
+    "titleEs": "El sombrero de mamá"
+  },
+  {
+    "level": "A1",
+    "title": "Молочный зуб",
+    "titleEs": "El primer diente de leche"
+  },
+  {
+    "level": "A1",
+    "title": "Мороженое для двоих",
+    "titleEs": "Un helado para dos"
+  },
+  {
+    "level": "A1",
+    "title": "Мяч на крыше",
+    "titleEs": "La pelota en el tejado"
+  },
+  {
+    "level": "A1",
+    "title": "Новая девочка в классе",
+    "titleEs": "La niña nueva de la clase"
+  },
+  {
+    "level": "A1",
+    "title": "Новая рыбка",
+    "titleEs": "El pez nuevo"
+  },
+  {
+    "level": "A1",
+    "title": "Новый сосед",
+    "titleEs": "El vecino nuevo"
+  },
+  {
+    "level": "A1",
+    "title": "Новый фрукт",
+    "titleEs": "Una fruta desconocida"
+  },
+  {
+    "level": "A1",
+    "title": "Носки из корзины",
+    "titleEs": "El calcetín sin pareja"
+  },
+  {
+    "level": "A1",
+    "title": "Очередь в пекарне",
+    "titleEs": "La fila de la panadería"
+  },
+  {
+    "level": "A1",
+    "title": "Первый гол",
+    "titleEs": "El primer gol"
+  },
+  {
+    "level": "A1",
+    "title": "Первый снег",
+    "titleEs": "La primera nieve"
+  },
+  {
+    "level": "A1",
+    "title": "Плюшевый заяц",
+    "titleEs": "La liebre de peluche"
+  },
+  {
+    "level": "A1",
+    "title": "Подарок для мамы",
+    "titleEs": "Un regalo para mamá"
+  },
+  {
+    "level": "A1",
+    "title": "Поход в библиотеку",
+    "titleEs": "Sábado en la biblioteca"
+  },
+  {
+    "level": "A1",
+    "title": "Поход в зоопарк",
+    "titleEs": "Un día en el zoológico"
+  },
+  {
+    "level": "A1",
+    "title": "Пробежка вдоль реки",
+    "titleEs": "Correr junto al río"
+  },
+  {
+    "level": "A1",
+    "title": "Прогулка на велосипеде",
+    "titleEs": "Un paseo en bicicleta"
+  },
+  {
+    "level": "A1",
+    "title": "Прогулка с собакой",
+    "titleEs": "Paseando al perro"
+  },
+  {
+    "level": "A1",
+    "title": "Радуга после дождя",
+    "titleEs": "El arcoíris después de la lluvia"
+  },
+  {
+    "level": "A1",
+    "title": "Репка",
+    "titleEs": "El nabo gigante"
+  },
+  {
+    "level": "A1",
+    "title": "Рыбалка с дедушкой по выходным",
+    "titleEs": "De pesca con el abuelo"
+  },
+  {
+    "level": "A1",
+    "title": "Секрет бабушкиного пирога",
+    "titleEs": "El secreto del pastel de la abuela"
+  },
+  {
+    "level": "A1",
+    "title": "Секретный узел",
+    "titleEs": "El nudo secreto"
+  },
+  {
+    "level": "A1",
+    "title": "Сколько тарелок?",
+    "titleEs": "¿Cuántos platos?"
+  },
+  {
+    "level": "A1",
+    "title": "Слишком много воды",
+    "titleEs": "Demasiada agua"
+  },
+  {
+    "level": "A1",
+    "title": "Слишком солёный суп",
+    "titleEs": "La sopa demasiado salada"
+  },
+  {
+    "level": "A1",
+    "title": "Снегурочка",
+    "titleEs": "Snegúrochka, la niña de nieve"
+  },
+  {
+    "level": "A1",
+    "title": "Сортировка мусора дома",
+    "titleEs": "Separar la basura en casa"
+  },
+  {
+    "level": "A1",
+    "title": "Соседский кот",
+    "titleEs": "El gato del vecino"
+  },
+  {
+    "level": "A1",
+    "title": "Стол по инструкции",
+    "titleEs": "La mesa según el dibujo"
+  },
+  {
+    "level": "A1",
+    "title": "Считаем секунды",
+    "titleEs": "Contar los segundos"
+  },
+  {
+    "level": "A1",
+    "title": "Теремок",
+    "titleEs": "La casita del bosque"
+  },
+  {
+    "level": "A1",
+    "title": "Три медведя",
+    "titleEs": "Los tres osos"
+  },
+  {
+    "level": "A1",
+    "title": "Трудная задача",
+    "titleEs": "Un problema difícil"
+  },
+  {
+    "level": "A1",
+    "title": "Уборка в субботу",
+    "titleEs": "Limpieza de sábado"
+  },
+  {
+    "level": "A1",
+    "title": "Урок рисования",
+    "titleEs": "La clase de dibujo"
+  },
+  {
+    "level": "A1",
+    "title": "Чтение перед сном",
+    "titleEs": "Leer antes de dormir"
+  },
+  {
+    "level": "A1",
+    "title": "Шнурки на ботинках",
+    "titleEs": "Los cordones de las botas"
+  },
+  {
+    "level": "A2",
+    "title": "Акула",
+    "titleEs": "El tiburón"
+  },
+  {
+    "level": "A2",
+    "title": "Без колёсиков",
+    "titleEs": "Sin rueditas"
+  },
+  {
+    "level": "A2",
+    "title": "Билет в два конца",
+    "titleEs": "Boleto de ida y vuelta"
+  },
+  {
+    "level": "A2",
+    "title": "Вершки и корешки",
+    "titleEs": "Las copas y las raíces"
+  },
+  {
+    "level": "A2",
+    "title": "Встреча выпускников без адреса",
+    "titleEs": "La reunión de exalumnos sin dirección"
+  },
+  {
+    "level": "A2",
+    "title": "Встреча с туристом",
+    "titleEs": "Un encuentro con un turista"
+  },
+  {
+    "level": "A2",
+    "title": "Гаражная распродажа",
+    "titleEs": "La venta de garaje"
+  },
+  {
+    "level": "A2",
+    "title": "Гуси-лебеди",
+    "titleEs": "Los gansos-cisnes"
+  },
+  {
+    "level": "A2",
+    "title": "День без телефона",
+    "titleEs": "Un día sin teléfono"
+  },
+  {
+    "level": "A2",
+    "title": "Домик для скворца",
+    "titleEs": "Una casita para el estornino"
+  },
+  {
+    "level": "A2",
+    "title": "Друг забыл про день рождения",
+    "titleEs": "El amigo que olvidó el cumpleaños"
+  },
+  {
+    "level": "A2",
+    "title": "Дым на кухне",
+    "titleEs": "Humo en la cocina"
+  },
+  {
+    "level": "A2",
+    "title": "Заблудившийся турист",
+    "titleEs": "El turista perdido"
+  },
+  {
+    "level": "A2",
+    "title": "Забытые перчатки в автобусе",
+    "titleEs": "Los guantes olvidados en el autobús"
+  },
+  {
+    "level": "A2",
+    "title": "Забытый день рождения",
+    "titleEs": "El cumpleaños olvidado"
+  },
+  {
+    "level": "A2",
+    "title": "Забытый зонтик",
+    "titleEs": "El paraguas olvidado"
+  },
+  {
+    "level": "A2",
+    "title": "Забытый пароль",
+    "titleEs": "La contraseña olvidada"
+  },
+  {
+    "level": "A2",
+    "title": "Забытый студенческий",
+    "titleEs": "El carné de estudiante olvidado"
+  },
+  {
+    "level": "A2",
+    "title": "Заряд для важного звонка",
+    "titleEs": "Batería para una llamada importante"
+  },
+  {
+    "level": "A2",
+    "title": "Зонт остался в кафе",
+    "titleEs": "El paraguas se quedó en la cafetería"
+  },
+  {
+    "level": "A2",
+    "title": "Каша из топора",
+    "titleEs": "Sopa de hacha"
+  },
+  {
+    "level": "A2",
+    "title": "Клубничный вор",
+    "titleEs": "El ladrón de fresas"
+  },
+  {
+    "level": "A2",
+    "title": "Косточка",
+    "titleEs": "El hueso de la ciruela"
+  },
+  {
+    "level": "A2",
+    "title": "Костюм в последний момент",
+    "titleEs": "Un disfraz a última hora"
+  },
+  {
+    "level": "A2",
+    "title": "Кот соседки",
+    "titleEs": "El gato de la vecina"
+  },
+  {
+    "level": "A2",
+    "title": "Кот убежал из дома",
+    "titleEs": "El gato se escapó de casa"
+  },
+  {
+    "level": "A2",
+    "title": "Лиса и журавль",
+    "titleEs": "La zorra y la grulla"
+  },
+  {
+    "level": "A2",
+    "title": "Лишний билет",
+    "titleEs": "Una entrada de más"
+  },
+  {
+    "level": "A2",
+    "title": "Мастер-класс для новичков",
+    "titleEs": "Taller de cocina para principiantes"
+  },
+  {
+    "level": "A2",
+    "title": "Маша и медведь",
+    "titleEs": "Masha y el oso"
+  },
+  {
+    "level": "A2",
+    "title": "Неправильный автобус",
+    "titleEs": "El autobús equivocado"
+  },
+  {
+    "level": "A2",
+    "title": "Обед без денег",
+    "titleEs": "Almuerzo sin dinero"
+  },
+  {
+    "level": "A2",
+    "title": "Обувь не по размеру",
+    "titleEs": "Zapatillas de la talla equivocada"
+  },
+  {
+    "level": "A2",
+    "title": "Одинаковые костюмы",
+    "titleEs": "Dos trajes idénticos"
+  },
+  {
+    "level": "A2",
+    "title": "Одна свадьба, одно такси",
+    "titleEs": "Una boda y un solo taxi"
+  },
+  {
+    "level": "A2",
+    "title": "Ошибка в бронировании номера",
+    "titleEs": "Un error en la reserva del hotel"
+  },
+  {
+    "level": "A2",
+    "title": "Ошибка в заказе",
+    "titleEs": "Un error en el pedido"
+  },
+  {
+    "level": "A2",
+    "title": "Ошибка в счёте за электричество",
+    "titleEs": "Un error en la factura de la luz"
+  },
+  {
+    "level": "A2",
+    "title": "Пельмени с нуля",
+    "titleEs": "Pelmeni desde cero"
+  },
+  {
+    "level": "A2",
+    "title": "Первый день в спортзале",
+    "titleEs": "El primer día en el gimnasio"
+  },
+  {
+    "level": "A2",
+    "title": "Первый урок танцев",
+    "titleEs": "La primera clase de baile"
+  },
+  {
+    "level": "A2",
+    "title": "Перепутанные книги",
+    "titleEs": "Los libros intercambiados"
+  },
+  {
+    "level": "A2",
+    "title": "Пирог для новых соседей",
+    "titleEs": "Un pastel para los vecinos nuevos"
+  },
+  {
+    "level": "A2",
+    "title": "Попугай Кеша",
+    "titleEs": "Kesha, el loro"
+  },
+  {
+    "level": "A2",
+    "title": "Посылка не по адресу",
+    "titleEs": "Un paquete en la dirección equivocada"
+  },
+  {
+    "level": "A2",
+    "title": "Потерянный телефон",
+    "titleEs": "El teléfono perdido"
+  },
+  {
+    "level": "A2",
+    "title": "Прыжок",
+    "titleEs": "El salto"
+  },
+  {
+    "level": "A2",
+    "title": "Пятно на скатерти",
+    "titleEs": "La mancha en el mantel"
+  },
+  {
+    "level": "A2",
+    "title": "Пять минут до автобуса",
+    "titleEs": "Cinco minutos para el autobús"
+  },
+  {
+    "level": "A2",
+    "title": "Разговор без слов",
+    "titleEs": "Una conversación sin palabras"
+  },
+  {
+    "level": "A2",
+    "title": "Разница во времени",
+    "titleEs": "La diferencia horaria"
+  },
+  {
+    "level": "A2",
+    "title": "Сломанные наушники",
+    "titleEs": "Los auriculares rotos"
+  },
+  {
+    "level": "A2",
+    "title": "Собака в автобусе",
+    "titleEs": "Un perro en el autobús"
+  },
+  {
+    "level": "A2",
+    "title": "Собака с характером",
+    "titleEs": "Un perro con carácter"
+  },
+  {
+    "level": "A2",
+    "title": "Соревнование по чтению",
+    "titleEs": "El concurso de lectura"
+  },
+  {
+    "level": "A2",
+    "title": "Соседский шум",
+    "titleEs": "El ruido de los vecinos"
+  },
+  {
+    "level": "A2",
+    "title": "Торт с чужим именем",
+    "titleEs": "Un pastel con el nombre equivocado"
+  },
+  {
+    "level": "A2",
+    "title": "Утерянный багаж",
+    "titleEs": "La maleta perdida"
+  },
+  {
+    "level": "A2",
+    "title": "Утренняя пробежка",
+    "titleEs": "Correr por la mañana"
+  },
+  {
+    "level": "A2",
+    "title": "Филипок",
+    "titleEs": "Filipok"
+  },
+  {
+    "level": "A2",
+    "title": "Чужое место в поезде",
+    "titleEs": "El asiento equivocado en el tren"
+  },
+  {
+    "level": "A2",
+    "title": "Чужое пальто из химчистки",
+    "titleEs": "Un abrigo ajeno en la tintorería"
+  },
+  {
+    "level": "A2",
+    "title": "Чужой рюкзак",
+    "titleEs": "La mochila de otra"
+  },
+  {
+    "level": "A2",
+    "title": "Шумные соседи",
+    "titleEs": "Los vecinos de arriba"
+  },
+  {
+    "level": "A2",
+    "title": "Экзамен по вождению",
+    "titleEs": "El examen de conducir"
+  },
+  {
+    "level": "B1",
+    "title": "Авария в подвале",
+    "titleEs": "La avería del sótano"
+  },
+  {
+    "level": "B1",
+    "title": "Велосипед на чердаке",
+    "titleEs": "La bicicleta del desván"
+  },
+  {
+    "level": "B1",
+    "title": "Внук слесаря",
+    "titleEs": "El nieto del cerrajero"
+  },
+  {
+    "level": "B1",
+    "title": "Волонтёры в приюте для животных",
+    "titleEs": "Voluntarios en el refugio de animales"
+  },
+  {
+    "level": "B1",
+    "title": "Ворона и Лисица",
+    "titleEs": "El cuervo y la zorra"
+  },
+  {
+    "level": "B1",
+    "title": "Вторая жизнь лампы",
+    "titleEs": "La segunda vida de una lámpara"
+  },
+  {
+    "level": "B1",
+    "title": "Гроза на озере",
+    "titleEs": "Tormenta en el lago"
+  },
+  {
+    "level": "B1",
+    "title": "Деталь от соперников",
+    "titleEs": "Una pieza de los rivales"
+  },
+  {
+    "level": "B1",
+    "title": "Доклад без слайдов",
+    "titleEs": "Una presentación sin diapositivas"
+  },
+  {
+    "level": "B1",
+    "title": "Забастовка в день важного собеседования",
+    "titleEs": "Huelga el día de la entrevista"
+  },
+  {
+    "level": "B1",
+    "title": "Забытая посылка",
+    "titleEs": "El paquete devuelto"
+  },
+  {
+    "level": "B1",
+    "title": "Замена на поле",
+    "titleEs": "El cambio en el campo"
+  },
+  {
+    "level": "B1",
+    "title": "Заявка на визу",
+    "titleEs": "La solicitud de visa"
+  },
+  {
+    "level": "B1",
+    "title": "Злоумышленник",
+    "titleEs": "El malhechor"
+  },
+  {
+    "level": "B1",
+    "title": "Кавказский пленник",
+    "titleEs": "El prisionero del Cáucaso"
+  },
+  {
+    "level": "B1",
+    "title": "Кофе на вынос",
+    "titleEs": "Café para llevar"
+  },
+  {
+    "level": "B1",
+    "title": "Курс первой помощи",
+    "titleEs": "El curso de primeros auxilios"
+  },
+  {
+    "level": "B1",
+    "title": "Курсы кройки и шитья",
+    "titleEs": "Clases de corte y confección"
+  },
+  {
+    "level": "B1",
+    "title": "Лев и собачка",
+    "titleEs": "El león y la perrita"
+  },
+  {
+    "level": "B1",
+    "title": "Мастер с детской площадки",
+    "titleEs": "El manitas del parque infantil"
+  },
+  {
+    "level": "B1",
+    "title": "Найденный кошелёк",
+    "titleEs": "La billetera encontrada"
+  },
+  {
+    "level": "B1",
+    "title": "Не самый большой кабачок",
+    "titleEs": "No gana el calabacín más grande"
+  },
+  {
+    "level": "B1",
+    "title": "Ночь перед юбилеем кафе",
+    "titleEs": "La noche antes del aniversario"
+  },
+  {
+    "level": "B1",
+    "title": "Общий огород",
+    "titleEs": "El huerto compartido"
+  },
+  {
+    "level": "B1",
+    "title": "Одна варежка",
+    "titleEs": "Una manopla sola"
+  },
+  {
+    "level": "B1",
+    "title": "Одна и та же идея",
+    "titleEs": "La misma idea"
+  },
+  {
+    "level": "B1",
+    "title": "Опоздание на репетицию",
+    "titleEs": "Tarde al ensayo"
+  },
+  {
+    "level": "B1",
+    "title": "Папа по видеосвязи",
+    "titleEs": "Papá por videollamada"
+  },
+  {
+    "level": "B1",
+    "title": "Первая смена в кофейне",
+    "titleEs": "El primer turno en la cafetería"
+  },
+  {
+    "level": "B1",
+    "title": "Первый полумарафон",
+    "titleEs": "El primer medio maratón"
+  },
+  {
+    "level": "B1",
+    "title": "Первый шаг на сцену",
+    "titleEs": "El primer paso al escenario"
+  },
+  {
+    "level": "B1",
+    "title": "Пересолил",
+    "titleEs": "Se pasó de la raya"
+  },
+  {
+    "level": "B1",
+    "title": "Плати, сколько можешь",
+    "titleEs": "Paga lo que puedas"
+  },
+  {
+    "level": "B1",
+    "title": "Пожарные собаки",
+    "titleEs": "Los perros bomberos"
+  },
+  {
+    "level": "B1",
+    "title": "Порванная струна",
+    "titleEs": "La cuerda rota"
+  },
+  {
+    "level": "B1",
+    "title": "Последний поезд",
+    "titleEs": "El último tren"
+  },
+  {
+    "level": "B1",
+    "title": "Поход выходного дня",
+    "titleEs": "Excursión de fin de semana"
+  },
+  {
+    "level": "B1",
+    "title": "Разносчик газет",
+    "titleEs": "El repartidor de periódicos"
+  },
+  {
+    "level": "B1",
+    "title": "Ремонт велосипеда",
+    "titleEs": "Arreglar la bicicleta"
+  },
+  {
+    "level": "B1",
+    "title": "Ремонт крыши после урагана",
+    "titleEs": "El tejado después del huracán"
+  },
+  {
+    "level": "B1",
+    "title": "Сбор для Марины",
+    "titleEs": "Una colecta para Marina"
+  },
+  {
+    "level": "B1",
+    "title": "Свидание вслепую с книгой",
+    "titleEs": "Cita a ciegas con un libro"
+  },
+  {
+    "level": "B1",
+    "title": "Сигнал в грозу",
+    "titleEs": "Una señal en la tormenta"
+  },
+  {
+    "level": "B1",
+    "title": "Сказка о рыбаке и рыбке",
+    "titleEs": "El cuento del pescador y el pez dorado"
+  },
+  {
+    "level": "B1",
+    "title": "Скинулись на новый лифт",
+    "titleEs": "Entre todos, un ascensor nuevo"
+  },
+  {
+    "level": "B1",
+    "title": "Собеседование мечты",
+    "titleEs": "La entrevista soñada"
+  },
+  {
+    "level": "B1",
+    "title": "Собеседование на новую работу",
+    "titleEs": "Entrevista para un nuevo trabajo"
+  },
+  {
+    "level": "B1",
+    "title": "Соперницы в кондитерской",
+    "titleEs": "Rivales en la pastelería"
+  },
+  {
+    "level": "B1",
+    "title": "Соседка сверху",
+    "titleEs": "La vecina de arriba"
+  },
+  {
+    "level": "B1",
+    "title": "Спор из-за забора",
+    "titleEs": "La disputa por la cerca"
+  },
+  {
+    "level": "B1",
+    "title": "Спор из-за пульта",
+    "titleEs": "La guerra por el control remoto"
+  },
+  {
+    "level": "B1",
+    "title": "Стрекоза и Муравей",
+    "titleEs": "La libélula y la hormiga"
+  },
+  {
+    "level": "B1",
+    "title": "Стриж на балконе",
+    "titleEs": "Un vencejo en el balcón"
+  },
+  {
+    "level": "B1",
+    "title": "Стук на повороте",
+    "titleEs": "Un ruido en la curva"
+  },
+  {
+    "level": "B1",
+    "title": "Тихий напарник",
+    "titleEs": "El compañero callado"
+  },
+  {
+    "level": "B1",
+    "title": "Толстый и тонкий",
+    "titleEs": "El gordo y el flaco"
+  },
+  {
+    "level": "B1",
+    "title": "Травма перед финалом",
+    "titleEs": "Una lesión antes de la final"
+  },
+  {
+    "level": "B1",
+    "title": "Три попытки входа",
+    "titleEs": "Tres intentos de contraseña"
+  },
+  {
+    "level": "B1",
+    "title": "Урок кулинарии по видеозвонку",
+    "titleEs": "Clase de cocina por videollamada"
+  },
+  {
+    "level": "B1",
+    "title": "Урок от дочери",
+    "titleEs": "La lección de una hija"
+  },
+  {
+    "level": "B1",
+    "title": "Учитель на один день",
+    "titleEs": "Maestra por un día"
+  },
+  {
+    "level": "B1",
+    "title": "Хамелеон",
+    "titleEs": "El camaleón"
+  },
+  {
+    "level": "B1",
+    "title": "Чемодан не долетел",
+    "titleEs": "La maleta que no llegó"
+  },
+  {
+    "level": "B1",
+    "title": "Честный отказ",
+    "titleEs": "Un no sincero"
+  },
+  {
+    "level": "B1",
+    "title": "Шахматы в парке",
+    "titleEs": "Ajedrez en el parque"
+  },
+  {
+    "level": "B2",
+    "title": "Авария на сайте",
+    "titleEs": "La web se cayó"
+  },
+  {
+    "level": "B2",
+    "title": "Алгоритм",
+    "titleEs": "El algoritmo"
+  },
+  {
+    "level": "B2",
+    "title": "Анонимная записка",
+    "titleEs": "La nota anónima"
+  },
+  {
+    "level": "B2",
+    "title": "Бабушка на связи",
+    "titleEs": "La abuela en videollamada"
+  },
+  {
+    "level": "B2",
+    "title": "Балконный сад",
+    "titleEs": "El jardín del balcón"
+  },
+  {
+    "level": "B2",
+    "title": "Благотворительный концерт студентов",
+    "titleEs": "El concierto benéfico de los estudiantes"
+  },
+  {
+    "level": "B2",
+    "title": "Ванька",
+    "titleEs": "Vanka"
+  },
+  {
+    "level": "B2",
+    "title": "Воробей",
+    "titleEs": "El gorrión"
+  },
+  {
+    "level": "B2",
+    "title": "Голос из прошлого",
+    "titleEs": "Una voz del pasado"
+  },
+  {
+    "level": "B2",
+    "title": "Голос совести",
+    "titleEs": "La voz de la conciencia"
+  },
+  {
+    "level": "B2",
+    "title": "Дама с собачкой",
+    "titleEs": "La dama del perrito"
+  },
+  {
+    "level": "B2",
+    "title": "Данко",
+    "titleEs": "Danko"
+  },
+  {
+    "level": "B2",
+    "title": "Двойное свидание",
+    "titleEs": "Cita doble por error"
+  },
+  {
+    "level": "B2",
+    "title": "Дебютный проект",
+    "titleEs": "El proyecto de debut"
+  },
+  {
+    "level": "B2",
+    "title": "Дневник прабабушки",
+    "titleEs": "El diario de la bisabuela"
+  },
+  {
+    "level": "B2",
+    "title": "Доставка под дождём",
+    "titleEs": "Un reparto bajo la lluvia"
+  },
+  {
+    "level": "B2",
+    "title": "Жестовый перевод на концерте",
+    "titleEs": "Lengua de señas en el concierto"
+  },
+  {
+    "level": "B2",
+    "title": "Звонок в прямом эфире",
+    "titleEs": "Una llamada en directo"
+  },
+  {
+    "level": "B2",
+    "title": "Коса для внучки",
+    "titleEs": "Una trenza para la nieta"
+  },
+  {
+    "level": "B2",
+    "title": "Куст сирени",
+    "titleEs": "El arbusto de lilas"
+  },
+  {
+    "level": "B2",
+    "title": "Мастер-класс по резьбе по дереву",
+    "titleEs": "Taller de talla en madera"
+  },
+  {
+    "level": "B2",
+    "title": "Морозко",
+    "titleEs": "Morozko"
+  },
+  {
+    "level": "B2",
+    "title": "Мягкая правда",
+    "titleEs": "Una verdad amable"
+  },
+  {
+    "level": "B2",
+    "title": "Наследство",
+    "titleEs": "La herencia"
+  },
+  {
+    "level": "B2",
+    "title": "Ночное дежурство в клинике",
+    "titleEs": "Guardia nocturna en la clínica"
+  },
+  {
+    "level": "B2",
+    "title": "Общее открытие",
+    "titleEs": "Un descubrimiento compartido"
+  },
+  {
+    "level": "B2",
+    "title": "Ответить всем",
+    "titleEs": "Responder a todos"
+  },
+  {
+    "level": "B2",
+    "title": "Ошибка нового повара",
+    "titleEs": "El error del cocinero nuevo"
+  },
+  {
+    "level": "B2",
+    "title": "Первый матч женской хоккейной команды",
+    "titleEs": "El primer partido del equipo femenino"
+  },
+  {
+    "level": "B2",
+    "title": "Первый самостоятельный заказ",
+    "titleEs": "El primer encargo propio"
+  },
+  {
+    "level": "B2",
+    "title": "Пианино за стеной",
+    "titleEs": "El piano al otro lado de la pared"
+  },
+  {
+    "level": "B2",
+    "title": "Письма в стене",
+    "titleEs": "Cartas dentro de la pared"
+  },
+  {
+    "level": "B2",
+    "title": "Письмо через двадцать лет",
+    "titleEs": "Una carta veinte años después"
+  },
+  {
+    "level": "B2",
+    "title": "Питч для книжного магазина",
+    "titleEs": "El pitch de la librería"
+  },
+  {
+    "level": "B2",
+    "title": "Подкаст из бабушкиной кухни",
+    "titleEs": "Un pódcast desde la cocina de la abuela"
+  },
+  {
+    "level": "B2",
+    "title": "Посадка воздушного шара",
+    "titleEs": "El aterrizaje del globo"
+  },
+  {
+    "level": "B2",
+    "title": "Последнее кукольное представление",
+    "titleEs": "La última función de marionetas"
+  },
+  {
+    "level": "B2",
+    "title": "Последний клиент",
+    "titleEs": "El último cliente"
+  },
+  {
+    "level": "B2",
+    "title": "Раненая ласточка",
+    "titleEs": "La golondrina herida"
+  },
+  {
+    "level": "B2",
+    "title": "Реставрация дедушкиного автомобиля",
+    "titleEs": "El coche del abuelo"
+  },
+  {
+    "level": "B2",
+    "title": "Реставрация старого маяка",
+    "titleEs": "La restauración del viejo faro"
+  },
+  {
+    "level": "B2",
+    "title": "Реставрация старого трамвая",
+    "titleEs": "La restauración del viejo tranvía"
+  },
+  {
+    "level": "B2",
+    "title": "Свет в чужом окне",
+    "titleEs": "La luz de la ventana de enfrente"
+  },
+  {
+    "level": "B2",
+    "title": "Слепая дегустация",
+    "titleEs": "Degustación a ciegas"
+  },
+  {
+    "level": "B2",
+    "title": "Слух наполовину",
+    "titleEs": "Oír a medias"
+  },
+  {
+    "level": "B2",
+    "title": "Смена профессии",
+    "titleEs": "Cambio de oficio"
+  },
+  {
+    "level": "B2",
+    "title": "Соседи по общежитию",
+    "titleEs": "Compañeras de residencia"
+  },
+  {
+    "level": "B2",
+    "title": "Спасение улья",
+    "titleEs": "Salvar la colmena"
+  },
+  {
+    "level": "B2",
+    "title": "Старая библиотека",
+    "titleEs": "La vieja biblioteca"
+  },
+  {
+    "level": "B2",
+    "title": "Стрижка для Барсика",
+    "titleEs": "Un corte de pelo para Barsik"
+  },
+  {
+    "level": "B2",
+    "title": "Съёмки любительского фильма",
+    "titleEs": "Rodaje de una película amateur"
+  },
+  {
+    "level": "B2",
+    "title": "Тайна семейного альбома",
+    "titleEs": "El secreto del álbum familiar"
+  },
+  {
+    "level": "B2",
+    "title": "Тёмные аллеи",
+    "titleEs": "Alamedas oscuras"
+  },
+  {
+    "level": "B2",
+    "title": "Тоска",
+    "titleEs": "Angustia"
+  },
+  {
+    "level": "B2",
+    "title": "У лукоморья дуб зелёный",
+    "titleEs": "Junto al mar, un roble verde"
+  },
+  {
+    "level": "B2",
+    "title": "Урок вождения",
+    "titleEs": "La clase de conducir"
+  },
+  {
+    "level": "B2",
+    "title": "Флаеры для дочери",
+    "titleEs": "Los folletos de su hija"
+  },
+  {
+    "level": "B2",
+    "title": "Фотография обычного дня",
+    "titleEs": "La foto de un día cualquiera"
+  },
+  {
+    "level": "B2",
+    "title": "Хирургия",
+    "titleEs": "Cirugía"
+  },
+  {
+    "level": "B2",
+    "title": "Хлеб на всех",
+    "titleEs": "Pan para todos"
+  },
+  {
+    "level": "B2",
+    "title": "Царевна-лягушка",
+    "titleEs": "La princesa rana"
+  },
+  {
+    "level": "B2",
+    "title": "Экзамен ради дедушки",
+    "titleEs": "Un examen por el abuelo"
+  },
+  {
+    "level": "B2",
+    "title": "Экскурсия для незрячих посетителей",
+    "titleEs": "Una visita guiada para personas ciegas"
+  },
+  {
+    "level": "B2",
+    "title": "Экскурсия под дождём",
+    "titleEs": "Una visita guiada bajo la lluvia"
+  },
+  {
+    "level": "B2",
+    "title": "Языковой обмен",
+    "titleEs": "Intercambio de idiomas"
+  },
+  {
+    "level": "C1",
+    "title": "Банка со старыми деталями",
+    "titleEs": "El frasco de piezas viejas"
+  },
+  {
+    "level": "C1",
+    "title": "Барышня-крестьянка",
+    "titleEs": "La señorita campesina"
+  },
+  {
+    "level": "C1",
+    "title": "Возвращение к тренеру",
+    "titleEs": "El regreso al entrenador"
+  },
+  {
+    "level": "C1",
+    "title": "Врачебная ошибка",
+    "titleEs": "Un error médico"
+  },
+  {
+    "level": "C1",
+    "title": "Второй шанс",
+    "titleEs": "La segunda oportunidad"
+  },
+  {
+    "level": "C1",
+    "title": "Голос за кадром",
+    "titleEs": "La voz en off"
+  },
+  {
+    "level": "C1",
+    "title": "Две сестры",
+    "titleEs": "Dos hermanas"
+  },
+  {
+    "level": "C1",
+    "title": "Дирижёрское решение",
+    "titleEs": "La decisión del director"
+  },
+  {
+    "level": "C1",
+    "title": "Дрожь в голосе",
+    "titleEs": "Un temblor en la voz"
+  },
+  {
+    "level": "C1",
+    "title": "Дуэт в переходе",
+    "titleEs": "Dúo en el pasaje del metro"
+  },
+  {
+    "level": "C1",
+    "title": "Здоровые, но лишние",
+    "titleEs": "Sanos, pero sobrantes"
+  },
+  {
+    "level": "C1",
+    "title": "Кадр, который никто не увидел",
+    "titleEs": "La foto que nadie vio"
+  },
+  {
+    "level": "C1",
+    "title": "Конфликт интересов",
+    "titleEs": "Conflicto de intereses"
+  },
+  {
+    "level": "C1",
+    "title": "Курган над рекой",
+    "titleEs": "El túmulo sobre el río"
+  },
+  {
+    "level": "C1",
+    "title": "Лапти",
+    "titleEs": "Los lapti"
+  },
+  {
+    "level": "C1",
+    "title": "Левша",
+    "titleEs": "El zurdo"
+  },
+  {
+    "level": "C1",
+    "title": "Летучий корабль",
+    "titleEs": "El barco volador"
+  },
+  {
+    "level": "C1",
+    "title": "Лишний год",
+    "titleEs": "Un año de más"
+  },
+  {
+    "level": "C1",
+    "title": "Ловушки в заповеднике",
+    "titleEs": "Trampas en la reserva"
+  },
+  {
+    "level": "C1",
+    "title": "Муму",
+    "titleEs": "Mumú"
+  },
+  {
+    "level": "C1",
+    "title": "Ночь перед Рождеством",
+    "titleEs": "La noche antes de Navidad"
+  },
+  {
+    "level": "C1",
+    "title": "Обещание анонимности",
+    "titleEs": "La promesa de anonimato"
+  },
+  {
+    "level": "C1",
+    "title": "Ошибка в формуле выплат",
+    "titleEs": "Un error en la fórmula de los pagos"
+  },
+  {
+    "level": "C1",
+    "title": "Перевод без переводчика",
+    "titleEs": "Traducir sin traductor"
+  },
+  {
+    "level": "C1",
+    "title": "Перевод без прикрас",
+    "titleEs": "Traducir sin adornos"
+  },
+  {
+    "level": "C1",
+    "title": "Плейлист для свадьбы",
+    "titleEs": "La lista de canciones de la boda"
+  },
+  {
+    "level": "C1",
+    "title": "Повесть о том, как один мужик двух генералов прокормил",
+    "titleEs": "Cómo un campesino alimentó a dos generales"
+  },
+  {
+    "level": "C1",
+    "title": "Подделка в винном погребе",
+    "titleEs": "Falsificación en la bodega"
+  },
+  {
+    "level": "C1",
+    "title": "Последнее письмо",
+    "titleEs": "La última carta"
+  },
+  {
+    "level": "C1",
+    "title": "Последние сто метров",
+    "titleEs": "Los últimos cien metros"
+  },
+  {
+    "level": "C1",
+    "title": "Последний маяк",
+    "titleEs": "El último farero"
+  },
+  {
+    "level": "C1",
+    "title": "Последний урок",
+    "titleEs": "La última clase"
+  },
+  {
+    "level": "C1",
+    "title": "Почтальон и молчаливый дом",
+    "titleEs": "El cartero y la casa silenciosa"
+  },
+  {
+    "level": "C1",
+    "title": "Правда за кадром",
+    "titleEs": "La verdad fuera de cámara"
+  },
+  {
+    "level": "C1",
+    "title": "Право на историю",
+    "titleEs": "El derecho a la propia historia"
+  },
+  {
+    "level": "C1",
+    "title": "Право на молчание",
+    "titleEs": "El derecho a callar"
+  },
+  {
+    "level": "C1",
+    "title": "Право не знать",
+    "titleEs": "El derecho a no saber"
+  },
+  {
+    "level": "C1",
+    "title": "Право оставаться дома",
+    "titleEs": "El derecho a quedarse en casa"
+  },
+  {
+    "level": "C1",
+    "title": "Продуманное поражение",
+    "titleEs": "Una derrota planeada"
+  },
+  {
+    "level": "C1",
+    "title": "Пшеничное поле",
+    "titleEs": "El campo de trigo"
+  },
+  {
+    "level": "C1",
+    "title": "Рассказы под псевдонимом",
+    "titleEs": "Relatos bajo seudónimo"
+  },
+  {
+    "level": "C1",
+    "title": "Родной язык",
+    "titleEs": "La lengua materna"
+  },
+  {
+    "level": "C1",
+    "title": "Скамейка для сына",
+    "titleEs": "El banquillo para su hijo"
+  },
+  {
+    "level": "C1",
+    "title": "Скрипка Ротшильда",
+    "titleEs": "El violín de Rothschild"
+  },
+  {
+    "level": "C1",
+    "title": "Скрытая переменная",
+    "titleEs": "La variable oculta"
+  },
+  {
+    "level": "C1",
+    "title": "Слепое пятно алгоритма",
+    "titleEs": "El punto ciego del algoritmo"
+  },
+  {
+    "level": "C1",
+    "title": "Слова, которые стесняются",
+    "titleEs": "Las palabras que dan vergüenza"
+  },
+  {
+    "level": "C1",
+    "title": "Слой под картиной",
+    "titleEs": "La capa bajo el cuadro"
+  },
+  {
+    "level": "C1",
+    "title": "Спасти лозу",
+    "titleEs": "Salvar la viña"
+  },
+  {
+    "level": "C1",
+    "title": "Срок эмбарго",
+    "titleEs": "El plazo del embargo"
+  },
+  {
+    "level": "C1",
+    "title": "Тень старой статьи",
+    "titleEs": "La sombra de un artículo antiguo"
+  },
+  {
+    "level": "C1",
+    "title": "Тишина после шторма",
+    "titleEs": "El silencio después del temporal"
+  },
+  {
+    "level": "C1",
+    "title": "Точный перевод",
+    "titleEs": "Traducción exacta"
+  },
+  {
+    "level": "C1",
+    "title": "Тревожная кнопка",
+    "titleEs": "El botón de emergencia"
+  },
+  {
+    "level": "C1",
+    "title": "Третий в комнате",
+    "titleEs": "El tercero en la sala"
+  },
+  {
+    "level": "C1",
+    "title": "Трещина в опоре",
+    "titleEs": "La grieta en el pilar"
+  },
+  {
+    "level": "C1",
+    "title": "Три вопроса",
+    "titleEs": "Las tres preguntas"
+  },
+  {
+    "level": "C1",
+    "title": "Три дня до премьеры",
+    "titleEs": "Tres días para el estreno"
+  },
+  {
+    "level": "C1",
+    "title": "У постели больного",
+    "titleEs": "Junto a la cama del enfermo"
+  },
+  {
+    "level": "C1",
+    "title": "Цена на полке",
+    "titleEs": "El precio en el estante"
+  },
+  {
+    "level": "C1",
+    "title": "Цена правды",
+    "titleEs": "El precio de la verdad"
+  },
+  {
+    "level": "C1",
+    "title": "Чудесный доктор",
+    "titleEs": "El médico milagroso"
+  },
+  {
+    "level": "C1",
+    "title": "Чужими словами",
+    "titleEs": "Con palabras ajenas"
+  },
+  {
+    "level": "C1",
+    "title": "Чутьё Бурана",
+    "titleEs": "El olfato de Burán"
+  },
+  {
+    "level": "C1",
+    "title": "Экспонат с историей",
+    "titleEs": "Una pieza con historia"
+  }
+]
