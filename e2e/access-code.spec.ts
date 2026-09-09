@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { randomInt } from "node:crypto";
 import { test, expect } from "./helpers/test";
 import { loginWithoutSubscription, loginWithSubscription } from "./helpers/auth";
@@ -25,7 +24,7 @@ import ru from "../src/dictionaries/ru.json";
  *      выдали»;
  *   2. форма ввода на месте и пуста — человеку есть куда ввести код заново;
  *   3. строка кода в базе не тронута (или тронута ровно так, как надо) —
- *      это читается стендом `scripts/e2e-access-code.ts`, а не выводится
+ *      это читается стендом `/api/test/access-code`, а не выводится
  *      из фразы на экране.
  *
  * КОНТРОЛЬ НА СЛЕПОТУ встроен, а не приложен отдельно:
@@ -43,7 +42,7 @@ import ru from "../src/dictionaries/ru.json";
  *
  * Коды свои на каждый случай и на каждый прогон (см. `newCode`): файл идёт
  * в двух проектах Playwright параллельно, и общий код был бы погашен первым
- * прогоном.
+ * прогоном. Заводит их СЕРВЕР, а не спека, — см. `bench` ниже.
  */
 
 const DICTS = { es, ru };
@@ -61,27 +60,51 @@ function newCode(): string {
 }
 
 /**
- * Стенд кодов. Отдельный процесс, а не импорт: генерируемый клиент Prisma —
- * ESM, а спеки Playwright грузятся как CommonJS (та же причина, по которой
- * e2e/helpers/auth.ts ходит в приложение по HTTP, а не через `@/lib/db`).
+ * Стенд кодов — маршрут `/api/test/access-code`, то есть ТОТ ЖЕ ПРОЦЕСС, что
+ * держит сайт.
+ *
+ * Так было не всегда, и разница стоила красного CI. Первая редакция (7.147)
+ * звала отдельный процесс `scripts/e2e-access-code.ts` под `tsx`, у которого
+ * своё соединение к тому же файлу базы. На полном прогоне в форме CI это
+ * роняло не эту спеку, а НАБОР: база в форме CI живёт в журнальном режиме
+ * `delete`, второе соединение исключает пишущего, а libSQL под Prisma на
+ * столкновении «писатель против писателя» не ждёт и не откатывает начатую
+ * транзакцию — сервер отвечает `P1008 / SocketTimeout` до конца жизни
+ * процесса (механизм измерен в 7.134, повторён числами в 7.148). Подпись
+ * отказа поэтому обманчива: падал `POST /api/auth/register` СЛЕДУЮЩЕГО
+ * теста, а не тот, который писал.
+ *
+ * `PRAGMA busy_timeout` на стороне стенда этого не лечит: ждать умеет только
+ * стенд, а ломается сторона сервера, которая не ждёт.
+ *
+ * Правило, из-за нарушения которого всё это случилось, записано ещё в 7.134:
+ * **базу e2e трогает ровно один процесс — сервер.**
  */
-function bench(args: string[]): Record<string, unknown> {
-  const output = execFileSync("node_modules/.bin/tsx", ["scripts/e2e-access-code.ts", ...args], {
-    cwd: process.cwd(),
-    env: { ...process.env, E2E_TEST_SEED: "1" },
-    encoding: "utf-8",
+async function createCode(
+  page: import("@playwright/test").Page,
+  options: { expired?: boolean; revoked?: boolean } = {}
+): Promise<string> {
+  const code = newCode();
+  const response = await page.context().request.post("/api/test/access-code", {
+    data: { code, ...options },
   });
-  const lines = output.trim().split("\n");
-  return JSON.parse(lines[lines.length - 1]) as Record<string, unknown>;
+  expect(response.status(), `POST /api/test/access-code ${code}`).toBe(200);
+  expect((await response.json()).created).toBe(code);
+  return code;
 }
 
-const createCode = (options: string[] = []): string => {
-  const code = newCode();
-  bench(["create", `--code=${code}`, ...options]);
-  return code;
-};
-
-const showCode = (code: string) => bench(["show", `--code=${code}`]);
+async function showCode(
+  page: import("@playwright/test").Page,
+  code: string
+): Promise<Record<string, unknown>> {
+  const response = await page.context().request.get(`/api/test/access-code?code=${code}`);
+  expect(response.status(), `GET /api/test/access-code ${code}`).toBe(200);
+  const row = (await response.json()) as Record<string, unknown>;
+  // Стенд обязан НАЙТИ строку. Без этого «redeemedAt равен null» проходило бы
+  // и на коде, которого в базе нет вовсе.
+  expect(row.found, `строка кода ${code} есть в базе`).toBe(true);
+  return row;
+}
 
 /**
  * ПЛАТНЫЙ МАТЕРИАЛ, на котором проверяется результат погашения.
@@ -203,7 +226,7 @@ for (const lang of ["es", "ru"] as const) {
     expect(await tierOf(page), "до погашения единая точка решения говорит free").toBe("free");
     expect(await paidMaterialIsOpen(page, lang), "до погашения платный пазл закрыт").toBe(false);
 
-    const code = createCode();
+    const code = await createCode(page);
     await submitCode(page, lang, code);
 
     expect(new URL(page.url()).searchParams.get("accessCode")).toBe("redeemed");
@@ -216,7 +239,7 @@ for (const lang of ["es", "ru"] as const) {
     // код кладёт строку плана `manual`, а она читается как `standard`.
     expect(await tierOf(page), "после погашения — standard, а не premium").toBe("standard");
 
-    const row = showCode(code);
+    const row = await showCode(page, code);
     expect(row.redeemedAt, "код помечен погашенным").not.toBeNull();
     expect(typeof row.redeemedById, "у погашения записан человек").toBe("string");
     expect(row.revokedAt).toBeNull();
@@ -236,12 +259,11 @@ for (const lang of ["es", "ru"] as const) {
   });
 
   test(`/${lang}: уже погашенный код — отказ второму, и код остаётся за первым`, async ({ page }) => {
-    const code = createCode();
-
     await loginWithoutSubscription(page);
+    const code = await createCode(page);
     await submitCode(page, lang, code);
     await expectNotice(page, lang, "accessCodeRedeemed");
-    const afterFirst = showCode(code);
+    const afterFirst = await showCode(page, code);
     expect(afterFirst.redeemedAt).not.toBeNull();
 
     // Второй человек в том же браузере: регистрация заменяет сессию.
@@ -253,31 +275,31 @@ for (const lang of ["es", "ru"] as const) {
     await expectNotice(page, lang, "accessCodeAlreadyRedeemed");
     expect(await paidMaterialIsOpen(page, lang), "второму материал так и не открылся").toBe(false);
 
-    const afterSecond = showCode(code);
+    const afterSecond = await showCode(page, code);
     expect(afterSecond.redeemedById, "погашение осталось за первым").toBe(afterFirst.redeemedById);
     expect(afterSecond.redeemedAt).toBe(afterFirst.redeemedAt);
   });
 
   test(`/${lang}: просроченный код — отказ, и код не израсходован`, async ({ page }) => {
     await loginWithoutSubscription(page);
-    const code = createCode(["--expired"]);
+    const code = await createCode(page, { expired: true });
     await submitCode(page, lang, code);
 
     expect(new URL(page.url()).searchParams.get("accessCode")).toBe("expired");
     await expectNotice(page, lang, "accessCodeExpired");
     expect(await paidMaterialIsOpen(page, lang), "после отказа платный пазл закрыт").toBe(false);
-    expect(showCode(code).redeemedAt, "просроченный код не погашается").toBeNull();
+    expect((await showCode(page, code)).redeemedAt, "просроченный код не погашается").toBeNull();
   });
 
   test(`/${lang}: отозванный код — отказ, и код не израсходован`, async ({ page }) => {
     await loginWithoutSubscription(page);
-    const code = createCode(["--revoked"]);
+    const code = await createCode(page, { revoked: true });
     await submitCode(page, lang, code);
 
     expect(new URL(page.url()).searchParams.get("accessCode")).toBe("revoked");
     await expectNotice(page, lang, "accessCodeRevoked");
     expect(await paidMaterialIsOpen(page, lang), "после отказа платный пазл закрыт").toBe(false);
-    expect(showCode(code).redeemedAt, "отозванный код не погашается").toBeNull();
+    expect((await showCode(page, code)).redeemedAt, "отозванный код не погашается").toBeNull();
   });
 
   test(`/${lang}: у кого доступ уже есть — код не тратится`, async ({ page }) => {
@@ -287,14 +309,14 @@ for (const lang of ["es", "ru"] as const) {
     // то, что строка кода осталась нетронутой.
     expect(await paidMaterialIsOpen(page, lang), "у подписчика платный пазл открыт").toBe(true);
 
-    const code = createCode();
+    const code = await createCode(page);
     await submitCode(page, lang, code);
 
     expect(new URL(page.url()).searchParams.get("accessCode")).toBe("already_has_access");
     await expectNotice(page, lang, "accessCodeAlreadyHasAccess");
     expect(await paidMaterialIsOpen(page, lang), "доступ на месте").toBe(true);
 
-    const row = showCode(code);
+    const row = await showCode(page, code);
     expect(row.redeemedAt, "код не сожжён за доступ, который и так был").toBeNull();
     expect(row.revokedAt).toBeNull();
   });

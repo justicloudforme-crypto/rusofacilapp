@@ -43,9 +43,25 @@ const HOME = "lib/access-code.ts";
  * Скрипты (`scripts/*.ts`) сюда не попадают вовсе: сторож ходит по `src/`, а
  * выпуск и отзыв партии — это administración базы, а не выдача доступа
  * пользователю в запросе.
+ *
+ * Исключение не безусловное: файл из этого списка обязан нести гейт
+ * `E2E_TEST_SEED` (см. ungatedAllowed ниже). Без гейта исключение само
+ * становится нарушением — иначе достаточно было бы назвать любой маршрут
+ * «тестовым» в комментарии, чтобы вывести его из-под правила.
  */
-const ALLOWED = new Map();
-const ALLOWED_COUNT = 0;
+const ALLOWED = new Map([
+  [
+    "app/api/test/access-code/route.ts",
+    "стенд браузерной проверки: заводит и читает БУМАЖКУ, Subscription не пишет " +
+      "и решений о доступе не принимает; 404 без E2E_TEST_SEED=1. Заведён вместо " +
+      "второго процесса с собственным соединением к базе — тот ронял весь прогон " +
+      "e2e (PROGRESS.md 7.134 и 7.148)",
+  ],
+]);
+const ALLOWED_COUNT = 1;
+
+/** Признак, без которого исключение недействительно. */
+const E2E_GATE = /process\.env\.E2E_TEST_SEED/;
 
 /** Записи в `Subscription`, которые в `access-code.ts` были бы вторым путём
  * выдачи в обход `extendOrGrantSubscription`. */
@@ -130,6 +146,21 @@ function grantCalls(read) {
   return (stripComments(read(HOME)).match(/extendOrGrantSubscription\s*\(/g) ?? []).length;
 }
 
+/** Исключение без гейта — не исключение. Проверяется у КАЖДОГО файла списка,
+ * а не только у тех, что нашлись при обходе: файл, который исчез или
+ * переименован, тоже обязан быть замечен. */
+function ungatedAllowed(files, read) {
+  const out = [];
+  for (const file of ALLOWED.keys()) {
+    if (!files.includes(file)) {
+      out.push({ file, why: "файла нет — строку исключения надо убрать вместе с ним" });
+      continue;
+    }
+    if (!E2E_GATE.test(read(file))) out.push({ file, why: "нет гейта process.env.E2E_TEST_SEED" });
+  }
+  return out;
+}
+
 function audit(files, read, schemaText) {
   const touches = tableTouches(files, read).filter((h) => !ALLOWED.has(h.file));
   return {
@@ -137,6 +168,7 @@ function audit(files, read, schemaText) {
     grants: directGrants(read),
     userFlags: userFlagFields(schemaText),
     grantCalls: grantCalls(read),
+    ungated: ungatedAllowed(files, read),
   };
 }
 
@@ -150,6 +182,9 @@ function problems(result) {
   }
   for (const field of result.userFlags) {
     out.push(`ФЛАГ НА USER: в model User появилось поле-признак доступа — ${field}`);
+  }
+  for (const hit of result.ungated) {
+    out.push(`ИСКЛЮЧЕНИЕ БЕЗ ГЕЙТА: src/${hit.file} стоит в списке исключений, но ${hit.why}`);
   }
   if (result.grantCalls === 0) {
     out.push(`ВЫДАЧИ НЕТ ВОВСЕ: в ${HOME} нет ни одного вызова extendOrGrantSubscription`);
@@ -211,6 +246,15 @@ function main() {
         },
       },
       {
+        name: "исключение потеряло гейт E2E_TEST_SEED — становится настоящим вторым путём",
+        run: () => {
+          const gated = [...ALLOWED.keys()][0];
+          const plantedRead = (file) =>
+            file === gated ? read(file).replaceAll("process.env.E2E_TEST_SEED", "process.env.SOMETHING_ELSE") : read(file);
+          return problems(audit(files, plantedRead, schemaText)).some((p) => p.startsWith("ИСКЛЮЧЕНИЕ БЕЗ ГЕЙТА"));
+        },
+      },
+      {
         name: "выдача выброшена вовсе — сторож не должен зеленеть на пустоте",
         run: () => {
           const plantedRead = (file) =>
@@ -236,7 +280,8 @@ function main() {
   const found = problems(audit(files, read, schemaText));
   if (found.length === 0) {
     console.log(
-      `check:access-code-path — ${files.length} файлов, таблица AccessCode читается только из src/${HOME}, ` +
+      `check:access-code-path — ${files.length} файлов, таблица AccessCode читается только из src/${HOME} ` +
+        `(исключений ${ALLOWED.size}, все с гейтом E2E_TEST_SEED), ` +
         `выдача идёт ${grantCalls(read)} вызовом extendOrGrantSubscription, флагов доступа на User 0, нарушений 0.`
     );
     process.exit(0);
