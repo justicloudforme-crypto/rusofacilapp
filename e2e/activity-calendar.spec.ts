@@ -200,25 +200,30 @@ for (const lang of ["es", "ru"] as const) {
     );
     expect(hotFlames.every((cls) => cls.length > 0 && !cls.includes("ice-flame"))).toBe(true);
 
-    const missed = page.locator('[data-date][data-state="missed"]');
-    const missedCount = await missed.count();
-    if (missedCount > 0) {
-      const cold = await missed.evaluateAll((els) =>
-        els.map((el) => ({
-          today: el.className.includes("ring-2"),
-          glyph: el.querySelector("span.absolute")?.className ?? "",
-        })),
-      );
-      for (const cell of cold) {
-        // Today is not a missed day until it is over, so it carries no cold
-        // flame — every other missed day does.
-        if (cell.today) continue;
-        expect(cell.glyph).toContain("ice-flame");
-      }
-      console.log(`  /${lang}: ${missedCount} day(s) without study, each carrying the cold flame`);
-    } else {
-      console.log(`  /${lang}: no day without study on this grid — the cold flame is not measured here`);
-    }
+    // И ДЕНЬ БЕЗ ЗАНЯТИЯ. Здесь до 08.09.2026 стоял `if (missedCount > 0)`
+    // с утверждением про холодный огонь внутри — и эта ветка не исполнялась
+    // НИ РАЗУ: аккаунт заводится за секунды до замера, поэтому каждый день
+    // до сегодняшнего — «до регистрации», а не «пропущен». Замерено
+    // прогоном с печатью числа (08.09.2026): `missedCount=0` в 4 случаях из
+    // 4 (PROGRESS.md 7.149, долг 94). Утверждение, которое не исполняется,
+    // пробой не является, поэтому вместо него стоит то, что здесь ДЕЙСТВИТЕЛЬНО
+    // проверяемо и может стать ложным: у свежего аккаунта пропущенных дней
+    // нет вовсе. Сам холодный огонь проверяет
+    // src/components/profile/ActivityCalendar.test.tsx, где у фикстуры есть
+    // история.
+    // Спрашивается ВЕСЬ словарь состояний, а не селектор одного из них:
+    // `[data-date][data-state="missed"]`, употреблённый только под
+    // `toHaveCount(0)`, никем не доказан живым — опечатка в нём дала бы
+    // тот же зелёный.
+    const states = await days.evaluateAll((els) => els.map((el) => el.getAttribute("data-state") ?? ""));
+    expect(states.length, "у каждой клетки календаря есть состояние").toBe(count);
+    // Положительная половина: атрибут действительно читается.
+    expect(states, "день занятия обязан быть на сетке").toContain("active");
+    console.log(`  /${lang}: состояния клеток — ${[...new Set(states)].sort().join(", ")}`);
+    expect(
+      states.filter((s) => s === "missed"),
+      "аккаунт заведён секунды назад: дни до сегодняшнего — «до регистрации», а не «пропущен»",
+    ).toEqual([]);
   });
 }
 

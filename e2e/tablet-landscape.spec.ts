@@ -24,19 +24,49 @@ test("home page uses the desktop nav, not the hamburger, and has no horizontal o
   await expectNoHorizontalOverflow(page);
 });
 
+/**
+ * СНАЧАЛА — ТА ЛИ ЭТО СТРАНИЦА, и только потом её ширина.
+ *
+ * `scrollWidth <= clientWidth` истинно на ПУСТОЙ странице, на экране
+ * отказа и на любом 404 — то есть само по себе оно не отличает «вёрстка в
+ * порядке» от «мерить было нечего». Замерено подсадкой 08.09.2026:
+ * `/es/courses` заменена на `<main />` при том же HTTP 200, и случай
+ * «courses catalog scales cleanly» прошёл зелёным в обоих проектах
+ * (PROGRESS.md 7.149, долг 94). Поэтому у каждого замера ширины теперь
+ * есть признак САМОЙ страницы — элемент, который бывает только на ней.
+ */
+async function expectPageIsReallyThere(
+  page: import("@playwright/test").Page,
+  status: number | undefined,
+  marker: import("@playwright/test").Locator,
+  what: string,
+) {
+  expect(status, `${what} не ответила 200`).toBe(200);
+  await expect(marker, `${what} отдала 200, но своего содержимого на ней нет`).toBeVisible();
+}
+
 test("vocabulary (flashcards) page scales cleanly at tablet landscape width", async ({ page }) => {
   // Vocabulary now requires an active subscription (see proxy.ts's
   // protectContentRoute) — without this the page would just redirect to
   // /pricing and the assertions below would be checking the wrong page.
   await loginWithSubscription(page);
-  await page.goto("/es/vocabulary");
+  const response = await page.goto("/es/vocabulary");
+  await expectPageIsReallyThere(page, response?.status(), page.getByRole("heading", { level: 1 }), "/es/vocabulary");
 
   await expect(page.locator("nav.hidden.sm\\:flex")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
 test("courses catalog scales cleanly at tablet landscape width", async ({ page }) => {
-  await page.goto("/es/courses");
+  const response = await page.goto("/es/courses");
+  // Вводная дека — то, из чего каталог курсов состоит; её `data-testid`
+  // ставит src/components/intro/IntroPresentation.tsx.
+  await expectPageIsReallyThere(
+    page,
+    response?.status(),
+    page.locator('[data-testid="intro-presentation"]'),
+    "/es/courses",
+  );
 
   await expectNoHorizontalOverflow(page);
 });
