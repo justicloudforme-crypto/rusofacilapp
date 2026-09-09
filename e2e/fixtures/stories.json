@@ -26,15 +26,15 @@
     "premiumOnly": false
   },
   {
-    "id": "e2e-fixture-story-primera-nieve",
-    "title": "Первый снег",
+    "id": "e2e-fixture-story-paraguas-olvidado",
+    "title": "Забытый зонтик",
     "titleEs": null,
     "author": "RusoFásil (relato original)",
-    "level": "A1",
-    "topic": "childhood",
-    "text": "Сегодня идёт первый снег.\nДети выходят во двор играть.\nНовая девочка Лена стоит одна у дома.\nОна не знает никого во дворе.\nМальчик Тёма лепит снеговика один.\nТёма видит Лену и говорит: «Привет! Помоги мне!»\nЛена улыбается и подходит к Тёме.\nВместе они лепят большого снеговика.\nОни дают снеговику морковку и шапку.\nТеперь у Лены есть друг во дворе.",
-    "description": "El primer día de nieve del año, una niña tímida y recién llegada al barrio hace su primer amigo construyendo un muñeco de nieve.",
-    "translationEs": "Hoy cae la primera nieve.\nLos niños salen al patio a jugar.\nLa niña nueva, Lena, está sola cerca de la casa.\nElla no conoce a nadie en el patio.\nEl niño Tioma hace un muñeco de nieve solo.\nTioma ve a Lena y dice: «¡Hola! ¡Ayúdame!»\nLena sonríe y se acerca a Tioma.\nJuntos hacen un muñeco de nieve grande.\nLe ponen una zanahoria y un gorro al muñeco.\nAhora Lena tiene un amigo en el patio.",
+    "level": "A2",
+    "topic": "daily_life",
+    "text": "Ольга сидела в кафе и пила кофе, потому что на улице шёл сильный дождь.\nКогда дождь немного стих, она встала и быстро вышла на улицу, но забыла свой зонтик у столика.\nОфициант заметил зонтик только через несколько минут, когда Ольга уже была далеко.\nМолодой человек за соседним столиком, Виктор, увидел эту сцену и решил помочь.\nОн схватил зонтик и побежал за Ольгой, хотя сам не взял с собой куртку.\nВиктор догнал её на углу улицы, весь мокрый от дождя, и протянул зонтик.\nОльга удивилась и сказала: «Вы промокли из-за меня, это неудобно!»\nВиктор рассмеялся и ответил: «Зато теперь у нас есть о чём поговорить за чашкой кофе».\nОни вернулись в то же кафе и проговорили целый час, пока дождь снова не начался за окном.\nС того дня Ольга и Виктор часто встречались в этом кафе, и всё началось с одного забытого зонтика.",
+    "description": "Una mujer olvida su paraguas en una cafetería y, gracias a un desconocido que corre para devolvérselo, nace una nueva amistad bajo la lluvia.",
+    "translationEs": "Olga estaba sentada en una cafetería tomando un café, porque afuera caía una lluvia fuerte.\nCuando la lluvia amainó un poco, se levantó y salió rápido a la calle, pero se olvidó su paraguas junto a la mesa.\nEl camarero notó el paraguas solo unos minutos después, cuando Olga ya estaba lejos.\nUn joven de la mesa de al lado, Víctor, vio la escena y decidió ayudar.\nAgarró el paraguas y corrió tras Olga, aunque él mismo no había llevado chaqueta.\nVíctor la alcanzó en la esquina de la calle, completamente mojado por la lluvia, y le entregó el paraguas.\nOlga se sorprendió y dijo: «Se mojó usted por mi culpa, qué incómodo».\nVíctor se rió y respondió: «Al menos ahora tenemos de qué hablar tomando un café».\nVolvieron a la misma cafetería y conversaron durante una hora entera, hasta que la lluvia volvió a empezar tras la ventana.\nDesde ese día, Olga y Víctor se encontraban a menudo en esa cafetería, y todo había empezado con un paraguas olvidado.",
     "isPremium": false,
     "premiumOnly": false
   }

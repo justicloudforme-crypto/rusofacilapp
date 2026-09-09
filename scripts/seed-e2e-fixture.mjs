@@ -97,8 +97,8 @@ async function main() {
     // Три строки — это ровно три состояния подачи названия, и меньшим
     // числом их не выразить (см. src/lib/story-title.ts):
     //   • `camaleon`      — не заморожен, `titleEs` есть: две строки на /es;
-    //   • `primera-nieve` — не заморожен, `titleEs` НЕТ: одна строка, ровно
-    //                       как до появления колонки;
+    //   • `paraguas-olvidado` — не заморожен, `titleEs` НЕТ: одна строка,
+    //                       ровно как до появления колонки;
     //   • `dia-de-colada` — ЗАМОРОЖЕН («День стирки», A1 — пилот
     //                       эксперимента, ключ (title, level)), `titleEs`
     //                       записан и всё равно НЕ показывается.
@@ -233,7 +233,13 @@ async function main() {
     // потерявшая любое из них, оставила бы спеку зелёной по причине,
     // которой в ней не видно, — ровно долг 94.
     const storiesWithEs = stories.filter((s) => s.titleEs).length;
-    const storiesWithoutEs = stories.filter((s) => !s.titleEs).length;
+    // «Без испанского названия» обязан быть НЕ замороженным: иначе
+    // спека, проверяющая «второй строки нет», проходила бы по причине
+    // заморозки, а не по причине пустого поля, и о пустом поле не
+    // говорила бы ничего. Ровно долг 94, только в фикстуре.
+    // 08.09.2026 на этом и поймано: первым кандидатом был «Первый снег»,
+    // а он сам в пилоте.
+    const storiesWithoutEs = stories.filter((s) => !s.titleEs && !isFrozenStory(s)).length;
     const frozenStories = stories.filter((s) => isFrozenStory(s)).length;
 
     console.log(

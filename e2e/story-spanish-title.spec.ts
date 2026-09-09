@@ -41,7 +41,7 @@ const byId = (id: string): FixtureStory => {
 };
 
 const WITH_ES = byId("e2e-fixture-story-camaleon");
-const WITHOUT_ES = byId("e2e-fixture-story-primera-nieve");
+const WITHOUT_ES = byId("e2e-fixture-story-paraguas-olvidado");
 const FROZEN = byId("e2e-fixture-story-dia-de-colada");
 
 /** Размер шрифта и порядок в DOM — числами, а не по имени класса. Класс
