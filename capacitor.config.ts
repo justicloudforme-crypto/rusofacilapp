@@ -22,7 +22,12 @@ const config: CapacitorConfig = {
   // change-before-first-publish territory in principle, but this is now the
   // actual intended identifier, not a stand-in.
   appId: "com.rusofacilapp.app",
-  appName: "RusoFácilapp",
+  // Витринное имя, НЕ бренд сайта: под иконкой стоит «RusoFácil»
+  // (решение владельца 09.09.2026, долг 70 «б»). Литерал, а не импорт из
+  // src/lib/brand.ts, по той же причине, что и appId выше: сторожа
+  // check:brand и check:app-id читают этот файл текстом. Сличается с
+  // APP_DISPLAY_NAME сторожем npm run check:brand.
+  appName: "RusoFácil",
   // Required by the Capacitor CLI schema (and `cap doctor`, which errors
   // on a missing index.html) even though nothing here is ever actually
   // served — server.url below is what really loads. Points at a tiny

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">RusoFácilapp</string>
-    <string name="title_activity_main">RusoFácilapp</string>
+    <string name="app_name">RusoFácil</string>
+    <string name="title_activity_main">RusoFácil</string>
     <string name="package_name">com.rusofacilapp.app</string>
     <string name="custom_url_scheme">com.rusofacilapp.app</string>
 </resources>

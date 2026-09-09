@@ -6,8 +6,18 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<!--
+	  Витринное имя, половина «б» долга 70. Решение владельца 09.09.2026:
+	  подпись под иконкой — «RusoFácil», короче бренда сайта на четыре
+	  буквы, потому что iOS обрезает подпись примерно на 12 знаках и
+	  «RusoFácilapp» превратилось бы в «RusoFáci…». Совпадать с брендом
+	  сайта (RusoFácilapp) она не обязана и намеренно не совпадает.
+	  Значение сличается с APP_DISPLAY_NAME из src/lib/brand.ts сторожем
+	  npm run check:brand — Xcode этот файл не читает, поэтому иначе как
+	  сторожем эти пять литералов в трёх файлах не удержать.
+	-->
 	<key>CFBundleDisplayName</key>
-        <string>RusoFácilapp</string>
+	<string>RusoFácil</string>
 	<!--
 	  Микрофон: упражнение на произношение (VoiceRecorder.tsx) зовёт
 	  navigator.mediaDevices.getUserMedia({ audio: true }) прямо из
@@ -41,7 +51,7 @@
 	  а не опечатка бренда.
 	-->
 	<key>CFBundleName</key>
-	<string>RusoFácilapp</string>
+	<string>RusoFácil</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
