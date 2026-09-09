@@ -32,6 +32,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
+      - "scripts/check-native-release-safety.mjs"
       - ".github/workflows/android-debug.yml"
   push:
     branches: [main]
@@ -42,6 +43,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
+      - "scripts/check-native-release-safety.mjs"
       - ".github/workflows/android-debug.yml"
   workflow_dispatch:
 
@@ -122,6 +124,32 @@ jobs:
 
       - name: Тот же сторож — позитивный контроль
         run: npm run check:apk-facts:plant
+
+      # РЕЛИЗНЫЙ вариант — и только ради него. Долг 109: до 09.09.2026
+      # `app-release-unsigned.apk` нёс внутри `assets/capacitor.config.json`
+      # строку `"url": "http://192.168.1.69:3000"` и `usesCleartextTraffic=true`
+      # в скомпилированном манифесте. Судить об этом по исходнику нельзя:
+      # `server.url` попадает в пакет через `cap sync` (файл в .gitignore),
+      # а `usesCleartextTraffic` — через слияние манифестов всех наборов.
+      # Подпись здесь по-прежнему НЕ делается: `assembleRelease` без
+      # signingConfig отдаёт неподписанный пакет, и для чтения манифеста и
+      # ассетов подпись не нужна.
+      - name: assembleRelease (неподписанный) — ради проверки ниже
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: В релизном пакете нет ни локального адреса, ни cleartext
+        run: |
+          set -euo pipefail
+          RAPK=android/app/build/outputs/apk/release/app-release-unsigned.apk
+          ls -l "$RAPK"
+          "$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt2" dump xmltree --file AndroidManifest.xml "$RAPK" > release-manifest.txt
+          unzip -p "$RAPK" assets/capacitor.config.json > release-capacitor-config.json
+          cat release-capacitor-config.json
+          node scripts/check-native-release-safety.mjs --xmltree=release-manifest.txt --config=release-capacitor-config.json
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:native-release-safety:plant
 
       - name: Выложить APK артефактом
         if: always()
