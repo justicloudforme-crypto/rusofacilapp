@@ -36,9 +36,17 @@
  *    src/lib/avatars.ts), bcrypt password hash, session cookie,
  *    theme-preference cookie, Stripe subscription status (card details
  *    never touch our servers — Stripe Checkout handles those directly),
- *    voice-pronunciation recordings (VoiceSubmission), and learning
- *    progress (lessons, flashcards, stories, exam attempts).
- *  - Subprocessors: Stripe (payments), Resend (transactional email),
+ *    and learning progress (lessons, flashcards, stories, exam attempts).
+ *    Voice-pronunciation recordings are NOT in that list and have not been
+ *    since 30.08.2026: they live in the browser's own IndexedDB
+ *    (src/lib/voice-recordings-store.ts, DB "rusofacil-voice", 30 clips /
+ *    20 MiB), there is no upload route among the 27 directories of
+ *    src/app/api/, and the six modules of the recording path make zero
+ *    network calls. Guarded mechanically by scripts/check-legal-truth.mjs.
+ *  - Subprocessors — the list is MEASURED, not remembered: every external
+ *    dependency imported from src/ must be named in both locales, and
+ *    scripts/check-legal-truth.mjs fails the build when one is not.
+ *    Stripe (payments), Resend (transactional email),
  *    Turso/libSQL (database), Vercel (hosting), Upstash (Redis — rate
  *    limiting and caching; sees email/IP as cache keys transiently, no
  *    persistent profile), OpenAI (text-to-speech, used ONCE per clip to
@@ -47,10 +55,15 @@
  *    speech call ever appears in runtime code; a listener's browser never
  *    reaches OpenAI), YouTube (embedded
  *    videos in the media library, governed by Google's own policies for
- *    any interaction with an embed).
+ *    any interaction with an embed), Sentry (error reports), RevenueCat
+ *    (in-app purchases on iOS/Android; web purchases go through Stripe),
+ *    and three Vercel products beyond hosting — Blob (course audio files),
+ *    Web Analytics and Speed Insights (aggregate, cookieless page and
+ *    load-time counts).
  *  - Account deletion is genuinely self-service and already built:
- *    password + emailed confirmation link, cascades every DB row and
- *    deletes on-disk voice recordings (see
+ *    password + emailed confirmation link, cascades every DB row (there are
+ *    no voice recordings on disk to delete any more — see above and
+ *    scripts/check-legal-truth.mjs; the text no longer promises it) (see
  *    src/app/api/auth/confirm-account-deletion/route.ts) — the Privacy
  *    Policy can honestly describe this as already working, not aspirational.
  *  - Subscription cancellation is immediate (not "at period end") and
@@ -70,7 +83,13 @@ export interface LegalSection {
 
 export interface LegalDocument {
   title: string;
+  /** ISO-дата решения, написанная рукой. НЕ время сборки: сборка идёт при
+   * каждом деплое, а документ меняется по решению — путать их значит
+   * заводить долг класса 39/40 («контент в коде не датирован») наоборот. */
   lastUpdated: string;
+  /** Подпись перед датой. Без неё на странице стояло голое «2026-08-31», и
+   * читатель не мог знать, что это за число. */
+  lastUpdatedLabel: string;
   intro: string;
   sections: LegalSection[];
 }
@@ -80,7 +99,14 @@ export interface LegalDocument {
 // sends nothing to OpenAI. The old wording was in the present tense
 // ("genera el audio…") and read as if a clip were synthesised while the
 // student pressed play. Nothing about what is collected changed.
-const PRIVACY_LAST_UPDATED = "2026-08-31";
+// 09.09.2026: восемь утверждений о голосе переписаны — они говорили, что
+// запись хранится у нас, а с 30.08.2026 (7.49) она не покидает устройство
+// (долг 73). Тем же заходом названы обработчики, которых текст не называл:
+// Sentry, RevenueCat и три продукта Vercel (Blob, Web Analytics, Speed
+// Insights) — долг 74. Дата написана рукой и НЕ берётся из времени сборки:
+// сборка идёт при каждом деплое, а документ меняется по решению, и дата
+// обязана означать второе (тот же класс, что долги 39 и 40).
+const PRIVACY_LAST_UPDATED = "2026-09-09";
 
 // 08.09.2026: section 3 of the Terms gained the three things it had never
 // said out loud — that cash (an OXXO voucher) is offered to buyers in
@@ -101,6 +127,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   es: {
     title: "Términos de Servicio",
     lastUpdated: TERMS_LAST_UPDATED,
+    lastUpdatedLabel: "Última actualización:",
     intro:
       "Estos Términos de Servicio ('Términos') regulan el uso de RusoFácilapp.com y de la aplicación asociada (el 'Servicio'), operado por Vasilii Petrov ('nosotros', 'el operador'). Al crear una cuenta o usar el Servicio, aceptas estos Términos. Si no estás de acuerdo, no uses el Servicio.",
     sections: [
@@ -135,7 +162,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
         heading: "4. Contenido del curso y propiedad intelectual",
         paragraphs: [
           "Todo el contenido educativo del Servicio (lecciones, historias, ejercicios, glosario, narraciones de audio) es propiedad del operador o se usa bajo licencia, y está protegido por leyes de propiedad intelectual. Puedes usarlo únicamente para tu aprendizaje personal, no comercial.",
-          "Las grabaciones de voz que subas como práctica de pronunciación siguen siendo tuyas; nos concedes una licencia limitada para almacenarlas y reproducírtelas a ti como parte del Servicio. No las usamos con ningún otro fin.",
+          "Las grabaciones de práctica de pronunciación no se suben: se quedan en el almacenamiento del propio navegador de tu dispositivo (IndexedDB) y nunca llegan a nuestros servidores. Son tuyas y sólo tuyas, y no te pedimos ninguna licencia sobre ellas porque nunca las recibimos.",
           "La biblioteca de audio y video incluye videos incrustados de YouTube mediante su reproductor oficial; no alojamos ni redistribuimos esos videos. Su uso está sujeto también a los Términos de Servicio de YouTube/Google.",
         ],
       },
@@ -149,7 +176,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Eliminación de cuenta",
         paragraphs: [
-          "Puedes eliminar tu cuenta en cualquier momento desde tu perfil. El proceso requiere tu contraseña y la confirmación de un enlace enviado a tu correo, y elimina de forma permanente tu cuenta, tu progreso, tus grabaciones de voz y cancela cualquier suscripción activa. Esta acción no se puede deshacer.",
+          "Puedes eliminar tu cuenta en cualquier momento desde tu perfil. El proceso requiere tu contraseña y la confirmación de un enlace enviado a tu correo, y elimina de forma permanente tu cuenta y tu progreso, y cancela cualquier suscripción activa. Esta acción no se puede deshacer. Tus grabaciones de pronunciación no entran en ese borrado porque nunca estuvieron en nuestros servidores: viven en tu dispositivo y las borras tú, desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
         ],
       },
       {
@@ -179,6 +206,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   ru: {
     title: "Условия использования",
     lastUpdated: TERMS_LAST_UPDATED,
+    lastUpdatedLabel: "Последнее изменение:",
     intro:
       "Эти Условия использования («Условия») регулируют использование сайта RusoFácilapp.com и связанного с ним приложения («Сервис»), которым управляет Василий Петров («мы», «оператор»). Создавая аккаунт или используя Сервис, вы соглашаетесь с этими Условиями. Если вы не согласны — пожалуйста, не используйте Сервис.",
     sections: [
@@ -213,7 +241,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
         heading: "4. Контент курса и интеллектуальная собственность",
         paragraphs: [
           "Весь учебный контент Сервиса (уроки, рассказы, упражнения, глоссарий, аудио-озвучка) принадлежит оператору или используется по лицензии и защищён законами об интеллектуальной собственности. Вы можете использовать его только для личного, некоммерческого обучения.",
-          "Аудиозаписи вашего произношения, которые вы загружаете для практики, остаются вашими; вы предоставляете нам ограниченную лицензию на их хранение и воспроизведение вам же в рамках Сервиса. Мы не используем их ни для каких других целей.",
+          "Аудиозаписи произношения никуда не загружаются: они остаются в хранилище самого браузера на вашем устройстве (IndexedDB) и на наши серверы не попадают. Они ваши и только ваши, и никакой лицензии на них мы не просим — потому что никогда их не получаем.",
           "Медиатека включает видео, встроенные с YouTube через официальный плеер; мы не размещаем и не распространяем эти видео самостоятельно. Их использование также регулируется условиями использования YouTube/Google.",
         ],
       },
@@ -227,7 +255,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Удаление аккаунта",
         paragraphs: [
-          "Вы можете удалить свой аккаунт в любой момент в личном профиле. Процесс требует ввода пароля и подтверждения по ссылке, отправленной на вашу почту, и безвозвратно удаляет ваш аккаунт, прогресс обучения, аудиозаписи произношения и отменяет любую активную подписку. Это действие нельзя отменить.",
+          "Вы можете удалить свой аккаунт в любой момент в личном профиле. Процесс требует ввода пароля и подтверждения по ссылке, отправленной на вашу почту, безвозвратно удаляет ваш аккаунт и прогресс обучения и отменяет любую активную подписку. Это действие нельзя отменить. Аудиозаписи произношения в это удаление не входят — их никогда не было на наших серверах: они живут на вашем устройстве, и удаляете их вы сами, прямо в упражнении или очистив данные сайта в браузере.",
         ],
       },
       {
@@ -260,6 +288,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
   es: {
     title: "Política de Privacidad",
     lastUpdated: PRIVACY_LAST_UPDATED,
+    lastUpdatedLabel: "Última actualización:",
     intro:
       "Esta Política de Privacidad explica qué datos personales recopila RusoFácilapp.com, cómo los usamos y qué derechos tienes sobre ellos. La escribimos en un lenguaje directo, evitando jerga legal innecesaria.",
     sections: [
@@ -274,7 +303,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
         paragraphs: [
           "Datos de cuenta: correo electrónico, nombre (opcional), un identificador de avatar (una cadena de texto como 'matryoshka_calm' — nunca subes ni almacenamos ninguna foto tuya), y tu contraseña, que guardamos siempre cifrada (hash bcrypt), nunca en texto plano.",
           "Datos de progreso de aprendizaje: qué lecciones has completado, tu racha de estudio, tus resultados en exámenes, qué palabras y expresiones ya conoces, y tu progreso de lectura en las historias.",
-          "Grabaciones de voz: si usas los ejercicios de pronunciación, almacenamos el archivo de audio que grabas para que puedas escucharlo y compararlo.",
+          "Grabaciones de voz: NO las recogemos. Si usas los ejercicios de pronunciación, el audio se guarda en el almacenamiento del propio navegador de tu dispositivo (IndexedDB, hasta 30 grabaciones o 20 MB, lo que se alcance primero) para que puedas escucharlo y compararlo. No se sube a ningún servidor, no existe ninguna ruta de subida en el Servicio y nosotros no podemos oírlo.",
           "Datos de suscripción: tu estado de suscripción (activa, cancelada, plan) y un identificador de cliente de Stripe. No almacenamos los datos de tu tarjeta de pago — Stripe los procesa directamente.",
           "Cookies técnicas: una cookie de sesión (para mantenerte conectado) y una cookie de preferencia de tema (claro/oscuro/lectura). Ninguna de las dos se usa para publicidad ni seguimiento entre sitios.",
         ],
@@ -293,7 +322,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• Stripe — procesamiento de pagos.",
           "• Resend — envío de correos operativos (recuperación de contraseña, confirmación de eliminación de cuenta).",
           "• Turso — alojamiento de la base de datos.",
-          "• Vercel — alojamiento del sitio y las funciones del servidor.",
+          "• Vercel — alojamiento del sitio y las funciones del servidor; almacenamiento de los archivos de audio del curso (Vercel Blob); y dos productos de medición del propio Vercel, Web Analytics y Speed Insights, que registran visitas de página y tiempos de carga de forma agregada, sin cookies y sin identificarte.",
+          "• Sentry — informes de errores. Cuando algo falla en el sitio o en la aplicación, Sentry recibe el error técnico, la dirección de la página y, si has iniciado sesión, tu identificador interno de usuario, para que podamos arreglarlo. No recibe tu contraseña ni tus grabaciones de voz.",
+          "• RevenueCat — gestión de las suscripciones compradas dentro de las aplicaciones móviles (App Store y Google Play). Recibe el identificador de la compra y tu identificador interno de usuario. Las compras hechas en la web no pasan por él, sino por Stripe.",
           "• Upstash — límite de intentos de inicio de sesión y caché de contenido; puede ver tu correo o dirección IP de forma transitoria, sin construir un perfil sobre ti.",
           "• OpenAI — la narración de las lecciones fue generada de antemano con su servicio de síntesis de voz, a partir del texto del curso. Los archivos de audio resultantes están guardados en nuestro propio almacenamiento: al escuchar una lección no se envía nada a OpenAI, ni texto tuyo ni datos personales.",
           "• YouTube/Google — cuando reproduces un video incrustado en nuestra biblioteca, YouTube puede recopilar datos según su propia política de privacidad, independiente de la nuestra.",
@@ -309,7 +340,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Cuánto tiempo conservamos tus datos",
         paragraphs: [
-          "Conservamos tus datos mientras tu cuenta esté activa. Si eliminas tu cuenta, el proceso (que requiere tu contraseña y confirmación por correo) borra de inmediato y de forma permanente tu cuenta, tu progreso y tus grabaciones de voz — incluidos los archivos de audio guardados en el servidor, no solo el registro en la base de datos.",
+          "Conservamos tus datos mientras tu cuenta esté activa. Si eliminas tu cuenta, el proceso (que requiere tu contraseña y confirmación por correo) borra de inmediato y de forma permanente tu cuenta y tu progreso, no sólo el registro principal sino todas las filas asociadas. Tus grabaciones de pronunciación no aparecen en esa lista porque nunca salieron de tu dispositivo: se borran desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
         ],
       },
       {
@@ -345,6 +376,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
   ru: {
     title: "Политика конфиденциальности",
     lastUpdated: PRIVACY_LAST_UPDATED,
+    lastUpdatedLabel: "Последнее изменение:",
     intro:
       "Эта Политика конфиденциальности объясняет, какие личные данные собирает RusoFácilapp.com, как мы их используем и какие права у вас есть в отношении них. Мы старались писать простым языком, без лишнего юридического жаргона.",
     sections: [
@@ -359,7 +391,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
         paragraphs: [
           "Данные аккаунта: email, имя (по желанию), идентификатор аватара (строка вроде 'matryoshka_calm' — вы никогда не загружаете и мы никогда не храним ваши фотографии), и ваш пароль, который мы всегда храним в зашифрованном виде (bcrypt-хэш), никогда в открытом тексте.",
           "Данные о прогрессе обучения: какие уроки вы прошли, ваша учебная серия (стрик), результаты экзаменов, какие слова и выражения вы уже знаете, и ваш прогресс чтения историй.",
-          "Аудиозаписи произношения: если вы используете упражнения на произношение, мы сохраняем файл записи, чтобы вы могли его прослушать и сравнить.",
+          "Аудиозаписи произношения: мы их НЕ собираем. Если вы делаете упражнения на произношение, запись сохраняется в хранилище самого браузера на вашем устройстве (IndexedDB, до 30 записей или 20 МБ — что наступит раньше), чтобы вы могли её прослушать и сравнить. На сервер она не уходит, маршрута загрузки в Сервисе не существует, и услышать её мы не можем.",
           "Данные подписки: статус вашей подписки (активна, отменена, тариф) и идентификатор клиента Stripe. Данные вашей банковской карты мы не храним — их обрабатывает напрямую Stripe.",
           "Технические cookie: cookie сессии (чтобы вы оставались авторизованы) и cookie предпочтения темы оформления (светлая/тёмная/для чтения). Ни один из них не используется для рекламы или межсайтового отслеживания.",
         ],
@@ -378,7 +410,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• Stripe — обработка платежей.",
           "• Resend — отправка служебных писем (восстановление пароля, подтверждение удаления аккаунта).",
           "• Turso — хостинг базы данных.",
-          "• Vercel — хостинг сайта и серверных функций.",
+          "• Vercel — хостинг сайта и серверных функций; хранение аудиофайлов курса (Vercel Blob); и два его собственных измерителя, Web Analytics и Speed Insights, которые считают просмотры страниц и время загрузки в обобщённом виде, без cookie и без вашего опознания.",
+          "• Sentry — отчёты об ошибках. Когда на сайте или в приложении что-то ломается, Sentry получает техническое описание ошибки, адрес страницы и, если вы вошли в аккаунт, ваш внутренний идентификатор пользователя, чтобы мы могли это починить. Ни пароля, ни аудиозаписей произношения он не получает.",
+          "• RevenueCat — управление подписками, купленными внутри мобильных приложений (App Store и Google Play). Получает идентификатор покупки и ваш внутренний идентификатор пользователя. Покупки на сайте через него не проходят — они идут через Stripe.",
           "• Upstash — ограничение попыток входа и кэширование контента; может видеть ваш email или IP-адрес кратковременно, без построения профиля о вас.",
           "• OpenAI — озвучка уроков была создана заранее его синтезатором речи на основе текста курса. Готовые аудиофайлы хранятся в нашем собственном хранилище: при прослушивании урока в OpenAI не уходит ничего — ни ваш текст, ни персональные данные.",
           "• YouTube/Google — при просмотре встроенного видео из нашей медиатеки YouTube может собирать данные согласно своей собственной политике конфиденциальности, независимой от нашей.",
@@ -394,7 +428,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Сколько мы храним ваши данные",
         paragraphs: [
-          "Мы храним ваши данные, пока ваш аккаунт активен. Если вы удаляете аккаунт (процесс требует пароль и подтверждение по почте), мы сразу и безвозвратно удаляем ваш аккаунт, прогресс и аудиозаписи произношения — включая сами аудиофайлы на сервере, а не только запись в базе данных.",
+          "Мы храним ваши данные, пока ваш аккаунт активен. Если вы удаляете аккаунт (процесс требует пароль и подтверждение по почте), мы сразу и безвозвратно удаляем ваш аккаунт и прогресс — не только основную запись, но и все связанные строки. Аудиозаписей произношения в этом списке нет: они никогда не покидали ваше устройство, и удаляются они вами — прямо в упражнении или очисткой данных сайта в браузере.",
         ],
       },
       {

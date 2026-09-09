@@ -7,7 +7,11 @@ export default function LegalDocumentView({ doc }: { doc: LegalDocument }) {
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{doc.title}</h1>
-      <p className="mt-2 text-sm text-foreground/50">{doc.lastUpdated}</p>
+      {/* Подпись обязательна: голая дата ничего не значит для читателя, а
+          магазины сверяют «дату последнего изменения» с текстом политики. */}
+      <p className="mt-2 text-sm text-foreground/50">
+        {doc.lastUpdatedLabel} <time dateTime={doc.lastUpdated}>{doc.lastUpdated}</time>
+      </p>
       <p className="mt-6 text-foreground/80">{doc.intro}</p>
 
       <div className="mt-10 space-y-8">
