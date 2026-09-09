@@ -185,6 +185,12 @@ for (const lang of ["es", "ru"] as const) {
     // closed, so the answer has to be read from the DOM rather than from
     // what is painted.
     const answers = await page.locator("details p").allTextContents();
+    // Селектор обязан что-то находить: `[].join("\n")` — это пустая
+    // строка, а «пустая строка не содержит OXXO» истинно всегда. Замерено
+    // подсадкой (ответ FAQ обёрнут в <div> вместо <p>) 08.09.2026:
+    // `details p` дал 0, и случай остался зелёным — PROGRESS.md 7.149,
+    // долг 94. Число то же, что у <details> четырьмя строками выше.
+    expect(answers, "ответ у каждого из четырёх вопросов").toHaveLength(4);
     expect(answers.join("\n")).not.toContain("OXXO");
 
     // THE CONTROL, and the reason this test is not simply "the page has no

@@ -351,6 +351,30 @@ async function dragSelect(page: Page, path: { row: number; col: number }[]) {
   await page.mouse.up();
 }
 
+/** Отпечаток ВИДА доски: класс каждой клетки в порядке DOM.
+ *
+ * Утверждать надо о виде, а не о конкретном классе. Проба, которая здесь
+ * стояла до 08.09.2026, считала клетки селектором
+ * `button[data-row].bg-foreground\\/15`, а выделенная клетка носит
+ * `bg-primary/20` (`src/components/word-games/WordSearchBoard.tsx`) — то
+ * есть селектор не совпадал НИ С ЧЕМ и счёт был нулём всегда. Замерено
+ * подсадкой настоящего дефекта (снят guard `isDraggingRef` в
+ * `handlePointerMove`): наведение мышью выделило 8 клеток, класс
+ * `bg-primary/20` появился на восьми, а прежняя проба нашла 0 и прошла
+ * (PROGRESS.md 7.149, долг 94). Отпечаток от имени класса не зависит: он
+ * сравнивает доску с ней же самой. */
+async function boardLook(page: Page): Promise<string> {
+  const cells = await page
+    .locator("button[data-row]")
+    .evaluateAll((els) => els.map((el) => `${el.getAttribute("data-row")},${el.getAttribute("data-col")}:${el.className}`).join("|"));
+  // Список слов — часть того же вида: найденное слово зачёркивается в нём,
+  // и отпечаток обязан это заметить, не называя ни одного класса.
+  const words = await page
+    .locator("ul li[data-word]")
+    .evaluateAll((els) => els.map((el) => `${el.getAttribute("data-word")}:${el.className}`).join("|"));
+  return `${cells}#${words}`;
+}
+
 test("word search: hovering the grid with no button held must not select anything", async ({ page }) => {
   // Regression guard for a real reported bug: the Pointer Events API
   // fires pointermove on plain hover, not only while a button is held,
@@ -361,16 +385,34 @@ test("word search: hovering the grid with no button held must not select anythin
   await page.waitForSelector("button[data-row]");
 
   const cells = await page.locator("button[data-row]").all();
+  expect(cells.length, "на доске нет ни одной клетки — мерить нечего").toBeGreaterThan(0);
+  const before = await boardLook(page);
+
+  // ПОЗИТИВНЫЙ КОНТРОЛЬ, и он обязан стоять ПЕРЕД замером: без него
+  // «после наведения доска не изменилась» доказывало бы только то, что
+  // отпечаток вообще не умеет меняться. Одиночное нажатие оставляет путь
+  // стоять (drag очищается на отпускании — см. handlePointerUp), поэтому
+  // именно оно и показывает, как выглядит выделенная клетка.
+  const first = (await cells[0].boundingBox())!;
+  await page.mouse.click(first.x + first.width / 2, first.y + first.height / 2);
+  const afterClick = await boardLook(page);
+  expect(afterClick, "нажатие обязано менять вид доски, иначе отпечаток слеп").not.toBe(before);
+
+  // Снять выделение той же кнопкой, которую видит человек, и убедиться,
+  // что доска вернулась к исходному виду.
+  await page.getByRole("button", { name: /^✕/ }).click();
+  await expect.poll(() => boardLook(page)).toBe(before);
+
   for (let i = 0; i < 30; i++) {
     const box = await cells[i].boundingBox();
     if (!box) continue;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 3 });
   }
 
-  const highlighted = await page.locator("button[data-row].bg-foreground\\/15").count();
-  expect(highlighted).toBe(0);
-  const foundCount = await page.locator("ul li[data-word].line-through").count();
-  expect(foundCount).toBe(0);
+  // ТО САМОЕ УТВЕРЖДЕНИЕ: наведение без нажатой кнопки не меняет на доске
+  // ни одного класса — ни выделения, ни найденного слова.
+  expect(await boardLook(page), "наведение мышью изменило вид доски или список слов").toBe(before);
+  await expect(page.getByRole("button", { name: /^✕/ })).toHaveCount(0);
 });
 
 test("word search: select a real word and see it struck through in the word list", async ({ page }) => {
@@ -528,9 +570,16 @@ test("word search: finding every word shows exactly one completion dialog", asyn
 
   // "Play again" must actually restart the SAME puzzle, not just close the
   // dialog — confirm every word goes back to unfound and is findable again.
+  //
+  // Счёт зачёркнутых слов берётся ДО и ПОСЛЕ. Прежде стояла только строка
+  // «после», и селектор `ul li[data-word].line-through` не был ничем
+  // доказан живым: опечатка в нём дала бы тот же зелёный (PROGRESS.md
+  // 7.149, долг 94).
+  const struck = page.locator("ul li[data-word].line-through");
+  await expect(struck, "перед перезапуском зачёркнуты все слова").toHaveCount(words.length);
   await page.getByRole("button", { name: "Jugar otro puzle" }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page.locator("ul li[data-word].line-through")).toHaveCount(0);
+  await expect(struck).toHaveCount(0);
   const firstPath = findPath(grid, words[0]);
   expect(firstPath).not.toBeNull();
   if (firstPath) await dragSelect(page, firstPath);

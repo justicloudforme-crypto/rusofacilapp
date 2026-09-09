@@ -109,6 +109,15 @@ const PATHS = [
 ];
 
 /**
+ * Пути, которым 404 на этой локали разрешён.
+ *
+ * Список пуст, и это ЗАМЕР, а не умолчание: 08.09.2026 в форме CI все семь
+ * путей выше отвечают 200 вошедшему Premium и на /es, и на /ru. Пока он
+ * пуст, «страница не нашлась» — это падение, а не молчаливый пропуск.
+ */
+const MAY_BE_MISSING: Record<string, string[]> = { es: [], ru: [] };
+
+/**
  * Бюджет теста, а не «таймаут на всякий случай».
  *
  * Каждое исполнение этого теста — один логин и СЕМЬ загрузок страниц, и
@@ -194,6 +203,15 @@ for (const width of WIDTHS) {
 
     const tooWide: string[] = [];
     const underfilled: string[] = [];
+    /** Что на самом деле померено, и что молча выпало. До 08.09.2026 обе
+     * величины не считались вовсе: страница, ответившая 404, пропускалась
+     * `continue`, и оба утверждения в конце сравнивали пустые списки.
+     * Замерено подсадкой (шесть из семи путей отвечают 404 у клиента с
+     * заголовком прогона): 20 исполнений из 20 остались ЗЕЛЁНЫМИ, включая
+     * `/word-games/WORD_SEARCH/C1/5` — ту самую 16-столбцовую доску, ради
+     * которой файл и написан (PROGRESS.md 7.149, долг 94). */
+    const measured: string[] = [];
+    const notFound: string[] = [];
     for (const path of PATHS) {
       const url = `/${lang}${path}`;
       // `domcontentloaded`, а не `load`, и это не послабление, а перенос
@@ -209,8 +227,12 @@ for (const width of WIDTHS) {
       // error page instead of the real one is how a check comes to pass
       // for the wrong reason.
       const status = response?.status() ?? 0;
-      if (status === 404) continue;
+      if (status === 404) {
+        notFound.push(path);
+        continue;
+      }
       expect(status, `${url} did not answer 200`).toBe(200);
+      measured.push(path);
       await settleGeometry(page);
       // The once-a-day greeting is a modal over the whole page. It is
       // position:fixed, so the fill rule skips it — but it also covers what
@@ -264,6 +286,21 @@ for (const width of WIDTHS) {
         }
       }
     }
+        // СКОЛЬКО СТРАНИЦ ПОМЕРЕНО — до того, как читать «находок ноль».
+        // Пропуск по 404 остаётся (несколько маршрутов и правда живут
+        // только на /es), но он теперь ИМЕНОВАННЫЙ и закреплён списком, а
+        // не молчаливым `continue`. Замер 08.09.2026 в форме CI: вошедшему
+        // Premium все семь путей отвечают 200 в обеих локалях, поэтому
+        // список пуст; появление в нём строки — это правка здесь, а не
+        // тихо уехавшее покрытие.
+        console.log(`  /${lang} at ${width}px: измерено ${measured.length} из ${PATHS.length}` +
+          (notFound.length ? `, 404 у ${notFound.join(", ")}` : ""));
+        expect(notFound.sort(), `страницы, которых не оказалось на /${lang}`).toEqual(
+          [...MAY_BE_MISSING[lang]].sort(),
+        );
+        expect(measured.length, "ни одна страница не была измерена").toBe(
+          PATHS.length - MAY_BE_MISSING[lang].length,
+        );
         expect(tooWide, `pages wider than the viewport:\n${tooWide.join("\n")}`).toEqual([]);
         expect(
           underfilled,

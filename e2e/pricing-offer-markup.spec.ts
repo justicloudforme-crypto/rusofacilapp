@@ -187,6 +187,12 @@ for (const lang of ["es", "ru"] as const) {
     await page.setExtraHTTPHeaders(headers("BR"));
     await page.goto(`/${lang}/pricing`);
     const offers = (await productOffers(page))!;
+    // Без этой строки весь случай проходил бы на разметке с ПУСТЫМ
+    // списком предложений: `[].every(...)` истинно, и цикл ниже не делает
+    // ни одного круга. Замерено подсадкой (`offers: []`) 08.09.2026:
+    // случай оставался зелёным, тогда как два соседних краснели —
+    // PROGRESS.md 7.149, долг 94.
+    expect(offers, "три предложения в разметке").toHaveLength(3);
     expect(offers.every((offer) => offer.priceCurrency === "MXN")).toBe(true);
     for (const offer of offers) {
       await expect(page.getByText(asWritten(offer, lang), { exact: true }).first()).toBeVisible();

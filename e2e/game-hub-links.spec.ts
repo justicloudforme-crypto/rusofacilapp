@@ -181,6 +181,12 @@ for (const lang of ["es", "ru"] as const) {
     expect(around, `puzzle ${middle} must link on to ${ladder[2]}`).toContain(ladder[2]);
 
     const topLinks = await rungLinks(last);
+    // Верхняя ступень обязана ВЕСТИ вниз — и это не украшение, а условие
+    // осмысленности двух циклов ниже: на пустом `topLinks` оба делают ноль
+    // кругов и проходят. Замерено подсадкой (у ступени `last` соседи
+    // убраны) 08.09.2026: `topLinks=0`, и случай остался зелёным —
+    // PROGRESS.md 7.149, долг 94.
+    expect(topLinks.length, `у ступени ${last} нет ни одной ссылки на соседа`).toBeGreaterThan(0);
     // The top of the FREE ladder links nothing above it. Rung 11 is
     // paywalled and a link to it is a 307 into /pricing.
     for (const seq of topLinks) {
