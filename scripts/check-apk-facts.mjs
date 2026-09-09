@@ -174,7 +174,9 @@ function main() {
     console.log("check:apk-facts --plant");
     const healthy = healthyBadging(src);
     const plants = [
-      ["package из старого переезда", healthy.replace(src.applicationId, "com.rusofasil.app")],
+      // Значение подсадки НЕ строчная опечатка имени: её запрещает
+      // `check:brand` (поймано им же на первом прогоне этого файла).
+      ["package не тот, что в build.gradle", healthy.replace(src.applicationId, "com.rusofacilapp.android")],
       ["versionCode не тот, что в build.gradle", healthy.replace(`versionCode='${src.versionCode}'`, "versionCode='7'")],
       ["versionName не тот, что в build.gradle", healthy.replace(`versionName='${src.versionName}'`, "versionName='9.9'")],
       ["витринное имя — бренд сайта, а не подпись под иконкой", healthy.replace(`application-label:'${src.label}'`, "application-label:'RusoFácilapp'")],
