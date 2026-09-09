@@ -19,10 +19,14 @@ import { STORY_CONTROL_SIZE, STORY_PILOT_SIZE } from "@/lib/story-pilot";
 
 const DICT = { indexTitle: "Título", indexIntro: "Intro" };
 
+/** Список принимает уже готовую пару строк («что крупно / что мельче») —
+ * решение принимает `storyTitles` на сервере, см. src/lib/story-title.ts. */
+const one = (title: string) => ({ primary: title, secondary: null });
+
 function rows(n: number, level = "A1") {
   return Array.from({ length: n }, (_, i) => ({
     id: `id-${i}`,
-    title: `Título ${String(i).padStart(3, "0")}`,
+    titles: one(`Título ${String(i).padStart(3, "0")}`),
     level,
   }));
 }
@@ -42,9 +46,36 @@ describe("StoryLinkIndex", () => {
 
   it("анкор — заголовок рассказа, а не «читать»", () => {
     const { container } = render(
-      <StoryLinkIndex lang="ru" stories={[{ id: "x", title: "Теремок", level: "A1" }]} dict={DICT} />,
+      <StoryLinkIndex lang="ru" stories={[{ id: "x", titles: one("Теремок"), level: "A1" }]} dict={DICT} />,
     );
     expect(container.querySelector("a")?.textContent).toBe("Теремок");
+  });
+
+  it("испанское название анкор, русский оригинал — второй строкой под ним", () => {
+    const { container } = render(
+      <StoryLinkIndex
+        lang="es"
+        stories={[{ id: "x", titles: { primary: "Día de colada", secondary: "День стирки" }, level: "A1" }]}
+        dict={DICT}
+      />,
+    );
+    const link = container.querySelector("a")!;
+    expect(link.querySelector('[data-testid="story-title-primary"]')?.textContent).toBe("Día de colada");
+    const original = link.querySelector('[data-testid="story-title-original"]');
+    expect(original?.textContent).toBe("День стирки");
+    // «Мельче» — не на глаз: кегль задан долей от родительского, поэтому
+    // он мельче в каждом из трёх мест, где стоит этот компонент.
+    expect(original?.className).toContain("text-[0.72em]");
+    // И это ОДНА ссылка, а не две: второе название — часть того же анкора.
+    expect(container.querySelectorAll("a")).toHaveLength(1);
+  });
+
+  it("рассказ без испанского названия печатается ровно как раньше — второй строки нет вовсе", () => {
+    const { container } = render(
+      <StoryLinkIndex lang="es" stories={[{ id: "x", titles: one("День стирки"), level: "A1" }]} dict={DICT} />,
+    );
+    expect(container.querySelector("a")?.textContent).toBe("День стирки");
+    expect(container.querySelector('[data-testid="story-title-original"]')).toBeNull();
   });
 
   it("порядок не зависит от порядка входа (значит, и от тарифа посетителя)", () => {
@@ -59,9 +90,9 @@ describe("StoryLinkIndex", () => {
       <StoryLinkIndex
         lang="es"
         stories={[
-          { id: "b1", title: "b", level: "B1" },
-          { id: "a1", title: "a", level: "A1" },
-          { id: "zz", title: "z", level: "C2" },
+          { id: "b1", titles: one("b"), level: "B1" },
+          { id: "a1", titles: one("a"), level: "A1" },
+          { id: "zz", titles: one("z"), level: "C2" },
         ]}
         dict={DICT}
       />,
@@ -78,7 +109,7 @@ describe("StoryLinkIndex", () => {
 
 describe("MediaLinkIndex", () => {
   it("печатает ссылку на каждый элемент медиатеки", () => {
-    const items = rows(275, "B2");
+    const items = rows(275, "B2").map(({ id, titles, level }) => ({ id, title: titles.primary, level }));
     const { container } = render(<MediaLinkIndex lang="ru" items={items} dict={DICT} />);
     expect(hrefs(container)).toHaveLength(275);
     expect(hrefs(container)[0]).toMatch(/^\/ru\/media\//);
@@ -105,7 +136,7 @@ describe("заморозка: обращение одинаковое", () => {
       ...rows(10).map((r, i) => ({ ...r, id: `plain-${i}` })),
       ...frozenPaths
         .filter((p) => p.startsWith("/es/stories/"))
-        .map((p, i) => ({ id: p.split("/").pop()!, title: `Frozen ${i}`, level: "A1" })),
+        .map((p, i) => ({ id: p.split("/").pop()!, titles: one(`Frozen ${i}`), level: "A1" })),
     ];
     const { container } = render(<StoryLinkIndex lang="es" stories={stories} dict={DICT} />);
     const counts = new Map<string, number>();

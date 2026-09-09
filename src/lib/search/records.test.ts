@@ -19,9 +19,9 @@ const SOURCES: SearchSources = {
   dictionaries: { es: es as unknown as Dictionary, ru: ru as unknown as Dictionary },
   exams: [{ level: "a1", slug: "a1-exam-1", title: "Examen A1 · Lecciones 1 a 10" }],
   stories: [
-    { id: "s1", title: "Три медведя", level: "A1", isPremium: false, premiumOnly: false },
-    { id: "s2", title: "Тихий Дон", level: "C1", isPremium: true, premiumOnly: false },
-    { id: "s3", title: "Платный рассказ", level: "B2", isPremium: true, premiumOnly: true },
+    { id: "s1", title: "Три медведя", titleEs: null, level: "A1", isPremium: false, premiumOnly: false },
+    { id: "s2", title: "Тихий Дон", titleEs: "El Don apacible", level: "C1", isPremium: true, premiumOnly: false },
+    { id: "s3", title: "Платный рассказ", titleEs: null, level: "B2", isPremium: true, premiumOnly: true },
   ],
   media: [
     { id: "song-katyusha", title: "Катюша", level: "A2", free: true },

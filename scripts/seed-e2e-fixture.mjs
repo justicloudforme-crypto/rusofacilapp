@@ -27,6 +27,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import { PrismaClient } from "../src/generated/prisma/client.ts";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { isFrozenStory } from "../src/lib/story-pilot.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(here, "..", "e2e", "fixtures");
@@ -88,6 +89,27 @@ async function main() {
     // сильнее прочих (LITERARY_IDIOM_LIMITS), и без неё платная половина
     // проверки не имела бы на чём сработать.
     const idioms = readFixture("idioms.json");
+    // Три настоящих рассказа, и это ФОРМА, а не количество (правило
+    // 7.141). До 08.09.2026 таблица `Story` в базе CI была пуста, и цену
+    // этого назвал долг 94: `catalog-index-links.spec.ts` сравнивал два
+    // ПУСТЫХ списка — `indexed=0`, `all=0` в 4 исполнениях из 4.
+    //
+    // Три строки — это ровно три состояния подачи названия, и меньшим
+    // числом их не выразить (см. src/lib/story-title.ts):
+    //   • `camaleon`      — не заморожен, `titleEs` есть: две строки на /es;
+    //   • `primera-nieve` — не заморожен, `titleEs` НЕТ: одна строка, ровно
+    //                       как до появления колонки;
+    //   • `dia-de-colada` — ЗАМОРОЖЕН («День стирки», A1 — пилот
+    //                       эксперимента, ключ (title, level)), `titleEs`
+    //                       записан и всё равно НЕ показывается.
+    // Без третьей строки утверждение «замороженные новой подачи не
+    // получили» проверялось бы на пустом множестве — то есть не
+    // проверялось бы вовсе.
+    //
+    // Одно отличие от боевых строк названо вслух: `isPremium` у всех трёх
+    // снят. Спека ходит анонимом, а закрытая страница показала бы пейволл
+    // вместо текста — то есть проверялся бы не тот вопрос.
+    const stories = readFixture("stories.json");
 
     assertSafeToSeed(
       "WordGamePuzzle",
@@ -111,6 +133,16 @@ async function main() {
       await db.idiom.findMany({ select: { id: true } }),
       (r) => r.id,
     );
+
+    assertSafeToSeed(
+      "Story",
+      await db.story.findMany({ select: { id: true } }),
+      (r) => r.id,
+    );
+
+    for (const s of stories) {
+      await db.story.upsert({ where: { id: s.id }, update: { ...s }, create: { ...s } });
+    }
 
     for (const i of idioms) {
       await db.idiom.upsert({ where: { id: i.id }, update: { ...i }, create: { ...i } });
@@ -197,13 +229,22 @@ async function main() {
     }
     const longestOpenableLadder = Math.max(0, ...freeByPair.values());
 
+    // Три состояния подачи названия рассказа, каждое числом. Фикстура,
+    // потерявшая любое из них, оставила бы спеку зелёной по причине,
+    // которой в ней не видно, — ровно долг 94.
+    const storiesWithEs = stories.filter((s) => s.titleEs).length;
+    const storiesWithoutEs = stories.filter((s) => !s.titleEs).length;
+    const frozenStories = stories.filter((s) => isFrozenStory(s)).length;
+
     console.log(
       `e2e fixture: ${puzzles.length} puzzles (${curved} curved/★, widest grid ${widestGrid} columns, ` +
         `widest crossword ${widestCrossword}, longest openable free ladder ${longestOpenableLadder}, ` +
         `${freeButLocked} free-by-rule but Premium-gated), ` +
         `${terms.length} glossary terms (${withRelatedLessons} with a related lesson), ` +
         `${cards.length} flashcards in ${cardCategories.size} category/-ies, ` +
-        `${idioms.length} idioms in ${idiomCategories.size} category/-ies`,
+        `${idioms.length} idioms in ${idiomCategories.size} category/-ies, ` +
+        `${stories.length} stories (${storiesWithEs} with a Spanish title, ${storiesWithoutEs} without, ` +
+        `${frozenStories} frozen by the experiment)`,
     );
     if (
       curved === 0 ||
@@ -214,7 +255,10 @@ async function main() {
       widestGrid < 18 ||
       widestCrossword < 40 ||
       longestOpenableLadder < 3 ||
-      freeButLocked === 0
+      freeButLocked === 0 ||
+      storiesWithEs === 0 ||
+      storiesWithoutEs === 0 ||
+      frozenStories === 0
     ) {
       console.error("the fixture lost a shape the suite asserts on — see e2e/fixtures/");
       process.exitCode = 1;

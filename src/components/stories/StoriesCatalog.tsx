@@ -10,10 +10,16 @@ import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/li
 import { usePaywall } from "@/contexts/PaywallContext";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
+import StoryTitle from "@/components/stories/StoryTitle";
+import type { StoryTitleView } from "@/lib/story-title";
 
 export interface StorySummary {
   id: string;
-  title: string;
+  /** Готовая пара «что показать крупно / что мельче» — считается на
+   * сервере (`storyTitles`), а не здесь: правило заморозки живёт в
+   * `story-pilot.ts`, и тащить его список из 65 названий в браузерный
+   * бандл ради карточки незачем. */
+  titles: StoryTitleView;
   author: string;
   level: StoryLevel;
   isPremium: boolean;
@@ -99,8 +105,13 @@ export default function StoriesCatalog({
       if (topicFilter !== "all" && story.topic !== topicFilter) return false;
       if (classicOnly && !story.isClassic) return false;
       if (trimmedQuery) {
+        // Обе строки названия, а не только напечатанная крупно: на
+        // `/es` испаноговорящий ищет по испанскому, а тот, кто уже
+        // услышал русское, — по русскому, и найтись обязаны оба.
         const matches =
-          story.title.toLowerCase().includes(trimmedQuery) || story.author.toLowerCase().includes(trimmedQuery);
+          story.titles.primary.toLowerCase().includes(trimmedQuery) ||
+          (story.titles.secondary?.toLowerCase().includes(trimmedQuery) ?? false) ||
+          story.author.toLowerCase().includes(trimmedQuery);
         if (!matches) return false;
       }
       return true;
@@ -222,7 +233,7 @@ export default function StoriesCatalog({
                     )}
                   </span>
                 </div>
-                <h2 className="mt-3 text-lg font-medium">{story.title}</h2>
+                <StoryTitle as="h2" titles={story.titles} className="mt-3 text-lg font-medium" />
                 <p className="mt-1 text-sm text-foreground/60">
                   {dict.byAuthor} {story.author}
                   {story.readingMinutes !== null && (

@@ -1405,6 +1405,8 @@
       "newTitle": "Nueva historia",
       "editTitleLabel": "Editar historia",
       "titleLabel": "Título",
+      "titleEsLabel": "Título en español (opcional)",
+      "titleEsHint": "Lo que lee el hispanohablante. El título ruso de arriba es el original y no se traduce.",
       "authorLabel": "Autor",
       "authorPlaceholder": "Ej.: Lérmontov, Tolstói, Cuento popular ruso",
       "levelLabel": "Nivel",
