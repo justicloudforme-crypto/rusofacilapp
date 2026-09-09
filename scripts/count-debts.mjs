@@ -13,12 +13,17 @@
 // в третий раз, утверждение закреплено проверкой, а не прозой.
 //
 // Контроль: `node scripts/count-debts.mjs --plant`.
-import { readFileSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync } from "node:fs";
 const PLANT = process.argv.includes("--plant");
 const src = PLANT ? "PROGRESS.md" : (process.argv[2] ?? "PROGRESS.md");
-function collect(file) {
+// Разбор идёт по ТЕКСТУ, а не по имени файла, и это не украшение: тест
+// src/lib/entry-point.test.ts запрещает скрипту писать файлы на импорте, а
+// подсадке нужен изменённый вариант таблицы. Вариант живёт в памяти —
+// временных файлов не создаётся вовсе. Поймано CI, а не локальным
+// прогоном: `npm run verify` юнит-тесты не запускает, их гоняет только CI.
+function collect(text) {
 const rows = [];
-for (const line of readFileSync(file, "utf8").split("\n")) {
+for (const line of text.split("\n")) {
   const m = line.match(/^\|\s*(\d+)\s*\|\s*([^|]*)\|/);
   if (!m) continue;
   const n = +m[1];
@@ -66,15 +71,13 @@ function print(s) {
 if (PLANT) {
   // Подсадка: строка таблицы в состоянии, которого счётчик не знает.
   // Именно так и выглядела бы «потерянная строка», о которой шёл спор.
-  const TMP = "scripts/__debts-plant__.generated.md";
   const body = readFileSync("PROGRESS.md", "utf8");
-  const healthy = summarise(collect("PROGRESS.md"));
+  const healthy = summarise(collect(body));
   let ok = healthy.balanced;
   console.log(`  ${ok ? "молчит" : "ЛОЖНО КРАСНЫЙ"} — здоровая таблица (отрицательный контроль)`);
 
   // 1. состояние вне трёх категорий: строка исчезает из счёта совсем
-  writeFileSync(TMP, body.replace("| 36 | **СНЯТ", "| 36 | **отложен"));
-  const s1 = summarise(collect(TMP));
+  const s1 = summarise(collect(body.replace("| 36 | **СНЯТ", "| 36 | **отложен")));
   const caught1 = !s1.balanced || s1.rows.length !== healthy.rows.length;
   console.log(
     `  ${caught1 ? "поймано" : "ПРОПУЩЕНО"} — единственная снятая строка переименована в состояние вне трёх категорий ` +
@@ -82,16 +85,15 @@ if (PLANT) {
   );
 
   // 2. прямой разлад суммы: подделываем счёт через дубль номера
-  const s2 = summarise([...collect("PROGRESS.md"), { n: 999, state: "неведомо" }]);
+  const s2 = summarise([...collect(body), { n: 999, state: "неведомо" }]);
   const caught2 = !s2.balanced;
   console.log(`  ${caught2 ? "поймано" : "ПРОПУЩЕНО"} — строка с неизвестным состоянием в наборе: сумма ${s2.sum} против строк ${s2.rows.length}`);
 
-  rmSync(TMP);
   ok &&= caught1 && caught2;
   console.log(ok ? "count:debts --plant — 2 из 2 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
   process.exitCode = ok ? 0 : 1;
 } else {
-  const s = summarise(collect(src));
+  const s = summarise(collect(readFileSync(src, "utf8")));
   print(s);
   if (!s.balanced) {
     console.error(
