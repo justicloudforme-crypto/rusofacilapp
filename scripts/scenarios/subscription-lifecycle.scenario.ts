@@ -441,8 +441,8 @@ describe("money going back", () => {
     const user = await newUser("u-code-and-premium");
     scenario("[11] погашенный код + купленный Premium -> Premium возвращён");
 
-    // Строка кода — та же, что кладёт redeemAccessCode: план "manual",
-    // ссылок на Stripe нет ни одной.
+    // Строка кода — та же, что кладёт redeemAccessCode: план "access_code"
+    // (7.151), ссылок на Stripe нет ни одной.
     await raw.execute({
       sql: `INSERT INTO "AccessCode" (id, code, tier, durationDays, batch, createdAt)
             VALUES (?, 'AMIGOSCENARIO11', 'standard', 90, 'SCENARIO', ?)`,
@@ -466,7 +466,7 @@ describe("money going back", () => {
     // столетний срок Premium наехал бы на 90 дней кода (или наоборот).
     const afterPurchase = await rows(user);
     expect(afterPurchase).toHaveLength(2);
-    expect(afterPurchase.map((r) => r.plan).sort()).toEqual(["lifetime", "manual"]);
+    expect(afterPurchase.map((r) => r.plan).sort()).toEqual(["access_code", "lifetime"]);
 
     expect(await deliver("charge.refunded", refundedCharge(user))).toBe(200);
     await step("Premium возвращён");
@@ -475,7 +475,7 @@ describe("money going back", () => {
     expect(await tier()).toBe("standard");
 
     const stored = await rows(user);
-    expect(stored.find((r) => r.plan === "manual")?.status).toBe("active");
+    expect(stored.find((r) => r.plan === "access_code")?.status).toBe("active");
     expect(stored.find((r) => r.plan === "lifetime")?.status).toBe("canceled");
   });
 });

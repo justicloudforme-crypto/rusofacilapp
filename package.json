@@ -148,6 +148,7 @@
     "check:e2e-single-writer:plant": "node scripts/check-e2e-single-writer.mjs --plant",
     "access-codes:generate": "tsx scripts/generate-access-codes.ts",
     "access-codes:revoke": "tsx scripts/revoke-access-codes.ts",
+    "access-codes:status": "tsx scripts/access-codes-status.ts",
     "check:entitlement-point": "node scripts/check-entitlement-single-point.mjs",
     "check:entitlement-point:map": "node scripts/check-entitlement-single-point.mjs --map",
     "check:entitlement-point:plant": "node scripts/check-entitlement-single-point.mjs --plant",

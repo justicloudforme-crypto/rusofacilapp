@@ -215,7 +215,10 @@ describe("код доступа открывает доступ тем же пу
     // без ссылок на Stripe и без собственного понятия доступа.
     const rows = await subscriptionRows(user.id);
     expect(rows).toHaveLength(1);
-    expect(rows[0].plan).toBe("manual");
+    // "access_code", а не "manual" (7.151): подпись в кабинете у выдачи по
+    // коду и у ручной выдачи администратора разная, потому что это разные
+    // события. Уровень при этом один и тот же — `standard` выше.
+    expect(rows[0].plan).toBe("access_code");
     expect(rows[0].status).toBe("active");
     expect(rows[0].stripeSubscription).toBeNull();
     expect(rows[0].stripePayment).toBeNull();
