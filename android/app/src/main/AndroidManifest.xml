@@ -42,4 +42,24 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+      Микрофон: упражнение на произношение (VoiceRecorder.tsx) зовёт
+      navigator.mediaDevices.getUserMedia({ audio: true }) прямо из
+      WebView. Без этих строк система возвращает запрос отказанным БЕЗ
+      диалога, и запись отказывает молча — на вебе такого не бывает, там
+      разрешение спрашивает браузер.
+
+      Разрешений ДВА, и это не перестраховка: BridgeWebChromeClient из
+      @capacitor/android на android.webkit.resource.AUDIO_CAPTURE просит
+      сразу MODIFY_AUDIO_SETTINGS и RECORD_AUDIO, а его колбэк считает
+      выдачу успешной, только если разрешены ВСЕ запрошенные (первый же
+      false в карте ответов даёт granted = false). Объявить одно
+      RECORD_AUDIO — значит починить наполовину и оставить рекордер
+      сломанным. Проверено чтением исходника плагина.
+
+      Оба разрешения сторожит npm run check:native-permissions.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 </manifest>

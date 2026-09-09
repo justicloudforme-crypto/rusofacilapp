@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">RusoFácilapp</string>
     <string name="title_activity_main">RusoFácilapp</string>
-    <string name="package_name">com.rusofasil.app</string>
-    <string name="custom_url_scheme">com.rusofasil.app</string>
+    <string name="package_name">com.rusofacilapp.app</string>
+    <string name="custom_url_scheme">com.rusofacilapp.app</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.rusofasil.app;
+package com.rusofacilapp.app;
 
 import com.getcapacitor.BridgeActivity;
 
