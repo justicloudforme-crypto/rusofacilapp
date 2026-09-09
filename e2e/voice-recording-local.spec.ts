@@ -191,6 +191,28 @@ async function expectPlayable(page: Page) {
 }
 
 test.describe("voice practice recordings stay on the device", () => {
+  /**
+   * Бюджет теста здесь БОЛЬШЕ суммы его собственных ожиданий, и это не
+   * послабление, а арифметика (PROGRESS.md 7.148, долг 95).
+   *
+   * У Playwright потолок теста по умолчанию — 30 000 мс. Один проход первого
+   * теста разрешает себе ждать: `toBeVisible` у плеера 15 000 + опрос
+   * `readyState` 15 000 + опрос IndexedDB 10 000, плюс `goto` с ожиданием
+   * `networkidle`, плюс 1200 мс самой записи. То есть ЛЮБОЙ прогон, где эти
+   * ожидания сработали не мгновенно, упирается в потолок теста раньше, чем в
+   * своё собственное ожидание, — и падает не там, где медленно, а там, где
+   * потолок кончился. Ровно это и видно в CI 08.09.2026: «Test timeout of
+   * 30000ms exceeded» на `audio.load()`, вызове, который сам по себе
+   * мгновенный.
+   *
+   * Ни одно утверждение при этом не ослаблено: потолки отдельных ожиданий
+   * остались прежними, изменился только общий бюджет, внутри которого им
+   * позволено сработать.
+   */
+  test.beforeEach(({}, testInfo) => {
+    testInfo.setTimeout(90_000);
+  });
+
   test("record, play, reload, still there — and not one request out", async ({ page }, testInfo) => {
     const bench = await prepare(page, testInfo);
     const net = watchRequests(page);
