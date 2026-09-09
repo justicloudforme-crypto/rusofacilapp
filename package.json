@@ -162,6 +162,8 @@
     "check:entitlement-point": "node scripts/check-entitlement-single-point.mjs",
     "check:entitlement-point:map": "node scripts/check-entitlement-single-point.mjs --map",
     "check:entitlement-point:plant": "node scripts/check-entitlement-single-point.mjs --plant",
+    "check:apk-facts": "node scripts/check-apk-facts.mjs",
+    "check:apk-facts:plant": "node scripts/check-apk-facts.mjs --plant",
     "check:ci-covers-verify": "node scripts/check-ci-covers-verify.mjs",
     "check:ci-covers-verify:map": "node scripts/check-ci-covers-verify.mjs --map",
     "check:ci-covers-verify:plant": "node scripts/check-ci-covers-verify.mjs --plant"

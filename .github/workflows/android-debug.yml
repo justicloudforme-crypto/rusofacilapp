@@ -1,0 +1,135 @@
+# Нативная сборка Android — ОТДЕЛЬНЫЙ workflow, а не задание в ci.yml.
+#
+# ПОЧЕМУ ОН СУЩЕСТВУЕТ. К 09.09.2026 каталог `android/` переехал под
+# `com.rusofacilapp.app` (7.154), витринное имя сведено к «RusoFácil»
+# (7.155), микрофон объявлен двумя разрешениями (7.154) — и НИ ОДНА из
+# этих правок ни разу не была собрана. Всё, что о них известно, доказано
+# СТАТИЧЕСКИ: `check:app-id` сличает одиннадцать объявлений друг с другом,
+# `check:brand` — пять литералов, `check:native-permissions` — манифесты.
+# Ни один из них по построению не может сказать, что из этого попало в
+# пакет и собирается ли пакет вообще. Это и был главный незакрытый риск
+# переезда.
+#
+# ЧТО ЗДЕСЬ ЕСТЬ И ЧЕГО НЕТ. Собирается **debug** и только он: ключ
+# подписи в репозитории не заводится и релизная подпись не делается —
+# это часть владельца. Артефакт `app-debug.apk` подписан отладочным
+# ключом, который Gradle генерирует сам, и в магазин не годится в
+# принципе.
+#
+# ПОЧЕМУ НЕ В `ci.yml`. Задание тянет JDK, Android SDK и дистрибутив
+# Gradle и стоит минуты; `ci.yml` гоняется на каждый коммит любой ветки.
+# Поэтому фильтр по путям ниже: сборка запускается только когда тронуто
+# то, что на неё влияет. `workflow_dispatch` — чтобы её можно было
+# позвать руками, ничего не трогая.
+name: Android debug build
+
+on:
+  pull_request:
+    paths:
+      - "android/**"
+      - "capacitor.config.ts"
+      - "capacitor-shell/**"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/check-apk-facts.mjs"
+      - ".github/workflows/android-debug.yml"
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - "capacitor.config.ts"
+      - "capacitor-shell/**"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/check-apk-facts.mjs"
+      - ".github/workflows/android-debug.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Значения читает `postinstall` (prisma generate) и ничего больше:
+  # нативной сборке база не нужна вовсе, но `npm ci` обязан пройти.
+  DATABASE_URL: "file:./dev.db"
+  # Версии SDK держатся ОДНОЙ строкой каждая и совпадают с
+  # android/variables.gradle (compileSdkVersion = 36). Разойдутся —
+  # сборка скажет об этом сама, отсутствующей платформой.
+  ANDROID_PLATFORM: "36"
+  ANDROID_BUILD_TOOLS: "36.0.0"
+
+jobs:
+  debug-apk:
+    name: assembleDebug + числа из самого APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # JDK 21: AGP 8.13 (android/build.gradle) требует 17+, Capacitor 8
+      # собран под 21. `cache: gradle` кэширует ~/.gradle между прогонами —
+      # именно он превращает вторую сборку из минут в десятки секунд.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Раннер приносит Android SDK с собой, но НЕ обязан приносить
+      # именно ту платформу, под которую собран проект. Ставим её явно и
+      # печатаем, что стоит, — иначе «сборка упала» и «на раннере не
+      # оказалось android-36» выглядят одинаково.
+      - name: Android SDK — платформа и build-tools под compileSdk
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-${ANDROID_PLATFORM}" "build-tools;${ANDROID_BUILD_TOOLS}"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
+
+      # `cap sync` копирует webDir (capacitor-shell — две страницы, не
+      # весь public/) в android/app/src/main/assets/public и переписывает
+      # список плагинов. Сборки Next.js здесь НЕ нужно: приложение —
+      # тонкая оболочка над удалённым URL (см. capacitor.config.ts).
+      - name: npx cap sync android
+        run: npx cap sync android
+
+      - name: assembleDebug
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      # Числа берутся ИЗ ПАКЕТА, а не из исходников: в этом весь смысл
+      # задания. `aapt2 dump badging` читает скомпилированный
+      # AndroidManifest внутри APK.
+      - name: Числа из самого APK
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          ls -l "$APK"
+          "$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt2" dump badging "$APK" > apk-badging.txt
+          cat apk-badging.txt
+          node scripts/check-apk-facts.mjs --badging=apk-badging.txt
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:apk-facts:plant
+
+      - name: Выложить APK артефактом
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            apk-badging.txt
+          retention-days: 14
+          if-no-files-found: warn
