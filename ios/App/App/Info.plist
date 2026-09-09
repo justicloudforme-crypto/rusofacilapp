@@ -8,14 +8,40 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
         <string>RusoFácilapp</string>
+	<!--
+	  Микрофон: упражнение на произношение (VoiceRecorder.tsx) зовёт
+	  navigator.mediaDevices.getUserMedia({ audio: true }) прямо из
+	  WebView. Отсутствие этой строки на iOS — НЕ отказ в доступе:
+	  система завершает процесс на первом же обращении, то есть
+	  приложение падает при первом нажатии «записать». На вебе этого не
+	  бывает и не могло случиться — там разрешение спрашивает браузер, а
+	  наш манифест не участвует, поэтому ни один прогон в браузере
+	  дефекта не видел.
+
+	  Текст по-испански: приложение испаноязычное, локализации
+	  InfoPlist.strings в проекте нет, и показана будет ровно эта
+	  строка. Она называет, ЧТО приложение делает с доступом, — Apple
+	  отбивает на ревью строки, которые просто просят разрешение.
+
+	  Сторожит npm run check:native-permissions.
+	-->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>RusoFácilapp usa el micrófono para grabar tu pronunciación en los ejercicios de lectura y vocabulario y reproducírtela enseguida, para que puedas compararla con la del hablante nativo.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!--
+	  Было `$(PRODUCT_NAME)`, а PRODUCT_NAME = "$(TARGET_NAME)", и таргет
+	  называется App — то есть iOS показывала в Настройках и в списке
+	  хранилища буквальное «App». На домашнем экране этого не видно:
+	  там выигрывает CFBundleDisplayName. Незаполненный шаблон Capacitor,
+	  а не опечатка бренда.
+	-->
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>RusoFácilapp</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
