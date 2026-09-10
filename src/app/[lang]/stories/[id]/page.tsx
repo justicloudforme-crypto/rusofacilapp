@@ -285,7 +285,14 @@ export default async function StoryReaderPage({
             {needsPremiumUpgrade ? dict.stories.premiumTierLockTitle : dict.stories.premiumLockTitle}
           </h2>
           <p className="mt-2 text-sm text-foreground/70">
-            {needsPremiumUpgrade ? dict.stories.premiumTierLockBody : dict.stories.premiumLockBody}
+            {needsPremiumUpgrade
+              ? // Уровень подставляется из строки рассказа, а не вшит в
+                // словарь: замок ставит колонка `premiumOnly`, а не уровень
+                // (`getStoryAccess`), поэтому запертыми оказываются и не-C1
+                // рассказы — 33 из 98 на 09.09.2026 (долг 115). Литерал
+                // «C1» в словаре врал каждому из них подписчику `standard`.
+                dict.stories.premiumTierLockBody.replace("{level}", story.level)
+              : dict.stories.premiumLockBody}
           </p>
           <Link
             href={`/${lang}/pricing?next=/${lang}/stories/${story.id}`}
