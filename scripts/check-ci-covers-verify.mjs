@@ -38,10 +38,21 @@
 // которая уже гоняется в `verify`, и исключение на команду, которой нет
 // в CI, — падение.
 //
+// ТРЕТЬЯ ПРАВКА, 09.09.2026 (долг 108): ЧИТАЮТСЯ ВСЕ WORKFLOW, А НЕ ОДИН.
+// До неё этот файл читал РОВНО `.github/workflows/ci.yml`. С появлением
+// второго workflow (`android-debug.yml`, 7.157) правило перестало
+// покрывать всё, что стоит на пути мержа: шаги оттуда не сверялись с
+// `verify` ни в одну сторону, и `check:apk-facts` был виден сторожу как
+// «нигде» — при том что он гоняется на каждом PR, задевающем `android/`.
+// Цена росла бы с каждым новым workflow. Теперь читается весь каталог
+// `.github/workflows/`, а множество имён — объединение по всем файлам.
+// Отдельная подсадка изображает ровно эту дыру: команда, добавленная во
+// ВТОРОЙ workflow и отсутствующая в `verify`, обязана ронять сторож.
+//
 //   node scripts/check-ci-covers-verify.mjs            # гейт
 //   node scripts/check-ci-covers-verify.mjs --map      # вся карта проверок
 //   node scripts/check-ci-covers-verify.mjs --plant    # позитивный контроль
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const PROGRESS_MARKER_START = "<!-- ci-verify-exceptions:start -->";
@@ -135,10 +146,78 @@ function main() {
 
   const verifyRuns = expand(scripts.verify);
 
-  const ciText = readFileSync(".github/workflows/ci.yml", "utf-8");
-  const ciCommands = [...ciText.matchAll(/run:\s*(.+)/g)].map((m) => m[1].trim());
-  const ciRuns = new Set();
-  for (const command of ciCommands) for (const name of expand(command)) ciRuns.add(name);
+  /** Тело каждого шага `run:`, ВКЛЮЧАЯ многострочные блоки `run: |`.
+   *
+   *  ВТОРАЯ СЛЕПОТА ТОГО ЖЕ СЕМЕЙСТВА, найдена 09.09.2026 при правке
+   *  долга 108. Прежний разбор был одной строкой
+   *  `text.matchAll(/run:\s*(.+)/g)` и на блоке
+   *
+   *      - name: Числа из самого APK
+   *        run: |
+   *          node scripts/check-apk-facts.mjs --badging=apk-badging.txt
+   *
+   *  забирал ровно символ `|`, а всё тело шага не видел вовсе. То есть
+   *  даже внутри `ci.yml` любая проверка, запущенная из многострочного
+   *  блока, была сторожу невидима — а таких в `ci.yml` уже есть.
+   *
+   *  Читать весь файл целиком нельзя: `expand()` засчитывает и прямое имя
+   *  файла скрипта, а комментарии в этих workflow называют скрипты по
+   *  именам, и сторож начал бы считать прогоном упоминание в комментарии.
+   *  Поэтому блок отрезается по отступу, как того требует YAML. */
+  function runBlocks(text) {
+    const lines = text.split("\n");
+    const out = [];
+    for (let i = 0; i < lines.length; i += 1) {
+      const m = lines[i].match(/^(\s*)(?:-\s+)?run:\s*(.*)$/);
+      if (!m) continue;
+      const indent = m[1].length;
+      const rest = m[2].trim();
+      if (!/^[|>][-+]?\d*$/.test(rest)) {
+        if (rest) out.push(rest);
+        continue;
+      }
+      // Блочный скаляр: тело — все последующие строки с отступом БОЛЬШЕ,
+      // чем у самого ключа; пустые строки внутри блок не заканчивают.
+      const body = [];
+      for (let j = i + 1; j < lines.length; j += 1) {
+        const line = lines[j];
+        if (line.trim() === "") { body.push(""); continue; }
+        const lineIndent = line.match(/^\s*/)[0].length;
+        if (lineIndent <= indent) break;
+        body.push(line.trim());
+        i = j;
+      }
+      out.push(body.join("\n"));
+    }
+    return out;
+  }
+
+  /** ВСЕ workflow каталога, а не один файл (долг 108). Множество имён —
+   *  объединение по всем файлам: путь на мерж один, а файлов, которые его
+   *  описывают, сколько угодно. */
+  const WORKFLOW_DIR = ".github/workflows";
+  function readWorkflows() {
+    return readdirSync(WORKFLOW_DIR)
+      .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+      .sort()
+      .map((f) => [`${WORKFLOW_DIR}/${f}`, readFileSync(`${WORKFLOW_DIR}/${f}`, "utf-8")]);
+  }
+
+  /** Имена npm-скриптов, которые исполнятся хотя бы в одном из workflow.
+   *  Вынесено в функцию ради подсадки: она подсовывает сюда выдуманный
+   *  ВТОРОЙ файл и смотрит, заметил ли сторож команду из него. */
+  function namesFromWorkflows(files) {
+    const out = new Set();
+    for (const [, text] of files) {
+      for (const command of runBlocks(text)) {
+        for (const name of expand(command)) out.add(name);
+      }
+    }
+    return out;
+  }
+
+  const workflowFiles = readWorkflows();
+  const ciRuns = namesFromWorkflows(workflowFiles);
 
   const progress = readFileSync("PROGRESS.md", "utf-8");
   function exceptionsBetween(start, end) {
@@ -175,7 +254,8 @@ function main() {
     console.log(`\n| в CI, нет в verify | исключение |`);
     console.log(`|---|---|`);
     for (const name of ciOnly) console.log(`| \`${name}\` | ${verifyExceptions.get(name) ?? "—"} |`);
-    console.log(`\nвсего команд: verify ${verifyRuns.size}, CI ${ciRuns.size}; в CI и не в verify: ${ciOnly.length}, из них названо исключениями: ${ciOnly.filter((n) => verifyExceptions.has(n)).length}`);
+    console.log(`\nпрочитано workflow: ${workflowFiles.length} (${workflowFiles.map(([f]) => f.split("/").pop()).join(", ")})`);
+    console.log(`всего команд: verify ${verifyRuns.size}, CI ${ciRuns.size}; в CI и не в verify: ${ciOnly.length}, из них названо исключениями: ${ciOnly.filter((n) => verifyExceptions.has(n)).length}`);
   }
 
   function audit(verifySet, ciSet, exceptionMap, ciOnlyExceptionMap = verifyExceptions) {
@@ -240,6 +320,53 @@ function main() {
           return { hit: audit(verifyRuns, ciRuns, exceptions, ex).staleCiOnly.includes(victim), what: victim };
         },
       },
+      // Подсадка долга 108: команда живёт во ВТОРОМ workflow и отсутствует
+      // в `verify`. До 09.09.2026 сторож читал только `ci.yml` и такую
+      // команду не видел вовсе — ни как непокрытую, ни как ненаписанную.
+      {
+        name: "команда добавлена во ВТОРОЙ workflow и отсутствует в verify",
+        run: () => {
+          const victim = "check:word-search:prod";
+          const fake = [
+            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - run: npm run ${victim}\n`],
+          ];
+          const ci = namesFromWorkflows([...workflowFiles, ...fake]);
+          return { hit: audit(verifyRuns, ci, exceptions).unverified.includes(victim), what: victim };
+        },
+      },
+      // Подсадка второй слепоты: команда спрятана в многострочном блоке
+      // `run: |`. До 09.09.2026 разбор забирал с такой строки символ `|`
+      // и тело шага не видел вовсе — даже внутри `ci.yml`.
+      {
+        name: "команда спрятана в многострочном блоке run: | второго workflow",
+        run: () => {
+          const victim = "check:word-search:prod";
+          const fake = [
+            [
+              ".github/workflows/__planted__.yml",
+              `jobs:\n  x:\n    steps:\n      - name: блок\n        run: |\n          set -euo pipefail\n          npm run ${victim}\n      - name: следующий шаг\n        uses: actions/checkout@v4\n`,
+            ],
+          ];
+          const ci = namesFromWorkflows([...workflowFiles, ...fake]);
+          return { hit: audit(verifyRuns, ci, exceptions).unverified.includes(victim), what: victim };
+        },
+      },
+      // Отрицательная половина той же подсадки: команда, добавленная во
+      // второй workflow и УЖЕ гоняемая в verify, ронять сторож не имеет
+      // права — иначе «поймано» выше означало бы «сторож краснеет на любой
+      // второй файл».
+      {
+        name: "команда во ВТОРОМ workflow, но она же есть в verify — красноты быть не должно",
+        run: () => {
+          const victim = [...verifyRuns].find((n) => n.startsWith("check:") && !n.endsWith(":plant"));
+          const fake = [
+            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - run: npm run ${victim}\n`],
+          ];
+          const ci = namesFromWorkflows([...workflowFiles, ...fake]);
+          const r = audit(verifyRuns, ci, exceptions);
+          return { hit: !r.unverified.includes(victim), what: victim, negative: true };
+        },
+      },
       {
         name: "исключение второго списка на команду, которой в CI нет вовсе",
         run: () => {
@@ -253,8 +380,9 @@ function main() {
       },
     ];
     for (const p of plants) {
-      const { hit, what } = p.run();
-      console.log(`  ${hit ? "поймано" : "ПРОПУЩЕНО"}: ${p.name} (${what})`);
+      const { hit, what, negative } = p.run();
+      const word = negative ? (hit ? "промолчал" : "ЛОЖНАЯ КРАСНОТА") : hit ? "поймано" : "ПРОПУЩЕНО";
+      console.log(`  ${word}: ${p.name} (${what})`);
       if (hit) caught += 1;
     }
     // Отрицательная половина: без подсадки прогон обязан быть чистым, иначе
@@ -273,7 +401,9 @@ function main() {
   const { uncovered, stale, unverified, staleCiOnly } = audit(verifyRuns, ciRuns, exceptions);
   if (uncovered.length === 0 && stale.length === 0 && unverified.length === 0 && staleCiOnly.length === 0) {
     console.log(
-      `check:ci-covers-verify — verify запускает ${verifyRuns.size} команд, CI ${ciRuns.size}; ` +
+      `check:ci-covers-verify — прочитано workflow ${workflowFiles.length} ` +
+        `(${workflowFiles.map(([f]) => f.split("/").pop()).join(", ")}); ` +
+        `verify запускает ${verifyRuns.size} команд, они ${ciRuns.size}; ` +
         `в CI и не в verify ${[...ciRuns].filter((n) => !verifyRuns.has(n)).length} (все названы), ` +
         `в verify и не в CI ${[...verifyRuns].filter((n) => !ciRuns.has(n)).length} (все названы); ` +
         `исключений ${exceptions.size} + ${verifyExceptions.size}, непокрытых 0 в обе стороны.`,
@@ -281,16 +411,16 @@ function main() {
     process.exit(0);
   }
   for (const name of uncovered) {
-    console.error(`НЕПОКРЫТО: \`${name}\` есть в verify, нет в ci.yml и нет в списке исключений PROGRESS.md`);
+    console.error(`НЕПОКРЫТО: \`${name}\` есть в verify, нет ни в одном из .github/workflows/ и нет в списке исключений PROGRESS.md`);
   }
   for (const name of stale) {
     console.error(
-      `ИСКЛЮЧЕНИЕ ПРОТУХЛО: \`${name}\` — ${ciRuns.has(name) ? "команда уже гоняется в CI" : "команды нет в verify"}`,
+      `ИСКЛЮЧЕНИЕ ПРОТУХЛО: \`${name}\` — ${ciRuns.has(name) ? "команда уже гоняется в одном из workflow" : "команды нет в verify"}`,
     );
   }
   for (const name of unverified) {
     console.error(
-      `НЕ В VERIFY: \`${name}\` гоняется в ci.yml, не гоняется в npm run verify и не назван во втором списке исключений PROGRESS.md`,
+      `НЕ В VERIFY: \`${name}\` гоняется в одном из .github/workflows/, не гоняется в npm run verify и не назван во втором списке исключений PROGRESS.md`,
     );
   }
   for (const name of staleCiOnly) {

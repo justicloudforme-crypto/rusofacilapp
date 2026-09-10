@@ -48,16 +48,11 @@ const BRAND = "src/lib/brand.ts";
  *  `android/app/build/outputs/logs/manifest-merger-debug-report.txt`,
  *  а не угадано. Десятое, приехавшее с новой зависимостью, обязано быть
  *  замечено человеком: список закреплён ЧИСЛОМ (см. MERGED_COUNT). */
-const ALLOWED_MERGED = new Map([
+export const ALLOWED_MERGED = new Map([
   ["android.permission.VIBRATE", "@capacitor/haptics"],
   ["android.permission.RECEIVE_BOOT_COMPLETED", "@capacitor/local-notifications"],
   ["android.permission.WAKE_LOCK", "@capacitor/local-notifications"],
   ["android.permission.POST_NOTIFICATIONS", "@capacitor/local-notifications"],
-  // Ограниченное разрешение Google Play: под него заполняется отдельная
-  // декларация, и приложениям, не являющимся будильником или календарём,
-  // её отклоняют. Заведено долгом 107 — здесь оно СПИСАНО как известное,
-  // а не одобрено.
-  ["android.permission.SCHEDULE_EXACT_ALARM", "@capacitor/local-notifications"],
   ["android.permission.FOREGROUND_SERVICE", "@capgo/capacitor-media-session"],
   ["android.permission.ACCESS_NETWORK_STATE", "com.revenuecat.purchases:purchases"],
   ["com.android.vending.BILLING", "com.android.billingclient:billing (через RevenueCat)"],
@@ -71,8 +66,15 @@ const ALLOWED_MERGED = new Map([
  *  именах разрешений. */
 const withAppId = (name, applicationId) => name.replace("${applicationId}", applicationId);
 
-/** Число, а не «примерно столько». Появилось десятое — падение. */
-const MERGED_COUNT = 9;
+/** Число, а не «примерно столько». Появилось лишнее — падение.
+ *
+ *  Было 9 до 09.09.2026. Стало 8: `SCHEDULE_EXACT_ALARM` больше не
+ *  приезжает — он вычеркнут `tools:node="remove"` в нашем манифесте
+ *  (долг 107), потому что напоминание перестало просить точный будильник
+ *  (`isExactNotification: false` в `src/lib/notifications.ts`). Это
+ *  ограниченное разрешение Google Play, и его отсутствие в пакете —
+ *  единственная форма, в которой анкету по нему заполнять не придётся. */
+const MERGED_COUNT = 8;
 
 function readSources() {
   const gradle = readFileSync(GRADLE, "utf-8");
@@ -95,10 +97,27 @@ function readSources() {
     versionName: pick(gradle, /versionName\s+"([^"]+)"/, "versionName"),
     label: pick(strings, /<string name="app_name">([^<]+)<\/string>/, "app_name"),
     brandLabel: pick(brand, /APP_DISPLAY_NAME\s*=\s*"([^"]+)"/, "APP_DISPLAY_NAME"),
-    permissions: new Set(
-      [...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map((m) => m[1]),
-    ),
+    ...splitPermissions(manifest),
   };
+}
+
+/** Наш манифест несёт записи ДВУХ противоположных смыслов, и путать их
+ *  нельзя. Обычная строка ОБЪЯВЛЯЕТ разрешение; строка с
+ *  `tools:node="remove"` (появилась 09.09.2026, долг 107) ВЫЧЁРКИВАЕТ
+ *  разрешение, принесённое библиотекой, и в пакете его после этого нет.
+ *  Считать вторую за объявление значило бы требовать в APK ровно то, что
+ *  она оттуда убирает. */
+export function splitPermissions(manifest) {
+  const declared = new Set();
+  const removed = new Set();
+  for (const m of manifest.matchAll(/<uses-permission\b([\s\S]*?)\/>/g)) {
+    const body = m[1];
+    const name = body.match(/android:name="([^"]+)"/)?.[1];
+    if (!name) continue;
+    if (/tools:node="remove"/.test(body)) removed.add(name);
+    else declared.add(name);
+  }
+  return { permissions: declared, removedPermissions: removed };
 }
 
 /** Разбор `aapt2 dump badging`. Формат строчный, кавычки одинарные. */
@@ -134,6 +153,14 @@ export function compare(apk, src) {
   const allowed = new Map(
     [...ALLOWED_MERGED].map(([name, from]) => [withAppId(name, src.applicationId), from]),
   );
+  // Вычеркнутое обязано в пакете ОТСУТСТВОВАТЬ. Без этого правила
+  // `tools:node="remove"` мог бы молча перестать работать (опечатка в
+  // имени, потерянный xmlns:tools) и никто бы не заметил.
+  for (const p of src.removedPermissions ?? []) {
+    if (apk.permissions.has(p)) {
+      bad.push(`разрешение вычеркнуто tools:node="remove", но в APK оно есть: ${p}`);
+    }
+  }
   const merged = [...apk.permissions].filter((p) => !src.permissions.has(p));
   for (const p of merged) {
     if (!allowed.has(p)) {
@@ -185,6 +212,14 @@ function main() {
       [
         "принесённое библиотекой разрешение ПРОПАЛО из пакета",
         healthy.replace(/^uses-permission: name='android\.permission\.POST_NOTIFICATIONS'\n/m, ""),
+      ],
+      // Долг 107: `tools:node="remove"` перестал работать (опечатка в
+      // имени, потерянный xmlns:tools, вернувшийся плагин) — ограниченное
+      // разрешение Google Play снова в пакете, и сказать об этом должен
+      // сторож, а не Play Console.
+      [
+        "вычеркнутое tools:node=remove разрешение вернулось в пакет",
+        `${healthy}\nuses-permission: name='android.permission.SCHEDULE_EXACT_ALARM'`,
       ],
     ];
     let caught = 0;
