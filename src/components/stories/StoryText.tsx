@@ -95,6 +95,7 @@ export default function StoryText({
   audioSegments,
   fullAudioUrl,
   sentenceOffsets,
+  allowTtsFallback = true,
   dict,
 }: {
   /** Used as the localStorage key for per-story reading progress. Pass
@@ -129,6 +130,22 @@ export default function StoryText({
    * `fullAudioUrl`, same order/length as buildStoryQueue(paragraphs) —
    * i.e. `Story.sentenceOffsetsJson`, already parsed. */
   sentenceOffsets?: number[] | null;
+  /** Разрешён ли аварийный откат на браузерный синтез
+   * (`SpeechSynthesisUtterance`, то есть системный голос ОС) там, где
+   * настоящей записи для предложения нет.
+   *
+   * `false` — для пейволльного превью. Долг 114 (PROGRESS.md 7.160): у
+   * закрытого рассказа страница не отдавала непокупателю ни одного клипа,
+   * а кнопка «слушать» оставалась и уходила в синтез — и именно этот
+   * системный голос (macOS/iOS — Milena, 219,2 Гц; Android — «Google
+   * русский»; Windows — «Ирина») много лет принимали за брак озвучки
+   * банка. Теперь превью получает настоящие клипы своего видимого абзаца
+   * (см. [id]/page.tsx), а синтез ему запрещён: нечего играть — нет и
+   * органа управления. Полноправному читателю откат остаётся: он
+   * закрывает редкие дыры в покрытии (15 рассказов из 325 с несколькими
+   * предложениями без клипа), где выбор стоит между одним синтезированным
+   * предложением и обрывом всей очереди. */
+  allowTtsFallback?: boolean;
   dict: StoryTextDict;
 }) {
   const [activeWord, setActiveWord] = useState<string | null>(null);
@@ -278,7 +295,10 @@ export default function StoryText({
   // underlying mechanism is in play. Playback functions below always
   // check hasFullAudio first, since it takes priority whenever available.
   const hasRealAudio = hasFullAudio || hasPerSentenceAudio;
-  const canPlay = hasRealAudio || ttsSupported;
+  // «Читать нечем» и «читать нечем, кроме системного голоса» — разные
+  // состояния, и второе разрешено не везде: см. allowTtsFallback.
+  const ttsFallbackAllowed = allowTtsFallback && ttsSupported;
+  const canPlay = hasRealAudio || ttsFallbackAllowed;
 
   /** Largest sentence index whose offset is <= `time` — i.e. which
    * sentence `fullAudioUrl` is currently playing at that position.
@@ -539,7 +559,10 @@ export default function StoryText({
       }
     };
 
-    if (!item || typeof window === "undefined" || !("speechSynthesis" in window)) {
+    // `!ttsFallbackAllowed` — превью за пейволом: дыра в покрытии молча
+    // пропускается вместо того, чтобы одно предложение вдруг прочитал
+    // системный голос посреди настоящей озвучки (долг 114).
+    if (!item || !ttsFallbackAllowed || typeof window === "undefined" || !("speechSynthesis" in window)) {
       advance();
       return;
     }
@@ -832,7 +855,9 @@ export default function StoryText({
       return;
     }
 
-    if (!ttsSupported) return;
+    // Настоящей записи нет вовсе. Синтез разрешён не всякому читателю —
+    // в превью за пейволом кнопки здесь просто не существует (canPlay).
+    if (!ttsFallbackAllowed) return;
     if (playing) {
       window.speechSynthesis.pause();
       setPlaying(false);
@@ -863,7 +888,7 @@ export default function StoryText({
       if (audioRef.current) audioRef.current.playbackRate = nextRate;
       return;
     }
-    if (playing && readingQueueIndex !== null) {
+    if (ttsFallbackAllowed && playing && readingQueueIndex !== null) {
       cancelSpeech();
       speakQueueAt(readingQueueIndex);
     }
@@ -890,6 +915,7 @@ export default function StoryText({
       playSegmentAt(index);
       return;
     }
+    if (!ttsFallbackAllowed) return;
     cancelSpeech();
     setPlaying(true);
     speakQueueAt(index);

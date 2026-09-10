@@ -153,14 +153,20 @@ export default async function StoryReaderPage({
   // Narration clips live in the shared AudioAsset cache, indexed against
   // the FULL story text, so they stay aligned even when visibleParagraphs
   // is truncated to the free preview — just drop clips for paragraphs the
-  // reader can't see. Not fetched at all for a non-entitled reader, same
-  // as the text/translation truncation above.
-  const audioAssetRows = entitled
-    ? await db.audioAsset.findMany({
-        where: { contentType: "story", contentId: story.id },
-        select: { itemKey: true, audioUrl: true, durationSeconds: true },
-      })
-    : [];
+  // reader can't see. Fetched for EVERY reader, entitled or not: the
+  // filter below hands out exactly the narration of the paragraphs the
+  // page already prints, so a locked story's preview is read aloud in the
+  // same studio voice the buyer hears instead of falling through to the
+  // browser's system voice (PROGRESS.md 7.160/7.161, debt 114 — the free
+  // preview of 323 of 325 stories was narrated by the OS: Milena on
+  // macOS/iOS, "Google русский" on Android). No leak and no new clips: the
+  // truncation is the same one applied to the text and the translation
+  // above, and `fullAudioUrl` (the whole story end to end) stays withheld
+  // below.
+  const audioAssetRows = await db.audioAsset.findMany({
+    where: { contentType: "story", contentId: story.id },
+    select: { itemKey: true, audioUrl: true, durationSeconds: true },
+  });
   const audioSegments = toStoryAudioSegments(audioAssetRows).filter(
     (segment) => segment.paragraphIndex < visibleParagraphs.length
   );
@@ -248,6 +254,11 @@ export default async function StoryReaderPage({
           translationParagraphs={visibleTranslationParagraphs}
           audioSegments={audioSegments}
           fullAudioUrl={fullAudioUrl}
+          // Аварийный браузерный синтез — только полноправному читателю.
+          // В превью читать нечем, кроме настоящих клипов видимого абзаца
+          // (они отданы выше): если их нет, органа управления не будет
+          // вовсе, а не «будет и заговорит системным голосом» — долг 114.
+          allowTtsFallback={entitled}
           sentenceOffsets={sentenceOffsets}
           dict={{
             translationLoading: dict.stories.translationLoading,
