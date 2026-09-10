@@ -48,15 +48,30 @@ export const SPANISH_ONLY_ROUTES = [
   "/vocabulary/[categoria]",
 ] as const;
 
-/** Путь БЕЗ префикса локали (`/alfabeto-cirilico`) — есть ли он только на `/es`. */
-export function isSpanishOnlyRoute(path: string): boolean {
+/**
+ * Путь БЕЗ префикса локали (`/alfabeto-cirilico`) → ЗАПИСЬ списка,
+ * которой он соответствует, или `null`.
+ *
+ * Возвращается именно запись, а не `true`: с 7.167 у каждой записи есть
+ * ещё и хаб, на который уводит переключатель языка
+ * (`locale-switch.ts`), и находить запись двумя разными сопоставлениями
+ * значило бы завести второе правило формы пути.
+ */
+export function matchSpanishOnlyRoute(path: string): (typeof SPANISH_ONLY_ROUTES)[number] | null {
   const clean = ("/" + path.replace(/^\/+/, "")).replace(/\/+$/, "") || "/";
   const parts = clean.split("/").filter(Boolean);
-  return SPANISH_ONLY_ROUTES.some((route) => {
-    const pattern = route.split("/").filter(Boolean);
-    if (pattern.length !== parts.length) return false;
-    return pattern.every((seg, i) => (seg.startsWith("[") ? parts[i].length > 0 : seg === parts[i]));
-  });
+  return (
+    SPANISH_ONLY_ROUTES.find((route) => {
+      const pattern = route.split("/").filter(Boolean);
+      if (pattern.length !== parts.length) return false;
+      return pattern.every((seg, i) => (seg.startsWith("[") ? parts[i].length > 0 : seg === parts[i]));
+    }) ?? null
+  );
+}
+
+/** Путь БЕЗ префикса локали (`/alfabeto-cirilico`) — есть ли он только на `/es`. */
+export function isSpanishOnlyRoute(path: string): boolean {
+  return matchSpanishOnlyRoute(path) !== null;
 }
 
 /**
