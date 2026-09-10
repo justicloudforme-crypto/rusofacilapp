@@ -13,6 +13,8 @@ import MediaPlayer from "@/components/media/MediaPlayer";
 import MediaSubtitlePlayer from "@/components/media/MediaSubtitlePlayer";
 import MediaExercises from "@/components/media/MediaExercises";
 import VocabularyTab from "@/components/lesson/VocabularyTab";
+import { clipsByText } from "@/lib/audio-reuse";
+import { textAudioKey } from "@/lib/lessons/audioKeys";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
 import { frozenMediaDescription, mediaDescription } from "@/lib/media/metadata";
@@ -123,6 +125,17 @@ export default async function MediaDetailPage({
   // lines) when it's been backfilled; fall back to the plain untimed lyrics
   // block for entries that don't have it yet.
   const hasSubtitles = Boolean(item.subtitles && item.subtitles.length > 0);
+
+  // Оплаченная озвучка ключевой лексики. Своей у медиа НЕТ ВОВСЕ:
+  // `contentType='media'` в `AudioAsset` не существует, ни один генератор
+  // эти 1312 слов не озвучивал, и до 7.163 все кнопки «слушать» на всех
+  // 275 медиа-страницах уходили в браузерный синтез — системный женский
+  // голос, запрещённый правилом владельца. 494 из 1312 слов дословно
+  // совпадают с уже озвученной карточкой или словом урока; их клип берётся
+  // как есть. Ничего не синтезируется — см. src/lib/audio-reuse.ts.
+  const vocabularyClips = await clipsByText(item.vocabulary.map((v) => v.word));
+  const vocabularyAudioMap: Record<string, string> = {};
+  for (const [text, url] of Object.entries(vocabularyClips)) vocabularyAudioMap[textAudioKey(text)] = url;
 
   return (
     <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
@@ -267,6 +280,7 @@ export default async function MediaDetailPage({
                 vocabulary={item.vocabulary}
                 dict={dict.lesson.vocabulary}
                 listenLabel={dict.lesson.pronunciation.listenLabel ?? ""}
+                audioMap={vocabularyAudioMap}
               />
             </div>
           </section>

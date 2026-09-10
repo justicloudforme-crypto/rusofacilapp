@@ -1,7 +1,7 @@
 import type { LessonContent } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
-import { grammarExampleAudioKey } from "@/lib/lessons/audioKeys";
+import { grammarExampleAudioKey, pickClip } from "@/lib/lessons/audioKeys";
 import ReadingPracticeBlock from "./ReadingPracticeBlock";
 import GlossaryText from "@/components/glossary/GlossaryText";
 import GlossaryHint from "@/components/glossary/GlossaryHint";
@@ -63,7 +63,7 @@ export default function GrammarTab({
                 <SpeakButton
                   text={example.russian}
                   label={dict.alphabet.listenLabel}
-                  audioUrl={audioMap[grammarExampleAudioKey(index)]}
+                  audioUrl={pickClip(audioMap, grammarExampleAudioKey(index), example.russian)}
                 />
                 <div className="flex flex-col">
                   <span className="font-medium">{example.russian}</span>

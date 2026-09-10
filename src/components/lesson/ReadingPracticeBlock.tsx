@@ -1,7 +1,7 @@
 import type { LessonContent } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
-import { readingPracticeAudioKey } from "@/lib/lessons/audioKeys";
+import { pickClip, readingPracticeAudioKey } from "@/lib/lessons/audioKeys";
 import VoiceRecorder from "./VoiceRecorder";
 
 type ReadAloudDict = Dictionary["lesson"]["readAloud"];
@@ -36,7 +36,7 @@ export default function ReadingPracticeBlock({
         {readingPractice.items.map((item, index) => (
           <div key={item.text} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/30">
             <div className="flex items-center gap-3">
-              <SpeakButton text={item.text} label={listenLabel} audioUrl={audioMap[readingPracticeAudioKey(index)]} />
+              <SpeakButton text={item.text} label={listenLabel} audioUrl={pickClip(audioMap, readingPracticeAudioKey(index), item.text)} />
               <div className="flex flex-col">
                 <span className="font-medium">{item.text}</span>
                 {item.translation && (

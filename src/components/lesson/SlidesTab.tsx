@@ -6,6 +6,7 @@ import type { Dictionary } from "@/i18n/dictionaries";
 import BrandMark from "./BrandMark";
 import SpeakButton from "./SpeakButton";
 import GlossaryText from "@/components/glossary/GlossaryText";
+import { pickClip } from "@/lib/lessons/audioKeys";
 
 type SlidesDict = Dictionary["lesson"]["slides"];
 
@@ -15,6 +16,7 @@ export default function SlidesTab({
   level,
   lessonSlug,
   canDownloadPdf,
+  audioMap,
   dict,
 }: {
   slides: Slide[];
@@ -35,6 +37,16 @@ export default function SlidesTab({
    * где 200, либо не печатается.
    */
   canDownloadPdf: boolean;
+  /**
+   * Оплаченная озвучка урока (`/api/lesson-audio`). У примеров на слайдах
+   * СВОЕГО позиционного ключа нет — генератор их не озвучивал ни разу, —
+   * поэтому здесь работает запасной ключ по тексту (`pickClip`): 492
+   * примера из 679 дословно совпадают со словарным словом или
+   * грамматическим примером ТОГО ЖЕ урока, и клип для них уже оплачен и
+   * лежит в Blob. До 7.163 все 679 кнопок уходили в браузерный синтез —
+   * системный женский голос, запрещённый правилом владельца.
+   */
+  audioMap?: Record<string, string>;
   dict: SlidesDict;
 }) {
   const [index, setIndex] = useState(0);
@@ -113,7 +125,12 @@ export default function SlidesTab({
                     key={example.text}
                     className="flex items-center gap-3 rounded-2xl border border-folk-red/20 bg-premium-400/[0.06] px-4 py-3"
                   >
-                    <SpeakButton text={example.text} label={dict.listenLabel} size="md" />
+                    <SpeakButton
+                      text={example.text}
+                      label={dict.listenLabel}
+                      size="md"
+                      audioUrl={pickClip(audioMap, null, example.text)}
+                    />
                     <div className="flex flex-col leading-tight">
                       <span className="text-lg font-semibold">{example.text}</span>
                       {example.caption && <span className="text-xs text-foreground/60">{example.caption}</span>}

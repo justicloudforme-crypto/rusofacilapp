@@ -284,6 +284,7 @@ export default function LessonView({
                   level={level}
                   lessonSlug={lessonSlug}
                   canDownloadPdf={canDownloadPdf}
+                  audioMap={audioMap}
                   dict={dict.slides}
                 />
               </div>

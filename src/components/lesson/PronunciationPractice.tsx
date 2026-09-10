@@ -1,7 +1,7 @@
 import type { VocabularyItem } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
-import { vocabAudioKey } from "@/lib/lessons/audioKeys";
+import { pickClip, vocabAudioKey } from "@/lib/lessons/audioKeys";
 import VoiceRecorder from "./VoiceRecorder";
 
 type PronunciationDict = Dictionary["lesson"]["pronunciation"];
@@ -47,7 +47,7 @@ export default function PronunciationPractice({
         {items.map((item, index) => (
           <div key={item.word} className="flex flex-col gap-2 border-t border-black/5 pt-3 first:border-t-0 first:pt-0 dark:border-white/30">
             <div className="flex items-center gap-2">
-              <SpeakButton text={item.word} label={dict.listenLabel} audioUrl={audioMap[vocabAudioKey(index)]} />
+              <SpeakButton text={item.word} label={dict.listenLabel} audioUrl={pickClip(audioMap, vocabAudioKey(index), item.word)} />
               <span className="font-medium">{item.word}</span>
               <span className="text-xs text-foreground/50">[{item.transcription}]</span>
             </div>

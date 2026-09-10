@@ -1,7 +1,7 @@
 import type { AlphabetLetter } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import SpeakButton from "./SpeakButton";
-import { alphabetAudioKey } from "@/lib/lessons/audioKeys";
+import { alphabetAudioKey, pickClip } from "@/lib/lessons/audioKeys";
 
 type AlphabetDict = Dictionary["lesson"]["alphabet"];
 
@@ -59,7 +59,7 @@ export default function AlphabetTable({
                       <SpeakButton
                         text={letter.name}
                         label={dict.listenLabel}
-                        audioUrl={audioMap[alphabetAudioKey(alphabet.indexOf(letter))]}
+                        audioUrl={pickClip(audioMap, alphabetAudioKey(alphabet.indexOf(letter)), letter.name)}
                       />
                     </div>
                     <p className="text-xs leading-5 text-foreground/70">{letter.pronunciation}</p>

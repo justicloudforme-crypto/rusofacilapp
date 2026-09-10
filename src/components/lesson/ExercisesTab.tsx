@@ -18,7 +18,7 @@ import ListeningItem from "./ListeningItem";
 import ReadingComprehensionItem from "./ReadingComprehensionItem";
 import ListeningTranscriptionItem from "./ListeningTranscriptionItem";
 import PronunciationPractice from "./PronunciationPractice";
-import { exerciseAudioKey } from "@/lib/lessons/audioKeys";
+import { exerciseAudioKey, pickClip } from "@/lib/lessons/audioKeys";
 import type { VocabularyItem } from "@/lib/lessons/types";
 import { flushPendingProgress, queuePendingProgress } from "@/lib/progress-client";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
@@ -335,7 +335,7 @@ export default function ExercisesTab({
                 submitted={submitted}
                 correct={itemResult?.correctness[0] ?? false}
                 dict={dict}
-                audioUrl={audioMap[exerciseAudioKey("listening", index)]}
+                audioUrl={pickClip(audioMap, exerciseAudioKey("listening", index), exercise.audioText)}
               />
             )}
             {exercise.type === "listening-transcription" && (
@@ -346,7 +346,7 @@ export default function ExercisesTab({
                 submitted={submitted}
                 correct={itemResult?.correctness[0] ?? false}
                 dict={dict}
-                audioUrl={audioMap[exerciseAudioKey("listening-transcription", index)]}
+                audioUrl={pickClip(audioMap, exerciseAudioKey("listening-transcription", index), exercise.audioText)}
               />
             )}
             {exercise.type === "reading-comprehension" && (
@@ -367,7 +367,7 @@ export default function ExercisesTab({
                 submitted={submitted}
                 correctness={itemResult?.correctness ?? []}
                 dict={dict}
-                audioUrl={audioMap[exerciseAudioKey("reading", index)]}
+                audioUrl={pickClip(audioMap, exerciseAudioKey("reading", index), exercise.text)}
               />
             )}
           </div>

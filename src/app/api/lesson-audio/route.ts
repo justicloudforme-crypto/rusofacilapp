@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isLevelSlug, isLessonSlug } from "@/lib/courses";
+import { getLessonContent } from "@/lib/lessons/content";
+import { clipsByText } from "@/lib/audio-reuse";
+import { textAudioKey } from "@/lib/lessons/audioKeys";
+import type { LessonContent } from "@/lib/lessons/types";
 
 // Public and unauthenticated on purpose: the mapping only exposes
 // itemKey -> audioUrl for a lesson whose Russian text is already visible in
@@ -10,6 +14,32 @@ import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 // gating this endpoint wouldn't protect anything the lesson page doesn't
 // already reveal. No rate limiter either: it's a cacheable read with no
 // side effect, unlike the POST routes for progress/voice uploads.
+
+/** Каждый русский текст, у которого на странице урока есть кнопка
+ * «слушать». Порядок и состав повторяют то, что рисуют вкладки
+ * (`SlidesTab`, `GrammarTab`, `VocabularyTab`, `AlphabetTable`,
+ * `ExercisesTab`), а не то, что озвучивал генератор: примеры на слайдах
+ * генератор не озвучивал НИКОГДА (заход 7.163), и именно ради них этот
+ * список и собирается. */
+function spokenTexts(content: LessonContent): string[] {
+  const texts: string[] = [];
+  for (const item of content.vocabulary ?? []) if (item?.word) texts.push(item.word);
+  for (const example of content.grammar?.examples ?? []) if (example?.russian) texts.push(example.russian);
+  for (const item of content.readingPractice?.items ?? []) if (item?.text) texts.push(item.text);
+  for (const item of content.alphabet ?? []) if (item?.name) texts.push(item.name);
+  for (const exercise of content.exercises ?? []) {
+    if (exercise.type === "listening" || exercise.type === "listening-transcription") {
+      if (exercise.audioText) texts.push(exercise.audioText);
+    } else if (exercise.type === "reading-comprehension") {
+      if (exercise.text) texts.push(exercise.text);
+    }
+  }
+  for (const slide of content.slides ?? []) {
+    for (const example of slide.audioExamples ?? []) if (example?.text) texts.push(example.text);
+  }
+  return texts;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const level = searchParams.get("level") ?? "";
@@ -19,9 +49,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid level or lesson" }, { status: 400 });
   }
 
+  const contentId = `${level}-${lesson}`;
   const rows = await db.audioAsset.findMany({
-    where: { contentType: "lesson", contentId: `${level}-${lesson}` },
-    select: { itemKey: true, audioUrl: true },
+    where: { contentType: "lesson", contentId },
+    select: { itemKey: true, text: true, audioUrl: true },
   });
 
   // Keyed by the item's fixed position (see src/lib/lessons/audioKeys.ts),
@@ -32,6 +63,21 @@ export async function GET(request: NextRequest) {
   // original static content.json text.
   const audio: Record<string, string> = {};
   for (const row of rows) audio[row.itemKey] = row.audioUrl;
+
+  // ЗАПАСНОЙ ключ — по тексту, и он не отменяет предыдущий абзац: клиент
+  // (`pickClip`) сначала спрашивает позицию и только при промахе — текст.
+  // Нужен там, где позиционного ключа НЕ СУЩЕСТВУЕТ: 679 примеров на
+  // слайдах уроков генератор не озвучивал ни разу, и до 7.163 все 679
+  // кнопок уходили в браузерный синтез. Клипы того же урока попадают сюда
+  // даром — строки уже прочитаны выше.
+  for (const row of rows) audio[textAudioKey(row.text)] = row.audioUrl;
+
+  const content = await getLessonContent(level, lesson);
+  if (content) {
+    const unresolved = spokenTexts(content).filter((text) => audio[textAudioKey(text)] === undefined);
+    const reused = await clipsByText(unresolved, contentId);
+    for (const [text, url] of Object.entries(reused)) audio[textAudioKey(text)] = url;
+  }
 
   return NextResponse.json({ audio });
 }

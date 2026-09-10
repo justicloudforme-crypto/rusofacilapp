@@ -38,3 +38,42 @@ export function exerciseAudioKey(type: ExerciseAudioType, index: number): string
 export function examAudioKey(areaIndex: number, exerciseIndex: number, type: ExerciseAudioType): string {
   return `area-${areaIndex}-ex-${exerciseIndex}-${type}`;
 }
+
+/**
+ * Запасной ключ — по САМОМУ ТЕКСТУ, и только запасной.
+ *
+ * Заход 7.163. Правило владельца: звучит только оплаченная запись,
+ * браузерного синтеза не должно быть нигде. Замер этого захода нашёл
+ * поверхности, у которых позиционного ключа нет вовсе (примеры на слайдах
+ * урока — генератор их никогда не озвучивал) или он не совпал
+ * (пересобранный урок сдвинул позицию). Клип при этом уже оплачен и лежит
+ * в Blob: 492 из 679 примеров на слайдах — это ТОТ ЖЕ текст, что у
+ * словарного слова или грамматического примера того же урока.
+ *
+ * Позиционный ключ остаётся главным и проверяется первым — предупреждение
+ * в шапке этого файла в силе: правка текста в админке не имеет права
+ * рвать связь с оплаченной озвучкой. Текстовый ключ только добавляет
+ * попадания там, где позиционного ключа нет; сломать существующую связь
+ * он не может, потому что до него дело доходит лишь после промаха по
+ * ключу.
+ */
+export function textAudioKey(text: string): string {
+  return `text:${text}`;
+}
+
+/**
+ * URL клипа для элемента: сначала по позиции, потом по тексту, иначе
+ * `undefined` (штатный запасной путь `SpeakButton` — браузерный синтез).
+ */
+export function pickClip(
+  audioMap: Record<string, string> | undefined,
+  positionKey: string | null,
+  text: string,
+): string | undefined {
+  if (!audioMap) return undefined;
+  if (positionKey) {
+    const byPosition = audioMap[positionKey];
+    if (byPosition) return byPosition;
+  }
+  return audioMap[textAudioKey(text)];
+}
