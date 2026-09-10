@@ -75,6 +75,12 @@ export default async function VocabularyCategoryPage({
     (card) => card.category === page.category && card.level === "C1",
   ).length;
 
+  // Сколько из показанных слов несут пару (синоним или антоним). Число
+  // печатается в подписи и заодно решает, показывать ли подпись вовсе.
+  const withPairs = cards.filter(
+    (card) => card.synonyms.length > 0 || card.antonyms.length > 0,
+  ).length;
+
   const byLevel = PUBLIC_VOCABULARY_LEVELS.map((level) => ({
     level,
     cards: cards.filter((card) => card.level === level),
@@ -138,6 +144,21 @@ export default async function VocabularyCategoryPage({
       <p className="mt-3 text-foreground/60">
         {cards.length} palabras con transcripción, traducción y una frase de ejemplo, ordenadas por
         nivel.
+        {/* Вторая строка печатается ТОЛЬКО там, где пары действительно
+            есть, и числом — чтобы обещание раздела было проверяемым, а
+            не общим (то же правило, что у счётчика слов выше). До 7.167
+            страница «Sinónimos y antónimos» обещала описанием ПАРЫ, а
+            показывала голый список: пары лежали в базе (247 карточек с
+            синонимами и 225 с антонимами из 296) и не выводились ни
+            одной строкой. */}
+        {withPairs > 0 && (
+          <>
+            {" "}
+            {withPairs === 1
+              ? "Una de ellas lleva además su pareja de sinónimos y antónimos."
+              : `${withPairs} de ellas llevan además su pareja de sinónimos y antónimos.`}
+          </>
+        )}
       </p>
 
       {page.intro.map((paragraph, index) => (
@@ -176,6 +197,38 @@ export default async function VocabularyCategoryPage({
                   <p className="mt-1 text-sm leading-6 text-foreground/60">
                     <span lang="ru">{card.exampleRu}</span> — {card.exampleEs}
                   </p>
+                  {/* Пара противоположностей и пара близких по смыслу —
+                      то, ЧТО обещает описание раздела «Sinónimos y
+                      antónimos». Блок общий для всех 23 категорий, а не
+                      только для той: 10 карточек других тем тоже несут
+                      отношения, и прятать их значило бы держать в коде
+                      второе правило про одно и то же поле. */}
+                  {(card.synonyms.length > 0 || card.antonyms.length > 0) && (
+                    <p className="mt-1 flex flex-wrap gap-x-3 text-sm leading-6 text-foreground/60">
+                      {card.synonyms.length > 0 && (
+                        <span>
+                          <span className="font-medium text-foreground/70">Sinónimos: </span>
+                          {card.synonyms.map((relation, i) => (
+                            <span key={`s-${relation.word}`}>
+                              {i > 0 && ", "}
+                              <span lang="ru">{relation.word}</span> ({relation.translation})
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                      {card.antonyms.length > 0 && (
+                        <span>
+                          <span className="font-medium text-foreground/70">Antónimos: </span>
+                          {card.antonyms.map((relation, i) => (
+                            <span key={`a-${relation.word}`}>
+                              {i > 0 && ", "}
+                              <span lang="ru">{relation.word}</span> ({relation.translation})
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </p>
+                  )}
                 </div>
               </li>
             ))}

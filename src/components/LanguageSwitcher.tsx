@@ -5,16 +5,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import Dropdown from "@/components/ui/Dropdown";
+import { localeSwitchTarget } from "@/lib/locale-switch";
 
 // usePathname() never includes the query string, so a page whose state
 // lives there (e.g. profile's `?tab=progress`) used to silently drop back
 // to its default tab on every language switch — the path was preserved,
 // but not "where you were" within it. search is threaded through so the
 // switch is a true no-op on everything except the locale segment.
+//
+// КУДА вести — считает не этот файл, а `localeSwitchTarget`: до 7.167
+// здесь стоял голый `segments[1] = locale`, и на 39 испанских страницах
+// («Антонимы» в их числе) переключение на русский давало 404. Строка
+// запроса переносится ТОЛЬКО на парную страницу: на хабе раздела,
+// который подставляется вместо несуществующей пары, чужой `?tab=…`
+// смысла не имеет.
 function withLocale(pathname: string, search: string, locale: Locale): string {
-  const segments = pathname.split("/");
-  segments[1] = locale;
-  return (segments.join("/") || "/") + search;
+  const { href, paired } = localeSwitchTarget(pathname, locale);
+  return href + (paired ? search : "");
 }
 
 // Compact ES/RU dropdown — a flag doesn't identify a language (Spanish
