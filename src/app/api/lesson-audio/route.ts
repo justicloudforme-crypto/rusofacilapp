@@ -5,6 +5,7 @@ import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { getLessonContent } from "@/lib/lessons/content";
 import { clipsByText } from "@/lib/audio-reuse";
 import { textAudioKey } from "@/lib/lessons/audioKeys";
+import { sanitizeTextForTTS } from "@/lib/speech";
 import type { LessonContent } from "@/lib/lessons/types";
 
 // Public and unauthenticated on purpose: the mapping only exposes
@@ -74,8 +75,18 @@ export async function GET(request: NextRequest) {
 
   const content = await getLessonContent(level, lesson);
   if (content) {
-    const unresolved = spokenTexts(content).filter((text) => audio[textAudioKey(text)] === undefined);
-    const reused = await clipsByText(unresolved, contentId);
+    // Спрашиваем и СЫРОЙ текст страницы, и очищенный: `AudioAsset.text`
+    // хранится уже пропущенным через `sanitizeTextForTTS`, поэтому текст
+    // с кавычками «» совпадёт только во второй форме (долг 125). Ключ в
+    // карте кладётся в той же форме, в какой нашёлся, а третья ступень
+    // `pickClip` спросит очищенный ключ после промаха по сырому.
+    const unresolved = spokenTexts(content).filter(
+      (text) =>
+        audio[textAudioKey(text)] === undefined &&
+        audio[textAudioKey(sanitizeTextForTTS(text))] === undefined,
+    );
+    const wanted = [...new Set(unresolved.flatMap((text) => [text, sanitizeTextForTTS(text)]))];
+    const reused = await clipsByText(wanted, contentId);
     for (const [text, url] of Object.entries(reused)) audio[textAudioKey(text)] = url;
   }
 

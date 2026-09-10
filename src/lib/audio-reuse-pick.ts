@@ -34,6 +34,13 @@ export function pickReusableClips(
   const chosen = new Map<string, { url: string; preferred: boolean }>();
   for (const row of sorted) {
     if (row.contentType === "story") continue;
+    // `word` — банк отдельных слов рассказов (заход 7.166, долг 123). Он
+    // САМ набран переиспользованием этого правила, поэтому пускать его
+    // обратно значило бы дать клипу, выбранному для тапа по слову,
+    // сменить уже закреплённый клип кнопки урока или медиа. Кнопки вне
+    // рассказов о нём не знают; тап по слову ходит своим путём
+    // (`wordClipUrl` в src/lib/story-word-audio.ts).
+    if (row.contentType === "word") continue;
     const preferred = preferContentId !== undefined && row.contentId === preferContentId;
     const current = chosen.get(row.text);
     if (!current || (preferred && !current.preferred)) {
