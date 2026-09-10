@@ -72,6 +72,32 @@ export async function scheduleStreakReminder(
           title,
           body,
           schedule: { on: { hour, minute }, repeats: true, allowWhileIdle: true },
+          // ТОЧНЫЙ БУДИЛЬНИК НЕ ПРОСИТСЯ, И ЭТО ПРАВКА 09.09.2026 (долг 107).
+          //
+          // `isExactNotification` у плагина по умолчанию **true**, и это не
+          // безобидная умолчалка. Прочитано в
+          // `node_modules/@capacitor/local-notifications/android/src/main/kotlin/…/LocalNotificationsPlugin.kt`:
+          // на `schedule()` при API 31+ плагин, не имея права на точный
+          // будильник, ОТКРЫВАЕТ СИСТЕМНЫЙ ЭКРАН «Alarms & reminders»
+          // (`startActivityForResult(ACTION_REQUEST_SCHEDULE_EXACT_ALARM)`) —
+          // независимо от `isExactMandatory`. А планируем мы на каждом
+          // запуске приложения (`NativeNotifications.tsx`). То есть с
+          // разрешением, которого Google Play не даёт приложениям, не
+          // являющимся будильником, ученик получал бы системные настройки в
+          // лицо при старте.
+          //
+          // `false` — «планировать неточно сразу, независимо от состояния
+          // разрешения» (так это и описано в definitions.d.ts). Для
+          // ежедневного напоминания в 19:00 неточность в пределах окна
+          // системы значения не имеет, а разрешение
+          // `SCHEDULE_EXACT_ALARM` после этого не нужно вовсе — оно
+          // вырезано из манифеста `tools:node="remove"`.
+          //
+          // `allowWhileIdle` остаётся: `setAndAllowWhileIdle` разрешения
+          // не требует (LocalNotificationManager.kt, ветка `else` в
+          // `setExactIfPossible`), а без него напоминание молчало бы в
+          // режиме Doze.
+          isExactNotification: false,
         },
       ],
     }),

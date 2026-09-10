@@ -41,12 +41,36 @@
 // (`$(...)`) строку Apple отклоняет, а короткую отбивает на ревью
 // требованием объяснить, ЗАЧЕМ.
 //
+// СЛЕПОТА, ОПЛАЧЕННАЯ 09.09.2026 (долг 107). Всё, что описано выше,
+// читало НАШ манифест — а Play Console спрашивает про каждое разрешение
+// В ЗАГРУЖЕННОМ ПАКЕТЕ. Первая же настоящая сборка (7.157) показала цену:
+// наш манифест объявлял ТРИ разрешения, собранный APK нёс ДВЕНАДЦАТЬ.
+// Девять приносило слияние манифестов библиотек, и этот сторож не мог
+// увидеть их ПО ПОСТРОЕНИЮ — он смотрел не туда, куда смотрит анкета.
+//
+// Поэтому у него теперь два входа, и правило у обоих одно:
+//
+//   без флагов          — множество разрешений берётся из
+//                         `android/app/src/main/AndroidManifest.xml`
+//                         (страховка: гоняется где угодно, инструментов
+//                         не требует)
+//   --badging=<файл>    — множество берётся из СОБРАННОГО APK
+//                         (`aapt2 dump badging`), то есть ровно то, что
+//                         увидит Play Console. Гоняется в
+//                         `.github/workflows/android-debug.yml`.
+//
+// Во втором режиме к `ALWAYS_ALLOWED` добавляется список разрешений,
+// принесённых библиотеками. Он не переписан сюда руками, а ИМПОРТИРОВАН
+// из `scripts/check-apk-facts.mjs`: два списка одного и того же разошлись
+// бы на первой же смене зависимости, и второй экземпляр начал бы врать.
+//
 // Сторож смотрит только на ОТСЛЕЖИВАЕМЫЕ файлы (`git ls-files`) — по той
 // же причине, что и `check:brand`: прогон до `git add` про новый файл не
 // говорит ничего (оплачено на PR #226).
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { ALLOWED_MERGED, parseBadging, splitPermissions } from "./check-apk-facts.mjs";
 
 const IS_ENTRY_POINT = process.argv[1]
   ? import.meta.url === pathToFileURL(process.argv[1]).href
@@ -95,10 +119,49 @@ const CAPABILITIES = [
   },
 ];
 
+/** СВЯЗКА ДВУХ ПОЛОВИН ОДНОЙ ПРАВКИ (долг 107, 09.09.2026).
+ *
+ *  `SCHEDULE_EXACT_ALARM` вычеркнут из пакета `tools:node="remove"`. Это
+ *  безопасно ровно до тех пор, пока код НЕ просит точный будильник:
+ *  `isExactNotification` у @capacitor/local-notifications по умолчанию
+ *  `true`, и при невыданном праве плагин ОТКРЫВАЕТ системный экран
+ *  «Alarms & reminders» на каждом `schedule()` — то есть на каждом запуске
+ *  приложения (`NativeNotifications.tsx`).
+ *
+ *  Две половины лежат в разных файлах и разных языках, поэтому связать их
+ *  может только правило. Уберут `isExactNotification: false` — сторож
+ *  скажет об этом здесь, а не ученик системными настройками в лицо. */
+const EXACT_ALARM = "android.permission.SCHEDULE_EXACT_ALARM";
+const NOTIFICATIONS_SOURCE = "src/lib/notifications.ts";
+
+function exactAlarmCoupling(manifestText) {
+  const { removedPermissions } = splitPermissions(manifestText);
+  if (!removedPermissions.has(EXACT_ALARM)) return null;
+  const code = read(NOTIFICATIONS_SOURCE);
+  if (code === null) return `${NOTIFICATIONS_SOURCE} — файла нет, а ${EXACT_ALARM} вычеркнут из пакета`;
+  if (/isExactNotification\s*:\s*false/.test(stripComments(code))) return null;
+  return (
+    `${EXACT_ALARM} вычеркнут из пакета tools:node="remove", но в ${NOTIFICATIONS_SOURCE} нет ` +
+    `isExactNotification: false.\n      Умолчание плагина — true: при невыданном праве он открывает ` +
+    `системный экран «Alarms & reminders» на КАЖДОМ запуске приложения.`
+  );
+}
+
 /** Разрешения, которые объявлены не ради способности из таблицы выше, а
  *  потому что без них приложение не работает вовсе. Каждое — с причиной. */
 const ALWAYS_ALLOWED = new Map([
   ["android.permission.INTERNET", "оболочка грузит удалённый URL — без сети приложения нет вовсе"],
+  // Долг 111. Способностью из CAPABILITIES это не описывается: тип службы
+  // `mediaPlayback` объявлен не у нас, а в манифесте
+  // `@capgo/capacitor-media-session`, и в одном множестве с нашим
+  // разрешением оказывается только после слияния манифестов. Связку
+  // «тип на службе ⇄ парное разрешение» сторожит по СОБРАННОМУ пакету
+  // `npm run check:fgs-types`; здесь разрешение только списано как
+  // известное, чтобы этот сторож не ругался на него как на бесхозное.
+  [
+    "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+    "фоновое воспроизведение озвучки; парность типу службы проверяет check:fgs-types по пакету",
+  ],
 ]);
 
 function tracked() {
@@ -139,19 +202,42 @@ function iosDeclared() {
   return out;
 }
 
-/** Что объявлено на Android. */
+/** Что объявлено на Android — по НАШЕМУ манифесту.
+ *
+ *  Строки с `tools:node="remove"` сюда не попадают: они не объявляют
+ *  разрешение, а вычёркивают принесённое библиотекой (долг 107). */
 function androidDeclared() {
   const text = read(MANIFEST);
   if (text === null) return null;
-  return new Set([...text.matchAll(/<uses-permission[^>]*android:name="([^"]+)"/g)].map((m) => m[1]));
+  return splitPermissions(text).permissions;
 }
 
-function scan() {
+/** Что лежит В СОБРАННОМ ПАКЕТЕ. Именно это множество видит Play Console.
+ *
+ *  Подстановка `${applicationId}`: `androidx.core` объявляет своё
+ *  разрешение через неё, и в пакете оно уже развёрнуто. Сравнивать надо
+ *  развёрнутые имена с развёрнутыми. */
+function androidInApk(badgingText, applicationId) {
+  return parseBadging(badgingText).permissions;
+}
+
+/** Разрешения, принесённые библиотеками, — список ОДИН на два сторожа:
+ *  импортирован из check-apk-facts.mjs, а не переписан. */
+function mergedAllowances(applicationId) {
+  const out = new Map();
+  for (const [name, from] of ALLOWED_MERGED) {
+    out.set(name.replace("${applicationId}", applicationId), `принесено библиотекой ${from}`);
+  }
+  return out;
+}
+
+function scan(apk = null) {
   const files = tracked();
   const failures = [];
   const { hits, scanned } = usage(files);
   const ios = iosDeclared();
-  const android = androidDeclared();
+  const android = apk ? androidInApk(apk.badging, apk.applicationId) : androidDeclared();
+  const extraAllowed = apk ? mergedAllowances(apk.applicationId) : new Map();
 
   if (ios === null) return { failures: [`${PLIST} — файла нет`], scanned, rows: [] };
   if (android === null) return { failures: [`${MANIFEST} — файла нет`], scanned, rows: [] };
@@ -210,10 +296,11 @@ function scan() {
   // чего она не знает, — то же самое, что не проверять.
   const known = new Set(CAPABILITIES.flatMap((c) => c.android));
   for (const p of android) {
-    if (known.has(p) || ALWAYS_ALLOWED.has(p)) continue;
+    if (known.has(p) || ALWAYS_ALLOWED.has(p) || extraAllowed.has(p)) continue;
     failures.push(
-      `Android: разрешение ${p} объявлено, но не относится ни к одной способности из таблицы сторожа.\n` +
-        `      Либо заведите способность в CAPABILITIES, либо причину в ALWAYS_ALLOWED, либо уберите разрешение.`,
+      `Android: разрешение ${p} ${apk ? "лежит в СОБРАННОМ ПАКЕТЕ" : "объявлено"}, но не относится ни к одной способности из таблицы сторожа.\n` +
+        `      Либо заведите способность в CAPABILITIES, либо причину в ALWAYS_ALLOWED, либо уберите разрешение.` +
+        (apk ? "\n      Разрешение, приехавшее с новой зависимостью, спросит анкета «Безопасность данных» в Play Console." : ""),
     );
   }
   // То же для iOS.
@@ -223,7 +310,10 @@ function scan() {
     failures.push(`iOS: ключ ${k} объявлен, но не относится ни к одной способности из таблицы сторожа.`);
   }
 
-  return { failures, scanned, rows };
+  const coupling = exactAlarmCoupling(read(MANIFEST) ?? "");
+  if (coupling) failures.push(`Android: ${coupling}`);
+
+  return { failures, scanned, rows, fromApk: Boolean(apk), androidCount: android.size };
 }
 
 function report(r) {
@@ -237,7 +327,10 @@ function report(r) {
     `check:native-permissions — ${r.scanned} файлов кода прочитано; ` +
       `способностей в таблице ${r.rows.length}, используется ${used.length} ` +
       `(${used.map((x) => x.id).join(", ") || "ни одной"}), ` +
-      `и каждая объявлена на обеих платформах; лишних разрешений нет ни на одной.`,
+      `и каждая объявлена на обеих платформах; лишних разрешений нет ни на одной. ` +
+      (r.fromApk
+        ? `Разрешения Android взяты ИЗ СОБРАННОГО APK: ${r.androidCount} — то самое множество, про которое спрашивает Play Console.`
+        : `Разрешения Android взяты из нашего манифеста: ${r.androidCount}. Слой пакета — в .github/workflows/android-debug.yml.`),
   );
   return true;
 }
@@ -334,6 +427,20 @@ function plantControls() {
       expect: (r) => r.failures.some((m) => m.includes("READ_CONTACTS") && m.includes("не относится ни к одной")),
     },
     {
+      name: "связка долга 107: isExactNotification: false убран из кода",
+      plant: () =>
+        swap("src/lib/notifications.ts", "isExactNotification: false,", "isExactNotification: true,"),
+      expect: (r) => r.failures.some((m) => m.includes("Alarms & reminders")),
+    },
+    {
+      name: "связка долга 107: разрешение перестали вычёркивать из пакета",
+      plant: () => swap(MANIFEST, 'tools:node="remove"', 'tools:node="merge"'),
+      // Правило молчит: вычеркивания нет — связывать нечего. Это НЕ дыра,
+      // а граница правила, и она проверена, а не подразумевается.
+      negative: true,
+      expect: (r) => !r.failures.some((m) => m.includes("Alarms & reminders")),
+    },
+    {
       name: "вызов спрятан за комментарий — ложной красноты быть не должно",
       plant: () => {
         writeFileSync(PLANTED, "// navigator.geolocation.getCurrentPosition — мы этого НЕ делаем\nexport {};\n");
@@ -370,7 +477,86 @@ function plantControls() {
   return ok;
 }
 
+/** Подсадки СЛОЯ ПАКЕТА (долг 107). Файла APK им не нужно: заведомо
+ *  здоровый дамп строится из наших же исходников и списка принесённых
+ *  библиотеками, а потом портится. Поэтому они гоняются на ноутбуке и в
+ *  `ci.yml`, где никакого Android SDK нет. */
+function plantApkControls() {
+  const applicationId = readFileSync("android/app/build.gradle", "utf8").match(
+    /applicationId\s+"([^"]+)"/,
+  )[1];
+  const ours = androidDeclared();
+  const merged = [...ALLOWED_MERGED.keys()].map((n) => n.replace("${applicationId}", applicationId));
+  const healthy = [
+    `package: name='${applicationId}' versionCode='1' versionName='1.0'`,
+    ...[...ours, ...merged].map((p) => `uses-permission: name='${p}'`),
+  ].join("\n");
+
+  const run = (badging) => scan({ badging, applicationId });
+  const controls = [
+    [
+      "в ПАКЕТЕ нет микрофона, хотя рекордер в коде есть",
+      () => run(healthy.replace(/^uses-permission: name='android\.permission\.RECORD_AUDIO'\n/m, "")),
+      (r) => r.failures.some((m) => m.startsWith("Android:") && m.includes("RECORD_AUDIO")),
+    ],
+    [
+      "в ПАКЕТЕ камера, которой в коде нет — приехала с новой зависимостью",
+      () => run(`${healthy}\nuses-permission: name='android.permission.CAMERA'`),
+      (r) => r.failures.some((m) => m.includes("CAMERA") && m.includes("не используется")),
+    ],
+    [
+      "в ПАКЕТЕ разрешение, о котором не знает ни таблица, ни список принесённых",
+      () => run(`${healthy}\nuses-permission: name='android.permission.READ_CONTACTS'`),
+      (r) =>
+        r.failures.some(
+          (m) => m.includes("READ_CONTACTS") && m.includes("лежит в СОБРАННОМ ПАКЕТЕ"),
+        ),
+    ],
+    [
+      "в ПАКЕТЕ ограниченное SCHEDULE_EXACT_ALARM, вычеркнутое из манифеста",
+      () => run(`${healthy}\nuses-permission: name='android.permission.SCHEDULE_EXACT_ALARM'`),
+      (r) => r.failures.some((m) => m.includes("SCHEDULE_EXACT_ALARM")),
+    ],
+    [
+      "в ПАКЕТЕ пропал MODIFY_AUDIO_SETTINGS — половинчатая правка долга 72",
+      () =>
+        run(healthy.replace(/^uses-permission: name='android\.permission\.MODIFY_AUDIO_SETTINGS'\n/m, "")),
+      (r) => r.failures.some((m) => m.includes("MODIFY_AUDIO_SETTINGS")),
+    ],
+  ];
+
+  let ok = true;
+  let caught = 0;
+  for (const [name, make, expect] of controls) {
+    const hit = expect(make());
+    console.log(`  ${hit ? "поймано" : "ПРОПУЩЕНО"} — ${name}`);
+    if (hit) caught += 1;
+    ok &&= hit;
+  }
+  // Отрицательный контроль: настоящий здоровый пакет обязан молчать.
+  const clean = run(healthy).failures.length === 0;
+  console.log(`  ${clean ? "отрицательный контроль: здоровый пакет — молчание" : "ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ КРАСЕН"}`);
+  console.log(`  слой пакета: поймано ${caught} из ${controls.length}`);
+  return ok && clean;
+}
+
+function main() {
+  if (process.argv.includes("--plant")) {
+    const a = plantControls();
+    console.log("check:native-permissions --plant — слой пакета (долг 107):");
+    const b = plantApkControls();
+    return a && b;
+  }
+  const arg = process.argv.find((x) => x.startsWith("--badging="));
+  if (arg) {
+    const applicationId = readFileSync("android/app/build.gradle", "utf8").match(
+      /applicationId\s+"([^"]+)"/,
+    )[1];
+    return report(scan({ badging: readFileSync(arg.slice("--badging=".length), "utf8"), applicationId }));
+  }
+  return report(scan());
+}
+
 if (IS_ENTRY_POINT) {
-  const ok = process.argv.includes("--plant") ? plantControls() : report(scan());
-  process.exitCode = ok ? 0 : 1;
+  process.exitCode = main() ? 0 : 1;
 }
