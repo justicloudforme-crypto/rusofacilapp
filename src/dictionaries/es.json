@@ -886,7 +886,7 @@
     "premiumLockBody": "Estás viendo una vista previa gratuita con el primer párrafo. Suscríbete para leer la historia completa y escuchar el audio.",
     "premiumLockCta": "Ver planes de suscripción",
     "premiumTierLockTitle": "Esta historia está disponible solo en el plan Premium",
-    "premiumTierLockBody": "Tu suscripción actual da acceso a la mayoría de las historias, pero esta forma parte de la biblioteca ampliada de nivel C1, exclusiva para el plan Premium.",
+    "premiumTierLockBody": "Tu suscripción actual da acceso a la mayoría de las historias, pero esta forma parte de la biblioteca ampliada de nivel {level}, exclusiva para el plan Premium.",
     "insightsVocabHeading": "Palabras de este cuento que ya están en el curso",
     "insightsVocabNote": "Todas aparecen en este cuento. Cada una viene con su transcripción y su traducción — son palabras sueltas del vocabulario del curso, no un resumen de la historia.",
     "insightsGrammarHeading": "Gramática que aparece en este cuento",
