@@ -78,3 +78,39 @@ describe("pickReusableClips: чей клип берётся, когда текс
     expect(pickReusableClips(withStory)["Привет!"]).toBeUndefined();
   });
 });
+
+/**
+ * Долг 125, заход 7.166. `AudioAsset.text` хранится уже пропущенным через
+ * `sanitizeTextForTTS`, а кнопка спрашивает СЫРЫМ текстом страницы.
+ * Пока текстовых ступеней было две, любой текст с кавычками «» не находил
+ * своего клипа никогда, хотя тот был оплачен и лежал в Blob.
+ */
+describe("pickClip: третья ступень — очищенный текст", () => {
+  const quoted = "Ты когда-нибудь читал «Войну и мир»?";
+  const cleaned = "Ты когда-нибудь читал Войну и мир?";
+
+  it("находит клип, лежащий под очищенным текстом", () => {
+    expect(pickClip({ [textAudioKey(cleaned)]: "/paid/clean.mp3" }, null, quoted)).toBe("/paid/clean.mp3");
+  });
+
+  it("сырой ключ остаётся главнее очищенного", () => {
+    const map = { [textAudioKey(cleaned)]: "/paid/clean.mp3", [textAudioKey(quoted)]: "/paid/raw.mp3" };
+    expect(pickClip(map, null, quoted)).toBe("/paid/raw.mp3");
+  });
+
+  it("позиционный ключ остаётся главнее обоих текстовых", () => {
+    const map = {
+      [vocabAudioKey(0)]: "/paid/position.mp3",
+      [textAudioKey(cleaned)]: "/paid/clean.mp3",
+    };
+    expect(pickClip(map, vocabAudioKey(0), quoted)).toBe("/paid/position.mp3");
+  });
+
+  it("очистка не склеивает разные тексты", () => {
+    expect(pickClip({ [textAudioKey(cleaned)]: "/paid/clean.mp3" }, null, "Ты когда-нибудь читал «Анну Каренину»?")).toBeUndefined();
+  });
+
+  it("текст без кавычек второго запроса не делает", () => {
+    expect(pickClip({ [textAudioKey("пять")]: "/paid/text.mp3" }, null, "пять")).toBe("/paid/text.mp3");
+  });
+});

@@ -11,6 +11,8 @@
  * its response by literal text instead of position.
  */
 
+import { sanitizeTextForTTS } from "@/lib/speech";
+
 export function vocabAudioKey(index: number): string {
   return `vocab-${index}`;
 }
@@ -62,8 +64,24 @@ export function textAudioKey(text: string): string {
 }
 
 /**
- * URL клипа для элемента: сначала по позиции, потом по тексту, иначе
- * `undefined` (штатный запасной путь `SpeakButton` — браузерный синтез).
+ * URL клипа для элемента: сначала по позиции, потом по тексту, потом по
+ * ОЧИЩЕННОМУ тексту, иначе `undefined` (штатный запасной путь
+ * `SpeakButton` — браузерный синтез).
+ *
+ * Третья ступень — долг 125, заход 7.166. `AudioAsset.text` хранит текст
+ * уже пропущенный через `sanitizeTextForTTS` (иначе синтезатор прочитал
+ * бы кавычки вслух), а кнопка спрашивает СЫРЫМ текстом страницы. Пока
+ * ступени было две, любой текст с кавычками «», типографскими кавычками,
+ * разметкой или переносом строки не находил своего клипа НИКОГДА, хотя
+ * тот лежал в Blob и был оплачен. Найдена одна такая кнопка (слайд
+ * `b1-15`), но класс шире одной кнопки — он ровно такой, какой снимает
+ * санитайзер.
+ *
+ * Ступень именно ТРЕТЬЯ, а не вместо второй: сырой ключ остаётся первым
+ * из текстовых, поэтому связь, которая работала до этой правки, сломаться
+ * не может — до очищенного ключа дело доходит лишь после промаха по
+ * сырому. И она не отменяет предупреждение в шапке файла: позиционный
+ * ключ по-прежнему главный.
  */
 export function pickClip(
   audioMap: Record<string, string> | undefined,
@@ -75,5 +93,9 @@ export function pickClip(
     const byPosition = audioMap[positionKey];
     if (byPosition) return byPosition;
   }
-  return audioMap[textAudioKey(text)];
+  const byText = audioMap[textAudioKey(text)];
+  if (byText) return byText;
+  const cleaned = sanitizeTextForTTS(text);
+  if (cleaned === text) return undefined;
+  return audioMap[textAudioKey(cleaned)];
 }
