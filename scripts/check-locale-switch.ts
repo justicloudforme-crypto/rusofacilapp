@@ -59,8 +59,20 @@ const arg = (name: string, fallback: string) => {
   return hit ? hit.slice(name.length + 3) : fallback;
 };
 const PLANT = argv.includes("--plant");
+/** Правило ДО 7.167: голая замена первого сегмента. Нужно, чтобы «до» и
+ * «после» снимались ОДНИМ инструментом, а не двумя разными скриптами
+ * (правило замера 4.1). Всегда без гейта — это замер, а не сторож. */
+const BEFORE = argv.includes("--before");
 const BASE = arg("base", "").replace(/\/$/, "");
 const CONCURRENCY = Number(arg("concurrency", "8"));
+
+/** Цель переключателя: нынешнее правило или прежнее, если задан --before. */
+function switchTargetOf(pathname: string, to: Locale): string {
+  if (!BEFORE) return localeSwitchTarget(pathname, to).href;
+  const segments = pathname.split("/");
+  segments[1] = to;
+  return segments.join("/") || "/";
+}
 
 const APP = join(process.cwd(), "src/app/[lang]");
 const PLANT_DIR = join(APP, "__plant-locale-switch__");
@@ -130,7 +142,7 @@ export function auditRoutes(routes: RoutePage[]): Finding[] {
       if (from !== "es" && bailsOutsideSpanish(page.source)) continue;
       for (const to of locales) {
         if (to === from) continue;
-        const { href } = localeSwitchTarget(fromHref, to as Locale);
+        const href = switchTargetOf(fromHref, to as Locale);
         const targetPath = href.slice(`/${to}`.length);
         const target = routeOf(targetPath, routes);
         if (!target) {
@@ -271,7 +283,7 @@ async function live(base: string): Promise<void> {
     const path = row.url.slice(origin.length);
     for (const to of locales) {
       if (to === localeOf(row.url)) continue;
-      const { href } = localeSwitchTarget(path, to);
+      const href = switchTargetOf(path, to);
       switchTarget.set(row.url, origin + href);
       wanted.add(origin + href);
     }
