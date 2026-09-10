@@ -41,6 +41,11 @@ export function pickReusableClips(
     // рассказов о нём не знают; тап по слову ходит своим путём
     // (`wordClipUrl` в src/lib/story-word-audio.ts).
     if (row.contentType === "word") continue;
+    // `story-word` — вырезка омографа из озвучки САМОГО рассказа (заход
+    // 7.168). Она звучит голосом каста того рассказа и несёт ударение,
+    // верное только для СВОЕГО места, поэтому за пределами этого места
+    // ей делать нечего — ни в кнопке урока, ни в общем банке слов.
+    if (row.contentType === "story-word") continue;
     const preferred = preferContentId !== undefined && row.contentId === preferContentId;
     const current = chosen.get(row.text);
     if (!current || (preferred && !current.preferred)) {

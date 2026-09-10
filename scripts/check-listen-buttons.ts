@@ -22,13 +22,20 @@
  * там ровно такая же и до 7.166 звучала браузерным голосом у всех, в том
  * числе у анонима на двух бесплатных рассказах (долг 123).
  *
- * Число «без записи» не обязано быть нулём: после 7.166 их 2426, и ни
- * одна не дефект кода. Разложение (PROGRESS.md 7.166): 3 — «груша»,
+ * ЧТО ЗНАЧИТ ОСТАТОК. До 7.168 он назывался «на голосе браузера»: орган
+ * без записи звучал системным голосом ОС. Теперь такого пути нет в коде
+ * вовсе (сторож `check:no-runtime-tts`), поэтому «на голосе браузера»
+ * структурно 0, а остаток называется тем, что он есть, — «без клипа»:
+ * орган на месте, тап ничего не проигрывает, подменять запись нечем.
+ *
+ * Число «без клипа» не обязано быть нулём: после 7.168 их 640, и ни одно
+ * не дефект кода. Разложение (PROGRESS.md 7.168): 3 — «груша»,
  * «расцветать», «яблоня» со `song-katyusha`, отложены до 26.09
- * заморозкой; 683 — омографы, которым изолированный клип дал бы чужое
- * ударение; 1740 — 696 словоформ, чей клип аудит не принял ни с первого
- * раза, ни после пересинтеза, и они лежат у владельца на прослушивании
- * (`~/rusofacil-listen/7.166/на-слух/`). Поэтому гейт сравнивает с
+ * заморозкой; 637 — места омографов, у которых нет годной вырезки из
+ * озвучки их собственного предложения. Изолированным клипом омограф не
+ * озвучивается никогда — он дал бы чужое ударение; 46 мест вырезку уже
+ * получили (владелец их прослушал), ещё 420 лежат у него на слух в
+ * `~/rusofacil-listen/7.168/на-слух/`. Поэтому гейт сравнивает с
  * ЗАКРЕПЛЁННЫМ ЧИСЛОМ (BASELINE ниже, приём `check:brand`): стало
  * больше — падение; стало меньше — тоже падение, чтобы число в
  * PROGRESS.md не расходилось с продуктом молча.
@@ -52,7 +59,7 @@ import { isEntryPoint } from "@/lib/entry-point";
 import { pickClip, textAudioKey } from "@/lib/lessons/audioKeys";
 import { pickReusableClips, type ReusableClipRow } from "@/lib/audio-reuse-pick";
 import { sanitizeTextForTTS } from "@/lib/speech";
-import { pickWordClip, isHomograph } from "@/lib/story-word-pick";
+import { pickWordClip, pickStoryWordClip, storyWordItemKey, isHomograph } from "@/lib/story-word-pick";
 import { splitStoryParagraphs, buildStoryQueue } from "@/lib/stories";
 
 const PLANT = process.argv.includes("--plant");
@@ -61,10 +68,14 @@ const CENSUS_ONLY = process.argv.includes("--census");
  * Нужна, чтобы «до» и «после» были сняты ОДНИМ инструментом, а не двумя
  * разными скриптами (PROGRESS.md 4.1). Всегда без гейта. */
 const BEFORE = process.argv.includes("--before");
+/** Поимённый список каждого органа без клипа — не пять образцов, а все.
+ *  С `--list=<файл>` тот же список пишется на диск. */
+const LIST = process.argv.includes("--list") || process.argv.some((a) => a.startsWith("--list="));
+const LIST_FILE = process.argv.find((a) => a.startsWith("--list="))?.slice(7);
 
 /** Поверхность → сколько кнопок «слушать» она рисует и для скольких из них
  * находится файл. Имена — те же, что в таблице раздела 7.163. */
-type Bucket = { buttons: number; withClip: number; samplesWithout: string[] };
+type Bucket = { buttons: number; withClip: number; samplesWithout: string[]; without: string[] };
 
 function resolve(map: Record<string, string> | undefined, positionKey: string | null, text: string) {
   if (BEFORE) return positionKey && map ? map[positionKey] : undefined;
@@ -72,10 +83,13 @@ function resolve(map: Record<string, string> | undefined, positionKey: string | 
 }
 
 function bump(buckets: Map<string, Bucket>, name: string, resolved: string | undefined, sample: string) {
-  const b = buckets.get(name) ?? { buttons: 0, withClip: 0, samplesWithout: [] };
+  const b = buckets.get(name) ?? { buttons: 0, withClip: 0, samplesWithout: [], without: [] };
   b.buttons++;
   if (resolved) b.withClip++;
-  else if (b.samplesWithout.length < 5) b.samplesWithout.push(sample);
+  else {
+    if (b.samplesWithout.length < 5) b.samplesWithout.push(sample);
+    b.without.push(sample);
+  }
   buckets.set(name, b);
 }
 
@@ -89,11 +103,10 @@ function bump(buckets: Map<string, Bucket>, name: string, resolved: string | und
  * «яблоня» со `song-katyusha` — их запись попала бы в серверный HTML
  * замороженной страницы, поэтому она после 26.09.
  *
- * У тапа по слову без записи **2423** места, и ни одно не дефект кода:
- * **683** — омографы (клип изолированного слова дал бы им чужое
- * ударение; правило в `story-word-pick.ts`), **1740** — 696 словоформ,
- * чей клип аудит не принял ни с первого раза, ни после пересинтеза; они
- * лежат владельцу на слух в `~/rusofacil-listen/7.166/на-слух/`.
+ * У тапа по слову без клипа **637** мест, и все до одного — омографы:
+ * клип изолированного слова дал бы им чужое ударение (правило в
+ * `story-word-pick.ts`), а годной вырезки из озвучки их собственного
+ * предложения пока нет. 46 мест вырезку получили в 7.168.
  */
 const BASELINE: Record<string, [number, number]> = {
   "урок: слайды": [679, 679],
@@ -117,7 +130,7 @@ const BASELINE: Record<string, [number, number]> = {
   // орган управления, который открывается по касанию слова: у каждого
   // тапаемого слова в окошке перевода есть своя кнопка «слушать». До
   // захода 7.166 все они до единой звучали браузерным голосом (долг 123).
-  "рассказы: тап по слову": [56642, 54219],
+  "рассказы: тап по слову": [56642, 56005],
 };
 
 /** Позитивный контроль резолвера, без сети и без базы. */
@@ -244,6 +257,43 @@ function plant(): number {
       ) === null,
   });
   // Банк слов не имеет права менять клипы кнопок ВНЕ рассказов.
+  // 7.168: вырезка омографа привязана к МЕСТУ.
+  const cutRow: ReusableClipRow = {
+    contentType: "story-word", contentId: "story-1", itemKey: "3-0-8", text: "замок",
+    audioUrl: "/paid/cut.wav",
+  };
+  const place = { storyId: "story-1", paragraphIndex: 3, sentenceIndex: 0, tokenIndex: 8 };
+  cases.push({
+    name: "вырезка омографа отдаётся своему месту",
+    ok: pickStoryWordClip([cutRow], place, "замок") === "/paid/cut.wav",
+  });
+  cases.push({
+    name: "отрицательный контроль: то же слово в ДРУГОМ месте вырезку не получает",
+    ok: pickStoryWordClip([cutRow], { ...place, tokenIndex: 9 }, "замок") === null,
+  });
+  cases.push({
+    name: "отрицательный контроль: то же место в ДРУГОМ рассказе вырезку не получает",
+    ok: pickStoryWordClip([cutRow], { ...place, storyId: "story-2" }, "замок") === null,
+  });
+  cases.push({
+    // Слово НЕ из списка омографов нарочно: иначе `pickWordClip` вернул бы
+    // null по первой же строчке (омограф не озвучивается вовсе), и
+    // подсадка проходила бы по чужой причине.
+    name: "отрицательный контроль: вырезка не становится общим клипом словоформы",
+    ok: pickWordClip([{ ...cutRow, text: "лесник" }], "лесник") === null,
+  });
+  cases.push({
+    // Тоже без опоры на порядок сортировки: `story-word` идёт после
+    // `lesson` по алфавиту, поэтому «урок выигрывает» ничего не доказало
+    // бы. Доказывает то, что одна вырезка не даёт клипа ВООБЩЕ.
+    name: "подсадка: вырезка не подменяет клип кнопки урока",
+    ok:
+      pickReusableClips([cutRow])["замок"] === undefined &&
+      pickReusableClips([
+        { contentType: "lesson", contentId: "a1-1", itemKey: "vocab-0", text: "замок", audioUrl: "/paid/lesson.mp3" },
+        cutRow,
+      ])["замок"] === "/paid/lesson.mp3",
+  });
   cases.push({
     name: "подсадка: банк слов не подменяет клип кнопки урока",
     ok:
@@ -498,13 +548,42 @@ async function census(): Promise<Map<string, Bucket>> {
     wordClipCache.set(cacheKey, url);
     return url ?? undefined;
   };
+  // Вырезки омографов (заход 7.168): клип привязан к МЕСТУ, а не к
+  // словоформе, поэтому и считается по месту — тем же правилом
+  // `pickStoryWordClip`, которым его отдаёт продукт.
+  const cutRows = (await db.audioAsset.findMany({
+    where: { contentType: "story-word" },
+    select: { contentType: true, contentId: true, itemKey: true, text: true, audioUrl: true },
+  })) as ReusableClipRow[];
+  const cutsByPlace = new Map<string, ReusableClipRow>();
+  for (const row of cutRows) cutsByPlace.set(`${row.contentId}|${row.itemKey}`, row);
+
   const stories = await db.story.findMany({ select: { id: true, text: true } });
   for (const story of stories) {
     for (const item of buildStoryQueue(splitStoryParagraphs(story.text))) {
-      for (const token of item.text.split(WORD_SPLIT_REGEX).filter((t) => t.length > 0)) {
-        if (!CYRILLIC_WORD_REGEX.test(token)) continue;
-        bump(buckets, "рассказы: тап по слову", clipForWord(token), `${story.id} ${token}${isHomograph(token) ? " (омограф)" : ""}`);
-      }
+      // Номер токена — ОБЩИЙ по предложению (пробелы и знаки тоже токены):
+      // ровно так их нумерует `StoryText.tsx`, и ровно так называется
+      // `itemKey` вырезки. Считать только словесные значило бы завести
+      // вторую нумерацию — класс долга 104.
+      const tokens = item.text.split(WORD_SPLIT_REGEX).filter((t) => t.length > 0);
+      tokens.forEach((token, tokenIndex) => {
+        if (!CYRILLIC_WORD_REGEX.test(token)) return;
+        const place = {
+          storyId: story.id,
+          paragraphIndex: item.paragraphIndex,
+          sentenceIndex: item.sentenceIndex,
+          tokenIndex,
+        };
+        const cut = cutsByPlace.get(`${story.id}|${storyWordItemKey(place)}`);
+        const resolved =
+          (cut ? pickStoryWordClip([cut], place, token) ?? undefined : undefined) ?? clipForWord(token);
+        bump(
+          buckets,
+          "рассказы: тап по слову",
+          resolved,
+          `${story.id} ${item.paragraphIndex}-${item.sentenceIndex}-${tokenIndex} ${token}${isHomograph(token) ? " (омограф)" : ""}`,
+        );
+      });
     }
   }
 
@@ -528,7 +607,7 @@ async function main(): Promise<number> {
   let totalWith = 0;
   const drift: string[] = [];
   for (const name of Object.keys(BASELINE)) {
-    const b = buckets.get(name) ?? { buttons: 0, withClip: 0, samplesWithout: [] };
+    const b = buckets.get(name) ?? { buttons: 0, withClip: 0, samplesWithout: [], without: [] };
     totalButtons += b.buttons;
     totalWith += b.withClip;
     const [wantButtons, wantWith] = BASELINE[name];
@@ -537,10 +616,28 @@ async function main(): Promise<number> {
       `${mark} ${name.padEnd(34)} кнопок ${String(b.buttons).padStart(5)}  с записью ${String(b.withClip).padStart(5)}  без ${String(b.buttons - b.withClip).padStart(5)}   (закреплено ${wantButtons}/${wantWith})`,
     );
     if (mark === "≠") drift.push(`${name}: ${b.buttons}/${b.withClip} против закреплённых ${wantButtons}/${wantWith}`);
-    if (b.samplesWithout.length) console.log(`    без записи, например: ${b.samplesWithout.join(" · ")}`);
+    if (b.samplesWithout.length) console.log(`    без клипа, например: ${b.samplesWithout.join(" · ")}`);
   }
   const unknown = [...buckets.keys()].filter((k) => !(k in BASELINE));
-  console.log(`\nвсего кнопок ${totalButtons}, с записью ${totalWith}, без записи ${totalButtons - totalWith}`);
+  // «На голосе браузера» больше не строка отчёта, а ноль по построению:
+  // с 7.168 браузерного синтеза нет в коде вовсе (сторож
+  // `check:no-runtime-tts`), поэтому орган без записи не звучит ничем.
+  // Остаток называется тем, что он есть, — «без клипа».
+  console.log(`\nвсего органов «слушать» ${totalButtons}, с клипом ${totalWith}, БЕЗ КЛИПА ${totalButtons - totalWith}`);
+  console.log("на голосе браузера 0 — структурно: браузерного синтеза нет в коде (check:no-runtime-tts)");
+  if (LIST) {
+    const all: string[] = [];
+    for (const name of Object.keys(BASELINE)) {
+      for (const item of buckets.get(name)?.without ?? []) all.push(`${name}\t${item}`);
+    }
+    if (LIST_FILE) {
+      const { writeFileSync } = await import("node:fs");
+      writeFileSync(LIST_FILE, all.join("\n") + "\n");
+      console.log(`поимённый список без клипа записан: ${LIST_FILE} (${all.length} строк)`);
+    } else {
+      for (const line of all) console.log(`  ${line}`);
+    }
+  }
 
   if (CENSUS_ONLY || BEFORE) return 0;
   if (unknown.length) {

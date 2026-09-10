@@ -3,13 +3,15 @@ import { cleanup, render, screen } from "@testing-library/react";
 import StoryText, { type StoryTextDict } from "./StoryText";
 import type { StoryAudioSegment } from "@/lib/stories";
 
-// Долг 114 (PROGRESS.md 7.160/7.161). Бесплатный отрывок закрытого
-// рассказа много лет читал системный голос ОС: страница не отдавала
-// непокупателю ни одного клипа, а кнопка «слушать» оставалась и уходила в
-// `SpeechSynthesisUtterance`. Здесь заперта та половина правила, которая
-// живёт в компоненте: **синтез не подставляется вместо записи там, где он
-// запрещён**. Вторая половина — что клипы видимого абзаца вообще отданы —
-// стоит на странице (`[id]/page.tsx`) и проверяется `check:silent-listen`.
+// Долг 114 (PROGRESS.md 7.160/7.161) и заход 7.168. Бесплатный отрывок
+// закрытого рассказа много лет читал системный голос ОС: страница не
+// отдавала непокупателю ни одного клипа, а кнопка «слушать» оставалась и
+// уходила в браузерный синтез. В 7.161 синтез запретили превью, в 7.168 —
+// сняли из кода целиком. Здесь заперта та половина правила, которая живёт
+// в компоненте: **орган управления «слушать» рисуется ровно тогда, когда
+// есть настоящая запись, и подставить вместо неё нечего**. Вторая
+// половина — что клипы видимого абзаца вообще отданы — стоит на странице
+// (`[id]/page.tsx`) и проверяется `check:silent-listen`.
 
 const dict: StoryTextDict = {
   translationLoading: "…",
@@ -31,13 +33,21 @@ const segments: StoryAudioSegment[] = [
   { paragraphIndex: 0, sentenceIndex: 1, url: "https://blob.example/0-1.mp3", durationSeconds: 4 },
 ];
 
+let speak: ReturnType<typeof vi.fn>;
+
 beforeEach(() => {
   // jsdom не реализует Web Speech API вовсе — а именно его наличие и
-  // включало аварийный путь в браузере. Подставляем движок, чтобы тест
-  // мерил НАШЕ правило, а не отсутствие API в jsdom.
+  // включало аварийный путь в браузере. Движок подставляется НАРОЧНО:
+  // тест обязан мерить наше правило, а не отсутствие API в jsdom. Если
+  // где-то в компоненте синтез вернётся, этот шпион его увидит.
+  // jsdom не реализует воспроизведение вовсе: без этой заглушки клик по
+  // предложению падает не на нашем правиле, а на `play() is not implemented`.
+  vi.spyOn(window.HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+  vi.spyOn(window.HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+  speak = vi.fn();
   Object.defineProperty(window, "speechSynthesis", {
     configurable: true,
-    value: { cancel: vi.fn(), pause: vi.fn(), resume: vi.fn(), speak: vi.fn(), speaking: false, paused: false },
+    value: { cancel: vi.fn(), pause: vi.fn(), resume: vi.fn(), speak, speaking: false, paused: false },
   });
   Object.defineProperty(window, "SpeechSynthesisUtterance", {
     configurable: true,
@@ -55,25 +65,28 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("StoryText: аварийный браузерный синтез", () => {
-  it("превью без клипов не показывает органа «слушать» вовсе — а не показывает и говорит системным голосом", () => {
-    render(
-      <StoryText
-        storyId={null}
-        title="Чужими словами"
-        author="—"
-        paragraphs={paragraphs}
-        audioSegments={[]}
-        fullAudioUrl={null}
-        sentenceOffsets={null}
-        allowTtsFallback={false}
-        dict={dict}
-      />
-    );
-    expect(screen.queryByLabelText(dict.playLabel)).toBeNull();
+describe("StoryText: браузерного синтеза нет ни на одном пути", () => {
+  it("без клипов органа «слушать» нет вовсе — ни у превью, ни у полноправного читателя", () => {
+    for (const storyId of [null, "story-1"]) {
+      const { container } = render(
+        <StoryText
+          storyId={storyId}
+          title="Чужими словами"
+          author="—"
+          paragraphs={paragraphs}
+          audioSegments={[]}
+          fullAudioUrl={null}
+          sentenceOffsets={null}
+          dict={dict}
+        />
+      );
+      expect(screen.queryByLabelText(dict.playLabel)).toBeNull();
+      expect(container.querySelector("audio")).toBeNull();
+      cleanup();
+    }
   });
 
-  it("превью с клипами видимого абзаца показывает орган и настоящий <audio>", () => {
+  it("с клипами видимого абзаца орган есть и <audio> настоящий", () => {
     const { container } = render(
       <StoryText
         storyId={null}
@@ -83,7 +96,6 @@ describe("StoryText: аварийный браузерный синтез", () =
         audioSegments={segments}
         fullAudioUrl={null}
         sentenceOffsets={null}
-        allowTtsFallback={false}
         dict={dict}
       />
     );
@@ -91,7 +103,7 @@ describe("StoryText: аварийный браузерный синтез", () =
     expect(container.querySelector("audio")).not.toBeNull();
   });
 
-  it("отрицательный контроль: полноправному читателю откат на синтез остаётся — без клипов орган на месте", () => {
+  it("нажатие на предложение без клипов не запускает синтез", () => {
     const { container } = render(
       <StoryText
         storyId="story-1"
@@ -101,31 +113,6 @@ describe("StoryText: аварийный браузерный синтез", () =
         audioSegments={[]}
         fullAudioUrl={null}
         sentenceOffsets={null}
-        allowTtsFallback
-        dict={dict}
-      />
-    );
-    expect(screen.queryByLabelText(dict.playLabel)).not.toBeNull();
-    // Записи нет — значит и <audio> быть не должно: играет синтез.
-    expect(container.querySelector("audio")).toBeNull();
-  });
-
-  it("нажатие на предложение в превью без клипов не запускает синтез", async () => {
-    const speak = vi.fn();
-    Object.defineProperty(window, "speechSynthesis", {
-      configurable: true,
-      value: { cancel: vi.fn(), pause: vi.fn(), resume: vi.fn(), speak, speaking: false, paused: false },
-    });
-    const { container } = render(
-      <StoryText
-        storyId={null}
-        title="Чужими словами"
-        author="—"
-        paragraphs={paragraphs}
-        audioSegments={[]}
-        fullAudioUrl={null}
-        sentenceOffsets={null}
-        allowTtsFallback={false}
         dict={dict}
       />
     );
@@ -134,6 +121,37 @@ describe("StoryText: аварийный браузерный синтез", () =
     const sentences = container.querySelectorAll("p > span");
     expect(sentences.length).toBeGreaterThan(0);
     (sentences[0] as HTMLElement).click();
+    expect(speak).not.toHaveBeenCalled();
+  });
+
+  it("тап по слову спрашивает клип адресом МЕСТА, а не одной словоформой (7.168)", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ audioUrl: null }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(
+      <StoryText
+        storyId="story-1"
+        audioStoryId="story-1"
+        title="Чужими словами"
+        author="—"
+        paragraphs={paragraphs}
+        audioSegments={segments}
+        fullAudioUrl={null}
+        sentenceOffsets={null}
+        dict={dict}
+      />
+    );
+    const word = container.querySelector<HTMLElement>('button[data-word="года"]');
+    expect(word).not.toBeNull();
+    word!.click();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const urls = (fetchMock.mock.calls as unknown as unknown[][]).map((c) => String(c[0]));
+    const audioCall = urls.find((u) => u.startsWith("/api/word-audio"));
+    expect(audioCall).toBeDefined();
+    expect(audioCall).toContain("story=story-1");
+    // «года» — третий словесный токен, но токенов ВСЕГО он четвёртый по
+    // счёту (между словами стоят пробелы), и адрес обязан назвать именно
+    // общий номер — им же называется `itemKey` вырезки.
+    expect(audioCall).toMatch(/&at=0-0-\d+$/);
     expect(speak).not.toHaveBeenCalled();
   });
 });

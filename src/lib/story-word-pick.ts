@@ -64,6 +64,46 @@ export function isHomograph(word: string): boolean {
   return HOMOGRAPH_SET.has(word.toLowerCase());
 }
 
+/** Место слова внутри рассказа: абзац, предложение и номер токена в нём —
+ *  ровно те индексы, которыми `StoryText.tsx` рисует токены, и ровно те,
+ *  которыми `AudioAsset.itemKey` вырезки называется (`p-s-token`).
+ *  Нужно ОДНОМУ классу слов — омографам: у них ударение зависит от места,
+ *  поэтому клип привязан к месту, а не к словоформе (заход 7.168). */
+export interface StoryWordPlace {
+  storyId: string;
+  paragraphIndex: number;
+  sentenceIndex: number;
+  tokenIndex: number;
+}
+
+/** `itemKey` строки `AudioAsset` для вырезки омографа. */
+export function storyWordItemKey(place: Omit<StoryWordPlace, "storyId">): string {
+  return `${place.paragraphIndex}-${place.sentenceIndex}-${place.tokenIndex}`;
+}
+
+/**
+ * Клип для КОНКРЕТНОГО места слова в рассказе — вырезка из уже оплаченной
+ * озвучки этого самого предложения. Отдаётся только точному совпадению
+ * места: тот же омограф в другом предложении этот клип не получает, иначе
+ * вернулась бы ровно та беда, ради которой омографы и не озвучиваются
+ * изолированно, — чужое ударение.
+ */
+export function pickStoryWordClip(
+  rows: readonly ReusableClipRow[],
+  place: StoryWordPlace,
+  word: string,
+): string | null {
+  const key = storyWordItemKey(place);
+  const row = rows.find(
+    (r) =>
+      r.contentType === "story-word" &&
+      r.contentId === place.storyId &&
+      r.itemKey === key &&
+      r.text === word,
+  );
+  return row?.audioUrl ?? null;
+}
+
 /**
  * Клип для одного слова из УЖЕ прочитанных строк `AudioAsset`.
  * Порядок: собственный клип слова (`contentType='word'`), иначе — уже
@@ -75,7 +115,9 @@ export function pickWordClip(rows: readonly ReusableClipRow[], word: string): st
   if (!trimmed || trimmed.length > 64) return null;
   if (isHomograph(trimmed)) return null;
   const lower = trimmed.toLowerCase();
-  const mine = rows.filter((row) => row.text === trimmed || row.text === lower);
+  const mine = rows.filter(
+    (row) => row.contentType !== "story-word" && (row.text === trimmed || row.text === lower),
+  );
   if (mine.length === 0) return null;
   const own = [...mine]
     .filter((row) => row.contentType === "word")
