@@ -16,23 +16,28 @@
  *   если продукт рисует орган управления «слушать», для него ОБЯЗАН
  *   находиться настоящий файл; обратное правилом не является.
  *
- * Число «без записи» не обязано быть нулём: после захода 7.165 их 32, и
- * ни одна не дефект кода. Разложение (PROGRESS.md 7.165): 27 — аудит не
- * принял ни прежний клип, ни пересинтезированный, и они лежат у
- * владельца на прослушивании (`~/rusofacil-listen/7.165/на-слух/`);
- * 3 — отложены до 26.09, потому что их запись попала бы в серверный HTML
- * замороженной `song-katyusha`; 1 — термин глоссария `verbo irregular`,
- * чью русскую форму аудит тоже не принял; 1 — текст с кавычками «»,
- * которые санитайзер вырезает, из-за чего сырой текст кнопки не совпадает
- * с текстом клипа (долг 125). Поэтому гейт сравнивает с ЗАКРЕПЛЁННЫМ
- * ЧИСЛОМ (BASELINE ниже, приём `check:brand`): стало больше — падение;
- * стало меньше — тоже падение, чтобы число в PROGRESS.md не расходилось
- * с продуктом молча.
+ * Поверхностей ВОСЕМНАДЦАТЬ, и восемнадцатая появилась в 7.166: тап по
+ * слову ВНУТРИ рассказа. Это не кнопка на странице, а орган, который
+ * открывается касанием слова, поэтому 7.163 его и не переписал; кнопка
+ * там ровно такая же и до 7.166 звучала браузерным голосом у всех, в том
+ * числе у анонима на двух бесплатных рассказах (долг 123).
  *
- * ВНИМАНИЕ: числа BASELINE сняты ПОСЛЕ обеих правок 7.165 — и записи
- * 187 клипов в боевую базу, и правки опечатки в слове «счёт» (последняя буква была латинской) в
- * `src/lib/media/mediaData.json` (отдельный PR данных). Если слит только
- * один из двух, «медиа: ключевая лексика» разойдётся на единицу.
+ * Число «без записи» не обязано быть нулём: после 7.166 их 2426, и ни
+ * одна не дефект кода. Разложение (PROGRESS.md 7.166): 3 — «груша»,
+ * «расцветать», «яблоня» со `song-katyusha`, отложены до 26.09
+ * заморозкой; 683 — омографы, которым изолированный клип дал бы чужое
+ * ударение; 1740 — 696 словоформ, чей клип аудит не принял ни с первого
+ * раза, ни после пересинтеза, и они лежат у владельца на прослушивании
+ * (`~/rusofacil-listen/7.166/на-слух/`). Поэтому гейт сравнивает с
+ * ЗАКРЕПЛЁННЫМ ЧИСЛОМ (BASELINE ниже, приём `check:brand`): стало
+ * больше — падение; стало меньше — тоже падение, чтобы число в
+ * PROGRESS.md не расходилось с продуктом молча.
+ *
+ * ВНИМАНИЕ: числа BASELINE сняты ПОСЛЕ трёх записей 7.166 (27 строк по
+ * долгу 126, правка `pickClip` по долгу 125 и 12 052 строки банка слов по
+ * долгу 123). Поверхность «рассказы: тап по слову» считается кодом
+ * `src/lib/story-word-pick.ts`, поэтому без слитой правки её число
+ * разойдётся целиком.
  *
  * Запускать:
  *   npx tsx scripts/check-listen-buttons.ts          # перепись по базе
@@ -46,6 +51,9 @@
 import { isEntryPoint } from "@/lib/entry-point";
 import { pickClip, textAudioKey } from "@/lib/lessons/audioKeys";
 import { pickReusableClips, type ReusableClipRow } from "@/lib/audio-reuse-pick";
+import { sanitizeTextForTTS } from "@/lib/speech";
+import { pickWordClip, isHomograph } from "@/lib/story-word-pick";
+import { splitStoryParagraphs, buildStoryQueue } from "@/lib/stories";
 
 const PLANT = process.argv.includes("--plant");
 const CENSUS_ONLY = process.argv.includes("--census");
@@ -72,12 +80,23 @@ function bump(buckets: Map<string, Bucket>, name: string, resolved: string | und
 }
 
 /**
- * Закреплённые числа переписи по боевой базе на 10.09.2026, ПОСЛЕ записи
- * остатка долга 122 (заход 7.165). Ключ — поверхность, значение —
- * [кнопок, с записью]. Прошлые числа этой таблицы — в PROGRESS.md 7.164.
+ * Закреплённые числа переписи по боевой базе на 10.09.2026, ПОСЛЕ трёх
+ * записей захода 7.166 (долги 126, 125 и 123). Ключ — поверхность,
+ * значение — [кнопок, с записью]. Прошлые числа этой таблицы — в
+ * PROGRESS.md 7.164 и 7.165.
+ *
+ * Вне рассказов без записи осталось **3**: «груша», «расцветать»,
+ * «яблоня» со `song-katyusha` — их запись попала бы в серверный HTML
+ * замороженной страницы, поэтому она после 26.09.
+ *
+ * У тапа по слову без записи **2423** места, и ни одно не дефект кода:
+ * **683** — омографы (клип изолированного слова дал бы им чужое
+ * ударение; правило в `story-word-pick.ts`), **1740** — 696 словоформ,
+ * чей клип аудит не принял ни с первого раза, ни после пересинтеза; они
+ * лежат владельцу на слух в `~/rusofacil-listen/7.166/на-слух/`.
  */
 const BASELINE: Record<string, [number, number]> = {
-  "урок: слайды": [679, 678],
+  "урок: слайды": [679, 679],
   "урок: словарь": [1930, 1930],
   "урок: произношение": [720, 720],
   "урок: грамматика": [737, 737],
@@ -86,14 +105,19 @@ const BASELINE: Record<string, [number, number]> = {
   "урок: упражнение (аудирование)": [250, 250],
   "урок: упражнение (диктант)": [232, 232],
   "урок: упражнение (чтение)": [119, 119],
-  "медиа: ключевая лексика": [1312, 1284],
-  "глоссарий: термин": [119, 118],
-  "глоссарий: пример": [240, 239],
-  "карточки: слово": [5771, 5770],
+  "медиа: ключевая лексика": [1312, 1309],
+  "глоссарий: термин": [119, 119],
+  "глоссарий: пример": [240, 240],
+  "карточки: слово": [5771, 5771],
   "карточки: пример": [5771, 5771],
   "идиомы: фраза": [771, 771],
   "идиомы: пример": [771, 771],
   "экзамены: упражнения": [148, 148],
+  // Тап по слову ВНУТРИ рассказа — не отдельная кнопка на странице, а
+  // орган управления, который открывается по касанию слова: у каждого
+  // тапаемого слова в окошке перевода есть своя кнопка «слушать». До
+  // захода 7.166 все они до единой звучали браузерным голосом (долг 123).
+  "рассказы: тап по слову": [56642, 54219],
 };
 
 /** Позитивный контроль резолвера, без сети и без базы. */
@@ -163,6 +187,70 @@ function plant(): number {
         [{ contentType: "story", contentId: "s1", itemKey: "seg-0", text: "Только рассказ.", audioUrl: "/paid/story.mp3" }],
         undefined,
       )["Только рассказ."] === undefined,
+  });
+
+  // 11-13. Долг 125: текст с кавычками. Клип лежит под ОЧИЩЕННЫМ текстом
+  //    (санитайзер снимает «» перед синтезом), а кнопка спрашивает сырым.
+  //    Третья ступень `pickClip` это закрывает, но не имеет права
+  //    подменять уже работающие связи.
+  const quoted = "Ты когда-нибудь читал «Войну и мир»?";
+  const cleanMap = { [textAudioKey(sanitizeTextForTTS(quoted))]: "/paid/cleaned.mp3" };
+  cases.push({
+    name: "подсадка (долг 125): кнопка с кавычками находит клип по очищенному тексту",
+    ok: pickClip(cleanMap, null, quoted) === "/paid/cleaned.mp3",
+  });
+  cases.push({
+    name: "отрицательный контроль: очищенный ключ НЕ подменяет сырой",
+    ok:
+      pickClip({ ...cleanMap, [textAudioKey(quoted)]: "/paid/raw.mp3" }, null, quoted) === "/paid/raw.mp3",
+  });
+  cases.push({
+    name: "отрицательный контроль: очистка не склеивает разные тексты",
+    ok: pickClip(cleanMap, null, "Ты когда-нибудь читал «Анну Каренину»?") === undefined,
+  });
+
+  // 14-17. Долг 123: тап по слову внутри рассказа.
+  const wordRows: ReusableClipRow[] = [
+    { contentType: "word", contentId: "репка", itemKey: "word", text: "репка", audioUrl: "/paid/word.mp3" },
+    { contentType: "flashcard", contentId: "c1", itemKey: "word", text: "репка", audioUrl: "/paid/card.mp3" },
+    { contentType: "story", contentId: "s1", itemKey: "seg-0", text: "репка", audioUrl: "/paid/story.mp3" },
+  ];
+  cases.push({
+    name: "подсадка (долг 123): свой клип слова главнее клипа карточки",
+    ok: pickWordClip(wordRows, "Репка") === "/paid/word.mp3",
+  });
+  cases.push({
+    name: "подсадка (долг 123): своего клипа нет — играет уже оплаченный клип того же текста",
+    ok: pickWordClip(wordRows.filter((r) => r.contentType !== "word"), "репка") === "/paid/card.mp3",
+  });
+  cases.push({
+    name: "отрицательный контроль: рассказ тапу не отдаётся (каст из пяти голосов)",
+    ok: pickWordClip([wordRows[2]], "репка") === null,
+  });
+  cases.push({
+    name: "отрицательный контроль: омограф не озвучивается изолированным клипом",
+    ok:
+      pickWordClip(
+        [{ contentType: "word", contentId: "замок", itemKey: "word", text: "замок", audioUrl: "/paid/zamok.mp3" }],
+        "замок",
+      ) === null,
+  });
+  cases.push({
+    name: "отрицательный контроль: ё и е не склеиваются",
+    ok:
+      pickWordClip(
+        [{ contentType: "word", contentId: "все", itemKey: "word", text: "все", audioUrl: "/paid/vse.mp3" }],
+        "всё",
+      ) === null,
+  });
+  // Банк слов не имеет права менять клипы кнопок ВНЕ рассказов.
+  cases.push({
+    name: "подсадка: банк слов не подменяет клип кнопки урока",
+    ok:
+      pickReusableClips([
+        { contentType: "lesson", contentId: "a1-1", itemKey: "vocab-0", text: "репка", audioUrl: "/paid/lesson.mp3" },
+        { contentType: "word", contentId: "репка", itemKey: "word", text: "репка", audioUrl: "/paid/word.mp3" },
+      ])["репка"] === "/paid/lesson.mp3",
   });
 
   let caught = 0;
@@ -238,8 +326,13 @@ async function census(): Promise<Map<string, Bucket>> {
     slides.forEach((s) => (s.audioExamples ?? []).forEach((e) => collect(e?.text)));
 
     const map = { ...base };
-    const unresolved = spoken.filter((t) => map[textAudioKey(t)] === undefined);
-    for (const [text, url] of Object.entries(await clipsByText(unresolved, contentId))) {
+    // Зеркало `/api/lesson-audio`: спрашиваем и сырой текст, и очищенный —
+    // `AudioAsset.text` хранится очищенным (долг 125).
+    const unresolved = spoken.filter(
+      (t) => map[textAudioKey(t)] === undefined && map[textAudioKey(sanitizeTextForTTS(t))] === undefined,
+    );
+    const wanted = [...new Set(unresolved.flatMap((t) => [t, sanitizeTextForTTS(t)]))];
+    for (const [text, url] of Object.entries(await clipsByText(wanted, contentId))) {
       map[textAudioKey(text)] = url;
     }
 
@@ -372,6 +465,47 @@ async function census(): Promise<Map<string, Bucket>> {
         );
       }),
     );
+  }
+
+  // Тап по слову внутри рассказа. Токенизация — та же, что в
+  // StoryText.tsx (её регулярное выражение повторено здесь дословно), а
+  // правило выбора клипа берётся из общего `pickWordClip`, а не пишется
+  // заново.
+  const WORD_SPLIT_REGEX = /([а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*)/gu;
+  const CYRILLIC_WORD_REGEX = /^[а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*$/u;
+  const wordBank = (await db.audioAsset.findMany({
+    where: { voice: "onyx", NOT: { contentType: "story" } },
+    select: { contentType: true, contentId: true, itemKey: true, text: true, audioUrl: true },
+  })) as ReusableClipRow[];
+  const bankByText = new Map<string, ReusableClipRow[]>();
+  for (const row of wordBank) {
+    if (!row.text) continue;
+    for (const key of new Set([row.text, row.text.toLowerCase()])) {
+      const list = bankByText.get(key) ?? [];
+      list.push(row);
+      bankByText.set(key, list);
+    }
+  }
+  const wordClipCache = new Map<string, string | null>();
+  const clipForWord = (word: string) => {
+    const cacheKey = word.toLowerCase();
+    const cached = wordClipCache.get(cacheKey);
+    if (cached !== undefined) return cached ?? undefined;
+    const rows = [
+      ...new Set([...(bankByText.get(word) ?? []), ...(bankByText.get(cacheKey) ?? [])]),
+    ];
+    const url = pickWordClip(rows, word);
+    wordClipCache.set(cacheKey, url);
+    return url ?? undefined;
+  };
+  const stories = await db.story.findMany({ select: { id: true, text: true } });
+  for (const story of stories) {
+    for (const item of buildStoryQueue(splitStoryParagraphs(story.text))) {
+      for (const token of item.text.split(WORD_SPLIT_REGEX).filter((t) => t.length > 0)) {
+        if (!CYRILLIC_WORD_REGEX.test(token)) continue;
+        bump(buckets, "рассказы: тап по слову", clipForWord(token), `${story.id} ${token}${isHomograph(token) ? " (омограф)" : ""}`);
+      }
+    }
   }
 
   return buckets;

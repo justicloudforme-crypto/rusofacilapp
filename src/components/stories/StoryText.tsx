@@ -151,6 +151,10 @@ export default function StoryText({
   const [activeWord, setActiveWord] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<PopoverPosition | null>(null);
   const [translation, setTranslation] = useState<TranslationState | null>(null);
+  // Адрес оплаченного клипа для слова, по которому тапнули (долг 123).
+  // `null` — «клипа нет», и тогда SpeakButton остаётся на своём запасном
+  // пути; убирается он отдельным заходом, а не молча здесь.
+  const [wordAudioUrl, setWordAudioUrl] = useState<string | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentenceRefs = useRef<Array<HTMLElement | null>>([]);
@@ -1108,6 +1112,19 @@ export default function StoryText({
     setPopoverPosition({ top, left });
     setActiveWord(word);
     setTranslation({ status: "loading" });
+    setWordAudioUrl(null);
+    // Озвучка и перевод спрашиваются НЕЗАВИСИМО: перевод ходит во внешний
+    // сервис и падает сам по себе, а клип лежит в нашем банке. Один
+    // общий `await` означал бы, что чужой отказ уносит с собой звук.
+    void (async () => {
+      try {
+        const res = await fetch(`/api/word-audio?word=${encodeURIComponent(word)}`);
+        const data = await res.json().catch(() => null);
+        if (res.ok && typeof data?.audioUrl === "string") setWordAudioUrl(data.audioUrl);
+      } catch {
+        /* клипа не будет — запасной путь SpeakButton */
+      }
+    })();
     try {
       const res = await fetch(`/api/dictionary/translate?word=${encodeURIComponent(word)}`);
       const data = await res.json().catch(() => null);
@@ -1125,6 +1142,7 @@ export default function StoryText({
     setActiveWord(null);
     setPopoverPosition(null);
     setTranslation(null);
+    setWordAudioUrl(null);
   }
 
   useEffect(() => {
@@ -1283,7 +1301,12 @@ export default function StoryText({
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-medium">{activeWord}</span>
-                <SpeakButton text={activeWord} label={dict.wordListenLabel} />
+                <SpeakButton
+                  key={wordAudioUrl ?? activeWord}
+                  text={activeWord}
+                  label={dict.wordListenLabel}
+                  audioUrl={wordAudioUrl ?? undefined}
+                />
               </div>
               <button
                 type="button"
