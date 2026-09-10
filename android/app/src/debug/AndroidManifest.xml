@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  ОТЛАДОЧНЫЙ НАБОР ИСХОДНИКОВ. Всё, что здесь написано, манифест-мерджер
+  подмешивает ТОЛЬКО в вариант `debug`; в `release` этого набора нет
+  вовсе — не по договорённости, а по устройству Android Gradle Plugin.
+
+  ЗАЧЕМ (долг 109, 09.09.2026). Android блокирует незашифрованный
+  (`http://`) трафик по умолчанию начиная с API 28, независимо от флага
+  `server.cleartext` в capacitor.config.ts. Без строки ниже WebView не
+  может достучаться до `next dev` на ноутбуке по адресу вида
+  `http://192.168.1.69:3000` вовсе, и живой перезапуск не работает.
+
+  Раньше эта же строка стояла в `src/main/AndroidManifest.xml`, то есть
+  во ВСЕХ вариантах. Замерено на артефакте, а не предположено:
+  `app-release-unsigned.apk` от 09.09.2026 нёс
+  `usesCleartextTraffic=true` в скомпилированном манифесте. Play Console
+  флажит это в pre-launch report.
+
+  `tools:replace` здесь НЕ нужен: `src/main` этот атрибут больше не
+  объявляет, конфликтовать не с чем.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>

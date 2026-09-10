@@ -8,13 +8,74 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // in a browser tab but with native chrome (splash screen, status bar) and
 // access to native APIs.
 //
-// `server.url` below points at a LAN dev URL by default so a phone/tablet
-// on the same Wi-Fi (or a simulator) can reach the developer's `next dev`
-// server directly — `localhost` inside a simulator/device means the
-// device itself, not the host machine, so a real IP is required. Before
-// building for a store release, set CAPACITOR_SERVER_URL to the deployed
-// production HTTPS URL (see MOBILE.md) and drop `cleartext`.
-const devServerUrl = process.env.CAPACITOR_SERVER_URL ?? "http://192.168.1.69:3000";
+// АДРЕС ПО УМОЛЧАНИЮ — БОЕВОЙ, И ЭТО ПРАВКА 09.09.2026 (долг 109).
+// До неё здесь по умолчанию стоял `http://192.168.1.69:3000` — адрес
+// ноутбука разработчика, — и он доезжал НЕ ТОЛЬКО до отладочной сборки.
+// Замерено на собранном артефакте, а не предположено: в
+// `app-release-unsigned.apk` от 09.09.2026 внутри `assets/capacitor.config.json`
+// лежал `"url": "http://192.168.1.69:3000"`, `"cleartext": true`, а в
+// скомпилированном манифесте — `usesCleartextTraffic=true`. То есть
+// релизный пакет, собранный «как есть», ушёл бы в Play Console с адресом
+// чужой домашней сети внутри и с отключённой защитой транспорта.
+//
+// Теперь молчаливое значение — прод по HTTPS. Локальный живой перезапуск
+// стал ЯВНЫМ режимом: он требует ДВУХ переменных окружения сразу, а не
+// одной, и ни одна из них в репозитории не записана:
+//
+//   CAPACITOR_LIVE_RELOAD=1 CAPACITOR_SERVER_URL=http://192.168.1.69:3000 npx cap sync android
+//
+// Одной `CAPACITOR_SERVER_URL` с адресом `http://` или частной сети мало —
+// конфиг в этом случае БРОСАЕТ, а не «предупреждает»: `cap sync` падает и
+// APK с таким адресом внутри просто не собирается. Забыть снять флаг
+// перед релизной сборкой можно, поэтому есть и вторая линия —
+// `npm run check:native-release-safety`, который читает СОБРАННЫЙ
+// релизный APK, а не этот файл.
+const PRODUCTION_URL = "https://rusofacilapp.com";
+
+/** Частная сеть или сам хост: 10/8, 172.16/12, 192.168/16, 127/8,
+ *  169.254/16, `localhost` и `*.local`. Адрес из такого множества внутри
+ *  магазинного пакета — это не «неудобство», а неработающее приложение у
+ *  каждого, кто его скачал. Ровно этот же список читает сторож
+ *  `scripts/check-native-release-safety.mjs`; он там объявлен ещё раз
+ *  намеренно — сторож обязан уметь судить о пакете, ничего не импортируя
+ *  из проверяемого файла. */
+function isPrivateHost(host: string): boolean {
+  if (host === "localhost" || host.endsWith(".local")) return true;
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  if (a === 10 || a === 127) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 169 && b === 254) return true;
+  return false;
+}
+
+function resolveServerUrl(): string {
+  const requested = process.env.CAPACITOR_SERVER_URL;
+  if (!requested) return PRODUCTION_URL;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(requested);
+  } catch {
+    throw new Error(`CAPACITOR_SERVER_URL не разбирается как адрес: ${requested}`);
+  }
+
+  const unsafe = parsed.protocol !== "https:" || isPrivateHost(parsed.hostname);
+  if (unsafe && process.env.CAPACITOR_LIVE_RELOAD !== "1") {
+    throw new Error(
+      `CAPACITOR_SERVER_URL=${requested} — не HTTPS и/или адрес частной сети. ` +
+        "Такой адрес разрешён ТОЛЬКО в явном режиме живого перезапуска: " +
+        "поставьте рядом CAPACITOR_LIVE_RELOAD=1. Собранный с ним пакет в " +
+        "магазин не годится — см. npm run check:native-release-safety.",
+    );
+  }
+  return requested;
+}
+
+const serverUrl = resolveServerUrl();
+const isCleartext = serverUrl.startsWith("http://");
 
 const config: CapacitorConfig = {
   // Reverse-domain of the now-confirmed production domain (rusofacilapp.com,
@@ -36,8 +97,10 @@ const config: CapacitorConfig = {
   // for no reason.
   webDir: "capacitor-shell",
   server: {
-    url: devServerUrl,
-    cleartext: devServerUrl.startsWith("http://"),
+    url: serverUrl,
+    // Только в явном режиме живого перезапуска: молчаливое значение —
+    // HTTPS, и тогда здесь false.
+    cleartext: isCleartext,
     // Without an explicit allowlist, Capacitor's WebViewClient can decide
     // a same-app navigation (e.g. the 303 redirect /api/auth/login issues
     // after a successful login/register) isn't "internal" and hand it to
@@ -46,7 +109,9 @@ const config: CapacitorConfig = {
     // the eventual production domain are listed so this doesn't need to
     // change again at the CAPACITOR_SERVER_URL production switch
     // described above.
-    allowNavigation: [new URL(devServerUrl).hostname, "rusofacilapp.com", "*.rusofacilapp.com"],
+    // Дубль убирается: в молчаливом режиме хост server.url и есть
+    // боевой домен, и без Set список печатался бы дважды.
+    allowNavigation: [...new Set([new URL(serverUrl).hostname, "rusofacilapp.com", "*.rusofacilapp.com"])],
     // A remote-URL Capacitor app has one native-only failure mode a
     // regular website never does: the very first request, before a
     // single byte of the real Next.js app (or its OfflineBanner
