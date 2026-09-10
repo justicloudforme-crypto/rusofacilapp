@@ -69,6 +69,39 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <!--
+      ФОНОВОЕ ВОСПРОИЗВЕДЕНИЕ ОЗВУЧКИ (долг 111, 09.09.2026). Решение
+      владельца: фоновое воспроизведение нужно, `FOREGROUND_SERVICE`
+      остаётся — а раз так, разрешение ниже перестаёт быть выбором.
+
+      ЧТО БЫЛО БЫ БЕЗ НЕЁ, И ЭТО НЕ ОПАСЕНИЕ, А ПРАВИЛО СИСТЕМЫ.
+      `MediaSessionService.java:132–134` из `@capgo/capacitor-media-session`
+      на API 29+ безусловно зовёт
+
+          startForeground(NOTIFICATION_ID, …,
+                          ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+
+      Начиная с Android 14 (API 34) приложение, у которого
+      `targetSdkVersion >= 34`, обязано объявить разрешение, ПАРНОЕ типу
+      службы. У нас `targetSdkVersion = 36` (android/variables.gradle), то
+      есть условие выполнено с запасом. Незаявленный тип система встречает
+      `SecurityException` в момент вызова — служба падает на первой же
+      попытке играть в фоне, и увидеть это статической проверкой нельзя.
+
+      САМ ТИП МЫ НЕ ОБЪЯВЛЯЕМ И НЕ ДОЛЖНЫ: `android:foregroundServiceType="mediaPlayback"`
+      стоит на службе в манифесте самого плагина
+      (`node_modules/@capgo/capacitor-media-session/android/src/main/AndroidManifest.xml`)
+      и приезжает к нам слиянием манифестов. В собранном пакете он виден
+      числом: `foregroundServiceType(0x01010599)=0x00000002`. Дублировать
+      его у себя значило бы завести второй экземпляр значения, который
+      разойдётся с первым на обновлении плагина.
+
+      Связку «тип на службе в пакете ⇄ парное разрешение в пакете»
+      сторожит `npm run check:fgs-types`, и он читает СОБРАННЫЙ APK, а не
+      этот файл: тип сюда не написан, и по исходнику о нём не судить.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!--
       ВЫРЕЗАНО ИЗ ПАКЕТА, А НЕ ОБЪЯВЛЕНО (долг 107, 09.09.2026).
 
       `SCHEDULE_EXACT_ALARM` приносит слияние манифестов с
