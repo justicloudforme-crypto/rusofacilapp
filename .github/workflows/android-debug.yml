@@ -33,6 +33,7 @@ on:
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
       - "scripts/check-native-release-safety.mjs"
+      - "scripts/check-native-permissions.mjs"
       - ".github/workflows/android-debug.yml"
   push:
     branches: [main]
@@ -44,6 +45,7 @@ on:
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
       - "scripts/check-native-release-safety.mjs"
+      - "scripts/check-native-permissions.mjs"
       - ".github/workflows/android-debug.yml"
   workflow_dispatch:
 
@@ -121,6 +123,15 @@ jobs:
           "$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt2" dump badging "$APK" > apk-badging.txt
           cat apk-badging.txt
           node scripts/check-apk-facts.mjs --badging=apk-badging.txt
+
+      # СЛОЙ ПАКЕТА у второго сторожа (долг 107). Без `--badging` он читает
+      # НАШ манифест, а Play Console спрашивает про каждое разрешение в
+      # ЗАГРУЖЕННОМ пакете: ровно так три наших разрешения выглядели
+      # исчерпывающим списком, пока первая настоящая сборка не показала
+      # двенадцать. Здесь тот же сторож судит по тому же множеству, что и
+      # анкета.
+      - name: Разрешения В ПАКЕТЕ — ровно под то, что зовёт код
+        run: node scripts/check-native-permissions.mjs --badging=apk-badging.txt
 
       - name: Тот же сторож — позитивный контроль
         run: npm run check:apk-facts:plant
