@@ -33,6 +33,8 @@ on:
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
       - "scripts/check-native-release-safety.mjs"
+      - "scripts/check-foreground-service-types.mjs"
+      - "scripts/check-native-permissions.mjs"
       - ".github/workflows/android-debug.yml"
   push:
     branches: [main]
@@ -44,6 +46,8 @@ on:
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
       - "scripts/check-native-release-safety.mjs"
+      - "scripts/check-foreground-service-types.mjs"
+      - "scripts/check-native-permissions.mjs"
       - ".github/workflows/android-debug.yml"
   workflow_dispatch:
 
@@ -122,6 +126,15 @@ jobs:
           cat apk-badging.txt
           node scripts/check-apk-facts.mjs --badging=apk-badging.txt
 
+      # СЛОЙ ПАКЕТА у второго сторожа (долг 107). Без `--badging` он читает
+      # НАШ манифест, а Play Console спрашивает про каждое разрешение в
+      # ЗАГРУЖЕННОМ пакете: ровно так три наших разрешения выглядели
+      # исчерпывающим списком, пока первая настоящая сборка не показала
+      # двенадцать. Здесь тот же сторож судит по тому же множеству, что и
+      # анкета.
+      - name: Разрешения В ПАКЕТЕ — ровно под то, что зовёт код
+        run: node scripts/check-native-permissions.mjs --badging=apk-badging.txt
+
       - name: Тот же сторож — позитивный контроль
         run: npm run check:apk-facts:plant
 
@@ -150,6 +163,23 @@ jobs:
 
       - name: Тот же сторож — позитивный контроль
         run: npm run check:native-release-safety:plant
+
+      # Долг 111. Связку «тип службы переднего плана ⇄ парное разрешение»
+      # нельзя проверить по исходникам: тип объявлен в манифесте
+      # `@capgo/capacitor-media-session` внутри node_modules, разрешение —
+      # в нашем манифесте, и в одном множестве они оказываются только
+      # после слияния манифестов, то есть в пакете. Дамп берётся debug'а:
+      # набор служб и разрешений у обоих вариантов один и тот же (проверено
+      # 09.09.2026: 12 из 12 совпали), а release здесь уже разобран выше.
+      - name: Тип службы и парное разрешение — из самого пакета
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt2" dump xmltree --file AndroidManifest.xml "$APK" > debug-manifest.txt
+          node scripts/check-foreground-service-types.mjs --xmltree=debug-manifest.txt
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:fgs-types:plant
 
       - name: Выложить APK артефактом
         if: always()
