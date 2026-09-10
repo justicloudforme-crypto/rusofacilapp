@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!--
       `android:usesCleartextTraffic` ЗДЕСЬ БОЛЬШЕ НЕТ, И ЭТО ПРАВКА
       09.09.2026 (долг 109). Он стоял в этом файле, то есть в наборе
@@ -66,4 +67,37 @@
     -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!--
+      ВЫРЕЗАНО ИЗ ПАКЕТА, А НЕ ОБЪЯВЛЕНО (долг 107, 09.09.2026).
+
+      `SCHEDULE_EXACT_ALARM` приносит слияние манифестов с
+      `@capacitor/local-notifications` (прочитано в
+      `node_modules/@capacitor/local-notifications/android/src/main/AndroidManifest.xml`).
+      Это ОГРАНИЧЕННОЕ разрешение Google Play: под него заполняется
+      отдельная декларация, и приложениям, не являющимся будильником или
+      календарём, её отклоняют.
+
+      Оно нам не нужно, и это доказано чтением исходника плагина, а не
+      предположено. `LocalNotificationManager.setExactIfPossible` при
+      `isExactNotification = false` уходит в ветку
+      `alarmManager.setAndAllowWhileIdle(...)`, которая никакого
+      разрешения не требует. Наше единственное уведомление — ежедневное
+      напоминание в 19:00 (`src/lib/notifications.ts`) — теперь ставится
+      именно так.
+
+      Более того, ОСТАВИТЬ разрешение было хуже, чем снять: при
+      `isExactNotification = true` (умолчание плагина) и невыданном праве
+      `LocalNotificationsPlugin.schedule` открывает системный экран
+      «Alarms & reminders» — на КАЖДОМ запуске приложения, потому что
+      `NativeNotifications.tsx` планирует напоминание при каждом старте.
+
+      `tools:node="remove"` — директива манифест-мерджера: строка ниже
+      ничего не объявляет, она ВЫЧЁРКИВАЕТ разрешение, принесённое
+      библиотекой. Проверяется по СОБРАННОМУ пакету:
+      `npm run check:apk-facts` и `npm run check:native-permissions`.
+    -->
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        tools:node="remove" />
 </manifest>
