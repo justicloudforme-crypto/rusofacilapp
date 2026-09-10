@@ -1014,7 +1014,8 @@ export type SlideIconKey =
 /** A Russian letter/word/phrase shown with a speaker button right on the
  * slide, so pronunciation is one tap away without switching tabs. */
 export interface SlideAudioExample {
-  /** What's spoken aloud (browser TTS) and shown large. */
+  /** Что произносится и показано крупно. Озвучка — оплаченный клип того же
+   * урока с тем же текстом, если он есть (см. Slide.audioExamples). */
   text: string;
   /** Short caption under the text — transcription, translation, or both. */
   caption?: string;
@@ -1028,8 +1029,11 @@ export interface Slide {
   /** Optional short bullet list, rendered under `body`. */
   highlights?: string[];
   /** Optional row of tap-to-listen chips — letters/words relevant to this
-   * slide, each with a speaker button. Not audio files: reuses the same
-   * browser text-to-speech as SpeakButton elsewhere in the lesson. */
+   * slide, each with a speaker button. Своей строки в `AudioAsset` у них
+   * нет: ни один генератор их не озвучивал. С 7.163 клип ищется по тексту
+   * среди уже оплаченных клипов ТОГО ЖЕ урока (`pickClip`) — 502 из 679
+   * находятся; у остальных 177 остаётся браузерный синтез, и это
+   * незакрытый долг, а не задумка. */
   audioExamples?: SlideAudioExample[];
 }
 

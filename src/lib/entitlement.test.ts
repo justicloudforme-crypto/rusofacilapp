@@ -64,6 +64,17 @@ describe("tierOfAccount — every plan × status × currentPeriodEnd", () => {
   afterEach(() => vi.useRealTimers());
 
   it("answers all 144 combinations exactly as the spec says", () => {
+    // Время заморожено, и это не украшение (10.09.2026, заход 7.163).
+    // Столбец «истекает ровно сейчас» сравнивает две РАЗНЫЕ отметки
+    // времени: тест берёт `now` до `period.at()`, а `tierOfAccount`
+    // читает `Date.now()` ещё позже. Пока всё три чтения попадают в одну
+    // миллисекунду, случай проходит; под нагрузкой полного `verify`
+    // миллисекунда успевает смениться, и правило `<=` даёт «free» там,
+    // где тест ждал «standard». Красный был у самого правила замера, а не
+    // у продукта: тот же файл в одиночку зелен 8 прогонов из 8 и на
+    // чистом `main` тоже. Заморозка делает границу границей.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-10T00:00:00.000Z"));
     let checked = 0;
     let free = 0;
     let standard = 0;
