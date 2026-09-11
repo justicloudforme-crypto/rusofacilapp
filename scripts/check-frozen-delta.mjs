@@ -21,6 +21,7 @@
 // check exists to catch.
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { guardLiveCrawl } from "./prod-read-budget.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -92,6 +93,18 @@ async function main() {
   }
 
   const base = JSON.parse(readFileSync(BASELINE, "utf8"));
+  // Этот прогон стоит 7 300 400 просмотренных строк боевой базы: каждая из
+  // 200 замороженных медиа-страниц читает AudioAsset полным проходом
+  // (долг 135, заход 7.172). Поэтому — только с --against-prod.
+  const guard = guardLiveCrawl({
+    name: "check:frozen",
+    argv,
+    base: base[0]?.url ?? "https://rusofacilapp.com",
+  });
+  if (guard !== 0) {
+    process.exitCode = guard;
+    return;
+  }
   console.log(`baseline: ${BASELINE}`);
   console.log(`frozen URLs in it: ${base.length}`);
   if (base.length !== 330) console.log(`  NOTE: expected 330 frozen URLs (165 pages x 2 locales), got ${base.length}`);

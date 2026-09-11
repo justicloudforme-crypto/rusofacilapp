@@ -314,10 +314,18 @@ function plant(): number {
 async function census(): Promise<Map<string, Bucket>> {
   const { PrismaClient } = await import("@/generated/prisma/client");
   const { PrismaLibSql } = await import("@prisma/adapter-libsql");
+  // Один прогон этой переписи — 1 236 782 просмотренные строки: она 33
+  // раза проходит `AudioAsset` целиком, потому что ищет клипы по колонке
+  // `text`, у которой нет индекса. По умолчанию она работает по СНИМКУ
+  // прода и боевую базу не трогает вовсе; чтобы пойти в боевую, нужен
+  // явный `--against-prod` (долг 135, заход 7.172).
+  const { resolveCensusDb } = await import("./prod-read-budget.mjs");
+  const resolved = resolveCensusDb({ name: "check:listen-buttons", argv: process.argv.slice(2) });
+  if (resolved.exitCode) process.exit(resolved.exitCode);
   const db = new PrismaClient({
     adapter: new PrismaLibSql({
-      url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
-      authToken: process.env.TURSO_AUTH_TOKEN,
+      url: resolved.url as string,
+      authToken: resolved.againstProd ? process.env.TURSO_AUTH_TOKEN : undefined,
     }),
   });
   // Тот же отбор, что у продукта (`clipsByText`), но без `server-only`:
