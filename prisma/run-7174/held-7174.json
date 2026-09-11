@@ -1,0 +1,50 @@
+[
+ {
+  "n": 111,
+  "file": "А/0111_уже.mp3",
+  "storyId": "cmsxtq0mn0007qwncc1mkgl2c",
+  "itemKey": "7-0-3",
+  "word": "уже",
+  "why": "записана голосом «onyx», а каст предложения — «echo»"
+ },
+ {
+  "n": 113,
+  "file": "А/0113_ноги.mp3",
+  "storyId": "cmsxtq0pp0008qwncp8zeg0ij",
+  "itemKey": "2-0-14",
+  "word": "ноги",
+  "why": "записана голосом «ash», а каст предложения — «onyx»"
+ },
+ {
+  "n": 119,
+  "file": "А/0119_уже_ОТКЛОНЕНО-АУДИТОМ.mp3",
+  "storyId": "cmsxtq2bt000gqwncxnbngpin",
+  "itemKey": "9-1-8",
+  "word": "уже",
+  "why": "записана голосом «echo», а каст предложения — «onyx»"
+ },
+ {
+  "n": 122,
+  "file": "А/0122_слова.mp3",
+  "storyId": "cmsxtq2jp000iqwnc68lmkbk6",
+  "itemKey": "14-1-26",
+  "word": "слова",
+  "why": "записана голосом «ash», а каст предложения — «onyx»"
+ },
+ {
+  "n": 131,
+  "file": "А/0131_уже_ОТКЛОНЕНО-АУДИТОМ.mp3",
+  "storyId": "cmsxtq4gl000uqwncuk4shlmy",
+  "itemKey": "8-0-21",
+  "word": "уже",
+  "why": "записана голосом «onyx», а каст предложения — «nova»"
+ },
+ {
+  "n": 192,
+  "file": "А/0192_Уже_ОТКЛОНЕНО-АУДИТОМ.mp3",
+  "storyId": "cmsxtqq8w0056qwncsdet8d34",
+  "itemKey": "6-2-1",
+  "word": "Уже",
+  "why": "записана голосом «nova», а каст предложения — «echo»"
+ }
+]

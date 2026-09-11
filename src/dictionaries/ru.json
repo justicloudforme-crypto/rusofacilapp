@@ -858,6 +858,7 @@
     "translationLoading": "Перевод…",
     "translationError": "Не удалось перевести это слово.",
     "wordListenLabel": "Прослушать слово",
+    "wordStressDependsOnMeaning": "У этого слова ударение зависит от смысла: здесь мы не даём запись, чтобы не подсказать неверное произношение.",
     "playLabel": "Слушать текст",
     "pauseLabel": "Пауза",
     "skipBackLabel": "Назад на 15 секунд",

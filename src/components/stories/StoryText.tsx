@@ -12,6 +12,7 @@ import SpeakButton from "@/components/lesson/SpeakButton";
 import StoryAudioPlayer, { READ_ALOUD_RATES } from "@/components/stories/StoryAudioPlayer";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
+import { isHomograph } from "@/lib/story-word-pick";
 import {
   setNativeMediaMetadata,
   setNativePlaybackState,
@@ -49,6 +50,9 @@ export interface StoryTextDict {
   translationLoading: string;
   translationError: string;
   wordListenLabel: string;
+  /** Вариант В (заход 7.174): строка вместо молчащей кнопки у места
+   *  омографа, для которого вырезки из озвучки его предложения нет. */
+  wordStressDependsOnMeaning: string;
   closeLabel: string;
   playLabel: string;
   pauseLabel: string;
@@ -115,9 +119,16 @@ export default function StoryText({
   const [popoverPosition, setPopoverPosition] = useState<PopoverPosition | null>(null);
   const [translation, setTranslation] = useState<TranslationState | null>(null);
   // Адрес оплаченного клипа для слова, по которому тапнули (долг 123).
-  // `null` — «клипа нет», и тогда SpeakButton остаётся на своём запасном
-  // пути; убирается он отдельным заходом, а не молча здесь.
-  const [wordAudioUrl, setWordAudioUrl] = useState<string | null>(null);
+  //
+  // Состояний ТРИ, а не два, и это принципиально (ловушка 7.170): кнопка в
+  // поповере появляется СРАЗУ, а ответ `/api/word-audio` приезжает позже,
+  // поэтому «адреса ещё нет» и «адреса не будет» — разные вещи. Пока
+  // `"loading"`, вариант В молчит; строку он показывает только после
+  // ответа, сказавшего `audioUrl: null`.
+  const [wordAudio, setWordAudio] = useState<
+    { status: "loading" } | { status: "done"; url: string } | { status: "none" }
+  >({ status: "loading" });
+  const wordAudioUrl = wordAudio.status === "done" ? wordAudio.url : null;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentenceRefs = useRef<Array<HTMLElement | null>>([]);
@@ -901,7 +912,7 @@ export default function StoryText({
     setPopoverPosition({ top, left });
     setActiveWord(word);
     setTranslation({ status: "loading" });
-    setWordAudioUrl(null);
+    setWordAudio({ status: "loading" });
     // Озвучка и перевод спрашиваются НЕЗАВИСИМО: перевод ходит во внешний
     // сервис и падает сам по себе, а клип лежит в нашем банке. Один
     // общий `await` означал бы, что чужой отказ уносит с собой звук.
@@ -918,9 +929,13 @@ export default function StoryText({
             : "";
         const res = await fetch(`/api/word-audio?word=${encodeURIComponent(word)}${place}`);
         const data = await res.json().catch(() => null);
-        if (res.ok && typeof data?.audioUrl === "string") setWordAudioUrl(data.audioUrl);
+        if (res.ok && typeof data?.audioUrl === "string") setWordAudio({ status: "done", url: data.audioUrl });
+        // 200 и `audioUrl: null` — это ШТАТНОЕ «клипа нет», а не сбой
+        // (так отвечает `/api/word-audio`), и только оно включает вариант В.
+        else if (res.ok) setWordAudio({ status: "none" });
       } catch {
-        /* клипа не будет — запасной путь SpeakButton */
+        /* сеть отказала — состояние не меняем: молчащая кнопка честнее
+           строки «ударение зависит от смысла», которой мы не проверили */
       }
     })();
     try {
@@ -940,7 +955,7 @@ export default function StoryText({
     setActiveWord(null);
     setPopoverPosition(null);
     setTranslation(null);
-    setWordAudioUrl(null);
+    setWordAudio({ status: "loading" });
   }
 
   useEffect(() => {
@@ -1101,12 +1116,32 @@ export default function StoryText({
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-medium">{activeWord}</span>
-                <SpeakButton
-                  key={wordAudioUrl ?? activeWord}
-                  text={activeWord}
-                  label={dict.wordListenLabel}
-                  audioUrl={wordAudioUrl ?? undefined}
-                />
+                {/* ВАРИАНТ В (заход 7.174). У места омографа, для которого
+                    вырезки из озвучки его собственного предложения нет,
+                    молчащая кнопка не объясняет ничего — вместо неё
+                    печатается строка о том, что ударение у этого слова
+                    зависит от смысла. Условий три, и все три обязательны:
+                    ответ уже пришёл и сказал «клипа нет»; слово — омограф;
+                    место называется (`audioStoryId`), то есть это тап по
+                    слову ВНУТРИ рассказа, а не кнопка любой другой
+                    поверхности. Серверный HTML от этого не меняется ни на
+                    знак: и кнопка, и строка появляются после гидрации,
+                    внутри поповера, которого в разметке нет вовсе. */}
+                {wordAudio.status === "none" && isHomograph(activeWord) && audioStoryId ? (
+                  <span
+                    data-testid="stress-depends-note"
+                    className="text-xs leading-snug text-foreground/60"
+                  >
+                    {dict.wordStressDependsOnMeaning}
+                  </span>
+                ) : (
+                  <SpeakButton
+                    key={wordAudioUrl ?? activeWord}
+                    text={activeWord}
+                    label={dict.wordListenLabel}
+                    audioUrl={wordAudioUrl ?? undefined}
+                  />
+                )}
               </div>
               <button
                 type="button"

@@ -264,6 +264,7 @@ export default async function StoryReaderPage({
             translationLoading: dict.stories.translationLoading,
             translationError: dict.stories.translationError,
             wordListenLabel: dict.stories.wordListenLabel,
+            wordStressDependsOnMeaning: dict.stories.wordStressDependsOnMeaning,
             closeLabel: dict.stories.closeLabel,
             playLabel: dict.stories.playLabel,
             pauseLabel: dict.stories.pauseLabel,
