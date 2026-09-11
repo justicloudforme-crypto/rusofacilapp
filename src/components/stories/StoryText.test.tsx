@@ -17,6 +17,7 @@ const dict: StoryTextDict = {
   translationLoading: "…",
   translationError: "!",
   wordListenLabel: "Escuchar palabra",
+  wordStressDependsOnMeaning: "El acento depende del sentido",
   closeLabel: "Cerrar",
   playLabel: "Escuchar el texto",
   pauseLabel: "Pausar lectura",
@@ -153,5 +154,72 @@ describe("StoryText: браузерного синтеза нет ни на од
     // общий номер — им же называется `itemKey` вырезки.
     expect(audioCall).toMatch(/&at=0-0-\d+$/);
     expect(speak).not.toHaveBeenCalled();
+  });
+});
+
+// Вариант В (заход 7.174). У места омографа, для которого вырезки из
+// озвучки его собственного предложения нет, приглушённая молчащая кнопка
+// не объясняет ничего. Вместо неё печатается короткая строка о том, что
+// ударение у этого слова зависит от смысла. Правило асимметричное, и обе
+// его половины здесь заперты: место БЕЗ клипа получает строку, место С
+// клипом — кнопку, и ни одно другое место строки не получает.
+describe("StoryText: вариант В — строка вместо молчащей кнопки у омографа без вырезки", () => {
+  const draw = (fetchMock: ReturnType<typeof vi.fn>) => {
+    vi.stubGlobal("fetch", fetchMock);
+    return render(
+      <StoryText
+        storyId="story-1"
+        audioStoryId="story-1"
+        title="Чужими словами"
+        author="—"
+        paragraphs={paragraphs}
+        audioSegments={segments}
+        fullAudioUrl={null}
+        sentenceOffsets={null}
+        dict={dict}
+      />
+    );
+  };
+  const reply = (body: unknown) => vi.fn(async (url: unknown) =>
+    String(url).startsWith("/api/word-audio")
+      ? new Response(JSON.stringify(body), { status: 200 })
+      : new Response(JSON.stringify({ translation: "año" }), { status: 200 }));
+
+  it("место БЕЗ клипа: строка есть, молчащей кнопки нет", async () => {
+    const { container } = draw(reply({ audioUrl: null }));
+    container.querySelector<HTMLElement>('button[data-word="года"]')!.click();
+    await vi.waitFor(() => expect(screen.getByTestId("stress-depends-note")).toBeTruthy());
+    expect(screen.getByTestId("stress-depends-note").textContent).toBe(dict.wordStressDependsOnMeaning);
+    expect(screen.queryByLabelText(dict.wordListenLabel)).toBeNull();
+    expect(speak).not.toHaveBeenCalled();
+  });
+
+  it("место С клипом: кнопка есть, строки нет", async () => {
+    const { container } = draw(reply({ audioUrl: "https://blob.example/года.mp3" }));
+    container.querySelector<HTMLElement>('button[data-word="года"]')!.click();
+    await vi.waitFor(() => expect(screen.getByLabelText(dict.wordListenLabel)).toBeTruthy());
+    expect(screen.queryByTestId("stress-depends-note")).toBeNull();
+  });
+
+  // Негативный контроль — обязательная половина: без него утверждение
+  // «строка появляется там, где надо» доказывало бы только то, что она
+  // вообще умеет появляться. Слово «собака» омографом не является, и
+  // отсутствие клипа у него — не повод говорить про ударение.
+  it("подсадка: у слова-НЕомографа без клипа строки не появляется", async () => {
+    const { container } = draw(reply({ audioUrl: null }));
+    container.querySelector<HTMLElement>('button[data-word="Собака"]')!.click();
+    await vi.waitFor(() => expect(screen.getByLabelText(dict.wordListenLabel)).toBeTruthy());
+    expect(screen.queryByTestId("stress-depends-note")).toBeNull();
+  });
+
+  // Ловушка 7.170: кнопка в поповере появляется РАНЬШЕ, чем приезжает
+  // адрес клипа. Пока ответа нет, «клипа нет» ещё не известно, и строка
+  // печататься не имеет права — иначе она мигала бы у каждого слова.
+  it("пока ответа нет, строки нет — «адреса ещё нет» ≠ «адреса не будет»", async () => {
+    const { container } = draw(vi.fn(() => new Promise<Response>(() => {})));
+    container.querySelector<HTMLElement>('button[data-word="года"]')!.click();
+    await vi.waitFor(() => expect(screen.getByTestId("translation-popover")).toBeTruthy());
+    expect(screen.queryByTestId("stress-depends-note")).toBeNull();
+    expect(screen.getByLabelText(dict.wordListenLabel)).toBeTruthy();
   });
 });
