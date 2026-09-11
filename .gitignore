@@ -100,3 +100,4 @@ next-env.d.ts
 /android/*.iml
 /android/app/*.iml
 /android/.idea/
+prisma/snapshots/
