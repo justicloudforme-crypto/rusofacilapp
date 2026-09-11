@@ -160,7 +160,17 @@ async function main() {
       [join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs"), "scripts/check-internal-links.ts", `--base=${BASE}`, "--plant", "--paths=/es,/ru"],
       { stdio: "inherit" }
     );
-    return (run.status ?? 1) || (layout.status ?? 1) || (links.status ?? 1) || (linksPlant.status ?? 1);
+    // Пятой на том же сервере — «несуществующий адрес отдаёт 404 и НАШУ
+    // страницу» (долг 129). Здесь, а не отдельным шагом, по той же
+    // причине, по какой здесь стоят layout и ссылки: сервер уже поднят.
+    // Статическую половину того же сторожа гоняет `npm run check:404` в
+    // `verify` и в `ci.yml`; она дешёвая и сервера не требует.
+    const notFound = spawnSync(
+      process.execPath,
+      ["scripts/check-404-page.mjs", `--base=${BASE}`],
+      { stdio: "inherit" }
+    );
+    return (run.status ?? 1) || (layout.status ?? 1) || (links.status ?? 1) || (linksPlant.status ?? 1) || (notFound.status ?? 1);
   } finally {
     stop();
   }
