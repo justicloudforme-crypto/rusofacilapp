@@ -34,12 +34,45 @@ async function main(): Promise<number> {
   // По одной вырезке на рассказ, чтобы шесть проб пришлись на шесть разных рассказов.
   const perStory = new Map<string, J>();
   for (const j of journal) if (!perStory.has(j.storyId!)) perStory.set(j.storyId!, j);
-  // Анониму рассказ показывается отрывком, поэтому места из первых
-  // абзацев пробуются первыми: это не отбор «где получится», а способ
-  // не тратить пробы на текст за пейволом. Рассказы всё равно разные.
-  const candidates = [...perStory.values()].sort(
+  // Два отбора, и оба — про пробу, а не про продукт.
+  //   1. Анониму рассказ показывается отрывком, поэтому места из первых
+  //      абзацев пробуются первыми: тратить пробу на текст за пейволом
+  //      бессмысленно.
+  //   2. Нажать можно только то место, которое проба умеет отличить от
+  //      соседей: `button[data-word][data-token]` НЕ уникален сам по себе,
+  //      потому что `data-token` нумеруется внутри предложения, и то же
+  //      слово на том же номере токена в другом предложении дало бы второй
+  //      элемент. Такие места отсеиваются ЗДЕСЬ, по тексту рассказа, а не
+  //      загрузкой страницы: иначе проба тратит по десять секунд на каждый
+  //      заведомый пропуск.
+  const { PrismaClient } = await import("@/generated/prisma/client");
+  const { PrismaLibSql } = await import("@prisma/adapter-libsql");
+  const { splitStoryParagraphs, buildStoryQueue } = await import("@/lib/stories");
+  const db = new PrismaClient({
+    adapter: new PrismaLibSql({
+      url: process.env.TURSO_DATABASE_URL ?? process.env.DATABASE_URL ?? "file:./dev.db",
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    }),
+  });
+  const WORD_SPLIT = /([а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*)/gu;
+  const CYRILLIC = /^[а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*$/u;
+  const texts = new Map((await db.story.findMany({ select: { id: true, text: true } })).map((x) => [x.id, x.text]));
+  await db.$disconnect();
+  const unique = (j: J) => {
+    const text = texts.get(j.storyId!);
+    if (!text) return false;
+    const token = Number(j.itemKey!.split("-")[2]);
+    let seen = 0;
+    for (const item of buildStoryQueue(splitStoryParagraphs(text))) {
+      const toks = item.text.split(WORD_SPLIT).filter((t) => t.length > 0);
+      if (toks[token] && CYRILLIC.test(toks[token]) && toks[token] === j.text) seen++;
+    }
+    return seen === 1;
+  };
+  const candidates = [...perStory.values()].filter(unique).sort(
     (a, b) => Number(a.itemKey!.split("-")[0]) - Number(b.itemKey!.split("-")[0]),
   );
+  console.log(`рассказов с новой вырезкой: ${perStory.size}; из них место опознаётся пробой однозначно: ${candidates.length}`);
 
   const { chromium, devices } = await import("playwright");
   const browser = await chromium.launch();
@@ -49,7 +82,10 @@ async function main(): Promise<number> {
   const lines: string[] = [];
 
   for (const c of candidates) {
-    if (played >= WANT || tried >= 40) break;
+    // С подсадкой успехов не бывает по построению, поэтому счётчик проб —
+    // единственный, который может остановить обход: без него контроль
+    // слепоты прошёл бы все 217 мест ради заведомого нуля.
+    if (played >= WANT || tried >= (PLANT ? WANT : 40)) break;
     const token = Number(c.itemKey!.split("-")[2]);
     const page = await ctx.newPage();
     await page.addInitScript(() => {
@@ -76,6 +112,12 @@ async function main(): Promise<number> {
       await hits.first().evaluate((el: HTMLElement) => el.click());
       const speak = page.locator('button[aria-label="Escuchar palabra"]').first();
       await speak.waitFor({ timeout: 8000 });
+      // Кнопка в поповере появляется СРАЗУ, а адрес клипа приезжает позже:
+      // `/api/word-audio` спрашивается уже после открытия окошка. Нажать её
+      // раньше ответа — значит получить ровно то же, что у места без клипа:
+      // ноль созданных `Audio`. Эта пауза стоила одного ложного «молчит» на
+      // пяти местах из шести в первом прогоне.
+      await page.waitForTimeout(3000);
       if (!PLANT) {
         await speak.evaluate((el: HTMLElement) => el.click());
       }
