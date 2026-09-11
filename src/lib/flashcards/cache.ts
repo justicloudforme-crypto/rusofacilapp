@@ -72,7 +72,8 @@ async function fetchFlashcardIndex(): Promise<FlashcardRow[]> {
   // one array backs all 23 vocabulary pages, /api/flashcards,
   // /api/flashcards/summary and the homepage previews. Cards without audio
   // is a state every consumer already handles — `audioUrl` is nullable and
-  // SpeakButton falls back to speechSynthesis when it is unset.
+  // Без него SpeakButton остаётся на месте, но молчит (7.168: подменять
+  // запись нечем).
   let audioRows: Array<{ contentId: string; itemKey: string; audioUrl: string }> = [];
   try {
     audioRows = await db.audioAsset.findMany({

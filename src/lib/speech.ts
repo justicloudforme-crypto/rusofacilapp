@@ -1,8 +1,10 @@
 /**
  * The single sanitizer every text-to-speech call site in the app must run
- * text through before handing it to a synthesizer — the browser's
- * SpeechSynthesisUtterance (SpeakButton, StoryText's read-aloud player) and
- * the server-side OpenAI TTS script (prisma/generate-story-audio.ts) alike.
+ * text through before handing it to a synthesizer. Since 7.168 there is
+ * exactly one such call site left — the server-side OpenAI TTS script
+ * (prisma/generate-story-audio.ts and its siblings); in the browser the
+ * app only ever plays an already-paid clip. The same sanitizer also
+ * produces the by-text lookup key for those clips (lessons/audioKeys.ts).
  * Plain TS with no browser/Next.js-specific imports, so it's importable
  * from both client components and standalone Node scripts.
  *
