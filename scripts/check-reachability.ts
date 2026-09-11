@@ -57,6 +57,9 @@ import { isDisallowed, parseRobotsTxt } from "../src/lib/robots-matcher";
 import { anchorTargets, normalizeUrl, urlFamily } from "../src/lib/link-graph";
 import { isEntryPoint } from "../src/lib/entry-point";
 
+// Общий страж бюджета чтений боевой базы (долг 135, заход 7.172).
+import { guardLiveCrawl } from "./prod-read-budget.mjs";
+
 const argv = process.argv.slice(2);
 const arg = (name: string, fallback: string) => {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
@@ -113,6 +116,14 @@ function declaresNoindex(html: string): boolean {
 }
 
 async function main() {
+  // Полный обход карты сайта стоит около 21,9 млн просмотренных строк
+  // боевой базы: 552 медиа-страницы читают AudioAsset полным проходом
+  // каждая (долг 135, заход 7.172). Поэтому — только с --against-prod.
+  const guard = guardLiveCrawl({ name: "check:reachability", argv, base: BASE });
+  if (guard !== 0) {
+    process.exitCode = guard;
+    return;
+  }
   const robotsRes = await fetch(`${BASE}/robots.txt`);
   const rules = parseRobotsTxt(await robotsRes.text());
   const allows = rules.filter((r) => r.allow).map((r) => r.pattern);
