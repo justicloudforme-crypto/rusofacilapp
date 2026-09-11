@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS } from "../../prisma/ensure-schema-sync";
+import {
+  parseSchema,
+  modelBodies,
+  CREATE_TABLE_STATEMENTS,
+  CREATE_INDEX_STATEMENTS,
+  INDEXES_ALREADY_IN_PRODUCTION,
+} from "../../prisma/ensure-schema-sync";
 
 /**
  * The production outage of 29.08.2026, as a test.
@@ -170,5 +176,82 @@ describe("ensure-schema-sync can create a table it has never seen", () => {
     const joined = studyDay!.statements.join("\n");
     expect(joined).toMatch(/CREATE UNIQUE INDEX[^\n]*"StudyDay"\("userId", "dateKey"\)/);
     expect(joined).toMatch(/FOREIGN KEY \("userId"\) REFERENCES "User"[^\n]*ON DELETE CASCADE/);
+  });
+});
+
+/**
+ * Третья половина того же миграционного шва, добавлена 11.09.2026 вместе с
+ * индексом `AudioAsset_text_idx`.
+ *
+ * Сверка колонок читает `PRAGMA table_info` и про индексы не знает ничего.
+ * `CREATE_TABLE_STATEMENTS` несёт индексы только у таблиц, которых на
+ * проде ещё нет. Значит `@@index`, дописанный к ДАВНО живущей модели, не
+ * доезжал до прода вовсе — и это не гипотеза: так `AudioAsset.text` жил
+ * без индекса, пока полный проход по 36 316 строкам на каждый рендер
+ * медиа-страницы не исчерпал месячную квоту чтений Turso и не уронил сайт
+ * (PROGRESS.md 7.172, долг 135).
+ *
+ * База здесь не нужна: сверяются два ТЕКСТА — схема и список операторов.
+ * Что индекс ещё и БЕРЁТСЯ планом, проверяет `npm run check:text-index` на
+ * базе в форме CI; здесь — что он объявлен, назван по правилу Prisma и
+ * доедет до прода.
+ */
+describe("ensure-schema-sync доставляет индексы существующих таблиц", () => {
+  it("каждый @@index и @@unique схемы либо уже на проде, либо в списке на создание", () => {
+    const declared = parseSchema(SCHEMA).flatMap((model) => model.indexes);
+    expect(declared.length).toBeGreaterThan(10);
+    const toCreate = new Set(CREATE_INDEX_STATEMENTS.map((s) => s.index));
+    const orphans = declared.filter((i) => !INDEXES_ALREADY_IN_PRODUCTION.has(i.name) && !toCreate.has(i.name));
+    expect(
+      orphans.map((i) => `${i.table}: ${i.name}`),
+      "этот индекс объявлен в схеме, но на прод его не везёт никто"
+    ).toEqual([]);
+  });
+
+  it("@@index([text]) у AudioAsset разобран и назван так, как его назвала бы Prisma", () => {
+    const audioAsset = parseSchema(SCHEMA).find((m) => m.name === "AudioAsset")!;
+    const byText = audioAsset.indexes.find((i) => i.columns.join(",") === "text");
+    expect(byText, "в схеме нет @@index([text]) у AudioAsset").toBeDefined();
+    // `prisma migrate diff --from-empty --to-schema` 11.09.2026 печатает
+    // ровно это имя. Самодельное имя уронило бы первый же прогон миграций
+    // на проде конфликтом «индекс уже есть под другим именем».
+    expect(byText!.name).toBe("AudioAsset_text_idx");
+    expect(byText!.unique).toBe(false);
+    const statement = CREATE_INDEX_STATEMENTS.find((s) => s.index === "AudioAsset_text_idx");
+    expect(statement, "AudioAsset_text_idx не поедет на прод").toBeDefined();
+    expect(statement!.table).toBe("AudioAsset");
+    expect(statement!.statement).toMatch(/CREATE INDEX IF NOT EXISTS "AudioAsset_text_idx" ON "AudioAsset"\("text"\)/);
+  });
+
+  it("контроль: сверка замечает @@index, который никто не везёт", () => {
+    // Правило 4.1. Случай выше отвечает «все на месте»; этот показывает,
+    // что сверка умеет сказать иначе — на той самой форме дыры, ради
+    // которой написана.
+    // Имя модели ЛАТИНСКОЕ не для красоты: заголовок модели разбирается
+    // регуляркой `/model\s+(\w+)/`, а `\w` в JavaScript кириллицу не
+    // покрывает (та же ловушка, что стоила 7.166 ста неверных клипов) —
+    // с кириллическим именем этот контроль был бы пустым и «проходил» бы.
+    const withNewIndex = parseSchema(SCHEMA + "\n\nmodel Invented {\n  id String @id\n  field String\n\n  @@index([field])\n}\n");
+    const declared = withNewIndex.flatMap((m) => m.indexes);
+    const toCreate = new Set(CREATE_INDEX_STATEMENTS.map((s) => s.index));
+    const orphans = declared.filter((i) => !INDEXES_ALREADY_IN_PRODUCTION.has(i.name) && !toCreate.has(i.name));
+    expect(orphans.map((i) => i.name)).toEqual(["Invented_field_idx"]);
+  });
+
+  it("каждый оператор перезапускаем: второй билд не падает на существующем индексе", () => {
+    expect(CREATE_INDEX_STATEMENTS.length).toBeGreaterThan(0);
+    for (const { index, statement } of CREATE_INDEX_STATEMENTS) {
+      expect(statement, `${index}: оператор не перезапускаем`).toMatch(/IF NOT EXISTS/);
+      expect(statement, `${index}: имя в операторе разошлось с полем index`).toContain(`"${index}"`);
+    }
+  });
+
+  it("ни один индекс не объявлен с чужой сортировкой", () => {
+    // COLLATE NOCASE на колонке без COLLATE — индекс, который планировщик
+    // не возьмёт НИКОГДА, а схема при этом выглядит правильной. Цена такой
+    // ошибки ровно та же, что у отсутствующего индекса.
+    for (const { index, statement } of CREATE_INDEX_STATEMENTS) {
+      expect(statement, `${index}: COLLATE в операторе индекса`).not.toMatch(/COLLATE/i);
+    }
   });
 });

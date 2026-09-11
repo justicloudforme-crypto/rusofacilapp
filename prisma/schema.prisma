@@ -563,6 +563,19 @@ model AudioAsset {
 
   @@unique([contentType, contentId, itemKey])
   @@index([contentType, contentId])
+  // Поиск клипа ПО ТЕКСТУ, а не по адресу места. Без этого индекса оба
+  // существующих начинаются с `contentType`, и запрос
+  // `WHERE text IN (…) AND NOT contentType='story'` (`clipsByText`,
+  // src/lib/audio-reuse.ts) шёл ПОЛНЫМ проходом: 11.09.2026 замерено, что
+  // один холодный рендер медиа-страницы достаёт 6 нужных строк, прочитав
+  // 36 316, — и 552 медиа-страницы в карте сайта давали 91% цены всего
+  // обхода. Это и исчерпало месячную квоту чтений Turso, уронив сайт на
+  // несколько часов (PROGRESS.md 7.172, долг 135). Тем же индексом
+  // лечится `/api/word-audio` (src/lib/story-word-audio.ts) и
+  // `/api/lesson-audio`. Сортировка у индекса BINARY — та же, что у
+  // колонки; с NOCASE он бы не взялся (контроль в
+  // scripts/check-text-index.mjs).
+  @@index([text])
 }
 
 // Architectural foundation for the planned "linguistic terms glossary" —

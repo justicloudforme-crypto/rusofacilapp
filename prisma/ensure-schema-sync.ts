@@ -50,9 +50,18 @@ interface FieldDef {
   defaultRaw: string | null;
 }
 
+interface IndexDef {
+  /** Имя, которое дала бы этому индексу миграция Prisma. */
+  name: string;
+  table: string;
+  columns: string[];
+  unique: boolean;
+}
+
 interface ModelDef {
   name: string;
   fields: FieldDef[];
+  indexes: IndexDef[];
 }
 
 /** Reads one model body by COUNTING BRACES rather than by matching up to
@@ -144,10 +153,44 @@ function parseSchema(schemaText: string): ModelDef[] {
       });
     }
 
-    models.push({ name: modelName, fields });
+    models.push({ name: modelName, fields, indexes: parseIndexes(modelName, body) });
   }
 
   return models;
+}
+
+/** Блоки `@@index([...])` и `@@unique([...])` одного тела модели, с ИМЕНЕМ,
+ * которое им даст сама Prisma.
+ *
+ * Имя важнее содержимого. В проекте нет каталога миграций: схему на прод
+ * доставляет этот файл. Но каталог миграций однажды появится, и если наш
+ * индекс будет лежать на проде под самодельным именем, первый же прогон
+ * миграций упадёт на конфликте «такой индекс уже есть под другим именем».
+ * Поэтому имя строится правилом Prisma — `<Модель>_<колонки через _>_idx`
+ * (и `_key` у уникального), — и это же имя проверено прогоном
+ * `prisma migrate diff --from-empty --to-schema` 11.09.2026: он печатает
+ * ровно `CREATE INDEX "AudioAsset_text_idx" ON "AudioAsset"("text");`. */
+function parseIndexes(modelName: string, body: string): IndexDef[] {
+  const out: IndexDef[] = [];
+  for (const line of body.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("//")) continue;
+    const m = /^@@(index|unique)\(\s*\[([^\]]*)\]/.exec(trimmed);
+    if (!m) continue;
+    const columns = m[2]
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+    if (columns.length === 0) continue;
+    const named = /name:\s*"([^"]+)"/.exec(trimmed) ?? /map:\s*"([^"]+)"/.exec(trimmed);
+    out.push({
+      name: named ? named[1] : `${modelName}_${columns.join("_")}_${m[1] === "unique" ? "key" : "idx"}`,
+      table: modelName,
+      columns,
+      unique: m[1] === "unique",
+    });
+  }
+  return out;
 }
 
 /** Tables this script is allowed to CREATE, with the DDL written out by
@@ -259,8 +302,101 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
   },
 ];
 
-export { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS };
-export type { FieldDef, ModelDef };
+/** Индексы СУЩЕСТВУЮЩИХ таблиц, которые этот скрипт имеет право создать.
+ *
+ * Третья дыра той же формы, что две выше. Сверка колонок читает
+ * `PRAGMA table_info` и про индексы не знает ничего; `CREATE_TABLE_STATEMENTS`
+ * несёт индексы только у таблиц, которых на проде ещё нет. Значит
+ * `@@index`, дописанный к ДАВНО живущей модели, не доезжает до прода
+ * никогда — и это не гипотеза: именно так `AudioAsset.text` прожил без
+ * индекса до 11.09.2026, когда полный проход по 36 316 строкам на каждый
+ * рендер медиа-страницы исчерпал месячную квоту чтений Turso и уронил
+ * сайт на несколько часов (PROGRESS.md 7.172, долг 135).
+ *
+ * Список, как и у таблиц, написан и прочитан человеком, а не сгенерирован:
+ * `CREATE INDEX` на 36 тысячах строк — это запись в боевую базу, и ей не
+ * место под автоматикой. `IF NOT EXISTS` делает второй прогон пустым
+ * действием. Имя — то, которое дала бы миграция Prisma, чтобы будущий
+ * каталог миграций не упал на конфликте; `src/lib/schema-sync.test.ts`
+ * сверяет этот список с `@@index` в схеме и с именами, выведенными
+ * правилом Prisma. */
+const CREATE_INDEX_STATEMENTS: ReadonlyArray<{ index: string; table: string; statement: string }> = [
+  {
+    index: "AudioAsset_text_idx",
+    table: "AudioAsset",
+    statement: `CREATE INDEX IF NOT EXISTS "AudioAsset_text_idx" ON "AudioAsset"("text")`,
+  },
+];
+
+/** Индексы, которые на проде БЫЛИ до 11.09.2026. Список не написан от
+ * руки и не угадан: он снят запросом `select name from sqlite_master where
+ * type='index'` со снимка боевой базы того же дня — 54 имени, 54 строки
+ * ниже. Нужен он затем, чтобы сверка в `src/lib/schema-sync.test.ts` могла
+ * сказать «этот `@@index` на проде уже есть», не имея базы под рукой:
+ * `npm run test` не открывает ни одного соединения (check:no-db-in-tests).
+ *
+ * Новый `@@index` в схеме обязан попасть либо сюда (если он и так на
+ * проде), либо в `CREATE_INDEX_STATEMENTS` — иначе тест покраснеет, и
+ * именно это отличает «индекс объявлен» от «индекс доехал». */
+const INDEXES_ALREADY_IN_PRODUCTION: ReadonlySet<string> = new Set([
+  "AccessCode_batch_idx",
+  "AccessCode_code_key",
+  "AccessCode_redeemedById_idx",
+  "AudioAsset_contentType_contentId_idx",
+  "AudioAsset_contentType_contentId_itemKey_key",
+  "ExamAttempt_userId_level_examSlug_idx",
+  "Exam_level_examSlug_key",
+  "FlashcardCard_category_idx",
+  "FlashcardCard_level_idx",
+  "FlashcardProgress_userId_cardId_key",
+  "FlashcardProgress_userId_idx",
+  "GlossaryTerm_category_idx",
+  "GlossaryTerm_slug_key",
+  "GrammarCheckResult_entityType_entityId_fieldName_key",
+  "GrammarCheckResult_status_idx",
+  "GroupMember_groupId_idx",
+  "GroupMember_groupId_userId_key",
+  "GroupMember_userId_idx",
+  "Group_inviteCode_key",
+  "Group_ownerUserId_idx",
+  "Idiom_category_idx",
+  "Idiom_level_idx",
+  "LessonProgress_userId_idx",
+  "LessonProgress_userId_level_lessonSlug_key",
+  "Lesson_level_lessonSlug_key",
+  "MediaOverride_mediaId_key",
+  "PendingCheckout_stripeSessionId_key",
+  "PendingCheckout_userId_idx",
+  "ReferralReward_referredUserId_key",
+  "ReferralReward_referrerUserId_idx",
+  "SearchQuery_hourBucket_idx",
+  "SearchQuery_query_idx",
+  "StoryReadingProgress_userId_idx",
+  "StoryReadingProgress_userId_storyId_key",
+  "Story_level_idx",
+  "StudyDay_userId_dateKey_key",
+  "StudyDay_userId_idx",
+  "Subscription_rcOriginalTransactionId_idx",
+  "Subscription_rcOriginalTransactionId_key",
+  "Subscription_stripeSubscriptionId_idx",
+  "Subscription_stripeSubscriptionId_key",
+  "Subscription_userId_createdAt_idx",
+  "Subscription_userId_idx",
+  "UserBadge_userId_badgeId_key",
+  "UserBadge_userId_idx",
+  "User_email_key",
+  "User_publicHandle_key",
+  "User_referralCode_key",
+  "User_stripeCustomerId_key",
+  "VoiceSubmission_userId_level_lessonSlug_itemKey_idx",
+  "WordGameProgress_userId_idx",
+  "WordGameProgress_userId_puzzleId_key",
+  "WordGamePuzzle_type_level_idx",
+  "WordGamePuzzle_type_level_sequence_key",
+]);
+
+export { parseSchema, modelBodies, CREATE_TABLE_STATEMENTS, CREATE_INDEX_STATEMENTS, INDEXES_ALREADY_IN_PRODUCTION };
+export type { FieldDef, ModelDef, IndexDef };
 
 async function main() {
   const url = process.env.TURSO_DATABASE_URL;
@@ -287,6 +423,23 @@ async function main() {
     createdCount++;
   }
 
+  // Индексы существующих таблиц — ПОСЛЕ таблиц и ДО колонок: индекс по
+  // колонке, которой ещё нет, создать нельзя, а все индексы из списка
+  // стоят на колонках, которые на проде есть годами.
+  let indexedCount = 0;
+  for (const { index, table, statement } of CREATE_INDEX_STATEMENTS) {
+    const existing = await client.execute(`PRAGMA index_info("${index}")`);
+    if (existing.rows.length > 0) continue;
+    const tableInfo = await client.execute(`PRAGMA table_info("${table}")`);
+    if (tableInfo.rows.length === 0) {
+      console.log(`[ensure-schema-sync] ${table} ещё нет — индекс ${index} пропущен.`);
+      continue;
+    }
+    console.log(`[ensure-schema-sync] Creating missing index ${index} on ${table}...`);
+    await client.execute(statement);
+    indexedCount++;
+  }
+
   for (const model of models) {
     let existingColumns: Set<string>;
     try {
@@ -310,9 +463,9 @@ async function main() {
   }
 
   console.log(
-    addedCount > 0 || createdCount > 0
-      ? `[ensure-schema-sync] Created ${createdCount} missing table(s), added ${addedCount} missing column(s).`
-      : "[ensure-schema-sync] Schema already in sync — no tables or columns added."
+    addedCount > 0 || createdCount > 0 || indexedCount > 0
+      ? `[ensure-schema-sync] Created ${createdCount} missing table(s), ${indexedCount} missing index(es), added ${addedCount} missing column(s).`
+      : "[ensure-schema-sync] Schema already in sync — no tables, indexes or columns added."
   );
   client.close();
 }
