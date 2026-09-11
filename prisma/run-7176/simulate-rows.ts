@@ -14,6 +14,7 @@
 import { copyFileSync, readFileSync } from "node:fs";
 import Database from "better-sqlite3";
 import { blobPathFor, textHashFor, type PlanRow } from "./write-cuts";
+import { storedDateTime } from "../../scripts/stored-datetime.mjs";
 
 const arg = (n: string) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3);
 const PLAN = arg("plan")!, FROM = arg("from")!, TO = arg("to")!;
@@ -22,7 +23,11 @@ const PREFIX = "https://0xvmk87qe017z4ei.public.blob.vercel-storage.com/";
 const plan = JSON.parse(readFileSync(PLAN, "utf-8")) as PlanRow[];
 copyFileSync(FROM, TO);
 const db = new Database(TO);
-const now = new Date().toISOString();
+// Дата кладётся сырым клиентом, минуя Prisma, поэтому формат берётся у
+// общего помощника: `toISOString()` даёт `…Z`, а Prisma — `…+00:00`, и
+// в одной колонке заводились бы два формата (долг 91, сторож
+// `check:raw-datetime`).
+const now: string = storedDateTime(new Date());
 const stmt = db.prepare(
   `insert into AudioAsset (id, contentType, contentId, itemKey, textHash, text, voice, model, audioUrl, createdAt, updatedAt, durationSeconds)
    values (?, 'story-word', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
