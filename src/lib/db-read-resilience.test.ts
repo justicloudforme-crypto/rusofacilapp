@@ -170,7 +170,7 @@ const MUST_DEGRADE: Array<{ where: string; file: string; symbol: string | null; 
     file: "lib/flashcards/cache.ts",
     symbol: "fetchFlashcardIndex",
     model: "audioAsset",
-    cost: "the whole card bank keeps working with audioUrl null; SpeakButton falls back to speechSynthesis",
+    cost: "the whole card bank keeps working with audioUrl null; SpeakButton stays visible but silent",
   },
   {
     where: "getThemedPuzzlesByTopic",

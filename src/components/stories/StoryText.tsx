@@ -10,7 +10,6 @@ import {
 } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import StoryAudioPlayer, { READ_ALOUD_RATES } from "@/components/stories/StoryAudioPlayer";
-import { sanitizeTextForTTS } from "@/lib/speech";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 import {
@@ -31,33 +30,6 @@ function tokenizeParagraph(text: string): string[] {
   return text.split(WORD_SPLIT_REGEX).filter((token) => token.length > 0);
 }
 
-/** Start offset of each token within its sentence — used to map a
- * SpeechSynthesis boundary event's charIndex back to a token to highlight. */
-function tokenStarts(tokens: string[]): number[] {
-  const starts: number[] = [];
-  let offset = 0;
-  for (const token of tokens) {
-    starts.push(offset);
-    offset += token.length;
-  }
-  return starts;
-}
-
-function tokenIndexAtChar(tokens: string[], starts: number[], charIndex: number): number | null {
-  let candidate = -1;
-  for (let i = 0; i < starts.length; i++) {
-    if (starts[i] <= charIndex) candidate = i;
-    else break;
-  }
-  if (candidate === -1) return null;
-  // The boundary event should land on the start of a word, but nudge
-  // forward to the nearest actual word token just in case it lands on
-  // whitespace/punctuation instead.
-  for (let i = candidate; i < tokens.length; i++) {
-    if (CYRILLIC_WORD_REGEX.test(tokens[i])) return i;
-  }
-  return null;
-}
 
 type TranslationState =
   | { status: "loading" }
@@ -88,6 +60,7 @@ export interface StoryTextDict {
 
 export default function StoryText({
   storyId,
+  audioStoryId,
   title,
   author,
   paragraphs,
@@ -95,13 +68,19 @@ export default function StoryText({
   audioSegments,
   fullAudioUrl,
   sentenceOffsets,
-  allowTtsFallback = true,
   dict,
 }: {
   /** Used as the localStorage key for per-story reading progress. Pass
    * `null` to disable progress tracking entirely — used for the
    * paywalled single-paragraph preview. */
   storyId: string | null;
+  /** Тот же `Story.id`, но отдаётся ВСЕГДА, в том числе непокупателю.
+   *  `storyId` выше означает «этому читателю сохраняем прогресс» и у
+   *  превью за пейволом намеренно `null`; адрес места для озвучки слова
+   *  от прогресса не зависит, а секрета в id нет — он и так стоит в
+   *  адресной строке. Без него омограф в превью остался бы без вырезки
+   *  (заход 7.168). */
+  audioStoryId?: string | null;
   /** Shown on the lock screen / notification media controls via the Media
    * Session API — see the effect below. */
   title: string;
@@ -130,22 +109,6 @@ export default function StoryText({
    * `fullAudioUrl`, same order/length as buildStoryQueue(paragraphs) —
    * i.e. `Story.sentenceOffsetsJson`, already parsed. */
   sentenceOffsets?: number[] | null;
-  /** Разрешён ли аварийный откат на браузерный синтез
-   * (`SpeechSynthesisUtterance`, то есть системный голос ОС) там, где
-   * настоящей записи для предложения нет.
-   *
-   * `false` — для пейволльного превью. Долг 114 (PROGRESS.md 7.160): у
-   * закрытого рассказа страница не отдавала непокупателю ни одного клипа,
-   * а кнопка «слушать» оставалась и уходила в синтез — и именно этот
-   * системный голос (macOS/iOS — Milena, 219,2 Гц; Android — «Google
-   * русский»; Windows — «Ирина») много лет принимали за брак озвучки
-   * банка. Теперь превью получает настоящие клипы своего видимого абзаца
-   * (см. [id]/page.tsx), а синтез ему запрещён: нечего играть — нет и
-   * органа управления. Полноправному читателю откат остаётся: он
-   * закрывает редкие дыры в покрытии (15 рассказов из 325 с несколькими
-   * предложениями без клипа), где выбор стоит между одним синтезированным
-   * предложением и обрывом всей очереди. */
-  allowTtsFallback?: boolean;
   dict: StoryTextDict;
 }) {
   const [activeWord, setActiveWord] = useState<string | null>(null);
@@ -159,11 +122,9 @@ export default function StoryText({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentenceRefs = useRef<Array<HTMLElement | null>>([]);
 
-  const [ttsSupported, setTtsSupported] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState<(typeof READ_ALOUD_RATES)[number]>(1);
   const [readingQueueIndex, setReadingQueueIndex] = useState<number | null>(null);
-  const [readingToken, setReadingToken] = useState<number | null>(null);
   const [playerSticky, setPlayerSticky] = useState(false);
   // The site header is itself `sticky top-0` with a higher z-index — without
   // this offset, our sticky player would pin to the same y=0 and end up
@@ -186,17 +147,6 @@ export default function StoryText({
   // monotonic counter can't get stuck: a stale utterance/clip simply never
   // matches the current generation, no reset step required.
   const playbackGenRef = useRef(0);
-  // Chromium/Android has a well-known Web Speech API quirk: the first
-  // speechSynthesis.speak() call after the engine has been idle clips the
-  // very start of the utterance while the engine spins up — a device
-  // report found exactly this ("the narrator skips the opening phrase")
-  // on a free-tier story that falls back to browser TTS. Firing one
-  // silent warm-up utterance immediately before the real first one (see
-  // handlePlayPause) absorbs that clipped fraction of a second instead of
-  // eating real content. Once per mount is enough — a new story page
-  // remounts this component and gets a fresh ref, and the engine doesn't
-  // go idle again just from a pause/seek within the same story.
-  const ttsWarmedRef = useRef(false);
 
   const [isCompletedBadge, setIsCompletedBadge] = useState(false);
   const [resumeQueueIndex, setResumeQueueIndex] = useState<number | null>(null);
@@ -299,10 +249,11 @@ export default function StoryText({
   // underlying mechanism is in play. Playback functions below always
   // check hasFullAudio first, since it takes priority whenever available.
   const hasRealAudio = hasFullAudio || hasPerSentenceAudio;
-  // «Читать нечем» и «читать нечем, кроме системного голоса» — разные
-  // состояния, и второе разрешено не везде: см. allowTtsFallback.
-  const ttsFallbackAllowed = allowTtsFallback && ttsSupported;
-  const canPlay = hasRealAudio || ttsFallbackAllowed;
+  // «Читать нечем» — теперь одно состояние: аварийного отката на голос
+  // браузера в коде нет вовсе (заход 7.168), поэтому орган управления
+  // «слушать» рисуется ровно тогда, когда есть НАСТОЯЩАЯ запись. Это же
+  // делает правило `check:silent-listen` невыполнимым по построению.
+  const canPlay = hasRealAudio;
 
   /** Largest sentence index whose offset is <= `time` — i.e. which
    * sentence `fullAudioUrl` is currently playing at that position.
@@ -317,21 +268,11 @@ export default function StoryText({
     return 0;
   }
 
-  // Cancels any in-flight utterance/clip and invalidates it for the queue
-  // chain.
+  // Отменяет проигрывающийся клип для цепочки очереди: следующий шаг
+  // увидит, что поколение сменилось, и не продолжит.
   function cancelSpeech() {
     playbackGenRef.current += 1;
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
   }
-
-  useEffect(() => {
-    // Same SSR/hydration-safe pattern as SpeakButton: start true, correct
-    // right after mount so server and client markup match.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
-  }, []);
 
   // Restore reading position on mount. A completed story reopens with just
   // the "read" badge; an in-progress one scrolls to and rings the saved
@@ -457,25 +398,6 @@ export default function StoryText({
     return () => observer.disconnect();
   }, []);
 
-  // Chromium has a long-standing bug where speechSynthesis silently stops
-  // delivering events (onend/onboundary never fire again) after roughly
-  // 15s of continuous speaking — it looks like playback "stops after the
-  // first sentence" once the queue reaches that mark. Nudging the engine
-  // with pause()+resume() every few seconds resets its internal timer and
-  // keeps the queue alive for arbitrarily long stories. Only relevant to
-  // the browser-TTS fallback — real <audio> playback has no such bug.
-  useEffect(() => {
-    if (!playing || hasRealAudio) return;
-    const keepAlive = setInterval(() => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-      if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      }
-    }, 5000);
-    return () => clearInterval(keepAlive);
-  }, [playing, hasRealAudio]);
-
   /** url -> duration in seconds, filled in as clips are actually played
    * (see the `loadedmetadata` handler below) or explicitly probed by
    * getClipDuration() when a ±15s skip needs to know a clip it hasn't
@@ -540,59 +462,20 @@ export default function StoryText({
     preload.src = url;
   }
 
-  /** Narrates a single sentence with browser TTS (no real clip for it —
-   * see hasRealAudio's comment) and hands back to playSegmentAt() for the
-   * next index once it ends, so the gap costs one sentence's worth of
-   * synthesized voice instead of derailing the rest of the real-audio
-   * queue. Mirrors speakQueueAt()'s onboundary/onend/onerror wiring
-   * (word-highlight during the utterance, generation-guarded chaining) —
-   * kept separate rather than reused because speakQueueAt() also owns the
-   * TTS-only playback mode's own state (setReadingToken(null) up front,
-   * etc.) that doesn't apply here. */
-  function speakGapSentenceThenAdvance(index: number, generation: number) {
-    const item = queue[index];
-    const advance = () => {
-      if (playbackGenRef.current !== generation) return;
-      const next = index + 1;
-      if (next < queue.length) {
-        playSegmentAt(next);
-      } else {
-        setPlaying(false);
-        setReadingQueueIndex(null);
-        setReadingToken(null);
-      }
-    };
-
-    // `!ttsFallbackAllowed` — превью за пейволом: дыра в покрытии молча
-    // пропускается вместо того, чтобы одно предложение вдруг прочитал
-    // системный голос посреди настоящей озвучки (долг 114).
-    if (!item || !ttsFallbackAllowed || typeof window === "undefined" || !("speechSynthesis" in window)) {
-      advance();
-      return;
+  /** Предложение, у которого настоящего клипа нет (дыра в покрытии — см.
+   *  комментарий hasRealAudio), молча пропускается, и очередь идёт дальше.
+   *  Ничем не подменяется: браузерного синтеза в коде нет (заход 7.168),
+   *  а чужой голос посреди настоящей озвучки хуже пропуска — тот же обмен,
+   *  что уже действовал для превью за пейволом (долг 114). */
+  function advanceOverGap(index: number, generation: number) {
+    if (playbackGenRef.current !== generation) return;
+    const next = index + 1;
+    if (next < queue.length) {
+      playSegmentAt(next);
+    } else {
+      setPlaying(false);
+      setReadingQueueIndex(null);
     }
-
-    setReadingQueueIndex(index);
-    setReadingToken(null);
-    setResumeQueueIndex(null);
-    setIsCompletedBadge(false);
-    if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
-
-    const utterance = new SpeechSynthesisUtterance(sanitizeTextForTTS(item.text));
-    utterance.lang = "ru-RU";
-    utterance.rate = rateRef.current;
-    utterance.onboundary = (event) => {
-      const tokens = sentenceTokens[index];
-      const starts = tokenStarts(tokens);
-      const tokenIndex = tokenIndexAtChar(tokens, starts, event.charIndex);
-      setReadingToken(tokenIndex);
-    };
-    utterance.onend = advance;
-    utterance.onerror = (event) => {
-      if (playbackGenRef.current !== generation) return;
-      console.error("[StoryText audio] gap-sentence TTS error:", event.error);
-      advance();
-    };
-    window.speechSynthesis.speak(utterance);
   }
 
   /** `startOffset` seconds into the clip — used by skipBy() when a ±15s
@@ -608,7 +491,7 @@ export default function StoryText({
     const audio = audioRef.current;
     const url = segmentUrlByKey.get(`${item.paragraphIndex}-${item.sentenceIndex}`);
     if (!url || !audio) {
-      speakGapSentenceThenAdvance(index, generation);
+      advanceOverGap(index, generation);
       return;
     }
     setReadingQueueIndex(index);
@@ -695,8 +578,8 @@ export default function StoryText({
    * crossed clip's actual duration until `deltaSeconds` is used up, then
    * seeks into whichever sentence that lands on and re-syncs the
    * highlight/scroll there — same as any other seek. Per-sentence mode
-   * only (no `fullAudioUrl`): speechSynthesis has no seekable timeline to
-   * walk, and skipBy() below routes a fullAudioUrl story to
+   * only (no `fullAudioUrl`): a chain of per-sentence clips has no single
+   * seekable timeline to walk, and skipBy() below routes a fullAudioUrl story to
    * skipByFull() instead of this function entirely. */
   async function skipByPerSentence(deltaSeconds: number) {
     if (!hasPerSentenceAudio || readingQueueIndex === null) return;
@@ -763,69 +646,6 @@ export default function StoryText({
     void skipByPerSentence(deltaSeconds);
   }
 
-  function speakQueueAt(index: number) {
-    const item = queue[index];
-    if (!item) {
-      setPlaying(false);
-      setReadingQueueIndex(null);
-      setReadingToken(null);
-      return;
-    }
-    // This utterance belongs to the current playback generation. If a
-    // cancel happens later (pause, word click, seek, rate change,
-    // unmount), playbackGenRef moves on and this closure's `generation`
-    // goes stale — its onend/onerror then know to no-op instead of
-    // continuing the chain.
-    const generation = playbackGenRef.current;
-    setReadingQueueIndex(index);
-    setReadingToken(null);
-    setResumeQueueIndex(null);
-    setIsCompletedBadge(false);
-    if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
-
-    const utterance = new SpeechSynthesisUtterance(sanitizeTextForTTS(item.text));
-    utterance.lang = "ru-RU";
-    utterance.rate = rateRef.current;
-    utterance.onboundary = (event) => {
-      const tokens = sentenceTokens[index];
-      const starts = tokenStarts(tokens);
-      const tokenIndex = tokenIndexAtChar(tokens, starts, event.charIndex);
-      setReadingToken(tokenIndex);
-    };
-    utterance.onend = () => {
-      if (playbackGenRef.current !== generation) return;
-      const next = index + 1;
-      if (next < queue.length) {
-        // Calling speak() synchronously from inside another utterance's
-        // onend is itself flaky in Chromium (the new utterance can be
-        // silently dropped) — deferring to the next tick works around it.
-        pendingNextRef.current = setTimeout(() => {
-          pendingNextRef.current = null;
-          // The user may have hit Pause or navigated away during this
-          // short gap between sentences (nothing was actively speaking
-          // for speechSynthesis.pause() to catch) — respect that instead
-          // of barreling ahead into the next sentence regardless.
-          if (!playingRef.current || playbackGenRef.current !== generation) return;
-          speakQueueAt(next);
-        }, 50);
-      } else {
-        setPlaying(false);
-        setReadingQueueIndex(null);
-        setReadingToken(null);
-      }
-    };
-    utterance.onerror = (event) => {
-      if (playbackGenRef.current !== generation) {
-        // Expected: this utterance was cancelled by our own cancelSpeech()
-        // (rate change, word click, seek, pause, unmount).
-        return;
-      }
-      console.error("[StoryText TTS] speechSynthesis error:", event.error);
-      setPlaying(false);
-    };
-    window.speechSynthesis.speak(utterance);
-  }
-
   function handlePlayPause() {
     if (queue.length === 0) return;
     if (hasFullAudio) {
@@ -859,30 +679,8 @@ export default function StoryText({
       return;
     }
 
-    // Настоящей записи нет вовсе. Синтез разрешён не всякому читателю —
-    // в превью за пейволом кнопки здесь просто не существует (canPlay).
-    if (!ttsFallbackAllowed) return;
-    if (playing) {
-      window.speechSynthesis.pause();
-      setPlaying(false);
-      return;
-    }
-    if (window.speechSynthesis.paused && readingQueueIndex !== null) {
-      window.speechSynthesis.resume();
-      setPlaying(true);
-      return;
-    }
-    const startIndex = readingQueueIndex !== null && readingQueueIndex < queue.length - 1 ? readingQueueIndex : 0;
-    setPlaying(true);
-    if (!ttsWarmedRef.current) {
-      ttsWarmedRef.current = true;
-      // Silent warm-up utterance, fired synchronously in the same click
-      // gesture right before the real one — see ttsWarmedRef's comment.
-      const warmup = new SpeechSynthesisUtterance(" ");
-      warmup.volume = 0;
-      window.speechSynthesis.speak(warmup);
-    }
-    speakQueueAt(startIndex);
+    // Настоящей записи нет вовсе — значит и органа управления нет:
+    // `canPlay` ложно, плеер не отрисован. Подменять запись нечем (7.168).
   }
 
   function handleRateChange(nextRate: (typeof READ_ALOUD_RATES)[number]) {
@@ -891,10 +689,6 @@ export default function StoryText({
     if (hasRealAudio) {
       if (audioRef.current) audioRef.current.playbackRate = nextRate;
       return;
-    }
-    if (ttsFallbackAllowed && playing && readingQueueIndex !== null) {
-      cancelSpeech();
-      speakQueueAt(readingQueueIndex);
     }
   }
 
@@ -919,10 +713,6 @@ export default function StoryText({
       playSegmentAt(index);
       return;
     }
-    if (!ttsFallbackAllowed) return;
-    cancelSpeech();
-    setPlaying(true);
-    speakQueueAt(index);
   }
 
   function handleSentenceKeyDown(event: ReactKeyboardEvent, index: number) {
@@ -1013,8 +803,7 @@ export default function StoryText({
     ms.setActionHandler("nexttrack", nextTrack);
     // Real lock-screen scrubbing — only possible with one genuine seekable
     // timeline (fullAudioUrl); the per-sentence chain has no single
-    // duration to report and speechSynthesis has no timeline at all, so
-    // neither of those modes offers this action.
+    // duration to report, so that mode doesn't offer this action.
     ms.setActionHandler(
       "seekto",
       hasFullAudio
@@ -1098,7 +887,7 @@ export default function StoryText({
   const progress =
     queue.length > 0 && readingQueueIndex !== null ? (readingQueueIndex + 1) / queue.length : 0;
 
-  async function handleWordClick(word: string, wordEl: HTMLElement) {
+  async function handleWordClick(word: string, wordEl: HTMLElement, queueIndex: number) {
     const rect = wordEl.getBoundingClientRect();
     const spaceAbove = rect.top;
     const placeAbove = spaceAbove > POPOVER_HEIGHT_ESTIMATE + POPOVER_MARGIN;
@@ -1118,7 +907,16 @@ export default function StoryText({
     // общий `await` означал бы, что чужой отказ уносит с собой звук.
     void (async () => {
       try {
-        const res = await fetch(`/api/word-audio?word=${encodeURIComponent(word)}`);
+        // Адрес МЕСТА едет вместе со словом: у омографа общего клипа нет
+        // и не будет, а вырезка из озвучки его собственного предложения
+        // есть, и она верна только здесь (заход 7.168). Прочим словам
+        // ответ от этих двух параметров не меняется.
+        const at = queue[queueIndex];
+        const place =
+          audioStoryId && at
+            ? `&story=${encodeURIComponent(audioStoryId)}&at=${at.paragraphIndex}-${at.sentenceIndex}-${Number(wordEl.dataset.token)}`
+            : "";
+        const res = await fetch(`/api/word-audio?word=${encodeURIComponent(word)}${place}`);
         const data = await res.json().catch(() => null);
         if (res.ok && typeof data?.audioUrl === "string") setWordAudioUrl(data.audioUrl);
       } catch {
@@ -1237,7 +1035,7 @@ export default function StoryText({
                     // sentence, matched back to the specific word element
                     // that was actually clicked.
                     const wordEl = (event.target as HTMLElement).closest<HTMLElement>("button[data-word]");
-                    if (wordEl?.dataset.word) void handleWordClick(wordEl.dataset.word, wordEl);
+                    if (wordEl?.dataset.word) void handleWordClick(wordEl.dataset.word, wordEl, queueIndex);
                     handleSentenceClick(queueIndex);
                   }}
                   onKeyDown={(event) => handleSentenceKeyDown(event, queueIndex)}
@@ -1260,11 +1058,13 @@ export default function StoryText({
                         key={tokenIndex}
                         type="button"
                         data-word={token}
-                        className={`tap rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 active:bg-foreground/10 focus:outline-none ${
-                          playing && readingQueueIndex === queueIndex && readingToken === tokenIndex
-                            ? "bg-amber-400/40 dark:bg-amber-400/30"
-                            : ""
-                        }`}
+                        // Номер токена внутри предложения. Нужен одному
+                        // классу слов — омографам: их клип привязан к
+                        // МЕСТУ, а не к словоформе (заход 7.168), и место
+                        // называется теми же индексами, что `itemKey`
+                        // вырезки: `<абзац>-<предложение>-<токен>`.
+                        data-token={tokenIndex}
+                        className="tap rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 active:bg-foreground/10 focus:outline-none"
                       >
                         {token}
                       </button>

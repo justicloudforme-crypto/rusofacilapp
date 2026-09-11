@@ -45,10 +45,9 @@ function renderTab(audioMap?: Record<string, string>) {
 }
 
 beforeEach(() => {
-  // Без этого jsdom изображает браузер БЕЗ синтеза, а `SpeakButton` в этом
-  // случае прячет себя целиком (`!supported && !audioUrl`) — и «кнопки
-  // нет» читалось бы как «кнопка есть, но молчит». Живой браузер синтез
-  // поддерживает всегда, значит и кнопку рисует всегда.
+  // Движок синтеза подставляется НАРОЧНО, хотя с 7.168 продукт его не
+  // зовёт нигде: если он где-нибудь вернётся, jsdom без движка молча
+  // проглотит вызов, а с движком тест это увидит.
   Object.defineProperty(window, "speechSynthesis", {
     configurable: true,
     value: { speaking: false, paused: false, speak: () => {}, cancel: () => {} },

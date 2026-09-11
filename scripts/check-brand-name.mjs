@@ -152,7 +152,6 @@ const IDENT_ALLOWED = new Map([
   ["prisma/seed-ty-uydyosh-override.ts", 1],
   ["prisma/vocabulary-idioms-audit.ts", 1],
   ["scripts/check-app-id.mjs", 4],
-  ["src/components/lesson/SpeakButton.tsx", 1],
   ["src/components/word-games/WordGamesPicker.tsx", 1],
   ["src/lib/flashcard-progress.ts", 1],
   ["src/lib/flashcards/level-progress.ts", 1],

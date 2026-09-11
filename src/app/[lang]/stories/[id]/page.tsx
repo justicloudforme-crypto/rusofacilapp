@@ -248,6 +248,7 @@ export default async function StoryReaderPage({
       <div className="mt-3">
         <StoryText
           storyId={entitled ? story.id : null}
+          audioStoryId={story.id}
           title={titles.primary}
           author={story.author}
           paragraphs={visibleParagraphs}
@@ -258,7 +259,6 @@ export default async function StoryReaderPage({
           // В превью читать нечем, кроме настоящих клипов видимого абзаца
           // (они отданы выше): если их нет, органа управления не будет
           // вовсе, а не «будет и заговорит системным голосом» — долг 114.
-          allowTtsFallback={entitled}
           sentenceOffsets={sentenceOffsets}
           dict={{
             translationLoading: dict.stories.translationLoading,

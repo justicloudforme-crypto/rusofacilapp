@@ -12,8 +12,8 @@ export interface HeroWordDeckDict {
 // Real vocabulary bank cards (see getHomepageWordSample), not invented
 // copy — flip-to-reveal (tap toggles a rotateY class), audio via the same
 // SpeakButton every practice screen uses, real pre-generated audioUrl
-// first with browser speechSynthesis only as SpeakButton's own built-in
-// fallback. motion-reduce disables the 3D transition, not the flip itself
+// only — без него кнопка остаётся на месте, но молчит (7.168).
+// motion-reduce disables the 3D transition, not the flip itself
 // (state still toggles instantly).
 export default function HeroWordDeck({ words, dict }: { words: FlashcardRow[]; dict: HeroWordDeckDict }) {
   const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());

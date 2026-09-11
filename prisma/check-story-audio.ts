@@ -1,7 +1,7 @@
 /**
  * Reports, per Story, how much of it has real pre-generated narration
  * audio (AudioAsset rows) vs. how much would fall back to the browser's
- * own speechSynthesis at read time — read-only, writes nothing.
+ * own runtime voice at read time — read-only, writes nothing.
  *
  * WHY THIS EXISTS
  * StoryText.tsx already tolerates missing clips sentence-by-sentence (see

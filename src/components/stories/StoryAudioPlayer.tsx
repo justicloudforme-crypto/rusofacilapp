@@ -1,6 +1,6 @@
 // Presentational transport bar for StoryText's narrated-story reader.
 // Deliberately holds no state or playback logic of its own — StoryText
-// owns the <audio>/speechSynthesis wiring (queue advance, sentence sync,
+// owns the <audio> wiring (queue advance, sentence sync,
 // media-session integration, the sticky/scroll behavior) because the
 // player and the reading text are bidirectionally coupled: a word tap
 // seeks playback, and playback drives which sentence is highlighted and
