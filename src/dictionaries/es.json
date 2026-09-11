@@ -858,6 +858,7 @@
     "translationLoading": "Traduciendo…",
     "translationError": "No se pudo traducir esta palabra.",
     "wordListenLabel": "Escuchar palabra",
+    "wordStressDependsOnMeaning": "Esta palabra cambia de acento según el sentido: aquí no ponemos audio para no enseñar una pronunciación equivocada.",
     "playLabel": "Escuchar el texto",
     "pauseLabel": "Pausar lectura",
     "skipBackLabel": "Retroceder 15 segundos",
