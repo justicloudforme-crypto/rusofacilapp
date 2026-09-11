@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { SEARCH_OPEN_EVENT } from "@/lib/search/open-event";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import AccessMark from "@/components/ui/AccessMark";
@@ -193,6 +194,17 @@ export default function GlobalSearch({
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
+  }, [openWindow]);
+
+  // «Открой поиск» со стороны страницы. Нужно одному месту — своей
+  // странице 404 (долг 129): у поиска нет адреса, поэтому ссылкой на него
+  // может быть только кнопка, а кнопка стоит не в шапке. Подписка ничего
+  // не рендерит и ни одного узла в DOM не добавляет: разметка всех
+  // страниц, включая 330 замороженных, остаётся прежней знак в знак.
+  useEffect(() => {
+    const onOpen = () => openWindow();
+    window.addEventListener(SEARCH_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(SEARCH_OPEN_EVENT, onOpen);
   }, [openWindow]);
 
   // Что человек видел в момент ухода — последнее значение, а не то, что
