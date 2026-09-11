@@ -1653,6 +1653,15 @@
   "offline": {
     "bannerMessage": "Estás sin conexión. Algunos cambios se guardarán y se enviarán cuando vuelva la conexión."
   },
+  "notFound": {
+    "code": "404",
+    "title": "Página no encontrada",
+    "lead": "Esta dirección no existe, o la página se movió. Nada se ha perdido: desde aquí puedes volver al inicio, abrir el catálogo de cursos o buscar en todo el sitio.",
+    "homeCta": "Ir al inicio",
+    "catalogCta": "Ver el catálogo de cursos",
+    "searchCta": "Buscar en el sitio",
+    "searchHint": "La búsqueda se abre en esta misma página, sin salir de ella."
+  },
   "download": {
     "pageTitle": "La app de RusoFácilapp",
     "pageSubtitle": "Estamos preparando una app para iPhone y Android. Será el mismo curso y el mismo progreso que ya tienes en el navegador.",

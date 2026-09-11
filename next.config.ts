@@ -32,6 +32,22 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "img.youtube.com" }],
   },
+  experimental: {
+    // Своя страница 404 — долг 129. Под флагом, потому что в Next 16.3
+    // конвенция `app/global-not-found.tsx` ещё экспериментальная; флаг
+    // меняет РОВНО одно: чем отрисован внутренний маршрут `/_not-found` —
+    // встроенной английской заглушкой Next или нашим документом
+    // (node_modules/next/dist/build/webpack/loaders/next-app-loader). Ни
+    // один другой маршрут от него не зависит, и это проверено замером:
+    // `check:rendered` и `check:frozen` после включения те же.
+    //
+    // Обычный `not-found.tsx` здесь непригоден, и это измерено: у
+    // приложения нет `src/app/layout.tsx`, поэтому Next не читает
+    // `[lang]/not-found.tsx` вовсе, а границы уровнем ниже попадают в
+    // payload, но документ остаётся пустой оболочкой `__next_error__`.
+    // Подробности — в шапке `src/app/global-not-found.tsx`.
+    globalNotFound: true,
+  },
 };
 
 // Run `ANALYZE=true npm run build` to get an interactive treemap of the

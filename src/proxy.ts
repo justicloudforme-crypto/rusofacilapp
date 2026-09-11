@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { defaultLocale, isLocale, locales } from "@/i18n/config";
+import { LOCALE_HEADER, NOT_FOUND_REWRITE_SEGMENT } from "@/lib/locale-header";
+import { isSpanishOnlyRoute } from "@/lib/spanish-only-routes";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
 import { db } from "@/lib/db";
 import { isStaff } from "@/lib/roles";
@@ -109,8 +111,46 @@ export async function proxy(request: NextRequest) {
 
   const segments = pathname.split("/").filter(Boolean);
 
+  // Локаль пути — единственному читателю, странице 404.
+  //
+  // `src/app/global-not-found.tsx` рисует свой документ и пропсов не
+  // получает вовсе: ни `params`, ни адреса у страницы ошибки нет, и язык
+  // человека взять больше негде (долг 129). Поэтому здесь — ровно одно
+  // значение и ровно для неё; все остальные страницы локаль получают
+  // параметром маршрута и этот заголовок не читают.
+  //
+  // Почему это не возвращение `x-pathname` (см. абзац ниже): тот был
+  // заголовком БЕЗ читателя, и читали его там, где нельзя — в
+  // `generateMetadata` корневого layout'а, что выключало статический
+  // рендер всему дереву. Здесь читатель один и он вне layout'а.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(LOCALE_HEADER, segments[0] ?? defaultLocale);
+
+  // Испанские маршруты, запрошенные под `/ru`, — на нашу страницу 404.
+  //
+  // Их 16 в списке и 39 живых адресов (`SPANISH_ONLY_ROUTES`, долг 127);
+  // каждый стоит под `if (lang !== "es") notFound()` в своей `page.tsx`.
+  // Код ответа у них и был, и остаётся 404 — меняется только то, ЧТО
+  // человек видит: `notFound()`, брошенный внутри маршрута, в этом
+  // приложении не умеет нарисовать документ вовсе (причина и замер — в
+  // шапке `src/app/global-not-found.tsx`), и до этого захода такой адрес
+  // отдавал пустую страницу. Переписывание на несовпадающий путь уводит
+  // ответ на тот же внутренний маршрут 404, которым отвечают опечатки, —
+  // и человек получает нашу страницу с рамой, нужным языком и ссылками.
+  //
+  // Адрес в строке браузера не меняется: это rewrite, а не redirect.
+  if (segments[0] && segments[0] !== "es") {
+    const pathWithoutLocale = "/" + segments.slice(1).join("/");
+    if (isSpanishOnlyRoute(pathWithoutLocale)) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${segments[0]}/${NOT_FOUND_REWRITE_SEGMENT}`;
+      return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+    }
+  }
+
   const adminAccessDenied = await protectAdminRoute(request, segments);
   if (adminAccessDenied) return adminAccessDenied;
+
 
   // No `x-pathname` header any more. It existed so [lang]/layout.tsx could
   // build canonical/hreflang for every route from one place; reading it
@@ -119,7 +159,7 @@ export async function proxy(request: NextRequest) {
   // derives its own canonical from its own params (routeAlternates in
   // lib/site.ts), so nothing reads this header — setting it would only
   // rebuild the request headers on every request for no reader.
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {
