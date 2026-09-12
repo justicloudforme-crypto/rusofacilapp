@@ -77,14 +77,22 @@ if (releaseKeyPresent) {
 // — это AAB для Play; `assemble*Release` остаётся собираемым без ключа
 // намеренно (см. шапку).
 //
-// ИМЯ ЗАДАЧИ СЛИЧАЕТСЯ ЦЕЛИКОМ, И ЭТО ОПЛАЧЕНО КРАСНЫМ ПРОГОНОМ.
+// ИМЯ ЗАДАЧИ СЛИЧАЕТСЯ ЦЕЛИКОМ И ТОЛЬКО В МОДУЛЕ ПРИЛОЖЕНИЯ, И ЭТО
+// ОПЛАЧЕНО ДВУМЯ КРАСНЫМИ ПРОГОНАМИ.
 // Первая редакция искала `startsWith('bundle') && contains('release')` —
 // и уронила `assembleRelease` в CI 12.09.2026 00:47 UTC: в графе задач
 // обычной релизной СБОРКИ APK лежит `bundleReleaseResources` (а с ним
 // `bundleReleaseClasses` и прочая внутренняя кухня AGP), и оба условия
 // на нём сходятся. Условие отказа обязано совпадать с именем задачи
 // ЦЕЛИКОМ: `bundleRelease` или `bundle<Вкус>Release`, и ничего кроме.
-// Сторож по исходникам этого поймать не мог и не поймал — имена
+// Одних якорей не хватило — прогон 34662918234 упал так же. Модулей в
+// сборке не один: плагин `com.android.library` заводит у КАЖДОЙ
+// зависимости задачи вида `bundleLibRuntimeToJarRelease`, а они тоже
+// начинаются на `bundle` и кончаются на `Release`. Поэтому условие
+// сужено до задач ЭТОГО модуля (`task.project == project`) — AAB для
+// Play собирает только он, — а сообщение об отказе называет задачу
+// полным путём, чтобы следующий такой случай не пришлось угадывать.
+// Сторож по исходникам этого поймать не мог и не поймал ни разу: имена
 // внутренних задач AGP не лежат ни в одном нашем файле. Ровно та
 // разница между слоем исходника и слоем пакета, ради которой заведён
 // долг 139.
@@ -93,10 +101,11 @@ gradle.taskGraph.whenReady { graph ->
         return
     }
     def storeTask = graph.allTasks.find { task ->
-        task.name ==~ /^bundle([A-Z][A-Za-z0-9]*)?Release$/
+        task.project == project && task.name ==~ /^bundle([A-Z][A-Za-z0-9]*)?Release$/
     }
     if (storeTask != null) {
         throw new GradleException(
+            'Задача ' + storeTask.path + ': ' +
             'bundleRelease без ключа подписи собрал бы AAB, который Play Console не примет, ' +
             'и не сказал бы об этом ни слова. Создайте android/keystore.properties ' +
             '(storeFile, storePassword, keyAlias, keyPassword) либо задайте четыре ' +
