@@ -66,8 +66,40 @@ function planFromProductId(productId: string | undefined): RevenueCatPlanId | "u
 // reusing the (unset) event field.
 const LIFETIME_PERIOD_END = new Date("2099-12-31T00:00:00.000Z");
 
+// The one plan id that must never be revoked by a lapse signal. Named once
+// so periodEndOf()'s "never expires" branch and the EXPIRATION guard below
+// cannot drift apart. Typed as the literal, not widened to string, so it
+// stays assignable to RevenueCatPlanId.
+const LIFETIME_PLAN = "lifetime" satisfies RevenueCatPlanId;
+
+/* A webhook event we deliberately did NOT act on. Sent to Sentry as an
+ * event rather than swallowed, because "we answered 200 and did nothing" is
+ * indistinguishable from "we answered 200 and stored the purchase" in an
+ * access log, and the difference is somebody's paid access. Reporting must
+ * never become a second failure, so it is wrapped — same rule as
+ * reportRefundNotApplied in the Stripe webhook. */
+async function reportIgnoredEvent(
+  name: string,
+  message: string,
+  extra: Record<string, unknown>
+): Promise<void> {
+  console.warn(`[revenuecat] ${name}: ${message}`, extra);
+  try {
+    const error = new Error(message);
+    error.name = name;
+    const Sentry = await import("@sentry/nextjs");
+    Sentry.captureException(error, {
+      level: "warning",
+      tags: { defect: "revenuecat-event-ignored", anomaly: name },
+      extra,
+    });
+  } catch {
+    // Reporting the problem must never become a second problem.
+  }
+}
+
 function periodEndOf(event: RevenueCatEvent, plan: RevenueCatPlanId | "unknown"): Date {
-  if (plan === "lifetime") return LIFETIME_PERIOD_END;
+  if (plan === LIFETIME_PLAN) return LIFETIME_PERIOD_END;
   if (event.expiration_at_ms) return new Date(event.expiration_at_ms);
   // A subscription event without an expiration and without a recognized
   // product mapping — shouldn't happen for a real subscription, but
@@ -76,13 +108,58 @@ function periodEndOf(event: RevenueCatEvent, plan: RevenueCatPlanId | "unknown")
   return new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 }
 
-async function upsertFromEvent(event: RevenueCatEvent, status: string) {
+// What the handler actually did with an event, so POST can say so in the
+// response body instead of returning an indistinguishable bare 200.
+type UpsertOutcome =
+  | { stored: true }
+  | { stored: false; ignored: "no-transaction-id" | "unknown-app-user-id" };
+
+async function upsertFromEvent(event: RevenueCatEvent, status: string): Promise<UpsertOutcome> {
   const transactionId = event.original_transaction_id;
-  if (!transactionId) return; // nothing stable to key this event on
+  if (!transactionId) return { stored: false, ignored: "no-transaction-id" }; // nothing stable to key this event on
 
   const existing = await db.subscription.findUnique({
     where: { rcOriginalTransactionId: transactionId },
   });
+
+  // Debt 31, end one. `create` below writes userId: event.app_user_id
+  // straight into a column that is a foreign key onto User
+  // (prisma/schema.prisma, model Subscription) — so an event carrying an
+  // app_user_id we have never seen made Prisma throw, the route answer
+  // 500, and RevenueCat redeliver the same event indefinitely. The id is
+  // not ours to trust: it is whatever `Purchases.logIn()` was called with
+  // on some device, and a reinstall, a sandbox tester, a TEST event from
+  // the dashboard or a deleted account all produce one we cannot resolve.
+  //
+  // So the user is looked up BEFORE the write, and an unresolvable one is
+  // answered 200 with an explicit `ignored` marker. The price of that 200
+  // is named out loud: a genuine purchase whose user row is merely LATE
+  // (signup transaction still committing) is dropped and never retried,
+  // because 200 tells RevenueCat to stop. That is the chosen side of the
+  // trade — an infinite redelivery loop costs every later event on the
+  // same endpoint, while this case is visible in Sentry by name and
+  // recoverable by hand. Only the create path needs the check: an
+  // existing row already has a valid userId, and update never touches it.
+  if (!existing) {
+    const user = await db.user.findUnique({
+      where: { id: event.app_user_id },
+      select: { id: true },
+    });
+    if (!user) {
+      await reportIgnoredEvent(
+        "RevenueCatUnknownAppUserId",
+        `${event.type}: app_user_id does not match any user — event acknowledged with 200 and deliberately not stored`,
+        {
+          type: event.type,
+          appUserId: event.app_user_id,
+          originalTransactionId: transactionId,
+          productId: event.product_id ?? null,
+          store: event.store ?? null,
+        }
+      );
+      return { stored: false, ignored: "unknown-app-user-id" };
+    }
+  }
 
   // Once a Subscription row exists, its plan is trusted as-is (an
   // existing row's `plan` column already went through this same mapping
@@ -108,6 +185,7 @@ async function upsertFromEvent(event: RevenueCatEvent, status: string) {
     },
   });
   await invalidateSubscriptionCache(event.app_user_id);
+  return { stored: true };
 }
 
 export async function POST(request: NextRequest) {
@@ -148,7 +226,8 @@ export async function POST(request: NextRequest) {
     case "PRODUCT_CHANGE":
     case "UNCANCELLATION":
     case "NON_RENEWING_PURCHASE": {
-      await upsertFromEvent(event, "active");
+      const outcome = await upsertFromEvent(event, "active");
+      if (!outcome.stored) return NextResponse.json({ received: true, ignored: outcome.ignored });
       break;
     }
 
@@ -160,7 +239,8 @@ export async function POST(request: NextRequest) {
     // access early (unlike Stripe's customer.subscription.deleted, which
     // fires exactly at the moment access should end).
     case "CANCELLATION": {
-      await upsertFromEvent(event, "active");
+      const outcome = await upsertFromEvent(event, "active");
+      if (!outcome.stored) return NextResponse.json({ received: true, ignored: outcome.ignored });
       break;
     }
 
@@ -171,10 +251,36 @@ export async function POST(request: NextRequest) {
       if (transactionId) {
         const existing = await db.subscription.findUnique({
           where: { rcOriginalTransactionId: transactionId },
-          select: { userId: true },
+          select: { userId: true, plan: true },
         });
+
+        // Debt 31, end two. The revocation used to name no plan at all, so
+        // a lifetime purchase — bought once, promised forever, and stored
+        // with currentPeriodEnd 2099 precisely so that nothing expires it —
+        // was revoked by the same one-line updateMany as a lapsed monthly
+        // subscription. A lifetime row has no renewal to lapse, so an
+        // EXPIRATION naming it is not a lapse but noise (a store-side
+        // refund shows up as CANCELLATION, and a real revocation is the
+        // Stripe-side path in debt 29): it is refused and reported, not
+        // obeyed. The guard sits in the `where`, not in an early return, so
+        // a transaction id that somehow covers both a lifetime row and a
+        // renewable one still closes the renewable one.
+        if (existing?.plan === LIFETIME_PLAN) {
+          await reportIgnoredEvent(
+            "RevenueCatExpirationOnLifetime",
+            "EXPIRATION named a lifetime purchase — access deliberately left open, nothing written",
+            {
+              appUserId: event.app_user_id,
+              originalTransactionId: transactionId,
+              productId: event.product_id ?? null,
+              store: event.store ?? null,
+            }
+          );
+          return NextResponse.json({ received: true, ignored: "expiration-on-lifetime" });
+        }
+
         await db.subscription.updateMany({
-          where: { rcOriginalTransactionId: transactionId },
+          where: { rcOriginalTransactionId: transactionId, plan: { not: LIFETIME_PLAN } },
           data: { status: "canceled" },
         });
         if (existing) await invalidateSubscriptionCache(existing.userId);
