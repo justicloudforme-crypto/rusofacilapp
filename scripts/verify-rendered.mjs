@@ -210,7 +210,37 @@ async function main() {
       ["scripts/check-404-page.mjs", `--base=${BASE}`],
       { stdio: "inherit" }
     );
-    return (run.status ?? 1) || (layout.status ?? 1) || (links.status ?? 1) || (linksPlant.status ?? 1) || (notFound.status ?? 1);
+    // Шестой на том же сервере — ЖИВАЯ половина долга 79: страница цен,
+    // запрошенная под User-Agent нативной оболочки, не имеет права
+    // отдавать ни одной формы `action="/api/checkout"` и ни одного
+    // упоминания домена stripe.com. Здесь, а не отдельным шагом, по той
+    // же причине, что и соседи: сервер уже поднят, сборка уже своя.
+    //
+    // Статическую половину того же сторожа гоняет
+    // `npm run check:native-payments` в `verify` и в `ci.yml` — она
+    // дешёвая и сервера не требует. Разделение то же, что у `check:404`.
+    const nativePayments = spawnSync(
+      process.execPath,
+      ["scripts/check-native-payments.mjs", `--base=${BASE}`],
+      { stdio: "inherit" }
+    );
+    // Обязательная вторая половина: та же страница, отданная БЕЗ токена
+    // оболочки, судится по нативным правилам и обязана уронить сторож.
+    // Без неё «0 форм» значило бы «измеритель ничего не ищет».
+    const nativePaymentsPlant = spawnSync(
+      process.execPath,
+      ["scripts/check-native-payments.mjs", `--base=${BASE}`, "--plant"],
+      { stdio: "inherit" }
+    );
+    return (
+      (run.status ?? 1) ||
+      (layout.status ?? 1) ||
+      (links.status ?? 1) ||
+      (linksPlant.status ?? 1) ||
+      (notFound.status ?? 1) ||
+      (nativePayments.status ?? 1) ||
+      (nativePaymentsPlant.status ?? 1)
+    );
   } finally {
     stop();
   }

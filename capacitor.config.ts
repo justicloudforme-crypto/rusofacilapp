@@ -77,6 +77,21 @@ function resolveServerUrl(): string {
 const serverUrl = resolveServerUrl();
 const isCleartext = serverUrl.startsWith("http://");
 
+// Токен, по которому СЕРВЕР узнаёт нативную оболочку (долг 79, заход
+// 7.183). Оболочка грузит боевой адрес удалённо, то есть запрашивает те
+// же страницы, что и браузер, и до 12.09.2026 сервер не мог их отличить
+// вовсе: замер 7.180 показал, что `/es/pricing` под User-Agent мобильного
+// Safari отдавала те же ТРИ формы `action="/api/checkout"`. Теперь
+// оболочка дописывает этот токен к своему User-Agent, и страница цен
+// внутри приложения отрисовывается нативной витриной, а веб-касса в её
+// ответе не появляется вовсе.
+//
+// Литерал, а не импорт из `src/lib/native-shell.ts`, по той же причине,
+// по которой литералами написаны `appId` и `appName` ниже: сторож
+// `npm run check:native-payments` читает ОБА файла текстом и сличает их
+// между собой, ничего не импортируя из проверяемого.
+const NATIVE_USER_AGENT_TOKEN = "RFNativeShell";
+
 const config: CapacitorConfig = {
   // Reverse-domain of the now-confirmed production domain (rusofacilapp.com,
   // purchased 2026-08-16) — set for real, not a placeholder anymore. Still
@@ -96,6 +111,11 @@ const config: CapacitorConfig = {
   // copy the whole public/ tree (audio, icons, etc.) into ios//android/
   // for no reason.
   webDir: "capacitor-shell",
+  // Дописывается к User-Agent webview на обеих платформах — см. комментарий
+  // к NATIVE_USER_AGENT_TOKEN выше. Именно `appendUserAgent`, а не
+  // `overrideUserAgent`: подменять строку целиком значило бы потерять всё,
+  // по чему сайт узнаёт платформу и движок.
+  appendUserAgent: NATIVE_USER_AGENT_TOKEN,
   server: {
     url: serverUrl,
     // Только в явном режиме живого перезапуска: молчаливое значение —
