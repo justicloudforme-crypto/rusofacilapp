@@ -35,6 +35,7 @@ on:
       - "scripts/check-native-release-safety.mjs"
       - "scripts/check-foreground-service-types.mjs"
       - "scripts/check-native-permissions.mjs"
+      - "scripts/check-release-signing.mjs"
       - ".github/workflows/android-debug.yml"
   push:
     branches: [main]
@@ -48,6 +49,7 @@ on:
       - "scripts/check-native-release-safety.mjs"
       - "scripts/check-foreground-service-types.mjs"
       - "scripts/check-native-permissions.mjs"
+      - "scripts/check-release-signing.mjs"
       - ".github/workflows/android-debug.yml"
   workflow_dispatch:
 
@@ -180,6 +182,102 @@ jobs:
 
       - name: Тот же сторож — позитивный контроль
         run: npm run check:fgs-types:plant
+
+
+      # ─────────────────────────────────────────────────────────────
+      # СЛОЙ ПАКЕТА У ПОДПИСИ (долг 139, заход 7.179).
+      #
+      # ЧЕГО ЗДЕСЬ НЕТ И ПОЧЕМУ. Ключа подписи в CI нет: хранилище
+      # боевого аккаунта Play невосстановимо, и класть его в секреты
+      # репозитория ради зелёной галочки — плохой размен. Поэтому путь
+      # без ключа объявлен ЯВНО, а не оставлен умолчанием, и он не
+      # пустой: одну половину долга 139 можно доказать именно БЕЗ
+      # ключа — и она доказывается ниже.
+      #
+      # ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ ГЕЙТА. `bundleRelease` без ключа обязан
+      # УПАСТЬ нашим сообщением, а не собрать пакет. Утверждение это —
+      # о поведении Gradle, и цена доверия чтению текста уже известна:
+      # 12.09.2026 тот же хук дважды уронил обычный `assembleRelease`
+      # (прогоны 34662544578 и 34662918234), и поймал это не сторож по
+      # исходникам, а собранный артефакт. Здесь проверяются оба конца
+      # сразу: `bundleRelease` падает, `assembleRelease` — нет (он
+      # собирается шагом выше и на нём стоят два сторожа).
+      - name: bundleRelease БЕЗ ключа обязан упасть нашим сообщением
+        working-directory: android
+        run: |
+          set -uo pipefail
+          set +e
+          ./gradlew bundleRelease --no-daemon > bundle-no-key.log 2>&1
+          CODE=$?
+          set -e
+          cat bundle-no-key.log
+          if [ "$CODE" -eq 0 ]; then
+            echo "ОТКАЗ: bundleRelease без ключа СОБРАЛСЯ — гейт не работает, и в Play уехал бы неподписанный AAB"
+            exit 1
+          fi
+          if ! grep -q "bundleRelease без ключа подписи собрал бы AAB" bundle-no-key.log; then
+            echo "ОТКАЗ: bundleRelease упал, но НЕ нашим сообщением — упал он по другой причине, и гейт тут ни при чём"
+            exit 1
+          fi
+          echo "bundleRelease без ключа: код выхода $CODE, сообщение наше — гейт держит"
+
+      # ВТОРАЯ ПОЛОВИНА — только если ключ дан секретами. Её нет в
+      # обычных прогонах, и это не забывчивость: без ключа доказывать
+      # нечем. Шаг написан заранее, чтобы владельцу оставалось положить
+      # два секрета, а не сочинять шаг.
+      - name: Подпись артефакта — есть ли чем проверять
+        id: signing-key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -n "${KEYSTORE_B64:-}" ]; then
+            echo "present=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=no" >> "$GITHUB_OUTPUT"
+            echo "Ключа подписи в секретах репозитория НЕТ (ANDROID_KEYSTORE_BASE64 пуст)."
+            echo "Слой пакета у подписи в этом прогоне НЕ гоняется — доказывать нечем."
+            echo "Что при этом ВСЁ РАВНО доказано выше: bundleRelease без ключа падает нашим сообщением."
+            echo "Настоящие подписанные APK и AAB собраны 12.09.2026 на машине владельца, их вывод"
+            echo "apksigner/jarsigner лежит образцами внутри scripts/check-release-signing.mjs и гоняется"
+            echo "подсадками в npm run check:release-signing:plant — в ci.yml, на каждом коммите."
+          fi
+
+      - name: bundleRelease С ключом + apksigner verify + слой пакета
+        if: steps.signing-key.outputs.present == 'yes'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_CERT_SHA256: ${{ secrets.ANDROID_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          # Хранилище пишется во временный каталог ВНЕ дерева репозитория:
+          # `check:release-signing` обходит android/ и ios/ диском, и файл
+          # ключа внутри уронил бы его — правильно уронил бы.
+          KS="$RUNNER_TEMP/release.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KS"
+          export ANDROID_KEYSTORE_FILE="$KS"
+          ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace
+          APK=app/build/outputs/apk/release/app-release.apk
+          AAB=app/build/outputs/bundle/release/app-release.aab
+          ls -l "$APK" "$AAB"
+          "$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/apksigner" verify --verbose --print-certs "$APK" > ../apk-certs.txt
+          jarsigner -verify -verbose:summary -certs "$AAB" > ../aab-certs.txt
+          cat ../apk-certs.txt
+          grep -E "jar verified|jar is unsigned|Signed by" ../aab-certs.txt || true
+        # Судит не этот шаг, а сторож: он же гоняется по образцам в ci.yml.
+      - name: Слой пакета — судит сторож, а не глаз
+        if: steps.signing-key.outputs.present == 'yes'
+        env:
+          ANDROID_CERT_SHA256: ${{ secrets.ANDROID_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          EXPECT=""
+          if [ -n "${ANDROID_CERT_SHA256:-}" ]; then EXPECT="--expect-sha256=$ANDROID_CERT_SHA256"; fi
+          node scripts/check-release-signing.mjs --certs=apk-certs.txt --certs=aab-certs.txt $EXPECT
 
       - name: Выложить APK артефактом
         if: always()
