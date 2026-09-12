@@ -83,7 +83,38 @@ function stopServer(server) {
   }
 }
 
+/**
+ * Порт обязан быть СВОБОДЕН до того, как мы поднимем свой сервер.
+ *
+ * Заплачено 11.09.2026. На машине остался чужой `next start -p 3123`,
+ * поднятый по базе в форме CI; `next start` этого прогона не смог занять
+ * порт и умер, а `waitForServer` увидел ответ 200 от ЧУЖОГО сервера и
+ * пошёл мерить его. Итог: `verify` покраснел на девяти семействах и на
+ * одиннадцати сочетаниях вкладки — на сборке, которой этот прогон не
+ * собирал, и на базе, которой у него не было. Комментарий к выбору порта
+ * выше говорит «прогон не должен принять чужой сервер за свой», но
+ * ПРОВЕРКИ на это не было.
+ *
+ * Отказ, а не предупреждение: «зелёный на чужой сборке» ничем не лучше
+ * красного, а «красный на чужой сборке» — ровно то, что здесь и вышло.
+ */
+async function portIsFree() {
+  try {
+    await fetch(`${BASE}/`, { signal: AbortSignal.timeout(3000) });
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 async function main() {
+  if (!(await portIsFree())) {
+    console.error(
+      `ОТКАЗ: на ${BASE} уже кто-то отвечает. Этот прогон поднимает СВОЙ сервер и меряет СВОЮ сборку; ` +
+        `чужой сервер на том же порту он принял бы за свой и намерил бы чужое. Остановите его и повторите.`,
+    );
+    return 1;
+  }
   // The local binary, not npx: one fewer process between us and the server.
   const nextBin = join(process.cwd(), "node_modules", ".bin", "next");
   if (!existsSync(nextBin)) {
@@ -110,6 +141,15 @@ async function main() {
   try {
     if (!(await waitForServer())) {
       console.error(`could not start next start on ${PORT}. Server output:\n${serverLog.slice(-800)}`);
+      return 1;
+    }
+    // Вторая половина того же: сервер мог ответить, а НАШ ребёнок —
+    // умереть (порт занят, сборки нет). Тогда отвечает не он.
+    if (server.exitCode !== null) {
+      console.error(
+        `ОТКАЗ: наш next start завершился с кодом ${server.exitCode}, а на ${BASE} кто-то отвечает — значит отвечает не он. ` +
+          `Вывод сервера:\n${serverLog.slice(-800)}`,
+      );
       return 1;
     }
     // --control is not optional here. A gate that cannot demonstrate it

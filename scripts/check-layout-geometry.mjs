@@ -107,6 +107,17 @@ const CI_MODE = argv.includes("--ci");
  * `contentOnly`-страницы — не свойство базы, а настоящая пропажа.
  */
 const REQUIRE_CONTENT = argv.includes("--require-content");
+/**
+ * Подсадка на ПОЛОВИНУ ПРОВЕРКИ, А НЕ НА ИЗМЕРЕНИЕ: имя вкладки
+ * подменяется несуществующим, и прогон обязан покраснеть на каждом
+ * сочетании с этой страницей.
+ *
+ * Тот же контроль 29.08.2026 делался руками — правкой списка страниц, —
+ * и потому проверялся один раз. Здесь он флаг: запись про вкладку
+ * трогают редко, а тихо переставшая срабатывать выглядит ровно как
+ * успех.
+ */
+const PLANT_TAB = argv.includes("--plant-tab");
 
 /**
  * Сокращённый прогон: свой список путей и свои ширины. Появился
@@ -415,12 +426,71 @@ async function inspect(ctx, page_, plant) {
     // The practice block does not exist until its tab is opened. A miss
     // here is reported, not swallowed: silently measuring the page without
     // the block would look exactly like measuring it with the block.
-    const opened = await page
-      .getByRole("tab", { name: tab, exact: true })
-      .click({ timeout: 10_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (!opened) problems.push(`could not open the "${tab}" tab — this page's practice block was NOT measured`);
+    //
+    // ПОЧЕМУ ЭТО НЕ ОДНО НАЖАТИЕ, А ТРИ ИМЕНОВАННЫХ ШАГА. 11.09.2026 этот
+    // клик упёрся в свой потолок на ОДНОМ сочетании из девяти (Pixel 5,
+    // 393 px) и уронил прогон PR #280, тогда как тот же коммит на `main`
+    // минутой раньше прошёл. Сообщение при этом ничего не объясняло:
+    // ошибка Playwright глоталась `.catch(() => false)`, и в логе
+    // оставалось только «could not open».
+    //
+    // Замер, из-за которого шаги разделены. Полоса вкладок урока
+    // (`src/components/ui/Tabs.tsx`) — `overflow-x-auto`, и на телефоне
+    // она ПЕРЕПОЛНЕНА: 434 px содержимого в окне 272 px (320), 327 (375),
+    // 342 (390), 345 (393). Вкладка «Ejercicios» при этом лежит ЦЕЛИКОМ
+    // за правым краем окна прокрутки (её левый край 394 px при правом
+    // крае полосы 296…369), и `document.elementFromPoint` в её центре
+    // возвращает `null`. С 610 px и шире полоса помещается целиком
+    // (562…624 px в окне той же ширины), и вкладка видна сразу.
+    //
+    // То есть на ЧЕТЫРЁХ сочетаниях из девяти нажатие молча зависело от
+    // неявной горизонтальной доводки, которую Playwright делает сам, — и
+    // именно на них прогон и падал. Доводка здесь сделана явной и
+    // отдельной, а её ожидание — своим: элемент сперва подводится в окно
+    // прокрутки, потом ждётся, когда его коробка перестанет двигаться,
+    // и только потом нажимается. Ни одно утверждение при этом не
+    // ослаблено: вкладка обязана открыться, иначе провал — и теперь
+    // провал говорит, на каком именно шаге и с какой ошибкой.
+    const wanted = PLANT_TAB ? `${tab}-подсадка-такой-вкладки-нет` : tab;
+    const target = page.getByRole("tab", { name: wanted, exact: true });
+    const t0 = Date.now();
+    let failedAt = null;
+    try {
+      await target.waitFor({ state: "visible", timeout: 10_000 });
+    } catch (e) {
+      failedAt = `вкладка не появилась: ${String(e.message).split("\n")[0].slice(0, 110)}`;
+    }
+    if (!failedAt) {
+      try {
+        await target.scrollIntoViewIfNeeded({ timeout: 5_000 });
+        // Коробка обязана перестать двигаться: полоса прокручивается, и
+        // нажатие по движущейся цели — это ровно тот повторный цикл,
+        // который и упирался в потолок.
+        let last = null;
+        for (let i = 0; i < 20; i += 1) {
+          const box = await target.boundingBox();
+          const sig = box ? `${Math.round(box.x)}x${Math.round(box.y)}` : null;
+          if (sig !== null && sig === last) break;
+          last = sig;
+          await page.waitForTimeout(50);
+        }
+      } catch (e) {
+        failedAt = `вкладку не удалось подвести в окно прокрутки: ${String(e.message).split("\n")[0].slice(0, 110)}`;
+      }
+    }
+    if (!failedAt) {
+      try {
+        await target.click({ timeout: 10_000 });
+      } catch (e) {
+        failedAt = `нажатие не прошло: ${String(e.message).split("\n")[0].slice(0, 110)}`;
+      }
+    }
+    if (failedAt) {
+      problems.push(
+        `could not open the "${wanted}" tab — this page's practice block was NOT measured ` +
+          `[${failedAt}; потрачено ${Date.now() - t0} мс]`,
+      );
+    }
     await settle(page);
   }
 
