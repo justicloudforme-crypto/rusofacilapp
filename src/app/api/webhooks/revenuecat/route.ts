@@ -67,8 +67,10 @@ function planFromProductId(productId: string | undefined): RevenueCatPlanId | "u
 const LIFETIME_PERIOD_END = new Date("2099-12-31T00:00:00.000Z");
 
 // The one plan id that must never be revoked by a lapse signal. Named once
-// so the EXPIRATION guard below and periodEndOf() above cannot drift apart.
-const LIFETIME_PLAN = "lifetime";
+// so periodEndOf()'s "never expires" branch and the EXPIRATION guard below
+// cannot drift apart. Typed as the literal, not widened to string, so it
+// stays assignable to RevenueCatPlanId.
+const LIFETIME_PLAN = "lifetime" satisfies RevenueCatPlanId;
 
 /* A webhook event we deliberately did NOT act on. Sent to Sentry as an
  * event rather than swallowed, because "we answered 200 and did nothing" is
@@ -97,7 +99,7 @@ async function reportIgnoredEvent(
 }
 
 function periodEndOf(event: RevenueCatEvent, plan: RevenueCatPlanId | "unknown"): Date {
-  if (plan === "lifetime") return LIFETIME_PERIOD_END;
+  if (plan === LIFETIME_PLAN) return LIFETIME_PERIOD_END;
   if (event.expiration_at_ms) return new Date(event.expiration_at_ms);
   // A subscription event without an expiration and without a recognized
   // product mapping — shouldn't happen for a real subscription, but
