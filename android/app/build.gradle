@@ -1,5 +1,120 @@
 apply plugin: 'com.android.application'
 
+// ПОДПИСЬ РЕЛИЗА (долг 78, правка 11.09.2026).
+//
+// До этой правки слова `signingConfig` не было во всём каталоге
+// `android/` ни разу, и это не давало ошибки ни в одном месте:
+// `./gradlew assembleRelease` без подписного конфига не падает и не
+// предупреждает — он кладёт `app-release-unsigned.apk`, файл с
+// обычным именем и обычным размером. Play Console неподписанный
+// артефакт не принимает вовсе, и узнать об этом было бы негде до
+// самой загрузки. Тот же класс отказа, что у долга 109: сборка
+// молчит, а беда всплывает там, где её уже видит чужой человек.
+//
+// ЧТО ЗДЕСЬ СДЕЛАНО И ЧЕГО НАМЕРЕННО НЕ СДЕЛАНО.
+//
+// Само хранилище ключей агент создать не может и не должен: ключ
+// боевого аккаунта Play создаёт владелец, и он невосстановим —
+// приложение, подписанное потерянным ключом, обновлять больше нечем.
+// Поэтому в репозитории лежит только МЕСТО для ключа, а не ключ:
+//
+//   android/keystore.properties   (в .gitignore, создаёт владелец)
+//       storeFile=release.jks
+//       storePassword=…
+//       keyAlias=…
+//       keyPassword=…
+//
+//   либо переменные окружения — для машины сборки, где файла нет:
+//       ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,
+//       ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+//
+// Ключа нет → `assembleRelease` по-прежнему собирается неподписанным,
+// и это НЕ послабление: на нём стоят `check:apk-facts` и
+// `check:native-release-safety` в .github/workflows/android-debug.yml,
+// а для чтения манифеста и ассетов подпись не нужна.
+//
+// Ключа нет → `bundleRelease` БРОСАЕТ. AAB — единственный артефакт,
+// который уходит в Play, и молчаливо неподписанным он не соберётся
+// больше никогда. Это и есть разница между «правилом» и «гейтом».
+//
+// Исходники стережёт `npm run check:release-signing`. Слоя пакета у
+// него нет: что собранный AAB действительно подписан и именно этим
+// ключом — доказывается только сборкой с настоящим хранилищем, и это
+// записано отдельным долгом, а не умолчанием.
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+def releaseKeyPresent = false
+
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+    releaseKeyPresent = true
+} else if (System.getenv('ANDROID_KEYSTORE_FILE')) {
+    keystoreProperties.setProperty('storeFile', System.getenv('ANDROID_KEYSTORE_FILE') ?: '')
+    keystoreProperties.setProperty('storePassword', System.getenv('ANDROID_KEYSTORE_PASSWORD') ?: '')
+    keystoreProperties.setProperty('keyAlias', System.getenv('ANDROID_KEY_ALIAS') ?: '')
+    keystoreProperties.setProperty('keyPassword', System.getenv('ANDROID_KEY_PASSWORD') ?: '')
+    releaseKeyPresent = true
+}
+
+// Полу-заданный ключ хуже отсутствующего: AGP на пустом пароле упал бы
+// где-то внутри задачи подписи, а не здесь, и сообщение было бы про
+// что угодно, кроме забытой строки.
+if (releaseKeyPresent) {
+    def missingKeyFields = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword'].findAll {
+        !keystoreProperties.getProperty(it)
+    }
+    if (!missingKeyFields.isEmpty()) {
+        throw new GradleException(
+            'Ключ подписи объявлен, но не хватает значений: ' + missingKeyFields.join(', ') +
+            '. Заполните android/keystore.properties целиком либо задайте все четыре ' +
+            'переменные ANDROID_KEYSTORE_FILE / ANDROID_KEYSTORE_PASSWORD / ' +
+            'ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD.'
+        )
+    }
+}
+
+// Отказ ровно на том артефакте, который уходит в магазин. `bundle*Release`
+// — это AAB для Play; `assemble*Release` остаётся собираемым без ключа
+// намеренно (см. шапку).
+//
+// ИМЯ ЗАДАЧИ СЛИЧАЕТСЯ ЦЕЛИКОМ И ТОЛЬКО В МОДУЛЕ ПРИЛОЖЕНИЯ, И ЭТО
+// ОПЛАЧЕНО ДВУМЯ КРАСНЫМИ ПРОГОНАМИ.
+// Первая редакция искала `startsWith('bundle') && contains('release')` —
+// и уронила `assembleRelease` в CI 12.09.2026 00:47 UTC: в графе задач
+// обычной релизной СБОРКИ APK лежит `bundleReleaseResources` (а с ним
+// `bundleReleaseClasses` и прочая внутренняя кухня AGP), и оба условия
+// на нём сходятся. Условие отказа обязано совпадать с именем задачи
+// ЦЕЛИКОМ: `bundleRelease` или `bundle<Вкус>Release`, и ничего кроме.
+// Одних якорей не хватило — прогон 34662918234 упал так же. Модулей в
+// сборке не один: плагин `com.android.library` заводит у КАЖДОЙ
+// зависимости задачи вида `bundleLibRuntimeToJarRelease`, а они тоже
+// начинаются на `bundle` и кончаются на `Release`. Поэтому условие
+// сужено до задач ЭТОГО модуля (`task.project == project`) — AAB для
+// Play собирает только он, — а сообщение об отказе называет задачу
+// полным путём, чтобы следующий такой случай не пришлось угадывать.
+// Сторож по исходникам этого поймать не мог и не поймал ни разу: имена
+// внутренних задач AGP не лежат ни в одном нашем файле. Ровно та
+// разница между слоем исходника и слоем пакета, ради которой заведён
+// долг 139.
+gradle.taskGraph.whenReady { graph ->
+    if (releaseKeyPresent) {
+        return
+    }
+    def storeTask = graph.allTasks.find { task ->
+        task.project == project && task.name ==~ /^bundle([A-Z][A-Za-z0-9]*)?Release$/
+    }
+    if (storeTask != null) {
+        throw new GradleException(
+            'Задача ' + storeTask.path + ': ' +
+            'bundleRelease без ключа подписи собрал бы AAB, который Play Console не примет, ' +
+            'и не сказал бы об этом ни слова. Создайте android/keystore.properties ' +
+            '(storeFile, storePassword, keyAlias, keyPassword) либо задайте четыре ' +
+            'переменные ANDROID_KEYSTORE_*. Файл ключа в git не кладётся: он закрыт ' +
+            '.gitignore и это стережёт npm run check:release-signing.'
+        )
+    }
+}
+
 android {
     namespace = "com.rusofacilapp.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,6 +122,14 @@ android {
         applicationId "com.rusofacilapp.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // Единица здесь — законное значение для ПЕРВОЙ подачи: Play
+        // отказывает только тому пакету, чей номер уже занят
+        // ОПУБЛИКОВАННЫМ. Формулировка долга 78 числила единицу бедой;
+        // замером 11.09.2026 это не подтвердилось. Что здесь настоящее —
+        // связь с iOS: CURRENT_PROJECT_VERSION и MARKETING_VERSION в
+        // ios/App/App.xcodeproj/project.pbxproj обязаны совпадать с этими
+        // двумя строками, иначе у одного релиза два разных номера в двух
+        // магазинах. Сличает npm run check:release-signing.
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -16,8 +139,30 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            // Пусто, когда ключа нет: конфиг объявлен, но ниже он
+            // подключается только при releaseKeyPresent, поэтому AGP его
+            // не трогает. Ни одно из четырёх значений не написано
+            // литералом — это отдельное правило сторожа: секрет подписи,
+            // однажды попавший в git, из истории не убирается.
+            if (releaseKeyPresent) {
+                storeFile rootProject.file(keystoreProperties.getProperty('storeFile'))
+                storePassword keystoreProperties.getProperty('storePassword')
+                keyAlias keystoreProperties.getProperty('keyAlias')
+                keyPassword keystoreProperties.getProperty('keyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (releaseKeyPresent) {
+                signingConfig signingConfigs.release
+            }
+            // Объявлено явно, а не оставлено на усмотрение AGP: у разных
+            // версий плагина молчаливое значение разное. Включение R8
+            // (`true`) для оболочки над удалённым URL ничего не даёт и
+            // требует своих правил proguard — отдельный долг, не этот.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
