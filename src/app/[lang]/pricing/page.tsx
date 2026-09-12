@@ -9,8 +9,11 @@ import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
+import NativePricingPanel from "@/components/pricing/NativePricingPanel";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
-import { getEntitlementTier, planAddsNothing } from "@/lib/entitlement";
+import { getCurrentUser } from "@/lib/auth";
+import { getEntitlementTier, hasAnyAccess, planAddsNothing } from "@/lib/entitlement";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   basePricesText,
   marked,
@@ -52,6 +55,43 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">)
 export default async function PricingPage({ params, searchParams }: PageProps<"/[lang]/pricing">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
+
+  // ДОЛГ 79. Внутри нативной оболочки эта страница отдаёт другую витрину —
+  // покупку через магазин, — и веб-касса в её ответе не рендерится ни
+  // одной формой. Ветка стоит ПЕРВОЙ и уходит раньше, чем страница
+  // соберёт что-либо своё: ни одного `action="/api/checkout"`, ни одной
+  // цены с сайта, ни таблицы способов оплаты, ни вопроса про OXXO.
+  //
+  // Почему именно так, а не оборачиванием готовой разметки в клиентский
+  // переключатель. Клиентская обёртка получила бы карточки уже
+  // ОТРИСОВАННЫМИ на сервере и убрала бы их из DOM только после гидрации —
+  // в ответе сервера три формы остались бы на месте. И ровно этот ответ
+  // читает и «просмотр исходного кода», и любой автоматический обход.
+  //
+  // Веб этой веткой не задет побайтово: обычный браузер токена нативной
+  // оболочки не шлёт, поэтому ниже исполняется в точности тот же код, что
+  // и до 12.09.2026. Проверено сличением HTML `/es/pricing` и
+  // `/ru/pricing` до и после правки — расхождение 0 знаков; страница стоит
+  // в карте сайта, и на неё ведут ссылки со всех 1913 адресов.
+  //
+  // Сама витрина — КЛИЕНТСКИЙ компонент внутри серверной страницы
+  // (директива клиента стоит в NativePricingPanel), а не превращение
+  // страницы в клиентскую: этот файл остался серверным.
+  if (await isNativeShellRequest()) {
+    const dict = await getDictionary(lang);
+    const user = await getCurrentUser();
+    // Право доступа считает сервер, и источник оплаты ему безразличен
+    // (решение владельца 11.09.2026: «заплатил где угодно — пользуется
+    // везде»). Если оно уже активно, кнопки покупки в витрине не будет.
+    const tier = await getEntitlementTier();
+    return (
+      <NativePricingPanel
+        userId={user?.id ?? null}
+        dict={dict.pricing.native}
+        hasAccessElsewhere={hasAnyAccess(tier)}
+      />
+    );
+  }
 
   const { next: nextRaw, highlight, checkout } = await searchParams;
   const next = typeof nextRaw === "string" && nextRaw.startsWith(`/${lang}/`) ? nextRaw : undefined;
