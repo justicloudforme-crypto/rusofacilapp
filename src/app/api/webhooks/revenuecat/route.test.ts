@@ -4,7 +4,9 @@ import type { NextRequest } from "next/server";
 const findUnique = vi.fn();
 const upsert = vi.fn();
 const updateMany = vi.fn();
+const userFindUnique = vi.fn();
 const invalidateSubscriptionCache = vi.fn();
+const captureException = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -13,12 +15,17 @@ vi.mock("@/lib/db", () => ({
       upsert: (...args: unknown[]) => upsert(...args),
       updateMany: (...args: unknown[]) => updateMany(...args),
     },
+    user: {
+      findUnique: (...args: unknown[]) => userFindUnique(...args),
+    },
   },
 }));
 
 vi.mock("@/lib/subscription", () => ({
   invalidateSubscriptionCache: (...args: unknown[]) => invalidateSubscriptionCache(...args),
 }));
+
+vi.mock("@sentry/nextjs", () => ({ captureException: (...args: unknown[]) => captureException(...args) }));
 
 const { POST } = await import("./route");
 
@@ -54,6 +61,9 @@ describe("POST /api/webhooks/revenuecat", () => {
     process.env.REVENUECAT_PRODUCT_MONTHLY = "com.rusofacilapp.monthly";
     process.env.REVENUECAT_PRODUCT_LIFETIME = "com.rusofacilapp.lifetime";
     findUnique.mockResolvedValue(null);
+    // Default for every pre-existing case: the app_user_id resolves to a
+    // real user, which is what those cases always silently assumed.
+    userFindUnique.mockResolvedValue({ id: "user_123" });
   });
 
   afterEach(() => {
@@ -147,10 +157,10 @@ describe("POST /api/webhooks/revenuecat", () => {
   });
 
   it("closes access on EXPIRATION", async () => {
-    findUnique.mockResolvedValue({ userId: "user_123" });
+    findUnique.mockResolvedValue({ userId: "user_123", plan: "monthly" });
     await POST(fakeRequest(rcEvent("EXPIRATION"), { authorization: "Bearer rc_test_secret" }));
     expect(updateMany).toHaveBeenCalledWith({
-      where: { rcOriginalTransactionId: "txn_abc" },
+      where: { rcOriginalTransactionId: "txn_abc", plan: { not: "lifetime" } },
       data: { status: "canceled" },
     });
     expect(invalidateSubscriptionCache).toHaveBeenCalledWith("user_123");
@@ -181,5 +191,106 @@ describe("POST /api/webhooks/revenuecat", () => {
       })
     );
     expect(upsert).not.toHaveBeenCalled();
+  });
+
+  // ------------------------------------------------------------------
+  // Долг 31, конец первый: чужой app_user_id не роняет маршрут
+  //
+  // Until this run the create path wrote userId: event.app_user_id into a
+  // foreign key onto User without asking whether that user exists, so an
+  // event naming an unknown id made Prisma throw → 500 → RevenueCat
+  // redelivered the same event forever. The contract asserted here is: the
+  // user is looked up FIRST, nothing is written, and the answer is 200 with
+  // an explicit marker so "ignored" is distinguishable from "stored".
+  // ------------------------------------------------------------------
+
+  it("debt 31, end one: an unknown app_user_id is answered 200, writes nothing, and is reported", async () => {
+    userFindUnique.mockResolvedValue(null);
+    const response = await POST(
+      fakeRequest(rcEvent("INITIAL_PURCHASE", { app_user_id: "user_does_not_exist" }), {
+        authorization: "Bearer rc_test_secret",
+      })
+    );
+
+    // 200, not 500: this is what stops the redelivery loop.
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ received: true, ignored: "unknown-app-user-id" });
+
+    // Nothing written — the foreign key is never given a chance to throw.
+    expect(upsert).not.toHaveBeenCalled();
+    expect(invalidateSubscriptionCache).not.toHaveBeenCalled();
+
+    // The user was checked BEFORE the write, not after a failure.
+    expect(userFindUnique).toHaveBeenCalledWith({
+      where: { id: "user_does_not_exist" },
+      select: { id: true },
+    });
+
+    // Silence is the failure mode this guard could have introduced, so the
+    // report is part of the contract, not a nicety.
+    expect(captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "RevenueCatUnknownAppUserId" }),
+      expect.objectContaining({
+        level: "warning",
+        extra: expect.objectContaining({ appUserId: "user_does_not_exist" }),
+      })
+    );
+  });
+
+  it("debt 31, end one: a known app_user_id is still stored (the guard does not block real purchases)", async () => {
+    userFindUnique.mockResolvedValue({ id: "user_123" });
+    const response = await POST(
+      fakeRequest(rcEvent("INITIAL_PURCHASE"), { authorization: "Bearer rc_test_secret" })
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ received: true });
+    expect(upsert).toHaveBeenCalledTimes(1);
+    expect(captureException).not.toHaveBeenCalled();
+  });
+
+  it("debt 31, end one: an existing row is updated without re-checking the user", async () => {
+    // An existing row already carries a valid userId — asking User again
+    // would be a read per renewal event for no gain.
+    findUnique.mockResolvedValue({ plan: "monthly", userId: "user_123" });
+    await POST(fakeRequest(rcEvent("RENEWAL"), { authorization: "Bearer rc_test_secret" }));
+    expect(userFindUnique).not.toHaveBeenCalled();
+    expect(upsert).toHaveBeenCalledTimes(1);
+  });
+
+  // ------------------------------------------------------------------
+  // Долг 31, конец второй: EXPIRATION не гасит пожизненную покупку
+  //
+  // The revocation named no plan at all, so a lifetime purchase (stored
+  // with currentPeriodEnd 2099 precisely so nothing expires it) was closed
+  // by the same updateMany as a lapsed monthly subscription.
+  // ------------------------------------------------------------------
+
+  it("debt 31, end two: EXPIRATION on a lifetime row writes nothing and is reported", async () => {
+    findUnique.mockResolvedValue({ userId: "user_123", plan: "lifetime" });
+    const response = await POST(
+      fakeRequest(
+        rcEvent("EXPIRATION", { product_id: "com.rusofacilapp.lifetime", expiration_at_ms: null }),
+        { authorization: "Bearer rc_test_secret" }
+      )
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ received: true, ignored: "expiration-on-lifetime" });
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(invalidateSubscriptionCache).not.toHaveBeenCalled();
+    expect(captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "RevenueCatExpirationOnLifetime" }),
+      expect.objectContaining({ level: "warning" })
+    );
+  });
+
+  it("debt 31, end two: the lifetime guard is in the where clause, so a monthly row still closes", async () => {
+    findUnique.mockResolvedValue({ userId: "user_123", plan: "monthly" });
+    await POST(fakeRequest(rcEvent("EXPIRATION"), { authorization: "Bearer rc_test_secret" }));
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { rcOriginalTransactionId: "txn_abc", plan: { not: "lifetime" } },
+      data: { status: "canceled" },
+    });
+    expect(invalidateSubscriptionCache).toHaveBeenCalledWith("user_123");
   });
 });
