@@ -178,17 +178,41 @@ export function judgeSigning({ gradle, gitignore, keyFiles, pbxproj }) {
         "собрался бы молча, и Play Console отказал бы уже на загрузке",
     );
   } else {
-    if (!/\bbundle\b|bundleRelease/.test(hook)) {
+    // Условие ищется в самом выражении поиска задачи, а не во всём теле
+    // хука: текст сообщения об отказе лежит в том же теле и содержит
+    // слово «bundleRelease», так что правило по телу целиком проходило бы
+    // и на хуке, который ничего не различает.
+    const detector = closureAfter(hook, "graph.allTasks.find");
+    if (detector === null) {
       bad.push(
-        `${GRADLE}: хук gradle.taskGraph.whenReady не различает задачу bundle*Release — ` +
-          "отказ не сработает на том единственном артефакте, который уходит в Play",
+        `${GRADLE}: хук gradle.taskGraph.whenReady не ищет задачу в графе — ` +
+          "отказывать ему не на чем",
       );
-    }
-    if (!/\brelease\b/i.test(hook)) {
-      bad.push(
-        `${GRADLE}: хук gradle.taskGraph.whenReady не различает релизный вариант — ` +
-          "отказ сработал бы не на том, на чём нужно",
-      );
+    } else {
+      if (!/bundle/.test(detector)) {
+        bad.push(
+          `${GRADLE}: условие отказа не упоминает задачу bundle*Release — ` +
+            "отказ не сработает на том единственном артефакте, который уходит в Play",
+        );
+      }
+      if (!/[Rr]elease/.test(detector)) {
+        bad.push(
+          `${GRADLE}: условие отказа не различает релизный вариант — ` +
+            "отказ сработал бы не на том, на чём нужно",
+        );
+      }
+      // Имя задачи обязано сличаться ЦЕЛИКОМ. Оплачено красным прогоном
+      // 12.09.2026: `startsWith('bundle') && contains('release')` ловило
+      // внутреннюю задачу AGP `bundleReleaseResources` и роняло обычный
+      // `assembleRelease`. Здесь правило требует якорей: без них условие
+      // снова станет «по подстроке».
+      if (!/\^bundle/.test(detector) || !/Release\$/.test(detector)) {
+        bad.push(
+          `${GRADLE}: условие отказа сличает имя задачи по подстроке, а не целиком — ` +
+            "в граф релизной СБОРКИ APK входит внутренняя задача AGP bundleReleaseResources, " +
+            "и такое условие уронит обычный assembleRelease (так и вышло 12.09.2026)",
+        );
+      }
     }
     if (!/throw\s+new\s+GradleException/.test(hook)) {
       bad.push(
@@ -359,14 +383,22 @@ function plant() {
         }),
     ],
     [
-      "хук перестал различать релизный AAB (bundle → assemble)",
+      "условие отказа перестало различать AAB (bundle → assemble)",
       () =>
         judgeSigning({
           ...healthy,
-          gradle: healthy.gradle
-            .replace(/startsWith\('bundle'\)/g, "startsWith('assemble')")
-            .replace(/bundleRelease/g, "someTask")
-            .replace(/bundle\*Release/g, "someTask"),
+          gradle: healthy.gradle.replace(/\^bundle\(/g, "^assemble("),
+        }),
+    ],
+    [
+      "имя задачи снова сличается по подстроке — та самая правка, что уронила assembleRelease",
+      () =>
+        judgeSigning({
+          ...healthy,
+          gradle: healthy.gradle.replace(
+            /task\.name ==~ \/\^bundle\(\[A-Z\]\[A-Za-z0-9\]\*\)\?Release\$\//,
+            "task.name.toLowerCase().startsWith('bundle') && task.name.toLowerCase().contains('release')",
+          ),
         }),
     ],
     [

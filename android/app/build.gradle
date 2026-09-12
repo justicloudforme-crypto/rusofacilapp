@@ -76,13 +76,24 @@ if (releaseKeyPresent) {
 // Отказ ровно на том артефакте, который уходит в магазин. `bundle*Release`
 // — это AAB для Play; `assemble*Release` остаётся собираемым без ключа
 // намеренно (см. шапку).
+//
+// ИМЯ ЗАДАЧИ СЛИЧАЕТСЯ ЦЕЛИКОМ, И ЭТО ОПЛАЧЕНО КРАСНЫМ ПРОГОНОМ.
+// Первая редакция искала `startsWith('bundle') && contains('release')` —
+// и уронила `assembleRelease` в CI 12.09.2026 00:47 UTC: в графе задач
+// обычной релизной СБОРКИ APK лежит `bundleReleaseResources` (а с ним
+// `bundleReleaseClasses` и прочая внутренняя кухня AGP), и оба условия
+// на нём сходятся. Условие отказа обязано совпадать с именем задачи
+// ЦЕЛИКОМ: `bundleRelease` или `bundle<Вкус>Release`, и ничего кроме.
+// Сторож по исходникам этого поймать не мог и не поймал — имена
+// внутренних задач AGP не лежат ни в одном нашем файле. Ровно та
+// разница между слоем исходника и слоем пакета, ради которой заведён
+// долг 139.
 gradle.taskGraph.whenReady { graph ->
     if (releaseKeyPresent) {
         return
     }
     def storeTask = graph.allTasks.find { task ->
-        def n = task.name.toLowerCase()
-        n.startsWith('bundle') && n.contains('release')
+        task.name ==~ /^bundle([A-Z][A-Za-z0-9]*)?Release$/
     }
     if (storeTask != null) {
         throw new GradleException(
