@@ -382,25 +382,6 @@
     "choosePlanCta": "Elegir"
   },
   "pricing": {
-    "native": {
-      "heading": "Planes y precios",
-      "subtitle": "Dentro de la aplicación la compra se hace a través de la tienda, con tu cuenta de App Store o Google Play.",
-      "loading": "Cargando los planes de la tienda…",
-      "emptyHeading": "Todavía no hay planes disponibles",
-      "emptyBody": "La tienda aún no devuelve ningún producto para esta aplicación. No es un error tuyo y no hace falta hacer nada: vuelve a abrir esta pantalla más adelante. Mientras tanto puedes seguir usando la parte gratuita del curso.",
-      "errorHeading": "No pudimos conectar con la tienda",
-      "errorBody": "Revisa tu conexión e inténtalo de nuevo. Si el problema sigue, cierra y vuelve a abrir la aplicación.",
-      "retry": "Reintentar",
-      "buyCta": "Comprar",
-      "restoreButton": "Restaurar compras",
-      "restoreNothing": "Listo. Si tenías una compra anterior con esta cuenta de la tienda, ya está aplicada.",
-      "activeHeading": "Tu acceso está activo",
-      "activeBody": "Compraste el acceso en esta aplicación. Puedes ver el estado, cambiar o cancelar la suscripción desde la tienda.",
-      "manageButton": "Gestionar suscripción",
-      "elsewhereHeading": "Ya tienes acceso completo",
-      "elsewhereBody": "Tu cuenta ya tiene el acceso activo y no se compró en esta aplicación, así que aquí no hay nada que pagar de nuevo. Esa suscripción se gestiona en el mismo sitio donde la contrataste.",
-      "storeNote": "Las suscripciones se renuevan solas hasta que las canceles, y se gestionan en los ajustes de tu cuenta de la tienda. El precio exacto lo muestra la tienda en tu moneda."
-    },
     "title": "Planes y precios",
     "subtitle": "Elige un plan para desbloquear todas las lecciones, de A1 a B2.",
     "freeHeading": "Gratis",

@@ -54,7 +54,7 @@ const STRIPE_MARK = "stripe.com";
 // `capacitor.config.ts` его дописывает оболочка, в `native-shell.ts` его
 // ищет сервер. Разойдись они — веб-касса вернулась бы внутрь приложения
 // молча, и ни одна из половин по отдельности этого бы не заметила.
-const TOKEN = "RusoFacilappNative";
+const TOKEN = "RFNativeShell";
 
 function read(path) {
   return readFileSync(path, "utf8");
@@ -225,7 +225,7 @@ async function main() {
       ],
       [
         "токен в capacitor.config.ts разошёлся с токеном сервера",
-        { [CAPACITOR_FILE]: sources[CAPACITOR_FILE].replace(TOKEN, "RusoFacilappNativo") },
+        { [CAPACITOR_FILE]: sources[CAPACITOR_FILE].replace(TOKEN, "RFNativeShim") },
       ],
       [
         "appendUserAgent убран из конфигурации оболочки",

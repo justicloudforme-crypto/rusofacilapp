@@ -71,29 +71,43 @@ export default function NativePricingPanel({
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [restoredNothing, setRestoredNothing] = useState(false);
-
-  const load = useCallback(async () => {
-    setStatus("loading");
-    try {
-      const offering = await getCurrentOffering();
-      setPackages(offering?.availablePackages ?? []);
-      setStatus("ready");
-    } catch {
-      // Связи нет, магазин не отвечает, ключ не настроен — всё это одно и
-      // то же для читателя: список показать не получилось. Отдельное
-      // состояние от «продуктов нет»: там повторять нечего, здесь есть.
-      setPackages([]);
-      setStatus("failed");
-    }
-  }, []);
+  // Счётчик попыток, а не функция загрузки: кнопка «Повторить» его
+  // увеличивает, и эффект ниже перезапускается. Вызов общей `load()` из
+  // эффекта пришлось бы начинать с `setStatus("loading")` прямо в теле
+  // эффекта — это ловит правило react-hooks/set-state-in-effect, и ловит
+  // по делу: лишний синхронный проход рендера на каждом заходе.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     // Пока SDK настраивается, спрашивать офферинги бессмысленно:
     // getCurrentOffering() до configure() отдаёт null, и пустой список
     // показался бы там, где он ещё ничего не значит.
     if (sdkLoading) return;
-    void load();
-  }, [sdkLoading, load]);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const offering = await getCurrentOffering();
+        if (cancelled) return;
+        setPackages(offering?.availablePackages ?? []);
+        setStatus("ready");
+      } catch {
+        // Связи нет, магазин не отвечает, ключ не настроен — всё это одно
+        // и то же для читателя: список показать не получилось. Отдельное
+        // состояние от «продуктов нет»: там повторять нечего, здесь есть.
+        if (cancelled) return;
+        setPackages([]);
+        setStatus("failed");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sdkLoading, attempt]);
+
+  const retry = useCallback(() => {
+    setStatus("loading");
+    setAttempt((n) => n + 1);
+  }, []);
 
   const buy = useCallback(
     async (pkg: PurchasesPackage) => {
@@ -157,7 +171,7 @@ export default function NativePricingPanel({
             <p className="mt-2 text-sm text-foreground/70">{dict.errorBody}</p>
             <button
               type="button"
-              onClick={() => void load()}
+              onClick={retry}
               className="mt-4 w-full rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] sm:w-auto"
             >
               {dict.retry}

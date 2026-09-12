@@ -13,6 +13,7 @@ import NativePricingPanel from "@/components/pricing/NativePricingPanel";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
 import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTier, hasAnyAccess, planAddsNothing } from "@/lib/entitlement";
+import { nativePricingCopy } from "@/lib/native-pricing-copy";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   basePricesText,
@@ -68,17 +69,23 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   // в ответе сервера три формы остались бы на месте. И ровно этот ответ
   // читает и «просмотр исходного кода», и любой автоматический обход.
   //
-  // Веб этой веткой не задет побайтово: обычный браузер токена нативной
-  // оболочки не шлёт, поэтому ниже исполняется в точности тот же код, что
-  // и до 12.09.2026. Проверено сличением HTML `/es/pricing` и
-  // `/ru/pricing` до и после правки — расхождение 0 знаков; страница стоит
-  // в карте сайта, и на неё ведут ссылки со всех 1913 адресов.
+  // Веб этой веткой не задет: обычный браузер токена нативной оболочки не
+  // шлёт, поэтому ниже исполняется в точности тот же код, что и до
+  // 12.09.2026. Замерено сличением HTML анонимных `/es/pricing` и
+  // `/ru/pricing` на двух сборках — до и после правки. ВИДИМЫЙ ДОКУМЕНТ
+  // (всё, кроме `<script>` и `<link rel=preload>`) совпал ПОБАЙТОВО:
+  // 31 520 знаков против 31 520 на испанской, 31 350 против 31 350 на
+  // русской, расхождение 0. Сырой ответ длиннее на 113 и 155 байт, и вся
+  // разница лежит внутри тегов сборки — имя бандла самой страницы и
+  // список идентификаторов чанков во flight-разметке. Обнулить её
+  // нельзя по построению: имя бандла маршрута меняется от любой правки
+  // его файла. Страница стоит в карте сайта, и на неё ведут ссылки со
+  // всех 1913 адресов, поэтому мерялось именно это.
   //
   // Сама витрина — КЛИЕНТСКИЙ компонент внутри серверной страницы
   // (директива клиента стоит в NativePricingPanel), а не превращение
   // страницы в клиентскую: этот файл остался серверным.
   if (await isNativeShellRequest()) {
-    const dict = await getDictionary(lang);
     const user = await getCurrentUser();
     // Право доступа считает сервер, и источник оплаты ему безразличен
     // (решение владельца 11.09.2026: «заплатил где угодно — пользуется
@@ -87,7 +94,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
     return (
       <NativePricingPanel
         userId={user?.id ?? null}
-        dict={dict.pricing.native}
+        dict={nativePricingCopy(lang)}
         hasAccessElsewhere={hasAnyAccess(tier)}
       />
     );

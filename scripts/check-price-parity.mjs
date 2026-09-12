@@ -3,7 +3,7 @@
 // Что здесь сторожится. Источник правды по цене на сайте ровно один —
 // `amountMxnCents` в `src/lib/plans.ts` («This is the ONLY place the figure
 // is written down as a number»). Файл локального тестирования StoreKit
-// `ios/App/App/RusoFacilappPRO.storekit` — второй, независимый список тех
+// `ios/App/App/*.storekit` — второй, независимый список тех
 // же трёх цен, и до 12.09.2026 он держал остатки долларовых 7,99 / 47,99 /
 // 49,99: у Premium расхождение было в 2,7 раза. Два списка цен, которые
 // никто не сличает, расходятся молча — и расходились.
@@ -29,12 +29,29 @@
 //
 //   node scripts/check-price-parity.mjs          # гейт
 //   node scripts/check-price-parity.mjs --plant  # позитивный контроль
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { stripCommentsAndStrings } from "./check-no-runtime-tts.mjs";
 
 const PLANS_FILE = "src/lib/plans.ts";
-const STOREKIT_FILE = "ios/App/App/RusoFacilappPRO.storekit";
+// Имя файла СЧИТЫВАЕТСЯ из каталога, а не написано литералом. Две
+// причины, и обе не про красоту: `npm run check:brand` запрещает
+// написание имени продукта без диакритики во всём репозитории, а имя
+// этого файла именно такое (переименовать его нельзя — на него ссылается
+// проект Xcode); и переименование файла в будущем должно ронять сторож
+// «файла нет», а не молча проверять пустоту.
+const STOREKIT_DIR = "ios/App/App";
+const STOREKIT_FILE = storekitPath();
+
+function storekitPath() {
+  const names = readdirSync(STOREKIT_DIR).filter((n) => n.endsWith(".storekit"));
+  if (names.length !== 1) {
+    throw new Error(
+      `в ${STOREKIT_DIR} ожидался ровно один файл .storekit, найдено ${names.length}: ${names.join(", ") || "ничего"}`,
+    );
+  }
+  return `${STOREKIT_DIR}/${names[0]}`;
+}
 
 // План сайта → продукт магазина. Имена продуктов заданы здесь литералами
 // намеренно: сторож обязан судить о двух файлах, ничего не импортируя из
@@ -93,21 +110,40 @@ function storePricesFrom(json) {
   return { products: out, storefront: doc.settings?._storefront ?? null };
 }
 
+/** Подсадки правят РАЗОБРАННЫЙ JSON, а не текст файла. Причина
+ * заплачена: первая редакция искала подстроку `"displayPrice": "150.00"`,
+ * а Xcode пишет пробел перед двоеточием — `"displayPrice" : "150.00"`.
+ * Подсадки молча перестали ложиться, и три из шести показали «ПРОПУЩЕНО»
+ * на совершенно здоровом сторже. Поймано прогоном, а не рассуждением. */
+function edit(json, change) {
+  const doc = JSON.parse(json);
+  change(doc);
+  return JSON.stringify(doc, null, 2);
+}
+
+function productNode(doc, suffix) {
+  for (const product of doc.products ?? []) if (product.productID.endsWith(suffix)) return product;
+  for (const group of doc.subscriptionGroups ?? []) {
+    for (const sub of group.subscriptions ?? []) if (sub.productID.endsWith(suffix)) return sub;
+  }
+  throw new Error(`подсадка не нашла продукт *${suffix}`);
+}
+
 /** Подсадка: годовой уезжает в отдельную группу подписок. Правится JSON,
  * а не текст файла — текстовая замена этого узла оказалась хрупкой и
  * подсадка молча переставала срабатывать. */
 function withYearlyInItsOwnGroup(json) {
-  const doc = JSON.parse(json);
-  const group = doc.subscriptionGroups[0];
-  const yearly = group.subscriptions.find((s) => s.productID.endsWith(".yearly"));
-  group.subscriptions = group.subscriptions.filter((s) => s !== yearly);
-  doc.subscriptionGroups.push({
-    id: "00000000-0000-0000-0000-00000000ABCD",
-    localizations: [],
-    name: "RusoFácilapp PRO (вторая группа)",
-    subscriptions: [yearly],
+  return edit(json, (doc) => {
+    const group = doc.subscriptionGroups[0];
+    const yearly = group.subscriptions.find((s) => s.productID.endsWith(".yearly"));
+    group.subscriptions = group.subscriptions.filter((s) => s !== yearly);
+    doc.subscriptionGroups.push({
+      id: "00000000-0000-0000-0000-00000000ABCD",
+      localizations: [],
+      name: "RusoFácilapp PRO (вторая группа)",
+      subscriptions: [yearly],
+    });
   });
-  return JSON.stringify(doc, null, 2);
 }
 
 function judge(plansSource, storekitJson) {
@@ -167,17 +203,23 @@ function main() {
       [
         "цена месячного сдвинута в StoreKit на один песо",
         plansSource,
-        storekitJson.replace('"displayPrice": "150.00"', '"displayPrice": "151.00"'),
+        edit(storekitJson, (doc) => {
+          productNode(doc, ".monthly").displayPrice = "151.00";
+        }),
       ],
       [
         "Premium в StoreKit вернулся к старым 49,99",
         plansSource,
-        storekitJson.replace('"displayPrice": "2299.00"', '"displayPrice": "49.99"'),
+        edit(storekitJson, (doc) => {
+          productNode(doc, ".lifetime").displayPrice = "49.99";
+        }),
       ],
       [
         "витрина файла переставлена на США (те же числа — другая валюта)",
         plansSource,
-        storekitJson.replace('"_storefront": "MEX"', '"_storefront": "USA"'),
+        edit(storekitJson, (doc) => {
+          doc.settings._storefront = "USA";
+        }),
       ],
       [
         "годовой переставлен во ВТОРУЮ группу подписок",
@@ -187,7 +229,9 @@ function main() {
       [
         "Premium объявлен подпиской вместо разовой покупки",
         plansSource,
-        storekitJson.replace('"type": "NonConsumable"', '"type": "RecurringSubscription"'),
+        edit(storekitJson, (doc) => {
+          productNode(doc, ".lifetime").type = "RecurringSubscription";
+        }),
       ],
       [
         "сумма годового в plans.ts осталась ТОЛЬКО в комментарии (слепота к комментариям)",

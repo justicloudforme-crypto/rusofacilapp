@@ -27,7 +27,12 @@ import { headers } from "next/headers";
  * появления этой ветки не меняется ни на один байт — и это проверено
  * побайтовым сличением, а не рассуждением (заход 7.183).
  */
-export const NATIVE_USER_AGENT_TOKEN = "RusoFacilappNative";
+// Написание НЕ брендовое и намеренно, по двум причинам сразу. Значение
+// User-Agent обязано быть ASCII, а в имени продукта есть «á», и в
+// заголовок оно не кладётся; а написать то же имя без диакритики
+// запрещает `npm run check:brand` — он ловит это во всём репозитории.
+// Поэтому токен чисто технический и с именем продукта не пересекается.
+export const NATIVE_USER_AGENT_TOKEN = "RFNativeShell";
 
 /** true, если запрос пришёл из нативной оболочки приложения. */
 export async function isNativeShellRequest(): Promise<boolean> {

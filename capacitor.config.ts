@@ -90,7 +90,7 @@ const isCleartext = serverUrl.startsWith("http://");
 // по которой литералами написаны `appId` и `appName` ниже: сторож
 // `npm run check:native-payments` читает ОБА файла текстом и сличает их
 // между собой, ничего не импортируя из проверяемого.
-const NATIVE_USER_AGENT_TOKEN = "RusoFacilappNative";
+const NATIVE_USER_AGENT_TOKEN = "RFNativeShell";
 
 const config: CapacitorConfig = {
   // Reverse-domain of the now-confirmed production domain (rusofacilapp.com,
