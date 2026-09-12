@@ -187,6 +187,172 @@ export function compare(src) {
   return bad;
 }
 
+
+// ─────────────────────────────────────────────────────────────────────
+// СЛОЙ ПАКЕТА (долг 113, заход 7.181).
+//
+// Всё выше читает ИСХОДНИКИ. Ни одно правило оттуда не может сказать,
+// что попало в СОБРАННЫЙ пакет: `project.pbxproj` здесь разбирается
+// регулярными выражениями, а не Xcode, и «Xcode читает INFOPLIST_FILE
+// так же, как его прочитал сторож» — это было предположение, а не
+// замер. Тот же класс, что у долга 109 на Android: там правку «по
+// исходнику» опроверг первый же собранный артефакт.
+//
+// ЧТО СУДИТСЯ. Не файл проекта, а ВЫВОД ИНСТРУМЕНТА, прочитавшего
+// готовый пакет: `plutil -p App.app/Info.plist`. Устройство ровно то
+// же, что у соседей по репозиторию, и выбрано не по вкусу:
+//   --badging=  у check:apk-facts              (aapt2 по APK)
+//   --xmltree=  у check:native-release-safety  (aapt2 по манифесту)
+//   --certs=    у check:release-signing        (apksigner/jarsigner)
+//   --plist=    здесь                          (plutil по App.app)
+// Судья ничего не запускает сам, поэтому его подсадки — чистый текст,
+// и они гоняются в CI, где нет ни Xcode, ни macOS, ни пакета.
+//
+//   xcodebuild -project ios/App/App.xcodeproj -scheme App \
+//     -configuration Release -sdk iphoneos -derivedDataPath <dd> \
+//     CODE_SIGNING_ALLOWED=NO build
+//   plutil -p <dd>/Build/Products/Release-iphoneos/App.app/Info.plist > ios-plist.txt
+//   node scripts/check-ios-release-safety.mjs --plist=ios-plist.txt
+//
+// ЧЕГО ЭТОТ СЛОЙ НЕ ДОКАЗЫВАЕТ И НЕ МОЖЕТ. Пакет собран БЕЗ подписи:
+// `security find-identity -v -p codesigning` на этой машине отдаёт
+// «0 valid identities found» — учётной записи Apple Developer Program
+// у проекта пока нет. Значит `.ipa`, подписанный дистрибутивной
+// личностью, не собирался и здесь не судится, а долг 140
+// (`CODE_SIGN_IDENTITY = "iPhone Developer"`, пустой
+// `DEVELOPMENT_TEAM`) этим слоем не закрывается. Эта половина ждёт
+// владельца, а не машину, и записана так в таблице долгов.
+const BUNDLE_ID = "com.rusofacilapp.app";
+const GRADLE = "android/app/build.gradle";
+
+/** Плоские значения из вывода `plutil -p`: `"CFBundleVersion" => "1"`.
+ *  Вложенные словари (иконки, сцены) не разбираются намеренно — ни одно
+ *  правило ниже о них не спрашивает, а полу-разбор врал бы молча. */
+export function parsePlutil(text) {
+  const out = {};
+  const re = /^\s*"([^"]+)"\s*=>\s*(.*)$/gm;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const raw = m[2].trim();
+    if (raw === "{" || raw === "[") continue;
+    out[m[1]] = raw.replace(/^"(.*)"$/, "$1");
+  }
+  return out;
+}
+
+/** Похоже ли это вообще на вывод `plutil -p`. Отдельным вопросом, а не
+ *  «ключей не нашлось»: пустой разбор чужого текста дал бы «расхождений
+ *  0» на любом файле, и молчание читалось бы как «в пакете чисто». */
+export function isPlutilOutput(text) {
+  return /^\s*\{/.test(text) && /"CFBundle\w+"\s*=>/.test(text);
+}
+
+/**
+ * Приговор по СОБРАННОМУ пакету. `inputs` — список `{ name, text }`,
+ * где text — дословный вывод `plutil -p`. `versions` — то, что стоит в
+ * `android/app/build.gradle`: у одного релиза номер обязан быть один на
+ * оба магазина, и проверяется это на пакете, а не на файле проекта.
+ */
+export function judgeBundle(inputs, versions) {
+  const bad = [];
+  const facts = { checked: 0, identifiers: [], shortVersions: [], versions: [] };
+
+  if (inputs.length === 0) {
+    bad.push(
+      "слою пакета не дали ни одного plist: без --plist=<файл> доказывать нечего, " +
+        "а «расхождений 0» на пустом входе — это не проверка",
+    );
+    return { bad, facts };
+  }
+
+  for (const { name, text } of inputs) {
+    if (!isPlutilOutput(text)) {
+      bad.push(
+        `${name}: это не вывод plutil -p — судить не о чем, а молчание здесь читалось бы ` +
+          "как «в собранном пакете чисто»",
+      );
+      continue;
+    }
+    facts.checked += 1;
+
+    // 1. Послабления транспорта в ПАКЕТЕ нет. Ровно то, что на исходниках
+    //    доказать было нельзя: Info-Debug.plist лежит рядом, и вопрос был
+    //    в том, какой из двух файлов возьмёт Xcode.
+    if (new RegExp(`"?(${ATS_KEY}|${ARBITRARY})"?`).test(text)) {
+      bad.push(
+        `${name}: в собранном пакете есть ${ATS_KEY}/${ARBITRARY} — послабление транспорта ` +
+          "доехало до магазинного артефакта, и поймало бы это ревью Apple, а не мы",
+      );
+    }
+
+    const kv = parsePlutil(text);
+
+    // 2. Тот ли это пакет. Идентификатор — то единственное, что
+    //    связывает артефакт с записью в App Store Connect и с
+    //    `apple-app-site-association` (долг 71); разойдясь, он даёт
+    //    загрузку «не в то приложение».
+    const id = kv.CFBundleIdentifier ?? null;
+    if (id === null) bad.push(`${name}: CFBundleIdentifier в пакете не прочитан`);
+    else {
+      facts.identifiers.push(id);
+      if (id !== BUNDLE_ID) {
+        bad.push(
+          `${name}: CFBundleIdentifier = ${id}, а обязан ${BUNDLE_ID} — ` +
+            "артефакт уехал бы не в то приложение App Store Connect",
+        );
+      }
+    }
+
+    // 3. Версия одна на две платформы, и сличается она с Android по
+    //    ПАКЕТУ. Слой исходников сличает pbxproj с build.gradle; здесь
+    //    проверяется, что Xcode действительно положил в пакет то самое.
+    const short = kv.CFBundleShortVersionString ?? null;
+    const build = kv.CFBundleVersion ?? null;
+    if (short === null) bad.push(`${name}: CFBundleShortVersionString в пакете не прочитан`);
+    else {
+      facts.shortVersions.push(short);
+      if (versions?.versionName && short !== versions.versionName) {
+        bad.push(
+          `${name}: CFBundleShortVersionString = ${short}, а versionName в ${GRADLE} = ` +
+            `"${versions.versionName}" — у одного релиза две разные витринные версии`,
+        );
+      }
+    }
+    if (build === null) bad.push(`${name}: CFBundleVersion в пакете не прочитан`);
+    else {
+      facts.versions.push(build);
+      if (versions?.versionCode && build !== versions.versionCode) {
+        bad.push(
+          `${name}: CFBundleVersion = ${build}, а versionCode в ${GRADLE} = ` +
+            `${versions.versionCode} — у одного релиза два разных номера сборки`,
+        );
+      }
+    }
+  }
+
+  return { bad, facts };
+}
+
+/** ОБРАЗЕЦ ДЛЯ ПОДСАДОК — ДОСЛОВНЫЙ ВЫВОД `plutil -p` ПО НАСТОЯЩЕМУ
+ *  ПАКЕТУ, СОБРАННОМУ 11.09.2026. Не выдуман и не сокращён.
+ *  Артефакт: Release-iphoneos/App.app, 31 МБ, Info.plist внутри 2 154 Б,
+ *  собран `xcodebuild -configuration Release -sdk iphoneos` за 1 мин 57 с,
+ *  BUILD SUCCEEDED, без подписи (личностей для подписи на машине 0).
+ *  Держать образец в файле, а не читать с диска, обязательно: подсадки
+ *  гоняются в CI, где ни Xcode, ни macOS, ни пакета нет. */
+export const BUNDLE_PLIST_SAMPLE = "{\n  \"BuildMachineOSBuild\" => \"24G90\"\n  \"CAPACITOR_DEBUG\" => \"\"\n  \"CFBundleDevelopmentRegion\" => \"en\"\n  \"CFBundleDisplayName\" => \"RusoFácil\"\n  \"CFBundleExecutable\" => \"App\"\n  \"CFBundleIcons\" => {\n    \"CFBundlePrimaryIcon\" => {\n      \"CFBundleIconFiles\" => [\n        0 => \"AppIcon60x60\"\n      ]\n      \"CFBundleIconName\" => \"AppIcon\"\n    }\n  }\n  \"CFBundleIcons~ipad\" => {\n    \"CFBundlePrimaryIcon\" => {\n      \"CFBundleIconFiles\" => [\n        0 => \"AppIcon60x60\"\n        1 => \"AppIcon76x76\"\n      ]\n      \"CFBundleIconName\" => \"AppIcon\"\n    }\n  }\n  \"CFBundleIdentifier\" => \"com.rusofacilapp.app\"\n  \"CFBundleInfoDictionaryVersion\" => \"6.0\"\n  \"CFBundleName\" => \"RusoFácil\"\n  \"CFBundlePackageType\" => \"APPL\"\n  \"CFBundleShortVersionString\" => \"1.0\"\n  \"CFBundleSupportedPlatforms\" => [\n    0 => \"iPhoneOS\"\n  ]\n  \"CFBundleVersion\" => \"1\"\n  \"DTCompiler\" => \"com.apple.compilers.llvm.clang.1_0\"\n  \"DTPlatformBuild\" => \"22F76\"\n  \"DTPlatformName\" => \"iphoneos\"\n  \"DTPlatformVersion\" => \"18.5\"\n  \"DTSDKBuild\" => \"22F76\"\n  \"DTSDKName\" => \"iphoneos18.5\"\n  \"DTXcode\" => \"1640\"\n  \"DTXcodeBuild\" => \"16F6\"\n  \"LSRequiresIPhoneOS\" => 1\n  \"MinimumOSVersion\" => \"15.0\"\n  \"NSMicrophoneUsageDescription\" => \"RusoFácilapp usa el micrófono para grabar tu pronunciación en los ejercicios de lectura y vocabulario y reproducírtela enseguida, para que puedas compararla con la del hablante nativo.\"\n  \"UIApplicationSceneManifest\" => {\n    \"UIApplicationSupportsMultipleScenes\" => 0\n    \"UISceneConfigurations\" => {\n      \"UIWindowSceneSessionRoleApplication\" => [\n        0 => {\n          \"UISceneConfigurationName\" => \"Default Configuration\"\n          \"UISceneDelegateClassName\" => \"App.SceneDelegate\"\n          \"UISceneStoryboardFile\" => \"Main\"\n        }\n      ]\n    }\n  }\n  \"UIBackgroundModes\" => [\n    0 => \"audio\"\n  ]\n  \"UIDeviceFamily\" => [\n    0 => 1\n    1 => 2\n  ]\n  \"UILaunchStoryboardName\" => \"LaunchScreen\"\n  \"UIMainStoryboardFile\" => \"Main\"\n  \"UIRequiredDeviceCapabilities\" => [\n    0 => \"arm64\"\n  ]\n  \"UISupportedInterfaceOrientations\" => [\n    0 => \"UIInterfaceOrientationPortrait\"\n    1 => \"UIInterfaceOrientationLandscapeLeft\"\n    2 => \"UIInterfaceOrientationLandscapeRight\"\n  ]\n  \"UISupportedInterfaceOrientations~ipad\" => [\n    0 => \"UIInterfaceOrientationPortrait\"\n    1 => \"UIInterfaceOrientationPortraitUpsideDown\"\n    2 => \"UIInterfaceOrientationLandscapeLeft\"\n    3 => \"UIInterfaceOrientationLandscapeRight\"\n  ]\n  \"UIViewControllerBasedStatusBarAppearance\" => 1\n}\n";
+
+/** versionCode и versionName из build.gradle — те же два числа, что
+ *  сличает `check:release-signing` на слое исходников. Читаются здесь
+ *  заново, а не импортируются: сторож обязан судить, ничего не
+ *  импортируя из проверяемого. */
+export function androidVersions(gradle) {
+  return {
+    versionCode: gradle?.match(/^\s*versionCode\s+(\d+)/m)?.[1] ?? null,
+    versionName: gradle?.match(/^\s*versionName\s+"([^"]+)"/m)?.[1] ?? null,
+  };
+}
+
 const read = (f) => (existsSync(f) ? readFileSync(f, "utf-8") : null);
 
 function readSources() {
@@ -199,8 +365,150 @@ function readSources() {
   };
 }
 
+/** Подсадки СЛОЯ ПАКЕТА. Вход у них — дословный вывод `plutil -p` по
+ *  настоящему собранному App.app, поэтому они гоняются везде, где
+ *  гоняется node, и ничего не собирают сами. */
+function plantBundle() {
+  console.log("check:ios-release-safety --plant — слой пакета:");
+
+  const versions = { versionCode: "1", versionName: "1.0" };
+  const healthy = [{ name: "App.app/Info.plist", text: BUNDLE_PLIST_SAMPLE }];
+  // Отрицательный контроль ПЕРВЫМ и на настоящем пакете: молчание здесь —
+  // условие того, что все жалобы ниже вызваны подсадкой, а не образцом.
+  const clean = judgeBundle(healthy, versions).bad;
+  const isNew = (bad) => bad.some((line) => !clean.includes(line));
+
+  const plants = [
+    [
+      // РОВНО ДОЛГ 110, но на СОБРАННОМ пакете: до этого слоя доказать,
+      // что послабление не доехало, было нечем.
+      "послабление транспорта доехало до пакета",
+      () =>
+        judgeBundle(
+          [
+            {
+              name: "App.app/Info.plist",
+              text: BUNDLE_PLIST_SAMPLE.replace(
+                '  "CFBundleIdentifier"',
+                '  "NSAppTransportSecurity" => {\n    "NSAllowsArbitraryLoads" => 1\n  }\n  "CFBundleIdentifier"',
+              ),
+            },
+          ],
+          versions,
+        ),
+    ],
+    [
+      "в пакете ЧУЖОЙ идентификатор",
+      () =>
+        judgeBundle(
+          [
+            {
+              name: "App.app/Info.plist",
+              text: BUNDLE_PLIST_SAMPLE.replace(BUNDLE_ID, "com.example.someoneelse"),
+            },
+          ],
+          versions,
+        ),
+    ],
+    [
+      "витринная версия пакета разошлась с versionName Android",
+      () =>
+        judgeBundle(
+          [
+            {
+              name: "App.app/Info.plist",
+              text: BUNDLE_PLIST_SAMPLE.replace('"CFBundleShortVersionString" => "1.0"', '"CFBundleShortVersionString" => "2.5"'),
+            },
+          ],
+          versions,
+        ),
+    ],
+    [
+      "номер сборки пакета разошёлся с versionCode Android",
+      () =>
+        judgeBundle(
+          [
+            {
+              name: "App.app/Info.plist",
+              text: BUNDLE_PLIST_SAMPLE.replace('"CFBundleVersion" => "1"', '"CFBundleVersion" => "42"'),
+            },
+          ],
+          versions,
+        ),
+    ],
+    [
+      "идентификатор из пакета пропал вовсе",
+      () =>
+        judgeBundle(
+          [
+            {
+              name: "App.app/Info.plist",
+              text: BUNDLE_PLIST_SAMPLE.replace(/^\s*"CFBundleIdentifier".*$/m, ""),
+            },
+          ],
+          versions,
+        ),
+    ],
+    [
+      "вместо вывода plutil подсунут чужой текст",
+      () => judgeBundle([{ name: "подставной.txt", text: "всё хорошо, честное слово\n" }], versions),
+    ],
+    [
+      "слою пакета не дали ни одного plist",
+      () => judgeBundle([], versions),
+    ],
+  ];
+
+  let caught = 0;
+  for (const [name, run] of plants) {
+    const { bad } = run();
+    const hit = isNew(bad);
+    const line = bad.find((l) => !clean.includes(l));
+    console.log(`  ${hit ? "поймано" : "ПРОПУЩЕНО"}: ${name}${hit ? ` → ${line}` : ""}`);
+    if (hit) caught += 1;
+  }
+  const quiet = clean.length === 0;
+  const f = judgeBundle(healthy, versions).facts;
+  console.log(
+    `  ${quiet ? `отрицательный контроль: настоящий App.app — молчание (${f.identifiers[0]}, ${f.shortVersions[0]}/${f.versions[0]}, ${ATS_KEY} в пакете 0)` : `ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ КРАСЕН: ${clean.join("; ")}`}`,
+  );
+  console.log(`  поймано ${caught} из ${plants.length}`);
+  return caught === plants.length && quiet;
+}
+
 function main() {
   const src = readSources();
+
+  // СЛОЙ ПАКЕТА. Отдельным входом, а не «заодно»: собранного App.app на
+  // машине разработчика и в CI может не быть вовсе (для него нужен macOS
+  // с Xcode), а правила по исходникам обязаны гоняться всегда. Зато
+  // когда вход дан — молчания «нечего проверять» не бывает: пустой
+  // список тоже жалоба.
+  const plistArgs = process.argv.filter((a) => a.startsWith("--plist="));
+  if (plistArgs.length > 0) {
+    const inputs = [];
+    for (const arg of plistArgs) {
+      const file = arg.slice("--plist=".length);
+      if (!existsSync(file)) {
+        console.error(`РАСХОЖДЕНИЕ: ${file} — файла с выводом plutil -p нет`);
+        process.exit(1);
+      }
+      inputs.push({ name: file, text: readFileSync(file, "utf-8") });
+    }
+    const versions = androidVersions(read(GRADLE));
+    const { bad, facts } = judgeBundle(inputs, versions);
+    if (bad.length > 0) {
+      for (const line of bad) console.error(`РАСХОЖДЕНИЕ: ${line}`);
+      process.exit(1);
+    }
+    console.log(
+      `check:ios-release-safety (слой пакета) — пакетов прочитано ${facts.checked}, ` +
+        `${ATS_KEY} в пакете 0, CFBundleIdentifier ${facts.identifiers.join(" ")}, ` +
+        `CFBundleShortVersionString ${facts.shortVersions.join(" ")} = versionName "${versions.versionName}", ` +
+        `CFBundleVersion ${facts.versions.join(" ")} = versionCode ${versions.versionCode} (${GRADLE}).`,
+    );
+    process.exit(0);
+  }
 
   if (process.argv.includes("--plant")) {
     console.log("check:ios-release-safety --plant");
@@ -274,7 +582,8 @@ function main() {
       `  ${quiet ? "отрицательный контроль: настоящие исходники — молчание" : `ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ КРАСЕН: ${cleanBad.join("; ")}`}`,
     );
     console.log(`  поймано ${caught} из ${plants.length}`);
-    process.exit(caught === plants.length && quiet ? 0 : 1);
+    const pkg = plantBundle();
+    process.exit(caught === plants.length && quiet && pkg ? 0 : 1);
   }
 
   const bad = compare(src);
