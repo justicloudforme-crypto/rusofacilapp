@@ -1,0 +1,93 @@
+# Нативная сборка iOS — ОТДЕЛЬНЫЙ workflow и ТОЛЬКО по кнопке.
+#
+# ПОЧЕМУ ОН СУЩЕСТВУЕТ. До 11.09.2026 (7.181) у iOS не было слоя пакета
+# вовсе: всё, что известно о `Info.plist`, `Info-Debug.plist` и
+# `project.pbxproj`, было доказано разбором ИСХОДНИКОВ регулярными
+# выражениями, а не Xcode. Ни одно такое правило не может сказать, какой
+# из двух plist Xcode на самом деле положит в пакет. Тот же класс, что у
+# долга 109 на Android: там правку «по исходнику» опроверг первый же
+# собранный артефакт. Здесь первый собранный пакет правку подтвердил —
+# `NSAppTransportSecurity` в `App.app/Info.plist` 0 вхождений, — и это
+# тоже замер, а не предположение.
+#
+# ПОЧЕМУ ТОЛЬКО `workflow_dispatch`, А НЕ НА КАЖДЫЙ PR. Задание требует
+# бегуна macOS, а минута macOS в GitHub Actions стоит вдесятеро против
+# ubuntu. Сборка занимает около двух минут процессорного времени, и
+# гонять её на каждый коммит, трогающий `ios/`, значило бы платить за
+# то, что подсадки проверяют бесплатно: образец вывода `plutil -p` снят
+# с настоящего пакета и вшит в `scripts/check-ios-release-safety.mjs`,
+# поэтому все правила слоя пакета гоняются в `ci.yml` на каждом коммите.
+# Здесь — то единственное, чего подсадка дать не может: что пакет
+# СОБИРАЕТСЯ и что в нём лежит именно это. Звать руками перед подачей.
+#
+# ЧЕГО ЗДЕСЬ НЕТ. Подписанного `.ipa`. Учётной записи Apple Developer
+# Program у проекта пока нет (`security find-identity -v -p codesigning`
+# — 0 личностей), поэтому сборка идёт с `CODE_SIGNING_ALLOWED=NO`, а
+# дистрибутивная личность и `DEVELOPMENT_TEAM` остаются долгом 140.
+# Это половина, которая ждёт владельца, а не машину.
+name: iOS release build
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Установить зависимости
+        run: npm ci
+
+      - name: Чем собираем
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          # Число личностей подписи печатается числом, а не словом: ноль
+          # здесь — не поломка, а состояние долга 140, и оно должно быть
+          # видно в журнале прогона.
+          security find-identity -v -p codesigning || true
+
+      - name: Release-сборка пакета
+        working-directory: ios/App
+        run: |
+          set -euo pipefail
+          xcodebuild -project App.xcodeproj -scheme App \
+            -configuration Release -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/ios-build" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Прочитать plist ИЗ ПАКЕТА
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/ios-build/Build/Products/Release-iphoneos/App.app"
+          ls -l "$APP/Info.plist"
+          du -sh "$APP"
+          plutil -p "$APP/Info.plist" > ios-plist.txt
+          cat ios-plist.txt
+
+      # Судит не шаг выше, а сторож: он же гоняется подсадками в ci.yml.
+      - name: Слой пакета — судит сторож, а не глаз
+        run: node scripts/check-ios-release-safety.mjs --plist=ios-plist.txt
+
+      - name: Слой исходников — на той же машине
+        run: npm run check:ios-release-safety
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-release-plist
+          path: ios-plist.txt
+          retention-days: 14
+          if-no-files-found: warn

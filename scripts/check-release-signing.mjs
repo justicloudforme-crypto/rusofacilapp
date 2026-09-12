@@ -120,6 +120,21 @@ export function pbxValues(pbxproj, key) {
   return out;
 }
 
+/** Groovy-комментарии прочь. Нужно ровно там, где правило судит о
+ *  НАЛИЧИИ настройки: `// enableV3Signing true`, написанное объяснением
+ *  рядом, неотличимо от самой настройки для любого регэкспа. Это не
+ *  предположение — позитивный контроль 11.09.2026 поймал ровно это:
+ *  флаг был закомментирован в настоящем `build.gradle`, а сторож
+ *  остался зелёным. Третий случай того же класса в этом репозитории:
+ *  `versionCode 1` в комментарии ломал `check-apk-facts` (7.178), а
+ *  имя `NSAppTransportSecurity` в объяснении правки ломало
+ *  `check-ios-release-safety` (7.159). Строковых литералов со «//»
+ *  внутри в `build.gradle` нет, поэтому наивного вырезания хватает, и
+ *  оно применяется ТОЛЬКО к этому правилу, а не ко всему файлу. */
+export function stripGroovyComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+}
+
 /**
  * Приговор по исходникам. Восемь правил; каждое возвращает строку, в
  * которой названо место, а не «что-то не так».
@@ -134,6 +149,20 @@ export function judgeSigning({ gradle, gitignore, keyFiles, pbxproj }) {
     bad.push(
       `${GRADLE}: нет signingConfigs.release — ./gradlew assembleRelease молча отдаёт ` +
         "app-release-unsigned.apk, а неподписанный артефакт Play Console не принимает вовсе",
+    );
+  } else if (!/\benableV3Signing\s+true\b/.test(stripGroovyComments(releaseSigning))) {
+    // 1a. Схема v3 объявлена ЯВНО и включена (долг 142, 11.09.2026).
+    //     Умолчание AGP здесь — `false`, и до этой строки v3 была
+    //     выключена у всех собранных артефактов (замер 7.179: v1 false,
+    //     v2 true, v3 false). Именно v3 несёт ротацию ключа: без неё
+    //     сменить скомпрометированный ключ у опубликованного пакета
+    //     нельзя вовсе, а ключ Android не перевыпускается. Правило
+    //     требует не «упоминания», а значения `true`: `enableV3Signing
+    //     false` — это то же самое умолчание, только записанное.
+    bad.push(
+      `${GRADLE}: signingConfigs.release не объявляет enableV3Signing true — схема v3 ` +
+        "выключена умолчанием AGP, а она единственная несёт ротацию ключа подписи " +
+        "(долг 142). Проверяется по собранному артефакту: apksigner verify --print-certs",
     );
   }
 
@@ -494,6 +523,20 @@ export function judgePackage(inputs, expectSha256) {
             `v3 ${schemes.v3}) — одной строки «Verifies» мало, подписью считается схема`,
         );
       }
+      // ДОЛГ 142. Мало «хоть одной схемы»: v2 в одиночку означает
+      // пакет, ключ которого не сменить уже никогда. До 11.09.2026
+      // сторож принимал ровно такой артефакт молча — правило про
+      // `strong.length === 0` на нём сходилось. Теперь v3 названа
+      // поимённо и числом, и это тот единственный слой, который может
+      // о ней судить: `enableV3Signing` в build.gradle — намерение,
+      // а схема — свойство файла.
+      if (schemes.v3 !== true && schemes["v3.1"] !== true) {
+        bad.push(
+          `${name}: схема подписи v3 не подтверждена (v2 ${schemes.v2}, v3 ${schemes.v3}, ` +
+            `v3.1 ${schemes["v3.1"]}) — без v3 ключ подписи не ротируется, а сменить его ` +
+            "у опубликованного приложения больше нечем (долг 142)",
+        );
+      }
     }
 
     facts.fingerprints.push(...certificateFingerprints(text));
@@ -533,14 +576,14 @@ export function judgePackage(inputs, expectSha256) {
 // АРТЕФАКТАМ, СОБРАННЫМ 11.09.2026. Не выдуманы и не сокращены по
 // смыслу: сокращён только длинный перечень записей у `jarsigner`.
 // Артефакты, с которых они сняты:
-//   app-release.apk          14 848 048 Б  (ключ владельца)
+//   app-release.apk          14 848 048 Б  (ключ владельца, v2+v3)
 //   app-release.aab          14 153 511 Б  (ключ владельца)
 //   app-debug.apk            19 479 967 Б  (отладочный ключ Gradle)
 //   app-release-unsigned.apk 14 835 760 Б  (тот же исходник БЕЗ ключа)
 // Держать их в файле, а не читать с диска, обязательно: подсадки
 // гоняются в CI, где ни ключа, ни Android SDK, ни собранного пакета нет.
 export const CERTS_SAMPLES = {
-  releaseApk: "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: CN=Vasilii Petrov, L=Tijuana, C=MX\nSigner #1 certificate SHA-256 digest: 00072d34ef64b992818fc20d5ca9e3951c1066b4b307f1ab27e04c507d0ebb82\nSigner #1 certificate SHA-1 digest: e64b2c0a274f071e741d2fa79b8ee1d6d1b14f95\nSigner #1 certificate MD5 digest: 8e1a832c7d6c6e4b284235aef709b6ea\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 5d47f38c9764a09d4a98bab201ad3f13314301857eee5b1e428e88571a183a8f\nSigner #1 public key SHA-1 digest: 79b7a9fae3f2aeef3c5698b7af847a57e9b2e3e8\nSigner #1 public key MD5 digest: 9823a9268572602d1ef0ea0241d24c68\n",
+  releaseApk: "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): true\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: CN=Vasilii Petrov, L=Tijuana, C=MX\nSigner #1 certificate SHA-256 digest: 00072d34ef64b992818fc20d5ca9e3951c1066b4b307f1ab27e04c507d0ebb82\nSigner #1 certificate SHA-1 digest: e64b2c0a274f071e741d2fa79b8ee1d6d1b14f95\nSigner #1 certificate MD5 digest: 8e1a832c7d6c6e4b284235aef709b6ea\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 5d47f38c9764a09d4a98bab201ad3f13314301857eee5b1e428e88571a183a8f\nSigner #1 public key SHA-1 digest: 79b7a9fae3f2aeef3c5698b7af847a57e9b2e3e8\nSigner #1 public key MD5 digest: 9823a9268572602d1ef0ea0241d24c68\n",
   releaseAab: "      X.509, CN=Vasilii Petrov, L=Tijuana, C=MX\n      Signature algorithm: SHA384withRSA, 2048-bit key\n      X.509, CN=Vasilii Petrov, L=Tijuana, C=MX\n      Signature algorithm: SHA384withRSA, 2048-bit key\n- Signed by \"CN=Vasilii Petrov, L=Tijuana, C=MX\"\n    Signature algorithm: SHA256withRSA, 2048-bit key\njar verified.\nThe signer certificate will expire on 2054-01-27.\n",
   debugApk: "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 2c69c958fcac6492d2ea71a97bfd3f886193128e3b6a99c600c4a3f730ff11a6\nSigner #1 certificate SHA-1 digest: 0bdd433c1933e45321341f4d0477e6d0e5cd9046\nSigner #1 certificate MD5 digest: 46152dace292e2001cb86794c9bb4447\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 8ab21c593c2863403816a19b8d88ad18db2a50a1c260194d73a4b77c64233bb5\nSigner #1 public key SHA-1 digest: 1bcf54dee4e2ebd9a20b3273c757dbfe0a44c5d2\nSigner #1 public key MD5 digest: 7eceac482c1533fea6ee19da976573b3\n",
   unsignedApk: "DOES NOT VERIFY\nERROR: Missing META-INF/MANIFEST.MF\n",
@@ -639,6 +682,41 @@ function plant() {
         judgeSigning({
           ...healthy,
           gradle: healthy.gradle.replace(/^(\s*)signingConfig\s+.*$/m, "$1// снято подсадкой"),
+        }),
+    ],
+    [
+      // РОВНО ДОЛГ 142, и это тот самый позитивный контроль, который
+      // требовался при его закрытии: флаг убран — сторож обязан
+      // покраснеть, флаг возвращён — замолчать.
+      "enableV3Signing убран — схема v3 снова на умолчании AGP",
+      () =>
+        judgeSigning({
+          ...healthy,
+          gradle: healthy.gradle.replace(/enableV3Signing\s+true/, "// enableV3Signing снят подсадкой"),
+        }),
+    ],
+    [
+      // ТА САМАЯ ПРАВКА, КОТОРАЯ ПРОШЛА МИМО ПЕРВОЙ РЕДАКЦИИ ПРАВИЛА.
+      // Позитивный контроль 11.09.2026 делался руками на настоящем
+      // файле: строка закомментирована — сторож обязан покраснеть. Он
+      // остался зелёным, потому что `// enableV3Signing true` для
+      // регэкспа неотличимо от настройки. Здесь этот случай заперт
+      // подсадкой, чтобы правило нельзя было вернуть в прежний вид.
+      "флаг остался только в комментарии (// enableV3Signing true)",
+      () =>
+        judgeSigning({
+          ...healthy,
+          gradle: healthy.gradle.replace(/^(\s*)enableV3Signing true/m, "$1// enableV3Signing true"),
+        }),
+    ],
+    [
+      // Записанное умолчание — то же умолчание. Правило требует
+      // значения, а не упоминания имени.
+      "enableV3Signing объявлен, но выключен (false)",
+      () =>
+        judgeSigning({
+          ...healthy,
+          gradle: healthy.gradle.replace(/enableV3Signing\s+true/, "enableV3Signing false"),
         }),
     ],
     [
@@ -835,6 +913,26 @@ function plantPackage() {
         ),
     ],
     [
+      // Ровно то состояние, в котором артефакт лежал с 11.09.2026 до
+      // закрытия долга 142: подписан, подписан ТЕМ ключом, «Verifies»
+      // на месте, v2 true — и только v3 false. Правило
+      // `strong.length === 0` на нём сходилось и молчало.
+      "схема v3 выключена, v2 подтверждена — ровно долг 142",
+      () =>
+        judgePackage(
+          [
+            {
+              name: "app-release.apk",
+              text: CERTS_SAMPLES.releaseApk.replace(
+                "Verified using v3 scheme (APK Signature Scheme v3): true",
+                "Verified using v3 scheme (APK Signature Scheme v3): false",
+              ),
+            },
+          ],
+          OWNER_CERT_SHA256,
+        ),
+    ],
+    [
       "все схемы подписи выключены, а слово «Verifies» осталось",
       () =>
         judgePackage(
@@ -946,7 +1044,8 @@ function main() {
       : "keystore.properties на этой машине нет — сборка релиза здесь неподписанная";
     console.log(
       `check:release-signing — signingConfigs.release объявлен и подключён к релизному ` +
-        `варианту, секретов литералом 0, bundleRelease без ключа БРОСАЕТ, хранилищ ключа в ` +
+        `варианту, секретов литералом 0, bundleRelease без ключа БРОСАЕТ, enableV3Signing true ` +
+        `(схема v3 включена явно — долг 142, она одна несёт ротацию ключа), хранилищ ключа в ` +
         `дереве репозитория ${material} (искали и в индексе git, и на диске), ${propsWord}, ` +
         `версия одна на две платформы: ` +
         `versionCode ${vc} = CURRENT_PROJECT_VERSION ×${pbxValues(pbx, "CURRENT_PROJECT_VERSION").length}, ` +
