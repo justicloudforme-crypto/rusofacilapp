@@ -32,6 +32,11 @@ on:
       - "package.json"
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
+      - "scripts/check-apk-icons.mjs"
+      - "scripts/check-app-icons.mjs"
+      - "scripts/store-assets/generate-app-icons.mjs"
+      - "scripts/store-assets/png-io.mjs"
+      - "resources/icon.png"
       - "scripts/check-native-release-safety.mjs"
       - "scripts/check-foreground-service-types.mjs"
       - "scripts/check-native-permissions.mjs"
@@ -46,6 +51,11 @@ on:
       - "package.json"
       - "package-lock.json"
       - "scripts/check-apk-facts.mjs"
+      - "scripts/check-apk-icons.mjs"
+      - "scripts/check-app-icons.mjs"
+      - "scripts/store-assets/generate-app-icons.mjs"
+      - "scripts/store-assets/png-io.mjs"
+      - "resources/icon.png"
       - "scripts/check-native-release-safety.mjs"
       - "scripts/check-foreground-service-types.mjs"
       - "scripts/check-native-permissions.mjs"
@@ -165,6 +175,30 @@ jobs:
 
       - name: Тот же сторож — позитивный контроль
         run: npm run check:native-release-safety:plant
+
+      # ЗАХОД 7.191, долг 177. СЛОЙ ПАКЕТА У ИКОНКИ. Сторож `check:app-icons`
+      # в ci.yml читает репозиторий и сказать, что попало в пакет, не может
+      # по построению — а весь долг 177 в том и состоял, что между
+      # исходником и экраном телефона стоит сборка. Ключа для этого шага
+      # не нужно: debug-пакет уже собран выше, а иконки в нём те же самые.
+      #
+      # Пакет читается ПОТОКОМ ИЗ ZIP, и это не украшение: замер 7.190
+      # распаковал APK на диск macOS, где имена `res/zR.png` и `res/zr.png`
+      # неразличимы, потерял 51 запись из 520 и объявил круглую иконку
+      # mdpi «выброшенной сжатием ресурсов». Её никто не выбрасывал.
+      - name: Иконка В ПАКЕТЕ — та, что в репозитории, и не дефолт Capacitor
+        run: |
+          set -euo pipefail
+          node scripts/check-apk-icons.mjs \
+            --apk=android/app/build/outputs/apk/debug/app-debug.apk \
+            --sdk="$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}"
+
+      - name: Тот же сторож — позитивный контроль НА НАСТОЯЩЕМ ПАКЕТЕ
+        run: |
+          set -euo pipefail
+          node scripts/check-apk-icons.mjs \
+            --apk=android/app/build/outputs/apk/debug/app-debug.apk \
+            --sdk="$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}" --plant
 
       # Долг 111. Связку «тип службы переднего плана ⇄ парное разрешение»
       # нельзя проверить по исходникам: тип объявлен в манифесте
