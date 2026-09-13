@@ -9,6 +9,32 @@
   file), no dictionary/i18n system, nothing from the Next.js app. Colors
   match the site's light-theme brand tokens (src/app/globals.css) by
   hardcoded hex since there's no CSS variable pipeline here.
+
+  ДВЕ ПРИЧИНЫ, ПО КОТОРЫМ ЭТОТ ЭКРАН ПОЯВЛЯЕТСЯ (7.189, долг 175).
+  Первая — отказ загрузки: её ловит сам Capacitor через `server.errorPath`
+  (`BridgeWebViewClient.onReceivedError`). Вторая появилась 13.09.2026 и
+  Capacitor её НЕ ловит вовсе: сервер не отказал, а МОЛЧИТ — запрос висит,
+  и webview остаётся белым сколько угодно долго. Её ловит сторож загрузки
+  в `android/app/src/main/java/com/rusofacilapp/app/MainActivity.java`: он
+  сам грузит этот файл, если страница не нарисовалась за отведённое время.
+  Поэтому текст ниже говорит про обе причины сразу («не ответил или нет
+  соединения»), а не только про отсутствие сети: показать «Sin conexión»
+  человеку, у которого сеть есть, а молчит наш сервер, — неправда.
+
+  ПОЧЕМУ КНОПКА НЕ `location.reload()`. Этот файл загружен НЕ с боевого
+  адреса: Capacitor отдаёт его по своему локальному адресу
+  (`https://localhost/error.html`, см. `Bridge.getErrorUrl()`), и
+  `reload()` перезагружал бы сам экран ошибки — то есть кнопка «Повторить»
+  не пыталась повторить ничего. Поэтому адрес написан явно. Он обязан
+  совпадать с `PRODUCTION_URL` из `capacitor.config.ts`, и это сличает
+  `npm run check:native-shell`. Следствие, названное честно: в режиме
+  живого перезапуска (CAPACITOR_LIVE_RELOAD=1) кнопка уведёт на прод, а не
+  на ноутбук разработчика — для отладочной сборки это безвредно.
+
+  ВИДИМЫХ СТРОК РОВНО ТРИ, и все три существуют в двух локалях. Ни одной
+  английской строки на экране быть не может: набор видимого текста
+  сличается с ожидаемым в браузере (`scripts/check-native-shell-render.mjs`),
+  поэтому четвёртая строка, добавленная сюда мимо словаря, уронит сборку.
 -->
 <html lang="es">
   <head>
@@ -79,9 +105,9 @@
       <div class="head"></div>
       <div class="body"></div>
     </div>
-    <h1 data-i18n="title">Sin conexión</h1>
-    <p data-i18n="body">No pudimos conectar con RusoFácilapp. Revisa tu conexión a internet e inténtalo de nuevo.</p>
-    <button type="button" onclick="location.reload()" data-i18n="retry">Reintentar</button>
+    <h1 data-i18n="title">No pudimos abrir la aplicación</h1>
+    <p data-i18n="body">El servidor no respondió o tu teléfono no tiene conexión a internet. Revisa tu conexión y vuelve a intentarlo.</p>
+    <button type="button" id="retry" data-i18n="retry">Reintentar</button>
 
     <script>
       // No framework, no dictionary import — just enough to not show
@@ -89,11 +115,17 @@
       // launch. Keys mirror the two locales the rest of the app supports.
       var strings = {
         ru: {
-          title: "Нет соединения",
-          body: "Не удалось подключиться к RusoFácilapp. Проверьте интернет-соединение и попробуйте снова.",
+          title: "Не удалось открыть приложение",
+          body: "Сервер не ответил или на телефоне нет соединения с интернетом. Проверьте соединение и попробуйте снова.",
           retry: "Повторить",
         },
       };
+      // Боевой адрес. Обязан совпадать с PRODUCTION_URL из
+      // capacitor.config.ts — сличает npm run check:native-shell.
+      var SITE_URL = "https://rusofacilapp.com";
+      document.getElementById("retry").addEventListener("click", function () {
+        location.href = SITE_URL;
+      });
       var lang = (navigator.language || "").slice(0, 2);
       var t = strings[lang];
       if (t) {

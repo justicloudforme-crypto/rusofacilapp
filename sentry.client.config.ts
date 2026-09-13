@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { scrubTokensFromEvent } from "./src/lib/scrub-token";
+import { tagShellOnEvent } from "./src/lib/shell-tag";
 
 // The browser cannot read VERCEL_ENV, so next.config.ts bakes it in at
 // build time as NEXT_PUBLIC_DEPLOY_ENV (empty string off Vercel). Same
@@ -87,6 +88,17 @@ Sentry.init({
     // который SDK кладёт в событие, включает фрагмент тоже, а между
     // загрузкой страницы и первым эффектом React есть окно. Здесь оно
     // закрывается: значение вырезается, адрес страницы остаётся узнаваемым.
-    return scrubTokensFromEvent(event);
+    // ДОЛГ 174. Метка «веб или нативная оболочка» на КАЖДОМ событии: без
+    // неё ошибка с телефона неотличима от ошибки в мобильном браузере —
+    // адрес страницы, движок и `environment` у них одни и те же, потому
+    // что оболочка грузит тот же боевой сайт. Признак берётся из
+    // User-Agent, куда его дописывает `appendUserAgent` в
+    // `capacitor.config.ts`; ничего нового в запрос не добавляется.
+    // Ставится ПОСЛЕ вычистки токенов, потому что вычистка возвращает то
+    // же событие, и порядок тут не важен — важно, что метка есть всегда.
+    return tagShellOnEvent(
+      scrubTokensFromEvent(event),
+      typeof navigator === "undefined" ? null : navigator.userAgent,
+    );
   },
 });

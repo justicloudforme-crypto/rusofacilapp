@@ -127,7 +127,7 @@ export interface LegalDocument {
 // Insights) — долг 74. Дата написана рукой и НЕ берётся из времени сборки:
 // сборка идёт при каждом деплое, а документ меняется по решению, и дата
 // обязана означать второе (тот же класс, что долги 39 и 40).
-const PRIVACY_LAST_UPDATED = "2026-09-09";
+const PRIVACY_LAST_UPDATED = "2026-09-13";
 
 // 08.09.2026: section 3 of the Terms gained the three things it had never
 // said out loud — that cash (an OXXO voucher) is offered to buyers in
@@ -348,6 +348,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• RevenueCat — gestión de las suscripciones compradas dentro de las aplicaciones móviles (App Store y Google Play). Recibe el identificador de la compra y tu identificador interno de usuario. Las compras hechas en la web no pasan por él, sino por Stripe.",
           "• Upstash — límite de intentos de inicio de sesión y caché de contenido; puede ver tu correo o dirección IP de forma transitoria, sin construir un perfil sobre ti.",
           "• OpenAI — la narración de las lecciones fue generada de antemano con su servicio de síntesis de voz, a partir del texto del curso. Los archivos de audio resultantes están guardados en nuestro propio almacenamiento: al escuchar una lección no se envía nada a OpenAI, ni texto tuyo ni datos personales.",
+          "• MyMemory — traducción de palabras sueltas. Cuando tocas una palabra de un cuento que no está en nuestro propio diccionario, esa palabra se envía a MyMemory, una memoria de traducción pública de otra empresa, para obtener su traducción. Se envía sólo la palabra y el par de idiomas, nada más. La petición la hace nuestro servidor, no tu teléfono: MyMemory no recibe tu dirección IP, ni tu cuenta, ni tu progreso, y no puede saber quién tocó la palabra.",
+          "• ExchangeRate-API — tipos de cambio. Para poder mostrarte el precio aproximado en la moneda de tu país, nuestro servidor le pide su tabla de cambios unas pocas veces al día. En esa petición no va nada tuyo: ni tu cuenta, ni tu dirección, ni qué estabas mirando.",
+          "• Anthropic — nos ayuda a redactar los subtítulos y los borradores de las lecciones en video. Lo usamos nosotros desde el panel de administración y le enviamos texto del curso. Nada tuyo pasa por ahí.",
           "• YouTube/Google — cuando reproduces un video incrustado en nuestra biblioteca, YouTube puede recopilar datos según su propia política de privacidad, independiente de la nuestra.",
           "No compartimos tus datos con ningún otro tercero salvo que la ley nos obligue a ello.",
         ],
@@ -437,6 +440,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• RevenueCat — управление подписками, купленными внутри мобильных приложений (App Store и Google Play). Получает идентификатор покупки и ваш внутренний идентификатор пользователя. Покупки на сайте через него не проходят — они идут через Stripe.",
           "• Upstash — ограничение попыток входа и кэширование контента; может видеть ваш email или IP-адрес кратковременно, без построения профиля о вас.",
           "• OpenAI — озвучка уроков была создана заранее его синтезатором речи на основе текста курса. Готовые аудиофайлы хранятся в нашем собственном хранилище: при прослушивании урока в OpenAI не уходит ничего — ни ваш текст, ни персональные данные.",
+          "• MyMemory — перевод отдельных слов. Когда вы нажимаете в рассказе на слово, которого нет в нашем собственном словаре, это слово уходит в MyMemory — публичную память переводов другой компании — за переводом. Уходит только само слово и языковая пара, больше ничего. Запрос делает наш сервер, а не ваш телефон: MyMemory не получает ни вашего IP-адреса, ни аккаунта, ни прогресса и не может узнать, кто нажал на слово.",
+          "• ExchangeRate-API — курсы валют. Чтобы показать вам примерную цену в валюте вашей страны, наш сервер несколько раз в сутки запрашивает у него таблицу курсов. В этом запросе нет ничего вашего: ни аккаунта, ни адреса, ни того, что вы смотрели.",
+          "• Anthropic — помогает нам составлять субтитры и черновики видео-уроков. Им пользуемся мы сами из административной панели и отправляем туда текст курса. Ничего вашего через него не проходит.",
           "• YouTube/Google — при просмотре встроенного видео из нашей медиатеки YouTube может собирать данные согласно своей собственной политике конфиденциальности, независимой от нашей.",
           "Мы не передаём ваши данные никаким другим третьим лицам, кроме случаев, когда этого требует закон.",
         ],

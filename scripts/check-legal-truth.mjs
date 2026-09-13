@@ -30,6 +30,19 @@
 //    именем из таблицы ниже. Появится завтра новый внешний обработчик и
 //    не будет назван — сборка покраснеет.
 //
+// 3. ВНЕШНИЕ АДРЕСА (заведено 13.09.2026, долг 173). Направление 2 видит
+//    только тех, кто пришёл пакетом npm. Вызов по адресу пакета не
+//    требует, и ровно так в политике оказалась дыра: `api.mymemory.translated.net`
+//    получает слово ученика при каждом тапе мимо нашего банка с самого
+//    появления тапа по слову, а в тексте политики вхождений «MyMemory»
+//    было 0 — и сторож молчал, потому что MyMemory не зависимость.
+//    Поэтому отдельно от зависимостей читаются АДРЕСА: каждый литерал
+//    `https://<хост>` в `src/` (кроме тестов, кроме `src/generated/`,
+//    кроме строк-комментариев) обязан быть либо назван в политике ОБЕИХ
+//    локалей под именем из HOST_PROCESSORS, либо стоять в
+//    HOSTS_WITHOUT_NAME с причиной. Хост, которого нет ни там, ни там, —
+//    падение: это и есть «код ходит туда, о чём политика молчит».
+//
 // Контроль: `node scripts/check-legal-truth.mjs --plant`.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync, readdirSync } from "node:fs";
@@ -120,6 +133,42 @@ const SKIP = new Map([
   ["@capacitor/splash-screen", "нативная оболочка"],
   ["@capacitor/status-bar", "нативная оболочка"],
   ["@capgo/capacitor-media-session", "нативный проигрыватель, локально"],
+]);
+
+/**
+ * ВНЕШНИЙ АДРЕС → как получатель обязан быть назван в политике.
+ * Ключ — хост, а не пакет: вызов наружу пакета не требует (долг 173).
+ */
+const HOST_PROCESSORS = new Map([
+  // Слово ученика, мимо нашего банка переводов. Единственный адрес в этом
+  // списке, который получает ТЕКСТ, введённый поведением ученика.
+  ["api.mymemory.translated.net", "MyMemory"],
+  // Таблица курсов для «примерной цены в валюте посетителя».
+  ["open.er-api.com", "ExchangeRate-API"],
+  // Субтитры и черновики видео-уроков, админские маршруты.
+  ["api.anthropic.com", "Anthropic"],
+  // Озвучка: расшифровка Whisper. В продуктовом пути не вызывается (это
+  // стережёт src/lib/no-runtime-tts.test.ts), но литерал в src/ есть, и
+  // молчать о нём нельзя — в политике OpenAI назван.
+  ["api.openai.com", "OpenAI"],
+  // Встроенный проигрыватель и его API-скрипт: сюда ходит БРАУЗЕР ученика.
+  ["www.youtube.com", "YouTube"],
+  ["img.youtube.com", "YouTube"],
+  // YouTube Data API v3, админская проверка живости встроек.
+  ["www.googleapis.com", "Google"],
+]);
+
+/**
+ * Адреса, которых в политике быть не обязано, каждый с причиной. Причина
+ * обязательна по той же причине, что и у SKIP: список без причин через
+ * месяц нельзя ни проверить, ни объяснить проверяющему магазина.
+ */
+const HOSTS_WITHOUT_NAME = new Map([
+  ["schema.org", "пространство имён JSON-LD: строка стоит в разметке `@context`, по сети не запрашивается"],
+  ["www.w3.org", "пространство имён SVG (`xmlns`), по сети не запрашивается"],
+  ["rusofacilapp.com", "наш собственный адрес"],
+  ["t.me", "внешняя ссылка на группу: переход делает сам ученик нажатием, код наружу ничего не отправляет"],
+  ["github.com", "загрузка бинарника yt-dlp админским маршрутом; наружу уходит GET за файлом релиза, данных ученика в запросе нет"],
 ]);
 
 /** Названы в политике, но npm-зависимостью не являются, каждый с
@@ -261,6 +310,57 @@ function scan() {
     namedOk.push(label);
   }
 
+  // --- 2.5 внешние адреса (долг 173) -----------------------------------
+  //
+  // Строки-комментарии отрезаются, и это не придирка: `src/lib/safe-redirect.ts`
+  // объясняет правку на примере `https://evil.com`, и без этого отреза
+  // сторож требовал бы назвать evil.com в политике конфиденциальности.
+  const hostFiles = srcFiles.filter((f) => !f.startsWith("src/generated/"));
+  const hosts = new Map();
+  hostFiles.forEach((file) => {
+    let src;
+    try {
+      src = readFileSync(file, "utf8");
+    } catch {
+      return;
+    }
+    src.split("\n").forEach((line, i) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return;
+      for (const m of line.matchAll(/["'`]https?:\/\/([A-Za-z0-9.-]+)/g)) {
+        const host = m[1].toLowerCase();
+        // Не адрес: заполнитель вида `https://...` в placeholder поля ввода.
+        if (!/^(?:[a-z0-9-]+\.)+[a-z]{2,}$/.test(host)) continue;
+        if (!hosts.has(host)) hosts.set(host, `${file}:${i + 1}`);
+      }
+    });
+  });
+
+  const namedHosts = [];
+  for (const [host, where] of hosts) {
+    if (HOSTS_WITHOUT_NAME.has(host)) continue;
+    const label = HOST_PROCESSORS.get(host);
+    if (!label) {
+      failures.push(
+        `код ходит на «${host}» (${where}), а политика о нём МОЛЧИТ.\n` +
+          `        Внешний адрес — это либо получатель данных (впишите хост в HOST_PROCESSORS ` +
+          `И его имя в раздел обработчиков ОБЕИХ локалей ${LEGAL}), либо не получатель ` +
+          `(впишите в HOSTS_WITHOUT_NAME с причиной). Молча — нельзя: именно так ` +
+          `MyMemory и прожил в коде, не будучи назван в политике (долг 173).`,
+      );
+      continue;
+    }
+    for (const [locale, body] of Object.entries(sections)) {
+      if (!body) continue;
+      if (body.includes(label)) continue;
+      failures.push(
+        `код ходит на «${host}» (${where}), а получатель «${label}» НЕ НАЗВАН в разделе ` +
+          `обработчиков локали ${locale}. Анкета Data safety спрашивает ровно об этом списке.`,
+      );
+    }
+    namedHosts.push(`${host} → ${label}`);
+  }
+
   // --- 3. дата --------------------------------------------------------
   const dates = [...text.matchAll(/const (TERMS|PRIVACY)_LAST_UPDATED = "(\d{4}-\d{2}-\d{2})";/g)];
   if (dates.length !== 2) {
@@ -313,6 +413,8 @@ function scan() {
     apiDirs: apiDirs.length,
     claims,
     imported,
+    hosts: [...hosts.keys()],
+    namedHosts,
     processors: [...new Set(namedOk)],
     unknown,
     dates: dates.map((d) => `${d[1]}=${d[2]}`),
@@ -335,6 +437,10 @@ function report(r) {
     `  обработчики: зависимостей, импортируемых из src/, ${r.imported.length}; ` +
       `из них обработчиков данных ${r.processors.length} (${r.processors.join(", ")}), ` +
       `остальные — в SKIP с причиной; названы в обеих локалях все`,
+  );
+  console.log(
+    `  внешние адреса: найдено в src/ ${r.hosts.length}; из них получателей данных ${r.namedHosts.length} ` +
+      `(${r.namedHosts.join(", ")}), остальные ${r.hosts.length - r.namedHosts.length} — в HOSTS_WITHOUT_NAME с причиной`,
   );
   console.log(
     `  названы без зависимости: ${[...NAMED_WITHOUT_DEPENDENCY.keys().toArray?.() ?? NAMED_WITHOUT_DEPENDENCY.keys()].join(", ")}`,
@@ -416,6 +522,43 @@ function plantControls() {
         !r.failures.some((m) => m.includes("«Sentry»") && m.includes("локали ru")),
     },
     {
+      name: "ПОДСАДКА ДОЛГА 173: фиктивный вызов наружу по адресу, которого нет в политике",
+      plant: () => {
+        writeFileSync(
+          PLANTED,
+          'export const ping = () => fetch("https://tracker.example.net/collect", { method: "POST" });\n',
+        );
+        execFileSync("git", ["add", "-N", PLANTED]);
+        return () => {
+          execFileSync("git", ["rm", "-q", "--cached", PLANTED]);
+          rmSync(PLANTED);
+        };
+      },
+      expect: (r) => r.failures.some((m) => m.includes("«tracker.example.net»") && m.includes("МОЛЧИТ")),
+    },
+    {
+      name: "ОБРАТНОЕ НАПРАВЛЕНИЕ ТОГО ЖЕ ПРАВИЛА: имя получателя убрано из политики, а код к нему ходит",
+      plant: () => swapLine(LEGAL, "• MyMemory — traducción de palabras sueltas",
+        '          "• Traducción de palabras sueltas.",'),
+      expect: (r) =>
+        r.failures.some((m) => m.includes("api.mymemory.translated.net") && m.includes("«MyMemory»") && m.includes("локали es")) &&
+        !r.failures.some((m) => m.includes("«MyMemory»") && m.includes("локали ru")),
+    },
+    {
+      name: "и в русской локали тоже — вторая его не спасает",
+      plant: () => swapLine(LEGAL, "• MyMemory — перевод отдельных слов",
+        '          "• Перевод отдельных слов.",'),
+      expect: (r) =>
+        r.failures.some((m) => m.includes("«MyMemory»") && m.includes("локали ru")) &&
+        !r.failures.some((m) => m.includes("«MyMemory»") && m.includes("локали es")),
+    },
+    {
+      name: "ОТРИЦАТЕЛЬНЫЙ: адрес внутри строки-комментария (`https://evil.com` в safe-redirect.ts) политики не требует",
+      plant: () => () => {},
+      expect: (r) => r.failures.length === 0,
+      negative: true,
+    },
+    {
       name: "зависимость, о которой таблица сторожа не знает вовсе",
       plant: () => {
         writeFileSync(PLANTED, 'import { Redis } from "@upstash/redis";\nexport const y = Redis;\n');
@@ -435,7 +578,7 @@ function plantControls() {
     {
       name: "дата стала временем сборки вместо решения",
       plant: () =>
-        swap(LEGAL, 'const PRIVACY_LAST_UPDATED = "2026-09-09";', "const PRIVACY_LAST_UPDATED = new Date().toISOString().slice(0, 10);"),
+        swapLine(LEGAL, "const PRIVACY_LAST_UPDATED = \"", "const PRIVACY_LAST_UPDATED = new Date().toISOString().slice(0, 10);"),
       expect: (r) => r.failures.some((m) => m.includes("вычисляется, а не написана рукой")),
     },
     {

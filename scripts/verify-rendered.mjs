@@ -254,7 +254,23 @@ async function main() {
       ["scripts/check-bottom-inset.mjs", `--base=${BASE}`, "--plant", ...passthrough],
       { stdio: "inherit" }
     );
+    // Девятым на том же сервере — долг 173, часть 2, пункт 2: оболочка
+    // обязана показать страницу, а не пустоту, и её экран ошибки обязан
+    // быть на языке устройства без единой английской строки. Здесь, а не
+    // отдельным шагом, по той же причине, что и соседи: сервер уже поднят,
+    // браузер уже установлен, сборка своя.
+    //
+    // Подсадки у этой проверки ВСТРОЕННЫЕ (четыре), отдельного
+    // `--plant`-прогона нет: три из них живут внутри одного открытия
+    // страницы, и выносить их в отдельный процесс значило бы поднимать
+    // браузер второй раз за тем же самым.
+    const nativeShellRender = spawnSync(
+      process.execPath,
+      ["scripts/check-native-shell-render.mjs", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
     return (
+      (nativeShellRender.status ?? 1) ||
       (bottomInset.status ?? 1) ||
       (bottomInsetPlant.status ?? 1) ||
       (run.status ?? 1) ||
