@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { isDeployedEnvironment } from "./src/lib/deploy-environment";
 import { scrubTokensFromEvent } from "./src/lib/scrub-token";
+import { tagShellOnEvent, userAgentFromSentryEvent } from "./src/lib/shell-tag";
 
 // null on a laptop and in CI, "production"/"preview"/"development" on
 // Vercel. Gating on this (not NODE_ENV) is what stops a local
@@ -30,5 +31,11 @@ Sentry.init({
   // стена стоит не против него, а против ЛЮБОГО другого адреса с
   // токеном, который когда-нибудь напишут: `?token=` в серверном
   // событии — это и журнал, и `Referer`, и ссылка в крошке.
-  beforeSend: (event) => scrubTokensFromEvent(event),
+  // ДОЛГ 174. Та же метка, что в браузерном конфиге, только User-Agent
+  // берётся не из `navigator`, которого здесь нет, а из заголовков
+  // запроса в самом событии — их кладёт туда штатная интеграция
+  // requestData. Серверная половина нужна не для симметрии: ошибка
+  // серверного компонента или маршрута API, случившаяся при запросе ИЗ
+  // оболочки, иначе тоже выглядела бы вебом.
+  beforeSend: (event) => tagShellOnEvent(scrubTokensFromEvent(event), userAgentFromSentryEvent(event)),
 });

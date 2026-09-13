@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { isDeployedEnvironment } from "./src/lib/deploy-environment";
+import { tagShellOnEvent, userAgentFromSentryEvent } from "./src/lib/shell-tag";
 
 // Same deployment gate as sentry.server.config.ts.
 const isDeployed = isDeployedEnvironment();
@@ -21,4 +22,8 @@ Sentry.init({
   enabled: isDeployed,
   tracesSampleRate: 0.1,
   debug: false,
+  // ДОЛГ 174. Третья половина той же метки. Краевой runtime исполняет
+  // `src/proxy.ts`, то есть стоит ПЕРЕД каждым запросом оболочки — и его
+  // события без метки были бы единственными неразмеченными.
+  beforeSend: (event) => tagShellOnEvent(event, userAgentFromSentryEvent(event)),
 });
