@@ -831,19 +831,6 @@ export default function StoryText({
         : null
     );
 
-    // Native half of the above — a no-op on web (see native-media-session.ts).
-    // Android's System WebView, unlike Chrome, doesn't surface
-    // navigator.mediaSession as a real OS notification/lock-screen player
-    // on its own; this drives the same handlers through
-    // @capgo/capacitor-media-session so the native shell gets one too.
-    void setNativeActionHandler("play", play);
-    void setNativeActionHandler("pause", pause);
-    void setNativeActionHandler("seekbackward", seekBackward);
-    void setNativeActionHandler("seekforward", seekForward);
-    void setNativeActionHandler("previoustrack", previousTrack);
-    void setNativeActionHandler("nexttrack", nextTrack);
-    void setNativeSeekToHandler(hasFullAudio ? (seekTime) => mediaActionsRef.current.seekTo(seekTime) : null);
-
     return () => {
       ms.setActionHandler("play", null);
       ms.setActionHandler("pause", null);
@@ -852,6 +839,39 @@ export default function StoryText({
       ms.setActionHandler("previoustrack", null);
       ms.setActionHandler("nexttrack", null);
       ms.setActionHandler("seekto", null);
+    };
+  }, [hasMediaSessionTarget, hasFullAudio]);
+
+  // НАТИВНАЯ ПОЛОВИНА — ОТДЕЛЬНЫМ ЭФФЕКТОМ, И ЭТО ВЕСЬ СМЫСЛ ДОЛГА 152.
+  //
+  // До 13.09.2026 все четыре вызова `setNative*` стояли ВНУТРИ эффектов
+  // выше, то есть ПОСЛЕ сторожа `"mediaSession" in navigator`. Лекарство
+  // от болезни было заперто самой болезнью: в Android System WebView, на
+  // котором работает оболочка, этого API нет вовсе (замерено на живом
+  // телефоне 12.09.2026: `'mediaSession' in navigator` → false,
+  // `MediaMetadata` → undefined), поэтому ни одна нативная строка не
+  // выполнялась ни разу — карточки проигрывателя в шторке не было, а
+  // `MediaSessionService` не стартовал (долг 111).
+  //
+  // Признак здесь ДРУГОЙ и не зависит от веб-API: `nativeOnly()` внутри
+  // src/lib/native-media-session.ts спрашивает `Capacitor.isNativePlatform()`
+  // и на вебе возвращает `undefined`, ничего не трогая. Поэтому эффект
+  // безопасно живёт без всякого сторожа — на вебе он стоит ровно ничего.
+  //
+  // Зависимости те же, что у веб-половины, нарочно: обе половины обязаны
+  // сниматься и ставиться в одну и ту же минуту, иначе шторка и страница
+  // разойдутся в том, какая дорожка играет.
+  useEffect(() => {
+    if (!hasMediaSessionTarget) return;
+    void setNativeActionHandler("play", () => mediaActionsRef.current.play());
+    void setNativeActionHandler("pause", () => mediaActionsRef.current.pause());
+    void setNativeActionHandler("seekbackward", () => mediaActionsRef.current.seekBackward());
+    void setNativeActionHandler("seekforward", () => mediaActionsRef.current.seekForward());
+    void setNativeActionHandler("previoustrack", () => mediaActionsRef.current.previousTrack());
+    void setNativeActionHandler("nexttrack", () => mediaActionsRef.current.nextTrack());
+    void setNativeSeekToHandler(hasFullAudio ? (seekTime) => mediaActionsRef.current.seekTo(seekTime) : null);
+
+    return () => {
       void setNativeActionHandler("play", null);
       void setNativeActionHandler("pause", null);
       void setNativeActionHandler("seekbackward", null);
@@ -872,7 +892,16 @@ export default function StoryText({
     // interface — it's namespaced under `navigator` rather than a
     // local/ref.
     navigator.mediaSession.metadata = new MediaMetadata({ title, artist: author, artwork });
-    void setNativeMediaMetadata({ title, artist: author, artwork });
+  }, [hasMediaSessionTarget, title, author]);
+
+  // Метаданные, нативная половина — вне веб-сторожа (долг 152).
+  useEffect(() => {
+    if (!hasMediaSessionTarget) return;
+    void setNativeMediaMetadata({
+      title,
+      artist: author,
+      artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],
+    });
   }, [hasMediaSessionTarget, title, author]);
 
   // Playback state: only when it actually flips.
@@ -880,6 +909,11 @@ export default function StoryText({
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
     if (!hasMediaSessionTarget) return;
     navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+  }, [hasMediaSessionTarget, playing]);
+
+  // Состояние воспроизведения, нативная половина — вне веб-сторожа (долг 152).
+  useEffect(() => {
+    if (!hasMediaSessionTarget) return;
     void setNativePlaybackState(playing);
   }, [hasMediaSessionTarget, playing]);
 
@@ -898,11 +932,67 @@ export default function StoryText({
       position: Math.min(audioEl.currentTime, audioEl.duration),
     };
     navigator.mediaSession.setPositionState(state);
-    void setNativePositionState(state);
+  }, [hasMediaSessionTarget, hasFullAudio, playing, rate, readingQueueIndex]);
+
+  // Ползунок, нативная половина — вне веб-сторожа (долг 152). Условия те
+  // же, кроме самого веб-API: без настоящей одной дорожки (`hasFullAudio`)
+  // сообщать ОС нечего — у цепочки по предложениям нет общей длительности.
+  useEffect(() => {
+    if (!hasMediaSessionTarget || !hasFullAudio) return;
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+    if (!Number.isFinite(audioEl.duration) || audioEl.duration <= 0) return;
+    void setNativePositionState({
+      duration: audioEl.duration,
+      playbackRate: rate,
+      position: Math.min(audioEl.currentTime, audioEl.duration),
+    });
   }, [hasMediaSessionTarget, hasFullAudio, playing, rate, readingQueueIndex]);
 
   const progress =
     queue.length > 0 && readingQueueIndex !== null ? (readingQueueIndex + 1) / queue.length : 0;
+
+  /**
+   * ДОЛГ 158: «два голоса при тапе на слово во время чтения».
+   *
+   * Правило одно и держится этой парой функций: пока человек занят
+   * словом, рассказ молчит, а как только со словом покончено — звучит
+   * дальше С ТОГО ЖЕ МЕСТА.
+   *
+   * Пауза берётся у `handlePlayPause` — ТОЙ ЖЕ, что у кнопки, а не
+   * собственным `audio.pause()`. Иначе состояние `playing` разошлось бы
+   * с настоящим звуком, и кнопка плеера начала бы врать (заметка к долгу
+   * в PROGRESS.md). По той же причине возврат — тоже `handlePlayPause`:
+   * у полной дорожки он продолжает с `currentTime`, у цепочки по
+   * предложениям — с `currentTime` текущего отрезка, и это ДВА разных
+   * случая, которые уже разведены внутри неё.
+   *
+   * `resumeAfterWordRef` — «рассказ остановили МЫ, а не человек». Без
+   * этого признака возврат случался бы и там, где человек сам нажал
+   * паузу перед тапом, то есть мы включали бы звук против его воли.
+   *
+   * Возврат зовётся из ТРЁХ мест, и это не перестраховка: клип слова
+   * может кончиться (`ended`), может быть остановлен второй нажатой 🔊
+   * (`pause`), а может не зазвучать вовсе — сеть отвалилась, клипа нет,
+   * человек просто закрыл карточку. Последний путь (`close`) и есть тот,
+   * без которого рассказ замолчал бы навсегда.
+   */
+  const resumeAfterWordRef = useRef(false);
+
+  function pauseForWord() {
+    if (!playing) return;
+    handlePlayPause();
+    resumeAfterWordRef.current = true;
+  }
+
+  function resumeAfterWord() {
+    if (!resumeAfterWordRef.current) return;
+    resumeAfterWordRef.current = false;
+    // Человек за это время нажал «играть» сам — второй вызов поставил бы
+    // паузу, то есть возврат выключил бы звук.
+    if (playing) return;
+    handlePlayPause();
+  }
 
   async function handleWordClick(word: string, wordEl: HTMLElement, queueIndex: number) {
     const rect = wordEl.getBoundingClientRect();
@@ -991,6 +1081,9 @@ export default function StoryText({
     setPopoverPosition(null);
     setTranslation(null);
     setWordAudio({ status: "loading" });
+    // Долг 158: карточка закрыта — со словом покончено в любом исходе,
+    // включая «клип так и не зазвучал».
+    resumeAfterWord();
   }
 
   /**
@@ -1113,7 +1206,22 @@ export default function StoryText({
                     // sentence, matched back to the specific word element
                     // that was actually clicked.
                     const wordEl = (event.target as HTMLElement).closest<HTMLElement>("button[data-word]");
-                    if (wordEl?.dataset.word) void handleWordClick(wordEl.dataset.word, wordEl, queueIndex);
+                    // ДОЛГ 158. Тап по СЛОВУ и тап по ПРЕДЛОЖЕНИЮ — два
+                    // разных намерения, и до 13.09.2026 они склеивались:
+                    // попадание в слово открывало карточку перевода И
+                    // вдобавок звало `handleSentenceClick`, то есть
+                    // перематывало чтение на начало этого предложения и
+                    // продолжало читать. Отсюда и жалоба владельца: слово
+                    // нажато ради произношения, а рассказ не замолкает —
+                    // а после нажатия 🔊 звучат оба голоса сразу.
+                    // Решение владельца: тап по слову СТАВИТ рассказ на
+                    // паузу и возвращает его с того же места (не с начала
+                    // предложения — поэтому перемотки здесь больше нет).
+                    if (wordEl?.dataset.word) {
+                      pauseForWord();
+                      void handleWordClick(wordEl.dataset.word, wordEl, queueIndex);
+                      return;
+                    }
                     handleSentenceClick(queueIndex);
                   }}
                   onKeyDown={(event) => handleSentenceKeyDown(event, queueIndex)}
@@ -1204,6 +1312,10 @@ export default function StoryText({
                     text={activeWord}
                     label={dict.wordListenLabel}
                     audioUrl={wordAudioUrl ?? undefined}
+                    // Долг 158. Клип слова зазвучал — рассказ замолкает;
+                    // кончился или остановлен — рассказ возвращается.
+                    onPlay={pauseForWord}
+                    onStop={resumeAfterWord}
                   />
                 )}
               </div>

@@ -79,6 +79,27 @@ import type { Locale } from "@/i18n/config";
 export interface LegalSection {
   heading: string;
   paragraphs: string[];
+  /**
+   * Якорь на раздел: `id` у `<section>` и, значит, адрес вида
+   * `/es/privacy#tus-derechos`.
+   *
+   * Заведён 13.09.2026 ради поля «Delete account URL» в анкете Google
+   * Play Data safety: там требуется адрес, ведущий ИМЕННО на объяснение,
+   * как удалить учётную запись, а не на политику целиком. Ссылка на
+   * документ без якоря — это ссылка на 12 разделов, среди которых
+   * проверяющий обязан искать сам, и на ревью это законное замечание.
+   *
+   * Слаг у обеих локалей ОДИН И ТОТ ЖЕ (`tus-derechos`), хотя заголовки
+   * разные («7. Tus derechos» и «7. Ваши права»). Это сделано нарочно:
+   * якорь — технический адрес, а не видимый текст, и один адрес обязан
+   * работать на обеих страницах, иначе в анкету придётся вписывать два
+   * разных, а поле там одно.
+   *
+   * Необязательное: раздел без якоря по-прежнему рисуется, просто на
+   * него нельзя сослаться. Обязательным сделано только то, на что
+   * ссылаются снаружи, и это стережёт `check:legal-truth`.
+   */
+  slug?: string;
 }
 
 export interface LegalDocument {
@@ -345,6 +366,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       },
       {
         heading: "7. Tus derechos",
+        slug: "tus-derechos",
         paragraphs: [
           "Tienes derecho a acceder, rectificar, eliminar y, en su caso, portar tus datos personales (derechos ARCO conforme a la ley mexicana). Puedes eliminar tu cuenta tú mismo en cualquier momento desde tu perfil. Para cualquier otra solicitud relacionada con tus datos, escríbenos a support@rusofacilapp.com y la atenderemos en un plazo razonable.",
         ],
@@ -433,6 +455,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       },
       {
         heading: "7. Ваши права",
+        // Тот же слаг, что у испанской локали, и это не копипаста, а
+        // правило — см. комментарий к `slug` в LegalSection.
+        slug: "tus-derechos",
         paragraphs: [
           "У вас есть право на доступ, исправление, удаление и, в применимых случаях, перенос своих персональных данных. Удалить аккаунт вы можете самостоятельно в любой момент в личном профиле. По любым другим запросам, связанным с вашими данными, пишите на support@rusofacilapp.com — мы ответим в разумный срок.",
         ],

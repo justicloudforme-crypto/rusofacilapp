@@ -16,7 +16,12 @@ export default function LegalDocumentView({ doc }: { doc: LegalDocument }) {
 
       <div className="mt-10 space-y-8">
         {doc.sections.map((section) => (
-          <section key={section.heading}>
+          // `id` — это и есть якорь на раздел (`/es/privacy#tus-derechos`),
+          // нужный полю «Delete account URL» анкеты Google Play. Раздел
+          // без слага получает `undefined`, то есть атрибута в разметке
+          // не появляется вовсе — серверный HTML таких разделов не
+          // меняется ни на знак.
+          <section key={section.heading} id={section.slug}>
             <h2 className="text-lg font-semibold tracking-tight">{section.heading}</h2>
             <div className="mt-2 space-y-3 text-sm leading-relaxed text-foreground/75">
               {section.paragraphs.map((paragraph, i) => (

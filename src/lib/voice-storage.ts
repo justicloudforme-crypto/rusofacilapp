@@ -1,5 +1,5 @@
 import "server-only";
-import { rm, unlink } from "node:fs/promises";
+import { unlink } from "node:fs/promises";
 import path from "node:path";
 
 /**
@@ -23,7 +23,6 @@ import path from "node:path";
  * one prefix at a time, with no --force — because how much of that data
  * to remove is the owner's call, not a side effect of a code change.
  */
-const LOCAL_DIR = path.join(process.cwd(), "public", "audio", "submissions");
 
 /** Deletes one legacy recording by the URL stored in
  * VoiceSubmission.audioUrl — dispatches on its shape (absolute Blob URL
@@ -41,15 +40,12 @@ export async function deleteVoiceSubmission(audioUrl: string): Promise<void> {
 
 /** Deletes every legacy recording under a user's prefix in one shot — used
  * on account deletion, where Prisma's cascade removes the VoiceSubmission
- * rows but can't reach the files/blobs they point to. */
-export async function deleteAllVoiceSubmissionsForUser(userId: string): Promise<void> {
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const { list, del } = await import("@vercel/blob");
-    const { blobs } = await list({ prefix: `submissions/${userId}/` });
-    if (blobs.length > 0) {
-      await del(blobs.map((blob) => blob.url));
-    }
-    return;
-  }
-  await rm(path.join(LOCAL_DIR, userId), { recursive: true, force: true });
-}
+ * rows but can't reach the files/blobs they point to.
+ *
+ * Сам код уборки живёт в `voice-blob-cleanup.ts` и отсюда только
+ * перевыставляется — долг 167: второй путь удаления
+ * (`prisma/delete-test-accounts.ts`) обычный скрипт, а этот файл
+ * открывается строкой `import "server-only"` и из скрипта не
+ * импортируется в принципе. Один код на оба пути — единственный способ
+ * не дать им разойтись снова. */
+export { deleteAllVoiceSubmissionsForUser } from "./voice-blob-cleanup";

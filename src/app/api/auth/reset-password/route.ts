@@ -17,8 +17,12 @@ export async function POST(request: NextRequest) {
 
   const fail = (error: string) => {
     const url = new URL(`/${lang}/reset-password`, request.url);
-    url.searchParams.set("token", token);
     url.searchParams.set("error", error);
+    // ДОЛГ 164. Токен возвращается человеку во ФРАГМЕНТЕ, а не в строке
+    // запроса: браузер фрагмент на сервер не отправляет, поэтому в
+    // журналах и в событиях Sentry его нет. Возвращать его надо — иначе
+    // после «слишком короткий пароль» вторую попытку делать нечем.
+    url.hash = `token=${encodeURIComponent(token)}`;
     return NextResponse.redirect(url, { status: 303 });
   };
 

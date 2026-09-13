@@ -88,6 +88,7 @@ function renderCalendar(dict = ES, over: Record<string, unknown> = {}) {
       daySources={SOURCES}
       todayKey={TODAY}
       firstDateKey="2026-06-15"
+      missedFromDateKey="2026-06-15"
       dict={dict}
       {...over}
     />,
@@ -258,7 +259,7 @@ describe("клетка: число не двигается и не меняет 
     const august = cell("2026-08-13")!;
     expect(august.className).not.toContain("border-dashed"); // control: neither is a plain day
 
-    const { container } = renderCalendar(ES, { firstDateKey: "2026-08-10", todayKey: "2026-08-20" });
+    const { container } = renderCalendar(ES, { firstDateKey: "2026-08-10", missedFromDateKey: "2026-08-10", todayKey: "2026-08-20" });
     const outside = container.querySelectorAll('[data-state="beforeStart"]');
     const future = container.querySelectorAll('[data-state="future"]');
     expect(outside.length).toBeGreaterThan(0);
