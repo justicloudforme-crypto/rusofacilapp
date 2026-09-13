@@ -232,7 +232,31 @@ async function main() {
       ["scripts/check-native-payments.mjs", `--base=${BASE}`, "--plant"],
       { stdio: "inherit" }
     );
+    // Седьмым и восьмым на том же сервере — долг 161: ни один прижатый к
+    // низу окна слой не накрывает орган, до которого человек обязан
+    // добраться. Здесь, а не отдельным шагом, по той же причине, что и
+    // соседи: сервер уже поднят, браузер уже установлен, сборка своя.
+    //
+    // `--ci` пробрасывается: на пустой базе CI страницы с содержимым
+    // (кроссворд, рассказ) отдают 404, и меряется только то, что живёт
+    // без строк. Правила от этого не слабеют — нижняя панель есть на
+    // КАЖДОЙ странице сайта.
+    const bottomInset = spawnSync(
+      process.execPath,
+      ["scripts/check-bottom-inset.mjs", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
+    // Обязательная вторая половина (PROGRESS.md 4.1): полоса, прижатая к
+    // низу МИМО общего учёта, обязана уронить сторож — и по правилу
+    // учёта, и по правилу перекрытия.
+    const bottomInsetPlant = spawnSync(
+      process.execPath,
+      ["scripts/check-bottom-inset.mjs", `--base=${BASE}`, "--plant", ...passthrough],
+      { stdio: "inherit" }
+    );
     return (
+      (bottomInset.status ?? 1) ||
+      (bottomInsetPlant.status ?? 1) ||
       (run.status ?? 1) ||
       (layout.status ?? 1) ||
       (links.status ?? 1) ||

@@ -8,6 +8,8 @@
 // turn a prop-drilling exercise into a real risk of breaking that sync;
 // this only pulls the transport bar's markup out to style it on its own,
 // unchanged behavior.
+import { usePinnedLayer } from "@/lib/usePinnedLayer";
+
 export const READ_ALOUD_RATES = [0.8, 1, 1.2] as const;
 export type ReadAloudRate = (typeof READ_ALOUD_RATES)[number];
 
@@ -51,8 +53,20 @@ export default function StoryAudioPlayer({
   onSeek: (index: number) => void;
   onRateChange: (rate: ReadAloudRate) => void;
 }) {
+  /**
+   * Плеер на ОБЩЕМ УЧЁТЕ прижатых слоёв (src/lib/pinned-layers.ts) — это
+   * и есть закрытие долга 159: карточка перевода слова накрывала ряд
+   * его кнопок, потому что ставилась «над словом» и о плеере не знала.
+   * Замер 13.09.2026 до правки, все пять телефонных ширин: 6 закрытых
+   * кнопок из 6, перекрытие 76..90 px.
+   *
+   * Места в конце документа не резервирует: `position: sticky` занимает
+   * своё место в потоке само.
+   */
+  const pinnedRef = usePinnedLayer<HTMLDivElement>({ edge: "top", label: "StoryAudioPlayer" });
   return (
     <div
+      ref={pinnedRef}
       style={{ top: navOffset }}
       // A flex-wrap row of skip/play/progress/rate controls was too much
       // for a ~390px phone width and wrapped unevenly (a device report

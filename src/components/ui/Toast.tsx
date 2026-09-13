@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { usePinnedLayer } from "@/lib/usePinnedLayer";
 
 export type ToastVariant = "default" | "success" | "danger";
 
@@ -46,6 +47,18 @@ function getServerSnapshot() {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const mounted = useSyncExternalStore(subscribeNever, getClientSnapshot, getServerSnapshot);
+  /**
+   * На общем учёте (src/lib/pinned-layers.ts) — но только пока в нём
+   * что-то есть: пустая колонка тостов всё равно занимает свои `pb-4` и,
+   * стоя на учёте постоянно, давала бы фантомную полосу в 16 px у низа
+   * каждой страницы. Места в конце документа тост не резервирует: он
+   * временный, а дыра в конце страницы осталась бы навсегда.
+   */
+  const pinnedRef = usePinnedLayer<HTMLDivElement>({
+    edge: "bottom",
+    label: "Toast",
+    active: toasts.length > 0,
+  });
 
   const show = useCallback((message: string, variant: ToastVariant = "default") => {
     const id = Date.now() + Math.random();
@@ -61,6 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {mounted &&
         createPortal(
           <div
+            ref={pinnedRef}
             role="status"
             aria-live="polite"
             className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 px-4 pb-4 pb-safe"

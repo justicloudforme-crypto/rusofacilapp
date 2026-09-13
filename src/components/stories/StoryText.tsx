@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -11,6 +12,7 @@ import {
 import SpeakButton from "@/components/lesson/SpeakButton";
 import StoryAudioPlayer, { READ_ALOUD_RATES } from "@/components/stories/StoryAudioPlayer";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
+import { measurePinnedLayers, placeInFreeBand } from "@/lib/pinned-layers";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 import { isHomograph } from "@/lib/story-word-pick";
 import {
@@ -168,6 +170,10 @@ export default function StoryText({
   // resume), so seeking to a word's own sentence right after opening its
   // popover doesn't immediately scroll-close it again.
   const suppressScrollCloseUntilRef = useRef(0);
+  /** Коробка слова, от которого открыта карточка, — нужна для повторной
+   * доводки по настоящей высоте карточки (см. placeOutsidePinnedLayers). */
+  const anchorRectRef = useRef<DOMRect | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   function setContainerScrollTop(container: HTMLElement, targetTop: number) {
     // A single instant write, not an eased rAF loop or CSS/native smooth
@@ -900,15 +906,20 @@ export default function StoryText({
 
   async function handleWordClick(word: string, wordEl: HTMLElement, queueIndex: number) {
     const rect = wordEl.getBoundingClientRect();
-    const spaceAbove = rect.top;
-    const placeAbove = spaceAbove > POPOVER_HEIGHT_ESTIMATE + POPOVER_MARGIN;
-    const top = placeAbove
-      ? rect.top - POPOVER_HEIGHT_ESTIMATE - POPOVER_MARGIN
-      : rect.bottom + POPOVER_MARGIN;
+    // Место под карточку спрашивается у ОБЩЕГО УЧЁТА прижатых слоёв
+    // (src/lib/pinned-layers.ts), а не считается здесь. До долга 159 эта
+    // строка знала ровно одну величину — свою же оценку высоты — и
+    // ставила карточку «над словом», не зная про плеер: замер 13.09.2026
+    // на всех пяти телефонных ширинах давал 6 закрытых кнопок плеера из
+    // 6 и перекрытие 76..90 px. Порядок предпочтений («сначала над
+    // словом») в `placeInFreeBand` сохранён — изменилось только то, что
+    // занятые полосы теперь известны.
+    const top = placeOutsidePinnedLayers(rect, POPOVER_HEIGHT_ESTIMATE);
     const left = Math.min(
       Math.max(rect.left + rect.width / 2 - POPOVER_WIDTH / 2, POPOVER_MARGIN),
       window.innerWidth - POPOVER_WIDTH - POPOVER_MARGIN
     );
+    anchorRectRef.current = rect;
     setPopoverPosition({ top, left });
     setActiveWord(word);
     setTranslation({ status: "loading" });
@@ -951,12 +962,64 @@ export default function StoryText({
     }
   }
 
+  /**
+   * Верхняя координата карточки, не накрывающая ни одного прижатого
+   * слоя. Вынесено отдельной функцией, потому что зовётся дважды: по
+   * ОЦЕНКЕ высоты — в момент нажатия, когда карточки ещё нет в DOM, и по
+   * НАСТОЯЩЕЙ высоте — сразу после её появления.
+   *
+   * Второй вызов не украшение: оценка `POPOVER_HEIGHT_ESTIMATE` равна
+   * 120, а настоящая карточка меряется 90..128 px (замер 13.09.2026), и
+   * на разнице в 8 px карточка залезала бы на полосу, из которой её
+   * только что вывели.
+   */
+  function placeOutsidePinnedLayers(anchor: DOMRect, height: number) {
+    const { viewport, bands } = measurePinnedLayers();
+    return placeInFreeBand({
+      anchorTop: anchor.top,
+      anchorBottom: anchor.bottom,
+      height,
+      margin: POPOVER_MARGIN,
+      viewport,
+      bands,
+    });
+  }
+
   function close() {
+    anchorRectRef.current = null;
     setActiveWord(null);
     setPopoverPosition(null);
     setTranslation(null);
     setWordAudio({ status: "loading" });
   }
+
+  /**
+   * Доводка карточки по её НАСТОЯЩЕЙ высоте, а не по оценке.
+   *
+   * Зовётся не один раз, и это тоже замер, а не осторожность: карточка
+   * рождается со строкой «Перевод…» (90 px), а после ответа словаря
+   * становится 128 px — то есть вырастает НА 38 px вниз уже после того,
+   * как место ей было выбрано. Поэтому зависимости — состояние перевода
+   * и состояние звука, всё, от чего её высота зависит.
+   *
+   * `useLayoutEffect`, а не `useEffect`: поправка обязана лечь до
+   * отрисовки кадра, иначе карточка на один кадр мигнёт поверх кнопок —
+   * ровно того, от чего её уводят.
+   *
+   * Цикла здесь нет: новое значение ставится только когда оно отличается
+   * больше чем на пиксель, а после поправки высота карточки не меняется.
+   */
+  useLayoutEffect(() => {
+    const anchor = anchorRectRef.current;
+    const element = popoverRef.current;
+    if (!activeWord || !anchor || !element) return;
+    const height = element.getBoundingClientRect().height;
+    if (height <= 0) return;
+    const top = placeOutsidePinnedLayers(anchor, height);
+    setPopoverPosition((current) =>
+      current && Math.abs(current.top - top) > 1 ? { ...current, top } : current,
+    );
+  }, [activeWord, translation, wordAudio]);
 
   useEffect(() => {
     if (!activeWord) return;
@@ -1109,6 +1172,7 @@ export default function StoryText({
             className="fixed inset-0 z-40 cursor-default"
           />
           <div
+            ref={popoverRef}
             data-testid="translation-popover"
             style={{ top: popoverPosition.top, left: popoverPosition.left, width: POPOVER_WIDTH }}
             className="fixed z-50 rounded-2xl border border-black/10 bg-background p-4 shadow-xl dark:border-white/15"

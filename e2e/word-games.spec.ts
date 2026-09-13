@@ -1133,9 +1133,15 @@ test("crossword: слово вниз не уходит под клавиатур
     ["shrunk", shrunk],
   ] as const) {
     for (const s of run.steps) {
+      // Граница — СВОБОДНАЯ, а не просто видимая: с заходом 7.185 (долг
+      // 161) доводка уводит клетку не под нижний край видимой области, а
+      // выше всего, что к этому краю прижато. До 7.185 в модели shrunk
+      // клетка вставала ровно под нижнюю панель — замерено 13.09.2026 в
+      // окне 420: 6..7 клеток из 21 под панелью в каждой из пяти ширин,
+      // перекрытие до 22 px.
       expect(
-        s.cellBottom <= s.viewBottom + 0.5,
-        `${model}, ${s.label}: клетка ${s.cellTop}..${s.cellBottom} ниже границы видимой области ${s.viewBottom} при scrollY ${s.scrollY}`
+        s.cellBottom <= s.freeBottom + 0.5,
+        `${model}, ${s.label}: клетка ${s.cellTop}..${s.cellBottom} ниже границы свободной области ${s.freeBottom} (видимая ${s.viewBottom}) при scrollY ${s.scrollY} из ${s.maxScrollY}`
       ).toBe(true);
     }
     // Вакуумная защита к результату: если страница не сдвинулась ни разу,
@@ -1154,18 +1160,56 @@ test("crossword: слово вниз не уходит под клавиатур
     expect(run.calls, `модель ${model}: доводка звала прокрутку впустую`).toBe(run.moved);
   }
 
-  // ГЛАВНОЕ УТВЕРЖДЕНИЕ. Обе модели обязаны дать одну и ту же таблицу: тот
-  // же шаг — та же клетка, тот же `scrollY`, то же число сдвигов. Пока это
-  // так, ответ на вопрос «увёз ли движок сам» не входит в результат — а
-  // именно на этом ответе первая редакция и сломалась в CI.
-  expect(shrunk.moved, "модели разошлись числом сдвигов").toBe(blind.moved);
-  for (let i = 0; i < blind.steps.length; i += 1) {
-    const b = blind.steps[i];
-    const k = shrunk.steps[i];
-    expect(
-      `${k.label} ${k.cellTop}..${k.cellBottom} scrollY ${k.scrollY}`,
-      `шаг ${i}: модели разошлись — доводка снова зависит от движка`
-    ).toBe(`${b.label} ${b.cellTop}..${b.cellBottom} scrollY ${b.scrollY}`);
+  // ГЛАВНОЕ УТВЕРЖДЕНИЕ. Обе модели обязаны пройти ОДИН И ТОТ ЖЕ путь по
+  // клеткам, и в обеих доводка обязана работать ОДНИМ И ТЕМ ЖЕ правилом:
+  // сдвинула страницу — значит поставила клетку ровно на свободную
+  // границу, к ближайшему краю и ни пикселем дальше. Пока это так, ответ
+  // на вопрос «увёз ли движок сам» в результат не входит — а именно на
+  // этом ответе первая редакция и сломалась в CI.
+  //
+  // ПОЧЕМУ СРАВНИВАЮТСЯ ПРАВИЛО И ПУТЬ, А НЕ СЫРАЯ ГЕОМЕТРИЯ, и это не
+  // послабление. До захода 7.185 обе модели давали побуквенно одну
+  // таблицу по простой причине: доводка не знала о нижней панели ВООБЩЕ и
+  // в обеих вела клетку к нижнему краю видимой области. С общим учётом
+  // прижатых слоёв (долг 161) модели перестали быть одинаковыми ПО
+  // СУЩЕСТВУ, а не по случайности:
+  //
+  //   blind  (iOS: layout-вьюпорт не ужат) — панель стоит на 716..780
+  //          layout-вьюпорта, то есть ЗА нижним краем видимой области
+  //          (420): она под клавиатурой, содержимого не закрывает, места
+  //          не отнимает. Свободная граница = видимая;
+  //   shrunk (Android: ужат и layout) — панель стоит у низа ужатого окна
+  //          и закрывает нижние 64 px ЕДИНСТВЕННОЙ видимой области.
+  //          Свободная граница = видимая − 64.
+  //
+  // Замер 13.09.2026: сдвигов 2 в модели blind против 5 в shrunk — ровно
+  // на те клетки, которые до 7.185 уезжали под панель. Требовать теперь
+  // одинакового `scrollY` значило бы требовать, чтобы доводка не замечала
+  // панель ровно там, где она мешает, то есть закреплять дефект.
+  expect(shrunk.steps.length, "модели разошлись числом шагов").toBe(blind.steps.length);
+  expect(
+    shrunk.steps.map((s) => s.label).join(" | "),
+    "модели разошлись путём по клеткам"
+  ).toBe(blind.steps.map((s) => s.label).join(" | "));
+  for (const [model, run] of [
+    ["blind", blind],
+    ["shrunk", shrunk],
+  ] as const) {
+    let moves = 0;
+    for (let i = 1; i < run.steps.length; i += 1) {
+      const prev = run.steps[i - 1];
+      const step = run.steps[i];
+      if (step.scrollY === prev.scrollY) continue;
+      moves += 1;
+      // Ближайший край, никогда не центр: сдвинули — значит клетка встала
+      // ровно на свободную границу. Разъезд здесь означал бы, что
+      // результат задала не доводка, а движок.
+      expect(
+        Math.abs(step.freeBottom - step.cellBottom) <= 1,
+        `${model}, ${step.label}: страница сдвинулась, а клетка встала на ${step.cellBottom} при свободной границе ${step.freeBottom}`
+      ).toBe(true);
+    }
+    expect(moves, `модель ${model}: ни один шаг не потребовал доводки`).toBeGreaterThan(0);
   }
 });
 
@@ -1350,12 +1394,17 @@ test.describe("тап и поздняя клавиатура", () => {
     // дефект дробного смещения в WebKit, из-за которого округление здесь
     // делается ОТ клетки (7.95).
     expect(kbStats.calls, "поздняя клавиатура: доводка звала прокрутку впустую").toBe(kbStats.moved);
-    // Ровно две живых подписки — `resize` и `scroll`. Число, а не «больше
-    // нуля»: подписаться нужно на оба события, и лишних быть не должно.
+    // Подписок на `visualViewport` живо не меньше двух — `resize` и
+    // `scroll`. Точное число здесь больше не утверждается, и это не
+    // послабление: с заходом 7.185 на те же два события подписан ОБЩИЙ
+    // УЧЁТ прижатых слоёв (src/lib/pinned-layers.ts), один на всё
+    // приложение и на всю его жизнь. Собственные подписки доски
+    // утверждаются в конце теста РАЗНОСТЬЮ — «доска добавила ровно две и
+    // ровно две сняла», — что и было настоящим содержанием этой строки.
     // Стоит ПОСЛЕ геометрии намеренно: при снятой правке красным обязана
     // становиться клетка под клавиатурой, а не счётчик подписок — иначе
     // структурная проверка перехватывала бы содержательную.
-    expect(kbStats.listeners, "подписаны не оба события visualViewport").toBe(2);
+    expect(kbStats.listeners, "подписаны не оба события visualViewport").toBeGreaterThanOrEqual(2);
 
     // Клавиатура убирается — доводка обязана промолчать: клетка видна.
     await page.evaluate(() => (window as unknown as { __vvSet: (h: number, o: number) => void }).__vvSet(null as never, null as never));
@@ -1431,7 +1480,19 @@ test.describe("тап и поздняя клавиатура", () => {
     const added = await page.evaluate(() => (window as unknown as { __vvListeners: { added: number } }).__vvListeners.added);
     expect(added, "переход оказался полной навигацией — счётчики обнулились, доказывать нечем").toBeGreaterThan(0);
     const after = await readStats();
-    expect(after.listeners, "подписка на visualViewport пережила размонтирование доски").toBe(0);
+    // РАЗНОСТЬЮ, а не абсолютным нулём: приложение держит на тех же двух
+    // событиях `visualViewport` общий учёт прижатых слоёв (заход 7.185,
+    // долг 161) — один на всю страницу, заводится при первой регистрации
+    // слоя и живёт, пока живёт вкладка. Утверждается ровно то, что
+    // утверждалось и раньше: доска подписалась на ОБА события и сняла
+    // ОБЕ свои подписки, ничего не оставив за собой.
+    expect(
+      kbStats.listeners - after.listeners,
+      "доска подписалась не на оба события visualViewport или не сняла обе подписки",
+    ).toBe(2);
+    // И остаток назван числом, а не оставлен «сколько получится»: две
+    // подписки общего учёта и ни одной чужой.
+    expect(after.listeners, "после ухода с доски остались лишние подписки").toBe(2);
   });
 
   /**
@@ -1494,6 +1555,8 @@ async function settledFocusGeometry(page: Page) {
         // Нижняя граница ВИДИМОЙ области, а не окна: под клавиатурой это
         // разные величины, и в этом вся задача (PROGRESS.md 7.95).
         viewBottom: number;
+        freeBottom: number;
+        maxScrollY: number;
         innerHeight: number;
         scrollY: number;
       }>(
@@ -1523,8 +1586,39 @@ async function settledFocusGeometry(page: Page) {
               cellTop: Math.round(r.top * 10) / 10,
               cellBottom: Math.round(r.bottom * 10) / 10,
               viewBottom: vv ? Math.round((vv.offsetTop + vv.height) * 10) / 10 : window.innerHeight,
+              // Нижняя граница СВОБОДНОЙ области: видимая минус то, что
+              // прижато к её низу поверх содержимого (заход 7.185, долг
+              // 161). Считается здесь же и по живому DOM, а не берётся из
+              // кода приложения: снимок обязан мерить то, что на экране.
+              freeBottom: (() => {
+                const bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+                const visible = bottom - (vv ? vv.offsetTop : 0);
+                let free = bottom;
+                for (const el of document.querySelectorAll("body *")) {
+                  const cs = getComputedStyle(el);
+                  if (cs.position !== "fixed" && cs.position !== "sticky") continue;
+                  const live = el.getBoundingClientRect();
+                  if (live.height === 0 || live.width < document.documentElement.clientWidth * 0.5) continue;
+                  if (live.height >= visible * 0.9) continue;
+                  // Коробка В ПОКОЕ, а не живая: нижняя панель прячется
+                  // при прокрутке вниз сдвигом `translate-y-full`, и
+                  // сразу после доводки её живая коробка стоит за краем
+                  // окна. Считать по ней значило бы мерить экран, с
+                  // которого панель уйдёт на полсекунды и вернётся.
+                  const pinnedToBottom = cs.position === "fixed" && Math.round(parseFloat(cs.bottom || "NaN")) === 0;
+                  const b = pinnedToBottom
+                    ? { top: window.innerHeight - (el as HTMLElement).offsetHeight, bottom: window.innerHeight }
+                    : { top: live.top, bottom: live.bottom };
+                  if (b.bottom >= bottom - 1 && b.top < bottom) free = Math.min(free, b.top);
+                }
+                return Math.round(free * 10) / 10;
+              })(),
               innerHeight: window.innerHeight,
               scrollY: Math.round(window.scrollY),
+              // Докуда страницу вообще можно прокрутить: без этого числа
+              // «клетка ниже границы» не отличить от «страница уже в
+              // самом низу и выше её не поднять».
+              maxScrollY: Math.round(document.documentElement.scrollHeight - window.innerHeight),
             };
             const key = JSON.stringify(shot);
             if (key === prev) same += 1;
