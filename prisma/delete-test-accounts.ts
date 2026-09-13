@@ -28,6 +28,19 @@
  *    аккаунт, у которого эти строки есть, скорее живой, чем тестовый.
  *    Пустой удаляется без `--force`.
  *
+ * ЧЕТВЁРТЫЙ, ДОБАВЛЕН 13.09.2026 (долг 167): **сначала объекты, потом
+ * строка, и отказ уборки останавливает удаление.** Каскад Prisma
+ * удаляет строки `VoiceSubmission`, но до файлов в хранилище не
+ * дотягивается, а этот скрипт про них не знал ВОВСЕ — вхождений `voice`
+ * и `blob` в нём было 0. Отсюда и сироты долга 24: объект остаётся, а
+ * id, по которому его можно было бы найти, исчезает навсегда. Порядок
+ * именно такой: объект без строки — потерянный файл, строка без объекта
+ * — сирота, которую уже не найти; из двух зол выбрано меньшее. И, в
+ * отличие от пути живого человека (`api/auth/confirm-account-deletion`,
+ * где удаление не имеет права застревать из-за файла), здесь отказ
+ * УБОРКИ ОТМЕНЯЕТ УДАЛЕНИЕ СТРОКИ: скрипт запускает владелец, он видит
+ * вывод, и остановиться тут дешевле, чем завести сироту.
+ *
  * Порядок работы (только владелец, ключ на запись):
  *
  *   TURSO_DATABASE_URL="libsql://…" TURSO_AUTH_TOKEN="…" \
@@ -44,6 +57,7 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { isEntryPoint } from "../src/lib/entry-point";
+import { deleteAllVoiceSubmissionsForUser } from "../src/lib/voice-blob-cleanup";
 
 /** Адреса, которые вообще могут быть удалены этим скриптом. Проверяются
  * по строке целиком, а не поиском подстроки: `%example.test%` внутри
@@ -247,12 +261,25 @@ async function main(): Promise<void> {
       return;
     }
 
+    let deleted = 0;
+    let cleanupFailures = 0;
     for (const c of deleting) {
+      // Долг 167, предохранитель 4: сначала объекты хранилища, и только
+      // потом строка. Отказ уборки отменяет удаление этой строки.
+      let removedObjects = 0;
+      try {
+        removedObjects = await deleteAllVoiceSubmissionsForUser(c.id);
+      } catch (error) {
+        cleanupFailures++;
+        console.error(`  ОТКАЗ   ${c.id} (${c.email}) — уборка записей голоса не удалась, строка НЕ удалена:`, error);
+        continue;
+      }
       await db.user.delete({ where: { id: c.id } });
-      console.log(`  УДАЛЁН  ${c.id}  ${c.email}`);
+      deleted++;
+      console.log(`  УДАЛЁН  ${c.id}  ${c.email}  (объектов голоса убрано: ${removedObjects})`);
     }
-    console.log(`\nУдалено аккаунтов: ${deleting.length}, отказов: ${refusals.length}.`);
-    if (refusals.length > 0) process.exitCode = 1;
+    console.log(`\nУдалено аккаунтов: ${deleted}, отказов: ${refusals.length + cleanupFailures}.`);
+    if (refusals.length > 0 || cleanupFailures > 0) process.exitCode = 1;
   } finally {
     await db.$disconnect();
   }
