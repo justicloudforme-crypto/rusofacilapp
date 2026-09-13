@@ -952,6 +952,48 @@ export default function StoryText({
   const progress =
     queue.length > 0 && readingQueueIndex !== null ? (readingQueueIndex + 1) / queue.length : 0;
 
+  /**
+   * ДОЛГ 158: «два голоса при тапе на слово во время чтения».
+   *
+   * Правило одно и держится этой парой функций: пока человек занят
+   * словом, рассказ молчит, а как только со словом покончено — звучит
+   * дальше С ТОГО ЖЕ МЕСТА.
+   *
+   * Пауза берётся у `handlePlayPause` — ТОЙ ЖЕ, что у кнопки, а не
+   * собственным `audio.pause()`. Иначе состояние `playing` разошлось бы
+   * с настоящим звуком, и кнопка плеера начала бы врать (заметка к долгу
+   * в PROGRESS.md). По той же причине возврат — тоже `handlePlayPause`:
+   * у полной дорожки он продолжает с `currentTime`, у цепочки по
+   * предложениям — с `currentTime` текущего отрезка, и это ДВА разных
+   * случая, которые уже разведены внутри неё.
+   *
+   * `resumeAfterWordRef` — «рассказ остановили МЫ, а не человек». Без
+   * этого признака возврат случался бы и там, где человек сам нажал
+   * паузу перед тапом, то есть мы включали бы звук против его воли.
+   *
+   * Возврат зовётся из ТРЁХ мест, и это не перестраховка: клип слова
+   * может кончиться (`ended`), может быть остановлен второй нажатой 🔊
+   * (`pause`), а может не зазвучать вовсе — сеть отвалилась, клипа нет,
+   * человек просто закрыл карточку. Последний путь (`close`) и есть тот,
+   * без которого рассказ замолчал бы навсегда.
+   */
+  const resumeAfterWordRef = useRef(false);
+
+  function pauseForWord() {
+    if (!playing) return;
+    handlePlayPause();
+    resumeAfterWordRef.current = true;
+  }
+
+  function resumeAfterWord() {
+    if (!resumeAfterWordRef.current) return;
+    resumeAfterWordRef.current = false;
+    // Человек за это время нажал «играть» сам — второй вызов поставил бы
+    // паузу, то есть возврат выключил бы звук.
+    if (playing) return;
+    handlePlayPause();
+  }
+
   async function handleWordClick(word: string, wordEl: HTMLElement, queueIndex: number) {
     const rect = wordEl.getBoundingClientRect();
     // Место под карточку спрашивается у ОБЩЕГО УЧЁТА прижатых слоёв
@@ -1039,6 +1081,9 @@ export default function StoryText({
     setPopoverPosition(null);
     setTranslation(null);
     setWordAudio({ status: "loading" });
+    // Долг 158: карточка закрыта — со словом покончено в любом исходе,
+    // включая «клип так и не зазвучал».
+    resumeAfterWord();
   }
 
   /**
@@ -1161,7 +1206,22 @@ export default function StoryText({
                     // sentence, matched back to the specific word element
                     // that was actually clicked.
                     const wordEl = (event.target as HTMLElement).closest<HTMLElement>("button[data-word]");
-                    if (wordEl?.dataset.word) void handleWordClick(wordEl.dataset.word, wordEl, queueIndex);
+                    // ДОЛГ 158. Тап по СЛОВУ и тап по ПРЕДЛОЖЕНИЮ — два
+                    // разных намерения, и до 13.09.2026 они склеивались:
+                    // попадание в слово открывало карточку перевода И
+                    // вдобавок звало `handleSentenceClick`, то есть
+                    // перематывало чтение на начало этого предложения и
+                    // продолжало читать. Отсюда и жалоба владельца: слово
+                    // нажато ради произношения, а рассказ не замолкает —
+                    // а после нажатия 🔊 звучат оба голоса сразу.
+                    // Решение владельца: тап по слову СТАВИТ рассказ на
+                    // паузу и возвращает его с того же места (не с начала
+                    // предложения — поэтому перемотки здесь больше нет).
+                    if (wordEl?.dataset.word) {
+                      pauseForWord();
+                      void handleWordClick(wordEl.dataset.word, wordEl, queueIndex);
+                      return;
+                    }
                     handleSentenceClick(queueIndex);
                   }}
                   onKeyDown={(event) => handleSentenceKeyDown(event, queueIndex)}
@@ -1252,6 +1312,10 @@ export default function StoryText({
                     text={activeWord}
                     label={dict.wordListenLabel}
                     audioUrl={wordAudioUrl ?? undefined}
+                    // Долг 158. Клип слова зазвучал — рассказ замолкает;
+                    // кончился или остановлен — рассказ возвращается.
+                    onPlay={pauseForWord}
+                    onStop={resumeAfterWord}
                   />
                 )}
               </div>

@@ -23,6 +23,8 @@ export default function SpeakButton({
   label,
   size = "sm",
   audioUrl,
+  onPlay,
+  onStop,
 }: {
   /** Текст, который читает клип. Кнопке он больше не нужен — синтеза нет,
    *  — но остаётся в контракте: его передают все 18 поверхностей, и он же
@@ -37,6 +39,13 @@ export default function SpeakButton({
   /** Оплаченная запись для `text` из общего кэша `AudioAsset`. Без неё
    *  кнопка остаётся на месте, но молчит: подменять запись нечем. */
   audioUrl?: string;
+  /** ДОЛГ 158. Кнопка обязана уметь сказать наружу, что она зазвучала и
+   *  что замолчала, — иначе поверхность, у которой звучит что-то ещё
+   *  (рассказ), не может замолчать на время слова и вернуться после.
+   *  Оба необязательны: семнадцать из восемнадцати поверхностей со
+   *  звуком их не передают, и для них поведение не меняется ни на знак. */
+  onPlay?: () => void;
+  onStop?: () => void;
 }) {
   const [speaking, setSpeaking] = useState(false);
   // Начинается `false` и на сервере, и на клиенте, чтобы разметка первого
@@ -45,6 +54,14 @@ export default function SpeakButton({
   // снятого `supported`.
   const [noClip, setNoClip] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Через ref, а не напрямую: слушатели вешаются один раз на созданный
+  // элемент, а `onPlay`/`onStop` приходят новыми функциями на каждом
+  // рендере родителя. Захвати их замыкание — и после первого же рендера
+  // звонок уходил бы в устаревшую пару.
+  const onPlayRef = useRef(onPlay);
+  const onStopRef = useRef(onStop);
+  onPlayRef.current = onPlay;
+  onStopRef.current = onStop;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -83,10 +100,27 @@ export default function SpeakButton({
     {
       if (!audioRef.current) {
         audioRef.current = new Audio(audioUrl);
-        audioRef.current.onplay = () => setSpeaking(true);
-        audioRef.current.onpause = () => setSpeaking(false);
-        audioRef.current.onended = () => setSpeaking(false);
-        audioRef.current.onerror = () => setSpeaking(false);
+        // Слушатели вешаются на СОБЫТИЯ элемента, а не на ветки
+        // `speak()`, нарочно: клип может кончиться сам, может быть
+        // остановлен второй нажатой кнопкой, а может и не зазвучать
+        // вовсе (`onerror`) — наружу обязаны уехать все три исхода, иначе
+        // рассказ, замолчавший ради слова, не вернётся (долг 158).
+        audioRef.current.onplay = () => {
+          setSpeaking(true);
+          onPlayRef.current?.();
+        };
+        audioRef.current.onpause = () => {
+          setSpeaking(false);
+          onStopRef.current?.();
+        };
+        audioRef.current.onended = () => {
+          setSpeaking(false);
+          onStopRef.current?.();
+        };
+        audioRef.current.onerror = () => {
+          setSpeaking(false);
+          onStopRef.current?.();
+        };
       }
       const audio = audioRef.current;
       if (!audio.paused) {
