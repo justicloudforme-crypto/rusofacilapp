@@ -27,10 +27,26 @@ export default function BottomNav({
   lang,
   dict,
   isLoggedIn,
+  nativeShell,
 }: {
   lang: Locale;
   dict: Dictionary;
   isLoggedIn: boolean;
+  /**
+   * ВНУТРИ ПРИЛОЖЕНИЯ ПАНЕЛЬ ПОСТОЯННАЯ — решение владельца 13.09.2026
+   * (долг 180). В вебе поведение не меняется ни на йоту: панель по-прежнему
+   * уезжает при прокрутке вниз.
+   *
+   * Почему в приложении иначе. В браузере есть своя нижняя рама, которая
+   * приходит и уходит, и прятать панель вместе с ней — привычное поведение
+   * страницы. В приложении рамы нет: панель — единственная навигация, и
+   * исчезающая навигация читается как поломка, а не как экономия места.
+   *
+   * Признак приходит с СЕРВЕРА (`isNativeShellRequest()` в корневом
+   * макете), а не спрашивается у Capacitor здесь: иначе первый кадр после
+   * гидрации отличался бы от серверного.
+   */
+  nativeShell: boolean;
 }) {
   const pathname = usePathname();
   const hiddenByScroll = useHideOnScroll();
@@ -55,7 +71,7 @@ export default function BottomNav({
    * документа, ни сужать свободное место для карточек и доводок.
    */
   const keyboardOpen = useKeyboardOpen();
-  const hidden = hiddenByScroll || keyboardOpen;
+  const hidden = (hiddenByScroll && !nativeShell) || keyboardOpen;
   const pinnedRef = usePinnedLayer<HTMLElement>({
     edge: "bottom",
     // Единственный слой продукта, который РЕЗЕРВИРУЕТ место: он на

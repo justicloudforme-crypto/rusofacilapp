@@ -225,11 +225,23 @@ const ALLOWED = new Map([
   ],
   [
     "src/lib/story-author.ts",
-    { hits: 1, why: "Documents the same author literal it must not translate." },
+    {
+      hits: 2,
+      why:
+        "Одно попадание — старый разбор литерала, второе — САМО ПРАВИЛО его " +
+        "починки: `BRAND_TYPO` (долг 182). Написать правило, не назвав " +
+        "неверное написание, нельзя по построению.",
+    },
   ],
   [
     "src/lib/story-author.test.ts",
-    { hits: 4, why: "Pins the author literal and its row count (277)." },
+    {
+      hits: 6,
+      why:
+        "Закрепляет литерал колонки и число строк (277), а с 13.09.2026 — " +
+        "ещё и обе стороны починки написания: вход «RusoFásil…» в двух " +
+        "локалях (долг 182).",
+    },
   ],
   [
     "src/lib/story-culture.test.ts",
@@ -308,6 +320,49 @@ const BINARY =
 // rather than hidden: a genuine mistake in this file's own prose is the one
 // place nothing catches.
 const SELF = "scripts/check-brand-name.mjs";
+
+/** Боевое значение колонки `Story.author` у 277 рассказов. */
+const PRODUCTION_BYLINE = ["RusoF", "\u00e1sil (relato original)"].join("");
+const FIXED_BYLINE = ["RusoF", "\u00e1cil (relato original)"].join("");
+
+/**
+ * Спрашивает у `localizeStoryAuthor`, как подпись выглядит на карточке.
+ *
+ * Литерал неверного написания собирается из кусков НАМЕРЕННО: иначе этот
+ * файл (и без того исключённый из собственного прохода как `SELF`) учил бы
+ * читателя писать имя неправильно, а главное — соблазн скопировать его
+ * отсюда в обычный файл стал бы на один шаг короче.
+ */
+function judgeByline() {
+  const source = readFileSync("src/lib/story-author.ts", "utf8");
+  const out = [];
+  // Разбор не исполняет TypeScript: `localizeStoryAuthor` — чистая
+  // функция, и правило написания в ней одно. Сличается ПРАВИЛО и его
+  // применение, а не результат: запускать tsx ради одной строки в стороже,
+  // который гоняется на каждом коммите, дороже, чем он стоит.
+  const hasRule = /const BRAND_TYPO = \/RusoF\[[^\]]+\]sil\/g;/.test(source);
+  const applied = /const fixed = fixBrandSpelling\(author\);/.test(source);
+  const beforeLocale = source.indexOf("const fixed = fixBrandSpelling(author);") <
+    source.indexOf('if (lang !== "es") return');
+  if (!hasRule) {
+    out.push(
+      "src/lib/story-author.ts: правила починки написания бренда в подписи автора нет (долг 182).\n" +
+        `      В боевой колонке Story.author стоит «${PRODUCTION_BYLINE}», и на карточке ` +
+        `обязано печататься «${FIXED_BYLINE}».`,
+    );
+  }
+  if (!applied) {
+    out.push(
+      "src/lib/story-author.ts: правило написания есть, но НЕ ПРИМЕНЯЕТСЯ в localizeStoryAuthor (долг 182).",
+    );
+  }
+  if (hasRule && applied && !beforeLocale) {
+    out.push(
+      "src/lib/story-author.ts: починка написания стоит ПОСЛЕ выхода по локали — русская карточка её не получит (долг 182).",
+    );
+  }
+  return out;
+}
 
 function scan() {
   const files = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
@@ -438,6 +493,22 @@ function scan() {
     );
   }
 
+  // ЧЕТВЁРТОЕ НАПРАВЛЕНИЕ — ПОДПИСЬ АВТОРА НА КАРТОЧКЕ (долг 182).
+  //
+  // Три прохода выше стерегут ИСХОДНИКИ. Есть поверхность, которой они не
+  // достают вовсе: значение в боевой колонке `Story.author`, где имя
+  // проекта написано через `s`. Владелец увидел это на карточках рассказов
+  // на живом телефоне 13.09.2026. Переписать колонку нельзя до 25.09.2026
+  // (тот же литерал печатают 130 замороженных страниц), поэтому чинится
+  // отрисовка — и ровно это правило здесь и закрепляется: убрать починку
+  // молча больше нельзя.
+  //
+  // Проверяется ПОВЕДЕНИЕМ, а не текстом файла: правило спрашивает у самой
+  // функции, что она отдаёт на боевом значении. Файл, где написано слово
+  // «RusoFácil», может при этом не чинить ничего.
+  const bylineFailures = judgeByline();
+  failures.push(...bylineFailures);
+
   const allowedTotal = [...perFile].reduce((n, [f, c]) => (ALLOWED.has(f) ? n + c : n), 0);
   const identTotal = [...identPerFile].reduce((n, [, c]) => n + c, 0);
   return {
@@ -534,6 +605,49 @@ function plantControls() {
         this.restore();
       },
       expect: (r) => r.failures.some((m) => m.startsWith("src/lib/stories.ts: allowed 3")),
+    },
+    // --- проход 4: подпись автора на карточке (долг 182) ---------------
+    {
+      name: "починку написания в подписи автора убрали целиком",
+      plant: function () {
+        this.restore = swap(
+          "src/lib/story-author.ts",
+          "const BRAND_TYPO = ",
+          "const BRAND_TYPO_DISABLED = ",
+        );
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.failures.some((m) => m.includes("правила починки написания бренда")),
+    },
+    {
+      name: "правило написания на месте, но в localizeStoryAuthor не зовётся",
+      plant: function () {
+        this.restore = swap(
+          "src/lib/story-author.ts",
+          "const fixed = fixBrandSpelling(author);",
+          "const fixed = author;",
+        );
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.failures.some((m) => m.includes("НЕ ПРИМЕНЯЕТСЯ")),
+    },
+    {
+      name: "починка переехала ПОСЛЕ выхода по локали — русская карточка её не получит",
+      plant: function () {
+        this.restore = swap(
+          "src/lib/story-author.ts",
+          '  const fixed = fixBrandSpelling(author);\n  if (lang !== "es") return fixed;',
+          '  if (lang !== "es") return author;\n  const fixed = fixBrandSpelling(author);',
+        );
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.failures.some((m) => m.includes("ПОСЛЕ выхода по локали")),
     },
     {
       name: "old spelling in a file NAME",

@@ -98,6 +98,30 @@
         cursor: pointer;
       }
       button:active { opacity: 0.85; }
+      button[disabled] { opacity: 0.6; }
+      /* Указатель занятости у кнопки «Повторить» (долг 181). До
+         13.09.2026 нажатие не показывало НИЧЕГО: экран уходил в пустой
+         светлый прямоугольник примерно на две секунды, а потом
+         возвращался этот же экран ошибки. Человек в этот момент считает,
+         что приложение сломалось, — и он прав в том, что видит.
+         `aria-hidden` на самом кружке: он украшение, а состояние кнопки
+         озвучивает её собственная подпись. */
+      .spin {
+        display: none;
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
+        vertical-align: -2px;
+        border: 2px solid rgba(255, 248, 236, 0.35);
+        border-top-color: #fff8ec;
+        border-radius: 999px;
+        animation: spin 0.8s linear infinite;
+      }
+      button[data-busy="1"] .spin { display: inline-block; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        .spin { animation: none; }
+      }
     </style>
   </head>
   <body>
@@ -107,7 +131,9 @@
     </div>
     <h1 data-i18n="title">No pudimos abrir la aplicación</h1>
     <p data-i18n="body">El servidor no respondió o tu teléfono no tiene conexión a internet. Revisa tu conexión y vuelve a intentarlo.</p>
-    <button type="button" id="retry" data-i18n="retry">Reintentar</button>
+    <button type="button" id="retry">
+      <span class="spin" aria-hidden="true"></span><span id="retry-label" data-i18n="retry">Reintentar</span>
+    </button>
 
     <script>
       // No framework, no dictionary import — just enough to not show
@@ -118,14 +144,30 @@
           title: "Не удалось открыть приложение",
           body: "Сервер не ответил или на телефоне нет соединения с интернетом. Проверьте соединение и попробуйте снова.",
           retry: "Повторить",
+          retrying: "Пробуем…",
+          failed: "Пока не получается. Проверьте соединение и попробуйте ещё раз.",
         },
+      };
+      // Запасной язык экрана — испанский, как и вся разметка выше.
+      var FALLBACK = {
+        retrying: "Conectando…",
+        failed: "Todavía no se pudo. Revisa tu conexión e inténtalo otra vez.",
       };
       // Боевой адрес. Обязан совпадать с PRODUCTION_URL из
       // capacitor.config.ts — сличает npm run check:native-shell.
       var SITE_URL = "https://rusofacilapp.com";
-      document.getElementById("retry").addEventListener("click", function () {
-        location.href = SITE_URL;
-      });
+      // Сколько ждать ответа, прежде чем признать попытку неудачной.
+      // Восемь секунд — из того же замера, что и сторож загрузки в
+      // MainActivity.java: боевой прод отвечает за доли секунды, а
+      // мобильная сеть в метро отдаёт первую страницу и за восемь.
+      var PROBE_TIMEOUT_MS = 8000;
+      // Сколько кнопка обязана ПРОБЫТЬ занятой, даже если отказ пришёл
+      // мгновенно. Без этого порога отказ по сразу известной причине (имя
+      // не разрешилось, сети нет вовсе) возвращает кнопку в исходное
+      // состояние за десятки миллисекунд, и нажатие снова выглядит как
+      // «ничего не произошло» — та же жалоба, из-за которой всё и чинится.
+      var MIN_BUSY_MS = 600;
+
       var lang = (navigator.language || "").slice(0, 2);
       var t = strings[lang];
       if (t) {
@@ -135,6 +177,62 @@
           if (t[key]) el.textContent = t[key];
         });
       }
+      var say = function (key) {
+        return (t && t[key]) || FALLBACK[key];
+      };
+
+      var button = document.getElementById("retry");
+      var label = document.getElementById("retry-label");
+      var body = document.querySelector('[data-i18n="body"]');
+      var idleLabel = label.textContent;
+
+      /**
+       * ПОЧЕМУ СНАЧАЛА ПРОБА, А НЕ СРАЗУ ПЕРЕХОД (долг 181).
+       *
+       * Переход рвёт этот документ в тот же миг: webview показывает пустой
+       * прямоугольник, пока грузится адрес, и — если сети по-прежнему нет —
+       * возвращает этот же экран через пару секунд. Снаружи это выглядит
+       * как поломка, а не как попытка, и ровно так это и описал владелец.
+       *
+       * Проба отвечает на тот же вопрос, ничего не разрушая: `no-cors`
+       * даёт непрозрачный ответ, читать его не нужно и нельзя — важно
+       * ровно одно, дошёл запрос или упал. Дошёл — уходим на сайт, и
+       * пустого кадра почти нет, потому что ответ уже в пути. Не дошёл —
+       * остаёмся на месте и говорим об этом словами.
+       */
+      button.addEventListener("click", function () {
+        if (button.getAttribute("data-busy") === "1") return;
+        button.setAttribute("data-busy", "1");
+        button.disabled = true;
+        label.textContent = say("retrying");
+
+        var done = false;
+        var startedAt = Date.now();
+        var fail = function () {
+          if (done) return;
+          done = true;
+          setTimeout(function () {
+            button.removeAttribute("data-busy");
+            button.disabled = false;
+            label.textContent = idleLabel;
+            body.textContent = say("failed");
+          }, Math.max(0, MIN_BUSY_MS - (Date.now() - startedAt)));
+        };
+        var timer = setTimeout(fail, PROBE_TIMEOUT_MS);
+
+        fetch(SITE_URL, { mode: "no-cors", cache: "no-store" }).then(
+          function () {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            location.href = SITE_URL;
+          },
+          function () {
+            clearTimeout(timer);
+            fail();
+          }
+        );
+      });
     </script>
   </body>
 </html>

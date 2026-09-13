@@ -8,6 +8,8 @@ import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { localizeSkillAreaTitle } from "@/lib/exams/localize";
 import { isStaff } from "@/lib/roles";
+import { isNativeShellRequest } from "@/lib/native-shell";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 import { db } from "@/lib/db";
 import {
   getSubscriptionsForUser,
@@ -50,7 +52,6 @@ import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
-import NativeSubscriptionPanel from "@/components/subscription/NativeSubscriptionPanel";
 import LocalDate from "@/components/profile/LocalDate";
 import SettingsAccordion from "@/components/profile/SettingsAccordion";
 import ActivityCalendar from "@/components/profile/ActivityCalendar";
@@ -285,6 +286,10 @@ export default async function ProfilePage({
   }
 
   const dict = await getDictionary(lang);
+  // ДОЛГ 179. Внутри приложения в кабинете не остаётся ни одного платного
+  // входа: ни панели магазина, ни кнопки «Оформить подписку», ни ссылок
+  // «перейти на годовой/Premium».
+  const nativeShell = await isNativeShellRequest();
   const query = await searchParams;
   const checkout = typeof query.checkout === "string" ? query.checkout : null;
   // What the buyer just paid for, carried back from Stripe by
@@ -872,7 +877,7 @@ export default async function ProfilePage({
                 at /pricing (annual is pre-selected there by default;
                 premium is highlighted via ?highlight=premium), the actual
                 plan change still goes through the real checkout flow. */}
-            {!isActive ? (
+            {nativeShell ? null : !isActive ? (
               <Link
                 href={`/${lang}/pricing`}
                 className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
@@ -1163,16 +1168,12 @@ export default async function ProfilePage({
       {/* Subscription status */}
       {activeTab === "subscription" && (
       <>
-      {/* Renders only inside the native app shell (no-op on web, see the
-          component's own Capacitor.isNativePlatform() guard) — a separate
-          section from the Stripe-driven one below rather than merged into
-          it, since a RevenueCat purchase's on-device entitlement state
-          (this panel) and the DB-backed Subscription row the Stripe
-          section reads are two different sources of truth that only
-          converge once /api/webhooks/revenuecat has actually synced a
-          purchase server-side (not the case yet for a purely local
-          StoreKit Testing purchase with no webhook tunnel configured). */}
-      <NativeSubscriptionPanel userId={user.id} dict={dict.profile.nativeSubscription} />
+      {/* Панель RevenueCat отсюда УБРАНА 13.09.2026 (долг 179). Она
+          рисовала внутри приложения кнопки «Оформить подписку» и
+          «Восстановить покупки», а обе не делали ничего: SDK не
+          сконфигурирован, потому что продуктов в консолях не заведено ни
+          одного и ключ платформы в боевой сборке пуст. Нерабочая кнопка —
+          дефект сама по себе; вернётся вместе с продуктами. */}
       <section className="mt-8 rounded-2xl border border-primary/15 bg-primary/[0.03] p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SectionHeading icon={<CrownIcon className="h-[18px] w-[18px]" />}>
@@ -1212,6 +1213,11 @@ export default async function ProfilePage({
             </form>
           ) : isStaff(user.role) ? (
             <p className="text-sm text-foreground/60">{dict.profile.staffAccessNotice}</p>
+          ) : nativeShell ? (
+            // ДОЛГ 179: внутри приложения вместо кнопки покупки — строка
+            // о том, как обстоят дела. Ни цены, ни способа оплаты, ни
+            // ссылки на страницу цен.
+            <p className="text-sm text-foreground/60">{nativeAccessCopy(lang).profileNote}</p>
           ) : (
             <Link
               href={`/${lang}/pricing`}

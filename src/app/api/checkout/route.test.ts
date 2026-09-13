@@ -224,6 +224,10 @@ describe("POST /api/checkout — Stripe refuses to open the session", () => {
     const request = {
       url: "https://rusofacilapp.com/api/checkout",
       formData: async () => form,
+      // Заголовки нужны с 13.09.2026: касса первым делом спрашивает, не
+      // из нативной ли оболочки пришёл запрос (долг 179). У настоящего
+      // NextRequest они есть всегда — пустой заглушке их не хватало.
+      headers: new Headers(),
     } as unknown as NextRequest;
 
     const body = await (await POST(request)).text();

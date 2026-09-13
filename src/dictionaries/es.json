@@ -767,15 +767,6 @@
     "examMistakeYourAnswer": "Tu respuesta",
     "examMistakeCorrectAnswer": "Respuesta correcta",
     "examMistakeExplanation": "Por qué",
-    "nativeSubscription": {
-      "heading": "Suscripción (app nativa)",
-      "proActive": "PRO activo",
-      "proInactive": "Sin PRO",
-      "manageButton": "Gestionar suscripción",
-      "upgradeButton": "Ver planes",
-      "restoreButton": "Restaurar compras",
-      "errorMessage": "No pudimos cargar tu estado de suscripción. Inténtalo de nuevo."
-    },
     "voiceRecordingsHeading": "Tus grabaciones de voz",
     "voiceRecordingsDescription": "Las grabaciones de las prácticas de pronunciación no se envían a ningún servidor: se quedan en el navegador donde las hiciste.",
     "voiceRecordingsDeviceNote": "Por eso esta cifra corresponde solo a este dispositivo. Si grabaste en el teléfono, aquí no aparecerán.",

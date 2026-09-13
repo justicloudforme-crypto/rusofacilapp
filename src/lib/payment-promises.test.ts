@@ -37,7 +37,15 @@ function pricingPageSource(): string {
 /** The two description literals inside generateMetadata — the ru one and
  * the es one, pulled out by the marker each ends with. */
 function metadataDescriptions(source: string): string[] {
-  const block = source.slice(source.indexOf("description:"), source.indexOf("alternates:"));
+  // Отсчёт от ВЕБ-ветки, а не от первого `description:` в файле. С
+  // 13.09.2026 у `generateMetadata` есть ещё одна ветка — для нативной
+  // оболочки (долг 179), и она стоит ВЫШЕ: её описание собирается из
+  // `nativeAccessCopy`, литералов в ней нет вовсе, а вот текст вокруг неё
+  // сбивал разбор. Веб-ветка узнаётся по своей первой строке — заголовку
+  // из словаря; именно её описание и уезжает в выдачу поиска.
+  const webBranch = source.indexOf("title: `${dict.pricing.title}");
+  const from = webBranch === -1 ? 0 : webBranch;
+  const block = source.slice(source.indexOf("description:", from), source.indexOf("alternates:", from));
   return [...block.matchAll(/"([^"]{60,})"/g)].map((m) => m[1]);
 }
 
