@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
 
   const token = signVerificationToken("delete_account", user.id, user.passwordHash);
   const origin = new URL(request.url).origin;
-  const confirmUrl = `${origin}/${langRaw || "es"}/confirm-delete-account?token=${encodeURIComponent(token)}`;
+  // Долг 164, тот же класс: токен во фрагменте, на сервер он не уезжает.
+  const confirmUrl = `${origin}/${langRaw || "es"}/confirm-delete-account#token=${encodeURIComponent(token)}`;
 
   await sendEmail({
     to: user.email,

@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { scrubTokensFromEvent } from "./src/lib/scrub-token";
 
 // The browser cannot read VERCEL_ENV, so next.config.ts bakes it in at
 // build time as NEXT_PUBLIC_DEPLOY_ENV (empty string off Vercel). Same
@@ -80,6 +81,12 @@ Sentry.init({
     );
     if (isServiceWorkerRegistration && isUnhandledRejection) return null;
 
-    return event;
+    // ДОЛГ 164, вторая стена. Токен сброса пароля и токен подтверждения
+    // удаления учётной записи переехали из строки запроса во фрагмент, и
+    // фрагмент стирается из адреса сразу после чтения — но `location.href`,
+    // который SDK кладёт в событие, включает фрагмент тоже, а между
+    // загрузкой страницы и первым эффектом React есть окно. Здесь оно
+    // закрывается: значение вырезается, адрес страницы остаётся узнаваемым.
+    return scrubTokensFromEvent(event);
   },
 });

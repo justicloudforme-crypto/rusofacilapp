@@ -16,8 +16,9 @@ export async function POST(request: NextRequest) {
 
   const fail = () => {
     const url = new URL(`/${lang}/confirm-delete-account`, request.url);
-    url.searchParams.set("token", token);
     url.searchParams.set("error", "invalid_token");
+    // Долг 164, тот же класс: токен возвращается во фрагменте.
+    url.hash = `token=${encodeURIComponent(token)}`;
     return NextResponse.redirect(url, { status: 303 });
   };
 

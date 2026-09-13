@@ -60,8 +60,14 @@ export default function SpeakButton({
   // звонок уходил бы в устаревшую пару.
   const onPlayRef = useRef(onPlay);
   const onStopRef = useRef(onStop);
-  onPlayRef.current = onPlay;
-  onStopRef.current = onStop;
+  // Без массива зависимостей нарочно: эффект обязан отработать на каждом
+  // рендере, а пишет он только в ref — ни браузера, ни состояния не
+  // трогает, поэтому ничего не перестраивает. Тот же приём, что у
+  // `mediaActionsRef` в StoryText.tsx, и по той же причине.
+  useEffect(() => {
+    onPlayRef.current = onPlay;
+    onStopRef.current = onStop;
+  });
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

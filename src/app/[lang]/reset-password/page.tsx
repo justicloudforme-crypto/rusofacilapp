@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import HashTokenForm from "@/components/auth/HashTokenForm";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import { routeAlternates } from "@/lib/site";
 
@@ -21,7 +22,9 @@ export default async function ResetPasswordPage({
 
   const dict = await getDictionary(lang);
   const query = await searchParams;
-  const token = typeof query.token === "string" ? query.token : "";
+  // Токена здесь НЕТ и быть не может: он приезжает во фрагменте адреса,
+  // которого сервер не видит по построению (долг 164). Читает его
+  // HashTokenForm уже в браузере.
   const errorMessages: Record<string, string> = {
     invalid_token: dict.auth.invalidResetToken,
     weak_password: dict.auth.weakPassword,
@@ -41,13 +44,13 @@ export default async function ResetPasswordPage({
         </p>
       )}
 
-      {!token ? (
-        <p className="mt-6 text-sm text-foreground/60">{dict.auth.invalidResetToken}</p>
-      ) : (
-        <form action="/api/auth/reset-password" method="POST" className="mt-6 flex flex-col gap-4">
-          <input type="hidden" name="lang" value={lang} />
-          <input type="hidden" name="token" value={token} />
-          <label className="flex flex-col gap-1.5 text-sm">
+      <HashTokenForm
+        action="/api/auth/reset-password"
+        lang={lang}
+        missingLabel={dict.auth.invalidResetToken}
+        className="mt-6 flex flex-col gap-4"
+      >
+        <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">{dict.auth.newPasswordLabel}</span>
             <input
               type="password"
@@ -59,14 +62,13 @@ export default async function ResetPasswordPage({
               className="rounded-lg border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/50 dark:border-white/20"
             />
           </label>
-          <button
-            type="submit"
-            className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-          >
-            {dict.auth.resetSubmit}
-          </button>
-        </form>
-      )}
+        <button
+          type="submit"
+          className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+        >
+          {dict.auth.resetSubmit}
+        </button>
+      </HashTokenForm>
     </div>
   );
 }
