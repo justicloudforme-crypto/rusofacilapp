@@ -385,6 +385,18 @@ export default async function ProfilePage({
     }),
   ]);
   const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
+  // ДОЛГ 157, решение владельца 13.09.2026: пропуски считать С ПЕРВОГО
+  // ЗАНЯТИЯ, а не с даты регистрации. `null` — занятий не было ни одного,
+  // и тогда пропущенных дней у человека нет вовсе.
+  //
+  // Минимум берётся перебором, а не `[0]`: порядок ключей — свойство
+  // запроса, а не контракта `getUserActivityDateKeys`, и опереться на
+  // него значило бы завести долг, который проявится при первой же смене
+  // сортировки.
+  const firstStudyDateKey =
+    activityDateKeys.length === 0
+      ? null
+      : activityDateKeys.reduce((earliest, key) => (key < earliest ? key : earliest));
   // "Freezes apply from <date>" — printed only when there is history the
   // freeze rule was never allowed to touch, i.e. when the epoch is later than
   // the learner's first day. An account that registered after freezes shipped
@@ -691,6 +703,7 @@ export default async function ProfilePage({
                     daySources={activityDaySources}
                     todayKey={todayKey}
                     firstDateKey={registeredDateKey}
+                    missedFromDateKey={firstStudyDateKey}
                     dict={{
                       prevMonth: dict.profile.calendarPrevMonth,
                       nextMonth: dict.profile.calendarNextMonth,

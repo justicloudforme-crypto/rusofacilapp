@@ -69,6 +69,7 @@ export default function ActivityCalendar({
   daySources,
   todayKey,
   firstDateKey,
+  missedFromDateKey,
   dict,
 }: {
   activeDateKeys: string[];
@@ -84,8 +85,16 @@ export default function ActivityCalendar({
    * in rather than computed here so the grid and the keys it is matched
    * against are one calendar — see src/lib/activity-calendar.ts. */
   todayKey: string;
-  /** The learner's registration day, in the same zone. */
+  /** День регистрации, в той же зоне. Нужен ОДНОМУ — окну
+   * перелистывания: назад листается до месяца, в котором появилась
+   * учётная запись. */
   firstDateKey: string;
+  /** День ПЕРВОГО ЗАНЯТИЯ, в той же зоне, или `null`, если занятий не
+   * было ни одного. Именно с него считаются пропуски — решение владельца
+   * 13.09.2026 (долг 157). До этого пропуски считались с регистрации, и
+   * учётная запись, ни разу не занимавшаяся, встречала хозяина стеной из
+   * 18 холодных значков подряд. */
+  missedFromDateKey: string | null;
   dict: ActivityCalendarDict;
 }) {
   const { min, max } = navigableMonths(firstDateKey, todayKey);
@@ -100,7 +109,7 @@ export default function ActivityCalendar({
     setOpenDay(null);
   };
 
-  const weeks = monthGrid(monthKey, { activeDateKeys, frozenDateKeys, todayKey, firstDateKey });
+  const weeks = monthGrid(monthKey, { activeDateKeys, frozenDateKeys, todayKey, missedFromDateKey });
   const summary = monthSummary(weeks);
   // Only the squares this month actually has get a line in the key below.
   const drawn = monthStates(weeks);

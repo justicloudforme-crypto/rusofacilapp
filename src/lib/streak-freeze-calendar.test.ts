@@ -67,7 +67,7 @@ function render(activity: string[], freezesSince: string | null) {
     activeDateKeys: activity,
     frozenDateKeys: streak.frozenDateKeys,
     todayKey: TODAY,
-    firstDateKey: REGISTERED,
+    missedFromDateKey: REGISTERED,
   });
   const byDate = new Map<string, CalendarCell>();
   for (const cell of weeks.flat()) if (cell.dateKey) byDate.set(cell.dateKey, cell);
@@ -249,7 +249,7 @@ describe("the grid before the learner existed and after today", () => {
     ),
     frozenDateKeys: [day(15)],
     todayKey: "2026-08-20",
-    firstDateKey: "2026-08-05",
+    missedFromDateKey: "2026-08-05",
   });
   const byDate = new Map(weeks.flat().filter((c) => c.dateKey).map((c) => [c.dateKey as string, c]));
 

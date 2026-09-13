@@ -21,11 +21,26 @@ import { addDateKeyDays } from "./timezone";
  *   active      — a day they studied
  *   frozen      — a day a streak freeze covered
  *   missed      — a day inside their period with nothing on it
- *   beforeStart — a day before they registered: not theirs to have missed
+ *   beforeStart — a day before their FIRST LESSON: not theirs to have missed
  *   future      — a day that has not happened yet
  *   padding     — a square belonging to a neighbouring month, kept only so
  *                 every row is seven wide. Carries `dateKey: null` and is
  *                 rendered `aria-hidden`, so it never needs a legend.
+ *
+ * `beforeStart` MEANT "before they registered" until 13.09.2026 (долг 157).
+ * Оно стоило вот чего, и замерено это на живом телефоне владельца: учётная
+ * запись, заведённая 26.08.2026 и ни разу не занимавшаяся, к 12 сентября
+ * встречала хозяина стеной из **18 холодных значков «пропуск» подряд** (6
+ * в августе + 12 в сентябре) при серии 0, «слов изучено 0» и «уроков
+ * сдано 0». Человек ещё не начинал — а ему уже показывали счёт
+ * пропущенного. **Решение владельца 13.09.2026: пропуски считать С ПЕРВОГО
+ * ЗАНЯТИЯ, а не с даты регистрации.**
+ *
+ * Поэтому границу теперь называет `missedFromDateKey` — день первого
+ * занятия, а не день регистрации, — и `null` в нём значит «занятий не было
+ * ни одного», то есть пропущенных дней нет ВООБЩЕ. Окно перелистывания
+ * (`navigableMonths`) по-прежнему начинается с регистрации: месяцы до
+ * первого занятия открываются, просто их дни не обвиняют.
  *
  * `beforeStart` and `future` were ONE state ("outside") until 01.09.2026,
  * and that is why the legend could only call it "fuera de tu periodo" /
@@ -98,10 +113,16 @@ export interface MonthGridInput {
   frozenDateKeys: Iterable<string>;
   /** Today, in the learner's zone. */
   todayKey: string;
-  /** The learner's first day: their registration date, in their zone.
-   * Everything before it is "outside" — they cannot have missed a day that
-   * predates their account, and a grid that scolds them for it is lying. */
-  firstDateKey: string;
+  /** Первый день, который человеку МОЖНО поставить в упрёк: день его
+   * первого занятия, в его зоне. `null` — занятий не было ни одного, и
+   * тогда пропущенных дней нет вовсе.
+   *
+   * Это НЕ дата регистрации. Раньше здесь стояла она, и цена этому —
+   * 18 значков «пропуск» подряд у того, кто ещё не начинал (долг 157,
+   * см. шапку файла). Дата регистрации осталась у `navigableMonths`,
+   * которой она и нужна: окно перелистывания начинается там, где
+   * началась учётная запись. */
+  missedFromDateKey: string | null;
 }
 
 /** The month laid out as weeks of seven, Monday first, padded at both ends
@@ -127,12 +148,16 @@ export function monthGrid(monthKey: string, input: MonthGridInput): CalendarCell
     // change can never paint a studied day as frozen. The two "not theirs"
     // cases are asked next and kept apart, because the learner is told two
     // different things about them.
+    // `future` спрашивается РАНЬШЕ границы первого занятия, и это не
+    // перестановка ради красоты: при `missedFromDateKey === null` (занятий
+    // не было ни одного) иначе весь остаток месяца, включая завтра,
+    // покрасился бы как «до первого занятия». Порядок заперт тестами.
     const state: CalendarCellState = active.has(dateKey)
       ? "active"
-      : dateKey < input.firstDateKey
-        ? "beforeStart"
-        : dateKey > input.todayKey
-          ? "future"
+      : dateKey > input.todayKey
+        ? "future"
+        : input.missedFromDateKey === null || dateKey < input.missedFromDateKey
+          ? "beforeStart"
           : frozen.has(dateKey)
             ? "frozen"
             : "missed";
@@ -149,7 +174,10 @@ export function monthGrid(monthKey: string, input: MonthGridInput): CalendarCell
 }
 
 /** The window the learner may page through: from the month they registered
- * in to the month they are in now, both inclusive. Back is bounded because
+ * in to the month they are in now, both inclusive. Здесь стоит именно
+ * РЕГИСТРАЦИЯ, а не первое занятие (долг 157): окно — про то, когда
+ * появилась учётная запись, а обвинение в пропуске — про то, когда
+ * человек начал заниматься. Это две разные величины. Back is bounded because
  * there is nothing behind it; forward because a calendar that offers next
  * month is offering an empty grid. */
 export function navigableMonths(firstDateKey: string, todayKey: string): { min: string; max: string } {

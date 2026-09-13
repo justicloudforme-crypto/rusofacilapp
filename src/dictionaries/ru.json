@@ -538,7 +538,7 @@
     "calendarLegendActive": "день занятия",
     "calendarLegendFrozen": "день спасён заморозкой",
     "calendarLegendMissed": "пропуск",
-    "calendarLegendBeforeStart": "до регистрации",
+    "calendarLegendBeforeStart": "до первого занятия",
     "calendarLegendFuture": "ещё впереди",
     "calendarLegendToday": "сегодня",
     "calendarMonths": ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],

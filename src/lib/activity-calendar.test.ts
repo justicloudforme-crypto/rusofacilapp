@@ -29,7 +29,7 @@ const grid = (month: string, over: Partial<Parameters<typeof monthGrid>[1]> = {}
     activeDateKeys: [],
     frozenDateKeys: [],
     todayKey: TODAY,
-    firstDateKey: REGISTERED,
+    missedFromDateKey: REGISTERED,
     ...over,
   });
 
@@ -106,7 +106,7 @@ describe("календарная арифметика", () => {
 describe("сетка месяца", () => {
   it("каждая строка ровно семь клеток, и все дни месяца на месте", () => {
     for (const month of ["2026-02", "2026-08", "2026-09", "2024-02"]) {
-      const weeks = grid(month, { todayKey: "2026-12-31", firstDateKey: "2000-01-01" });
+      const weeks = grid(month, { todayKey: "2026-12-31", missedFromDateKey: "2000-01-01" });
       for (const week of weeks) expect(week).toHaveLength(7);
       const days = weeks.flat().filter((cell) => cell.dateKey !== null);
       expect(days).toHaveLength(daysInMonth(month));
@@ -211,13 +211,13 @@ describe("календарь и часовой пояс ученика", () => {
       activeDateKeys: [],
       frozenDateKeys: [],
       todayKey: tijuana,
-      firstDateKey: REGISTERED,
+      missedFromDateKey: REGISTERED,
     });
     const east = monthGrid("2026-08", {
       activeDateKeys: [],
       frozenDateKeys: [],
       todayKey: auckland,
-      firstDateKey: REGISTERED,
+      missedFromDateKey: REGISTERED,
     });
 
     expect(cellFor(west, "2026-08-31")!.isToday).toBe(true);
@@ -234,7 +234,7 @@ describe("итог месяца и дата словами", () => {
       activeDateKeys: ["2026-07-31", "2026-08-10", "2026-08-12", "2026-09-01"],
       frozenDateKeys: ["2026-08-11"],
       todayKey: "2026-09-30",
-      firstDateKey: "2026-01-01",
+      missedFromDateKey: "2026-01-01",
     });
     // 31.07 and 01.09 are in the grid's padding, which carries no dateKey —
     // exactly the case a naive "count the flames I can see" would get wrong.
@@ -247,7 +247,7 @@ describe("итог месяца и дата словами", () => {
   });
 
   it("monthSummary на пустом месяце — нули, а не пустота", () => {
-    expect(monthSummary(grid("2026-08", { todayKey: "2026-09-30", firstDateKey: "2026-01-01" }))).toEqual({
+    expect(monthSummary(grid("2026-08", { todayKey: "2026-09-30", missedFromDateKey: "2026-01-01" }))).toEqual({
       active: 0,
       frozen: 0,
     });
@@ -283,7 +283,7 @@ describe("итог месяца и дата словами", () => {
       activeDateKeys: ["2026-08-10"],
       frozenDateKeys: ["2026-08-11"],
       todayKey: "2026-08-31",
-      firstDateKey: "2026-08-07",
+      missedFromDateKey: "2026-08-07",
     });
     const { states, today } = monthStates(weeks);
     expect(states.has("future")).toBe(false);
@@ -300,7 +300,7 @@ describe("итог месяца и дата словами", () => {
     const weeks = grid("2026-08", {
       activeDateKeys: ["2026-08-10"],
       todayKey: "2026-08-30",
-      firstDateKey: "2026-08-07",
+      missedFromDateKey: "2026-08-07",
     });
     expect(monthStates(weeks).states.has("future")).toBe(true);
   });
@@ -309,7 +309,7 @@ describe("итог месяца и дата словами", () => {
     // A grid whose padding leans into July and September. Padding squares
     // are aria-hidden in the component, so naming them in the key would be
     // explaining a square nobody can see.
-    const weeks = grid("2026-08", { todayKey: "2026-09-30", firstDateKey: "2026-01-01" });
+    const weeks = grid("2026-08", { todayKey: "2026-09-30", missedFromDateKey: "2026-01-01" });
     expect(weeks.flat().filter((c) => c.dateKey === null).length).toBeGreaterThan(0);
     expect(monthStates(weeks).states.has("padding" as never)).toBe(false);
   });
@@ -320,7 +320,7 @@ describe("итог месяца и дата словами", () => {
     const weeks = grid("2026-08", {
       activeDateKeys: ["2026-08-31"],
       todayKey: "2026-08-31",
-      firstDateKey: "2026-08-01",
+      missedFromDateKey: "2026-08-01",
     });
     const { states, today } = monthStates(weeks);
     expect(today).toBe(true);
@@ -328,7 +328,58 @@ describe("итог месяца и дата словами", () => {
 
     // Control: a month the learner is not in reports no today at all.
     expect(
-      monthStates(grid("2026-07", { todayKey: "2026-08-31", firstDateKey: "2026-01-01" })).today,
+      monthStates(grid("2026-07", { todayKey: "2026-08-31", missedFromDateKey: "2026-01-01" })).today,
     ).toBe(false);
+  });
+});
+
+/**
+ * ДОЛГ 157 — «18 дней „пропуск“ подряд у учётной записи без единого
+ * занятия». Замерено на живом телефоне владельца 13.09.2026: регистрация
+ * 26.08.2026, занятий ноль, сегодня 12.09.2026 — и календарь рисует
+ * сплошную полосу холодных значков: 6 в августе + 12 в сентябре.
+ *
+ * РЕШЕНИЕ ВЛАДЕЛЬЦА: пропуски считать С ПЕРВОГО ЗАНЯТИЯ. Здесь заперты
+ * оба конца правила — и «не обвинять того, кто не начинал», и «обвинять
+ * того, кто начал и бросил», потому что первое без второго превратило бы
+ * календарь в картинку, которая не умеет сказать ничего.
+ */
+describe("долг 157: пропуски считаются с первого занятия, а не с регистрации", () => {
+  const OWNER = { activeDateKeys: [], frozenDateKeys: [], todayKey: "2026-09-12" };
+  const countIn = (months: string[], input: Parameters<typeof grid>[1], state: string) =>
+    months.reduce((n, m) => n + grid(m, input).flat().filter((c) => c.state === state).length, 0);
+
+  it("ни одного занятия — пропущенных дней 0 (было 18)", () => {
+    const input = { ...OWNER, missedFromDateKey: null };
+    expect(countIn(["2026-08", "2026-09"], input, "missed")).toBe(0);
+    // Позитивный контроль прибора: те же дни, но граница поставлена по
+    // РЕГИСТРАЦИИ, как было до правки, — и счётчик обязан увидеть ровно
+    // те 18, на которые жаловался владелец. Без этой строки «0» доказывал
+    // бы только то, что считать нечего.
+    expect(countIn(["2026-08", "2026-09"], { ...OWNER, missedFromDateKey: "2026-08-26" }, "missed")).toBe(18);
+  });
+
+  it("дни до первого занятия зовутся beforeStart, а не пропуском", () => {
+    const input = { ...OWNER, missedFromDateKey: "2026-09-05" };
+    expect(grid("2026-09", input).flat().filter((c) => c.state === "beforeStart").length).toBe(4); // 1–4 сентября
+    expect(grid("2026-09", input).flat().filter((c) => c.state === "missed").length).toBe(8); // 5–12
+  });
+
+  it("завтрашний день остаётся будущим, а не «до первого занятия»", () => {
+    const weeks = grid("2026-09", { ...OWNER, missedFromDateKey: null });
+    const tomorrow = weeks.flat().find((c) => c.dateKey === "2026-09-13");
+    expect(tomorrow?.state).toBe("future");
+    expect(weeks.flat().filter((c) => c.state === "future").length).toBe(18); // 13–30 сентября
+  });
+
+  it("занимавшийся и бросивший пропуски ВИДИТ — правило не превратилось в «никогда не обвинять»", () => {
+    const input = { activeDateKeys: ["2026-09-01"], frozenDateKeys: [], todayKey: "2026-09-12", missedFromDateKey: "2026-09-01" };
+    const cells = grid("2026-09", input).flat();
+    expect(cells.filter((c) => c.state === "active").length).toBe(1);
+    expect(cells.filter((c) => c.state === "missed").length).toBe(11); // 2–12
+  });
+
+  it("окно перелистывания по-прежнему начинается с РЕГИСТРАЦИИ, а не с первого занятия", () => {
+    expect(navigableMonths("2026-08-26", "2026-09-12")).toEqual({ min: "2026-08", max: "2026-09" });
   });
 });
