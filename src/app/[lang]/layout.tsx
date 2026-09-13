@@ -201,7 +201,19 @@ export default async function LangLayout({
       // actual content difference.
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col" suppressHydrationWarning>
+      <body
+        // Отступ под нижнюю панель стоит ЗДЕСЬ, а не на <main>: конец
+        // прокручиваемой области — это конец ДОКУМЕНТА, а <main>
+        // кончается в его середине, подвал идёт после него. Замер
+        // 13.09.2026 при отступе на <main>: на 360×780 под панелью
+        // лежали ШЕСТЬ ссылок подвала из шести, последняя («Политика
+        // конфиденциальности», 756..776) — целиком внутри полосы
+        // панели 716..780. Величина берётся из общего учёта прижатых
+        // слоёв (--pinned-inset-bottom, см. src/lib/pinned-layers.ts);
+        // `sm:pb-0` — потому что сама панель `sm:hidden`.
+        className={`flex min-h-full flex-col ${user ? "pb-pinned sm:pb-0" : ""}`}
+        suppressHydrationWarning
+      >
         <HydrationMarker />
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} register={false}>
           <SerwistRegister />
@@ -214,12 +226,10 @@ export default async function LangLayout({
         <OfflineBanner message={dict.offline.bannerMessage} />
         <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans} priceNote={paywallPriceNote}>
           <Navbar lang={lang} dict={dict} streak={streak} />
-          {/* pb-20 clears BottomNav's own height (~56px content + its own
-              pb-safe inset) below sm so page content never sits under it —
-              only when BottomNav actually renders (logged in; it returns
-              null when logged out, see BottomNav.tsx), and sm:pb-0 either
-              way since BottomNav itself is sm:hidden. */}
-          <main className={`flex flex-1 flex-col ${user ? "pb-20 sm:pb-0" : ""}`}>{children}</main>
+          {/* Отступ под BottomNav переехал на <body> (см. комментарий там):
+              он обязан стоять в конце ПРОКРУЧИВАЕМОЙ ОБЛАСТИ, а конец
+              <main> — это середина документа. Долг 161. */}
+          <main className="flex flex-1 flex-col">{children}</main>
           <Footer dict={dict} lang={lang} />
         </PaywallProvider>
         <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} />

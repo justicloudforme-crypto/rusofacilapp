@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { hapticTap } from "@/lib/haptics";
 import { useHideOnScroll } from "@/lib/useHideOnScroll";
+import { usePinnedLayer, useKeyboardOpen } from "@/lib/usePinnedLayer";
 import { BookIcon, GraduationCapIcon, DictionaryIcon, PuzzleIcon, PersonalIcon } from "@/components/profile/ProfileIcons";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
@@ -32,7 +33,37 @@ export default function BottomNav({
   isLoggedIn: boolean;
 }) {
   const pathname = usePathname();
-  const hidden = useHideOnScroll();
+  const hiddenByScroll = useHideOnScroll();
+  /**
+   * Поднятая клавиатура снимает панель — долг 161.
+   *
+   * Замерено с живого телефона владельца 13.09.2026 на
+   * `/ru/word-games/CROSSWORD/A1/1`: при открытой клавиатуре видимая
+   * часть окна `visualViewport.height = 569` CSS-px (без клавиатуры у
+   * этого телефона около 904), и панель занимает в ней полосу 517..569 —
+   * НИЖНИЕ 52 пикселя единственной видимой области. Строка определения,
+   * которую человек в этот момент читает, оказывается под ней.
+   *
+   * Отступ в конце документа этого не лечит по построению: он ждёт
+   * строку на самом низу, а клавиатура поднимает её в середину. Прячется
+   * панель и сама — при прокрутке (`useHideOnScroll`), — но во время
+   * набора человек не прокручивает, и то лекарство в этом сценарии не
+   * срабатывает никогда.
+   *
+   * Пока клавиатура поднята, панель ещё и СНИМАЕТСЯ С УЧЁТА (`active`
+   * ниже): её полоса не должна ни резервировать место в конце
+   * документа, ни сужать свободное место для карточек и доводок.
+   */
+  const keyboardOpen = useKeyboardOpen();
+  const hidden = hiddenByScroll || keyboardOpen;
+  const pinnedRef = usePinnedLayer<HTMLElement>({
+    edge: "bottom",
+    // Единственный слой продукта, который РЕЗЕРВИРУЕТ место: он на
+    // экране постоянно, остальные четыре приходят и уходят.
+    reserve: true,
+    label: "BottomNav",
+    active: isLoggedIn && !keyboardOpen,
+  });
 
   if (!isLoggedIn) return null;
 
@@ -46,6 +77,7 @@ export default function BottomNav({
 
   return (
     <nav
+      ref={pinnedRef}
       aria-label={dict.nav.bottomNavLabel}
       // No backdrop-blur: a `fixed` blurred bar forces the Android WebView
       // compositor to repaint the blur region on every frame of whatever

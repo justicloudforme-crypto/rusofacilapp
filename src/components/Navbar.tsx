@@ -1,4 +1,5 @@
 import Link from "next/link";
+import StickyHeader from "./StickyHeader";
 import LanguageSwitcher from "./LanguageSwitcher";
 import SoundToggle from "./SoundToggle";
 import MobileMenu from "./MobileMenu";
@@ -118,7 +119,7 @@ export default async function Navbar({
   const avatarId = user && isAvatarId(user.avatarId) ? user.avatarId : DEFAULT_AVATAR_ID;
 
   return (
-    <header
+    <StickyHeader
       // No backdrop-blur — same Android WebView repaint cost as BottomNav
       // (see that file's comment). The background is therefore FULLY
       // opaque, not bg-background/95: every other pinned bar in this app
@@ -265,6 +266,6 @@ export default async function Navbar({
           />
         </div>
       </div>
-    </header>
+    </StickyHeader>
   );
 }
