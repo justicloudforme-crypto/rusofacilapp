@@ -228,7 +228,10 @@
     "snapshot:prod": "node scripts/make-prod-snapshot.mjs",
     "snapshot:prod:dry": "node scripts/make-prod-snapshot.mjs --dry-run",
     "check:bottom-inset": "node scripts/check-bottom-inset.mjs",
-    "check:bottom-inset:plant": "node scripts/check-bottom-inset.mjs --plant"
+    "check:bottom-inset:plant": "node scripts/check-bottom-inset.mjs --plant",
+    "store:icon": "node scripts/store-assets/render-icon-512.mjs",
+    "store:banner": "node scripts/store-assets/render-feature-graphic.mjs",
+    "store:screenshots": "node scripts/store-assets/capture-store-screenshots.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",
