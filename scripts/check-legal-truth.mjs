@@ -40,6 +40,10 @@ const IS_ENTRY_POINT = process.argv[1]
   : false;
 
 const LEGAL = "src/lib/legal/content.ts";
+const LEGAL_VIEW = "src/components/legal/LegalDocumentView.tsx";
+/** Якорь, на который ссылается анкета Google Play («Delete account URL»).
+ *  Один и тот же в обеих локалях НАРОЧНО: поле в анкете одно. */
+const REQUIRED_ANCHOR = "tus-derechos";
 
 /** Модули пути записи голоса. Список поимённый, а не по маске: маска
  * молча пропустила бы переименование, а поимённый список на него
@@ -276,8 +280,34 @@ function scan() {
     failures.push(`подписей к дате ${labels}, а документов четыре (условия и политика × две локали).`);
   }
 
+  // --- 4. якорь на раздел о правах (13.09.2026) -----------------------
+  //
+  // В анкете Google Play Data safety есть поле «Delete account URL»: туда
+  // требуется адрес, ведущий ИМЕННО на объяснение, как удалить учётную
+  // запись. Ссылка на политику целиком — это ссылка на 12 разделов, среди
+  // которых проверяющий обязан искать сам, и на ревью это законное
+  // замечание. Адрес держится на двух вещах сразу, и без любой из них он
+  // молча перестаёт работать: слаг у раздела в ОБЕИХ локалях и `id` у
+  // `<section>` в отрисовщике. Поэтому проверяются обе.
+  const anchors = [...text.matchAll(/slug: "([\w-]+)"/g)].map((m) => m[1]);
+  const rightsAnchors = anchors.filter((a) => a === REQUIRED_ANCHOR).length;
+  if (rightsAnchors !== 2) {
+    failures.push(
+      `якорей «${REQUIRED_ANCHOR}» на раздел о правах найдено ${rightsAnchors}, а нужно два — по одному на локаль. ` +
+        `На этот адрес ссылается поле «Delete account URL» анкеты Google Play, и молча он не ломается.`,
+    );
+  }
+  const view = readFileSync(LEGAL_VIEW, "utf8");
+  if (!/<section[^>]*\bid=\{section\.slug\}/.test(view)) {
+    failures.push(
+      `${LEGAL_VIEW}: у <section> нет id={section.slug} — слаг в данных есть, а якоря в разметке нет, ` +
+        `то есть адрес с «#» ведёт на начало страницы и ничего не выделяет.`,
+    );
+  }
+
   return {
     failures,
+    anchors,
     sends,
     voiceRoutes,
     apiDirs: apiDirs.length,
@@ -310,6 +340,10 @@ function report(r) {
     `  названы без зависимости: ${[...NAMED_WITHOUT_DEPENDENCY.keys().toArray?.() ?? NAMED_WITHOUT_DEPENDENCY.keys()].join(", ")}`,
   );
   console.log(`  даты последнего изменения: ${r.dates.join(", ")}, обе написаны рукой`);
+  console.log(
+    `  якоря на разделы: ${r.anchors.length} (${r.anchors.join(", ")}); ` +
+      `«${REQUIRED_ANCHOR}» — в обеих локалях, id={section.slug} в отрисовщике на месте`,
+  );
   return true;
 }
 
@@ -408,6 +442,16 @@ function plantControls() {
       name: "подпись к дате снята с одного документа",
       plant: () => swap(LEGAL, '    lastUpdatedLabel: "Última actualización:",\n', ""),
       expect: (r) => r.failures.some((m) => m.startsWith("подписей к дате 3")),
+    },
+    {
+      name: "якорь на раздел о правах снят с одной локали",
+      plant: () => swap(LEGAL, '        slug: "tus-derechos",\n        paragraphs: [\n          "Tienes derecho', '        paragraphs: [\n          "Tienes derecho'),
+      expect: (r) => r.failures.some((m) => m.includes("на раздел о правах найдено 1")),
+    },
+    {
+      name: "слаг в данных есть, а id в разметке нет",
+      plant: () => swap(LEGAL_VIEW, "id={section.slug}", ""),
+      expect: (r) => r.failures.some((m) => m.includes("нет id={section.slug}")),
     },
     {
       name: "ОТРИЦАТЕЛЬНЫЙ: абзац про озвучку OpenAI («хранятся в нашем хранилище») — не про голос пользователя",
