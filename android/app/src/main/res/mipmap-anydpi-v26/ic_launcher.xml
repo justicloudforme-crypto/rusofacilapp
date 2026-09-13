@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Адаптивная иконка: два слоя 108dp, поверх которых прошивка кладёт свою
+  маску — круг, квадрат со скруглением или «каплю» — и срезает ВНЕШНИЕ
+  18dp с каждой стороны, то есть треть поля.
+
+  ИНСЕТА ЗДЕСЬ БОЛЬШЕ НЕТ, И ЭТО ПРАВКА, А НЕ УБОРКА. Заготовка
+  Capacitor вставляла оба слоя с `android:inset="16.7%"`. Фону это
+  прямо вредило: подложка переставала доходить до края, и на круглой
+  маске по кромке проступала прозрачность. Переднему слою инсет просто
+  дублировал бы работу — безопасное поле теперь посчитано и запечено в
+  сам PNG (см. scripts/store-assets/generate-app-icons.mjs: знак вписан
+  в круг 66dp из 108 по дальней точке СИЛУЭТА, а не по углам рамки).
+
+  Оба файла собираются командой `npm run store:app-icons` из
+  `resources/icon.png` и стерегутся `npm run check:app-icons`.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background>
-        <inset android:drawable="@mipmap/ic_launcher_background" android:inset="16.7%" />
-    </background>
-    <foreground>
-        <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="16.7%" />
-    </foreground>
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
 </adaptive-icon>
