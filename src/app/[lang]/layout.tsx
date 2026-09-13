@@ -12,13 +12,13 @@ import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import TelegramFloatButton from "@/components/TelegramFloatButton";
-import OfflineBanner from "@/components/OfflineBanner";
 import DevServiceWorkerCleanup from "@/components/DevServiceWorkerCleanup";
 import HydrationMarker from "@/components/HydrationMarker";
 import NativeBackButtonHandler from "@/components/NativeBackButtonHandler";
 import NativeNotifications from "@/components/NativeNotifications";
 import SerwistRegister from "@/components/SerwistRegister";
 import SentryUser from "@/components/SentryUser";
+import NativeShellCookie from "@/components/NativeShellCookie";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserStreakStats, persistFreezeState } from "@/lib/streaks";
@@ -28,6 +28,8 @@ import { PaywallProvider } from "@/contexts/PaywallContext";
 import { type PlanId } from "@/lib/plans";
 import { getLocalPriceContext } from "@/lib/country-server";
 import { basePricesText, marked, priceCopy, withBasePrices } from "@/lib/pricing-display";
+import { isNativeShellRequest } from "@/lib/native-shell";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 
 // RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
 // (body/UI), PT Serif (display headings/wordmark), PT Mono (labels/status
@@ -147,6 +149,12 @@ export default async function LangLayout({
   // whole surface a reader can see while it is open. In Mexico, in an
   // unlisted or unknown country, and whenever the rate feed stayed silent,
   // `converted` is false and this is the peso copy it always was.
+  // ДОЛГ 179. Один-единственный признак оболочки на весь макет: по нему
+  // и окно поверх закрытого материала становится замком вместо пейвола,
+  // и нижняя панель перестаёт прятаться. Спрошено на СЕРВЕРЕ, чтобы
+  // сервер и клиент судили об оболочке одинаково.
+  const nativeShell = await isNativeShellRequest();
+
   const localPrice = await getLocalPriceContext();
   const paywallPriceCopy = priceCopy(localPrice, lang, {
     monthly: dict.pricing.monthly.price,
@@ -211,7 +219,12 @@ export default async function LangLayout({
         // панели 716..780. Величина берётся из общего учёта прижатых
         // слоёв (--pinned-inset-bottom, см. src/lib/pinned-layers.ts);
         // `sm:pb-0` — потому что сама панель `sm:hidden`.
-        className={`flex min-h-full flex-col ${user ? "pb-pinned sm:pb-0" : ""}`}
+        // `sm:pb-safe`, а не `sm:pb-0`, и `pb-safe` вместо пустоты для
+        // вышедшего — долг 180. Панель `sm:hidden` и логгед-аутному не
+        // рисуется вовсе, но полоса системных кнопок Android в обоих этих
+        // случаях никуда не девается: замер владельца — последние строки
+        // обычных страниц срезаны ею.
+        className={`flex min-h-full flex-col ${user ? "pb-pinned sm:pb-safe" : "pb-safe"}`}
         suppressHydrationWarning
       >
         <HydrationMarker />
@@ -223,16 +236,29 @@ export default async function LangLayout({
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
         <NativeNotifications lang={lang} userId={user?.id ?? null} />
-        <OfflineBanner message={dict.offline.bannerMessage} />
-        <PaywallProvider lang={lang} userId={user?.id ?? null} dict={dict.paywall} plans={paywallPlans} priceNote={paywallPriceNote}>
-          <Navbar lang={lang} dict={dict} streak={streak} />
+        <NativeShellCookie />
+        {/* Плашка «нет соединения» переехала ВНУТРЬ шапки (долг 180).
+            Здесь, первым элементом потока, она стояла ВЫШЕ шапки и
+            забирала себе полосу под строкой состояния: в оболочке на
+            Android 16 окно рисуется во весь экран, и время с батареей
+            оказывались поверх её текста. Резерв под строку состояния в
+            этом макете ровно один — `pt-safe` на шапке, — поэтому и
+            плашка теперь под ним, а не рядом с ним. */}
+        <PaywallProvider
+          lang={lang}
+          dict={dict.paywall}
+          plans={paywallPlans}
+          priceNote={paywallPriceNote}
+          nativeLock={nativeShell ? nativeAccessCopy(lang).lock : null}
+        >
+          <Navbar lang={lang} dict={dict} streak={streak} offlineMessage={dict.offline.bannerMessage} />
           {/* Отступ под BottomNav переехал на <body> (см. комментарий там):
               он обязан стоять в конце ПРОКРУЧИВАЕМОЙ ОБЛАСТИ, а конец
               <main> — это середина документа. Долг 161. */}
           <main className="flex flex-1 flex-col">{children}</main>
           <Footer dict={dict} lang={lang} />
         </PaywallProvider>
-        <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} />
+        <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} nativeShell={nativeShell} />
         {/* Reading mode is meant to minimize distractions — the floating
             Telegram CTA is the one persistent, animated, non-content element
             on every page, so it's the one thing this mode hides. */}

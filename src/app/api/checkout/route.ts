@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  NATIVE_SHELL_COOKIE,
+  NATIVE_SHELL_COOKIE_VALUE,
+  userAgentIsNativeShell,
+} from "@/lib/native-shell-token";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -176,6 +181,25 @@ export async function POST(request: NextRequest) {
   // so this can't be turned into an open redirect via a crafted form post.
   const nextRaw = String(formData.get("next") ?? "");
   const nextPath = nextRaw.startsWith(`/${lang}/`) && !nextRaw.startsWith("//") ? nextRaw : null;
+
+  // ВНУТРИ ПРИЛОЖЕНИЯ КАССА НЕ ОТКРЫВАЕТСЯ ВОВСЕ — ДОЛГ 179.
+  //
+  // Стоит ПЕРВОЙ, до разбора плана и до опознания человека: ни одна
+  // платёжная сессия не должна успеть завестись. Страница цен внутри
+  // оболочки кнопок не рисует, но скрытый орган — не закрытая дверь: этот
+  // маршрут принимает обычный POST формы, и ровно тот же довод записан
+  // ниже про страну для OXXO. Возврат — на тот же адрес, который внутри
+  // приложения отдаёт честное объяснение вместо цен.
+  // Кука читается из ЗАГОЛОВКА, а не через `request.cookies`: этот маршрут
+  // вызывается в тестах обычным `Request`, у которого разобранных кук нет
+  // вовсе, и обращение к ним роняло бы кассу на пустом месте.
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const shellCookie = cookieHeader
+    .split(";")
+    .some((part) => part.trim() === `${NATIVE_SHELL_COOKIE}=${NATIVE_SHELL_COOKIE_VALUE}`);
+  if (userAgentIsNativeShell(request.headers.get("user-agent")) || shellCookie) {
+    return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });
+  }
 
   if (!isPlanId(planRaw)) {
     return NextResponse.redirect(new URL(`/${lang}/pricing`, request.url), { status: 303 });

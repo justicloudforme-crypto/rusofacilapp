@@ -35,6 +35,38 @@ import type { Locale } from "@/i18n/config";
  * as a blank or a guess.
  */
 
+/**
+ * ОПЕЧАТКА В ИМЕНИ ПРОЕКТА ВНУТРИ ЗНАЧЕНИЯ ДАННЫХ — долг 182.
+ *
+ * В боевой колонке `Story.author` у 277 рассказов стоит
+ * «RusoFásil (relato original)» — через `s`. Бренд пишется «RusoFácil»
+ * (и `npm run check:brand` ловит любое другое написание во всём
+ * репозитории; это значение — одно из пяти закреплённых исключений,
+ * потому что оно КОПИЯ прода, а не наш текст). Владелец увидел опечатку
+ * на карточках рассказов в приложении 13.09.2026.
+ *
+ * Чинится ОТРИСОВКОЙ, а не записью в базу, по двум причинам сразу.
+ * Первая: записей в боевую базу в этом заходе нет ни одной. Вторая, и
+ * она важнее: то же значение печатается на 130 замороженных страницах
+ * рассказов, которые нельзя менять до 25.09.2026, — а через эту функцию
+ * проходят ровно две поверхности, и ни одна из них не заморожена (главная
+ * и каталог `/stories`; страница самого рассказа автора отсюда не берёт).
+ * Замерено, а не предположено: в `docs/frozen-baseline-2026-08-30.json`
+ * неверное написание встречается в сличаемых полях 0 раз из 330.
+ *
+ * Правка НЕ трогает разбор ниже: нормализуется только написание имени, а
+ * дальше строка идёт по тем же таблицам, что и раньше.
+ */
+const BRAND_TYPO = /RusoF[áa]sil/g;
+const BRAND = "RusoFácil";
+
+/** Единственное место, где опечатка в имени проекта исправляется в
+ *  значении данных. Ни локаль, ни таблицы ниже на это не влияют: имя
+ *  пишется одинаково по-испански и по-русски. */
+function fixBrandSpelling(author: string): string {
+  return author.replace(BRAND_TYPO, BRAND);
+}
+
 /** Whole-value matches, tried first. */
 const WHOLE: Record<string, string> = {
   "Русская народная сказка": "Cuento popular ruso",
@@ -68,15 +100,18 @@ const QUALIFIERS: Record<string, string> = {
  * `/ru` gets the column untouched — it is written in that locale already.
  */
 export function localizeStoryAuthor(author: string, lang: Locale): string {
-  if (lang !== "es") return author;
-  const trimmed = author.trim();
-  if (!trimmed) return author;
+  // Написание имени проекта чинится ДО всего остального и в обеих
+  // локалях — долг 182, см. комментарий к fixBrandSpelling выше.
+  const fixed = fixBrandSpelling(author);
+  if (lang !== "es") return fixed;
+  const trimmed = fixed.trim();
+  if (!trimmed) return fixed;
 
   const whole = WHOLE[trimmed];
   if (whole) return whole;
 
   const match = /^(.*?)\s*\(([^()]*)\)\s*$/.exec(trimmed);
-  if (!match) return NAMES[trimmed] ?? author;
+  if (!match) return NAMES[trimmed] ?? fixed;
 
   const [, head, qualifier] = match;
   const headEs = WHOLE[head] ?? NAMES[head];
@@ -84,6 +119,6 @@ export function localizeStoryAuthor(author: string, lang: Locale): string {
   // Half a translation is worse than none: "А.П. Чехов (versión libre)"
   // is the same defect in a smaller font. Only rewrite when both halves
   // are known.
-  if (!headEs || !qualifierEs) return author;
+  if (!headEs || !qualifierEs) return fixed;
   return `${headEs} (${qualifierEs})`;
 }

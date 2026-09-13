@@ -20,6 +20,7 @@ import { storyTitles } from "@/lib/story-title";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
 import { basePricesText, marked, priceCopy, withBasePrices, withPrice } from "@/lib/pricing-display";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -49,7 +50,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   if (!isLocale(lang)) notFound();
 
   const dict = await getDictionary(lang);
-  const [stats, words, preview, cashAvailable, localPrice] = await Promise.all([
+  const [stats, words, preview, cashAvailableForCountry, localPrice, nativeShell] = await Promise.all([
     getHomepageStats(),
     getHomepageWordSample(),
     getHomepagePreviewData(),
@@ -59,7 +60,15 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
     // past the front page should not have to open another page to find out
     // what they are about to spend. Null everywhere it is null there.
     getLocalPriceContext(),
+    // ДОЛГ 179. Внутри приложения ни одной платёжной поверхности: ни
+    // плитки «OXXO» в полосе доверия, ни полосы цен, ни ссылки на них.
+    isNativeShellRequest(),
   ]);
+  // Плитка OXXO — обещание мексиканской лавки, и внутри приложения это
+  // ещё и упоминание стороннего способа оплаты, которого на ревью быть не
+  // должно (Google Play Payments). Правило страны при этом остаётся в силе
+  // и проверяется первым (7.117).
+  const cashAvailable = cashAvailableForCountry && !nativeShell;
   // One figure per tile, in the visitor's money, and the peso base price in
   // the single footnote under the strip — same rule as /pricing, same
   // module (PROGRESS.md 7.120).
@@ -345,6 +354,12 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
+      {/* ПОЛОСА ЦЕН — ТОЛЬКО В ВЕБЕ (долг 179). Внутри приложения она
+          несёт четыре цифры цены и ссылку на страницу цен, то есть ровно
+          то, из-за чего ревью Google Play заворачивает подачу. Секция не
+          «прячется стилем», а не отрисовывается вовсе: в ответе сервера
+          её нет ни одним знаком. */}
+      {!nativeShell && (
       <section className="border-t border-black/10 dark:border-white/30">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold tracking-tight">{dict.home.pricingStripTitle}</h2>
@@ -393,6 +408,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           </Link>
         </div>
       </section>
+      )}
 
       <section className="relative overflow-hidden border-t border-black/10 dark:border-white/30">
         <CyrillicWatermark letter="Р" className="-bottom-16 -right-10 -z-10" />

@@ -35,11 +35,34 @@
      regular browser tab, real values once this runs standalone (PWA
      "Add to Home Screen" or a Capacitor WebView). Applied to the fixed
      Navbar header and TelegramFloatButton so branded chrome never sits
-     under a notch or gets covered by the home-indicator gesture bar. */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
+     under a notch or gets covered by the home-indicator gesture bar.
+
+     ДВА ИСТОЧНИКА, А НЕ ОДИН — ПРАВКА 13.09.2026 (долг 180).
+
+     `env(safe-area-inset-*)` в браузере отвечает про ВЫРЕЗ экрана. В
+     Android WebView он про него же и отвечает — и НЕ про системные
+     полосы. С Android 15 (а у нас targetSdk 36, где отказаться уже
+     нельзя вовсе: `windowOptOutEdgeToEdgeEnforcement` система
+     игнорирует, см. README `@capacitor/status-bar`) окно приложения
+     рисуется во весь экран, ПОД строкой состояния сверху и ПОД
+     кнопками навигации снизу. Замер владельца на POCO X6 Pro, Android
+     16, сборка 7191: плашка «нет соединения» лежала под часами и
+     значком батареи, нижняя панель уходила под системные кнопки, и в
+     кадр попадал только её край. При этом `env()` оставался нулём — то
+     есть одними стилями это не лечится в принципе.
+
+     Поэтому настоящие величины полос присылает НАТИВНАЯ сторона:
+     `MainActivity.java` читает `WindowInsetsCompat` и кладёт их сюда
+     как `--android-inset-*`. `max()` берёт большее из двух, и это не
+     осторожность: у телефона с вырезом ЭКРАНА и полосами системы обе
+     величины настоящие, а перекрывать друг друга они не должны —
+     нативная сторона уже считает вырез частью своих insets. В обычном
+     браузере `--android-inset-*` не существует, `max()` сводится к
+     `env()`, и веб не двигается ни на пиксель. */
+  --safe-top: max(env(safe-area-inset-top, 0px), var(--android-inset-top, 0px));
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--android-inset-bottom, 0px));
+  --safe-left: max(env(safe-area-inset-left, 0px), var(--android-inset-left, 0px));
+  --safe-right: max(env(safe-area-inset-right, 0px), var(--android-inset-right, 0px));
 }
 
 /* Reading mode — for parsing grammar explanations and long story texts
@@ -96,7 +119,12 @@ body {
    не мелочь: `<main>` кончается в середине документа, подвал идёт после
    него, и на 360×780 под панелью лежали шесть ссылок подвала из шести. */
 @utility pb-pinned {
-  padding-bottom: var(--pinned-inset-bottom, 5rem);
+  /* `max()` с полосой системных кнопок — долг 180. Учёт прижатых слоёв
+     меряет ВЫСОТУ панели, и в неё её собственный `pb-safe` уже входит,
+     поэтому двойного счёта здесь нет. Но до первого замера здесь стоит
+     запасные 5rem, а на широких экранах панели нет вовсе — и тогда
+     полоса системных кнопок остаётся единственным, что занимает низ. */
+  padding-bottom: max(var(--pinned-inset-bottom, 5rem), var(--safe-bottom));
 }
 
 /* Shared tap-feedback utility — most interactive elements in this app only

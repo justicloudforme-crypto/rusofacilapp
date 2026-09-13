@@ -36,7 +36,10 @@ const CYRILLIC = /[А-Яа-яЁё]/;
 describe("localizeStoryAuthor", () => {
   it("leaves the Russian locale's byline exactly as the column holds it", () => {
     for (const [author] of AUTHORS_IN_THE_BANK) {
-      expect(localizeStoryAuthor(author, "ru")).toBe(author);
+      // Кроме написания имени проекта: опечатка «RusoFásil» чинится в обеих
+      // локалях (долг 182). Все остальные 19 значений — как в колонке.
+      const expected = author.replace("RusoFásil", "RusoFácil");
+      expect(localizeStoryAuthor(author, "ru")).toBe(expected);
     }
   });
 
@@ -49,10 +52,20 @@ describe("localizeStoryAuthor", () => {
     expect(leftovers).toEqual([]);
   });
 
-  it("keeps the project's own originals marked exactly as they were", () => {
-    // The marker other tooling and the content pipeline key off — see
-    // PROGRESS.md's rule about `author: \"RusoFásil (relato original)\"`.
-    expect(localizeStoryAuthor("RusoFásil (relato original)", "es")).toBe("RusoFásil (relato original)");
+  it("fixes the brand's spelling in the byline of the project's own originals", () => {
+    // ДОЛГ 182. В колонке лежит «RusoFásil» — через `s`, — и владелец
+    // увидел это на карточках рассказов на живом телефоне 13.09.2026.
+    // Правится на отрисовке, обе локали, без единой записи в базу; форма
+    // значения при этом не трогается — маркер оригиналов остаётся собой.
+    expect(localizeStoryAuthor("RusoFásil (relato original)", "es")).toBe("RusoFácil (relato original)");
+    expect(localizeStoryAuthor("RusoFásil (relato original)", "ru")).toBe("RusoFácil (relato original)");
+  });
+
+  it("leaves a correctly spelled byline untouched", () => {
+    // Отрицательный контроль правки выше: она обязана быть починкой
+    // ОПЕЧАТКИ, а не переписыванием всего, что похоже на имя проекта.
+    expect(localizeStoryAuthor("RusoFácil (relato original)", "es")).toBe("RusoFácil (relato original)");
+    expect(localizeStoryAuthor("А.П. Чехов", "ru")).toBe("А.П. Чехов");
   });
 
   it("translates the genre label and its qualifier together", () => {

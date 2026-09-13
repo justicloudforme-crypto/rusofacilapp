@@ -1,5 +1,6 @@
 import Link from "next/link";
 import StickyHeader from "./StickyHeader";
+import OfflineBanner from "./OfflineBanner";
 import LanguageSwitcher from "./LanguageSwitcher";
 import SoundToggle from "./SoundToggle";
 import MobileMenu from "./MobileMenu";
@@ -15,6 +16,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
 import { getEntitlementTier, isPremiumTier } from "@/lib/entitlement";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import { getProfileTabs } from "@/lib/profile-tabs";
 import {
   HomeIcon,
@@ -32,15 +34,25 @@ export default async function Navbar({
   lang,
   dict,
   streak,
+  offlineMessage,
 }: {
   lang: Locale;
   dict: Dictionary;
+  /** Текст плашки «нет соединения». Плашка живёт ВНУТРИ шапки, а не над
+   *  ней (долг 180): резерв под строку состояния в этом макете ровно один
+   *  — `pt-safe` ниже, — и всё, что должно оказаться ниже строки
+   *  состояния, обязано стоять под ним. */
+  offlineMessage: string;
   /** Fetched once in layout.tsx (getUserStreakStats is TTL-cached, so this
    * doesn't add a real per-request cost) — null when logged out. */
   streak: StreakStats | null;
 }) {
   const user = await getCurrentUser();
   const staff = Boolean(user && isStaff(user.role));
+  // ДОЛГ 179. Внутри приложения платных входов нет ни одного, и ссылка
+  // «Цены» — вход. Сам маршрут при этом жив и отдаёт честное объяснение
+  // тому, кто придёт по прямой ссылке (см. `/[lang]/pricing/page.tsx`).
+  const nativeShell = await isNativeShellRequest();
   // Drives the gold ring/crown on the header avatar — see
   // MatryoshkaAvatar.tsx's `premium` prop.
   const isPremiumUser = user ? isPremiumTier(await getEntitlementTier()) : false;
@@ -91,7 +103,7 @@ export default async function Navbar({
           label: dict.nav.groupCommunity,
           links: [{ href: `/${lang}/groups`, label: dict.nav.groups, icon: <UsersIcon className={iconClass} /> }],
         },
-        { label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] },
+        ...(nativeShell ? [] : [{ label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] }]),
         ...(staff ? [{ label: dict.admin.title, links: [{ href: `/${lang}/admin`, label: dict.admin.title }] }] : []),
       ]
     : [
@@ -112,7 +124,7 @@ export default async function Navbar({
             { href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> },
           ],
         },
-        { label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] },
+        ...(nativeShell ? [] : [{ label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] }]),
       ];
 
   const profileTabs = getProfileTabs(dict);
@@ -137,6 +149,7 @@ export default async function Navbar({
       // downstream needs to guess at a variable header height.
       className="sticky top-0 z-50 border-b border-black/10 bg-background pt-safe dark:border-white/30"
     >
+      <OfflineBanner message={offlineMessage} />
       {/* Бюджет ширины ряда в полосе 640–767 (7.132, долги 55 и 56).
           Замер на проде и на базе в форме CI: при вьюпорте 640 у вошедшего
           на `/ru` правый край кластера стоял на 631.48 при контентной
@@ -166,9 +179,11 @@ export default async function Navbar({
             {dict.nav.courses}
           </Link>
           <PracticeMenu label={dict.nav.practice} links={practiceLinks} />
-          <Link href={`/${lang}/pricing`} className="tap hover:text-primary-text active:text-primary-text">
-            {dict.nav.pricing}
-          </Link>
+          {!nativeShell && (
+            <Link href={`/${lang}/pricing`} className="tap hover:text-primary-text active:text-primary-text">
+              {dict.nav.pricing}
+            </Link>
+          )}
           {/* Hidden below md since 31.08.2026 (7.71). This fourth link is
               what pushed a staff account's /es/profile 86px past a 640px
               viewport and /ru/profile 115px. Like the streak badge above, it
