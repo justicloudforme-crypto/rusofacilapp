@@ -209,7 +209,9 @@
     "check:prod-reads": "node scripts/prod-read-budget.mjs",
     "check:prod-reads:plant": "node scripts/prod-read-budget.mjs --plant",
     "snapshot:prod": "node scripts/make-prod-snapshot.mjs",
-    "snapshot:prod:dry": "node scripts/make-prod-snapshot.mjs --dry-run"
+    "snapshot:prod:dry": "node scripts/make-prod-snapshot.mjs --dry-run",
+    "check:bottom-inset": "node scripts/check-bottom-inset.mjs",
+    "check:bottom-inset:plant": "node scripts/check-bottom-inset.mjs --plant"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

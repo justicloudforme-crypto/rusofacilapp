@@ -8,6 +8,7 @@ import type { AvatarId } from "@/lib/avatars";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import { hapticTap } from "@/lib/haptics";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import { usePinnedLayer } from "@/lib/usePinnedLayer";
 import Button from "@/components/ui/Button";
 
 export interface MobileMenuLink {
@@ -88,6 +89,9 @@ export default function MobileMenu({
 }) {
   const [open, setOpen] = useState(false);
   useBodyScrollLock(open);
+  /** На общем учёте прижатых слоёв (src/lib/pinned-layers.ts) — пока
+   * открыт. Места в конце документа не резервирует: лист временный. */
+  const pinnedRef = usePinnedLayer<HTMLElement>({ edge: "bottom", label: "MobileMenu", active: open });
   const pathname = usePathname();
   // Fallback close-on-navigation for paths that don't go through one of
   // this panel's own links below (browser back/forward, a programmatic
@@ -162,7 +166,7 @@ export default function MobileMenu({
               className="animate-celebration-fade-in fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] dark:bg-black/50"
             />
 
-          <nav className="sheet-slide-up fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-3xl border-t border-primary/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(36,28,21,0.25)]">
+          <nav ref={pinnedRef} className="sheet-slide-up fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-3xl border-t border-primary/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(36,28,21,0.25)]">
             <div className="mx-auto mt-2.5 h-1 w-9 flex-shrink-0 rounded-full bg-foreground/15" aria-hidden />
 
             <div className="flex flex-shrink-0 justify-end px-4 pt-2">{languageSwitcher}</div>

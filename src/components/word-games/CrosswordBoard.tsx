@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PublicCrosswordPuzzle, PublicCrosswordWord } from "@/lib/word-games/data";
+import { getFreeViewportBounds } from "@/lib/pinned-layers";
 import {
   buildCellWordMap,
   cellsOfWord,
@@ -241,17 +242,25 @@ export default function CrosswordBoard({
    * guarantee had been delegated to a decision the engine takes differently
    * in different builds.
    *
-   * Bounds come from `visualViewport` (`offsetTop` included: pinch-zoom
-   * moves the visual viewport inside the layout one, and the rect this is
-   * compared against is in layout coordinates). With no such API the page's
-   * own `innerHeight` is the only bound there is — which is right for every
-   * engine that also has no keyboard shrinking the visual viewport, and is
-   * still a real reveal rather than a stand-down.
+   * Границы приходят из общего учёта прижатых слоёв
+   * (`getFreeViewportBounds`, src/lib/pinned-layers.ts): визуальный
+   * вьюпорт (`offsetTop` включён — pinch-zoom двигает его внутри
+   * layout-вьюпорта, а сравниваемая коробка в layout-координатах) МИНУС
+   * то, что прижато к его краям прямо сейчас. Без `visualViewport` тем
+   * же учётом берётся `innerHeight` — верно для всякого движка, у
+   * которого и клавиатура визуальный вьюпорт не ужимает, и это всё ещё
+   * настоящая доводка, а не отказ от неё.
    */
   function revealBelowKeyboard(el: HTMLInputElement) {
-    const vv = typeof window === "undefined" ? null : window.visualViewport;
-    const top = vv ? vv.offsetTop : 0;
-    const bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    // Границы берутся из ОБЩЕГО УЧЁТА прижатых слоёв
+    // (src/lib/pinned-layers.ts), а не считаются здесь по одному лишь
+    // `visualViewport`. Разница ровно в долге 161: визуальный вьюпорт
+    // при поднятой клавиатуре равен 569 CSS-px, и НИЖНИЕ 51 из них
+    // занимает нижняя навигация — доводка «до низа видимой области»
+    // ставила клетку ровно под неё. Верх учтён по той же причине: шапка
+    // `sticky top-0` занимает 65 px, и доводка вверх уводила клетку под
+    // неё.
+    const { top, bottom } = getFreeViewportBounds();
     // Nearest edge, never centred — same rule as the horizontal branch, and
     // a cell already fully inside is left alone. That is also what keeps an
     // engine that ignored `preventScroll` from being fought: it revealed the
@@ -467,13 +476,22 @@ export default function CrosswordBoard({
     updateGuess(row, col, letter.toLowerCase(), { row, col });
 
     const word = activeDirection ? wordAt(cellWordMap, row, col, activeDirection)?.word : null;
-    if (word) {
-      const next = nextCellInWord(word, row, col);
-      if (next) {
-        setActiveCell(next);
-        focusCell(next.row, next.col);
-      }
+    const next = word ? nextCellInWord(word, row, col) : null;
+    if (next) {
+      setActiveCell(next);
+      focusCell(next.row, next.col);
+      return;
     }
+    // ПОСЛЕДНЯЯ БУКВА СЛОВА. Следующей клетки нет, фокус никуда не едет —
+    // и до захода 7.185 доводка здесь не звалась вовсе. Пока нижней
+    // границей считалась граница видимой области, это сходило с рук;
+    // с общим учётом прижатых слоёв (долг 161) оказалось, что клетка,
+    // на которой слово кончилось, спокойно остаётся ПОД нижней панелью.
+    // Замерено на B1/91 при 320×444: последняя клетка слова вниз стоит
+    // 382..404 при полосе панели 380..444 — 24 px под ней, и ни одно
+    // событие её оттуда не выводит.
+    const current = inputRefs.current.get(`${row},${col}`);
+    if (current) revealCell(current);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>, row: number, col: number) {

@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import { usePinnedLayer } from "@/lib/usePinnedLayer";
 
 /**
  * Bottom sheet below `sm`, centered dialog at `sm`+ — reuses the exact
@@ -35,6 +36,9 @@ export default function Modal({
   fullScreenOnMobile?: boolean;
 }) {
   useBodyScrollLock(open);
+  /** На общем учёте прижатых слоёв (src/lib/pinned-layers.ts) — пока
+   * открыта. Места в конце документа не резервирует: модалка временная. */
+  const pinnedRef = usePinnedLayer<HTMLDivElement>({ edge: "bottom", label: "Modal", active: open });
 
   useEffect(() => {
     if (!open) return;
@@ -61,6 +65,7 @@ export default function Modal({
       />
 
       <div
+        ref={pinnedRef}
         className={`flex flex-col border-primary/15 bg-background pb-safe shadow-[0_-8px_30px_-8px_rgba(27,20,15,0.25)] ${panelShapeClasses} ${className}`}
       >
         {!fullScreenOnMobile && (

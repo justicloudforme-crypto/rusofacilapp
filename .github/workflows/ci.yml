@@ -574,7 +574,16 @@ jobs:
       # process alive (see that file's header). That is fixed; this cap is
       # here so the NEXT way it could hang costs minutes instead of an hour.
       # The check itself takes about a minute, so 10 is generous.
-      - name: Rendered surface (real browser, after hydration)
+      # Заход 7.185, долг 161. В этом же шаге, на этом же сервере, гоняется
+      # `scripts/check-bottom-inset.mjs` и его подсадка (см.
+      # scripts/verify-rendered.mjs, седьмой и восьмой spawn): «ни один
+      # прижатый к низу окна слой не накрывает орган, до которого человек
+      # обязан добраться». Отдельным шагом он не стоит по той же причине,
+      # по какой здесь стоят check:layout, check:internal-links и живая
+      # половина check:404 — сервер уже поднят, браузер уже установлен,
+      # сборка уже своя; отдельное задание заплатило бы за npm ci, prisma
+      # generate, сборку и установку движка ещё раз.
+      - name: Rendered surface + прижатые к низу слои (real browser, after hydration)
         if: github.event.pull_request.base.ref == 'main' || github.ref == 'refs/heads/main'
         timeout-minutes: 10
         run: npm run check:rendered:ci
