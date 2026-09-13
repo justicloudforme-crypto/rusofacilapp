@@ -1,0 +1,29 @@
+{
+  "_": "Базовый список моста нативной оболочки. Читается scripts/check-native-bridge.mjs. Правило: записи ТОЛЬКО дописываются. Удаление записи из кода — отказ сборки; удаление записи из ЭТОГО файла — тоже отказ, он сверяется с версией в git. Заведён 13.09.2026, заход 7.189.",
+  "routes": [
+    "*.rusofacilapp.com",
+    "rusofacilapp.com"
+  ],
+  "server": [
+    "allowNavigation",
+    "cleartext",
+    "errorPath",
+    "url"
+  ],
+  "plugins": [
+    "SplashScreen",
+    "StatusBar"
+  ],
+  "packages": [
+    "@capacitor/app",
+    "@capacitor/core",
+    "@capacitor/haptics",
+    "@capacitor/local-notifications",
+    "@capacitor/preferences",
+    "@capacitor/splash-screen",
+    "@capacitor/status-bar",
+    "@capgo/capacitor-media-session",
+    "@revenuecat/purchases-capacitor",
+    "@revenuecat/purchases-capacitor-ui"
+  ]
+}
