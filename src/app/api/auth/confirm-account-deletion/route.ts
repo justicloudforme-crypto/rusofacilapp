@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
@@ -16,8 +17,9 @@ export async function POST(request: NextRequest) {
 
   const fail = () => {
     const url = new URL(`/${lang}/confirm-delete-account`, request.url);
-    url.searchParams.set("token", token);
     url.searchParams.set("error", "invalid_token");
+    // Долг 164, тот же класс: токен возвращается во фрагменте.
+    url.hash = `token=${encodeURIComponent(token)}`;
     return NextResponse.redirect(url, { status: 303 });
   };
 
@@ -54,7 +56,29 @@ export async function POST(request: NextRequest) {
   // rows point to; remove the whole per-user prefix in one shot rather
   // than per-file, and before the DB rows are gone so this can still be
   // attempted even if it fails silently on that clean-up branch.
-  await deleteAllVoiceSubmissionsForUser(user.id).catch(() => {});
+  //
+  // ДОЛГ 167: отказ уборки больше НЕ МОЛЧИТ. Раньше здесь стоял
+  // `.catch(() => {})`, и это была дыра, измеренная тремя сиротами: строка
+  // `User` удалялась следующей командой в любом случае, поэтому сбой
+  // уборки не откатывал удаление, не писался в журнал и не уходил в
+  // Sentry — а вместе со строкой исчезал и id, по которому объект можно
+  // было бы найти. Найти его после этого нечем в принципе.
+  //
+  // Падать по-прежнему НЕЛЬЗЯ, и это решение, а не упущение: удаление
+  // учётной записи — обещание, данное человеку и записанное в политике,
+  // и застревать оно из-за файла не имеет права. Разница с прежним
+  // поведением ровно одна и она вся: теперь об этом становится известно.
+  // Второй путь (`prisma/delete-test-accounts.ts`) поступает НАОБОРОТ —
+  // отказывается удалять строку, — потому что там никто не ждёт ответа.
+  try {
+    await deleteAllVoiceSubmissionsForUser(user.id);
+  } catch (error) {
+    console.error("confirm-account-deletion: уборка записей голоса не удалась", user.id, error);
+    Sentry.captureException(error, {
+      tags: { area: "account-deletion", step: "voice-blob-cleanup" },
+      extra: { userId: user.id },
+    });
+  }
 
   await db.user.delete({ where: { id: user.id } });
   await destroySession();

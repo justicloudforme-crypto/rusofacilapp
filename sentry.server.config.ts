@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { isDeployedEnvironment } from "./src/lib/deploy-environment";
+import { scrubTokensFromEvent } from "./src/lib/scrub-token";
 
 // null on a laptop and in CI, "production"/"preview"/"development" on
 // Vercel. Gating on this (not NODE_ENV) is what stops a local
@@ -25,4 +26,9 @@ Sentry.init({
   enabled: isDeployed,
   tracesSampleRate: 0.1,
   debug: false,
+  // ДОЛГ 164. Фрагмент на сервер не уезжает вовсе, так что здесь эта
+  // стена стоит не против него, а против ЛЮБОГО другого адреса с
+  // токеном, который когда-нибудь напишут: `?token=` в серверном
+  // событии — это и журнал, и `Referer`, и ссылка в крошке.
+  beforeSend: (event) => scrubTokensFromEvent(event),
 });

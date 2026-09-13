@@ -538,7 +538,7 @@
     "calendarLegendActive": "día de estudio",
     "calendarLegendFrozen": "día salvado con una congelación",
     "calendarLegendMissed": "día sin estudiar",
-    "calendarLegendBeforeStart": "antes de registrarte",
+    "calendarLegendBeforeStart": "antes de tu primera clase",
     "calendarLegendFuture": "aún por llegar",
     "calendarLegendToday": "hoy",
     "calendarMonths": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],

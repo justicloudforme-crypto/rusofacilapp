@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
   if (user?.passwordHash) {
     const token = signVerificationToken("password_reset", user.id, user.passwordHash);
     const origin = new URL(request.url).origin;
-    const resetUrl = `${origin}/${lang}/reset-password?token=${encodeURIComponent(token)}`;
+    // ДОЛГ 164: токен во ФРАГМЕНТЕ, а не в строке запроса. Фрагмент —
+    // единственный кусок адреса, который браузер на сервер не отправляет
+    // вовсе: он не попадает ни в журнал, ни в `Referer`, ни в событие
+    // Sentry, к которому SDK прикладывает полный адрес страницы. Читает
+    // его уже в браузере src/components/auth/HashTokenForm.tsx, он же
+    // стирает фрагмент из адреса сразу после чтения.
+    const resetUrl = `${origin}/${lang}/reset-password#token=${encodeURIComponent(token)}`;
 
     await sendEmail({
       to: user.email,
