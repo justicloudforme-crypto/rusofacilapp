@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useIsNativeShell } from "@/lib/native-shell-client";
 import { SEARCH_OPEN_EVENT } from "@/lib/search/open-event";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -73,6 +74,8 @@ export default function GlobalSearch({
   // после него нечего.
   const [flushNow, setFlushNow] = useState(false);
 
+  const nativeShell = useIsNativeShell();
+
   const destinations = useMemo<Destination[]>(() => {
     const base: Destination[] = [
       { href: `/${lang}`, label: dict.nav.home },
@@ -81,14 +84,16 @@ export default function GlobalSearch({
       { href: `/${lang}/media`, label: dict.nav.media },
       { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary },
       { href: `/${lang}/word-games`, label: dict.nav.wordGames },
-      { href: `/${lang}/pricing`, label: dict.nav.pricing },
+      // Внутри приложения платных входов нет ни одного (долг 179) —
+      // включая быстрый переход поиска.
+      ...(nativeShell ? [] : [{ href: `/${lang}/pricing`, label: dict.nav.pricing }]),
       { href: `/${lang}/glossary`, label: dict.nav.glossary },
     ];
     if (isLoggedIn) {
       base.push({ href: `/${lang}/profile`, label: dict.nav.profile }, { href: `/${lang}/groups`, label: dict.nav.groups });
     }
     return base;
-  }, [lang, dict, isLoggedIn]);
+  }, [lang, dict, isLoggedIn, nativeShell]);
 
   const trimmed = query.trim();
 

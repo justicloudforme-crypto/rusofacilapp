@@ -9,11 +9,10 @@ import PaymentMethodLogos from "@/components/pricing/PaymentMethodLogos";
 import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
-import NativePricingPanel from "@/components/pricing/NativePricingPanel";
+import NativeAccessNotice from "@/components/native/NativeAccessNotice";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
-import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTier, hasAnyAccess, planAddsNothing } from "@/lib/entitlement";
-import { nativePricingCopy } from "@/lib/native-pricing-copy";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   basePricesText,
@@ -28,6 +27,19 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">)
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
+  // ДОЛГ 179. Внутри приложения у этой страницы другое содержимое, значит и
+  // подпись у неё другая. Прежний текст описания называет OXXO — сторонний
+  // способ оплаты по имени, — и он оставался в `<head>` даже тогда, когда
+  // из тела страницы исчезло всё платное. Найдено живым замером сторожа, а
+  // не рассуждением: в видимом документе нативной отдачи оставалось ровно
+  // одно вхождение «OXXO», и это было оно.
+  //
+  // Веб-подпись не тронута ни знаком: обычный браузер в эту ветку не
+  // заходит, а карту сайта и выдачу поиска кормит именно она.
+  if (await isNativeShellRequest()) {
+    const copy = nativeAccessCopy(lang).notice;
+    return { title: `${copy.heading} | RusoFácilapp`, description: copy.body, robots: { index: false } };
+  }
   return {
     title: `${dict.pricing.title} | RusoFácilapp`,
     // "Tarjeta o efectivo OXXO." until 08.09.2026 (debt 43): the snippet
@@ -57,9 +69,9 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  // ДОЛГ 79. Внутри нативной оболочки эта страница отдаёт другую витрину —
-  // покупку через магазин, — и веб-касса в её ответе не рендерится ни
-  // одной формой. Ветка стоит ПЕРВОЙ и уходит раньше, чем страница
+  // ДОЛГИ 79 и 179. Внутри нативной оболочки эта страница отдаёт честное
+  // объяснение вместо всего платного: ни цены, ни способа оплаты, ни
+  // кнопки покупки в её ответе нет вовсе. Ветка стоит ПЕРВОЙ и уходит раньше, чем страница
   // соберёт что-либо своё: ни одного `action="/api/checkout"`, ни одной
   // цены с сайта, ни таблицы способов оплаты, ни вопроса про OXXO.
   //
@@ -82,21 +94,19 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   // его файла. Страница стоит в карте сайта, и на неё ведут ссылки со
   // всех 1913 адресов, поэтому мерялось именно это.
   //
-  // Сама витрина — КЛИЕНТСКИЙ компонент внутри серверной страницы
-  // (директива клиента стоит в NativePricingPanel), а не превращение
-  // страницы в клиентскую: этот файл остался серверным.
+  // Отдаётся СЕРВЕРНЫЙ компонент без единого обработчика: ни витрины
+  // магазина, ни кнопки покупки, ни цены. Витрина на RevenueCat
+  // (`NativePricingPanel`) в этом заходе удалена целиком — она показывала
+  // кнопку, которая ничего не делала, потому что продуктов в консолях нет
+  // ни одного. Вернуть её из истории git — работа того захода, который
+  // заведёт продукты (перепись — PROGRESS.md 7.192, часть 4).
   if (await isNativeShellRequest()) {
-    const user = await getCurrentUser();
     // Право доступа считает сервер, и источник оплаты ему безразличен
     // (решение владельца 11.09.2026: «заплатил где угодно — пользуется
-    // везде»). Если оно уже активно, кнопки покупки в витрине не будет.
+    // везде»). Если оно уже активно, человеку так и сказано.
     const tier = await getEntitlementTier();
     return (
-      <NativePricingPanel
-        userId={user?.id ?? null}
-        dict={nativePricingCopy(lang)}
-        hasAccessElsewhere={hasAnyAccess(tier)}
-      />
+      <NativeAccessNotice lang={lang} copy={nativeAccessCopy(lang).notice} hasAccess={hasAnyAccess(tier)} />
     );
   }
 

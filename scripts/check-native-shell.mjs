@@ -58,8 +58,13 @@ const IS_ENTRY_POINT = process.argv[1]
 const CAP_CONFIG = "capacitor.config.ts";
 const ERROR_PAGE = "capacitor-shell/error.html";
 const MAIN_ACTIVITY = "android/app/src/main/java/com/rusofacilapp/app/MainActivity.java";
-const NATIVE_SHELL_LIB = "src/lib/native-shell.ts";
+// Литерал токена переехал 13.09.2026 (долг 179) в отдельный модуль без
+// серверных импортов: его читает ещё и `src/proxy.ts`, а в middleware
+// `next/headers` запрещён. Сторож смотрит туда, где литерал ЖИВЁТ, — иначе
+// он сличал бы перевыставленный экспорт и молчал бы о расхождении.
+const NATIVE_SHELL_LIB = "src/lib/native-shell-token.ts";
 const SHELL_TAG_LIB = "src/lib/shell-tag.ts";
+const GLOBALS_CSS = "src/app/globals.css";
 const SENTRY_CONFIGS = ["sentry.client.config.ts", "sentry.server.config.ts", "sentry.edge.config.ts"];
 const TAG_CALL = "tagShellOnEvent(";
 
@@ -259,7 +264,83 @@ function scan() {
     }
   }
 
-  // --- 6. метка оболочки во всех трёх конфигурациях Sentry ----------------
+  // --- 6. у кнопки «Повторить» есть видимое состояние занятости ----------
+  //
+  // Замер владельца 13.09.2026 на живом телефоне: нажатие «Повторить» без
+  // сети давало пустой светлый экран примерно на две секунды, после чего
+  // возвращался этот же экран ошибки. Признака загрузки не было ни одного,
+  // и человек в эти две секунды считает, что приложение сломалось.
+  //
+  // Причина ровно в том, что кнопка УХОДИЛА с адреса сразу: переход рвёт
+  // документ, webview рисует пустоту, и — если сети по-прежнему нет —
+  // возвращает экран ошибки. Поэтому здесь стерегутся три вещи сразу:
+  // занятость кнопки, ПРОБА вместо немедленного перехода и русский текст у
+  // обоих новых состояний.
+  const errorScript = stripComments(page);
+  if (!/data-busy/.test(errorScript)) {
+    failures.push(
+      `${ERROR_PAGE}: у кнопки «Повторить» нет состояния занятости (\`data-busy\`). ` +
+        `Нажатие без видимого отклика читается как поломка — замер 13.09.2026 (долг 181).`,
+    );
+  }
+  if (!/fetch\(\s*SITE_URL/.test(errorScript)) {
+    failures.push(
+      `${ERROR_PAGE}: кнопка «Повторить» уходит на адрес, не спросив, доступен ли он. ` +
+        `Переход рвёт этот документ, и при отказе человек видит пустой экран вместо ответа (долг 181).`,
+    );
+  }
+  if (!/button\.disabled = true/.test(errorScript)) {
+    failures.push(`${ERROR_PAGE}: кнопка «Повторить» не запирается на время попытки — второе нажатие заведёт вторую (долг 181).`);
+  }
+  for (const key of ["retrying", "failed"]) {
+    if (!new RegExp(`\\b${key}:`).test(errorScript)) {
+      failures.push(`${ERROR_PAGE}: нет строки «${key}» — состояние попытки нечем назвать словами (долг 181).`);
+      continue;
+    }
+    const ru = errorScript.slice(errorScript.indexOf("ru: {"), errorScript.indexOf("};", errorScript.indexOf("ru: {")));
+    if (!new RegExp(`\\b${key}:`).test(ru)) {
+      failures.push(`${ERROR_PAGE}: у строки «${key}» нет русского перевода (долг 181).`);
+    }
+  }
+
+  // --- 7. безопасные поля сверху и снизу (долг 180) -----------------------
+  //
+  // У приложения targetSdk 36, а с Android 15 система рисует окно во весь
+  // экран и отказаться нельзя: `windowOptOutEdgeToEdgeEnforcement` на
+  // targetSdk 36 игнорируется (README `@capacitor/status-bar`). Значит
+  // содержимое лезет под строку состояния сверху и под кнопки навигации
+  // снизу — ровно это и снял владелец на POCO X6 Pro 13.09.2026.
+  // `env(safe-area-inset-*)` в webview отвечает про ВЫРЕЗ, а не про
+  // системные полосы, и остаётся нулём, поэтому величины присылает
+  // нативная сторона. Правило держит оба конца этой связи: кто присылает и
+  // кто читает. Разойдись они — отступ молча станет нулём.
+  const activityLive = stripComments(read(MAIN_ACTIVITY));
+  const css = read(GLOBALS_CSS);
+  for (const [needle, why] of [
+    ["setOnApplyWindowInsetsListener", "нативная сторона перестала слушать системные полосы"],
+    ["--android-inset-top", "величина ВЕРХНЕЙ полосы не уезжает в страницу"],
+    ["--android-inset-bottom", "величина НИЖНЕЙ полосы не уезжает в страницу"],
+    ["addWebViewListener", "полосы не переставляются на новой странице — переход стирает их вместе со старым документом"],
+  ]) {
+    if (!activityLive.includes(needle)) {
+      failures.push(`${MAIN_ACTIVITY}: нет живого «${needle}» — ${why} (долг 180).`);
+    }
+  }
+  for (const [varName, side] of [["--safe-top", "верх"], ["--safe-bottom", "низ"]]) {
+    const line = css.split("\n").find((l) => l.trim().startsWith(`${varName}:`));
+    if (!line) {
+      failures.push(`${GLOBALS_CSS}: переменной ${varName} нет вовсе.`);
+      continue;
+    }
+    if (!line.includes("--android-inset")) {
+      failures.push(
+        `${GLOBALS_CSS}: ${varName} (${side}) читает только env(safe-area-inset-*), а в webview это ` +
+          `ноль. Величину системной полосы присылает MainActivity — её здесь никто не берёт (долг 180).`,
+      );
+    }
+  }
+
+  // --- 8. метка оболочки во всех трёх конфигурациях Sentry ----------------
   const tagged = [];
   for (const file of SENTRY_CONFIGS) {
     const text = stripComments(read(file));
@@ -309,6 +390,13 @@ function plantControls() {
     writeFileSync(file, before.replace(from, to));
     return () => writeFileSync(file, before);
   };
+  /** То же, что `swap`, но по шаблону и по ВСЕМ вхождениям. */
+  const swapAll = (file, re, to) => {
+    const before = readFileSync(file, "utf8");
+    if (!re.test(before)) throw new Error(`подсадка не нашла ${re} в ${file}`);
+    writeFileSync(file, before.replace(re, to));
+    return () => writeFileSync(file, before);
+  };
 
   const controls = [
     {
@@ -335,6 +423,49 @@ function plantControls() {
       name: "кнопка «Повторить» уводит на чужой адрес",
       plant: () => swap(ERROR_PAGE, 'var SITE_URL = "https://rusofacilapp.com";', 'var SITE_URL = "https://example.com";'),
       expect: (r) => r.failures.some((m) => m.includes("ведёт на https://example.com")),
+    },
+    {
+      name: "кнопка «Повторить» снова уходит на адрес, не спросив (пустой экран вместо ответа)",
+      plant: () => swap(ERROR_PAGE, 'fetch(SITE_URL, { mode: "no-cors"', 'noFetch(SITE_URL, { mode: "no-cors"'),
+      expect: (r) => r.failures.some((m) => m.includes("не спросив, доступен ли он")),
+    },
+    {
+      name: "у кнопки «Повторить» убрали состояние занятости",
+      // Все вхождения сразу: правило спрашивает про признак, а не про одну
+      // строку, и подсадка, стирающая только первую (она в стилях), ничего
+      // бы не доказала — ровно это и случилось на первом прогоне.
+      plant: () => swapAll(ERROR_PAGE, /data-busy/g, "data-idle"),
+      expect: (r) => r.failures.some((m) => m.includes("нет состояния занятости")),
+    },
+    {
+      name: "кнопка «Повторить» перестала запираться на время попытки",
+      plant: () => swap(ERROR_PAGE, "button.disabled = true", "button.dataset.x = true"),
+      expect: (r) => r.failures.some((m) => m.includes("не запирается на время попытки")),
+    },
+    {
+      name: "у строки «Пробуем…» пропал русский перевод",
+      plant: () => swap(ERROR_PAGE, '          retrying: "Пробуем…",\n', ""),
+      expect: (r) => r.failures.some((m) => m.includes("«retrying»") && m.includes("русск")),
+    },
+    {
+      name: "нативная сторона перестала присылать системные полосы",
+      plant: () => swap(MAIN_ACTIVITY, "setOnApplyWindowInsetsListener", "неСлушаемПолосы"),
+      expect: (r) => r.failures.some((m) => m.includes("перестала слушать системные полосы")),
+    },
+    {
+      name: "полосы присылаются, но страница берёт только env() — в webview это ноль",
+      plant: () =>
+        swap(
+          GLOBALS_CSS,
+          "--safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--android-inset-bottom, 0px));",
+          "--safe-bottom: env(safe-area-inset-bottom, 0px);",
+        ),
+      expect: (r) => r.failures.some((m) => m.includes("--safe-bottom") && m.includes("это")),
+    },
+    {
+      name: "полосы не переставляются после перехода на новую страницу",
+      plant: () => swap(MAIN_ACTIVITY, "addWebViewListener", "неСлушаемПереходы"),
+      expect: (r) => r.failures.some((m) => m.includes("переход стирает их")),
     },
     {
       name: "срок сторожа загрузки снят вовсе",

@@ -67,6 +67,38 @@ const runtimeCaching = defaultCache.map((route) => {
   };
 });
 
+/**
+ * ПЛАТЁЖНЫЕ ПОВЕРХНОСТИ ВОРКЕР НЕ КЕШИРУЕТ ВОВСЕ — ДОЛГ 179.
+ *
+ * Почему это здесь, а не только на сервере. Внутри нативной оболочки
+ * сервер узнаёт приложение и отдаёт ему страницу без кассы
+ * (`src/lib/native-shell.ts`). Копия, однажды положенная воркером в кеш,
+ * этого различия не помнит: NetworkFirst достаёт её, как только сеть
+ * молчит, — и человек внутри приложения снова видит веб-кассу, которой
+ * магазины не прощают. Цена отказа от кеша ровно этой страницы нулевая:
+ * офлайн ей всё равно нечего показать, кроме общего экрана `offline.html`,
+ * который и подставится дальше.
+ *
+ * Пути перечислены обеими локалями явно, а не одним `includes("pricing")`:
+ * подстрока встречается в адресах, которые к оплате отношения не имеют.
+ */
+const PAYMENT_PATH = /^\/(es|ru)\/pricing(\/|$)/;
+
+/** Уже лежащие в кешах копии страницы цен — с прошлых установок, до этой
+ *  правки. Пока их не убрать, старый ответ переживёт выкат. */
+async function dropCachedPaymentPages(): Promise<void> {
+  for (const name of await caches.keys()) {
+    const cache = await caches.open(name);
+    for (const request of await cache.keys()) {
+      try {
+        if (PAYMENT_PATH.test(new URL(request.url).pathname)) await cache.delete(request);
+      } catch {
+        // Непарсящийся адрес в кеше — не наша забота, пропускаем.
+      }
+    }
+  }
+}
+
 // Whatever the previous build (or the pre-fix, fixed-name config) left
 // behind is dead weight the moment this worker activates.
 self.addEventListener("activate", (event) => {
@@ -74,6 +106,7 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const existing = await caches.keys();
       await Promise.all(staleCacheNames(existing, FINGERPRINT).map((name) => caches.delete(name)));
+      await dropCachedPaymentPages();
     })()
   );
 });
@@ -88,7 +121,19 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching,
+  // Строка про оплату стоит ПЕРВОЙ, и это не вкусовщина: маршрутизатор
+  // Serwist берёт первое совпадение в порядке регистрации, а у
+  // `defaultCache` последним стоит всеохватный `others`, которым и
+  // обслуживаются все переходы (см. `pageCacheNames`). Встань наша строка
+  // после — она не сработала бы ни разу.
+  runtimeCaching: [
+    {
+      matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
+        sameOrigin && PAYMENT_PATH.test(url.pathname),
+      handler: new NetworkOnly(),
+    },
+    ...runtimeCaching,
+  ],
   // When a page navigation isn't in the cache and the network fetch fails
   // (offline, DNS down, etc.), serve the precached offline.html instead of
   // letting the browser show its own generic error screen. Only matches

@@ -78,7 +78,7 @@ export default async function GlobalNotFound() {
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
-        <Navbar lang={lang} dict={dict} streak={streak} />
+        <Navbar lang={lang} dict={dict} streak={streak} offlineMessage={dict.offline.bannerMessage} />
         <main className="flex flex-1 flex-col">
           <NotFoundBody lang={lang} dict={dict.notFound} />
         </main>

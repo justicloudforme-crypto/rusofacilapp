@@ -204,6 +204,12 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    // Явно, а не транзитивно через appcompat: `MainActivity` читает
+    // `ViewCompat`/`WindowInsetsCompat`/`Insets` напрямую (долг 180),
+    // и зависимость, от которой компилируется НАШ код, обязана быть
+    // названа здесь. Версия — из `android/variables.gradle`, та же, что
+    // подставляет Capacitor.
+    implementation "androidx.core:core:$androidxCoreVersion"
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

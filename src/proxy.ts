@@ -7,6 +7,12 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
 import { db } from "@/lib/db";
 import { isStaff } from "@/lib/roles";
 import { APEX_REDIRECT_STATUS, apexRedirectTarget } from "@/lib/canonical-host";
+import {
+  NATIVE_SHELL_COOKIE,
+  NATIVE_SHELL_COOKIE_MAX_AGE,
+  NATIVE_SHELL_COOKIE_VALUE,
+  userAgentIsNativeShell,
+} from "@/lib/native-shell-token";
 
 function getPreferredLocale(request: NextRequest): string {
   const header = request.headers.get("accept-language");
@@ -72,7 +78,7 @@ async function protectAdminRoute(request: NextRequest, segments: string[]) {
   return null;
 }
 
-export async function proxy(request: NextRequest) {
+async function route(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Сведение www к апексу — ПЕРВЫМ, до всего остального.
@@ -160,6 +166,49 @@ export async function proxy(request: NextRequest) {
   // lib/site.ts), so nothing reads this header — setting it would only
   // rebuild the request headers on every request for no reader.
   return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
+/**
+ * ОБЁРТКА, КОТОРАЯ ПРЕДСТАВЛЯЕТ ОБОЛОЧКУ СЕРВЕРУ НАДОЛГО (долг 179).
+ *
+ * Токен нативной оболочки в User-Agent несут только те запросы, которые
+ * webview делает САМ. Переход, который от его имени выполняет наш service
+ * worker (`src/app/sw.ts`), уходит из другого контекста и токена не несёт
+ * вовсе — Capacitor ставит User-Agent ровно на `WebSettings` самого
+ * webview (`Bridge.java:592…596`), а у ServiceWorkerController свои
+ * настройки, в которых установщика User-Agent в Android нет. Полный разбор
+ * — в шапке `src/lib/native-shell.ts`.
+ *
+ * Поэтому первый же запрос с токеном (после установки он всегда прямой:
+ * воркера ещё нет) оставляет КУКУ, и дальше оболочку узнают по ней — куку
+ * браузер прикладывает к любому запросу своего источника, включая запросы
+ * service worker'а.
+ *
+ * Кука ставится на ЛЮБОМ ответе, включая редиректы: первый запрос
+ * приложения идёт на `https://rusofacilapp.com/` без локали и получает
+ * здесь 307 на `/es` или `/ru`. Стой запись куки только на `next()`,
+ * самый первый — и единственный гарантированно прямой — запрос её бы и
+ * потерял.
+ */
+export async function proxy(request: NextRequest) {
+  const response = await route(request);
+  if (
+    userAgentIsNativeShell(request.headers.get("user-agent")) &&
+    request.cookies.get(NATIVE_SHELL_COOKIE)?.value !== NATIVE_SHELL_COOKIE_VALUE
+  ) {
+    response.cookies.set(NATIVE_SHELL_COOKIE, NATIVE_SHELL_COOKIE_VALUE, {
+      path: "/",
+      maxAge: NATIVE_SHELL_COOKIE_MAX_AGE,
+      sameSite: "lax",
+      // `secure` берётся у самого запроса, а не пишется константой: на
+      // прогоне verify сервер поднят по http://localhost:3123, и кука с
+      // `secure: true` там не доехала бы ни до одной страницы — сторож
+      // мерил бы собственную ошибку.
+      secure: request.nextUrl.protocol === "https:",
+      httpOnly: false,
+    });
+  }
+  return response;
 }
 
 export const config = {
