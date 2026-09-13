@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>RusoFácil — icono 512×512 para Google Play</title>
+    <style>
+      /*
+        Иконка витрины Google Play: ровно 512×512, PNG 32-bit с альфой.
+
+        Исходник — `resources/icon.png` (1024×1024), тот же фирменный знак
+        матрёшки, из которого собраны иконки PWA и favicon. Здесь он ТОЛЬКО
+        уменьшается вдвое: ни скруглений, ни тени, ни рамки — и то и другое
+        Google рисует сам, а запечённое в файл даёт двойное скругление.
+
+        Прозрачность формально есть (PNG-32), но по существу фон
+        непрозрачный: знак кадрирован «в обрез», пустых углов у него нет.
+      */
+      * { margin: 0; padding: 0; }
+      html, body { width: 512px; height: 512px; overflow: hidden; background: transparent; }
+      img { width: 512px; height: 512px; display: block; }
+    </style>
+  </head>
+  <body>
+    <img src="../../resources/icon.png" alt="" />
+  </body>
+</html>
