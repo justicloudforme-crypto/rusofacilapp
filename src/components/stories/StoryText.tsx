@@ -15,6 +15,7 @@ import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/re
 import { measurePinnedLayers, placeInFreeBand } from "@/lib/pinned-layers";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 import { isHomograph } from "@/lib/story-word-pick";
+import { cacheTranslation, cacheTranslations, readCachedTranslation, unknownWords } from "@/lib/translation-store";
 import {
   setNativeMediaMetadata,
   setNativePlaybackState,
@@ -221,6 +222,81 @@ export default function StoryText({
     });
     return groups;
   }, [queue]);
+
+  /**
+   * ДОЛГ 169, ШАГ 3: ПРЕДЗАГРУЗКА ТОЛЬКО ВИДИМОГО АБЗАЦА.
+   *
+   * Не всего рассказа, и это не осторожность, а арифметика: в рассказе
+   * 174 слова в среднем, а суточный потолок чужого сервиса ≈916 тапов НА
+   * ВЕСЬ САЙТ. Абзац — 40–60 слов, и они у человека перед глазами.
+   *
+   * Спрашивается `/api/dictionary/bank` — адрес, который НЕ ХОДИТ НАРУЖУ
+   * НИКОГДА (см. его же комментарий). Поэтому предзагрузка не может
+   * потратить ни знака чужой квоты, сколько бы абзацев ни пролистали:
+   * слова, которого нет в нашем банке, в ответе просто не будет, и оно
+   * спросится по тапу, по одному.
+   *
+   * Абзац спрашивается ОДИН раз за жизнь вкладки (`prefetchedRef`) —
+   * `IntersectionObserver` зовёт обработчик и на выход из экрана тоже, и
+   * без этого признака прокрутка туда-обратно стоила бы запроса на
+   * каждое пересечение.
+   */
+  const paragraphRefs = useRef<Map<number, HTMLElement>>(new Map());
+  const paragraphIndexByElement = useRef<WeakMap<Element, number>>(new WeakMap());
+  const prefetchedRef = useRef<Set<number>>(new Set());
+
+  const paragraphWords = useMemo(() => {
+    const byParagraph = new Map<number, string[]>();
+    paragraphGroups.forEach((group) => {
+      const words = group.queueIndexes.flatMap((queueIndex) =>
+        (sentenceTokens[queueIndex] ?? []).filter((token) => CYRILLIC_WORD_REGEX.test(token)),
+      );
+      byParagraph.set(group.paragraphIndex, words);
+    });
+    return byParagraph;
+  }, [paragraphGroups, sentenceTokens]);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const prefetch = (paragraphIndex: number) => {
+      if (prefetchedRef.current.has(paragraphIndex)) return;
+      prefetchedRef.current.add(paragraphIndex);
+      // Спрашиваются только слова, которых вкладка ещё не знает: второй
+      // абзац того же рассказа переспрашивает заметно меньше первого.
+      const words = unknownWords(paragraphWords.get(paragraphIndex) ?? []);
+      if (words.length === 0) return;
+      void (async () => {
+        try {
+          const res = await fetch(`/api/dictionary/bank?words=${encodeURIComponent(words.join(","))}`);
+          const data = await res.json().catch(() => null);
+          if (res.ok && data?.translations && typeof data.translations === "object") {
+            cacheTranslations(data.translations as Record<string, string>);
+          }
+        } catch {
+          /* предзагрузка — ускорение, а не путь: молчим, тап спросит сам */
+        }
+      })();
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const index = paragraphIndexByElement.current.get(entry.target);
+          if (index !== undefined) prefetch(index);
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    // `isConnected` — не перестраховка: React заменяет узел абзаца между
+    // отрисовками, и карта успевает подержать ОТЦЕПЛЕННЫЙ узел.
+    // Наблюдать его бессмысленно — видимым он не станет никогда.
+    for (const [index, element] of [...paragraphRefs.current]) {
+      if (element.isConnected) observer.observe(element);
+      else paragraphRefs.current.delete(index);
+    }
+    return () => observer.disconnect();
+  }, [paragraphWords]);
 
   const segmentUrlByKey = useMemo(() => {
     const map = new Map<string, string>();
@@ -1012,7 +1088,13 @@ export default function StoryText({
     anchorRectRef.current = rect;
     setPopoverPosition({ top, left });
     setActiveWord(word);
-    setTranslation({ status: "loading" });
+    // ДОЛГ 169, ШАГ 2. Слово, уже известное этой вкладке, показывается
+    // БЕЗ ЕДИНОГО ЗАПРОСА — ни в наш сервер, ни тем более наружу. Сюда
+    // попадает всё, что положила предзагрузка видимого абзаца (шаг 3), и
+    // всё, что человек тапал раньше: в «Снегурочке» 126 тапаемых мест на
+    // 93 различных словоформы, то есть треть тапов — повтор.
+    const cached = readCachedTranslation(word);
+    setTranslation(cached ? { status: "done", translation: cached } : { status: "loading" });
     setWordAudio({ status: "loading" });
     // Озвучка и перевод спрашиваются НЕЗАВИСИМО: перевод ходит во внешний
     // сервис и падает сам по себе, а клип лежит в нашем банке. Один
@@ -1039,14 +1121,21 @@ export default function StoryText({
            строки «ударение зависит от смысла», которой мы не проверили */
       }
     })();
+    if (cached) return;
     try {
       const res = await fetch(`/api/dictionary/translate?word=${encodeURIComponent(word)}`);
       const data = await res.json().catch(() => null);
       if (!res.ok || typeof data?.translation !== "string" || !data.translation) {
+        // Отказ чужого сервиса приходит с HTTP 200 и строкой, похожей на
+        // перевод (долг 168) — узнаёт его сервер, а сюда доезжает
+        // обычная ошибка. Карточка скажет `dict.translationError`, то
+        // есть фразу на языке ученика, и ни одной английской строки он
+        // не увидит.
         setTranslation({ status: "error" });
         return;
       }
       setTranslation({ status: "done", translation: data.translation });
+      cacheTranslation(word, data.translation);
     } catch {
       setTranslation({ status: "error" });
     }
@@ -1177,7 +1266,22 @@ export default function StoryText({
         className="flex max-h-[70dvh] flex-col gap-6 overflow-y-auto overscroll-contain rounded-2xl border border-black/10 p-4 text-lg leading-8 dark:border-white/30 sm:max-h-[75dvh] sm:p-6 sm:text-xl sm:leading-9"
       >
         {paragraphGroups.map((group) => (
-          <div key={group.paragraphIndex}>
+          <div
+            key={group.paragraphIndex}
+            // Ссылка, а НЕ атрибут вроде `data-paragraph-index`, и это
+            // решение: 330 замороженных URL сличаются по серверному
+            // HTML, а новый атрибут на каждом абзаце 65 рассказов сдвинул
+            // бы его. `ref` в разметку не попадает вовсе — номер абзаца
+            // помнит карта рядом (долг 169, шаг 3).
+            ref={(el) => {
+              if (el) {
+                paragraphRefs.current.set(group.paragraphIndex, el);
+                paragraphIndexByElement.current.set(el, group.paragraphIndex);
+              } else {
+                paragraphRefs.current.delete(group.paragraphIndex);
+              }
+            }}
+          >
             <p>
               {group.queueIndexes.map((queueIndex) => (
                 <span
