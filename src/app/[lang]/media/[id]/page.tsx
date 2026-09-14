@@ -6,6 +6,8 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
+import { isNativeShellRequest } from "@/lib/native-shell";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 import { getMediaGrammarLinks, getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
 import ContentInsights from "@/components/stories/ContentInsights";
 import { isPilotMedia } from "@/lib/media-pilot";
@@ -301,12 +303,19 @@ export default async function MediaDetailPage({
         <div className="paywall-lock mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
           <h2 className="font-medium">{dict.media.premiumLockTitle}</h2>
           <p className="mt-2 text-sm text-foreground/70">{dict.media.premiumLockBody}</p>
-          <Link
-            href={`/${lang}/pricing?next=/${lang}/media/${item.id}`}
-            className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-          >
-            {dict.media.premiumLockCta}
-          </Link>
+          {/* ДОЛГ 184: внутри оболочки на месте кнопки покупки — строка.
+              Заголовок и текст замка остаются: они говорят, что материал
+              закрыт, и это правда, которую человеку надо знать. */}
+          {(await isNativeShellRequest()) ? (
+            <p className="mt-4 text-sm text-foreground/60">{nativeAccessCopy(lang).closedNote}</p>
+          ) : (
+            <Link
+              href={`/${lang}/pricing?next=/${lang}/media/${item.id}`}
+              className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+            >
+              {dict.media.premiumLockCta}
+            </Link>
+          )}
         </div>
       )}
     </div>

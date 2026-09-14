@@ -431,6 +431,10 @@ export type DisplayStatus =
   | "trialing"
   | "past_due"
   | "canceled"
+  /** Отменена, но оплаченный период ещё идёт: продления не будет, доступ
+   *  есть (долг 190). Самостоятельное состояние, потому что и «активна», и
+   *  «отменена» про такую строку — полуправда. */
+  | "canceling"
   | "expired";
 
 /**
@@ -440,11 +444,19 @@ export type DisplayStatus =
  * "expired", not "active".
  */
 export function getDisplayStatus(
-  subscription: Pick<Subscription, "status" | "currentPeriodEnd"> | null | undefined
+  subscription:
+    | (Pick<Subscription, "status" | "currentPeriodEnd"> & Partial<Pick<Subscription, "canceledAt">>)
+    | null
+    | undefined
 ): DisplayStatus {
   if (!subscription) return "none";
   if (subscription.status === "canceled") return "canceled";
   if (subscription.status === "past_due") return "past_due";
   if (!isSubscriptionActive(subscription)) return "expired";
+  // Отменена, но ещё действует — долг 190. Проверка стоит ПОСЛЕ даты, а не
+  // до: у строки, чей период уже кончился, «отменена» — не новость, её
+  // честное состояние «истекла», и оно печатается тем же словом, что у
+  // любой другой истёкшей.
+  if (subscription.canceledAt) return "canceling";
   return subscription.status === "trialing" ? "trialing" : "active";
 }

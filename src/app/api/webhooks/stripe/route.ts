@@ -109,17 +109,30 @@ async function upsertFromStripeSubscription(subscription: Stripe.Subscription) {
       ? subscription.customer
       : subscription.customer.id;
 
+  // ДОЛГ 190. Про «продления не будет» знает Stripe, и он же — источник
+  // правды: отменить можно и из его панели, и из письма, не только нашей
+  // кнопкой. `canceledAt` ставится один раз и не переписывается на каждом
+  // событии (иначе дата отмены уезжала бы вперёд при каждом чихе), а
+  // снимается, если человек отмену отозвал, — тогда строка снова просто
+  // действующая. Доступа это поле не решает вовсе: его по-прежнему решает
+  // `currentPeriodEnd` в `isSubscriptionActive`.
+  const canceledAt = subscription.cancel_at_period_end
+    ? (existing?.canceledAt ?? new Date())
+    : null;
+
   await db.subscription.upsert({
     where: { stripeSubscriptionId: subscription.id },
     update: {
       status: mapStripeStatus(subscription.status),
       currentPeriodEnd: periodEndOf(subscription),
+      canceledAt,
     },
     create: {
       userId,
       plan,
       status: mapStripeStatus(subscription.status),
       currentPeriodEnd: periodEndOf(subscription),
+      canceledAt,
       stripeSubscriptionId: subscription.id,
       stripeCustomerId: customerId,
     },

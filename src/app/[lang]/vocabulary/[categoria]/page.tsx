@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   PUBLIC_VOCABULARY_LEVELS,
   VOCABULARY_CATEGORY_PAGES,
@@ -236,7 +237,8 @@ export default async function VocabularyCategoryPage({
         </section>
       ))}
 
-      {c1Count > 0 && (
+      {/* Тот же долг 184 и та же причина, что у подписи на /vocabulary. */}
+      {c1Count > 0 && !(await isNativeShellRequest()) && (
         <aside className="mt-12 rounded-2xl border border-black/10 p-5 dark:border-white/30">
           <h2 className="text-base font-semibold tracking-tight">El nivel C1 está en Premium</h2>
           <p className="mt-2 text-sm leading-6 text-foreground/70">

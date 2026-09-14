@@ -16,6 +16,8 @@ import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import { getRecordingsOwnerScope } from "@/lib/recordings-owner";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
+import { isNativeShellRequest } from "@/lib/native-shell";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, fitTitle, truncateForMeta, paywallJsonLd, routeAlternates } from "@/lib/site";
@@ -204,6 +206,13 @@ export default async function LessonPage({
            читает сам маршрут: активная подписка или сотрудник. */
         canDownloadPdf={tier !== "free"}
         lockedCounts={lockedCounts}
+        /* Внутри оболочки на закрытых вкладках вместо кнопки «Смотреть
+           тарифы» стоит строка — долг 184. Признак берётся ЗАПРОСОМ, а не
+           у Capacitor на клиенте: клиентская ветка убирает кнопку из живого
+           DOM после гидрации, а в ответе сервера она остаётся, и ровно этот
+           ответ читает ревью магазина (разбор — в шапке
+           `src/lib/native-shell.ts`). */
+        nativeClosedNote={(await isNativeShellRequest()) ? nativeAccessCopy(lang).closedNote : null}
         slideIllustrations={slideIllustrations}
         dict={dict.lesson}
         celebrationDict={dict.celebration}

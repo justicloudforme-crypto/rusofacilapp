@@ -32,6 +32,7 @@ function LockedModuleCard({
   count,
   cta,
   pricingHref,
+  closedNote,
 }: {
   locale: Locale;
   /** "Este módulo incluye {count} palabra(s)" — the noun agrees with the
@@ -40,16 +41,33 @@ function LockedModuleCard({
   count: number;
   cta: string;
   pricingHref: string;
+  /**
+   * ВНУТРИ ПРИЛОЖЕНИЯ — строка вместо кнопки, и `null` в вебе (долг 184).
+   *
+   * Это была ТА САМАЯ кнопка, которую владелец снял на живом телефоне
+   * 13.09.2026: три «Смотреть тарифы» на закрытых вкладках урока
+   * (Презентация, Словарь, Упражнения). Заход 7.192 закрыл платные
+   * поверхности, до которых доходил ЕГО замер, а эту не увидел вовсе —
+   * разбор в шапке `scripts/check-native-payments.mjs`.
+   *
+   * Число остаётся на месте и в оболочке: «в этом модуле 24 слова» —
+   * это правда о материале, а не призыв его купить.
+   */
+  closedNote: string | null;
 }) {
   return (
     <div className="paywall-lock rounded-2xl border border-primary/30 bg-primary/[0.04] p-6 dark:border-primary-400/30 dark:bg-primary-400/[0.06]">
       <p className="text-sm leading-6 text-foreground/80">{plural(locale, count, label, { count })}</p>
-      <Link
-        href={pricingHref}
-        className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-      >
-        {cta}
-      </Link>
+      {closedNote ? (
+        <p className="mt-3 text-sm leading-6 text-foreground/60">{closedNote}</p>
+      ) : (
+        <Link
+          href={pricingHref}
+          className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+        >
+          {cta}
+        </Link>
+      )}
     </div>
   );
 }
@@ -65,6 +83,7 @@ export default function LessonView({
   isLocked,
   canDownloadPdf,
   lockedCounts,
+  nativeClosedNote,
   slideIllustrations,
   dict,
   celebrationDict,
@@ -101,6 +120,14 @@ export default function LessonView({
   // of a vague "content available with subscription". Null when the lesson
   // couldn't be loaded at all (content itself is also null in that case).
   lockedCounts: { vocabulary: number; exercises: number; slides: number } | null;
+  /**
+   * Строка вместо кнопки покупки на закрытых вкладках — внутри оболочки, и
+   * `null` в вебе (долг 184). Приходит ГОТОВОЙ с сервера, а не берётся из
+   * `nativeAccessCopy` здесь: этот компонент клиентский, и импорт положил
+   * бы обе локали объяснения в веб-бандл, где их не читает никто (цена
+   * строки — её вес, умноженный на 1913 адресов; замер 7.183).
+   */
+  nativeClosedNote: string | null;
   // Pre-rendered server-side (see [lesson]/page.tsx), keyed by slide id —
   // keeps src/lib/lessons/slideIcons.ts's shape data out of this "use
   // client" component's bundle.
@@ -237,6 +264,7 @@ export default function LessonView({
                     count={lockedCounts?.slides ?? 0}
                     cta={dict.locked.cta}
                     pricingHref={`/${lang}/pricing?next=/${lang}/courses/${level}/${lessonSlug}`}
+                    closedNote={nativeClosedNote}
                   />
                 </div>
                 <div className={tab === "vocabulary" ? undefined : "hidden"}>
@@ -254,6 +282,7 @@ export default function LessonView({
                     count={lockedCounts?.vocabulary ?? 0}
                     cta={dict.locked.cta}
                     pricingHref={`/${lang}/pricing?next=/${lang}/courses/${level}/${lessonSlug}`}
+                    closedNote={nativeClosedNote}
                   />
                 </div>
                 <div className={tab === "exercises" ? undefined : "hidden"}>
@@ -263,6 +292,7 @@ export default function LessonView({
                     count={lockedCounts?.exercises ?? 0}
                     cta={dict.locked.cta}
                     pricingHref={`/${lang}/pricing?next=/${lang}/courses/${level}/${lessonSlug}`}
+                    closedNote={nativeClosedNote}
                   />
                 </div>
               </>
