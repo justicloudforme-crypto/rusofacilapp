@@ -11,6 +11,7 @@ import LevelFilterBar from "./LevelFilterBar";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardCategory, type FlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
+import { lockedView } from "@/lib/flashcards/locked-view";
 import { hapticTap, hapticSuccess } from "@/lib/haptics";
 import type { Locale } from "@/i18n/config";
 import type { PluralForms } from "@/lib/plural";
@@ -75,12 +76,12 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // message, loaded+non-empty -> cards.
   const [cardsLoading, setCardsLoading] = useState(false);
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
+  // Перепись БАНКА по темам и по уровням — чтобы сетка внутри оболочки не
+  // писала «0 слов» там, где слова есть (7.195, часть 3).
+  const [bankCategories, setBankCategories] = useState<Record<string, { bank: number; open: number; locked: number }>>({});
+  const [bankLockedByLevel, setBankLockedByLevel] = useState<Record<string, number>>({});
   const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
   const [hasAnyProgress, setHasAnyProgress] = useState(false);
-  // Сколько карточек существует, но требует плана Premium. 0 у премиума и
-  // у сотрудника — то есть это и есть ответ «закрыт ли C1 ЭТОМУ
-  // посетителю», посчитанный тем же гейтом, который режет выдачу.
-  const [premiumOnlyWords, setPremiumOnlyWords] = useState(0);
   // Карточка, на которую надо встать, когда придут карточки темы. Это
   // и есть «то самое слово, на котором человек остановился»: приходит из
   // блока «Продолжить» (`RecentCategory.lastCardId`) или из адреса
@@ -187,9 +188,10 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   useEffect(() => {
     fetchCategorySummary(levelFilter).then((body) => {
       setCategorySummary(body.categories);
+      setBankCategories(body.bankCategories);
+      setBankLockedByLevel(body.lockedByLevel);
       setRecentCategories(body.recent);
       setHasAnyProgress(body.hasAnyProgress);
-      setPremiumOnlyWords(body.premiumOnlyWords);
     });
   }, [knownWords, levelFilter]);
 
@@ -266,9 +268,15 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // браузер (см. `cards` выше), поэтому и разрез закрытого берётся по
   // уровню: при «ВСЕ» — всё закрытое темы, при выбранном уровне — только
   // его доля. Числа приходят с сервера разностью по базе.
-  const lockedHere = useMemo(
-    () => (levelFilter === "all" ? lockedTotal : (lockedByLevel[levelFilter] ?? 0)),
-    [levelFilter, lockedTotal, lockedByLevel],
+  const locked = useMemo(
+    () =>
+      lockedView({
+        levelFilter,
+        categoryLabel: category ? dict.categoryLabels[category] : null,
+        lockedTotal,
+        lockedByLevel,
+      }),
+    [levelFilter, category, dict.categoryLabels, lockedTotal, lockedByLevel],
   );
 
   const progress = useMemo(() => {
@@ -451,7 +459,7 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
           placeholder={dict.searchPlaceholder}
           className="mb-3 w-full rounded-full border border-black/10 bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-foreground/40 dark:border-white/15"
         />
-        <LevelFilterBar dict={dict} value={levelFilter} onChange={selectLevel} premiumLockedLevel={premiumOnlyWords > 0 ? "C1" : null} />
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={selectLevel} />
       </div>
 
       {inGrid ? (
@@ -462,6 +470,8 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
             summary={categorySummary}
             hasAnyProgress={hasAnyProgress}
             levelFilter={levelFilter}
+            bank={bankCategories}
+            lockedAtLevel={levelFilter === "all" ? 0 : (bankLockedByLevel[levelFilter] ?? 0)}
             onSelectCategory={selectCategory}
           />
         </>
@@ -503,8 +513,10 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
               message={dict.freeTrialLimitMessage}
               cta={dict.freeTrialLimitCta}
               locale={dict.locale}
-              lockedTotal={lockedHere}
-              level={levelFilter === "all" ? null : levelFilter}
+              lockedTotal={locked.lockedHere}
+              level={locked.level}
+              topic={locked.topic}
+              requirement={locked.requirement}
               unit="words"
             />
           )}
@@ -522,9 +534,12 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
             <LockedOrEmpty
               locale={dict.locale}
               emptyMessage={searchQuery ? dict.noSearchResultsMessage : dict.categoryDoneMessage}
-              lockedHere={lockedHere}
-              level={levelFilter === "all" ? null : levelFilter}
+              lockedHere={locked.lockedHere}
+              level={locked.level}
+              topic={locked.topic}
+              requirement={locked.requirement}
               unit="words"
+              noticeAbove={limited}
             />
           ) : (
             <>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import Skeleton from "@/components/ui/Skeleton";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
+import { ACCESS_MARK_ICON, idiomRequirement } from "@/lib/access-marks";
 import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -186,11 +187,15 @@ export default function IdiomsList({
     setKnownIdioms(setWordKnown(id, !knownIdioms[id]));
   }
 
-  const categoryTabs: { value: IdiomCategory | "all"; label: string }[] = [
+  const categoryTabs: { value: IdiomCategory | "all"; label: string; mark?: boolean }[] = [
     { value: "all", label: dict.categoryAllLabel },
     { value: "daily", label: dict.categoryDailyLabel },
     { value: "proverbs", label: dict.categoryProverbsLabel },
-    { value: "literary", label: dict.categoryLiteraryLabel },
+    // Корона у «Литературных» — метка сорта: категория требует плана
+    // Premium (`idiomRequirement`), и до 7.195 на вкладке об этом не было
+    // сказано ничего. Метка, а не орган: `data-access-mark` отделяет её
+    // от подписи кнопки для сторожа отрисованных поверхностей.
+    { value: "literary", label: dict.categoryLiteraryLabel, mark: idiomRequirement({ category: "literary" }) === "premium-tier" },
   ];
 
   return (
@@ -202,7 +207,22 @@ export default function IdiomsList({
         </span>
       </div>
 
-      {limited && (
+      {/*
+        ПЛАШКА НА ЭКРАНЕ ОДНА (7.195, часть 1).
+
+        Три условия ниже не исключали друг друга: у гостя, пришедшего по
+        ссылке на закрытое выражение, `limited` и `focusMissing` истинны
+        ОБА, и внутри оболочки одна и та же плашка печаталась дважды —
+        ровно то, что владелец снял на словаре. Порядок здесь и есть
+        правило: общий предел важнее частного, частный важнее слоя
+        Premium.
+
+        Знак берётся у признака (`idiomRequirement`): категория
+        `literary` требует плана Premium и потому носит 👑, остальное —
+        🔒. До правки все три плашки печатали 🔒, включая те, что про
+        Premium.
+      */}
+      {limited ? (
         <FreeTrialLimitBanner
           message={dict.freeTrialLimitMessage}
           cta={dict.freeTrialLimitCta}
@@ -210,31 +230,27 @@ export default function IdiomsList({
           lockedTotal={lockedTotal}
           unit="expressions"
         />
-      )}
-      {/* Free-tier visitors already see the banner above (their literary
-       * cap is just one facet of the general free-sample limit) — this one
-       * is specifically for an already-subscribed "standard" visitor, who
-       * needs Premium for literary and nothing else. */}
-      {focusMissing && (
+      ) : focusMissing ? (
         <FreeTrialLimitBanner
           message={dict.deepLinkLockedMessage}
           cta={dict.literaryUpgradeCta}
           reason="premium"
           locale={dict.locale}
           lockedTotal={lockedTotal}
+          requirement={idiomRequirement({ category: "literary" })}
           unit="expressions"
         />
-      )}
-      {!limited && literaryLocked === "standard" && (categoryFilter === "all" || categoryFilter === "literary") && (
+      ) : literaryLocked === "standard" && (categoryFilter === "all" || categoryFilter === "literary") ? (
         <FreeTrialLimitBanner
           message={dict.literaryLockedMessageStandard}
           cta={dict.literaryUpgradeCta}
           reason="premium"
           locale={dict.locale}
           lockedTotal={lockedTotal}
+          requirement={idiomRequirement({ category: "literary" })}
           unit="expressions"
         />
-      )}
+      ) : null}
 
       <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30">
         {categoryTabs.map((tab) => (
@@ -247,6 +263,11 @@ export default function IdiomsList({
             }`}
           >
             {tab.label}
+            {tab.mark && (
+              <span data-access-mark="premium-tier" aria-hidden className="ml-1">
+                {ACCESS_MARK_ICON["premium-tier"]}
+              </span>
+            )}
           </button>
         ))}
       </div>

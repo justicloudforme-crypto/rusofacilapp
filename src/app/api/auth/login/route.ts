@@ -6,6 +6,7 @@ import { verifyPassword } from "@/lib/password";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import { loginRetryEmail } from "@/lib/login-retry";
 
 /**
  * Real email+password login (see src/lib/password.ts). Two rate limiters:
@@ -30,6 +31,11 @@ export async function POST(request: NextRequest) {
     const url = new URL(`/${lang}/login`, request.url);
     url.searchParams.set("error", error);
     if (redirectTo) url.searchParams.set("redirectTo", redirectTo);
+    // Адрес возвращается в форму, пароль — никогда (7.195, часть 5).
+    // Что именно считается адресом и чем за это заплачено — в
+    // `src/lib/login-retry.ts`.
+    const retry = loginRetryEmail(email);
+    if (retry) url.searchParams.set("email", retry);
     return NextResponse.redirect(url, { status: 303 });
   };
 

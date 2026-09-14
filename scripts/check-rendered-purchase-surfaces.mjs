@@ -127,12 +127,40 @@ async function makeSession(base, withSubscription) {
   });
 }
 
-/** Перепись органов управления ОТРИСОВАННОГО документа. */
-const CONTROL_CENSUS = () => {
+/**
+ * Перепись органов управления ОТРИСОВАННОГО документа.
+ *
+ * МЕТКА — НЕ ОРГАН УПРАВЛЕНИЯ (7.195, часть 4).
+ *
+ * Значок платности (`src/components/ui/AccessMark.tsx` и остальные четыре
+ * места, где он печатается) — это `<span>` с подписью «Solo Premium» /
+ * «Только Premium». Он ничего не предлагает купить, никуда не ведёт и
+ * нажатием не является, но стоит ВНУТРИ ссылки или кнопки: на карточке
+ * рассказа, на плитке филворда, на строке поиска, на кнопке уровня C1.
+ * Его текст попадал в подпись органа, и слабое правило («Premium» на
+ * короткой подписи кнопки без адреса) считало метку призывом к покупке.
+ *
+ * Поэтому подпись органа собирается БЕЗ текста меток: узел копируется,
+ * из копии удаляются все `[data-access-mark]`, и судится остаток. Правится
+ * прибор, а не экран: метка остаётся человеку полностью видимой.
+ *
+ * Настоящая кнопка покупки метки не носит и потому не прячется: подсадка
+ * ниже (`Оформить подписку`) ловится после этой правки ровно так же, как
+ * до неё, и это проверяется тем же прогоном `--plant`.
+ */
+export const CONTROL_CENSUS = () => {
   const nodes = [...document.querySelectorAll("a, button, [role=button], form, input[type=submit]")];
+  const labelOf = (node) => {
+    if (!node.querySelector("[data-access-mark]")) {
+      return node.innerText || node.textContent || node.getAttribute("value") || "";
+    }
+    const copy = node.cloneNode(true);
+    for (const mark of copy.querySelectorAll("[data-access-mark]")) mark.remove();
+    return copy.textContent || node.getAttribute("value") || "";
+  };
   return nodes.map((node) => ({
     tag: node.tagName.toLowerCase(),
-    text: (node.innerText || node.textContent || node.getAttribute("value") || "").slice(0, 200),
+    text: labelOf(node).slice(0, 200),
     target:
       node.getAttribute("href") ||
       node.getAttribute("action") ||

@@ -34,6 +34,18 @@ export interface CategorySummaryResponse {
    * which is how the UI knows to print the short sentence. */
   premiumOnlyWords: number;
   hasAnyProgress: boolean;
+  /**
+   * Перепись БАНКА по темам под текущим фильтром уровня — 7.195, часть 3.
+   *
+   * `categories` выше считает доступное, и на уровне C1 у неоплатившего
+   * это ноль по каждой теме. Здесь — сколько строк там ЕСТЬ и сколько из
+   * них закрыто; читает только сетка внутри оболочки.
+   */
+  bankCategories: Record<string, { bank: number; open: number; locked: number }>;
+  /** Сколько закрыто на каждом уровне по ВСЕМУ банку (без фильтра темы). */
+  lockedByLevel: Record<string, number>;
+  /** Сколько закрыто во всём банке. */
+  lockedTotal: number;
 }
 
 const EMPTY_RESPONSE: CategorySummaryResponse = {
@@ -43,6 +55,9 @@ const EMPTY_RESPONSE: CategorySummaryResponse = {
   availableWords: 0,
   premiumOnlyWords: 0,
   hasAnyProgress: false,
+  bankCategories: {},
+  lockedByLevel: {},
+  lockedTotal: 0,
 };
 
 /** Shared by every vocabulary study mode's category grid (flip cards,
@@ -72,6 +87,9 @@ export async function fetchCategorySummary(level: FlashcardLevel | "all"): Promi
       availableWords: body.availableWords ?? 0,
       premiumOnlyWords: body.premiumOnlyWords ?? 0,
       hasAnyProgress: body.hasAnyProgress ?? false,
+      bankCategories: body.bankCategories ?? {},
+      lockedByLevel: body.lockedByLevel ?? {},
+      lockedTotal: body.lockedTotal ?? 0,
     };
   } catch {
     return EMPTY_RESPONSE;

@@ -13,6 +13,14 @@ import { ACCESS_MARK_ICON, type AccessRequirement } from "@/lib/access-marks";
  *
  * `<span>`, не `<button>`/`<a>`: значок сообщает, а не действует — то же
  * ограничение, что у `PremiumBadge`, и его же сторожит `check:tokens`.
+ *
+ * `data-access-mark` — 7.195, часть 4. Значок часто стоит ВНУТРИ ссылки
+ * или кнопки (карточка рассказа, плитка филворда, строка поиска), и его
+ * текст попадал в подпись органа управления: «👑 Solo Premium» внутри
+ * ссылки читалось прибором как платное слово на органе. Атрибут отделяет
+ * метку от органа, и по нему `check-rendered-purchase-surfaces` вычитает
+ * текст метки из подписи. Метка при этом остаётся полностью видимой
+ * человеку — правится прибор, а не экран.
  */
 export default function AccessMark({
   mark,
@@ -30,6 +38,7 @@ export default function AccessMark({
       : "bg-foreground/10 text-foreground/70";
   return (
     <span
+      data-access-mark={mark}
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${tone} ${className}`}
       title={label}
     >

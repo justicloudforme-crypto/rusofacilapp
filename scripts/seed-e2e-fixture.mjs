@@ -70,6 +70,17 @@ async function main() {
   try {
     const puzzles = readFixture("word-games.json");
     const terms = readFixture("glossary.json");
+    // Четырнадцать настоящих карточек: восемь A1 «greetings» и шесть C1
+    // (по три в «food» и «greetings»). Шесть строк C1 добавлены 14.09.2026
+    // в 7.195 и добавлены НЕ для того, чтобы что-то позеленело, а потому
+    // что без них проверка проверяла бы пустое множество: весь смысл
+    // `e2e/native-dictionary-signs.spec.ts` — экран уровня C1, на котором
+    // материал ЕСТЬ и закрыт. В базе CI строк C1 не было ни одной, то есть
+    // и «плашка ровно одна», и «плитка не пишет 0 слов» доказывались бы на
+    // отсутствии карточек. Две темы, а не одна, тоже намеренно: у спеки
+    // есть отрицательный контроль «хотя бы одна плитка с непустым банком»,
+    // и одной темы ему хватило бы ровно впритык.
+    //
     // Eight real A1 "greetings" cards. e2e/match-result-panel.spec.ts plays
     // a Match round to the end, and a round needs at least MIN_PLAYABLE (4)
     // cards in one category; CI's FlashcardCard table is empty, so without
