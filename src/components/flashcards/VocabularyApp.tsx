@@ -34,7 +34,9 @@ export interface VocabularyDict extends FlashcardsDict {
   subtitleFillBlank: string;
   subtitleMatch: string;
   subtitleIdioms: string;
-  idioms: IdiomsDict;
+  // `locale` подставляется здесь (см. вызов IdiomsList ниже), в словаре
+  // его нет — поэтому требуется всё, кроме него.
+  idioms: Omit<IdiomsDict, "locale">;
   recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
   match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
   fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
@@ -222,7 +224,7 @@ export default function VocabularyApp({
             resultDict={resultDict}
           />
         )}
-        {mode === "idioms" && <IdiomsList dict={dict.idioms} focusId={focusIdiomId} />}
+        {mode === "idioms" && <IdiomsList dict={{ ...dict.idioms, locale: dict.locale }} focusId={focusIdiomId} />}
       </div>
     </div>
   );

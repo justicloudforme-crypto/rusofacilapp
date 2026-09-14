@@ -287,19 +287,28 @@ export default async function StoryReaderPage({
           <h2 className="font-medium">
             {needsPremiumUpgrade ? dict.stories.premiumTierLockTitle : dict.stories.premiumLockTitle}
           </h2>
+          {/* ДОЛГ 191. Здесь стоял ТЕКСТ замка из словаря, и заход 7.193
+              оставил его на месте намеренно — «он говорит, что материал
+              закрыт, и это правда». Правда, да не вся: русская редакция
+              этой строки читается «Вы видите бесплатный отрывок — первый
+              абзац. ОФОРМИТЕ ПОДПИСКУ, чтобы читать историю полностью»,
+              испанская — «Suscríbete para leer la historia completa». Это
+              призыв к покупке, и внутри оболочки его быть не может.
+              Перестроенный прибор нашёл его первым же прогоном: 8
+              срабатываний на двух рассказах в двух ролях и двух обличьях.
+              Заголовок замка остаётся — он про положение дел. */}
           <p className="mt-2 text-sm text-foreground/70">
-            {needsPremiumUpgrade
-              ? // Уровень подставляется из строки рассказа, а не вшит в
-                // словарь: замок ставит колонка `premiumOnly`, а не уровень
-                // (`getStoryAccess`), поэтому запертыми оказываются и не-C1
-                // рассказы — 33 из 98 на 09.09.2026 (долг 115). Литерал
-                // «C1» в словаре врал каждому из них подписчику `standard`.
-                dict.stories.premiumTierLockBody.replace("{level}", story.level)
-              : dict.stories.premiumLockBody}
+            {(await isNativeShellRequest())
+              ? nativeAccessCopy(lang).lock.body
+              : needsPremiumUpgrade
+                ? // Уровень подставляется из строки рассказа, а не вшит в
+                  // словарь: замок ставит колонка `premiumOnly`, а не уровень
+                  // (`getStoryAccess`), поэтому запертыми оказываются и не-C1
+                  // рассказы — 33 из 98 на 09.09.2026 (долг 115). Литерал
+                  // «C1» в словаре врал каждому из них подписчику `standard`.
+                  dict.stories.premiumTierLockBody.replace("{level}", story.level)
+                : dict.stories.premiumLockBody}
           </p>
-          {/* ДОЛГ 184: внутри оболочки на месте кнопки покупки — строка.
-              Заголовок и текст замка остаются: они говорят, что материал
-              закрыт, и это правда, которую человеку надо знать. */}
           {(await isNativeShellRequest()) ? (
             <p className="mt-4 text-sm text-foreground/60">{nativeAccessCopy(lang).closedNote}</p>
           ) : (

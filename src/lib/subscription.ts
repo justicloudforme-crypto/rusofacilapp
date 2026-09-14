@@ -2,23 +2,16 @@ import "server-only";
 import { db } from "./db";
 import type { Subscription } from "@/generated/prisma/client";
 import { cached, getOrCreateGlobalSingleton, TtlCache } from "./ttl-cache";
-
-const INACTIVE_STATUSES = new Set(["canceled", "past_due", "incomplete_expired"]);
-
-/**
- * Access is derived from `currentPeriodEnd`, not just from `status`. This
- * means a subscription is automatically treated as expired the moment its
- * period ends, even if the Stripe webhook that flips `status` hasn't
- * arrived yet — the deciding check always happens at read time.
- */
-export function isSubscriptionActive(
-  subscription: Pick<Subscription, "status" | "currentPeriodEnd"> | null | undefined
-): boolean {
-  if (!subscription) return false;
-  if (INACTIVE_STATUSES.has(subscription.status)) return false;
-  if (subscription.currentPeriodEnd.getTime() <= Date.now()) return false;
-  return subscription.status === "active" || subscription.status === "trialing";
-}
+// Чистые правила состояния живут отдельно (см. шапку того файла) и
+// перевыставляются здесь: у них по-прежнему ровно одно определение, а
+// все прежние `from "@/lib/subscription"` продолжают работать.
+import { isSubscriptionActive } from "./subscription-status";
+export {
+  isSubscriptionActive,
+  getDisplayStatus,
+  subscriptionDateLine,
+} from "./subscription-status";
+export type { DisplayStatus, SubscriptionDateLine } from "./subscription-status";
 
 export const MANUAL_GRANT_DAYS = 30;
 
@@ -425,38 +418,3 @@ export async function reportPremiumPaymentNotApplied(
   return tier;
 }
 
-export type DisplayStatus =
-  | "none"
-  | "active"
-  | "trialing"
-  | "past_due"
-  | "canceled"
-  /** Отменена, но оплаченный период ещё идёт: продления не будет, доступ
-   *  есть (долг 190). Самостоятельное состояние, потому что и «активна», и
-   *  «отменена» про такую строку — полуправда. */
-  | "canceling"
-  | "expired";
-
-/**
- * UI-facing status: unlike the raw `status` column, this folds in the
- * date-based auto-expiry from `isSubscriptionActive` — a subscription still
- * marked "active" in the database past its `currentPeriodEnd` is shown as
- * "expired", not "active".
- */
-export function getDisplayStatus(
-  subscription:
-    | (Pick<Subscription, "status" | "currentPeriodEnd"> & Partial<Pick<Subscription, "canceledAt">>)
-    | null
-    | undefined
-): DisplayStatus {
-  if (!subscription) return "none";
-  if (subscription.status === "canceled") return "canceled";
-  if (subscription.status === "past_due") return "past_due";
-  if (!isSubscriptionActive(subscription)) return "expired";
-  // Отменена, но ещё действует — долг 190. Проверка стоит ПОСЛЕ даты, а не
-  // до: у строки, чей период уже кончился, «отменена» — не новость, её
-  // честное состояние «истекла», и оно печатается тем же словом, что у
-  // любой другой истёкшей.
-  if (subscription.canceledAt) return "canceling";
-  return subscription.status === "trialing" ? "trialing" : "active";
-}

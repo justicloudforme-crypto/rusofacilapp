@@ -77,9 +77,15 @@
 //   node scripts/check-native-payments.mjs --plant             # её контроль
 //   node scripts/check-native-payments.mjs --base=http://…     # живая
 //   node scripts/check-native-payments.mjs --base=http://… --plant
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { stripCommentsAndStrings } from "./check-no-runtime-tts.mjs";
+import { collectAddresses } from "./route-census.mjs";
+import {
+  purchaseCtaKeys,
+  paymentTargetsInHtml,
+  visibleDocument as sharedVisibleDocument,
+} from "./purchase-surface-rules.mjs";
 
 const PAGE_FILE = "src/app/[lang]/pricing/page.tsx";
 const NOTICE_FILE = "src/components/native/NativeAccessNotice.tsx";
@@ -108,6 +114,12 @@ const WORD_GAME_FILE = "src/app/[lang]/word-games/[type]/[level]/[sequence]/page
 const SEARCH_API_FILE = "src/app/api/search/route.ts";
 const SEARCH_UI_FILE = "src/components/GlobalSearch.tsx";
 const FOOTER_FILE = "src/components/Footer.tsx";
+/** Единственная точка, через которую словарь и идиомы говорят про закрытое. */
+const CHOKEPOINT_FILE = "src/components/flashcards/FreeTrialLimitBanner.tsx";
+/** Признак «этот файл спрашивает про оболочку» — своей веткой или через
+ *  единственную точку. */
+const BRANCH_OR_CHOKEPOINT =
+  /isNativeShellRequest|nativeShell|useIsNativeShell|nativeAccessCopy|NativeLockedLink|NativeLockedNotice|FreeTrialLimitBanner|LockedOrEmpty|lockedTarget|closedNote/;
 
 const SOURCES = [
   PAGE_FILE, NOTICE_FILE, COPY_FILE, SHELL_FILE, TOKEN_FILE, PROXY_FILE, SW_FILE,
@@ -139,6 +151,52 @@ function read(path) {
 }
 
 /**
+ * Спрашивает про оболочку — сам или через того, кому передал строку
+ * дальше.
+ *
+ * Вторая половина обязательна, и вот почему. `VocabularyApp.tsx` строку
+ * не отрисовывает вовсе: он раскладывает словарь по четырём режимам и
+ * передаёт подпись пропом. Требовать ветку от него значило бы требовать
+ * её в месте, где решать нечего, — и, что хуже, приучить ставить туда
+ * ветку-пустышку. Поэтому файл считается защищённым, если защищены ВСЕ
+ * файлы, которым он эту же строку передаёт: решение живёт там, где текст
+ * попадает в документ.
+ *
+ * `visited` — от циклического импорта: он в React-дереве обычное дело.
+ */
+function isGuarded(file, files, mentions, visited) {
+  if (visited.has(file.path)) return true;
+  visited.add(file.path);
+  if (BRANCH_OR_CHOKEPOINT.test(file.body)) return true;
+  const imported = files.filter(
+    (other) => other.path !== file.path && mentions(other) && importsEachOther(file, other),
+  );
+  if (imported.length === 0) return false;
+  return imported.every((other) => isGuarded(other, files, mentions, visited));
+}
+
+/** Импортирует ли `file` модуль `other` — по имени файла в строке импорта. */
+function importsEachOther(file, other) {
+  const name = other.path.split("/").pop().replace(/\.tsx?$/, "");
+  return new RegExp(`from "[^"]*\\b${name}"`).test(file.body);
+}
+
+/** Все .ts/.tsx под src/, с уже вычеркнутыми комментариями: закомментированная
+ *  ветка веткой не является (класс 7.182). */
+function sourceFilesUnderSrc(dir = "src") {
+  const out = [];
+  for (const entry of readdirSync(dir)) {
+    const full = `${dir}/${entry}`;
+    if (statSync(full).isDirectory()) {
+      out.push(...sourceFilesUnderSrc(full));
+    } else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) {
+      out.push({ path: full, body: stripCommentsOnly(readFileSync(full, "utf8")) });
+    }
+  }
+  return out;
+}
+
+/**
  * ПОДПИСИ ПЛАТНЫХ ОРГАНОВ УПРАВЛЕНИЯ — ИЗ САМИХ СЛОВАРЕЙ, А НЕ СПИСКОМ
  * ЗДЕСЬ.
  *
@@ -148,46 +206,27 @@ function read(path) {
  * переименовали, и падает сам, если ключ исчез, — то есть отказывается
  * судить вслепую.
  */
-const CTA_KEYS = [
-  ["account", "seePricing"],
-  ["vocabulary", "c1PremiumCta"],
-  ["stories", "premiumLockCta"],
-  ["media", "premiumLockCta"],
-  ["lesson", "locked", "cta"],
-  ["profile", "profileUpsellFree"],
-  ["profile", "profileUpsellToAnnual"],
-  ["profile", "profileUpsellToPremium"],
-  ["profile", "subscribeButton"],
-  ["profile", "renewButton"],
-  ["profile", "lockedNotice"],
-  ["profile", "referralHeading"],
-  ["home", "pricingStripCta"],
-  ["footer", "appLink"],
-];
+const DICTIONARIES = () => ({
+  ru: JSON.parse(read("src/dictionaries/ru.json")),
+  es: JSON.parse(read("src/dictionaries/es.json")),
+});
 
-function dictValue(dict, path) {
-  let node = dict;
-  for (const key of path) {
-    if (node == null || typeof node !== "object") return null;
-    node = node[key];
-  }
-  return typeof node === "string" ? node : null;
-}
-
+/**
+ * ПОДПИСИ ПЛАТНЫХ ОРГАНОВ — ПЕРЕПИСЬ СЛОВАРЕЙ, А НЕ СПИСОК КЛЮЧЕЙ.
+ *
+ * Здесь стоял список из 15 ключей, переписанный рукой, и он промахнулся
+ * ровно так, как рукописный список только и может: `vocabulary.freeTrialLimitCta`
+ * и `vocabulary.idioms.freeTrialLimitCta` — те самые две кнопки, которые
+ * владелец нашёл на телефоне, — в него не входили. 0 подписей из 2.
+ *
+ * Теперь словари обходятся целиком, и платной считается КАЖДАЯ строка,
+ * которая по смыслу зовёт оформить подписку (`STRONG_PURCHASE` в
+ * `purchase-surface-rules.mjs`). Число печатается: на 14.09.2026 таких
+ * строк 27 против 15 в прежнем списке.
+ */
 function purchaseLabels(locale) {
-  const dict = JSON.parse(read(`src/dictionaries/${locale}.json`));
-  const labels = [];
-  for (const path of CTA_KEYS) {
-    const value = dictValue(dict, path);
-    if (!value) {
-      throw new Error(
-        `сторож и словарь разошлись: в src/dictionaries/${locale}.json нет строки ${path.join(".")}. ` +
-          `Пока ключ не поправлен, судить нечем — молчать об этом нельзя.`,
-      );
-    }
-    labels.push(value);
-  }
-  return labels;
+  const all = purchaseCtaKeys(DICTIONARIES());
+  return all.filter((entry) => entry.locale === locale).map((entry) => entry.value);
 }
 
 /** Только комментарии, строки на месте: часть правил спрашивает именно про
@@ -430,6 +469,92 @@ function judgeSources(sources) {
   if (!/nativeShell \? null : \(\s*\n?\s*<Card>/.test(sources[PROFILE_FILE])) {
     problems.push(`${PROFILE_FILE}: реферальный блок «Приглашай и получай» не скрыт внутри оболочки (долг 186)`);
   }
+  problems.push(...chokepointProblems(sources));
+  return problems;
+}
+
+/**
+ * КАЖДАЯ ПОДПИСЬ ПОКУПКИ ИЗ СЛОВАРЕЙ ОТРИСОВЫВАЕТСЯ ЧЕРЕЗ ВЕТКУ НА
+ * ОБОЛОЧКУ — ДОЛГ 191, ПРАВИЛО, КОТОРОГО ЗДЕСЬ НЕ БЫЛО ВОВСЕ.
+ *
+ * Прежние правила спрашивали ИМЕНОВАННЫЕ файлы: «а есть ли ветка в
+ * `profile/page.tsx`». Список файлов писался рукой и отставал от продукта
+ * ровно так же, как список адресов: кнопку «Оформить подписку» рисовал
+ * `FreeTrialLimitBanner.tsx`, которого в списке не было, — и он был чист
+ * по всем 13 правилам сразу.
+ *
+ * Здесь спрашивается не файл, а СТРОКА. Перепись словарей даёт все
+ * подписи покупки (27 на 14.09.2026); для каждой ищется КАЖДОЕ место в
+ * `src/`, где её ключ упоминается, и каждое такое место обязано либо само
+ * спрашивать про оболочку, либо быть единственной точкой, которая это
+ * делает за него (`FreeTrialLimitBanner` — она же и проверяется отдельно
+ * ниже: если из неё пропадёт `useIsNativeShell`, точка перестанет быть
+ * точкой, и правило покраснеет).
+ *
+ * Файлы `/admin/` исключены не списком, а признаком: в оболочке этих
+ * маршрутов нет ни у одной из трёх ролей (сотрудничьи страницы требуют
+ * роли staff), и подписи там про выдачу доступа рукой, а не про покупку.
+ */
+function chokepointProblems(overrides = {}) {
+  const problems = [];
+  // Подмена (`--plant`) действует и здесь: правило, которое читает диск
+  // мимо подсадки, контролю не поддаётся вовсе.
+  const dictionaries = {
+    ru: JSON.parse(overrides["src/dictionaries/ru.json"] ?? read("src/dictionaries/ru.json")),
+    es: JSON.parse(overrides["src/dictionaries/es.json"] ?? read("src/dictionaries/es.json")),
+  };
+  const keys = purchaseCtaKeys(dictionaries);
+  // Одна и та же строка живёт в двух словарях; ключ у неё один.
+  const uniqueKeys = [...new Set(keys.map((entry) => entry.key))];
+  const files = sourceFilesUnderSrc().map((file) =>
+    overrides[file.path] ? { path: file.path, body: stripCommentsOnly(overrides[file.path]) } : file,
+  );
+
+  // Единственная точка обязана оставаться точкой.
+  const banner = overrides[CHOKEPOINT_FILE] ?? read(CHOKEPOINT_FILE);
+  for (const mark of ["useIsNativeShell", "NativeLockedNotice"]) {
+    if (!banner.includes(mark)) {
+      problems.push(
+        `${CHOKEPOINT_FILE}: нет «${mark}» — единственная точка, через которую словарь и идиомы ` +
+          `говорят про закрытое, перестала спрашивать про оболочку (долг 191)`,
+      );
+    }
+  }
+
+  for (const key of uniqueKeys) {
+    // Место отрисовки ищется по ДВУМ последним частям ключа, а не по
+    // одной. Заплачено первым же прогоном: у `lesson.locked.cta` последняя
+    // часть — `cta`, и по ней в «отрисовывает платную подпись» попали
+    // `FreeTierCard.tsx` и `FirstStepCards.tsx`, где своё собственное
+    // слово `cta` и никакого отношения к подписке. Требование «и
+    // родитель, и лист» это снимает, оставаясь независимым от того, как
+    // именно вызывающий разобрал объект (`dict.locked.cta`,
+    // `{ cta } = dict.locked`, `lockedDict.cta` — все три проходят).
+    const parts = key.split(".");
+    const leaf = parts[parts.length - 1];
+    const parent = parts.length > 1 ? parts[parts.length - 2] : null;
+    // Границы слова заданы явно, а не через `\b`: в JS `\b` считает
+    // словесными только ASCII-символы, и ключ с кириллицей (а такие
+    // заводятся легко) не находился бы вовсе — поймано подсадкой.
+    const word = (name) => new RegExp(`(?<![\\p{L}\\p{N}_])${name}(?![\\p{L}\\p{N}_])`, "u");
+    const mentions = (file) =>
+      word(leaf).test(file.body) && (parent === null || word(parent).test(file.body));
+    const users = files.filter((file) => !file.path.includes("/admin/") && mentions(file));
+    if (users.length === 0) continue; // строка в словаре есть, в коде не зовётся — не наше дело
+    for (const file of users) {
+      // Для делегирования спрашивается только ЛИСТ: получатель пропа не
+      // обязан знать, из какой ветки словаря строка пришла — у
+      // `FlashcardsApp` нет и не должно быть слова «vocabulary».
+      const mentionsLeaf = (other) => word(leaf).test(other.body);
+      const guarded = isGuarded(file, files, mentionsLeaf, new Set());
+      if (!guarded) {
+        problems.push(
+          `${file.path}: отрисовывает платную подпись «${key}» и не спрашивает про оболочку ` +
+            `ни сам, ни через единственную точку — ровно этим и был долг 191`,
+        );
+      }
+    }
+  }
   return problems;
 }
 
@@ -437,39 +562,9 @@ function countOf(haystack, needle) {
   return haystack.split(needle).length - 1;
 }
 
-/**
- * ВИДИМЫЙ документ: всё, кроме `<script>` и `<template>`.
- *
- * Словарь уезжает во flight-разметку КАЖДОЙ страницы целиком (`Navbar`,
- * `Footer` и `BottomNav` — клиентские компоненты и получают `dict`
- * ЦЕЛИКОМ), поэтому `MXN` и `OXXO` лежат внутри `<script>` даже там, где
- * на экране их нет. Это отдельная и немаленькая работа — долг 183; здесь
- * граница названа честно: правило судит по ВИДИМОМУ документу, потому что
- * на ревью магазина смотрят на ЭКРАН и на то, куда ведут органы
- * управления, а ни адресной строки, ни «просмотра исходного кода» внутри
- * приложения нет вовсе.
- */
-function visibleDocument(html) {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<template[\s\S]*?<\/template>/gi, " ");
-}
-
-/**
- * Все ссылки на страницу цен в ОТВЕТЕ ЦЕЛИКОМ, а не только те, у которых
- * адрес кончается ровно на `/pricing`.
- *
- * Здесь стоял буквальный `href="/ru/pricing"`, и он не видел ни одной
- * ссылки вида `href="/ru/pricing?next=/ru/courses/a1/2"` — а такими
- * написаны ВСЕ замки, которые «возвращают, куда шёл». На закрытом уроке
- * настоящих ссылок было 3, счётчик показывал 0 (долг 184, причина №3).
- *
- * Считается по сырому ответу: ссылка, лежащая во flight-разметке,
- * становится настоящей после гидрации.
- */
-function pricingLinks(raw) {
-  return [...raw.matchAll(/href=\\?"([^"\\]*\/pricing[^"\\]*)\\?"/g)].map((m) => m[1]);
-}
+// `visibleDocument` и перепись платёжных целей переехали в
+// `scripts/purchase-surface-rules.mjs`: их читают обе половины сторожа.
+const visibleDocument = sharedVisibleDocument;
 
 const SAFARI =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
@@ -530,49 +625,48 @@ async function makeSession(base, withSubscription) {
 }
 
 /**
- * Что меряется. Для каждой страницы названо, у КАКИХ ролей веб-отдача
- * обязана содержать платный вход: это и есть встроенный позитивный
- * контроль. Ноль на странице, где в вебе тоже ноль, не доказывает ничего.
+ * ДВА ПРАВОВЫХ ДОКУМЕНТА — ЕДИНСТВЕННОЕ ИСКЛЮЧЕНИЕ, И ОНО ЗАКРЕПЛЕНО
+ * ИМЕНЕМ.
  *
- * `OXXO` в контроли не берётся намеренно: на localhost он может не
- * отдаваться и вебу (правило 7.117).
+ * Перестроенный прибор нашёл на `/es/terms` и `/ru/terms` слова «MXN» и
+ * «OXXO» — по 3 вхождения на страницу, во всех трёх ролях. Разобрано:
+ * это не платёжная поверхность. Ни одного органа управления, ни одной
+ * ссылки на оплату там нет; это условия использования, которые ОПИСЫВАЮТ,
+ * как устроена оплата на сайте («базовая цена установлена в мексиканских
+ * песо», «кроме карты принимаем наличные по ваучеру OXXO»).
+ *
+ * Почему текст не правится. Документ обязан быть правдой — за этим
+ * следит `check:legal-truth`, — а на сайте оплата устроена именно так.
+ * Написать в условиях, что оплаты нет, значило бы соврать вебу ради
+ * приложения.
+ *
+ * Почему исключение именно такое узкое: правило про цены остаётся в силе
+ * на ВСЕХ 130 остальных адресах, а два эти названы поимённо, чтобы
+ * появление третьего роняло сторож, а не пополняло молчаливую привычку.
+ *
+ * ЭТО РАЗВИЛКА ВЛАДЕЛЬЦА, и она вынесена в отчёт: Google запрещает
+ * УВОДИТЬ на внешнюю оплату; описание порядка оплаты в условиях
+ * использования — серая зона, и решать, убирать ли абзац из приложения
+ * (ценой расхождения документа с сайтом), владельцу, а не прибору.
  */
-const LIVE_PAGES = [
-  { path: "/es/pricing", control: ["guest", "free", "sub"] },
-  { path: "/ru/pricing", control: ["guest", "free", "sub"] },
-  { path: "/es", control: ["guest", "free", "sub"] },
-  { path: "/ru", control: ["guest", "free", "sub"] },
-  // Кабинет: список курсов живёт на вкладке «Прогресс», и БЕЗ `?tab=` его
-  // нет в ответе вовсе — ещё одна причина, по которой старый список из
-  // четырёх адресов не поймал бы его, даже появись он там.
-  { path: "/ru/profile?tab=progress", control: ["free"] },
-  { path: "/es/profile?tab=progress", control: ["free"] },
-  { path: "/ru/profile?tab=subscription", control: ["free"] },
-  // Закрытый урок: три кнопки на вкладках. Видны и анониму, и аккаунту без
-  // подписки — а подписчику не видны вовсе, поэтому контроль назван по
-  // ролям, а не «всегда».
-  { path: "/ru/courses/a1/2", control: ["guest", "free"] },
-  { path: "/es/courses/a1/2", control: ["guest", "free"] },
-  // Словарь: подпись про C1 стояла всем, включая подписчика.
-  { path: "/ru/vocabulary", control: ["guest", "free", "sub"] },
-  { path: "/es/vocabulary", control: ["guest", "free", "sub"] },
-];
+const LEGAL_DOCUMENT_PATHS = new Set(["/es/terms", "/ru/terms"]);
 
 /** Судит ОДИН ответ по нативным правилам. Возвращает список проблем. */
-function judgeNative(html, where, labels) {
+function judgeNative(html, where, labels, { legalDocument = false } = {}) {
   const problems = [];
   const visible = visibleDocument(html);
   for (const mark of FORBIDDEN_TEXT) {
+    if (legalDocument && (mark === PRICE_MARK || mark === CASH_MARK)) continue;
     const n = countOf(visible, mark);
     if (n > 0) problems.push(`${where}: в видимом документе ${n} вхождений «${mark}»`);
   }
-  const links = pricingLinks(html);
+  const links = paymentTargetsInHtml(html);
   if (links.length > 0) {
-    problems.push(`${where}: ${links.length} ссылок на страницу цен — ${[...new Set(links)].join(", ")}`);
+    problems.push(`${where}: ${links.length} входов на платёжную поверхность — ${[...new Set(links)].join(", ")}`);
   }
   for (const label of labels) {
     const n = countOf(visible, label);
-    if (n > 0) problems.push(`${where}: ${n} вхождений подписи платной кнопки «${label}»`);
+    if (n > 0) problems.push(`${where}: ${n} вхождений подписи платной кнопки «${label.slice(0, 60)}»`);
   }
   return problems;
 }
@@ -586,66 +680,132 @@ function plantPurchaseButton(html, lang) {
   );
 }
 
+/** Очередь с ограничением одновременности: 132 адреса × 3 роли × 2
+ *  обличья — это 792 запроса, и последовательно они идут минутами. */
+async function pool(items, limit, worker) {
+  const results = [];
+  let next = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const index = next++;
+      if (index >= items.length) return;
+      results[index] = await worker(items[index], index);
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
+/**
+ * ЖИВАЯ ПОЛОВИНА ПО HTTP. Множество адресов СОБИРАЕТСЯ (см.
+ * `scripts/route-census.mjs`), рукописного списка здесь больше нет.
+ *
+ * Позитивный контроль тоже перестал быть рукописным. Раньше у КАЖДОГО
+ * адреса руками было записано, у каких ролей веб-отдача обязана нести
+ * платный вход, — и список этот старел ровно так же, как список адресов.
+ * Теперь контроль выводится из замера: по всему множеству в КАЖДОЙ роли
+ * веб-отдача обязана показать хотя бы один платный вход, иначе измеритель
+ * слеп и его ноль в оболочке не доказывает ничего. Плюс обязательная
+ * подсадка (`--plant`), которая роняет сторож в каждой из трёх ролей.
+ */
 async function live(base, plant) {
   const problems = [];
-  // Подсадка обязана уронить сторож В КАЖДОЙ РОЛИ. «Где-то сработало» — не
-  // ответ: долг 184 и состоял в том, что одну роль не судили вовсе.
   const caughtByRole = { guest: 0, free: 0, sub: 0 };
   const labels = { ru: purchaseLabels("ru"), es: purchaseLabels("es") };
+
+  const census = await collectAddresses(base);
+  console.log(
+    `  адреса собраны: ${census.patterns.length} шаблонов app router + ${census.sitemapCount} адресов карты сайта → ` +
+      `${census.addresses.length} проверяемых адресов (представители заменяют ${census.represented} адресов карты сайта)`,
+  );
+  if (census.unreachable.length) {
+    console.log(
+      `  шаблонов без живого представителя: ${census.unreachable.length} — ${census.unreachable.join(", ")} ` +
+        `(в карте сайта их нет; молча выброшены не были)`,
+    );
+  }
 
   const sessions = {
     guest: "",
     free: await makeSession(base, false),
     sub: await makeSession(base, true),
   };
+  console.log(`  роли: гость (без сессии), бесплатный аккаунт, подписчик — 3 из 3, все настоящие`);
+
+  const jobs = [];
+  for (const path of census.addresses) {
+    for (const role of Object.keys(sessions)) jobs.push({ path, role });
+  }
+
+  const webPaidByRole = { guest: 0, free: 0, sub: 0 };
+  let skipped = 0;
+  const outcomes = await pool(jobs, 8, async ({ path, role }) => {
+    const lang = path.slice(1, 3);
+    const jar = sessions[role];
+    const out = { problems: [], planted: 0, webPaid: 0, skipped: false };
+    let web;
+    try {
+      web = await fetchPage(base, path, "web", jar);
+    } catch {
+      // Не 200 — страница этой роли не открывается вовсе (админка, чужая
+      // группа). Считается и печатается, а не глотается.
+      out.skipped = true;
+      return out;
+    }
+    const legalDocument = LEGAL_DOCUMENT_PATHS.has(path);
+    out.webPaid = judgeNative(web, "контроль", labels[lang], { legalDocument }).length;
+    for (const disguise of ["token", "cookie"]) {
+      let raw;
+      try {
+        raw = await fetchPage(base, path, disguise, jar);
+      } catch {
+        continue;
+      }
+      const judged = plant ? plantPurchaseButton(raw, lang) : raw;
+      const found = judgeNative(judged, `${path} (${role}/${disguise})`, labels[lang], { legalDocument });
+      if (plant) out.planted += found.length;
+      else out.problems.push(...found);
+    }
+    return out;
+  });
+
+  for (let i = 0; i < jobs.length; i += 1) {
+    const { role } = jobs[i];
+    const out = outcomes[i];
+    if (out.skipped) {
+      skipped += 1;
+      continue;
+    }
+    webPaidByRole[role] += out.webPaid;
+    caughtByRole[role] += out.planted;
+    problems.push(...out.problems);
+  }
+
   console.log(
-    `  роли: гость (без сессии), бесплатный аккаунт, подписчик — ${Object.keys(sessions).length} из 3, все настоящие`,
+    `  запросов: ${census.addresses.length} адресов × 3 роли × 2 обличья = ${census.addresses.length * 6}; ` +
+      `не открылось этой роли: ${skipped} сочетаний адрес×роль`,
   );
 
-  for (const page of LIVE_PAGES) {
-    const lang = page.path.slice(1, 3);
-    for (const [role, jar] of Object.entries(sessions)) {
-      const web = await fetchPage(base, page.path, "web", jar);
-      const mustBeControl = page.control.includes(role);
-      const webProblems = judgeNative(web, "контроль", labels[lang]);
-      if (mustBeControl && webProblems.length === 0) {
-        problems.push(
-          `${page.path} (${role}): в ВЕБ-отдаче не нашлось НИ ОДНОГО платного входа — измеритель слеп, ` +
-            `его ноль в оболочке ничего не доказывает`,
-        );
-      }
-      for (const disguise of ["token", "cookie"]) {
-        const raw = await fetchPage(base, page.path, disguise, jar);
-        // ПОДСАДКА: в нативную отдачу вставляется кнопка покупки. Сторож
-        // обязан покраснеть в КАЖДОЙ роли — «подсадка любой кнопки покупки
-        // в любой из ролей роняет сторож».
-        const judged = plant ? plantPurchaseButton(raw, lang) : raw;
-        const where = `${page.path} (${role}/${disguise})`;
-        const found = judgeNative(judged, where, labels[lang]);
-        if (!plant) {
-          const links = pricingLinks(raw);
-          console.log(
-            `  ${page.path.padEnd(28)} ${role.padEnd(5)} ${disguise.padEnd(6)} — ` +
-              `форм: ${countOf(visibleDocument(raw), FORM_MARK)}, цен: ${countOf(visibleDocument(raw), PRICE_MARK)}, ` +
-              `ссылок на цены: ${links.length}, платных подписей: ` +
-              `${labels[lang].reduce((n, l) => n + countOf(visibleDocument(raw), l), 0)}`,
-          );
-        }
-        if (plant) caughtByRole[role] += found.length;
-        problems.push(...found);
-      }
-    }
-  }
   if (plant) {
     for (const [role, n] of Object.entries(caughtByRole)) {
       console.log(`  роль ${role.padEnd(5)} — подсадка поймана ${n} раз${n === 0 ? " (ПРОПУЩЕНО)" : ""}`);
       if (n === 0) {
-        // Пустой список = «подсадка прошла насквозь» = прогон красный.
-        // Роль, на которой подсадка не срабатывает, сторожем не судится
-        // вовсе, и зелёный по остальным двум этого не искупает.
         console.error(`  роль ${role}: подсаженная кнопка покупки НЕ уронила сторож — эта роль не судится вовсе`);
         return [];
       }
+    }
+    return problems.length ? problems : ["подсадка сработала во всех трёх ролях"];
+  }
+
+  // Встроенный позитивный контроль измерителя: в вебе платные входы
+  // обязаны находиться в каждой роли.
+  for (const [role, n] of Object.entries(webPaidByRole)) {
+    console.log(`  роль ${role.padEnd(5)} — платных входов в ВЕБ-отдаче по всему множеству: ${n}`);
+    if (n === 0) {
+      problems.push(
+        `роль ${role}: по ВСЕМУ множеству адресов веб-отдача не показала НИ ОДНОГО платного входа — ` +
+          `измеритель слеп, и его ноль в оболочке не доказывает ничего`,
+      );
     }
   }
   return problems;
@@ -699,8 +859,8 @@ async function main() {
       return 1;
     }
     console.log(
-      `check:native-payments (живая) — ${LIVE_PAGES.length} адресов × 3 роли × 2 обличья оболочки: ` +
-        `0 форм, 0 цен, 0 ссылок на цены, 0 подписей платных кнопок.`,
+      "check:native-payments (живая) — по всему собранному множеству адресов, три роли × два обличья оболочки: " +
+        "0 форм, 0 цен, 0 входов на платёжные поверхности, 0 подписей платных кнопок.",
     );
     return 0;
   }
@@ -778,6 +938,28 @@ async function main() {
         { [LEVEL_FILE]: sources[LEVEL_FILE].replace(/NativeLockedLink/g, "Link") }],
       ["реферальный блок вернулся в приложение (долг 186)",
         { [PROFILE_FILE]: sources[PROFILE_FILE].replace("{nativeShell ? null : (\n          <Card>", "{(\n          <Card>") }],
+      // ДОЛГ 191. Три подсадки на новое правило единственной точки. Первая
+      // — ровно то состояние, в котором код был до 14.09.2026.
+      ["единственная точка перестала спрашивать про оболочку (кнопка «Оформить подписку» вернулась в словарь)",
+        { [CHOKEPOINT_FILE]: read(CHOKEPOINT_FILE).replace(/useIsNativeShell/g, "неСпрашиваем") }],
+      ["в единственной точке не осталось честного объяснения — только кнопка",
+        { [CHOKEPOINT_FILE]: read(CHOKEPOINT_FILE).replace(/NativeLockedNotice/g, "НетОбъяснения") }],
+      ["режим словаря перестал ходить через единственную точку и зовёт пейвол сам",
+        { "src/components/flashcards/FlashcardsApp.tsx":
+            read("src/components/flashcards/FlashcardsApp.tsx")
+              .replace(/FreeTrialLimitBanner/g, "СвояКнопка")
+              .replace(/LockedOrEmpty/g, "СвойПустойЭкран") }],
+      // Главная подсадка захода: НОВАЯ подпись покупки, заведённая в
+      // словаре и отрисованная из файла, которого нет ни в одном списке.
+      // Рукописный список ключей её не увидел бы никогда — перепись видит.
+      ["в словарь добавлена НОВАЯ кнопка покупки и отрисована из незащищённого файла",
+        {
+          "src/dictionaries/ru.json": JSON.stringify({
+            ...JSON.parse(read("src/dictionaries/ru.json")),
+            подсадка: { купить: "Оформить подписку" },
+          }),
+          "src/components/ui/Tabs.tsx": `const подсадка = 1; const купить = 2;\n${read("src/components/ui/Tabs.tsx")}`,
+        }],
     ];
 
     let caught = 0;

@@ -10,11 +10,30 @@ import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 
 /**
- * Persistent 5-item bottom bar for a LOGGED-IN mobile user only — a
- * logged-out visitor's job on this app is to register, and a tab bar
- * competing with that CTA works against it (see the header/mobile-nav
- * plan). Renders nothing at all when logged out; MobileMenu.tsx's drawer
- * (opened via the header hamburger) is the only mobile nav in that case.
+ * Persistent 5-item bottom bar. In the BROWSER it is for a LOGGED-IN
+ * mobile user only — a logged-out visitor's job on the web is to register,
+ * and a tab bar competing with that CTA works against it (see the
+ * header/mobile-nav plan); MobileMenu.tsx's drawer (opened via the header
+ * hamburger) is the only mobile nav in that case.
+ *
+ * ВНУТРИ ПРИЛОЖЕНИЯ ПАНЕЛЬ ЕСТЬ У ВСЕХ, ВКЛЮЧАЯ ГОСТЯ — долг 192,
+ * решение владельца 14.09.2026.
+ *
+ * ПРИЧИНА, ПО КОТОРОЙ ЕЁ НЕ БЫЛО, НАЗВАНА СТРОКОЙ: `if (!isLoggedIn)
+ * return null` — правило веба, написанное до того, как у проекта
+ * появилась оболочка, и применённое безусловно. Признак `nativeShell`
+ * добавили сюда 13.09.2026 (долг 180), но только к ПРЯТАНЬЮ ПРИ
+ * ПРОКРУТКЕ; до условия самого рендера он не дошёл.
+ *
+ * Почему в приложении иначе. В вебе у гостя есть адресная строка,
+ * закладки и ссылки извне — уйти с посадочной страницы ему есть чем.
+ * В приложении ни одного из трёх нет: единственная навигация гостя —
+ * гамбургер в шапке, и большинство ПЕРВЫХ открытий приложения — именно
+ * гость. Ревьюер магазина тоже видит первым делом эту роль.
+ *
+ * «Мой профиль» у гостя ведёт на вход. Это не призыв к покупке: вход
+ * бесплатен, платных органов на нём нет ни одного, и проверяет это
+ * `check:native-payments`.
  *
  * Items are Рассказы/Курсы/Слова/Игры/Профиль, not Главная — a returning
  * logged-in user has no use for the marketing landing page: the logo in
@@ -78,17 +97,27 @@ export default function BottomNav({
     // экране постоянно, остальные четыре приходят и уходят.
     reserve: true,
     label: "BottomNav",
-    active: isLoggedIn && !keyboardOpen,
+    // Учёт занятого низа (7.185) обязан совпадать с тем, что на экране:
+    // панель, которая теперь рисуется гостю в оболочке, обязана и место
+    // резервировать. Иначе низ последней карточки уехал бы под неё.
+    active: (isLoggedIn || nativeShell) && !keyboardOpen,
   });
 
-  if (!isLoggedIn) return null;
+  if (!isLoggedIn && !nativeShell) return null;
 
   const items = [
     { href: `/${lang}/stories`, label: dict.nav.stories, icon: BookIcon },
     { href: `/${lang}/courses`, label: dict.nav.courses, icon: GraduationCapIcon },
     { href: `/${lang}/vocabulary`, label: dict.nav.vocabulary, icon: DictionaryIcon },
     { href: `/${lang}/word-games`, label: dict.nav.wordGames, icon: PuzzleIcon },
-    { href: `/${lang}/profile`, label: dict.nav.profile, icon: PersonalIcon },
+    {
+      // Гостю — на вход, а не в кабинет: кабинет без сессии всё равно
+      // отправит туда же, но лишним переходом, а на медленной сети это
+      // выглядит как «кнопка не работает».
+      href: isLoggedIn ? `/${lang}/profile` : `/${lang}/login`,
+      label: dict.nav.profile,
+      icon: PersonalIcon,
+    },
   ];
 
   return (

@@ -46,8 +46,18 @@ const INTERNALS = [
   "isSubscriptionActive",
 ];
 
-/** Дом правила: здесь внутренностям и место. */
-const HOME = new Set(["lib/subscription.ts", "lib/entitlement.ts"]);
+/** Дом правила: здесь внутренностям и место.
+ *
+ * `lib/subscription-status.ts` — тот же дом, разделённый надвое 14.09.2026:
+ * чистые правила состояния (`isSubscriptionActive`, `getDisplayStatus`,
+ * `subscriptionDateLine`) вынесены из `subscription.ts` в модуль БЕЗ
+ * серверных импортов, потому что их читает сторож
+ * `check:subscription-wording`, гоняющийся под `tsx` вне разрешения
+ * модулей Next. Определение осталось ровно одно, `subscription.ts` его
+ * перевыставляет — то есть это не третье место решения, а половина
+ * прежнего первого. Исключением такое быть не может: исключение говорит
+ * «зовут не ради доступа», а здесь доступ ровно и решается. */
+const HOME = new Set(["lib/subscription.ts", "lib/subscription-status.ts", "lib/entitlement.ts"]);
 
 /**
  * Где внутренность зовут не ради доступа, а ради управления строками.
