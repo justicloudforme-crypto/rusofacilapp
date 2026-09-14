@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
 import { canAccessLevel, getEntitlementTier } from "@/lib/entitlement";
+import { siteCensus } from "@/lib/flashcards/locked-census";
 
 // Powers the category grid + "Continue" strip on /vocabulary: total card
 // count per category (public) plus, per visitor, how many of those cards
@@ -231,10 +232,42 @@ export async function POST(request: NextRequest) {
   const totalKnown = [...resolvedKnownIds].filter((id) => validCardIds.has(id)).length;
   const hasAnyProgress = lastActivityByCardId.size > 0;
 
+  /**
+   * ЗАКРЫТОЕ ВИДНО И НА СЕТКЕ ТЕМ — 7.195, части 2 и 3.
+   *
+   * Что было. `categories` выше считается по `index`, то есть по тому, что
+   * посетитель МОЖЕТ открыть. На уровне C1 у неоплатившего это пустое
+   * множество, и все 23 плитки печатали «0 слов» — при 988 строках C1 в
+   * боевой базе. Ноль означал «ноль доступных», а человек читает «ничего
+   * нет»: ровно тот же класс промаха, что и «Нет карточек для этого
+   * фильтра» в долге 191, только на экран раньше.
+   *
+   * Что стало. Рядом с доступным едет перепись БАНКА тем же разрезом:
+   * сколько строк есть и сколько из них закрыто. Числа — разность, а не
+   * литералы (`siteCensus`), и правило выдачи у переписи то же самое,
+   * которым режет список `GET /api/flashcards`.
+   *
+   * Разрез по уровням остаётся полным намеренно: плашка на выбранном
+   * уровне обязана назвать число ЭТОГО уровня по всему банку, а не по
+   * пересечению с темой, — иначе повторилась бы подмена, из-за которой
+   * «8 слов темы Еда» было напечатано как «8 слов уровня C1».
+   *
+   * Веб этих полей не читает: их берёт только сетка внутри оболочки
+   * (`CategoryGrid`, ветка `useIsNativeShell`).
+   */
+  const census = siteCensus(wholeIndex, {
+    entitled: tier !== "free",
+    canAccessLevel: (lvl) => canAccessLevel(tier, lvl),
+    level,
+  });
+
   return NextResponse.json({
     categories,
     recent,
     totalKnown,
+    bankCategories: census.byCategory,
+    lockedByLevel: Object.fromEntries(Object.entries(census.byLevel).map(([lvl, row]) => [lvl, row.locked])),
+    lockedTotal: census.total.locked,
     // Cards this visitor can open right now, at their current tier.
     availableWords: index.length,
     // Cards that exist but need the Premium plan — 0 for a premium/staff

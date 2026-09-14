@@ -10,6 +10,7 @@ import {
   storyRequirement,
   wordGameRequirement,
   type ViewerTier,
+  type AccessRequirement,
 } from "./access-marks";
 import { isFreeWordGamePuzzle } from "./word-games/free-tier";
 
@@ -139,5 +140,56 @@ describe("mediaRequirement", () => {
     expect(mediaRequirement({ free: true })).toBe("free");
     expect(mediaRequirement({ free: false })).toBe("subscription");
     expect(mediaRequirement({})).toBe("subscription");
+  });
+});
+
+/**
+ * ПОД ПОДПИСЧИКОМ КОРОНОВАННОЕ ОТКРЫВАЕТСЯ, И ЗАМКА НА НЁМ НЕТ — 7.195, часть 4.
+ *
+ * Решение владельца 14.09.2026: 👑 — метка сорта («это премиум»), 🔒 —
+ * состояние доступа («сейчас не открыть»). Отсюда обязательство, которое
+ * можно проверить: у того, чей план покрывает премиальный слой, на
+ * коронованном материале не должно оставаться ни одного замка.
+ *
+ * Роль здесь названа точно, и это важно: «подписчик» бывает двух видов.
+ * `premium` премиальный слой покрывает, `standard` — НЕТ (C1, `curved`,
+ * `premiumOnly`, `literary` сверх пробы). Поэтому под `standard` корона на
+ * закрытом материале — не дефект, а правда о его плане, и проверка это
+ * различает вместо того, чтобы усреднять.
+ */
+describe("коронованное и роль подписчика", () => {
+  /** По одному представителю каждого коронованного вида содержимого. */
+  const CROWNED: Array<[string, AccessRequirement]> = [
+    ["карточка C1", flashcardRequirement({ level: "C1" })],
+    ["рассказ C1", storyRequirement({ level: "C1", isPremium: true, premiumOnly: false })],
+    ["рассказ premiumOnly", storyRequirement({ level: "B2", isPremium: true, premiumOnly: true })],
+    ["пазл curved", wordGameRequirement({ type: "WORD_SEARCH", level: "A1", sequence: 2, curved: true })],
+    ["пазл premiumOnly", wordGameRequirement({ type: "CROSSWORD", level: "B1", sequence: 9, premiumOnly: true })],
+    ["идиома literary", idiomRequirement({ level: "A2", category: "literary" })],
+  ];
+
+  it("все шесть видов действительно коронованы — иначе проверять нечего", () => {
+    for (const [name, requirement] of CROWNED) {
+      expect(requirement, name).toBe("premium-tier");
+    }
+    expect(CROWNED).toHaveLength(6);
+  });
+
+  it("под планом Premium замков на коронованном ноль", () => {
+    const locks = CROWNED.filter(([, requirement]) => accessMarkFor(requirement, "premium") !== null);
+    expect(locks.map(([name]) => name)).toEqual([]);
+    for (const [name, requirement] of CROWNED) {
+      expect(meetsRequirement(requirement, "premium"), name).toBe(true);
+    }
+  });
+
+  // ПОЗИТИВНЫЙ КОНТРОЛЬ к утверждению выше: у роли, чей план премиальный
+  // слой НЕ покрывает, знак обязан остаться. Ноль под `premium` без этого
+  // мог бы означать «знаков нет вовсе».
+  it("под free и standard знак на коронованном остаётся у всех шести", () => {
+    for (const tier of ["free", "standard"] as const) {
+      const marked = CROWNED.filter(([, requirement]) => accessMarkFor(requirement, tier) === "premium-tier");
+      expect(marked, tier).toHaveLength(CROWNED.length);
+    }
   });
 });

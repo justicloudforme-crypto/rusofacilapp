@@ -6,6 +6,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
 import Button from "@/components/ui/Button";
 import { routeAlternates } from "@/lib/site";
+import { loginRetryEmail } from "@/lib/login-retry";
 
 export async function generateMetadata({
   params,
@@ -33,6 +34,15 @@ export default async function LoginPage({
   const errorMessage =
     typeof query.error === "string" ? errorMessages[query.error] : undefined;
   const resetSuccess = query.reset === "success";
+  /**
+   * Адрес, набранный в прошлой попытке, — 7.195, часть 5.
+   *
+   * До правки при неверном пароле очищались ОБА поля, и адрес приходилось
+   * набирать заново (владелец на видеозаписи — три раза). Возвращается
+   * только адрес и только в форме, прошедшей проверку; пароль не
+   * возвращается никогда и не подставляется никогда.
+   */
+  const retryEmail = loginRetryEmail(query.email);
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
@@ -65,17 +75,23 @@ export default async function LoginPage({
               type="email"
               name="email"
               required
+              defaultValue={retryEmail ?? ""}
+              autoComplete="username"
               placeholder={dict.auth.emailPlaceholder}
               className="rounded-lg border border-primary/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">{dict.auth.passwordLabel}</span>
+            {/* Курсор сразу в поле пароля, когда адрес уже подставлен: иначе
+                человек после неверной попытки упирается в поле, в котором
+                править нечего. */}
             <input
               type="password"
               name="password"
               required
               autoComplete="current-password"
+              autoFocus={Boolean(retryEmail)}
               placeholder={dict.auth.passwordPlaceholder}
               className="rounded-lg border border-primary/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
             />

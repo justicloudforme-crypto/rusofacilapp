@@ -9,6 +9,10 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import type { CategorySummary } from "@/lib/flashcards/summary-client";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
+import { useIsNativeShell } from "@/lib/native-shell-client";
+import { ACCESS_MARK_ICON, flashcardRequirement } from "@/lib/access-marks";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
+import { NativeLockedNotice } from "./FreeTrialLimitBanner";
 
 export type { CategorySummary } from "@/lib/flashcards/summary-client";
 
@@ -27,6 +31,8 @@ export default function CategoryGrid({
   summary,
   hasAnyProgress = true,
   levelFilter,
+  bank = {},
+  lockedAtLevel = 0,
   onSelectCategory,
 }: {
   dict: CategoryGridDict;
@@ -42,14 +48,61 @@ export default function CategoryGrid({
   // the next-level nudge below — there's no single current level to
   // suggest moving on from.
   levelFilter?: FlashcardLevel | "all";
+  /**
+   * ПЛИТКА НЕ ИМЕЕТ ПРАВА ПИСАТЬ «0 СЛОВ», КОГДА СЛОВА ЕСТЬ — 7.195, часть 3.
+   *
+   * `summary` выше считает ДОСТУПНОЕ. На уровне C1 у неоплатившего это ноль
+   * по каждой из 23 тем, и все 23 плитки писали «0 слов» — при 988 строках
+   * C1 в боевой базе. Ноль означал «ноль доступных», а человек читает
+   * «ничего нет»: тот же класс промаха, что «Нет карточек для этого
+   * фильтра» в долге 191.
+   *
+   * Здесь — перепись БАНКА тем же разрезом (`bankCategories` в ответе
+   * `/api/flashcards/summary`): сколько строк есть и сколько из них
+   * закрыто. Читается ТОЛЬКО внутри оболочки: в вебе плитка остаётся
+   * ровно такой, какой была, и это проверяется отдельно.
+   */
+  bank?: Record<string, { bank: number; open: number; locked: number }>;
+  /** Сколько закрыто на ВЫБРАННОМ уровне по всему банку. Печатается одной
+   *  плашкой над сеткой внутри оболочки; 0 — плашки нет. */
+  lockedAtLevel?: number;
   onSelectCategory: (category: FlashcardCategory) => void;
 }) {
+  const nativeShell = useIsNativeShell();
+  // Сорт материала у выбранного уровня: C1 — план Premium (👑), остальное —
+  // подписка (🔒). Решает признак, а не эта разметка.
+  const levelRequirement =
+    levelFilter && levelFilter !== "all" ? flashcardRequirement({ level: levelFilter }) : "subscription";
+  const mark = levelRequirement === "premium-tier" ? "premium-tier" : "subscription";
+  const markLabel =
+    mark === "premium-tier" ? nativeAccessCopy(dict.locale).locked.badgePremium : nativeAccessCopy(dict.locale).locked.badge;
+
   return (
     <div>
+      {nativeShell && lockedAtLevel > 0 && (
+        <NativeLockedNotice
+          locale={dict.locale}
+          lockedTotal={lockedAtLevel}
+          level={levelFilter && levelFilter !== "all" ? levelFilter : null}
+          unit="words"
+          requirement={levelRequirement}
+        />
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {flashcardCategories.map((category) => {
           const stat = summary[category];
-          const total = stat?.total ?? 0;
+          const openHere = stat?.total ?? 0;
+          const bankHere = bank[category]?.bank ?? 0;
+          // Внутри оболочки плитка называет то, что ЕСТЬ; в вебе — то, что
+          // доступно, ровно как было. Запасное значение — доступное: если
+          // перепись банка почему-то не пришла, плитка не станет врать в
+          // другую сторону.
+          const total = nativeShell && bankHere > 0 ? bankHere : openHere;
+          // Открытое берётся у ТОЙ ЖЕ переписи, что и банк: `summary`
+          // считается другим проходом, и на стыке двух источников знак
+          // разошёлся бы с числом.
+          const openHereInBank = bank[category]?.open ?? openHere;
+          const allLocked = nativeShell && bankHere > 0 && openHereInBank === 0;
           const known = stat?.known ?? 0;
           const percent = total === 0 ? 0 : Math.round((known / total) * 100);
           const nextLevel =
@@ -63,6 +116,7 @@ export default function CategoryGrid({
               type="button"
               data-testid="category-tile"
               data-total={total}
+              data-bank-total={bankHere}
               onClick={() => {
                 hapticTap();
                 onSelectCategory(category);
@@ -96,7 +150,21 @@ export default function CategoryGrid({
                   label that genuinely needs three lines still gets them
                   rather than being cut, and `h-full` keeps its row square. */}
               <span className="min-h-11 text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
-              <span className="text-xs text-foreground/50">{plural(dict.locale, total, dict.cardCountLabel, { count: total })}</span>
+              <span className="flex flex-wrap items-center gap-1.5 text-xs text-foreground/50">
+                {plural(dict.locale, total, dict.cardCountLabel, { count: total })}
+                {/* Метка, а не орган управления: `data-access-mark` — то,
+                    по чему сторож отрисованных поверхностей отличает знак
+                    сорта от подписи кнопки покупки (7.195, часть 4). */}
+                {allLocked && (
+                  <span
+                    data-access-mark={mark}
+                    title={markLabel}
+                    className="inline-flex items-center rounded-full bg-foreground/10 px-1.5 py-0.5 text-[0.7rem] text-foreground/70"
+                  >
+                    <span aria-hidden>{ACCESS_MARK_ICON[mark]}</span>
+                  </span>
+                )}
+              </span>
               {hasAnyProgress && (
                 <ProgressBar percent={percent} tone="success" className="mt-auto w-full pt-1" ariaLabel={dict.categoryLabels[category]} />
               )}

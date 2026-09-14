@@ -102,5 +102,83 @@
     "exampleEs": "—¡Qué tal! ¿Cómo andas? —Bien, ¿y tú qué tal?",
     "synonyms": "[]",
     "antonyms": "[]"
+  },
+  {
+    "id": "e2e-fixture-card-09",
+    "category": "food",
+    "level": "C1",
+    "emoji": "🍷",
+    "russian": "послевкусие",
+    "transcription": "paslyefkúsiye",
+    "translationEs": "regusto",
+    "exampleRu": "У этого вина приятное послевкусие.",
+    "exampleEs": "Este vino tiene un regusto agradable.",
+    "synonyms": "[]",
+    "antonyms": "[]"
+  },
+  {
+    "id": "e2e-fixture-card-10",
+    "category": "food",
+    "level": "C1",
+    "emoji": "✨",
+    "russian": "изысканный",
+    "transcription": "izýskannyy",
+    "translationEs": "exquisito",
+    "exampleRu": "Ресторан предлагает изысканные блюда.",
+    "exampleEs": "El restaurante ofrece platillos exquisitos.",
+    "synonyms": "[]",
+    "antonyms": "[]"
+  },
+  {
+    "id": "e2e-fixture-card-11",
+    "category": "food",
+    "level": "C1",
+    "emoji": "🤢",
+    "russian": "прогорклый",
+    "transcription": "pragórklyy",
+    "translationEs": "rancio",
+    "exampleRu": "Масло стало прогорклым.",
+    "exampleEs": "El aceite se puso rancio.",
+    "synonyms": "[]",
+    "antonyms": "[]"
+  },
+  {
+    "id": "e2e-fixture-card-12",
+    "category": "greetings",
+    "level": "C1",
+    "emoji": "✨",
+    "russian": "искренне рад нашей встрече",
+    "transcription": "iskrínni rat náshey fstryéchi",
+    "translationEs": "un verdadero placer conocerle / encontrarnos",
+    "exampleRu": "Искренне рад нашей встрече, давно хотел с вами познакомиться.",
+    "exampleEs": "Es un verdadero placer conocerlo, hace tiempo que quería conocerlo.",
+    "synonyms": "[]",
+    "antonyms": "[]"
+  },
+  {
+    "id": "e2e-fixture-card-13",
+    "category": "greetings",
+    "level": "C1",
+    "emoji": "🤝",
+    "russian": "надеюсь на дальнейшее сотрудничество",
+    "transcription": "nadyéyus' na dal'nyéyshiye satrúdnichistva",
+    "translationEs": "espero que sigamos colaborando",
+    "exampleRu": "Надеюсь на дальнейшее сотрудничество между нашими компаниями.",
+    "exampleEs": "Espero que sigamos colaborando entre nuestras empresas.",
+    "synonyms": "[]",
+    "antonyms": "[]"
+  },
+  {
+    "id": "e2e-fixture-card-14",
+    "category": "greetings",
+    "level": "C1",
+    "emoji": "🚪",
+    "russian": "прошу простить за беспокойство",
+    "transcription": "prashú prastít' za bispakóystva",
+    "translationEs": "disculpe las molestias",
+    "exampleRu": "Прошу простить за беспокойство в столь поздний час.",
+    "exampleEs": "Disculpe las molestias a esta hora tan tardía.",
+    "synonyms": "[]",
+    "antonyms": "[]"
   }
 ]

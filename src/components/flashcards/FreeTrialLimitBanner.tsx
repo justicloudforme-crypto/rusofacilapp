@@ -7,7 +7,7 @@ import { plural } from "@/lib/plural";
 import type { Locale } from "@/i18n/config";
 // Глиф платности берётся у ПРИЗНАКА, а не пишется здесь: на этом сайте
 // он объявлен ровно в одном месте, и за этим следит `check:access-marks`.
-import { ACCESS_MARK_ICON } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, type AccessRequirement } from "@/lib/access-marks";
 
 /**
  * ЕДИНСТВЕННАЯ ТОЧКА, ГДЕ СЛОВАРЬ И ИДИОМЫ ГОВОРЯТ ПРО ЗАКРЫТОЕ.
@@ -52,38 +52,83 @@ import { ACCESS_MARK_ICON } from "@/lib/access-marks";
 export type LockedUnit = "words" | "expressions";
 
 /**
- * Честное «материал есть, и он закрыт» — замок, метка, число из базы.
+ * ДВА ЗНАКА, И КАЖДЫЙ НА СВОЁМ МЕСТЕ — 7.195, часть 4.
+ *
+ * 👑 — сорт материала: «нужен план Premium». Метка, а не орган управления:
+ * ничего не предлагает купить, никуда не ведёт, нажатием не является.
+ * 🔒 — состояние доступа: «сейчас не открыть».
+ *
+ * Признак берётся у `src/lib/access-marks.ts`, а не решается здесь: там же
+ * его спрашивают каталоги рассказов, филвордов, медиа и поиск. До правки
+ * плашка печатала 🔒 всегда — и на уровне C1, который на всех остальных
+ * экранах носит корону. Один и тот же материал носил два разных знака.
+ */
+function markOf(requirement: AccessRequirement): Exclude<AccessRequirement, "free"> {
+  return requirement === "premium-tier" ? "premium-tier" : "subscription";
+}
+
+/**
+ * Честное «материал есть, и он закрыт» — знак, метка, число из базы.
  *
  * Ни цены, ни кнопки, ни ссылки. Число приходит из ответа сервера
  * (`lockedTotal` / `lockedByLevel`), то есть является разностью между тем,
  * что лежит в базе, и тем, что отдано; литералом его сюда вписать нельзя
  * по построению.
+ *
+ * РАЗРЕЗ ЧИСЛА ЗВУЧИТ СЛОВАМИ. Если число посчитано по пересечению
+ * «уровень × тема», предложение называет и уровень, и тему: ровно из-за
+ * молчания про тему «8 слов темы Еда» было прочитано как «8 слов уровня
+ * C1» при 988 строках C1 в базе (7.195, часть 2).
  */
 export function NativeLockedNotice({
   locale,
   lockedTotal,
   level = null,
+  topic = null,
   unit,
+  requirement = "subscription",
 }: {
   locale: Locale;
   lockedTotal: number;
   level?: string | null;
+  /** Название темы человеку — уже из словаря локали, здесь не собирается. */
+  topic?: string | null;
   unit: LockedUnit;
+  /** Что нужно, чтобы это открыть. Решает, какой знак стоит на плашке. */
+  requirement?: AccessRequirement;
 }) {
   const copy = nativeAccessCopy(locale).locked;
   const items = plural(locale, lockedTotal, unit === "words" ? copy.words : copy.expressions, {
     count: lockedTotal,
   });
-  const line = (level ? copy.closedAtLevel.replace("{level}", level) : copy.closed).replace("{items}", items);
+  const template = topic
+    ? level
+      ? copy.closedAtLevelInTopic
+      : copy.closedInTopic
+    : level
+      ? copy.closedAtLevel
+      : copy.closed;
+  const line = template
+    .replace("{level}", level ?? "")
+    .replace("{topic}", topic ?? "")
+    .replace("{items}", items);
+  const mark = markOf(requirement);
+  const badge = mark === "premium-tier" ? copy.badgePremium : copy.badge;
 
   return (
-    <div className="mb-4 rounded-2xl border border-black/10 bg-foreground/[0.03] px-4 py-3 dark:border-white/30 dark:bg-white/[0.04]">
+    <div
+      data-testid="native-locked-notice"
+      className="mb-4 rounded-2xl border border-black/10 bg-foreground/[0.03] px-4 py-3 dark:border-white/30 dark:bg-white/[0.04]"
+    >
       <div className="flex items-center gap-2">
-        <span aria-hidden className="text-base leading-none">
-          {ACCESS_MARK_ICON.subscription}
-        </span>
-        <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-foreground/70">
-          {copy.badge}
+        {/* Один регистр на весь сайт: `uppercase` здесь стоял и давал
+            «ПО ПОДПИСКЕ» там, где `AccessMark` печатает «По подписке»
+            (7.195, часть 4). Метка помечена `data-access-mark`, чтобы
+            сторож отрисованных поверхностей считал её меткой, а не
+            подписью органа управления. */}
+        <span data-access-mark={mark} className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/70">
+          <span aria-hidden>{ACCESS_MARK_ICON[mark]}</span>
+          {badge}
         </span>
       </div>
       <p className="mt-2 text-sm leading-6 text-foreground/80">{line}</p>
@@ -108,18 +153,49 @@ export function LockedOrEmpty({
   emptyMessage,
   lockedHere,
   level = null,
+  topic = null,
   unit,
+  requirement = "subscription",
+  noticeAbove = false,
 }: {
   locale: Locale;
   emptyMessage: string;
   /** Сколько строк ПОД ЭТИМ ЖЕ фильтром закрыто. 0 — фильтр пуст честно. */
   lockedHere: number;
   level?: string | null;
+  topic?: string | null;
   unit: LockedUnit;
+  requirement?: AccessRequirement;
+  /**
+   * ПЛАШКА НА ЭКРАНЕ ОДНА — 7.195, часть 1.
+   *
+   * Владелец снял с живого телефона две одинаковые плашки подряд в
+   * словаре на уровне C1. Причина — не копия разметки, а два независимых
+   * условия, которые на этом экране истинны ОБА:
+   * `limited` (ответ сервера — проба, а не весь банк) рисует плашку
+   * сверху, а `!card` (клиентский фильтр уровня выбросил все десять
+   * карточек пробы) рисует её же здесь. По отдельности каждое условие
+   * верно; вместе они печатали одно и то же дважды.
+   *
+   * Правило записано в одном месте — здесь: если плашка уже стоит выше,
+   * второй нет, и пустого текста «Нет карточек для этого фильтра» тоже
+   * нет (он противоречил бы плашке над ним).
+   */
+  noticeAbove?: boolean;
 }) {
   const nativeShell = useIsNativeShell();
   if (nativeShell && lockedHere > 0) {
-    return <NativeLockedNotice locale={locale} lockedTotal={lockedHere} level={level} unit={unit} />;
+    if (noticeAbove) return null;
+    return (
+      <NativeLockedNotice
+        locale={locale}
+        lockedTotal={lockedHere}
+        level={level}
+        topic={topic}
+        unit={unit}
+        requirement={requirement}
+      />
+    );
   }
   return (
     <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
@@ -142,7 +218,10 @@ export default function FreeTrialLimitBanner({
   locale,
   lockedTotal,
   level = null,
+  topic = null,
   unit,
+  requirement = "subscription",
+  noticeAbove = false,
 }: {
   message: string;
   cta: string;
@@ -152,7 +231,25 @@ export default function FreeTrialLimitBanner({
    *  призыва; в вебе не читается вовсе. */
   lockedTotal: number;
   level?: string | null;
+  topic?: string | null;
   unit: LockedUnit;
+  requirement?: AccessRequirement;
+  /**
+   * ПЛАШКА ОДНА — НО ТОЛЬКО ВНУТРИ ОБОЛОЧКИ (7.195, часть 1).
+   *
+   * В ВЕБЕ соседние предупреждения этого компонента говорят РАЗНОЕ: общий
+   * предел пробы, ссылка на закрытое выражение, слой Premium у категории
+   * `literary`. Их три, и все три законны — первая редакция правки свела
+   * их в одну цепочку `? :` и тем убрала со страницы сообщение
+   * «…se abre con la suscripción», на котором стоит
+   * `e2e/search-deep-link.spec.ts` (поймано CI, не рассуждением).
+   *
+   * Внутри оболочки все три превращаются в ОДНУ и ту же плашку замка, и
+   * вот её повтор и был находкой владельца. Поэтому признак проверяется
+   * здесь, где уже известно, оболочка это или браузер: в вебе флаг не
+   * читается вовсе.
+   */
+  noticeAbove?: boolean;
 }) {
   // Оба хука зовутся безусловно и до любой ветки: порядок хуков не имеет
   // права зависеть от того, оболочка это или браузер.
@@ -160,7 +257,17 @@ export default function FreeTrialLimitBanner({
   const nativeShell = useIsNativeShell();
 
   if (nativeShell) {
-    return <NativeLockedNotice locale={locale} lockedTotal={lockedTotal} level={level} unit={unit} />;
+    if (noticeAbove) return null;
+    return (
+      <NativeLockedNotice
+        locale={locale}
+        lockedTotal={lockedTotal}
+        level={level}
+        topic={topic}
+        unit={unit}
+        requirement={requirement}
+      />
+    );
   }
 
   return (

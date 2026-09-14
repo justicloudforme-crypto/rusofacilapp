@@ -79,14 +79,45 @@ async function expectLeadsToObject(
   await expect(focused).toBeInViewport();
 }
 
+/**
+ * Доводка проверяется анонимом, и потому — только на том, что анониму
+ * вообще доступно.
+ *
+ * С 14.09.2026 (7.195) в фикстуре есть строки уровня **C1**: они там
+ * ради `e2e/native-dictionary-signs.spec.ts`, которому нужен экран, где
+ * материал ЕСТЬ и закрыт. Анониму уровень C1 не отдаётся вовсе
+ * (`canAccessLevel`, `entitlement.ts`), поэтому доводить его строку не до
+ * чего — и это не исключение ради зелёного, а то же правило доступа,
+ * которое проверяется прямо ниже отдельным утверждением.
+ */
+const OPEN_TO_ANONYMOUS = cardFixture.filter((card) => card.level !== "C1");
+const PREMIUM_ONLY_CARDS = cardFixture.filter((card) => card.level === "C1");
+
 test.describe("карточка словаря доводится до себя", () => {
-  for (const card of cardFixture) {
+  for (const card of OPEN_TO_ANONYMOUS) {
     test(`«${card.russian}» открывает страницу темы с этой карточкой в поле зрения`, async ({ page }) => {
       // Аноним намеренно: тематические страницы словаря A1–B2 открыты
       // всем, и доводка обязана работать без подписки.
       await expectLeadsToObject(page, "flashcard", card.russian, "card-");
     });
   }
+});
+
+test("контроль пары: карточку уровня C1 аноним в выдаче не получает вовсе", async ({ page }) => {
+  // Вторая половина к набору выше, и без неё он неполон: «доводится» у
+  // открытых строк ничего не значило бы, если бы закрытые доводились
+  // тоже. Обе выборки непусты — это проверяется первым утверждением,
+  // иначе фильтр мог бы молча выбросить всё.
+  expect(OPEN_TO_ANONYMOUS.length).toBeGreaterThan(0);
+  expect(PREMIUM_ONLY_CARDS.length).toBeGreaterThan(0);
+
+  await openSearch(page, "es");
+  await page.getByRole("searchbox").fill(PREMIUM_ONLY_CARDS[0].russian);
+  // Раздел карточек в выдаче не появляется: строки нет, а не спрятана.
+  // Локатор берётся ТЕМ ЖЕ `firstHit`, которым набор выше находит строки
+  // и нажимает на них, — иначе опечатка в селекторе дала бы зелёный тут и
+  // осталась бы незамеченной (правило 7.149).
+  await expect(firstHit(page, "flashcard")).toHaveCount(0);
 });
 
 test.describe("идиома доводится до себя", () => {

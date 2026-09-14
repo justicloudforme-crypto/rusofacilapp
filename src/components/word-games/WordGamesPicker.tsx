@@ -147,6 +147,7 @@ export default function WordGamesPicker({
               )}
               {mark && (
                 <span
+                  data-access-mark={mark}
                   aria-label={mark === "premium-tier" ? dict.premiumTierLabel : dict.subscriptionLabel}
                   title={mark === "premium-tier" ? dict.premiumTierLabel : dict.subscriptionLabel}
                   className={`absolute top-1.5 text-sm leading-none ${isCurved ? "left-5" : "left-1.5"} ${

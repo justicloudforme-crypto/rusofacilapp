@@ -1831,7 +1831,10 @@ export default async function ProfilePage({
                     метка состояния, а её магазины разрешают прямо. */}
                 {nativeShell && !entitled && (
                   <p className="-mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-foreground/60">
-                    <span className="rounded-full bg-foreground/10 px-2 py-0.5 font-semibold uppercase tracking-wide">
+                    {/* Один регистр на весь сайт (7.195, часть 4): `uppercase`
+                        здесь давал «ПО ПОДПИСКЕ» там, где `AccessMark` на
+                        соседних экранах печатает «По подписке». */}
+                    <span data-access-mark="subscription" className="rounded-full bg-foreground/10 px-2 py-0.5 font-medium">
                       {ACCESS_MARK_ICON.subscription} {nativeAccessCopy(lang).locked.badge}
                     </span>
                     <span>

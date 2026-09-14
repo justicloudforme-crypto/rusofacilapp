@@ -108,8 +108,29 @@ export interface NativeAccessCopy {
     closed: string;
     /** То же с уровнем: «…закрыто {items} уровня {level}.» */
     closedAtLevel: string;
+    /**
+     * ТЕМА НАЗЫВАЕТСЯ СЛОВАМИ, ЕСЛИ ЧИСЛО ПОСЧИТАНО ПО ТЕМЕ — 7.195, часть 2.
+     *
+     * Владелец прочитал «закрыто 8 слов уровня C1» как число уровня и
+     * назвал его неверным: строк C1 в боевой базе 988. Арифметика была
+     * права, предложение — нет. Восемь — это пересечение (тема «Еда» ×
+     * уровень C1), и в базе их ровно 8; слова «тема» в предложении не
+     * было вовсе. Разрез, по которому посчитано число, обязан звучать.
+     */
+    closedInTopic: string;
+    closedAtLevelInTopic: string;
     /** Вторая строка, одна на оба случая. */
     rest: string;
+    /**
+     * Подпись премиального слоя. 👑 — это метка СОРТА материала
+     * («нужен план Premium»), а не орган управления: она ничего не
+     * предлагает купить, никуда не ведёт и нажатием не является
+     * (`src/lib/access-marks.ts`). Значение здесь обязано совпадать знак в
+     * знак с `dict.access.premiumTierBadge`, и это проверяется тестом
+     * `native-access-copy.test.ts` — иначе на одном экране стояло бы
+     * «Только Premium», а на соседнем что-нибудь своё.
+     */
+    badgePremium: string;
     /** Метка на карточке-заглушке. Существующая подпись сайта
      *  (`dict.access.subscriptionBadge`) сюда НЕ тянется намеренно: её
      *  пришлось бы протащить через пять слоёв свойств четырёх режимов
@@ -151,7 +172,11 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       expressions: { one: "{count} expresión", few: "{count} expresiones", many: "{count} expresiones" },
       closed: "En esta versión de la aplicación hay {items} cerradas aquí.",
       closedAtLevel: "En esta versión de la aplicación hay {items} del nivel {level} cerradas.",
+      closedInTopic: "En esta versión de la aplicación hay {items} cerradas en el tema «{topic}».",
+      closedAtLevelInTopic:
+        "En esta versión de la aplicación hay {items} del nivel {level} cerradas en el tema «{topic}».",
       rest: "El resto del material funciona con normalidad.",
+      badgePremium: "Solo Premium",
       badge: "Con suscripción",
     },
     courses: {
@@ -191,7 +216,10 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       expressions: { one: "{count} выражение", few: "{count} выражения", many: "{count} выражений" },
       closed: "В этой версии приложения закрыто {items}.",
       closedAtLevel: "В этой версии приложения закрыто {items} уровня {level}.",
+      closedInTopic: "В этой версии приложения закрыто {items} в теме «{topic}».",
+      closedAtLevelInTopic: "В этой версии приложения закрыто {items} уровня {level} в теме «{topic}».",
       rest: "Остальной материал работает как обычно.",
+      badgePremium: "Только Premium",
       badge: "По подписке",
     },
     courses: {
