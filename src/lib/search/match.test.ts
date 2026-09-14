@@ -147,7 +147,7 @@ describe("платное не раздаётся, но и не прячется"
   it("в строке выдачи нет ничего, кроме названия, раздела и адреса", () => {
     const res = searchRecords(INDEX, "Тихий Дон", OPTIONS);
     const hit = res.sections[0].hits[0];
-    expect(Object.keys(hit).sort()).toEqual(["href", "id", "lockReason", "locked", "section", "subtitle", "title"]);
+    expect(Object.keys(hit).sort()).toEqual(["href", "id", "lockReason", "locked", "section", "sign", "subtitle", "title"]);
   });
 });
 

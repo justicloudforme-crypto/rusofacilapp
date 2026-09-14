@@ -35,7 +35,7 @@ import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
 import { levelSlugs, lessonsPerLevel, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
 // Глиф платности — у признака, а не литералом (`check:access-marks`).
-import { ACCESS_MARK_ICON } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, accessSignFor, lessonRequirement } from "@/lib/access-marks";
 import { isPlanId } from "@/lib/plans";
 import { SUPPORT_EMAIL } from "@/lib/support";
 import {
@@ -1834,9 +1834,25 @@ export default async function ProfilePage({
                     {/* Один регистр на весь сайт (7.195, часть 4): `uppercase`
                         здесь давал «ПО ПОДПИСКЕ» там, где `AccessMark` на
                         соседних экранах печатает «По подписке». */}
-                    <span data-access-mark="subscription" className="rounded-full bg-foreground/10 px-2 py-0.5 font-medium">
-                      {ACCESS_MARK_ICON.subscription} {nativeAccessCopy(lang).locked.badge}
-                    </span>
+                    {/* 7.196: знак приходит от ОБЩЕГО правила, а не
+                        вписан сюда строкой "subscription". Слоя Premium у
+                        уроков нет, поэтому ответ тот же — но правило
+                        теперь одно на все поверхности, и подсадка чужого
+                        знака здесь роняет сторож. */}
+                    {(() => {
+                      const sign = accessSignFor(lessonRequirement({ level, slug: "2" }), "free", {
+                        nativeShell,
+                      });
+                      if (!sign) return null;
+                      return (
+                        <span data-access-mark={sign.mark} className="rounded-full bg-foreground/10 px-2 py-0.5 font-medium">
+                          {ACCESS_MARK_ICON[sign.mark]}{" "}
+                          {sign.labelKey === "premiumTierBadge"
+                            ? nativeAccessCopy(lang).locked.badgePremium
+                            : nativeAccessCopy(lang).locked.badge}
+                        </span>
+                      );
+                    })()}
                     <span>
                       {nativeAccessCopy(lang)
                         .courses.openLine.replace("{open}", String(openLessons))

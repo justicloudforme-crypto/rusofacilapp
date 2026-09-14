@@ -7,6 +7,7 @@ import { hapticTap } from "@/lib/haptics";
 import ProgressBar from "@/components/ui/ProgressBar";
 import type { Locale } from "@/i18n/config";
 import type { PluralForms } from "@/lib/plural";
+import { useIsNativeShell } from "@/lib/native-shell-client";
 
 export interface ContinueStripDict {
   locale: Locale;
@@ -49,12 +50,23 @@ export interface ContinueStripDict {
 export default function ContinueStrip({
   dict,
   recent,
+  ready = true,
   onSelectCategory,
 }: {
   dict: ContinueStripDict;
   recent: RecentCategory[];
+  /**
+   * Свои ли числа в руках — 7.196, часть 2б.
+   *
+   * `0/0 · 0 %` в этой строке владелец снял на телефоне рядом с «0 слов»
+   * на плитках, и это один и тот же дефект: знаменателем стояло
+   * ДОСТУПНОЕ, а на уровне C1 у неоплатившего доступного ноль. Пока ответ
+   * не про текущий разрез, чисел здесь нет вовсе — серая полоса.
+   */
+  ready?: boolean;
   onSelectCategory: (category: FlashcardCategory, startCardId?: string | null) => void;
 }) {
+  const nativeShell = useIsNativeShell();
   if (recent.length === 0) return null;
 
   return (
@@ -62,7 +74,13 @@ export default function ContinueStrip({
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/50">{dict.continueTitle}</h2>
       <div className="flex flex-col gap-2">
         {recent.map((item) => {
-          const percent = item.total === 0 ? 0 : Math.round((item.known / item.total) * 100);
+          // Внутри оболочки знаменатель — то, что ЕСТЬ под этим разрезом
+          // (`bankTotal`), а не то, что отдано: «0/0» при 988 строках C1 в
+          // банке человек читает как «тут ничего нет». В вебе строка
+          // остаётся ровно такой, какой была.
+          const denominator = nativeShell && item.bankTotal > 0 ? item.bankTotal : item.total;
+          const percent = denominator === 0 ? 0 : Math.round((item.known / denominator) * 100);
+          const showNumbers = !nativeShell || ready;
           return (
             <button
               key={item.category}
@@ -89,10 +107,22 @@ export default function ContinueStrip({
                     : dict.categoryLabels[item.category]}
                 </span>
                 <span className="mt-0.5 block truncate text-xs text-foreground/60">
-                  {dict.categoryLabels[item.category]} · {item.known}/{item.total} · {percent}%
+                  {dict.categoryLabels[item.category]}
+                  {showNumbers ? (
+                    <> · {item.known}/{denominator} · {percent}%</>
+                  ) : (
+                    <>
+                      {" "}
+                      <span
+                        data-testid="continue-count-skeleton"
+                        aria-hidden
+                        className="inline-block h-3 w-20 animate-pulse rounded bg-foreground/15 align-middle"
+                      />
+                    </>
+                  )}
                 </span>
                 <ProgressBar
-                  percent={percent}
+                  percent={showNumbers ? percent : 0}
                   tone="success"
                   className="mt-1.5 w-full"
                   ariaLabel={dict.categoryLabels[item.category]}

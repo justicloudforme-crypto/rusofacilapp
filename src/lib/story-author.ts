@@ -95,15 +95,42 @@ const QUALIFIERS: Record<string, string> = {
 };
 
 /**
- * How the byline should read to a visitor of `lang`.
+ * ИСПАНСКИЙ В КОЛОНКЕ, И ОН ВИДЕН НА `/ru` — 7.196, часть 4а.
  *
- * `/ru` gets the column untouched — it is written in that locale already.
+ * Прежняя редакция этой функции исходила из того, что колонка написана
+ * по-русски, а лечить надо только `/es`. Замер 14.09.2026 по боевой базе
+ * это опровергает: из 325 значений `Story.author` **277 — испанские**
+ * («RusoFásil (relato original)»), и владелец снял их на телефоне в
+ * русском каталоге: «Автор: RusoFácil (relato original)» под русским
+ * заголовком. Русскими написаны только 48 строк — классики и народные
+ * сказки.
+ *
+ * Лечится тем же приёмом и в ту же сторону: одной таблицей, отрисовкой, в
+ * базу не записывается ничего. Таблица ровно на одно значение, потому что
+ * испанское значение в колонке ровно одно.
+ *
+ * ГРАНИЦА, КОТОРУЮ ЭТА ПРАВКА НЕ ПЕРЕСЕКАЕТ. Через эту функцию проходят
+ * ДВЕ поверхности — главная и каталог `/stories`, — и обе не заморожены.
+ * Страница самого рассказа автора отсюда не берёт, и это важно числом:
+ * `byline` входит в сличаемые поля заморозки, и у **57 из 65**
+ * замороженных страниц `/ru/stories/…` там стоит ровно
+ * «Автор: RusoFásil (relato original)». Правка подписи на самой странице
+ * рассказа уронила бы `check:frozen` на 57 адресах — она отложена до
+ * снятия заморозки 25.09.2026 (долг).
+ */
+const AUTHOR_MARKER_RU: Record<string, string> = {
+  // Написание уже нормализовано `fixBrandSpelling`, поэтому ключ один.
+  "RusoFácil (relato original)": "RusoFácil (оригинальный рассказ)",
+};
+
+/**
+ * How the byline should read to a visitor of `lang`.
  */
 export function localizeStoryAuthor(author: string, lang: Locale): string {
   // Написание имени проекта чинится ДО всего остального и в обеих
   // локалях — долг 182, см. комментарий к fixBrandSpelling выше.
   const fixed = fixBrandSpelling(author);
-  if (lang !== "es") return fixed;
+  if (lang !== "es") return AUTHOR_MARKER_RU[fixed.trim()] ?? fixed;
   const trimmed = fixed.trim();
   if (!trimmed) return fixed;
 

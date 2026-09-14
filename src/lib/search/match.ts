@@ -1,5 +1,5 @@
 import type { Locale } from "@/i18n/config";
-import { accessMarkFor, type AccessRequirement } from "@/lib/access-marks";
+import { accessMarkFor, accessSignFor, type AccessRequirement } from "@/lib/access-marks";
 import { fold, tokenize, tokensAreClose } from "./normalize";
 import {
   COLLAPSED_SECTIONS,
@@ -124,6 +124,8 @@ export interface SearchOptions {
   tier: "free" | "standard" | "premium";
   /** Куда ведёт свёрнутая строка раздела. */
   collapsedHrefs: Partial<Record<SearchSection, string>>;
+  /** Внутри оболочки знак — метка сорта; в вебе поведение прежнее. */
+  nativeShell?: boolean;
   perSectionLimit?: number;
   totalLimit?: number;
 }
@@ -139,9 +141,11 @@ export interface SearchOptions {
 function lockOf(
   record: SearchRecord,
   tier: SearchOptions["tier"],
-): { locked: boolean; lockReason?: Exclude<AccessRequirement, "free"> } {
+  nativeShell: boolean,
+): { locked: boolean; lockReason?: Exclude<AccessRequirement, "free">; sign?: Exclude<AccessRequirement, "free"> } {
   const mark = accessMarkFor(record.requires ?? "free", tier);
-  return mark ? { locked: true, lockReason: mark } : { locked: false };
+  const sign = accessSignFor(record.requires ?? "free", tier, { nativeShell })?.mark;
+  return mark ? { locked: true, lockReason: mark, sign } : { locked: false, sign };
 }
 
 export function searchRecords(
@@ -245,7 +249,7 @@ export function searchRecords(
     );
 
     const hits: SearchHit[] = ordered.slice(0, take).map((c) => {
-      const lock = lockOf(c.record, tier);
+      const lock = lockOf(c.record, tier, options.nativeShell ?? false);
       return {
         section,
         id: c.record.id,

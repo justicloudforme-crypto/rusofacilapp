@@ -10,13 +10,17 @@ import type { CategorySummary } from "@/lib/flashcards/summary-client";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
 import { useIsNativeShell } from "@/lib/native-shell-client";
-import { ACCESS_MARK_ICON, flashcardRequirement } from "@/lib/access-marks";
-import { nativeAccessCopy } from "@/lib/native-access-copy";
+import { ACCESS_MARK_ICON, accessSignFor, levelRequirement, type ViewerTier } from "@/lib/access-marks";
 import { NativeLockedNotice } from "./FreeTrialLimitBanner";
 
 export type { CategorySummary } from "@/lib/flashcards/summary-client";
 
 export interface CategoryGridDict {
+  /** Подписи знаков — из словаря сайта, одни на весь сайт
+   *  (`dict.access.*`, приезжают спредом на странице). Собирать текст
+   *  здесь нельзя: он локаль-зависим. */
+  premiumTierBadge: string;
+  subscriptionBadge: string;
   /** Carried in the dict rather than as a prop because every dict here is
    * built once, in the one component that has the locale, and passed down
    * whole. Any label that has to agree with a number needs it. */
@@ -33,6 +37,8 @@ export default function CategoryGrid({
   levelFilter,
   bank = {},
   lockedAtLevel = 0,
+  summaryLevel,
+  tier = "free",
   onSelectCategory,
 }: {
   dict: CategoryGridDict;
@@ -66,26 +72,49 @@ export default function CategoryGrid({
   /** Сколько закрыто на ВЫБРАННОМ уровне по всему банку. Печатается одной
    *  плашкой над сеткой внутри оболочки; 0 — плашки нет. */
   lockedAtLevel?: number;
+  /**
+   * РАЗРЕЗ, ПО КОТОРОМУ ПОСЧИТАНЫ ЧИСЛА В РУКАХ — 7.196, часть 2.
+   *
+   * `undefined` — ответа ещё нет; `null` — ответ про все уровни; строка —
+   * про этот уровень. Пока он не совпадает с `levelFilter`, числа на
+   * плитке ЧУЖИЕ, и печатать их нельзя: замер 14.09.2026 с задержкой
+   * ответа 3000 мс показал «266 слов» и отсутствие знака всё время
+   * ожидания на уровне C1, где в банке 8 премиальных строк.
+   */
+  summaryLevel?: string | null;
+  /** Тариф спрашивающего — приходит тем же ответом; нужен общему правилу знака. */
+  tier?: ViewerTier;
   onSelectCategory: (category: FlashcardCategory) => void;
 }) {
   const nativeShell = useIsNativeShell();
   // Сорт материала у выбранного уровня: C1 — план Premium (👑), остальное —
   // подписка (🔒). Решает признак, а не эта разметка.
-  const levelRequirement =
-    levelFilter && levelFilter !== "all" ? flashcardRequirement({ level: levelFilter }) : "subscription";
-  const mark = levelRequirement === "premium-tier" ? "premium-tier" : "subscription";
-  const markLabel =
-    mark === "premium-tier" ? nativeAccessCopy(dict.locale).locked.badgePremium : nativeAccessCopy(dict.locale).locked.badge;
+  const requirement =
+    levelFilter && levelFilter !== "all" ? levelRequirement("flashcards", levelFilter) : "subscription";
+
+  /**
+   * ЧИСЛА В РУКАХ — СВОИ ИЛИ ЧУЖИЕ (7.196, часть 2).
+   *
+   * Одно условие закрывает оба дефекта владельца сразу: «плитки печатают
+   * 0 слов, пока данные едут» и «на уровне C1 плитка пишет 266 слов».
+   * Оба — одно и то же положение дел: на экране нарисованы числа, которые
+   * к текущему разрезу не относятся. Пока ответ не про этот уровень,
+   * плитка не печатает ЧИСЛО вовсе — на его месте серая полоса.
+   *
+   * Только внутри оболочки: в вебе сетка остаётся ровно такой, какой
+   * была, и это отдельное утверждение в обоих сторожах.
+   */
+  const ready = !nativeShell || (summaryLevel !== undefined && (summaryLevel ?? "all") === levelFilter);
 
   return (
     <div>
-      {nativeShell && lockedAtLevel > 0 && (
+      {nativeShell && ready && lockedAtLevel > 0 && (
         <NativeLockedNotice
           locale={dict.locale}
           lockedTotal={lockedAtLevel}
           level={levelFilter && levelFilter !== "all" ? levelFilter : null}
           unit="words"
-          requirement={levelRequirement}
+          requirement={requirement}
         />
       )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -103,6 +132,22 @@ export default function CategoryGrid({
           // разошёлся бы с числом.
           const openHereInBank = bank[category]?.open ?? openHere;
           const allLocked = nativeShell && bankHere > 0 && openHereInBank === 0;
+          /**
+           * ЗНАК РЕШАЕТ ОБЩЕЕ ПРАВИЛО — 7.196, часть 1.
+           *
+           * До правки плитка ставила знак только там, где нельзя открыть
+           * НИЧЕГО, и знак этот выбирался здесь же выражением «C1 —
+           * корона, иначе замок». Два следствия были видны на экране: у
+           * подписчика Premium короны на C1 не было вовсе (открыто —
+           * значит молчим), а закрытость и сорт решались двумя разными
+           * строками в двух разных файлах.
+           *
+           * Теперь и то и другое решает `accessSignFor`: корона — сорт
+           * (стоит при любом тарифе), замок — состояние доступа, и
+           * закрытость плитка называет сама, потому что про бесплатную
+           * пробу знает больше, чем правило.
+           */
+          const sign = nativeShell ? accessSignFor(requirement, tier, { nativeShell, closed: allLocked }) : null;
           const known = stat?.known ?? 0;
           const percent = total === 0 ? 0 : Math.round((known / total) * 100);
           const nextLevel =
@@ -151,17 +196,30 @@ export default function CategoryGrid({
                   rather than being cut, and `h-full` keeps its row square. */}
               <span className="min-h-11 text-sm font-medium leading-snug">{dict.categoryLabels[category]}</span>
               <span className="flex flex-wrap items-center gap-1.5 text-xs text-foreground/50">
-                {plural(dict.locale, total, dict.cardCountLabel, { count: total })}
+                {/* ЗАГЛУШКА ВМЕСТО НУЛЯ (7.196, часть 2б). Пока числа
+                    чужие или их нет вовсе, на месте числа серая полоса:
+                    «0 слов» человек читает как «ничего нет», и до правки
+                    это печаталось на 23 плитках из 23 всё время, пока едет
+                    ответ. */}
+                {ready ? (
+                  plural(dict.locale, total, dict.cardCountLabel, { count: total })
+                ) : (
+                  <span
+                    data-testid="tile-count-skeleton"
+                    aria-hidden
+                    className="inline-block h-3 w-14 animate-pulse rounded bg-foreground/15 align-middle"
+                  />
+                )}
                 {/* Метка, а не орган управления: `data-access-mark` — то,
                     по чему сторож отрисованных поверхностей отличает знак
                     сорта от подписи кнопки покупки (7.195, часть 4). */}
-                {allLocked && (
+                {sign && (
                   <span
-                    data-access-mark={mark}
-                    title={markLabel}
+                    data-access-mark={sign.mark}
+                    title={sign.labelKey === "premiumTierBadge" ? dict.premiumTierBadge : dict.subscriptionBadge}
                     className="inline-flex items-center rounded-full bg-foreground/10 px-1.5 py-0.5 text-[0.7rem] text-foreground/70"
                   >
-                    <span aria-hidden>{ACCESS_MARK_ICON[mark]}</span>
+                    <span aria-hidden>{ACCESS_MARK_ICON[sign.mark]}</span>
                   </span>
                 )}
               </span>

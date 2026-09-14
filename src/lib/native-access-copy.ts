@@ -25,6 +25,26 @@ import type { PluralForms } from "@/lib/plural";
  * НИ ОДНОЙ ЦИФРЫ ЦЕНЫ И НИ ОДНОГО СПОСОБА ОПЛАТЫ В ЭТОМ ФАЙЛЕ БЫТЬ НЕ
  * МОЖЕТ — за этим следит `npm run check:native-payments`.
  */
+/**
+ * Тип материала, по которому выбирается текст окна «Этот материал
+ * закрыт» (7.196, часть 3).
+ *
+ * Список закрытый и перечислением, а не «строкой от вызывающего»: тогда
+ * сторож не мог бы проверить, что у КАЖДОГО типа свой текст в КАЖДОЙ
+ * локали, — а именно это и есть правило.
+ */
+export type LockedKind = "lesson" | "exam" | "story" | "puzzle" | "video" | "flashcard" | "idiom";
+
+export const LOCKED_KINDS: readonly LockedKind[] = [
+  "lesson",
+  "exam",
+  "story",
+  "puzzle",
+  "video",
+  "flashcard",
+  "idiom",
+];
+
 export interface NativeAccessCopy {
   /** Страница `/[lang]/pricing` внутри приложения. */
   notice: {
@@ -38,11 +58,35 @@ export interface NativeAccessCopy {
     activeBody: string;
     backCta: string;
   };
-  /** Окно, которое открывается вместо пейвола по тапу на закрытый
-   *  материал: замок, объяснение, одна кнопка «понятно». */
+  /**
+   * Окно, которое открывается вместо пейвола по тапу на закрытый
+   * материал: замок, объяснение, одна кнопка «понятно».
+   *
+   * ТЕКСТ ЗАВИСИТ ОТ ТИПА МАТЕРИАЛА — 7.196, часть 3.
+   *
+   * До этой правки текст был ОДИН на всё: «Он относится к закрытой части
+   * КУРСА. В этой версии приложения его не открыть…». Владелец снял его
+   * и по тапу на закрытый пазл филворда, и по тапу на закрытый рассказ.
+   * Ни пазл, ни рассказ курсом не являются: курс — это 120 уроков в
+   * `/courses`, а пазлы и рассказы живут рядом с ним и в него не входят.
+   * Человеку говорили неправду о том, чего он коснулся.
+   *
+   * Отсюда `body` — таблица по типу материала, а не строка. Типов семь,
+   * и седьмой (экзамен) добавлен не «на всякий случай»: закрытый экзамен
+   * открывает это же окно (`courses/[level]/page.tsx`), и без своей
+   * строки он получил бы чужую.
+   *
+   * НИ ОДИН ИЗ ЭТИХ ТЕКСТОВ НЕ ЗОВЁТ ПОКУПАТЬ. Правило 7.192 в силе:
+   * внутри оболочки нет ни цены, ни кнопки, ни ссылки на оплату, и за
+   * этим следит `check:native-payments`. `premiumNote` называет ПЛАН —
+   * это метка сорта, ровно как 👑, а не предложение его купить.
+   */
   lock: {
     heading: string;
-    body: string;
+    body: Record<LockedKind, string>;
+    /** Добавляется к тексту, когда знак — 👑: «Этот материал входит в
+     *  план Premium.» Ни цены, ни кнопки, ни ссылки. */
+    premiumNote: string;
     close: string;
   };
   /** Строка в разделе подписки личного кабинета. */
@@ -160,7 +204,23 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     },
     lock: {
       heading: "Este material está cerrado",
-      body: "Forma parte de la sección cerrada del curso. En esta versión de la aplicación no se puede abrir, y el resto del material sigue disponible como siempre.",
+      body: {
+        lesson:
+          "Esta clase forma parte de la sección cerrada del curso. En esta versión de la aplicación no se puede abrir, y el resto del curso sigue disponible como siempre.",
+        exam:
+          "Este examen de nivel está cerrado en esta versión de la aplicación. Las clases abiertas y sus ejercicios siguen funcionando con normalidad.",
+        story:
+          "Este relato está cerrado en esta versión de la aplicación. La biblioteca tiene otros relatos abiertos, con su audio, en todos los niveles.",
+        puzzle:
+          "Este juego de palabras está cerrado en esta versión de la aplicación. Quedan abiertas sopas de letras y crucigramas de los dos tipos en los demás niveles.",
+        video:
+          "Este video está cerrado en esta versión de la aplicación. La videoteca tiene otros videos y canciones abiertos, con traducción línea por línea.",
+        flashcard:
+          "Estas tarjetas de vocabulario están cerradas en esta versión de la aplicación. En cada tema hay una muestra abierta que se usa sin límite de tiempo.",
+        idiom:
+          "Estas expresiones están cerradas en esta versión de la aplicación. La lista abierta de modismos y refranes sigue funcionando como siempre.",
+      },
+      premiumNote: "Este material entra en el plan Premium.",
       close: "Entendido",
     },
     profileNote:
@@ -204,7 +264,23 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     },
     lock: {
       heading: "Этот материал закрыт",
-      body: "Он относится к закрытой части курса. В этой версии приложения его не открыть, а остальной материал работает как обычно.",
+      body: {
+        lesson:
+          "Этот урок относится к закрытой части курса. В этой версии приложения его не открыть, а остальной курс работает как обычно.",
+        exam:
+          "Этот экзамен уровня закрыт в этой версии приложения. Открытые уроки и упражнения к ним работают как обычно.",
+        story:
+          "Этот рассказ закрыт в этой версии приложения. В библиотеке остаются открытые рассказы с озвучкой — на каждом уровне.",
+        puzzle:
+          "Эта игра со словами закрыта в этой версии приложения. Открытыми остаются филворды и кроссворды обоих видов на остальных уровнях.",
+        video:
+          "Это видео закрыто в этой версии приложения. В видеотеке остаются открытые видео и песни с построчным переводом.",
+        flashcard:
+          "Эти карточки словаря закрыты в этой версии приложения. В каждой теме есть открытая выборка, и она работает без ограничения по времени.",
+        idiom:
+          "Эти выражения закрыты в этой версии приложения. Открытый список идиом и пословиц работает как обычно.",
+      },
+      premiumNote: "Этот материал входит в план Premium.",
       close: "Понятно",
     },
     profileNote:
@@ -232,4 +308,18 @@ const COPY: Record<Locale, NativeAccessCopy> = {
 
 export function nativeAccessCopy(lang: Locale): NativeAccessCopy {
   return COPY[lang];
+}
+
+/**
+ * Готовый текст окна «Этот материал закрыт» — ОДНА точка сборки на все
+ * три поверхности, где он печатается (само окно, страница рассказа,
+ * страница видео). 7.196, часть 3.
+ *
+ * Собирается здесь, а не у вызывающих, по той же причине, по какой знак
+ * собирает `accessSignFor`: три места, собирающие один текст, — это три
+ * места, где он может разойтись.
+ */
+export function nativeLockBody(lang: Locale, kind: LockedKind, premium: boolean): string {
+  const lock = COPY[lang].lock;
+  return premium ? `${lock.body[kind]} ${lock.premiumNote}` : lock.body[kind];
 }

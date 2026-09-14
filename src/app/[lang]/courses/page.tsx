@@ -48,7 +48,11 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
   // Every quantity the deck states, counted from the same sources the site
   // reads — see src/lib/intro/stats.ts. Nothing on a slide is written by
   // hand any more.
-  const introSlides = buildIntroSlides(await getIntroStats());
+  // 7.196, часть 4б: колода на языке интерфейса. PDF остаётся испанским
+  // намеренно — его обложка, подписи страниц и префикс ссылок `/es`
+  // написаны по-испански целиком, и переводить его — отдельная работа
+  // (заведено долгом).
+  const introSlides = buildIntroSlides(await getIntroStats(), lang);
   const levels = levelSlugs.map((slug) => ({
     slug,
     title: dict.courses.levels[slug].title,

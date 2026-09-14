@@ -7,7 +7,7 @@ import { plural } from "@/lib/plural";
 import type { Locale } from "@/i18n/config";
 // Глиф платности берётся у ПРИЗНАКА, а не пишется здесь: на этом сайте
 // он объявлен ровно в одном месте, и за этим следит `check:access-marks`.
-import { ACCESS_MARK_ICON, type AccessRequirement } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, accessSignFor, type AccessRequirement } from "@/lib/access-marks";
 
 /**
  * ЕДИНСТВЕННАЯ ТОЧКА, ГДЕ СЛОВАРЬ И ИДИОМЫ ГОВОРЯТ ПРО ЗАКРЫТОЕ.
@@ -63,8 +63,11 @@ export type LockedUnit = "words" | "expressions";
  * плашка печатала 🔒 всегда — и на уровне C1, который на всех остальных
  * экранах носит корону. Один и тот же материал носил два разных знака.
  */
-function markOf(requirement: AccessRequirement): Exclude<AccessRequirement, "free"> {
-  return requirement === "premium-tier" ? "premium-tier" : "subscription";
+function signOf(requirement: AccessRequirement) {
+  // Плашка печатается только там, где материал ЗАКРЫТ (её и рисуют по
+  // ненулевому числу закрытого), поэтому закрытость названа прямо, а не
+  // выведена из тарифа: тарифа этот компонент не знает и знать не должен.
+  return accessSignFor(requirement, "free", { nativeShell: true, closed: true })!;
 }
 
 /**
@@ -112,8 +115,8 @@ export function NativeLockedNotice({
     .replace("{level}", level ?? "")
     .replace("{topic}", topic ?? "")
     .replace("{items}", items);
-  const mark = markOf(requirement);
-  const badge = mark === "premium-tier" ? copy.badgePremium : copy.badge;
+  const sign = signOf(requirement);
+  const badge = sign.labelKey === "premiumTierBadge" ? copy.badgePremium : copy.badge;
 
   return (
     <div
@@ -126,8 +129,8 @@ export function NativeLockedNotice({
             (7.195, часть 4). Метка помечена `data-access-mark`, чтобы
             сторож отрисованных поверхностей считал её меткой, а не
             подписью органа управления. */}
-        <span data-access-mark={mark} className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/70">
-          <span aria-hidden>{ACCESS_MARK_ICON[mark]}</span>
+        <span data-access-mark={sign.mark} className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/70">
+          <span aria-hidden>{ACCESS_MARK_ICON[sign.mark]}</span>
           {badge}
         </span>
       </div>
@@ -275,7 +278,7 @@ export default function FreeTrialLimitBanner({
       <p className="text-sm text-foreground/80">{message}</p>
       <button
         type="button"
-        onClick={() => openPaywall(reason)}
+        onClick={() => openPaywall(reason, unit === "expressions" ? "idiom" : "flashcard")}
         className="tap shrink-0 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
       >
         {cta}

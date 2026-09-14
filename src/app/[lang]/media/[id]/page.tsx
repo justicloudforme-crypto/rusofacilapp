@@ -7,7 +7,7 @@ import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { isNativeShellRequest } from "@/lib/native-shell";
-import { nativeAccessCopy } from "@/lib/native-access-copy";
+import { nativeAccessCopy, nativeLockBody } from "@/lib/native-access-copy";
 import { getMediaGrammarLinks, getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
 import ContentInsights from "@/components/stories/ContentInsights";
 import { isPilotMedia } from "@/lib/media-pilot";
@@ -307,7 +307,11 @@ export default async function MediaDetailPage({
               библиотеку» / «Suscríbete para desbloquear toda la
               biblioteca»), и внутри оболочки его быть не может. */}
           <p className="mt-2 text-sm text-foreground/70">
-            {(await isNativeShellRequest()) ? nativeAccessCopy(lang).lock.body : dict.media.premiumLockBody}
+            {(await isNativeShellRequest())
+              ? // У медиа слоя Premium нет вовсе (`mediaRequirement`), поэтому
+                // здесь всегда обычный замок — сорт не подставляется.
+                nativeLockBody(lang, "video", false)
+              : dict.media.premiumLockBody}
           </p>
           {(await isNativeShellRequest()) ? (
             <p className="mt-4 text-sm text-foreground/60">{nativeAccessCopy(lang).closedNote}</p>

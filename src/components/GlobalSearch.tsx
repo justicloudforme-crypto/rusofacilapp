@@ -482,11 +482,20 @@ export default function GlobalSearch({
                                   09.09.2026 выдача печатала свою серую
                                   пилюлю без глифа — четвёртый вид значка
                                   платности на сайте. */}
-                              {hit.locked && hit.lockReason && (
-                                <span data-testid="search-result-locked" className="flex-shrink-0">
+                              {/* 7.196: печатается `sign` — знак материала,
+                                  а не `lockReason` — состояние доступа.
+                                  Признак `data-testid="search-result-locked"`
+                                  оставлен на своём прежнем условии
+                                  (`hit.locked`): на нём стоят пробы, и он
+                                  про доступ, а не про знак. */}
+                              {hit.sign && (
+                                <span
+                                  data-testid={hit.locked ? "search-result-locked" : "search-result-sign"}
+                                  className="flex-shrink-0"
+                                >
                                   <AccessMark
-                                    mark={hit.lockReason}
-                                    label={hit.lockReason === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                                    mark={hit.sign}
+                                    label={hit.sign === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
                                   />
                                 </span>
                               )}
