@@ -6,7 +6,7 @@ import SpeakButton from "@/components/lesson/SpeakButton";
 import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategorySummary } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
-import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
+import FreeTrialLimitBanner, { LockedOrEmpty } from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardCategory, type FlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
@@ -88,6 +88,10 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // на «Продолжить» всегда открывало ПЕРВУЮ карточку темы.
   const [pendingCardId, setPendingCardId] = useState<string | null>(null);
   const [limited, setLimited] = useState(false);
+  // Перепись закрытого из ответа сервера (долг 191). Внутри оболочки из
+  // неё берётся число, которым «Нет карточек» заменяется на «закрыто N».
+  const [lockedTotal, setLockedTotal] = useState(0);
+  const [lockedByLevel, setLockedByLevel] = useState<Record<string, number>>({});
   const router = useRouter();
   const pathname = usePathname();
 
@@ -196,10 +200,12 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     setCardsLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(category)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
-      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number> }) => {
         if (!cancelled) {
           setCategoryCards(body.cards ?? []);
           setLimited(Boolean(body.limited));
+          setLockedTotal(body.lockedTotal ?? 0);
+          setLockedByLevel(body.lockedByLevel ?? {});
         }
       })
       .catch(() => {
@@ -222,10 +228,12 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     if (levelFilter !== "all") params.set("level", levelFilter);
     fetch(`/api/flashcards?${params.toString()}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
-      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number> }) => {
         if (!cancelled) {
           setCategoryCards(body.cards ?? []);
           setLimited(Boolean(body.limited));
+          setLockedTotal(body.lockedTotal ?? 0);
+          setLockedByLevel(body.lockedByLevel ?? {});
           setIndex(0);
           setFlipped(false);
         }
@@ -253,6 +261,15 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     if (!category && !searchQuery) return [];
     return levelFilter === "all" || searchQuery ? categoryCards : categoryCards.filter((c) => c.level === levelFilter);
   }, [categoryCards, category, levelFilter, searchQuery]);
+
+  // Сколько строк закрыто ПОД ТЕКУЩИМ фильтром. Уровень накладывает
+  // браузер (см. `cards` выше), поэтому и разрез закрытого берётся по
+  // уровню: при «ВСЕ» — всё закрытое темы, при выбранном уровне — только
+  // его доля. Числа приходят с сервера разностью по базе.
+  const lockedHere = useMemo(
+    () => (levelFilter === "all" ? lockedTotal : (lockedByLevel[levelFilter] ?? 0)),
+    [levelFilter, lockedTotal, lockedByLevel],
+  );
 
   const progress = useMemo(() => {
     const total = categoryCards.length;
@@ -482,7 +499,14 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
           )}
 
           {limited && (
-            <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+            <FreeTrialLimitBanner
+              message={dict.freeTrialLimitMessage}
+              cta={dict.freeTrialLimitCta}
+              locale={dict.locale}
+              lockedTotal={lockedHere}
+              level={levelFilter === "all" ? null : levelFilter}
+              unit="words"
+            />
           )}
 
           {cardsLoading ? (
@@ -495,9 +519,13 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
               </div>
             </div>
           ) : !card ? (
-            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
-              {searchQuery ? dict.noSearchResultsMessage : dict.categoryDoneMessage}
-            </p>
+            <LockedOrEmpty
+              locale={dict.locale}
+              emptyMessage={searchQuery ? dict.noSearchResultsMessage : dict.categoryDoneMessage}
+              lockedHere={lockedHere}
+              level={levelFilter === "all" ? null : levelFilter}
+              unit="words"
+            />
           ) : (
             <>
               <p className="mb-3 text-center text-xs font-medium text-foreground/50">

@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/config";
+import type { PluralForms } from "@/lib/plural";
 
 /**
  * Тексты, которые ВНУТРИ ПРИЛОЖЕНИЯ стоят на месте всего платного
@@ -58,6 +59,63 @@ export interface NativeAccessCopy {
    * читаются как два разных положения дел.
    */
   closedNote: string;
+  /**
+   * ЗАКРЫТОЕ ВИДНО, ЧТО ОНО ЕСТЬ — долг 191, решение владельца 14.09.2026.
+   *
+   * До этой правки внутри приложения гость на уровне C1 (а после
+   * клиентской фильтрации и на B2) читал «Нет карточек для этого фильтра».
+   * Это неправда по факту: карточек 5771, из них 988 уровня C1, — они
+   * закрыты, а не отсутствуют. Человек, поставивший приложение, из такого
+   * экрана делает единственный доступный вывод: внутри ничего нет.
+   *
+   * Что магазины запрещают и что разрешают, разделено здесь буквально:
+   * запрещён ПРИЗЫВ платить мимо их биллинга, а показать, что материал
+   * СУЩЕСТВУЕТ и ЗАКРЫТ, разрешено. Поэтому ниже есть замок, число и
+   * объяснение — и нет ни цены, ни кнопки, ни ссылки, ни слова «подписка»
+   * в побудительном наклонении. За этим следит `check:native-payments`.
+   *
+   * Числа подставляются из базы (`lockedTotal`/`lockedByLevel` в ответах
+   * `/api/flashcards` и `/api/idioms`), а не вписаны литералом.
+   */
+  /**
+   * Список курсов в кабинете внутри оболочки — долг 193.
+   *
+   * ЧТО БЫЛО. Заголовок «Доступные курсы», сразу под ним «Эта часть курса
+   * закрыта в этой версии приложения», а у уровней кнопка «Начать». Три
+   * утверждения, и все три про одно и то же: доступны — закрыты — начните.
+   * Человек нажимает и упирается.
+   *
+   * ЧТО СТАЛО. Одна картина, и она поддаётся проверке числом: у каждого
+   * уровня открыт первый урок (`isFreeTrialLesson`, 1 из 30), остальные 29
+   * показаны с замком и меткой. Кнопка ведёт ровно туда, где есть
+   * открытое, и потому не врёт; призыва купить нет ни одного.
+   */
+  courses: {
+    /** Подпись под заголовком вместо «эта часть закрыта». */
+    note: string;
+    /** «Открыто: {open} из {total}» — числа из кода курса, не литералы. */
+    openLine: string;
+    /** «{locked} с замком». */
+    lockedLine: string;
+  };
+  locked: {
+    /** «{count} слово/слова/слов» — только существительное с числом. */
+    words: PluralForms;
+    /** «{count} выражение/выражения/выражений». */
+    expressions: PluralForms;
+    /** «В этой версии приложения закрыто {items}.» — {items} приходит из
+     *  `words`/`expressions` выше. */
+    closed: string;
+    /** То же с уровнем: «…закрыто {items} уровня {level}.» */
+    closedAtLevel: string;
+    /** Вторая строка, одна на оба случая. */
+    rest: string;
+    /** Метка на карточке-заглушке. Существующая подпись сайта
+     *  (`dict.access.subscriptionBadge`) сюда НЕ тянется намеренно: её
+     *  пришлось бы протащить через пять слоёв свойств четырёх режимов
+     *  словаря, а внутри оболочки текст всё равно свой. */
+    badge: string;
+  };
 }
 
 const COPY: Record<Locale, NativeAccessCopy> = {
@@ -88,6 +146,19 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       "En esta versión de la aplicación no hay compras. La parte abierta del curso funciona con normalidad.",
     closedNote:
       "Esta parte del curso está cerrada en esta versión de la aplicación.",
+    locked: {
+      words: { one: "{count} palabra", few: "{count} palabras", many: "{count} palabras" },
+      expressions: { one: "{count} expresión", few: "{count} expresiones", many: "{count} expresiones" },
+      closed: "En esta versión de la aplicación hay {items} cerradas aquí.",
+      closedAtLevel: "En esta versión de la aplicación hay {items} del nivel {level} cerradas.",
+      rest: "El resto del material funciona con normalidad.",
+      badge: "Con suscripción",
+    },
+    courses: {
+      note: "De cada nivel está abierta la primera clase. Las demás aparecen con un candado.",
+      openLine: "Abierto: {open} de {total}",
+      lockedLine: "{locked} con candado",
+    },
   },
   ru: {
     notice: {
@@ -115,6 +186,19 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       "В этой версии приложения покупок нет. Открытая часть курса работает как обычно.",
     closedNote:
       "Эта часть курса закрыта в этой версии приложения.",
+    locked: {
+      words: { one: "{count} слово", few: "{count} слова", many: "{count} слов" },
+      expressions: { one: "{count} выражение", few: "{count} выражения", many: "{count} выражений" },
+      closed: "В этой версии приложения закрыто {items}.",
+      closedAtLevel: "В этой версии приложения закрыто {items} уровня {level}.",
+      rest: "Остальной материал работает как обычно.",
+      badge: "По подписке",
+    },
+    courses: {
+      note: "На каждом уровне открыт первый урок. Остальные показаны с замком.",
+      openLine: "Открыто: {open} из {total}",
+      lockedLine: "{locked} с замком",
+    },
   },
 };
 
