@@ -90,6 +90,34 @@ const CLICK_BUDGET = 14;
 /** Сколько экранов собирается одновременно. */
 const CONCURRENCY = 8;
 
+/**
+ * ДОЛЯ РАБОТЫ, КОТОРУЮ БЕРЁТ ЭТОТ ПРОГОН — 7.196, часть 5.
+ *
+ * ЗАЧЕМ. После роста прибора в 7.194 (132 адреса × 3 роли = 396 экранов,
+ * ~2200 нажатий) шаг CI стал ходить впритык: PR #316 дошёл до 390 экранов
+ * из 396 и был срезан предохранителем на 30 минуте, а полный прогон занял
+ * 44 минуты. Красный при этом давал не дефект, а таймер, и отличить одно
+ * от другого можно было только вручную.
+ *
+ * Долю берут ПО ОСТАТКУ ОТ ДЕЛЕНИЯ индекса адреса, а не отрезком: адреса
+ * в переписи идут группами (все уроки подряд, все рассказы подряд), и
+ * отрезок дал бы одной доле только дешёвые экраны, а другой — только
+ * дорогие. Остаток перемешивает их равномерно по построению.
+ *
+ * Делится множество АДРЕСОВ, а не пар «адрес × роль»: каждая доля обязана
+ * судить все три роли, иначе роль, которой не досталось ни одного экрана,
+ * молча перестанет проверяться — ровно то, чем был долг 184.
+ */
+function parseShard(argv) {
+  const arg = argv.find((a) => a.startsWith("--shard="));
+  if (!arg) return { index: 0, total: 1 };
+  const [index, total] = arg.slice("--shard=".length).split("/").map(Number);
+  if (!Number.isInteger(index) || !Number.isInteger(total) || total < 1 || index < 1 || index > total) {
+    throw new Error(`--shard=<k>/<n> ожидает целые 1 ≤ k ≤ n, получено «${arg}»`);
+  }
+  return { index: index - 1, total };
+}
+
 /** Настоящий аккаунт — тот же способ, что у `check-native-payments`. */
 async function makeSession(base, withSubscription) {
   const email = `rendered-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
@@ -275,10 +303,23 @@ export async function main() {
   // для прогона в verify: там множество всегда собранное и полное.
   const pathsArg = process.argv.find((a) => a.startsWith("--paths="));
 
+  const shard = parseShard(process.argv);
   const census = await collectAddresses(base);
-  const addresses = pathsArg
+  const allAddresses = pathsArg
     ? pathsArg.slice("--paths=".length).split(",").filter(Boolean)
     : census.addresses.slice(0, limit);
+  const addresses =
+    shard.total === 1 ? allAddresses : allAddresses.filter((_, i) => i % shard.total === shard.index);
+  if (shard.total > 1) {
+    if (addresses.length === 0) {
+      console.error(
+        `доля ${shard.index + 1}/${shard.total} пуста: адресов всего ${allAddresses.length}. ` +
+          `Пустая доля отчиталась бы «0 нарушений», не открыв ни одного экрана.`,
+      );
+      return 1;
+    }
+    console.log(`  доля ${shard.index + 1} из ${shard.total}: ${addresses.length} адресов из ${allAddresses.length}`);
+  }
   console.log(
     `  адреса собраны: ${census.patterns.length} шаблонов app router + ${census.sitemapCount} адресов карты сайта → ` +
       `${census.addresses.length} проверяемых адресов` +

@@ -193,6 +193,20 @@ async function main() {
     // assertions, which CI's empty database cannot satisfy, and keeps
     // everything that identifies a broken render.
     const passthrough = process.argv.slice(2).filter((a) => a === "--ci");
+    /**
+     * ТЯЖЁЛАЯ ПЕРЕПИСЬ ПЛАТНЫХ ПОВЕРХНОСТЕЙ УЕЗЖАЕТ В СВОЁ ЗАДАНИЕ — 7.196, ч. 5.
+     *
+     * Она одна занимает ~38 минут из 44 у этого шага (132 адреса × 3 роли,
+     * ~2200 нажатий), и из-за неё шаг ходил впритык к предохранителю: PR
+     * #316 был срезан на 390 экранах из 396. В CI её теперь гоняет
+     * отдельное задание из трёх долей, идущих параллельно
+     * (`scripts/verify-purchase-surfaces.mjs`), и этот флаг говорит, что
+     * повторять её здесь незачем.
+     *
+     * ЛОКАЛЬНЫЙ `npm run verify` флага не передаёт и гоняет всё целиком:
+     * там параллелить не по чему, а полнота важнее минут.
+     */
+    const skipPurchases = process.argv.includes("--no-purchase-census");
     const run = spawnSync(
       process.execPath,
       ["scripts/check-rendered-surface.mjs", `--base=${BASE}`, "--control", ...passthrough],
@@ -293,21 +307,25 @@ async function main() {
         // вовсе: её рисует клиент после `/api/flashcards` и после одного
         // нажатия на плитку темы. Замер: 0 платных органов на открытии, 1
         // после нажатия.
-        renderedPurchases = spawnSync(
-          process.execPath,
-          ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`],
-          { stdio: "inherit" }
-        );
+        renderedPurchases = skipPurchases
+          ? { status: 0 }
+          : spawnSync(
+              process.execPath,
+              ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`],
+              { stdio: "inherit" }
+            );
         // Обязательная вторая половина: кнопка покупки БЕЗ АДРЕСА,
         // подсаженная в уже отрисованный документ, обязана уронить прибор
         // в каждой из трёх ролей. Гоняется по короткому срезу адресов —
         // подсадка живёт на КАЖДОМ экране, и платить за неё 132 адресами
         // значит платить за одно и то же.
-        renderedPurchasesPlant = spawnSync(
-          process.execPath,
-          ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--plant", "--limit=4"],
-          { stdio: "inherit" }
-        );
+        renderedPurchasesPlant = skipPurchases
+          ? { status: 0 }
+          : spawnSync(
+              process.execPath,
+              ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--plant", "--limit=4"],
+              { stdio: "inherit" }
+            );
         // ПЯТАЯ И ШЕСТАЯ на том же сервере ролей — 7.196, часть 1: знак
         // платного на отрисованном экране сверяется с ОБЩИМ правилом
         // (`accessSignFor`), а подсадка «замок вместо короны и наоборот»

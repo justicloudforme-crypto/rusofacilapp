@@ -83,9 +83,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -93,7 +93,7 @@ jobs:
       # JDK 21: AGP 8.13 (android/build.gradle) требует 17+, Capacitor 8
       # собран под 21. `cache: gradle` кэширует ~/.gradle между прогонами —
       # именно он превращает вторую сборку из минут в десятки секунд.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -315,7 +315,7 @@ jobs:
 
       - name: Выложить APK артефактом
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: app-debug-apk
           path: |

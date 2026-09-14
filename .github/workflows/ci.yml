@@ -23,9 +23,9 @@ jobs:
     name: Lint, typecheck, build, unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -644,9 +644,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -752,11 +752,27 @@ jobs:
       # 0 находок, подсадка поймана во всех трёх ролях: 428/420/420).
       # Красный дал не дефект, а потолок.
       #
-      # 30, а не «побольше»: замеренная цена шага после правки — около
-      # 16 минут (6 у прежних проверок, 10 у браузерного обхода), и
-      # предохранитель по-прежнему предохранитель, а не отсутствие
-      # предохранителя. Урок 29.08.2026 (56 минут висящего шага) он
-      # закрывает так же, как закрывал на десяти.
+      # 7.196, ЧАСТЬ 5: ТЯЖЁЛАЯ ПОЛОВИНА УЕХАЛА В СВОЁ ЗАДАНИЕ.
+      #
+      # Оценка «около 16 минут» из 7.194 не подтвердилась. PR #316 дошёл
+      # до 390 экранов из 396 и был срезан предохранителем на 30-й минуте,
+      # а полный прогон этого шага занял 44 минуты. Красный при этом давал
+      # не дефект, а таймер — и отличить одно от другого без ручного
+      # перезапуска было нельзя. Шаг, который роняет случайные PR, стоит
+      # дороже минут, которые он экономит.
+      #
+      # Поэтому перепись платных поверхностей (132 адреса × 3 роли, ~2200
+      # нажатий — ~38 минут из 44) здесь больше не гоняется: её берёт
+      # задание `purchase-surfaces` ниже, тремя долями на трёх бегунках
+      # одновременно. Работа не уменьшена ни на один экран.
+      #
+      # Здесь остаётся всё остальное — отрисованная поверхность, вёрстка,
+      # внутренние ссылки, живая половина 404, прижатые к низу слои и
+      # живая половина `check:native-payments`.
+      #
+      # Предохранитель оставлен на 30 минутах при ожидаемой цене остатка
+      # около 6 минут: он и должен быть запасом, а не потолком. Урок
+      # 29.08.2026 (56 минут висящего шага) он закрывает так же.
       - name: Rendered surface + прижатые к низу слои (real browser, after hydration)
         if: github.event.pull_request.base.ref == 'main' || github.ref == 'refs/heads/main'
         timeout-minutes: 30
@@ -764,8 +780,80 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+  # ====================================================================
+  # ПЕРЕПИСЬ ПЛАТНЫХ ПОВЕРХНОСТЕЙ — ТРЕМЯ ДОЛЯМИ ПАРАЛЛЕЛЬНО (7.196, ч. 5)
+  # ====================================================================
+  #
+  # ЗАЧЕМ ОТДЕЛЬНОЕ ЗАДАНИЕ. До 14.09.2026 эта перепись жила внутри шага
+  # «Rendered surface» задания `e2e`, и после роста прибора в 7.194 она
+  # перестала помещаться: PR #316 срезан предохранителем на 390 экранах из
+  # 396, полный прогон — 44 минуты. Красный означал таймер, а не находку.
+  #
+  # Работа не уменьшена ни на один экран: те же 132 адреса × 3 роли и те
+  # же ~2200 нажатий, только разделённые по остатку от деления на три и
+  # идущие на трёх бегунках сразу. Стенные часы делятся примерно втрое;
+  # минут CI тратится примерно столько же плюс тройная подготовка.
+  # Решение владельца: время захода дороже минут CI.
+  #
+  # ПОЧЕМУ ДОЛИ ПО ОСТАТКУ, А НЕ ОТРЕЗКАМИ — см. `parseShard` в
+  # scripts/check-rendered-purchase-surfaces.mjs: адреса в переписи идут
+  # группами (все уроки подряд, все рассказы подряд), и отрезок отдал бы
+  # одной доле только дешёвые экраны, а другой — только дорогие.
+  #
+  # ПОЧЕМУ `fail-fast: false`: доля, упавшая по находке, не должна гасить
+  # две другие — иначе в отчёте будет треть правды вместо целой.
+  purchase-surfaces:
+    name: Платные поверхности (доля ${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event.pull_request.base.ref == 'main' || github.ref == 'refs/heads/main'
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Push database schema
+        run: npx prisma db push
+
+      # Те же две фикстуры, что у задания e2e: без них перепись адресов
+      # соберёт меньше страниц с содержимым, и «0 платных органов» было бы
+      # доказано отсутствием страниц.
+      - name: Seed the e2e content fixture
+        run: npx tsx scripts/seed-e2e-fixture.mjs
+
+      - name: Seed the render fixture
+        timeout-minutes: 5
+        run: npx tsx scripts/seed-ci-render-fixture.mjs
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      # Предохранитель с запасом: замеренная цена целой переписи — 44
+      # минуты, доля — около трети, то есть ~15. 45 минут оставляют втрое
+      # больше, чем нужно, и при этом остаются предохранителем: шаг,
+      # который ВИСИТ (урок 29.08.2026), стоит минуты, а не час.
+      - name: Перепись платных поверхностей — доля ${{ matrix.shard }} из 3
+        timeout-minutes: 45
+        run: npm run check:purchase-surfaces:shard -- --shard=${{ matrix.shard }}/3
