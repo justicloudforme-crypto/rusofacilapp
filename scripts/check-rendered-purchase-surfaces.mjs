@@ -88,7 +88,7 @@ const CLICK_SELECTOR = "main button:not([disabled]):not([href])";
 /** Сколько органов управления нажимается на одном экране. */
 const CLICK_BUDGET = 14;
 /** Сколько экранов собирается одновременно. */
-const CONCURRENCY = 6;
+const CONCURRENCY = 8;
 
 /** Настоящий аккаунт — тот же способ, что у `check-native-payments`. */
 async function makeSession(base, withSubscription) {
@@ -158,7 +158,7 @@ async function screen(context, base, path, role, plant) {
   try {
     const response = await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
     if (!response || response.status() >= 400) return { problems, clicks, opened: false };
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(450);
     if (plant) {
       // ПОДСАДКА: кнопка покупки, вставленная в уже отрисованный документ.
       // Именно кнопка без адреса — та самая форма, которой был написан
@@ -192,7 +192,7 @@ async function screen(context, base, path, role, plant) {
         continue; // невидимый, перекрытый, исчезнувший — не наше дело
       }
       clicks += 1;
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(350);
       // Окно, открытое нажатием, закрывается: иначе оно перекроет все
       // следующие органы, и остаток бюджета уйдёт в пустоту.
       await page.keyboard.press("Escape").catch(() => {});
