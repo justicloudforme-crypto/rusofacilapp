@@ -1,39 +1,77 @@
-// ВНУТРИ ПРИЛОЖЕНИЯ ПЛАТНЫХ ПОВЕРХНОСТЕЙ НЕТ ВОВСЕ — ДОЛГИ 79 И 179.
+// ВНУТРИ ПРИЛОЖЕНИЯ ПЛАТНЫХ ПОВЕРХНОСТЕЙ НЕТ ВОВСЕ — ДОЛГИ 79, 179 И 184.
 //
 // Что сторожится. Google Play Payments и App Store 3.1.1 запрещают уводить
 // на внешнюю оплату цифрового содержимого, и это отклонение на ревью, а не
 // замечание. Решение владельца от 13.09.2026 для первой подачи: внутри
 // оболочки платных кнопок нет НИ ОДНОЙ — ни веб-кассы, ни витрины
-// магазина, ни цен, ни способов оплаты. Платный материал остаётся
-// закрытым, и человеку честно сказано, что он закрыт.
+// магазина, ни цен, ни способов оплаты, ни призыва «смотреть тарифы».
+// Платный материал остаётся закрытым, и человеку честно сказано, что он
+// закрыт.
 //
-// ПОЧЕМУ СТОРОЖ ПЕРЕПИСАН, ХОТЯ ДОЛГ 79 ЧИСЛИЛСЯ ЗАКРЫТЫМ. Владелец снял
-// на живом POCO X6 Pro (сборка 7191) полную веб-страницу цен ВНУТРИ
-// приложения: переключатель «Карта / Наличные», инструкция OXXO, рабочая
-// кнопка «Оплатить наличными». Прежний сторож этого увидеть не мог по
-// построению: он спрашивал сервер ОДНИМ способом — запросом с токеном в
-// User-Agent, — а телефон ходит ещё и вторым, которого сторож не знал.
-// Переходы в приложении обслуживает наш service worker, и запрос, который
-// он делает от имени страницы, токена не несёт вовсе (разбор — в шапке
-// `src/lib/native-shell.ts`). Поэтому здесь теперь ТРИ обличья запроса, а
-// не два, и третье — кука без токена — воспроизводит ровно тот случай,
-// который увидел владелец.
+// ========================================================================
+// ПОЧЕМУ СТОРОЖ ПЕРЕПИСАН ВТОРОЙ РАЗ ЗА ДВА ДНЯ.
+// ========================================================================
 //
+// 12.09 (7.183) он спрашивал сервер ОДНИМ способом — запросом с токеном в
+// User-Agent, — и не знал, что переходы в приложении делает service worker,
+// чей запрос токена не несёт. 13.09 (7.192) обличий стало ТРИ, и это
+// закрыло ту дыру целиком.
+//
+// И всё-таки владелец снял на живом телефоне, аккаунтом БЕЗ подписки, три
+// поверхности с кнопкой «Смотреть тарифы»: список курсов в кабинете и три
+// закрытые вкладки урока. Ветка на оболочку опять была ни при чём. Не
+// хватало сторожу ТРЁХ вещей сразу, и каждая мерится числом:
+//
+//   1. РОЛЬ. Живая половина делала 4 адреса × 3 обличья = 12 запросов, и
+//      НИ ОДИН не нёс сессии: все двенадцать шли анонимом. Из трёх ролей
+//      меряли одну, из двух ролей с учётной записью — НОЛЬ. Кабинет без
+//      сессии вообще не показывает ни списка курсов, ни кнопок: аноним
+//      видел 0 там, где аккаунт без подписки видит 4.
+//
+//   2. АДРЕС. Из трёх поверхностей, которые снял владелец, в списке из
+//      четырёх адресов не было НИ ОДНОЙ. Закрытый урок при этом показывал
+//      свои три кнопки даже АНОНИМУ — то есть две поверхности из трёх
+//      поймались бы и старой ролью, будь адрес в списке.
+//
+//   3. СЧЁТ ССЫЛОК. Ссылки считались буквальным `href="/ru/pricing"` — с
+//      закрывающей кавычкой. Все ссылки с «куда вернуться» выглядят как
+//      `href="/ru/pricing?next=…"`, и их этот счётчик видел как НОЛЬ: на
+//      закрытом уроке настоящих ссылок на цены 3, измеритель показывал 0.
+//
+//   И четвёртая, в статической половине: правило было «файл упоминает
+//   isNativeShellRequest». `profile/page.tsx` упоминал (ветка стояла у
+//   кнопки подписки), а вторая кнопка в том же файле, семьюстами строк
+//   ниже, ветки не имела вовсе — правило по файлу такого не видит по
+//   построению.
+//
+// ========================================================================
 // ДВЕ ПОЛОВИНЫ, И ОБЕ ОБЯЗАТЕЛЬНЫ.
+// ========================================================================
 //
-//   1. ЖИВАЯ (`--base=http://localhost:3123`) — берёт ОТДАЧУ страниц в
-//      трёх обличьях: веб, оболочка по токену, оболочка по куке. Позитивный
-//      контроль встроен и не отключается: веб-отдача обязана СОДЕРЖАТЬ то,
-//      чего в двух других быть не может. Проверка, которая не видит кассу
-//      там, где она заведомо есть, зелёная ни о чём не говорит (ПРАВИЛА
-//      ЗАМЕРА 4.1). Гоняется из scripts/verify-rendered.mjs.
+//   1. ЖИВАЯ (`--base=…`) — берёт ОТДАЧУ страниц в ТРЁХ РОЛЯХ (гость,
+//      бесплатный аккаунт, подписчик) × ТРЁХ ОБЛИЧЬЯХ запроса (веб,
+//      оболочка по токену, оболочка по куке). Позитивных контролей два, и
+//      оба не отключаются:
+//        • веб-отдача обязана СОДЕРЖАТЬ то, чего в двух других быть не
+//          может, — иначе измеритель слеп (ПРАВИЛА ЗАМЕРА 4.1);
+//        • `--plant` подсаживает кнопку покупки в нативную отдачу КАЖДОЙ
+//          роли: не упавший на этом сторож не умеет судить эту роль вовсе.
+//      Роли настоящие: аккаунты заводятся через `/api/auth/register`,
+//      подписка выдаётся через `/api/test/grant-subscription`. Поэтому
+//      живой половине нужен сервер, поднятый с `E2E_TEST_SEED=1` (его
+//      поднимает `scripts/verify-rendered.mjs` отдельно от общего): без
+//      этого флага сессионная кука уходит с `Secure` и по http не
+//      возвращается вовсе — то есть «вошли» не получилось бы ни у кого.
+//      Отказ завести роль — это ОТКАЗ сторожа, а не тихий пропуск роли:
+//      именно тихий пропуск и стоил долга 184.
 //
 //   2. СТАТИЧЕСКАЯ (без `--base`) — по исходникам, дешёвая, стоит в
 //      `verify` и в `ci.yml` на каждом коммите. Она отвечает на вопрос, на
 //      который живая ответить не может: жив ли САМ механизм — оба признака
 //      оболочки, кука в middleware, запрет кеша у воркера, замок вместо
-//      пейвола. Разбор идёт ПОСЛЕ вычёркивания комментариев: на «ветку
-//      закомментировали» стоит отдельная подсадка (класс 7.182).
+//      пейвола, ветка у каждой из поверхностей поимённо. Разбор идёт ПОСЛЕ
+//      вычёркивания комментариев: на «ветку закомментировали» стоит
+//      отдельная подсадка (класс 7.182).
 //
 //   node scripts/check-native-payments.mjs                     # статическая
 //   node scripts/check-native-payments.mjs --plant             # её контроль
@@ -56,10 +94,27 @@ const HOME_FILE = "src/app/[lang]/page.tsx";
 const NAVBAR_FILE = "src/components/Navbar.tsx";
 const PROFILE_FILE = "src/app/[lang]/profile/page.tsx";
 const CAPACITOR_FILE = "capacitor.config.ts";
+// Поверхности, добавленные долгом 184 (все — с кнопкой покупки, которую
+// заход 7.192 не увидел) и долгами 186–188.
+const LESSON_VIEW_FILE = "src/components/lesson/LessonView.tsx";
+const LESSON_PAGE_FILE = "src/app/[lang]/courses/[level]/[lesson]/page.tsx";
+const LEVEL_FILE = "src/app/[lang]/courses/[level]/page.tsx";
+const STORY_FILE = "src/app/[lang]/stories/[id]/page.tsx";
+const MEDIA_FILE = "src/app/[lang]/media/[id]/page.tsx";
+const VOCAB_FILE = "src/app/[lang]/vocabulary/page.tsx";
+const VOCAB_CAT_FILE = "src/app/[lang]/vocabulary/[categoria]/page.tsx";
+const EXAM_FILE = "src/app/[lang]/courses/[level]/exam/[examSlug]/page.tsx";
+const WORD_GAME_FILE = "src/app/[lang]/word-games/[type]/[level]/[sequence]/page.tsx";
+const SEARCH_API_FILE = "src/app/api/search/route.ts";
+const SEARCH_UI_FILE = "src/components/GlobalSearch.tsx";
+const FOOTER_FILE = "src/components/Footer.tsx";
 
 const SOURCES = [
   PAGE_FILE, NOTICE_FILE, COPY_FILE, SHELL_FILE, TOKEN_FILE, PROXY_FILE, SW_FILE,
   PAYWALL_FILE, CHECKOUT_FILE, HOME_FILE, NAVBAR_FILE, PROFILE_FILE, CAPACITOR_FILE,
+  LESSON_VIEW_FILE, LESSON_PAGE_FILE, LEVEL_FILE, STORY_FILE, MEDIA_FILE,
+  VOCAB_FILE, VOCAB_CAT_FILE, EXAM_FILE, WORD_GAME_FILE, SEARCH_API_FILE,
+  SEARCH_UI_FILE, FOOTER_FILE,
 ];
 
 // Строки, которых в нативной отдаче быть не должно.
@@ -67,17 +122,72 @@ const SOURCES = [
 //   `stripe.com`             — домен внешнего платёжного сервиса;
 //   `MXN`                    — цена; внутри приложения цен нет вовсе;
 //   `OXXO`                   — сторонний способ оплаты, названный по имени;
-//   `/pricing`               — вход на страницу цен.
+//   `/pricing`               — вход на страницу цен, в любом виде.
 const FORM_MARK = 'action="/api/checkout"';
 const STRIPE_MARK = "stripe.com";
 const PRICE_MARK = "MXN";
 const CASH_MARK = "OXXO";
+const PRICING_PATH_MARK = "/pricing";
+
+const FORBIDDEN_TEXT = [FORM_MARK, STRIPE_MARK, PRICE_MARK, CASH_MARK, PRICING_PATH_MARK];
 
 const TOKEN = "RFNativeShell";
 const COOKIE = "rf_native_shell";
 
 function read(path) {
   return readFileSync(path, "utf8");
+}
+
+/**
+ * ПОДПИСИ ПЛАТНЫХ ОРГАНОВ УПРАВЛЕНИЯ — ИЗ САМИХ СЛОВАРЕЙ, А НЕ СПИСКОМ
+ * ЗДЕСЬ.
+ *
+ * Списка, переписанного руками, хватило бы ровно до первой правки текста:
+ * «Смотреть тарифы» → «Открыть тарифы», и сторож молчит на той же самой
+ * кнопке. Читая строку по её КЛЮЧУ, он ловит кнопку, как бы её ни
+ * переименовали, и падает сам, если ключ исчез, — то есть отказывается
+ * судить вслепую.
+ */
+const CTA_KEYS = [
+  ["account", "seePricing"],
+  ["vocabulary", "c1PremiumCta"],
+  ["stories", "premiumLockCta"],
+  ["media", "premiumLockCta"],
+  ["lesson", "locked", "cta"],
+  ["profile", "profileUpsellFree"],
+  ["profile", "profileUpsellToAnnual"],
+  ["profile", "profileUpsellToPremium"],
+  ["profile", "subscribeButton"],
+  ["profile", "renewButton"],
+  ["profile", "lockedNotice"],
+  ["profile", "referralHeading"],
+  ["home", "pricingStripCta"],
+  ["footer", "appLink"],
+];
+
+function dictValue(dict, path) {
+  let node = dict;
+  for (const key of path) {
+    if (node == null || typeof node !== "object") return null;
+    node = node[key];
+  }
+  return typeof node === "string" ? node : null;
+}
+
+function purchaseLabels(locale) {
+  const dict = JSON.parse(read(`src/dictionaries/${locale}.json`));
+  const labels = [];
+  for (const path of CTA_KEYS) {
+    const value = dictValue(dict, path);
+    if (!value) {
+      throw new Error(
+        `сторож и словарь разошлись: в src/dictionaries/${locale}.json нет строки ${path.join(".")}. ` +
+          `Пока ключ не поправлен, судить нечем — молчать об этом нельзя.`,
+      );
+    }
+    labels.push(value);
+  }
+  return labels;
 }
 
 /** Только комментарии, строки на месте: часть правил спрашивает именно про
@@ -141,6 +251,12 @@ function judgeSources(sources) {
       problems.push(`${file}: содержит кнопку — внутри приложения платных органов управления нет ни одного`);
     }
   }
+  // Строка, которая стоит на месте кнопок покупки на самих страницах
+  // (долг 184). Без неё карточка закрытого материала осталась бы без
+  // единого слова о том, почему она закрыта.
+  if (!text[COPY_FILE].includes("closedNote")) {
+    problems.push(`${COPY_FILE}: нет строки closedNote — заменить кнопку покупки на объяснение нечем`);
+  }
 
   // --- 3. признаков оболочки ДВА, и второй — кука -------------------------
   if (!live[SHELL_FILE].includes("userAgentIsNativeShell")) {
@@ -202,15 +318,117 @@ function judgeSources(sources) {
     problems.push(`${CHECKOUT_FILE}: маршрут кассы не отказывает оболочке — скрытый орган не закрытая дверь`);
   }
 
-  // --- 8. остальные платные поверхности ветвятся --------------------------
+  // --- 8. КАЖДАЯ платная поверхность ветвится, И КАЖДЫЙ ВХОД В НЕЙ --------
+  //
+  // Правило «файл упоминает isNativeShellRequest» тут было и оказалось
+  // недостаточным по построению: в `profile/page.tsx` ветка стояла у одной
+  // кнопки, а вторая, семьюстами строк ниже, осталась без неё, и файл
+  // считался чистым (долг 184). Поэтому спрашивается не файл, а КАЖДОЕ
+  // место, где в исходнике появляется вход на страницу цен: у него обязана
+  // быть ветка на оболочку в пределах видимости — своя или общая.
+  const PRICING_ENTRY = /\/\$\{lang\}\/pricing|\/es\/pricing|\/ru\/pricing/;
+  // `nativeAccessCopy` и `NativeLockedLink` — тоже признаки ветки: обе
+  // существуют ТОЛЬКО внутри оболочки и нигде больше не зовутся.
+  const BRANCH_TOKEN = /isNativeShellRequest|nativeShell|nativeAccessCopy|NativeLockedLink|lockedTarget/;
   for (const [file, what] of [
     [HOME_FILE, "главная (плитка OXXO и полоса цен)"],
     [NAVBAR_FILE, "шапка и мобильное меню (ссылка «Цены»)"],
-    [PROFILE_FILE, "личный кабинет (кнопка подписки и апсейлы)"],
+    [PROFILE_FILE, "личный кабинет (кнопка подписки, список курсов, апсейлы)"],
+    [LESSON_PAGE_FILE, "страница урока (закрытые вкладки)"],
+    [LEVEL_FILE, "список уроков уровня (закрытая плитка)"],
+    [STORY_FILE, "страница рассказа (замок)"],
+    [MEDIA_FILE, "страница видео (замок)"],
+    [VOCAB_FILE, "словарь (подпись про C1)"],
+    [VOCAB_CAT_FILE, "категория словаря (подпись про C1)"],
+    [EXAM_FILE, "экзамен (увод закрытого)"],
+    [WORD_GAME_FILE, "филворд (увод закрытого)"],
+    [SEARCH_API_FILE, "выдача поиска (запись «Цены»)"],
+    [FOOTER_FILE, "подвал (ссылка «Скачать приложение»)"],
   ]) {
-    if (!live[file].includes("isNativeShellRequest")) {
+    const source = live[file];
+    if (!source.includes("isNativeShellRequest") && !source.includes("nativeShell")) {
       problems.push(`${file}: ${what} не спрашивает про оболочку — платный вход остался на месте`);
+      continue;
     }
+    // Каждая строка исходника со входом на страницу цен: сколько их всего
+    // и сколько из них стоит рядом с веткой. «Рядом» — в пределах того же
+    // выражения: двадцать строк вверх от входа. Больше не берём намеренно,
+    // иначе ветка у соседней кнопки снова закрывала бы чужую.
+    //
+    // Читается `text`, а не `live`: адрес страницы цен — это СТРОКОВЫЙ
+    // литерал, и `stripCommentsAndStrings` вычёркивает его вместе со всеми
+    // остальными строками. На `live` правило не находило ни одного входа
+    // вовсе и молчало на подсадке «список курсов снова ведёт на цены» —
+    // поймано первым же прогоном --plant. Комментарии при этом вычеркнуты,
+    // так что «ветку закомментировали» это правило по-прежнему видит.
+    // КАЖДЫЙ вход на страницу цен обязан стоять внутри выражения,
+    // которое спрашивает про оболочку. Проверяется НАСТОЯЩЕЙ вложенностью,
+    // а не расстоянием в строках и не отступом: и то и другое пробовали, и
+    // оба врут. Окно в двадцать строк ругалось на здоровую полосу цен
+    // главной (там между веткой и ссылкой лежат 42 строки карточек), а
+    // отступ — на `{!nativeShell && (` и `<section …>`, написанные на
+    // одном уровне.
+    //
+    // Разбор идёт НАЗАД по символам и считает незакрытые скобки: каждая
+    // скобка, из которой мы вышли, — это объемлющее выражение, и у него
+    // спрашивается голова (что написано перед скобкой) и начало тела (что
+    // сразу после неё). Ветка может стоять и там и там: `{!nativeShell && (`
+    // — перед, `{nativeShell ? null : (` — после.
+    const body = text[file];
+    const WINDOW = 140;
+    const STATEMENT_WINDOW = 320;
+    let at = -1;
+    while ((at = body.indexOf("/pricing", at + 1)) !== -1) {
+      const lineStart = body.lastIndexOf("\n", at) + 1;
+      const lineEnd = body.indexOf("\n", at);
+      const lineText = body.slice(lineStart, lineEnd === -1 ? body.length : lineEnd);
+      if (!PRICING_ENTRY.test(lineText)) continue;
+      let depth = 0;
+      // Ветка может стоять и в ТОМ ЖЕ выражении, без объемлющей скобки —
+      // `const lockedTarget = (await isNativeShellRequest()) ? … : …` или
+      // длинная цепочка тернарников в кабинете. Скобочный разбор такую не
+      // видит (скобки в ней сбалансированы), поэтому сначала спрашивается
+      // окрестность самого входа.
+      let guarded = BRANCH_TOKEN.test(body.slice(Math.max(0, at - STATEMENT_WINDOW), at + STATEMENT_WINDOW));
+      for (let k = at; k >= 0 && !guarded; k -= 1) {
+        const ch = body[k];
+        if (ch === ")" || ch === "}") depth += 1;
+        else if (ch === "(" || ch === "{") {
+          if (depth > 0) {
+            depth -= 1;
+            continue;
+          }
+          const around = body.slice(Math.max(0, k - WINDOW), k) + body.slice(k, k + WINDOW);
+          if (BRANCH_TOKEN.test(around)) guarded = true;
+        }
+      }
+      if (!guarded) {
+        const lineNo = body.slice(0, at).split("\n").length;
+        problems.push(
+          `${file}:${lineNo}: вход на страницу цен вне выражения, спрашивающего про оболочку — ` +
+            `ровно этот класс дефекта и был долгом 184`,
+        );
+      }
+    }
+  }
+  // Быстрый список поиска и выдача по строке — РАЗНЫЕ места, и в 7.192
+  // закрыли только первое (долг 187).
+  if (!live[SEARCH_UI_FILE].includes("nativeShell")) {
+    problems.push(`${SEARCH_UI_FILE}: быстрый список поиска не спрашивает про оболочку`);
+  }
+  if (!live[SEARCH_API_FILE].includes('"pricing"')  && !stripCommentsOnly(sources[SEARCH_API_FILE]).includes('"pricing"')) {
+    problems.push(`${SEARCH_API_FILE}: запись «Цены» не вырезается из выдачи внутри оболочки (долг 187)`);
+  }
+  // Замок урока ведёт себя как замок рассказа (долг 185).
+  if (!live[LEVEL_FILE].includes("NativeLockedLink")) {
+    problems.push(
+      `${LEVEL_FILE}: закрытая плитка урока не открывает окно «Этот материал закрыт» — ` +
+        `закрытый урок снова ведёт себя не так, как закрытый рассказ (долг 185)`,
+    );
+  }
+  // Реферальный блок — тоже призыв к покупке (долг 186).
+  if (!/nativeShell \? null : \(\s*\n?\s*<Card>/.test(sources[PROFILE_FILE])) {
+    problems.push(`${PROFILE_FILE}: реферальный блок «Приглашай и получай» не скрыт внутри оболочки (долг 186)`);
   }
   return problems;
 }
@@ -222,19 +440,13 @@ function countOf(haystack, needle) {
 /**
  * ВИДИМЫЙ документ: всё, кроме `<script>` и `<template>`.
  *
- * Замер первого же прогона этого сторожа, и он стоит того, чтобы быть
- * записанным: в нативной отдаче `/es/pricing` форм кассы 0 и ссылок на
- * цены 0, а слов «MXN» — 10 и «OXXO» — 9. Все они лежат ВО FLIGHT-РАЗМЕТКЕ,
- * внутри `<script>`, и попадают туда не со страницы цен, а из корневого
- * макета: `Navbar`, `Footer` и `BottomNav` — клиентские компоненты и
- * получают `dict` ЦЕЛИКОМ, то есть весь словарь уезжает в каждую из 1913
- * страниц (это же замерено в 7.183 и в шапке `src/lib/native-access-copy.ts`).
- *
- * Правило судит по видимому документу, и граница названа честно: обнулить
- * словарь во flight-разметке эта правка не может — это отдельная и
- * немаленькая работа по тому, как макет передаёт словарь клиентским рамам.
- * На ревью магазина смотрят на ЭКРАН и на то, куда ведут органы
- * управления; ни адресной строки, ни «просмотра исходного кода» внутри
+ * Словарь уезжает во flight-разметку КАЖДОЙ страницы целиком (`Navbar`,
+ * `Footer` и `BottomNav` — клиентские компоненты и получают `dict`
+ * ЦЕЛИКОМ), поэтому `MXN` и `OXXO` лежат внутри `<script>` даже там, где
+ * на экране их нет. Это отдельная и немаленькая работа — долг 183; здесь
+ * граница названа честно: правило судит по ВИДИМОМУ документу, потому что
+ * на ревью магазина смотрят на ЭКРАН и на то, куда ведут органы
+ * управления, а ни адресной строки, ни «просмотра исходного кода» внутри
  * приложения нет вовсе.
  */
 function visibleDocument(html) {
@@ -243,62 +455,196 @@ function visibleDocument(html) {
     .replace(/<template[\s\S]*?<\/template>/gi, " ");
 }
 
+/**
+ * Все ссылки на страницу цен в ОТВЕТЕ ЦЕЛИКОМ, а не только те, у которых
+ * адрес кончается ровно на `/pricing`.
+ *
+ * Здесь стоял буквальный `href="/ru/pricing"`, и он не видел ни одной
+ * ссылки вида `href="/ru/pricing?next=/ru/courses/a1/2"` — а такими
+ * написаны ВСЕ замки, которые «возвращают, куда шёл». На закрытом уроке
+ * настоящих ссылок было 3, счётчик показывал 0 (долг 184, причина №3).
+ *
+ * Считается по сырому ответу: ссылка, лежащая во flight-разметке,
+ * становится настоящей после гидрации.
+ */
+function pricingLinks(raw) {
+  return [...raw.matchAll(/href=\\?"([^"\\]*\/pricing[^"\\]*)\\?"/g)].map((m) => m[1]);
+}
+
+const SAFARI =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
+
 /** Три обличья запроса. `web` — обычный браузер; `token` — оболочка, как её
  *  видит прямой переход webview; `cookie` — оболочка, как её видит запрос
- *  service worker'а: токена нет, кука есть. Третье и есть тот случай,
- *  который увидел владелец на телефоне. */
-async function fetchPage(base, path, disguise) {
-  const safari =
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
-  const headers = { "user-agent": disguise === "token" ? `${safari} ${TOKEN}` : safari };
-  if (disguise === "cookie") headers.cookie = `${COOKIE}=1`;
+ *  service worker'а: токена нет, кука есть. */
+async function fetchPage(base, path, disguise, session) {
+  const headers = { "user-agent": disguise === "token" ? `${SAFARI} ${TOKEN}` : SAFARI };
+  const jar = [session, disguise === "cookie" ? `${COOKIE}=1` : ""].filter(Boolean).join("; ");
+  if (jar) headers.cookie = jar;
   const res = await fetch(`${base}${path}`, { headers, signal: AbortSignal.timeout(30_000) });
-  if (!res.ok) throw new Error(`${path} ответил ${res.status}`);
+  if (!res.ok) throw new Error(`${path} (${disguise}) ответил ${res.status}`);
   return res.text();
 }
 
-/** Что обязано быть в ВЕБ-отдаче каждой страницы (позитивный контроль) и
- *  чего не может быть в двух других. Признаки выбраны так, чтобы не
- *  зависеть от страны прогона: `OXXO` на localhost может не отдаваться и
- *  вебу (правило 7.117), поэтому позитивным контролем он не служит. */
+/**
+ * Настоящий аккаунт. Не изображённый заголовком и не «как если бы»: ровно
+ * та же регистрация, что у человека, и ровно та же выдача подписки, что у
+ * прогона Playwright.
+ */
+async function makeSession(base, withSubscription) {
+  const email = `guard-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
+  const registered = await fetch(`${base}/api/auth/register`, {
+    method: "POST",
+    redirect: "manual",
+    headers: { "content-type": "application/x-www-form-urlencoded", "user-agent": SAFARI },
+    body: new URLSearchParams({ email, password: "TestPass123!", lang: "ru", redirectTo: "/ru" }).toString(),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const jar = registered.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .filter((c) => !c.endsWith("="))
+    .join("; ");
+  if (!jar) {
+    throw new Error(
+      `не удалось завести роль: POST /api/auth/register ответил ${registered.status} и не отдал сессионной куки. ` +
+        `Сервер поднят без E2E_TEST_SEED=1? Тогда кука уходит с Secure и по http не возвращается. ` +
+        `Тихо пропустить роль нельзя: ровно так и появился долг 184.`,
+    );
+  }
+  if (withSubscription) {
+    const granted = await fetch(`${base}/api/test/grant-subscription`, {
+      method: "POST",
+      headers: { cookie: jar, "content-type": "application/json" },
+      body: "{}",
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!granted.ok) {
+      throw new Error(
+        `не удалось выдать подписку роли «подписчик»: /api/test/grant-subscription ответил ${granted.status}. ` +
+          `Этот маршрут живёт только при E2E_TEST_SEED=1.`,
+      );
+    }
+  }
+  return jar;
+}
+
+/**
+ * Что меряется. Для каждой страницы названо, у КАКИХ ролей веб-отдача
+ * обязана содержать платный вход: это и есть встроенный позитивный
+ * контроль. Ноль на странице, где в вебе тоже ноль, не доказывает ничего.
+ *
+ * `OXXO` в контроли не берётся намеренно: на localhost он может не
+ * отдаваться и вебу (правило 7.117).
+ */
 const LIVE_PAGES = [
-  { path: "/es/pricing", control: [FORM_MARK, PRICE_MARK] },
-  { path: "/ru/pricing", control: [FORM_MARK, PRICE_MARK] },
-  { path: "/es", control: ['href="/es/pricing"', PRICE_MARK] },
-  { path: "/ru", control: ['href="/ru/pricing"', PRICE_MARK] },
+  { path: "/es/pricing", control: ["guest", "free", "sub"] },
+  { path: "/ru/pricing", control: ["guest", "free", "sub"] },
+  { path: "/es", control: ["guest", "free", "sub"] },
+  { path: "/ru", control: ["guest", "free", "sub"] },
+  // Кабинет: список курсов живёт на вкладке «Прогресс», и БЕЗ `?tab=` его
+  // нет в ответе вовсе — ещё одна причина, по которой старый список из
+  // четырёх адресов не поймал бы его, даже появись он там.
+  { path: "/ru/profile?tab=progress", control: ["free"] },
+  { path: "/es/profile?tab=progress", control: ["free"] },
+  { path: "/ru/profile?tab=subscription", control: ["free"] },
+  // Закрытый урок: три кнопки на вкладках. Видны и анониму, и аккаунту без
+  // подписки — а подписчику не видны вовсе, поэтому контроль назван по
+  // ролям, а не «всегда».
+  { path: "/ru/courses/a1/2", control: ["guest", "free"] },
+  { path: "/es/courses/a1/2", control: ["guest", "free"] },
+  // Словарь: подпись про C1 стояла всем, включая подписчика.
+  { path: "/ru/vocabulary", control: ["guest", "free", "sub"] },
+  { path: "/es/vocabulary", control: ["guest", "free", "sub"] },
 ];
 
-const FORBIDDEN = [FORM_MARK, STRIPE_MARK, PRICE_MARK, CASH_MARK];
+/** Судит ОДИН ответ по нативным правилам. Возвращает список проблем. */
+function judgeNative(html, where, labels) {
+  const problems = [];
+  const visible = visibleDocument(html);
+  for (const mark of FORBIDDEN_TEXT) {
+    const n = countOf(visible, mark);
+    if (n > 0) problems.push(`${where}: в видимом документе ${n} вхождений «${mark}»`);
+  }
+  const links = pricingLinks(html);
+  if (links.length > 0) {
+    problems.push(`${where}: ${links.length} ссылок на страницу цен — ${[...new Set(links)].join(", ")}`);
+  }
+  for (const label of labels) {
+    const n = countOf(visible, label);
+    if (n > 0) problems.push(`${where}: ${n} вхождений подписи платной кнопки «${label}»`);
+  }
+  return problems;
+}
+
+/** Подсадка: кнопка покупки, вставленная в нативную отдачу. Сторож обязан
+ *  упасть на ней в КАЖДОЙ роли — иначе он эту роль не судит вовсе. */
+function plantPurchaseButton(html, lang) {
+  return html.replace(
+    "</body>",
+    `<a href="/${lang}/pricing?next=/${lang}/courses/a1/2">подсадка</a></body>`,
+  );
+}
 
 async function live(base, plant) {
   const problems = [];
+  // Подсадка обязана уронить сторож В КАЖДОЙ РОЛИ. «Где-то сработало» — не
+  // ответ: долг 184 и состоял в том, что одну роль не судили вовсе.
+  const caughtByRole = { guest: 0, free: 0, sub: 0 };
+  const labels = { ru: purchaseLabels("ru"), es: purchaseLabels("es") };
+
+  const sessions = {
+    guest: "",
+    free: await makeSession(base, false),
+    sub: await makeSession(base, true),
+  };
+  console.log(
+    `  роли: гость (без сессии), бесплатный аккаунт, подписчик — ${Object.keys(sessions).length} из 3, все настоящие`,
+  );
+
   for (const page of LIVE_PAGES) {
-    const web = await fetchPage(base, page.path, "web");
-    for (const mark of page.control) {
-      if (countOf(mark.startsWith("href=") ? web : visibleDocument(web), mark) === 0) {
+    const lang = page.path.slice(1, 3);
+    for (const [role, jar] of Object.entries(sessions)) {
+      const web = await fetchPage(base, page.path, "web", jar);
+      const mustBeControl = page.control.includes(role);
+      const webProblems = judgeNative(web, "контроль", labels[lang]);
+      if (mustBeControl && webProblems.length === 0) {
         problems.push(
-          `${page.path}: в ВЕБ-отдаче не найдено «${mark}» — измеритель слеп, его ноль ничего не доказывает`,
+          `${page.path} (${role}): в ВЕБ-отдаче не нашлось НИ ОДНОГО платного входа — измеритель слеп, ` +
+            `его ноль в оболочке ничего не доказывает`,
         );
       }
-    }
-    for (const disguise of ["token", "cookie"]) {
-      // ПОДСАДКА: обеим оболочкам подсовывается веб-отдача. Сторож обязан
-      // покраснеть — иначе он не умеет отличать одно от другого вовсе.
-      const raw = plant ? web : await fetchPage(base, page.path, disguise);
-      const html = visibleDocument(raw);
-      const counts = FORBIDDEN.map((m) => [m, countOf(html, m)]);
-      // Ссылка — орган управления, и она считается по ВСЕМУ ответу: ссылка
-      // внутри flight-разметки становится настоящей после гидрации.
-      const linkCount = countOf(raw, `href="${page.path.slice(0, 3)}/pricing"`);
-      console.log(
-        `  ${page.path.padEnd(12)} ${plant ? "ПОДСАДКА" : "оболочка"} по ${disguise.padEnd(6)} — ` +
-          counts.map(([m, n]) => `${m}: ${n}`).join(", ") + `, ссылок на цены: ${linkCount}`,
-      );
-      for (const [mark, n] of counts) {
-        if (n > 0) problems.push(`${page.path} (${disguise}): в нативной отдаче ${n} вхождений «${mark}»`);
+      for (const disguise of ["token", "cookie"]) {
+        const raw = await fetchPage(base, page.path, disguise, jar);
+        // ПОДСАДКА: в нативную отдачу вставляется кнопка покупки. Сторож
+        // обязан покраснеть в КАЖДОЙ роли — «подсадка любой кнопки покупки
+        // в любой из ролей роняет сторож».
+        const judged = plant ? plantPurchaseButton(raw, lang) : raw;
+        const where = `${page.path} (${role}/${disguise})`;
+        const found = judgeNative(judged, where, labels[lang]);
+        if (!plant) {
+          const links = pricingLinks(raw);
+          console.log(
+            `  ${page.path.padEnd(28)} ${role.padEnd(5)} ${disguise.padEnd(6)} — ` +
+              `форм: ${countOf(visibleDocument(raw), FORM_MARK)}, цен: ${countOf(visibleDocument(raw), PRICE_MARK)}, ` +
+              `ссылок на цены: ${links.length}, платных подписей: ` +
+              `${labels[lang].reduce((n, l) => n + countOf(visibleDocument(raw), l), 0)}`,
+          );
+        }
+        if (plant) caughtByRole[role] += found.length;
+        problems.push(...found);
       }
-      if (linkCount > 0) {
-        problems.push(`${page.path} (${disguise}): ${linkCount} ссылок на страницу цен`);
+    }
+  }
+  if (plant) {
+    for (const [role, n] of Object.entries(caughtByRole)) {
+      console.log(`  роль ${role.padEnd(5)} — подсадка поймана ${n} раз${n === 0 ? " (ПРОПУЩЕНО)" : ""}`);
+      if (n === 0) {
+        // Пустой список = «подсадка прошла насквозь» = прогон красный.
+        // Роль, на которой подсадка не срабатывает, сторожем не судится
+        // вовсе, и зелёный по остальным двум этого не искупает.
+        console.error(`  роль ${role}: подсаженная кнопка покупки НЕ уронила сторож — эта роль не судится вовсе`);
+        return [];
       }
     }
   }
@@ -319,9 +665,6 @@ function commentOutBranch(source) {
  *  функции — текстуально он на месте, а карточки собираются раньше него. */
 function moveBranchToTheEnd(source) {
   const startMark = "  if (await isNativeShellRequest()) {";
-  // От тела страницы, а не от начала файла: такая же ветка стоит выше, в
-  // `generateMetadata`, и подсадка двигала бы ЕЁ — то есть изображала бы
-  // дефект там, где правило не смотрит. Поймано прогоном verify.
   const from = source.indexOf("export default async function PricingPage");
   const start = source.indexOf(startMark, from === -1 ? 0 : from);
   if (start === -1) throw new Error("подсадка не нашла ветку — сторож и подсадка разошлись");
@@ -344,7 +687,8 @@ async function main() {
       const caught = problems.length > 0;
       console.log(
         caught
-          ? "check:native-payments (живая) --plant — поймано: веб-отдача, выданная за нативную, роняет сторож"
+          ? `check:native-payments (живая) --plant — поймано: подсаженная кнопка покупки роняет сторож ` +
+              `(${problems.length} срабатываний, все три роли)`
           : "check:native-payments (живая) --plant — ПРОПУЩЕНО",
       );
       return caught ? 0 : 1;
@@ -354,7 +698,10 @@ async function main() {
       for (const p of problems) console.error(`  ${p}`);
       return 1;
     }
-    console.log("check:native-payments (живая) — в обеих оболочках 0 форм, 0 цен, 0 упоминаний OXXO и stripe.com.");
+    console.log(
+      `check:native-payments (живая) — ${LIVE_PAGES.length} адресов × 3 роли × 2 обличья оболочки: ` +
+        `0 форм, 0 цен, 0 ссылок на цены, 0 подписей платных кнопок.`,
+    );
     return 0;
   }
 
@@ -377,6 +724,8 @@ async function main() {
         { [COPY_FILE]: sources[COPY_FILE].replace("profileNote:", 'price: "150 MXN",\n      profileNote:') }],
       ["в честное объяснение вернулось упоминание OXXO",
         { [NOTICE_FILE]: sources[NOTICE_FILE].replace("const copyHeading", "const oxxo").replace("{copy.backCta}", "OXXO {copy.backCta}") }],
+      ["исчезла строка, которая стоит на месте кнопок покупки",
+        { [COPY_FILE]: sources[COPY_FILE].replaceAll("closedNote", "ничегоНеГоворим") }],
       ["признак по КУКЕ убран — остался только User-Agent, которого нет у service worker",
         { [SHELL_FILE]: sources[SHELL_FILE].replace(/NATIVE_SHELL_COOKIE/g, "НЕТ_ТАКОЙ_КУКИ") }],
       ["middleware перестал ставить куку",
@@ -390,15 +739,45 @@ async function main() {
       ["маршрут кассы перестал отказывать оболочке",
         { [CHECKOUT_FILE]: sources[CHECKOUT_FILE].replace(/userAgentIsNativeShell/g, "ктоУгодно") }],
       ["полоса цен на главной вернулась в приложение",
-        { [HOME_FILE]: sources[HOME_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+        { [HOME_FILE]: sources[HOME_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
       ["ссылка «Цены» вернулась в шапку приложения",
-        { [NAVBAR_FILE]: sources[NAVBAR_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+        { [NAVBAR_FILE]: sources[NAVBAR_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
       ["кнопка подписки вернулась в кабинет приложения",
-        { [PROFILE_FILE]: sources[PROFILE_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+        { [PROFILE_FILE]: sources[PROFILE_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
       ["токен в capacitor.config.ts разошёлся с токеном сервера",
         { [CAPACITOR_FILE]: sources[CAPACITOR_FILE].replace(TOKEN, "RFNativeShim") }],
       ["appendUserAgent убран из конфигурации оболочки",
         { [CAPACITOR_FILE]: sources[CAPACITOR_FILE].replace(/appendUserAgent/g, "неДописываем") }],
+      // Долг 184 и соседи: по одной подсадке на КАЖДУЮ поверхность, которую
+      // заход 7.192 не увидел.
+      ["кнопка «Смотреть тарифы» вернулась на закрытые вкладки урока",
+        { [LESSON_PAGE_FILE]: sources[LESSON_PAGE_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+      ["список курсов в кабинете снова ведёт на страницу цен (тот самый дефект)",
+        { [PROFILE_FILE]: sources[PROFILE_FILE].replace(
+            "entitled || nativeShell\n                      ? `/${lang}/courses/${level}`\n                      : `/${lang}/pricing`",
+            "entitled ? `/${lang}/courses/${level}` : `/${lang}/pricing`") }],
+      ["замок рассказа снова зовёт покупать",
+        { [STORY_FILE]: sources[STORY_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+      ["замок видео снова зовёт покупать",
+        { [MEDIA_FILE]: sources[MEDIA_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+      ["подпись про C1 в словаре снова ведёт на цены",
+        { [VOCAB_FILE]: sources[VOCAB_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+      ["подпись про C1 в категории словаря снова ведёт на цены",
+        { [VOCAB_CAT_FILE]: sources[VOCAB_CAT_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+      ["закрытый экзамен снова уводит на страницу цен",
+        { [EXAM_FILE]: sources[EXAM_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+      ["закрытый филворд снова уводит на страницу цен",
+        { [WORD_GAME_FILE]: sources[WORD_GAME_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/lockedTarget/g, "цели") }],
+      ["страница цен вернулась в выдачу поиска",
+        { [SEARCH_API_FILE]: sources[SEARCH_API_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
+      ["быстрый список поиска снова предлагает «Цены»",
+        { [SEARCH_UI_FILE]: sources[SEARCH_UI_FILE].replace(/nativeShell/g, "неСпрашиваем") }],
+      ["подвал снова предлагает скачать приложение тому, кто уже в нём",
+        { [FOOTER_FILE]: sources[FOOTER_FILE].replace(/nativeShell/g, "неСпрашиваем") }],
+      ["закрытая плитка урока снова ведёт на страницу вместо окна (долг 185)",
+        { [LEVEL_FILE]: sources[LEVEL_FILE].replace(/NativeLockedLink/g, "Link") }],
+      ["реферальный блок вернулся в приложение (долг 186)",
+        { [PROFILE_FILE]: sources[PROFILE_FILE].replace("{nativeShell ? null : (\n          <Card>", "{(\n          <Card>") }],
     ];
 
     let caught = 0;
@@ -412,7 +791,7 @@ async function main() {
     console.log(
       ok
         ? `check:native-payments --plant — ${caught} из ${plants.length} подсадок, 1 из 1 отрицательный контроль`
-        : "check:native-payments --plant — FAILED",
+        : `check:native-payments --plant — FAILED (${caught} из ${plants.length})`,
     );
     return ok ? 0 : 1;
   }
@@ -424,10 +803,10 @@ async function main() {
     return 1;
   }
   console.log(
-    "check:native-payments — оболочку узнают по ДВУМ признакам, кассы нет ни на одной поверхности, " +
-      "вместо пейвола замок, воркер платёжных страниц не кеширует; контроль — --plant.",
+    "check:native-payments — оболочку узнают по ДВУМ признакам, ветка стоит у КАЖДОГО входа на страницу цен " +
+      `(${SOURCES.length} файлов), вместо пейвола замок, воркер платёжных страниц не кеширует; контроль — --plant.`,
   );
-  console.log("  Живая половина (по отдаче страниц, три обличья запроса) гоняется из scripts/verify-rendered.mjs с --base=.");
+  console.log("  Живая половина (три роли × три обличья запроса) гоняется из scripts/verify-rendered.mjs с --base=.");
   return 0;
 }
 

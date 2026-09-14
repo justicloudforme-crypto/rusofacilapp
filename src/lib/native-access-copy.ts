@@ -46,6 +46,18 @@ export interface NativeAccessCopy {
   };
   /** Строка в разделе подписки личного кабинета. */
   profileNote: string;
+  /**
+   * Одна строка на месте КАЖДОЙ кнопки покупки, которая раньше стояла под
+   * закрытым материалом на самой странице: три закрытых вкладки урока,
+   * карточка закрытого рассказа, закрытое видео, уведомление о словах C1.
+   *
+   * Почему не `lock.body`: тот текст пишется в окне поверх страницы, где
+   * места много, а здесь строка стоит внутри карточки рядом с числом
+   * («в этом модуле 24 слова») и обязана быть короткой. Смысл тот же, и
+   * это намеренно: два разных объяснения одного и того же положения дел
+   * читаются как два разных положения дел.
+   */
+  closedNote: string;
 }
 
 const COPY: Record<Locale, NativeAccessCopy> = {
@@ -74,6 +86,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     },
     profileNote:
       "En esta versión de la aplicación no hay compras. La parte abierta del curso funciona con normalidad.",
+    closedNote:
+      "Esta parte del curso está cerrada en esta versión de la aplicación.",
   },
   ru: {
     notice: {
@@ -99,6 +113,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     },
     profileNote:
       "В этой версии приложения покупок нет. Открытая часть курса работает как обычно.",
+    closedNote:
+      "Эта часть курса закрыта в этой версии приложения.",
   },
 };
 

@@ -9,6 +9,8 @@ import { localizeExamText } from "@/lib/exams/localize";
 import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTierFor } from "@/lib/entitlement";
 import { accessMarkFor, examRequirement, lessonRequirement } from "@/lib/access-marks";
+import { isNativeShellRequest } from "@/lib/native-shell";
+import NativeLockedLink from "@/components/native/NativeLockedLink";
 import AccessMark from "@/components/ui/AccessMark";
 import { getLevelLessonStatuses, type LessonStatus } from "@/lib/progress";
 import LevelGlossaryProgressBar from "@/components/glossary/LevelGlossaryProgressBar";
@@ -57,6 +59,12 @@ export default async function LevelPage({
   // itself stays browsable without an account, same as before.
   const user = await getCurrentUser();
   const lessonStatuses = user ? await getLevelLessonStatuses(user.id, level) : {};
+  /* ДОЛГ 185. Внутри оболочки закрытая плитка урока и закрытая плитка
+     экзамена ведут себя как закрытая плитка рассказа: окно «Этот материал
+     закрыт» и одна кнопка «Понятно». В вебе ветка не выбирается вовсе:
+     рендерится тот же `Link`, что и раньше, и отдача не меняется ни на
+     байт. */
+  const nativeShell = await isNativeShellRequest();
   // Значок платности. До 09.09.2026 его здесь не было вовсе: 116 уроков
   // из 120 отдают словарь, упражнения и слайды только по подписке, а
   // список уроков об этом молчал — «платность есть, знака нет». Правило
@@ -147,58 +155,96 @@ export default async function LevelPage({
                 : undefined;
           return (
             <li key={lesson} className="flex flex-col gap-3">
-              <Link
-                href={`/${lang}/courses/${level}/${lessonNumber}`}
-                className="tap flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
-              >
-                <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${circleClasses}`}
-                  aria-label={statusLabel}
-                  title={statusLabel}
-                >
-                  {status === "passed" ? (
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
-                      <path
-                        fillRule="evenodd"
-                        d="M16.704 5.29a1 1 0 010 1.415l-7.5 7.5a1 1 0 01-1.415 0l-3.5-3.5a1 1 0 111.415-1.414l2.793 2.792 6.793-6.793a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  ) : (
-                    lessonNumber
-                  )}
-                </span>
-                <span className="text-sm leading-6">{lesson}</span>
-                {lessonMark && (
-                  <span className="ml-auto shrink-0">
-                    <AccessMark
-                      mark={lessonMark}
-                      label={lessonMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
-                    />
-                  </span>
-                )}
-              </Link>
-              {milestone && (
-                <Link
-                  href={`/${lang}/courses/${level}/exam/${milestone.examSlug}`}
-                  className="tap flex items-start gap-3 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 transition-colors hover:border-primary active:border-primary dark:border-primary-400/40 dark:bg-primary-400/10"
-                >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-white">
-                    ★
-                  </span>
-                  <span className="text-sm font-medium leading-6 text-primary-text dark:text-primary-400">
-                    {localizeExamText(milestone.exam.title, lang, dict.courses.examNames)}
-                  </span>
-                  {examMark && (
-                    <span className="ml-auto shrink-0">
-                      <AccessMark
-                        mark={examMark}
-                        label={examMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
-                      />
+              {/* Один и тот же внутренний вид в обеих ветках, и он вынесен
+                  в переменную ровно затем, чтобы его нельзя было
+                  расподобить правкой одной из двух. */}
+              {(() => {
+                const inner = (
+                  <>
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${circleClasses}`}
+                      aria-label={statusLabel}
+                      title={statusLabel}
+                    >
+                      {status === "passed" ? (
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
+                          <path
+                            fillRule="evenodd"
+                            d="M16.704 5.29a1 1 0 010 1.415l-7.5 7.5a1 1 0 01-1.415 0l-3.5-3.5a1 1 0 111.415-1.414l2.793 2.792 6.793-6.793a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      ) : (
+                        lessonNumber
+                      )}
                     </span>
-                  )}
-                </Link>
-              )}
+                    <span className="text-sm leading-6">{lesson}</span>
+                    {lessonMark && (
+                      <span className="ml-auto shrink-0">
+                        <AccessMark
+                          mark={lessonMark}
+                          label={lessonMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                        />
+                      </span>
+                    )}
+                  </>
+                );
+                const cls =
+                  "tap flex items-start gap-3 rounded-xl border border-black/10 p-4 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30";
+                const href = `/${lang}/courses/${level}/${lessonNumber}`;
+                return nativeShell && lessonMark ? (
+                  <NativeLockedLink
+                    href={href}
+                    className={cls}
+                    reason={lessonMark === "premium-tier" ? "premium" : "free"}
+                  >
+                    {inner}
+                  </NativeLockedLink>
+                ) : (
+                  <Link href={href} className={cls}>
+                    {inner}
+                  </Link>
+                );
+              })()}
+              {/* Тот же приём, что у плитки урока выше, и по той же
+                  причине: внутренний вид один. */}
+              {milestone &&
+                (() => {
+                  const inner = (
+                    <>
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-white">
+                        ★
+                      </span>
+                      <span className="text-sm font-medium leading-6 text-primary-text dark:text-primary-400">
+                        {localizeExamText(milestone.exam.title, lang, dict.courses.examNames)}
+                      </span>
+                      {examMark && (
+                        <span className="ml-auto shrink-0">
+                          <AccessMark
+                            mark={examMark}
+                            label={examMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                          />
+                        </span>
+                      )}
+                    </>
+                  );
+                  const cls =
+                    "tap flex items-start gap-3 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 transition-colors hover:border-primary active:border-primary dark:border-primary-400/40 dark:bg-primary-400/10";
+                  const href = `/${lang}/courses/${level}/exam/${milestone.examSlug}`;
+                  return nativeShell && examMark ? (
+                    <NativeLockedLink
+                      href={href}
+                      className={cls}
+                      reason={examMark === "premium-tier" ? "premium" : "free"}
+                    >
+                      {inner}
+                    </NativeLockedLink>
+                  ) : (
+                    <Link href={href} className={cls}>
+                      {inner}
+                    </Link>
+                  );
+                })()}
             </li>
           );
         })}

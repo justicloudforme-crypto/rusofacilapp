@@ -3,7 +3,23 @@ import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import MatryoshkaMark from "./MatryoshkaMark";
 
-export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale }) {
+export default function Footer({
+  dict,
+  lang,
+  nativeShell,
+}: {
+  dict: Dictionary;
+  lang: Locale;
+  /**
+   * ВНУТРИ ОБОЛОЧКИ из подвала уходит «Скачать приложение» (долг 188):
+   * человек уже в приложении, и ссылка ведёт его на страницу, которая
+   * предлагает установить то, что у него установлено. Признак приходит с
+   * СЕРВЕРА (корневой макет), а не спрашивается у Capacitor: подвал —
+   * серверный компонент, и ссылки в его ответе быть не должно, а не
+   * «спрятаться после гидрации».
+   */
+  nativeShell: boolean;
+}) {
   return (
     <footer className="border-t border-black/10 dark:border-white/30">
       {/* flex-wrap on BOTH rows, and it has to be both. The link row below
@@ -45,9 +61,11 @@ export default function Footer({ dict, lang }: { dict: Dictionary; lang: Locale 
           <span>{dict.footer.tagline}</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
-            {dict.footer.appLink}
-          </Link>
+          {nativeShell ? null : (
+            <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
+              {dict.footer.appLink}
+            </Link>
+          )}
           {/* The navbar's own Glosario entry (added alongside this) lives
               inside the Practicar dropdown, whose panel only renders once
               opened — so it gives a human a path but a crawler nothing.

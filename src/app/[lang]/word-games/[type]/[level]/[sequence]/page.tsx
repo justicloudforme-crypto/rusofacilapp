@@ -9,6 +9,7 @@ import { getFreeSequences, getPuzzle, toPublicPuzzle } from "@/lib/word-games/da
 import { freeNeighbours } from "@/lib/word-games/free-index";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessCurvedPuzzle, getEntitlementTier, isFreeWordGamePuzzle } from "@/lib/entitlement";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import { puzzleDescription, puzzleTitle } from "@/lib/word-games/metadata";
 import { getTopicInfo, vocabularyPathForTopic } from "@/lib/word-games/topics";
@@ -121,13 +122,23 @@ export default async function WordGamePuzzlePage({
   // reader and lesson pages already do for their own free/premium splits.
   const tier = await getEntitlementTier();
   const entitled = tier !== "free";
+  // ДОЛГ 184. Внутри оболочки закрытый материал НЕ уводит на страницу цен —
+  // её там нет вовсе. Уводит на список, откуда пришли: на самом списке
+  // закрытая плитка открывает окно «Этот материал закрыт» (`openPaywall` →
+  // `NativeLockedModal`), то есть человек оказывается там, где ему скажут
+  // словами, а не в тупике. Эти два перехода — путь по прямой ссылке; из
+  // приложения по ним обычно не ходят вовсе, но ходить есть чем: адрес
+  // может прийти из поиска.
+  const lockedTarget = (await isNativeShellRequest())
+    ? `/${lang}/word-games`
+    : `/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`;
   if (!entitled && !free) {
-    redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
+    redirect(lockedTarget);
   }
   // ★ (curved) and premiumOnly puzzles need Premium specifically, even for
   // an otherwise entitled standard subscriber.
   if ((row.curved || row.premiumOnly) && !canAccessCurvedPuzzle(tier)) {
-    redirect(`/${lang}/pricing?next=/${lang}/word-games/${type}/${level}/${sequence}`);
+    redirect(lockedTarget);
   }
 
   // NO day mark here — deliberately, since 03.09.2026 (owner's decision).

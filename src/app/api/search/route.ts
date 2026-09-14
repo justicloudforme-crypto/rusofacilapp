@@ -5,6 +5,7 @@ import { getEntitlementTier } from "@/lib/entitlement";
 import { getSearchIndex } from "@/lib/search/index-server";
 import { searchRecords } from "@/lib/search/match";
 import { MAX_QUERY_LENGTH, collapsedHrefsFor } from "@/lib/search/query";
+import { isNativeShellRequest } from "@/lib/native-shell";
 
 /**
  * Поиск по названиям объектов сайта.
@@ -33,7 +34,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ query, total: 0, shown: 0, sections: [], fuzzy: false });
   }
 
-  const [records, tier] = await Promise.all([getSearchIndex(), getEntitlementTier()]);
+  const [allRecords, tier, nativeShell] = await Promise.all([
+    getSearchIndex(),
+    getEntitlementTier(),
+    isNativeShellRequest(),
+  ]);
+
+  /**
+   * ДОЛГ 187. Внутри оболочки страницы цен нет вовсе: ссылку на неё убрали
+   * из шапки, из меню, из подвала и из быстрого списка назначений этого же
+   * окна поиска (`GlobalSearch.tsx`). А НАБРАННОЕ слово её по-прежнему
+   * находило — в разделе «Страницы сайта», потому что быстрый список и
+   * выдача по строке приходят из разных мест: список собирает сам
+   * компонент, а выдачу печатает индекс (`src/lib/search/records.ts`,
+   * запись `pricing`). Замер 13.09.2026, запрос «Цены» по-русски: total 2,
+   * и первой строкой `/ru/pricing`.
+   *
+   * Отсекается ЗДЕСЬ, а не в индексе, и это не мелочь: индекс общий и
+   * кешированный на пять минут (`getSearchIndex`) — он один для веба и для
+   * оболочки, и вырезать из него запись значило бы забрать её у веба тоже.
+   * Решение принимает запрос, у которого есть признак оболочки.
+   */
+  const records = nativeShell
+    ? allRecords.filter((record) => !(record.section === "page" && record.id === "pricing"))
+    : allRecords;
+
   const response = searchRecords(records, query, {
     lang,
     tier,

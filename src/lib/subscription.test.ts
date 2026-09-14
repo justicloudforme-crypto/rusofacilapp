@@ -6,9 +6,8 @@ import { describe, expect, it, vi } from "vitest";
 // implicit integration test against whatever dev.db happens to exist.
 vi.mock("./db", () => ({ db: {} }));
 
-const { isSubscriptionActive, tierOfSubscriptions, pickEffectiveSubscription } = await import(
-  "./subscription"
-);
+const { isSubscriptionActive, tierOfSubscriptions, pickEffectiveSubscription, getDisplayStatus } =
+  await import("./subscription");
 
 function subscription(overrides: { status: string; currentPeriodEnd: Date }) {
   return overrides;
@@ -55,6 +54,52 @@ describe("isSubscriptionActive", () => {
 // holds, not the plan on their newest row. Everything below is the read half
 // of "a Premium purchase lives on its own record".
 // ---------------------------------------------------------------------------
+
+/**
+ * ДОЛГ 190 — ОТМЕНА НЕ ЗАБИРАЕТ ОПЛАЧЕННОЕ.
+ *
+ * До 13.09.2026 «Отменить подписку» ставило строке `status = "canceled"`
+ * немедленно, а «canceled» мёртв независимо от даты, — то есть доступ
+ * пропадал в ту же секунду, при оплаченном периоде впереди. Замер на
+ * собранном приложении: `/api/subscription/status` отдавал `standard`, а
+ * сразу после нажатия — `free`; закрытых карточек на одном уроке
+ * становилось 0 → 5; кабинет писал «Истекла 15 сентября 2026 г.» — дату в
+ * БУДУЩЕМ. А ответ на вопрос «Можно ли отменить подписку?» на самой
+ * странице цен обещает ровно обратное: «Доступ останется активным до
+ * конца уже оплаченного периода».
+ *
+ * Теперь отмена — это `canceledAt`, а `status` остаётся прежним, и доступ
+ * кончается там же, где кончается оплаченный период.
+ */
+describe("отменённая подписка живёт до конца оплаченного периода (долг 190)", () => {
+  const future = () => new Date(Date.now() + 86_400_000);
+  const past = () => new Date(Date.now() - 1000);
+
+  it("доступ ЕСТЬ, пока период не кончился", () => {
+    expect(isSubscriptionActive({ status: "active", currentPeriodEnd: future() })).toBe(true);
+  });
+
+  it("состояние называется «отменена», а не «активна» и не «истекла»", () => {
+    expect(getDisplayStatus({ status: "active", currentPeriodEnd: future(), canceledAt: new Date() })).toBe(
+      "canceling",
+    );
+  });
+
+  it("без отметки об отмене состояние прежнее", () => {
+    expect(getDisplayStatus({ status: "active", currentPeriodEnd: future(), canceledAt: null })).toBe("active");
+  });
+
+  it("когда период кончился, состояние «истекла» — и слово наконец правда", () => {
+    expect(getDisplayStatus({ status: "active", currentPeriodEnd: past(), canceledAt: new Date() })).toBe(
+      "expired",
+    );
+  });
+
+  it("строка, которую Stripe уже закрыл, остаётся «отменена» и доступа не даёт", () => {
+    expect(getDisplayStatus({ status: "canceled", currentPeriodEnd: future() })).toBe("canceled");
+    expect(isSubscriptionActive({ status: "canceled", currentPeriodEnd: future() })).toBe(false);
+  });
+});
 
 describe("tierOfSubscriptions", () => {
   const DAY = 86_400_000;

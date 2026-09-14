@@ -47,15 +47,28 @@ const TAB_INACTIVE = "text-foreground/70 hover:text-foreground active:text-foreg
 
 export default function Tabs({ items, activeId, label, className = "", hrefBase, onSelect }: TabsProps) {
   return (
-    // The fade masks are a cheap scroll-affordance fix for AUDIT.md's
+    // The fade mask is a cheap scroll-affordance fix for AUDIT.md's
     // "profile tabs look cut off, no hint that the row scrolls" finding —
     // pure CSS, no JS, no extra markup per tab.
+    //
+    // ЛЕВОГО КРАЯ У МАСКИ БОЛЬШЕ НЕТ, И ЭТО ПОЧИНКА, А НЕ ВКУС (долг 189).
+    // Владелец снял на живом телефоне: «полоса вкладок кабинета срезана
+    // слева, первый пункт нечитаем». Замер на 360 px подтвердил причину
+    // ровно: полоса 328 px при содержимом 556 px, то есть она прокручена в
+    // НАЧАЛО и остаётся там, пока человек её не тронет; первая плитка
+    // начинается в 5 px от края, а маска гасила всё до 12 px — то есть
+    // 7 px активной плитки (она залита `bg-primary`) и всю левую скруглину
+    // рамки, ВСЕГДА, а не когда слева действительно что-то скрыто.
+    // Подсказка «строка прокручивается» нужна там, где содержимое реально
+    // уходит за край, — справа; слева при `scrollLeft = 0` скрывать нечего.
+    // Сделать градиент зависящим от прокрутки без JS нечем: `scroll()` как
+    // временную шкалу WebKit не поддерживает вовсе, а в этом проекте
+    // оболочка собирается и под iOS.
     <div
       className="relative"
       style={{
-        maskImage: "linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)",
-        WebkitMaskImage:
-          "linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)",
+        maskImage: "linear-gradient(to right, black 0, black calc(100% - 12px), transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to right, black 0, black calc(100% - 12px), transparent 100%)",
       }}
     >
       <nav

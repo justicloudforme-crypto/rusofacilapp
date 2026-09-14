@@ -6,6 +6,7 @@ import { isLevelSlug } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import { getExamContent } from "@/lib/exams/content";
 import { localizeExamText, localizeSkillAreaTitle } from "@/lib/exams/localize";
 import ExamView from "@/components/lesson/ExamView";
@@ -29,7 +30,14 @@ export default async function ExamPage({
 
   const user = await getCurrentUser();
   if (!user || !hasAnyAccess(await getEntitlementTierFor(user))) {
-    redirect(`/${lang}/pricing?next=/${lang}/courses/${level}/exam/${examSlug}`);
+    // ДОЛГ 184, та же причина, что у закрытого филворда: внутри оболочки
+    // страницы цен нет, поэтому закрытый экзамен возвращает на свой
+    // уровень, а не на неё.
+    redirect(
+      (await isNativeShellRequest())
+        ? `/${lang}/courses/${level}`
+        : `/${lang}/pricing?next=/${lang}/courses/${level}/exam/${examSlug}`,
+    );
   }
 
   const dict = await getDictionary(lang);

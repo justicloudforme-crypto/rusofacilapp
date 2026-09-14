@@ -6,6 +6,8 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
+import { isNativeShellRequest } from "@/lib/native-shell";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import { getContentInsights, getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
 import { isPilotStory } from "@/lib/story-pilot";
@@ -295,12 +297,19 @@ export default async function StoryReaderPage({
                 dict.stories.premiumTierLockBody.replace("{level}", story.level)
               : dict.stories.premiumLockBody}
           </p>
-          <Link
-            href={`/${lang}/pricing?next=/${lang}/stories/${story.id}`}
-            className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-          >
-            {dict.stories.premiumLockCta}
-          </Link>
+          {/* ДОЛГ 184: внутри оболочки на месте кнопки покупки — строка.
+              Заголовок и текст замка остаются: они говорят, что материал
+              закрыт, и это правда, которую человеку надо знать. */}
+          {(await isNativeShellRequest()) ? (
+            <p className="mt-4 text-sm text-foreground/60">{nativeAccessCopy(lang).closedNote}</p>
+          ) : (
+            <Link
+              href={`/${lang}/pricing?next=/${lang}/stories/${story.id}`}
+              className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+            >
+              {dict.stories.premiumLockCta}
+            </Link>
+          )}
         </Card>
       )}
 
