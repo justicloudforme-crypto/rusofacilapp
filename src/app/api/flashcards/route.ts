@@ -4,6 +4,8 @@ import { isFlashcardCategory, isFlashcardLevel, type FlashcardRow } from "@/lib/
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
 import { canAccessLevel, getEntitlementTier, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 import { escapeRegExp } from "@/lib/regex";
+// Вычитание «банк минус отданное» живёт одно на весь словарь — 7.195.
+import { lockedCensus } from "@/lib/flashcards/locked-census";
 
 const SEARCH_RESULT_LIMIT = 50;
 
@@ -61,45 +63,6 @@ function searchIndex(index: FlashcardRow[], query: string, level: string | null)
 // category" bug for any category other than the lucky few landing in that
 // fixed slice. Capping per-filtered-request instead means every category
 // a free-trial visitor opens shows up to 10 real words from THAT category.
-/**
- * Сколько карточек этот ответ НЕ отдал — по уровням и всего (долг 191).
- *
- * Зачем. Внутри приложения гость на уровне C1 (а после клиентской
- * фильтрации — и на B2) видел «Нет карточек для этого фильтра». Это
- * неправда по факту: карточки есть — 988 строк уровня C1 из 5771, —
- * они ЗАКРЫТЫ, а не отсутствуют, и разница эта для человека,
- * поставившего приложение, решающая. Магазины запрещают призыв платить
- * мимо их биллинга, но показать, что материал СУЩЕСТВУЕТ и закрыт, они
- * разрешают.
- *
- * Число берётся из банка, а не вписано литералом: разность между тем, что
- * лежит в базе под этим же фильтром, и тем, что ушло в ответ. Поэтому оно
- * не может разойтись ни с тарифным правилом (`canAccessLevel`), ни с
- * размером бесплатной пробы (`FREE_TRIAL_LIMITS`), ни с содержимым банка —
- * все трое участвуют в одном и том же вычитании.
- *
- * Считается ВСЕГДА, для любой роли: у подписчика разность честно равна
- * нулю, и отдельной ветки «а тут не считаем» здесь нет намеренно —
- * ветка была бы вторым местом, где живёт правило доступа.
- */
-function lockedCensus(
-  bank: readonly FlashcardRow[],
-  shown: readonly FlashcardRow[],
-  filter: { category: string | null; level: string | null }
-): { lockedTotal: number; lockedByLevel: Record<string, number> } {
-  const shownIds = new Set(shown.map((card) => card.id));
-  const lockedByLevel: Record<string, number> = {};
-  let lockedTotal = 0;
-  for (const card of bank) {
-    if (filter.category && card.category !== filter.category) continue;
-    if (filter.level && card.level !== filter.level) continue;
-    if (shownIds.has(card.id)) continue;
-    lockedByLevel[card.level] = (lockedByLevel[card.level] ?? 0) + 1;
-    lockedTotal += 1;
-  }
-  return { lockedTotal, lockedByLevel };
-}
-
 export async function GET(request: NextRequest) {
   const tier = await getEntitlementTier();
   const entitled = tier !== "free";

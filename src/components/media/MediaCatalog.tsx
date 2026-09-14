@@ -154,7 +154,10 @@ export default function MediaCatalog({
                     (белым по кадру видео иначе не прочитать); общий
                     `AccessMark` рисует для светлой карточки. */}
                 {item.mark && (
-                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                  <span
+                    data-access-mark={item.mark}
+                    className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                  >
                     <span aria-hidden>{ACCESS_MARK_ICON[item.mark]}</span>{" "}
                     {item.mark === "premium-tier" ? dict.premiumTierBadge : dict.subscriptionBadge}
                   </span>

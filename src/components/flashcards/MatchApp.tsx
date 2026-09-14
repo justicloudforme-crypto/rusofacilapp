@@ -12,6 +12,7 @@ import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flas
 import { buildMatchRound } from "@/lib/flashcards/match-round";
 import { recordSrsAnswer } from "@/lib/flashcard-progress";
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
+import { lockedView } from "@/lib/flashcards/locked-view";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
 import { plural, type PluralForms } from "@/lib/plural";
 import { learnedProgressText } from "@/lib/flashcards/learned-progress";
@@ -50,6 +51,10 @@ export default function MatchApp({
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
   const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
+  // Перепись БАНКА по темам и по уровням — чтобы сетка внутри оболочки не
+  // писала «0 слов» там, где слова есть (7.195, часть 3).
+  const [bankCategories, setBankCategories] = useState<Record<string, { bank: number; open: number; locked: number }>>({});
+  const [bankLockedByLevel, setBankLockedByLevel] = useState<Record<string, number>>({});
   const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
   const [hasAnyProgress, setHasAnyProgress] = useState(false);
   // `total` is what THIS visitor can open, `locked` is what Premium
@@ -69,7 +74,13 @@ export default function MatchApp({
   const [lockedByLevel, setLockedByLevel] = useState<Record<string, number>>({});
   // Закрытое под текущим фильтром уровня: уровень здесь тоже
   // накладывает браузер (см. `pool` ниже), поэтому и разрез тот же.
-  const lockedHere = levelFilter === "all" ? lockedTotal : (lockedByLevel[levelFilter] ?? 0);
+  // Разрез плашки — один на четыре режима словаря (7.195, часть 2).
+  const locked = lockedView({
+    levelFilter,
+    categoryLabel: category ? dict.categoryLabels[category] : null,
+    lockedTotal,
+    lockedByLevel,
+  });
   // True only while a category's round is being fetched — without it, the
   // "not enough cards" message flashed for a moment on every category open
   // (round starts at [] before the fetch resolves, which is also < the
@@ -79,6 +90,8 @@ export default function MatchApp({
   useEffect(() => {
     fetchCategorySummary(levelFilter).then((body) => {
       setCategorySummary(body.categories);
+      setBankCategories(body.bankCategories);
+      setBankLockedByLevel(body.lockedByLevel);
       setRecentCategories(body.recent);
       setHasAnyProgress(body.hasAnyProgress);
       setTotalProgress({ known: body.totalKnown, total: body.availableWords, locked: body.premiumOnlyWords });
@@ -150,7 +163,7 @@ export default function MatchApp({
           same condition. To play a different level, back out to the
           category grid first, same as changing category. */}
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap gap-2 bg-background/95 px-4 pb-3 pt-1 backdrop-blur-sm sm:mx-0 sm:px-0">
-        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} premiumLockedLevel={totalProgress.locked > 0 ? "C1" : null} />
+        <LevelFilterBar dict={dict} value={levelFilter} onChange={setLevelFilter} disabled={Boolean(category)} />
       </div>
 
       {inGrid ? (
@@ -161,6 +174,8 @@ export default function MatchApp({
             summary={categorySummary}
             hasAnyProgress={hasAnyProgress}
             levelFilter={levelFilter}
+            bank={bankCategories}
+            lockedAtLevel={levelFilter === "all" ? 0 : (bankLockedByLevel[levelFilter] ?? 0)}
             onSelectCategory={selectCategory}
           />
         </>
@@ -185,8 +200,10 @@ export default function MatchApp({
               message={dict.freeTrialLimitMessage}
               cta={dict.freeTrialLimitCta}
               locale={dict.locale}
-              lockedTotal={lockedHere}
-              level={levelFilter === "all" ? null : levelFilter}
+              lockedTotal={locked.lockedHere}
+              level={locked.level}
+              topic={locked.topic}
+              requirement={locked.requirement}
               unit="words"
             />
           )}

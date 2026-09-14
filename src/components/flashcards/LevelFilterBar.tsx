@@ -1,7 +1,7 @@
 "use client";
 
 import { flashcardLevels, type FlashcardLevel } from "@/lib/flashcards";
-import { ACCESS_MARK_ICON } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, flashcardRequirement } from "@/lib/access-marks";
 
 export interface LevelFilterDict {
   levelAll: string;
@@ -24,26 +24,11 @@ export default function LevelFilterBar({
   value,
   onChange,
   disabled = false,
-  premiumLockedLevel = null,
 }: {
   dict: LevelFilterDict;
   value: FlashcardLevel | "all";
   onChange: (level: FlashcardLevel | "all") => void;
   disabled?: boolean;
-  /**
-   * Уровень, который этому посетителю НЕ откроется без плана Premium.
-   *
-   * До 09.09.2026 значка здесь не было вовсе: кнопка C1 стояла в ряду
-   * наравне с A1–B2, а за ней у неоплатившего лежала пустая сетка — 988
-   * карточек из 5771 отдаются только плану Premium, и страница об этом
-   * молчала. «Платность есть — знака нет», ровно тот класс.
-   *
-   * Признак приходит от вызывающего, а не собирается здесь: кто именно
-   * закрыт, знает только ответ `/api/flashcards/summary`
-   * (`premiumOnlyWords` — разность целого банка и доступного этому
-   * тарифу), то есть тот же гейт, который режет выдачу.
-   */
-  premiumLockedLevel?: FlashcardLevel | null;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -72,8 +57,27 @@ export default function LevelFilterBar({
           }`}
         >
           {lvl}
-          {premiumLockedLevel === lvl && (
-            <span aria-hidden className="ml-1" title={dict.premiumTierBadge}>
+          {/*
+            КОРОНА — МЕТКА СОРТА, А НЕ СОСТОЯНИЯ ДОСТУПА (7.195, часть 4).
+
+            До правки корона стояла только у того, кто уровень открыть НЕ
+            может (`premiumLockedLevel` приходил как `premiumOnlyWords > 0
+            ? "C1" : null`), то есть подписчику плана Premium граница
+            платного не показывалась вовсе. Решение владельца 14.09.2026:
+            весь премиальный материал помечен одинаково, независимо от
+            роли, — человек должен видеть, где проходит граница и что
+            именно даёт подписка.
+
+            Какой уровень премиальный, решает признак
+            (`flashcardRequirement`), а не список здесь: то же правило
+            читают карточка, плашка закрытого и поиск.
+
+            `data-access-mark` — по нему сторож отрисованных поверхностей
+            отличает МЕТКУ от подписи органа управления: корона ничего не
+            предлагает купить и никуда не ведёт.
+          */}
+          {flashcardRequirement({ level: lvl }) === "premium-tier" && (
+            <span data-access-mark="premium-tier" aria-hidden className="ml-1" title={dict.premiumTierBadge}>
               {ACCESS_MARK_ICON["premium-tier"]}
             </span>
           )}
