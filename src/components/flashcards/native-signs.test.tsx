@@ -1,6 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import { NativeLockedNotice, LockedOrEmpty } from "./FreeTrialLimitBanner";
+import FreeTrialLimitBanner, { NativeLockedNotice, LockedOrEmpty } from "./FreeTrialLimitBanner";
+
+// Пейвол подменён целиком: настоящая рама требует словарь, планы и цену —
+// то есть ровно то, чего внутри оболочки не существует. Здесь проверяется
+// не она, а СКОЛЬКО плашек печатает компонент.
+vi.mock("@/contexts/PaywallContext", () => ({
+  usePaywall: () => ({ openPaywall: () => {} }),
+}));
 import CategoryGrid, { type CategoryGridDict } from "./CategoryGrid";
 import { NATIVE_SHELL_COOKIE, NATIVE_SHELL_COOKIE_VALUE } from "@/lib/native-shell-token";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
@@ -84,6 +91,50 @@ describe("часть 1 — плашка на экране одна", () => {
       </>,
     );
     expect(plates()).toHaveLength(2);
+  });
+
+  it("два предупреждения идиом дают ОДНУ плашку в оболочке", () => {
+    // Путь, который поймал CI, а не рассуждение: у гостя по ссылке на
+    // закрытое выражение `limited` и `focusMissing` истинны ОБА.
+    render(
+      <>
+        <FreeTrialLimitBanner message="общий предел" cta="купить" locale="ru" lockedTotal={766} unit="expressions" />
+        <FreeTrialLimitBanner
+          message="ссылка на закрытое"
+          cta="купить"
+          locale="ru"
+          lockedTotal={766}
+          unit="expressions"
+          requirement="premium-tier"
+          noticeAbove
+        />
+      </>,
+    );
+    expect(plates()).toHaveLength(1);
+  });
+
+  it("В ВЕБЕ оба предупреждения остаются — они говорят разное", () => {
+    // ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ к случаю выше. Первая редакция правки свела
+    // три блока идиом в одну цепочку и убрала со страницы сообщение
+    // «…se abre con la suscripción»; поймал это CI
+    // (`e2e/search-deep-link.spec.ts`), а не проверка. Теперь ловит она.
+    leaveNativeShell();
+    render(
+      <>
+        <FreeTrialLimitBanner message="общий предел" cta="купить" locale="ru" lockedTotal={766} unit="expressions" />
+        <FreeTrialLimitBanner
+          message="ссылка на закрытое"
+          cta="купить"
+          locale="ru"
+          lockedTotal={766}
+          unit="expressions"
+          noticeAbove
+        />
+      </>,
+    );
+    expect(plates()).toHaveLength(0);
+    expect(screen.getByText("общий предел")).toBeInTheDocument();
+    expect(screen.getByText("ссылка на закрытое")).toBeInTheDocument();
   });
 
   it("честно пустой фильтр по-прежнему говорит, что он пуст", () => {

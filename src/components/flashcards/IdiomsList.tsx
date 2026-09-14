@@ -208,21 +208,27 @@ export default function IdiomsList({
       </div>
 
       {/*
-        ПЛАШКА НА ЭКРАНЕ ОДНА (7.195, часть 1).
+        ТРИ РАЗНЫХ ПРЕДУПРЕЖДЕНИЯ В ВЕБЕ, ОДНА ПЛАШКА В ОБОЛОЧКЕ (7.195, часть 1).
 
-        Три условия ниже не исключали друг друга: у гостя, пришедшего по
-        ссылке на закрытое выражение, `limited` и `focusMissing` истинны
-        ОБА, и внутри оболочки одна и та же плашка печаталась дважды —
-        ровно то, что владелец снял на словаре. Порядок здесь и есть
-        правило: общий предел важнее частного, частный важнее слоя
-        Premium.
+        В браузере эти три блока говорят РАЗНОЕ и все три законны: общий
+        предел бесплатной пробы, ссылка на закрытое выражение, слой
+        Premium у категории `literary`. Сводить их в одну цепочку нельзя —
+        первая редакция правки так и сделала и убрала со страницы
+        сообщение «…se abre con la suscripción», на котором стоит
+        `e2e/search-deep-link.spec.ts`. Поймано CI, а не рассуждением.
 
-        Знак берётся у признака (`idiomRequirement`): категория
-        `literary` требует плана Premium и потому носит 👑, остальное —
-        🔒. До правки все три плашки печатали 🔒, включая те, что про
-        Premium.
+        ВНУТРИ ОБОЛОЧКИ все три превращаются в одну и ту же плашку замка,
+        и вот её повтор владелец и снял: у гостя, пришедшего по ссылке на
+        закрытое выражение, `limited` и `focusMissing` истинны ОБА.
+        Порядок здесь и есть правило: общий предел важнее частного,
+        частный важнее слоя Premium. Признак `noticeAbove` читается только
+        в оболочке — см. сам компонент.
+
+        Знак берётся у признака (`idiomRequirement`): категория `literary`
+        требует плана Premium и потому носит 👑, остальное — 🔒. До правки
+        все три плашки печатали 🔒, включая те, что про Premium.
       */}
-      {limited ? (
+      {limited && (
         <FreeTrialLimitBanner
           message={dict.freeTrialLimitMessage}
           cta={dict.freeTrialLimitCta}
@@ -230,7 +236,8 @@ export default function IdiomsList({
           lockedTotal={lockedTotal}
           unit="expressions"
         />
-      ) : focusMissing ? (
+      )}
+      {focusMissing && (
         <FreeTrialLimitBanner
           message={dict.deepLinkLockedMessage}
           cta={dict.literaryUpgradeCta}
@@ -239,8 +246,10 @@ export default function IdiomsList({
           lockedTotal={lockedTotal}
           requirement={idiomRequirement({ category: "literary" })}
           unit="expressions"
+          noticeAbove={limited}
         />
-      ) : literaryLocked === "standard" && (categoryFilter === "all" || categoryFilter === "literary") ? (
+      )}
+      {!limited && literaryLocked === "standard" && (categoryFilter === "all" || categoryFilter === "literary") && (
         <FreeTrialLimitBanner
           message={dict.literaryLockedMessageStandard}
           cta={dict.literaryUpgradeCta}
@@ -249,8 +258,9 @@ export default function IdiomsList({
           lockedTotal={lockedTotal}
           requirement={idiomRequirement({ category: "literary" })}
           unit="expressions"
+          noticeAbove={focusMissing}
         />
-      ) : null}
+      )}
 
       <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30">
         {categoryTabs.map((tab) => (

@@ -221,6 +221,7 @@ export default function FreeTrialLimitBanner({
   topic = null,
   unit,
   requirement = "subscription",
+  noticeAbove = false,
 }: {
   message: string;
   cta: string;
@@ -233,6 +234,22 @@ export default function FreeTrialLimitBanner({
   topic?: string | null;
   unit: LockedUnit;
   requirement?: AccessRequirement;
+  /**
+   * ПЛАШКА ОДНА — НО ТОЛЬКО ВНУТРИ ОБОЛОЧКИ (7.195, часть 1).
+   *
+   * В ВЕБЕ соседние предупреждения этого компонента говорят РАЗНОЕ: общий
+   * предел пробы, ссылка на закрытое выражение, слой Premium у категории
+   * `literary`. Их три, и все три законны — первая редакция правки свела
+   * их в одну цепочку `? :` и тем убрала со страницы сообщение
+   * «…se abre con la suscripción», на котором стоит
+   * `e2e/search-deep-link.spec.ts` (поймано CI, не рассуждением).
+   *
+   * Внутри оболочки все три превращаются в ОДНУ и ту же плашку замка, и
+   * вот её повтор и был находкой владельца. Поэтому признак проверяется
+   * здесь, где уже известно, оболочка это или браузер: в вебе флаг не
+   * читается вовсе.
+   */
+  noticeAbove?: boolean;
 }) {
   // Оба хука зовутся безусловно и до любой ветки: порядок хуков не имеет
   // права зависеть от того, оболочка это или браузер.
@@ -240,6 +257,7 @@ export default function FreeTrialLimitBanner({
   const nativeShell = useIsNativeShell();
 
   if (nativeShell) {
+    if (noticeAbove) return null;
     return (
       <NativeLockedNotice
         locale={locale}
