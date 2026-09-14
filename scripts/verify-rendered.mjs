@@ -45,11 +45,31 @@ import { pathToFileURL } from "node:url";
 const PORT = 3123;
 const BASE = `http://localhost:${PORT}`;
 
-async function waitForServer(timeoutMs = 90_000) {
+/**
+ * ВТОРОЙ сервер, и он нужен ровно одной проверке — живой половине
+ * `check:native-payments` (долг 184).
+ *
+ * Зачем отдельный. Сторож судит теперь ТРИ РОЛИ: гостя, аккаунт без
+ * подписки и подписчика, — и роли у него настоящие: он заводит их через
+ * `/api/auth/register` и выдаёт подписку через
+ * `/api/test/grant-subscription`. Второй маршрут живёт только при
+ * `E2E_TEST_SEED=1`, а первый без этого флага отдаёт сессионную куку с
+ * `Secure` (см. `src/lib/session-token.ts`), и по http она не вернётся
+ * вовсе — то есть «войти» не вышло бы ни у одной роли.
+ *
+ * Почему флаг не добавлен общему серверу на 3123: на нём меряют отдачу
+ * восемь других проверок, и менять условия их замера ради одной — цена,
+ * которую платить незачем. Этот поднимается непосредственно перед
+ * проверкой и гасится сразу после неё.
+ */
+const ROLES_PORT = 3124;
+const ROLES_BASE = `http://localhost:${ROLES_PORT}`;
+
+async function waitForServer(timeoutMs = 90_000, base = BASE) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${BASE}/es`, { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(`${base}/es`, { signal: AbortSignal.timeout(4000) });
       if (res.ok) return true;
     } catch {
       // not up yet
@@ -98,9 +118,9 @@ function stopServer(server) {
  * Отказ, а не предупреждение: «зелёный на чужой сборке» ничем не лучше
  * красного, а «красный на чужой сборке» — ровно то, что здесь и вышло.
  */
-async function portIsFree() {
+async function portIsFree(base = BASE) {
   try {
-    await fetch(`${BASE}/`, { signal: AbortSignal.timeout(3000) });
+    await fetch(`${base}/`, { signal: AbortSignal.timeout(3000) });
     return false;
   } catch {
     return true;
@@ -108,10 +128,15 @@ async function portIsFree() {
 }
 
 async function main() {
-  if (!(await portIsFree())) {
+  // ОБА порта, а не один: с 13.09.2026 прогон поднимает второй сервер под
+  // роли (см. ROLES_PORT), и чужой `next start` на 3124 он принял бы за
+  // свой ровно так же, как когда-то принял чужой на 3123.
+  for (const base of [BASE, ROLES_BASE]) {
+    if (await portIsFree(base)) continue;
     console.error(
-      `ОТКАЗ: на ${BASE} уже кто-то отвечает. Этот прогон поднимает СВОЙ сервер и меряет СВОЮ сборку; ` +
-        `чужой сервер на том же порту он принял бы за свой и намерил бы чужое. Остановите его и повторите.`,
+      `ОТКАЗ: на ${base} уже кто-то отвечает.` +
+        ` Этот прогон поднимает СВОИ серверы и меряет СВОЮ сборку; чужой сервер на том же порту он` +
+        ` принял бы за свой и намерил бы чужое. Остановите его и повторите.`,
     );
     return 1;
   }
@@ -121,12 +146,20 @@ async function main() {
     console.error(`cannot find ${nextBin} — run npm ci first`);
     return 1;
   }
-  const server = spawn(nextBin, ["start", "-p", String(PORT)], {
-    stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env },
-    // Its own process group, so one kill reaches every process it forks.
-    detached: true,
-  });
+  const spawnServer = (port, extraEnv = {}) => {
+    const child = spawn(nextBin, ["start", "-p", String(port)], {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, ...extraEnv },
+      // Its own process group, so one kill reaches every process it forks.
+      detached: true,
+    });
+    child.log = "";
+    child.stdout.on("data", (d) => { child.log += d.toString(); });
+    child.stderr.on("data", (d) => { child.log += d.toString(); });
+    return child;
+  };
+
+  const server = spawnServer(PORT);
   let serverLog = "";
   server.stdout.on("data", (d) => { serverLog += d.toString(); });
   server.stderr.on("data", (d) => { serverLog += d.toString(); });
@@ -219,19 +252,39 @@ async function main() {
     // Статическую половину того же сторожа гоняет
     // `npm run check:native-payments` в `verify` и в `ci.yml` — она
     // дешёвая и сервера не требует. Разделение то же, что у `check:404`.
-    const nativePayments = spawnSync(
-      process.execPath,
-      ["scripts/check-native-payments.mjs", `--base=${BASE}`],
-      { stdio: "inherit" }
-    );
-    // Обязательная вторая половина: та же страница, отданная БЕЗ токена
-    // оболочки, судится по нативным правилам и обязана уронить сторож.
-    // Без неё «0 форм» значило бы «измеритель ничего не ищет».
-    const nativePaymentsPlant = spawnSync(
-      process.execPath,
-      ["scripts/check-native-payments.mjs", `--base=${BASE}`, "--plant"],
-      { stdio: "inherit" }
-    );
+    //
+    // ТРИ РОЛИ, И ПОЭТОМУ СВОЙ СЕРВЕР. Разбор — у объявления ROLES_PORT
+    // выше и в шапке самого сторожа. Поднимается здесь, гасится сразу
+    // после двух прогонов: держать два `next start` рядом с Chromium всю
+    // дорогу незачем.
+    const rolesServer = spawnServer(ROLES_PORT, { E2E_TEST_SEED: "1" });
+    let nativePayments = { status: 1 };
+    let nativePaymentsPlant = { status: 1 };
+    try {
+      if (!(await waitForServer(90_000, ROLES_BASE))) {
+        console.error(
+          `ОТКАЗ: сервер ролей на ${ROLES_BASE} не поднялся. Живая половина check:native-payments ` +
+            `без него судила бы одну роль из трёх — ровно то, чем и был долг 184. Вывод сервера:\n` +
+            rolesServer.log.slice(-800),
+        );
+      } else {
+        nativePayments = spawnSync(
+          process.execPath,
+          ["scripts/check-native-payments.mjs", `--base=${ROLES_BASE}`],
+          { stdio: "inherit" }
+        );
+        // Обязательная вторая половина: в нативную отдачу КАЖДОЙ роли
+        // подсаживается кнопка покупки, и сторож обязан упасть. Без неё
+        // «0 форм» значило бы «измеритель ничего не ищет».
+        nativePaymentsPlant = spawnSync(
+          process.execPath,
+          ["scripts/check-native-payments.mjs", `--base=${ROLES_BASE}`, "--plant"],
+          { stdio: "inherit" }
+        );
+      }
+    } finally {
+      stopServer(rolesServer);
+    }
     // Седьмым и восьмым на том же сервере — долг 161: ни один прижатый к
     // низу окна слой не накрывает орган, до которого человек обязан
     // добраться. Здесь, а не отдельным шагом, по той же причине, что и

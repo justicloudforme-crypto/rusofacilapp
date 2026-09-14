@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import VocabularyApp from "@/components/flashcards/VocabularyApp";
 import JsonLd from "@/components/seo/JsonLd";
 import { VOCABULARY_CATEGORY_PAGES } from "@/lib/vocabulary-categories";
@@ -90,6 +91,12 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
           на B2. Формулировка — действующая формула уровней (PROGRESS 7.76):
           курс A1-B2; словарь, рассказы и игры — до C1. Обе локали: эта
           страница существует и на /ru, в отличие от категорийных. */}
+      {/* ДОЛГ 184. Внутри оболочки этой подписи нет вовсе: и заголовок,
+          и текст называют «тариф Premium», то есть продают то, чего в
+          приложении не продают. В вебе блок остаётся целиком — он там и
+          написан, чтобы посетитель не догадывался, почему списки кончаются
+          на B2. */}
+      {(await isNativeShellRequest()) ? null : (
       <aside className="mt-10 rounded-2xl border border-black/10 p-5 dark:border-white/30">
         <h2 className="text-base font-semibold tracking-tight">{dict.vocabulary.c1PremiumHeading}</h2>
         <p className="mt-2 text-sm leading-6 text-foreground/70">{dict.vocabulary.c1PremiumBody}</p>
@@ -100,6 +107,7 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
           {dict.vocabulary.c1PremiumCta}
         </Link>
       </aside>
+      )}
 
       {showCategoryIndex && (
         <>

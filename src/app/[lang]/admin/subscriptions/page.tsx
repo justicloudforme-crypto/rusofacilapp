@@ -13,6 +13,8 @@ const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
   trialing: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   past_due: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   canceled: "bg-red-500/10 text-red-600 dark:text-red-400",
+  // Долг 190: отменена, но оплаченный период ещё идёт — доступ есть.
+  canceling: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   expired: "bg-red-500/10 text-red-600 dark:text-red-400",
   none: "bg-foreground/10 text-foreground/60",
 };
@@ -44,6 +46,7 @@ export default async function AdminSubscriptionsPage({
     trialing: dict.profile.statusTrialing,
     past_due: dict.profile.statusPastDue,
     canceled: dict.profile.statusCanceled,
+    canceling: dict.profile.statusCanceling,
     expired: dict.profile.statusIncompleteExpired,
     none: dict.admin.subscriptions.noSubscription,
   };

@@ -256,7 +256,7 @@ export default async function LangLayout({
               он обязан стоять в конце ПРОКРУЧИВАЕМОЙ ОБЛАСТИ, а конец
               <main> — это середина документа. Долг 161. */}
           <main className="flex flex-1 flex-col">{children}</main>
-          <Footer dict={dict} lang={lang} />
+          <Footer dict={dict} lang={lang} nativeShell={nativeShell} />
         </PaywallProvider>
         <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} nativeShell={nativeShell} />
         {/* Reading mode is meant to minimize distractions — the floating

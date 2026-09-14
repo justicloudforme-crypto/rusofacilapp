@@ -262,6 +262,9 @@ const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
   trialing: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   past_due: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   canceled: "bg-red-500/10 text-red-600 dark:text-red-400",
+  // Отменена, но действует (долг 190) — янтарный, а не красный: доступ
+  // ЕСТЬ. Красный сказал бы, что всё кончилось, а это неправда.
+  canceling: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   expired: "bg-red-500/10 text-red-600 dark:text-red-400",
   none: "bg-foreground/10 text-foreground/60",
 };
@@ -441,7 +444,12 @@ export default async function ProfilePage({
   // one question has exactly one answer in this app: tierOfAccount, reached
   // here through getEntitlementTierFor. Until 08.09.2026 this page derived
   // the second from the first and re-applied the staff bypass itself.
-  const isActive = displayStatus === "active" || displayStatus === "trialing";
+  // «canceling» здесь ТОЖЕ активна, и это главное в долге 190: подписка
+  // отменена, продления не будет, а оплаченный период идёт — доступ есть.
+  // Именно эта строка печатала «Истекла» с датой в БУДУЩЕМ: до правки
+  // отменённая строка не попадала ни в одну из двух ветвей.
+  const isActive =
+    displayStatus === "active" || displayStatus === "trialing" || displayStatus === "canceling";
   const tier = await getEntitlementTierFor(user);
   const entitled = hasAnyAccess(tier);
   // Drives the gold ring/crown on this page's own avatar (below) and the
@@ -481,6 +489,7 @@ export default async function ProfilePage({
     trialing: dict.profile.statusTrialing,
     past_due: dict.profile.statusPastDue,
     canceled: dict.profile.statusCanceled,
+    canceling: dict.profile.statusCanceling,
     expired: dict.profile.statusIncompleteExpired,
     none: dict.profile.statusNoSubscription,
   };
@@ -901,6 +910,13 @@ export default async function ProfilePage({
             ) : null}
           </Card>
 
+          {/* ДОЛГ 186. «Приглашай и получай» внутри приложения обещало
+              30 дней за то, что приглашённый ОФОРМИТ ПОДПИСКУ, и давало
+              ссылку на сайт, где её оформляют. Это призыв к покупке
+              (чужой, но покупке) и увод на внешнюю оплату сразу — то
+              есть ровно то, что запрещают Google Play Payments и App
+              Store 3.1.1. В вебе блок остаётся целиком. */}
+          {nativeShell ? null : (
           <Card>
             <SectionHeading icon={<GiftIcon className="h-[18px] w-[18px]" />}>
               {dict.profile.referralHeading}
@@ -932,6 +948,7 @@ export default async function ProfilePage({
               </div>
             )}
           </Card>
+          )}
         </section>
       )}
 
@@ -1194,14 +1211,26 @@ export default async function ProfilePage({
               {planDisplayLabel(subscription.plan, dict)}
             </dd>
             <dt className="text-foreground/60">
+              {/* ДОЛГ 190. «Истекла» рядом с датой в БУДУЩЕМ — это то, что
+                  увидел владелец, и слово здесь всегда было следствием, а
+                  не причиной: `isActive` был ложью сразу после отмены,
+                  потому что отмена закрывала доступ немедленно. Теперь
+                  отменённая, но действующая подписка — это `isActive`, и
+                  подпись сама собой становится «Действует до». */}
               {isActive ? dict.profile.expiresLabel : dict.profile.expiredLabel}
             </dt>
             <dd><LocalDate iso={subscription.currentPeriodEnd.toISOString()} locale={lang} /></dd>
           </dl>
         )}
 
+        {/* Отменена, но ещё действует: сказать это словами, и убрать
+            кнопку отмены — отменять больше нечего (долг 190). */}
+        {displayStatus === "canceling" && (
+          <p className="mt-4 text-sm text-foreground/70">{dict.profile.cancelingNotice}</p>
+        )}
+
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {isActive ? (
+          {isActive && displayStatus !== "canceling" ? (
             <form action="/api/subscription/cancel" method="POST">
               <input type="hidden" name="lang" value={lang} />
               <button
@@ -1731,7 +1760,11 @@ export default async function ProfilePage({
         </SectionHeading>
         {!entitled && (
           <p className="mt-2 text-sm text-foreground/60">
-            {dict.profile.lockedNotice}
+            {/* Слово «подписка» внутри оболочки — тоже призыв: оно называет
+                то, чего в приложении не продают. Решение владельца от
+                13.09.2026 (долг 184): ни «тарифов», ни «подписки», ни
+                «цен» — только положение дел. */}
+            {nativeShell ? nativeAccessCopy(lang).closedNote : dict.profile.lockedNotice}
           </p>
         )}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1759,9 +1792,21 @@ export default async function ProfilePage({
                     {levelDict.subtitle}
                   </p>
                 </div>
+                {/* ДОЛГ 184, СНЯТО ВЛАДЕЛЬЦЕМ НА ЖИВОМ ТЕЛЕФОНЕ. Под каждым
+                    из четырёх уровней стояла кнопка «Смотреть тарифы» —
+                    аккаунту БЕЗ подписки, внутри приложения. Замер 7.192 её
+                    не увидел вовсе: его живая половина спрашивала четыре
+                    адреса и ни один из них не был кабинетом, а ветка на
+                    оболочку в этом же файле (строка 880) делала статическое
+                    правило «файл упоминает isNativeShellRequest» зелёным.
+                    Внутри оболочки кнопка ведёт НА УРОВЕНЬ: первый урок
+                    каждого уровня открыт всем, остальные показаны с замком —
+                    ни цены, ни слова «тарифы». */}
                 <Link
                   href={
-                    entitled ? `/${lang}/courses/${level}` : `/${lang}/pricing`
+                    entitled || nativeShell
+                      ? `/${lang}/courses/${level}`
+                      : `/${lang}/pricing`
                   }
                   className={`tap w-full rounded-full px-4 py-2 text-center text-sm font-medium transition-colors sm:w-fit ${
                     entitled
@@ -1769,7 +1814,7 @@ export default async function ProfilePage({
                       : "border border-black/10 hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
                   }`}
                 >
-                  {entitled ? ctaLabel : dict.account.seePricing}
+                  {entitled || nativeShell ? ctaLabel : dict.account.seePricing}
                 </Link>
               </div>
             );

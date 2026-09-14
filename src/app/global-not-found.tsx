@@ -12,6 +12,7 @@ import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserStreakStats } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
+import { isNativeShellRequest } from "@/lib/native-shell";
 
 /**
  * Своя страница 404 на весь сайт, в обеих локалях — долг 129.
@@ -82,7 +83,10 @@ export default async function GlobalNotFound() {
         <main className="flex flex-1 flex-col">
           <NotFoundBody lang={lang} dict={dict.notFound} />
         </main>
-        <Footer dict={dict} lang={lang} />
+        {/* Долг 188: у 404 признак оболочки спрашивается тем же вызовом,
+            что и у корневого макета — иначе «Скачать приложение» уцелело бы
+            ровно на одной странице сайта. */}
+        <Footer dict={dict} lang={lang} nativeShell={await isNativeShellRequest()} />
       </body>
     </html>
   );
