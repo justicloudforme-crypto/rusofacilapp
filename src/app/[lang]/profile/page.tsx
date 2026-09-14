@@ -14,6 +14,7 @@ import { db } from "@/lib/db";
 import {
   getSubscriptionsForUser,
   getDisplayStatus,
+  subscriptionDateLine,
   pickEffectiveSubscription,
   type DisplayStatus,
 } from "@/lib/subscription";
@@ -32,7 +33,9 @@ import { getOpenPendingCheckout } from "@/lib/pending-checkout";
 import { getStoryCatalog } from "@/lib/stories-catalog";
 import CopyReferralLink from "@/components/profile/CopyReferralLink";
 import PublicProfileToggle from "@/components/profile/PublicProfileToggle";
-import { levelSlugs } from "@/lib/courses";
+import { levelSlugs, lessonsPerLevel, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
+// Глиф платности — у признака, а не литералом (`check:access-marks`).
+import { ACCESS_MARK_ICON } from "@/lib/access-marks";
 import { isPlanId } from "@/lib/plans";
 import { SUPPORT_EMAIL } from "@/lib/support";
 import {
@@ -437,6 +440,8 @@ export default async function ProfilePage({
   // src/lib/subscription.ts.
   const subscription = pickEffectiveSubscription(subscriptionHistory);
   const displayStatus = getDisplayStatus(subscription);
+  // Дата и её подпись — одно решение, а не два (долг 194).
+  const dateLine = subscription ? subscriptionDateLine(subscription) : null;
   // Two different questions, and this page needs both. `isActive` is about
   // the STORED SUBSCRIPTION — it drives the plan card, the renewal date and
   // the cancel button, and a staff account with no row must not be
@@ -1203,7 +1208,7 @@ export default async function ProfilePage({
           </span>
         </div>
 
-        {subscription && (
+        {subscription && dateLine && (
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-foreground/60">{dict.account.plan}</dt>
             <dd className="flex items-center gap-1.5">
@@ -1211,15 +1216,21 @@ export default async function ProfilePage({
               {planDisplayLabel(subscription.plan, dict)}
             </dd>
             <dt className="text-foreground/60">
-              {/* ДОЛГ 190. «Истекла» рядом с датой в БУДУЩЕМ — это то, что
-                  увидел владелец, и слово здесь всегда было следствием, а
-                  не причиной: `isActive` был ложью сразу после отмены,
-                  потому что отмена закрывала доступ немедленно. Теперь
-                  отменённая, но действующая подписка — это `isActive`, и
-                  подпись сама собой становится «Действует до». */}
-              {isActive ? dict.profile.expiresLabel : dict.profile.expiredLabel}
+              {/* ДОЛГ 190, доведён в 194. «Истекла» рядом с датой в БУДУЩЕМ
+                  — это то, что снял владелец на телефоне 14.09.2026, и
+                  причина была здесь: подпись выбиралась доступом
+                  (`isActive`), а доступ — словом «canceled» из колонки.
+                  Теперь и подпись, и сама дата приходят одним решением из
+                  `subscriptionDateLine`, которое считает от ДАТЫ. Трёх
+                  случаев ровно три, и ни в одном подпись не может
+                  разойтись с датой, которую она подписывает. */}
+              {dateLine.kind === "expires"
+                ? dict.profile.expiresLabel
+                : dateLine.kind === "expired"
+                  ? dict.profile.expiredLabel
+                  : dict.profile.statusCanceled}
             </dt>
-            <dd><LocalDate iso={subscription.currentPeriodEnd.toISOString()} locale={lang} /></dd>
+            <dd><LocalDate iso={dateLine.iso} locale={lang} /></dd>
           </dl>
         )}
 
@@ -1763,14 +1774,26 @@ export default async function ProfilePage({
             {/* Слово «подписка» внутри оболочки — тоже призыв: оно называет
                 то, чего в приложении не продают. Решение владельца от
                 13.09.2026 (долг 184): ни «тарифов», ни «подписки», ни
-                «цен» — только положение дел. */}
-            {nativeShell ? nativeAccessCopy(lang).closedNote : dict.profile.lockedNotice}
+                «цен» — только положение дел.
+
+                ДОЛГ 193. Здесь стоял `closedNote` («эта часть курса
+                закрыта»), и он спорил с заголовком «Доступные курсы» над
+                собой и с кнопкой «Начать» под собой. Правда ровно посредине
+                и проверяется числом: открыт первый урок каждого уровня
+                (`isFreeTrialLesson`), закрыты остальные 29 из 30. */}
+            {nativeShell ? nativeAccessCopy(lang).courses.note : dict.profile.lockedNotice}
           </p>
         )}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {levelSlugs.map((level) => {
             const levelDict = dict.courses.levels[level];
             const levelProgress = progress[level];
+            // Сколько уроков уровня открыто без подписки и сколько закрыто.
+            // Считается тем же правилом, которым закрывает сама страница
+            // урока (`isFreeTrialLesson`), а не повторённым числом: разойтись
+            // с ней это не может по построению.
+            const openLessons = lessonSlugsFor(level).filter((slug) => isFreeTrialLesson(level, slug)).length;
+            const totalLessons = lessonsPerLevel[level];
             const ctaLabel =
               levelProgress.percent >= 100
                 ? dict.profile.completedButton
@@ -1802,6 +1825,27 @@ export default async function ProfilePage({
                     Внутри оболочки кнопка ведёт НА УРОВЕНЬ: первый урок
                     каждого уровня открыт всем, остальные показаны с замком —
                     ни цены, ни слова «тарифы». */}
+                {/* ДОЛГ 193. Внутри оболочки у неоплатившего под уровнем
+                    стоит не «закрыто», а разложение: что открыто и сколько
+                    с замком. Ни цены, ни кнопки покупки здесь нет — только
+                    метка состояния, а её магазины разрешают прямо. */}
+                {nativeShell && !entitled && (
+                  <p className="-mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-foreground/60">
+                    <span className="rounded-full bg-foreground/10 px-2 py-0.5 font-semibold uppercase tracking-wide">
+                      {ACCESS_MARK_ICON.subscription} {nativeAccessCopy(lang).locked.badge}
+                    </span>
+                    <span>
+                      {nativeAccessCopy(lang)
+                        .courses.openLine.replace("{open}", String(openLessons))
+                        .replace("{total}", String(totalLessons))}
+                      {" · "}
+                      {nativeAccessCopy(lang).courses.lockedLine.replace(
+                        "{locked}",
+                        String(totalLessons - openLessons),
+                      )}
+                    </span>
+                  </p>
+                )}
                 <Link
                   href={
                     entitled || nativeShell

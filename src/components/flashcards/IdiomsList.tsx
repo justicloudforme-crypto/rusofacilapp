@@ -8,8 +8,11 @@ import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { idiomAnchor } from "@/lib/deep-link-anchors";
+import type { Locale } from "@/i18n/config";
 
 export interface IdiomsDict {
+  /** Нужен подписи про закрытое внутри оболочки (число склоняется). */
+  locale: Locale;
   listenLabel: string;
   literalTranslationLabel: string;
   spanishEquivalentLabel: string;
@@ -77,6 +80,10 @@ export default function IdiomsList({
   const [idiomsLoading, setIdiomsLoading] = useState(true);
   const [limited, setLimited] = useState(false);
   const [literaryLocked, setLiteraryLocked] = useState<"free" | "standard" | null>(null);
+  // Перепись закрытого из ответа сервера (долг 191): сколько выражений
+  // лежит в базе и не ушло в ответ. Внутри оболочки это число стоит на
+  // месте призыва к покупке.
+  const [lockedTotal, setLockedTotal] = useState(0);
   // Фраза из ссылки, которой в отданном списке нет вовсе. Отдельное
   // состояние, а не вычисление на лету: до ответа `/api/idioms` список
   // пуст у всех, и «не нашлась» на пустом списке значило бы «не нашлась»
@@ -93,10 +100,11 @@ export default function IdiomsList({
   useEffect(() => {
     fetch("/api/idioms")
       .then((res) => (res.ok ? res.json() : { idioms: [], limited: false, literaryLocked: null }))
-      .then((body: { idioms?: Idiom[]; limited?: boolean; literaryLocked?: "free" | "standard" | null }) => {
+      .then((body: { idioms?: Idiom[]; limited?: boolean; literaryLocked?: "free" | "standard" | null; lockedTotal?: number }) => {
         setIdioms(body.idioms ?? []);
         setLimited(Boolean(body.limited));
         setLiteraryLocked(body.literaryLocked ?? null);
+        setLockedTotal(body.lockedTotal ?? 0);
       })
       .catch(() => setIdioms([]))
       .finally(() => setIdiomsLoading(false));
@@ -195,7 +203,13 @@ export default function IdiomsList({
       </div>
 
       {limited && (
-        <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+        <FreeTrialLimitBanner
+          message={dict.freeTrialLimitMessage}
+          cta={dict.freeTrialLimitCta}
+          locale={dict.locale}
+          lockedTotal={lockedTotal}
+          unit="expressions"
+        />
       )}
       {/* Free-tier visitors already see the banner above (their literary
        * cap is just one facet of the general free-sample limit) — this one
@@ -206,6 +220,9 @@ export default function IdiomsList({
           message={dict.deepLinkLockedMessage}
           cta={dict.literaryUpgradeCta}
           reason="premium"
+          locale={dict.locale}
+          lockedTotal={lockedTotal}
+          unit="expressions"
         />
       )}
       {!limited && literaryLocked === "standard" && (categoryFilter === "all" || categoryFilter === "literary") && (
@@ -213,6 +230,9 @@ export default function IdiomsList({
           message={dict.literaryLockedMessageStandard}
           cta={dict.literaryUpgradeCta}
           reason="premium"
+          locale={dict.locale}
+          lockedTotal={lockedTotal}
+          unit="expressions"
         />
       )}
 

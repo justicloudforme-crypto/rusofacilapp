@@ -260,6 +260,8 @@ async function main() {
     const rolesServer = spawnServer(ROLES_PORT, { E2E_TEST_SEED: "1" });
     let nativePayments = { status: 1 };
     let nativePaymentsPlant = { status: 1 };
+    let renderedPurchases = { status: 1 };
+    let renderedPurchasesPlant = { status: 1 };
     try {
       if (!(await waitForServer(90_000, ROLES_BASE))) {
         console.error(
@@ -279,6 +281,27 @@ async function main() {
         nativePaymentsPlant = spawnSync(
           process.execPath,
           ["scripts/check-native-payments.mjs", `--base=${ROLES_BASE}`, "--plant"],
+          { stdio: "inherit" }
+        );
+        // ДОЛГ 191. Третья и четвёртая на ЭТОМ ЖЕ сервере ролей —
+        // отрисованный экран. Половина по http судит ОТВЕТ СЕРВЕРА, и
+        // кнопки, которую владелец нашёл в словаре, в этом ответе нет
+        // вовсе: её рисует клиент после `/api/flashcards` и после одного
+        // нажатия на плитку темы. Замер: 0 платных органов на открытии, 1
+        // после нажатия.
+        renderedPurchases = spawnSync(
+          process.execPath,
+          ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`],
+          { stdio: "inherit" }
+        );
+        // Обязательная вторая половина: кнопка покупки БЕЗ АДРЕСА,
+        // подсаженная в уже отрисованный документ, обязана уронить прибор
+        // в каждой из трёх ролей. Гоняется по короткому срезу адресов —
+        // подсадка живёт на КАЖДОМ экране, и платить за неё 132 адресами
+        // значит платить за одно и то же.
+        renderedPurchasesPlant = spawnSync(
+          process.execPath,
+          ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--plant", "--limit=4"],
           { stdio: "inherit" }
         );
       }
@@ -332,7 +355,9 @@ async function main() {
       (linksPlant.status ?? 1) ||
       (notFound.status ?? 1) ||
       (nativePayments.status ?? 1) ||
-      (nativePaymentsPlant.status ?? 1)
+      (nativePaymentsPlant.status ?? 1) ||
+      (renderedPurchases.status ?? 1) ||
+      (renderedPurchasesPlant.status ?? 1)
     );
   } finally {
     stop();

@@ -302,10 +302,13 @@ export default async function MediaDetailPage({
       ) : (
         <div className="paywall-lock mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
           <h2 className="font-medium">{dict.media.premiumLockTitle}</h2>
-          <p className="mt-2 text-sm text-foreground/70">{dict.media.premiumLockBody}</p>
-          {/* ДОЛГ 184: внутри оболочки на месте кнопки покупки — строка.
-              Заголовок и текст замка остаются: они говорят, что материал
-              закрыт, и это правда, которую человеку надо знать. */}
+          {/* ДОЛГ 191, то же, что на странице рассказа: сам ТЕКСТ замка
+              зовёт оформить подписку («Оформите подписку, чтобы открыть всю
+              библиотеку» / «Suscríbete para desbloquear toda la
+              biblioteca»), и внутри оболочки его быть не может. */}
+          <p className="mt-2 text-sm text-foreground/70">
+            {(await isNativeShellRequest()) ? nativeAccessCopy(lang).lock.body : dict.media.premiumLockBody}
+          </p>
           {(await isNativeShellRequest()) ? (
             <p className="mt-4 text-sm text-foreground/60">{nativeAccessCopy(lang).closedNote}</p>
           ) : (

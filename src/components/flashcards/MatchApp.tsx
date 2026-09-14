@@ -64,6 +64,12 @@ export default function MatchApp({
   const [roundTimeSeconds, setRoundTimeSeconds] = useState(0);
   const roundStartedAtRef = useRef(0);
   const [limited, setLimited] = useState(false);
+  // Перепись закрытого из ответа сервера (долг 191).
+  const [lockedTotal, setLockedTotal] = useState(0);
+  const [lockedByLevel, setLockedByLevel] = useState<Record<string, number>>({});
+  // Закрытое под текущим фильтром уровня: уровень здесь тоже
+  // накладывает браузер (см. `pool` ниже), поэтому и разрез тот же.
+  const lockedHere = levelFilter === "all" ? lockedTotal : (lockedByLevel[levelFilter] ?? 0);
   // True only while a category's round is being fetched — without it, the
   // "not enough cards" message flashed for a moment on every category open
   // (round starts at [] before the fetch resolves, which is also < the
@@ -95,10 +101,12 @@ export default function MatchApp({
     setRoundLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
-      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number> }) => {
         const cards = body.cards ?? [];
         setCategoryCards(cards);
         setLimited(Boolean(body.limited));
+        setLockedTotal(body.lockedTotal ?? 0);
+        setLockedByLevel(body.lockedByLevel ?? {});
         startRound(ROUND_SIZES[0], cards, levelFilter, startCardId);
       })
       .catch(() => {
@@ -173,7 +181,14 @@ export default function MatchApp({
               spot already sits behind the modal while it's open and
               becomes visible the moment it closes. */}
           {limited && (
-            <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+            <FreeTrialLimitBanner
+              message={dict.freeTrialLimitMessage}
+              cta={dict.freeTrialLimitCta}
+              locale={dict.locale}
+              lockedTotal={lockedHere}
+              level={levelFilter === "all" ? null : levelFilter}
+              unit="words"
+            />
           )}
 
           <GameResultPanel

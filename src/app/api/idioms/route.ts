@@ -139,5 +139,23 @@ export async function GET(request: NextRequest) {
     contextExampleAudioUrl: contextAudioById.get(idiom.id),
   }));
 
-  return NextResponse.json({ idioms: withAudio, limited: !entitled, literaryLocked });
+  // Перепись закрытого (долг 191): сколько строк под этим же фильтром
+  // лежит в базе и НЕ ушло в ответ. Число — разность, а не литерал, и
+  // считается для любой роли: у подписчика оно честно равно нулю.
+  const shownIds = new Set(visibleIdioms.map((idiom) => idiom.id));
+  const lockedByLevel: Record<string, number> = {};
+  let lockedTotal = 0;
+  for (const idiom of idioms) {
+    if (shownIds.has(idiom.id)) continue;
+    lockedByLevel[idiom.level] = (lockedByLevel[idiom.level] ?? 0) + 1;
+    lockedTotal += 1;
+  }
+
+  return NextResponse.json({
+    idioms: withAudio,
+    limited: !entitled,
+    literaryLocked,
+    lockedTotal,
+    lockedByLevel,
+  });
 }

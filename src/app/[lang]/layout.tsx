@@ -224,7 +224,11 @@ export default async function LangLayout({
         // рисуется вовсе, но полоса системных кнопок Android в обоих этих
         // случаях никуда не девается: замер владельца — последние строки
         // обычных страниц срезаны ею.
-        className={`flex min-h-full flex-col ${user ? "pb-pinned sm:pb-safe" : "pb-safe"}`}
+        // ДОЛГ 192: внутри оболочки панель есть и у гостя, значит отступ
+        // под неё нужен и гостю. Условие теперь ровно то же, по которому
+        // BottomNav решает рисоваться, — иначе низ последней карточки
+        // снова уехал бы под панель, ровно как в долге 161.
+        className={`flex min-h-full flex-col ${user || nativeShell ? "pb-pinned sm:pb-safe" : "pb-safe"}`}
         suppressHydrationWarning
       >
         <HydrationMarker />

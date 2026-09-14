@@ -5,7 +5,7 @@ import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
-import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
+import FreeTrialLimitBanner, { LockedOrEmpty } from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import { resumeRoundAt } from "@/lib/flashcards/resume-round";
 import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flashcards";
@@ -69,6 +69,12 @@ export default function FillBlankApp({
   const [streak, setStreak] = useState(0);
   const [streakToast, setStreakToast] = useState<number | null>(null);
   const [limited, setLimited] = useState(false);
+  // Перепись закрытого из ответа сервера (долг 191).
+  const [lockedTotal, setLockedTotal] = useState(0);
+  const [lockedByLevel, setLockedByLevel] = useState<Record<string, number>>({});
+  // Закрытое под текущим фильтром уровня: уровень здесь тоже
+  // накладывает браузер (см. `pool` ниже), поэтому и разрез тот же.
+  const lockedHere = levelFilter === "all" ? lockedTotal : (lockedByLevel[levelFilter] ?? 0);
   const [roundLoading, setRoundLoading] = useState(false);
   const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const roundStartedAtRef = useRef(0);
@@ -107,8 +113,10 @@ export default function FillBlankApp({
     setRoundLoading(true);
     fetch(`/api/flashcards?category=${encodeURIComponent(next)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
-      .then((body: { cards?: FlashcardRow[]; limited?: boolean }) => {
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number> }) => {
         setLimited(Boolean(body.limited));
+        setLockedTotal(body.lockedTotal ?? 0);
+        setLockedByLevel(body.lockedByLevel ?? {});
         startRound(body.cards ?? [], startCardId);
       })
       .catch(() => startRound([]))
@@ -196,7 +204,14 @@ export default function FillBlankApp({
               spot already sits behind the modal while it's open and
               becomes visible the moment it closes. */}
           {limited && (
-            <FreeTrialLimitBanner message={dict.freeTrialLimitMessage} cta={dict.freeTrialLimitCta} />
+            <FreeTrialLimitBanner
+              message={dict.freeTrialLimitMessage}
+              cta={dict.freeTrialLimitCta}
+              locale={dict.locale}
+              lockedTotal={lockedHere}
+              level={levelFilter === "all" ? null : levelFilter}
+              unit="words"
+            />
           )}
 
           <GameResultPanel
@@ -227,9 +242,13 @@ export default function FillBlankApp({
               <Skeleton variant="rect" className="h-11 w-full max-w-xs rounded-xl" />
             </div>
           ) : !card ? (
-            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
-              {dict.noCategoryCardsMessage}
-            </p>
+            <LockedOrEmpty
+              locale={dict.locale}
+              emptyMessage={dict.noCategoryCardsMessage}
+              lockedHere={lockedHere}
+              level={levelFilter === "all" ? null : levelFilter}
+              unit="words"
+            />
           ) : (
             <FillBlankCard key={card.id} dict={dict} card={card} result={result} onSubmit={handleSubmit} onNext={handleNext} />
           )}
