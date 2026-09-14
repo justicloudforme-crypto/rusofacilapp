@@ -384,7 +384,22 @@ function judgeSources(sources) {
     [SEARCH_API_FILE, "выдача поиска (запись «Цены»)"],
     [FOOTER_FILE, "подвал (ссылка «Скачать приложение»)"],
   ]) {
-    const source = live[file];
+    /**
+     * ИМЯ СВОЙСТВА — НЕ ВОПРОС ПРО ОБОЛОЧКУ (7.196).
+     *
+     * Найдено подсадкой, а не рассуждением. 7.196 завёл общее правило
+     * знака `accessSignFor(requirement, tier, { nativeShell: … })`, и с
+     * этого дня страница рассказа содержала строку `nativeShell:` даже
+     * после того, как подсадка вычеркнула из неё ВСЕ настоящие вызовы
+     * `isNativeShellRequest`. Правило ниже засчитывало это как ветку, и
+     * подсадка «замок рассказа снова зовёт покупать» перестала ловиться:
+     * 34 из 35 вместо 35 из 35.
+     *
+     * Ключ объекта вычёркивается ДО проверки. Настоящий вопрос про
+     * оболочку — это вызов или чтение значения, а не слово в позиции
+     * имени поля.
+     */
+    const source = live[file].replace(/\bnativeShell\s*:/g, "");
     if (!source.includes("isNativeShellRequest") && !source.includes("nativeShell")) {
       problems.push(`${file}: ${what} не спрашивает про оболочку — платный вход остался на месте`);
       continue;
@@ -917,7 +932,10 @@ async function main() {
             "entitled || nativeShell\n                      ? `/${lang}/courses/${level}`\n                      : `/${lang}/pricing`",
             "entitled ? `/${lang}/courses/${level}` : `/${lang}/pricing`") }],
       ["замок рассказа снова зовёт покупать",
-        { [STORY_FILE]: sources[STORY_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+        // `nativeShell` тоже вычёркивается: с 7.196 на этой странице есть
+        // локальная переменная того же имени (аргумент общего правила
+        // знака), и без этой замены подсадка убирала бы не весь вопрос.
+        { [STORY_FILE]: sources[STORY_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
       ["замок видео снова зовёт покупать",
         { [MEDIA_FILE]: sources[MEDIA_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
       ["подпись про C1 в словаре снова ведёт на цены",

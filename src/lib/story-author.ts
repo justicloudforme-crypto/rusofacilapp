@@ -24,9 +24,10 @@ import type { Locale } from "@/i18n/config";
  *     publisher writes them (Чехов → Chéjov). A name is not interface
  *     text, but leaving twelve Cyrillic names in an otherwise Spanish
  *     column would just move the seam rather than close it;
- *   - "RusoFásil (relato original)" is already Spanish and is left exactly
- *     as it is — it is the marker the project's own originals are
- *     identified by.
+ *   - the project's own marker of an original story was left exactly as
+ *     the column holds it — it is already Spanish, and `/es` is where it
+ *     belongs. Since 14.09.2026 it is ALSO translated the other way, for
+ *     `/ru`; see AUTHOR_MARKER_RU below.
  *
  * Anything not in the table passes through unchanged. That matters more
  * than completeness: this table was built from the values actually present
@@ -100,9 +101,8 @@ const QUALIFIERS: Record<string, string> = {
  * Прежняя редакция этой функции исходила из того, что колонка написана
  * по-русски, а лечить надо только `/es`. Замер 14.09.2026 по боевой базе
  * это опровергает: из 325 значений `Story.author` **277 — испанские**
- * («RusoFásil (relato original)»), и владелец снял их на телефоне в
- * русском каталоге: «Автор: RusoFácil (relato original)» под русским
- * заголовком. Русскими написаны только 48 строк — классики и народные
+ * (маркер оригиналов), и владелец снял их на телефоне в русском каталоге:
+ * «Автор: RusoFácil (relato original)» под русским заголовком. Русскими написаны только 48 строк — классики и народные
  * сказки.
  *
  * Лечится тем же приёмом и в ту же сторону: одной таблицей, отрисовкой, в
@@ -113,8 +113,8 @@ const QUALIFIERS: Record<string, string> = {
  * ДВЕ поверхности — главная и каталог `/stories`, — и обе не заморожены.
  * Страница самого рассказа автора отсюда не берёт, и это важно числом:
  * `byline` входит в сличаемые поля заморозки, и у **57 из 65**
- * замороженных страниц `/ru/stories/…` там стоит ровно
- * «Автор: RusoFásil (relato original)». Правка подписи на самой странице
+ * замороженных страниц `/ru/stories/…` там стоит ровно тот же маркер, со
+ * старым написанием имени и всё. Правка подписи на самой странице
  * рассказа уронила бы `check:frozen` на 57 адресах — она отложена до
  * снятия заморозки 25.09.2026 (долг).
  */

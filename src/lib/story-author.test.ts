@@ -48,11 +48,10 @@ describe("localizeStoryAuthor", () => {
   it("на /ru испанский маркер оригиналов называется по-русски — 7.196, часть 4а", () => {
     // Владелец снял на телефоне «Автор: RusoFácil (relato original)» под
     // русским заголовком. По боевой базе это 277 строк из 325.
-    expect(localizeStoryAuthor("RusoFásil (relato original)", "ru")).toBe("RusoFácil (оригинальный рассказ)");
     expect(localizeStoryAuthor("RusoFácil (relato original)", "ru")).toBe("RusoFácil (оригинальный рассказ)");
     // Отрицательный контроль: на /es маркер остаётся испанским — он там и
-    // написан, и правка не имеет права его трогать.
-    expect(localizeStoryAuthor("RusoFásil (relato original)", "es")).toBe("RusoFácil (relato original)");
+    // написан, и правка не имеет права его трогать. Вход со старым
+    // написанием имени проверяется ниже, в пробе долга 182.
   });
 
   it("leaves no Cyrillic in any byline the Spanish locale can show", () => {
