@@ -72,9 +72,22 @@ const future = (days: number) => new Date(Date.now() + days * DAY);
 const past = (days: number) => new Date(Date.now() - days * DAY);
 
 /**
- * Таблица состояний. Пятая строка — это боевая строка
- * `cmszbb7fg000104lb96t5obn4` на 14.09.2026 (замер по проду, только
- * чтение): отменена старым кодом, период ещё идёт, `canceledAt` пуст.
+ * Таблица состояний.
+ *
+ * Пятая строка — это боевая строка `cmszbb7fg000104lb96t5obn4` ДО
+ * миграции долга 195: отменена старым кодом, период ещё идёт, `canceledAt`
+ * пуст. Она оставлена, и оставлена намеренно: правило обязано отвечать
+ * верно и на строки, которые старый код мог оставить и после.
+ *
+ * ШЕСТАЯ — ТА ЖЕ СТРОКА ПОСЛЕ МИГРАЦИИ, применённой к проду 14.09.2026
+ * (7.196, часть 6): `status: active`, `canceledAt` проставлен,
+ * `currentPeriodEnd` 18.09.2026 — то есть «отменена, но оплаченный период
+ * ещё идёт». Это САМОСТОЯТЕЛЬНОЕ состояние `canceling` со своим текстом:
+ * и «активна», и «отменена» про такую строку — полуправда. Доказано на
+ * экране в обеих локалях: «Отменена — доступ до конца оплаченного
+ * периода» / «Cancelada — acceso hasta el final del periodo pagado», под
+ * ней «Действует до 18 сентября 2026 г.» / «Vence el 18 de septiembre de
+ * 2026».
  */
 const CASES: Array<{ name: string; row: Row; wantStatus: DisplayStatus; wantLine: SubscriptionDateLine["kind"] }> = [
   {
@@ -106,6 +119,13 @@ const CASES: Array<{ name: string; row: Row; wantStatus: DisplayStatus; wantLine
     row: { status: "canceled", currentPeriodEnd: future(4), canceledAt: null, updatedAt: past(26) },
     wantStatus: "canceled",
     wantLine: "canceledOn",
+  },
+  {
+    // ДОЛГ 195 ПОСЛЕ ПРИМЕНЕНИЯ — 7.196, часть 6.
+    name: "БОЕВАЯ СТРОКА ПОСЛЕ МИГРАЦИИ: отменена, но период ещё идёт",
+    row: { status: "active", currentPeriodEnd: future(4), canceledAt: past(26), updatedAt: past(26) },
+    wantStatus: "canceling",
+    wantLine: "expires",
   },
   {
     name: "просрочен платёж",
@@ -165,6 +185,21 @@ const IGNORES_CANCELED_AT: Rules = {
   line: (row) => subscriptionDateLine({ ...row, canceledAt: null }),
 };
 
+/**
+ * ПОДСАДКА «МИГРАЦИЯ ОТКАЧЕНА» — 7.196, часть 6.
+ *
+ * Возвращает строку в то состояние, в котором она лежала на проде ДО
+ * 14.09.2026: слово `canceled` в колонке и пустой `canceledAt`. Экран
+ * тогда снова печатает «Отменена» и дату ОТМЕНЫ вместо конца оплаченного
+ * периода — то есть человек не видит того, за что заплатил. Подсадка
+ * обязана быть поймана: без неё «состояние canceling проверено» значило
+ * бы только, что оно существует в перечислении.
+ */
+const MIGRATION_ROLLED_BACK: Rules = {
+  status: (row) => getDisplayStatus({ ...row, status: "canceled", canceledAt: null }),
+  line: (row) => subscriptionDateLine({ ...row, status: "canceled", canceledAt: null }),
+};
+
 /** Подсадка «дату подписи взяли от периода всегда». */
 const ALWAYS_PERIOD_END: Rules = {
   status: (row) => getDisplayStatus(row),
@@ -187,6 +222,7 @@ export async function main(): Promise<number> {
       ["СТАРОЕ правило целиком: слово «canceled» решает раньше даты", OLD_RULES],
       ["признак отмены (canceledAt) перестал читаться", IGNORES_CANCELED_AT],
       ["дата подписи всегда берётся от конца периода", ALWAYS_PERIOD_END],
+      ["миграция долга 195 откачена: строка снова canceled с пустым canceledAt", MIGRATION_ROLLED_BACK],
     ];
     let caught = 0;
     for (const [name, rules] of plants) {
