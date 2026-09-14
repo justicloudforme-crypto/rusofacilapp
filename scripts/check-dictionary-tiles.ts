@@ -83,6 +83,14 @@ export async function main(): Promise<number> {
   const base = baseArg.slice("--base=".length);
   const plant = process.argv.includes("--plant");
   const table = process.argv.includes("--table");
+  /**
+   * `--ci` — форма пустой базы. Утверждение «число на плитке равно
+   * пересечению» на фикстуре из четырнадцати карточек по-прежнему
+   * проверяемо и проверяется; а отказ «в базе нет ни одной карточки» под
+   * CI означал бы красноту по данным. Под `--ci` пустая база — пропуск с
+   * явной строкой в выводе, а не молчаливый зелёный.
+   */
+  const ci = process.argv.includes("--ci");
 
   // ОЖИДАНИЕ ИЗ БАЗЫ. Считается ровно так же, как считает `siteCensus`, но
   // отдельным запросом — чтобы сторож не спрашивал ответ у того же места,
@@ -103,8 +111,13 @@ export async function main(): Promise<number> {
     inBank.set(whole, (inBank.get(whole) ?? 0) + 1);
   }
   if (rows.length === 0) {
-    console.error("в базе нет ни одной карточки — сверять нечего, и «0 расхождений» тут ничего не значит");
-    return 1;
+    const message = "в базе нет ни одной карточки — сверять нечего, и «0 расхождений» тут ничего не значит";
+    if (!ci) {
+      console.error(message);
+      return 1;
+    }
+    console.log(`check:dictionary-tiles — ПРОПУЩЕНО под --ci: ${message}`);
+    return 0;
   }
 
   const browser = await chromium.launch();

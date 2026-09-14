@@ -216,6 +216,13 @@ export async function main(): Promise<number> {
   }
   const base = baseArg.slice("--base=".length);
   const plant = process.argv.includes("--plant");
+  /**
+   * `--ci` — форма пустой базы. Полосы фильтров рисуются всегда (они не от
+   * данных), а сетка тем на базе CI может отдать меньше плиток, чем на
+   * полной. Правило судит КАЖДЫЙ найденный узел, поэтому под `--ci` пол
+   * опускается до одного: ноль узлов по-прежнему отказ.
+   */
+  const ci = process.argv.includes("--ci");
 
   const browser = await chromium.launch();
   const problemsBySurface = new Map<string, string[]>();
@@ -241,9 +248,10 @@ export async function main(): Promise<number> {
       const problems: string[] = [];
       for (const role of surface.roles) {
         const nodes = await readNodes(contexts[role]!, base, surface);
-        if (nodes.length < surface.minNodes) {
+        const minNodes = ci ? 1 : surface.minNodes;
+        if (nodes.length < minNodes) {
           problems.push(
-            `${surface.name} (${role}): узлов ${nodes.length} при ожидаемых минимум ${surface.minNodes} — ` +
+            `${surface.name} (${role}): узлов ${nodes.length} при ожидаемых минимум ${minNodes} — ` +
               `экран не собрался, и «0 нарушений» здесь ничего не значит`,
           );
           continue;

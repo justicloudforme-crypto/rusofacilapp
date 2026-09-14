@@ -334,12 +334,12 @@ async function main() {
         // доказывалось бы ролью, у которой открыто не всё.
         accessSigns = spawnSync(
           process.execPath,
-          [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`],
+          [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, ...passthrough],
           { stdio: "inherit" }
         );
         accessSignsPlant = spawnSync(
           process.execPath,
-          [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, "--plant"],
+          [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, "--plant", ...passthrough],
           { stdio: "inherit" }
         );
       }
@@ -389,12 +389,12 @@ async function main() {
     // экран.
     const tiles = spawnSync(
       process.execPath,
-      [TSX, "scripts/check-dictionary-tiles.ts", `--base=${BASE}`],
+      [TSX, "scripts/check-dictionary-tiles.ts", `--base=${BASE}`, ...passthrough],
       { stdio: "inherit" }
     );
     const tilesPlant = spawnSync(
       process.execPath,
-      [TSX, "scripts/check-dictionary-tiles.ts", `--base=${BASE}`, "--plant"],
+      [TSX, "scripts/check-dictionary-tiles.ts", `--base=${BASE}`, "--plant", ...passthrough],
       { stdio: "inherit" }
     );
     // Двенадцатым — 7.196, часть 4: на `/ru` в каталоге рассказов и в
@@ -403,7 +403,7 @@ async function main() {
     // отдельно в `verify` (`check:ru-spanish:plant`).
     const ruSpanish = spawnSync(
       process.execPath,
-      [TSX, "scripts/check-ru-locale-spanish.ts", `--base=${BASE}`],
+      [TSX, "scripts/check-ru-locale-spanish.ts", `--base=${BASE}`, ...passthrough],
       { stdio: "inherit" }
     );
     return (
