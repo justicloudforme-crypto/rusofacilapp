@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { usePaywall, type PaywallReason } from "@/contexts/PaywallContext";
+import type { LockedKind } from "@/lib/native-access-copy";
 
 /**
  * Плитка закрытого материала ВНУТРИ ОБОЛОЧКИ: тап открывает окно «Этот
@@ -32,10 +33,14 @@ export default function NativeLockedLink({
   href,
   className,
   reason = "free",
+  kind,
   children,
 }: {
   href: string;
   className?: string;
+  /** Тип материала: он решает ТЕКСТ окна (7.196, часть 3). Обязателен —
+   *  умолчание вернуло бы «относится к закрытой части курса» пазлу. */
+  kind: LockedKind;
   /** "premium" — когда материалу нужен именно план Premium, а подписка у
    *  человека уже есть. Дальше решает само окно. */
   reason?: PaywallReason;
@@ -48,7 +53,7 @@ export default function NativeLockedLink({
       className={className}
       onClick={(event) => {
         event.preventDefault();
-        openPaywall(reason);
+        openPaywall(reason, kind);
       }}
     >
       {children}

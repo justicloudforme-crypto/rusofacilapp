@@ -2,6 +2,7 @@
 
 import type { FlashcardCategory, FlashcardLevel } from "./types";
 import { getProgressEntries } from "../flashcard-progress";
+import type { ViewerTier } from "../access-marks";
 
 export interface CategorySummary {
   total: number;
@@ -19,9 +20,28 @@ export interface RecentCategory {
   lastCardId: string | null;
   /** Русское слово этой карточки, чтобы блок мог его назвать. */
   lastCardWord: string | null;
+  /**
+   * Сколько строк ЕСТЬ в этой теме под текущим разрезом уровня —
+   * 7.196, часть 2б. `total` выше считает ДОСТУПНОЕ, и на уровне C1 у
+   * неоплатившего это ноль: строка «Продолжить» печатала «0/0 · 0 %» при
+   * непустом банке. Читает это число только оболочка.
+   */
+  bankTotal: number;
 }
 
 export interface CategorySummaryResponse {
+  /**
+   * РАЗРЕЗ ЭТОГО ОТВЕТА — 7.196, часть 2а. `null` — все уровни,
+   * `undefined` — ответа ещё нет вовсе (или он не пришёл).
+   *
+   * Без этого поля сетка тем не могла отличить свои числа от чужих и всё
+   * время ожидания печатала числа ПРЕДЫДУЩЕГО уровня: замер с задержкой
+   * 3000 мс показал «266 слов» и отсутствие знака на уровне C1, где в
+   * банке 8 строк и они все премиальные.
+   */
+  level?: string | null;
+  /** Тариф спрашивающего — нужен общему правилу знака (`accessSignFor`). */
+  tier: ViewerTier;
   categories: Record<string, CategorySummary>;
   recent: RecentCategory[];
   totalKnown: number;
@@ -49,6 +69,10 @@ export interface CategorySummaryResponse {
 }
 
 const EMPTY_RESPONSE: CategorySummaryResponse = {
+  // undefined, а НЕ null: null означал бы «ответ про все уровни»,
+  // то есть сетка приняла бы пустоту за готовые числа.
+  level: undefined,
+  tier: "free",
   categories: {},
   recent: [],
   totalKnown: 0,
@@ -81,6 +105,11 @@ export async function fetchCategorySummary(level: FlashcardLevel | "all"): Promi
     if (!res.ok) return EMPTY_RESPONSE;
     const body = (await res.json()) as Partial<CategorySummaryResponse>;
     return {
+      // `body.level` приходит `null` для разреза «все уровни», и это
+      // законное значение: `??` здесь съел бы его и превратил в «ответа
+      // нет». Поэтому поле берётся ровно как приехало.
+      level: "level" in body ? body.level : undefined,
+      tier: body.tier ?? "free",
       categories: body.categories ?? {},
       recent: body.recent ?? [],
       totalKnown: body.totalKnown ?? 0,

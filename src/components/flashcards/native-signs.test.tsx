@@ -229,6 +229,8 @@ const GRID_DICT: CategoryGridDict = {
   categoryLabels: Object.fromEntries(flashcardCategories.map((c) => [c, c])) as Record<FlashcardCategory, string>,
   cardCountLabel: { one: "{count} слово", few: "{count} слова", many: "{count} слов" },
   nextLevelBadgeLabel: "Дальше {level}",
+  premiumTierBadge: "Только Premium",
+  subscriptionBadge: "По подписке",
 };
 
 /** Перепись банка в форме ответа `/api/flashcards/summary`. */
@@ -247,6 +249,7 @@ describe("часть 3 — плитка не пишет «0 слов», когд
         levelFilter="C1"
         bank={bankOf(43)}
         lockedAtLevel={988}
+        summaryLevel="C1"
         onSelectCategory={() => {}}
       />,
     );
@@ -266,11 +269,23 @@ describe("часть 3 — плитка не пишет «0 слов», когд
   // ровно то, что владелец снял на телефоне.
   it("подсадка прежнего поведения (переписи банка нет) ловится", () => {
     const { container } = render(
-      <CategoryGrid dict={GRID_DICT} summary={{}} levelFilter="C1" bank={{}} lockedAtLevel={0} onSelectCategory={() => {}} />,
+      <CategoryGrid
+        dict={GRID_DICT}
+        summary={{}}
+        levelFilter="C1"
+        bank={{}}
+        lockedAtLevel={0}
+        summaryLevel="C1"
+        onSelectCategory={() => {}}
+      />,
     );
     const tiles = [...container.querySelectorAll("[data-testid=category-tile]")];
     expect(tiles.every((t) => t.getAttribute("data-total") === "0")).toBe(true);
     expect(tiles[0].textContent).toContain("0 слов");
+    // 7.196: корона при этом на месте — она метка СОРТА и от переписи не
+    // зависит вовсе. Подсадка ловится числом «0 слов», а не отсутствием
+    // знака: это два независимых утверждения, и их нельзя путать.
+    expect(tiles[0].textContent).toContain(ACCESS_MARK_ICON["premium-tier"]);
   });
 
   it("в вебе плитка считает доступное, как считала", () => {
@@ -282,6 +297,7 @@ describe("часть 3 — плитка не пишет «0 слов», когд
         levelFilter="C1"
         bank={bankOf(43)}
         lockedAtLevel={988}
+        summaryLevel="C1"
         onSelectCategory={() => {}}
       />,
     );
@@ -296,7 +312,15 @@ describe("часть 3 — плитка не пишет «0 слов», когд
   it("на открытом уровне корона не ставится", () => {
     const open = Object.fromEntries(flashcardCategories.map((c) => [c, { bank: 40, open: 10, locked: 30 }]));
     const { container } = render(
-      <CategoryGrid dict={GRID_DICT} summary={{}} levelFilter="B1" bank={open} lockedAtLevel={0} onSelectCategory={() => {}} />,
+      <CategoryGrid
+        dict={GRID_DICT}
+        summary={{}}
+        levelFilter="B1"
+        bank={open}
+        lockedAtLevel={0}
+        summaryLevel="B1"
+        onSelectCategory={() => {}}
+      />,
     );
     expect(container.querySelectorAll("[data-access-mark]")).toHaveLength(0);
     expect(plates()).toHaveLength(0);

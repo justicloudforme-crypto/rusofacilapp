@@ -47,47 +47,69 @@ const DECK = [
   "intro-10-first-week",
 ] as const;
 
-const EXPECTED_SLIDES = buildIntroSlides(introStatsFrom(null));
+/**
+ * КОЛОДА ТЕПЕРЬ НА ДВУХ ЯЗЫКАХ — 7.196, часть 4б.
+ *
+ * До 14.09.2026 она была испанской в обеих локалях, и этот файл держал
+ * именно это утверждение. Решение владельца: вводная презентация
+ * рассказывает О ПРОДУКТЕ, а не учит русскому, и язык у неё обязан быть
+ * тот же, на котором человек читает интерфейс. Идентификаторы слайдов и
+ * их порядок при этом ОДНИ И ТЕ ЖЕ — на них стоят навигация и нумерация
+ * страниц PDF, и это по-прежнему проверяется.
+ */
+const SLIDES_BY_LANG = {
+  es: buildIntroSlides(introStatsFrom(null), "es"),
+  ru: buildIntroSlides(introStatsFrom(null), "ru"),
+} as const;
+const EXPECTED_SLIDES = SLIDES_BY_LANG.es;
 const EXPECTED_PDF_PAGES = introPdfPageCount(EXPECTED_SLIDES);
 
 for (const lang of ["es", "ru"] as const) {
   test(`/${lang}/courses renders the whole deck, one dot per slide`, async ({ page }) => {
+    const SLIDES = SLIDES_BY_LANG[lang];
     const response = await page.goto(`/${lang}/courses`);
     expect(response?.status()).toBe(200);
 
     // The source still is the deck this spec describes.
-    expect(EXPECTED_SLIDES.map((slide) => slide.id)).toEqual([...DECK]);
+    expect(SLIDES.map((slide) => slide.id)).toEqual([...DECK]);
 
     // The pager dots are one <button> per slide, each labelled with that
     // slide's title — the only place in the DOM where the whole deck is
     // present at once (the card itself shows one slide at a time).
-    const dots = page.getByRole("button", { name: EXPECTED_SLIDES[0].title, exact: true });
+    const dots = page.getByRole("button", { name: SLIDES[0].title, exact: true });
     await expect(dots).toHaveCount(1);
-    for (const slide of EXPECTED_SLIDES) {
+    for (const slide of SLIDES) {
       await expect(
         page.getByRole("button", { name: slide.title, exact: true }),
         `no pager dot for "${slide.title}"`,
       ).toHaveCount(1);
     }
 
-    // The deck is Spanish in both locales, by the same rule as the lesson
-    // content — so the first slide's heading is the same string on /ru.
-    await expect(page.getByRole("heading", { name: EXPECTED_SLIDES[0].title })).toBeVisible();
+    // Заголовок первого слайда — на языке локали (7.196, часть 4б).
+    await expect(page.getByRole("heading", { name: SLIDES[0].title })).toBeVisible();
+    // И отрицательный контроль к правке: заголовок ЧУЖОЙ локали на этой
+    // странице не встречается ни разу. Без него «заголовок свой» прошло бы
+    // и на колоде, где обе локали печатают одно и то же.
+    const other = lang === "es" ? SLIDES_BY_LANG.ru : SLIDES_BY_LANG.es;
+    await expect(page.getByRole("heading", { name: other[0].title })).toHaveCount(0);
 
     // And a number that came from the data reached the rendered page. The
     // alphabet count is the one to assert here: it is static, so this
     // holds on a CI database seeded with the e2e fixture as well as on a
     // full one.
-    await page.getByRole("button", { name: EXPECTED_SLIDES[3].title, exact: true }).click();
-    await expect(page.getByRole("heading", { name: EXPECTED_SLIDES[3].title })).toBeVisible();
-    await expect(page.getByText(`${INTRO_STATIC_STATS.alphabetLetters} letras`, { exact: false }).first()).toBeVisible();
+    await page.getByRole("button", { name: SLIDES[3].title, exact: true }).click();
+    await expect(page.getByRole("heading", { name: SLIDES[3].title })).toBeVisible();
+    // Слово при числе — своё в каждой локали, а САМО ЧИСЛО одно и то же:
+    // обе колоды берут его из `stats` (7.196, часть 4б).
+    const letters = lang === "es" ? "letras" : "букв";
+    await expect(
+      page.getByText(`${INTRO_STATIC_STATS.alphabetLetters} ${letters}`, { exact: false }).first(),
+    ).toBeVisible();
 
     // The last slide is reachable, and reaching it is what opens the level
     // picker — the one decision this presentation asks for.
-    await page.getByRole("button", { name: EXPECTED_SLIDES[EXPECTED_SLIDES.length - 1].title, exact: true }).click();
-    await expect(
-      page.getByRole("heading", { name: EXPECTED_SLIDES[EXPECTED_SLIDES.length - 1].title }),
-    ).toBeVisible();
+    await page.getByRole("button", { name: SLIDES[SLIDES.length - 1].title, exact: true }).click();
+    await expect(page.getByRole("heading", { name: SLIDES[SLIDES.length - 1].title })).toBeVisible();
     await expect(page.getByRole("link", { name: /A1/ }).first()).toBeVisible();
   });
 }

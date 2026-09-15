@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
   const response = searchRecords(records, query, {
     lang,
     tier,
+    nativeShell,
     collapsedHrefs: collapsedHrefsFor(lang),
   });
 

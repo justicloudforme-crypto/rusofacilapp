@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import Skeleton from "@/components/ui/Skeleton";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
-import { ACCESS_MARK_ICON, idiomRequirement } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, idiomRequirement, sortSign, type AccessRequirement } from "@/lib/access-marks";
 import type { Idiom, IdiomCategory } from "@/lib/idioms";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -12,6 +12,8 @@ import { idiomAnchor } from "@/lib/deep-link-anchors";
 import type { Locale } from "@/i18n/config";
 
 export interface IdiomsDict {
+  /** Подпись знака сорта — из словаря сайта (`dict.access.premiumTierBadge`). */
+  premiumTierBadge: string;
   /** Нужен подписи про закрытое внутри оболочки (число склоняется). */
   locale: Locale;
   listenLabel: string;
@@ -187,7 +189,10 @@ export default function IdiomsList({
     setKnownIdioms(setWordKnown(id, !knownIdioms[id]));
   }
 
-  const categoryTabs: { value: IdiomCategory | "all"; label: string; mark?: boolean }[] = [
+  // 7.196: знак вкладки приходит от ОБЩЕГО правила (`sortSign` — та же
+  // строка, с которой начинается `accessSignFor`), а не решается здесь
+  // сравнением признака со строкой "premium-tier".
+  const categoryTabs: { value: IdiomCategory | "all"; label: string; requires?: AccessRequirement }[] = [
     { value: "all", label: dict.categoryAllLabel },
     { value: "daily", label: dict.categoryDailyLabel },
     { value: "proverbs", label: dict.categoryProverbsLabel },
@@ -195,7 +200,7 @@ export default function IdiomsList({
     // Premium (`idiomRequirement`), и до 7.195 на вкладке об этом не было
     // сказано ничего. Метка, а не орган: `data-access-mark` отделяет её
     // от подписи кнопки для сторожа отрисованных поверхностей.
-    { value: "literary", label: dict.categoryLiteraryLabel, mark: idiomRequirement({ category: "literary" }) === "premium-tier" },
+    { value: "literary", label: dict.categoryLiteraryLabel, requires: idiomRequirement({ category: "literary" }) },
   ];
 
   return (
@@ -273,11 +278,15 @@ export default function IdiomsList({
             }`}
           >
             {tab.label}
-            {tab.mark && (
-              <span data-access-mark="premium-tier" aria-hidden className="ml-1">
-                {ACCESS_MARK_ICON["premium-tier"]}
-              </span>
-            )}
+            {(() => {
+              const sign = tab.requires ? sortSign(tab.requires) : null;
+              if (!sign) return null;
+              return (
+                <span data-access-mark={sign.mark} aria-hidden className="ml-1" title={dict.premiumTierBadge}>
+                  {ACCESS_MARK_ICON[sign.mark]}
+                </span>
+              );
+            })()}
           </button>
         ))}
       </div>

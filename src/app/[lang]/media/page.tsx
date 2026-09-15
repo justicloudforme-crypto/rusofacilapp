@@ -5,7 +5,8 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getAllMedia } from "@/lib/media/data";
 import { mediaLevels } from "@/lib/media/types";
 import { getEntitlementTier } from "@/lib/entitlement";
-import { accessMarkFor, mediaRequirement } from "@/lib/access-marks";
+import { accessSignFor, mediaRequirement } from "@/lib/access-marks";
+import { isNativeShellRequest } from "@/lib/native-shell";
 import MediaCatalog from "@/components/media/MediaCatalog";
 import MediaLinkIndex from "@/components/media/MediaLinkIndex";
 import JsonLd from "@/components/seo/JsonLd";
@@ -27,7 +28,12 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const [dict, tier, allMedia] = await Promise.all([getDictionary(lang), getEntitlementTier(), getAllMedia()]);
+  const [dict, tier, allMedia, mediaNativeShell] = await Promise.all([
+    getDictionary(lang),
+    getEntitlementTier(),
+    getAllMedia(),
+    isNativeShellRequest(),
+  ]);
   if (!dict?.media) notFound();
 
   const levelRank = new Map(mediaLevels.map((level, index) => [level, index]));
@@ -58,7 +64,11 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
       // «пускать ли», признак — «что нужно». Совпадение этих двух
       // ответов у медиа проверяется тестом (access-marks.test.ts), а не
       // подразумевается тем, что оба выражения похожи.
-      mark: accessMarkFor(mediaRequirement(item), tier),
+      // 7.196: тот же общий вызов, что на всех остальных поверхностях.
+      // Слоя Premium у медиа нет (`mediaRequirement` отдаёт только
+      // free/subscription), поэтому ответ знак в знак прежний и в вебе, и
+      // в оболочке — но решает его одно правило, а не два похожих.
+      mark: accessSignFor(mediaRequirement(item), tier, { nativeShell: mediaNativeShell })?.mark ?? null,
     }))
     .sort(
       (a, b) =>

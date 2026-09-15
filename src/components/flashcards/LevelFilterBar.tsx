@@ -1,7 +1,7 @@
 "use client";
 
 import { flashcardLevels, type FlashcardLevel } from "@/lib/flashcards";
-import { ACCESS_MARK_ICON, flashcardRequirement } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, levelRequirement, sortSign } from "@/lib/access-marks";
 
 export interface LevelFilterDict {
   levelAll: string;
@@ -31,9 +31,10 @@ export default function LevelFilterBar({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div data-testid="level-filter" className="flex flex-wrap gap-2">
       <button
         type="button"
+        data-level="all"
         onClick={() => onChange("all")}
         disabled={disabled}
         className={`tap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
@@ -48,6 +49,7 @@ export default function LevelFilterBar({
         <button
           key={lvl}
           type="button"
+          data-level={lvl}
           onClick={() => onChange(lvl)}
           disabled={disabled}
           className={`tap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
@@ -76,11 +78,20 @@ export default function LevelFilterBar({
             отличает МЕТКУ от подписи органа управления: корона ничего не
             предлагает купить и никуда не ведёт.
           */}
-          {flashcardRequirement({ level: lvl }) === "premium-tier" && (
-            <span data-access-mark="premium-tier" aria-hidden className="ml-1" title={dict.premiumTierBadge}>
-              {ACCESS_MARK_ICON["premium-tier"]}
-            </span>
-          )}
+          {/* 7.196: знак приходит от ОБЩЕГО правила
+              (`sortSign` — та же строка, с которой начинается
+              `accessSignFor`), а не выбирается здесь сравнением с
+              «premium-tier». Поведение то же, знак в знак; разница в том,
+              что правило теперь одно на все одиннадцать поверхностей. */}
+          {(() => {
+            const sign = sortSign(levelRequirement("flashcards", lvl));
+            if (!sign) return null;
+            return (
+              <span data-access-mark={sign.mark} aria-hidden className="ml-1" title={dict.premiumTierBadge}>
+                {ACCESS_MARK_ICON[sign.mark]}
+              </span>
+            );
+          })()}
         </button>
       ))}
     </div>

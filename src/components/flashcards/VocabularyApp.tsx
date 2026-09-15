@@ -36,10 +36,10 @@ export interface VocabularyDict extends FlashcardsDict {
   subtitleIdioms: string;
   // `locale` подставляется здесь (см. вызов IdiomsList ниже), в словаре
   // его нет — поэтому требуется всё, кроме него.
-  idioms: Omit<IdiomsDict, "locale">;
-  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
-  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
-  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  idioms: Omit<IdiomsDict, "locale" | "premiumTierBadge">;
+  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -176,6 +176,7 @@ export default function VocabularyApp({
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               premiumTierBadge: dict.premiumTierBadge,
+              subscriptionBadge: dict.subscriptionBadge,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
@@ -195,6 +196,7 @@ export default function VocabularyApp({
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               premiumTierBadge: dict.premiumTierBadge,
+              subscriptionBadge: dict.subscriptionBadge,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
@@ -214,6 +216,7 @@ export default function VocabularyApp({
               cardCountLabel: dict.cardCountLabel,
               nextLevelBadgeLabel: dict.nextLevelBadgeLabel,
               premiumTierBadge: dict.premiumTierBadge,
+              subscriptionBadge: dict.subscriptionBadge,
               freeTrialLimitMessage: dict.freeTrialLimitMessage,
               freeTrialLimitCta: dict.freeTrialLimitCta,
               continueTitle: dict.continueTitle,
@@ -224,7 +227,7 @@ export default function VocabularyApp({
             resultDict={resultDict}
           />
         )}
-        {mode === "idioms" && <IdiomsList dict={{ ...dict.idioms, locale: dict.locale }} focusId={focusIdiomId} />}
+        {mode === "idioms" && <IdiomsList dict={{ ...dict.idioms, locale: dict.locale, premiumTierBadge: dict.premiumTierBadge }} focusId={focusIdiomId} />}
       </div>
     </div>
   );
