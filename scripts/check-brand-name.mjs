@@ -162,6 +162,12 @@ const IDENT_ALLOWED = new Map([
   ["src/lib/media/generateSubtitlesWithClaude.ts", 1],
   ["src/lib/media/types.ts", 1],
   ["src/lib/progress-client.ts", 1],
+  // 7.199, часть 2. Перепись личных ключей хранилища и её сторож: оба
+  // ЦИТИРУЮТ имена ключей, и цитировать их надо дословно — приставка
+  // `rusofasil:` в четырёх ключах из десяти настоящая, «исправить» её
+  // здесь значит промахнуться мимо них при уборке после выхода.
+  ["src/lib/signed-out-local.ts", 6],
+  ["src/components/signed-out-local.test.tsx", 3],
   ["src/lib/ttl-cache.ts", 1],
 ]);
 
