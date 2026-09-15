@@ -92,6 +92,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       cards,
       limited: !entitled,
+      cut: { category: null, level: levelFilter, search },
       ...lockedCensus(searchIndex(bank, search, levelFilter), cards, { category: null, level: null }),
     });
   }
@@ -103,6 +104,18 @@ export async function GET(request: NextRequest) {
   const cards = entitled ? filtered : filtered.slice(0, FREE_TRIAL_LIMITS.flashcards);
 
   return NextResponse.json({
+    /**
+     * РАЗРЕЗ, ПО КОТОРОМУ ПОСЧИТАН ЭТОТ ОТВЕТ — 7.197, та же половина,
+     * что и `level` у `/api/flashcards/summary` в 7.196.
+     *
+     * Без него браузер не может отличить «карточки этой темы» от
+     * «карточек ПРЕДЫДУЩЕЙ темы, которые ещё не сменились», и полоса
+     * «Aprendidas: X из Y» всё время загрузки печатает чужие числа —
+     * тем громче, чем медленнее сеть. Уровень здесь `null` намеренно:
+     * его накладывает браузер (см. `cards` в FlashcardsApp), и врать,
+     * что ответ уже про уровень, нельзя.
+     */
+    cut: { category: categoryFilter, level: levelFilter, search: "" },
     cards,
     limited: !entitled,
     ...lockedCensus(bank, cards, { category: categoryFilter, level: levelFilter }),

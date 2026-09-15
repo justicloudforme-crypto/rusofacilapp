@@ -139,9 +139,6 @@ export default function IdiomsList({
     setOpenId(focusId);
   }, [focusId, idioms, idiomsLoading]);
 
-  const known = idioms.filter((idiom) => knownIdioms[idiom.id]).length;
-  const percent = idioms.length === 0 ? 0 : Math.round((known / idioms.length) * 100);
-
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return idioms.filter((idiom) => {
@@ -155,6 +152,22 @@ export default function IdiomsList({
       );
     });
   }, [idioms, categoryFilter, search]);
+
+  /**
+   * ПОЛОСА ОСВОЕННОГО СЧИТАЕТСЯ ПО ТОМУ ЖЕ РАЗРЕЗУ, ЧТО И СПИСОК ПОД НЕЙ
+   * — 7.197, та же семья, что «Aprendidas: 0 de 216» в словаре.
+   *
+   * До правки числитель и знаменатель брались по ВСЕМ фразам, а список
+   * под полосой резался вкладкой («Cotidianas», «Refranes»,
+   * «Literarias») и поиском. На вкладке «Literarias» полоса говорила
+   * «Aprendidas: 12 de 771», хотя на экране лежало 118 фраз: знаменатель
+   * отвечал не на тот вопрос, который задан вкладкой.
+   *
+   * Считается по `filtered` — по тому же массиву, который листает
+   * пагинация и который человек видит.
+   */
+  const known = filtered.filter((idiom) => knownIdioms[idiom.id]).length;
+  const percent = filtered.length === 0 ? 0 : Math.round((known / filtered.length) * 100);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -208,7 +221,7 @@ export default function IdiomsList({
       <div ref={listTopRef} className="mb-6">
         <ProgressBar percent={percent} tone="success" className="w-full" />
         <span className="mt-1 block text-xs text-foreground/60">
-          {dict.progressLabel.replace("{known}", String(known)).replace("{total}", String(idioms.length))}
+          {dict.progressLabel.replace("{known}", String(known)).replace("{total}", String(filtered.length))}
         </span>
       </div>
 

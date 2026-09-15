@@ -28,6 +28,12 @@
  *      число на плитке сверяется с числом В БАЗЕ по паре «уровень × тема».
  *      Ожидание берётся из базы, а не из того же API, которое рисует
  *      экран, — иначе сторож сверял бы прибор сам с собой.
+ *   1б. И ТО ЖЕ САМОЕ ВНУТРИ ТЕМЫ — 7.197. Знаменатель полосы
+ *      «Aprendidas: X из Y» сверяется с той же базой по той же паре
+ *      «уровень × тема». Владелец снял «Aprendidas: 0 de 216» на уровне
+ *      C1 рядом с «45 palabras del nivel C1 cerradas»: 216 — это тема
+ *      ЦЕЛИКОМ без уровня (261 − 45), и его арифметика подтвердилась по
+ *      боевой базе знак в знак.
  *   2. НОЛЬ НЕ МЕЛЬКАЕТ. При искусственной задержке ответа на экране не
  *      должно быть ни одного «0 слов»: на месте числа стоит заглушка.
  *
@@ -44,6 +50,7 @@ import { chromium } from "playwright";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { isEntryPoint } from "../src/lib/entry-point";
+import { flashcardCategories } from "../src/lib/flashcards";
 
 const TOKEN = "RFNativeShell";
 const COOKIE = "rf_native_shell";
@@ -134,7 +141,13 @@ export async function main(): Promise<number> {
     // ── ПОЛОВИНА 2: ноль не мелькает, пока едет ответ ──
     await page.route("**/api/flashcards/summary", async (route) => {
       await new Promise((r) => setTimeout(r, DELAY_MS));
-      await route.continue();
+      // Задержка переживает `unroute`: пока она тикает, страница уже
+      // ушла дальше, и запрос успевает обработаться сам. Тогда
+      // `continue()` бросает «Route is already handled», и это падение
+      // ВСЕГО прогона на ровном месте — прибор умирает, не напечатав ни
+      // строки результата. Гасится здесь и только здесь: это единственное
+      // место, где отказ ничего не значит.
+      await route.continue().catch(() => {});
     });
     await page.goto(`${base}/ru/vocabulary`, { waitUntil: "domcontentloaded", timeout: 60_000 });
     await page.waitForSelector("[data-testid=category-tile]", { timeout: 30_000 });
@@ -199,6 +212,53 @@ export async function main(): Promise<number> {
           `сумма в базе ${inDb.reduce((a, b) => a + b, 0)}`,
       );
     }
+    // ── ПОЛОВИНА 1б: знаменатель ВНУТРИ темы = то же пересечение ──
+    //
+    // Тем берётся три, а не двадцать три, и граница названа честно: одно
+    // открытие темы — это переход, ожидание ответа и снимок, то есть
+    // 23 × 5 = 115 таких кругов превратили бы прибор в минуты. Взяты те
+    // две темы, на которых дефект снят владельцем, и одна, где на двух
+    // уровнях строк нет вовсе, — «0 из 0» обязано быть правдой, а не
+    // заглушкой.
+    const PROBE_CATEGORIES = ["feelings", "shopping", "law"] as const;
+    for (const level of LEVELS) {
+      for (const category of PROBE_CATEGORIES) {
+        const index = flashcardCategories.indexOf(category as (typeof flashcardCategories)[number]);
+        if (index < 0) {
+          problems.push(`темы «${category}» нет в переписи тем — проба написана про несуществующее`);
+          continue;
+        }
+        await page.goto(`${base}/ru/vocabulary?level=${level}`, { waitUntil: "domcontentloaded", timeout: 60_000 });
+        await page.waitForSelector("[data-testid=category-tile]", { timeout: 30_000 });
+        await page.waitForFunction(() => !document.querySelector("[data-testid=tile-count-skeleton]"), undefined, {
+          timeout: 30_000,
+        });
+        await page.locator("[data-testid=category-tile]").nth(index).click();
+        // Ждём именно ГОТОВНОСТИ разреза, а не появления полосы: полоса
+        // появляется сразу, и снимок до ответа судил бы заглушку.
+        await page.waitForFunction(
+          () => document.querySelector("[data-testid=topic-progress]")?.getAttribute("data-ready") === "1",
+          undefined,
+          { timeout: 30_000 },
+        );
+        const shown = await page.$eval("[data-testid=topic-progress]", (el) => ({
+          total: Number(el.getAttribute("data-total") ?? "-1"),
+          known: Number(el.getAttribute("data-known") ?? "-1"),
+        }));
+        compared += 1;
+        const expected = inBank.get(`${plant ? "ALL" : level}/${category}`) ?? 0;
+        if (shown.total !== expected) {
+          problems.push(
+            `уровень ${level}, тема «${category}»: знаменатель полосы освоенного ${shown.total}, ` +
+              `а строк базы в пересечении «уровень × тема» ${expected}`,
+          );
+        }
+        if (shown.known > shown.total) {
+          problems.push(`уровень ${level}, тема «${category}»: освоено ${shown.known} при знаменателе ${shown.total}`);
+        }
+      }
+    }
+
     if (table) for (const line of report) console.log(line);
   } finally {
     await browser.close();
@@ -206,8 +266,20 @@ export async function main(): Promise<number> {
 
   if (plant) {
     const caught = problems.length > 0;
-    console.log(`  ${caught ? "поймано" : "ПРОПУЩЕНО"} — подсадка «число темы целиком вместо пересечения» и «ноль вместо заглушки»`);
-    for (const p of problems.slice(0, 6)) console.log(`    ${p}`);
+    console.log(
+      `  ${caught ? "поймано" : "ПРОПУЩЕНО"} — подсадка «число темы целиком вместо пересечения» ` +
+        `(и на плитке, и в полосе освоенного внутри темы) и «ноль вместо заглушки»`,
+    );
+    // Обе половины ОБЯЗАНЫ отозваться: подсадка, поймавшая только сетку,
+    // означала бы, что знаменатель внутри темы прибором не судится вовсе.
+    const grid = problems.filter((p) => p.startsWith("уровень") && !p.includes("тема «"));
+    const inside = problems.filter((p) => p.includes("тема «"));
+    console.log(`    сетка тем: ${grid.length} расхождений; полоса внутри темы: ${inside.length}`);
+    for (const p of [...grid.slice(0, 3), ...inside.slice(0, 3)]) console.log(`    ${p}`);
+    if (grid.length === 0 || inside.length === 0) {
+      console.log("check:dictionary-tiles --plant — FAILED: подсадку поймала только одна половина");
+      return 1;
+    }
     console.log(
       caught
         ? "check:dictionary-tiles --plant — прежнее поведение роняет прогон"
@@ -222,7 +294,8 @@ export async function main(): Promise<number> {
     return 1;
   }
   console.log(
-    `check:dictionary-tiles — сверено ${compared} плиток по ${LEVELS.length} уровням; ` +
+    `check:dictionary-tiles — сверено ${compared} чисел по ${LEVELS.length} уровням ` +
+      `(плитки сетки и знаменатель полосы освоенного внутри темы); ` +
       `во время загрузки «0 слов» ${zerosWhileLoading}, заглушек ${skeletonsWhileLoading}.`,
   );
   return 0;

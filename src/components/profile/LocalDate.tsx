@@ -1,25 +1,36 @@
-"use client";
+// ДЕНЬ СЧИТАЕТ СЕРВЕР, В ПОЯСЕ САМОГО ЧЕЛОВЕКА — правка 15.09.2026, 7.197.
+//
+// ЧТО БЫЛО. Компонент был клиентским и делал две отрисовки подряд:
+// сперва серверную в UTC (чтобы не разошлась гидратация), потом, уже
+// после монтирования, свою — в поясе браузера. То есть на одном и том
+// же экране день сначала один, а через мгновение другой. Замер: боевая
+// строка истории платежей `2026-08-18T23:47:10.300Z` печаталась как
+// «18 de agosto», а через кадр становилась «19 de agosto» (телефон
+// владельца — Asia/Vladivostok, UTC+10). Ровно из-за этого отчёт 7.196
+// записал «18 сентября» там, где владелец видел 19-е.
+//
+// В шапке файла при этом было написано: «нет сохранённого пояса
+// пользователя, чтобы передать его серверу». К 15.09.2026 это уже
+// неправда: колонка `User.timezone` есть (её пишет `TimeZoneSync`), и
+// весь кабинет уже считает в ней свою «сегодня» — `getRequestTimeZone`
+// в `profile/page.tsx`. Пояс просто не доезжал сюда.
+//
+// ЧТО СТАЛО. Пояс приходит пропом, посчитанным на сервере той же
+// цепочкой, что и день занятия: колонка аккаунта → кука → заголовок
+// Vercel → UTC. Второй отрисовки нет, клиентского кода нет, мигания дня
+// нет. См. также `src/lib/subscription-moment.ts` — там тот же пояс
+// печатает МОМЕНТ закрытия подписки, где одного дня мало.
+import { DEFAULT_TIME_ZONE, isValidTimeZone } from "@/lib/timezone";
 
-import { useEffect, useState } from "react";
-
-// AUDIT.md §8 "Дата регистрации на день вперёд (таймзона)": the server
-// runtime (Vercel/Node) formats in UTC, so a visitor who registered late
-// in the evening in their own timezone can see a date already rolled over
-// to the next UTC day. There's no per-user timezone stored to pass a fixed
-// `timeZone` to Intl.DateTimeFormat server-side, so this renders the same
-// UTC-formatted date the server did first (no hydration mismatch), then
-// swaps to the browser's own local-timezone formatting once mounted — the
-// same "safe value, then replace after mount" pattern WelcomeOverlay uses.
-export default function LocalDate({ iso, locale }: { iso: string; locale: string }) {
-  const utcFormatted = new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "UTC" }).format(
-    new Date(iso),
-  );
-  const [formatted, setFormatted] = useState(utcFormatted);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormatted(new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date(iso)));
-  }, [iso, locale]);
-
-  return <>{formatted}</>;
+export default function LocalDate({
+  iso,
+  locale,
+  timeZone,
+}: {
+  iso: string;
+  locale: string;
+  timeZone: string;
+}) {
+  const zone = isValidTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE;
+  return <>{new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: zone }).format(new Date(iso))}</>;
 }

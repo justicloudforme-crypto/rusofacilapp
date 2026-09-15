@@ -56,6 +56,7 @@ import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
 import LocalDate from "@/components/profile/LocalDate";
+import { subscriptionMomentText } from "@/lib/subscription-moment";
 import SettingsAccordion from "@/components/profile/SettingsAccordion";
 import ActivityCalendar from "@/components/profile/ActivityCalendar";
 import StreakExplanation from "@/components/profile/StreakExplanation";
@@ -596,8 +597,8 @@ export default async function ProfilePage({
   );
 
   // Split around {date} instead of dateFormatter.format()-ing it into the
-  // string, so the date itself can render as <LocalDate> (browser-timezone
-  // aware) rather than baking in the server's UTC value — see LocalDate.tsx.
+  // string, so the date itself can be rendered by `subscriptionMomentText`
+  // — тот же момент, тот же пояс, что и на вкладке «Подписка».
   // Per-plan template (not a single generic "Pro" label, which named a tier
   // that doesn't exist on /pricing — a real device report caught it): the
   // lifetime plan has no renewal date at all, so its template carries no
@@ -872,7 +873,7 @@ export default async function ProfilePage({
                 ) : subscriptionCompactParts && subscription ? (
                   <>
                     {subscriptionCompactParts[0]}
-                    <LocalDate iso={subscription.currentPeriodEnd.toISOString()} locale={lang} />
+                    {subscriptionMomentText(subscription.currentPeriodEnd.toISOString(), lang, timeZone)}
                     {subscriptionCompactParts[1]}
                   </>
                 ) : (
@@ -992,7 +993,7 @@ export default async function ProfilePage({
                       <dd>{user.email}</dd>
                       <dt className="text-foreground/60">{dict.profile.memberSinceLabel}</dt>
                       <dd>
-                        <LocalDate iso={user.createdAt.toISOString()} locale={lang} />
+                        <LocalDate iso={user.createdAt.toISOString()} locale={lang} timeZone={timeZone} />
                       </dd>
                     </dl>
                     <div className="border-t border-black/10 pt-5 dark:border-white/30">
@@ -1230,7 +1231,17 @@ export default async function ProfilePage({
                   ? dict.profile.expiredLabel
                   : dict.profile.statusCanceled}
             </dt>
-            <dd><LocalDate iso={dateLine.iso} locale={lang} /></dd>
+            {/* МОМЕНТ, А НЕ ДЕНЬ — правка 15.09.2026, 7.197.
+                Доступ закрывается в МОМЕНТ (`currentPeriodEnd`), а экран
+                печатал ДЕНЬ, и печатал его браузером после гидратации.
+                Боевая строка: `2026-09-18T23:47:02.000Z`, пояс человека
+                `Asia/Vladivostok` — «19 сентября», а закрывается в 09:47
+                того же 19-го. Обещанного «весь 19-й мой» было на
+                14 ч 13 мин больше правды. Теперь печатается тот же
+                момент целиком и в поясе человека, посчитанном СЕРВЕРОМ
+                (`getRequestTimeZone` выше) — поэтому /ru и /es называют
+                один день по построению, а не по совпадению. */}
+            <dd>{subscriptionMomentText(dateLine.iso, lang, timeZone)}</dd>
           </dl>
         )}
 
@@ -1285,7 +1296,7 @@ export default async function ProfilePage({
                 >
                   <span>{planDisplayLabel(row.plan, dict)}</span>
                   <span className="text-foreground/60">
-                    <LocalDate iso={row.createdAt.toISOString()} locale={lang} />
+                    <LocalDate iso={row.createdAt.toISOString()} locale={lang} timeZone={timeZone} />
                   </span>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE_CLASSES[getDisplayStatus(row)]}`}
@@ -1401,7 +1412,7 @@ export default async function ProfilePage({
                 earnedOnText={
                   b.earnedAt ? (
                     <>
-                      {dict.profile.badgesEarnedOnLabel} <LocalDate iso={b.earnedAt.toISOString()} locale={lang} />
+                      {dict.profile.badgesEarnedOnLabel} <LocalDate iso={b.earnedAt.toISOString()} locale={lang} timeZone={timeZone} />
                     </>
                   ) : undefined
                 }
@@ -1708,7 +1719,7 @@ export default async function ProfilePage({
                   </span>
                 </div>
                 <p className="text-xs text-foreground/50">
-                  <LocalDate iso={attempt.completedAt.toISOString()} locale={lang} />
+                  <LocalDate iso={attempt.completedAt.toISOString()} locale={lang} timeZone={timeZone} />
                 </p>
                 <p className="text-foreground/60">
                   {dict.profile.examBreakdownLabel}:{" "}

@@ -14,6 +14,7 @@ import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-pro
 import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
 import { lockedView } from "@/lib/flashcards/locked-view";
 import { hapticTap, hapticSuccess } from "@/lib/haptics";
+import { useIsNativeShell } from "@/lib/native-shell-client";
 import type { Locale } from "@/i18n/config";
 import type { PluralForms } from "@/lib/plural";
 
@@ -69,6 +70,17 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   const [knownWords, setKnownWords] = useState<Record<string, boolean>>({});
   // Only the current category's cards are fetched — previously the whole
   // ~2,600-card bank was bundled straight into this client component's JS.
+  const nativeShell = useIsNativeShell();
+  /**
+   * РАЗРЕЗ, В КОТОРОМ ПОСЧИТАНЫ КАРТОЧКИ В РУКАХ (7.197).
+   *
+   * `null` — ответа ещё нет. Пока разрез ответа не совпадает с тем, что
+   * выбрано на экране, числа полосы освоенного ЧУЖИЕ, и печатать их
+   * нельзя: между нажатием на другую тему и приходом ответа на экране
+   * стоит знаменатель предыдущей темы. Заглушка — та же серая полоса,
+   * что на плитках (7.196, часть 2).
+   */
+  const [cardsCut, setCardsCut] = useState<{ category: string | null; search: string } | null>(null);
   const [categoryCards, setCategoryCards] = useState<FlashcardRow[]>([]);
   // True while a category/search fetch is in flight — without this, the
   // "no cards" message rendered for a split second on every category open
@@ -214,10 +226,12 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCardsLoading(true);
+    setCardsCut(null);
     fetch(`/api/flashcards?category=${encodeURIComponent(category)}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
-      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number> }) => {
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number>; cut?: { category: string | null; search: string } }) => {
         if (!cancelled) {
+          setCardsCut(body.cut ? { category: body.cut.category, search: body.cut.search } : null);
           setCategoryCards(body.cards ?? []);
           setLimited(Boolean(body.limited));
           setLockedTotal(body.lockedTotal ?? 0);
@@ -242,10 +256,12 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     setCardsLoading(true);
     const params = new URLSearchParams({ search: searchQuery });
     if (levelFilter !== "all") params.set("level", levelFilter);
+    setCardsCut(null);
     fetch(`/api/flashcards?${params.toString()}`)
       .then((res) => (res.ok ? res.json() : { cards: [], limited: false }))
-      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number> }) => {
+      .then((body: { cards?: FlashcardRow[]; limited?: boolean; lockedTotal?: number; lockedByLevel?: Record<string, number>; cut?: { category: string | null; search: string } }) => {
         if (!cancelled) {
+          setCardsCut(body.cut ? { category: body.cut.category, search: body.cut.search } : null);
           setCategoryCards(body.cards ?? []);
           setLimited(Boolean(body.limited));
           setLockedTotal(body.lockedTotal ?? 0);
@@ -293,11 +309,47 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     [levelFilter, category, dict.categoryLabels, lockedTotal, lockedByLevel],
   );
 
+  /**
+   * «APRENDIDAS: X DE Y» — ЗНАМЕНАТЕЛЬ ТОГО ЖЕ РАЗРЕЗА, ЧТО И ЭКРАН.
+   *
+   * ЧТО СНЯЛ ВЛАДЕЛЕЦ (15.09.2026, уровень C1 внутри темы): «Aprendidas:
+   * 0 de 216» рядом с плашкой «45 palabras del nivel C1 cerradas en el
+   * tema “Sentimientos y emociones”». И второй случай: «0 de 248» при
+   * «20 palabras del nivel C1» в теме «Compras y precios».
+   *
+   * ЕГО АРИФМЕТИКА ПЕРЕМЕРЕНА И ПОДТВЕРДИЛАСЬ ПО БОЕВОЙ БАЗЕ:
+   * «Чувства и эмоции» — 18+39+89+70+45 = 261 строка, 261 − 45 = 216;
+   * «Покупки и цены» — 63+71+74+40+20 = 268, 268 − 20 = 248. То есть
+   * знаменателем стояло ОТКРЫТОЕ ВСЕЙ ТЕМЫ БЕЗ УЧЁТА УРОВНЯ:
+   * `categoryCards` — это ответ `/api/flashcards?category=…`, куда
+   * уровень не передаётся вовсе, а накладывает его браузер ниже
+   * (`cards`).
+   *
+   * СТАЛО. Числитель и знаменатель считаются по `cards` — по тому же
+   * массиву, который печатает счётчик «N из M» и который лежит на
+   * экране. Внутри оболочки к знаменателю прибавляется ЗАКРЫТОЕ ЭТОГО
+   * ЖЕ РАЗРЕЗА (`locked.lockedHere`, число из ответа сервера) — по
+   * правилу 7.196: плитка и полоса называют то, ЧТО ЕСТЬ, а не то, что
+   * досталось. Тогда «45 закрыто» и знаменатель говорят об одном и том
+   * же множестве, а не о двух разных.
+   *
+   * Литералов-чисел в этом пути нет ни одного: и `cards`, и
+   * `locked.lockedHere` — разности, посчитанные сервером по базе.
+   */
   const progress = useMemo(() => {
-    const total = categoryCards.length;
-    const known = categoryCards.filter((c) => knownWords[c.id]).length;
+    const open = cards.length;
+    const total = nativeShell ? open + locked.lockedHere : open;
+    const known = cards.filter((c) => knownWords[c.id]).length;
     return { known, total, percent: total === 0 ? 0 : Math.round((known / total) * 100) };
-  }, [categoryCards, knownWords]);
+  }, [cards, knownWords, nativeShell, locked.lockedHere]);
+
+  /** Числа в руках — свои или чужие. Разрез ответа против разреза
+   *  экрана; уровень в сравнение не входит, потому что его накладывает
+   *  сам браузер и он всегда текущий. */
+  const progressReady =
+    cardsCut !== null &&
+    cardsCut.search === (searchQuery ? searchQuery : "") &&
+    cardsCut.category === (searchQuery ? null : (category ?? null));
 
   // Встать на нужную карточку, когда список темы уже пришёл. Отдельным
   // эффектом, а не внутри fetch: список ещё режет фильтр уровня
@@ -511,10 +563,24 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
                   <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress.percent}%` }} />
                 </div>
-                <span className="mt-1 block text-right text-xs text-foreground/60">
-                  {dict.progressLabel
-                    .replace("{known}", String(progress.known))
-                    .replace("{total}", String(progress.total))}
+                <span
+                  className="mt-1 block text-right text-xs text-foreground/60"
+                  data-testid="topic-progress"
+                  data-known={progress.known}
+                  data-total={progress.total}
+                  data-ready={progressReady ? "1" : "0"}
+                >
+                  {progressReady ? (
+                    dict.progressLabel
+                      .replace("{known}", String(progress.known))
+                      .replace("{total}", String(progress.total))
+                  ) : (
+                    <span
+                      data-testid="progress-count-skeleton"
+                      aria-hidden
+                      className="inline-block h-3 w-20 animate-pulse rounded bg-foreground/15 align-middle"
+                    />
+                  )}
                 </span>
               </div>
             </div>
