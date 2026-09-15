@@ -128,6 +128,38 @@ const SCREEN_DEADLINE_MS = 240_000;
 const GO_BACK_TIMEOUT_MS = 8_000;
 
 /**
+ * ЭКРАНЫ, КОТОРЫЕ НЕ ОТВЕЧАЮТ, — ОТДЕЛЬНАЯ НАХОДКА И ОТДЕЛЬНЫЙ СЧЁТ.
+ *
+ * Этот прибор ищет ОДНО: платные органы управления внутри оболочки. Экран,
+ * который не ответил за свой срок, — находка ДРУГОГО рода, и сваливать её
+ * в ту же кучу значит путать два разных сообщения: «здесь кнопка покупки»
+ * и «здесь страница не отвечает».
+ *
+ * Поэтому такие экраны печатаются отдельным списком ВСЕГДА, а роняют
+ * прогон только те, которых нет в списке ниже. Список — с причиной и
+ * закреплён числом, ровно как исключения `check:brand` и
+ * `check:access-marks`: новый молчащий адрес уронит прогон и будет назван,
+ * а известный не будет каждый раз выдавать красное за старое.
+ *
+ * ЗАМЕР, ИЗ-ЗА КОТОРОГО СПИСОК ПОЯВИЛСЯ (15.09.2026, три прогона CI на
+ * трёх разных ветках): `/es/account` под гостем не отвечает ни за 90 с, ни
+ * за 240 с, при среднем экране ≈6 с. Локально на базе той же формы тот же
+ * адрес проходит за секунды. Адрес — переадресация на `/profile`, у гостя
+ * дальше на вход; что именно там встаёт на бегунке CI, ещё не измерено —
+ * это долг 210, и он назван, а не спрятан.
+ */
+const STALLED_ALLOWED = new Map([
+  [
+    "/es/account (guest)",
+    "долг 210: переадресация /account → /profile → вход; на бегунке CI экран не отвечает ни за 90, ни за 240 с при среднем ≈6 с, локально проходит за секунды",
+  ],
+]);
+const STALLED_ALLOWED_COUNT = 1;
+/** Признак, по которому экран, не уложившийся в срок, отличается от
+ *  находки про платный орган. */
+const STALLED_MARK = "экран не ответил за";
+
+/**
  * ДОЛЯ РАБОТЫ, КОТОРУЮ БЕРЁТ ЭТОТ ПРОГОН — 7.196, часть 5.
  *
  * ЗАЧЕМ. После роста прибора в 7.194 (132 адреса × 3 роли = 396 экранов,
@@ -244,7 +276,39 @@ function judgeCensus(controls, where) {
   return problems;
 }
 
-async function screen(context, base, path, role, plant) {
+/**
+ * ПЕРЕПИСЬ ОРГАНОВ НА СТРАНИЦЕ, КОТОРАЯ МОЖЕТ УХОДИТЬ ИЗ-ПОД РУК.
+ *
+ * ЗАЧЕМ ОТДЕЛЬНАЯ ФУНКЦИЯ (15.09.2026). Нажатие делается с
+ * `noWaitAfter: true` — прибор нарочно не ждёт перехода, иначе бюджет в
+ * четырнадцать нажатий стоил бы четырнадцать переходов. Но переход при
+ * этом всё равно происходит, и `page.evaluate` попадает ровно в него.
+ * Исходов два, и оба видены: локально — отказ «Execution context was
+ * destroyed, most likely because of a navigation», на бегунке CI — ОЖИДАНИЕ
+ * БЕЗ СРОКА, потому что `evaluate` ждёт нового контекста столько, сколько
+ * понадобится. Ровно это и выглядело как «прибор повис на 390 экранах из
+ * 396»: `/es/account` у гостя переадресуется дважды, и почти каждое
+ * нажатие на нём — переход.
+ *
+ * Здесь страница сначала доводится до `domcontentloaded` со СВОИМ сроком, и
+ * только потом судится. Отказ означает «экран сменился под руками» —
+ * судить в этот момент нечего, и следующий шаг цикла посудит уже новую
+ * страницу. Такие пропуски СЧИТАЮТСЯ и печатаются: молчаливый `catch`
+ * здесь был бы дырой, а не починкой.
+ */
+const SETTLE_TIMEOUT_MS = 8_000;
+
+async function censusOf(page, skipped) {
+  try {
+    await page.waitForLoadState("domcontentloaded", { timeout: SETTLE_TIMEOUT_MS });
+    return await page.evaluate(CONTROL_CENSUS);
+  } catch {
+    skipped.count += 1;
+    return [];
+  }
+}
+
+async function screen(context, base, path, role, plant, skipped) {
   const page = await context.newPage();
   const problems = [];
   let clicks = 0;
@@ -263,7 +327,7 @@ async function screen(context, base, path, role, plant) {
         document.body.appendChild(button);
       });
     }
-    problems.push(...judgeCensus(await page.evaluate(CONTROL_CENSUS), `${path} (${role}, открытие)`));
+    problems.push(...judgeCensus(await censusOf(page, skipped), `${path} (${role}, открытие)`));
 
     // Счёт берётся ТЕМ ЖЕ локатором, каким идёт нажатие. Первая редакция
     // считала кнопки отдельным выражением, которое отбрасывало всё внутри
@@ -303,7 +367,7 @@ async function screen(context, base, path, role, plant) {
         await page.waitForTimeout(400);
         continue;
       }
-      problems.push(...judgeCensus(await page.evaluate(CONTROL_CENSUS), `${path} (${role}, нажатий ${i + 1})`));
+      problems.push(...judgeCensus(await censusOf(page, skipped), `${path} (${role}, нажатий ${i + 1})`));
     }
     return { problems, clicks, opened: true };
   } finally {
@@ -372,6 +436,9 @@ export async function main() {
 
   const browser = await chromium.launch();
   const problemsByRole = { guest: [], free: [], sub: [] };
+  const stalled = [];
+  /** Сколько раз судить было нечего, потому что страница уходила. */
+  const skipped = { count: 0 };
   let opened = 0;
   let clicks = 0;
   try {
@@ -407,7 +474,7 @@ export async function main() {
         // всё равно когда-нибудь завершится, и его отказ без обработчика
         // стал бы необработанным отклонением — то есть падением процесса
         // уже ПОСЛЕ того, как отчёт напечатан.
-        const running = screen(contexts[role], base, path, role, plant);
+        const running = screen(contexts[role], base, path, role, plant, skipped);
         running.catch(() => {});
         try {
           return { role, ...(await Promise.race([running, deadline])) };
@@ -415,11 +482,14 @@ export async function main() {
           clearTimeout(timer);
         }
       } catch (error) {
+        const line = `${path} (${role}): ${error.message.slice(0, 120)}`;
+        if (error.message.includes(STALLED_MARK)) return { role, stalled: [line], problems: [], clicks: 0, opened: false };
         return { role, problems: [`${path} (${role}): экран не собрался — ${error.message.slice(0, 120)}`], clicks: 0, opened: false };
       }
     });
     for (const result of results) {
       problemsByRole[result.role].push(...result.problems);
+      if (result.stalled) stalled.push(...result.stalled);
       clicks += result.clicks;
       if (result.opened) opened += 1;
     }
@@ -427,7 +497,31 @@ export async function main() {
     await browser.close();
   }
 
-  console.log(`  собрано экранов: ${opened} из ${addresses.length * 3}; нажатий сделано: ${clicks}`);
+  console.log(
+    `  собрано экранов: ${opened} из ${addresses.length * 3}; нажатий сделано: ${clicks}; ` +
+      `снимков пропущено из-за перехода: ${skipped.count}`,
+  );
+
+  // МОЛЧАЩИЕ ЭКРАНЫ — своим списком и своим счётом.
+  if (STALLED_ALLOWED.size !== STALLED_ALLOWED_COUNT) {
+    console.error(
+      `список известных молчащих экранов вырос до ${STALLED_ALLOWED.size} при ожидаемых ${STALLED_ALLOWED_COUNT} — ` +
+        `так и было задумано? тогда поправьте число рядом со списком`,
+    );
+    return 1;
+  }
+  const unknownStalled = [];
+  for (const line of stalled) {
+    const key = line.slice(0, line.indexOf(":"));
+    const reason = STALLED_ALLOWED.get(key);
+    console.log(`  молчит: ${line}${reason ? ` — известен (${reason})` : " — НОВЫЙ"}`);
+    if (!reason) unknownStalled.push(line);
+  }
+  if (!plant && unknownStalled.length) {
+    console.error("ЭКРАНЫ, КОТОРЫЕ НЕ ОТВЕТИЛИ В СВОЙ СРОК И НЕ ЗАПИСАНЫ В СПИСОК ИЗВЕСТНЫХ:");
+    for (const line of unknownStalled) console.error(`  ${line}`);
+    return 1;
+  }
 
   if (plant) {
     let ok = true;
