@@ -31,6 +31,9 @@ export interface WordGamesPickerDict {
   puzzleLabel: string;
   completedBadge: string;
   expertModeLabel: string;
+  /** Видимая легенда знака ★ над сеткой — долг 213. Печатается только на
+   *  тех уровнях, где пазлы со звездой ЕСТЬ. */
+  expertModeLegend: string;
   premiumTierLabel: string;
   subscriptionLabel: string;
 }
@@ -126,6 +129,44 @@ export default function WordGamesPicker({
         activeId={level}
         onChange={setLevel}
       />
+
+      {/*
+        ЗВЕЗДА ОБЪЯСНЕНА ГЛАЗАМИ, А НЕ ТОЛЬКО ПОДСКАЗКОЙ — долг 213,
+        решение владельца от 15.09.2026: знак ОСТАВИТЬ, но человек обязан
+        понимать, что он значит.
+
+        До этой правки подпись у ★ жила только в `aria-label`/`title`
+        (`wordGames.expertModeLabel`), то есть её нельзя было увидеть
+        вовсе: на телефоне ни наведения, ни всплывающей подсказки нет.
+
+        ЧТО ИМЕННО МЕНЯЕТ ПРИЗНАК `curved`, ПРОЧИТАНО В КОДЕ, А НЕ
+        ПЕРЕСКАЗАНО. Две вещи, и обе про раскладку слов:
+          — слово кладётся не лучом, а НЕПОВТОРЯЮЩЕЙСЯ ЦЕПОЧКОЙ соседних
+            клеток (`src/lib/word-games/snake-word-search.ts`), то есть
+            может гнуться в любой из восьми сторон на каждом шаге;
+          — и выбор игрока разбирается тем же правилом: доска берёт
+            `extendPath` вместо `extendPathStraight`
+            (`src/components/word-games/WordSearchBoard.tsx:151`), то есть
+            след не залипает на первой же прямой.
+        Поэтому текст легенды говорит ровно это: слова гнутся, и след
+        ведётся клетка за клеткой.
+
+        ЗВЕЗДА И КОРОНА — РАЗНОЕ, И В ТЕКСТЕ ОНИ НЕ СМЕШИВАЮТСЯ (7.196):
+        👑 — сорт материала, ★ — сложность задачи. Легенда ниже про
+        сложность и про деньги не говорит ни слова.
+
+        Условие — по данным этого разреза, а не по уровню: «на C1 звёзды
+        есть» было бы догадкой, а `curved.length` — фактом про то, что
+        нарисовано на экране прямо сейчас.
+      */}
+      {curved.length > 0 && (
+        <p
+          data-testid="expert-mode-legend"
+          className="rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm leading-relaxed text-foreground/75 dark:border-primary-400/30 dark:bg-primary-400/10"
+        >
+          {dict.expertModeLegend}
+        </p>
+      )}
 
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
         {Array.from({ length: total }, (_, i) => i + 1).map((sequence) => {

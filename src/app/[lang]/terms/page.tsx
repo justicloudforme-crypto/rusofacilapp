@@ -4,6 +4,7 @@ import { isLocale } from "@/i18n/config";
 import { TERMS_CONTENT } from "@/lib/legal/content";
 import LegalDocumentView from "@/components/legal/LegalDocumentView";
 import { routeAlternates } from "@/lib/site";
+import { isNativeShellRequest } from "@/lib/native-shell";
 
 export async function generateMetadata({
   params,
@@ -29,5 +30,11 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  return <LegalDocumentView doc={TERMS_CONTENT[lang]} />;
+  // ДОЛГ 196. Внутри приложения раздел про способы оплаты не печатается:
+  // ни OXXO, ни MXN. На сайте текст остаётся полным — разбор в шапке
+  // `LegalParagraph` (`src/lib/legal/content.ts`). Признак оболочки —
+  // тот же самый, что у всех остальных платных поверхностей (7.192).
+  const nativeShell = await isNativeShellRequest();
+
+  return <LegalDocumentView doc={TERMS_CONTENT[lang]} nativeShell={nativeShell} />;
 }

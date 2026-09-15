@@ -25,6 +25,7 @@ export interface WordGamePlayerDict {
   wrongCellHint: string;
   resetSelectionButton: string;
   expertModeLabel: string;
+  expertModeHint: string;
   backToWordGames: string;
   breakdownButton: string;
   hideBreakdownButton: string;

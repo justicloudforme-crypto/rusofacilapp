@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { TERMS_CONTENT } from "./legal/content";
+import { TERMS_CONTENT, visibleLegalParagraphs } from "./legal/content";
 import { locales } from "@/i18n/config";
 
 /**
@@ -90,7 +90,11 @@ describe("what section 3 of the Terms has to state, in both locales", () => {
   function paymentSection(locale: (typeof locales)[number]): string {
     const section = TERMS_CONTENT[locale].sections.find((s) => s.heading.startsWith("3."));
     expect(section, `no section 3 in ${locale} terms`).toBeTruthy();
-    return section!.paragraphs.join("\n");
+    // Читатель здесь — ВЕБ: раздел обязан быть полным именно там
+    // (долг 196; внутри оболочки два абзаца про способы оплаты не
+    // печатаются, и это отдельное утверждение в
+    // `src/lib/legal/native-terms.test.ts`).
+    return visibleLegalParagraphs(section!, { nativeShell: false }).join("\n");
   }
 
   it.each(locales)("%s: cash is named, and bounded to Mexico", (locale) => {

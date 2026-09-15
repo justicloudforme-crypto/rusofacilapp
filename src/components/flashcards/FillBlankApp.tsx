@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Skeleton from "@/components/ui/Skeleton";
-import type { ViewerTier } from "@/lib/access-marks";
-import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
+import CategoryGrid, { type CategoryGridDict } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FillBlankCard, { type FillBlankCardDict } from "./FillBlankCard";
 import FreeTrialLimitBanner, { LockedOrEmpty } from "./FreeTrialLimitBanner";
@@ -13,7 +12,8 @@ import type { FlashcardCategory, FlashcardLevel, FlashcardRow } from "@/lib/flas
 import { checkRecallAnswer, type RecallResult } from "@/lib/flashcards/recall-round";
 import { buildFillBlankRound } from "@/lib/flashcards/fill-blank-round";
 import { getSrsProgress, recordSrsAnswer, syncSrsProgress, type SrsEntry } from "@/lib/flashcard-progress";
-import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
+import type { RecentCategory } from "@/lib/flashcards/summary-client";
+import { useCategorySummary } from "@/lib/flashcards/use-category-summary";
 import { lockedView } from "@/lib/flashcards/locked-view";
 import StreakToast from "@/components/celebration/StreakToast";
 import GameResultPanel, { type GameResultPanelDict } from "@/components/games/GameResultPanel";
@@ -56,26 +56,6 @@ export default function FillBlankApp({
 }) {
   const [category, setCategory] = useState<FlashcardCategory | null>(null);
   const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
-  const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
-  // Перепись БАНКА по темам и по уровням — чтобы сетка внутри оболочки не
-  // писала «0 слов» там, где слова есть (7.195, часть 3).
-  const [bankCategories, setBankCategories] = useState<Record<string, { bank: number; open: number; locked: number }>>({});
-  const [bankLockedByLevel, setBankLockedByLevel] = useState<Record<string, number>>({});
-  /**
-   * РАЗРЕЗ ОТВЕТА, КОТОРЫЙ СЕЙЧАС В РУКАХ — 7.196, часть 2.
-   *
-   * `undefined` — ответа ещё нет; `null` — ответ про все уровни. Сетка тем
-   * сравнивает его с выбранным уровнем и, пока они не совпали, не печатает
-   * чисел вовсе. Без этого поля ЧУЖИЕ числа стояли на экране всё время,
-   * пока едет ответ (замер: «266 слов» на уровне C1 при 8 в банке).
-   */
-  const [summaryLevel, setSummaryLevel] = useState<string | null | undefined>(undefined);
-  const [summaryTier, setSummaryTier] = useState<ViewerTier>("free");
-  const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
-  const [hasAnyProgress, setHasAnyProgress] = useState(false);
-  // `total` is what THIS visitor can open, `locked` is what Premium
-  // would add — the API sends both, and neither is ever computed here.
-  const [totalProgress, setTotalProgress] = useState({ known: 0, total: 0, locked: 0 });
   const [roundTimeSeconds, setRoundTimeSeconds] = useState(0);
   const [srsMap, setSrsMap] = useState<Record<string, SrsEntry>>({});
   const [round, setRound] = useState<FlashcardRow[]>([]);
@@ -99,6 +79,28 @@ export default function FillBlankApp({
     lockedByLevel,
   });
   const [roundLoading, setRoundLoading] = useState(false);
+  /**
+   * ПЕРЕПИСЬ ТЕМ ТЕКУЩЕГО РАЗРЕЗА — 7.199, часть 1.
+   *
+   * Один общий крючок на все четыре режима словаря. Он же держит признак
+   * `summaryLevel` («какому разрезу принадлежат числа в руках»), который
+   * читают сетка тем и строка «Продолжить»: пока он не совпал с выбранным
+   * уровнем, чисел на экране нет вовсе. Почему это один крючок, а не
+   * четыре эффекта, и какой дефект это чинит — в шапке
+   * `src/lib/flashcards/use-category-summary.ts`.
+   */
+  const { summary, summaryLevel } = useCategorySummary(levelFilter, [round, complete]);
+  const categorySummary = summary.categories;
+  const bankCategories = summary.bankCategories;
+  const bankLockedByLevel = summary.lockedByLevel;
+  const summaryTier = summary.tier;
+  const recentCategories: RecentCategory[] = summary.recent;
+  const hasAnyProgress = summary.hasAnyProgress;
+  const totalProgress = {
+    known: summary.totalKnown,
+    total: summary.availableWords,
+    locked: summary.premiumOnlyWords,
+  };
   const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const roundStartedAtRef = useRef(0);
 
@@ -107,19 +109,6 @@ export default function FillBlankApp({
     setSrsMap(getSrsProgress());
     syncSrsProgress().then(setSrsMap);
   }, []);
-
-  useEffect(() => {
-    fetchCategorySummary(levelFilter).then((body) => {
-      setCategorySummary(body.categories);
-      setBankCategories(body.bankCategories);
-      setBankLockedByLevel(body.lockedByLevel);
-      setSummaryLevel(body.level);
-      setSummaryTier(body.tier);
-      setRecentCategories(body.recent);
-      setHasAnyProgress(body.hasAnyProgress);
-      setTotalProgress({ known: body.totalKnown, total: body.availableWords, locked: body.premiumOnlyWords });
-    });
-  }, [round, levelFilter, complete]);
 
   const card = round[roundIndex];
 

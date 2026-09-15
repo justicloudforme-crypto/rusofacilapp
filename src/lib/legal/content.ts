@@ -76,9 +76,35 @@
  */
 import type { Locale } from "@/i18n/config";
 
+/**
+ * АБЗАЦ ДОКУМЕНТА — ДОЛГ 196, решение владельца 15.09.2026.
+ *
+ * Обычно это просто строка. Форма с пометкой `webOnly` нужна ровно для
+ * одного случая: абзац правдив и обязан остаться НА САЙТЕ, но внутри
+ * приложения его печатать нельзя.
+ *
+ * ОТКУДА ЭТО. Перестроенный прибор 7.194 нашёл на `/es/terms` и
+ * `/ru/terms` слова «MXN» и «OXXO» во всех трёх ролях. Платёжной
+ * поверхностью это не является — ни органа управления, ни ссылки на
+ * оплату там нет, — но Google запрещает УВОДИТЬ на внешнюю оплату, а
+ * абзац, называющий сторонний способ оплаты по имени, лежит в серой
+ * зоне. Решение владельца: текст НЕ удалять, на сайте он остаётся
+ * полным и правдивым (там есть и Stripe, и продажи), а внутри оболочки
+ * раздел про способы оплаты не показывать.
+ *
+ * Почему пометка на абзаце, а не на разделе: раздел 3 — это ещё и
+ * автопродление, и отмена, и право менять цену. Вырезать его целиком
+ * значило бы спрятать от человека внутри приложения условия, которые к
+ * способам оплаты отношения не имеют.
+ *
+ * Механизм — уже существующий признак оболочки (`isNativeShellRequest`,
+ * заходы 7.117/7.118/7.120), нового здесь нет ничего.
+ */
+export type LegalParagraph = string | { text: string; webOnly: true };
+
 export interface LegalSection {
   heading: string;
-  paragraphs: string[];
+  paragraphs: LegalParagraph[];
   /**
    * Якорь на раздел: `id` у `<section>` и, значит, адрес вида
    * `/es/privacy#tus-derechos`.
@@ -173,8 +199,8 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
           "Ofrecemos dos planes de suscripción —mensual y anual— y un plan Premium de pago único. Los pagos se procesan a través de Stripe; nunca almacenamos los datos de tu tarjeta en nuestros servidores.",
           "Las suscripciones mensual y anual se renuevan automáticamente al final de cada periodo, salvo que las canceles antes de la fecha de renovación.",
           "El plan Premium no es una suscripción: es un pago único. No se renueva, no genera cobros posteriores y no hay nada que cancelar; el acceso que otorga se mantiene mientras el Servicio siga en funcionamiento.",
-          "Además del pago con tarjeta, aceptamos pago en efectivo mediante un vale OXXO, y únicamente para compradores en México: OXXO es una cadena de tiendas mexicana y su vale no puede pagarse fuera del país. El vale es válido durante 3 días; si vence sin pagarse no se te cobra nada y puedes generar otro. El acceso se activa automáticamente en cuanto la tienda confirma el pago. Un pago en efectivo cubre un solo periodo y nunca genera cobros automáticos: para continuar hay que repetirlo.",
-          "El precio base de todos los planes está fijado en pesos mexicanos (MXN). El cobro, en cambio, no siempre se hace en pesos: la página de pago puede presentarte el importe convertido a la moneda de tu país y cobrártelo en ella, y ahí mismo puedes elegir pagar en pesos si lo prefieres. El importe exacto y el tipo de cambio los fija esa página en el momento del cobro (o tu banco, si aplica su propia conversión); los importes en otras monedas que mostramos en el sitio son aproximados y pueden diferir del cargo final. En los planes mensual y anual, el importe de las renovaciones puede variar ligeramente si varía el tipo de cambio, aunque el precio en pesos siga siendo el mismo.",
+          { webOnly: true, text: "Además del pago con tarjeta, aceptamos pago en efectivo mediante un vale OXXO, y únicamente para compradores en México: OXXO es una cadena de tiendas mexicana y su vale no puede pagarse fuera del país. El vale es válido durante 3 días; si vence sin pagarse no se te cobra nada y puedes generar otro. El acceso se activa automáticamente en cuanto la tienda confirma el pago. Un pago en efectivo cubre un solo periodo y nunca genera cobros automáticos: para continuar hay que repetirlo." },
+          { webOnly: true, text: "El precio base de todos los planes está fijado en pesos mexicanos (MXN). El cobro, en cambio, no siempre se hace en pesos: la página de pago puede presentarte el importe convertido a la moneda de tu país y cobrártelo en ella, y ahí mismo puedes elegir pagar en pesos si lo prefieres. El importe exacto y el tipo de cambio los fija esa página en el momento del cobro (o tu banco, si aplica su propia conversión); los importes en otras monedas que mostramos en el sitio son aproximados y pueden diferir del cargo final. En los planes mensual y anual, el importe de las renovaciones puede variar ligeramente si varía el tipo de cambio, aunque el precio en pesos siga siendo el mismo." },
           "Puedes cancelar tu suscripción mensual o anual en cualquier momento desde tu perfil. La cancelación surte efecto de inmediato: perderás el acceso a las funciones de pago en el momento de cancelar, no al final del periodo ya pagado. Salvo que la ley aplicable exija lo contrario, no ofrecemos reembolsos por el tiempo restante de un periodo ya iniciado.",
           "Nos reservamos el derecho de modificar los precios de las suscripciones. Cualquier cambio se aplicará a partir del siguiente ciclo de renovación, nunca de forma retroactiva.",
         ],
@@ -252,8 +278,8 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
           "Мы предлагаем две подписки — месячную и годовую — и тариф Premium с разовым платежом. Платежи обрабатываются через Stripe; данные вашей карты никогда не хранятся на наших серверах.",
           "Месячная и годовая подписки продлеваются автоматически в конце каждого периода, если вы не отменили их заранее.",
           "Premium — не подписка, а разовый платёж. Он не продлевается, не порождает последующих списаний и его нечего отменять; выданный им доступ сохраняется, пока Сервис продолжает работать.",
-          "Кроме оплаты картой мы принимаем наличные — по ваучеру OXXO, и только для покупателей в Мексике: OXXO это сеть магазинов в Мексике, и оплатить её ваучер за пределами страны негде. Ваучер действует 3 дня; если срок истёк, с вас ничего не списано и можно выпустить новый. Доступ включается автоматически, как только магазин подтвердит оплату. Оплата наличными покрывает один период и никогда не приводит к автосписаниям: чтобы продолжить, платёж нужно повторить.",
-          "Базовая цена всех тарифов установлена в мексиканских песо (MXN). Само списание при этом не всегда идёт в песо: платёжная страница может показать сумму, пересчитанную в валюту вашей страны, и списать именно её — там же можно выбрать оплату в песо, если вам так удобнее. Точную сумму и курс определяет эта страница в момент списания (или ваш банк, если конвертацию делает он); суммы в других валютах, которые мы показываем на сайте, — приблизительные и могут отличаться от итогового списания. У месячной и годовой подписки сумма следующих списаний может немного меняться вслед за курсом, даже если цена в песо осталась прежней.",
+          { webOnly: true, text: "Кроме оплаты картой мы принимаем наличные — по ваучеру OXXO, и только для покупателей в Мексике: OXXO это сеть магазинов в Мексике, и оплатить её ваучер за пределами страны негде. Ваучер действует 3 дня; если срок истёк, с вас ничего не списано и можно выпустить новый. Доступ включается автоматически, как только магазин подтвердит оплату. Оплата наличными покрывает один период и никогда не приводит к автосписаниям: чтобы продолжить, платёж нужно повторить." },
+          { webOnly: true, text: "Базовая цена всех тарифов установлена в мексиканских песо (MXN). Само списание при этом не всегда идёт в песо: платёжная страница может показать сумму, пересчитанную в валюту вашей страны, и списать именно её — там же можно выбрать оплату в песо, если вам так удобнее. Точную сумму и курс определяет эта страница в момент списания (или ваш банк, если конвертацию делает он); суммы в других валютах, которые мы показываем на сайте, — приблизительные и могут отличаться от итогового списания. У месячной и годовой подписки сумма следующих списаний может немного меняться вслед за курсом, даже если цена в песо осталась прежней." },
           "Отменить месячную или годовую подписку можно в любой момент в личном профиле. Отмена вступает в силу немедленно: доступ к платным функциям прекращается в момент отмены, а не в конце уже оплаченного периода. Если иное не требуется применимым законодательством, возврат средств за оставшуюся часть уже начавшегося периода не производится.",
           "Мы оставляем за собой право менять стоимость подписки. Любое изменение применяется начиная со следующего цикла продления, никогда задним числом.",
         ],
@@ -493,3 +519,27 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
     ],
   },
 };
+
+/**
+ * Абзацы раздела, которые видит ЭТОТ читатель.
+ *
+ * Правило одно и живёт здесь: внутри оболочки помеченные абзацы не
+ * печатаются, в вебе печатаются все. Обе стороны держит
+ * `src/lib/legal/native-terms.test.ts` и — на живой отдаче — сторож
+ * `npm run check:native-payments`, у которого после этой правки больше
+ * нет исключения для двух правовых адресов.
+ */
+export function visibleLegalParagraphs(
+  section: LegalSection,
+  { nativeShell }: { nativeShell: boolean },
+): string[] {
+  const out: string[] = [];
+  for (const paragraph of section.paragraphs) {
+    if (typeof paragraph === "string") {
+      out.push(paragraph);
+      continue;
+    }
+    if (!nativeShell) out.push(paragraph.text);
+  }
+  return out;
+}
