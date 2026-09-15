@@ -315,13 +315,19 @@ async function main() {
         // в каждой из трёх ролей. Гоняется по короткому срезу адресов —
         // подсадка живёт на КАЖДОМ экране, и платить за неё 132 адресами
         // значит платить за одно и то же.
-        renderedPurchasesPlant = skipPurchases
-          ? { status: 0 }
-          : spawnSync(
-              process.execPath,
-              ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--plant", "--limit=4"],
-              { stdio: "inherit" }
-            );
+        // ПОДСАДКА ГОНЯЕТСЯ ВСЕГДА, включая `--no-purchase-census`.
+        //
+        // Живая половина в CI уехала в задание долей, а подсадка осталась
+        // здесь, и это не недосмотр: она не делится на доли по смыслу
+        // (живёт на КАЖДОМ экране, ей хватает среза из четырёх адресов),
+        // стоит здесь секунды и в задании долей дважды повисла до
+        // предохранителя. Без неё «0 платных органов» значило бы
+        // «измеритель ничего не ищет» — правило 4.1.
+        renderedPurchasesPlant = spawnSync(
+          process.execPath,
+          ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--plant", "--limit=4"],
+          { stdio: "inherit" }
+        );
       }
     } finally {
       stopServer(rolesServer);
