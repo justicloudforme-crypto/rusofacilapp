@@ -44,7 +44,7 @@ let markStudyDay: (
   timeZone: string,
   source: "lesson" | "story" | "flashcards" | "word-game" | "exam",
   at?: Date,
-) => Promise<void>;
+) => Promise<boolean>;
 let getStudyDayKeys: (userId: string) => Promise<string[]>;
 let getUserActivityDateKeys: (userId: string, timeZone?: string) => Promise<string[]>;
 let getUserActivityDaySources: (userId: string, timeZone?: string) => Promise<Record<string, string[]>>;

@@ -57,7 +57,7 @@ export async function markStudyDay(
   timeZone: string,
   source: StudyDaySource,
   at: Date = new Date(),
-): Promise<void> {
+): Promise<boolean> {
   const dateKey = dateKeyIn(at, timeZone);
   try {
     // Read first, and on the overwhelmingly common path (the day is already
@@ -70,7 +70,7 @@ export async function markStudyDay(
     });
     if (existing) {
       const belongsTo = studyDayKeyIn({ dateKey, markedAt: existing.markedAt }, timeZone);
-      if (belongsTo === dateKey) return; // the ordinary case: today is marked
+      if (belongsTo === dateKey) return false; // the ordinary case: today is marked
 
       // The row sitting on today's key was written for another day: it was
       // stamped in a zone the server did not know at the time — UTC on a
@@ -111,12 +111,18 @@ export async function markStudyDay(
     // lesson still does not count — which is the very complaint this
     // change set answers.
     await invalidateActivityDateKeys(userId, timeZone);
+    // ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ — «день ДЕЙСТВИТЕЛЬНО новый», и оно не
+    // бухгалтерия: на нём висит выдача значков серии (долг 220). Правда
+    // ровно здесь, потому что сюда попадают только те вызовы, которые
+    // прошли мимо `return false` выше, то есть не чаще раза в сутки.
+    return true;
   } catch (error) {
     // Includes the one race this design has: two requests arriving in the
     // same millisecond both find nothing and both insert. The unique index
     // rejects the loser, which is exactly the right outcome — one row for
     // the day — so it is logged and dropped, not retried.
     console.error("markStudyDay failed", error);
+    return false;
   }
 }
 

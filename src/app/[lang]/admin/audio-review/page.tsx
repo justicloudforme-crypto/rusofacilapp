@@ -45,9 +45,9 @@ export default async function AudioReviewPage({ params }: PageProps<"/[lang]/adm
       <div className="rounded-lg border border-foreground/10 bg-surface p-6 text-sm">
         <p className="font-medium">Пока нет данных проверки.</p>
         <p className="mt-2 text-foreground/60">
-          Запусти в терминале: <code className="font-mono">npx tsx prisma/audit-story-audio.ts</code>
-          {" "}(добавь <code className="font-mono">-- --whisper</code>, если хочешь ещё и проверку через
-          распознавание речи — это платно и дольше). Потом обнови страницу.
+          Запустите в терминале: <code className="font-mono">npx tsx prisma/audit-story-audio.ts</code>
+          {" "}(добавьте <code className="font-mono">-- --whisper</code>, если хотите ещё и проверку через
+          распознавание речи — это платно и дольше). Потом обновите страницу.
         </p>
       </div>
     );
@@ -64,7 +64,7 @@ export default async function AudioReviewPage({ params }: PageProps<"/[lang]/adm
       <p className="mb-6 text-sm text-foreground/60">
         Проверка от {new Date(findingsFile.generatedAt).toLocaleString("ru-RU")} · всего клипов в библиотеке
         рассказов: {findingsFile.totalClips}. Эта страница ничего не перегенерирует сама — только показывает
-        находки и сохраняет твои решения.
+        находки и сохраняет ваши решения.
       </p>
       <AudioReviewTable lang={lang} rows={rows} />
     </div>

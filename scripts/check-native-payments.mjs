@@ -485,7 +485,7 @@ function judgeSources(sources) {
   }
   // Реферальный блок — тоже призыв к покупке (долг 186).
   if (!/nativeShell \? null : \(\s*\n?\s*<Card>/.test(sources[PROFILE_FILE])) {
-    problems.push(`${PROFILE_FILE}: реферальный блок «Приглашай и получай» не скрыт внутри оболочки (долг 186)`);
+    problems.push(`${PROFILE_FILE}: реферальный блок «Приглашайте и получайте» не скрыт внутри оболочки (долг 186)`);
   }
   problems.push(...chokepointProblems(sources));
   return problems;
