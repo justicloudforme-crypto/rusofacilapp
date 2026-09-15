@@ -280,6 +280,8 @@ async function main() {
     let renderedPurchasesPlant = { status: 1 };
     let accessSigns = { status: 1 };
     let accessSignsPlant = { status: 1 };
+    let signedOut = { status: 1 };
+    let signedOutPlant = { status: 1 };
     try {
       if (!(await waitForServer(90_000, ROLES_BASE))) {
         console.error(
@@ -348,6 +350,26 @@ async function main() {
           [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, "--plant", ...passthrough],
           { stdio: "inherit" }
         );
+        // СЕДЬМАЯ И ВОСЬМАЯ на том же сервере ролей — 7.198, часть 1:
+        // после выхода не остаётся ни сессии, ни личной копии страницы.
+        // Сервер ролей здесь обязателен по той же причине, что и у
+        // соседей: без `E2E_TEST_SEED=1` завести настоящий аккаунт нечем,
+        // а без аккаунта в кеше не появится ни одной личной копии — и
+        // «личных копий 0» означало бы пустой прибор, а не чистый кеш.
+        //
+        // Подсадок две, и они РАЗНЫЕ намеренно: «кука уцелела» и
+        // «страница пришла из кеша» — два разных дефекта, и одна проверка
+        // на оба случая не годится.
+        signedOut = spawnSync(
+          process.execPath,
+          ["scripts/check-signed-out.mjs", `--base=${ROLES_BASE}`],
+          { stdio: "inherit" }
+        );
+        signedOutPlant = spawnSync(
+          process.execPath,
+          ["scripts/check-signed-out.mjs", `--base=${ROLES_BASE}`, "--plant"],
+          { stdio: "inherit" }
+        );
       }
     } finally {
       stopServer(rolesServer);
@@ -372,6 +394,20 @@ async function main() {
     const bottomInsetPlant = spawnSync(
       process.execPath,
       ["scripts/check-bottom-inset.mjs", `--base=${BASE}`, "--plant", ...passthrough],
+      { stdio: "inherit" }
+    );
+    // Девятым и десятым на том же сервере — 7.198, часть 3 «а»: выбранный
+    // язык переживает перезапуск. «Перезапуск» моделируется закрытием
+    // контекста и подъёмом нового из его же `storageState` — это ровно
+    // то, что webview поднимает с диска при следующем запуске.
+    const rememberedLocale = spawnSync(
+      process.execPath,
+      ["scripts/check-remembered-locale.mjs", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
+    const rememberedLocalePlant = spawnSync(
+      process.execPath,
+      ["scripts/check-remembered-locale.mjs", `--base=${BASE}`, "--plant", ...passthrough],
       { stdio: "inherit" }
     );
     // Девятым на том же сервере — долг 173, часть 2, пункт 2: оболочка
@@ -421,6 +457,10 @@ async function main() {
       (nativeShellRender.status ?? 1) ||
       (bottomInset.status ?? 1) ||
       (bottomInsetPlant.status ?? 1) ||
+      (rememberedLocale.status ?? 1) ||
+      (rememberedLocalePlant.status ?? 1) ||
+      (signedOut.status ?? 1) ||
+      (signedOutPlant.status ?? 1) ||
       (run.status ?? 1) ||
       (layout.status ?? 1) ||
       (links.status ?? 1) ||
