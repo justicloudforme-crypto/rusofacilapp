@@ -136,6 +136,23 @@
     </button>
 
     <script>
+      // No framework, no dictionary import — just enough to not show
+      // Spanish to a Russian-speaking user on their very first (failed)
+      // launch. Keys mirror the two locales the rest of the app supports.
+      var strings = {
+        ru: {
+          title: "Не удалось открыть приложение",
+          body: "Сервер не ответил или на телефоне нет соединения с интернетом. Проверьте соединение и попробуйте снова.",
+          retry: "Повторить",
+          retrying: "Пробуем…",
+          failed: "Пока не получается. Проверьте соединение и попробуйте ещё раз.",
+        },
+      };
+      // Запасной язык экрана — испанский, как и вся разметка выше.
+      var FALLBACK = {
+        retrying: "Conectando…",
+        failed: "Todavía no se pudo. Revisa tu conexión e inténtalo otra vez.",
+      };
       // Боевой адрес. Обязан совпадать с PRODUCTION_URL из
       // capacitor.config.ts — сличает npm run check:native-shell.
       var SITE_URL = "https://rusofacilapp.com";
@@ -151,83 +168,23 @@
       // «ничего не произошло» — та же жалоба, из-за которой всё и чинится.
       var MIN_BUSY_MS = 600;
 
-      var button = document.getElementById("retry");
-      var label = document.getElementById("retry-label");
-      var body = document.querySelector('[data-i18n="body"]');
-      var idleLabel = "";
-
-      /**
-       * СЛОВАРЬ ЭКРАНА ОШИБКИ — ОДИН НА ОБЕ ЛОКАЛИ (заход 7.198, часть 3).
-       *
-       * До 15.09.2026 испанский жил в разметке выше, а русский — здесь, и
-       * согласовывать их было нечем. Теперь обе локали стоят рядом в одном
-       * объекте, а текст в разметке — это ЗАПАСНОЙ путь на случай, когда
-       * JS не исполнился вовсе (файл открывается локально, без сети и без
-       * бандла, и остаться пустым он права не имеет). Что они совпадают
-       * знак в знак, сличает `npm run check:shell-error-locale`.
-       */
-      var strings = {
-        es: {
-          title: "No pudimos abrir la aplicación",
-          body: "El servidor no respondió o tu teléfono no tiene conexión a internet. Revisa tu conexión y vuelve a intentarlo.",
-          retry: "Reintentar",
-          retrying: "Conectando…",
-          failed: "Todavía no se pudo. Revisa tu conexión e inténtalo otra vez.",
-        },
-        ru: {
-          title: "Не удалось открыть приложение",
-          body: "Сервер не ответил или на телефоне нет соединения с интернетом. Проверьте соединение и попробуйте снова.",
-          retry: "Повторить",
-          retrying: "Пробуем…",
-          failed: "Пока не получается. Проверьте соединение и попробуйте ещё раз.",
-        },
-      };
-      // Запасной язык экрана — испанский, как и вся разметка выше.
-      var FALLBACK_LOCALE = "es";
-      var current = FALLBACK_LOCALE;
-
-      var say = function (key) {
-        return (strings[current] && strings[current][key]) || strings[FALLBACK_LOCALE][key];
-      };
-
-      function applyLocale(lang) {
-        if (!strings[lang]) return;
-        current = lang;
+      var lang = (navigator.language || "").slice(0, 2);
+      var t = strings[lang];
+      if (t) {
         document.documentElement.lang = lang;
         document.querySelectorAll("[data-i18n]").forEach(function (el) {
           var key = el.getAttribute("data-i18n");
-          if (strings[lang][key]) el.textContent = strings[lang][key];
+          if (t[key]) el.textContent = t[key];
         });
-        idleLabel = say("retry");
-        if (button && button.getAttribute("data-busy") !== "1") label.textContent = idleLabel;
       }
+      var say = function (key) {
+        return (t && t[key]) || FALLBACK[key];
+      };
 
-      /**
-       * ЯЗЫК ЭТОГО ЭКРАНА НАЗЫВАЕТ ОБОЛОЧКА, А НЕ ТЕЛЕФОН.
-       *
-       * Раньше он брался из `navigator.language`, то есть из языка
-       * ТЕЛЕФОНА. У владельца телефон испанский, а интерфейс сайта был
-       * переключён на русский — и экран ошибки пришёл на испанском.
-       *
-       * Прочитать выбор с сайта отсюда нельзя ни куки, ни хранилищем: этот
-       * файл загружен с ЛОКАЛЬНОГО адреса (`https://localhost/error.html`,
-       * см. `Bridge.getErrorUrl()`), а выбор живёт на источнике
-       * `https://rusofacilapp.com`. Разные источники — общего хранилища у
-       * них нет вовсе.
-       *
-       * Поэтому значение приносит оболочка: `MainActivity` помнит локаль
-       * последней открытой страницы и зовёт эту функцию, как только видит
-       * на экране адрес экрана ошибки. Функция объявлена ЗДЕСЬ и вызывается
-       * ОТТУДА — то есть язык в разметке не зашит и запасной путь остаётся
-       * прежним, пока оболочка молчит (первый запуск: помнить ещё нечего).
-       */
-      window.__rfApplyLocale = applyLocale;
-
-      // Пока оболочка молчит — язык телефона, как и раньше. Первый запуск
-      // после установки другого источника и не имеет.
-      applyLocale((navigator.language || "").slice(0, 2));
-      idleLabel = say("retry");
-
+      var button = document.getElementById("retry");
+      var label = document.getElementById("retry-label");
+      var body = document.querySelector('[data-i18n="body"]');
+      var idleLabel = label.textContent;
 
       /**
        * ПОЧЕМУ СНАЧАЛА ПРОБА, А НЕ СРАЗУ ПЕРЕХОД (долг 181).

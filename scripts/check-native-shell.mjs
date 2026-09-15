@@ -210,7 +210,12 @@ function scan() {
   }
 
   // --- 4. обе локали экрана ошибки ----------------------------------------
-  const keys = [...page.matchAll(/data-i18n="([\w-]+)"/g)].map((m) => m[1]);
+  // Только РАЗМЕТКА и только уникальные ключи: ниже, в скрипте, тот же
+  // `data-i18n` встречается селектором, и до 15.09.2026 сторож печатал
+  // «видимых строк 4 (title, body, retry, body)» — считая свой же разбор.
+  const keys = [
+    ...new Set([...page.slice(0, page.indexOf("<script>")).matchAll(/data-i18n="([\w-]+)"/g)].map((m) => m[1])),
+  ];
   facts.i18nKeys = keys;
   if (keys.length === 0) {
     failures.push(`${ERROR_PAGE}: ни одной строки с \`data-i18n\` — переводить нечего, значит экран одноязычный.`);
@@ -474,7 +479,10 @@ function plantControls() {
     },
     {
       name: "полосы не переставляются после перехода на новую страницу",
-      plant: () => swap(MAIN_ACTIVITY, "onPageStarted", "неСлушаемПереходы"),
+      // swapAll, а не swap: с 7.198 `onPageStarted` в классе три
+      // (безопасные поля и память о локали), и подмена ОДНОГО вхождения
+      // оставляла сторож молчащим — поймано своей же подсадкой 15.09.2026.
+      plant: () => swapAll(MAIN_ACTIVITY, /onPageStarted/g, "неСлушаемПереходы"),
       expect: (r) => r.failures.some((m) => m.includes("первый нарисованный кадр")),
     },
     {
@@ -494,7 +502,9 @@ function plantControls() {
     },
     {
       name: "сторож перестал спрашивать адрес экрана ошибки у моста",
-      plant: () => swap(MAIN_ACTIVITY, "getBridge().getErrorUrl()", "null"),
+      // То же самое: с 7.198 адрес экрана ошибки спрашивают двое —
+      // сторож загрузки и подстановка языка.
+      plant: () => swapAll(MAIN_ACTIVITY, /getBridge\(\)\.getErrorUrl\(\)/g, "null"),
       expect: (r) => r.failures.some((m) => m.includes("`getErrorUrl`")),
     },
     {

@@ -38,12 +38,35 @@
  *   * картинки заставки совпадают с эталоном из `resources/icon.png`,
  *     то есть дефолт Capacitor в пакет не вернулся.
  *
+ * ====================================================================
+ * ЧТО ДОБАВЛЕНО 15.09.2026 (заход 7.198, часть 4)
+ * ====================================================================
+ *
+ * Замер владельца на ТОЙ ЖЕ сборке 7.197, два запуска покадрово:
+ * с иконки — синий фон и матрёшка с первого кадра; кнопкой «Открыть» из
+ * установщика сразу после установки — синий фон и НИ ОДНОГО кадра со
+ * знаком, 4,2 с сплошного цвета.
+ *
+ * Фон при этом БЫЛ фирменный. Этот цвет в приложении существует ровно в
+ * одном месте — `windowSplashScreenBackground` темы запуска, — значит
+ * тема применена, и применена та самая: активность в манифесте одна и
+ * `intent-filter` у неё один. То есть обе версии «тема не применилась» и
+ * «тема не та» опровергнуты самим кадром.
+ *
+ * Остаётся стиль системной заставки, который запрашивает ВЫЗЫВАЮЩЕЕ
+ * приложение (`SPLASH_SCREEN_STYLE_EMPTY`): фон темы без значка. Так
+ * запускает установщик и так запускает Play Store. Нашей темой это не
+ * чинится вовсе — поэтому знак рисует САМА активность своим слоем, и
+ * сторож ниже требует ровно этого: слой есть, он фирменного цвета, знак
+ * в нём тот же `@drawable/splash_icon` и поле у него те же 288dp, что у
+ * системной заставки.
+ *
  *   node scripts/check-splash.mjs
  *   node scripts/check-splash.mjs --plant
  */
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { buildSplash, splashBackgroundHex } from "./store-assets/generate-splash.mjs";
+import { buildSplash, splashBackgroundHex, SPLASH_ICON_DP } from "./store-assets/generate-splash.mjs";
 
 const STYLES = "android/app/src/main/res/values/styles.xml";
 const COLORS = "android/app/src/main/res/values/colors.xml";
@@ -105,7 +128,7 @@ export function judge(sources) {
   if (!/onPageCommitVisible|onPageLoaded/.test(activity)) {
     problems.push(`${ACTIVITY}: заставка не отпускается по событию готовности страницы`);
   }
-  const fuse = /postDelayed\([^;]*splashReleased\s*=\s*true[^;]*,\s*([A-Z_]+|\d+)\s*\)/.exec(activity);
+  const fuse = /loadWatchdog\.postDelayed\(\(\) -> releaseSplash\(\),\s*([A-Z_]+|\d+)\s*\)/.exec(activity);
   if (!fuse) {
     problems.push(
       `${ACTIVITY}: у заставки нет ПРЕДОХРАНИТЕЛЯ — страница, которая не пришла, оставила бы человека ` +
@@ -115,6 +138,56 @@ export function judge(sources) {
     problems.push(
       `${ACTIVITY}: предохранитель заставки (${fuse[1]}) — не то же число, что срок сторожа загрузки ` +
         `(LOAD_TIMEOUT_MS). Разойдись они — между уходом заставки и экраном ошибки человек увидел бы пустоту`,
+    );
+  }
+
+  // 3.1. ЕДИНСТВЕННЫЙ ВЫХОД ИЗ ЗАСТАВКИ снимает и системную половину, и
+  // нашу. Раньше выход был один и снимал одну; теперь их две, и разойдись
+  // они — человек увидел бы фирменный слой поверх готовой страницы.
+  const release = /private void releaseSplash\(\)\s*\{[\s\S]*?\n    \}/.exec(activity);
+  if (!release) {
+    problems.push(`${ACTIVITY}: выхода из заставки нет вовсе (releaseSplash)`);
+  } else {
+    if (!/splashReleased\s*=\s*true/.test(release[0])) {
+      problems.push(`${ACTIVITY}: releaseSplash не отпускает системную заставку`);
+    }
+    if (!/hideBrandSplashOverlay\(\)/.test(release[0])) {
+      problems.push(`${ACTIVITY}: releaseSplash не снимает собственный слой — знак остался бы поверх страницы`);
+    }
+  }
+
+  // 3.2. СОБСТВЕННЫЙ СЛОЙ ЗНАКА. Ровно то, чего не хватало запуску из
+  // установщика: системная заставка там приходит пустой по требованию
+  // ВЫЗЫВАЮЩЕГО приложения, и нашей темой это не лечится.
+  if (!/attachBrandSplashOverlay\(\)/.test(activity)) {
+    problems.push(
+      `${ACTIVITY}: у оболочки нет собственного слоя заставки — запуск из установщика и из Play Store ` +
+        `покажет фон без знака (замер владельца: 4,2 с сплошного цвета)`,
+    );
+  }
+  if (!/setImageResource\(R\.drawable\.splash_icon\)/.test(activity)) {
+    problems.push(`${ACTIVITY}: собственный слой заставки рисует не @drawable/splash_icon`);
+  }
+  if (!/setBackgroundColor\(getColor\(R\.color\.splashBackground\)\)/.test(activity)) {
+    problems.push(`${ACTIVITY}: собственный слой заставки красится не @color/splashBackground`);
+  }
+  const iconDp = /SPLASH_ICON_DP\s*=\s*(\d+)/.exec(activity);
+  if (!iconDp) {
+    problems.push(`${ACTIVITY}: поле знака собственного слоя не названо числом`);
+  } else if (Number(iconDp[1]) !== SPLASH_ICON_DP) {
+    problems.push(
+      `${ACTIVITY}: поле знака ${iconDp[1]}dp расходится с полем системной заставки (${SPLASH_ICON_DP}dp) — ` +
+        `подмена одной другой была бы видна рывком размера`,
+    );
+  }
+  // Условие удержания системной заставки обязано сниматься НАШИМ слоем, а
+  // не готовностью страницы: иначе на запуске с пустой системной заставкой
+  // человек смотрел бы на голый фон всё время загрузки — то есть ровно то,
+  // что и было снято владельцем.
+  if (!/setKeepOnScreenCondition\(\(\) -> !overlayAttached\)/.test(activity)) {
+    problems.push(
+      `${ACTIVITY}: системная заставка держится не до появления нашего слоя — на пустой системной заставке ` +
+        `(запуск из установщика) знака не будет всё время загрузки`,
     );
   }
 
@@ -179,9 +252,21 @@ export async function main() {
       ["заставка не отпускается по готовности страницы",
         { [ACTIVITY]: sources[ACTIVITY].replace(/onPageCommitVisible/g, "неСобытие").replace(/onPageLoaded/g, "неСобытие2") }],
       ["у заставки отобрали предохранитель — логотип навсегда",
-        { [ACTIVITY]: sources[ACTIVITY].replace(/loadWatchdog\.postDelayed\(\(\) -> splashReleased = true, LOAD_TIMEOUT_MS\);/, "") }],
+        { [ACTIVITY]: sources[ACTIVITY].replace(/loadWatchdog\.postDelayed\(\(\) -> releaseSplash\(\), LOAD_TIMEOUT_MS\);/, "") }],
       ["предохранитель разошёлся со сроком сторожа загрузки",
-        { [ACTIVITY]: sources[ACTIVITY].replace("splashReleased = true, LOAD_TIMEOUT_MS)", "splashReleased = true, 3000)") }],
+        { [ACTIVITY]: sources[ACTIVITY].replace("releaseSplash(), LOAD_TIMEOUT_MS)", "releaseSplash(), 3000)") }],
+      ["собственного слоя заставки нет — запуск из установщика снова без знака",
+        { [ACTIVITY]: sources[ACTIVITY].replace(/attachBrandSplashOverlay\(\)/g, "неСтавимСлой()") }],
+      ["собственный слой рисует не фирменный знак",
+        { [ACTIVITY]: sources[ACTIVITY].replace("setImageResource(R.drawable.splash_icon)", "setImageResource(R.drawable.ic_launcher_background)") }],
+      ["собственный слой красится не фирменным фоном",
+        { [ACTIVITY]: sources[ACTIVITY].replace("setBackgroundColor(getColor(R.color.splashBackground))", "setBackgroundColor(0xFFFFFFFF)") }],
+      ["поле знака собственного слоя разошлось с полем системной заставки",
+        { [ACTIVITY]: sources[ACTIVITY].replace("SPLASH_ICON_DP = 288", "SPLASH_ICON_DP = 160") }],
+      ["системная заставка снова держится до готовности страницы — на пустой она оставит голый фон",
+        { [ACTIVITY]: sources[ACTIVITY].replace("setKeepOnScreenCondition(() -> !overlayAttached)", "setKeepOnScreenCondition(() -> !splashReleased)") }],
+      ["выход из заставки перестал снимать собственный слой — знак поверх готовой страницы",
+        { [ACTIVITY]: sources[ACTIVITY].replace("        hideBrandSplashOverlay();\n    }", "    }") }],
       ["цвет фона заставки разошёлся с фирменным",
         { [COLORS]: sources[COLORS].replace(/#2d5f8a/i, "#ffffff") }],
       ["цвет в конфиге оболочки разошёлся с фирменным",
