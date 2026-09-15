@@ -141,20 +141,19 @@ const GO_BACK_TIMEOUT_MS = 8_000;
  * `check:access-marks`: новый молчащий адрес уронит прогон и будет назван,
  * а известный не будет каждый раз выдавать красное за старое.
  *
- * ЗАМЕР, ИЗ-ЗА КОТОРОГО СПИСОК ПОЯВИЛСЯ (15.09.2026, три прогона CI на
- * трёх разных ветках): `/es/account` под гостем не отвечает ни за 90 с, ни
- * за 240 с, при среднем экране ≈6 с. Локально на базе той же формы тот же
- * адрес проходит за секунды. Адрес — переадресация на `/profile`, у гостя
- * дальше на вход; что именно там встаёт на бегунке CI, ещё не измерено —
- * это долг 210, и он назван, а не спрятан.
+ * ПОЧЕМУ СПИСОК ПУСТ С 15.09.2026 (долг 210 закрыт). В нём стоял один
+ * адрес — `/es/account` под гостем, — и причина его молчания найдена и
+ * убрана, а не записана в список. Она была не в странице: у гостя этот
+ * адрес ПЕРЕАДРЕСУЕТСЯ (`/account` → `/profile` → вход), и прибор тратил
+ * весь бюджет в четырнадцать нажатий на чужой странице, возвращаясь
+ * после каждого нажатия через ту же двойную переадресацию. Теперь
+ * переадресованный адрес судится один раз на открытии, а нажатия на
+ * странице-цели делает та же перепись под ЕЁ собственным адресом —
+ * см. `screen()` ниже. Список остаётся механизмом: новый молчащий адрес
+ * уронит прогон и будет назван вместе с шагом, на котором встал.
  */
-const STALLED_ALLOWED = new Map([
-  [
-    "/es/account (guest)",
-    "долг 210: переадресация /account → /profile → вход; на бегунке CI экран не отвечает ни за 90, ни за 240 с при среднем ≈6 с, локально проходит за секунды",
-  ],
-]);
-const STALLED_ALLOWED_COUNT = 1;
+const STALLED_ALLOWED = new Map([]);
+const STALLED_ALLOWED_COUNT = 0;
 /** Признак, по которому экран, не уложившийся в срок, отличается от
  *  находки про платный орган. */
 const STALLED_MARK = "экран не ответил за";
@@ -308,11 +307,37 @@ async function censusOf(page, skipped) {
   }
 }
 
-async function screen(context, base, path, role, plant, skipped) {
+/**
+ * ПЕРЕАДРЕСОВАННЫЙ АДРЕС СУДИТСЯ ОДИН РАЗ, А НЕ ЧЕТЫРНАДЦАТЬ — ДОЛГ 210.
+ *
+ * ЗАМЕР, КОТОРЫЙ ЭТО НАЗВАЛ. `/es/account` под гостем не отвечал ни за
+ * 90 с, ни за 240 с на трёх прогонах CI подряд, при среднем экране ≈6 с.
+ * Диагноз «висит» был неверен: адрес переадресуется дважды (`/account` →
+ * `/profile` → вход), то есть под этим адресом открыта СТРАНИЦА ВХОДА, и
+ * каждое из четырнадцати нажатий на ней — переход, после которого прибор
+ * возвращался через ту же двойную переадресацию. Четырнадцать таких
+ * кругов и есть те минуты.
+ *
+ * И работа эта была лишней ЦЕЛИКОМ: страница-цель — самостоятельный
+ * адрес переписи (`/[lang]/login`, `/[lang]/profile` — оба среди 66
+ * шаблонов app router), её нажатия делает тот же прибор под её
+ * собственным именем. Судить её второй раз под чужим адресом значит
+ * платить вдвое за одно и то же и приписывать находку не тому месту.
+ *
+ * Поэтому: переадресация — судим ОТКРЫТЫЙ документ (кнопка покупки на
+ * нём была бы находкой) и уходим. Цель переадресации возвращается
+ * наверх и там сверяется с переписью: цель, которой в переписи НЕТ,
+ * означает, что экран выпал из замера, и это находка, а не пропуск.
+ */
+async function screen(context, base, path, role, plant, skipped, step) {
   const page = await context.newPage();
   const problems = [];
   let clicks = 0;
+  const at = (name) => {
+    if (step) step.name = name;
+  };
   try {
+    at("открытие");
     const response = await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
     if (!response || response.status() >= 400) return { problems, clicks, opened: false };
     await page.waitForTimeout(450);
@@ -329,6 +354,11 @@ async function screen(context, base, path, role, plant, skipped) {
     }
     problems.push(...judgeCensus(await censusOf(page, skipped), `${path} (${role}, открытие)`));
 
+    const landed = new URL(page.url()).pathname;
+    if (landed !== path) {
+      return { problems, clicks, opened: true, redirectedTo: landed };
+    }
+
     // Счёт берётся ТЕМ ЖЕ локатором, каким идёт нажатие. Первая редакция
     // считала кнопки отдельным выражением, которое отбрасывало всё внутри
     // `<form>`, — и на словаре, где 39 кнопок, бюджет выходил 1. Прибор
@@ -343,6 +373,7 @@ async function screen(context, base, path, role, plant, skipped) {
       // на экран вместо восьми и не дошёл до плитки темы — той самой, что
       // и открывает кнопку покупки.
       const button = page.locator(CLICK_SELECTOR).nth(i);
+      at(`нажатие ${i + 1} из ${budget}`);
       try {
         await button.click({ timeout: 2500, noWaitAfter: true });
       } catch {
@@ -363,10 +394,12 @@ async function screen(context, base, path, role, plant, skipped) {
         // сравнение считало это уходом, звало `goBack()`, и страница после
         // возврата отдавала 0 кнопок в `<main>` — остаток бюджета уходил в
         // пустоту, и до плитки темы прибор не доходил никогда.
+        at(`возврат после нажатия ${i + 1} из ${budget}`);
         await page.goBack({ waitUntil: "domcontentloaded", timeout: GO_BACK_TIMEOUT_MS }).catch(() => {});
         await page.waitForTimeout(400);
         continue;
       }
+      at(`перепись после нажатия ${i + 1} из ${budget}`);
       problems.push(...judgeCensus(await censusOf(page, skipped), `${path} (${role}, нажатий ${i + 1})`));
     }
     return { problems, clicks, opened: true };
@@ -437,6 +470,8 @@ export async function main() {
   const browser = await chromium.launch();
   const problemsByRole = { guest: [], free: [], sub: [] };
   const stalled = [];
+  /** Переадресованные экраны: откуда, куда, под какой ролью. */
+  const redirects = [];
   /** Сколько раз судить было нечего, потому что страница уходила. */
   const skipped = { count: 0 };
   let opened = 0;
@@ -461,12 +496,22 @@ export async function main() {
     const results = await pool(jobs, CONCURRENCY, async ({ path, role }) => {
       done += 1;
       if (done % 30 === 0) console.log(`  … ${done} из ${jobs.length} экранов`);
+      // Шаг, на котором экран находится прямо сейчас. Нужен ровно для
+      // одного: срок, истёкший молча, называет «что-то повисло», а срок,
+      // истёкший с именем шага, называет ЧТО ИМЕННО. Долг 210 разбирали
+      // тремя прогонами CI именно потому, что этого имени не было.
+      const step = { name: "не начат" };
       try {
         // Гонка со сроком: что бы ни повисло внутри, ответ будет.
         let timer;
         const deadline = new Promise((_, reject) => {
           timer = setTimeout(
-            () => reject(new Error(`экран не ответил за ${Math.round(SCREEN_DEADLINE_MS / 1000)} с`)),
+            () =>
+              reject(
+                new Error(
+                  `экран не ответил за ${Math.round(SCREEN_DEADLINE_MS / 1000)} с (встал на шаге «${step.name}»)`,
+                ),
+              ),
             SCREEN_DEADLINE_MS,
           );
         });
@@ -474,22 +519,23 @@ export async function main() {
         // всё равно когда-нибудь завершится, и его отказ без обработчика
         // стал бы необработанным отклонением — то есть падением процесса
         // уже ПОСЛЕ того, как отчёт напечатан.
-        const running = screen(contexts[role], base, path, role, plant, skipped);
+        const running = screen(contexts[role], base, path, role, plant, skipped, step);
         running.catch(() => {});
         try {
-          return { role, ...(await Promise.race([running, deadline])) };
+          return { role, path, ...(await Promise.race([running, deadline])) };
         } finally {
           clearTimeout(timer);
         }
       } catch (error) {
         const line = `${path} (${role}): ${error.message.slice(0, 120)}`;
-        if (error.message.includes(STALLED_MARK)) return { role, stalled: [line], problems: [], clicks: 0, opened: false };
-        return { role, problems: [`${path} (${role}): экран не собрался — ${error.message.slice(0, 120)}`], clicks: 0, opened: false };
+        if (error.message.includes(STALLED_MARK)) return { role, path, stalled: [line], problems: [], clicks: 0, opened: false };
+        return { role, path, problems: [`${path} (${role}): экран не собрался — ${error.message.slice(0, 120)}`], clicks: 0, opened: false };
       }
     });
     for (const result of results) {
       problemsByRole[result.role].push(...result.problems);
       if (result.stalled) stalled.push(...result.stalled);
+      if (result.redirectedTo) redirects.push({ from: result.path, to: result.redirectedTo, role: result.role });
       clicks += result.clicks;
       if (result.opened) opened += 1;
     }
@@ -501,6 +547,28 @@ export async function main() {
     `  собрано экранов: ${opened} из ${addresses.length * 3}; нажатий сделано: ${clicks}; ` +
       `снимков пропущено из-за перехода: ${skipped.count}`,
   );
+
+  // ПЕРЕАДРЕСАЦИИ — СВОИМ ЧИСЛОМ, И КАЖДАЯ ЦЕЛЬ ОБЯЗАНА БЫТЬ В ПЕРЕПИСИ.
+  //
+  // Экран, ушедший на другой адрес, дальше не судится (см. `screen`), и
+  // это законно ровно при одном условии: цель судится сама, под своим
+  // именем. Условие проверяется, а не предполагается — иначе «не судим
+  // переадресованное» стало бы тихой дырой размером в целую страницу.
+  const known = new Set(allAddresses);
+  const escaped = [];
+  for (const { from, to, role } of redirects) {
+    if (!known.has(to)) escaped.push(`${from} (${role}) переадресован на ${to}, а этого адреса в переписи НЕТ`);
+  }
+  if (redirects.length) {
+    const pairs = [...new Set(redirects.map((r) => `${r.from} → ${r.to}`))];
+    console.log(`  переадресаций: ${redirects.length} (${pairs.length} различных), цели в переписи: ${pairs.length - new Set(escaped).size} из ${pairs.length}`);
+    for (const pair of pairs.slice(0, 10)) console.log(`    ${pair}`);
+  }
+  if (!plant && escaped.length) {
+    console.error("ЭКРАНЫ, УШЕДШИЕ ИЗ ЗАМЕРА ЧЕРЕЗ ПЕРЕАДРЕСАЦИЮ НА АДРЕС ВНЕ ПЕРЕПИСИ:");
+    for (const line of [...new Set(escaped)]) console.error(`  ${line}`);
+    return 1;
+  }
 
   // МОЛЧАЩИЕ ЭКРАНЫ — своим списком и своим счётом.
   if (STALLED_ALLOWED.size !== STALLED_ALLOWED_COUNT) {
