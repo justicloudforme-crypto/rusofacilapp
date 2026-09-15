@@ -396,7 +396,25 @@ async function main() {
       ["scripts/check-bottom-inset.mjs", `--base=${BASE}`, "--plant", ...passthrough],
       { stdio: "inherit" }
     );
-    // Девятым и десятым на том же сервере — 7.198, часть 3 «а»: выбранный
+    // Девятым и десятым на том же сервере — 7.198, часть 2: безопасные
+    // поля переживают ЛЮБОЙ переход, а не только загрузку документа.
+    // Проверка браузерная и здесь, а не отдельным шагом, по той же
+    // причине, что и соседи: сервер уже поднят, браузер уже установлен.
+    //
+    // Она НЕ ПИШЕТ свою копию подстановки: строка достаётся текстом из
+    // `MainActivity.java` и исполняется как есть. Поэтому проверяется
+    // ровно то, что поедет в пакет, а не пересказ.
+    const safeInsets = spawnSync(
+      process.execPath,
+      ["scripts/check-safe-area-insets.mjs", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
+    const safeInsetsPlant = spawnSync(
+      process.execPath,
+      ["scripts/check-safe-area-insets.mjs", `--base=${BASE}`, "--plant", ...passthrough],
+      { stdio: "inherit" }
+    );
+    // Одиннадцатым и двенадцатым — 7.198, часть 3 «а»: выбранный
     // язык переживает перезапуск. «Перезапуск» моделируется закрытием
     // контекста и подъёмом нового из его же `storageState` — это ровно
     // то, что webview поднимает с диска при следующем запуске.
@@ -457,6 +475,8 @@ async function main() {
       (nativeShellRender.status ?? 1) ||
       (bottomInset.status ?? 1) ||
       (bottomInsetPlant.status ?? 1) ||
+      (safeInsets.status ?? 1) ||
+      (safeInsetsPlant.status ?? 1) ||
       (rememberedLocale.status ?? 1) ||
       (rememberedLocalePlant.status ?? 1) ||
       (signedOut.status ?? 1) ||

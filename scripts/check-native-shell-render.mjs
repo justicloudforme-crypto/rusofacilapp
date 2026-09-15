@@ -94,7 +94,7 @@ const SHELL_PAGES = [
 /** Слова, по которым узнаётся текст отказа — те же, что у check:rendered. */
 const BOUNDARY = /Something went wrong|Algo salió mal|Что-то пошло не так/i;
 
-async function readErrorScreen(browser, locale, breakIt) {
+async function readErrorScreen(browser, locale, breakIt, shellLocale) {
   const ctx = await browser.newContext({ ...PIXEL, locale });
   const page = await ctx.newPage();
   const navigations = [];
@@ -110,6 +110,14 @@ async function readErrorScreen(browser, locale, breakIt) {
   });
   if (breakIt) await breakIt(page);
   await page.goto(ERROR_PAGE_URL, { waitUntil: "load" });
+  // Язык, который приносит ОБОЛОЧКА (7.198, часть 3 «б»). Ровно этот
+  // вызов делает `MainActivity.applyLocaleToErrorScreen`, увидев на
+  // экране адрес экрана ошибки. Если его нет — экран остаётся на языке
+  // устройства, как и было до правки.
+  if (shellLocale) {
+    await page.evaluate((l) => window.__rfApplyLocale && window.__rfApplyLocale(l), shellLocale);
+    await page.waitForTimeout(100);
+  }
 
   const visible = await page.evaluate(() => {
     const out = [];
@@ -222,6 +230,23 @@ async function main() {
       problems.forEach((p) => console.log(`          → ${p}`));
     }
 
+    // ЖАЛОБА 7.198, ЧАСТЬ 3 «б», ВОСПРОИЗВЕДЁННАЯ БУКВАЛЬНО: телефон
+    // испанский, интерфейс сайта переключён на русский. До правки экран
+    // ошибки приходил на испанском — он спрашивал язык у ТЕЛЕФОНА.
+    for (const [deviceLocale, shellLocale] of [
+      ["es", "ru"],
+      ["ru", "es"],
+    ]) {
+      const read = await readErrorScreen(browser, deviceLocale, undefined, shellLocale);
+      const problems = judgeErrorScreen(shellLocale, read, retryTarget);
+      failures += problems.length ? 1 : 0;
+      console.log(
+        `  ${problems.length ? "FAIL" : "ok  "}  телефон ${deviceLocale}, оболочка назвала ${shellLocale}: ` +
+          `${read.visible.length} видимых строк, lang=${read.htmlLang}`,
+      );
+      problems.forEach((p) => console.log(`          → ${p}`));
+    }
+
     console.log(`\n=== ${BASE} под User-Agent оболочки («…${TOKEN}») ===`);
     for (const p of SHELL_PAGES) {
       const { problems, chars, h1, links } = await inspectShellPage(browser, p);
@@ -235,6 +260,24 @@ async function main() {
     console.log("\n=== позитивный контроль: сторож обязан покраснеть ===");
     let caught = 0;
     const controls = [];
+
+    controls.push([
+      "оболочка назвала язык, а экран ошибки его не принял — снова язык телефона",
+      async () => {
+        const read = await readErrorScreen(
+          browser,
+          "es",
+          async (page) => {
+            // Точка входа снята — ровно состояние до правки 7.198.
+            await page.addInitScript(() => {
+              Object.defineProperty(window, "__rfApplyLocale", { get: () => undefined, configurable: true });
+            });
+          },
+          "ru",
+        );
+        return judgeErrorScreen("ru", read, retryTarget).length > 0;
+      },
+    ]);
 
     controls.push([
       "страница оболочки опустела после гидратации",
