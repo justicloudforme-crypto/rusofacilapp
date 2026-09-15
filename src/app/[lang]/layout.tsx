@@ -19,6 +19,7 @@ import NativeNotifications from "@/components/NativeNotifications";
 import SerwistRegister from "@/components/SerwistRegister";
 import SentryUser from "@/components/SentryUser";
 import NativeShellCookie from "@/components/NativeShellCookie";
+import SignedOutCachePurge from "@/components/SignedOutCachePurge";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserStreakStats, persistFreezeState } from "@/lib/streaks";
@@ -241,6 +242,10 @@ export default async function LangLayout({
         <NativeBackButtonHandler />
         <NativeNotifications lang={lang} userId={user?.id ?? null} />
         <NativeShellCookie />
+        {/* Личные копии страниц вышедшего человека — из кеша воркера
+            (заход 7.198, часть 1). Ничего не делает ни на одной странице,
+            кроме первой после выхода. */}
+        <SignedOutCachePurge />
         {/* Плашка «нет соединения» переехала ВНУТРЬ шапки (долг 180).
             Здесь, первым элементом потока, она стояла ВЫШЕ шапки и
             забирала себе полосу под строкой состояния: в оболочке на
