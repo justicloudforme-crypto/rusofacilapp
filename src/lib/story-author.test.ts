@@ -36,11 +36,22 @@ const CYRILLIC = /[А-Яа-яЁё]/;
 describe("localizeStoryAuthor", () => {
   it("leaves the Russian locale's byline exactly as the column holds it", () => {
     for (const [author] of AUTHORS_IN_THE_BANK) {
-      // Кроме написания имени проекта: опечатка «RusoFásil» чинится в обеих
-      // локалях (долг 182). Все остальные 19 значений — как в колонке.
-      const expected = author.replace("RusoFásil", "RusoFácil");
-      expect(localizeStoryAuthor(author, "ru")).toBe(expected);
+      // Кроме двух правок, обе про ОДНО значение из двадцати: опечатка
+      // «RusoFásil» чинится в обеих локалях (долг 182), а испанский маркер
+      // оригиналов на /ru называется по-русски (7.196, часть 4а). Все
+      // остальные 19 значений — как в колонке.
+      if (author.includes("relato original")) continue;
+      expect(localizeStoryAuthor(author, "ru")).toBe(author);
     }
+  });
+
+  it("на /ru испанский маркер оригиналов называется по-русски — 7.196, часть 4а", () => {
+    // Владелец снял на телефоне «Автор: RusoFácil (relato original)» под
+    // русским заголовком. По боевой базе это 277 строк из 325.
+    expect(localizeStoryAuthor("RusoFácil (relato original)", "ru")).toBe("RusoFácil (оригинальный рассказ)");
+    // Отрицательный контроль: на /es маркер остаётся испанским — он там и
+    // написан, и правка не имеет права его трогать. Вход со старым
+    // написанием имени проверяется ниже, в пробе долга 182.
   });
 
   it("leaves no Cyrillic in any byline the Spanish locale can show", () => {
@@ -58,7 +69,7 @@ describe("localizeStoryAuthor", () => {
     // Правится на отрисовке, обе локали, без единой записи в базу; форма
     // значения при этом не трогается — маркер оригиналов остаётся собой.
     expect(localizeStoryAuthor("RusoFásil (relato original)", "es")).toBe("RusoFácil (relato original)");
-    expect(localizeStoryAuthor("RusoFásil (relato original)", "ru")).toBe("RusoFácil (relato original)");
+    expect(localizeStoryAuthor("RusoFásil (relato original)", "ru")).toBe("RusoFácil (оригинальный рассказ)");
   });
 
   it("leaves a correctly spelled byline untouched", () => {

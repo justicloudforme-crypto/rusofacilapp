@@ -9,7 +9,15 @@ import type { Locale } from "@/i18n/config";
 import { usePaywall } from "@/contexts/PaywallContext";
 import TabBar from "@/components/ui/TabBar";
 import FilterChipGroup from "@/components/ui/FilterChipGroup";
-import { ACCESS_MARK_ICON, accessMarkFor, wordGameRequirement, type ViewerTier } from "@/lib/access-marks";
+import {
+  ACCESS_MARK_ICON,
+  accessMarkFor,
+  accessSignFor,
+  wordGameLevelHasFreePuzzle,
+  wordGameRequirement,
+  type ViewerTier,
+} from "@/lib/access-marks";
+import { useIsNativeShell } from "@/lib/native-shell-client";
 
 export type PickerData = Record<
   WordGameType,
@@ -60,6 +68,8 @@ export default function WordGamesPicker({
   const [type, setType] = useState<WordGameType>("WORD_SEARCH");
   const [level, setLevel] = useState<FlashcardLevel>("A1");
   const { openPaywall } = usePaywall();
+  const nativeShell = useIsNativeShell();
+  const tier: ViewerTier = isPremium ? "premium" : isSubscriber ? "standard" : "free";
 
   const { total, completed, curved, premiumOnly } = data[type][level];
   const completedSet = new Set(completed);
@@ -77,9 +87,42 @@ export default function WordGamesPicker({
         onSelect={setType}
       />
 
+      {/*
+        ЗНАК НА ПОЛОСЕ УРОВНЕЙ ИГР — 7.196, часть 1, и здесь он НЕ КОРОНА.
+
+        Владелец ждал короны на C1, как в словаре. Замер запрещает: ворота
+        страницы пазла смотрят `row.curved || row.premiumOnly` и про
+        уровень не знают ничего, поэтому из 482 пазлов уровня C1 план
+        Premium требуют 138, а остальные **344 открывает обычная подписка
+        `standard`**. Корона у них была бы ровно тем враньём, из-за
+        которого в 7.137 сняли «⭐ Premium» с 225 рассказов.
+
+        Правда про этот уровень другая, и она печатается: бесплатных
+        рунгов на C1 нет ни одного (`isFreeWordGamePuzzle` отвергает C1 до
+        всякого номера), то есть гостю уровень закрыт ЦЕЛИКОМ — это 🔒,
+        состояние доступа. Подписчику замка нет: у него открыто.
+      */}
       <FilterChipGroup
+        testId="word-game-level-filter"
         label={dict.chooseLevelLabel}
-        options={flashcardLevels.map((lvl) => ({ id: lvl, label: lvl }))}
+        options={flashcardLevels.map((lvl) => {
+          const sign = nativeShell
+            ? accessSignFor("subscription", tier, {
+                nativeShell,
+                closed: tier === "free" && !wordGameLevelHasFreePuzzle(type, lvl),
+              })
+            : null;
+          return {
+            id: lvl,
+            label: lvl,
+            accessMark: sign?.mark,
+            accessLabel: sign
+              ? sign.labelKey === "premiumTierBadge"
+                ? dict.premiumTierLabel
+                : dict.subscriptionLabel
+              : undefined,
+          };
+        })}
         activeId={level}
         onChange={setLevel}
       />
@@ -104,9 +147,14 @@ export default function WordGamesPicker({
             curved: isCurved,
             premiumOnly: isPremiumOnlySeq,
           });
-          const tier: ViewerTier = isPremium ? "premium" : isSubscriber ? "standard" : "free";
-          const mark = accessMarkFor(requirement, tier);
-          const isLocked = mark !== null;
+          // 7.196: ЗНАК и ЗАПЕРТОСТЬ — разные вопросы, и до правки на них
+          // отвечала одна строка. Корона — сорт: она стоит у `curved` и
+          // `premiumOnly` при ЛЮБОМ тарифе, включая Premium, у которого
+          // плитка открывается. Заперта плитка или нет, решает прежний
+          // `accessMarkFor` — то есть поведение нажатия не меняется ни на
+          // одной плитке.
+          const sign = accessSignFor(requirement, tier, { nativeShell });
+          const isLocked = accessMarkFor(requirement, tier) !== null;
           return (
             <Link
               key={sequence}
@@ -124,7 +172,7 @@ export default function WordGamesPicker({
               onClick={(e) => {
                 if (!isLocked) return;
                 e.preventDefault();
-                openPaywall(mark === "premium-tier" ? "premium" : "free");
+                openPaywall(requirement === "premium-tier" ? "premium" : "free", "puzzle");
               }}
               className={`tap relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-semibold transition-colors hover:border-foreground/40 active:border-foreground/40 ${
                 isPremiumOnlySeq ? "border-primary/40 bg-primary/5 dark:border-primary-400/40 dark:bg-primary-400/10" : "border-black/10 dark:border-white/30"
@@ -145,16 +193,16 @@ export default function WordGamesPicker({
                   ★
                 </span>
               )}
-              {mark && (
+              {sign && (
                 <span
-                  data-access-mark={mark}
-                  aria-label={mark === "premium-tier" ? dict.premiumTierLabel : dict.subscriptionLabel}
-                  title={mark === "premium-tier" ? dict.premiumTierLabel : dict.subscriptionLabel}
+                  data-access-mark={sign.mark}
+                  aria-label={sign.labelKey === "premiumTierBadge" ? dict.premiumTierLabel : dict.subscriptionLabel}
+                  title={sign.labelKey === "premiumTierBadge" ? dict.premiumTierLabel : dict.subscriptionLabel}
                   className={`absolute top-1.5 text-sm leading-none ${isCurved ? "left-5" : "left-1.5"} ${
-                    mark === "premium-tier" ? "text-premium-500 dark:text-premium-300" : "text-foreground/45"
+                    sign.mark === "premium-tier" ? "text-premium-500 dark:text-premium-300" : "text-foreground/45"
                   }`}
                 >
-                  {ACCESS_MARK_ICON[mark]}
+                  {ACCESS_MARK_ICON[sign.mark]}
                 </span>
               )}
               {sequence}

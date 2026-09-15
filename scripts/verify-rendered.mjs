@@ -43,6 +43,8 @@ import { pathToFileURL } from "node:url";
 // port used for manual probing. A verify run must not adopt whatever server
 // happens to be listening there and report on the wrong build.
 const PORT = 3123;
+/** Путь к `tsx` — тем же способом, каким его зовёт проверка ссылок ниже. */
+const TSX = join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs");
 const BASE = `http://localhost:${PORT}`;
 
 /**
@@ -276,6 +278,8 @@ async function main() {
     let nativePaymentsPlant = { status: 1 };
     let renderedPurchases = { status: 1 };
     let renderedPurchasesPlant = { status: 1 };
+    let accessSigns = { status: 1 };
+    let accessSignsPlant = { status: 1 };
     try {
       if (!(await waitForServer(90_000, ROLES_BASE))) {
         console.error(
@@ -328,6 +332,22 @@ async function main() {
           ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--plant", "--limit=4"],
           { stdio: "inherit" }
         );
+        // ПЯТАЯ И ШЕСТАЯ на том же сервере ролей — 7.196, часть 1: знак
+        // платного на отрисованном экране сверяется с ОБЩИМ правилом
+        // (`accessSignFor`), а подсадка «замок вместо короны и наоборот»
+        // обязана уронить КАЖДУЮ поверхность переписи. Роль `premium`
+        // здесь обязательна: без неё утверждение «коронованное открыто»
+        // доказывалось бы ролью, у которой открыто не всё.
+        accessSigns = spawnSync(
+          process.execPath,
+          [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, ...passthrough],
+          { stdio: "inherit" }
+        );
+        accessSignsPlant = spawnSync(
+          process.execPath,
+          [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, "--plant", ...passthrough],
+          { stdio: "inherit" }
+        );
       }
     } finally {
       stopServer(rolesServer);
@@ -369,7 +389,35 @@ async function main() {
       ["scripts/check-native-shell-render.mjs", `--base=${BASE}`, ...passthrough],
       { stdio: "inherit" }
     );
+    // Десятым и одиннадцатым — 7.196, часть 2: число на плитке темы равно
+    // пересечению «уровень × тема» ПО БАЗЕ, и «0 слов» не мелькает, пока
+    // едет ответ. Сверка идёт с базой, а не с тем же API, которое рисует
+    // экран.
+    const tiles = spawnSync(
+      process.execPath,
+      [TSX, "scripts/check-dictionary-tiles.ts", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
+    const tilesPlant = spawnSync(
+      process.execPath,
+      [TSX, "scripts/check-dictionary-tiles.ts", `--base=${BASE}`, "--plant", ...passthrough],
+      { stdio: "inherit" }
+    );
+    // Двенадцатым — 7.196, часть 4: на `/ru` в каталоге рассказов и в
+    // колоде «Перед первым уроком» нет ни одной испанской строки.
+    // Позитивный контроль у этой проверки серверу не нужен и гоняется
+    // отдельно в `verify` (`check:ru-spanish:plant`).
+    const ruSpanish = spawnSync(
+      process.execPath,
+      [TSX, "scripts/check-ru-locale-spanish.ts", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
     return (
+      (accessSigns.status ?? 1) ||
+      (accessSignsPlant.status ?? 1) ||
+      (tiles.status ?? 1) ||
+      (tilesPlant.status ?? 1) ||
+      (ruSpanish.status ?? 1) ||
       (nativeShellRender.status ?? 1) ||
       (bottomInset.status ?? 1) ||
       (bottomInsetPlant.status ?? 1) ||

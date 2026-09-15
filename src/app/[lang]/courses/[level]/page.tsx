@@ -8,7 +8,7 @@ import { getExamContent } from "@/lib/exams/content";
 import { localizeExamText } from "@/lib/exams/localize";
 import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTierFor } from "@/lib/entitlement";
-import { accessMarkFor, examRequirement, lessonRequirement } from "@/lib/access-marks";
+import { accessMarkFor, accessSignFor, examRequirement, lessonRequirement } from "@/lib/access-marks";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import NativeLockedLink from "@/components/native/NativeLockedLink";
 import AccessMark from "@/components/ui/AccessMark";
@@ -145,8 +145,17 @@ export default async function LevelPage({
               : status === "attempted"
                 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
                 : "bg-foreground/10";
-          const lessonMark = accessMarkFor(lessonRequirement({ level, slug: String(lessonNumber) }), tier);
+          // ДОСТУП (решает поведение ссылки) и ЗНАК (решает разметку) —
+          // 7.196, часть 1: разные вопросы, разные вызовы. Слоя Premium у
+          // уроков и экзаменов нет (`lessonRequirement`/`examRequirement`
+          // отдают только free/subscription), поэтому ответы здесь
+          // совпадают знак в знак и до, и после правки; общим правило
+          // сделано затем, чтобы перепись поверхностей была полной.
+          const lessonReq = lessonRequirement({ level, slug: String(lessonNumber) });
+          const lessonMark = accessMarkFor(lessonReq, tier);
           const examMark = accessMarkFor(examRequirement(), tier);
+          const lessonSign = accessSignFor(lessonReq, tier, { nativeShell });
+          const examSign = accessSignFor(examRequirement(), tier, { nativeShell });
           const statusLabel =
             status === "passed"
               ? dict.courses.lessonStatusPassed
@@ -179,11 +188,15 @@ export default async function LevelPage({
                       )}
                     </span>
                     <span className="text-sm leading-6">{lesson}</span>
-                    {lessonMark && (
+                    {lessonSign && (
                       <span className="ml-auto shrink-0">
                         <AccessMark
-                          mark={lessonMark}
-                          label={lessonMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                          mark={lessonSign.mark}
+                          label={
+                            lessonSign.labelKey === "premiumTierBadge"
+                              ? dict.access.premiumTierBadge
+                              : dict.access.subscriptionBadge
+                          }
                         />
                       </span>
                     )}
@@ -196,6 +209,7 @@ export default async function LevelPage({
                   <NativeLockedLink
                     href={href}
                     className={cls}
+                    kind="lesson"
                     reason={lessonMark === "premium-tier" ? "premium" : "free"}
                   >
                     {inner}
@@ -218,11 +232,15 @@ export default async function LevelPage({
                       <span className="text-sm font-medium leading-6 text-primary-text dark:text-primary-400">
                         {localizeExamText(milestone.exam.title, lang, dict.courses.examNames)}
                       </span>
-                      {examMark && (
+                      {examSign && (
                         <span className="ml-auto shrink-0">
                           <AccessMark
-                            mark={examMark}
-                            label={examMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+                            mark={examSign.mark}
+                            label={
+                              examSign.labelKey === "premiumTierBadge"
+                                ? dict.access.premiumTierBadge
+                                : dict.access.subscriptionBadge
+                            }
                           />
                         </span>
                       )}
@@ -235,6 +253,7 @@ export default async function LevelPage({
                     <NativeLockedLink
                       href={href}
                       className={cls}
+                      kind="exam"
                       reason={examMark === "premium-tier" ? "premium" : "free"}
                     >
                       {inner}

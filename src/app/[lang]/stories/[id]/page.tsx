@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { isNativeShellRequest } from "@/lib/native-shell";
-import { nativeAccessCopy } from "@/lib/native-access-copy";
+import { nativeAccessCopy, nativeLockBody } from "@/lib/native-access-copy";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import { getContentInsights, getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
 import { isPilotStory } from "@/lib/story-pilot";
@@ -17,7 +17,7 @@ import StoryText from "@/components/stories/StoryText";
 import ContentInsights from "@/components/stories/ContentInsights";
 import CulturalNote from "@/components/stories/CulturalNote";
 import AccessMark from "@/components/ui/AccessMark";
-import { accessMarkFor, storyRequirement } from "@/lib/access-marks";
+import { accessSignFor, storyRequirement } from "@/lib/access-marks";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
@@ -124,7 +124,14 @@ export default async function StoryReaderPage({
   // Значок платности — через общий признак, а не через ещё одно
   // повторение правила: `storyRequirement` и `getStoryAccess` сверены
   // друг с другом тестом по всем восьми сочетаниям колонок.
-  const storyMark = accessMarkFor(storyRequirement(story), tier);
+  // 7.196: и сорт, и состояние доступа решает одно правило. Внутри
+  // оболочки 👑 стоит у премиального рассказа при любой роли — человек,
+  // который платит за Premium, обязан видеть, за что именно; в вебе
+  // возвращается прежний ответ, знак в знак.
+  const storySign = accessSignFor(storyRequirement(story), tier, {
+    nativeShell: await isNativeShellRequest(),
+    closed: !entitled,
+  });
 
   // descriptionRu is null for every row today (see schema.prisma) — this
   // fallback is what keeps /ru showing the Spanish summary instead of
@@ -230,10 +237,14 @@ export default async function StoryReaderPage({
         </span>
         {/* Тот же один признак, что на карточке в каталоге: значок видит
             только тот, кто не может открыть, и он всегда один. */}
-        {storyMark && (
+        {storySign && (
           <AccessMark
-            mark={storyMark}
-            label={storyMark === "premium-tier" ? dict.access.premiumTierBadge : dict.access.subscriptionBadge}
+            mark={storySign.mark}
+            label={
+              storySign.labelKey === "premiumTierBadge"
+                ? dict.access.premiumTierBadge
+                : dict.access.subscriptionBadge
+            }
           />
         )}
       </div>
@@ -299,7 +310,7 @@ export default async function StoryReaderPage({
               Заголовок замка остаётся — он про положение дел. */}
           <p className="mt-2 text-sm text-foreground/70">
             {(await isNativeShellRequest())
-              ? nativeAccessCopy(lang).lock.body
+              ? nativeLockBody(lang, "story", storySign?.mark === "premium-tier")
               : needsPremiumUpgrade
                 ? // Уровень подставляется из строки рассказа, а не вшит в
                   // словарь: замок ставит колонка `premiumOnly`, а не уровень

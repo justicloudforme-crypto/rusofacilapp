@@ -133,7 +133,7 @@ export default function MediaCatalog({
               onClick={(e) => {
                 if (item.mark === null) return;
                 e.preventDefault();
-                openPaywall(item.mark === "premium-tier" ? "premium" : "free");
+                openPaywall(item.mark === "premium-tier" ? "premium" : "free", "video");
               }}
               className="tap group flex flex-col overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
             >

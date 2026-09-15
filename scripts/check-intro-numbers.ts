@@ -104,13 +104,20 @@ export function sentinelStats(): Sentinelled {
 /** Every human-visible string a slide produces. */
 export function slideTexts(stats: IntroStats): Array<{ where: string; text: string }> {
   const out: Array<{ where: string; text: string }> = [];
-  for (const slide of buildIntroSlides(stats)) {
-    out.push({ where: `${slide.id}.title`, text: slide.title });
-    slide.body.forEach((p, i) => out.push({ where: `${slide.id}.body[${i}]`, text: p }));
-    (slide.highlights ?? []).forEach((h, i) => out.push({ where: `${slide.id}.highlights[${i}]`, text: h }));
-    // Link labels are read; hrefs are addresses, and the alphabet path is
-    // imported from cyrillic-alphabet.ts anyway.
-    (slide.links ?? []).forEach((l, i) => out.push({ where: `${slide.id}.links[${i}].label`, text: l.label }));
+  // ОБЕ ЛОКАЛИ, А НЕ ОДНА — 7.196, часть 4б. Колода теперь пишется на двух
+  // языках, и русская половина берёт числа из того же `stats`. Если бы
+  // сторож ходил только по испанской, в русской можно было бы вписать
+  // число руками, и никто бы этого не увидел.
+  for (const lang of ["es", "ru"] as const) {
+    for (const slide of buildIntroSlides(stats, lang)) {
+      const id = `${lang}/${slide.id}`;
+      out.push({ where: `${id}.title`, text: slide.title });
+      slide.body.forEach((p, i) => out.push({ where: `${id}.body[${i}]`, text: p }));
+      (slide.highlights ?? []).forEach((h, i) => out.push({ where: `${id}.highlights[${i}]`, text: h }));
+      // Link labels are read; hrefs are addresses, and the alphabet path is
+      // imported from cyrillic-alphabet.ts anyway.
+      (slide.links ?? []).forEach((l, i) => out.push({ where: `${id}.links[${i}].label`, text: l.label }));
+    }
   }
   return out;
 }
