@@ -28,7 +28,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     title: { es: "Primeros pasos", ru: "Первые шаги" },
     description: {
       es: "3 días seguidos de práctica.",
-      ru: "3 дня подряд занятий.",
+      ru: "3 дня занятий подряд.",
     },
   },
   {
@@ -38,7 +38,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     title: { es: "Semana completa", ru: "Целая неделя" },
     description: {
       es: "7 días seguidos de práctica.",
-      ru: "7 дней подряд занятий.",
+      ru: "7 дней занятий подряд.",
     },
   },
   {
@@ -51,7 +51,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     title: { es: "Un mes de constancia", ru: "Месяц упорства" },
     description: {
       es: "30 días seguidos de práctica.",
-      ru: "30 дней подряд занятий.",
+      ru: "30 дней занятий подряд.",
     },
   },
   {
@@ -64,7 +64,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     title: { es: "Cien días", ru: "Сто дней" },
     description: {
       es: "100 días seguidos de práctica.",
-      ru: "100 дней подряд занятий.",
+      ru: "100 дней занятий подряд.",
     },
   },
 

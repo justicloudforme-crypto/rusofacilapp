@@ -68,7 +68,7 @@ export interface CategorySummaryResponse {
   lockedTotal: number;
 }
 
-const EMPTY_RESPONSE: CategorySummaryResponse = {
+export const EMPTY_SUMMARY: CategorySummaryResponse = {
   // undefined, а НЕ null: null означал бы «ответ про все уровни»,
   // то есть сетка приняла бы пустоту за готовые числа.
   level: undefined,
@@ -92,7 +92,36 @@ const EMPTY_RESPONSE: CategorySummaryResponse = {
  * POST /api/flashcards/summary treats this as untrusted input and never
  * lets it override a logged-in user's real server-side progress — see
  * that route's own comment for the full trust rule. */
+/** Разрез, к которому ответ обязан относиться. `null` — «все уровни»:
+ *  именно так этот разрез называет и сервер, и поле `level` ответа. */
+export function requestedCut(level: FlashcardLevel | "all"): string | null {
+  return level === "all" ? null : level;
+}
+
+/**
+ * ОТВЕТ ВСЕГДА ПОДПИСАН ЗАПРОШЕННЫМ РАЗРЕЗОМ — 7.199, часть 1.
+ *
+ * До 15.09.2026 поле `level` бралось ровно как приехало, а неудачный
+ * запрос возвращал пустой ответ с `level: undefined`. Оба случая
+ * оставляли на экране заглушку, снять которую было уже нечем: сетка тем и
+ * строка «Продолжить» печатают числа только тогда, когда разрез ответа
+ * совпадает с выбранным уровнем, а «ответа нет» от «ответ про чужой
+ * разрез» они не отличают.
+ *
+ * Теперь подпись ставится ЗДЕСЬ и по запросу, а не по ответу:
+ *
+ *   — ответ приехал и его разрез совпал с запрошенным → числа те самые;
+ *   — ответ приехал про ЧУЖОЙ разрез (ошибка сервера) → числа не берутся
+ *     вовсе, но подпись стоит: заглушка снимается, врать ей нечем;
+ *   — запрос не доехал → то же самое, пустые числа под своей подписью.
+ *
+ * Цена названа честно: при неудачном запросе внутри оболочки плитка
+ * напечатает «0 слов» вместо вечной серой полосы. Это состояние «сеть
+ * молчит», и в приложении поверх него стоит собственный экран ошибки
+ * оболочки; вечная заглушка на этот счёт не говорила ничего.
+ */
 export async function fetchCategorySummary(level: FlashcardLevel | "all"): Promise<CategorySummaryResponse> {
+  const cut = requestedCut(level);
   try {
     const res = await fetch("/api/flashcards/summary", {
       method: "POST",
@@ -102,13 +131,15 @@ export async function fetchCategorySummary(level: FlashcardLevel | "all"): Promi
         entries: getProgressEntries(),
       }),
     });
-    if (!res.ok) return EMPTY_RESPONSE;
+    if (!res.ok) return { ...EMPTY_SUMMARY, level: cut };
     const body = (await res.json()) as Partial<CategorySummaryResponse>;
+    // `body.level` приходит `null` для разреза «все уровни», и это
+    // законное значение. Сверяется оно с ЗАПРОШЕННЫМ разрезом: ответ про
+    // чужой уровень — это чужие числа, и печатать их нельзя ни секунды.
+    const answered = "level" in body ? (body.level ?? null) : undefined;
+    if (answered !== cut) return { ...EMPTY_SUMMARY, level: cut };
     return {
-      // `body.level` приходит `null` для разреза «все уровни», и это
-      // законное значение: `??` здесь съел бы его и превратил в «ответа
-      // нет». Поэтому поле берётся ровно как приехало.
-      level: "level" in body ? body.level : undefined,
+      level: cut,
       tier: body.tier ?? "free",
       categories: body.categories ?? {},
       recent: body.recent ?? [],
@@ -121,6 +152,6 @@ export async function fetchCategorySummary(level: FlashcardLevel | "all"): Promi
       lockedTotal: body.lockedTotal ?? 0,
     };
   } catch {
-    return EMPTY_RESPONSE;
+    return { ...EMPTY_SUMMARY, level: cut };
   }
 }

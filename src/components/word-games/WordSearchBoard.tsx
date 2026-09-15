@@ -13,6 +13,9 @@ interface Dict {
   wordSearchGridLabel: string;
   resetSelectionButton: string;
   expertModeLabel: string;
+  /** Одна короткая строка перед игрой — что в этом пазле не так, как в
+   *  обычном (долг 213). Значок сам по себе этого не говорит. */
+  expertModeHint: string;
 }
 
 function cellKey(c: Cell): string {
@@ -267,10 +270,19 @@ export default function WordSearchBoard({
           real limit, so a too-wide puzzle scrolls inside its own card —
           which is what the card was for. */}
       <div className="flex min-w-0 max-w-full flex-col items-center gap-2 md:flex-1">
+        {/* Значок был, объяснения не было (долг 213). Строка под ним
+            говорит то самое, что меняет `puzzle.curved` на этой же
+            доске: ниже по файлу он выбирает `extendPath` вместо
+            `extendPathStraight`, то есть след имеет право гнуться. */}
         {puzzle.curved && (
-          <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
-            ★ {dict.expertModeLabel}
-          </span>
+          <div className="flex w-full max-w-sm flex-col items-center gap-1.5">
+            <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-text dark:bg-primary-400/15 dark:text-primary-400">
+              ★ {dict.expertModeLabel}
+            </span>
+            <p data-testid="expert-mode-hint" className="text-center text-xs leading-relaxed text-foreground/60">
+              {dict.expertModeHint}
+            </p>
+          </div>
         )}
         {/* No lower bound on the column track, and that is the fix, not a
             tidy-up. With `minmax(22px, …)` a 16-column grid could shrink no

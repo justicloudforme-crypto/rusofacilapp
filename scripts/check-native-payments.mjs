@@ -643,38 +643,33 @@ async function makeSession(base, withSubscription) {
 }
 
 /**
- * ДВА ПРАВОВЫХ ДОКУМЕНТА — ЕДИНСТВЕННОЕ ИСКЛЮЧЕНИЕ, И ОНО ЗАКРЕПЛЕНО
- * ИМЕНЕМ.
+ * ИСКЛЮЧЕНИЯ ДЛЯ ПРАВОВЫХ ДОКУМЕНТОВ БОЛЬШЕ НЕТ — долг 196 закрыт
+ * решением владельца 15.09.2026.
  *
- * Перестроенный прибор нашёл на `/es/terms` и `/ru/terms` слова «MXN» и
- * «OXXO» — по 3 вхождения на страницу, во всех трёх ролях. Разобрано:
- * это не платёжная поверхность. Ни одного органа управления, ни одной
- * ссылки на оплату там нет; это условия использования, которые ОПИСЫВАЮТ,
- * как устроена оплата на сайте («базовая цена установлена в мексиканских
- * песо», «кроме карты принимаем наличные по ваучеру OXXO»).
+ * ЧТО БЫЛО. 7.194 нашёл на `/es/terms` и `/ru/terms` слова «MXN» и
+ * «OXXO» во всех трёх ролях и вынес их из-под правила ИМЕНЕМ: документ
+ * обязан быть правдой (`check:legal-truth`), а на сайте оплата устроена
+ * именно так, и написать в условиях, что оплаты нет, значило бы соврать
+ * вебу ради приложения.
  *
- * Почему текст не правится. Документ обязан быть правдой — за этим
- * следит `check:legal-truth`, — а на сайте оплата устроена именно так.
- * Написать в условиях, что оплаты нет, значило бы соврать вебу ради
- * приложения.
+ * ЧТО РЕШЕНО. Не удалять и не врать, а РАЗВЕСТИ: на сайте текст остаётся
+ * полным, а внутри оболочки два абзаца про способы оплаты не
+ * печатаются вовсе (`webOnly` в `src/lib/legal/content.ts`, ветка на уже
+ * существующем признаке оболочки). После этого исключение стало не
+ * нужно, и держать его значило бы держать дыру: третий адрес с «MXN»
+ * появился бы молча.
  *
- * Почему исключение именно такое узкое: правило про цены остаётся в силе
- * на ВСЕХ 130 остальных адресах, а два эти названы поимённо, чтобы
- * появление третьего роняло сторож, а не пополняло молчаливую привычку.
- *
- * ЭТО РАЗВИЛКА ВЛАДЕЛЬЦА, и она вынесена в отчёт: Google запрещает
- * УВОДИТЬ на внешнюю оплату; описание порядка оплаты в условиях
- * использования — серая зона, и решать, убирать ли абзац из приложения
- * (ценой расхождения документа с сайтом), владельцу, а не прибору.
+ * Поэтому правило теперь ровно одно и без имён: в нативной отдаче слов
+ * «MXN» и «OXXO» нет НИГДЕ. В ВЕБ-отдаче они есть, и это же множество
+ * адресов служит встроенным положительным контролем измерителя (см.
+ * `webPaidByRole` ниже).
  */
-const LEGAL_DOCUMENT_PATHS = new Set(["/es/terms", "/ru/terms"]);
 
 /** Судит ОДИН ответ по нативным правилам. Возвращает список проблем. */
-function judgeNative(html, where, labels, { legalDocument = false } = {}) {
+function judgeNative(html, where, labels) {
   const problems = [];
   const visible = visibleDocument(html);
   for (const mark of FORBIDDEN_TEXT) {
-    if (legalDocument && (mark === PRICE_MARK || mark === CASH_MARK)) continue;
     const n = countOf(visible, mark);
     if (n > 0) problems.push(`${where}: в видимом документе ${n} вхождений «${mark}»`);
   }
@@ -770,8 +765,7 @@ async function live(base, plant) {
       out.skipped = true;
       return out;
     }
-    const legalDocument = LEGAL_DOCUMENT_PATHS.has(path);
-    out.webPaid = judgeNative(web, "контроль", labels[lang], { legalDocument }).length;
+    out.webPaid = judgeNative(web, "контроль", labels[lang]).length;
     for (const disguise of ["token", "cookie"]) {
       let raw;
       try {
@@ -780,7 +774,7 @@ async function live(base, plant) {
         continue;
       }
       const judged = plant ? plantPurchaseButton(raw, lang) : raw;
-      const found = judgeNative(judged, `${path} (${role}/${disguise})`, labels[lang], { legalDocument });
+      const found = judgeNative(judged, `${path} (${role}/${disguise})`, labels[lang]);
       if (plant) out.planted += found.length;
       else out.problems.push(...found);
     }

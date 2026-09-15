@@ -4,14 +4,14 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import Skeleton from "@/components/ui/Skeleton";
-import type { ViewerTier } from "@/lib/access-marks";
-import CategoryGrid, { type CategorySummary } from "./CategoryGrid";
+import CategoryGrid from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner, { LockedOrEmpty } from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardCategory, type FlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
-import { fetchCategorySummary, type RecentCategory } from "@/lib/flashcards/summary-client";
+import type { RecentCategory } from "@/lib/flashcards/summary-client";
+import { useCategorySummary } from "@/lib/flashcards/use-category-summary";
 import { lockedView } from "@/lib/flashcards/locked-view";
 import { hapticTap, hapticSuccess } from "@/lib/haptics";
 import { useIsNativeShell } from "@/lib/native-shell-client";
@@ -89,23 +89,23 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   // appeared. Three real states now: loading -> skeleton, loaded+empty ->
   // message, loaded+non-empty -> cards.
   const [cardsLoading, setCardsLoading] = useState(false);
-  const [categorySummary, setCategorySummary] = useState<Record<string, CategorySummary>>({});
-  // Перепись БАНКА по темам и по уровням — чтобы сетка внутри оболочки не
-  // писала «0 слов» там, где слова есть (7.195, часть 3).
-  const [bankCategories, setBankCategories] = useState<Record<string, { bank: number; open: number; locked: number }>>({});
-  const [bankLockedByLevel, setBankLockedByLevel] = useState<Record<string, number>>({});
   /**
-   * РАЗРЕЗ ОТВЕТА, КОТОРЫЙ СЕЙЧАС В РУКАХ — 7.196, часть 2.
+   * ПЕРЕПИСЬ ТЕМ ТЕКУЩЕГО РАЗРЕЗА — 7.199, часть 1.
    *
-   * `undefined` — ответа ещё нет; `null` — ответ про все уровни. Сетка тем
-   * сравнивает его с выбранным уровнем и, пока они не совпали, не печатает
-   * чисел вовсе. Без этого поля ЧУЖИЕ числа стояли на экране всё время,
-   * пока едет ответ (замер: «266 слов» на уровне C1 при 8 в банке).
+   * Один общий крючок на все четыре режима словаря. Он же держит признак
+   * `summaryLevel` («какому разрезу принадлежат числа в руках»), который
+   * читают сетка тем и строка «Продолжить»: пока он не совпал с выбранным
+   * уровнем, чисел на экране нет вовсе. Почему это один крючок, а не
+   * четыре эффекта, и какой дефект это чинит — в шапке
+   * `src/lib/flashcards/use-category-summary.ts`.
    */
-  const [summaryLevel, setSummaryLevel] = useState<string | null | undefined>(undefined);
-  const [summaryTier, setSummaryTier] = useState<ViewerTier>("free");
-  const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
-  const [hasAnyProgress, setHasAnyProgress] = useState(false);
+  const { summary, summaryLevel } = useCategorySummary(levelFilter, [knownWords]);
+  const categorySummary = summary.categories;
+  const bankCategories = summary.bankCategories;
+  const bankLockedByLevel = summary.lockedByLevel;
+  const summaryTier = summary.tier;
+  const recentCategories: RecentCategory[] = summary.recent;
+  const hasAnyProgress = summary.hasAnyProgress;
   // Карточка, на которую надо встать, когда придут карточки темы. Это
   // и есть «то самое слово, на котором человек остановился»: приходит из
   // блока «Продолжить» (`RecentCategory.lastCardId`) или из адреса
@@ -208,18 +208,6 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
     const timer = setTimeout(() => setSearchQuery(searchInput.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [searchInput]);
-
-  useEffect(() => {
-    fetchCategorySummary(levelFilter).then((body) => {
-      setCategorySummary(body.categories);
-      setBankCategories(body.bankCategories);
-      setBankLockedByLevel(body.lockedByLevel);
-      setSummaryLevel(body.level);
-      setSummaryTier(body.tier);
-      setRecentCategories(body.recent);
-      setHasAnyProgress(body.hasAnyProgress);
-    });
-  }, [knownWords, levelFilter]);
 
   useEffect(() => {
     if (searchQuery || !category) return; // search fetch below takes over, or nothing to fetch yet
