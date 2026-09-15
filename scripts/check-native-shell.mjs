@@ -192,7 +192,12 @@ function scan() {
     }
   }
   for (const [needle, why] of [
-    ["postDelayed", "таймер не заводится вовсе"],
+    // ПРИЗНАК НАЗВАН ЦЕЛИКОМ, А НЕ ОДНИМ СЛОВОМ. С 15.09.2026 в этом же
+    // файле есть ВТОРОЙ `postDelayed` — предохранитель заставки (7.197),
+    // — и голое слово «postDelayed» оставалось бы в файле даже после
+    // того, как таймер сторожа загрузки убран целиком. Тот же класс, что
+    // «сторож засчитал имя свойства за вопрос про оболочку» (7.196).
+    ["loadWatchdog.postDelayed(pendingCheck", "таймер не заводится вовсе"],
     ["getErrorUrl", "адрес экрана ошибки не спрашивается у моста — значит показывать будет нечего"],
     ["loadUrl", "экран ошибки не загружается"],
     ["stopLoading", "висящий запрос не прерывается, и он перерисует экран ошибки поверх"],
@@ -321,6 +326,11 @@ function scan() {
     ["--android-inset-top", "величина ВЕРХНЕЙ полосы не уезжает в страницу"],
     ["--android-inset-bottom", "величина НИЖНЕЙ полосы не уезжает в страницу"],
     ["addWebViewListener", "полосы не переставляются на новой странице — переход стирает их вместе со старым документом"],
+    // И ЗДЕСЬ ПРИЗНАК СВОЙ, А НЕ ОБЩИЙ. Слушателей перехода в файле два:
+    // этот, про полосы, и слушатель заставки (7.197). Общий
+    // `addWebViewListener` остаётся в файле, даже если слушатель полос
+    // снят целиком; `onPageStarted` есть только у него.
+    ["onPageStarted", "полосы не ставятся В НАЧАЛЕ загрузки — первый нарисованный кадр будет без отступа"],
   ]) {
     if (!activityLive.includes(needle)) {
       failures.push(`${MAIN_ACTIVITY}: нет живого «${needle}» — ${why} (долг 180).`);
@@ -464,8 +474,8 @@ function plantControls() {
     },
     {
       name: "полосы не переставляются после перехода на новую страницу",
-      plant: () => swap(MAIN_ACTIVITY, "addWebViewListener", "неСлушаемПереходы"),
-      expect: (r) => r.failures.some((m) => m.includes("переход стирает их")),
+      plant: () => swap(MAIN_ACTIVITY, "onPageStarted", "неСлушаемПереходы"),
+      expect: (r) => r.failures.some((m) => m.includes("первый нарисованный кадр")),
     },
     {
       name: "срок сторожа загрузки снят вовсе",
@@ -480,7 +490,7 @@ function plantControls() {
     {
       name: "таймер не заводится: postDelayed убран",
       plant: () => swap(MAIN_ACTIVITY, "loadWatchdog.postDelayed(pendingCheck, LOAD_TIMEOUT_MS);", ""),
-      expect: (r) => r.failures.some((m) => m.includes("`postDelayed`")),
+      expect: (r) => r.failures.some((m) => m.includes("таймер не заводится вовсе")),
     },
     {
       name: "сторож перестал спрашивать адрес экрана ошибки у моста",
