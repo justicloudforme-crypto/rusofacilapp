@@ -90,7 +90,13 @@ export default async function Navbar({
   const mobileGroups = user
     ? [
         {
-          label: dict.nav.groupPlay,
+          // ЗАГОЛОВОК НАЗЫВАЕТ ТО, ЧТО ПОД НИМ (7.199, часть 5а). До
+          // 15.09.2026 здесь стояло «Jugar»/«Играть», а под ним — «Аудио
+          // и видео» и «Глоссарий»: ни то, ни другое игрой не является, и
+          // владелец снял это на телефоне. Игры у вошедшего человека и
+          // так лежат в нижней панели (`BottomNav`), поэтому в ящике их
+          // здесь нет вовсе — заголовок был неверен по построению.
+          label: dict.nav.groupMaterials,
           links: [
             { href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> },
             // Not covered by BottomNav either (it carries Cuentos/Cursos/
@@ -118,7 +124,11 @@ export default async function Navbar({
           ],
         },
         {
-          label: dict.nav.groupPlay,
+          // Тот же заголовок и у гостя: под ним игры со словами И «Аудио
+          // и видео», то есть группа опять не про одни игры. «Материалы»
+          // верны для обоих составов, а два разных заголовка для одной
+          // группы развели бы их молча.
+          label: dict.nav.groupMaterials,
           links: [
             { href: `/${lang}/word-games`, label: dict.nav.wordGames, icon: <PuzzleIcon className={iconClass} /> },
             { href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> },

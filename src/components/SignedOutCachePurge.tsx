@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SIGNED_OUT_PARAM, personalPageCaches } from "@/lib/signed-out";
+import { personalLocalKeys } from "@/lib/signed-out-local";
 
 /**
  * УБОРЩИК ЛИЧНЫХ КОПИЙ ПОСЛЕ ВЫХОДА (заход 7.198, часть 1).
@@ -30,6 +31,13 @@ import { SIGNED_OUT_PARAM, personalPageCaches } from "@/lib/signed-out";
  * сам маршрут выхода (`/api/auth/logout`), а страница его тут же
  * стирает из адреса — чтобы он не уехал ни в закладку, ни в историю, ни
  * в `canonical`.
+ *
+ * ВТОРОЕ ХРАНИЛИЩЕ — 7.199, часть 2. Кешей документов мало: учебная
+ * история живёт ещё и в localStorage, и после выхода гость видел блок
+ * «Продолжить» прежнего пользователя (снято на телефоне 15.09.2026).
+ * Список ключей и разбор, почему гостевой прогресс до входа отделить
+ * нечем, — в шапке `src/lib/signed-out-local.ts`. Уборщик один, потому
+ * что момент один; хранилища два, и чистятся они по отдельности.
  */
 export default function SignedOutCachePurge() {
   useEffect(() => {
@@ -39,15 +47,23 @@ export default function SignedOutCachePurge() {
     url.searchParams.delete(SIGNED_OUT_PARAM);
     window.history.replaceState(null, "", url.pathname + url.search + url.hash);
 
+    // Хранилища два, и падение одного не отменяет уборку другого:
+    // каждое чистится в своей попытке.
+    try {
+      const keys = personalLocalKeys(Object.keys(window.localStorage));
+      for (const key of keys) window.localStorage.removeItem(key);
+    } catch {
+      // Приватное окно, запрет на сайт, переполнение — уборка не условие
+      // выхода: сессии уже нет, и ронять из-за неё страницу нечем.
+    }
+
     if (typeof caches === "undefined") return;
     void (async () => {
       try {
         const names = personalPageCaches(await caches.keys());
         await Promise.all(names.map((name) => caches.delete(name)));
       } catch {
-        // Хранилище кешей может быть недоступно (приватное окно, запрет
-        // на сайт). Уборка — не условие выхода: сессии уже нет, и ронять
-        // из-за неё страницу нечем.
+        // То же самое про хранилище кешей.
       }
     })();
   }, []);
