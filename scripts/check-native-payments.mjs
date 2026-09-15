@@ -85,6 +85,9 @@ import {
   purchaseCtaKeys,
   paymentTargetsInHtml,
   visibleDocument as sharedVisibleDocument,
+  judgeControl,
+  labelBeyondTopic,
+  normalizeLabel,
 } from "./purchase-surface-rules.mjs";
 
 const PAGE_FILE = "src/app/[lang]/pricing/page.tsx";
@@ -880,11 +883,52 @@ async function main() {
     return 0;
   }
 
+/**
+ * ПРАВИЛО «НАЗВАНИЕ ТЕМЫ ПРОТИВ КАССЫ» — ПОДСАДКИ НА САМО ПРАВИЛО.
+ *
+ * Правило, освобождающее что-нибудь от проверки, обязано доказывать две
+ * вещи сразу, иначе оно просто дыра: (1) освобождённое — действительно
+ * учебная тема, и (2) освобождение НЕ распространяется на кассу, стоящую
+ * рядом. Здесь проверяются обе, и отдельно — что молчание даёт именно
+ * перепись названий, а не общая слепота прибора.
+ */
+function topicVsCheckoutPlants() {
+  const tile = "🛍️ Compras y precios · 248 palabras";
+  const tileWaiting = "🛍️ Compras y precios";
+  const cases = [
+    // отрицательный контроль: плитка темы молчит в обоих состояниях
+    ["молчит", "плитка темы словаря с числом", () => judgeControl({ text: tile, target: "" }).length === 0],
+    ["молчит", "плитка темы словаря БЕЗ числа (состояние ожидания, 7.196)", () =>
+      judgeControl({ text: tileWaiting, target: "" }).length === 0],
+    // подсадки: настоящая касса на той же странице
+    ["поймано", "настоящая кнопка покупки на той же странице", () =>
+      judgeControl({ text: "Оформить подписку", target: "" }).length > 0],
+    ["поймано", "кнопка «Precios» без адреса", () => judgeControl({ text: "Precios", target: "" }).length > 0],
+    ["поймано", "касса, ПРИСТАВЛЕННАЯ к названию темы", () =>
+      judgeControl({ text: "Compras y precios — Premium", target: "" }).length > 0],
+    ["поймано", "название темы, ведущее на страницу цен", () =>
+      judgeControl({ text: tile, target: "/es/pricing" }).length > 0],
+    // и главное: молчание даёт ПЕРЕПИСЬ, а не слепота
+    ["поймано", "перепись названий тем опустела — плитка снова краснеет", () =>
+      labelBeyondTopic(tileWaiting, new Set()) === null &&
+      normalizeLabel(tileWaiting) === "compras y precios"],
+  ];
+  let ok = true;
+  for (const [want, name, run] of cases) {
+    const passed = run();
+    if (!passed) ok = false;
+    console.log(`  ${passed ? want : "ПРОПУЩЕНО"} — правило «тема против кассы»: ${name}`);
+  }
+  return ok;
+}
+
   const sources = Object.fromEntries(SOURCES.map((f) => [f, read(f)]));
 
   if (plant) {
     let ok = judgeSources(sources).length === 0;
     console.log(`  ${ok ? "молчит" : "ЛОЖНО КРАСНЫЙ"} — здоровые исходники (отрицательный контроль)`);
+
+    ok &&= topicVsCheckoutPlants();
 
     const plants = [
       ["ветка на оболочку ЗАКОММЕНТИРОВАНА целиком (слепота к комментариям)",
