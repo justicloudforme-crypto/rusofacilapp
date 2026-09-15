@@ -579,50 +579,6 @@ public class MainActivity extends BridgeActivity {
         webView.post(() -> webView.evaluateJavascript(js, null));
     }
 
-    /**
-     * СРОК СЧИТАЕТСЯ ОТ НАЧАЛА ТЕКУЩЕЙ НАВИГАЦИИ, А НЕ ОТ ЗАПУСКА ПРОЦЕССА
-     * (заход 7.200, долг 217).
-     *
-     * ЖАЛОБА. «Повторить» на экране ошибки срабатывает со ВТОРОГО раза:
-     * сеть вернулась, человек нажал, настоящая главная показалась на один
-     * кадр — и закрылась свежим экраном ошибки.
-     *
-     * ЧТО ИЗМЕРЕНО НА ЭТОМ ЖЕ ФАЙЛЕ ДО ПРАВКИ (16.09.2026), числом:
-     * `loadWatchdog.postDelayed(pendingCheck, …)` — 1 вхождение, строка
-     * 611; `loadWatchdog.removeCallbacks(pendingCheck)` — 1 вхождение,
-     * строка 677, и оно внутри `onDestroy`; слушателей перехода в теле
-     * `armLoadWatchdog()` — НОЛЬ (`addWebViewListener`, `onPageStarted`,
-     * `onPageCommitVisible`, `onPageLoaded` — ни одного). То есть таймер
-     * заводился один раз за жизнь процесса и до закрытия окна не снимался
-     * ничем: ни новой навигацией, ни экраном ошибки, ни нажатием
-     * «Повторить». Через 12 000 мс от ЗАПУСКА он просыпался, видел у
-     * ещё догружающейся страницы `getProgress() < 100` и грузил экран
-     * ошибки поверх уже нарисованной главной. Второе нажатие проходило
-     * потому, что стрелять было уже нечем.
-     *
-     * ЧТО СТАЛО. Три события webview, и каждое делает ровно одно:
-     *
-     *   `onPageStarted`        — началась навигация → срок ПЕРЕВЗВОДИТСЯ
-     *                            от этого мига (снять и завести заново,
-     *                            иначе два таймера жили бы параллельно);
-     *   `onPageCommitVisible`  — первый кадр содержимого нарисован → срок
-     *                            СНИМАЕТСЯ;
-     *   `onPageLoaded`         — загрузка дошла до конца → срок СНИМАЕТСЯ.
-     *
-     * ЧЕГО ЭТО НЕ ОТНИМАЕТ. Сторож заводился ради случая «сервер не
-     * отказал, а МОЛЧИТ» (7.189, инцидент №1). В этом случае не приходит
-     * НИ ОДНО из двух снимающих событий — рисовать нечего и загрузке
-     * нечем закончиться, — поэтому таймер доживает до срока и показывает
-     * экран ошибки ровно как раньше. Снимающие события приходят только
-     * там, где страница действительно есть, а убивать нарисованную
-     * страницу сторож не должен был никогда.
-     *
-     * ГРАНИЦА ЧЕСТНОСТИ прежняя: ни одна строка этого файла на машине
-     * сборки не исполняется (долг 176). Форму правки держит
-     * `npm run check:load-watchdog`, у которого положительный контроль —
-     * НАСТОЯЩИЙ файл до этой правки
-     * (`scripts/fixtures/before-7200/main-activity.before-7200.txt`).
-     */
     private void armLoadWatchdog() {
         pendingCheck = new Runnable() {
             @Override
@@ -652,52 +608,7 @@ public class MainActivity extends BridgeActivity {
                 webView.loadUrl(errorUrl);
             }
         };
-        scheduleLoadWatchdog();
-        if (getBridge() == null) {
-            return;
-        }
-        getBridge().addWebViewListener(new WebViewListener() {
-            @Override
-            public void onPageStarted(WebView view) {
-                // Началась НОВАЯ навигация — в том числе та, которую завела
-                // кнопка «Повторить» на экране ошибки. Срок обязан идти от
-                // неё, а не от запуска приложения.
-                scheduleLoadWatchdog();
-            }
-
-            @Override
-            public void onPageCommitVisible(WebView view, String url) {
-                // Страница нарисована. Дальше сторожу стрелять не во что:
-                // всё, ради чего он есть, уже не случилось.
-                cancelLoadWatchdog();
-            }
-
-            @Override
-            public void onPageLoaded(WebView view) {
-                cancelLoadWatchdog();
-            }
-        });
-    }
-
-    /** Завести срок заново от ЭТОГО мига. Снятие перед заводом
-     *  обязательно: без него каждая навигация оставляла бы за собой ещё
-     *  один живой таймер, и через несколько переходов их было бы столько
-     *  же, сколько страниц открыл человек. */
-    private void scheduleLoadWatchdog() {
-        if (pendingCheck == null) {
-            return;
-        }
-        loadWatchdog.removeCallbacks(pendingCheck);
         loadWatchdog.postDelayed(pendingCheck, LOAD_TIMEOUT_MS);
-    }
-
-    /** Снять срок. Идемпотентно: снимающих событий два, и прийти они
-     *  могут в любом порядке и оба сразу. */
-    private void cancelLoadWatchdog() {
-        if (pendingCheck == null) {
-            return;
-        }
-        loadWatchdog.removeCallbacks(pendingCheck);
     }
 
     /**

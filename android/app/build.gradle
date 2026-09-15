@@ -122,16 +122,19 @@ android {
         applicationId "com.rusofacilapp.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Единица здесь — законное значение для ПЕРВОЙ подачи: Play
-        // отказывает только тому пакету, чей номер уже занят
-        // ОПУБЛИКОВАННЫМ. Формулировка долга 78 числила единицу бедой;
-        // замером 11.09.2026 это не подтвердилось. Что здесь настоящее —
+        // ДВОЙКА, А НЕ ЕДИНИЦА, И ЭТО РЕШЕНИЕ ВЛАДЕЛЬЦА 16.09.2026 (заход
+        // 7.200). Опубликованного пакета по-прежнему нет ни одного, то
+        // есть единица осталась бы законной: Play отказывает только тому,
+        // чей номер уже занят ОПУБЛИКОВАННЫМ (замер 11.09.2026, долг 78).
+        // Номер поднят не ради Play, а ради людей: под номером 1 уже
+        // ходят по рукам собранные 7.191…7.199, и различить их на телефоне
+        // нечем. С этой сборки номер называет сборку. Что здесь настоящее —
         // связь с iOS: CURRENT_PROJECT_VERSION и MARKETING_VERSION в
         // ios/App/App.xcodeproj/project.pbxproj обязаны совпадать с этими
         // двумя строками, иначе у одного релиза два разных номера в двух
         // магазинах. Сличает npm run check:release-signing.
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
