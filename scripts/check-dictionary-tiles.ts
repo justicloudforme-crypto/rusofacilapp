@@ -132,6 +132,9 @@ export async function main(): Promise<number> {
   let compared = 0;
   let zerosWhileLoading = 0;
   let skeletonsWhileLoading = 0;
+  /** Сколько проб подсадка вообще способна отличить от живого ожидания. */
+  let discriminatingProbes = 0;
+  let probePairs = 0;
 
   try {
     const ctx = await browser.newContext({ userAgent: `${SAFARI} ${TOKEN}`, viewport: { width: 360, height: 720 } });
@@ -216,11 +219,28 @@ export async function main(): Promise<number> {
     //
     // Тем берётся три, а не двадцать три, и граница названа честно: одно
     // открытие темы — это переход, ожидание ответа и снимок, то есть
-    // 23 × 5 = 115 таких кругов превратили бы прибор в минуты. Взяты те
-    // две темы, на которых дефект снят владельцем, и одна, где на двух
-    // уровнях строк нет вовсе, — «0 из 0» обязано быть правдой, а не
-    // заглушкой.
-    const PROBE_CATEGORIES = ["feelings", "shopping", "law"] as const;
+    // 23 × 5 = 115 таких кругов превратили бы прибор в минуты.
+    //
+    // ТЕМЫ БЕРУТСЯ ИЗ БАЗЫ, А НЕ ВПИСАНЫ РУКОЙ. Первая редакция называла
+    // «feelings», «shopping» и «law» — те, на которых дефект снят
+    // владельцем, — и на бегунке CI это дало зелёную дыру: в тамошней
+    // фикстуре у всех трёх ровно ноль строк, «0 из 0» совпадало с
+    // ожиданием при любом разрезе, и подсадка проходила молча. Теперь
+    // берутся три самые населённые темы ТОЙ базы, из которой отвечает
+    // проверяемый сервер, и рядом печатается, сколько в них строк.
+    const byCategory = new Map<string, number>();
+    for (const [key, n] of inBank) {
+      if (!key.startsWith("ALL/")) continue;
+      byCategory.set(key.slice("ALL/".length), n);
+    }
+    const PROBE_CATEGORIES = [...byCategory.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([category]) => category);
+    console.log(
+      `  темы для полосы освоенного (три самые населённые в базе): ` +
+        PROBE_CATEGORIES.map((c) => `${c} — ${byCategory.get(c)} строк`).join(", "),
+    );
     for (const level of LEVELS) {
       for (const category of PROBE_CATEGORIES) {
         const index = flashcardCategories.indexOf(category as (typeof flashcardCategories)[number]);
@@ -246,6 +266,8 @@ export async function main(): Promise<number> {
           known: Number(el.getAttribute("data-known") ?? "-1"),
         }));
         compared += 1;
+        probePairs += 1;
+        if ((inBank.get(`${level}/${category}`) ?? 0) !== (inBank.get(`ALL/${category}`) ?? 0)) discriminatingProbes += 1;
         const expected = inBank.get(`${plant ? "ALL" : level}/${category}`) ?? 0;
         if (shown.total !== expected) {
           problems.push(
@@ -276,7 +298,17 @@ export async function main(): Promise<number> {
     const inside = problems.filter((p) => p.includes("тема «"));
     console.log(`    сетка тем: ${grid.length} расхождений; полоса внутри темы: ${inside.length}`);
     for (const p of [...grid.slice(0, 3), ...inside.slice(0, 3)]) console.log(`    ${p}`);
-    if (grid.length === 0 || inside.length === 0) {
+    // ОБЕ ПОЛОВИНЫ ОБЯЗАНЫ ОТОЗВАТЬСЯ — но только там, где подсадке есть
+    // что подменить. Подсадка ставит на место ожидания число темы ЦЕЛИКОМ
+    // вместо пересечения; если в базе под рукой эти два числа совпадают
+    // (например, у темы вообще нет строк), она не различает ничего, и
+    // требовать от неё срабатывания значило бы требовать выдумки. Условие
+    // считается по базе и ПЕЧАТАЕТСЯ, а не подразумевается.
+    const discriminating = discriminatingProbes > 0;
+    console.log(
+      `    пар «уровень × тема», где подсадка вообще различает разрезы: ${discriminatingProbes} из ${probePairs}`,
+    );
+    if (grid.length === 0 || (discriminating && inside.length === 0)) {
       console.log("check:dictionary-tiles --plant — FAILED: подсадку поймала только одна половина");
       return 1;
     }
