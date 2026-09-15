@@ -1,10 +1,14 @@
 package com.rusofacilapp.app;
 
+import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.webkit.WebView;
 import androidx.core.graphics.Insets;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
@@ -72,11 +76,114 @@ public class MainActivity extends BridgeActivity {
      */
     private int insetTop, insetBottom, insetLeft, insetRight;
 
+    /**
+     * Заставка ушла (или ей велено уйти). Читается из условия удержания,
+     * которое система спрашивает на каждой отрисовке.
+     */
+    private volatile boolean splashReleased = false;
+
+    /** Сколько длится уход заставки. Не «пока грузится», а именно уход:
+     *  мгновенная подмена знака на страницу читается как рывок. */
+    private static final long SPLASH_FADE_MS = 220L;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // ДО super.onCreate: androidx требует установить заставку раньше,
+        // чем окно получит своё содержимое, а содержимое ставит
+        // BridgeActivity внутри super.
+        installBrandSplash();
         super.onCreate(savedInstanceState);
         armLoadWatchdog();
         armSafeAreaInsets();
+        armSplashRelease();
+    }
+
+    /**
+     * ЗАСТАВКА ДЕРЖИТСЯ ДО ГОТОВНОСТИ СТРАНИЦЫ, А НЕ ДО ИСТЕЧЕНИЯ СРОКА
+     * (заход 7.197, замер владельца 15.09.2026).
+     *
+     * ЧТО БЫЛО. Заставку показывал плагин `@capacitor/splash-screen`, и
+     * показывал её ПО ТАЙМЕРУ: `launchShowDuration: 1500` плюс
+     * `launchAutoHide` по умолчанию. Через полторы секунды заставка
+     * уходила, а страница ещё не пришла — и оставшиеся секунды человек
+     * смотрел на пустой webview. Замер владельца на POCO X6 Pro: 5,9 с
+     * от нажатия на иконку до первой картинки. Плюс вторая половина: на
+     * Android 12+ плагин рисует заставку СВОЙСТВАМИ ТЕМЫ, а в теме их не
+     * было (см. `values/styles.xml`), поэтому и эти полторы секунды были
+     * пустыми.
+     *
+     * ЧТО СТАЛО. Плагин из запуска выведен (`launchShowDuration: 0` в
+     * `capacitor.config.ts`), а заставку ставит этот класс напрямую через
+     * `androidx.core:core-splashscreen` — ту же библиотеку, которой
+     * пользовался плагин. Разница одна и она главная: условие удержания
+     * здесь не таймер, а СОБЫТИЕ — страница загрузилась.
+     *
+     * ПОЧЕМУ ЗДЕСЬ, А НЕ В ВЕБЕ. Обычный способ — позвать
+     * `SplashScreen.hide()` из кода страницы. Он здесь не годится:
+     * оболочка грузит БОЕВОЙ САЙТ, тот же, что открывает браузер, и
+     * заставка — свойство оболочки, а не сайта. Веб этой правкой не
+     * тронут ни на байт.
+     */
+    private void installBrandSplash() {
+        SplashScreen splash = SplashScreen.installSplashScreen(this);
+        splash.setKeepOnScreenCondition(() -> !splashReleased);
+        splash.setOnExitAnimationListener(provider -> {
+            ObjectAnimator fade = ObjectAnimator.ofFloat(provider.getView(), View.ALPHA, 1f, 0f);
+            fade.setInterpolator(new LinearInterpolator());
+            fade.setDuration(SPLASH_FADE_MS);
+            fade.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(android.animation.Animator animation) {
+                    provider.remove();
+                }
+            });
+            fade.start();
+        });
+    }
+
+    /**
+     * ДВА ВЫХОДА ИЗ ЗАСТАВКИ, И ВТОРОЙ ОБЯЗАТЕЛЕН.
+     *
+     * Первый — страница загрузилась: `onPageLoaded` webview. Это нормаль.
+     *
+     * Второй — ПРЕДОХРАНИТЕЛЬ. Событие загрузки может не прийти вовсе:
+     * сервер молчит, сеть отвалилась на середине ответа, webview ждёт
+     * первого байта. Без второго выхода человек остался бы наедине с
+     * логотипом навсегда — то есть тем же белым экраном, только
+     * фирменным. Поэтому срок стоит тот же самый, что у сторожа загрузки
+     * ({@link #LOAD_TIMEOUT_MS}), и это НЕ два независимых числа: сторож
+     * в ту же секунду грузит уже существующий экран ошибки с кнопкой
+     * «Повторить» (заход 7.189), а заставка уходит и открывает его.
+     * Разойдись они — человек увидел бы между ними пустоту.
+     */
+    private void armSplashRelease() {
+        if (getBridge() == null) {
+            // Моста нет — держать заставку не на чем и не для чего.
+            splashReleased = true;
+            return;
+        }
+        getBridge().addWebViewListener(new WebViewListener() {
+            @Override
+            public void onPageCommitVisible(WebView view, String url) {
+                // Самый ранний ЧЕСТНЫЙ момент: webview нарисовал первый
+                // кадр содержимого. Держать заставку дольше значило бы
+                // прятать уже готовую страницу.
+                splashReleased = true;
+            }
+
+            @Override
+            public void onPageLoaded(WebView view) {
+                splashReleased = true;
+            }
+
+            @Override
+            public void onReceivedError(WebView view) {
+                // Ошибку показывает `server.errorPath`; заставке над ней
+                // стоять нечего.
+                splashReleased = true;
+            }
+        });
+        loadWatchdog.postDelayed(() -> splashReleased = true, LOAD_TIMEOUT_MS);
     }
 
     /**
