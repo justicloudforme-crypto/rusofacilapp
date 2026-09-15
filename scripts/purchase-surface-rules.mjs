@@ -34,6 +34,10 @@
  * 1, то есть цель, а не текст.
  */
 
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 /** Платёжные поверхности. Ловит и `/ru/pricing?next=/ru/courses/a1/2`. */
 export const PAYMENT_TARGET = /(^|\/)(pricing|checkout)(\/|\?|#|$)|\/api\/checkout|(^|\/\/|\.)stripe\.com/i;
 
@@ -43,6 +47,85 @@ export const STRONG_PURCHASE =
 
 /** Слова, которые платные только в роли органа управления. */
 export const WEAK_PURCHASE = /(^|\W)(Precios|Цены|тариф\w*|Premium|Suscripci[óo]n|подписк\w+)(\W|$)/i;
+
+/**
+ * НАЗВАНИЕ УЧЕБНОЙ ТЕМЫ — ЭТО НЕ ПРИЗЫВ КУПИТЬ, И ОТЛИЧАЮТСЯ ОНИ ПЕРЕПИСЬЮ.
+ *
+ * Заплачено прогоном CI 15.09.2026 (PR #319, доля 2/3): плитка темы
+ * словаря «🛍️ Compras y precios» покраснела как «платное слово на органе
+ * без адреса». Это учебная тема «Покупки и цены», кнопка без `href` —
+ * ровно форма долга 191, и старое ограничение «подпись не длиннее трёх
+ * слов» её больше не спасало: правка 7.196 убрала с плитки число, пока
+ * едет ответ, и подпись из пяти слов («Compras y precios · 248 palabras»)
+ * стала ровно трёхсловной.
+ *
+ * Отсюда правило, не зависящее от длины: подпись, НАЧИНАЮЩАЯСЯ с
+ * названия учебной темы, судится по ОСТАТКУ. Названия берутся ПЕРЕПИСЬЮ
+ * словарей (каждая карта `categoryLabels`, обе локали), а не рукописным
+ * списком — правило 7.194 в силе: рукописных списков адресов и подписей
+ * здесь не заводится.
+ *
+ * Что это НЕ отменяет: настоящая кнопка покупки названием темы не
+ * начинается, поэтому «Suscríbete», «Precios», «Оформить подписку»
+ * ловятся ровно как раньше — это проверяется подсадкой.
+ */
+export function contentTopicLabels(dictionaries) {
+  const out = new Set();
+  for (const dict of Object.values(dictionaries)) {
+    const bucket = new Set();
+    const walk = (node, inside) => {
+      if (typeof node === "string") {
+        if (inside) bucket.add(node);
+        return;
+      }
+      if (!node || typeof node !== "object") return;
+      for (const key of Object.keys(node)) walk(node[key], inside || key === "categoryLabels");
+    };
+    walk(dict, false);
+    for (const value of bucket) out.add(value);
+  }
+  return out;
+}
+
+/** Подпись, приведённая к сравнимому виду: без значков, без знаков
+ *  препинания, одним пробелом, строчными. */
+export function normalizeLabel(text) {
+  return (text ?? "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+let TOPIC_LABELS = null;
+/** Перепись строится один раз и из тех же двух файлов, что читает
+ *  `check-native-payments`. Вынесена сюда, чтобы у `judgeControl` не
+ *  менялась подпись: её зовут из двух разных приборов. */
+function topicLabels() {
+  if (TOPIC_LABELS) return TOPIC_LABELS;
+  const here = dirname(fileURLToPath(import.meta.url));
+  const root = join(here, "..");
+  const dictionaries = {};
+  for (const locale of ["ru", "es"]) {
+    dictionaries[locale] = JSON.parse(readFileSync(join(root, "src", "dictionaries", `${locale}.json`), "utf8"));
+  }
+  TOPIC_LABELS = new Set([...contentTopicLabels(dictionaries)].map(normalizeLabel).filter(Boolean));
+  return TOPIC_LABELS;
+}
+
+/** Остаток подписи после названия темы, если подпись с него начинается.
+ *  `null` — подпись темой не начинается и судится целиком. */
+export function labelBeyondTopic(label, labels = topicLabels()) {
+  const normalized = normalizeLabel(label);
+  let longest = null;
+  for (const topic of labels) {
+    if (normalized === topic || normalized.startsWith(`${topic} `)) {
+      if (!longest || topic.length > longest.length) longest = topic;
+    }
+  }
+  if (longest === null) return null;
+  return normalized.slice(longest.length).trim();
+}
 
 /** Один орган управления, приведённый к трём полям. */
 export function judgeControl({ text, target, isControl = true }) {
@@ -55,20 +138,22 @@ export function judgeControl({ text, target, isControl = true }) {
   if (isControl && STRONG_PURCHASE.test(label)) {
     problems.push(`подпись прямо зовёт оформить подписку: «${label.slice(0, 80)}»`);
   }
-  // СЛАБОЕ слово судится только на КОРОТКОЙ подписи — той, где оно и есть
-  // весь смысл кнопки («Цены», «Precios», «Premium»).
+  // СЛАБОЕ слово судится по ОСТАТКУ подписи после названия учебной темы.
   //
-  // Заплачено первым же прогоном перестроенного прибора: плитка темы
-  // словаря называется «🛍️ Покупки и цены · 248 слов» (по-испански
-  // «Compras y precios»), это СОДЕРЖИМОЕ курса, а не касса, и по слабому
-  // правилу без ограничения длины она краснела во всех трёх ролях на обеих
-  // локалях. Порог — три слова: подпись кассы короткая всегда, подпись
-  // темы — почти никогда.
-  const words = label
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-  if (isControl && words.length <= 3 && WEAK_PURCHASE.test(label) && (!to || PAYMENT_TARGET.test(to))) {
+  // До 15.09.2026 здесь стоял порог «не длиннее трёх слов». Он был
+  // подобран под ту же плитку темы словаря и перестал работать ровно
+  // тогда, когда правка 7.196 убрала с неё число на время ожидания
+  // ответа: «Compras y precios · 248 palabras» (пять слов) стало
+  // «Compras y precios» (три). Порог по длине — признак случайный;
+  // перепись названий тем — признак по смыслу, и она выше.
+  //
+  // Подпись, начинающаяся названием темы, судится по остатку: у плитки
+  // это «248 palabras» или пустая строка, и платного слова там нет. У
+  // настоящей кнопки покупки остатка нет вовсе (она темой не
+  // начинается), поэтому судится вся подпись, как и раньше.
+  const beyondTopic = labelBeyondTopic(label);
+  const judged = beyondTopic === null ? label : beyondTopic;
+  if (isControl && WEAK_PURCHASE.test(judged) && (!to || PAYMENT_TARGET.test(to))) {
     problems.push(
       `платное слово на органе без адреса или на органе, ведущем к оплате: «${label.slice(0, 80)}»` +
         (to ? ` → ${to}` : " (кнопка без href — ровно так был написан долг 191)"),
