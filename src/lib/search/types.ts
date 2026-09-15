@@ -124,6 +124,16 @@ export interface SearchHit {
   /** Тот же значок, что печатают каталоги: `"subscription"` — 🔒,
    * `"premium-tier"` — 👑. Приходит от `accessMarkFor`. */
   lockReason?: Exclude<AccessRequirement, "free">;
+  /**
+   * ЗНАК СТРОКИ — 7.196, часть 1, и он НЕ то же самое, что `locked`.
+   *
+   * `locked` отвечает «может ли ЭТОТ посетитель открыть» и решает
+   * поведение; `sign` отвечает «какой знак положен материалу» и решает
+   * только разметку. У подписчика Premium строка уровня C1 открыта
+   * (`locked: false`) и при этом носит 👑: он платит именно за неё.
+   * Пока это были одно поле, второе утверждение выразить было нечем.
+   */
+  sign?: Exclude<AccessRequirement, "free">;
 }
 
 export interface SearchSectionResult {

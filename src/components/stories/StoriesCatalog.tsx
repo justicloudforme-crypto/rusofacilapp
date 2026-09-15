@@ -5,6 +5,14 @@ import Link from "next/link";
 import { storyLevels, storyTopics, type StoryLevel, type StoryTopic } from "@/lib/stories";
 import LevelBadge from "@/components/LevelBadge";
 import AccessMark from "@/components/ui/AccessMark";
+import {
+  accessSignFor,
+  levelRequirement,
+  sortSign,
+  type AccessRequirement,
+  type ViewerTier,
+} from "@/lib/access-marks";
+import { useIsNativeShell } from "@/lib/native-shell-client";
 import FilterChipGroup, { filterChipClass } from "@/components/ui/FilterChipGroup";
 import { getAllStoryProgress, syncStoryProgress, type StoryProgress } from "@/lib/reading-progress";
 import { usePaywall } from "@/contexts/PaywallContext";
@@ -28,6 +36,9 @@ export interface StorySummary {
    * the crown badge + paywall-on-click below; the list itself already
    * arrives pre-sorted accessible-first (see [lang]/stories/page.tsx). */
   lockReason: "free" | "premium" | null;
+  /** Чего требует САМ рассказ, независимо от роли смотрящего, — то, из
+   *  чего общее правило делает знак сорта (7.196, часть 1). */
+  requires: AccessRequirement;
   description: string | null;
   hasAudio: boolean;
   readingMinutes: number | null;
@@ -64,11 +75,16 @@ export default function StoriesCatalog({
   lang,
   stories,
   dict,
+  tier,
 }: {
   lang: Locale;
   stories: StorySummary[];
   dict: StoriesCatalogDict;
+  /** Тариф смотрящего — нужен общему правилу знака. В вебе оно с этим
+   *  тарифом возвращает ровно прежний `accessMarkFor`. */
+  tier: ViewerTier;
 }) {
+  const nativeShell = useIsNativeShell();
   const [filter, setFilter] = useState<"all" | StoryLevel>("all");
   const [topicFilter, setTopicFilter] = useState<"all" | StoryTopic>("all");
   const [classicOnly, setClassicOnly] = useState(false);
@@ -141,11 +157,29 @@ export default function StoriesCatalog({
         style={{ top: navOffset }}
         className="sticky z-20 mt-4 flex flex-col gap-3 bg-background/95 py-3 backdrop-blur-sm"
       >
+        {/* ЗНАК НА ПОЛОСЕ УРОВНЕЙ — 7.196, часть 1. Владелец снял с
+            телефона: в словаре на C1 стоит «C1 👑», а в каталоге
+            рассказов у того же C1 знака нет вовсе, хотя все 65 рассказов
+            уровня требуют плана Premium (`getStoryAccess`). Знак приходит
+            от общего правила; в вебе полоса остаётся прежней. */}
         <FilterChipGroup
+          testId="story-level-filter"
           label={dict.levelFilterLabel}
           options={[
             { id: "all" as const, label: dict.filterAll },
-            ...storyLevels.map((level) => ({ id: level, label: level })),
+            ...storyLevels.map((level) => {
+              const sign = nativeShell ? sortSign(levelRequirement("stories", level)) : null;
+              return {
+                id: level,
+                label: level,
+                accessMark: sign?.mark,
+                accessLabel: sign
+                  ? sign.labelKey === "premiumTierBadge"
+                    ? dict.premiumTierBadge
+                    : dict.subscriptionBadge
+                  : undefined,
+              };
+            }),
           ]}
           activeId={filter}
           onChange={(value) => { setFilter(value); setVisibleCount(PAGE_SIZE); }}
@@ -187,11 +221,12 @@ export default function StoriesCatalog({
             return (
               <Link
                 key={story.id}
+                data-testid="story-card"
                 href={`/${lang}/stories/${story.id}`}
                 onClick={(e) => {
                   if (!isLocked) return;
                   e.preventDefault();
-                  openPaywall(story.lockReason ?? "free");
+                  openPaywall(story.lockReason ?? "free", "story");
                 }}
                 className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
               >
@@ -225,12 +260,25 @@ export default function StoriesCatalog({
                         нужно) плюс «👑 Solo Premium» у ещё 98. Что
                         рисовать, решает один признак на весь сайт, см.
                         src/lib/access-marks.ts. */}
-                    {story.lockReason && (
-                      <AccessMark
-                        mark={story.lockReason === "premium" ? "premium-tier" : "subscription"}
-                        label={story.lockReason === "premium" ? dict.premiumTierBadge : dict.subscriptionBadge}
-                      />
-                    )}
+                    {/* 7.196: знак решает ОБЩЕЕ правило. Внутри
+                        оболочки 👑 стоит у премиального рассказа при любой
+                        роли (метка сорта), 🔒 — у закрытого обычного; в
+                        вебе возвращается ровно прежнее поведение, знак в
+                        знак, потому что `nativeShell: false` отдаёт старый
+                        `accessMarkFor`. */}
+                    {(() => {
+                      const sign = accessSignFor(story.requires, tier, {
+                        nativeShell,
+                        closed: story.lockReason !== null,
+                      });
+                      if (!sign) return null;
+                      return (
+                        <AccessMark
+                          mark={sign.mark}
+                          label={sign.labelKey === "premiumTierBadge" ? dict.premiumTierBadge : dict.subscriptionBadge}
+                        />
+                      );
+                    })()}
                   </span>
                 </div>
                 <StoryTitle as="h2" titles={story.titles} className="mt-3 text-lg font-medium" />

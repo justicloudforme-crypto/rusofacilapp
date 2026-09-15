@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Skeleton from "@/components/ui/Skeleton";
+import type { ViewerTier } from "@/lib/access-marks";
 import CategoryGrid, { type CategoryGridDict, type CategorySummary } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
@@ -21,6 +22,7 @@ export interface MatchAppDict extends CategoryGridDict {
   levelAll: string;
   /** Подпись значка «нужен план Premium» — одна на весь сайт. */
   premiumTierBadge: string;
+  subscriptionBadge: string;
   backToCategories: string;
   instructionLabel: string;
   notEnoughCardsMessage: string;
@@ -55,6 +57,16 @@ export default function MatchApp({
   // писала «0 слов» там, где слова есть (7.195, часть 3).
   const [bankCategories, setBankCategories] = useState<Record<string, { bank: number; open: number; locked: number }>>({});
   const [bankLockedByLevel, setBankLockedByLevel] = useState<Record<string, number>>({});
+  /**
+   * РАЗРЕЗ ОТВЕТА, КОТОРЫЙ СЕЙЧАС В РУКАХ — 7.196, часть 2.
+   *
+   * `undefined` — ответа ещё нет; `null` — ответ про все уровни. Сетка тем
+   * сравнивает его с выбранным уровнем и, пока они не совпали, не печатает
+   * чисел вовсе. Без этого поля ЧУЖИЕ числа стояли на экране всё время,
+   * пока едет ответ (замер: «266 слов» на уровне C1 при 8 в банке).
+   */
+  const [summaryLevel, setSummaryLevel] = useState<string | null | undefined>(undefined);
+  const [summaryTier, setSummaryTier] = useState<ViewerTier>("free");
   const [recentCategories, setRecentCategories] = useState<RecentCategory[]>([]);
   const [hasAnyProgress, setHasAnyProgress] = useState(false);
   // `total` is what THIS visitor can open, `locked` is what Premium
@@ -92,6 +104,8 @@ export default function MatchApp({
       setCategorySummary(body.categories);
       setBankCategories(body.bankCategories);
       setBankLockedByLevel(body.lockedByLevel);
+      setSummaryLevel(body.level);
+      setSummaryTier(body.tier);
       setRecentCategories(body.recent);
       setHasAnyProgress(body.hasAnyProgress);
       setTotalProgress({ known: body.totalKnown, total: body.availableWords, locked: body.premiumOnlyWords });
@@ -168,13 +182,20 @@ export default function MatchApp({
 
       {inGrid ? (
         <>
-          <ContinueStrip dict={dict} recent={recentCategories} onSelectCategory={selectCategory} />
+          <ContinueStrip
+            dict={dict}
+            recent={recentCategories}
+            ready={summaryLevel !== undefined && (summaryLevel ?? "all") === levelFilter}
+            onSelectCategory={selectCategory}
+          />
           <CategoryGrid
             dict={dict}
             summary={categorySummary}
             hasAnyProgress={hasAnyProgress}
             levelFilter={levelFilter}
             bank={bankCategories}
+            summaryLevel={summaryLevel}
+            tier={summaryTier}
             lockedAtLevel={levelFilter === "all" ? 0 : (bankLockedByLevel[levelFilter] ?? 0)}
             onSelectCategory={selectCategory}
           />

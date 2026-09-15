@@ -6,6 +6,7 @@ import { getStoryCatalog } from "@/lib/stories-catalog";
 import { getEntitlementTier, getStoryAccess } from "@/lib/entitlement";
 import { storyLevels } from "@/lib/stories";
 import { localizeStoryAuthor } from "@/lib/story-author";
+import { storyRequirement } from "@/lib/access-marks";
 import { storyTitles } from "@/lib/story-title";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
 import StoryLinkIndex from "@/components/stories/StoryLinkIndex";
@@ -64,10 +65,27 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
       // кеш каталога остаётся локаль-независимым, а список заморозки не
       // уезжает в браузерный бандл.
       titles: storyTitles(story, lang),
-      // descriptionRu is null for every row today (see schema.prisma) —
-      // this fallback is what keeps /ru showing the Spanish summary
-      // instead of hiding the block, until the Russian text exists.
-      description: lang === "ru" ? (story.descriptionRu ?? story.description) : story.description,
+      /**
+       * НА `/ru` — ТОЛЬКО РУССКОЕ ОПИСАНИЕ ИЛИ НИЧЕГО — 7.196, часть 4а.
+       *
+       * Здесь стояла подстраховка «если русского нет, показать испанское»,
+       * и она была написана, когда выбор стоял между испанским текстом и
+       * пустотой. Замер 14.09.2026 по боевой базе показывает цену этого
+       * выбора: `descriptionRu` пуст у **325 строк из 325**, то есть
+       * подстраховка работала не в редком случае, а ВСЕГДА, и русский
+       * каталог целиком состоял из русских заголовков с испанскими
+       * аннотациями под ними. Владелец снял ровно это.
+       *
+       * Перевести это таблицей нельзя: 325 разных абзацев — это работа по
+       * содержимому и запись в базу, а в этом заходе разрешена одна
+       * строка записи и та в `Subscription`. Поэтому на `/ru` карточка
+       * печатает русское описание, когда оно появится, и не печатает
+       * ничего, пока его нет. Написать 325 русских аннотаций заведено
+       * долгом.
+       *
+       * `/es` не тронут ни знаком.
+       */
+      description: lang === "ru" ? story.descriptionRu : story.description,
       // Same idea one column over: `author` is a single column read by both
       // locales, and on /es it was rendering «Por Русская народная сказка»
       // (see story-author.ts). Applied HERE rather than in
@@ -75,6 +93,12 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
       // and after `isClassic` has already been derived from the raw value.
       author: localizeStoryAuthor(story.author, lang),
       lockReason: getStoryAccess(tier, story).reason,
+      // ЧЕГО ТРЕБУЕТ САМ РАССКАЗ — 7.196, часть 1. `lockReason` выше
+      // отвечает на вопрос «что мешает ЭТОМУ посетителю», и подписчику
+      // Premium он отвечает `null`: до правки граница премиального
+      // материала человеку, который за неё платит, не показывалась вовсе.
+      // Знак сорта решает признак, а он от роли не зависит.
+      requires: storyRequirement(story),
     }))
     .sort((a, b) => {
       const lockDiff = Number(a.lockReason !== null) - Number(b.lockReason !== null);
@@ -94,7 +118,7 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
       <p className="mt-3 max-w-xl text-foreground/70">{dict?.stories?.pageSubtitle}</p>
 
       <div className="mt-10">
-        <StoriesCatalog lang={lang} stories={stories} dict={{ ...dict.stories, ...dict.access }} />
+        <StoriesCatalog lang={lang} stories={stories} tier={tier} dict={{ ...dict.stories, ...dict.access }} />
       </div>
 
       {/* Под каталогом, а не вместо него: каталог остаётся клиентским со

@@ -23,10 +23,18 @@ export default function NativeLockedModal({
   open,
   onClose,
   copy,
+  body,
 }: {
   open: boolean;
   onClose: () => void;
   copy: NativeAccessCopy["lock"];
+  /**
+   * Готовый текст ПО ТИПУ материала — 7.196, часть 3. Собирается одной
+   * функцией (`nativeLockBody`) там, где известны и тип, и сорт; сюда
+   * приезжает строкой, потому что окно про тип ничего не знает и знать
+   * не должно.
+   */
+  body: string;
 }) {
   return (
     <Modal open={open} onClose={onClose} title={copy.heading} closeLabel={copy.close}>
@@ -34,7 +42,7 @@ export default function NativeLockedModal({
           здесь стоял до первого прогона e2e и давал в диалоге ДВА
           одинаковых заголовка. */}
       <div className="px-5 pb-6 pt-2 sm:px-6">
-        <p className="text-sm leading-6 text-foreground/70">{copy.body}</p>
+        <p data-testid="native-lock-body" className="text-sm leading-6 text-foreground/70">{body}</p>
         <button
           type="button"
           onClick={onClose}
