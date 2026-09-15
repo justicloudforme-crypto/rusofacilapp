@@ -114,7 +114,6 @@ export async function POST(request: NextRequest) {
   const wholeIndex = await getFlashcardIndex();
   const tier = await getEntitlementTier();
   const index = wholeIndex.filter((c) => canAccessLevel(tier, c.level));
-  const premiumOnlyWords = wholeIndex.length - index.length;
   const cardById = new Map(index.map((c) => [c.id, c]));
   const validCardIds = new Set(cardById.keys());
 
@@ -263,7 +262,26 @@ export async function POST(request: NextRequest) {
   // `resolvedKnownIds` is still built from every source first (server rows
   // win over client entries) and narrowed only at the end, so the trust
   // order above is untouched.
-  const totalKnown = [...resolvedKnownIds].filter((id) => validCardIds.has(id)).length;
+  //
+  // И РАЗРЕЗ ТОЖЕ ТОТ ЖЕ — правка 15.09.2026, 7.197. До неё эти три числа
+  // (`totalKnown`, `availableWords`, `premiumOnlyWords`) считались по
+  // ВСЕМУ банку, а печатались на экране, у которого уже выбран уровень:
+  // строка «Has aprendido 6 de 4787 palabras disponibles» стояла под
+  // результатом раунда на уровне C1. Ровно та же семья, что «Aprendidas:
+  // 0 de 216» на уровне C1 в теме из 45 строк: знаменатель отвечал не на
+  // тот вопрос, который задан фильтром.
+  //
+  // Разрез накладывается ТОЛЬКО на эти три числа. `index`, `cardById` и
+  // `validCardIds` остаются по всем уровням намеренно: по ним строятся
+  // «недавние» карточки и разбирается то, что прислал браузер, и сузить
+  // их значило бы молча потерять карточку другого уровня.
+  const inCut = (card: { level: string }) => !level || card.level === level;
+  const availableWords = index.filter(inCut).length;
+  const premiumOnlyWords = wholeIndex.filter(inCut).length - availableWords;
+  const totalKnown = [...resolvedKnownIds].filter((id) => {
+    const card = cardById.get(id);
+    return card !== undefined && inCut(card);
+  }).length;
   const hasAnyProgress = lastActivityByCardId.size > 0;
 
 
@@ -301,8 +319,9 @@ export async function POST(request: NextRequest) {
     bankCategories: census.byCategory,
     lockedByLevel: Object.fromEntries(Object.entries(census.byLevel).map(([lvl, row]) => [lvl, row.locked])),
     lockedTotal: census.total.locked,
-    // Cards this visitor can open right now, at their current tier.
-    availableWords: index.length,
+    // Cards this visitor can open right now, at their current tier — В
+    // ТОМ ЖЕ РАЗРЕЗЕ, что и всё остальное в этом ответе (см. `inCut`).
+    availableWords,
     // Cards that exist but need the Premium plan — 0 for a premium/staff
     // visitor, which is what tells the UI to drop the second half of the
     // sentence rather than print "and 0 more in Premium".
