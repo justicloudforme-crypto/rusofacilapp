@@ -143,15 +143,45 @@ const config: CapacitorConfig = {
     errorPath: "error.html",
   },
   plugins: {
-    // Keep the native splash (resources/splash.png, brand gradient) up
-    // until the remote page has actually painted, instead of Capacitor's
-    // default ~500ms timer — a slow LAN/dev-server load would otherwise
-    // flash to a blank WebView before content arrives. The page itself
-    // must call SplashScreen.hide() once ready if this is set to false;
-    // autoHide keeps it simple for now since there's no native entry code
-    // in this remote-URL setup to call that from.
+    // ЗАСТАВКА ЗАПУСКА У ПЛАГИНА ВЫКЛЮЧЕНА — ПРАВКА 15.09.2026, 7.197.
+    //
+    // Комментарий, стоявший здесь до правки, утверждал, что заставка
+    // держится «пока удалённая страница не отрисуется». Замер владельца
+    // это опроверг: от нажатия на иконку до первой картинки 5,9 с, и всё
+    // это время экран пустой и светлый.
+    //
+    // Причин было две, и обе — в этих трёх строках.
+    //
+    //   1. `launchShowDuration` = 1500 вместе с `launchAutoHide` (по
+    //      умолчанию true) — это ТАЙМЕР, а не событие. Через полторы
+    //      секунды заставка уходила, страница ещё не пришла, и оставшиеся
+    //      ~4,4 с человек смотрел на пустой webview.
+    //   2. `androidSplashResourceName` на Android 12+ не читается вовсе:
+    //      системная заставка берёт фон и знак из СВОЙСТВ ТЕМЫ
+    //      (`windowSplashScreenBackground`, `windowSplashScreenAnimatedIcon`),
+    //      а их в `android/app/src/main/res/values/styles.xml` не было ни
+    //      одного. Поэтому и первые полторы секунды были пустыми.
+    //
+    // Ноль — плагин из запуска выходит совсем
+    // (`SplashScreen.showOnLaunch` возвращается первой же строкой).
+    // Заставку ставит `MainActivity` напрямую через ту же библиотеку
+    // `androidx.core:core-splashscreen`, и условие её ухода — СОБЫТИЕ
+    // готовности страницы плюс предохранитель на тот же срок, что у
+    // сторожа загрузки. Метод `SplashScreen.hide()` из веба не зовётся и
+    // звать его неоткуда: оболочка грузит боевой сайт, и заставка —
+    // свойство оболочки, а не сайта.
+    //
+    // `backgroundColor` оставлен и сличается сторожем `check:splash` с
+    // `@color/splashBackground` и с `theme_color` сайта: три записи
+    // одного и того же цвета обязаны совпадать.
+    //
+    // iOS ЭТА ПРАВКА НЕ ЛЕЧИТ. Там заставку тоже показывал этот же
+    // плагин и по тому же таймеру, а нативного кода, который сделал бы
+    // для iOS то же самое, здесь не написано: `ios/` в этом заходе не
+    // трогается, а собрать и проверить его нечем — Xcode на машине нет.
+    // Записано долгом, а не умолчанием.
     SplashScreen: {
-      launchShowDuration: 1500,
+      launchShowDuration: 0,
       backgroundColor: "#2d5f8a",
       androidSplashResourceName: "splash",
     },

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ФОН ЗАСТАВКИ. Ни одного нового цвета: это фон `resources/icon.png`,
+    он же `theme_color` сайта (`src/app/manifest.ts`), он же
+    `backgroundColor` заставки в `capacitor.config.ts`. Значение
+    сличается сторожем `npm run check:splash` со всеми тремя.
+-->
+<resources>
+    <color name="splashBackground">#2d5f8a</color>
+</resources>
