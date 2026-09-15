@@ -259,10 +259,20 @@ export function judge(sources) {
  */
 const BEFORE_FIX = "fdfc1c4";
 
-/** Копии тех же файлов, лежащие рядом. Имя каталога называет заход. */
+/**
+ * Копии тех же файлов, лежащие рядом. Имя каталога называет заход.
+ *
+ * РАСШИРЕНИЕ `.txt`, А НЕ `.java`/`.html`, И ЭТО НЕ КАПРИЗ. Первая
+ * редакция назвала копию `MainActivity.java` — и уронила в CI чужой
+ * сторож `check:app-id`, который считает файлы с таким именем во всём
+ * дереве и требует ровно одного: «забытая копия в старом каталоге пакета
+ * собирается вместе с новой». Правило это верное, ослаблять его ради
+ * фикстуры нельзя, а фикстура ни во что не собирается — значит менять
+ * надо имя, а не правило.
+ */
 const FIXTURES = {
-  [ACTIVITY]: "scripts/fixtures/before-7198/MainActivity.java",
-  [ERROR_PAGE]: "scripts/fixtures/before-7198/error.html",
+  [ACTIVITY]: "scripts/fixtures/before-7198/main-activity.before-7198.txt",
+  [ERROR_PAGE]: "scripts/fixtures/before-7198/error-page.before-7198.txt",
 };
 
 function fileBeforeFix(path) {
