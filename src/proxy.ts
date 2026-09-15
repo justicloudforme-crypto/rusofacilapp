@@ -8,6 +8,12 @@ import { db } from "@/lib/db";
 import { isStaff } from "@/lib/roles";
 import { APEX_REDIRECT_STATUS, apexRedirectTarget } from "@/lib/canonical-host";
 import {
+  LOCALE_COOKIE,
+  LOCALE_COOKIE_MAX_AGE,
+  localeOfPath,
+  rememberedLocale,
+} from "@/lib/remembered-locale";
+import {
   NATIVE_SHELL_COOKIE,
   NATIVE_SHELL_COOKIE_MAX_AGE,
   NATIVE_SHELL_COOKIE_VALUE,
@@ -109,7 +115,15 @@ async function route(request: NextRequest) {
   );
 
   if (!pathnameHasLocale) {
-    const locale = getPreferredLocale(request);
+    // ЗАПОМНЕННЫЙ ВЫБОР ИДЁТ ПЕРВЫМ, ЗАГОЛОВОК УСТРОЙСТВА — ВТОРЫМ
+    // (заход 7.198, часть 3 «а»). Оболочка грузит именно этот адрес —
+    // корневой, без локали, — и до правки решение принимал только
+    // `Accept-Language`, то есть язык ТЕЛЕФОНА. Поэтому выбранный
+    // русский не переживал ни одного перезапуска приложения.
+    //
+    // Ничего не запомнено — прежнее поведение слово в слово. Полный
+    // разбор и границы — в шапке `src/lib/remembered-locale.ts`.
+    const locale = rememberedLocale(request.cookies.get(LOCALE_COOKIE)?.value) ?? getPreferredLocale(request);
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}${pathname}`;
     return NextResponse.redirect(url);
@@ -192,6 +206,26 @@ async function route(request: NextRequest) {
  */
 export async function proxy(request: NextRequest) {
   const response = await route(request);
+
+  // ЗАПОМИНАНИЕ ЯЗЫКА. Пишется ровно тогда, когда значение изменилось —
+  // тем же правилом, что и кука ниже: ответ без `Set-Cookie` остаётся
+  // побайтово прежним, и ни один из 330 замороженных адресов от этой
+  // строки не двигается.
+  const visited = localeOfPath(request.nextUrl.pathname);
+  if (visited && request.cookies.get(LOCALE_COOKIE)?.value !== visited) {
+    response.cookies.set(LOCALE_COOKIE, visited, {
+      path: "/",
+      maxAge: LOCALE_COOKIE_MAX_AGE,
+      sameSite: "lax",
+      // Как и у куки признака оболочки: `secure` берётся у самого
+      // запроса, иначе на прогоне verify по http://localhost:3123 кука
+      // не доехала бы ни до одной страницы и сторож мерил бы
+      // собственную ошибку.
+      secure: request.nextUrl.protocol === "https:",
+      httpOnly: false,
+    });
+  }
+
   if (
     userAgentIsNativeShell(request.headers.get("user-agent")) &&
     request.cookies.get(NATIVE_SHELL_COOKIE)?.value !== NATIVE_SHELL_COOKIE_VALUE
