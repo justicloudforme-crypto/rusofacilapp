@@ -103,7 +103,23 @@ export default function MediaExercises({
           {!submitted ? (
             <button
               type="button"
-              onClick={() => setSubmitted(true)}
+              onClick={() => {
+                setSubmitted(true);
+                // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ (17.09.2026, заход 7.204).
+                // Открытие песни или видеоурока день больше не ставит, а
+                // серверного признака «прослушано до половины» у медиа нет
+                // вовсе — поэтому засчитывается сданное упражнение, то
+                // есть вот это нажатие. Отказ глотается: день — не то,
+                // ради чего стоит показывать человеку ошибку. Без
+                // `keepalive`: нажатие никуда не уводит, документ жив, и
+                // маячок здесь потребовал бы своего маршрута в service
+                // worker (см. scripts/check-dying-post-routes.mjs).
+                void fetch("/api/study-day", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ source: "media" }),
+                }).catch(() => {});
+              }}
               disabled={!allComplete}
               className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
             >

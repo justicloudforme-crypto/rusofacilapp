@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import VocabularyApp from "@/components/flashcards/VocabularyApp";
 import JsonLd from "@/components/seo/JsonLd";
@@ -60,9 +59,9 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
   // which a crawler never executes. Same reasoning as the footer glossary
   // link added in PR #44.
   //
-  // Opening the card trainer is the study action — answering a card is not
-  // required, and before this the whole day could go unrecorded.
-  await markStudyDayVisit("flashcards");
+  // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ (17.09.2026, заход 7.204).
+  // Словарь ставит день ОТВЕТОМ в карточке — `POST /api/flashcard-progress`.
+  // Открытие этой страницы не ставит ничего.
 
   // ES-only, because the category pages themselves are ES-only.
   const showCategoryIndex = lang === "es";

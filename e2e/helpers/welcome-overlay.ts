@@ -5,8 +5,11 @@ import { expect, type Page } from "@playwright/test";
  *
  * Why this exists at all. `src/components/profile/WelcomeOverlay.tsx` is a
  * full-screen `role="dialog"` with `fixed inset-0 z-[60]`, rendered on the
- * profile page once per (userId, calendar day) and gated by a localStorage
- * key written inside a `useEffect`. The effect fires after hydration, not
+ * profile page once per (userId, LOCAL calendar day of the account) and
+ * gated by a cookie written inside a `useEffect`. Куки, а не
+ * localStorage, и день ученика, а не гринвичский — с 17.09.2026, долг
+ * 223: прежний замок съедался выходом из аккаунта, и приветствие
+ * приходило второй раз за тот же день. The effect fires after hydration, not
  * synchronously with the navigation — so a spec that lands on /profile and
  * immediately clicks anything (the header's "Mi perfil" button, say) is
  * racing a backdrop that swallows the click. Playwright's actionability

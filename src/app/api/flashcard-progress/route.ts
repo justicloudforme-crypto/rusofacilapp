@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 
 // Server-backed mirror of src/lib/flashcard-progress.ts's localStorage map —
 // lets "known" flags survive a device switch or app reinstall. Unauthenticated
@@ -81,6 +82,12 @@ export async function POST(request: NextRequest) {
   // long enough to finish (unlike a bare un-awaited call, which risks being
   // cut off mid-write on a serverless runtime).
   after(() => awardBadgesSafely(user.id));
+  // ДЕНЬ ЗАНЯТИЯ (17.09.2026, заход 7.204). Это единственный писатель
+  // отметки «знаю» — и у КАРТОЧКИ словаря, и у ИДИОМЫ (`setWordKnown` в
+  // src/lib/flashcard-progress.ts зовут оба экрана). То есть здесь стоит
+  // ровно то действие, которое владелец назвал занятием, и оно уже
+  // приходит на сервер само — отдельного запроса ради дня не нужно.
+  await markStudyDayVisit("flashcards", user);
 
   return NextResponse.json({ ok: true, updatedAt: row.updatedAt.getTime() });
 }

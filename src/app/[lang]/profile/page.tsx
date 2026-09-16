@@ -671,6 +671,11 @@ export default async function ProfilePage({
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
       <WelcomeOverlay
         userId={user.id}
+        // «Сегодня» в зоне АККАУНТА, тем же `dateKeyIn`, которым
+        // считается день занятия (долг 223): у браузера своего мнения о
+        // дате здесь быть не должно — по Гринвичу новый день у владельца
+        // наступал в 10:00 по местному.
+        todayKey={todayKey}
         name={user.name}
         currentStreak={streak.currentStreak}
         greeting={dict.profile.welcomeGreeting}

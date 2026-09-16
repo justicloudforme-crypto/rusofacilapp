@@ -4,7 +4,6 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLevelSlug } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
-import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import { getExamContent } from "@/lib/exams/content";
@@ -42,10 +41,9 @@ export default async function ExamPage({
 
   const dict = await getDictionary(lang);
 
-  // Opening the exam is the study action. Reached only past the guard
-  // above, so `user` is non-null here; passed in so the zone comes from the
-  // account rather than the cookie.
-  await markStudyDayVisit("exam", user);
+  // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ (17.09.2026, заход
+  // 7.204). Экзамен ставит день там, где его СДАЮТ, —
+  // `POST /api/exams/[level]/[examSlug]/attempt`.
 
   const localizedExam = {
     ...exam,
