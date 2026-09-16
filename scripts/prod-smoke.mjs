@@ -85,6 +85,16 @@ const VOCABULARY_CATEGORY = "comida";
  *  `npm run check:health-route`. */
 const HEALTH_OK_TOKEN = "RF-OK";
 
+/** Чем проверка представляется серверу. Написание НЕ брендовое и
+ *  намеренно — ровно по той же причине, что и токен оболочки
+ *  (`src/lib/native-shell-token.ts`): имя продукта пишется «RusoFácilapp»,
+ *  «á» в заголовок HTTP не кладётся, а написать то же имя без диакритики
+ *  запрещает `npm run check:brand` по всему репозиторию. Стоило одного
+ *  красного CI 17.09.2026: локально `verify` был зелёным, потому что
+ *  сторож смотрит ОТСЛЕЖИВАЕМЫЕ файлы, а новый файл в тот момент ещё не
+ *  был добавлен в индекс. */
+const SMOKE_USER_AGENT = "RFProdSmoke";
+
 function dictionary(lang) {
   return JSON.parse(readFileSync(`src/dictionaries/${lang}.json`, "utf-8"));
 }
@@ -120,7 +130,7 @@ async function probe(context, base, target) {
   const url = `${base}${target.path}`;
 
   if (target.redirect) {
-    const res = await fetch(url, { redirect: "manual", headers: { "user-agent": "RusoFacilapp-prod-smoke" } });
+    const res = await fetch(url, { redirect: "manual", headers: { "user-agent": SMOKE_USER_AGENT } });
     const why = [];
     if (res.status !== target.redirect.status) why.push(`ответ ${res.status}, ожидался ${target.redirect.status}`);
     const location = res.headers.get("location") ?? "";
@@ -129,7 +139,7 @@ async function probe(context, base, target) {
   }
 
   if (target.json) {
-    const res = await fetch(url, { headers: { "user-agent": "RusoFacilapp-prod-smoke" } });
+    const res = await fetch(url, { headers: { "user-agent": SMOKE_USER_AGENT } });
     const text = await res.text();
     const why = [];
     if (res.status !== target.json.status) why.push(`ответ ${res.status}, ожидался ${target.json.status}`);
