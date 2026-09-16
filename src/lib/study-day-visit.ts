@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE, verifySessionToken } from "./session-token";
 import { getRequestTimeZone } from "./timezone-server";
 import { markStudyDay, type StudyDaySource } from "./study-day";
+import { awardBadgesSafely } from "./badges";
 
 // The one line a study page adds so that opening it counts as a study day.
 //
@@ -53,7 +54,22 @@ export async function markStudyDayVisit(
   const userId = user === undefined ? await signedInUserId() : user?.id ?? null;
   if (!userId) return;
   const timeZone = await getRequestTimeZone(user?.timezone ?? null);
-  after(() => markStudyDay(userId, timeZone, source));
+  after(async () => {
+    // ВЫДАЧА ЗНАЧКОВ СТОИТ ТАМ, ГДЕ МЕНЯЕТСЯ УСЛОВИЕ (долг 220,
+    // заход 7.200). Серию считают ДНИ ЗАНЯТИЙ, а день ставит открытие
+    // страницы — вот эта самая функция, шесть поверхностей. Правило же
+    // выдачи звали только три ПИШУЩИХ маршрута (`/api/progress`,
+    // `/api/flashcard-progress`, приём экзамена), и человек, который
+    // читает рассказы и открывает словарь, не касался ни одного из них
+    // ни разу: боевой аккаунт с серией 3 дня и нулём строк `UserBadge` —
+    // именно этот случай.
+    //
+    // Считается только на НОВОМ дне: `markStudyDay` возвращает `true`
+    // ровно тогда, когда строка дня появилась, то есть не чаще раза в
+    // сутки на человека. Каждый просмотр страницы это не удорожает.
+    const dayIsNew = await markStudyDay(userId, timeZone, source);
+    if (dayIsNew) await awardBadgesSafely(userId);
+  });
 }
 
 async function signedInUserId(): Promise<string | null> {

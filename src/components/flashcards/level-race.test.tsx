@@ -166,6 +166,9 @@ function View({
       <button type="button" data-testid="pick-c1" onClick={() => onLevel("C1")}>
         C1
       </button>
+      <button type="button" data-testid="pick-all" onClick={() => onLevel("all")}>
+        all
+      </button>
       <ContinueStrip
         dict={STRIP_DICT(locale)}
         recent={summary.recent}
@@ -212,6 +215,53 @@ function useRacingSummary(level: FlashcardLevel | "all") {
     });
   }, [level]);
   return state;
+}
+
+/**
+ * ВТОРАЯ ПОДСАДКА — код 7.199: отмена уже есть, а прежний разрез в руках
+ * ОСТАЁТСЯ. Дословно тот крючок, каким он был до 16.09.2026: `state`
+ * отдаётся наружу как есть, без сравнения разреза с запрошенным.
+ */
+function use7199Summary(level: FlashcardLevel | "all") {
+  const [state, setState] = useState<{ summary: CategorySummaryResponse; summaryLevel: string | null | undefined }>({
+    summary: EMPTY_SUMMARY,
+    summaryLevel: undefined,
+  });
+  useEffect(() => {
+    let cancelled = false;
+    void fetchCategorySummary(level).then((body) => {
+      if (cancelled) return;
+      setState({ summary: body, summaryLevel: body.level });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [level]);
+  return state;
+}
+
+function Screen7199({ locale }: { locale: Locale }) {
+  const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
+  const { summary, summaryLevel } = use7199Summary(levelFilter);
+  return (
+    <View locale={locale} levelFilter={levelFilter} onLevel={setLevelFilter} summaryLevel={summaryLevel} summary={summary} />
+  );
+}
+
+/** Тот же нынешний крючок, но с ключом перезапроса — как его зовут
+ *  режимы словаря после отметки «знаю» и после конца раунда. */
+function ReloadableScreen({ locale }: { locale: Locale }) {
+  const [levelFilter, setLevelFilter] = useState<FlashcardLevel | "all">("all");
+  const [round, setRound] = useState(0);
+  const { summary, summaryLevel } = useCategorySummary(levelFilter, [round]);
+  return (
+    <div>
+      <button type="button" data-testid="mark-known" onClick={() => setRound((r) => r + 1)}>
+        знаю
+      </button>
+      <View locale={locale} levelFilter={levelFilter} onLevel={setLevelFilter} summaryLevel={summaryLevel} summary={summary} />
+    </div>
+  );
 }
 
 function RacingScreen({ locale }: { locale: Locale }) {
@@ -326,5 +376,94 @@ describe("в вебе числа печатаются как печаталис�
     await answer(null, ALL_CUT);
     expect(tileSkeletons()).toHaveLength(0);
     expect(stripSkeletons()).toHaveLength(0);
+  });
+});
+
+/**
+ * ЗАГЛУШКА ВО ВРЕМЯ ОЖИДАНИЯ — 7.200, часть 5.
+ *
+ * Вечная заглушка закрыта в 7.199. Владелец снял оставшуюся КОРОТКУЮ, и в
+ * обе стороны: после нажатия C1 примерно секунду «Продолжить» показывает
+ * серые карточки со словами разреза «Все» («гибкий график», «молоко»,
+ * «арендатор»); после нажатия «Все» из C1 полсекунды видно карточку со
+ * словом C1 «послевкусие».
+ *
+ * Здесь это воспроизводится без таймеров: ответ на новый разрез просто НЕ
+ * ДАЁТСЯ, и измеряется то, что нарисовано в эту секунду. Правило: пока
+ * ответа нет, на экране не должно быть ни одного названия и ни одного
+ * числа ЧУЖОГО разреза.
+ */
+describe("во время ожидания на экране нет слов чужого разреза", () => {
+  it("«все уровни» → C1: слов разреза «все» не видно ни одного", async () => {
+    render(<FixedScreen locale="ru" />);
+    await answer(null, ALL_CUT); // разрез «все» отрисован целиком
+    expect(stripText()).toContain("молоко");
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("pick-c1"));
+    });
+    // Ответа про C1 ещё нет — и это та самая секунда.
+    expect(stripText()).not.toContain("молоко");
+    expect(stripText()).not.toContain("арендатор");
+    expect(stripText()).toBe("");
+    // Числа чужого разреза тоже не печатаются: у плиток заглушки.
+    expect(tileSkeletons()).toHaveLength(flashcardCategories.length);
+    for (const tile of tiles()) expect(tile.getAttribute("data-bank-total")).not.toBe("266");
+  });
+
+  it("C1 → «все уровни»: слова C1 не видно ни одного", async () => {
+    render(<FixedScreen locale="es" />);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("pick-c1"));
+    });
+    await answer(null, ALL_CUT);
+    await answer("C1", C1_CUT);
+    expect(stripText()).toContain("переговоры");
+
+    // Обратно на «все уровни» — тем же способом, каким это делает экран.
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("pick-all"));
+    });
+    expect(stripText()).not.toContain("переговоры");
+    expect(stripText()).toBe("");
+    expect(tileSkeletons()).toHaveLength(flashcardCategories.length);
+  });
+
+  it("и появляется всё разом, когда ответ пришёл", async () => {
+    render(<FixedScreen locale="ru" />);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("pick-c1"));
+    });
+    await answer("C1", C1_CUT);
+    expect(stripText()).toContain("переговоры");
+    expect(tileSkeletons()).toHaveLength(0);
+  });
+
+  // ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ: код 7.199 — отмена есть, а чужие данные в
+  // руках остаются, и «Продолжить» печатает их серыми.
+  it("подсадка «заглушка держит прежний разрез» ловится", async () => {
+    render(<Screen7199 locale="ru" />);
+    await answer(null, ALL_CUT);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("pick-c1"));
+    });
+    // Ответа про C1 нет, а слова разреза «все» на экране — вот дефект.
+    expect(stripText()).toContain("молоко");
+    expect(stripText()).toContain("арендатор");
+    // И они именно СЕРЫЕ: числа спрятаны, а названия нет.
+    expect(stripSkeletons()).toHaveLength(ALL_CUT.recent!.length);
+  });
+
+  it("перезапрос ПО ТОМУ ЖЕ разрезу числами не мигает", async () => {
+    // Отметили слово — тот же разрез перезапрашивается. Данные в руках
+    // свои, и прятать их незачем: иначе мигало бы после каждой отметки.
+    render(<ReloadableScreen locale="ru" />);
+    await answer(null, ALL_CUT);
+    expect(stripText()).toContain("молоко");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("mark-known"));
+    });
+    expect(stripText()).toContain("молоко");
+    expect(tileSkeletons()).toHaveLength(0);
   });
 });

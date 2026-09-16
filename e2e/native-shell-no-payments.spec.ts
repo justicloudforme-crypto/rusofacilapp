@@ -113,7 +113,7 @@ test("аккаунту БЕЗ подписки внутри оболочки н�
 
   // Реферальный блок обещал 30 дней за чужую подписку и вёл на сайт.
   await page.goto("/ru/profile?tab=overview");
-  await expect(page.getByText("Приглашай и получай")).toHaveCount(0);
+  await expect(page.getByText("Приглашайте и получайте")).toHaveCount(0);
 
   // Подвал предлагал скачать приложение тому, кто уже в приложении.
   await expect(page.getByRole("link", { name: "Скачать приложение" })).toHaveCount(0);
@@ -129,7 +129,7 @@ test("в вебе тот же аккаунт без подписки видит 
   await expect(page.locator('a[href*="/pricing"]').first()).toBeAttached();
 
   await page.goto("/ru/profile?tab=overview");
-  await expect(page.getByText("Приглашай и получай")).toBeVisible();
+  await expect(page.getByText("Приглашайте и получайте")).toBeVisible();
   await expect(page.getByRole("link", { name: "Скачать приложение" })).toBeVisible();
 });
 

@@ -66,13 +66,27 @@
  *    scripts/check-legal-truth.mjs; the text no longer promises it) (see
  *    src/app/api/auth/confirm-account-deletion/route.ts) — the Privacy
  *    Policy can honestly describe this as already working, not aspirational.
- *  - Subscription cancellation is immediate (not "at period end") and
- *    there's no self-service proration/refund logic in the code — the
- *    Terms describe that honestly rather than promising a refund flow
- *    that doesn't exist.
- *  - No age-gate exists at registration. The "menores de edad" / "minors"
- *    section is a policy statement (not directed at children under 13),
- *    not a claim that technical enforcement exists.
+ *  - Subscription cancellation is AT PERIOD END, not immediate. Измерено
+ *    по коду 16.09.2026, тремя строками: `cancel_at_period_end: true`
+ *    (src/app/api/subscription/cancel/route.ts:64), `status` при отмене
+ *    НЕ трогается — ставится только `canceledAt` (:71–74), а доступ
+ *    решает дата (`isSubscriptionActive`,
+ *    src/lib/subscription-status.ts:26–32: подписка жива, пока
+ *    `currentPeriodEnd > now`). До 16.09.2026 раздел 3 обещал обратное —
+ *    «доступ прекращается в момент отмены», — и это был текст от старого
+ *    кода: немедленную отмену убрали правкой долга 190 (7.193), а
+ *    документ за ней не поехал. Кабинет при этом говорил правду
+ *    («Отменена — доступ до конца оплаченного периода», статус
+ *    `canceling`), то есть расходились между собой не код и кабинет, а
+ *    документ и они оба. Возврата за уже начавшийся период по-прежнему
+ *    нет, и текст по-прежнему это говорит.
+ *  - No age-gate exists at registration. Решение владельца 16.09.2026:
+ *    сервис предназначен для лиц от 18 лет — везде, на сайте и в
+ *    приложении, в обеих локалях. Формула «13 лет с согласия родителя»
+ *    убрана из всех четырёх мест (два в Условиях, два в Политике).
+ *    Механизма проверки возраста нет и не заводилось: это условие
+ *    использования, а не автоматический контроль, и текст говорит именно
+ *    это. Держится сторожем `src/lib/legal/age-18.test.ts`.
  */
 import type { Locale } from "@/i18n/config";
 
@@ -100,7 +114,31 @@ import type { Locale } from "@/i18n/config";
  * Механизм — уже существующий признак оболочки (`isNativeShellRequest`,
  * заходы 7.117/7.118/7.120), нового здесь нет ничего.
  */
-export type LegalParagraph = string | { text: string; webOnly: true };
+export type LegalParagraph =
+  | string
+  | { text: string; webOnly: true }
+  /**
+   * ВТОРАЯ ПОЛОВИНА ТОЙ ЖЕ ПАРЫ — ЗАХОД 7.200, доведение решения по
+   * долгу 196.
+   *
+   * `webOnly` умеет только ПРЯТАТЬ. Этого хватало, пока прятали абзац,
+   * без которого документ остаётся полным (способы оплаты). Но абзац
+   * «платежи обрабатываются через Stripe» спрятать молча нельзя: тогда
+   * внутри приложения человек не узнаёт вовсе, кто списывает деньги и
+   * почему мы не храним карту, — а это условие сделки, а не подробность.
+   *
+   * Поэтому абзацы ходят парой: `webOnly` называет платёжную систему по
+   * имени (сайт), `nativeOnly` говорит то же самое, не называя ни одной
+   * (приложение). Обе версии правдивы; разная у них только степень
+   * подробности, и решение владельца 16.09.2026 — внутри оболочки не
+   * называть ни одной платёжной системы, а не только OXXO и MXN.
+   *
+   * Умолчание прежнее и осознанное: страница, забывшая спросить про
+   * оболочку (`nativeShell = false`), отдаёт ВЕБ-версию, то есть документ
+   * целиком. Молчаливая потеря текста правового документа хуже лишнего
+   * абзаца.
+   */
+  | { text: string; nativeOnly: true };
 
 export interface LegalSection {
   heading: string;
@@ -153,7 +191,12 @@ export interface LegalDocument {
 // Insights) — долг 74. Дата написана рукой и НЕ берётся из времени сборки:
 // сборка идёт при каждом деплое, а документ меняется по решению, и дата
 // обязана означать второе (тот же класс, что долги 39 и 40).
-const PRIVACY_LAST_UPDATED = "2026-09-13";
+// 16.09.2026: раздел «Несовершеннолетние» / «Menores de edad» переписан
+// с 13 лет на 18 — решение владельца, одно и то же на сайте и в
+// приложении. Больше в политике не изменилось ничего, но изменение
+// касается того, чьи данные мы соглашаемся обрабатывать, и такое обязано
+// двигать дату.
+const PRIVACY_LAST_UPDATED = "2026-09-16";
 
 // 08.09.2026: section 3 of the Terms gained the three things it had never
 // said out loud — that cash (an OXXO voucher) is offered to buyers in
@@ -168,7 +211,26 @@ const PRIVACY_LAST_UPDATED = "2026-09-13";
 // promised is exactly the kind of change that has to move the date; the
 // Privacy Policy did not change and keeps its own, which is why these are
 // two constants and not one.
-const TERMS_LAST_UPDATED = "2026-09-09";
+// 16.09.2026 — заход 7.200, три правки, и каждая меняет то, что человеку
+// обещано:
+//   * ОТМЕНА. Раздел 3 говорил «вступает в силу немедленно, доступ
+//     прекращается в момент отмены». Код с 7.193 делает
+//     `cancel_at_period_end`, то есть доступ держится до конца уже
+//     оплаченного периода, и кабинет так и пишет. Текст приведён к коду —
+//     в пользу читателя, а не против него, поэтому и дата обязана
+//     сдвинуться: человек, прочитавший старую редакцию, мог не отменять
+//     подписку из страха потерять оплаченное.
+//   * ВОЗРАСТ. «Не для детей младше 13 лет, с 13 — с согласия родителя»
+//     заменено на «от 18 лет» (решение владельца, оно же согласуется с
+//     целевой аудиторией «18+» в карточке Google Play).
+//   * ПЛАТЁЖНАЯ СИСТЕМА ВНУТРИ ПРИЛОЖЕНИЯ. Абзац про Stripe разведён на
+//     пару `webOnly`/`nativeOnly`: на сайте система названа по имени, в
+//     приложении — нет, а сам факт («карту мы не храним, списывает
+//     внешний обработчик») сказан на обеих поверхностях.
+// Плюс одна правка, которая обещаний не меняет, но перестала быть
+// правдой: «и, в будущем, через нативные мобильные приложения» читает
+// человек, уже сидящий в этом приложении.
+const TERMS_LAST_UPDATED = "2026-09-16";
 
 export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   es: {
@@ -182,7 +244,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
         heading: "1. Descripción del Servicio",
         paragraphs: [
           "RusoFácilapp es una plataforma de aprendizaje del idioma ruso dirigida a hablantes de español, con lecciones estructuradas (niveles A1 a B2), historias de lectura, vocabulario, idioms, ejercicios de pronunciación y una biblioteca de video y audio.",
-          "El Servicio se ofrece a través del sitio web y, en el futuro, de aplicaciones móviles nativas. Algunas funciones (lecciones, exámenes, historias completas) requieren una suscripción de pago; otras son de acceso gratuito.",
+          "El Servicio se ofrece a través del sitio web y de la aplicación móvil. Algunas funciones (lecciones, exámenes, historias completas) requieren una suscripción de pago; otras son de acceso gratuito.",
         ],
       },
       {
@@ -190,18 +252,20 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
         paragraphs: [
           "Para acceder a la mayoría de las funciones necesitas crear una cuenta con un correo electrónico y una contraseña. Eres responsable de mantener la confidencialidad de tu contraseña y de toda actividad que ocurra en tu cuenta.",
           "Debes proporcionar información veraz al registrarte. Si detectas un uso no autorizado de tu cuenta, cámbiala contraseña de inmediato desde tu perfil o usa la opción de recuperación de contraseña.",
-          "El Servicio no está dirigido a niños menores de 13 años. Si tienes entre 13 y la mayoría de edad en tu país, necesitas el consentimiento de un padre, madre o tutor para usar el Servicio.",
+          "El Servicio está dirigido a personas mayores de 18 años. Al crear una cuenta declaras que tienes 18 años cumplidos. No comprobamos la edad por medios técnicos: es una condición de uso, no un control automático. Si sabemos que una cuenta pertenece a alguien menor de 18 años, la eliminaremos.",
         ],
       },
       {
         heading: "3. Suscripciones y pagos",
         paragraphs: [
-          "Ofrecemos dos planes de suscripción —mensual y anual— y un plan Premium de pago único. Los pagos se procesan a través de Stripe; nunca almacenamos los datos de tu tarjeta en nuestros servidores.",
+          "Ofrecemos dos planes de suscripción —mensual y anual— y un plan Premium de pago único.",
+          { webOnly: true, text: "Los pagos se procesan a través de Stripe; nunca almacenamos los datos de tu tarjeta en nuestros servidores." },
+          { nativeOnly: true, text: "Los pagos los procesa un proveedor de pagos externo; nunca almacenamos los datos de tu tarjeta en nuestros servidores." },
           "Las suscripciones mensual y anual se renuevan automáticamente al final de cada periodo, salvo que las canceles antes de la fecha de renovación.",
           "El plan Premium no es una suscripción: es un pago único. No se renueva, no genera cobros posteriores y no hay nada que cancelar; el acceso que otorga se mantiene mientras el Servicio siga en funcionamiento.",
           { webOnly: true, text: "Además del pago con tarjeta, aceptamos pago en efectivo mediante un vale OXXO, y únicamente para compradores en México: OXXO es una cadena de tiendas mexicana y su vale no puede pagarse fuera del país. El vale es válido durante 3 días; si vence sin pagarse no se te cobra nada y puedes generar otro. El acceso se activa automáticamente en cuanto la tienda confirma el pago. Un pago en efectivo cubre un solo periodo y nunca genera cobros automáticos: para continuar hay que repetirlo." },
           { webOnly: true, text: "El precio base de todos los planes está fijado en pesos mexicanos (MXN). El cobro, en cambio, no siempre se hace en pesos: la página de pago puede presentarte el importe convertido a la moneda de tu país y cobrártelo en ella, y ahí mismo puedes elegir pagar en pesos si lo prefieres. El importe exacto y el tipo de cambio los fija esa página en el momento del cobro (o tu banco, si aplica su propia conversión); los importes en otras monedas que mostramos en el sitio son aproximados y pueden diferir del cargo final. En los planes mensual y anual, el importe de las renovaciones puede variar ligeramente si varía el tipo de cambio, aunque el precio en pesos siga siendo el mismo." },
-          "Puedes cancelar tu suscripción mensual o anual en cualquier momento desde tu perfil. La cancelación surte efecto de inmediato: perderás el acceso a las funciones de pago en el momento de cancelar, no al final del periodo ya pagado. Salvo que la ley aplicable exija lo contrario, no ofrecemos reembolsos por el tiempo restante de un periodo ya iniciado.",
+          "Puedes cancelar tu suscripción mensual o anual en cualquier momento desde tu perfil. La cancelación detiene la renovación, no el acceso: conservas las funciones de pago hasta el final del periodo que ya has pagado, y al terminar ese periodo no se te cobra nada más. Salvo que la ley aplicable exija lo contrario, no ofrecemos reembolsos por el periodo en curso, precisamente porque lo sigues usando hasta el final.",
           "Nos reservamos el derecho de modificar los precios de las suscripciones. Cualquier cambio se aplicará a partir del siguiente ciclo de renovación, nunca de forma retroactiva.",
         ],
       },
@@ -261,7 +325,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
         heading: "1. Описание Сервиса",
         paragraphs: [
           "RusoFácilapp — платформа для изучения русского языка испаноговорящими пользователями: структурированные уроки (уровни A1–B2), рассказы для чтения, словарь, идиомы, упражнения на произношение и библиотека аудио- и видеоматериалов.",
-          "Сервис доступен через сайт и, в будущем, через нативные мобильные приложения. Часть функций (уроки, экзамены, полные рассказы) доступна по платной подписке, часть — бесплатно.",
+          "Сервис доступен через сайт и через мобильное приложение. Часть функций (уроки, экзамены, полные рассказы) доступна по платной подписке, часть — бесплатно.",
         ],
       },
       {
@@ -269,18 +333,20 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
         paragraphs: [
           "Для доступа к большинству функций нужно зарегистрировать аккаунт с email и паролем. Вы несёте ответственность за конфиденциальность своего пароля и за любые действия в своём аккаунте.",
           "При регистрации нужно указывать достоверные данные. Если вы заметили несанкционированный доступ к своему аккаунту — немедленно смените пароль в профиле или воспользуйтесь функцией восстановления пароля.",
-          "Сервис не предназначен для детей младше 13 лет. Если вам от 13 лет до совершеннолетия по законам вашей страны, для использования Сервиса вам нужно согласие родителя или законного представителя.",
+          "Сервис предназначен для лиц от 18 лет. Создавая аккаунт, вы подтверждаете, что вам исполнилось 18 лет. Технической проверки возраста у нас нет: это условие использования, а не автоматический контроль. Если нам станет известно, что аккаунт принадлежит человеку младше 18 лет, мы его удалим.",
         ],
       },
       {
         heading: "3. Подписки и оплата",
         paragraphs: [
-          "Мы предлагаем две подписки — месячную и годовую — и тариф Premium с разовым платежом. Платежи обрабатываются через Stripe; данные вашей карты никогда не хранятся на наших серверах.",
+          "Мы предлагаем две подписки — месячную и годовую — и тариф Premium с разовым платежом.",
+          { webOnly: true, text: "Платежи обрабатываются через Stripe; данные вашей карты никогда не хранятся на наших серверах." },
+          { nativeOnly: true, text: "Платежи обрабатывает внешний платёжный провайдер; данные вашей карты никогда не хранятся на наших серверах." },
           "Месячная и годовая подписки продлеваются автоматически в конце каждого периода, если вы не отменили их заранее.",
           "Premium — не подписка, а разовый платёж. Он не продлевается, не порождает последующих списаний и его нечего отменять; выданный им доступ сохраняется, пока Сервис продолжает работать.",
           { webOnly: true, text: "Кроме оплаты картой мы принимаем наличные — по ваучеру OXXO, и только для покупателей в Мексике: OXXO это сеть магазинов в Мексике, и оплатить её ваучер за пределами страны негде. Ваучер действует 3 дня; если срок истёк, с вас ничего не списано и можно выпустить новый. Доступ включается автоматически, как только магазин подтвердит оплату. Оплата наличными покрывает один период и никогда не приводит к автосписаниям: чтобы продолжить, платёж нужно повторить." },
           { webOnly: true, text: "Базовая цена всех тарифов установлена в мексиканских песо (MXN). Само списание при этом не всегда идёт в песо: платёжная страница может показать сумму, пересчитанную в валюту вашей страны, и списать именно её — там же можно выбрать оплату в песо, если вам так удобнее. Точную сумму и курс определяет эта страница в момент списания (или ваш банк, если конвертацию делает он); суммы в других валютах, которые мы показываем на сайте, — приблизительные и могут отличаться от итогового списания. У месячной и годовой подписки сумма следующих списаний может немного меняться вслед за курсом, даже если цена в песо осталась прежней." },
-          "Отменить месячную или годовую подписку можно в любой момент в личном профиле. Отмена вступает в силу немедленно: доступ к платным функциям прекращается в момент отмены, а не в конце уже оплаченного периода. Если иное не требуется применимым законодательством, возврат средств за оставшуюся часть уже начавшегося периода не производится.",
+          "Отменить месячную или годовую подписку можно в любой момент в личном профиле. Отмена выключает продление, а не доступ: платные функции остаются у вас до конца уже оплаченного периода, а по его окончании новых списаний не будет. Если иное не требуется применимым законодательством, возврат средств за текущий период не производится — именно потому, что вы пользуетесь им до конца.",
           "Мы оставляем за собой право менять стоимость подписки. Любое изменение применяется начиная со следующего цикла продления, никогда задним числом.",
         ],
       },
@@ -403,7 +469,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "8. Menores de edad",
         paragraphs: [
-          "El Servicio no está dirigido a niños menores de 13 años y no recopilamos intencionalmente datos de menores de esa edad. Si tienes motivos para creer que un menor de 13 años nos ha proporcionado datos personales, contáctanos y los eliminaremos.",
+          "El Servicio está dirigido a personas mayores de 18 años y no recopilamos intencionalmente datos de quien no llegue a esa edad. Si tienes motivos para creer que alguien menor de 18 años nos ha proporcionado datos personales, contáctanos y los eliminaremos.",
         ],
       },
       {
@@ -497,7 +563,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "8. Несовершеннолетние",
         paragraphs: [
-          "Сервис не предназначен для детей младше 13 лет, и мы намеренно не собираем данные таких пользователей. Если у вас есть основания полагать, что ребёнок младше 13 лет предоставил нам свои данные, свяжитесь с нами — мы их удалим.",
+          "Сервис предназначен для лиц от 18 лет, и мы намеренно не собираем данные тех, кто младше. Если у вас есть основания полагать, что свои данные нам предоставил человек младше 18 лет, свяжитесь с нами — мы их удалим.",
         ],
       },
       {
@@ -539,7 +605,17 @@ export function visibleLegalParagraphs(
       out.push(paragraph);
       continue;
     }
-    if (!nativeShell) out.push(paragraph.text);
+    // Две пометки, и они ровно противоположны. `webOnly` — «этого в
+    // приложении не печатать», `nativeOnly` — «это печатать ТОЛЬКО в
+    // приложении». Ветка написана через явный признак каждой формы, а не
+    // через `else`: третья пометка, добавленная когда-нибудь позже,
+    // должна ронять типы здесь, а не молча попадать в одну из двух
+    // половин.
+    if ("webOnly" in paragraph) {
+      if (!nativeShell) out.push(paragraph.text);
+      continue;
+    }
+    if (nativeShell) out.push(paragraph.text);
   }
   return out;
 }
