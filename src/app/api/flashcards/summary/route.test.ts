@@ -265,3 +265,90 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
     expect(after.premiumOnlyWords).toBe(before.premiumOnlyWords);
   });
 });
+
+/**
+ * ДОЛГ 229: «ПРОДОЛЖИТЬ» НЕ ПРЕДЛАГАЕТ ТОГО, ЧЕГО НА ЭТОМ РАЗРЕЗЕ НЕТ.
+ *
+ * Снято владельцем на телефоне 17.09.2026: у подписчика standard в
+ * словаре при фильтре C1 блок «Continuar» показывал три темы («Trabajo y
+ * estudios 0/51», «Comida y restaurante 0/8», «Derecho y ley 0/20») —
+ * под плашкой «988 palabras C1 cerradas». Причина: список тем собирался
+ * по активности на ЛЮБОМ уровне, а числа в тех же строках — по
+ * выбранному.
+ *
+ * Обе стороны проверяются здесь: на закрытом уровне список пуст, а на
+ * уровне, где человек действительно занимался, он НЕ пуст. Проверка,
+ * умеющая только опустошать, опустошила бы и то, что показывать нужно.
+ */
+describe("POST /api/flashcards/summary — «Продолжить» считается по тому же разрезу, что и числа", () => {
+  // Две темы, у каждой карточка A1 и карточка C1: только так видно
+  // разницу между «тема тронута» и «тема тронута на этом уровне».
+  const MIXED = [
+    { id: "work-a1", category: "work", level: "A1" },
+    { id: "work-c1", category: "work", level: "C1" },
+    { id: "food-a1", category: "food", level: "A1" },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getFlashcardIndex.mockResolvedValue(MIXED);
+    getCurrentUser.mockResolvedValue({ id: "user-1" });
+    getEntitlementTier.mockResolvedValue("standard");
+    // Человек занимался ТОЛЬКО на A1 — ровно случай с видео: карточек C1
+    // подписчику standard не отдано вовсе.
+    findMany.mockResolvedValue([
+      { cardId: "work-a1", known: false, updatedAt: new Date(300) },
+      { cardId: "food-a1", known: true, updatedAt: new Date(200) },
+    ]);
+  });
+
+  it("на закрытом уровне C1 не предлагается ни одной темы", async () => {
+    const body = await (await POST(fakeRequest({ level: "C1" }))).json();
+    expect(body.recent).toEqual([]);
+    // И это не «пустой ответ вообще»: плашка про закрытое на месте, и
+    // она про банк, а не про доступное.
+    expect(body.premiumOnlyWords).toBe(1);
+  });
+
+  it("а на A1 те же две темы предлагаются, и с карточкой, на которой человек стоял", async () => {
+    const body = await (await POST(fakeRequest({ level: "A1" }))).json();
+    expect(body.recent.map((r: { category: string }) => r.category)).toEqual(["work", "food"]);
+    expect(body.recent[0].lastCardId).toBe("work-a1");
+  });
+
+  it("без фильтра уровня ничего не изменилось: обе темы на месте", async () => {
+    const body = await (await POST(fakeRequest({}))).json();
+    expect(body.recent.map((r: { category: string }) => r.category)).toEqual(["work", "food"]);
+  });
+
+  it("у Premium, которому C1 отдан, занятие на C1 предлагается как и раньше", async () => {
+    getEntitlementTier.mockResolvedValue("premium");
+    findMany.mockResolvedValue([{ cardId: "work-c1", known: false, updatedAt: new Date(400) }]);
+    const body = await (await POST(fakeRequest({ level: "C1" }))).json();
+    expect(body.recent.map((r: { category: string }) => r.category)).toEqual(["work"]);
+    expect(body.recent[0].lastCardId).toBe("work-c1");
+  });
+
+  /**
+   * Положительный контроль. Всё выше прошло бы и на эндпоинте, который
+   * на уровне C1 просто отвечает пустотой кому угодно. Подсадка —
+   * настоящая карточка C1, тронутая ТЕМ ЖЕ человеком в то время, когда
+   * уровень ему был отдан (строка `flashcardProgress` переживает
+   * окончание Premium). Для standard она обязана остаться невидимой —
+   * карточка ему не отдана, — а для premium обязана поднять тему.
+   */
+  it("положительный контроль: тронутая карточка C1 поднимает тему только тому, кому C1 отдан", async () => {
+    findMany.mockResolvedValue([
+      { cardId: "work-a1", known: false, updatedAt: new Date(300) },
+      { cardId: "work-c1", known: true, updatedAt: new Date(900) },
+    ]);
+
+    getEntitlementTier.mockResolvedValue("standard");
+    const standard = await (await POST(fakeRequest({ level: "C1" }))).json();
+    expect(standard.recent).toEqual([]);
+
+    getEntitlementTier.mockResolvedValue("premium");
+    const premium = await (await POST(fakeRequest({ level: "C1" }))).json();
+    expect(premium.recent.map((r: { category: string }) => r.category)).toEqual(["work"]);
+  });
+});

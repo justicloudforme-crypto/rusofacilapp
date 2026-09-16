@@ -302,23 +302,57 @@ for (const lang of ["es", "ru"] as const) {
     expect((await showCode(page, code)).redeemedAt, "отозванный код не погашается").toBeNull();
   });
 
-  test(`/${lang}: у кого доступ уже есть — код не тратится`, async ({ page }) => {
+  /**
+   * ДОЛГ 228, решение владельца 16.09.2026: у кого доступ есть — тому и
+   * поля нет.
+   *
+   * До 7.203 этот тест ВВОДИЛ код подписчиком и читал отказ. Теперь вводить
+   * негде, и это ровно та правка: приглашение неисполнимо по построению, а
+   * значит и показывать его незачем. Проверяется обе стороны сразу:
+   *
+   *   — у подписчика standard формы на вкладке нет вовсе (а материал
+   *     открыт — то есть это подписчик, а не сломанная страница);
+   *   — маршрут погашения при этом НИКУДА не делся и по-прежнему
+   *     отказывает, если запрос послать мимо страницы. Гейт — на экране,
+   *     правило — в маршруте, и второе не подменяется первым;
+   *   — у бесплатного форма есть (иначе «формы нет» проходило бы и на
+   *     странице, сломанной для всех).
+   */
+  test(`/${lang}: у кого доступ уже есть — поля кода нет, а маршрут всё равно отказывает`, async ({ page }) => {
     await loginWithSubscription(page);
-    // Контроль: у этого человека материал открыт ДО ввода кода, поэтому
-    // «открыт после» ниже ничего не доказывает само по себе — доказывает
-    // то, что строка кода осталась нетронутой.
+    // Контроль: это действительно подписчик, а не сломанная страница.
     expect(await paidMaterialIsOpen(page, lang), "у подписчика платный пазл открыт").toBe(true);
+    expect(await tierOf(page), "разряд подписчика").toBe("standard");
 
+    const response = await page.goto(`/${lang}/profile?tab=subscription`, { waitUntil: "domcontentloaded" });
+    expect(response?.status(), `GET /${lang}/profile?tab=subscription`).toBe(200);
+    await page.waitForFunction(() => !document.documentElement.hasAttribute("data-hydrating"));
+    await expect(
+      page.locator('form[action="/api/access-code/redeem"]'),
+      "подписчику форма кода не показывается",
+    ).toHaveCount(0);
+    // И заголовок раздела тоже: приглашения нет целиком, а не наполовину.
+    await expect(page.getByText(DICTS[lang].profile.accessCodeHeading, { exact: true })).toHaveCount(0);
+
+    // Вторая половина: правило живёт в маршруте, а не в разметке.
     const code = await createCode(page);
-    await submitCode(page, lang, code);
+    const posted = await page.context().request.post("/api/access-code/redeem", {
+      form: { lang, code },
+      maxRedirects: 0,
+    });
+    expect(posted.status(), "маршрут отвечает переадресацией").toBe(303);
+    expect(posted.headers().location, "причина отказа названа").toContain("accessCode=already_has_access");
 
-    expect(new URL(page.url()).searchParams.get("accessCode")).toBe("already_has_access");
-    await expectNotice(page, lang, "accessCodeAlreadyHasAccess");
     expect(await paidMaterialIsOpen(page, lang), "доступ на месте").toBe(true);
-
     const row = await showCode(page, code);
     expect(row.redeemedAt, "код не сожжён за доступ, который и так был").toBeNull();
     expect(row.revokedAt).toBeNull();
+  });
+
+  test(`/${lang}: а бесплатному поле кода показывается (обратная сторона того же правила)`, async ({ page }) => {
+    await loginWithoutSubscription(page);
+    expect(await tierOf(page), "разряд бесплатного").toBe("free");
+    await openRedeemForm(page, lang, true);
   });
 
   /**
