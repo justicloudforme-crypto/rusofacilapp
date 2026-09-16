@@ -15,7 +15,6 @@ import {
 import { getAllMedia } from "@/lib/media/data";
 import LessonView from "@/components/lesson/LessonView";
 import { getRecordingsOwnerScope } from "@/lib/recordings-owner";
-import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
 import SlideIllustration from "@/components/lesson/SlideIllustration";
@@ -95,10 +94,9 @@ export default async function LessonPage({
   const relatedMediaResult = getRelatedMediaForLesson(level, lesson, allMedia);
   const grammarGuide = getGrammarGuideForLesson(lang, level, lesson);
 
-  // Opening the lesson is the study action — the day counts from here, not
-  // from finishing an exercise. Costs no user lookup and no time on the
-  // response; see markStudyDayVisit.
-  await markStudyDayVisit("lesson");
+  // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ (17.09.2026, заход
+  // 7.204). Урок ставит день там, где ученик СДАЁТ упражнения, —
+  // `POST /api/progress`. Здесь не ставится ничего.
 
   // Every level's first lesson is fully open, no subscription required —
   // lets a visitor try the actual exercise/audio mechanic before paying

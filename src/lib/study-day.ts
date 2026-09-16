@@ -4,35 +4,66 @@ import { DEFAULT_TIME_ZONE, dateKeyIn } from "./timezone";
 import { studyDayKeyIn } from "./study-day-key";
 import { invalidateActivityDateKeys } from "./activity-cache";
 
-// The day mark: "this learner studied today".
+// Отметка дня: «этот ученик сегодня занимался».
 //
-// ── Why this file exists ──────────────────────────────────────────────
+// ── ПРАВИЛО ДНЯ, редакция 17.09.2026 (решение владельца, заход 7.204) ──
 //
-// Before it, a day counted only if a progress ROW moved: an exercise
-// checked, a card answered, a story page turned, a puzzle finished, an exam
-// submitted. Opening the lesson, reading the story, looking through the
-// cards — none of it left a trace. Verified in a real browser on
-// 31.08.2026, logged in as a real account, eight page loads across both
-// locales: zero rows moved, and the streak still pointed at 27.08.
+// ДЕНЬ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ СТРАНИЦЫ.
 //
-// The rule now is the one the owner stated: a day counts for a SUBSTANTIVE
-// ACTION — opening a lesson, a story, a game, the cards or an exam — on
-// either locale, for any signed-in learner. Opening the profile alone is
-// not one, which is why /profile does not call anything in this file.
+// Ставят день (шесть событий, и все шесть — запросы, которые продукт
+// посылает сам, ради собственных дел):
 //
-// ── Where the day boundary comes from ────────────────────────────────
+//   ответ в карточке словаря или отметка «выучено» у идиомы
+//                                   POST /api/flashcard-progress
+//   сданные упражнения урока        POST /api/progress
+//   сданный экзамен                 POST /api/exams/[level]/[examSlug]/attempt
+//   ответ в игре (первая буква)     POST /api/word-games/check
+//   рассказ, прочитанный хотя бы
+//     до половины                   POST /api/reading-progress, percent >= 50
+//   сданное упражнение под роликом  POST /api/study-day  (source "media")
 //
-// src/lib/timezone.ts, and nowhere else. There is no second implementation
-// of "what day is it" in this file on purpose: two of them is precisely the
-// defect fixed on 31.08.2026 (PROGRESS.md 7.68).
+// НЕ ставят день: открытие ЛЮБОЙ страницы — словаря, темы словаря,
+// рассказа, песни или видеоурока, урока, экзамена, кабинета, списков,
+// поиска, — а также переключатели профиля и смена языка, темы, аватара.
+//
+// ── ЧТО БЫЛО ДО ЭТОГО И ПОЧЕМУ ИЗМЕНИЛОСЬ ─────────────────────────────
+//
+// С 31.08.2026 день ставило ОТКРЫТИЕ шести поверхностей. Правило лечило
+// настоящий дефект (до него открытие лекции, рассказа и карточек не
+// оставляло следа вовсе), но перелечило: 17.09.2026 владелец снял на
+// видео, как бесплатному аккаунту записался полный день занятий за одно
+// открытие словаря — ни одной карточки при этом отвечено не было
+// (строка StudyDay, источник `flashcards`, markedAt
+// 2026-09-16T14:45:12.740Z, зона ученика Asia/Vladivostok). Отсюда
+// нынешняя редакция: открытие — это намерение, а не занятие.
+//
+// УЖЕ ЗАПИСАННЫЕ ДНИ НЕ ПЕРЕСЧИТЫВАЮТСЯ И НЕ УДАЛЯЮТСЯ. Правило меняет
+// только то, КАКОЕ событие ставит день впредь; серии, заморозки,
+// календарь и значки читают строки ровно как читали.
+//
+// ── Откуда берётся граница суток ──────────────────────────────────────
+//
+// src/lib/timezone.ts, и больше ниоткуда. Второй реализации вопроса «какой
+// сегодня день» здесь нет намеренно: две штуки — это ровно тот дефект,
+// который исправлен 31.08.2026 (PROGRESS.md 7.68).
 
-/** The surfaces that count as study. Kept as a closed union so adding one
- * is a deliberate edit here, not an ad-hoc string at a call site.
+/** Доля рассказа, начиная с которой чтение считается занятием.
  *
- * "media" joined on 31.08.2026 by the owner's decision: a song or a grammar
- * video is study, and it was the last substantive surface that gave no day.
- * Nothing about the column changed — `source` is a plain String, so a new
- * member costs no migration. */
+ * «Хотя бы до половины» — формулировка владельца (17.09.2026). Порог
+ * взят у единственного серверного сигнала прогресса, который у рассказа
+ * есть: `percent` в StoryReadingProgress, то есть страница из общего
+ * числа страниц. Тот же процент рисует полосу в списке рассказов, так
+ * что второго определения «половины» на сайте не появляется. */
+export const STUDY_DAY_READ_PERCENT = 50;
+
+/** Поверхности, которые считаются занятием. Закрытое объединение —
+ * чтобы добавление новой было осознанной правкой ЗДЕСЬ, а не строкой,
+ * написанной на месте вызова.
+ *
+ * Состав не менялся 17.09.2026: изменилось не то, ЧТО считается занятием,
+ * а то, КАКОЕ событие каждой поверхности ставит день (см. шапку). Колонка
+ * `source` — обычная строка, поэтому состав объединения не стоит ни одной
+ * миграции. */
 export type StudyDaySource = "lesson" | "story" | "flashcards" | "word-game" | "exam" | "media";
 
 /** Records that `userId` studied on the calendar day `at` falls on, as seen

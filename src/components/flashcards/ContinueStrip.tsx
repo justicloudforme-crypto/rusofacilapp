@@ -80,7 +80,9 @@ export default function ContinueStrip({
           // остаётся ровно такой, какой была.
           const denominator = nativeShell && item.bankTotal > 0 ? item.bankTotal : item.total;
           const percent = denominator === 0 ? 0 : Math.round((item.known / denominator) * 100);
-          const showNumbers = !nativeShell || ready;
+          // Числа печатаются, только когда они СВОИ — и в оболочке, и в
+          // вебе (7.204, долг 224: «данных ещё нет» ≠ «данных ноль»).
+          const showNumbers = ready;
           return (
             <button
               key={item.category}

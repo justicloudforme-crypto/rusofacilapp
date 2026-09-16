@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
-import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   PUBLIC_VOCABULARY_LEVELS,
@@ -57,10 +56,9 @@ export default async function VocabularyCategoryPage({
   const page = getVocabularyCategoryPage(categoria);
   if (!page) notFound();
 
-  // A signed-in learner reading a category word list is studying cards,
-  // even though this page exists mainly for anonymous search traffic —
-  // which marks nothing, having no account to mark.
-  await markStudyDayVisit("flashcards");
+  // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ (17.09.2026, заход 7.204).
+  // Список слов темы — страница для поисковых роботов; день с неё не
+  // ставится. Ставит его ответ в карточке (`POST /api/flashcard-progress`).
 
   const publicLevels = new Set<string>(PUBLIC_VOCABULARY_LEVELS);
   const index = await getFlashcardIndex();
