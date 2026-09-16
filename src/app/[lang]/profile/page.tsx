@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isLocale, locales, localeNames, type Locale } from "@/i18n/config";
@@ -24,7 +25,7 @@ import { getUserStreakStats, getUserActivityDateKeys, getUserActivityDaySources 
 import { getRequestTimeZone } from "@/lib/timezone-server";
 import { dateKeyIn } from "@/lib/timezone";
 import { getExamAttempts, type ExamAttemptSummary } from "@/lib/exams/progress";
-import { getUserBadgesForDisplay, type DisplayBadge } from "@/lib/badges";
+import { getUserBadgesForDisplay, withEarnedNow, awardBadgesSafely, type DisplayBadge } from "@/lib/badges";
 import type { BadgeDef } from "@/lib/badges/catalog";
 import { getWeeklyWeakTopic } from "@/lib/weak-topic";
 import { getReferralStats } from "@/lib/referral";
@@ -37,6 +38,7 @@ import { levelSlugs, lessonsPerLevel, isFreeTrialLesson, lessonSlugsFor } from "
 // Глиф платности — у признака, а не литералом (`check:access-marks`).
 import { ACCESS_MARK_ICON, accessSignFor, lessonRequirement } from "@/lib/access-marks";
 import { isPlanId } from "@/lib/plans";
+import { planDisplayLabel } from "@/lib/subscription-plan-label";
 import { SUPPORT_EMAIL } from "@/lib/support";
 import {
   CheckoutOutcomeNotice,
@@ -234,31 +236,18 @@ function buildBadgeDisplay(
   locale: Locale,
 ) {
   const withProgress = badges.map((b) => ({ ...b, ...computeBadgeProgress(b.def, ctx, dict, locale) }));
-  const earned = withProgress
-    .filter((b) => b.earnedAt !== null)
+  // Порядок: сначала выданные с датой (новые сверху), затем заслуженные,
+  // у которых строки выдачи ещё нет — дата придёт со следующим открытием,
+  // — и только потом закрытые. Сортировать по `earnedAt` всех разом
+  // нельзя: у второй группы даты нет вовсе, и `getTime()` на `null`
+  // уронил бы страницу.
+  const earnedWithDate = withProgress
+    .filter((b) => b.earned && b.earnedAt !== null)
     .sort((a, b) => (b.earnedAt as Date).getTime() - (a.earnedAt as Date).getTime());
-  const locked = withProgress.filter((b) => b.earnedAt === null).sort((a, b) => b.ratio - a.ratio);
+  const earnedWithoutDate = withProgress.filter((b) => b.earned && b.earnedAt === null);
+  const locked = withProgress.filter((b) => !b.earned).sort((a, b) => b.ratio - a.ratio);
+  const earned = [...earnedWithDate, ...earnedWithoutDate];
   return { sorted: [...earned, ...locked], topLocked: locked.slice(0, 3) };
-}
-
-// Subscription.plan stores the internal identifier ("monthly"/"annual"/
-// "lifetime") shared with Stripe/RevenueCat product mapping — display uses
-// the already-localized pricing-card names instead so a plan renders as
-// "Premium" here (and its own locale) without renaming that identifier.
-function planDisplayLabel(plan: string, dict: Dictionary): string {
-  if (plan === "monthly") return dict.pricing.monthly.name;
-  if (plan === "annual") return dict.pricing.annual.name;
-  if (plan === "lifetime") return dict.pricing.lifetime.name;
-  // Две выдачи не через кассу, и подписи у них разные (PROGRESS.md 7.151).
-  // "access_code" — человек погасил код-приглашение сам; "manual" — доступ
-  // выдал администратор. До 08.09.2026 обе строки были "manual", и ученик с
-  // приглашением читал у себя «Доступ выдан вручную» — фразу про чужое
-  // событие. Строки, записанные ДО этой правки, так и остались "manual" и
-  // подписаны как ручная выдача: отличить их задним числом нечем, а
-  // переписывать боевые строки ради подписи — цена выше пользы.
-  if (plan === "access_code") return dict.profile.planAccessCodeLabel;
-  if (plan === "manual") return dict.profile.planManualLabel;
-  return plan;
 }
 
 const STATUS_BADGE_CLASSES: Record<DisplayStatus, string> = {
@@ -359,13 +348,14 @@ export default async function ProfilePage({
     activityDateKeys,
     activityDaySources,
     theme,
-    badges,
+    badgeRows,
     weakTopic,
     referral,
     publicProfile,
     storyCatalog,
     requestHeaders,
     openVoucher,
+    storiesStarted,
   ] = await Promise.all([
     getSubscriptionsForUser(user.id).catch((error) => {
       console.error("profile: getSubscriptionsForUser failed", error);
@@ -395,8 +385,31 @@ export default async function ProfilePage({
       console.error("profile: getOpenPendingCheckout failed", error);
       return null;
     }),
+    // ДОЛГ 216. Сколько рассказов человек начал читать. Данные были на
+    // сервере всё это время — модель `StoryReadingProgress` заведена
+    // давно, — а эта страница к ней не обращалась ни разу, и оттого
+    // предлагала «прочитать первый рассказ» тому, у кого рассказ открыт
+    // на 65 %. Считается СТРОКАМИ, а не процентами: открытый рассказ —
+    // это уже начатое чтение, и звать человека начать начатое незачем.
+    db.storyReadingProgress.count({ where: { userId: user.id } }).catch((error) => {
+      console.error("profile: storyReadingProgress.count failed", error);
+      return 0;
+    }),
   ]);
-  const earnedBadgeCount = badges.filter((b) => b.earnedAt !== null).length;
+  // ДОЛГ 220: экран судит значок ТЕМ ЖЕ правилом, каким его выдают, а не
+  // наличием строки в базе. Без этого плитка печатала «3/3 ДНЯ» и стояла
+  // серой — на боевом бесплатном аккаунте именно так и было.
+  const badges = withEarnedNow(badgeRows, {
+    longestStreak: streak.longestStreak,
+    examAttempts,
+    vocabKnownCount: wordsLearned,
+  });
+  // А строку выдачи ставит вот это, ПОСЛЕ ответа: у значка есть дата, и
+  // восстановить её из статистики нельзя. `after()` выбран нарочно —
+  // кабинет и без того медленный (долг 212), и платить за запись
+  // задержкой отрисовки незачем.
+  after(() => awardBadgesSafely(user.id));
+  const earnedBadgeCount = badges.filter((b) => b.earned).length;
   // ДОЛГ 157, решение владельца 13.09.2026: пропуски считать С ПЕРВОГО
   // ЗАНЯТИЯ, а не с даты регистрации. `null` — занятий не было ни одного,
   // и тогда пропущенных дней у человека нет вовсе.
@@ -456,6 +469,12 @@ export default async function ProfilePage({
   // отменённая строка не попадала ни в одну из двух ветвей.
   const isActive =
     displayStatus === "active" || displayStatus === "trialing" || displayStatus === "canceling";
+  // ДОЛГ 221. Сотрудник без строки подписки: доступ у него есть, и
+  // источник у доступа — роль, а не покупка. Признак нужен ровно бейджу
+  // карточки: подпись под ним уже говорила правду, а бейдж — нет.
+  // Условие «и активной подписки нет» здесь не украшение: сотрудник,
+  // купивший подписку сам, обязан видеть свою подписку, а не роль.
+  const staffAccess = isStaff(user.role) && !isActive;
   const tier = await getEntitlementTierFor(user);
   const entitled = hasAnyAccess(tier);
   // Drives the gold ring/crown on this page's own avatar (below) and the
@@ -519,7 +538,11 @@ export default async function ProfilePage({
 
   // --- Empty-state logic (Problem 1) ------------------------------------
   const totalLessonsCompleted = levelSlugs.reduce((sum, level) => sum + progress[level].completed, 0);
-  const hasAnyProgress = wordsLearned > 0 || totalLessonsCompleted > 0 || streak.longestStreak > 0;
+  // ДОЛГ 216, вторая половина: чтение рассказов — тоже прогресс. До
+  // 16.09.2026 человек, который ТОЛЬКО читает, видел пустой кабинет:
+  // список считал занятия, слова и серию, а открытые рассказы — нет.
+  const hasAnyProgress =
+    wordsLearned > 0 || totalLessonsCompleted > 0 || streak.longestStreak > 0 || storiesStarted > 0;
   // "Early" = something's there, but not enough to be worth 9 stat tiles
   // yet — both thresholds grow quickly from normal use (one flashcard
   // category clears the vocab one; 3 lessons is roughly one week), so this
@@ -582,10 +605,15 @@ export default async function ProfilePage({
       }
     : null;
   const zeroStepItems: FirstStepItem[] = [lessonItem, vocabItem, ...(storyItem ? [storyItem] : [])];
+  // ДОЛГ 216. У всех трёх пунктов условие ОДНО И ТО ЖЕ: «этого человек
+  // ещё не начинал». До 16.09.2026 у рассказа условия не было вовсе —
+  // карточка «Прочитать первый рассказ» добавлялась всегда и вела на
+  // первый бесплатный рассказ A1, кем бы и что бы ни было прочитано.
+  // Асимметрия соседних пунктов одного списка задумкой быть не могла.
   const whatsNextItems: FirstStepItem[] = [
     ...(totalLessonsCompleted === 0 ? [lessonItem] : []),
     ...(wordsLearned === 0 ? [vocabItem] : []),
-    ...(storyItem ? [storyItem] : []),
+    ...(storiesStarted === 0 && storyItem ? [storyItem] : []),
   ].slice(0, 3);
 
   // --- Badges (Problem 4) -------------------------------------------------
@@ -783,7 +811,7 @@ export default async function ProfilePage({
                 <div className="rounded-2xl border border-black/10 p-4 dark:border-white/30">
                   <p className="text-2xl font-semibold uppercase">{currentLevel ?? "—"}</p>
                   <p className="text-sm text-foreground/60">
-                    {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
+                    {dict.profile.currentLevelLabel}
                   </p>
                 </div>
               </div>
@@ -916,7 +944,7 @@ export default async function ProfilePage({
             ) : null}
           </Card>
 
-          {/* ДОЛГ 186. «Приглашай и получай» внутри приложения обещало
+          {/* ДОЛГ 186. «Приглашайте и получайте» внутри приложения обещало
               30 дней за то, что приглашённый ОФОРМИТ ПОДПИСКУ, и давало
               ссылку на сайт, где её оформляют. Это призыв к покупке
               (чужой, но покупке) и увод на внешнюю оплату сразу — то
@@ -1202,10 +1230,19 @@ export default async function ProfilePage({
           <SectionHeading icon={<CrownIcon className="h-[18px] w-[18px]" />}>
             {dict.profile.subscriptionHeading}
           </SectionHeading>
+          {/* ДОЛГ 221. Бейдж говорил «У вас пока нет подписки», а строкой
+              ниже стояло «Полный доступ… оформлять подписку не нужно» —
+              карточка спорила сама с собой. Причина проста и читается по
+              боевой базе: у сотрудника строк `Subscription` НОЛЬ, значит
+              `displayStatus` = "none", а «none» переводится словом про
+              отсутствие подписки. Для роли это не отсутствие доступа, а
+              другой ЕГО ИСТОЧНИК, и бейдж обязан говорить про доступ. */}
           <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES[displayStatus]}`}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              staffAccess ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES[displayStatus]
+            }`}
           >
-            {statusLabels[displayStatus]}
+            {staffAccess ? dict.profile.statusStaffAccess : statusLabels[displayStatus]}
           </span>
         </div>
 
@@ -1408,7 +1445,7 @@ export default async function ProfilePage({
                 icon={b.def.icon}
                 title={b.def.title[lang]}
                 description={b.def.description[lang]}
-                earned={b.earnedAt !== null}
+                earned={b.earned}
                 earnedOnText={
                   b.earnedAt ? (
                     <>
@@ -1449,9 +1486,12 @@ export default async function ProfilePage({
                 <p className="text-2xl font-semibold uppercase">
                   {currentLevel ? currentLevel : "—"}
                 </p>
-                <p className="text-sm text-foreground/60">
-                  {currentLevel ? dict.profile.currentLevelLabel : dict.profile.noLevelStarted}
-                </p>
+                {/* ДОЛГ 222. Обе плитки говорили одно и то же: слева
+                    «0 уроков сдано», справа «— нет сданных уроков».
+                    Вторая плитка — про УРОВЕНЬ, и называть она обязана
+                    себя: пустое значение «—» и так означает «уровня ещё
+                    нет», а кнопка под ним говорит, что с этим делать. */}
+                <p className="text-sm text-foreground/60">{dict.profile.currentLevelLabel}</p>
                 {!currentLevel && (
                   <Button href={`/${lang}/courses/a1`} size="sm" variant="outline" className="mt-3">
                     {dict.profile.startButton}

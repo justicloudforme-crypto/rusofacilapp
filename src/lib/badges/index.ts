@@ -32,7 +32,7 @@ const EXAM_SLUGS_PER_LEVEL: Record<string, string[]> = {
   b2: ["b2-exam-1", "b2-exam-2", "b2-exam-3"],
 };
 
-interface BadgeContext {
+export interface BadgeContext {
   // longestStreak, not currentStreak: a streak badge, once earned, must
   // never be revoked just because the user later breaks their streak.
   longestStreak: number;
@@ -138,7 +138,37 @@ export async function awardBadgesSafely(userId: string): Promise<void> {
 
 export interface DisplayBadge {
   def: BadgeDef;
+  /** Когда выдан. `null` — строки выдачи нет; это НЕ то же самое, что
+   *  «не заслужен», см. {@link DisplayBadge.earned}. */
   earnedAt: Date | null;
+  /**
+   * ЗАСЛУЖЕН ЛИ ЗНАЧОК ПРЯМО СЕЙЧАС — а не «есть ли строка о выдаче».
+   *
+   * ДОЛГ 220 (заход 7.200). Условие значка и его ВЫДАЧА питались из
+   * разных мест, и это видно числами на боевом аккаунте
+   * `justicloudforme@gmail.com` (прочитано 16.09.2026, только SELECT):
+   * дней занятий 3 (13.09 story, 14.09 flashcards, 16.09 flashcards),
+   * `longestStreak` 3 — а `UserBadge` 0 строк, `LessonProgress` 0,
+   * `FlashcardProgress` 0, `ExamAttempt` 0.
+   *
+   * Почему так: день занятия ставят ШЕСТЬ поверхностей, и ставят его по
+   * ОТКРЫТИЮ страницы (`markStudyDayVisit`). А `evaluateAndAwardBadges`
+   * до 16.09.2026 звали ровно ТРИ пишущих маршрута — `/api/progress`,
+   * `/api/flashcard-progress` и приём экзамена. Человек, который читает
+   * рассказы и открывает словарь, набирает серию в три дня и не
+   * притрагивается ни к одному из этих трёх маршрутов: значит правило
+   * выдачи не исполняется ни разу, строки нет, значок серый. А счётчик
+   * прогресса на плитке считался по живой статистике и честно печатал
+   * «3/3 ДНЯ» — отсюда и экран, спорящий сам с собой.
+   *
+   * Поэтому «выдан» для ЭКРАНА теперь считается правилом, а не наличием
+   * строки: строка — это запись о факте, а факт — это правило над
+   * статистикой. Запись при этом никуда не девается и по-прежнему
+   * ставится (см. `awardBadgesSafely` в `markStudyDayVisit` и на
+   * отрисовке кабинета) — она нужна ради ДАТЫ выдачи, которую из
+   * статистики не восстановить.
+   */
+  earned: boolean;
 }
 
 /** Every catalog badge, in catalog order, paired with when the user earned
@@ -153,9 +183,32 @@ export async function getUserBadgesForDisplay(userId: string): Promise<DisplayBa
   try {
     const earned = await db.userBadge.findMany({ where: { userId } });
     const earnedMap = new Map(earned.map((b) => [b.badgeId, b.earnedAt]));
-    return BADGE_CATALOG.map((def) => ({ def, earnedAt: earnedMap.get(def.id) ?? null }));
+    return BADGE_CATALOG.map((def) => ({
+      def,
+      earnedAt: earnedMap.get(def.id) ?? null,
+      earned: earnedMap.has(def.id),
+    }));
   } catch (error) {
     console.error("[badges] getUserBadgesForDisplay failed", error);
-    return BADGE_CATALOG.map((def) => ({ def, earnedAt: null }));
+    return BADGE_CATALOG.map((def) => ({ def, earnedAt: null, earned: false }));
   }
+}
+
+/**
+ * ДОЛГ 220 — ЗАСЛУЖЕННОЕ СЕЙЧАС, А НЕ ТОЛЬКО ЗАПИСАННОЕ.
+ *
+ * Чистая функция, и это важно: она берёт ТУ ЖЕ статистику, из которой
+ * плитка считает свой «3/3 ДНЯ», и прогоняет её через ТО ЖЕ правило
+ * {@link computeEarnedBadgeIds}, которым выдача пишет строки. Поэтому
+ * счётчик и цвет плитки больше не могут разойтись — они питаются из
+ * одного места, а не из двух.
+ *
+ * Строка выдачи при этом остаётся нужной и никуда не девается: из
+ * статистики нельзя восстановить ДАТУ, когда значок заслужен. Её ставит
+ * `awardBadgesSafely` — теперь и на новом дне занятий, и на открытии
+ * кабинета, — и на следующем открытии дата появляется.
+ */
+export function withEarnedNow(badges: DisplayBadge[], ctx: BadgeContext): DisplayBadge[] {
+  const earnedNow = computeEarnedBadgeIds(ctx);
+  return badges.map((b) => ({ ...b, earned: b.earned || earnedNow.has(b.def.id) }));
 }

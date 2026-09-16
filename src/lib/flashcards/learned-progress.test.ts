@@ -15,7 +15,7 @@ const ru = {
 describe("learnedProgressText", () => {
   it("prints the short sentence when nothing is locked", () => {
     expect(learnedProgressText("ru", ru, { known: 6, available: 5683, locked: 0 })).toBe(
-      "Ты выучил 6 из 5683 слов",
+      "Вы выучили 6 из 5683 слов",
     );
     expect(learnedProgressText("es", es, { known: 6, available: 5683, locked: 0 })).toBe(
       "Has aprendido 6 de 5683 palabras",
@@ -24,7 +24,7 @@ describe("learnedProgressText", () => {
 
   it("names both numbers when something is behind Premium", () => {
     expect(learnedProgressText("ru", ru, { known: 6, available: 4787, locked: 896 })).toBe(
-      "Ты выучил 6 из 4787 доступных · ещё 896 в Premium",
+      "Вы выучили 6 из 4787 доступных · ещё 896 в Premium",
     );
     expect(learnedProgressText("es", es, { known: 6, available: 4787, locked: 896 })).toBe(
       "Llevas 6 de 4787 palabras disponibles · 896 más con Premium",

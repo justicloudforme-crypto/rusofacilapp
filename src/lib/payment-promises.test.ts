@@ -141,12 +141,13 @@ describe("what section 3 of the Terms has to state, in both locales", () => {
   });
 
   it("carries its own date, separate from the Privacy Policy's", () => {
-    // The Terms changed on 08.09.2026 and again on 09.09.2026, when the
-    // currency paragraph was corrected; the Privacy Policy changed on
-    // neither day. One shared constant would have back-dated these changes
-    // or falsely re-dated that document.
+    // The Terms changed on 08.09.2026, on 09.09.2026 (currency) and on
+    // 16.09.2026 (cancellation is at period end, 18+, no payment-system
+    // name inside the shell). The Privacy Policy has its own date and its
+    // own reason to move — one shared constant would have back-dated one
+    // document or falsely re-dated the other.
     for (const locale of locales) {
-      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-09-09");
+      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-09-16");
     }
   });
 
