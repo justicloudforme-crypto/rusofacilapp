@@ -1,5 +1,6 @@
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { markStudyDayByAction } from "./helpers/study-day";
 import { SETTLE_MAX_MS, settleGeometry } from "./helpers/geometry";
 import {
   FILL_THRESHOLD,
@@ -195,11 +196,12 @@ for (const width of WIDTHS) {
 
     // /profile renders its empty state — no calendar, no stat tiles — until
     // the account has done something, and measuring that is measuring a
-    // different page than the one this rule is about. One GET to
-    // /vocabulary is enough: it marks the study day (markStudyDayVisit),
-    // which is what `hasAnyProgress` reads. No fixture rows needed, so this
-    // works against CI's empty database exactly as it does locally.
-    await page.context().request.get(`/${lang}/vocabulary`);
+    // different page than the one this rule is about. Один ОТВЕТ в
+    // карточке ставит день занятия, а его и читает `hasAnyProgress`.
+    // Открытие `/vocabulary`, стоявшее здесь до 17.09.2026, дня больше не
+    // ставит: правило заменено владельцем (заход 7.204). Фикстур не
+    // нужно, поэтому на пустой базе CI это работает так же, как локально.
+    await markStudyDayByAction(page);
 
     const tooWide: string[] = [];
     const underfilled: string[] = [];

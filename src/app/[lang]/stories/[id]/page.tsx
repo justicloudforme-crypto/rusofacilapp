@@ -5,7 +5,6 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
-import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy, nativeLockBody } from "@/lib/native-access-copy";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
@@ -100,9 +99,9 @@ export default async function StoryReaderPage({
   ]);
   if (!story) notFound();
 
-  // Opening the story is the study action — the day counts from here, not
-  // from turning a page far enough for StoryReadingProgress to be written.
-  await markStudyDayVisit("story");
+  // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ (17.09.2026, заход
+  // 7.204). Рассказ ставит день, когда прочитан ХОТЯ БЫ ДО ПОЛОВИНЫ, —
+  // `POST /api/reading-progress`, порог STUDY_DAY_READ_PERCENT.
 
   const titles = storyTitles(story, lang);
 

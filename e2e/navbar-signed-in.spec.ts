@@ -1,5 +1,6 @@
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { markStudyDayByAction } from "./helpers/study-day";
 import { SETTLE_MAX_MS, settleGeometry } from "./helpers/geometry";
 
 /**
@@ -31,19 +32,14 @@ const WIDE = 768;
  * combination, and it is what `md:flex` now gates. */
 const STREAK_BADGE = "header span.text-folk-red";
 
-/** Gives the account a streak by doing the thing that now counts as study:
- * opening a lesson. Nothing is submitted — that is the point of the rule
- * changed on 31.08.2026, and it is why this helper is two lines. */
-async function studySomething(page: import("@playwright/test").Page, lang: string) {
-  // `domcontentloaded` + отсутствие `networkidle`: отметка дня ставится на
-  // СЕРВЕРЕ, при рендере страницы урока (markStudyDayVisit), то есть она
-  // уже случилась к моменту, когда пришёл ответ 200. Ждать после этого
-  // тишины в сети — ждать не того; на загруженной машине эта тишина не
-  // наступала за 30 с и красила тест таймаутом (замер 05.09.2026, заход
-  // 7.124: 4 исполнения из 4 при тройной нагрузке, все —
-  // `Test timeout of 30000ms exceeded`, ни одного провала утверждения).
-  const response = await page.goto(`/${lang}/courses/a1/1`, { waitUntil: "domcontentloaded" });
-  expect(response?.status(), "the lesson page must answer 200 for the mark to happen").toBe(200);
+/** Даёт аккаунту серию тем, что теперь считается занятием, — ДЕЙСТВИЕМ.
+ *
+ * До 17.09.2026 здесь открывалась страница урока: правилом было «занятие
+ * = открытие». Правило отменено владельцем (заход 7.204), и открытие
+ * урока дня больше не ставит — значит проба, которая его открывала, с
+ * этого дня мерила бы пустоту. Теперь ставится ответ в карточке. */
+async function studySomething(page: import("@playwright/test").Page, _lang: string) {
+  await markStudyDayByAction(page);
 }
 
 async function overflow(page: import("@playwright/test").Page) {

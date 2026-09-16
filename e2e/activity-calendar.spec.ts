@@ -1,5 +1,6 @@
 import { expect, test } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { markStudyDayByAction } from "./helpers/study-day";
 import { settleGeometry } from "./helpers/geometry";
 
 /**
@@ -46,15 +47,18 @@ for (const lang of ["es", "ru"] as const) {
   }) => {
     await loginWithSubscription(page, { tier: "premium" });
     // /profile shows its empty state until the account has done something,
-    // and an empty state has no calendar to measure. One GET marks the day.
-    await page.context().request.get(`/${lang}/vocabulary`);
+    // and an empty state has no calendar to measure. День ставит
+    // ДЕЙСТВИЕ — один ответ в карточке (правило владельца 17.09.2026,
+    // заход 7.204; открытие `/vocabulary`, стоявшее здесь раньше, дня
+    // больше не ставит).
+    await markStudyDayByAction(page);
 
     const response = await page.goto(`/${lang}/profile`, { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBe(200);
 
     // Модалка приветствия — УТВЕРЖДЕНИЕ, а не подсматривание. На первом в
     // жизни свежего контекста заходе на /profile она гарантирована:
-    // `localStorage` пуст, а гейт стоит на паре (userId, календарный день)
+    // банка кук пуста, а гейт стоит на паре (userId, местный день)
     // — см. e2e/helpers/welcome-overlay.ts. Прежняя форма (`if (await
     // count())` плюс `waitFor(...).catch()`) отвечала «модалки нет»
     // одинаково и когда её нет, и когда её эффект ещё не отработал после

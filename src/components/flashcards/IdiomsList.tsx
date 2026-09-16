@@ -218,11 +218,42 @@ export default function IdiomsList({
 
   return (
     <div>
+      {/*
+        ЗАГЛУШКА ВМЕСТО НУЛЯ — 7.204, долг 231.
+
+        До правки полоса и её подпись рисовались БЕЗУСЛОВНО, а `idioms`
+        до ответа `/api/idioms` — пустой массив: `known` и
+        `filtered.length` давали честные нули, и человек читал «Aprendidas:
+        0 de 0» («Изучено: 0 из 0») ещё и в серверной отдаче страницы.
+        Список под полосой в ту же секунду показывал скелет — то есть
+        экран говорил про себя две разные вещи сразу.
+
+        Настоящий ноль (ответ пришёл, выражений в разрезе ноль) печатается
+        числом, как и печатался: условие смотрит на `idiomsLoading`, а не
+        на величину.
+      */}
       <div ref={listTopRef} className="mb-6">
-        <ProgressBar percent={percent} tone="success" className="w-full" />
-        <span className="mt-1 block text-xs text-foreground/60">
-          {dict.progressLabel.replace("{known}", String(known)).replace("{total}", String(filtered.length))}
-        </span>
+        {idiomsLoading ? (
+          <>
+            <div
+              data-testid="idioms-progress-skeleton"
+              aria-hidden
+              className="h-1.5 w-full animate-pulse rounded-full bg-foreground/15 motion-reduce:animate-none"
+            />
+            <span
+              data-testid="idioms-progress-label-skeleton"
+              aria-hidden
+              className="mt-1 block h-3 w-28 animate-pulse rounded bg-foreground/15 motion-reduce:animate-none"
+            />
+          </>
+        ) : (
+          <>
+            <ProgressBar percent={percent} tone="success" className="w-full" />
+            <span data-testid="idioms-progress-label" className="mt-1 block text-xs text-foreground/60">
+              {dict.progressLabel.replace("{known}", String(known)).replace("{total}", String(filtered.length))}
+            </span>
+          </>
+        )}
       </div>
 
       {/*
@@ -280,13 +311,35 @@ export default function IdiomsList({
         />
       )}
 
-      <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-black/10 p-1 dark:border-white/30">
+      {/*
+        РЯД ВКЛАДОК БЕЗ ОДИНОКОЙ КНОПКИ — 7.204, долг 233.
+
+        Замерено 17.09.2026 браузером на трёх ширинах, и формулировка
+        долга при этом уточнена: ряд ломался НЕ только на /ru. До правки
+        строк было 3+1 на /ru при 320, 360 и 393 — и на /es тоже при 320
+        и 360; одну строку /es держал только на 393. То есть дело не в
+        русских подписях как таковых, а в том, что `flex-1` считает
+        ширину по содержимому, а кегль и отступы на телефоне те же, что
+        на столе.
+
+        Правило теперь такое: ниже 384 px — ровно две кнопки в строке
+        (`basis` в половину ряда), от 384 px — все четыре в один ряд за
+        счёт меньшего кегля и узких отступов, от 640 px — прежний кегль.
+        Одинокой кнопки во второй строке не остаётся ни на одной ширине.
+
+        Почему порог 384, а не 360, хотя при 360 четыре кнопки ВЛЕЗАЛИ:
+        влезали с запасом 6 px из 302 — два процента. Шрифт в webview
+        телефона шире headless-браузера легко на столько же, и запас в
+        два процента — это не «влезает», это «повезло». При 384 запас
+        русского ряда 18 px, и порог выбран по нему.
+      */}
+      <div className="mb-4 flex flex-wrap gap-0.5 rounded-2xl border border-black/10 p-1 min-[384px]:rounded-full sm:gap-1 dark:border-white/30">
         {categoryTabs.map((tab) => (
           <button
             key={tab.value}
             type="button"
             onClick={() => selectCategory(tab.value)}
-            className={`tap flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+            className={`tap basis-[calc(50%-0.0625rem)] whitespace-nowrap rounded-full px-1 py-2 text-xs font-medium transition-colors min-[384px]:basis-0 min-[384px]:flex-1 sm:px-3 sm:text-sm ${
               categoryFilter === tab.value ? "bg-foreground text-background" : "text-foreground/70 hover:text-foreground active:text-foreground"
             }`}
           >

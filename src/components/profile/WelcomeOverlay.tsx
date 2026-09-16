@@ -4,15 +4,31 @@ import { useEffect, useState } from "react";
 import StreakFlame from "@/components/StreakFlame";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
+import {
+  WELCOME_SHOWN_COOKIE,
+  WELCOME_SHOWN_MAX_AGE_SECONDS,
+  welcomeShownValue,
+} from "@/lib/welcome-shown";
 
-// Shown once per calendar day when the learner lands on their profile
-// (the page every post-login redirect and the header's logged-in CTA both
-// point at) — gated in localStorage rather than a DB flag, since "have we
-// already greeted this user today" doesn't need to survive across devices
-// or be queried anywhere else. Reuses the streak stats the profile page
-// already fetches for its stat tiles, so this adds no extra data fetching.
+// Показывается один раз в СУТКИ УЧЕНИКА, когда он попадает в кабинет
+// (туда ведёт и переход после входа, и кнопка в шапке у вошедшего).
+// Пользуется теми же числами серии, которые кабинет и так запрашивает
+// для своих плиток, — лишних запросов не добавляет.
+//
+// ДВА ПРАВИЛА, КОТОРЫЕ ЗДЕСЬ НЕЛЬЗЯ НАРУШАТЬ (долг 223, заход 7.204):
+//
+//   1. «Сегодня» приходит ГОТОВЫМ (`todayKey`), посчитанным на сервере в
+//      зоне аккаунта тем же `dateKeyIn`, которым считается день занятия.
+//      Своего мнения о дате у этого файла нет вовсе: `new Date()` здесь
+//      означал бы Гринвич и второе определение суток.
+//   2. Отметка «уже показано» лежит в КУКЕ, а не в localStorage: выход
+//      из аккаунта чистит localStorage (7.199), и приветствие
+//      показывалось второй раз за тот же день.
+//
+// Оба правила сторожит `npm run check:welcome-once`.
 export default function WelcomeOverlay({
   userId,
+  todayKey,
   name,
   currentStreak,
   greeting,
@@ -23,6 +39,9 @@ export default function WelcomeOverlay({
   continueLabel,
 }: {
   userId: string;
+  /** «Какой сегодня день» в зоне аккаунта — `dateKeyIn(new Date(),
+   *  timeZone)`, посчитанный на сервере (src/lib/welcome-shown.ts). */
+  todayKey: string;
   name: string | null;
   currentStreak: number;
   greeting: string;
@@ -35,19 +54,21 @@ export default function WelcomeOverlay({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const todayKey = new Date().toISOString().slice(0, 10);
-    const storageKey = `rf-welcome-shown:${userId}:${todayKey}`;
-    if (typeof window === "undefined") return;
+    if (typeof document === "undefined") return;
+    const mark = welcomeShownValue(userId, todayKey);
     try {
-      if (window.localStorage.getItem(storageKey)) return;
-      window.localStorage.setItem(storageKey, "1");
+      const already = document.cookie
+        .split("; ")
+        .some((pair) => pair === `${WELCOME_SHOWN_COOKIE}=${encodeURIComponent(mark)}`);
+      if (already) return;
+      document.cookie = `${WELCOME_SHOWN_COOKIE}=${encodeURIComponent(mark)}; path=/; max-age=${WELCOME_SHOWN_MAX_AGE_SECONDS}; SameSite=Lax`;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(true);
     } catch {
-      // Private-browsing / storage-disabled: just skip the greeting rather
-      // than showing it on every single visit.
+      // Куки запрещены — лучше промолчать, чем здороваться на каждом
+      // открытии кабинета.
     }
-  }, [userId]);
+  }, [userId, todayKey]);
 
   if (!visible) return null;
 

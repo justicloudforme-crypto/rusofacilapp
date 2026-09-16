@@ -6,46 +6,50 @@ import { getRequestTimeZone } from "./timezone-server";
 import { markStudyDay, type StudyDaySource } from "./study-day";
 import { awardBadgesSafely } from "./badges";
 
-// The one line a study page adds so that opening it counts as a study day.
+// Одна строка, которую добавляет маршрут, чтобы его действие
+// засчиталось днём занятия.
 //
-// Kept apart from study-day.ts so the data module stays free of Next's
-// request APIs: streaks.ts imports that one, and nothing that computes a
-// streak should drag `after`/`cookies` in behind it.
+// Держится отдельно от study-day.ts, чтобы модуль данных не тянул за
+// собой запросные API Next: streaks.ts импортирует именно его, и ничему,
+// что считает серию, не нужны `after`/`cookies`.
 
-/** Marks today as a study day for whoever is signed in, and does nothing at
- * all for a signed-out visitor.
+/** Отмечает сегодняшний день занятым для того, кто вошёл; для гостя не
+ * делает ничего.
  *
- * Call it from the page's Server Component body. The rule is that OPENING
- * the page is the study action, and a mark that needs JavaScript to fire is
- * a mark a slow phone, a dead battery or an ad blocker can lose.
+ * ГДЕ ЭТО ЗОВУТ — редакция 17.09.2026 (заход 7.204). Раньше — из тела
+ * серверного компонента страницы, потому что правилом было «занятие =
+ * открытие». Правило заменено решением владельца: день ставит ДЕЙСТВИЕ.
+ * Поэтому теперь все вызовы стоят в ПИШУЩИХ маршрутах, на запросах,
+ * которые продукт посылает по своим делам и без отметки дня:
  *
- * ONE surface is deliberately different, and it is the exception that
- * states the rule rather than a loophole: the crossword marks its day from
- * POST /api/word-games/check, on the first letter entered, because opening
- * a puzzle and typing nothing is not study (owner's decision, 03.09.2026 —
- * measured: a page open with 0 keystrokes used to put a full day on the
- * calendar). It stays a server-side mark on a request the product already
- * sends for its own reasons, so nothing here depends on an extra fetch that
- * a flaky network could lose.
+ *   POST /api/flashcard-progress   ответ в карточке, отметка «выучено»
+ *   POST /api/progress             сданные упражнения урока
+ *   POST /api/exams/…/attempt      сданный экзамен
+ *   POST /api/word-games/check     буква в игре
+ *   POST /api/reading-progress     рассказ прочитан хотя бы до половины
+ *   POST /api/study-day            сданное упражнение под роликом
  *
- * **Costs no database read to identify the learner.** The session cookie is
- * HMAC-signed, so verifySessionToken already establishes that the id is
- * genuine, and that is all a day mark needs. This is the same trade
- * getRecordingsOwnerScope makes, for the same reason: the lesson page is
- * the page incident №1 happened on, and putting a second `SELECT * FROM
- * User` on every lesson, story, game and card view to write one row would
- * be a poor bargain. The one thing skipped is the sessionVersion check, so
- * a browser holding a revoked session could still mark its own day; the
- * cost of that is one row on the learner's own account, and the row is
- * still impossible to create for a deleted account (foreign key).
+ * Полный список правила — в шапке src/lib/study-day.ts, и он там один.
+ * Ни одна страница (`src/app/**\/page.tsx`) звать это больше не имеет
+ * права, и за этим следит `npm run check:study-day-action`.
  *
- * A page that already has the User row in hand should pass it: the zone
- * stored on the account beats the cookie, and passing it is free.
+ * **Опознание ученика не стоит ни одного чтения базы.** Кука сессии
+ * подписана HMAC, поэтому `verifySessionToken` уже устанавливает, что
+ * идентификатор настоящий, — а больше отметке дня ничего и не нужно. Не
+ * проверяется только `sessionVersion`, то есть браузер с отозванной
+ * сессией мог бы поставить день сам себе; цена этому — одна строка на
+ * его собственном аккаунте, и создать её для удалённого аккаунта всё
+ * равно невозможно (внешний ключ).
  *
- * The write itself is deferred with after(), so the response is already on
- * its way to the learner before the database is touched and the mark can
- * never slow a page down. Both cookie reads happen BEFORE that — a Server
- * Component may not touch cookies() or headers() inside after().
+ * Маршрут, у которого строка `User` уже в руках, обязан её передать:
+ * зона, записанная на аккаунте, надёжнее куки, а передача бесплатна.
+ * После правки 7.204 так делают ВСЕ вызовы — у каждого пишущего маршрута
+ * пользователь уже прочитан для проверки доступа.
+ *
+ * Сама запись отложена `after()`, поэтому ответ уже уходит к ученику,
+ * когда база только трогается, и отметка не может замедлить ни страницу,
+ * ни ответ маршрута. Оба чтения куки происходят ДО этого — внутри
+ * `after()` трогать `cookies()` и `headers()` нельзя.
  */
 export async function markStudyDayVisit(
   source: StudyDaySource,
@@ -56,13 +60,14 @@ export async function markStudyDayVisit(
   const timeZone = await getRequestTimeZone(user?.timezone ?? null);
   after(async () => {
     // ВЫДАЧА ЗНАЧКОВ СТОИТ ТАМ, ГДЕ МЕНЯЕТСЯ УСЛОВИЕ (долг 220,
-    // заход 7.200). Серию считают ДНИ ЗАНЯТИЙ, а день ставит открытие
-    // страницы — вот эта самая функция, шесть поверхностей. Правило же
-    // выдачи звали только три ПИШУЩИХ маршрута (`/api/progress`,
-    // `/api/flashcard-progress`, приём экзамена), и человек, который
-    // читает рассказы и открывает словарь, не касался ни одного из них
-    // ни разу: боевой аккаунт с серией 3 дня и нулём строк `UserBadge` —
-    // именно этот случай.
+    // заход 7.200). Серию считают ДНИ ЗАНЯТИЙ, а день ставит вот эта
+    // самая функция — значит и правило выдачи живёт здесь, а не только
+    // в трёх маршрутах, как было до 7.200.
+    //
+    // После 7.204 все вызовы этой функции и так стоят в пишущих
+    // маршрутах, но строка не лишняя: `/api/reading-progress` и
+    // `/api/word-games/check` значков сами не выдают, и без неё читатель
+    // рассказов снова остался бы с серией и без значков.
     //
     // Считается только на НОВОМ дне: `markStudyDay` возвращает `true`
     // ровно тогда, когда строка дня появилась, то есть не чаще раза в

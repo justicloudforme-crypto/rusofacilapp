@@ -9,6 +9,7 @@ import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
 import { invalidateWeakTopicCache } from "@/lib/weak-topic";
 import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 
 // Exam attempts are inherently rare (one exam every 10 lessons) — this
 // limit exists only to stop a scripted client from spamming attempts.
@@ -73,6 +74,9 @@ export async function POST(
   const outcome = await recordExamAttempt(user.id, level, examSlug, totalEarned, totalPoints, breakdown);
   // Deferred via after() — see flashcard-progress/route.ts's comment.
   after(() => awardBadgesSafely(user.id));
+  // ДЕНЬ ЗАНЯТИЯ (17.09.2026, заход 7.204): экзамен засчитывается
+  // СДАННЫЙ, а не открытый.
+  await markStudyDayVisit("exam", user);
   await invalidateWeakTopicCache(user.id);
 
   return NextResponse.json({

@@ -5,7 +5,6 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
-import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy, nativeLockBody } from "@/lib/native-access-copy";
 import { getMediaGrammarLinks, getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
@@ -75,10 +74,11 @@ export default async function MediaDetailPage({
   if (!dict?.media) notFound();
   if (!item) notFound();
 
-  // A song or a grammar video is study, decided 31.08.2026 — it was the
-  // one substantive surface left that gave no day. Same rule as the other
-  // six: OPENING it counts, finishing it is not required.
-  await markStudyDayVisit("media");
+  // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ (17.09.2026, заход
+  // 7.204). У песни и видеоурока серверного признака «прослушано до
+  // половины» нет вовсе (хранилища прогресса медиа не существует), и
+  // поэтому взят запасной порог, названный владельцем: день ставит
+  // СДАННОЕ упражнение под роликом — `POST /api/study-day`.
 
   const relatedStories = await getRelatedStoriesForMedia(item);
   // Which grammar topics this item's transcript actually contains, as

@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getRateLimiter } from "@/lib/rate-limit";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
+import { STUDY_DAY_READ_PERCENT } from "@/lib/study-day";
 
 // Server-backed mirror of src/lib/reading-progress.ts's localStorage map —
 // same rationale as /api/flashcard-progress: a 401 here just means "stay
@@ -70,6 +72,13 @@ export async function POST(request: NextRequest) {
     update: { currentPage, queueIndex, totalPages, percent, isCompleted },
     create: { userId: user.id, storyId, currentPage, queueIndex, totalPages, percent, isCompleted },
   });
+
+  // ДЕНЬ ЗАНЯТИЯ (17.09.2026, заход 7.204). Рассказ засчитывается
+  // прочитанным ХОТЯ БЫ ДО ПОЛОВИНЫ, и порог берётся у сигнала, который
+  // тут уже посчитан, — `percent` (страница из общего числа страниц).
+  // Другого серверного признака прогресса у рассказа нет: `percent` —
+  // тот же, что рисует полосу в списке рассказов и в кабинете.
+  if (percent >= STUDY_DAY_READ_PERCENT) await markStudyDayVisit("story", user);
 
   return NextResponse.json({ ok: true, updatedAt: row.updatedAt.getTime() });
 }

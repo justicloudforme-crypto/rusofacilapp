@@ -5,6 +5,7 @@ import { getLessonAttempt, saveLessonAttempt } from "@/lib/progress";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
+import { markStudyDayVisit } from "@/lib/study-day-visit";
 import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
 import type { AnswerMap, MistakeDetail } from "@/lib/lessons/scoring";
 
@@ -82,6 +83,9 @@ export async function POST(request: NextRequest) {
   // awaiting the full badge-evaluation scan here added it to every single
   // exercise check's response time.
   after(() => awardBadgesSafely(user.id));
+  // ДЕНЬ ЗАНЯТИЯ (17.09.2026, заход 7.204): урок засчитывается по
+  // СДАННЫМ упражнениям («Comprobar»), а не по открытию страницы.
+  await markStudyDayVisit("lesson", user);
 
   return NextResponse.json({ ok: true });
 }

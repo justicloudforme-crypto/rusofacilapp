@@ -151,8 +151,10 @@ export interface DisplayBadge {
    * `longestStreak` 3 — а `UserBadge` 0 строк, `LessonProgress` 0,
    * `FlashcardProgress` 0, `ExamAttempt` 0.
    *
-   * Почему так: день занятия ставят ШЕСТЬ поверхностей, и ставят его по
-   * ОТКРЫТИЮ страницы (`markStudyDayVisit`). А `evaluateAndAwardBadges`
+   * Почему так: день занятия ставят ШЕСТЬ поверхностей, и до 17.09.2026
+   * ставили его по ОТКРЫТИЮ страницы (`markStudyDayVisit`; с 7.204 день
+   * ставит ДЕЙСТВИЕ — см. шапку src/lib/study-day.ts, и на разбор этого
+   * долга смена правила не влияет). А `evaluateAndAwardBadges`
    * до 16.09.2026 звали ровно ТРИ пишущих маршрута — `/api/progress`,
    * `/api/flashcard-progress` и приём экзамена. Человек, который читает
    * рассказы и открывает словарь, набирает серию в три дня и не
