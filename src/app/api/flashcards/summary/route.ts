@@ -200,10 +200,32 @@ export async function POST(request: NextRequest) {
   for (const [cardId, entry] of clientEntries) {
     if (!lastActivityByCardId.has(cardId)) lastActivityByCardId.set(cardId, entry.updatedAt);
   }
+  //
+  // ФИЛЬТР УРОВНЯ ЗДЕСЬ — ДОЛГ 229, заход 7.203, часть 3. До 16.09.2026 в
+  // этом цикле его не было, а двадцатью строками ниже, у выбора самой
+  // карточки, он стоял. Расхождение читалось на экране так: подписчик
+  // standard выбирает C1, на котором ему не отдано ни одной карточки, и
+  // «Продолжить» предлагает ему три темы («Работа и учёба 0/51» и
+  // соседние) — потому что ТЕМА бралась по активности на ЛЮБОМ уровне, а
+  // числа в той же строке считались по выбранному. `data-card` при этом
+  // был null у всех трёх строк: продолжать было не с чего, нажатие
+  // открывало тему с начала.
+  //
+  // Теперь тема попадает в список только по активности НА ЭТОМ РАЗРЕЗЕ.
+  // Следствие, и оно намеренное: на уровне, где человеку не отдано
+  // ничего, список пуст, а пустой список ContinueStrip не рисует вовсе
+  // (`recent.length === 0` → null). Закрытый материал перестаёт
+  // предлагаться, а плашка «закрыто N слов уровня C1» остаётся — она про
+  // банк и говорит правду.
+  //
+  // Заметьте, что `cardById` — уже НЕ весь банк, а доступное этому
+  // разряду; одного этого не хватало: тронутая карточка A1 из темы
+  // «Работа и учёба» доступна и на C1-разрезе оставалась в списке.
   const lastActivityByCategory = new Map<string, number>();
   for (const [cardId, updatedAt] of lastActivityByCardId) {
     const card = cardById.get(cardId);
     if (!card) continue;
+    if (level && card.level !== level) continue;
     const prev = lastActivityByCategory.get(card.category);
     if (!prev || updatedAt > prev) lastActivityByCategory.set(card.category, updatedAt);
   }

@@ -19,7 +19,7 @@ import {
   pickEffectiveSubscription,
   type DisplayStatus,
 } from "@/lib/subscription";
-import { getEntitlementTierFor, hasAnyAccess, isPremiumTier } from "@/lib/entitlement";
+import { canRedeemAccessCode, getEntitlementTierFor, hasAnyAccess, isPremiumTier } from "@/lib/entitlement";
 import { getLevelProgress, getLessonProgressDetails, getFirstIncompleteLessonSlug } from "@/lib/progress";
 import { getUserStreakStats, getUserActivityDateKeys, getUserActivityDaySources } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
@@ -1419,30 +1419,39 @@ export default async function ProfilePage({
           одного поля значило бы завести второй способ узнать, что доступ
           появился.
 
-          КОМУ ЭТОТ БЛОК НЕ ПОКАЗЫВАЕТСЯ — ЗАХОД 7.202, ЧАСТЬ 3.
+          КОМУ ЭТОТ БЛОК НЕ ПОКАЗЫВАЕТСЯ — ДОЛГ 228, РЕШЕНИЕ ВЛАДЕЛЬЦА
+          16.09.2026.
 
-          Владелец снял 16.09.2026: сотруднику с полным доступом
-          предлагается ввести код доступа. Предложение неисполнимо по
-          построению — `redeemAccessCode` (`src/lib/access-code.ts:160…163`)
-          отказывает при `tier !== "free"`, — и неприятно по смыслу: у
-          человека уже есть всё, что код мог бы дать.
+          Заход 7.202 спрятал блок только от верхнего разряда
+          (`isPremiumUser`: сотрудник, владелец, пожизненный), и между
+          видимостью блока и отказом маршрута остался жить подписчик
+          standard: поле ему показывали, а `redeemAccessCode` отказывает
+          при ЛЮБОМ живом доступе. Владелец решил: приглашение видит
+          только аккаунт БЕЗ действующего доступа; продления доступа
+          кодом не делаем.
 
-          Условие — `isPremiumUser`, то есть верхний разряд доступа
-          (`tierOfAccount`: сотрудник и владелец — «premium» по роли,
-          пожизненный — по строке подписки). Ровно три роли из задания и
-          ни одной лишней. Подписчику standard и бесплатному блок остаётся:
-          решение владельца, и оно не про механику, а про то, кому мы
-          показываем приглашение. То, что маршрут откажет и подписчику
-          standard, замерено и записано отдельной строкой долга — правкой
-          этого захода оно не трогается. Держит
+          Поэтому условие здесь — не «верхний разряд» и вообще не своё
+          выражение, а ТА ЖЕ функция, которую спрашивает маршрут
+          погашения: `canRedeemAccessCode` (`src/lib/access-code-offer.ts`,
+          читается как `!hasAnyAccess(tier)`). Отменённая подписка с
+          неистёкшим оплаченным периодом — живой доступ, и блока такой
+          человек не видит; когда период кончится, разряд станет `free`
+          сам, и блок вернётся сам. Держат
+          `npm run check:access-code-offer` и
           `npm run check:cabinet-plan-truth`. */}
-      {!isPremiumUser && (
+      {(canRedeemAccessCode(tier) || accessCodeOutcome !== null) && (
       <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
         <SectionHeading icon={<KeyIcon className="h-[18px] w-[18px]" />}>
           {dict.profile.accessCodeHeading}
         </SectionHeading>
-        <p className="mt-2 text-sm text-foreground/70">{dict.profile.accessCodeIntro}</p>
 
+        {/* ОТВЕТ НА ДЕЙСТВИЕ ПЕРЕЖИВАЕТ ИСЧЕЗНОВЕНИЕ ПРИГЛАШЕНИЯ, и это не
+            мелочь: успешное погашение САМО делает человека платным, то есть
+            `canRedeemAccessCode` в этот же миг становится ложью. Стой
+            сообщение под тем же условием, что и форма, — человек ввёл бы
+            код и увидел пустоту вместо «Доступ открыт». Поэтому раздел
+            открывается при любом ответе маршрута, а поле и приглашение
+            внутри него — только тому, кто может ими воспользоваться. */}
         {accessCodeOutcome !== null && (
           <p
             className={`mt-4 rounded-lg px-3 py-2 text-sm ${
@@ -1454,6 +1463,10 @@ export default async function ProfilePage({
             {accessCodeMessage}
           </p>
         )}
+
+        {canRedeemAccessCode(tier) && (
+        <>
+        <p className="mt-2 text-sm text-foreground/70">{dict.profile.accessCodeIntro}</p>
 
         <form action="/api/access-code/redeem" method="POST" className="mt-4 flex flex-col gap-3 sm:flex-row">
           <input type="hidden" name="lang" value={lang} />
@@ -1480,6 +1493,8 @@ export default async function ProfilePage({
             {dict.profile.accessCodeSubmit}
           </button>
         </form>
+        </>
+        )}
       </section>
       )}
       </>

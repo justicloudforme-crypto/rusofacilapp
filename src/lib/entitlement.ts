@@ -222,6 +222,16 @@ export function canAccessCurvedPuzzle(tier: EntitlementTier): boolean {
  */
 export { FREE_TRIAL_LIMITS, LITERARY_IDIOM_LIMITS } from "./free-trial-limits";
 
+/**
+ * Кому показывается приглашение погасить код доступа (долг 228). Живёт в
+ * `src/lib/access-code-offer.ts` по той же причине, что и константы выше —
+ * правило нужно и там, где `server-only` не разрешается, — и
+ * ре-экспортируется здесь, чтобы определение осталось одно. Читается оно
+ * как `!hasAnyAccess(tier)`; что это и есть одна величина, держит
+ * `src/lib/access-code-offer.test.ts`.
+ */
+export { canRedeemAccessCode } from "./access-code-offer";
+
 export function getLiteraryIdiomLimit(tier: EntitlementTier): number | null {
   if (tier === "premium") return null;
   return LITERARY_IDIOM_LIMITS[tier];

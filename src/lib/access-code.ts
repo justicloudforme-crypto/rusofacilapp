@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { extendOrGrantSubscription } from "./subscription";
-import { getEntitlementTierFor } from "./entitlement";
+import { canRedeemAccessCode, getEntitlementTierFor } from "./entitlement";
 import { normalizeAccessCode } from "./access-code-format";
 
 /**
@@ -156,9 +156,14 @@ export async function redeemAccessCode(
     return { ok: false, reason: "unknown" };
   }
 
-  // Шаг 1. Тот же ответ, который читают страницы уроков.
+  // Шаг 1. Тот же ответ, который читают страницы уроков, и то же самое
+  // условие, которым кабинет решает, показывать ли поле кода вовсе
+  // (долг 228): `canRedeemAccessCode` — одна функция на оба места, а не
+  // два похожих выражения. Раньше здесь стояло `tier !== "free"`
+  // дословно, и подписчику standard поле показывали, а погасить код он не
+  // мог — отказ был неисполним по построению.
   const tier = await getEntitlementTierFor(user);
-  if (tier !== "free") {
+  if (!canRedeemAccessCode(tier)) {
     await reportRefusal("already_has_access", { userId: user.id, code });
     return { ok: false, reason: "already_has_access" };
   }
