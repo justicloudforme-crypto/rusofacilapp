@@ -230,6 +230,24 @@ const PRIVACY_LAST_UPDATED = "2026-09-16";
 // Плюс одна правка, которая обещаний не меняет, но перестала быть
 // правдой: «и, в будущем, через нативные мобильные приложения» читает
 // человек, уже сидящий в этом приложении.
+// 16.09.2026, заход 7.202, часть 4 — ПРАВКА ЯЗЫКА, А НЕ СМЫСЛА, И ДАТА
+// ПОЭТОМУ НЕ ДВИГАЕТСЯ НИ У ОДНОГО ИЗ ДВУХ ДОКУМЕНТОВ.
+//
+// Что поправлено в ИСПАНСКОМ тексте (русский решением владельца не
+// тронут): «idioms» → «modismos» (английское слово в испанском перечне),
+// «cámbiala contraseña» → «cambia la contraseña» (слипшееся «cambia la»),
+// и шесть пар прямых кавычек заменены на «…» — пять во вступлении и
+// разделе 7 Условий, шестая в разделе 2 Политики (`'matryoshka_calm'`),
+// которую владелец не называл, а нашёл прогон всего текста.
+//
+// Названная владельцем «tu pais» ОПРОВЕРГНУТА числом: в репозитории 0
+// вхождений, слово `país` встречается четыре раза и все четыре с
+// ударением.
+//
+// Ни одно обещание, ни одна цифра, ни один получатель данных не
+// изменились — значит и обе даты ниже остаются прежними. Обе и так стоят
+// на 16.09.2026, то есть на дне этой правки: двигать нечего даже при
+// обратном решении. Держит `npm run check:legal-es-text`.
 const TERMS_LAST_UPDATED = "2026-09-16";
 
 export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
@@ -238,12 +256,12 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
     lastUpdated: TERMS_LAST_UPDATED,
     lastUpdatedLabel: "Última actualización:",
     intro:
-      "Estos Términos de Servicio ('Términos') regulan el uso de RusoFácilapp.com y de la aplicación asociada (el 'Servicio'), operado por Vasilii Petrov ('nosotros', 'el operador'). Al crear una cuenta o usar el Servicio, aceptas estos Términos. Si no estás de acuerdo, no uses el Servicio.",
+      "Estos Términos de Servicio («Términos») regulan el uso de RusoFácilapp.com y de la aplicación asociada (el «Servicio»), operado por Vasilii Petrov («nosotros», «el operador»). Al crear una cuenta o usar el Servicio, aceptas estos Términos. Si no estás de acuerdo, no uses el Servicio.",
     sections: [
       {
         heading: "1. Descripción del Servicio",
         paragraphs: [
-          "RusoFácilapp es una plataforma de aprendizaje del idioma ruso dirigida a hablantes de español, con lecciones estructuradas (niveles A1 a B2), historias de lectura, vocabulario, idioms, ejercicios de pronunciación y una biblioteca de video y audio.",
+          "RusoFácilapp es una plataforma de aprendizaje del idioma ruso dirigida a hablantes de español, con lecciones estructuradas (niveles A1 a B2), historias de lectura, vocabulario, modismos, ejercicios de pronunciación y una biblioteca de video y audio.",
           "El Servicio se ofrece a través del sitio web y de la aplicación móvil. Algunas funciones (lecciones, exámenes, historias completas) requieren una suscripción de pago; otras son de acceso gratuito.",
         ],
       },
@@ -251,7 +269,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
         heading: "2. Cuentas de usuario",
         paragraphs: [
           "Para acceder a la mayoría de las funciones necesitas crear una cuenta con un correo electrónico y una contraseña. Eres responsable de mantener la confidencialidad de tu contraseña y de toda actividad que ocurra en tu cuenta.",
-          "Debes proporcionar información veraz al registrarte. Si detectas un uso no autorizado de tu cuenta, cámbiala contraseña de inmediato desde tu perfil o usa la opción de recuperación de contraseña.",
+          "Debes proporcionar información veraz al registrarte. Si detectas un uso no autorizado de tu cuenta, cambia la contraseña de inmediato desde tu perfil o usa la opción de recuperación de contraseña.",
           "El Servicio está dirigido a personas mayores de 18 años. Al crear una cuenta declaras que tienes 18 años cumplidos. No comprobamos la edad por medios técnicos: es una condición de uso, no un control automático. Si sabemos que una cuenta pertenece a alguien menor de 18 años, la eliminaremos.",
         ],
       },
@@ -293,7 +311,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "7. Exclusión de garantías y limitación de responsabilidad",
         paragraphs: [
-          "El Servicio se ofrece 'tal cual'. No garantizamos que esté libre de errores o interrupciones. En la medida permitida por la ley aplicable, no seremos responsables de daños indirectos derivados del uso del Servicio.",
+          "El Servicio se ofrece «tal cual». No garantizamos que esté libre de errores o interrupciones. En la medida permitida por la ley aplicable, no seremos responsables de daños indirectos derivados del uso del Servicio.",
         ],
       },
       {
@@ -414,7 +432,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "2. Qué datos recopilamos",
         paragraphs: [
-          "Datos de cuenta: correo electrónico, nombre (opcional), un identificador de avatar (una cadena de texto como 'matryoshka_calm' — nunca subes ni almacenamos ninguna foto tuya), y tu contraseña, que guardamos siempre cifrada (hash bcrypt), nunca en texto plano.",
+          "Datos de cuenta: correo electrónico, nombre (opcional), un identificador de avatar (una cadena de texto como «matryoshka_calm» — nunca subes ni almacenamos ninguna foto tuya), y tu contraseña, que guardamos siempre cifrada (hash bcrypt), nunca en texto plano.",
           "Datos de progreso de aprendizaje: qué lecciones has completado, tu racha de estudio, tus resultados en exámenes, qué palabras y expresiones ya conoces, y tu progreso de lectura en las historias.",
           "Grabaciones de voz: NO las recogemos. Si usas los ejercicios de pronunciación, el audio se guarda en el almacenamiento del propio navegador de tu dispositivo (IndexedDB, hasta 30 grabaciones o 20 MB, lo que se alcance primero) para que puedas escucharlo y compararlo. No se sube a ningún servidor, no existe ninguna ruta de subida en el Servicio y nosotros no podemos oírlo.",
           "Datos de suscripción: tu estado de suscripción (activa, cancelada, plan) y un identificador de cliente de Stripe. No almacenamos los datos de tu tarjeta de pago — Stripe los procesa directamente.",

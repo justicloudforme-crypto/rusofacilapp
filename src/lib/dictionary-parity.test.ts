@@ -71,11 +71,13 @@ const NO_CYRILLIC_IS_CORRECT = new Map<string, string>([
   ["vocabulary.recall.directionEsToRuLabel", "language codes"],
   ["vocabulary.recall.directionRuToEsLabel", "language codes"],
   ["admin.exams.examSlugPlaceholder", "an example slug"],
-  // Пример кода доступа в поле ввода (PROGRESS.md 7.146). Коды печатаются
-  // одним алфавитом на обе локали — латиница и цифры, — потому что их
-  // переписывают с бумаги, и кириллическая подсказка обещала бы кириллический
-  // код, которого не существует.
-  ["profile.accessCodePlaceholder", "an example code: access codes are Latin+digits in both locales"],
+  // `profile.accessCodePlaceholder` СНЯТ СО СПИСКА 16.09.2026, заход 7.202,
+  // часть 3. Подсказкой был образец `AMIGO-0000-0000`, то есть настоящая
+  // приставка выпуска (5 знаков из 5, `scripts/generate-access-codes.ts`,
+  // DEFAULT_PREFIX) и настоящая разбивка на группы по четыре. Теперь там
+  // обычная фраза, и в русской локали она по-русски, — значит месту в этом
+  // списке взяться неоткуда, а сам список правило «каждая запись всё ещё
+  // без кириллицы» и проверяет.
   // Platform names, not store names — the page no longer asserts which
   // store the app will appear in (05.09.2026, PROGRESS.md 7.127).
   ["download.iosCta", "platform name, the same word in both locales"],
