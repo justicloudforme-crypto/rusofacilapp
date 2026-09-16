@@ -297,13 +297,73 @@ function judgeCensus(controls, where) {
  */
 const SETTLE_TIMEOUT_MS = 8_000;
 
-async function censusOf(page, skipped) {
+/**
+ * СРОК САМОЙ ПЕРЕПИСИ — 7.201.
+ *
+ * ЗАЧЕМ ОТДЕЛЬНОЕ ЧИСЛО, когда у экрана уже есть срок в 240 с. Ждать
+ * страницу без срока умеет ровно один вызов Playwright — `page.evaluate`:
+ * если исполняемый контекст страницы срывается (навигация) или её главный
+ * поток занят навсегда, он ждёт нового контекста сколько угодно. Внешний
+ * срок экрана это ловит, но платит за это ЧЕТЫРЕ МИНУТЫ и называет шаг
+ * «открытие», под которым лежат и переход, и ожидание, и перепись.
+ *
+ * ЗАМЕР, КОТОРЫЙ ЭТО НАЗВАЛ (доля 3/3, 15–16.09.2026): три красных прогона
+ * из четырёх на `/ru/account (guest)`, каждый — ровно 240 с и ровно на
+ * шаге «открытие», при среднем экране ≈6 с. Причина была в странице
+ * (`/[lang]/profile` отвечал гостю 200 с `<meta refresh>` на 1000-й
+ * миллисекунде), и она убрана; этот срок — вторая половина: теперь
+ * молчащая перепись называется за 30 с и называет СВОЙ шаг.
+ *
+ * ЧИСЛО. 30 с — впятеро больше целого среднего экрана и в восемь раз
+ * меньше срока экрана. Перепись органов на уже загруженном документе
+ * стоит миллисекунды; 30 с здесь означает не «медленно», а «не отвечает».
+ * Экран, не уложившийся в него, попадает в ТОТ ЖЕ список молчащих и так
+ * же роняет прогон — строгость не изменилась, изменилась цена и точность
+ * названия.
+ */
+const CENSUS_ANSWER_MS = 30_000;
+
+/** Молчание, за которое отвечает `CENSUS_ANSWER_MS`: отличается от прочих
+ *  отказов тем, что НЕ гасится в `censusOf`, а идёт наверх находкой. */
+class ScreenStalled extends Error {}
+
+/**
+ * ПОДСАЖЕННОЕ ЗАВИСАНИЕ — ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ СРОКА ПЕРЕПИСИ (7.201).
+ *
+ * Занимает главный поток страницы настоящим бесконечным циклом — ровно тем
+ * классом отказа, ради которого срок и заведён (7.196: «страница, чей
+ * главный поток занят навсегда, не ответит никогда»). Цикл
+ * САМООГРАНИЧЕН 45 секундами: срок переписи истекает на 30-й, находка уже
+ * записана, а браузер после этого закрывается без висящего рендерера.
+ */
+const STALL_PLANT_MS = 45_000;
+
+async function censusOf(page, skipped, where) {
   try {
     await page.waitForLoadState("domcontentloaded", { timeout: SETTLE_TIMEOUT_MS });
-    return await page.evaluate(CONTROL_CENSUS);
   } catch {
     skipped.count += 1;
     return [];
+  }
+  let timer;
+  const answer = page.evaluate(CONTROL_CENSUS);
+  // Проигравший гонку `evaluate` когда-нибудь откажет (браузер закроется),
+  // и отказ без обработчика уронил бы процесс уже ПОСЛЕ отчёта.
+  answer.catch(() => {});
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new ScreenStalled(`${STALLED_MARK} ${Math.round(CENSUS_ANSWER_MS / 1000)} с (встал на шаге «${where}»)`)),
+      CENSUS_ANSWER_MS,
+    );
+  });
+  try {
+    return await Promise.race([answer, deadline]);
+  } catch (error) {
+    if (error instanceof ScreenStalled) throw error;
+    skipped.count += 1;
+    return [];
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -329,7 +389,7 @@ async function censusOf(page, skipped) {
  * наверх и там сверяется с переписью: цель, которой в переписи НЕТ,
  * означает, что экран выпал из замера, и это находка, а не пропуск.
  */
-async function screen(context, base, path, role, plant, skipped, step) {
+async function screen(context, base, path, role, plant, skipped, step, stallPlant = false) {
   const page = await context.newPage();
   const problems = [];
   let clicks = 0;
@@ -352,7 +412,20 @@ async function screen(context, base, path, role, plant, skipped, step) {
         document.body.appendChild(button);
       });
     }
-    problems.push(...judgeCensus(await censusOf(page, skipped), `${path} (${role}, открытие)`));
+    if (stallPlant) {
+      // ПОДСАДКА ЗАВИСАНИЯ: главный поток страницы занят настоящим циклом.
+      // Ставится ПОСЛЕ открытия и ДО переписи — то есть ровно туда, где
+      // живой отказ и случался.
+      await page.evaluate((ms) => {
+        setTimeout(() => {
+          const until = Date.now() + ms;
+          while (Date.now() < until) {
+            /* занят навсегда — с точки зрения срока переписи */
+          }
+        }, 0);
+      }, STALL_PLANT_MS);
+    }
+    problems.push(...judgeCensus(await censusOf(page, skipped, "перепись на открытии"), `${path} (${role}, открытие)`));
 
     const landed = new URL(page.url()).pathname;
     if (landed !== path) {
@@ -400,7 +473,12 @@ async function screen(context, base, path, role, plant, skipped, step) {
         continue;
       }
       at(`перепись после нажатия ${i + 1} из ${budget}`);
-      problems.push(...judgeCensus(await censusOf(page, skipped), `${path} (${role}, нажатий ${i + 1})`));
+      problems.push(
+        ...judgeCensus(
+          await censusOf(page, skipped, `перепись после нажатия ${i + 1} из ${budget}`),
+          `${path} (${role}, нажатий ${i + 1})`,
+        ),
+      );
     }
     return { problems, clicks, opened: true };
   } finally {
@@ -436,6 +514,17 @@ export async function main() {
   // `--paths=` — для замера «до/после» по названным поверхностям, а не
   // для прогона в verify: там множество всегда собранное и полное.
   const pathsArg = process.argv.find((a) => a.startsWith("--paths="));
+  /**
+   * `--stall=<адрес>` — ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ СРОКА ПЕРЕПИСИ (7.201).
+   *
+   * На названном адресе главный поток страницы занимается бесконечным
+   * циклом, и прогон обязан назвать этот экран молчащим В КАЖДОЙ ИЗ ТРЁХ
+   * РОЛЕЙ. Исход обратный обычному: поймано — 0, пропущено — 1. Без этого
+   * флага тот же адрес обязан молчать в отчёте (отрицательный контроль), и
+   * обе половины гоняются рядом — см. scripts/verify-rendered.mjs.
+   */
+  const stallArg = process.argv.find((a) => a.startsWith("--stall="));
+  const stallPath = stallArg ? stallArg.slice("--stall=".length) : null;
 
   const shard = parseShard(process.argv);
   const census = await collectAddresses(base);
@@ -519,7 +608,7 @@ export async function main() {
         // всё равно когда-нибудь завершится, и его отказ без обработчика
         // стал бы необработанным отклонением — то есть падением процесса
         // уже ПОСЛЕ того, как отчёт напечатан.
-        const running = screen(contexts[role], base, path, role, plant, skipped, step);
+        const running = screen(contexts[role], base, path, role, plant, skipped, step, path === stallPath);
         running.catch(() => {});
         try {
           return { role, path, ...(await Promise.race([running, deadline])) };
@@ -561,13 +650,43 @@ export async function main() {
   }
   if (redirects.length) {
     const pairs = [...new Set(redirects.map((r) => `${r.from} → ${r.to}`))];
-    console.log(`  переадресаций: ${redirects.length} (${pairs.length} различных), цели в переписи: ${pairs.length - new Set(escaped).size} из ${pairs.length}`);
+    const inCensus = pairs.filter((pair) => known.has(pair.slice(pair.indexOf(" → ") + 3))).length;
+    console.log(
+      `  переадресаций: ${redirects.length} (${pairs.length} различных)` +
+        // При `--paths=` перепись не полная по построению, и доля «целей в
+        // переписи» считала бы полноту среза: печатать её значит печатать
+        // заведомую бессмыслицу (замер: «-1 из 2»).
+        (pathsArg ? "" : `, цели в переписи: ${inCensus} из ${pairs.length}`),
+    );
     for (const pair of pairs.slice(0, 10)) console.log(`    ${pair}`);
   }
-  if (!plant && escaped.length) {
+  // При `--paths=` перепись НЕ полная по построению (это замер по
+  // названным поверхностям), и требование «цель переадресации обязана быть
+  // в переписи» к ней неприменимо: оно судило бы полноту среза, а не сайт.
+  // В прогоне доли `--paths=` не передаётся никогда.
+  if (!plant && !pathsArg && escaped.length) {
     console.error("ЭКРАНЫ, УШЕДШИЕ ИЗ ЗАМЕРА ЧЕРЕЗ ПЕРЕАДРЕСАЦИЮ НА АДРЕС ВНЕ ПЕРЕПИСИ:");
     for (const line of [...new Set(escaped)]) console.error(`  ${line}`);
     return 1;
+  }
+
+  if (stallPath) {
+    const roles = Object.keys(sessions);
+    const caught = roles.filter((role) => stalled.some((line) => line.startsWith(`${stallPath} (${role})`)));
+    for (const role of roles) {
+      const ok = caught.includes(role);
+      console.log(`  роль ${role.padEnd(5)} — подсаженное зависание ${ok ? "поймано" : "ПРОПУЩЕНО"}`);
+    }
+    for (const line of stalled) console.log(`  молчит: ${line}`);
+    if (caught.length !== roles.length) {
+      console.error(
+        `подсаженное зависание на ${stallPath} названо ${caught.length} ролями из ${roles.length} — ` +
+          `срок переписи не ловит занятый навсегда главный поток`,
+      );
+      return 1;
+    }
+    console.log(`  подсадка зависания поймана всеми ${roles.length} ролями — срок переписи работает`);
+    return 0;
   }
 
   // МОЛЧАЩИЕ ЭКРАНЫ — своим списком и своим счётом.

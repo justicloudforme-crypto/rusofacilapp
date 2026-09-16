@@ -278,6 +278,8 @@ async function main() {
     let nativePaymentsPlant = { status: 1 };
     let renderedPurchases = { status: 1 };
     let renderedPurchasesPlant = { status: 1 };
+    let stallPlant = { status: 1 };
+    let stallHealthy = { status: 1 };
     let accessSigns = { status: 1 };
     let accessSignsPlant = { status: 1 };
     let signedOut = { status: 1 };
@@ -332,6 +334,34 @@ async function main() {
         renderedPurchasesPlant = spawnSync(
           process.execPath,
           ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--plant", "--limit=4"],
+          { stdio: "inherit" }
+        );
+        /**
+         * СЕДЬМАЯ И ВОСЬМАЯ — ДВУСТОРОННИЙ СТОРОЖ МОЛЧАЩЕГО ЭКРАНА (7.201).
+         *
+         * ЗАЧЕМ. Заход 7.201 разбирал красную долю 3/3, где `/ru/account`
+         * под гостем «не ответил за 240 с». Причина была в СТРАНИЦЕ
+         * (`/[lang]/profile` отдавал гостю 200 с `<meta refresh>` вместо
+         * 307), и она убрана. Но утверждение «здоровый экран молчит в
+         * отчёте» без второй половины ничего не стоит: так же молчал бы
+         * прибор, который зависаний не ловит вовсе.
+         *
+         * ПОЛОЖИТЕЛЬНАЯ ПОЛОВИНА: на `/ru/account` подсаживается настоящий
+         * бесконечный цикл в главном потоке, и прибор обязан назвать этот
+         * экран молчащим в КАЖДОЙ из трёх ролей. ОТРИЦАТЕЛЬНАЯ: тот же
+         * адрес без подсадки обязан пройти без единого молчащего экрана —
+         * то есть починка страницы проверяется тем же прибором, что её
+         * нашёл. Цена: подсадка упирается в срок переписи (30 с), здоровый
+         * срез — секунды. Оба гоняются ВСЕГДА, включая `--no-purchase-census`.
+         */
+        stallPlant = spawnSync(
+          process.execPath,
+          ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--paths=/ru/account", "--stall=/ru/account"],
+          { stdio: "inherit" }
+        );
+        stallHealthy = spawnSync(
+          process.execPath,
+          ["scripts/check-rendered-purchase-surfaces.mjs", `--base=${ROLES_BASE}`, "--paths=/ru/account"],
           { stdio: "inherit" }
         );
         // ПЯТАЯ И ШЕСТАЯ на том же сервере ролей — 7.196, часть 1: знак
@@ -489,7 +519,9 @@ async function main() {
       (nativePayments.status ?? 1) ||
       (nativePaymentsPlant.status ?? 1) ||
       (renderedPurchases.status ?? 1) ||
-      (renderedPurchasesPlant.status ?? 1)
+      (renderedPurchasesPlant.status ?? 1) ||
+      (stallPlant.status ?? 1) ||
+      (stallHealthy.status ?? 1)
     );
   } finally {
     stop();

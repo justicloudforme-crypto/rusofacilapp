@@ -84,6 +84,63 @@ async function protectAdminRoute(request: NextRequest, segments: string[]) {
   return null;
 }
 
+/**
+ * ГОСТЬ УХОДИТ С КАБИНЕТА НА ВХОД ОТВЕТОМ СЕРВЕРА — 7.201, долг 226.
+ *
+ * ЧТО БЫЛО ИЗМЕРЕНО (прод, 16.09.2026, без сессии). `GET /ru/profile`
+ * отвечал **200**, а не переадресацией, и в теле стояло
+ * `<meta http-equiv="refresh" content="1;url=/ru/login?redirectTo=/ru/profile">`;
+ * то же на `/es/profile` и, через 307 со страницы-псевдонима, на обоих
+ * адресах `account`. Человек получал целый документ на 147 КиБ и уходил на
+ * вход ЧЕРЕЗ СЕКУНДУ после его загрузки.
+ *
+ * ПОЧЕМУ ТАК ВЫХОДИЛО. Рядом с `[lang]/profile/page.tsx` лежит
+ * `loading.tsx` — единственный в проекте. Next оборачивает такую страницу
+ * в Suspense и отдаёт оболочку документа клиенту ДО того, как страница
+ * дочитает `getCurrentUser()`; после первого байта настоящей
+ * 307-переадресации уже не сделать, и `redirect()` из тела страницы
+ * вырождается в `<meta refresh>`. Проверено: перенос той же проверки в
+ * `layout.tsx` рядом со страницей НЕ помогает — макет отдаётся тем же
+ * потоком (замер: мета-обновление осталось на всех четырёх адресах).
+ * Помогает только ответ, данный ДО рендера, — то есть здесь.
+ *
+ * ЧЕМ ЭТО ПЛОХО ПРИБОРУ. Перепись платных поверхностей открывает экран,
+ * ждёт `domcontentloaded` и переписывает органы через `page.evaluate` —
+ * единственный вызов Playwright без своего срока. Мета-обновление срывает
+ * исполняемый контекст ровно на 1000-й миллисекунде, то есть посреди этой
+ * переписи, и на бегунке CI ожидание нового контекста бесконечно. Отсюда
+ * «/ru/account (guest): экран не ответил за 240 с» — три красных прогона
+ * доли 3/3 из четырёх.
+ *
+ * ПОЧЕМУ ПРОВЕРКА ТОЛЬКО ПО ТОКЕНУ, БЕЗ ЧТЕНИЯ БАЗЫ. Ровно как первая
+ * половина `protectAdminRoute` выше: подписанного токена нет — человек
+ * заведомо гость, и это единственный случай, который вообще попадает на
+ * этот путь. Токен с устаревшим `sessionVersion` (пароль сменили на другом
+ * устройстве) проверку проходит и упирается в проверку самой страницы —
+ * там останется прежнее мета-обновление; платить за этот редкий случай
+ * лишним чтением базы на КАЖДОМ открытии кабинета дороже, чем он стоит.
+ *
+ * КУДА ВЕДЁТ `redirectTo`. Туда, куда человек шёл: кабинет — это
+ * `/[lang]/profile`, а `/[lang]/account` только его псевдоним. Запрос
+ * сохраняется целиком, иначе гость, вернувшийся из кассы с
+ * `?checkout=success`, потерял бы исход покупки на входе.
+ */
+function protectCabinetRoute(request: NextRequest, segments: string[]) {
+  const [lang, section] = segments;
+  if (section !== "profile" && section !== "account") return null;
+  if (!isLocale(lang)) return null;
+
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  if (token && verifySessionToken(token)) return null;
+
+  const url = request.nextUrl.clone();
+  const search = request.nextUrl.search;
+  url.pathname = `/${lang}/login`;
+  url.search = "";
+  url.searchParams.set("redirectTo", `/${lang}/profile${search}`);
+  return NextResponse.redirect(url);
+}
+
 async function route(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -170,6 +227,9 @@ async function route(request: NextRequest) {
 
   const adminAccessDenied = await protectAdminRoute(request, segments);
   if (adminAccessDenied) return adminAccessDenied;
+
+  const cabinetAccessDenied = protectCabinetRoute(request, segments);
+  if (cabinetAccessDenied) return cabinetAccessDenied;
 
 
   // No `x-pathname` header any more. It existed so [lang]/layout.tsx could
