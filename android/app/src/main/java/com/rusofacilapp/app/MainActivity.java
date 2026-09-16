@@ -134,6 +134,22 @@ public class MainActivity extends BridgeActivity {
     private static final String PREF_LOCALE = "lastLocale";
 
     /**
+     * ИМЯ КУКИ ВЫБОРА ЯЗЫКА — ВТОРАЯ ПОЛОВИНА ПАРЫ (заход 7.202, часть 1).
+     *
+     * Абзац выше говорит «кука — правильное место для первого читателя, но
+     * экран ошибки её не видит». Первая половина верна, вторая была
+     * неполна: её не видит САМ ЭКРАН, загруженный с `https://localhost`, —
+     * а оболочка видит, потому что спрашивает кувшин кук webview по
+     * БОЕВОМУ адресу (`CookieManager.getCookie(serverUrl)`), и никакой
+     * политики источников там нет.
+     *
+     * Значение обязано совпадать с `LOCALE_COOKIE` из
+     * `src/lib/remembered-locale.ts` — сличает
+     * `npm run check:shell-session-locale`.
+     */
+    private static final String LOCALE_COOKIE = "rf-lang";
+
+    /**
      * ПОДСТАНОВКА БЕЗОПАСНЫХ ПОЛЕЙ — ОДНА СТРОКА НА ВЕСЬ ПРОЕКТ.
      *
      * Здесь она объявлена шаблоном, а не собирается по месту, потому что
@@ -556,6 +572,75 @@ public class MainActivity extends BridgeActivity {
         return null;
     }
 
+    /**
+     * ВЫБОР ЧЕЛОВЕКА, А НЕ СЛЕД НАВИГАЦИИ (заход 7.202, часть 1).
+     *
+     * ЧТО СНЯЛ ВЛАДЕЛЕЦ 16.09.2026. Язык интерфейса переключён на
+     * русский, сайт показан по-русски, приложение закрыто из «Недавних»,
+     * запущено без Wi-Fi — экран ошибки пришёл ПО-ИСПАНСКИ. Дважды.
+     *
+     * ПОЧЕМУ ПРАВКА 7.198 ЭТОГО НЕ ЗАКРЫВАЛА И НЕ МОГЛА. Она запоминает
+     * локаль в {@link #PREF_LOCALE}, а пишет туда {@link
+     * #rememberLocaleFrom(String)} — из трёх слушателей `WebViewListener`:
+     * `onPageStarted`, `onPageCommitVisible`, `onPageLoaded`. Все три —
+     * события ПОЛНОЙ навигации. Переключатель языка на сайте
+     * (`src/components/LanguageSwitcher.tsx`) — это `next/link`, то есть
+     * МЯГКИЙ переход: адрес меняет `pushState`, документ остаётся тот же,
+     * события загрузки не происходит вовсе. Это уже было измерено в
+     * 7.198, часть 2, другими словами и по другому поводу: «событий
+     * `load` на смене языка НОЛЬ, полной навигации нет вовсе». Значит ни
+     * один из трёх слушателей на смене языка не срабатывает, и в
+     * `PREF_LOCALE` остаётся то, что положила ПЕРВАЯ жёсткая загрузка, —
+     * у владельца `es`, потому что телефон испанский и корневой адрес
+     * увёл на `/es`.
+     *
+     * ЧТО ЧИТАЕТСЯ ТЕПЕРЬ. Кука `rf-lang` боевого источника — та самая,
+     * которую ставит `src/proxy.ts` и описывает
+     * `src/lib/remembered-locale.ts`. Она и есть ВЫБОР: proxy переписывает
+     * её на каждом ответе, где локаль пути изменилась, включая ответы
+     * мягкого перехода (запрос RSC идёт через тот же proxy). Экран ошибки
+     * прочитать её не может — он загружен с `https://localhost`, чужого
+     * источника, — а ОБОЛОЧКА может: у неё общий с webview кувшин кук, и
+     * спрашивает она его по боевому адресу.
+     *
+     * Список локалей по-прежнему ОДИН: значение куки проверяется тем же
+     * {@link #localeOf(String)}, что и адрес страницы.
+     *
+     * @return `es`/`ru` — выбор человека, либо null, если выбора ещё нет.
+     */
+    private String chosenLocaleFromCookies() {
+        if (getBridge() == null) {
+            return null;
+        }
+        String serverUrl = getBridge().getServerUrl();
+        if (serverUrl == null) {
+            return null;
+        }
+        String jar;
+        try {
+            jar = CookieManager.getInstance().getCookie(serverUrl);
+        } catch (Exception e) {
+            return null;
+        }
+        if (jar == null) {
+            return null;
+        }
+        for (String pair : jar.split(";")) {
+            int eq = pair.indexOf('=');
+            if (eq <= 0) {
+                continue;
+            }
+            if (!LOCALE_COOKIE.equals(pair.substring(0, eq).trim())) {
+                continue;
+            }
+            // Через localeOf, а не своим списком: список локалей обязан
+            // жить в одном месте, иначе третья локаль появится в проекте
+            // и не появится здесь.
+            return localeOf("/" + pair.substring(eq + 1).trim());
+        }
+        return null;
+    }
+
     private void applyLocaleToErrorScreen(String url) {
         if (getBridge() == null || url == null) {
             return;
@@ -564,11 +649,22 @@ public class MainActivity extends BridgeActivity {
         if (errorUrl == null || !url.startsWith(errorUrl)) {
             return;
         }
-        String locale = getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LOCALE, null);
+        // ПОРЯДОК ИСТОЧНИКОВ, И ОН НЕ СЛУЧАЕН (заход 7.202, часть 1).
+        //
+        //   1. Выбор человека — кука `rf-lang`. Переживает и мягкий
+        //      переход, и закрытие приложения.
+        //   2. След последней ЖЁСТКОЙ навигации — `PREF_LOCALE`. Ниже
+        //      выбора: он говорит, какую страницу открыли, а не что
+        //      выбрали. Оставлен, потому что кувшин кук чистят (выход,
+        //      «очистить данные»), а след переживает это.
+        //   3. Молчание. Тогда экран ошибки берёт язык СИСТЕМЫ, а если и
+        //      его не знает — испанский; оба правила живут в самом
+        //      `capacitor-shell/error.html` и сюда не переезжают.
+        String locale = chosenLocaleFromCookies();
         if (locale == null) {
-            // Ничего не запомнено — прежнее поведение экрана ошибки
-            // (язык телефона, запасной испанский). Это ПЕРВЫЙ запуск,
-            // у которого другого источника и нет.
+            locale = getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LOCALE, null);
+        }
+        if (locale == null) {
             return;
         }
         WebView webView = getBridge().getWebView();

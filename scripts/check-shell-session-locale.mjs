@@ -92,6 +92,7 @@ import { pathToFileURL } from "node:url";
 const ACTIVITY = "android/app/src/main/java/com/rusofacilapp/app/MainActivity.java";
 const ERROR_PAGE = "capacitor-shell/error.html";
 const I18N = "src/i18n/config.ts";
+const LOCALE_COOKIE_SOURCE = "src/lib/remembered-locale.ts";
 
 const read = (path) => readFileSync(path, "utf8");
 
@@ -112,6 +113,20 @@ function methodBody(source, signature) {
     }
   }
   return null;
+}
+
+/**
+ * Тело без комментариев.
+ *
+ * ПОЧЕМУ ЭТО ОТДЕЛЬНАЯ ФУНКЦИЯ, а не «и так понятно». Первая редакция
+ * правила 6 сравнивала порядок двух имён прямо в тексте метода — и
+ * покраснела на ПОЧИНЕННОМ файле, потому что `PREF_LOCALE` стоит в
+ * комментарии, объясняющем порядок источников, то есть выше самого кода.
+ * Сторож мерил объяснение вместо решения. Тот же класс, что «сторож
+ * засчитывал ИМЯ СВОЙСТВА за вопрос про оболочку» (7.196).
+ */
+function withoutComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
 }
 
 /** Видимый текст экрана ошибки по ключу `data-i18n` — из РАЗМЕТКИ. */
@@ -160,6 +175,7 @@ export function judge(sources) {
   const activity = sources[ACTIVITY];
   const html = sources[ERROR_PAGE];
   const i18n = sources[I18N];
+  const cookieSource = sources[LOCALE_COOKIE_SOURCE];
 
   // --- 1. Запись хранилища кук на диск -------------------------------
   for (const hook of ["public void onPause()", "public void onStop()"]) {
@@ -220,6 +236,72 @@ export function judge(sources) {
   }
   if (!/window\.__rfApplyLocale\s*=\s*applyLocale;/.test(html)) {
     problems.push(`${ERROR_PAGE}: экран ошибки не объявляет точку входа для языка от оболочки`);
+  }
+
+  // --- 6. ЯЗЫК ЭКРАНА ОШИБКИ — ЭТО ВЫБОР, А НЕ СЛЕД (заход 7.202) -----
+  //
+  // `PREF_LOCALE` пишут три слушателя ПОЛНОЙ навигации, а переключатель
+  // языка на сайте — `next/link`, то есть мягкий переход. Значит след
+  // навигации выбора не видит вовсе, и опираться на него одного нельзя.
+  // Выбор живёт в куке `rf-lang` боевого источника; прочитать её может
+  // только оболочка — у самого экрана ошибки другой источник.
+  const chosen = methodBody(activity, "private String chosenLocaleFromCookies()");
+  if (!chosen) {
+    problems.push(
+      `${ACTIVITY}: выбор языка нигде не читается — экран ошибки знает только про полные навигации, ` +
+        `а переключатель языка на сайте их не делает`,
+    );
+  } else {
+    if (!/CookieManager\.getInstance\(\)\.getCookie\(/.test(chosen)) {
+      problems.push(`${ACTIVITY}: выбор языка читается не из кувшина кук webview`);
+    }
+    if (!/getServerUrl\(\)/.test(chosen)) {
+      problems.push(
+        `${ACTIVITY}: кука выбора языка спрашивается не по БОЕВОМУ адресу — ` +
+          `у локального экрана ошибки свой источник, и кук боевого домена на нём нет ни одной`,
+      );
+    }
+    if (!/LOCALE_COOKIE/.test(chosen)) {
+      problems.push(`${ACTIVITY}: имя куки выбора языка написано по месту, а не взято из одного объявления`);
+    }
+    if (!/localeOf\(/.test(chosen)) {
+      problems.push(
+        `${ACTIVITY}: значение куки проверяется своим списком локалей, а не общим localeOf — ` +
+          `третья локаль появится в проекте и не появится здесь`,
+      );
+    }
+  }
+  if (apply) {
+    const applyCode = withoutComments(apply);
+    const atChosen = applyCode.indexOf("chosenLocaleFromCookies()");
+    const atPref = applyCode.indexOf("PREF_LOCALE");
+    if (atChosen === -1) {
+      problems.push(
+        `${ACTIVITY}: экрану ошибки приносится след последней страницы, а не выбор человека`,
+      );
+    } else if (atPref !== -1 && atPref < atChosen) {
+      problems.push(
+        `${ACTIVITY}: след навигации спрашивается РАНЬШЕ выбора человека — ` +
+          `выбранный русский снова проиграет первой жёсткой загрузке на /es`,
+      );
+    }
+  }
+
+  // Имя куки — одно на проект. Расхождение молчаливое: оболочка искала бы
+  // куку, которой сайт не ставит, и экран ошибки снова остался бы без языка.
+  const cookieName = /export const LOCALE_COOKIE = "([^"]+)"/.exec(cookieSource ?? "");
+  if (!cookieName) {
+    problems.push(`${LOCALE_COOKIE_SOURCE}: имя куки выбора языка не читается`);
+  } else {
+    const inJava = /private static final String LOCALE_COOKIE = "([^"]+)"/.exec(activity);
+    if (!inJava) {
+      problems.push(`${ACTIVITY}: имя куки выбора языка не объявлено`);
+    } else if (inJava[1] !== cookieName[1]) {
+      problems.push(
+        `${ACTIVITY}: имя куки выбора языка «${inJava[1]}» разошлось с ${LOCALE_COOKIE_SOURCE} ` +
+          `(«${cookieName[1]}») — оболочка искала бы куку, которой сайт не ставит`,
+      );
+    }
   }
 
   // --- 5. Один словарь, разметка с ним совпадает ----------------------
@@ -298,7 +380,9 @@ function fileBeforeFix(path) {
 
 export async function main() {
   const plant = process.argv.includes("--plant");
-  const sources = Object.fromEntries([ACTIVITY, ERROR_PAGE, I18N].map((f) => [f, read(f)]));
+  const sources = Object.fromEntries(
+    [ACTIVITY, ERROR_PAGE, I18N, LOCALE_COOKIE_SOURCE].map((f) => [f, read(f)]),
+  );
 
   if (plant) {
     let ok = judge(sources).length === 0;
@@ -351,6 +435,27 @@ export async function main() {
         { [ERROR_PAGE]: sources[ERROR_PAGE].replace(
           '<button type="button" id="retry">',
           '<p data-i18n="extra">Texto suelto</p>\n    <button type="button" id="retry">') }],
+      ["выбор человека не читается вовсе — остался только след полной навигации (состояние 7.198)",
+        { [ACTIVITY]: sources[ACTIVITY].replace(
+          "private String chosenLocaleFromCookies()", "private String неЧитаемВыбор()") }],
+      ["выбор спрашивается ПОСЛЕ следа навигации — выбранный русский снова проигрывает",
+        { [ACTIVITY]: sources[ACTIVITY].replace(
+          "        String locale = chosenLocaleFromCookies();\n        if (locale == null) {\n            locale = getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LOCALE, null);\n        }",
+          "        String locale = getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LOCALE, null);\n        if (locale == null) {\n            locale = chosenLocaleFromCookies();\n        }") }],
+      ["кука спрашивается по ЛОКАЛЬНОМУ адресу экрана ошибки, а не по боевому",
+        { [ACTIVITY]: sources[ACTIVITY].replace(
+          "String serverUrl = getBridge().getServerUrl();", 'String serverUrl = "https://localhost";') }],
+      ["значение куки проверяется своим списком локалей, а не общим localeOf",
+        { [ACTIVITY]: sources[ACTIVITY].replace(
+          'return localeOf("/" + pair.substring(eq + 1).trim());',
+          "return pair.substring(eq + 1).trim();") }],
+      ["имя куки в оболочке разошлось с именем на сайте",
+        { [ACTIVITY]: sources[ACTIVITY].replace(
+          'private static final String LOCALE_COOKIE = "rf-lang";',
+          'private static final String LOCALE_COOKIE = "rf-locale";') }],
+      ["имя куки переехало на сайте, а в оболочке осталось прежним",
+        { [LOCALE_COOKIE_SOURCE]: sources[LOCALE_COOKIE_SOURCE].replace(
+          'export const LOCALE_COOKIE = "rf-lang";', 'export const LOCALE_COOKIE = "rf-idioma";') }],
     ];
 
     let caught = 0;
@@ -379,7 +484,9 @@ export async function main() {
   console.log(
     "check:shell-session-locale — хранилище кук пишется на диск в onPause и onStop; локаль последней " +
       "страницы берётся из адреса и запоминается; список локалей совпадает с src/i18n/config.ts; язык " +
-      "доезжает до локального экрана ошибки через его собственную точку входа; обе локали экрана ошибки " +
+      "доезжает до локального экрана ошибки через его собственную точку входа; язык этого экрана берётся " +
+      "СНАЧАЛА из выбора человека (кука rf-lang боевого источника, имя сверено с src/lib/remembered-locale.ts) " +
+      "и только потом из следа последней полной навигации; обе локали экрана ошибки " +
       "лежат в одном словаре, и все три видимые строки разметки совпадают с ним знак в знак. " +
       "Контроль — --plant.",
   );
