@@ -111,3 +111,4 @@ keystore.properties
 *.jks
 *.keystore
 prisma/snapshots/
+smoke-artifacts/
