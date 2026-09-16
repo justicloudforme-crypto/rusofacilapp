@@ -72,6 +72,7 @@
  *   node scripts/check-cabinet-plan-truth.mjs --plant
  */
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
@@ -269,32 +270,86 @@ export function judge(sources) {
 
 /** `main` на 16.09.2026 — слияние PR #337, последнее до этого захода.
  *  Ровно тот код, на котором владелец снял все три находки. */
-const BEFORE_FIX = "4884a6e";
+const BEFORE_FIX = "4884a6e18c7775f889b9dcd88ee8a6bf846c34cc";
 
+/**
+ * Копии старых файлов и ОТПЕЧАТОК каждой.
+ *
+ * ДВА ИСТОЧНИКА, И ГЛАВНЫЙ — КОПИЯ, А НЕ ИСТОРИЯ. Заплачено первым же
+ * прогоном CI 16.09.2026: первая редакция считала историю обязательной и
+ * роняла прогон словами «состояние недоступно» на бегунке, у которого
+ * `actions/checkout` забирает ОДИН коммит. Хуже того, она печатала при
+ * этом «РАСХОЖДЕНИЕ» — то есть называла причиной не то, чем причина была.
+ *
+ * Поэтому теперь порядок такой:
+ *
+ *   1. Копия читается всегда и всегда же сличается со своим SHA-256,
+ *      записанным здесь. Это и держит копию честной: молча подправить её
+ *      под сторож нельзя — отпечаток лежит в коде сторожа, а не рядом с
+ *      файлом.
+ *   2. История спрашивается ТОЛЬКО если объект коммита действительно есть
+ *      (`git cat-file -e <sha>^{commit}`). Нет истории — это законное
+ *      состояние CI, и прогон из-за него не краснеет.
+ *   3. Есть история и содержимое разошлось — вот это отказ, и он про
+ *      копию, а не про бегунок.
+ *
+ * Имя коммита написано полными сорока знаками: короткое имя в мелком
+ * клоне разрешается иначе, и ровно на этом первая редакция и запуталась.
+ */
 const FIXTURES = {
-  [PAGE]: "scripts/fixtures/before-7202/profile-page.before-7202.txt",
-  [RU]: "scripts/fixtures/before-7202/ru.before-7202.txt",
-  [ES]: "scripts/fixtures/before-7202/es.before-7202.txt",
+  [PAGE]: {
+    file: "scripts/fixtures/before-7202/profile-page.before-7202.txt",
+    sha256: "111cfeb3d45e1c997b46333f2a45e715b2a9238c188e0e834cec3f1755aaf7c8",
+  },
+  [RU]: {
+    file: "scripts/fixtures/before-7202/ru.before-7202.txt",
+    sha256: "aba1124cf6ebd0c6e4094cf6ff3a70afddc3fa975cfcdcd1cabc13c002dbd797",
+  },
+  [ES]: {
+    file: "scripts/fixtures/before-7202/es.before-7202.txt",
+    sha256: "f049eccd6d650d396362c493f23e6d261db54a8b8b853007c6f996605afa11fa",
+  },
 };
 
-function fileBeforeFix(path) {
+/** Есть ли в этом клоне сам коммит. В CI — нет, и это нормально. */
+function historyHasBeforeFix() {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${BEFORE_FIX}^{commit}`], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function fileBeforeFix(path, useHistory) {
+  const { file, sha256 } = FIXTURES[path];
   let fixture;
   try {
-    fixture = readFileSync(FIXTURES[path], "utf8");
+    fixture = readFileSync(file, "utf8");
   } catch {
+    console.log(`  ОТКАЗ — копии ${file} нет`);
     return null;
   }
-  try {
-    const fromGit = execFileSync("git", ["show", `${BEFORE_FIX}:${path}`], {
-      encoding: "utf8",
-      maxBuffer: 32 * 1024 * 1024,
-    });
-    if (fromGit !== fixture) {
-      console.log(`  РАСХОЖДЕНИЕ — ${FIXTURES[path]} не совпадает с ${BEFORE_FIX}:${path}`);
+  const actual = createHash("sha256").update(fixture, "utf8").digest("hex");
+  if (actual !== sha256) {
+    console.log(`  ОТКАЗ — ${file}: SHA-256 ${actual.slice(0, 12)}… вместо ${sha256.slice(0, 12)}…`);
+    return null;
+  }
+  if (useHistory) {
+    let fromGit;
+    try {
+      fromGit = execFileSync("git", ["cat-file", "blob", `${BEFORE_FIX}:${path}`], {
+        encoding: "utf8",
+        maxBuffer: 64 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch {
+      fromGit = null;
+    }
+    if (fromGit !== null && fromGit !== fixture) {
+      console.log(`  ОТКАЗ — ${file} не совпадает с ${BEFORE_FIX.slice(0, 7)}:${path}`);
       return null;
     }
-  } catch {
-    // Истории нет (в CI забирается один коммит) — работаем по копии.
   }
   return fixture;
 }
@@ -307,20 +362,37 @@ export async function main() {
     let ok = judge(sources).length === 0;
     console.log(`  ${ok ? "молчит" : "ЛОЖНО КРАСНЫЙ"} — здоровые исходники (отрицательный контроль)`);
 
-    const old = Object.fromEntries([PAGE, RU, ES].map((f) => [f, fileBeforeFix(f)]));
+    const useHistory = historyHasBeforeFix();
+    console.log(
+      `  копии сличены с SHA-256 из кода сторожа; история коммита ${BEFORE_FIX.slice(0, 7)} ` +
+        `${useHistory ? "есть — сличена и она" : "в этом клоне отсутствует (обычное состояние CI), копия и есть источник"}`,
+    );
+    const old = Object.fromEntries([PAGE, RU, ES].map((f) => [f, fileBeforeFix(f, useHistory)]));
     if (Object.values(old).some((v) => v === null)) {
-      console.log(`  ПРОПУЩЕНО — состояние ${BEFORE_FIX} недоступно, положительный контроль на старом коде не снят`);
+      console.log(`  ПРОПУЩЕНО — положительный контроль на старом коде не снят`);
       ok = false;
     } else {
       const found = judge({ ...sources, ...old });
       const hit = found.length > 0;
       if (!hit) ok = false;
       console.log(
-        `  ${hit ? "поймано" : "ПРОПУЩЕНО"} — НАСТОЯЩИЙ код ${BEFORE_FIX} (замер владельца снят на нём): ` +
+        `  ${hit ? "поймано" : "ПРОПУЩЕНО"} — НАСТОЯЩИЙ код ${BEFORE_FIX.slice(0, 7)} (замер владельца снят на нём): ` +
           `${found.length} нарушени${found.length === 1 ? "е" : "й"}`,
       );
       for (const p of found) console.log(`      · ${p}`);
     }
+
+    // Контроль самой копии: подправленная копия обязана перестать сходиться
+    // с отпечатком. Без этого «копия — главный источник» держалось бы на
+    // честном слове, а не на проверке.
+    const tampered = createHash("sha256")
+      .update(readFileSync(FIXTURES[PAGE].file, "utf8").replace("staffAccess", "чтоУгодноДругое"), "utf8")
+      .digest("hex");
+    const tamperCaught = tampered !== FIXTURES[PAGE].sha256;
+    if (!tamperCaught) ok = false;
+    console.log(
+      `  ${tamperCaught ? "поймано" : "ПРОПУЩЕНО"} — подправленная копия старого кода не сходится с отпечатком`,
+    );
 
     const plants = [
       ["обзорный бейдж снова решает без роли (состояние 7.200)",
@@ -379,7 +451,7 @@ export async function main() {
     console.log(
       ok
         ? `check:cabinet-plan-truth --plant — ${caught} из ${plants.length} подсадок, ` +
-            `1 из 1 отрицательный контроль, 1 из 1 положительный на настоящем коде ${BEFORE_FIX}`
+            `1 из 1 отрицательный контроль, 1 из 1 положительный на настоящем коде ${BEFORE_FIX.slice(0, 7)}`
         : `check:cabinet-plan-truth --plant — FAILED (${caught} из ${plants.length})`,
     );
     return ok ? 0 : 1;
