@@ -570,9 +570,9 @@
     "dangerZoneHeading": "Опасная зона",
     "dangerZoneToggle": "Показать",
     "badgeProgressStreak": {
-      "one": "лучшая серия: {current}/{total} день",
-      "few": "лучшая серия: {current}/{total} дня",
-      "many": "лучшая серия: {current}/{total} дней"
+      "one": "{current}/{total} день",
+      "few": "{current}/{total} дня",
+      "many": "{current}/{total} дней"
     },
     "badgeProgressVocab": {
       "one": "{current}/{total} слово",
@@ -729,7 +729,7 @@
     "accessCodeHeading": "Код доступа",
     "accessCodeIntro": "Получили код-приглашение? Введите его здесь — доступ откроется сразу.",
     "accessCodeLabel": "Ваш код",
-    "accessCodePlaceholder": "Введите код из приглашения",
+    "accessCodePlaceholder": "AMIGO-0000-0000",
     "accessCodeSubmit": "Активировать код",
     "accessCodeRedeemed": "Готово: код активирован, доступ открыт. Дату окончания видно выше.",
     "accessCodeNotApplied": "Код принят, но доступ пока не отображается активным. Обновите страницу через минуту; если ничего не изменится, напишите нам с адреса вашего аккаунта.",
