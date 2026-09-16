@@ -570,9 +570,9 @@
     "dangerZoneHeading": "Zona de riesgo",
     "dangerZoneToggle": "Mostrar",
     "badgeProgressStreak": {
-      "one": "mejor racha: {current}/{total} día",
-      "few": "mejor racha: {current}/{total} días",
-      "many": "mejor racha: {current}/{total} días"
+      "one": "{current}/{total} día",
+      "few": "{current}/{total} días",
+      "many": "{current}/{total} días"
     },
     "badgeProgressVocab": {
       "one": "{current}/{total} palabra",
@@ -729,7 +729,7 @@
     "accessCodeHeading": "Código de acceso",
     "accessCodeIntro": "¿Recibiste un código de invitación? Escríbelo aquí y tu acceso se activa al instante.",
     "accessCodeLabel": "Tu código",
-    "accessCodePlaceholder": "Escribe el código de tu invitación",
+    "accessCodePlaceholder": "AMIGO-0000-0000",
     "accessCodeSubmit": "Activar el código",
     "accessCodeRedeemed": "Listo: tu código quedó activado y tu acceso ya está abierto. Arriba puedes ver hasta qué fecha.",
     "accessCodeNotApplied": "Recibimos tu código, pero tu acceso todavía no aparece activo. Recarga la página en un momento; si sigue igual, escríbenos con el correo de tu cuenta.",

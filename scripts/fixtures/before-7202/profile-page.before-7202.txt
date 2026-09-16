@@ -192,33 +192,6 @@ function computeBadgeProgress(
   locale: Locale,
 ): BadgeProgress {
   if (def.id.startsWith("streak-")) {
-    /**
-     * ЧИСЛО И ПОДПИСЬ — ОБ ОДНОМ (заход 7.202, часть 5).
-     *
-     * ЧТО СНЯЛ ВЛАДЕЛЕЦ 16.09.2026. У Vasya приветствие называет серию
-     * 3, а «Целая неделя — 7 дней занятий подряд» показывает 5/7 и
-     * «Месяц упорства» 5/30. У сотрудника текущая серия 5, лучшая 10 —
-     * а «Месяц упорства» 10/30 и «Сто дней» 10/100.
-     *
-     * ЧТО ЭТО СЧИТАЕТ, ЧИСЛОМ. Оба набора совпадают с `longestStreak`
-     * знак в знак (5 и 10) и не совпадают с `currentStreak` (3 и 5).
-     * Заморозки, пропуски и «дни занятий» тут ни при чём вовсе:
-     * числитель — это ЛУЧШАЯ серия, ровно тот же счётчик, по которому
-     * значок и выдаётся (`src/lib/badges/index.ts:49…52`).
-     *
-     * ЧТО ВЫБРАНО И ПОЧЕМУ. Не «считать по текущей серии», а назвать то,
-     * что считается. Числитель обязан быть ТЕМ ЖЕ, что решает выдачу:
-     * покажи здесь текущую серию — и человек, у которого лучшая 29, а
-     * текущая 2, увидит «2/30» за день до значка. А выданное значком не
-     * отнимается ни в одном из двух вариантов: выдача стоит на
-     * `longestStreak`, и её эта правка не трогает вовсе.
-     *
-     * ЦЕНА. Подпись стала длиннее на два слова в обеих локалях
-     * («лучшая серия: 5/7 дней» / «mejor racha: 5/7 días»), и на узкой
-     * плитке «Что дальше» она переносится в две строки. Больше не
-     * изменилось ничего: ни одно число, ни один выданный значок, ни
-     * порядок плиток (`ratio` считается прежним делением).
-     */
     const threshold = Number(def.id.slice("streak-".length));
     const current = Math.min(ctx.longestStreak, threshold);
     return {
@@ -922,34 +895,8 @@ export default async function ProfilePage({
               <SectionHeading icon={<CrownIcon className="h-[18px] w-[18px]" />}>
                 {dict.profile.subscriptionHeading}
               </SectionHeading>
-              {/* ЗАХОД 7.202, ЧАСТЬ 2. ОДНО ПРАВИЛО НА ОБЕ ВКЛАДКИ.
-
-                  ЧТО СНЯЛ ВЛАДЕЛЕЦ 16.09.2026: у сотрудника на «Обзоре»
-                  стояло «Бесплатный план», а на вкладке «Подписка» —
-                  «Полный доступ». Одна страница, один человек, две
-                  взаимоисключающие надписи.
-
-                  ПРИЧИНА, И ОНА НЕ В ОПЕЧАТКЕ. Долг 221 (7.200) завёл
-                  признак `staffAccess` и применил его РОВНО В ОДНОМ месте
-                  — в бейдже вкладки «Подписка». Здешний бейдж остался на
-                  прежнем правиле, у которого выбор был из трёх: пожизненный,
-                  активная подписка, иначе «бесплатный». Роли в этом выборе
-                  не было вовсе, и сотрудник без строки `Subscription`
-                  попадал в «иначе».
-
-                  Теперь `staffAccess` стоит ПЕРВЫМ на обеих вкладках, и
-                  цвет бейджа берётся тем же выражением, что там. Условие
-                  «и активной подписки нет» внутри самого `staffAccess`:
-                  сотрудник, купивший подписку, обязан видеть свою подписку,
-                  а не роль. Держит `npm run check:cabinet-plan-truth`. */}
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  staffAccess ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES[displayStatus]
-                }`}
-              >
-                {staffAccess ? (
-                  dict.profile.statusStaffAccess
-                ) : subscription && isActive && subscription.plan === "lifetime" ? (
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES[displayStatus]}`}>
+                {subscription && isActive && subscription.plan === "lifetime" ? (
                   dict.profile.subscriptionCompactLifetime
                 ) : subscriptionCompactParts && subscription ? (
                   <>
@@ -973,15 +920,7 @@ export default async function ProfilePage({
                 at /pricing (annual is pre-selected there by default;
                 premium is highlighted via ?highlight=premium), the actual
                 plan change still goes through the real checkout flow. */}
-            {/* ЗАХОД 7.202, ЧАСТЬ 2, вторая половина той же правды.
-                Бейдж выше говорил сотруднику «Бесплатный план», а эта
-                кнопка — «откройте всё»: тот же признак роли не спрашивали
-                и здесь. Человеку с полным доступом предлагать открыть
-                доступ нечего, и вкладка «Подписка» это уже знает
-                (`staffAccessNotice`). Вычитается ровно `staffAccess` —
-                сотрудник, купивший подписку сам, снова идёт по общим
-                ветвям ниже. */}
-            {nativeShell || staffAccess ? null : !isActive ? (
+            {nativeShell ? null : !isActive ? (
               <Link
                 href={`/${lang}/pricing`}
                 className="tap mt-4 inline-block rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
@@ -1417,26 +1356,7 @@ export default async function ProfilePage({
           Форма обычная, с редиректом 303 — как отмена подписки рядом. У
           страницы профиля нет клиентского состояния, и заводить его ради
           одного поля значило бы завести второй способ узнать, что доступ
-          появился.
-
-          КОМУ ЭТОТ БЛОК НЕ ПОКАЗЫВАЕТСЯ — ЗАХОД 7.202, ЧАСТЬ 3.
-
-          Владелец снял 16.09.2026: сотруднику с полным доступом
-          предлагается ввести код доступа. Предложение неисполнимо по
-          построению — `redeemAccessCode` (`src/lib/access-code.ts:160…163`)
-          отказывает при `tier !== "free"`, — и неприятно по смыслу: у
-          человека уже есть всё, что код мог бы дать.
-
-          Условие — `isPremiumUser`, то есть верхний разряд доступа
-          (`tierOfAccount`: сотрудник и владелец — «premium» по роли,
-          пожизненный — по строке подписки). Ровно три роли из задания и
-          ни одной лишней. Подписчику standard и бесплатному блок остаётся:
-          решение владельца, и оно не про механику, а про то, кому мы
-          показываем приглашение. То, что маршрут откажет и подписчику
-          standard, замерено и записано отдельной строкой долга — правкой
-          этого захода оно не трогается. Держит
-          `npm run check:cabinet-plan-truth`. */}
-      {!isPremiumUser && (
+          появился. */}
       <section className="mt-8 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
         <SectionHeading icon={<KeyIcon className="h-[18px] w-[18px]" />}>
           {dict.profile.accessCodeHeading}
@@ -1481,7 +1401,6 @@ export default async function ProfilePage({
           </button>
         </form>
       </section>
-      )}
       </>
       )}
 
