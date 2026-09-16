@@ -1,0 +1,125 @@
+# ЖИВОЙ ПРОД ПОСЛЕ ВЫКАТА — ОТДЕЛЬНЫЙ ПУТЬ, НЕ ЧАСТЬ CI ВЕТКИ.
+#
+# `ci.yml` отвечает на вопрос «сломает ли этот PR сайт» и гоняется на
+# ветке. Этот workflow отвечает на другой вопрос — «работает ли сайт
+# ПРЯМО СЕЙЧАС» — и гоняется по живому адресу. Смешивать их нельзя в обе
+# стороны: на PR прода ещё нет (ветка не выкачена), а после выката ветка
+# уже не при чём. Поэтому здесь нет ни `pull_request`, ни `push`.
+#
+# ЧЕМ ЗАПУСКАЕТСЯ И ПОЧЕМУ ИМЕННО ЭТИМ. Vercel заводит в этом репозитории
+# настоящие GitHub Deployments и ставит им статусы — проверено событием из
+# истории, а не предположено:
+#
+#   GET /repos/justicloudforme-crypto/rusofacilapp/deployments
+#     → id 6488973917, environment "Production", sha 326d1f6,
+#       creator "vercel[bot]", created_at 2026-09-16T19:39:53Z
+#   GET /repos/.../deployments/6488973917/statuses
+#     → state "success", environment "Production", creator "vercel[bot]",
+#       environment_url https://rusofacilapp-ll0lpoxfh-rusofacilappcom.vercel.app
+#
+# То есть событие `deployment_status` со `state == success` и
+# `environment == Production` в этот репозиторий действительно приходит, и
+# приходит от Vercel. `repository_dispatch` не нужен: он потребовал бы
+# настройки на стороне Vercel, которой сейчас нет.
+#
+# Плюс ручной запуск и расписание раз в час — авария бывает и без выката
+# (11.09.2026 кончилась квота чтений Turso, ничего при этом не
+# выкатывалось).
+name: Прод после выката
+
+on:
+  deployment_status:
+  workflow_dispatch:
+  schedule:
+    # 17-я минута каждого часа: не в ноль, чтобы не толкаться с общей
+    # очередью расписаний GitHub.
+    - cron: "17 * * * *"
+
+# Ровно то, что нужно тревоге: завести и закрыть issue. Ни записи в код,
+# ни доступа к пакетам.
+permissions:
+  contents: read
+  issues: write
+
+# Два прогона подряд по одному и тому же проду друг другу мешают, но
+# отменять предыдущий нельзя: отменённый прогон — это неизвестный ответ,
+# а не зелёный.
+concurrency:
+  group: prod-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Живой прод — гостем, только чтение
+    # Успешный ПРОДОВЫЙ выкат, ручной запуск или расписание. Превью-деплои
+    # Vercel заводят ту же цепочку событий, и без этого условия сторож
+    # ходил бы на боевой адрес по десять раз за каждый PR.
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      # ДВУСТОРОННИЙ СТОРОЖ, ПЕРВАЯ ПОЛОВИНА. Прогон против заведомо
+      # сломанной цели обязан покраснеть — иначе зелёный по живому проду
+      # ниже не значит ничего (правило 4.1). Цель местная, настоящий прод
+      # не трогается, тревога не поднимается.
+      - name: Позитивный контроль — сломанная цель обязана дать красный
+        run: npm run smoke:prod:plant
+
+      - name: Позитивный контроль тревоги и отката
+        run: npm run alarm:prod:plant
+
+      # ВТОРАЯ ПОЛОВИНА: тот же прибор по живому проду обязан дать
+      # зелёный. `continue-on-error` — чтобы шаг тревоги ниже успел
+      # отработать: без него задание кончалось бы раньше, чем владелец
+      # что-нибудь узнает.
+      - name: Живой прод
+        id: smoke
+        continue-on-error: true
+        run: npm run smoke:prod
+
+      - name: Снимки и отчёт прогона
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-smoke-${{ github.run_id }}
+          path: smoke-artifacts
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # Тревога владельцу и — только при наличии секрета и только на
+      # ВТОРОМ подряд падении того же деплоя — откат. Без `VERCEL_TOKEN`
+      # шаг честно пишет в issue, что автооткат выключен.
+      - name: Тревога владельцу (и откат, если включён)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: npm run alarm:prod
+
+      # Красный шаг выше проглочен `continue-on-error`, поэтому вердикт
+      # задания ставится здесь — иначе прогон был бы зелёным при упавшем
+      # проде.
+      - name: Вердикт
+        if: steps.smoke.outcome == 'failure'
+        run: |
+          echo "прод не прошёл проверку — см. issue с меткой prod-down"
+          exit 1
