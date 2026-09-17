@@ -434,8 +434,17 @@ for (const lang of ["es", "ru"] as const) {
      * у неё своя подпись, и проверяется она здесь — иначе «в карточке 1»
      * проходило бы и тогда, когда из истории пропало всё.
      */
-    const inHistory = page.locator("section").getByText(DICTS[lang].profile.historyGrantCode, { exact: true });
-    await expect(inHistory, "строка выдачи в истории").not.toHaveCount(0);
+    // Область истории берётся от её собственного заголовка, а не от
+    // `section`: строк с этой подписью на экране теперь ДВЕ (вторая — в
+    // карточке подписки выше), и утверждение «она есть где-то» ничего не
+    // отличало бы. Здесь утверждается ИМЕННО про историю.
+    const historyBlock = page
+      .getByText(DICTS[lang].profile.paymentHistoryHeading, { exact: true })
+      .locator("..");
+    await expect(historyBlock, "блок истории платежей на экране").toHaveCount(1);
+    const inHistory = historyBlock.getByText(DICTS[lang].profile.historyGrantCode, { exact: true });
+    await expect(inHistory, "строка выдачи в истории").toHaveCount(1);
+    await expect(inHistory).toBeVisible();
     await expect(page.getByText(DICTS[OTHER[lang]].profile.historyGrantCode, { exact: true })).toHaveCount(0);
 
     /**
