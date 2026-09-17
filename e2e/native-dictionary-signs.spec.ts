@@ -52,10 +52,27 @@ async function openVocabulary(page: import("@playwright/test").Page) {
   await expect(page.locator("[data-testid=category-tile]").first()).toBeVisible();
 }
 
-async function toC1(page: import("@playwright/test").Page) {
-  await page.getByRole("button", { name: "C1", exact: false }).click();
+/**
+ * НА C1 СРАЗУ АДРЕСОМ, А НЕ НАЖАТИЕМ.
+ *
+ * Уровень у режима карточек живёт в адресе, и нажатие на «C1» кладёт туда
+ * `?level=C1` само. Первая редакция этой пробы нажимала кнопку, а затем
+ * шла на `/ru/vocabulary` за вторым снимком — и на `mobile-iphone` ловила
+ * «Navigation is interrupted by another navigation»: переход, который
+ * начало нажатие, ещё не закончился. Поймано локальным прогоном.
+ *
+ * Нажатие как путь на C1 при этом не потеряно — им ходят три пробы выше.
+ */
+async function openAtC1(page: import("@playwright/test").Page) {
+  await page.goto("/ru/vocabulary?level=C1");
+  await expect(page.locator("[data-testid=category-tile]").first()).toBeVisible();
   // Числа приезжают ответом сервера; до него на месте числа заглушка, и
   // судить её значило бы судить «данных ещё нет» вместо «данных ноль».
+  await expect(page.locator("[data-testid=tile-count-skeleton]")).toHaveCount(0);
+}
+
+async function toC1(page: import("@playwright/test").Page) {
+  await page.getByRole("button", { name: "C1", exact: false }).click();
   await expect(page.locator("[data-testid=tile-count-skeleton]")).toHaveCount(0);
 }
 
@@ -150,15 +167,13 @@ test("ни одна плитка не пишет «0 слов», когда в �
  */
 test("веб говорит то же, что приложение: плашка, короны, замки и числа совпадают", async ({ page, context }) => {
   await context.addCookies([SHELL_COOKIE]);
-  await openVocabulary(page);
-  await toC1(page);
+  await openAtC1(page);
   const inShell = await snapshot(page);
   expect(inShell.withBank, "внутри оболочки банк пуст — сравнивать нечего").toBeGreaterThan(0);
   expect(inShell.marks, "внутри оболочки знаков нет — сравнивать нечего").toBeGreaterThan(0);
 
   await context.clearCookies({ name: "rf_native_shell" });
-  await openVocabulary(page);
-  await toC1(page);
+  await openAtC1(page);
   const inWeb = await snapshot(page);
 
   expect(inWeb.tiles).toBe(inShell.tiles);
@@ -176,16 +191,14 @@ test("веб говорит то же, что приложение: плашка
 test("Premium: корона на C1 есть, замка нет — и в приложении, и в браузере", async ({ page, context }) => {
   await loginWithSubscription(page, { tier: "premium" });
   await context.addCookies([SHELL_COOKIE]);
-  await openVocabulary(page);
-  await toC1(page);
+  await openAtC1(page);
   const inShell = await snapshot(page);
   expect(inShell.marks).toBe(inShell.tiles);
   expect(inShell.locks).toBe(0);
   expect(inShell.plates).toBe(0);
 
   await context.clearCookies({ name: "rf_native_shell" });
-  await openVocabulary(page);
-  await toC1(page);
+  await openAtC1(page);
   const inWeb = await snapshot(page);
   expect(inWeb.marks).toBe(inShell.marks);
   expect(inWeb.locks).toBe(0);
