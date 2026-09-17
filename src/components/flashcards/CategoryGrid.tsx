@@ -9,7 +9,6 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import type { CategorySummary } from "@/lib/flashcards/summary-client";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
-import { useIsNativeShell } from "@/lib/native-shell-client";
 import { ACCESS_MARK_ICON, accessSignFor, levelRequirement, type ViewerTier } from "@/lib/access-marks";
 import { NativeLockedNotice } from "./FreeTrialLimitBanner";
 
@@ -65,8 +64,21 @@ export default function CategoryGrid({
    *
    * Здесь — перепись БАНКА тем же разрезом (`bankCategories` в ответе
    * `/api/flashcards/summary`): сколько строк есть и сколько из них
-   * закрыто. Читается ТОЛЬКО внутри оболочки: в вебе плитка остаётся
-   * ровно такой, какой была, и это проверяется отдельно.
+   * закрыто.
+   *
+   * ЧИТАЕТСЯ ВЕЗДЕ — ДОЛГ 257, решение владельца 18.09.2026. До этой
+   * правки перепись читала ТОЛЬКО ветка `useIsNativeShell()`, и это было
+   * действующим правилом, а не промахом: в вебе плитка оставалась такой,
+   * какой была. Замер 18.09.2026 на прод-сборке (три роли × две локали ×
+   * оболочка/веб = 12 экранов, ширина 384) назвал цену этого правила
+   * числом: внутри оболочки на C1 стоят 23 короны, 23 замка и сумма чисел
+   * на плитках 988; в браузере у бесплатного и у доступа по коду — 0
+   * корон, 0 замков и сумма 0 при тех же 988 строках банка. Один и тот же
+   * раздел выглядел пустым в браузере и полным в приложении.
+   *
+   * Решение владельца: в браузере то же самое, что в приложении. Ветки
+   * оболочки здесь больше нет ни одной — и за этим следит
+   * `check:zero-placeholder`.
    */
   bank?: Record<string, { bank: number; open: number; locked: number }>;
   /** Сколько закрыто на ВЫБРАННОМ уровне по всему банку. Печатается одной
@@ -86,7 +98,6 @@ export default function CategoryGrid({
   tier?: ViewerTier;
   onSelectCategory: (category: FlashcardCategory) => void;
 }) {
-  const nativeShell = useIsNativeShell();
   // Сорт материала у выбранного уровня: C1 — план Premium (👑), остальное —
   // подписка (🔒). Решает признак, а не эта разметка.
   const requirement =
@@ -116,7 +127,7 @@ export default function CategoryGrid({
 
   return (
     <div>
-      {nativeShell && ready && lockedAtLevel > 0 && (
+      {ready && lockedAtLevel > 0 && (
         <NativeLockedNotice
           locale={dict.locale}
           lockedTotal={lockedAtLevel}
@@ -130,16 +141,15 @@ export default function CategoryGrid({
           const stat = summary[category];
           const openHere = stat?.total ?? 0;
           const bankHere = bank[category]?.bank ?? 0;
-          // Внутри оболочки плитка называет то, что ЕСТЬ; в вебе — то, что
-          // доступно, ровно как было. Запасное значение — доступное: если
-          // перепись банка почему-то не пришла, плитка не станет врать в
-          // другую сторону.
-          const total = nativeShell && bankHere > 0 ? bankHere : openHere;
+          // Плитка называет то, что ЕСТЬ, — и в приложении, и в браузере
+          // (долг 257). Запасное значение — доступное: если перепись банка
+          // почему-то не пришла, плитка не станет врать в другую сторону.
+          const total = bankHere > 0 ? bankHere : openHere;
           // Открытое берётся у ТОЙ ЖЕ переписи, что и банк: `summary`
           // считается другим проходом, и на стыке двух источников знак
           // разошёлся бы с числом.
           const openHereInBank = bank[category]?.open ?? openHere;
-          const allLocked = nativeShell && bankHere > 0 && openHereInBank === 0;
+          const allLocked = bankHere > 0 && openHereInBank === 0;
           /**
            * ЗНАК РЕШАЕТ ОБЩЕЕ ПРАВИЛО — 7.196, часть 1.
            *
@@ -155,7 +165,17 @@ export default function CategoryGrid({
            * закрытость плитка называет сама, потому что про бесплатную
            * пробу знает больше, чем правило.
            */
-          const sign = nativeShell ? accessSignFor(requirement, tier, { nativeShell, closed: allLocked }) : null;
+          /**
+           * `nativeShell: true` — ИМЯ ОПЦИИ, А НЕ МЕСТО (долг 257).
+           *
+           * Опция включает правило «корона это сорт, замок это состояние»
+           * (см. шапку `access-marks.ts`). Имя ей досталось от места, где
+           * правило появилось впервые, — от оболочки. С 18.09.2026 сетка
+           * тем словаря просит его и в браузере: решение владельца
+           * «в вебе то же самое, что в приложении». Прежнее правило
+           * (`accessMarkFor`) осталось за остальными поверхностями.
+           */
+          const sign = accessSignFor(requirement, tier, { nativeShell: true, closed: allLocked });
           const known = stat?.known ?? 0;
           const percent = total === 0 ? 0 : Math.round((known / total) * 100);
           const nextLevel =

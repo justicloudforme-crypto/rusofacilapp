@@ -56,14 +56,41 @@ import { pathToFileURL } from "node:url";
 const PLANT = process.argv.includes("--plant");
 const ROUTE = "src/app/api/flashcards/summary/route.ts";
 const TEXT = "src/lib/flashcards/learned-progress.ts";
+/** Тот самый один кусочек разметки, через который проходят все четыре режима. */
+const LINE = "src/components/flashcards/LearnedProgressLine.tsx";
 /** Экраны, печатающие это предложение. Список закреплён числом: новый
  *  экран обязан быть замечен, а не пропущен молча. */
 const SCREENS = [
   "src/components/flashcards/MatchApp.tsx",
   "src/components/flashcards/RecallApp.tsx",
   "src/components/flashcards/FillBlankApp.tsx",
+  // ДОЛГ 258, 18.09.2026: режим карточек тоже печатает это предложение.
+  "src/components/flashcards/FlashcardsApp.tsx",
   "src/components/word-games/WordGamePlayer.tsx",
 ];
+/**
+ * РЕЖИМЫ СЛОВАРЯ, В КОТОРЫХ СТРОКА «СКОЛЬКО МНЕ ОТКРЫТО» ОБЯЗАНА СТОЯТЬ
+ * НА САМОМ ЭКРАНЕ — долг 258, решение владельца 18.09.2026.
+ *
+ * Список закреплён числом (четыре), и каждый из четырёх обязан звать ОДИН
+ * И ТОТ ЖЕ компонент `LearnedProgressLine` с одними и теми же четырьмя
+ * числами ответа. Копия предложения в пятом месте — это второй источник
+ * правды, ровно то, из-за чего окно итога раунда и сетка тем в 7.208
+ * говорили про одно разное.
+ *
+ * «Expresiones y refranes» сюда НЕ входит намеренно: у идиом другой банк
+ * и другой ответ сервера (`/api/idioms`), и решение владельца 18.09.2026 —
+ * не трогать.
+ */
+const GRID_MODES = [
+  "src/components/flashcards/FlashcardsApp.tsx",
+  "src/components/flashcards/MatchApp.tsx",
+  "src/components/flashcards/RecallApp.tsx",
+  "src/components/flashcards/FillBlankApp.tsx",
+];
+/** Четыре числа ответа, которыми собирается предложение. Все четыре обязаны
+ *  доехать до компонента в каждом режиме — иначе режимы разойдутся числом. */
+const LINE_PROPS = ["known=", "available=", "locked=", "lockedBySubscription="];
 const DICTS = ["src/dictionaries/es.json", "src/dictionaries/ru.json"];
 const TEMPLATES = [
   "learnedProgressLabel",
@@ -82,7 +109,8 @@ export function stripComments(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^[ \t]*\/\/.*$/gm, " ");
 }
 
-export function violations({ route, text, screens, dicts }) {
+export function violations(read) {
+  const { route, text, screens, dicts } = read;
   const bad = [];
   const r = stripComments(route);
 
@@ -103,6 +131,15 @@ export function violations({ route, text, screens, dicts }) {
   }
   // Правило 8. Ищется ровно то условие, которым карта браузера
   // дополняет ответ сервера.
+  /**
+   * ПРАВИЛО 10 — ПЕРЕПИСЬ ТЕМ СЧИТАЕТСЯ ПО ОТКРЫТОМУ (долг 260,
+   * 18.09.2026). Третьего основания «доступного» в маршруте быть не
+   * должно: цикл по `index` без `openIds` печатал бесплатному аккаунту
+   * «Comida y restaurante 0/266» рядом со строкой «0 de 230 disponibles».
+   */
+  if (!/if \(!openIds\.has\(card\.id\)\) continue;/.test(r)) {
+    bad.push(`${ROUTE}: перепись тем считается мимо openIds — у знаменателя темы снова своё основание (долг 260)`);
+  }
   const merge = /if \(entry\.known && !(server\w+)\.has\(cardId\)\) resolvedKnownIds\.add\(cardId\);/.exec(r);
   if (!merge) {
     bad.push(`${ROUTE}: условия слияния карты браузера с ответом сервера нет вовсе — сторож ослеп, а не доволен`);
@@ -134,9 +171,39 @@ export function violations({ route, text, screens, dicts }) {
     }
   }
 
+  /**
+   * ПРАВИЛО 9 — СТРОКА СТОИТ ВО ВСЕХ ЧЕТЫРЁХ РЕЖИМАХ И ПРИХОДИТ ИЗ ОДНОГО
+   * МЕСТА (долг 258, 18.09.2026).
+   *
+   * Замер 18.09.2026 по исходнику: вызовов `LearnedProgressLine` было
+   * ТРИ — «Emparejar», «Escribir la palabra», «Completa la frase»; в
+   * режиме карточек ноль. Владелец смотрел на видео именно режим
+   * карточек. Сторож падает и когда строка пропала, и когда она собрана
+   * на месте своими руками мимо общего компонента: второй случай и есть
+   * «разошлась по числу».
+   */
+  if (!/const text = learnedProgressText\(/.test(stripComments(read.line ?? ""))) {
+    bad.push(`${LINE}: строка собирается не общим \`learnedProgressText\` — источников текста стало два (долг 258)`);
+  }
   for (const [file, source] of Object.entries(screens)) {
-    if (!/lockedBySubscription/.test(stripComments(source))) {
+    const clean = stripComments(source);
+    if (!/lockedBySubscription/.test(clean)) {
       bad.push(`${file}: печатает строку «доступно», не передав закрытое подпиской (долг 240)`);
+    }
+    if (!GRID_MODES.includes(file)) continue;
+    if (!/<LearnedProgressLine\b/.test(clean)) {
+      bad.push(`${file}: сетка тем этого режима не печатает строку «сколько мне открыто» (долг 258)`);
+      continue;
+    }
+    const at = clean.indexOf("<LearnedProgressLine");
+    const call = clean.slice(at, clean.indexOf("/>", at));
+    for (const prop of LINE_PROPS) {
+      if (!call.includes(prop)) {
+        bad.push(`${file}: \`LearnedProgressLine\` зовётся без \`${prop}\` — число этого режима разойдётся с остальными (долг 258)`);
+      }
+    }
+    if (!/available=\{totalProgress\.total\}/.test(call)) {
+      bad.push(`${file}: знаменатель строки взят не из общей переписи \`totalProgress\` (долг 258)`);
     }
   }
 
@@ -200,6 +267,7 @@ function load() {
   return {
     route: readFileSync(ROUTE, "utf8"),
     text: readFileSync(TEXT, "utf8"),
+    line: readFileSync(LINE, "utf8"),
     screens,
     dicts,
   };
@@ -293,6 +361,30 @@ function plant() {
       ),
     },
     "условия слияния карты браузера",
+  );
+  // ── ДОЛГ 258: строка «сколько мне открыто» в четырёх режимах ──
+  for (const mode of GRID_MODES) {
+    planted(
+      `подсадка: ${mode} перестал печатать строку «сколько мне открыто» — поймана (долг 258)`,
+      { screens: { ...live.screens, [mode]: live.screens[mode].replace("<LearnedProgressLine", "<LearnedProgressLineOFF") } },
+      "не печатает строку «сколько мне открыто»",
+    );
+    planted(
+      `подсадка: ${mode} считает знаменатель строки сам — поймана (долг 258)`,
+      { screens: { ...live.screens, [mode]: live.screens[mode].replace("available={totalProgress.total}", "available={categoryCards.length}") } },
+      "взят не из общей переписи",
+    );
+  }
+  planted(
+    "подсадка: строка собирается мимо общего текста — поймана (долг 258)",
+    { line: live.line.replace("const text = learnedProgressText(", "const text = String(") },
+    "источников текста стало два",
+  );
+  // ── ДОЛГ 260: перепись тем по открытому ──
+  planted(
+    "подсадка: перепись тем снова считается мимо openIds — поймана (долг 260)",
+    { route: live.route.replace("    if (!openIds.has(card.id)) continue;\n", "") },
+    "мимо openIds",
   );
   planted(
     "подсадка: из шаблона «обе причины» убрано второе число — поймана",
