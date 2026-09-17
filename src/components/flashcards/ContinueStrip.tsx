@@ -7,7 +7,6 @@ import { hapticTap } from "@/lib/haptics";
 import ProgressBar from "@/components/ui/ProgressBar";
 import type { Locale } from "@/i18n/config";
 import type { PluralForms } from "@/lib/plural";
-import { useIsNativeShell } from "@/lib/native-shell-client";
 
 export interface ContinueStripDict {
   locale: Locale;
@@ -66,7 +65,6 @@ export default function ContinueStrip({
   ready?: boolean;
   onSelectCategory: (category: FlashcardCategory, startCardId?: string | null) => void;
 }) {
-  const nativeShell = useIsNativeShell();
   if (recent.length === 0) return null;
 
   return (
@@ -74,11 +72,38 @@ export default function ContinueStrip({
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/50">{dict.continueTitle}</h2>
       <div className="flex flex-col gap-2">
         {recent.map((item) => {
-          // Внутри оболочки знаменатель — то, что ЕСТЬ под этим разрезом
-          // (`bankTotal`), а не то, что отдано: «0/0» при 988 строках C1 в
-          // банке человек читает как «тут ничего нет». В вебе строка
-          // остаётся ровно такой, какой была.
-          const denominator = nativeShell && item.bankTotal > 0 ? item.bankTotal : item.total;
+          /**
+           * ЗНАМЕНАТЕЛЬ — ТО, ЧТО ЧЕЛОВЕКУ ОТКРЫТО (долг 260, 18.09.2026).
+           *
+           * ЧТО СНЯЛ ВЛАДЕЛЕЦ. Бесплатный аккаунт, `/es`, фильтр «TODOS»,
+           * режим «Emparejar»: на одном экране «Seguir con «закуска» —
+           * Comida y restaurante · 0/266 · 0 %» и строкой ниже «Llevas 0 de
+           * 230 palabras disponibles». Одна тема считает 266, весь банк —
+           * 230.
+           *
+           * ЧТО ИМЕННО СЧИТАЛО 266 (замер 18.09.2026 по локальной копии
+           * боевого банка, только SELECT). Оснований было ТРИ, а не два:
+           *   `bankTotal`               = 266 — тема целиком, доступа не
+           *                               видит вовсе (его и печатала
+           *                               оболочка);
+           *   `total` (`categories[]`)  = 258 — тема без уровня C1, то есть
+           *                               правило уровня без бесплатной
+           *                               пробы (его печатал браузер);
+           *   открыто на самом деле     =  10 — проба, 10 карточек на тему,
+           *                               и 23 × 10 = 230, ровно то число,
+           *                               что стоит в строке под блоком.
+           *
+           * ЧТО СТАЛО. Знаменатель — `total`, и он теперь считается по
+           * открытым карточкам (`openIds` в `/api/flashcards/summary`,
+           * долг 254). Дробь и строка «сколько мне открыто» стоят на одном
+           * основании, и ветки оболочки здесь больше нет: в браузере и в
+           * приложении одно и то же (долг 257).
+           *
+           * `bankTotal` остаётся ЗАПАСНЫМ и только против нуля в
+           * знаменателе — ровно та работа, ради которой он и заводился в
+           * 7.196 (часть 2б): «0/0» человек читает как «тут ничего нет».
+           */
+          const denominator = item.total > 0 ? item.total : item.bankTotal;
           const percent = denominator === 0 ? 0 : Math.round((item.known / denominator) * 100);
           // Числа печатаются, только когда они СВОИ — и в оболочке, и в
           // вебе (7.204, долг 224: «данных ещё нет» ≠ «данных ноль»).
