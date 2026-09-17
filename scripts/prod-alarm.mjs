@@ -233,6 +233,37 @@ async function main() {
       },
     });
     console.log(`заведён issue #${created.number}`);
+
+    // ОТВЕТ ЧИТАЕТСЯ, А НЕ ПРИНИМАЕТСЯ НА ВЕРУ — правка 17.09.2026
+    // (7.206), и вот чем она оплачена.
+    //
+    // Заведение этого же issue настоящим GitHub (личным токеном агента,
+    // issue #348) прошло с кодом 201 и БЕЗ единой жалобы — а метки и
+    // назначения у созданного issue не оказалось вовсе: GitHub молча
+    // выбрасывает `labels` и `assignees`, если у того, кто просит, нет
+    // права их ставить. Ошибки при этом нет НИКАКОЙ.
+    //
+    // Цена молчания здесь не косметическая: всё состояние тревоги
+    // держится на метке (`?labels=prod-down`). Issue без метки не найдёт
+    // ни следующее падение — и заведёт ВТОРОЙ issue, и третий, и по
+    // одному в час, — ни зелёный прогон, и закрыть его будет некому.
+    //
+    // Поэтому ответ проверяется, и несовпадение — ОТКАЗ шага, а не
+    // предупреждение в журнале. Красный шаг владелец увидит: push про
+    // Failed Workflows у него включён, и это тот же карман.
+    const gotLabel = (created.labels ?? []).some((l) => (typeof l === "string" ? l : l?.name) === ISSUE_LABEL);
+    const gotAssignee = (created.assignees ?? []).some((a) => a?.login === ISSUE_OWNER);
+    if (!gotLabel || !gotAssignee) {
+      console.error(
+        `issue #${created.number} заведён, но GitHub молча отбросил: ` +
+          [!gotLabel ? `метку ${ISSUE_LABEL}` : null, !gotAssignee ? `назначение на ${ISSUE_OWNER}` : null]
+            .filter(Boolean)
+            .join(" и ") +
+          ". У токена нет права их ставить. Без метки тревога перестаёт быть одной: " +
+          "каждое следующее падение заведёт новый issue, и закрыть их будет некому.",
+      );
+      process.exitCode = 1;
+    }
     return;
   }
 
@@ -321,7 +352,7 @@ async function plant() {
 
   /** Один сквозной прогон против подменённого GitHub. `openIssues` —
    *  то, что отдаёт поддельный список открытых issue. */
-  async function endToEndRun(openIssues) {
+  async function endToEndRun(openIssues, dropsRights = false) {
     const seen = [];
     const server = createServer((req, res) => {
       let body = "";
@@ -331,6 +362,18 @@ async function plant() {
         res.writeHead(200, { "content-type": "application/json" });
         if (req.method === "GET" && req.url.includes("/issues?")) return res.end(JSON.stringify(openIssues));
         if (req.method === "GET" && req.url.includes("/comments")) return res.end("[]");
+        // Ответ на заведение issue — такой, каким его отдаёт GitHub тому,
+        // у кого права ЕСТЬ. `dropsRights` изображает обратный случай:
+        // код 201, а метки и назначения молча нет.
+        if (req.method === "POST" && req.url.endsWith("/issues")) {
+          return res.end(
+            JSON.stringify(
+              dropsRights
+                ? { number: 101 }
+                : { number: 101, labels: [{ name: ISSUE_LABEL }], assignees: [{ login: ISSUE_OWNER }] },
+            ),
+          );
+        }
         res.end(JSON.stringify({ number: 101 }));
       });
     });
@@ -360,6 +403,9 @@ async function plant() {
   const { seen, run } = await endToEndRun([]);
   // Второй прогон: issue с меткой уже открыт.
   const second = await endToEndRun([{ number: 101, body: "старое тело" }]);
+  // Третий: GitHub принял issue и молча выбросил метку и назначение —
+  // ровно то, что случилось с настоящим issue #348 17.09.2026.
+  const dropped = await endToEndRun([], true);
   const secondComment = second.seen
     .filter((s) => s.method === "POST" && s.url.includes("/comments"))
     .map((s) => JSON.parse(s.body).body);
@@ -388,6 +434,10 @@ async function plant() {
     ["второе падение дополняет открытый issue комментарием", secondComment.length === 1],
     ["в комментарии упоминания владельца НЕТ", secondComment.every((body) => !body.includes(`@${ISSUE_OWNER}`))],
     ["второй прогон завершился без ошибки", second.run.status === 0],
+    // Молчаливая потеря метки обязана быть ОТКАЗОМ, а не строкой в
+    // журнале: без метки тревога перестаёт быть одной.
+    ["молча отброшенная метка роняет шаг", dropped.run.status !== 0],
+    ["и называет причину словами", /молча отбросил/.test(dropped.run.stderr ?? "")],
   ];
   for (const [title, ok] of endToEnd) {
     if (ok) caught += 1;
