@@ -38,7 +38,7 @@ import { levelSlugs, lessonsPerLevel, isFreeTrialLesson, lessonSlugsFor } from "
 // Глиф платности — у признака, а не литералом (`check:access-marks`).
 import { ACCESS_MARK_ICON, accessSignFor, lessonRequirement } from "@/lib/access-marks";
 import { isPlanId } from "@/lib/plans";
-import { planDisplayLabel } from "@/lib/subscription-plan-label";
+import { subscriptionRowLabel } from "@/lib/subscription-plan-label";
 import { SUPPORT_EMAIL } from "@/lib/support";
 import {
   CheckoutOutcomeNotice,
@@ -698,7 +698,15 @@ export default async function ProfilePage({
         // Отметка дня НА АККАУНТЕ (долг 234). Кука ниже осталась вторым
         // рубежом, но переустановку приложения и второй телефон
         // переживает только эта колонка.
-        greetedOnAccount={greetedOnAccountToday(user.welcomeShownDateKey, todayKey)}
+        //
+        // ДЕНЬ ОТМЕТКИ СЧИТАЕТСЯ ОТ МГНОВЕНИЯ, В ТЕКУЩЕЙ ЗОНЕ АККАУНТА
+        // (долг 247). Зона аккаунта меняется сама — её переписывает
+        // `POST /api/timezone` зоной устройства, — и записанный ключ дня
+        // после этого назывался бы днём ДРУГОГО календаря. Отсюда и брались
+        // два приветствия за один вход: «2» в America/Tijuana и «6» в
+        // Asia/Vladivostok. Оба числа — `streak.currentStreak`, то же самое,
+        // что печатает плитка «racha actual» ниже.
+        greetedOnAccount={greetedOnAccountToday(user, todayKey, timeZone)}
         name={user.name}
         currentStreak={streak.currentStreak}
         greeting={dict.profile.welcomeGreeting}
@@ -1340,7 +1348,12 @@ export default async function ProfilePage({
             <dt className="text-foreground/60">{dict.account.plan}</dt>
             <dd className="flex items-center gap-1.5">
               {subscription.plan === "lifetime" && <span aria-hidden>👑</span>}
-              {planDisplayLabel(subscription.plan, dict)}
+              {/* ДОЛГ 248. Строка «Plan» спрашивает ТОТ ЖЕ признак, что и
+                  история платежей ниже: у выданного доступа план в колонке
+                  может врать (строки до 08.09.2026 все `manual`, в том
+                  числе заведённые погашением кода), и два разных ответа на
+                  один вопрос стояли на экране рядом. */}
+              {subscriptionRowLabel(subscription, dict, redeemedCodeDates, "plan")}
             </dd>
             <dt className="text-foreground/60">
               {/* ДОЛГ 190, доведён в 194. «Истекла» рядом с датой в БУДУЩЕМ
@@ -1441,13 +1454,7 @@ export default async function ProfilePage({
                       никогда не было, а вот тариф стоял — и строка
                       `www.petrov.ru_1992@mail.ru` читалась как «оплачен
                       тариф „Acceso otorgado a mano“». */}
-                  <span>
-                    {isGrantSubscription(row)
-                      ? grantSource(row, redeemedCodeDates) === "code"
-                        ? dict.profile.historyGrantCode
-                        : dict.profile.historyGrantManual
-                      : planDisplayLabel(row.plan, dict)}
-                  </span>
+                  <span>{subscriptionRowLabel(row, dict, redeemedCodeDates, "history")}</span>
                   <span className="text-foreground/60">
                     <LocalDate iso={row.createdAt.toISOString()} locale={lang} timeZone={timeZone} />
                   </span>

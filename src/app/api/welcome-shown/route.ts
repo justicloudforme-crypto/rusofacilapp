@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { getRequestTimeZone } from "@/lib/timezone-server";
 import { dateKeyIn } from "@/lib/timezone";
+import { greetedOnAccountToday } from "@/lib/welcome-shown";
 
 /**
  * «ЭТОМУ АККАУНТУ СЕГОДНЯ УЖЕ СКАЗАЛИ ЗДРАВСТВУЙТЕ» — ДОЛГ 234.
@@ -45,12 +46,22 @@ export async function POST() {
   // Запись пропускается, когда отметка уже стоит на сегодня: браузер
   // зовёт этот маршрут не чаще раза в сутки, но лишняя запись в квоту
   // Turso всё равно стоит денег, а значение не меняется.
-  if (user.welcomeShownDateKey === todayKey) {
+  //
+  // Вопрос «стоит ли отметка на сегодня» задаётся ТОЙ ЖЕ функцией, что и
+  // в кабинете (долг 247). Двух ответов на него быть не может: разойдись
+  // они — маршрут либо писал бы лишнее, либо не писал нужного, и ровно
+  // это и было бы вторым приветствием.
+  if (greetedOnAccountToday(user, todayKey, timeZone)) {
     return NextResponse.json({ ok: true, stored: true, dateKey: todayKey });
   }
 
   try {
-    await db.user.update({ where: { id: user.id }, data: { welcomeShownDateKey: todayKey } });
+    // Пишутся ОБА: мгновение — правда, ключ дня — читаемый след того же
+    // события и запасной ответ для кода, который мгновения не знает.
+    await db.user.update({
+      where: { id: user.id },
+      data: { welcomeShownAt: new Date(), welcomeShownDateKey: todayKey },
+    });
   } catch (error) {
     console.error("welcome-shown: не удалось записать отметку дня", error);
     return NextResponse.json({ ok: true, stored: false });

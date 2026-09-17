@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategoryGridDict } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
+import LearnedProgressLine from "./LearnedProgressLine";
 import RecallCard, { type RecallCardDict, type RecallDirection } from "./RecallCard";
 import FreeTrialLimitBanner, { LockedOrEmpty } from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
@@ -240,6 +241,18 @@ export default function RecallApp({
             recent={recentCategories}
             ready={summaryLevel !== undefined && (summaryLevel ?? "all") === levelFilter}
             onSelectCategory={selectCategory}
+          />
+          {/* ДОЛГ 249. Сколько слов человеку вообще открыто — на самом
+              экране, а не только в окне итога раунда. Блок «Продолжить»
+              выше не тронут: строка встаёт ПОД ним и НАД сеткой тем. */}
+          <LearnedProgressLine
+            dict={dict}
+            locale={dict.locale}
+            ready={summaryLevel !== undefined && (summaryLevel ?? "all") === levelFilter}
+            known={totalProgress.known}
+            available={totalProgress.total}
+            locked={totalProgress.locked}
+            lockedBySubscription={totalProgress.lockedBySubscription}
           />
           <CategoryGrid
             dict={dict}
