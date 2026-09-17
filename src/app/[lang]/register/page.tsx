@@ -5,7 +5,7 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
-import Button from "@/components/ui/Button";
+import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
@@ -85,9 +85,8 @@ export default async function RegisterPage({
               className="rounded-lg border border-primary/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </label>
-          <Button type="submit" variant="primary" haptic={false}>
-            {dict.auth.registerSubmit}
-          </Button>
+          {/* ДОЛГ 241, та же болезнь, что у входа. */}
+          <AuthSubmitButton label={dict.auth.registerSubmit} pendingLabel={dict.auth.registerSubmitPending} />
         </form>
 
         <p className="mt-4 text-center text-xs text-foreground/50">

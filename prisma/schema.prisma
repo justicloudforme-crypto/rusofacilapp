@@ -89,6 +89,25 @@ model User {
   // this system is a key in the learner's zone, and storing an instant here
   // would reintroduce the UTC-boundary ambiguity fixed on 31.08.2026.
   streakFreezesSince   String?
+  // ЗАМОК ПРИВЕТСТВИЯ ДНЯ — ПРО АККАУНТ, А НЕ ПРО УСТРОЙСТВО (долг 234).
+  //
+  // «YYYY-MM-DD» в зоне АККАУНТА — тот же ключ дня, которым считается день
+  // занятия (`dateKeyIn`, src/lib/timezone.ts), и намеренно не DateTime:
+  // мгновение вернуло бы неоднозначность границы суток, снятую 31.08.2026.
+  //
+  // До 17.09.2026 отметка жила только в куке `rf-welcome-shown`, то есть на
+  // одном устройстве и в одном браузере: переустановка приложения, очистка
+  // данных и второй телефон здоровались заново в тот же местный день.
+  // Кука осталась вторым рубежом — она снимает запрос, когда ответ и так
+  // известен, — но правду про аккаунт держит эта колонка.
+  //
+  // НУЛЛИРУЕМАЯ ОБЯЗАТЕЛЬНО, и это то же правило, что у пары заморозок
+  // выше: `prisma/ensure-schema-sync.ts` добавляет недостающую колонку
+  // голым `ALTER TABLE … ADD COLUMN` без `DEFAULT`, и ненулевая уронила бы
+  // каждый `SELECT` по `User` — это авария 27.08.2026. NULL читается как
+  // «этому аккаунту ещё ни разу не здоровались», и никакого другого
+  // значения у пустоты здесь нет.
+  welcomeShownDateKey  String?
   createdAt            DateTime               @default(now())
   subscriptions        Subscription[]
   pendingCheckouts     PendingCheckout[]

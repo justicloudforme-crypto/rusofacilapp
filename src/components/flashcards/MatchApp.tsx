@@ -38,6 +38,8 @@ export interface MatchAppDict extends CategoryGridDict {
    * lib/flashcards/learned-progress.ts for which one prints when. */
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
   learnedProgressAvailableLabel: PluralForms; // adds literal "{locked}". Inflects with {total}.
+  learnedProgressSubscriptionLabel: PluralForms; // закрыто бесплатной пробой — открывает любая подписка (7.206).
+  learnedProgressBothLabel: PluralForms; // закрыто и пробой, и Premium; добавляет "{premium}".
 }
 
 const ROUND_SIZES = [4, 6, 8];
@@ -99,6 +101,9 @@ export default function MatchApp({
     known: summary.totalKnown,
     total: summary.availableWords,
     locked: summary.premiumOnlyWords,
+    // Закрытое подпиской — отдельным числом (7.206): её и Premium нельзя
+    // называть одним словом, это разные покупки.
+    lockedBySubscription: summary.subscriptionOnlyWords,
   };
 
   function startRound(size: number, sourceCards: FlashcardRow[], level: FlashcardLevel | "all", startCardId?: string | null) {

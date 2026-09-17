@@ -46,6 +46,8 @@ export interface FlashcardsDict {
   continueWithWord: string;
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}" — global count (see /api/flashcards/summary), not per-category. Inflects with {total}.
   learnedProgressAvailableLabel: PluralForms; // the same line for a visitor with Premium-locked cards; adds literal "{locked}".
+  learnedProgressSubscriptionLabel: PluralForms; // закрыто бесплатной пробой — открывает любая подписка (7.206).
+  learnedProgressBothLabel: PluralForms; // закрыто и пробой, и Premium; добавляет "{premium}".
 }
 
 // Debounce delay for the always-visible search box — short enough to feel
