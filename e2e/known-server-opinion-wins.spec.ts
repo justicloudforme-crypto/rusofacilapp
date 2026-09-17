@@ -32,7 +32,11 @@ import { loginWithSubscription } from "./helpers/auth";
 test("сводка уважает мнение сервера: «не знаю» на сервере не перебивается картой браузера", async ({ page }) => {
   await loginWithSubscription(page, { tier: "standard" });
 
-  const list = await page.request.get("/api/flashcards?category=food");
+  // Тема `greetings`: в фикстуре CI карточки уровня A1 есть только у неё,
+  // а у `food` все три строки уровня C1 — разряду `standard` они не
+  // отдаются вовсе, и список приходил пустым (поймано CI, а не
+  // рассуждением).
+  const list = await page.request.get("/api/flashcards?category=greetings");
   expect(list.ok(), "список карточек не ответил").toBe(true);
   const cards = ((await list.json()) as { cards: { id: string }[] }).cards;
   expect(cards.length, "в теме нет карточек — судить нечего").toBeGreaterThan(1);
