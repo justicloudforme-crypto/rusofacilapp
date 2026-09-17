@@ -397,21 +397,32 @@ for (const lang of ["es", "ru"] as const) {
     expect(await tierOf(page), "после погашения — standard").toBe("standard");
     expect((await showCode(page, code)).redeemedAt, "код помечен погашенным").not.toBeNull();
 
-    // Подпись тарифа — на той же вкладке, куда вернул редирект.
-    const mine = DICTS[lang].profile.planAccessCodeLabel;
-    const theirs = DICTS[OTHER[lang]].profile.planAccessCodeLabel;
+    /**
+     * ПОДПИСЬ СТРОКИ «PLAN» — ДОЛГ 248, ЗАХОД 7.207.
+     *
+     * До 17.09.2026 здесь ждали `planAccessCodeLabel` («Acceso con código
+     * de invitación») — подпись, которую выбирала КОЛОНКА `plan`. Владелец
+     * снял 17.09.2026, что колонка врёт: у строк, заведённых погашением
+     * кода ДО 08.09.2026, в ней стоит `manual`, и «Plan: Acceso otorgado a
+     * mano» стояло над строкой «Tu acceso está abierto con un código…».
+     * Теперь обе строки спрашивают ОДИН признак и говорят одно слово.
+     */
+    const mine = DICTS[lang].profile.historyGrantCode;
+    const theirs = DICTS[OTHER[lang]].profile.historyGrantCode;
     expect(mine, "подписи в двух локалях обязаны различаться").not.toBe(theirs);
-    // Подпись стоит В ДВУХ местах, и оба названы заданием: карточка подписки
-    // (`<dd>` под словом «Тариф») и история платежей (`<span>` в строке).
-    // Утверждать «видна» без числа здесь нельзя — Playwright в strict-режиме
-    // упадёт на двух совпадениях, и падение выглядело бы как отсутствие
-    // подписи, хотя она на месте дважды.
+    // Мест ДВА — карточка подписки (`<dd>` под словом «Тариф») и строка
+    // истории, — и оба обязаны нести ОДНУ подпись. Число здесь и есть всё
+    // утверждение: «видна» без числа прошло бы и тогда, когда одно из двух
+    // мест замолчало.
     const label = page.getByText(mine, { exact: true });
-    await expect(label, "подпись тарифа в карточке подписки").toHaveCount(1);
+    await expect(label, "подпись выдачи в карточке подписки И в истории").toHaveCount(2);
     await expect(label.first()).toBeVisible();
+    await expect(label.nth(1)).toBeVisible();
     await expect(page.getByText(theirs, { exact: true })).toHaveCount(0);
-    // И старой фразы про ручную выдачу на экране нет вовсе.
+    // И ни одной старой подписи на экране: ни «выдано вручную», ни
+    // «с кодом-приглашением», которую выбирала колонка `plan`.
     await expect(page.getByText(DICTS[lang].profile.planManualLabel, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(DICTS[lang].profile.planAccessCodeLabel, { exact: true })).toHaveCount(0);
 
     /**
      * ИСТОРИЯ НАЗЫВАЕТ ЭТО ВЫДАЧЕЙ, А НЕ ТАРИФОМ — долг 239, заход 7.206.
@@ -423,9 +434,8 @@ for (const lang of ["es", "ru"] as const) {
      * у неё своя подпись, и проверяется она здесь — иначе «в карточке 1»
      * проходило бы и тогда, когда из истории пропало всё.
      */
-    const inHistory = page.getByText(DICTS[lang].profile.historyGrantCode, { exact: true });
-    await expect(inHistory, "строка выдачи в истории").toHaveCount(1);
-    await expect(inHistory).toBeVisible();
+    const inHistory = page.locator("section").getByText(DICTS[lang].profile.historyGrantCode, { exact: true });
+    await expect(inHistory, "строка выдачи в истории").not.toHaveCount(0);
     await expect(page.getByText(DICTS[OTHER[lang]].profile.historyGrantCode, { exact: true })).toHaveCount(0);
 
     /**

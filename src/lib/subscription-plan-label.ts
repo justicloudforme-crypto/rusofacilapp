@@ -1,4 +1,5 @@
 import type { Dictionary } from "@/i18n/dictionaries";
+import { grantSource, isGrantSubscription } from "./subscription-grant";
 
 /**
  * ПОДПИСЬ ТАРИФА НА ЭКРАНЕ — ОДНА ФУНКЦИЯ, И ОНА ТЕПЕРЬ ПРОВЕРЯЕМА.
@@ -32,4 +33,43 @@ export function planDisplayLabel(plan: string, dict: Dictionary): string {
   if (plan === "access_code") return dict.profile.planAccessCodeLabel;
   if (plan === "manual") return dict.profile.planManualLabel;
   return plan;
+}
+
+/**
+ * ПОДПИСЬ СТРОКИ ДОСТУПА — ОДИН ПРИЗНАК НА ОБА МЕСТА (долг 248, 7.207).
+ *
+ * ЧТО СНЯЛ ВЛАДЕЛЕЦ 17.09.2026, аккаунтом `www.petrov.ru_1992@mail.ru`.
+ * Вкладка «Suscripción» спорила сама с собой на расстоянии трёх строк:
+ *
+ *     Plan:  Acceso otorgado a mano
+ *     ...    Tu acceso está abierto con un código y no se renueva…
+ *
+ * Причина не в словах, а в том, что ОТВЕЧАЛИ на вопрос «откуда этот
+ * доступ» два разных куска кода. Строка истории платежей уже спрашивала
+ * `grantSource` (7.206), а строка «Plan» смотрела только колонку `plan` —
+ * а в ней у этого аккаунта стоит `manual`, потому что строка заведена
+ * погашением кода ДО правки 08.09.2026 (7.151), и отличить её планом
+ * нечем. По времени — можно: погашение `AMIGOJY9DTAVG` 09.09.2026 в
+ * 03:58:05.498Z, строка `Subscription` — в 03:58:05.612Z, разница 114 мс.
+ *
+ * Теперь признак спрашивается ЗДЕСЬ, один раз, и оба места зовут эту
+ * функцию. `planDisplayLabel` ниже она не отменяет — та по-прежнему
+ * отвечает за настоящие тарифы.
+ *
+ * СЛОВА У ДВУХ МЕСТ РАЗНЫЕ НАМЕРЕННО, и это не второй признак. «Plan:
+ * Acceso otorgado a mano» — про то, ЧТО у человека сейчас; строка истории
+ * «Acceso abierto a mano» — про СОБЫТИЕ, которое когда-то случилось.
+ * Общим у них обязано быть одно: ответ на вопрос «код это или рука».
+ */
+export type LabelPlace = "plan" | "history";
+
+export function subscriptionRowLabel(
+  row: { plan: string; stripeSubscriptionId: string | null; createdAt: Date },
+  dict: Dictionary,
+  redeemedCodeDates: readonly Date[],
+  place: LabelPlace,
+): string {
+  if (!isGrantSubscription(row)) return planDisplayLabel(row.plan, dict);
+  if (grantSource(row, redeemedCodeDates) === "code") return dict.profile.historyGrantCode;
+  return place === "plan" ? dict.profile.planManualLabel : dict.profile.historyGrantManual;
 }

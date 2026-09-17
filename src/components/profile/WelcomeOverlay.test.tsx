@@ -45,6 +45,10 @@ const NEXT_DAY = "2026-09-18";
 
 /** «База»: какой день стоит отметкой у каждого аккаунта. */
 const accountMarks = new Map<string, string>();
+/** Зона аккаунта в этом стенде одна на все проверки: здесь судится
+ *  порядок рубежей, а НЕ смена зоны посреди визита — та снята отдельно, в
+ *  `src/lib/welcome-shown.test.ts` (долг 247). */
+const ZONE = "Asia/Vladivostok";
 /** Чей запрос сейчас летит: маршрут узнаёт человека по сессии, а не по
  *  телу, поэтому стенд держит «вошедшего» отдельно от разметки. */
 let sessionUser = "";
@@ -57,7 +61,7 @@ function overlay(todayKey: string, userId = USER) {
     <WelcomeOverlay
       userId={userId}
       todayKey={todayKey}
-      greetedOnAccount={greetedOnAccountToday(accountMarks.get(userId) ?? null, todayKey)}
+      greetedOnAccount={greetedOnAccountToday({ welcomeShownDateKey: accountMarks.get(userId) ?? null }, todayKey, ZONE)}
       name="Vasya"
       currentStreak={3}
       greeting="¡Feliz nuevo día de ruso!"
