@@ -37,9 +37,9 @@ export interface VocabularyDict extends FlashcardsDict {
   // `locale` подставляется здесь (см. вызов IdiomsList ниже), в словаре
   // его нет — поэтому требуется всё, кроме него.
   idioms: Omit<IdiomsDict, "locale" | "premiumTierBadge">;
-  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel">;
-  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel">;
-  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel">;
+  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel" | "learnedProgressNonePremiumLabel" | "learnedProgressNoneSubscriptionLabel" | "learnedProgressNoneBothLabel">;
+  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel" | "learnedProgressNonePremiumLabel" | "learnedProgressNoneSubscriptionLabel" | "learnedProgressNoneBothLabel">;
+  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel" | "learnedProgressNonePremiumLabel" | "learnedProgressNoneSubscriptionLabel" | "learnedProgressNoneBothLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -185,6 +185,9 @@ export default function VocabularyApp({
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
               learnedProgressSubscriptionLabel: dict.learnedProgressSubscriptionLabel,
               learnedProgressBothLabel: dict.learnedProgressBothLabel,
+              learnedProgressNonePremiumLabel: dict.learnedProgressNonePremiumLabel,
+              learnedProgressNoneSubscriptionLabel: dict.learnedProgressNoneSubscriptionLabel,
+              learnedProgressNoneBothLabel: dict.learnedProgressNoneBothLabel,
             }}
             resultDict={resultDict}
           />
@@ -207,6 +210,9 @@ export default function VocabularyApp({
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
               learnedProgressSubscriptionLabel: dict.learnedProgressSubscriptionLabel,
               learnedProgressBothLabel: dict.learnedProgressBothLabel,
+              learnedProgressNonePremiumLabel: dict.learnedProgressNonePremiumLabel,
+              learnedProgressNoneSubscriptionLabel: dict.learnedProgressNoneSubscriptionLabel,
+              learnedProgressNoneBothLabel: dict.learnedProgressNoneBothLabel,
             }}
             resultDict={resultDict}
           />
@@ -229,6 +235,9 @@ export default function VocabularyApp({
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
               learnedProgressSubscriptionLabel: dict.learnedProgressSubscriptionLabel,
               learnedProgressBothLabel: dict.learnedProgressBothLabel,
+              learnedProgressNonePremiumLabel: dict.learnedProgressNonePremiumLabel,
+              learnedProgressNoneSubscriptionLabel: dict.learnedProgressNoneSubscriptionLabel,
+              learnedProgressNoneBothLabel: dict.learnedProgressNoneBothLabel,
             }}
             resultDict={resultDict}
           />

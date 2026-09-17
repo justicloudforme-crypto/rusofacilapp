@@ -20,5 +20,8 @@ export function wordGamePlayerDict(dict: Dictionary): WordGamePlayerDict {
     learnedProgressAvailableLabel: dict.vocabulary.learnedProgressAvailableLabel,
     learnedProgressSubscriptionLabel: dict.vocabulary.learnedProgressSubscriptionLabel,
     learnedProgressBothLabel: dict.vocabulary.learnedProgressBothLabel,
+    learnedProgressNonePremiumLabel: dict.vocabulary.learnedProgressNonePremiumLabel,
+    learnedProgressNoneSubscriptionLabel: dict.vocabulary.learnedProgressNoneSubscriptionLabel,
+    learnedProgressNoneBothLabel: dict.vocabulary.learnedProgressNoneBothLabel,
   };
 }

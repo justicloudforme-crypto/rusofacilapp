@@ -8,12 +8,18 @@ const es = {
   learnedProgressAvailableLabel: esDict.vocabulary.learnedProgressAvailableLabel,
   learnedProgressSubscriptionLabel: esDict.vocabulary.learnedProgressSubscriptionLabel,
   learnedProgressBothLabel: esDict.vocabulary.learnedProgressBothLabel,
+  learnedProgressNonePremiumLabel: esDict.vocabulary.learnedProgressNonePremiumLabel,
+  learnedProgressNoneSubscriptionLabel: esDict.vocabulary.learnedProgressNoneSubscriptionLabel,
+  learnedProgressNoneBothLabel: esDict.vocabulary.learnedProgressNoneBothLabel,
 };
 const ru = {
   learnedProgressLabel: ruDict.vocabulary.learnedProgressLabel,
   learnedProgressAvailableLabel: ruDict.vocabulary.learnedProgressAvailableLabel,
   learnedProgressSubscriptionLabel: ruDict.vocabulary.learnedProgressSubscriptionLabel,
   learnedProgressBothLabel: ruDict.vocabulary.learnedProgressBothLabel,
+  learnedProgressNonePremiumLabel: ruDict.vocabulary.learnedProgressNonePremiumLabel,
+  learnedProgressNoneSubscriptionLabel: ruDict.vocabulary.learnedProgressNoneSubscriptionLabel,
+  learnedProgressNoneBothLabel: ruDict.vocabulary.learnedProgressNoneBothLabel,
 };
 
 describe("learnedProgressText", () => {
@@ -100,5 +106,45 @@ describe("learnedProgressText", () => {
     expect(learnedProgressText("ru", ru, { known: 0, available: 22, locked: 2 })).toContain(
       "из 22 доступных",
     );
+  });
+
+  /**
+   * ДРОБЬ С НУЛЁМ В ЗНАМЕНАТЕЛЕ — находка владельца 17.09.2026 (видео
+   * проверки 7.207). На уровне C1 и бесплатный аккаунт, и доступ по коду
+   * читали «Llevas 0 de 0 palabras disponibles · 988 más con Premium» /
+   * «Вы выучили 0 из 0 доступных · ещё 988 в Premium».
+   */
+  describe("доступного ноль — дроби нет ни в одной локали", () => {
+    const cases = [
+      { name: "закрыто только планом Premium (C1 у доступа по коду)", args: { known: 0, available: 0, locked: 988, lockedBySubscription: 0 }, number: 988 },
+      { name: "закрыто только подпиской", args: { known: 0, available: 0, locked: 0, lockedBySubscription: 4553 }, number: 4553 },
+      { name: "закрыто и тем и другим (C1 у бесплатного)", args: { known: 0, available: 0, locked: 988, lockedBySubscription: 12 }, number: 988 },
+    ];
+    for (const { name, args, number } of cases) {
+      it(`${name}: одинокого нуля на экране нет`, () => {
+        for (const [locale, dict] of [["ru", ru], ["es", es]] as const) {
+          const text = learnedProgressText(locale, dict, args);
+          expect([locale, text]).not.toEqual([locale, ""]);
+          // Ни «0 из 0», ни «0 de 0», ни любого другого одинокого нуля.
+          expect([locale, /(^|\D)0(\D|$)/.test(text)]).toEqual([locale, false]);
+          // И закрытое названо числом, а не умолчано.
+          expect([locale, text.includes(String(number))]).toEqual([locale, true]);
+        }
+      });
+    }
+
+    it("нечего сказать — не говорится ничего", () => {
+      // Под разрезом нет ни одной строки: ни открытой, ни закрытой.
+      for (const [locale, dict] of [["ru", ru], ["es", es]] as const) {
+        expect([locale, learnedProgressText(locale, dict, { known: 0, available: 0, locked: 0, lockedBySubscription: 0 })]).toEqual([locale, ""]);
+      }
+    });
+
+    it("ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ: там, где доступное есть, дробь печатается как прежде", () => {
+      const ruText = learnedProgressText("ru", ru, { known: 0, available: 230, locked: 988, lockedBySubscription: 4553 });
+      expect(ruText).toContain("230");
+      const esText = learnedProgressText("es", es, { known: 0, available: 230, locked: 988, lockedBySubscription: 4553 });
+      expect(esText).toContain("230");
+    });
   });
 });

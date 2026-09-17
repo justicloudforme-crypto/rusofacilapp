@@ -1010,6 +1010,21 @@
       "few": "У вас {known} из {total} доступных слов · ещё {locked} открывает подписка и {premium} — Premium",
       "many": "У вас {known} из {total} доступных слов · ещё {locked} открывает подписка и {premium} — Premium"
     },
+    "learnedProgressNonePremiumLabel": {
+      "one": "Здесь вам пока не открыто ни одного слова — {locked} слово открывает Premium",
+      "few": "Здесь вам пока не открыто ни одного слова — {locked} слова открывает Premium",
+      "many": "Здесь вам пока не открыто ни одного слова — {locked} слов открывает Premium"
+    },
+    "learnedProgressNoneSubscriptionLabel": {
+      "one": "Здесь вам пока не открыто ни одного слова — {locked} слово открывает подписка",
+      "few": "Здесь вам пока не открыто ни одного слова — {locked} слова открывает подписка",
+      "many": "Здесь вам пока не открыто ни одного слова — {locked} слов открывает подписка"
+    },
+    "learnedProgressNoneBothLabel": {
+      "one": "Здесь вам пока не открыто ни одного слова — {locked} слово открывает подписка и ещё {premium} Premium",
+      "few": "Здесь вам пока не открыто ни одного слова — {locked} слова открывает подписка и ещё {premium} Premium",
+      "many": "Здесь вам пока не открыто ни одного слова — {locked} слов открывает подписка и ещё {premium} Premium"
+    },
     "modeVocabulary": "Словарь по категориям",
     "modeRecall": "Написать слово",
     "modeFillBlank": "Пропущенное слово",

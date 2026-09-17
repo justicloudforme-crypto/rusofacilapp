@@ -45,6 +45,10 @@ export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
   learnedProgressAvailableLabel: PluralForms; // adds literal "{locked}". Inflects with {total}.
   learnedProgressSubscriptionLabel: PluralForms; // закрыто бесплатной пробой — открывает любая подписка (7.206).
   learnedProgressBothLabel: PluralForms; // закрыто и пробой, и Premium; добавляет "{premium}".
+  /** Доступного ноль — три формы без дроби (находка 17.09.2026). */
+  learnedProgressNonePremiumLabel: PluralForms; // "{locked}"
+  learnedProgressNoneSubscriptionLabel: PluralForms; // "{locked}"
+  learnedProgressNoneBothLabel: PluralForms; // "{locked}", "{premium}"
 }
 
 const ROUND_SIZE = 10;
@@ -316,6 +320,12 @@ export default function RecallApp({
                 known: totalProgress.known,
                 available: totalProgress.total,
                 locked: totalProgress.locked,
+                // ОДНО ПРЕДЛОЖЕНИЕ, А НЕ ДВА (18.09.2026). Окно итога
+                // раунда считало то же самое БЕЗ закрытого подпиской и
+                // потому звало бесплатный аккаунт в Premium за словами,
+                // которые открывает любая подписка, — при том что строка
+                // на сетке тем в двух сантиметрах выше говорила правду.
+                lockedBySubscription: totalProgress.lockedBySubscription,
               })}
             </p>
           </GameResultPanel>

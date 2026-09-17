@@ -231,6 +231,21 @@ export default function CategoryGrid({
                     <span aria-hidden>{ACCESS_MARK_ICON[sign.mark]}</span>
                   </span>
                 )}
+                {/* ЗАМОК РЯДОМ С КОРОНОЙ — долг 251, решение владельца
+                    18.09.2026. Тот же знак и то же правило, что на плитке
+                    пазла: корона — сорт, замок — состояние. У Premium на
+                    C1 замка нет, потому что тема ему открыта. Признака
+                    `data-access-mark` узел не носит: знаков платного на
+                    плитке по-прежнему один. */}
+                {sign?.locked && (
+                  <span
+                    data-access-locked="true"
+                    title={dict.subscriptionBadge}
+                    className="inline-flex items-center rounded-full bg-foreground/10 px-1.5 py-0.5 text-[0.7rem] text-foreground/70"
+                  >
+                    <span aria-hidden>{ACCESS_MARK_ICON.subscription}</span>
+                  </span>
+                )}
               </span>
               {hasAnyProgress && (
                 <ProgressBar percent={percent} tone="success" className="mt-auto w-full pt-1" ariaLabel={dict.categoryLabels[category]} />
