@@ -53,6 +53,9 @@ export interface CategorySummaryResponse {
   /** Cards that exist but need Premium. 0 for a Premium/staff visitor,
    * which is how the UI knows to print the short sentence. */
   premiumOnlyWords: number;
+  /** Закрытые БЕСПЛАТНОЙ ПРОБОЙ — заход 7.206. Их открывает любая
+   *  подписка; 0 у всех, кроме бесплатного аккаунта и гостя. */
+  subscriptionOnlyWords: number;
   hasAnyProgress: boolean;
   /**
    * Перепись БАНКА по темам под текущим фильтром уровня — 7.195, часть 3.
@@ -78,6 +81,7 @@ export const EMPTY_SUMMARY: CategorySummaryResponse = {
   totalKnown: 0,
   availableWords: 0,
   premiumOnlyWords: 0,
+  subscriptionOnlyWords: 0,
   hasAnyProgress: false,
   bankCategories: {},
   lockedByLevel: {},
@@ -146,6 +150,7 @@ export async function fetchCategorySummary(level: FlashcardLevel | "all"): Promi
       totalKnown: body.totalKnown ?? 0,
       availableWords: body.availableWords ?? 0,
       premiumOnlyWords: body.premiumOnlyWords ?? 0,
+      subscriptionOnlyWords: body.subscriptionOnlyWords ?? 0,
       hasAnyProgress: body.hasAnyProgress ?? false,
       bankCategories: body.bankCategories ?? {},
       lockedByLevel: body.lockedByLevel ?? {},

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
@@ -45,12 +46,9 @@ export default async function ForgotPasswordPage({
               className="rounded-lg border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/50 dark:border-white/20"
             />
           </label>
-          <button
-            type="submit"
-            className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
-          >
-            {dict.auth.forgotSubmit}
-          </button>
+          {/* ДОЛГ 241. Письмо уходит не мгновенно, и второе нажатие
+              означало бы второе письмо. */}
+          <AuthSubmitButton label={dict.auth.forgotSubmit} pendingLabel={dict.auth.forgotSubmitPending} />
         </form>
       )}
 

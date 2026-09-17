@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
-import Button from "@/components/ui/Button";
+import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { routeAlternates } from "@/lib/site";
 import { loginRetryEmail } from "@/lib/login-retry";
 
@@ -96,9 +96,10 @@ export default async function LoginPage({
               className="rounded-lg border border-primary/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </label>
-          <Button type="submit" variant="primary" haptic={false}>
-            {dict.auth.submit}
-          </Button>
+          {/* ДОЛГ 241. Три секунды без единого признака — это то, что
+              владелец снял 17.09.2026: кнопка гаснет и называет
+              происходящее, второй запрос не уходит. */}
+          <AuthSubmitButton label={dict.auth.submit} pendingLabel={dict.auth.submitPending} />
         </form>
 
         <Link

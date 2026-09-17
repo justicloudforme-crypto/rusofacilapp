@@ -262,3 +262,26 @@ export async function revokeAccessCode(
   if (row.redeemedAt !== null) return { ok: false, reason: "already_redeemed" };
   return { ok: false, reason: "already_revoked" };
 }
+
+/**
+ * КОГДА ЭТОТ ЧЕЛОВЕК ГАСИЛ КОДЫ — ТОЛЬКО РАДИ ПОДПИСИ НА ЭКРАНЕ.
+ *
+ * Живёт здесь, а не в кабинете, по правилу 1 сторожа
+ * `check:access-code-path`: таблицу `AccessCode` читает только этот файл.
+ *
+ * ЧЕГО ЭТА ФУНКЦИЯ НЕ ДЕЛАЕТ, И ЭТО ГЛАВНОЕ. Она не участвует в решении
+ * «что этому человеку открыто» ни одним значением: доступ по-прежнему
+ * решает `tierOfAccount` по строкам `Subscription`, и второго пути тут не
+ * заводится. Всё, на что годится её ответ, — выбрать между двумя
+ * подписями выдачи: «доступ по коду» и «доступ открыт вручную»
+ * (`grantSource` в `src/lib/subscription-grant.ts`). Даже если она вернёт
+ * пустой список из-за отказа базы, человек увидит вторую подпись вместо
+ * первой и ни одного дня доступа не потеряет.
+ */
+export async function getRedeemedAccessCodeDates(userId: string): Promise<Date[]> {
+  const rows = await db.accessCode.findMany({
+    where: { redeemedById: userId, redeemedAt: { not: null } },
+    select: { redeemedAt: true },
+  });
+  return rows.map((row) => row.redeemedAt).filter((at): at is Date => at !== null);
+}

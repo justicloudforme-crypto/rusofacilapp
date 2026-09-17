@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
 import { canAccessLevel, getEntitlementTier } from "@/lib/entitlement";
-import { siteCensus } from "@/lib/flashcards/locked-census";
+import { openCardIds, siteCensus } from "@/lib/flashcards/locked-census";
 
 // Powers the category grid + "Continue" strip on /vocabulary: total card
 // count per category (public) plus, per visitor, how many of those cards
@@ -148,6 +148,29 @@ export async function POST(request: NextRequest) {
   const resolvedKnownIds = new Set<string>(serverKnownUpdatedAt.keys());
   for (const [cardId, entry] of clientEntries) {
     if (entry.known && !serverKnownUpdatedAt.has(cardId)) resolvedKnownIds.add(cardId);
+  }
+
+  /**
+   * ЧИСЛИТЕЛЬ СЧИТАЕТСЯ ПО ТОМУ ЖЕ МНОЖЕСТВУ, ЧТО И ЗНАМЕНАТЕЛЬ — 7.206.
+   *
+   * `openCardIds` повторяет правило выдачи `GET /api/flashcards` целиком:
+   * уровень плюс бесплатная проба (`FREE_TRIAL_LIMITS.flashcards` НА
+   * ТЕМУ). До этого захода правило уровня учитывалось, а проба — нет, и
+   * у бесплатного аккаунта, когда-то бывшего подписчиком, числитель
+   * законно считал карточки, которых в знаменателе нет вовсе: «25 из 20»
+   * — дробь, у которой нет смысла.
+   *
+   * Цена названа честно: бесплатный аккаунт после окончания подписки
+   * увидит в счётчике меньше выученного, чем видел вчера. Ни одна строка
+   * `flashcardProgress` при этом не трогается — счётчик говорит «из того,
+   * что вам открыто», и только про это.
+   */
+  const openIds = openCardIds(wholeIndex, {
+    entitled: tier !== "free",
+    canAccessLevel: (lvl) => canAccessLevel(tier, lvl),
+  });
+  for (const cardId of [...resolvedKnownIds]) {
+    if (!openIds.has(cardId)) resolvedKnownIds.delete(cardId);
   }
 
   const categories: Record<string, CategoryStat> = {};
@@ -298,8 +321,40 @@ export async function POST(request: NextRequest) {
   // «недавние» карточки и разбирается то, что прислал браузер, и сузить
   // их значило бы молча потерять карточку другого уровня.
   const inCut = (card: { level: string }) => !level || card.level === level;
-  const availableWords = index.filter(inCut).length;
-  const premiumOnlyWords = wholeIndex.filter(inCut).length - availableWords;
+  /**
+   * ЗНАМЕНАТЕЛЬ — ЭТО ТО, ЧТО ЧЕЛОВЕК ДЕЙСТВИТЕЛЬНО МОЖЕТ ОТКРЫТЬ.
+   * Заход 7.206, находка 7.204, часть 3.
+   *
+   * Что было. `availableWords` считался как `index`, то есть по одному
+   * правилу уровня (`canAccessLevel`), и БЕСПЛАТНУЮ ПРОБУ не видел вовсе.
+   * А проба — это ровно то, чем ограничен бесплатный аккаунт:
+   * `GET /api/flashcards` отдаёт ему `FREE_TRIAL_LIMITS.flashcards`
+   * карточек НА ТЕМУ и ни одной сверх того.
+   *
+   * Чем это было на экране. Замер по боевому банку 17.09.2026: строк
+   * всего 5771, из них не-C1 — 4783, тем — 23. Бесплатный аккаунт
+   * (`justicloudforme@gmail.com`) читал под фильтром «TODOS» ровно то же
+   * число, что и подписчик, — «0 de 4783 palabras disponibles», — а
+   * открыть мог 10 × 23 = 230. Завышение в 4553 слова, и слово
+   * «disponibles» («доступные») делало его утверждением, а не опиской.
+   *
+   * Что стало. Доступное считается ТЕМ ЖЕ `openCardIds`, которым его
+   * считает перепись закрытого, то есть тем же правилом, каким режет
+   * выдачу сам список карточек. Второго определения «доступного» в этом
+   * файле больше нет.
+   *
+   * И ЗАКРЫТОЕ РАЗДЕЛЕНО ПО ПРИЧИНАМ. Одного числа мало: у бесплатного
+   * аккаунта 4553 слова закрыты ПОДПИСКОЙ и 988 — планом Premium, и
+   * печатать всё это как «столько-то ещё с Premium» значило бы звать
+   * человека покупать не то, что ему нужно. Причина у карточки одна и
+   * определяется правилом уровня: не пускает уровень — это Premium; не
+   * пускает проба — это подписка.
+   */
+  const inCutBank = wholeIndex.filter(inCut);
+  const availableWords = inCutBank.filter((card) => openIds.has(card.id)).length;
+  const lockedInCut = inCutBank.filter((card) => !openIds.has(card.id));
+  const premiumOnlyWords = lockedInCut.filter((card) => !canAccessLevel(tier, card.level)).length;
+  const subscriptionOnlyWords = lockedInCut.length - premiumOnlyWords;
   const totalKnown = [...resolvedKnownIds].filter((id) => {
     const card = cardById.get(id);
     return card !== undefined && inCut(card);
@@ -348,6 +403,10 @@ export async function POST(request: NextRequest) {
     // visitor, which is what tells the UI to drop the second half of the
     // sentence rather than print "and 0 more in Premium".
     premiumOnlyWords,
+    // Закрытые бесплатной пробой: их открывает ЛЮБАЯ подписка, и звать за
+    // ними в Premium было бы враньём. 0 у всех, кроме бесплатного
+    // аккаунта и гостя.
+    subscriptionOnlyWords,
     hasAnyProgress,
   });
 }
