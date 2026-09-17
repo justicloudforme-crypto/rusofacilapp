@@ -125,6 +125,43 @@ export function markupProblems(rel, source) {
   return problems;
 }
 
+/**
+ * ЗАМОК РЯДОМ С КОРОНОЙ — долг 251, решение владельца 18.09.2026.
+ *
+ * ЧТО СНЯЛ ВЛАДЕЛЕЦ 17.09.2026: аккаунт с доступом по коду смотрит
+ * филворды A1, на пазлах 166 и дальше стоит корона на тонированном фоне —
+ * и ни одного знака того, что пазл ему НЕ ОТКРОЕТСЯ. По боевой базе таких
+ * пазлов 580 из 2015. Правило владельца «корона — СОРТ, замок —
+ * СОСТОЯНИЕ» выполнялось наполовину: сорт назван, состояние умолчано.
+ *
+ * Правило одно и живёт в `accessSignFor` (поле `locked`); здесь сторожится
+ * то, что поверхность его ЧИТАЕТ. Обе поверхности названы поимённо: это
+ * те две, где знак сорта печатается на плитке внутри оболочки.
+ */
+const CROWN_AND_LOCK = [
+  "components/word-games/WordGamesPicker.tsx",
+  "components/flashcards/CategoryGrid.tsx",
+];
+
+export function crownLockProblems(rel, source) {
+  const problems = [];
+  if (!/sign\?\.locked/.test(source)) {
+    problems.push({ rel, rule: "состояние умолчано", line: "печатает знак сорта и не спрашивает sign.locked (долг 251)" });
+  }
+  if (!/data-access-locked=/.test(source)) {
+    problems.push({ rel, rule: "состояние без признака", line: "замок не помечен data-access-locked — сторожам его не видно" });
+  }
+  return problems;
+}
+
+/** Само правило: закрытый премиальный материал внутри оболочки обязан
+ *  нести и состояние, а не только сорт. */
+export function ruleProblems(source) {
+  return /locked: true/.test(source)
+    ? []
+    : [{ rel: "lib/access-marks.ts", rule: "правило потеряло состояние", line: "accessSignFor не отдаёт locked — замку взяться неоткуда" }];
+}
+
 /** Файлы, где `ACCESS_MARK_ICON` только объявляется или упоминается. */
 const MARKUP_EXEMPT = new Set(["lib/access-marks.ts", "lib/search/types.ts"]);
 
@@ -137,6 +174,11 @@ function main() {
   const offenders = [];
   const markup = [];
   let scanned = 0;
+  // Долг 251: правило и обе поверхности, которые его читают.
+  markup.push(...ruleProblems(stripComments(readFileSync(join(ROOT, "lib/access-marks.ts"), "utf8"))));
+  for (const rel of CROWN_AND_LOCK) {
+    markup.push(...crownLockProblems(rel, stripComments(readFileSync(join(ROOT, rel), "utf8"))));
+  }
   for (const file of files) {
     const rel = relative(ROOT, file);
     scanned += 1;
@@ -177,12 +219,32 @@ function main() {
         (p) => p.rule === "метка без признака",
       ),
     ]);
+    // 4. Долг 251: поверхность печатает корону и молчит о закрытости.
+    results.push([
+      "плитка печатает сорт и не спрашивает sign.locked (долг 251)",
+      crownLockProblems(
+        "components/__planted__/Picker.tsx",
+        '<span data-access-mark={sign.mark}>{ACCESS_MARK_ICON[sign.mark]}</span>',
+      ).some((p) => p.rule === "состояние умолчано"),
+    ]);
+    // 5. Правило отдаёт только сорт — замку взяться неоткуда.
+    results.push([
+      "accessSignFor перестал отдавать состояние (долг 251)",
+      ruleProblems("return sortSign(requirement) ?? (closed ? { mark: 'subscription' } : null);").length > 0,
+    ]);
     // ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: правильная разметка обязана пройти.
     results.push([
       "отрицательный контроль: правильная разметка чиста",
       markupProblems("components/__planted__/Ok.tsx",
         '<span data-access-mark={mark} className="text-xs font-medium">{ACCESS_MARK_ICON[mark]}</span>',
       ).length === 0,
+    ]);
+    // ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ долга 251: живые поверхности сегодня чисты.
+    results.push([
+      "отрицательный контроль: обе плитки печатают и сорт, и состояние",
+      CROWN_AND_LOCK.every(
+        (rel) => crownLockProblems(rel, stripComments(readFileSync(join(ROOT, rel), "utf8"))).length === 0,
+      ),
     ]);
     for (const [name, caught] of results) console.log(`  ${caught ? "поймано" : "ПРОПУЩЕНО"}: ${name}`);
     const caught = results.filter(([, ok]) => ok).length;

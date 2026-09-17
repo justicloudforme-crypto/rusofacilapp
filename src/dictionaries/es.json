@@ -1010,6 +1010,21 @@
       "few": "Llevas {known} de {total} palabras disponibles · {locked} más con la suscripción y {premium} con Premium",
       "many": "Llevas {known} de {total} palabras disponibles · {locked} más con la suscripción y {premium} con Premium"
     },
+    "learnedProgressNonePremiumLabel": {
+      "one": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabra se abre con Premium",
+      "few": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabras se abren con Premium",
+      "many": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabras se abren con Premium"
+    },
+    "learnedProgressNoneSubscriptionLabel": {
+      "one": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabra se abre con la suscripción",
+      "few": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabras se abren con la suscripción",
+      "many": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabras se abren con la suscripción"
+    },
+    "learnedProgressNoneBothLabel": {
+      "one": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabra se abre con la suscripción y {premium} con Premium",
+      "few": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabras se abren con la suscripción y {premium} con Premium",
+      "many": "Aquí todavía no tienes ninguna palabra disponible: {locked} palabras se abren con la suscripción y {premium} con Premium"
+    },
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",
     "modeFillBlank": "Completa la frase",

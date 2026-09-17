@@ -16,6 +16,23 @@ export interface LearnedProgressDict {
   /** Закрыто и тем и другим — случай бесплатного аккаунта и гостя: часть
    * слов открывает подписка, часть (уровень C1) — только Premium. */
   learnedProgressBothLabel: PluralForms; // + "{premium}"
+  /**
+   * ДОСТУПНОГО НОЛЬ — три формы, и ни в одной нет дроби.
+   *
+   * Находка владельца 17.09.2026 (видео проверки 7.207): на уровне C1 и у
+   * бесплатного аккаунта, и у доступа по коду строка печатала
+   * «Llevas 0 de 0 palabras disponibles · 988 más con Premium» /
+   * «Вы выучили 0 из 0 доступных · ещё 988 в Premium». Дробь с нулевым
+   * знаменателем не значит НИЧЕГО: делить не на что, и «0 из 0» человек
+   * читает как «тут пусто» — тот же класс, что убран в 7.204.
+   *
+   * Правда здесь другая и она произносится словами: на этом разрезе вам
+   * не открыто ни одного слова, а закрытое названо числом и ПРИЧИНОЙ, как
+   * и в четырёх шаблонах выше.
+   */
+  learnedProgressNonePremiumLabel: PluralForms; // "{locked}"
+  learnedProgressNoneSubscriptionLabel: PluralForms; // "{locked}"
+  learnedProgressNoneBothLabel: PluralForms; // "{locked}", "{premium}"
 }
 
 /**
@@ -50,6 +67,37 @@ export function learnedProgressText(
 ): string {
   const premiumLocked = Math.max(0, locked);
   const subscriptionLocked = Math.max(0, lockedBySubscription);
+
+  /**
+   * НУЛЕВОГО ЗНАМЕНАТЕЛЯ НА ЭКРАНЕ НЕ БЫВАЕТ (находка 17.09.2026).
+   *
+   * Ветка стоит ПЕРВОЙ намеренно: все четыре шаблона ниже печатают дробь
+   * «{known} из {total}», и при `available = 0` она вырождается в «0 из
+   * 0» при любой причине закрытого. Условие смотрит на ЗНАМЕНАТЕЛЬ, а не
+   * на тариф: тарифов эта функция не знает и знать не должна.
+   *
+   * Пустая строка, когда закрытого нет вовсе: доступного ноль и закрытого
+   * ноль означает, что под этим разрезом в банке нет ни строки — сказать
+   * про него нечего, и «0 из 0» было бы единственным, что тут можно
+   * соврать. Вызывающие такую строку не рисуют.
+   */
+  if (available <= 0) {
+    if (premiumLocked > 0 && subscriptionLocked > 0) {
+      return plural(locale, subscriptionLocked, dict.learnedProgressNoneBothLabel, {
+        locked: subscriptionLocked,
+        premium: premiumLocked,
+      });
+    }
+    if (premiumLocked > 0) {
+      return plural(locale, premiumLocked, dict.learnedProgressNonePremiumLabel, { locked: premiumLocked });
+    }
+    if (subscriptionLocked > 0) {
+      return plural(locale, subscriptionLocked, dict.learnedProgressNoneSubscriptionLabel, {
+        locked: subscriptionLocked,
+      });
+    }
+    return "";
+  }
 
   if (premiumLocked <= 0 && subscriptionLocked <= 0) {
     return plural(locale, available, dict.learnedProgressLabel, { known, total: available });

@@ -246,6 +246,30 @@ export default function WordGamesPicker({
                   {ACCESS_MARK_ICON[sign.mark]}
                 </span>
               )}
+              {/* ЗАМОК РЯДОМ С КОРОНОЙ — долг 251, решение владельца
+                  18.09.2026. Корона называет СОРТ («это премиум») и стоит
+                  у всех, включая Premium, которому плитка открывается;
+                  замок называет СОСТОЯНИЕ («вам не открыто») и стоит
+                  только у того, кому не открыто. До этой правки второго
+                  знака не было вовсе, и аккаунт с доступом по коду видел
+                  на 580 пазлах из 2015 корону и ничего больше.
+
+                  Признак `data-access-mark` этот узел НЕ носит намеренно:
+                  знак платного на плитке один и он выше, а по этому
+                  признаку сторожа считают ЗНАКИ. Здесь состояние, и у
+                  него свой признак. */}
+              {sign?.locked && (
+                <span
+                  data-access-locked="true"
+                  aria-label={dict.subscriptionLabel}
+                  title={dict.subscriptionLabel}
+                  className={`absolute top-1.5 text-sm leading-none text-foreground/45 ${
+                    isCurved ? "left-[2.125rem]" : "left-5"
+                  }`}
+                >
+                  {ACCESS_MARK_ICON.subscription}
+                </span>
+              )}
               {sequence}
               {isCompleted && (
                 <span

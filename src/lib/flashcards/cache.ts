@@ -54,6 +54,31 @@ const localLayer = getOrCreateGlobalSingleton<{ entry: LocalEntry | null }>(
   () => ({ entry: null })
 );
 
+/** Прикладывает озвучку к уже прочитанным строкам банка. Вынесено из
+ *  `fetchFlashcardIndex` ради узких срезов главной (`home-stats.ts`,
+ *  долг 250): у среза правило сборки строки обязано быть ТО ЖЕ, иначе на
+ *  главной и в словаре одна карточка выглядела бы по-разному. */
+export function attachNarration(
+  cards: Awaited<ReturnType<typeof db.flashcardCard.findMany>>,
+  audioRows: Array<{ contentId: string; itemKey: string; audioUrl: string }>,
+): FlashcardRow[] {
+  const wordAudioByCardId = new Map<string, string>();
+  const exampleAudioByCardId = new Map<string, string>();
+  for (const row of audioRows) {
+    if (row.itemKey === "word") wordAudioByCardId.set(row.contentId, row.audioUrl);
+    else if (row.itemKey === "example") exampleAudioByCardId.set(row.contentId, row.audioUrl);
+  }
+  return cards.map((card) => ({
+    ...card,
+    category: card.category as FlashcardRow["category"],
+    level: card.level as FlashcardRow["level"],
+    synonyms: parseWordRelationsJson(card.synonyms),
+    antonyms: parseWordRelationsJson(card.antonyms),
+    audioUrl: wordAudioByCardId.get(card.id) ?? null,
+    exampleAudioUrl: exampleAudioByCardId.get(card.id) ?? null,
+  }));
+}
+
 async function fetchFlashcardIndex(): Promise<FlashcardRow[]> {
   const cards = await db.flashcardCard.findMany({ orderBy: { createdAt: "asc" } });
 
@@ -83,22 +108,21 @@ async function fetchFlashcardIndex(): Promise<FlashcardRow[]> {
   } catch (error) {
     console.error("[flashcards] could not read AudioAsset; serving the card bank without narration", error);
   }
-  const wordAudioByCardId = new Map<string, string>();
-  const exampleAudioByCardId = new Map<string, string>();
-  for (const row of audioRows) {
-    if (row.itemKey === "word") wordAudioByCardId.set(row.contentId, row.audioUrl);
-    else if (row.itemKey === "example") exampleAudioByCardId.set(row.contentId, row.audioUrl);
-  }
+  return attachNarration(cards, audioRows);
+}
 
-  return cards.map((card) => ({
-    ...card,
-    category: card.category as FlashcardRow["category"],
-    level: card.level as FlashcardRow["level"],
-    synonyms: parseWordRelationsJson(card.synonyms),
-    antonyms: parseWordRelationsJson(card.antonyms),
-    audioUrl: wordAudioByCardId.get(card.id) ?? null,
-    exampleAudioUrl: exampleAudioByCardId.get(card.id) ?? null,
-  }));
+/**
+ * ПОЛНЫЙ БАНК, ЕСЛИ ОН УЖЕ ЛЕЖИТ В ЭТОМ ПРОЦЕССЕ, — и `null`, если нет.
+ *
+ * Заведено для долга 250, шаг 1 (18.09.2026): главная показывает 13
+ * карточек и один рассказ, а строила для этого ВЕСЬ банк. Узкие запросы
+ * там теперь свои, но платить ими на ТЁПЛОМ экземпляре, где банк уже
+ * прочитан, незачем — эта функция и есть тот вопрос, который можно
+ * задать бесплатно: она не ходит ни в базу, ни в Redis.
+ */
+export function peekFlashcardIndex(): FlashcardRow[] | null {
+  const local = localLayer.entry;
+  return local && local.expiresAt > Date.now() ? local.value : null;
 }
 
 /** Returns the cached full card bank, loading it from the DB on a cold

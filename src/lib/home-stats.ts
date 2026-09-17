@@ -1,9 +1,9 @@
 import "server-only";
 import { db } from "./db";
 import { cached, getOrCreateGlobalSingleton, isPlainObject, TtlCache } from "./ttl-cache";
-import { getFlashcardIndex } from "./flashcards/cache";
+import { attachNarration, peekFlashcardIndex } from "./flashcards/cache";
 import type { FlashcardRow } from "./flashcards";
-import { getStoryCatalog, type StoryCatalogRow } from "./stories-catalog";
+import { isStoryLevel, type StoryLevel } from "./stories";
 
 export interface HomepageStats {
   wordCount: number;
@@ -44,20 +44,57 @@ export async function getHomepageStats(): Promise<HomepageStats | null> {
   }
 }
 
-/** Real greeting-category, A1-level flashcards for the hero demo deck —
- * reuses the same cached full bank getFlashcardIndex() already builds
- * (word/example audioUrl already joined from AudioAsset), just filtered
- * and sliced. No new query, no new content invented. */
+/**
+ * Real greeting-category, A1-level flashcards for the hero demo deck.
+ *
+ * ДОЛГ 250, ШАГ 1 (18.09.2026). До этой правки здесь строился ВЕСЬ банк
+ * (`getFlashcardIndex()`) ради пяти карточек: замер боевой базы
+ * 17.09.2026 — 5771 строка `FlashcardCard` плюс 11 542 строки
+ * `AudioAsset`. Теперь спрашивается ровно тот срез, который показывается.
+ *
+ * Порядок тот же (`createdAt asc`), поэтому какие именно пять карточек
+ * попадут в колоду, правка не меняет — это доказано побайтовым сличением
+ * HTML главной до и после.
+ *
+ * Тёплый экземпляр не платит ничего: если полный банк уже прочитан ЭТИМ
+ * процессом, срез берётся из него и запроса нет вовсе.
+ */
 export async function getHomepageWordSample(count = 5): Promise<FlashcardRow[]> {
   // Empty on failure; the homepage already renders the hero deck only when
   // `words.length > 0`, so this costs the deck and nothing else.
   try {
-    const all = await getFlashcardIndex();
-    return all.filter((card) => card.category === "greetings" && card.level === "A1").slice(0, count);
+    const warm = peekFlashcardIndex();
+    if (warm) return warm.filter((card) => card.category === "greetings" && card.level === "A1").slice(0, count);
+    const cards = await db.flashcardCard.findMany({
+      where: { category: "greetings", level: "A1" },
+      orderBy: { createdAt: "asc" },
+      take: count,
+    });
+    // Озвучка спрашивается только про ЭТИ строки. Та же деградация, что у
+    // полного банка: без записи карточка остаётся карточкой.
+    const audioRows = cards.length
+      ? await db.audioAsset.findMany({
+          where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
+          select: { contentId: true, itemKey: true, audioUrl: true },
+        })
+      : [];
+    return attachNarration(cards, audioRows);
   } catch (error) {
     console.error("[home-stats] could not read the flashcard bank; serving the homepage without the hero deck", error);
     return [];
   }
+}
+
+/** Ровно те поля рассказа, которые главная печатает, — и ни одного
+ *  сверх того. Это НЕ `StoryCatalogRow`: каталог несёт ещё восемь колонок
+ *  и одну группировку по озвучке, которых на главной не видно (долг 250). */
+export interface HomepagePreviewStory {
+  id: string;
+  title: string;
+  titleEs: string | null;
+  author: string;
+  level: StoryLevel;
+  description: string | null;
 }
 
 export interface HomepagePreviewData {
@@ -67,7 +104,7 @@ export interface HomepagePreviewData {
   /** A real, currently free-to-read story for the stories section preview —
    * filtered to isPremium: false so the preview never shows something the
    * visitor can't actually open for free. */
-  previewStory: StoryCatalogRow | null;
+  previewStory: HomepagePreviewStory | null;
   /** Real Russian words (not invented) rendered as static tiles for the
    * word-games section preview. Deliberately NOT wired to real crossword/
    * word-search generation logic (buildCrossword etc.) — per the redesign
@@ -81,21 +118,53 @@ export async function getHomepagePreviewData(): Promise<HomepagePreviewData> {
   // (`preview.previewWord &&`, `preview.previewStory &&`,
   // `previewGameWords.length > 0`), so the honest failure mode is an empty
   // preview object — the section disappears, the page stays.
-  let flashcards: FlashcardRow[] = [];
-  let stories: StoryCatalogRow[] = [];
+  //
+  // ДОЛГ 250, ШАГ 1 (18.09.2026). До правки здесь звались
+  // `getFlashcardIndex()` и `getStoryCatalog()` — 5771 карточка, 11 542
+  // строки озвучки и 325 рассказов ради ОДНОГО слова, СЕМИ слов для плиток
+  // игры и ОДНОЙ карточки рассказа. Условия отбора и порядок повторены
+  // буквально, чтобы на главной остались те же самые строки:
+  //   слово-образец  — первая A1-карточка темы `food` по `createdAt asc`;
+  //   слова для игры — первые семь A1-карточек темы `city`, тем же порядком;
+  //   рассказ        — первый A1 без `isPremium` по `createdAt desc`, и
+  //                    строка с неизвестным уровнем отбрасывается ровно
+  //                    так же, как её отбрасывает каталог (`isStoryLevel`).
   try {
-    [flashcards, stories] = await Promise.all([getFlashcardIndex(), getStoryCatalog()]);
+    const warm = peekFlashcardIndex();
+    const sliceOf = async (category: string, take: number, narration: boolean): Promise<FlashcardRow[]> => {
+      if (warm) return warm.filter((card) => card.category === category && card.level === "A1").slice(0, take);
+      const cards = await db.flashcardCard.findMany({
+        where: { category, level: "A1" },
+        orderBy: { createdAt: "asc" },
+        take,
+      });
+      if (!narration || cards.length === 0) return attachNarration(cards, []);
+      const audioRows = await db.audioAsset.findMany({
+        where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
+        select: { contentId: true, itemKey: true, audioUrl: true },
+      });
+      return attachNarration(cards, audioRows);
+    };
+    const [words, gameCards, storyRows] = await Promise.all([
+      sliceOf("food", 1, true),
+      // Слова для плиток игры печатаются ТЕКСТОМ: озвучка им не нужна, и
+      // спрашивать её значило бы платить за то, чего на экране нет.
+      sliceOf("city", 7, false),
+      db.story.findMany({
+        where: { level: "A1", isPremium: false },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, title: true, titleEs: true, author: true, level: true, description: true },
+        take: 5,
+      }),
+    ]);
+    const row = storyRows.find((candidate) => isStoryLevel(candidate.level));
+    return {
+      previewWord: words[0] ?? null,
+      previewStory: row ? { ...row, level: row.level as StoryLevel } : null,
+      previewGameWords: gameCards.map((card) => card.russian),
+    };
   } catch (error) {
     console.error("[home-stats] could not read cards/stories; serving the homepage without the previews", error);
     return { previewWord: null, previewStory: null, previewGameWords: [] };
   }
-
-  const previewWord = flashcards.find((card) => card.category === "food" && card.level === "A1") ?? null;
-  const previewStory = stories.find((story) => story.level === "A1" && !story.isPremium) ?? null;
-  const previewGameWords = flashcards
-    .filter((card) => card.category === "city" && card.level === "A1")
-    .slice(0, 7)
-    .map((card) => card.russian);
-
-  return { previewWord, previewStory, previewGameWords };
 }
