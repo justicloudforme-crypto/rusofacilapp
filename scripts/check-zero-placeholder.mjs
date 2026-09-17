@@ -33,6 +33,27 @@
  *   IdiomsList     — полоса освоенного и её подпись за `idiomsLoading`;
  *   FlashcardsApp  — счётчик «N из M» внутри темы за `progressReady`.
  *
+ * ====================================================================
+ * ЧТО ДОБАВЛЕНО 18.09.2026 — ДОЛГИ 257, 259, 260
+ * ====================================================================
+ *
+ * Тот же класс, только причина у молчания другая: экран не ждал ответа, а
+ * НАМЕРЕННО не показывал того, что знает, — потому что смотрели его
+ * браузером, а не приложением. Замер 18.09.2026 на прод-сборке назвал цену
+ * числами: на `/vocabulary?level=C1` внутри оболочки стоят 23 короны, 23
+ * замка и сумма чисел на плитках 988, а в браузере у тех же ролей — 0, 0 и
+ * 0; на пустом экране темы честную причину показывали 8 экранов из 32.
+ *
+ * Решение владельца 18.09.2026: браузер говорит то же, что приложение.
+ * Поэтому здесь сторожатся ЧЕТЫРЕ ветки, каждая падает отдельно:
+ *
+ *   257 — `CategoryGrid`: перепись банка и плашка закрытого не спрашивают
+ *         `nativeShell` ни в числе, ни в знаке, ни в плашке;
+ *   259 — `LockedOrEmpty`: причина «закрыто» не спрятана за оболочкой;
+ *         `MatchApp`: пустой экран идёт через тот же общий компонент, а не
+ *         печатает «недостаточно слов» сам;
+ *   260 — `ContinueStrip`: знаменатель не спрашивает `nativeShell`.
+ *
  *   node scripts/check-zero-placeholder.mjs          # гейт
  *   node scripts/check-zero-placeholder.mjs --plant  # положительный контроль
  */
@@ -45,7 +66,11 @@ const GRID = "src/components/flashcards/CategoryGrid.tsx";
 const STRIP = "src/components/flashcards/ContinueStrip.tsx";
 const IDIOMS = "src/components/flashcards/IdiomsList.tsx";
 const CARDS = "src/components/flashcards/FlashcardsApp.tsx";
-export const FILES = [GRID, STRIP, IDIOMS, CARDS];
+/** Общий пустой экран словаря — тот, что печатает причину (долг 259). */
+const EMPTY = "src/components/flashcards/FreeTrialLimitBanner.tsx";
+/** Режим «Emparejar» — единственное место, печатавшее «недостаточно слов». */
+const MATCH = "src/components/flashcards/MatchApp.tsx";
+export const FILES = [GRID, STRIP, IDIOMS, CARDS, EMPTY, MATCH];
 
 /** Комментарии вычёркиваются: в этих файлах правило объяснено словами, и
  *  слова содержат и `nativeShell`, и «0». */
@@ -96,6 +121,57 @@ export function violations(read) {
   if (!/progressReady \? \(/.test(cards) || !/progress-count-skeleton/.test(cards)) {
     bad.push(`${CARDS}: счётчик «N из M» внутри темы печатается до ответа`);
   }
+
+  // ── ДОЛГ 257: сетка тем говорит одно и то же в браузере и в приложении ──
+  // Ищется ЧТЕНИЕ признака оболочки, а не слово: `nativeShell: true` в
+  // вызове `accessSignFor` — имя опции общего правила, а не ветка (см.
+  // комментарий у самого вызова).
+  if (/useIsNativeShell/.test(grid) || /\bnativeShell\s*(&&|\?|\))/.test(grid)) {
+    bad.push(
+      `${GRID}: в сетке тем снова появилась ветка оболочки — в браузере раздел C1 опять станет ` +
+        `пустым на вид (долг 257, замер 18.09.2026: 23 короны против 0)`,
+    );
+  }
+  const totalLine = /const total = ([^;]+);/.exec(grid)?.[1] ?? "";
+  if (!totalLine) bad.push(`${GRID}: числа на плитке нет вовсе — сторож ослеп, а не доволен`);
+  else if (!/bankHere > 0 \? bankHere/.test(totalLine)) {
+    bad.push(`${GRID}: плитка печатает не перепись банка — «0 слов» при непустом банке вернётся (долг 257)`);
+  }
+  if (!/\{ready && lockedAtLevel > 0 && \(/.test(grid)) {
+    bad.push(`${GRID}: плашка закрытого уровня рисуется по другому условию — её снова не увидит браузер (долг 257)`);
+  }
+
+  // ── ДОЛГ 260: знаменатель «Продолжить» один на оба места ──
+  const denomLine = /const denominator = ([^;]+);/.exec(strip)?.[1] ?? "";
+  if (!denomLine) bad.push(`${STRIP}: знаменателя строки «Продолжить» нет вовсе — сторож ослеп`);
+  else if (/nativeShell/.test(denomLine)) {
+    bad.push(`${STRIP}: знаменатель «Продолжить» снова зависит от оболочки (долг 260)`);
+  } else if (!/item\.total > 0 \? item\.total/.test(denomLine)) {
+    bad.push(
+      `${STRIP}: знаменатель «Продолжить» считается не по открытому — «0/266» рядом с «0 de 230» ` +
+        `вернётся (долг 260)`,
+    );
+  }
+
+  // ── ДОЛГ 259: причина «закрыто» не спрятана за оболочкой ──
+  const empty = stripComments(read(EMPTY));
+  const emptyAt = empty.indexOf("export function LockedOrEmpty");
+  const emptyBody = emptyAt === -1 ? "" : empty.slice(emptyAt);
+  if (!emptyBody) {
+    bad.push(`${EMPTY}: общего пустого экрана словаря нет вовсе — сторож ослеп, а не доволен`);
+  } else if (!/\n  if \(lockedHere > 0\) \{/.test(emptyBody)) {
+    bad.push(
+      `${EMPTY}: причина «материал есть и закрыт» снова за признаком оболочки — в браузере вернётся ` +
+        `«Нет карточек для этого фильтра» при непустом банке (долг 259)`,
+    );
+  }
+  const match = stripComments(read(MATCH));
+  if (!/<LockedOrEmpty/.test(match) || !/emptyMessage=\{dict\.notEnoughCardsMessage\}/.test(match)) {
+    bad.push(
+      `${MATCH}: «недостаточно слов для этого фильтра» печатается мимо общего пустого экрана — ` +
+        `причина снова умолчана (долг 259)`,
+    );
+  }
   return bad;
 }
 
@@ -140,6 +216,48 @@ function plant() {
     "{progressReady ? (",
     "{true ? (",
     "«N из M»",
+  );
+  planted(
+    "подсадка: вернуть сетке тем ветку оболочки — поймана (долг 257)",
+    GRID,
+    "const total = bankHere > 0 ? bankHere : openHere;",
+    "const nativeShell = false; const total = nativeShell && bankHere > 0 ? bankHere : openHere;",
+    "ветка оболочки",
+  );
+  planted(
+    "подсадка: плитка снова печатает доступное вместо банка — поймана (долг 257)",
+    GRID,
+    "const total = bankHere > 0 ? bankHere : openHere;",
+    "const total = openHere;",
+    "не перепись банка",
+  );
+  planted(
+    "подсадка: плашку закрытого уровня снова прячут — поймана (долг 257)",
+    GRID,
+    "{ready && lockedAtLevel > 0 && (",
+    "{false && ready && lockedAtLevel > 0 && (",
+    "плашка закрытого уровня",
+  );
+  planted(
+    "подсадка: знаменатель «Продолжить» снова считает банк — поймана (долг 260)",
+    STRIP,
+    "const denominator = item.total > 0 ? item.total : item.bankTotal;",
+    "const denominator = item.bankTotal > 0 ? item.bankTotal : item.total;",
+    "не по открытому",
+  );
+  planted(
+    "подсадка: причину «закрыто» снова прячут за оболочкой — поймана (долг 259)",
+    EMPTY,
+    "\n  if (lockedHere > 0) {",
+    "\n  if (nativeShell && lockedHere > 0) {",
+    "снова за признаком оболочки",
+  );
+  planted(
+    "подсадка: «Emparejar» снова печатает «недостаточно слов» сам — поймана (долг 259)",
+    MATCH,
+    "emptyMessage={dict.notEnoughCardsMessage}",
+    "emptyMessage={dict.instructionLabel}",
+    "мимо общего пустого экрана",
   );
 
   let passed = 0;

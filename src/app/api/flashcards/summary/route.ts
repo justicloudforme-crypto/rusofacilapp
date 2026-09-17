@@ -203,9 +203,36 @@ export async function POST(request: NextRequest) {
     if (!openIds.has(cardId)) resolvedKnownIds.delete(cardId);
   }
 
+  /**
+   * ПЕРЕПИСЬ ТЕМ СЧИТАЕТСЯ ПО ОТКРЫТОМУ — ДОЛГ 260, 18.09.2026.
+   *
+   * ЧТО БЫЛО. Цикл шёл по `index`, то есть по правилу УРОВНЯ
+   * (`canAccessLevel`), и бесплатной пробы не видел — ровно тот же промах,
+   * который заход 7.206 убрал у `availableWords` (долг 240), только этажом
+   * ниже и потому незамеченный. В маршруте жили ТРИ основания сразу, и
+   * владелец увидел два из них на одном экране: «Comida y restaurante ·
+   * 0/266 · 0 %» рядом с «Llevas 0 de 230 palabras disponibles».
+   *
+   * ЗАМЕР 18.09.2026 ПО ЛОКАЛЬНОЙ КОПИИ БОЕВОГО БАНКА (только SELECT),
+   * тема `food`, бесплатный аккаунт:
+   *   `bankCategories.food` = { bank: 266, open: 10, locked: 256 };
+   *   `categories.food.total` = 258 (тема без C1 — правило уровня);
+   *   `availableWords` = 230 = 23 темы × 10 карточек пробы.
+   * Сумма `categories[*].total` по всем темам была 4783 при 230 открытых.
+   *
+   * ЧТО СТАЛО. Знаменатель темы — `openIds`, то самое множество, которым
+   * считаются и `availableWords`, и числитель. Второго определения
+   * «доступного» в этом файле больше нет ни одного: сумма
+   * `categories[*].total` теперь равна `availableWords` по построению.
+   *
+   * СКОЛЬКО МАТЕРИАЛА ЕСТЬ, человеку по-прежнему говорится — но другим
+   * числом и с другим знаком: это `bankCategories` ниже, которое плитка
+   * печатает вместе с короной и замком (долг 257).
+   */
   const categories: Record<string, CategoryStat> = {};
   for (const card of index) {
     if (level && card.level !== level) continue;
+    if (!openIds.has(card.id)) continue;
     (categories[card.category] ??= { total: 0, known: 0 }).total += 1;
   }
   for (const cardId of resolvedKnownIds) {
@@ -235,8 +262,11 @@ export async function POST(request: NextRequest) {
    * пересечению с темой, — иначе повторилась бы подмена, из-за которой
    * «8 слов темы Еда» было напечатано как «8 слов уровня C1».
    *
-   * Веб этих полей не читает: их берёт только сетка внутри оболочки
-   * (`CategoryGrid`, ветка `useIsNativeShell`).
+   * ЭТИ ПОЛЯ ЧИТАЕТ И ВЕБ — долг 257, решение владельца 18.09.2026. До
+   * него их брала только сетка внутри оболочки (`CategoryGrid`, ветка
+   * `useIsNativeShell`), и в браузере раздел C1 выглядел пустым: 0 корон,
+   * 0 замков, сумма чисел на 23 плитках 0 при 988 строках банка. Теперь
+   * ветка одна на оба места.
    */
   const census = siteCensus(wholeIndex, {
     entitled: tier !== "free",

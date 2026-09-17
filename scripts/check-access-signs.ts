@@ -30,8 +30,19 @@
  * красный. Ровно этой половины не было у прибора 7.195, и он отчитался
  * «знаков 11 из 11» про экраны, на которых знака не было.
  *
- * Третье направление — ВЕБ НЕ ТРОНУТ: те же адреса открываются БЕЗ
- * признака оболочки, и там знак обязан совпасть со старым `accessMarkFor`.
+ * Третье направление — ВЕБ. До 18.09.2026 оно звучало «веб не тронут»: те
+ * же адреса открывались БЕЗ признака оболочки, и знак обязан был совпасть
+ * со старым `accessMarkFor`. Решением владельца от 18.09.2026 (долг 257)
+ * правило поменялось у ОДНОЙ поверхности — у сетки тем словаря: там
+ * браузер обязан говорить ровно то же, что оболочка. Поэтому направление
+ * разделено на два утверждения, и оба живые:
+ *
+ *   `sameInWeb: true`  — знак в браузере ВЫЧИСЛЯЕТСЯ тем же правилом, что
+ *                        и в оболочке, и обязан совпасть с ним знак в знак;
+ *   иначе              — прежнее утверждение, `accessMarkFor`.
+ *
+ * Смена правила ослаблением не является, и это проверяется: под `--plant`
+ * ожидание веб-половины тоже подменяется, и она ОБЯЗАНА покраснеть.
  *
  *   npx tsx scripts/check-access-signs.ts --base=http://localhost:3123
  *   npx tsx scripts/check-access-signs.ts --base=… --plant
@@ -87,6 +98,12 @@ interface Surface {
   /** Сколько узлов обязано найтись как минимум: иначе «0 нарушений» было
    *  бы доказано отсутствием экрана. */
   minNodes: number;
+  /**
+   * ДОЛГ 257. Поверхность, у которой браузер обязан говорить ТО ЖЕ, что
+   * оболочка. Тогда веб-половина судит её тем же `expect`, а не прежним
+   * `accessMarkFor`.
+   */
+  sameInWeb?: boolean;
 }
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
@@ -107,6 +124,8 @@ const SURFACES: Surface[] = [
     selector: "[data-testid=category-tile]",
     expect: (_node, tier) => accessSignFor(levelRequirement("flashcards", "C1"), tier, { nativeShell: true }),
     minNodes: 23,
+    // Долг 257: та же корона и в браузере, у той же роли.
+    sameInWeb: true,
   },
   {
     name: "словарь — плитки тем на B1 (отрицательный контроль сорта)",
@@ -118,6 +137,9 @@ const SURFACES: Surface[] = [
     selector: "[data-testid=category-tile]",
     expect: () => null,
     minNodes: 23,
+    // И отрицательный контроль сорта тоже общий: «корона везде» не должно
+    // проходить ни в оболочке, ни в браузере.
+    sameInWeb: true,
   },
   {
     name: "каталог рассказов — полоса уровней",
@@ -232,6 +254,8 @@ export async function main(): Promise<number> {
   try {
     const premiumCookies = await makeSession(base, "lifetime");
     const contexts: Partial<Record<Role, BrowserContext>> = {};
+    /** Те же роли без признака оболочки — третье направление (долг 257). */
+    const webContexts: Partial<Record<Role, BrowserContext>> = {};
     for (const role of ["guest", "premium"] as Role[]) {
       const ctx = await browser.newContext({
         userAgent: `${SAFARI} ${TOKEN}`,
@@ -242,6 +266,17 @@ export async function main(): Promise<number> {
         ...(role === "premium" ? premiumCookies : []),
       ]);
       contexts[role] = ctx;
+      /**
+       * ТА ЖЕ РОЛЬ, НО БРАУЗЕРОМ — долг 257. Роль обязана быть ТОЙ ЖЕ:
+       * иначе веб-половина сравнивала бы не «два места», а «два разных
+       * посетителя». Первая редакция этой правки именно так и ошиблась —
+       * судила отрицательный контроль плана Premium ролью гостя, и он
+       * честно покраснел на замках, которые гостю положены.
+       */
+      const web = await browser.newContext({ userAgent: SAFARI, viewport: { width: 360, height: 720 } });
+      await ctx.addCookies([]);
+      await web.addCookies(role === "premium" ? premiumCookies : []);
+      webContexts[role] = web;
     }
 
     for (const surface of SURFACES) {
@@ -273,13 +308,45 @@ export async function main(): Promise<number> {
       problemsBySurface.set(surface.name, problems);
     }
 
-    // ТРЕТЬЕ НАПРАВЛЕНИЕ: в вебе ответ прежний. Открываем те же адреса без
-    // признака оболочки и сверяем со СТАРЫМ правилом.
-    if (!plant) {
-      const web = await browser.newContext({ viewport: { width: 360, height: 720 } });
-      const webProblems: string[] = [];
+    /**
+     * ТРЕТЬЕ НАПРАВЛЕНИЕ — ВЕБ. Два утверждения, см. шапку:
+     *   `sameInWeb` — браузер говорит то же, что оболочка (долг 257);
+     *   остальные   — браузер говорит прежнее (`accessMarkFor`).
+     *
+     * Под `--plant` половина НЕ пропускается: ожидание подменяется тем же
+     * `swapped`, и поверхности обязаны покраснеть. Пропуск означал бы, что
+     * про веб прибор не судит вовсе, — ровно тот промах, ради которого у
+     * этого сторожа и заводилась подсадка.
+     */
+    {
+      const webSame: string[] = [];
+      const webLegacy: string[] = [];
       for (const surface of SURFACES) {
-        const nodes = await readNodes(web, base, surface);
+        if (surface.sameInWeb) {
+          for (const role of surface.roles) {
+            const nodes = await readNodes(webContexts[role]!, base, surface);
+            if (nodes.length < (ci ? 1 : surface.minNodes)) {
+              webSame.push(
+                `${surface.name} (веб, ${role}): узлов ${nodes.length} при ожидаемых минимум ${ci ? 1 : surface.minNodes} — ` +
+                  `экран не собрался, и «0 нарушений» здесь ничего не значит`,
+              );
+              continue;
+            }
+            for (const node of nodes) {
+              const want0 = surface.expect(node, TIER_OF[role]);
+              const want = plant ? swapped(want0) : want0;
+              if ((want?.mark ?? null) !== node.mark) {
+                webSame.push(
+                  `${surface.name} (веб, ${role}, «${node.key}»): на экране ${node.mark ?? "знака нет"}, ` +
+                    `правило требует ${want?.mark ?? "знака нет"} — браузер и оболочка обязаны говорить одно (долг 257)`,
+                );
+              }
+            }
+          }
+          continue;
+        }
+        if (plant) continue;
+        const nodes = await readNodes(webContexts.guest!, base, surface);
         for (const node of nodes) {
           const requirement: AccessRequirement = LEVELS.includes(node.key)
             ? levelRequirement(surface.name.includes("рассказ") ? "stories" : surface.name.includes("игры") ? "wordGames" : "flashcards", node.key)
@@ -290,12 +357,12 @@ export async function main(): Promise<number> {
           const allowed = new Set<string | null>([legacy, null]);
           if (surface.name.startsWith("словарь — полоса")) allowed.add(sortSign(requirement)?.mark ?? null);
           if (!allowed.has(node.mark)) {
-            webProblems.push(`${surface.name} (веб, «${node.key}»): знак ${node.mark}, прежнее правило даёт ${legacy}`);
+            webLegacy.push(`${surface.name} (веб, «${node.key}»): знак ${node.mark}, прежнее правило даёт ${legacy}`);
           }
         }
       }
-      await web.close();
-      problemsBySurface.set("ВЕБ не тронут", webProblems);
+      problemsBySurface.set("ВЕБ: словарь говорит то же, что оболочка (долг 257)", webSame);
+      if (!plant) problemsBySurface.set("ВЕБ: остальные поверхности не тронуты", webLegacy);
     }
   } finally {
     await browser.close();

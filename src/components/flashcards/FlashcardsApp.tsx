@@ -7,6 +7,7 @@ import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import FreeTrialLimitBanner, { LockedOrEmpty } from "./FreeTrialLimitBanner";
+import LearnedProgressLine from "./LearnedProgressLine";
 import LevelFilterBar from "./LevelFilterBar";
 import { isFlashcardCategory, isFlashcardLevel, type FlashcardCategory, type FlashcardLevel, type FlashcardRow } from "@/lib/flashcards";
 import { getKnownWords, setWordKnown, syncKnownWords } from "@/lib/flashcard-progress";
@@ -112,6 +113,27 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
   const summaryTier = summary.tier;
   const recentCategories: RecentCategory[] = summary.recent;
   const hasAnyProgress = summary.hasAnyProgress;
+  /**
+   * «СКОЛЬКО МНЕ ОТКРЫТО» — И В РЕЖИМЕ КАРТОЧЕК ТОЖЕ (долг 258, решение
+   * владельца 18.09.2026).
+   *
+   * Замер 18.09.2026 по исходнику и браузером: `LearnedProgressLine`
+   * звалась из ТРЁХ мест из пяти — «Emparejar», «Escribir la palabra»,
+   * «Completa la frase». В режиме карточек («Vocabulario en tarjetas» /
+   * «Словарь по категориям») и в идиомах её не было вовсе, и на видео
+   * 17.09.2026 бесплатный аккаунт смотрел именно режим карточек. Идиомы
+   * не тронуты намеренно — там другой банк (решение владельца).
+   *
+   * Числа берутся из ТОГО ЖЕ ответа и теми же четырьмя полями, что у трёх
+   * соседей: копии предложения не заводится, текст собирает одна
+   * `learnedProgressText`.
+   */
+  const totalProgress = {
+    known: summary.totalKnown,
+    total: summary.availableWords,
+    locked: summary.premiumOnlyWords,
+    lockedBySubscription: summary.subscriptionOnlyWords,
+  };
   // Карточка, на которую надо встать, когда придут карточки темы. Это
   // и есть «то самое слово, на котором человек остановился»: приходит из
   // блока «Продолжить» (`RecentCategory.lastCardId`) или из адреса
@@ -529,6 +551,18 @@ export default function FlashcardsApp({ dict }: { dict: FlashcardsDict }) {
             recent={recentCategories}
             ready={summaryLevel !== undefined && (summaryLevel ?? "all") === levelFilter}
             onSelectCategory={selectCategory}
+          />
+          {/* ДОЛГ 258. Та же строка, тем же компонентом и под тем же
+              признаком готовности, что у трёх остальных режимов: она
+              встаёт ПОД блоком «Продолжить» и НАД сеткой тем. */}
+          <LearnedProgressLine
+            dict={dict}
+            locale={dict.locale}
+            ready={summaryLevel !== undefined && (summaryLevel ?? "all") === levelFilter}
+            known={totalProgress.known}
+            available={totalProgress.total}
+            locked={totalProgress.locked}
+            lockedBySubscription={totalProgress.lockedBySubscription}
           />
           <CategoryGrid
             dict={dict}

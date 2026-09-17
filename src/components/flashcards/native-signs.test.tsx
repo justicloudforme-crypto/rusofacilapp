@@ -143,9 +143,25 @@ describe("часть 1 — плашка на экране одна", () => {
     expect(screen.getByText("Нет карточек для этого фильтра")).toBeInTheDocument();
   });
 
-  it("в вебе плашки нет вовсе", () => {
+  /**
+   * ПРАВИЛО СМЕНИЛОСЬ, А НЕ ОСЛАБЛО — долг 259, решение владельца
+   * 18.09.2026. До него это утверждение звучало «в вебе плашки нет вовсе»,
+   * и оно было верным для прежнего правила. Теперь причина «материал есть
+   * и закрыт» одинакова в браузере и в приложении, и проверяется ровно то
+   * же самое, только с обратным знаком: плашка ОБЯЗАНА быть, а прежний
+   * текст — исчезнуть, потому что он противоречил бы ей.
+   */
+  it("в вебе плашка та же, что в приложении", () => {
     leaveNativeShell();
     render(<LockedOrEmpty locale="ru" emptyMessage="Нет карточек для этого фильтра" lockedHere={8} unit="words" />);
+    expect(plates()).toHaveLength(1);
+    expect(plates()[0].textContent).toContain("8");
+    expect(screen.queryByText("Нет карточек для этого фильтра")).toBeNull();
+  });
+
+  it("в вебе честно пустой фильтр по-прежнему говорит, что он пуст", () => {
+    leaveNativeShell();
+    render(<LockedOrEmpty locale="ru" emptyMessage="Нет карточек для этого фильтра" lockedHere={0} unit="words" />);
     expect(plates()).toHaveLength(0);
     expect(screen.getByText("Нет карточек для этого фильтра")).toBeInTheDocument();
   });
@@ -288,7 +304,16 @@ describe("часть 3 — плитка не пишет «0 слов», когд
     expect(tiles[0].textContent).toContain(ACCESS_MARK_ICON["premium-tier"]);
   });
 
-  it("в вебе плитка считает доступное, как считала", () => {
+  /**
+   * ПРАВИЛО СМЕНИЛОСЬ, А НЕ ОСЛАБЛО — долг 257, решение владельца
+   * 18.09.2026. Прежнее утверждение звучало «в вебе плитка считает
+   * доступное, как считала», и ему соответствовал замер: в браузере на C1
+   * у бесплатного и у доступа по коду стояло 0 корон, 0 замков и сумма
+   * чисел 0 при 988 строках банка. Теперь браузер обязан сказать то же
+   * самое, что приложение, — и проверяется это тем же числом и тем же
+   * селектором, только с обратным знаком.
+   */
+  it("в вебе плитка говорит то же, что в приложении", () => {
     leaveNativeShell();
     const { container } = render(
       <CategoryGrid
@@ -303,10 +328,14 @@ describe("часть 3 — плитка не пишет «0 слов», когд
     );
     const tiles = [...container.querySelectorAll("[data-testid=category-tile]")];
     const food = tiles.find((t) => t.textContent?.includes("food"));
-    expect(food?.getAttribute("data-total")).toBe("5");
-    // И ни плашки, ни короны: веб не тронут.
-    expect(plates()).toHaveLength(0);
-    expect(container.querySelectorAll("[data-access-mark]")).toHaveLength(0);
+    expect(food?.getAttribute("data-total")).toBe("43");
+    expect(plates()).toHaveLength(1);
+    // Только знаки НА ПЛИТКАХ: у плашки над сеткой метка своя, и считать
+    // её вместе с плитками значило бы сверять 24 с 23.
+    expect(
+      container.querySelectorAll("[data-testid=category-tile] [data-access-mark=premium-tier]"),
+    ).toHaveLength(tiles.length);
+    expect(container.querySelectorAll("[data-testid=category-tile] [data-access-locked]")).toHaveLength(tiles.length);
   });
 
   it("на открытом уровне корона не ставится", () => {

@@ -5,7 +5,7 @@ import Skeleton from "@/components/ui/Skeleton";
 import CategoryGrid, { type CategoryGridDict } from "./CategoryGrid";
 import ContinueStrip from "./ContinueStrip";
 import LearnedProgressLine from "./LearnedProgressLine";
-import FreeTrialLimitBanner from "./FreeTrialLimitBanner";
+import FreeTrialLimitBanner, { LockedOrEmpty } from "./FreeTrialLimitBanner";
 import LevelFilterBar from "./LevelFilterBar";
 import { resumeRoundAt } from "@/lib/flashcards/resume-round";
 import MatchBoard, { type MatchResult } from "./MatchBoard";
@@ -275,9 +275,42 @@ export default function MatchApp({
               ))}
             </div>
           ) : round.length < MIN_PLAYABLE ? (
-            <p className="rounded-2xl border border-black/10 p-10 text-center text-sm text-foreground/60 dark:border-white/30">
-              {dict.notEnoughCardsMessage}
-            </p>
+            /**
+             * ПОЧЕМУ СЛОВ НЕ ХВАТИЛО — ДОЛГ 259, 18.09.2026.
+             *
+             * ЧТО СНЯЛ ВЛАДЕЛЕЦ. Аккаунт «доступ по коду», внутри
+             * приложения, `/es`: «Vocabulario por categorías» → тема →
+             * фильтр C1 → «Esta categoría no tiene suficientes palabras
+             * para este filtro». Формально не ложь — слов под этим
+             * разрезом действительно меньше четырёх. Но настоящая причина
+             * умолчана: их не «мало», их закрыл план Premium.
+             *
+             * ЗАМЕР 18.09.2026 ПО ИСХОДНИКУ. Эту фразу печатало РОВНО ОДНО
+             * место в `src/` — вот это, — и условие у него было одно:
+             * `round.length < MIN_PLAYABLE`. Случаи «слов мало» и «слова
+             * есть, но закрыты» оно не различало вовсе, ни в приложении,
+             * ни в браузере. Три соседних режима словаря к тому времени
+             * уже ходили через `LockedOrEmpty` и различали — но только
+             * внутри оболочки (это вторая половина того же долга, она
+             * закрыта в самом `LockedOrEmpty`).
+             *
+             * ЧТО СТАЛО. Тот же общий компонент, что у трёх соседей:
+             * закрытого под этим разрезом нет — прежний текст знак в знак;
+             * закрытое есть — плашка называет число, уровень, тему и знак
+             * («👑 Только Premium» / «🔒 По подписке»). `noticeAbove`
+             * держит правило «плашка на экране одна» (7.195, часть 1):
+             * когда `limited` уже нарисовал её сверху, второй не будет.
+             */
+            <LockedOrEmpty
+              locale={dict.locale}
+              emptyMessage={dict.notEnoughCardsMessage}
+              lockedHere={locked.lockedHere}
+              level={locked.level}
+              topic={locked.topic}
+              requirement={locked.requirement}
+              unit="words"
+              noticeAbove={limited}
+            />
           ) : (
             <>
               <p className="mb-4 text-center text-xs font-medium text-foreground/50">{dict.instructionLabel}</p>
