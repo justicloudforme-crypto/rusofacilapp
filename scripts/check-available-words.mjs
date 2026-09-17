@@ -30,6 +30,23 @@
  *   6. Оба словаря несут все четыре шаблона, и в шаблоне «обе причины»
  *      стоят оба места подстановки.
  *
+ * ЧТО ДОБАВЛЕНО 18.09.2026 (видео проверки 7.207)
+ *
+ *   7. ДРОБИ С НУЛЁМ В ЗНАМЕНАТЕЛЕ НЕ БЫВАЕТ. На уровне C1 и бесплатный
+ *      аккаунт, и доступ по коду читали «Llevas 0 de 0 palabras
+ *      disponibles · 988 más con Premium» / «Вы выучили 0 из 0 доступных ·
+ *      ещё 988 в Premium»: делить не на что, а человек читает «тут пусто»
+ *      — тот же класс, что убран в 7.204. Ветка `available <= 0` обязана
+ *      стоять в `learned-progress.ts` и звать ТРИ отдельных шаблона, у
+ *      которых мест под `{known}`/`{total}` нет вовсе.
+ *   8. МНЕНИЕ СЕРВЕРА СИЛЬНЕЕ ЗАЯВЛЕНИЯ БРАУЗЕРА. Маршрут сводки обязан
+ *      спрашивать `serverAnyUpdatedAt` — «есть ли у сервера СТРОКА про
+ *      эту карточку», — а не `serverKnownUpdatedAt` («сказал ли он про
+ *      неё „знаю“»). Из-за второго строка «не знаю» была неотличима от
+ *      отсутствия строки, и у проверяющего кабинет печатал «0 palabras
+ *      aprendidas», а сетка словаря — «Вы выучили 4 из 4783» (замер
+ *      боевой базы 17.09.2026: четыре строки, все `known = 0`).
+ *
  *   node scripts/check-available-words.mjs
  *   node scripts/check-available-words.mjs --plant
  */
@@ -53,6 +70,12 @@ const TEMPLATES = [
   "learnedProgressAvailableLabel",
   "learnedProgressSubscriptionLabel",
   "learnedProgressBothLabel",
+];
+/** Шаблоны на случай «доступного ноль»: дроби в них нет по построению. */
+const NONE_TEMPLATES = [
+  "learnedProgressNonePremiumLabel",
+  "learnedProgressNoneSubscriptionLabel",
+  "learnedProgressNoneBothLabel",
 ];
 
 export function stripComments(code) {
@@ -78,6 +101,17 @@ export function violations({ route, text, screens, dicts }) {
   if (!/subscriptionOnlyWords,/.test(r)) {
     bad.push(`${ROUTE}: закрытое подпиской наружу не уезжает — экран снова позовёт за ним в Premium`);
   }
+  // Правило 8. Ищется ровно то условие, которым карта браузера
+  // дополняет ответ сервера.
+  const merge = /if \(entry\.known && !(server\w+)\.has\(cardId\)\) resolvedKnownIds\.add\(cardId\);/.exec(r);
+  if (!merge) {
+    bad.push(`${ROUTE}: условия слияния карты браузера с ответом сервера нет вовсе — сторож ослеп, а не доволен`);
+  } else if (merge[1] !== "serverAnyUpdatedAt") {
+    bad.push(
+      `${ROUTE}: заявление браузера сверяется с ${merge[1]}, а не с serverAnyUpdatedAt — ` +
+        `строка сервера «не знаю» снова неотличима от отсутствия строки (17.09.2026)`,
+    );
+  }
 
   const t = stripComments(text);
   // Ищется ВЫЗОВ, а не объявление типа: объявление переживает и
@@ -89,6 +123,15 @@ export function violations({ route, text, screens, dicts }) {
   }
   if (!/lockedBySubscription/.test(t)) {
     bad.push(`${TEXT}: предложение не знает про закрытое подпиской`);
+  }
+  // Правило 7. Ветка нулевого знаменателя и все три её шаблона.
+  if (!/if \(available <= 0\)/.test(t)) {
+    bad.push(`${TEXT}: ветки «доступного ноль» нет — вернётся дробь «0 из 0» (17.09.2026)`);
+  }
+  for (const key of NONE_TEMPLATES) {
+    if (!new RegExp(`dict\\.${key}\\b`).test(t)) {
+      bad.push(`${TEXT}: нет ветки ${key} — причина закрытого при нулевом знаменателе не названа`);
+    }
   }
 
   for (const [file, source] of Object.entries(screens)) {
@@ -119,6 +162,29 @@ export function violations({ route, text, screens, dicts }) {
         }
         if (key === "learnedProgressBothLabel" && !value.includes("{premium}")) {
           bad.push(`${file}: у ${key}.${form} нет второй причины {premium} — обе названы одним числом`);
+        }
+      }
+    }
+    for (const key of NONE_TEMPLATES) {
+      const forms = section[key];
+      if (!forms || typeof forms !== "object") {
+        bad.push(`${file}: нет шаблона ${key}`);
+        continue;
+      }
+      for (const form of ["one", "few", "many"]) {
+        const value = forms[form];
+        if (typeof value !== "string") {
+          bad.push(`${file}: у ${key}.${form} нет формы`);
+          continue;
+        }
+        if (value.includes("{total}") || value.includes("{known}")) {
+          bad.push(`${file}: у ${key}.${form} снова стоит дробь {known}/{total} — знаменатель там ноль`);
+        }
+        if (!value.includes("{locked}")) {
+          bad.push(`${file}: у ${key}.${form} нет места для закрытого {locked}`);
+        }
+        if (key === "learnedProgressNoneBothLabel" && !value.includes("{premium}")) {
+          bad.push(`${file}: у ${key}.${form} нет второй причины {premium}`);
         }
       }
     }
@@ -183,6 +249,51 @@ function plant() {
       "не передав закрытое подпиской",
     );
   }
+  planted(
+    "подсадка: убрана ветка «доступного ноль» — поймана (17.09.2026)",
+    { text: live.text.replace("if (available <= 0) {", "if (false) {") },
+    "ветки «доступного ноль» нет",
+  );
+  planted(
+    "подсадка: шаблон нулевого знаменателя снова печатает дробь — поймана",
+    {
+      dicts: {
+        ...live.dicts,
+        [DICTS[1]]: {
+          ...live.dicts[DICTS[1]],
+          vocabulary: {
+            ...live.dicts[DICTS[1]].vocabulary,
+            learnedProgressNonePremiumLabel: {
+              one: "{known} из {total} · {locked}",
+              few: "{known} из {total} · {locked}",
+              many: "{known} из {total} · {locked}",
+            },
+          },
+        },
+      },
+    },
+    "снова стоит дробь",
+  );
+  planted(
+    "подсадка: сводка снова спрашивает только строки «знаю» — поймана (17.09.2026)",
+    {
+      route: live.route.replace(
+        "if (entry.known && !serverAnyUpdatedAt.has(cardId)) resolvedKnownIds.add(cardId);",
+        "if (entry.known && !serverKnownUpdatedAt.has(cardId)) resolvedKnownIds.add(cardId);",
+      ),
+    },
+    "а не с serverAnyUpdatedAt",
+  );
+  planted(
+    "подсадка: условие слияния уехало целиком — поймана",
+    {
+      route: live.route.replace(
+        "if (entry.known && !serverAnyUpdatedAt.has(cardId)) resolvedKnownIds.add(cardId);",
+        "void entry;",
+      ),
+    },
+    "условия слияния карты браузера",
+  );
   planted(
     "подсадка: из шаблона «обе причины» убрано второе число — поймана",
     {

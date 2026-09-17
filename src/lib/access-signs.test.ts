@@ -29,8 +29,55 @@ describe("правило знака — три исхода и ни одного
   it("корона стоит у премиального материала при ЛЮБОЙ роли, включая premium", () => {
     for (const tier of TIERS) {
       const sign = accessSignFor("premium-tier", tier, { nativeShell: true });
-      expect(sign).toEqual({ mark: "premium-tier", labelKey: "premiumTierBadge" });
+      expect([tier, sign?.mark, sign?.labelKey]).toEqual([tier, "premium-tier", "premiumTierBadge"]);
     }
+  });
+
+  /**
+   * ЗАМОК РЯДОМ С КОРОНОЙ — долг 251, решение владельца 18.09.2026.
+   *
+   * Владелец снял: у доступа по коду на премиальном пазле стоит корона и
+   * ничего больше, хотя пазл ему не откроется (580 из 2015 по боевой базе
+   * 17.09.2026). Корона — СОРТ, замок — СОСТОЯНИЕ, и одно не заменяет
+   * другого.
+   */
+  it("у закрытого премиального материала оба знака: сорт и состояние", () => {
+    for (const tier of ["free", "standard"] as ViewerTier[]) {
+      const sign = accessSignFor("premium-tier", tier, { nativeShell: true });
+      expect([tier, sign?.mark, sign?.locked]).toEqual([tier, "premium-tier", true]);
+    }
+  });
+
+  it("у Premium премиальный материал открыт — корона без замка", () => {
+    const sign = accessSignFor("premium-tier", "premium", { nativeShell: true });
+    expect(sign?.mark).toBe("premium-tier");
+    expect(sign?.locked ?? false).toBe(false);
+  });
+
+  it("закрытость, названную поверхностью, слушает и корона", () => {
+    // Словарь знает про бесплатную пробу больше, чем правило; знак сорта
+    // от этого не пропадает, но состояние берётся у поверхности.
+    expect(accessSignFor("premium-tier", "premium", { nativeShell: true, closed: true })?.locked).toBe(true);
+    expect(accessSignFor("premium-tier", "free", { nativeShell: true, closed: false })?.locked ?? false).toBe(false);
+  });
+
+  it("в ВЕБЕ второго знака нет ни у кого — правило там прежнее", () => {
+    for (const tier of TIERS) {
+      for (const requirement of REQUIREMENTS) {
+        for (const closed of [true, false]) {
+          const sign = accessSignFor(requirement, tier, { nativeShell: false, closed });
+          expect([tier, requirement, closed, sign?.locked ?? false]).toEqual([tier, requirement, closed, false]);
+        }
+      }
+    }
+  });
+
+  it("замок в одиночку по-прежнему не несёт признака состояния отдельно", () => {
+    // У непремиального закрытого материала знак ОДИН и он же состояние:
+    // второго глифа рядом быть не должно, иначе на экране два замка.
+    const sign = accessSignFor("subscription", "free", { nativeShell: true });
+    expect(sign?.mark).toBe("subscription");
+    expect(sign?.locked ?? false).toBe(false);
   });
 
   it("замок — только у закрытого и только у НЕпремиального", () => {
@@ -43,10 +90,12 @@ describe("правило знака — три исхода и ни одного
     expect(accessSignFor("free", "free", { nativeShell: true })).toBeNull();
   });
 
-  it("сорт побеждает закрытость: у премиального и закрытого — корона, а не замок", () => {
+  it("сорт остаётся сортом: у премиального и закрытого знак сорта — корона", () => {
     const sign = accessSignFor("premium-tier", "free", { nativeShell: true, closed: true });
     expect(sign?.mark).toBe("premium-tier");
     expect(sign?.labelKey).toBe("premiumTierBadge");
+    // …и рядом с ней состояние, а не вместо неё (долг 251).
+    expect(sign?.locked).toBe(true);
   });
 
   it("закрытость, названную поверхностью, правило слушает — но только для замка", () => {

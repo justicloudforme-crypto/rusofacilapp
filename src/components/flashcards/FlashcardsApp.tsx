@@ -48,6 +48,10 @@ export interface FlashcardsDict {
   learnedProgressAvailableLabel: PluralForms; // the same line for a visitor with Premium-locked cards; adds literal "{locked}".
   learnedProgressSubscriptionLabel: PluralForms; // закрыто бесплатной пробой — открывает любая подписка (7.206).
   learnedProgressBothLabel: PluralForms; // закрыто и пробой, и Premium; добавляет "{premium}".
+  /** Доступного ноль — три формы без дроби (находка 17.09.2026). */
+  learnedProgressNonePremiumLabel: PluralForms; // "{locked}"
+  learnedProgressNoneSubscriptionLabel: PluralForms; // "{locked}"
+  learnedProgressNoneBothLabel: PluralForms; // "{locked}", "{premium}"
 }
 
 // Debounce delay for the always-visible search box — short enough to feel

@@ -45,12 +45,21 @@ export default function LearnedProgressLine({
   lockedBySubscription: number;
 }) {
   if (!ready) return null;
+  /**
+   * ПУСТОЙ СТРОКЕ МЕСТА НА ЭКРАНЕ НЕТ (18.09.2026). `learnedProgressText`
+   * отвечает пустой строкой ровно в одном случае: под этим разрезом нет
+   * ни одного слова — ни открытого, ни закрытого. Сказать про такой
+   * разрез нечего, и «0 из 0» было бы единственным, что тут можно
+   * соврать.
+   */
+  const text = learnedProgressText(locale, dict, { known, available, locked, lockedBySubscription });
+  if (!text) return null;
   return (
     <p
       data-learned-progress="grid"
       className="mb-4 text-center text-sm text-foreground/60"
     >
-      {learnedProgressText(locale, dict, { known, available, locked, lockedBySubscription })}
+      {text}
     </p>
   );
 }

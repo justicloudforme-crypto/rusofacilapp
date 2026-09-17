@@ -41,6 +41,9 @@ export interface WordGamePlayerDict {
   learnedProgressAvailableLabel: LearnedProgressDict["learnedProgressAvailableLabel"];
   learnedProgressSubscriptionLabel: LearnedProgressDict["learnedProgressSubscriptionLabel"];
   learnedProgressBothLabel: LearnedProgressDict["learnedProgressBothLabel"];
+  learnedProgressNonePremiumLabel: LearnedProgressDict["learnedProgressNonePremiumLabel"];
+  learnedProgressNoneSubscriptionLabel: LearnedProgressDict["learnedProgressNoneSubscriptionLabel"];
+  learnedProgressNoneBothLabel: LearnedProgressDict["learnedProgressNoneBothLabel"];
 }
 
 /** Orchestrates one puzzle attempt: picks the right board (crossword vs
@@ -198,6 +201,7 @@ export default function WordGamePlayer({
                 known: totalProgress.known,
                 available: totalProgress.total,
                 locked: totalProgress.locked,
+                lockedBySubscription: totalProgress.lockedBySubscription,
               })}
             </p>
           )}
