@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planDisplayLabel } from "./subscription-plan-label";
+import { planDisplayLabel, subscriptionRowLabel } from "./subscription-plan-label";
 import type { Dictionary } from "@/i18n/dictionaries";
 import ru from "@/dictionaries/ru.json";
 import es from "@/dictionaries/es.json";
@@ -55,5 +55,67 @@ describe("вкладка «Подписка»: тариф назван прав�
 
   it("ОТРИЦАТЕЛЬНЫЙ: неизвестный тариф печатается как есть, а не пустотой", () => {
     expect(planDisplayLabel("whatever", DICTS.ru)).toBe("whatever");
+  });
+});
+
+/**
+ * ДОЛГ 248, ЗАХОД 7.207: «Plan» и история платежей больше не спорят.
+ *
+ * Строка снята с прода: `www.petrov.ru_1992@mail.ru` погасил код
+ * `AMIGOJY9DTAVG` 09.09.2026 в 03:58:05.498Z, а его `Subscription`
+ * заведена в 03:58:05.612Z — через 114 мс, тем же запросом. План в
+ * колонке у неё `manual`, потому что строка старше правки 7.151.
+ *
+ * ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ прежнего кода — `planDisplayLabel(row.plan, …)`:
+ * та самая функция и тот самый аргумент, которыми строка «Plan»
+ * подписывалась до этой правки. Она обязана сказать «вручную».
+ */
+describe("подпись выданного доступа: код это или рука (долг 248)", () => {
+  const REDEEMED = new Date("2026-09-09T03:58:05.498Z");
+  const byCode = {
+    plan: "manual",
+    stripeSubscriptionId: null,
+    createdAt: new Date("2026-09-09T03:58:05.612Z"),
+  };
+  const byHand = {
+    plan: "manual",
+    stripeSubscriptionId: null,
+    createdAt: new Date("2026-09-01T10:00:00.000Z"),
+  };
+  const paid = {
+    plan: "monthly",
+    stripeSubscriptionId: "sub_123",
+    createdAt: new Date("2026-09-01T10:00:00.000Z"),
+  };
+
+  it("доступ по коду: и «Plan», и история говорят «по коду»", () => {
+    expect(subscriptionRowLabel(byCode, DICTS.es, [REDEEMED], "plan")).toBe("Acceso por código");
+    expect(subscriptionRowLabel(byCode, DICTS.es, [REDEEMED], "history")).toBe("Acceso por código");
+    expect(subscriptionRowLabel(byCode, DICTS.ru, [REDEEMED], "plan")).toBe("Доступ по коду");
+    expect(subscriptionRowLabel(byCode, DICTS.ru, [REDEEMED], "history")).toBe("Доступ по коду");
+  });
+
+  it("положительный контроль: прежний код на той же строке говорил «вручную»", () => {
+    expect(planDisplayLabel(byCode.plan, DICTS.es)).toBe("Acceso otorgado a mano");
+    expect(planDisplayLabel(byCode.plan, DICTS.es)).not.toBe(
+      subscriptionRowLabel(byCode, DICTS.es, [REDEEMED], "plan"),
+    );
+  });
+
+  it("настоящая ручная выдача осталась «otorgado a mano»", () => {
+    expect(subscriptionRowLabel(byHand, DICTS.es, [REDEEMED], "plan")).toBe("Acceso otorgado a mano");
+    expect(subscriptionRowLabel(byHand, DICTS.ru, [REDEEMED], "plan")).toBe("Доступ выдан вручную");
+  });
+
+  it("настоящая подписка подписана тарифом, а не выдачей", () => {
+    expect(subscriptionRowLabel(paid, DICTS.es, [REDEEMED], "plan")).toBe("Mensual");
+    expect(subscriptionRowLabel(paid, DICTS.ru, [REDEEMED], "history")).toBe("Ежемесячный");
+  });
+
+  it("окно совпадения — минута, и ни секундой больше", () => {
+    const late = { ...byHand, createdAt: new Date(REDEEMED.getTime() + 60_001) };
+    const inside = { ...byHand, createdAt: new Date(REDEEMED.getTime() + 59_000) };
+    expect(subscriptionRowLabel(late, DICTS.es, [REDEEMED], "plan")).toBe("Acceso otorgado a mano");
+    expect(subscriptionRowLabel(inside, DICTS.es, [REDEEMED], "plan")).toBe("Acceso por código");
   });
 });

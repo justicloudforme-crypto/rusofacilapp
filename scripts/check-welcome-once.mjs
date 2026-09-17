@@ -60,6 +60,7 @@ const PLANT = process.argv.slice(2).includes("--plant");
 const OVERLAY = "src/components/profile/WelcomeOverlay.tsx";
 const CABINET = "src/app/[lang]/profile/page.tsx";
 const ROUTE = "src/app/api/welcome-shown/route.ts";
+const RULE = "src/lib/welcome-shown.ts";
 
 /** Комментарии из рассмотрения вычёркиваются: в этом файле правило
  *  объяснено словами, и слова эти содержат и `new Date()`, и
@@ -68,10 +69,11 @@ export function stripComments(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^[ \t]*\/\/.*$/gm, " ");
 }
 
-export function violations(overlayRaw, cabinetRaw, routeRaw = "") {
+export function violations(overlayRaw, cabinetRaw, routeRaw = "", ruleRaw = "") {
   const overlay = stripComments(overlayRaw);
   const cabinet = stripComments(cabinetRaw);
   const route = stripComments(routeRaw);
+  const rule = stripComments(ruleRaw);
   const bad = [];
 
   if (/new Date\s*\(/.test(overlay) || /toISOString\s*\(/.test(overlay)) {
@@ -119,8 +121,16 @@ export function violations(overlayRaw, cabinetRaw, routeRaw = "") {
   }
   if (!overlayTag) {
     // уже сказано выше
-  } else if (!/greetedOnAccount=\{greetedOnAccountToday\(user\.welcomeShownDateKey,\s*todayKey\)\}/.test(overlayTag)) {
-    bad.push(`${CABINET}: признак \`greetedOnAccount\` собран не из колонки и не из того же дня (долг 234)`);
+  } else if (!/greetedOnAccount=\{greetedOnAccountToday\(user,\s*todayKey,\s*timeZone\)\}/.test(overlayTag)) {
+    bad.push(`${CABINET}: признак \`greetedOnAccount\` собран не из строки аккаунта, не из того же дня и не в зоне аккаунта (долги 234, 247)`);
+  }
+  // ДОЛГ 247, вторая половина: число в приветствии обязано быть ТЕМ ЖЕ
+  // значением, которое печатает плитка «racha actual». Владелец видел «2»
+  // и «6» — оба настоящие, просто посчитанные в разных зонах; если
+  // приветствию когда-нибудь дадут считать своё число, расхождение
+  // вернётся уже без всякой зоны.
+  if (overlayTag && !/currentStreak=\{streak\.currentStreak\}/.test(overlayTag)) {
+    bad.push(`${CABINET}: число в приветствии — не \`streak.currentStreak\`, то есть не то, что печатает «racha actual» (долг 247)`);
   }
   if (!route) {
     bad.push(`${ROUTE}: маршрута записи отметки нет — сторож ослеп, а не доволен`);
@@ -134,8 +144,28 @@ export function violations(overlayRaw, cabinetRaw, routeRaw = "") {
     if (!/welcomeShownDateKey:\s*todayKey/.test(route)) {
       bad.push(`${ROUTE}: отметка пишется не тем днём, который посчитан здесь же`);
     }
+    // ДОЛГ 247: правду держит МГНОВЕНИЕ. Без него запись снова становится
+    // ключом одного календаря, сличаемым с днём другого.
+    if (!/welcomeShownAt:\s*new Date\(\)/.test(route)) {
+      bad.push(`${ROUTE}: мгновение показа не записывается — день отметки снова повиснет в старой зоне (долг 247)`);
+    }
+    if (!/greetedOnAccountToday\(/.test(route)) {
+      bad.push(`${ROUTE}: «уже здоровались?» спрашивается не общей функцией — второй ответ на тот же вопрос (долг 247)`);
+    }
     if (!/catch/.test(route)) {
       bad.push(`${ROUTE}: запись не обёрнута отказом — без колонки маршрут уронил бы кабинет`);
+    }
+  }
+  // ——— ДОЛГ 247: правило считает день ОТ МГНОВЕНИЯ ———
+
+  if (!rule) {
+    bad.push(`${RULE}: файла правила нет — сторож ослеп, а не доволен`);
+  } else {
+    if (!/dateKeyIn\(at,\s*timeZone\)\s*===\s*todayKey/.test(rule)) {
+      bad.push(`${RULE}: день отметки считается не от мгновения в текущей зоне аккаунта — два календаря, сличённые как один (долг 247)`);
+    }
+    if (!/welcomeShownAt/.test(rule)) {
+      bad.push(`${RULE}: мгновение показа в правиле не участвует вовсе (долг 247)`);
     }
   }
   return bad;
@@ -145,20 +175,21 @@ function plant() {
   const overlay = readFileSync(OVERLAY, "utf8");
   const cabinet = readFileSync(CABINET, "utf8");
   const route = readFileSync(ROUTE, "utf8");
-  const cases = [{ name: "отрицательный контроль: живые файлы сегодня чисты", ok: violations(overlay, cabinet, route).length === 0 }];
+  const rule = readFileSync(RULE, "utf8");
+  const cases = [{ name: "отрицательный контроль: живые файлы сегодня чисты", ok: violations(overlay, cabinet, route, rule).length === 0 }];
   const planted = (name, o, c, expect) => {
     if (o === overlay && c === cabinet) {
       cases.push({ name: `${name} — ЯКОРЬ ПОДСАДКИ УЕХАЛ`, ok: false });
       return;
     }
-    cases.push({ name, ok: violations(o, c, route).some((f) => f.includes(expect)) });
+    cases.push({ name, ok: violations(o, c, route, rule).some((f) => f.includes(expect)) });
   };
   const plantedRoute = (name, r, expect) => {
     if (r === route) {
       cases.push({ name: `${name} — ЯКОРЬ ПОДСАДКИ УЕХАЛ`, ok: false });
       return;
     }
-    cases.push({ name, ok: violations(overlay, cabinet, r).some((f) => f.includes(expect)) });
+    cases.push({ name, ok: violations(overlay, cabinet, r, rule).some((f) => f.includes(expect)) });
   };
 
   planted(
@@ -208,10 +239,26 @@ function plant() {
     "не сообщается серверу",
   );
   planted(
-    "подсадка: кабинет собирает признак мимо колонки — поймана",
+    "подсадка: кабинет собирает признак мимо строки аккаунта — поймана",
     overlay,
-    cabinet.replace("greetedOnAccount={greetedOnAccountToday(user.welcomeShownDateKey, todayKey)}", "greetedOnAccount={false}"),
-    "собран не из колонки",
+    cabinet.replace("greetedOnAccount={greetedOnAccountToday(user, todayKey, timeZone)}", "greetedOnAccount={false}"),
+    "собран не из строки аккаунта",
+  );
+  // ——— ДОЛГ 247 ———
+  planted(
+    "подсадка: вернуть прежнее сравнение ключей (мимо зоны аккаунта) — поймана",
+    overlay,
+    cabinet.replace(
+      "greetedOnAccount={greetedOnAccountToday(user, todayKey, timeZone)}",
+      "greetedOnAccount={greetedOnAccountToday(user.welcomeShownDateKey, todayKey)}",
+    ),
+    "не в зоне аккаунта",
+  );
+  planted(
+    "подсадка: дать приветствию своё число вместо «racha actual» — поймана",
+    overlay,
+    cabinet.replace("currentStreak={streak.currentStreak}\n        greeting=", "currentStreak={0}\n        greeting="),
+    "не то, что печатает «racha actual»",
   );
   plantedRoute(
     "подсадка: маршрут берёт день из тела запроса — поймана",
@@ -222,6 +269,28 @@ function plant() {
     "подсадка: маршрут пишет не тот день — поймана",
     route.replace("welcomeShownDateKey: todayKey", "welcomeShownDateKey: \"2026-01-01\""),
     "не тем днём",
+  );
+  plantedRoute(
+    "подсадка: маршрут перестал писать мгновение — поймана",
+    route.replace("welcomeShownAt: new Date(), ", ""),
+    "мгновение показа не записывается",
+  );
+  plantedRoute(
+    "подсадка: маршрут спрашивает «уже здоровались?» сам — поймана",
+    route.replace("greetedOnAccountToday(user, todayKey, timeZone)", "user.welcomeShownDateKey === todayKey"),
+    "не общей функцией",
+  );
+  const plantedRule = (name, r, expect) => {
+    if (r === rule) {
+      cases.push({ name: `${name} — ЯКОРЬ ПОДСАДКИ УЕХАЛ`, ok: false });
+      return;
+    }
+    cases.push({ name, ok: violations(overlay, cabinet, route, r).some((f) => f.includes(expect)) });
+  };
+  plantedRule(
+    "подсадка: правило снова сравнивает две строки ключей — поймана",
+    rule.replace("if (!Number.isNaN(at.getTime())) return dateKeyIn(at, timeZone) === todayKey;", ""),
+    "не от мгновения",
   );
 
   let passed = 0;
@@ -235,13 +304,13 @@ function plant() {
 
 function main() {
   if (PLANT) return plant();
-  const bad = violations(readFileSync(OVERLAY, "utf8"), readFileSync(CABINET, "utf8"), readFileSync(ROUTE, "utf8"));
+  const bad = violations(readFileSync(OVERLAY, "utf8"), readFileSync(CABINET, "utf8"), readFileSync(ROUTE, "utf8"), readFileSync(RULE, "utf8"));
   if (bad.length) {
     console.error("ПРИВЕТСТВИЕ ДНЯ СНОВА МОЖЕТ ПРИЙТИ ДВАЖДЫ (долг 223):");
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log("[check:welcome-once] сутки считает сервер в зоне аккаунта; главный замок — колонка аккаунта, кука — второй рубеж (контроль — --plant).");
+  console.log("[check:welcome-once] сутки считает сервер в зоне аккаунта; главный замок — МГНОВЕНИЕ на аккаунте, кука — второй рубеж (контроль — --plant).");
   return 0;
 }
 

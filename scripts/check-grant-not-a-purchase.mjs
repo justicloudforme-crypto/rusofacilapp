@@ -43,6 +43,7 @@ const PLANT = process.argv.includes("--plant");
 const ROOT = join(process.cwd(), "src");
 const CABINET = "src/app/[lang]/profile/page.tsx";
 const GRANT_LIB = "src/lib/subscription-grant.ts";
+const LABEL_LIB = "src/lib/subscription-plan-label.ts";
 
 /** Портал платёжной системы: любое из этих написаний означает, что
  *  человека уводят управлять покупкой наружу. */
@@ -67,9 +68,10 @@ function walk(dir) {
   return out;
 }
 
-export function violations({ cabinetRaw, grantLibRaw, portalHits }) {
+export function violations({ cabinetRaw, grantLibRaw, labelLibRaw, portalHits }) {
   const cabinet = stripComments(cabinetRaw);
   const grantLib = stripComments(grantLibRaw);
+  const labelLib = stripComments(labelLibRaw ?? "");
   const bad = [];
 
   // 1. Правило выдачи — одно, и оно спрашивает ОБА условия.
@@ -98,12 +100,30 @@ export function violations({ cabinetRaw, grantLibRaw, portalHits }) {
     bad.push(`${CABINET}: выданный доступ не гасит блок органов управления ДО формы отмены — кнопка «отменить» остаётся у того, кому нечего отменять`);
   }
 
-  // 4. История не называет выдачу тарифом.
-  if (!/isGrantSubscription\(row\)/.test(cabinet)) {
+  // 4. История не называет выдачу тарифом, а строка «Plan» не спорит с
+  //    ней (долг 248, 7.207): обе подписи собирает ОДНА функция, и признак
+  //    «код или рука» в ней ровно один.
+  if (!/subscriptionRowLabel\(row,\s*dict,\s*redeemedCodeDates,\s*"history"\)/.test(cabinet)) {
     bad.push(`${CABINET}: строка истории не отличает выдачу от платежа`);
   }
-  if (!/historyGrantCode/.test(cabinet) || !/historyGrantManual/.test(cabinet)) {
-    bad.push(`${CABINET}: у выдачи в истории нет своей подписи — она снова читается как оплаченный тариф`);
+  if (!/subscriptionRowLabel\(subscription,\s*dict,\s*redeemedCodeDates,\s*"plan"\)/.test(cabinet)) {
+    bad.push(`${CABINET}: строка «Plan» подписана мимо общего признака — она снова может сказать «выдано вручную» тому, кто погасил код (долг 248)`);
+  }
+  if (/planDisplayLabel\s*\(/.test(cabinet)) {
+    bad.push(`${CABINET}: подпись тарифа зовётся напрямую, в обход признака выдачи — второй ответ на тот же вопрос (долг 248)`);
+  }
+  if (!labelLib) {
+    bad.push(`${LABEL_LIB}: файла подписи нет — сторож ослеп, а не доволен`);
+  } else {
+    if (!/isGrantSubscription\(row\)/.test(labelLib)) {
+      bad.push(`${LABEL_LIB}: подпись не спрашивает, выдача ли это, — тариф из колонки снова говорит за неё`);
+    }
+    if (!/grantSource\(row,\s*redeemedCodeDates\)\s*===\s*"code"/.test(labelLib)) {
+      bad.push(`${LABEL_LIB}: «код или рука» решается не общим признаком по времени погашения (долг 248)`);
+    }
+    if (!/historyGrantCode/.test(labelLib) || !/historyGrantManual/.test(labelLib) || !/planManualLabel/.test(labelLib)) {
+      bad.push(`${LABEL_LIB}: у выдачи нет своих подписей — она снова читается как оплаченный тариф`);
+    }
   }
 
   // 5. Портала нет нигде.
@@ -139,7 +159,8 @@ function plant() {
   const read = (f) => readFileSync(f, "utf8");
   const cabinetRaw = read(CABINET);
   const grantLibRaw = read(GRANT_LIB);
-  const live = { cabinetRaw, grantLibRaw, portalHits: portalTouches(files, read) };
+  const labelLibRaw = read(LABEL_LIB);
+  const live = { cabinetRaw, grantLibRaw, labelLibRaw, portalHits: portalTouches(files, read) };
 
   const cases = [{ name: "отрицательный контроль: живые файлы сегодня чисты", ok: violations(live).length === 0 }];
   const planted = (name, patch, expect) => {
@@ -172,8 +193,23 @@ function plant() {
   );
   planted(
     "подсадка: история снова называет выдачу тарифом — поймана",
-    { cabinetRaw: cabinetRaw.replace("isGrantSubscription(row)", "false") },
+    { cabinetRaw: cabinetRaw.replace('subscriptionRowLabel(row, dict, redeemedCodeDates, "history")', "planDisplayLabel(row.plan, dict)") },
     "не отличает выдачу от платежа",
+  );
+  planted(
+    "подсадка: строка «Plan» снова подписана одной колонкой — поймана (долг 248)",
+    { cabinetRaw: cabinetRaw.replace('subscriptionRowLabel(subscription, dict, redeemedCodeDates, "plan")', "planDisplayLabel(subscription.plan, dict)") },
+    "подписана мимо общего признака",
+  );
+  planted(
+    "подсадка: подпись перестала спрашивать, выдача ли это — поймана",
+    { labelLibRaw: labelLibRaw.replace("if (!isGrantSubscription(row)) return planDisplayLabel(row.plan, dict);", "") },
+    "не спрашивает, выдача ли это",
+  );
+  planted(
+    "подсадка: «код или рука» решается планом, а не временем — поймана",
+    { labelLibRaw: labelLibRaw.replace('grantSource(row, redeemedCodeDates) === "code"', 'row.plan === "access_code"') },
+    "не общим признаком по времени",
   );
   planted(
     "подсадка: признак выдачи собран мимо общего правила — поймана",
@@ -207,6 +243,7 @@ function main() {
   const bad = violations({
     cabinetRaw: read(CABINET),
     grantLibRaw: read(GRANT_LIB),
+    labelLibRaw: read(LABEL_LIB),
     portalHits: portalTouches(files, read),
   });
   if (bad.length) {
@@ -214,7 +251,7 @@ function main() {
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log(`[check:grant-not-a-purchase] ${files.length} файлов: у выданного доступа нет ни отмены, ни покупки, история его платежом не называет, ссылок на портал платёжной системы 0 (контроль — --plant).`);
+  console.log(`[check:grant-not-a-purchase] ${files.length} файлов: у выданного доступа нет ни отмены, ни покупки, история его платежом не называет, «Plan» и история подписаны одним признаком, ссылок на портал платёжной системы 0 (контроль — --plant).`);
   return 0;
 }
 
