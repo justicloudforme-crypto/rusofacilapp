@@ -33,12 +33,14 @@ export interface WordGamePlayerDict {
   progressCountLabel: string; // {solved} {words} {filled} {cells}
   wordSearchGridLabel: string;
   crosswordGridLabel: string;
-  /** Строка «выучено N из M» под панелью результата. Те же два ключа, что
-   * у режимов словаря: предложение одно и то же, и второй копии текста в
-   * словаре быть не должно. Какая из двух форм печатается, решает
-   * learned-progress.ts по числу закрытых слов, а не по тарифу. */
+  /** Строка «выучено N из M» под панелью результата. Те же ключи, что у
+   * режимов словаря: предложение одно и то же, и второй копии текста в
+   * словаре быть не должно. Какая из ЧЕТЫРЁХ форм печатается, решает
+   * learned-progress.ts по числам закрытого, а не по тарифу. */
   learnedProgressLabel: LearnedProgressDict["learnedProgressLabel"];
   learnedProgressAvailableLabel: LearnedProgressDict["learnedProgressAvailableLabel"];
+  learnedProgressSubscriptionLabel: LearnedProgressDict["learnedProgressSubscriptionLabel"];
+  learnedProgressBothLabel: LearnedProgressDict["learnedProgressBothLabel"];
 }
 
 /** Orchestrates one puzzle attempt: picks the right board (crossword vs
@@ -76,9 +78,11 @@ export default function WordGamePlayer({
   // an incorrectly hidden stat.
   const [errorCount, setErrorCount] = useState<number | undefined>(puzzle.type === "CROSSWORD" ? 0 : undefined);
   // `total` — сколько слов доступно ЭТОМУ игроку, `locked` — сколько
-  // добавит Premium. Оба числа приходят с сервера и здесь не считаются
-  // (PROGRESS 7.76: знаменатель «из 5683» для не-Premium был неправдой).
-  const [totalProgress, setTotalProgress] = useState({ known: 0, total: 0, locked: 0 });
+  // добавит Premium, `lockedBySubscription` — сколько откроет любая
+  // подписка. Все числа приходят с сервера и здесь не считаются
+  // (PROGRESS 7.76: знаменатель «из 5683» для не-Premium был неправдой;
+  // 7.206: «из 4783» для бесплатного аккаунта был ею же).
+  const [totalProgress, setTotalProgress] = useState({ known: 0, total: 0, locked: 0, lockedBySubscription: 0 });
   const completeReported = useRef(false);
 
   // Запрос уходит только после решения: до него панели нет, а лишний
@@ -89,7 +93,12 @@ export default function WordGamePlayer({
     let alive = true;
     fetchCategorySummary("all").then((body) => {
       if (!alive) return;
-      setTotalProgress({ known: body.totalKnown, total: body.availableWords, locked: body.premiumOnlyWords });
+      setTotalProgress({
+        known: body.totalKnown,
+        total: body.availableWords,
+        locked: body.premiumOnlyWords,
+        lockedBySubscription: body.subscriptionOnlyWords ?? 0,
+      });
     });
     return () => {
       alive = false;

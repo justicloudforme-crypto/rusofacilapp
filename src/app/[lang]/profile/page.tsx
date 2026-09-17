@@ -53,6 +53,9 @@ import ProfileNameForm from "@/components/profile/ProfileNameForm";
 import ThemeSwitcher from "@/components/profile/ThemeSwitcher";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import WelcomeOverlay from "@/components/profile/WelcomeOverlay";
+import { greetedOnAccountToday } from "@/lib/welcome-shown";
+import { grantSource, isGrantSubscription } from "@/lib/subscription-grant";
+import { getRedeemedAccessCodeDates } from "@/lib/access-code";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
@@ -383,6 +386,7 @@ export default async function ProfilePage({
     requestHeaders,
     openVoucher,
     storiesStarted,
+    redeemedCodeDates,
   ] = await Promise.all([
     getSubscriptionsForUser(user.id).catch((error) => {
       console.error("profile: getSubscriptionsForUser failed", error);
@@ -421,6 +425,14 @@ export default async function ProfilePage({
     db.storyReadingProgress.count({ where: { userId: user.id } }).catch((error) => {
       console.error("profile: storyReadingProgress.count failed", error);
       return 0;
+    }),
+    // ДОЛГ 239 (7.206): когда этот человек гасил коды. Нужно ОДНОЙ подписи
+    // — «доступ по коду» против «доступ открыт вручную», — и ни одному
+    // решению о доступе (см. getRedeemedAccessCodeDates). Отказ базы
+    // деградирует в пустой список, то есть во вторую подпись, а не в 500.
+    getRedeemedAccessCodeDates(user.id).catch((error) => {
+      console.error("profile: getRedeemedAccessCodeDates failed", error);
+      return [] as Date[];
     }),
   ]);
   // ДОЛГ 220: экран судит значок ТЕМ ЖЕ правилом, каким его выдают, а не
@@ -502,6 +514,13 @@ export default async function ProfilePage({
   // Условие «и активной подписки нет» здесь не украшение: сотрудник,
   // купивший подписку сам, обязан видеть свою подписку, а не роль.
   const staffAccess = isStaff(user.role) && !isActive;
+  // ВЫДАННЫЙ ДОСТУП — НЕ ПОКУПКА (долг 239, заход 7.206). Отменять его
+  // нечем: кассы за ним нет, он не продлевается и сам истекает в
+  // `currentPeriodEnd`. Поэтому кнопки отмены у него не бывает НИГДЕ — ни
+  // в вебе, ни внутри оболочки, — а вместо неё стоит строка о том, до
+  // какого дня доступ действует.
+  const grantAccess = isActive && isGrantSubscription(subscription);
+  const grantKind = grantAccess && subscription ? grantSource(subscription, redeemedCodeDates) : null;
   const tier = await getEntitlementTierFor(user);
   const entitled = hasAnyAccess(tier);
   // Drives the gold ring/crown on this page's own avatar (below) and the
@@ -676,6 +695,10 @@ export default async function ProfilePage({
         // дате здесь быть не должно — по Гринвичу новый день у владельца
         // наступал в 10:00 по местному.
         todayKey={todayKey}
+        // Отметка дня НА АККАУНТЕ (долг 234). Кука ниже осталась вторым
+        // рубежом, но переустановку приложения и второй телефон
+        // переживает только эта колонка.
+        greetedOnAccount={greetedOnAccountToday(user.welcomeShownDateKey, todayKey)}
         name={user.name}
         currentStreak={streak.currentStreak}
         greeting={dict.profile.welcomeGreeting}
@@ -1350,12 +1373,28 @@ export default async function ProfilePage({
 
         {/* Отменена, но ещё действует: сказать это словами, и убрать
             кнопку отмены — отменять больше нечего (долг 190). */}
-        {displayStatus === "canceling" && (
+        {displayStatus === "canceling" && !grantAccess && (
           <p className="mt-4 text-sm text-foreground/70">{dict.profile.cancelingNotice}</p>
         )}
 
+        {/* ВЫДАННЫЙ ДОСТУП: вместо кнопки отмены — строка о сроке (долг
+            235). Стоит ДО органов управления и намеренно: это ответ на
+            вопрос «почему здесь нечего нажимать». */}
+        {grantAccess && dateLine && (
+          <p className="mt-4 text-sm text-foreground/70">
+            {(grantKind === "code" ? dict.profile.grantNoticeCode : dict.profile.grantNoticeManual).replace(
+              "{date}",
+              subscriptionMomentText(dateLine.iso, lang, timeZone),
+            )}
+          </p>
+        )}
+
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {isActive && displayStatus !== "canceling" ? (
+          {/* У выданного доступа органов управления нет ВОВСЕ: ни отмены
+              (отменять нечего), ни «продлить» (продлевать кассой нечего —
+              это не покупка). Всё, что человеку нужно знать, сказано
+              строкой выше. */}
+          {grantAccess ? null : isActive && displayStatus !== "canceling" ? (
             <form action="/api/subscription/cancel" method="POST">
               <input type="hidden" name="lang" value={lang} />
               <button
@@ -1397,7 +1436,18 @@ export default async function ProfilePage({
                   key={row.id}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-black/[.03] px-3 py-2 text-sm dark:bg-white/[.05]"
                 >
-                  <span>{planDisplayLabel(row.plan, dict)}</span>
+                  {/* ДОЛГ 239. Выданный доступ платежом не называется:
+                      ни тарифом, ни суммой. Сумм на этой строке нет и
+                      никогда не было, а вот тариф стоял — и строка
+                      `www.petrov.ru_1992@mail.ru` читалась как «оплачен
+                      тариф „Acceso otorgado a mano“». */}
+                  <span>
+                    {isGrantSubscription(row)
+                      ? grantSource(row, redeemedCodeDates) === "code"
+                        ? dict.profile.historyGrantCode
+                        : dict.profile.historyGrantManual
+                      : planDisplayLabel(row.plan, dict)}
+                  </span>
                   <span className="text-foreground/60">
                     <LocalDate iso={row.createdAt.toISOString()} locale={lang} timeZone={timeZone} />
                   </span>

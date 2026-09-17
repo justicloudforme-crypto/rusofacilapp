@@ -42,6 +42,8 @@ export interface RecallAppDict extends CategoryGridDict, RecallCardDict {
    * lib/flashcards/learned-progress.ts for which one prints when. */
   learnedProgressLabel: PluralForms; // templates, contain literal "{known}" and "{total}". Inflects with {total}.
   learnedProgressAvailableLabel: PluralForms; // adds literal "{locked}". Inflects with {total}.
+  learnedProgressSubscriptionLabel: PluralForms; // закрыто бесплатной пробой — открывает любая подписка (7.206).
+  learnedProgressBothLabel: PluralForms; // закрыто и пробой, и Premium; добавляет "{premium}".
 }
 
 const ROUND_SIZE = 10;
@@ -112,6 +114,9 @@ export default function RecallApp({
     known: summary.totalKnown,
     total: summary.availableWords,
     locked: summary.premiumOnlyWords,
+    // Закрытое подпиской — отдельным числом (7.206): её и Premium нельзя
+    // называть одним словом, это разные покупки.
+    lockedBySubscription: summary.subscriptionOnlyWords,
   };
   const streakToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const roundStartedAtRef = useRef(0);
