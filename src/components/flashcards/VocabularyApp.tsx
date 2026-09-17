@@ -37,9 +37,9 @@ export interface VocabularyDict extends FlashcardsDict {
   // `locale` подставляется здесь (см. вызов IdiomsList ниже), в словаре
   // его нет — поэтому требуется всё, кроме него.
   idioms: Omit<IdiomsDict, "locale" | "premiumTierBadge">;
-  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
-  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
-  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel">;
+  recall: Omit<RecallAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel">;
+  match: Omit<MatchAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel">;
+  fillBlank: Omit<FillBlankAppDict, "locale" | "categoryLabels" | "cardCountLabel" | "nextLevelBadgeLabel" | "premiumTierBadge" | "subscriptionBadge" | "freeTrialLimitMessage" | "freeTrialLimitCta" | "continueTitle" | "continueWithWord" | "learnedProgressLabel" | "learnedProgressAvailableLabel" | "learnedProgressSubscriptionLabel" | "learnedProgressBothLabel">;
 }
 
 type Mode = "vocabulary" | "recall" | "fillBlank" | "match" | "idioms";
@@ -183,6 +183,8 @@ export default function VocabularyApp({
               continueWithWord: dict.continueWithWord,
               learnedProgressLabel: dict.learnedProgressLabel,
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
+              learnedProgressSubscriptionLabel: dict.learnedProgressSubscriptionLabel,
+              learnedProgressBothLabel: dict.learnedProgressBothLabel,
             }}
             resultDict={resultDict}
           />
@@ -203,6 +205,8 @@ export default function VocabularyApp({
               continueWithWord: dict.continueWithWord,
               learnedProgressLabel: dict.learnedProgressLabel,
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
+              learnedProgressSubscriptionLabel: dict.learnedProgressSubscriptionLabel,
+              learnedProgressBothLabel: dict.learnedProgressBothLabel,
             }}
             resultDict={resultDict}
           />
@@ -223,6 +227,8 @@ export default function VocabularyApp({
               continueWithWord: dict.continueWithWord,
               learnedProgressLabel: dict.learnedProgressLabel,
               learnedProgressAvailableLabel: dict.learnedProgressAvailableLabel,
+              learnedProgressSubscriptionLabel: dict.learnedProgressSubscriptionLabel,
+              learnedProgressBothLabel: dict.learnedProgressBothLabel,
             }}
             resultDict={resultDict}
           />

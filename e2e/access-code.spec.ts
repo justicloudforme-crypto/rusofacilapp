@@ -407,11 +407,39 @@ for (const lang of ["es", "ru"] as const) {
     // упадёт на двух совпадениях, и падение выглядело бы как отсутствие
     // подписи, хотя она на месте дважды.
     const label = page.getByText(mine, { exact: true });
-    await expect(label, "карточка подписки и история платежей").toHaveCount(2);
+    await expect(label, "подпись тарифа в карточке подписки").toHaveCount(1);
     await expect(label.first()).toBeVisible();
-    await expect(label.last()).toBeVisible();
     await expect(page.getByText(theirs, { exact: true })).toHaveCount(0);
     // И старой фразы про ручную выдачу на экране нет вовсе.
     await expect(page.getByText(DICTS[lang].profile.planManualLabel, { exact: true })).toHaveCount(0);
+
+    /**
+     * ИСТОРИЯ НАЗЫВАЕТ ЭТО ВЫДАЧЕЙ, А НЕ ТАРИФОМ — долг 239, заход 7.206.
+     *
+     * До 17.09.2026 подпись тарифа стояла В ДВУХ местах, и эта проверка
+     * требовала ровно двух совпадений. Правка 7.206 сняла второе: строка
+     * в списке «Accesos y pagos» — не платёж, и называть её именем тарифа
+     * значило бы поставить выданный доступ в один ряд с оплаченным. Теперь
+     * у неё своя подпись, и проверяется она здесь — иначе «в карточке 1»
+     * проходило бы и тогда, когда из истории пропало всё.
+     */
+    const inHistory = page.getByText(DICTS[lang].profile.historyGrantCode, { exact: true });
+    await expect(inHistory, "строка выдачи в истории").toHaveCount(1);
+    await expect(inHistory).toBeVisible();
+    await expect(page.getByText(DICTS[OTHER[lang]].profile.historyGrantCode, { exact: true })).toHaveCount(0);
+
+    /**
+     * И ОТМЕНЯТЬ ТУТ НЕЧЕГО — та же правка, вторая её половина.
+     *
+     * Кнопка «Cancelar suscripción» у выданного доступа не уходила в кассу
+     * вовсе (у строки нет `stripeSubscriptionId`) и лишь проставляла
+     * местной строке `canceledAt` — то есть меняла подпись и не меняла ни
+     * дня доступа. Её нет ни в вебе, ни внутри оболочки; вместо неё —
+     * строка о сроке.
+     */
+    await expect(
+      page.getByRole("button", { name: DICTS[lang].profile.cancelButton }),
+      "у выданного доступа кнопки отмены нет",
+    ).toHaveCount(0);
   });
 }

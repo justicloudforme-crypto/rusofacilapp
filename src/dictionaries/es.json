@@ -345,6 +345,9 @@
     "passwordPlaceholder": "Mínimo 8 caracteres",
     "submit": "Iniciar sesión",
     "registerSubmit": "Crear cuenta",
+    "submitPending": "Entrando…",
+    "registerSubmitPending": "Creando cuenta…",
+    "forgotSubmitPending": "Enviando…",
     "legalNoticeBeforeTerms": "Al crear una cuenta, aceptas nuestros",
     "legalNoticeBetween": "y nuestra",
     "legalNoticeAfterPrivacy": ".",
@@ -665,7 +668,7 @@
     "welcomeSubtextActive": "Cada día que practicas, el ruso te resulta más cercano y más fácil de entender.",
     "welcomeSubtextNew": "Hoy es un buen día para empezar a acercarte al ruso.",
     "welcomeContinue": "Continuar",
-    "paymentHistoryHeading": "Historial de pagos",
+    "paymentHistoryHeading": "Accesos y pagos",
     "paymentHistoryEmpty": "Todavía no hay pagos.",
     "languageHeading": "Idioma de la interfaz",
     "languageDescription": "Elige en qué idioma se muestran los menús, botones y ayudas del sitio.",
@@ -722,6 +725,10 @@
     "expiresLabel": "Vence el",
     "expiredLabel": "Venció el",
     "cancelButton": "Cancelar suscripción",
+    "grantNoticeCode": "Tu acceso está abierto con un código y no se renueva: termina el {date}. No hay nada que cancelar.",
+    "grantNoticeManual": "Tu acceso se abrió a mano y no se renueva: termina el {date}. No hay nada que cancelar.",
+    "historyGrantCode": "Acceso por código",
+    "historyGrantManual": "Acceso abierto a mano",
     "canceledNotice": "Tu suscripción se canceló: no se renovará, y conservas el acceso a las lecciones hasta el final del periodo ya pagado.",
     "cancelingNotice": "No habrá renovación. Conservas el acceso a todo el material hasta el final del periodo ya pagado.",
     "renewButton": "Renovar suscripción",
@@ -992,6 +999,16 @@
       "one": "Llevas {known} de {total} palabra disponible · {locked} más con Premium",
       "few": "Llevas {known} de {total} palabras disponibles · {locked} más con Premium",
       "many": "Llevas {known} de {total} palabras disponibles · {locked} más con Premium"
+    },
+    "learnedProgressSubscriptionLabel": {
+      "one": "Llevas {known} de {total} palabra disponible · {locked} más con la suscripción",
+      "few": "Llevas {known} de {total} palabras disponibles · {locked} más con la suscripción",
+      "many": "Llevas {known} de {total} palabras disponibles · {locked} más con la suscripción"
+    },
+    "learnedProgressBothLabel": {
+      "one": "Llevas {known} de {total} palabra disponible · {locked} más con la suscripción y {premium} con Premium",
+      "few": "Llevas {known} de {total} palabras disponibles · {locked} más con la suscripción y {premium} con Premium",
+      "many": "Llevas {known} de {total} palabras disponibles · {locked} más con la suscripción y {premium} con Premium"
     },
     "modeVocabulary": "Vocabulario por categorías",
     "modeRecall": "Escribir la palabra",

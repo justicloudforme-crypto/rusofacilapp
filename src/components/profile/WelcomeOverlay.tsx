@@ -6,6 +6,7 @@ import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
 import {
   WELCOME_SHOWN_COOKIE,
+  WELCOME_SHOWN_ENDPOINT,
   WELCOME_SHOWN_MAX_AGE_SECONDS,
   welcomeShownValue,
 } from "@/lib/welcome-shown";
@@ -25,10 +26,20 @@ import {
 //      из аккаунта чистит localStorage (7.199), и приветствие
 //      показывалось второй раз за тот же день.
 //
-// Оба правила сторожит `npm run check:welcome-once`.
+//   3. ГЛАВНЫЙ ЗАМОК — НА АККАУНТЕ, А НЕ НА УСТРОЙСТВЕ (долг 234, заход
+//      7.206). `greetedOnAccount` приходит с сервера: это ответ на
+//      вопрос «стоит ли у этого аккаунта отметка за сегодняшний местный
+//      день». Стоит — не показываем и куку не трогаем; смена аккаунтов
+//      A→B→A в один день даёт ровно одно приветствие каждому, а
+//      переустановка и второй телефон не дают второго вовсе. Кука
+//      осталась ВТОРЫМ рубежом: она снимает лишнюю запись и закрывает
+//      щель, пока запись летит.
+//
+// Все три правила сторожит `npm run check:welcome-once`.
 export default function WelcomeOverlay({
   userId,
   todayKey,
+  greetedOnAccount,
   name,
   currentStreak,
   greeting,
@@ -42,6 +53,9 @@ export default function WelcomeOverlay({
   /** «Какой сегодня день» в зоне аккаунта — `dateKeyIn(new Date(),
    *  timeZone)`, посчитанный на сервере (src/lib/welcome-shown.ts). */
   todayKey: string;
+  /** Стоит ли у АККАУНТА отметка за этот же местный день
+   *  (`User.welcomeShownDateKey`, долг 234). Считает сервер. */
+  greetedOnAccount: boolean;
   name: string | null;
   currentStreak: number;
   greeting: string;
@@ -55,6 +69,10 @@ export default function WelcomeOverlay({
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+    // Первый рубеж, и он сильнее куки: отметка на аккаунте уже стоит за
+    // сегодня — значит этому человеку сегодня здоровались, чем бы он ни
+    // открыл кабинет.
+    if (greetedOnAccount) return;
     const mark = welcomeShownValue(userId, todayKey);
     try {
       const already = document.cookie
@@ -62,13 +80,27 @@ export default function WelcomeOverlay({
         .some((pair) => pair === `${WELCOME_SHOWN_COOKIE}=${encodeURIComponent(mark)}`);
       if (already) return;
       document.cookie = `${WELCOME_SHOWN_COOKIE}=${encodeURIComponent(mark)}; path=/; max-age=${WELCOME_SHOWN_MAX_AGE_SECONDS}; SameSite=Lax`;
+      // Отметка на аккаунте. День считает сервер сам — тело здесь пустое
+      // намеренно (см. маршрут). Неудача запроса ничего не ломает:
+      // остаётся ровно то поведение, что было до долга 234.
+      //
+      // БЕЗ `keepalive`, И ЭТО НЕ МЕЛОЧЬ (долг 59, сторож
+      // `check:dying-posts`). `keepalive` означает «отправка обязана
+      // пережить уход со страницы», а такой отправке нужен собственный
+      // маршрут в service worker — иначе она тихо теряется в офлайне.
+      // Здесь она не нужна вовсе: запрос уходит в тот миг, когда
+      // приветствие ПОЯВИЛОСЬ на экране, то есть человек остаётся на
+      // странице и смотрит на него. А если он всё-таки успел уйти —
+      // отметка не легла, но кука на месте, и второго приветствия на
+      // ЭТОМ устройстве всё равно не будет.
+      void fetch(WELCOME_SHOWN_ENDPOINT, { method: "POST" }).catch(() => {});
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(true);
     } catch {
       // Куки запрещены — лучше промолчать, чем здороваться на каждом
       // открытии кабинета.
     }
-  }, [userId, todayKey]);
+  }, [userId, todayKey, greetedOnAccount]);
 
   if (!visible) return null;
 

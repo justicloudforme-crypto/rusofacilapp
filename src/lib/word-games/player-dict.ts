@@ -18,5 +18,7 @@ export function wordGamePlayerDict(dict: Dictionary): WordGamePlayerDict {
     ...dict.wordGames,
     learnedProgressLabel: dict.vocabulary.learnedProgressLabel,
     learnedProgressAvailableLabel: dict.vocabulary.learnedProgressAvailableLabel,
+    learnedProgressSubscriptionLabel: dict.vocabulary.learnedProgressSubscriptionLabel,
+    learnedProgressBothLabel: dict.vocabulary.learnedProgressBothLabel,
   };
 }

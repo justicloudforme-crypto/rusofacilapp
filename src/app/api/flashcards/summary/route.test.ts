@@ -352,3 +352,84 @@ describe("POST /api/flashcards/summary — «Продолжить» считае
     expect(premium.recent.map((r: { category: string }) => r.category)).toEqual(["work"]);
   });
 });
+
+/**
+ * ЗНАМЕНАТЕЛЬ БЕСПЛАТНОГО АККАУНТА — ЗАХОД 7.206 (находка 7.204, часть 3).
+ *
+ * Банк выше нарочно крошечный, и бесплатная проба (10 карточек НА ТЕМУ)
+ * на нём не срабатывает ни разу: три не-C1 строки — это меньше десяти.
+ * Поэтому весь этот блок работает на СВОЁМ банке, где тема заведомо
+ * больше пробы, — иначе проверка зеленела бы и на старом коде, который
+ * пробы не видел вовсе.
+ *
+ * Числа подобраны так, чтобы повторить форму боевых (замер 17.09.2026:
+ * 5771 строка всего, 4783 не-C1, 23 темы, доступно бесплатному 230).
+ */
+const BIG_BANK = [
+  ...Array.from({ length: 25 }, (_, i) => ({ id: `food-${i}`, category: "food", level: "A1" })),
+  ...Array.from({ length: 15 }, (_, i) => ({ id: `city-${i}`, category: "city", level: "B1" })),
+  ...Array.from({ length: 12 }, (_, i) => ({ id: `abs-${i}`, category: "abstract", level: "C1" })),
+];
+
+describe("бесплатная проба входит в знаменатель (долг 240)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getFlashcardIndex.mockResolvedValue(BIG_BANK);
+    getCurrentUser.mockResolvedValue(null);
+    findMany.mockResolvedValue([]);
+  });
+
+  it("гостю доступно ровно то, что ему отдаёт список карточек: 10 на тему", async () => {
+    getEntitlementTier.mockResolvedValue("free");
+    const body = await (await POST(fakeRequest({}))).json();
+    // 10 из «food» + 10 из «city»; C1 не отдаётся вовсе.
+    expect(body.availableWords).toBe(20);
+    // Ровно то число, которое стояло на экране до правки, — и оно НЕ
+    // равно доступному: положительный контроль самой находки.
+    expect(body.availableWords).not.toBe(40);
+    // 40 не-C1 строк минус 20 отданных.
+    expect(body.subscriptionOnlyWords).toBe(20);
+    expect(body.premiumOnlyWords).toBe(12);
+  });
+
+  it("бесплатному аккаунту — то же самое, что гостю", async () => {
+    getEntitlementTier.mockResolvedValue("free");
+    getCurrentUser.mockResolvedValue({ id: "u1" });
+    const body = await (await POST(fakeRequest({}))).json();
+    expect(body.availableWords).toBe(20);
+    expect(body.subscriptionOnlyWords).toBe(20);
+  });
+
+  it("подписчику standard — весь банк, кроме C1, и подпиской не закрыто ничего", async () => {
+    getEntitlementTier.mockResolvedValue("standard");
+    const body = await (await POST(fakeRequest({}))).json();
+    expect(body.availableWords).toBe(40);
+    expect(body.subscriptionOnlyWords).toBe(0);
+    expect(body.premiumOnlyWords).toBe(12);
+  });
+
+  it("Premium — весь банк, закрытого нет ни по одной причине", async () => {
+    getEntitlementTier.mockResolvedValue("premium");
+    const body = await (await POST(fakeRequest({}))).json();
+    expect(body.availableWords).toBe(52);
+    expect(body.subscriptionOnlyWords).toBe(0);
+    expect(body.premiumOnlyWords).toBe(0);
+  });
+
+  it("разрез уровня накладывается на все три числа", async () => {
+    getEntitlementTier.mockResolvedValue("free");
+    const body = await (await POST(fakeRequest({ level: "A1" }))).json();
+    expect(body.availableWords).toBe(10); // проба темы «food»
+    expect(body.subscriptionOnlyWords).toBe(15); // 25 строк A1 минус 10
+    expect(body.premiumOnlyWords).toBe(0); // C1 в разрез A1 не попадает
+  });
+
+  it("выученная, но закрытая карточка в числитель не попадает", async () => {
+    getEntitlementTier.mockResolvedValue("free");
+    // «food-20» лежит за пробой: он есть в банке, но этому человеку не отдан.
+    const body = await (
+      await POST(fakeRequest({ entries: { "food-0": { known: true, updatedAt: 1 }, "food-20": { known: true, updatedAt: 2 } } }))
+    ).json();
+    expect(body.totalKnown).toBe(1);
+  });
+});

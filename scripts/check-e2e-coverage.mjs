@@ -54,6 +54,10 @@ const E2E_DIR = join(repoRoot, "e2e");
  * keyboard test — a word typed DOWN must stay above the on-screen
  * keyboard, and the reveal must not touch the page when the engine scrolls
  * for itself (PROGRESS.md 7.95) — again one test per project.
+ * Raised from 449 to 455 on 17.09.2026 by e2e/login-loading-state.spec.ts
+ * (PROGRESS.md 7.206, долг 241): три проверки — положительный контроль
+ * счётчика запросов, вход и регистрация — в каждом из двух проектов, где
+ * они идут, то есть 3 × 2 = 6.
  * Raised from 103 to 111 on 04.09.2026 by e2e/game-hub-links.spec.ts:
  * four tests — the hub serving the whole free sample without JavaScript,
  * no Spanish game page being a dead end, and the neighbour rungs of a free
@@ -233,7 +237,7 @@ const E2E_DIR = join(repoRoot, "e2e");
  * сюда 461 значило бы задним числом объявить проверенным то, чего этот
  * заход не измерял прогоном.
  */
-const MIN_EXECUTED_TESTS = 449;
+const MIN_EXECUTED_TESTS = 455;
 
 /**
  * Skips that are allowed to exist, each with the reason it is allowed.

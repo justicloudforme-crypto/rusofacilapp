@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import WelcomeOverlay from "./WelcomeOverlay";
-import { WELCOME_SHOWN_COOKIE } from "@/lib/welcome-shown";
+import { WELCOME_SHOWN_COOKIE, WELCOME_SHOWN_ENDPOINT, greetedOnAccountToday } from "@/lib/welcome-shown";
 import { PERSONAL_LOCAL_PREFIXES } from "@/lib/signed-out-local";
 
 /**
@@ -19,17 +19,67 @@ import { PERSONAL_LOCAL_PREFIXES } from "@/lib/signed-out-local";
  *
  * Полночь здесь МЕСТНАЯ, а не гринвичская: день приезжает готовым
  * (`todayKey`), посчитанным сервером в зоне аккаунта.
+ *
+ * ====================================================================
+ * ВТОРОЙ СЛОЙ СТЕНДА — ОТМЕТКА НА АККАУНТЕ (долг 234, заход 7.206)
+ * ====================================================================
+ *
+ * Кука — про устройство, и три случая она не закрывает: переустановка,
+ * второй телефон и смена аккаунтов на одном устройстве. Правду держит
+ * колонка `User.welcomeShownDateKey`, и здесь она изображена настоящей
+ * парой «сервер + запрос»: `accountMarks` — это база, `fetch` на
+ * `WELCOME_SHOWN_ENDPOINT` — запись в неё, а `greetedOnAccountToday` —
+ * ровно то чтение, которое делает кабинет. Ни одного значения тест не
+ * подставляет руками: всё, что он знает про аккаунт, приходит через тот
+ * же путь, что и на проде.
+ *
+ * ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ этого слоя — `overlayBefore7206`, отрисовка БЕЗ
+ * колонки (`greetedOnAccount` всегда `false`), то есть в точности
+ * поведение 7.204. Проверки про A→B→A и про переустановку обязаны на ней
+ * падать; не падающая проверка не судит ничего.
  */
 
 const USER = "usr_vasya";
 const DAY = "2026-09-17";
 const NEXT_DAY = "2026-09-18";
 
+/** «База»: какой день стоит отметкой у каждого аккаунта. */
+const accountMarks = new Map<string, string>();
+/** Чей запрос сейчас летит: маршрут узнаёт человека по сессии, а не по
+ *  телу, поэтому стенд держит «вошедшего» отдельно от разметки. */
+let sessionUser = "";
+let sessionDay = "";
+
 function overlay(todayKey: string, userId = USER) {
+  sessionUser = userId;
+  sessionDay = todayKey;
   return (
     <WelcomeOverlay
       userId={userId}
       todayKey={todayKey}
+      greetedOnAccount={greetedOnAccountToday(accountMarks.get(userId) ?? null, todayKey)}
+      name="Vasya"
+      currentStreak={3}
+      greeting="¡Feliz nuevo día de ruso!"
+      subtextActive="activo"
+      subtextNew="nuevo"
+      locale="es"
+      streakDaysUnit={{ one: "día", few: "días", many: "días" }}
+      continueLabel="Continuar"
+    />
+  );
+}
+
+/** Та же разметка, но БЕЗ колонки — код ровно такой, каким он был до
+ *  захода 7.206. Служит положительным контролем. */
+function overlayBefore7206(todayKey: string, userId = USER) {
+  sessionUser = userId;
+  sessionDay = todayKey;
+  return (
+    <WelcomeOverlay
+      userId={userId}
+      todayKey={todayKey}
+      greetedOnAccount={false}
       name="Vasya"
       currentStreak={3}
       greeting="¡Feliz nuevo día de ruso!"
@@ -65,8 +115,23 @@ function wipeDevice() {
   }
 }
 
-beforeEach(() => wipeDevice());
-afterEach(() => cleanup());
+beforeEach(() => {
+  wipeDevice();
+  accountMarks.clear();
+  // Запись отметки: маршрут сам считает день в зоне аккаунта и сам узнаёт
+  // человека по сессии — здесь то же самое, тело запроса не читается.
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      if (String(url) === WELCOME_SHOWN_ENDPOINT) accountMarks.set(sessionUser, sessionDay);
+      return { ok: true, json: async () => ({ ok: true }) } as unknown as Response;
+    }),
+  );
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("приветствие дня", () => {
   it("первый заход в кабинет за день — приветствие есть", () => {
@@ -117,5 +182,77 @@ describe("приветствие дня", () => {
     cleanup();
     render(overlay(DAY, "usr_maria"));
     expect(shown()).toBe(1);
+  });
+
+  // ——— ДОЛГ 234: замок про АККАУНТ ———
+
+  it("A→B→A в один местный день — ровно одно приветствие каждому", () => {
+    render(overlay(DAY, "usr_a"));
+    expect(shown()).toBe(1);
+    cleanup();
+    signOut();
+
+    render(overlay(DAY, "usr_b"));
+    expect(shown()).toBe(1);
+    cleanup();
+    signOut();
+
+    render(overlay(DAY, "usr_a"));
+    expect(shown()).toBe(0); // A сегодня уже здоровался
+  });
+
+  it("положительный контроль: без колонки A→B→A здоровается с A дважды", () => {
+    render(overlayBefore7206(DAY, "usr_a"));
+    cleanup();
+    signOut();
+    render(overlayBefore7206(DAY, "usr_b"));
+    cleanup();
+    signOut();
+    render(overlayBefore7206(DAY, "usr_a"));
+    expect(shown()).toBe(1); // ровно та беда, ради которой заведён долг 234
+  });
+
+  it("переустановка приложения в тот же день — второго приветствия нет", () => {
+    render(overlay(DAY));
+    expect(shown()).toBe(1);
+    cleanup();
+    wipeDevice(); // куки и localStorage стёрты; отметка на аккаунте цела
+    render(overlay(DAY));
+    expect(shown()).toBe(0);
+  });
+
+  it("положительный контроль: без колонки переустановка здоровается снова", () => {
+    render(overlayBefore7206(DAY));
+    cleanup();
+    wipeDevice();
+    render(overlayBefore7206(DAY));
+    expect(shown()).toBe(1);
+  });
+
+  it("новый местный день после A→B→A — каждому снова по одному", () => {
+    render(overlay(DAY, "usr_a"));
+    cleanup();
+    signOut();
+    render(overlay(DAY, "usr_b"));
+    cleanup();
+    signOut();
+
+    render(overlay(NEXT_DAY, "usr_a"));
+    expect(shown()).toBe(1);
+    cleanup();
+    signOut();
+    render(overlay(NEXT_DAY, "usr_b"));
+    expect(shown()).toBe(1);
+  });
+
+  it("сеть молчит — приветствие всё равно не чаще, чем было до 7.206", () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("сеть молчит"); }));
+    render(overlay(DAY));
+    expect(shown()).toBe(1);
+    cleanup();
+    // Отметка на аккаунт не легла, но кука на месте — второго показа на
+    // ЭТОМ устройстве нет, ровно как в 7.204.
+    render(overlay(DAY));
+    expect(shown()).toBe(0);
   });
 });

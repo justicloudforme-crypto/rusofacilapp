@@ -345,6 +345,9 @@
     "passwordPlaceholder": "Минимум 8 символов",
     "submit": "Войти",
     "registerSubmit": "Создать аккаунт",
+    "submitPending": "Входим…",
+    "registerSubmitPending": "Создаём аккаунт…",
+    "forgotSubmitPending": "Отправляем…",
     "legalNoticeBeforeTerms": "Создавая аккаунт, вы соглашаетесь с документами «",
     "legalNoticeBetween": "» и «",
     "legalNoticeAfterPrivacy": "».",
@@ -665,7 +668,7 @@
     "welcomeSubtextActive": "С каждым днём практики русский язык становится вам ближе и понятнее.",
     "welcomeSubtextNew": "Сегодня отличный день, чтобы сделать русский язык ближе.",
     "welcomeContinue": "Продолжить",
-    "paymentHistoryHeading": "История платежей",
+    "paymentHistoryHeading": "Доступы и платежи",
     "paymentHistoryEmpty": "Платежей пока не было.",
     "languageHeading": "Язык интерфейса",
     "languageDescription": "Выберите, на каком языке показывать меню, кнопки и подсказки сайта.",
@@ -722,6 +725,10 @@
     "expiresLabel": "Действует до",
     "expiredLabel": "Истекла",
     "cancelButton": "Отменить подписку",
+    "grantNoticeCode": "Ваш доступ открыт по коду и не продлевается: он закончится {date}. Отменять нечего.",
+    "grantNoticeManual": "Ваш доступ открыт вручную и не продлевается: он закончится {date}. Отменять нечего.",
+    "historyGrantCode": "Доступ по коду",
+    "historyGrantManual": "Доступ открыт вручную",
     "canceledNotice": "Подписка отменена: продления не будет, а доступ к урокам остаётся до конца уже оплаченного периода.",
     "cancelingNotice": "Продления не будет. Доступ ко всем материалам остаётся до конца уже оплаченного периода.",
     "renewButton": "Продлить подписку",
@@ -992,6 +999,16 @@
       "one": "Вы выучили {known} из {total} доступного · ещё {locked} в Premium",
       "few": "Вы выучили {known} из {total} доступных · ещё {locked} в Premium",
       "many": "Вы выучили {known} из {total} доступных · ещё {locked} в Premium"
+    },
+    "learnedProgressSubscriptionLabel": {
+      "one": "У вас {known} из {total} доступного слова · ещё {locked} открывает подписка",
+      "few": "У вас {known} из {total} доступных слов · ещё {locked} открывает подписка",
+      "many": "У вас {known} из {total} доступных слов · ещё {locked} открывает подписка"
+    },
+    "learnedProgressBothLabel": {
+      "one": "У вас {known} из {total} доступного слова · ещё {locked} открывает подписка и {premium} — Premium",
+      "few": "У вас {known} из {total} доступных слов · ещё {locked} открывает подписка и {premium} — Premium",
+      "many": "У вас {known} из {total} доступных слов · ещё {locked} открывает подписка и {premium} — Premium"
     },
     "modeVocabulary": "Словарь по категориям",
     "modeRecall": "Написать слово",
