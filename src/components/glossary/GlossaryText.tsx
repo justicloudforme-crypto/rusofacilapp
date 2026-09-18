@@ -3,8 +3,9 @@
 import { useEffect, useState, type ElementType, type ReactNode } from "react";
 import type { GlossaryTermData } from "./GlossaryApp";
 import GlossaryTermPopover from "./GlossaryTermPopover";
+import HighlightBoundary from "./HighlightBoundary";
 import { getCachedGlossaryTerms, loadGlossaryTerms } from "@/lib/glossary-client";
-import { escapeRegExp } from "@/lib/regex";
+import { GLOSSARY_TERM_GROUP, buildGlossaryPattern } from "@/lib/glossary-pattern";
 
 interface Matcher {
   pattern: RegExp;
@@ -17,7 +18,14 @@ let cachedMatcherTerms: GlossaryTermData[] | null = null;
 /** Builds one alternation regex from every term, longest surface form
  * first, so "adverbio de lugar" wins over the shorter "adverbio" when both
  * would otherwise match at the same position. Rebuilt only when the term
- * list identity changes (i.e. once, after the first successful fetch). */
+ * list identity changes (i.e. once, after the first successful fetch).
+ *
+ * Сборка выражения живёт в `src/lib/glossary-pattern.ts` — там же
+ * записано, почему граница слова слева пишется группой `(^|[^\p{L}])`, а
+ * не просмотром назад `(?<![\p{L}])`, который не собирается ни в одном
+ * браузере на iOS до 16.4. Возврат `null` при неудаче — прежний:
+ * выражение собирается из 119 строк правимого из админки содержимого, и
+ * одна плохая строка не должна стоить читателю страницу. */
 function getMatcher(terms: GlossaryTermData[]): Matcher | null {
   if (terms.length === 0) return null;
   if (cachedMatcher && cachedMatcherTerms === terms) return cachedMatcher;
@@ -25,27 +33,9 @@ function getMatcher(terms: GlossaryTermData[]): Matcher | null {
   const bySurface = new Map<string, GlossaryTermData>();
   for (const t of terms) bySurface.set(t.term.toLowerCase(), t);
 
-  const alternatives = [...bySurface.keys()].sort((a, b) => b.length - a.length).map(escapeRegExp);
-  if (alternatives.length === 0) return null;
+  const pattern = buildGlossaryPattern([...bySurface.keys()]);
+  if (!pattern) return null;
 
-  // \p{L} (Unicode letter) rather than \w, so the boundary check also
-  // works right against accented Spanish letters (á, ñ...) at the edges.
-  //
-  // Wrapped because this line took the whole site's lesson pages down on
-  // 29.08.2026 (incident №1): escapeRegExp emitted `\-`, which the `u` flag
-  // rejects, so `new RegExp` threw — during render, in a client component,
-  // with no error boundary above it. The cause is fixed in regex.ts, but
-  // this pattern is assembled from 119 rows of editable database content
-  // and there is no reason a single bad row should ever cost the reader the
-  // page. Auto-linking glossary terms is decoration; the lesson is the
-  // product. Degrade, exactly as PROGRESS.md 7.24 argues for DB reads.
-  let pattern: RegExp;
-  try {
-    pattern = new RegExp(`(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])`, "giu");
-  } catch (error) {
-    console.error("[glossary] term pattern is not a valid regex — terms will not be auto-linked", error);
-    return null;
-  }
   cachedMatcher = { pattern, bySurface };
   cachedMatcherTerms = terms;
   return cachedMatcher;
@@ -70,8 +60,12 @@ function linkify(text: string, terms: GlossaryTermData[]): ReactNode {
   let key = 0;
 
   while ((match = pattern.exec(text))) {
-    const full = match[0];
-    const start = match.index;
+    // Группа 1 — граница слева (начало строки или один не-буквенный
+    // знак). Она съедена совпадением, но текстом остаётся: смещение
+    // термина считается от неё, и сам знак уезжает в предыдущий кусок
+    // обычного текста ниже.
+    const full = match[GLOSSARY_TERM_GROUP];
+    const start = match.index + match[1].length;
     const surface = full.toLowerCase();
     const data = bySurface.get(surface);
 
@@ -94,6 +88,14 @@ function linkify(text: string, terms: GlossaryTermData[]): ReactNode {
   if (parts.length === 0) return text;
   if (lastIndex < text.length) parts.push(text.slice(lastIndex));
   return parts;
+}
+
+/** Отдельный компонент, а не тело `GlossaryText`, ровно ради границы
+ * ошибок: разбор и отрисовка ссылок обязаны падать ВНУТРИ
+ * `HighlightBoundary`, иначе граница поймала бы только то, что случилось
+ * у детей, а не саму подсветку. */
+function Linkified({ text, terms }: { text: string; terms: GlossaryTermData[] }) {
+  return <>{linkify(text, terms)}</>;
 }
 
 /** Drop-in replacement for rendering a plain string of lesson prose that
@@ -125,5 +127,15 @@ export default function GlossaryText({
     };
   }, [terms]);
 
-  return <Tag className={className}>{terms ? linkify(text, terms) : text}</Tag>;
+  return (
+    <Tag className={className}>
+      {terms ? (
+        <HighlightBoundary fallback={text}>
+          <Linkified text={text} terms={terms} />
+        </HighlightBoundary>
+      ) : (
+        text
+      )}
+    </Tag>
+  );
 }
