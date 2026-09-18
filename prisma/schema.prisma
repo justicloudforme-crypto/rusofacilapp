@@ -133,6 +133,7 @@ model User {
   createdAt            DateTime               @default(now())
   subscriptions        Subscription[]
   pendingCheckouts     PendingCheckout[]
+  subscriptionPayments SubscriptionPayment[]
   lessonProgress       LessonProgress[]
   voiceSubmissions     VoiceSubmission[]
   examAttempts         ExamAttempt[]
@@ -292,6 +293,51 @@ model Subscription {
   @@index([userId, createdAt])
   @@index([stripeSubscriptionId])
   @@index([rcOriginalTransactionId])
+}
+
+// ОДИН ПЛАТЁЖ — ОДНА СТРОКА. Долги 84 и 85.
+//
+// Зачем таблица, а не ещё одна колонка у `Subscription`. У строки доступа
+// есть ровно одно поле `stripePaymentIntentId`, и оно держит ПОСЛЕДНИЙ
+// платёж: `extendOrGrantSubscription` может продлить одну строку двумя
+// платежами подряд, и второй затирает первый. Возврат более раннего из
+// двух после этого не находит ничего (долг 85). А у ПОВТОРЯЮЩЕГОСЯ счёта
+// — месячного или годового — платёж не попадал в строку доступа вовсе:
+// её пишет `upsertFromStripeSubscription` по событию о подписке, где
+// никакого PaymentIntent нет, а `Stripe.Charge` в этой версии API не
+// несёт ссылки на счёт ни одним полем (проверено перечислением: 47 полей
+// верхнего уровня, `invoice` среди них нет). Возврат месячной подписки
+// не находил строки и уходил в Sentry как `RefundLeftAccessOpen` —
+// долг 84.
+//
+// Строка здесь — НЕ доступ: ни срока, ни уровня; правило доступа
+// (`tierOfAccount`) сюда не смотрит вовсе, ровно как и в `PendingCheckout`.
+// Это журнал: «за эту строку доступа заплачено вот этими деньгами».
+//
+// `stripePaymentIntentId` уникален: Stripe доставляет событие повторно, а
+// второй записи об одном платеже хватило бы, чтобы «сколько раз заплачено»
+// стало неправдой.
+model SubscriptionPayment {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Наша строка доступа, которую этот платёж оплатил. Без внешнего ключа
+  // намеренно: событие о счёте может прийти раньше, чем событие о самой
+  // подписке, и падение вставки на ключе превратило бы это в бесконечную
+  // очередь повторов у Stripe. Строка-сирота хуже не делает: она просто
+  // не найдёт, что отзывать, и скажет об этом в Sentry.
+  subscriptionId        String
+
+  stripePaymentIntentId String   @unique
+  // Подписка Stripe, если платёж пришёл по повторяющемуся счёту. NULL у
+  // разового платежа (Premium картой) и у талона OXXO.
+  stripeSubscriptionId  String?
+  plan                  String
+  // Событие, которое эту строку написало, — чтобы «откуда она взялась»
+  // читалось без раскопок.
+  source                String
+  createdAt             DateTime @default(now())
 }
 
 // One row per lesson a user has ATTEMPTED (pass or fail) — written by

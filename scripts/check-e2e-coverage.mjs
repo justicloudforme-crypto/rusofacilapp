@@ -259,7 +259,24 @@ const MIN_EXECUTED_TESTS = 475;
  * with a sentence attached, which is the opposite of how the 24 skipped
  * tests got there.
  */
-const ALLOWED_SKIPS = new Map();
+const ALLOWED_SKIPS = new Map([
+  [
+    "e2e/story-spanish-title.spec.ts:90",
+    // Пропуск по ИЗМЕРЕННОМУ условию, а не по process.env.CI, и в CI он не
+    // срабатывает ни разу: там фикстура посеяна. Три рассказа этой спеки
+    // кладёт scripts/seed-e2e-fixture.mjs, а он намеренно отказывается
+    // писать в базу с настоящим содержимым (assertSafeToSeed) — значит на
+    // машине разработчика их нет и быть не может (замер 18.09.2026: в
+    // dev.db 325 рассказов, 0 строк фикстуры), и дюжина проб краснела на
+    // каждом локальном прогоне с 7.204. Сделать их зелёными на полной базе
+    // честно нельзя: одна из них утверждает, что серверный указатель
+    // каталога называет РОВНО столько рассказов, сколько их в фикстуре.
+    // Если фикстуру однажды перестанут сеять в CI, эта запись прогон НЕ
+    // спасёт: проверка отчёта ниже валит любой прогон с пропущенной пробой
+    // независимо от этого списка.
+    "база под сервером не в форме CI: фикстуры рассказов в ней нет (PROGRESS.md 7.213, задача 2)",
+  ],
+]);
 
 /** Every form of "do not run this" Playwright offers, plus `.only`, which
  * does the same damage from the other end — it runs one test and silently

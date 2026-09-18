@@ -19,6 +19,11 @@ const constructEvent = vi.fn();
 const subscriptionsRetrieve = vi.fn();
 const getStripe = vi.fn();
 const invalidateSubscriptionCache = vi.fn();
+const recordSubscriptionPayment = vi.fn();
+const reportDuplicatePaidGrant = vi.fn();
+const getOpenPendingCheckouts = vi.fn();
+const sessionsExpire = vi.fn();
+const invoicePaymentsList = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -45,10 +50,13 @@ vi.mock("@/lib/subscription", () => ({
   extendOrGrantSubscription: (...args: unknown[]) => extendOrGrantSubscription(...args),
   reportPremiumPaymentNotApplied: (...args: unknown[]) => reportPremiumPaymentNotApplied(...args),
   revokeAccessForPayment: (...args: unknown[]) => revokeAccessForPayment(...args),
+  recordSubscriptionPayment: (...args: unknown[]) => recordSubscriptionPayment(...args),
+  reportDuplicatePaidGrant: (...args: unknown[]) => reportDuplicatePaidGrant(...args),
 }));
 
 vi.mock("@/lib/pending-checkout", () => ({
   settlePendingCheckout: (...args: unknown[]) => settlePendingCheckout(...args),
+  getOpenPendingCheckouts: (...args: unknown[]) => getOpenPendingCheckouts(...args),
 }));
 
 vi.mock("@sentry/nextjs", () => ({ captureException: (...args: unknown[]) => captureException(...args) }));
@@ -65,6 +73,8 @@ function fakeRequest(body: string, headers: Record<string, string> = {}): NextRe
 const fakeStripe = {
   webhooks: { constructEvent: (...args: unknown[]) => constructEvent(...args) },
   subscriptions: { retrieve: (...args: unknown[]) => subscriptionsRetrieve(...args) },
+  checkout: { sessions: { expire: (...args: unknown[]) => sessionsExpire(...args) } },
+  invoicePayments: { list: (...args: unknown[]) => invoicePaymentsList(...args) },
 } as unknown as Stripe;
 
 function stripeEvent(type: string, object: unknown): Stripe.Event {
@@ -82,6 +92,11 @@ describe("POST /api/webhooks/stripe", () => {
     findMany.mockResolvedValue([]);
     revokeAccessForPayment.mockResolvedValue({ revoked: 0, userIds: [] });
     settlePendingCheckout.mockResolvedValue(0);
+    recordSubscriptionPayment.mockResolvedValue(undefined);
+    reportDuplicatePaidGrant.mockResolvedValue(false);
+    getOpenPendingCheckouts.mockResolvedValue([]);
+    sessionsExpire.mockResolvedValue({});
+    invoicePaymentsList.mockResolvedValue({ data: [] });
   });
 
   afterEach(() => {
@@ -521,6 +536,157 @@ describe("POST /api/webhooks/stripe", () => {
 
       expect(settlePendingCheckout).toHaveBeenCalledWith("cs_4", "failed");
       expect(extendOrGrantSubscription).not.toHaveBeenCalled();
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // ДОЛГ 84. Возврат по ПОВТОРЯЮЩЕМУСЯ счёту не находил строки, потому что
+  // подписочная строка не знала о деньгах ничего. Теперь знает: платёж
+  // записывается по `invoice.payment_succeeded`.
+  // ---------------------------------------------------------------------
+  describe("оплаченный счёт подписки записывается против строки доступа (долг 84)", () => {
+    function invoice(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "in_1",
+        parent: { subscription_details: { subscription: "sub_84" } },
+        payments: { data: [{ payment: { type: "payment_intent", payment_intent: "pi_84" } }] },
+        ...overrides,
+      };
+    }
+
+    it("пишет связь «платёж → наша строка», не трогая ни период, ни статус", async () => {
+      findUnique.mockResolvedValue({ id: "row_84", userId: "user_84", plan: "monthly" });
+      constructEvent.mockReturnValue(stripeEvent("invoice.payment_succeeded", invoice()));
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(recordSubscriptionPayment).toHaveBeenCalledWith({
+        userId: "user_84",
+        subscriptionId: "row_84",
+        stripePaymentIntentId: "pi_84",
+        stripeSubscriptionId: "sub_84",
+        plan: "monthly",
+        source: "invoice.payment_succeeded",
+      });
+      // Доступ этим событием не двигается ни на день.
+      expect(updateMany).not.toHaveBeenCalled();
+      expect(upsert).not.toHaveBeenCalled();
+      expect(extendOrGrantSubscription).not.toHaveBeenCalled();
+    });
+
+    it("список платежей не разложен в событии — спрашивается у Stripe один раз", async () => {
+      findUnique.mockResolvedValue({ id: "row_84", userId: "user_84", plan: "annual" });
+      invoicePaymentsList.mockResolvedValue({
+        data: [{ payment: { type: "payment_intent", payment_intent: "pi_listed" } }],
+      });
+      constructEvent.mockReturnValue(stripeEvent("invoice.payment_succeeded", invoice({ payments: undefined })));
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(invoicePaymentsList).toHaveBeenCalledWith({ invoice: "in_1", limit: 10 });
+      expect(recordSubscriptionPayment).toHaveBeenCalledWith(
+        expect.objectContaining({ stripePaymentIntentId: "pi_listed" }),
+      );
+    });
+
+    it("разовый счёт без подписки не записывается: он и так записан выдачей", async () => {
+      constructEvent.mockReturnValue(
+        stripeEvent("invoice.payment_succeeded", invoice({ parent: null })),
+      );
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(recordSubscriptionPayment).not.toHaveBeenCalled();
+      expect(captureException).not.toHaveBeenCalled();
+    });
+
+    it("строки доступа под эту подписку ещё нет — это доклад, а не тишина", async () => {
+      findUnique.mockResolvedValue(null);
+      constructEvent.mockReturnValue(stripeEvent("invoice.payment_succeeded", invoice()));
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(recordSubscriptionPayment).not.toHaveBeenCalled();
+      expect(captureException).toHaveBeenCalledTimes(1);
+      expect((captureException.mock.calls[0]![0] as Error).name).toBe("RefundLeftAccessOpen");
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // ДОЛГ 86. Талон, оплаченный поверх уже живого доступа, стоит вторых
+  // 2 299 песо. Две половины: не дать этому случиться и — если всё-таки
+  // случилось — не дать этому остаться невидимым.
+  // ---------------------------------------------------------------------
+  describe("оплата талона поверх живой подписки (долг 86)", () => {
+    it("карта, закрывшая lifetime, гасит непогашенный талон на тот же план", async () => {
+      getOpenPendingCheckouts.mockResolvedValue([
+        { stripeSessionId: "cs_voucher", plan: "lifetime" },
+        { stripeSessionId: "cs_other", plan: "monthly" },
+      ]);
+      constructEvent.mockReturnValue(
+        stripeEvent("checkout.session.completed", {
+          id: "cs_card",
+          mode: "payment",
+          payment_status: "paid",
+          client_reference_id: "user_86",
+          metadata: { plan: "lifetime" },
+          payment_intent: "pi_card",
+        }),
+      );
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      // Ровно один — талон на ДРУГОЙ план не наш, чтобы его гасить.
+      expect(sessionsExpire).toHaveBeenCalledTimes(1);
+      expect(sessionsExpire).toHaveBeenCalledWith("cs_voucher");
+      expect(settlePendingCheckout).toHaveBeenCalledWith("cs_voucher", "expired");
+    });
+
+    it("непогашенных талонов нет — Stripe не спрашивается вовсе", async () => {
+      constructEvent.mockReturnValue(
+        stripeEvent("checkout.session.completed", {
+          id: "cs_card2",
+          mode: "payment",
+          payment_status: "paid",
+          client_reference_id: "user_86b",
+          metadata: { plan: "lifetime" },
+        }),
+      );
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(sessionsExpire).not.toHaveBeenCalled();
+    });
+
+    it("талон всё-таки оплачен — доступ выдаётся, и о вторых деньгах докладывается ДО выдачи", async () => {
+      const order: string[] = [];
+      reportDuplicatePaidGrant.mockImplementation(async () => {
+        order.push("доклад");
+        return true;
+      });
+      extendOrGrantSubscription.mockImplementation(async () => {
+        order.push("выдача");
+      });
+      constructEvent.mockReturnValue(
+        stripeEvent("checkout.session.async_payment_succeeded", {
+          id: "cs_paid",
+          client_reference_id: "user_86c",
+          metadata: { plan: "lifetime" },
+          payment_intent: "pi_voucher",
+        }),
+      );
+
+      await POST(fakeRequest("{}", { "stripe-signature": "sig" }));
+
+      expect(reportDuplicatePaidGrant).toHaveBeenCalledWith({
+        userId: "user_86c",
+        plan: "lifetime",
+        stripePaymentIntentId: "pi_voucher",
+        reference: "cs_paid",
+      });
+      // Деньги пришли — доступ выдан всё равно: проглатывать оплату нельзя.
+      expect(extendOrGrantSubscription).toHaveBeenCalled();
+      expect(order).toEqual(["доклад", "выдача"]);
     });
   });
 

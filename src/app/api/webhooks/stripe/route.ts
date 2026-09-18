@@ -7,10 +7,12 @@ import {
   extendOrGrantSubscription,
   invalidateSubscriptionCache,
   isPremiumPlan,
+  recordSubscriptionPayment,
+  reportDuplicatePaidGrant,
   reportPremiumPaymentNotApplied,
   revokeAccessForPayment,
 } from "@/lib/subscription";
-import { settlePendingCheckout } from "@/lib/pending-checkout";
+import { getOpenPendingCheckouts, settlePendingCheckout } from "@/lib/pending-checkout";
 import { LIFETIME_DURATION_DAYS } from "@/lib/plans";
 import { awardReferralRewardSafely } from "@/lib/referral";
 import { isPlanId, plans } from "@/lib/plans";
@@ -207,6 +209,112 @@ async function reportRefundNotApplied(
   }
 }
 
+/**
+ * Записывает платёж по ПОВТОРЯЮЩЕМУСЯ счёту против нашей строки доступа.
+ *
+ * ДОЛГ 84 — ровно то, что говорила его строка: «чинить хранением платежа и
+ * для подписочных строк — слушать `invoice.payment_succeeded`». До этого
+ * подписочная строка не знала о деньгах НИЧЕГО: её пишет
+ * `upsertFromStripeSubscription` по событию о подписке, где PaymentIntent
+ * не участвует, а `Stripe.Charge` ссылки на счёт не несёт ни одним из
+ * своих 47 полей. Возврат месячной или годовой подписки поэтому не
+ * находил, что отзывать, — и уходил в Sentry как `RefundLeftAccessOpen`.
+ *
+ * Откуда берётся PaymentIntent. У счёта он лежит не полем, а списком
+ * `payments` (по объекту `invoice_payment` на платёж). В теле события этот
+ * список бывает не разложен, поэтому: сначала то, что прислали, и только
+ * если там пусто — один запрос в Stripe. Лишнего запроса в обычном случае
+ * не делается.
+ *
+ * Строки нашей ещё нет — это не ошибка, а порядок событий: `invoice.*`
+ * может опередить `customer.subscription.*`. Такой случай докладывается, а
+ * не молчит, потому что цена его — незакрываемый возврат.
+ */
+async function recordRecurringInvoicePayment(
+  stripe: Stripe,
+  invoice: Stripe.Invoice,
+  stripeSubscriptionId: string
+): Promise<void> {
+  const row = await db.subscription.findUnique({
+    where: { stripeSubscriptionId },
+    select: { id: true, userId: true, plan: true },
+  });
+  if (!row) {
+    await reportRefundNotApplied("invoice.payment_succeeded", {
+      why: "счёт оплачен, а строки доступа под эту подписку ещё нет — платёж записать не на что",
+      invoiceId: invoice.id,
+      stripeSubscriptionId,
+    });
+    return;
+  }
+
+  let payments = invoice.payments?.data ?? [];
+  if (payments.length === 0 && invoice.id) {
+    try {
+      const listed = await stripe.invoicePayments.list({ invoice: invoice.id, limit: 10 });
+      payments = listed.data;
+    } catch {
+      payments = [];
+    }
+  }
+
+  for (const payment of payments) {
+    const ref = payment.payment?.payment_intent;
+    const paymentIntentId = typeof ref === "string" ? ref : ref?.id;
+    if (!paymentIntentId) continue;
+    await recordSubscriptionPayment({
+      userId: row.userId,
+      subscriptionId: row.id,
+      stripePaymentIntentId: paymentIntentId,
+      stripeSubscriptionId,
+      plan: row.plan,
+      source: "invoice.payment_succeeded",
+    });
+  }
+}
+
+/**
+ * Гасит непогашенные талоны OXXO на ТОТ ЖЕ план, за который только что
+ * заплатили картой.
+ *
+ * ДОЛГ 86, половина предупреждающая. Оплаченный талон поверх уже живого
+ * доступа — это не лишний срок, а вторые деньги: у `lifetime` — 2 299
+ * песо за срок, который и так идёт до 2126 года. Погашенный талон
+ * оплатить нельзя, поэтому дешевле всего не дать этому случиться.
+ *
+ * Узко по плану намеренно: талон на ДРУГОЙ план — это осознанная вторая
+ * покупка, и гасить её за человека мы не вправе.
+ *
+ * Ошибка Stripe (талон успели оплатить секундой раньше, сеть, что угодно)
+ * не роняет обработчик: доступ за оплату картой уже выдан, и терять его
+ * из-за неудавшейся уборки нельзя. Такой случай докладывается.
+ */
+async function expireOutstandingVouchers(
+  stripe: Stripe,
+  userId: string,
+  plan: string
+): Promise<number> {
+  let expired = 0;
+  const open = await getOpenPendingCheckouts(userId);
+  for (const row of open) {
+    if (row.plan !== plan) continue;
+    try {
+      await stripe.checkout.sessions.expire(row.stripeSessionId);
+      await settlePendingCheckout(row.stripeSessionId, "expired");
+      expired += 1;
+    } catch (error) {
+      await reportRefundNotApplied("checkout.session.completed", {
+        why: "непогашенный талон на тот же план погасить не вышло — он ещё может быть оплачен во второй раз",
+        stripeSessionId: row.stripeSessionId,
+        plan,
+        userId,
+        cause: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return expired;
+}
+
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -279,6 +387,9 @@ export async function POST(request: NextRequest) {
             source: "checkout.session.completed",
             reference: session.id,
           });
+          // Долг 86: непогашенный талон на тот же план теперь оплатить
+          // нельзя — платить дважды за одно не за что.
+          await expireOutstandingVouchers(stripe, userId, "lifetime");
           await awardReferralRewardSafely(userId);
         }
       }
@@ -298,6 +409,14 @@ export async function POST(request: NextRequest) {
       const userId = session.client_reference_id;
       const planId = session.metadata?.plan;
       if (userId && planId && isPlanId(planId)) {
+        // Долг 86: смотрим ДО выдачи — после неё «уже был доступ» станет
+        // правдой из-за этой же выдачи и отчёт потеряет смысл.
+        await reportDuplicatePaidGrant({
+          userId,
+          plan: planId,
+          stripePaymentIntentId: paymentIntentIdOf(session),
+          reference: session.id,
+        });
         await extendOrGrantSubscription(
           userId,
           plans[planId].durationDays,
@@ -362,6 +481,25 @@ export async function POST(request: NextRequest) {
         data: { status: "canceled" },
       });
       if (existing) await invalidateSubscriptionCache(existing.userId);
+      break;
+    }
+
+    /**
+     * ДОЛГ 84. Повторяющийся счёт оплачен — записываем, КАКИМИ деньгами.
+     *
+     * Доступ этим событием не выдаётся и не двигается ни на день: период
+     * строки по-прежнему ставит `customer.subscription.updated`. Здесь
+     * пишется только связь «платёж → строка», без которой возврат
+     * месячной или годовой подписки не находил, что отзывать.
+     */
+    case "invoice.payment_succeeded": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscriptionRef = invoice.parent?.subscription_details?.subscription;
+      const subscriptionId =
+        typeof subscriptionRef === "string" ? subscriptionRef : subscriptionRef?.id;
+      // Счёт не про подписку (разовый платёж) — этой дыры не касается:
+      // такой платёж уже записан выдачей.
+      if (subscriptionId) await recordRecurringInvoicePayment(stripe, invoice, subscriptionId);
       break;
     }
 

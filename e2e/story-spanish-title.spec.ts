@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test, expect } from "./helpers/test";
+import { storyFixtureShape } from "./helpers/story-fixture";
 
 /**
  * Испанское название рассказа — первой строкой, русский оригинал под ним
@@ -71,6 +72,24 @@ async function titleShape(page: import("@playwright/test").Page, scope: string) 
 }
 
 test.describe("испанское название рассказа", () => {
+  /**
+   * Три рассказа фикстуры в базе — ИЛИ громкий пропуск с причиной.
+   *
+   * Условие спрашивает саму базу через сервер, а не `process.env.CI`:
+   * полный разбор, почему именно так, — в шапке `helpers/story-fixture.ts`.
+   * В CI фикстура посеяна, условие ложно, и не пропускается ничего; если
+   * её однажды перестанут сеять, пропуск уронит прогон через
+   * `check:e2e-coverage --report=`, где любая пропущенная проба — красный
+   * выход.
+   */
+  test.beforeEach(async ({ page }) => {
+    const shape = await storyFixtureShape(page.request);
+    if (!shape.present) {
+      console.log(`[story-spanish-title] пропущено: локальная база не в форме CI — ${shape.why}`);
+    }
+    test.skip(!shape.present, `пропущено: локальная база не в форме CI — ${shape.why}`);
+  });
+
   test("es: испанское название первой строкой, русский оригинал под ним мельче", async ({ page }) => {
     expect(WITH_ES.titleEs, "фикстура обязана держать рассказ С испанским названием").toBeTruthy();
     const response = await page.goto(`/es/stories/${WITH_ES.id}`);
