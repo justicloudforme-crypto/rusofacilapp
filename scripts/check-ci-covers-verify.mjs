@@ -49,6 +49,26 @@
 // Отдельная подсадка изображает ровно эту дыру: команда, добавленная во
 // ВТОРОЙ workflow и отсутствующая в `verify`, обязана ронять сторож.
 //
+// ЧЕТВЁРТАЯ ПРАВКА, 18.09.2026 (ДОЛГ 252): ВОЗРАСТ САМИХ ПРОГОНОВ.
+// Правила выше стерегут, ЧТО гоняется. Ничто не стерегло, НА ЧЁМ это
+// гоняется, а GitHub 17.09.2026 написал аннотацией, что Node.js 20 на
+// раннерах устаревает и действия на нём перестанут запускаться. Цена
+// известна заранее: прогон, который сегодня зелёный, в какой-то день
+// начнёт падать сам по себе, и падение это будет не про наш код.
+//
+// Поэтому здесь же, в стороже, который И ТАК читает весь каталог
+// `.github/workflows/`, живут два утверждения:
+//
+//   * ни один `node-version:` не ниже 22;
+//   * ни одно действие из поимённого списка не ниже своего минимального
+//     мажора (сегодня это пятый мажор у действий `actions/…` — версии,
+//     работающие на Node 24).
+//
+// Список именно ПОИМЁННЫЙ: «любое действие свежее такого-то мажора»
+// неверно — у каждого действия своя нумерация. Неизвестное действие
+// пропускается молча и это названо, а не спрятано: сторож, который
+// краснеет на незнакомое имя, чинят удалением сторожа.
+//
 //   node scripts/check-ci-covers-verify.mjs            # гейт
 //   node scripts/check-ci-covers-verify.mjs --map      # вся карта проверок
 //   node scripts/check-ci-covers-verify.mjs --plant    # позитивный контроль
@@ -216,6 +236,55 @@ function main() {
     return out;
   }
 
+  /**
+   * ВОЗРАСТ ПРОГОНОВ — долг 252. Минимальные мажоры названы поимённо.
+   * Сегодня все четыре действия существуют в `@v5`, и `@v5` у них — это
+   * Node 24; `@v4` у `upload-artifact` GitHub уже принудительно перевёл
+   * на Node 24 и аннотацией предупредил, что дальше так не будет.
+   */
+  const MIN_NODE_VERSION = 22;
+  const MIN_ACTION_MAJOR = new Map([
+    ["actions/checkout", 5],
+    ["actions/setup-node", 5],
+    ["actions/setup-java", 5],
+    ["actions/upload-artifact", 5],
+    ["actions/download-artifact", 5],
+    ["actions/cache", 4],
+  ]);
+
+  /** Все нарушения возраста в одном наборе файлов. Отдельная функция —
+   *  ради подсадки: ей подсовывается выдуманный файл. */
+  function runtimeProblems(files) {
+    const out = [];
+    let nodeVersions = 0;
+    let actionsSeen = 0;
+    for (const [file, text] of files) {
+      const lines = text.split("\n");
+      for (let i = 0; i < lines.length; i += 1) {
+        const nv = lines[i].match(/^\s*node-version:\s*['"]?(\d+)/);
+        if (nv) {
+          nodeVersions += 1;
+          if (Number(nv[1]) < MIN_NODE_VERSION) {
+            out.push(
+              `${file}:${i + 1} — node-version: ${nv[1]}, а GitHub снимает с раннеров всё ниже ${MIN_NODE_VERSION} (долг 252)`,
+            );
+          }
+        }
+        const act = lines[i].match(/uses:\s*([\w.-]+\/[\w.-]+)@v(\d+)/);
+        if (act && MIN_ACTION_MAJOR.has(act[1])) {
+          actionsSeen += 1;
+          const min = MIN_ACTION_MAJOR.get(act[1]);
+          if (Number(act[2]) < min) {
+            out.push(
+              `${file}:${i + 1} — ${act[1]}@v${act[2]}, а на Node 24 работает только @v${min} и выше (долг 252)`,
+            );
+          }
+        }
+      }
+    }
+    return { out, nodeVersions, actionsSeen };
+  }
+
   const workflowFiles = readWorkflows();
   const ciRuns = namesFromWorkflows(workflowFiles);
 
@@ -367,6 +436,37 @@ function main() {
           return { hit: !r.unverified.includes(victim), what: victim, negative: true };
         },
       },
+      // Долг 252, оба утверждения про ВОЗРАСТ прогонов.
+      {
+        name: "в рабочем процессе вернулся node-version: 20",
+        run: () => {
+          const fake = [
+            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - uses: actions/setup-node@v5\n        with:\n          node-version: 20\n`],
+          ];
+          const r = runtimeProblems(fake);
+          return { hit: r.out.some((p) => p.includes("node-version: 20")), what: "node-version: 20" };
+        },
+      },
+      {
+        name: "в рабочем процессе вернулось actions/upload-artifact@v4",
+        run: () => {
+          const fake = [
+            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - uses: actions/upload-artifact@v4\n`],
+          ];
+          const r = runtimeProblems(fake);
+          return { hit: r.out.some((p) => p.includes("upload-artifact@v4")), what: "upload-artifact@v4" };
+        },
+      },
+      {
+        name: "ОТРИЦАТЕЛЬНЫЙ контроль возраста: свежие версии красноты не дают",
+        run: () => {
+          const fake = [
+            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - uses: actions/checkout@v5\n      - uses: actions/setup-node@v5\n        with:\n          node-version: 22\n      - uses: actions/upload-artifact@v5\n      - uses: some/unknown-action@v1\n`],
+          ];
+          const r = runtimeProblems(fake);
+          return { hit: r.out.length === 0, what: `просмотрено ${r.nodeVersions} node-version и ${r.actionsSeen} действий`, negative: true };
+        },
+      },
       {
         name: "исключение второго списка на команду, которой в CI нет вовсе",
         run: () => {
@@ -388,25 +488,40 @@ function main() {
     // Отрицательная половина: без подсадки прогон обязан быть чистым, иначе
     // «поймано» выше означало бы просто вечно красную проверку.
     const clean = audit(verifyRuns, ciRuns, exceptions);
+    const runtime = runtimeProblems(workflowFiles);
     const quiet =
       clean.uncovered.length === 0 &&
       clean.stale.length === 0 &&
       clean.unverified.length === 0 &&
-      clean.staleCiOnly.length === 0;
+      clean.staleCiOnly.length === 0 &&
+      runtime.out.length === 0;
     console.log(`  ${quiet ? "отрицательный контроль: без подсадки чисто" : "ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ КРАСЕН — сначала почини настоящее расхождение"}`);
     console.log(`  поймано ${caught} из ${plants.length}`);
     process.exit(caught === plants.length && quiet ? 0 : 1);
   }
 
   const { uncovered, stale, unverified, staleCiOnly } = audit(verifyRuns, ciRuns, exceptions);
-  if (uncovered.length === 0 && stale.length === 0 && unverified.length === 0 && staleCiOnly.length === 0) {
+  const runtime = runtimeProblems(workflowFiles);
+  /** Пол: «нарушений возраста 0» на выборке, где ничего не нашлось, —
+   *  не результат (PROGRESS.md 4.1). Строк `node-version:` в каталоге
+   *  сегодня пять, известных действий — с десяток. */
+  if (runtime.nodeVersions < 4 || runtime.actionsSeen < 8) {
+    console.error(
+      `ВОЗРАСТ ПРОГОНОВ НЕ ИЗМЕРЕН: строк node-version ${runtime.nodeVersions}, известных действий ${runtime.actionsSeen} — ` +
+        `разбор читает не то, и «нарушений 0» здесь ничего не значит`,
+    );
+    process.exit(1);
+  }
+  if (uncovered.length === 0 && stale.length === 0 && unverified.length === 0 && staleCiOnly.length === 0 && runtime.out.length === 0) {
     console.log(
       `check:ci-covers-verify — прочитано workflow ${workflowFiles.length} ` +
         `(${workflowFiles.map(([f]) => f.split("/").pop()).join(", ")}); ` +
         `verify запускает ${verifyRuns.size} команд, они ${ciRuns.size}; ` +
         `в CI и не в verify ${[...ciRuns].filter((n) => !verifyRuns.has(n)).length} (все названы), ` +
         `в verify и не в CI ${[...verifyRuns].filter((n) => !ciRuns.has(n)).length} (все названы); ` +
-        `исключений ${exceptions.size} + ${verifyExceptions.size}, непокрытых 0 в обе стороны.`,
+        `исключений ${exceptions.size} + ${verifyExceptions.size}, непокрытых 0 в обе стороны; ` +
+        `возраст прогонов: строк node-version ${runtime.nodeVersions}, известных действий ${runtime.actionsSeen}, ` +
+        `устаревших 0 (долг 252).`,
     );
     process.exit(0);
   }
@@ -422,6 +537,9 @@ function main() {
     console.error(
       `НЕ В VERIFY: \`${name}\` гоняется в одном из .github/workflows/, не гоняется в npm run verify и не назван во втором списке исключений PROGRESS.md`,
     );
+  }
+  for (const problem of runtime.out) {
+    console.error(`УСТАРЕВШИЙ ПРОГОН: ${problem}`);
   }
   for (const name of staleCiOnly) {
     console.error(

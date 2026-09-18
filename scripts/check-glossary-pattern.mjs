@@ -29,12 +29,19 @@ import { pathToFileURL } from "node:url";
 
 import { escapeRegExp } from "../src/lib/regex.ts";
 
-/** GlossaryText.tsx getMatcher(), character for character. If that changes,
- * this must change with it — src/lib/glossary-pattern.test.ts asserts the
- * component still builds the shape both of these mirror. */
+/** `glossaryPatternSource()` из src/lib/glossary-pattern.ts, знак в знак.
+ * Копия, а не импорт: этот файл гоняется через `node
+ * --experimental-strip-types`, которому нужны расширения в путях, а у
+ * общего модуля их нет. Расхождение стережётся с двух сторон —
+ * `src/lib/glossary-pattern.test.ts` держит форму, а
+ * `check:no-lookbehind` не даёт вернуться просмотру назад.
+ *
+ * ГРАНИЦА СЛЕВА — ГРУППОЙ `(^|[^\p{L}])`, А НЕ ПРОСМОТРОМ НАЗАД
+ * `(?<![\p{L}])` (18.09.2026): просмотра назад нет ни в одном браузере на
+ * iOS до Safari 16.4, и там выражение не собирается вовсе. */
 function buildPattern(terms, escape = escapeRegExp) {
   const surfaces = [...new Set(terms.map((t) => t.toLowerCase()))].sort((a, b) => b.length - a.length);
-  return new RegExp(`(?<![\\p{L}])(${surfaces.map(escape).join("|")})(?![\\p{L}])`, "giu");
+  return new RegExp(`(^|[^\\p{L}])(${surfaces.map(escape).join("|")})(?![\\p{L}])`, "giu");
 }
 
 async function main() {
