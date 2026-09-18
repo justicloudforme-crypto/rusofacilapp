@@ -263,6 +263,7 @@ export async function extendOrGrantSubscription(
       isPremiumPlan(row.plan) === premiumGrant
   );
 
+  let rowId: string;
   if (target) {
     await db.subscription.update({
       where: { id: target.id },
@@ -270,15 +271,16 @@ export async function extendOrGrantSubscription(
         status: "active",
         currentPeriodEnd: new Date(target.currentPeriodEnd.getTime() + extraMs),
         // The LATEST payment wins the column. A row extended by two
-        // payments can only name one of them, and the newer one is the one
-        // a refund is most likely to be about; the older is unreachable and
-        // is reported rather than silently dropped — see
-        // revokeAccessForPayment.
+        // payments can only name one of them — and the older one is no
+        // longer unreachable: since 18.09.2026 every payment is also its
+        // own row in SubscriptionPayment (долг 85), which is what a refund
+        // of the earlier payment resolves through.
         ...(stripePaymentIntentId ? { stripePaymentIntentId } : {}),
       },
     });
+    rowId = target.id;
   } else {
-    await db.subscription.create({
+    const created = await db.subscription.create({
       data: {
         userId,
         plan,
@@ -287,8 +289,76 @@ export async function extendOrGrantSubscription(
         stripePaymentIntentId: stripePaymentIntentId ?? null,
       },
     });
+    rowId = created.id;
+  }
+  if (stripePaymentIntentId) {
+    await recordSubscriptionPayment({
+      userId,
+      subscriptionId: rowId,
+      stripePaymentIntentId,
+      plan,
+      source: "extendOrGrantSubscription",
+    });
   }
   await invalidateSubscriptionCache(userId);
+}
+
+/**
+ * Записывает «за эту строку доступа заплачено вот этими деньгами».
+ *
+ * ДОЛГИ 84 И 85. Одна строка доступа может быть оплачена НЕСКОЛЬКИМИ
+ * платежами (продление талоном поверх талона), а строка подписки Stripe —
+ * вообще ни одним: её пишет событие о подписке, в котором PaymentIntent
+ * не участвует. И то и другое кончалось одинаково: возврат денег не
+ * находил, что отзывать.
+ *
+ * Идемпотентно по `stripePaymentIntentId`: Stripe доставляет событие
+ * повторно, а «сколько раз заплачено» обязано остаться правдой. Первая
+ * запись побеждает — `update: {}` намеренно пуст.
+ *
+ * Никогда не бросает. Журнал платежей не имеет права уронить выдачу
+ * доступа: человек заплатил, доступ обязан появиться, даже если записать
+ * об этом не вышло. Несостоявшаяся запись уходит в Sentry — то же
+ * правило, что у `reportPremiumPaymentNotApplied`.
+ */
+export async function recordSubscriptionPayment(input: {
+  userId: string;
+  subscriptionId: string;
+  stripePaymentIntentId: string;
+  stripeSubscriptionId?: string | null;
+  plan: string;
+  source: string;
+}): Promise<void> {
+  try {
+    await db.subscriptionPayment.upsert({
+      where: { stripePaymentIntentId: input.stripePaymentIntentId },
+      update: {},
+      create: {
+        userId: input.userId,
+        subscriptionId: input.subscriptionId,
+        stripePaymentIntentId: input.stripePaymentIntentId,
+        stripeSubscriptionId: input.stripeSubscriptionId ?? null,
+        plan: input.plan,
+        source: input.source,
+      },
+    });
+  } catch (error) {
+    try {
+      const wrapped = new Error(
+        `payment ${input.stripePaymentIntentId} was not written down against subscription ` +
+          `${input.subscriptionId} — a refund of it will have nothing to revoke`
+      );
+      wrapped.name = "SubscriptionPaymentNotRecorded";
+      const Sentry = await import("@sentry/nextjs");
+      Sentry.captureException(wrapped, {
+        level: "error",
+        tags: { defect: "subscription-payment-not-recorded", source: input.source },
+        extra: { ...input, cause: error instanceof Error ? error.message : String(error) },
+      });
+    } catch {
+      // Reporting the problem must never become a second problem.
+    }
+  }
 }
 
 /**
@@ -322,6 +392,31 @@ export async function revokeAccessForPayment(reference: {
   const or: Array<Record<string, string>> = [];
   if (reference.paymentIntentId) or.push({ stripePaymentIntentId: reference.paymentIntentId });
   if (reference.stripeSubscriptionId) or.push({ stripeSubscriptionId: reference.stripeSubscriptionId });
+
+  // ВТОРАЯ ДОРОГА К ТОЙ ЖЕ СТРОКЕ — ЖУРНАЛ ПЛАТЕЖЕЙ (долги 84 и 85).
+  //
+  // Колонка `Subscription.stripePaymentIntentId` держит ПОСЛЕДНИЙ платёж и
+  // существует не у всех строк вовсе: подписочную строку пишет событие о
+  // подписке, где PaymentIntent не участвует. Журнал знает обе связи —
+  // и с нашей строкой, и с подпиской Stripe, — поэтому возврат
+  // ПОВТОРЯЮЩЕГОСЯ счёта и возврат БОЛЕЕ РАННЕГО из двух платежей
+  // находят то же, что находил разовый платёж.
+  //
+  // Расширением «по человеку» это не становится: ключ по-прежнему один —
+  // тот самый PaymentIntent, которому вернули деньги. Ни админская
+  // выдача, ни реферальный бонус, ни покупка через магазин строк в этом
+  // журнале не имеют и сюда не попадут.
+  if (reference.paymentIntentId) {
+    const paid = await db.subscriptionPayment.findUnique({
+      where: { stripePaymentIntentId: reference.paymentIntentId },
+      select: { subscriptionId: true, stripeSubscriptionId: true },
+    });
+    if (paid) {
+      or.push({ id: paid.subscriptionId });
+      if (paid.stripeSubscriptionId) or.push({ stripeSubscriptionId: paid.stripeSubscriptionId });
+    }
+  }
+
   // No reference is not "match everything" — it is "match nothing".
   if (or.length === 0) return { revoked: 0, userIds: [] };
 
@@ -339,6 +434,73 @@ export async function revokeAccessForPayment(reference: {
   const userIds = [...new Set(targets.map((row) => row.userId))];
   for (const userId of userIds) await invalidateSubscriptionCache(userId);
   return { revoked: targets.length, userIds };
+}
+
+/**
+ * «За это уже заплачено» — до того, как деньги примут во второй раз.
+ *
+ * ДОЛГ 86. Порядок, который стоит денег: человек берёт талон OXXO, ждать
+ * ему надоедает, он платит картой и получает доступ, а через день всё-таки
+ * платит и талон. Деньги пришли по-настоящему, и проглотить их нельзя —
+ * `checkout.session.async_payment_succeeded` честно продлевает строку. Для
+ * `monthly` и `annual` это лишний СРОК; для `lifetime` — вторые 2 299
+ * песо к сроку, который и так идёт до 2126 года.
+ *
+ * Отсюда две половины. Первая — не дать этому случиться: карта, закрывшая
+ * тот же план, гасит непогашенный талон (см. `expireOutstandingVouchers`
+ * в обработчике). Вторая — вот эта: если талон всё-таки оплачен (Stripe
+ * успел принять деньги раньше, чем до него дошло наше гашение), случай
+ * обязан перестать быть невидимым. Вернуть деньги может только владелец —
+ * это движение денег, и автоматике здесь не место, — но у него теперь
+ * есть и повод, и точный `PaymentIntent`, по которому возврат делается
+ * одним движением в панели Stripe.
+ *
+ * Никогда не бросает и никогда ничего не отменяет: только смотрит и
+ * рассказывает.
+ */
+export async function reportDuplicatePaidGrant(input: {
+  userId: string;
+  plan: string;
+  stripePaymentIntentId: string | null;
+  reference: string;
+}): Promise<boolean> {
+  try {
+    const rows = await getSubscriptionsForUser(input.userId);
+    const incomingIsPremium = isPremiumPlan(input.plan);
+    // Живая строка ТОГО ЖЕ сорта, оплаченная ДРУГИМИ деньгами.
+    const already = rows.find(
+      (row) =>
+        isSubscriptionActive(row) &&
+        isPremiumPlan(row.plan) === incomingIsPremium &&
+        row.stripePaymentIntentId !== null &&
+        row.stripePaymentIntentId !== input.stripePaymentIntentId
+    );
+    if (!already) return false;
+
+    const error = new Error(
+      `${input.plan} paid twice: user ${input.userId} already had live access paid by ` +
+        `${already.stripePaymentIntentId} when ${input.stripePaymentIntentId ?? "an unnamed payment"} ` +
+        `arrived — the second payment buys nothing and should be refunded by hand`
+    );
+    error.name = "DuplicatePaidGrantNeedsRefund";
+    const Sentry = await import("@sentry/nextjs");
+    Sentry.captureException(error, {
+      level: "error",
+      tags: { defect: "duplicate-paid-grant", plan: input.plan },
+      extra: {
+        userId: input.userId,
+        refundThisPayment: input.stripePaymentIntentId,
+        alreadyPaidBy: already.stripePaymentIntentId,
+        existingRowId: already.id,
+        existingPeriodEnd: already.currentPeriodEnd.toISOString(),
+        reference: input.reference,
+      },
+    });
+    return true;
+  } catch {
+    // Reporting the problem must never become a second problem.
+    return false;
+  }
 }
 
 /** The tier a stored row grants, decided by exactly the two rules the read

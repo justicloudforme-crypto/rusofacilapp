@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { defaultLocale, isLocale, locales } from "@/i18n/config";
+import { preferredLocaleFromHeader } from "@/lib/preferred-locale";
 import { LOCALE_HEADER, NOT_FOUND_REWRITE_SEGMENT } from "@/lib/locale-header";
 import { isSpanishOnlyRoute } from "@/lib/spanish-only-routes";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
@@ -20,21 +21,12 @@ import {
   userAgentIsNativeShell,
 } from "@/lib/native-shell-token";
 
+// Разбор `Accept-Language` живёт в `src/lib/preferred-locale.ts` — там же
+// и разобрано, почему он уехал из этого файла (долг 155). Здесь остаётся
+// только чтение заголовка: решение принимает одна функция, и её можно
+// спросить таблицей значений, не поднимая сервера.
 function getPreferredLocale(request: NextRequest): string {
-  const header = request.headers.get("accept-language");
-  if (!header) return defaultLocale;
-
-  const preferred = header
-    .split(",")
-    .map((part) => part.split(";")[0]?.trim().toLowerCase())
-    .filter(Boolean);
-
-  for (const lang of preferred) {
-    const short = lang.split("-")[0];
-    if (isLocale(short)) return short;
-  }
-
-  return defaultLocale;
+  return preferredLocaleFromHeader(request.headers.get("accept-language"));
 }
 
 // No section is blanket-gated here any more as of 2026-08-28 (lessons were
