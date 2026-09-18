@@ -36,9 +36,22 @@
 
 /** Unicode-aware word boundary. JS `\b` is ASCII-only, so it never fires
  * between Cyrillic letters — written with `\b` first, every pattern below
- * matched exactly zero of 130 stories. */
+ * matched exactly zero of 130 stories.
+ *
+ * ГРАНИЦА СЛЕВА — ГРУППОЙ, А НЕ ПРОСМОТРОМ НАЗАД (18.09.2026). Здесь
+ * стояло `(?<!\p{L})`, и это ES2018: на iOS просмотр назад появился
+ * только в Safari 16.4 (март 2023), а до него `new RegExp` бросает
+ * `SyntaxError` на построении. Сегодня эти выражения собираются на
+ * сервере (Node 22) и клиенту не отдаются — то есть отказа на проде
+ * отсюда быть не может, — но правило «регулярка из данных не пользуется
+ * просмотром назад» стережётся `check:no-lookbehind` по всему `src/`, и
+ * исключений у него нет: один чужой импорт, и модуль уедет в браузер
+ * молча. Подробности разбора — в `src/lib/glossary-pattern.ts`.
+ *
+ * Группа 1 — съеденная граница, группа 2 — само слово; отсюда
+ * `match[2]` у единственного вызывающего ниже. */
 function ru(body: string): RegExp {
-  return new RegExp(`(?<!\\p{L})(?:${body})(?!\\p{L})`, "giu");
+  return new RegExp(`(^|[^\\p{L}])((?:${body}))(?!\\p{L})`, "giu");
 }
 
 export interface GrammarFeature {
@@ -97,7 +110,9 @@ export function detectGrammarFeatures(text: string, maxExamples = 2): GrammarFea
   for (const { slug, pattern } of FEATURE_PATTERNS) {
     const seen = new Set<string>();
     for (const match of text.matchAll(ru(pattern))) {
-      const word = match[0].toLowerCase();
+      // `match[2]`, а не `match[0]`: нулевая группа теперь включает
+      // съеденный слева не-буквенный знак (см. `ru()` выше).
+      const word = match[2].toLowerCase();
       if (!seen.has(word)) seen.add(word);
       if (seen.size >= maxExamples) break;
     }
