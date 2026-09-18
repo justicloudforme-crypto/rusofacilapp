@@ -36,8 +36,11 @@ const SRS_KEY = "rusofacil:flashcard-srs";
 const ACCOUNT = "usr_vasya";
 const OTHER = "usr_petya";
 
+/** Строка карты прогресса в том виде, в каком её пишет клиент. */
+type Row = { known: boolean; updatedAt: number; by?: string };
+
 /** Карта после входа: три строки гостя, две аккаунта, одна наследство. */
-const MIXED = {
+const MIXED: Record<string, Row> = {
   "guest-milk": { known: true, updatedAt: 1_757_900_000_000, by: GUEST_OWNER },
   "guest-tenant": { known: true, updatedAt: 1_757_900_001_000, by: GUEST_OWNER },
   "guest-fridge": { known: true, updatedAt: 1_757_900_002_000, by: GUEST_OWNER },
@@ -134,7 +137,8 @@ describe("долг 218 — выход разбирает карту по про�
   });
 
   it("переключение аккаунта уносит чужие строки и оставляет свои и гостевые", () => {
-    const after = dropOtherOwners({ ...MIXED, foreign: { known: true, updatedAt: 9, by: OTHER } }, ACCOUNT);
+    const withForeign: Record<string, Row> = { ...MIXED, foreign: { known: true, updatedAt: 9, by: OTHER } };
+    const after = dropOtherOwners(withForeign, ACCOUNT);
     expect(Object.keys(after).sort()).toEqual([
       "acc-door",
       "acc-window",
@@ -162,8 +166,11 @@ describe("долг 218 — выход разбирает карту по про�
   });
 
   it("подсадка: строка без происхождения не считается гостевой", () => {
-    expect(keepGuestOwned({ a: { known: true, updatedAt: 1 } })).toEqual({});
-    expect(keepGuestOwned({ a: { known: true, updatedAt: 1, by: "usr_x" } })).toEqual({});
-    expect(Object.keys(keepGuestOwned({ a: { known: true, updatedAt: 1, by: GUEST_OWNER } }))).toEqual(["a"]);
+    const legacyOnly: Record<string, Row> = { a: { known: true, updatedAt: 1 } };
+    const foreignOnly: Record<string, Row> = { a: { known: true, updatedAt: 1, by: "usr_x" } };
+    const guestOnly: Record<string, Row> = { a: { known: true, updatedAt: 1, by: GUEST_OWNER } };
+    expect(keepGuestOwned(legacyOnly)).toEqual({});
+    expect(keepGuestOwned(foreignOnly)).toEqual({});
+    expect(Object.keys(keepGuestOwned(guestOnly))).toEqual(["a"]);
   });
 });
