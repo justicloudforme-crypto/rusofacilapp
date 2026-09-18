@@ -111,13 +111,68 @@ for (const lang of ["es", "ru"] as const) {
   });
 }
 
-test("веб не тронут: замка нет ни на одной плитке без признака оболочки", async ({ page }) => {
-  await page.setViewportSize({ width: 384, height: 780 });
-  await loginWithSubscription(page, { tier: "standard" });
+/**
+ * ЭТА ПРОБА ПЕРЕПИСАНА 18.09.2026, А НЕ УДАЛЕНА.
+ *
+ * Было: «веб не тронут — замка нет ни на одной плитке без признака
+ * оболочки». Утверждение было верным для прежнего правила и было нужно.
+ *
+ * Стало: та же роль, тот же экран, обе семьи пазлов и все уровни — и в
+ * браузере обязано найтись РОВНО СТОЛЬКО ЖЕ, сколько внутри оболочки в
+ * ТОМ ЖЕ прогоне. Это не ослабление, и разница называется числом:
+ * «в вебе замков 0» прошло бы и на экране, который не собрался вовсе;
+ * «в вебе столько же, сколько в оболочке, и замков там 580» — не
+ * пройдёт.
+ *
+ * Почему правило поменялось: замер 18.09.2026 по 12 экранам показал,
+ * что у роли «доступ по коду» в оболочке 580 замков, а в браузере 0, и
+ * что Premium в браузере не видел ни одной короны из 580 — то есть
+ * человек, который за премиальный материал платит, границы этого
+ * материала в браузере не видел вовсе. Решение владельца — то же, что у
+ * словаря в долге 257: браузер и оболочка говорят одно и то же.
+ */
+for (const tier of ["standard", "premium"] as const) {
+  test(`[${tier}] браузер печатает то же, что оболочка, знак в знак`, async ({ page, context }) => {
+    await page.setViewportSize({ width: 384, height: 780 });
+    await loginWithSubscription(page, { tier });
 
-  const tally = await tallyPicker(page, "es");
-  // Положительная половина того же селектора: корона в вебе у этой роли
-  // стоит, то есть экран собрался и отрицание не доказано пустотой.
-  expect(tally.crowned, "в вебе нет ни одной короны — отрицание доказано пустым экраном").toBeGreaterThan(0);
-  expect(tally.locks, "в вебе появился замок").toBe(0);
+    // Сначала БЕЗ признака оболочки — тот же посетитель, другое место.
+    const web = await tallyPicker(page, "es");
+    await context.addCookies([SHELL_COOKIE]);
+    const shell = await tallyPicker(page, "es");
+
+    // Пол: сравнивать два пустых экрана нельзя.
+    expect(shell.tiles, "плиток не нашлось — сравнивать нечего").toBeGreaterThan(0);
+    expect(shell.crowned, "короны нет ни на одной плитке — сравнение доказано пустым экраном").toBeGreaterThan(0);
+    if (tier === "standard") {
+      // И у этой роли замки в оболочке ЕСТЬ — иначе «столько же» было бы
+      // равенством двух нулей.
+      expect(shell.locks, "у доступа по коду в оболочке нет ни одного замка").toBeGreaterThan(0);
+    }
+
+    expect(web.tiles, "плиток в браузере и в оболочке разное число").toBe(shell.tiles);
+    expect(web.crowned, "корон в браузере не столько же, сколько в оболочке").toBe(shell.crowned);
+    expect(web.locks, "замков в браузере не столько же, сколько в оболочке").toBe(shell.locks);
+    expect(web.crownedLockedWithLock, "замок рядом с короной доехал не до обоих мест").toBe(
+      shell.crownedLockedWithLock,
+    );
+  });
+}
+
+/**
+ * ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ СОРТА, И ОН ТЕПЕРЬ ОБЩИЙ ДЛЯ ОБОИХ МЕСТ.
+ * Без него «одинаково» можно было бы доказать, поставив знак везде.
+ */
+test("Premium: замка нет ни в оболочке, ни в браузере", async ({ page, context }) => {
+  await page.setViewportSize({ width: 384, height: 780 });
+  await loginWithSubscription(page, { tier: "premium" });
+
+  const web = await tallyPicker(page, "es");
+  await context.addCookies([SHELL_COOKIE]);
+  const shell = await tallyPicker(page, "es");
+
+  expect(web.crowned, "в браузере нет ни одной короны — отрицание доказано пустым экраном").toBeGreaterThan(0);
+  expect(shell.crowned, "в оболочке нет ни одной короны — отрицание доказано пустым экраном").toBeGreaterThan(0);
+  expect(web.locks, "у Premium в браузере замок").toBe(0);
+  expect(shell.locks, "у Premium в оболочке замок").toBe(0);
 });

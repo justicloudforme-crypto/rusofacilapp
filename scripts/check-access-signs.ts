@@ -64,8 +64,16 @@ const COOKIE = "rf_native_shell";
 const SAFARI =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
-type Role = "guest" | "free" | "premium";
-const TIER_OF: Record<Role, ViewerTier> = { guest: "free", free: "free", premium: "premium" };
+type Role = "guest" | "free" | "standard" | "premium";
+const TIER_OF: Record<Role, ViewerTier> = {
+  guest: "free",
+  free: "free",
+  // «Доступ по коду» — разряд `standard`. Заведён 18.09.2026 ради игр:
+  // именно у него расхождение браузера и оболочки было самым дорогим
+  // (в оболочке 580 замков, в браузере 0).
+  standard: "standard",
+  premium: "premium",
+};
 
 /** Что должно стоять на узле. `null` — знака быть не должно. */
 type Expected = AccessSign | null;
@@ -76,9 +84,12 @@ type Expected = AccessSign | null;
  */
 function swapped(sign: Expected): Expected {
   if (!sign) return { mark: "subscription", labelKey: "subscriptionBadge" };
+  // Состояние подменяется вместе с сортом: иначе утверждение про замок
+  // (долг 251) под подсадкой оставалось бы верным и красить было бы
+  // нечего — то есть прибором оно не судилось бы вовсе.
   return sign.mark === "premium-tier"
-    ? { mark: "subscription", labelKey: "subscriptionBadge" }
-    : { mark: "premium-tier", labelKey: "premiumTierBadge" };
+    ? { mark: "subscription", labelKey: "subscriptionBadge", locked: !sign.locked }
+    : { mark: "premium-tier", labelKey: "premiumTierBadge", locked: !sign.locked };
 }
 
 interface Surface {
@@ -154,6 +165,9 @@ const SURFACES: Surface[] = [
     path: "/ru/word-games",
     roles: ["guest", "premium"],
     selector: "[data-testid=word-game-level-filter] button",
+    // Долг того же класса, что 257: до 18.09.2026 полоса уровней игр в
+    // браузере не несла знака вовсе.
+    sameInWeb: true,
     expect: (node, tier) =>
       LEVELS.includes(node.key)
         ? accessSignFor("subscription", tier, {
@@ -172,7 +186,7 @@ async function readNodes(
   context: BrowserContext,
   base: string,
   surface: Surface,
-): Promise<Array<{ key: string; text: string; mark: string | null; uppercase: boolean; label: string }>> {
+): Promise<Array<{ key: string; text: string; mark: string | null; locked: boolean; uppercase: boolean; label: string }>> {
   const page = await context.newPage();
   try {
     await page.goto(`${base}${surface.path}`, { waitUntil: "domcontentloaded", timeout: 45_000 });
@@ -183,11 +197,15 @@ async function readNodes(
     return await page.$$eval(surface.selector, (els) =>
       els.map((el) => {
         const badge = el.querySelector("[data-access-mark]");
+        // ЗАМОК СЧИТАЕТСЯ ОТДЕЛЬНО (долг 251): у него свой признак,
+        // потому что знак платного на узле по-прежнему один.
+        const lock = el.querySelector("[data-access-locked]");
         const key = (el.getAttribute("data-level") ?? el.textContent ?? "").trim().split(/\s+/)[0] ?? "";
         return {
           key,
           text: (el.textContent ?? "").trim(),
           mark: badge?.getAttribute("data-access-mark") ?? null,
+          locked: lock !== null,
           uppercase: badge ? /uppercase/.test(badge.className) : false,
           label: (badge?.getAttribute("title") ?? badge?.textContent ?? "").trim(),
         };
@@ -196,6 +214,92 @@ async function readNodes(
   } finally {
     await page.close().catch(() => {});
   }
+}
+
+
+/**
+ * ====================================================================
+ * ПЛИТКИ ПАЗЛОВ — ЧЕТВЁРТОЕ НАПРАВЛЕНИЕ (18.09.2026)
+ * ====================================================================
+ *
+ * Поверхности выше судятся ПРАВИЛОМ: сторож вычисляет ожидаемый знак сам
+ * и сверяет с экраном. Для плиток пазлов так не выйдет: требование
+ * отдельной плитки зависит от колонок `curved`/`premiumOnly` той строки,
+ * а в разметке их нет и быть не должно — плитка носит ЗНАК, а не данные,
+ * по которым он выбран.
+ *
+ * Поэтому здесь утверждение другой формы, и оно ровно то, что просил
+ * владелец: **браузер и оболочка обязаны давать одинаковые знаки для
+ * ОДНОЙ роли**. Сравниваются два отрисованных экрана, плитка к плитке, а
+ * не экран с пересказом правила.
+ *
+ * Рядом — второе утверждение, которое сравнением не доказывается: **у
+ * Premium замков нет нигде**. Одинаковость прошла бы и на двух экранах,
+ * где замок стоит у всех. Замеров у этого утверждения два (оболочка и
+ * браузер), и у него есть пол: корон у Premium обязано быть больше нуля,
+ * иначе «замков 0» доказывалось бы несобравшимся экраном.
+ */
+const GAME_TYPES = ["WORD_SEARCH", "CROSSWORD"] as const;
+
+interface Tile {
+  /** Адрес плитки — она же и подпись узла в отчёте. */
+  key: string;
+  mark: string | null;
+  locked: boolean;
+}
+
+async function readGameTiles(context: BrowserContext, base: string, lang = "ru"): Promise<Tile[]> {
+  const page = await context.newPage();
+  const out: Tile[] = [];
+  try {
+    await page.goto(`${base}/${lang}/word-games`, { waitUntil: "domcontentloaded", timeout: 60_000 });
+    await page.waitForSelector("[data-testid=word-game-level-filter] button", { timeout: 30_000 });
+    for (const type of GAME_TYPES) {
+      // Вкладка выбирается по порядку в tablist: подпись локаль-зависима,
+      // а порядок — нет (см. WordGamesPicker: филворд, затем кроссворд).
+      const tabs = page.locator('[role=tablist] [role=tab]');
+      await tabs.nth(GAME_TYPES.indexOf(type)).click();
+      for (const level of LEVELS) {
+        await page.locator(`[data-testid=word-game-level-filter] button`, { hasText: level }).first().click();
+        await page.waitForTimeout(250);
+        out.push(
+          ...(await page.$$eval("a[href*='/word-games/']", (els) =>
+            els
+              .filter((el) => /\/word-games\/[A-Z_]+\/[A-Za-z0-9]+\/\d+$/.test(el.getAttribute("href") ?? ""))
+              .map((el) => ({
+                key: el.getAttribute("href") ?? "",
+                mark: el.querySelector("[data-access-mark]")?.getAttribute("data-access-mark") ?? null,
+                locked: el.querySelector("[data-access-locked]") !== null,
+              })),
+          )),
+        );
+      }
+    }
+  } finally {
+    await page.close().catch(() => {});
+  }
+  return out;
+}
+
+/** Подпись плитки одной строкой — по ней и идёт сравнение. */
+const tileSign = (t: Tile) => `${t.key}:${t.mark ?? "-"}${t.locked ? "+lock" : ""}`;
+
+/**
+ * ПОДСАДКИ ДЛЯ ПЛИТОК — в обе стороны, как просил владелец.
+ *
+ *   `extra-lock`   — у Premium в браузере появился лишний замок;
+ *   `missing-lock` — у роли без доступа замок в браузере пропал.
+ *
+ * Подменяется ТОЛЬКО веб-половина: сравнение обязано это заметить.
+ * Подсадка живёт здесь, в стороже, и в продуктовый код не уходит.
+ */
+function plantTiles(tiles: Tile[], kind: "extra-lock" | "missing-lock"): Tile[] {
+  if (kind === "extra-lock") {
+    const at = tiles.findIndex((t) => !t.locked);
+    return at === -1 ? tiles : tiles.map((t, i) => (i === at ? { ...t, locked: true } : t));
+  }
+  const at = tiles.findIndex((t) => t.locked || t.mark === "subscription");
+  return at === -1 ? tiles : tiles.map((t, i) => (i === at ? { ...t, locked: false, mark: null } : t));
 }
 
 async function makeSession(base: string, plan: "e2e-test" | "lifetime"): Promise<Array<{ name: string; value: string; url: string }>> {
@@ -253,18 +357,23 @@ export async function main(): Promise<number> {
 
   try {
     const premiumCookies = await makeSession(base, "lifetime");
+    /** «Доступ по коду» — разряд `standard`, нужен играм (см. ниже). */
+    const standardCookies = await makeSession(base, "e2e-test");
     const contexts: Partial<Record<Role, BrowserContext>> = {};
     /** Те же роли без признака оболочки — третье направление (долг 257). */
     const webContexts: Partial<Record<Role, BrowserContext>> = {};
-    for (const role of ["guest", "premium"] as Role[]) {
+    const cookiesOf: Record<Role, Array<{ name: string; value: string; url: string }>> = {
+      guest: [],
+      free: [],
+      standard: standardCookies,
+      premium: premiumCookies,
+    };
+    for (const role of ["guest", "standard", "premium"] as Role[]) {
       const ctx = await browser.newContext({
         userAgent: `${SAFARI} ${TOKEN}`,
         viewport: { width: 360, height: 720 },
       });
-      await ctx.addCookies([
-        { name: COOKIE, value: "1", url: base },
-        ...(role === "premium" ? premiumCookies : []),
-      ]);
+      await ctx.addCookies([{ name: COOKIE, value: "1", url: base }, ...cookiesOf[role]]);
       contexts[role] = ctx;
       /**
        * ТА ЖЕ РОЛЬ, НО БРАУЗЕРОМ — долг 257. Роль обязана быть ТОЙ ЖЕ:
@@ -274,8 +383,7 @@ export async function main(): Promise<number> {
        * честно покраснел на замках, которые гостю положены.
        */
       const web = await browser.newContext({ userAgent: SAFARI, viewport: { width: 360, height: 720 } });
-      await ctx.addCookies([]);
-      await web.addCookies(role === "premium" ? premiumCookies : []);
+      await web.addCookies(cookiesOf[role]);
       webContexts[role] = web;
     }
 
@@ -300,6 +408,12 @@ export async function main(): Promise<number> {
             problems.push(
               `${surface.name} (${role}, «${node.key}»): на экране ${node.mark ?? "знака нет"}, ` +
                 `правило требует ${want?.mark ?? "знака нет"}`,
+            );
+          }
+          if ((want?.locked ?? false) !== node.locked) {
+            problems.push(
+              `${surface.name} (${role}, «${node.key}»): на экране ${node.locked ? "замок" : "замка нет"}, ` +
+                `правило требует ${want?.locked ? "замок" : "замка нет"}`,
             );
           }
           if (node.uppercase) problems.push(`${surface.name} (${role}, «${node.key}»): на знаке стоит uppercase`);
@@ -341,6 +455,12 @@ export async function main(): Promise<number> {
                     `правило требует ${want?.mark ?? "знака нет"} — браузер и оболочка обязаны говорить одно (долг 257)`,
                 );
               }
+              if ((want?.locked ?? false) !== node.locked) {
+                webSame.push(
+                  `${surface.name} (веб, ${role}, «${node.key}»): на экране ${node.locked ? "замок" : "замка нет"}, ` +
+                    `правило требует ${want?.locked ? "замок" : "замка нет"} — браузер и оболочка обязаны говорить одно`,
+                );
+              }
             }
           }
           continue;
@@ -363,6 +483,69 @@ export async function main(): Promise<number> {
       }
       problemsBySurface.set("ВЕБ: словарь говорит то же, что оболочка (долг 257)", webSame);
       if (!plant) problemsBySurface.set("ВЕБ: остальные поверхности не тронуты", webLegacy);
+    }
+
+    /**
+     * ЧЕТВЁРТОЕ НАПРАВЛЕНИЕ — ПЛИТКИ ПАЗЛОВ. См. шапку `readGameTiles`.
+     */
+    {
+      const mirror: string[] = [];
+      const premiumFree: string[] = [];
+      let tilesSeen = 0;
+      let premiumCrowns = 0;
+      for (const role of ["guest", "standard", "premium"] as Role[]) {
+        const shellTiles = await readGameTiles(contexts[role]!, base);
+        const webRaw = await readGameTiles(webContexts[role]!, base);
+        const webTiles = plant
+          ? plantTiles(webRaw, role === "premium" ? "extra-lock" : "missing-lock")
+          : webRaw;
+        tilesSeen += shellTiles.length;
+        const floor = ci ? 1 : 100;
+        if (shellTiles.length < floor || webTiles.length !== shellTiles.length) {
+          mirror.push(
+            `игры (${role}): плиток в оболочке ${shellTiles.length}, в браузере ${webTiles.length} ` +
+              `при ожидаемых минимум ${floor} — экран не собрался, и «расхождений 0» здесь ничего не значит`,
+          );
+          continue;
+        }
+        const a = shellTiles.map(tileSign);
+        const b = webTiles.map(tileSign);
+        for (let i = 0; i < a.length; i += 1) {
+          if (a[i] !== b[i]) {
+            mirror.push(
+              `игры (${role}): оболочка «${a[i]}», браузер «${b[i]}» — ` +
+                `браузер и оболочка обязаны говорить одно`,
+            );
+          }
+        }
+        if (role === "premium") {
+          premiumCrowns = shellTiles.filter((t) => t.mark === "premium-tier").length;
+          for (const [place, tiles] of [["приложение", shellTiles], ["браузер", webTiles]] as const) {
+            for (const t of tiles) {
+              if (t.locked || t.mark === "subscription") {
+                premiumFree.push(`Premium, ${place}: на плитке ${t.key} стоит замок — он платит именно за это`);
+              }
+            }
+          }
+        }
+      }
+      /**
+       * ПОЛ У ВТОРОГО УТВЕРЖДЕНИЯ. «У Premium замков 0» обязано быть
+       * доказано НЕПУСТЫМ экраном: если корон у него нет ни одной, знака
+       * на экране нет вовсе, и утверждение доказано отсутствием экрана.
+       */
+      if (premiumCrowns < 1) {
+        premiumFree.push(
+          `Premium: корон на плитках ${premiumCrowns} — «замков 0» доказано пустым экраном, а это не доказательство`,
+        );
+      }
+      problemsBySurface.set("ИГРЫ: браузер говорит то же, что оболочка", mirror);
+      problemsBySurface.set("ИГРЫ: у Premium замков нет нигде", premiumFree);
+      if (!plant) {
+        console.log(
+          `  игры: плиток просмотрено ${tilesSeen} (три роли × два места), корон у Premium ${premiumCrowns}`,
+        );
+      }
     }
   } finally {
     await browser.close();

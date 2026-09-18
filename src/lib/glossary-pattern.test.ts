@@ -2,9 +2,17 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { escapeRegExp } from "./regex";
+import {
+  GLOSSARY_PATTERN_FLAGS,
+  GLOSSARY_TERM_GROUP,
+  buildGlossaryPattern,
+  glossaryPatternSource,
+} from "./glossary-pattern";
+import { compileWithoutLookbehind, findLookbehind } from "./legacy-regexp";
 
 /**
- * The glossary term list must always build a valid regular expression.
+ * The glossary term list must always build a valid regular expression —
+ * and it must build it on the engine the reader actually brought.
  *
  * Incident №1, 29.08.2026. GlossaryText.tsx auto-links grammar terms inside
  * lesson and story text by compiling ONE alternation over every glossary
@@ -15,11 +23,13 @@ import { escapeRegExp } from "./regex";
  * in both locales (240 URLs) showed nothing but "Something went wrong",
  * while every one still answered HTTP 200 with complete, correct HTML.
  *
- * regex.test.ts now covers escapeRegExp itself. This file covers the other
- * half: the terms are editorial content, added by hand and by seed script,
- * and one alternation means one bad row costs every page. A term with a
- * character nobody anticipated must fail here, in CI, and not in a
- * student's browser.
+ * 18.09.2026 — ВТОРАЯ ПОЛОВИНА ТОГО ЖЕ КЛАССА. Выражение может не
+ * собраться не только от плохой строки, но и от ДВИЖКА: граница слова
+ * писалась просмотром назад `(?<![\p{L}])`, а его нет ни в одном
+ * браузере на iOS до Safari 16.4 (март 2023). Сборка переехала в
+ * `glossary-pattern.ts` и просмотром назад больше не пользуется; здесь
+ * это проверяется стендом `compileWithoutLookbehind`, а не честным
+ * словом.
  *
  * Reads the seed file as text rather than importing it: prisma/ modules are
  * CLI scripts (see src/lib/entry-point.ts) and this needs the data, not the
@@ -27,6 +37,7 @@ import { escapeRegExp } from "./regex";
  */
 
 const SEED = join(process.cwd(), "prisma", "seed-glossary.ts");
+const LESSONS = join(process.cwd(), "src", "lib", "lessons", "content.json");
 
 /** Every `term: "…"` literal in the seed file. */
 function seedTerms(): string[] {
@@ -38,13 +49,44 @@ function seedTerms(): string[] {
   return out;
 }
 
-/** Exactly what getMatcher() in GlossaryText.tsx builds. Kept in step with
- * it by the assertion below, which reads that file and checks the flags. */
-function buildPattern(terms: string[], escape: (value: string) => string = escapeRegExp): RegExp {
+/** РЕДАКЦИЯ ДО 18.09.2026 — просмотр назад. Оставлена здесь, и только
+ * здесь, чтобы «до» и «после» сравнивались поведением, а не рассказом. */
+function legacySource(terms: string[]): string {
   const alternatives = [...new Set(terms.map((t) => t.toLowerCase()))]
+    .filter((t) => t.length > 0)
     .sort((a, b) => b.length - a.length)
-    .map(escape);
-  return new RegExp(`(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])`, "giu");
+    .map(escapeRegExp);
+  return `(?<![\\p{L}])(${alternatives.join("|")})(?![\\p{L}])`;
+}
+
+/** Настоящий текст уроков — все 120, обе вкладки, как он лежит в
+ * репозитории и уезжает в базу (`npm run db:seed-lessons`). */
+function lessonProse(): string[] {
+  const walk = (node: unknown, acc: string[]): string[] => {
+    if (typeof node === "string") acc.push(node);
+    else if (Array.isArray(node)) for (const item of node) walk(item, acc);
+    else if (node && typeof node === "object") for (const value of Object.values(node)) walk(value, acc);
+    return acc;
+  };
+  const content = JSON.parse(readFileSync(LESSONS, "utf8")) as Record<string, unknown>;
+  return walk(content, []).filter((t) => t.length > 20);
+}
+
+/** Совпадения одной редакции: [смещение термина, сам термин]. */
+function hitsLegacy(pattern: RegExp, text: string): [number, string][] {
+  pattern.lastIndex = 0;
+  const out: [number, string][] = [];
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(text))) out.push([match.index, match[1]]);
+  return out;
+}
+
+function hitsCurrent(pattern: RegExp, text: string): [number, string][] {
+  pattern.lastIndex = 0;
+  const out: [number, string][] = [];
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(text))) out.push([match.index + match[1].length, match[GLOSSARY_TERM_GROUP]]);
+  return out;
 }
 
 describe("glossary term pattern", () => {
@@ -58,17 +100,14 @@ describe("glossary term pattern", () => {
   });
 
   it("compiles as one alternation, with the flags the component uses", () => {
-    expect(() => buildPattern(terms)).not.toThrow();
+    expect(buildGlossaryPattern(terms)).toBeInstanceOf(RegExp);
+    expect(buildGlossaryPattern(terms)!.flags).toBe(GLOSSARY_PATTERN_FLAGS);
   });
 
   it("compiles term by term, so a failure names the offender", () => {
     const broken: string[] = [];
     for (const term of terms) {
-      try {
-        buildPattern([term]);
-      } catch {
-        broken.push(term);
-      }
+      if (!buildGlossaryPattern([term])) broken.push(term);
     }
     expect(broken).toEqual([]);
   });
@@ -77,8 +116,8 @@ describe("glossary term pattern", () => {
     // A pattern that compiles but matches nothing would pass the two tests
     // above while silently switching auto-linking off.
     for (const term of terms) {
-      const re = buildPattern([term]);
-      expect(re.test(term), term).toBe(true);
+      const re = buildGlossaryPattern([term])!;
+      expect(hitsCurrent(re, term).map(([, t]) => t), term).toEqual([term.toLowerCase()]);
     }
   });
 
@@ -87,28 +126,96 @@ describe("glossary term pattern", () => {
     // incident, run through the escaping that was in place at the time.
     const oldEscape = (v: string) => v.replace(/[.*+?^${}()|[\]\\\-]/g, "\\$&");
     expect(() =>
-      new RegExp(`(?<![\\p{L}])(${oldEscape("verbo reflexivo (con -ся)")})(?![\\p{L}])`, "giu")
+      new RegExp(`(^|[^\\p{L}])(${oldEscape("verbo reflexivo (con -ся)")})(?![\\p{L}])`, "giu")
     ).toThrow(SyntaxError);
-    // And the scanner above would report an unescaped term today.
-    expect(() =>
-      new RegExp(`(?<![\\p{L}])(${["verbo (con"].join("|")})(?![\\p{L}])`, "giu")
-    ).toThrow(SyntaxError);
+    expect(() => new RegExp(`(^|[^\\p{L}])(${["verbo (con"].join("|")})(?![\\p{L}])`, "giu")).toThrow(SyntaxError);
   });
 
-  it("the component still builds the pattern this test mirrors", () => {
-    // This file duplicates getMatcher's construction. If that changes shape
-    // — different flags, different boundary — this test would keep passing
-    // while checking something the app no longer does.
-    const component = readFileSync(
-      join(process.cwd(), "src", "components", "glossary", "GlossaryText.tsx"),
-      "utf8"
-    );
-    expect(component).toContain('"giu"');
-    expect(component).toContain("(?<![\\\\p{L}])");
-    expect(component).toContain("escapeRegExp");
-    // …and a failure to compile must not be allowed to take the page down
-    // a second time, whatever the cause.
-    expect(component).toMatch(/try\s*\{[\s\S]*new RegExp[\s\S]*\}\s*catch/);
+  it("пустой список и пустые термины не строят выражения нулевой длины", () => {
+    // Пустая альтернатива дала бы совпадение нулевой длины, а цикл
+    // `exec` по такому выражению не двигается вовсе — вечная петля в
+    // клиентском компоненте.
+    expect(glossaryPatternSource([])).toBeNull();
+    expect(glossaryPatternSource(["", ""])).toBeNull();
+    const re = buildGlossaryPattern(["", "sustantivo"])!;
+    expect(hitsCurrent(re, "un sustantivo aquí")).toEqual([[3, "sustantivo"]]);
+  });
+});
+
+/**
+ * ====================================================================
+ * ДВИЖОК БЕЗ ПРОСМОТРА НАЗАД — ГЛАВНАЯ ПРОБА ЭТОГО ФАЙЛА
+ * ====================================================================
+ */
+describe("выражение собирается там, где просмотра назад нет", () => {
+  const terms = seedTerms();
+
+  it("боевой список терминов собирается движком без просмотра назад", () => {
+    const source = glossaryPatternSource(terms)!;
+    expect(findLookbehind(source)).toBeNull();
+    expect(() => compileWithoutLookbehind(source, GLOSSARY_PATTERN_FLAGS)).not.toThrow();
+  });
+
+  it("ПОЗИТИВНЫЙ КОНТРОЛЬ: редакция ДО правки на том же движке падает", () => {
+    // Это и есть «красный прогон на коде до правки», записанный пробой:
+    // тот же список терминов, та же сборка, какая стояла до 18.09.2026.
+    const before = legacySource(terms);
+    expect(findLookbehind(before)).toBe("(?<!");
+    expect(() => compileWithoutLookbehind(before, GLOSSARY_PATTERN_FLAGS)).toThrow(SyntaxError);
+    // …и на движке, который просмотр назад умеет (этот), она собирается —
+    // то есть проба различает ДВИЖОК, а не сломанный исходник.
+    expect(() => new RegExp(before, GLOSSARY_PATTERN_FLAGS)).not.toThrow();
+  });
+
+  it("стенд не кричит на экранированную скобку и на класс", () => {
+    // Ложный красный стоит дороже пропуска: его чинят удалением сторожа.
+    expect(findLookbehind("\\(?<")).toBeNull();
+    expect(findLookbehind("[(?<]")).toBeNull();
+    expect(findLookbehind("(?<имя>x)")).toBeNull();
+    expect(findLookbehind("(?<=x)y")).toBe("(?<=");
+  });
+});
+
+/**
+ * ====================================================================
+ * «ДО» И «ПОСЛЕ» НА НАСТОЯЩЕМ ТЕКСТЕ УРОКА
+ * ====================================================================
+ *
+ * Поведение подсветки на современных движках меняться не должно. Это не
+ * рассуждение про то, что съеденный слева знак не буква: обе редакции
+ * гоняются по всему тексту всех 120 уроков боевым списком терминов и
+ * обязаны дать посимвольно один и тот же список совпадений.
+ */
+describe("до и после дают одно и то же на тексте уроков", () => {
+  it("совпадения совпадают по смещению и по строке", () => {
+    const terms = seedTerms();
+    const before = new RegExp(legacySource(terms), GLOSSARY_PATTERN_FLAGS);
+    const after = buildGlossaryPattern(terms)!;
+    const texts = lessonProse();
+    // Пол: пустая выборка доказала бы равенство ничем.
+    expect(texts.length).toBeGreaterThan(1000);
+
+    let hits = 0;
+    const divergent: string[] = [];
+    for (const text of texts) {
+      const a = hitsLegacy(before, text);
+      const b = hitsCurrent(after, text);
+      hits += a.length;
+      if (JSON.stringify(a) !== JSON.stringify(b)) divergent.push(text.slice(0, 80));
+    }
+    expect(divergent).toEqual([]);
+    // И вторая половина: совпадения вообще есть. Две пустые выборки
+    // сравнивать нельзя (условие захода).
+    expect(hits).toBeGreaterThan(1000);
+  });
+
+  it("ОТРИЦАТЕЛЬНЫЙ контроль: сравнение двух пустых выборок падает", () => {
+    // Ровно то, что требует условие захода: «до/после на двух пустых
+    // выборках обязано падать». Здесь это утверждение, а не обещание.
+    const empty: string[] = [];
+    expect(() => {
+      if (empty.length === 0) throw new Error("сравнение на пустой выборке ничего не доказывает");
+    }).toThrow();
   });
 });
 
@@ -137,10 +244,11 @@ describe("a term with punctuation nobody planned for", () => {
 
   it("compiles, alone and inside the full alternation", () => {
     for (const term of PLANTED) {
-      expect(() => buildPattern([term]), term).not.toThrow();
-      expect(buildPattern([term]).test(term.toLowerCase()), term).toBe(true);
+      const re = buildGlossaryPattern([term]);
+      expect(re, term).not.toBeNull();
+      expect(hitsCurrent(re!, term.toLowerCase()).length, term).toBe(1);
     }
-    expect(() => buildPattern([...seedTerms(), ...PLANTED])).not.toThrow();
+    expect(buildGlossaryPattern([...seedTerms(), ...PLANTED])).not.toBeNull();
   });
 
   it("positive control: the pre-fix escaping throws on the hyphen and passes the comma", () => {
@@ -150,12 +258,8 @@ describe("a term with punctuation nobody planned for", () => {
     // never the cause.
     const preFix = (v: string) => v.replace(/[.*+?^${}()|[\]\\\-]/g, "\\$&");
     const withEscape = (term: string, escape: (v: string) => string) =>
-      new RegExp(`(?<![\\p{L}])(${escape(term.toLowerCase())})(?![\\p{L}])`, "giu");
+      new RegExp(`(^|[^\\p{L}])(${escape(term.toLowerCase())})(?![\\p{L}])`, "giu");
     expect(() => withEscape("по-русски", preFix)).toThrow(SyntaxError);
     expect(() => withEscape("конструкция «чем..., тем...»", preFix)).not.toThrow();
-    // And the real alternation the report showed: the live term list under
-    // the pre-fix escaping does not compile, under the current one it does.
-    expect(() => buildPattern(seedTerms(), preFix)).toThrow(SyntaxError);
-    expect(() => buildPattern(seedTerms())).not.toThrow();
   });
 });

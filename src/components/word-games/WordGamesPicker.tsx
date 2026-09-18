@@ -17,7 +17,6 @@ import {
   wordGameRequirement,
   type ViewerTier,
 } from "@/lib/access-marks";
-import { useIsNativeShell } from "@/lib/native-shell-client";
 
 export type PickerData = Record<
   WordGameType,
@@ -71,7 +70,6 @@ export default function WordGamesPicker({
   const [type, setType] = useState<WordGameType>("WORD_SEARCH");
   const [level, setLevel] = useState<FlashcardLevel>("A1");
   const { openPaywall } = usePaywall();
-  const nativeShell = useIsNativeShell();
   const tier: ViewerTier = isPremium ? "premium" : isSubscriber ? "standard" : "free";
 
   const { total, completed, curved, premiumOnly } = data[type][level];
@@ -109,12 +107,21 @@ export default function WordGamesPicker({
         testId="word-game-level-filter"
         label={dict.chooseLevelLabel}
         options={flashcardLevels.map((lvl) => {
-          const sign = nativeShell
-            ? accessSignFor("subscription", tier, {
-                nativeShell,
-                closed: tier === "free" && !wordGameLevelHasFreePuzzle(type, lvl),
-              })
-            : null;
+          /**
+           * `nativeShell: true` — ИМЯ ОПЦИИ, А НЕ МЕСТО (то же, что у
+           * `CategoryGrid` с 18.09.2026). Опция включает правило «корона
+           * это сорт, замок это состояние»; имя ей досталось от места,
+           * где правило появилось впервые.
+           *
+           * До 18.09.2026 здесь стояло `nativeShell ? … : null`, то есть в
+           * браузере полоса уровней игр не несла знака ВООБЩЕ, а в
+           * оболочке у гостя на C1 стоял 🔒 — одна и та же роль, два
+           * разных экрана.
+           */
+          const sign = accessSignFor("subscription", tier, {
+            nativeShell: true,
+            closed: tier === "free" && !wordGameLevelHasFreePuzzle(type, lvl),
+          });
           return {
             id: lvl,
             label: lvl,
@@ -194,7 +201,22 @@ export default function WordGamesPicker({
           // плитка открывается. Заперта плитка или нет, решает прежний
           // `accessMarkFor` — то есть поведение нажатия не меняется ни на
           // одной плитке.
-          const sign = accessSignFor(requirement, tier, { nativeShell });
+          /**
+           * БРАУЗЕР И ОБОЛОЧКА ГОВОРЯТ ОДНО И ТО ЖЕ — 18.09.2026, тем же
+           * решением владельца, каким это сделано у сетки тем словаря
+           * (долг 257). Здесь стояло `{ nativeShell }`, и разница была
+           * измерена отрисовкой по 12 экранам, суммой по всем пяти
+           * уровням обоих типов игр:
+           *
+           *   «доступ по коду» — в оболочке 580 замков, в браузере 0;
+           *   Premium          — в оболочке 580 корон,  в браузере 0;
+           *   бесплатный       — в оболочке 1972 замка, в браузере 1392.
+           *
+           * То есть платящий за Premium человек в браузере не видел
+           * границы премиального материала вовсе — ровно тот дефект,
+           * из-за которого правило вводилось в 7.196.
+           */
+          const sign = accessSignFor(requirement, tier, { nativeShell: true });
           const isLocked = accessMarkFor(requirement, tier) !== null;
           return (
             <Link
