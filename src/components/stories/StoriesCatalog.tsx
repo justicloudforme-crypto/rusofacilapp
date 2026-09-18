@@ -267,10 +267,15 @@ export default function StoriesCatalog({
                         знак, потому что `nativeShell: false` отдаёт старый
                         `accessMarkFor`. */}
                     {(() => {
-                      const sign = accessSignFor(story.requires, tier, {
-                        nativeShell,
-                        closed: story.lockReason !== null,
-                      });
+                      // 7.212: рассказ — единица целиком, «частично
+                      // открытым» он не бывает. Прежняя строка
+                      // `closed: story.lockReason !== null` была тем же
+                      // ответом другими словами: равенство
+                      // `meetsRequirement(storyRequirement(...), tier)` и
+                      // `getStoryAccess(...).entitled` заперто пробой
+                      // `access-marks.test.ts` по всем восьми сочетаниям
+                      // колонок.
+                      const sign = accessSignFor(story.requires, tier, { nativeShell });
                       if (!sign) return null;
                       return (
                         <AccessMark

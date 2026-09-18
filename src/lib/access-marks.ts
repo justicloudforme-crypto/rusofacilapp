@@ -270,6 +270,86 @@ export function sortSign(requirement: AccessRequirement): AccessSign | null {
   return requirement === "premium-tier" ? { mark: "premium-tier", labelKey: "premiumTierBadge" } : null;
 }
 
+/**
+ * ====================================================================
+ * ОДНО ПРАВИЛО ЗАКРЫТОСТИ НА ВЕСЬ ПРОДУКТ — 7.212, решение владельца
+ * (вариант А).
+ * ====================================================================
+ *
+ * ЧТО БЫЛО. Закрытость решали ТРИ МЕСТА, и каждое по-своему:
+ *
+ *   1. сетка тем словаря (`CategoryGrid.tsx`) — «не отдано ни одной
+ *      карточки», считала сама и присылала сюда готовый вердикт
+ *      `closed: allLocked`;
+ *   2. плитки пазлов игр (`WordGamesPicker.tsx`) — вердикта не
+ *      присылали вовсе, то есть закрытость равнялась общему правилу
+ *      доступа `!meetsRequirement`;
+ *   3. полоса уровней игр (там же) — третий вердикт своей строкой
+ *      `tier === "free" && !wordGameLevelHasFreePuzzle(...)`.
+ *
+ * ПОЧЕМУ ОБЩИМ СТАЛО ПРАВИЛО СЕТКИ ТЕМ, А НЕ ПРАВИЛО ПЛИТОК (довод
+ * владельца, записанный словами, потому что через полгода он и будет
+ * опорой): замок на теме, где человеку открыты десять карточек, говорит
+ * «сюда нельзя» там, где можно, — это обман. Обратный выбор такой
+ * ошибки не создаёт: у ОТДЕЛЬНОГО пазла состояния «частично открыт» не
+ * бывает, и оба правила дают на нём один и тот же ответ. Цена ошибочного
+ * выбора названа числом в 7.211: общее правило доступа поставило бы
+ * гостю **138 замков вместо 60**, то есть **78 плиток из 138 (56,5 %)**
+ * несли бы замок там, где открыто десять карточек темы.
+ *
+ * ПРАВИЛО ОДНОЙ СТРОКОЙ: замок стоит тогда и только тогда, когда у ЭТОЙ
+ * РОЛИ в ЭТОМ ОБЪЕКТЕ не открыто НИ ОДНОГО элемента. Корона от замка не
+ * зависит: она — сорт материала и считается отдельно (`sortSign`).
+ *
+ * ПОВЕРХНОСТЬ ПРИСЫЛАЕТ ФАКТЫ, А НЕ ВЕРДИКТ. Опции `closed` больше нет
+ * ни у одного вызова: поверхность описывает, ЧЕМ она является
+ * (`wholeUnit()` — единица целиком, `trialSet()` — набор, внутри
+ * которого режет ещё и бесплатная проба), и сколько элементов проба ей
+ * отдала. Вердикт выносит `isClosedFor` — здесь и только здесь. За этим
+ * следит `npm run check:access-signs:static`.
+ */
+export type Openness =
+  /**
+   * Единица, у которой нет состояния «частично открыта»: пазл, рассказ,
+   * урок, экзамен, видео. Открыта ровно тогда, когда хватает тарифа.
+   */
+  | { kind: "whole" }
+  /**
+   * Набор, внутри которого сверх требования тарифа режет ещё и
+   * бесплатная проба: тема словаря (`FREE_TRIAL_LIMITS.flashcards` штук
+   * НА ТЕМУ) и уровень игр (первые рунги каждого типа).
+   *
+   * `known` — приехала ли перепись вообще. Пока не приехала, закрытости
+   * не утверждаем: «мы не знаем» и «ничего нет» — разные вещи, и это тот
+   * же довод, по которому плитка печатает заглушку вместо «0 слов».
+   * `openToTrial` — сколько элементов набора отдано БЕСПЛАТНОЙ ПРОБЕ.
+   */
+  | { kind: "set"; known: boolean; openToTrial: number };
+
+/** Единица целиком — открыта или нет, середины нет. */
+export function wholeUnit(): Openness {
+  return { kind: "whole" };
+}
+
+/** Набор с бесплатной пробой: сколько элементов она отдала. */
+export function trialSet(known: boolean, openToTrial: number): Openness {
+  return { kind: "set", known, openToTrial };
+}
+
+/**
+ * ЕДИНСТВЕННОЕ МЕСТО, ГДЕ РЕШАЕТСЯ ЗАКРЫТОСТЬ.
+ *
+ * Хватает тарифа — открыто всё, и замка нет никогда (в том числе у
+ * Premium: он платит именно за это). Не хватает — открыто ровно столько,
+ * сколько отдала бесплатная проба, и замок стоит тогда, когда она не
+ * отдала ничего.
+ */
+export function isClosedFor(requirement: AccessRequirement, tier: ViewerTier, openness: Openness): boolean {
+  if (meetsRequirement(requirement, tier)) return false;
+  if (openness.kind === "whole") return true;
+  return openness.known && openness.openToTrial === 0;
+}
+
 export function accessSignFor(
   requirement: AccessRequirement,
   tier: ViewerTier,
@@ -277,17 +357,14 @@ export function accessSignFor(
     /** Внутри приложения знак означает сорт; в вебе — прежнее поведение. */
     nativeShell: boolean;
     /**
-     * Закрыт ли материал на самом деле, если поверхность знает это лучше
-     * правила. Словарь знает: сверх требования уровня там режет ещё и
-     * бесплатная проба (`FREE_TRIAL_LIMITS.flashcards` штук НА ТЕМУ), и
-     * тема, в которой посетителю не отдано ни одной карточки, закрыта, хотя
-     * `meetsRequirement` про неё говорит «хватает». Умолчание — само
-     * правило.
+     * ЧЕМ ЯВЛЯЕТСЯ ОБЪЕКТ, а не «закрыт ли он» — см. `Openness` выше.
+     * Умолчание — единица целиком: так ведёт себя всё, у чего нет
+     * бесплатной пробы внутри.
      */
-    closed?: boolean;
+    openness?: Openness;
   },
 ): AccessSign | null {
-  const closed = options.closed ?? !meetsRequirement(requirement, tier);
+  const closed = isClosedFor(requirement, tier, options.openness ?? wholeUnit());
   if (!options.nativeShell) {
     const legacy = accessMarkFor(requirement, tier);
     if (!legacy) return null;
@@ -344,8 +421,25 @@ export function levelRequirement(family: LevelFamily, level: string): AccessRequ
  * через ту же функцию, что решает на самой странице пазла.
  */
 export function wordGameLevelHasFreePuzzle(type: string, level: string): boolean {
+  return wordGamePuzzlesOpenToTrial(type, level) > 0;
+}
+
+/**
+ * СКОЛЬКО пазлов уровня отдано бесплатной пробе — факт, который полоса
+ * уровней игр присылает общему правилу (`trialSet`).
+ *
+ * Число, а не «да/нет», по той же причине, по какой сетка тем словаря
+ * присылает число открытых карточек: правило одно на обе поверхности, и
+ * оно сравнивает с нулём САМО (`isClosedFor`). Поверхность, отвечающая
+ * «да/нет», отвечала бы на вопрос правила вместо него.
+ *
+ * Окно 1..10 то же, что и было: дальше десятого рунга бесплатных не
+ * бывает ни у одного типа (`isFreeWordGamePuzzle`).
+ */
+export function wordGamePuzzlesOpenToTrial(type: string, level: string): number {
+  let open = 0;
   for (let sequence = 1; sequence <= 10; sequence += 1) {
-    if (isFreeWordGamePuzzle({ type, level, sequence })) return true;
+    if (isFreeWordGamePuzzle({ type, level, sequence })) open += 1;
   }
-  return false;
+  return open;
 }

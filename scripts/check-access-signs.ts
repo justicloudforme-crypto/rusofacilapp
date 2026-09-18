@@ -52,12 +52,16 @@ import {
   accessMarkFor,
   accessSignFor,
   levelRequirement,
+  trialSet,
+  wordGamePuzzlesOpenToTrial,
   meetsRequirement,
   sortSign,
   type AccessRequirement,
   type AccessSign,
   type ViewerTier,
 } from "../src/lib/access-marks";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, sep } from "node:path";
 import { isEntryPoint } from "../src/lib/entry-point";
 
 const TOKEN = "RFNativeShell";
@@ -224,8 +228,10 @@ const SURFACES: Surface[] = [
             nativeShell: true,
             // C1 у игр премиальным сортом НЕ является: 344 пазла из 482
             // открывает обычная подписка. Закрыт он бесплатной пробе
-            // целиком — это и печатается.
-            closed: tier === "free" && node.key === "C1",
+            // целиком — это и печатается. 7.212: сторож присылает тот же
+            // ФАКТ, что и поверхность, — сколько рунгов отдала проба, —
+            // и вердикт выносит то же самое общее правило.
+            openness: trialSet(true, wordGamePuzzlesOpenToTrial("WORD_SEARCH", node.key)),
           })
         : null,
     minNodes: 5,
@@ -384,7 +390,253 @@ async function makeSession(base: string, plan: "e2e-test" | "lifetime"): Promise
   });
 }
 
+
+/**
+ * ====================================================================
+ * ПЯТОЕ НАПРАВЛЕНИЕ — ОДИН ИСТОЧНИК ЗАКРЫТОСТИ (7.212, решение
+ * владельца, вариант А). Гоняется БЕЗ браузера: `--static`.
+ * ====================================================================
+ *
+ * ЗАЧЕМ ОТДЕЛЬНОЕ НАПРАВЛЕНИЕ, КОГДА ЕСТЬ ЧЕТЫРЕ ЖИВЫХ. Живые судят
+ * ЭКРАН: что нарисовано у роли на адресе. Экран не отвечает на вопрос,
+ * ПОЧЕМУ там этот знак, — а до 7.212 закрытость решали три места, и на
+ * экранах это расхождение было НЕВИДИМО ровно потому, что каждое из трёх
+ * правил было по-своему право. Увидеть можно было только в исходнике:
+ * три разных выражения на один вопрос. Поэтому направление судит текст.
+ *
+ * ПРАВИЛО, КОТОРОЕ ОНО ДЕРЖИТ. Закрытость выносит РОВНО ОДНА функция —
+ * `isClosedFor` в `src/lib/access-marks.ts`. Поверхность присылает ФАКТ
+ * (`wholeUnit()` или `trialSet(known, openToTrial)`) и не имеет права
+ * прислать вердикт: опции `closed` у правила больше нет вовсе, а
+ * выражение с условием на месте факта — красный.
+ *
+ *   npx tsx scripts/check-access-signs.ts --static
+ *   npx tsx scripts/check-access-signs.ts --static --plant
+ */
+const RULE_FILE = "src/lib/access-marks.ts";
+/** Тело правила — строка, которая обязана встречаться РОВНО ОДИН раз. */
+const RULE_BODY = "openness.openToTrial === 0";
+/**
+ * Поверхности, которым разрешено решать САМИМ, но НЕ про знак: `isLocked`
+ * там решает, что делает НАЖАТИЕ (перейти или открыть окно), а не какой
+ * знак рисовать. Список закрытый и с числом: третья такая строка —
+ * красный, и разбираться с ней придётся руками.
+ */
+const TAP_BEHAVIOUR_ALLOWED = [
+  "src/components/word-games/WordGamesPicker.tsx",
+  "src/components/stories/StoriesCatalog.tsx",
+];
+const TAP_BEHAVIOUR_COUNT = 2;
+
+/** Пол переписи: меньше этого — прибор ослеп, а не доволен. */
+const MIN_CALL_SITES = 6;
+
+interface SourceFile {
+  rel: string;
+  text: string;
+}
+
+function listSources(dir: string, out: SourceFile[] = []): SourceFile[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === "generated" || entry.name === "node_modules") continue;
+      listSources(full, out);
+      continue;
+    }
+    if (!/\.(ts|tsx)$/.test(entry.name)) continue;
+    out.push({ rel: full.split(sep).join("/"), text: readFileSync(full, "utf8") });
+  }
+  return out;
+}
+
+/** Текст вызова `accessSignFor(` от имени до закрывающей скобки объекта опций. */
+function callSites(text: string): string[] {
+  const out: string[] = [];
+  let at = text.indexOf("accessSignFor(");
+  while (at !== -1) {
+    let depth = 0;
+    let i = at + "accessSignFor".length;
+    for (; i < text.length; i += 1) {
+      if (text[i] === "(") depth += 1;
+      else if (text[i] === ")") {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+    out.push(text.slice(at, i + 1));
+    at = text.indexOf("accessSignFor(", i + 1);
+  }
+  return out;
+}
+
+/** Сам разбор — отдельной функцией, чтобы подсадка судила ТУ ЖЕ логику. */
+export function sourceProblems(files: SourceFile[]): { problems: string[]; calls: number } {
+  const problems: string[] = [];
+  let calls = 0;
+  let ruleBodies = 0;
+  let ruleDefinitions = 0;
+
+  if (files.length === 0) {
+    problems.push("файлов на разбор не пришло ни одного — «нарушений 0» доказано пустой выборкой");
+    return { problems, calls };
+  }
+
+  for (const file of files) {
+    // Комментарии вырезаются: в них записано ПРОШЛОЕ («здесь стояло
+    // `closed: allLocked`»), и судить его — значит краснеть на истории.
+    const code = file.text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    if (code.includes(RULE_BODY)) ruleBodies += code.split(RULE_BODY).length - 1;
+    if (/export function isClosedFor\(/.test(code)) ruleDefinitions += 1;
+
+    for (const call of callSites(code)) {
+      calls += 1;
+      if (/\bclosed\s*:/.test(call)) {
+        problems.push(`${file.rel}: поверхность присылает ВЕРДИКТ \`closed:\` — закрытость решает она, а не правило`);
+      }
+      const openness = /openness\s*:\s*([\s\S]*?)(?:,\s*\}|\s*\})/.exec(call)?.[1]?.trim();
+      if (openness !== undefined && !/^(wholeUnit\(|trialSet\()/.test(openness)) {
+        problems.push(
+          `${file.rel}: на месте факта о наборе стоит выражение «${openness.slice(0, 60)}» — ` +
+            `факт присылают только \`wholeUnit()\` и \`trialSet()\``,
+        );
+      }
+    }
+
+    // Локальный вердикт о закрытости — только у тех, кто ПЕЧАТАЕТ замок.
+    // Не «у всех, кто зовёт правило»: слово «locked» живёт и там, где оно
+    // не про доступ вовсе (значки кабинета — `const locked =
+    // withProgress.filter(...)`), и такой прибор краснел бы на чужом.
+    if (code.includes("data-access-locked") || /sign\??\.locked/.test(code)) {
+      for (const m of code.matchAll(/const\s+(\w*[Ll]ocked\w*)\s*=\s*([^;\n]+)/g)) {
+        const [, name, init] = m;
+        if (name === "isLocked") {
+          if (!TAP_BEHAVIOUR_ALLOWED.includes(file.rel)) {
+            problems.push(
+              `${file.rel}: \`isLocked\` вне закрытого списка из ${TAP_BEHAVIOUR_COUNT} поверхностей — ` +
+                `это либо поведение нажатия (тогда впишите файл в список с причиной), либо второй вердикт о закрытости`,
+            );
+          }
+          continue;
+        }
+        if (/(===|!==|&&|\|\||[<>])/.test(init)) {
+          problems.push(
+            `${file.rel}: поверхность считает закрытость сама — \`const ${name} = ${init.trim().slice(0, 60)}\``,
+          );
+        }
+      }
+    }
+  }
+
+  if (ruleDefinitions !== 1) {
+    problems.push(`\`isClosedFor\` объявлена ${ruleDefinitions} раз(а), а правило обязано быть одно`);
+  }
+  if (ruleBodies !== 1) {
+    problems.push(`тело правила «${RULE_BODY}» встречается ${ruleBodies} раз(а) — правило размножилось`);
+  }
+  if (calls < MIN_CALL_SITES) {
+    problems.push(`вызовов \`accessSignFor\` найдено ${calls} при поле ${MIN_CALL_SITES} — прибор смотрит не туда`);
+  }
+  return { problems, calls };
+}
+
+function staticDirection(plant: boolean): number {
+  const files = [...listSources("src"), ...listSources("scripts")].filter(
+    (f) =>
+      !/\.test\.tsx?$/.test(f.rel) &&
+      // Сам сторож из выборки исключён намеренно: подсадки ниже держат в
+      // тексте ИМЕННО те строки, которые он обязан ловить, и судить себя
+      // он краснел бы всегда. Тот же довод, по которому
+      // `check-native-shell-render.mjs` читает токен текстом, ничего из
+      // проверяемого не исполняя.
+      f.rel !== "scripts/check-access-signs.ts",
+  );
+  const rule = files.find((f) => f.rel === RULE_FILE);
+  if (!rule) {
+    console.error(`не найден ${RULE_FILE} — судить нечего`);
+    return 1;
+  }
+
+  if (plant) {
+    /** Подсадки в ОБЕ стороны: и вернувшийся вердикт, и размножившееся правило. */
+    const planted: Array<[string, SourceFile[]]> = [
+      [
+        "поверхность снова присылает вердикт `closed:`",
+        [...files, { rel: "src/components/__planted__/Tile.tsx", text: 'accessSignFor(req, tier, { nativeShell: true, closed: allLocked });' }],
+      ],
+      [
+        "на месте факта стоит условие, а не факт",
+        [
+          ...files,
+          {
+            rel: "src/components/__planted__/Strip.tsx",
+            text: 'accessSignFor(req, tier, { nativeShell: true, openness: tier === "free" ? trialSet(true, 0) : wholeUnit() });',
+          },
+        ],
+      ],
+      [
+        "правило размножилось: тело закрытости во втором файле",
+        [...files, { rel: "src/lib/__planted__/copy-of-rule.ts", text: `export function closedHere(o) { return o.known && ${RULE_BODY}; }` }],
+      ],
+      [
+        "поверхность завела свой вердикт о закрытости",
+        [
+          ...files,
+          {
+            rel: "src/components/__planted__/Grid.tsx",
+            text:
+              "const allLocked = bankHere > 0 && openHereInBank === 0;\n" +
+              'accessSignFor(req, tier, { nativeShell: true });\n<span data-access-locked="true" />',
+          },
+        ],
+      ],
+      [
+        "`isLocked` завелась на третьей поверхности",
+        [
+          ...files,
+          {
+            rel: "src/components/__planted__/Card.tsx",
+            text:
+              "const isLocked = accessMarkFor(req, tier) !== null;\n" +
+              'accessSignFor(req, tier, { nativeShell: true });\n<span data-access-locked="true" />',
+          },
+        ],
+      ],
+      ["правило потеряли целиком", files.filter((f) => f.rel !== RULE_FILE)],
+      ["выборка пуста", []],
+    ];
+    const results = planted.map(([name, set]) => [name, sourceProblems(set).problems.length > 0] as const);
+    // ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: настоящий исходник обязан быть чистым,
+    // иначе «подсадка ловится» доказывалось бы прибором, который красен
+    // всегда.
+    results.push(["отрицательный контроль: настоящий исходник чист", sourceProblems(files).problems.length === 0]);
+    for (const [name, ok] of results) console.log(`  ${ok ? "поймано" : "ПРОПУЩЕНО"} — ${name}`);
+    const ok = results.every(([, r]) => r);
+    console.log(
+      ok
+        ? `check:access-signs --static --plant — подсадок ${results.length - 1} из ${results.length - 1}, отрицательный контроль 1 из 1`
+        : "check:access-signs --static --plant — FAILED",
+    );
+    return ok ? 0 : 1;
+  }
+
+  const { problems, calls } = sourceProblems(files);
+  if (problems.length) {
+    console.error("ЗАКРЫТОСТЬ РЕШАЕТСЯ НЕ В ОДНОМ МЕСТЕ:");
+    for (const p of problems) console.error(`  ${p}`);
+    return 1;
+  }
+  console.log(
+    `check:access-signs --static — файлов ${files.length}, вызовов правила ${calls}, ` +
+      `поверхностей с собственным вердиктом 0; закрытость решает одна \`isClosedFor\`.`,
+  );
+  return 0;
+}
+
 export async function main(): Promise<number> {
+  // Пятое направление живёт без браузера и без сервера — поэтому оно
+  // отвечает РАНЬШЕ требования `--base`.
+  if (process.argv.includes("--static")) return staticDirection(process.argv.includes("--plant"));
   const baseArg = process.argv.find((a) => a.startsWith("--base="));
   if (!baseArg) {
     console.error("нужен --base=http://… — этой проверке нечего открывать без сервера");
