@@ -135,7 +135,11 @@ jobs:
 
       - name: Снимки и отчёт прогона
         if: always()
-        uses: actions/upload-artifact@v4
+        # Долг 252, вторая половина. Именно это действие GitHub
+        # принудительно перевёл на Node.js 24 и про него написал
+        # аннотацию; во всех остальных местах уже `@v5`. Это было
+        # последнее `@v4` во всём каталоге.
+        uses: actions/upload-artifact@v5
         with:
           name: prod-smoke-${{ github.run_id }}
           path: smoke-artifacts
