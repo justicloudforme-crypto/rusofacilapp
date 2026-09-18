@@ -5,7 +5,7 @@
  * every term that cannot be compiled.
  *
  * Why this exists next to src/lib/glossary-pattern.test.ts. That test reads
- * prisma/seed-glossary.ts, which is the terms we MEANT to have. The rows a
+ * prisma/glossary-terms-data.ts, which is the terms we MEANT to have. The rows a
  * student's browser compiles are the ones in Turso, and they are editable
  * from the admin screen without touching the seed file. Incident №1
  * (29.08.2026) was caused by exactly that gap: nothing in the repository

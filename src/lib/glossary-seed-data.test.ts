@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 /**
  * Guard against the glossary data drifting back out of shape.
  *
- * This reads prisma/seed-glossary.ts as TEXT rather than importing it: that
+ * This reads prisma/glossary-terms-data.ts as TEXT rather than importing it: that
  * module runs its own main() against the database on import, and the seed
  * file — not the DB — is the source of truth these rules protect. Production
  * is kept in sync with it (`npm run db:seed-glossary -- --dry-run` reports
@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
  * of errors this file deliberately does NOT try to catch.
  */
 
-const SEED_PATH = path.resolve(__dirname, "../../prisma/seed-glossary.ts");
+const SEED_PATH = path.resolve(__dirname, "../../prisma/glossary-terms-data.ts");
 const source = readFileSync(SEED_PATH, "utf8");
 
 interface Entry {

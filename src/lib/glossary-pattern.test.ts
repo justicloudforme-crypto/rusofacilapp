@@ -36,7 +36,7 @@ import { compileWithoutLookbehind, findLookbehind } from "./legacy-regexp";
  * script.
  */
 
-const SEED = join(process.cwd(), "prisma", "seed-glossary.ts");
+const SEED = join(process.cwd(), "prisma", "glossary-terms-data.ts");
 const LESSONS = join(process.cwd(), "src", "lib", "lessons", "content.json");
 
 /** Every `term: "…"` literal in the seed file. */
