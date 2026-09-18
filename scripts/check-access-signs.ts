@@ -52,6 +52,7 @@ import {
   accessMarkFor,
   accessSignFor,
   levelRequirement,
+  meetsRequirement,
   sortSign,
   type AccessRequirement,
   type AccessSign,
@@ -115,9 +116,56 @@ interface Surface {
    * `accessMarkFor`.
    */
   sameInWeb?: boolean;
+  /**
+   * ЗАКРЫТОСТЬ ЗНАЕТ ПОВЕРХНОСТЬ, А НЕ ПРАВИЛО.
+   *
+   * Сетка тем словаря считает `closed` сама, по переписи банка: тема,
+   * в которой посетителю не отдано НИ ОДНОЙ карточки, закрыта, а тема,
+   * где отдано хоть что-то, — нет (см. `accessSignFor`, опция `closed`).
+   * Сторож эту перепись повторить не может и не должен — он судит
+   * экран, а не второй экземпляр правила.
+   *
+   * Поэтому у таких поверхностей замок сверяется НЕ на равенство, а
+   * односторонним утверждением, которое от данных не зависит вовсе:
+   * **замка не может быть там, где тарифа ХВАТАЕТ**. Это ровно то
+   * утверждение, ради которого проверка замка и заводилась: платящий за
+   * Premium не должен видеть замок на том, за что заплатил.
+   *
+   * Цена отказа от равенства названа числом: на базе CI у 21 темы из 23
+   * карточек уровня C1 нет вовсе, `closed` у них ложно, и равенство
+   * покраснело бы на пустом банке, а не на дефекте. Поймано CI, а не
+   * рассуждением.
+   */
+  surfaceOwnsClosed?: boolean;
 }
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
+
+/**
+ * Расходится ли ЗАМОК на узле с тем, что требуется. `null` — не
+ * расходится.
+ *
+ * Две формы утверждения, и выбор между ними — не поблажка, а вопрос о
+ * том, кто знает закрытость (см. `surfaceOwnsClosed`):
+ *
+ *   равенство       — правило знает закрытость целиком (полосы уровней);
+ *   одностороннее   — закрытость считает поверхность, и тогда судится
+ *                     только то, что от данных не зависит: замка не может
+ *                     быть там, где тарифа хватает.
+ */
+function lockMismatch(surface: Surface, onScreen: boolean, want: Expected, tier: ViewerTier): string | null {
+  if (surface.surfaceOwnsClosed) {
+    if (!onScreen) return null;
+    const requirement = want?.mark === "premium-tier" ? "premium-tier" : want?.mark === "subscription" ? "subscription" : "free";
+    return meetsRequirement(requirement, tier)
+      ? "на экране замок, хотя тарифа хватает — платящий не должен видеть замок на том, за что заплатил"
+      : null;
+  }
+  if ((want?.locked ?? false) === onScreen) return null;
+  return `на экране ${onScreen ? "замок" : "замка нет"}, правило требует ${want?.locked ? "замок" : "замка нет"}`;
+}
+
+
 
 const SURFACES: Surface[] = [
   {
@@ -135,6 +183,8 @@ const SURFACES: Surface[] = [
     selector: "[data-testid=category-tile]",
     expect: (_node, tier) => accessSignFor(levelRequirement("flashcards", "C1"), tier, { nativeShell: true }),
     minNodes: 23,
+    // Закрытость здесь считает плитка, по переписи банка — см. выше.
+    surfaceOwnsClosed: true,
     // Долг 257: та же корона и в браузере, у той же роли.
     sameInWeb: true,
   },
@@ -410,12 +460,8 @@ export async function main(): Promise<number> {
                 `правило требует ${want?.mark ?? "знака нет"}`,
             );
           }
-          if ((want?.locked ?? false) !== node.locked) {
-            problems.push(
-              `${surface.name} (${role}, «${node.key}»): на экране ${node.locked ? "замок" : "замка нет"}, ` +
-                `правило требует ${want?.locked ? "замок" : "замка нет"}`,
-            );
-          }
+          const lockProblem = lockMismatch(surface, node.locked, want, TIER_OF[role]);
+          if (lockProblem) problems.push(`${surface.name} (${role}, «${node.key}»): ${lockProblem}`);
           if (node.uppercase) problems.push(`${surface.name} (${role}, «${node.key}»): на знаке стоит uppercase`);
         }
       }
@@ -455,11 +501,9 @@ export async function main(): Promise<number> {
                     `правило требует ${want?.mark ?? "знака нет"} — браузер и оболочка обязаны говорить одно (долг 257)`,
                 );
               }
-              if ((want?.locked ?? false) !== node.locked) {
-                webSame.push(
-                  `${surface.name} (веб, ${role}, «${node.key}»): на экране ${node.locked ? "замок" : "замка нет"}, ` +
-                    `правило требует ${want?.locked ? "замок" : "замка нет"} — браузер и оболочка обязаны говорить одно`,
-                );
+              const lockProblem = lockMismatch(surface, node.locked, want, TIER_OF[role]);
+              if (lockProblem) {
+                webSame.push(`${surface.name} (веб, ${role}, «${node.key}»): ${lockProblem}`);
               }
             }
           }
