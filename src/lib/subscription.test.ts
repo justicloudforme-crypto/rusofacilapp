@@ -184,15 +184,28 @@ describe("extendOrGrantSubscription and the row it writes to", () => {
     const update = vi.fn<Write>(async () => ({}));
     const create = vi.fn<Write>(async () => ({}));
     const findMany = vi.fn(async () => existing);
+    // Журнал платежей (долги 84 и 85): выдача пишет сюда строку на каждый
+    // платёж, у которого есть PaymentIntent.
+    type PaymentWrite = (args: {
+      where: { stripePaymentIntentId: string };
+      update: Record<string, unknown>;
+      create: Record<string, unknown>;
+    }) => Promise<unknown>;
+    const paymentUpsert = vi.fn<PaymentWrite>(async () => ({}));
     vi.resetModules();
-    vi.doMock("./db", () => ({ db: { subscription: { findMany, update, create } } }));
+    vi.doMock("./db", () => ({
+      db: {
+        subscription: { findMany, update, create },
+        subscriptionPayment: { upsert: paymentUpsert },
+      },
+    }));
     // The 30s TtlCache in front of the row read is a globalThis singleton,
     // so a fresh module registry is not enough on its own — a second case
     // would read the first case's rows. Give each run its own user id
     // instead of trying to reach into the cache.
     const mod = await import("./subscription");
     await mod.extendOrGrantSubscription(`user-${Math.random()}`, 30, plan, paymentIntentId);
-    return { update, create };
+    return { update, create, paymentUpsert };
   }
 
   const local = (plan: string, overrides: Partial<StoredRow> = {}): StoredRow => ({
@@ -310,6 +323,21 @@ describe("extendOrGrantSubscription and the row it writes to", () => {
     const { update } = await run([local("manual")], "referral");
     expect(update.mock.calls[0]?.[0]?.data).not.toHaveProperty("stripePaymentIntentId");
   });
+
+  it("выдача за платёж пишет строку журнала и называет нашу строку доступа", async () => {
+    const { create, paymentUpsert } = await run([], "lifetime", "pi_new");
+    expect(create).toHaveBeenCalled();
+    expect(paymentUpsert).toHaveBeenCalledTimes(1);
+    const args = paymentUpsert.mock.calls[0]![0];
+    expect(args.where).toEqual({ stripePaymentIntentId: "pi_new" });
+    expect(args.create.stripePaymentIntentId).toBe("pi_new");
+    expect(args.create.plan).toBe("lifetime");
+  });
+
+  it("выдача БЕЗ денег (админская, реферальная) журнала не трогает", async () => {
+    const { paymentUpsert } = await run([], "manual");
+    expect(paymentUpsert).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -326,9 +354,13 @@ describe("extendOrGrantSubscription and the row it writes to", () => {
 describe("revokeAccessForPayment", () => {
   type Row = { id: string; userId: string };
 
+  /** Строка журнала платежей, если она для этого платежа есть. */
+  type PaidRow = { subscriptionId: string; stripeSubscriptionId: string | null };
+
   async function revoke(
     reference: { paymentIntentId?: string | null; stripeSubscriptionId?: string | null },
-    matched: Row[] = []
+    matched: Row[] = [],
+    journal: PaidRow | null = null
   ) {
     type Where = { where?: Record<string, unknown>; data?: Record<string, unknown>; select?: unknown };
     const findMany = vi.fn<(args: Where) => Promise<Row[]>>(async () => matched);
@@ -336,15 +368,21 @@ describe("revokeAccessForPayment", () => {
       count: matched.length,
     }));
     const del = vi.fn(async () => undefined);
+    const paymentFindUnique = vi.fn<(args: Where) => Promise<PaidRow | null>>(async () => journal);
     vi.resetModules();
-    vi.doMock("./db", () => ({ db: { subscription: { findMany, updateMany } } }));
+    vi.doMock("./db", () => ({
+      db: {
+        subscription: { findMany, updateMany },
+        subscriptionPayment: { findUnique: paymentFindUnique },
+      },
+    }));
     vi.doMock("./ttl-cache", async () => {
       const actual = await vi.importActual<typeof import("./ttl-cache")>("./ttl-cache");
       return { ...actual };
     });
     const mod = await import("./subscription");
     const result = await mod.revokeAccessForPayment(reference);
-    return { result, findMany, updateMany, del };
+    return { result, findMany, updateMany, del, paymentFindUnique };
   }
 
   it("revokes the row the refunded payment paid for", async () => {
@@ -408,6 +446,65 @@ describe("revokeAccessForPayment", () => {
       { id: "b", userId: "user_5" },
     ]);
     expect(result).toEqual({ revoked: 2, userIds: ["user_5"] });
+  });
+
+  // -------------------------------------------------------------------------
+  // ДОЛГИ 84 И 85 — ВТОРАЯ ДОРОГА К СТРОКЕ ДОСТУПА ЧЕРЕЗ ЖУРНАЛ ПЛАТЕЖЕЙ.
+  //
+  // До 18.09.2026 ключей было ровно два: колонка `stripePaymentIntentId`
+  // самой строки (её пишут только две выдачи за РАЗОВЫЙ платёж) и
+  // `stripeSubscriptionId`, которого у события возврата нет. Поэтому
+  // возврат месячной подписки (долг 84) и возврат более раннего из двух
+  // платежей (долг 85) не находили ни строки.
+  // -------------------------------------------------------------------------
+
+  it("возврат ПОВТОРЯЮЩЕГОСЯ счёта находит строку через журнал платежей (долг 84)", async () => {
+    const { findMany, result } = await revoke(
+      { paymentIntentId: "pi_invoice" },
+      [{ id: "row_monthly", userId: "user_84" }],
+      { subscriptionId: "row_monthly", stripeSubscriptionId: "sub_84" },
+    );
+    expect(findMany.mock.calls[0]![0].where).toEqual({
+      OR: [
+        { stripePaymentIntentId: "pi_invoice" },
+        { id: "row_monthly" },
+        { stripeSubscriptionId: "sub_84" },
+      ],
+    });
+    expect(result).toEqual({ revoked: 1, userIds: ["user_84"] });
+  });
+
+  it("возврат БОЛЕЕ РАННЕГО из двух платежей находит ту же строку (долг 85)", async () => {
+    // Колонка строки называет уже ДРУГОЙ, более поздний платёж — ровно тот
+    // случай, в котором прежний поиск возвращал ноль.
+    const { findMany, result } = await revoke(
+      { paymentIntentId: "pi_older" },
+      [{ id: "row_extended", userId: "user_85" }],
+      { subscriptionId: "row_extended", stripeSubscriptionId: null },
+    );
+    expect(findMany.mock.calls[0]![0].where).toEqual({
+      OR: [{ stripePaymentIntentId: "pi_older" }, { id: "row_extended" }],
+    });
+    expect(result).toEqual({ revoked: 1, userIds: ["user_85"] });
+  });
+
+  it("контроль: без журнала тот же возврат по-прежнему не находит ничего", async () => {
+    // Позитивный контроль к двум случаям выше: если строку журнала убрать,
+    // поиск сужается ровно до прежнего одного ключа и отдаёт ноль. Без
+    // этого случая оба утверждения выше могли бы проходить и на старом коде.
+    const { findMany, result, updateMany } = await revoke({ paymentIntentId: "pi_older" }, [], null);
+    expect(findMany.mock.calls[0]![0].where).toEqual({ OR: [{ stripePaymentIntentId: "pi_older" }] });
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(result).toEqual({ revoked: 0, userIds: [] });
+  });
+
+  it("журнал не спрашивается вовсе, когда платежа в ссылке нет", async () => {
+    // Свойство узости сохраняется: по подписке Stripe строка ищется
+    // по-прежнему напрямую, а «найти хоть что-нибудь этого человека»
+    // по-прежнему невозможно.
+    const { paymentFindUnique, findMany } = await revoke({ stripeSubscriptionId: "sub_only" }, []);
+    expect(paymentFindUnique).not.toHaveBeenCalled();
+    expect(findMany.mock.calls[0]![0].where).toEqual({ OR: [{ stripeSubscriptionId: "sub_only" }] });
   });
 });
 

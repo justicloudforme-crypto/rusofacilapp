@@ -300,6 +300,28 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
       `CREATE INDEX IF NOT EXISTS "AccessCode_redeemedById_idx" ON "AccessCode"("redeemedById")`,
     ],
   },
+  {
+    // Журнал платежей (PROGRESS.md 7.213, долги 84 и 85). Строка здесь —
+    // НЕ доступ: доступ по-прежнему держит `Subscription`. Внешний ключ на
+    // User с CASCADE — запись про конкретного человека и обязана уезжать
+    // вместе с ним; на `Subscription` ключа НЕТ намеренно, см. комментарий
+    // к модели в schema.prisma.
+    table: "SubscriptionPayment",
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "SubscriptionPayment" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "userId" TEXT NOT NULL,
+         "subscriptionId" TEXT NOT NULL,
+         "stripePaymentIntentId" TEXT NOT NULL,
+         "stripeSubscriptionId" TEXT,
+         "plan" TEXT NOT NULL,
+         "source" TEXT NOT NULL,
+         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+         CONSTRAINT "SubscriptionPayment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+       )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "SubscriptionPayment_stripePaymentIntentId_key" ON "SubscriptionPayment"("stripePaymentIntentId")`,
+    ],
+  },
 ];
 
 /** Индексы СУЩЕСТВУЮЩИХ таблиц, которые этот скрипт имеет право создать.
