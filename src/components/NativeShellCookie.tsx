@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { nativeShellCookiePresent, setNativeShellCookie } from "@/lib/native-shell-client";
+import { readSession, writeSession } from "@/lib/safe-storage";
 
 /**
  * Страховка признака нативной оболочки (долг 179).
@@ -32,15 +33,10 @@ export default function NativeShellCookie() {
     if (!Capacitor.isNativePlatform()) return;
     if (nativeShellCookiePresent()) return;
     setNativeShellCookie();
-    let already = false;
-    try {
-      already = sessionStorage.getItem(ONCE_KEY) === "1";
-      sessionStorage.setItem(ONCE_KEY, "1");
-    } catch {
-      // Приватный режим/запрет хранилища — тогда просто не обновляемся:
-      // следующий переход всё равно уедет на сервер уже с кукой.
-      already = true;
-    }
+    // Приватный режим/запрет хранилища — тогда просто не обновляемся:
+    // следующий переход всё равно уедет на сервер уже с кукой. Поэтому
+    // неудачная ЗАПИСЬ флажка читается как «уже обновлялись».
+    const already = readSession(ONCE_KEY) === "1" || !writeSession(ONCE_KEY, "1");
     if (!already) router.refresh();
   }, [router]);
 

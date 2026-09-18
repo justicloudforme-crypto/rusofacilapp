@@ -1,6 +1,7 @@
 "use client";
 
 import { normalizeBankWord } from "./translation-normalize";
+import { readSession, sessionStorageOrNull, writeSession } from "@/lib/safe-storage";
 
 /**
  * Кэш переводов на стороне ЧИТАТЕЛЯ — шаг 2 долга 169 (заход 7.188).
@@ -36,19 +37,11 @@ const MAX_ENTRIES = 600;
 
 let memory: Map<string, string> | null = null;
 
-function storage(): Storage | null {
-  try {
-    return typeof window === "undefined" ? null : window.sessionStorage;
-  } catch {
-    return null;
-  }
-}
-
 function load(): Map<string, string> {
   if (memory) return memory;
   memory = new Map();
   try {
-    const raw = storage()?.getItem(STORAGE_KEY);
+    const raw = readSession(STORAGE_KEY);
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
       if (parsed && typeof parsed === "object") {
@@ -64,16 +57,12 @@ function load(): Map<string, string> {
 }
 
 function persist(map: Map<string, string>): void {
-  const store = storage();
-  if (!store) return;
-  try {
-    // Обрезается ХВОСТ вставки: `Map` хранит порядок добавления, и
-    // выброшенным оказывается то, что положено раньше всего.
-    const entries = [...map.entries()].slice(-MAX_ENTRIES);
-    store.setItem(STORAGE_KEY, JSON.stringify(Object.fromEntries(entries)));
-  } catch {
-    /* квота хранилища кончилась — слой в памяти остаётся рабочим */
-  }
+  // Обрезается ХВОСТ вставки: `Map` хранит порядок добавления, и
+  // выброшенным оказывается то, что положено раньше всего.
+  const entries = [...map.entries()].slice(-MAX_ENTRIES);
+  // Квота хранилища кончилась или хранилище запрещено — слой в памяти
+  // остаётся рабочим, и `writeSession` об этом молчит намеренно.
+  writeSession(STORAGE_KEY, JSON.stringify(Object.fromEntries(entries)));
 }
 
 /** Перевод слова, если он уже известен этой вкладке. */
@@ -133,9 +122,5 @@ export function unknownWords(words: readonly string[]): string[] {
 /** Только для тестов: забыть всё, что вкладка успела узнать. */
 export function resetTranslationStoreForTests(): void {
   memory = null;
-  try {
-    storage()?.removeItem(STORAGE_KEY);
-  } catch {
-    /* нечего чистить */
-  }
+  sessionStorageOrNull()?.removeItem(STORAGE_KEY);
 }

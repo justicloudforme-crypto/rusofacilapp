@@ -7,6 +7,8 @@
 // callers already run inside a click handler (Check/submit buttons), which
 // is what browsers require before any audio can play at all.
 
+import { readLocal, writeLocal } from "@/lib/safe-storage";
+
 const STORAGE_KEY = "rusofacil-sound-enabled";
 
 let audioContext: AudioContext | null = null;
@@ -25,14 +27,18 @@ function getAudioContext(): AudioContext | null {
   return audioContext;
 }
 
+// Отказ хранилища — не «звук выключен», а «мы не знаем»: умолчание у
+// звука включённое, и оно же остаётся ответом (долг 261).
 export function isSoundEnabled(): boolean {
   if (typeof window === "undefined") return true;
-  return window.localStorage.getItem(STORAGE_KEY) !== "0";
+  return readLocal(STORAGE_KEY) !== "0";
 }
 
 export function setSoundEnabled(enabled: boolean): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, enabled ? "1" : "0");
+  // Не записалось — выбор не переживёт перезагрузку, но эта вкладка
+  // звучит так, как человек попросил: решение держит состояние React.
+  writeLocal(STORAGE_KEY, enabled ? "1" : "0");
 }
 
 function playTone(

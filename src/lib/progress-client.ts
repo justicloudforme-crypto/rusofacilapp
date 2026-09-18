@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnswerMap, MistakeDetail } from "@/lib/lessons/scoring";
+import { readLocal, writeLocal } from "@/lib/safe-storage";
 
 const PENDING_KEY = "rusofasil:pending-progress";
 
@@ -14,8 +15,9 @@ interface PendingProgress {
 }
 
 function readQueue(): PendingProgress[] {
+  // `try` остаётся ради `JSON.parse` — см. шапку `safe-storage.ts`.
   try {
-    const raw = localStorage.getItem(PENDING_KEY);
+    const raw = readLocal(PENDING_KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? (parsed as PendingProgress[]) : [];
   } catch {
@@ -24,12 +26,9 @@ function readQueue(): PendingProgress[] {
 }
 
 function writeQueue(queue: PendingProgress[]) {
-  try {
-    localStorage.setItem(PENDING_KEY, JSON.stringify(queue));
-  } catch {
-    // Private browsing / storage disabled — the attempt just won't retry
-    // automatically; it's still unlocked locally for this session.
-  }
+  // Private browsing / storage disabled — the attempt just won't retry
+  // automatically; it's still unlocked locally for this session.
+  writeLocal(PENDING_KEY, JSON.stringify(queue));
 }
 
 /** Called when a POST to /api/progress fails (offline, or a transient
