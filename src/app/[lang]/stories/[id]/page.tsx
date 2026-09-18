@@ -127,9 +127,13 @@ export default async function StoryReaderPage({
   // оболочки 👑 стоит у премиального рассказа при любой роли — человек,
   // который платит за Premium, обязан видеть, за что именно; в вебе
   // возвращается прежний ответ, знак в знак.
+  // 7.212: рассказ — единица целиком (`wholeUnit` по умолчанию), и
+  // прежний вердикт `closed: !entitled` был тем же ответом другими
+  // словами: согласие `meetsRequirement(storyRequirement(...), tier)` с
+  // `getStoryAccess(...).entitled` заперто пробой `access-marks.test.ts`
+  // по всем восьми сочетаниям колонок.
   const storySign = accessSignFor(storyRequirement(story), tier, {
     nativeShell: await isNativeShellRequest(),
-    closed: !entitled,
   });
 
   // descriptionRu is null for every row today (see schema.prisma) — this

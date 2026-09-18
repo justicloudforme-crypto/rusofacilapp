@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { routeAlternates, truncateForMeta } from "@/lib/site";
+import { isNativeShellRequest } from "@/lib/native-shell";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 
 // Simple line-icon badges instead of Apple/Google's official artwork —
 // this page ships before either store listing is actually live, so a
@@ -62,6 +64,14 @@ export async function generateMetadata({
   // the footer link reaches a page announcing itself with the HOME PAGE's
   // title and description. Its own title costs one line.
   if (!isLocale(lang)) return { alternates };
+  // ДОЛГ 154. Внутри приложения у этой страницы другое содержимое — значит
+  // и подпись у неё другая; тот же довод и та же форма, что у страницы цен
+  // (долг 179). Веб-подпись не тронута ни знаком: обычный браузер в эту
+  // ветку не заходит.
+  if (await isNativeShellRequest()) {
+    const copy = nativeAccessCopy(lang).download;
+    return { title: `${copy.heading} | RusoFácilapp`, description: copy.body, robots: { index: false }, alternates };
+  }
   const dict = await getDictionary(lang);
   return {
     title: `${dict.download.pageTitle} | RusoFácilapp`,
@@ -91,6 +101,45 @@ export default async function DownloadPage({ params }: PageProps<"/[lang]/downlo
   const dict = await getDictionary(lang);
   if (!dict?.download) notFound();
   const d = dict.download;
+
+  /**
+   * ДОЛГ 154, заход 7.212: ВИТРИНА ЗНАЕТ, ГДЕ ОНА ОТКРЫТА.
+   *
+   * Внутри оболочки человеку, который уже в приложении, предлагали
+   * установить приложение — двумя плашками «Скоро — iPhone / Android».
+   * Apple 2.3.1 называет такое вводящим в заблуждение, Google Play
+   * считает уводом из приложения; но главное — это просто неправда для
+   * того, кто это читает.
+   *
+   * Страница не удаляется и молча никуда не переадресовывает (долг 197
+   * закрывали ровно от молчаливой переадресации): она отдаёт честный
+   * ответ и одну ссылку туда, где есть что делать. Ни цены, ни кнопки
+   * покупки, ни ссылки в магазин — за этим следит `check:native-payments`.
+   */
+  if (await isNativeShellRequest()) {
+    const copy = nativeAccessCopy(lang).download;
+    return (
+      <div className="flex flex-1 flex-col">
+        <section className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-20 text-center sm:py-28">
+          <Image
+            src="/icons/icon-512.png"
+            alt=""
+            width={96}
+            height={96}
+            className="rounded-[22%] shadow-lg shadow-black/10"
+          />
+          <h1 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{copy.heading}</h1>
+          <p className="max-w-xl text-lg leading-8 text-foreground/70">{copy.body}</p>
+          <Link
+            href={`/${lang}/courses`}
+            className="tap mt-2 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
+          >
+            {copy.cta}
+          </Link>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col">

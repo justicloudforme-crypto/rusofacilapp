@@ -16,6 +16,8 @@ const SRS_STORAGE_KEY = "rusofacil:flashcard-srs";
 export interface Entry {
   known: boolean;
   updatedAt: number;
+  /** Чья это строка — см. `src/lib/progress-owner.ts` (долг 218). */
+  by?: string;
 }
 
 export type EntryMap = Record<string, Entry>;
@@ -27,11 +29,14 @@ type KnownMap = Record<string, boolean>;
 
 import { postReliably } from "./reliable-post";
 import { readLocal, writeLocal } from "@/lib/safe-storage";
+import { currentOwner, dropOtherOwners, rememberOwner } from "@/lib/progress-owner";
 
 export interface SrsEntry {
   box: number;
   correctStreak: number;
   lastSeenAt: number;
+  /** Чья это строка — то же поле и то же правило, что у `Entry`. */
+  by?: string;
 }
 
 type SrsMap = Record<string, SrsEntry>;
@@ -57,6 +62,7 @@ function readSrsAll(): SrsMap {
       ) {
         const entry = value as SrsEntry;
         out[cardId] = {
+          ...(typeof entry.by === "string" ? { by: entry.by } : {}),
           box: entry.box,
           correctStreak: entry.correctStreak,
           lastSeenAt: typeof entry.lastSeenAt === "number" ? entry.lastSeenAt : 0,
@@ -108,7 +114,9 @@ export function recordSrsAnswer(cardId: string, correct: boolean): SrsEntry {
       : { box: prev.box, correctStreak: prev.correctStreak + 1, lastSeenAt: Date.now() }
     : { box: 0, correctStreak: 0, lastSeenAt: Date.now() };
 
-  all[cardId] = next;
+  // Долг 218: коробки повторения помечаются тем же владельцем и тем же
+  // правилом, что и отметка «знаю».
+  all[cardId] = { ...next, by: currentOwner() };
   writeSrsAll(all);
   // A correct answer that just promoted a card, or any miss, is worth
   // marking "known"/"not known" too — keeps the coarse flag used by the
@@ -139,7 +147,13 @@ function readAll(): EntryMap {
         out[cardId] = { known: value, updatedAt: 0 };
       } else if (value && typeof value === "object" && typeof (value as Entry).known === "boolean") {
         const entry = value as Entry;
-        out[cardId] = { known: entry.known, updatedAt: typeof entry.updatedAt === "number" ? entry.updatedAt : 0 };
+        out[cardId] = {
+          known: entry.known,
+          updatedAt: typeof entry.updatedAt === "number" ? entry.updatedAt : 0,
+          // Долг 218: происхождение переживает чтение. Его отсутствие —
+          // тоже ответ («наследство»), поэтому поля тут может и не быть.
+          ...(typeof entry.by === "string" ? { by: entry.by } : {}),
+        };
       }
     }
     return out;
@@ -179,7 +193,10 @@ export function getProgressEntries(): EntryMap {
 
 export function setWordKnown(cardId: string, known: boolean): KnownMap {
   const all = readAll();
-  all[cardId] = { known, updatedAt: Date.now() };
+  // ДОЛГ 218. Строка помечается тем, кто её пишет: без сессии — «guest»,
+  // под аккаунтом — его идентификатором. Дальше выход разбирает их по
+  // этому полю, а не стирает ключ целиком.
+  all[cardId] = { known, updatedAt: Date.now(), by: currentOwner() };
   writeAll(all);
   syncToServer(cardId, known);
   return toKnownMap(all);
@@ -194,18 +211,32 @@ export async function syncKnownWords(): Promise<KnownMap> {
   const local = readAll();
   try {
     const res = await fetch("/api/flashcard-progress");
-    if (!res.ok) return toKnownMap(local);
+    // 401 — «никто не вошёл»: дальше пишем от имени гостя.
+    if (!res.ok) {
+      rememberOwner(null);
+      return toKnownMap(local);
+    }
     const body: unknown = await res.json();
     const remote =
       body && typeof body === "object" && (body as { progress?: unknown }).progress
         ? ((body as { progress: EntryMap }).progress ?? {})
         : {};
 
-    const merged: EntryMap = { ...local };
+    // ДОЛГ 218. Ответ сервера — единственный достоверный ответ клиента на
+    // вопрос «кто вошёл»; запоминаем владельца до слияния, чтобы строки,
+    // написанные после него, помечались верно.
+    const who = body && typeof body === "object" ? (body as { owner?: unknown }).owner : undefined;
+    const ownerId = typeof who === "string" && who ? who : null;
+    rememberOwner(ownerId);
+
+    // Чужие строки на этом устройстве уходят при переключении аккаунта;
+    // свои и гостевые остаются.
+    const merged: EntryMap = ownerId ? dropOtherOwners(local, ownerId) : { ...local };
     for (const [cardId, remoteEntry] of Object.entries(remote)) {
       const localEntry = merged[cardId];
       if (!localEntry || remoteEntry.updatedAt >= localEntry.updatedAt) {
-        merged[cardId] = remoteEntry;
+        // Строка приехала с сервера — значит она этого аккаунта.
+        merged[cardId] = ownerId ? { ...remoteEntry, by: ownerId } : remoteEntry;
       }
     }
     writeAll(merged);
@@ -231,12 +262,19 @@ export async function syncSrsProgress(): Promise<SrsMap> {
         ? ((body as { progress: Record<string, SrsEntry & { lastSeenAt: number | null }> }).progress ?? {})
         : {};
 
-    const merged: SrsMap = { ...local };
+    const whoSrs = body && typeof body === "object" ? (body as { owner?: unknown }).owner : undefined;
+    const ownerSrs = typeof whoSrs === "string" && whoSrs ? whoSrs : null;
+    const merged: SrsMap = ownerSrs ? dropOtherOwners(local, ownerSrs) : { ...local };
     for (const [cardId, remoteEntry] of Object.entries(remote)) {
       if (remoteEntry.lastSeenAt === null) continue;
       const localEntry = merged[cardId];
       if (!localEntry || remoteEntry.lastSeenAt >= localEntry.lastSeenAt) {
-        merged[cardId] = { box: remoteEntry.box, correctStreak: remoteEntry.correctStreak, lastSeenAt: remoteEntry.lastSeenAt };
+        merged[cardId] = {
+          box: remoteEntry.box,
+          correctStreak: remoteEntry.correctStreak,
+          lastSeenAt: remoteEntry.lastSeenAt,
+          ...(ownerSrs ? { by: ownerSrs } : {}),
+        };
       }
     }
     writeSrsAll(merged);

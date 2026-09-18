@@ -70,7 +70,11 @@ function signOf(requirement: AccessRequirement) {
   // Плашка печатается только там, где материал ЗАКРЫТ (её и рисуют по
   // ненулевому числу закрытого), поэтому закрытость названа прямо, а не
   // выведена из тарифа: тарифа этот компонент не знает и знать не должен.
-  return accessSignFor(requirement, "free", { nativeShell: true, closed: true })!;
+  // 7.212: вердикта здесь больше нет. Плашка печатается только у
+  // закрытого материала и спрашивает правило под тарифом «без подписки» —
+  // для требований `subscription` и `premium-tier` общее правило и
+  // отвечает «закрыто», знак в знак с прежним `closed: true`.
+  return accessSignFor(requirement, "free", { nativeShell: true })!;
 }
 
 /**

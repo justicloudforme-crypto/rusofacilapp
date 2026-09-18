@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { SIGNED_OUT_PARAM, personalPageCaches } from "@/lib/signed-out";
-import { personalLocalKeys } from "@/lib/signed-out-local";
-import { localKeys, removeLocal } from "@/lib/safe-storage";
+import { OWNED_LOCAL_KEYS, personalLocalKeys, purgedOwnedValue } from "@/lib/signed-out-local";
+import { localKeys, readLocal, removeLocal, writeLocal } from "@/lib/safe-storage";
 
 /**
  * УБОРЩИК ЛИЧНЫХ КОПИЙ ПОСЛЕ ВЫХОДА (заход 7.198, часть 1).
@@ -53,6 +53,16 @@ export default function SignedOutCachePurge() {
     // выхода: `localKeys()` вернёт пустой список, удалять будет нечего,
     // и ронять из-за этого страницу нечем.
     for (const key of personalLocalKeys(localKeys())) removeLocal(key);
+
+    // ДОЛГ 218. Две карты чистятся ПО СТРОКАМ: гостевые остаются, записи
+    // аккаунта уходят. Правило — в `signed-out-local.ts`, здесь только
+    // момент. Отказ хранилища ничего не меняет: `readLocal` вернёт `null`,
+    // и делать будет нечего.
+    for (const key of OWNED_LOCAL_KEYS) {
+      const kept = purgedOwnedValue(readLocal(key));
+      if (kept === null) removeLocal(key);
+      else writeLocal(key, kept);
+    }
 
     if (typeof caches === "undefined") return;
     void (async () => {

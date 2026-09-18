@@ -10,6 +10,38 @@ export const TELEGRAM_INVITE_URL = "https://t.me/+-UhllZ_YI3dmYjdi";
 // (profile/page.tsx, imports TELEGRAM_INVITE_URL directly) that already
 // covers the "keep the link reachable" need on mobile — this floating
 // bubble stays desktop-only, where it wasn't reported as a problem.
+//
+// ====================================================================
+// ДОЛГ 82: ГРАНИЦА ПОДНЯТА С `sm` ДО `xl` — 7.212.
+// ====================================================================
+//
+// «Не было доложено на десктопе» оказалось верно только про НАСТОЯЩИЙ
+// десктоп. Замер 18.09.2026 по живой прод-сборке, 6 ширин × 6 адресов ×
+// два положения прокрутки (верх и низ страницы), перекрытие считалось
+// геометрией — площадь пересечения коробки кнопки с коробкой любого
+// органа управления:
+//
+//   640  — 3 перекрытия (карточка рассказа 52×45 и 52×39, плитка темы
+//          словаря 52×60);
+//   768  — 6 (те же плюс ссылка подвала «Политика конфиденциальности»
+//          37,1×12 — ровно та, что записана в долге);
+//   834  — 6 (та же ссылка подвала 4,1×12);
+//   1024 — 2 (карточки рассказов);
+//   1280 — 0;
+//   1440 — 0.
+//
+// Итого 19 перекрытий из 72 замеров ниже 1280 и 0 из 24 начиная с 1280.
+// Причина у числа простая и проверяемая: самая широкая колонка
+// содержимого на сайте — `max-w-5xl` (1024 px). Пока окно уже 1176 px,
+// свободного поля справа от колонки на кнопку (60 px) и её отступ
+// (16 px) не хватает, и она ложится ПОВЕРХ содержимого. На 1280 поле
+// равно 128 px — кнопка стоит рядом с колонкой, а не на ней.
+//
+// Поэтому граница `xl` (1280), а не «отступ у самой кнопки», как
+// предполагала запись долга: отступ увёл бы кнопку от одного органа к
+// другому — плитки и карточки стоят сеткой, свободного места внутри
+// колонки нет вовсе. Держится сторожем `check:float-overlap`
+// (`scripts/check-float-overlap.mjs`, в `verify` и в `ci.yml`).
 export default function TelegramFloatButton({ label }: { label: string }) {
   return (
     <a
@@ -23,7 +55,7 @@ export default function TelegramFloatButton({ label }: { label: string }) {
       // already uses.
       aria-label={label}
       title={label}
-      className="fixed z-[1000] hidden h-[60px] w-[60px] items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-[0_4px_10px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-out hover:scale-110 hover:bg-[#2090c7] sm:flex"
+      className="fixed z-[1000] hidden h-[60px] w-[60px] items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-[0_4px_10px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-out hover:scale-110 hover:bg-[#2090c7] xl:flex"
       style={{
         bottom: "calc(16px + var(--safe-bottom))",
         right: "calc(16px + var(--safe-right))",

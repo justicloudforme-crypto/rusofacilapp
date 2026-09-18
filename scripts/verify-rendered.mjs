@@ -413,6 +413,38 @@ async function main() {
     // (кроссворд, рассказ) отдают 404, и меряется только то, что живёт
     // без строк. Правила от этого не слабеют — нижняя панель есть на
     // КАЖДОЙ странице сайта.
+    // ДОЛГ 154, заход 7.212: ревизия шапки, подвала и нижней панели на
+    // вопрос «имеет ли это смысл внутри оболочки». Оба места — веб и
+    // оболочка — открываются в одном прогоне, потому что утверждение у
+    // сторожа парное: ноль в оболочке значит что-то только тогда, когда
+    // в вебе не ноль.
+    const shellSurfaces = spawnSync(
+      TSX,
+      ["scripts/check-shell-surfaces.ts", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
+    const shellSurfacesPlant = spawnSync(
+      TSX,
+      ["scripts/check-shell-surfaces.ts", `--base=${BASE}`, "--plant", ...passthrough],
+      { stdio: "inherit" }
+    );
+    // ДОЛГ 82, заход 7.212: плавающая кнопка не ложится на органы
+    // управления. Здесь же, на том же сервере, по той же причине, что и
+    // соседи. `--ci` пробрасывается: на пустой базе CI каталог рассказов
+    // короче, и пол замеров опускается — но каждый найденный замер
+    // судится полностью.
+    const floatOverlap = spawnSync(
+      process.execPath,
+      ["scripts/check-float-overlap.mjs", `--base=${BASE}`, ...passthrough],
+      { stdio: "inherit" }
+    );
+    // Позитивный контроль: кнопка возвращается на все ширины — ровно
+    // поведение до 7.212, — и перекрытия обязаны найтись.
+    const floatOverlapPlant = spawnSync(
+      process.execPath,
+      ["scripts/check-float-overlap.mjs", `--base=${BASE}`, "--plant", ...passthrough],
+      { stdio: "inherit" }
+    );
     const bottomInset = spawnSync(
       process.execPath,
       ["scripts/check-bottom-inset.mjs", `--base=${BASE}`, ...passthrough],
@@ -503,6 +535,10 @@ async function main() {
       (tilesPlant.status ?? 1) ||
       (ruSpanish.status ?? 1) ||
       (nativeShellRender.status ?? 1) ||
+      (shellSurfaces.status ?? 1) ||
+      (shellSurfacesPlant.status ?? 1) ||
+      (floatOverlap.status ?? 1) ||
+      (floatOverlapPlant.status ?? 1) ||
       (bottomInset.status ?? 1) ||
       (bottomInsetPlant.status ?? 1) ||
       (safeInsets.status ?? 1) ||

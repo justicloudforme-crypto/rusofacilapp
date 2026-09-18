@@ -13,7 +13,9 @@ import {
   ACCESS_MARK_ICON,
   accessMarkFor,
   accessSignFor,
-  wordGameLevelHasFreePuzzle,
+  trialSet,
+  wholeUnit,
+  wordGamePuzzlesOpenToTrial,
   wordGameRequirement,
   type ViewerTier,
 } from "@/lib/access-marks";
@@ -118,9 +120,13 @@ export default function WordGamesPicker({
            * оболочке у гостя на C1 стоял 🔒 — одна и та же роль, два
            * разных экрана.
            */
+          // 7.212: поверхность присылает ФАКТ — сколько пазлов уровня
+          // отдано бесплатной пробе, — а закрытость выносит общее правило.
+          // Прежняя строка `tier === "free" && !wordGameLevelHasFreePuzzle(…)`
+          // была третьим по счёту вердиктом о закрытости в продукте.
           const sign = accessSignFor("subscription", tier, {
             nativeShell: true,
-            closed: tier === "free" && !wordGameLevelHasFreePuzzle(type, lvl),
+            openness: trialSet(true, wordGamePuzzlesOpenToTrial(type, lvl)),
           });
           return {
             id: lvl,
@@ -216,7 +222,10 @@ export default function WordGamesPicker({
            * границы премиального материала вовсе — ровно тот дефект,
            * из-за которого правило вводилось в 7.196.
            */
-          const sign = accessSignFor(requirement, tier, { nativeShell: true });
+          // 7.212: у отдельного пазла состояния «частично открыт» не
+          // бывает — он и есть та единица, на которой общее правило и
+          // прежнее умолчание дают один и тот же ответ.
+          const sign = accessSignFor(requirement, tier, { nativeShell: true, openness: wholeUnit() });
           const isLocked = accessMarkFor(requirement, tier) !== null;
           return (
             <Link
