@@ -18,6 +18,7 @@ import ListeningItem from "./ListeningItem";
 import ReadingComprehensionItem from "./ReadingComprehensionItem";
 import ListeningTranscriptionItem from "./ListeningTranscriptionItem";
 import PronunciationPractice from "./PronunciationPractice";
+import { readLocal, writeLocal } from "@/lib/safe-storage";
 import { exerciseAudioKey, pickClip } from "@/lib/lessons/audioKeys";
 import type { VocabularyItem } from "@/lib/lessons/types";
 import { flushPendingProgress, queuePendingProgress } from "@/lib/progress-client";
@@ -88,8 +89,14 @@ export default function ExercisesTab({
     // Reading localStorage is only possible after mount (it doesn't exist
     // during SSR), so this genuinely has to happen in an effect rather
     // than during render — hence the rule overrides below.
-    const alreadyPassed =
-      exercises.length === 0 || window.localStorage.getItem(storageKey) === "1";
+    //
+    // Через обёртку, а не напрямую (долг 262): этот эффект стоит НА
+    // МОНТИРОВАНИИ страницы урока, то есть исполняется у КАЖДОГО
+    // посетителя. Отказ хранилища здесь бросал бы исключение при
+    // гидрации и отдавал бы страницу границе ошибок — при коде 200.
+    // Отказ читается как «замок ещё не снят»: упражнения от этого не
+    // ломаются, человек просто решает их заново.
+    const alreadyPassed = exercises.length === 0 || readLocal(storageKey) === "1";
     if (alreadyPassed) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPassed(true);
@@ -166,7 +173,9 @@ export default function ExercisesTab({
     if (outcome.passed && !passed) {
       setPassed(true);
       setJustPassed(true);
-      window.localStorage.setItem(storageKey, "1");
+      // Не записалось — в этой вкладке урок всё равно пройден
+      // (состояние React), а серверная попытка уходит ниже.
+      writeLocal(storageKey, "1");
       onPassChange(true);
     } else if (!outcome.passed) {
       setJustFailed(true);

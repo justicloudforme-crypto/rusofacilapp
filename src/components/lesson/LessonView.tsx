@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { LessonContent } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { readLocal } from "@/lib/safe-storage";
 import GrammarTab from "./GrammarTab";
 import VocabularyTab from "./VocabularyTab";
 import ExercisesTab from "./ExercisesTab";
@@ -173,18 +174,16 @@ export default function LessonView({
   // attempt, which is restored by ExercisesTab's own GET /api/progress.)
   useEffect(() => {
     if (!content) return;
-    try {
-      // Reading localStorage is only possible after mount (it doesn't
-      // exist during SSR), so this has to happen in an effect rather than
-      // during render — same reasoning and same rule override as
-      // ExercisesTab's own copy of this check.
-      if (content.exercises.length === 0 || window.localStorage.getItem(`lesson-passed:${level}:${lessonSlug}`) === "1") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPassed(true);
-      }
-    } catch {
-      // localStorage unavailable (private mode / disabled) — the gate just
-      // stays closed until the student opens Ejercicios, same as before.
+    // Reading localStorage is only possible after mount (it doesn't
+    // exist during SSR), so this has to happen in an effect rather than
+    // during render — same reasoning and same rule override as
+    // ExercisesTab's own copy of this check.
+    //
+    // Отказ хранилища здесь читается ровно как раньше: замок остаётся
+    // закрытым, пока человек не откроет вкладку Ejercicios.
+    if (content.exercises.length === 0 || readLocal(`lesson-passed:${level}:${lessonSlug}`) === "1") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPassed(true);
     }
   }, [content, level, lessonSlug]);
   // Pre-generated pronunciation audio for this lesson's items (see

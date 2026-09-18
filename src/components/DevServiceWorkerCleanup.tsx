@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { readSession, writeSession } from "@/lib/safe-storage";
 
 const RELOAD_GUARD_KEY = "rf_sw_cleanup_reloaded";
 
@@ -47,9 +48,11 @@ export default function DevServiceWorkerCleanup() {
       });
     }
 
-    if (hadController && !sessionStorage.getItem(RELOAD_GUARD_KEY)) {
-      sessionStorage.setItem(RELOAD_GUARD_KEY, "1");
-      window.location.reload();
+    // Через обёртку (долг 263): без неё отказ хранилища ронял бы эффект
+    // ещё ДО перезагрузки. Если флажок записать не удалось, перезагрузки
+    // не будет вовсе — это безопаснее петли из перезагрузок.
+    if (hadController && !readSession(RELOAD_GUARD_KEY)) {
+      if (writeSession(RELOAD_GUARD_KEY, "1")) window.location.reload();
     }
   }, []);
 

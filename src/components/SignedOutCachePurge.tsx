@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { SIGNED_OUT_PARAM, personalPageCaches } from "@/lib/signed-out";
 import { personalLocalKeys } from "@/lib/signed-out-local";
+import { localKeys, removeLocal } from "@/lib/safe-storage";
 
 /**
  * УБОРЩИК ЛИЧНЫХ КОПИЙ ПОСЛЕ ВЫХОДА (заход 7.198, часть 1).
@@ -47,15 +48,11 @@ export default function SignedOutCachePurge() {
     url.searchParams.delete(SIGNED_OUT_PARAM);
     window.history.replaceState(null, "", url.pathname + url.search + url.hash);
 
-    // Хранилища два, и падение одного не отменяет уборку другого:
-    // каждое чистится в своей попытке.
-    try {
-      const keys = personalLocalKeys(Object.keys(window.localStorage));
-      for (const key of keys) window.localStorage.removeItem(key);
-    } catch {
-      // Приватное окно, запрет на сайт, переполнение — уборка не условие
-      // выхода: сессии уже нет, и ронять из-за неё страницу нечем.
-    }
+    // Хранилища два, и падение одного не отменяет уборку другого.
+    // Приватное окно, запрет на сайт, переполнение — уборка не условие
+    // выхода: `localKeys()` вернёт пустой список, удалять будет нечего,
+    // и ронять из-за этого страницу нечем.
+    for (const key of personalLocalKeys(localKeys())) removeLocal(key);
 
     if (typeof caches === "undefined") return;
     void (async () => {

@@ -3,6 +3,8 @@
 // guest use, mirrored in the background to /api/reading-progress so
 // progress survives a device switch or app reinstall.
 
+import { readLocal, writeLocal } from "@/lib/safe-storage";
+
 const STORAGE_KEY = "rusofacil:story-progress";
 
 export interface StoryProgress {
@@ -21,8 +23,9 @@ type ProgressMap = Record<string, StoryProgress>;
 
 function readAll(): ProgressMap {
   if (typeof window === "undefined") return {};
+  // `try` остаётся ради `JSON.parse` — см. шапку `safe-storage.ts`.
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = readLocal(STORAGE_KEY);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
@@ -41,12 +44,9 @@ function readAll(): ProgressMap {
 
 function writeAll(map: ProgressMap) {
   if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    // Storage full or unavailable (e.g. private browsing) — progress
-    // tracking is a nice-to-have, never let it block reading.
-  }
+  // Storage full or unavailable (e.g. private browsing) — progress
+  // tracking is a nice-to-have, never let it block reading.
+  writeLocal(STORAGE_KEY, JSON.stringify(map));
 }
 
 function syncToServer(storyId: string, entry: StoryProgress) {
