@@ -62,7 +62,7 @@ const CLIENT_SIDE_DEFAULTS = new Set(["cuid()", "uuid()", "autoincrement()", "au
 interface Finding {
   model: string;
   column: string;
-  kind: "нет колонки" | "nullability" | "дефолт" | "тип";
+  kind: "нет колонки" | "nullability" | "дефолт" | "дефолт только в базе" | "тип";
   expected: string;
   actual: string;
   /** Сколько строк пусты — только для NOT NULL в схеме и nullable в базе. */
@@ -151,6 +151,42 @@ export async function findDrift(client: Client, schemaText: string): Promise<Fin
             actual: actual.dflt ?? "нет дефолта",
           });
         }
+      } else if (actual.dflt !== null) {
+        /**
+         * ОБРАТНЫЙ ВОПРОС — ДОЛГ 69.
+         *
+         * Строка долга: «`check:schema-drift` спрашивает про дефолт
+         * ТОЛЬКО когда он объявлен в схеме: обратного вопроса — «в базе
+         * дефолт есть, а в схеме его нет» — у неё нет вовсе. Снятие
+         * `@default(2)` у `User.streakFreezesLeft` закрыло находку и тем
+         * же движением лишило сверку возможности возразить со второй
+         * стороны […] чинится симметричным вопросом в
+         * `scripts/check-schema-drift.ts` — те же `PRAGMA table_info`,
+         * которые скрипт уже читает, обратной сверкой».
+         *
+         * Чем это плохо на практике: дефолт, оставшийся в базе
+         * наследством `prisma db push` или ручного `ALTER`, продолжает
+         * подставлять значение при вставке мимо Prisma (сид, сырой SQL,
+         * `ensure-schema-sync.ts`), а код об этом значении не знает
+         * ничего. Расхождение молча живёт дальше — ровно то, что эта
+         * сверка и обязана ловить.
+         *
+         * `CURRENT_TIMESTAMP` из этого вопроса исключён намеренно: его
+         * ставит сам `ensure-schema-sync.ts` на колонках времени, где
+         * Prisma считает значение на своей стороне (`@default(now())`
+         * разбирается в `expectedDefault` как клиентский), и ругаться на
+         * собственный шов было бы ложной тревогой.
+         */
+        const dflt = actual.dflt.trim().toUpperCase();
+        if (dflt !== "CURRENT_TIMESTAMP" && dflt !== "NULL") {
+          findings.push({
+            model: model.name,
+            column: field.name,
+            kind: "дефолт только в базе",
+            expected: "дефолта нет",
+            actual: actual.dflt,
+          });
+        }
       }
 
       const allowed = ACCEPTABLE_SQLITE_TYPES[field.sqlType] ?? [field.sqlType];
@@ -180,8 +216,10 @@ function connect(): { client: Client; label: string } {
 
 /** Позитивный контроль. Подсаживается не в базу — в ТЕКСТ схемы, потому
  * что сверка сравнивает две стороны, и подсадка в ту, которую можно
- * менять безнаказанно, доказывает ровно то же. Три формы, по одной на
- * каждый вопрос сверки. */
+ * менять безнаказанно, доказывает ровно то же. ЧЕТЫРЕ формы, по одной на
+ * каждый вопрос сверки; четвёртая — обратный вопрос долга 69, и она
+ * подсаживается СНЯТИЕМ `@default`, то есть ровно тем движением, которым
+ * дыра и была открыта. */
 const PLANTS: Array<{ name: string; mutate: (schema: string) => string; expect: (f: Finding) => boolean }> = [
   {
     name: "nullable-колонка объявлена NOT NULL (форма долга 68)",
@@ -192,6 +230,15 @@ const PLANTS: Array<{ name: string; mutate: (schema: string) => string; expect: 
     name: "дефолт в схеме не тот, что в базе",
     mutate: (s) => s.replace("isPremium     Boolean  @default(false)", "isPremium     Boolean  @default(true)"),
     expect: (f) => f.model === "Story" && f.column === "isPremium" && f.kind === "дефолт",
+  },
+  {
+    // ДОЛГ 69, обратный вопрос: дефолт остался в базе, а из схемы убран.
+    // Снятие `@default(false)` у `Story.isPremium` — это буквально то же
+    // движение, каким 7.142 сняло `@default(2)` у `User.streakFreezesLeft`
+    // и тем же движением лишило сверку второй стороны.
+    name: "дефолт есть в базе, а из схемы убран (долг 69)",
+    mutate: (s) => s.replace("isPremium     Boolean  @default(false)", "isPremium     Boolean"),
+    expect: (f) => f.model === "Story" && f.column === "isPremium" && f.kind === "дефолт только в базе",
   },
   {
     name: "колонки, объявленной в схеме, в базе нет",
