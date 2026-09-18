@@ -12,6 +12,16 @@
 // Пересчёт подтвердил 60 + 44 + 1 = 105. Чтобы этот вопрос не задавался
 // в третий раз, утверждение закреплено проверкой, а не прозой.
 //
+// ЧЕТВЁРТАЯ КАТЕГОРИЯ — «ПРАВИЛО» (18.09.2026, 7.212, решение владельца C).
+// Ревизия 7.211 нашла в таблице пять строк, которые долгами не являются и
+// закрыться не могут в принципе: обряд после мержа со сменой схемы (5),
+// два запрета расширять фикстуры (21, 25), дефект libSQL на локальном
+// файле, которого нет на проде (60), и следствие политики доступа (62).
+// Пока они лежали в «открытых», число открытых долгов было на пять больше
+// правды и не могло упасть никогда. Теперь у них своё состояние, они
+// по-прежнему СТРОКИ таблицы (значит, дыры в нумерации не появляется), но
+// в счёт открытых не входят.
+//
 // Контроль: `node scripts/count-debts.mjs --plant`.
 import { readFileSync } from "node:fs";
 const PLANT = process.argv.includes("--plant");
@@ -32,7 +42,7 @@ for (const line of text.split("\n")) {
   // «закрыт» или «снят»
   // Граница слова обязательна: без неё «закрытие вкладки» из совсем
   // другой таблицы читается как «закрыт» — поймано контролем ДО.
-  if (!/^(открыт|открыта|закрыт|закрыта|снят|снята)(?![а-яё])/.test(state)) continue;
+  if (!/^(открыт|открыта|закрыт|закрыта|снят|снята|правило)(?![а-яё])/.test(state)) continue;
   rows.push({ n, state });
 }
 return rows;
@@ -41,19 +51,20 @@ function summarise(rows) {
   const open = rows.filter((r) => r.state.startsWith("открыт"));
   const closed = rows.filter((r) => r.state.startsWith("закрыт"));
   const dropped = rows.filter((r) => r.state.startsWith("снят"));
+  const rules = rows.filter((r) => r.state.startsWith("правило"));
   const nums = rows.map((r) => r.n);
   const dupes = nums.filter((x, i) => nums.indexOf(x) !== i);
   const max = nums.length ? Math.max(...nums) : 0;
   const holes = [];
   for (let i = 1; i <= max; i++) if (!nums.includes(i)) holes.push(i);
-  const sum = open.length + closed.length + dropped.length;
-  return { rows, open, closed, dropped, dupes, holes, sum, balanced: sum === rows.length };
+  const sum = open.length + closed.length + dropped.length + rules.length;
+  return { rows, open, closed, dropped, rules, dupes, holes, sum, balanced: sum === rows.length };
 }
 
 function print(s) {
   console.log(
     `строк ${s.rows.length}, открытых ${s.open.length}, закрытых ${s.closed.length}, ` +
-      `снятых ${s.dropped.length}, сумма ${s.sum}, ` +
+      `снятых ${s.dropped.length}, правил ${s.rules.length}, сумма ${s.sum}, ` +
       `дублей ${s.dupes.length}${s.dupes.length ? " (" + s.dupes.join(",") + ")" : ""}, ` +
       `дыр ${s.holes.length}${s.holes.length ? " (" + s.holes.join(",") + ")" : ""}`,
   );
@@ -61,10 +72,11 @@ function print(s) {
     `  из них открытых частично: ${s.open.filter((r) => r.state.includes("частично")).map((r) => r.n).join(", ")}`,
   );
   console.log(`  снятых поимённо: ${s.dropped.map((r) => r.n).join(", ") || "нет"}`);
+  console.log(`  правил поимённо: ${s.rules.map((r) => r.n).join(", ") || "нет"}`);
   console.log(
     s.balanced
-      ? `  сумма категорий сходится с числом строк: ${s.open.length} + ${s.closed.length} + ${s.dropped.length} = ${s.rows.length}`
-      : `  СУММА НЕ СХОДИТСЯ: ${s.open.length} + ${s.closed.length} + ${s.dropped.length} = ${s.sum}, а строк ${s.rows.length} — ${Math.abs(s.rows.length - s.sum)} строк(и) не названы ни одной категорией`,
+      ? `  сумма категорий сходится с числом строк: ${s.open.length} + ${s.closed.length} + ${s.dropped.length} + ${s.rules.length} = ${s.rows.length}`
+      : `  СУММА НЕ СХОДИТСЯ: ${s.open.length} + ${s.closed.length} + ${s.dropped.length} + ${s.rules.length} = ${s.sum}, а строк ${s.rows.length} — ${Math.abs(s.rows.length - s.sum)} строк(и) не названы ни одной категорией`,
   );
 }
 
@@ -89,8 +101,23 @@ if (PLANT) {
   const caught2 = !s2.balanced;
   console.log(`  ${caught2 ? "поймано" : "ПРОПУЩЕНО"} — строка с неизвестным состоянием в наборе: сумма ${s2.sum} против строк ${s2.rows.length}`);
 
-  ok &&= caught1 && caught2;
-  console.log(ok ? "count:debts --plant — 2 из 2 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
+  // 3. Правило, названное открытым долгом: число открытых обязано вырасти.
+  //    Ровно так таблица и выглядела до 18.09.2026, и ровно так «открытых
+  //    109» было на пять больше правды.
+  const s3 = summarise(collect(body.replace("| 5 | правило", "| 5 | открыт,")));
+  const caught3 = s3.open.length === healthy.open.length + 1 && s3.rules.length === healthy.rules.length - 1;
+  console.log(
+    `  ${caught3 ? "поймано" : "ПРОПУЩЕНО"} — правило, названное открытым долгом ` +
+      `(открытых ${s3.open.length} против ${healthy.open.length}, правил ${s3.rules.length} против ${healthy.rules.length})`,
+  );
+
+  // 4. Правил не должно быть ноль: если их счёт молчит, четвёртая
+  //    категория не проверяется вовсе.
+  const caught4 = healthy.rules.length > 0;
+  console.log(`  ${caught4 ? "поймано" : "ПРОПУЩЕНО"} — категория «правило» в таблице ЕСТЬ (правил ${healthy.rules.length}), иначе её счёт ничего не значит`);
+
+  ok &&= caught1 && caught2 && caught3 && caught4;
+  console.log(ok ? "count:debts --plant — 4 из 4 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
   process.exitCode = ok ? 0 : 1;
 } else {
   const s = summarise(collect(readFileSync(src, "utf8")));
@@ -98,7 +125,7 @@ if (PLANT) {
   if (!s.balanced) {
     console.error(
       "count:debts — ОТКАЗ: сумма категорий не сходится с числом строк таблицы долгов.\n" +
-        "  Строка состояния каждого долга обязана начинаться с «открыт», «закрыт» или «снят».",
+        "  Строка состояния каждого долга обязана начинаться с «открыт», «закрыт», «снят» или «правило».",
     );
     process.exitCode = 1;
   }
