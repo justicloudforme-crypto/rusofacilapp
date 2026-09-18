@@ -9,7 +9,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import type { CategorySummary } from "@/lib/flashcards/summary-client";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
-import { ACCESS_MARK_ICON, accessSignFor, levelRequirement, type ViewerTier } from "@/lib/access-marks";
+import { ACCESS_MARK_ICON, accessSignFor, levelRequirement, trialSet, type ViewerTier } from "@/lib/access-marks";
 import { NativeLockedNotice } from "./FreeTrialLimitBanner";
 
 export type { CategorySummary } from "@/lib/flashcards/summary-client";
@@ -149,7 +149,11 @@ export default function CategoryGrid({
           // считается другим проходом, и на стыке двух источников знак
           // разошёлся бы с числом.
           const openHereInBank = bank[category]?.open ?? openHere;
-          const allLocked = bankHere > 0 && openHereInBank === 0;
+          // ФАКТ, А НЕ ВЕРДИКТ — 7.212. Здесь считается только то, что
+          // знает плитка: приехала ли перепись банка и сколько карточек
+          // темы отдано бесплатной пробе. Закрыта тема или нет, решает
+          // общее правило (`isClosedFor` в `access-marks.ts`), и решает
+          // одно на весь продукт.
           /**
            * ЗНАК РЕШАЕТ ОБЩЕЕ ПРАВИЛО — 7.196, часть 1.
            *
@@ -175,7 +179,10 @@ export default function CategoryGrid({
            * «в вебе то же самое, что в приложении». Прежнее правило
            * (`accessMarkFor`) осталось за остальными поверхностями.
            */
-          const sign = accessSignFor(requirement, tier, { nativeShell: true, closed: allLocked });
+          const sign = accessSignFor(requirement, tier, {
+            nativeShell: true,
+            openness: trialSet(bankHere > 0, openHereInBank),
+          });
           const known = stat?.known ?? 0;
           const percent = total === 0 ? 0 : Math.round((known / total) * 100);
           const nextLevel =

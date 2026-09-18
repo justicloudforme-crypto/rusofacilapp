@@ -89,6 +89,26 @@ export interface NativeAccessCopy {
     premiumNote: string;
     close: string;
   };
+  /**
+   * СТРАНИЦА «СКАЧАТЬ ПРИЛОЖЕНИЕ» ВНУТРИ ПРИЛОЖЕНИЯ — долг 154, заход
+   * 7.212.
+   *
+   * Ссылку из подвала убрал ещё заход 7.193 (долг 188), но САМА страница
+   * осталась достижимой по адресу и внутри оболочки предлагала человеку,
+   * который уже в приложении, установить приложение — двумя плашками
+   * «Скоро — iPhone / Android». Ревизия 7.212 прошла по всем пунктам
+   * шапки, подвала и нижней навигации и нашла ровно это одно место.
+   *
+   * Приём тот же, которым 7.199 закрыла долг 196 (OXXO в условиях):
+   * ВИТРИНА ЗНАЕТ, ГДЕ ОНА ОТКРЫТА. Страница не удаляется и не
+   * переадресовывает молча (долг 197 закрывали ровно от этого) — она
+   * говорит правду для того места, где её открыли.
+   */
+  download: {
+    heading: string;
+    body: string;
+    cta: string;
+  };
   /** Строка в разделе подписки личного кабинета. */
   profileNote: string;
   /**
@@ -223,6 +243,12 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       premiumNote: "Este material entra en el plan Premium.",
       close: "Entendido",
     },
+    download: {
+      heading: "Ya tienes la aplicación",
+      body:
+        "Estás leyendo esto dentro de la aplicación, así que no hace falta instalar nada. El curso, el vocabulario, los cuentos y los juegos se abren aquí mismo.",
+      cta: "Ir al curso",
+    },
     profileNote:
       "En esta versión de la aplicación no hay compras. La parte abierta del curso funciona con normalidad.",
     closedNote:
@@ -281,6 +307,12 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       },
       premiumNote: "Этот материал входит в план Premium.",
       close: "Понятно",
+    },
+    download: {
+      heading: "Приложение уже установлено",
+      body:
+        "Вы читаете это внутри приложения, устанавливать ничего не нужно. Курс, словарь, рассказы и игры открываются прямо здесь.",
+      cta: "Перейти к курсу",
     },
     profileNote:
       "В этой версии приложения покупок нет. Открытая часть курса работает как обычно.",

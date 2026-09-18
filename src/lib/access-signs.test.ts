@@ -11,12 +11,16 @@ import {
   accessSignFor,
   flashcardRequirement,
   idiomRequirement,
+  isClosedFor,
   lessonRequirement,
   levelRequirement,
   mediaRequirement,
   sortSign,
   storyRequirement,
+  trialSet,
+  wholeUnit,
   wordGameLevelHasFreePuzzle,
+  wordGamePuzzlesOpenToTrial,
   wordGameRequirement,
   type AccessRequirement,
   type ViewerTier,
@@ -54,19 +58,44 @@ describe("правило знака — три исхода и ни одного
     expect(sign?.locked ?? false).toBe(false);
   });
 
-  it("закрытость, названную поверхностью, слушает и корона", () => {
-    // Словарь знает про бесплатную пробу больше, чем правило; знак сорта
-    // от этого не пропадает, но состояние берётся у поверхности.
-    expect(accessSignFor("premium-tier", "premium", { nativeShell: true, closed: true })?.locked).toBe(true);
-    expect(accessSignFor("premium-tier", "free", { nativeShell: true, closed: false })?.locked ?? false).toBe(false);
+  it("закрытость набора слушает и корона — но тариф Premium она не отменяет (7.212)", () => {
+    // Словарь знает про бесплатную пробу больше, чем требование уровня:
+    // тема, в которой не отдано ни одной карточки, закрыта. Факт присылает
+    // поверхность, вердикт выносит правило.
+    expect(accessSignFor("premium-tier", "standard", { nativeShell: true, openness: trialSet(true, 0) })?.locked).toBe(true);
+    expect(accessSignFor("premium-tier", "standard", { nativeShell: true, openness: trialSet(true, 10) })?.locked ?? false).toBe(false);
+    // ГЛАВНОЕ УТВЕРЖДЕНИЕ ВАРИАНТА А: у того, кому тарифа ХВАТАЕТ, замка
+    // нет ни при каком факте от поверхности. Раньше `closed: true` от
+    // поверхности вешал замок и на Premium.
+    for (const openness of [wholeUnit(), trialSet(true, 0), trialSet(false, 0)]) {
+      expect(accessSignFor("premium-tier", "premium", { nativeShell: true, openness })?.locked ?? false).toBe(false);
+    }
+  });
+
+  it("перепись не приехала — закрытость не утверждается (7.212)", () => {
+    // «Мы не знаем» и «ничего нет» — разные вещи: тот же довод, по
+    // которому плитка печатает заглушку вместо «0 слов».
+    expect(accessSignFor("subscription", "free", { nativeShell: true, openness: trialSet(false, 0) })).toBeNull();
+    expect(accessSignFor("subscription", "free", { nativeShell: true, openness: trialSet(true, 0) })?.mark).toBe("subscription");
+  });
+
+  it("правило закрытости — одно, и это `isClosedFor` (7.212)", () => {
+    // Замок стоит тогда и только тогда, когда у этой роли в этом объекте
+    // не открыто НИ ОДНОГО элемента.
+    expect(isClosedFor("subscription", "free", wholeUnit())).toBe(true);
+    expect(isClosedFor("subscription", "standard", wholeUnit())).toBe(false);
+    expect(isClosedFor("subscription", "free", trialSet(true, 1))).toBe(false);
+    expect(isClosedFor("subscription", "free", trialSet(true, 0))).toBe(true);
+    expect(isClosedFor("subscription", "free", trialSet(false, 0))).toBe(false);
+    expect(isClosedFor("free", "free", wholeUnit())).toBe(false);
   });
 
   it("в ВЕБЕ второго знака нет ни у кого — правило там прежнее", () => {
     for (const tier of TIERS) {
       for (const requirement of REQUIREMENTS) {
-        for (const closed of [true, false]) {
-          const sign = accessSignFor(requirement, tier, { nativeShell: false, closed });
-          expect([tier, requirement, closed, sign?.locked ?? false]).toEqual([tier, requirement, closed, false]);
+        for (const openness of [wholeUnit(), trialSet(true, 0), trialSet(true, 10)]) {
+          const sign = accessSignFor(requirement, tier, { nativeShell: false, openness });
+          expect([tier, requirement, openness.kind, sign?.locked ?? false]).toEqual([tier, requirement, openness.kind, false]);
         }
       }
     }
@@ -91,28 +120,28 @@ describe("правило знака — три исхода и ни одного
   });
 
   it("сорт остаётся сортом: у премиального и закрытого знак сорта — корона", () => {
-    const sign = accessSignFor("premium-tier", "free", { nativeShell: true, closed: true });
+    const sign = accessSignFor("premium-tier", "free", { nativeShell: true, openness: wholeUnit() });
     expect(sign?.mark).toBe("premium-tier");
     expect(sign?.labelKey).toBe("premiumTierBadge");
     // …и рядом с ней состояние, а не вместо неё (долг 251).
     expect(sign?.locked).toBe(true);
   });
 
-  it("закрытость, названную поверхностью, правило слушает — но только для замка", () => {
-    // Словарь знает про бесплатную пробу больше, чем правило: тема, в
-    // которой не отдано ни одной карточки, закрыта, хотя тариф «хватает».
-    expect(accessSignFor("subscription", "standard", { nativeShell: true, closed: true })?.mark).toBe("subscription");
-    // И обратно: открытая тема знака не несёт.
-    expect(accessSignFor("subscription", "free", { nativeShell: true, closed: false })).toBeNull();
+  it("подписчику, которому тарифа хватает, знака не даёт ни один факт (7.212)", () => {
+    // ДО 7.212 поверхность могла сказать `closed: true` и повесить замок
+    // на того, кому всё открыто. Теперь такого ответа у правила нет.
+    expect(accessSignFor("subscription", "standard", { nativeShell: true, openness: trialSet(true, 0) })).toBeNull();
+    // И обратно: у кого тарифа нет, а проба что-то отдала, — замка нет.
+    expect(accessSignFor("subscription", "free", { nativeShell: true, openness: trialSet(true, 10) })).toBeNull();
   });
 
   it("подписей ровно две пары, и обе — ключи словаря сайта", () => {
     const keys = new Set<string>();
     for (const requirement of REQUIREMENTS) {
       for (const tier of TIERS) {
-        for (const closed of [true, false]) {
+        for (const openness of [wholeUnit(), trialSet(true, 0), trialSet(true, 10)]) {
           for (const nativeShell of [true, false]) {
-            const sign = accessSignFor(requirement, tier, { nativeShell, closed });
+            const sign = accessSignFor(requirement, tier, { nativeShell, openness });
             if (sign) keys.add(sign.labelKey);
           }
         }
@@ -175,6 +204,24 @@ describe("сорт уровня — по семьям, а не «C1 значит
       expect(wordGameLevelHasFreePuzzle(type, "C1")).toBe(false);
       for (const level of ["A1", "A2", "B1", "B2"]) {
         expect(wordGameLevelHasFreePuzzle(type, level)).toBe(true);
+      }
+    }
+  });
+
+  it("полоса уровней игр присылает правилу ЧИСЛО, и оно сходится с прежним «да/нет» (7.212)", () => {
+    for (const type of ["WORD_SEARCH", "CROSSWORD"]) {
+      for (const level of ["A1", "A2", "B1", "B2", "C1"]) {
+        const open = wordGamePuzzlesOpenToTrial(type, level);
+        expect([type, level, open > 0]).toEqual([type, level, wordGameLevelHasFreePuzzle(type, level)]);
+        // И тот же ответ, что давало прежнее выражение поверхности
+        // `tier === "free" && !wordGameLevelHasFreePuzzle(type, level)`.
+        expect([type, level, isClosedFor("subscription", "free", trialSet(true, open))]).toEqual([
+          type,
+          level,
+          !wordGameLevelHasFreePuzzle(type, level),
+        ]);
+        expect(isClosedFor("subscription", "standard", trialSet(true, open))).toBe(false);
+        expect(isClosedFor("subscription", "premium", trialSet(true, open))).toBe(false);
       }
     }
   });

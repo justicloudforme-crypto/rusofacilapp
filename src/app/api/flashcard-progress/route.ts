@@ -32,7 +32,11 @@ export async function GET() {
       lastSeenAt: row.lastSeenAt ? row.lastSeenAt.getTime() : null,
     };
   }
-  return NextResponse.json({ progress: map });
+  // `owner` — долг 218: клиенту нужно знать, ЧЬИ строки он сейчас получил,
+  // чтобы пометить ими свою карту и не отдать их следующему человеку на
+  // этом устройстве. Идентификатор аккаунта и так уже лежит в сессионной
+  // куке этого же браузера — новых сведений наружу не уходит.
+  return NextResponse.json({ progress: map, owner: user.id });
 }
 
 export async function POST(request: NextRequest) {
