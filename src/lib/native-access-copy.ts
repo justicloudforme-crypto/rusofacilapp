@@ -147,7 +147,7 @@ export interface NativeAccessCopy {
     words: PluralForms;
     /** «{count} выражение/выражения/выражений». */
     expressions: PluralForms;
-    /** «В этой версии приложения закрыто {items}.» — {items} приходит из
+    /** «Закрыто {items}.» — {items} приходит из
      *  `words`/`expressions` выше. */
     closed: string;
     /** То же с уровнем: «…закрыто {items} уровня {level}.» */
@@ -230,11 +230,10 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     locked: {
       words: { one: "{count} palabra", few: "{count} palabras", many: "{count} palabras" },
       expressions: { one: "{count} expresión", few: "{count} expresiones", many: "{count} expresiones" },
-      closed: "En esta versión de la aplicación hay {items} cerradas aquí.",
-      closedAtLevel: "En esta versión de la aplicación hay {items} del nivel {level} cerradas.",
-      closedInTopic: "En esta versión de la aplicación hay {items} cerradas en el tema «{topic}».",
-      closedAtLevelInTopic:
-        "En esta versión de la aplicación hay {items} del nivel {level} cerradas en el tema «{topic}».",
+      closed: "Hay {items} cerradas.",
+      closedAtLevel: "Hay {items} del nivel {level} cerradas.",
+      closedInTopic: "Hay {items} cerradas en el tema «{topic}».",
+      closedAtLevelInTopic: "Hay {items} del nivel {level} cerradas en el tema «{topic}».",
       rest: "El resto del material funciona con normalidad.",
       badgePremium: "Solo Premium",
       badge: "Con suscripción",
@@ -290,10 +289,10 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     locked: {
       words: { one: "{count} слово", few: "{count} слова", many: "{count} слов" },
       expressions: { one: "{count} выражение", few: "{count} выражения", many: "{count} выражений" },
-      closed: "В этой версии приложения закрыто {items}.",
-      closedAtLevel: "В этой версии приложения закрыто {items} уровня {level}.",
-      closedInTopic: "В этой версии приложения закрыто {items} в теме «{topic}».",
-      closedAtLevelInTopic: "В этой версии приложения закрыто {items} уровня {level} в теме «{topic}».",
+      closed: "Закрыто {items}.",
+      closedAtLevel: "Закрыто {items} уровня {level}.",
+      closedInTopic: "Закрыто {items} в теме «{topic}».",
+      closedAtLevelInTopic: "Закрыто {items} уровня {level} в теме «{topic}».",
       rest: "Остальной материал работает как обычно.",
       badgePremium: "Только Premium",
       badge: "По подписке",

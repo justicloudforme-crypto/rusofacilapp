@@ -1,6 +1,7 @@
 "use client";
 
 import type { GlossaryTermData } from "@/components/glossary/GlossaryApp";
+import { readLocal, writeLocal } from "@/lib/safe-storage";
 
 /**
  * Module-level cache for the full glossary term list, shared by every
@@ -42,20 +43,13 @@ export function getCachedGlossaryTerms(): GlossaryTermData[] | null {
 export const GLOSSARY_DISCOVERED_KEY = "rusofasil:glossary-discovered";
 
 export function markGlossaryDiscovered() {
-  try {
-    localStorage.setItem(GLOSSARY_DISCOVERED_KEY, "1");
-  } catch {
-    // Private browsing / storage disabled — the hint just shows again next
-    // time, which is harmless.
-  }
+  // Private browsing / storage disabled — the hint just shows again next
+  // time, which is harmless.
+  writeLocal(GLOSSARY_DISCOVERED_KEY, "1");
 }
 
 export function isGlossaryDiscovered(): boolean {
-  try {
-    return localStorage.getItem(GLOSSARY_DISCOVERED_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readLocal(GLOSSARY_DISCOVERED_KEY) === "1";
 }
 
 /** Per-term progress tracking (distinct from GLOSSARY_DISCOVERED_KEY above,
@@ -71,8 +65,10 @@ const GLOSSARY_MASTERED_TERMS_KEY = "rusofasil:glossary-mastered-terms";
 export const GLOSSARY_SEEN_CHANGE_EVENT = "rusofasil:glossary-seen-change";
 
 function readSlugSet(key: string): string[] {
+  // `try` остаётся ради `JSON.parse`: обёртка отвечает за хранилище, а
+  // не за форму лежащих в нём данных.
   try {
-    const raw = localStorage.getItem(key);
+    const raw = readLocal(key);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed.filter((s): s is string => typeof s === "string") : [];
@@ -82,15 +78,13 @@ function readSlugSet(key: string): string[] {
 }
 
 function addToSlugSet(key: string, slug: string) {
-  try {
-    const slugs = readSlugSet(key);
-    if (slugs.includes(slug)) return;
-    slugs.push(slug);
-    localStorage.setItem(key, JSON.stringify(slugs));
-    window.dispatchEvent(new Event(GLOSSARY_SEEN_CHANGE_EVENT));
-  } catch {
-    // Private browsing / storage disabled — progress just won't persist.
-  }
+  const slugs = readSlugSet(key);
+  if (slugs.includes(slug)) return;
+  slugs.push(slug);
+  // Private browsing / storage disabled — progress just won't persist;
+  // событие при этом не рассылается, потому что рассылать нечего.
+  if (!writeLocal(key, JSON.stringify(slugs))) return;
+  window.dispatchEvent(new Event(GLOSSARY_SEEN_CHANGE_EVENT));
 }
 
 export function markTermSeen(slug: string) {

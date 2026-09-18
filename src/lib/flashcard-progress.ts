@@ -26,6 +26,7 @@ type KnownMap = Record<string, boolean>;
  * the full promotion rule. */
 
 import { postReliably } from "./reliable-post";
+import { readLocal, writeLocal } from "@/lib/safe-storage";
 
 export interface SrsEntry {
   box: number;
@@ -37,10 +38,12 @@ type SrsMap = Record<string, SrsEntry>;
 
 const MAX_BOX = 2;
 
+
 function readSrsAll(): SrsMap {
   if (typeof window === "undefined") return {};
+  // `try` остаётся ради `JSON.parse` — см. шапку `safe-storage.ts`.
   try {
-    const raw = window.localStorage.getItem(SRS_STORAGE_KEY);
+    const raw = readLocal(SRS_STORAGE_KEY);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
@@ -68,11 +71,8 @@ function readSrsAll(): SrsMap {
 
 function writeSrsAll(map: SrsMap) {
   if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(SRS_STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    // Same "nice-to-have, never block studying" reasoning as writeAll above.
-  }
+  // Same "nice-to-have, never block studying" reasoning as writeAll above.
+  writeLocal(SRS_STORAGE_KEY, JSON.stringify(map));
 }
 
 function syncSrsToServer(cardId: string, known: boolean, entry: SrsEntry) {
@@ -125,8 +125,9 @@ function toKnownMap(entries: EntryMap): KnownMap {
 
 function readAll(): EntryMap {
   if (typeof window === "undefined") return {};
+  // `try` остаётся ради `JSON.parse` — см. шапку `safe-storage.ts`.
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = readLocal(STORAGE_KEY);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
@@ -149,12 +150,9 @@ function readAll(): EntryMap {
 
 function writeAll(map: EntryMap) {
   if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    // Storage full or unavailable (e.g. private browsing) — progress
-    // tracking is a nice-to-have, never let it block studying.
-  }
+  // Storage full or unavailable (e.g. private browsing) — progress
+  // tracking is a nice-to-have, never let it block studying.
+  writeLocal(STORAGE_KEY, JSON.stringify(map));
 }
 
 function syncToServer(cardId: string, known: boolean) {
