@@ -26,6 +26,7 @@
 //   node scripts/check-float-overlap.mjs --base=http://localhost:3123
 //   node scripts/check-float-overlap.mjs --base=… --plant
 import { chromium } from "@playwright/test";
+import { pathToFileURL } from "node:url";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -138,11 +139,16 @@ async function main() {
   return 0;
 }
 
-main()
-  .then((code) => {
-    process.exitCode = code;
-  })
-  .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
+// Скрипт не делает НИЧЕГО при простом импорте — общее правило проекта,
+// заперто пробой `src/lib/entry-point.test.ts`.
+const IS_ENTRY_POINT = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
+if (IS_ENTRY_POINT) {
+  main()
+    .then((code) => {
+      process.exitCode = code;
+    })
+    .catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+}
