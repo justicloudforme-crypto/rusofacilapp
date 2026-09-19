@@ -83,6 +83,12 @@ async function speakCalls(page: import("@playwright/test").Page) {
 
 for (const surface of SURFACES) {
   test(`${surface.what}: анониму синтез не звучит ни разу`, async ({ page }) => {
+    // Бюджет назван числом: на уроке A1-1 органов «слушать» четырнадцать,
+    // и каждый нажимается со своим потолком. Замер 19.09.2026: на этой
+    // машине случай укладывался в 5 с, а на бегунке CI не укладывался в
+    // 30 с по умолчанию и краснел трижды подряд — отказ приходил по
+    // потолку ТЕСТА и указывал на невиновный `waitForTimeout` (долг 95).
+    test.setTimeout(120_000);
     await page.addInitScript(COUNTER);
     const response = await page.goto(surface.path);
     expect(response?.status(), `${surface.path} не ответила 200`).toBe(200);
@@ -106,6 +112,7 @@ test("закрытый рассказ анониму: синтез не звуч
   const fixture = await storyFixtureShape(request);
   test.skip(!fixture.present, fixture.why);
 
+  test.setTimeout(120_000);
   await page.addInitScript(COUNTER);
   const path = "/es/stories/e2e-fixture-story-camaleon";
   const response = await page.goto(path);

@@ -153,26 +153,30 @@ test("воркер держит документы своим счётом и в
   /**
    * ДОКАЗАТЕЛЬСТВО, ЧТО ПОТОЛОК ДЕРЖИТСЯ, А НЕ ПРОСТО НЕ ДОСТИГНУТ.
    *
-   * Двенадцать адресов дают предзагрузок меньше объявленного потолка, и
-   * «54 против 64» само по себе ничего не доказывает: ровно так выглядел
-   * бы и кеш вовсе без ограничения. Поэтому каталог ПРОКРУЧИВАЕТСЯ: Next
-   * префетчит каждую ссылку, попавшую в окно, и на списке рассказов их
-   * сотни. Ниже считается, сколько предзагрузок браузер и правда сделал,
-   * и если это число больше потолка, а в кеше записей не больше его, —
-   * потолок держится.
+   * Двенадцать адресов дают предзагрузок меньше потолка, и «54 против 64»
+   * само по себе ничего не доказывает: ровно так выглядел бы и кеш вовсе
+   * без ограничения. Нужна нагрузка ВЫШЕ потолка.
+   *
+   * Сначала нагрузка бралась прокруткой каталогов — Next префетчит каждую
+   * ссылку, попавшую в окно. На полной базе это давало 615 адресов, а в CI
+   * **23**: там база в форме фикстуры, и ссылок в каталогах просто нет.
+   * Проба краснела не на продукте, а на размере банка содержимого.
+   *
+   * Поэтому нагрузка синтетическая и одинаковая везде: страница сама шлёт
+   * запросы с теми же заголовками, по которым воркер и узнаёт
+   * предзагрузку (`RSC: 1` и `Next-Router-Prefetch: 1`). Адреса разные по
+   * строке запроса, то есть это разные ключи кеша и настоящая нагрузка на
+   * счётчик, а не повтор одного адреса.
    */
-  const prefetched = new Set<string>();
-  page.on("request", (request) => {
-    if (request.headers()["next-router-prefetch"] === "1") prefetched.add(new URL(request.url()).pathname);
-  });
-  for (const path of ["/es/stories", "/es/courses", "/es/word-games"]) {
-    await page.goto(path, { waitUntil: "domcontentloaded" });
-    for (let y = 0; y < 12; y += 1) {
-      await page.evaluate((step) => window.scrollTo(0, step * 900), y);
-      await page.waitForTimeout(300);
+  const LOAD = CACHE_BUDGET_BY_KEY.rscPrefetch.maxEntries * 2;
+  const requested = await page.evaluate(async (count) => {
+    const urls = Array.from({ length: count }, (_, i) => `/es?rf-cache-probe=${i}`);
+    for (const url of urls) {
+      await fetch(url, { headers: { RSC: "1", "Next-Router-Prefetch": "1" } }).catch(() => {});
     }
-  }
-  console.log(`  предзагрузок браузер сделал: ${prefetched.size} разных адресов`);
+    return urls.length;
+  }, LOAD);
+  console.log(`  предзагрузок отправлено: ${requested} разных адресов`);
 
   const caches_ = await census(page);
   expect(caches_.length, "кешей на устройстве 0 — воркер ничего не записал").toBeGreaterThan(0);
@@ -193,7 +197,7 @@ test("воркер держит документы своим счётом и в
   const cached = (path: string) => documents.some((p) => p === path || p === `${path}/`);
   const missing = WALK.filter((path) => path !== PAYMENT_PATH && !cached(path));
   console.log(`  документов в кеше ${documents.length} из ${WALK.length} обойдённых; не сохранены: ${missing.join(", ") || "нет"}`);
-  expect(missing, `эти адреса воркер не сохранил, хотя они обойдены дважды:\n${missing.join("\n")}`).toEqual([]);
+  expect(missing, `эти адреса воркер не сохранил, хотя заходов на них было до пяти:\n${missing.join("\n")}`).toEqual([]);
 
   // ДОЛГ 179 не отменён этой правкой: платёжная поверхность в кеше не
   // лежит, и это утверждается, а не подразумевается.
@@ -220,15 +224,15 @@ test("воркер держит документы своим счётом и в
   }
 
   // Потолок предзагрузки ДЕРЖИТСЯ, а не просто не достигнут: адресов
-  // запрошено больше, чем он позволяет, а в кеше их не больше него.
+  // отправлено вдвое больше, чем он позволяет, а в кеше их не больше него.
   const prefetchLimit = CACHE_BUDGET_BY_KEY.rscPrefetch.maxEntries;
   expect(
-    prefetched.size,
-    `предзагрузок сделано ${prefetched.size} при потолке ${prefetchLimit} — нагрузки не хватило, чтобы проверить сам потолок`,
+    requested,
+    `предзагрузок отправлено ${requested} при потолке ${prefetchLimit} — нагрузки не хватило, чтобы проверить сам потолок`,
   ).toBeGreaterThan(prefetchLimit);
-  expect(prefetch, "кеша предзагрузки нет вовсе").toBeTruthy();
+  expect(prefetch, "кеша предзагрузки нет вовсе — воркер не взял ни одной предзагрузки").toBeTruthy();
   expect(
     prefetch!.entries.length,
-    `предзагрузка: ${prefetch!.entries.length} записей против объявленных ${prefetchLimit} при ${prefetched.size} запрошенных — ровно долг 75`,
+    `предзагрузка: ${prefetch!.entries.length} записей против объявленных ${prefetchLimit} при ${requested} отправленных — ровно долг 75`,
   ).toBeLessThanOrEqual(prefetchLimit);
 });
