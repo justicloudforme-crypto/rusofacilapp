@@ -1,8 +1,9 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
-import { NetworkFirst, NetworkOnly, Serwist } from "serwist";
-import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
+import { CacheFirst, CacheableResponsePlugin, ExpirationPlugin, NetworkFirst, NetworkOnly, RangeRequestsPlugin, Serwist } from "serwist";
+import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
+import { AUDIO_CACHE_NAME, CACHE_BUDGET_BY_KEY, isAudioClipUrl } from "@/lib/sw-cache-policy";
 
 // The `/// <reference lib="webworker" />` above scopes this file's ambient
 // `self` type to ServiceWorkerGlobalScope without touching the project-wide
@@ -49,20 +50,74 @@ const REBUILT: Record<string, string> = {
   others: CACHES.others,
 };
 
+/** Какой строке бюджета (`src/lib/sw-cache-policy.ts`) отвечает каждое
+ *  переименованное имя. Раньше здесь не было ничего: переименованная
+ *  стратегия получала ЧУЖОЙ объект плагина из `@serwist/next`, и потолок в
+ *  32 записи приходил из `node_modules` — то есть был не наш и чинить его
+ *  было негде (долг 75). */
+const BUDGET_KEY: Record<string, "html" | "rsc" | "rscPrefetch" | "others"> = {
+  "pages-rsc-prefetch": "rscPrefetch",
+  "pages-rsc": "rsc",
+  pages: "html",
+  others: "others",
+};
+
+/**
+ * Свежий срок годности на КАЖДЫЙ кеш, с числом из нашей таблицы.
+ *
+ * `ignoreVary: true` — И ЭТО НАСТОЯЩАЯ ПРИЧИНА ДОЛГА 75, найденная
+ * экспериментом 19.09.2026, а не догадкой.
+ *
+ * Что измерено. После прокрутки трёх каталогов в кеше
+ * `rf-pages-rsc-prefetch-*` лежало **704 записи при объявленных 64**, а в
+ * хранилище сроков годности (`IndexedDB serwist-expiration`,
+ * `cache-entries`) — **69 записей на все кеши сразу**. То есть плагин
+ * исправно вычёркивал лишнее у себя и исправно звал `cache.delete(url)` —
+ * а из самого кеша не удалялось НИЧЕГО.
+ *
+ * Почему. `CacheExpiration.expireEntries` зовёт
+ * `cache.delete(url, this._matchOptions)`, и без `matchOptions` браузер
+ * обязан учитывать заголовок `Vary`. У ответа RSC он длинный (`RSC`,
+ * `Next-Router-State-Tree`, `Next-Router-Prefetch`, …), поэтому:
+ *
+ *   * один и тот же адрес лежит в кеше НЕСКОЛЬКИМИ записями — по одной на
+ *     каждое сочетание состояния роутера, отсюда 704 записи там, где
+ *     адресов на порядок меньше;
+ *   * `cache.delete(url)` без `ignoreVary` не совпадает ни с одной из них,
+ *     потому что у запроса-ключа при удалении этих заголовков нет вовсе.
+ *
+ * `ignoreVary: true` СНИМАЕТ ровно эту разницу и только при УДАЛЕНИИ:
+ * стратегия читает кеш своими правилами, с `Vary` как есть, поэтому
+ * чужой flight-ответ на чужое состояние роутера никому не отдастся.
+ * Удаление же становится тем, чем его считали: «выкинуть этот адрес».
+ */
+function expiration(key: "html" | "rsc" | "rscPrefetch" | "others" | "audio") {
+  const budget = CACHE_BUDGET_BY_KEY[key];
+  return new ExpirationPlugin({
+    maxEntries: budget.maxEntries,
+    maxAgeSeconds: budget.maxAgeSeconds,
+    matchOptions: { ignoreVary: true },
+  });
+}
+
 const runtimeCaching = defaultCache.map((route) => {
   const current = (route.handler as { cacheName?: string } | undefined)?.cacheName;
   const renamed = current ? REBUILT[current] : undefined;
   if (!renamed) return route;
   // Rebuilt rather than mutated: a Strategy reads its own cacheName in
   // several places and Serwist gives no supported way to change it after
-  // construction. The options mirror @serwist/next's own (NetworkFirst, and
-  // the plugins the strategy was built with) so behaviour is unchanged apart
-  // from where the entries live.
+  // construction.
+  //
+  // ДОЛГ 75. Плагины больше НЕ заимствуются у переименованной стратегии:
+  // каждый кеш получает свой `ExpirationPlugin`, собранный из нашей
+  // таблицы бюджетов. Замер, ради которого это сделано: у
+  // `rf-pages-rsc-prefetch` лежало 139 записей против объявленных 32, и
+  // объявление было чужое.
   return {
     matcher: route.matcher,
     handler: new NetworkFirst({
       cacheName: renamed,
-      plugins: (route.handler as { plugins?: SerwistPlugin[] }).plugins,
+      plugins: [expiration(BUDGET_KEY[current!])],
     }),
   };
 });
@@ -131,6 +186,53 @@ const serwist = new Serwist({
       matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
         sameOrigin && PAYMENT_PATH.test(url.pathname),
       handler: new NetworkOnly(),
+    },
+    /**
+     * ДОКУМЕНТ — СВОЙ КЕШ, ДОЛГ 76.
+     *
+     * Маршрут «pages» у `defaultCache` недостижим по построению: он
+     * требует у ЗАПРОСА заголовок `Content-Type: text/html`, которого
+     * навигация не шлёт никогда (замер записан в `sw-cache-names.ts`).
+     * Поэтому каждый документ падал во всеохватный `others` и делил
+     * тридцать две записи со статикой: в замере 7.143 на 32 записи
+     * приходилось 8 документов и 24 файла — и из 12 обойдённых подряд
+     * адресов офлайн открывались 8.
+     *
+     * Судим по `request.mode === "navigate"` — признаку самой навигации, а
+     * не по заголовку, которого не бывает. Стоит ДО `runtimeCaching`,
+     * иначе всеохватный `others` заберёт запрос себе первым.
+     */
+    {
+      matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
+        sameOrigin && request.mode === "navigate" && !url.pathname.startsWith("/api/"),
+      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html")] }),
+    },
+    /**
+     * КЛИП ОЗВУЧКИ — СВОЙ КЕШ, ДОЛГ 77.
+     *
+     * Совпадение считает ФУНКЦИЯ, а не регулярка, и в этом вся починка:
+     * `RegExpRoute` у `serwist` отказывается применять регулярку к чужому
+     * адресу, если совпадение начинается не с нулевого символа, — а
+     * `\.mp3$` на `https://…public.blob.vercel-storage.com/a/b.mp3`
+     * совпадает в конце. Замер до правки: 40 запрошенных клипов, 40
+     * ответов 200, 0 записей в `static-audio-assets` (кеш не создан
+     * вовсе) и 32 в общем `cross-origin` с часом жизни.
+     *
+     * `statuses: [0, 200]` — потому что ответ чужого источника без CORS
+     * приходит непрозрачным (`status 0`), и без этого он не кешируется
+     * вовсе. `RangeRequestsPlugin` — потому что проигрыватель просит
+     * куски файла, а не файл целиком.
+     */
+    {
+      matcher: ({ url }: { url: URL }) => isAudioClipUrl(url),
+      handler: new CacheFirst({
+        cacheName: AUDIO_CACHE_NAME,
+        plugins: [
+          expiration("audio"),
+          new CacheableResponsePlugin({ statuses: [0, 200] }),
+          new RangeRequestsPlugin(),
+        ],
+      }),
     },
     ...runtimeCaching,
   ],

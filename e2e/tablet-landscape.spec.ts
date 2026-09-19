@@ -1,5 +1,6 @@
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { expectPageIsItself } from "./helpers/page-identity";
 
 // iPad landscape — above Tailwind's `sm` (640px) breakpoint, where the
 // desktop nav should be showing and MobileMenu's hamburger should stay
@@ -17,7 +18,11 @@ async function expectNoHorizontalOverflow(page: import("@playwright/test").Page)
 }
 
 test("home page uses the desktop nav, not the hamburger, and has no horizontal overflow", async ({ page }) => {
-  await page.goto("/es");
+  const response = await page.goto("/es");
+  // ДОЛГ 96: ширина пустого документа укладывается в окно ровно так же,
+  // как ширина настоящей главной.
+  expect(response?.status(), "/es не ответила 200").toBe(200);
+  await expectPageIsItself(page, "/es");
 
   await expect(page.locator("nav.hidden.sm\\:flex")).toBeVisible();
   await expect(page.getByRole("button", { name: /abrir menú|open menu/i })).toBeHidden();
@@ -51,7 +56,11 @@ test("vocabulary (flashcards) page scales cleanly at tablet landscape width", as
   // /pricing and the assertions below would be checking the wrong page.
   await loginWithSubscription(page);
   const response = await page.goto("/es/vocabulary");
-  await expectPageIsReallyThere(page, response?.status(), page.getByRole("heading", { level: 1 }), "/es/vocabulary");
+  // ДОЛГ 96: раньше признаком тут был ЛЮБОЙ `h1` — а `h1` есть у каждой
+  // страницы сайта, включая экран отказа при 200. Теперь спрашивается
+  // собственный canonical страницы, то есть именно этот адрес.
+  await expectPageIsReallyThere(page, response?.status(), page.locator('[data-testid="level-filter"]'), "/es/vocabulary");
+  await expectPageIsItself(page, "/es/vocabulary");
 
   await expect(page.locator("nav.hidden.sm\\:flex")).toBeVisible();
   await expectNoHorizontalOverflow(page);
@@ -67,6 +76,7 @@ test("courses catalog scales cleanly at tablet landscape width", async ({ page }
     page.locator('[data-testid="intro-presentation"]'),
     "/es/courses",
   );
+  await expectPageIsItself(page, "/es/courses");
 
   await expectNoHorizontalOverflow(page);
 });

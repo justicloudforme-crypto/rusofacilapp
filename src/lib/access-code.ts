@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "./db";
 import { extendOrGrantSubscription } from "./subscription";
 import { canRedeemAccessCode, getEntitlementTierFor } from "./entitlement";
-import { normalizeAccessCode } from "./access-code-format";
+import { describeNormalization, normalizationTag, normalizeAccessCode } from "./access-code-format";
 
 /**
  * Коды доступа для первых учеников (PROGRESS.md 7.146).
@@ -50,12 +50,14 @@ export type AccessCodeTier = (typeof ACCESS_CODE_TIERS)[number];
  * Смыслов на экране, однако, два, а не один: «выдал администратор» и
  * «человек погасил приглашение» — это разные события с разной историей.
  *
- * ЧТО ЭТО ЗНАЧЕНИЕ НЕ ОБЕЩАЕТ. Оно называет того, кто строку СОЗДАЛ, а не
- * каждого, кто её продлил: `extendOrGrantSubscription` продлевает любую живую
- * непремиальную строку, не глядя на её план (см. её же комментарий, правило
- * 2). Код, погашенный поверх живой ручной выдачи, продлит строку "manual" и
- * подпись не сменит. Это то же свойство, что у пары "referral"/"manual", и
- * оно старше этого захода.
+ * ЧТО ЭТО ЗНАЧЕНИЕ ОБЕЩАЕТ С 19.09.2026 (ДОЛГ 102 ЗАКРЫТ). Оно называет
+ * ПОСЛЕДНЕЕ событие со строкой доступа, а не того, кто её создал: с этого
+ * дня `extendOrGrantSubscription` переписывает `plan` продлеваемой строки
+ * новым значением. Код, погашенный поверх живой ручной выдачи, теперь даёт
+ * подпись "access_code"; ручная выдача поверх кода — "manual". До правки
+ * подпись оставалась от создателя строки, и на этом же свойстве оплаченный
+ * через OXXO месяц оставался подписан «выдано вручную» — то есть не попадал
+ * в историю платежей и показывал кнопку отмены.
  *
  * Premium в этой таблице отсутствует, поэтому выдать его кодом нельзя даже
  * опечаткой. */
@@ -100,18 +102,34 @@ export type RedeemResult =
  * Никогда не бросает: отчёт о проблеме не должен становиться второй
  * проблемой.
  */
-async function reportRefusal(reason: AccessCodeRefusal, context: { userId: string; code: string }) {
+async function reportRefusal(
+  reason: AccessCodeRefusal,
+  context: { userId: string; code: string; raw: string }
+) {
   try {
     const error = new Error(`Access code refused: ${reason}`);
     error.name = "AccessCodeRefused";
     const Sentry = await import("@sentry/nextjs");
+    // ДОЛГ 103. До 19.09.2026 отчёт знал длину кода и причину отказа — и
+    // отказ `unknown` от опечатки был в нём неотличим от отказа `unknown`
+    // от невидимого знака, вставленного мессенджером. Теперь у отказа есть
+    // второй тег: ЧТО нормализация из строки убрала, именами классов.
+    // Значения кода в теге нет и быть не может — там только имена классов
+    // из `NORMALIZATION_CLASSES` и `none`.
+    const shape = describeNormalization(context.raw);
     Sentry.captureException(error, {
       level: "info",
-      tags: { area: "access-code", refusal: reason },
+      tags: { area: "access-code", refusal: reason, normalized: normalizationTag(shape) },
       // Сам код — не секрет уровня пароля, но это платёжный по сути
       // предмет; в отчёт уходит только его длина и партия, если строка
-      // нашлась, а не значение.
-      extra: { userId: context.userId, codeLength: context.code.length },
+      // нашлась, а не значение. Счётчики классов — тоже не значение:
+      // «два тире и один невидимый знак» кода не восстанавливают.
+      extra: {
+        userId: context.userId,
+        codeLength: context.code.length,
+        rawLength: context.raw.length,
+        normalizationCounts: shape.counts,
+      },
     });
   } catch {
     // Молча: см. выше.
@@ -152,7 +170,7 @@ export async function redeemAccessCode(
 ): Promise<RedeemResult> {
   const code = normalizeAccessCode(rawCode);
   if (code.length === 0) {
-    await reportRefusal("unknown", { userId: user.id, code });
+    await reportRefusal("unknown", { userId: user.id, code, raw: rawCode });
     return { ok: false, reason: "unknown" };
   }
 
@@ -164,7 +182,7 @@ export async function redeemAccessCode(
   // мог — отказ был неисполним по построению.
   const tier = await getEntitlementTierFor(user);
   if (!canRedeemAccessCode(tier)) {
-    await reportRefusal("already_has_access", { userId: user.id, code });
+    await reportRefusal("already_has_access", { userId: user.id, code, raw: rawCode });
     return { ok: false, reason: "already_has_access" };
   }
 
@@ -180,7 +198,7 @@ export async function redeemAccessCode(
     data: { redeemedAt: now, redeemedById: user.id },
   });
 
-  if (count === 0) return { ok: false, reason: await diagnoseFailedRedemption(code, now, user.id) };
+  if (count === 0) return { ok: false, reason: await diagnoseFailedRedemption(code, now, user.id, rawCode) };
 
   const row = await db.accessCode.findUnique({ where: { code } });
   // Строка только что стала нашей — исчезнуть она не может. Но читать её
@@ -200,7 +218,8 @@ export async function redeemAccessCode(
 async function diagnoseFailedRedemption(
   code: string,
   now: Date,
-  userId: string
+  userId: string,
+  rawCode: string
 ): Promise<AccessCodeRefusal> {
   const row = await db.accessCode.findUnique({ where: { code } });
   const reason: AccessCodeRefusal = !row
@@ -215,7 +234,7 @@ async function diagnoseFailedRedemption(
             // именно поэтому это не «просрочен» и не «уже погашен», а
             // «неизвестен»: врать человеку о причине хуже, чем сказать общее.
             "unknown";
-  await reportRefusal(reason, { userId, code });
+  await reportRefusal(reason, { userId, code, raw: rawCode });
   return reason;
 }
 

@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { ACCESS_CODE_ALPHABET, formatAccessCode, normalizeAccessCode } from "./access-code-format";
+import {
+  ACCESS_CODE_ALPHABET,
+  NORMALIZATION_CLASSES,
+  describeNormalization,
+  formatAccessCode,
+  normalizationTag,
+  normalizeAccessCode,
+} from "./access-code-format";
 
 /**
  * Форма кода доступа: что именно нормализация выбрасывает и во что отображает
@@ -145,5 +152,86 @@ describe("нормализация одна на записи и на чтени
   it("объявление ровно одно на весь репозиторий", () => {
     const home = readFileSync(join(process.cwd(), "src/lib/access-code-format.ts"), "utf-8");
     expect(home.match(/export function normalizeAccessCode\s*\(/g)?.length).toBe(1);
+  });
+});
+
+/**
+ * ДОЛГ 103 — ЧТО ИМЕННО НОРМАЛИЗАЦИЯ УБРАЛА ИЗ СТРОКИ.
+ *
+ * Сторож `check:redeem-normalization` читает код. Здесь — поведение
+ * признака на настоящих строках, включая ту, которой долг и заведён:
+ * код, вставленный из мессенджера с типографским тире.
+ */
+describe("долг 103: признак «строка изменилась нормализацией»", () => {
+  const CODE = "AMIGO-JY9D-TAVG";
+
+  it("код, набранный ровно как напечатан, даёт только класс тире", () => {
+    const r = describeNormalization(CODE);
+    expect(r.changed).toBe(true);
+    expect(r.classes).toEqual(["dash"]);
+    expect(r.counts.dash).toBe(2);
+    expect(normalizationTag(r)).toBe("dash");
+  });
+
+  it("код без дефисов не меняется вовсе — признак говорит none", () => {
+    const r = describeNormalization("AMIGOJY9DTAVG");
+    expect(r.changed).toBe(false);
+    expect(normalizationTag(r)).toBe("none");
+  });
+
+  it("вставка из мессенджера: типографское тире и мягкий перенос — РАЗНЫЕ классы", () => {
+    // Ровно та строка, на которой долг 103 и стоит: отказ от невидимого
+    // знака обязан быть отличим от отказа от опечатки.
+    const r = describeNormalization("AMIGO–JY9D­TAVG");
+    expect(r.classes).toEqual(["dash", "invisible"]);
+    expect(r.counts.dash).toBe(1);
+    expect(r.counts.invisible).toBe(1);
+    expect(normalizationTag(r)).toBe("dash+invisible");
+  });
+
+  it("русская раскладка: омоглифы считаются своим классом", () => {
+    const r = describeNormalization("АМIGО-JY9D-TAVG");
+    expect(r.counts.homoglyph).toBe(3);
+    expect(normalizationTag(r)).toBe("dash+homoglyph");
+  });
+
+  it("нижний регистр и пробелы вместо дефисов — два класса, оба названы", () => {
+    const r = describeNormalization("amigo jy9d tavg");
+    expect(r.classes).toEqual(["case", "space"]);
+    expect(r.counts.space).toBe(2);
+  });
+
+  it("ПЯТЫЙ КЛАСС: знак, переживший нормализацию и не буква и не цифра", () => {
+    // До 19.09.2026 такой отказ приходил как `unknown` неотличимо от
+    // опечатки — это и есть «пятый класс, если он есть» из строки долга.
+    const r = describeNormalization(`${CODE}!`);
+    expect(r.counts.other).toBe(1);
+    expect(normalizationTag(r)).toBe("dash+other");
+  });
+
+  it("ГРАНИЦА КЛАССА `other` — латиница и цифры, а НЕ алфавит выпуска", () => {
+    // Приставка партии печатается словом, и в слове стоят `I` и `O` —
+    // буквы, которых в алфавите выпуска нет по замыслу. Считай мы «нет в
+    // алфавите выпуска», каждый законный код сообщал бы о двух
+    // посторонних знаках, и признак умер бы в первый же день.
+    expect(describeNormalization("AMIGOJY9DTAVG").counts.other).toBe(0);
+  });
+
+  it("КОНТРОЛЬ: признак не врёт ни на одном знаке алфавита выпуска", () => {
+    for (const ch of ACCESS_CODE_ALPHABET) {
+      expect(describeNormalization(ch).changed, ch).toBe(false);
+    }
+  });
+
+  it("КОНТРОЛЬ: имена классов — закрытый список, и он весь под проверкой", () => {
+    expect([...NORMALIZATION_CLASSES]).toEqual(["case", "space", "dash", "invisible", "homoglyph", "other"]);
+  });
+
+  it("ЗНАЧЕНИЯ КОДА В ПРИЗНАКЕ НЕТ: тег собран только из имён классов", () => {
+    const tag = normalizationTag(describeNormalization("amigo–JY9D TAVG!"));
+    for (const ch of "AMIGOJY9DTAVG") expect(tag.includes(ch)).toBe(false);
+    for (const part of tag.split("+")) {
+      expect([...NORMALIZATION_CLASSES] as string[]).toContain(part);
+    }
   });
 });

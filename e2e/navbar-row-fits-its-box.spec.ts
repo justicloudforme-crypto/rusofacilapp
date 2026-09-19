@@ -1,6 +1,7 @@
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
 import { SETTLE_MAX_MS, settleGeometry } from "./helpers/geometry";
+import { expectPageIsItself } from "./helpers/page-identity";
 
 /**
  * Сторож полосы 640–767: **ряд шапки не выезжает за свою контентную
@@ -99,6 +100,10 @@ for (const lang of ["es", "ru"] as const) {
       await page.setViewportSize({ width, height: 780 });
       const response = await page.goto(`/${lang}`, { waitUntil: "domcontentloaded" });
       expect(response?.status(), `/${lang} не ответила 200`).toBe(200);
+      // ДОЛГ 96: ряд шапки помещается в коробку и на пустом документе, и
+      // на экране отказа при 200 — значит перед замером спрашивается
+      // признак САМОЙ страницы.
+      await expectPageIsItself(page, `/${lang}`);
       await settleGeometry(page);
       const geometry = await rowGeometry(page);
       if (geometry.overflow > ROUNDING_EPS) {
@@ -116,6 +121,7 @@ for (const lang of ["es", "ru"] as const) {
       await page.setViewportSize({ width, height: 780 });
       const response = await page.goto(`/${lang}/profile`, { waitUntil: "domcontentloaded" });
       expect(response?.status(), `/${lang}/profile не ответила 200`).toBe(200);
+      await expectPageIsItself(page, `/${lang}/profile`);
       await settleGeometry(page);
       const geometry = await rowGeometry(page);
       if (geometry.overflow > ROUNDING_EPS) {
