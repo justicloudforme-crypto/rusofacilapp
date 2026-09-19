@@ -5,6 +5,7 @@ import type { GlossaryTermData } from "./GlossaryApp";
 import GlossaryTermPopover from "./GlossaryTermPopover";
 import TermQuiz, { type TermQuizDict } from "./TermQuiz";
 import { GLOSSARY_SEEN_CHANGE_EVENT, getMasteredTermSlugs } from "@/lib/glossary-client";
+import { glossaryTermPrimaryName } from "@/lib/glossary-term-name";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
 
@@ -88,7 +89,7 @@ export default function LessonGlossaryTerms({
         <div className="flex flex-wrap gap-2">
           {terms.map((term) => (
             <GlossaryTermPopover key={term.id} term={term} className={CHIP_CLASSNAME}>
-              {term.term}
+              {glossaryTermPrimaryName(term, lang)}
             </GlossaryTermPopover>
           ))}
         </div>

@@ -7,6 +7,7 @@ import { levelSlugs, type LevelSlug } from "@/lib/courses";
 import RelatedLessonsList from "./RelatedLessonsList";
 import GlossaryProgress from "./GlossaryProgress";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import { glossaryTermNames } from "@/lib/glossary-term-name";
 import type { Locale } from "@/i18n/config";
 import type { PluralForms } from "@/lib/plural";
 
@@ -205,6 +206,7 @@ export default function GlossaryApp({
         )}
         {terms.map((term) => {
           const earliestLevel = earliestRelatedLevel(term.relatedLessons);
+          const names = glossaryTermNames(term, lang);
           return (
           <div key={term.id} className="rounded-xl border border-black/10 p-4 dark:border-white/30">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -214,9 +216,12 @@ export default function GlossaryApp({
                     href={`/${lang}/glossary/${term.slug}`}
                     className="tap underline-offset-4 hover:underline active:underline"
                   >
-                    {term.term}
+                    {names.primary}
                   </Link>
                 </h2>
+                {names.secondary && (
+                  <span className="text-sm text-foreground/50">{names.secondary}</span>
+                )}
                 {earliestLevel && (
                   <span className="rounded-full border border-black/10 px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-foreground/50 dark:border-white/15">
                     {dict.introducedAtLabel} {earliestLevel}
@@ -230,8 +235,18 @@ export default function GlossaryApp({
                   and the speak button add up to 362px, which overhangs a
                   320px phone and scrolls the whole document sideways.
                   Measured by scripts/check-layout-geometry.mjs. */}
+              {/* На `/ru` подпись «Русский эквивалент» и её значение
+                  сняты: русское название уже стоит заголовком карточки
+                  (`names.primary`), а испанское — строкой под ним. Печатать
+                  тут то же самое третий раз незачем. Транскрипция и кнопка
+                  «слушать» остаются в обеих локалях — они про русское
+                  слово, а не про подпись. */}
               <span className="flex flex-wrap items-center gap-1.5 text-sm text-foreground/50">
-                {dict.russianEquivalentLabel}: <span className="font-medium text-foreground/80">{term.russianEquivalent}</span>
+                {lang === "ru" ? null : (
+                  <>
+                    {dict.russianEquivalentLabel}: <span className="font-medium text-foreground/80">{term.russianEquivalent}</span>
+                  </>
+                )}
                 {term.transcription ? <span className="text-foreground/50"> [{term.transcription}]</span> : null}
                 <SpeakButton text={term.russianEquivalent} label={dict.listenLabel} audioUrl={term.audioUrl} />
               </span>

@@ -13,6 +13,7 @@ import {
   getGrammarGuideForLesson,
 } from "@/lib/content-links";
 import { getAllMedia } from "@/lib/media/data";
+import { glossaryTermPrimaryName } from "@/lib/glossary-term-name";
 import LessonView from "@/components/lesson/LessonView";
 import { getRecordingsOwnerScope } from "@/lib/recordings-owner";
 import { isNativeShellRequest } from "@/lib/native-shell";
@@ -266,7 +267,7 @@ export default async function LessonPage({
                       <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
                         {dict.crossLinks.glossaryLabel}
                       </span>
-                      {term.term}
+                      {glossaryTermPrimaryName(term, lang)}
                     </Link>
                   </li>
                 ))}

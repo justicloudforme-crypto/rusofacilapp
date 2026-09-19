@@ -12,6 +12,7 @@ import {
   parseRelatedLessonsJson,
 } from "@/lib/glossary";
 import { attachGlossaryAudio } from "@/lib/glossary-audio";
+import { glossaryTermNames, glossaryTermPrimaryName } from "@/lib/glossary-term-name";
 import RelatedLessonsList from "@/components/glossary/RelatedLessonsList";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import JsonLd from "@/components/seo/JsonLd";
@@ -87,7 +88,11 @@ export async function generateMetadata({
       : term.definition;
   const description = truncateForMeta(rawDescription);
 
-  const titleBase = lang === "ru" ? `${term.term} — glosario de gramática rusa` : `${term.term} en ruso — glosario de gramática`;
+  // Главное имя, а не `term`: на `/ru` заголовок вкладки обязан совпасть
+  // с тем, что человек видит в `h1` на самой странице. Именно этим был
+  // плох отвергнутый вариант В — он оставлял их разными.
+  const headline = glossaryTermPrimaryName(term, lang);
+  const titleBase = lang === "ru" ? `${headline} — glosario de gramática rusa` : `${headline} en ruso — glosario de gramática`;
   const titleWithSuffix = `${titleBase} | RusoFácilapp`;
   // Term text varies a lot in length (5–52 chars) — for a long term, the
   // brand suffix is what has to give so the actual search term stays
@@ -123,10 +128,14 @@ export default async function GlossaryTermPage({
     where: { category: term.category, slug: { not: term.slug } },
     orderBy: { term: "asc" },
     take: 3,
-    select: { slug: true, term: true },
+    // `russianEquivalent` читается ради главного имени на `/ru`: без него
+    // ссылки «родственные термины» остались бы единственным местом
+    // страницы, где термин назван по-испански.
+    select: { slug: true, term: true, russianEquivalent: true },
   });
 
   const termUrl = `${SITE_URL}/${lang}/glossary/${term.slug}`;
+  const names = glossaryTermNames(term, lang);
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
@@ -134,7 +143,7 @@ export default async function GlossaryTermPage({
         data={{
           "@context": "https://schema.org",
           "@type": "DefinedTerm",
-          name: term.term,
+          name: names.primary,
           description: term.definition,
           inDefinedTermSet: {
             "@type": "DefinedTermSet",
@@ -148,7 +157,7 @@ export default async function GlossaryTermPage({
         data={breadcrumbList([
           { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
           { name: dict.nav.glossary, url: `${SITE_URL}/${lang}/glossary` },
-          { name: term.term, url: termUrl },
+          { name: names.primary, url: termUrl },
         ])}
       />
 
@@ -173,10 +182,27 @@ export default async function GlossaryTermPage({
         )}
       </div>
 
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{term.term}</h1>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{names.primary}</h1>
+      {/* Вторая строка — мельче главной.
+        *
+        * На `/es` тут по-прежнему подписанная строка «Equivalente ruso:
+        * звательный падеж», и разметка испанской локали не меняется ни
+        * байтом. На `/ru` подпись исчезает вместе с поводом для неё:
+        * русское название УЖЕ стоит в `h1`, и повторять его под
+        * заголовком значило бы напечатать одно и то же дважды. Вместо
+        * подписи там идёт испанское название термина — то самое
+        * `names.secondary`. Транскрипция и кнопка «слушать» остаются в
+        * обеих локалях: они относятся к РУССКОМУ слову, где бы оно ни
+        * стояло. */}
       <p className="mt-2 flex flex-wrap items-center gap-1.5 text-foreground/70">
-        {glossaryDict.russianEquivalentLabel}:{" "}
-        <span className="font-medium text-foreground">{term.russianEquivalent}</span>
+        {lang === "ru" ? (
+          names.secondary ? <span className="text-lg text-foreground/55">{names.secondary}</span> : null
+        ) : (
+          <>
+            {glossaryDict.russianEquivalentLabel}:{" "}
+            <span className="font-medium text-foreground">{term.russianEquivalent}</span>
+          </>
+        )}
         {term.transcription ? <span className="text-foreground/50">[{term.transcription}]</span> : null}
         <SpeakButton text={term.russianEquivalent} label={glossaryDict.listenLabel} audioUrl={term.audioUrl} />
       </p>
@@ -226,7 +252,7 @@ export default async function GlossaryTermPage({
                   href={`/${lang}/glossary/${related.slug}`}
                   className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
                 >
-                  {related.term}
+                  {glossaryTermPrimaryName(related, lang)}
                 </Link>
               </li>
             ))}

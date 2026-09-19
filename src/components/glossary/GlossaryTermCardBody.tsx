@@ -5,6 +5,7 @@ import type { GlossaryTermData } from "./GlossaryApp";
 import RelatedLessonsList from "./RelatedLessonsList";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import { earliestRelatedLevel } from "@/lib/glossary";
+import { glossaryTermNames } from "@/lib/glossary-term-name";
 import { useUiStrings } from "@/lib/use-ui-strings";
 
 /** The actual card content (term header, simple definition, Russian
@@ -25,13 +26,24 @@ export default function GlossaryTermCardBody({ term }: { term: GlossaryTermData 
   // JSON dictionaries.
   const t = useUiStrings().glossary;
   const earliestLevel = earliestRelatedLevel(term.relatedLessons);
+  const names = glossaryTermNames(term, lang);
 
   return (
     <>
+      {/* Заголовок карточки: главным — то название, которое положено
+        * локали. На `/es` это по-прежнему «caso vocativo — звательный
+        * падеж [транскрипция]»; на `/ru` — «звательный падеж — caso
+        * vocativo [транскрипция]». У шести терминов, где русское и
+        * испанское поля совпадают дословно, второй половины нет вовсе
+        * (`names.secondary === null`), и тире с ней не печатается. */}
       <span className="flex flex-wrap items-center gap-1.5 font-semibold text-foreground">
-        {term.term}
+        {names.primary}
         <span className="font-normal text-foreground/50">
-          — {term.russianEquivalent}
+          {lang === "ru"
+            ? names.secondary
+              ? `— ${names.secondary}`
+              : ""
+            : `— ${term.russianEquivalent}`}
           {term.transcription ? ` [${term.transcription}]` : ""}
         </span>
         <SpeakButton text={term.russianEquivalent} label={t.listenInRussian} audioUrl={term.audioUrl} />
