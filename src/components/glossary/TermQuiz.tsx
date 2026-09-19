@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { GlossaryTermData } from "./GlossaryApp";
 import { loadGlossaryTerms, markTermMastered, markTermSeen } from "@/lib/glossary-client";
 import SpeakButton from "@/components/lesson/SpeakButton";
+import { glossaryTermNames } from "@/lib/glossary-term-name";
 
 export interface TermQuizDict {
   toggleLabel: string;
@@ -156,6 +157,10 @@ export default function TermQuiz({
 
   const wasCorrect = selected === question.correctIndex;
   const hint = question.term.russianComparison ?? question.term.definition;
+  // Одно и то же имя и в крупном заголовке вопроса, и в подписи
+  // «Подсказка о «…»»: спрашивают об одном термине, называть его двумя
+  // разными словами на одном экране нельзя.
+  const names = glossaryTermNames(question.term, lang);
 
   return (
     <div className="mt-3 rounded-lg border border-black/10 p-3 dark:border-white/30">
@@ -170,7 +175,10 @@ export default function TermQuiz({
           {dict.questionPrompt}
         </p>
         <div className="mt-1 flex items-center gap-2">
-          <h3 className="text-xl font-bold leading-tight text-foreground">{question.term.term}</h3>
+          <h3 className="text-xl font-bold leading-tight text-foreground">{names.primary}</h3>
+          {names.secondary && (
+            <span className="text-sm text-foreground/50">{names.secondary}</span>
+          )}
           <SpeakButton text={question.term.russianEquivalent} label={dict.listenLabel} audioUrl={question.term.audioUrl} />
         </div>
       </div>
@@ -220,7 +228,7 @@ export default function TermQuiz({
             <div className="mt-2 rounded-lg bg-red-500/5 px-3 py-2">
               <p className="text-xs leading-5 text-foreground/70">
                 <span className="font-medium text-foreground/50">
-                  {dict.hintLabel.replace("{term}", question.term.term)}:{" "}
+                  {dict.hintLabel.replace("{term}", names.primary)}:{" "}
                 </span>
                 {hint}
               </p>
