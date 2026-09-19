@@ -283,6 +283,14 @@ describe("redeemAccessCode — отказы называются своим им
 });
 
 describe("revokeAccessCode", () => {
+  /**
+   * ДОЛГ 89, остаток закрыт 19.09.2026 (7.216): исполнитель отзыва больше
+   * не может быть `null`. Раньше три случая ниже звали функцию с `null` —
+   * то есть сами и показывали, что пустой исполнитель проходит. Теперь
+   * везде стоит настоящий идентификатор, а `null` исключён ТИПОМ: строка
+   * `revokeAccessCode("X", null)` не соберётся вовсе, и это проверяет
+   * `npm run typecheck`, а не утверждение в прогоне.
+   */
   it("отзывает только НЕ погашенный и НЕ отозванный — условие стоит в самом UPDATE", async () => {
     updateMany.mockResolvedValue({ count: 1 });
 
@@ -297,7 +305,7 @@ describe("revokeAccessCode", () => {
   it("погашенный код отозвать нельзя", async () => {
     updateMany.mockResolvedValue({ count: 0 });
     findUnique.mockResolvedValue(row({ redeemedAt: new Date() }));
-    await expect(revokeAccessCode("AMIGOK7M2QW9F", null)).resolves.toEqual({
+    await expect(revokeAccessCode("AMIGOK7M2QW9F", "owner-1")).resolves.toEqual({
       ok: false,
       reason: "already_redeemed",
     });
@@ -306,7 +314,7 @@ describe("revokeAccessCode", () => {
   it("уже отозванный — тоже отказ, но со своей причиной", async () => {
     updateMany.mockResolvedValue({ count: 0 });
     findUnique.mockResolvedValue(row({ revokedAt: new Date() }));
-    await expect(revokeAccessCode("AMIGOK7M2QW9F", null)).resolves.toEqual({
+    await expect(revokeAccessCode("AMIGOK7M2QW9F", "owner-1")).resolves.toEqual({
       ok: false,
       reason: "already_revoked",
     });
@@ -315,6 +323,6 @@ describe("revokeAccessCode", () => {
   it("несуществующий код", async () => {
     updateMany.mockResolvedValue({ count: 0 });
     findUnique.mockResolvedValue(null);
-    await expect(revokeAccessCode("NOPE", null)).resolves.toEqual({ ok: false, reason: "unknown" });
+    await expect(revokeAccessCode("NOPE", "owner-1")).resolves.toEqual({ ok: false, reason: "unknown" });
   });
 });

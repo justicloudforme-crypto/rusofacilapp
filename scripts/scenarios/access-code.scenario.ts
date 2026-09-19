@@ -57,9 +57,10 @@ type Account = { id: string; role: string };
 let redeemAccessCode: (user: Account, code: string) => Promise<
   { ok: true; days: number; tier: string } | { ok: false; reason: string }
 >;
+// Долг 89: исполнитель отзыва обязателен — `null` больше не тип.
 let revokeAccessCode: (
   code: string,
-  actorId: string | null
+  actorId: string
 ) => Promise<{ ok: true } | { ok: false; reason: string }>;
 let getEntitlementTier: () => Promise<Tier>;
 let invalidateSubscriptionCache: (userId: string) => Promise<void>;
@@ -418,7 +419,11 @@ describe("отзыв кода", () => {
   });
 
   it("[A10] отзыв кода, которого нет", async () => {
-    expect(await revokeAccessCode("AMIGO-NOPE-00000", null)).toEqual({ ok: false, reason: "unknown" });
+    // Долг 89 закрыт 19.09.2026 (7.216): исполнитель обязателен и здесь.
+    // Раньше сценарий звал отзыв с `null` — то есть сам и показывал, что
+    // пустая подпись проходит. Теперь такой вызов не собирается вовсе.
+    const actor = await newUser("ac-revoker");
+    expect(await revokeAccessCode("AMIGO-NOPE-00000", actor.id)).toEqual({ ok: false, reason: "unknown" });
   });
 });
 
