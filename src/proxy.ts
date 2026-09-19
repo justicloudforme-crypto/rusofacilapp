@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { defaultLocale, isLocale, locales } from "@/i18n/config";
-import { preferredLocaleFromHeader } from "@/lib/preferred-locale";
+import { localeForPrefixlessPath } from "@/lib/locale-decision";
 import { LOCALE_HEADER, NOT_FOUND_REWRITE_SEGMENT } from "@/lib/locale-header";
 import { isSpanishOnlyRoute } from "@/lib/spanish-only-routes";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
@@ -12,7 +12,6 @@ import {
   LOCALE_COOKIE,
   LOCALE_COOKIE_MAX_AGE,
   localeOfPath,
-  rememberedLocale,
 } from "@/lib/remembered-locale";
 import {
   NATIVE_SHELL_COOKIE,
@@ -21,12 +20,16 @@ import {
   userAgentIsNativeShell,
 } from "@/lib/native-shell-token";
 
-// Разбор `Accept-Language` живёт в `src/lib/preferred-locale.ts` — там же
-// и разобрано, почему он уехал из этого файла (долг 155). Здесь остаётся
-// только чтение заголовка: решение принимает одна функция, и её можно
-// спросить таблицей значений, не поднимая сервера.
-function getPreferredLocale(request: NextRequest): string {
-  return preferredLocaleFromHeader(request.headers.get("accept-language"));
+// ПОРЯДОК ИСТОЧНИКОВ ЯЗЫКА ЖИВЁТ В `src/lib/locale-decision.ts` (7.214).
+// Здесь остаётся только СБОР фактов: что лежит в куке и что пришло в
+// заголовке. Ни выбора, ни `??` между источниками в этом файле больше
+// нет — иначе порядок можно поменять местами, и ни один прогон не
+// покраснеет. Полный разбор и замер на проде — в шапке того модуля.
+function localeForRoot(request: NextRequest): string {
+  return localeForPrefixlessPath({
+    remembered: request.cookies.get(LOCALE_COOKIE)?.value,
+    acceptLanguage: request.headers.get("accept-language"),
+  });
 }
 
 // No section is blanket-gated here any more as of 2026-08-28 (lessons were
@@ -164,15 +167,21 @@ async function route(request: NextRequest) {
   );
 
   if (!pathnameHasLocale) {
-    // ЗАПОМНЕННЫЙ ВЫБОР ИДЁТ ПЕРВЫМ, ЗАГОЛОВОК УСТРОЙСТВА — ВТОРЫМ
-    // (заход 7.198, часть 3 «а»). Оболочка грузит именно этот адрес —
+    // ЗАПОМНЕННЫЙ ВЫБОР ИДЁТ ПЕРВЫМ, ЗАГОЛОВОК УСТРОЙСТВА — ВТОРЫМ,
+    // МОЛЧАЛИВЫЙ ОТВЕТ ТРЕТЬИМ (7.198 часть 3 «а», порядок накрыт
+    // сторожем `check:locale-priority` в 7.214).
+    //
+    // Наблюдение владельца 18.09.2026 — испанский телефон, голый адрес,
+    // человек попал на `/ru` — это ПРАВИЛЬНОЕ поведение, а не дефект:
+    // выбор человека сильнее языка устройства. Оболочка грузит именно
+    // этот адрес —
     // корневой, без локали, — и до правки решение принимал только
     // `Accept-Language`, то есть язык ТЕЛЕФОНА. Поэтому выбранный
     // русский не переживал ни одного перезапуска приложения.
     //
     // Ничего не запомнено — прежнее поведение слово в слово. Полный
     // разбор и границы — в шапке `src/lib/remembered-locale.ts`.
-    const locale = rememberedLocale(request.cookies.get(LOCALE_COOKIE)?.value) ?? getPreferredLocale(request);
+    const locale = localeForRoot(request);
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}${pathname}`;
     return NextResponse.redirect(url);
