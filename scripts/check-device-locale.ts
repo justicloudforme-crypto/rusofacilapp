@@ -72,15 +72,36 @@ function behaviour(decide: Decide): string[] {
 }
 
 const PROXY_DEFAULT = join(process.cwd(), "src", "proxy.ts");
+const DECISION_DEFAULT = join(process.cwd(), "src", "lib", "locale-decision.ts");
 
-/** Половина вторая: кто именно решает язык в `src/proxy.ts`. */
-export function statics(proxyText: string): string[] {
+/**
+ * Половина вторая: кто именно решает язык в `src/proxy.ts`.
+ *
+ * ВОПРОС ПОСТАВЛЕН ЗАНОВО 18.09.2026 (7.214), и вот почему. Прежняя
+ * формулировка требовала, чтобы `src/proxy.ts` звал
+ * `preferredLocaleFromHeader` СВОЕЙ РУКОЙ, и на правке 7.214 покраснела,
+ * хотя ничего не сломалось: разбор заголовка уехал на одну ступень
+ * ниже — в `src/lib/locale-decision.ts`, где к нему добавился порядок
+ * источников (кука сильнее устройства). Требовать прямого вызова значило
+ * бы запретить эту ступень навсегда.
+ *
+ * Охраняемое свойство, как оно есть на самом деле, одно: **разбор
+ * `Accept-Language` живёт в ОДНОМ модуле, и `src/proxy.ts` не разбирает
+ * заголовок сам.** Поэтому вопросов теперь два: прокси обязан спрашивать
+ * цепочку (прямо или через `locale-decision`), и у самого модуля разбора
+ * обязан быть настоящий пользователь.
+ */
+export function statics(proxyText: string, decisionText?: string): string[] {
   const bad: string[] = [];
-  if (!/from\s+"@\/lib\/preferred-locale"/.test(proxyText)) {
-    bad.push("src/proxy.ts не берёт разбор из @/lib/preferred-locale — решение снова в двух местах");
+  const direct = /from\s+"@\/lib\/preferred-locale"/.test(proxyText) && /preferredLocaleFromHeader\s*\(/.test(proxyText);
+  const viaDecision = /from\s+"@\/lib\/locale-decision"/.test(proxyText);
+  if (!direct && !viaDecision) {
+    bad.push(
+      "src/proxy.ts не берёт разбор ни из @/lib/preferred-locale, ни из @/lib/locale-decision — решение снова в двух местах",
+    );
   }
-  if (!/preferredLocaleFromHeader\s*\(/.test(proxyText)) {
-    bad.push("src/proxy.ts не зовёт preferredLocaleFromHeader — модуль есть, пользователя нет");
+  if (viaDecision && decisionText !== undefined && !/preferredLocaleFromHeader\s*\(/.test(decisionText)) {
+    bad.push("src/lib/locale-decision.ts не зовёт preferredLocaleFromHeader — модуль разбора есть, пользователя нет");
   }
   // Свой разбор узнаётся по связке «взял заголовок → режет по ';'».
   const reads = /headers\.get\(\s*"accept-language"\s*\)/.test(proxyText);
@@ -119,18 +140,29 @@ function plant(): void {
   say("настоящий разбор", behaviour(preferredLocaleFromHeader).length, false);
 
   const proxy = readFileSync(PROXY_DEFAULT, "utf8");
-  say("настоящий src/proxy.ts", statics(proxy).length, false);
+  const decision = readFileSync(DECISION_DEFAULT, "utf8");
+  say("настоящий src/proxy.ts", statics(proxy, decision).length, false);
   say(
     "proxy.ts потерял вызов и разбирает сам",
     statics(
       proxy
+        .replace(/import \{ localeForPrefixlessPath \}.*\n/, "")
         .replace(/import \{ preferredLocaleFromHeader \}.*\n/, "")
+        .replace(/localeForPrefixlessPath\s*\(/g, "ownParse(")
         .replace(/preferredLocaleFromHeader\s*\(/g, "ownParse(")
         .replace(
-          /return ownParse\(request\.headers\.get\("accept-language"\)\);/,
-          'const h = request.headers.get("accept-language"); return (h ?? "").split(",")[0]!.split(";")[0]!;',
+          /acceptLanguage: request\.headers\.get\("accept-language"\),/,
+          'acceptLanguage: (request.headers.get("accept-language") ?? "").split(",")[0]!.split(";")[0]!,',
         ),
+      decision,
     ).length,
+    true,
+  );
+  // 7.214: ступень есть, а разбора в ней нет — модуль разбора остался бы
+  // без пользователя, и поведенческая половина проверяла бы никого.
+  say(
+    "locale-decision.ts потерял вызов разбора",
+    statics(proxy, decision.replace(/preferredLocaleFromHeader\s*\(/g, "ownParse(")).length,
     true,
   );
 
@@ -144,7 +176,10 @@ function main(argv: string[]): void {
   const proxyArg = argv.find((a) => a.startsWith("--proxy="));
   const proxyPath = proxyArg ? proxyArg.slice("--proxy=".length) : PROXY_DEFAULT;
 
-  const bad = [...behaviour(preferredLocaleFromHeader), ...statics(readFileSync(proxyPath, "utf8"))];
+  const bad = [
+    ...behaviour(preferredLocaleFromHeader),
+    ...statics(readFileSync(proxyPath, "utf8"), readFileSync(DECISION_DEFAULT, "utf8")),
+  ];
   console.log(
     `[check:device-locale] значений заголовка ${CASES.length}, расхождений ${bad.length}; ` +
       `решает язык ${proxyPath === PROXY_DEFAULT ? "src/proxy.ts" : proxyPath}`,

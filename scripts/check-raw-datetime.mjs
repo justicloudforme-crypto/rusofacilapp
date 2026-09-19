@@ -57,6 +57,26 @@ const ALLOWED = new Map([
 ]);
 const ALLOWED_COUNT = 1;
 
+/**
+ * Исключения ВТОРОГО вопроса (по аргументу вызова, долг 92) — отдельным
+ * списком и УЖЕ файлового: ключ «файл:колонка», а не файл целиком.
+ *
+ * Почему не общий список. Пустить сюда весь файл значило бы ослепить
+ * сторожа на остальные его строки, а в `access-code.scenario.ts` записей
+ * даты ещё шесть, и все через форматтер. Здесь разрешена ровно одна
+ * колонка в одном файле — та, кривой формат которой и есть ПРЕДМЕТ
+ * измерения случая [A12]: он кладёт срок числом миллисекунд нарочно и
+ * показывает, что живой код становится неизвестным. Запрети это — и
+ * находка 7.146 перестанет быть воспроизводимой.
+ */
+const ALLOWED_ARGUMENT_SITES = new Map([
+  [
+    "scripts/scenarios/access-code.scenario.ts:expiresAt",
+    "случай [A12] кладёт срок числом миллисекунд НАРОЧНО — это измерение поведения SQLite, а не запись продукта",
+  ],
+]);
+const ALLOWED_ARGUMENT_SITES_COUNT = 1;
+
 /** Порядковые операторы: именно они зависят от формата хранения. Равенство
  * (`=`) в список не входит намеренно — оно врёт иначе и заметнее. */
 const ORDER_OPS = ["<=", ">=", "<", ">"];
@@ -204,6 +224,118 @@ export function writtenColumns(sql, columns) {
 }
 
 /**
+ * ====================================================================
+ * ВТОРОЙ ВОПРОС, УЖЕ ПО ВЫЗОВУ, А НЕ ПО ФАЙЛУ — ДОЛГ 92
+ * ====================================================================
+ *
+ * Строка долга дословно: «у `check:raw-datetime` источник даты ищется по
+ * ВСЕМУ файлу, а не по вызову, и это осознанный размен (иначе значение
+ * прячется за переименованием в переменную — так сторож и нашёл
+ * `check-rendered-surface.mjs`). Цена размена: в файле, где общий
+ * форматтер УЖЕ есть, запись мимо него сторож не увидит. Это не догадка,
+ * это измерено: случай [A12] в `access-code.scenario.ts` кладёт
+ * `expiresAt` числом миллисекунд, и сторож на этом файле молчит. Чинить
+ * разбором аргументов вызова, а не строк файла».
+ *
+ * Сделано ровно это, и вопрос по файлу НЕ убран — добавлен второй.
+ * Файловый вопрос ловит «дата собрана в переменную двумя строками выше»,
+ * вызовный — «в файле форматтер есть, а этот конкретный аргумент мимо
+ * него». Убери любой из двух, и одна из двух форм проходит молча.
+ *
+ * Как считается соответствие «колонка → аргумент». Позиция щели `?`
+ * берётся из САМОГО SQL: у `INSERT` — из списка колонок и списка
+ * `VALUES` (литералы вроде `'standard'` и `90` щелями не считаются и
+ * счёт не сдвигают), у `UPDATE` — по числу щелей до `SET col =`. Дальше
+ * смотрится ровно тот аргумент, а не весь список: аргумент с
+ * `Date.now()` для колонки, которая датой не является, ложной тревогой
+ * не становится.
+ */
+
+/** Верхнеуровневое разбиение по запятым: скобки и кавычки не режутся. */
+export function splitTopLevel(text) {
+  const out = [];
+  let depth = 0;
+  let quote = null;
+  let start = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === "\\") i += 1;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") quote = ch;
+    else if (ch === "(" || ch === "[" || ch === "{") depth += 1;
+    else if (ch === ")" || ch === "]" || ch === "}") depth -= 1;
+    else if (ch === "," && depth === 0) {
+      out.push(text.slice(start, i));
+      start = i + 1;
+    }
+  }
+  out.push(text.slice(start));
+  return out.map((t) => t.trim());
+}
+
+/** Номер щели `?`, в которую этот SQL кладёт названную колонку `DateTime`.
+ *  `null` — колонка пишется не щелью (литералом), спрашивать нечего. */
+export function placeholderIndexFor(sql, column) {
+  const insert =
+    /\binsert\s+(?:or\s+\w+\s+)?into\s+["'`[]?[A-Za-z_][A-Za-z0-9_]*["'`\]]?\s*\(([^)]*)\)\s*values\s*\(([\s\S]*?)\)/i.exec(
+      sql,
+    );
+  if (insert) {
+    const cols = splitTopLevel(insert[1]).map((c) => c.replace(/^["'`[]|["'`\]]$/g, ""));
+    const values = splitTopLevel(insert[2]);
+    const at = cols.indexOf(column);
+    if (at < 0 || at >= values.length) return null;
+    if (values[at] !== "?") return null;
+    return values.slice(0, at).filter((v) => v === "?").length;
+  }
+  if (/\bupdate\b/i.test(sql) && /\bset\b/i.test(sql)) {
+    const bare = "(?:\"|`|\\[)?" + column + "(?:\"|`|\\])?";
+    const m = new RegExp(bare + "\\s*=\\s*\\?", "i").exec(sql);
+    if (!m) return null;
+    return (sql.slice(0, m.index).match(/\?/g) ?? []).length;
+  }
+  return null;
+}
+
+/** Массив `args: [...]` того вызова, которому принадлежит этот SQL. */
+export function argumentsAfter(source, from) {
+  const at = source.indexOf("args", from);
+  if (at < 0) return null;
+  const open = source.indexOf("[", at);
+  if (open < 0 || open - at > 40) return null;
+  let depth = 0;
+  let quote = null;
+  for (let i = open; i < source.length; i += 1) {
+    const ch = source[i];
+    if (quote) {
+      if (ch === "\\") i += 1;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") quote = ch;
+    else if (ch === "[" || ch === "(" || ch === "{") depth += 1;
+    else if (ch === "]" || ch === ")" || ch === "}") {
+      depth -= 1;
+      if (depth === 0) return splitTopLevel(source.slice(open + 1, i));
+    }
+  }
+  return null;
+}
+
+/** Берёт ли этот аргумент дату мимо общего форматтера. */
+export function argumentBypassesFormatter(argument) {
+  if (argument === undefined || argument === null) return null;
+  if (argument.includes(`${FORMATTER}(`)) return null;
+  for (const expr of RAW_DATE_SOURCES) {
+    if (argument.includes(expr)) return expr;
+  }
+  return null;
+}
+
+/**
  * ОБЛАСТЬ ПОИСКА ИСТОЧНИКА ДАТЫ — ВЕСЬ ФАЙЛ, А НЕ ВЫЗОВ. Это решение, и вот
  * его цена, измеренная на первом же прогоне: `scripts/check-rendered-surface.mjs`
  * пишет `currentPeriodEnd`, `createdAt` и `updatedAt` строкой
@@ -251,6 +383,28 @@ export function auditFile(file, source, columns) {
           `Ответ зависит от формата хранения, а формат принадлежит Prisma: сравнивать через Prisma или в JS.`
       );
     }
+    // ВТОРОЙ ВОПРОС — ПО ВЫЗОВУ (долг 92). Работает и там, где форматтер
+    // в файле есть: спрашивается ровно тот аргумент, который уезжает в
+    // щель этой колонки.
+    if (written.length > 0) {
+      const args = argumentsAfter(source, literal.end ?? literal.start);
+      if (args) {
+        for (const column of written) {
+          const index = placeholderIndexFor(literal.text, column);
+          if (index === null || index >= args.length) continue;
+          const bypass = argumentBypassesFormatter(args[index]);
+          if (!bypass) continue;
+          if (ALLOWED_ARGUMENT_SITES.has(`${file}:${column}`)) continue;
+          problems.push(
+            `ЗАПИСЬ ДАТЫ МИМО ФОРМАТА PRISMA (по аргументу вызова): ${file}:${line} — ` +
+              `колонка ${column} уезжает в щель №${index + 1}, а там «${args[index].trim()}» (${bypass}). ` +
+              `Значение обязано пройти через ${FORMATTER}() (scripts/stored-datetime.mjs). ` +
+              `Вопрос по файлу здесь молчит: общий форматтер в файле есть — долг 92.`,
+          );
+        }
+      }
+    }
+
     if (written.length > 0 && rawSources.length > 0 && !hasFormatter) {
       problems.push(
         `ЗАПИСЬ ДАТЫ МИМО ФОРМАТА PRISMA: ${file}:${line} — пишет ${written.join(", ")}, ` +
@@ -283,6 +437,13 @@ function main() {
 
   if (ALLOWED.size !== ALLOWED_COUNT) {
     console.error(`Длина списка исключений ${ALLOWED.size}, ожидалось ${ALLOWED_COUNT}. Число правится вместе со списком.`);
+    process.exit(1);
+  }
+  if (ALLOWED_ARGUMENT_SITES.size !== ALLOWED_ARGUMENT_SITES_COUNT) {
+    console.error(
+      `Длина списка исключений по аргументу ${ALLOWED_ARGUMENT_SITES.size}, ожидалось ${ALLOWED_ARGUMENT_SITES_COUNT}. ` +
+        "Число правится вместе со списком.",
+    );
     process.exit(1);
   }
 
@@ -340,6 +501,36 @@ function main() {
         name: "строка со словом update, но не запрос — молчание (отрицательный контроль)",
         file: "src/lib/planted.ts",
         source: 'const message = "update your createdAt > settings"; console.log(message, Date.now());',
+        expect: null,
+      },
+      {
+        // ДОЛГ 92. Ровно форма случая [A12]: в файле общий форматтер ЕСТЬ
+        // (соседний аргумент через него и уезжает), а срок кладётся числом
+        // миллисекунд. Вопрос по файлу здесь молчит по построению —
+        // ловит только вопрос по аргументу вызова.
+        name: "форматтер в файле есть, а ОДИН аргумент мимо него (долг 92)",
+        file: "src/lib/planted.ts",
+        source:
+          'await raw.execute({ sql: `INSERT INTO "AccessCode" (id, code, tier, expiresAt, createdAt) VALUES (?, ?, \'standard\', ?, ?)`, args: [id, code, hour.getTime(), storedDateTime(new Date())] });',
+        expect: "ЗАПИСЬ ДАТЫ МИМО ФОРМАТА PRISMA (по аргументу вызова)",
+      },
+      {
+        // Обратная половина той же подсадки: тот же вызов, но срок уезжает
+        // через форматтер — сторож обязан молчать, иначе он ловит не то.
+        name: "тот же вызов, срок через форматтер — молчание (отрицательный контроль к долгу 92)",
+        file: "src/lib/planted.ts",
+        source:
+          'await raw.execute({ sql: `INSERT INTO "AccessCode" (id, code, tier, expiresAt, createdAt) VALUES (?, ?, \'standard\', ?, ?)`, args: [id, code, storedDateTime(hour), storedDateTime(new Date())] });',
+        expect: null,
+      },
+      {
+        // И третья: аргумент с `Date.now()` для колонки, которая ДАТОЙ НЕ
+        // ЯВЛЯЕТСЯ, ложной тревогой становиться не должен — позиционный
+        // разбор тем и оправдан, что он смотрит ровно свою щель.
+        name: "Date.now() уезжает в щель НЕ-даты — молчание (отрицательный контроль)",
+        file: "src/lib/planted.ts",
+        source:
+          'await raw.execute({ sql: `INSERT INTO "AccessCode" (id, code, durationDays, createdAt) VALUES (?, ?, ?, ?)`, args: [id, code, Date.now(), storedDateTime(new Date())] });',
         expect: null,
       },
     ];

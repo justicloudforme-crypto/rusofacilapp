@@ -1,3 +1,39 @@
+// ПЕРЕПИСЬ СТРОК ПОДПИСКИ. ПРАВИТЬ ИМИ БОЛЬШЕ НЕЧЕГО — ДОЛГ 32 ЗАКРЫТ
+// 18.09.2026 (заход 7.214).
+//
+// Строка долга дословно: «`raise-subscription-tier.mjs` поднимает `plan`
+// на месте и требует самой свежей строки — обе посылки после 7.59
+// неверны → сверка со Stripe по 7.58 всё-таки находит задетую строку
+// (сейчас таких 0) → не запускать как есть: переписать под новую модель
+// или удалить».
+//
+// ПЕРЕМЕРЕНО 18.09.2026, обе посылки действительно неверны:
+//
+//   1. «ПОДНИМАЕТ `plan` НА МЕСТЕ». Под нынешней моделью это неверная
+//      ФОРМА РЕМОНТА, а не деталь. `extendOrGrantSubscription`
+//      (`src/lib/subscription.ts`) ищет строку для продления только ТОГО
+//      ЖЕ СОРТА (`isPremiumPlan(row.plan) === premiumGrant`), то есть
+//      покупка Premium поверх месячной заводит СВОЮ строку. Поднять
+//      `plan` у месячной строки сегодня значило бы схлопнуть две выдачи
+//      в одну и потерять месячную.
+//   2. «ТРЕБУЕТ САМОЙ СВЕЖЕЙ СТРОКИ». Доступ решает `tierOfAccount`, а он
+//      читает ВСЕ строки человека (`getSubscriptionsForUser`), а не одну
+//      свежую. «Быть самой свежей» перестало быть свойством безопасности
+//      ещё в 7.59 — сторож, который этого требует, охраняет не то.
+//
+// ЗАМЕР НА ПРОДЕ 18.09.2026 (только SELECT, этим же `--list`): строк
+// `Subscription` 6, строк с планом `lifetime` 0, людей с ДВУМЯ строками
+// 0. То есть случая, ради которого скрипт писался, на проде не случилось
+// ни разу.
+//
+// ЧТО ОСТАЛОСЬ. Только `--list` — перепись строк, чтение и ничего кроме.
+// Запись отключена НЕ флагом, который можно снять, а отсутствием кода:
+// если такая строка когда-нибудь найдётся, чинится она обычной
+// админской выдачей (она заведёт отдельную строку Premium — ровно то,
+// что сделала бы сегодняшняя покупка), а не правкой `plan` на месте.
+//
+// ================== ИСТОРИЯ, РАДИ КОТОРОЙ ФАЙЛ ЖИВ ==================
+//
 // Raise a Subscription row that a Premium payment failed to raise.
 //
 // Prepared, NOT run. Production held zero affected rows when this was
@@ -44,26 +80,17 @@
 import "dotenv/config";
 import { pathToFileURL } from "node:url";
 import { createClient } from "@libsql/client";
-// Формат даты — общий для всех, кто пишет в базу мимо Prisma
-// (stored-datetime.mjs, PROGRESS.md 7.147 долг 91).
-import { storedDateTime } from "./stored-datetime.mjs";
-
-// Same constant as src/lib/subscription.ts. Not imported: that module is
-// `server-only` and pulls in Prisma, Redis and the Next runtime.
-const PREMIUM_PLAN_ID = "lifetime";
+// Ни форматтера даты, ни константы плана здесь больше нет: писать нечем,
+// и держать их значило бы держать полуготовую правку под рукой (долг 32).
 const INACTIVE_STATUSES = new Set(["canceled", "past_due", "incomplete_expired"]);
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
-const arg = (name) => {
-  const hit = argv.find((a) => a.startsWith(`--${name}=`));
-  return hit ? hit.slice(name.length + 3) : "";
-};
 
-const APPLY = flag("apply");
+// `--apply`, `--only` и `--expect-plan` сохранены как ВХОД, чтобы старая
+// команда из документов не сделала вид, что сработала: она доходит до
+// отказа и печатает причину. Читаются они уже только для этого.
 const LIST = flag("list");
-const EXPECT_PLAN = arg("expect-plan").trim();
-const ONLY = arg("only").split(",").map((s) => s.trim()).filter(Boolean);
 
 function connection() {
   const url = process.env.PROD_TURSO_DATABASE_URL || process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
@@ -109,96 +136,21 @@ async function main() {
 
   if (LIST) return 0;
 
-  if (ONLY.length === 0) {
-    console.error(
-      "\n--only=<subscriptionId>[,<subscriptionId>] is required. There is no 'fix everyone' here" +
-        " on purpose — run with --list to get the ids above."
-    );
-    return 1;
-  }
-  if (!EXPECT_PLAN) {
-    console.error(
-      "\n--expect-plan=<plan> is required: name the plan the row is supposed to be holding right now." +
-        " If the stored plan is anything else, this run stops without writing."
-    );
-    return 1;
-  }
-  if (EXPECT_PLAN === PREMIUM_PLAN_ID) {
-    console.error(`\n--expect-plan=${PREMIUM_PLAN_ID} makes no sense: that row is already Premium, there is nothing to raise.`);
-    return 1;
-  }
-
-  const byId = new Map(all.map((r) => [r.id, r]));
-  const targets = [];
-  const refusals = [];
-  for (const id of ONLY) {
-    const row = byId.get(id);
-    if (!row) {
-      refusals.push(`${id}: no such Subscription row`);
-      continue;
-    }
-    if (row.plan !== EXPECT_PLAN) {
-      refusals.push(`${id}: stored plan is "${row.plan}", --expect-plan says "${EXPECT_PLAN}"`);
-      continue;
-    }
-    if (row.plan === PREMIUM_PLAN_ID) {
-      refusals.push(`${id}: already Premium — nothing to raise`);
-      continue;
-    }
-    if (!isActive(row)) {
-      // An expired or canceled row grants nothing whatever its plan says,
-      // so raising it would look like a repair and change no access at all.
-      refusals.push(`${id}: not active (status=${row.status}, periodEnd=${row.currentPeriodEnd}) — raising it would change no access`);
-      continue;
-    }
-    if (newestOf.get(row.userId) !== row.id) {
-      // getLatestSubscription reads the newest row by createdAt and nothing
-      // else, so raising an older one is a write that nobody ever reads.
-      refusals.push(`${id}: not this user's newest row (${newestOf.get(row.userId)} is) — nothing reads it`);
-      continue;
-    }
-    targets.push(row);
-  }
-
-  if (refusals.length) {
-    console.error(`\nrefused, nothing written:`);
-    refusals.forEach((r) => console.error(`  ${r}`));
-    // All or nothing: a partial run leaves half a decision applied and no
-    // record of which half.
-    return 1;
-  }
-
-  console.log(`\nin scope: ${targets.length} row(s)`);
-  for (const row of targets) {
-    console.log(
-      `  ${row.id}  user=${row.userId}\n` +
-        `    plan: "${row.plan}" -> "${PREMIUM_PLAN_ID}"   (status, period end and every other column untouched)`
-    );
-  }
-
-  if (!APPLY) {
-    console.log("\n--dry-run (default): nothing was written. Add --apply to do it for real.");
-    return 0;
-  }
-
-  for (const row of targets) {
-    // Guarded in the statement itself, not only in the checks above: if the
-    // row changed between the read and this write, it updates nothing.
-    const res = await db.execute({
-      sql: `UPDATE Subscription SET plan = ?, updatedAt = ? WHERE id = ? AND plan = ?`,
-      args: [PREMIUM_PLAN_ID, storedDateTime(new Date()), row.id, EXPECT_PLAN],
-    });
-    console.log(`  ${row.id}: ${res.rowsAffected} row(s) updated`);
-    if (res.rowsAffected !== 1) {
-      console.error(`  stopped: expected exactly 1 row, got ${res.rowsAffected} — the row changed under the run`);
-      return 1;
-    }
-  }
-  console.log(
-    "\nDone. The 30s subscription cache means access can lag by up to half a minute;" +
-      " the row itself is already correct."
+  // ДОЛГ 32. Единственная дверь к записи — и она заперта кодом, а не
+  // флагом. Причина названа числом в шапке файла: обе посылки, на
+  // которых стояла правка, после 7.59 неверны, а строк, которые она
+  // чинила бы, на проде 0.
+  console.error(
+    "\nЗАПИСЬ ОТКЛЮЧЕНА (долг 32, закрыт 18.09.2026).\n" +
+      "  Правка «поднять plan на месте» под нынешней моделью НЕВЕРНА: покупка Premium поверх\n" +
+      "  месячной заводит ОТДЕЛЬНУЮ строку (extendOrGrantSubscription), и подъём plan у месячной\n" +
+      "  схлопнул бы две выдачи в одну. Доступ решает tierOfAccount по ВСЕМ строкам человека,\n" +
+      "  а не по самой свежей, — второе требование этого скрипта тоже перестало что-либо охранять.\n" +
+      "  Если задетая строка всё-таки найдётся: чинить обычной админской выдачей Premium —\n" +
+      "  она заведёт отдельную строку, ровно как сегодняшняя покупка. Здесь править нечем.\n" +
+      "  Перепись строк по-прежнему доступна: --list.",
   );
-  return 0;
+  return 1;
 }
 
 // Only when this file is the process entry point — see src/lib/entry-point.ts.
