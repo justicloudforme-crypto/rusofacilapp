@@ -1733,5 +1733,30 @@
       }
     ],
     "webCta": "Mientras tanto, continúa en el navegador"
+  },
+  "clientUi": {
+    "glossary": {
+      "listenInRussian": "Escuchar en ruso",
+      "introducedIn": "Introducido en",
+      "howItWorksInRussian": "Cómo funciona en ruso:",
+      "appearsIn": "Aparece en",
+      "noDefinitionYet": "Sin definición todavía."
+    },
+    "videoLesson": {
+      "levelLabel": "Nivel",
+      "transcriptHeading": "Texto / transcripción",
+      "noTranscript": "Esta lección todavía no tiene transcripción.",
+      "historicalContextHeading": "Contexto histórico y cultural",
+      "keyVocabularyHeading": "Vocabulario clave",
+      "quizHeading": "Cuestionario interactivo",
+      "quizPartOne": "Parte 1 · Contexto histórico y cultural",
+      "quizPartTwo": "Parte 2 · Vocabulario",
+      "scoreLabel": "Puntuación:",
+      "passedLabel": "Aprobado",
+      "failedLabel": "No aprobado",
+      "checkButton": "Comprobar",
+      "retryButton": "Reintentar",
+      "closeLabel": "Cerrar"
+    }
   }
 }

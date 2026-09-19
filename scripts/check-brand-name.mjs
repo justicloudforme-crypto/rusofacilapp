@@ -122,9 +122,12 @@ const SHOWCASE = [
     re: /<string name="title_activity_main">([^<]*)<\/string>/, expect: () => APP_DISPLAY_NAME },
   { file: "capacitor.config.ts", what: "appName",
     re: /appName:\s*"([^"]*)"/, expect: () => APP_DISPLAY_NAME },
-  { file: "src/app/manifest.ts", what: "manifest name", 
+  // ДОЛГ 83 (7.217): манифест собирается `src/lib/pwa-manifest.ts` и
+  // зависит от локали; `src/app/manifest.ts` больше нет. Бренд САЙТА
+  // по-прежнему берётся из одного объявления, просто место переехало.
+  { file: "src/lib/pwa-manifest.ts", what: "manifest name", 
     re: /\n\s*name: (\w+|"[^"]*"),/, expect: () => "SITE_BRAND" },
-  { file: "src/app/manifest.ts", what: "manifest short_name",
+  { file: "src/lib/pwa-manifest.ts", what: "manifest short_name",
     re: /short_name: (\w+|"[^"]*"),/, expect: () => "SITE_BRAND" },
 ];
 
@@ -738,7 +741,7 @@ function plantControls() {
     {
       name: "манифест PWA подписан витринным именем вместо бренда сайта",
       plant: function () {
-        this.restore = swap("src/app/manifest.ts", "name: SITE_BRAND,", 'name: "RusoFácil",');
+        this.restore = swap("src/lib/pwa-manifest.ts", "name: SITE_BRAND,", 'name: "RusoFácil",');
       },
       undo: function () {
         this.restore();

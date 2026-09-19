@@ -216,9 +216,14 @@ const MUST_FAIL_LOUDLY: Array<{ where: string; file: string; symbol: string; why
     why: "this is the picker's content, not its decoration — degrading it would serve a hub with no puzzles on it",
   },
   {
-    where: "protectAdminRoute",
+    // ДОЛГ 227, 19.09.2026: чтение уехало из `protectAdminRoute` в общую
+    // `liveSessionUser` — одну на оба гейта, админку и кабинет. Правило
+    // не изменилось ни на знак, изменилось его МЕСТО: проглотить отказ
+    // базы здесь значит пустить на /admin и в кабинет того, чью сессию
+    // только что отозвали.
+    where: "liveSessionUser",
     file: "proxy.ts",
-    symbol: "protectAdminRoute",
+    symbol: "liveSessionUser",
     why: "the read IS the authorisation check — swallowing its error and continuing would admit an unauthenticated request to /admin",
   },
 ];

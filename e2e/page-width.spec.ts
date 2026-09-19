@@ -2,6 +2,7 @@ import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
 import { markStudyDayByAction } from "./helpers/study-day";
 import { SETTLE_MAX_MS, settleGeometry } from "./helpers/geometry";
+import { expectPageIsItself } from "./helpers/page-identity";
 import {
   FILL_THRESHOLD,
   MIN_CONTAINER_WIDTH,
@@ -234,6 +235,11 @@ for (const width of WIDTHS) {
         continue;
       }
       expect(status, `${url} did not answer 200`).toBe(200);
+      // ДОЛГ 96: 200 — это ещё не «та страница». Ширина пустого документа
+      // и ширина экрана отказа укладываются в окно точно так же, как
+      // ширина настоящей страницы, поэтому перед замером спрашивается
+      // признак САМОЙ страницы — её собственный canonical.
+      await expectPageIsItself(page, url);
       measured.push(path);
       await settleGeometry(page);
       // The once-a-day greeting is a modal over the whole page. It is

@@ -46,6 +46,34 @@ function localeForRoot(request: NextRequest): string {
 // all of that unreachable for exactly the visitors it's meant to reach.
 
 /**
+ * ЖИВ ЛИ ЭТОТ ТОКЕН НА САМОМ ДЕЛЕ — ОДНА ФУНКЦИЯ НА ОБА ГЕЙТА (ДОЛГ 227).
+ *
+ * Подпись токена говорит только «его выдали мы». Отозван ли он с тех пор —
+ * знает единственная колонка `User.sessionVersion`, и знает она это в
+ * базе, а не в токене: «выйти на других устройствах» и смена пароля
+ * поднимают номер, и все ранее выданные токены с этой секунды мертвы,
+ * оставаясь верно подписанными.
+ *
+ * Одной функцией, а не двумя похожими выражениями, ровно по той причине,
+ * по которой правило доступа сведено к `tierOfAccount`: два пересказа
+ * одного правила расходятся молча, и расходиться они будут в сторону
+ * «пустили того, кого не надо».
+ *
+ * ЦЕНА НАЗВАНА ЧИСЛОМ: одно чтение `User` по первичному ключу на каждое
+ * открытие `/[lang]/admin`, `/[lang]/profile` и `/[lang]/account`. Для
+ * кабинета это чтение НЕ первое в запросе: страница всё равно зовёт
+ * `getCurrentUser()`, который читает ту же строку по тому же ключу.
+ */
+async function liveSessionUser(parsed: { userId: string; sessionVersion: number }) {
+  const user = await db.user.findUnique({
+    where: { id: parsed.userId },
+    select: { role: true, sessionVersion: true },
+  });
+  if (!user || user.sessionVersion !== parsed.sessionVersion) return null;
+  return user;
+}
+
+/**
  * Gate for /{lang}/admin and everything under it. Only 'owner' and 'admin'
  * roles get in; everyone else (including logged-out visitors) is bounced
  * before the dashboard ever renders. Fine-grained checks (e.g. the
@@ -65,11 +93,8 @@ async function protectAdminRoute(request: NextRequest, segments: string[]) {
     return NextResponse.redirect(url);
   }
 
-  const user = await db.user.findUnique({
-    where: { id: parsed.userId },
-    select: { role: true, sessionVersion: true },
-  });
-  if (!user || user.sessionVersion !== parsed.sessionVersion || !isStaff(user.role)) {
+  const user = await liveSessionUser(parsed);
+  if (!user || !isStaff(user.role)) {
     const url = request.nextUrl.clone();
     url.pathname = `/${lang}`;
     url.search = "";
@@ -107,26 +132,42 @@ async function protectAdminRoute(request: NextRequest, segments: string[]) {
  * «/ru/account (guest): экран не ответил за 240 с» — три красных прогона
  * доли 3/3 из четырёх.
  *
- * ПОЧЕМУ ПРОВЕРКА ТОЛЬКО ПО ТОКЕНУ, БЕЗ ЧТЕНИЯ БАЗЫ. Ровно как первая
- * половина `protectAdminRoute` выше: подписанного токена нет — человек
- * заведомо гость, и это единственный случай, который вообще попадает на
- * этот путь. Токен с устаревшим `sessionVersion` (пароль сменили на другом
- * устройстве) проверку проходит и упирается в проверку самой страницы —
- * там останется прежнее мета-обновление; платить за этот редкий случай
- * лишним чтением базы на КАЖДОМ открытии кабинета дороже, чем он стоит.
+ * ПРОВЕРКА ИДЁТ ДО БАЗЫ И ПОТОМ В БАЗУ — ДОЛГ 227 ЗАКРЫТ 19.09.2026.
+ *
+ * Строка долга дословно: «у токена с устаревшим `sessionVersion`
+ * мета-обновление в кабинете остаётся… гейт кабинета в `src/proxy.ts`
+ * судит только подпись токена (`verifySessionToken`) и базу не читает;
+ * подпись у такого токена верна, и запрос доходит до страницы, где
+ * `getCurrentUser()` вернёт `null` уже ПОСЛЕ первого байта… Не закрыто
+ * намеренно: случай редкий, а платит за него каждый вход в кабинет».
+ *
+ * ЧТО ПЕРЕСМОТРЕНО. Цена была названа верно, а вот с чем её сравнивали —
+ * нет. Чтение `User` по первичному ключу для кабинета не ПЕРВОЕ в
+ * запросе: страница кабинета всё равно зовёт `getCurrentUser()`, который
+ * читает ту же строку по тому же ключу. То есть плата — не «чтение вместо
+ * ноля», а второе чтение той же тёплой строки; а не платили мы за неё
+ * ровно тем случаем, ради которого «выйти на других устройствах» и
+ * существует: человек, сменивший пароль, на старом устройстве всё ещё
+ * получал целый документ кабинета и уходил на вход через секунду.
+ *
+ * ПОРЯДОК ШАГОВ — ЧАСТЬ ПОВЕДЕНИЯ. Гость (токена нет или подпись не
+ * сошлась) разворачивается БЕЗ единого обращения к базе: это самый
+ * частый случай на этом пути, и он остался ровно таким же дешёвым, каким
+ * был до правки. База спрашивается только у того, чей токен подписан.
  *
  * КУДА ВЕДЁТ `redirectTo`. Туда, куда человек шёл: кабинет — это
  * `/[lang]/profile`, а `/[lang]/account` только его псевдоним. Запрос
  * сохраняется целиком, иначе гость, вернувшийся из кассы с
  * `?checkout=success`, потерял бы исход покупки на входе.
  */
-function protectCabinetRoute(request: NextRequest, segments: string[]) {
+async function protectCabinetRoute(request: NextRequest, segments: string[]) {
   const [lang, section] = segments;
   if (section !== "profile" && section !== "account") return null;
   if (!isLocale(lang)) return null;
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  if (token && verifySessionToken(token)) return null;
+  const parsed = token ? verifySessionToken(token) : null;
+  if (parsed && (await liveSessionUser(parsed))) return null;
 
   const url = request.nextUrl.clone();
   const search = request.nextUrl.search;
@@ -229,7 +270,7 @@ async function route(request: NextRequest) {
   const adminAccessDenied = await protectAdminRoute(request, segments);
   if (adminAccessDenied) return adminAccessDenied;
 
-  const cabinetAccessDenied = protectCabinetRoute(request, segments);
+  const cabinetAccessDenied = await protectCabinetRoute(request, segments);
   if (cabinetAccessDenied) return cabinetAccessDenied;
 
 

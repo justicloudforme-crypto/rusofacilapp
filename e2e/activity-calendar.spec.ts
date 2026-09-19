@@ -123,6 +123,10 @@ for (const lang of ["es", "ru"] as const) {
         return { date: el.getAttribute("data-date")!, w: b.width, h: b.height, l: b.left, r: b.right, t: b.top };
       }),
     );
+    // ДОЛГ 96: сколько коробок померено — числом, до того как читать
+    // «самая маленькая». `reduce` по пустому списку бросил бы, а `map`
+    // и `some` по нему молча прошли бы.
+    expect(boxes.length, `/${lang}: коробок дней померено 0`).toBe(count);
     const smallest = boxes.reduce((min, b) => (b.w * b.h < min.w * min.h ? b : min));
     const widest = boxes.reduce((max, b) => (b.w > max.w ? b : max));
     console.log(

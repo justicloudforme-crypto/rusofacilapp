@@ -24,6 +24,10 @@ async function puzzleLinks(page: import("@playwright/test").Page, within: string
   const hrefs = await page.locator(`${within} a`).evaluateAll((els) =>
     els.map((el) => new URL((el as HTMLAnchorElement).href).pathname),
   );
+  // ДОЛГ 96: сколько ссылок собрано — числом, ВНУТРИ помощника. Иначе
+  // `filter` по пустому списку возвращает пустой список, и «ни одной
+  // платной ссылки» истинно на странице, где ссылок нет вовсе.
+  expect(hrefs.length, `${within}: ссылок на странице 0 — мерить было нечего`).toBeGreaterThan(0);
   return hrefs.filter((h) => PUZZLE_HREF.test(h));
 }
 

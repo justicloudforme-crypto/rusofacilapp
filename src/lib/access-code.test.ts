@@ -260,12 +260,38 @@ describe("redeemAccessCode — отказы называются своим им
 
     expect(captureException).toHaveBeenCalledWith(
       expect.objectContaining({ name: "AccessCodeRefused" }),
-      expect.objectContaining({ tags: { area: "access-code", refusal: "already_redeemed" } })
+      expect.objectContaining({
+        tags: { area: "access-code", refusal: "already_redeemed", normalized: "none" },
+      })
     );
     // И значение кода в отчёт не уходит — только длина.
     const extra = captureException.mock.calls[0][1].extra as Record<string, unknown>;
     expect(Object.values(extra)).not.toContain("AMIGOK7M2QW9F");
     expect(extra.codeLength).toBe(13);
+  });
+
+  /**
+   * ДОЛГ 103. Признак «что нормализация убрала из строки» — второй тег
+   * отказа. До 19.09.2026 отказ `unknown` от опечатки и отказ `unknown`
+   * от невидимого знака в отчётах были неотличимы.
+   */
+  it("тег называет классы знаков, которые нормализация выбросила", async () => {
+    updateMany.mockResolvedValue({ count: 0 });
+    findUnique.mockResolvedValue(null);
+
+    // Ровно та строка, на которой долг 103 и стоит: вставка из
+    // мессенджера — типографское тире и мягкий перенос.
+    await redeemAccessCode(USER, "AMIGO\u2013K7M2\u00ADQW9F");
+
+    const options = captureException.mock.calls[0][1] as {
+      tags: Record<string, string>;
+      extra: Record<string, unknown>;
+    };
+    expect(options.tags.normalized).toBe("dash+invisible");
+    // Значения кода ни в теге, ни в счётчиках нет.
+    expect(Object.values(options.tags)).not.toContain("AMIGOK7M2QW9F");
+    expect(options.extra.rawLength).toBe(15);
+    expect(options.extra.codeLength).toBe(13);
   });
 
   it("отчёт в Sentry, который сам упал, не роняет погашение", async () => {

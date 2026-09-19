@@ -1733,5 +1733,30 @@
       }
     ],
     "webCta": "А пока — продолжить в браузере"
+  },
+  "clientUi": {
+    "glossary": {
+      "listenInRussian": "Послушать по-русски",
+      "introducedIn": "Вводится на уровне",
+      "howItWorksInRussian": "Как это устроено в русском:",
+      "appearsIn": "Встречается в",
+      "noDefinitionYet": "Определения пока нет."
+    },
+    "videoLesson": {
+      "levelLabel": "Уровень",
+      "transcriptHeading": "Текст / расшифровка",
+      "noTranscript": "У этого урока пока нет расшифровки.",
+      "historicalContextHeading": "Исторический и культурный контекст",
+      "keyVocabularyHeading": "Ключевая лексика",
+      "quizHeading": "Интерактивный тест",
+      "quizPartOne": "Часть 1 · Исторический и культурный контекст",
+      "quizPartTwo": "Часть 2 · Лексика",
+      "scoreLabel": "Результат:",
+      "passedLabel": "Зачёт",
+      "failedLabel": "Не зачтено",
+      "checkButton": "Проверить",
+      "retryButton": "Пройти заново",
+      "closeLabel": "Закрыть"
+    }
   }
 }

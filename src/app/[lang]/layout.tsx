@@ -105,7 +105,9 @@ export async function generateMetadata({
   return {
     title: dict.meta.title,
     description: dict.meta.description,
-    manifest: "/manifest.webmanifest",
+    // ДОЛГ 83: манифест зависит от локали — испанское описание на русской
+    // странице было ровно тем, что человек видел в карточке установки.
+    manifest: `/${lang}/manifest.webmanifest`,
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
