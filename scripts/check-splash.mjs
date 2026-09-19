@@ -72,7 +72,12 @@ const STYLES = "android/app/src/main/res/values/styles.xml";
 const COLORS = "android/app/src/main/res/values/colors.xml";
 const ACTIVITY = "android/app/src/main/java/com/rusofacilapp/app/MainActivity.java";
 const CONFIG = "capacitor.config.ts";
-const MANIFEST = "src/app/manifest.ts";
+// ДОЛГ 83 (7.217): манифест собирается `src/lib/pwa-manifest.ts` и
+// зависит от локали, а `src/app/manifest.ts` больше нет — соглашение Next
+// само вставляло `<link rel="manifest">` и побеждало `metadata.manifest`
+// из раскладки, поэтому корневой адрес отдаётся обычным маршрутом.
+// Здесь читается ИСТОЧНИК цвета, а он теперь один на оба адреса.
+const MANIFEST = "src/lib/pwa-manifest.ts";
 
 const read = (path) => readFileSync(path, "utf8");
 
