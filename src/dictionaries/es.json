@@ -1356,7 +1356,8 @@
       "media": "Catálogo de medios",
       "glossary": "Glosario",
       "flashcards": "Vocabulario",
-      "idioms": "Expresiones"
+      "idioms": "Expresiones",
+      "accessCodes": "Códigos"
     },
     "lessons": {
       "title": "Lecciones",
@@ -1499,6 +1500,23 @@
       "definitionRequired": "La definición es obligatoria.",
       "russianEquivalentRequired": "El equivalente en ruso es obligatorio.",
       "genericError": "No se pudo guardar. Inténtalo de nuevo."
+    },
+    "accessCodes": {
+      "title": "Códigos de acceso",
+      "subtitle": "Códigos de invitación emitidos y su estado. Se puede anular un código que todavía no se ha canjeado.",
+      "codeHeader": "Código",
+      "stateHeader": "Estado",
+      "batchHeader": "Lote",
+      "daysHeader": "Días de acceso",
+      "expiresHeader": "Válido hasta",
+      "actionsHeader": "Acciones",
+      "stateOpen": "Sin canjear",
+      "stateRedeemed": "Canjeado",
+      "stateRevoked": "Anulado",
+      "stateExpired": "Caducado",
+      "revokeButton": "Anular",
+      "empty": "Todavía no hay códigos.",
+      "readOnlyNotice": "Solo el propietario puede anular códigos de acceso."
     },
     "subscriptions": {
       "title": "Suscripciones",

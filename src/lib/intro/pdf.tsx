@@ -3,6 +3,7 @@ import path from "node:path";
 import { SITE_URL } from "@/lib/site";
 import { Document, Page, Text, View, Svg, Path, Circle, Rect, StyleSheet, Font } from "@react-pdf/renderer";
 import { buildIntroSlides, introPdfPageCount } from "./content";
+import type { Locale } from "@/i18n/config";
 import type { IntroStats } from "./stats";
 import { INTRO_ILLUSTRATION_VIEWBOX, introSlideIllustrations, type IntroIconKey, type IntroIllustrationColorRole } from "./slideIcons";
 
@@ -227,15 +228,58 @@ function BrandMarkPdf() {
   );
 }
 
-function FooterPdf({ page, total }: { page: number; total: number }) {
+
+/**
+ * РАМКА PDF ГОВОРИТ НА ЯЗЫКЕ ЛОКАЛИ — ДОЛГ 209 (заход 7.216).
+ *
+ * Строка долга дословно: «PDF вводной презентации остаётся испанским
+ * целиком. Колода на экране с 7.196 пишется на языке интерфейса
+ * (`buildIntroSlides(stats, lang)`), а PDF — нет: у него по-испански
+ * написаны обложка, подпись „Diapositiva N de M“, название документа и
+ * префикс ссылок `/es`, и раздаётся он одним адресом `/api/intro/pdf`
+ * без сегмента локали. Переводить половину (слайды по-русски внутри
+ * испанской рамки) хуже, чем не переводить вовсе → сделать
+ * `/api/intro/pdf` локале-зависимым вместе с рамкой, отдельным заходом».
+ *
+ * Поэтому здесь переведено ВСЁ, что долг назвал поимённо, и ничего не
+ * осталось наполовину: название документа, четыре строки обложки,
+ * подпись слайда, строка подвала, имя файла (в маршруте) и префикс
+ * ссылок. Слайды уже умели обе локали с 7.196 — им передаётся `lang`.
+ *
+ * Бренд `RusoFácilapp` не переводится ни в одной строке: это имя, и его
+ * написание заперто `check:brand`.
+ */
+const PDF_FRAME: Record<Locale, {
+  documentTitle: string;
+  coverEyebrow: string;
+  coverTitle: string;
+  coverSubtitle: string;
+  footer: string;
+  slideLabel: (page: number, total: number) => string;
+}> = {
+  es: {
+    documentTitle: "RusoFácilapp — Introducción",
+    coverEyebrow: "Presentación de introducción",
+    coverTitle: "Bienvenido a RusoFácilapp",
+    coverSubtitle: "El idioma ruso y todo lo que la plataforma tiene para ti",
+    // Было «aprende ruso desde México». Аудитория — испаноговорящие везде.
+    footer: "RusoFácilapp — aprender ruso en español",
+    slideLabel: (page, total) => `Diapositiva ${page} de ${total}`,
+  },
+  ru: {
+    documentTitle: "RusoFácilapp — вводная презентация",
+    coverEyebrow: "Вводная презентация",
+    coverTitle: "Добро пожаловать в RusoFácilapp",
+    coverSubtitle: "Русский язык и всё, что есть на платформе",
+    footer: "RusoFácilapp — русский язык для испаноговорящих",
+    slideLabel: (page, total) => `Слайд ${page} из ${total}`,
+  },
+};
+
+function FooterPdf({ page, total, lang }: { page: number; total: number; lang: Locale }) {
   return (
     <View style={styles.footerBar} fixed>
-      {/* Was "aprende ruso desde México". The audience is Spanish speakers
-          everywhere — the same reasoning already written down for the
-          /courses metadata in src/app/[lang]/courses/page.tsx — and a
-          Colombian or Argentine reader of this PDF was being told the
-          product is somebody else's. */}
-      <Text style={styles.footerText}>RusoFácilapp — aprender ruso en español</Text>
+      <Text style={styles.footerText}>{PDF_FRAME[lang].footer}</Text>
       <Text style={styles.footerText}>
         {page} / {total}
       </Text>
@@ -243,26 +287,27 @@ function FooterPdf({ page, total }: { page: number; total: number }) {
   );
 }
 
-export function IntroDocument({ stats }: { stats: IntroStats }) {
-  const introSlides = buildIntroSlides(stats);
+export function IntroDocument({ stats, lang = "es" }: { stats: IntroStats; lang?: Locale }) {
+  const introSlides = buildIntroSlides(stats, lang);
   const totalPages = introPdfPageCount(introSlides);
+  const frame = PDF_FRAME[lang];
 
   return (
-    <Document title="RusoFácilapp — Introducción">
+    <Document title={frame.documentTitle}>
       <Page size="A4" style={styles.page}>
         <View style={{ ...styles.topBar, backgroundColor: BRAND_ACCENT_LIGHT }} />
         <View style={styles.coverBrandMark}>
           <BrandMarkPdf />
         </View>
         <View style={styles.coverBody}>
-          <Text style={styles.coverEyebrow}>Presentación de introducción</Text>
-          <Text style={styles.coverTitle}>Bienvenido a RusoFácilapp</Text>
+          <Text style={styles.coverEyebrow}>{frame.coverEyebrow}</Text>
+          <Text style={styles.coverTitle}>{frame.coverTitle}</Text>
           <Text style={{ ...styles.coverSubtitle, color: BRAND_ACCENT }}>
-            El idioma ruso y todo lo que la plataforma tiene para ti
+            {frame.coverSubtitle}
           </Text>
           <View style={styles.coverAccentBar} />
         </View>
-        <FooterPdf page={1} total={totalPages} />
+        <FooterPdf page={1} total={totalPages} lang={lang} />
       </Page>
 
       {introSlides.map((slide, index) => (
@@ -277,7 +322,7 @@ export function IntroDocument({ stats }: { stats: IntroStats }) {
             </View>
 
             <Text style={styles.eyebrowChip}>
-              Diapositiva {index + 1} de {introSlides.length}
+              {frame.slideLabel(index + 1, introSlides.length)}
             </Text>
             <Text style={styles.slideTitle}>{slide.title}</Text>
 
@@ -291,7 +336,7 @@ export function IntroDocument({ stats }: { stats: IntroStats }) {
               <View>
                 {slide.links.map((link) => (
                   <Text key={link.href} style={styles.linkLine}>
-                    {link.label}: {link.external ? link.href : `${SITE_URL}/es${link.href}`}
+                    {link.label}: {link.external ? link.href : `${SITE_URL}/${lang}${link.href}`}
                   </Text>
                 ))}
               </View>
@@ -308,7 +353,7 @@ export function IntroDocument({ stats }: { stats: IntroStats }) {
               </View>
             )}
           </View>
-          <FooterPdf page={index + 2} total={totalPages} />
+          <FooterPdf page={index + 2} total={totalPages} lang={lang} />
         </Page>
       ))}
     </Document>

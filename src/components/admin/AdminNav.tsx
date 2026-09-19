@@ -26,7 +26,14 @@ export default function AdminNav({
     { href: `/${lang}/admin/idioms`, label: dict.nav.idioms },
     { href: `/${lang}/admin/subscriptions`, label: dict.nav.subscriptions },
     { href: `/${lang}/admin/search-demand`, label: dict.nav.searchDemand },
-    ...(isOwner ? [{ href: `/${lang}/admin/users`, label: dict.nav.users }] : []),
+    // Долг 89: экран кодов доступа. Только владельцу — как и «Пользователи»:
+    // отзыв кода отменить нечем, и роль `admin` его не получает.
+    ...(isOwner
+      ? [
+          { href: `/${lang}/admin/access-codes`, label: dict.nav.accessCodes },
+          { href: `/${lang}/admin/users`, label: dict.nav.users },
+        ]
+      : []),
   ];
 
   return (

@@ -1356,7 +1356,8 @@
       "media": "Каталог медиа",
       "glossary": "Глоссарий",
       "flashcards": "Словарь",
-      "idioms": "Выражения"
+      "idioms": "Выражения",
+      "accessCodes": "Коды доступа"
     },
     "lessons": {
       "title": "Уроки",
@@ -1499,6 +1500,23 @@
       "definitionRequired": "Определение обязательно.",
       "russianEquivalentRequired": "Русский эквивалент обязателен.",
       "genericError": "Не удалось сохранить. Попробуйте ещё раз."
+    },
+    "accessCodes": {
+      "title": "Коды доступа",
+      "subtitle": "Выпущенные коды-приглашения и их состояние. Отозвать можно код, который ещё не погашен.",
+      "codeHeader": "Код",
+      "stateHeader": "Состояние",
+      "batchHeader": "Партия",
+      "daysHeader": "Дней доступа",
+      "expiresHeader": "Годен до",
+      "actionsHeader": "Действия",
+      "stateOpen": "Не погашен",
+      "stateRedeemed": "Погашен",
+      "stateRevoked": "Отозван",
+      "stateExpired": "Просрочен",
+      "revokeButton": "Отозвать",
+      "empty": "Кодов пока нет.",
+      "readOnlyNotice": "Отзывать коды доступа может только владелец."
     },
     "subscriptions": {
       "title": "Подписки",

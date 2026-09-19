@@ -234,6 +234,62 @@ async function reportUnknownTier(code: string, tier: string | null, userId: stri
   }
 }
 
+
+/**
+ * ПЕРЕПИСЬ КОДОВ ДЛЯ ЭКРАНА `/admin/access-codes` — ДОЛГ 89 (7.216).
+ *
+ * Живёт здесь, а не на странице, по правилу 1 сторожа
+ * `check:access-code-path`: таблицу `AccessCode` читает ТОЛЬКО этот файл.
+ * Страница получает готовые строки и о существовании таблицы не знает.
+ *
+ * Сам код целиком отдаётся намеренно: экран для того и нужен, чтобы
+ * владелец нашёл нужную бумажку глазами и нажал «отозвать» рядом с ней.
+ * Экран закрыт `requireStaffUser` (раскладка `/admin`), а кнопка отзыва —
+ * ролью владельца.
+ */
+export interface AccessCodeRow {
+  code: string;
+  tier: string;
+  batch: string | null;
+  durationDays: number;
+  expiresAt: Date | null;
+  redeemedAt: Date | null;
+  revokedAt: Date | null;
+  createdAt: Date;
+}
+
+export async function listAccessCodes(limit = 200): Promise<AccessCodeRow[]> {
+  return db.accessCode.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      code: true,
+      tier: true,
+      batch: true,
+      durationDays: true,
+      expiresAt: true,
+      redeemedAt: true,
+      revokedAt: true,
+      createdAt: true,
+    },
+  });
+}
+
+/**
+ * Состояние кода одним словом — та же тройка, которой отвечает
+ * `revokeAccessCode`, и считается она ЗДЕСЬ, а не на экране: второй
+ * пересказ правила «отозван раньше или погашен раньше» разошёлся бы с
+ * первым молча.
+ */
+export type AccessCodeState = "revoked" | "redeemed" | "expired" | "open";
+
+export function accessCodeState(row: Pick<AccessCodeRow, "redeemedAt" | "revokedAt" | "expiresAt">, now = new Date()): AccessCodeState {
+  if (row.revokedAt !== null) return "revoked";
+  if (row.redeemedAt !== null) return "redeemed";
+  if (row.expiresAt !== null && row.expiresAt.getTime() <= now.getTime()) return "expired";
+  return "open";
+}
+
 /**
  * Отзыв кода ДО погашения.
  *
@@ -248,7 +304,22 @@ async function reportUnknownTier(code: string, tier: string | null, userId: stri
  */
 export async function revokeAccessCode(
   rawCode: string,
-  actorId: string | null
+  /**
+   * ДОЛГ 89: ИСПОЛНИТЕЛЬ ОБЯЗАТЕЛЕН, И `null` БОЛЬШЕ НЕ ПРИНИМАЕТСЯ.
+   *
+   * Остаток строки долга дословно: «экрана отзыва в `/admin` по-прежнему
+   * нет, и `revokeAccessCode` в библиотеке всё ещё принимает `null`
+   * исполнителем — это нужно сценарию [A10]. Чинить экраном в `/admin`,
+   * который передаст идентификатор администратора».
+   *
+   * Обе половины закрыты 19.09.2026 (7.216): экран —
+   * `src/app/[lang]/admin/access-codes/page.tsx`, исполнитель — этот
+   * признак. `null` исключён ТИПОМ, а не проверкой внутри: проверка
+   * ловит вызов в тот миг, когда он уже случился, а тип не даёт его
+   * написать вовсе. Скриптовая половина требовала `--by` ещё с 7.147,
+   * и теперь у колонки `revokedById` нет ни одного пути к пустоте.
+   */
+  actorId: string
 ): Promise<{ ok: true } | { ok: false; reason: "unknown" | "already_redeemed" | "already_revoked" }> {
   const code = normalizeAccessCode(rawCode);
   const { count } = await db.accessCode.updateMany({

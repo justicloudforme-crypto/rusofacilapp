@@ -334,7 +334,7 @@ export default function IntroPresentation({
 
       <div className="flex flex-wrap items-center gap-4">
         <a
-          href={`/api/intro/pdf`}
+          href={`/api/intro/pdf?lang=${lang}`}
           onClick={() => track("intro_pdf_downloaded", { lang })}
           data-testid="intro-pdf"
           className="tap inline-flex min-h-11 items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"

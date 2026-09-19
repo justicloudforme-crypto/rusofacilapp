@@ -95,12 +95,30 @@ function defaultsAgree(expected: string, actual: string | null): boolean {
   return norm(expected) === norm(actual);
 }
 
+/**
+ * Сколько ТАБЛИЦ сверка действительно осмотрела в последнем прогоне.
+ *
+ * ДЫРА, НАЙДЕННАЯ 19.09.2026 (7.216) ПРИ ЗАКРЫТИИ ДОЛГА 68. Пропуск
+ * отсутствующей таблицы (строка ниже) — решение правильное и
+ * объяснённое, но у него есть край: на базе, где таблиц НЕТ ВОВСЕ,
+ * пропускаются все, и сверка честно печатает «расхождений нет».
+ * Проверено на пустом файле базы: 0 осмотренных таблиц и зелёный код
+ * выхода. Это ровно тот случай из правила замера 4.1, где «0» означает
+ * «0 совпадений», а не «всё хорошо», — и он опасен именно там, куда
+ * сверку и надо поставить: в прогоне, где базу кто-то должен был поднять
+ * перед ней. Поэтому число осмотренного теперь называется вслух, а ноль
+ * роняет прогон.
+ */
+export let lastExaminedTables = 0;
+
 export async function findDrift(client: Client, schemaText: string): Promise<Finding[]> {
   const findings: Finding[] = [];
+  let examined = 0;
 
   for (const model of parseSchema(schemaText)) {
     const info = await client.execute(`PRAGMA table_info("${model.name}")`);
     if (info.rows.length === 0) continue; // таблицы нет — это вопрос ensure-schema-sync, не этой сверки
+    examined += 1;
     const columns = new Map(
       info.rows.map((row) => [
         String(row.name),
@@ -196,6 +214,7 @@ export async function findDrift(client: Client, schemaText: string): Promise<Fin
     }
   }
 
+  lastExaminedTables = examined;
   return findings;
 }
 
@@ -278,10 +297,19 @@ async function main() {
     }
 
     console.log(`check:schema-drift — ${label}`);
-    if (real.length === 0) {
-      console.log("  расхождений схемы и базы нет (контроль — npm run check:schema-drift:plant).");
+    if (lastExaminedTables === 0) {
+      console.error(
+        "  ОТКАЗ: осмотрено 0 таблиц. В этой базе нет ни одной таблицы из схемы — значит сверять было нечего,\n" +
+          "  а «расхождений нет» означало бы «0 совпадений», а не «всё хорошо» (правило замера 4.1).",
+      );
+      process.exitCode = 1;
       return;
     }
+    if (real.length === 0) {
+      console.log(`  осмотрено таблиц: ${lastExaminedTables}; расхождений схемы и базы нет (контроль — npm run check:schema-drift:plant).`);
+      return;
+    }
+    console.log(`  осмотрено таблиц: ${lastExaminedTables}`);
     console.log(`  расхождений: ${real.length}`);
     for (const f of real) console.log(describe(f));
     process.exitCode = 1;
