@@ -224,6 +224,10 @@ export function getRelatedMediaForStory(story: { title: string; level: string },
 export interface RelatedGlossaryTermRef {
   slug: string;
   term: string;
+  /** Русское название термина. Читается ради `glossaryTermPrimaryName`:
+   * на `/ru` главным печатается именно оно (решение владельца 19.09.2026,
+   * вариант Б; см. src/lib/glossary-term-name.ts). */
+  russianEquivalent: string;
 }
 
 /**
@@ -252,7 +256,7 @@ export async function getGlossaryTermsForLesson(
   const rows = await db.glossaryTerm.findMany({
     where: { relatedLessons: { contains: `"${level}-${lessonSlug}"` } },
     orderBy: { term: "asc" },
-    select: { slug: true, term: true },
+    select: { slug: true, term: true, russianEquivalent: true },
   });
   return rows;
 }

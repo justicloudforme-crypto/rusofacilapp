@@ -19,6 +19,7 @@ import {
   storyRequirement,
   wordGameRequirement,
 } from "@/lib/access-marks";
+import { glossaryTermNames } from "@/lib/glossary-term-name";
 import type { SearchRecord } from "./types";
 
 /**
@@ -304,13 +305,34 @@ function idiomRecords(idioms: SearchSources["idioms"]): SearchRecord[] {
 }
 
 function glossaryRecords(terms: SearchSources["glossary"]): SearchRecord[] {
-  return terms.map((term) => ({
-    section: "glossary" as const,
-    id: term.slug,
-    path: `/glossary/${term.slug}`,
-    title: term.term,
-    subtitle: term.russianEquivalent,
-  }));
+  // Выдача поиска обязана называть термин ТЕМ ЖЕ именем, каким его
+  // называет страница, куда она ведёт (решение владельца 19.09.2026,
+  // вариант Б; src/lib/glossary-term-name.ts). Индекс общий на обе
+  // локали и кешируется один раз, поэтому здесь лежат ОБА имени, а
+  // выбор между ними делает `titleRu`/`subtitleRu` в момент запроса —
+  // тот же приём, которым уже локализованы восемь страниц меню.
+  return terms.map((term) => {
+    const es = glossaryTermNames(term, "es");
+    const ru = glossaryTermNames(term, "ru");
+    return {
+      section: "glossary" as const,
+      id: term.slug,
+      path: `/glossary/${term.slug}`,
+      title: es.primary,
+      titleRu: ru.primary,
+      subtitle: term.russianEquivalent,
+      // ПУСТАЯ строка, а не `undefined`, и это не мелочь: `subtitleOf`
+      // склеивает поля оператором `??`, который пропускает только
+      // `null`/`undefined`. У шести терминов из 119 русское и испанское
+      // поля совпадают дословно («бежать / бегать» и пять таких же пар
+      // глаголов движения) — второй строки у них нет, и `undefined`
+      // здесь откатил бы выдачу на общий `subtitle`, то есть напечатал
+      // бы под русским названием его же. Пустую строку витрина не рисует
+      // вовсе (`{hit.subtitle && …}` в GlobalSearch.tsx), а из строк для
+      // поиска её выбрасывает сам `searchableStrings`.
+      subtitleRu: ru.secondary ?? "",
+    };
+  });
 }
 
 function grammarRecords(): SearchRecord[] {

@@ -69,6 +69,27 @@
 // пропускается молча и это названо, а не спрятано: сторож, который
 // краснеет на незнакомое имя, чинят удалением сторожа.
 //
+// ТРЕТЬЕ НАПРАВЛЕНИЕ, ЗАВЕДЁННОЕ 19.09.2026 (7.215, задача 2). Два
+// правила выше сравнивают verify и CI ДРУГ С ДРУГОМ — и оба слепы к
+// проверке, которой нет ни в одном из них. Такая проверка выглядит как
+// работающая охрана (файл на месте, скрипт в `package.json`, строка в
+// PROGRESS.md), а исполняется ноль раз. Цена названа числом: ревизия
+// 7.215 нашла 31 такую команду из 116, то есть больше четверти переписи.
+//
+//   команда `check:*` из `package.json` обязана либо запускаться в
+//   `npm run verify`, либо запускаться в `.github/workflows/`, либо
+//   стоять в ТРЕТЬЕМ списке исключений в PROGRESS.md — с причиной.
+//
+// Обе половины третьего списка стерегутся так же, как у двух первых:
+// исключение на команду, которая уже гоняется, и исключение на команду,
+// которой в `package.json` нет вовсе, — тоже падение.
+//
+// ВАЖНО, ЧЕГО ЭТО ПРАВИЛО НЕ ГОВОРИТ. Оно не требует поставить всё в
+// строй: у прогона по ЖИВОМУ проду, у прогона по полному банку
+// содержимого и у прогона по СОБРАННОМУ пакету места в `verify` нет по
+// построению. Оно требует ровно одного — чтобы у каждой неисполняемой
+// проверки была написана причина, по которой её не исполняют.
+//
 //   node scripts/check-ci-covers-verify.mjs            # гейт
 //   node scripts/check-ci-covers-verify.mjs --map      # вся карта проверок
 //   node scripts/check-ci-covers-verify.mjs --plant    # позитивный контроль
@@ -81,6 +102,9 @@ const PROGRESS_MARKER_END = "<!-- ci-verify-exceptions:end -->";
 // в `npm run verify`.
 const VERIFY_MARKER_START = "<!-- verify-ci-exceptions:start -->";
 const VERIFY_MARKER_END = "<!-- verify-ci-exceptions:end -->";
+// ТРЕТИЙ СПИСОК — проверки, которых нет НИ ТАМ НИ ТАМ (7.215, задача 2).
+const ORPHAN_MARKER_START = "<!-- orphan-checks:start -->";
+const ORPHAN_MARKER_END = "<!-- orphan-checks:end -->";
 
 function main() {
   const pkg = JSON.parse(readFileSync("package.json", "utf-8"));
@@ -289,6 +313,36 @@ function main() {
   const ciRuns = namesFromWorkflows(workflowFiles);
 
   const progress = readFileSync("PROGRESS.md", "utf-8");
+
+  /**
+   * МЕТКА ОБЯЗАНА БЫТЬ РОВНО ОДНА — и это не педантизм, а цена, заплаченная
+   * 19.09.2026 (7.215). Разбор ниже режет файл по ПЕРВОМУ вхождению метки.
+   * Раздел 7.215 пересказывал правило третьего списка и процитировал обе
+   * метки дословно — а вставлен он выше самого списка. Итог: `split` взял
+   * кусок между копиями В ПРОЗЕ, список вышел ПУСТЫМ, и сторож объявил
+   * непокрытыми все 30 команд сразу. Отказ был громкий и потому дешёвый;
+   * но та же ошибка в другую сторону (копия ПОСЛЕ списка) сделала бы
+   * список молча короче, а короткий список исключений — это зелёный
+   * прогон на неправде. Поэтому число вхождений проверяется отдельно.
+   */
+  function markerProblems() {
+    const bad = [];
+    for (const marker of [
+      PROGRESS_MARKER_START, PROGRESS_MARKER_END,
+      VERIFY_MARKER_START, VERIFY_MARKER_END,
+      ORPHAN_MARKER_START, ORPHAN_MARKER_END,
+    ]) {
+      const times = progress.split(marker).length - 1;
+      if (times !== 1) {
+        bad.push(
+          `метка ${marker} встречается в PROGRESS.md ${times} раз(а), а должна ровно один: ` +
+            `разбор режет файл по ПЕРВОМУ вхождению, и лишняя копия (даже в прозе) укорачивает или обнуляет список`,
+        );
+      }
+    }
+    return bad;
+  }
+
   function exceptionsBetween(start, end) {
     const block = progress.split(start)[1]?.split(end)[0] ?? "";
     const map = new Map();
@@ -300,10 +354,23 @@ function main() {
   }
   const exceptions = exceptionsBetween(PROGRESS_MARKER_START, PROGRESS_MARKER_END);
   const verifyExceptions = exceptionsBetween(VERIFY_MARKER_START, VERIFY_MARKER_END);
+  const orphanExceptions = exceptionsBetween(ORPHAN_MARKER_START, ORPHAN_MARKER_END);
 
   const checkNames = Object.keys(scripts).filter((n) => n.startsWith("check:"));
   const VARIANT_SUFFIXES = [":plant", ":self-test", ":map"];
   const named = checkNames.filter((n) => !VARIANT_SUFFIXES.some((suffix) => n.endsWith(suffix)));
+
+  /** Третье направление: кто не исполняется НИГДЕ. Считается по тому же
+   *  множеству `named`, что печатает `--map`, — иначе число в отчёте и
+   *  число в гейте разошлись бы, а это ровно тот сорт расхождения,
+   *  из-за которого правило и заводится. */
+  function orphanAudit(verifySet, ciSet, exceptionMap, universe = named) {
+    const orphans = universe.filter((n) => !verifySet.has(n) && !ciSet.has(n) && !exceptionMap.has(n)).sort();
+    const stale = [...exceptionMap.keys()]
+      .filter((n) => verifySet.has(n) || ciSet.has(n) || !scripts[n])
+      .sort();
+    return { orphans, stale };
+  }
 
   if (process.argv.includes("--map")) {
     console.log(`| команда | verify | CI | исключение |`);
@@ -323,6 +390,13 @@ function main() {
     console.log(`\n| в CI, нет в verify | исключение |`);
     console.log(`|---|---|`);
     for (const name of ciOnly) console.log(`| \`${name}\` | ${verifyExceptions.get(name) ?? "—"} |`);
+    const nowhere = named.filter((n) => !verifyRuns.has(n) && !ciRuns.has(n)).sort();
+    console.log(`\n| не гоняется нигде | причина |`);
+    console.log(`|---|---|`);
+    for (const name of nowhere) console.log(`| \`${name}\` | ${orphanExceptions.get(name) ?? "—"} |`);
+    console.log(
+      `\nне гоняется нигде: ${nowhere.length} из ${named.length}; из них названо причиной: ${nowhere.filter((n) => orphanExceptions.has(n)).length}`,
+    );
     console.log(`\nпрочитано workflow: ${workflowFiles.length} (${workflowFiles.map(([f]) => f.split("/").pop()).join(", ")})`);
     console.log(`всего команд: verify ${verifyRuns.size}, CI ${ciRuns.size}; в CI и не в verify: ${ciOnly.length}, из них названо исключениями: ${ciOnly.filter((n) => verifyExceptions.has(n)).length}`);
   }
@@ -436,6 +510,56 @@ function main() {
           return { hit: !r.unverified.includes(victim), what: victim, negative: true };
         },
       },
+      // ТРЕТЬЕ НАПРАВЛЕНИЕ (7.215, задача 2): проверка, которой нет ни
+      // там ни там. Подсадка буквальная — в `package.json` заводится
+      // фиктивный `check:*`, и сторож обязан покраснеть на нём.
+      {
+        name: "в package.json появился check:*, не вызываемый ни из verify, ни из ci.yml",
+        run: () => {
+          const fake = "check:__planted__";
+          const r = orphanAudit(verifyRuns, ciRuns, orphanExceptions, [...named, fake]);
+          return { hit: r.orphans.includes(fake), what: fake };
+        },
+      },
+      {
+        name: "исключение третьего списка на команду, которая УЖЕ гоняется",
+        run: () => {
+          const victim = [...verifyRuns].find((n) => named.includes(n));
+          const map = new Map([...orphanExceptions, [victim, "выдуманная причина"]]);
+          return { hit: orphanAudit(verifyRuns, ciRuns, map).stale.includes(victim), what: victim };
+        },
+      },
+      {
+        name: "исключение третьего списка на команду, которой нет в package.json",
+        run: () => {
+          const ghost = "check:__ghost__";
+          const map = new Map([...orphanExceptions, [ghost, "выдуманная причина"]]);
+          return { hit: orphanAudit(verifyRuns, ciRuns, map).stale.includes(ghost), what: ghost };
+        },
+      },
+      {
+        name: "метка третьего списка процитирована в прозе выше самого списка (цена 7.215)",
+        run: () => {
+          const twice = `${ORPHAN_MARKER_START}\n- \`check:__prose__\` — копия в прозе\n${ORPHAN_MARKER_END}\n${progress}`;
+          const block = twice.split(ORPHAN_MARKER_START)[1]?.split(ORPHAN_MARKER_END)[0] ?? "";
+          const names = [...block.matchAll(/^\s*[-*]\s*`([\w:-]+)`/gm)].map((m) => m[1]);
+          return {
+            hit: (twice.split(ORPHAN_MARKER_START).length - 1) !== 1 && !names.includes("check:schema-drift"),
+            what: `из списка осталось ${names.length} строк вместо ${orphanExceptions.size}`,
+          };
+        },
+      },
+      {
+        name: "ОТРИЦАТЕЛЬНЫЙ контроль третьего направления: настоящий список красноты не даёт",
+        run: () => {
+          const r = orphanAudit(verifyRuns, ciRuns, orphanExceptions);
+          return {
+            hit: r.orphans.length === 0 && r.stale.length === 0,
+            what: `проверок ${named.length}, не гоняется нигде ${orphanExceptions.size}, у всех написана причина`,
+            negative: true,
+          };
+        },
+      },
       // Долг 252, оба утверждения про ВОЗРАСТ прогонов.
       {
         name: "в рабочем процессе вернулся node-version: 20",
@@ -501,6 +625,12 @@ function main() {
   }
 
   const { uncovered, stale, unverified, staleCiOnly } = audit(verifyRuns, ciRuns, exceptions);
+  const orphan = orphanAudit(verifyRuns, ciRuns, orphanExceptions);
+  const markers = markerProblems();
+  if (markers.length) {
+    for (const m of markers) console.error(`МЕТКА СПИСКА ИСКЛЮЧЕНИЙ: ${m}`);
+    process.exit(1);
+  }
   const runtime = runtimeProblems(workflowFiles);
   /** Пол: «нарушений возраста 0» на выборке, где ничего не нашлось, —
    *  не результат (PROGRESS.md 4.1). Строк `node-version:` в каталоге
@@ -512,7 +642,26 @@ function main() {
     );
     process.exit(1);
   }
-  if (uncovered.length === 0 && stale.length === 0 && unverified.length === 0 && staleCiOnly.length === 0 && runtime.out.length === 0) {
+  /** Пол третьего направления: «неисполняемых 0» на пустом списке — не
+   *  результат. Проверок с префиксом `check:` в проекте больше сотни, и
+   *  если разбор `package.json` вдруг вернёт горсть, молчаливое «всё
+   *  покрыто» будет неправдой (правило замера 4.1). */
+  if (named.length < 50) {
+    console.error(
+      `ПЕРЕПИСЬ ПРОВЕРОК НЕ СОСТОЯЛАСЬ: имён check:* прочитано ${named.length} — разбор package.json читает не то, ` +
+        `и «неисполняемых 0» здесь ничего не значит`,
+    );
+    process.exit(1);
+  }
+  if (
+    uncovered.length === 0 &&
+    stale.length === 0 &&
+    unverified.length === 0 &&
+    staleCiOnly.length === 0 &&
+    orphan.orphans.length === 0 &&
+    orphan.stale.length === 0 &&
+    runtime.out.length === 0
+  ) {
     console.log(
       `check:ci-covers-verify — прочитано workflow ${workflowFiles.length} ` +
         `(${workflowFiles.map(([f]) => f.split("/").pop()).join(", ")}); ` +
@@ -521,7 +670,8 @@ function main() {
         `в verify и не в CI ${[...verifyRuns].filter((n) => !ciRuns.has(n)).length} (все названы); ` +
         `исключений ${exceptions.size} + ${verifyExceptions.size}, непокрытых 0 в обе стороны; ` +
         `возраст прогонов: строк node-version ${runtime.nodeVersions}, известных действий ${runtime.actionsSeen}, ` +
-        `устаревших 0 (долг 252).`,
+        `устаревших 0 (долг 252); ` +
+        `проверок check:* всего ${named.length}, не гоняется нигде ${orphanExceptions.size} (у всех написана причина, 7.215).`,
     );
     process.exit(0);
   }
@@ -538,6 +688,19 @@ function main() {
       `НЕ В VERIFY: \`${name}\` гоняется в одном из .github/workflows/, не гоняется в npm run verify и не назван во втором списке исключений PROGRESS.md`,
     );
   }
+  for (const name of orphan.orphans) {
+    console.error(
+      `НЕ ГОНЯЕТСЯ НИГДЕ: \`${name}\` есть в package.json, не запускается ни из npm run verify, ни из .github/workflows/ ` +
+        `и не назван в третьем списке исключений PROGRESS.md — такая проверка исполняется 0 раз`,
+    );
+  }
+  for (const name of orphan.stale) {
+    console.error(
+      `ИСКЛЮЧЕНИЕ ТРЕТЬЕГО СПИСКА ПРОТУХЛО: \`${name}\` — ${
+        scripts[name] ? "команда уже гоняется в verify или в workflow" : "команды нет в package.json вовсе"
+      }`,
+    );
+  }
   for (const problem of runtime.out) {
     console.error(`УСТАРЕВШИЙ ПРОГОН: ${problem}`);
   }
@@ -548,7 +711,9 @@ function main() {
   }
   console.error(
     `\nСписок исключений живёт в PROGRESS.md между ${PROGRESS_MARKER_START} и ${PROGRESS_MARKER_END}, ` +
-      `обратный — между ${VERIFY_MARKER_START} и ${VERIFY_MARKER_END}; строка вида "- \`имя\` — причина".`,
+      `обратный — между ${VERIFY_MARKER_START} и ${VERIFY_MARKER_END}, ` +
+      `третий (проверки, не гоняемые нигде) — между ${ORPHAN_MARKER_START} и ${ORPHAN_MARKER_END}; ` +
+      `строка вида "- \`имя\` — причина".`,
   );
   process.exit(1);
 
