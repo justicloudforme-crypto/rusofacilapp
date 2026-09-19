@@ -36,6 +36,43 @@
 //      вызов — ровно так `voice-recording-local.spec.ts:194` падал в CI
 //      08.09.2026 на мгновенном `audio.load()` (PROGRESS.md 7.148).
 //
+// ТРИ ПРАВИЛА, ДОБАВЛЕННЫЕ 19.09.2026 — ДОЛГ 96 ЗАКРЫТ.
+//
+// Строка долга дословно: «сторож `check:e2e-live-probes` закрывает
+// МЕХАНИЧЕСКУЮ половину класса „проба, переставшая быть пробой“ — 3
+// находки из 9. Остальные шесть статически неотличимы от здорового кода:
+// „страница отдала 200 и пустоту“ (`tablet-landscape`), „404 молча
+// пропущен и никто не считает, сколько“ (`page-width`), „заголовок
+// проверен на видимость, а не на текст“ (`glossary`), „цикл по списку,
+// который может быть пуст“ (`game-hub-links`), „`every` по списку,
+// который может быть пуст“ (`pricing-offer-markup`), „ветка `if`, не
+// исполняющаяся ни разу“ (`activity-calendar`). Все шесть найдены
+// ПОДСАДКОЙ, то есть прогоном, а не чтением. Чинить не статикой: правило
+// „у каждого замера есть признак самой страницы“ и „сколько объектов
+// измерено — печатается числом“ держится сегодня только соглашением».
+//
+// Так вот: «не статикой» оказалось неверным утверждением, и это выяснено
+// прогоном, а не спором. Обе фразы, которые долг называл соглашением,
+// поддаются механической проверке, если формулировать их узко:
+//
+//   6. СПИСОК, СОБРАННЫЙ СО СТРАНИЦЫ И ПРОЙДЕННЫЙ ЦИКЛОМ, обязан иметь
+//      утверждение о своём размере. Это правило 4, обобщённое с `every`
+//      на любой обход (`for…of`, `map`, `filter`, `some`, `forEach`) и на
+//      любой сбор со страницы (`all()`, `allTextContents()`,
+//      `evaluateAll()`). Замер на живом дереве 19.09.2026 до правки: 22
+//      собранных списка, у 5 размер не утверждался нигде.
+//   7. ЗАМЕР ГЕОМЕТРИИ обязан стоять после признака САМОЙ страницы.
+//      `scrollWidth <= clientWidth` истинно на пустом документе, на
+//      экране отказа при 200 и на любом 404 — то есть геометрия одна из
+//      всех величин не отличает «вёрстка в порядке» от «мерить было
+//      нечего». Замер на живом дереве до правки: 58 тестов меряют
+//      что-нибудь, геометрию меряют 22, без признака страницы — 3.
+//   8. ЕДИНСТВЕННЫЕ УТВЕРЖДЕНИЯ ТЕСТА ВНУТРИ `if`. Тест, у которого вне
+//      условных веток нет ни одного `expect`, проходит зелёным, не
+//      исполнив ни одного утверждения, — ровно случай `activity-calendar`
+//      из строки долга. На живом дереве таких 0, и подсадка ниже
+//      доказывает, что правило это видит.
+//
 // Список исключений закреплён ЧИСЛОМ: молча добавить строку нельзя.
 //
 //   node scripts/check-e2e-live-probes.mjs
@@ -74,6 +111,14 @@ const EXCEPTIONS = [
       "а `hotFlames` собран из того же `studied`; связь через другой идентификатор сторож не видит",
   },
   {
+    rule: "list-size-never-asserted",
+    file: "activity-calendar.spec.ts",
+    id: "hotFlames",
+    why:
+      "то же исключение, что строкой выше, но по правилу 6 (долг 96): непустота доказана " +
+      "`expect(await studied.count()).toBeGreaterThan(0)`, а `hotFlames` собран из того же `studied`",
+  },
+  {
     rule: "every-on-possibly-empty",
     file: "paywall-modal.spec.ts",
     id: "inMexico",
@@ -92,7 +137,7 @@ const EXCEPTIONS = [
     why: "непустота доказана `expect(inMexico.map(...)).not.toEqual(inArgentina.map(...))` ниже",
   },
 ];
-const EXCEPTIONS_COUNT = 4;
+const EXCEPTIONS_COUNT = 5;
 
 function walk(dir, re) {
   const out = [];
@@ -123,9 +168,25 @@ function srcFiles() {
 function provesNonEmpty(source, id) {
   const mentions = new RegExp(`\\b${id}\\b`);
   const PROVING = /\.(toHaveLength\((?!\s*0\s*\))|toContain\(|toContainEqual\(|toEqual\((?!\s*\[\s*\]\s*\))|toStrictEqual\((?!\s*\[\s*\]\s*\))|toBeGreaterThan\(|toBeGreaterThanOrEqual\((?!\s*0\s*\)))/;
+  /**
+   * ДОЛГ 96. Отдельно — САМЫЙ ПРЯМОЙ способ сказать «список не пуст»:
+   * `expect(xs.length, "…").toBe(N)`. Раньше он не считался
+   * доказательством вовсе, потому что `toBe(` в списке выше нет — и не по
+   * недосмотру: `expect(xs.some(…)).toBe(true)` истинно на пустом списке,
+   * то есть `toBe` вообще ничего не доказывает. Разница в ПОДЛЕЖАЩЕМ: если
+   * меряется `xs.length`, `toBe(N)` при N ≠ 0 — настоящее утверждение о
+   * размере. Поэтому образец требует именно `expect(<id>.length`.
+   */
+  const LENGTH_SUBJECT = new RegExp(`expect\\(\\s*${id}\\.(length|size)\\b`);
+  const NONZERO = /\.(toBe\((?!\s*0\s*\))|toEqual\((?!\s*0\s*\))|toBeGreaterThan\(|toBeGreaterThanOrEqual\((?!\s*0\s*\)))/;
   return source
     .split("\n")
-    .some((line) => line.includes("expect(") && mentions.test(line) && PROVING.test(line) && !/\bnot\./.test(line));
+    .some(
+      (line) =>
+        line.includes("expect(") &&
+        !/\bnot\./.test(line) &&
+        ((mentions.test(line) && PROVING.test(line)) || (LENGTH_SUBJECT.test(line) && NONZERO.test(line))),
+    );
 }
 
 const isExpectCall = (n) => {
@@ -302,7 +363,170 @@ function auditFile(file, source, selectorUses) {
   };
   visit(sf);
 
+  found.push(...auditHarvestedLists(sf, source, rel, lineOf));
+  found.push(...auditGeometryWithoutIdentity(sf, rel, lineOf));
+  found.push(...auditAssertionsOnlyUnderIf(sf, rel, lineOf));
   found.push(...auditBudgets(sf, rel, lineOf));
+  return found;
+}
+
+// ── правила 6, 7 и 8 (долг 96) ────────────────────────────────────────
+
+/** Сбор списка СО СТРАНИЦЫ: всё, что возвращает массив из живого DOM. */
+const HARVEST = /\.(all|allTextContents|allInnerTexts|evaluateAll)\s*\(/;
+
+/** Величины, которые одинаковы на настоящей странице и на пустой. */
+const GEOMETRY = [/scrollWidth/, /clientWidth/, /boundingBox\(/, /offsetWidth/, /getBoundingClientRect/];
+
+/**
+ * Что считается признаком САМОЙ страницы. Список намеренно широк: сторож
+ * ловит не «плохо написанный тест», а ровно один случай — замер, у
+ * которого нет НИ ОДНОГО утверждения, отличающего эту страницу от пустой.
+ */
+const IDENTITY = [
+  /expectPageIsItself\(/,
+  /data-testid/,
+  /toHaveText\(/,
+  /toContainText\(/,
+  /toHaveURL\(/,
+  /toHaveTitle\(/,
+  /toHaveClass\(/,
+  /toBeGreaterThan\(\s*0\s*\)/,
+  /toBeGreaterThanOrEqual\(\s*[1-9]/,
+  /toHaveCount\(\s*[1-9]/,
+  /toHaveLength\(\s*[1-9]/,
+  /waitForSelector\(/,
+  /getByRole\([^)]*name:/,
+];
+
+/** Тело теста вместе с телами помощников ТОГО ЖЕ файла, которые он зовёт:
+ *  утверждение, вынесенное в помощника, — это утверждение теста. */
+function testTextWithHelpers(node, sf, fns) {
+  let text = node.getText(sf);
+  for (const [name, code] of fns) if (text.includes(`${name}(`)) text += `\n${code}`;
+  return text;
+}
+
+function helperTexts(sf) {
+  const fns = new Map();
+  const walkNode = (n) => {
+    if (ts.isFunctionDeclaration(n) && n.name) fns.set(n.name.text, n.getText(sf));
+    if (
+      ts.isVariableDeclaration(n) &&
+      ts.isIdentifier(n.name) &&
+      n.initializer &&
+      (ts.isArrowFunction(n.initializer) || ts.isFunctionExpression(n.initializer))
+    )
+      fns.set(n.name.text, n.initializer.getText(sf));
+    ts.forEachChild(n, walkNode);
+  };
+  walkNode(sf);
+  return fns;
+}
+
+const isTestCall = (node, sf) =>
+  ts.isCallExpression(node) &&
+  /^(test|it)(\.(only|skip|fixme))?$/.test(node.expression.getText(sf)) &&
+  node.arguments.length >= 2;
+
+const testBody = (node) => node.arguments.find((a) => ts.isArrowFunction(a) || ts.isFunctionExpression(a));
+
+/** Правило 6: список собран со страницы, пройден циклом, размер не утверждён. */
+function auditHarvestedLists(sf, source, rel, lineOf) {
+  const found = [];
+  const visit = (node) => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      const init = node.initializer.getText(sf);
+      if (HARVEST.test(init)) {
+        const id = node.name.text;
+        const proven = provesNonEmpty(source, id);
+        const iterated = new RegExp(
+          `for\\s*\\((?:const|let)\\s+[^)]*\\bof\\s+${id}\\b|\\b${id}\\.(map|filter|some|every|forEach|reduce)\\s*\\(`,
+        ).test(source);
+        const excepted = EXCEPTIONS.some((e) => e.rule === "list-size-never-asserted" && e.file === rel && e.id === id);
+        if (iterated && !proven && !excepted) {
+          found.push({
+            rule: "list-size-never-asserted",
+            file: rel,
+            line: lineOf(node),
+            message:
+              `«${id}» собран со страницы и пройден циклом, а его размер не утверждён нигде — ` +
+              `на пустом списке обход не делает ничего и тест зелен независимо от продукта`,
+          });
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return found;
+}
+
+/** Правило 7: геометрия меряется без признака самой страницы. */
+function auditGeometryWithoutIdentity(sf, rel, lineOf) {
+  const found = [];
+  const fns = helperTexts(sf);
+  const visit = (node) => {
+    if (isTestCall(node, sf)) {
+      const body = testBody(node);
+      if (body) {
+        const text = testTextWithHelpers(body, sf, fns);
+        if (/page\.goto\(/.test(text) && GEOMETRY.some((r) => r.test(text)) && !IDENTITY.some((r) => r.test(text))) {
+          found.push({
+            rule: "geometry-without-page-identity",
+            file: rel,
+            line: lineOf(node),
+            message:
+              "тест меряет геометрию открытой страницы и ни одним утверждением не отличает её от пустой — " +
+              "`scrollWidth <= clientWidth` истинно и на экране отказа при HTTP 200",
+          });
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return found;
+}
+
+/** Правило 8: все утверждения теста лежат внутри условных веток. */
+function auditAssertionsOnlyUnderIf(sf, rel, lineOf) {
+  const found = [];
+  const visit = (node) => {
+    if (isTestCall(node, sf)) {
+      const body = testBody(node);
+      if (body) {
+        let inside = 0;
+        let outside = 0;
+        const countExpects = (n, underIf) => {
+          if (ts.isCallExpression(n) && isExpectCall(n)) {
+            if (underIf) inside += 1;
+            else outside += 1;
+          }
+          if (ts.isIfStatement(n)) {
+            ts.forEachChild(n.expression, (c) => countExpects(c, underIf));
+            if (n.thenStatement) ts.forEachChild(n.thenStatement, (c) => countExpects(c, true));
+            if (n.elseStatement) ts.forEachChild(n.elseStatement, (c) => countExpects(c, true));
+            return;
+          }
+          ts.forEachChild(n, (c) => countExpects(c, underIf));
+        };
+        countExpects(body, false);
+        if (inside > 0 && outside === 0) {
+          found.push({
+            rule: "assertions-only-under-if",
+            file: rel,
+            line: lineOf(node),
+            message:
+              `все ${inside} утверждений теста лежат внутри условных веток — ` +
+              "тест проходит зелёным, не исполнив ни одного из них",
+          });
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
   return found;
 }
 
@@ -638,6 +862,31 @@ function plant() {
       (f) =>
         f === target
           ? `${base(f)}\ntest("подсадка", async ({ page }) => { await expect(page.locator("h1")).toBeVisible({ timeout: 20_000 }); await expect(page.locator("h2")).toBeVisible({ timeout: 20_000 }); expect(1).toBe(1); });\n`
+          : base(f),
+    ],
+    // ── долг 96: три правила, добавленные 19.09.2026 ──────────────────
+    [
+      "list-size-never-asserted",
+      "список собран со страницы и пройден циклом, а размер его не утверждён",
+      (f) =>
+        f === target
+          ? `${base(f)}\ntest("подсадка", async ({ page }) => { await page.goto("/es"); const plantedCells = await page.locator("li").all(); for (const c of plantedCells) { await expect(c).toBeVisible(); } });\n`
+          : base(f),
+    ],
+    [
+      "geometry-without-page-identity",
+      "замер геометрии без единого признака самой страницы",
+      (f) =>
+        f === target
+          ? `${base(f)}\ntest("подсадка", async ({ page }) => { await page.goto("/es"); const m = await page.evaluate(() => ({ s: document.documentElement.scrollWidth, c: document.documentElement.clientWidth })); expect(m.s).toBeLessThanOrEqual(m.c); });\n`
+          : base(f),
+    ],
+    [
+      "assertions-only-under-if",
+      "единственные утверждения теста лежат внутри условной ветки",
+      (f) =>
+        f === target
+          ? `${base(f)}\ntest("подсадка", async ({ page }) => { await page.goto("/es"); const n = await page.locator("article").count(); if (n > 3) { expect(n).toBeGreaterThan(3); } });\n`
           : base(f),
     ],
   ];

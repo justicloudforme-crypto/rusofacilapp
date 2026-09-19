@@ -54,6 +54,10 @@ async function readCrosswordCells(page: Page): Promise<Cell[]> {
   const labels = await page
     .locator("input[aria-label^='row']")
     .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
+  // ДОЛГ 96: клеток ответа на доске не бывает ноль. Пустой список здесь
+  // означает, что кроссворда на экране нет, — и тогда всякое утверждение
+  // о его клетках ниже истинно по построению.
+  expect(labels.length, "клеток ответа на доске 0 — кроссворда на экране нет").toBeGreaterThan(0);
   return labels.map((label) => {
     const m = /^row (\d+) col (\d+)$/.exec(label);
     if (!m) throw new Error(`unexpected crossword cell label: ${label}`);
@@ -340,6 +344,10 @@ async function dragSelect(page: Page, path: { row: number; col: number }[]) {
   const boxes = await Promise.all(
     path.map((cell) => page.locator(`button[data-row="${cell.row}"][data-col="${cell.col}"]`).boundingBox()),
   );
+  // ДОЛГ 96: `some` по пустому списку ложно, то есть пустой путь прошёл
+  // бы эту защиту и «протащился» бы мышью ни по чему.
+  expect(boxes.length, "путь протяжки пуст — тянуть было не по чему").toBe(path.length);
+  expect(path.length, "путь протяжки пуст").toBeGreaterThan(0);
   if (boxes.some((b) => !b)) throw new Error("missing cell bounding box");
 
   const first = boxes[0]!;
@@ -464,6 +472,10 @@ test("word search: diagonal words are findable and each found word gets a distin
   // report was that every found word shared the same green, making the
   // grid unreadable once several words were found.
   const chipClasses = await page.locator("ul li[data-word]").evaluateAll((els) => els.slice(0, 3).map((el) => el.className));
+  // ДОЛГ 96: сколько фишек прочитано — числом. Без этого `map` по
+  // пустому списку дал бы пустой набор, и правило «три разных цвета»
+  // спорило бы с пустотой, а не с цветами.
+  expect(chipClasses.length, "фишек найденных слов на экране 0").toBe(3);
   const hues = chipClasses.map((c) => c.match(/bg-(\w+)-500/)?.[1]);
   expect(new Set(hues).size).toBe(3);
 

@@ -274,9 +274,14 @@ describe("extendOrGrantSubscription and the row it writes to", () => {
     const { update, create } = await run([local("manual")], "referral");
     expect(create).not.toHaveBeenCalled();
     expect(update.mock.calls[0]?.[0]?.data?.currentPeriodEnd).toBeInstanceOf(Date);
-    // Extending never rewrites the plan: the row keeps standing for the
-    // ground it was opened on.
-    expect(update.mock.calls[0]?.[0]?.data).not.toHaveProperty("plan");
+    // ДОЛГ 102, 19.09.2026: продление ПЕРЕПИСЫВАЕТ подпись тарифа — она
+    // называет последнее событие со строкой, а не того, кто её создал.
+    // До этой даты здесь стояло обратное утверждение, и на нём месяц,
+    // оплаченный через OXXO поверх ручной выдачи, оставался подписан
+    // выдачей: в «Historial de pagos» он не попадал, а кнопку отмены
+    // показывал. Премиальность при этом не меняется — отбор строки-цели
+    // требует её совпадения, и это отдельный случай ниже.
+    expect(update.mock.calls[0]?.[0]?.data?.plan).toBe("referral");
   });
 
   it("extends an existing Premium row rather than opening a second one", async () => {

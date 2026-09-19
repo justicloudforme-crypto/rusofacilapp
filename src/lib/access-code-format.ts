@@ -121,3 +121,84 @@ export function formatAccessCode(code: string, prefix: string): string {
   const body = code.slice(prefix.length);
   return [prefix, ...(body.match(/.{1,4}/g) ?? [])].join("-");
 }
+
+/**
+ * ЧТО ИМЕННО НОРМАЛИЗАЦИЯ СДЕЛАЛА СО СТРОКОЙ — ДОЛГ 103 (заход 7.217).
+ *
+ * Строка долга дословно: «новая нормализация покрывает четыре класса
+ * знаков, которые **найдены разбором**, а не измерением живого входа:
+ * сколько людей вообще вставляет код с тире, неизвестно — маршрут
+ * погашения шлёт в Sentry длину кода и причину отказа, но не то, что
+ * нормализация из строки выбросила. Сегодня отказ `unknown` от опечатки и
+ * отказ `unknown` от невидимого знака неразличимы в отчётах → в теге
+ * Sentry появляется признак «строка изменилась нормализацией» (без
+ * значения кода) → пересмотреть список классов числом».
+ *
+ * ЧТО ЗДЕСЬ И ЧЕГО ЗДЕСЬ НЕТ. Функция отвечает на один вопрос: какие
+ * классы знаков нормализация из строки убрала или подменила. Ответ —
+ * набор ИМЁН КЛАССОВ и число знаков в каждом. Ни одного знака самой
+ * строки наружу не уходит: имя класса и счётчик значения кода не
+ * восстанавливают, а по ним видно ровно то, ради чего долг заведён, —
+ * различие «отказ от опечатки» и «отказ от невидимого знака».
+ *
+ * ПЯТЫЙ КЛАСС, О КОТОРОМ ГОВОРИТ ДОЛГ, НАЗВАН ЗДЕСЬ ЯВНО: `other` — знак,
+ * переживший нормализацию и при этом НЕ являющийся латинской буквой или
+ * цифрой. Именно он и есть «пятый класс, если он есть»: сегодня такой знак
+ * доходит до базы как есть, `where { code }` по нему не совпадает, и отказ
+ * приходит как `unknown` неотличимо от опечатки. Теперь он считается
+ * отдельно и виден в отчёте числом.
+ *
+ * Граница класса — `[A-Z0-9]`, а НЕ `ACCESS_CODE_ALPHABET`, и это не
+ * небрежность. Приставка партии печатается человеку словом (`AMIGO-…`), а
+ * в слове стоят `I` и `O` — те самые буквы, которых в алфавите ВЫПУСКА
+ * нет по замыслу (их путают с 1 и 0). Считай мы «нет в алфавите выпуска»,
+ * каждый законный код сообщал бы о двух посторонних знаках, и признак
+ * умер бы в первый же день.
+ */
+export const NORMALIZATION_CLASSES = ["case", "space", "dash", "invisible", "homoglyph", "other"] as const;
+export type NormalizationClass = (typeof NORMALIZATION_CLASSES)[number];
+
+/** Невидимые знаки нулевой ширины и мягкий перенос — отдельный класс от
+ *  тире, хотя выбрасываются тем же списком: человек их не видит вовсе, и
+ *  это совсем другая история о том, откуда взялась строка. */
+const INVISIBLE = new Set(["\u00AD", "\u200B", "\u200C", "\u200D", "\uFEFF"]);
+
+
+export interface NormalizationReport {
+  /** Изменила ли нормализация строку хоть чем-нибудь. */
+  changed: boolean;
+  /** Классы по именам, в порядке объявления — годятся в тег Sentry как есть. */
+  classes: NormalizationClass[];
+  /** Сколько знаков в каждом классе. Значения кода не содержит. */
+  counts: Record<NormalizationClass, number>;
+}
+
+export function describeNormalization(raw: string): NormalizationReport {
+  const counts = Object.fromEntries(NORMALIZATION_CLASSES.map((c) => [c, 0])) as Record<NormalizationClass, number>;
+  for (const ch of raw) {
+    const upper = ch.toUpperCase();
+    if (upper !== ch) counts.case += 1;
+    if (DROPPED.has(upper)) {
+      if (INVISIBLE.has(upper)) counts.invisible += 1;
+      else counts.dash += 1;
+      continue;
+    }
+    if (/\s/.test(upper)) {
+      counts.space += 1;
+      continue;
+    }
+    if (HOMOGLYPHS.has(upper)) {
+      counts.homoglyph += 1;
+      continue;
+    }
+    if (!/[A-Z0-9]/.test(upper)) counts.other += 1;
+  }
+  const classes = NORMALIZATION_CLASSES.filter((c) => counts[c] > 0);
+  return { changed: classes.length > 0, classes, counts };
+}
+
+/** Признак для тега Sentry: имена классов через `+`, либо `none`. Строка
+ *  короткая и без знаков кода — тег Sentry длинных значений не любит. */
+export function normalizationTag(report: NormalizationReport): string {
+  return report.classes.length ? report.classes.join("+") : "none";
+}
