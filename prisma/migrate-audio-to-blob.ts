@@ -29,6 +29,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 import { isEntryPoint } from "../src/lib/entry-point";
+import { isAlreadyMigrated } from "../src/lib/audio-blob-map";
 const MAP_FILE = path.join(process.cwd(), "prisma", "audio-blob-map.json");
 // Project is now on Vercel Pro (upgraded specifically to remove the
 // Hobby plan's 10,000 Advanced Operations/month cap, which fully
@@ -59,6 +60,7 @@ async function saveMap(map: Record<string, string>): Promise<void> {
   await writeFile(MAP_FILE, JSON.stringify(map, null, 2));
 }
 
+
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
 
@@ -85,8 +87,24 @@ async function main() {
   console.log(`Found ${rows.length} AudioAsset row(s) in the local database.`);
 
   const map = await loadMap();
-  const queue = rows.filter((r) => !map[r.audioUrl]);
+  // Значения — один раз в Set: без него проверка по значению стоила бы
+  // O(строк x записей карты), то есть 21 866 x 21 866 на полном прогоне.
+  const migratedValues = new Set(Object.values(map));
+  const queue = rows.filter((r) => !isAlreadyMigrated(r.audioUrl, map, migratedValues));
   console.log(`${rows.length - queue.length} already migrated (resuming), ${queue.length} remaining.`);
+  // Признак из строки долга 38, названный вслух: карта не пуста, а
+  // перенесённых ноль — значит ключ и значение поменялись местами, и
+  // очередь сейчас равна всей базе. Прогон останавливается ДО сети.
+  if (rows.length > 0 && Object.keys(map).length > 0 && queue.length === rows.length) {
+    console.error(
+      `migrate:audio-to-blob — ОТКАЗ: записей в карте ${Object.keys(map).length}, а перенесённых строк 0 ` +
+        `при ${rows.length} строках в базе. Это признак долга 38: продолжение не узнаёт уже перенесённые файлы, ` +
+        `и боевой прогон перезалил бы стор целиком.`,
+    );
+    await db.$disconnect();
+    process.exitCode = 1;
+    return;
+  }
 
   if (dryRun) {
     const byType = new Map<string, number>();

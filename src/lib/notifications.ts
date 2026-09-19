@@ -104,6 +104,37 @@ export async function scheduleStreakReminder(
   );
 }
 
+/**
+ * СНИМАЕТ БЕЙДЖ С ИКОНКИ ПРИЛОЖЕНИЯ — ДОЛГ 203 (заход 7.216).
+ *
+ * Строка долга дословно: «бейдж на иконке приложения не сбрасывается,
+ * если приложение открыли С ИКОНКИ, а не нажатием на уведомление.
+ * Половина, которая работает: нажатие на само уведомление его убирает —
+ * плагин ставит `setAutoCancel(localNotification.autoCancel)`
+ * (`LocalNotificationManager.kt:158`) при умолчании `var autoCancel:
+ * Boolean = true` (`LocalNotification.kt:34`). Половина, которая не
+ * работает, названа числом: вызовов
+ * `LocalNotifications.removeAllDeliveredNotifications()` во всём `src/`
+ * ровно **0**, полей `badge` у планируемого уведомления **0**, и на
+ * возобновление приложения не подписан никто → чинится одним вызовом на
+ * возобновление; трогает `src/lib/notifications.ts` и точку монтирования
+ * `NativeNotifications`, правок в `android/` не требует».
+ *
+ * Правка ровно та, что названа долгом, и ничего сверх неё: один вызов,
+ * зовомый на запуске и на каждом возвращении приложения на передний
+ * план. Расписание напоминания не трогается вовсе — «доставленное»
+ * (delivered) и «запланированное» (scheduled) у плагина разные списки, и
+ * `removeAllDeliveredNotifications` снимает только то, что уже показано
+ * в шторке и уже сосчитано бейджем.
+ *
+ * Почему не поле `badge` у самого уведомления: оно задаёт ЧИСЛО на
+ * значке, а долг про то, что число не снимается. Ставить счётчик, не
+ * умея его обнулить, значит завести вторую половину той же поломки.
+ */
+export async function clearDeliveredNotifications(): Promise<void> {
+  await nativeOnly(() => LocalNotifications.removeAllDeliveredNotifications());
+}
+
 /** Cancels the streak reminder, e.g. if the user turns reminders off. */
 export async function cancelStreakReminder(): Promise<void> {
   await nativeOnly(() =>
