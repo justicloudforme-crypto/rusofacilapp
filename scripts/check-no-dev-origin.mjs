@@ -102,10 +102,16 @@ function checkSentryGate(source = readFileSync("./sentry.client.config.ts", "utf
 const ENV_FILES = [".env", ".env.local", ".env.production", ".env.development", ".env.test"];
 const FORBIDDEN_ENV = /^\s*(?:export\s+)?(VERCEL_ENV|NEXT_PUBLIC_VERCEL_ENV)\s*=/m;
 
-function checkEnvFiles(read = (f) => readFileSync(f, "utf8")) {
+// `exists` И `read` подставляются вместе, и это не украшение: первый
+// прогон в CI показал ровно такую дыру. Локально подсадка «.env с
+// VERCEL_ENV» проходила, потому что файл `.env` на машине разработчика
+// есть; в CI его нет, проверка существования отсекала подсаженное чтение,
+// и сторож сообщал «поймано 5 из 7». То есть зелёный локальный прогон
+// подсадки ничего не доказывал — ровно то, о чём раздел 4 PROGRESS.md.
+function checkEnvFiles(read = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   const problems = [];
   for (const file of ENV_FILES) {
-    if (!existsSync(file)) continue;
+    if (!exists(file)) continue;
     // Читается ТОЛЬКО имя переменной; ни одно значение отсюда не печатается.
     if (FORBIDDEN_ENV.test(read(file))) {
       problems.push(
@@ -152,12 +158,18 @@ function selfTest() {
     {
       label: "локальный .env с VERCEL_ENV",
       run: () =>
-        checkEnvFiles((f) => (f === ".env" ? "DATABASE_URL=x\nVERCEL_ENV=production\n" : "")).length > 0,
+        checkEnvFiles(
+          (f) => (f === ".env" ? "DATABASE_URL=x\nVERCEL_ENV=production\n" : ""),
+          (f) => f === ".env",
+        ).length > 0,
     },
     {
       label: "локальный .env с NEXT_PUBLIC_VERCEL_ENV",
       run: () =>
-        checkEnvFiles((f) => (f === ".env" ? "NEXT_PUBLIC_VERCEL_ENV=production\n" : "")).length > 0,
+        checkEnvFiles(
+          (f) => (f === ".env" ? "NEXT_PUBLIC_VERCEL_ENV=production\n" : ""),
+          (f) => f === ".env",
+        ).length > 0,
     },
   ];
 
@@ -168,7 +180,7 @@ function selfTest() {
     fail([`КОНТРОЛЬ СЛОМАН: чистый текст назван грязным (${cleanHits.join(", ")}).`]);
   }
   console.log("  ✓ чистый текст проходит (0 находок)");
-  if (checkEnvFiles(() => "DATABASE_URL=x\nVERCEL_OIDC_TOKEN=y\n").length > 0) {
+  if (checkEnvFiles(() => "DATABASE_URL=x\nVERCEL_OIDC_TOKEN=y\n", () => true).length > 0) {
     fail(["КОНТРОЛЬ СЛОМАН: чистый .env назван грязным."]);
   }
   console.log("  ✓ чистый .env проходит");
