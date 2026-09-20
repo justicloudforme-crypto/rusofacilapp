@@ -66,12 +66,52 @@ export async function generateStaticParams() {
   }
 }
 
+/** Запасные метаданные страницы термина — см. `generateMetadata` ниже.
+ * Не из словаря по той же причине, что и у рассказа: чинить отказ ещё
+ * одним возможным отказом нельзя. */
+const FALLBACK_GLOSSARY_METADATA: Record<"es" | "ru", { title: string; description: string }> = {
+  es: {
+    title: "Glosario de gramática rusa | RusoFácilapp",
+    description: "Términos de gramática rusa explicados en español, con ejemplos y audio.",
+  },
+  ru: {
+    title: "Глоссарий русской грамматики | RusoFácilapp",
+    description: "Термины русской грамматики с объяснениями, примерами и озвучкой.",
+  },
+};
+
 export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/glossary/[slug]">): Promise<Metadata> {
   const { lang, slug } = await params;
   if (!isLocale(lang)) return {};
-  const term = await getTermBySlug(slug);
+  const alternates = routeAlternates(lang, `/glossary/${encodeURIComponent(slug)}`);
+  /**
+   * ЗАГОЛОВОК ВКЛАДКИ НЕ СТОИТ ЦЕЛОЙ СТРАНИЦЫ — 20.09.2026, заход 7.220.
+   *
+   * То же правило и по той же причине, что у `/[lang]/stories/[id]`:
+   * `generateMetadata` — отдельный вызов, и его падение даёт 500 всему
+   * ответу, даже когда тело страницы прочиталось бы. Sentry
+   * `JAVASCRIPT-NEXTJS-Z` (21 событие `BLOCKED: Operation was blocked`)
+   * пришёл с тела, а не отсюда, — но чтение ОДНО И ТО ЖЕ и выполняется за
+   * одно открытие страницы ДВАЖДЫ (замер 20.09.2026 на настоящем рендере:
+   * `GlossaryTerm.findUnique` × 2 и `AudioAsset.findMany` × 2 на пять
+   * запросов всего). Половина, которая про заголовок, теперь деградирует.
+   *
+   * Тело страницы остаётся ГРОМКИМ намеренно: термин — содержимое своей
+   * страницы, а страница, не сумевшая показать то единственное, ради чего
+   * существует, деградировать не во что. Это записано в MUST_FAIL_LOUDLY.
+   */
+  let term: Awaited<ReturnType<typeof getTermBySlug>> = null;
+  try {
+    term = await getTermBySlug(slug);
+  } catch (error) {
+    console.error(
+      "[glossary/[slug]] не удалось прочитать термин для метаданных — отдаю запасной заголовок",
+      error
+    );
+    return { ...FALLBACK_GLOSSARY_METADATA[lang], alternates };
+  }
   if (!term) return {};
 
   const dict = await getDictionary(lang);
@@ -107,7 +147,7 @@ export async function generateMetadata({
   // byte-identical.
   const title = shortenTitle(titleWithSuffix.length > 60 ? titleBase : titleWithSuffix);
 
-  return { title, description, alternates: routeAlternates(lang, `/glossary/${encodeURIComponent(slug)}`) };
+  return { title, description, alternates };
 }
 
 export default async function GlossaryTermPage({

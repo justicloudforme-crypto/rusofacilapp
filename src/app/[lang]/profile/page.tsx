@@ -55,7 +55,11 @@ import AvatarPicker from "@/components/profile/AvatarPicker";
 import WelcomeOverlay from "@/components/profile/WelcomeOverlay";
 import { greetedOnAccountToday } from "@/lib/welcome-shown";
 import { grantSource, isGrantSubscription } from "@/lib/subscription-grant";
-import { getRedeemedAccessCodeDates } from "@/lib/access-code";
+import {
+  ACCESS_CODE_OUTCOME_MESSAGE_KEY,
+  accessCodeOutcomeFromQuery,
+  getRedeemedAccessCodeDates,
+} from "@/lib/access-code";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import LogoutEverywhereButton from "@/components/profile/LogoutEverywhereButton";
 import { ownerScopeFor } from "@/lib/recordings-owner";
@@ -537,24 +541,28 @@ export default async function ProfilePage({
   // `entitled` действительно истинно. Закладка на такой адрес поэтому
   // ничего не наобещает. Тот же приём, что у CheckoutOutcomeNotice.
   const accessCodeSucceeded = accessCodeOutcome === "redeemed" && entitled;
+  // ПРИЧИНА ОТКАЗА НАЗЫВАЕТСЯ, А НЕ ПОДРАЗУМЕВАЕТСЯ — 20.09.2026 (7.220).
+  //
+  // Здесь стояла вложенная лесенка `? :` с хвостом «всё остальное», и в
+  // этот хвост попадали три РАЗНЫЕ ситуации под общим словом `unknown`:
+  // пустое поле, несуществующий код и наш собственный дефект. Все три
+  // читали «No encontramos ese código. Revisa las letras» — то есть
+  // человека отправляли искать опечатку даже тогда, когда он вообще
+  // ничего не вводил. Таблица соответствий живёт в
+  // `src/lib/access-code.ts` рядом с самими причинами, а проба
+  // `src/lib/access-code-refusal.test.ts` требует от неё полноты.
+  const namedOutcome = accessCodeOutcomeFromQuery(accessCodeOutcome);
+  const profileCopy = dict.profile as unknown as Record<string, string>;
   const accessCodeMessage =
     accessCodeOutcome === "redeemed"
       ? entitled
         ? dict.profile.accessCodeRedeemed
         : dict.profile.accessCodeNotApplied
-      : accessCodeOutcome === "already_redeemed"
-        ? dict.profile.accessCodeAlreadyRedeemed
-        : accessCodeOutcome === "expired"
-          ? dict.profile.accessCodeExpired
-          : accessCodeOutcome === "revoked"
-            ? dict.profile.accessCodeRevoked
-            : accessCodeOutcome === "already_has_access"
-              ? dict.profile.accessCodeAlreadyHasAccess
-              : accessCodeOutcome === "rate_limited"
-                ? dict.profile.accessCodeRateLimited
-                : // "unknown" и всё, что мог написать в адрес человек сам:
-                  // общий отказ, а не выдуманная причина.
-                  dict.profile.accessCodeUnknown;
+      : namedOutcome
+        ? profileCopy[ACCESS_CODE_OUTCOME_MESSAGE_KEY[namedOutcome]]
+        : // Слово, которого нет среди исходов, — то есть напечатанное в
+          // адресной строке человеком. Общий отказ, а не выдуманная причина.
+          dict.profile.accessCodeUnknown;
 
   const statusLabels: Record<DisplayStatus, string> = {
     active: dict.profile.statusActive,

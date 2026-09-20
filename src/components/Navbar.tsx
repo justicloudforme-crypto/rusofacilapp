@@ -12,7 +12,7 @@ import Button from "@/components/ui/Button";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 import type { StreakStats } from "@/lib/streaks";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUserForChrome } from "@/lib/auth";
 import { isStaff } from "@/lib/roles";
 import { isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
 import { getEntitlementTier, isPremiumTier } from "@/lib/entitlement";
@@ -47,7 +47,12 @@ export default async function Navbar({
    * doesn't add a real per-request cost) — null when logged out. */
   streak: StreakStats | null;
 }) {
-  const user = await getCurrentUser();
+  // Вторая половина правки 7.220: шапка читает человека ЕЩЁ РАЗ (замер
+  // 20.09.2026 на настоящем рендере: `User.findUnique` три-четыре раза за
+  // одно открытие страницы), и этот второй раз ронял бы её ровно так же,
+  // как первый. Повтор в этом заходе НЕ убирается — он записан числом и
+  // отдан следующему заходу вместе с остальными N+1.
+  const user = await getCurrentUserForChrome();
   const staff = Boolean(user && isStaff(user.role));
   // ДОЛГ 179. Внутри приложения платных входов нет ни одного, и ссылка
   // «Цены» — вход. Сам маршрут при этом жив и отдаёт честное объяснение
@@ -55,7 +60,21 @@ export default async function Navbar({
   const nativeShell = await isNativeShellRequest();
   // Drives the gold ring/crown on the header avatar — see
   // MatryoshkaAvatar.tsx's `premium` prop.
-  const isPremiumUser = user ? isPremiumTier(await getEntitlementTier()) : false;
+  // Золотое кольцо на аватаре — украшение, и отказ чтения обязан стоить
+  // кольца, а не шапки (7.220). Ветка отказа даёт `false`, то есть
+  // кольца НЕТ: сторона отказа выбрана в меньшую, как и везде в этом
+  // заходе. Это ЕДИНСТВЕННОЕ место, где ответ `getEntitlementTier`
+  // проглатывается, и проглатывается он потому, что здесь он ничего не
+  // открывает и не закрывает; в решении о доступе он остаётся громким —
+  // см. MUST_FAIL_LOUDLY в src/lib/db-read-resilience.test.ts.
+  let isPremiumUser = false;
+  if (user) {
+    try {
+      isPremiumUser = isPremiumTier(await getEntitlementTier());
+    } catch (error) {
+      console.error("[navbar] не удалось прочитать уровень доступа — аватар рисуется без кольца", error);
+    }
+  }
 
   const iconClass = "h-4 w-4";
   // Single source for the 4 "Практика" destinations — desktop's dropdown

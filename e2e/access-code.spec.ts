@@ -250,8 +250,11 @@ for (const lang of ["es", "ru"] as const) {
     // Код той же формы, что настоящий, но не заведённый ничем.
     await submitCode(page, lang, newCode());
 
-    expect(new URL(page.url()).searchParams.get("accessCode")).toBe("unknown");
-    await expectNotice(page, lang, "accessCodeUnknown");
+    // 7.220: причина называется своим словом. Раньше здесь стояло
+    // `unknown` — одно слово на «поле пустое», «такого кода нет» и «у нас
+    // дефект», и на экране у всех трёх был один и тот же текст.
+    expect(new URL(page.url()).searchParams.get("accessCode")).toBe("not_found");
+    await expectNotice(page, lang, "accessCodeNotFound");
     expect(await tierOf(page), "после отказа доступа не появилось").toBe("free");
     expect(await paidMaterialIsOpen(page, lang), "после отказа платный пазл закрыт").toBe(false);
     // Состояние страницы после отказа: форма снова открыта и пуста.

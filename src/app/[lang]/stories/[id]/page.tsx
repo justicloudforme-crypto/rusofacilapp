@@ -24,15 +24,72 @@ import { storyTitles } from "@/lib/story-title";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates, truncateForMeta } from "@/lib/site";
 
+/**
+ * Запасные метаданные страницы рассказа — на случай, когда база не
+ * ответила вовсе (см. длинный комментарий в `generateMetadata`). Написаны
+ * здесь, а не собраны из словаря, намеренно: словарь грузится своим
+ * `await`, и подставлять запасной текст через ещё одно возможное падение
+ * значило бы чинить отказ отказом.
+ */
+const FALLBACK_STORY_METADATA: Record<"es" | "ru", { title: string; description: string }> = {
+  es: {
+    title: "Cuento en ruso | RusoFácilapp",
+    description: "Lee cuentos en ruso con audio y traducción al español, por nivel (A1–C1).",
+  },
+  ru: {
+    title: "Рассказ на русском | RusoFácilapp",
+    description: "Рассказы на русском языке с озвучкой и переводом, по уровням A1–C1.",
+  },
+};
+
 export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/stories/[id]">): Promise<Metadata> {
   const { lang, id } = await params;
   if (!isLocale(lang)) return {};
-  const story = await db.story.findUnique({
-    where: { id },
-    select: { title: true, titleEs: true, level: true, description: true, descriptionRu: true },
-  });
+  const alternates = routeAlternates(lang, `/stories/${encodeURIComponent(id)}`);
+  /**
+   * ОТКАЗ ЭТОГО ЧТЕНИЯ СТОИЛ ВСЕЙ СТРАНИЦЫ — 20.09.2026, заход 7.220.
+   *
+   * Что измерено. Sentry `JAVASCRIPT-NEXTJS-12`: `Invalid
+   * prisma.story.findUnique() invocation` … `BLOCKED: Operation was
+   * blocked`, **unhandled**, транзакция `Page.generateMetadata
+   * (/[lang]/stories/[id])`, **126 событий** — самая частая запись
+   * семейства. `BLOCKED` отдаёт сама Turso при исчерпанной квоте чтений
+   * (авария 11.09.2026, PROGRESS.md строка 135).
+   *
+   * Почему это отдельный дефект от тела страницы. В Next.js
+   * `generateMetadata` и рендер страницы — два разных вызова, и падение
+   * ЛЮБОГО из них даёт 500 на весь ответ. То есть рассказ, чьё тело
+   * прочиталось бы, всё равно не показывался, потому что не прочитался
+   * заголовок вкладки. Заголовок вкладки — не содержимое рассказа.
+   *
+   * Что теперь. Отказ стоит ТОЧНОГО заголовка: страница отдаёт запасные
+   * метаданные — родовое название раздела на своём языке и canonical,
+   * который от базы не зависит вовсе. Тело страницы при этом остаётся
+   * ГРОМКИМ (`db.story.findUnique` ниже, без try): рассказ — содержимое,
+   * и показывать пустую страницу вместо него было бы враньём. Обе
+   * половины заперты в `src/lib/db-read-resilience.test.ts`.
+   */
+  let story: {
+    title: string;
+    titleEs: string | null;
+    level: string;
+    description: string | null;
+    descriptionRu: string | null;
+  } | null = null;
+  try {
+    story = await db.story.findUnique({
+      where: { id },
+      select: { title: true, titleEs: true, level: true, description: true, descriptionRu: true },
+    });
+  } catch (error) {
+    console.error(
+      "[stories/[id]] не удалось прочитать рассказ для метаданных — отдаю запасной заголовок",
+      error
+    );
+    return { ...FALLBACK_STORY_METADATA[lang], alternates };
+  }
   if (!story) return {};
   const rawDescription =
     (lang === "ru" ? (story.descriptionRu ?? story.description) : story.description) ??
@@ -62,7 +119,7 @@ export async function generateMetadata({
   // `contentPageTitle` — старую форму строки; так две ветки заморозки
   // говорят одно и то же.
   const title = contentPageTitle(id, storyTitles(story, lang).primary, qualifier, shortQualifier);
-  return { title, description, alternates: routeAlternates(lang, `/stories/${encodeURIComponent(id)}`) };
+  return { title, description, alternates };
 }
 
 /** `Story.sentenceOffsetsJson` -> offsets, or null if the row is unusable.
