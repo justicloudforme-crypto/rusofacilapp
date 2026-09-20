@@ -630,6 +630,8 @@
     "sessionsHeading": "Сеансы",
     "sessionsDescription": "Завершить сеансы на всех остальных устройствах, кроме этого.",
     "logoutEverywhereButton": "Выйти на всех остальных устройствах",
+    "logoutEverywherePending": "Завершаем сеансы…",
+    "logoutEverywhereError": "Не получилось завершить сеансы. Проверьте связь и попробуйте снова.",
     "loggedOutEverywhereNotice": "Готово — остальные устройства разлогинены.",
     "deleteAccountHeading": "Удаление аккаунта",
     "deleteAccountDescription": "Безвозвратно удалить аккаунт и все связанные данные.",

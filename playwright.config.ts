@@ -53,7 +53,7 @@ export default defineConfig({
        * пропуск в отчёте роняет прогон по правилу `check:e2e-coverage`,
        * и роняет правильно.
        */
-      testIgnore: /sw-cache-budget\.spec\.ts/,
+      testIgnore: /(sw-cache-budget|sw-audio-replay|sw-offline-screen)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
