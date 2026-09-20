@@ -5,7 +5,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { db } from "@/lib/db";
 import { isGlossaryCategory, parseExamplesJson, parseRelatedLessonsJson } from "@/lib/glossary";
 import { attachGlossaryAudio } from "@/lib/glossary-audio";
-import GlossaryApp from "@/components/glossary/GlossaryApp";
+import GlossaryApp, { type GlossaryTermData } from "@/components/glossary/GlossaryApp";
 import { routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
@@ -48,17 +48,36 @@ export default async function GlossaryPage({ params }: PageProps<"/[lang]/glossa
   // fetch a crawler may never wait for. Same query shape and
   // parse/attach-audio helpers /api/glossary itself uses, just called
   // directly instead of through an extra HTTP round trip.
-  const rows = await db.glossaryTerm.findMany({ orderBy: { term: "asc" } });
-  const parsed = rows.map((row) => ({
-    ...row,
-    // isGlossaryCategory guards against a stale/corrupt row's category
-    // never matching the known set — falls back to "otros" (the catch-all
-    // bucket) rather than letting an unexpected DB value crash the page.
-    category: isGlossaryCategory(row.category) ? row.category : ("otros" as const),
-    relatedLessons: parseRelatedLessonsJson(row.relatedLessons),
-    examples: parseExamplesJson(row.examples),
-  }));
-  const initialTerms = await attachGlossaryAudio(parsed);
+  /**
+   * ОТКАЗ ЧТЕНИЯ СПИСКА СТОИТ СПИСКА — 20.09.2026, заход 7.220.
+   *
+   * Sentry `JAVASCRIPT-NEXTJS-X`: `prisma.glossaryTerm.findMany()` …
+   * `BLOCKED: Operation was blocked`, **unhandled**, транзакция
+   * `Page Server Component (/[lang]/glossary)`, 2 события.
+   *
+   * Страница-указатель — это список ссылок; заголовок, подзаголовок и
+   * разметка от базы не зависят. При отказе отдаётся пустой список с
+   * честной подписью. Страница ОДНОГО термина (`[slug]/page.tsx`) живёт
+   * по другому правилу и падает громко: там чтение — содержимое.
+   */
+  let initialTerms: GlossaryTermData[] = [];
+  let listUnavailable = false;
+  try {
+    const rows = await db.glossaryTerm.findMany({ orderBy: { term: "asc" } });
+    const parsed = rows.map((row) => ({
+      ...row,
+      // isGlossaryCategory guards against a stale/corrupt row's category
+      // never matching the known set — falls back to "otros" (the catch-all
+      // bucket) rather than letting an unexpected DB value crash the page.
+      category: isGlossaryCategory(row.category) ? row.category : ("otros" as const),
+      relatedLessons: parseRelatedLessonsJson(row.relatedLessons),
+      examples: parseExamplesJson(row.examples),
+    }));
+    initialTerms = await attachGlossaryAudio(parsed);
+  } catch (error) {
+    listUnavailable = true;
+    console.error("[glossary] не удалось прочитать список терминов — отдаю пустой список", error);
+  }
 
   return (
     <div
@@ -71,6 +90,14 @@ export default async function GlossaryPage({ params }: PageProps<"/[lang]/glossa
     >
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict.glossary.pageTitle}</h1>
       <p className="mt-3 max-w-xl text-foreground/70">{dict.glossary.pageSubtitle}</p>
+      {listUnavailable && (
+        <p
+          data-testid="list-unavailable"
+          className="mt-6 rounded-xl border border-black/10 bg-foreground/5 px-4 py-3 text-sm text-foreground/70 dark:border-white/20"
+        >
+          {dict.errors.listUnavailable}
+        </p>
+      )}
 
       <div className="mt-10">
         <GlossaryApp dict={dict.glossary} lang={lang} initialTerms={initialTerms} />

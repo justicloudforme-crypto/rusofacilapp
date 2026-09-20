@@ -60,7 +60,14 @@ function tryRanges(rawSource: string): Array<[number, number]> {
  * do not care about either.
  */
 function symbolBody(source: string, symbol: string): string {
-  const decl = new RegExp(`^(export\\s+)?(async\\s+)?(function|const)\\s+${symbol}\\b`, "m");
+  // `default` допущено 20.09.2026 (7.220): компонент страницы в Next.js
+  // объявляется ровно как `export default async function Page…`, и без
+  // этого слова сканер не находил НИ ОДНОГО из них — то есть три новые
+  // границы этого захода он бы просто не увидел.
+  const decl = new RegExp(
+    `^(export\\s+)?(default\\s+)?(async\\s+)?(function|const)\\s+${symbol}\\b`,
+    "m",
+  );
   const start = source.search(decl);
   if (start === -1) throw new Error(`symbol not found: ${symbol}`);
   const rest = source.slice(start + 1);
@@ -82,6 +89,16 @@ const DB_BACKED_HELPERS: Array<{ name: string; definedIn: string }> = [
   { name: "getFlashcardIndex", definedIn: "lib/flashcards/cache.ts" },
   { name: "getStoryCatalog", definedIn: "lib/stories-catalog.ts" },
   { name: "attachGlossaryAudio", definedIn: "lib/glossary-audio.ts" },
+  // 20.09.2026 (7.220), семейство `BLOCKED`. Четыре помощника, чьи
+  // чтения решили судьбу шести маршрутов из восьми записей Sentry.
+  // `getTermBySlug` — единственный в списке НЕ экспортируемый: он
+  // локальная функция страницы термина, и экспортировать её наружу
+  // только ради сканера нельзя — Next.js разрешает у модуля страницы
+  // закрытый набор экспортов.
+  { name: "getCurrentUser", definedIn: "lib/auth.ts" },
+  { name: "getSubscriptionsForUser", definedIn: "lib/subscription.ts" },
+  { name: "getUserStreakStats", definedIn: "lib/streaks.ts" },
+  { name: "getTermBySlug", definedIn: "app/[lang]/glossary/[slug]/page.tsx" },
 ];
 
 /**
@@ -203,6 +220,73 @@ const MUST_DEGRADE: Array<{ where: string; file: string; symbol: string | null; 
     model: "mediaOverride",
     cost: "the catalog, 650 story pages, 240 lesson pages and the sitemap keep their media blocks; a broken embed stops being hidden",
   },
+  // ============================================================
+  // СЕМЕЙСТВО `BLOCKED` — 20.09.2026, заход 7.220. Восемь записей
+  // Sentry, 223 события, одна причина: Turso отказывает в чтении при
+  // исчерпанной квоте. Шесть записей — шесть мест ниже; седьмая
+  // (`mediaOverride` на странице рассказа) закрыта заходом 7.219
+  // двумя строками выше; восьмая (`wordGamePuzzle` на /sitemap.xml)
+  // уже стоит в try с 29.08.2026 — см. первую строку этого списка.
+  // ============================================================
+  {
+    // JAVASCRIPT-NEXTJS-12, 126 событий — самая частая запись семейства.
+    where: "stories/[id] generateMetadata",
+    file: "app/[lang]/stories/[id]/page.tsx",
+    symbol: "generateMetadata",
+    cost: "650 story URLs keep their text, audio and paywall; the tab title falls back to the section's generic one",
+  },
+  {
+    // JAVASCRIPT-NEXTJS-Z, 21 событие. Пришло с ТЕЛА страницы, а не
+    // отсюда — но чтение то же самое и за одно открытие выполняется
+    // дважды (замер 20.09.2026: GlossaryTerm.findUnique × 2 из пяти
+    // запросов страницы). Деградирует половина, которая про заголовок.
+    where: "glossary/[slug] generateMetadata",
+    file: "app/[lang]/glossary/[slug]/page.tsx",
+    symbol: "generateMetadata",
+    cost: "236 glossary URLs keep their definition; the tab title falls back to the section's generic one",
+  },
+  {
+    // JAVASCRIPT-NEXTJS-Y, 3 события.
+    where: "StoriesPage (the catalog read only)",
+    file: "app/[lang]/stories/page.tsx",
+    symbol: "StoriesPage",
+    model: "getStoryCatalog",
+    cost: "the catalog page keeps its heading, breadcrumbs and layout, and says plainly that the list could not be loaded",
+  },
+  {
+    // JAVASCRIPT-NEXTJS-X, 2 события.
+    where: "GlossaryPage (the index read)",
+    file: "app/[lang]/glossary/page.tsx",
+    symbol: "GlossaryPage",
+    cost: "the glossary index keeps its heading and layout and says plainly that the list could not be loaded",
+  },
+  {
+    // JAVASCRIPT-NEXTJS-13, 1 событие.
+    where: "VocabularyCategoryPage (the card bank read only)",
+    file: "app/[lang]/vocabulary/[categoria]/page.tsx",
+    symbol: "VocabularyCategoryPage",
+    model: "getFlashcardIndex",
+    cost: "23 vocabulary landings keep their prose, schema.org markup and game links; the word list is empty and says so",
+  },
+  {
+    // Вторая половина той же записи: значок серии дней в шапке. Украшение,
+    // и отказ обязан стоить значка. Своё try/catch, а не общее с чтением
+    // человека выше, — иначе одно из двух молчало бы о своём отказе.
+    where: "LangLayout (the streak badge read only)",
+    file: "app/[lang]/layout.tsx",
+    symbol: "LangLayout",
+    model: "getUserStreakStats",
+    cost: "the header loses the streak badge and keeps the avatar, the navigation and the page under it",
+  },
+  {
+    // JAVASCRIPT-NEXTJS-14, 6 событий — и самая дорогая запись семейства
+    // не числом, а ценой: раскладка рисует шапку, шапка стоит на каждой
+    // странице, поэтому отказ стоил САЙТА для вошедшего человека.
+    where: "getCurrentUserForChrome",
+    file: "lib/auth.ts",
+    symbol: "getCurrentUserForChrome",
+    cost: "every page under a signed-in visitor renders with the guest header instead of returning 500",
+  },
 ];
 
 /**
@@ -253,6 +337,29 @@ const MUST_FAIL_LOUDLY: Array<{ where: string; file: string; symbol: string; why
     file: "lib/media/data.ts",
     symbol: "getManualOverrideIds",
     why: "an empty set reads as \"nobody set a manual flag\", and the very next automated embed check would overwrite a human judgment call it exists to protect",
+  },
+  // ============================================================
+  // ГРАНИЦЫ, ДОПИСАННЫЕ 20.09.2026 (7.220) ВМЕСТЕ С ДЕГРАДАЦИЕЙ ВЫШЕ.
+  // Их три, и все три отвечают на один вопрос: почему ЭТО чтение не
+  // деградирует, когда соседнее в том же файле — деградирует.
+  // ============================================================
+  {
+    where: "StoryReaderPage",
+    file: "app/[lang]/stories/[id]/page.tsx",
+    symbol: "StoryReaderPage",
+    why: "the story text IS the page — its own generateMetadata degrades because a tab title is decoration, but a reader page with no story on it would be a blank page pretending to be a story",
+  },
+  {
+    where: "GlossaryTermPage",
+    file: "app/[lang]/glossary/[slug]/page.tsx",
+    symbol: "GlossaryTermPage",
+    why: "the term IS the page, exactly as with the story reader — the index at /glossary degrades to an empty list because a list of links is not its own content, and one term page has nothing equivalent to fall back to",
+  },
+  {
+    where: "getEntitlementTierFor",
+    file: "lib/entitlement.ts",
+    symbol: "getEntitlementTierFor",
+    why: "a swallowed failure here answers \"free\" for somebody who has paid, so the paywall appears in front of material they already own — and the next thing that person does is pay for it again; a 500 costs one page view, a duplicate charge costs trust and money",
   },
 ];
 
@@ -358,20 +465,64 @@ describe("a single database read cannot take down a page", () => {
     expect(readOffsets(`const x = db.story.findMany();`).map((r) => r.model)).toEqual(["story"]);
   });
 
-  it("the indirect-read list still names real exports", () => {
+  it("the indirect-read list still names real declarations", () => {
     // A rename would otherwise empty this list silently and every
     // indirect read would go back to being invisible.
+    //
+    // `export` is optional since 20.09.2026 (7.220): getTermBySlug is a
+    // module-local function of the glossary term page, and a page module
+    // in Next.js may not carry an arbitrary extra export — so requiring
+    // one here would mean changing the app to please the scanner.
     for (const { name, definedIn } of DB_BACKED_HELPERS) {
       const src = readFileSync(join(SRC, definedIn), "utf8");
-      expect(src, `${definedIn} no longer exports ${name}`).toMatch(
-        new RegExp(`export\\s+(async\\s+)?(function|const)\\s+${name}\\b`),
+      expect(src, `${definedIn} no longer declares ${name}`).toMatch(
+        new RegExp(`(export\\s+)?(async\\s+)?(function|const)\\s+${name}\\b`),
       );
       expect(readOffsets(src).length, `${definedIn}: ${name} no longer touches the database`).toBeGreaterThan(0);
     }
   });
 
+  /**
+   * ШАПКА ЧИТАЕТ ЧЕЛОВЕКА ЧЕРЕЗ ДЕГРАДИРУЮЩУЮ ДВЕРЬ — 20.09.2026 (7.220).
+   *
+   * Отдельным правилом, а не строкой в MUST_DEGRADE, по устройству:
+   * `getCurrentUserForChrome` сама по себе базу не трогает (она зовёт
+   * `getCurrentUser`), поэтому сканер чтений в раскладке и в шапке видит
+   * НОЛЬ обращений и сказать о них ничего не может. Проверено прямой
+   * подсадкой при написании: возврат этих двух файлов к прежнему коду
+   * (`getCurrentUser()` напрямую) не ловился ни одним из правил выше.
+   *
+   * Цена ошибки здесь — весь сайт для вошедшего человека, потому что
+   * шапка стоит на каждой странице.
+   */
+  const CHROME_FILES = ["app/[lang]/layout.tsx", "components/Navbar.tsx"] as const;
+
+  it.each(CHROME_FILES)("%s reads the visitor through getCurrentUserForChrome", (file) => {
+    const source = withoutComments(readFileSync(join(SRC, file), "utf8"));
+    expect(source, `${file}: header no longer uses the degrading door`).toContain(
+      "getCurrentUserForChrome(",
+    );
+    // И вторая половина: прежняя, громкая дверь здесь не вызывается.
+    // `\b(?<!ForChrome)` тут не годится — просмотр назад запрещён правилом
+    // проекта (7.210), — поэтому вызовы считаются вычитанием.
+    const all = (source.match(/\bgetCurrentUser\w*\(/g) ?? []).filter((m) => m !== "getCurrentUser(");
+    const loud = (source.match(/\bgetCurrentUser\(/g) ?? []).length;
+    expect(loud, `${file}: calls getCurrentUser() directly — that is the 500 this pass removed`).toBe(0);
+    expect(all.length, `${file}: no call found at all — has it been renamed?`).toBeGreaterThan(0);
+  });
+
+  it("positive control: the chrome rule really can tell the two doors apart", () => {
+    // Без этого предыдущая проверка могла бы проходить потому, что
+    // регулярка не ловит ничего.
+    const loudOnly = "const user = await getCurrentUser();";
+    const quietOnly = "const user = await getCurrentUserForChrome();";
+    expect((loudOnly.match(/\bgetCurrentUser\(/g) ?? []).length).toBe(1);
+    expect((quietOnly.match(/\bgetCurrentUser\(/g) ?? []).length).toBe(0);
+    expect((quietOnly.match(/\bgetCurrentUser\w*\(/g) ?? []).length).toBe(1);
+  });
+
   it("records why some reads deliberately stay unguarded", () => {
-    expect(MUST_FAIL_LOUDLY.length).toBeGreaterThanOrEqual(5);
+    expect(MUST_FAIL_LOUDLY.length).toBeGreaterThanOrEqual(9);
     for (const { why } of MUST_FAIL_LOUDLY) expect(why.length).toBeGreaterThan(60);
     for (const reason of Object.values(LEFT_ALONE_ON_PURPOSE)) expect(reason.length).toBeGreaterThan(60);
   });

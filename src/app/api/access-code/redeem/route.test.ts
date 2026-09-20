@@ -69,7 +69,12 @@ describe("POST /api/access-code/redeem", () => {
   });
 
   it.each([
-    ["unknown"],
+    // 7.220: `unknown` разошлось на три — `empty`, `not_found`,
+    // `inconsistent`. Список перечислен здесь целиком намеренно: новая
+    // причина, забытая в маршруте, обязана ронять эту пробу.
+    ["empty"],
+    ["not_found"],
+    ["inconsistent"],
     ["already_redeemed"],
     ["expired"],
     ["revoked"],
@@ -110,7 +115,7 @@ describe("POST /api/access-code/redeem", () => {
   });
 
   it("отсутствующее поле кода — обычный отказ, а не падение маршрута", async () => {
-    redeemAccessCode.mockResolvedValue({ ok: false, reason: "unknown" });
+    redeemAccessCode.mockResolvedValue({ ok: false, reason: "empty" });
     const form = new FormData();
     form.set("lang", "es");
     const request = {

@@ -742,6 +742,9 @@
     "accessCodeSubmit": "Activar el código",
     "accessCodeRedeemed": "Listo: tu código quedó activado y tu acceso ya está abierto. Arriba puedes ver hasta qué fecha.",
     "accessCodeNotApplied": "Recibimos tu código, pero tu acceso todavía no aparece activo. Recarga la página en un momento; si sigue igual, escríbenos con el correo de tu cuenta.",
+    "accessCodeEmpty": "No escribiste ningún código. Escríbelo en el campo de arriba y vuelve a pulsar «Activar el código».",
+    "accessCodeNotFound": "No encontramos ese código. Revisa las letras y vuelve a escribirlo: si lo copiaste de un mensaje, copia solo el código, sin espacios ni puntos.",
+    "accessCodeInconsistent": "Ese código existe, pero algo falló de nuestro lado al activarlo. No lo gastaste: escríbenos a support@rusofacilapp.com con el correo de tu cuenta y lo activamos a mano.",
     "accessCodeUnknown": "No encontramos ese código. Revisa las letras y vuelve a escribirlo.",
     "accessCodeAlreadyRedeemed": "Ese código ya se usó. Cada código sirve una sola vez.",
     "accessCodeExpired": "Ese código venció y ya no se puede activar.",
@@ -1760,5 +1763,8 @@
       "retryButton": "Reintentar",
       "closeLabel": "Cerrar"
     }
+  },
+  "errors": {
+    "listUnavailable": "No pudimos cargar esta lista ahora mismo. Vuelve a intentarlo en un momento: el resto del sitio sigue funcionando."
   }
 }
