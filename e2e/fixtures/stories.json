@@ -14,6 +14,8 @@
   },
   {
     "id": "e2e-fixture-story-dia-de-colada",
+    "fullAudioUrl": "https://0xvmk87qe017z4ei.public.blob.vercel-storage.com/audio/stories/cmt07mslt0000bance9fb6rkw/full.7992497f1ad5164c.mp3",
+    "sentenceOffsetsJson": "[0,4.32,11.784,16.488,21.048,26.208,29.375999999999998,34.727999999999994,39.19199999999999,45.09599999999999,49.10399999999999,54.55199999999999,58.151999999999994,62.25599999999999,67.91999999999999,71.73599999999999,75.192]",
     "title": "День стирки",
     "titleEs": "Día de colada",
     "author": "RusoFásil (relato original)",

@@ -57,6 +57,7 @@ import { greetedOnAccountToday } from "@/lib/welcome-shown";
 import { grantSource, isGrantSubscription } from "@/lib/subscription-grant";
 import { getRedeemedAccessCodeDates } from "@/lib/access-code";
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
+import LogoutEverywhereButton from "@/components/profile/LogoutEverywhereButton";
 import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
@@ -1232,15 +1233,13 @@ export default async function ProfilePage({
                       </span>
                       <p className="mt-1 text-sm text-foreground/60">{dict.profile.sessionsDescription}</p>
                       <div className="mt-3 flex flex-wrap gap-3">
-                        <form action="/api/auth/logout-everywhere" method="POST">
-                          <input type="hidden" name="lang" value={lang} />
-                          <button
-                            type="submit"
-                            className="tap rounded-full border border-black/10 px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
-                          >
-                            {dict.profile.logoutEverywhereButton}
-                          </button>
-                        </form>
+                        <LogoutEverywhereButton
+                          lang={lang}
+                          label={dict.profile.logoutEverywhereButton}
+                          pendingLabel={dict.profile.logoutEverywherePending}
+                          doneLabel={dict.profile.loggedOutEverywhereNotice}
+                          errorLabel={dict.profile.logoutEverywhereError}
+                        />
                         <form action="/api/auth/logout" method="POST">
                           <input type="hidden" name="lang" value={lang} />
                           <button

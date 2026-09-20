@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
 import { CacheFirst, CacheableResponsePlugin, ExpirationPlugin, NetworkFirst, NetworkOnly, RangeRequestsPlugin, Serwist } from "serwist";
-import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
 import { buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
 import { AUDIO_CACHE_NAME, CACHE_BUDGET_BY_KEY, isAudioClipUrl } from "@/lib/sw-cache-policy";
 
@@ -137,6 +137,63 @@ const runtimeCaching = defaultCache.map((route) => {
  * Пути перечислены обеими локалями явно, а не одним `includes("pricing")`:
  * подстрока встречается в адресах, которые к оплате отношения не имеют.
  */
+/**
+ * КЛИП ОЗВУЧКИ БЕРЁТСЯ ЦЕЛИКОМ И С CORS — ИНАЧЕ В КЕШ ЛОЖИТСЯ ТО, ЧЕМ
+ * ПОТОМ НЕЧЕМ ОТВЕТИТЬ. Найдено экспериментом 20.09.2026 (заход 7.218),
+ * а не чтением: ровно это и был дефект «рассказ не играет».
+ *
+ * ЧТО ИЗМЕРЕНО. Проигрыватель просит клип ЭЛЕМЕНТОМ `<audio>`, а тот
+ * ходит в сеть без CORS (`mode: "no-cors"`) и С заголовком `Range` —
+ * оба признака сняты с настоящего запроса в собранном воркере. Чужой
+ * источник отвечает 206, но браузер отдаёт воркеру ответ НЕПРОЗРАЧНЫМ:
+ * `status 0`, `type "opaque"`, тело нечитаемо — снятая длина тела
+ * **0 байт** при файле в 1 303 724 байта. Прежнее правило
+ * (`statuses: [0, 200]`) такой ответ КЛАЛО В КЕШ, и на втором
+ * прослушивании выходило вот что:
+ *
+ *   * `CacheFirst` достаёт из кеша ту самую пустую запись;
+ *   * `RangeRequestsPlugin` режет из неё кусок и отдаёт **416** с телом
+ *     в 0 байт;
+ *   * элемент `<audio>` получает `MEDIA_ERR_SRC_NOT_SUPPORTED` (код 4) и
+ *     молчит: кнопка остаётся «play», полоса не движется.
+ *
+ * Числа замера на собранном приложении 20.09.2026, один и тот же рассказ
+ * три раза подряд: первый заход — играет (`currentTime` растёт, ошибок
+ * 0), второй и третий — `currentTime 0`, `paused true`, `error.code 4`.
+ * С этой правкой те же три захода: играет каждый раз, в кеше лежит
+ * настоящий ответ (`status 200`, `type "cors"`, тело 43 392 байта), а на
+ * запрос с `Range` воркер отдаёт 206 с телом в 101 байт.
+ *
+ * Почему `credentials: "omit"`: запрос уходит на ЧУЖОЙ источник, куки
+ * ему не нужны и посылать их незачем.
+ */
+const WHOLE_CLIP_WITH_CORS: SerwistPlugin = {
+  requestWillFetch: async ({ request }) => new Request(request.url, { mode: "cors", credentials: "omit" }),
+};
+
+/**
+ * ЛИЧНЫЕ СТРАНИЦЫ ВОРКЕР НЕ КЕШИРУЕТ ВОВСЕ — НАХОДКА ЗАХОДА 7.218.
+ *
+ * Замер 20.09.2026 на собранном приложении: после одного захода в кабинет
+ * в кеше документов `rf-pages-*` лежала страница `/ru/profile` размером
+ * **167 965 байт, с адресом почты владельца внутри**, при том что сервер
+ * пометил её так громко, как позволяет HTTP: `Cache-Control: private,
+ * no-cache, no-store, max-age=0, must-revalidate`. Дальше куки очищались
+ * (то же, что выход из аккаунта), сеть отключалась — и воркер отдавал
+ * навигации на `/ru/profile` ЧУЖОЙ кабинет целиком: «Личный кабинет»,
+ * вкладки, имя. Это не устаревание, а показ личных данных другому
+ * человеку на том же устройстве.
+ *
+ * Почему правило пути, а не `no-store` у ответа: на этом сайте `no-store`
+ * стоит у ВСЕХ страниц без исключения (замер тех же суток: 12 адресов из
+ * 12, весь сайт рендерится динамически) — правило по заголовку опустошило
+ * бы кеш документов целиком и вернуло бы долг 76 в тот же день.
+ *
+ * Цена отказа от кеша ровно этих адресов нулевая: кабинет и админка
+ * офлайн бессмысленны — в них нечего показать без ответа сервера.
+ */
+const PRIVATE_PATH = /^\/(es|ru)\/(profile|admin)(\/|$)/;
+
 const PAYMENT_PATH = /^\/(es|ru)\/pricing(\/|$)/;
 
 /** Уже лежащие в кешах копии страницы цен — с прошлых установок, до этой
@@ -166,6 +223,24 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+/** Стратегия кеша клипов — вынесена из строки маршрута, потому что у
+ *  маршрута теперь свой обработчик с запасным выходом в сеть (см. ниже). */
+const audioStrategy = new CacheFirst({
+  cacheName: AUDIO_CACHE_NAME,
+  plugins: [
+    expiration("audio"),
+    // Порядок важен: сначала подменяем запрос на «весь файл с CORS»,
+    // потом решаем, что кешировать.
+    WHOLE_CLIP_WITH_CORS,
+    // ТОЛЬКО 200 и только читаемое тело. Прежнее `[0, 200]` клало в кеш
+    // непрозрачный ответ с нечитаемым телом — это и есть дефект
+    // «рассказ не играет со второго раза», разобранный числами у
+    // WHOLE_CLIP_WITH_CORS.
+    new CacheableResponsePlugin({ statuses: [200] }),
+    new RangeRequestsPlugin(),
+  ],
+});
+
 const serwist = new Serwist({
   // `precacheEntries`, not `self.__SW_MANIFEST` again: Serwist's webpack
   // plugin substitutes the manifest at the literal occurrence of that
@@ -185,6 +260,15 @@ const serwist = new Serwist({
     {
       matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
         sameOrigin && PAYMENT_PATH.test(url.pathname),
+      handler: new NetworkOnly(),
+    },
+    {
+      // Личный кабинет и админка — см. PRIVATE_PATH выше. Стоит рядом с
+      // платёжной строкой и по той же причине: маршрутизатор берёт первое
+      // совпадение, а ниже стоит маршрут документов, который забрал бы
+      // навигацию себе.
+      matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
+        sameOrigin && PRIVATE_PATH.test(url.pathname),
       handler: new NetworkOnly(),
     },
     /**
@@ -218,21 +302,39 @@ const serwist = new Serwist({
      * ответов 200, 0 записей в `static-audio-assets` (кеш не создан
      * вовсе) и 32 в общем `cross-origin` с часом жизни.
      *
-     * `statuses: [0, 200]` — потому что ответ чужого источника без CORS
-     * приходит непрозрачным (`status 0`), и без этого он не кешируется
-     * вовсе. `RangeRequestsPlugin` — потому что проигрыватель просит
-     * куски файла, а не файл целиком.
+     * `statuses: [0, 200]` СТОЯЛО ЗДЕСЬ ДО 20.09.2026 И ОКАЗАЛОСЬ
+     * ДЕФЕКТОМ: непрозрачный ответ (`status 0`) кешировался, а тело у
+     * него нечитаемо — разбор числами в `WHOLE_CLIP_WITH_CORS` выше.
+     * Теперь клип берётся целиком и с CORS, а кешируется только 200.
+     * `RangeRequestsPlugin` — потому что проигрыватель просит куски
+     * файла, а не файл целиком, и режет он их из ЦЕЛОГО тела.
      */
     {
       matcher: ({ url }: { url: URL }) => isAudioClipUrl(url),
-      handler: new CacheFirst({
-        cacheName: AUDIO_CACHE_NAME,
-        plugins: [
-          expiration("audio"),
-          new CacheableResponsePlugin({ statuses: [0, 200] }),
-          new RangeRequestsPlugin(),
-        ],
-      }),
+      /**
+       * СЕТЬ ПОСЛЕДНИМ РУБЕЖОМ, И ЭТО НЕ ПЕРЕСТРАХОВКА (заход 7.218).
+       *
+       * Ради читаемого тела клип берётся с CORS — значит теперь у
+       * озвучки есть зависимость, которой раньше не было: правила
+       * чужого источника. Замер тех же суток: простой GET с `Origin`
+       * даёт 206 и `access-control-allow-origin: *`, а предварительный
+       * запрос `OPTIONS` — **405**, и разрешённых заголовков у
+       * источника ровно один (`content-type`). То есть любой лишний
+       * заголовок делает запрос НЕпростым, браузер идёт с `OPTIONS` и
+       * получает отказ. В браузере человека лишних заголовков нет; но
+       * цена ошибки тут — немая озвучка на всём сайте, и она слишком
+       * велика, чтобы полагаться на чужие настройки.
+       *
+       * Поэтому отказ стратегии не роняет воспроизведение: клип
+       * доигрывается прямо из сети исходным запросом, просто без кеша.
+       */
+      handler: async (options: Parameters<CacheFirst["handle"]>[0]) => {
+        try {
+          return await audioStrategy.handle(options);
+        } catch {
+          return fetch(options.request);
+        }
+      },
     },
     ...runtimeCaching,
   ],

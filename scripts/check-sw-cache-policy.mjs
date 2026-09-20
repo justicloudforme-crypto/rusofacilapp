@@ -24,8 +24,23 @@
  *      заголовку `Content-Type` запроса, которого у навигации не бывает;
  *   г) маршрут документов стоит ДО всеохватного `others`;
  *   д) клипы судятся функцией `isAudioClipUrl`, а не регуляркой;
- *   е) ответ чужого источника кешируется и непрозрачным (`statuses: [0, 200]`),
- *      иначе кеш клипов снова окажется пустым при живых ответах 200;
+ *   е) НЕПРОЗРАЧНЫЙ ответ в кеш клипов НЕ кладётся (`statuses: [200]`, без
+ *      нуля) — правило ПЕРЕВЁРНУТО 20.09.2026 (заход 7.218) замером, а не
+ *      вкусом. Прежнее `[0, 200]` клало в кеш ответ `status 0`,
+ *      `type "opaque"` с НЕЧИТАЕМЫМ телом (снятая длина 0 байт при файле в
+ *      1 303 724), и на втором прослушивании `RangeRequestsPlugin` резал из
+ *      него кусок и отдавал 416 с пустым телом: элемент `<audio>` получал
+ *      `MEDIA_ERR_SRC_NOT_SUPPORTED` (код 4) и молчал. То есть кеш клипов
+ *      не просто не помогал, а ЛОМАЛ повторное прослушивание всего, что
+ *      человек уже слушал;
+ *   з) клип берётся ЦЕЛИКОМ и с CORS (`requestWillFetch` → `mode: "cors"`),
+ *      иначе непрозрачного ответа не избежать: элемент `<audio>` ходит
+ *      `no-cors` и с заголовком `Range`, и кешировать там нечего;
+ *   и) личные страницы (кабинет, админка) не кешируются ВОВСЕ и стоят
+ *      ДО маршрута документов. Замер 20.09.2026: страница `/ru/profile`
+ *      лежала в кеше документов на 167 965 байт вместе с адресом почты, и
+ *      после выхода из аккаунта отдавалась офлайн следующему человеку на
+ *      том же устройстве;
  *   ж) срок годности удаляет записи с `ignoreVary: true` — и это
  *      НАСТОЯЩАЯ причина долга 75, найденная экспериментом 19.09.2026:
  *      без него `cache.delete(url)` не совпадает ни с одной записью
@@ -105,8 +120,25 @@ export function violations(policyRaw, swRaw) {
   if (!/matcher:\s*\(\{ url \}: \{ url: URL \}\) => isAudioClipUrl\(url\)/.test(sw)) {
     bad.push(`${SW}: клипы не судятся функцией isAudioClipUrl — регулярка на чужом адресе не применяется (долг 77)`);
   }
-  if (!/statuses:\s*\[0,\s*200\]/.test(sw)) {
-    bad.push(`${SW}: непрозрачный ответ чужого источника не кешируется — кеш клипов снова будет пуст при живых 200 (долг 77)`);
+  if (/statuses:\s*\[\s*0\s*,/.test(sw)) {
+    bad.push(`${SW}: в кеш клипов снова кладётся НЕПРОЗРАЧНЫЙ ответ (statuses: [0, …]) — тело такой записи нечитаемо, RangeRequestsPlugin отдаёт из неё 416, и всё уже прослушанное перестаёт играть со второго раза (замер 20.09.2026: error.code 4)`);
+  }
+  if (!/requestWillFetch/.test(sw) || !/mode:\s*"cors"/.test(sw)) {
+    bad.push(`${SW}: клип берётся не целиком и не с CORS — элемент <audio> ходит no-cors и с Range, и в кеш снова ляжет непрозрачный ответ с пустым телом`);
+  }
+  if (!/catch\s*\{\s*return fetch\(options\.request\);/.test(sw)) {
+    bad.push(`${SW}: у маршрута клипов нет запасного выхода в сеть — теперь озвучка зависит от правил ЧУЖОГО источника (замер 20.09.2026: OPTIONS туда отвечает 405, разрешённый заголовок один), и отказ CORS означал бы немую озвучку на всём сайте`);
+  }
+  if (!/const PRIVATE_PATH\s*=/.test(sw)) {
+    bad.push(`${SW}: личные страницы (кабинет, админка) снова кешируются — замер 20.09.2026: /ru/profile лежал в кеше на 167 965 байт с адресом почты и отдавался после выхода из аккаунта`);
+  } else {
+    const privateAt = sw.indexOf("PRIVATE_PATH.test");
+    const navAt = sw.indexOf('request.mode === "navigate"');
+    if (privateAt === -1 || !/PRIVATE_PATH\.test\(url\.pathname\),\s*handler: new NetworkOnly\(\)/.test(sw.replace(/\s+/g, " ").replace(/ ,/g, ","))) {
+      bad.push(`${SW}: личные страницы обслуживает не NetworkOnly — любой другой маршрут кладёт их копию на устройство`);
+    } else if (navAt !== -1 && privateAt > navAt) {
+      bad.push(`${SW}: маршрут личных страниц стоит ПОСЛЕ маршрута документов — тот заберёт навигацию себе первым`);
+    }
   }
   if (!/AUDIO_CACHE_NAME/.test(sw)) {
     bad.push(`${SW}: у клипов нет своего кеша (долг 77)`);
@@ -155,10 +187,34 @@ function plant() {
     "не судятся функцией isAudioClipUrl",
   );
   add(
-    "подсадка: непрозрачный ответ перестал кешироваться",
+    "подсадка: непрозрачный ответ снова кешируется (ровно дефект «не играет со второго раза»)",
     policy,
-    sw.replaceAll("statuses: [0, 200]", "statuses: [200]"),
-    "непрозрачный ответ",
+    sw.replaceAll("statuses: [200]", "statuses: [0, 200]"),
+    "НЕПРОЗРАЧНЫЙ ответ",
+  );
+  add(
+    "подсадка: клип снова берётся куском и без CORS",
+    policy,
+    sw.replace(/requestWillFetch: async \(\{ request \}\) => new Request\(request\.url, \{ mode: "cors", credentials: "omit" \}\)/, "cacheKeyWillBeUsed: async ({ request }) => request.url"),
+    "не целиком и не с CORS",
+  );
+  add(
+    "подсадка: у клипов отобран запасной выход в сеть",
+    policy,
+    sw.replace("catch {\n          return fetch(options.request);\n        }", "catch (error) {\n          throw error;\n        }"),
+    "нет запасного выхода в сеть",
+  );
+  add(
+    "подсадка: личных страниц снова нет в правилах (кабинет ложится в кеш документов)",
+    policy,
+    sw.replace(/const PRIVATE_PATH\s*=/, "const PRIVATE_PATH_UNUSED ="),
+    "личные страницы (кабинет, админка) снова кешируются",
+  );
+  add(
+    "подсадка: личные страницы обслуживает NetworkFirst, а не NetworkOnly",
+    policy,
+    sw.replace(/sameOrigin && PRIVATE_PATH\.test\(url\.pathname\),\n      handler: new NetworkOnly\(\)/, 'sameOrigin && PRIVATE_PATH.test(url.pathname),\n      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html")] })'),
+    "обслуживает не NetworkOnly",
   );
   add(
     "подсадка: удаление по сроку годности снова учитывает Vary (НАСТОЯЩАЯ причина долга 75)",
@@ -190,7 +246,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log(`check:sw-cache-policy — 7 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77)`);
+  console.log(`check:sw-cache-policy — 11 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77)`);
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
