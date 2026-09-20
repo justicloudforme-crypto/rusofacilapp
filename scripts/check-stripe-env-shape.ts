@@ -51,6 +51,11 @@ function fail(message: string): never {
  * originally, and mistakenly, believed to have been built for; it remains a
  * real way to break checkout, just not the one that happened.
  */
+/** Тот же набор без одной переменной — изображает «её не завели вовсе». */
+function without(env: Record<string, string>, drop: string): Record<string, string> {
+  return Object.fromEntries(Object.entries(env).filter(([key]) => key !== drop));
+}
+
 function selfTest(): void {
   const clean = {
     STRIPE_PRICE_MONTHLY: "price_1SelfTestMonthly",
@@ -102,6 +107,25 @@ function selfTest(): void {
       env: { ...clean, STRIPE_PRICE_LIFETIME: clean.STRIPE_PRICE_MONTHLY },
       expect: "STRIPE_PRICE_LIFETIME",
     },
+    // 20.09.2026, заход 7.219: четвёртая сеть — переменной нет ВОВСЕ, и мы
+    // на развёрнутом сайте. Без неё план не продаётся, а покупатель узнаёт
+    // об этом первым. Отсутствие вне Vercel по-прежнему законно — это
+    // проверяет отдельный контроль ниже.
+    {
+      label: "Premium price variable absent on a deployment",
+      env: { ...without(clean, "STRIPE_PRICE_LIFETIME"), VERCEL_ENV: "production" },
+      expect: "STRIPE_PRICE_LIFETIME",
+    },
+    {
+      label: "the Stripe secret key absent on a deployment",
+      env: { ...without(clean, "STRIPE_SECRET_KEY"), VERCEL_ENV: "production" },
+      expect: "STRIPE_SECRET_KEY",
+    },
+    {
+      label: "the webhook secret absent on a deployment",
+      env: { ...without(clean, "STRIPE_WEBHOOK_SECRET"), VERCEL_ENV: "preview" },
+      expect: "STRIPE_WEBHOOK_SECRET",
+    },
   ];
 
   console.log("check:stripe-env --self-test — the checker must go red on each planted case.");
@@ -114,6 +138,18 @@ function selfTest(): void {
       "A check that rejects good values would be turned off within a day, and then nothing is guarded.");
   }
   console.log("  ✓ a correctly shaped environment passes (0 problems)");
+
+  // Контроль «в обратную сторону» к правилу присутствия: ВНЕ Vercel
+  // отсутствие переменных по-прежнему законно. Без этой строки правило
+  // 7.219 уронило бы каждый локальный прогон и каждый прогон CI, где
+  // ключей Stripe нет вовсе, — и было бы выключено в тот же день.
+  const nothingSetLocally = checkStripeEnvShapes({ DATABASE_URL: "file:./dev.db" });
+  if (nothingSetLocally.length > 0) {
+    console.error(formatStripeEnvProblems(nothingSetLocally));
+    fail("CONTROL BROKEN: an environment with no Stripe variables at all was reported as broken " +
+      "even though VERCEL_ENV is absent — that is a laptop and a CI runner, where this is normal.");
+  }
+  console.log("  ✓ off a deployment, absent variables are still legal (0 problems)");
 
   for (const { label, env, expect } of planted) {
     const problems: StripeEnvProblem[] = checkStripeEnvShapes(env);

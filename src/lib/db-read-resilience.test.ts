@@ -184,6 +184,25 @@ const MUST_DEGRADE: Array<{ where: string; file: string; symbol: string | null; 
     symbol: "getAllCurvedSequences",
     cost: "/es|ru/word-games loses ★ badges but keeps all 196 puzzle links",
   },
+  {
+    // ДОЛГ 279, 20.09.2026 (7.219). Sentry JAVASCRIPT-NEXTJS-10: 300
+    // событий `BLOCKED: Operation was blocked` на
+    // `Page.generateMetadata (/[lang]/media/[id])`, unhandled. Накладка —
+    // субтитры и признак встройки; содержимое медиа лежит в
+    // mediaData.json рядом с кодом и от базы не зависит вовсе.
+    where: "getMediaById (the MediaOverride read)",
+    file: "lib/media/data.ts",
+    symbol: "getMediaById",
+    model: "mediaOverride",
+    cost: "550 media URLs keep title, description, vocabulary and exercises; they lose subtitles",
+  },
+  {
+    where: "getAllMedia (the MediaOverride read)",
+    file: "lib/media/data.ts",
+    symbol: "getAllMedia",
+    model: "mediaOverride",
+    cost: "the catalog, 650 story pages, 240 lesson pages and the sitemap keep their media blocks; a broken embed stops being hidden",
+  },
 ];
 
 /**
@@ -225,6 +244,15 @@ const MUST_FAIL_LOUDLY: Array<{ where: string; file: string; symbol: string; why
     file: "proxy.ts",
     symbol: "liveSessionUser",
     why: "the read IS the authorisation check — swallowing its error and continuing would admit an unauthenticated request to /admin",
+  },
+  {
+    // 20.09.2026 (7.219), вторая половина той же правки: публичные чтения
+    // накладки медиа теперь деградируют, а это — НЕТ, и разница
+    // содержательная, а не стилистическая.
+    where: "getManualOverrideIds",
+    file: "lib/media/data.ts",
+    symbol: "getManualOverrideIds",
+    why: "an empty set reads as \"nobody set a manual flag\", and the very next automated embed check would overwrite a human judgment call it exists to protect",
   },
 ];
 
