@@ -54,13 +54,55 @@ function applyOverride(
   };
 }
 
-async function readOverrides(): Promise<Map<string, Awaited<ReturnType<typeof db.mediaOverride.findMany>>[number]>> {
+type OverrideRow = Awaited<ReturnType<typeof db.mediaOverride.findMany>>[number];
+
+/**
+ * ЧТЕНИЕ НАКЛАДКИ НЕ ИМЕЕТ ПРАВА УРОНИТЬ СТРАНИЦУ — 20.09.2026, заход 7.219.
+ *
+ * Что было измерено. Sentry `JAVASCRIPT-NEXTJS-10`: 300 событий
+ * `PrismaClientKnownRequestError`, `Invalid prisma.mediaOverride.findUnique()
+ * invocation`, `BLOCKED: Operation was blocked`, **unhandled**, транзакция
+ * `Page.generateMetadata (/[lang]/media/[id])`. Ответ приходит не от нашего
+ * кода и не от Prisma, а от Turso: `BLOCKED` — это отказ самой базы принять
+ * запрос (авария и исчерпанная квота чтений 11.09.2026 — та же строка).
+ *
+ * Чего это стоило. Накладка НЕ является содержимым ни одной страницы:
+ * заголовок, описание, лексика и упражнения лежат в `mediaData.json` рядом
+ * с кодом, а в базе — только субтитры, признак работоспособности встройки и
+ * приписка к источнику. При этом один её отказ уносил **1442 публичных
+ * адреса**: 550 страниц медиа (`getMediaById`), 2 каталога, 650 страниц
+ * рассказов и 240 страниц уроков (все три зовут `getAllMedia` ради блока
+ * «похожее»), плюс всю карту сайта. Правило проекта (см.
+ * `src/lib/db-read-resilience.test.ts`) говорит ровно обратное: отказ одного
+ * чтения стоит своей семьи URL, а не всего ответа.
+ *
+ * Что теперь. Оба ПУБЛИЧНЫХ чтения — `getAllMedia` и `getMediaById` —
+ * держат свой запрос в try/catch и при отказе работают с пустой накладкой:
+ * страница отдаётся по статической основе, без субтитров и без скрытия
+ * сломанных встроек, но живая. `readOverrides` ниже остаётся ГОЛЫМ и
+ * обслуживает только административные пути (`saveEmbedStatuses`,
+ * `getOverrideMeta`), как и `getManualOverrideIds`: пустая карта там
+ * означала бы «ручной пометки ни у кого нет», и следующий автоматический
+ * прогон затёр бы человеческое решение. Там отказ обязан быть громким —
+ * это записано в MUST_FAIL_LOUDLY.
+ */
+async function readOverrides(): Promise<Map<string, OverrideRow>> {
   const overrides = await db.mediaOverride.findMany();
   return new Map(overrides.map((o) => [o.mediaId, o]));
 }
 
 export async function getAllMedia(): Promise<MediaItem[]> {
-  const [store, overrides] = await Promise.all([readStore(), readOverrides()]);
+  const store = await readStore();
+  let overrides = new Map<string, OverrideRow>();
+  try {
+    const rows = await db.mediaOverride.findMany();
+    overrides = new Map(rows.map((o) => [o.mediaId, o]));
+  } catch (error) {
+    console.error(
+      "[media] MediaOverride is unreadable — serving the static catalog baseline (no subtitles, no embed-status filtering)",
+      error,
+    );
+  }
   return Object.values(store).map((item) => applyOverride(item, overrides.get(item.id)));
 }
 
@@ -68,7 +110,15 @@ export async function getMediaById(id: string): Promise<MediaItem | null> {
   const store = await readStore();
   const item = store[id];
   if (!item) return null;
-  const override = await db.mediaOverride.findUnique({ where: { mediaId: id } });
+  let override: OverrideRow | null = null;
+  try {
+    override = await db.mediaOverride.findUnique({ where: { mediaId: id } });
+  } catch (error) {
+    console.error(
+      `[media] MediaOverride is unreadable for "${id}" — serving the static catalog baseline`,
+      error,
+    );
+  }
   return applyOverride(item, override ?? undefined);
 }
 
