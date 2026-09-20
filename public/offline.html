@@ -17,7 +17,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sin conexión / Нет соединения — RusoFácilapp</title>
+    <title>Sin conexión — RusoFácilapp</title>
     <style>
       :root {
         color-scheme: light;
@@ -70,10 +70,39 @@
     </style>
   </head>
   <body>
+    <!--
+      ОДНА ЛОКАЛЬ, А НЕ ДВЕ СРАЗУ (заход 7.218). До 20.09.2026 экран
+      печатал «Estás sin conexión — Вы не в сети» и обе подписи подряд:
+      человек, зашедший на `/ru/...`, читал половину экрана по-испански.
+
+      Локаль берётся из АДРЕСА, и это единственное, что здесь вообще
+      можно знать: файл статический, отдаётся воркером вместо страницы, а
+      адрес в строке браузера остаётся ИСХОДНЫМ (см. комментарий в шапке
+      файла) — то есть `/ru/stories/...` или `/es/pricing`. Поэтому
+      выбирать есть по чему, и ничего спрашивать у сервера не нужно.
+
+      Обе половины лежат в разметке сразу, и лишняя убирается скриптом, а
+      не дописывается им: при выключенном JS человек прочтёт обе — это
+      хуже, чем одна, но лучше, чем пустой экран.
+    -->
     <p class="icon" aria-hidden="true">📡</p>
-    <h1>Estás sin conexión — Вы не в сети</h1>
-    <p>Esta página no se guardó para uso sin conexión. Conéctate a internet e inténtalo de nuevo.</p>
-    <p>Эта страница не сохранена для офлайн-доступа. Подключитесь к интернету и попробуйте снова.</p>
-    <button type="button" onclick="window.location.reload()">Reintentar / Повторить</button>
+    <h1 lang="es" data-locale="es">Estás sin conexión</h1>
+    <h1 lang="ru" data-locale="ru">Вы не в сети</h1>
+    <p lang="es" data-locale="es">Esta página no se guardó para uso sin conexión. Conéctate a internet e inténtalo de nuevo.</p>
+    <p lang="ru" data-locale="ru">Эта страница не сохранена для офлайн-доступа. Подключитесь к интернету и попробуйте снова.</p>
+    <button type="button" lang="es" data-locale="es" onclick="window.location.reload()">Reintentar</button>
+    <button type="button" lang="ru" data-locale="ru" onclick="window.location.reload()">Повторить</button>
+    <script>
+      (function () {
+        var lang = /^\/ru(\/|$)/.test(location.pathname) ? "ru" : "es";
+        document.documentElement.lang = lang;
+        // Заголовок вкладки — тоже подпись, и её человек видит первой.
+        if (lang === "ru") document.title = "Нет соединения — RusoFácilapp";
+        var nodes = document.querySelectorAll("[data-locale]");
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].getAttribute("data-locale") !== lang) nodes[i].remove();
+        }
+      })();
+    </script>
   </body>
 </html>

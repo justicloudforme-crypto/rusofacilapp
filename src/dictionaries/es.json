@@ -630,6 +630,8 @@
     "sessionsHeading": "Sesiones",
     "sessionsDescription": "Cierra la sesión en todos los demás dispositivos, excepto en este.",
     "logoutEverywhereButton": "Cerrar sesión en los demás dispositivos",
+    "logoutEverywherePending": "Cerrando sesiones…",
+    "logoutEverywhereError": "No se pudieron cerrar las sesiones. Revisa tu conexión e inténtalo de nuevo.",
     "loggedOutEverywhereNotice": "Listo — se cerró la sesión en los demás dispositivos.",
     "deleteAccountHeading": "Eliminar cuenta",
     "deleteAccountDescription": "Elimina tu cuenta y todos los datos asociados de forma permanente.",
