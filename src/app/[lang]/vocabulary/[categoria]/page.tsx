@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
+import { getDictionary } from "@/i18n/dictionaries";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   PUBLIC_VOCABULARY_LEVELS,
@@ -61,7 +62,29 @@ export default async function VocabularyCategoryPage({
   // ставится. Ставит его ответ в карточке (`POST /api/flashcard-progress`).
 
   const publicLevels = new Set<string>(PUBLIC_VOCABULARY_LEVELS);
-  const index = await getFlashcardIndex();
+  /**
+   * ОТКАЗ ЧТЕНИЯ БАНКА КАРТОЧЕК СТОИТ СПИСКА СЛОВ — 20.09.2026, 7.220.
+   *
+   * Sentry `JAVASCRIPT-NEXTJS-13`: `prisma.flashcardCard.findMany()` …
+   * `BLOCKED: Operation was blocked`, **unhandled**, транзакция
+   * `Page Server Component (/[lang]/vocabulary/[categoria])`, 1 событие.
+   *
+   * Страница темы — витрина для поиска: заголовок, описание, разметка
+   * `CollectionPage` и перелинковка с играми лежат в коде, а из базы
+   * приходит только сам список слов. Пустой индекс здесь уже предусмотрен
+   * (`byLevel` отфильтрует пустые уровни, `c1Count` и `withPairs` станут
+   * нулями, а подписи с числами по правилу долга 199 при нуле не
+   * печатаются вовсе) — так что деградация не заводит новых пустых
+   * обещаний, а снимает пятисотку.
+   */
+  let index: Awaited<ReturnType<typeof getFlashcardIndex>> = [];
+  let listUnavailable = false;
+  try {
+    index = await getFlashcardIndex();
+  } catch (error) {
+    listUnavailable = true;
+    console.error("[vocabulary/[categoria]] не удалось прочитать банк карточек — отдаю пустой список", error);
+  }
   const cards = index.filter(
     (card) => card.category === page.category && publicLevels.has(card.level),
   );
@@ -96,6 +119,7 @@ export default async function VocabularyCategoryPage({
   // is the correct thing to show before the regeneration and for any
   // category no rung could use.
   const puzzles = (await getThemedPuzzlesByTopic()).get(page.slug) ?? [];
+  const dict = await getDictionary("es");
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -140,6 +164,14 @@ export default async function VocabularyCategoryPage({
       </Link>
 
       <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{page.h1}</h1>
+      {listUnavailable && (
+        <p
+          data-testid="list-unavailable"
+          className="mt-6 rounded-xl border border-black/10 bg-foreground/5 px-4 py-3 text-sm text-foreground/70 dark:border-white/20"
+        >
+          {dict.errors.listUnavailable}
+        </p>
+      )}
       <p className="mt-3 text-foreground/60">
         {cards.length} palabras con transcripción, traducción y una frase de ejemplo, ordenadas por
         nivel.

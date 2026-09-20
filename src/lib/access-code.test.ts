@@ -134,9 +134,12 @@ describe("redeemAccessCode — порядок вопросов", () => {
     expect(updateMany).not.toHaveBeenCalled();
   });
 
-  it("пустой код — отказ без обращения к базе", async () => {
+  it("пустой код — отказ `empty` без обращения к базе", async () => {
+    // 7.220: раньше здесь ждали `unknown` — то же слово, что у
+    // несуществующего кода, — и человек с пустым полем читал «проверьте
+    // буквы». Теперь причина своя.
     const result = await redeemAccessCode(USER, "   ");
-    expect(result).toEqual({ ok: false, reason: "unknown" });
+    expect(result).toEqual({ ok: false, reason: "empty" });
     expect(updateMany).not.toHaveBeenCalled();
   });
 });
@@ -194,7 +197,7 @@ describe("redeemAccessCode — успех", () => {
 
     const result = await redeemAccessCode(USER, "AMIGOK7M2QW9F");
 
-    expect(result).toEqual({ ok: false, reason: "unknown" });
+    expect(result).toEqual({ ok: false, reason: "inconsistent" });
     expect(extendOrGrantSubscription).not.toHaveBeenCalled();
     expect(captureException).toHaveBeenCalledWith(
       expect.objectContaining({ name: "AccessCodeUnknownTier" }),
@@ -206,7 +209,7 @@ describe("redeemAccessCode — успех", () => {
 describe("redeemAccessCode — отказы называются своим именем", () => {
   const now = Date.now();
   const cases: Array<[string, Row | null, string]> = [
-    ["код неизвестен", null, "unknown"],
+    ["такого кода нет", null, "not_found"],
     ["код уже погашен", row({ redeemedAt: new Date(now - 1000) }), "already_redeemed"],
     ["код отозван", row({ revokedAt: new Date(now - 1000) }), "revoked"],
     ["срок годности кода вышел", row({ expiresAt: new Date(now - 1000) }), "expired"],
@@ -222,13 +225,13 @@ describe("redeemAccessCode — отказы называются своим им
     expect(extendOrGrantSubscription).not.toHaveBeenCalled();
   });
 
-  it("КОНТРОЛЬ: заведомо несуществующий код по-прежнему unknown, и это не тавтология", async () => {
+  it("КОНТРОЛЬ: заведомо несуществующий код — `not_found`, и это не тавтология", async () => {
     // Половина первая — утверждение. Строки в базе нет, отказ обязан быть
-    // именно `unknown`, а не «просрочен» и не «уже погашен».
+    // именно `not_found`, а не «просрочен» и не «уже погашен».
     updateMany.mockResolvedValue({ count: 0 });
     findUnique.mockResolvedValue(null);
     const result = await redeemAccessCode(USER, "AMIGO-XXXX-XXXX");
-    expect(result).toEqual({ ok: false, reason: "unknown" });
+    expect(result).toEqual({ ok: false, reason: "not_found" });
     expect(extendOrGrantSubscription).not.toHaveBeenCalled();
 
     // Половина вторая, без которой первая ничего не значит: этот случай
@@ -303,7 +306,7 @@ describe("redeemAccessCode — отказы называются своим им
 
     await expect(redeemAccessCode(USER, "AMIGOK7M2QW9F")).resolves.toEqual({
       ok: false,
-      reason: "unknown",
+      reason: "not_found",
     });
   });
 });

@@ -21,8 +21,8 @@ import SentryUser from "@/components/SentryUser";
 import NativeShellCookie from "@/components/NativeShellCookie";
 import SignedOutCachePurge from "@/components/SignedOutCachePurge";
 import { getThemePreference } from "@/lib/theme";
-import { getCurrentUser } from "@/lib/auth";
-import { getUserStreakStats, persistFreezeState } from "@/lib/streaks";
+import { getCurrentUserForChrome } from "@/lib/auth";
+import { getUserStreakStats, persistFreezeState, type StreakStats } from "@/lib/streaks";
 import { getRequestTimeZone } from "@/lib/timezone-server";
 import TimeZoneSync from "@/components/TimeZoneSync";
 import { PaywallProvider } from "@/contexts/PaywallContext";
@@ -125,13 +125,29 @@ export default async function LangLayout({
 
   const dict = await getDictionary(lang);
   const theme = await getThemePreference();
-  const user = await getCurrentUser();
+  // ОТКАЗ ЧТЕНИЯ ЗДЕСЬ СТОИТ ШАПКИ, А НЕ САЙТА — 20.09.2026, заход 7.220.
+  // Sentry JAVASCRIPT-NEXTJS-14, 6 событий `BLOCKED: Operation was
+  // blocked` на `Layout Server Component (/[lang])`: эта строка роняла
+  // ЛЮБУЮ страницу под вошедшим человеком. `getCurrentUserForChrome`
+  // отдаёт при отказе `null`, то есть гостя; почему именно здесь это
+  // безопасно, а в решении о доступе — нет, написано у неё самой.
+  const user = await getCurrentUserForChrome();
   // getUserStreakStats is TTL-cached (60s, see streaks.ts) — calling it
   // here for the header's streak badge doesn't add a real per-request DB
   // cost. null for a logged-out visitor, who never sees the badge anyway.
   // The learner's own midnight, not the server's — see src/lib/timezone.ts.
   const timeZone = await getRequestTimeZone(user?.timezone);
-  const streak = user ? await getUserStreakStats(user.id, timeZone, user) : null;
+  // Значок серии — украшение шапки, а не её содержимое: 7.220. Отказ
+  // чтения обязан стоить значка, а не всей страницы, поэтому здесь своё
+  // try/catch, а не общее с чтением человека выше.
+  let streak: StreakStats | null = null;
+  if (user) {
+    try {
+      streak = await getUserStreakStats(user.id, timeZone, user);
+    } catch (error) {
+      console.error("[layout] не удалось прочитать серию дней — шапка рисуется без значка", error);
+    }
+  }
   // The freeze ledger is derived on read; this only writes the mirror and
   // the epoch back, and only when one of them moved. after() keeps it off
   // the render path — nothing on the page waits for it, and the same page

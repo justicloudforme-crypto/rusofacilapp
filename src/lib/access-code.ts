@@ -78,14 +78,88 @@ export const DEFAULT_ACCESS_CODE_DAYS = 90;
  * перевыставлена, чтобы у читателя этого файла всё было под рукой. */
 export { ACCESS_CODE_ALPHABET, normalizeAccessCode } from "./access-code-format";
 
-/** Почему погашение не состоялось. Ровно пять причин, у каждой свой текст на
- * экране: человеку, у которого код не сработал, «ошибка» не говорит ничего. */
+/**
+ * Почему погашение не состоялось. У каждой причины свой текст на экране:
+ * человеку, у которого код не сработал, «ошибка» не говорит ничего.
+ *
+ * СЕМЬ ПРИЧИН ВМЕСТО ПЯТИ — 20.09.2026, заход 7.220.
+ *
+ * Что измерено. Sentry `JAVASCRIPT-NEXTJS-R`: `AccessCodeRefused`,
+ * `Access code refused: unknown`, `POST /api/access-code/redeem`, 2
+ * события, **пользователей 1** — вторая за всю историю проекта запись, у
+ * которой пострадавший не ноль.
+ *
+ * Чем было плохо слово `unknown`. Оно означало ТРИ разные вещи, и ни
+ * отчёт, ни человек на экране не могли их отличить:
+ *   1. в поле ничего не было (после нормализации строка пуста);
+ *   2. такого кода в базе нет (опечатка, чужая партия, код ещё не выпущен);
+ *   3. строка НАШЛАСЬ, но ни одно условие отказа её не объясняет — то
+ *      есть у нас дефект, а не у человека.
+ * Первое и третье при этом показывали текст «No encontramos ese código.
+ * Revisa las letras» — то есть отправляли человека искать опечатку там,
+ * где её не было.
+ *
+ * Теперь у каждой из трёх свой ответ и свой тег в Sentry. Третья, вдобавок,
+ * уходит уровнем `error`, а не `info`: это единственная из семи, которая
+ * говорит о нашей поломке.
+ */
 export type AccessCodeRefusal =
-  | "unknown"
+  | "empty"
+  | "not_found"
+  | "inconsistent"
   | "already_redeemed"
   | "expired"
   | "revoked"
   | "already_has_access";
+
+/** Все причины отказа списком — чтобы экран и проба перечисляли их из
+ * одного места, а не пересказывали тип своими словами. */
+export const ACCESS_CODE_REFUSALS: readonly AccessCodeRefusal[] = [
+  "empty",
+  "not_found",
+  "inconsistent",
+  "already_redeemed",
+  "expired",
+  "revoked",
+  "already_has_access",
+];
+
+/**
+ * ЧТО ЧЕЛОВЕК ЧИТАЕТ ПРИ КАЖДОМ ИСХОДЕ — ОДНА ТАБЛИЦА, 20.09.2026 (7.220).
+ *
+ * До этого дня соответствие «исход → строка словаря» жило вложенной
+ * лесенкой `? :` в `src/app/[lang]/profile/page.tsx`, и у лесенки был
+ * хвост «всё остальное», в который молча попадали и `unknown`, и любое
+ * слово, которое человек сам напечатал в адресной строке. Новая причина,
+ * добавленная в тип, в лесенку не попадала бы вовсе — она просто уехала
+ * бы в тот же хвост, и экран сказал бы «проверьте буквы» там, где буквы
+ * ни при чём.
+ *
+ * Теперь это таблица, и проба `access-code-refusal.test.ts` требует,
+ * чтобы у КАЖДОЙ причины из `ACCESS_CODE_REFUSALS` в ней была своя
+ * строка, а строки эти были разными в обеих локалях. Хвост остался ровно
+ * один и ровно для того, чем он был: слово, пришедшее из адресной строки
+ * и не совпавшее ни с одним исходом.
+ */
+export type AccessCodeOutcome = AccessCodeRefusal | "rate_limited";
+
+export const ACCESS_CODE_OUTCOME_MESSAGE_KEY: Record<AccessCodeOutcome, string> = {
+  empty: "accessCodeEmpty",
+  not_found: "accessCodeNotFound",
+  inconsistent: "accessCodeInconsistent",
+  already_redeemed: "accessCodeAlreadyRedeemed",
+  expired: "accessCodeExpired",
+  revoked: "accessCodeRevoked",
+  already_has_access: "accessCodeAlreadyHasAccess",
+  rate_limited: "accessCodeRateLimited",
+};
+
+/** Слово из адресной строки — исход или ничего. Разбор ЗДЕСЬ, а не на
+ * экране: экран не должен знать, какие слова бывают. */
+export function accessCodeOutcomeFromQuery(value: string | null): AccessCodeOutcome | null {
+  if (value === null) return null;
+  return value in ACCESS_CODE_OUTCOME_MESSAGE_KEY ? (value as AccessCodeOutcome) : null;
+}
 
 export type RedeemResult =
   | { ok: true; days: number; tier: AccessCodeTier }
@@ -118,7 +192,9 @@ async function reportRefusal(
     // из `NORMALIZATION_CLASSES` и `none`.
     const shape = describeNormalization(context.raw);
     Sentry.captureException(error, {
-      level: "info",
+      // `inconsistent` — единственная причина, которая говорит о НАШЕЙ
+      // поломке, а не о жизни кода, поэтому у неё другой уровень.
+      level: reason === "inconsistent" ? "error" : "info",
       tags: { area: "access-code", refusal: reason, normalized: normalizationTag(shape) },
       // Сам код — не секрет уровня пароля, но это платёжный по сути
       // предмет; в отчёт уходит только его длина и партия, если строка
@@ -170,8 +246,10 @@ export async function redeemAccessCode(
 ): Promise<RedeemResult> {
   const code = normalizeAccessCode(rawCode);
   if (code.length === 0) {
-    await reportRefusal("unknown", { userId: user.id, code, raw: rawCode });
-    return { ok: false, reason: "unknown" };
+    // Не «такого кода нет»: кода не было вовсе. До 7.220 обе ситуации
+    // отвечали одним словом и одним текстом на экране.
+    await reportRefusal("empty", { userId: user.id, code, raw: rawCode });
+    return { ok: false, reason: "empty" };
   }
 
   // Шаг 1. Тот же ответ, который читают страницы уроков, и то же самое
@@ -205,7 +283,7 @@ export async function redeemAccessCode(
   // как «точно есть» всё равно нельзя: тип честнее кода.
   if (!row || !isAccessCodeTier(row.tier)) {
     await reportUnknownTier(code, row?.tier ?? null, user.id);
-    return { ok: false, reason: "unknown" };
+    return { ok: false, reason: "inconsistent" };
   }
 
   // Шаг 3. Выдача — тем же путём, что и всё остальное в этом приложении.
@@ -223,17 +301,19 @@ async function diagnoseFailedRedemption(
 ): Promise<AccessCodeRefusal> {
   const row = await db.accessCode.findUnique({ where: { code } });
   const reason: AccessCodeRefusal = !row
-    ? "unknown"
+    ? "not_found"
     : row.revokedAt !== null
       ? "revoked"
       : row.redeemedAt !== null
         ? "already_redeemed"
         : row.expiresAt !== null && row.expiresAt.getTime() <= now.getTime()
           ? "expired"
-          : // Ни одно из условий не объясняет отказ. Такого быть не может, и
-            // именно поэтому это не «просрочен» и не «уже погашен», а
-            // «неизвестен»: врать человеку о причине хуже, чем сказать общее.
-            "unknown";
+          : // Ни одно из условий не объясняет отказ — строка свободна, а
+            // UPDATE её не задел. Такого быть не может, значит дефект у
+            // нас. До 7.220 этот случай назывался тем же словом, что и
+            // «кода нет», и человека отправляли искать опечатку в
+            // совершенно исправном коде.
+            "inconsistent";
   await reportRefusal(reason, { userId, code, raw: rawCode });
   return reason;
 }

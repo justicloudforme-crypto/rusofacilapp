@@ -45,7 +45,39 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
   const dict = await getDictionary(lang);
   if (!dict?.stories) notFound();
 
-  const [rawStories, tier] = await Promise.all([getStoryCatalog(), getEntitlementTier()]);
+  /**
+   * ОТКАЗ ЧТЕНИЯ КАТАЛОГА СТОИТ СПИСКА, А НЕ СТРАНИЦЫ — 20.09.2026, 7.220.
+   *
+   * Sentry `JAVASCRIPT-NEXTJS-Y`: `prisma.story.findMany()` …
+   * `BLOCKED: Operation was blocked`, **unhandled**, транзакция
+   * `Page Server Component (/[lang]/stories)`, 3 события. `BLOCKED` —
+   * отказ самой Turso (квота чтений, PROGRESS.md строка 135).
+   *
+   * Каталог — список ссылок, а не содержимое: заголовок, подзаголовок,
+   * хлебные крошки и разметка страницы от базы не зависят вовсе. Поэтому
+   * при отказе страница отдаётся с ПУСТЫМ списком и честной подписью, а
+   * не пятисоткой. `getEntitlementTier` в том же `Promise.all` остаётся
+   * ГРОМКИМ: это решение о деньгах, и проглоченный отказ показал бы
+   * оплатившему человеку витрину замков (MUST_FAIL_LOUDLY).
+   *
+   * `Promise.all` здесь разобран на два `await` не по невнимательности:
+   * `try/catch` обязан обнимать САМО чтение, иначе сторож
+   * `src/lib/db-read-resilience.test.ts` (он считает скобки в исходнике)
+   * справедливо скажет «чтение вне try», а `.catch()` на общем
+   * `Promise.all` уронил бы вместе с каталогом и решение о доступе.
+   * Цена — один последовательный вызов вместо двух параллельных, и у
+   * гостя она нулевая: `getEntitlementTier` без сессии не читает базу
+   * вовсе (замер 20.09.2026: 0 запросов).
+   */
+  const tier = await getEntitlementTier();
+  let rawStories: Awaited<ReturnType<typeof getStoryCatalog>> = [];
+  let catalogUnavailable = false;
+  try {
+    rawStories = await getStoryCatalog();
+  } catch (error) {
+    catalogUnavailable = true;
+    console.error("[stories] не удалось прочитать каталог рассказов — отдаю пустой список", error);
+  }
 
   // Sorted (stable) accessible-first, locked-at-the-end — a story this
   // visitor can't open at all right now shouldn't crowd out the ones they
@@ -116,6 +148,14 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
       />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{dict?.stories?.pageTitle}</h1>
       <p className="mt-3 max-w-xl text-foreground/70">{dict?.stories?.pageSubtitle}</p>
+      {catalogUnavailable && (
+        <p
+          data-testid="list-unavailable"
+          className="mt-6 rounded-xl border border-black/10 bg-foreground/5 px-4 py-3 text-sm text-foreground/70 dark:border-white/20"
+        >
+          {dict.errors.listUnavailable}
+        </p>
+      )}
 
       <div className="mt-10">
         <StoriesCatalog lang={lang} stories={stories} tier={tier} dict={{ ...dict.stories, ...dict.access }} />
