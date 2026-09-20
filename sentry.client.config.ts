@@ -1,11 +1,24 @@
 import * as Sentry from "@sentry/nextjs";
 import { scrubTokensFromEvent } from "./src/lib/scrub-token";
 import { tagShellOnEvent } from "./src/lib/shell-tag";
+import { mayReportToProductionSentry } from "./src/lib/dev-origin";
 
 // The browser cannot read VERCEL_ENV, so next.config.ts bakes it in at
 // build time as NEXT_PUBLIC_DEPLOY_ENV (empty string off Vercel). Same
 // gate as the server/edge configs — see src/lib/deploy-environment.ts.
-const isDeployed = Boolean(process.env.NEXT_PUBLIC_DEPLOY_ENV);
+//
+// ВТОРАЯ СТЕНА, 20.09.2026 (заход 7.219, долг 280): судится ещё и хост, с
+// которого страница реально отдана. Повод — Sentry JAVASCRIPT-NEXTJS-8:
+// событие с боевой меткой `vercel-production` и адресом страницы
+// `http://localhost:3100/`. Ворота выше зависят от переменной окружения, а
+// одна переменная в локальном `.env` (`vercel env pull` умеет их записать)
+// делает локальную сборку неотличимой от боевой. Хост от переменных не
+// зависит: `localhost` боевым доменом не станет никогда. Правило и его
+// тест — src/lib/dev-origin.ts.
+const isDeployed = mayReportToProductionSentry(
+  process.env.NEXT_PUBLIC_DEPLOY_ENV,
+  typeof window === "undefined" ? null : window.location.hostname,
+);
 // NOTE: `environment` is deliberately NOT set here. On Vercel the SDK
 // derives it itself as "vercel-production" / "vercel-preview" — verified
 // against the live site, whose HTML carries

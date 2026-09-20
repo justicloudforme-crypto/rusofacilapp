@@ -80,7 +80,35 @@ const KNOWN_STRIPE_PREFIXES: ReadonlyArray<readonly [string, string]> = [
   ["pk_", "a publishable API key"],
 ];
 
-export type StripeEnvProblemKind = "empty" | "wrong-prefix" | "duplicate-value";
+export type StripeEnvProblemKind = "empty" | "wrong-prefix" | "duplicate-value" | "missing";
+
+/**
+ * ПЕРЕМЕННЫЕ, БЕЗ КОТОРЫХ БОЕВАЯ КАССА НЕ КАССА — 20.09.2026, заход 7.219.
+ *
+ * До этого дня отсутствующая переменная проблемой здесь не считалась, и
+ * это было записано осознанно: локальный прогон и CI живут без ключей
+ * Stripe по замыслу. Но у правила не было второй половины — на
+ * РАЗВЁРНУТОМ сайте отсутствие `STRIPE_PRICE_LIFETIME` означает, что
+ * Premium проваливается в ветку «без Stripe» (см.
+ * src/app/api/checkout/route.ts), и покупатель вместо оплаты получает
+ * страницу цен с флагом ошибки. Молчать об этом до первой попытки купить
+ * — значит узнать о поломке от покупателя, а не от сборки.
+ *
+ * Поэтому присутствие требуется ТОЛЬКО там, где переменные обязаны быть, —
+ * внутри сборки и прогона на Vercel, где `VERCEL_ENV` существует (см.
+ * src/lib/deploy-environment.ts: на ноутбуке и в CI её нет никогда).
+ * Список закрытый и короткий: три плана, которые сайт продаёт, ключ и
+ * секрет вебхука. Новый план, добавленный в `src/lib/plans.ts`, сюда
+ * попадает руками — и это правильнее, чем вывод из кода: пустая ячейка
+ * плана, который ещё не заведён в Stripe, сборку ронять не должна.
+ */
+export const REQUIRED_ON_DEPLOYMENT: readonly string[] = [
+  "STRIPE_PRICE_MONTHLY",
+  "STRIPE_PRICE_ANNUAL",
+  "STRIPE_PRICE_LIFETIME",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+];
 
 export interface StripeEnvProblem {
   kind: StripeEnvProblemKind;
@@ -170,6 +198,22 @@ export function checkStripeEnvShapes(env: Record<string, string | undefined>): S
     });
   }
 
+  // Третья сеть: переменной нет вовсе, а мы на развёрнутом сайте. Стоит
+  // ПОСЛЕДНЕЙ, чтобы сообщение о кривом значении шло раньше сообщения о
+  // пропавшем — кривое чинится, пропавшее заводится.
+  if (env.VERCEL_ENV) {
+    for (const name of REQUIRED_ON_DEPLOYMENT) {
+      if (keys.includes(name)) continue;
+      const rule = rulesFor(name);
+      problems.push({
+        kind: "missing",
+        name,
+        expectedPrefix: rule?.expectedPrefix ?? "",
+        what: rule?.what ?? "a Stripe value",
+      });
+    }
+  }
+
   return problems;
 }
 
@@ -191,7 +235,12 @@ export function formatStripeEnvProblems(problems: readonly StripeEnvProblem[]): 
   ];
 
   for (const problem of problems) {
-    if (problem.kind === "empty") {
+    if (problem.kind === "missing") {
+      lines.push(
+        `  ${problem.name} is NOT SET on this deployment. Expected ${problem.what}, i.e. a value starting with "${problem.expectedPrefix}". ` +
+          `Without it this deployment cannot take money for the plan it belongs to.`
+      );
+    } else if (problem.kind === "empty") {
       lines.push(
         `  ${problem.name} is set but empty. Expected ${problem.what}, i.e. a value starting with "${problem.expectedPrefix}".`
       );
