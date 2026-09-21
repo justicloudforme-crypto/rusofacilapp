@@ -9,10 +9,18 @@ import {
 // A value that has the right SHAPE and belongs to nothing. Every literal in
 // this file is invented; none of it is a credential, and the point of the
 // module under test is that a shape check needs nothing real to work on.
+//
+// ЗАХОД 7.221, СТРОКА ДОЛГА 294. До 21.09.2026 в `STRIPE_PRICE_LIFETIME`
+// здесь лежал НАСТОЯЩИЙ id цены боевого аккаунта — единственное место во
+// всём репозитории, где боевой `price_1…` стоял значением. Сторожу формы
+// всё равно, какой это id (он смотрит на префикс и длину), а настоящий —
+// это адрес боевого объекта, лежащий в открытом репозитории без нужды.
+// Заменён на выдуманный той же формы. Рабочие цены кассы — В ПЕСО, их три,
+// и они названы в PROGRESS.md; сюда их переносить НЕ НАДО никогда.
 const OK = {
   STRIPE_PRICE_MONTHLY: "price_1TestMonthlyAAAAAAAAAAAA",
   STRIPE_PRICE_ANNUAL: "price_1TestAnnualBBBBBBBBBBBB",
-  STRIPE_PRICE_LIFETIME: "price_1U8dXcDP0jFvlr1mqhzGYUwW",
+  STRIPE_PRICE_LIFETIME: "price_1TestLifetimeFFFFFFFFFFFF",
   STRIPE_SECRET_KEY: "sk_live_notarealkeyCCCCCCCCCCCC",
   STRIPE_PUBLISHABLE_KEY: "pk_live_notarealkeyDDDDDDDDDDDD",
   STRIPE_WEBHOOK_SECRET: "whsec_notarealsecretEEEEEEEEEEEE",
@@ -144,7 +152,7 @@ describe("formatStripeEnvProblems", () => {
 
 describe("hasStripeShape", () => {
   it("is what plans.ts uses to refuse a malformed price id before Stripe sees it", () => {
-    expect(hasStripeShape("STRIPE_PRICE_LIFETIME", "price_1U8dXcDP0jFvlr1mqhzGYUwW")).toBe(true);
+    expect(hasStripeShape("STRIPE_PRICE_LIFETIME", "price_1TestLifetimeFFFFFFFFFFFF")).toBe(true);
     expect(hasStripeShape("STRIPE_PRICE_LIFETIME", "sk_live_notarealkey")).toBe(false);
     expect(hasStripeShape("STRIPE_PRICE_LIFETIME", undefined)).toBe(false);
     expect(hasStripeShape("STRIPE_PRICE_LIFETIME", "")).toBe(false);
