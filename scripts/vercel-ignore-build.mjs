@@ -73,6 +73,33 @@ export function isSkippable(paths) {
   return paths.every(isDocOnlyPath);
 }
 
+/**
+ * Полное решение: строить или пропустить, с учётом ОКРУЖЕНИЯ выката.
+ *
+ * Заход 7.221, задача 1.4. До него в поле «Ignored Build Step» стояло
+ *
+ *     if [ "$VERCEL_ENV" == "production" ]; then exit 1; else exit 0; fi
+ *
+ * то есть превью не собирались никогда, а в ПРОДАКШН собирался ЛЮБОЙ мерж —
+ * включая PR #382, где не менялось ничего, кроме PROGRESS.md, и который сжёг
+ * 46 минут сборочного времени и всё равно упал.
+ *
+ * Здесь оба правила соединены, и порядок важен:
+ *   1) не продакшн → пропустить (ровно прежнее поведение, ничего не
+ *      сломается: превью как не собирались, так и не собираются);
+ *   2) продакшн и ВСЕ изменённые пути — проза → пропустить;
+ *   3) во всех остальных случаях, включая «не смогли понять, что менялось» —
+ *      СТРОИТЬ. Пропущенная по ошибке сборка оставляет продакшн на коммит
+ *      позади с зелёной галочкой, и это хуже потраченных двух минут.
+ *
+ * Возвращает "skip" | "build" — слова, а не коды Vercel, чтобы в позитивном
+ * контроле нельзя было перепутать их задом наперёд.
+ */
+export function decide({ env, paths }) {
+  if (env !== "production") return "skip";
+  return isSkippable(paths) ? "skip" : "build";
+}
+
 function git(args) {
   return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
@@ -133,9 +160,35 @@ function selfTest() {
     console.error(`✗ ${bad} case(s) decided the wrong way. Do not enable this until they pass.`);
     process.exit(1);
   }
+  // ВТОРОЙ ЯРУС: те же пути, но через decide(), где добавлено окружение.
+  // Именно он доказывает два случая, названные заданием 7.221 поимённо.
+  const envCases = [
+    { label: "ПРОДАКШН, документный коммит (как PR #382)", env: "production", paths: ["PROGRESS.md"], want: "skip" },
+    { label: "ПРОДАКШН, коммит с кодом", env: "production", paths: ["src/lib/plans.ts"], want: "build" },
+    { label: "ПРОДАКШН, документы плюс код в одном коммите", env: "production", paths: ["PROGRESS.md", "src/app/sw.ts"], want: "build" },
+    { label: "ПРОДАКШН, не смогли понять, что менялось", env: "production", paths: [], want: "build" },
+    { label: "превью, коммит с кодом — как и прежде не собираем", env: "preview", paths: ["src/lib/plans.ts"], want: "skip" },
+    { label: "превью, документный коммит", env: "preview", paths: ["PROGRESS.md"], want: "skip" },
+    { label: "окружения нет вовсе (запуск не на Vercel)", env: undefined, paths: ["src/lib/plans.ts"], want: "skip" },
+  ];
+  console.log("");
+  for (const { label, env, paths, want } of envCases) {
+    const got = decide({ env, paths });
+    const ok = got === want;
+    if (!ok) bad++;
+    console.log(`  ${ok ? "✓" : "✗"} ${want.toUpperCase()}: ${label}${ok ? "" : `  ← получено ${got.toUpperCase()}`}`);
+  }
+  console.log("");
+  if (bad > 0) {
+    console.error(`✗ ${bad} случай(ев) решены не в ту сторону. Не включать, пока не зелено.`);
+    process.exit(1);
+  }
   // The control that matters is the negative direction: a rule that never
   // says BUILD would silently freeze production at whatever is deployed now.
-  console.log(`Control passed: ${cases.length} cases, ${cases.filter((c) => !c.skip).length} of them required to BUILD.`);
+  console.log(
+    `Control passed: ${cases.length} + ${envCases.length} cases, ` +
+      `${cases.filter((c) => !c.skip).length + envCases.filter((c) => c.want === "build").length} of them required to BUILD.`,
+  );
   process.exit(0);
 }
 
@@ -150,8 +203,13 @@ function main() {
     process.exit(1); // build
   }
 
-  if (isSkippable(paths)) {
-    console.log(`[ignore-build] Skipping: ${paths.length} changed path(s), all documentation — ${paths.join(", ")}`);
+  const env = process.env.VERCEL_ENV;
+  if (decide({ env, paths }) === "skip") {
+    const why =
+      env !== "production"
+        ? `окружение ${env ?? "(нет)"}, а не production`
+        : `${paths.length} изменённых пут(и/ей), все — проза: ${paths.join(", ")}`;
+    console.log(`[ignore-build] Skipping: ${why}`);
     process.exit(0); // skip
   }
 

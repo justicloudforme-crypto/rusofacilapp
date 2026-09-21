@@ -1,6 +1,7 @@
 import { test, expect } from "./helpers/test";
 import { expectPageIsItself } from "./helpers/page-identity";
 import { loginWithSubscription } from "./helpers/auth";
+import { serveClipLocally } from "./helpers/audio-clip-origin";
 
 /**
  * ТО, ЧТО ЧЕЛОВЕК УЖЕ СЛУШАЛ, ОБЯЗАНО ИГРАТЬ И ВО ВТОРОЙ РАЗ — ЗАХОД 7.218.
@@ -21,6 +22,20 @@ import { loginWithSubscription } from "./helpers/auth";
  * дефект и был, — и требует, чтобы воспроизведение СЛОМАЛОСЬ. Без этого
  * шага «играет во второй раз» и «проба смотрит не туда» читались бы
  * одинаково.
+ *
+ * ЗВУК БЕРЁТСЯ НЕ ИЗ ИНТЕРНЕТА — ЗАХОД 7.221, ДОЛГ 297. Заход 7.218
+ * положил в строку фикстуры НАСТОЯЩИЙ боевой `fullAudioUrl`, и проба
+ * стала качать живой файл с `*.public.blob.vercel-storage.com` в каждом
+ * прогоне CI. Из четырёх прогонов 20–21.09.2026 два были красными, один
+ * из них — даже после второй повторной попытки, и падало ПЕРВОЕ
+ * воспроизведение с `error.code 2` (`MEDIA_ERR_NETWORK`), то есть ещё до
+ * всякого кеша: меряли связь, а не воркер. Теперь байты клипа собираются
+ * здесь же (`helpers/audio-clip-fixture.ts`) и отдаются с ТЕМИ ЖЕ
+ * заголовками, которыми отвечает боевой источник. Подменён ровно один
+ * слой — откуда приходят байты; весь путь, который проверяется
+ * (`<audio>` → воркер → `CacheFirst` → `RangeRequestsPlugin`), остаётся
+ * настоящим, и адрес клипа остаётся ЧУЖИМ источником, иначе дефект 7.218
+ * (непрозрачный ответ `status 0`) было бы нечем воспроизвести.
  *
  * ТОЛЬКО CHROMIUM — по той же измеренной причине, что у
  * `e2e/sw-cache-budget.spec.ts`: WebKit под Playwright навигацию воркеру
@@ -85,6 +100,12 @@ test("клип, однажды сыгранный, играет и после п
   test.setTimeout(30_000 + 3 * 4_000 + 30_000);
 
   await context.setExtraHTTPHeaders({});
+
+  // Источник клипа — свой, и он считает обращения. Ноль обращений
+  // означал бы, что подмена не попала по адресу и проба меряет что-то
+  // другое; ниже это проверяется числом, а не на веру.
+  const clipOrigin = await serveClipLocally(context);
+
   await loginWithSubscription(page);
 
   await page.goto("/ru");
@@ -98,6 +119,10 @@ test("клип, однажды сыгранный, играет и после п
   await expectPageIsItself(page, storyPath, `рассказ «${STORY_TITLE}»`);
 
   const first = await playOnce(page);
+  expect(
+    clipOrigin.hits.length,
+    "за клипом не сходили ни разу — значит подмена источника не попала по адресу и дальше мерилось бы не то",
+  ).toBeGreaterThan(0);
   expect(first.errorCode, "первое воспроизведение: элемент <audio> сообщил об ошибке").toBeNull();
   expect(first.currentTime, "первое воспроизведение: время не сдвинулось").toBeGreaterThan(0);
 
