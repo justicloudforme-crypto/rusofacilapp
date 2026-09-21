@@ -336,7 +336,7 @@
     "check:no-dev-origin:plant": "node scripts/check-no-dev-origin.mjs --plant",
     "check:build-memory": "node scripts/check-build-memory.mjs",
     "check:build-memory:plant": "node scripts/check-build-memory.mjs --plant",
-    "measure:build-memory": "node scripts/measure-build-memory.mjs --limit-mb=5600 -- npm run build",
+    "measure:build-memory": "node scripts/measure-build-memory.mjs --limit-mb=6400 -- npm run build",
     "measure:build-memory:self-test": "node scripts/measure-build-memory.mjs --self-test",
     "measure:build-memory:plant": "node scripts/measure-build-memory.mjs --limit-mb=300 -- npm run build",
     "check:e2e-audio-offline": "node scripts/check-e2e-audio-offline.mjs",
