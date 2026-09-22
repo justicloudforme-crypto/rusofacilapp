@@ -21,7 +21,7 @@
  *   node prisma/run-7222/html-parity.mjs --before=<.next> --after=<.next> --db=<файл.db>
  */
 import { spawn } from "node:child_process";
-import { cpSync, existsSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createHmac } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -36,33 +36,93 @@ if (!BEFORE || !AFTER || !DB || !SECRET) {
 
 const SENTRY = [/<meta name="sentry-trace" content="[^"]*"\/?>/g, /<meta name="baggage" content="[^"]*"\/?>/g];
 const SPLIT = /\\n"\]\)<\/script><script>self\.__next_f\.push\(\[1,"/g;
-const norm = (html) => SENTRY.reduce((h, re) => h.replace(re, ""), html).replace(SPLIT, "\\n");
+
+/**
+ * ТРЕТИЙ И ЧЕТВЁРТЫЙ ИСТОЧНИКИ ШУМА — ОНИ ЖЕ ЕДИНСТВЕННЫЕ, ЧЕМ ДВЕ СБОРКИ
+ * ОТЛИЧАЮТСЯ НЕИЗБЕЖНО.
+ *
+ * Первый съём 7.222 дал ПОЛ ШУМА 0 из 24 (одна сборка, два съёма —
+ * совпали знак в знак) и при этом 21 расхождение из 24 между сборками —
+ * ПРИ РАВНОЙ ДО БАЙТА ДЛИНЕ у каждой страницы. Посимвольный разбор назвал
+ * оба места:
+ *
+ *   1. `buildId` — случайная строка, своя у каждой сборки. В HTML он
+ *      стоит и в путях, и в полезной нагрузке потока (`\"b\":\"…\"`).
+ *   2. хеш содержимого в именах чанков
+ *      (`/_next/static/chunks/7101-178334f6b00947c0.js`): код изменился,
+ *      значит хеш обязан измениться — иначе сборка была бы неверной.
+ *
+ * Оба снимаются. Это НЕ ослабляет сравнение: длина у обеих страниц
+ * совпадала и до снятия, а любое настоящее изменение разметки или текста
+ * меняет длину или сами знаки, а не только шестнадцатеричный хвост имени
+ * файла. Имя чанка при этом сохраняется — подменится только хеш, — так
+ * что исчезнувший или добавленный чанк расхождением останется.
+ */
+const CHUNK_HASH = /(\/_next\/static\/chunks\/[A-Za-z0-9_.\-[\]()@]+?)-[0-9a-f]{16,}\.js/g;
+const CHUNK_HASH_IN_PAYLOAD = /(static\/chunks\/[A-Za-z0-9_.\-[\]()@]+?)-[0-9a-f]{16,}\.js/g;
+const norm = (html, buildId) => {
+  let out = SENTRY.reduce((h, re) => h.replace(re, ""), html).replace(SPLIT, "\\n");
+  out = out.replace(CHUNK_HASH, "$1-ХЕШ.js").replace(CHUNK_HASH_IN_PAYLOAD, "$1-ХЕШ.js");
+  if (buildId) out = out.split(buildId).join("BUILD_ID");
+  return out;
+};
+
+/**
+ * ПЯТЫЙ ИСТОЧНИК РАЗЛИЧИЙ — НОМЕРА МОДУЛЕЙ, И ЕГО НЕЛЬЗЯ ПРОСТО СТЕРЕТЬ.
+ *
+ * После снятия `buildId` и хешей чанков остались ДВЕ страницы из 24, и они
+ * повторились в двух независимых прогонах знак в знак — то есть это не шум.
+ * Посимвольный разбор назвал место: в потоковой нагрузке React стоит
+ * ссылочный список клиентских модулей (`26:I[4901,["8500","static/chunks/…
+ * ",…],"default"]`), и правка кода перенумеровывает модули webpack и
+ * переставляет их чанки. В «до» под номером 26 оказался модуль страницы, в
+ * «после» — модуль раскладки: тот же набор, другая нумерация.
+ *
+ * Стереть номера и объявить совпадение было бы подгонкой. Поэтому
+ * сравниваются ДВА разных предмета, и оба печатаются:
+ *
+ *   1. ВИДИМАЯ РАЗМЕТКА — HTML без блоков `self.__next_f.push`. Это то,
+ *      что видит читатель и что читает поисковик. Здесь обязан быть ноль.
+ *   2. ПОЛНАЯ нагрузка — со ссылочным списком модулей. Здесь расхождение
+ *      ожидаемо ровно там, где менялся код, и оно называется поимённо.
+ */
+const FLIGHT = /<script>self\.__next_f\.push\([\s\S]*?\)<\/script>/g;
+const visibleOnly = (html) => html.replace(FLIGHT, "");
 
 const sqlite = (sql) => execFileSync("sqlite3", [DB, sql], { encoding: "utf8" }).trim();
 
-/** Три роли — настоящими строками в базе, а не подменой функции. */
+/**
+ * Три роли — настоящими строками в базе, а не подменой функции.
+ *
+ * Колонки и формат дат взяты из САМОЙ базы, а не из памяти: у `User` нет
+ * `updatedAt` вовсе, а `DATETIME` здесь лежит ТЕКСТОМ вида
+ * `2026-09-22T00:36:53.957+00:00` — Prisma поверх libSQL пишет так, и
+ * строка другого вида сравнилась бы не с тем (правило `check:raw-datetime`).
+ */
 function ensureRoles() {
-  const now = new Date();
-  const far = new Date(now.getTime() + 365 * 24 * 3600 * 1000).toISOString();
+  const stamp = (date) => date.toISOString().replace("Z", "+00:00");
+  const now = stamp(new Date());
+  const far = stamp(new Date(Date.now() + 365 * 24 * 3600 * 1000));
   const rows = [
     { id: "parity-free", email: "parity-free@example.com" },
     { id: "parity-standard", email: "parity-standard@example.com" },
     { id: "parity-premium", email: "parity-premium@example.com" },
   ];
+  sqlite(`DELETE FROM Subscription WHERE userId LIKE 'parity-%';`);
+  sqlite(`DELETE FROM User WHERE id LIKE 'parity-%';`);
   for (const row of rows) {
     sqlite(
-      `INSERT OR REPLACE INTO User (id,email,name,avatarId,role,sessionVersion,createdAt,updatedAt,timezone)
-       VALUES ('${row.id}','${row.email}','Parity','matryoshka_calm','student',0,'${now.toISOString()}','${now.toISOString()}','America/Tijuana');`,
+      `INSERT INTO User (id,email,name,avatarId,role,sessionVersion,createdAt,timezone,publicProfileEnabled)
+       VALUES ('${row.id}','${row.email}','Parity','matryoshka_calm','student',0,'${now}','America/Tijuana',0);`,
     );
   }
-  sqlite(`DELETE FROM Subscription WHERE userId LIKE 'parity-%';`);
   sqlite(
-    `INSERT INTO Subscription (id,userId,plan,status,currentPeriodEnd,createdAt,updatedAt)
-     VALUES ('parity-sub-standard','parity-standard','monthly','active','${far}','${now.toISOString()}','${now.toISOString()}');`,
+    `INSERT INTO Subscription (id,userId,plan,status,currentPeriodEnd,provider,createdAt,updatedAt)
+     VALUES ('parity-sub-standard','parity-standard','monthly','active','${far}','stripe','${now}','${now}');`,
   );
   sqlite(
-    `INSERT INTO Subscription (id,userId,plan,status,currentPeriodEnd,createdAt,updatedAt)
-     VALUES ('parity-sub-premium','parity-premium','lifetime','active','${far}','${now.toISOString()}','${now.toISOString()}');`,
+    `INSERT INTO Subscription (id,userId,plan,status,currentPeriodEnd,provider,createdAt,updatedAt)
+     VALUES ('parity-sub-premium','parity-premium','lifetime','active','${far}','stripe','${now}','${now}');`,
   );
   const sign = (id) => `session=${id}.0.${createHmac("sha256", SECRET).update(`${id}.0`).digest("hex")}`;
   return [
@@ -106,6 +166,7 @@ async function waitUp(port) {
 }
 
 async function snapshot(nextDir, port, roles, targets) {
+  const buildId = readFileSync(path.join(nextDir, "BUILD_ID"), "utf8").trim();
   const child = start(nextDir, port);
   try {
     if (!(await waitUp(port))) throw new Error("сервер не поднялся");
@@ -114,7 +175,7 @@ async function snapshot(nextDir, port, roles, targets) {
       for (const p of [...targets.pages, targets.sitemap]) {
         const headers = cookie ? { cookie } : {};
         const r = await fetch(`http://127.0.0.1:${port}${p}`, { headers, redirect: "manual" });
-        out.set(`${role} ${p}`, { status: r.status, html: norm(await r.text()) });
+        out.set(`${role} ${p}`, { status: r.status, html: norm(await r.text(), buildId) });
       }
     }
     return out;
@@ -124,15 +185,17 @@ async function snapshot(nextDir, port, roles, targets) {
   }
 }
 
-function diffOf(a, b) {
+function diffOf(a, b, pick = (entry) => entry.html) {
   const keys = [...new Set([...a.keys(), ...b.keys()])];
   if (keys.length === 0) throw new Error("обе выборки пусты — сравнивать нечего");
   const differing = keys.filter((k) => {
     const x = a.get(k), y = b.get(k);
-    return !x || !y || x.status !== y.status || x.html !== y.html;
+    return !x || !y || x.status !== y.status || pick(x) !== pick(y);
   });
   return { checked: keys.length, differing };
 }
+
+const visible = (entry) => visibleOnly(entry.html);
 
 const roles = ensureRoles();
 const targets = urls();
@@ -144,9 +207,20 @@ const floor = diffOf(beforeA, beforeB);
 console.log(`ПОЛ ШУМА (одна и та же сборка «до», два съёма): расходятся ${floor.differing.length} из ${floor.checked}`);
 for (const k of floor.differing) console.log(`   шум: ${k}`);
 
+const floorVisible = diffOf(beforeA, beforeB, visible);
+console.log(`ПОЛ ШУМА по ВИДИМОЙ РАЗМЕТКЕ: расходятся ${floorVisible.differing.length} из ${floorVisible.checked}`);
+
 const after = await snapshot(AFTER, 3153, roles, targets);
+
+const realVisible = diffOf(beforeA, after, visible);
+console.log(`ДО против ПОСЛЕ — ВИДИМАЯ РАЗМЕТКА: расходятся ${realVisible.differing.length} из ${realVisible.checked}`);
+for (const k of realVisible.differing) {
+  const x = beforeA.get(k), y = after.get(k);
+  console.log(`   ${k}: статус ${x?.status}→${y?.status}, длина ${visibleOnly(x?.html ?? "").length}→${visibleOnly(y?.html ?? "").length}`);
+}
+
 const real = diffOf(beforeA, after);
-console.log(`ДО против ПОСЛЕ: расходятся ${real.differing.length} из ${real.checked}`);
+console.log(`ДО против ПОСЛЕ — ПОЛНАЯ нагрузка (со ссылочным списком модулей): расходятся ${real.differing.length} из ${real.checked}`);
 for (const k of real.differing) {
   const x = beforeA.get(k), y = after.get(k);
   console.log(`   ${k}: статус ${x?.status}→${y?.status}, длина ${x?.html.length}→${y?.html.length}`);
@@ -155,6 +229,17 @@ for (const k of real.differing) {
 // Сравнение на двух пустых выборках обязано падать — правило проекта.
 writeFileSync(
   arg("out", "/dev/null"),
-  JSON.stringify({ floor: floor.differing, differing: real.differing, checked: real.checked }, null, 2),
+  JSON.stringify(
+    {
+      floor: floor.differing,
+      floorVisible: floorVisible.differing,
+      visible: realVisible.differing,
+      payload: real.differing,
+      checked: real.checked,
+    },
+    null,
+    2,
+  ),
 );
-process.exit(real.differing.length > floor.differing.length ? 1 : 0);
+// Вердикт даёт ВИДИМАЯ разметка: её расхождение сверх пола шума — регрессия.
+process.exit(realVisible.differing.length > floorVisible.differing.length ? 1 : 0);
