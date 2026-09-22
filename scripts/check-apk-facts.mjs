@@ -54,7 +54,6 @@ export const ALLOWED_MERGED = new Map([
   ["android.permission.WAKE_LOCK", "@capacitor/local-notifications"],
   ["android.permission.POST_NOTIFICATIONS", "@capacitor/local-notifications"],
   ["android.permission.FOREGROUND_SERVICE", "@capgo/capacitor-media-session"],
-  ["android.permission.ACCESS_NETWORK_STATE", "com.revenuecat.purchases:purchases"],
   ["com.android.vending.BILLING", "com.android.billingclient:billing (через RevenueCat)"],
   // Записан ЧЕРЕЗ ПОДСТАНОВКУ, а не литералом: androidx.core объявляет
   // его как `${applicationId}.DYNAMIC_…`, и смена идентификатора пакета
@@ -73,8 +72,15 @@ const withAppId = (name, applicationId) => name.replace("${applicationId}", appl
  *  (долг 107), потому что напоминание перестало просить точный будильник
  *  (`isExactNotification: false` в `src/lib/notifications.ts`). Это
  *  ограниченное разрешение Google Play, и его отсутствие в пакете —
- *  единственная форма, в которой анкету по нему заполнять не придётся. */
-const MERGED_COUNT = 8;
+ *  единственная форма, в которой анкету по нему заполнять не придётся.
+ *
+ *  Было 8 до 22.09.2026. Стало 7: `ACCESS_NETWORK_STATE` больше не
+ *  «приезжает» — его объявляет НАШ манифест (заход 7.223, долг 250,
+ *  шаг 2), потому что от него зависит наш собственный код
+ *  (`MainActivity.armNetworkRecovery`, `registerDefaultNetworkCallback`).
+ *  Множество разрешений ПАКЕТА от этой правки не изменилось ни на одну
+ *  строку — изменилось то, кто за него отвечает. */
+const MERGED_COUNT = 7;
 
 function readSources() {
   const gradle = readFileSync(GRADLE, "utf-8");

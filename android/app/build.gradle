@@ -133,8 +133,14 @@ android {
         // ios/App/App.xcodeproj/project.pbxproj обязаны совпадать с этими
         // двумя строками, иначе у одного релиза два разных номера в двух
         // магазинах. Сличает npm run check:release-signing.
-        versionCode 2
-        versionName "1.0.1"
+        //
+        // ТРОЙКА — заход 7.223 (22.09.2026). Под номером 2 в закрытом
+        // тесте Google Play уже лежит сборка 7202; этот номер называет
+        // сборку с самостоятельным подъёмом после возврата сети (долг
+        // 250, шаг 2), мгновенным снятием заставки над экраном ошибки
+        // (долг 232) и признаком версии оболочки для сайта (долг 235).
+        versionCode 3
+        versionName "1.0.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -192,6 +198,38 @@ android {
             // требует своих правил proguard — отдельный долг, не этот.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            // НАТИВНЫЕ ОТЛАДОЧНЫЕ СИМВОЛЫ (заход 7.223).
+            //
+            // Play Console писал по сборке 7202: «в этом App Bundle нет
+            // отладочных символов». Своего нативного кода у нас нет ни
+            // строки, но в пакете лежат ЧЕТЫРЕ библиотеки
+            // `libandroidx.graphics.path.so` (по одной на ABI), которые
+            // приезжают с `androidx.graphics:graphics-path` — и падение
+            // внутри них Play показал бы адресами, а не именами.
+            //
+            // Строка ниже велит AGP собрать символы из ВСЕХ .so пакета и
+            // положить их в BUNDLE-METADATA самого AAB, откуда Play
+            // забирает их сам: отдельным файлом заливать нечего.
+            //
+            // ЧТО ИЗ ЭТОГО ВЫШЛО, ИЗМЕРЕНО ПО СОБРАННОМУ ПАКЕТУ
+            // 22.09.2026, И ЭТО ЧЕСТНЫЙ НОЛЬ. В AAB с этой строкой
+            // BUNDLE-METADATA содержит пять файлов (dependencies.pb,
+            // baseline.prof, baseline.profm, app-metadata.properties,
+            // d8.json) и НИ ОДНОГО каталога символов. Причина прочитана
+            // в самих библиотеках: во всех четырёх .so нет ни секции
+            // `.symtab`, ни `.debug_info` (24/25/24/24 секции, размеры
+            // 10096/7252/9284/10760 байт) — они приезжают из AAR
+            // `androidx.graphics:graphics-path` уже обрезанными, и
+            // доставать AGP нечего. Предупреждение Play Console про
+            // отсутствие символов этой строкой не снимается и снято
+            // быть не может, пока символы обрезает чужая библиотека.
+            // Строка оставлена намеренно: свой нативный код или
+            // необрезанная зависимость попадут в пакет молча, а с ней —
+            // уже с символами.
+            ndk {
+                debugSymbolLevel = 'FULL'
+            }
         }
     }
 }

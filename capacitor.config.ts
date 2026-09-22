@@ -92,6 +92,23 @@ const isCleartext = serverUrl.startsWith("http://");
 // между собой, ничего не импортируя из проверяемого.
 const NATIVE_USER_AGENT_TOKEN = "RFNativeShell";
 
+// ВЕРСИЯ ОБОЛОЧКИ В ТОМ ЖЕ КАНАЛЕ, ЧТО И ПРИЗНАК (долг 235, заход
+// 7.223).
+//
+// До этой правки признаков оболочки было два, и оба бесверсионные по
+// построению: токен выше — литерал без чисел, а кука `rf_native_shell`
+// имела единственное значение "1". Сайт не мог отличить 7202 от будущей
+// сборки, а на `versionCode 4` это понадобится: касса Google должна
+// включаться ТОЛЬКО в той оболочке, которая её умеет.
+//
+// Число обязано совпадать с `versionCode` в `android/app/build.gradle` и
+// с `CURRENT_PROJECT_VERSION` в iOS-проекте — сличает
+// `npm run check:native-payments`. Разбор на стороне сайта —
+// `src/lib/native-shell-token.ts`, и он СОВМЕСТИМ СО СТАРОЙ ОБОЛОЧКОЙ:
+// токен без косой черты и без числа читается как версия 2, потому что
+// бесверсионным был ровно один залитый пакет — 7202.
+const NATIVE_SHELL_VERSION = 3;
+
 const config: CapacitorConfig = {
   // Reverse-domain of the now-confirmed production domain (rusofacilapp.com,
   // purchased 2026-08-16) — set for real, not a placeholder anymore. Still
@@ -115,7 +132,7 @@ const config: CapacitorConfig = {
   // к NATIVE_USER_AGENT_TOKEN выше. Именно `appendUserAgent`, а не
   // `overrideUserAgent`: подменять строку целиком значило бы потерять всё,
   // по чему сайт узнаёт платформу и движок.
-  appendUserAgent: NATIVE_USER_AGENT_TOKEN,
+  appendUserAgent: `${NATIVE_USER_AGENT_TOKEN}/${NATIVE_SHELL_VERSION}`,
   server: {
     url: serverUrl,
     // Только в явном режиме живого перезапуска: молчаливое значение —
