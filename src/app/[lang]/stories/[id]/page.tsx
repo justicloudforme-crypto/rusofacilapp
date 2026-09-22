@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -42,6 +43,29 @@ const FALLBACK_STORY_METADATA: Record<"es" | "ru", { title: string; description:
   },
 };
 
+/**
+ * ОДНО ЧТЕНИЕ РАССКАЗА НА ЗАПРОС — 21.09.2026, заход 7.222, строка 292.
+ *
+ * Замерено прибором `src/lib/db-read-meter.ts`: за одно открытие страницы
+ * рассказа уходило `SELECT Story` **дважды** — раз из `generateMetadata`
+ * (пять колонок), раз из тела страницы (строка целиком). В Next.js это
+ * два разных вызова, и знать друг о друге им нечем.
+ *
+ * Почему ОБЩЕЕ чтение берёт строку ЦЕЛИКОМ, а не пять колонок. Тело
+ * страницы всё равно читает её целиком — там текст рассказа, перевод и
+ * разметка. Сузить общее чтение до пяти колонок значило бы оставить телу
+ * второй поход, то есть не убрать ничего. Наоборот: узкое чтение
+ * метаданных исчезает, и полное остаётся ОДНО на весь ответ.
+ *
+ * ДВЕ ГРАНИЦЫ ОТКАЗА, РЕШЁННЫЕ ЗАХОДОМ 7.220, ОСТАЮТСЯ РАЗНЫМИ, и это не
+ * на словах. Памятка `cache` запоминает обещание вместе с его отказом:
+ * `generateMetadata` свой `try` сохраняет и по-прежнему отдаёт запасной
+ * заголовок, а тело страницы получает ТО ЖЕ отказавшее обещание и падает
+ * громко — рассказ это содержимое, и пустая страница вместо него была бы
+ * враньём. Заперто в `db-read-resilience.test.ts`.
+ */
+const getStoryById = cache((id: string) => db.story.findUnique({ where: { id } }));
+
 export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/stories/[id]">): Promise<Metadata> {
@@ -79,10 +103,7 @@ export async function generateMetadata({
     descriptionRu: string | null;
   } | null = null;
   try {
-    story = await db.story.findUnique({
-      where: { id },
-      select: { title: true, titleEs: true, level: true, description: true, descriptionRu: true },
-    });
+    story = await getStoryById(id);
   } catch (error) {
     console.error(
       "[stories/[id]] не удалось прочитать рассказ для метаданных — отдаю запасной заголовок",
@@ -150,7 +171,7 @@ export default async function StoryReaderPage({
   // ones — dict/story/tier/allMedia don't depend on each other.
   const [dict, story, tier, allMedia] = await Promise.all([
     getDictionary(lang),
-    db.story.findUnique({ where: { id } }),
+    getStoryById(id),
     getEntitlementTier(),
     getAllMedia(),
   ]);
@@ -232,10 +253,39 @@ export default async function StoryReaderPage({
   // truncation is the same one applied to the text and the translation
   // above, and `fullAudioUrl` (the whole story end to end) stays withheld
   // below.
-  const audioAssetRows = await db.audioAsset.findMany({
-    where: { contentType: "story", contentId: story.id },
-    select: { itemKey: true, audioUrl: true, durationSeconds: true },
-  });
+  //
+  // ОТКАЗ ЭТОГО ЧТЕНИЯ СТОИТ ПРОИГРЫВАТЕЛЯ, А НЕ РАССКАЗА — 21.09.2026,
+  // заход 7.222, строка долга 295.
+  //
+  // До правки чтение стояло голым, и это единственное место из 25,
+  // которое перепись 7.220 назвала поимённо как НЕзаконно громкое:
+  // «озвучка — украшение: рассказ читается и без неё». Стоило оно всей
+  // страницы — 650 адресов рассказов отдавали бы 500 при следующей
+  // аварии квоты Turso (строка 135), потеряв текст, перевод, разбор и
+  // ссылки ради кнопки воспроизведения.
+  //
+  // Деградация ровно в ту сторону, в какую можно: без клипов остаются
+  // пустые `audioSegments`, `StoryText` печатает тот же текст и рисует
+  // те же абзацы, а `fullAudioUrl` (ниже) от этого чтения не зависит
+  // вовсе — он колонка самой строки рассказа.
+  //
+  // ПЛАТНАЯ ГРАНИЦА ЭТИМ НЕ СДВИНУТА. Отсечение по `visibleParagraphs`
+  // применяется к тому, что вернулось, и пустой список отсекается в
+  // пустой; проглоченный отказ не может показать НИ ОДНОГО лишнего
+  // клипа — только меньше. Это отказ в сторону меньшего, ровно как у
+  // шапки в `getCurrentUserForChrome` (7.220).
+  let audioAssetRows: Array<{ itemKey: string; audioUrl: string; durationSeconds: number | null }> = [];
+  try {
+    audioAssetRows = await db.audioAsset.findMany({
+      where: { contentType: "story", contentId: story.id },
+      select: { itemKey: true, audioUrl: true, durationSeconds: true },
+    });
+  } catch (error) {
+    console.error(
+      "[stories/[id]] не удалось прочитать клипы озвучки — рассказ отдаётся без проигрывателя",
+      error
+    );
+  }
   const audioSegments = toStoryAudioSegments(audioAssetRows).filter(
     (segment) => segment.paragraphIndex < visibleParagraphs.length
   );

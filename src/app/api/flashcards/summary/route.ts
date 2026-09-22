@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
-import { canAccessLevel, getEntitlementTier } from "@/lib/entitlement";
+import { canAccessLevel, getEntitlementTierFor } from "@/lib/entitlement";
 import { openCardIds, siteCensus } from "@/lib/flashcards/locked-census";
 
 // Powers the category grid + "Continue" strip on /vocabulary: total card
@@ -112,7 +112,24 @@ export async function POST(request: NextRequest) {
   // learner who sees "4787 available" and nothing else has been told the
   // bank is 4787 cards, which is its own lie.
   const wholeIndex = await getFlashcardIndex();
-  const tier = await getEntitlementTier();
+  /**
+   * ОДНО ЧТЕНИЕ `User` НА ОТВЕТ — 21.09.2026, заход 7.222, строка 292.
+   *
+   * Здесь нельзя положиться на `cache` из React, которым закрыто то же
+   * повторение на страницах, и это ИЗМЕРЕНО, а не выведено: после правки
+   * `getCurrentUser` прибор показал на страницах `SELECT User` один раз
+   * вместо трёх, а на ЭТОМ маршруте — по-прежнему ДВА. Обработчик
+   * маршрута живёт вне отрисовки React, и памятка запроса до него не
+   * достаёт.
+   *
+   * Поэтому строка читается ровно один раз и передаётся второй парадной
+   * двери уровня доступа (`getEntitlementTierFor`), которая берёт
+   * готового человека вместо того, чтобы читать его заново.
+   * `getEntitlementTier()` и `getEntitlementTierFor(user)` — один и тот
+   * же вердикт по построению (`tierOfAccount`), см. `entitlement.ts`.
+   */
+  const user = await getCurrentUser();
+  const tier = await getEntitlementTierFor(user);
   const index = wholeIndex.filter((c) => canAccessLevel(tier, c.level));
   const cardById = new Map(index.map((c) => [c.id, c]));
   const validCardIds = new Set(cardById.keys());
@@ -124,8 +141,6 @@ export async function POST(request: NextRequest) {
     }
   }
   const clientEntries = parseEntries(entriesRaw, validCardIds, wholeIndex.length);
-
-  const user = await getCurrentUser();
 
   // Server rows first (authoritative). Fetches every row regardless of
   // `known` — a "Repetir" tap is still real activity worth surfacing in

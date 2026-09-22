@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { db } from "./db";
 import { SESSION_COOKIE, shouldUseSecureSessionCookie, signUserId, verifySessionToken } from "./session-token";
@@ -78,7 +79,36 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-export async function getCurrentUser() {
+/**
+ * ОДНО ЧТЕНИЕ ВОШЕДШЕГО НА ЗАПРОС — 21.09.2026, заход 7.222, строка 292.
+ *
+ * Что было измерено. Прибор `src/lib/db-read-meter.ts` считает ПОХОДЫ В
+ * ПРОВОД, а не вызовы Prisma. За одно открытие страницы вошедшим
+ * человеком уходило: главная — `SELECT User` **три** раза, страница
+ * рассказа — **три**, страница термина — **три**, `/[lang]/word-games` —
+ * **четыре** (это и есть запись Sentry `JAVASCRIPT-NEXTJS-16`). Один и
+ * тот же `where`, одна и та же строка, три-четыре похода.
+ *
+ * Откуда бралось повторение. `getCurrentUser` зовут независимо друг от
+ * друга раскладка (шапка), тело страницы и `getEntitlementTier`, и ни
+ * один из них не знает об остальных. Это не ошибка вызывающих: каждому из
+ * них ответ действительно нужен.
+ *
+ * Что сделано. `cache` из React — памятка НА ОДИН ЗАПРОС, не кеш между
+ * запросами: у каждого запроса своя. Значит ни одно состояние между
+ * людьми не делится, cookie читается той же функцией, и «вышел —
+ * перестал быть вошедшим» остаётся правдой немедленно.
+ *
+ * ГРАНИЦА ДЕГРАДАЦИИ НЕ СДВИНУТА, И ЭТО ГЛАВНОЕ. `cache` запоминает
+ * ОБЕЩАНИЕ, включая неудавшееся. Если первым позвал
+ * `getCurrentUserForChrome` и база отказала, он, как и прежде, проглотит
+ * отказ и нарисует шапку гостя; но следующий за ним `getCurrentUser` —
+ * например из `getEntitlementTier` — получит ТО ЖЕ отказавшее обещание и
+ * бросит громко. То есть подписчик по-прежнему не может быть тихо
+ * превращён в `free`: ровно граница, решённая заходом 7.220 и запертая
+ * в `db-read-resilience.test.ts`.
+ */
+export const getCurrentUser = cache(async () => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -102,4 +132,4 @@ export async function getCurrentUser() {
   Sentry.setUser({ id: user.id });
 
   return user;
-}
+});

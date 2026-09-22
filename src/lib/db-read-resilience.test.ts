@@ -99,6 +99,14 @@ const DB_BACKED_HELPERS: Array<{ name: string; definedIn: string }> = [
   { name: "getSubscriptionsForUser", definedIn: "lib/subscription.ts" },
   { name: "getUserStreakStats", definedIn: "lib/streaks.ts" },
   { name: "getTermBySlug", definedIn: "app/[lang]/glossary/[slug]/page.tsx" },
+  // 21.09.2026 (7.222), дедупликация чтений в пределах запроса. Три
+  // чтения переехали за памятку `cache` из React, и без этих трёх строк
+  // сканер перестал бы видеть их вовсе: `StoryReaderPage` и
+  // `generateMetadata` страницы рассказа больше не пишут `db.story.` у
+  // себя, а оба среза главной — `db.flashcardCard.`. Молчаливо пустой
+  // сканер здесь опаснее отсутствия правила: он ОТЧИТЫВАЕТСЯ об успехе.
+  { name: "getStoryById", definedIn: "app/[lang]/stories/[id]/page.tsx" },
+  { name: "homePreviewPool", definedIn: "lib/home-stats.ts" },
 ];
 
 /**

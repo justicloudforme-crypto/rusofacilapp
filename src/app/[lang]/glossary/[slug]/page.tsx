@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -27,7 +28,26 @@ import { SITE_URL, breadcrumbList, shortenTitle, truncateForMeta, routeAlternate
 export const dynamicParams = true;
 export const revalidate = 3600;
 
-async function getTermBySlug(slug: string) {
+/**
+ * ОДНО ЧТЕНИЕ ТЕРМИНА НА ЗАПРОС — 21.09.2026, заход 7.222, строка 292.
+ *
+ * Замерено прибором `src/lib/db-read-meter.ts` (походы в провод, не
+ * вызовы Prisma): за одно открытие страницы термина уходило
+ * `SELECT GlossaryTerm` **дважды** и `SELECT AudioAsset` **дважды** —
+ * четыре похода на ТРИ разных чтения. Причина: эту функцию зовут и
+ * `generateMetadata`, и тело страницы, а в Next.js это два отдельных
+ * вызова, ничего друг о друге не знающих.
+ *
+ * `cache` из React — памятка на ОДИН запрос; между запросами и между
+ * людьми ничего не делится, `revalidate` страницы работает как прежде.
+ *
+ * Деградация не сдвинута: озвучка (`attachGlossaryAudio`) как была
+ * мягкой, так и осталась, а сам термин — содержимое страницы, и его
+ * отказ по-прежнему громкий (`LEFT_ALONE_ON_PURPOSE` в
+ * `db-read-resilience.test.ts`). Памятка запоминает и неудавшееся
+ * обещание, поэтому второй вызов получит тот же отказ, а не тихий `null`.
+ */
+const getTermBySlug = cache(async (slug: string) => {
   const row = await db.glossaryTerm.findUnique({ where: { slug } });
   if (!row) return null;
   const category = isGlossaryCategory(row.category) ? row.category : ("otros" as const);
@@ -39,7 +59,7 @@ async function getTermBySlug(slug: string) {
   };
   const [withAudio] = await attachGlossaryAudio([parsed]);
   return withAudio;
-}
+});
 
 // Runs at BUILD time, not request time — force-dynamic (the fix used for
 // sitemap.ts's identical symptom) doesn't apply here, since this function
