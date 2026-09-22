@@ -99,10 +99,31 @@ async function fetchFlashcardIndex(): Promise<FlashcardRow[]> {
   // is a state every consumer already handles — `audioUrl` is nullable and
   // Без него SpeakButton остаётся на месте, но молчит (7.168: подменять
   // запись нечем).
+  //
+  // ОДИН ПОХОД ВМЕСТО ШЕСТИ — 21.09.2026, заход 7.222, строка долга 285
+  // (Sentry `JAVASCRIPT-NEXTJS-V`, «N+1 по AudioAsset», 38 событий,
+  // `POST /api/flashcards/summary`).
+  //
+  // Тут стоял один вызов `findMany` со списком `contentId: { in: [...] }`
+  // на ВЕСЬ банк карточек. Один вызов — но не один поход: у SQLite есть
+  // предел на число подставляемых значений, и Prisma режет такой список
+  // на части. Замерено прибором `src/lib/db-read-meter.ts` на холодном
+  // экземпляре: при 5771 карточке — **шесть** `SELECT AudioAsset` за один
+  // ответ. Расширение клиента Prisma этого не показывало вовсе: оно
+  // считает вызовы, а платим мы за провод. Отсюда и запись в Sentry: она
+  // видит спаны, то есть походы.
+  //
+  // Список убран целиком. Спрашивается `contentType: "flashcard"` — то
+  // же самое множество строк: карточкам этого банка отвечают ровно
+  // записи этого сорта. Строки озвучки, оставшиеся от УДАЛЁННЫХ
+  // карточек, в ответ попасть могут, но повлиять ни на что не могут:
+  // `attachNarration` ищет по `card.id` в карте, а не наоборот, и запись
+  // без карточки просто ни разу не спрашивается. Ответ побайтово тот же —
+  // это проверено сличением HTML и ответа маршрута, а не рассуждением.
   let audioRows: Array<{ contentId: string; itemKey: string; audioUrl: string }> = [];
   try {
     audioRows = await db.audioAsset.findMany({
-      where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
+      where: { contentType: "flashcard" },
       select: { contentId: true, itemKey: true, audioUrl: true },
     });
   } catch (error) {

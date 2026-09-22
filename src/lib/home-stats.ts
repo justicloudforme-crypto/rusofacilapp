@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { db } from "./db";
 import { cached, getOrCreateGlobalSingleton, isPlainObject, TtlCache } from "./ttl-cache";
 import { attachNarration, peekFlashcardIndex } from "./flashcards/cache";
@@ -45,6 +46,79 @@ export async function getHomepageStats(): Promise<HomepageStats | null> {
 }
 
 /**
+ * ТРИ СРЕЗА БАНКА, КОТОРЫЕ ПОКАЗЫВАЕТ ГЛАВНАЯ, — ОДНИМ ПОХОДОМ.
+ *
+ * 21.09.2026, заход 7.222, строка долга 284 (Sentry
+ * `JAVASCRIPT-NEXTJS-17`, «N+1 по FlashcardCard», `GET /[lang]`, 49
+ * событий; панель: `Pattern Size 5`, `Repeating Spans 3`).
+ *
+ * Что было измерено прибором `src/lib/db-read-meter.ts`. За одно открытие
+ * главной уходило `SELECT FlashcardCard` **три** раза — по разу на пару
+ * «категория + уровень» (`greetings`/A1 для колоды героя, `food`/A1 для
+ * слова-образца, `city`/A1 для плиток игры) — и `SELECT AudioAsset`
+ * **два** раза. Пять походов, и ровно столько же спанов видит Sentry.
+ * Каждый из них — отдельный круговой поход в Turso (замер 7.219: 63 мс).
+ *
+ * Что сделано: один запрос по трём категориям сразу, срезы режутся в
+ * памяти тем же порядком (`createdAt asc`) и тем же числом, что резались
+ * запросами. Какие именно карточки попадут на экран, правка не меняет —
+ * это доказано побайтовым сличением HTML главной до и после.
+ *
+ * ЦЕНА НАЗВАНА, А НЕ ЗАМОЛЧАНА. Строк читается БОЛЬШЕ: вместо 13 (5+1+7)
+ * из базы приходят все карточки A1 этих трёх тем — на замере 21.09.2026
+ * это 106 строк (`greetings` 30, `food` 47, `city` 29). Плюс 93 строки за
+ * холодное открытие главной против минус четыре круговых похода
+ * (три карточных и один звуковой). Обмен сознательный: у квоты чтений
+ * запас в строках (740,9 млн из 2,5 млрд), а у главной — самый дорогой
+ * на сайте TTFB, и 63 мс × 4 читатель видит глазами. Если запас строк
+ * когда-нибудь станет узким местом вместо времени, обмен разворачивается
+ * обратно одной правкой здесь.
+ *
+ * Озвучка спрашивается ТОЛЬКО про те карточки, у которых на экране есть
+ * кнопка: колода героя и слово-образец. Плиткам игры она не нужна —
+ * они печатаются текстом, — и раньше её им и не спрашивали.
+ */
+const HOME_PREVIEW_CATEGORIES = ["greetings", "food", "city"] as const;
+/** Сколько карточек каждой темы печатает главная. Числа те же, что стояли
+ *  в `take` у трёх прежних запросов, и менять их здесь — менять экран. */
+const HOME_PREVIEW_TAKE = { greetings: 5, food: 1, city: 7 } as const;
+/** У каких тем на главной есть кнопка воспроизведения. */
+const HOME_PREVIEW_NARRATED = ["greetings", "food"] as const;
+
+function sliceFromPool(
+  pool: Awaited<ReturnType<typeof db.flashcardCard.findMany>>,
+  category: string,
+  take: number,
+) {
+  return pool.filter((card) => card.category === category).slice(0, take);
+}
+
+/**
+ * Памятка на ОДИН запрос (`cache` из React): главная зовёт
+ * `getHomepageWordSample` и `getHomepagePreviewData` двумя независимыми
+ * ветками `Promise.all`, и без памятки они сходили бы в базу дважды за
+ * одним и тем же. Между запросами и между людьми ничего не делится.
+ */
+const homePreviewPool = cache(async () => {
+  const cards = await db.flashcardCard.findMany({
+    where: { level: "A1", category: { in: [...HOME_PREVIEW_CATEGORIES] } },
+    orderBy: { createdAt: "asc" },
+  });
+  const narratedIds = HOME_PREVIEW_NARRATED.flatMap((category) =>
+    sliceFromPool(cards, category, HOME_PREVIEW_TAKE[category]).map((card) => card.id),
+  );
+  // Та же деградация, что у полного банка: без записи карточка остаётся
+  // карточкой. Здесь она вложена в `try` вызывающих, см. ниже.
+  const audioRows = narratedIds.length
+    ? await db.audioAsset.findMany({
+        where: { contentType: "flashcard", contentId: { in: narratedIds } },
+        select: { contentId: true, itemKey: true, audioUrl: true },
+      })
+    : [];
+  return { cards, audioRows };
+});
+
+/**
  * Real greeting-category, A1-level flashcards for the hero demo deck.
  *
  * ДОЛГ 250, ШАГ 1 (18.09.2026). До этой правки здесь строился ВЕСЬ банк
@@ -65,20 +139,8 @@ export async function getHomepageWordSample(count = 5): Promise<FlashcardRow[]> 
   try {
     const warm = peekFlashcardIndex();
     if (warm) return warm.filter((card) => card.category === "greetings" && card.level === "A1").slice(0, count);
-    const cards = await db.flashcardCard.findMany({
-      where: { category: "greetings", level: "A1" },
-      orderBy: { createdAt: "asc" },
-      take: count,
-    });
-    // Озвучка спрашивается только про ЭТИ строки. Та же деградация, что у
-    // полного банка: без записи карточка остаётся карточкой.
-    const audioRows = cards.length
-      ? await db.audioAsset.findMany({
-          where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
-          select: { contentId: true, itemKey: true, audioUrl: true },
-        })
-      : [];
-    return attachNarration(cards, audioRows);
+    const { cards, audioRows } = await homePreviewPool();
+    return attachNarration(sliceFromPool(cards, "greetings", count), audioRows);
   } catch (error) {
     console.error("[home-stats] could not read the flashcard bank; serving the homepage without the hero deck", error);
     return [];
@@ -133,17 +195,8 @@ export async function getHomepagePreviewData(): Promise<HomepagePreviewData> {
     const warm = peekFlashcardIndex();
     const sliceOf = async (category: string, take: number, narration: boolean): Promise<FlashcardRow[]> => {
       if (warm) return warm.filter((card) => card.category === category && card.level === "A1").slice(0, take);
-      const cards = await db.flashcardCard.findMany({
-        where: { category, level: "A1" },
-        orderBy: { createdAt: "asc" },
-        take,
-      });
-      if (!narration || cards.length === 0) return attachNarration(cards, []);
-      const audioRows = await db.audioAsset.findMany({
-        where: { contentType: "flashcard", contentId: { in: cards.map((card) => card.id) } },
-        select: { contentId: true, itemKey: true, audioUrl: true },
-      });
-      return attachNarration(cards, audioRows);
+      const { cards, audioRows } = await homePreviewPool();
+      return attachNarration(sliceFromPool(cards, category, take), narration ? audioRows : []);
     };
     const [words, gameCards, storyRows] = await Promise.all([
       sliceOf("food", 1, true),

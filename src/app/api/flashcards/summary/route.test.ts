@@ -4,20 +4,20 @@ import type { NextRequest } from "next/server";
 const findMany = vi.fn();
 const getCurrentUser = vi.fn();
 const getFlashcardIndex = vi.fn();
-const getEntitlementTier = vi.fn();
+const getEntitlementTierFor = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   db: { flashcardProgress: { findMany: (...args: unknown[]) => findMany(...args) } },
 }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: (...args: unknown[]) => getCurrentUser(...args) }));
 vi.mock("@/lib/flashcards/cache", () => ({ getFlashcardIndex: (...args: unknown[]) => getFlashcardIndex(...args) }));
-// Only getEntitlementTier is substituted — canAccessLevel comes through
+// Only getEntitlementTierFor is substituted — canAccessLevel comes through
 // untouched, on purpose: it IS the rule under test here ("C1 needs
 // Premium"), and a hand-written copy of it in this mock would keep passing
 // after someone changed the real one.
 vi.mock("@/lib/entitlement", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/entitlement")>()),
-  getEntitlementTier: (...args: unknown[]) => getEntitlementTier(...args),
+  getEntitlementTierFor: (...args: unknown[]) => getEntitlementTierFor(...args),
 }));
 
 const { POST } = await import("./route");
@@ -42,7 +42,7 @@ describe("POST /api/flashcards/summary", () => {
     vi.clearAllMocks();
     getFlashcardIndex.mockResolvedValue(INDEX);
     getCurrentUser.mockResolvedValue(null);
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     findMany.mockResolvedValue([]);
   });
 
@@ -152,7 +152,7 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
   });
 
   it("no subscription: C1 is out of the denominator and named as locked", async () => {
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     const body = await (await POST(fakeRequest({}))).json();
     expect(body.availableWords).toBe(3);
     expect(body.premiumOnlyWords).toBe(1);
@@ -160,14 +160,14 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
   });
 
   it("monthly/annual subscription: same as free here — C1 is a Premium slice, not a paid-vs-unpaid one", async () => {
-    getEntitlementTier.mockResolvedValue("standard");
+    getEntitlementTierFor.mockResolvedValue("standard");
     const body = await (await POST(fakeRequest({}))).json();
     expect(body.availableWords).toBe(3);
     expect(body.premiumOnlyWords).toBe(1);
   });
 
   it("Premium: the whole bank is the denominator and nothing is locked", async () => {
-    getEntitlementTier.mockResolvedValue("premium");
+    getEntitlementTierFor.mockResolvedValue("premium");
     const body = await (await POST(fakeRequest({}))).json();
     expect(body.availableWords).toBe(4);
     expect(body.premiumOnlyWords).toBe(0);
@@ -179,7 +179,7 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
     // the row survives in flashcardProgress. It must not count toward
     // "known" while the card itself is out of reach — otherwise the
     // fraction claims progress on cards the page will not open.
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     getCurrentUser.mockResolvedValue({ id: "user-1" });
     findMany.mockResolvedValue([
       { cardId: "food-1", known: true, updatedAt: new Date(100) },
@@ -189,7 +189,7 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
     expect(body.totalKnown).toBe(1);
     expect(body.availableWords).toBe(3);
 
-    getEntitlementTier.mockResolvedValue("premium");
+    getEntitlementTierFor.mockResolvedValue("premium");
     const premium = await (await POST(fakeRequest({}))).json();
     expect(premium.totalKnown).toBe(2);
     expect(premium.availableWords).toBe(4);
@@ -199,7 +199,7 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
     // The ceiling is the whole bank on purpose: a lapsed-Premium device
     // legitimately holds entries for cards it can no longer open, and
     // rejecting the request would blank every progress bar on the page.
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     const res = await POST(
       fakeRequest({
         entries: {
@@ -224,7 +224,7 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
    * cannot show this cannot show it is measuring the bank at all.
    */
   it("positive control: one planted C1 card moves the locked count by one and the denominator by zero", async () => {
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     const before = await (await POST(fakeRequest({}))).json();
 
     getFlashcardIndex.mockResolvedValue([
@@ -239,7 +239,7 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
     // And the mirror image, so the control cannot pass by the endpoint
     // simply never moving: for Premium the SAME planted card moves the
     // denominator instead, and leaves nothing locked.
-    getEntitlementTier.mockResolvedValue("premium");
+    getEntitlementTierFor.mockResolvedValue("premium");
     const premium = await (await POST(fakeRequest({}))).json();
     expect(premium.availableWords).toBe(before.availableWords + 2);
     expect(premium.premiumOnlyWords).toBe(0);
@@ -252,7 +252,7 @@ describe("POST /api/flashcards/summary — the denominator is what this visitor 
    * entirely.
    */
   it("negative control: a planted A1 card moves the denominator, not the locked count", async () => {
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     const before = await (await POST(fakeRequest({}))).json();
 
     getFlashcardIndex.mockResolvedValue([
@@ -293,7 +293,7 @@ describe("POST /api/flashcards/summary — «Продолжить» считае
     vi.clearAllMocks();
     getFlashcardIndex.mockResolvedValue(MIXED);
     getCurrentUser.mockResolvedValue({ id: "user-1" });
-    getEntitlementTier.mockResolvedValue("standard");
+    getEntitlementTierFor.mockResolvedValue("standard");
     // Человек занимался ТОЛЬКО на A1 — ровно случай с видео: карточек C1
     // подписчику standard не отдано вовсе.
     findMany.mockResolvedValue([
@@ -322,7 +322,7 @@ describe("POST /api/flashcards/summary — «Продолжить» считае
   });
 
   it("у Premium, которому C1 отдан, занятие на C1 предлагается как и раньше", async () => {
-    getEntitlementTier.mockResolvedValue("premium");
+    getEntitlementTierFor.mockResolvedValue("premium");
     findMany.mockResolvedValue([{ cardId: "work-c1", known: false, updatedAt: new Date(400) }]);
     const body = await (await POST(fakeRequest({ level: "C1" }))).json();
     expect(body.recent.map((r: { category: string }) => r.category)).toEqual(["work"]);
@@ -343,11 +343,11 @@ describe("POST /api/flashcards/summary — «Продолжить» считае
       { cardId: "work-c1", known: true, updatedAt: new Date(900) },
     ]);
 
-    getEntitlementTier.mockResolvedValue("standard");
+    getEntitlementTierFor.mockResolvedValue("standard");
     const standard = await (await POST(fakeRequest({ level: "C1" }))).json();
     expect(standard.recent).toEqual([]);
 
-    getEntitlementTier.mockResolvedValue("premium");
+    getEntitlementTierFor.mockResolvedValue("premium");
     const premium = await (await POST(fakeRequest({ level: "C1" }))).json();
     expect(premium.recent.map((r: { category: string }) => r.category)).toEqual(["work"]);
   });
@@ -380,7 +380,7 @@ describe("бесплатная проба входит в знаменатель
   });
 
   it("гостю доступно ровно то, что ему отдаёт список карточек: 10 на тему", async () => {
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     const body = await (await POST(fakeRequest({}))).json();
     // 10 из «food» + 10 из «city»; C1 не отдаётся вовсе.
     expect(body.availableWords).toBe(20);
@@ -393,7 +393,7 @@ describe("бесплатная проба входит в знаменатель
   });
 
   it("бесплатному аккаунту — то же самое, что гостю", async () => {
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     getCurrentUser.mockResolvedValue({ id: "u1" });
     const body = await (await POST(fakeRequest({}))).json();
     expect(body.availableWords).toBe(20);
@@ -401,7 +401,7 @@ describe("бесплатная проба входит в знаменатель
   });
 
   it("подписчику standard — весь банк, кроме C1, и подпиской не закрыто ничего", async () => {
-    getEntitlementTier.mockResolvedValue("standard");
+    getEntitlementTierFor.mockResolvedValue("standard");
     const body = await (await POST(fakeRequest({}))).json();
     expect(body.availableWords).toBe(40);
     expect(body.subscriptionOnlyWords).toBe(0);
@@ -409,7 +409,7 @@ describe("бесплатная проба входит в знаменатель
   });
 
   it("Premium — весь банк, закрытого нет ни по одной причине", async () => {
-    getEntitlementTier.mockResolvedValue("premium");
+    getEntitlementTierFor.mockResolvedValue("premium");
     const body = await (await POST(fakeRequest({}))).json();
     expect(body.availableWords).toBe(52);
     expect(body.subscriptionOnlyWords).toBe(0);
@@ -417,7 +417,7 @@ describe("бесплатная проба входит в знаменатель
   });
 
   it("разрез уровня накладывается на все три числа", async () => {
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     const body = await (await POST(fakeRequest({ level: "A1" }))).json();
     expect(body.availableWords).toBe(10); // проба темы «food»
     expect(body.subscriptionOnlyWords).toBe(15); // 25 строк A1 минус 10
@@ -425,7 +425,7 @@ describe("бесплатная проба входит в знаменатель
   });
 
   it("выученная, но закрытая карточка в числитель не попадает", async () => {
-    getEntitlementTier.mockResolvedValue("free");
+    getEntitlementTierFor.mockResolvedValue("free");
     // «food-20» лежит за пробой: он есть в банке, но этому человеку не отдан.
     const body = await (
       await POST(fakeRequest({ entries: { "food-0": { known: true, updatedAt: 1 }, "food-20": { known: true, updatedAt: 2 } } }))
