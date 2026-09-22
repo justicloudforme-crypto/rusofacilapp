@@ -149,16 +149,59 @@ export function judge(sources) {
   // 3.1. ЕДИНСТВЕННЫЙ ВЫХОД ИЗ ЗАСТАВКИ снимает и системную половину, и
   // нашу. Раньше выход был один и снимал одну; теперь их две, и разойдись
   // они — человек увидел бы фирменный слой поверх готовой страницы.
-  const release = /private void releaseSplash\(\)\s*\{[\s\S]*?\n    \}/.exec(activity);
+  const release = /private void releaseSplash\(boolean immediate\)\s*\{[\s\S]*?\n    \}/.exec(activity);
   if (!release) {
-    problems.push(`${ACTIVITY}: выхода из заставки нет вовсе (releaseSplash)`);
+    problems.push(`${ACTIVITY}: выхода из заставки нет вовсе (releaseSplash(boolean))`);
   } else {
     if (!/splashReleased\s*=\s*true/.test(release[0])) {
       problems.push(`${ACTIVITY}: releaseSplash не отпускает системную заставку`);
     }
-    if (!/hideBrandSplashOverlay\(\)/.test(release[0])) {
+    if (!/hideBrandSplashOverlay\(immediate\)/.test(release[0])) {
       problems.push(`${ACTIVITY}: releaseSplash не снимает собственный слой — знак остался бы поверх страницы`);
     }
+  }
+
+  // 3.1.1. ЗАСТАВКА НЕ СТОИТ НАД ЭКРАНОМ ОШИБКИ НИ ОДНОГО КАДРА
+  // (долг 232, заход 7.223).
+  //
+  // Что снял владелец 16.09.2026 (7.203, замер З4): запуск с иконки без
+  // сети — знак заставки виден ПОВЕРХ текста экрана ошибки. Причина —
+  // анимация ухода длиной SPLASH_FADE_MS = 220 мс, запущенная в тот же
+  // миг, когда webview нарисовал первый кадр: поверх уже отрисованного
+  // экрана ошибки слой ещё жил эти 220 мс.
+  //
+  // Плавный уход осмыслен там, где под слоем настоящая страница.
+  // Поэтому правило не «убрать анимацию», а «выбрать режим по тому, что
+  // под слоем», и проверяется здесь ровно это — все три дороги к экрану
+  // ошибки обязаны просить мгновенного снятия.
+  const fade = /private void hideBrandSplashOverlay\(boolean immediate\)/.test(activity);
+  if (!fade) {
+    problems.push(
+      `${ACTIVITY}: у ухода заставки нет режима — значит, он снова один, и над экраном ошибки ` +
+        `знак простоит SPLASH_FADE_MS (долг 232)`,
+    );
+  }
+  if (!/if \(immediate\) \{/.test(activity)) {
+    problems.push(`${ACTIVITY}: режим мгновенного снятия объявлен, но ничего не делает`);
+  }
+  // Дорога 1 — отказ webview: экран ошибки показывает сам Capacitor
+  // через server.errorPath.
+  if (!/public void onReceivedError\(WebView view\) \{[^{}]*?releaseSplash\(true\);/.test(activity)) {
+    problems.push(
+      `${ACTIVITY}: отказ webview снимает заставку С АНИМАЦИЕЙ — знак поверх экрана ошибки (долг 232)`,
+    );
+  }
+  // Дорога 2 — первый кадр локального экрана ошибки.
+  if (!/releaseSplash\(isErrorScreen\(url\)\)/.test(activity)) {
+    problems.push(
+      `${ACTIVITY}: первый кадр содержимого снимает заставку, не спросив, экран ли это ошибки (долг 232)`,
+    );
+  }
+  // Дорога 3 — наш собственный сторож загрузки грузит тот же адрес сам.
+  if (!/releaseSplash\(true\);\n\s*webView\.loadUrl\(errorUrl\);/.test(activity)) {
+    problems.push(
+      `${ACTIVITY}: сторож загрузки грузит экран ошибки, не сняв слой заставки этим же кадром (долг 232)`,
+    );
   }
 
   // 3.2. СОБСТВЕННЫЙ СЛОЙ ЗНАКА. Ровно то, чего не хватало запуску из
@@ -271,7 +314,17 @@ export async function main() {
       ["системная заставка снова держится до готовности страницы — на пустой она оставит голый фон",
         { [ACTIVITY]: sources[ACTIVITY].replace("setKeepOnScreenCondition(() -> !overlayAttached)", "setKeepOnScreenCondition(() -> !splashReleased)") }],
       ["выход из заставки перестал снимать собственный слой — знак поверх готовой страницы",
-        { [ACTIVITY]: sources[ACTIVITY].replace("        hideBrandSplashOverlay();\n    }", "    }") }],
+        { [ACTIVITY]: sources[ACTIVITY].replace("        hideBrandSplashOverlay(immediate);\n    }", "    }") }],
+      ["ДОЛГ 232: у ухода заставки снова один режим — знак 220 мс поверх текста ошибки",
+        { [ACTIVITY]: sources[ACTIVITY].replace("private void hideBrandSplashOverlay(boolean immediate)", "private void hideBrandSplashOverlay()") }],
+      ["ДОЛГ 232: мгновенный режим объявлен, но ничего не делает",
+        { [ACTIVITY]: sources[ACTIVITY].replace("if (immediate) {", "if (false) {") }],
+      ["ДОЛГ 232: отказ webview снова снимает заставку с анимацией",
+        { [ACTIVITY]: sources[ACTIVITY].replace("                // стоять нечего — и стоять ей нечего НИ ОДНОГО кадра.\n                releaseSplash(true);", "                releaseSplash();") }],
+      ["ДОЛГ 232: первый кадр содержимого не спрашивает, экран ли это ошибки",
+        { [ACTIVITY]: sources[ACTIVITY].replace("releaseSplash(isErrorScreen(url))", "releaseSplash()") }],
+      ["ДОЛГ 232: сторож загрузки грузит экран ошибки, не сняв слой",
+        { [ACTIVITY]: sources[ACTIVITY].replace("                releaseSplash(true);\n                webView.loadUrl(errorUrl);", "                webView.loadUrl(errorUrl);") }],
       ["цвет фона заставки разошёлся с фирменным",
         { [COLORS]: sources[COLORS].replace(/#2d5f8a/i, "#ffffff") }],
       ["цвет в конфиге оболочки разошёлся с фирменным",
