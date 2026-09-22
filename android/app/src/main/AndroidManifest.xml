@@ -102,6 +102,35 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!--
+      СОСТОЯНИЕ СЕТИ (заход 7.223, долг 250, шаг 2).
+
+      В пакете это разрешение было и до правки — его приносит слиянием
+      манифестов `com.revenuecat.purchases:purchases` (прочитано в
+      `android/app/build/outputs/logs/manifest-merger-*-report.txt`, и
+      оно же названо в ALLOWED_MERGED сторожа `check:apk-facts`). То
+      есть в пакете 7202 оно уже лежало, и РАБОТАЛ бы код и без этой
+      строки — ровно до того дня, когда RevenueCat из проекта уйдёт или
+      перестанет его объявлять.
+
+      Теперь разрешение объявляем МЫ, потому что теперь оно нам НУЖНО:
+      `MainActivity.armNetworkRecovery()` зовёт
+      `ConnectivityManager.registerDefaultNetworkCallback`, а он без
+      ACCESS_NETWORK_STATE бросает SecurityException. Разрешение, от
+      которого зависит НАШ код, обязано стоять в НАШЕМ манифесте — иначе
+      оно уйдёт вместе с чужой зависимостью и ни один сторож этого не
+      заметит: множество разрешений пакета при этом не изменится ни на
+      одну строку.
+
+      Опасным (dangerous) оно не является: система выдаёт его на этапе
+      установки и диалога не показывает. Анкета Data safety от него не
+      меняется — наружу от него не уходит ничего.
+
+      Парная правка: разрешение вычеркнуто из ALLOWED_MERGED
+      `scripts/check-apk-facts.mjs`, и MERGED_COUNT там стал 7 вместо 8.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
       ВЫРЕЗАНО ИЗ ПАКЕТА, А НЕ ОБЪЯВЛЕНО (долг 107, 09.09.2026).
 
       `SCHEDULE_EXACT_ALARM` приносит слияние манифестов с

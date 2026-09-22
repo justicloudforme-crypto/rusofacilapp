@@ -162,6 +162,18 @@ const ALWAYS_ALLOWED = new Map([
     "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
     "фоновое воспроизведение озвучки; парность типу службы проверяет check:fgs-types по пакету",
   ],
+  // Долг 250, шаг 2 (22.09.2026). Способностью из CAPABILITIES это тоже
+  // не описывается: способности таблицы — про то, что webview просит у
+  // ЧЕЛОВЕКА диалогом (микрофон, камера, геопозиция), а здесь
+  // разрешение нужно НАТИВНОМУ коду оболочки и выдаётся системой на
+  // установке без единого диалога. `MainActivity.armNetworkRecovery()`
+  // зовёт `ConnectivityManager.registerDefaultNetworkCallback`, и без
+  // этой строки он бросает SecurityException. Форму правки и саму
+  // связку «разрешение ⇄ вызов» сторожит `npm run check:network-retry`.
+  [
+    "android.permission.ACCESS_NETWORK_STATE",
+    "оболочка сама поднимается при возврате сети (долг 250, шаг 2); связку стережёт check:network-retry",
+  ],
 ]);
 
 function tracked() {

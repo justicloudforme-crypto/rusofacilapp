@@ -3,6 +3,8 @@ package com.rusofacilapp.app;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -75,6 +77,51 @@ public class MainActivity extends BridgeActivity {
 
     private final Handler loadWatchdog = new Handler(Looper.getMainLooper());
     private Runnable pendingCheck;
+
+    /**
+     * ЛЕСТНИЦА САМОСТОЯТЕЛЬНОГО ПОДЪЁМА (заход 7.223, долг 250, шаг 2).
+     *
+     * ЧТО СНЯЛ ВЛАДЕЛЕЦ 18.09.2026 на POCO X6 Pro (Android 16): Wi-Fi
+     * выключен → экран ошибки оболочки примерно через СЕКУНДУ; Wi-Fi
+     * включён обратно → приложение САМО НЕ ПОДНЯЛОСЬ, понадобилось 5–7
+     * секунд и НЕСКОЛЬКО нажатий «Повторить». Сервер при этом был жив —
+     * это доказывает само нажатие.
+     *
+     * ПОЧЕМУ НЕ ТАЙМЕР. Таймер на экране ошибки перезагружал бы сайт и
+     * тогда, когда сети нет вовсе, — то есть жёг бы батарею на заведомо
+     * невозможном запросе и мигал бы экраном. Настоящий сигнал у системы
+     * есть: {@link ConnectivityManager#registerDefaultNetworkCallback}
+     * (API 24, наш `minSdkVersion` ровно 24) зовёт `onAvailable` в тот
+     * миг, когда у телефона снова появляется сеть по умолчанию.
+     *
+     * ПОЧЕМУ ЛЕСТНИЦА, А НЕ ОДИН ПОВТОР. Возврат сети и готовность
+     * СЕРВЕРА — разные события: Wi-Fi поднялся, а DNS ещё не отвечает.
+     * Поэтому повтор не один, а до {@link #AUTO_RETRY_LIMIT} штук с
+     * растущей паузой 1 → 2 → 4 → 8 → 16 с (потолок
+     * {@link #AUTO_RETRY_MAX_MS}), и вся лестница укладывается в 31 с.
+     *
+     * ПОЧЕМУ ЭТО НЕ ЗАЦИКЛИВАЕТСЯ ПРИ ЖИВОЙ СЕТИ И МЁРТВОМ СЕРВЕРЕ.
+     * Счётчик {@link #autoRetryAttempt} обнуляется РОВНО В ДВУХ местах:
+     * когда пришёл сигнал новой сети и когда webview показал НЕ экран
+     * ошибки, то есть подъём удался. Пять неудач подряд — и оболочка
+     * замолкает, оставляя человеку кнопку «Повторить», которая никуда не
+     * делась.
+     */
+    private static final int AUTO_RETRY_LIMIT = 5;
+
+    /** Первая пауза. Не ноль: перезагрузка в тот же миг, когда система
+     *  объявила сеть доступной, застаёт её ещё без маршрута. */
+    private static final long AUTO_RETRY_BASE_MS = 1_000L;
+
+    /** Потолок паузы. Шестнадцать секунд — последняя ступень лестницы;
+     *  выше человек уже нажмёт «Повторить» сам. */
+    private static final long AUTO_RETRY_MAX_MS = 16_000L;
+
+    private final Handler autoRetryHandler = new Handler(Looper.getMainLooper());
+    private Runnable pendingAutoRetry;
+    private int autoRetryAttempt = 0;
+    private ConnectivityManager connectivity;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     /**
      * Последние измеренные системные полосы в CSS-пикселях. Держатся
@@ -205,6 +252,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         attachBrandSplashOverlay();
         armLoadWatchdog();
+        armNetworkRecovery();
         armSafeAreaInsets();
         armRememberedLocale();
         armSplashRelease();
@@ -306,13 +354,40 @@ public class MainActivity extends BridgeActivity {
         overlayAttached = true;
     }
 
-    /** Убирает фирменный слой тем же уходом, что был у системной заставки. */
-    private void hideBrandSplashOverlay() {
+    /**
+     * Убирает фирменный слой тем же уходом, что был у системной заставки, —
+     * но НЕ над экраном ошибки (заход 7.223, долг 232).
+     *
+     * ЧТО СНЯЛ ВЛАДЕЛЕЦ 16.09.2026 (7.203, замер З4): запуск с иконки без
+     * сети — знак заставки виден ПОВЕРХ текста экрана ошибки. Причина в
+     * этом самом методе: слой уходил АНИМАЦИЕЙ прозрачности длиной
+     * {@link #SPLASH_FADE_MS} = 220 мс, и запускалась она в тот же миг,
+     * когда webview нарисовал первый кадр — то есть поверх уже
+     * отрисованного экрана ошибки слой ещё жил эти 220 мс.
+     *
+     * Плавный уход осмыслен ровно там, где под ним НАСТОЯЩАЯ страница:
+     * мгновенная подмена знака на сайт читается как рывок. Над экраном
+     * ошибки прятать нечего, и 220 мс поверх текста — не мягкость, а
+     * дефект. Поэтому у ухода теперь два режима, и режим выбирает тот,
+     * кто знает, что под слоем (см. {@link #releaseSplash(boolean)}).
+     *
+     * @param immediate true — снять слой этим же кадром, без анимации.
+     */
+    private void hideBrandSplashOverlay(boolean immediate) {
         final View overlay = brandSplashOverlay;
         if (overlay == null) {
             return;
         }
         brandSplashOverlay = null;
+        if (immediate) {
+            overlay.post(() -> {
+                ViewGroup parent = (ViewGroup) overlay.getParent();
+                if (parent != null) {
+                    parent.removeView(overlay);
+                }
+            });
+            return;
+        }
         overlay.post(() -> {
             ObjectAnimator fade = ObjectAnimator.ofFloat(overlay, View.ALPHA, 1f, 0f);
             fade.setInterpolator(new LinearInterpolator());
@@ -356,20 +431,21 @@ public class MainActivity extends BridgeActivity {
             public void onPageCommitVisible(WebView view, String url) {
                 // Самый ранний ЧЕСТНЫЙ момент: webview нарисовал первый
                 // кадр содержимого. Держать заставку дольше значило бы
-                // прятать уже готовую страницу.
-                releaseSplash();
+                // прятать уже готовую страницу. Если этот кадр — экран
+                // ошибки, слой снимается БЕЗ анимации (долг 232).
+                releaseSplash(isErrorScreen(url));
             }
 
             @Override
             public void onPageLoaded(WebView view) {
-                releaseSplash();
+                releaseSplash(isErrorScreen(view.getUrl()));
             }
 
             @Override
             public void onReceivedError(WebView view) {
                 // Ошибку показывает `server.errorPath`; заставке над ней
-                // стоять нечего.
-                releaseSplash();
+                // стоять нечего — и стоять ей нечего НИ ОДНОГО кадра.
+                releaseSplash(true);
             }
         });
         loadWatchdog.postDelayed(() -> releaseSplash(), LOAD_TIMEOUT_MS);
@@ -379,11 +455,25 @@ public class MainActivity extends BridgeActivity {
      *  конец загрузки, ошибка, предохранитель), и прийти они могут в любом
      *  порядке. Второй уход анимировал бы уже снятый слой. */
     private void releaseSplash() {
+        releaseSplash(false);
+    }
+
+    /**
+     * Тот же уход, но с выбором режима (заход 7.223, долг 232).
+     *
+     * `immediate = true` приходит ровно с тех трёх дорог, на которых под
+     * слоем оказывается ЭКРАН ОШИБКИ: отказ webview
+     * (`WebViewListener.onReceivedError`, его показывает `server.errorPath`
+     * Capacitor), первый кадр локального `error.html` и наш сторож
+     * загрузки, который грузит тот же адрес сам. На всех остальных дорогах
+     * под слоем настоящая страница, и уход остаётся плавным.
+     */
+    private void releaseSplash(boolean immediate) {
         if (splashReleased) {
             return;
         }
         splashReleased = true;
-        hideBrandSplashOverlay();
+        hideBrandSplashOverlay(immediate);
     }
 
     /**
@@ -745,6 +835,9 @@ public class MainActivity extends BridgeActivity {
                     return;
                 }
                 webView.stopLoading();
+                // Слой заставки уходит В ЭТОТ ЖЕ КАДР, а не за 220 мс
+                // поверх текста ошибки (долг 232).
+                releaseSplash(true);
                 webView.loadUrl(errorUrl);
             }
         };
@@ -773,6 +866,160 @@ public class MainActivity extends BridgeActivity {
                 cancelLoadWatchdog();
             }
         });
+    }
+
+
+    /**
+     * Показан ли сейчас (или этим адресом) ЛОКАЛЬНЫЙ экран ошибки
+     * оболочки. Адрес его мы не строим — он приходит из
+     * `Bridge.getErrorUrl()`, потому что показать экран ошибки может и
+     * сам Capacitor через `server.errorPath`, и наш сторож загрузки.
+     * Одно место на обе дороги, иначе одна из них осталась бы
+     * неузнанной.
+     */
+    private boolean isErrorScreen(String url) {
+        if (getBridge() == null || url == null) {
+            return false;
+        }
+        String errorUrl = getBridge().getErrorUrl();
+        return errorUrl != null && url.startsWith(errorUrl);
+    }
+
+    /** То же самое, но про текущий адрес webview: лестница повторов
+     *  обязана спрашивать не «что грузилось», а «что на экране сейчас». */
+    private boolean onErrorScreenNow() {
+        WebView webView = getBridge() == null ? null : getBridge().getWebView();
+        return webView != null && isErrorScreen(webView.getUrl());
+    }
+
+    /**
+     * ПРИЛОЖЕНИЕ САМО ПОДНИМАЕТСЯ ПРИ ВОЗВРАТЕ СЕТИ (заход 7.223, долг
+     * 250, шаг 2). Разбор — в шапке {@link #AUTO_RETRY_LIMIT}.
+     *
+     * Источников у подъёма два, и они разные по природе:
+     *
+     *   1. НАСТОЯЩИЙ СИГНАЛ СЕТИ — `ConnectivityManager.NetworkCallback`.
+     *      Это то, чего у оболочки не было вовсе: до сих пор она узнавала
+     *      о возврате сети только из нажатия человека.
+     *   2. ПОЯВЛЕНИЕ ЭКРАНА ОШИБКИ НА ЭКРАНЕ. Сеть могла вернуться ещё до
+     *      того, как экран ошибки показался, — тогда сигнала (1) не будет
+     *      вовсе, потому что сеть и не пропадала с точки зрения системы
+     *      (отказал сервер, DNS, прокси). Лестница повторов нужна и здесь,
+     *      и она та же самая.
+     *
+     * Оба источника ведут в {@link #scheduleAutoRetry()}, и счётчик у них
+     * общий — иначе два источника дали бы вдвое больше запросов, чем
+     * названо числом.
+     *
+     * ГРАНИЦА ЧЕСТНОСТИ прежняя: ни одна строка этого файла на машине
+     * сборки не исполняется (долг 176). Форму правки держит
+     * `npm run check:network-retry`, проверку глазами — владелец на
+     * телефоне.
+     */
+    private void armNetworkRecovery() {
+        if (getBridge() != null) {
+            getBridge().addWebViewListener(new WebViewListener() {
+                @Override
+                public void onPageCommitVisible(WebView view, String url) {
+                    noteScreenShown(url);
+                }
+
+                @Override
+                public void onPageLoaded(WebView view) {
+                    noteScreenShown(view.getUrl());
+                }
+            });
+        }
+        Object service = getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (!(service instanceof ConnectivityManager)) {
+            return;
+        }
+        connectivity = (ConnectivityManager) service;
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                // Колбэк приходит НЕ в главном потоке, а webview
+                // разрешено трогать только из него.
+                autoRetryHandler.post(() -> {
+                    // Новая сеть — новая попытка с самого начала лестницы:
+                    // прежние неудачи были про прежнюю сеть.
+                    autoRetryAttempt = 0;
+                    if (onErrorScreenNow()) {
+                        scheduleAutoRetry();
+                    }
+                });
+            }
+        };
+        try {
+            // API 24 — ровно наш minSdkVersion. Требует
+            // ACCESS_NETWORK_STATE, и разрешение объявлено в НАШЕМ
+            // манифесте, а не взято транзитивно у библиотеки.
+            connectivity.registerDefaultNetworkCallback(networkCallback);
+        } catch (Exception e) {
+            // Регистрация отказала — остаётся кнопка «Повторить», она
+            // никуда не делась ни при каком исходе.
+            networkCallback = null;
+        }
+    }
+
+    /** Что оказалось на экране. Экран ошибки заводит лестницу; любая
+     *  другая страница означает, что подъём удался, — лестница снимается
+     *  и счётчик обнуляется. */
+    private void noteScreenShown(String url) {
+        if (url == null) {
+            return;
+        }
+        if (isErrorScreen(url)) {
+            scheduleAutoRetry();
+            return;
+        }
+        cancelAutoRetry();
+        autoRetryAttempt = 0;
+    }
+
+    /**
+     * Завести следующую ступень. Пауза растёт вдвое от
+     * {@link #AUTO_RETRY_BASE_MS} и упирается в {@link #AUTO_RETRY_MAX_MS};
+     * после {@link #AUTO_RETRY_LIMIT} ступеней оболочка замолкает.
+     */
+    private void scheduleAutoRetry() {
+        if (getBridge() == null || autoRetryAttempt >= AUTO_RETRY_LIMIT) {
+            return;
+        }
+        long delay = Math.min(AUTO_RETRY_BASE_MS << autoRetryAttempt, AUTO_RETRY_MAX_MS);
+        autoRetryAttempt++;
+        // Снятие перед заводом обязательно, ровно по той же причине, что
+        // у сторожа загрузки: иначе ступени копились бы одна на другой.
+        cancelAutoRetry();
+        pendingAutoRetry = new Runnable() {
+            @Override
+            public void run() {
+                pendingAutoRetry = null;
+                // Человек мог успеть нажать «Повторить» сам — тогда под
+                // нами уже настоящая страница и грузить её заново значит
+                // стереть её у него на глазах.
+                if (!onErrorScreenNow() || getBridge() == null) {
+                    return;
+                }
+                WebView webView = getBridge().getWebView();
+                String serverUrl = getBridge().getServerUrl();
+                if (webView == null || serverUrl == null) {
+                    return;
+                }
+                webView.loadUrl(serverUrl);
+            }
+        };
+        autoRetryHandler.postDelayed(pendingAutoRetry, delay);
+    }
+
+    /** Снять ступень. Идемпотентно: снимают её и удачная загрузка, и
+     *  новая ступень, и закрытие окна. */
+    private void cancelAutoRetry() {
+        if (pendingAutoRetry == null) {
+            return;
+        }
+        autoRetryHandler.removeCallbacks(pendingAutoRetry);
+        pendingAutoRetry = null;
     }
 
     /** Завести срок заново от ЭТОГО мига. Снятие перед заводом
@@ -861,6 +1108,15 @@ public class MainActivity extends BridgeActivity {
         if (pendingCheck != null) {
             loadWatchdog.removeCallbacks(pendingCheck);
             pendingCheck = null;
+        }
+        cancelAutoRetry();
+        if (connectivity != null && networkCallback != null) {
+            try {
+                connectivity.unregisterNetworkCallback(networkCallback);
+            } catch (Exception e) {
+                // Система уже сняла его сама — это не отказ.
+            }
+            networkCallback = null;
         }
         CookieManager.getInstance().flush();
         super.onDestroy();
