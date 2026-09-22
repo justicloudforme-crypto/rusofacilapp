@@ -3,6 +3,8 @@ import { cookies, headers } from "next/headers";
 import {
   NATIVE_SHELL_COOKIE,
   NATIVE_SHELL_COOKIE_VALUE,
+  NATIVE_SHELL_VERSION_COOKIE,
+  nativeShellVersion,
   userAgentIsNativeShell,
 } from "@/lib/native-shell-token";
 
@@ -67,6 +69,11 @@ export {
   NATIVE_SHELL_COOKIE,
   NATIVE_SHELL_COOKIE_VALUE,
   NATIVE_SHELL_COOKIE_MAX_AGE,
+  NATIVE_SHELL_VERSION_COOKIE,
+  LEGACY_NATIVE_SHELL_VERSION,
+  MIN_SUPPORTED_NATIVE_SHELL_VERSION,
+  nativeShellVersion,
+  nativeShellAtLeast,
   userAgentIsNativeShell,
 } from "@/lib/native-shell-token";
 
@@ -76,4 +83,19 @@ export async function isNativeShellRequest(): Promise<boolean> {
   if (userAgentIsNativeShell(ua)) return true;
   const cookie = (await cookies()).get(NATIVE_SHELL_COOKIE)?.value;
   return cookie === NATIVE_SHELL_COOKIE_VALUE;
+}
+
+/**
+ * Версия оболочки, открывшей ЭТОТ запрос, или `null` для браузера
+ * (долг 235). Одна функция чтения на весь сайт — разбор источников и
+ * правило «токен без числа = версия 2» живут в
+ * `src/lib/native-shell-token.ts`, а не повторяются по месту.
+ */
+export async function nativeShellVersionOfRequest(): Promise<number | null> {
+  const jar = await cookies();
+  return nativeShellVersion({
+    userAgent: (await headers()).get("user-agent"),
+    versionCookie: jar.get(NATIVE_SHELL_VERSION_COOKIE)?.value,
+    shellCookie: jar.get(NATIVE_SHELL_COOKIE)?.value,
+  });
 }

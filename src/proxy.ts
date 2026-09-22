@@ -17,6 +17,8 @@ import {
   NATIVE_SHELL_COOKIE,
   NATIVE_SHELL_COOKIE_MAX_AGE,
   NATIVE_SHELL_COOKIE_VALUE,
+  NATIVE_SHELL_VERSION_COOKIE,
+  nativeShellVersion,
   userAgentIsNativeShell,
 } from "@/lib/native-shell-token";
 
@@ -340,6 +342,36 @@ export async function proxy(request: NextRequest) {
       // прогоне verify сервер поднят по http://localhost:3123, и кука с
       // `secure: true` там не доехала бы ни до одной страницы — сторож
       // мерил бы собственную ошибку.
+      secure: request.nextUrl.protocol === "https:",
+      httpOnly: false,
+    });
+  }
+
+  // ВЕРСИЯ ОБОЛОЧКИ (долг 235, заход 7.223). Пишется ровно из ТОКЕНА —
+  // то есть из запроса, который webview сделал сам, — и ровно тогда,
+  // когда число изменилось. Дальше версию несёт кука, потому что запрос
+  // service worker'а токена не несёт вовсе (разбор — в шапке
+  // `src/lib/native-shell.ts`).
+  //
+  // СОВМЕСТИМОСТЬ СО СТАРОЙ ОБОЛОЧКОЙ ЗДЕСЬ ЖЕ: 7202 шлёт токен БЕЗ
+  // числа, `nativeShellVersion` отвечает за неё 2, и кука встаёт со
+  // значением "2". Ничего не ломается и ни одного нового условия на
+  // стороне читателя не появляется.
+  //
+  // Браузер сюда не попадает никогда: без токена функция отвечает null,
+  // и ответ остаётся побайтово прежним — ни один из 330 замороженных
+  // адресов от этой строки не двигается.
+  const shellVersion = userAgentIsNativeShell(request.headers.get("user-agent"))
+    ? nativeShellVersion({ userAgent: request.headers.get("user-agent") })
+    : null;
+  if (
+    shellVersion !== null &&
+    request.cookies.get(NATIVE_SHELL_VERSION_COOKIE)?.value !== String(shellVersion)
+  ) {
+    response.cookies.set(NATIVE_SHELL_VERSION_COOKIE, String(shellVersion), {
+      path: "/",
+      maxAge: NATIVE_SHELL_COOKIE_MAX_AGE,
+      sameSite: "lax",
       secure: request.nextUrl.protocol === "https:",
       httpOnly: false,
     });
