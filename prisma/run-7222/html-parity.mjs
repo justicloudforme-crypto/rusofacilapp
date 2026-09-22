@@ -25,6 +25,7 @@ import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs
 import { createHmac } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import { storedDateTime } from "../../scripts/stored-datetime.mjs";
 
 const arg = (n, d) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? d;
 const BEFORE = arg("before"), AFTER = arg("after"), DB = path.resolve(arg("db"));
@@ -100,9 +101,12 @@ const sqlite = (sql) => execFileSync("sqlite3", [DB, sql], { encoding: "utf8" })
  * строка другого вида сравнилась бы не с тем (правило `check:raw-datetime`).
  */
 function ensureRoles() {
-  const stamp = (date) => date.toISOString().replace("Z", "+00:00");
-  const now = stamp(new Date());
-  const far = stamp(new Date(Date.now() + 365 * 24 * 3600 * 1000));
+  // Формат даты — через общий помощник, а не своей строкой: `toISOString()`
+  // даёт `…000Z`, а Prisma пишет `…000+00:00`, и два формата в одной
+  // колонке ломают СРАВНЕНИЕ в SQL (долг 91). Держит `check:raw-datetime`,
+  // и он же поймал здесь ровно эту самодельную запись.
+  const now = storedDateTime(new Date());
+  const far = storedDateTime(new Date(Date.now() + 365 * 24 * 3600 * 1000));
   const rows = [
     { id: "parity-free", email: "parity-free@example.com" },
     { id: "parity-standard", email: "parity-standard@example.com" },
