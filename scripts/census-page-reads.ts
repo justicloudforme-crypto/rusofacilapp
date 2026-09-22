@@ -24,6 +24,7 @@
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const SRC = join(process.cwd(), "src");
 const APP = join(SRC, "app");
@@ -204,4 +205,9 @@ function main() {
   }
 }
 
-main();
+// Гейт точки входа: сам по себе импорт этого файла не имеет права ничего
+// делать. Правило держит `src/lib/entry-point.test.ts`, и оно же поймало
+// здесь голый `main()` — перепись запускалась бы от одного импорта.
+const isEntryPoint =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isEntryPoint) main();
