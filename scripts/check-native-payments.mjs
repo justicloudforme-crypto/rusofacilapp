@@ -714,7 +714,7 @@ function plantPurchaseButton(html, lang) {
 }
 
 /** Очередь с ограничением одновременности: 132 адреса × 3 роли × 2
- *  обличья — это 792 запроса, и последовательно они идут минутами. */
+ *  обличья — это 1608 запросов, и последовательно они идут минутами. */
 async function pool(items, limit, worker) {
   const results = [];
   let next = 0;
@@ -814,7 +814,7 @@ async function live(base, plant) {
   }
 
   console.log(
-    `  запросов: ${census.addresses.length} адресов × 3 роли × 2 обличья = ${census.addresses.length * 6}; ` +
+    `  запросов: ${census.addresses.length} адресов × 3 роли × 4 обличья = ${census.addresses.length * 12}; ` +
       `не открылось этой роли: ${skipped} сочетаний адрес×роль`,
   );
 
@@ -891,7 +891,7 @@ async function main() {
       return 1;
     }
     console.log(
-      "check:native-payments (живая) — по всему собранному множеству адресов, три роли × два обличья оболочки: " +
+      "check:native-payments (живая) — по всему собранному множеству адресов, три роли × четыре обличья оболочки (версии 2 и 4, токен и кука): " +
         "0 форм, 0 цен, 0 входов на платёжные поверхности, 0 подписей платных кнопок.",
     );
     return 0;
@@ -1073,7 +1073,7 @@ function topicVsCheckoutPlants() {
     "check:native-payments — оболочку узнают по ДВУМ признакам, ветка стоит у КАЖДОГО входа на страницу цен " +
       `(${SOURCES.length} файлов), вместо пейвола замок, воркер платёжных страниц не кеширует; контроль — --plant.`,
   );
-  console.log("  Живая половина (три роли × три обличья запроса) гоняется из scripts/verify-rendered.mjs с --base=.");
+  console.log("  Живая половина (три роли × четыре обличья оболочки) гоняется из scripts/verify-rendered.mjs с --base=.");
   return 0;
 }
 
