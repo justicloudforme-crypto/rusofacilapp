@@ -201,6 +201,57 @@ export interface NativeAccessCopy {
      *  словаря, а внутри оболочки текст всё равно свой. */
     badge: string;
   };
+  /**
+   * ЭКРАН ПОКУПКИ ВНУТРИ ПРИЛОЖЕНИЯ — заход 7.224, новое решение владельца
+   * по долгу 79.
+   *
+   * Что изменилось по сравнению с 13.09.2026. Тогда внутри оболочки не
+   * было платного пути ВОВСЕ, потому что товаров в консолях не было ни
+   * одного. Теперь они есть, и платный путь внутри приложения ровно один —
+   * покупка магазина. Веб-кассы здесь по-прежнему нет ни в каком виде.
+   *
+   * НИ ОДНОЙ ЦИФРЫ ЦЕНЫ В ЭТИХ СТРОКАХ БЫТЬ НЕ МОЖЕТ. Цену печатает
+   * магазин: экран берёт `priceString` у пакета предложения. Наша сторона
+   * цену не знает и знать не должна — в Play месяц стоит 149 песо, а на
+   * сайте 150, и любая записанная здесь цифра однажды соврала бы.
+   *
+   * НИ ОДНА СТРОКА НЕ НАЗЫВАЕТ ПЛАТЁЖНУЮ СИСТЕМУ (долг 196). Системный
+   * лист покупки рисует сам магазин — это не наш интерфейс, и там его имя
+   * законно.
+   */
+  purchase: {
+    heading: string;
+    intro: string;
+    /** Названия трёх пакетов. Цену к ним подставляет магазин. */
+    planMonthly: string;
+    planAnnual: string;
+    planLifetime: string;
+    /** Подпись под названием: что именно даёт этот пакет. */
+    noteMonthly: string;
+    noteAnnual: string;
+    noteLifetime: string;
+    loading: string;
+    unavailable: string;
+    retry: string;
+    restoreCta: string;
+    restoredNothing: string;
+    /** Пока ждём подтверждения от сервера после покупки. */
+    activating: string;
+    activated: string;
+    /** Подтверждение не доехало за отведённое время. */
+    activationSlow: string;
+    /** Отложенная покупка: оплата наличными в магазине. */
+    pending: string;
+    offline: string;
+    failed: string;
+    /** Аноним: покупать может только вошедший. */
+    signInFirst: string;
+    signInCta: string;
+    /** Ссылка в кабинете для тех, кто купил в приложении. */
+    manageCta: string;
+    /** Строка статуса для тех, кто оплатил на сайте. */
+    webBought: string;
+  };
 }
 
 const COPY: Record<Locale, NativeAccessCopy> = {
@@ -269,6 +320,34 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       openLine: "Abierto: {open} de {total}",
       lockedLine: "{locked} con candado",
     },
+    purchase: {
+      heading: "Abrir todo el curso",
+      intro:
+        "Con el acceso completo se abren las 120 clases, todos los cuentos con audio, el vocabulario entero y los juegos de palabras.",
+      planMonthly: "Un mes",
+      planAnnual: "Un año",
+      planLifetime: "Premium para siempre",
+      noteMonthly: "Se renueva cada mes; puedes darlo de baja cuando quieras.",
+      noteAnnual: "Se renueva cada año.",
+      noteLifetime: "Un solo pago. Incluye el nivel C1 y los juegos con estrella.",
+      loading: "Cargando las opciones…",
+      unavailable: "Ahora mismo no se pueden cargar las opciones. Vuelve a intentarlo en un momento.",
+      retry: "Reintentar",
+      restoreCta: "Restaurar compras",
+      restoredNothing: "No encontramos ninguna compra anterior en esta cuenta.",
+      activating: "Activando tu acceso…",
+      activated: "Listo: tu acceso ya está abierto.",
+      activationSlow:
+        "El pago se registró, pero el acceso todavía no llega. Espera un momento y vuelve a intentarlo; no hace falta pagar otra vez.",
+      pending:
+        "Tu pago quedó pendiente. El acceso se abrirá solo en cuanto se confirme; no hace falta hacer nada más.",
+      offline: "No hay conexión. Revisa tu internet y vuelve a intentarlo.",
+      failed: "No se pudo completar. Vuelve a intentarlo.",
+      signInFirst: "Entra en tu cuenta para abrir el acceso completo.",
+      signInCta: "Entrar",
+      manageCta: "Gestionar la suscripción",
+      webBought: "Tu acceso viene de tu cuenta y funciona igual aquí.",
+    },
   },
   ru: {
     notice: {
@@ -333,6 +412,34 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       note: "На каждом уровне открыт первый урок. Остальные показаны с замком.",
       openLine: "Открыто: {open} из {total}",
       lockedLine: "{locked} с замком",
+    },
+    purchase: {
+      heading: "Открыть весь курс",
+      intro:
+        "С полным доступом открываются все 120 уроков, рассказы с озвучкой, весь словарь и игры со словами.",
+      planMonthly: "Месяц",
+      planAnnual: "Год",
+      planLifetime: "Premium навсегда",
+      noteMonthly: "Продлевается каждый месяц, отменить можно в любой момент.",
+      noteAnnual: "Продлевается раз в год.",
+      noteLifetime: "Один платёж. Включает уровень C1 и игры со звездой.",
+      loading: "Загружаем варианты…",
+      unavailable: "Сейчас варианты не загрузились. Попробуйте ещё раз через минуту.",
+      retry: "Повторить",
+      restoreCta: "Восстановить покупки",
+      restoredNothing: "Прежних покупок у этой учётной записи не нашлось.",
+      activating: "Активируем доступ…",
+      activated: "Готово: доступ открыт.",
+      activationSlow:
+        "Оплата прошла, а доступ ещё не доехал. Подождите немного и нажмите ещё раз — платить второй раз не нужно.",
+      pending:
+        "Оплата пока не подтверждена. Доступ откроется сам, как только она пройдёт; делать ничего не нужно.",
+      offline: "Нет соединения. Проверьте интернет и попробуйте ещё раз.",
+      failed: "Не получилось завершить. Попробуйте ещё раз.",
+      signInFirst: "Войдите в учётную запись, чтобы открыть полный доступ.",
+      signInCta: "Войти",
+      manageCta: "Управлять подпиской",
+      webBought: "Доступ привязан к вашей учётной записи и работает здесь так же.",
     },
   },
 };

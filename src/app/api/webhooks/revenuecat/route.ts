@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { invalidateSubscriptionCache } from "@/lib/subscription";
+import { planFromStoreProductId } from "@/lib/revenuecat-config";
 import type { PlanId } from "@/lib/plans";
 
 // RevenueCat webhooks (https://www.revenuecat.com/docs/integrations/webhooks)
@@ -22,13 +23,27 @@ function isAuthorized(request: NextRequest): boolean {
 // our own internal userId directly (unlike Stripe, which needs a metadata
 // round-trip because Stripe has no concept of "our" user id at all).
 interface RevenueCatEvent {
+  /** Идентификатор САМОГО события. Ключ, по которому повтор доставки
+   *  различается с первой доставкой, — см. `alreadyProcessed` ниже. */
+  id?: string;
   type: string;
   app_user_id: string;
   original_transaction_id?: string | null;
   product_id?: string;
+  /** Базовый план Google, если RevenueCat разложил товар на два поля.
+   *  Обычно `product_id` уже приходит составным (`standard:monthly`). */
+  base_plan_id?: string | null;
   store?: string;
+  /** SANDBOX у покупки тестировщика из License testing, PRODUCTION у
+   *  покупки ученика. Доступ этим полем НЕ решается — оно только
+   *  записывается, чтобы «сколько у нас платящих» можно было спросить
+   *  честно. */
+  environment?: string | null;
   expiration_at_ms?: number | null;
   purchased_at_ms?: number;
+  /** TRANSFER: у кого покупку забрали и кому отдали. Оба поля — списки. */
+  transferred_from?: string[] | null;
+  transferred_to?: string[] | null;
 }
 
 interface RevenueCatWebhookBody {
@@ -41,20 +56,14 @@ interface RevenueCatWebhookBody {
 // than conflated with it.
 type RevenueCatPlanId = PlanId | "lifetime";
 
-// Maps a store product identifier (configured in App Store Connect / Play
-// Console and mirrored into RevenueCat) to our internal plan id, the same
-// way STRIPE_PRICE_MONTHLY/ANNUAL map a Stripe Price id to one. Values are
-// filled in once real store products exist — until then this map is empty
-// and events fall back to "unknown", same as the Stripe webhook does for
-// an unrecognized subscription.
-function planFromProductId(productId: string | undefined): RevenueCatPlanId | "unknown" {
-  const monthly = process.env.REVENUECAT_PRODUCT_MONTHLY;
-  const annual = process.env.REVENUECAT_PRODUCT_ANNUAL;
-  const lifetime = process.env.REVENUECAT_PRODUCT_LIFETIME;
-  if (productId && monthly && productId === monthly) return "monthly";
-  if (productId && annual && productId === annual) return "annual";
-  if (productId && lifetime && productId === lifetime) return "lifetime";
-  return "unknown";
+// Товар магазина → наш план. Сама перепись живёт в
+// `src/lib/revenuecat-config.ts` (её читает ещё и экран покупки, и
+// сторож), здесь только вызов: «неизвестный товар» обязан называться
+// `unknown`, а не превращаться молча в подписку.
+function planFromProductId(event: RevenueCatEvent): RevenueCatPlanId | "unknown" {
+  return (
+    planFromStoreProductId({ productId: event.product_id, basePlanId: event.base_plan_id }) ?? "unknown"
+  );
 }
 
 // A lifetime purchase is a StoreKit "non-consumable" — it has no renewal,
@@ -165,13 +174,33 @@ async function upsertFromEvent(event: RevenueCatEvent, status: string): Promise<
   // existing row's `plan` column already went through this same mapping
   // when the row was created) — only a brand-new row needs the product-id
   // lookup.
-  const plan = (existing?.plan as RevenueCatPlanId | "unknown" | undefined) ?? planFromProductId(event.product_id);
+  const plan = (existing?.plan as RevenueCatPlanId | "unknown" | undefined) ?? planFromProductId(event);
+
+  // Товар, которого нет в переписи, — это НЕ «ничего страшного». Доступ
+  // такой строке всё равно открывается (деньги магазин уже взял, и
+  // отказать заплатившему хуже), но уровень у неё будет `standard`, и
+  // покупатель Premium за 2 299 песо не увидит ни C1, ни звёздных пазлов.
+  // Молчать об этом нельзя: снаружи это неотличимо от исправной покупки.
+  if (!existing && plan === "unknown") {
+    await reportIgnoredEvent(
+      "RevenueCatUnknownProduct",
+      `${event.type}: товар магазина не найден в переписи — доступ открыт как «standard», уровень мог быть выше`,
+      {
+        type: event.type,
+        appUserId: event.app_user_id,
+        productId: event.product_id ?? null,
+        basePlanId: event.base_plan_id ?? null,
+        store: event.store ?? null,
+      }
+    );
+  }
 
   await db.subscription.upsert({
     where: { rcOriginalTransactionId: transactionId },
     update: {
       status,
       currentPeriodEnd: periodEndOf(event, plan),
+      rcEnvironment: event.environment ?? null,
     },
     create: {
       userId: event.app_user_id,
@@ -182,10 +211,38 @@ async function upsertFromEvent(event: RevenueCatEvent, status: string): Promise<
       rcOriginalTransactionId: transactionId,
       rcAppUserId: event.app_user_id,
       rcStore: event.store ?? null,
+      rcEnvironment: event.environment ?? null,
     },
   });
   await invalidateSubscriptionCache(event.app_user_id);
   return { stored: true };
+}
+
+/**
+ * Расписка о прочтении. Пишется ПОСЛЕ работы, а не до: событие, на
+ * котором обработчик упал, обязано приехать снова.
+ *
+ * Гонка двух одновременных доставок одного события ловится здесь же —
+ * вторая вставка падает на первичном ключе, и это ровно тот исход,
+ * который нам нужен. Падение записи расписки НЕ роняет ответ: хуже
+ * повтора только 500, после которого RevenueCat пришлёт то же событие
+ * ещё раз.
+ */
+async function rememberEvent(eventId: string | null, event: RevenueCatEvent): Promise<void> {
+  if (!eventId) return;
+  try {
+    await db.revenueCatEvent.create({
+      data: {
+        id: eventId,
+        type: event.type,
+        appUserId: event.app_user_id,
+        environment: event.environment ?? null,
+      },
+    });
+  } catch {
+    // Уже записано другой доставкой — значит расписка есть, и это всё,
+    // что от неё требовалось.
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -210,6 +267,23 @@ export async function POST(request: NextRequest) {
   const event = body.event;
   if (!event?.type || !event.app_user_id) {
     return NextResponse.json({ error: "Malformed event" }, { status: 400 });
+  }
+
+  /* ИДЕМПОТЕНТНОСТЬ ПО ID СОБЫТИЯ — заход 7.224.
+   *
+   * RevenueCat повторяет доставку, пока не получит 2xx, и повторяет её же
+   * по кнопке «Resend» в консоли. `upsert` по транзакции идемпотентен сам
+   * по себе, но соседние ветки — нет: EXPIRATION, доставленный повторно
+   * ПОСЛЕ UNCANCELLATION, снова закрыл бы уже восстановленный доступ.
+   * Расписка о прочтении делает повтор пустым.
+   *
+   * Событие без `id` (такое шлёт только рукописная проба) обрабатывается
+   * как обычно: отказать ему значило бы отказать и настоящей покупке,
+   * если RevenueCat однажды перестанет класть это поле. */
+  const eventId = typeof event.id === "string" && event.id.trim() ? event.id.trim() : null;
+  if (eventId) {
+    const seen = await db.revenueCatEvent.findUnique({ where: { id: eventId }, select: { id: true } });
+    if (seen) return NextResponse.json({ received: true, ignored: "duplicate-event" });
   }
 
   switch (event.type) {
@@ -306,12 +380,63 @@ export async function POST(request: NextRequest) {
       break;
     }
 
+    /* ПОКУПКА ПЕРЕЕХАЛА НА ДРУГОЙ АККАУНТ САЙТА — заход 7.224.
+     *
+     * Когда это приходит. Один и тот же аккаунт Google купил подписку,
+     * сидя под одной учётной записью сайта, а потом вошёл под другой:
+     * RevenueCat переносит покупку на нового `app_user_id` и сообщает об
+     * этом списками `transferred_from` / `transferred_to`.
+     *
+     * Почему это нельзя пропустить. Строка доступа привязана к
+     * ПОЛЬЗОВАТЕЛЮ САЙТА (`Subscription.userId`), а не к покупке Google.
+     * Оставь мы её на прежнем месте — платит один человек, а доступ
+     * остаётся у другого, и ни один из них об этом не узнает.
+     *
+     * Собственного `original_transaction_id` у этого события может не
+     * быть, поэтому строки ищутся по `rcAppUserId`. Неизвестный получатель
+     * — тот же случай, что и везде здесь: 200, след в Sentry, ничего не
+     * переписано. */
+    case "TRANSFER": {
+      const to = (event.transferred_to ?? []).find((id) => typeof id === "string" && id.trim());
+      const from = (event.transferred_from ?? []).filter((id) => typeof id === "string" && id.trim());
+      if (!to || from.length === 0) {
+        await reportIgnoredEvent(
+          "RevenueCatTransferWithoutParties",
+          "TRANSFER без отправителя или получателя — переносить нечего и некуда",
+          { appUserId: event.app_user_id, from, to: to ?? null }
+        );
+        break;
+      }
+      const user = await db.user.findUnique({ where: { id: to }, select: { id: true } });
+      if (!user) {
+        await reportIgnoredEvent(
+          "RevenueCatUnknownAppUserId",
+          "TRANSFER: получатель не совпал ни с одним пользователем — событие принято 200 и намеренно не применено",
+          { type: event.type, appUserId: to, from }
+        );
+        break;
+      }
+      const moved = await db.subscription.updateMany({
+        where: { rcAppUserId: { in: from }, provider: "revenuecat" },
+        data: { userId: to, rcAppUserId: to },
+      });
+      for (const previous of from) await invalidateSubscriptionCache(previous);
+      await invalidateSubscriptionCache(to);
+      if (moved.count === 0) {
+        await reportIgnoredEvent(
+          "RevenueCatTransferMatchedNothing",
+          "TRANSFER: под прежним app_user_id не нашлось ни одной строки доступа",
+          { from, to }
+        );
+      }
+      break;
+    }
+
     // TEST fires whenever the "Send test event" button in the RevenueCat
-    // dashboard is used to verify the endpoint is reachable; TRANSFER and
-    // SUBSCRIPTION_PAUSED aren't part of this app's plan model yet. Both
+    // dashboard is used to verify the endpoint is reachable;
+    // SUBSCRIPTION_PAUSED isn't part of this app's plan model yet. Both
     // acknowledged explicitly rather than falling through silently.
     case "TEST":
-    case "TRANSFER":
     case "SUBSCRIPTION_PAUSED":
       break;
 
@@ -319,5 +444,6 @@ export async function POST(request: NextRequest) {
       break;
   }
 
+  await rememberEvent(eventId, event);
   return NextResponse.json({ received: true });
 }

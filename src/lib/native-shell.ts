@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
+import { NATIVE_PURCHASE_MIN_SHELL_VERSION } from "@/lib/revenuecat-config";
 import {
   NATIVE_SHELL_COOKIE,
   NATIVE_SHELL_COOKIE_VALUE,
@@ -98,4 +99,23 @@ export async function nativeShellVersionOfRequest(): Promise<number | null> {
     versionCookie: jar.get(NATIVE_SHELL_VERSION_COOKIE)?.value,
     shellCookie: jar.get(NATIVE_SHELL_COOKIE)?.value,
   });
+}
+
+/**
+ * МОЖЕТ ЛИ ЭТОТ ЗАПРОС КУПИТЬ ВНУТРИ ПРИЛОЖЕНИЯ — заход 7.224, новое
+ * решение владельца по долгу 79.
+ *
+ * Одно условие, а не два: оболочка версии не ниже
+ * {@link NATIVE_PURCHASE_MIN_SHELL_VERSION}. Браузер — всегда false, и
+ * это не «на всякий случай»: в браузере платный путь по-прежнему
+ * Stripe-касса, она никуда не делась и не меняется ни на байт.
+ *
+ * Почему версия, а не признак оболочки. В закрытом тесте уже живёт
+ * `versionCode 3`, где ни плагина покупки, ни разрешения BILLING нет
+ * вовсе. Покажи ей экран покупки — человек получил бы ровно то, чем был
+ * долг 179: орган управления, который молча не делает ничего.
+ */
+export async function canBuyInsideShell(): Promise<boolean> {
+  const version = await nativeShellVersionOfRequest();
+  return version !== null && version >= NATIVE_PURCHASE_MIN_SHELL_VERSION;
 }

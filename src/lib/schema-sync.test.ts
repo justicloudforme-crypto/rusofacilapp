@@ -196,11 +196,35 @@ describe("ensure-schema-sync can create a table it has never seen", () => {
  * базе в форме CI; здесь — что он объявлен, назван по правилу Prisma и
  * доедет до прода.
  */
+/**
+ * ВСЕ имена индексов, которые скрипт ДЕЙСТВИТЕЛЬНО везёт на прод — двумя
+ * путями сразу, и это правка 22.09.2026 (заход 7.224).
+ *
+ * До неё сверка смотрела только в `CREATE_INDEX_STATEMENTS` — список
+ * индексов у СУЩЕСТВУЮЩИХ таблиц. Индекс НОВОЙ таблицы едет не там: он
+ * стоит внутри её собственного `CREATE TABLE`-блока, рядом с самой
+ * таблицей, где ему и место. Поэтому первая же новая модель с `@@index`
+ * (`RevenueCatEvent`) объявлялась «сиротой», хотя доезжает исправно.
+ *
+ * Имена вынимаются из текста операторов, а не переписываются руками:
+ * рукописная копия разошлась бы с оператором молча.
+ */
+function deliveredIndexNames(): Set<string> {
+  const names = new Set(CREATE_INDEX_STATEMENTS.map((s) => s.index));
+  for (const table of CREATE_TABLE_STATEMENTS) {
+    for (const statement of table.statements) {
+      const match = /CREATE (?:UNIQUE )?INDEX IF NOT EXISTS "([^"]+)"/.exec(statement);
+      if (match) names.add(match[1]);
+    }
+  }
+  return names;
+}
+
 describe("ensure-schema-sync доставляет индексы существующих таблиц", () => {
   it("каждый @@index и @@unique схемы либо уже на проде, либо в списке на создание", () => {
     const declared = parseSchema(SCHEMA).flatMap((model) => model.indexes);
     expect(declared.length).toBeGreaterThan(10);
-    const toCreate = new Set(CREATE_INDEX_STATEMENTS.map((s) => s.index));
+    const toCreate = deliveredIndexNames();
     const orphans = declared.filter((i) => !INDEXES_ALREADY_IN_PRODUCTION.has(i.name) && !toCreate.has(i.name));
     expect(
       orphans.map((i) => `${i.table}: ${i.name}`),
@@ -233,7 +257,7 @@ describe("ensure-schema-sync доставляет индексы существ�
     // с кириллическим именем этот контроль был бы пустым и «проходил» бы.
     const withNewIndex = parseSchema(SCHEMA + "\n\nmodel Invented {\n  id String @id\n  field String\n\n  @@index([field])\n}\n");
     const declared = withNewIndex.flatMap((m) => m.indexes);
-    const toCreate = new Set(CREATE_INDEX_STATEMENTS.map((s) => s.index));
+    const toCreate = deliveredIndexNames();
     const orphans = declared.filter((i) => !INDEXES_ALREADY_IN_PRODUCTION.has(i.name) && !toCreate.has(i.name));
     expect(orphans.map((i) => i.name)).toEqual(["Invented_field_idx"]);
   });

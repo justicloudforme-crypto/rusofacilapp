@@ -10,10 +10,12 @@ import PricingFaq from "@/components/pricing/PricingFaq";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 import NativeAccessNotice from "@/components/native/NativeAccessNotice";
+import NativePurchasePanel from "@/components/native/NativePurchasePanel";
+import { getCurrentUser } from "@/lib/auth";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
 import { getEntitlementTier, hasAnyAccess, planAddsNothing } from "@/lib/entitlement";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
-import { isNativeShellRequest } from "@/lib/native-shell";
+import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
 import {
   basePricesText,
   marked,
@@ -105,8 +107,30 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
     // (решение владельца 11.09.2026: «заплатил где угодно — пользуется
     // везде»). Если оно уже активно, человеку так и сказано.
     const tier = await getEntitlementTier();
+    // Покупка внутри приложения — заход 7.224. Веб-кассы здесь
+    // по-прежнему нет ни в каком виде: платный путь ровно один, и он
+    // нативный.
+    const canBuy = await canBuyInsideShell();
+    const user = canBuy ? await getCurrentUser() : null;
+    const copy = nativeAccessCopy(lang);
     return (
-      <NativeAccessNotice lang={lang} copy={nativeAccessCopy(lang).notice} hasAccess={hasAnyAccess(tier)} />
+      <NativeAccessNotice
+        lang={lang}
+        copy={copy.notice}
+        hasAccess={hasAnyAccess(tier)}
+        purchaseCopy={copy.purchase}
+        purchase={
+          canBuy ? (
+            <NativePurchasePanel
+              lang={lang}
+              copy={copy.purchase}
+              userId={user?.id ?? null}
+              next={`/${lang}/courses`}
+              withHeading={false}
+            />
+          ) : null
+        }
+      />
     );
   }
 

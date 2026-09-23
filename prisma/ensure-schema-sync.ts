@@ -301,6 +301,22 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
     ],
   },
   {
+    // Расписка о прочтении события RevenueCat (PROGRESS.md 7.224). Строка
+    // здесь — НЕ доступ: доступ держит `Subscription`. Внешнего ключа нет
+    // намеренно, см. комментарий к модели в schema.prisma.
+    table: "RevenueCatEvent",
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "RevenueCatEvent" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "type" TEXT NOT NULL,
+         "appUserId" TEXT NOT NULL,
+         "environment" TEXT,
+         "processedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+       )`,
+      `CREATE INDEX IF NOT EXISTS "RevenueCatEvent_appUserId_idx" ON "RevenueCatEvent"("appUserId")`,
+    ],
+  },
+  {
     // Журнал платежей (PROGRESS.md 7.213, долги 84 и 85). Строка здесь —
     // НЕ доступ: доступ по-прежнему держит `Subscription`. Внешний ключ на
     // User с CASCADE — запись про конкретного человека и обязана уезжать
