@@ -58,7 +58,8 @@ type Stage =
   | { kind: "pending" }
   | { kind: "offline" }
   | { kind: "failed" }
-  | { kind: "restoredNothing" };
+  | { kind: "restoredNothing" }
+  | { kind: "restoredExpired" };
 
 /** Сколько ждём событие вебхука после подтверждённой оплаты. Шестьдесят
  *  секунд — это не «на глазок»: доставка события RevenueCat идёт через их
@@ -246,7 +247,16 @@ export default function NativePurchasePanel({
       const info = await restorePurchases();
       if (!alive.current) return;
       if (!info || Object.keys(info.entitlements.active).length === 0) {
-        setStage({ kind: "restoredNothing" });
+        /* ДВА ИСХОДА, А НЕ ОДИН — заход 7.226. «Прежних покупок не
+           нашлось» было неправдой ровно для того человека, ради которого
+           кнопка и существует: он платил, а срок доступа кончился.
+           Различает их `allPurchasedProductIdentifiers` — перепись ВСЕХ
+           когда-либо купленных товаров, которую магазин отдаёт независимо
+           от того, действует доступ или нет. Пусто — покупок не было
+           вовсе; не пусто при пустом `entitlements.active` — покупки были,
+           но истекли. */
+        const everBought = info?.allPurchasedProductIdentifiers?.length ?? 0;
+        setStage({ kind: everBought > 0 ? "restoredExpired" : "restoredNothing" });
         return;
       }
       await waitForAccess();
@@ -303,15 +313,17 @@ export default function NativePurchasePanel({
             ? copy.activationSlow
             : stage.kind === "restoredNothing"
               ? copy.restoredNothing
-              : stage.kind === "activating"
-                ? copy.activating
-                : stage.kind === "activated"
-                  ? copy.activated
-                  : stage.kind === "loading"
-                    ? copy.loading
-                    : stage.kind === "unavailable"
-                      ? failureText(stage.reason)
-                      : null;
+              : stage.kind === "restoredExpired"
+                ? copy.restoredExpired
+                : stage.kind === "activating"
+                  ? copy.activating
+                  : stage.kind === "activated"
+                    ? copy.activated
+                    : stage.kind === "loading"
+                      ? copy.loading
+                      : stage.kind === "unavailable"
+                        ? failureText(stage.reason)
+                        : null;
 
   const busy = stage.kind === "buying" || stage.kind === "activating" || stage.kind === "loading";
   const showList = packages.length > 0 && stage.kind !== "activated";
