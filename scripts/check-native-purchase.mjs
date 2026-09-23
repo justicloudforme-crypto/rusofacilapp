@@ -237,6 +237,108 @@ function judge(files) {
     );
   }
 
+
+  /* ================================================================ *
+   * ПРАВИЛА 10-13 — ЗАХОД 7.225. ЭКРАН ПОКУПКИ НЕ ИМЕЕТ ПРАВА ВИСЕТЬ.
+   *
+   * Все четыре написаны по одному настоящему дефекту, снятому владельцем
+   * с телефона 23.09.2026: «Загружаем варианты…» навсегда, ошибки нет, в
+   * RevenueCat ноль клиентов. Причина — `return mod.Purchases` из
+   * `async`-функции: объект плагина THENABLE, и промис не завершался
+   * НИКОГДА. Ни один прибор этого не ловил, потому что в браузере до той
+   * строки исполнение не доходит вовсе.
+   * ================================================================ */
+  const clientCode = stripComments(files.client);
+
+  // ПРАВИЛО 10. Объект плагина НЕ возвращается из `async`-функции голым.
+  //
+  // `Purchases` — Proxy, чья ловушка `get` отдаёт функцию на ЛЮБОЕ имя,
+  // включая `then`. Значит он thenable, и `Promise.resolve(Purchases)`
+  // обязан позвать `Purchases.then(resolve, reject)`; обёртка Capacitor
+  // аргументы игнорирует и не зовёт ни то, ни другое. Промис висит вечно.
+  if (/return\s+mod\.Purchases\s*;/.test(clientCode) || /return\s+\(await import\([^)]*\)\)\.Purchases/.test(clientCode)) {
+    problems.push(
+      `${FILES.client}: объект плагина возвращается из async-функции голым — ` +
+        "он THENABLE, и такой промис не завершится никогда (дефект 23.09.2026)",
+    );
+  }
+  if (!clientCode.includes("{ api: mod.Purchases }")) {
+    problems.push(
+      `${FILES.client}: объект плагина больше не заворачивается в { api } — ` +
+        "обёртка и есть защита от thenable",
+    );
+  }
+
+  // ПРАВИЛО 11. У КАЖДОГО обращения к мосту есть СРОК.
+  //
+  // `native-bridge.js` в `cap.toNative` глотает отказ и возвращает `null`,
+  // а созданный `cap.nativePromise` промис остаётся висеть. Отменить вызов
+  // нечем — значит единственная защита — срок. Исключение ровно одно и
+  // названо: сама покупка, где человек говорит с системным листом.
+  const bare = [...clientCode.matchAll(/await\s+api\.(\w+)\(/g)].map((m) => m[1]);
+  const allowedBare = ["purchasePackage"];
+  for (const method of bare) {
+    if (!allowedBare.includes(method)) {
+      problems.push(
+        `${FILES.client}: api.${method}() вызывается без срока — ` +
+          "мост Capacitor умеет проглотить вызов молча, и экран зависнет навсегда",
+      );
+    }
+  }
+  const deadline = /STORE_DEADLINE_MS\s*=\s*([\d_]+)/.exec(files.client)?.[1];
+  const deadlineMs = deadline ? Number(deadline.replaceAll("_", "")) : NaN;
+  if (!Number.isFinite(deadlineMs) || deadlineMs < 5_000 || deadlineMs > 20_000) {
+    problems.push(
+      `${FILES.client}: срок ожидания магазина ${deadline ?? "не найден"} — ` +
+        "он обязан быть между 5 000 и 20 000 мс: меньше рвёт живой магазин, больше неотличимо от зависания",
+    );
+  }
+
+  // ПРАВИЛО 12. У КАЖДОГО исхода отказа свой текст, код и «Повторить».
+  //
+  // До 7.225 отказ был один и немой. Четыре причины лечатся РАЗНЫМ, и
+  // человек с телефоном обязан суметь назвать свою, не читая логов.
+  const OUTCOME_KEYS = ["failPlugin", "failConnect", "failProducts", "offline", "codeLabel"];
+  for (const key of OUTCOME_KEYS) {
+    // Дважды — по одному разу на локаль (es и ru).
+    const seen = files.copy.split(`${key}:`).length - 1;
+    if (seen < 2) {
+      problems.push(`${FILES.copy}: текст исхода «${key}» есть не во всех локалях (${seen} из 2)`);
+    }
+    if (key !== "codeLabel" && !files.panel.includes(`copy.${key}`)) {
+      problems.push(`${FILES.panel}: исход «${key}» нигде не показывается человеку`);
+    }
+  }
+  for (const reason of ["plugin-missing", "no-products", "offline"]) {
+    if (!files.panel.includes(`"${reason}"`)) {
+      problems.push(`${FILES.panel}: исход «${reason}» не различается — все отказы снова сольются в один`);
+    }
+  }
+  if (!files.panel.includes("native-purchase-retry") || !files.panel.includes("stage.code")) {
+    problems.push(
+      `${FILES.panel}: у отказа нет кнопки «Повторить» или кода ошибки — ` +
+        "человеку нечего нажать и нечего прислать фотографией",
+    );
+  }
+
+  // ПРАВИЛО 13. Каждый отказ доезжает до Sentry, и без личных данных.
+  if (!files.panel.includes("Sentry.captureMessage")) {
+    problems.push(`${FILES.panel}: отказ магазина никуда не сообщается — про него снова никто не узнает`);
+  } else {
+    const report = files.panel.slice(files.panel.indexOf("Sentry.captureMessage"));
+    const tags = report.slice(0, report.indexOf("});") + 3);
+    for (const needed of ["reason", "step", "code"]) {
+      if (!tags.includes(needed)) {
+        problems.push(`${FILES.panel}: событие отказа не называет «${needed}» — по нему нельзя понять, где оборвалось`);
+      }
+    }
+    for (const personal of ["email", "userId", "user.id"]) {
+      if (tags.includes(personal)) {
+        problems.push(`${FILES.panel}: событие отказа несёт личные данные («${personal}»)`);
+      }
+    }
+  }
+
   return problems;
 }
 
@@ -282,6 +384,37 @@ const PLANTS = [
     apply: (f) => ({ ...f, identity: f.identity.replaceAll("logoutRevenueCat", "noopRevenueCat") }),
   },
   {
+    name: "объект плагина снова возвращается голым (дефект 23.09.2026)",
+    apply: (f) => ({ ...f, client: f.client.replace("return { api: mod.Purchases };", "return mod.Purchases;") }),
+  },
+  {
+    name: "со списка товаров снят срок",
+    apply: (f) => ({
+      ...f,
+      client: f.client.replace('await within(api.getOfferings(), "offerings")', "await api.getOfferings()"),
+    }),
+  },
+  {
+    name: "срок вырос до минуты — для человека это то же зависание",
+    apply: (f) => ({ ...f, client: f.client.replace("STORE_DEADLINE_MS = 15_000", "STORE_DEADLINE_MS = 60_000") }),
+  },
+  {
+    name: "исход «товаров нет» перестал отличаться от «не достучались»",
+    apply: (f) => ({ ...f, panel: f.panel.replaceAll('"no-products"', '"store-unreachable"') }),
+  },
+  {
+    name: "у отказа пропала кнопка «Повторить»",
+    apply: (f) => ({ ...f, panel: f.panel.replace('data-testid="native-purchase-retry"', 'data-testid="native-purchase-x"') }),
+  },
+  {
+    name: "отказ перестал доезжать до Sentry",
+    apply: (f) => ({ ...f, panel: f.panel.replace("Sentry.captureMessage", "noopCapture") }),
+  },
+  {
+    name: "событие отказа понесло личные данные",
+    apply: (f) => ({ ...f, panel: f.panel.replace("tags: { area: \"native-purchase\", reason, step,", "tags: { area: \"native-purchase\", email: \"x\", reason, step,") }),
+  },
+  {
     name: "наша отмена снова трогает строки магазина",
     apply: (f) => ({ ...f, cancel: f.cancel.replace('provider !== "revenuecat"', 'provider !== "нет-такого"') }),
   },
@@ -300,7 +433,7 @@ function main() {
     }
     const v = versions(files);
     console.log(
-      `check:native-purchase — 9 правил, 0 нарушений. Версия оболочки ${v.fromConfig} в трёх местах ` +
+      `check:native-purchase — 13 правил, 0 нарушений. Версия оболочки ${v.fromConfig} в трёх местах ` +
         `(настройка, capacitor.config.ts, build.gradle); ключ магазина в одном файле; ` +
         `${REQUIRED_EVENTS.length} типов событий разбираются поимённо.`,
     );
