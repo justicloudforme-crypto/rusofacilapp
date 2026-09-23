@@ -163,9 +163,73 @@ describe("POST /api/webhooks/revenuecat", () => {
     await POST(fakeRequest(rcEvent("CANCELLATION"), { authorization: "Bearer rc_test_secret" }));
     expect(upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: { status: "active", currentPeriodEnd: expect.any(Date), rcEnvironment: null },
+        update: {
+          status: "active",
+          currentPeriodEnd: expect.any(Date),
+          rcEnvironment: null,
+          canceledAt: expect.any(Date),
+        },
       })
     );
+  });
+
+  /* ОТМЕТКА «ПРОДЛЕНИЯ НЕ БУДЕТ» — заход 7.226.
+   *
+   * Замер боевой базы 23.09.2026: CANCELLATION дошёл (расписка
+   * 2AAEB200-…, 19:36:20 UTC), а `canceledAt` у строки остался NULL, и
+   * кабинет печатал «Активна» подписке, которая уже не продлится. Ниже —
+   * ровно то, чего не хватало, и обратный ход тоже. */
+  describe("отметка об отключённом продлении (долг 190 для магазинной подписки)", () => {
+    it("CANCELLATION ставит дату отмены по часам события", async () => {
+      const at = Date.UTC(2026, 8, 23, 19, 36, 20);
+      await POST(
+        fakeRequest(rcEvent("CANCELLATION", { event_timestamp_ms: at }), {
+          authorization: "Bearer rc_test_secret",
+        })
+      );
+      const call = upsert.mock.calls[0][0] as { update: { canceledAt: Date | null } };
+      expect(call.update.canceledAt).toEqual(new Date(at));
+    });
+
+    it("повторная доставка CANCELLATION не двигает дату отмены вперёд", async () => {
+      const first = new Date("2026-09-23T19:36:20.000Z");
+      findUnique.mockResolvedValue({ plan: "monthly", canceledAt: first });
+      await POST(
+        fakeRequest(rcEvent("CANCELLATION", { event_timestamp_ms: Date.UTC(2026, 8, 24, 10, 0, 0) }), {
+          authorization: "Bearer rc_test_secret",
+        })
+      );
+      const call = upsert.mock.calls[0][0] as { update: { canceledAt: Date | null } };
+      expect(call.update.canceledAt).toEqual(first);
+    });
+
+    it("UNCANCELLATION снимает дату отмены", async () => {
+      findUnique.mockResolvedValue({ plan: "monthly", canceledAt: new Date("2026-09-23T19:36:20.000Z") });
+      await POST(fakeRequest(rcEvent("UNCANCELLATION"), { authorization: "Bearer rc_test_secret" }));
+      const call = upsert.mock.calls[0][0] as { update: { canceledAt: Date | null } };
+      expect(call.update.canceledAt).toBeNull();
+    });
+
+    it.each(["INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE", "NON_RENEWING_PURCHASE"])(
+      "%s оставляет строку без отметки об отмене",
+      async (type) => {
+        findUnique.mockResolvedValue({ plan: "monthly", canceledAt: new Date("2026-09-23T19:36:20.000Z") });
+        await POST(fakeRequest(rcEvent(type), { authorization: "Bearer rc_test_secret" }));
+        const call = upsert.mock.calls[0][0] as { update: { canceledAt: Date | null } };
+        expect(call.update.canceledAt).toBeNull();
+      }
+    );
+
+    it("новая строка от CANCELLATION тоже получает дату (create, а не только update)", async () => {
+      const at = Date.UTC(2026, 8, 23, 19, 36, 20);
+      await POST(
+        fakeRequest(rcEvent("CANCELLATION", { event_timestamp_ms: at }), {
+          authorization: "Bearer rc_test_secret",
+        })
+      );
+      const call = upsert.mock.calls[0][0] as { create: { canceledAt: Date | null } };
+      expect(call.create.canceledAt).toEqual(new Date(at));
+    });
   });
 
   it("closes access on EXPIRATION", async () => {

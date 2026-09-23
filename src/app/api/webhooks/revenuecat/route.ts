@@ -41,6 +41,9 @@ interface RevenueCatEvent {
   environment?: string | null;
   expiration_at_ms?: number | null;
   purchased_at_ms?: number;
+  /** Когда это событие произошло по часам RevenueCat. Нужен ровно одному
+   *  месту — дате отмены (`canceledAt`), см. `upsertFromEvent`. */
+  event_timestamp_ms?: number | null;
   /** TRANSFER: у кого покупку забрали и кому отдали. Оба поля — списки. */
   transferred_from?: string[] | null;
   transferred_to?: string[] | null;
@@ -123,7 +126,38 @@ type UpsertOutcome =
   | { stored: true }
   | { stored: false; ignored: "no-transaction-id" | "unknown-app-user-id" };
 
-async function upsertFromEvent(event: RevenueCatEvent, status: string): Promise<UpsertOutcome> {
+/**
+ * ПРОДЛЕНИЕ ОТКЛЮЧЕНО ИЛИ НЕТ — ВТОРОЙ ФАКТ О СТРОКЕ, заход 7.226.
+ *
+ * `"renews"` — строка продлится (покупка, продление, смена товара,
+ * отзыв отмены); `"canceled"` — автопродление выключено, а оплаченный
+ * период ещё идёт.
+ *
+ * Зачем это здесь. Замер боевой базы 23.09.2026 после настоящей покупки
+ * владельца: событие CANCELLATION дошло (расписка
+ * `2AAEB200-A075-4430-A896-172C6903AF5F`, 19:36:20 UTC), а у строки
+ * `cmuehmp6f000004l2e6p0ts0r` колонка `canceledAt` осталась `NULL` —
+ * ветка CANCELLATION писала только `status: "active"`. Кабинет читает
+ * `getDisplayStatus` (`src/lib/subscription-status.ts`), а тот считает
+ * строку «отменяемой» РОВНО по `canceledAt != null || status ===
+ * "canceled"`: ни того, ни другого не было, и экран печатал «Активна» —
+ * про подписку, которая уже не продлится.
+ *
+ * Колонка `canceledAt` заведена долгом 190 и в боевой базе УЖЕ ЕСТЬ
+ * (прочитана тем же замером) — миграции здесь не требуется ни одной.
+ *
+ * Правило то же, что у Stripe (`src/app/api/webhooks/stripe/route.ts`,
+ * долг 190): дата ставится ОДИН раз и не переписывается повторной
+ * доставкой, а отзыв отмены её снимает. Доступа это поле не решает
+ * вовсе — доступ по-прежнему решает `currentPeriodEnd`.
+ */
+type RenewalIntent = "renews" | "canceled";
+
+async function upsertFromEvent(
+  event: RevenueCatEvent,
+  status: string,
+  intent: RenewalIntent
+): Promise<UpsertOutcome> {
   const transactionId = event.original_transaction_id;
   if (!transactionId) return { stored: false, ignored: "no-transaction-id" }; // nothing stable to key this event on
 
@@ -195,12 +229,19 @@ async function upsertFromEvent(event: RevenueCatEvent, status: string): Promise<
     );
   }
 
+  const canceledAt =
+    intent === "canceled"
+      ? (existing?.canceledAt ??
+        (event.event_timestamp_ms ? new Date(event.event_timestamp_ms) : new Date()))
+      : null;
+
   await db.subscription.upsert({
     where: { rcOriginalTransactionId: transactionId },
     update: {
       status,
       currentPeriodEnd: periodEndOf(event, plan),
       rcEnvironment: event.environment ?? null,
+      canceledAt,
     },
     create: {
       userId: event.app_user_id,
@@ -212,6 +253,7 @@ async function upsertFromEvent(event: RevenueCatEvent, status: string): Promise<
       rcAppUserId: event.app_user_id,
       rcStore: event.store ?? null,
       rcEnvironment: event.environment ?? null,
+      canceledAt,
     },
   });
   await invalidateSubscriptionCache(event.app_user_id);
@@ -300,7 +342,10 @@ export async function POST(request: NextRequest) {
     case "PRODUCT_CHANGE":
     case "UNCANCELLATION":
     case "NON_RENEWING_PURCHASE": {
-      const outcome = await upsertFromEvent(event, "active");
+      // Любое из этих событий означает «строка живёт и продлится дальше»,
+      // поэтому отметка об отключённом продлении с неё снимается —
+      // UNCANCELLATION ради этого и стоит в этом списке.
+      const outcome = await upsertFromEvent(event, "active", "renews");
       if (!outcome.stored) return NextResponse.json({ received: true, ignored: outcome.ignored });
       break;
     }
@@ -313,7 +358,7 @@ export async function POST(request: NextRequest) {
     // access early (unlike Stripe's customer.subscription.deleted, which
     // fires exactly at the moment access should end).
     case "CANCELLATION": {
-      const outcome = await upsertFromEvent(event, "active");
+      const outcome = await upsertFromEvent(event, "active", "canceled");
       if (!outcome.stored) return NextResponse.json({ received: true, ignored: outcome.ignored });
       break;
     }

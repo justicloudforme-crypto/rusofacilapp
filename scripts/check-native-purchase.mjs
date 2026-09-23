@@ -298,7 +298,16 @@ function judge(files) {
   //
   // До 7.225 отказ был один и немой. Четыре причины лечатся РАЗНЫМ, и
   // человек с телефоном обязан суметь назвать свою, не читая логов.
-  const OUTCOME_KEYS = ["failPlugin", "failConnect", "failProducts", "offline", "codeLabel"];
+  const OUTCOME_KEYS = [
+    "failPlugin",
+    "failConnect",
+    "failProducts",
+    "offline",
+    "codeLabel",
+    // ДВА ИСХОДА ВОССТАНОВЛЕНИЯ — заход 7.226, см. правило 13 ниже.
+    "restoredNothing",
+    "restoredExpired",
+  ];
   for (const key of OUTCOME_KEYS) {
     // Дважды — по одному разу на локаль (es и ru).
     const seen = files.copy.split(`${key}:`).length - 1;
@@ -314,6 +323,29 @@ function judge(files) {
       problems.push(`${FILES.panel}: исход «${reason}» не различается — все отказы снова сольются в один`);
     }
   }
+  // ПРАВИЛО 13. «ВОССТАНОВИТЬ ПОКУПКИ» НЕ ИМЕЕТ ПРАВА ГОВОРИТЬ
+  // ЗАПЛАТИВШЕМУ, ЧТО ПОКУПОК НЕ БЫЛО — заход 7.226.
+  //
+  // Владелец нажал её 23.09.2026 на POCO после того, как его тестовая
+  // подписка истекла, и прочитал «Прежних покупок у этой учётной записи
+  // не нашлось». Покупка была: строка `cmuehmp6f000004l2e6p0ts0r`,
+  // шесть событий вебхука, деньги магазин взял. Текст был неправдой.
+  //
+  // Различать эти два случая есть чем: `allPurchasedProductIdentifiers`
+  // у `CustomerInfo` перечисляет ВСЕ когда-либо купленные товары
+  // независимо от срока, а `entitlements.active` — только действующие
+  // права. Правило требует, чтобы панель спрашивала ОБА поля: сравнение
+  // одного только `entitlements.active` и есть прежний дефект.
+  if (!files.panel.includes("allPurchasedProductIdentifiers")) {
+    problems.push(
+      `${FILES.panel}: восстановление покупок не различает «покупок не было» и «были, но истекли» — ` +
+        "заплатившему снова скажут, что он не платил",
+    );
+  }
+  if (!files.panel.includes('kind: "restoredExpired"') && !files.panel.includes('"restoredExpired"')) {
+    problems.push(`${FILES.panel}: исход «покупки были, но истекли» не заведён вовсе`);
+  }
+
   if (!files.panel.includes("native-purchase-retry") || !files.panel.includes("stage.code")) {
     problems.push(
       `${FILES.panel}: у отказа нет кнопки «Повторить» или кода ошибки — ` +
@@ -413,6 +445,14 @@ const PLANTS = [
   {
     name: "событие отказа понесло личные данные",
     apply: (f) => ({ ...f, panel: f.panel.replace("tags: { area: \"native-purchase\", reason, step,", "tags: { area: \"native-purchase\", email: \"x\", reason, step,") }),
+  },
+  {
+    name: "восстановление покупок снова врёт заплатившему (дефект 23.09.2026)",
+    apply: (f) => ({ ...f, panel: f.panel.replace(/allPurchasedProductIdentifiers/g, "нетТакогоПоля") }),
+  },
+  {
+    name: "исход «покупки были, но истекли» вырезан из текстов",
+    apply: (f) => ({ ...f, copy: f.copy.replace(/restoredExpired:/g, "неНужныйКлюч:") }),
   },
   {
     name: "наша отмена снова трогает строки магазина",
