@@ -54,6 +54,7 @@ import { isEntryPoint } from "../src/lib/entry-point";
 import { subscriptionMoment } from "../src/lib/subscription-moment";
 
 const PROFILE_FILE = "src/app/[lang]/profile/page.tsx";
+const RC_WEBHOOK_FILE = "src/app/api/webhooks/revenuecat/route.ts";
 
 /**
  * ====================================================================
@@ -485,7 +486,32 @@ export async function main(): Promise<number> {
     );
     if (localDatePlanted.length > 0) caught++;
 
-    const expected = plants.length + renderPlants.length + 2;
+    // ПИСАТЕЛЬСКАЯ ПОЛОВИНА (7.226): три подсадки в вебхук магазина.
+    const webhookSource = readFileSync(RC_WEBHOOK_FILE, "utf8");
+    const webhookClean = webhookProblems(webhookSource);
+    ok &&= webhookClean.length === 0;
+    console.log(
+      `  ${webhookClean.length === 0 ? "молчит" : "ЛОЖНО КРАСНЫЙ"} — здоровый вебхук магазина ` +
+        `(отрицательный контроль)${webhookClean.length ? `: ${webhookClean[0]}` : ""}`,
+    );
+    const webhookPlants: Array<[string, string]> = [
+      [
+        "CANCELLATION снова пишет строку как продлеваемую",
+        webhookSource.replace('upsertFromEvent(event, "active", "canceled")', 'upsertFromEvent(event, "active", "renews")'),
+      ],
+      [
+        "отметку об отмене никто не снимает (UNCANCELLATION мёртв)",
+        webhookSource.replace('upsertFromEvent(event, "active", "renews")', 'upsertFromEvent(event, "active", "canceled")'),
+      ],
+      ["колонка canceledAt из вебхука убрана вовсе", webhookSource.replace(/canceledAt/g, "неПишемОтмену")],
+    ];
+    for (const [name, planted] of webhookPlants) {
+      const found = webhookProblems(planted);
+      if (found.length > 0) caught++;
+      console.log(`  ${found.length > 0 ? "поймано" : "ПРОПУЩЕНО"} — ${name}${found.length ? ` (${found[0]})` : ""}`);
+    }
+
+    const expected = plants.length + renderPlants.length + webhookPlants.length + 2;
     ok &&= caught === expected;
     console.log(
       ok
@@ -499,6 +525,7 @@ export async function main(): Promise<number> {
     ...judge(LIVE_RULES),
     ...momentProblems(LIVE_RENDER),
     ...wiringProblems(readFileSync(PROFILE_FILE, "utf8")),
+    ...webhookProblems(readFileSync(RC_WEBHOOK_FILE, "utf8")),
   ];
   if (problems.length) {
     console.error("ТЕКСТ ПРО ПОДПИСКУ РАСХОДИТСЯ С ДАТОЙ:");
@@ -515,7 +542,53 @@ export async function main(): Promise<number> {
       `«Истекла» ни разу не стоит рядом с датой в будущем, «Действует до» — ни разу с датой в прошлом; ` +
       `подпись и дата приходят одним решением из subscriptionDateLine. Контроль — --plant.`,
   );
+  console.log(
+    `check:subscription-wording — вебхук магазина пишет «продления не будет» (canceledAt) в обеих ветках upsert, ` +
+      `CANCELLATION ставит отметку, продлевающие события её снимают.`,
+  );
   return 0;
+}
+
+/**
+ * ПИСАТЕЛЬСКАЯ ПОЛОВИНА — заход 7.226.
+ *
+ * Правила выше судят ТЕКСТ по строке базы. Но строка базы должна ещё и
+ * появиться: 23.09.2026 боевая покупка владельца показала, что она не
+ * появляется. Событие CANCELLATION дошло (расписка в `RevenueCatEvent`,
+ * 19:36:20 UTC), а у строки `cmuehmp6f000004l2e6p0ts0r` колонка
+ * `canceledAt` осталась `NULL` — ветка вебхука писала только
+ * `status: "active"`. Правила отображения при этом были верны знак в
+ * знак: им просто нечего было показывать, и кабинет честно печатал
+ * «Активна» подписке, которая уже не продлится.
+ *
+ * Отсюда третье правило и его место здесь, а не в отдельном стороже: у
+ * «продления не будет» два конца — кто это ЗАПИСЫВАЕТ и кто это ЧИТАЕТ, —
+ * и расходятся они молча.
+ */
+function webhookProblems(source: string): string[] {
+  const problems: string[] = [];
+  if (!/canceledAt/.test(source)) {
+    problems.push(`${RC_WEBHOOK_FILE}: вебхук магазина не пишет canceledAt вовсе — «продления не будет» негде взять`);
+  }
+  if (!/upsertFromEvent\(event, "active", "canceled"\)/.test(source)) {
+    problems.push(
+      `${RC_WEBHOOK_FILE}: CANCELLATION больше не помечает строку как «продления не будет» — ` +
+        `кабинет снова напишет «Активна» подписке, которая не продлится`,
+    );
+  }
+  if (!/upsertFromEvent\(event, "active", "renews"\)/.test(source)) {
+    problems.push(
+      `${RC_WEBHOOK_FILE}: ни одно событие не снимает отметку об отмене — UNCANCELLATION перестал возвращать «Активна»`,
+    );
+  }
+  // Отметка обязана попасть В ОБЕ половины upsert: `update` — для строки,
+  // которая уже есть, `create` — для той, что событие заводит.
+  const upsert = source.slice(source.indexOf("db.subscription.upsert"));
+  const update = upsert.slice(upsert.indexOf("update:"), upsert.indexOf("create:"));
+  const create = upsert.slice(upsert.indexOf("create:"), upsert.indexOf("});", upsert.indexOf("create:")));
+  if (!/canceledAt/.test(update)) problems.push(`${RC_WEBHOOK_FILE}: canceledAt не пишется в ветке update`);
+  if (!/canceledAt/.test(create)) problems.push(`${RC_WEBHOOK_FILE}: canceledAt не пишется в ветке create`);
+  return problems;
 }
 
 /** Экранная половина: кабинет обязан брать подпись и дату из одного места. */

@@ -43,6 +43,23 @@ interface Entry<T> {
   expiresAt: number;
 }
 
+/**
+ * СКОЛЬКО ПОСЛЕ ГАШЕНИЯ КЛЮЧ НЕЛЬЗЯ ЗАПОЛНЯТЬ — заход 7.226.
+ *
+ * Гонка, ради которой это число существует, воспроизведена прогоном, а не
+ * вычитана: чтение холодного ключа уходит в базу; ПОКА оно идёт, вебхук
+ * записывает строку и гасит ключ; чтение возвращается со СТАРЫМ ответом
+ * базы и кладёт его в кеш — уже ПОСЛЕ гашения. Дальше этот старый ответ
+ * живёт полный `ttlMs`, и для кеша подписок это значит до тридцати секунд
+ * замков у человека, который только что заплатил.
+ *
+ * Пять секунд, а не весь `ttlMs`: закрывать надо ровно то время, пока
+ * может идти уже начатое чтение базы (миллисекунды), а держать ключ
+ * незаполняемым дольше — значит гонять базу без нужды. Меньше секунды
+ * было бы подгонкой под скорость этой машины.
+ */
+const INVALIDATION_BLOCK_MS = 5_000;
+
 export class TtlCache<T> {
   // Only used by the in-memory fallback path.
   private readonly store = new Map<string, Entry<T>>();
@@ -79,8 +96,48 @@ export class TtlCache<T> {
     private readonly isValidValue?: (value: unknown) => boolean,
   ) {}
 
+  /** Ключи, погашенные за последние {@link INVALIDATION_BLOCK_MS} —
+   *  только для запасного пути без Redis. */
+  private readonly blocked = new Map<string, number>();
+
   private redisKey(key: string): string {
     return `ttlcache:${this.namespace}:${key}`;
+  }
+
+  /** Метка «этот ключ только что погасили». Живёт своей жизнью рядом со
+   *  значением и НЕ читается на попадании в кеш — только на промахе,
+   *  перед тем как промах решит что-то записать. */
+  private blockKey(key: string): string {
+    return `ttlcache:${this.namespace}:${key}:invalidated`;
+  }
+
+  /**
+   * Гасили ли этот ключ за последние {@link INVALIDATION_BLOCK_MS}.
+   *
+   * Метка в Redis, а не счётчик в процессе, и это не перестраховка: гасит
+   * ключ ВЕБХУК, а заполняет его СТРАНИЦА, и на Vercel это разные
+   * экземпляры с разной памятью. Счётчик в процессе не увидел бы чужого
+   * гашения вовсе.
+   *
+   * Отказ Redis считается «не гасили»: хуже устаревшего значения только
+   * упавшая страница — то же правило, что у `get`/`set`/`del` выше.
+   */
+  async wasInvalidated(key: string): Promise<boolean> {
+    if (redis) {
+      try {
+        return (await redis.get(this.blockKey(key))) != null;
+      } catch (error) {
+        console.error(`[ttl-cache] Redis get failed for ${this.blockKey(key)}, treating as not invalidated`, error);
+        return false;
+      }
+    }
+    const until = this.blocked.get(key);
+    if (until === undefined) return false;
+    if (until <= Date.now()) {
+      this.blocked.delete(key);
+      return false;
+    }
+    return true;
   }
 
   // A Redis error (wrong/expired token, network blip, Upstash outage) must
@@ -142,12 +199,17 @@ export class TtlCache<T> {
   async del(key: string): Promise<void> {
     if (redis) {
       try {
+        // Порядок важен: метка СНАЧАЛА. Поставь её после удаления — и
+        // чтение, вернувшееся между двумя командами, снова положило бы
+        // старое значение, а метки на тот миг ещё не было бы.
+        await redis.set(this.blockKey(key), 1, { px: INVALIDATION_BLOCK_MS });
         await redis.del(this.redisKey(key));
       } catch (error) {
         console.error(`[ttl-cache] Redis del failed for ${this.redisKey(key)}`, error);
       }
       return;
     }
+    this.blocked.set(key, Date.now() + INVALIDATION_BLOCK_MS);
     this.store.delete(key);
   }
 }
@@ -180,7 +242,14 @@ export async function cached<T>(cache: TtlCache<T>, key: string, load: () => Pro
 
   const promise = (async () => {
     const value = await load();
-    await cache.set(key, value);
+    // ЧТО ПРОЧИТАНО ДО ГАШЕНИЯ, В КЕШ НЕ КЛАДЁТСЯ — заход 7.226.
+    //
+    // Без этой строки чтение, начатое до записи вебхука и вернувшееся
+    // после неё, клало устаревший ответ базы поверх только что
+    // погашенного ключа и держал его там полный TTL. Для кеша подписок
+    // это ровно «заплатил — и тридцать секунд смотришь на замки».
+    // Воспроизведено прогоном, см. `ttl-cache.invalidation-race.test.ts`.
+    if (!(await cache.wasInvalidated(key))) await cache.set(key, value);
     return value;
   })().finally(() => inFlight.delete(dedupeKey));
 

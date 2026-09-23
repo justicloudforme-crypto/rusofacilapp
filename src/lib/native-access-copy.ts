@@ -249,7 +249,21 @@ export interface NativeAccessCopy {
     codeLabel: string;
     retry: string;
     restoreCta: string;
+    /**
+     * ДВА РАЗНЫХ ИСХОДА ВОССТАНОВЛЕНИЯ ВМЕСТО ОДНОГО — заход 7.226.
+     *
+     * До 23.09.2026 исход был один: «Прежних покупок у этой учётной
+     * записи не нашлось». Владелец снял его 23.09.2026 на POCO после
+     * того, как его же тестовая подписка истекла, — то есть покупка БЫЛА,
+     * и текст был неправдой. Различить эти два случая есть чем и без
+     * догадок: `CustomerInfo.allPurchasedProductIdentifiers` перечисляет
+     * ВСЕ купленные товары независимо от того, истёк доступ или нет, а
+     * `entitlements.active` — только действующие права. Пусто и то и
+     * другое — покупок не было вовсе; пусто только второе — покупки были,
+     * но доступ по ним кончился.
+     */
     restoredNothing: string;
+    restoredExpired: string;
     /** Пока ждём подтверждения от сервера после покупки. */
     activating: string;
     activated: string;
@@ -355,7 +369,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       codeLabel: "Código",
       retry: "Reintentar",
       restoreCta: "Restaurar compras",
-      restoredNothing: "No encontramos ninguna compra anterior en esta cuenta.",
+      restoredNothing: "No encontramos compras activas en esta cuenta.",
+      restoredExpired: "Encontramos compras anteriores, pero su acceso ya venció.",
       activating: "Activando tu acceso…",
       activated: "Listo: tu acceso ya está abierto.",
       activationSlow:
@@ -454,7 +469,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       codeLabel: "Код",
       retry: "Повторить",
       restoreCta: "Восстановить покупки",
-      restoredNothing: "Прежних покупок у этой учётной записи не нашлось.",
+      restoredNothing: "Активных покупок у этой учётной записи не нашлось.",
+      restoredExpired: "Прежние покупки нашлись, но срок доступа по ним уже закончился.",
       activating: "Активируем доступ…",
       activated: "Готово: доступ открыт.",
       activationSlow:
