@@ -3,17 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 import type { PurchasesPackage } from "@revenuecat/purchases-capacitor";
 import type { Locale } from "@/i18n/config";
 import type { NativeAccessCopy } from "@/lib/native-access-copy";
-import { OFFERING_PACKAGE_ORDER } from "@/lib/revenuecat-config";
-import {
-  configureRevenueCat,
-  getCurrentOffering,
-  loginRevenueCat,
-  purchasePackage,
-  restorePurchases,
-} from "@/lib/revenuecat-client";
+import { loadStore, purchasePackage, restorePurchases, storeFailureCode } from "@/lib/revenuecat-client";
+import type { StoreFailure, StoreStep } from "@/lib/revenuecat-client";
 
 /**
  * ЕДИНСТВЕННЫЙ ЭКРАН ПОКУПКИ ВНУТРИ ПРИЛОЖЕНИЯ — заход 7.224.
@@ -53,7 +48,9 @@ async function readTier(): Promise<string | null> {
 type Stage =
   | { kind: "loading" }
   | { kind: "ready" }
-  | { kind: "unavailable" }
+  /** Отказ с ИМЕНЕМ. До 7.225 здесь стоял безымянный `unavailable`, и
+   *  четыре разные причины выглядели одинаково — см. `native-access-copy.ts`. */
+  | { kind: "unavailable"; reason: StoreFailure; step: StoreStep; code: string }
   | { kind: "buying" }
   | { kind: "activating" }
   | { kind: "activated" }
@@ -119,59 +116,77 @@ export default function NativePurchasePanel({
    * ставит состояние уже после ожидания, а кнопка «Повторить» ставит
    * «загружаем» сама — ей это нужно, иначе нажатие выглядит как
    * ничего не делающее.
+   *
+   * ЦЕПОЧКИ ОБРАЩЕНИЙ К МАГАЗИНУ ЗДЕСЬ БОЛЬШЕ НЕТ — заход 7.225. До этого
+   * экран сам звал `configureRevenueCat` → `loginRevenueCat` →
+   * `getCurrentOffering` и сводил ЛЮБОЙ исход в одно немое `null`. Весь
+   * путь переехал в `loadStore()`, и он отвечает НАЗВАННЫМ исходом с
+   * шагом и коротким кодом. Обещание `loadStore` — она всегда
+   * завершается; экран, который может ждать вечно, и был дефектом.
    */
-  const readStore = useCallback(async (): Promise<PurchasesPackage[] | null> => {
+  const readStore = useCallback(async (uid: string) => {
+    // Уровень доступа ДО покупки спрашиваем ПЕРВЫМ и отдельно: это наш
+    // сервер, а не магазин, и его отказ не должен выглядеть как отказ
+    // магазина. Не дождались — покупка всё равно возможна, просто
+    // сравнивать будет не с чем, и ожидание доступа упрётся в свой срок.
     try {
-      const ok = await configureRevenueCat();
-      if (!ok) return null;
-      if (userId) await loginRevenueCat(userId);
       baselineTier.current = await readTier();
-      const offering = await getCurrentOffering();
-      const available = offering?.availablePackages ?? [];
-      if (available.length === 0) return null;
-      // Порядок показа — наш (`OFFERING_PACKAGE_ORDER`), а не тот, в
-      // котором пакеты приехали: он в консоли меняется мышью.
-      const rank = (p: PurchasesPackage) => {
-        const at = OFFERING_PACKAGE_ORDER.indexOf(p.identifier as (typeof OFFERING_PACKAGE_ORDER)[number]);
-        return at === -1 ? OFFERING_PACKAGE_ORDER.length : at;
-      };
-      return [...available].sort((a, b) => rank(a) - rank(b));
     } catch {
-      return null;
+      baselineTier.current = null;
     }
-  }, [userId]);
+    return loadStore(uid);
+  }, []);
+
+  /**
+   * КАЖДЫЙ ОТКАЗ — СОБЫТИЕ В SENTRY, И В НЁМ НАЗВАН ШАГ.
+   *
+   * Личных данных не отправляется: ни `userId`, ни почты, ни чего-либо
+   * ещё об учётной записи — только имя исхода, шаг и код. Этого хватает,
+   * чтобы отличить «оболочка старая» от «магазин молчит» и от «аккаунт не
+   * в списке тестировщиков», а больше ничего для этого и не нужно.
+   */
+  const report = useCallback((reason: StoreFailure, step: StoreStep) => {
+    Sentry.captureMessage(`NativeStorePurchaseBlocked: ${reason}`, {
+      level: "warning",
+      tags: { area: "native-purchase", reason, step, code: storeFailureCode(reason, step) },
+    });
+  }, []);
+
+  const apply = useCallback(
+    (found: Awaited<ReturnType<typeof loadStore>>) => {
+      if (!found.ok) {
+        report(found.reason, found.step);
+        setStage({ kind: "unavailable", reason: found.reason, step: found.step, code: found.code });
+        return;
+      }
+      setPackages(found.packages);
+      setStage({ kind: "ready" });
+    },
+    [report],
+  );
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     void (async () => {
-      const found = await readStore();
+      const found = await readStore(userId);
       if (cancelled || !alive.current) return;
-      if (!found) {
-        setStage({ kind: "unavailable" });
-        return;
-      }
-      setPackages(found);
-      setStage({ kind: "ready" });
+      apply(found);
     })();
     return () => {
       cancelled = true;
     };
-  }, [readStore, userId]);
+  }, [apply, readStore, userId]);
 
   const retry = useCallback(() => {
+    if (!userId) return;
     setStage({ kind: "loading" });
     void (async () => {
-      const found = await readStore();
+      const found = await readStore(userId);
       if (!alive.current) return;
-      if (!found) {
-        setStage({ kind: "unavailable" });
-        return;
-      }
-      setPackages(found);
-      setStage({ kind: "ready" });
+      apply(found);
     })();
-  }, [readStore]);
+  }, [apply, readStore, userId]);
 
   /** Спрашивает СЕРВЕР, изменился ли уровень доступа. Ответ сервера — это
    *  и есть определение «доступ открыт»: строку пишет вебхук. */
@@ -267,6 +282,16 @@ export default function NativePurchasePanel({
         ? copy.planLifetime
         : copy.planMonthly;
 
+  /** Отказ магазина → текст. Четыре исхода, четыре разговора (7.225). */
+  const failureText = (reason: StoreFailure) =>
+    reason === "plugin-missing"
+      ? copy.failPlugin
+      : reason === "offline"
+        ? copy.offline
+        : reason === "no-products"
+          ? copy.failProducts
+          : copy.failConnect;
+
   const message =
     stage.kind === "pending"
       ? copy.pending
@@ -285,7 +310,7 @@ export default function NativePurchasePanel({
                   : stage.kind === "loading"
                     ? copy.loading
                     : stage.kind === "unavailable"
-                      ? copy.unavailable
+                      ? failureText(stage.reason)
                       : null;
 
   const busy = stage.kind === "buying" || stage.kind === "activating" || stage.kind === "loading";
@@ -330,13 +355,21 @@ export default function NativePurchasePanel({
       ) : null}
 
       {stage.kind === "unavailable" ? (
-        <button
-          type="button"
-          onClick={retry}
-          className="tap mt-4 w-full rounded-full border border-foreground/20 px-5 py-2.5 text-sm font-medium text-foreground"
-        >
-          {copy.retry}
-        </button>
+        <>
+          {/* КОД МЕЛКИМ ШРИФТОМ — чтобы владелец мог прислать фотографию,
+              а не пересказ. Он же стоит меткой у события Sentry. */}
+          <p data-testid="native-purchase-code" className="mt-2 text-[11px] leading-4 text-foreground/45">
+            {copy.codeLabel}: {stage.code}
+          </p>
+          <button
+            type="button"
+            data-testid="native-purchase-retry"
+            onClick={retry}
+            className="tap mt-4 w-full rounded-full border border-foreground/20 px-5 py-2.5 text-sm font-medium text-foreground"
+          >
+            {copy.retry}
+          </button>
+        </>
       ) : null}
 
       {stage.kind === "activated" ? null : (

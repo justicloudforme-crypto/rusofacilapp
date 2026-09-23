@@ -231,7 +231,22 @@ export interface NativeAccessCopy {
     noteAnnual: string;
     noteLifetime: string;
     loading: string;
-    unavailable: string;
+    /**
+     * ЧЕТЫРЕ РАЗНЫХ ОТКАЗА ВМЕСТО ОДНОГО НЕМОГО — заход 7.225.
+     *
+     * До 23.09.2026 отказ был один (`unavailable`), и он ничего не
+     * различал: «в этой оболочке магазина нет», «магазин не ответил»,
+     * «товаров для этой учётной записи нет» и «нет сети» выглядели
+     * одинаково. Лечатся они РАЗНЫМ: первое — новой сборкой, второе —
+     * повтором, третье — списком тестировщиков трека, четвёртое —
+     * интернетом. Теперь у каждого свой текст и свой короткий код
+     * (`RC-…`), который видно на фотографии экрана.
+     */
+    failPlugin: string;
+    failConnect: string;
+    failProducts: string;
+    /** Подпись перед кодом ошибки мелким шрифтом. */
+    codeLabel: string;
     retry: string;
     restoreCta: string;
     restoredNothing: string;
@@ -331,7 +346,13 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       noteAnnual: "Se renueva cada año.",
       noteLifetime: "Un solo pago. Incluye el nivel C1 y los juegos con estrella.",
       loading: "Cargando las opciones…",
-      unavailable: "Ahora mismo no se pueden cargar las opciones. Vuelve a intentarlo en un momento.",
+      failPlugin:
+        "Esta versión de la aplicación todavía no puede abrir la tienda. Actualízala a la última versión y vuelve a intentarlo.",
+      failConnect:
+        "No conseguimos conectar con la tienda. Espera un momento y vuelve a intentarlo.",
+      failProducts:
+        "La tienda respondió, pero no encontró ninguna opción para tu cuenta. Prueba de nuevo más tarde.",
+      codeLabel: "Código",
       retry: "Reintentar",
       restoreCta: "Restaurar compras",
       restoredNothing: "No encontramos ninguna compra anterior en esta cuenta.",
@@ -424,7 +445,13 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       noteAnnual: "Продлевается раз в год.",
       noteLifetime: "Один платёж. Включает уровень C1 и игры со звездой.",
       loading: "Загружаем варианты…",
-      unavailable: "Сейчас варианты не загрузились. Попробуйте ещё раз через минуту.",
+      failPlugin:
+        "Эта версия приложения пока не умеет открывать магазин. Обновите приложение до последней версии и попробуйте снова.",
+      failConnect:
+        "Не удалось связаться с магазином. Подождите немного и попробуйте ещё раз.",
+      failProducts:
+        "Магазин ответил, но вариантов для вашей учётной записи не нашлось. Попробуйте позже.",
+      codeLabel: "Код",
       retry: "Повторить",
       restoreCta: "Восстановить покупки",
       restoredNothing: "Прежних покупок у этой учётной записи не нашлось.",
