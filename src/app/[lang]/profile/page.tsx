@@ -9,14 +9,17 @@ import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/auth";
 import { localizeSkillAreaTitle } from "@/lib/exams/localize";
 import { isStaff } from "@/lib/roles";
-import { isNativeShellRequest } from "@/lib/native-shell";
+import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
+import NativePurchasePanel from "@/components/native/NativePurchasePanel";
+import { playSubscriptionCenterUrl } from "@/lib/revenuecat-config";
 import { db } from "@/lib/db";
 import {
   getSubscriptionsForUser,
   getDisplayStatus,
   subscriptionDateLine,
   pickEffectiveSubscription,
+  isPremiumPlan,
   type DisplayStatus,
 } from "@/lib/subscription";
 import { canRedeemAccessCode, getEntitlementTierFor, hasAnyAccess, isPremiumTier } from "@/lib/entitlement";
@@ -321,6 +324,9 @@ export default async function ProfilePage({
   // входа: ни панели магазина, ни кнопки «Оформить подписку», ни ссылок
   // «перейти на годовой/Premium».
   const nativeShell = await isNativeShellRequest();
+  // Покупка внутри приложения — заход 7.224. Ноль обращений к базе: ответ
+  // целиком в заголовке и куках запроса.
+  const nativeCanBuy = nativeShell && (await canBuyInsideShell());
   const query = await searchParams;
   const checkout = typeof query.checkout === "string" ? query.checkout : null;
   // What the buyer just paid for, carried back from Stripe by
@@ -1414,7 +1420,23 @@ export default async function ProfilePage({
               (отменять нечего), ни «продлить» (продлевать кассой нечего —
               это не покупка). Всё, что человеку нужно знать, сказано
               строкой выше. */}
-          {grantAccess ? null : isActive && displayStatus !== "canceling" ? (
+          {/* ПОДПИСКА ИЗ МАГАЗИНА — ЗАХОД 7.224. Отменить её может только
+              сам магазин: наша кнопка пометила бы строку отменённой, а
+              списания продолжились бы. Поэтому здесь ссылка в центр
+              подписок, а не наша отмена; подпись платёжную систему не
+              называет (долг 196). Тем, кто оплатил на сайте, внутри
+              приложения печатается только строка о состоянии — кассы в
+              оболочке нет. */}
+          {grantAccess ? null : isActive && subscription?.provider === "revenuecat" && !isPremiumPlan(subscription.plan) ? (
+            <a
+              href={playSubscriptionCenterUrl()}
+              target="_blank"
+              rel="noreferrer"
+              className="tap w-full rounded-full border border-black/10 px-5 py-2.5 text-center text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/15 sm:w-auto"
+            >
+              {nativeAccessCopy(lang).purchase.manageCta}
+            </a>
+          ) : isActive && displayStatus !== "canceling" ? (
             <form action="/api/subscription/cancel" method="POST">
               <input type="hidden" name="lang" value={lang} />
               <button
@@ -1426,6 +1448,18 @@ export default async function ProfilePage({
             </form>
           ) : isStaff(user.role) ? (
             <p className="text-sm text-foreground/60">{dict.profile.staffAccessNotice}</p>
+          ) : nativeCanBuy ? (
+            // ЗАХОД 7.224: внутри приложения версии 4 и выше платный путь
+            // есть, и он ровно один — покупка магазина. Экран покупки
+            // стоит ЗДЕСЬ ЖЕ, а не ссылкой на страницу цен: ссылка на
+            // `/pricing` внутри оболочки — это вход на платёжную
+            // поверхность, и её запрещает долг 79.
+            <NativePurchasePanel
+              lang={lang}
+              copy={nativeAccessCopy(lang).purchase}
+              userId={user.id}
+              next={`/${lang}/profile`}
+            />
           ) : nativeShell ? (
             // ДОЛГ 179: внутри приложения вместо кнопки покупки — строка
             // о том, как обстоят дела. Ни цены, ни способа оплаты, ни

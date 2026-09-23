@@ -148,6 +148,9 @@ const FORBIDDEN_TEXT = [FORM_MARK, STRIPE_MARK, PRICE_MARK, CASH_MARK, PRICING_P
 
 const TOKEN = "RFNativeShell";
 const COOKIE = "rf_native_shell";
+// Кука с ЧИСЛОМ версии оболочки (долг 235). Тот же литерал читает
+// `src/lib/native-shell-token.ts`.
+const VERSION_COOKIE = "rf_shell_version";
 
 function read(path) {
   return readFileSync(path, "utf8");
@@ -587,12 +590,29 @@ const visibleDocument = sharedVisibleDocument;
 const SAFARI =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
 
-/** Три обличья запроса. `web` — обычный браузер; `token` — оболочка, как её
- *  видит прямой переход webview; `cookie` — оболочка, как её видит запрос
- *  service worker'а: токена нет, кука есть. */
+/**
+ * ПЯТЬ ОБЛИЧИЙ ЗАПРОСА. `web` — обычный браузер; `token` — оболочка, как её
+ * видит прямой переход webview; `cookie` — оболочка, как её видит запрос
+ * service worker'а: токена нет, кука есть.
+ *
+ * `token4` и `cookie4` добавлены 22.09.2026 (заход 7.224). В оболочке
+ * `versionCode 4` внутри приложения ПОЯВИЛАСЬ покупка — нативная, через
+ * магазин, — и сайт отличает её от старой по числу в токене и в куке
+ * `rf_shell_version` (`src/lib/native-shell-token.ts`). Без этих двух
+ * обличий сторож судил бы ровно те версии, где новой ветки нет вовсе, и
+ * его ноль не говорил бы о новой ничего. Правило для них ТО ЖЕ: нативная
+ * покупка законна, а веб-касса, цена в песо и OXXO — нет.
+ */
 async function fetchPage(base, path, disguise, session) {
-  const headers = { "user-agent": disguise === "token" ? `${SAFARI} ${TOKEN}` : SAFARI };
-  const jar = [session, disguise === "cookie" ? `${COOKIE}=1` : ""].filter(Boolean).join("; ");
+  const token = disguise === "token" ? TOKEN : disguise === "token4" ? `${TOKEN}/4` : null;
+  const headers = { "user-agent": token ? `${SAFARI} ${token}` : SAFARI };
+  const jar = [
+    session,
+    disguise === "cookie" || disguise === "cookie4" ? `${COOKIE}=1` : "",
+    disguise === "cookie4" ? `${VERSION_COOKIE}=4` : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
   if (jar) headers.cookie = jar;
   const res = await fetch(`${base}${path}`, { headers, signal: AbortSignal.timeout(30_000) });
   if (!res.ok) throw new Error(`${path} (${disguise}) ответил ${res.status}`);
@@ -766,7 +786,7 @@ async function live(base, plant) {
       return out;
     }
     out.webPaid = judgeNative(web, "контроль", labels[lang]).length;
-    for (const disguise of ["token", "cookie"]) {
+    for (const disguise of ["token", "cookie", "token4", "cookie4"]) {
       let raw;
       try {
         raw = await fetchPage(base, path, disguise, jar);
