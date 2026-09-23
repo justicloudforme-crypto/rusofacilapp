@@ -31,8 +31,20 @@ export async function POST(request: NextRequest) {
   // uses account deletion, which is a different button with a different
   // confirmation.
   const rows = await getSubscriptionsForUser(user.id);
+  // Строка магазина сюда НЕ попадает — заход 7.224.
+  //
+  // Отменить подписку Google может только сам Google: наш код может лишь
+  // пометить строку отменённой, а списание продолжится. Это худший из
+  // возможных исходов — человек нажал «отменить», увидел подтверждение и
+  // продолжил платить. Поэтому такие строки исключены здесь, а в кабинете
+  // на их месте стоит ссылка в центр подписок магазина
+  // (`playSubscriptionCenterUrl`), а не кнопка отмены.
   const cancellable = rows.filter(
-    (row) => isSubscriptionActive(row) && !isPremiumPlan(row.plan) && row.canceledAt === null,
+    (row) =>
+      isSubscriptionActive(row) &&
+      !isPremiumPlan(row.plan) &&
+      row.canceledAt === null &&
+      row.provider !== "revenuecat",
   );
 
   if (cancellable.length > 0) {

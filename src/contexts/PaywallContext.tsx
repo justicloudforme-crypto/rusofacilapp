@@ -6,6 +6,7 @@ import type { Locale } from "@/i18n/config";
 import type { PlanId } from "@/lib/plans";
 import { nativeLockBody, type LockedKind, type NativeAccessCopy } from "@/lib/native-access-copy";
 import NativeLockedModal from "@/components/native/NativeLockedModal";
+import NativePurchasePanel from "@/components/native/NativePurchasePanel";
 import PaywallModal, { type PaywallModalDict, type PaywallPlanCopy } from "@/components/subscription/PaywallModal";
 
 export type PaywallReason = "free" | "premium";
@@ -34,6 +35,7 @@ export function PaywallProvider({
   plans,
   priceNote,
   nativeLock,
+  nativePurchase,
   children,
 }: {
   lang: Locale;
@@ -55,6 +57,17 @@ export function PaywallProvider({
    * строки здесь — её вес, умноженный на 1913 адресов; замер 7.183).
    */
   nativeLock: NativeAccessCopy["lock"] | null;
+  /**
+   * ЭКРАН ПОКУПКИ ВНУТРИ ПРИЛОЖЕНИЯ — заход 7.224.
+   *
+   * `null` означает «покупать здесь нечем»: либо это браузер (там платный
+   * путь прежний, веб-касса), либо оболочка версии ниже
+   * `NATIVE_PURCHASE_MIN_SHELL_VERSION`, где ни плагина покупки, ни
+   * разрешения BILLING нет вовсе. Решение принимает СЕРВЕР
+   * (`canBuyInsideShell`), по той же причине, по которой он принимает
+   * решение про сам замок: сервер и клиент обязаны судить одинаково.
+   */
+  nativePurchase: { copy: NativeAccessCopy["purchase"]; userId: string | null } | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -89,7 +102,27 @@ export function PaywallProvider({
           open={open}
           onClose={() => setOpen(false)}
           copy={nativeLock}
-          body={nativeLockBody(lang, kind, reason === "premium")}
+          /* В оболочке, которая умеет покупать, текст «в этой версии
+             приложения его не открыть» стал бы неправдой — открыть можно
+             ровно здесь же. Поэтому при покупке остаётся только метка
+             сорта (👑), а объяснение уступает место экрану выбора. */
+          body={
+            nativePurchase
+              ? reason === "premium"
+                ? nativeLock.premiumNote
+                : ""
+              : nativeLockBody(lang, kind, reason === "premium")
+          }
+          purchase={
+            nativePurchase ? (
+              <NativePurchasePanel
+                lang={lang}
+                copy={nativePurchase.copy}
+                userId={nativePurchase.userId}
+                next={pathname}
+              />
+            ) : null
+          }
         />
       ) : (
         <PaywallModal

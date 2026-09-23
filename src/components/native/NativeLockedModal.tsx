@@ -24,6 +24,7 @@ export default function NativeLockedModal({
   onClose,
   copy,
   body,
+  purchase,
 }: {
   open: boolean;
   onClose: () => void;
@@ -35,6 +36,12 @@ export default function NativeLockedModal({
    * не должно.
    */
   body: string;
+  /**
+   * Экран покупки — или `null` в оболочке, которая покупать не умеет
+   * (`versionCode` ниже 4, заход 7.224). Приходит готовым узлом, потому
+   * что окно про покупку ничего не знает и знать не должно: оно рама.
+   */
+  purchase?: React.ReactNode;
 }) {
   return (
     <Modal open={open} onClose={onClose} title={copy.heading} closeLabel={copy.close}>
@@ -42,7 +49,10 @@ export default function NativeLockedModal({
           здесь стоял до первого прогона e2e и давал в диалоге ДВА
           одинаковых заголовка. */}
       <div className="px-5 pb-6 pt-2 sm:px-6">
-        <p data-testid="native-lock-body" className="text-sm leading-6 text-foreground/70">{body}</p>
+        {body ? (
+          <p data-testid="native-lock-body" className="text-sm leading-6 text-foreground/70">{body}</p>
+        ) : null}
+        {purchase}
         <button
           type="button"
           onClick={onClose}

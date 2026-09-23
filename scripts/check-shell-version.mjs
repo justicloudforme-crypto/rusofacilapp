@@ -147,15 +147,38 @@ export async function main() {
     let ok = judge(sources).length === 0;
     console.log(`  ${ok ? "молчит" : "ЛОЖНО КРАСНЫЙ"} — здоровые исходники (отрицательный контроль)`);
 
+    /* ЧИСЛО ВЕРСИИ БЕРЁТСЯ ИЗ ИСХОДНИКОВ, А НЕ ПИШЕТСЯ ЗДЕСЬ ЛИТЕРАЛОМ.
+     *
+     * Заплачено прогоном CI 22.09.2026 (заход 7.224): подсадки были
+     * написаны под `= 3`, и в тот же день, когда версия стала четвёркой,
+     * три из тринадцати перестали ИЗМЕНЯТЬ текст вовсе — прибор честно
+     * сказал «подсадка не сработала» и уронил прогон. Это правильный
+     * исход (ложно-зелёного не случилось), но цена ему — красный CI на
+     * ровном месте, и повторится он на каждой следующей сборке.
+     *
+     * Теперь литерал собирается по факту, а «разошедшееся» число — это
+     * просто текущее плюс один: оно заведомо не равно ни versionCode, ни
+     * номеру iOS, каким бы ни было сегодняшнее. */
+    const currentVersion = Number(/NATIVE_SHELL_VERSION\s*=\s*(\d+)/.exec(sources[CAP_CONFIG])?.[1]);
+    if (!Number.isInteger(currentVersion)) {
+      console.error("  подсадки не собрать: в capacitor.config.ts не прочиталось NATIVE_SHELL_VERSION");
+      process.exitCode = 1;
+      return;
+    }
+    const versionLiteral = `const NATIVE_SHELL_VERSION = ${currentVersion};`;
+    const otherLiteral = `const NATIVE_SHELL_VERSION = ${currentVersion + 1};`;
+    const gradleVersion = new RegExp(`versionCode ${currentVersion}\\b`);
+    const gradleOther = `versionCode ${currentVersion + 1}`;
+
     const plants = [
       ["версия оболочки не объявлена вовсе",
-        { [CAP_CONFIG]: sources[CAP_CONFIG].replace("const NATIVE_SHELL_VERSION = 3;", "") }],
+        { [CAP_CONFIG]: sources[CAP_CONFIG].replace(versionLiteral, "") }],
       ["версия объявлена, но к User-Agent не приклеена",
         { [CAP_CONFIG]: sources[CAP_CONFIG].replace("appendUserAgent: `${NATIVE_USER_AGENT_TOKEN}/${NATIVE_SHELL_VERSION}`", "appendUserAgent: NATIVE_USER_AGENT_TOKEN") }],
       ["версия оболочки разошлась с versionCode",
-        { [CAP_CONFIG]: sources[CAP_CONFIG].replace("const NATIVE_SHELL_VERSION = 3;", "const NATIVE_SHELL_VERSION = 4;") }],
+        { [CAP_CONFIG]: sources[CAP_CONFIG].replace(versionLiteral, otherLiteral) }],
       ["версия оболочки разошлась с номером сборки iOS",
-        { [GRADLE]: sources[GRADLE].replace(/versionCode 3/, "versionCode 4"), [CAP_CONFIG]: sources[CAP_CONFIG].replace("const NATIVE_SHELL_VERSION = 3;", "const NATIVE_SHELL_VERSION = 4;") }],
+        { [GRADLE]: sources[GRADLE].replace(gradleVersion, gradleOther), [CAP_CONFIG]: sources[CAP_CONFIG].replace(versionLiteral, otherLiteral) }],
       ["функции чтения версии нет — каждый читатель заведёт свою",
         { [TOKEN_LIB]: sources[TOKEN_LIB].replace("export function nativeShellVersion(", "function nativeShellVersion(") }],
       ["куки версии нет — запрос service worker'а без числа",

@@ -29,8 +29,9 @@ import { PaywallProvider } from "@/contexts/PaywallContext";
 import { type PlanId } from "@/lib/plans";
 import { getLocalPriceContext } from "@/lib/country-server";
 import { basePricesText, marked, priceCopy, withBasePrices } from "@/lib/pricing-display";
-import { isNativeShellRequest } from "@/lib/native-shell";
+import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
+import NativeStoreIdentity from "@/components/native/NativeStoreIdentity";
 
 // RusoFácilapp's "Городецкая роспись" (Gorodets) type system — PT Sans
 // (body/UI), PT Serif (display headings/wordmark), PT Mono (labels/status
@@ -173,6 +174,10 @@ export default async function LangLayout({
   // и нижняя панель перестаёт прятаться. Спрошено на СЕРВЕРЕ, чтобы
   // сервер и клиент судили об оболочке одинаково.
   const nativeShell = await isNativeShellRequest();
+  // Покупка внутри приложения — заход 7.224. Вопрос задаётся один раз на
+  // макет, ровно как признак оболочки выше, и стоит он ноль обращений к
+  // базе: ответ целиком в заголовке и куках запроса.
+  const nativeCanBuy = nativeShell && (await canBuyInsideShell());
 
   const localPrice = await getLocalPriceContext();
   const paywallPriceCopy = priceCopy(localPrice, lang, {
@@ -277,7 +282,11 @@ export default async function LangLayout({
           plans={paywallPlans}
           priceNote={paywallPriceNote}
           nativeLock={nativeShell ? nativeAccessCopy(lang).lock : null}
+          nativePurchase={
+            nativeCanBuy ? { copy: nativeAccessCopy(lang).purchase, userId: user?.id ?? null } : null
+          }
         >
+          {nativeCanBuy ? <NativeStoreIdentity userId={user?.id ?? null} /> : null}
           <Navbar lang={lang} dict={dict} streak={streak} offlineMessage={dict.offline.bannerMessage} />
           {/* Отступ под BottomNav переехал на <body> (см. комментарий там):
               он обязан стоять в конце ПРОКРУЧИВАЕМОЙ ОБЛАСТИ, а конец

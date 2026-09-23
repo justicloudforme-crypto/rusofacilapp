@@ -16,20 +16,30 @@ export default function NativeAccessNotice({
   lang,
   copy,
   hasAccess,
+  purchase,
+  purchaseCopy,
 }: {
   lang: Locale;
   copy: NativeAccessCopy["notice"];
   /** Право доступа, уже активное у учётной записи (его считает сервер,
    *  `getEntitlementTier`): оплата на сайте, код доступа, сотрудник. */
   hasAccess: boolean;
+  /**
+   * Экран покупки — заход 7.224. `null` в браузере и в оболочке версии
+   * ниже 4. Когда он есть, раздел «Пока закрыто» не печатается: его текст
+   * («в этой версии приложения покупок нет») перестал быть правдой ровно
+   * в тот день, когда покупка появилась.
+   */
+  purchase?: React.ReactNode;
+  purchaseCopy?: NativeAccessCopy["purchase"];
 }) {
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-        {hasAccess ? copy.activeHeading : copy.heading}
+        {hasAccess ? copy.activeHeading : purchase && purchaseCopy ? purchaseCopy.heading : copy.heading}
       </h1>
       <p className="mt-3 text-base leading-7 text-foreground/70">
-        {hasAccess ? copy.activeBody : copy.body}
+        {hasAccess ? copy.activeBody : purchase && purchaseCopy ? purchaseCopy.intro : copy.body}
       </p>
 
       {!hasAccess && (
@@ -46,10 +56,16 @@ export default function NativeAccessNotice({
             </ul>
           </section>
 
-          <section className="mt-4 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
-            <h2 className="font-medium">{copy.closedHeading}</h2>
-            <p className="mt-3 text-sm leading-6 text-foreground/70">{copy.closedBody}</p>
-          </section>
+          {purchase ? (
+            <section className="mt-4 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
+              {purchase}
+            </section>
+          ) : (
+            <section className="mt-4 rounded-2xl border border-black/10 p-5 dark:border-white/30 sm:p-6">
+              <h2 className="font-medium">{copy.closedHeading}</h2>
+              <p className="mt-3 text-sm leading-6 text-foreground/70">{copy.closedBody}</p>
+            </section>
+          )}
         </>
       )}
 

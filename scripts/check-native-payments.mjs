@@ -148,6 +148,9 @@ const FORBIDDEN_TEXT = [FORM_MARK, STRIPE_MARK, PRICE_MARK, CASH_MARK, PRICING_P
 
 const TOKEN = "RFNativeShell";
 const COOKIE = "rf_native_shell";
+// Кука с ЧИСЛОМ версии оболочки (долг 235). Тот же литерал читает
+// `src/lib/native-shell-token.ts`.
+const VERSION_COOKIE = "rf_shell_version";
 
 function read(path) {
   return readFileSync(path, "utf8");
@@ -587,12 +590,29 @@ const visibleDocument = sharedVisibleDocument;
 const SAFARI =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
 
-/** Три обличья запроса. `web` — обычный браузер; `token` — оболочка, как её
- *  видит прямой переход webview; `cookie` — оболочка, как её видит запрос
- *  service worker'а: токена нет, кука есть. */
+/**
+ * ПЯТЬ ОБЛИЧИЙ ЗАПРОСА. `web` — обычный браузер; `token` — оболочка, как её
+ * видит прямой переход webview; `cookie` — оболочка, как её видит запрос
+ * service worker'а: токена нет, кука есть.
+ *
+ * `token4` и `cookie4` добавлены 22.09.2026 (заход 7.224). В оболочке
+ * `versionCode 4` внутри приложения ПОЯВИЛАСЬ покупка — нативная, через
+ * магазин, — и сайт отличает её от старой по числу в токене и в куке
+ * `rf_shell_version` (`src/lib/native-shell-token.ts`). Без этих двух
+ * обличий сторож судил бы ровно те версии, где новой ветки нет вовсе, и
+ * его ноль не говорил бы о новой ничего. Правило для них ТО ЖЕ: нативная
+ * покупка законна, а веб-касса, цена в песо и OXXO — нет.
+ */
 async function fetchPage(base, path, disguise, session) {
-  const headers = { "user-agent": disguise === "token" ? `${SAFARI} ${TOKEN}` : SAFARI };
-  const jar = [session, disguise === "cookie" ? `${COOKIE}=1` : ""].filter(Boolean).join("; ");
+  const token = disguise === "token" ? TOKEN : disguise === "token4" ? `${TOKEN}/4` : null;
+  const headers = { "user-agent": token ? `${SAFARI} ${token}` : SAFARI };
+  const jar = [
+    session,
+    disguise === "cookie" || disguise === "cookie4" ? `${COOKIE}=1` : "",
+    disguise === "cookie4" ? `${VERSION_COOKIE}=4` : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
   if (jar) headers.cookie = jar;
   const res = await fetch(`${base}${path}`, { headers, signal: AbortSignal.timeout(30_000) });
   if (!res.ok) throw new Error(`${path} (${disguise}) ответил ${res.status}`);
@@ -694,7 +714,7 @@ function plantPurchaseButton(html, lang) {
 }
 
 /** Очередь с ограничением одновременности: 132 адреса × 3 роли × 2
- *  обличья — это 792 запроса, и последовательно они идут минутами. */
+ *  обличья — это 1608 запросов, и последовательно они идут минутами. */
 async function pool(items, limit, worker) {
   const results = [];
   let next = 0;
@@ -766,7 +786,7 @@ async function live(base, plant) {
       return out;
     }
     out.webPaid = judgeNative(web, "контроль", labels[lang]).length;
-    for (const disguise of ["token", "cookie"]) {
+    for (const disguise of ["token", "cookie", "token4", "cookie4"]) {
       let raw;
       try {
         raw = await fetchPage(base, path, disguise, jar);
@@ -794,7 +814,7 @@ async function live(base, plant) {
   }
 
   console.log(
-    `  запросов: ${census.addresses.length} адресов × 3 роли × 2 обличья = ${census.addresses.length * 6}; ` +
+    `  запросов: ${census.addresses.length} адресов × 3 роли × 4 обличья = ${census.addresses.length * 12}; ` +
       `не открылось этой роли: ${skipped} сочетаний адрес×роль`,
   );
 
@@ -871,7 +891,7 @@ async function main() {
       return 1;
     }
     console.log(
-      "check:native-payments (живая) — по всему собранному множеству адресов, три роли × два обличья оболочки: " +
+      "check:native-payments (живая) — по всему собранному множеству адресов, три роли × четыре обличья оболочки (версии 2 и 4, токен и кука): " +
         "0 форм, 0 цен, 0 входов на платёжные поверхности, 0 подписей платных кнопок.",
     );
     return 0;
@@ -1053,7 +1073,7 @@ function topicVsCheckoutPlants() {
     "check:native-payments — оболочку узнают по ДВУМ признакам, ветка стоит у КАЖДОГО входа на страницу цен " +
       `(${SOURCES.length} файлов), вместо пейвола замок, воркер платёжных страниц не кеширует; контроль — --plant.`,
   );
-  console.log("  Живая половина (три роли × три обличья запроса) гоняется из scripts/verify-rendered.mjs с --base=.");
+  console.log("  Живая половина (три роли × четыре обличья оболочки) гоняется из scripts/verify-rendered.mjs с --base=.");
   return 0;
 }
 
