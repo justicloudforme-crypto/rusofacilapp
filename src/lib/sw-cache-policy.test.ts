@@ -77,7 +77,17 @@ describe("долг 77: клип озвучки узнаётся на чужом 
  */
 describe("долги 75 и 76: бюджет объявлен у каждого кеша", () => {
   it("шесть кешей, и у каждого свой ключ (шестой — содержание, заход 7.229)", () => {
-    expect(CACHE_BUDGETS.map((b) => b.key)).toEqual(["html", "content", "rsc", "rscPrefetch", "others", "audio"]);
+    // «section» добавлен 25.09.2026 (7.230, строка 309): корни разделов
+    // получили свой кеш — без него вкладки каркаса без сети вели в пустоту.
+    expect(CACHE_BUDGETS.map((b) => b.key)).toEqual([
+      "html",
+      "content",
+      "section",
+      "rsc",
+      "rscPrefetch",
+      "others",
+      "audio",
+    ]);
   });
 
   it("у документов свой счёт, отдельный от статики (долг 76)", () => {
@@ -174,7 +184,10 @@ describe("офлайн-2: потолок кеша содержания назв�
   it("свой кеш есть, и он не делит потолок с общим кешем документов", () => {
     const content = CACHE_BUDGET_BY_KEY.content;
     expect(content).toBeDefined();
-    expect(content.maxEntries).toBe(40);
+    // Тридцать шесть, а не сорок: 25.09.2026 (7.230) у корней разделов
+    // появился свой кеш, каталоги оказались тяжелее материала, и счёт
+    // сохранённого на устройстве пересчитан — см. `why`.
+    expect(content.maxEntries).toBe(36);
     // Тридцать суток, а не сутки: читать сохранённое человек собирается
     // НЕ в тот же день, когда открыл.
     expect(content.maxAgeSeconds).toBe(30 * 24 * 60 * 60);
@@ -186,10 +199,26 @@ describe("офлайн-2: потолок кеша содержания назв�
     // сняты на собранной сборке 23.09.2026.
     expect(CACHE_BUDGET_BY_KEY.content.why).toMatch(/240 068/);
     expect(CACHE_BUDGET_BY_KEY.content.why).toMatch(/236 308/);
+    // Перемер 25.09.2026 (7.230) — и он в объяснении тоже назван.
+    expect(CACHE_BUDGET_BY_KEY.content.why).toMatch(/252 585/);
   });
 
-  it("у каждого объявленного кеша своя строка бюджета — их шесть", () => {
-    expect(CACHE_BUDGETS).toHaveLength(6);
-    expect(new Set(CACHE_BUDGETS.map((b) => b.key)).size).toBe(6);
+  it("у каждого объявленного кеша своя строка бюджета — их семь", () => {
+    expect(CACHE_BUDGETS).toHaveLength(7);
+    expect(new Set(CACHE_BUDGETS.map((b) => b.key)).size).toBe(7);
+  });
+
+  /**
+   * ЗАХОД 7.230 (ОФЛАЙН-2б, строка 309). Корни разделов — это три из
+   * пяти вкладок каркаса, и до этого захода им не полагалось кеша
+   * вовсе: обычный `html` живёт сутки и вытесняется первым же обходом.
+   */
+  it("корни разделов: свой потолок, свой срок и число, объяснённое замером", () => {
+    const section = CACHE_BUDGET_BY_KEY.section;
+    expect(section.maxEntries).toBe(4);
+    expect(section.maxAgeSeconds).toBe(30 * 24 * 60 * 60);
+    expect(section.why).toMatch(/два раздела × две локали/);
+    // Материалу разделы не мешают: счёт у них отдельный и потолок свой.
+    expect(section.maxEntries).toBeLessThan(CACHE_BUDGET_BY_KEY.content.maxEntries);
   });
 });

@@ -57,7 +57,9 @@ import { pathToFileURL } from "node:url";
 const PLANT = process.argv.slice(2).includes("--plant");
 const POLICY = "src/lib/sw-cache-policy.ts";
 const SW = "src/app/sw.ts";
-const KEYS = ["html", "rsc", "rscPrefetch", "others", "content", "audio"];
+// «section» добавлен 25.09.2026 (7.230, строка 309): корни разделов
+// получили свой кеш — без него вкладки каркаса без сети вели в пустоту.
+const KEYS = ["html", "rsc", "rscPrefetch", "others", "content", "section", "audio"];
 
 export function stripComments(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^[ \t]*\/\/.*$/gm, " ");

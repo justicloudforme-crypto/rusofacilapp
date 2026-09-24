@@ -14,7 +14,9 @@
 // (`e2e/offline-shell.spec.ts`, где полосы подставляются руками, ровно
 // как их подставляет оболочка).
 //
-// ЧТО ПРОВЕРЯЕТСЯ — тринадцать утверждений.
+// ЧТО ПРОВЕРЯЕТСЯ — восемнадцать утверждений (тринадцать от 7.229 и пять
+// от 7.230: список сохранённого, честная пустая строка, строка-прибор,
+// вкладки без сети и порядок показа списка).
 //
 //  1. Каркас читает `Cache Storage` САМ (`caches.keys`, `cache.match`) —
 //     то есть не ждёт воркера, которого в оболочке на навигации нет.
@@ -45,7 +47,35 @@
 // 13. Панелей размечено столько же, сколько их переключается по `tab ===`
 //     — то есть добавить вкладку, забыв про метку, нельзя.
 //
+// 14. Каркас показывает СПИСОК сохранённого на телефоне — заголовок в
+//     обеих локалях и разметку под перечень. Без него человек после
+//     холодного старта без сети не имеет НИ ОДНОГО способа попасть в
+//     сохранённый урок: адрес урока он наизусть не знает (заход 7.230,
+//     видео владельца 25.09.2026).
+// 15. Пусто — так и сказано, одной честной строкой в обеих локалях.
+// 16. Внизу каркаса стоит строка-прибор с ЧИСЛОМ сохранённого и
+//     коротким отпечатком кеша: по видео владельца видно, сохранил
+//     телефон что-нибудь или нет.
+// 17. Вкладки каркаса без сети смотрят в кеш, а не ведут в пустоту: три
+//     раздела названы поимённо.
+// 18. Список рисуется ровно тогда, когда каркас ОСТАЁТСЯ на экране, — в
+//     обеих ветках (копии нет и копия не отрисовалась).
+//
 //   node scripts/check-offline-reader.mjs
+// 14. Каркас показывает СПИСОК сохранённого на телефоне — заголовок в
+//     обеих локалях и разметку под перечень. Без него человек после
+//     холодного старта без сети не имеет НИ ОДНОГО способа попасть в
+//     сохранённый урок: адрес урока он наизусть не знает (заход 7.230,
+//     видео владельца 25.09.2026).
+// 15. Пусто — так и сказано, одной честной строкой в обеих локалях.
+// 16. Внизу каркаса стоит строка-прибор с ЧИСЛОМ сохранённого и
+//     коротким отпечатком кеша: по видео владельца видно, сохранил
+//     телефон что-нибудь или нет.
+// 17. Вкладки каркаса без сети смотрят в кеш, а не ведут в пустоту: три
+//     раздела названы поимённо.
+// 18. Список рисуется ровно тогда, когда каркас ОСТАЁТСЯ на экране, — в
+//     обеих ветках (копии нет и копия не отрисовалась).
+//
 //   node scripts/check-offline-reader.mjs --plant
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -172,6 +202,37 @@ export function violations(sources) {
   if (!/data-offline-tab=\{item\.id\}/.test(tabbar)) {
     bad.push(`${TABBAR}: кнопка вкладки не несёт data-offline-tab — без сети её нечем опознать`);
   }
+  // 14
+  if (!/data-saved-list/.test(shell) || !/Guardado en este teléfono/.test(shell) || !/Сохранено на этом телефоне/.test(shell)) {
+    bad.push(
+      `${SHELL}: списка «сохранено на этом телефоне» нет — после холодного старта без сети человек не имеет ни одного способа попасть в сохранённый урок (ровно видео владельца 25.09.2026)`,
+    );
+  }
+  // 15
+  if (!/data-saved-empty/.test(shell) || !/Aún no hay nada guardado/.test(shell) || !/ничего не сохранено/.test(shell)) {
+    bad.push(`${SHELL}: пустой список молчит вместо одной честной строки — пустое место читается как поломка`);
+  }
+  // 16
+  if (!/data-saved-gauge/.test(shell) || !/fingerprintOf/.test(shell)) {
+    bad.push(`${SHELL}: строки-прибора «сохранено: N · отпечаток» нет — по видео с телефона нечем отличить «не сохранилось» от «не нашлось»`);
+  }
+  // 17
+  const tabFilter = /var TAB_FILTER = \{([^}]*)\}/.exec(shell)?.[1] ?? "";
+  for (const section of ["/courses", "/stories", "/vocabulary"]) {
+    if (!tabFilter.includes(`"${section}"`)) {
+      bad.push(`${SHELL}: вкладка «${section}» без сети не смотрит в кеш — нажатие снова даст пустой каркас`);
+    }
+  }
+  if (!/\n\s*armTabsOffline\(\);/.test(shell)) {
+    bad.push(`${SHELL}: обработчик вкладок без сети не подключён — правило написано и не включено`);
+  }
+  // 18
+  const shownBranches = (shell.match(/showSavedList\(/g) ?? []).length;
+  if (shownBranches < 3) {
+    bad.push(
+      `${SHELL}: список сохранённого рисуется не во всех ветках каркаса (найдено ${shownBranches} упоминаний из трёх) — в одной из них человек снова увидит пустой каркас`,
+    );
+  }
   // 13
   const panels = (lesson.match(/data-offline-panel="/g) ?? []).length;
   const switched = (lesson.match(/tab === "[a-z]+" \? undefined : "hidden"/g) ?? []).length;
@@ -220,8 +281,8 @@ function plant() {
     SHELL,
     (s) =>
       s.replace(
-        '            if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);',
-        '            if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);',
+        '            if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);\n            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);',
+        '            if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);',
       ),
     "спрашивается раньше кеша содержания",
   );
@@ -300,6 +361,42 @@ function plant() {
     "не раньше разговора о сети",
   );
   add(
+    "подсадка: списка сохранённого на каркасе больше нет",
+    SHELL,
+    (s) => s.replaceAll("data-saved-list", "data-nothing-list"),
+    "списка «сохранено на этом телефоне» нет",
+  );
+  add(
+    "подсадка: пустой список молчит вместо честной строки",
+    SHELL,
+    (s) => s.replaceAll("data-saved-empty", "data-nothing-empty"),
+    "пустой список молчит",
+  );
+  add(
+    "подсадка: строка-прибор убрана",
+    SHELL,
+    (s) => s.replaceAll("data-saved-gauge", "data-nothing-gauge"),
+    "строки-прибора",
+  );
+  add(
+    "подсадка: вкладка «Cuentos» без сети снова ведёт в пустоту",
+    SHELL,
+    (s) => s.replace('"/stories": "story", ', ""),
+    "вкладка «/stories» без сети не смотрит в кеш",
+  );
+  add(
+    "подсадка: обработчик вкладок написан и не включён",
+    SHELL,
+    (s) => s.replace("        armTabsOffline();\n", ""),
+    "не подключён",
+  );
+  add(
+    "подсадка: список рисуется не во всех ветках каркаса",
+    SHELL,
+    (s) => s.replace("            showSavedList(null);\n            decideMessage();\n          })\n          .catch(function () {", "            decideMessage();\n          })\n          .catch(function () {"),
+    "не во всех ветках",
+  );
+  add(
     "подсадка: кнопка вкладки потеряла метку",
     TABBAR,
     (s) => s.replace("data-offline-tab={item.id}", "data-tab={item.id}"),
@@ -332,7 +429,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-reader — 13 правил, нарушений 0 (заход 7.229, офлайн-2)");
+  console.log("check:offline-reader — 18 правил, нарушений 0 (заходы 7.229 и 7.230, офлайн-2 и 2б)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
