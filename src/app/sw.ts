@@ -3,7 +3,13 @@ import { defaultCache } from "@serwist/next/worker";
 import { CacheFirst, CacheableResponsePlugin, ExpirationPlugin, NetworkFirst, NetworkOnly, RangeRequestsPlugin, Serwist } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
 import { buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
-import { AUDIO_CACHE_NAME, CACHE_BUDGET_BY_KEY, isAudioClipUrl } from "@/lib/sw-cache-policy";
+import {
+  AUDIO_CACHE_NAME,
+  CACHE_BUDGET_BY_KEY,
+  isAudioClipUrl,
+  isOfflineContentPath,
+  looksClosedForThisVisitor,
+} from "@/lib/sw-cache-policy";
 
 // The `/// <reference lib="webworker" />` above scopes this file's ambient
 // `self` type to ServiceWorkerGlobalScope without touching the project-wide
@@ -91,7 +97,7 @@ const BUDGET_KEY: Record<string, "html" | "rsc" | "rscPrefetch" | "others"> = {
  * чужой flight-ответ на чужое состояние роутера никому не отдастся.
  * Удаление же становится тем, чем его считали: «выкинуть этот адрес».
  */
-function expiration(key: "html" | "rsc" | "rscPrefetch" | "others" | "audio") {
+function expiration(key: "html" | "rsc" | "rscPrefetch" | "others" | "content" | "audio") {
   const budget = CACHE_BUDGET_BY_KEY[key];
   return new ExpirationPlugin({
     maxEntries: budget.maxEntries,
@@ -246,6 +252,52 @@ const OFFLINE_SHELL_URL = "/offline.html";
  * документов теперь свой, и он умеет то, чего чужой не умел, — сперва
  * проверить, жив ли сервер.
  */
+/**
+ * ЗАКРЫТОЕ НА УСТРОЙСТВЕ НЕ ОСТАЁТСЯ — ЗАХОД 7.229 (ОФЛАЙН-2).
+ *
+ * Сохранять урок, чтобы он читался в самолёте, и сохранять урок, который
+ * человеку не отдан, — разные вещи, и различать их обязан ТОТ ЖЕ код,
+ * который сохраняет. Иначе «офлайн-2» означало бы «платное лежит на
+ * телефоне у всякого, кто до него дотапал».
+ *
+ * ДВА ПРИЗНАКА, И ОБА СНЯТЫ С ОТВЕТА СЕРВЕРА, А НЕ ВЫЧИСЛЕНЫ НАМИ:
+ *
+ *   1. `"isAccessibleForFree":false` в разметке. Это `paywallJsonLd`
+ *      (`src/lib/site.ts`) — та самая подпись для поисковика, которую
+ *      урок, рассказ и медиа печатают и так. Она говорит ровно то, что
+ *      нужно: закрытая часть ЭТОМУ посетителю не отдана.
+ *   2. Ответ пришёл ПЕРЕНАПРАВЛЕНИЕМ (`response.redirected`). Так
+ *      выглядит `/ru/vocabulary` для человека без подписки: сторож
+ *      маршрута (`proxy.ts`) уводит его, и по исходному адресу лёг бы
+ *      чужой по смыслу документ.
+ *
+ * ПРАВИЛО РАБОТАЕТ В ОБЕ СТОРОНЫ, и вторая сторона — главная. Копия не
+ * просто не кладётся: уже лежащая СТИРАЕТСЯ. То есть подписка кончилась
+ * → человек при первом же заходе с сетью получает от сервера закрытую
+ * страницу → сохранённая открытая копия исчезает в тот же миг. Без
+ * стирания «офлайн-2» означал бы вечный доступ за один оплаченный месяц.
+ *
+ * ВТОРОЙ РУБЕЖ — ВЫХОД ИЗ УЧЁТНОЙ ЗАПИСИ: имя кеша начинается с
+ * `rf-pages`, а такие кеши кнопка выхода стирает целиком
+ * (`personalPageCaches`, `src/lib/signed-out.ts`). Одного рубежа здесь
+ * мало: на общем телефоне цена ошибки — чужой платный урок.
+ */
+const CLOSED_CONTENT_NOT_STORED: SerwistPlugin = {
+  cacheWillUpdate: async ({ request, response }) => {
+    if (!response || response.status !== 200) return null;
+    const closed = response.redirected || looksClosedForThisVisitor(await response.clone().text());
+    if (!closed) return response;
+    // Стереть прежнюю копию — это и есть вторая половина правила.
+    try {
+      const cache = await caches.open(CACHES.content);
+      await cache.delete(request, { ignoreVary: true });
+    } catch {
+      // Кеша может не быть вовсе — тогда стирать нечего.
+    }
+    return null;
+  },
+};
+
 const DOCUMENT_FALLBACK: SerwistPlugin = {
   handlerDidError: async ({ request }) => {
     if (self.navigator.onLine !== false && (await serverAnswers())) {
@@ -363,6 +415,27 @@ const serwist = new Serwist({
      * не по заголовку, которого не бывает. Стоит ДО `runtimeCaching`,
      * иначе всеохватный `others` заберёт запрос себе первым.
      */
+    /**
+     * СОХРАНЁННОЕ СОДЕРЖАНИЕ — СВОЙ КЕШ, ЗАХОД 7.229 (ОФЛАЙН-2).
+     *
+     * Стоит ДО общего маршрута документов и после личных: урок, рассказ
+     * и словарь тем кладутся в `CACHES.content` с собственным потолком
+     * (40 записей, 30 суток, `src/lib/sw-cache-policy.ts`), потому что
+     * общий кеш документов их вытесняет. Замер прогоном 23.09.2026:
+     * обход 46 разных адресов оставляет в `html` ровно 40 записей, и
+     * открытого первым урока среди них уже нет.
+     *
+     * Запасной выход — тот же `DOCUMENT_FALLBACK`: правило «нет сети»
+     * (долг 278) одно на все документы, и расподобить его нельзя.
+     */
+    {
+      matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
+        sameOrigin && request.mode === "navigate" && isOfflineContentPath(url.pathname),
+      handler: new NetworkFirst({
+        cacheName: CACHES.content,
+        plugins: [expiration("content"), CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+      }),
+    },
     {
       matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
         sameOrigin && request.mode === "navigate" && !url.pathname.startsWith("/api/"),

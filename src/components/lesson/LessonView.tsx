@@ -256,7 +256,7 @@ export default function LessonView({
                 be active. */}
             {isLocked && (
               <>
-                <div className={tab === "slides" ? undefined : "hidden"}>
+                <div data-offline-panel="slides" className={tab === "slides" ? undefined : "hidden"}>
                   <LockedModuleCard
                     locale={lang}
                     label={dict.locked.slidesLabel}
@@ -266,7 +266,7 @@ export default function LessonView({
                     closedNote={nativeClosedNote}
                   />
                 </div>
-                <div className={tab === "vocabulary" ? undefined : "hidden"}>
+                <div data-offline-panel="vocabulary" className={tab === "vocabulary" ? undefined : "hidden"}>
                   <LessonGlossaryTerms
                     level={level}
                     lessonSlug={lessonSlug}
@@ -284,7 +284,7 @@ export default function LessonView({
                     closedNote={nativeClosedNote}
                   />
                 </div>
-                <div className={tab === "exercises" ? undefined : "hidden"}>
+                <div data-offline-panel="exercises" className={tab === "exercises" ? undefined : "hidden"}>
                   <LockedModuleCard
                     locale={lang}
                     label={dict.locked.exercisesLabel}
@@ -306,7 +306,7 @@ export default function LessonView({
                 Same visible behaviour for a human: one panel showing,
                 the rest hidden. */}
             {!isLocked && content.slides && (
-              <div className={tab === "slides" ? undefined : "hidden"}>
+              <div data-offline-panel="slides" className={tab === "slides" ? undefined : "hidden"}>
                 <SlidesTab
                   slides={content.slides}
                   illustrations={slideIllustrations}
@@ -319,11 +319,11 @@ export default function LessonView({
               </div>
             )}
             {content.alphabet && (
-              <div className={tab === "alphabet" ? undefined : "hidden"}>
+              <div data-offline-panel="alphabet" className={tab === "alphabet" ? undefined : "hidden"}>
                 <AlphabetTable alphabet={content.alphabet} dict={dict.alphabet} audioMap={audioMap} />
               </div>
             )}
-            <div className={tab === "grammar" ? undefined : "hidden"}>
+            <div data-offline-panel="grammar" className={tab === "grammar" ? undefined : "hidden"}>
               <GrammarTab
                 grammar={content.grammar}
                 readingPractice={content.readingPractice}
@@ -336,7 +336,7 @@ export default function LessonView({
               />
             </div>
             {!isLocked && (
-              <div className={tab === "vocabulary" ? undefined : "hidden"}>
+              <div data-offline-panel="vocabulary" className={tab === "vocabulary" ? undefined : "hidden"}>
                 <LessonGlossaryTerms
                   level={level}
                   lessonSlug={lessonSlug}
@@ -359,7 +359,7 @@ export default function LessonView({
                 the crawler's view costs nothing for SEO while saving a
                 GET /api/progress on every single lesson view. */}
             {!isLocked && exercisesEverOpened && (
-              <div className={tab === "exercises" ? undefined : "hidden"}>
+              <div data-offline-panel="exercises" className={tab === "exercises" ? undefined : "hidden"}>
                 <ExercisesTab
                   exercises={content.exercises}
                   vocabulary={content.vocabulary}

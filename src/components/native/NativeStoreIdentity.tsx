@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { configureRevenueCat, loginRevenueCat, logoutRevenueCat } from "@/lib/revenuecat-client";
+import { subscribeActivation } from "@/lib/access-activation";
 
 /**
  * ПРИВЯЗКА ПОКУПАТЕЛЯ МАГАЗИНА К УЧЁТНОЙ ЗАПИСИ САЙТА — заход 7.224.
@@ -21,8 +23,23 @@ import { configureRevenueCat, loginRevenueCat, logoutRevenueCat } from "@/lib/re
  *
  * ВЫХОД ИЗ УЧЁТНОЙ ЗАПИСИ ОБЯЗАН СБРАСЫВАТЬ ПРИВЯЗКУ. Телефон бывает
  * общим: без `logOut` следующий вошедший унаследовал бы чужую покупку.
+ *
+ * ВТОРАЯ ОБЯЗАННОСТЬ, ДОБАВЛЕННАЯ 24.09.2026 (долг 304): ПЕРЕЧИТАТЬ
+ * СТРАНИЦУ, КОГДА СЕРВЕР ОТКРЫЛ ДОСТУП. Раньше это делал экран покупки —
+ * и переставал делать, как только шторка закрывалась, потому что вместе
+ * с ней размонтировался и сам экран. Воспроизведено прогоном
+ * 24.09.2026: шторка закрыта на «Activando…» → доступ выдан через 6
+ * секунд → на странице уровня 32 знака платного и через 15 секунд.
+ *
+ * Этот узел для такой работы подходит ровно потому же, почему он вообще
+ * существует: он смонтирован в корневом макете, то есть ВСЕГДА, и
+ * закрытие любой шторки его не задевает. Своего понятия «доступ открыт»
+ * у него нет — он лишь слушает `src/lib/access-activation.ts`, а тот
+ * спрашивает сервер.
  */
 export default function NativeStoreIdentity({ userId }: { userId: string | null }) {
+  const router = useRouter();
+
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -46,6 +63,21 @@ export default function NativeStoreIdentity({ userId }: { userId: string | null 
       cancelled = true;
     };
   }, [userId]);
+
+  /**
+   * `router.refresh()` перерисовывает серверные компоненты ТЕКУЩЕГО
+   * маршрута — то есть ровно ту страницу, поверх которой человек купил:
+   * знаки платного и кружки «сдан/начат» пересчитываются сервером
+   * заново. Полная перезагрузка здесь была бы грубее и дороже: она
+   * потеряла бы состояние всех открытых вкладок урока.
+   */
+  useEffect(
+    () =>
+      subscribeActivation((live) => {
+        if (live.kind === "granted") router.refresh();
+      }),
+    [router],
+  );
 
   return null;
 }

@@ -60,7 +60,19 @@ export default defineConfig({
        * Playwright не доводит её до воркера, и мерить здесь пришлось бы
        * Playwright, а не продукт. Тот же класс, что у трёх проб выше.
        */
-      testIgnore: /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell)\.spec\.ts/,
+      /**
+       * `offline-saved-content.spec.ts` добавлен сюда 24.09.2026 (заход
+       * 7.229) по замеру, а не по подозрению: из четырёх его тестов на
+       * этом проекте падают ДВА — оба те, что трогают навигацию без
+       * сети. Причина та же, по которой здесь уже нет `offline-shell`:
+       * WebKit под Playwright навигацию при `setOffline(true)` до
+       * документа не доводит, и мерить пришлось бы Playwright, а не
+       * продукт. Два теста, которые сети НЕ выключают (правило
+       * «закрытое не сохраняется» и геометрия каркаса), вынесены в
+       * отдельный файл `offline-content-access.spec.ts` и идут на ОБОИХ
+       * движках: терять их вместе с остальными было бы не за что.
+       */
+      testIgnore: /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone

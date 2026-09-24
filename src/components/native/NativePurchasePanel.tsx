@@ -1,13 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as Sentry from "@sentry/nextjs";
 import type { PurchasesPackage } from "@revenuecat/purchases-capacitor";
 import type { Locale } from "@/i18n/config";
 import type { NativeAccessCopy } from "@/lib/native-access-copy";
 import { loadStore, purchasePackage, restorePurchases, storeFailureCode } from "@/lib/revenuecat-client";
+import {
+  activationState,
+  readTier,
+  startActivationWatch,
+  subscribeActivation,
+} from "@/lib/access-activation";
 import type { StoreFailure, StoreStep } from "@/lib/revenuecat-client";
 
 /**
@@ -36,15 +41,6 @@ import type { StoreFailure, StoreStep } from "@/lib/revenuecat-client";
  *      упёрся бы в тот же замок.
  */
 
-/** Что о доступе этой учётной записи говорит СЕРВЕР прямо сейчас.
- *  Единственное определение «доступ открыт» на этом экране. */
-async function readTier(): Promise<string | null> {
-  const res = await fetch("/api/subscription/status", { cache: "no-store" });
-  if (!res.ok) return null;
-  const body: { tier?: string } = await res.json();
-  return body.tier ?? null;
-}
-
 type Stage =
   | { kind: "loading" }
   | { kind: "ready" }
@@ -60,14 +56,6 @@ type Stage =
   | { kind: "failed" }
   | { kind: "restoredNothing" }
   | { kind: "restoredExpired" };
-
-/** Сколько ждём событие вебхука после подтверждённой оплаты. Шестьдесят
- *  секунд — это не «на глазок»: доставка события RevenueCat идёт через их
- *  очередь, и типичная задержка — единицы секунд, а не минуты. Дольше
- *  держать человека перед крутящимся кружком незачем: у экрана есть
- *  честное «ещё не доехало» и кнопка повтора. */
-const ACTIVATION_TIMEOUT_MS = 60_000;
-const ACTIVATION_POLL_MS = 3_000;
 
 export default function NativePurchasePanel({
   lang,
@@ -88,7 +76,6 @@ export default function NativePurchasePanel({
    *  (страница цен внутри приложения) — иначе они стояли бы дважды. */
   withHeading?: boolean;
 }) {
-  const router = useRouter();
   const [stage, setStage] = useState<Stage>({ kind: "loading" });
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const alive = useRef(true);
@@ -161,7 +148,13 @@ export default function NativePurchasePanel({
         return;
       }
       setPackages(found.packages);
-      setStage({ kind: "ready" });
+      // Шторку могли закрыть и открыть снова, пока доступ активируется:
+      // тогда список вариантов показывать нечего, разговор уже идёт.
+      const live = activationState();
+      if (live.kind === "waiting") setStage({ kind: "activating" });
+      else if (live.kind === "granted") setStage({ kind: "activated" });
+      else if (live.kind === "slow") setStage({ kind: "slow" });
+      else setStage({ kind: "ready" });
     },
     [report],
   );
@@ -189,30 +182,40 @@ export default function NativePurchasePanel({
     })();
   }, [apply, readStore, userId]);
 
-  /** Спрашивает СЕРВЕР, изменился ли уровень доступа. Ответ сервера — это
-   *  и есть определение «доступ открыт»: строку пишет вебхук. */
+  /**
+   * ОЖИДАНИЕ ДОСТУПА НАЧИНАЕТСЯ ЗДЕСЬ, НО ЖИВЁТ НЕ ЗДЕСЬ — ДОЛГ 304.
+   *
+   * До 24.09.2026 весь цикл ожидания стоял в этом компоненте, и в нём
+   * было два выхода по `alive.current` — оба ПЕРЕД `router.refresh()`.
+   * Значит закрытая шторка (а она закрывается: возврат из системного
+   * листа Google Play, кнопка «назад», пересоздание окна) убивала не
+   * лишний `setState`, а саму перерисовку страницы: оплата прошла,
+   * сервер доступ открыл, а замки на странице уровня остались.
+   * Воспроизведено прогоном 24.09.2026 — 32 знака платного и через 15
+   * секунд после выдачи доступа.
+   *
+   * Теперь ожидание живёт в модуле (`src/lib/access-activation.ts`), у
+   * которого нет ни монтирования, ни размонтирования, а перечитывает
+   * страницу `NativeStoreIdentity` — он в оболочке смонтирован всегда.
+   * Этот экран лишь ПОКАЗЫВАЕТ ход дела, пока открыт.
+   */
   const waitForAccess = useCallback(async () => {
     setStage({ kind: "activating" });
-    const before = baselineTier.current;
-    const deadline = Date.now() + ACTIVATION_TIMEOUT_MS;
-    while (Date.now() < deadline) {
-      try {
-        const tier = await readTier();
-        if (tier && tier !== before) {
-          if (!alive.current) return;
-          setStage({ kind: "activated" });
-          router.refresh();
-          return;
-        }
-      } catch {
-        // Сеть моргнула — это не повод бросать ожидание: оплата уже
-        // прошла, и следующий круг попробует снова.
-      }
-      await new Promise((resolve) => setTimeout(resolve, ACTIVATION_POLL_MS));
-      if (!alive.current) return;
-    }
-    setStage({ kind: "slow" });
-  }, [router]);
+    await startActivationWatch(baselineTier.current);
+  }, []);
+
+  /** Ход ожидания приходит подпиской — в том числе если шторку закрыли и
+   *  открыли снова, пока доступ активируется. */
+  useEffect(
+    () =>
+      subscribeActivation((live) => {
+        if (!alive.current) return;
+        if (live.kind === "waiting") setStage({ kind: "activating" });
+        else if (live.kind === "granted") setStage({ kind: "activated" });
+        else if (live.kind === "slow") setStage({ kind: "slow" });
+      }),
+    [],
+  );
 
   const buy = useCallback(
     async (pkg: PurchasesPackage) => {

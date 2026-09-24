@@ -32,6 +32,7 @@ const FILES = {
   capacitor: "capacitor.config.ts",
   gradle: "android/app/build.gradle",
   cancel: "src/app/api/subscription/cancel/route.ts",
+  activation: "src/lib/access-activation.ts",
 };
 
 /** Все файлы правила — один снимок. Подсадка правит СНИМОК, а не диск. */
@@ -436,6 +437,72 @@ function judge(files) {
     );
   }
 
+  /* ================================================================ *
+   * ПРАВИЛО 16 — ЗАХОД 7.229, ДОЛГ 304. ОЖИДАНИЕ ДОСТУПА ПЕРЕЖИВАЕТ
+   * ЗАКРЫТИЕ ШТОРКИ.
+   *
+   * ЧТО ИЗМЕРЕНО ПРОГОНОМ 24.09.2026 (Chromium, настоящий мост
+   * Capacitor, подставной магазин, вебхук через 6 секунд):
+   *
+   *   страница уровня A1 до покупки ............. 32 знака платного
+   *   покупка, шторка осталась открытой ......... 0 через 0,5 секунды
+   *   покупка, шторка закрыта на «Activando…» ... 32 и через 15 секунд
+   *
+   * ПРИЧИНА СТРОКОЙ: цикл ожидания жил внутри `NativePurchasePanel`, а
+   * тот размонтируется вместе со шторкой (`Modal` при `open === false`
+   * возвращает `null`). Два выхода по `alive.current` стояли ПЕРЕД
+   * `router.refresh()` — значит закрытая шторка убивала саму
+   * перерисовку страницы, а не лишний `setState`.
+   *
+   * ПОЧЕМУ ЭТО ПРАВИЛО, А НЕ ТОЛЬКО ПРАВКА: форма лечения тут и есть
+   * лечение. Верни ожидание в компонент — и дефект вернётся дословно,
+   * а живая проба, если её однажды вынесут, этого уже не увидит.
+   * ================================================================ */
+  const activation = stripComments(files.activation ?? "");
+  const identityCode = stripComments(files.identity);
+
+  if (!/export async function startActivationWatch\(/.test(activation)) {
+    problems.push(
+      `${FILES.activation}: ожидания доступа вне компонента нет — закрытая шторка снова убьёт ` +
+        "перерисовку страницы, и замки останутся после оплаты (долг 304)",
+    );
+  }
+  if (!/export function subscribeActivation\(/.test(activation)) {
+    problems.push(
+      `${FILES.activation}: подписки на ход активации нет — экрану покупки нечем показать ` +
+        "«активируем» и «готово» (долг 304)",
+    );
+  }
+  if (/alive|cancelled|useRef|useState/.test(activation)) {
+    problems.push(
+      `${FILES.activation}: ожидание снова привязано к жизни компонента — ровно то, из-за чего ` +
+        "закрытая шторка оставляла замки на оплаченной странице (долг 304)",
+    );
+  }
+  if (/router\.refresh\(\)/.test(panelCode)) {
+    problems.push(
+      `${FILES.panel}: страницу перечитывает экран покупки — он размонтируется вместе со шторкой, ` +
+        "и перечитывать станет некому (долг 304, замер 24.09.2026: 32 знака платного через 15 секунд)",
+    );
+  }
+  if (/while \(Date\.now\(\) </.test(panelCode)) {
+    problems.push(
+      `${FILES.panel}: цикл ожидания доступа вернулся внутрь экрана покупки (долг 304)`,
+    );
+  }
+  if (!/startActivationWatch\(/.test(panelCode)) {
+    problems.push(
+      `${FILES.panel}: после подтверждённой оплаты ожидание доступа не запускается вовсе — ` +
+        "человек заплатил и остался перед замком (долг 304)",
+    );
+  }
+  if (!/subscribeActivation\(/.test(identityCode) || !/router\.refresh\(\)/.test(identityCode)) {
+    problems.push(
+      `${FILES.identity}: страницу после выдачи доступа не перечитывает никто из постоянно ` +
+        "смонтированных — замки снимет только уход на другую вкладку (долг 304)",
+    );
+  }
+
   return problems;
 }
 
@@ -547,6 +614,35 @@ const PLANTS = [
     name: "наша отмена снова трогает строки магазина",
     apply: (f) => ({ ...f, cancel: f.cancel.replace('provider !== "revenuecat"', 'provider !== "нет-такого"') }),
   },
+  /* ---- ДОЛГ 304, заход 7.229: ожидание доступа переживает шторку ---- */
+  {
+    name: "страницу снова перечитывает экран покупки — то есть тот, кто уезжает вместе со шторкой",
+    apply: (f) => ({ ...f, panel: f.panel.replace("await startActivationWatch(baselineTier.current);", "await startActivationWatch(baselineTier.current);\n    router.refresh();") }),
+  },
+  {
+    name: "цикл ожидания вернулся внутрь экрана покупки",
+    apply: (f) => ({ ...f, panel: f.panel.replace("await startActivationWatch(baselineTier.current);", "while (Date.now() < Date.now() + 1) break;") }),
+  },
+  {
+    name: "ожидание доступа после оплаты не запускается вовсе",
+    apply: (f) => ({ ...f, panel: f.panel.replace(/startActivationWatch\(/g, "noopWatch(") }),
+  },
+  {
+    name: "постоянно смонтированный узел перестал перечитывать страницу",
+    apply: (f) => ({ ...f, identity: f.identity.replace(/router\.refresh\(\)/g, "void 0") }),
+  },
+  {
+    name: "ожидание снова привязано к жизни компонента (useRef внутри модуля)",
+    apply: (f) => ({ ...f, activation: `${f.activation}\nconst alive = { current: true };\n` }),
+  },
+  {
+    name: "модуля ожидания нет вовсе — состояние ДО захода 7.229",
+    apply: (f) => ({ ...f, activation: f.activation.replace("export async function startActivationWatch(", "async function startActivationWatchUnused(") }),
+  },
+  {
+    name: "подписки на ход активации нет — экрану нечем показать «готово»",
+    apply: (f) => ({ ...f, activation: f.activation.replace("export function subscribeActivation(", "function subscribeActivationUnused(") }),
+  },
 ];
 
 function main() {
@@ -562,7 +658,7 @@ function main() {
     }
     const v = versions(files);
     console.log(
-      `check:native-purchase — 15 правил, 0 нарушений. Оболочка называет себя версией ${v.fromCapacitor} ` +
+      `check:native-purchase — 16 правил, 0 нарушений. Оболочка называет себя версией ${v.fromCapacitor} ` +
         `и собрана как versionCode ${v.fromGradle} (совпадают); покупать умеет оболочка от ` +
         `${v.fromConfig} и выше; ключ магазина в одном файле; ` +
         `${REQUIRED_EVENTS.length} типов событий разбираются поимённо.`,
