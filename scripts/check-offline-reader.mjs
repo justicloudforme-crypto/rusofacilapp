@@ -216,6 +216,16 @@ function plant() {
     "rf-pages-content-",
   );
   add(
+    "подсадка: общий кеш документов спрашивается раньше кеша содержания",
+    SHELL,
+    (s) =>
+      s.replace(
+        '            if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);',
+        '            if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);',
+      ),
+    "спрашивается раньше кеша содержания",
+  );
+  add(
     "подсадка: подресурсы снова запрашиваются адресом, а не blob",
     SHELL,
     (s) => s.replace(/createObjectURL/g, "toStringTag"),
