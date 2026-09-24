@@ -181,6 +181,49 @@ public class MainActivity extends BridgeActivity {
     private static final String PREF_LOCALE = "lastLocale";
 
     /**
+     * ОТКРЫВАЛОСЬ ЛИ ПРИЛОЖЕНИЕ ХОТЬ РАЗ УСПЕШНО (заход 7.228, долг 306).
+     *
+     * От этого признака зависит, что человек увидит без сети. Если
+     * настоящая страница сайта уже рисовалась на этом телефоне, значит у
+     * воркера есть что показать, и каркас с пятью вкладками — правда. Если
+     * нет (самый первый запуск после установки без сети), то каркас обещал
+     * бы меню, за которым пусто, и остаётся прежний нативный экран 7.223.
+     *
+     * Признак записывается там же, где оболочка замечает НЕ экран отказа, —
+     * в {@link #noteScreenShown(String)}, то есть по первому же
+     * нарисованному кадру настоящей страницы.
+     */
+    private static final String PREF_EVER_LOADED = "everLoadedSite";
+
+    /** Копия признака в памяти: спрашивают его из фонового потока
+     *  webview (`shouldInterceptRequest`) на каждом документе. */
+    private volatile boolean siteEverLoaded = false;
+
+    /**
+     * СЕЙЧАС НА ЭКРАНЕ КАРКАС БЕЗ СЕТИ, А НЕ СТРАНИЦА САЙТА.
+     *
+     * Отличить их по адресу НЕЛЬЗЯ: каркас отдаётся по исходному адресу
+     * (в этом весь смысл — см. {@link OfflineShellWebViewClient}). Поэтому
+     * признак ставится в тот миг, когда каркас отдан, и снимается на
+     * начале следующей навигации. Без него лестница повторов сочла бы
+     * каркас настоящей страницей и перестала бы поднимать приложение,
+     * когда сеть вернётся.
+     */
+    private volatile boolean offlineShellVisible = false;
+
+    /**
+     * ВТОРАЯ ПОПЫТКА ЗАГРУЗКИ ГЛАВНОГО КАДРА — РОВНО ОДНА.
+     *
+     * Первый отказ главного кадра происходит ДО того, как наш клиент
+     * успел бы отдать каркас: до 7.228 Capacitor отвечал на этот отказ
+     * сразу экраном ошибки. Повтор навигации по тому же адресу даёт
+     * дороге дойти до `shouldInterceptRequest` нашего клиента (а при
+     * живом сервере — просто ещё один честный шанс). Больше одной
+     * попытки нельзя: два отказа подряд — это уже не гонка.
+     */
+    private volatile boolean mainFrameRetryUsed = false;
+
+    /**
      * ИМЯ КУКИ ВЫБОРА ЯЗЫКА — ВТОРАЯ ПОЛОВИНА ПАРЫ (заход 7.202, часть 1).
      *
      * Абзац выше говорит «кука — правильное место для первого читателя, но
@@ -243,6 +286,156 @@ public class MainActivity extends BridgeActivity {
         "}catch(e){}" +
         "})(%TOP%,%BOTTOM%,%LEFT%,%RIGHT%)";
 
+    /**
+     * КЛИЕНТ WEBVIEW ПОДМЕНЯЕТСЯ В САМОМ РАННЕМ МЕСТЕ, КОТОРОЕ ЕСТЬ.
+     *
+     * `BridgeActivity.load()` создаёт мост, и внутри создания Capacitor
+     * успевает и поставить свой `BridgeWebViewClient`, и позвать
+     * `webView.loadUrl(appUrl)`. Сама загрузка при этом асинхронна:
+     * `loadUrl` только ставит навигацию в очередь. Поэтому подмена сразу
+     * после `super.load()` — ещё в том же обороте главного потока —
+     * успевает до первого запроса. Если бы всё же не успела, первый
+     * отказ доехал бы до Capacitor, тот показал бы экран ошибки, и
+     * лестница повторов (7.223) через секунду загрузила бы адрес снова —
+     * уже нашим клиентом. То есть худший случай стоит одну секунду, а не
+     * поломку.
+     */
+    @Override
+    protected void load() {
+        super.load();
+        installOfflineShellClient();
+    }
+
+    private void installOfflineShellClient() {
+        if (getBridge() == null) {
+            return;
+        }
+        WebView webView = getBridge().getWebView();
+        if (webView == null) {
+            return;
+        }
+        siteEverLoaded = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(PREF_EVER_LOADED, false);
+        webView.setWebViewClient(
+            new OfflineShellWebViewClient(
+                getBridge(),
+                new OfflineShellWebViewClient.Host() {
+                    @Override
+                    public boolean offlineShellAllowed() {
+                        return siteEverLoaded && (mainFrameRetryUsed || deviceHasNoNetwork());
+                    }
+
+                    @Override
+                    public void onOfflineShellServed() {
+                        offlineShellVisible = true;
+                    }
+
+                    @Override
+                    public void onMainFrameLoadFailed(WebView view, String failedUrl) {
+                        handleMainFrameFailure(view, failedUrl);
+                    }
+                },
+                this
+            )
+        );
+    }
+
+    /**
+     * НЕТ НИ ОДНОЙ ДЕЙСТВУЮЩЕЙ СЕТИ У ТЕЛЕФОНА.
+     *
+     * Зачем это условие у каркаса. Без него каркас подменял бы ЛЮБОЙ
+     * ответ, которого Capacitor не смог получить с первого раза, — в том
+     * числе честный 404 и честный 500 при живом интернете. Правило
+     * такое: при выключенной сети каркас отдаётся сразу, а при живой —
+     * только со ВТОРОЙ попытки (`mainFrameRetryUsed`), то есть когда
+     * webview уже попробовал загрузить адрес сам и тоже не смог. Так
+     * поведение 7.223 для живой сети с медленным или молчащим сервером
+     * остаётся прежним: его ловит сторож загрузки, а не этот каркас.
+     *
+     * «Не знаем» считается за «сеть есть» намеренно: догадка не имеет
+     * права подменять настоящий ответ сервера.
+     */
+    private boolean deviceHasNoNetwork() {
+        Object service = connectivity != null ? connectivity : getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (!(service instanceof ConnectivityManager)) {
+            return false;
+        }
+        try {
+            return ((ConnectivityManager) service).getActiveNetwork() == null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * ЧТО ДЕЛАТЬ, КОГДА ГЛАВНЫЙ КАДР НЕ ЗАГРУЗИЛСЯ.
+     *
+     * Ступеней три, и последняя — прежнее поведение 7.223:
+     *  1. одна повторная навигация по тому же адресу (см.
+     *     {@link #mainFrameRetryUsed}) — ради дороги до нашего клиента;
+     *  2. её отдаёт каркасом сам клиент, и тогда сюда мы больше не
+     *     попадаем: ответ 200, отказа нет;
+     *  3. если повтор тоже отказал или каркас показывать не за что
+     *     (первый запуск после установки без сети), остаётся нативный
+     *     экран `server.errorPath` — ровно то, что было до 7.228.
+     */
+    private void handleMainFrameFailure(WebView view, String failedUrl) {
+        boolean canRetry = siteEverLoaded
+            && !mainFrameRetryUsed
+            && failedUrl != null
+            && !isErrorScreen(failedUrl);
+        if (canRetry) {
+            mainFrameRetryUsed = true;
+            view.loadUrl(failedUrl);
+            return;
+        }
+        releaseSplash(true);
+        String errorUrl = getBridge() == null ? null : getBridge().getErrorUrl();
+        if (errorUrl != null) {
+            view.loadUrl(errorUrl);
+        }
+    }
+
+    /** Признак «на экране каркас» снимается на НАЧАЛЕ навигации: клиент
+     *  ставит его позже, уже отвечая на запрос документа. */
+    private void armOfflineShell() {
+        if (getBridge() == null) {
+            return;
+        }
+        getBridge().addWebViewListener(new WebViewListener() {
+            @Override
+            public void onPageStarted(WebView view) {
+                offlineShellVisible = false;
+            }
+        });
+    }
+
+    /** Настоящая страница сайта нарисовалась — значит каркасу без сети
+     *  есть что обещать. Записывается один раз и навсегда. */
+    private void rememberSiteLoaded(String url) {
+        if (url == null || getBridge() == null) {
+            return;
+        }
+        // Имя переменной здесь НЕ такое, как в chosenLocaleFromCookies,
+        // намеренно: подсадка check:shell-session-locale ищет первое
+        // вхождение объявления с тем именем по всему файлу, и
+        // одноимённая переменная здесь молча перенаправила бы её сюда —
+        // тот же класс промаха, что 7.210. По той же причине и в этом
+        // пояснении та строка не выписана целиком.
+        String site = getBridge().getServerUrl();
+        if (site == null || !url.startsWith(site)) {
+            return;
+        }
+        if (siteEverLoaded) {
+            return;
+        }
+        siteEverLoaded = true;
+        getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(PREF_EVER_LOADED, true)
+            .apply();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // ДО super.onCreate: androidx требует установить заставку раньше,
@@ -253,6 +446,7 @@ public class MainActivity extends BridgeActivity {
         attachBrandSplashOverlay();
         armLoadWatchdog();
         armNetworkRecovery();
+        armOfflineShell();
         armSafeAreaInsets();
         armRememberedLocale();
         armSplashRelease();
@@ -829,6 +1023,11 @@ public class MainActivity extends BridgeActivity {
                 if (current != null && current.startsWith(errorUrl)) {
                     return;
                 }
+                // Каркас без сети нарисован и его стирать нечем лучше
+                // (7.228): подменять его нативным экраном — шаг назад.
+                if (offlineShellVisible) {
+                    return;
+                }
                 boolean finished = webView.getProgress() >= 100;
                 boolean painted = webView.getContentHeight() > 0;
                 if (finished && painted) {
@@ -888,6 +1087,11 @@ public class MainActivity extends BridgeActivity {
     /** То же самое, но про текущий адрес webview: лестница повторов
      *  обязана спрашивать не «что грузилось», а «что на экране сейчас». */
     private boolean onErrorScreenNow() {
+        // Каркас без сети (7.228) настоящей страницей не считается: он
+        // отдан по исходному адресу, и по адресу его не отличить.
+        if (offlineShellVisible) {
+            return true;
+        }
         WebView webView = getBridge() == null ? null : getBridge().getWebView();
         return webView != null && isErrorScreen(webView.getUrl());
     }
@@ -969,12 +1173,16 @@ public class MainActivity extends BridgeActivity {
         if (url == null) {
             return;
         }
-        if (isErrorScreen(url)) {
+        if (isErrorScreen(url) || offlineShellVisible) {
             scheduleAutoRetry();
             return;
         }
         cancelAutoRetry();
         autoRetryAttempt = 0;
+        // Настоящая страница нарисовалась: вторая попытка снова доступна,
+        // и телефону теперь есть что показать без сети (7.228).
+        mainFrameRetryUsed = false;
+        rememberSiteLoaded(url);
     }
 
     /**

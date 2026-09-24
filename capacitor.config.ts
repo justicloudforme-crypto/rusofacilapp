@@ -103,11 +103,16 @@ const NATIVE_USER_AGENT_TOKEN = "RFNativeShell";
 //
 // Число обязано совпадать с `versionCode` в `android/app/build.gradle` и
 // с `CURRENT_PROJECT_VERSION` в iOS-проекте — сличает
-// `npm run check:native-payments`. Разбор на стороне сайта —
+// `npm run check:native-payments`. С `NATIVE_PURCHASE_MIN_SHELL_VERSION`
+// оно совпадать НЕ обязано и с 24.09.2026 не совпадает: то число —
+// НИЖНЯЯ граница («какая оболочка умеет покупать», 4), а это —
+// нынешняя сборка (5). Равенство держало бы покупку только в самой
+// свежей оболочке и отбирало бы её у 25 тестировщиков в тот же день,
+// когда выходит обновление. Разбор на стороне сайта —
 // `src/lib/native-shell-token.ts`, и он СОВМЕСТИМ СО СТАРОЙ ОБОЛОЧКОЙ:
 // токен без косой черты и без числа читается как версия 2, потому что
 // бесверсионным был ровно один залитый пакет — 7202.
-const NATIVE_SHELL_VERSION = 4;
+const NATIVE_SHELL_VERSION = 5;
 
 const config: CapacitorConfig = {
   // Reverse-domain of the now-confirmed production domain (rusofacilapp.com,
