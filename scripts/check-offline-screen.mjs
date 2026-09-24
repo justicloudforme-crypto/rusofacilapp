@@ -1,5 +1,5 @@
 /**
- * ОФЛАЙН-ЗАГЛУШКА ГОВОРИТ НА ОДНОМ ЯЗЫКЕ — ЗАХОД 7.218.
+ * КАРКАС БЕЗ СЕТИ И ОДИН ЯЗЫК НА ЭКРАНЕ — ЗАХОДЫ 7.218 И 7.227.
  *
  * ЧТО СНЯЛ ВЛАДЕЛЕЦ 20.09.2026: при живой сети страница рассказа на
  * несколько секунд подменилась экраном «Estás sin conexión — Вы не в
@@ -70,6 +70,61 @@ export function violations(htmlRaw) {
   if (!/documentElement\.lang/.test(html)) {
     bad.push(`${FILE}: язык документа не проставляется — экран для озвучки и переводчика остаётся чужим`);
   }
+
+  // 5) каркас: шапка и нижняя панель из пяти вкладок
+  if (!/<header[\s>]/.test(html)) {
+    bad.push(`${FILE}: шапки нет — без сети снова голый экран (замер 23.09.2026: header отсутствует, ссылок 0)`);
+  }
+  const tabs = [...html.matchAll(/data-href="([^"]*)"/g)].map((m) => m[1]);
+  const tabLinks = tabs.filter((href) => href !== "");
+  if (tabLinks.length !== 5) {
+    bad.push(
+      `${FILE}: вкладок в нижней панели ${tabLinks.length}, а не 5 — меню без сети перестало совпадать с BottomNav.tsx`,
+    );
+  }
+  for (const expected of ["/stories", "/courses", "/vocabulary", "/word-games"]) {
+    if (!tabLinks.includes(expected)) {
+      bad.push(`${FILE}: во вкладках нет адреса ${expected} — меню без сети уже не то же, что с сетью`);
+    }
+  }
+  // 6) адреса подставляются по локали
+  if (!/setAttribute\("href", "\/" \+ lang/.test(html)) {
+    bad.push(`${FILE}: адреса вкладок не получают локаль из адреса — человек с /ru уедет в испанский раздел`);
+  }
+  // 7) кнопка повтора
+  if ((html.match(/data-retry/g) ?? []).length < 3) {
+    bad.push(`${FILE}: кнопки «Повторить» нет в обеих локалях или у неё нет обработчика`);
+  }
+  // 8) возврат сети — без ручной перезагрузки
+  if (!/addEventListener\("online"/.test(html)) {
+    bad.push(`${FILE}: возврат сети не слушается — человеку придётся перезапускать приложение руками`);
+  }
+  if (!/setInterval\(/.test(html)) {
+    bad.push(
+      `${FILE}: своей пробы по таймеру нет — событие «online» приходит не на всех устройствах, и экран завис бы до ручного действия`,
+    );
+  }
+  // 9) «нет сети» — только по признаку (долг 278)
+  if (!/navigator\.onLine/.test(html)) {
+    bad.push(`${FILE}: признака navigator.onLine нет — «нет сети» снова утверждается по ОДНОМУ упавшему запросу (долг 278)`);
+  }
+  if (!/\/api\/health/.test(html)) {
+    bad.push(`${FILE}: пробы до своего /api/health нет — отличить «сеть умерла» от «страница не открылась» нечем (долг 278)`);
+  }
+  for (const state of ["offline", "error"]) {
+    if (!new RegExp(`data-state="${state}"`).test(html)) {
+      bad.push(
+        `${FILE}: состояния «${state}» в разметке нет — экран снова говорит одно и то же при любой причине отказа (долг 278)`,
+      );
+    }
+  }
+  // 10) личных и платных адресов в каркасе нет
+  const forbidden = [...html.matchAll(/data-href="([^"]*)"/g)]
+    .map((m) => m[1])
+    .filter((href) => /(profile|admin|pricing)/.test(href));
+  if (forbidden.length > 0) {
+    bad.push(`${FILE}: во вкладках личный или платный адрес (${forbidden.join(", ")}) — без сети показать там нечего`);
+  }
   return bad;
 }
 
@@ -95,10 +150,60 @@ function plant() {
   add(
     "подсадка: заголовок снова печатает две локали разом (ровно замер владельца)",
     html.replace(
-      /<h1 lang="es" data-locale="es">[^<]*<\/h1>/,
-      '<h1 lang="es" data-locale="es">Estás sin conexión — Вы не в сети</h1>',
+      /<h1 lang="es" data-locale="es" data-state="error">[^<]*<\/h1>/,
+      '<h1 lang="es" data-locale="es" data-state="error">Estás sin conexión — Вы не в сети</h1>',
     ),
     "печатают две локали разом",
+  );
+  add(
+    "подсадка: шапки нет — состояние ДО захода 7.227",
+    html.replace(/<header[\s\S]*?<\/header>/, ""),
+    "шапки нет",
+  );
+  add(
+    "подсадка: нижняя панель убрана целиком (голый экран, ссылок 0)",
+    html.replace(/<nav class="tabs"[\s\S]*?<\/nav>/, ""),
+    "вкладок в нижней панели 0",
+  );
+  add(
+    "подсадка: вкладка «Курсы» выпала из меню",
+    html.replace('data-href="/courses"', 'data-href="/coursesX"'),
+    "нет адреса /courses",
+  );
+  add(
+    "подсадка: во вкладках появился кабинет",
+    html.replace('data-href="/login"', 'data-href="/profile"'),
+    "личный или платный адрес",
+  );
+  add(
+    "подсадка: адреса вкладок перестали получать локаль",
+    html.replace(/setAttribute\("href", "\/" \+ lang/, 'setAttribute("href", "/es"'),
+    "не получают локаль",
+  );
+  add(
+    "подсадка: возврат сети больше не слушается",
+    html.replace(/addEventListener\("online"/, 'addEventListener("focus"'),
+    "возврат сети не слушается",
+  );
+  add(
+    "подсадка: своей пробы по таймеру нет",
+    html.replace(/setInterval\(/g, "queueMicrotask("),
+    "пробы по таймеру нет",
+  );
+  add(
+    "подсадка: «нет сети» снова утверждается без пробы (ровно долг 278)",
+    html.replaceAll("/api/health", "/nothing"),
+    "пробы до своего /api/health нет",
+  );
+  add(
+    "подсадка: признак navigator.onLine выброшен",
+    html.replace(/navigator\.onLine/g, "false"),
+    "признака navigator.onLine нет",
+  );
+  add(
+    "подсадка: состояние «страница не открылась» убрано — экран снова врёт про сеть",
+    html.replaceAll('data-state="error"', 'data-state="offline"'),
+    "состояния «error» в разметке нет",
   );
   add("подсадка: русской половины нет вовсе", html.replaceAll('data-locale="ru"', 'data-locale="xx"'), "половины «ru» нет");
   add("подсадка: локаль выбирается не по адресу", html.replace(/location\.pathname/g, 'navigator.language.slice(0, 2)'), "не по адресу");
@@ -125,7 +230,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-screen — 4 правила, локалей 2, нарушений 0 (заход 7.218)");
+  console.log("check:offline-screen — 10 правил, локалей 2, вкладок 5, нарушений 0 (заходы 7.218 и 7.227)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
