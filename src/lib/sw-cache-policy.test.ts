@@ -5,6 +5,8 @@ import {
   CACHE_BUDGETS,
   CACHE_BUDGET_BY_KEY,
   isAudioClipUrl,
+  isOfflineContentPath,
+  looksClosedForThisVisitor,
 } from "./sw-cache-policy";
 
 /**
@@ -74,8 +76,8 @@ describe("долг 77: клип озвучки узнаётся на чужом 
  * сверять.
  */
 describe("долги 75 и 76: бюджет объявлен у каждого кеша", () => {
-  it("пять кешей, и у каждого свой ключ", () => {
-    expect(CACHE_BUDGETS.map((b) => b.key)).toEqual(["html", "rsc", "rscPrefetch", "others", "audio"]);
+  it("шесть кешей, и у каждого свой ключ (шестой — содержание, заход 7.229)", () => {
+    expect(CACHE_BUDGETS.map((b) => b.key)).toEqual(["html", "content", "rsc", "rscPrefetch", "others", "audio"]);
   });
 
   it("у документов свой счёт, отдельный от статики (долг 76)", () => {
@@ -102,5 +104,92 @@ describe("долги 75 и 76: бюджет объявлен у каждого �
 
   it("кеш клипов не метится отпечатком сборки — клип от выката не меняется", () => {
     expect(AUDIO_CACHE_NAME).toBe("rf-audio");
+  });
+});
+
+/**
+ * ОФЛАЙН-2 (заход 7.229): ЧТО ЧИТАЕТСЯ БЕЗ СЕТИ И ЧТО НА ТЕЛЕФОНЕ НЕ
+ * ОСТАЁТСЯ.
+ *
+ * Оба правила проверяются С ДВУХ СТОРОН — «попало» и «не попало». Список
+ * без второй половины означал бы «берём всё подряд», а признак
+ * закрытости без второй половины — «не кладём ничего».
+ */
+describe("офлайн-2: перечень страниц, которые читают без сети", () => {
+  it("урок, рассказ, словарь тем и карточки — считаются содержанием", () => {
+    for (const path of [
+      "/ru/courses/a1/2",
+      "/es/courses/b2/17",
+      "/ru/stories/cmt07mslt0000bance9fb6rkw",
+      "/es/vocabulary",
+      "/es/vocabulary/comida",
+    ]) {
+      expect(isOfflineContentPath(path), path).toBe(true);
+    }
+  });
+
+  it("игры, экзамены, поиск, кабинет и каталоги — НЕ содержание (решение владельца, 7.227)", () => {
+    for (const path of [
+      "/ru/word-games",
+      "/ru/word-games/CROSSWORD/A1/1",
+      "/ru/profile",
+      "/ru/admin/lessons",
+      "/ru/courses",
+      "/ru/courses/a1",
+      "/ru/stories",
+      "/ru/glossary/padezh",
+      "/ru/pricing",
+      "/api/health",
+      "/offline.html",
+    ]) {
+      expect(isOfflineContentPath(path), path).toBe(false);
+    }
+  });
+
+  it("чужая локаль в первом сегменте не проходит — правило про НАШИ адреса", () => {
+    expect(isOfflineContentPath("/fr/courses/a1/2")).toBe(false);
+    expect(isOfflineContentPath("/courses/a1/2")).toBe(false);
+  });
+});
+
+describe("офлайн-2: закрытое этому посетителю на телефоне не остаётся", () => {
+  /** Ровно та подпись, которую печатает `paywallJsonLd` (src/lib/site.ts). */
+  const CLOSED = `<script type="application/ld+json">{"@context":"https://schema.org","isAccessibleForFree":false,"hasPart":{"cssSelector":".paywall-lock"}}</script>`;
+  const OPEN = `<script type="application/ld+json">{"@context":"https://schema.org","isAccessibleForFree":true}</script>`;
+
+  it("страница, у которой закрытая часть не отдана, — закрыта", () => {
+    expect(looksClosedForThisVisitor(`<html><body>${CLOSED}</body></html>`)).toBe(true);
+  });
+
+  it("страница подписчика — открыта, и её копия класться обязана", () => {
+    expect(looksClosedForThisVisitor(`<html><body>${OPEN}</body></html>`)).toBe(false);
+  });
+
+  it("страница без подписи вовсе (каталог, словарь тем) — не закрыта", () => {
+    expect(looksClosedForThisVisitor("<html><body><h1>Vocabulario</h1></body></html>")).toBe(false);
+  });
+});
+
+describe("офлайн-2: потолок кеша содержания назван числом", () => {
+  it("свой кеш есть, и он не делит потолок с общим кешем документов", () => {
+    const content = CACHE_BUDGET_BY_KEY.content;
+    expect(content).toBeDefined();
+    expect(content.maxEntries).toBe(40);
+    // Тридцать суток, а не сутки: читать сохранённое человек собирается
+    // НЕ в тот же день, когда открыл.
+    expect(content.maxAgeSeconds).toBe(30 * 24 * 60 * 60);
+    expect(content.maxAgeSeconds).toBeGreaterThan(CACHE_BUDGET_BY_KEY.html.maxAgeSeconds);
+  });
+
+  it("числа замера названы в объяснении потолка, а не забыты", () => {
+    // 240 068 байт — урок `/ru/courses/a1/2`, 236 308 — рассказ; оба
+    // сняты на собранной сборке 23.09.2026.
+    expect(CACHE_BUDGET_BY_KEY.content.why).toMatch(/240 068/);
+    expect(CACHE_BUDGET_BY_KEY.content.why).toMatch(/236 308/);
+  });
+
+  it("у каждого объявленного кеша своя строка бюджета — их шесть", () => {
+    expect(CACHE_BUDGETS).toHaveLength(6);
+    expect(new Set(CACHE_BUDGETS.map((b) => b.key)).size).toBe(6);
   });
 });

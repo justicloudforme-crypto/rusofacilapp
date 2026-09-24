@@ -1,26 +1,60 @@
 <!doctype html>
 <!--
-  КАРКАС БЕЗ СЕТИ — ЗАХОД 7.227 (ОФЛАЙН-1).
+  КАРКАС БЕЗ СЕТИ И ЧИТАЛКА СОХРАНЁННОГО — ЗАХОДЫ 7.227 (ОФЛАЙН-1),
+  7.228 (ОФЛАЙН-1б) И 7.229 (ОФЛАЙН-2).
 
   Этот файл — не «страница ошибки», а ОБЩИЙ КАРКАС приложения: шапка,
   нижняя панель вкладок и сообщение о том, почему середина пуста. Воркер
   (`src/app/sw.ts`, `fallbacks` и обработчик `handlerDidError` маршрута
   документов) отдаёт его вместо той страницы, которую человек попросил,
-  когда её нет ни в сети, ни в кеше.
+  когда её нет ни в сети, ни в кеше. Внутри приложения то же самое
+  делает java-клиент `OfflineShellWebViewClient` — по ИСХОДНОМУ адресу,
+  то есть на источнике сайта (заход 7.228).
 
-  ЗАЧЕМ КАРКАС, А НЕ ГОЛЫЙ ЭКРАН. Замер 23.09.2026 на собранном
-  приложении (Chromium, профиль Pixel 7, сеть выключена): переход на
-  неоткрытый адрес давал экран, у которого `header` нет, ссылок **0** —
-  то есть уйти с него было некуда, и приложение выглядело умершим.
-  Каркас возвращает меню: по любой вкладке можно уйти на адрес, который
-  в кеше есть, и он откроется.
+  ====================================================================
+  ЧТО ЭТОТ ФАЙЛ УМЕЕТ С 7.229: ОН САМ ДОСТАЁТ СОХРАНЁННУЮ СТРАНИЦУ
+  ====================================================================
 
-  ПОЧЕМУ ЭТО СТАТИЧЕСКИЙ ФАЙЛ, А НЕ СТРАНИЦА NEXT. Адресная строка
-  остаётся на ИСХОДНОМ адресе (например `/es/pricing`), пока в ответ
-  отдано содержимое этого файла. Страница Next в таком положении
-  гидрировала бы свой роутер на `/offline`, увидела бы чужой адрес и
-  начала бы «исправлять» его — навигационная петля при выключенной сети.
-  У статического файла роутера нет, поэтому он просто рисуется.
+  ПОЧЕМУ ЭТО ДЕЛАЕТ КАРКАС, А НЕ ВОРКЕР. Внутри приложения доказано
+  обратным: на сборке 1.0.3 (нашего java-клиента ещё не было) отказ
+  главного кадра без сети заканчивался НАТИВНЫМ экраном ошибки. Ответь
+  на ту навигацию воркер — экрана бы не было вовсе. То есть навигацию в
+  оболочке воркер не обслуживает, и строить на нём офлайн-2 значило бы
+  строить на том, чего в приложении нет.
+
+  А вот `caches` — это API САМОГО ДОКУМЕНТА, не воркера. Каркас живёт на
+  источнике сайта (в этом вся суть правки 7.228), значит читает ровно те
+  же кеши, куда воркер клал страницы, пока сеть была. Никакого участия
+  воркера при чтении не нужно ни на шаг.
+
+  ПОЧЕМУ ПОДРЕСУРСЫ БЕРУТСЯ ИЗ КЕША, А НЕ ЗАПРАШИВАЮТСЯ. Оставь мы в
+  сохранённом HTML ссылки `<link rel="stylesheet" href="/_next/...">`,
+  за ними пошёл бы браузер — мимо нас, через java-посредник Capacitor,
+  который на НЕ-html отвечает `null`, и дальше в сеть, которой нет.
+  Обслужит ли их воркер в WebView — НЕ ПРОВЕРЕНО НИЧЕМ (эмулятора
+  Android на машине проекта нет, строка 306). Поэтому стили и картинки
+  достаются из `Cache Storage` прямо здесь и подставляются `blob:`-
+  адресами: такой адрес не доходит до сетевого слоя ВООБЩЕ, и вопрос,
+  на который нет ответа, перестаёт что-либо решать.
+
+  СКРИПТЫ САЙТА НЕ ИСПОЛНЯЮТСЯ, И ЭТО РЕШЕНИЕ, А НЕ НЕДОДЕЛКА. Чанки
+  Next догружают друг друга по адресам, роутер начинает «исправлять»
+  адрес, гидрация ищет свои данные — без сети это петля, а не страница.
+  Сохранённая копия показывается КАК ЧТЕНИЕ: текст, таблицы, картинки,
+  вкладки урока (их переключает свой маленький обработчик ниже, по
+  меткам `data-offline-tab` / `data-offline-panel`). Всё, что требует
+  сервера — проверка упражнений, озвучка по кнопке, сохранение
+  прогресса, — не притворяется работающим.
+
+  ====================================================================
+  ПОЧЕМУ ЭТО СТАТИЧЕСКИЙ ФАЙЛ, А НЕ СТРАНИЦА NEXT
+  ====================================================================
+
+  Адресная строка остаётся на ИСХОДНОМ адресе (например `/es/pricing`),
+  пока в ответ отдано содержимое этого файла. Страница Next в таком
+  положении гидрировала бы свой роутер на `/offline`, увидела бы чужой
+  адрес и начала бы «исправлять» его — навигационная петля при
+  выключенной сети. У статического файла роутера нет.
 
   ЛОКАЛЬ БЕРЁТСЯ ИЗ АДРЕСА. Это единственное, что здесь вообще можно
   знать: спросить некого, а адрес в строке — исходный. Обе половины
@@ -37,13 +71,24 @@
       `NetworkOnly`, из кеша не отдаётся никогда). Обе не дошли → «нет
       соединения». Хоть одна дошла → сеть жива, и экран говорит другое:
       страница не открылась, — и сам один раз пробует её перезапросить.
+
+  БЕЗОПАСНЫЕ ПОЛЯ (находка владельца 24.09.2026 на POCO, сборка 1.0.4).
+  Каркас рисовался ПОД системными полосами: имя «RusoFácilapp» поверх
+  часов, подписи вкладок под кнопками ◼ ● ◀. Настоящие страницы на том
+  же телефоне стояли правильно, и разница была ровно одна: сайт берёт
+  `max(env(safe-area-inset-*), var(--android-inset-*))`
+  (`src/app/globals.css`), а каркас знал только про `env()`. В webview
+  с targetSdk 36 `env()` отвечает про ВЫРЕЗ экрана и остаётся нулём,
+  а настоящие величины полос присылает `MainActivity.pushSafeAreaInsets`
+  теми самыми переменными `--android-inset-*`. Теперь их читает и
+  каркас — теми же двумя источниками и тем же `max()`.
 -->
 <html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Sin conexión — RusoFácilapp</title>
-    <style>
+    <style id="rf-shell-style">
       :root {
         color-scheme: light dark;
         --background: #fff8ec;
@@ -51,6 +96,18 @@
         --surface: #ffffff;
         --border: rgba(0, 0, 0, 0.1);
         --muted: rgba(36, 28, 21, 0.6);
+        /* Цвет активной вкладки и имени — тот же токен, что у сайта
+           (`--color-primary-text`, `src/app/tokens.generated.css`). */
+        --accent: #253b7e;
+        /* ДВА ИСТОЧНИКА БЕЗОПАСНЫХ ПОЛЕЙ, ровно как в globals.css:
+           `env()` отвечает про вырез экрана, `--android-inset-*`
+           присылает оболочка про СИСТЕМНЫЕ ПОЛОСЫ. В браузере вторых
+           не существует, `max()` сводится к первому, и веб не двигается
+           ни на пиксель. */
+        --safe-top: max(env(safe-area-inset-top, 0px), var(--android-inset-top, 0px));
+        --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--android-inset-bottom, 0px));
+        --safe-left: max(env(safe-area-inset-left, 0px), var(--android-inset-left, 0px));
+        --safe-right: max(env(safe-area-inset-right, 0px), var(--android-inset-right, 0px));
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -59,6 +116,7 @@
           --surface: #413a2f;
           --border: rgba(255, 255, 255, 0.3);
           --muted: rgba(245, 234, 210, 0.6);
+          --accent: #9daddd;
         }
       }
       * {
@@ -71,24 +129,103 @@
         flex-direction: column;
         background: var(--background);
         color: var(--foreground);
+        padding-left: var(--safe-left);
+        padding-right: var(--safe-right);
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       }
-      /* ШАПКА — та же рамка, что у сайта: имя слева, ничего лишнего.
-         Кнопок, которым без сети нечего делать, здесь нет вовсе. */
+      /* ШАПКА — та же рама, что у сайта (`src/components/Navbar.tsx`):
+         высота 4rem, матрёшка и имя серифом слева, непрозрачный фон,
+         нижняя граница. Кнопок, которым без сети нечего делать (поиск,
+         аватар, переключатели), здесь нет вовсе — обещать их значило бы
+         врать. ОТСТУП СВЕРХУ — под строку состояния, `pt-safe` сайта. */
       header {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.75rem 1rem;
+        height: calc(4rem + var(--safe-top));
+        padding: var(--safe-top) 1rem 0;
         border-bottom: 1px solid var(--border);
         background: var(--background);
       }
       header .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
         font-size: 1.05rem;
         font-weight: 700;
         letter-spacing: -0.01em;
         color: var(--foreground);
         text-decoration: none;
+        font-family: ui-serif, Georgia, "Times New Roman", serif;
+      }
+      /* МАТРЁШКА — тот же приём, что у `MatryoshkaMark.tsx`: силуэт из
+         обычных блоков, без картинки и без SVG, цвета фирменные и от
+         темы не зависят (это раскрашенный предмет, а не рама). */
+      .doll {
+        position: relative;
+        display: inline-block;
+        width: 16px;
+        height: 26px;
+        flex-shrink: 0;
+      }
+      .doll i {
+        position: absolute;
+        display: block;
+      }
+      .doll .head {
+        left: 50%;
+        top: 0;
+        width: 46%;
+        height: 46%;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: #fbe3c0;
+      }
+      .doll .scarf {
+        left: 50%;
+        top: 24%;
+        width: 64%;
+        height: 18%;
+        transform: translateX(-50%);
+        border-radius: 999px 999px 40% 40%;
+        background: #e0a934;
+      }
+      .doll .body {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 80%;
+        overflow: hidden;
+        border-radius: 46% 46% 38% 38% / 58% 58% 30% 30%;
+        background: #2d5f8a;
+      }
+      .doll .band-red {
+        left: 0;
+        right: 0;
+        top: 30%;
+        height: 24%;
+        background: #d63b2f;
+      }
+      .doll .band-gold {
+        left: 0;
+        right: 0;
+        top: 58%;
+        height: 24%;
+        background: #e0a934;
+      }
+      .doll .apron {
+        left: 18%;
+        right: 18%;
+        bottom: 0;
+        height: 46%;
+        border-radius: 999px 999px 0 0;
+        background: #fff8ec;
+      }
+      .doll .dot {
+        width: 14%;
+        height: 14%;
+        border-radius: 50%;
+        background: #e0a934;
       }
       main {
         flex: 1;
@@ -134,8 +271,11 @@
       button:hover {
         opacity: 0.85;
       }
-      /* НИЖНЯЯ ПАНЕЛЬ — те же пять вкладок и те же адреса, что у
-         `src/components/BottomNav.tsx`. Она и есть «меню работает». */
+      /* НИЖНЯЯ ПАНЕЛЬ — те же пять вкладок, те же адреса и те же значки,
+         что у `src/components/BottomNav.tsx`. Она и есть «меню
+         работает». ОТСТУП СНИЗУ — под кнопки навигации Android
+         (`pb-safe` сайта); в жестовом режиме величина приходит та же,
+         просто меньше. */
       nav.tabs {
         position: fixed;
         inset-inline: 0;
@@ -143,7 +283,9 @@
         display: flex;
         border-top: 1px solid var(--border);
         background: var(--background);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: var(--safe-left);
+        padding-right: var(--safe-right);
+        padding-bottom: var(--safe-bottom);
       }
       nav.tabs a {
         flex: 1;
@@ -164,7 +306,7 @@
         height: 1.25rem;
         stroke: currentColor;
         fill: none;
-        stroke-width: 1.7;
+        stroke-width: 1.75;
         stroke-linecap: round;
         stroke-linejoin: round;
       }
@@ -172,14 +314,70 @@
         display: none !important;
       }
     </style>
+    <!-- СТИЛЬ ЧИТАЛКИ живёт отдельным листом и НЕ удаляется вместе с
+         каркасным: когда на экране сохранённая копия, каркасный стиль
+         уходит (иначе он перекрасил бы страницу сайта), а этот
+         остаётся — им нарисованы полоса «сохранённая копия» и
+         переключение вкладок урока. -->
+    <style id="rf-reader-style">
+      [data-offline-copy] .rf-saved-bar {
+        position: sticky;
+        top: 0;
+        z-index: 2147483000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: calc(0.5rem + max(env(safe-area-inset-top, 0px), var(--android-inset-top, 0px))) 1rem 0.5rem;
+        background: #253b7e;
+        color: #fff8ec;
+        font: 500 0.8125rem/1.3 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      [data-offline-copy] .rf-saved-bar button {
+        margin: 0;
+        border: 1px solid rgba(255, 248, 236, 0.5);
+        border-radius: 9999px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        background: transparent;
+        color: inherit;
+      }
+      /* Вкладки урока без скриптов сайта: подсветка своя, потому что
+         классы активной вкладки рисует React, которого здесь нет. */
+      [data-offline-copy] [data-offline-tab] {
+        opacity: 0.55;
+      }
+      [data-offline-copy] [data-offline-tab][aria-selected="true"] {
+        opacity: 1;
+        font-weight: 700;
+      }
+    </style>
   </head>
   <!-- Признак каркаса для проб: узнавать его по ТЕКСТУ нельзя — текст
        меняется вместе с состоянием (см. долг 278), и проба, ищущая слова
        «нет соединения», перестала бы видеть каркас ровно тогда, когда он
-       говорит «страница не открылась». -->
+       говорит «страница не открылась». Сохранённая копия помечается
+       ДРУГИМ признаком (`data-offline-copy`), и каркасного на ней уже
+       нет: это два разных экрана, и путать их пробам нельзя. -->
   <body data-offline-shell="1">
     <header>
-      <a class="brand" data-href="" href="/es">RusoFácilapp</a>
+      <a class="brand" data-href="" href="/es">
+        <span class="doll" aria-hidden="true">
+          <i class="head"></i>
+          <i class="scarf"></i>
+          <i class="body">
+            <i class="band-red"></i>
+            <i class="band-gold"></i>
+            <i class="apron"></i>
+            <i class="dot" style="top: 40%; left: 50%; transform: translateX(-50%)"></i>
+            <i class="dot" style="top: 52%; left: 62%; transform: translateY(-50%)"></i>
+            <i class="dot" style="top: 64%; left: 50%; transform: translateX(-50%)"></i>
+            <i class="dot" style="top: 52%; left: 38%; transform: translateY(-50%)"></i>
+            <i class="dot" style="top: 52%; left: 50%; width: 11%; height: 11%; background: #d63b2f; transform: translate(-50%, -50%)"></i>
+          </i>
+        </span>
+        <span>RusoFácilapp</span>
+      </a>
     </header>
 
     <main>
@@ -198,35 +396,39 @@
       <p lang="es" data-locale="es" data-state="offline" hidden>Esta página no se guardó en el teléfono, por eso ahora está vacía.</p>
       <p lang="ru" data-locale="ru" data-state="offline" hidden>Эта страница не сохранена на телефоне, поэтому сейчас она пуста.</p>
 
-      <!-- ЧЕСТНАЯ ГРАНИЦА: обещаем ровно то, что уже умеем, — меню и
-           ранее открытые страницы. Скачивания уроков и звука здесь нет,
-           и обещать его нельзя (это отдельные заходы офлайн-2 и -3). -->
-      <p class="note" lang="es" data-locale="es">Sin internet puedes usar el menú y abrir las páginas que ya viste antes.</p>
-      <p class="note" lang="ru" data-locale="ru">Без интернета работает меню и открываются страницы, которые вы уже открывали.</p>
+      <!-- ЧЕСТНАЯ ГРАНИЦА: обещаем ровно то, что уже умеем. С 7.229 это
+           «уроки, рассказы и словарь, которые вы открывали» — их каркас
+           теперь и правда показывает. Скачивания по кнопке и отправки
+           прогресса здесь нет, и обещать их нельзя (это офлайн-3). -->
+      <p class="note" lang="es" data-locale="es">Sin internet puedes usar el menú y leer las lecciones, los cuentos y el vocabulario que ya abriste antes.</p>
+      <p class="note" lang="ru" data-locale="ru">Без интернета работает меню и открываются уроки, рассказы и словарь, которые вы уже открывали.</p>
 
       <button type="button" lang="es" data-locale="es" data-retry>Reintentar</button>
       <button type="button" lang="ru" data-locale="ru" data-retry>Повторить</button>
     </main>
 
     <nav class="tabs" aria-label="RusoFácilapp">
+      <!-- Значки — те же, что у `BottomNav` (`ProfileIcons.tsx`):
+           BookIcon, GraduationCapIcon, DictionaryIcon, PuzzleIcon,
+           PersonalIcon, скопированные путями, а не «похожие». -->
       <a data-href="/stories" href="/es/stories">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5Z" /><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5Z" /></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c1.8-1 4.4-1.2 6.5-.3 .9.4 1.5 1 1.5 1.7v12.6c0-.7-.6-1.3-1.5-1.7-2.1-.9-4.7-.7-6.5.3V5.5Z" /><path d="M20 5.5c-1.8-1-4.4-1.2-6.5-.3-.9.4-1.5 1-1.5 1.7v12.6c0-.7.6-1.3 1.5-1.7 2.1-.9 4.7-.7 6.5.3V5.5Z" /></svg>
         <span lang="es" data-locale="es">Cuentos</span><span lang="ru" data-locale="ru">Рассказы</span>
       </a>
       <a data-href="/courses" href="/es/courses">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2 9l10 5 10-5Z" /><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" /></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5 12 5l9.5 4.5-9.5 4.5-9.5-4.5Z" /><path d="M6.5 11.7v4.3c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5v-4.3M20.5 10v6" /></svg>
         <span lang="es" data-locale="es">Cursos</span><span lang="ru" data-locale="ru">Курсы</span>
       </a>
       <a data-href="/vocabulary" href="/es/vocabulary">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h11a1.5 1.5 0 0 1 1.5 1.5v13.5H7.5A1.5 1.5 0 0 1 6 17.9V4.5Z" /><path d="M6 4.5A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5" /><path d="M9.5 8.5h5M9.5 11.5h5" /></svg>
         <span lang="es" data-locale="es">Vocabulario</span><span lang="ru" data-locale="ru">Слова</span>
       </a>
       <a data-href="/word-games" href="/es/word-games">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4Z" /><path d="M13 13h7v7h-7Z" /><path d="M13 4h7v7h-7Z" /><path d="M4 13h7v7H4Z" /></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5h4v2.1a1.6 1.6 0 0 0 3 0V4.5h4V9h-2.1a1.6 1.6 0 0 0 0 3H20v4.5h-4v-2.1a1.6 1.6 0 0 0-3 0v2.1H9V12H6.9a1.6 1.6 0 0 1 0-3H9V4.5Z" /></svg>
         <span lang="es" data-locale="es">Juegos</span><span lang="ru" data-locale="ru">Игры</span>
       </a>
       <a data-href="/login" href="/es/login">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6" /></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" /></svg>
         <span lang="es" data-locale="es">Mi perfil</span><span lang="ru" data-locale="ru">Мой профиль</span>
       </a>
     </nav>
@@ -240,8 +442,19 @@
         // что экран: до 23.09.2026 во вкладке стояло «нет соединения»
         // даже тогда, когда в теле было написано другое.
         var TITLES = {
-          es: { error: "No pudimos abrir la página — RusoFácilapp", offline: "Sin conexión — RusoFácilapp" },
-          ru: { error: "Страница не открылась — RusoFácilapp", offline: "Нет соединения — RusoFácilapp" },
+          es: {
+            error: "No pudimos abrir la página — RusoFácilapp",
+            offline: "Sin conexión — RusoFácilapp",
+          },
+          ru: {
+            error: "Страница не открылась — RusoFácilapp",
+            offline: "Нет соединения — RusoFácilapp",
+          },
+        };
+        /** Надпись полосы над сохранённой копией — обе локали здесь же. */
+        var SAVED = {
+          es: { note: "Copia guardada en el teléfono", retry: "Reintentar" },
+          ru: { note: "Сохранённая копия на телефоне", retry: "Повторить" },
         };
         document.title = TITLES[lang].error;
 
@@ -309,6 +522,289 @@
           });
         }
 
+        /* ============================================================
+           ЧИТАЛКА СОХРАНЁННОГО — ЗАХОД 7.229 (ОФЛАЙН-2)
+           ============================================================ */
+
+        /** Кеши документов этого сайта: сохранённое содержание и общий
+         *  кеш страниц. Имена собирает `pageCacheNames`
+         *  (`src/lib/sw-cache-names.ts`); отпечаток сборки в них заранее
+         *  не знает никто, поэтому берутся они из ЖИВОГО списка. */
+        function documentCacheNames(names) {
+          var content = [];
+          var pages = [];
+          for (var i = 0; i < names.length; i++) {
+            if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);
+            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);
+          }
+          // Сохранённое содержание спрашивается ПЕРВЫМ: у него свой
+          // потолок и свой срок, и именно оно живёт дольше.
+          return content.concat(pages);
+        }
+
+        /** Ответ из кеша по адресу, или null. `ignoreVary` — потому что у
+         *  документа заголовок `Vary` длинный, и ключ без него не совпал
+         *  бы ни с одной записью (тот же разбор, что у долга 75). */
+        function fromCaches(url, names) {
+          var index = 0;
+          function step() {
+            if (index >= names.length) return Promise.resolve(null);
+            var name = names[index++];
+            return caches
+              .open(name)
+              .then(function (cache) {
+                return cache.match(url, { ignoreVary: true });
+              })
+              .then(function (hit) {
+                return hit || step();
+              })
+              .catch(function () {
+                return step();
+              });
+          }
+          return step();
+        }
+
+        /** Любой ресурс — из ЛЮБОГО кеша этого источника, включая
+         *  precache (там лежат стили, шрифты и сам этот файл). */
+        function anyCache(url) {
+          return caches.match(url, { ignoreVary: true }).catch(function () {
+            return null;
+          });
+        }
+
+        /** Адрес `blob:` для того, что нашлось в кеше. Именно blob, а не
+         *  исходный адрес: blob не доходит до сетевого слоя вообще, и
+         *  вопрос «обслуживает ли воркер подресурсы в WebView» (на
+         *  который ответа нет, строка 306) перестаёт что-либо решать. */
+        function blobFor(url) {
+          return anyCache(url).then(function (response) {
+            if (!response) return null;
+            return response
+              .blob()
+              .then(function (body) {
+                return URL.createObjectURL(body);
+              })
+              .catch(function () {
+                return null;
+              });
+          });
+        }
+
+        /** Подстановка `url(...)` внутри листа стилей: шрифты и картинки
+         *  фона. Ненайденное оставляется как есть — страница прочитается
+         *  и системным шрифтом, а вот отказ всей читалки из-за одного
+         *  файла был бы платой не по счёту. */
+        function inlineCssUrls(css) {
+          var found = css.match(/url\((?:"|')?(\/_next\/[^)"']+)(?:"|')?\)/g) || [];
+          var uniq = [];
+          for (var i = 0; i < found.length; i++) {
+            var raw = found[i].replace(/^url\((?:"|')?/, "").replace(/(?:"|')?\)$/, "");
+            if (uniq.indexOf(raw) === -1) uniq.push(raw);
+          }
+          return Promise.all(uniq.map(blobFor)).then(function (blobs) {
+            var out = css;
+            for (var j = 0; j < uniq.length; j++) {
+              if (!blobs[j]) continue;
+              out = out.split(uniq[j]).join(blobs[j]);
+            }
+            return out;
+          });
+        }
+
+        /** Стили сохранённой страницы — текстом из кеша, отдельными
+         *  листами. Ссылок `<link>` в итоговом документе не остаётся ни
+         *  одной: за ними пошёл бы браузер. */
+        function collectStyles(doc) {
+          var links = doc.querySelectorAll('link[rel="stylesheet"][href]');
+          var jobs = [];
+          for (var i = 0; i < links.length; i++) {
+            (function (href) {
+              jobs.push(
+                anyCache(href).then(function (response) {
+                  if (!response) return null;
+                  return response.text().then(inlineCssUrls);
+                }),
+              );
+            })(links[i].getAttribute("href"));
+          }
+          return Promise.all(jobs);
+        }
+
+        /** Картинки — из кеша или вон. Битая рамка вместо иллюстрации
+         *  выглядит как поломка, а её отсутствие — просто как текст. */
+        function inlineImages(doc) {
+          var images = doc.querySelectorAll("img[src]");
+          var jobs = [];
+          for (var i = 0; i < images.length; i++) {
+            (function (node) {
+              node.removeAttribute("srcset");
+              node.removeAttribute("loading");
+              jobs.push(
+                blobFor(node.getAttribute("src")).then(function (href) {
+                  if (href) node.setAttribute("src", href);
+                  else if (node.parentNode) node.parentNode.removeChild(node);
+                }),
+              );
+            })(images[i]);
+          }
+          return Promise.all(jobs);
+        }
+
+        /** Вкладки урока без React. Контракт держит
+         *  `npm run check:offline-reader`: кнопки несут
+         *  `data-offline-tab`, панели — `data-offline-panel`, и добавить
+         *  вкладку, забыв про метку, сторож не даст. */
+        function armTabs(root) {
+          var all = root.querySelectorAll("[data-offline-tab]");
+          if (all.length === 0) return;
+          var panels = root.querySelectorAll("[data-offline-panel]");
+          /**
+           * ВКЛАДКА БЕЗ СВОЕЙ ПАНЕЛИ УБИРАЕТСЯ, А НЕ ОСТАЁТСЯ МЁРТВОЙ.
+           *
+           * Замер 24.09.2026 на сохранённом уроке `/ru/courses/a1/2`:
+           * вкладок 4, панелей 3. Панели «Упражнения» в разметке нет
+           * вовсе — она монтируется только по первому нажатию
+           * (`exercisesEverOpened` в `LessonView.tsx`), и в сохранённую
+           * копию попадает лишь у того, кто её открывал. Оставить
+           * кнопку значило бы дать кнопку, которая очищает экран.
+           */
+          var buttons = [];
+          for (var b = 0; b < all.length; b++) {
+            var id = all[b].getAttribute("data-offline-tab");
+            var has = false;
+            for (var pp = 0; pp < panels.length; pp++) {
+              if (panels[pp].getAttribute("data-offline-panel") === id) has = true;
+            }
+            if (has) buttons.push(all[b]);
+            else all[b].hidden = true;
+          }
+          if (buttons.length === 0) return;
+          function select(id) {
+            for (var i = 0; i < panels.length; i++) {
+              var mine = panels[i].getAttribute("data-offline-panel") === id;
+              panels[i].classList.toggle("hidden", !mine);
+            }
+            for (var j = 0; j < buttons.length; j++) {
+              buttons[j].setAttribute(
+                "aria-selected",
+                buttons[j].getAttribute("data-offline-tab") === id ? "true" : "false",
+              );
+            }
+          }
+          for (var k = 0; k < buttons.length; k++) {
+            (function (button) {
+              button.addEventListener("click", function () {
+                select(button.getAttribute("data-offline-tab"));
+              });
+            })(buttons[k]);
+          }
+          var opened = root.querySelector('[data-offline-tab][aria-selected="true"]');
+          select(
+            (opened || buttons[0]).getAttribute("data-offline-tab"),
+          );
+        }
+
+        /** Полоса «это сохранённая копия». Честная подпись обязательна:
+         *  без неё человек считает, что смотрит живую страницу, и
+         *  удивляется, почему упражнения не проверяются. */
+        function savedBar() {
+          var bar = document.createElement("div");
+          bar.className = "rf-saved-bar";
+          var note = document.createElement("span");
+          note.textContent = SAVED[lang].note;
+          var again = document.createElement("button");
+          again.type = "button";
+          again.textContent = SAVED[lang].retry;
+          again.addEventListener("click", function () {
+            location.reload();
+          });
+          bar.appendChild(note);
+          bar.appendChild(again);
+          return bar;
+        }
+
+        /**
+         * ПОКАЗАТЬ СОХРАНЁННУЮ КОПИЮ ВМЕСТО КАРКАСА.
+         *
+         * Документ не подменяется целиком (`document.write` заново
+         * запустил бы разбор и убил бы этот самый скрипт) — меняется
+         * содержимое `<head>` и `<body>` уже существующего документа.
+         * Переменные безопасных полей при этом никуда не деваются: их
+         * оболочка кладёт в `style` элемента `<html>` и в
+         * `adoptedStyleSheets`, а мы `<html>` не трогаем.
+         */
+        function renderSaved(html) {
+          var doc = new DOMParser().parseFromString(html, "text/html");
+          var strip = doc.querySelectorAll("script, noscript, link[rel='stylesheet'], link[rel='preload']");
+          for (var i = 0; i < strip.length; i++) strip[i].remove();
+          return Promise.resolve()
+            .then(function () {
+              return Promise.all([collectStyles(new DOMParser().parseFromString(html, "text/html")), inlineImages(doc)]);
+            })
+            .then(function (result) {
+              var sheets = result[0].filter(Boolean);
+              if (sheets.length === 0) {
+                // Стилей нет — значит их выбросила новая сборка вместе с
+                // прежним кешем. Голая разметка в 240 килобайт читается
+                // хуже честного каркаса, и подсовывать её нельзя.
+                return false;
+              }
+              var shellStyle = document.getElementById("rf-shell-style");
+              if (shellStyle) shellStyle.remove();
+              var title = doc.querySelector("title");
+              if (title) document.title = title.textContent;
+              for (var s = 0; s < sheets.length; s++) {
+                var style = document.createElement("style");
+                style.textContent = sheets[s];
+                document.head.appendChild(style);
+              }
+              // Встроенные `<style>` самой страницы — тоже её вид.
+              var inline = doc.querySelectorAll("style");
+              for (var t = 0; t < inline.length; t++) {
+                var copy = document.createElement("style");
+                copy.textContent = inline[t].textContent;
+                document.head.appendChild(copy);
+              }
+              var html2 = doc.documentElement;
+              if (html2.getAttribute("class")) {
+                document.documentElement.setAttribute("class", html2.getAttribute("class"));
+              }
+              if (html2.getAttribute("data-theme")) {
+                document.documentElement.setAttribute("data-theme", html2.getAttribute("data-theme"));
+              }
+              document.body.removeAttribute("data-offline-shell");
+              document.body.setAttribute("data-offline-copy", "1");
+              document.body.setAttribute("class", doc.body.getAttribute("class") || "");
+              document.body.innerHTML = doc.body.innerHTML;
+              document.body.insertBefore(savedBar(), document.body.firstChild);
+              armTabs(document.body);
+              return true;
+            })
+            .catch(function () {
+              return false;
+            });
+        }
+
+        /** Есть ли на телефоне сохранённая копия ИМЕННО этого адреса. */
+        function savedCopy() {
+          if (typeof caches === "undefined" || location.pathname === "/offline.html") {
+            return Promise.resolve(null);
+          }
+          return caches
+            .keys()
+            .then(function (names) {
+              return fromCaches(location.href, documentCacheNames(names));
+            })
+            .then(function (response) {
+              if (!response || !response.ok) return null;
+              return response.text();
+            })
+            .catch(function () {
+              return null;
+            });
+        }
+
         /**
          * СКОЛЬКО РАЗ МОЖНО ПЕРЕЗАПРОСИТЬ СТРАНИЦУ САМИМ. Счётчик живёт в
          * `window.name`, потому что он обязан пережить перезагрузку той же
@@ -361,33 +857,53 @@
           }, 5000);
         }
 
-        // РЕШЕНИЕ О НАДПИСИ — ОДНО МЕСТО (долг 278).
-        if (navigator.onLine === false) {
-          show("offline");
-          waitForNetwork();
-          return;
-        }
-        probeHealth().then(function (first) {
-          if (first) {
-            // Сеть жива: «нет сети» не пишем вовсе, а страницу пробуем
-            // перезапросить сами — ровно тот случай, который владелец
-            // видел 20.09.2026 при живом интернете.
-            show("error");
-            setTimeout(reloadOnce, 1200);
+        /** Надпись каркаса — когда показывать нечего (долг 278). */
+        function decideMessage() {
+          if (navigator.onLine === false) {
+            show("offline");
+            waitForNetwork();
             return;
           }
-          setTimeout(function () {
-            probeHealth().then(function (second) {
-              if (second) {
-                show("error");
-                setTimeout(reloadOnce, 1200);
-                return;
-              }
-              show("offline");
-              waitForNetwork();
-            });
-          }, 700);
-        });
+          probeHealth().then(function (first) {
+            if (first) {
+              // Сеть жива: «нет сети» не пишем вовсе, а страницу пробуем
+              // перезапросить сами — ровно тот случай, который владелец
+              // видел 20.09.2026 при живом интернете.
+              show("error");
+              setTimeout(reloadOnce, 1200);
+              return;
+            }
+            setTimeout(function () {
+              probeHealth().then(function (second) {
+                if (second) {
+                  show("error");
+                  setTimeout(reloadOnce, 1200);
+                  return;
+                }
+                show("offline");
+                waitForNetwork();
+              });
+            }, 700);
+          });
+        }
+
+        /**
+         * ПОРЯДОК ОДИН И ОН ВАЖЕН: сначала СОХРАНЁННОЕ, и только если
+         * его нет — разговор о сети. Наоборот было бы нелепо: человеку,
+         * у которого урок лежит на телефоне, нечего читать про то, что
+         * страница не открылась.
+         */
+        savedCopy()
+          .then(function (html) {
+            if (!html) return false;
+            return renderSaved(html);
+          })
+          .then(function (shown) {
+            if (!shown) decideMessage();
+          })
+          .catch(function () {
+            decideMessage();
+          });
       })();
     </script>
   </body>

@@ -68,13 +68,28 @@ interface CacheCensus {
   entries: string[];
 }
 
-/** Документы, лежащие в кеше документов прямо сейчас. */
+/**
+ * Документы, лежащие в кешах документов прямо сейчас — В ОБОИХ.
+ *
+ * С захода 7.229 (офлайн-2) их два: общий `rf-pages-<отпечаток>` и
+ * отдельный `rf-pages-content-<отпечаток>` для того, что читают без сети
+ * (урок, рассказ, словарь). Разделение сделано по замеру: обход 46
+ * разных адресов оставляет в ОБЩЕМ кеше ровно 40 записей, и открытого
+ * первым урока среди них уже нет. Проба обязана знать про оба, иначе
+ * «документ не сохранился» она напишет ровно про то, что сохранилось
+ * лучше прежнего.
+ */
 async function documentsInCache(page: import("@playwright/test").Page): Promise<string[]> {
   return page.evaluate(async () => {
-    const name = (await caches.keys()).find((n) => /^rf-pages-(?!rsc-|others-)[a-z0-9]+$/.test(n));
-    if (!name) return [];
-    const cache = await caches.open(name);
-    return (await cache.keys()).map((r) => new URL(r.url).pathname);
+    const names = (await caches.keys()).filter((n) =>
+      /^rf-pages-content-[a-z0-9]+$/.test(n) || /^rf-pages-(?!rsc-|others-|content-)[a-z0-9]+$/.test(n),
+    );
+    const out: string[] = [];
+    for (const name of names) {
+      const cache = await caches.open(name);
+      for (const request of await cache.keys()) out.push(new URL(request.url).pathname);
+    }
+    return out;
   });
 }
 
@@ -185,7 +200,11 @@ test("воркер держит документы своим счётом и в
   // (`rf-pages-`), поэтому «начинается с» для кеша документов не годится:
   // под него попадают и `rf-pages-rsc-…`, и `rf-pages-others-…`.
   const byName = (re: RegExp) => caches_.find((c) => re.test(c.name));
-  const html = byName(/^rf-pages-(?!rsc-|others-)[a-z0-9]+$/);
+  const html = byName(/^rf-pages-(?!rsc-|others-|content-)[a-z0-9]+$/);
+  // Кеш сохранённого содержания — заход 7.229. Отдельный, со своим
+  // потолком, и именно поэтому обход каталогов больше не вытесняет из
+  // него урок.
+  const content = byName(/^rf-pages-content-[a-z0-9]+$/);
   const prefetch = byName(/^rf-pages-rsc-prefetch-/);
   const others = byName(/^rf-pages-others-/);
 
@@ -193,11 +212,29 @@ test("воркер держит документы своим счётом и в
 
   // ── ДОЛГ 76: документы считаются отдельно и не вытесняются статикой ──
   expect(html, "кеша документов нет вовсе — документ снова лёг в общий others").toBeTruthy();
-  const documents = html!.entries.filter((p) => isDocument(p));
+  expect(content, "кеша сохранённого содержания нет вовсе — урок снова делит потолок со всеми документами (7.229)").toBeTruthy();
+  const documents = [...html!.entries, ...content!.entries].filter((p) => isDocument(p));
   const cached = (path: string) => documents.some((p) => p === path || p === `${path}/`);
   const missing = WALK.filter((path) => path !== PAYMENT_PATH && !cached(path));
   console.log(`  документов в кеше ${documents.length} из ${WALK.length} обойдённых; не сохранены: ${missing.join(", ") || "нет"}`);
   expect(missing, `эти адреса воркер не сохранил, хотя заходов на них было до пяти:\n${missing.join("\n")}`).toEqual([]);
+
+  /**
+   * РАЗДЕЛЕНИЕ КЕШЕЙ УТВЕРЖДАЕТСЯ, А НЕ ПОДРАЗУМЕВАЕТСЯ (7.229).
+   *
+   * Без этой пары строк «документ нашёлся хоть где-то» прошло бы и
+   * тогда, когда содержание снова свалено в общий кеш, — то есть ровно
+   * в том положении, ради выхода из которого кеш и заводился.
+   */
+  const contentPaths = content!.entries.filter((p) => isDocument(p));
+  expect(contentPaths, "урок не попал в кеш сохранённого содержания").toContain("/es/courses/a1/1");
+  expect(contentPaths, "словарь не попал в кеш сохранённого содержания").toContain("/es/vocabulary");
+  const generalPaths = html!.entries.filter((p) => isDocument(p));
+  expect(contentPaths, "каталог курсов ушёл в кеш содержания — перечень путей разошёлся с задуманным").not.toContain(
+    "/es/courses",
+  );
+  expect(contentPaths, "главная ушла в кеш содержания — перечень путей разошёлся с задуманным").not.toContain("/es");
+  expect(generalPaths, "каталог курсов пропал из общего кеша документов").toContain("/es/courses");
 
   // ДОЛГ 179 не отменён этой правкой: платёжная поверхность в кеше не
   // лежит, и это утверждается, а не подразумевается.

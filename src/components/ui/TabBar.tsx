@@ -47,6 +47,14 @@ export default function TabBar<T extends string = string>({
             type="button"
             role="tab"
             aria-selected={active}
+            /* ЧИТАЛКА БЕЗ СЕТИ — заход 7.229. Сохранённая страница
+               показывается каркасом `public/offline.html`, и скриптов
+               сайта на ней не исполняется ни одного: переключать
+               вкладки там некому. Эта метка и парная ей
+               `data-offline-panel` у панели — весь договор между
+               страницей и читалкой; держит его
+               `npm run check:offline-reader`. */
+            data-offline-tab={item.id}
             onClick={() => onSelect(item.id)}
             className={`tap flex-shrink-0 whitespace-nowrap border-b-2 px-1 py-2.5 text-sm font-medium transition-colors ${
               active

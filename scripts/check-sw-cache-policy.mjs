@@ -57,7 +57,7 @@ import { pathToFileURL } from "node:url";
 const PLANT = process.argv.slice(2).includes("--plant");
 const POLICY = "src/lib/sw-cache-policy.ts";
 const SW = "src/app/sw.ts";
-const KEYS = ["html", "rsc", "rscPrefetch", "others", "audio"];
+const KEYS = ["html", "rsc", "rscPrefetch", "others", "content", "audio"];
 
 export function stripComments(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^[ \t]*\/\/.*$/gm, " ");
@@ -142,6 +142,45 @@ export function violations(policyRaw, swRaw) {
   }
   if (!/AUDIO_CACHE_NAME/.test(sw)) {
     bad.push(`${SW}: у клипов нет своего кеша (долг 77)`);
+  }
+
+  /**
+   * и) СОХРАНЁННОЕ СОДЕРЖАНИЕ — СВОЙ КЕШ, И ЗАКРЫТОЕ В НЁМ НЕ ЛЕЖИТ
+   *    (заход 7.229, офлайн-2).
+   *
+   *    Первая половина — про обещание: замер прогоном 23.09.2026 показал,
+   *    что обход 46 разных адресов оставляет в общем кеше документов
+   *    ровно 40 записей и открытого ПЕРВЫМ урока среди них уже нет.
+   *    Вторая — про платное: сохранять урок, который человеку не отдан,
+   *    нельзя, а сохранённый обязан исчезать, когда сервер при первом же
+   *    заходе с сетью сказал «доступа нет».
+   */
+  if (!/export function isOfflineContentPath\(/.test(policy)) {
+    bad.push(`${POLICY}: перечня страниц, которые читают без сети, нет — офлайн-2 снова кладёт содержание в общий кеш документов, где его вытесняет обход каталогов`);
+  }
+  if (!/export function looksClosedForThisVisitor\(/.test(policy)) {
+    bad.push(`${POLICY}: признака «этому посетителю закрыто» нет — платный урок ляжет на телефон любому, кто до него дотапал`);
+  }
+  if (!/isAccessibleForFree/.test(policy)) {
+    bad.push(`${POLICY}: закрытость судится не по подписи страницы для поисковика, а чем-то своим — два определения доступа разойдутся в первый же месяц`);
+  }
+  if (!/isOfflineContentPath\(url\.pathname\)/.test(sw)) {
+    bad.push(`${SW}: у сохранённого содержания нет своего маршрута — урок снова делит потолок со всеми документами подряд (замер 23.09.2026: 46 адресов → 40 записей, первого урока нет)`);
+  } else {
+    const contentAt = sw.indexOf("isOfflineContentPath(url.pathname)");
+    const navAt = sw.indexOf('request.mode === "navigate" && !url.pathname.startsWith("/api/")');
+    if (navAt !== -1 && contentAt > navAt) {
+      bad.push(`${SW}: маршрут содержания стоит ПОСЛЕ общего маршрута документов — тот заберёт навигацию себе первым, и свой кеш не наполнится никогда`);
+    }
+  }
+  if (!/cacheWillUpdate/.test(sw) || !/looksClosedForThisVisitor/.test(sw)) {
+    bad.push(`${SW}: закрытая страница кладётся в кеш содержания наравне с открытой — доступ за один оплаченный месяц станет вечным`);
+  }
+  if (!/response\.redirected/.test(sw)) {
+    bad.push(`${SW}: перенаправление сторожа маршрутов за содержание не считается — страница без подписки легла бы под адресом платной`);
+  }
+  if (!/cache\.delete\(request, \{ ignoreVary: true \}\)/.test(sw)) {
+    bad.push(`${SW}: прежняя сохранённая копия не СТИРАЕТСЯ, когда сервер сказал «доступа нет» — это и есть «подписка кончилась, а урок открывается»`);
   }
 
   /**
@@ -281,6 +320,52 @@ function plant() {
     policy,
     sw.replaceAll("matchOptions: { ignoreVary: true },", ""),
     "снова учитывает Vary",
+  );
+  add(
+    "подсадка: у сохранённого содержания отобран свой маршрут (состояние ДО офлайн-2)",
+    policy,
+    sw.replace("isOfflineContentPath(url.pathname)", "false && url.pathname"),
+    "нет своего маршрута",
+  );
+  add(
+    "подсадка: маршрут содержания встал ПОСЛЕ общего маршрута документов",
+    policy,
+    (() => {
+      const block = /\n    \{\n      matcher: \(\{ request, url, sameOrigin \}[^]*?isOfflineContentPath\(url\.pathname\),[^]*?\n    \},\n/.exec(sw);
+      if (!block) return sw;
+      return sw.replace(block[0], "\n").replace("    ...runtimeCaching,", block[0] + "    ...runtimeCaching,");
+    })(),
+    "стоит ПОСЛЕ общего маршрута документов",
+  );
+  add(
+    "подсадка: закрытая страница снова кладётся в кеш содержания",
+    policy,
+    sw.replace(/looksClosedForThisVisitor/g, "Boolean"),
+    "кладётся в кеш содержания наравне с открытой",
+  );
+  add(
+    "подсадка: прежняя копия больше не стирается, когда сервер сказал «доступа нет»",
+    policy,
+    sw.replace("cache.delete(request, { ignoreVary: true })", "cache.keys()"),
+    "не СТИРАЕТСЯ",
+  );
+  add(
+    "подсадка: перенаправление сторожа маршрутов перестало считаться закрытостью",
+    policy,
+    sw.replace("response.redirected ||", "false ||"),
+    "не считается",
+  );
+  add(
+    "подсадка: перечня страниц офлайна нет вовсе",
+    policy.replace("export function isOfflineContentPath(", "function isOfflineContentPathUnused("),
+    sw,
+    "перечня страниц, которые читают без сети, нет",
+  );
+  add(
+    "подсадка: закрытость судится не подписью страницы для поисковика",
+    policy.replace('const CLOSED_MARKER = \'"isAccessibleForFree":false\';', 'const CLOSED_MARKER = "data-closed";'),
+    sw,
+    "судится не по подписи страницы",
   );
   add(
     "подсадка: чужой источник снова узнаётся подстрокой",

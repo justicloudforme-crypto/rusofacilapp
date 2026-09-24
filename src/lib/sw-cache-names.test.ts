@@ -48,7 +48,7 @@ describe("cache names", () => {
   it("carry the fingerprint, so two builds cannot share entries", () => {
     const a = pageCacheNames("aaa");
     const b = pageCacheNames("bbb");
-    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(8);
+    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(10);
     for (const name of Object.values(a)) expect(name).toContain("aaa");
   });
 
@@ -120,5 +120,34 @@ describe("the worker actually uses this", () => {
     // The rebuilt routes must replace defaultCache, not sit beside it.
     expect(sw).toContain("runtimeCaching,");
     expect(sw).not.toMatch(/runtimeCaching:\s*defaultCache/);
+  });
+});
+
+/**
+ * ОФЛАЙН-2 (заход 7.229): кеш сохранённого содержания — пятое имя, и оно
+ * НАМЕРЕННО начинается с общего префикса.
+ *
+ * На этом префиксе висят две уже оплаченные вещи, и обе нужны здесь
+ * дословно: выход из учётной записи стирает такие кеши целиком
+ * (`personalPageCaches`, `src/lib/signed-out.ts`), а новая сборка
+ * выбрасывает чужие отпечатки (`staleCacheNames`). Сохранённый урок
+ * ОБЯЗАН исчезать при выходе: он платный.
+ */
+describe("кеш сохранённого содержания (офлайн-2)", () => {
+  it("носит общий префикс — значит выход из аккаунта его стирает", () => {
+    expect(pageCacheNames("zzz").content.startsWith(PAGE_CACHE_PREFIX)).toBe(true);
+  });
+
+  it("помечен отпечатком сборки — сохранённый HTML не переживает выката (долг 14)", () => {
+    expect(pageCacheNames("zzz").content).toContain("zzz");
+    expect(pageCacheNames("zzz").content).not.toBe(pageCacheNames("yyy").content);
+  });
+
+  it("кеш ТЕКУЩЕЙ сборки не выбрасывается при активации, кеш прошлой — выбрасывается", () => {
+    const mine = pageCacheNames("zzz").content;
+    const older = pageCacheNames("yyy").content;
+    const stale = staleCacheNames([mine, older], "zzz");
+    expect(stale).toContain(older);
+    expect(stale).not.toContain(mine);
   });
 });
