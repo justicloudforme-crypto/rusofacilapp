@@ -8,6 +8,7 @@ import {
   CACHE_BUDGET_BY_KEY,
   isAudioClipUrl,
   isOfflineContentPath,
+  isOfflineSectionPath,
   looksClosedForThisVisitor,
 } from "@/lib/sw-cache-policy";
 
@@ -97,7 +98,7 @@ const BUDGET_KEY: Record<string, "html" | "rsc" | "rscPrefetch" | "others"> = {
  * чужой flight-ответ на чужое состояние роутера никому не отдастся.
  * Удаление же становится тем, чем его считали: «выкинуть этот адрес».
  */
-function expiration(key: "html" | "rsc" | "rscPrefetch" | "others" | "content" | "audio") {
+function expiration(key: "html" | "rsc" | "rscPrefetch" | "others" | "content" | "section" | "audio") {
   const budget = CACHE_BUDGET_BY_KEY[key];
   return new ExpirationPlugin({
     maxEntries: budget.maxEntries,
@@ -436,6 +437,24 @@ const serwist = new Serwist({
         plugins: [expiration("content"), CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
       }),
     },
+    /**
+     * КОРНИ РАЗДЕЛОВ — ЗАХОД 7.230 (ОФЛАЙН-2б, строка 309).
+     *
+     * `/es/courses`, `/es/stories`, `/es/vocabulary` и их русские
+     * двойники — это три из пяти вкладок каркаса. До этой строки они
+     * жили в общем `html`: потолок 40 на сутки, делится со всеми
+     * документами подряд. Владелец 25.09.2026 снял, что без сети
+     * нажатие вкладки даёт каркас, а не раздел, — дорога к
+     * сохранённому уроку обрывалась на первом же шаге.
+     */
+    {
+      matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
+        sameOrigin && request.mode === "navigate" && isOfflineSectionPath(url.pathname),
+      handler: new NetworkFirst({
+        cacheName: CACHES.section,
+        plugins: [expiration("section"), CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+      }),
+    },
     {
       matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
         sameOrigin && request.mode === "navigate" && !url.pathname.startsWith("/api/"),
@@ -557,5 +576,44 @@ serwist.registerCapture(
   new NetworkOnly(),
   "POST"
 );
+
+/**
+ * ИМЕНА КЕШЕЙ — ПО ЗАПРОСУ СТРАНИЦЫ. ЗАХОД 7.230 (ОФЛАЙН-2б, строка 309).
+ *
+ * ЗАЧЕМ. Внутри оболочки навигацию обслуживает java-посредник
+ * Capacitor, а не воркер (доказано в 7.228 отказом сборки 1.0.3). Из
+ * этого следует не только то, что разобрано в 7.229 («отдавать
+ * сохранённое обязан каркас»), но и то, чего 7.229 не заметил: раз
+ * навигация до обработчика `fetch` не доходит, воркер её и НЕ
+ * СОХРАНЯЕТ. Поэтому копию кладёт сама страница
+ * (`src/lib/offline-save.ts`, `OfflineSaveCopy.tsx`).
+ *
+ * ПОЧЕМУ СПРАШИВАЕТ, А НЕ СЧИТАЕТ САМА. Отпечаток сборки в имени кеша
+ * обязателен (долг 14, строка 308), а считается он из
+ * precache-манифеста, которого на странице нет вовсе. Ответ воркера —
+ * единственный способ получить ИМЕННО ТО имя, которое этот же воркер
+ * потом признает своим при выкате (`staleCacheNames`). Совпадение
+ * выходит по построению, а не по совпадению двух чисел в двух файлах.
+ *
+ * Отвечает воркер и тогда, когда страницу он НЕ контролирует: сообщение
+ * приходит на `registration.active`, а не на `controller`, и наличие
+ * контроля здесь ни при чём.
+ */
+self.addEventListener("message", (event) => {
+  const data = event.data as { type?: unknown } | null;
+  if (!data || data.type !== "rf-cache-names") return;
+  const reply = {
+    type: "rf-cache-names",
+    fingerprint: FINGERPRINT,
+    content: CACHES.content,
+    section: CACHES.section,
+  };
+  const port = event.ports && event.ports[0];
+  if (port) {
+    port.postMessage(reply);
+    return;
+  }
+  (event.source as Client | null)?.postMessage(reply);
+});
 
 serwist.addEventListeners();
