@@ -48,7 +48,9 @@ describe("cache names", () => {
   it("carry the fingerprint, so two builds cannot share entries", () => {
     const a = pageCacheNames("aaa");
     const b = pageCacheNames("bbb");
-    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(10);
+    // Пять имён на сборку с 25.09.2026 (7.230): к четырём добавился кеш
+    // корней разделов `rf-pages-section-<отпечаток>`.
+    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(12);
     for (const name of Object.values(a)) expect(name).toContain("aaa");
   });
 

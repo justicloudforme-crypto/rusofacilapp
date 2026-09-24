@@ -210,7 +210,15 @@ function main() {
       // Значение подсадки НЕ строчная опечатка имени: её запрещает
       // `check:brand` (поймано им же на первом прогоне этого файла).
       ["package не тот, что в build.gradle", healthy.replace(src.applicationId, "com.rusofacilapp.android")],
-      ["versionCode не тот, что в build.gradle", healthy.replace(`versionCode='${src.versionCode}'`, "versionCode='7'")],
+      // ЧИСЛО ПОДСАДКИ СЧИТАЕТСЯ ОТ ЖИВОГО, А НЕ ПИШЕТСЯ ЛИТЕРАЛОМ.
+      // 25.09.2026 (7.230) versionCode стал 7 — ровно тем числом, которое
+      // здесь стояло подсадкой, — и мутация превратилась в пустое место:
+      // подсадка «versionCode не тот» перестала быть подсадкой и была
+      // пропущена. Соседняя строка про versionName так и написана.
+      [
+        "versionCode не тот, что в build.gradle",
+        healthy.replace(`versionCode='${src.versionCode}'`, `versionCode='${Number(src.versionCode) + 1}'`),
+      ],
       ["versionName не тот, что в build.gradle", healthy.replace(`versionName='${src.versionName}'`, "versionName='9.9'")],
       ["витринное имя — бренд сайта, а не подпись под иконкой", healthy.replace(`application-label:'${src.label}'`, "application-label:'RusoFácilapp'")],
       ["микрофон в APK не доехал", healthy.replace(/^uses-permission: name='android\.permission\.RECORD_AUDIO'\n/m, "")],

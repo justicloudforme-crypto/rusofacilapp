@@ -20,6 +20,7 @@ import SerwistRegister from "@/components/SerwistRegister";
 import SentryUser from "@/components/SentryUser";
 import NativeShellCookie from "@/components/NativeShellCookie";
 import SignedOutCachePurge from "@/components/SignedOutCachePurge";
+import OfflineSaveCopy from "@/components/OfflineSaveCopy";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUserForChrome } from "@/lib/auth";
 import { getUserStreakStats, persistFreezeState, type StreakStats } from "@/lib/streaks";
@@ -269,6 +270,10 @@ export default async function LangLayout({
             (заход 7.198, часть 1). Ничего не делает ни на одной странице,
             кроме первой после выхода. */}
         <SignedOutCachePurge />
+        {/* Страница кладёт свою копию на телефон сама — заход 7.230,
+            строка 309: в оболочке навигацию обслуживает java-посредник
+            Capacitor, воркер её не видит и в кеш не кладёт ничего. */}
+        <OfflineSaveCopy />
         {/* Плашка «нет соединения» переехала ВНУТРЬ шапки (долг 180).
             Здесь, первым элементом потока, она стояла ВЫШЕ шапки и
             забирала себе полосу под строкой состояния: в оболочке на

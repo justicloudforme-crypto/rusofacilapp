@@ -81,8 +81,12 @@ interface CacheCensus {
  */
 async function documentsInCache(page: import("@playwright/test").Page): Promise<string[]> {
   return page.evaluate(async () => {
+    // Трёх кешей документов, а не двух: с 25.09.2026 (7.230) у корней
+    // разделов свой — без него вкладки каркаса без сети вели в пустоту.
     const names = (await caches.keys()).filter((n) =>
-      /^rf-pages-content-[a-z0-9]+$/.test(n) || /^rf-pages-(?!rsc-|others-|content-)[a-z0-9]+$/.test(n),
+      /^rf-pages-content-[a-z0-9]+$/.test(n) ||
+      /^rf-pages-section-[a-z0-9]+$/.test(n) ||
+      /^rf-pages-(?!rsc-|others-|content-|section-)[a-z0-9]+$/.test(n),
     );
     const out: string[] = [];
     for (const name of names) {
@@ -200,11 +204,15 @@ test("воркер держит документы своим счётом и в
   // (`rf-pages-`), поэтому «начинается с» для кеша документов не годится:
   // под него попадают и `rf-pages-rsc-…`, и `rf-pages-others-…`.
   const byName = (re: RegExp) => caches_.find((c) => re.test(c.name));
-  const html = byName(/^rf-pages-(?!rsc-|others-|content-)[a-z0-9]+$/);
+  const html = byName(/^rf-pages-(?!rsc-|others-|content-|section-)[a-z0-9]+$/);
   // Кеш сохранённого содержания — заход 7.229. Отдельный, со своим
   // потолком, и именно поэтому обход каталогов больше не вытесняет из
   // него урок.
   const content = byName(/^rf-pages-content-[a-z0-9]+$/);
+  // Корни разделов — свой кеш с 25.09.2026 (7.230, строка 309): три из
+  // пяти вкладок каркаса ведут именно на них, а в общем `html` они жили
+  // сутки и вытеснялись первым же обходом.
+  const section = byName(/^rf-pages-section-[a-z0-9]+$/);
   const prefetch = byName(/^rf-pages-rsc-prefetch-/);
   const others = byName(/^rf-pages-others-/);
 
@@ -213,7 +221,8 @@ test("воркер держит документы своим счётом и в
   // ── ДОЛГ 76: документы считаются отдельно и не вытесняются статикой ──
   expect(html, "кеша документов нет вовсе — документ снова лёг в общий others").toBeTruthy();
   expect(content, "кеша сохранённого содержания нет вовсе — урок снова делит потолок со всеми документами (7.229)").toBeTruthy();
-  const documents = [...html!.entries, ...content!.entries].filter((p) => isDocument(p));
+  expect(section, "кеша корней разделов нет вовсе — вкладки каркаса без сети снова ведут в пустоту (7.230)").toBeTruthy();
+  const documents = [...html!.entries, ...content!.entries, ...section!.entries].filter((p) => isDocument(p));
   const cached = (path: string) => documents.some((p) => p === path || p === `${path}/`);
   const missing = WALK.filter((path) => path !== PAYMENT_PATH && !cached(path));
   console.log(`  документов в кеше ${documents.length} из ${WALK.length} обойдённых; не сохранены: ${missing.join(", ") || "нет"}`);
@@ -230,11 +239,19 @@ test("воркер держит документы своим счётом и в
   expect(contentPaths, "урок не попал в кеш сохранённого содержания").toContain("/es/courses/a1/1");
   expect(contentPaths, "словарь не попал в кеш сохранённого содержания").toContain("/es/vocabulary");
   const generalPaths = html!.entries.filter((p) => isDocument(p));
+  const sectionPaths = section!.entries.filter((p) => isDocument(p));
   expect(contentPaths, "каталог курсов ушёл в кеш содержания — перечень путей разошёлся с задуманным").not.toContain(
     "/es/courses",
   );
   expect(contentPaths, "главная ушла в кеш содержания — перечень путей разошёлся с задуманным").not.toContain("/es");
-  expect(generalPaths, "каталог курсов пропал из общего кеша документов").toContain("/es/courses");
+  // С 7.230 каталог курсов лежит в СВОЁМ кеше, а не в общем: у общего
+  // срок сутки, и вкладка «Cursos» без сети переставала работать через
+  // день. Утверждается обе стороны — где лежит и где НЕ лежит.
+  expect(sectionPaths, "каталог курсов не попал в кеш корней разделов — вкладка «Cursos» без сети снова пуста").toContain(
+    "/es/courses",
+  );
+  expect(sectionPaths, "главная ушла в кеш разделов — перечень путей разошёлся с задуманным").not.toContain("/es");
+  expect(generalPaths, "главная пропала из общего кеша документов").toContain("/es");
 
   // ДОЛГ 179 не отменён этой правкой: платёжная поверхность в кеше не
   // лежит, и это утверждается, а не подразумевается.
@@ -249,6 +266,7 @@ test("воркер держит документы своим счётом и в
   const budgets: [string, CacheCensus | undefined, number][] = [
     ["документы", html, CACHE_BUDGET_BY_KEY.html.maxEntries],
     ["предзагрузка", prefetch, CACHE_BUDGET_BY_KEY.rscPrefetch.maxEntries],
+    ["корни разделов", section, CACHE_BUDGET_BY_KEY.section.maxEntries],
     ["прочее того же источника", others, CACHE_BUDGET_BY_KEY.others.maxEntries],
   ];
   for (const [what, cache, limit] of budgets) {

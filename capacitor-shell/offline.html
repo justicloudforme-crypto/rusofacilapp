@@ -310,6 +310,68 @@
         stroke-linecap: round;
         stroke-linejoin: round;
       }
+      /* СПИСОК СОХРАНЁННОГО — ЗАХОД 7.230 (ОФЛАЙН-2б, строка 309).
+         Владелец 25.09.2026 без сети видел каркас и не имел ни одного
+         способа узнать, лежит ли на телефоне хоть что-нибудь и куда
+         нажать. Теперь список стоит прямо здесь, а под ним — мелкая
+         строка-прибор с числом сохранённого. */
+      .saved {
+        width: 100%;
+        max-width: 28rem;
+        margin-top: 1.5rem;
+        text-align: start;
+      }
+      .saved h2 {
+        margin: 0 0 0.5rem;
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+      .saved ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: var(--surface);
+      }
+      .saved li + li {
+        border-top: 1px solid var(--border);
+      }
+      .saved li button {
+        margin: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.125rem;
+        border-radius: 0;
+        padding: 0.625rem 0.875rem;
+        background: transparent;
+        color: var(--foreground);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-align: start;
+      }
+      .saved li .kind {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: var(--muted);
+      }
+      .saved .empty {
+        margin: 0;
+        font-size: 0.8125rem;
+      }
+      /* СТРОКА-ПРИБОР. Мелкая и серая намеренно: она не для чтения, а
+         для того, чтобы владелец по видео мог сказать одним взглядом,
+         сохранил телефон что-нибудь или нет. Личного в ней нет ничего —
+         число и короткий отпечаток кеша. */
+      .gauge {
+        margin-top: 1rem;
+        font-size: 0.6875rem;
+        color: var(--muted);
+        opacity: 0.8;
+      }
       [hidden] {
         display: none !important;
       }
@@ -405,6 +467,24 @@
 
       <button type="button" lang="es" data-locale="es" data-retry>Reintentar</button>
       <button type="button" lang="ru" data-locale="ru" data-retry>Повторить</button>
+
+      <!-- СОХРАНЁННОЕ НА ЭТОМ ТЕЛЕФОНЕ — ЗАХОД 7.230 (строка 309).
+           Список строится скриптом из описи (`/__rf-offline-index`) или,
+           если описи нет, прямо из ключей кешей документов. Он виден в
+           ОБОИХ состояниях каркаса («нет сети» и «страница не
+           открылась»): человеку, у которого урок лежит на телефоне,
+           одинаково нужно попасть в него в обоих случаях. -->
+      <section class="saved" data-saved hidden>
+        <h2 lang="es" data-locale="es">Guardado en este teléfono</h2>
+        <h2 lang="ru" data-locale="ru">Сохранено на этом телефоне</h2>
+        <ul data-saved-list></ul>
+        <p class="empty" data-saved-empty hidden>
+          <span lang="es" data-locale="es">Aún no hay nada guardado en este teléfono. Abre una lección, un cuento o el vocabulario con internet y se quedará aquí.</span>
+          <span lang="ru" data-locale="ru">Пока на этом телефоне ничего не сохранено. Откройте урок, рассказ или словарь с интернетом — и они останутся здесь.</span>
+        </p>
+      </section>
+
+      <p class="gauge" data-saved-gauge></p>
     </main>
 
     <nav class="tabs" aria-label="RusoFácilapp">
@@ -456,6 +536,12 @@
           es: { note: "Copia guardada en el teléfono", retry: "Reintentar" },
           ru: { note: "Сохранённая копия на телефоне", retry: "Повторить" },
         };
+        /** Подписи списка сохранённого и строки-прибора (заход 7.230). */
+        var KINDS = {
+          es: { lesson: "Lección", story: "Cuento", vocabulary: "Vocabulario", section: "Sección" },
+          ru: { lesson: "Урок", story: "Рассказ", vocabulary: "Словарь", section: "Раздел" },
+        };
+        var GAUGE = { es: "Guardado", ru: "Сохранено" };
         document.title = TITLES[lang].error;
 
         // Лишняя половина УБИРАЕТСЯ, а не дописывается: при выключенном
@@ -532,14 +618,26 @@
          *  не знает никто, поэтому берутся они из ЖИВОГО списка. */
         function documentCacheNames(names) {
           var content = [];
+          var section = [];
           var pages = [];
           for (var i = 0; i < names.length; i++) {
             if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);
+            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);
             else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);
           }
           // Сохранённое содержание спрашивается ПЕРВЫМ: у него свой
-          // потолок и свой срок, и именно оно живёт дольше.
-          return content.concat(pages);
+          // потолок и свой срок, и именно оно живёт дольше. Разделы —
+          // вторыми (заход 7.230): их кладёт то же правило и на тот же
+          // срок, но материал важнее каталога.
+          //
+          // ОТПЕЧАТОК СБОРКИ ЗДЕСЬ НЕ СЛИЧАЕТСЯ НИ С ЧЕМ, И ЭТО НЕ
+          // небрежность (строка 308). Каркас зашит в пакет приложения и
+          // собирается на другой машине и в другой день, чем сайт;
+          // знай он отпечаток «свой», он перестал бы находить кеш
+          // ровно после первого же выката — молча. Имена берутся из
+          // ЖИВОГО списка `caches.keys()`, то есть из того, что и
+          // правда лежит на телефоне.
+          return content.concat(section).concat(pages);
         }
 
         /** Ответ из кеша по адресу, или null. `ignoreVary` — потому что у
@@ -786,6 +884,266 @@
             });
         }
 
+        /* ============================================================
+           СПИСОК СОХРАНЁННОГО — ЗАХОД 7.230 (ОФЛАЙН-2б, СТРОКА 309)
+           ============================================================
+
+           ЧТО ИМЕННО БЫЛО СЛОМАНО. Читалка 7.229 умела показать
+           сохранённую копию ТОГО АДРЕСА, по которому человек пришёл. А
+           приходит он после холодного старта на главную — страницу,
+           которой в кеше содержания нет и не должно быть. Дальше он
+           нажимал вкладки, те вели на корни разделов, которых в кеше
+           тоже не было, и каркас честно показывал каркас. Урок лежал
+           рядом, и попасть в него было нечем: адреса урока человек
+           наизусть не знает.
+
+           Поэтому каркас теперь ПОКАЗЫВАЕТ, что на телефоне лежит, —
+           названием и видом, а не адресом. */
+
+        /** Адрес описи — тот же, что кладёт страница
+         *  (`src/lib/offline-save.ts`, `OFFLINE_INDEX_PATH`). */
+        var INDEX_PATH = "/__rf-offline-index";
+
+        /** Вид страницы по её адресу. То же правило, что у сайта
+         *  (`savedKindOf`, `src/lib/sw-cache-policy.ts`) — переписано
+         *  здесь, потому что статический файл ничего не импортирует;
+         *  сличает оба текста `npm run check:offline-cache-names`. */
+        function kindOfPath(path) {
+          if (/^\/(es|ru)\/courses\/[^/]+\/[^/]+\/?$/.test(path)) return "lesson";
+          if (/^\/(es|ru)\/stories\/[^/]+\/?$/.test(path)) return "story";
+          if (/^\/(es|ru)\/vocabulary(\/[^/]+)?\/?$/.test(path)) return "vocabulary";
+          if (/^\/(es|ru)\/(courses|stories)\/?$/.test(path)) return "section";
+          return null;
+        }
+
+        /** Короткий отпечаток того кеша, в котором и правда что-то
+         *  лежит. Для строки-прибора: владелец по видео видит, «тот»
+         *  ли кеш нашёл каркас. */
+        function fingerprintOf(names) {
+          for (var i = 0; i < names.length; i++) {
+            var m = /^rf-pages-content-([a-z0-9]+)$/.exec(names[i]);
+            if (m) return m[1];
+          }
+          return "—";
+        }
+
+        /** Опись, положенная страницей. Нет описи — не беда: список
+         *  собирается прямо из ключей кешей, просто без названий. */
+        function readIndex(names) {
+          var url;
+          try {
+            url = new URL(INDEX_PATH, location.href).toString();
+          } catch (e) {
+            return Promise.resolve([]);
+          }
+          return fromCaches(url, names)
+            .then(function (hit) {
+              if (!hit) return [];
+              return hit.json();
+            })
+            .then(function (rows) {
+              return Object.prototype.toString.call(rows) === "[object Array]" ? rows : [];
+            })
+            .catch(function () {
+              return [];
+            });
+        }
+
+        /** Ключи кешей документов — запасной источник списка. */
+        function readKeys(names) {
+          var rows = [];
+          var index = 0;
+          function step() {
+            if (index >= names.length) return Promise.resolve(rows);
+            var name = names[index++];
+            return caches
+              .open(name)
+              .then(function (cache) {
+                return cache.keys();
+              })
+              .then(function (requests) {
+                for (var i = 0; i < requests.length; i++) {
+                  var path;
+                  try {
+                    path = new URL(requests[i].url).pathname;
+                  } catch (e) {
+                    continue;
+                  }
+                  var kind = kindOfPath(path);
+                  if (!kind) continue;
+                  rows.push({ url: requests[i].url, path: path, kind: kind, title: "", savedAt: 0 });
+                }
+                return step();
+              })
+              .catch(function () {
+                return step();
+              });
+          }
+          return step();
+        }
+
+        /** Список сохранённого: опись, дополненная ключами. Опись
+         *  первее — в ней есть названия; ключи добавляют то, что опись
+         *  не застала (копии, положенные воркером в браузере). */
+        function savedRows(names) {
+          return readIndex(names).then(function (rows) {
+            var clean = [];
+            var seen = {};
+            for (var i = 0; i < rows.length; i++) {
+              var row = rows[i];
+              if (!row || typeof row.url !== "string") continue;
+              var kind = kindOfPath(row.path || "");
+              if (!kind) continue;
+              if (seen[row.url]) continue;
+              seen[row.url] = 1;
+              clean.push({
+                url: row.url,
+                path: row.path,
+                kind: kind,
+                title: typeof row.title === "string" ? row.title : "",
+                savedAt: typeof row.savedAt === "number" ? row.savedAt : 0,
+              });
+            }
+            return readKeys(names).then(function (extra) {
+              for (var j = 0; j < extra.length; j++) {
+                if (seen[extra[j].url]) continue;
+                seen[extra[j].url] = 1;
+                clean.push(extra[j]);
+              }
+              clean.sort(function (a, b) {
+                return b.savedAt - a.savedAt;
+              });
+              return clean;
+            });
+          });
+        }
+
+        /** Показать сохранённую копию по нажатию из списка. Адрес в
+         *  строке меняется ДО отрисовки: иначе «Повторить» перезапросил
+         *  бы не ту страницу, которую человек читает. */
+        function openSavedUrl(url, names) {
+          return fromCaches(url, names)
+            .then(function (hit) {
+              if (!hit || !hit.ok) return false;
+              return hit.text();
+            })
+            .then(function (html) {
+              if (!html) return false;
+              try {
+                history.replaceState(null, "", url);
+              } catch (e) {
+                // Адрес мог быть чужого источника — тогда просто не меняем.
+              }
+              return renderSaved(html);
+            })
+            .catch(function () {
+              return false;
+            });
+        }
+
+        /** Отрисовать список и строку-прибор. `filter` — вид или null. */
+        function paintSaved(rows, names, filter) {
+          var block = document.querySelector("[data-saved]");
+          var list = document.querySelector("[data-saved-list]");
+          var empty = document.querySelector("[data-saved-empty]");
+          var gauge = document.querySelector("[data-saved-gauge]");
+          if (!block || !list || !empty) return;
+          var shown = [];
+          for (var i = 0; i < rows.length; i++) {
+            if (filter && rows[i].kind !== filter) continue;
+            shown.push(rows[i]);
+          }
+          list.innerHTML = "";
+          for (var j = 0; j < shown.length; j++) {
+            (function (row) {
+              var item = document.createElement("li");
+              var button = document.createElement("button");
+              button.type = "button";
+              var name = document.createElement("span");
+              name.textContent = row.title || row.path;
+              var kind = document.createElement("span");
+              kind.className = "kind";
+              kind.textContent = KINDS[lang][row.kind] || row.kind;
+              button.appendChild(name);
+              button.appendChild(kind);
+              button.addEventListener("click", function () {
+                openSavedUrl(row.url, names);
+              });
+              item.appendChild(button);
+              list.appendChild(item);
+            })(shown[j]);
+          }
+          list.hidden = shown.length === 0;
+          empty.hidden = shown.length !== 0;
+          block.hidden = false;
+          if (gauge) {
+            // ЧИСЛО — ПОЛНОЕ, А НЕ ОТФИЛЬТРОВАННОЕ: прибор отвечает на
+            // вопрос «сохранил ли телефон хоть что-нибудь», и ответ не
+            // должен зависеть от того, какую вкладку нажали.
+            gauge.textContent = GAUGE[lang] + ": " + rows.length + " · " + fingerprintOf(names);
+          }
+        }
+
+        var savedNames = null;
+        var savedCache = null;
+        function withSaved(then) {
+          if (typeof caches === "undefined") return;
+          var ready =
+            savedCache ||
+            caches.keys().then(function (names) {
+              savedNames = documentCacheNames(names);
+              return savedRows(savedNames);
+            });
+          savedCache = ready;
+          ready
+            .then(function (rows) {
+              then(rows, savedNames || []);
+            })
+            .catch(function () {
+              /* Кешей может не быть вовсе — списку тогда неоткуда взяться. */
+            });
+        }
+
+        /** Список на каркасе. Зовётся ровно тогда, когда каркас
+         *  остаётся на экране: поверх сохранённой копии он не нужен. */
+        function showSavedList(filter) {
+          withSaved(function (rows, names) {
+            paintSaved(rows, names, filter || null);
+          });
+        }
+
+        /**
+         * ВКЛАДКИ КАРКАСА БЕЗ СЕТИ. Три из пяти ведут на корни разделов,
+         * и до 7.230 без сети каждая давала тот же каркас — это и снял
+         * владелец 25.09.2026. Теперь: есть сохранённый раздел — он и
+         * откроется; нет — список сохранённого, отфильтрованный по виду
+         * этой вкладки, вместо пустого каркаса.
+         *
+         * При ЖИВОЙ сети вкладка остаётся обычной ссылкой: подменять
+         * работающий переход сохранённой копией было бы хуже дефекта.
+         */
+        var TAB_FILTER = { "/courses": "lesson", "/stories": "story", "/vocabulary": "vocabulary" };
+        function armTabsOffline() {
+          var links = document.querySelectorAll("nav.tabs [data-href]");
+          for (var i = 0; i < links.length; i++) {
+            (function (link) {
+              var base = link.getAttribute("data-href");
+              if (!Object.prototype.hasOwnProperty.call(TAB_FILTER, base)) return;
+              link.addEventListener("click", function (event) {
+                if (navigator.onLine !== false) return;
+                event.preventDefault();
+                var target = link.href;
+                withSaved(function (rows, names) {
+                  openSavedUrl(target, names).then(function (shown) {
+                    if (shown) return;
+                    paintSaved(rows, names, TAB_FILTER[base]);
+                  });
+                });
+              });
+            })(links[i]);
+          }
+        }
+
         /** Есть ли на телефоне сохранённая копия ИМЕННО этого адреса. */
         function savedCopy() {
           if (typeof caches === "undefined" || location.pathname === "/offline.html") {
@@ -893,15 +1251,22 @@
          * у которого урок лежит на телефоне, нечего читать про то, что
          * страница не открылась.
          */
+        armTabsOffline();
+
         savedCopy()
           .then(function (html) {
             if (!html) return false;
             return renderSaved(html);
           })
           .then(function (shown) {
-            if (!shown) decideMessage();
+            if (shown) return;
+            // Каркас остаётся на экране — значит человеку нужен список
+            // того, что на телефоне ВСЁ-ТАКИ лежит, и число в приборе.
+            showSavedList(null);
+            decideMessage();
           })
           .catch(function () {
+            showSavedList(null);
             decideMessage();
           });
       })();
