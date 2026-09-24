@@ -542,6 +542,11 @@
           ru: { lesson: "Урок", story: "Рассказ", vocabulary: "Словарь", section: "Раздел" },
         };
         var GAUGE = { es: "Guardado", ru: "Сохранено" };
+        /** Строка описи есть, а копии под ней уже нет (её мог унести
+         *  выкат сайта — строка 308). Кнопка, которая молча ничего не
+         *  делает, — дефект сама по себе, и это правило на проекте уже
+         *  оплачено (7.192, шапка этого файла). */
+        var GONE = { es: "No disponible", ru: "Недоступно" };
         document.title = TITLES[lang].error;
 
         // Лишняя половина УБИРАЕТСЯ, а не дописывается: при выключенном
@@ -1067,7 +1072,14 @@
               button.appendChild(name);
               button.appendChild(kind);
               button.addEventListener("click", function () {
-                openSavedUrl(row.url, names);
+                openSavedUrl(row.url, names).then(function (shown) {
+                  if (shown) return;
+                  // Копии под строкой больше нет. Говорим это прямо и
+                  // гасим кнопку: молчащая кнопка хуже честного отказа.
+                  kind.textContent = GONE[lang];
+                  button.disabled = true;
+                  button.style.opacity = "0.5";
+                });
               });
               item.appendChild(button);
               list.appendChild(item);

@@ -239,6 +239,43 @@ test("вкладка «Cursos» без сети открывает сохран�
   expect(opened.bar, "раздел открыт без честной подписи «сохранённая копия»").toMatch(/Copia guardada/);
   expect(opened.title, "у открытого раздела не тот заголовок").toBe(sectionTitle);
 
+  // 3. СТРОКА ЕСТЬ, А КОПИИ ПОД НЕЙ НЕТ — КНОПКА ГОВОРИТ ОБ ЭТОМ ПРЯМО.
+  //    Так выглядит телефон после выката сайта (строка 308): опись
+  //    пережила выкат, а кеш с копиями унесло. Кнопка, которая молча
+  //    ничего не делает, — дефект сама по себе.
+  await context.unroute("**/*");
+  await context.setOffline(false);
+  await page.goto("/es");
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
+  const emptied = await page.evaluate(async () => {
+    let removed = 0;
+    for (const name of await caches.keys()) {
+      if (!/^rf-pages-section-[a-z0-9]+$/.test(name)) continue;
+      const cache = await caches.open(name);
+      for (const request of await cache.keys()) {
+        if (await cache.delete(request)) removed += 1;
+      }
+    }
+    return removed;
+  });
+  expect(emptied, "копий разделов не было вовсе — стирать было нечего, и замер ничего не доказал бы").toBeGreaterThan(0);
+
+  await becomeNativeShell(page, context);
+  await visit(page, "/es");
+  await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
+  // Строка ищется по НАЗВАНИЮ, а не по подписи вида: подпись вида —
+  // это ровно то, что нажатие меняет, и локатор по ней перестал бы
+  // находить свою же кнопку в тот миг, когда она отвечает.
+  const orphan = page.locator("[data-saved-list] li button").filter({ hasText: "Sección" }).first();
+  const orphanName = (await orphan.innerText()).split("\n")[0].trim();
+  expect(orphanName.length, "у строки списка нет названия — искать её было бы не по чему").toBeGreaterThan(0);
+  await orphan.click();
+  const byName = page.locator("[data-saved-list] li button").filter({ hasText: orphanName }).first();
+  await expect(byName, "строка без копии молчит вместо честного «No disponible»").toContainText("No disponible", {
+    timeout: 15_000,
+  });
+  expect(await byName.isDisabled(), "кнопка без копии осталась нажимаемой — она ничего не делает").toBe(true);
+
   await context.unroute("**/*");
   await context.setOffline(false);
 });
