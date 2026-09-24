@@ -53,7 +53,14 @@ export default defineConfig({
        * пропуск в отчёте роняет прогон по правилу `check:e2e-coverage`,
        * и роняет правильно.
        */
-      testIgnore: /(sw-cache-budget|sw-audio-replay|sw-offline-screen)\.spec\.ts/,
+      /**
+       * `offline-shell.spec.ts` добавлен сюда 23.09.2026 (заход 7.227) по
+       * замеру, а не по подозрению: на этом проекте из трёх его тестов
+       * падают ДВА — те, что трогают навигацию без сети. Движок под
+       * Playwright не доводит её до воркера, и мерить здесь пришлось бы
+       * Playwright, а не продукт. Тот же класс, что у трёх проб выше.
+       */
+      testIgnore: /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone

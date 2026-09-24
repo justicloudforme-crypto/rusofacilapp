@@ -196,6 +196,71 @@ const PRIVATE_PATH = /^\/(es|ru)\/(profile|admin)(\/|$)/;
 
 const PAYMENT_PATH = /^\/(es|ru)\/pricing(\/|$)/;
 
+/**
+ * ПРОБА ЖИЗНИ СЕРВЕРА — СТРОКА ДОЛГА 278.
+ *
+ * Долг дословно: «почему запрос воркера в сеть отказал при ЖИВОМ
+ * интернете — не установлено»; владелец 20.09.2026 на проде при
+ * работающем интернете увидел, как страница рассказа на несколько секунд
+ * подменилась экраном «Estás sin conexión».
+ *
+ * Причина отказа так и не названа (воспроизвести её не удалось шестью
+ * способами). Но СЛЕДСТВИЕ лечится без знания причины: «нет сети» —
+ * утверждение о СЕТИ, а один упавший запрос о сети не говорит ничего.
+ * Поэтому прежде, чем показать экран «нет соединения», воркер
+ * спрашивает СВОЙ сервер: `/api/health` (маршрут ниже — `NetworkOnly`,
+ * то есть ответ на него не приходит из кеша никогда и означает ровно
+ * «сервер ответил»). Ответил — значит сеть жива, и страница
+ * перезапрашивается один раз молча; человек в этом случае не видит
+ * вообще ничего, а если и второй запрос не дошёл — видит каркас с
+ * надписью «страница не открылась», без утверждений о сети.
+ */
+const HEALTH_PATH = "/api/health";
+
+async function serverAnswers(timeoutMs = 2500): Promise<boolean> {
+  const control = new AbortController();
+  const timer = setTimeout(() => control.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${HEALTH_PATH}?sw-probe=${Date.now()}`, {
+      cache: "no-store",
+      signal: control.signal,
+    });
+    return response.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Общий каркас без сети — `public/offline.html`, лежит в precache. */
+const OFFLINE_SHELL_URL = "/offline.html";
+
+/**
+ * ЧТО ПОКАЗАТЬ, КОГДА ДОКУМЕНТ НЕ ВЗЯЛСЯ НИ ИЗ СЕТИ, НИ ИЗ КЕША.
+ *
+ * Плагин с `handlerDidError` МОЛЧА отменяет запасной обработчик Serwist
+ * на этом маршруте (`fallbacks` вешается только туда, где такого плагина
+ * нет) — это измерено в заходе 7.218 и стоило часа на ложную находку.
+ * Здесь это не побочный эффект, а намерение: запасной ответ у маршрута
+ * документов теперь свой, и он умеет то, чего чужой не умел, — сперва
+ * проверить, жив ли сервер.
+ */
+const DOCUMENT_FALLBACK: SerwistPlugin = {
+  handlerDidError: async ({ request }) => {
+    if (self.navigator.onLine !== false && (await serverAnswers())) {
+      try {
+        // Сеть жива — значит отказал ОДИН запрос, и его стоит повторить.
+        return await fetch(request.url, { credentials: "include", cache: "no-store" });
+      } catch {
+        // Сервер отвечает на пробу, а этой странице — нет. Утверждать
+        // «нет сети» в этом случае нельзя: каркас скажет честнее.
+      }
+    }
+    return (await serwist.matchPrecache(OFFLINE_SHELL_URL)) ?? Response.error();
+  },
+};
+
 /** Уже лежащие в кешах копии страницы цен — с прошлых установок, до этой
  *  правки. Пока их не убрать, старый ответ переживёт выкат. */
 async function dropCachedPaymentPages(): Promise<void> {
@@ -258,6 +323,18 @@ const serwist = new Serwist({
   // после — она не сработала бы ни разу.
   runtimeCaching: [
     {
+      /**
+       * ПРОБА ЖИЗНИ НЕ ОТВЕЧАЕТ ИЗ КЕША — иначе она отвечала бы «сервер
+       * жив» ровно тогда, когда он умер. `defaultCache` держит все
+       * `/api/…` на `NetworkFirst`, то есть без этой строки ответ
+       * здоровья лёг бы в кеш `apis` и подтверждал бы жизнь сервера из
+       * памяти устройства (долг 278).
+       */
+      matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
+        sameOrigin && url.pathname === HEALTH_PATH,
+      handler: new NetworkOnly(),
+    },
+    {
       matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
         sameOrigin && PAYMENT_PATH.test(url.pathname),
       handler: new NetworkOnly(),
@@ -289,7 +366,7 @@ const serwist = new Serwist({
     {
       matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
         sameOrigin && request.mode === "navigate" && !url.pathname.startsWith("/api/"),
-      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html")] }),
+      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html"), DOCUMENT_FALLBACK] }),
     },
     /**
      * КЛИП ОЗВУЧКИ — СВОЙ КЕШ, ДОЛГ 77.
