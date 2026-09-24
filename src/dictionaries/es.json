@@ -1703,7 +1703,7 @@
     "glossaryAllLink": "Ver todos los términos del glosario"
   },
   "offline": {
-    "bannerMessage": "Estás sin conexión. Algunos cambios se guardarán y se enviarán cuando vuelva la conexión."
+    "bannerMessage": "Estás sin conexión. Se guarda solo lo que revises en los ejercicios de una lección; se enviará cuando vuelva la conexión."
   },
   "notFound": {
     "code": "404",

@@ -300,3 +300,57 @@ describe("объект плагина не возвращается голым",
     expect(configure).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * НАСТРОЙКА SDK НЕ ИМЕЕТ ПРАВА ЗАВОДИТЬ АНОНИМНОГО КЛИЕНТА, КОГДА
+ * ЧЕЛОВЕК ИЗВЕСТЕН — заход 7.228, долг 305.
+ *
+ * Замер 23.09.2026: владелец увидел в консоли RevenueCat рядом со своим
+ * клиентом второй, `$RCAnonymousID:…`, «создан до входа». Причина — этот
+ * самый вызов: `configure({ apiKey })` без `appUserID`. Доступ от этого
+ * не ломался (он привязан к `Subscription.userId`), поэтому поймать это
+ * могло только правило — и вот оно, числами по аргументам вызова.
+ */
+describe("appUserID в самой настройке SDK (долг 305)", () => {
+  it("известный человек уходит в configure ВМЕСТЕ с настройкой", async () => {
+    const configure = vi.fn(async () => ({}));
+    plugin = { ...workingPlugin(), configure };
+    const { configureRevenueCat } = await freshClient();
+    await settle(configureRevenueCat("cmt9lqcny000004l6u2gb3j87"));
+    expect(configure).toHaveBeenCalledWith({
+      apiKey: expect.any(String),
+      appUserID: "cmt9lqcny000004l6u2gb3j87",
+    });
+  });
+
+  it("гость настраивается безымянно — своего идентификатора у него нет", async () => {
+    // Аргумент назван в типе намеренно: без него `vi.fn` выводит вызов
+    // без параметров, и прочитать переданный объект нечем.
+    const configure = vi.fn(async (_options: unknown) => ({}));
+    plugin = { ...workingPlugin(), configure };
+    const { configureRevenueCat } = await freshClient();
+    await settle(configureRevenueCat(null));
+    const args = configure.mock.calls[0]?.[0] as Record<string, unknown> | undefined;
+    expect(args, "configure не позван вовсе").toBeDefined();
+    expect(args?.appUserID, "пустого appUserID в вызове быть не должно — SDK его не примет").toBeUndefined();
+    expect(args?.apiKey).toEqual(expect.any(String));
+  });
+
+  it("loginRevenueCat настраивает SDK сразу под своим идентификатором", async () => {
+    const configure = vi.fn(async () => ({}));
+    const logIn = vi.fn(async () => ({ customerInfo: {} }));
+    plugin = { ...workingPlugin(), configure, logIn };
+    const { loginRevenueCat } = await freshClient();
+    await settle(loginRevenueCat("user-1"));
+    expect(configure).toHaveBeenCalledWith({ apiKey: expect.any(String), appUserID: "user-1" });
+    expect(logIn).toHaveBeenCalledWith({ appUserID: "user-1" });
+  });
+
+  it("экран покупки (loadStore) тоже настраивает SDK под своим идентификатором", async () => {
+    const configure = vi.fn(async () => ({}));
+    plugin = { ...workingPlugin(), configure };
+    const { loadStore } = await freshClient();
+    await settle(loadStore("user-2"));
+    expect(configure).toHaveBeenCalledWith({ apiKey: expect.any(String), appUserID: "user-2" });
+  });
+});

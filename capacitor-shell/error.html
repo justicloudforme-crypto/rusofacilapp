@@ -151,6 +151,38 @@
       // «ничего не произошло» — та же жалоба, из-за которой всё и чинится.
       var MIN_BUSY_MS = 600;
 
+      /**
+       * ОДИН СЛЕПОЙ ПЕРЕХОД ПОСЛЕ НЕУДАЧНОЙ ПРОБЫ — ПРАВКА 7.228.
+       *
+       * ЧТО БЫЛО ДОКАЗАНО ТЕКСТОМ. Проба ниже — это `fetch` с ЭТОГО
+       * документа, а он загружен с `https://localhost/error.html`
+       * (`Bridge.getErrorUrl()`). Для источника `https://localhost`
+       * воркера сайта не существует вовсе, поэтому проба идёт прямо в
+       * сеть и без сети падает ВСЕГДА — сколько бы сохранённых страниц
+       * ни лежало на телефоне. До 7.228 отказ пробы заканчивал дело
+       * надписью «Todavía no se pudo», и перехода на сайт не случалось
+       * НИ РАЗУ: ровно это владелец и видел 23.09.2026.
+       *
+       * Переход же идёт на источник САЙТА, и там его встречает каркас
+       * без сети (`OfflineShellWebViewClient`). То есть отказ пробы не
+       * доказывает, что переход бесполезен, — и один переход мы делаем.
+       *
+       * ПОЧЕМУ РОВНО ОДИН. Второй нужен только затем, чтобы вернуть
+       * прежний укор «пустой кадр вместо ответа» (долг 181): если
+       * слепой переход уже был и мы снова здесь, значит и он не помог,
+       * и человеку честнее сказать словами. Отметка живёт в
+       * `window.name`, потому что переход рвёт этот документ, а имя
+       * вкладки его переживает; хранилище браузера на этом экране
+       * трогать нечем — файл локальный и вне `safe-storage`.
+       */
+      var BLIND_MARK = "rf-error-blind-try";
+      function blindTryUsed() {
+        return window.name === BLIND_MARK;
+      }
+      function markBlindTry() {
+        window.name = BLIND_MARK;
+      }
+
       var button = document.getElementById("retry");
       var label = document.getElementById("retry-label");
       var body = document.querySelector('[data-i18n="body"]');
@@ -263,18 +295,25 @@
         };
         var timer = setTimeout(fail, PROBE_TIMEOUT_MS);
 
-        fetch(SITE_URL, { mode: "no-cors", cache: "no-store" }).then(
-          function () {
-            if (done) return;
-            done = true;
-            clearTimeout(timer);
-            location.href = SITE_URL;
-          },
-          function () {
-            clearTimeout(timer);
-            fail();
+        var go = function () {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          location.href = SITE_URL;
+        };
+
+        fetch(SITE_URL, { mode: "no-cors", cache: "no-store" }).then(go, function () {
+          clearTimeout(timer);
+          // Проба не дошла. Если слепого перехода ещё не было — делаем
+          // его: каркас на источнике сайта пробе недоступен, а переходу
+          // доступен (см. шапку BLIND_MARK).
+          if (!blindTryUsed()) {
+            markBlindTry();
+            go();
+            return;
           }
-        );
+          fail();
+        });
       });
     </script>
   </body>

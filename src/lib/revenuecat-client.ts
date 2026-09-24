@@ -241,9 +241,27 @@ export function storeIsPossible(): boolean {
   return Capacitor.isNativePlatform() && currentPlatformApiKey() !== undefined;
 }
 
-/** Настраивает SDK. Звать можно сколько угодно раз — второй вызов пустой.
- *  Возвращает `false`, если настроить нечем (браузер, iOS без ключа). */
-export async function configureRevenueCat(): Promise<boolean> {
+/**
+ * Настраивает SDK. Звать можно сколько угодно раз — второй вызов пустой.
+ * Возвращает `false`, если настроить нечем (браузер, iOS без ключа).
+ *
+ * `appUserID` ПЕРЕДАЁТСЯ СРАЗУ, КОГДА ЧЕЛОВЕК ИЗВЕСТЕН — правка 7.228,
+ * долг 305. До неё `configure` звался ВСЕГДА без идентификатора, и SDK по
+ * своему правилу выдумывал анонимного клиента (`$RCAnonymousID:…`) даже
+ * тогда, когда `id` вошедшего уже лежал в разметке страницы; наш
+ * `logIn` переключал на него лишь следующим обращением. Измерено
+ * 23.09.2026: владелец увидел в консоли RevenueCat рядом со своим
+ * клиентом второй, анонимный, «создан до входа». Доступ это не ломало
+ * ничем (он привязан к `Subscription.userId`), но список клиентов рос
+ * мусором со скоростью «один на установку плюс один на каждый выход».
+ *
+ * Правило RevenueCat ровно такое: если свой идентификатор известен
+ * ЗАРАНЕЕ, его место — в `configure`, а `logIn` нужен для входа, который
+ * случился уже в работающем приложении. Обе дороги остаются: гость
+ * настраивается без идентификатора (иначе настраивать нечем — до входа у
+ * нас своего `id` нет), а вошедший — сразу со своим.
+ */
+export async function configureRevenueCat(appUserID?: string | null): Promise<boolean> {
   if (!storeIsPossible()) return false;
   if (configured) return true;
 
@@ -251,7 +269,7 @@ export async function configureRevenueCat(): Promise<boolean> {
   if (!apiKey) return false;
 
   const { api } = await within(sdk(), "import");
-  await within(api.configure({ apiKey }), "configure");
+  await within(api.configure(appUserID ? { apiKey, appUserID } : { apiKey }), "configure");
   configured = true;
   return true;
 }
@@ -263,7 +281,9 @@ export async function configureRevenueCat(): Promise<boolean> {
  * платёжной системе.
  */
 export async function loginRevenueCat(userId: string): Promise<CustomerInfo | undefined> {
-  if (!(await configureRevenueCat())) return undefined;
+  // Идентификатор известен ЗДЕСЬ, значит и настройка обязана идти с ним:
+  // иначе первый же `configure` завёл бы анонимного клиента (долг 305).
+  if (!(await configureRevenueCat(userId))) return undefined;
   const { api } = await within(sdk(), "import");
   const { customerInfo } = await within(api.logIn({ appUserID: userId }), "login");
   return customerInfo;
@@ -324,7 +344,9 @@ export async function loadStore(userId: string): Promise<StoreLoad> {
 
   if (!configured) {
     try {
-      await within(api.configure({ apiKey: currentPlatformApiKey()! }), "configure");
+      // `userId` известен уже здесь — анонимного клиента заводить незачем
+      // (долг 305).
+      await within(api.configure({ apiKey: currentPlatformApiKey()!, appUserID: userId }), "configure");
       configured = true;
     } catch (err) {
       return failureFrom(err, "configure");

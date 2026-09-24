@@ -207,7 +207,7 @@ export async function main() {
       ["счётчик попыток нигде не обнуляется",
         { [ACTIVITY]: sources[ACTIVITY].replace(/autoRetryAttempt = 0/g, "autoRetryAttempt += 0") }],
       ["повтор заводится, не спросив, экран ли ошибки",
-        { [ACTIVITY]: sources[ACTIVITY].replace("        if (isErrorScreen(url)) {\n            scheduleAutoRetry();\n            return;\n        }", "        scheduleAutoRetry();") }],
+        { [ACTIVITY]: sources[ACTIVITY].replace("        if (isErrorScreen(url) || offlineShellVisible) {\n            scheduleAutoRetry();\n            return;\n        }", "        scheduleAutoRetry();") }],
       ["перед перезагрузкой не спрашивают, что на экране — стёрли бы нажатие «Повторить»",
         { [ACTIVITY]: sources[ACTIVITY].replace("                if (!onErrorScreenNow() || getBridge() == null) {", "                if (getBridge() == null) {") }],
       ["с экрана ошибки убрали кнопку «Повторить»",
