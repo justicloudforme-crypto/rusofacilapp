@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+
+/** Отпечаток каркаса без сети — см. `additionalPrecacheEntries` ниже. */
+function offlineShellRevision(): string {
+  return createHash("sha256").update(readFileSync("public/offline.html")).digest("hex").slice(0, 16);
+}
 
 const nextConfig: NextConfig = {
   // Baked into the client bundle at build time, because the browser has no
@@ -166,10 +173,17 @@ const config =
         // public/offline.html isn't reachable through Next's own link graph
         // (it's a static file, not a route), so it needs to be added to the
         // precache list by hand — sw.ts's `fallbacks` config is what
-        // actually serves it when a navigation fails offline. Bump the
-        // revision string if the file's content ever changes, so existing
-        // installs pick up the update.
-        additionalPrecacheEntries: [{ url: "/offline.html", revision: "1" }],
+        // actually serves it when a navigation fails offline.
+        //
+        // ОТПЕЧАТОК СЧИТАЕТСЯ ИЗ САМОГО ФАЙЛА — ЗАХОД 7.227. До 23.09.2026
+        // здесь стояла строка `"1"`, которую полагалось поднимать руками.
+        // Цена забытой правки — не «неудобство»: у всех, кто уже открывал
+        // приложение, остался бы СТАРЫЙ каркас без сети (у Serwist запись
+        // precache с прежней ревизией не перезагружается вовсе), и
+        // проверить это на своём телефоне нечем — старый экран показался
+        // бы только при выключенной сети. Хеш содержимого снимает вопрос:
+        // файл изменился — изменилась запись.
+        additionalPrecacheEntries: [{ url: "/offline.html", revision: offlineShellRevision() }],
       })(withBundleAnalyzer(nextConfig))
     : withBundleAnalyzer(nextConfig);
 

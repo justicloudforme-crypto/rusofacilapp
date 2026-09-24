@@ -23,9 +23,18 @@ import { expectPageIsItself } from "./helpers/page-identity";
 
 const WALK = ["/ru", "/ru/courses", "/ru/stories", "/ru/glossary", "/es", "/es/courses", "/es/stories", "/es/word-games"];
 
-/** Признак офлайн-заглушки — её собственный текст, обе локали сразу. */
+/**
+ * Признак каркаса без сети — его СОБСТВЕННАЯ метка, а не текст.
+ *
+ * До 23.09.2026 здесь стояла регулярка по словам «sin conexión» и «не в
+ * сети». Заход 7.227 сделал надпись переменной: при живой сети тот же
+ * экран говорит «страница не открылась», не утверждая о сети ничего
+ * (долг 278). Проба по тексту с этого дня переставала бы видеть каркас
+ * ровно тогда, когда он честен, — поэтому судим по `data-offline-shell`,
+ * который экран ставит на `<body>` в любом состоянии.
+ */
 async function looksLikeOfflineScreen(page: import("@playwright/test").Page): Promise<boolean> {
-  return page.evaluate(() => /sin conexión|не в сети/i.test(document.body.innerText));
+  return page.evaluate(() => document.body?.dataset.offlineShell === "1");
 }
 
 test("при живой сети офлайн-заглушка не показывается ни разу, и прибор это умеет видеть", async ({ page }) => {
@@ -51,6 +60,6 @@ test("при живой сети офлайн-заглушка не показы
   // И она говорит на ОДНОМ языке, а не на двух сразу. Адрес `/offline.html`
   // локали не называет — значит испанский, язык по умолчанию.
   const text = await page.evaluate(() => document.body.innerText);
-  expect(text, "заглушка не на испанском там, где локаль неизвестна").toMatch(/sin conexión/i);
-  expect(text, "заглушка снова печатает две локали разом").not.toMatch(/не в сети/i);
+  expect(text, "заглушка не на испанском там, где локаль неизвестна").toMatch(/[áéíóúñ]|pudimos|conexión/i);
+  expect(text, "заглушка снова печатает две локали разом").not.toMatch(/[а-яё]/i);
 });

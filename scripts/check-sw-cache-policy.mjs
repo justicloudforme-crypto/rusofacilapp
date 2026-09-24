@@ -143,6 +143,42 @@ export function violations(policyRaw, swRaw) {
   if (!/AUDIO_CACHE_NAME/.test(sw)) {
     bad.push(`${SW}: у клипов нет своего кеша (долг 77)`);
   }
+
+  /**
+   * к) ПРОБА ЖИЗНИ СЕРВЕРА НЕ ОТВЕЧАЕТ ИЗ КЕША, И ОТКАЗ ОДНОГО ЗАПРОСА НЕ
+   *    ОБЪЯВЛЯЕТСЯ ОТСУТСТВИЕМ СЕТИ — заход 7.227, строка долга 278.
+   *
+   *    Владелец 20.09.2026 при ЖИВОМ интернете видел, как страница
+   *    рассказа подменилась экраном «Estás sin conexión». Причина отказа
+   *    не установлена до сих пор (шесть способов воспроизведения дали
+   *    ноль), но следствие лечится без неё: прежде чем показать каркас,
+   *    воркер спрашивает свой `/api/health` и повторяет запрос один раз.
+   *    Без строки `NetworkOnly` для здоровья проба отвечала бы из кеша
+   *    `apis` — то есть подтверждала бы жизнь сервера из памяти телефона.
+   */
+  if (!/const HEALTH_PATH\s*=\s*"\/api\/health"/.test(sw)) {
+    bad.push(`${SW}: пробы жизни сервера нет — «нет сети» снова утверждается по ОДНОМУ упавшему запросу (долг 278)`);
+  } else {
+    const flat = sw.replace(/\s+/g, " ");
+    if (!/url\.pathname === HEALTH_PATH, handler: new NetworkOnly\(\)/.test(flat)) {
+      bad.push(
+        `${SW}: проба жизни сервера обслуживается не NetworkOnly — ответ на неё ляжет в кеш apis и будет подтверждать жизнь сервера из памяти телефона (долг 278)`,
+      );
+    }
+    const healthAt = sw.indexOf("url.pathname === HEALTH_PATH");
+    const spreadAt = sw.indexOf("...runtimeCaching");
+    if (healthAt !== -1 && spreadAt !== -1 && healthAt > spreadAt) {
+      bad.push(`${SW}: строка пробы здоровья стоит ПОСЛЕ маршрутов defaultCache — NetworkFirst заберёт её себе первым (долг 278)`);
+    }
+  }
+  if (!/handlerDidError/.test(sw) || !/serverAnswers\(/.test(sw)) {
+    bad.push(
+      `${SW}: у маршрута документов нет своего запасного ответа с пробой сети — каркас снова показывается по первому же отказу (долг 278)`,
+    );
+  }
+  if (!/matchPrecache\(OFFLINE_SHELL_URL\)/.test(sw)) {
+    bad.push(`${SW}: каркас без сети берётся не из precache — без сети взять его больше неоткуда`);
+  }
   return bad;
 }
 
@@ -191,6 +227,30 @@ function plant() {
     policy,
     sw.replaceAll("statuses: [200]", "statuses: [0, 200]"),
     "НЕПРОЗРАЧНЫЙ ответ",
+  );
+  add(
+    "подсадка: проба здоровья снова отвечает из кеша (ровно долг 278)",
+    policy,
+    sw.replace("sameOrigin && url.pathname === HEALTH_PATH,\n      handler: new NetworkOnly(),", "sameOrigin && url.pathname === HEALTH_PATH,\n      handler: new NetworkFirst({ cacheName: CACHES.others }),"),
+    "обслуживается не NetworkOnly",
+  );
+  add(
+    "подсадка: пробы жизни сервера нет вовсе (состояние до 23.09.2026)",
+    policy,
+    sw.replace('const HEALTH_PATH = "/api/health"', 'const HEALTH_PATH_GONE = "/api/health"'),
+    "пробы жизни сервера нет",
+  );
+  add(
+    "подсадка: запасной ответ документов снова чужой, без пробы сети",
+    policy,
+    sw.replace(/handlerDidError/g, "cacheDidUpdate"),
+    "нет своего запасного ответа с пробой сети",
+  );
+  add(
+    "подсадка: каркас берётся не из precache",
+    policy,
+    sw.replace("serwist.matchPrecache(OFFLINE_SHELL_URL)", "caches.match(OFFLINE_SHELL_URL)"),
+    "берётся не из precache",
   );
   add(
     "подсадка: клип снова берётся куском и без CORS",
@@ -246,7 +306,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log(`check:sw-cache-policy — 11 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77)`);
+  console.log(`check:sw-cache-policy — 15 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77, 278)`);
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
