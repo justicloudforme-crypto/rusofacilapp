@@ -112,7 +112,7 @@ const NATIVE_USER_AGENT_TOKEN = "RFNativeShell";
 // `src/lib/native-shell-token.ts`, и он СОВМЕСТИМ СО СТАРОЙ ОБОЛОЧКОЙ:
 // токен без косой черты и без числа читается как версия 2, потому что
 // бесверсионным был ровно один залитый пакет — 7202.
-const NATIVE_SHELL_VERSION = 6;
+const NATIVE_SHELL_VERSION = 7;
 
 const config: CapacitorConfig = {
   // Reverse-domain of the now-confirmed production domain (rusofacilapp.com,
