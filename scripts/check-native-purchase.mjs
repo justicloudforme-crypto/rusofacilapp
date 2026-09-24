@@ -118,17 +118,36 @@ function judge(files) {
     );
   }
 
-  // ПРАВИЛО 2. Три числа версии обязаны совпадать. Разойдись они — и
-  // оболочка, умеющая покупать, не получит экран покупки (или получит его
-  // оболочка, которая не умеет: долг 179 ровно в этом и состоял).
+  // ПРАВИЛО 2. Три числа версии, и связаны они НЕ равенством.
+  //
+  // До 7.228 правило требовало равенства всех трёх, и на первой же смене
+  // `versionCode` это оказалось дефектом: подняв её до 5, пришлось бы
+  // поднять и НИЖНЮЮ границу покупки — то есть в день выхода обновления
+  // отобрать покупку у всех 25 тестировщиков, у кого ещё живёт оболочка 4
+  // (сайт сравнивает `version >= NATIVE_PURCHASE_MIN_SHELL_VERSION`,
+  // `src/lib/native-shell.ts`). Поэтому правил два:
+  //   * `NATIVE_SHELL_VERSION` (то, чем оболочка себя НАЗЫВАЕТ) РАВНО
+  //     `versionCode` — иначе сайт узнаёт не ту сборку, что установлена;
+  //   * `NATIVE_PURCHASE_MIN_SHELL_VERSION` (какая оболочка УМЕЕТ
+  //     покупать) НЕ БОЛЬШЕ `versionCode` — граница выше нынешней сборки
+  //     означала бы, что покупать не умеет никто, включая только что
+  //     собранную (это и есть долг 179 в его настоящем виде).
   const v = versions(files);
   if (!v.fromConfig || !v.fromCapacitor || !v.fromGradle) {
     problems.push(`версия оболочки не прочиталась: ${JSON.stringify(v)}`);
-  } else if (new Set([v.fromConfig, v.fromCapacitor, v.fromGradle]).size !== 1) {
-    problems.push(
-      `версии разошлись: NATIVE_PURCHASE_MIN_SHELL_VERSION=${v.fromConfig}, ` +
-        `NATIVE_SHELL_VERSION=${v.fromCapacitor}, versionCode=${v.fromGradle}`,
-    );
+  } else {
+    if (v.fromCapacitor !== v.fromGradle) {
+      problems.push(
+        `оболочка называет себя версией ${v.fromCapacitor}, а собрана как versionCode ${v.fromGradle} — ` +
+          "сайт узнаёт не ту сборку, что стоит на телефоне",
+      );
+    }
+    if (Number(v.fromConfig) > Number(v.fromGradle)) {
+      problems.push(
+        `NATIVE_PURCHASE_MIN_SHELL_VERSION=${v.fromConfig} больше versionCode=${v.fromGradle} — ` +
+          "покупать не умеет никто, включая только что собранную оболочку (долг 179)",
+      );
+    }
   }
 
   // ПРАВИЛО 3. Экран покупки не знает ни веб-кассы, ни цены.
@@ -371,6 +390,52 @@ function judge(files) {
     }
   }
 
+  /* ================================================================ *
+   * ПРАВИЛО 15 — ЗАХОД 7.228, ДОЛГ 305. НАСТРОЙКА SDK С НАШИМ
+   * ИДЕНТИФИКАТОРОМ, КОГДА ЧЕЛОВЕК ИЗВЕСТЕН.
+   *
+   * Что было измерено 23.09.2026: владелец увидел в консоли RevenueCat
+   * рядом со своим клиентом второй, `$RCAnonymousID:…`, «создан до
+   * входа». Причина прочитана по коду: `configure` звался БЕЗ
+   * `appUserID` всегда, и SDK по своему правилу выдумывал анонимного
+   * клиента даже тогда, когда `id` вошедшего уже был известен; `logIn`
+   * переключал лишь следующим обращением. Список клиентов рос мусором
+   * со скоростью «один на установку плюс один на каждый выход».
+   *
+   * Доступ это не ломало (он привязан к `Subscription.userId`), поэтому
+   * ни одна проба отдачи этого поймать не может — только правило.
+   * ================================================================ */
+  if (!/export async function configureRevenueCat\(appUserID\??:/.test(clientCode)) {
+    problems.push(
+      `${FILES.client}: configureRevenueCat не принимает appUserID — SDK снова заведёт ` +
+        "анонимного клиента до входа (долг 305)",
+    );
+  }
+  if (!/api\.configure\(appUserID \? \{ apiKey, appUserID \} : \{ apiKey \}\)/.test(clientCode)) {
+    problems.push(
+      `${FILES.client}: настройка SDK не передаёт appUserID, когда он известен — ровно этот вызов ` +
+        "и заводил $RCAnonymousID (долг 305)",
+    );
+  }
+  if (!/configureRevenueCat\(userId\)/.test(clientCode)) {
+    problems.push(
+      `${FILES.client}: loginRevenueCat настраивает SDK безымянно, хотя идентификатор известен ему ` +
+        "самому (долг 305)",
+    );
+  }
+  if (!/api\.configure\(\{ apiKey: currentPlatformApiKey\(\)!, appUserID: userId \}\)/.test(clientCode)) {
+    problems.push(
+      `${FILES.client}: путь экрана покупки (loadStore) настраивает SDK без appUserID — первый же ` +
+        "открытый экран покупки завёл бы анонимного клиента (долг 305)",
+    );
+  }
+  if (!/configureRevenueCat\(userId\)/.test(stripComments(files.identity))) {
+    problems.push(
+      `${FILES.identity}: привязка покупателя настраивает SDK без appUserID — это и есть замер ` +
+        "23.09.2026: анонимный клиент заводился до входа (долг 305)",
+    );
+  }
+
   return problems;
 }
 
@@ -381,8 +446,12 @@ const PLANTS = [
     apply: (f) => ({ ...f, panel: `${f.panel}\n// goog_YlQIdtFbcQHnAPVjhJnMggEQIQF\n` }),
   },
   {
-    name: "versionCode ушёл вперёд оболочки",
+    name: "versionCode ушёл вперёд того, чем оболочка себя называет",
     apply: (f) => ({ ...f, gradle: f.gradle.replace(/versionCode\s+\d+/, "versionCode 9") }),
+  },
+  {
+    name: "нижняя граница покупки уехала выше собранной версии — покупать не умеет никто",
+    apply: (f) => ({ ...f, config: f.config.replace(/NATIVE_PURCHASE_MIN_SHELL_VERSION = \d+/, "NATIVE_PURCHASE_MIN_SHELL_VERSION = 99") }),
   },
   {
     name: "на экране покупки появилась веб-касса",
@@ -414,6 +483,26 @@ const PLANTS = [
   {
     name: "выход из учётной записи перестал сбрасывать покупателя",
     apply: (f) => ({ ...f, identity: f.identity.replaceAll("logoutRevenueCat", "noopRevenueCat") }),
+  },
+  {
+    name: "configureRevenueCat снова не принимает appUserID (долг 305)",
+    apply: (f) => ({ ...f, client: f.client.replace("export async function configureRevenueCat(appUserID?: string | null)", "export async function configureRevenueCat()") }),
+  },
+  {
+    name: "настройка SDK снова идёт безымянной (долг 305)",
+    apply: (f) => ({ ...f, client: f.client.replace("api.configure(appUserID ? { apiKey, appUserID } : { apiKey })", "api.configure({ apiKey })") }),
+  },
+  {
+    name: "loginRevenueCat настраивает SDK безымянно (долг 305)",
+    apply: (f) => ({ ...f, client: f.client.replaceAll("configureRevenueCat(userId)", "configureRevenueCat()") }),
+  },
+  {
+    name: "экран покупки настраивает SDK без appUserID (долг 305)",
+    apply: (f) => ({ ...f, client: f.client.replace("api.configure({ apiKey: currentPlatformApiKey()!, appUserID: userId })", "api.configure({ apiKey: currentPlatformApiKey()! })") }),
+  },
+  {
+    name: "привязка покупателя настраивает SDK без appUserID (долг 305)",
+    apply: (f) => ({ ...f, identity: f.identity.replace("configureRevenueCat(userId)", "configureRevenueCat()") }),
   },
   {
     name: "объект плагина снова возвращается голым (дефект 23.09.2026)",
@@ -473,8 +562,9 @@ function main() {
     }
     const v = versions(files);
     console.log(
-      `check:native-purchase — 13 правил, 0 нарушений. Версия оболочки ${v.fromConfig} в трёх местах ` +
-        `(настройка, capacitor.config.ts, build.gradle); ключ магазина в одном файле; ` +
+      `check:native-purchase — 15 правил, 0 нарушений. Оболочка называет себя версией ${v.fromCapacitor} ` +
+        `и собрана как versionCode ${v.fromGradle} (совпадают); покупать умеет оболочка от ` +
+        `${v.fromConfig} и выше; ключ магазина в одном файле; ` +
         `${REQUIRED_EVENTS.length} типов событий разбираются поимённо.`,
     );
     return 0;

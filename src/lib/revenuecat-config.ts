@@ -97,9 +97,14 @@ export const ANDROID_PACKAGE_NAME = "com.rusofacilapp.app";
  * (`src/lib/native-shell-token.ts`), и покупка включается только тем, кто
  * умеет её выполнить.
  *
- * Число ОБЯЗАНО совпадать с `NATIVE_SHELL_VERSION` в `capacitor.config.ts`
- * и с `versionCode` в `android/app/build.gradle` — сличает
- * `npm run check:native-purchase`.
+ * Это НИЖНЯЯ ГРАНИЦА, а не номер нынешней сборки, и с 24.09.2026 (заход
+ * 7.228, `versionCode 5`) она от него отличается намеренно. Сличается так:
+ * `NATIVE_PURCHASE_MIN_SHELL_VERSION` ≤ `versionCode` в
+ * `android/app/build.gradle`, а `NATIVE_SHELL_VERSION` в
+ * `capacitor.config.ts` равен `versionCode` — держит
+ * `npm run check:native-purchase`. Требовать равенства всех трёх, как было
+ * до 7.228, значило бы отбирать покупку у всех, кто ещё не обновился: в
+ * закрытом тесте у 25 человек живёт оболочка 4, и покупать она умеет.
  */
 export const NATIVE_PURCHASE_MIN_SHELL_VERSION = 4;
 

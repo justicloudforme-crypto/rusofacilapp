@@ -27,7 +27,12 @@ export default function NativeStoreIdentity({ userId }: { userId: string | null 
     let cancelled = false;
     void (async () => {
       try {
-        const ready = await configureRevenueCat();
+        // ИДЕНТИФИКАТОР ИДЁТ В САМУ НАСТРОЙКУ, а не только в `logIn`
+        // (долг 305, 7.228): `configure` без него заводит анонимного
+        // клиента, и каждый выход из учётной записи добавлял в консоль
+        // RevenueCat ещё одного. Для гостя (`userId === null`) настройка
+        // остаётся безымянной — своего идентификатора у него и нет.
+        const ready = await configureRevenueCat(userId);
         if (!ready || cancelled) return;
         if (userId) await loginRevenueCat(userId);
         else await logoutRevenueCat();

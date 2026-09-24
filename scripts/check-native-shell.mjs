@@ -421,7 +421,10 @@ function plantControls() {
     },
     {
       name: "errorPath указывает на файл, которого нет",
-      plant: () => swap(CAP_CONFIG, 'errorPath: "error.html",', 'errorPath: "offline.html",'),
+      // Имя намеренно НЕ `offline.html`: с 23.09.2026 такой файл в
+      // `capacitor-shell/` есть (каркас без сети, заход 7.228), и
+      // подсадка молча перестала бы что-либо подсаживать.
+      plant: () => swap(CAP_CONFIG, 'errorPath: "error.html",', 'errorPath: "error-ne-sushchestvuet.html",'),
       expect: (r) => r.failures.some((m) => m.includes("а файла нет")),
     },
     {
