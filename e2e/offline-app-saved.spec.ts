@@ -155,12 +155,20 @@ test("каркас без сети показывает список сохра�
       (n as HTMLElement).innerText.replace(/\s+/g, " ").trim(),
     ),
     gauge: document.querySelector("[data-saved-gauge]")?.textContent ?? "",
+    // Отпечаток сборки с ЭКРАНА убран заходом 7.232 (владелец спросил по
+    // видео, что значит «ug5mki», — и вопрос был законный: служебная
+    // метка на экране ученика). Прибором он остался, но признаком:
+    // проверять его нужно там, иначе эта проба перестанет кусаться.
+    fingerprint: document.querySelector("[data-saved-gauge]")?.getAttribute("data-rf-fingerprint") ?? "",
     emptyShown: !(document.querySelector("[data-saved-empty]") as HTMLElement | null)?.hidden,
   }));
   expect(shell.isShell, "на стартовом адресе без сети показана не каркасная страница").toBe(true);
   expect(shell.items.length, "список сохранённого пуст, хотя урок открывали — это и есть строка 309").toBeGreaterThan(0);
   expect(shell.emptyShown, "честная строка «ничего не сохранено» показана при непустом списке").toBe(false);
-  expect(shell.gauge, "строка-прибор не называет число сохранённого").toMatch(/Сохранено: [1-9]\d* · [a-z0-9]+/);
+  expect(shell.gauge, "строка-прибор не называет число сохранённого").toMatch(/Сохранено: [1-9]\d*$/);
+  expect(shell.fingerprint, "прибор потерял отпечаток кеша — по видео станет не видно, тот ли кеш нашёл каркас").toMatch(
+    /^[a-z0-9]+$/,
+  );
   expect(shell.items.join(" | "), "в списке нет ни урока, ни его вида").toMatch(/Урок/);
 
   // НАЖАТИЕ НА СТРОКУ СПИСКА ОТКРЫВАЕТ СОХРАНЁННУЮ КОПИЮ С СИНЕЙ ПОЛОСОЙ.
@@ -209,11 +217,16 @@ test("вкладка «Cursos» без сети открывает сохран�
     emptyShown: !(document.querySelector("[data-saved-empty]") as HTMLElement | null)?.hidden,
     text: document.querySelector("[data-saved-empty]")?.textContent?.trim() ?? "",
     gauge: document.querySelector("[data-saved-gauge]")?.textContent ?? "",
+    // Отпечаток сборки с ЭКРАНА убран заходом 7.232 (владелец спросил по
+    // видео, что значит «ug5mki», — и вопрос был законный: служебная
+    // метка на экране ученика). Прибором он остался, но признаком:
+    // проверять его нужно там, иначе эта проба перестанет кусаться.
+    fingerprint: document.querySelector("[data-saved-gauge]")?.getAttribute("data-rf-fingerprint") ?? "",
   }));
   expect(empty.items, "на пустом телефоне список не пуст").toBe(0);
   expect(empty.emptyShown, "на пустом телефоне нет честной строки — пустое место читается как поломка").toBe(true);
   expect(empty.text, "честная строка написана не по-испански на испанском адресе").toMatch(/Aún no hay nada guardado/);
-  expect(empty.gauge, "прибор на пустом телефоне обязан показывать ноль").toMatch(/Guardado: 0 ·/);
+  expect(empty.gauge, "прибор на пустом телефоне обязан показывать ноль").toMatch(/Guardado: 0$/);
 
   // 2. ТЕПЕРЬ РАЗДЕЛ СОХРАНЁН — И ТА ЖЕ ВКЛАДКА ОТКРЫВАЕТ ЕГО.
   await context.unroute("**/*");

@@ -6,6 +6,7 @@ import { formatWeight } from "@/lib/downloads";
 import {
   askPersistence,
   clipUrlsOnPage,
+  copyMarkupOf,
   downloadPage,
   isComplete,
   measureClips,
@@ -40,7 +41,14 @@ import {
 type Phase =
   | { kind: "idle" }
   | { kind: "measuring" }
-  | { kind: "ready"; weight: ClipWeights; bytes: number }
+  /**
+   * СНИМОК ЛЕЖИТ ПРЯМО В ФАЗЕ, И ЭТО РЕШЕНИЕ, А НЕ УДОБСТВО (строки 312
+   * и 313). Взвешивается и кладётся ОДНО И ТО ЖЕ дерево: иначе вес,
+   * названный до нажатия, и вес в описи расходятся молча — разметка
+   * растёт от каждой открытой вкладки (замер 24.09.2026: урок `a1-1`
+   * 272 844 → 310 941 байта, клипов 59 → 71).
+   */
+  | { kind: "ready"; weight: ClipWeights; bytes: number; html: string }
   | { kind: "running"; done: number; total: number }
   | { kind: "done" }
   | { kind: "error"; text: string };
@@ -110,17 +118,21 @@ export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
       setPhase({ kind: "error", text: t.errorOffline });
       return;
     }
+    // СНИМОК СНИМАЕТСЯ ДО СМЕНЫ ФАЗЫ. Порядок тут — весь смысл правки
+    // (строка 313): поставь мы фазу первой, React успел бы нарисовать
+    // «Midiendo…» и это слово легло бы в копию навсегда.
+    const html = copyMarkupOf(document, t.done);
     setPhase({ kind: "measuring" });
     const clipUrls = clipUrlsOnPage(document);
     const weight = await measureClips(clipUrls, (url, init) => fetch(url, init));
-    const pageBytes = new TextEncoder().encode(`<!doctype html>\n${document.documentElement.outerHTML}`).length;
+    const pageBytes = new TextEncoder().encode(html).length;
     const bytes = pageBytes + weight.clips.reduce((sum, clip) => sum + clip.bytes, 0);
     if (!mounted.current) return;
-    setPhase({ kind: "ready", weight, bytes });
+    setPhase({ kind: "ready", weight, bytes, html });
   }, [t]);
 
   const run = useCallback(
-    async (weight: ClipWeights) => {
+    async (weight: ClipWeights, html: string) => {
       setPhase({ kind: "running", done: 0, total: weight.clips.length + 1 });
       // Просьба «не выбрасывай наше хранилище» уходит ровно здесь: при
       // первом настоящем скачивании, а не заранее.
@@ -130,7 +142,9 @@ export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
         fetch: (url, init) => fetch(url, init),
         url: window.location.href,
         pathname: window.location.pathname,
-        html: `<!doctype html>\n${document.documentElement.outerHTML}`,
+        // КЛАДЁТСЯ ТОТ ЖЕ СНИМОК, КОТОРЫЙ ВЗВЕСИЛИ. Живой документ здесь
+        // не спрашивается вовсе: на нём прямо сейчас нарисовано «↓ 0 / 13».
+        html,
         title: document.title,
         lang,
         clipUrls: weight.clips.map((clip) => clip.url),
@@ -169,7 +183,7 @@ export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
         disabled={busy || phase.kind === "done"}
         aria-busy={busy}
         onClick={() => {
-          if (phase.kind === "ready") void run(phase.weight);
+          if (phase.kind === "ready") void run(phase.weight, phase.html);
           else if (phase.kind === "idle" || phase.kind === "error") void measure();
         }}
       >

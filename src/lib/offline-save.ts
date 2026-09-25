@@ -165,6 +165,36 @@ export function trimIndex(
   return { keep, drop };
 }
 
+/**
+ * НАЗВАНИЕ ИЗ САМОЙ КОПИИ — ЗАХОД 7.232, СТРОКА 312.
+ *
+ * Владелец 25.09.2026 увидел в списке строки `/es/stories` и
+ * `/es/vocabulary` — ГОЛЫЕ АДРЕСА вместо названий. Причин ровно две, и
+ * обе лечатся одним и тем же: названия в описи может не быть (строку
+ * подобрал запасной источник — ключи кешей) и названия могло не быть в
+ * момент сохранения (переход клиентским роутером Next снимает `<title>`
+ * прежней страницы ДО того, как поставит новый, и `document.title` в
+ * этот миг — пустая строка; прогон 7.232 поймал так `/es/stories` с
+ * `title: ""` прямо в описи).
+ *
+ * Разметка копии при этом лежит рядом и название своё знает. Спросить её
+ * дешевле, чем показать человеку адрес: адрес не говорит НИЧЕГО тому,
+ * кто не читает по-английски, а название — ровно то, что он выбирал.
+ */
+export function titleFromHtml(html: string): string {
+  const found = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+  if (!found) return "";
+  const text = found[1]
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/\s+/g, " ")
+    .trim();
+  return tidyTitle(text);
+}
+
 /** Заголовок страницы человеческими словами: хвост бренда не нужен. */
 export function tidyTitle(raw: string): string {
   const cut = raw.split(/\s+[—|–|]\s+/)[0]?.trim() ?? "";
