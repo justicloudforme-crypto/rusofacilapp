@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
+import { reachShell } from "./helpers/offline-shell";
 import { loginWithSubscription } from "./helpers/auth";
 import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
 
@@ -104,17 +105,6 @@ async function becomeNativeShell(page: Page, context: BrowserContext): Promise<v
   await context.setOffline(true);
 }
 
-async function visit(page: Page, path: string): Promise<void> {
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const arrived = await page
-      .goto(path, { timeout: 15_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (arrived) return;
-    await page.waitForTimeout(500);
-  }
-}
-
 /** Строки списка каркаса: название и подпись вида, как их видит человек. */
 async function shellRows(page: Page): Promise<{ text: string; disabled: boolean }[]> {
   return page.evaluate(() =>
@@ -162,7 +152,12 @@ test("строки списка нет там, где нет копии, — и 
   //    рассказа в списке ЕСТЬ. Без этого шага «строки нет» доказывало бы
   //    ровно то, что сохранение сломано вообще.
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt1 = await reachShell(page, "/es");
+  expect(shellAt1.arrived, `каркас не открылся по /es — страница осталась на ${shellAt1.where}`).toBe(true);
   await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
   const before = await shellRows(page);
   expect(before.length, "после прохода по рассказу и уроку список пуст").toBeGreaterThan(1);
@@ -207,7 +202,12 @@ test("строки списка нет там, где нет копии, — и 
   ).toBe(true);
 
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt2 = await reachShell(page, "/es");
+  expect(shellAt2.arrived, `каркас не открылся по /es — страница осталась на ${shellAt2.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const after = await shellRows(page);
 
@@ -256,7 +256,12 @@ test("сценарий владельца целиком: выход → гос�
 
   // Шаг 4. Без сети: каждая показанная строка обязана открыться.
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt3 = await reachShell(page, "/es");
+  expect(shellAt3.arrived, `каркас не открылся по /es — страница осталась на ${shellAt3.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const rows = await shellRows(page);
   expect(rows.length, "гость прошёл рассказ, каталоги и урок, а список пуст").toBeGreaterThan(0);
@@ -266,7 +271,12 @@ test("сценарий владельца целиком: выход → гос�
 
   const count = await page.locator("[data-saved-list] li button").count();
   for (let i = 0; i < count; i += 1) {
-    await visit(page, "/es");
+    // Переход на каркас — через устойчивого помощника (заход 7.233):
+    // выключение сети заставляет живую страницу перейти на саму себя, и
+    // голый `goto` сразу после него отменяется. Разбор и замер — в
+    // `helpers/offline-shell.ts`.
+    const shellAt4 = await reachShell(page, "/es");
+    expect(shellAt4.arrived, `каркас не открылся по /es — страница осталась на ${shellAt4.where}`).toBe(true);
     await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
     const button = page.locator("[data-saved-list] li button").nth(i);
     const name = (await button.innerText()).split("\n")[0].trim();
