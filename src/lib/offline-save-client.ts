@@ -44,6 +44,21 @@ export type SaveOutcome =
   | "removed-closed"
   | "skipped-not-content"
   | "skipped-no-caches"
+  /**
+   * КОПИЮ УНЕСЛО ПРЯМО ПОД РУКАМИ — ЗАХОД 7.231, СТРОКА 310.
+   *
+   * Уборщик выхода (`SignedOutCachePurge`) стирает кеш ЦЕЛИКОМ
+   * (`caches.delete(name)`), и делает это своим собственным «потом»,
+   * не спрашивая никого. Если он успел между `cache.put` и записью
+   * описи, то `caches.open` на следующей строке СОЗДАЁТ кеш заново —
+   * пустой, — и опись ложится в него со строкой, под которой копии
+   * больше нет. Так и получалось «No disponible» у владельца.
+   *
+   * Этот исход — не отказ: страница сделала всё правильно, а копию
+   * унесли. Правильный ответ — не заводить строку (и снять её, если
+   * успела лечь), а не делать вид, что сохранено.
+   */
+  | "lost-race"
   | "failed";
 
 function cacheNameFor(names: CacheNames, kind: string): string {
@@ -55,6 +70,23 @@ function cacheNameFor(names: CacheNames, kind: string): string {
  *  нашёл бы ни разу: ключ записи в кеше — это полный адрес. */
 export function indexUrl(sameOriginAs: string): string {
   return new URL(OFFLINE_INDEX_PATH, sameOriginAs).toString();
+}
+
+
+/**
+ * ЛЕЖИТ ЛИ КОПИЯ ПРЯМО СЕЙЧАС — ЗАХОД 7.231, СТРОКА 310.
+ *
+ * Кеш открывается ЗАНОВО намеренно: у `Cache` нет способа спросить «а
+ * меня ещё не удалили», а `caches.open` на удалённом имени молча создаёт
+ * пустой кеш. Пустой ответ на `match` — это и есть ответ «унесло».
+ */
+async function copyIsThere(store: CacheStorage, cacheName: string, url: string): Promise<boolean> {
+  try {
+    const fresh = await store.open(cacheName);
+    return Boolean(await fresh.match(url, { ignoreVary: true }));
+  } catch {
+    return false;
+  }
 }
 
 async function readIndex(store: CacheStorage, names: CacheNames, origin: string): Promise<SavedRow[]> {
@@ -108,7 +140,8 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
       return "removed-closed";
     }
 
-    const cache = await deps.caches.open(cacheNameFor(deps.names, kind));
+    const copyCacheName = cacheNameFor(deps.names, kind);
+    const cache = await deps.caches.open(copyCacheName);
     await cache.put(
       deps.url,
       new Response(deps.html, {
@@ -116,6 +149,13 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
         headers: { "content-type": "text/html; charset=utf-8" },
       }),
     );
+
+    // СТРОКА ОПИСИ ЗАВОДИТСЯ ТОЛЬКО ПОД РЕАЛЬНО ЛЕЖАЩУЮ КОПИЮ (строка
+    // 310). Спрашивается СВЕЖИЙ дескриптор кеша, а не тот, в который
+    // только что положили: удалённый кеш `caches.open` создаёт заново, и
+    // именно этой разницей отличается «копия на месте» от «кеш унесло, а
+    // мы пишем в его пустого двойника».
+    if (!(await copyIsThere(deps.caches, copyCacheName, deps.url))) return "lost-race";
 
     const row: SavedRow = {
       url: deps.url,
@@ -132,6 +172,16 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
       await dropCache.delete(dropped.url, { ignoreVary: true });
     }
     await writeIndex(deps.caches, deps.names, deps.url, keep);
+
+    // И ЕЩЁ РАЗ ПОСЛЕ ОПИСИ. Между проверкой выше и этой строкой окно
+    // остаётся — маленькое, но существующее, а цена ему та самая серая
+    // строка «No disponible». Если копии больше нет, опись обязана
+    // вернуться к правде немедленно, тем же заходом.
+    if (!(await copyIsThere(deps.caches, copyCacheName, deps.url))) {
+      const after = await readIndex(deps.caches, deps.names, deps.url);
+      await writeIndex(deps.caches, deps.names, deps.url, withoutUrl(after, deps.url));
+      return "lost-race";
+    }
     return "saved";
   } catch {
     return "failed";

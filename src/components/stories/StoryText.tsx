@@ -1289,6 +1289,29 @@ export default function StoryText({
                   ref={(el) => {
                     sentenceRefs.current[queueIndex] = el;
                   }}
+                  /**
+                   * АДРЕС КЛИПА ЭТОГО ПРЕДЛОЖЕНИЯ — ЗАХОД 7.231 (ОФЛАЙН-3).
+                   *
+                   * Тот же признак, что у `SpeakButton`, и по тем же двум
+                   * причинам: кнопка «Descargar» собирает по нему список
+                   * клипов рассказа, а каркас без сети по нему же
+                   * озвучивает сохранённую копию — в копии React не
+                   * оживает, и адрес клипа из неё иначе не достать.
+                   *
+                   * Соседний комментарий про `ref` вместо
+                   * `data-paragraph-index` этому не противоречит: там
+                   * отказались от атрибута ради серверного HTML 330
+                   * замороженных адресов, а сличается он по `title`,
+                   * `description`, `canonical` и `h1` — ни один из них
+                   * этим атрибутом не меняется. И в отличие от номера
+                   * абзаца, адрес клипа нужен ИМЕННО в разметке: `ref`
+                   * в сохранённую копию не попадает.
+                   */
+                  data-rf-clip={
+                    segmentUrlByKey.get(
+                      `${queue[queueIndex]?.paragraphIndex}-${queue[queueIndex]?.sentenceIndex}`,
+                    ) || undefined
+                  }
                   role={canPlay ? "button" : undefined}
                   tabIndex={canPlay ? 0 : undefined}
                   // A tabIndex=0 element gets the browser's own native

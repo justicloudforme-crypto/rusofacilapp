@@ -459,11 +459,13 @@
       <p lang="ru" data-locale="ru" data-state="offline" hidden>Эта страница не сохранена на телефоне, поэтому сейчас она пуста.</p>
 
       <!-- ЧЕСТНАЯ ГРАНИЦА: обещаем ровно то, что уже умеем. С 7.229 это
-           «уроки, рассказы и словарь, которые вы открывали» — их каркас
-           теперь и правда показывает. Скачивания по кнопке и отправки
-           прогресса здесь нет, и обещать их нельзя (это офлайн-3). -->
-      <p class="note" lang="es" data-locale="es">Sin internet puedes usar el menú y leer las lecciones, los cuentos y el vocabulario que ya abriste antes.</p>
-      <p class="note" lang="ru" data-locale="ru">Без интернета работает меню и открываются уроки, рассказы и словарь, которые вы уже открывали.</p>
+           «уроки, рассказы и словарь, которые вы открывали»; с 7.231 к ним
+           добавилось скачанное по кнопке — оно и звучит. Отправки
+           прогресса без сети здесь по-прежнему НЕТ, и обещать её нельзя
+           (это офлайн-3б), как нет и проверки упражнений: ответы на
+           сервере, и это замысел, а не недоделка. -->
+      <p class="note" lang="es" data-locale="es">Sin internet puedes usar el menú y leer las lecciones, los cuentos y el vocabulario que ya abriste antes. Lo que descargaste con el botón «Descargar» también suena.</p>
+      <p class="note" lang="ru" data-locale="ru">Без интернета работает меню и открываются уроки, рассказы и словарь, которые вы уже открывали. То, что скачано кнопкой «Скачать», ещё и звучит.</p>
 
       <button type="button" lang="es" data-locale="es" data-retry>Reintentar</button>
       <button type="button" lang="ru" data-locale="ru" data-retry>Повторить</button>
@@ -482,6 +484,20 @@
           <span lang="es" data-locale="es">Aún no hay nada guardado en este teléfono. Abre una lección, un cuento o el vocabulario con internet y se quedará aquí.</span>
           <span lang="ru" data-locale="ru">Пока на этом телефоне ничего не сохранено. Откройте урок, рассказ или словарь с интернетом — и они останутся здесь.</span>
         </p>
+      </section>
+
+      <!-- СКАЧАННОЕ ПО КНОПКЕ — ЗАХОД 7.231 (ОФЛАЙН-3). Отдельный блок, а
+           не строки в общем списке, и это не украшение: у скачанного
+           другое обещание (оно не выбрасывается само и переживает выкат
+           сайта), свой вес в мегабайтах и своя кнопка «удалить». Человек
+           вправе видеть, за что на его телефоне заняты мегабайты, и без
+           сети тоже — сеть тут вообще ни при чём. -->
+      <section class="saved" data-downloads hidden>
+        <h2 lang="es" data-locale="es">Descargado</h2>
+        <h2 lang="ru" data-locale="ru">Скачанное</h2>
+        <p class="gauge" data-downloads-total></p>
+        <ul data-downloads-list></ul>
+        <button type="button" data-downloads-remove-all hidden></button>
       </section>
 
       <p class="gauge" data-saved-gauge></p>
@@ -547,6 +563,37 @@
          *  делает, — дефект сама по себе, и это правило на проекте уже
          *  оплачено (7.192, шапка этого файла). */
         var GONE = { es: "No disponible", ru: "Недоступно" };
+        /** Подписи скачанного — заход 7.231. Те же слова, что у кнопки на
+         *  сайте (ветка `clientUi.download` словарей): человек обязан
+         *  узнать в каркасе то, что нажимал на странице. */
+        var DL = {
+          es: {
+            mark: "Descargado",
+            total: "En total",
+            remove: "Borrar",
+            removeAll: "Borrar todo",
+            confirm: "¿Borrar todo lo descargado?",
+            unit: "MB",
+            noAudio: "El audio de esta copia no está en el teléfono",
+          },
+          ru: {
+            mark: "Скачано",
+            total: "Всего",
+            remove: "Удалить",
+            removeAll: "Удалить всё",
+            confirm: "Удалить всё скачанное?",
+            unit: "МБ",
+            noAudio: "Звука этой копии на телефоне нет",
+          },
+        };
+        /** Вес человеческими словами — то же правило, что у `formatWeight`
+         *  (`src/lib/downloads.ts`): запятая как разделитель дроби. */
+        function weightText(bytes) {
+          var mb = bytes / (1024 * 1024);
+          if (bytes > 0 && mb < 0.1) return "0,1 " + DL[lang].unit;
+          var shown = mb < 10 ? mb.toFixed(1) : String(Math.round(mb));
+          return shown.replace(".", ",") + " " + DL[lang].unit;
+        }
         document.title = TITLES[lang].error;
 
         // Лишняя половина УБИРАЕТСЯ, а не дописывается: при выключенном
@@ -625,8 +672,15 @@
           var content = [];
           var section = [];
           var pages = [];
+          var downloads = [];
           for (var i = 0; i < names.length; i++) {
-            if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);
+            // СКАЧАННОЕ СПРАШИВАЕТСЯ ПЕРВЫМ (заход 7.231). Имя у него
+            // постоянное, без отпечатка сборки, — потому и стоит впереди:
+            // после выката сайта это единственный кеш, в котором что-то
+            // ещё лежит, и искать в нём последним значило бы ходить
+            // впустую по четырём пустым.
+            if (/^rf-pages-downloads$/.test(names[i])) downloads.push(names[i]);
+            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);
             else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);
             else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);
           }
@@ -642,7 +696,7 @@
           // ровно после первого же выката — молча. Имена берутся из
           // ЖИВОГО списка `caches.keys()`, то есть из того, что и
           // правда лежит на телефоне.
-          return content.concat(section).concat(pages);
+          return downloads.concat(content).concat(section).concat(pages);
         }
 
         /** Ответ из кеша по адресу, или null. `ignoreVary` — потому что у
@@ -808,6 +862,66 @@
           );
         }
 
+        /**
+         * ЗВУК В СОХРАНЁННОЙ КОПИИ — ЗАХОД 7.231 (ОФЛАЙН-3).
+         *
+         * В копии React не оживает: `renderSaved` вырезает все `script`
+         * нарочно (иначе они попытались бы гидрировать страницу без
+         * данных и без сети). Значит проигрыватель рассказа со шкалой в
+         * копии не работает и работать не будет — и это сказано прямо, а
+         * не замазано.
+         *
+         * Но НАЖАТИЕ НА ПРЕДЛОЖЕНИЕ И НА КНОПКУ 🔊 звучать обязано: ради
+         * этого звук и качали. Адрес клипа объявлен в самой разметке
+         * (`data-rf-clip`, см. `SpeakButton.tsx` и `StoryText.tsx`), а
+         * играется он с адреса `blob:` — тот не доходит до сетевого слоя
+         * вообще, и вопрос «обслуживает ли воркер подресурсы в WebView»
+         * (строка 306, ответа нет) перестаёт что-либо решать.
+         */
+        function armClips(root) {
+          var nodes = root.querySelectorAll("[data-rf-clip]");
+          if (nodes.length === 0) return;
+          var playing = null;
+          for (var i = 0; i < nodes.length; i++) {
+            (function (node) {
+              var url = node.getAttribute("data-rf-clip");
+              if (!url) return;
+              node.setAttribute("data-rf-clip-armed", "1");
+              node.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (playing) {
+                  playing.pause();
+                  playing = null;
+                }
+                blobFor(url).then(function (src) {
+                  if (!src) {
+                    // Клипа на телефоне нет. Честная подпись вместо
+                    // молчания: молчащая кнопка читается как поломка.
+                    node.setAttribute("title", DL[lang].noAudio);
+                    node.setAttribute("aria-disabled", "true");
+                    node.style.opacity = "0.5";
+                    return;
+                  }
+                  var audio = new Audio(src);
+                  playing = audio;
+                  audio.onended = function () {
+                    URL.revokeObjectURL(src);
+                    if (playing === audio) playing = null;
+                  };
+                  var started = audio.play();
+                  if (started && typeof started.catch === "function") {
+                    started.catch(function () {
+                      URL.revokeObjectURL(src);
+                      if (playing === audio) playing = null;
+                    });
+                  }
+                });
+              });
+            })(nodes[i]);
+          }
+        }
+
         /** Полоса «это сохранённая копия». Честная подпись обязательна:
          *  без неё человек считает, что смотрит живую страницу, и
          *  удивляется, почему упражнения не проверяются. */
@@ -882,6 +996,7 @@
               document.body.innerHTML = doc.body.innerHTML;
               document.body.insertBefore(savedBar(), document.body.firstChild);
               armTabs(document.body);
+              armClips(document.body);
               return true;
             })
             .catch(function () {
@@ -954,6 +1069,92 @@
             });
         }
 
+        /** Адрес описи скачанного — тот же, что кладёт кнопка
+         *  («DOWNLOADS_INDEX_PATH», `src/lib/downloads.ts`). */
+        var DOWNLOADS_INDEX_PATH = "/__rf-downloads-index";
+        var DOWNLOADS_CACHE = "rf-pages-downloads";
+
+        /**
+         * СКАЧАННОЕ ПО КНОПКЕ — ЗАХОД 7.231 (ОФЛАЙН-3).
+         *
+         * Отдельная опись и отдельный кеш: у скачанного нет ни потолка
+         * записей, ни срока, ни отпечатка сборки в имени — человек нажал
+         * кнопку, и обещание обязано пережить выкат сайта. Разбор — в
+         * `src/lib/downloads.ts`.
+         */
+        function readDownloadsIndex() {
+          var url;
+          try {
+            url = new URL(DOWNLOADS_INDEX_PATH, location.href).toString();
+          } catch (e) {
+            return Promise.resolve([]);
+          }
+          return caches
+            .open(DOWNLOADS_CACHE)
+            .then(function (cache) {
+              return cache.match(url, { ignoreVary: true });
+            })
+            .then(function (hit) {
+              return hit ? hit.json() : [];
+            })
+            .then(function (rows) {
+              if (Object.prototype.toString.call(rows) !== "[object Array]") return [];
+              var out = [];
+              for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (!row || typeof row.url !== "string") continue;
+                var kind = kindOfPath(row.path || "");
+                if (!kind) continue;
+                out.push({
+                  url: row.url,
+                  path: row.path,
+                  kind: kind,
+                  title: typeof row.title === "string" ? row.title : "",
+                  savedAt: typeof row.savedAt === "number" ? row.savedAt : 0,
+                  bytes: typeof row.bytes === "number" ? row.bytes : 0,
+                  clips: Object.prototype.toString.call(row.clips) === "[object Array]" ? row.clips : [],
+                  downloaded: true,
+                });
+              }
+              return out;
+            })
+            .catch(function () {
+              return [];
+            });
+        }
+
+        /**
+         * СТРОКА ЕСТЬ ТОЛЬКО ТАМ, ГДЕ ЕСТЬ КОПИЯ — ЗАХОД 7.231, СТРОКА 310.
+         *
+         * Владелец 25.09.2026 на 1.0.6 получил список из пяти строк, одна
+         * из которых («Снегурочка») была серой: опись её знала, а копии
+         * под ней не лежало. Причина разобрана и починена на стороне
+         * записи (`src/lib/offline-save-client.ts`), но правило обязано
+         * держаться и на стороне ПОКАЗА: опись — это чужое утверждение о
+         * телефоне, а кеш — сам телефон. Спрашиваем телефон.
+         *
+         * Серая строка «No disponible» при этом НЕ снята и остаётся
+         * последним рубежом: копию может унести между отрисовкой списка и
+         * нажатием, и молчащая кнопка была бы дефектом сама по себе.
+         */
+        function keepPresent(rows, names) {
+          var out = [];
+          var index = 0;
+          function step() {
+            if (index >= rows.length) return Promise.resolve(out);
+            var row = rows[index++];
+            return fromCaches(row.url, names)
+              .then(function (hit) {
+                if (hit) out.push(row);
+                return step();
+              })
+              .catch(function () {
+                return step();
+              });
+          }
+          return step();
+        }
+
         /** Ключи кешей документов — запасной источник списка. */
         function readKeys(names) {
           var rows = [];
@@ -991,9 +1192,23 @@
          *  первее — в ней есть названия; ключи добавляют то, что опись
          *  не застала (копии, положенные воркером в браузере). */
         function savedRows(names) {
+          return readDownloadsIndex().then(function (downloaded) {
+            return savedRowsAfterDownloads(names, downloaded);
+          });
+        }
+
+        function savedRowsAfterDownloads(names, downloaded) {
           return readIndex(names).then(function (rows) {
             var clean = [];
             var seen = {};
+            // СКАЧАННОЕ ПЕРВЫМ И ПОБЕЖДАЕТ: тот же адрес мог лечь и сам
+            // (7.230), и по кнопке. Строка обязана сказать «Descargado»,
+            // а не «просто сохранено», — обещания у них разные.
+            for (var d = 0; d < downloaded.length; d++) {
+              if (seen[downloaded[d].url]) continue;
+              seen[downloaded[d].url] = 1;
+              clean.push(downloaded[d]);
+            }
             for (var i = 0; i < rows.length; i++) {
               var row = rows[i];
               if (!row || typeof row.url !== "string") continue;
@@ -1018,7 +1233,8 @@
               clean.sort(function (a, b) {
                 return b.savedAt - a.savedAt;
               });
-              return clean;
+              // ПОСЛЕДНИМ ДЕЛОМ — ОТСЕВ ПО ФАКТУ (строка 310).
+              return keepPresent(clean, names);
             });
           });
         }
@@ -1068,7 +1284,13 @@
               name.textContent = row.title || row.path;
               var kind = document.createElement("span");
               kind.className = "kind";
-              kind.textContent = KINDS[lang][row.kind] || row.kind;
+              // Строка скачанного говорит об этом ПРЯМО и называет вес:
+              // «Cuento · Descargado · 1,4 MB». Иначе два разных обещания
+              // («я это открывал» и «я это взял с собой») выглядели бы
+              // одинаково, а ведут себя по-разному после выката сайта.
+              kind.textContent = row.downloaded
+                ? (KINDS[lang][row.kind] || row.kind) + " · " + DL[lang].mark + " · " + weightText(row.bytes || 0)
+                : KINDS[lang][row.kind] || row.kind;
               button.appendChild(name);
               button.appendChild(kind);
               button.addEventListener("click", function () {
@@ -1096,6 +1318,115 @@
           }
         }
 
+        /**
+         * БЛОК СКАЧАННОГО В КАРКАСЕ — ЗАХОД 7.231 (ОФЛАЙН-3).
+         *
+         * Что лежит, вес каждого, общий вес, «удалить» у каждого и
+         * «удалить всё». Без сети — потому что вопрос «за что заняты
+         * мегабайты» к сети отношения не имеет, а задают его как раз
+         * тогда, когда места не осталось.
+         */
+        function paintDownloads(rows, names) {
+          var block = document.querySelector("[data-downloads]");
+          var list = document.querySelector("[data-downloads-list]");
+          var total = document.querySelector("[data-downloads-total]");
+          var all = document.querySelector("[data-downloads-remove-all]");
+          if (!block || !list || !total || !all) return;
+          var mine = [];
+          for (var i = 0; i < rows.length; i++) if (rows[i].downloaded) mine.push(rows[i]);
+          if (mine.length === 0) {
+            block.hidden = true;
+            return;
+          }
+          var sum = 0;
+          for (var t = 0; t < mine.length; t++) sum += mine[t].bytes || 0;
+          total.textContent = DL[lang].total + ": " + weightText(sum);
+          list.innerHTML = "";
+          for (var j = 0; j < mine.length; j++) {
+            (function (row) {
+              var item = document.createElement("li");
+              var open = document.createElement("button");
+              open.type = "button";
+              var name = document.createElement("span");
+              name.textContent = row.title || row.path;
+              var kind = document.createElement("span");
+              kind.className = "kind";
+              kind.textContent = (KINDS[lang][row.kind] || row.kind) + " · " + weightText(row.bytes || 0);
+              open.appendChild(name);
+              open.appendChild(kind);
+              open.addEventListener("click", function () {
+                openSavedUrl(row.url, names).then(function (shownIt) {
+                  if (shownIt) return;
+                  kind.textContent = GONE[lang];
+                  open.disabled = true;
+                  open.style.opacity = "0.5";
+                });
+              });
+              var drop = document.createElement("button");
+              drop.type = "button";
+              drop.setAttribute("data-downloads-remove", row.path);
+              drop.textContent = DL[lang].remove;
+              drop.addEventListener("click", function () {
+                removeOneDownload(row).then(function () {
+                  savedCache = null;
+                  showSavedList(null);
+                });
+              });
+              item.appendChild(open);
+              item.appendChild(drop);
+              list.appendChild(item);
+            })(mine[j]);
+          }
+          all.hidden = false;
+          all.textContent = DL[lang].removeAll;
+          all.onclick = function () {
+            if (!window.confirm(DL[lang].confirm)) return;
+            caches
+              .delete(DOWNLOADS_CACHE)
+              .catch(function () {})
+              .then(function () {
+                savedCache = null;
+                showSavedList(null);
+              });
+          };
+          block.hidden = false;
+        }
+
+        /** Удалить одно скачанное: страницу, все её клипы и строку описи.
+         *  То же правило, что у `removeDownload` на сайте. */
+        function removeOneDownload(row) {
+          return caches
+            .open(DOWNLOADS_CACHE)
+            .then(function (cache) {
+              var victims = [row.url];
+              for (var i = 0; i < (row.clips || []).length; i++) {
+                if (row.clips[i] && typeof row.clips[i].url === "string") victims.push(row.clips[i].url);
+              }
+              var index = 0;
+              function step() {
+                if (index >= victims.length) return Promise.resolve();
+                return cache
+                  .delete(victims[index++], { ignoreVary: true })
+                  .catch(function () {})
+                  .then(step);
+              }
+              return step().then(function () {
+                return readDownloadsIndex().then(function (rows) {
+                  var kept = [];
+                  for (var k = 0; k < rows.length; k++) if (rows[k].url !== row.url) kept.push(rows[k]);
+                  return cache.put(
+                    new URL(DOWNLOADS_INDEX_PATH, location.href).toString(),
+                    new Response(JSON.stringify(kept), {
+                      status: 200,
+                      headers: { "content-type": "application/json", "cache-control": "no-store" },
+                    }),
+                  );
+                });
+              });
+            })
+            .catch(function () {});
+        }
+
         var savedNames = null;
         var savedCache = null;
         function withSaved(then) {
@@ -1121,6 +1452,7 @@
         function showSavedList(filter) {
           withSaved(function (rows, names) {
             paintSaved(rows, names, filter || null);
+            paintDownloads(rows, names);
           });
         }
 

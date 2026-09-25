@@ -1,0 +1,62 @@
+[
+  {
+    "id": "e2e-fixture-audio-colada-0",
+    "contentType": "story",
+    "contentId": "e2e-fixture-story-dia-de-colada",
+    "itemKey": "0-0",
+    "textHash": "e2e-fixture-hash-0",
+    "text": "фикстурное предложение 0",
+    "voice": "onyx",
+    "model": "gpt-4o-mini-tts",
+    "audioUrl": "https://0xvmk87qe017z4ei.public.blob.vercel-storage.com/audio/stories/e2e-fixture-story-dia-de-colada/0-0.mp3",
+    "durationSeconds": 2.0
+  },
+  {
+    "id": "e2e-fixture-audio-colada-1",
+    "contentType": "story",
+    "contentId": "e2e-fixture-story-dia-de-colada",
+    "itemKey": "1-0",
+    "textHash": "e2e-fixture-hash-1",
+    "text": "фикстурное предложение 1",
+    "voice": "onyx",
+    "model": "gpt-4o-mini-tts",
+    "audioUrl": "https://0xvmk87qe017z4ei.public.blob.vercel-storage.com/audio/stories/e2e-fixture-story-dia-de-colada/1-0.mp3",
+    "durationSeconds": 2.0
+  },
+  {
+    "id": "e2e-fixture-audio-colada-2",
+    "contentType": "story",
+    "contentId": "e2e-fixture-story-dia-de-colada",
+    "itemKey": "2-0",
+    "textHash": "e2e-fixture-hash-2",
+    "text": "фикстурное предложение 2",
+    "voice": "onyx",
+    "model": "gpt-4o-mini-tts",
+    "audioUrl": "https://0xvmk87qe017z4ei.public.blob.vercel-storage.com/audio/stories/e2e-fixture-story-dia-de-colada/2-0.mp3",
+    "durationSeconds": 2.0
+  },
+  {
+    "id": "e2e-fixture-audio-colada-3",
+    "contentType": "story",
+    "contentId": "e2e-fixture-story-dia-de-colada",
+    "itemKey": "3-0",
+    "textHash": "e2e-fixture-hash-3",
+    "text": "фикстурное предложение 3",
+    "voice": "onyx",
+    "model": "gpt-4o-mini-tts",
+    "audioUrl": "https://0xvmk87qe017z4ei.public.blob.vercel-storage.com/audio/stories/e2e-fixture-story-dia-de-colada/3-0.mp3",
+    "durationSeconds": 2.0
+  },
+  {
+    "id": "e2e-fixture-audio-colada-4",
+    "contentType": "story",
+    "contentId": "e2e-fixture-story-dia-de-colada",
+    "itemKey": "4-0",
+    "textHash": "e2e-fixture-hash-4",
+    "text": "фикстурное предложение 4",
+    "voice": "onyx",
+    "model": "gpt-4o-mini-tts",
+    "audioUrl": "https://0xvmk87qe017z4ei.public.blob.vercel-storage.com/audio/stories/e2e-fixture-story-dia-de-colada/4-0.mp3",
+    "durationSeconds": 2.0
+  }
+]
