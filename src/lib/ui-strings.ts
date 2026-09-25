@@ -12,6 +12,30 @@
 import type { Locale } from "@/i18n/config";
 
 export interface UiStrings {
+  download: {
+    button: string;
+    measuring: string;
+    confirm: string;
+    progress: string;
+    done: string;
+    mark: string;
+    cancel: string;
+    weightNote: string;
+    errorNetwork: string;
+    errorSpace: string;
+    errorTooBig: string;
+    errorClosed: string;
+    errorOffline: string;
+    errorUnknown: string;
+    unknownWeight: string;
+    screenTitle: string;
+    screenTotal: string;
+    screenEmpty: string;
+    screenIncomplete: string;
+    remove: string;
+    removeAll: string;
+    removeAllConfirm: string;
+  };
   glossary: {
     listenInRussian: string;
     introducedIn: string;
@@ -39,6 +63,30 @@ export interface UiStrings {
 
 export const UI_STRINGS: Record<Locale, UiStrings> = {
   es: {
+    "download": {
+      "button": "Descargar",
+      "measuring": "Calculando…",
+      "confirm": "Descargar {weight}",
+      "progress": "{done} / {total}",
+      "done": "Descargado ✓",
+      "mark": "Descargado",
+      "cancel": "Cancelar",
+      "weightNote": "Página y {clips} audios",
+      "errorNetwork": "Se cortó la conexión. No se ha descargado nada.",
+      "errorSpace": "No hay espacio en el teléfono. No se ha descargado nada.",
+      "errorTooBig": "Ya no cabe. Borra algo en «Descargado».",
+      "errorClosed": "Este material no está disponible en tu cuenta.",
+      "errorOffline": "Sin internet no se puede descargar.",
+      "errorUnknown": "No se pudo descargar. Inténtalo de nuevo.",
+      "unknownWeight": "peso de {clips} audios sin confirmar",
+      "screenTitle": "Descargado",
+      "screenTotal": "En total: {weight}",
+      "screenEmpty": "Aún no has descargado nada.",
+      "screenIncomplete": "Incompleto",
+      "remove": "Borrar",
+      "removeAll": "Borrar todo",
+      "removeAllConfirm": "¿Borrar todo lo descargado?"
+    },
     "glossary": {
       "listenInRussian": "Escuchar en ruso",
       "introducedIn": "Introducido en",
@@ -64,6 +112,30 @@ export const UI_STRINGS: Record<Locale, UiStrings> = {
     }
   },
   ru: {
+    "download": {
+      "button": "Скачать",
+      "measuring": "Считаем…",
+      "confirm": "Скачать {weight}",
+      "progress": "{done} из {total}",
+      "done": "Скачано ✓",
+      "mark": "Скачано",
+      "cancel": "Отмена",
+      "weightNote": "Страница и {clips} записей",
+      "errorNetwork": "Связь оборвалась. Ничего не скачано.",
+      "errorSpace": "На телефоне нет места. Ничего не скачано.",
+      "errorTooBig": "Больше не влезает. Удалите что-нибудь в «Скачанном».",
+      "errorClosed": "Этот материал недоступен в вашей учётной записи.",
+      "errorOffline": "Без интернета скачать нельзя.",
+      "errorUnknown": "Скачать не удалось. Попробуйте ещё раз.",
+      "unknownWeight": "вес {clips} записей не подтверждён",
+      "screenTitle": "Скачанное",
+      "screenTotal": "Всего: {weight}",
+      "screenEmpty": "Вы ещё ничего не скачали.",
+      "screenIncomplete": "Не целиком",
+      "remove": "Удалить",
+      "removeAll": "Удалить всё",
+      "removeAllConfirm": "Удалить всё скачанное?"
+    },
     "glossary": {
       "listenInRussian": "Послушать по-русски",
       "introducedIn": "Вводится на уровне",

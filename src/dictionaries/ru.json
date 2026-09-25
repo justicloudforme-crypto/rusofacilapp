@@ -1740,6 +1740,30 @@
     "webCta": "А пока — продолжить в браузере"
   },
   "clientUi": {
+    "download": {
+      "button": "Скачать",
+      "measuring": "Считаем…",
+      "confirm": "Скачать {weight}",
+      "progress": "{done} из {total}",
+      "done": "Скачано ✓",
+      "mark": "Скачано",
+      "cancel": "Отмена",
+      "weightNote": "Страница и {clips} записей",
+      "errorNetwork": "Связь оборвалась. Ничего не скачано.",
+      "errorSpace": "На телефоне нет места. Ничего не скачано.",
+      "errorTooBig": "Больше не влезает. Удалите что-нибудь в «Скачанном».",
+      "errorClosed": "Этот материал недоступен в вашей учётной записи.",
+      "errorOffline": "Без интернета скачать нельзя.",
+      "errorUnknown": "Скачать не удалось. Попробуйте ещё раз.",
+      "unknownWeight": "вес {clips} записей не подтверждён",
+      "screenTitle": "Скачанное",
+      "screenTotal": "Всего: {weight}",
+      "screenEmpty": "Вы ещё ничего не скачали.",
+      "screenIncomplete": "Не целиком",
+      "remove": "Удалить",
+      "removeAll": "Удалить всё",
+      "removeAllConfirm": "Удалить всё скачанное?"
+    },
     "glossary": {
       "listenInRussian": "Послушать по-русски",
       "introducedIn": "Вводится на уровне",

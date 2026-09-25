@@ -258,8 +258,8 @@ function plant() {
     SHELL,
     (s) =>
       s.replace(
-        'if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);\n            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);',
-        'if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);',
+        '            if (/^rf-pages-downloads$/.test(names[i])) downloads.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);\n            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);',
+        '            if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);\n            else if (/^rf-pages-downloads$/.test(names[i])) downloads.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);',
       ),
     "порядок кешей",
   );

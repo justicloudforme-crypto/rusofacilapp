@@ -227,10 +227,21 @@ export function violations(sources) {
     bad.push(`${SHELL}: обработчик вкладок без сети не подключён — правило написано и не включено`);
   }
   // 18
-  const shownBranches = (shell.match(/showSavedList\(/g) ?? []).length;
-  if (shownBranches < 3) {
+  //
+  // СЧИТАЕТСЯ ИМЕННО ПАРА «список + решение о сообщении», А НЕ ВСЕ ВЫЗОВЫ
+  // `showSavedList` ПОДРЯД, и это правка 26.09.2026 (7.231). Прежнее
+  // правило требовало «хотя бы три упоминания», и хватало его ровно до
+  // того дня, когда у списка появились ДРУГИЕ законные поводы
+  // перерисоваться: блок скачанного зовёт его после удаления одного
+  // материала и после «удалить всё». С ними упоминаний стало пять, и
+  // подсадка «одну ветку холодного старта убрали» перестала кусаться —
+  // четыре всё ещё больше трёх. Проверять надо то, о чём правило: у
+  // холодного старта ДВЕ ветки (сеть ответила и сеть отказала), и список
+  // обязан рисоваться в обеих.
+  const coldStartBranches = (shell.match(/showSavedList\(null\);\s*\n\s*decideMessage\(\);/g) ?? []).length;
+  if (coldStartBranches < 2) {
     bad.push(
-      `${SHELL}: список сохранённого рисуется не во всех ветках каркаса (найдено ${shownBranches} упоминаний из трёх) — в одной из них человек снова увидит пустой каркас`,
+      `${SHELL}: список сохранённого рисуется не во всех ветках холодного старта (найдено ${coldStartBranches} из двух — ветка «сеть ответила» и ветка «сеть отказала») — в одной из них человек снова увидит пустой каркас`,
     );
   }
   // 13
@@ -281,8 +292,8 @@ function plant() {
     SHELL,
     (s) =>
       s.replace(
-        '            if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);\n            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);',
-        '            if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);',
+        '            if (/^rf-pages-downloads$/.test(names[i])) downloads.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);\n            else if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);',
+        '            if (/^rf-pages-[a-z0-9]+$/.test(names[i])) pages.push(names[i]);\n            else if (/^rf-pages-downloads$/.test(names[i])) downloads.push(names[i]);\n            else if (/^rf-pages-content-[a-z0-9]+$/.test(names[i])) content.push(names[i]);\n            else if (/^rf-pages-section-[a-z0-9]+$/.test(names[i])) section.push(names[i]);',
       ),
     "спрашивается раньше кеша содержания",
   );
