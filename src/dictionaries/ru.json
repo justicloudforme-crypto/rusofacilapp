@@ -1760,6 +1760,7 @@
       "screenTotal": "Всего: {weight}",
       "screenEmpty": "Вы ещё ничего не скачали.",
       "screenIncomplete": "Не целиком",
+      "screenUntitled": "Скачанный материал",
       "remove": "Удалить",
       "removeAll": "Удалить всё",
       "removeAllConfirm": "Удалить всё скачанное?"

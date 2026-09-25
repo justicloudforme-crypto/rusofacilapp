@@ -1760,6 +1760,7 @@
       "screenTotal": "En total: {weight}",
       "screenEmpty": "Aún no has descargado nada.",
       "screenIncomplete": "Incompleto",
+      "screenUntitled": "Material descargado",
       "remove": "Borrar",
       "removeAll": "Borrar todo",
       "removeAllConfirm": "¿Borrar todo lo descargado?"
