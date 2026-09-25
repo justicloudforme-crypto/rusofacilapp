@@ -59,12 +59,23 @@ class FakeCaches {
   async keys(): Promise<string[]> {
     return [...this.caches.keys()];
   }
+  /** `caches.match` без имени — поиск ПО ВСЕМ кешам, как у браузера.
+   *  Нужен листам стилей: они уже лежат в precache, и второй раз за
+   *  тем же файлом ходить в сеть незачем. */
+  async match(request: RequestInfo, _options?: CacheQueryOptions): Promise<Response | undefined> {
+    for (const cache of this.caches.values()) {
+      const hit = await cache.match(request);
+      if (hit) return hit;
+    }
+    return undefined;
+  }
 }
 
 const NAMES: CacheNames = {
   fingerprint: "abc123",
   content: "rf-pages-content-abc123",
   section: "rf-pages-section-abc123",
+  sheets: "rf-pages-sheets-abc123",
 };
 
 const ORIGIN = "https://rusofacilapp.com";
@@ -252,5 +263,57 @@ describe("строка 310: опись не заводит строк без к�
       const where = row.kind === "section" ? NAMES.section : NAMES.content;
       expect(await (await store.open(where)).match(row.url), `строка ${row.path} без копии`).toBeTruthy();
     }
+  });
+});
+
+
+/**
+ * ЛИСТЫ СТИЛЕЙ ЛОЖАТСЯ РЯДОМ С КОПИЕЙ — ЗАХОД 7.233, СТРОКА 314.
+ *
+ * Строка, которая появилась и исчезла (видео владельца 26.09.2026,
+ * «Curso de ruso online · Sección», трижды: 1:15→1:30, 4:45→4:55,
+ * 6:05→6:25). Отсев 7.232 спрашивает «лежит ли хоть один лист стилей», и
+ * ответ на этот вопрос менялся у него под руками, потому что листы
+ * лежали в чужом кеше — в precache текущей сборки.
+ */
+const STYLED = OPEN_HTML.replace(
+  "</head>",
+  '<link rel="stylesheet" href="/_next/static/css/aaa.css"/><link rel="stylesheet" href="https://fonts.example.com/x.css"/></head>',
+);
+
+describe("строка 314: копия несёт свои листы стилей", () => {
+  it("лист стилей переезжает из чужого кеша в кеш копии", async () => {
+    const { store, args } = deps({ html: STYLED });
+    const precache = await store.open("serwist-precache-v2");
+    await precache.put(`${ORIGIN}/_next/static/css/aaa.css`, new Response("body{}", { status: 200 }));
+
+    expect(await saveCopy(args)).toBe("saved");
+    const sheetCache = await store.open(NAMES.sheets);
+    expect(
+      await sheetCache.match(`${ORIGIN}/_next/static/css/aaa.css`),
+      "листа стилей рядом с копией нет — строка исчезнет с первым же выкатом",
+    ).toBeTruthy();
+    // Чужой источник не берётся: за шрифты чужого домена сохранение не подписывалось.
+    expect(await sheetCache.match("https://fonts.example.com/x.css")).toBeFalsy();
+    // И НЕ В КЕШЕ ДОКУМЕНТОВ: у него потолок объявлен В ЗАПИСЯХ, и
+    // служебный файл вытеснял бы оттуда урок (`sw-cache-names.ts`).
+    const copyCache = await store.open(NAMES.content);
+    expect(await copyCache.match(`${ORIGIN}/_next/static/css/aaa.css`)).toBeFalsy();
+  });
+
+  it("ПОЗИТИВНЫЙ КОНТРОЛЬ: страница без листов стилей кеша стилей не заводит вовсе", async () => {
+    const { store, args } = deps();
+    expect(await saveCopy(args)).toBe("saved");
+    expect(await store.keys()).not.toContain(NAMES.sheets);
+  });
+
+  it("копию унесло — листы стилей не пишутся и кеш не воскресает", async () => {
+    // Уборщик выхода стирает кеши ЦЕЛИКОМ, а любой `put` заводит их
+    // заново. Заход, писавший стили ДО проверки копии, воскрешал три
+    // кеша сразу после выхода — поймано `e2e/offline-orphan-row.spec.ts`.
+    const { store, args } = deps({ html: STYLED });
+    store.wipeOnOpen = { after: 2, name: NAMES.content };
+    expect(await saveCopy(args)).toBe("lost-race");
+    expect(await store.keys()).not.toContain(NAMES.sheets);
   });
 });

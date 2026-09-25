@@ -196,7 +196,7 @@ test("кнопка называет настоящий вес, качает ст
     const keys = await cache.keys();
     const hit = await cache.match(new URL("/__rf-downloads-index", location.href).toString(), { ignoreVary: true });
     const rows = hit
-      ? ((await hit.json()) as { url: string; bytes: number; pageBytes: number; clips: { bytes: number }[] }[])
+      ? ((await hit.json()) as { url: string; bytes: number; pageBytes: number; clips: { bytes: number }[]; sheets: string[] }[])
       : [];
     return { keys: keys.length, rows };
   });
@@ -212,8 +212,12 @@ test("кнопка называет настоящий вес, качает ст
   // `honestWeight`).
   expect(Math.abs(laid.rows[0].pageBytes - measured.page)).toBeLessThan(4096);
   expect(laid.rows[0].bytes).toBe(laid.rows[0].pageBytes + measured.clips);
-  // Страница плюс все клипы плюс сама опись.
-  expect(laid.keys).toBe(story.clips + 2);
+  // Страница, все клипы, сама опись — и листы стилей материала (заход
+  // 7.233, строка 314). Число листов не зашито: их столько, сколько
+  // объявила сама страница, и опись называет их поимённо. Утверждается
+  // обе стороны — что они есть и что лишнего в кеше нет.
+  expect(laid.rows[0].sheets.length, "скачанное легло без своих листов стилей").toBeGreaterThan(0);
+  expect(laid.keys).toBe(story.clips + 2 + laid.rows[0].sheets.length);
 
   // 3. ВТОРОЕ НАЖАТИЕ НЕ КАЧАЕТ ЗАНОВО: кнопка приходит уже «Descargado»
   //    после перезагрузки, то есть знает о скачанном из кеша, а не из

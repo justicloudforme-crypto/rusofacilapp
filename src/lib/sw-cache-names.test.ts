@@ -48,13 +48,16 @@ describe("cache names", () => {
   it("carry the fingerprint, so two builds cannot share entries", () => {
     const a = pageCacheNames("aaa");
     const b = pageCacheNames("bbb");
-    // Шесть имён с 26.09.2026 (7.231), но НА СБОРКУ приходится пять, и
-    // шестое — общее. Пять несут отпечаток (`html`, `content`, `section`,
-    // `rsc`, `rsc-prefetch`, `others` — шесть за вычетом скачанного), а
-    // `downloads` у обеих сборок ОДНО И ТО ЖЕ, и это не недосмотр:
-    // скачанное по кнопке обязано пережить выкат сайта (разбор — в
-    // `src/lib/downloads.ts`). Поэтому 6 + 6 разных имён дают 13, а не 14.
-    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(13);
+    // Семь имён с 28.09.2026 (7.233), но НА СБОРКУ приходится шесть, и
+    // седьмое — общее. Шесть несут отпечаток (`html`, `content`,
+    // `section`, `rsc`, `rsc-prefetch`, `others` и `sheets` — семь за
+    // вычетом скачанного), а `downloads` у обеих сборок ОДНО И ТО ЖЕ, и
+    // это не недосмотр: скачанное по кнопке обязано пережить выкат сайта
+    // (разбор — в `src/lib/downloads.ts`). Поэтому 7 + 7 разных имён
+    // дают 15, а не 16. Листы стилей СОХРАНЁННОЙ копии отпечаток несут
+    // намеренно: лист принадлежит своей сборке так же, как разметка,
+    // которая на него ссылается (заход 7.233, строка 314).
+    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(15);
     expect(a.downloads, "имя кеша скачанного разъехалось по сборкам").toBe(b.downloads);
     for (const [key, name] of Object.entries(a)) {
       if (key === "downloads") continue;

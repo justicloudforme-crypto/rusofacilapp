@@ -39,13 +39,15 @@ import {
   type DownloadedRow,
   downloadableKindOf,
   fitsBudget,
+  langOfPath,
   parseDownloads,
   urlsOf,
   withDownload,
   withoutDownload,
+  withoutDuplicates,
 } from "./downloads";
 import { looksClosedForThisVisitor } from "./sw-cache-policy";
-import { tidyTitle, titleFromHtml } from "./offline-save";
+import { sheetUrlsInHtml, tidyTitle, titleFromHtml } from "./offline-save";
 
 export type DownloadOutcome =
   | "downloaded"
@@ -137,11 +139,79 @@ export async function readDownloads(store: CacheStorage, origin: string): Promis
     if (!(await downloadsCacheExists(store))) return [];
     const cache = await openDownloads(store);
     const hit = await cache.match(indexUrlFor(origin), { ignoreVary: true });
-    if (!hit) return [];
-    return await withTitles(cache, parseDownloads(await hit.json()));
+    const listed = hit ? parseDownloads(await hit.json()) : [];
+    const whole = withoutDuplicates([...listed, ...(await rowsFromCache(cache, origin, listed))]);
+    return await withTitles(cache, whole);
   } catch {
     return [];
   }
+}
+
+/**
+ * ОПИСЬ ПУСТА, А КЕШ — НЕТ: ВОССТАНОВЛЕНИЕ ИЗ САМОГО ТЕЛЕФОНА — СТРОКА 315.
+ *
+ * ====================================================================
+ * ПОЧЕМУ ЭТО НУЖНО, И ЧТО ИМЕННО ИЗМЕРЕНО
+ * ====================================================================
+ *
+ * Опись — это УТВЕРЖДЕНИЕ о телефоне, а кеш — сам телефон, и правило
+ * захода 7.231 говорит верить телефону. Но верили ему только в одну
+ * сторону: строку без копии снимали, а копию без строки не замечали
+ * вовсе. Прогон 26.09.2026 (`.run7233/repro2.mjs index-gone`): стёрта
+ * ОДНА запись описи при тринадцати живых записях кеша — и блок
+ * «Descargado» исчезает целиком, вес не назван, «Borrar» предложить
+ * нечему; сам рассказ при этом лежит и открывается.
+ *
+ * Опись теряется дешевле, чем кажется: её пишет ОДНА запись, а стереть
+ * её может и уборщик выхода, попавший между `put` и `put` (строка 310),
+ * и любой отказ на последнем шаге скачивания.
+ *
+ * ЧЕГО ЗДЕСЬ НЕТ И ПОЧЕМУ. Восстановленная строка НЕ переписывает опись:
+ * чтение не имеет права быть записью (то же правило, что у `withTitles`).
+ * Вес её — настоящий вес лежащих записей, а не число из описи, потому
+ * что описи как раз и нет; клипы и листы стилей в неё не собираются
+ * поимённо — их адреса без описи ни с одним материалом не связаны, и
+ * приписать их наугад значило бы соврать в «удалить».
+ */
+async function rowsFromCache(cache: Cache, origin: string, known: readonly DownloadedRow[]): Promise<DownloadedRow[]> {
+  const seen = new Set(known.map((row) => row.url));
+  const out: DownloadedRow[] = [];
+  const indexUrl = indexUrlFor(origin);
+  for (const request of await cache.keys()) {
+    if (request.url === indexUrl || seen.has(request.url)) continue;
+    let pathname: string;
+    try {
+      pathname = new URL(request.url).pathname;
+    } catch {
+      continue;
+    }
+    const kind = downloadableKindOf(pathname);
+    if (!kind) continue;
+    let bytes = 0;
+    let title = "";
+    try {
+      const hit = await cache.match(request, { ignoreVary: true });
+      if (!hit || !hit.ok) continue;
+      const html = await hit.text();
+      bytes = new TextEncoder().encode(html).length;
+      title = titleFromHtml(html);
+    } catch {
+      continue;
+    }
+    out.push({
+      url: request.url,
+      path: pathname,
+      kind,
+      title,
+      lang: langOfPath(pathname),
+      savedAt: 0,
+      pageBytes: bytes,
+      clips: [],
+      sheets: [],
+      bytes,
+    });
+  }
+  return out;
 }
 
 /**
@@ -212,6 +282,9 @@ export interface DownloadArgs {
   lang: "es" | "ru";
   /** Адреса клипов со страницы (атрибуты `data-rf-clip`). */
   clipUrls: readonly string[];
+  /** Адреса листов стилей, объявленных страницей (строка 314). Если не
+   *  переданы — берутся из самой разметки снимка. */
+  sheetUrls?: readonly string[];
   /** Веса, уже посчитанные `measureClips` до нажатия. */
   weights?: ClipWeights;
   now: number;
@@ -246,6 +319,7 @@ export async function downloadPage(args: DownloadArgs): Promise<DownloadOutcome>
 
     const pageBytes = new TextEncoder().encode(args.html).length;
     const weights = args.weights ?? (await measureClips(args.clipUrls, args.fetch));
+    const sheets = [...(args.sheetUrls ?? sheetUrlsInHtml(args.html, args.url))];
     const wanted = pageBytes + weights.clips.reduce((sum, clip) => sum + clip.bytes, 0);
     if (!fitsBudget(rows, wanted, args.url)) return "too-big";
 
@@ -279,6 +353,40 @@ export async function downloadPage(args: DownloadArgs): Promise<DownloadOutcome>
     } catch (error) {
       await rollback();
       return isQuotaError(error) ? "no-space" : "failed";
+    }
+
+    /**
+     * ЛИСТЫ СТИЛЕЙ — В ЭТОТ ЖЕ КЕШ (строка 314). Берутся из хранилища,
+     * если уже лежат (тогда сеть не нужна вовсе), и только иначе из
+     * сети. В полосу «12 / 65» они НЕ входят: человек считает материал,
+     * а не служебные файлы, и цифра, прыгнувшая с 60 на 62 ради двух
+     * css, была бы цифрой не про его рассказ.
+     *
+     * Отказ листа стилей скачивание НЕ роняет: страница без одного из
+     * двух листов читается, а вот потерять из-за него весь рассказ
+     * было бы платой не по счёту. Целость проверяет `isComplete` по
+     * тем адресам, которые в опись и попали, — то есть по реально
+     * лежащим.
+     */
+    const laidSheets: string[] = [];
+    for (const sheet of sheets) {
+      try {
+        if (await cache.match(sheet, { ignoreVary: true })) {
+          laidSheets.push(sheet);
+          continue;
+        }
+        const response = await args.fetch(sheet, { credentials: "omit", cache: "no-store" });
+        if (!response.ok) continue;
+        await cache.put(sheet, response);
+        laid.push(sheet);
+        laidSheets.push(sheet);
+      } catch (error) {
+        if (isQuotaError(error)) {
+          await rollback();
+          return "no-space";
+        }
+        // Сеть отказала ИМЕННО на стиле — материал от этого не пропал.
+      }
     }
 
     // Клипы — по одному и последовательно намеренно: полоса «12 / 65»
@@ -316,6 +424,7 @@ export async function downloadPage(args: DownloadArgs): Promise<DownloadOutcome>
       savedAt: args.now,
       pageBytes,
       clips: weights.clips,
+      sheets: laidSheets,
       bytes: wanted,
     };
     if (!(await isComplete(args.caches, row))) {
@@ -336,15 +445,24 @@ function isQuotaError(error: unknown): boolean {
   return name === "QuotaExceededError" || name === "NS_ERROR_DOM_QUOTA_REACHED";
 }
 
-/** Удалить одно скачанное: и страницу, и все её клипы, и строку описи. */
+/**
+ * Удалить одно скачанное: и страницу, и все её клипы, и строку описи.
+ *
+ * ЛИСТ СТИЛЕЙ, КОТОРЫЙ НУЖЕН СОСЕДУ, НЕ УДАЛЯЕТСЯ (строка 314). Адрес
+ * листа один на весь сайт, и все скачанные материалы делят одну запись;
+ * удалить её вместе с первым же рассказом значило бы погасить в списке
+ * все остальные — то есть починить дефект и завести его заново.
+ */
 export async function removeDownload(store: CacheStorage, url: string): Promise<number> {
   try {
     if (!(await downloadsCacheExists(store))) return 0;
     const rows = await readDownloads(store, url);
     const row = rows.find((one) => one.url === url);
+    const needed = new Set(rows.filter((one) => one.url !== url).flatMap((one) => one.sheets));
     const cache = await openDownloads(store);
     let removed = 0;
     for (const victim of row ? urlsOf(row) : [url]) {
+      if (needed.has(victim)) continue;
       if (await cache.delete(victim, { ignoreVary: true })) removed += 1;
     }
     await writeDownloads(store, url, withoutDownload(rows, url));
