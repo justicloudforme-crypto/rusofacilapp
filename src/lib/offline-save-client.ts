@@ -9,6 +9,7 @@
  */
 import {
   OFFLINE_INDEX_PATH,
+  sheetUrlsInHtml,
   parseIndex,
   type SavedRow,
   savedKindOf,
@@ -25,6 +26,9 @@ export interface CacheNames {
   fingerprint: string;
   content: string;
   section: string;
+  /** Кеш листов стилей этой сборки (строка 314). Почему свой, а не место
+   *  в `content`, — в `sw-cache-names.ts`. */
+  sheets: string;
 }
 
 export interface SaveDeps {
@@ -158,6 +162,14 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
     // мы пишем в его пустого двойника».
     if (!(await copyIsThere(deps.caches, copyCacheName, deps.url))) return "lost-race";
 
+    // ЛИСТЫ СТИЛЕЙ — ПОСЛЕ ТОГО, КАК КОПИЯ ПОДТВЕРЖДЕНА, И НИ МИНУТОЙ
+    // РАНЬШЕ. Порядок измерен, а не выбран: уборщик выхода стирает кеши
+    // ЦЕЛИКОМ, а любой `put` заводит их заново — и заход, писавший стили
+    // до проверки, ВОСКРЕШАЛ три кеша сразу после выхода из учётной
+    // записи. Поймано пробой `e2e/offline-orphan-row.spec.ts` («после
+    // выхода кешей rf-pages*: ожидалось 0, получено 3»).
+    await keepSheetsBeside(deps.caches, deps.names.sheets, deps.html, deps.url);
+
     const row: SavedRow = {
       url: deps.url,
       path: deps.pathname,
@@ -196,6 +208,58 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
 }
 
 /**
+ * ЛИСТЫ СТИЛЕЙ ЛОЖАТСЯ РЯДОМ С КОПИЕЙ — ЗАХОД 7.233, СТРОКА 314.
+ *
+ * ====================================================================
+ * ЧТО ЭТО ЧИНИТ
+ * ====================================================================
+ *
+ * Строку, которая ПОЯВИЛАСЬ И ИСЧЕЗЛА. Правило 7.232 верное: строка
+ * показывается только тогда, когда телефон и правда может показать
+ * копию, а без единого листа стилей показать её нельзя. Но лист стилей
+ * лежал в precache — в кеше, которым распоряжается не эта копия, а
+ * текущая сборка сайта. Один и тот же вопрос «можно ли показать» давал
+ * при первой отрисовке «да», а через несколько секунд или после
+ * возврата в список «нет», потому что между двумя ответами менялся
+ * precache. Владелец снял это трижды на видео 26.09.2026 (1:15→1:30,
+ * 4:45→4:55, 6:05→6:25) на строке «Curso de ruso online · Sección», и
+ * серой она при этом не становилась ни разу — она просто пропадала
+ * вместе с единицей в приборе.
+ *
+ * ЦЕНА. Два файла, 174 КиБ на сборку (замер 26.09.2026: 167 861 + 6 506
+ * байт), и кладутся они ОДИН раз: ключ записи — адрес, а адрес листа
+ * один на весь сайт. Не на копию, не на локаль — на кеш. Против потолка
+ * содержания в 36 записей это меньше двух процентов его веса.
+ *
+ * ПОЧЕМУ БЕРЁТСЯ ИЗ ХРАНИЛИЩА, А НЕ ИЗ СЕТИ. Сохранение идёт следом за
+ * показом страницы, то есть эти листы браузер уже получил и они уже
+ * лежат в precache. Сеть тут была бы вторым запросом за тем же файлом.
+ * Если же в хранилище их нет — идём в сеть, но отказ НЕ роняет
+ * сохранение: копия без одного из двух листов читается, а потерять из-за
+ * него весь урок было бы платой не по счёту.
+ */
+async function keepSheetsBeside(store: CacheStorage, cacheName: string, html: string, origin: string): Promise<void> {
+  try {
+    const sheets = sheetUrlsInHtml(html, origin);
+    if (sheets.length === 0) return;
+    const cache = await store.open(cacheName);
+    for (const sheet of sheets) {
+      try {
+        if (await cache.match(sheet, { ignoreVary: true })) continue;
+        const known = await store.match(sheet, { ignoreVary: true });
+        const response = known ?? (await fetch(sheet, { credentials: "omit", cache: "no-store" }));
+        if (!response.ok) continue;
+        await cache.put(sheet, response.clone());
+      } catch {
+        // Один лист — не вся копия; молча дальше.
+      }
+    }
+  } catch {
+    // Хранилище могло уехать целиком — это ловит `copyIsThere` ниже.
+  }
+}
+
+/**
  * СПРОСИТЬ ИМЕНА У ВОРКЕРА. Сообщение уходит на `registration.active`, а
  * НЕ на `navigator.serviceWorker.controller`: в оболочке контроля над
  * документом у воркера нет (на то и весь этот заход), а отвечать на
@@ -223,7 +287,13 @@ export function askCacheNames(timeoutMs = 4000): Promise<CacheNames | null> {
         channel.port1.onmessage = (event: MessageEvent) => {
           clearTimeout(timer);
           const data = event.data as Partial<CacheNames> & { type?: string };
-          if (!data || data.type !== "rf-cache-names" || typeof data.content !== "string" || typeof data.section !== "string") {
+          if (
+            !data ||
+            data.type !== "rf-cache-names" ||
+            typeof data.content !== "string" ||
+            typeof data.section !== "string" ||
+            typeof data.sheets !== "string"
+          ) {
             finish(null);
             return;
           }
@@ -231,6 +301,7 @@ export function askCacheNames(timeoutMs = 4000): Promise<CacheNames | null> {
             fingerprint: typeof data.fingerprint === "string" ? data.fingerprint : "",
             content: data.content,
             section: data.section,
+            sheets: data.sheets,
           });
         };
         worker.postMessage({ type: "rf-cache-names" }, [channel.port2]);

@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { uiStrings } from "@/lib/ui-strings";
-import { DOWNLOADS_MAX_BYTES, formatWeight, totalBytes, type DownloadedRow } from "@/lib/downloads";
+import {
+  DOWNLOADS_MAX_BYTES,
+  formatWeight,
+  langMark,
+  langOfPath,
+  totalBytes,
+  withoutDuplicates,
+  type DownloadedRow,
+} from "@/lib/downloads";
 import { isComplete, readDownloads, removeAllDownloads, removeDownload } from "@/lib/downloads-client";
 
 /**
@@ -32,7 +40,9 @@ export default function DownloadsPanel({ lang }: { lang: "es" | "ru" }) {
       setRows([]);
       return;
     }
-    const found = await readDownloads(caches, window.location.href);
+    // ДУБЛЕЙ ОДНОГО АДРЕСА НЕ БЫВАЕТ (строка 316) — и это утверждение, а
+    // не надежда на то, что запись всегда клала строку по одной.
+    const found = withoutDuplicates(await readDownloads(caches, window.location.href));
     const complete: Record<string, boolean> = {};
     for (const row of found) complete[row.url] = await isComplete(caches, row);
     setRows(found);
@@ -85,7 +95,18 @@ export default function DownloadsPanel({ lang }: { lang: "es" | "ru" }) {
                     {row.title || t.screenUntitled}
                   </Link>
                   <span className="text-xs text-foreground/60">
-                    {formatWeight(row.bytes, lang)}
+                    {/*
+                      ПОМЕТКА ЯЗЫКА — строка 316. Владелец 26.09.2026
+                      получил в списке две строки «Снегурочка · Cuento ·
+                      Descargado · 1,4 MB»: испанскую и русскую версии
+                      одной страницы, различить которые нечем — название
+                      рассказа у них одно на двоих. Два знака, ES и RU,
+                      не переводятся намеренно: они читаются одинаково в
+                      обеих локалях и не спорят с языком оболочки. Язык
+                      берётся из АДРЕСА, а не из описи: адрес есть у
+                      строки всегда, даже у восстановленной из кеша.
+                    */}
+                    {langMark(langOfPath(row.path) || row.lang)} · {formatWeight(row.bytes, lang)}
                     {whole[row.url] === false ? ` · ${t.screenIncomplete}` : ""}
                   </span>
                 </span>
