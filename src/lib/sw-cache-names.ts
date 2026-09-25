@@ -60,6 +60,13 @@ export function buildFingerprint(entries: readonly PrecacheEntryLike[]): string 
   return (hash >>> 0).toString(36);
 }
 
+/**
+ * Имя кеша скачанного. Живёт здесь, а не в `downloads.ts`, потому что его
+ * обязан знать `staleCacheNames` (иначе выкат унесёт скачанное), а
+ * `downloads.ts` тянуть сюда нельзя: этот файл читает и воркер, и сторож.
+ */
+export const DOWNLOADS_CACHE_NAME = "rf-pages-downloads";
+
 /** The prefix every build-scoped cache shares, so old ones can be found and
  * deleted on activate without touching Serwist's own precache. */
 export const PAGE_CACHE_PREFIX = "rf-pages";
@@ -132,6 +139,26 @@ export function pageCacheNames(fingerprint: string) {
      * потолок 8 с запасом на будущий раздел.
      */
     section: `${PAGE_CACHE_PREFIX}-section-${fingerprint}`,
+    /**
+     * СКАЧАННОЕ ПО НАЖАТИЮ КНОПКИ — ЗАХОД 7.231 (ОФЛАЙН-3).
+     *
+     * ЕДИНСТВЕННОЕ ИМЯ ЗДЕСЬ БЕЗ ОТПЕЧАТКА СБОРКИ, И ЭТО НЕ НЕДОСМОТР, а
+     * ровно то, за что нажимали кнопку. Отпечаток в имени (долг 14)
+     * означает «переживать выкат сайта этому кешу нельзя»; для копии,
+     * которую человек не просил, это верно — она бесплатна и её не жаль.
+     * Для скачанного неверно: выкат сайта случается в любой день, а
+     * человек нажал «Descargar» перед самолётом. Это и есть закрытие
+     * долга 308 для скачанного (для просто просмотренного долг остаётся).
+     *
+     * Ради чего имя всё-таки начинается с `rf-pages`: выход из учётной
+     * записи стирает такие кеши целиком (`personalPageCaches`), а
+     * скачанный платный урок обязан при выходе исчезать. Постоянное имя
+     * стоит ЗДЕСЬ, а не рядом, чтобы `staleCacheNames` знал его «своим»
+     * при любом отпечатке и не унёс на первом же выкате.
+     *
+     * Разбор и числа потолка — `src/lib/downloads.ts`.
+     */
+    downloads: DOWNLOADS_CACHE_NAME,
   };
 }
 

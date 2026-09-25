@@ -10,6 +10,7 @@ import VocabularyTab from "./VocabularyTab";
 import ExercisesTab from "./ExercisesTab";
 import AlphabetTable from "./AlphabetTable";
 import VideoPlayer from "./VideoPlayer";
+import DownloadButton from "@/components/DownloadButton";
 import SlidesTab from "./SlidesTab";
 import LessonGlossaryTerms from "@/components/glossary/LessonGlossaryTerms";
 import TabBar from "@/components/ui/TabBar";
@@ -226,6 +227,17 @@ export default function LessonView({
         {levelTitle} · {dict.lessonLabel} {lessonSlug}
       </span>
       <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
+
+      {/* КНОПКА «DESCARGAR» — ЗАХОД 7.231 (ОФЛАЙН-3). Под заголовком и НАД
+          вкладками: она про весь урок целиком, а не про какую-то одну из
+          них. Что именно уедет на телефон — ровно то, что сейчас в
+          разметке: сама страница и все клипы с признаком `data-rf-clip`
+          (то есть озвучка слайдов и словаря урока). Панель «Ejercicios»
+          монтируется только по нажатию, и её клипы попадут в скачанное,
+          если человек её открывал, — так же, как и в копию 7.230. */}
+      <div className="mt-4">
+        <DownloadButton lang={lang} />
+      </div>
 
       {!content ? (
         <p className="mt-6 leading-7 text-foreground/70">{dict.placeholder}</p>

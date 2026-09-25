@@ -29,13 +29,32 @@ class FakeCache {
 
 class FakeCaches {
   readonly caches = new Map<string, FakeCache>();
+  /**
+   * УБОРЩИК ВЫХОДА, ПОДСТАВЛЕННЫЙ В ТОЧКУ (заход 7.231, строка 310).
+   *
+   * `caches.delete(name)` у настоящего браузера уносит кеш ЦЕЛИКОМ, и
+   * следующий `caches.open(name)` создаёт пустого двойника. Здесь то же
+   * самое, и наступает оно ровно на N-м вызове `open` — то есть гонка
+   * воспроизводится не «иногда», а каждый раз.
+   */
+  wipeOnOpen: { after: number; name: string } | null = null;
+  opens = 0;
   async open(name: string): Promise<FakeCache> {
+    this.opens += 1;
+    if (this.wipeOnOpen && this.opens > this.wipeOnOpen.after) {
+      const victim = this.wipeOnOpen.name;
+      this.wipeOnOpen = null;
+      this.caches.delete(victim);
+    }
     let cache = this.caches.get(name);
     if (!cache) {
       cache = new FakeCache();
       this.caches.set(name, cache);
     }
     return cache;
+  }
+  async delete(name: string): Promise<boolean> {
+    return this.caches.delete(name);
   }
   async keys(): Promise<string[]> {
     return [...this.caches.keys()];
@@ -137,5 +156,71 @@ describe("saveCopy", () => {
     const { store, args } = deps({ url: `${ORIGIN}/ru/profile`, pathname: "/ru/profile" });
     expect(await saveCopy(args)).toBe("skipped-not-content");
     expect(store.caches.size).toBe(0);
+  });
+});
+
+/**
+ * ====================================================================
+ * СТРОКА 310: СТРОКА СПИСКА БЕЗ КОПИИ ПОД НЕЙ — ЗАХОД 7.231
+ * ====================================================================
+ *
+ * Дословный сценарий владельца (видео 25.09.2026, 1.0.6, 7:10–7:12 по
+ * часам POCO): вошёл под учётной записью, страницы сохранились, с сетью
+ * открыл «Mi perfil» → «Cerrar sesión», дальше ГОСТЕМ с сетью открыл
+ * «Снегурочку» (бесплатный рассказ A1, слушал звук), «Cuentos»,
+ * «Vocabulario» и урок A1/1, убил приложение и включил самолётный режим.
+ * Без сети в списке «Guardado en este teléfono» лежало 5 строк, и строка
+ * «Снегурочка» была серой, с подписью «No disponible», — остальные
+ * четыре открывались. Выката сайта между шагами не было, то есть долг
+ * 308 тут не при чём.
+ *
+ * ПРИЧИНА, доказанная здесь прогоном: уборщик выхода стирает кеши
+ * `rf-pages*` целиком и делает это своим фоновым «потом»
+ * (`SignedOutCachePurge`, `void (async () => …)()`). Первая страница,
+ * которую гость открывает после выхода, сохраняется ОДНОВРЕМЕННО с этой
+ * уборкой. Если уборка успевает между `cache.put` (копия легла) и
+ * записью описи, то `caches.open` создаёт кеш ЗАНОВО, пустым, и опись
+ * ложится в него строкой, под которой копии нет. Первой страницей после
+ * выхода была ровно «Снегурочка».
+ */
+describe("строка 310: опись не заводит строк без копии", () => {
+  it("уборка между копией и описью — строки НЕ появляется (а без уборки появляется: позитивный контроль)", async () => {
+    // Позитивный контроль ПЕРВЫМ: без уборки тот же самый заход обязан
+    // дать строку. Иначе «строки нет» доказывало бы лишь то, что
+    // сохранение сломано вообще.
+    const control = deps();
+    expect(await saveCopy(control.args)).toBe("saved");
+    expect(await indexOf(control.store)).toHaveLength(1);
+
+    // А теперь та же страница, но уборщик успевает между `put` и описью.
+    // `open` вызывается так: 1 — readIndex, 2 — кеш под копию, 3 —
+    // проверка «копия на месте». Уносим кеш после второго.
+    const raced = deps();
+    raced.store.wipeOnOpen = { after: 2, name: NAMES.content };
+    expect(await saveCopy(raced.args)).toBe("lost-race");
+    const rows = await indexOf(raced.store);
+    expect(rows, "строка заведена под копию, которой нет, — это и есть «No disponible»").toHaveLength(0);
+  });
+
+  it("уборка ПОСЛЕ описи — строка снимается тем же заходом", async () => {
+    const raced = deps();
+    // 1 readIndex, 2 кеш копии, 3 проверка до описи, 4 writeIndex →
+    // уносим после четвёртого, то есть сразу после записи описи.
+    raced.store.wipeOnOpen = { after: 4, name: NAMES.content };
+    expect(await saveCopy(raced.args)).toBe("lost-race");
+    expect(await indexOf(raced.store), "опись осталась со строкой без копии").toHaveLength(0);
+  });
+
+  it("каждая строка описи после обычного прогона и правда подкреплена копией", async () => {
+    const { store, args } = deps();
+    for (const path of ["/ru/courses/a1/1", "/ru/stories/snegurochka", "/ru/courses", "/ru/vocabulary"]) {
+      await saveCopy({ ...args, url: `${ORIGIN}${path}`, pathname: path });
+    }
+    const rows = await indexOf(store);
+    expect(rows.length, "сохранять было нечего — сравнивать нечего").toBe(4);
+    for (const row of rows) {
+      const where = row.kind === "section" ? NAMES.section : NAMES.content;
+      expect(await (await store.open(where)).match(row.url), `строка ${row.path} без копии`).toBeTruthy();
+    }
   });
 });

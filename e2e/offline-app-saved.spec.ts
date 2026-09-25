@@ -239,14 +239,33 @@ test("вкладка «Cursos» без сети открывает сохран�
   expect(opened.bar, "раздел открыт без честной подписи «сохранённая копия»").toMatch(/Copia guardada/);
   expect(opened.title, "у открытого раздела не тот заголовок").toBe(sectionTitle);
 
-  // 3. СТРОКА ЕСТЬ, А КОПИИ ПОД НЕЙ НЕТ — КНОПКА ГОВОРИТ ОБ ЭТОМ ПРЯМО.
-  //    Так выглядит телефон после выката сайта (строка 308): опись
-  //    пережила выкат, а кеш с копиями унесло. Кнопка, которая молча
-  //    ничего не делает, — дефект сама по себе.
+  // 3. КОПИЯ УШЛА ПОСЛЕ ОТРИСОВКИ СПИСКА — КНОПКА ГОВОРИТ ОБ ЭТОМ ПРЯМО.
+  //
+  //    ПЕРЕПИСАНО В ЗАХОДЕ 7.231 (строка 310), и вот почему. До 7.231
+  //    проба стирала копии ДО показа списка и требовала, чтобы строка
+  //    осталась и сказала «No disponible». С 7.231 правило строже:
+  //    строка появляется ТОЛЬКО под реально лежащую копию, — то есть
+  //    такой строки в списке не будет вовсе (это проверяет
+  //    `e2e/offline-orphan-row.spec.ts`). Механизм честного отказа при
+  //    этом НЕ снят и остаётся последним рубежом: копию может унести
+  //    между отрисовкой списка и нажатием, и молчащая кнопка была бы
+  //    дефектом сама по себе. Ровно это окно здесь и воспроизводится —
+  //    стирание происходит ПОСЛЕ того, как список нарисован.
   await context.unroute("**/*");
   await context.setOffline(false);
   await page.goto("/es");
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
+
+  await becomeNativeShell(page, context);
+  await visit(page, "/es");
+  await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
+  // Строка ищется по НАЗВАНИЮ, а не по подписи вида: подпись вида —
+  // это ровно то, что нажатие меняет, и локатор по ней перестал бы
+  // находить свою же кнопку в тот миг, когда она отвечает.
+  const orphan = page.locator("[data-saved-list] li button").filter({ hasText: "Sección" }).first();
+  const orphanName = (await orphan.innerText()).split("\n")[0].trim();
+  expect(orphanName.length, "у строки списка нет названия — искать её было бы не по чему").toBeGreaterThan(0);
+
   const emptied = await page.evaluate(async () => {
     let removed = 0;
     for (const name of await caches.keys()) {
@@ -260,15 +279,6 @@ test("вкладка «Cursos» без сети открывает сохран�
   });
   expect(emptied, "копий разделов не было вовсе — стирать было нечего, и замер ничего не доказал бы").toBeGreaterThan(0);
 
-  await becomeNativeShell(page, context);
-  await visit(page, "/es");
-  await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
-  // Строка ищется по НАЗВАНИЮ, а не по подписи вида: подпись вида —
-  // это ровно то, что нажатие меняет, и локатор по ней перестал бы
-  // находить свою же кнопку в тот миг, когда она отвечает.
-  const orphan = page.locator("[data-saved-list] li button").filter({ hasText: "Sección" }).first();
-  const orphanName = (await orphan.innerText()).split("\n")[0].trim();
-  expect(orphanName.length, "у строки списка нет названия — искать её было бы не по чему").toBeGreaterThan(0);
   await orphan.click();
   const byName = page.locator("[data-saved-list] li button").filter({ hasText: orphanName }).first();
   await expect(byName, "строка без копии молчит вместо честного «No disponible»").toContainText("No disponible", {

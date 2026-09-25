@@ -14,6 +14,7 @@ import { isPilotStory } from "@/lib/story-pilot";
 import { getCulturalNote } from "@/lib/story-culture";
 import { getAllMedia } from "@/lib/media/data";
 import StoryText from "@/components/stories/StoryText";
+import DownloadButton from "@/components/DownloadButton";
 import ContentInsights from "@/components/stories/ContentInsights";
 import CulturalNote from "@/components/stories/CulturalNote";
 import AccessMark from "@/components/ui/AccessMark";
@@ -364,6 +365,14 @@ export default async function StoryReaderPage({
         {dict.stories.byAuthor} {story.author}
       </p>
       {localizedDescription && <p className="mt-3 text-foreground/70">{localizedDescription}</p>}
+
+      {/* КНОПКА «DESCARGAR» — ЗАХОД 7.231 (ОФЛАЙН-3). Стоит НАД текстом,
+          а не под ним: человек решает «взять с собой» до чтения, а не
+          после. Кнопка сама узнаёт, что уже скачано, и сама отказывает
+          закрытому — см. `src/components/DownloadButton.tsx`. */}
+      <div className="mt-6">
+        <DownloadButton lang={lang} />
+      </div>
 
       <p className="mt-8 text-xs font-medium uppercase tracking-wide text-foreground/40">
         {dict.stories.translationHint}

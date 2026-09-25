@@ -70,6 +70,7 @@ async function main() {
   try {
     const puzzles = readFixture("word-games.json");
     const terms = readFixture("glossary.json");
+    const storyAudio = readFixture("story-audio.json");
     // Четырнадцать настоящих карточек: восемь A1 «greetings» и шесть C1
     // (по три в «food» и «greetings»). Шесть строк C1 добавлены 14.09.2026
     // в 7.195 и добавлены НЕ для того, чтобы что-то позеленело, а потому
@@ -153,6 +154,29 @@ async function main() {
 
     for (const s of stories) {
       await db.story.upsert({ where: { id: s.id }, update: { ...s }, create: { ...s } });
+    }
+
+    /**
+     * КЛИПЫ ПО ПРЕДЛОЖЕНИЯМ У РАССКАЗА ФИКСТУРЫ — ЗАХОД 7.231 (ОФЛАЙН-3).
+     *
+     * Без них проверять скачивание звука было бы НЕЧЕМ: в базе CI строк
+     * `AudioAsset` не было ни одной, то есть и «скачалось 6 записей», и
+     * «скачалась одна страница и ноль клипов» читались бы одинаково
+     * зелёным. Пять клипов, а не один: полоса «12 / 65» обязана
+     * показывать рост, а на одном клипе рост от «готово» не отличить.
+     *
+     * Адреса — на ЧУЖОМ источнике (`*.public.blob.vercel-storage.com`),
+     * и это обязательное условие: байты на прогоне отдаёт
+     * `helpers/audio-clip-origin.ts`, а вся разница между прозрачным и
+     * непрозрачным ответом решается тем, чужой ли адрес (разбор 7.218).
+     */
+    assertSafeToSeed(
+      "AudioAsset",
+      await db.audioAsset.findMany({ select: { id: true } }),
+      (r) => r.id,
+    );
+    for (const clip of storyAudio) {
+      await db.audioAsset.upsert({ where: { id: clip.id }, update: { ...clip }, create: { ...clip } });
     }
 
     for (const i of idioms) {
