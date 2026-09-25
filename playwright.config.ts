@@ -100,8 +100,16 @@ export default defineConfig({
        * а не `test.skip` внутри спеки: пропуск в отчёте роняет прогон по
        * правилу `check:e2e-coverage`, и роняет правильно.
        */
+      /**
+       * `offline-saved-rows.spec.ts` добавлен сюда 26.09.2026 (заход
+       * 7.232) по той же измеренной причине, что и семь файлов до него:
+       * он изображает оболочку — снимает регистрацию воркера и отдаёт
+       * каркас на навигацию, — а WebKit под Playwright навигацию воркеру
+       * отдаёт не так. Самопроверка прибора «стало короче» браузера не
+       * трогает вовсе и идёт на chromium каждым прогоном.
+       */
       testIgnore:
-        /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads)\.spec\.ts/,
+        /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-saved-rows)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone

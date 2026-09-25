@@ -575,6 +575,7 @@
             confirm: "¿Borrar todo lo descargado?",
             unit: "MB",
             noAudio: "El audio de esta copia no está en el teléfono",
+            untitled: "Material descargado",
           },
           ru: {
             mark: "Скачано",
@@ -584,6 +585,7 @@
             confirm: "Удалить всё скачанное?",
             unit: "МБ",
             noAudio: "Звука этой копии на телефоне нет",
+            untitled: "Скачанный материал",
           },
         };
         /** Вес человеческими словами — то же правило, что у `formatWeight`
@@ -1047,8 +1049,23 @@
           return "—";
         }
 
-        /** Опись, положенная страницей. Нет описи — не беда: список
-         *  собирается прямо из ключей кешей, просто без названий. */
+        /**
+         * ОПИСЬ СОБИРАЕТСЯ ИЗ ВСЕХ КЕШЕЙ СОДЕРЖАНИЯ, А НЕ ИЗ ПЕРВОГО —
+         * ЗАХОД 7.232, СТРОКА 312.
+         *
+         * На телефоне отпечатков сборки бывает ДВА: старый и новый. Копии
+         * лежат в обоих (имена каркас берёт из живого списка — так решено
+         * в `documentCacheNames`, долг 308), а описей тоже две. Прежний
+         * код брал ПЕРВУЮ попавшуюся и терял названия всех строк из
+         * второй — их потом подбирал запасной источник (`readKeys`) уже
+         * без названия, и человек видел голый адрес. Прогон 7.232
+         * (`.run7232/harness3.mjs`) показывал ровно то, что на видео
+         * владельца: «/es/stories · Sección» и «/es/vocabulary ·
+         * Vocabulario».
+         *
+         * Свежая строка побеждает: у одного адреса в двух описях
+         * выигрывает та, где `savedAt` больше.
+         */
         function readIndex(names) {
           var url;
           try {
@@ -1056,17 +1073,30 @@
           } catch (e) {
             return Promise.resolve([]);
           }
-          return fromCaches(url, names)
-            .then(function (hit) {
-              if (!hit) return [];
-              return hit.json();
-            })
-            .then(function (rows) {
-              return Object.prototype.toString.call(rows) === "[object Array]" ? rows : [];
-            })
-            .catch(function () {
-              return [];
-            });
+          var all = [];
+          var index = 0;
+          function step() {
+            if (index >= names.length) return Promise.resolve(all);
+            var name = names[index++];
+            return caches
+              .open(name)
+              .then(function (cache) {
+                return cache.match(url, { ignoreVary: true });
+              })
+              .then(function (hit) {
+                return hit ? hit.json() : null;
+              })
+              .then(function (rows) {
+                if (Object.prototype.toString.call(rows) === "[object Array]") {
+                  for (var i = 0; i < rows.length; i++) all.push(rows[i]);
+                }
+                return step();
+              })
+              .catch(function () {
+                return step();
+              });
+          }
+          return step();
         }
 
         /** Адрес описи скачанного — тот же, что кладёт кнопка
@@ -1136,23 +1166,155 @@
          * Серая строка «No disponible» при этом НЕ снята и остаётся
          * последним рубежом: копию может унести между отрисовкой списка и
          * нажатием, и молчащая кнопка была бы дефектом сама по себе.
+         *
+         * ЗАХОД 7.232, СТРОКА 312 — ВОПРОС СТАЛ ТЕМ ЖЕ, ЧТО У ПОКАЗА.
+         * Владелец 25.09.2026 нажимал строки разделов и получал серую
+         * «No disponible» там, где копия ЛЕЖАЛА: «есть ли ответ в кеше» и
+         * «можно ли этот ответ показать» — разные вопросы, и отсев
+         * задавал первый, а кнопка второй. Показать копию нельзя, если
+         * ответ не `ok`, если тело пустое или если ни один её лист стилей
+         * не лежит на телефоне (у копии СТАРОЙ сборки листы ушли вместе с
+         * её precache — прогон `.run7232/harness3.mjs`: две строки из
+         * четырёх гасли ровно так). Теперь отсев спрашивает ровно это.
          */
         function keepPresent(rows, names) {
           var out = [];
           var index = 0;
+          /** Один и тот же лист стилей у всех страниц сайта — спрашиваем
+           *  кеш о нём один раз, а не по разу на строку. */
+          var styleKnown = {};
+          function styleIsThere(href) {
+            if (Object.prototype.hasOwnProperty.call(styleKnown, href)) {
+              return Promise.resolve(styleKnown[href]);
+            }
+            return anyCache(href)
+              .then(function (response) {
+                styleKnown[href] = Boolean(response);
+                return styleKnown[href];
+              })
+              .catch(function () {
+                styleKnown[href] = false;
+                return false;
+              });
+          }
+          function anyStyleIsThere(hrefs) {
+            var i = 0;
+            function next() {
+              if (i >= hrefs.length) return Promise.resolve(false);
+              return styleIsThere(hrefs[i++]).then(function (found) {
+                return found ? true : next();
+              });
+            }
+            return next();
+          }
           function step() {
             if (index >= rows.length) return Promise.resolve(out);
             var row = rows[index++];
             return fromCaches(row.url, names)
               .then(function (hit) {
-                if (hit) out.push(row);
-                return step();
+                // ПЕРВЫЙ ВОПРОС ТОТ ЖЕ, ЧТО У ПОКАЗА: ответ с ошибкой
+                // показывать нечем, и `openSavedUrl` его и не показывает.
+                if (!hit || !hit.ok) return step();
+                return headOf(hit).then(function (head) {
+                  if (!head) return step();
+                  var hrefs = styleHrefsIn(head);
+                  if (hrefs.length === 0) return step();
+                  return anyStyleIsThere(hrefs).then(function (found) {
+                    if (!found) return step();
+                    // НАЗВАНИЕ БЕРЁТСЯ У САМОЙ КОПИИ, ЕСЛИ ОПИСЬ ЕГО НЕ
+                    // ЗНАЕТ (строка 312). Адрес на экран не выводится
+                    // никогда: он не говорит ничего тому, кто не читает
+                    // по-английски.
+                    if (!row.title) {
+                      var own = titleIn(head);
+                      if (own) row.title = own;
+                    }
+                    out.push(row);
+                    return step();
+                  });
+                });
               })
               .catch(function () {
                 return step();
               });
           }
           return step();
+        }
+
+        /**
+         * НАЧАЛО ОТВЕТА ТЕКСТОМ — не весь ответ.
+         *
+         * Копия страницы весит от двухсот килобайт до восьмисот, а всё,
+         * что здесь нужно, лежит в `<head>`: название и ссылки на листы
+         * стилей. Читать целиком по разу на строку значило бы платить
+         * мегабайтами за список из пяти строк. Поток читается кусками,
+         * пока не встретится конец `<head>` или не наберётся 128 КиБ;
+         * браузер без потоков (старый WebView) честно откатывается к
+         * чтению целиком.
+         */
+        function headOf(response) {
+          var body = response.body;
+          if (!body || typeof body.getReader !== "function") {
+            return response
+              .text()
+              .then(function (text) {
+                return text.slice(0, 131072);
+              })
+              .catch(function () {
+                return "";
+              });
+          }
+          var reader = body.getReader();
+          var decoder = new TextDecoder();
+          var seen = "";
+          function pull() {
+            return reader.read().then(function (chunk) {
+              if (chunk.done) return seen;
+              seen += decoder.decode(chunk.value, { stream: true });
+              if (seen.length >= 131072 || seen.indexOf("</head>") !== -1) {
+                try {
+                  reader.cancel();
+                } catch (e) {
+                  // Отменить поток не вышло — читать дальше всё равно незачем.
+                }
+                return seen;
+              }
+              return pull();
+            });
+          }
+          return pull().catch(function () {
+            return "";
+          });
+        }
+
+        /** Адреса листов стилей, объявленные копией. */
+        function styleHrefsIn(head) {
+          var out = [];
+          var pattern = /<link\b[^>]*>/gi;
+          var tag;
+          while ((tag = pattern.exec(head)) !== null) {
+            if (!/rel\s*=\s*["']?stylesheet/i.test(tag[0])) continue;
+            var href = /href\s*=\s*["']([^"']+)["']/i.exec(tag[0]);
+            if (href && out.indexOf(href[1]) === -1) out.push(href[1]);
+          }
+          return out;
+        }
+
+        /** Название самой копии. То же правило обрезки, что у сайта
+         *  (`tidyTitle`, `src/lib/offline-save.ts`). */
+        function titleIn(head) {
+          var found = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(head);
+          if (!found) return "";
+          var text = found[1]
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&quot;/g, '"')
+            .replace(/\s+/g, " ")
+            .trim();
+          var cut = text.split(/\s+[—–|]\s+/)[0];
+          var title = (cut || text).trim();
+          return title.length > 90 ? title.slice(0, 87) + "…" : title;
         }
 
         /** Ключи кешей документов — запасной источник списка. */
@@ -1209,6 +1371,12 @@
               seen[downloaded[d].url] = 1;
               clean.push(downloaded[d]);
             }
+            // ОПИСЕЙ БЫВАЕТ НЕСКОЛЬКО (см. `readIndex`), и у одного
+            // адреса в них могут стоять разные названия и даты. Сначала
+            // свежее: побеждает та строка, которую писали последней.
+            rows.sort(function (a, b) {
+              return (b && b.savedAt ? b.savedAt : 0) - (a && a.savedAt ? a.savedAt : 0);
+            });
             for (var i = 0; i < rows.length; i++) {
               var row = rows[i];
               if (!row || typeof row.url !== "string") continue;
@@ -1271,7 +1439,9 @@
           if (!block || !list || !empty) return;
           var shown = [];
           for (var i = 0; i < rows.length; i++) {
-            if (filter && rows[i].kind !== filter) continue;
+            // `filter` — это база вкладки («/stories»), а не вид: см.
+            // разбор у `TAB_FILTER`.
+            if (filter && !rowUnderTab(rows[i], filter)) continue;
             shown.push(rows[i]);
           }
           list.innerHTML = "";
@@ -1281,7 +1451,10 @@
               var button = document.createElement("button");
               button.type = "button";
               var name = document.createElement("span");
-              name.textContent = row.title || row.path;
+              // Адрес на экран не выводится никогда (строка 312): у строки
+              // без названия его берёт из самой копии `keepPresent`, а
+              // если не нашлось и там — общее честное слово.
+              name.textContent = row.title || DL[lang].untitled;
               var kind = document.createElement("span");
               kind.className = "kind";
               // Строка скачанного говорит об этом ПРЯМО и называет вес:
@@ -1311,10 +1484,23 @@
           empty.hidden = shown.length !== 0;
           block.hidden = false;
           if (gauge) {
-            // ЧИСЛО — ПОЛНОЕ, А НЕ ОТФИЛЬТРОВАННОЕ: прибор отвечает на
-            // вопрос «сохранил ли телефон хоть что-нибудь», и ответ не
-            // должен зависеть от того, какую вкладку нажали.
-            gauge.textContent = GAUGE[lang] + ": " + rows.length + " · " + fingerprintOf(names);
+            /**
+             * ЧИСЛО — ЭТО ЧИСЛО ПОКАЗАННЫХ СТРОК, ЗАХОД 7.232, ЗАДАЧА 3.
+             *
+             * До правки прибор считал ВСЕ строки, а список показывал
+             * отфильтрованные вкладкой, и владелец 25.09.2026 получил
+             * «Aún no hay nada guardado» вместе с «Guardado: 1». Прибор,
+             * который спорит с тем, что под ним нарисовано, хуже
+             * отсутствующего прибора.
+             *
+             * ОТПЕЧАТОК СБОРКИ С ЭКРАНА УБРАН. «ug5mki» — служебная метка
+             * (имя кеша содержания), она ничего не значит для человека и
+             * на видео вызвала вопрос «что это». Прибору она была нужна
+             * ради чтения по видео — и осталась там же, но признаком, а
+             * не подписью: `data-rf-fingerprint`.
+             */
+            gauge.textContent = GAUGE[lang] + ": " + shown.length;
+            gauge.setAttribute("data-rf-fingerprint", fingerprintOf(names));
           }
         }
 
@@ -1348,7 +1534,8 @@
               var open = document.createElement("button");
               open.type = "button";
               var name = document.createElement("span");
-              name.textContent = row.title || row.path;
+              // Адрес на экран не выводится никогда (строка 312).
+              name.textContent = row.title || DL[lang].untitled;
               var kind = document.createElement("span");
               kind.className = "kind";
               kind.textContent = (KINDS[lang][row.kind] || row.kind) + " · " + weightText(row.bytes || 0);
@@ -1466,7 +1653,21 @@
          * При ЖИВОЙ сети вкладка остаётся обычной ссылкой: подменять
          * работающий переход сохранённой копией было бы хуже дефекта.
          */
+        /**
+         * ЧТО ПОКАЗЫВАЕТ ВКЛАДКА — ПУТЬ, А НЕ ОДИН ВИД (заход 7.232).
+         *
+         * До правки вкладка «Cuentos» просила вид `story` и прятала при
+         * этом сохранённый КОРЕНЬ раздела `/es/stories` (вид `section`).
+         * Владелец 25.09.2026 получил из-за этого «Aún no hay nada
+         * guardado» при приборе «Guardado: 1»: единственная сохранённая
+         * строка была как раз корнем раздела. Отбор идёт по началу
+         * адреса — тогда под вкладкой оказывается ровно то, что за ней и
+         * стоит.
+         */
         var TAB_FILTER = { "/courses": "lesson", "/stories": "story", "/vocabulary": "vocabulary" };
+        function rowUnderTab(row, base) {
+          return new RegExp("^/(es|ru)" + base + "(/|$)").test(row.path || "");
+        }
         function armTabsOffline() {
           var links = document.querySelectorAll("nav.tabs [data-href]");
           for (var i = 0; i < links.length; i++) {
@@ -1480,7 +1681,7 @@
                 withSaved(function (rows, names) {
                   openSavedUrl(target, names).then(function (shown) {
                     if (shown) return;
-                    paintSaved(rows, names, TAB_FILTER[base]);
+                    paintSaved(rows, names, base);
                   });
                 });
               });

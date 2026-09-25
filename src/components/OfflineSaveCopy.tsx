@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { askCacheNames, saveCopy } from "@/lib/offline-save-client";
+import { copyMarkupOf } from "@/lib/downloads-client";
 import { savedKindOf } from "@/lib/offline-save";
 
 /**
@@ -46,7 +47,10 @@ export default function OfflineSaveCopy() {
         names,
         url: window.location.href,
         pathname: window.location.pathname,
-        html: `<!doctype html>\n${document.documentElement.outerHTML}`,
+        // Снимок берётся с КОПИИ дерева, и кнопка «Descargar» из него
+        // убирается (строка 313): нажать её в копии нечем — скрипты
+        // каркас вырезает, — а застывшее «↓ 0 / 13» владелец уже видел.
+        html: copyMarkupOf(document, null),
         title: document.title,
         lang: document.documentElement.lang === "ru" ? "ru" : "es",
         now: Date.now(),

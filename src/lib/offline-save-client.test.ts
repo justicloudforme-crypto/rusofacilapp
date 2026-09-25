@@ -211,6 +211,36 @@ describe("строка 310: опись не заводит строк без к�
     expect(await indexOf(raced.store), "опись осталась со строкой без копии").toHaveLength(0);
   });
 
+  /**
+   * СТРОКА 312 — НАЗВАНИЕ, КОТОРОГО НЕ БЫЛО У ДОКУМЕНТА.
+   *
+   * Переход клиентским роутером Next снимает прежний `<title>` до того,
+   * как поставит новый. Сохранение, попавшее в этот промежуток, заводило
+   * строку с пустым названием, и список показывал вместо неё адрес —
+   * ровно «/es/stories · Sección» с видео владельца 25.09.2026 (прогон
+   * поймал такую строку прямо в описи, `.run7232/live.mjs`).
+   */
+  it("пустое название берётся из разметки (а непустое остаётся своим: позитивный контроль)", async () => {
+    const own = deps({ title: "Урок 1 — RusoFácilapp" });
+    expect(await saveCopy(own.args)).toBe("saved");
+    expect((await indexOf(own.store))[0].title, "название документа перестало доходить до описи").toBe("Урок 1");
+
+    const blank = deps({ title: "", html: OPEN_HTML.replace("<head>", "<head><title>Снегурочка — cuento en ruso (A1) | RusoFácilapp</title>") });
+    expect(await saveCopy(blank.args)).toBe("saved");
+    expect(
+      (await indexOf(blank.store))[0].title,
+      "название пустое — список показал бы человеку адрес",
+    ).toBe("Снегурочка");
+  });
+
+  it("названия нет ни у документа, ни в разметке — в опись не попадает адрес", async () => {
+    const nothing = deps({ title: "", html: "<!doctype html><html><head></head><body>теория</body></html>" });
+    expect(await saveCopy(nothing.args)).toBe("saved");
+    const row = (await indexOf(nothing.store))[0];
+    expect(row.title).toBe("");
+    expect(row.title, "в название подставили адрес").not.toContain("/");
+  });
+
   it("каждая строка описи после обычного прогона и правда подкреплена копией", async () => {
     const { store, args } = deps();
     for (const path of ["/ru/courses/a1/1", "/ru/stories/snegurochka", "/ru/courses", "/ru/vocabulary"]) {

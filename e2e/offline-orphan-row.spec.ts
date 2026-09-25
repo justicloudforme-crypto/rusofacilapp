@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
 
 /**
  * СТРОКА СПИСКА БЕЗ КОПИИ ПОД НЕЙ — ЗАХОД 7.231, СТРОКА 310.
@@ -62,17 +63,21 @@ const SHELL_HTML = readFileSync("public/offline.html", "utf8");
  */
 async function logoutByClick(page: Page, lang: "es" | "ru"): Promise<void> {
   await page.goto(`/${lang}/profile?tab=settings`);
-  // Приветствие дня — во весь экран (`WelcomeOverlay`, `z-[60]`), и оно
-  // перехватывает нажатия: без этого шага нажатие по заголовку раздела
-  // жгло весь тайм-аут (прогон 26.09.2026, 300 с). Здесь оно снимается
-  // условно, а не утверждением: утверждение «оно ГАРАНТИРОВАНО есть»
-  // стоит там, где это первый заход нового аккаунта в кабинет
-  // (`e2e/offline-downloads.spec.ts`), а сюда можно прийти и вторым.
-  const greeting = page.getByRole("dialog", { name: "¡Feliz nuevo día de ruso!" });
-  if (await greeting.isVisible().catch(() => false)) {
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await greeting.waitFor({ state: "hidden", timeout: 15_000 });
-  }
+  /**
+   * Приветствие дня — во весь экран (`WelcomeOverlay`, `z-[60]`), и оно
+   * перехватывает нажатия.
+   *
+   * СНИМАЕТСЯ УТВЕРЖДЕНИЕМ, А НЕ УСЛОВНО — ПОЧИНКА 27.09.2026 (7.232).
+   * Прежний вид (`isVisible()` один раз и «нет так нет») — сам по себе
+   * гонка: признак ставится эффектом ПОСЛЕ гидрации, и одна мгновенная
+   * проверка успевает раньше него. CI 27.09.2026 на `origin/main` так и
+   * встал: 789 попыток нажать заголовок раздела, каждую перехватывал
+   * `<div role="dialog" aria-label="¡Feliz nuevo día de ruso!">`, и тест
+   * сжёг весь бюджет 420 с. Здесь это ПЕРВЫЙ заход нового аккаунта в
+   * кабинет, значит приветствие гарантировано, и ждать его — утверждение,
+   * а не догадка (разбор — в шапке `helpers/welcome-overlay.ts`).
+   */
+  await dismissWelcomeOverlay(page);
   const submit = page.locator('form[action="/api/auth/logout"] button[type="submit"]').first();
   if (!(await submit.isVisible().catch(() => false))) {
     const headers = page.locator("button[aria-expanded]");
