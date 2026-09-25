@@ -45,7 +45,7 @@ import {
   withoutDownload,
 } from "./downloads";
 import { looksClosedForThisVisitor } from "./sw-cache-policy";
-import { tidyTitle } from "./offline-save";
+import { tidyTitle, titleFromHtml } from "./offline-save";
 
 export type DownloadOutcome =
   | "downloaded"
@@ -138,10 +138,40 @@ export async function readDownloads(store: CacheStorage, origin: string): Promis
     const cache = await openDownloads(store);
     const hit = await cache.match(indexUrlFor(origin), { ignoreVary: true });
     if (!hit) return [];
-    return parseDownloads(await hit.json());
+    return await withTitles(cache, parseDownloads(await hit.json()));
   } catch {
     return [];
   }
+}
+
+/**
+ * СТРОКА БЕЗ НАЗВАНИЯ БЕРЁТ ЕГО У СВОЕЙ ЖЕ КОПИИ — ЗАХОД 7.232, СТРОКА 312.
+ *
+ * Адрес на экране — это не название. Владелец 25.09.2026 получил в списке
+ * `/es/stories` и `/es/vocabulary` вместо «Cuentos en ruso con audio y
+ * traducción» и «Vocabulario ruso por temas»; читать по-английски он не
+ * обязан, и адрес не говорит ему ничего. Опись могла лечь без названия
+ * (разбор — у `titleFromHtml`), но сама скачанная разметка своё название
+ * знает всегда: её и спрашиваем. Описи при этом НЕ переписываем — чтение
+ * не имеет права быть записью.
+ */
+async function withTitles(cache: Cache, rows: DownloadedRow[]): Promise<DownloadedRow[]> {
+  const out: DownloadedRow[] = [];
+  for (const row of rows) {
+    if (row.title) {
+      out.push(row);
+      continue;
+    }
+    let title = "";
+    try {
+      const page = await cache.match(row.url, { ignoreVary: true });
+      if (page) title = titleFromHtml(await page.text());
+    } catch {
+      // Копии может не быть вовсе — тогда названию просто неоткуда взяться.
+    }
+    out.push(title ? { ...row, title } : row);
+  }
+  return out;
 }
 
 async function writeDownloads(store: CacheStorage, origin: string, rows: DownloadedRow[]): Promise<void> {
@@ -279,7 +309,9 @@ export async function downloadPage(args: DownloadArgs): Promise<DownloadOutcome>
       url: args.url,
       path: args.pathname,
       kind,
-      title: tidyTitle(args.title),
+      // То же правило, что у сохранения (строка 312): пустое название
+      // берётся из самой разметки, а не превращается в адрес на экране.
+      title: tidyTitle(args.title) || titleFromHtml(args.html),
       lang: args.lang,
       savedAt: args.now,
       pageBytes,
@@ -349,6 +381,64 @@ export async function askPersistence(): Promise<"granted" | "denied" | "unsuppor
   } catch {
     return "unsupported";
   }
+}
+
+/**
+ * СНИМОК СТРАНИЦЫ ДЛЯ СКАЧИВАНИЯ — ЗАХОД 7.232, СТРОКА 313.
+ *
+ * ====================================================================
+ * ЧТО БЫЛО СЛОМАНО
+ * ====================================================================
+ *
+ * Владелец 25.09.2026 открыл скачанную «Снегурочку» без сети и увидел на
+ * её кнопке «↓ 0 / 13» — состояние НАЧАЛА скачивания, застывшее навсегда.
+ * Так же застыли урок A1/1 («↓ 0 / 60») и «Репка» («↓ 0 / 15»).
+ *
+ * ПРИЧИНА, доказанная прогоном (`.run7232/dl.mjs`, замер 24.09.2026):
+ * кнопка ставила фазу `running` ДО того, как снять разметку, а
+ * `await askPersistence()` отдавал React кадр на отрисовку. К моменту
+ * `documentElement.outerHTML` на экране уже стояло «↓ 0 / 13» — оно и
+ * легло в кеш. В снимке из кеша так и прочиталось: `"↓0 / 13"`.
+ *
+ * ====================================================================
+ * ЧЕМ ПОЧИНЕНО
+ * ====================================================================
+ *
+ * Снимок берётся ОДИН РАЗ, и берётся с КОПИИ дерева, а не с живого
+ * документа: у копии кнопка сразу ставится в то состояние, в котором она
+ * и окажется у читателя скачанного, — «✓ Descargado ✓», выключенная.
+ * Промежуточных состояний в снимок не попадает ни одного, потому что
+ * снимок и промежуточное состояние больше не делят один объект.
+ *
+ * ТОТ ЖЕ СНИМОК ВЗВЕШИВАЕТСЯ И ТОТ ЖЕ КЛАДЁТСЯ (задача 5 захода): вес,
+ * названный до нажатия, и вес, записанный в опись, обязаны быть одним
+ * числом. Разметка страницы растёт от того, что человек на ней открыл, —
+ * замер 24.09.2026 на боевом уроке `a1-1`: 272 844 байта и 59 клипов
+ * сразу после открытия, 310 941 байт и 71 клип после того, как открыты
+ * все вкладки. Взвесь мы одно дерево, а положи другое — числа разошлись
+ * бы, и разошлись бы молча.
+ */
+export function copyMarkupOf(doc: Document, doneLabel: string | null): string {
+  const clone = doc.documentElement.cloneNode(true) as HTMLElement;
+  if (doneLabel === null) {
+    // ПРОСТО ПРОСМОТРЕННАЯ КОПИЯ (7.230) КНОПКИ НЕ ПОКАЗЫВАЕТ ВОВСЕ:
+    // «Descargado ✓» в ней было бы неправдой, а живая «Descargar» —
+    // кнопкой, которая не нажимается (скрипты из копии вырезаны).
+    for (const block of clone.querySelectorAll("[data-rf-download]")) block.remove();
+    return `<!doctype html>\n${clone.outerHTML}`;
+  }
+  for (const button of clone.querySelectorAll("[data-rf-download-button]")) {
+    button.setAttribute("disabled", "");
+    button.setAttribute("aria-busy", "false");
+    const mark = button.querySelector('[aria-hidden="true"]');
+    if (mark) mark.textContent = "✓";
+    const label = button.querySelector("[data-rf-download-label]");
+    if (label) label.textContent = doneLabel;
+  }
+  // Заметка «Página y 12 audios» и строка ошибки — про НАЖАТИЕ, а не про
+  // материал; в копии, где нажимать нечего, они врут обе.
+  for (const note of clone.querySelectorAll("[data-rf-download-note], [data-rf-download-error]")) note.remove();
+  return `<!doctype html>\n${clone.outerHTML}`;
 }
 
 /** Адреса клипов, объявленные самой страницей. Один источник правды и для

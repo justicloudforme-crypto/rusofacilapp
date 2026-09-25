@@ -9,6 +9,7 @@ import {
   withRow,
   withoutUrl,
   type SavedRow,
+  titleFromHtml,
 } from "./offline-save";
 
 /**
@@ -113,5 +114,23 @@ describe("tidyTitle", () => {
   it("бренд из заголовка убирается, длинное обрезается", () => {
     expect(tidyTitle("Урок 1 — RusoFácilapp")).toBe("Урок 1");
     expect(tidyTitle("x".repeat(200)).length).toBe(88);
+  });
+});
+
+describe("titleFromHtml — строка 312", () => {
+  it("название берётся из разметки и обрезается тем же правилом", () => {
+    expect(titleFromHtml('<html><head><title>Cuentos en ruso con audio y traducción | RusoFácilapp</title></head></html>'))
+      .toBe("Cuentos en ruso con audio y traducción");
+    expect(titleFromHtml("<title>Curso de ruso online — Niveles A1 a B2 | RusoFácilapp</title>"))
+      .toBe("Curso de ruso online");
+  });
+
+  it("сущности разворачиваются, перенос строки не остаётся", () => {
+    expect(titleFromHtml("<title>\n  Ruso &amp; español\n</title>")).toBe("Ruso & español");
+  });
+
+  it("разметка без заголовка отвечает пустой строкой, а не адресом", () => {
+    expect(titleFromHtml("<html><head></head><body>нет</body></html>")).toBe("");
+    expect(titleFromHtml("")).toBe("");
   });
 });

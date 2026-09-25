@@ -7,6 +7,7 @@ import {
   totalBytes,
 } from "./downloads";
 import {
+  copyMarkupOf,
   downloadPage,
   indexUrlFor,
   isComplete,
@@ -325,5 +326,95 @@ describe("вес человеческими словами", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0].bytes).toBe(1000);
     expect(totalBytes(rows)).toBe(1050);
+  });
+});
+
+/**
+ * СНИМОК СТРАНИЦЫ — ЗАХОД 7.232, СТРОКА 313.
+ *
+ * Владелец 25.09.2026 открыл скачанную «Снегурочку» без сети и увидел на
+ * кнопке «↓ 0 / 13» — состояние начала скачивания, застывшее навсегда.
+ * Живой документ здесь настоящий (jsdom), и первое утверждение каждой
+ * пары — позитивный контроль: на СТАРОМ способе (`outerHTML` как есть)
+ * промежуточная надпись в снимок попадает.
+ */
+function pageWithButton(label: string): Document {
+  document.documentElement.innerHTML = `
+    <head><title>Снегурочка — cuento en ruso (A1) | RusoFácilapp</title></head>
+    <body>
+      <div data-rf-download>
+        <button type="button" data-rf-download-button aria-busy="true">
+          <span aria-hidden="true">↓</span><span data-rf-download-label>${label}</span>
+        </button>
+        <p data-rf-download-note>Página y 12 audios</p>
+      </div>
+      <p>texto</p>
+    </body>`;
+  return document;
+}
+
+describe("снимок скачанной страницы", () => {
+  it("промежуточное «0 / 13» в снимок не попадает, а «Descargado ✓» попадает", () => {
+    const doc = pageWithButton("0 / 13");
+
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ: прежний способ уносил в копию ровно это.
+    expect(doc.documentElement.outerHTML, "надпись «0 / 13» на живой странице не стоит — мерить нечего").toContain(
+      "0 / 13",
+    );
+
+    const copy = copyMarkupOf(doc, "Descargado ✓");
+    expect(copy, "в скачанную копию легло состояние начала скачивания").not.toContain("0 / 13");
+    expect(copy).toContain("Descargado ✓");
+    expect(copy).toContain("✓</span>");
+    expect(copy).toContain("disabled");
+    expect(copy, "заметка «Página y 12 audios» — про нажатие, а не про материал").not.toContain("Página y 12 audios");
+    expect(copy.startsWith("<!doctype html>\n<html")).toBe(true);
+  });
+
+  it("у просто сохранённой копии кнопки нет вовсе", () => {
+    const doc = pageWithButton("Descargar 1,4 MB");
+    const copy = copyMarkupOf(doc, null);
+    expect(copy).not.toContain("data-rf-download-button");
+    expect(copy).not.toContain("Descargar 1,4 MB");
+    expect(copy, "вместе с кнопкой унесли и саму страницу").toContain("texto");
+  });
+
+  it("живой документ снимком НЕ портится", () => {
+    const doc = pageWithButton("0 / 13");
+    copyMarkupOf(doc, "Descargado ✓");
+    expect(doc.querySelector("[data-rf-download-label]")?.textContent).toBe("0 / 13");
+  });
+});
+
+describe("название строки скачанного", () => {
+  it("пустое название берётся из самой копии (а непустое остаётся своим)", async () => {
+    const own = args();
+    expect(await downloadPage(own.args)).toBe("downloaded");
+    expect((await readDownloads(own.args.caches, STORY))[0].title).toBe("Snegúrochka");
+
+    const blank = args({ title: "" });
+    expect(await downloadPage(blank.args)).toBe("downloaded");
+    const rows = await readDownloads(blank.args.caches, STORY);
+    expect(rows[0].title, "строка без названия — список показал бы адрес").toBe("Snegúrochka");
+  });
+
+  it("опись, УЖЕ лежащая с пустым названием, дополняется при чтении — и не переписывается", async () => {
+    // Такая опись лежит на телефонах, где скачивали ДО этой правки:
+    // название там пустое, и список показывал вместо него адрес.
+    const { args: a, store } = args();
+    expect(await downloadPage(a)).toBe("downloaded");
+    const cache = await store.open(DOWNLOADS_CACHE_NAME);
+    const raw = (await (await cache.match(indexUrlFor(STORY)))!.json()) as { title: string }[];
+    raw[0].title = "";
+    await cache.put(indexUrlFor(STORY), new Response(JSON.stringify(raw)));
+
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ: на диске названия и правда нет.
+    expect((await (await cache.match(indexUrlFor(STORY)))!.json())[0].title).toBe("");
+
+    const rows = await readDownloads(a.caches, STORY);
+    expect(rows[0].title, "название не подобрано у копии — на экран пошёл бы адрес").toBe("Snegúrochka");
+    expect(rows[0].title).not.toContain("/");
+    // Чтение не пишет: опись на диске осталась прежней.
+    expect((await (await cache.match(indexUrlFor(STORY)))!.json())[0].title).toBe("");
   });
 });

@@ -13,6 +13,7 @@ import {
   type SavedRow,
   savedKindOf,
   tidyTitle,
+  titleFromHtml,
   trimIndex,
   withRow,
   withoutUrl,
@@ -161,7 +162,13 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
       url: deps.url,
       path: deps.pathname,
       kind,
-      title: tidyTitle(deps.title),
+      // НАЗВАНИЕ БЕРЁТСЯ ИЗ РАЗМЕТКИ, ЕСЛИ ЕГО НЕТ У ДОКУМЕНТА (строка
+      // 312). Переход клиентским роутером Next снимает прежний `<title>`
+      // до того, как поставит новый, и сохранение, попавшее в этот
+      // промежуток, заводило строку с пустым названием — список потом
+      // показывал вместо неё адрес. Разметка, которую мы кладём, своё
+      // название знает всегда.
+      title: tidyTitle(deps.title) || titleFromHtml(deps.html),
       lang: deps.lang,
       savedAt: deps.now,
       bytes: deps.html.length,

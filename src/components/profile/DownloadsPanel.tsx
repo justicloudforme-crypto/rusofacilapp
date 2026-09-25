@@ -73,7 +73,16 @@ export default function DownloadsPanel({ lang }: { lang: "es" | "ru" }) {
               >
                 <span className="flex min-w-0 flex-col">
                   <Link href={row.path} className="truncate font-medium">
-                    {row.title || row.path}
+                    {/*
+                      АДРЕС НА ЭКРАН НЕ ВЫВОДИТСЯ НИКОГДА — строка 312.
+                      Владелец 25.09.2026 получил в списке `/es/stories`
+                      вместо «Cuentos en ruso con audio y traducción»:
+                      адрес ничего не говорит тому, кто не читает
+                      по-английски. Название у строки без него берётся из
+                      самой копии (`readDownloads` → `withTitles`), а
+                      если копии не осталось — честное общее слово.
+                    */}
+                    {row.title || t.screenUntitled}
                   </Link>
                   <span className="text-xs text-foreground/60">
                     {formatWeight(row.bytes, lang)}

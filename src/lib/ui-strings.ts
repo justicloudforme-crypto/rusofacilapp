@@ -32,6 +32,7 @@ export interface UiStrings {
     screenTotal: string;
     screenEmpty: string;
     screenIncomplete: string;
+    screenUntitled: string;
     remove: string;
     removeAll: string;
     removeAllConfirm: string;
@@ -83,6 +84,7 @@ export const UI_STRINGS: Record<Locale, UiStrings> = {
       "screenTotal": "En total: {weight}",
       "screenEmpty": "Aún no has descargado nada.",
       "screenIncomplete": "Incompleto",
+      "screenUntitled": "Material descargado",
       "remove": "Borrar",
       "removeAll": "Borrar todo",
       "removeAllConfirm": "¿Borrar todo lo descargado?"
@@ -132,6 +134,7 @@ export const UI_STRINGS: Record<Locale, UiStrings> = {
       "screenTotal": "Всего: {weight}",
       "screenEmpty": "Вы ещё ничего не скачали.",
       "screenIncomplete": "Не целиком",
+      "screenUntitled": "Скачанный материал",
       "remove": "Удалить",
       "removeAll": "Удалить всё",
       "removeAllConfirm": "Удалить всё скачанное?"
