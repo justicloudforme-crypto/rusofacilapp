@@ -19,6 +19,21 @@ import { useEffect, useRef, useState } from "react";
  * после гидрации: кнопка приглушается и помечается `aria-disabled`,
  * нажатие ничего не проигрывает и ничем не подменяет звук.
  */
+/**
+ * АДРЕС КЛИПА ОБЪЯВЛЕН В РАЗМЕТКЕ — ЗАХОД 7.231 (ОФЛАЙН-3).
+ *
+ * `data-rf-clip` служит сразу двум делам, и оба без него невозможны:
+ *   * кнопка «Descargar» собирает по этому признаку список того, что
+ *     качать (`clipUrlsOnPage`), — один источник правды вместо второй
+ *     описи, которая разошлась бы с разметкой на первой же правке;
+ *   * каркас без сети по нему же ОЗВУЧИВАЕТ сохранённую копию: копия
+ *     статична, React в ней не оживает, и узнать адрес клипа из неё
+ *     больше нечем (`renderSaved` вырезает все `script`).
+ *
+ * На 330 замороженных адресах это не сказывается: сторож
+ * `check:frozen:prod` сличает `title`, `description`, `canonical` и `h1`,
+ * и ни одного из них атрибут не трогает.
+ */
 export default function SpeakButton({
   label,
   size = "sm",
@@ -153,6 +168,7 @@ export default function SpeakButton({
       <button
         type="button"
         onClick={speak}
+        data-rf-clip={audioUrl || undefined}
         aria-label={label}
         aria-disabled={noClip || undefined}
         className={`inline-flex min-h-11 flex-shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors disabled:opacity-50 ${
@@ -173,6 +189,7 @@ export default function SpeakButton({
     <button
       type="button"
       onClick={speak}
+      data-rf-clip={audioUrl || undefined}
       aria-label={label}
       title={label}
       aria-disabled={noClip || undefined}

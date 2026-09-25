@@ -68,6 +68,7 @@ import LogoutEverywhereButton from "@/components/profile/LogoutEverywhereButton"
 import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
 import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
+import DownloadsPanel from "@/components/profile/DownloadsPanel";
 import LocalDate from "@/components/profile/LocalDate";
 import { subscriptionMomentText } from "@/lib/subscription-moment";
 import SettingsAccordion from "@/components/profile/SettingsAccordion";
@@ -1095,6 +1096,17 @@ export default async function ProfilePage({
             )}
           </Card>
           )}
+
+          {/* ЭКРАН «DESCARGADO» — ЗАХОД 7.231 (ОФЛАЙН-3).
+              СТОИТ НА ВКЛАДКЕ «ОБЗОР», А НЕ В НАСТРОЙКАХ, И ЭТО РЕШЕНИЕ.
+              Сперва он стоял рядом с панелью записей голоса — то есть во
+              вкладке «Ajustes», внутри свёрнутого раздела аккордеона, куда
+              ведут два нажатия. Человек, который скачал урок и хочет
+              узнать, за что заняты мегабайты (или удалить лишнее), обязан
+              находить это с первого экрана кабинета: он не помнит, что
+              «скачанное» — это настройка. Проба того же захода ходит
+              туда же и тем же путём. */}
+          <DownloadsPanel lang={lang} />
         </section>
       )}
 

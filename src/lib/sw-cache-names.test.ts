@@ -48,10 +48,19 @@ describe("cache names", () => {
   it("carry the fingerprint, so two builds cannot share entries", () => {
     const a = pageCacheNames("aaa");
     const b = pageCacheNames("bbb");
-    // Пять имён на сборку с 25.09.2026 (7.230): к четырём добавился кеш
-    // корней разделов `rf-pages-section-<отпечаток>`.
-    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(12);
-    for (const name of Object.values(a)) expect(name).toContain("aaa");
+    // Шесть имён с 26.09.2026 (7.231), но НА СБОРКУ приходится пять, и
+    // шестое — общее. Пять несут отпечаток (`html`, `content`, `section`,
+    // `rsc`, `rsc-prefetch`, `others` — шесть за вычетом скачанного), а
+    // `downloads` у обеих сборок ОДНО И ТО ЖЕ, и это не недосмотр:
+    // скачанное по кнопке обязано пережить выкат сайта (разбор — в
+    // `src/lib/downloads.ts`). Поэтому 6 + 6 разных имён дают 13, а не 14.
+    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(13);
+    expect(a.downloads, "имя кеша скачанного разъехалось по сборкам").toBe(b.downloads);
+    for (const [key, name] of Object.entries(a)) {
+      if (key === "downloads") continue;
+      expect(name).toContain("aaa");
+    }
+    expect(a.downloads, "в имени кеша скачанного появился отпечаток сборки").not.toContain("aaa");
   });
 
   it("positive control: the names this replaces are NOT build-scoped", () => {
@@ -83,7 +92,12 @@ describe("staleCacheNames", () => {
   it("deletes the previous build's caches and keeps this build's", () => {
     const existing = [...Object.values(pageCacheNames("old")), ...Object.values(pageCacheNames(current))];
     const doomed = staleCacheNames(existing, current);
-    expect(doomed.sort()).toEqual(Object.values(pageCacheNames("old")).sort());
+    // Кеш скачанного НЕ обречён: имя у него одно на все сборки, и
+    // выбрасывать его выкатом значило бы отменять обещание кнопки
+    // «Descargar» (заход 7.231). Остальное прошлой сборки — обречено.
+    const expected = Object.values(pageCacheNames("old")).filter((name) => name !== pageCacheNames(current).downloads);
+    expect(doomed.sort()).toEqual(expected.sort());
+    expect(doomed, "выкат уносит скачанное").not.toContain(pageCacheNames(current).downloads);
   });
 
   it("also deletes the fixed-name caches a returning visitor already has", () => {
