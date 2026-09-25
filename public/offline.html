@@ -1112,6 +1112,31 @@
          * кнопку, и обещание обязано пережить выкат сайта. Разбор — в
          * `src/lib/downloads.ts`.
          */
+        /**
+         * ОПИСЬ СКАЧАННОГО, А ЕСЛИ ЕЁ НЕТ — САМ КЕШ (заход 7.233, строка 315).
+         *
+         * Опись — это УТВЕРЖДЕНИЕ о телефоне, кеш — сам телефон. Правило
+         * 7.231 велело верить телефону, но верили ему в одну сторону:
+         * строку без копии снимали, а копию без строки не замечали вовсе.
+         * Прогон 26.09.2026 (`.run7233/repro2.mjs index-gone`): стёрта
+         * ОДНА запись описи при тринадцати живых записях кеша — блок
+         * «Descargado» исчезает целиком, вес не назван, удалять нечего, а
+         * рассказ при этом лежит и открывается.
+         *
+         * У восстановленной строки нет ни веса из описи, ни списка клипов
+         * (без описи связать клип с материалом нечем), и это честно
+         * видно: вес её — вес самой разметки. Назвать её «Descargado» всё
+         * равно правильно: она лежит в кеше скачанного, а туда ничего не
+         * попадает само.
+         *
+         * КЕШ ЗДЕСЬ НЕ ЗАВОДИТСЯ ЧТЕНИЕМ. `caches.open` на несуществующем
+         * имени СОЗДАЁТ кеш, и до этой правки каркас заводил пустой
+         * `rf-pages-downloads` у каждого, кто просто открыл его без сети,
+         * — прогон 26.09.2026 печатал это имя в перечне кешей на профиле,
+         * где не скачивали ничего. То же правило, что у `readDownloads`
+         * на сайте: прибор не должен показывать того, чего человек не
+         * делал.
+         */
         function readDownloadsIndex() {
           var url;
           try {
@@ -1120,36 +1145,100 @@
             return Promise.resolve([]);
           }
           return caches
-            .open(DOWNLOADS_CACHE)
+            .keys()
+            .then(function (names) {
+              if (names.indexOf(DOWNLOADS_CACHE) === -1) return null;
+              return caches.open(DOWNLOADS_CACHE);
+            })
             .then(function (cache) {
-              return cache.match(url, { ignoreVary: true });
-            })
-            .then(function (hit) {
-              return hit ? hit.json() : [];
-            })
-            .then(function (rows) {
-              if (Object.prototype.toString.call(rows) !== "[object Array]") return [];
-              var out = [];
-              for (var i = 0; i < rows.length; i++) {
-                var row = rows[i];
-                if (!row || typeof row.url !== "string") continue;
-                var kind = kindOfPath(row.path || "");
-                if (!kind) continue;
-                out.push({
-                  url: row.url,
-                  path: row.path,
-                  kind: kind,
-                  title: typeof row.title === "string" ? row.title : "",
-                  savedAt: typeof row.savedAt === "number" ? row.savedAt : 0,
-                  bytes: typeof row.bytes === "number" ? row.bytes : 0,
-                  clips: Object.prototype.toString.call(row.clips) === "[object Array]" ? row.clips : [],
-                  downloaded: true,
+              if (!cache) return [];
+              return cache
+                .match(url, { ignoreVary: true })
+                .then(function (hit) {
+                  return hit ? hit.json() : [];
+                })
+                .catch(function () {
+                  return [];
+                })
+                .then(function (rows) {
+                  var out = [];
+                  var seen = {};
+                  if (Object.prototype.toString.call(rows) === "[object Array]") {
+                    for (var i = 0; i < rows.length; i++) {
+                      var row = rows[i];
+                      if (!row || typeof row.url !== "string") continue;
+                      if (seen[row.url]) continue;
+                      var kind = kindOfPath(row.path || "");
+                      if (!kind) continue;
+                      seen[row.url] = 1;
+                      out.push({
+                        url: row.url,
+                        path: row.path,
+                        kind: kind,
+                        title: typeof row.title === "string" ? row.title : "",
+                        savedAt: typeof row.savedAt === "number" ? row.savedAt : 0,
+                        bytes: typeof row.bytes === "number" ? row.bytes : 0,
+                        clips: Object.prototype.toString.call(row.clips) === "[object Array]" ? row.clips : [],
+                        sheets: Object.prototype.toString.call(row.sheets) === "[object Array]" ? row.sheets : [],
+                        downloaded: true,
+                      });
+                    }
+                  }
+                  return restoreFromDownloadsCache(cache, url, seen, out);
                 });
-              }
-              return out;
             })
             .catch(function () {
               return [];
+            });
+        }
+
+        /** Строки, которых опись не знает, — прямо из ключей кеша
+         *  скачанного. Разбор — в шапке `readDownloadsIndex`. */
+        function restoreFromDownloadsCache(cache, indexUrl, seen, out) {
+          return cache
+            .keys()
+            .then(function (requests) {
+              var index = 0;
+              function step() {
+                if (index >= requests.length) return Promise.resolve(out);
+                var request = requests[index++];
+                if (request.url === indexUrl || seen[request.url]) return step();
+                var path;
+                try {
+                  path = new URL(request.url).pathname;
+                } catch (e) {
+                  return step();
+                }
+                var kind = kindOfPath(path);
+                if (!kind) return step();
+                seen[request.url] = 1;
+                return cache
+                  .match(request, { ignoreVary: true })
+                  .then(function (hit) {
+                    if (!hit || !hit.ok) return step();
+                    return headOf(hit).then(function (head) {
+                      out.push({
+                        url: request.url,
+                        path: path,
+                        kind: kind,
+                        title: titleIn(head),
+                        savedAt: 0,
+                        bytes: 0,
+                        clips: [],
+                        sheets: [],
+                        downloaded: true,
+                      });
+                      return step();
+                    });
+                  })
+                  .catch(function () {
+                    return step();
+                  });
+              }
+              return step();
+            })
+            .catch(function () {
+              return out;
             });
         }
 
@@ -1392,6 +1481,7 @@
                 savedAt: typeof row.savedAt === "number" ? row.savedAt : 0,
               });
             }
+            savedCensus.listed = downloaded.length;
             return readKeys(names).then(function (extra) {
               for (var j = 0; j < extra.length; j++) {
                 if (seen[extra[j].url]) continue;
@@ -1402,6 +1492,7 @@
                 return b.savedAt - a.savedAt;
               });
               // ПОСЛЕДНИМ ДЕЛОМ — ОТСЕВ ПО ФАКТУ (строка 310).
+              savedCensus.whole = clean.length;
               return keepPresent(clean, names);
             });
           });
@@ -1461,9 +1552,17 @@
               // «Cuento · Descargado · 1,4 MB». Иначе два разных обещания
               // («я это открывал» и «я это взял с собой») выглядели бы
               // одинаково, а ведут себя по-разному после выката сайта.
+              // Вес называется только тогда, когда он известен: у строки,
+              // восстановленной из кеша без описи (строка 315), его нет, и
+              // «0,0 MB» было бы не скромностью, а неправдой.
               kind.textContent = row.downloaded
-                ? (KINDS[lang][row.kind] || row.kind) + " · " + DL[lang].mark + " · " + weightText(row.bytes || 0)
-                : KINDS[lang][row.kind] || row.kind;
+                ? (KINDS[lang][row.kind] || row.kind) +
+                  " · " +
+                  langMarkOf(row.path) +
+                  " · " +
+                  DL[lang].mark +
+                  (row.bytes ? " · " + weightText(row.bytes) : "")
+                : (KINDS[lang][row.kind] || row.kind) + " · " + langMarkOf(row.path);
               button.appendChild(name);
               button.appendChild(kind);
               button.addEventListener("click", function () {
@@ -1501,6 +1600,12 @@
              */
             gauge.textContent = GAUGE[lang] + ": " + shown.length;
             gauge.setAttribute("data-rf-fingerprint", fingerprintOf(names));
+            savedCensus.caches = names.length;
+            savedCensus.shown = shown.length;
+            gauge.setAttribute(
+              "data-rf-truth",
+              "кешей " + savedCensus.caches + " · описей " + savedCensus.listed + " · строк " + savedCensus.whole + " · показано " + savedCensus.shown,
+            );
           }
         }
 
@@ -1538,7 +1643,11 @@
               name.textContent = row.title || DL[lang].untitled;
               var kind = document.createElement("span");
               kind.className = "kind";
-              kind.textContent = (KINDS[lang][row.kind] || row.kind) + " · " + weightText(row.bytes || 0);
+              kind.textContent =
+                (KINDS[lang][row.kind] || row.kind) +
+                " · " +
+                langMarkOf(row.path) +
+                (row.bytes ? " · " + weightText(row.bytes) : "");
               open.appendChild(name);
               open.appendChild(kind);
               open.addEventListener("click", function () {
@@ -1582,12 +1691,36 @@
         /** Удалить одно скачанное: страницу, все её клипы и строку описи.
          *  То же правило, что у `removeDownload` на сайте. */
         function removeOneDownload(row) {
+          return readDownloadsIndex().then(function (all) {
+            /**
+             * ЛИСТ СТИЛЕЙ, НУЖНЫЙ СОСЕДУ, НЕ УДАЛЯЕТСЯ — ЗАХОД 7.233,
+             * СТРОКА 314. Адрес листа один на весь сайт, и все скачанные
+             * материалы делят ОДНУ запись кеша; унести её вместе с первым
+             * же рассказом значило бы погасить в списке все остальные —
+             * то есть починить дефект и завести его заново. То же правило
+             * и в той же формулировке, что у `removeDownload` на сайте.
+             */
+            var needed = {};
+            for (var n = 0; n < all.length; n++) {
+              if (all[n].url === row.url) continue;
+              var mine = all[n].sheets || [];
+              for (var m = 0; m < mine.length; m++) needed[mine[m]] = 1;
+            }
+            return removeOneDownloadNow(row, needed);
+          });
+        }
+
+        function removeOneDownloadNow(row, needed) {
           return caches
             .open(DOWNLOADS_CACHE)
             .then(function (cache) {
               var victims = [row.url];
               for (var i = 0; i < (row.clips || []).length; i++) {
                 if (row.clips[i] && typeof row.clips[i].url === "string") victims.push(row.clips[i].url);
+              }
+              var sheets = row.sheets || [];
+              for (var k = 0; k < sheets.length; k++) {
+                if (typeof sheets[k] === "string" && !needed[sheets[k]]) victims.push(sheets[k]);
               }
               var index = 0;
               function step() {
@@ -1616,6 +1749,17 @@
 
         var savedNames = null;
         var savedCache = null;
+        /**
+         * ПРИБОР, ОТВЕЧАЮЩИЙ НА ВОПРОС «ПОЧЕМУ НОЛЬ» — ЗАХОД 7.233.
+         *
+         * «Guardado: 0» означает две совершенно разные вещи: на телефоне и
+         * правда ничего нет — или отсев не пропустил НИЧЕГО из того, что
+         * есть. По видео их не различить, и заход 7.233 начался с того,
+         * что этот вопрос пришлось решать прогонами вместо одного кадра.
+         * Числа пишутся в признак, а не на экран: человеку они не говорят
+         * ничего, а на видео читаются отладчиком за секунду.
+         */
+        var savedCensus = { caches: 0, listed: 0, whole: 0, shown: 0 };
         function withSaved(then) {
           if (typeof caches === "undefined") return;
           var ready =
@@ -1664,6 +1808,22 @@
          * адреса — тогда под вкладкой оказывается ровно то, что за ней и
          * стоит.
          */
+        /**
+         * ПОМЕТКА ЯЗЫКА СТРОКИ — ЗАХОД 7.233, СТРОКА 316.
+         *
+         * Владелец на видео получил в списке ДВЕ одинаковые строки
+         * «Снегурочка · Cuento · Descargado · 1,4 MB» — испанскую и
+         * русскую версии одной страницы: адреса разные, копии разные, а
+         * название рассказа одно на двоих, и выбрать нужную нечем.
+         * Знаки ES и RU не переводятся намеренно: они одинаково читаются
+         * в обеих локалях и не спорят с языком оболочки. Берутся из
+         * АДРЕСА — он есть у строки всегда, даже у восстановленной из
+         * ключей кеша, а поля `lang` в описи каркаса нет вовсе.
+         */
+        function langMarkOf(path) {
+          return /^\/ru(\/|$)/.test(path || "") ? "RU" : "ES";
+        }
+
         var TAB_FILTER = { "/courses": "lesson", "/stories": "story", "/vocabulary": "vocabulary" };
         function rowUnderTab(row, base) {
           return new RegExp("^/(es|ru)" + base + "(/|$)").test(row.path || "");

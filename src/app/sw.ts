@@ -607,6 +607,7 @@ self.addEventListener("message", (event) => {
     fingerprint: FINGERPRINT,
     content: CACHES.content,
     section: CACHES.section,
+    sheets: CACHES.sheets,
   };
   const port = event.ports && event.ports[0];
   if (port) {

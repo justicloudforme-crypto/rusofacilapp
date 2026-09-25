@@ -3,9 +3,14 @@ import {
   DOWNLOADS_CACHE_NAME,
   DOWNLOADS_MAX_BYTES,
   formatWeight,
+  langMark,
+  langOfPath,
   parseDownloads,
   totalBytes,
+  urlsOf,
+  withoutDuplicates,
 } from "./downloads";
+import { sheetUrlsInHtml } from "./offline-save";
 import {
   copyMarkupOf,
   downloadPage,
@@ -416,5 +421,196 @@ describe("название строки скачанного", () => {
     expect(rows[0].title).not.toContain("/");
     // Чтение не пишет: опись на диске осталась прежней.
     expect((await (await cache.match(indexUrlFor(STORY)))!.json())[0].title).toBe("");
+  });
+});
+
+
+/**
+ * ЛИСТЫ СТИЛЕЙ ЛОЖАТСЯ ВМЕСТЕ СО СКАЧАННЫМ — ЗАХОД 7.233, СТРОКА 314.
+ *
+ * Что это чинит, дословно по видео владельца 26.09.2026 (1.0.8, POCO):
+ * гостем скачаны «Снегурочка» и урок A1/1, приложение убито, Wi-Fi
+ * выключен, запуск — «Aún no hay nada guardado», «Guardado: 0», блока
+ * «Descargado» нет; а копии при этом лежат (в 2:47 с сетью кнопка
+ * говорит «Descargado ✓»). Прогон 26.09.2026 `.run7233/repro2.mjs
+ * css-gone` показал это состояние знак в знак: четырнадцать записей в
+ * кеше скачанного, опись из одной строки — и пустой экран, потому что
+ * из ЧУЖОГО кеша пропали два файла `/_next/static/css/…`.
+ */
+const STYLED_HTML =
+  '<!doctype html><html lang="es"><head><title>Snegúrochka — RusoFácilapp</title>' +
+  '<link rel="stylesheet" href="/_next/static/css/aaa.css"/>' +
+  '<link rel="stylesheet" href="/_next/static/css/bbb.css"/>' +
+  '<link rel="stylesheet" href="https://fonts.example.com/x.css"/>' +
+  "</head><body>texto</body></html>";
+const SHEETS = [`${ORIGIN}/_next/static/css/aaa.css`, `${ORIGIN}/_next/static/css/bbb.css`];
+const STYLED_SIZES = { ...SIZES, [SHEETS[0]]: 6_506, [SHEETS[1]]: 167_861 };
+
+describe("скачанное несёт свои листы стилей", () => {
+  it("они ложатся в кеш скачанного, попадают в опись и входят в «лежит целиком»", async () => {
+    const { store, args: a } = args({ html: STYLED_HTML, fetch: fakeNet(STYLED_SIZES) });
+    expect(await downloadPage(a)).toBe("downloaded");
+
+    const cache = await store.open(DOWNLOADS_CACHE_NAME);
+    for (const sheet of SHEETS) {
+      expect(await cache.match(sheet), `листа стилей ${sheet} нет рядом со скачанным`).toBeTruthy();
+    }
+    const rows = await readDownloads(a.caches, ORIGIN);
+    expect(rows[0].sheets).toEqual(SHEETS);
+    // ЧУЖОЙ ИСТОЧНИК НЕ БЕРЁТСЯ: платить мегабайтами за чужие шрифты
+    // скачивание не подписывалось. Это и отрицательный контроль разбора.
+    expect(rows[0].sheets.some((url) => url.includes("fonts.example.com"))).toBe(false);
+    expect(urlsOf(rows[0])).toEqual(expect.arrayContaining(SHEETS));
+    expect(await isComplete(a.caches, rows[0])).toBe(true);
+
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ ТОГО ЖЕ УТВЕРЖДЕНИЯ: убери лист — и «целиком»
+    // честно станет ложью. Без этой строки предыдущая не значит ничего.
+    await cache.delete(SHEETS[0]);
+    expect(await isComplete(a.caches, rows[0])).toBe(false);
+  });
+
+  it("лист не качается второй раз, если уже лежит рядом", async () => {
+    const { args: a } = args({ html: STYLED_HTML, fetch: fakeNet(STYLED_SIZES) });
+    expect(await downloadPage(a)).toBe("downloaded");
+    const net = fakeNet(STYLED_SIZES);
+    const second = args({
+      html: STYLED_HTML,
+      fetch: net,
+      url: `${ORIGIN}/es/courses/a1/1`,
+      pathname: "/es/courses/a1/1",
+      clipUrls: [],
+    });
+    // тот же кеш, что и у первой строки
+    const shared = { ...second.args, caches: a.caches };
+    expect(await downloadPage(shared)).toBe("downloaded");
+    expect(net.mock.calls.some(([url]) => SHEETS.includes(url as string))).toBe(false);
+  });
+
+  it("отказ сети НА ЛИСТЕ не роняет скачивание — рассказ дороже стиля", async () => {
+    const { args: a } = args({
+      html: STYLED_HTML,
+      fetch: fakeNet(STYLED_SIZES, [SHEETS[1]]),
+    });
+    expect(await downloadPage(a)).toBe("downloaded");
+    const rows = await readDownloads(a.caches, ORIGIN);
+    expect(rows[0].sheets).toEqual([SHEETS[0]]);
+  });
+
+  it("удаление одного материала НЕ уносит лист, нужный соседу", async () => {
+    const first = args({ html: STYLED_HTML, fetch: fakeNet(STYLED_SIZES) });
+    expect(await downloadPage(first.args)).toBe("downloaded");
+    const second = {
+      ...first.args,
+      url: `${ORIGIN}/es/courses/a1/1`,
+      pathname: "/es/courses/a1/1",
+      clipUrls: [],
+      html: STYLED_HTML,
+    };
+    expect(await downloadPage(second)).toBe("downloaded");
+
+    await removeDownload(first.args.caches, STORY);
+    const cache = await first.store.open(DOWNLOADS_CACHE_NAME);
+    for (const sheet of SHEETS) {
+      expect(await cache.match(sheet), `лист ${sheet} унесён вместе с соседом`).toBeTruthy();
+    }
+    expect(await cache.match(STORY), "сама страница не удалена").toBeFalsy();
+
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ: когда соседа больше нет, лист уходит.
+    await removeDownload(first.args.caches, `${ORIGIN}/es/courses/a1/1`);
+    expect(await cache.match(SHEETS[0])).toBeFalsy();
+  });
+
+  it("разбор листов из разметки берёт только свой источник", () => {
+    expect(sheetUrlsInHtml(STYLED_HTML, STORY)).toEqual(SHEETS);
+    expect(sheetUrlsInHtml("<link rel=icon href=/x.ico>", STORY)).toEqual([]);
+  });
+});
+
+/**
+ * ОПИСЬ ПУСТА, А КЕШ ПОЛОН — ЗАХОД 7.233, СТРОКА 315.
+ *
+ * Прогон 26.09.2026 `.run7233/repro2.mjs index-gone` на коде ДО правки:
+ * стёрта одна запись описи при тринадцати живых записях кеша — блок
+ * «Descargado» исчезает целиком, вес не назван, удалять нечего, а
+ * рассказ лежит и открывается.
+ */
+describe("опись потеряна, а скачанное лежит", () => {
+  it("строка восстанавливается из самого кеша — и честно без веса из описи", async () => {
+    const { store, args: a } = args();
+    expect(await downloadPage(a)).toBe("downloaded");
+    const cache = await store.open(DOWNLOADS_CACHE_NAME);
+
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ: с описью строка приходит со своим весом.
+    const listed = await readDownloads(a.caches, ORIGIN);
+    expect(listed).toHaveLength(1);
+    expect(listed[0].bytes).toBeGreaterThan(300_000);
+    expect(listed[0].clips).toHaveLength(3);
+
+    await cache.delete(indexUrlFor(ORIGIN));
+    const restored = await readDownloads(a.caches, ORIGIN);
+    expect(restored, "строка не восстановлена — список бы опустел").toHaveLength(1);
+    expect(restored[0].url).toBe(STORY);
+    expect(restored[0].title).toBe("Snegúrochka");
+    // Ни веса материала, ни клипов у восстановленной строки нет: без
+    // описи связать клип с рассказом нечем, и приписывать наугад значило
+    // бы соврать в «удалить».
+    expect(restored[0].clips).toEqual([]);
+    expect(restored[0].bytes).toBe(new TextEncoder().encode(OPEN_HTML).length);
+    // Чтение не пишет: описи на диске по-прежнему нет.
+    expect(await cache.match(indexUrlFor(ORIGIN))).toBeFalsy();
+  });
+
+  it("чужие записи кеша строками не становятся", async () => {
+    const { store, args: a } = args();
+    expect(await downloadPage(a)).toBe("downloaded");
+    const cache = await store.open(DOWNLOADS_CACHE_NAME);
+    await cache.delete(indexUrlFor(ORIGIN));
+    const rows = await readDownloads(a.caches, ORIGIN);
+    // Клипы лежат в том же кеше, но материалами они не являются.
+    expect(rows).toHaveLength(1);
+    expect(rows.every((row) => !row.url.includes(".mp3"))).toBe(true);
+  });
+});
+
+/**
+ * ДВЕ ЛОКАЛИ ОДНОЙ СТРАНИЦЫ — ЗАХОД 7.233, СТРОКА 316.
+ *
+ * Владелец получил в списке две строки «Снегурочка · Cuento · Descargado
+ * · 1,4 MB», различить которые нечем: адреса разные, название одно.
+ */
+describe("пометка языка у строки", () => {
+  it("берётся из адреса, а не из описи", () => {
+    expect(langOfPath("/ru/stories/snegurochka")).toBe("ru");
+    expect(langOfPath("/es/stories/snegurochka")).toBe("es");
+    expect(langOfPath("/rules/x")).toBe("es");
+    expect(langMark("ru")).toBe("RU");
+    expect(langMark("es")).toBe("ES");
+  });
+
+  it("две локали одного рассказа — две РАЗНЫЕ строки с разными пометками", async () => {
+    const first = args();
+    expect(await downloadPage(first.args)).toBe("downloaded");
+    expect(
+      await downloadPage({
+        ...first.args,
+        url: `${ORIGIN}/ru/stories/snegurochka`,
+        pathname: "/ru/stories/snegurochka",
+        lang: "ru",
+      }),
+    ).toBe("downloaded");
+    const rows = await readDownloads(first.args.caches, ORIGIN);
+    expect(rows).toHaveLength(2);
+    expect(new Set(rows.map((row) => langMark(langOfPath(row.path)))).size, "пометки одинаковые — строки не различить").toBe(2);
+  });
+
+  it("дубль одного адреса в списке не выживает", () => {
+    const one = parseDownloads([
+      { url: STORY, path: "/es/stories/snegurochka", kind: "story", savedAt: 2, title: "свежая" },
+      { url: STORY, path: "/es/stories/snegurochka", kind: "story", savedAt: 1, title: "старая" },
+    ]);
+    expect(one).toHaveLength(2);
+    const clean = withoutDuplicates(one);
+    expect(clean).toHaveLength(1);
+    expect(clean[0].title).toBe("свежая");
   });
 });

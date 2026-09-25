@@ -255,7 +255,15 @@ function plant() {
   add(
     "подсадка: отсев перестал спрашивать hit.ok",
     SHELL,
-    (s) => s.replace("if (!hit || !hit.ok) return step();", "if (!hit) return step();"),
+    // ЯКОРЬ С КОНТЕКСТОМ, А НЕ ОДНА СТРОКА (заход 7.233): та же строка
+    // появилась в `restoreFromDownloadsCache` выше по файлу, и подсадка
+    // без контекста меняла ЕЁ, а не отсев, — то есть молча перестала
+    // кусаться. Поймано прогоном `--plant`, а не чтением.
+    (s) =>
+      s.replace(
+        "if (!hit || !hit.ok) return step();\n                return headOf(hit)",
+        "if (!hit) return step();\n                return headOf(hit)",
+      ),
     "не спрашивает hit.ok",
   );
   add(
@@ -329,7 +337,7 @@ function plant() {
   add(
     "подсадка: чтение описи перестало дополнять названия",
     CLIENT,
-    (s) => s.replace("return await withTitles(cache, parseDownloads(await hit.json()));", "return parseDownloads(await hit.json());"),
+    (s) => s.replace("return await withTitles(cache, whole);", "return whole;"),
     "не дополняет пустые названия",
   );
   add(

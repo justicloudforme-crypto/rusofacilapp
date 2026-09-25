@@ -84,7 +84,19 @@ export interface DownloadedRow {
   /** Вес разметки страницы в байтах. */
   pageBytes: number;
   clips: DownloadedClip[];
-  /** Вес всего материала: разметка плюс все клипы. */
+  /**
+   * ЛИСТЫ СТИЛЕЙ, ПОЛОЖЕННЫЕ ВМЕСТЕ С МАТЕРИАЛОМ — ЗАХОД 7.233, СТРОКА 314.
+   *
+   * Адреса `/_next/static/css/…`, которые объявляет сама скачанная
+   * разметка. Лежат они в ТОМ ЖЕ кеше `rf-pages-downloads`, и это не
+   * запас на всякий случай, а закрытие дефекта, снятого на видео
+   * 26.09.2026: без них строка скачанного исчезала из списка целиком,
+   * хотя страница и все её клипы лежали на телефоне.
+   *
+   * Разбор — у `sheetUrlsOnPage` в `downloads-client.ts`.
+   */
+  sheets: string[];
+  /** Вес всего материала: разметка плюс все клипы плюс листы стилей. */
   bytes: number;
 }
 
@@ -130,6 +142,10 @@ export function parseDownloads(raw: unknown): DownloadedRow[] {
       }
     }
     const pageBytes = numberOr(row.pageBytes, 0);
+    const sheets: string[] = [];
+    if (Array.isArray(row.sheets)) {
+      for (const sheet of row.sheets) if (typeof sheet === "string" && !sheets.includes(sheet)) sheets.push(sheet);
+    }
     out.push({
       url: row.url,
       path: row.path,
@@ -139,6 +155,7 @@ export function parseDownloads(raw: unknown): DownloadedRow[] {
       savedAt: row.savedAt,
       pageBytes,
       clips,
+      sheets,
       bytes: numberOr(row.bytes, pageBytes + clips.reduce((sum, clip) => sum + clip.bytes, 0)),
     });
   }
@@ -192,7 +209,52 @@ export function formatWeight(bytes: number, lang: "es" | "ru"): string {
   return `${shown.replace(".", ",")} ${unit}`;
 }
 
-/** Все адреса, которые скачивание кладёт на телефон под эту строку. */
+/**
+ * Все адреса, которые скачивание кладёт на телефон под эту строку.
+ *
+ * ЛИСТЫ СТИЛЕЙ ВХОДЯТ СЮДА НАРАВНЕ С КЛИПАМИ (строка 314): скачанное без
+ * своих стилей показать нельзя, и «лежит целиком» без них было бы
+ * неправдой ровно того рода, которую снял владелец на видео.
+ *
+ * Дубли убираются: один и тот же лист стилей объявляют все страницы
+ * сайта, и удалять его по разу за строку — значит удалить его у соседа.
+ */
 export function urlsOf(row: DownloadedRow): string[] {
-  return [row.url, ...row.clips.map((clip) => clip.url)];
+  return [...new Set([row.url, ...row.clips.map((clip) => clip.url), ...row.sheets])];
+}
+
+/**
+ * ЯЗЫК СТРАНИЦЫ — ИЗ ЕЁ ЖЕ АДРЕСА, ЗАХОД 7.233, СТРОКА 316.
+ *
+ * Две локали одной страницы — это два РАЗНЫХ адреса и две разные копии,
+ * но название у них бывает одно на двоих: «Снегурочка» и по-испански
+ * «Снегурочка». Владелец 26.09.2026 получил в списке две строки
+ * «Снегурочка · Cuento · Descargado · 1,4 MB», различить которые
+ * нечем. Пометка языка берётся из адреса, а не из описи: адрес есть у
+ * строки всегда, даже у восстановленной из ключей кеша.
+ */
+export function langOfPath(pathname: string): "es" | "ru" {
+  return /^\/ru(\/|$)/.test(pathname) ? "ru" : "es";
+}
+
+/** Пометка языка на экране. Два знака и без перевода: они одинаково
+ *  читаются и по-испански, и по-русски, и не спорят с языком оболочки. */
+export function langMark(lang: "es" | "ru"): string {
+  return lang === "ru" ? "RU" : "ES";
+}
+
+/**
+ * ДУБЛЕЙ ОДНОГО АДРЕСА В СПИСКЕ НЕ БЫВАЕТ (строка 316). Побеждает первая
+ * строка: опись отсортирована свежим вперёд, а восстановленное из кешей
+ * дописывается после неё.
+ */
+export function withoutDuplicates(rows: readonly DownloadedRow[]): DownloadedRow[] {
+  const seen = new Set<string>();
+  const out: DownloadedRow[] = [];
+  for (const row of rows) {
+    if (seen.has(row.url)) continue;
+    seen.add(row.url);
+    out.push(row);
+  }
+  return out;
 }

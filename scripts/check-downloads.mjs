@@ -24,6 +24,18 @@
  *      по факту (`keepPresent` в каркасе).
  *   6. ЧАСТИЧНОЕ СКАЧИВАНИЕ ОТКАТЫВАЕТСЯ. В `downloads-client.ts` обязан
  *      быть откат, и опись обязана писаться ПОСЛЕ проверки целости.
+ *   7. СКАЧАННОЕ НЕСЁТ СВОИ ЛИСТЫ СТИЛЕЙ (заход 7.233, строка 314). И
+ *      скачивание, и сохранение кладут листы стилей в ТОТ ЖЕ кеш, что и
+ *      копию, а `urlsOf` считает их частью материала. Иначе отсев 7.232
+ *      («можно ли показать») привязывает судьбу скачанного к precache
+ *      текущей сборки — и первый же выкат сайта гасит весь список при
+ *      целом кеше. Прогон, который это показал: `.run7233/repro2.mjs`.
+ *   8. ОПИСЬ ПУСТА, А КЕШ — НЕТ: СТРОКИ ВОССТАНАВЛИВАЮТСЯ (строка 315).
+ *      И на сайте (`readDownloads` → `rowsFromCache`), и в каркасе
+ *      (`restoreFromDownloadsCache`). Опись — утверждение о телефоне,
+ *      кеш — сам телефон; верить телефону нужно в ОБЕ стороны.
+ *   9. У СТРОКИ ЕСТЬ ВИДИМАЯ ПОМЕТКА ЯЗЫКА (строка 316) — и в кабинете,
+ *      и в каркасе; дублей одного адреса в списке не бывает.
  *
  *   node scripts/check-downloads.mjs          # гейт
  *   node scripts/check-downloads.mjs --plant  # контроль подсадками
@@ -39,7 +51,8 @@ const DOWNLOADS = "src/lib/downloads.ts";
 const CLIENT = "src/lib/downloads-client.ts";
 const SAVE_CLIENT = "src/lib/offline-save-client.ts";
 const SHELL = "public/offline.html";
-const FILES = [NAMES, SIGNED_OUT, DOWNLOADS, CLIENT, SAVE_CLIENT, SHELL];
+const PANEL = "src/components/profile/DownloadsPanel.tsx";
+const FILES = [NAMES, SIGNED_OUT, DOWNLOADS, CLIENT, SAVE_CLIENT, SHELL, PANEL];
 
 const load = () => Object.fromEntries(FILES.map((f) => [f, readFileSync(f, "utf8")]));
 const withoutJsComments = (code) => code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1");
@@ -69,6 +82,7 @@ export function violations(sources) {
   const client = withoutJsComments(sources[CLIENT] ?? "");
   const saveClient = withoutJsComments(sources[SAVE_CLIENT] ?? "");
   const shell = withoutHtmlComments(sources[SHELL] ?? "");
+  const panel = withoutJsComments(sources[PANEL] ?? "");
   if (FILES.some((f) => !(sources[f] ?? "").trim())) {
     bad.push("одного из файлов нет — сличать нечего");
     return bad;
@@ -163,6 +177,57 @@ export function violations(sources) {
     bad.push(
       `${CLIENT}: клип берётся не простым запросом с CORS — источник отвечает на OPTIONS 405, и скачивание молча отказало бы (замер 7.218)`,
     );
+  }
+
+  // 7 — свои листы стилей
+  if (!/sheetUrlsInHtml/.test(client) || !/sheets: laidSheets/.test(client)) {
+    bad.push(
+      `${CLIENT}: скачивание не кладёт листы стилей рядом с материалом — отсев «можно ли показать» привяжет скачанное к precache сборки, и первый выкат погасит весь список при целом кеше (строка 314)`,
+    );
+  }
+  if (!/\.\.\.row\.sheets/.test(downloads)) {
+    bad.push(`${DOWNLOADS}: urlsOf не считает листы стилей частью материала — «лежит целиком» стало бы неправдой (строка 314)`);
+  }
+  if (!/await keepSheetsBeside\(deps\.caches/.test(saveClient)) {
+    bad.push(
+      `${SAVE_CLIENT}: сохранение не кладёт листы стилей рядом с копией — строка списка будет появляться и исчезать вместе с чужим precache (строка 314)`,
+    );
+  }
+  if (!/needed\.has\(victim\)/.test(client)) {
+    bad.push(`${CLIENT}: удаление одного материала уносит лист стилей, нужный соседу — погаснут все остальные строки (строка 314)`);
+  }
+  if (!/if \(typeof sheets\[k\] === "string" && !needed\[sheets\[k\]\]\)/.test(shell)) {
+    bad.push(
+      `${SHELL}: удаление из каркаса уносит лист стилей, нужный соседу, или не уносит свой вовсе — оба конца правила 314 держатся только вместе`,
+    );
+  }
+
+  // 8 — опись восстанавливается из кеша
+  if (!/await rowsFromCache\(cache, origin, listed\)/.test(client)) {
+    bad.push(
+      `${CLIENT}: потерянная опись не восстанавливается из самого кеша — скачанное лежит, а списка нет (строка 315)`,
+    );
+  }
+  if (!/function restoreFromDownloadsCache\(/.test(shell) || !/return restoreFromDownloadsCache\(cache, url/.test(shell)) {
+    bad.push(`${SHELL}: каркас не восстанавливает строки из кеша скачанного при потерянной описи (строка 315)`);
+  }
+  if (!/names\.indexOf\(DOWNLOADS_CACHE\) === -1/.test(shell)) {
+    bad.push(
+      `${SHELL}: каркас заводит кеш скачанного ЧТЕНИЕМ (caches.open на несуществующем имени создаёт его) — перепись кешей начнёт показывать то, чего человек не делал`,
+    );
+  }
+
+  // 9 — пометка языка и отсутствие дублей
+  if (!/function langMarkOf\(/.test(shell) || (shell.match(/langMarkOf\(row\.path\)/g) ?? []).length < 3) {
+    bad.push(
+      `${SHELL}: в каркасе нет пометки языка у строки — две локали одной страницы выглядят одинаково и различить их нечем (строка 316)`,
+    );
+  }
+  if (!/langMark\(langOfPath\(row\.path\)/.test(panel)) {
+    bad.push(`${PANEL}: в кабинете нет пометки языка у строки скачанного (строка 316)`);
+  }
+  if (!/withoutDuplicates\(/.test(panel)) {
+    bad.push(`${PANEL}: список скачанного не снимает дубли одного адреса (строка 316)`);
   }
 
   return bad;
@@ -284,6 +349,72 @@ async function plant() {
     "без проверки целости",
   );
   add(
+    "подсадка: скачивание перестало класть свои листы стилей (строка 314)",
+    CLIENT,
+    (s) => s.replace("sheets: laidSheets,", "sheets: [],").replace(/sheetUrlsInHtml/g, "noSheets"),
+    "не кладёт листы стилей рядом с материалом",
+  );
+  add(
+    "подсадка: листы стилей выпали из «лежит целиком» (строка 314)",
+    DOWNLOADS,
+    (s) => s.replace("...row.sheets", ""),
+    "urlsOf не считает листы стилей",
+  );
+  add(
+    "подсадка: сохранение перестало класть листы рядом с копией (строка 314)",
+    SAVE_CLIENT,
+    (s) => s.replace("await keepSheetsBeside(", "await Promise.resolve("),
+    "сохранение не кладёт листы стилей",
+  );
+  add(
+    "подсадка: удаление уносит лист, нужный соседу (строка 314)",
+    CLIENT,
+    (s) => s.replace("if (needed.has(victim)) continue;", ""),
+    "уносит лист стилей, нужный соседу",
+  );
+  add(
+    "подсадка: удаление из каркаса уносит общий лист стилей (строка 314)",
+    SHELL,
+    (s) => s.replace('if (typeof sheets[k] === "string" && !needed[sheets[k]])', 'if (typeof sheets[k] === "string")'),
+    "удаление из каркаса уносит лист стилей",
+  );
+  add(
+    "подсадка: потерянная опись больше не восстанавливается (строка 315)",
+    CLIENT,
+    (s) => s.replace("(await rowsFromCache(cache, origin, listed))", "[]"),
+    "не восстанавливается из самого кеша",
+  );
+  add(
+    "подсадка: каркас перестал восстанавливать строки из кеша (строка 315)",
+    SHELL,
+    (s) => s.replace("return restoreFromDownloadsCache(cache, url, seen, out);", "return out;"),
+    "не восстанавливает строки из кеша скачанного",
+  );
+  add(
+    "подсадка: каркас снова заводит кеш скачанного чтением",
+    SHELL,
+    (s) => s.replace("if (names.indexOf(DOWNLOADS_CACHE) === -1) return null;", ""),
+    "заводит кеш скачанного ЧТЕНИЕМ",
+  );
+  add(
+    "подсадка: из каркаса убрали пометку языка (строка 316)",
+    SHELL,
+    (s) => s.replace(/langMarkOf\(row\.path\)/g, '""'),
+    "нет пометки языка у строки",
+  );
+  add(
+    "подсадка: из кабинета убрали пометку языка (строка 316)",
+    PANEL,
+    (s) => s.replace("{langMark(langOfPath(row.path) || row.lang)} · ", ""),
+    "в кабинете нет пометки языка",
+  );
+  add(
+    "подсадка: кабинет перестал снимать дубли адреса (строка 316)",
+    PANEL,
+    (s) => s.replace("withoutDuplicates(await readDownloads", "(await readDownloads"),
+    "не снимает дубли одного адреса",
+  );
+  add(
     "подсадка: persist() больше не спрашивается",
     CLIENT,
     (s) => s.replace(/askPersistence/g, "skipPersistence"),
@@ -316,7 +447,9 @@ async function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:downloads — 6 правил (из них 2 прогоном), нарушений 0 (заход 7.231, офлайн-3; строки 310 и 311)");
+  console.log(
+    "check:downloads — 9 правил (из них 2 прогоном), нарушений 0 (заходы 7.231 и 7.233, офлайн-3; строки 310, 311, 314, 315, 316)",
+  );
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
