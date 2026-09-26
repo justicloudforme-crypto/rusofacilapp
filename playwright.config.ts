@@ -124,7 +124,7 @@ export default defineConfig({
        * «каркас не открылся по /es», в `chromium` оба зелёные.
        */
       testIgnore:
-        /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows)\.spec\.ts/,
+        /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
