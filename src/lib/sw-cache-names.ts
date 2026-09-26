@@ -212,11 +212,16 @@ function carriedNames(fingerprint: string): string[] {
   return CARRIED_KINDS.map((kind) => names[kind]);
 }
 
+/** Имя кеша переносимого вида; префикс — `PAGE_CACHE_PREFIX` (равенство
+ *  держит пример в `sw-cache-names.test.ts`). Литерал, а не сборка из
+ *  значения: регулярку из данных пришлось бы экранировать. */
+export const CARRIED_CACHE_NAME = /^rf-pages-(?:content|section|sheets)-([a-z0-9]+)$/;
+
 /** Отпечатки, у которых на телефоне есть кеш переносимого вида. */
 function carriedFingerprints(existing: readonly string[]): string[] {
   const found = new Set<string>();
   for (const name of existing) {
-    const m = new RegExp(`^${PAGE_CACHE_PREFIX}-(?:content|section|sheets)-([a-z0-9]+)$`).exec(name);
+    const m = CARRIED_CACHE_NAME.exec(name);
     if (m) found.add(m[1]);
   }
   return [...found];

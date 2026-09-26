@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { GENERATION_CACHE_NAME, PAGE_CACHE_PREFIX, buildFingerprint, pageCacheNames, staleCacheNames } from "./sw-cache-names";
+import { CARRIED_CACHE_NAME, GENERATION_CACHE_NAME, PAGE_CACHE_PREFIX, buildFingerprint, pageCacheNames, staleCacheNames } from "./sw-cache-names";
 
 /**
  * The service worker's page and RSC caches must be scoped to the build.
@@ -119,6 +119,14 @@ describe("staleCacheNames", () => {
     expect(doomed).toContain(pageCacheNames("older").sheets);
     expect(doomed).not.toContain(pageCacheNames("old").content);
     expect(doomed, "метку поколения стёрли").not.toContain(GENERATION_CACHE_NAME);
+  });
+
+  it("регулярка переносимых имён совпадает с тем, что строит pageCacheNames", () => {
+    for (const kind of ["content", "section", "sheets"] as const) {
+      expect(CARRIED_CACHE_NAME.exec(pageCacheNames("abc123")[kind])?.[1]).toBe("abc123");
+    }
+    expect(CARRIED_CACHE_NAME.test(pageCacheNames("abc123").others)).toBe(false);
+    expect(CARRIED_CACHE_NAME.test(GENERATION_CACHE_NAME)).toBe(false);
   });
 
   it("метки ещё нет: предыдущим считается единственный чужой отпечаток; два чужих — не переносится ничего", () => {
