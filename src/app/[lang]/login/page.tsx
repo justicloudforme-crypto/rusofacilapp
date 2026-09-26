@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { routeAlternates } from "@/lib/site";
 import { loginRetryEmail } from "@/lib/login-retry";
+import { getCurrentUserForChrome } from "@/lib/auth";
+import { signedInLoginTarget } from "@/lib/login-signed-in";
 
 export async function generateMetadata({
   params,
@@ -26,6 +28,23 @@ export default async function LoginPage({
   const query = await searchParams;
   const redirectTo =
     typeof query.redirectTo === "string" ? query.redirectTo : `/${lang}/profile`;
+  /**
+   * ВОШЕДШЕГО СТРАНИЦА ВХОДА УВОДИТ ТУДА, КУДА ОН ШЁЛ — заход 7.236,
+   * находка 3 (видео владельца, POCO, 26.09.2026).
+   *
+   * Воспроизведено на эмуляторе: без сети в каркасе «Mi perfil» (его
+   * ссылка — `/es/login`, `public/offline.html`) → сеть вернулась → каркас
+   * перезагрузил тот же адрес → живая страница входа: форма «Inicia
+   * sesión» при аватаре в шапке. Сессия при этом жива (`/api/progress`
+   * ответил 200) — пароль вводить было незачем. Форма входа вошедшему не
+   * нужна ни в каком случае, поэтому правило общее, а не про каркас.
+   * Чтение вошедшего здесь бесплатно: шапка того же запроса уже его
+   * сделала (`cache` в src/lib/auth.ts). Отказ базы → `null` → форма, как
+   * и раньше.
+   */
+  if (await getCurrentUserForChrome()) {
+    redirect(signedInLoginTarget(redirectTo, lang));
+  }
   const errorMessages: Record<string, string> = {
     invalid_email: dict.auth.invalidEmail,
     invalid_credentials: dict.auth.invalidCredentials,
