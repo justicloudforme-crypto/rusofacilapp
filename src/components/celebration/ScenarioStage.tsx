@@ -14,6 +14,10 @@ import { SCENARIOS, type ScenarioId } from "./catalog";
 // on-demand request the first time it's picked — never anything upfront.
 const componentCache = new Map<ScenarioId, ComponentType>();
 
+function NoScenario() {
+  return null;
+}
+
 function getScenarioComponent(id: ScenarioId): ComponentType {
   const cached = componentCache.get(id);
   if (cached) return cached;
@@ -25,7 +29,22 @@ function getScenarioComponent(id: ScenarioId): ComponentType {
   // ssr:false is fine here — ScenarioStage only ever renders once
   // CelebrationModal's `open` is true, i.e. after a client interaction,
   // so there's nothing for the server to have pre-rendered anyway.
-  const Component = dynamic(entry.load, { ssr: false });
+  //
+  // ЧАНК НЕ ПРИШЁЛ — СЦЕНЫ НЕТ, А СТРАНИЦА ЖИВА (заход 7.236). Замер:
+  // Chromium без воркера и WebKit (mobile-iphone) — «Comprobar» без сети →
+  // `ChunkLoadError: Loading chunk 5208 failed` → граница ошибок, «Algo
+  // salió mal» вместо урока. В приложении чанки лежат в precache, у
+  // посетителя сайта без воркера — нет. Сцена — украшение: её отсутствие
+  // не должно стоить ученику страницы с только что проверенными ответами.
+  // Из кеша неудача убирается, чтобы с сетью сцена загрузилась заново.
+  const Component = dynamic(
+    () =>
+      entry.load().catch(() => {
+        componentCache.delete(id);
+        return { default: NoScenario };
+      }),
+    { ssr: false },
+  );
   componentCache.set(id, Component);
   return Component;
 }
