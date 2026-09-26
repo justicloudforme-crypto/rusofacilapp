@@ -57,7 +57,11 @@ const CLIENT = "src/lib/downloads-client.ts";
 const SAVE_CLIENT = "src/lib/offline-save-client.ts";
 const SHELL = "public/offline.html";
 const PANEL = "src/components/profile/DownloadsPanel.tsx";
-const FILES = [NAMES, SIGNED_OUT, DOWNLOADS, CLIENT, SAVE_CLIENT, SHELL, PANEL];
+const HEAL = "src/components/DownloadsHeal.tsx";
+const LAYOUT = "src/app/[lang]/layout.tsx";
+const SLIDES = "src/components/lesson/SlidesTab.tsx";
+const STRINGS = "src/lib/ui-strings.ts";
+const FILES = [NAMES, SIGNED_OUT, DOWNLOADS, CLIENT, SAVE_CLIENT, SHELL, PANEL, HEAL, LAYOUT, SLIDES, STRINGS];
 
 const load = () => Object.fromEntries(FILES.map((f) => [f, readFileSync(f, "utf8")]));
 const withoutJsComments = (code) => code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1");
@@ -88,6 +92,11 @@ export function violations(sources) {
   const saveClient = withoutJsComments(sources[SAVE_CLIENT] ?? "");
   const shell = withoutHtmlComments(sources[SHELL] ?? "");
   const panel = withoutJsComments(sources[PANEL] ?? "");
+  const heal = withoutJsComments(sources[HEAL] ?? "");
+  const layout = withoutJsComments(sources[LAYOUT] ?? "");
+  const slides = withoutJsComments(sources[SLIDES] ?? "");
+  // Как есть: в строках интерфейса встречается «/*», и вырезатель комментариев съел бы их.
+  const strings = sources[STRINGS] ?? "";
   if (FILES.some((f) => !(sources[f] ?? "").trim())) {
     bad.push("одного из файлов нет — сличать нечего");
     return bad;
@@ -217,6 +226,45 @@ export function violations(sources) {
     bad.push(
       `${SAVE_CLIENT}: сохранение не отличает «кеш листов стилей завели мы» от «он лежал до нас» — уборка унесла бы чужое (строка 317)`,
     );
+  }
+
+  // 11 — скачанное долечивается при заходе с сетью (заход 7.235)
+  if (!/<DownloadsHeal \/>/.test(layout)) {
+    bad.push(
+      `${LAYOUT}: DownloadsHeal не стоит в разметке — скачанное до #412 так и останется без своих листов стилей, и выкат спрячет его в каркасе («Guardado: 0», видео 26.09.2026)`,
+    );
+  }
+  if (!/healDownloads\(\{/.test(heal) || !/currentSheets:/.test(heal)) {
+    bad.push(`${HEAL}: компонент не зовёт healDownloads с листами текущей сборки — лечить нечем`);
+  }
+  if (!/SIGNED_OUT_PARAM\) === "1"\) return/.test(heal)) {
+    bad.push(
+      `${HEAL}: лечение идёт и на первой странице после выхода — завело бы кеш скачанного вышедшего человека заново (строка 317)`,
+    );
+  }
+  if (!/export async function healDownloads\(/.test(client) || !/if \(changed && \(await downloadsCacheExists\(args\.caches\)\)\)/.test(client)) {
+    bad.push(
+      `${CLIENT}: лечение пишет опись, не спросив, жив ли ещё кеш скачанного — уборка выхода посреди лечения была бы отменена записью (строка 317)`,
+    );
+  }
+
+  // 12 — презентация листается в скачанной копии (заход 7.235)
+  if (!/slides\.map\(\(slide, i\)/.test(slides) || !/data-rf-slide=\{i\}/.test(slides) || !/hidden=\{i !== index\}/.test(slides)) {
+    bad.push(
+      `${SLIDES}: в разметке урока лежит не каждый слайд — скачанная копия без сети листается только до первого («Diapositiva 1 de 8», видео 26.09.2026)`,
+    );
+  }
+  if (!/const clone = doc\.documentElement\.cloneNode\(true\) as HTMLElement;\s*offlineDeckOf\(clone\);/.test(client)) {
+    bad.push(
+      `${CLIENT}: copyMarkupOf не превращает колоду слайдов в переключатели без скриптов — в копии стрелки мертвы (каркас вырезает скрипты)`,
+    );
+  }
+
+  // 13 — одна галочка у «Descargado» (находка 2 захода 7.234)
+  for (const done of strings.match(/"done": "[^"]*"/g) ?? []) {
+    if (/✓/.test(done)) {
+      bad.push(`${STRINGS}: строка ${done} несёт свою галочку, а значок кнопки ставит вторую — «✓ Descargado ✓»`);
+    }
   }
 
   // 8 — опись восстанавливается из кеша
@@ -456,6 +504,43 @@ async function plant() {
     "не простым запросом с CORS",
   );
 
+  add(
+    "подсадка: DownloadsHeal снят из разметки (заход 7.235)",
+    LAYOUT,
+    (s) => s.replace("<DownloadsHeal />", "{null}"),
+    "DownloadsHeal не стоит в разметке",
+  );
+  add(
+    "подсадка: лечение идёт и после выхода",
+    HEAL,
+    (s) => s.replace('SIGNED_OUT_PARAM) === "1") return', 'SIGNED_OUT_PARAM) === "never") return'),
+    "первой странице после выхода",
+  );
+  add(
+    "подсадка: лечение пишет опись, не спросив про кеш",
+    CLIENT,
+    (s) => s.replace("if (changed && (await downloadsCacheExists(args.caches)))", "if (changed)"),
+    "не спросив, жив ли ещё кеш скачанного",
+  );
+  add(
+    "подсадка: в разметке урока снова только текущий слайд",
+    SLIDES,
+    (s) => s.replace("hidden={i !== index}", ""),
+    "лежит не каждый слайд",
+  );
+  add(
+    "подсадка: копия больше не превращает колоду в переключатели",
+    CLIENT,
+    (s) => s.replace("HTMLElement;\n  offlineDeckOf(clone);", "HTMLElement;"),
+    "стрелки мертвы",
+  );
+  add(
+    "подсадка: вторая галочка вернулась в строку «done»",
+    STRINGS,
+    (s) => s.replace('"done": "Descargado",', '"done": "Descargado ✓",'),
+    "несёт свою галочку",
+  );
+
   for (const c of cases) {
     console.log(`  ${c.ok ? (c.name.startsWith("отрицательный") ? "молчит" : "поймано") : "ПРОПУЩЕНО"} — ${c.name}`);
   }
@@ -477,7 +562,7 @@ async function gate() {
     return;
   }
   console.log(
-    "check:downloads — 10 правил (из них 2 прогоном), нарушений 0 (заходы 7.231 и 7.233, офлайн-3; строки 310, 311, 314, 315, 316, 317)",
+    "check:downloads — 13 правил (из них 2 прогоном), нарушений 0 (заходы 7.231, 7.233 и 7.235, офлайн-3; строки 310, 311, 314, 315, 316, 317)",
   );
 }
 

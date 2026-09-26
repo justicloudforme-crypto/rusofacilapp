@@ -21,6 +21,7 @@ import SentryUser from "@/components/SentryUser";
 import NativeShellCookie from "@/components/NativeShellCookie";
 import SignedOutCachePurge from "@/components/SignedOutCachePurge";
 import OfflineSaveCopy from "@/components/OfflineSaveCopy";
+import DownloadsHeal from "@/components/DownloadsHeal";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUserForChrome } from "@/lib/auth";
 import { getUserStreakStats, persistFreezeState, type StreakStats } from "@/lib/streaks";
@@ -274,6 +275,9 @@ export default async function LangLayout({
             строка 309: в оболочке навигацию обслуживает java-посредник
             Capacitor, воркер её не видит и в кеш не кладёт ничего. */}
         <OfflineSaveCopy />
+        {/* Скачанное долечивается при заходе с сетью — заход 7.235:
+            копия без своих листов стилей не переживала выкат сайта. */}
+        <DownloadsHeal />
         {/* Плашка «нет соединения» переехала ВНУТРЬ шапки (долг 180).
             Здесь, первым элементом потока, она стояла ВЫШЕ шапки и
             забирала себе полосу под строкой состояния: в оболочке на

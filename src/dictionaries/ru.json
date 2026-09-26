@@ -1745,7 +1745,7 @@
       "measuring": "Считаем…",
       "confirm": "Скачать {weight}",
       "progress": "{done} из {total}",
-      "done": "Скачано ✓",
+      "done": "Скачано",
       "mark": "Скачано",
       "cancel": "Отмена",
       "weightNote": "Страница и {clips} записей",
