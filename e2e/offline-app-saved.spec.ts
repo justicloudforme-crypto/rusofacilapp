@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
+import { reachShell } from "./helpers/offline-shell";
 import { loginWithSubscription } from "./helpers/auth";
 
 /**
@@ -46,17 +47,6 @@ async function becomeNativeShell(page: Page, context: BrowserContext): Promise<v
     await route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: SHELL_HTML });
   });
   await context.setOffline(true);
-}
-
-async function visit(page: Page, path: string): Promise<void> {
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const arrived = await page
-      .goto(path, { timeout: 15_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (arrived) return;
-    await page.waitForTimeout(500);
-  }
 }
 
 /** Что лежит в кешах документов, по видам. */
@@ -146,7 +136,12 @@ test("каркас без сети показывает список сохра�
   // ХОЛОДНЫЙ СТАРТ: приложение открывается НА СТАРТОВОМ АДРЕСЕ, а не на
   // уроке. Ровно так было у владельца, и ровно поэтому читалка 7.229 не
   // находила ничего: она ищет копию ЭТОГО адреса.
-  await visit(page, "/ru");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt1 = await reachShell(page, "/ru");
+  expect(shellAt1.arrived, `каркас не открылся по /ru — страница осталась на ${shellAt1.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
 
   const shell = await page.evaluate(() => ({
@@ -210,7 +205,12 @@ test("вкладка «Cursos» без сети открывает сохран�
     for (const name of await caches.keys()) if (name.startsWith("rf-pages")) await caches.delete(name);
   });
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt2 = await reachShell(page, "/es");
+  expect(shellAt2.arrived, `каркас не открылся по /es — страница осталась на ${shellAt2.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const empty = await page.evaluate(() => ({
     items: document.querySelectorAll("[data-saved-list] li").length,
@@ -239,7 +239,12 @@ test("вкладка «Cursos» без сети открывает сохран�
   const sectionTitle = await page.title();
 
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt3 = await reachShell(page, "/es");
+  expect(shellAt3.arrived, `каркас не открылся по /es — страница осталась на ${shellAt3.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   await page.locator('a[data-href="/courses"]').click();
   await page.waitForFunction(() => document.body?.dataset.offlineCopy === "1", null, { timeout: 25_000 });
@@ -270,7 +275,12 @@ test("вкладка «Cursos» без сети открывает сохран�
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
 
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt4 = await reachShell(page, "/es");
+  expect(shellAt4.arrived, `каркас не открылся по /es — страница осталась на ${shellAt4.where}`).toBe(true);
   await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
   // Строка ищется по НАЗВАНИЮ, а не по подписи вида: подпись вида —
   // это ровно то, что нажатие меняет, и локатор по ней перестал бы

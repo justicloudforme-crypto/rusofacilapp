@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
+import { reachShell } from "./helpers/offline-shell";
 import { loginWithSubscription } from "./helpers/auth";
 import { serveClipLocally } from "./helpers/audio-clip-origin";
 import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
@@ -162,7 +163,12 @@ test("«Borrar» у скачанного НЕ уносит просто прос
   // Без сети строка говорит «Descargado» — два обещания не выглядят
   // одинаково.
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt1 = await reachShell(page, "/es");
+  expect(shellAt1.arrived, `каркас не открылся по /es — страница осталась на ${shellAt1.where}`).toBe(true);
   await page.waitForSelector("[data-downloads-list] li", { timeout: 25_000 });
   await expect(page.locator("[data-saved-list] li button").first()).toContainText("Descargado");
 
