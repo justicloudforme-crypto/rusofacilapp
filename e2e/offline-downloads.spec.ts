@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
+import { reachShell } from "./helpers/offline-shell";
 import { loginWithSubscription } from "./helpers/auth";
 import { serveClipLocally } from "./helpers/audio-clip-origin";
 import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
@@ -284,7 +285,12 @@ test("скачанное открывается без сети, звучит, �
 
   // ====== БЕЗ СЕТИ: список, блок скачанного, звук ======
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt1 = await reachShell(page, "/es");
+  expect(shellAt1.arrived, `каркас не открылся по /es — страница осталась на ${shellAt1.where}`).toBe(true);
   await page.waitForSelector("[data-downloads]:not([hidden])", { timeout: 25_000 });
 
   await expect(page.locator("[data-downloads-total]")).toContainText(/MB/);
@@ -337,7 +343,12 @@ test("скачанное открывается без сети, звучит, �
   expect(wiped, "кешей с отпечатком сборки не было вовсе — выкат изобразить было нечем").toBeGreaterThan(0);
 
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt2 = await reachShell(page, "/es");
+  expect(shellAt2.arrived, `каркас не открылся по /es — страница осталась на ${shellAt2.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const rowsAfterDeploy = await page.evaluate(() =>
     [...document.querySelectorAll("[data-saved-list] li button")].map((node) =>
@@ -368,7 +379,12 @@ test("скачанное открывается без сети, звучит, �
     .toBe(0);
 
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt3 = await reachShell(page, "/es");
+  expect(shellAt3.arrived, `каркас не открылся по /es — страница осталась на ${shellAt3.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const afterLogout = await page.evaluate(() => ({
     items: document.querySelectorAll("[data-saved-list] li").length,

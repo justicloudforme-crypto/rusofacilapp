@@ -168,7 +168,7 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
     // до проверки, ВОСКРЕШАЛ три кеша сразу после выхода из учётной
     // записи. Поймано пробой `e2e/offline-orphan-row.spec.ts` («после
     // выхода кешей rf-pages*: ожидалось 0, получено 3»).
-    await keepSheetsBeside(deps.caches, deps.names.sheets, deps.html, deps.url);
+    const madeSheetCache = await keepSheetsBeside(deps.caches, deps.names.sheets, deps.html, deps.url);
 
     const row: SavedRow = {
       url: deps.url,
@@ -199,6 +199,26 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
     if (!(await copyIsThere(deps.caches, copyCacheName, deps.url))) {
       const after = await readIndex(deps.caches, deps.names, deps.url);
       await writeIndex(deps.caches, deps.names, deps.url, withoutUrl(after, deps.url));
+      // КЕШ ЛИСТОВ СТИЛЕЙ, ЗАВЕДЁННЫЙ ЭТИМ ЖЕ ЗАХОДОМ, УНОСИТСЯ ВМЕСТЕ С
+      // НИМ — ЗАХОД 7.233, СТРОКА 317.
+      //
+      // Уборщик выхода стирает кеши `rf-pages*` ЦЕЛИКОМ, а любой `put`
+      // заводит их заново. Проверка «копия на месте» ловит уборку,
+      // случившуюся ДО записи стилей, но не ту, что пришла между записью
+      // и этой строкой: тогда на телефоне вышедшего человека остаётся
+      // кеш, которого он не заводил. Поймано живой пробой
+      // `e2e/offline-orphan-row.spec.ts` на CI 25.09.2026 («после выхода
+      // кешей rf-pages*: ожидалось 0, получено 2»), а не рассуждением.
+      //
+      // Уносится ТОЛЬКО заведённый здесь: чужой кеш листов стилей,
+      // лежавший до нас, к этой уборке отношения не имеет.
+      if (madeSheetCache) {
+        try {
+          await deps.caches.delete(deps.names.sheets);
+        } catch {
+          // Уборка — не обещание; упасть на ней нечем.
+        }
+      }
       return "lost-race";
     }
     return "saved";
@@ -238,10 +258,19 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
  * сохранение: копия без одного из двух листов читается, а потерять из-за
  * него весь урок было бы платой не по счёту.
  */
-async function keepSheetsBeside(store: CacheStorage, cacheName: string, html: string, origin: string): Promise<void> {
+async function keepSheetsBeside(
+  store: CacheStorage,
+  cacheName: string,
+  html: string,
+  origin: string,
+): Promise<boolean> {
   try {
     const sheets = sheetUrlsInHtml(html, origin);
-    if (sheets.length === 0) return;
+    if (sheets.length === 0) return false;
+    // ЗАВЕЛИ ЛИ КЕШ МЫ САМИ — спрашивается ДО `open`, потому что `open`
+    // на несуществующем имени создаёт его молча. Ответ нужен уборке в
+    // `saveCopy` (строка 317): унести можно только своё.
+    const existed = (await store.keys()).includes(cacheName);
     const cache = await store.open(cacheName);
     for (const sheet of sheets) {
       try {
@@ -254,8 +283,10 @@ async function keepSheetsBeside(store: CacheStorage, cacheName: string, html: st
         // Один лист — не вся копия; молча дальше.
       }
     }
+    return !existed;
   } catch {
     // Хранилище могло уехать целиком — это ловит `copyIsThere` ниже.
+    return false;
   }
 }
 

@@ -307,6 +307,32 @@ describe("строка 314: копия несёт свои листы стиле
     expect(await store.keys()).not.toContain(NAMES.sheets);
   });
 
+  it("уборка пришла ПОСЛЕ записи стилей — заведённый кеш уносится вместе со строкой (317)", async () => {
+    // Дословно то, что поймала живая проба на CI 25.09.2026: после выхода
+    // из учётной записи на телефоне осталось ДВА кеша `rf-pages*`, хотя
+    // уборщик стёр все. Один из них — кеш листов стилей, заведённый
+    // сохранением уже ПОСЛЕ уборки.
+    const { store, args } = deps({ html: STYLED });
+    const precache = await store.open("serwist-precache-v2");
+    await precache.put(`${ORIGIN}/_next/static/css/aaa.css`, new Response("body{}", { status: 200 }));
+
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ ПЕРВЫМ: без уборки кеш листов заводится и остаётся.
+    expect(await saveCopy(args)).toBe("saved");
+    expect(await store.keys()).toContain(NAMES.sheets);
+
+    // Теперь то же самое, но уборка приходит между записью стилей и
+    // последней проверкой: `open` вызывается сохранением 4 раза до неё.
+    const raced = deps({ html: STYLED });
+    const pre2 = await raced.store.open("serwist-precache-v2");
+    await pre2.put(`${ORIGIN}/_next/static/css/aaa.css`, new Response("body{}", { status: 200 }));
+    raced.store.wipeOnOpen = { after: 5, name: NAMES.content };
+    expect(await saveCopy(raced.args)).toBe("lost-race");
+    expect(
+      await raced.store.keys(),
+      "кеш листов стилей остался на телефоне вышедшего человека — он его не заводил",
+    ).not.toContain(NAMES.sheets);
+  });
+
   it("копию унесло — листы стилей не пишутся и кеш не воскресает", async () => {
     // Уборщик выхода стирает кеши ЦЕЛИКОМ, а любой `put` заводит их
     // заново. Заход, писавший стили ДО проверки копии, воскрешал три

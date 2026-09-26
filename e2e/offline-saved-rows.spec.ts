@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
+import { reachShell } from "./helpers/offline-shell";
 
 /**
  * СПИСОК СОХРАНЁННОГО ГОВОРИТ ПРАВДУ — ЗАХОД 7.232, СТРОКА 312.
@@ -154,7 +155,13 @@ test("строка раздела, которую нельзя показать,
   // ШАГ 2. ПОЗИТИВНЫЙ КОНТРОЛЬ, И ОН ПЕРВЫЙ: пока всё на месте, строки
   // есть, НАЗВАНЫ СЛОВАМИ (а не адресом) и открываются.
   await becomeNativeShell(page, context);
-  await page.goto("/es", { waitUntil: "commit" }).catch(() => {});
+  // ПЕРЕХОД, КОТОРЫЙ НЕ ТЕРЯЕТСЯ (заход 7.233): выключение сети заставляет
+  // живую страницу перейти на саму себя, и `goto` сразу после него
+  // отменяется — каркас открывается по ЧУЖОМУ адресу и честно показывает
+  // копию той страницы, а списка на экране копии нет. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const first = await reachShell(page, "/es");
+  expect(first.arrived, `каркас не открылся по /es — страница осталась на ${first.where}`).toBe(true);
   await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
   const before = await shellRows(page);
   expect(before.length, "список пуст после прохода по трём разделам").toBeGreaterThan(0);
@@ -209,7 +216,8 @@ test("строка раздела, которую нельзя показать,
 
   // ШАГ 4. ГЛАВНОЕ УТВЕРЖДЕНИЕ ЗАХОДА.
   await becomeNativeShell(page, context);
-  await page.goto("/es", { waitUntil: "commit" }).catch(() => {});
+  const again = await reachShell(page, "/es");
+  expect(again.arrived, `каркас не открылся по /es — страница осталась на ${again.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const after = await shellRows(page);
 
@@ -227,7 +235,8 @@ test("строка раздела, которую нельзя показать,
   const count = await page.locator("[data-saved-list] li button").count();
   expect(count, "после отсева не осталось ни одной строки — открывать нечего").toBeGreaterThan(0);
   for (let i = 0; i < count; i += 1) {
-    await page.goto("/es", { waitUntil: "commit" }).catch(() => {});
+    const back = await reachShell(page, "/es");
+    expect(back.arrived, `каркас не открылся по /es — страница осталась на ${back.where}`).toBe(true);
     await page.waitForSelector("[data-saved-list] li button", { timeout: 25_000 });
     const button = page.locator("[data-saved-list] li button").nth(i);
     const name = (await button.innerText()).split("\n")[0].trim();

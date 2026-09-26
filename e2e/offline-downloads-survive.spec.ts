@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
+import { reachShell } from "./helpers/offline-shell";
 import { loginWithSubscription } from "./helpers/auth";
 import { serveClipLocally } from "./helpers/audio-clip-origin";
 
@@ -144,7 +145,12 @@ test("листы стилей чужих кешей ушли — скачанн�
   expect(wiped, "листов стилей вне кеша скачанного не было — выкат изобразить было нечем").toBeGreaterThan(0);
 
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt1 = await reachShell(page, "/es");
+  expect(shellAt1.arrived, `каркас не открылся по /es — страница осталась на ${shellAt1.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const after = await shellRows(page);
 
@@ -165,7 +171,12 @@ test("листы стилей чужих кешей ушли — скачанн�
       if (/\/_next\/static\/css\//.test(request.url)) await cache.delete(request);
     }
   });
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt2 = await reachShell(page, "/es");
+  expect(shellAt2.arrived, `каркас не открылся по /es — страница осталась на ${shellAt2.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const blind = await shellRows(page);
   expect(
@@ -189,7 +200,12 @@ test("опись скачанного потеряна — строка восс
 
   // ПОЗИТИВНЫЙ КОНТРОЛЬ ПЕРВЫМ: с описью строка есть и называет вес.
   await becomeNativeShell(page, context);
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt3 = await reachShell(page, "/es");
+  expect(shellAt3.arrived, `каркас не открылся по /es — страница осталась на ${shellAt3.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const listed = await shellRows(page);
   expect(listed.rows.join(" | "), "строки скачанного нет ещё до потери описи").toMatch(/Descargado/);
@@ -207,7 +223,12 @@ test("опись скачанного потеряна — строка восс
   expect(gone.removed, "описи не было — терять было нечего").toBe(true);
   expect(gone.left, "кеш скачанного пуст — восстанавливать не из чего").toBeGreaterThan(1);
 
-  await visit(page, "/es");
+  // Переход на каркас — через устойчивого помощника (заход 7.233):
+  // выключение сети заставляет живую страницу перейти на саму себя, и
+  // голый `goto` сразу после него отменяется. Разбор и замер — в
+  // `helpers/offline-shell.ts`.
+  const shellAt4 = await reachShell(page, "/es");
+  expect(shellAt4.arrived, `каркас не открылся по /es — страница осталась на ${shellAt4.where}`).toBe(true);
   await page.waitForSelector("[data-saved]:not([hidden])", { timeout: 25_000 });
   const restored = await shellRows(page);
   expect(restored.rows.join(" | "), "строка не восстановлена из кеша — скачанное лежит и недостижимо").toMatch(
