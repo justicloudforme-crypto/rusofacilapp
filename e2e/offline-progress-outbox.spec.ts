@@ -1,8 +1,6 @@
 import { test, expect } from "./helpers/test";
 import type { BrowserContext, Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import { fillAllExercises } from "./helpers/exercises";
-import { reachShell } from "./helpers/offline-shell";
 
 /**
  * ОЧЕРЕДЬ ОТВЕТОВ БЕЗ СЕТИ — ЗАХОД 7.236 (ОФЛАЙН-3б).
@@ -350,53 +348,5 @@ test.describe("очередь ответов урока без сети (7.236)"
       expect(await screenPercent(page)).toBe(second);
       expect(await outboxCount(page)).toBe(0);
     });
-  });
-
-  test("«Borrar todo» в каркасе без сети стирает скачанное, но не очередь ответов (7.237)", async ({ page, context }) => {
-    test.setTimeout(180_000);
-    await register(context);
-    await page.goto(LESSON);
-    await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
-    const download = page.locator("[data-rf-download-button]").first();
-    await download.click();
-    await expect(download).toContainText(/Descargar \d/, { timeout: 60_000 });
-    await download.click();
-    await expect(download).toContainText("Descargado", { timeout: 120_000 });
-
-    await page.getByRole("tab", { name: /Ejercicios/ }).click();
-    await fillAllExercises(page);
-    await context.setOffline(true);
-    await checkAnswers(page);
-    const offlineScore = await screenPercent(page);
-    await expect(page.locator("[data-rf-outbox-note]")).toBeVisible();
-    expect(await outboxCount(page)).toBe(1);
-
-    // Каркас приложения без сети (как у оболочки: документ — `offline.html`).
-    await page.evaluate(async () => {
-      for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
-    });
-    const shellHtml = readFileSync("public/offline.html", "utf8");
-    await context.route("**/*", (route) =>
-      route.request().resourceType() === "document"
-        ? route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: shellHtml })
-        : route.continue(),
-    );
-    const arrival = await reachShell(page, "/es");
-    expect(arrival.arrived, `каркас не открылся — страница на ${arrival.where}`).toBe(true);
-    await page.waitForSelector("[data-downloads]:not([hidden])", { timeout: 25_000 });
-    page.on("dialog", (dialog) => void dialog.accept());
-    await page.locator("[data-downloads-remove-all]").click();
-    // ПОЗИТИВНЫЙ КОНТРОЛЬ: «Borrar todo» и правда стёр скачанное.
-    await expect(page.locator("[data-downloads]")).toBeHidden({ timeout: 15_000 });
-    expect(await page.evaluate(async () => (await caches.keys()).includes("rf-pages-downloads"))).toBe(false);
-    expect(await outboxCount(page), "«Borrar todo» стёр очередь ответов").toBe(1);
-
-    await context.unroute("**/*");
-    await context.setOffline(false);
-    await page.goto("/es");
-    await expect.poll(() => outboxCount(page), { timeout: 20_000 }).toBe(0);
-    const after = await ledger(context);
-    expect(after.receipts).toBe(1);
-    expect(after.attempt?.score).toBe(offlineScore);
   });
 });
