@@ -1745,7 +1745,7 @@
       "measuring": "Calculando…",
       "confirm": "Descargar {weight}",
       "progress": "{done} / {total}",
-      "done": "Descargado ✓",
+      "done": "Descargado",
       "mark": "Descargado",
       "cancel": "Cancelar",
       "weightNote": "Página y {clips} audios",

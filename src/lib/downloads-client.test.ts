@@ -14,6 +14,8 @@ import { sheetUrlsInHtml } from "./offline-save";
 import {
   copyMarkupOf,
   downloadPage,
+  healDownloads,
+  withSheetLinks,
   indexUrlFor,
   isComplete,
   measureClips,
@@ -359,7 +361,7 @@ function pageWithButton(label: string): Document {
 }
 
 describe("снимок скачанной страницы", () => {
-  it("промежуточное «0 / 13» в снимок не попадает, а «Descargado ✓» попадает", () => {
+  it("промежуточное «0 / 13» в снимок не попадает, а «✓ Descargado» попадает", () => {
     const doc = pageWithButton("0 / 13");
 
     // ПОЗИТИВНЫЙ КОНТРОЛЬ: прежний способ уносил в копию ровно это.
@@ -367,10 +369,13 @@ describe("снимок скачанной страницы", () => {
       "0 / 13",
     );
 
-    const copy = copyMarkupOf(doc, "Descargado ✓");
+    const copy = copyMarkupOf(doc, "Descargado");
     expect(copy, "в скачанную копию легло состояние начала скачивания").not.toContain("0 / 13");
-    expect(copy).toContain("Descargado ✓");
+    expect(copy).toContain("Descargado");
     expect(copy).toContain("✓</span>");
+    // ОДНА ГАЛОЧКА (заход 7.235, находка 2 захода 7.234): значок кнопки
+    // уже ставит «✓», и строка «done» второй галочки не несёт.
+    expect(copy.match(/✓/g)?.length, "на кнопке скачанной копии две галочки — «✓ Descargado ✓»").toBe(1);
     expect(copy).toContain("disabled");
     expect(copy, "заметка «Página y 12 audios» — про нажатие, а не про материал").not.toContain("Página y 12 audios");
     expect(copy.startsWith("<!doctype html>\n<html")).toBe(true);
@@ -386,7 +391,7 @@ describe("снимок скачанной страницы", () => {
 
   it("живой документ снимком НЕ портится", () => {
     const doc = pageWithButton("0 / 13");
-    copyMarkupOf(doc, "Descargado ✓");
+    copyMarkupOf(doc, "Descargado");
     expect(doc.querySelector("[data-rf-download-label]")?.textContent).toBe("0 / 13");
   });
 });
@@ -612,5 +617,186 @@ describe("пометка языка у строки", () => {
     const clean = withoutDuplicates(one);
     expect(clean).toHaveLength(1);
     expect(clean[0].title).toBe("свежая");
+  });
+});
+
+
+/**
+ * СКАЧАННОЕ ДО #412 ДОЛЕЧИВАЕТСЯ ПРИ ЗАХОДЕ С СЕТЬЮ — ЗАХОД 7.235.
+ *
+ * Видео владельца 26.09.2026: кабинет — две строки «Descargado», каркас без
+ * сети — «Guardado: 0». Эмулятор 7.235: скачано кодом ДО мержа #412,
+ * выкат, без сети — «кешей 2 · описей 2 · строк 2 · показано 0». Своих
+ * листов стилей у такой строки нет, а её лист (`…css?dpl=<старый выкат>`)
+ * жил только в кеше с отпечатком сборки и ушёл с выкатом.
+ */
+const OLD_SHEET = `${ORIGIN}/_next/static/css/old.css?dpl=dpl_OLD`;
+const NEW_SHEETS = [`${ORIGIN}/_next/static/css/new1.css?dpl=dpl_NEW`, `${ORIGIN}/_next/static/css/new2.css?dpl=dpl_NEW`];
+const LEGACY_HTML =
+  '<!doctype html><html lang="es"><head><title>Snegúrochka — RusoFácilapp</title>' +
+  '<link rel="stylesheet" href="/_next/static/css/old.css?dpl=dpl_OLD" data-precedence="next"/>' +
+  "</head><body>texto</body></html>";
+
+/** Скачанное кодом до #412: страница, клипы и опись БЕЗ листов стилей. */
+async function legacyDownload(store: FakeCaches): Promise<FakeCache> {
+  const cache = await store.open(DOWNLOADS_CACHE_NAME);
+  await cache.put(STORY, new Response(LEGACY_HTML, { status: 200 }));
+  for (const clip of CLIPS) await cache.put(clip, new Response(new Uint8Array(10), { status: 200 }));
+  const row = {
+    url: STORY,
+    path: "/es/stories/snegurochka",
+    kind: "story",
+    title: "Снегурочка",
+    lang: "es",
+    savedAt: 1,
+    pageBytes: LEGACY_HTML.length,
+    clips: CLIPS.map((url) => ({ url, bytes: 10 })),
+    bytes: LEGACY_HTML.length + 30,
+  };
+  await cache.put(indexUrlFor(ORIGIN), new Response(JSON.stringify([row]), { status: 200 }));
+  return cache;
+}
+
+/** Тот же вопрос, что задаёт каркас (`keepPresent`): лежит ли хоть один
+ *  лист стилей, объявленный самой копией. */
+async function shellWouldShow(store: FakeCaches): Promise<boolean> {
+  const cache = await store.open(DOWNLOADS_CACHE_NAME);
+  const page = await cache.match(STORY);
+  if (!page) return false;
+  for (const sheet of sheetUrlsInHtml(await page.text(), STORY)) if (await cache.match(sheet)) return true;
+  return false;
+}
+
+function serverAfterDeploy(servesOld: boolean) {
+  return vi.fn(async (url: string) => {
+    if (NEW_SHEETS.includes(url) || (servesOld && url === OLD_SHEET)) return new Response("body{}", { status: 200 });
+    return new Response("not found", { status: 404 });
+  });
+}
+
+describe("долечивание скачанного после выката (заход 7.235)", () => {
+  it("старого листа на сервере нет — копия переходит на листы текущей сборки и снова видна каркасу", async () => {
+    const store = new FakeCaches();
+    await legacyDownload(store);
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ: это и есть экран владельца — каркасу показать нечем.
+    expect(await shellWouldShow(store), "стенд не воспроизводит «Guardado: 0» — мерить нечего").toBe(false);
+
+    const net = serverAfterDeploy(false);
+    const outcome = await healDownloads({
+      caches: store as unknown as CacheStorage,
+      fetch: net,
+      origin: ORIGIN,
+      currentSheets: NEW_SHEETS,
+    });
+    expect(outcome).toEqual({ rows: 1, healed: 0, rewritten: 1, failed: 0 });
+    expect(await shellWouldShow(store), "после лечения каркас всё ещё не видит скачанное").toBe(true);
+
+    const rows = await readDownloads(store as unknown as CacheStorage, ORIGIN);
+    expect(rows[0].sheets).toEqual(NEW_SHEETS);
+    expect(rows[0].clips).toHaveLength(CLIPS.length);
+    expect(await isComplete(store as unknown as CacheStorage, rows[0])).toBe(true);
+    // Клипы не качались заново: только листы стилей.
+    expect(net.mock.calls.every(([url]) => url.includes("/_next/static/css/"))).toBe(true);
+
+    // Второй заход ничего не трогает.
+    const again = await healDownloads({
+      caches: store as unknown as CacheStorage,
+      fetch: net,
+      origin: ORIGIN,
+      currentSheets: NEW_SHEETS,
+    });
+    expect(again).toEqual({ rows: 1, healed: 0, rewritten: 0, failed: 0 });
+  });
+
+  it("старый лист сервер ещё отдаёт — он и докладывается, разметка не меняется", async () => {
+    const store = new FakeCaches();
+    const cache = await legacyDownload(store);
+    const outcome = await healDownloads({
+      caches: store as unknown as CacheStorage,
+      fetch: serverAfterDeploy(true),
+      origin: ORIGIN,
+      currentSheets: NEW_SHEETS,
+    });
+    expect(outcome).toEqual({ rows: 1, healed: 1, rewritten: 0, failed: 0 });
+    expect(await (await cache.match(STORY))!.text()).toBe(LEGACY_HTML);
+    expect((await readDownloads(store as unknown as CacheStorage, ORIGIN))[0].sheets).toEqual([OLD_SHEET]);
+  });
+
+  it("сеть отказала на всём — ничего не портится и строка остаётся как была", async () => {
+    const store = new FakeCaches();
+    const cache = await legacyDownload(store);
+    const outcome = await healDownloads({
+      caches: store as unknown as CacheStorage,
+      fetch: vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }),
+      origin: ORIGIN,
+      currentSheets: NEW_SHEETS,
+    });
+    expect(outcome.failed).toBe(1);
+    expect(await (await cache.match(STORY))!.text()).toBe(LEGACY_HTML);
+  });
+
+  it("кеша скачанного нет — лечение его не заводит", async () => {
+    const store = new FakeCaches();
+    await healDownloads({
+      caches: store as unknown as CacheStorage,
+      fetch: serverAfterDeploy(false),
+      origin: ORIGIN,
+      currentSheets: NEW_SHEETS,
+    });
+    expect(await store.keys()).toEqual([]);
+  });
+
+  it("withSheetLinks меняет только листы стилей", () => {
+    const out = withSheetLinks(LEGACY_HTML.replace("</head>", '<link rel="icon" href="/i.png"/></head>'), NEW_SHEETS);
+    expect(out).not.toContain("old.css");
+    expect(out).toContain('rel="icon"');
+    expect(sheetUrlsInHtml(out, STORY)).toEqual(NEW_SHEETS);
+  });
+});
+
+/**
+ * ПРЕЗЕНТАЦИЯ ЛИСТАЕТСЯ В КОПИИ БЕЗ СКРИПТОВ — ЗАХОД 7.235.
+ */
+function pageWithDeck(): Document {
+  document.documentElement.innerHTML = `
+    <head><title>Lección</title></head>
+    <body>
+      <div data-rf-deck>
+        ${[0, 1, 2]
+          .map(
+            (i) => `<div data-rf-slide="${i}" class="flex"${i === 0 ? "" : " hidden"}>
+              <button type="button" data-rf-slide-go="${Math.max(0, i - 1)}"${i === 0 ? " disabled" : ""} aria-label="Anterior">←</button>
+              <button type="button" data-rf-slide-go="${Math.min(2, i + 1)}"${i === 2 ? " disabled" : ""} aria-label="Siguiente">→</button>
+              <span>Diapositiva ${i + 1} de 3</span>
+            </div>`,
+          )
+          .join("")}
+      </div>
+    </body>`;
+  return document;
+}
+
+describe("колода слайдов в скачанной копии (заход 7.235)", () => {
+  it("все слайды в копии, и каждый достижим переключателем без скриптов", () => {
+    const doc = pageWithDeck();
+    // ПОЗИТИВНЫЙ КОНТРОЛЬ: живая страница листается React-кнопками, а два
+    // слайда из трёх спрятаны атрибутом — в копии это был бы тупик.
+    expect(doc.querySelectorAll("[data-rf-slide][hidden]").length).toBe(2);
+    expect(doc.querySelectorAll("button[data-rf-slide-go]").length).toBe(6);
+
+    const copy = new DOMParser().parseFromString(copyMarkupOf(doc, null), "text/html");
+    expect(copy.querySelectorAll("[data-rf-slide][hidden]").length, "в копии слайды спрятаны атрибутом").toBe(0);
+    expect(copy.querySelectorAll("button[data-rf-slide-go]").length, "в копии остались мёртвые кнопки").toBe(0);
+    const radios = copy.querySelectorAll<HTMLInputElement>("input[data-rf-deck-radio]");
+    expect(radios.length).toBe(3);
+    expect(radios[0].hasAttribute("checked")).toBe(true);
+    const targets = new Set([...copy.querySelectorAll("label[data-rf-slide-go]")].map((l) => l.getAttribute("for")));
+    for (const radio of radios) expect(targets.has(radio.id), `к слайду ${radio.id} не ведёт ни одна стрелка`).toBe(true);
+    const css = copy.querySelector("[data-rf-deck] > style")?.textContent ?? "";
+    for (let i = 0; i < 3; i++) expect(css).toContain(`:checked~[data-rf-slide="${i}"]`);
+    // Живая страница не тронута: копия снималась с клона.
+    expect(doc.querySelectorAll("button[data-rf-slide-go]").length).toBe(6);
   });
 });

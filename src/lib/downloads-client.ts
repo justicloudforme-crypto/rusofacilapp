@@ -481,6 +481,146 @@ export async function removeAllDownloads(store: CacheStorage): Promise<boolean> 
   }
 }
 
+export interface HealOutcome {
+  /** Строк скачанного всего. */
+  rows: number;
+  /** Строк, которым доложены их же листы стилей. */
+  healed: number;
+  /** Строк, переведённых на листы стилей ТЕКУЩЕЙ сборки. */
+  rewritten: number;
+  /** Строк, которые вылечить не вышло (сеть отказала на всём). */
+  failed: number;
+}
+
+/** Все `<link rel=stylesheet>` разметки заменяются на листы `sheets`. */
+export function withSheetLinks(html: string, sheets: readonly string[]): string {
+  const stripped = html.replace(/<link\b[^>]*>/gi, (tag) => (/rel\s*=\s*["']?stylesheet/i.test(tag) ? "" : tag));
+  const links = sheets.map((href) => `<link rel="stylesheet" href="${href.replace(/"/g, "&quot;")}">`).join("");
+  return /<\/head>/i.test(stripped) ? stripped.replace(/<\/head>/i, `${links}</head>`) : `${links}${stripped}`;
+}
+
+/**
+ * ДОЛЕЧИТЬ СКАЧАННОЕ ПРИ ЗАХОДЕ С СЕТЬЮ — ЗАХОД 7.235.
+ *
+ * ====================================================================
+ * ЧТО СНЯЛ ВЛАДЕЛЕЦ И ЧТО ПОКАЗАЛ ПРОГОН
+ * ====================================================================
+ *
+ * Видео 26.09.2026 (POCO): в кабинете «Descargado» две строки (1,5 и
+ * 1,4 MB), без сети каркас — «Guardado: 0». Эмулятор, прогон 7.235:
+ * скачать кодом ДО мержа #412 (25.09.2026 14:35, строка 314) → выкат
+ * текущего → открыть с сетью → убить → без сети. Прибор каркаса:
+ * «кешей 2 · описей 2 · строк 2 · показано 0» — экран владельца знак в
+ * знак. Скачанное целиком на месте (74 записи кеша), а своих листов
+ * стилей у такой копии нет: на проде адрес листа несёт `?dpl=<выкат>`
+ * (Vercel), в precache таких ключей нет вовсе, и лист лежал ТОЛЬКО в
+ * `rf-pages-others-<отпечаток>` — а его первый же выкат уносит. Каркас
+ * показывает строку лишь при хоть одном её листе стилей (строка 312),
+ * кабинет этого не спрашивает — отсюда «2 в кабинете, 0 в каркасе».
+ *
+ * Скачанное кодом ПОСЛЕ #412 носит свои листы с собой и выкат переживает
+ * (прогон 7.235: гость и вошедший, «показано 2»). Лечить надо то, что
+ * уже лежит на телефонах.
+ *
+ * ====================================================================
+ * КАК ЛЕЧИТСЯ
+ * ====================================================================
+ *
+ * Для каждой строки: листы, которые объявляет её разметка, но которых
+ * нет в кеше скачанного, докладываются из сети. Не отдаёт их сервер
+ * (старого выката больше нет) — разметка копии переводится на листы
+ * ТЕКУЩЕЙ сборки (`currentSheets`), и они кладутся рядом. Стили сайта
+ * общие на все страницы, и копия с новыми листами читается; голая
+ * разметка без листов не читается вовсе — выбор между этими двумя.
+ *
+ * Ничего не удаляется и ничего не скачивается заново, кроме листов
+ * стилей (два файла ≈170 КБ на весь кеш, не на строку). Кеш скачанного
+ * НЕ заводится: нет его — лечить нечего (то же правило, что у чтения).
+ */
+export async function healDownloads(args: {
+  caches: CacheStorage;
+  fetch: FetchLike;
+  origin: string;
+  currentSheets: readonly string[];
+}): Promise<HealOutcome> {
+  const outcome: HealOutcome = { rows: 0, healed: 0, rewritten: 0, failed: 0 };
+  try {
+    if (!(await downloadsCacheExists(args.caches))) return outcome;
+    const rows = await readDownloads(args.caches, args.origin);
+    outcome.rows = rows.length;
+    if (rows.length === 0) return outcome;
+    const cache = await openDownloads(args.caches);
+
+    const lies = async (url: string) => Boolean(await cache.match(url, { ignoreVary: true }));
+    const bring = async (url: string): Promise<boolean> => {
+      if (await lies(url)) return true;
+      try {
+        const response = await args.fetch(url, { credentials: "omit", cache: "no-store" });
+        if (!response.ok) return false;
+        await cache.put(url, response);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    let changed = false;
+    const next: DownloadedRow[] = [];
+    for (const row of rows) {
+      let html = "";
+      try {
+        const page = await cache.match(row.url, { ignoreVary: true });
+        if (page && page.ok) html = await page.text();
+      } catch {
+        html = "";
+      }
+      if (!html) {
+        next.push(row);
+        continue;
+      }
+      const wanted = sheetUrlsInHtml(html, row.url);
+      let whole = wanted.length > 0;
+      for (const sheet of wanted) if (!(await bring(sheet))) whole = false;
+      if (whole) {
+        if (wanted.some((sheet) => !row.sheets.includes(sheet))) {
+          next.push({ ...row, sheets: [...new Set([...row.sheets, ...wanted])] });
+          outcome.healed += 1;
+          changed = true;
+        } else next.push(row);
+        continue;
+      }
+      const current = [...new Set(args.currentSheets)];
+      let currentOk = current.length > 0;
+      for (const sheet of current) if (!(await bring(sheet))) currentOk = false;
+      if (!currentOk) {
+        next.push(row);
+        outcome.failed += 1;
+        continue;
+      }
+      const rewrittenHtml = withSheetLinks(html, current);
+      await cache.put(
+        row.url,
+        new Response(rewrittenHtml, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }),
+      );
+      const pageBytes = new TextEncoder().encode(rewrittenHtml).length;
+      next.push({
+        ...row,
+        sheets: current,
+        pageBytes,
+        bytes: pageBytes + row.clips.reduce((sum, clip) => sum + clip.bytes, 0),
+      });
+      outcome.rewritten += 1;
+      changed = true;
+    }
+    // Уборка выхода могла прийти посреди лечения (строка 317): тогда опись
+    // не пишется — запись завела бы кеш вышедшего человека заново.
+    if (changed && (await downloadsCacheExists(args.caches))) await writeDownloads(args.caches, args.origin, next);
+    return outcome;
+  } catch {
+    return outcome;
+  }
+}
+
 /**
  * ПОПРОСИТЬ БРАУЗЕР НЕ ВЫБРАСЫВАТЬ НАШЕ ХРАНИЛИЩЕ.
  *
@@ -524,7 +664,7 @@ export async function askPersistence(): Promise<"granted" | "denied" | "unsuppor
  *
  * Снимок берётся ОДИН РАЗ, и берётся с КОПИИ дерева, а не с живого
  * документа: у копии кнопка сразу ставится в то состояние, в котором она
- * и окажется у читателя скачанного, — «✓ Descargado ✓», выключенная.
+ * и окажется у читателя скачанного, — «✓ Descargado», выключенная (одна галочка — заход 7.235).
  * Промежуточных состояний в снимок не попадает ни одного, потому что
  * снимок и промежуточное состояние больше не делят один объект.
  *
@@ -538,6 +678,7 @@ export async function askPersistence(): Promise<"granted" | "denied" | "unsuppor
  */
 export function copyMarkupOf(doc: Document, doneLabel: string | null): string {
   const clone = doc.documentElement.cloneNode(true) as HTMLElement;
+  offlineDeckOf(clone);
   if (doneLabel === null) {
     // ПРОСТО ПРОСМОТРЕННАЯ КОПИЯ (7.230) КНОПКИ НЕ ПОКАЗЫВАЕТ ВОВСЕ:
     // «Descargado ✓» в ней было бы неправдой, а живая «Descargar» —
@@ -568,4 +709,68 @@ export function clipUrlsOnPage(root: ParentNode): string[] {
     if (url && !out.includes(url)) out.push(url);
   }
   return out;
+}
+
+/**
+ * ПРЕЗЕНТАЦИЯ УРОКА ЛИСТАЕТСЯ В КОПИИ БЕЗ СКРИПТОВ — ЗАХОД 7.235.
+ *
+ * Владелец 26.09.2026: в скачанном уроке без сети «Diapositiva 1 de 8» —
+ * и дальше первого слайда не уйти. Каркас вырезает из копии все скрипты
+ * (`renderSaved`, `public/offline.html`), то есть React-стрелки в ней
+ * мертвы, а остальных слайдов в разметке до 7.235 не было вовсе.
+ *
+ * Теперь все слайды лежат в разметке (`SlidesTab.tsx`), а в копии колода
+ * получает по одной радиокнопке на слайд и свой `<style>`: виден тот
+ * слайд, чья радиокнопка отмечена. Стрелки и точки становятся `<label>`
+ * к нужной радиокнопке — нажатие переключает слайд силами самого
+ * браузера, без единой строки скрипта. Так листается и в каркасе,
+ * который зашит в пакет приложения и не меняется без нового AAB.
+ */
+export function offlineDeckOf(root: Element): void {
+  const decks = Array.from(root.querySelectorAll("[data-rf-deck]"));
+  decks.forEach((deck, n) => {
+    const slides = Array.from(deck.children).filter((node) => node.hasAttribute("data-rf-slide"));
+    if (slides.length === 0) return;
+    const doc = deck.ownerDocument;
+    const name = `rf-deck-${n}`;
+    deck.setAttribute("data-rf-deck", name);
+    const shown = Math.max(0, slides.findIndex((slide) => !slide.hasAttribute("hidden")));
+    const rules = [
+      `[data-rf-deck="${name}"]>input[data-rf-deck-radio]{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}`,
+      `[data-rf-deck="${name}"]>[data-rf-slide]{display:none}`,
+      ...slides.map((_, i) => `#${name}-${i}:checked~[data-rf-slide="${i}"]{display:flex}`),
+    ];
+    const style = doc.createElement("style");
+    style.textContent = rules.join("");
+    const radios = slides.map((_, i) => {
+      const radio = doc.createElement("input");
+      radio.setAttribute("type", "radio");
+      radio.setAttribute("name", name);
+      radio.setAttribute("id", `${name}-${i}`);
+      radio.setAttribute("data-rf-deck-radio", "");
+      radio.setAttribute("aria-hidden", "true");
+      radio.setAttribute("tabindex", "-1");
+      if (i === shown) radio.setAttribute("checked", "");
+      return radio;
+    });
+    deck.prepend(style, ...radios);
+    for (const slide of slides) {
+      slide.removeAttribute("hidden");
+      for (const button of Array.from(slide.querySelectorAll("button[data-rf-slide-go]"))) {
+        const label = doc.createElement("label");
+        label.setAttribute("for", `${name}-${button.getAttribute("data-rf-slide-go")}`);
+        label.setAttribute("data-rf-slide-go", button.getAttribute("data-rf-slide-go") ?? "");
+        const cls = button.getAttribute("class");
+        if (cls) label.setAttribute("class", cls);
+        const aria = button.getAttribute("aria-label");
+        if (aria) label.setAttribute("aria-label", aria);
+        label.setAttribute("role", "button");
+        // У `<label>` нет `:disabled`, и `disabled:opacity-0` на нём не
+        // сработает: крайняя стрелка прячется так же, как на живой странице.
+        if (button.hasAttribute("disabled")) label.setAttribute("style", "opacity:0;pointer-events:none");
+        label.innerHTML = button.innerHTML;
+        button.replaceWith(label);
+      }
+    }
+  });
 }
