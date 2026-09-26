@@ -79,10 +79,20 @@ export default function DownloadsPanel({ lang }: { lang: "es" | "ru" }) {
             {rows.map((row) => (
               <li
                 key={row.url}
-                className="flex min-h-11 flex-wrap items-center justify-between gap-2 rounded-xl border border-black/5 px-3 py-2 dark:border-white/10"
+                className="flex min-h-11 flex-col items-start gap-2 rounded-xl border border-black/5 px-3 py-2 dark:border-white/10"
+                data-rf-downloads-row
               >
-                <span className="flex min-w-0 flex-col">
-                  <Link href={row.path} className="truncate font-medium">
+                {/*
+                  «BORRAR» ВСЕГДА ПОД НАЗВАНИЕМ — заход 7.235. До правки
+                  строка была `flex-wrap … justify-between`: у короткого
+                  названия кнопка вставала справа, у длинного («El
+                  alfabeto cirílico y los sonidos del ruso») уезжала вниз —
+                  видео владельца, POCO 1220×2712. Теперь одинаково у всех
+                  строк и так же, как в каркасе без сети, где «Borrar»
+                  стоит под названием всегда.
+                */}
+                <span className="flex w-full min-w-0 flex-col">
+                  <Link href={row.path} className="break-words font-medium">
                     {/*
                       АДРЕС НА ЭКРАН НЕ ВЫВОДИТСЯ НИКОГДА — строка 312.
                       Владелец 25.09.2026 получил в списке `/es/stories`
