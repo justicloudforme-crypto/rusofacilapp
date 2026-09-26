@@ -68,7 +68,8 @@ async function screenPercent(page: Page): Promise<number | null> {
 }
 
 test("«Borrar todo» в каркасе без сети стирает скачанное, но не очередь ответов (7.237)", async ({ page, context }) => {
-  test.setTimeout(180_000);
+  // Сумма собственных ожиданий 278 с (сторож `check:e2e-live-probes`).
+  test.setTimeout(330_000);
   // Клипы урока — из памяти прогона, а не из живого интернета (долг 297).
   await serveClipLocally(context);
   await register(context);
@@ -100,7 +101,7 @@ test("«Borrar todo» в каркасе без сети стирает скач�
   );
   const arrival = await reachShell(page, "/es");
   expect(arrival.arrived, `каркас не открылся — страница на ${arrival.where}`).toBe(true);
-  await page.waitForSelector("[data-downloads]:not([hidden])", { timeout: 25_000 });
+  await expect(page.locator("[data-downloads]"), "блок «Descargado» не показан — стирать нечего").toBeVisible({ timeout: 25_000 });
   page.on("dialog", (dialog) => void dialog.accept());
   await page.locator("[data-downloads-remove-all]").click();
   // ПОЗИТИВНЫЙ КОНТРОЛЬ: «Borrar todo» и правда стёр скачанное.

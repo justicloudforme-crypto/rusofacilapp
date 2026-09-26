@@ -304,6 +304,8 @@ test.describe("очередь ответов урока без сети (7.236)"
       page,
       context,
     }) => {
+      // Сумма собственных ожиданий 58 с (сторож `check:e2e-live-probes`).
+      test.setTimeout(120_000);
       await register(context);
       // Попытка 1 — с сетью (у владельца 18/25).
       await openExercises(page, "first");
