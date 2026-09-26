@@ -148,8 +148,8 @@ android {
         // (NATIVE_PURCHASE_MIN_SHELL_VERSION в src/lib/revenuecat-config.ts),
         // и три числа — здесь, в capacitor.config.ts и в настройке сайта —
         // обязаны совпадать: сличает npm run check:native-purchase.
-        versionCode 9
-        versionName "1.0.8"
+        versionCode 10
+        versionName "1.0.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
