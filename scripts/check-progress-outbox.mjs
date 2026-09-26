@@ -24,6 +24,12 @@
  *      аватаре в шапке после возврата сети.
  *   9. Сцена праздника, чей чанк не пришёл без сети, — пустая сцена, а не
  *      «Algo salió mal» вместо урока (Chromium без воркера и WebKit).
+ *  10. «Este es tu intento anterior» — ПОСЛЕДНЯЯ попытка (заход 7.237):
+ *      вкладка восстанавливает через `restoreLessonAttempt` (сначала
+ *      досылка очереди, ждущая запись урока первее сервера), а GET
+ *      `/api/progress` воркер не отдаёт из кеша `apis`. Замер до правки:
+ *      сервер 20 %, экран 16 % — вкладка спрашивала сервер на 0,5 с, очередь
+ *      уходила на 1,9 с; без сети в `apis` лежало 16 % при 20 % на сервере.
  *
  *   node scripts/check-progress-outbox.mjs
  *   node scripts/check-progress-outbox.mjs --plant   # подсадки: каждая обязана покраснеть
@@ -45,7 +51,8 @@ const CLIENT = "src/lib/downloads-client.ts";
 const LESSON_VIEW = "src/components/lesson/LessonView.tsx";
 const LOGIN = "src/app/[lang]/login/page.tsx";
 const STAGE = "src/components/celebration/ScenarioStage.tsx";
-const FILES = [NEXT_CONFIG, LAYOUT, TAB, OUTBOX, ROUTE, PROGRESS, SCHEMA_SYNC, SCHEMA, CLIENT, LESSON_VIEW, LOGIN, STAGE];
+const SW = "src/app/sw.ts";
+const FILES = [NEXT_CONFIG, LAYOUT, TAB, OUTBOX, ROUTE, PROGRESS, SCHEMA_SYNC, SCHEMA, CLIENT, LESSON_VIEW, LOGIN, STAGE, SW];
 
 const load = () => Object.fromEntries(FILES.map((f) => [f, readFileSync(f, "utf8")]));
 const code = (s) => s.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1").replace(/\{\/\*[\s\S]*?\*\/\}/g, " ");
@@ -97,6 +104,21 @@ export function violations(src) {
   if (!/entry\.load\(\)\.catch\(\(\) => \{[\s\S]*?return \{ default: NoScenario \};/.test(code(src[STAGE]))) {
     out.push("9: ScenarioStage грузит сцену без перехвата — не пришедший чанк роняет страницу урока");
   }
+
+  // 10. Последняя попытка под «intento anterior».
+  if (!/restoreLessonAttempt\(ownerScope, level, lessonSlug,/.test(tab)) out.push("10: ExercisesTab восстанавливает попытку не через restoreLessonAttempt — экран покажет сервер раньше, чем дошла очередь");
+  if (/fetch\(`\/api\/progress\?level=[^`]*`[^)]*\)\s*\.then[\s\S]{0,200}setAnswers\(body\.attempt/.test(tab)) out.push("10: ExercisesTab снова рисует ответ сервера напрямую, мимо очереди");
+  const restore = /export async function restoreAttemptWith\([\s\S]*?\n\}/.exec(outbox)?.[0] ?? "";
+  const flushAt = restore.search(/await flush\(\)/);
+  const pendingAt = restore.search(/latestPendingWith\(/);
+  const serverAt = restore.search(/fromServer\(\)/);
+  if (flushAt < 0 || pendingAt < 0 || serverAt < 0 || !(flushAt < pendingAt && pendingAt < serverAt)) {
+    out.push("10: restoreAttemptWith не держит порядок «досылка → ждущая запись → сервер»");
+  }
+  const sw = code(src[SW]);
+  if (!/const LESSON_ATTEMPT_PATH = "\/api\/progress";/.test(sw) || !/url\.pathname === LESSON_ATTEMPT_PATH,\s*handler: new NetworkOnly\(\)/.test(sw)) {
+    out.push("10: воркер отдаёт GET /api/progress из кеша apis — устаревшая попытка без сети");
+  }
   return out;
 }
 
@@ -125,6 +147,10 @@ function plant() {
   add("вход снова рисует форму вошедшему", LOGIN, (s) => s.replace("if (await getCurrentUserForChrome()) {", "if (false && (await getCurrentUserForChrome())) {"), "8:");
 
   add("сцена снова без перехвата", STAGE, (s) => s.replace("entry.load().catch(() => {", "entry.load().then((m) => {"), "9:");
+  add("вкладка снова спрашивает сервер мимо очереди", TAB, (s) => s.replace("void restoreLessonAttempt(ownerScope, level, lessonSlug, () =>", "void ((f: () => Promise<unknown>) => f())(() =>"), "10:");
+  add("сервер спрашивается раньше очереди", OUTBOX, (s) => s.replace("  if (owner !== GUEST_OWNER) {\n    await flush().catch(() => null);", "  const early = await fromServer().catch(() => null);\n  if (owner !== GUEST_OWNER) {\n    await flush().catch(() => null);"), "10:");
+  add("ждущая запись урока не читается", OUTBOX, (s) => s.replace("const pending = await latestPendingWith(store, owner, level, lesson);", "const pending = null as OutboxBody | null;"), "10:");
+  add("GET /api/progress снова в кеше apis", SW, (s) => s.replace("sameOrigin && url.pathname === LESSON_ATTEMPT_PATH,", "sameOrigin && url.pathname === LESSON_ATTEMPT_PATH + \"-gone\","), "10:");
 
   for (const c of cases) console.log(`  ${c.ok ? (c.name.startsWith("отрицательный") ? "молчит" : "поймано") : "ПРОПУЩЕНО"} — ${c.name}`);
   const ok = cases.every((c) => c.ok);
@@ -140,7 +166,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:progress-outbox — 9 правил, нарушений 0 (заход 7.236, офлайн-3б: очередь ответов без сети, находка 3)");
+  console.log("check:progress-outbox — 10 правил, нарушений 0 (заходы 7.236–7.237: очередь ответов без сети, последняя попытка)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

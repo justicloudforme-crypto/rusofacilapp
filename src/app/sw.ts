@@ -223,6 +223,8 @@ const PAYMENT_PATH = /^\/(es|ru)\/pricing(\/|$)/;
  * надписью «страница не открылась», без утверждений о сети.
  */
 const HEALTH_PATH = "/api/health";
+/** Попытка урока (`GET` — «intento anterior»), заход 7.237. */
+const LESSON_ATTEMPT_PATH = "/api/progress";
 
 async function serverAnswers(timeoutMs = 2500): Promise<boolean> {
   const control = new AbortController();
@@ -385,6 +387,22 @@ const serwist = new Serwist({
        */
       matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
         sameOrigin && url.pathname === HEALTH_PATH,
+      handler: new NetworkOnly(),
+    },
+    {
+      /**
+       * ПОСЛЕДНЯЯ ПОПЫТКА УРОКА НЕ ОТВЕЧАЕТ ИЗ КЕША — ЗАХОД 7.237.
+       *
+       * `defaultCache` держит `/api/…` на `NetworkFirst` с кешем `apis`, а
+       * отправка ответа (`POST`) этот кеш не обновляет. Замер на эмуляторе:
+       * в `apis` лежало 16 %, на сервере — 20 %, и без сети вкладка
+       * «Ejercicios» показывала под «Este es tu intento anterior» НЕ
+       * последнюю попытку. Без сети последнюю знает очередь на телефоне
+       * (`restoreAttemptWith` в `src/lib/progress-outbox.ts`), с сетью —
+       * сервер; устаревший снимок не знает никто.
+       */
+      matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
+        sameOrigin && url.pathname === LESSON_ATTEMPT_PATH,
       handler: new NetworkOnly(),
     },
     {

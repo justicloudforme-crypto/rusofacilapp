@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Exercise } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import {
@@ -29,6 +29,7 @@ import {
   flushProgress,
   newRecordKey,
   pendingProgress,
+  restoreLessonAttempt,
 } from "@/lib/progress-outbox";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import EncouragementModal from "@/components/celebration/EncouragementModal";
@@ -96,6 +97,9 @@ export default function ExercisesTab({
   // ответов ЭТОГО урока ждут отправки, и идёт ли отправка прямо сейчас —
   // пометка «Guardado, se enviará…» не мигает на каждом ответе с сетью.
   const [pendingHere, setPendingHere] = useState(0);
+  // Человек начал отвечать, пока досылалась очередь (7.237): восстановление
+  // приходит позже прежнего и не имеет права стереть его ответы.
+  const touched = useRef(false);
   const [sending, setSending] = useState(false);
   const [outboxFull, setOutboxFull] = useState(false);
 
@@ -128,22 +132,26 @@ export default function ExercisesTab({
     // attempt should be lost just by navigating away.
     if (exercises.length === 0) return;
     const controller = new AbortController();
-    fetch(`/api/progress?level=${level}&lesson=${lessonSlug}`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : { attempt: null }))
-      .then((body: { attempt?: { score: number; passed: boolean; answers: AnswerMap } | null }) => {
-        if (!body.attempt) return;
-        setAnswers(body.attempt.answers);
-        setSubmitted(true);
-        setRestored(true);
-        if (body.attempt.passed) {
-          setPassed(true);
-          onPassChange(true);
-        }
-      })
-      .catch(() => {
-        // No saved attempt reachable (offline, or none exists yet) — the
-        // form just starts blank, same as before this feature existed.
-      });
+    // ПОСЛЕДНЯЯ ПОПЫТКА, А НЕ ПЕРВАЯ ДОШЕДШАЯ (заход 7.237). Сначала
+    // очередь без сети: она досылается, и если запись урока всё ещё ждёт
+    // — показывается она. Сервер спрашивается потом, и мимо кеша воркера
+    // (`/api/progress` — `NetworkOnly` в `src/app/sw.ts`). До правки вкладка
+    // спрашивала сервер на 0,5 с, очередь уходила на 1,9 с — и владелец
+    // видел 18/25 при ушедших 20/25. Разбор — `restoreAttemptWith`.
+    void restoreLessonAttempt(ownerScope, level, lessonSlug, () =>
+      fetch(`/api/progress?level=${level}&lesson=${lessonSlug}`, { signal: controller.signal, cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : { attempt: null }))
+        .then((body: { attempt?: { score: number; passed: boolean; answers: AnswerMap } | null }) => body.attempt ?? null),
+    ).then(({ attempt }) => {
+      if (!attempt || controller.signal.aborted || touched.current) return;
+      setAnswers(attempt.answers as AnswerMap);
+      setSubmitted(true);
+      setRestored(true);
+      if (attempt.passed) {
+        setPassed(true);
+        onPassChange(true);
+      }
+    });
     return () => controller.abort();
     // Only run once per lesson on mount, same reasoning as the effect above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,10 +198,12 @@ export default function ExercisesTab({
       );
 
   function setAnswer(id: string, value: AnswerValue) {
+    touched.current = true;
     setAnswers((prev) => ({ ...prev, [id]: value }));
   }
 
   function handleCheck() {
+    touched.current = true;
     const outcome = computeScore(exercises, answers);
     setSubmitted(true);
     setRestored(false);
