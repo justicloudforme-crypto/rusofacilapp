@@ -7,7 +7,7 @@ import { expect, type Page } from "@playwright/test";
  * Семь типов: радиокнопки (выбор, аудирование, чтение), поля (пропуск,
  * транскрипция), списки (сопоставление), кнопки пула (перестановка слов).
  */
-export async function fillAllExercises(page: Page): Promise<void> {
+export async function fillAllExercises(page: Page, pick: "first" | "last" = "first"): Promise<void> {
   const panel = page.locator('[data-offline-panel="exercises"]');
   await panel.locator("fieldset, input, select").first().waitFor();
   // Радиокнопки спрятаны внутрь <label> — отметка принудительная.
@@ -22,7 +22,10 @@ export async function fillAllExercises(page: Page): Promise<void> {
     // телефоне (mobile-iphone) принудительный клик по спрятанной радиокнопке
     // её не отмечает. Отметка затем утверждается — иначе заполнение молча не
     // случилось бы.
-    const radio = panel.locator(`input[type="radio"][name="${name}"]`).first();
+    // «last» — другой набор ответов с другим баллом (7.237: две попытки,
+    // которые должны различаться на экране).
+    const group = panel.locator(`input[type="radio"][name="${name}"]`);
+    const radio = pick === "last" ? group.last() : group.first();
     await radio.evaluate((el) => (el as HTMLInputElement).click());
     await expect(radio).toBeChecked();
   }

@@ -74,13 +74,20 @@ const outboxCount = (page: Page) =>
       }),
   );
 
-async function openExercises(page: Page) {
+async function openExercises(page: Page, pick: "first" | "last" = "first") {
   await page.goto(LESSON);
   await page.waitForLoadState("networkidle");
   await page.getByRole("tab", { name: /Ejercicios/ }).click();
   const retry = page.getByRole("button", { name: "Volver a intentar" });
   if (await retry.isVisible().catch(() => false)) await retry.click();
-  await fillAllExercises(page);
+  await fillAllExercises(page, pick);
+}
+
+/** «18/25 (72%)» на экране итога — процент числом. */
+async function screenPercent(page: Page): Promise<number | null> {
+  const text = await page.locator('[data-offline-panel="exercises"]').innerText();
+  const m = /\d+\s*\/\s*\d+\s*\((\d+)\s*%\)/.exec(text);
+  return m ? Number(m[1]) : null;
 }
 
 async function checkAnswers(page: Page) {
@@ -287,5 +294,61 @@ test.describe("очередь ответов урока без сети (7.236)"
       expected.has(days[0]),
       `день ${days[0]}, а ответ был ${[...expected].join(" / ")}`,
     ).toBe(true);
+  });
+
+  test.describe("«intento anterior» — последняя попытка (7.237)", () => {
+    // Воркер заблокирован: отправку очереди нужно ЗАДЕРЖАТЬ, а запросы
+    // воркера `page.route` не видит (см. describe выше).
+    test.use({ serviceWorkers: "block" });
+    test("ответ без сети ушёл позже, чем открылась вкладка: на экране он, а не прошлая попытка сервера", async ({
+      page,
+      context,
+    }) => {
+      // Сумма собственных ожиданий 58 с (сторож `check:e2e-live-probes`).
+      test.setTimeout(120_000);
+      await register(context);
+      // Попытка 1 — с сетью (у владельца 18/25).
+      await openExercises(page, "first");
+      await checkAnswers(page);
+      const first = await screenPercent(page);
+      await expect.poll(async () => (await ledger(context)).attempt?.score ?? null, { timeout: 15_000 }).toBe(first);
+
+      // Попытка 2 — без сети, другими ответами (у владельца 20/25).
+      await context.setOffline(true);
+      await page.getByRole("button", { name: "Volver a intentar" }).click();
+      await fillAllExercises(page, "last");
+      await checkAnswers(page);
+      const second = await screenPercent(page);
+      await expect(page.locator("[data-rf-outbox-note]")).toBeVisible();
+      // ПОЗИТИВНЫЙ КОНТРОЛЬ: попытки различимы, иначе проба ничего не мерит.
+      expect(first, "две попытки дали один и тот же балл — пробе нечем различить старую и новую").not.toBe(second);
+
+      // Сеть вернулась, но первая отправка очереди идёт медленно (у владельца
+      // — сеть ещё не готова, следующая попытка через 20 с).
+      let posts = 0;
+      await page.route("**/api/progress", async (route) => {
+        if (route.request().method() !== "POST") return route.continue();
+        posts += 1;
+        await new Promise((r) => setTimeout(r, 4000));
+        return route.continue();
+      });
+      await context.setOffline(false);
+      await page.goto(LESSON);
+      await page.getByRole("tab", { name: /Ejercicios/ }).click();
+      await expect(page.getByText("Este es tu intento anterior")).toBeVisible({ timeout: 15_000 });
+      expect(
+        await screenPercent(page),
+        `«intento anterior» показывает ${first}% — прошлую попытку сервера, а последняя (${second}%) ещё в очереди`,
+      ).toBe(second);
+
+      // Очередь дошла: на сервере последняя, по квитанции на попытку, день один.
+      await expect.poll(async () => (await ledger(context)).attempt?.score ?? null, { timeout: 20_000 }).toBe(second);
+      const final = await ledger(context);
+      expect(final.receipts).toBe(2);
+      expect(final.studyDays).toHaveLength(1);
+      expect(posts, "очередь не отправлялась — задержка не изображена").toBeGreaterThan(0);
+      expect(await screenPercent(page)).toBe(second);
+      expect(await outboxCount(page)).toBe(0);
+    });
   });
 });

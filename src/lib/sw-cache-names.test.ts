@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { PAGE_CACHE_PREFIX, buildFingerprint, pageCacheNames, staleCacheNames } from "./sw-cache-names";
+import { CARRIED_CACHE_NAME, GENERATION_CACHE_NAME, PAGE_CACHE_PREFIX, buildFingerprint, pageCacheNames, staleCacheNames } from "./sw-cache-names";
 
 /**
  * The service worker's page and RSC caches must be scoped to the build.
@@ -92,15 +92,48 @@ describe("cache names", () => {
 describe("staleCacheNames", () => {
   const current = "now";
 
-  it("deletes the previous build's caches and keeps this build's", () => {
+  it("deletes the previous build's caches and keeps this build's — except what was viewed (строка 308, 7.237)", () => {
     const existing = [...Object.values(pageCacheNames("old")), ...Object.values(pageCacheNames(current))];
-    const doomed = staleCacheNames(existing, current);
+    const doomed = staleCacheNames(existing, current, "old");
     // Кеш скачанного НЕ обречён: имя у него одно на все сборки, и
     // выбрасывать его выкатом значило бы отменять обещание кнопки
-    // «Descargar» (заход 7.231). Остальное прошлой сборки — обречено.
-    const expected = Object.values(pageCacheNames("old")).filter((name) => name !== pageCacheNames(current).downloads);
+    // «Descargar» (заход 7.231). Просмотренное прошлой сборки (content,
+    // section, sheets) переживает ОДИН выкат (7.237). Остальное — обречено.
+    const old = pageCacheNames("old");
+    const carried = [old.content, old.section, old.sheets, pageCacheNames(current).downloads];
+    const expected = Object.values(old).filter((name) => !carried.includes(name));
     expect(doomed.sort()).toEqual(expected.sort());
     expect(doomed, "выкат уносит скачанное").not.toContain(pageCacheNames(current).downloads);
+    expect(doomed, "выкат уносит просмотренное прошлой сборки").not.toContain(old.content);
+  });
+
+  it("просмотренное переживает ровно один выкат: позапрошлое поколение уходит", () => {
+    const existing = [
+      ...Object.values(pageCacheNames("older")),
+      ...Object.values(pageCacheNames("old")),
+      ...Object.values(pageCacheNames(current)),
+      GENERATION_CACHE_NAME,
+    ];
+    const doomed = staleCacheNames(existing, current, "old");
+    expect(doomed).toContain(pageCacheNames("older").content);
+    expect(doomed).toContain(pageCacheNames("older").sheets);
+    expect(doomed).not.toContain(pageCacheNames("old").content);
+    expect(doomed, "метку поколения стёрли").not.toContain(GENERATION_CACHE_NAME);
+  });
+
+  it("регулярка переносимых имён совпадает с тем, что строит pageCacheNames", () => {
+    for (const kind of ["content", "section", "sheets"] as const) {
+      expect(CARRIED_CACHE_NAME.exec(pageCacheNames("abc123")[kind])?.[1]).toBe("abc123");
+    }
+    expect(CARRIED_CACHE_NAME.test(pageCacheNames("abc123").others)).toBe(false);
+    expect(CARRIED_CACHE_NAME.test(GENERATION_CACHE_NAME)).toBe(false);
+  });
+
+  it("метки ещё нет: предыдущим считается единственный чужой отпечаток; два чужих — не переносится ничего", () => {
+    const one = [pageCacheNames("old").content, pageCacheNames("old").sheets, pageCacheNames(current).content];
+    expect(staleCacheNames(one, current, null)).toEqual([]);
+    const two = [pageCacheNames("a").content, pageCacheNames("b").content, pageCacheNames(current).content];
+    expect(staleCacheNames(two, current, null).sort()).toEqual([pageCacheNames("a").content, pageCacheNames("b").content].sort());
   });
 
   it("also deletes the fixed-name caches a returning visitor already has", () => {
@@ -162,11 +195,15 @@ describe("кеш сохранённого содержания (офлайн-2)"
     expect(pageCacheNames("zzz").content).not.toBe(pageCacheNames("yyy").content);
   });
 
-  it("кеш ТЕКУЩЕЙ сборки не выбрасывается при активации, кеш прошлой — выбрасывается", () => {
+  it("кеш ТЕКУЩЕЙ сборки не выбрасывается при активации, кеш позапрошлой — выбрасывается", () => {
     const mine = pageCacheNames("zzz").content;
     const older = pageCacheNames("yyy").content;
-    const stale = staleCacheNames([mine, older], "zzz");
-    expect(stale).toContain(older);
+    const oldest = pageCacheNames("xxx").content;
+    // «yyy» — предыдущее поколение (метка): переживает один выкат (7.237);
+    // «xxx» — позапрошлое: выбрасывается.
+    const stale = staleCacheNames([mine, older, oldest], "zzz", "yyy");
+    expect(stale).toContain(oldest);
+    expect(stale).not.toContain(older);
     expect(stale).not.toContain(mine);
   });
 });
