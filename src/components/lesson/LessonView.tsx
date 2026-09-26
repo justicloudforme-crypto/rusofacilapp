@@ -371,7 +371,15 @@ export default function LessonView({
                 the crawler's view costs nothing for SEO while saving a
                 GET /api/progress on every single lesson view. */}
             {!isLocked && exercisesEverOpened && (
-              <div data-offline-panel="exercises" className={tab === "exercises" ? undefined : "hidden"}>
+              // `data-rf-exercises-live`: в копии без сети эта панель
+              // заменяется честной плашкой (`offlineExercisesOf`,
+              // src/lib/downloads-client.ts, заход 7.236) — без скриптов
+              // упражнения не проверяются и в очередь не пишутся.
+              <div
+                data-offline-panel="exercises"
+                data-rf-exercises-live
+                className={tab === "exercises" ? undefined : "hidden"}
+              >
                 <ExercisesTab
                   exercises={content.exercises}
                   vocabulary={content.vocabulary}

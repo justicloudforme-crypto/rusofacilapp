@@ -32,6 +32,7 @@
  *    правило, что починило строку 310 в этом же заходе: строка есть
  *    только там, где есть копия.
  */
+import { uiStrings } from "./ui-strings";
 import {
   DOWNLOADS_CACHE_NAME,
   DOWNLOADS_INDEX_PATH,
@@ -679,6 +680,7 @@ export async function askPersistence(): Promise<"granted" | "denied" | "unsuppor
 export function copyMarkupOf(doc: Document, doneLabel: string | null): string {
   const clone = doc.documentElement.cloneNode(true) as HTMLElement;
   offlineDeckOf(clone);
+  offlineExercisesOf(clone);
   if (doneLabel === null) {
     // ПРОСТО ПРОСМОТРЕННАЯ КОПИЯ (7.230) КНОПКИ НЕ ПОКАЗЫВАЕТ ВОВСЕ:
     // «Descargado ✓» в ней было бы неправдой, а живая «Descargar» —
@@ -698,6 +700,50 @@ export function copyMarkupOf(doc: Document, doneLabel: string | null): string {
   // материал; в копии, где нажимать нечего, они врут обе.
   for (const note of clone.querySelectorAll("[data-rf-download-note], [data-rf-download-error]")) note.remove();
   return `<!doctype html>\n${clone.outerHTML}`;
+}
+
+/**
+ * УПРАЖНЕНИЯ В КОПИИ БЕЗ СЕТИ — ЗАХОД 7.236 (ОФЛАЙН-3б).
+ *
+ * Замер на эмуляторе до правки: урок скачан при открытой вкладке
+ * «Ejercicios» → без сети в копии та же панель — прошлая попытка,
+ * 36 радиокнопок и 25 кнопок, скриптов 0; нажатие не отмечает ничего,
+ * «Volver a intentar» не делает ничего. Мёртвые кнопки. А если вкладку до
+ * скачивания не открывали, панели нет вовсе, и каркас вкладку прячет
+ * (`armTabs`, 7.230) — человек не узнаёт, почему упражнений нет.
+ *
+ * Упражнения без скриптов работать не могут по-настоящему: проверку
+ * ответа можно было бы изобразить радиокнопками и `:checked` (как
+ * презентацию, 7.235), но ЗАПИСАТЬ ответ в очередь без скрипта нечем, а
+ * каркас в пакете приложения скрипты копии вырезает. Проверка без записи
+ * — обещание, которое не выполняется. Поэтому в копии на месте
+ * упражнений — честная плашка: для упражнений нужен интернет; теория,
+ * словарь и аудио доступны. Закрытый урок (карточка подписки в той же
+ * панели) не трогается.
+ */
+export function offlineExercisesOf(root: Element): void {
+  const tab = root.querySelector('[data-offline-tab="exercises"]');
+  if (!tab) return;
+  const doc = root.ownerDocument;
+  const lang = root.getAttribute("lang") === "ru" ? "ru" : "es";
+  const note = doc.createElement("p");
+  note.setAttribute("data-rf-exercises-offline", "");
+  note.setAttribute("role", "status");
+  note.className = "rounded-lg bg-primary/[0.06] px-3 py-2 text-sm text-foreground/70 dark:bg-primary-400/[0.08]";
+  note.textContent = uiStrings(lang).download.exercisesOffline;
+  const live = root.querySelector('[data-offline-panel="exercises"][data-rf-exercises-live]');
+  if (live) {
+    live.replaceChildren(note);
+    return;
+  }
+  if (root.querySelector('[data-offline-panel="exercises"]')) return;
+  const sibling = root.querySelector('[data-offline-panel="grammar"]');
+  if (!sibling?.parentElement) return;
+  const panel = doc.createElement("div");
+  panel.setAttribute("data-offline-panel", "exercises");
+  panel.className = "hidden";
+  panel.appendChild(note);
+  sibling.parentElement.appendChild(panel);
 }
 
 /** Адреса клипов, объявленные самой страницей. Один источник правды и для
