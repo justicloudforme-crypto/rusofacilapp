@@ -22,6 +22,8 @@ import NativeShellCookie from "@/components/NativeShellCookie";
 import SignedOutCachePurge from "@/components/SignedOutCachePurge";
 import OfflineSaveCopy from "@/components/OfflineSaveCopy";
 import DownloadsHeal from "@/components/DownloadsHeal";
+import ProgressOutboxSync from "@/components/ProgressOutboxSync";
+import { ownerScopeFor } from "@/lib/recordings-owner";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUserForChrome } from "@/lib/auth";
 import { getUserStreakStats, persistFreezeState, type StreakStats } from "@/lib/streaks";
@@ -258,7 +260,19 @@ export default async function LangLayout({
         suppressHydrationWarning
       >
         <HydrationMarker />
-        <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"} register={false}>
+        {/* `reloadOnOnline={false}` — заход 7.236. По умолчанию Serwist
+            перезагружает ВСЮ страницу на каждом событии `online`. Замер
+            (Playwright и эмулятор Android): ученик заполнил 17 упражнений
+            без сети, сеть вернулась до «Comprobar» — страница
+            перезагрузилась, вкладка «Ejercicios» закрылась, ответы
+            пропали. Возврат сети теперь обрабатывают те, кому он нужен:
+            очередь ответов (`ProgressOutboxSync`) и плашка «нет сети». */}
+        <SerwistProvider
+          swUrl="/sw.js"
+          disable={process.env.NODE_ENV !== "production"}
+          register={false}
+          reloadOnOnline={false}
+        >
           <SerwistRegister />
         </SerwistProvider>
         <SentryUser userId={user?.id ?? null} />
@@ -278,6 +292,9 @@ export default async function LangLayout({
         {/* Скачанное долечивается при заходе с сетью — заход 7.235:
             копия без своих листов стилей не переживала выкат сайта. */}
         <DownloadsHeal />
+        {/* Очередь ответов без сети уходит с любой страницы, а не только
+            из урока — заход 7.236 (src/lib/progress-outbox.ts). */}
+        <ProgressOutboxSync owner={user ? ownerScopeFor(user.id) : "anon"} />
         {/* Плашка «нет соединения» переехала ВНУТРЬ шапки (долг 180).
             Здесь, первым элементом потока, она стояла ВЫШЕ шапки и
             забирала себе полосу под строкой состояния: в оболочке на

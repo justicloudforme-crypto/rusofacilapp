@@ -170,6 +170,14 @@ const config =
         // регистрации не меняется), но сам не регистрирует. Единственный
         // вызов register() остаётся один, и он с обработчиком.
         register: false,
+        // ВОЗВРАТ СЕТИ НЕ ПЕРЕЗАГРУЖАЕТ СТРАНИЦУ — заход 7.236. По
+        // умолчанию `true`, и это ВТОРОЕ место того же поведения рядом с
+        // `reloadOnOnline` у <SerwistProvider>: sw-entry сам вешает
+        // `online → location.reload()`. Замер: выключили только у
+        // провайдера — страница всё равно перезагрузилась (проба
+        // e2e/offline-progress-outbox.spec.ts), и введённые без сети ответы
+        // урока пропадали. Выключено в обоих местах.
+        reloadOnOnline: false,
         // public/offline.html isn't reachable through Next's own link graph
         // (it's a static file, not a route), so it needs to be added to the
         // precache list by hand — sw.ts's `fallbacks` config is what
