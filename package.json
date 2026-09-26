@@ -2,6 +2,9 @@
   "name": "rusofacilapp",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "check:notification-badge": "node scripts/check-notification-badge.mjs",
     "check:notification-badge:plant": "node scripts/check-notification-badge.mjs --plant",
