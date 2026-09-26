@@ -69,6 +69,7 @@
 // allowlisted file therefore still fails the check: the count no longer
 // matches. A hit that disappears fails too, so a fixed file cannot quietly
 // keep its exemption.
+import { repoFiles } from "./repo-files.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -383,9 +384,7 @@ function judgeByline() {
 }
 
 function scan() {
-  const files = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
-    .split("\0")
-    .filter((f) => f && f !== SELF && !BINARY.test(f));
+  const files = repoFiles().filter((f) => f !== SELF && !BINARY.test(f));
 
   /** [{file, line, text, context}] for every hit that is not a legal spelling. */
   const wrong = [];

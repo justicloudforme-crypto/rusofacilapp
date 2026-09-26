@@ -64,9 +64,10 @@
 // из `scripts/check-apk-facts.mjs`: два списка одного и того же разошлись
 // бы на первой же смене зависимости, и второй экземпляр начал бы врать.
 //
-// Сторож смотрит только на ОТСЛЕЖИВАЕМЫЕ файлы (`git ls-files`) — по той
-// же причине, что и `check:brand`: прогон до `git add` про новый файл не
-// говорит ничего (оплачено на PR #226).
+// Сторож смотрит на отслеживаемые И новые, ещё не добавленные файлы
+// (`scripts/repo-files.mjs`, 7.236): прогон до `git add` раньше не видел
+// новый файл вовсе (оплачено на PR #226 и PR #420).
+import { repoFiles } from "./repo-files.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -177,7 +178,7 @@ const ALWAYS_ALLOWED = new Map([
 ]);
 
 function tracked() {
-  return execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean);
+  return repoFiles();
 }
 
 const read = (f) => (existsSync(f) ? readFileSync(f, "utf8") : null);

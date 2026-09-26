@@ -118,13 +118,59 @@ export async function saveLessonAttempt(
   mistakes: MistakeDetail[],
   answers: AnswerMap,
 ) {
+  await lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers);
+}
+
+function lessonAttemptUpsert(
+  userId: string,
+  level: string,
+  lessonSlug: string,
+  score: number,
+  passed: boolean,
+  mistakes: MistakeDetail[],
+  answers: AnswerMap,
+) {
   const mistakesJson = JSON.stringify(mistakes.slice(0, 20));
   const answersJson = JSON.stringify(answers);
-  await db.lessonProgress.upsert({
+  return db.lessonProgress.upsert({
     where: { userId_level_lessonSlug: { userId, level, lessonSlug } },
     update: { score, passed, mistakes: mistakesJson, answers: answersJson, completedAt: new Date() },
     create: { userId, level, lessonSlug, score, passed, mistakes: mistakesJson, answers: answersJson },
   });
+}
+
+/**
+ * Попытка из очереди без сети — РОВНО ОДИН РАЗ (заход 7.236).
+ *
+ * Квитанция (`OfflineReceipt`, первичный ключ = ключ записи) и сама
+ * попытка пишутся одной транзакцией: либо обе, либо ни одной. Повтор того
+ * же ключа падает на первичном ключе квитанции (P2002) и возвращает
+ * `"duplicate"` — попытка не перезаписывается, а маршрут не ставит день
+ * занятия второй раз. Чтение перед вставкой — дешёвый путь для обычного
+ * повтора; перехват P2002 — для двух одновременных отправок.
+ */
+export async function saveLessonAttemptOnce(
+  key: string,
+  userId: string,
+  level: string,
+  lessonSlug: string,
+  score: number,
+  passed: boolean,
+  mistakes: MistakeDetail[],
+  answers: AnswerMap,
+): Promise<"saved" | "duplicate"> {
+  const seen = await db.offlineReceipt.findUnique({ where: { id: key }, select: { id: true } });
+  if (seen) return "duplicate";
+  try {
+    await db.$transaction([
+      db.offlineReceipt.create({ data: { id: key, userId, kind: "lesson" } }),
+      lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers),
+    ]);
+    return "saved";
+  } catch (error) {
+    if ((error as { code?: unknown })?.code === "P2002") return "duplicate";
+    throw error;
+  }
 }
 
 export interface LessonProgressDetail {

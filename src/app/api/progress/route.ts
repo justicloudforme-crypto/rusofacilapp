@@ -1,7 +1,9 @@
 import { NextResponse, after } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getLessonAttempt, saveLessonAttempt } from "@/lib/progress";
+import { getLessonAttempt, saveLessonAttempt, saveLessonAttemptOnce } from "@/lib/progress";
+import { ownerScopeFor } from "@/lib/recordings-owner";
+import { actionInstant, isForeignRecord, parseRecordKey } from "@/lib/offline-record";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
@@ -45,6 +47,15 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
+
+  // ЧУЖАЯ ЗАПИСЬ ОЧЕРЕДИ НЕ ПРИНИМАЕТСЯ (заход 7.236). Очередь без сети
+  // живёт в браузере, а браузер переживает выход из учётной записи и вход
+  // другой. Замер до правки: попытка A легла под B. 409 — не «отказ
+  // навсегда»: очередь запись хранит, пока A не войдёт снова.
+  if (isForeignRecord(body?.owner, ownerScopeFor(user.id))) {
+    return NextResponse.json({ error: "owner_mismatch" }, { status: 409 });
+  }
+  const recordKey = parseRecordKey(body?.key);
   const level = typeof body?.level === "string" ? body.level : "";
   const lesson = typeof body?.lesson === "string" ? body.lesson : "";
 
@@ -77,7 +88,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers);
+  if (recordKey) {
+    // Запись очереди: принимается один раз, повтор — пустая операция без
+    // второго дня занятия (src/lib/progress.ts, saveLessonAttemptOnce).
+    const once = await saveLessonAttemptOnce(recordKey, user.id, level, lesson, score, passed, mistakes, answers);
+    if (once === "duplicate") return NextResponse.json({ ok: true, duplicate: true });
+  } else {
+    await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers);
+  }
   // Deferred via after() — see flashcard-progress/route.ts's comment for
   // why. This route fires on every "Comprobar" click, pass or fail, so
   // awaiting the full badge-evaluation scan here added it to every single
@@ -85,7 +103,8 @@ export async function POST(request: NextRequest) {
   after(() => awardBadgesSafely(user.id));
   // ДЕНЬ ЗАНЯТИЯ (17.09.2026, заход 7.204): урок засчитывается по
   // СДАННЫМ упражнениям («Comprobar»), а не по открытию страницы.
-  await markStudyDayVisit("lesson", user);
+  // Для записи очереди — день ДЕЙСТВИЯ, а не приёма (7.236).
+  await markStudyDayVisit("lesson", user, actionInstant(body?.at, recordKey !== null));
 
   return NextResponse.json({ ok: true });
 }
