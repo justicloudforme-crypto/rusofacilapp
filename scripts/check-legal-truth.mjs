@@ -44,6 +44,7 @@
 //    падение: это и есть «код ходит туда, о чём политика молчит».
 //
 // Контроль: `node scripts/check-legal-truth.mjs --plant`.
+import { repoFiles } from "./repo-files.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync, readdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -266,8 +267,7 @@ function scan() {
 
   // --- 2. обработчики ---------------------------------------------------
   const deps = Object.keys(JSON.parse(readFileSync("package.json", "utf8")).dependencies ?? {});
-  const srcFiles = execFileSync("git", ["ls-files", "-z", "src"], { encoding: "utf8" })
-    .split("\0")
+  const srcFiles = repoFiles(["src"])
     .filter((f) => /\.(ts|tsx|mjs|js)$/.test(f) && !/\.test\./.test(f));
   const bodies = srcFiles.map((f) => {
     try {

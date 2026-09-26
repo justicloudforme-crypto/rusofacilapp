@@ -1280,6 +1280,8 @@
       "instructionReadingComprehension": "Lee el texto y responde las preguntas.",
       "explanationLabel": "Explicación",
       "progressLabel": "Progreso",
+      "savedOffline": "Guardado, se enviará al volver la conexión",
+      "outboxFull": "No se pudo guardar: hay demasiadas respuestas esperando conexión. Conéctate para enviarlas.",
       "answeredLabel": {
         "one": "respondido",
         "few": "respondidos",
@@ -1763,7 +1765,8 @@
       "screenUntitled": "Material descargado",
       "remove": "Borrar",
       "removeAll": "Borrar todo",
-      "removeAllConfirm": "¿Borrar todo lo descargado?"
+      "removeAllConfirm": "¿Borrar todo lo descargado?",
+      "exercisesOffline": "Para los ejercicios necesitas internet; la teoría, el vocabulario y el audio están disponibles."
     },
     "glossary": {
       "listenInRussian": "Escuchar en ruso",

@@ -36,6 +36,7 @@ export interface UiStrings {
     remove: string;
     removeAll: string;
     removeAllConfirm: string;
+    exercisesOffline: string;
   };
   glossary: {
     listenInRussian: string;
@@ -87,7 +88,8 @@ export const UI_STRINGS: Record<Locale, UiStrings> = {
       "screenUntitled": "Material descargado",
       "remove": "Borrar",
       "removeAll": "Borrar todo",
-      "removeAllConfirm": "¿Borrar todo lo descargado?"
+      "removeAllConfirm": "¿Borrar todo lo descargado?",
+      "exercisesOffline": "Para los ejercicios necesitas internet; la teoría, el vocabulario y el audio están disponibles."
     },
     "glossary": {
       "listenInRussian": "Escuchar en ruso",
@@ -137,7 +139,8 @@ export const UI_STRINGS: Record<Locale, UiStrings> = {
       "screenUntitled": "Скачанный материал",
       "remove": "Удалить",
       "removeAll": "Удалить всё",
-      "removeAllConfirm": "Удалить всё скачанное?"
+      "removeAllConfirm": "Удалить всё скачанное?",
+      "exercisesOffline": "Для упражнений нужен интернет; теория, словарь и аудио доступны."
     },
     "glossary": {
       "listenInRussian": "Послушать по-русски",

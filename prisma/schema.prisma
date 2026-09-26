@@ -164,6 +164,7 @@ model User {
   groupMemberships     GroupMember[]
   wordGameProgress     WordGameProgress[]
   studyDays            StudyDay[]
+  offlineReceipts      OfflineReceipt[]
   // Коды доступа, которые этот человек погасил и которые он отозвал
   // (PROGRESS.md 7.146). Обе связи — SetNull, а не Cascade: погашенный
   // код остаётся израсходованным, даже если аккаунт удалён; иначе
@@ -381,6 +382,29 @@ model SubscriptionPayment {
   // читалось без раскопок.
   source                String
   createdAt             DateTime @default(now())
+}
+
+// КВИТАНЦИЯ ЗАПИСИ ОЧЕРЕДИ БЕЗ СЕТИ — заход 7.236 (офлайн-3б).
+//
+// Ответ урока, данный без сети, лежит в очереди браузера
+// (`src/lib/progress-outbox.ts`) со своим ключом и уходит на сервер, когда
+// сеть вернётся. Отправка может повториться: сервер записал, а ответ до
+// телефона не дошёл (замер 7.236: сервер обработал ОДНУ попытку ДВАЖДЫ).
+// Строка здесь — «этот ключ уже принят»: вторая вставка того же `id`
+// падает на первичном ключе, и `POST /api/progress` отвечает «повтор», не
+// трогая ни попытку, ни день занятия. Квитанция и попытка пишутся ОДНОЙ
+// транзакцией — иначе упавшая запись попытки оставила бы квитанцию, и
+// повтор счёл бы потерянное принятым.
+model OfflineReceipt {
+  /** Ключ, который браузер присвоил записи очереди (UUID). */
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /** Что за запись: пока только "lesson". */
+  kind      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // One row per lesson a user has ATTEMPTED (pass or fail) — written by

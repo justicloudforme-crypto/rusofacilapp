@@ -44,11 +44,15 @@ function banner(locale: "es" | "ru"): string {
 
 describe("плашка без сети не обещает больше, чем умеет", () => {
   it("в очередь на отправку ставит РОВНО одно место, и это упражнения урока", () => {
-    const callers = files
-      .filter((f) => /queuePendingProgress\(/.test(readFileSync(f, "utf8")))
-      .filter((f) => !f.endsWith(join("lib", "progress-client.ts")))
-      .map((f) => f.slice(ROOT.length + 1));
-    expect(callers).toEqual(["components/lesson/ExercisesTab.tsx"]);
+    // С 7.236 очередь — `enqueueProgress` (`src/lib/progress-outbox.ts`,
+    // IndexedDB); старую `queuePendingProgress` больше не зовёт никто.
+    const callers = (pattern: RegExp, home: string) =>
+      files
+        .filter((f) => pattern.test(readFileSync(f, "utf8")))
+        .filter((f) => !f.endsWith(join("lib", home)))
+        .map((f) => f.slice(ROOT.length + 1));
+    expect(callers(/enqueueProgress\(/, "progress-outbox.ts")).toEqual(["components/lesson/ExercisesTab.tsx"]);
+    expect(callers(/queuePendingProgress\(/, "progress-client.ts")).toEqual([]);
   });
 
   it("обе локали называют упражнения, а не «некоторые изменения»", () => {
@@ -63,8 +67,10 @@ describe("плашка без сети не обещает больше, чем 
     expect(banner("ru")).toMatch(/связь вернётся/);
   });
 
-  it("отправка действительно привязана к возврату связи, а не к таймеру", () => {
-    const tab = readFileSync(join(ROOT, "components", "lesson", "ExercisesTab.tsx"), "utf8");
-    expect(tab).toMatch(/addEventListener\("online", flushPendingProgress\)/);
+  it("отправка действительно привязана к возврату связи, а не только к таймеру", () => {
+    // С 7.236 отправку ведёт `ProgressOutboxSync` на каждой странице.
+    const sync = readFileSync(join(ROOT, "components", "ProgressOutboxSync.tsx"), "utf8");
+    expect(sync).toMatch(/addEventListener\("online", soon\)/);
+    expect(sync).toMatch(/flushProgress\(owner\)/);
   });
 });

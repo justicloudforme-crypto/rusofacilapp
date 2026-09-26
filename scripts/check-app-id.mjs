@@ -41,11 +41,12 @@
 // не равное канону и не являющееся его продолжением, — падение. Именно
 // сплошной проход ловит место, которого в списке выше ещё нет.
 //
-// СТОРОЖ СМОТРИТ ТОЛЬКО НА ОТСЛЕЖИВАЕМЫЕ ФАЙЛЫ (`git ls-files`). Правило
-// оплачено на PR #226: локальный прогон `check:brand` был зелёным, пока
-// новый файл не попал в индекс. Прогон до `git add` про новый файл не
-// говорит ничего.
-import { execFileSync } from "node:child_process";
+// СТОРОЖ СМОТРИТ НА ОТСЛЕЖИВАЕМЫЕ И НОВЫЕ ФАЙЛЫ (`scripts/repo-files.mjs`).
+// Правило оплачено на PR #226: локальный прогон `check:brand` был зелёным,
+// пока новый файл не попал в индекс. До 7.236 урок держался словами
+// («прогон до `git add` ничего не говорит»); PR #420 показал, что словами
+// мало, — теперь новый файл виден и до `git add`.
+import { repoFiles } from "./repo-files.mjs";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
@@ -71,9 +72,7 @@ const NATIVE_SURFACE = (f) =>
   f.startsWith("android/") || f.startsWith("ios/") || f === "capacitor.config.ts";
 
 function tracked() {
-  return execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
-    .split("\0")
-    .filter(Boolean);
+  return repoFiles();
 }
 
 function read(file) {

@@ -800,3 +800,41 @@ describe("колода слайдов в скачанной копии (захо
     expect(doc.querySelectorAll("button[data-rf-slide-go]").length).toBe(6);
   });
 });
+
+describe("упражнения в копии без сети — честная плашка (7.236)", () => {
+  function lesson(lang: string, exercisesPanel: string) {
+    const doc = document.implementation.createHTMLDocument("x");
+    doc.documentElement.setAttribute("lang", lang);
+    doc.body.innerHTML = `
+      <div role="tablist"><button data-offline-tab="grammar">Gramática</button><button data-offline-tab="exercises">Ejercicios</button></div>
+      <div class="mt-8"><div data-offline-panel="grammar">teoría</div>${exercisesPanel}</div>`;
+    return doc;
+  }
+
+  it("контроль: живые упражнения в копии заменяются плашкой — ни одной кнопки и радиокнопки", () => {
+    const doc = lesson("es", `<div data-offline-panel="exercises" data-rf-exercises-live><input type="radio"><button>Comprobar</button></div>`);
+    const html = copyMarkupOf(doc, null);
+    const copy = new DOMParser().parseFromString(html, "text/html");
+    const panel = copy.querySelector('[data-offline-panel="exercises"]')!;
+    expect(panel.querySelectorAll("button, input").length).toBe(0);
+    expect(panel.querySelector("[data-rf-exercises-offline]")?.textContent).toMatch(/necesitas internet.*teoría, el vocabulario y el audio/);
+    // Живая страница не тронута — правка только в копии.
+    expect(doc.querySelectorAll('[data-offline-panel="exercises"] button').length).toBe(1);
+  });
+
+  it("вкладку не открывали — панель с плашкой добавляется (иначе каркас прячет вкладку молча); ru", () => {
+    const html = copyMarkupOf(lesson("ru", ""), null);
+    const copy = new DOMParser().parseFromString(html, "text/html");
+    const panel = copy.querySelector('[data-offline-panel="exercises"]')!;
+    expect(panel).not.toBeNull();
+    expect(panel.classList.contains("hidden")).toBe(true);
+    expect(panel.textContent).toBe("Для упражнений нужен интернет; теория, словарь и аудио доступны.");
+  });
+
+  it("закрытый урок: карточка подписки в панели не трогается", () => {
+    const html = copyMarkupOf(lesson("es", `<div data-offline-panel="exercises"><a href="/es/pricing">Suscríbete</a></div>`), null);
+    const copy = new DOMParser().parseFromString(html, "text/html");
+    expect(copy.querySelector("[data-rf-exercises-offline]")).toBeNull();
+    expect(copy.querySelector('[data-offline-panel="exercises"] a')?.textContent).toBe("Suscríbete");
+  });
+});
