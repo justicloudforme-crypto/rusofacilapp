@@ -569,6 +569,9 @@ const DYING_DOCUMENT_POST_PATHS = [
   "/api/search/log",
   "/api/word-games/complete",
   "/api/flashcard-progress",
+  // Очередь ответов урока (заход 7.236, `src/lib/progress-outbox.ts`):
+  // запись очереди уходит тем же транспортом `postReliablyForResult`.
+  "/api/progress",
 ];
 
 serwist.registerCapture(

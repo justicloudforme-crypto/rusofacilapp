@@ -54,6 +54,11 @@ import { awardBadgesSafely } from "./badges";
 export async function markStudyDayVisit(
   source: StudyDaySource,
   user?: { id: string; timezone: string | null } | null,
+  /** Момент ДЕЙСТВИЯ, если он не «сейчас»: ответ из очереди без сети
+   *  (заход 7.236) засчитывает день, когда ученик занимался, а не день,
+   *  когда вернулась сеть. Окно доверия — `actionInstant` в
+   *  `src/lib/offline-record.ts`. */
+  at?: Date,
 ): Promise<void> {
   const userId = user === undefined ? await signedInUserId() : user?.id ?? null;
   if (!userId) return;
@@ -72,7 +77,7 @@ export async function markStudyDayVisit(
     // Считается только на НОВОМ дне: `markStudyDay` возвращает `true`
     // ровно тогда, когда строка дня появилась, то есть не чаще раза в
     // сутки на человека. Каждый просмотр страницы это не удорожает.
-    const dayIsNew = await markStudyDay(userId, timeZone, source);
+    const dayIsNew = await markStudyDay(userId, timeZone, source, at);
     if (dayIsNew) await awardBadgesSafely(userId);
   });
 }

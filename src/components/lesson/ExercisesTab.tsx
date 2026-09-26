@@ -21,7 +21,15 @@ import PronunciationPractice from "./PronunciationPractice";
 import { readLocal, writeLocal } from "@/lib/safe-storage";
 import { exerciseAudioKey, pickClip } from "@/lib/lessons/audioKeys";
 import type { VocabularyItem } from "@/lib/lessons/types";
-import { flushPendingProgress, queuePendingProgress } from "@/lib/progress-client";
+import { flushPendingProgress } from "@/lib/progress-client";
+import {
+  GUEST_OWNER,
+  OUTBOX_CHANGE_EVENT,
+  enqueueProgress,
+  flushProgress,
+  newRecordKey,
+  pendingProgress,
+} from "@/lib/progress-outbox";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
 import EncouragementModal from "@/components/celebration/EncouragementModal";
 import type { Locale } from "@/i18n/config";
@@ -84,6 +92,12 @@ export default function ExercisesTab({
   // Same "fired exactly once, only for a fresh result this visit" rule as
   // justPassed above, mirrored for the failing case.
   const [justFailed, setJustFailed] = useState(false);
+  // ОЧЕРЕДЬ БЕЗ СЕТИ (заход 7.236, src/lib/progress-outbox.ts): сколько
+  // ответов ЭТОГО урока ждут отправки, и идёт ли отправка прямо сейчас —
+  // пометка «Guardado, se enviará…» не мигает на каждом ответе с сетью.
+  const [pendingHere, setPendingHere] = useState(0);
+  const [sending, setSending] = useState(false);
+  const [outboxFull, setOutboxFull] = useState(false);
 
   useEffect(() => {
     // Reading localStorage is only possible after mount (it doesn't exist
@@ -136,14 +150,27 @@ export default function ExercisesTab({
   }, [level, lessonSlug]);
 
   useEffect(() => {
-    // A student who checked exercises offline (or hit a transient server
-    // error) still gets the local unlock immediately — this just makes
-    // sure the server eventually finds out too, so /profile and the
-    // "restore my last attempt" feature don't quietly stay stale forever.
+    // Старая очередь в localStorage (до 7.236) больше не пополняется —
+    // здесь только досылается то, что в ней осталось с прошлых версий.
+    // Новая очередь (IndexedDB) отправляется из `ProgressOutboxSync`.
     flushPendingProgress();
-    window.addEventListener("online", flushPendingProgress);
-    return () => window.removeEventListener("online", flushPendingProgress);
   }, []);
+
+  useEffect(() => {
+    if (ownerScope === GUEST_OWNER) return;
+    let alive = true;
+    const recount = () => {
+      void pendingProgress(ownerScope, level, lessonSlug).then((count) => {
+        if (alive) setPendingHere(count);
+      });
+    };
+    recount();
+    window.addEventListener(OUTBOX_CHANGE_EVENT, recount);
+    return () => {
+      alive = false;
+      window.removeEventListener(OUTBOX_CHANGE_EVENT, recount);
+    };
+  }, [ownerScope, level, lessonSlug]);
 
   if (exercises.length === 0) {
     return <p className="text-sm text-foreground/60">{dict.noContent}</p>;
@@ -190,25 +217,41 @@ export default function ExercisesTab({
       mistakes: describeMistakes(exercises, answers, outcome.results),
       answers,
     };
-    fetch("/api/progress", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(attemptPayload),
-    }).then((res) => {
-      // 401 means no session — never retryable (there's no logged-out ->
-      // logged-in transition that a background retry could catch), so
-      // don't queue it. Since the free-trial lesson (A1/1) is now reachable
-      // without an account, this is the common case for that lesson, not
-      // an edge case — queuing it anyway would grow localStorage forever
-      // for every anonymous visitor who checks their answers there.
-      if (!res.ok && res.status !== 401) queuePendingProgress(attemptPayload);
-    }).catch(() => {
-      // Offline, or the request never reached the server — queue it for a
-      // background retry (see progress-client.ts) instead of losing it.
-      // Progress is still unlocked locally (localStorage) either way; the
-      // /profile progress bar and the "restore last attempt" feature just
-      // won't reflect this particular check until the retry succeeds.
-      queuePendingProgress(attemptPayload);
+    if (ownerScope === GUEST_OWNER) {
+      // Гость: сервер ответит 401, очереди у гостя нет (как и до 7.236) —
+      // прогресс гостя живёт только отметкой «пройдено» на телефоне.
+      fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attemptPayload),
+      }).catch(() => {});
+      return;
+    }
+    // Вошедший: СНАЧАЛА в очередь (IndexedDB), потом отправка. Запись с
+    // ключом, временем действия и владельцем (src/lib/offline-record.ts)
+    // переживает обрыв сети, убийство приложения и перезапуск, а сервер
+    // принимает её ровно один раз.
+    const record = { ...attemptPayload, key: newRecordKey(), at: Date.now(), owner: ownerScope };
+    setSending(true);
+    setOutboxFull(false);
+    void enqueueProgress(record).then(async (queued) => {
+      if (queued === "queued") {
+        await flushProgress(ownerScope);
+      } else {
+        // Хранилища нет (частный режим) или очередь полна: шлём как
+        // раньше, напрямую. Полная очередь — вслух, а не молча.
+        if (queued === "full") setOutboxFull(true);
+        await fetch("/api/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(record),
+        })
+          .then((res) => {
+            if (res.ok) setOutboxFull(false);
+          })
+          .catch(() => {});
+      }
+      setSending(false);
     });
   }
 
@@ -438,6 +481,16 @@ export default function ExercisesTab({
             </span>
           )}
         </div>
+        {pendingHere > 0 && !sending && (
+          <p data-rf-outbox-note className="text-xs text-foreground/60" role="status">
+            {dict.savedOffline}
+          </p>
+        )}
+        {outboxFull && (
+          <p data-rf-outbox-full className="text-xs text-red-600 dark:text-red-400" role="alert">
+            {dict.outboxFull}
+          </p>
+        )}
       </div>
     </div>
   );

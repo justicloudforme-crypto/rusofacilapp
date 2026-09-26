@@ -338,6 +338,22 @@ const CREATE_TABLE_STATEMENTS: ReadonlyArray<{ table: string; statements: string
       `CREATE UNIQUE INDEX IF NOT EXISTS "SubscriptionPayment_stripePaymentIntentId_key" ON "SubscriptionPayment"("stripePaymentIntentId")`,
     ],
   },
+  {
+    // Квитанции очереди ответов без сети (PROGRESS.md 7.236). Первичный
+    // ключ — ключ записи очереди, его и хватает для «принято один раз».
+    // Внешний ключ на User с CASCADE: квитанция про конкретного человека.
+    table: "OfflineReceipt",
+    statements: [
+      `CREATE TABLE IF NOT EXISTS "OfflineReceipt" (
+         "id" TEXT NOT NULL PRIMARY KEY,
+         "userId" TEXT NOT NULL,
+         "kind" TEXT NOT NULL,
+         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+         CONSTRAINT "OfflineReceipt_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+       )`,
+      `CREATE INDEX IF NOT EXISTS "OfflineReceipt_userId_idx" ON "OfflineReceipt"("userId")`,
+    ],
+  },
 ];
 
 /** Индексы СУЩЕСТВУЮЩИХ таблиц, которые этот скрипт имеет право создать.
