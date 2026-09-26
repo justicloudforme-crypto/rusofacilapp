@@ -13,5 +13,9 @@ describe("куда вход уводит уже вошедшего (7.236, на�
     expect(signedInLoginTarget("//evil.example/x", "ru")).toBe("/ru/profile");
     expect(signedInLoginTarget("/es/login", "es")).toBe("/es/profile");
     expect(signedInLoginTarget("/es/register?redirectTo=/es", "es")).toBe("/es/profile");
+    expect(signedInLoginTarget("/\\evil.example/x", "es")).toBe("/es/profile");
+    expect(signedInLoginTarget("javascript:alert(1)", "es")).toBe("/es/profile");
+    expect(signedInLoginTarget("/es/x\nSet-Cookie:a", "es")).toBe("/es/profile");
+    expect(signedInLoginTarget("", "es")).toBe("/es/profile");
   });
 });
