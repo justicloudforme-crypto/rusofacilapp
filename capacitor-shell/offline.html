@@ -1068,7 +1068,11 @@
                 return;
               }
               if (!src) {
+                // Клипа на телефоне нет — та же честная пометка, что у
+                // нажатия по одной фразе (7.231), и очередь идёт дальше.
                 line.setAttribute("title", DL[lang].noAudio);
+                line.setAttribute("aria-disabled", "true");
+                line.style.opacity = "0.5";
                 return playAt(i + 1);
               }
               var audio = new Audio(src);
