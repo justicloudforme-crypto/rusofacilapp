@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { LessonContent } from "@/lib/lessons/types";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { readLocal } from "@/lib/safe-storage";
+import { takeCopyView } from "@/lib/copy-view";
 import GrammarTab from "./GrammarTab";
 import VocabularyTab from "./VocabularyTab";
 import ExercisesTab from "./ExercisesTab";
@@ -187,6 +188,35 @@ export default function LessonView({
       setPassed(true);
     }
   }, [content, level, lessonSlug]);
+  // ВОЗВРАТ СЕТИ В СКАЧАННОЙ КОПИИ — заход 7.239. Каркас перед
+  // перезагрузкой оставил записку «какая вкладка была открыта и где
+  // прокрутка» (src/lib/copy-view.ts); без неё живой урок всегда
+  // начинал с «Gramática» и сверху. Только вкладки, которые у этого
+  // урока есть; закрытому уроку — только прокрутка, в карточку подписки
+  // не уводим.
+  const [restoreY, setRestoreY] = useState<number | null>(null);
+  useEffect(() => {
+    const view = takeCopyView(window.location.pathname);
+    if (!view) return;
+    const known: Tab[] = ["grammar", "vocabulary", "alphabet", "exercises", "slides"];
+    const wanted = known.find((id) => id === view.tab);
+    const offered =
+      wanted === "slides" ? hasSlides : wanted === "alphabet" ? hasAlphabet : wanted !== undefined;
+    if (content && !isLocked && wanted && offered) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (wanted === "exercises") setExercisesEverOpened(true);
+      setTab(wanted);
+    }
+    if (view.y > 0) setRestoreY(view.y);
+    // Один раз на монтирование: записка читается и стирается.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (restoreY === null) return;
+    // После того как выбранная вкладка нарисовалась.
+    const frame = requestAnimationFrame(() => window.scrollTo(0, restoreY));
+    return () => cancelAnimationFrame(frame);
+  }, [restoreY, tab]);
   // Pre-generated pronunciation audio for this lesson's items (see
   // prisma/generate-lesson-audio.ts), keyed by the Russian text itself.
   // Empty until this resolves — SpeakButton just falls back to browser
