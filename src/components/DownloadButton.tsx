@@ -39,6 +39,13 @@ import {
  *    при них не появляется. Откат делает `downloadPage`.
  */
 type Phase =
+  /**
+   * ЕЩЁ НЕ ЯСНО, СКАЧАН ЛИ УРОК (7.238, А2). Кнопка начинает с этого, а не
+   * с «↓ Descargar»: на POCO при возврате сети скачанный урок около
+   * секунды показывал «Descargar» — ложь о том, что он не скачан, — пока
+   * опись читалась из кеша. Нейтральная кнопка того же размера, без слова.
+   */
+  | { kind: "checking" }
   | { kind: "idle" }
   | { kind: "measuring" }
   /**
@@ -55,7 +62,7 @@ type Phase =
 
 export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
   const t = uiStrings(lang).download;
-  const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   /**
    * ЕСТЬ ЛИ НА ЭТОМ УСТРОЙСТВЕ ХРАНИЛИЩЕ КЕШЕЙ. Начинается `true` и у
    * сервера, и у клиента, чтобы разметка первого рендера совпала знак в
@@ -89,11 +96,17 @@ export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
     if (typeof caches === "undefined") return;
     let cancelled = false;
     void (async () => {
-      const rows = await readDownloads(caches, window.location.href);
-      const mine = rows.find((row) => row.url === window.location.href);
-      if (!mine || cancelled) return;
-      if (await isComplete(caches, mine)) {
-        if (!cancelled && mounted.current) setPhase({ kind: "done" });
+      let downloaded = false;
+      try {
+        const rows = await readDownloads(caches, window.location.href);
+        const mine = rows.find((row) => row.url === window.location.href);
+        downloaded = Boolean(mine) && !cancelled && (await isComplete(caches, mine!));
+      } catch {
+        downloaded = false;
+      }
+      // Ответ известен — нейтральное состояние снимается в любую сторону.
+      if (!cancelled && mounted.current) {
+        setPhase((prev) => (prev.kind === "checking" ? { kind: downloaded ? "done" : "idle" } : prev));
       }
     })();
     return () => {
@@ -172,6 +185,7 @@ export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
   })();
 
   const busy = phase.kind === "measuring" || phase.kind === "running";
+  const checking = phase.kind === "checking";
 
   return (
     <div className="flex flex-col gap-1" data-rf-download>
@@ -179,16 +193,23 @@ export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
         type="button"
         data-rf-download-button
         // 44px минимум — правило проекта для всего нажимаемого.
-        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-black/10 px-4 py-2 text-sm font-semibold text-[var(--color-fg)] disabled:opacity-60 dark:border-white/30"
-        disabled={busy || phase.kind === "done"}
-        aria-busy={busy}
+        data-rf-download-checking={checking ? "" : undefined}
+        className={`inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-black/10 px-4 py-2 text-sm font-semibold text-[var(--color-fg)] disabled:opacity-60 dark:border-white/30 ${checking ? "animate-pulse motion-reduce:animate-none" : ""}`}
+        disabled={busy || checking || phase.kind === "done"}
+        aria-busy={busy || checking}
         onClick={() => {
           if (phase.kind === "ready") void run(phase.weight, phase.html);
           else if (phase.kind === "idle" || phase.kind === "error") void measure();
         }}
       >
-        <span aria-hidden="true">{phase.kind === "done" ? "✓" : "↓"}</span>
-        <span data-rf-download-label>{label}</span>
+        {/* Пока проверяется — то же место, те же слова, но невидимые:
+            размер кнопки не прыгает, а ложного «Descargar» нет. */}
+        <span aria-hidden="true" className={checking ? "invisible" : undefined}>
+          {phase.kind === "done" ? "✓" : "↓"}
+        </span>
+        <span data-rf-download-label className={checking ? "invisible" : undefined}>
+          {label}
+        </span>
       </button>
       {phase.kind === "ready" ? (
         <p className="text-xs opacity-70" data-rf-download-note>

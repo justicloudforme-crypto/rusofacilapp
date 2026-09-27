@@ -36,6 +36,8 @@ export interface UiStrings {
     remove: string;
     removeAll: string;
     removeAllConfirm: string;
+    removeAllCancel: string;
+    removeAllOk: string;
     exercisesOffline: string;
   };
   glossary: {
@@ -89,6 +91,8 @@ export const UI_STRINGS: Record<Locale, UiStrings> = {
       "remove": "Borrar",
       "removeAll": "Borrar todo",
       "removeAllConfirm": "¿Borrar todo lo descargado?",
+      "removeAllCancel": "Cancelar",
+      "removeAllOk": "Borrar",
       "exercisesOffline": "Para los ejercicios necesitas internet; la teoría, el vocabulario y el audio están disponibles."
     },
     "glossary": {
@@ -140,6 +144,8 @@ export const UI_STRINGS: Record<Locale, UiStrings> = {
       "remove": "Удалить",
       "removeAll": "Удалить всё",
       "removeAllConfirm": "Удалить всё скачанное?",
+      "removeAllCancel": "Отмена",
+      "removeAllOk": "Удалить",
       "exercisesOffline": "Для упражнений нужен интернет; теория, словарь и аудио доступны."
     },
     "glossary": {

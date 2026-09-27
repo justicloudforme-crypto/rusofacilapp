@@ -35,6 +35,11 @@ import CelebrationModal from "@/components/celebration/CelebrationModal";
 import EncouragementModal from "@/components/celebration/EncouragementModal";
 import type { Locale } from "@/i18n/config";
 import { plural } from "@/lib/plural";
+import Skeleton from "@/components/ui/Skeleton";
+
+/** Сколько ждать восстановления попытки, прежде чем показать пустую форму
+ * (7.238, А2): досылка очереди на плохой сети может идти дольше. */
+const RESTORE_WAIT_MS = 4000;
 
 type ExercisesDict = Dictionary["lesson"]["exercises"];
 
@@ -100,6 +105,12 @@ export default function ExercisesTab({
   // Человек начал отвечать, пока досылалась очередь (7.237): восстановление
   // приходит позже прежнего и не имеет права стереть его ответы.
   const touched = useRef(false);
+  // ПОКА ПОПЫТКА НЕ ВОССТАНОВЛЕНА — НЕ ПОКАЗЫВАТЬ ЛОЖНОЕ (7.238, А2). На
+  // POCO при возврате сети живая страница урока около секунды рисовала
+  // пустую форму «Progreso 0/17 respondidos», а потом — «Este es tu intento
+  // anterior». Пустая форма — неправда о том, что человек уже отвечал;
+  // вместо неё заглушка, пока не ясно, есть ли прошлая попытка.
+  const [restoring, setRestoring] = useState(true);
   const [sending, setSending] = useState(false);
   const [outboxFull, setOutboxFull] = useState(false);
 
@@ -132,6 +143,7 @@ export default function ExercisesTab({
     // attempt should be lost just by navigating away.
     if (exercises.length === 0) return;
     const controller = new AbortController();
+    const giveUp = window.setTimeout(() => setRestoring(false), RESTORE_WAIT_MS);
     // ПОСЛЕДНЯЯ ПОПЫТКА, А НЕ ПЕРВАЯ ДОШЕДШАЯ (заход 7.237). Сначала
     // очередь без сети: она досылается, и если запись урока всё ещё ждёт
     // — показывается она. Сервер спрашивается потом, и мимо кеша воркера
@@ -142,17 +154,31 @@ export default function ExercisesTab({
       fetch(`/api/progress?level=${level}&lesson=${lessonSlug}`, { signal: controller.signal, cache: "no-store" })
         .then((res) => (res.ok ? res.json() : { attempt: null }))
         .then((body: { attempt?: { score: number; passed: boolean; answers: AnswerMap } | null }) => body.attempt ?? null),
-    ).then(({ attempt }) => {
-      if (!attempt || controller.signal.aborted || touched.current) return;
-      setAnswers(attempt.answers as AnswerMap);
-      setSubmitted(true);
-      setRestored(true);
-      if (attempt.passed) {
-        setPassed(true);
-        onPassChange(true);
-      }
-    });
-    return () => controller.abort();
+    )
+      .then(({ attempt }) => {
+        if (controller.signal.aborted) return;
+        // ЗАЧЁТ (7.238): `passed` восстановленной попытки — «урок сдан»
+        // (лучшая попытка), даже если последняя — неудачная. Он же
+        // запоминается на телефоне: «Siguiente lección» открыта сразу при
+        // следующем заходе, ещё до того, как откроют упражнения.
+        if (attempt?.passed) {
+          setPassed(true);
+          onPassChange(true);
+          writeLocal(storageKey, "1");
+        }
+        if (!attempt || touched.current) return;
+        setAnswers(attempt.answers as AnswerMap);
+        setSubmitted(true);
+        setRestored(true);
+      })
+      .finally(() => {
+        window.clearTimeout(giveUp);
+        if (!controller.signal.aborted) setRestoring(false);
+      });
+    return () => {
+      window.clearTimeout(giveUp);
+      controller.abort();
+    };
     // Only run once per lesson on mount, same reasoning as the effect above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level, lessonSlug]);
@@ -182,6 +208,18 @@ export default function ExercisesTab({
 
   if (exercises.length === 0) {
     return <p className="text-sm text-foreground/60">{dict.noContent}</p>;
+  }
+
+  if (restoring) {
+    return (
+      <div data-rf-exercises-restoring className="flex flex-col gap-4" role="status" aria-busy="true">
+        <span className="sr-only">{dict.restoring}</span>
+        <Skeleton className="h-12" height={48} />
+        <Skeleton variant="rect" className="h-24" height={96} />
+        <Skeleton variant="rect" className="h-24" height={96} />
+        <Skeleton variant="rect" className="h-24" height={96} />
+      </div>
+    );
   }
 
   const result = submitted ? computeScore(exercises, answers) : null;
@@ -472,7 +510,7 @@ export default function ExercisesTab({
               type="button"
               onClick={handleCheck}
               disabled={!allComplete}
-              className="tap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
+              className="tap shrink-0 whitespace-nowrap rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {dict.checkButton}
             </button>
@@ -480,7 +518,7 @@ export default function ExercisesTab({
             <button
               type="button"
               onClick={handleRetry}
-              className="tap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
+              className="tap shrink-0 whitespace-nowrap rounded-full border border-black/10 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
             >
               {dict.retryButton}
             </button>

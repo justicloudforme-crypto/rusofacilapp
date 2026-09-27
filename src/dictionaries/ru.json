@@ -1266,6 +1266,7 @@
       "matchingLeftHeader": "Русский",
       "matchingRightHeader": "Перевод",
       "completeToUnlock": "Пройдите упражнения минимум на 70%, чтобы открыть следующий урок.",
+      "restoring": "Загружаем ваши ответы…",
       "wordReorderEmpty": "Нажимайте на слова в правильном порядке",
       "listeningPlayLabel": "Воспроизвести аудио",
       "readingTextLabel": "Текст",
@@ -1766,6 +1767,8 @@
       "remove": "Удалить",
       "removeAll": "Удалить всё",
       "removeAllConfirm": "Удалить всё скачанное?",
+      "removeAllCancel": "Отмена",
+      "removeAllOk": "Удалить",
       "exercisesOffline": "Для упражнений нужен интернет; теория, словарь и аудио доступны."
     },
     "glossary": {
