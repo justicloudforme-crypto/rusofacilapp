@@ -13363,7 +13363,7 @@ C1-заголовок ловится, а A1-слова той же страни�
 | «Borrar todo» в каркасе | своё окно на испанском | «¿Borrar todo lo descargado? · Cancelar · Borrar», системных 0 |
 | `inset-apply-js.test.ts` на старой строке Java | красный | `TypeError … reading 'style'` |
 | `npm run verify`, сайт | зелёный | зелёный на `b7596d5`, пик сборки 5103 МБ |
-| `npm run verify`, оболочка | зелёный | см. часть 6 |
+| `npm run verify`, оболочка | зелёный | 1 — красный на двух примерах `offline-screen.test.ts` (ждали `/login` и «кабинета нет»; переписаны под правило 10); **2 — зелёный на `3cc6e5f`**, примеров 2311 + 1 пропуск, пик сборки 5165 МБ |
 
 ## ЧАСТЬ 5 (7.238). ЛОВУШКИ СТЕНДА
 
@@ -13375,6 +13375,7 @@ C1-заголовок ловится, а A1-слова той же страни�
 ## ЧАСТЬ 6 (7.238). ПРОГОНЫ И СБОРКА
 
 * **verify сайта:** 1 — красный на двух примерах (`ExercisesTab.storage-failure` ждал форму сразу — теперь ждёт после заглушки); 2 — красный на `check:e2e-live-probes` (селектор «Intentada…» только в отрицательном утверждении — добавлен позитивный контроль); **3 — зелёный на `b7596d5`**, примеров 2315 + 1 прежний пропуск, `families with problems: 0`.
+* **CI:** #424 — прогон [36289451642](https://github.com/justicloudforme-crypto/rusofacilapp/actions/runs/36289451642) на `b7596d5`; #425 — [36289599457](https://github.com/justicloudforme-crypto/rusofacilapp/actions/runs/36289599457) на `3cc6e5f`; сборка и примеры, Playwright E2E, три доли «Платные поверхности», assembleDebug — **зелёные целиком**. Последний коммит #425 (`3cc6e5f`) — только примеры, содержимое AAB он не меняет.
 * **AAB:** `~/Desktop/rusofacil-release-7238-vc11-2026-09-27.aab`, 13 808 195 байт, sha256 `0ec10e27a9fc4f6365beafa83e0237e72e2783bf800fdda9198d2b5113bb7752`, `jar verified`, подписант `CN=Vasilii Petrov, L=Tijuana, C=MX`, SHA-256 `00:07:2D:34:EF:64:B9:92:81:8F:C2:0D:5C:A9:E3:95:1C:10:66:B4:B3:07:F1:AB:27:E0:4C:50:7D:0E:BB:82` — тот же ключ; `base/assets/public/offline.html` побайтово равен `public/offline.html` (sha256 `20bdc256…`); APK той же сборки: `check:apk-facts` «5 величин сошлись, … расхождений 0», `versionCode='11' versionName='1.0.10'`. Собран из ветки `fix/run-7238-shell` (`npx cap sync android` на боевой адрес + `./gradlew bundleRelease assembleRelease`).
 * **Что приедет выкатом сайта, а что пакетом.** Выкатом #424 — зачёт по лучшей попытке, время ответа, заглушка и нейтральная кнопка, кнопки итога, окно в кабинете. Пакетом 1.0.10 — `INSET_APPLY_JS`, вкладки копии, «Mi perfil» → `/profile` и окно «Borrar todo» В КАРКАСЕ (каркас приложения — из пакета). **Заливать AAB в Alpha — только после выката #424 и #425.**
 
