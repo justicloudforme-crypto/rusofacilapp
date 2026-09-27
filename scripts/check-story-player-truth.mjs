@@ -21,7 +21,9 @@
  *   R5 слово со следующим знаком — в `whitespace-nowrap`, абзацы — через
  *      `tidyPunctuationSpacing`;
  *   R6 кнопка и шкала плеера несут `data-rf-player` (по ним плеер
- *      оживает в скачанной копии, долг 311).
+ *      оживает в скачанной копии, долг 311);
+ *   R7 каждый `data-rf-player`, который ищет каркас копии, есть у плеера,
+ *      и подписи кнопки каркас берёт из тех же атрибутов.
  *
  * Позитивный контроль — `--plant`: каждая подсадка ломает одно правило
  * на копии живого файла и обязана быть пойманной; живые файлы — 0 находок.
@@ -35,6 +37,7 @@ const FILES = {
   bridge: "src/lib/native-media-session.ts",
   player: "src/components/stories/StoryAudioPlayer.tsx",
   stories: "src/lib/stories.ts",
+  shell: "public/offline.html",
 };
 
 function blockFrom(code, index, open, close) {
@@ -111,6 +114,15 @@ export function violationsIn(src) {
     if (!new RegExp(`data-rf-player="${role}"`).test(player)) bad.push(`R6: у плеера нет data-rf-player="${role}" — в копии его нечем оживить`);
   }
   if (!/data-rf-play-label=/.test(player) || !/data-rf-pause-label=/.test(player)) bad.push("R6: кнопка плеера не несёт обе подписи для копии");
+  // R7
+  const wanted = [...(src.shell ?? "").matchAll(/\[data-rf-player="([a-z]+)"\]/g)].map((m) => m[1]);
+  if (wanted.length === 0) bad.push("R7: каркас копии не ищет ни одного data-rf-player — сторож ослеп, а плеер копии мёртв");
+  for (const role of new Set(wanted)) {
+    if (!new RegExp(`data-rf-player="${role}"`).test(player)) bad.push(`R7: каркас ищет data-rf-player="${role}", а у плеера такого нет — в копии эта кнопка мертва`);
+  }
+  for (const attr of ["data-rf-play-label", "data-rf-pause-label", "data-rf-story-title"]) {
+    if (!(src.shell ?? "").includes(attr)) bad.push(`R7: каркас не читает ${attr}`);
+  }
   return bad;
 }
 
@@ -146,6 +158,8 @@ function plant() {
   planted("text", 'className="whitespace-nowrap"', 'className=""', "подсадка: склейку слова со знаком сняли", "R5");
   planted("stories", ".map((paragraph) => tidyPunctuationSpacing(paragraph.trim()))", ".map((paragraph) => paragraph.trim())", "подсадка: нормализацию пробела убрали", "R5");
   planted("player", 'data-rf-player="play"', "", "подсадка: у кнопки плеера нет признака для копии", "R6");
+  planted("player", 'data-rf-player="back"', 'data-rf-player="rewind"', "подсадка: плеер переименовал «назад», каркас ищет старое имя", "R7");
+  planted("shell", 'root.querySelector(\'[data-rf-player="bar"]\')', 'root.querySelector(\'[data-rf-player="progress"]\')', "подсадка: каркас ищет шкалу под именем, которого у плеера нет", "R7");
   // Отрицательный: объяснение в комментарии — не нарушение.
   const commented = live.text.replace("function renderSentenceTokens(", '// src: "/icons/x.png" — так было до 7.240\nfunction renderSentenceTokens(');
   cases.push({ name: "отрицательный контроль: старый адрес в КОММЕНТАРИИ — молчание", ok: violationsIn({ ...live, text: commented }).length === 0 });
