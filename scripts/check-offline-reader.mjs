@@ -244,6 +244,13 @@ export function violations(sources) {
       `${SHELL}: список сохранённого рисуется не во всех ветках холодного старта (найдено ${coldStartBranches} из двух — ветка «сеть ответила» и ветка «сеть отказала») — в одной из них человек снова увидит пустой каркас`,
     );
   }
+  // 19. Подчёркнута открытая вкладка (долг 320, заход 7.238): каркас
+  // переставляет классы вместе с `aria-selected`, иначе подчёркивание
+  // остаётся там, где его застал снимок.
+  const arm = /function armTabs\(root\) \{[\s\S]*?\n        \}/.exec(shell)?.[0] ?? "";
+  if (!/buttons\[j\]\.className = chosen \? onClass : offClass;/.test(arm) || !/onClass = buttons\[c\]\.className;/.test(arm)) {
+    bad.push(`${SHELL}: вкладки копии меняют только aria-selected — подчёркнута не та вкладка (долг 320)`);
+  }
   // 13
   const panels = (lesson.match(/data-offline-panel="/g) ?? []).length;
   const switched = (lesson.match(/tab === "[a-z]+" \? undefined : "hidden"/g) ?? []).length;
@@ -408,6 +415,12 @@ function plant() {
     "не во всех ветках",
   );
   add(
+    "подсадка: вкладки копии снова меняют только aria-selected (долг 320)",
+    SHELL,
+    (s) => s.replace("              if (onClass !== null && offClass !== null) buttons[j].className = chosen ? onClass : offClass;\n", ""),
+    "подчёркнута не та вкладка",
+  );
+  add(
     "подсадка: кнопка вкладки потеряла метку",
     TABBAR,
     (s) => s.replace("data-offline-tab={item.id}", "data-tab={item.id}"),
@@ -440,7 +453,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-reader — 18 правил, нарушений 0 (заходы 7.229 и 7.230, офлайн-2 и 2б)");
+  console.log("check:offline-reader — 19 правил, нарушений 0 (заходы 7.229 и 7.230, офлайн-2 и 2б)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

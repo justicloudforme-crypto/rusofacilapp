@@ -271,6 +271,46 @@
       button:hover {
         opacity: 0.85;
       }
+      .rf-confirm {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 1rem calc(1rem + var(--safe-right)) calc(1rem + var(--safe-bottom)) calc(1rem + var(--safe-left));
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .rf-confirm-card {
+        width: 100%;
+        max-width: 28rem;
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+        padding: 1.25rem;
+        background: var(--surface);
+        color: var(--foreground);
+      }
+      .rf-confirm-card p {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .rf-confirm-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+      .rf-confirm-actions button {
+        margin-top: 0;
+        min-height: 2.75rem;
+      }
+      .rf-confirm-actions [data-downloads-confirm-cancel] {
+        background: transparent;
+        color: var(--foreground);
+        border: 1px solid var(--border);
+      }
       /* НИЖНЯЯ ПАНЕЛЬ — те же пять вкладок, те же адреса и те же значки,
          что у `src/components/BottomNav.tsx`. Она и есть «меню
          работает». ОТСТУП СНИЗУ — под кнопки навигации Android
@@ -499,6 +539,18 @@
         <ul data-downloads-list></ul>
         <button type="button" data-downloads-remove-all hidden></button>
       </section>
+      <!-- СВОЁ ОКНО «BORRAR TODO» — заход 7.238. Системное `confirm` в
+           WebView говорит по-английски «CANCEL / OK» на испанской
+           странице (видео POCO 1.0.9). Слова — из `DL` ниже. -->
+      <div class="rf-confirm" data-downloads-confirm role="dialog" aria-modal="true" hidden>
+        <div class="rf-confirm-card">
+          <p data-downloads-confirm-text></p>
+          <div class="rf-confirm-actions">
+            <button type="button" data-downloads-confirm-cancel></button>
+            <button type="button" data-downloads-confirm-ok></button>
+          </div>
+        </div>
+      </div>
 
       <p class="gauge" data-saved-gauge></p>
     </main>
@@ -523,7 +575,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5h4v2.1a1.6 1.6 0 0 0 3 0V4.5h4V9h-2.1a1.6 1.6 0 0 0 0 3H20v4.5h-4v-2.1a1.6 1.6 0 0 0-3 0v2.1H9V12H6.9a1.6 1.6 0 0 1 0-3H9V4.5Z" /></svg>
         <span lang="es" data-locale="es">Juegos</span><span lang="ru" data-locale="ru">Игры</span>
       </a>
-      <a data-href="/login" href="/es/login">
+      <a data-href="/profile" href="/es/profile">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" /></svg>
         <span lang="es" data-locale="es">Mi perfil</span><span lang="ru" data-locale="ru">Мой профиль</span>
       </a>
@@ -573,6 +625,8 @@
             remove: "Borrar",
             removeAll: "Borrar todo",
             confirm: "¿Borrar todo lo descargado?",
+            cancel: "Cancelar",
+            ok: "Borrar",
             unit: "MB",
             noAudio: "El audio de esta copia no está en el teléfono",
             untitled: "Material descargado",
@@ -583,6 +637,8 @@
             remove: "Удалить",
             removeAll: "Удалить всё",
             confirm: "Удалить всё скачанное?",
+            cancel: "Отмена",
+            ok: "Удалить",
             unit: "МБ",
             noAudio: "Звука этой копии на телефоне нет",
             untitled: "Скачанный материал",
@@ -839,16 +895,35 @@
             else all[b].hidden = true;
           }
           if (buttons.length === 0) return;
+          /**
+           * ПОДЧЁРКНУТА ТА ВКЛАДКА, ЧТО ОТКРЫТА — ДОЛГ 320 (заход 7.238).
+           *
+           * Подчёркивание и цвет — классы, застывшие в снимке страницы
+           * (`TabBar.tsx`: у выбранной `border-primary text-foreground`, у
+           * остальных `border-transparent …`). Здесь раньше менялся только
+           * `aria-selected`, и на видео POCO была открыта «Ejercicios», а
+           * подчёркнута «Gramática». Теперь классы берутся из самого
+           * снимка — у выбранной кнопки и у невыбранной — и переставляются
+           * вместе с выбором. Работает и на копиях, скачанных до правки.
+           */
+          var onClass = null;
+          var offClass = null;
+          for (var c = 0; c < buttons.length; c++) {
+            if (buttons[c].getAttribute("aria-selected") === "true") {
+              if (onClass === null) onClass = buttons[c].className;
+            } else if (offClass === null) {
+              offClass = buttons[c].className;
+            }
+          }
           function select(id) {
             for (var i = 0; i < panels.length; i++) {
               var mine = panels[i].getAttribute("data-offline-panel") === id;
               panels[i].classList.toggle("hidden", !mine);
             }
             for (var j = 0; j < buttons.length; j++) {
-              buttons[j].setAttribute(
-                "aria-selected",
-                buttons[j].getAttribute("data-offline-tab") === id ? "true" : "false",
-              );
+              var chosen = buttons[j].getAttribute("data-offline-tab") === id;
+              buttons[j].setAttribute("aria-selected", chosen ? "true" : "false");
+              if (onClass !== null && offClass !== null) buttons[j].className = chosen ? onClass : offClass;
             }
           }
           for (var k = 0; k < buttons.length; k++) {
@@ -1676,16 +1751,38 @@
           all.hidden = false;
           all.textContent = DL[lang].removeAll;
           all.onclick = function () {
-            if (!window.confirm(DL[lang].confirm)) return;
-            caches
-              .delete(DOWNLOADS_CACHE)
-              .catch(function () {})
-              .then(function () {
-                savedCache = null;
-                showSavedList(null);
-              });
+            askToRemoveAll(function () {
+              caches
+                .delete(DOWNLOADS_CACHE)
+                .catch(function () {})
+                .then(function () {
+                  savedCache = null;
+                  showSavedList(null);
+                });
+            });
           };
           block.hidden = false;
+        }
+
+        /** Подтверждение «Borrar todo» своим окном на языке страницы
+         *  (7.238): стирается только скачанное — очередь ответов и
+         *  просмотренное не трогаются, как и раньше. */
+        function askToRemoveAll(onYes) {
+          var box = document.querySelector("[data-downloads-confirm]");
+          if (!box) return;
+          var ok = box.querySelector("[data-downloads-confirm-ok]");
+          var cancel = box.querySelector("[data-downloads-confirm-cancel]");
+          box.querySelector("[data-downloads-confirm-text]").textContent = DL[lang].confirm;
+          cancel.textContent = DL[lang].cancel;
+          ok.textContent = DL[lang].ok;
+          box.hidden = false;
+          cancel.onclick = function () {
+            box.hidden = true;
+          };
+          ok.onclick = function () {
+            box.hidden = true;
+            onYes();
+          };
         }
 
         /** Удалить одно скачанное: страницу, все её клипы и строку описи.
