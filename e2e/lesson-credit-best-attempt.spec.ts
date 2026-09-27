@@ -108,11 +108,15 @@ async function expectCreditKept(page: Page, context: BrowserContext, lastPct: nu
 
 test.describe("зачёт урока держится по лучшей попытке (7.238, А1)", () => {
   test("с сетью: сдан 80 %, повторная неудачная — галочка и следующий урок на месте", async ({ page, context }) => {
-    // Ожидания: 15 + 3 + 5 + 15 + ожидания видимости по умолчанию (5 × 5) — 63 с.
+    // Ожидания: 15 + 3 + 5 + 15 + ожидания видимости по умолчанию (6 × 5) — 68 с.
     test.setTimeout(120_000);
     await register(context);
+    // Позитивный контроль селекторов: несданная попытка видна на уровне как
+    // «Intentada…», сданная — как «Lección aprobada».
+    await passByRequest(context, { score: 20, passed: false });
+    await page.goto(LEVEL);
+    await expect(page.locator('[aria-label="Intentada, todavía no aprobada"]').first()).toBeVisible();
     await passByRequest(context);
-    // Позитивный контроль «до»: зачёт виден.
     await page.goto(LEVEL);
     await expect(page.locator('[aria-label="Lección aprobada"]').first()).toBeVisible();
 
