@@ -115,3 +115,45 @@ describe("офлайн-заглушка", () => {
     expect(HTML).toContain('data-state="offline"');
   });
 });
+
+/**
+ * ЗАХОД 7.240, ЗАДАЧА 4 — ЗАПУСК ПРИЛОЖЕНИЯ БЕЗ СЕТИ.
+ *
+ * Видео владельца 28.09.2026: холодный запуск без сети → «Estás sin
+ * conexión» и «Esta página no se guardó en el teléfono, por eso ahora está
+ * vacía» — при первом открытии это читается как ошибка. На стартовом
+ * адресе теперь приглашение к сохранённому; фраза про несохранённую
+ * страницу — только на конкретном адресе.
+ */
+describe("каркас без сети: запуск и конкретная страница (7.240)", () => {
+  async function offlineAt(path: string): Promise<Document> {
+    Object.defineProperty(window.navigator, "onLine", { configurable: true, get: () => false });
+    const doc = renderOfflineScreenAt(path);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    return doc;
+  }
+  const shown = (doc: Document) =>
+    [...doc.querySelectorAll<HTMLElement>('[data-state="offline"]')].filter((el) => !el.hidden).map((el) => el.textContent);
+
+  for (const path of ["/", "/es", "/es/"]) {
+    it(`стартовый адрес ${path}: «Aquí tienes lo que guardaste…», без «no se guardó»`, async () => {
+      const doc = await offlineAt(path);
+      expect(shown(doc)).toEqual(["Estás sin conexión", "Aquí tienes lo que guardaste en este teléfono."]);
+    });
+  }
+
+  it("стартовый адрес /ru: «Вот что сохранено на этом телефоне.»", async () => {
+    const doc = await offlineAt("/ru");
+    expect(shown(doc)).toEqual(["Нет соединения", "Вот что сохранено на этом телефоне."]);
+  });
+
+  it("контроль: конкретная несохранённая страница — прежняя честная фраза", async () => {
+    const doc = await offlineAt("/es/stories/cmszq4fab0000pknco5jnogbu");
+    expect(shown(doc)).toEqual(["Estás sin conexión", "Esta página no se guardó en el teléfono, por eso ahora está vacía."]);
+  });
+
+  it("контроль: /es/profile — тоже конкретная страница, а не запуск", async () => {
+    const doc = await offlineAt("/ru/profile");
+    expect(shown(doc)).toEqual(["Нет соединения", "Эта страница не сохранена на телефоне, поэтому сейчас она пуста."]);
+  });
+});
