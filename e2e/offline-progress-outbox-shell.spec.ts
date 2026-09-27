@@ -102,8 +102,20 @@ test("«Borrar todo» в каркасе без сети стирает скач�
   const arrival = await reachShell(page, "/es");
   expect(arrival.arrived, `каркас не открылся — страница на ${arrival.where}`).toBe(true);
   await expect(page.locator("[data-downloads]"), "блок «Descargado» не показан — стирать нечего").toBeVisible({ timeout: 25_000 });
-  page.on("dialog", (dialog) => void dialog.accept());
+  // Своё окно на языке страницы, а не системное `confirm` WebView с
+  // английскими «CANCEL / OK» (7.238). Системное, если всплывёт, считается.
+  let nativeDialogs = 0;
+  page.on("dialog", (dialog) => {
+    nativeDialogs += 1;
+    void dialog.dismiss();
+  });
   await page.locator("[data-downloads-remove-all]").click();
+  const confirm = page.locator("[data-downloads-confirm]");
+  await expect(confirm, "«Borrar todo» не спросила своим окном").toBeVisible({ timeout: 5000 });
+  await expect(confirm).toContainText("¿Borrar todo lo descargado?");
+  await expect(page.locator("[data-downloads-confirm-cancel]")).toHaveText("Cancelar");
+  await page.locator("[data-downloads-confirm-ok]").click();
+  expect(nativeDialogs, "спросили системным окном (CANCEL / OK)").toBe(0);
   // ПОЗИТИВНЫЙ КОНТРОЛЬ: «Borrar todo» и правда стёр скачанное.
   await expect(page.locator("[data-downloads]")).toBeHidden({ timeout: 15_000 });
   expect(await page.evaluate(async () => (await caches.keys()).includes("rf-pages-downloads"))).toBe(false);

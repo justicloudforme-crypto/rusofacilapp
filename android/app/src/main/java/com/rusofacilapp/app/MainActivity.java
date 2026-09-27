@@ -270,13 +270,22 @@ public class MainActivity extends BridgeActivity {
      * Первая запись оставлена, а не заменена: конструируемые листы стилей
      * есть не во всяком WebView, и на старом устройстве вторая запись
      * просто не выполнится (она в `try`), а первая сработает.
+     *
+     * ДОКУМЕНТА ЕЩЁ НЕТ — НЕ ОШИБКА (заход 7.238, находка 1 захода 7.234).
+     * `onPageStarted` зовёт эту строку, когда `document.documentElement`
+     * ещё `null`: при каждом холодном старте с сетью в журнал падало
+     * `Uncaught TypeError: Cannot read properties of null (reading
+     * 'style')`, и исключение уносило и вторую запись (лист), потому что
+     * случалось ДО `try`. Теперь первая запись пропускается, пока корня
+     * нет, а лист ставится всё равно — `adoptedStyleSheets` у документа
+     * есть и без корня; следующие вызовы (`onPageLoaded`) допишут первую.
      */
     private static final String INSET_APPLY_JS =
         "(function(t,b,l,r){" +
         "var v={'--android-inset-top':t+'px','--android-inset-bottom':b+'px'," +
         "'--android-inset-left':l+'px','--android-inset-right':r+'px'};" +
-        "var s=document.documentElement.style;" +
-        "for(var k in v){s.setProperty(k,v[k]);}" +
+        "var d=document.documentElement;" +
+        "if(d){var s=d.style;for(var k in v){s.setProperty(k,v[k]);}}" +
         "try{" +
         "var txt=':root{';for(var k2 in v){txt+=k2+':'+v[k2]+';';}txt+='}';" +
         "var sheet=window.__rfInsetSheet;" +

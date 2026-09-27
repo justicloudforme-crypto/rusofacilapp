@@ -118,12 +118,27 @@ export function violations(htmlRaw) {
       );
     }
   }
-  // 10) личных и платных адресов в каркасе нет
+  // 10) платных и служебных адресов в каркасе нет. ИСКЛЮЧЕНИЕ — «Mi perfil»
+  //     → `/profile` (заход 7.238, решение 7.236): прежняя ссылка на
+  //     `/login` при возврате сети рисовала форму входа вошедшему
+  //     (строка 323); кабинет сам уводит гостя на вход. Сам кабинет в
+  //     precache не кладётся — это держит `check:precache-budget`.
   const forbidden = [...html.matchAll(/data-href="([^"]*)"/g)]
     .map((m) => m[1])
-    .filter((href) => /(profile|admin|pricing)/.test(href));
+    .filter((href) => /(admin|pricing)/.test(href) || (/profile/.test(href) && href !== "/profile"));
   if (forbidden.length > 0) {
     bad.push(`${FILE}: во вкладках личный или платный адрес (${forbidden.join(", ")}) — без сети показать там нечего`);
+  }
+  // 11) «Mi perfil» ведёт в кабинет, а не на форму входа (7.238)
+  const profileTab = /<a data-href="([^"]*)"[^>]*>(?:(?!<\/a>)[\s\S])*Mi perfil/.exec(html)?.[1];
+  if (profileTab !== "/profile") {
+    bad.push(`${FILE}: «Mi perfil» ведёт на ${profileTab ?? "ничто"}, а не в кабинет /profile — вошедший снова увидит форму входа (строка 323)`);
+  }
+  // 12) подтверждение — своим окном на языке страницы, не `confirm` WebView
+  //     с английскими «CANCEL / OK» (7.238)
+  const scripts = [...htmlRaw.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1].replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")).join("\n");
+  if (/\bconfirm\(/.test(scripts) || !/data-downloads-confirm\b/.test(html)) {
+    bad.push(`${FILE}: «Borrar todo» спрашивает системным окном (английские CANCEL / OK), своего окна нет`);
   }
   return bad;
 }
@@ -171,9 +186,19 @@ function plant() {
     "нет адреса /courses",
   );
   add(
-    "подсадка: во вкладках появился кабинет",
-    html.replace('data-href="/login"', 'data-href="/profile"'),
+    "подсадка: во вкладках появилась страница цен",
+    html.replace('data-href="/word-games"', 'data-href="/pricing"'),
     "личный или платный адрес",
+  );
+  add(
+    "подсадка: «Mi perfil» снова ведёт на вход (код до 7.238)",
+    html.replace('<a data-href="/profile" href="/es/profile">', '<a data-href="/login" href="/es/login">'),
+    "а не в кабинет /profile",
+  );
+  add(
+    "подсадка: «Borrar todo» снова спрашивает window.confirm",
+    html.replace("askToRemoveAll(function () {", "if (window.confirm(DL[lang].confirm)) (function () {"),
+    "системным окном",
   );
   add(
     "подсадка: адреса вкладок перестали получать локаль",
@@ -230,7 +255,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-screen — 10 правил, локалей 2, вкладок 5, нарушений 0 (заходы 7.218 и 7.227)");
+  console.log("check:offline-screen — 12 правил, локалей 2, вкладок 5, нарушений 0 (заходы 7.218 и 7.227)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
