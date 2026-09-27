@@ -12,6 +12,7 @@ import { isStaff } from "@/lib/roles";
 import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
 import NativePurchasePanel from "@/components/native/NativePurchasePanel";
+import ActivationAwareStatus from "@/components/native/ActivationAwareStatus";
 import { playSubscriptionCenterUrl } from "@/lib/revenuecat-config";
 import { db } from "@/lib/db";
 import {
@@ -1359,16 +1360,30 @@ export default async function ProfilePage({
               `displayStatus` = "none", а «none» переводится словом про
               отсутствие подписки. Для роли это не отсутствие доступа, а
               другой ЕГО ИСТОЧНИК, и бейдж обязан говорить про доступ. */}
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              staffAccess ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES[displayStatus]
-            }`}
+          {/* Заход 7.239: сразу после покупки в приложении сервер уже открыл
+              доступ, а страница ещё не перерисована — «Expirada» рядом с
+              «Listo: tu acceso ya está abierto». Пока так, значок говорит
+              «Activa» (см. ActivationAwareStatus). */}
+          <ActivationAwareStatus
+            serverEntitled={entitled || staffAccess}
+            whenGranted={
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES.active}`}>
+                {statusLabels.active}
+              </span>
+            }
           >
-            {staffAccess ? dict.profile.statusStaffAccess : statusLabels[displayStatus]}
-          </span>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                staffAccess ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES[displayStatus]
+              }`}
+            >
+              {staffAccess ? dict.profile.statusStaffAccess : statusLabels[displayStatus]}
+            </span>
+          </ActivationAwareStatus>
         </div>
 
         {subscription && dateLine && (
+          <ActivationAwareStatus serverEntitled={entitled || staffAccess} whenGranted={null}>
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-foreground/60">{dict.account.plan}</dt>
             <dd className="flex items-center gap-1.5">
@@ -1407,6 +1422,7 @@ export default async function ProfilePage({
                 один день по построению, а не по совпадению. */}
             <dd>{subscriptionMomentText(dateLine.iso, lang, timeZone)}</dd>
           </dl>
+          </ActivationAwareStatus>
         )}
 
         {/* Отменена, но ещё действует: сказать это словами, и убрать

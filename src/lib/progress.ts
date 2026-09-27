@@ -1,5 +1,7 @@
 import "server-only";
 import { db } from "./db";
+import { dateKeyIn } from "./timezone";
+import { keepStudyDay } from "./study-day";
 import { levelSlugs, lessonsPerLevel, type LevelSlug } from "./courses";
 import type { AnswerMap, MistakeDetail } from "./lessons/scoring";
 
@@ -118,8 +120,42 @@ export async function saveLessonAttempt(
   mistakes: MistakeDetail[],
   answers: AnswerMap,
   at: Date = new Date(),
+  timeZone?: string,
 ) {
+  const previousAt = await previousAttemptAt(userId, level, lessonSlug);
   await lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers, at);
+  await keepPreviousLessonDay(userId, previousAt, at, timeZone);
+}
+
+/** Когда была прошлая попытка этого урока — до того, как её перепишут. */
+async function previousAttemptAt(userId: string, level: string, lessonSlug: string): Promise<Date | null> {
+  const row = await db.lessonProgress.findUnique({
+    where: { userId_level_lessonSlug: { userId, level, lessonSlug } },
+    select: { completedAt: true },
+  });
+  return row?.completedAt ?? null;
+}
+
+/**
+ * ПОВТОРНАЯ ПОПЫТКА НЕ УБИРАЕТ ПРОШЛЫЙ ДЕНЬ ИЗ КАЛЕНДАРЯ — заход 7.239.
+ *
+ * `completedAt` ниже переписывается временем НОВОЙ попытки (7.238), и
+ * календарь, который берёт день урока из этой колонки, терял день прошлой
+ * — если его не держала своя строка `StudyDay` (дни до 31.08.2026).
+ * Поэтому день прошлой попытки сохраняется строкой дня
+ * (`keepStudyDay`: только вставка, старые строки не трогаются). Если
+ * прошлая попытка была в тот же день, делать нечего — и запроса нет.
+ * Сегодняшний день ставит сам маршрут (`markStudyDayVisit`).
+ */
+async function keepPreviousLessonDay(
+  userId: string,
+  previousAt: Date | null,
+  at: Date,
+  timeZone: string | undefined,
+): Promise<void> {
+  if (!previousAt || !timeZone) return;
+  if (dateKeyIn(previousAt, timeZone) === dateKeyIn(at, timeZone)) return;
+  await keepStudyDay(userId, timeZone, "lesson", previousAt);
 }
 
 /**
@@ -179,14 +215,17 @@ export async function saveLessonAttemptOnce(
   mistakes: MistakeDetail[],
   answers: AnswerMap,
   at: Date = new Date(),
+  timeZone?: string,
 ): Promise<"saved" | "duplicate"> {
   const seen = await db.offlineReceipt.findUnique({ where: { id: key }, select: { id: true } });
   if (seen) return "duplicate";
+  const previousAt = await previousAttemptAt(userId, level, lessonSlug);
   try {
     await db.$transaction([
       db.offlineReceipt.create({ data: { id: key, userId, kind: "lesson" } }),
       lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers, at),
     ]);
+    await keepPreviousLessonDay(userId, previousAt, at, timeZone);
     return "saved";
   } catch (error) {
     if ((error as { code?: unknown })?.code === "P2002") return "duplicate";

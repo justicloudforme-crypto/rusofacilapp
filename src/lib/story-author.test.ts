@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { localizeStoryAuthor } from "./story-author";
+import { isFolkTaleAuthor, localizeStoryAuthor, storyByline } from "./story-author";
 
 /**
  * The 20 distinct `Story.author` values present in the content bank on
@@ -106,5 +106,30 @@ describe("localizeStoryAuthor", () => {
   it("handles an empty or blank column without inventing a byline", () => {
     expect(localizeStoryAuthor("", "es")).toBe("");
     expect(localizeStoryAuthor("   ", "es")).toBe("   ");
+  });
+});
+
+// Заход 7.239: у народной сказки нет автора — «Por» только перед автором.
+describe("storyByline", () => {
+  it("народная сказка — без «Por», на /es по-испански, на /ru по-русски", () => {
+    expect(storyByline("Русская народная сказка", "es", "Por")).toBe("Cuento popular ruso");
+    expect(storyByline("Русская народная сказка", "ru", "Автор:")).toBe("Русская народная сказка");
+    expect(storyByline("Русская народная сказка (обработка)", "es", "Por")).toBe("Cuento popular ruso (adaptación)");
+  });
+
+  it("позитивный контроль: у автора «Por» остаётся", () => {
+    expect(storyByline("А.П. Чехов", "es", "Por")).toBe("Por A. P. Chéjov");
+    expect(storyByline("RusoFásil (relato original)", "es", "Por")).toBe("Por RusoFácil (relato original)");
+    expect(storyByline("RusoFásil (relato original)", "ru", "Автор:")).toBe("Автор: RusoFácil (оригинальный рассказ)");
+  });
+
+  it("пустой колонке подпись не выдумывается", () => {
+    expect(storyByline("  ", "es", "Por")).toBe("");
+  });
+
+  it("isFolkTaleAuthor не путает жанр с похожим началом", () => {
+    expect(isFolkTaleAuthor("Русская народная сказка")).toBe(true);
+    expect(isFolkTaleAuthor("Русская народная сказкаX")).toBe(false);
+    expect(isFolkTaleAuthor("А.С. Пушкин")).toBe(false);
   });
 });

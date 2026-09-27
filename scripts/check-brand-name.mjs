@@ -183,18 +183,6 @@ const IDENT_ALLOWED = new Map([
 /** file → { hits, why }. `hits` is exact; see the header on why. */
 const ALLOWED = new Map([
   [
-    "prisma/stories-data.ts",
-    {
-      hits: 278,
-      why:
-        "`author: \"RusoFásil (relato original)\"` — a value, not a label. It is " +
-        "printed as the byline of 114 of the 330 frozen pages measured in " +
-        "docs/frozen-baseline-2026-08-30.json, and the same string lives in the " +
-        "production Story.author column. Rewriting it is a frozen-page regression " +
-        "plus a production write; it waits for 25.09.2026 together with debt 34.",
-    },
-  ],
-  [
     // Найдено 08.09.2026: этот файл приехал в main с PR #220 и сделал
     // `npm run check:brand` — а значит и весь `npm run verify` — КРАСНЫМ,
     // и никто этого не заметил, потому что check:brand в ci.yml не входит.
@@ -232,13 +220,6 @@ const ALLOWED = new Map([
     },
   ],
   [
-    "src/lib/stories.ts",
-    {
-      hits: 3,
-      why: "ORIGINAL_STORY_AUTHOR must equal the value in prisma/stories-data.ts exactly.",
-    },
-  ],
-  [
     "src/lib/story-author.ts",
     {
       hits: 1,
@@ -253,22 +234,15 @@ const ALLOWED = new Map([
   [
     "src/lib/story-author.test.ts",
     {
-      hits: 5,
+      hits: 7,
       why:
+        "7.239: +2 — вход со старым написанием в storyByline на обеих локалях. " +
         "Закрепляет литерал колонки и число строк (277), а с 13.09.2026 — " +
         "ещё и обе стороны починки написания: вход со старым написанием в " +
         "двух локалях (долг 182). Было 6: 7.196 убрал ОДНО дублирующее " +
         "утверждение — та же пара «вход со старым написанием → /es» стояла " +
         "в двух пробах подряд.",
     },
-  ],
-  [
-    "src/lib/story-culture.test.ts",
-    { hits: 2, why: "Splits classics from originals by that same author literal." },
-  ],
-  [
-    "src/lib/stories-catalog.ts",
-    { hits: 1, why: "Comment naming the author literal above." },
   ],
   [
     "docs/frozen-baseline-2026-08-30.json",
@@ -379,6 +353,34 @@ function judgeByline() {
     out.push(
       "src/lib/story-author.ts: починка написания стоит ПОСЛЕ выхода по локали — русская карточка её не получит (долг 182).",
     );
+  }
+
+  // ПОВЕРХНОСТИ РАССКАЗА (заход 7.239). Починка жила только на главной и
+  // в каталоге; страница рассказа, шторка плеера (MediaSession) и
+  // микроразметка печатали колонку как есть — и «Por Русская народная
+  // сказка», и опечатку в имени проекта. Теперь колонка автора и описание
+  // не имеют права попадать на эти поверхности мимо story-author.ts.
+  const page = readFileSync("src/app/[lang]/stories/[id]/page.tsx", "utf8");
+  const catalogPage = readFileSync("src/app/[lang]/stories/page.tsx", "utf8");
+  const raw = [
+    [/\{story\.author\}/, "подпись под заголовком печатает колонку автора как есть"],
+    [/author=\{story\.author\}/, "шторка плеера (MediaSession) получает колонку автора как есть"],
+    [/name: story\.author\b/, "микроразметка получает колонку автора как есть"],
+  ];
+  for (const [re, what] of raw) {
+    if (re.test(page)) out.push(`src/app/[lang]/stories/[id]/page.tsx: ${what} (7.239).`);
+  }
+  if (!/storyByline\(story\.author, lang, dict\.stories\.byAuthor\)/.test(page)) {
+    out.push("src/app/[lang]/stories/[id]/page.tsx: подпись под заголовком строится не через storyByline (7.239).");
+  }
+  if (!/const authorName = localizeStoryAuthor\(story\.author, lang\);/.test(page)) {
+    out.push("src/app/[lang]/stories/[id]/page.tsx: имя автора для плеера и разметки не проходит localizeStoryAuthor (7.239).");
+  }
+  if ((page.match(/fixBrandSpelling\(/g) ?? []).length < 2) {
+    out.push("src/app/[lang]/stories/[id]/page.tsx: описание рассказа печатается без починки написания имени (7.239).");
+  }
+  if (!/byline: storyByline\(story\.author, lang,/.test(catalogPage) || !/fixBrandSpelling\(text\)/.test(catalogPage)) {
+    out.push("src/app/[lang]/stories/page.tsx: каталог строит подпись или описание мимо story-author.ts (7.239).");
   }
   return out;
 }
@@ -616,12 +618,71 @@ function plantControls() {
     {
       name: "one EXTRA old spelling inside an allowlisted file",
       plant: function () {
-        this.restore = swap("src/lib/stories.ts", "export", "// RusoFásil\nexport");
+        this.restore = swap("src/lib/story-author.test.ts", "import { describe", "// RusoFásil\nimport { describe");
       },
       undo: function () {
         this.restore();
       },
-      expect: (r) => r.failures.some((m) => m.startsWith("src/lib/stories.ts: allowed 3")),
+      expect: (r) => r.failures.some((m) => m.startsWith("src/lib/story-author.test.ts: allowed 7")),
+    },
+    {
+      name: "опечатка вернулась в данные рассказов (исправлены 7.239, исключения больше нет)",
+      plant: function () {
+        this.restore = swap("prisma/stories-data.ts", "RusoFácil (relato original)", "RusoFásil (relato original)");
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.unexpected.some((h) => h.file === "prisma/stories-data.ts"),
+    },
+    // --- 7.239: поверхности рассказа печатают автора через story-author.ts ---
+    {
+      name: "страница рассказа снова печатает колонку автора («Por Русская народная сказка»)",
+      plant: function () {
+        this.restore = swap(
+          "src/app/[lang]/stories/[id]/page.tsx",
+          "{storyByline(story.author, lang, dict.stories.byAuthor)}",
+          "{dict.stories.byAuthor} {story.author}",
+        );
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.failures.some((m) => m.includes("подпись под заголовком печатает колонку автора как есть")),
+    },
+    {
+      name: "шторка плеера снова получает колонку как есть",
+      plant: function () {
+        this.restore = swap("src/app/[lang]/stories/[id]/page.tsx", "author={authorName}", "author={story.author}");
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.failures.some((m) => m.includes("шторка плеера")),
+    },
+    {
+      name: "микроразметка снова получает колонку как есть",
+      plant: function () {
+        this.restore = swap("src/app/[lang]/stories/[id]/page.tsx", "name: authorName", "name: story.author");
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.failures.some((m) => m.includes("микроразметка")),
+    },
+    {
+      name: "каталог снова ставит «Por» перед народной сказкой",
+      plant: function () {
+        this.restore = swap(
+          "src/app/[lang]/stories/page.tsx",
+          "byline: storyByline(story.author, lang,",
+          "byline: localizeStoryAuthor(story.author, lang) ?? storyByline(story.author, lang,",
+        );
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.failures.some((m) => m.includes("каталог строит подпись")),
     },
     // --- проход 4: подпись автора на карточке (долг 182) ---------------
     {

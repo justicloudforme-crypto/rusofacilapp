@@ -46,7 +46,7 @@ export interface StoryCatalogRow {
   readingMinutes: number | null;
   topic: StoryTopic;
   /** Retelling/adaptation of existing literature (or a folk tale) vs. an
-   * original RusoFásil story — a SOURCE distinction, not a topic. See
+   * original RusoFácil story — a SOURCE distinction, not a topic. See
    * isClassicStory in src/lib/stories.ts. */
   isClassic: boolean;
 }

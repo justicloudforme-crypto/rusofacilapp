@@ -61,7 +61,8 @@ const HEAL = "src/components/DownloadsHeal.tsx";
 const LAYOUT = "src/app/[lang]/layout.tsx";
 const SLIDES = "src/components/lesson/SlidesTab.tsx";
 const STRINGS = "src/lib/ui-strings.ts";
-const FILES = [NAMES, SIGNED_OUT, DOWNLOADS, CLIENT, SAVE_CLIENT, SHELL, PANEL, HEAL, LAYOUT, SLIDES, STRINGS];
+const BUTTON = "src/components/DownloadButton.tsx";
+const FILES = [NAMES, SIGNED_OUT, DOWNLOADS, CLIENT, SAVE_CLIENT, SHELL, PANEL, HEAL, LAYOUT, SLIDES, STRINGS, BUTTON];
 
 const load = () => Object.fromEntries(FILES.map((f) => [f, readFileSync(f, "utf8")]));
 const withoutJsComments = (code) => code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1");
@@ -95,6 +96,7 @@ export function violations(sources) {
   const heal = withoutJsComments(sources[HEAL] ?? "");
   const layout = withoutJsComments(sources[LAYOUT] ?? "");
   const slides = withoutJsComments(sources[SLIDES] ?? "");
+  const button = withoutJsComments(sources[BUTTON] ?? "");
   // Как есть: в строках интерфейса встречается «/*», и вырезатель комментариев съел бы их.
   const strings = sources[STRINGS] ?? "";
   if (FILES.some((f) => !(sources[f] ?? "").trim())) {
@@ -293,6 +295,13 @@ export function violations(sources) {
   }
   if (!/withoutDuplicates\(/.test(panel)) {
     bad.push(`${PANEL}: список скачанного не снимает дубли одного адреса (строка 316)`);
+  }
+
+  // 14 — клипы берутся из КОПИИ, а не с живой страницы (заход 7.239):
+  // иначе число «audios» зависит от открытой вкладки (A1/1: 59 или 65),
+  // а клипы упражнений, которых в копии нет, качаются впустую.
+  if (/clipUrlsOnPage\(document\)/.test(button) || !/clipUrlsOnPage\(new DOMParser\(\)\.parseFromString\(html, "text\/html"\)\)/.test(button)) {
+    bad.push(`${BUTTON}: клипы для скачивания берутся с живой страницы, а не из копии — «audios» зависят от открытой вкладки`);
   }
 
   return bad;
@@ -541,6 +550,12 @@ async function plant() {
     "стрелки мертвы",
   );
   add(
+    "подсадка: клипы снова с живой страницы — «65 audios» с открытой «Ejercicios» (состояние 1.0.10)",
+    BUTTON,
+    (s) => s.replace('clipUrlsOnPage(new DOMParser().parseFromString(html, "text/html"))', "clipUrlsOnPage(document)"),
+    "берутся с живой страницы",
+  );
+  add(
     "подсадка: вторая галочка вернулась в строку «done»",
     STRINGS,
     (s) => s.replace('"done": "Descargado",', '"done": "Descargado ✓",'),
@@ -568,7 +583,7 @@ async function gate() {
     return;
   }
   console.log(
-    "check:downloads — 13 правил (из них 2 прогоном), нарушений 0 (заходы 7.231, 7.233 и 7.235, офлайн-3; строки 310, 311, 314, 315, 316, 317)",
+    "check:downloads — 14 правил (из них 2 прогоном), нарушений 0 (заходы 7.231, 7.233, 7.235 и 7.239, офлайн-3; строки 310, 311, 314, 315, 316, 317)",
   );
 }
 
