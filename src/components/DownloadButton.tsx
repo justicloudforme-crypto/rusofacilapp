@@ -136,7 +136,13 @@ export default function DownloadButton({ lang }: { lang: "es" | "ru" }) {
     // «Midiendo…» и это слово легло бы в копию навсегда.
     const html = copyMarkupOf(document, t.done);
     setPhase({ kind: "measuring" });
-    const clipUrls = clipUrlsOnPage(document);
+    // КЛИПЫ — ИЗ САМОЙ КОПИИ, А НЕ С ЖИВОЙ СТРАНИЦЫ (заход 7.239). Урок
+    // A1/1: при закрытой «Ejercicios» — «59 audios», при открытой — «65»:
+    // шесть клипов живут только в упражнениях, а в копии упражнения
+    // заменены плашкой (`offlineExercisesOf`) — без сети эти клипы не
+    // играли нигде, но качались и взвешивались. Теперь качается ровно
+    // то, что в копии звучит, и число не зависит от открытой вкладки.
+    const clipUrls = clipUrlsOnPage(new DOMParser().parseFromString(html, "text/html"));
     const weight = await measureClips(clipUrls, (url, init) => fetch(url, init));
     const pageBytes = new TextEncoder().encode(html).length;
     const bytes = pageBytes + weight.clips.reduce((sum, clip) => sum + clip.bytes, 0);
