@@ -1266,6 +1266,7 @@
       "matchingLeftHeader": "Ruso",
       "matchingRightHeader": "Traducción",
       "completeToUnlock": "Completa los ejercicios con al menos 70% de aciertos para desbloquear la siguiente lección.",
+      "restoring": "Cargando tus respuestas…",
       "wordReorderEmpty": "Toca las palabras en el orden correcto",
       "listeningPlayLabel": "Reproducir audio",
       "readingTextLabel": "Texto",
@@ -1766,6 +1767,8 @@
       "remove": "Borrar",
       "removeAll": "Borrar todo",
       "removeAllConfirm": "¿Borrar todo lo descargado?",
+      "removeAllCancel": "Cancelar",
+      "removeAllOk": "Borrar",
       "exercisesOffline": "Para los ejercicios necesitas internet; la teoría, el vocabulario y el audio están disponibles."
     },
     "glossary": {

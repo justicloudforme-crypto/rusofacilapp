@@ -13,6 +13,7 @@ import {
   type DownloadedRow,
 } from "@/lib/downloads";
 import { isComplete, readDownloads, removeAllDownloads, removeDownload } from "@/lib/downloads-client";
+import Modal from "@/components/ui/Modal";
 
 /**
  * ЭКРАН «DESCARGADO» В КАБИНЕТЕ — ЗАХОД 7.231 (ОФЛАЙН-3).
@@ -34,6 +35,9 @@ export default function DownloadsPanel({ lang }: { lang: "es" | "ru" }) {
   const t = uiStrings(lang).download;
   const [rows, setRows] = useState<DownloadedRow[] | null>(null);
   const [whole, setWhole] = useState<Record<string, boolean>>({});
+  // Своё окно вместо `window.confirm` (7.238, А4): системное окно WebView
+  // говорит по-английски «CANCEL / OK» на испанской странице.
+  const [confirmAll, setConfirmAll] = useState(false);
 
   const load = useCallback(async () => {
     if (typeof caches === "undefined") {
@@ -138,17 +142,40 @@ export default function DownloadsPanel({ lang }: { lang: "es" | "ru" }) {
             type="button"
             data-rf-downloads-remove-all
             className="tap mt-4 min-h-11 rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-600 dark:text-red-400"
-            onClick={async () => {
-              // Подтверждение обязательно: кнопка уносит мегабайты, которые
-              // человек скачивал по одному, и вернуть их можно только
-              // сетью, которой рядом может не быть.
-              if (!window.confirm(t.removeAllConfirm)) return;
-              await removeAllDownloads(caches);
-              await load();
-            }}
+            // Подтверждение обязательно: кнопка уносит мегабайты, которые
+            // человек скачивал по одному, и вернуть их можно только
+            // сетью, которой рядом может не быть.
+            onClick={() => setConfirmAll(true)}
           >
             {t.removeAll}
           </button>
+          <Modal open={confirmAll} onClose={() => setConfirmAll(false)} closeLabel={t.removeAllCancel}>
+            <div data-rf-downloads-confirm className="flex flex-col gap-4 pt-2">
+              <p className="text-base font-semibold">{t.removeAllConfirm}</p>
+              <div className="flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  data-rf-downloads-confirm-cancel
+                  className="tap min-h-11 rounded-full border border-black/10 px-4 py-2 text-sm dark:border-white/15"
+                  onClick={() => setConfirmAll(false)}
+                >
+                  {t.removeAllCancel}
+                </button>
+                <button
+                  type="button"
+                  data-rf-downloads-confirm-ok
+                  className="tap min-h-11 rounded-full border border-red-500/30 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400"
+                  onClick={async () => {
+                    setConfirmAll(false);
+                    await removeAllDownloads(caches);
+                    await load();
+                  }}
+                >
+                  {t.removeAllOk}
+                </button>
+              </div>
+            </div>
+          </Modal>
         </>
       )}
     </div>

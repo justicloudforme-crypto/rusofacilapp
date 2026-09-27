@@ -144,7 +144,17 @@ test("сохранённые урок, рассказ и словарь чита
     [...document.querySelectorAll("[data-offline-panel]")].map((n) => n.getAttribute("data-offline-panel")!),
   );
   const other = ids.find((id) => id !== "grammar") ?? ids[0];
+  // ПОДЧЁРКНУТА ОТКРЫТАЯ (долг 320, 7.238). Позитивный контроль: в снимке
+  // подчёркнута «grammar» — иначе сравнивать было бы нечего.
+  const underlined = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("[data-offline-tab]:not([hidden])")]
+        .filter((b) => b.classList.contains("border-primary"))
+        .map((b) => b.getAttribute("data-offline-tab")),
+    );
+  expect(await underlined(), "в снимке урока подчёркнута не «grammar» — пробе не с чем сравнивать").toEqual(["grammar"]);
   await page.locator(`[data-offline-tab="${other}"]`).click();
+  expect(await underlined(), `открыта «${other}», а подчёркнута другая (долг 320)`).toEqual([other]);
   const shown = await page.evaluate(
     (id) => document.querySelector(`[data-offline-panel="${id}"]`)?.classList.contains("hidden") === false,
     other,

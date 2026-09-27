@@ -6,6 +6,7 @@ import {
   enqueueWith,
   flushWith,
   latestPendingWith,
+  pendingPassedWith,
   restoreAttemptWith,
   verdictOf,
   type OutboxBody,
@@ -169,7 +170,9 @@ describe("«intento anterior» — последняя попытка, а не п
     const fromServer = vi.fn().mockResolvedValue(server18);
     const r = await restoreAttemptWith(store, "A", "a1", "1", flush, fromServer);
     expect(r).toMatchObject({ source: "queue", attempt: { score: 80, answers: { e1: "ответ-80" } } });
-    expect(fromServer).not.toHaveBeenCalled();
+    // С 7.238 сервер спрашивается и здесь — но только о ЗАЧЁТЕ; ответы и
+    // балл на экране по-прежнему из ждущей записи.
+    expect(r.attempt?.passed).toBe(false);
   });
 
   it("из нескольких ждущих — последняя по порядку очереди; чужой урок и чужой владелец не в счёт", async () => {
@@ -194,5 +197,43 @@ describe("«intento anterior» — последняя попытка, а не п
     const store = memoryStore();
     const r = await restoreAttemptWith(store, "A", "a1", "1", () => Promise.reject(new Error("x")), async () => server18);
     expect(r.source).toBe("server");
+  });
+});
+
+describe("зачёт урока — по лучшей попытке (7.238)", () => {
+  const failing = (owner: string, key: string, score = 32): OutboxBody => ({ ...body(owner, key), score, passed: false, answers: { e1: `ответ-${score}` } });
+  const passing = (owner: string, key: string): OutboxBody => ({ ...body(owner, key), score: 80, passed: true, answers: { e1: "ответ-80" } });
+  const lostFlush = (store: OutboxStore) => () => flushWith(store, "A", vi.fn().mockResolvedValue(lost));
+
+  it("дефект владельца: ждёт неудачная повторная, сервер знает сданную — экран последней, зачёт на месте", async () => {
+    const store = memoryStore();
+    await enqueueWith(store, failing("A", "k8"));
+    const r = await restoreAttemptWith(store, "A", "a1", "1", lostFlush(store), async () => ({ score: 80, passed: true, answers: {} }));
+    expect(r).toMatchObject({ source: "queue", attempt: { score: 32, passed: true, answers: { e1: "ответ-32" } } });
+  });
+
+  it("без сети: сданная и неудачная обе ждут — экран неудачной, зачёт от сданной, сервер не нужен", async () => {
+    const store = memoryStore();
+    await enqueueWith(store, passing("A", "k1"));
+    await enqueueWith(store, failing("A", "k2"));
+    const fromServer = vi.fn().mockRejectedValue(new Error("offline"));
+    const r = await restoreAttemptWith(store, "A", "a1", "1", lostFlush(store), fromServer);
+    expect(r).toMatchObject({ source: "queue", attempt: { score: 32, passed: true } });
+    expect(fromServer).not.toHaveBeenCalled();
+  });
+
+  it("контроль: урок не сдан ни разу — зачёта нет; сервер без сети — тоже нет", async () => {
+    const store = memoryStore();
+    await enqueueWith(store, failing("A", "k1"));
+    expect((await restoreAttemptWith(store, "A", "a1", "1", lostFlush(store), async () => ({ score: 40, passed: false, answers: {} }))).attempt?.passed).toBe(false);
+    expect((await restoreAttemptWith(store, "A", "a1", "1", lostFlush(store), () => Promise.reject(new Error("offline")))).attempt?.passed).toBe(false);
+  });
+
+  it("сданная ждущая чужого владельца или урока зачёта не даёт", async () => {
+    const store = memoryStore();
+    await enqueueWith(store, passing("B", "k1"));
+    await enqueueWith(store, { ...passing("A", "k2"), lesson: "2" });
+    expect(await pendingPassedWith(store, "A", "a1", "1")).toBe(false);
+    expect(await pendingPassedWith(store, "B", "a1", "1")).toBe(true);
   });
 });

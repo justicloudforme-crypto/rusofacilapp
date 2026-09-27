@@ -424,10 +424,12 @@ model LessonProgress {
   lessonSlug  String
   // Percentage score (0-100) of the attempt that triggered this row/update.
   score       Int      @default(0)
-  // Whether THIS attempt cleared the pass threshold — distinct from score,
-  // since callers that only care about "has this lesson been passed"
-  // (course-progress bars, /profile) must filter on this, not infer it from
-  // score, now that failing attempts are saved too.
+  // The lesson's CREDIT: true once ANY attempt cleared the pass threshold,
+  // and a later failing attempt does not clear it (7.238 — before that a
+  // failed retry after a pass wiped the checkmark and relocked the next
+  // lesson). Callers that ask "has this lesson been passed" (course-progress
+  // bars, /profile, the level page) filter on this; score/mistakes/answers
+  // stay those of the LATEST attempt. Semantics only — no column change.
   passed      Boolean  @default(true)
   // JSON-encoded string[]: a short human-readable label per exercise the
   // student got wrong on this attempt (e.g. the fill-blank prompt or the
@@ -439,6 +441,9 @@ model LessonProgress {
   // on a repeat visit so the graded view (not just the aggregate score)
   // reappears exactly as left.
   answers     String   @default("{}")
+  // When the latest attempt was MADE (the queue's action time for an
+  // offline answer, 7.238), not when it reached the server — the calendar
+  // derives the lesson's day from it.
   completedAt DateTime @default(now())
 
   @@unique([userId, level, lessonSlug])
