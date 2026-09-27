@@ -242,6 +242,22 @@ export async function latestPendingWith(
   }
 }
 
+/** Есть ли среди ждущих записей урока СДАННАЯ (7.238: зачёт по лучшей). */
+export async function pendingPassedWith(
+  store: OutboxStore,
+  owner: string,
+  level: string,
+  lesson: string,
+): Promise<boolean> {
+  try {
+    return (await store.all()).some(
+      (r) => r.owner === owner && r.body.level === level && r.body.lesson === lesson && r.body.passed === true,
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function restoreAttemptWith(
   store: OutboxStore,
   owner: string,
@@ -254,7 +270,15 @@ export async function restoreAttemptWith(
     await flush().catch(() => null);
     const pending = await latestPendingWith(store, owner, level, lesson);
     if (pending) {
-      return { source: "queue", attempt: { score: pending.score, passed: pending.passed, answers: pending.answers } };
+      // ЗАЧЁТ — ПО ЛУЧШЕЙ ПОПЫТКЕ (7.238). Ответы — последней ждущей, а
+      // `passed` здесь значит «урок сдан»: сдан он этой записью, другой
+      // ждущей или раньше на сервере (там `passed` неудачной не снимается).
+      // Без сети сервер не ответит — тогда остаётся отметка на телефоне.
+      const credit =
+        pending.passed ||
+        (await pendingPassedWith(store, owner, level, lesson)) ||
+        Boolean((await fromServer().catch(() => null))?.passed);
+      return { source: "queue", attempt: { score: pending.score, passed: credit, answers: pending.answers } };
     }
   }
   const server = await fromServer().catch(() => null);
