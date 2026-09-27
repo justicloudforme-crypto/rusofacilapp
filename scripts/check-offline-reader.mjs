@@ -301,6 +301,7 @@ export function violations(sources) {
     if (!/setActionHandler\(\{ action: action \}/.test(player) || !/pause: function/.test(player)) bad.push(`${SHELL}: у шторки копии нет play/pause`);
     if (!/var ARTWORK = "data:image\/png;base64,/.test(shell)) bad.push(`${SHELL}: обложка шторки копии не картинкой — серый динамик`);
     if (!/var story = armStoryPlayer\(root\);/.test(shell)) bad.push(`${SHELL}: проигрыватель копии написан и не включён`);
+    if (!/if \(ms && state\.started\) quiet\(ms\.setPlaybackState/.test(player)) bad.push(`${SHELL}: копия сообщает шторке «paused» до первого «▶» — карточка проигрывателя появляется, хотя ничего не играло`);
   }
   // 13
   const panels = (lesson.match(/data-offline-panel="/g) ?? []).length;
@@ -512,6 +513,12 @@ function plant() {
     SHELL,
     (s) => s.replace('            // Карточка от умершей живой страницы — долой сразу.\n            quiet(ms.setPlaybackState({ playbackState: "none" }));\n', ""),
     "шторка копии не гасится",
+  );
+  add(
+    "подсадка 7.240: шторке «paused» до первого «▶» (ошибка, пойманная эмулятором)",
+    SHELL,
+    (s) => s.replace("if (ms && state.started) quiet(ms.setPlaybackState", "if (ms) quiet(ms.setPlaybackState"),
+    "до первого",
   );
   add(
     "подсадка 7.240: кнопка копии не слушает звук",

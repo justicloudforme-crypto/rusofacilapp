@@ -1011,7 +1011,10 @@
           }
           if (lines.length === 0) return null;
           var ms = nativeSession();
-          var state = { index: -1, audio: null, src: null, playing: false, gen: 0, own: 0 };
+          // `started` — звук в этой копии уже запускали. До этого шторке
+          // сообщать нечего: «paused» до первого «▶» подняло бы карточку
+          // проигрывателя, который ничего не играл (замер на эмуляторе).
+          var state = { index: -1, audio: null, src: null, playing: false, gen: 0, own: 0, started: false };
           var icon = play.querySelector("span") || play;
 
           function paint() {
@@ -1031,7 +1034,7 @@
                 lines[i].style.backgroundColor = "";
               }
             }
-            if (ms) quiet(ms.setPlaybackState({ playbackState: state.playing ? "playing" : "paused" }));
+            if (ms && state.started) quiet(ms.setPlaybackState({ playbackState: state.playing ? "playing" : "paused" }));
           }
           function release() {
             if (state.audio) {
@@ -1060,6 +1063,7 @@
             if (i < 0) i = 0;
             state.index = i;
             state.playing = true;
+            state.started = true;
             paint();
             var line = lines[i];
             blobFor(line.getAttribute("data-rf-clip")).then(function (src) {
@@ -1143,6 +1147,7 @@
             state.gen += 1;
             release();
             state.playing = false;
+            state.started = false;
             if (ms) quiet(ms.setPlaybackState({ playbackState: "none" }));
           }
 
