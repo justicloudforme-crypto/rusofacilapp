@@ -29,6 +29,8 @@ export interface StorySummary {
    * бандл ради карточки незачем. */
   titles: StoryTitleView;
   author: string;
+  /** Готовая подпись: «Por …» у автора, без «Por» у народной сказки. */
+  byline: string;
   level: StoryLevel;
   isPremium: boolean;
   /** Whether (and why) THIS visitor can't open this story right now — see
@@ -288,7 +290,7 @@ export default function StoriesCatalog({
                 </div>
                 <StoryTitle as="h2" titles={story.titles} className="mt-3 text-lg font-medium" />
                 <p className="mt-1 text-sm text-foreground/60">
-                  {dict.byAuthor} {story.author}
+                  {story.byline}
                   {story.readingMinutes !== null && (
                     <> · {dict.readingTimeLabel.replace("{minutes}", String(story.readingMinutes))}</>
                   )}

@@ -93,6 +93,28 @@ async function logoutByClick(page: Page, lang: "es" | "ru"): Promise<void> {
 }
 
 
+/** Страницы вошедшего, оставшиеся в кешах `rf-pages*`. Гостевая `/es`
+ *  (ссылка на `/es/login` есть, «Grupos» только для вошедшего нет) — не
+ *  его: её кладёт воркер сразу после выхода (строка 318, заход 7.239). */
+async function signedInPagesLeft(page: Page): Promise<string[]> {
+  return page.evaluate(async () => {
+    const left: string[] = [];
+    for (const name of await caches.keys()) {
+      if (!name.startsWith("rf-pages")) continue;
+      const cache = await caches.open(name);
+      for (const request of await cache.keys()) {
+        const path = new URL(request.url).pathname;
+        if (path === "/es") {
+          const html = (await (await cache.match(request))?.text()) ?? "";
+          if (html.includes('href="/es/login"') && !html.includes('href="/es/groups"')) continue;
+        }
+        left.push(`${name} ${path}`);
+      }
+    }
+    return left;
+  });
+}
+
 async function becomeNativeShell(page: Page, context: BrowserContext): Promise<void> {
   await page.evaluate(async () => {
     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -240,16 +262,27 @@ test("сценарий владельца целиком: выход → гос�
   // Шаг 2. «Mi perfil» → «Cerrar sesión». Кнопкой, а не запросом: уборщик
   // кешей заводится ПРИЗНАКОМ В АДРЕСЕ (`?signedout=1`), который ставит
   // именно маршрут выхода, и мимо кнопки его не получить.
+  // ПОЗИТИВНЫЙ КОНТРОЛЬ проверки ниже: пока человек вошёл, она ВИДИТ его
+  // страницы. Без этого «после выхода пусто» доказывало бы лишь слепоту.
+  expect(
+    (await signedInPagesLeft(page)).length,
+    "до выхода в кешах rf-pages не нашлось ни одной страницы вошедшего — проверять уборку не на чем",
+  ).toBeGreaterThan(0);
   await logoutByClick(page, "es");
   // Уборка — фоновая, и ждём мы именно её окончания: опись обязана уйти
   // вместе с кешами. Это и есть «Guardado: 0» с видео.
-  await expect
-    .poll(
-      async () =>
-        page.evaluate(async () => (await caches.keys()).filter((name) => name.startsWith("rf-pages")).length),
-      { timeout: 20_000 },
-    )
-    .toBe(0);
+  //
+  // ЧТО ИМЕННО УТВЕРЖДАЕТСЯ — ПОЧИНКА 27.09.2026 (7.239). Прежний вид
+  // («кешей rf-pages ровно 0») падал в CI PR #429 дважды подряд (попытка и
+  // повтор): «Expected 0, Received 2». Причина — открытая строка 318:
+  // уборщик стирает кеши, а воркер через доли секунды кладёт в них
+  // ГОСТЕВУЮ страницу `/es`, на которую увёл сам выход. Суть проверки —
+  // «от вошедшего не осталось ни одной страницы», и она не ослаблена: в
+  // кешах не должно быть НИЧЕГО, кроме `/es`, а сама `/es` обязана быть
+  // гостевой (ссылка «Entrar» на `/es/login` есть, пункта «Grupos» только
+  // для вошедшего нет). Копия `/es`, снятая до выхода, этот признак не
+  // пройдёт.
+  await expect.poll(() => signedInPagesLeft(page), { timeout: 20_000 }).toEqual([]);
 
   // Шаг 3. Гостем, с сетью, кликами — рассказ, каталоги, урок.
   await walkContentByClicks(page, "es");

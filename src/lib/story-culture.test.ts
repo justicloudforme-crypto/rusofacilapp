@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { stories } from "../../prisma/stories-data";
 import { CULTURAL_NOTE_TITLES, getCulturalNote } from "./story-culture";
 import { isFrozenStory, isPilotStory, isControlStory } from "./story-pilot";
+import { isClassicStory } from "./stories";
 
 const byTitle = new Map(stories.map((s) => [s.title, s]));
-const classics = stories.filter((s) => !s.author.startsWith("RusoFásil"));
+const classics = stories.filter((s) => isClassicStory(s.author));
 
 describe("cultural notes", () => {
   it("never touches a story frozen by the thin-page experiment", () => {
@@ -27,7 +28,7 @@ describe("cultural notes", () => {
   });
 
   it("writes no note for a RusoFácilapp original", () => {
-    const original = stories.find((s) => s.author.startsWith("RusoFásil"))!;
+    const original = stories.find((s) => !isClassicStory(s.author))!;
     expect(getCulturalNote(original, "es")).toBeNull();
     expect(getCulturalNote(original, "ru")).toBeNull();
   });
