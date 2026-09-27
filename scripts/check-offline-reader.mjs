@@ -273,6 +273,36 @@ export function violations(sources) {
   if (!/takeCopyView\(window\.location\.pathname\)/.test(lesson)) {
     bad.push(`${LESSON}: живой урок не читает записку каркаса — после возврата сети вкладка теряется`);
   }
+  // 21. Запуск приложения без сети (заход 7.240, задача 4): на стартовом
+  // адресе — приглашение к сохранённому, «эта страница не сохранилась» —
+  // только на конкретном адресе. Видео владельца 28.09.2026: при первом
+  // открытии прежняя фраза читалась как ошибка.
+  if (
+    !/data-variant="start"[^>]*>Aquí tienes lo que guardaste en este teléfono\.</.test(shell) ||
+    !/data-variant="start"[^>]*>Вот что сохранено на этом телефоне\.</.test(shell) ||
+    !/data-variant="page"[^>]*>Esta página no se guardó/.test(shell) ||
+    !/var VARIANT = \/\^\\\/\(\?:es\|ru\)\?\\\/\?\$\/\.test\(location\.pathname\) \? "start" : "page";/.test(shell) ||
+    !/variant !== null && variant !== VARIANT/.test(shell)
+  ) {
+    bad.push(`${SHELL}: при запуске приложения без сети снова «Esta página no se guardó…» — читается как ошибка (7.240, задача 4)`);
+  }
+  // 22. Проигрыватель рассказа в копии (заход 7.240, долг 311): «▶» копии
+  // оживает по признакам `data-rf-player`, играет фразы по порядку, а
+  // шторка — через тот же плагин с play/pause; устаревшая карточка живой
+  // страницы гасится при открытии копии, своя — при уходе.
+  const player = /function armStoryPlayer\(root\) \{[\s\S]*?\n        \}\n\n        function armClips/.exec(shell)?.[0] ?? "";
+  if (!player) {
+    bad.push(`${SHELL}: проигрывателя рассказа в копии нет — «▶» копии мёртв, шкала пуста (долг 311)`);
+  } else {
+    if (!/\[data-rf-player="play"\]/.test(player) || !/data-rf-pause-label/.test(player)) bad.push(`${SHELL}: проигрыватель копии не находит кнопку «▶» и её подписи`);
+    if (!/audio\.onpause = function/.test(player)) bad.push(`${SHELL}: кнопка копии не слушает сам звук — чужая пауза оставит «⏸»`);
+    if ((player.match(/playbackState: "none"/g) ?? []).length < 2) bad.push(`${SHELL}: шторка копии не гасится (при открытии копии и при уходе)`);
+    if (!/window\.addEventListener\("pagehide", stopAll\)/.test(player)) bad.push(`${SHELL}: уход из копии не гасит звук и шторку`);
+    if (!/setActionHandler\(\{ action: action \}/.test(player) || !/pause: function/.test(player)) bad.push(`${SHELL}: у шторки копии нет play/pause`);
+    if (!/var ARTWORK = "data:image\/png;base64,/.test(shell)) bad.push(`${SHELL}: обложка шторки копии не картинкой — серый динамик`);
+    if (!/var story = armStoryPlayer\(root\);/.test(shell)) bad.push(`${SHELL}: проигрыватель копии написан и не включён`);
+    if (!/if \(ms && state\.started\) quiet\(ms\.setPlaybackState/.test(player)) bad.push(`${SHELL}: копия сообщает шторке «paused» до первого «▶» — карточка проигрывателя появляется, хотя ничего не играло`);
+  }
   // 13
   const panels = (lesson.match(/data-offline-panel="/g) ?? []).length;
   const switched = (lesson.match(/tab === "[a-z]+" \? undefined : "hidden"/g) ?? []).length;
@@ -467,6 +497,36 @@ function plant() {
     "подчёркнута не та вкладка",
   );
   add(
+    "подсадка 7.240: стартовый адрес снова говорит «no se guardó»",
+    SHELL,
+    (s) => s.replace('? "start" : "page";', '? "page" : "page";'),
+    "при запуске приложения без сети",
+  );
+  add(
+    "подсадка 7.240: проигрыватель копии выключен (как до 7.240)",
+    SHELL,
+    (s) => s.replace("var story = armStoryPlayer(root);", "var story = null;"),
+    "написан и не включён",
+  );
+  add(
+    "подсадка 7.240: копия не гасит устаревшую шторку при открытии",
+    SHELL,
+    (s) => s.replace('            // Карточка от умершей живой страницы — долой сразу.\n            quiet(ms.setPlaybackState({ playbackState: "none" }));\n', ""),
+    "шторка копии не гасится",
+  );
+  add(
+    "подсадка 7.240: шторке «paused» до первого «▶» (ошибка, пойманная эмулятором)",
+    SHELL,
+    (s) => s.replace("if (ms && state.started) quiet(ms.setPlaybackState", "if (ms) quiet(ms.setPlaybackState"),
+    "до первого",
+  );
+  add(
+    "подсадка 7.240: кнопка копии не слушает звук",
+    SHELL,
+    (s) => s.replace("audio.onpause = function", "audio.onpauseX = function"),
+    "чужая пауза",
+  );
+  add(
     "подсадка: кнопка вкладки потеряла метку",
     TABBAR,
     (s) => s.replace("data-offline-tab={item.id}", "data-tab={item.id}"),
@@ -499,7 +559,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-reader — 20 правил, нарушений 0 (заходы 7.229 и 7.230, офлайн-2 и 2б)");
+  console.log("check:offline-reader — 22 правила, нарушений 0 (заходы 7.229, 7.230, 7.239, 7.240)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

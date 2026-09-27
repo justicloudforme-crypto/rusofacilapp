@@ -36,6 +36,54 @@ export async function setNativePlaybackState(playing: boolean): Promise<void> {
 }
 
 /**
+ * Убирает карточку проигрывателя из шторки целиком (заход 7.240, задача 2).
+ *
+ * Состояние `"none"` плагин понимает как «звука больше нет»: отвязывает
+ * свою службу, та делает `stopForeground(true)` — уведомление исчезает.
+ * До 7.240 при уходе со страницы рассказа снимались только кнопки, а
+ * состояние оставалось «playing»: замер на эмуляторе — в шторке
+ * `PLAYING`, `actions=0`, время бежит, хотя звук уже остановлен. Ровно
+ * это и видел владелец («только полоса, без play/pause»).
+ */
+export async function clearNativeMediaSession(): Promise<void> {
+  await nativeOnly(() => MediaSession.setPlaybackState({ playbackState: "none" }));
+}
+
+/**
+ * Обложка для шторки — КАРТИНКОЙ, а не относительным адресом.
+ *
+ * Java-половина плагина (`urlToBitmap`) понимает только `http…` и
+ * `data:…;base64,`. Адрес `/icons/icon-512.png` (как было до 7.240) она
+ * молча превращает в `null` — отсюда серый значок динамика вместо
+ * обложки. `data:` работает и без сети: иконка лежит в precache
+ * воркера, а самой Java сеть для неё не нужна. Если прочитать иконку не
+ * удалось — полный адрес (с сетью Java скачает его сама).
+ */
+const ARTWORK_PATH = "/icons/icon-192.png";
+let artworkPromise: Promise<string> | null = null;
+
+export function nativeArtworkSrc(): Promise<string> {
+  if (artworkPromise) return artworkPromise;
+  const absolute = new URL(ARTWORK_PATH, window.location.origin).href;
+  artworkPromise = fetch(ARTWORK_PATH)
+    .then((response) => (response.ok ? response.blob() : Promise.reject(new Error(String(response.status)))))
+    .then(
+      (blob) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => (typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("не строка")));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        }),
+    )
+    .catch(() => {
+      artworkPromise = null;
+      return absolute;
+    });
+  return artworkPromise;
+}
+
+/**
  * Registers (or clears, passing `null`) a handler for one native media
  * action. Mirrors navigator.mediaSession.setActionHandler's own shape so
  * call sites can register the same action on both APIs side by side.

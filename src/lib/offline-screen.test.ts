@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -24,6 +25,17 @@ import { join } from "node:path";
  * замерено и записано в `e2e/offline.spec.ts` ещё в августе. Правило же
  * тут чисто разметочное, и jsdom проверяет его точнее.
  */
+/** Конструктор окна jsdom — для изолированных прогонов каркаса ниже. Типов
+ *  `@types/jsdom` в проекте нет, и заводить зависимость ради одного
+ *  конструктора незачем: нужная часть описана здесь. */
+type IsolatedDom = { window: { document: Document; close(): void } };
+const { JSDOM } = createRequire(import.meta.url)("jsdom") as {
+  JSDOM: new (
+    html: string,
+    options: { url: string; runScripts: "dangerously"; beforeParse(win: Window): void },
+  ) => IsolatedDom;
+};
+
 const HTML = readFileSync(join(process.cwd(), "public", "offline.html"), "utf8");
 
 /** Ставит документ заглушки по адресу `path` и исполняет её скрипт —
@@ -113,5 +125,76 @@ describe("офлайн-заглушка", () => {
     // которое утверждает (долг 278).
     expect(HTML).toContain('data-state="error"');
     expect(HTML).toContain('data-state="offline"');
+  });
+});
+
+/**
+ * ЗАХОД 7.240, ЗАДАЧА 4 — ЗАПУСК ПРИЛОЖЕНИЯ БЕЗ СЕТИ.
+ *
+ * Видео владельца 28.09.2026: холодный запуск без сети → «Estás sin
+ * conexión» и «Esta página no se guardó en el teléfono, por eso ahora está
+ * vacía» — при первом открытии это читается как ошибка. На стартовом
+ * адресе теперь приглашение к сохранённому; фраза про несохранённую
+ * страницу — только на конкретном адресе.
+ */
+describe("каркас без сети: запуск и конкретная страница (7.240)", () => {
+  // СВОЁ ОКНО НА КАЖДЫЙ ВЫЗОВ. Таймеры скрипта каркаса в jsdom переживают
+  // `document.open()` (проверено пробой), и экземпляры из тестов выше —
+  // они идут «с сетью» — после своих проб `/api/health` сами зовут
+  // `show("offline")` со СВОИМ вариантом «page». На CI это попадало в
+  // тест «/ru» (3 падения из 4 прогонов #430). Отдельный `JSDOM` — свои
+  // таймеры, свой `navigator`, закрывается после проверки.
+  async function offlineAt(path: string): Promise<Document> {
+    const dom = new JSDOM(HTML, {
+      url: `http://localhost${path}`,
+      runScripts: "dangerously",
+      beforeParse(win) {
+        Object.defineProperty(win.navigator, "onLine", { configurable: true, get: () => false });
+      },
+    });
+    opened.push(dom);
+    const doc = dom.window.document;
+    await vi.waitFor(
+      () => {
+        const visible = [...doc.querySelectorAll<HTMLElement>('[data-state="offline"]')].some((el) => !el.hidden);
+        if (!visible) throw new Error("каркас ещё не показал состояние «нет сети»");
+      },
+      { timeout: 5_000, interval: 20 },
+    );
+    return doc;
+  }
+  const opened: IsolatedDom[] = [];
+  afterEach(() => {
+    for (const dom of opened.splice(0)) dom.window.close();
+  });
+  const shown = (doc: Document) =>
+    [...doc.querySelectorAll<HTMLElement>('[data-state="offline"]')].filter((el) => !el.hidden).map((el) => el.textContent);
+  const detail = (doc: Document) =>
+    JSON.stringify({
+      path: doc.location.pathname,
+      shown: shown(doc),
+      variants: [...doc.querySelectorAll<HTMLElement>("[data-variant]")].map((el) => `${el.getAttribute("data-variant")}:${el.hidden ? "hidden" : "shown"}`),
+    });
+
+  for (const path of ["/", "/es", "/es/"]) {
+    it(`стартовый адрес ${path}: «Aquí tienes lo que guardaste…», без «no se guardó»`, async () => {
+      const doc = await offlineAt(path);
+      expect(shown(doc), detail(doc)).toEqual(["Estás sin conexión", "Aquí tienes lo que guardaste en este teléfono."]);
+    });
+  }
+
+  it("стартовый адрес /ru: «Вот что сохранено на этом телефоне.»", async () => {
+    const doc = await offlineAt("/ru");
+    expect(shown(doc), detail(doc)).toEqual(["Нет соединения", "Вот что сохранено на этом телефоне."]);
+  });
+
+  it("контроль: конкретная несохранённая страница — прежняя честная фраза", async () => {
+    const doc = await offlineAt("/es/stories/cmszq4fab0000pknco5jnogbu");
+    expect(shown(doc), detail(doc)).toEqual(["Estás sin conexión", "Esta página no se guardó en el teléfono, por eso ahora está vacía."]);
+  });
+
+  it("контроль: /es/profile — тоже конкретная страница, а не запуск", async () => {
+    const doc = await offlineAt("/ru/profile");
+    expect(shown(doc), detail(doc)).toEqual(["Нет соединения", "Эта страница не сохранена на телефоне, поэтому сейчас она пуста."]);
   });
 });

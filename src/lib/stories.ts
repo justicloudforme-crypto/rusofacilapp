@@ -85,8 +85,29 @@ export type StoryValidationResult =
 export function splitStoryParagraphs(text: string): string[] {
   return text
     .split(/\n+/)
-    .map((paragraph) => paragraph.trim())
+    .map((paragraph) => tidyPunctuationSpacing(paragraph.trim()))
     .filter(Boolean);
+}
+
+/**
+ * Пробел перед знаком препинания — убрать (заход 7.240, задача 5).
+ *
+ * ОДНА нормализация для всех поверхностей рассказа: страница, скачанная
+ * копия (это тот же серверный HTML) и скрипты озвучки берут абзацы
+ * только через `splitStoryParagraphs`. Шторка и микроразметка текста
+ * рассказа не несут (название и автор).
+ *
+ * Замер прода 27.09.2026: в `text` и `translationEs` всех 325 рассказов
+ * таких мест 0 — «столом .» на видео владельца рисовала разметка, а не
+ * данные (см. `StoryText.tsx`, склейка слова со знаком). Правило здесь —
+ * чтобы будущая правка текста в админке не вернула дефект.
+ *
+ * Индексы не сдвигаются: пробел живёт ВНУТРИ небуквенного токена
+ * (« .» → «.»), поэтому число токенов предложения, номер предложения и
+ * `data-token` омографа остаются прежними — это проверяет тест.
+ */
+export function tidyPunctuationSpacing(text: string): string {
+  return text.replace(/[ \u00a0]+([.,!?:;])/g, "$1");
 }
 
 // A slower-than-average pace on purpose — this is a learner reading a

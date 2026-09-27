@@ -269,6 +269,11 @@ export interface NativeAccessCopy {
     activated: string;
     /** Подтверждение не доехало за отведённое время. */
     activationSlow: string;
+    /** Значок статуса в кабинете, пока сервер не подтвердил оплату
+     *  Google (7.240, задача 3) — вместо старого «Expirada». */
+    activatingBadge: string;
+    /** Значок, когда подтверждения нет дольше срока ожидания. */
+    activationSlowBadge: string;
     /** Отложенная покупка: оплата наличными в магазине. */
     pending: string;
     offline: string;
@@ -375,6 +380,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       activated: "Listo: tu acceso ya está abierto.",
       activationSlow:
         "El pago se registró, pero el acceso todavía no llega. Espera un momento y vuelve a intentarlo; no hace falta pagar otra vez.",
+      activatingBadge: "Activando…",
+      activationSlowBadge: "Sin confirmar",
       pending:
         "Tu pago quedó pendiente. El acceso se abrirá solo en cuanto se confirme; no hace falta hacer nada más.",
       offline: "No hay conexión. Revisa tu internet y vuelve a intentarlo.",
@@ -475,6 +482,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       activated: "Готово: доступ открыт.",
       activationSlow:
         "Оплата прошла, а доступ ещё не доехал. Подождите немного и нажмите ещё раз — платить второй раз не нужно.",
+      activatingBadge: "Активируем…",
+      activationSlowBadge: "Не подтверждено",
       pending:
         "Оплата пока не подтверждена. Доступ откроется сам, как только она пройдёт; делать ничего не нужно.",
       offline: "Нет соединения. Проверьте интернет и попробуйте ещё раз.",

@@ -82,6 +82,7 @@ export default function StoryAudioPlayer({
           <button
             type="button"
             onClick={onSkipBack}
+            data-rf-player="back"
             aria-label={dict.skipBackLabel}
             title={dict.skipBackLabel}
             className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary-text/70 transition-colors hover:text-primary-text ${
@@ -95,6 +96,13 @@ export default function StoryAudioPlayer({
         <button
           type="button"
           onClick={onPlayPause}
+          // Признаки для СКАЧАННОЙ КОПИИ (заход 7.240, долг 311): в копии
+          // React не оживает, и проигрыватель там оживляет каркас
+          // `public/offline.html` — по этим атрибутам он находит кнопку и
+          // обе её подписи, не зная словаря сайта.
+          data-rf-player="play"
+          data-rf-play-label={dict.playLabel}
+          data-rf-pause-label={dict.pauseLabel}
           aria-label={playing ? dict.pauseLabel : dict.playLabel}
           title={playing ? dict.pauseLabel : dict.playLabel}
           className={`flex flex-shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all hover:bg-primary-400 ${
@@ -108,6 +116,7 @@ export default function StoryAudioPlayer({
           <button
             type="button"
             onClick={onSkipForward}
+            data-rf-player="forward"
             aria-label={dict.skipForwardLabel}
             title={dict.skipForwardLabel}
             className={`flex flex-shrink-0 items-center justify-center rounded-full text-primary-text/70 transition-colors hover:text-primary-text ${
@@ -121,6 +130,7 @@ export default function StoryAudioPlayer({
         <div className="relative flex min-w-[60px] flex-1 items-center">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
             <div
+              data-rf-player="bar"
               className="h-full rounded-full bg-premium-400 transition-[width] duration-300"
               style={{ width: `${Math.min(progress * 100, 100)}%` }}
             />
