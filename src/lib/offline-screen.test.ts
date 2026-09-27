@@ -144,17 +144,25 @@ describe("каркас без сети: запуск и конкретная с�
   }
   const shown = (doc: Document) =>
     [...doc.querySelectorAll<HTMLElement>('[data-state="offline"]')].filter((el) => !el.hidden).map((el) => el.textContent);
+  // Полное состояние для сообщения об отказе: CI печатает массив свёрнутым
+  // («…(1)»), а разбирать надо, ЧТО именно показано и по какому адресу.
+  const detail = (doc: Document) =>
+    JSON.stringify({
+      path: window.location.pathname,
+      shown: shown(doc),
+      variants: [...doc.querySelectorAll<HTMLElement>("[data-variant]")].map((el) => `${el.getAttribute("data-variant")}:${el.hidden ? "hidden" : "shown"}`),
+    });
 
   for (const path of ["/", "/es", "/es/"]) {
     it(`стартовый адрес ${path}: «Aquí tienes lo que guardaste…», без «no se guardó»`, async () => {
       const doc = await offlineAt(path);
-      expect(shown(doc)).toEqual(["Estás sin conexión", "Aquí tienes lo que guardaste en este teléfono."]);
+      expect(shown(doc), detail(doc)).toEqual(["Estás sin conexión", "Aquí tienes lo que guardaste en este teléfono."]);
     });
   }
 
   it("стартовый адрес /ru: «Вот что сохранено на этом телефоне.»", async () => {
     const doc = await offlineAt("/ru");
-    expect(shown(doc)).toEqual(["Нет соединения", "Вот что сохранено на этом телефоне."]);
+    expect(shown(doc), detail(doc)).toEqual(["Нет соединения", "Вот что сохранено на этом телефоне."]);
   });
 
   it("контроль: конкретная несохранённая страница — прежняя честная фраза", async () => {
