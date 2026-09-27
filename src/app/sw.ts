@@ -2,7 +2,7 @@
 import { defaultCache } from "@serwist/next/worker";
 import { CacheFirst, CacheableResponsePlugin, ExpirationPlugin, NetworkFirst, NetworkOnly, RangeRequestsPlugin, Serwist } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
-import { buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
+import { GENERATION_CACHE_NAME, GENERATION_KEY, buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
 import {
   AUDIO_CACHE_NAME,
   CACHE_BUDGET_BY_KEY,
@@ -223,6 +223,8 @@ const PAYMENT_PATH = /^\/(es|ru)\/pricing(\/|$)/;
  * надписью «страница не открылась», без утверждений о сети.
  */
 const HEALTH_PATH = "/api/health";
+/** Попытка урока (`GET` — «intento anterior»), заход 7.237. */
+const LESSON_ATTEMPT_PATH = "/api/progress";
 
 async function serverAnswers(timeoutMs = 2500): Promise<boolean> {
   const control = new AbortController();
@@ -335,7 +337,16 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const existing = await caches.keys();
-      await Promise.all(staleCacheNames(existing, FINGERPRINT).map((name) => caches.delete(name)));
+      // Предыдущее поколение — из метки (заход 7.237, строка 308): его
+      // просмотренные копии переживают этот выкат, следующий — уже нет.
+      const marker = await caches.open(GENERATION_CACHE_NAME);
+      const previous = await marker
+        .match(GENERATION_KEY)
+        .then((hit) => (hit ? hit.text() : null))
+        .catch(() => null);
+      const carriedFrom = previous && previous !== FINGERPRINT ? previous : null;
+      await Promise.all(staleCacheNames(existing, FINGERPRINT, carriedFrom).map((name) => caches.delete(name)));
+      await marker.put(GENERATION_KEY, new Response(FINGERPRINT)).catch(() => {});
       await dropCachedPaymentPages();
     })()
   );
@@ -385,6 +396,22 @@ const serwist = new Serwist({
        */
       matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
         sameOrigin && url.pathname === HEALTH_PATH,
+      handler: new NetworkOnly(),
+    },
+    {
+      /**
+       * ПОСЛЕДНЯЯ ПОПЫТКА УРОКА НЕ ОТВЕЧАЕТ ИЗ КЕША — ЗАХОД 7.237.
+       *
+       * `defaultCache` держит `/api/…` на `NetworkFirst` с кешем `apis`, а
+       * отправка ответа (`POST`) этот кеш не обновляет. Замер на эмуляторе:
+       * в `apis` лежало 16 %, на сервере — 20 %, и без сети вкладка
+       * «Ejercicios» показывала под «Este es tu intento anterior» НЕ
+       * последнюю попытку. Без сети последнюю знает очередь на телефоне
+       * (`restoreAttemptWith` в `src/lib/progress-outbox.ts`), с сетью —
+       * сервер; устаревший снимок не знает никто.
+       */
+      matcher: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
+        sameOrigin && url.pathname === LESSON_ATTEMPT_PATH,
       handler: new NetworkOnly(),
     },
     {

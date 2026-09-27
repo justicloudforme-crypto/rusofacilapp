@@ -187,13 +187,83 @@ export function pageCacheNames(fingerprint: string) {
 }
 
 /**
+ * МЕТКА ПОКОЛЕНИЯ — ЗАХОД 7.237, СТРОКА 308.
+ *
+ * Кеш с одной записью: отпечаток сборки, чей воркер активировался
+ * последним. Следующий воркер читает её при активации и узнаёт, какое
+ * поколение было ПРЕДЫДУЩИМ. Имя с дефисом после `rf-pages-`, чтобы каркас
+ * не принял его за кеш документов (`documentCacheNames`, регулярка
+ * `^rf-pages-[a-z0-9]+$`), и с общим префиксом — выход из учётной записи
+ * стирает и её.
+ */
+export const GENERATION_CACHE_NAME = `${PAGE_CACHE_PREFIX}-generation-marker`;
+export const GENERATION_KEY = "/__rf-generation";
+
+/**
+ * Что из ПРЕДЫДУЩЕГО поколения переживает один выкат: просмотренные
+ * копии (`content`), корни разделов (`section`) и их листы стилей
+ * (`sheets`). Копия читается каркасом только со своими листами, поэтому
+ * три вида — вместе или никак.
+ */
+const CARRIED_KINDS = ["content", "section", "sheets"] as const;
+
+function carriedNames(fingerprint: string): string[] {
+  const names = pageCacheNames(fingerprint);
+  return CARRIED_KINDS.map((kind) => names[kind]);
+}
+
+/** Имя кеша переносимого вида; префикс — `PAGE_CACHE_PREFIX` (равенство
+ *  держит пример в `sw-cache-names.test.ts`). Литерал, а не сборка из
+ *  значения: регулярку из данных пришлось бы экранировать. */
+export const CARRIED_CACHE_NAME = /^rf-pages-(?:content|section|sheets)-([a-z0-9]+)$/;
+
+/** Отпечатки, у которых на телефоне есть кеш переносимого вида. */
+function carriedFingerprints(existing: readonly string[]): string[] {
+  const found = new Set<string>();
+  for (const name of existing) {
+    const m = CARRIED_CACHE_NAME.exec(name);
+    if (m) found.add(m[1]);
+  }
+  return [...found];
+}
+
+/**
  * Caches to delete on activate: everything this app named, from any build
  * that is not the current one, plus the three fixed-name caches
  * @serwist/next used before this change (a returning visitor still has
  * those, holding pre-fix pages, and nothing else would ever remove them).
+ *
+ * ПРОСМОТРЕННОЕ ПЕРЕЖИВАЕТ ОДИН ВЫКАТ — ЗАХОД 7.237, СТРОКА 308.
+ *
+ * Видео владельца 27.09.2026: без сети в каркасе сначала 4 строки, через
+ * 1–2 с — одна («Guardado: 1»). Прогон на эмуляторе: каркас рисуется
+ * дважды (исходная отдача и первая ступень лестницы повторов оболочки,
+ * загрузка на +2,1 с), а активация воркера нового выката удаляет
+ * просмотренные копии прошлого отпечатка — у владельца три из четырёх
+ * строк; после выката без сети на эмуляторе — «Guardado: 1», только
+ * скачанное. Теперь `content`/`section`/`sheets` ПРЕДЫДУЩЕГО поколения
+ * остаются до следующего выката: активация больше не уносит то, что
+ * каркас только что показал.
+ *
+ * Долг 14 этим не возвращается: маршруты воркера читают только кеши
+ * ТЕКУЩЕГО отпечатка (`CACHES` в `sw.ts`), так что устаревший HTML живой
+ * страницей не станет никогда; старую копию открывает только каркас без
+ * сети — вместе с её собственными листами. Вес ограничен: одно поколение
+ * сверх текущего (потолки `content`/`section` в записях).
+ *
+ * `previous` — отпечаток из метки поколения; `null` — метки ещё нет
+ * (первый выкат после этой правки): тогда предыдущим считается
+ * единственный чужой отпечаток переносимых кешей, а если их несколько —
+ * не переносится ничего.
  */
-export function staleCacheNames(existing: readonly string[], fingerprint: string): string[] {
-  const keep = new Set(Object.values(pageCacheNames(fingerprint)));
+export function staleCacheNames(existing: readonly string[], fingerprint: string, previous: string | null = null): string[] {
+  const keep = new Set<string>([...Object.values(pageCacheNames(fingerprint)), GENERATION_CACHE_NAME]);
+  let carried: string | null = previous;
+  if (carried === null) {
+    const others = carriedFingerprints(existing).filter((fp) => fp !== fingerprint);
+    carried = others.length === 1 ? others[0] : null;
+  }
+  if (carried && carried !== fingerprint) for (const name of carriedNames(carried)) keep.add(name);
   const legacy = new Set(["pages", "pages-rsc", "pages-rsc-prefetch", "others"]);
   return existing.filter((name) => legacy.has(name) || (name.startsWith(PAGE_CACHE_PREFIX) && !keep.has(name)));
 }

@@ -30,6 +30,12 @@
 //     однажды показала бы человеку JSON вместо урока.
 //  8. Потолки, по которым страница чистит сохранённое, берутся из той же
 //     таблицы бюджетов, что и потолки воркера, а не объявлены второй раз.
+//  9. Просмотренное переживает ОДИН выкат (заход 7.237, строка 308):
+//     воркер при активации читает метку поколения и отдаёт предыдущий
+//     отпечаток в `staleCacheNames`, потом пишет свой; `staleCacheNames`
+//     держит `content`/`section`/`sheets` предыдущего; имя метки каркас
+//     кешем документов не считает. Замер до правки: без сети каркас
+//     «Guardado: 4» → после выката «Guardado: 1».
 //
 //   node scripts/check-offline-cache-names.mjs
 //   node scripts/check-offline-cache-names.mjs --plant
@@ -43,6 +49,7 @@ const NAMES = "src/lib/sw-cache-names.ts";
 const POLICY = "src/lib/sw-cache-policy.ts";
 const SAVE = "src/lib/offline-save.ts";
 const CLIENT = "src/lib/offline-save-client.ts";
+const SW = "src/app/sw.ts";
 
 const read = (path) => {
   try {
@@ -210,11 +217,30 @@ export function violations(sources) {
     bad.push(`${CLIENT}: страница не спрашивает имена кешей у воркера — значит угадывает отпечаток сборки, а угадать его нечем`);
   }
 
+  // 9
+  const sw = withoutJsComments(sources[SW] ?? "");
+  const activate = /addEventListener\("activate"[\s\S]*?\n\}\);/.exec(sw)?.[0] ?? "";
+  const readAt = activate.search(/marker\s*\.match\(GENERATION_KEY\)/);
+  const staleAt = activate.search(/staleCacheNames\(existing, FINGERPRINT, carriedFrom\)/);
+  const writeAt = activate.search(/marker\.put\(GENERATION_KEY, new Response\(FINGERPRINT\)\)/);
+  if (readAt < 0 || staleAt < 0 || writeAt < 0 || !(readAt < staleAt && staleAt < writeAt)) {
+    bad.push(`${SW}: активация не держит «прочитать метку поколения → чистка с предыдущим → записать свою» — выкат снова унесёт просмотренное (строка 308)`);
+  }
+  const stale = /export function staleCacheNames\([\s\S]*?\n\}/.exec(names)?.[0] ?? "";
+  if (!/carriedNames\(carried\)/.test(stale) || !/const CARRIED_KINDS = \["content", "section", "sheets"\] as const;/.test(names)) {
+    bad.push(`${NAMES}: staleCacheNames не держит content/section/sheets предыдущего поколения — каркас «сжимается» после выката (7.237)`);
+  }
+  const markerName = /GENERATION_CACHE_NAME = `\$\{PAGE_CACHE_PREFIX\}-([^`]*)`/.exec(names)?.[1];
+  const matchers = shellCacheMatchers(shell);
+  if (!markerName || matchers.patterns.some((p) => new RegExp(p).test(`rf-pages-${markerName}`))) {
+    bad.push(`${NAMES}: имя метки поколения ловится регуляркой каркаса — каркас примет служебный кеш за кеш документов`);
+  }
+
   return bad;
 }
 
 function load() {
-  return Object.fromEntries([SHELL, NAMES, POLICY, SAVE, CLIENT].map((p) => [p, read(p)]));
+  return Object.fromEntries([SHELL, NAMES, POLICY, SAVE, CLIENT, SW].map((p) => [p, read(p)]));
 }
 
 function plant() {
@@ -294,6 +320,31 @@ function plant() {
     "не спрашивает имена кешей у воркера",
   );
 
+  add(
+    "подсадка: воркер чистит без метки поколения (как до 7.237)",
+    SW,
+    (s) => s.replace("staleCacheNames(existing, FINGERPRINT, carriedFrom)", "staleCacheNames(existing, FINGERPRINT)"),
+    "прочитать метку поколения",
+  );
+  add(
+    "подсадка: метка поколения не пишется",
+    SW,
+    (s) => s.replace("await marker.put(GENERATION_KEY, new Response(FINGERPRINT))", "void marker"),
+    "прочитать метку поколения",
+  );
+  add(
+    "подсадка: staleCacheNames снова уносит предыдущее поколение",
+    NAMES,
+    (s) => s.replace("for (const name of carriedNames(carried)) keep.add(name);", "void carried;"),
+    "не держит content/section/sheets",
+  );
+  add(
+    "подсадка: метка названа так, что каркас считает её кешем документов",
+    NAMES,
+    (s) => s.replace("`${PAGE_CACHE_PREFIX}-generation-marker`", "`${PAGE_CACHE_PREFIX}-generation`"),
+    "ловится регуляркой каркаса",
+  );
+
   for (const c of cases) {
     console.log(`  ${c.ok ? (c.name.startsWith("отрицательный") ? "молчит" : "поймано") : "ПРОПУЩЕНО"} — ${c.name}`);
   }
@@ -314,7 +365,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-cache-names — 8 правил, нарушений 0 (заход 7.230, офлайн-2б)");
+  console.log("check:offline-cache-names — 9 правил, нарушений 0 (заходы 7.230 и 7.237: офлайн-2б, просмотренное переживает один выкат)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

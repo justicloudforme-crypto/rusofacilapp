@@ -314,13 +314,19 @@ async function runtimeViolations() {
     bad.push(`${NAMES}: имя кеша СОДЕРЖАНИЯ перестало зависеть от сборки — обратный контроль провален (долг 14)`);
   }
 
-  const live = [pageCacheNames("aaa111").downloads, pageCacheNames("aaa111").content];
-  const stale = staleCacheNames(live, "bbb222");
+  // Выкат bbb222 после ccc333: скачанное живо; просмотренное ПРЕДЫДУЩЕГО
+  // поколения (ccc333) переживает один выкат (7.237, строка 308);
+  // позапрошлое (aaa111) — уходит (обратный контроль, долг 14).
+  const live = [pageCacheNames("aaa111").downloads, pageCacheNames("aaa111").content, pageCacheNames("ccc333").content];
+  const stale = staleCacheNames(live, "bbb222", "ccc333");
   if (stale.includes(DOWNLOADS_CACHE_NAME)) {
     bad.push(`${NAMES}: staleCacheNames уносит скачанное на чужом отпечатке — это и есть долг 308, только теперь по кнопке`);
   }
+  if (stale.includes(pageCacheNames("ccc333").content)) {
+    bad.push(`${NAMES}: staleCacheNames уносит просмотренное ПРЕДЫДУЩЕГО поколения — каркас без сети «сжимается» после выката (7.237)`);
+  }
   if (!stale.includes(pageCacheNames("aaa111").content)) {
-    bad.push(`${NAMES}: staleCacheNames не уносит чужой кеш содержания — обратный контроль провален`);
+    bad.push(`${NAMES}: staleCacheNames не уносит позапрошлый кеш содержания — обратный контроль провален`);
   }
 
   if (!personalPageCaches([DOWNLOADS_CACHE_NAME, "rf-audio"]).includes(DOWNLOADS_CACHE_NAME)) {

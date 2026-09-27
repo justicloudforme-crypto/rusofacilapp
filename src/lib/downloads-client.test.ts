@@ -293,9 +293,11 @@ describe("удаление скачанного", () => {
 });
 
 describe("имя кеша скачанного держит два обещания сразу", () => {
-  it("выкат сайта его НЕ уносит — при любом отпечатке (а кеш содержания уносит: контроль)", () => {
+  it("выкат сайта его НЕ уносит — при любом отпечатке (а позапрошлый кеш содержания уносит: контроль)", () => {
     const live = [pageCacheNames("aaa").content, pageCacheNames("aaa").downloads];
-    expect(staleCacheNames(live, "bbb")).toEqual([pageCacheNames("aaa").content]);
+    // «ccc» — предыдущее поколение по метке, значит «aaa» — позапрошлое:
+    // просмотренное переживает только один выкат (7.237, строка 308).
+    expect(staleCacheNames(live, "bbb", "ccc")).toEqual([pageCacheNames("aaa").content]);
     expect(staleCacheNames(live, "aaa")).toEqual([]);
     expect(pageCacheNames("bbb").downloads).toBe(pageCacheNames("aaa").downloads);
   });

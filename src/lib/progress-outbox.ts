@@ -198,6 +198,69 @@ export async function countWith(store: OutboxStore, owner: string, level?: strin
   }
 }
 
+/**
+ * КАКУЮ ПОПЫТКУ ПОКАЗАТЬ ПОД «ESTE ES TU INTENTO ANTERIOR» — ЗАХОД 7.237.
+ *
+ * Владелец 27.09.2026: ответил без сети (20/25, «Guardado, se enviará…»),
+ * позже с сетью открыл урок — и увидел прошлую попытку 18/25. Прогон на
+ * эмуляторе (PROGRESS 7.237): очередь НЕ терялась и дошла — сервер 20 %,
+ * по квитанции на попытку, день один, — но вкладка спросила сервер на
+ * 0,5 с, а очередь ушла на 1,9 с (первая отправка страницы — через 1,5 с,
+ * после неудачи — через 20 с). Экран строился раньше, чем последняя
+ * попытка доходила, и сам больше не перерисовывался. Второй путь к тому
+ * же: без сети ответ GET брал воркер из кеша `apis`, который отправка
+ * ответа не обновляет (16 % в кеше при 20 % на сервере).
+ *
+ * Правило: сначала досылаем очередь; если запись этого урока всё ещё
+ * ждёт — она и есть последняя попытка (всё в очереди новее всего, что
+ * сервер получил с этого телефона); только иначе — ответ сервера.
+ */
+export interface RestoredAttempt {
+  score: number;
+  passed: boolean;
+  answers: Record<string, unknown>;
+}
+
+export type RestoreSource = "queue" | "server" | "none";
+
+/** Самая свежая ждущая запись урока у владельца (последняя по порядку очереди). */
+export async function latestPendingWith(
+  store: OutboxStore,
+  owner: string,
+  level: string,
+  lesson: string,
+): Promise<OutboxBody | null> {
+  try {
+    const mine = (await store.all()).filter(
+      (r) => r.owner === owner && r.body.level === level && r.body.lesson === lesson,
+    );
+    if (mine.length === 0) return null;
+    mine.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+    return mine[mine.length - 1].body;
+  } catch {
+    return null;
+  }
+}
+
+export async function restoreAttemptWith(
+  store: OutboxStore,
+  owner: string,
+  level: string,
+  lesson: string,
+  flush: () => Promise<unknown>,
+  fromServer: () => Promise<RestoredAttempt | null>,
+): Promise<{ source: RestoreSource; attempt: RestoredAttempt | null }> {
+  if (owner !== GUEST_OWNER) {
+    await flush().catch(() => null);
+    const pending = await latestPendingWith(store, owner, level, lesson);
+    if (pending) {
+      return { source: "queue", attempt: { score: pending.score, passed: pending.passed, answers: pending.answers } };
+    }
+  }
+  const server = await fromServer().catch(() => null);
+  return server ? { source: "server", attempt: server } : { source: "none", attempt: null };
+}
+
 /* ------------------------------------------------------------------ */
 /* IndexedDB                                                           */
 /* ------------------------------------------------------------------ */
@@ -282,4 +345,14 @@ export function flushProgress(owner: string): Promise<FlushReport> {
 
 export function pendingProgress(owner: string, level?: string, lesson?: string): Promise<number> {
   return countWith(indexedDbOutbox, owner, level, lesson);
+}
+
+/** Попытка для «intento anterior»: очередь первее сервера (7.237). */
+export function restoreLessonAttempt(
+  owner: string,
+  level: string,
+  lesson: string,
+  fromServer: () => Promise<RestoredAttempt | null>,
+): Promise<{ source: RestoreSource; attempt: RestoredAttempt | null }> {
+  return restoreAttemptWith(indexedDbOutbox, owner, level, lesson, () => flushProgress(owner), fromServer);
 }
