@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { fixBrandSpelling, localizeStoryAuthor, storyByline } from "@/lib/story-author";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
 import { isNativeShellRequest } from "@/lib/native-shell";
@@ -114,7 +115,10 @@ export async function generateMetadata({
   }
   if (!story) return {};
   const rawDescription =
-    (lang === "ru" ? (story.descriptionRu ?? story.description) : story.description) ??
+    (() => {
+      const text = lang === "ru" ? (story.descriptionRu ?? story.description) : story.description;
+      return text && fixBrandSpelling(text);
+    })() ??
     (lang === "ru"
       ? `Рассказ на русском языке, уровень ${story.level}, в RusoFácilapp.`
       : `Cuento en ruso, nivel ${story.level}, en RusoFácilapp.`);
@@ -218,7 +222,10 @@ export default async function StoryReaderPage({
   // descriptionRu is null for every row today (see schema.prisma) — this
   // fallback is what keeps /ru showing the Spanish summary instead of
   // hiding the block, until the Russian text exists.
-  const localizedDescription = lang === "ru" ? (story.descriptionRu ?? story.description) : story.description;
+  const rawLocalizedDescription = lang === "ru" ? (story.descriptionRu ?? story.description) : story.description;
+  // Написание имени проекта в описании — та же опечатка, что в подписи
+  // автора (одна строка прода, 7.239); чинится отрисовкой.
+  const localizedDescription = rawLocalizedDescription && fixBrandSpelling(rawLocalizedDescription);
 
   const paragraphs = splitStoryParagraphs(story.text);
   const visibleParagraphs = entitled ? paragraphs : paragraphs.slice(0, 1);
@@ -305,6 +312,11 @@ export default async function StoryReaderPage({
   // a value from the database reaching a parser that can throw during
   // render, with the whole page downstream of it. See PROGRESS.md 7.40.
   const sentenceOffsets = parseSentenceOffsets(entitled ? story.sentenceOffsetsJson : null);
+  // Автор так, как его читает посетитель этой локали (7.239): до этого
+  // страница, разметка и шторка плеера (MediaSession) печатали колонку
+  // как есть — «Русская народная сказка» на /es и «RusoFácil (relato
+  // original)» с опечаткой в имени проекта на обеих.
+  const authorName = localizeStoryAuthor(story.author, lang);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -319,7 +331,7 @@ export default async function StoryReaderPage({
           // разметка носила бы одну строку дважды.
           ...(titles.secondary ? { alternateName: titles.secondary } : {}),
           ...(localizedDescription ? { description: localizedDescription } : {}),
-          author: { "@type": "Person", name: story.author },
+          author: { "@type": "Person", name: authorName },
           publisher: { "@type": "Organization", name: "RusoFácilapp", url: SITE_URL },
           inLanguage: "ru",
           datePublished: story.createdAt.toISOString(),
@@ -362,7 +374,7 @@ export default async function StoryReaderPage({
 
       <StoryTitle as="h1" titles={titles} className="mt-3 text-3xl font-semibold tracking-tight" />
       <p className="mt-1 text-foreground/60">
-        {dict.stories.byAuthor} {story.author}
+        {storyByline(story.author, lang, dict.stories.byAuthor)}
       </p>
       {localizedDescription && <p className="mt-3 text-foreground/70">{localizedDescription}</p>}
 
@@ -382,7 +394,7 @@ export default async function StoryReaderPage({
           storyId={entitled ? story.id : null}
           audioStoryId={story.id}
           title={titles.primary}
-          author={story.author}
+          author={authorName}
           paragraphs={visibleParagraphs}
           translationParagraphs={visibleTranslationParagraphs}
           audioSegments={audioSegments}
