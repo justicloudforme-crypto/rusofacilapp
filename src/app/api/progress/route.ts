@@ -8,6 +8,7 @@ import { isLevelSlug, isLessonSlug, isFreeTrialLesson } from "@/lib/courses";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { awardBadgesSafely } from "@/lib/badges";
 import { markStudyDayVisit } from "@/lib/study-day-visit";
+import { getRequestTimeZone } from "@/lib/timezone-server";
 import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
 import type { AnswerMap, MistakeDetail } from "@/lib/lessons/scoring";
 
@@ -92,13 +93,16 @@ export async function POST(request: NextRequest) {
   // ответа — сейчас. Одно и то же время идёт и в попытку (день урока в
   // календаре, 7.238), и в день занятия ниже.
   const at = actionInstant(body?.at, recordKey !== null);
+  // Зона ученика — чтобы день ПРОШЛОЙ попытки, который повторная попытка
+  // стирает из `completedAt`, остался в календаре (7.239, progress.ts).
+  const timeZone = await getRequestTimeZone(user.timezone ?? null);
   if (recordKey) {
     // Запись очереди: принимается один раз, повтор — пустая операция без
     // второго дня занятия (src/lib/progress.ts, saveLessonAttemptOnce).
-    const once = await saveLessonAttemptOnce(recordKey, user.id, level, lesson, score, passed, mistakes, answers, at);
+    const once = await saveLessonAttemptOnce(recordKey, user.id, level, lesson, score, passed, mistakes, answers, at, timeZone);
     if (once === "duplicate") return NextResponse.json({ ok: true, duplicate: true });
   } else {
-    await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers, at);
+    await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers, at, timeZone);
   }
   // Deferred via after() — see flashcard-progress/route.ts's comment for
   // why. This route fires on every "Comprobar" click, pass or fail, so
