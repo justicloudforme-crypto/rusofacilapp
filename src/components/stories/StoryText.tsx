@@ -17,6 +17,8 @@ import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 import { isHomograph } from "@/lib/story-word-pick";
 import { cacheTranslation, cacheTranslations, readCachedTranslation, unknownWords } from "@/lib/translation-store";
 import {
+  clearNativeMediaSession,
+  nativeArtworkSrc,
   setNativeMediaMetadata,
   setNativePlaybackState,
   setNativeActionHandler,
@@ -32,6 +34,64 @@ const CYRILLIC_WORD_REGEX = /^[а-яёА-ЯЁ]+(?:-[а-яёА-ЯЁ]+)*$/u;
 
 function tokenizeParagraph(text: string): string[] {
   return text.split(WORD_SPLIT_REGEX).filter((token) => token.length > 0);
+}
+
+/**
+ * Знаки, которые ПРИКЛЕИВАЮТСЯ к слову перед ними (заход 7.240, задача 5).
+ *
+ * Слово — `<button>`, то есть неделимый блок строки: браузер вправе
+ * перенести строку сразу за кнопкой, и точка уезжала на отдельную строку
+ * («Дети сидят за одним большим столом» / «.»), а поле `px-0.5` кнопки
+ * читалось как пробел перед знаком. В данных пробела нет (замер прода —
+ * 0 мест из 325 рассказов). Лечится разметкой: слово и начало следующего
+ * небуквенного токена до первого пробела — в одном `whitespace-nowrap`, а
+ * у знака отрицательное поле, съедающее поле кнопки.
+ */
+const GLUED_PUNCTUATION_REGEX = /^[.,!?:;…»")\]]+/u;
+
+function gluedPunctuation(next: string | undefined): string {
+  if (!next || CYRILLIC_WORD_REGEX.test(next)) return "";
+  return GLUED_PUNCTUATION_REGEX.exec(next)?.[0] ?? "";
+}
+
+function renderSentenceTokens(tokens: string[]) {
+  return tokens.map((token, tokenIndex) => {
+    if (CYRILLIC_WORD_REGEX.test(token)) {
+      const glue = gluedPunctuation(tokens[tokenIndex + 1]);
+      const word = (
+        // No onClick prop here on purpose — see the wrapping
+        // sentence <span>'s onClick, which delegates word
+        // clicks via this data attribute instead of every
+        // single word registering its own React click
+        // handler (hundreds per long story).
+        <button
+          key={glue ? undefined : tokenIndex}
+          type="button"
+          data-word={token}
+          // Номер токена внутри предложения. Нужен одному
+          // классу слов — омографам: их клип привязан к
+          // МЕСТУ, а не к словоформе (заход 7.168), и место
+          // называется теми же индексами, что `itemKey`
+          // вырезки: `<абзац>-<предложение>-<токен>`.
+          data-token={tokenIndex}
+          className="tap rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 active:bg-foreground/10 focus:outline-none"
+        >
+          {token}
+        </button>
+      );
+      if (!glue) return word;
+      return (
+        <span key={tokenIndex} className="whitespace-nowrap" data-rf-glued="">
+          {word}
+          <span className="-ml-0.5">{glue}</span>
+        </span>
+      );
+    }
+    const previous = tokens[tokenIndex - 1];
+    const glued = previous !== undefined && CYRILLIC_WORD_REGEX.test(previous) ? gluedPunctuation(token) : "";
+    const rest = token.slice(glued.length);
+    return rest ? <span key={tokenIndex}>{rest}</span> : null;
+  });
 }
 
 
@@ -423,14 +483,72 @@ export default function StoryText({
     scrollSentenceIntoView(readingQueueIndex);
   }, [readingQueueIndex]);
 
-  // Stop any in-flight narration when the reader navigates away.
+  // УХОД СО СТРАНИЦЫ = ЗВУК ОСТАНОВЛЕН, ШТОРКА ПУСТА (заход 7.240, задача 2).
+  //
+  // Решение: рассказ — это чтение ВМЕСТЕ со звуком (подсветка строки,
+  // тап по слову), а не подкаст; мини-проигрывателя на других вкладках
+  // нет, значит звук без страницы нечем ни увидеть, ни остановить,
+  // кроме шторки. Поэтому уход останавливает звук, а место чтения
+  // остаётся (кольцо на строке и шкала — см. `displayQueueIndex`).
+  //
+  // До 7.240 здесь ставилась только пауза, а шторка оставалась в
+  // состоянии «playing» без кнопок (эффект ниже снимал обработчики, но
+  // не состояние): замер на эмуляторе — `PLAYING`, `actions=0`, время
+  // бежит. Теперь карточка убирается целиком — и при уходе внутри
+  // приложения (размонтирование), и когда документ умирает сам
+  // (`pagehide`: перезагрузка, переход в сохранённую копию без сети).
   useEffect(() => {
     const audio = audioRef.current;
-    return () => {
+    const stopEverything = () => {
       if (pendingNextRef.current) clearTimeout(pendingNextRef.current);
       playbackGenRef.current += 1;
       cancelSpeech();
       audio?.pause();
+      if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = "none";
+        navigator.mediaSession.metadata = null;
+      }
+      void clearNativeMediaSession();
+    };
+    window.addEventListener("pagehide", stopEverything);
+    return () => {
+      window.removeEventListener("pagehide", stopEverything);
+      stopEverything();
+    };
+  }, []);
+
+  // ОДИН ИСТОЧНИК ПРАВДЫ — САМ ЭЛЕМЕНТ <audio> (заход 7.240, задача 2).
+  //
+  // Кнопка плеера и шторка раньше верили только своему `playing`, а его
+  // ставили наши обработчики. Если элемент остановил кто-то другой
+  // (система забрала звук — звонок, другое приложение; WebView сам),
+  // кнопка оставалась «⏸» при тишине — замерено на эмуляторе. Теперь
+  // чужая пауза и чужой запуск переводят состояние сами.
+  //
+  // Свои паузы между предложениями (цепочка клипов, `playSegmentAt`)
+  // помечены `ownPausesRef` и сюда не доходят — иначе кнопка и шторка
+  // мигали бы на каждом предложении. Конец клипа (`ended`) тоже не
+  // «чужая пауза»: очередь идёт дальше сама.
+  const ownPausesRef = useRef(0);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onPause = () => {
+      if (ownPausesRef.current > 0) {
+        ownPausesRef.current -= 1;
+        return;
+      }
+      if (audio.ended) return;
+      if (playingRef.current) setPlaying(false);
+    };
+    const onPlay = () => {
+      if (!playingRef.current) setPlaying(true);
+    };
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("play", onPlay);
+    return () => {
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("play", onPlay);
     };
   }, []);
 
@@ -593,7 +711,10 @@ export default function StoryText({
     if (hasPerSentenceAudio) preloadSegment(index + 1);
     if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
 
-    audio.pause();
+    if (!audio.paused) {
+      ownPausesRef.current += 1;
+      audio.pause();
+    }
     audio.src = url;
     // Explicit load() after reassigning src: setting .src alone is
     // supposed to trigger this per spec, but on several Android
@@ -749,6 +870,12 @@ export default function StoryText({
         setPlaying(false);
         return;
       }
+      // Вернулись на страницу после ухода (звук остановлен, место чтения
+      // помечено кольцом) — «▶» продолжает С ЭТОГО МЕСТА, а не с начала.
+      if (readingQueueIndex === null && resumeQueueIndex !== null && audio.currentTime === 0) {
+        const offset = sentenceOffsets?.[resumeQueueIndex];
+        if (offset !== undefined) audio.currentTime = offset;
+      }
       setPlaying(true);
       audio.play().catch(() => setPlaying(false));
       return;
@@ -766,7 +893,10 @@ export default function StoryText({
         audio.play().catch(() => setPlaying(false));
         return;
       }
-      const startIndex = readingQueueIndex !== null && readingQueueIndex < queue.length - 1 ? readingQueueIndex : 0;
+      const startIndex =
+        readingQueueIndex !== null && readingQueueIndex < queue.length - 1
+          ? readingQueueIndex
+          : (resumeQueueIndex ?? 0);
       setPlaying(true);
       playSegmentAt(startIndex);
       return;
@@ -971,13 +1101,22 @@ export default function StoryText({
   }, [hasMediaSessionTarget, title, author]);
 
   // Метаданные, нативная половина — вне веб-сторожа (долг 152).
+  // Обложка — картинкой (`nativeArtworkSrc`): относительный адрес Java
+  // плагина не читает и рисует серый динамик (заход 7.240).
   useEffect(() => {
     if (!hasMediaSessionTarget) return;
-    void setNativeMediaMetadata({
-      title,
-      artist: author,
-      artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],
+    let cancelled = false;
+    void nativeArtworkSrc().then((src) => {
+      if (cancelled) return;
+      void setNativeMediaMetadata({
+        title,
+        artist: author,
+        artwork: [{ src, sizes: "192x192", type: "image/png" }],
+      });
     });
+    return () => {
+      cancelled = true;
+    };
   }, [hasMediaSessionTarget, title, author]);
 
   // Playback state: only when it actually flips.
@@ -1025,8 +1164,13 @@ export default function StoryText({
     });
   }, [hasMediaSessionTarget, hasFullAudio, playing, rate, readingQueueIndex]);
 
+  // Шкала показывает НАСТОЯЩЕЕ место: пока звучит — читаемую строку, а
+  // когда звук остановлен уходом со страницы — сохранённое место чтения
+  // (то же, что обведено кольцом). До 7.240 после возврата шкала была
+  // пустой, хотя кольцо стояло на 7-й строке.
+  const displayQueueIndex = readingQueueIndex ?? resumeQueueIndex;
   const progress =
-    queue.length > 0 && readingQueueIndex !== null ? (readingQueueIndex + 1) / queue.length : 0;
+    queue.length > 0 && displayQueueIndex !== null ? (displayQueueIndex + 1) / queue.length : 0;
 
   /**
    * ДОЛГ 158: «два голоса при тапе на слово во время чтения».
@@ -1222,7 +1366,9 @@ export default function StoryText({
   }, [activeWord]);
 
   return (
-    <div>
+    // Название и подпись для шторки СКАЧАННОЙ КОПИИ: там React не оживает,
+    // и проигрыватель копии (`public/offline.html`) берёт их отсюда.
+    <div data-rf-story-title={title} data-rf-story-author={author}>
       {isCompletedBadge && (
         <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
           <span aria-hidden="true">✓</span> {dict.completedBadge}
@@ -1243,7 +1389,7 @@ export default function StoryText({
             progress={progress}
             rate={rate}
             queueLength={queue.length}
-            readingQueueIndex={readingQueueIndex}
+            readingQueueIndex={displayQueueIndex}
             onSkipBack={() => skipBy(-15)}
             onSkipForward={() => skipBy(15)}
             onPlayPause={handlePlayPause}
@@ -1360,31 +1506,7 @@ export default function StoryText({
                       : ""
                   }`}
                 >
-                  {sentenceTokens[queueIndex].map((token, tokenIndex) =>
-                    CYRILLIC_WORD_REGEX.test(token) ? (
-                      // No onClick prop here on purpose — see the wrapping
-                      // sentence <span>'s onClick, which delegates word
-                      // clicks via this data attribute instead of every
-                      // single word registering its own React click
-                      // handler (hundreds per long story).
-                      <button
-                        key={tokenIndex}
-                        type="button"
-                        data-word={token}
-                        // Номер токена внутри предложения. Нужен одному
-                        // классу слов — омографам: их клип привязан к
-                        // МЕСТУ, а не к словоформе (заход 7.168), и место
-                        // называется теми же индексами, что `itemKey`
-                        // вырезки: `<абзац>-<предложение>-<токен>`.
-                        data-token={tokenIndex}
-                        className="tap rounded px-0.5 transition-colors hover:bg-foreground/10 focus:bg-foreground/10 active:bg-foreground/10 focus:outline-none"
-                      >
-                        {token}
-                      </button>
-                    ) : (
-                      <span key={tokenIndex}>{token}</span>
-                    )
-                  )}
+                  {renderSentenceTokens(sentenceTokens[queueIndex])}
                 </span>
               ))}
             </p>

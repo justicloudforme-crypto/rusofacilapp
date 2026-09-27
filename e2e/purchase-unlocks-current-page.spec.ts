@@ -3,6 +3,7 @@ import path from "node:path";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect } from "./helpers/test";
 import { loginWithoutSubscription } from "./helpers/auth";
+import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
 
 /**
  * ДОЛГ 304: ПОСЛЕ ПОКУПКИ ЗАМКИ СНИМАЮТСЯ С ТОЙ ЖЕ СТРАНИЦЫ, ПОВЕРХ
@@ -192,4 +193,72 @@ test("покупка при ЗАКРЫТОЙ шторке: замки всё р�
 
   // И адрес не менялся: снялись они САМИ, а не переходом.
   expect(new URL(page.url()).pathname, "замки сняты переходом на другую страницу, а не сами").toBe("/ru/courses/a1");
+});
+
+/**
+ * ЗАХОД 7.240, ЗАДАЧА 3 — «EXPIRADA» ~5 С ПОСЛЕ ПОКУПКИ, КАБИНЕТ.
+ *
+ * Видео владельца (1.0.11, 28.09.2026): «Mi perfil → Suscripción →
+ * Un mes» — окно Google закрылось, и около пяти секунд на экране были
+ * старый статус, «Venció el…» и тарифы, потом «Activa». Это ровно разрыв
+ * «магазин подтвердил → вебхук доехал», который здесь изображает
+ * `webhookDelayMs`. Правило: в этом разрыве значок «Activando…», тарифов
+ * нет; «Activa» — только по ответу сервера.
+ */
+async function openProfileWithStore(page: Page, context: BrowserContext, webhookDelayMs: number): Promise<string> {
+  await loginWithoutSubscription(page);
+  await context.addCookies(SHELL);
+  await context.addInitScript({ content: `${storeThatSells(webhookDelayMs)}\n${GLOBAL_JS}\n${BRIDGE_JS}\n${PLUGIN_JS}` });
+  await page.goto("/es/profile?tab=subscription");
+  await dismissWelcomeOverlay(page);
+  await expect(page.getByTestId("native-purchase-option").first(), "вариантов покупки в кабинете нет").toBeVisible({
+    timeout: 30_000,
+  });
+  // Обратный контроль: до покупки значок — ответ сервера, а не «Activando…».
+  await expect(page.getByTestId("activation-badge")).toHaveCount(0);
+  const badge = page.getByTestId("subscription-badge");
+  await expect(badge, "серверного значка статуса нет").toBeVisible();
+  return (await badge.innerText()).trim();
+}
+
+test("кабинет: между оплатой и вебхуком — «Activando…» и без тарифов, потом «Activa»", async ({ page, context }) => {
+  test.setTimeout(150_000);
+  const before = await openProfileWithStore(page, context, 6_000);
+  expect(before, "до покупки значок — не «Activa»").not.toBe("Activa");
+
+  await page.getByTestId("native-purchase-option").first().click();
+  await expect(page.getByTestId("activation-badge"), "значок не перешёл в «Activando…»").toHaveText("Activando…", {
+    timeout: 5_000,
+  });
+  // Ровно то, что было на видео: старый статус и тарифы в этом разрыве.
+  await expect(page.getByTestId("subscription-badge"), `старый значок «${before}» остался рядом с оплатой`).toHaveCount(0);
+  await expect(page.getByTestId("native-purchase-option")).toHaveCount(0);
+  await expect(page.getByTestId("native-purchase-message")).toHaveText("Activando tu acceso…");
+
+  await expect(
+    page.getByTestId("subscription-badge").or(page.getByText("Activa", { exact: true })).first(),
+    "после вебхука значок не стал «Activa»",
+  ).toHaveText("Activa", { timeout: 60_000 });
+  await expect(page.getByTestId("activation-badge")).toHaveCount(0);
+});
+
+test("кабинет: 30 с без подтверждения — честный текст и «Reintentar», тарифов нет", async ({ page, context }) => {
+  test.setTimeout(150_000);
+  // «Вебхук» не доезжает за время пробы.
+  await openProfileWithStore(page, context, 600_000);
+  await page.getByTestId("native-purchase-option").first().click();
+  await expect(page.getByTestId("activation-badge")).toHaveText("Activando…", { timeout: 5_000 });
+
+  await expect(page.getByTestId("activation-badge"), "через 30 с значок не сказал «Sin confirmar»").toHaveText(
+    "Sin confirmar",
+    { timeout: 45_000 },
+  );
+  await expect(page.getByTestId("native-purchase-message")).toHaveText(/El pago se registró, pero el acceso todavía no llega/);
+  await expect(page.getByTestId("native-purchase-option")).toHaveCount(0);
+  await expect(page.getByText("Activa", { exact: true })).toHaveCount(0);
+
+  await page.getByTestId("native-activation-retry").click();
+  await expect(page.getByTestId("activation-badge"), "«Reintentar» не начал новое ожидание").toHaveText("Activando…", {
+    timeout: 5_000,
+  });
 });

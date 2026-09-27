@@ -121,8 +121,13 @@ async function main() {
   });
   await drain();
   const testHits = hits.length - at;
-  const summary = (run.stdout ?? "").split("\n").filter((l) => /Test Files|Tests\s+\d|Tests\s+\d+ passed/.test(l));
-  summary.forEach((l) => console.log("  " + l.trim()));
+  // Цвета vitest режутся ДО разбора (заход 7.240): с ними строка «Tests  1
+  // failed» не совпадала с шаблоном, а имена упавших тестов не печатались
+  // вовсе — CI краснел «вслепую», без единого имени. Теперь печатаются и
+  // сводка, и каждая строка FAIL / × (имя файла и теста).
+  const plain = `${run.stdout ?? ""}\n${run.stderr ?? ""}`.replace(/\x1b\[[0-9;]*m/g, "");
+  const summary = plain.split("\n").filter((l) => /Test Files|^\s*Tests\s+\d|\bFAIL\b|^\s*×|AssertionError|Error:.*expected/.test(l));
+  [...new Set(summary)].slice(0, 60).forEach((l) => console.log("  " + l.trim()));
   console.log(`  exit ${run.status}`);
   console.log(`\n  database connections opened by the test suite: ${testHits}`);
 
