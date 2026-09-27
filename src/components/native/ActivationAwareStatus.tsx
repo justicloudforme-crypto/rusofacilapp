@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { activationState, subscribeActivation } from "@/lib/access-activation";
+import { activationState, subscribeActivation, type ActivationState } from "@/lib/access-activation";
 
 /**
  * «EXPIRADA» РЯДОМ С «LISTO: TU ACCESO YA ESTÁ ABIERTO» — ЗАХОД 7.239.
@@ -21,21 +21,43 @@ import { activationState, subscribeActivation } from "@/lib/access-activation";
  * ответ. Ничего не выдумывается: «granted» публикуется только по ответу
  * сервера.
  */
+/*
+ * ЗАХОД 7.240, ЗАДАЧА 3: «EXPIRADA» ~5 С ПОСЛЕ ПОКУПКИ.
+ *
+ * Видео владельца, 1.0.11: окно Google закрылось — и около пяти секунд
+ * кабинет показывал «Expirada», «Venció el 27 de septiembre…» и тарифы, а
+ * потом «Activa». Это время между ответом Google («оплачено») и ответом
+ * НАШЕГО сервера (вебхук RevenueCat): состояние «waiting». 7.239 закрыл
+ * только «granted», а «waiting» рисовал старый серверный ответ.
+ *
+ * Теперь: `waiting` → `whenWaiting` («Activando…»), `slow` (30 с без
+ * подтверждения) → `whenSlow`. Ни одно из них не утверждает «Activa»:
+ * это говорит только сервер (`granted`).
+ */
 export default function ActivationAwareStatus({
   serverEntitled,
   whenGranted,
+  whenWaiting,
+  whenSlow,
   children,
 }: {
   serverEntitled: boolean;
   whenGranted: ReactNode;
+  /** Google подтвердил оплату, сервер ещё нет. Не задано — как сервер. */
+  whenWaiting?: ReactNode;
+  /** Подтверждения нет дольше срока ожидания. Не задано — как сервер. */
+  whenSlow?: ReactNode;
   children: ReactNode;
 }) {
-  const [granted, setGranted] = useState(false);
+  const [live, setLive] = useState<ActivationState["kind"]>("idle");
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setGranted(activationState().kind === "granted");
-    return subscribeActivation((live) => setGranted(live.kind === "granted"));
+    setLive(activationState().kind);
+    return subscribeActivation((next) => setLive(next.kind));
   }, []);
-  if (granted && !serverEntitled) return <>{whenGranted}</>;
+  if (serverEntitled) return <>{children}</>;
+  if (live === "granted") return <>{whenGranted}</>;
+  if (live === "waiting" && whenWaiting !== undefined) return <>{whenWaiting}</>;
+  if (live === "slow" && whenSlow !== undefined) return <>{whenSlow}</>;
   return <>{children}</>;
 }

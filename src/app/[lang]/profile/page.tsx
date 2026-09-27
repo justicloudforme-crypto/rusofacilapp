@@ -1364,6 +1364,8 @@ export default async function ProfilePage({
               доступ, а страница ещё не перерисована — «Expirada» рядом с
               «Listo: tu acceso ya está abierto». Пока так, значок говорит
               «Activa» (см. ActivationAwareStatus). */}
+          {/* Заход 7.240: и РАНЬШЕ — пока Google уже взял оплату, а сервер
+              ещё не подтвердил, значок «Activando…», а не «Expirada». */}
           <ActivationAwareStatus
             serverEntitled={entitled || staffAccess}
             whenGranted={
@@ -1371,8 +1373,25 @@ export default async function ProfilePage({
                 {statusLabels.active}
               </span>
             }
+            whenWaiting={
+              <span
+                data-testid="activation-badge"
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES.past_due}`}
+              >
+                {nativeAccessCopy(lang).purchase.activatingBadge}
+              </span>
+            }
+            whenSlow={
+              <span
+                data-testid="activation-badge"
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES.past_due}`}
+              >
+                {nativeAccessCopy(lang).purchase.activationSlowBadge}
+              </span>
+            }
           >
             <span
+              data-testid="subscription-badge"
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
                 staffAccess ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES[displayStatus]
               }`}
@@ -1383,7 +1402,12 @@ export default async function ProfilePage({
         </div>
 
         {subscription && dateLine && (
-          <ActivationAwareStatus serverEntitled={entitled || staffAccess} whenGranted={null}>
+          <ActivationAwareStatus
+            serverEntitled={entitled || staffAccess}
+            whenGranted={null}
+            whenWaiting={null}
+            whenSlow={null}
+          >
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-foreground/60">{dict.account.plan}</dt>
             <dd className="flex items-center gap-1.5">
