@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { getUserActivityDateKeys } from "@/lib/streaks";
+import { getRequestTimeZone } from "@/lib/timezone-server";
 
 /**
  * Учёт прогресса ВОШЕДШЕГО — только для e2e (заход 7.236, очередь без
@@ -22,13 +24,17 @@ export async function GET(request: NextRequest) {
   const params = new URL(request.url).searchParams;
   const level = params.get("level") ?? "a1";
   const lesson = params.get("lesson") ?? "1";
-  const [attempt, studyDays, receipts] = await Promise.all([
+  // `activityDays` — дни календаря, как их видит кабинет (заход 7.238):
+  // день урока в нём берётся и из `LessonProgress.completedAt`.
+  const timeZone = await getRequestTimeZone(user.timezone ?? null);
+  const [attempt, studyDays, receipts, activityDays] = await Promise.all([
     db.lessonProgress.findUnique({
       where: { userId_level_lessonSlug: { userId: user.id, level, lessonSlug: lesson } },
       select: { score: true, passed: true, completedAt: true },
     }),
     db.studyDay.findMany({ where: { userId: user.id }, select: { dateKey: true, source: true }, orderBy: { dateKey: "asc" } }),
     db.offlineReceipt.count({ where: { userId: user.id } }),
+    getUserActivityDateKeys(user.id, timeZone),
   ]);
-  return NextResponse.json({ attempt, studyDays, receipts });
+  return NextResponse.json({ attempt, studyDays, receipts, activityDays: [...activityDays].sort() });
 }

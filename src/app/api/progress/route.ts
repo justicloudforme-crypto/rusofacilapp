@@ -88,13 +88,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Время ДЕЙСТВИЯ: у записи очереди — когда ученик ответил, у прямого
+  // ответа — сейчас. Одно и то же время идёт и в попытку (день урока в
+  // календаре, 7.238), и в день занятия ниже.
+  const at = actionInstant(body?.at, recordKey !== null);
   if (recordKey) {
     // Запись очереди: принимается один раз, повтор — пустая операция без
     // второго дня занятия (src/lib/progress.ts, saveLessonAttemptOnce).
-    const once = await saveLessonAttemptOnce(recordKey, user.id, level, lesson, score, passed, mistakes, answers);
+    const once = await saveLessonAttemptOnce(recordKey, user.id, level, lesson, score, passed, mistakes, answers, at);
     if (once === "duplicate") return NextResponse.json({ ok: true, duplicate: true });
   } else {
-    await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers);
+    await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers, at);
   }
   // Deferred via after() — see flashcard-progress/route.ts's comment for
   // why. This route fires on every "Comprobar" click, pass or fail, so
@@ -104,7 +108,7 @@ export async function POST(request: NextRequest) {
   // ДЕНЬ ЗАНЯТИЯ (17.09.2026, заход 7.204): урок засчитывается по
   // СДАННЫМ упражнениям («Comprobar»), а не по открытию страницы.
   // Для записи очереди — день ДЕЙСТВИЯ, а не приёма (7.236).
-  await markStudyDayVisit("lesson", user, actionInstant(body?.at, recordKey !== null));
+  await markStudyDayVisit("lesson", user, at);
 
   return NextResponse.json({ ok: true });
 }
