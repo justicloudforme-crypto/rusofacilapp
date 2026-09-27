@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, waitFor } from "@testing-library/react";
 import StoryText, { type StoryTextDict } from "./StoryText";
 import type { StoryAudioSegment } from "@/lib/stories";
 import {
@@ -37,6 +37,8 @@ vi.mock("@/lib/native-media-session", () => ({
   setNativeActionHandler: vi.fn(async () => {}),
   setNativeSeekToHandler: vi.fn(async () => {}),
   setNativePositionState: vi.fn(async () => {}),
+  clearNativeMediaSession: vi.fn(async () => {}),
+  nativeArtworkSrc: vi.fn(async () => "data:image/png;base64,AAAA"),
 }));
 
 const dict: StoryTextDict = {
@@ -99,7 +101,7 @@ describe("StoryText: нативная медиа-сессия в оболочк�
     expect((globalThis as { MediaMetadata?: unknown }).MediaMetadata).toBeUndefined();
   });
 
-  it("без navigator.mediaSession нативные вызовы ВСЁ РАВНО происходят", () => {
+  it("без navigator.mediaSession нативные вызовы ВСЁ РАВНО происходят", async () => {
     draw();
     // Шесть кнопок шторки — ровно те, что 7.184 не смог нажать на телефоне.
     const actions = vi
@@ -109,8 +111,16 @@ describe("StoryText: нативная медиа-сессия в оболочк�
     expect(new Set(actions)).toEqual(
       new Set(["play", "pause", "seekbackward", "seekforward", "previoustrack", "nexttrack"]),
     );
-    expect(vi.mocked(setNativeMediaMetadata)).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Репка", artist: "Народная сказка" }),
+    // Обложка — картинкой (`data:`), не относительным адресом: Java плагина
+    // понимает только `http…`/`data:` и иначе рисует серый динамик (7.240).
+    await waitFor(() =>
+      expect(vi.mocked(setNativeMediaMetadata)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Репка",
+          artist: "Народная сказка",
+          artwork: [expect.objectContaining({ src: expect.stringMatching(/^(data:|https?:)/) })],
+        }),
+      ),
     );
     expect(vi.mocked(setNativePlaybackState)).toHaveBeenCalledWith(false);
   });

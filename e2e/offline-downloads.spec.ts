@@ -305,6 +305,36 @@ test("скачанное открывается без сети, звучит, �
   const armed = await page.locator("[data-rf-clip-armed]").count();
   expect(armed, "каркас не привязал ни одного клипа к сохранённой копии — звук молчит").toBeGreaterThan(0);
 
+  // ====== «▶» КОПИИ ЖИВОЙ (заход 7.240, долг 311) ======
+  // До 7.240 кнопка копии была мёртвой разметкой: 0 вызовов play, шкала
+  // пустая, строка не подсвечена (замер на эмуляторе). Обе стороны здесь:
+  // ДО нажатия — «▶», шкала 0 %, подсвеченной строки нет; ПОСЛЕ — «⏸»,
+  // звук из кеша (`blob:`), строка подсвечена, шкала сдвинулась; пауза —
+  // снова «▶».
+  const copyPlay = page.locator('[data-rf-player="play"]');
+  const copyBar = page.locator('[data-rf-player="bar"]');
+  await expect(copyPlay, "в копии нет кнопки проигрывателя").toHaveAttribute("aria-label", "Escuchar el texto");
+  expect(await copyBar.evaluate((el) => (el as HTMLElement).style.width)).toBe("0%");
+  await expect(page.locator("[data-rf-reading]")).toHaveCount(0);
+  await page.evaluate(() => {
+    const w = window as unknown as { __rfPlays: string[] };
+    w.__rfPlays = [];
+    const original = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      w.__rfPlays.push(this.src);
+      return original.call(this);
+    };
+  });
+  await copyPlay.click();
+  await expect(copyPlay, "«▶» копии не перешёл в паузу").toHaveAttribute("aria-label", "Pausar lectura", { timeout: 10_000 });
+  await expect(page.locator("[data-rf-reading]"), "строка копии не подсвечена").toHaveCount(1, { timeout: 10_000 });
+  expect(await copyBar.evaluate((el) => (el as HTMLElement).style.width)).not.toBe("0%");
+  const plays = await page.evaluate(() => (window as unknown as { __rfPlays: string[] }).__rfPlays);
+  expect(plays.length, "«▶» копии не запустил звук").toBeGreaterThan(0);
+  expect(plays.every((src) => src.startsWith("blob:")), "звук копии пошёл не из кеша").toBe(true);
+  await copyPlay.click();
+  await expect(copyPlay, "пауза в копии не вернула «▶»").toHaveAttribute("aria-label", "Escuchar el texto");
+
   // ЗВУК ИГРАЕТ ИЗ КЕША: нажатие не гасит элемент (гаснет он ровно тогда,
   // когда клипа на телефоне нет, — обратный контроль ниже).
   const clipNode = page.locator("[data-rf-clip-armed]").first();

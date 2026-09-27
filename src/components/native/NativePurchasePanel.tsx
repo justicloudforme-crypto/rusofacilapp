@@ -329,7 +329,12 @@ export default function NativePurchasePanel({
                         : null;
 
   const busy = stage.kind === "buying" || stage.kind === "activating" || stage.kind === "loading";
-  const showList = packages.length > 0 && stage.kind !== "activated";
+  // Заход 7.240, задача 3: пока Google уже взял оплату, а сервер ещё не
+  // открыл доступ (и после срока ожидания), тарифов на экране быть не
+  // должно — на видео владельца они висели ~5 с рядом с «Expirada», и
+  // экран читался как «покупка не прошла, выбери снова».
+  const showList =
+    packages.length > 0 && stage.kind !== "activated" && stage.kind !== "activating" && stage.kind !== "slow";
 
   return (
     <div data-testid="native-purchase" className="mt-4">
@@ -385,6 +390,19 @@ export default function NativePurchasePanel({
             {copy.retry}
           </button>
         </>
+      ) : null}
+
+      {stage.kind === "slow" ? (
+        // «Reintentar» после 30 с без подтверждения: новое ожидание того же
+        // ответа сервера. Второй оплаты здесь нет и быть не может.
+        <button
+          type="button"
+          data-testid="native-activation-retry"
+          onClick={() => void waitForAccess()}
+          className="tap mt-4 w-full rounded-full border border-foreground/20 px-5 py-2.5 text-sm font-medium text-foreground"
+        >
+          {copy.retry}
+        </button>
       ) : null}
 
       {stage.kind === "activated" ? null : (

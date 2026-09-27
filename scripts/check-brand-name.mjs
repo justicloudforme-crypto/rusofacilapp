@@ -200,26 +200,6 @@ const ALLOWED = new Map([
     },
   ],
   [
-    // Заведено 08.09.2026 (PROGRESS.md 7.150). Фикстура рассказов —
-    // побайтовая выгрузка НАСТОЯЩИХ строк прода, и `author` в ней тот же
-    // самый литерал `Story.author`, что и в двух исключениях выше (долг
-    // 49, 277 живых строк). Переписать его здесь значило бы держать в
-    // фикстуре значение, которого на проде нет, — то есть проверять
-    // страницу, которой не существует. Два попадания: два из трёх
-    // рассказов фикстуры — оригиналы проекта, третий («Хамелеон») —
-    // Чехов. Число закреплено: третий оригинал в фикстуре снова уронит
-    // проверку.
-    "e2e/fixtures/stories.json",
-    {
-      hits: 2,
-      why:
-        "Byte-for-byte export of two real production Story rows whose author column " +
-        "still holds «RusoFásil (relato original)» (debt 49). The value cannot be " +
-        "rewritten before 25.09.2026, and a fixture that spells it differently would " +
-        "no longer be a copy of production.",
-    },
-  ],
-  [
     "src/lib/story-author.ts",
     {
       hits: 1,
@@ -634,6 +614,18 @@ function plantControls() {
         this.restore();
       },
       expect: (r) => r.unexpected.some((h) => h.file === "prisma/stories-data.ts"),
+    },
+    {
+      // 7.240: боевая колонка переписана (277 → 0, долг 49), фикстура снова
+      // побайтовая копия прода — и исключения для неё больше нет.
+      name: "копия прода в фикстуре e2e снова со старым написанием (долг 49)",
+      plant: function () {
+        this.restore = swap("e2e/fixtures/stories.json", "RusoFácil (relato original)", "RusoFásil (relato original)");
+      },
+      undo: function () {
+        this.restore();
+      },
+      expect: (r) => r.unexpected.some((h) => h.file === "e2e/fixtures/stories.json"),
     },
     // --- 7.239: поверхности рассказа печатают автора через story-author.ts ---
     {

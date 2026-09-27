@@ -33,6 +33,7 @@ const FILES = {
   gradle: "android/app/build.gradle",
   cancel: "src/app/api/subscription/cancel/route.ts",
   activation: "src/lib/access-activation.ts",
+  status: "src/components/native/ActivationAwareStatus.tsx",
 };
 
 /** Все файлы правила — один снимок. Подсадка правит СНИМОК, а не диск. */
@@ -501,7 +502,7 @@ function judge(files) {
   // сервер до покупки, а перерисовка приходит после «granted». Значок
   // обязан слушать ожидание доступа.
   if (
-    !/<ActivationAwareStatus\s+serverEntitled=\{entitled \|\| staffAccess\}\s+whenGranted=\{[\s\S]{0,400}?statusLabels\.active[\s\S]{0,400}?\}\s*>\s*<span[\s\S]{0,500}?statusLabels\[displayStatus\]/.test(
+    !/<ActivationAwareStatus\s+serverEntitled=\{entitled \|\| staffAccess\}\s+whenGranted=\{[\s\S]{0,400}?statusLabels\.active[\s\S]{0,1600}?\}\s*>\s*<span[\s\S]{0,500}?statusLabels\[displayStatus\]/.test(
       files.profile ?? "",
     )
   ) {
@@ -509,6 +510,32 @@ function judge(files) {
       `${FILES.profile}: значок статуса подписки не слушает ожидание доступа — сразу после покупки ` +
         "«Expirada» стоит рядом с «Listo: tu acceso ya está abierto» (7.239)",
     );
+  }
+  // Заход 7.240, задача 3: ~5 с МЕЖДУ ответом Google и ответом сервера
+  // кабинет показывал «Expirada», «Venció el…» и тарифы. Правило: пока
+  // ждём (и после срока), значок и строка дат — не старый серверный ответ,
+  // тарифов нет, после 30 с — «Reintentar».
+  const statusCode = stripComments(files.status ?? "");
+  if (!/live === "waiting"[^\n]*whenWaiting/.test(statusCode) || !/live === "slow"[^\n]*whenSlow/.test(statusCode)) {
+    problems.push(
+      `${FILES.status}: ожидание подтверждения рисует старый ответ сервера — «Expirada» ~5 с после оплаты (7.240)`,
+    );
+  }
+  const profileCode = files.profile ?? "";
+  if (!/whenWaiting=\{[\s\S]{0,300}?activatingBadge/.test(profileCode) || !/whenSlow=\{[\s\S]{0,300}?activationSlowBadge/.test(profileCode)) {
+    problems.push(`${FILES.profile}: значок статуса не говорит «Activando…» между оплатой и вебхуком (7.240)`);
+  }
+  if (!/whenGranted=\{null\}\s+whenWaiting=\{null\}\s+whenSlow=\{null\}/.test(profileCode)) {
+    problems.push(`${FILES.profile}: строка «Venció el…» видна между оплатой и вебхуком (7.240)`);
+  }
+  if (!/stage\.kind !== "activating" && stage\.kind !== "slow"/.test(panelCode)) {
+    problems.push(`${FILES.panel}: тарифы видны, пока Google уже взял оплату — экран читается как «купи снова» (7.240)`);
+  }
+  if (!/stage\.kind === "slow" \?[\s\S]{0,400}?waitForAccess\(\)/.test(panelCode)) {
+    problems.push(`${FILES.panel}: после срока ожидания нет «Reintentar» — человеку нечего нажать (7.240)`);
+  }
+  if (!/ACTIVATION_TIMEOUT_MS = 30_000/.test(activation)) {
+    problems.push(`${FILES.activation}: срок ожидания подтверждения не 30 с (решение владельца, 7.240)`);
   }
   if (!/subscribeActivation\(/.test(identityCode) || !/router\.refresh\(\)/.test(identityCode)) {
     problems.push(
@@ -557,6 +584,30 @@ const PLANTS = [
   {
     name: "значок статуса снова рисует только ответ сервера — «Expirada» рядом с «Listo» (1.0.10)",
     apply: (f) => ({ ...f, profile: f.profile.replace("serverEntitled={entitled || staffAccess}\n", "serverEntitled\n") }),
+  },
+  {
+    name: "7.240: ожидание снова рисует «Expirada» (НАСТОЯЩИЙ код 7.239 — whenWaiting игнорируется)",
+    apply: (f) => ({ ...f, status: f.status.replace('if (live === "waiting" && whenWaiting !== undefined)', "if (false)") }),
+  },
+  {
+    name: "7.240: кабинет не передаёт «Activando…» значку",
+    apply: (f) => ({ ...f, profile: f.profile.replace("{nativeAccessCopy(lang).purchase.activatingBadge}", "{statusLabels[displayStatus]}") }),
+  },
+  {
+    name: "7.240: строка дат снова видна во время ожидания",
+    apply: (f) => ({ ...f, profile: f.profile.replace("whenGranted={null}\n            whenWaiting={null}", "whenGranted={null}\n            whenWaitingX={null}") }),
+  },
+  {
+    name: "7.240: тарифы снова видны во время «Activando…»",
+    apply: (f) => ({ ...f, panel: f.panel.replace('stage.kind !== "activated" && stage.kind !== "activating" && stage.kind !== "slow"', 'stage.kind !== "activated"') }),
+  },
+  {
+    name: "7.240: после 30 с нет «Reintentar»",
+    apply: (f) => ({ ...f, panel: f.panel.replace("onClick={() => void waitForAccess()}", "onClick={() => void restore()}") }),
+  },
+  {
+    name: "7.240: срок ожидания вернули на 60 с",
+    apply: (f) => ({ ...f, activation: f.activation.replace("ACTIVATION_TIMEOUT_MS = 30_000", "ACTIVATION_TIMEOUT_MS = 60_000") }),
   },
   {
     name: "второй экран покупки",
