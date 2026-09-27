@@ -1012,7 +1012,7 @@
           again.type = "button";
           again.textContent = SAVED[lang].retry;
           again.addEventListener("click", function () {
-            location.reload();
+            reloadForNetwork();
           });
           bar.appendChild(note);
           bar.appendChild(again);
@@ -1991,18 +1991,53 @@
           return location.pathname === "/offline.html";
         }
 
+        /**
+         * ВКЛАДКА И ПРОКРУТКА КОПИИ ПЕРЕЖИВАЮТ ВОЗВРАТ СЕТИ — ЗАХОД 7.239.
+         *
+         * Видео 1.0.10: в скачанном уроке открыта «Ejercicios», сеть
+         * вернулась — живая страница открылась сверху на «Gramática».
+         * Перезагрузка отдаёт живую страницу, а та о копии не знает
+         * ничего. Поэтому ПЕРЕД перезагрузкой каркас оставляет записку в
+         * хранилище вкладки: адрес, открытая вкладка, прокрутка, время.
+         * Живой урок читает её один раз (`src/lib/copy-view.ts`) и
+         * стирает. Записка пишется только когда на экране КОПИЯ, а не
+         * сам каркас. Отказ хранилища — не отказ перезагрузки.
+         */
+        var COPY_VIEW_KEY = "rf-copy-view";
+        function rememberCopyView() {
+          if (document.body.getAttribute("data-offline-copy") !== "1") return;
+          var chosen = document.querySelector('[data-offline-tab][aria-selected="true"]');
+          try {
+            sessionStorage.setItem(
+              COPY_VIEW_KEY,
+              JSON.stringify({
+                path: location.pathname,
+                tab: chosen ? chosen.getAttribute("data-offline-tab") : null,
+                y: Math.round(window.scrollY || 0),
+                at: Date.now(),
+              }),
+            );
+          } catch (e) {
+            // Хранилище закрыто — живая страница откроется как раньше.
+          }
+        }
+        function reloadForNetwork() {
+          rememberCopyView();
+          location.reload();
+        }
+
         function reloadOnce() {
           if (shellOpenedDirectly()) return;
           if (retriesDone() >= 2) return;
           countRetry();
-          location.reload();
+          reloadForNetwork();
         }
 
         // СЕТЬ ВЕРНУЛАСЬ — ПОВТОР БЕЗ РУЧНОЙ ПЕРЕЗАГРУЗКИ. Событие
         // браузера плюс собственная проба: `online` приходит не на всех
         // устройствах и не всегда вовремя.
         window.addEventListener("online", function () {
-          if (!shellOpenedDirectly()) location.reload();
+          if (!shellOpenedDirectly()) reloadForNetwork();
         });
 
         var waiting = null;
@@ -2013,7 +2048,7 @@
               if (!alive) return;
               clearInterval(waiting);
               waiting = null;
-              if (!shellOpenedDirectly()) location.reload();
+              if (!shellOpenedDirectly()) reloadForNetwork();
             });
           }, 5000);
         }

@@ -192,6 +192,20 @@ export function judge(sources) {
     }
   }
 
+  // --- 1б. Запись кук на диск после каждой загрузки (заход 7.239) -----
+  // Вход и выход — полные переходы 303; без записи на загрузке убийство
+  // процесса без паузы через 3–20 с теряло вход и «воскрешало» выход.
+  const flushOnLoad = methodBody(activity, "private void armCookieFlush()");
+  if (flushOnLoad === null) {
+    problems.push(`${ACTIVITY}: нет armCookieFlush() — вход и выход не переживут убийства процесса в первые ~30 с`);
+  } else if (!/onPageLoaded\(WebView view\)\s*\{\s*CookieManager\.getInstance\(\)\.flush\(\);/.test(flushOnLoad)) {
+    problems.push(`${ACTIVITY}: armCookieFlush() не пишет куки на диск в onPageLoaded`);
+  }
+  const onCreate = methodBody(activity, "public void onCreate(Bundle savedInstanceState)");
+  if (!onCreate || !/\barmCookieFlush\(\);/.test(onCreate)) {
+    problems.push(`${ACTIVITY}: onCreate не включает armCookieFlush() — запись на загрузке не работает`);
+  }
+
   // --- 2. Память о локали --------------------------------------------
   if (!/getSharedPreferences\(PREFS,\s*Context\.MODE_PRIVATE\)/.test(activity)) {
     problems.push(`${ACTIVITY}: оболочка не помнит ничего между запусками (нет SharedPreferences)`);
@@ -414,6 +428,12 @@ export async function main() {
         { [ACTIVITY]: sources[ACTIVITY].replace(
           "        super.onStop();\n        CookieManager.getInstance().flush();",
           "        super.onStop();") }],
+      ["куки не пишутся на диск после загрузки страницы — вход теряется при убийстве через 3 с",
+        { [ACTIVITY]: sources[ACTIVITY].replace(
+          "            public void onPageLoaded(WebView view) {\n                CookieManager.getInstance().flush();",
+          "            public void onPageLoaded(WebView view) {") }],
+      ["запись кук на загрузке не включена в onCreate",
+        { [ACTIVITY]: sources[ACTIVITY].replace("        armCookieFlush();\n", "") }],
       ["локаль последней страницы никуда не пишется",
         { [ACTIVITY]: sources[ACTIVITY].replace("putString(PREF_LOCALE", "неПишем(PREF_LOCALE") }],
       ["локаль снова берётся из языка телефона",
@@ -482,7 +502,7 @@ export async function main() {
     return 1;
   }
   console.log(
-    "check:shell-session-locale — хранилище кук пишется на диск в onPause и onStop; локаль последней " +
+    "check:shell-session-locale — хранилище кук пишется на диск в onPause и onStop и после каждой загрузки страницы (7.239); локаль последней " +
       "страницы берётся из адреса и запоминается; список локалей совпадает с src/i18n/config.ts; язык " +
       "доезжает до локального экрана ошибки через его собственную точку входа; язык этого экрана берётся " +
       "СНАЧАЛА из выбора человека (кука rf-lang боевого источника, имя сверено с src/lib/remembered-locale.ts) " +

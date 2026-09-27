@@ -85,6 +85,7 @@ const PLANT = process.argv.includes("--plant");
 const SHELL = "public/offline.html";
 const TABBAR = "src/components/ui/TabBar.tsx";
 const LESSON = "src/components/lesson/LessonView.tsx";
+const COPY_VIEW = "src/lib/copy-view.ts";
 
 const read = (path) => {
   try {
@@ -112,6 +113,7 @@ export function violations(sources) {
   const shell = withoutHtmlComments(sources[SHELL] ?? "");
   const tabbar = withoutJsComments(sources[TABBAR] ?? "");
   const lesson = withoutJsComments(sources[LESSON] ?? "");
+  const copyView = withoutJsComments(sources[COPY_VIEW] ?? "");
 
   if (!shell.trim()) {
     bad.push(`${SHELL}: файла нет — читать сохранённое некому`);
@@ -251,6 +253,26 @@ export function violations(sources) {
   if (!/buttons\[j\]\.className = chosen \? onClass : offClass;/.test(arm) || !/onClass = buttons\[c\]\.className;/.test(arm)) {
     bad.push(`${SHELL}: вкладки копии меняют только aria-selected — подчёркнута не та вкладка (долг 320)`);
   }
+  // 20. Вкладка и прокрутка копии переживают возврат сети (заход 7.239):
+  // каждая перезагрузка каркаса ради сети идёт через `reloadForNetwork`,
+  // который оставляет записку, ключ записки один у каркаса и у сайта, а
+  // живой урок её читает. Голый `location.reload()` остался только у
+  // кнопки экрана ошибки (`[data-retry]`) — там копии на экране нет.
+  const shellKey = /var COPY_VIEW_KEY = "([^"]+)";/.exec(shell)?.[1] ?? null;
+  const siteKey = /export const COPY_VIEW_KEY = "([^"]+)";/.exec(copyView)?.[1] ?? null;
+  if (!shellKey || !siteKey || shellKey !== siteKey) {
+    bad.push(`${SHELL}: ключ записки о вкладке копии («${shellKey}») не совпадает с ${COPY_VIEW} («${siteKey}») — после возврата сети урок откроется на «Gramática»`);
+  }
+  if (!/function reloadForNetwork\(\) \{\s*rememberCopyView\(\);\s*location\.reload\(\);/.test(shell)) {
+    bad.push(`${SHELL}: reloadForNetwork не запоминает вкладку копии перед перезагрузкой`);
+  }
+  const bareReloads = (shell.match(/location\.reload\(\)/g) ?? []).length;
+  if (bareReloads !== 2) {
+    bad.push(`${SHELL}: голых location.reload() ${bareReloads}, а ждали 2 (reloadForNetwork и кнопка экрана ошибки) — какая-то перезагрузка ради сети забывает вкладку копии`);
+  }
+  if (!/takeCopyView\(window\.location\.pathname\)/.test(lesson)) {
+    bad.push(`${LESSON}: живой урок не читает записку каркаса — после возврата сети вкладка теряется`);
+  }
   // 13
   const panels = (lesson.match(/data-offline-panel="/g) ?? []).length;
   const switched = (lesson.match(/tab === "[a-z]+" \? undefined : "hidden"/g) ?? []).length;
@@ -265,7 +287,7 @@ export function violations(sources) {
 }
 
 function load() {
-  return { [SHELL]: read(SHELL), [TABBAR]: read(TABBAR), [LESSON]: read(LESSON) };
+  return { [SHELL]: read(SHELL), [TABBAR]: read(TABBAR), [LESSON]: read(LESSON), [COPY_VIEW]: read(COPY_VIEW) };
 }
 
 function plant() {
@@ -282,6 +304,30 @@ function plant() {
     cases.push({ name, ok: violations(mutated).some((x) => x.includes(expect)) });
   };
 
+  add(
+    "подсадка: возврат сети перезагружает копию голым reload — вкладка теряется (состояние 1.0.10)",
+    SHELL,
+    (s) => s.replace('if (!shellOpenedDirectly()) reloadForNetwork();\n        });', 'if (!shellOpenedDirectly()) location.reload();\n        });'),
+    "голых location.reload()",
+  );
+  add(
+    "подсадка: reloadForNetwork перестал оставлять записку",
+    SHELL,
+    (s) => s.replace("function reloadForNetwork() {\n          rememberCopyView();", "function reloadForNetwork() {"),
+    "не запоминает вкладку копии",
+  );
+  add(
+    "подсадка: ключ записки разошёлся у сайта и каркаса",
+    COPY_VIEW,
+    (s) => s.replace('export const COPY_VIEW_KEY = "rf-copy-view";', 'export const COPY_VIEW_KEY = "rf-copy-tab";'),
+    "не совпадает",
+  );
+  add(
+    "подсадка: живой урок не читает записку",
+    LESSON,
+    (s) => s.replace("takeCopyView(window.location.pathname)", "null"),
+    "не читает записку",
+  );
   add(
     "подсадка: каркас перестал читать кеши — состояние ДО захода 7.229",
     SHELL,
@@ -453,7 +499,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-reader — 19 правил, нарушений 0 (заходы 7.229 и 7.230, офлайн-2 и 2б)");
+  console.log("check:offline-reader — 20 правил, нарушений 0 (заходы 7.229 и 7.230, офлайн-2 и 2б)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
