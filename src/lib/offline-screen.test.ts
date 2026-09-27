@@ -73,14 +73,19 @@ describe("офлайн-заглушка", () => {
     const doc = renderOfflineScreenAt("/ru/glossary");
     const hrefs = [...doc.querySelectorAll("nav.tabs a")].map((a) => a.getAttribute("href"));
     expect(hrefs, "вкладок в нижней панели не пять").toHaveLength(5);
-    expect(hrefs).toEqual(["/ru/stories", "/ru/courses", "/ru/vocabulary", "/ru/word-games", "/ru/login"]);
+    expect(hrefs).toEqual(["/ru/stories", "/ru/courses", "/ru/vocabulary", "/ru/word-games", "/ru/profile"]);
     expect(doc.querySelector("header a")?.getAttribute("href"), "имя в шапке ведёт не на главную своей локали").toBe("/ru");
   });
 
-  it("ни одна вкладка каркаса не ведёт в кабинет, в админку или на страницу цен", () => {
+  it("ни одна вкладка каркаса не ведёт в админку или на страницу цен; в кабинет — только «Mi perfil» (7.238)", () => {
     const doc = renderOfflineScreenAt("/es/stories");
     const hrefs = [...doc.querySelectorAll("a")].map((a) => a.getAttribute("href") ?? "");
-    expect(hrefs.filter((href) => /profile|admin|pricing/.test(href))).toEqual([]);
+    expect(hrefs.filter((href) => /admin|pricing/.test(href))).toEqual([]);
+    // «Mi perfil» ведёт в кабинет, а не на форму входа: прежняя ссылка на
+    // `/login` при возврате сети рисовала форму вошедшему (строка 323).
+    const profile = [...doc.querySelectorAll("nav.tabs a")].find((a) => /Mi perfil/.test(a.textContent ?? ""));
+    expect(profile?.getAttribute("href")).toBe("/es/profile");
+    expect(hrefs.filter((href) => /profile/.test(href))).toEqual(["/es/profile"]);
   });
 
   it("на испанском адресе печатает только испанское", () => {
