@@ -103,27 +103,30 @@ test("«Borrar todo» спрашивает подтверждение: отка�
   await dismissWelcomeOverlay(page);
   await expect(page.locator("[data-rf-downloads-list] li")).toHaveCount(1, { timeout: 30_000 });
 
-  // ВЕТКА «ОТКАЗАЛСЯ». Окно обязано появиться — без него обработчик
-  // `dialog` не сработает ни разу, и проба это увидит числом.
-  let asked = 0;
-  const refuse = (dialog: { type: () => string; message: () => string; dismiss: () => Promise<void> }) => {
-    asked += 1;
-    expect(dialog.type(), "спросили не подтверждением").toBe("confirm");
-    expect(dialog.message(), "в вопросе не сказано, что именно унесут").toMatch(/Borrar todo|descargado/i);
+  // ВЕТКА «ОТКАЗАЛСЯ». Спрашивает СВОЁ окно сайта на языке страницы, а не
+  // системное `confirm` WebView с английскими «CANCEL / OK» (7.238, А4).
+  // Системное окно, если появится, считается — и роняет пробу.
+  let nativeDialogs = 0;
+  page.on("dialog", (dialog) => {
+    nativeDialogs += 1;
     void dialog.dismiss();
-  };
-  page.on("dialog", refuse);
+  });
+  const confirm = page.locator("[data-rf-downloads-confirm]");
   await page.locator("[data-rf-downloads-remove-all]").click();
-  await page.waitForTimeout(3000);
-  expect(asked, "«Borrar todo» унесла скачанное, ни о чём не спросив").toBe(1);
+  await expect(confirm, "«Borrar todo» не спросила своим окном").toBeVisible({ timeout: 5000 });
+  await expect(confirm).toContainText("¿Borrar todo lo descargado?");
+  await expect(page.locator("[data-rf-downloads-confirm-cancel]")).toHaveText("Cancelar");
+  await expect(page.locator("[data-rf-downloads-confirm-ok]")).toHaveText("Borrar");
+  await page.locator("[data-rf-downloads-confirm-cancel]").click();
+  await expect(confirm).toBeHidden();
   await expect(page.locator("[data-rf-downloads-list] li")).toHaveCount(1);
   expect((await downloadedKeys(page)).length, "отказ в окне всё равно стёр скачанное").toBeGreaterThan(0);
-  page.off("dialog", refuse);
 
   // ВЕТКА «СОГЛАСИЛСЯ». Та же кнопка, тот же вопрос — и теперь пусто.
-  page.on("dialog", (dialog) => void dialog.accept());
   await page.locator("[data-rf-downloads-remove-all]").click();
+  await page.locator("[data-rf-downloads-confirm-ok]").click();
   await expect(page.locator("[data-rf-downloads-empty]")).toBeVisible({ timeout: 30_000 });
+  expect(nativeDialogs, "спросили системным окном WebView (английские CANCEL / OK)").toBe(0);
   expect(await downloadedKeys(page), "согласие не унесло ни одной записи").toHaveLength(0);
 });
 
