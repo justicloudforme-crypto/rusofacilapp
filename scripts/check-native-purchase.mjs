@@ -496,6 +496,20 @@ function judge(files) {
         "человек заплатил и остался перед замком (долг 304)",
     );
   }
+  // Заход 7.239: сразу после покупки ~2 с кабинет показывал «Expirada»
+  // рядом с «Listo: tu acceso ya está abierto» — значок статуса рисовал
+  // сервер до покупки, а перерисовка приходит после «granted». Значок
+  // обязан слушать ожидание доступа.
+  if (
+    !/<ActivationAwareStatus\s+serverEntitled=\{entitled \|\| staffAccess\}\s+whenGranted=\{[\s\S]{0,400}?statusLabels\.active[\s\S]{0,400}?\}\s*>\s*<span[\s\S]{0,500}?statusLabels\[displayStatus\]/.test(
+      files.profile ?? "",
+    )
+  ) {
+    problems.push(
+      `${FILES.profile}: значок статуса подписки не слушает ожидание доступа — сразу после покупки ` +
+        "«Expirada» стоит рядом с «Listo: tu acceso ya está abierto» (7.239)",
+    );
+  }
   if (!/subscribeActivation\(/.test(identityCode) || !/router\.refresh\(\)/.test(identityCode)) {
     problems.push(
       `${FILES.identity}: страницу после выдачи доступа не перечитывает никто из постоянно ` +
@@ -539,6 +553,10 @@ const PLANTS = [
   {
     name: "текст покупки назвал платёжную систему",
     apply: (f) => ({ ...f, copy: f.copy.replace('retry: "Reintentar",', 'retry: "Reintentar con Google Play",') }),
+  },
+  {
+    name: "значок статуса снова рисует только ответ сервера — «Expirada» рядом с «Listo» (1.0.10)",
+    apply: (f) => ({ ...f, profile: f.profile.replace("serverEntitled={entitled || staffAccess}\n", "serverEntitled\n") }),
   },
   {
     name: "второй экран покупки",

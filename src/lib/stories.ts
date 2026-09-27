@@ -1,6 +1,8 @@
 // "Cuentos / Lecturas" reading library. Levels use the full CEFR scale
 // (A1-C1) since some readings target advanced students beyond the course
 // track, which stops at B2.
+import { fixBrandSpelling } from "./story-author";
+
 export const storyLevels = ["A1", "A2", "B1", "B2", "C1"] as const;
 
 export type StoryLevel = (typeof storyLevels)[number];
@@ -36,21 +38,26 @@ export function isStoryTopic(value: string | null | undefined): value is StoryTo
   return typeof value === "string" && (storyTopics as readonly string[]).includes(value);
 }
 
-// The one author string every original (non-retelling) RusoFásil story
+// The one author string every original (non-retelling) RusoFácil story
 // uses — every other author value in the catalog is either a named
 // classic author ("Л.Н. Толстой", "А.П. Чехов (пересказ)", ...) or
 // "Русская народная сказка" (a traditional folk tale), both of which
 // count as "classic" for this marker. A dedicated boolean column would
 // duplicate information the `author` field already carries reliably.
-const ORIGINAL_STORY_AUTHOR = "RusoFásil (relato original)";
+//
+// Compared AFTER the brand spelling is normalized (7.239): the production
+// column still holds the old misspelling in 277 rows, while
+// prisma/stories-data.ts is spelled correctly, and both must count as
+// originals.
+const ORIGINAL_STORY_AUTHOR = "RusoFácil (relato original)";
 
 /** Whether a story is a retelling/adaptation of existing literature (or a
- * traditional folk tale) rather than an original RusoFásil story — a
+ * traditional folk tale) rather than an original RusoFácil story — a
  * SOURCE distinction, deliberately separate from `topic` (a classic
  * retelling about childhood is both "classic" and "childhood", and a
  * single topic field can't hold both). */
 export function isClassicStory(author: string): boolean {
-  return author !== ORIGINAL_STORY_AUTHOR;
+  return fixBrandSpelling(author) !== ORIGINAL_STORY_AUTHOR;
 }
 
 export interface StoryInput {

@@ -63,9 +63,11 @@ const BRAND = "RusoFácil";
 
 /** Единственное место, где опечатка в имени проекта исправляется в
  *  значении данных. Ни локаль, ни таблицы ниже на это не влияют: имя
- *  пишется одинаково по-испански и по-русски. */
-function fixBrandSpelling(author: string): string {
-  return author.replace(BRAND_TYPO, BRAND);
+ *  пишется одинаково по-испански и по-русски. С 7.239 через неё же идёт
+ *  описание рассказа (одна строка прода: «…al espíritu de …» с той же
+ *  опечаткой) и признак оригинала в `src/lib/stories.ts`. */
+export function fixBrandSpelling(value: string): string {
+  return value.replace(BRAND_TYPO, BRAND);
 }
 
 /** Whole-value matches, tried first. */
@@ -148,4 +150,29 @@ export function localizeStoryAuthor(author: string, lang: Locale): string {
   // are known.
   if (!headEs || !qualifierEs) return fixed;
   return `${headEs} (${qualifierEs})`;
+}
+
+/**
+ * НАРОДНАЯ СКАЗКА — БЕЗ «POR» (заход 7.239).
+ *
+ * Владелец на телефоне, 1.0.10: страница «Репки» подписана «Por Русская
+ * народная сказка» (кириллица в испанском интерфейсе: страница рассказа
+ * брала колонку как есть — до снятия заморозки 25.09.2026 её нельзя было
+ * трогать, см. выше), а каталог — «Por Cuento popular ruso». У народной
+ * сказки нет автора, и предлог «Por» («автор — …») перед жанром неверен
+ * в обоих вариантах. Поэтому подпись строится одной функцией для всех
+ * мест, где она видна: каталог, страница рассказа, шторка плеера
+ * (MediaSession) и микроразметка; «Por» ставится только перед автором.
+ */
+const FOLK_TALE = /^Русская народная сказка(?:\s|\(|$)/;
+
+export function isFolkTaleAuthor(author: string): boolean {
+  return FOLK_TALE.test(fixBrandSpelling(author).trim());
+}
+
+/** Подпись под заголовком: «Por A. P. Chéjov», но «Cuento popular ruso». */
+export function storyByline(author: string, lang: Locale, byWord: string): string {
+  const name = localizeStoryAuthor(author, lang);
+  if (!name.trim()) return "";
+  return isFolkTaleAuthor(author) ? name : `${byWord} ${name}`;
 }

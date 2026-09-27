@@ -54,7 +54,16 @@ export function violations(src) {
   if (!/completedAt:\s*at\b/.test(update) || !/create:\s*\{[^\n]*completedAt:\s*at\b/.test(upsert)) out.push("2: время попытки — не время действия (`completedAt: at`)");
   const route = code(src[ROUTE]);
   if (!/const at = actionInstant\(body\?\.at, recordKey !== null\);/.test(route)) out.push("2: маршрут не вычисляет время действия до записи попытки");
-  if (!/saveLessonAttemptOnce\([^)]*, at\)/.test(route) || !/saveLessonAttempt\([^)]*, at\)/.test(route)) out.push("2: попытка пишется без времени действия");
+  if (!/saveLessonAttemptOnce\([^)]*, at(?:, timeZone)?\)/.test(route) || !/saveLessonAttempt\([^)]*, at(?:, timeZone)?\)/.test(route)) out.push("2: попытка пишется без времени действия");
+  // 7 (заход 7.239): повторная попытка переписывает `completedAt`, и день
+  // прошлой попытки пропадал из календаря (дни до 31.08.2026 без StudyDay).
+  // Обе записи попытки читают прошлое время ДО записи и сохраняют его день;
+  // маршрут передаёт зону ученика в обе.
+  const keepCalls = (progress.match(/await keepPreviousLessonDay\(userId, previousAt, at, timeZone\);/g) ?? []).length;
+  const prevReads = (progress.match(/const previousAt = await previousAttemptAt\(userId, level, lessonSlug\);/g) ?? []).length;
+  if (keepCalls !== 2 || prevReads !== 2) out.push(`7: повторная попытка стирает день прошлой из календаря (сохранений дня ${keepCalls} из 2, чтений прошлого времени ${prevReads} из 2)`);
+  if (!/keepStudyDay\(userId, timeZone, "lesson", previousAt\)/.test(progress)) out.push("7: день прошлой попытки не записывается строкой дня");
+  if (!/saveLessonAttemptOnce\([^)]*, at, timeZone\)/.test(route) || !/saveLessonAttempt\([^)]*, at, timeZone\)/.test(route)) out.push("7: маршрут не передаёт зону ученика — день прошлой попытки не сохранится");
   if (!/markStudyDayVisit\("lesson", user, at\)/.test(route)) out.push("2: день занятия и попытка берут разное время");
 
   const outbox = code(src[OUTBOX]);
@@ -93,7 +102,10 @@ function plant() {
   add("обновление снова пишет passed как есть (код до 7.238)", PROGRESS, (s) => s.replace("update: { ...(passed ? { passed: true } : {}), score,", "update: { score, passed,"), "1:");
   add("зачёт — исходом попытки", PROGRESS, (s) => s.replace("...(passed ? { passed: true } : {}), score,", "...(passed ? { passed: true } : {}), passed: passed, score,"), "1:");
   add("время попытки — время приёма", PROGRESS, (s) => s.replace("answers: answersJson, completedAt: at },\n    create", "answers: answersJson, completedAt: new Date() },\n    create"), "2:");
-  add("маршрут не передаёт время в попытку", ROUTE, (s) => s.replace("await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers, at);", "await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers);"), "2:");
+  add("маршрут не передаёт время в попытку", ROUTE, (s) => s.replace("await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers, at, timeZone);", "await saveLessonAttempt(user.id, level, lesson, score, passed, mistakes, answers);"), "2:");
+  add("повтор снова стирает прошлый день (код 7.238)", PROGRESS, (s) => s.replace("  await lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers, at);\n  await keepPreviousLessonDay(userId, previousAt, at, timeZone);", "  await lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers, at);"), "7:");
+  add("очередь стирает прошлый день", PROGRESS, (s) => s.replace("    ]);\n    await keepPreviousLessonDay(userId, previousAt, at, timeZone);", "    ]);"), "7:");
+  add("маршрут не передаёт зону", ROUTE, (s) => s.replace("mistakes, answers, at, timeZone);\n  }", "mistakes, answers, at);\n  }"), "7:");
   add("день — по своему времени", ROUTE, (s) => s.replace('markStudyDayVisit("lesson", user, at)', 'markStudyDayVisit("lesson", user)'), "2:");
   add("зачёт из очереди — только последняя запись", OUTBOX, (s) => s.replace("        pending.passed ||\n", "        pending.passed && false ||\n"), "3:");
   add("зачёт не запоминается", TAB, (s) => s.replace('          writeLocal(storageKey, "1");\n        }\n        if (!attempt', '        }\n        if (!attempt'), "3:");
@@ -117,7 +129,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:lesson-credit — 6 правил, нарушений 0 (заход 7.238: зачёт по лучшей попытке, время действия, честные состояния, своё окно)");
+  console.log("check:lesson-credit — 7 правил, нарушений 0 (заходы 7.238–7.239: зачёт по лучшей попытке, время действия, честные состояния, своё окно, прошлый день урока)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -157,6 +157,47 @@ export async function markStudyDay(
   }
 }
 
+/**
+ * ПРОШЛЫЙ ДЕНЬ ДЕЙСТВИЯ ОСТАЁТСЯ В КАЛЕНДАРЕ — заход 7.239.
+ *
+ * Строка `LessonProgress` одна на урок, и повторная попытка переписывает
+ * её `completedAt` на сегодня. Календарь берёт день урока именно оттуда
+ * (streaks.ts), так что день ПРОШЛОЙ попытки пропадал, если его не держало
+ * ничто другое — а для дней до 31.08.2026 своей строки `StudyDay` нет
+ * вовсе. Прод на 27.09.2026: один аккаунт, один такой день (29.08.2026,
+ * четыре урока).
+ *
+ * Здесь день прошлого ДЕЙСТВИЯ записывается строкой дня ровно так, как её
+ * поставил бы `markStudyDay` в тот момент: ключ и `markedAt` — от того
+ * самого мгновения. Правило «день ставит действие» не нарушается: это
+ * день, когда ученик действительно сдавал упражнения, и он уже был в
+ * календаре. Отличие от `markStudyDay` одно и намеренное: существующие
+ * строки не трогаются НИКАК — ни переноса, ни удаления, только вставка,
+ * если дня нет. Старые дни не пересчитываются.
+ */
+export async function keepStudyDay(
+  userId: string,
+  timeZone: string,
+  source: StudyDaySource,
+  at: Date,
+): Promise<boolean> {
+  const dateKey = dateKeyIn(at, timeZone);
+  try {
+    const existing = await db.studyDay.findUnique({
+      where: { userId_dateKey: { userId, dateKey } },
+      select: { id: true },
+    });
+    if (existing) return false;
+    await db.studyDay.create({ data: { userId, dateKey, source, markedAt: at } });
+    await invalidateActivityDateKeys(userId, timeZone);
+    return true;
+  } catch (error) {
+    // Включая гонку двух вставок: уникальный индекс оставит одну строку.
+    console.error("keepStudyDay failed", error);
+    return false;
+  }
+}
+
 /** Every marked day of this learner, as `{ dateKey, source }`. Degrades to
  * an empty list rather than throwing (see 7.24): the streak still has its
  * five derived sources, so a missing table costs accuracy, not the profile

@@ -49,6 +49,17 @@ let getStudyDayKeys: (userId: string) => Promise<string[]>;
 let getUserActivityDateKeys: (userId: string, timeZone?: string) => Promise<string[]>;
 let getUserActivityDaySources: (userId: string, timeZone?: string) => Promise<Record<string, string[]>>;
 let getLevelProgress: (userId: string) => Promise<Record<string, { completed: number; total: number }>>;
+let saveLessonAttempt: (
+  userId: string,
+  level: string,
+  lessonSlug: string,
+  score: number,
+  passed: boolean,
+  mistakes: [],
+  answers: Record<string, never>,
+  at?: Date,
+  timeZone?: string,
+) => Promise<void>;
 let getUserStreakStats: (
   userId: string,
   timeZone?: string,
@@ -122,7 +133,7 @@ beforeAll(async () => {
 
   ({ markStudyDay, getStudyDayKeys } = await import("@/lib/study-day"));
   ({ getUserActivityDateKeys, getUserActivityDaySources, getUserStreakStats } = await import("@/lib/streaks"));
-  ({ getLevelProgress } = await import("@/lib/progress"));
+  ({ getLevelProgress, saveLessonAttempt } = await import("@/lib/progress"));
 });
 
 afterAll(() => {
@@ -451,5 +462,69 @@ describe("отметка, поставленная до того, как бра�
     const rows = await dayRows(user);
     console.log(`    пять заходов -> ${rows.length} запись(и)`);
     expect(rows).toEqual([{ dateKey: day, source: "lesson" }]);
+  });
+});
+
+describe("повторная попытка не убирает прошлый день урока — заход 7.239", () => {
+  // Урок сдан 20.08.2026 — до 31.08, то есть своей строки StudyDay у этого
+  // дня нет, и в календаре его держит только LessonProgress.completedAt.
+  // 27.09 ученик повторяет урок: строка одна, completedAt переписывается.
+  const passedOn = new Date("2026-08-20T18:00:00.000Z"); // 11:00 Tijuana
+  const retryOn = new Date("2026-09-27T18:00:00.000Z");
+
+  async function plantOldLesson(user: string) {
+    await raw.execute({
+      sql: `INSERT INTO "LessonProgress" (id, userId, level, lessonSlug, score, passed, mistakes, answers, completedAt)
+            VALUES (?, ?, 'a1', '1', 90, 1, '[]', '{}', ?)`,
+      args: [`${user}-lp`, user, storedDateTime(passedOn)],
+    });
+  }
+
+  it("ДО (прежнее поведение — день прошлой попытки не сохраняется): 20.08 пропадает", async () => {
+    const user = await newUser("sd-retry-before");
+    await plantOldLesson(user);
+    const first = await getUserActivityDateKeys(user, TIJUANA);
+    // Без зоны правка не срабатывает — так вёл себя маршрут до 7.239.
+    await saveLessonAttempt(user, "a1", "1", 30, false, [], {}, retryOn, undefined);
+    await markStudyDay(user, TIJUANA, "lesson", retryOn);
+    const after = await getUserActivityDateKeys(user, TIJUANA);
+    console.log(`    до: календарь ${JSON.stringify(first)} -> после повтора ${JSON.stringify(after)}`);
+    expect(first).toEqual(["2026-08-20"]);
+    expect(after).toEqual(["2026-09-27"]);
+  });
+
+  it("ПОСЛЕ: повтор — день сегодняшний, и 20.08 остаётся", async () => {
+    const user = await newUser("sd-retry-after");
+    await plantOldLesson(user);
+    await saveLessonAttempt(user, "a1", "1", 30, false, [], {}, retryOn, TIJUANA);
+    await markStudyDay(user, TIJUANA, "lesson", retryOn);
+    const after = await getUserActivityDateKeys(user, TIJUANA);
+    const rows = await dayRows(user);
+    console.log(`    после: календарь ${JSON.stringify([...after].sort())}; строки дня ${JSON.stringify(rows)}`);
+    expect([...after].sort()).toEqual(["2026-08-20", "2026-09-27"]);
+    expect(rows).toEqual([
+      { dateKey: "2026-08-20", source: "lesson" },
+      { dateKey: "2026-09-27", source: "lesson" },
+    ]);
+  });
+
+  it("повтор в тот же день — ни одной лишней строки дня", async () => {
+    const user = await newUser("sd-retry-same-day");
+    await plantOldLesson(user);
+    await saveLessonAttempt(user, "a1", "1", 30, false, [], {}, new Date("2026-08-20T22:00:00.000Z"), TIJUANA);
+    expect(await dayRows(user)).toEqual([]);
+  });
+
+  it("существующая строка прошлого дня не трогается (старые дни не пересчитываются)", async () => {
+    const user = await newUser("sd-retry-existing");
+    await plantOldLesson(user);
+    const planted = new Date("2026-08-20T15:00:00.000Z");
+    await raw.execute({
+      sql: `INSERT INTO "StudyDay" (id, userId, dateKey, source, markedAt) VALUES (?, ?, '2026-08-20', 'story', ?)`,
+      args: [`${user}-sd`, user, storedDateTime(planted)],
+    });
+    await saveLessonAttempt(user, "a1", "1", 30, false, [], {}, retryOn, TIJUANA);
+    const row = await raw.execute({ sql: `SELECT source, markedAt FROM "StudyDay" WHERE userId = ?`, args: [user] });
+    expect(row.rows.map((r) => [String(r.source), String(r.markedAt)])).toEqual([["story", storedDateTime(planted)]]);
   });
 });

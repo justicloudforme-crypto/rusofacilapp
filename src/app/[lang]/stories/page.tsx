@@ -5,7 +5,7 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { getStoryCatalog } from "@/lib/stories-catalog";
 import { getEntitlementTier, getStoryAccess } from "@/lib/entitlement";
 import { storyLevels } from "@/lib/stories";
-import { localizeStoryAuthor } from "@/lib/story-author";
+import { fixBrandSpelling, localizeStoryAuthor, storyByline } from "@/lib/story-author";
 import { storyRequirement } from "@/lib/access-marks";
 import { storyTitles } from "@/lib/story-title";
 import StoriesCatalog from "@/components/stories/StoriesCatalog";
@@ -117,13 +117,18 @@ export default async function StoriesPage({ params }: PageProps<"/[lang]/stories
        *
        * `/es` не тронут ни знаком.
        */
-      description: lang === "ru" ? story.descriptionRu : story.description,
+      description: (() => {
+        const text = lang === "ru" ? story.descriptionRu : story.description;
+        return text && fixBrandSpelling(text);
+      })(),
       // Same idea one column over: `author` is a single column read by both
       // locales, and on /es it was rendering «Por Русская народная сказка»
       // (see story-author.ts). Applied HERE rather than in
       // getStoryCatalog() so the catalog cache stays locale-independent,
       // and after `isClassic` has already been derived from the raw value.
       author: localizeStoryAuthor(story.author, lang),
+      // «Por» — только перед автором; народной сказке — без него (7.239).
+      byline: storyByline(story.author, lang, dict.stories.byAuthor),
       lockReason: getStoryAccess(tier, story).reason,
       // ЧЕГО ТРЕБУЕТ САМ РАССКАЗ — 7.196, часть 1. `lockReason` выше
       // отвечает на вопрос «что мешает ЭТОМУ посетителю», и подписчику

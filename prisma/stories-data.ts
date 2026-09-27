@@ -1606,7 +1606,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Кофе на вынос",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Una historia moderna sobre un barista, una clienta silenciosa y cómo un pequeño gesto de generosidad puede cambiarlo todo.",
@@ -1646,7 +1646,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Соседка сверху",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un vecino nuevo, ruidos misteriosos por las noches y un giro cálido e inesperado: una historia moderna sobre prejuicios y compañía.",
@@ -1684,7 +1684,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Алгоритм",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una influencer de viajes descubre, en un pueblo sin señal, que el día más real de su vida es el único que nunca subió a internet.",
@@ -1718,7 +1718,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Голос из прошлого",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Al ordenar las cosas de su padre fallecido, una mujer encuentra una vieja contestadora con un mensaje grabado décadas atrás — una reflexión sobre el tiempo, la memoria y las conversaciones que llegan tarde.",
@@ -1752,7 +1752,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Новый сосед",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Una niña conoce a un vecino nuevo que está solo, y una simple invitación a jugar se convierte en una gran amistad.",
@@ -1784,7 +1784,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Подарок для мамы",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un niño con poco dinero busca el regalo perfecto para el cumpleaños de su mamá, y una vendedora amable lo ayuda.",
@@ -1816,7 +1816,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дождливый день",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un día lluvioso y aburrido se transforma en un momento familiar cálido gracias a un pastel casero.",
@@ -1848,7 +1848,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ошибка в заказе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un pedido de pizza equivocado se convierte, gracias a un poco de amabilidad, en un descubrimiento inesperado.",
@@ -1880,7 +1880,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Потерянный телефон",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Después de perder su teléfono en el metro, una mujer descubre que la amabilidad de un desconocido puede ser el comienzo de algo más.",
@@ -2036,7 +2036,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Наследство",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Tres hermanos deben resolver un enigma dejado por su padre antes de heredar su taller — una historia moderna sobre el verdadero valor del trabajo y la unión familiar.",
@@ -2198,7 +2198,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Последнее письмо",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Veinte años de silencio entre un padre y un hijo terminan con una libreta de apuntes heredada tras la muerte del padre — una historia moderna sobre el rencor no perdonado y el amor que llega demasiado tarde.",
@@ -2236,10 +2236,10 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Родной язык",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
-      "Una abuela emigrada se niega a dejar de hablarle ruso a su nieta, aunque a ella le avergüence — hasta que, décadas después, ese idioma se convierte en el único puente posible entre ambas. Una historia sobre la herencia lingüística, muy cercana al espíritu de RusoFásil.",
+      "Una abuela emigrada se niega a dejar de hablarle ruso a su nieta, aunque a ella le avergüence — hasta que, décadas después, ese idioma se convierte en el único puente posible entre ambas. Una historia sobre la herencia lingüística, muy cercana al espíritu de RusoFácil.",
     text: [
       "Когда семья Кати эмигрировала из России в Аргентину, ей было всего пять лет, и русский язык быстро стал казаться ей чем-то далёким и ненужным.",
       "Дома родители, уставшие от нового языка и новой жизни, постепенно тоже стали говорить с ней всё больше по-испански, лишь бы облегчить её школьную жизнь.",
@@ -2344,7 +2344,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Второй шанс",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un joven prodigio del ajedrez pierde todo tras hacer trampa en un torneo importante — una historia sobre la redención lenta y silenciosa, que llega no como una revancha triunfal, sino como años de trabajo honesto.",
@@ -2378,7 +2378,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Тишина после шторма",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un devastador temporal destruye la flota de un pueblo pesquero del norte — una historia sobre cómo la verdadera fuerza de una comunidad se revela no en la ausencia de tormentas, sino en la manera de reconstruirse después de ellas.",
@@ -2476,7 +2476,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Последний урок",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una maestra rural jubilada descubre, en su último día de trabajo, el impacto silencioso e invisible que dejó en uno de sus alumnos más difíciles.",
@@ -2508,7 +2508,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Точный перевод",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una intérprete profesional debe decidir si traducir con total fidelidad un comentario hostil no oficial durante una negociación tensa — una historia sobre la honestidad como forma de respeto.",
@@ -2604,7 +2604,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Голос за кадром",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un veterano actor de doblaje, invisible para el público toda su carrera, enseña a su nieto que el verdadero talento no necesita un rostro reconocible.",
@@ -2636,7 +2636,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дуэт в переходе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un acordeonista veterano y un joven músico viral compiten por el mismo rincón del metro — hasta que descubren que el arte no divide generaciones, las une.",
@@ -2736,7 +2736,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Хлеб на всех",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una panadera orgullosa se niega a aceptar ayuda mientras su negocio se hunde — una historia sobre la sabiduría de pedir ayuda a la comunidad.",
@@ -2768,7 +2768,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Бабушка на связи",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una abuela reacia a la tecnología descubre las videollamadas gracias a un vecino — una historia sobre acortar distancias familiares.",
@@ -2836,7 +2836,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Найденный кошелёк",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un niño encuentra una billetera perdida en la calle — una historia sobre la honestidad y sus recompensas inesperadas.",
@@ -2872,7 +2872,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый шаг на сцену",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Una alumna tímida enfrenta su miedo a hablar en público — una historia sobre el poder del apoyo de un amigo.",
@@ -2908,7 +2908,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Шахматы в парке",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un jubilado y un adolescente inmigrante se hacen amigos jugando ajedrez sin compartir idioma — una historia sobre la amistad más allá de las palabras.",
@@ -2942,7 +2942,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Мороженое для двоих",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un niño comparte su helado con un nuevo amigo que no tiene dinero, y descubre que compartir es más rico que comer solo.",
@@ -2974,7 +2974,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Соседский кот",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Una niña cuida a un gato callejero a pesar de las quejas de un vecino, y al final descubre que él también quiere ayudarlo.",
@@ -3006,7 +3006,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Утренняя пробежка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un hombre perezoso decide correr por primera vez después de conocer a un vecino madrugador, y descubre que el primer paso es el más difícil.",
@@ -3038,7 +3038,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Соседский шум",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un malentendido entre vecinos por el ruido se resuelve gracias a una conversación honesta, no a una queja por escrito.",
@@ -3070,7 +3070,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Секрет бабушкиного пирога",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Una niña descubre que el verdadero secreto del delicioso pastel de su abuela no es un ingrediente, sino el cariño con que se prepara.",
@@ -3102,7 +3102,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Новая девочка в классе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Una niña nueva y tímida en la escuela encuentra a su primera amiga gracias a la amabilidad de una compañera de clase.",
@@ -3134,7 +3134,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Экзамен по вождению",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Después de reprobar su primer examen de manejo por los nervios, un joven aprende que la calma y la práctica son la clave del éxito.",
@@ -3168,7 +3168,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Забытый день рождения",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Una chica cree que su mejor amiga olvidó su cumpleaños, pero descubre que en realidad le estaba preparando una sorpresa.",
@@ -3236,7 +3236,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Голос совести",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un empleado observa cómo culpan injustamente a una compañera nueva por su propio error y debe decidir si confesar la verdad delante de todo el equipo.",
@@ -3270,7 +3270,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Письмо через двадцать лет",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "En una reunión de exalumnos, una mujer abre la carta que se escribió a sí misma veinte años atrás y descubre que su verdadero sueño se cumplió bajo un nombre distinto.",
@@ -3302,7 +3302,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Последний клиент",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una cajera de librería, agotada al final de su turno, ayuda a una anciana a encontrar un libro perdido y descubre lo simple que puede ser un verdadero acto de bondad.",
@@ -3334,7 +3334,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Даша учится плавать",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Una niña que le tiene miedo al agua da su primer paso en la piscina gracias al apoyo de su entrenador, y descubre la alegría de superar el miedo.",
@@ -3366,7 +3366,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый снег",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "El primer día de nieve del año, una niña tímida y recién llegada al barrio hace su primer amigo construyendo un muñeco de nieve.",
@@ -3398,7 +3398,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Забытый зонтик",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Una mujer olvida su paraguas en una cafetería y, gracias a un desconocido que corre para devolvérselo, nace una nueva amistad bajo la lluvia.",
@@ -3430,7 +3430,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Одна варежка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un niño pierde una manopla en la calle una tarde de invierno, y una cadena de desconocidos, cada uno a su manera, intenta devolvérsela antes de que llegue a casa.",
@@ -3464,7 +3464,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Собака в автобусе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un perro callejero sube a un autobús y los pasajeros trabajan juntos para encontrar a su dueño gracias a una placa en el collar.",
@@ -3498,7 +3498,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дым на кухне",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un joven intenta cocinar un plato extranjero para un amigo, pero un pequeño desastre en la cocina termina convirtiéndose en un recuerdo divertido compartido.",
@@ -3532,7 +3532,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Велосипед на чердаке",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un padre encuentra su vieja bicicleta de infancia en el desván y decide restaurarla junto a su hijo, descubriendo un puente entre dos generaciones.",
@@ -3564,7 +3564,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Собеседование мечты",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Una candidata nerviosa comete un error tonto en la entrevista de su empleo soñado, pero su honestidad termina siendo justo lo que la empresa buscaba.",
@@ -3596,7 +3596,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Поход в зоопарк",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un niño visita el zoológico con su papá y descubre que, aunque el león esté dormido, siempre hay algo nuevo por ver.",
@@ -3628,7 +3628,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Урок рисования",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un niño no sabe cómo empezar su dibujo hasta que una compañera de clase le da una idea sencilla.",
@@ -3660,7 +3660,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Мамина шляпа",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Una niña toma prestado el sombrero de su mamá sin permiso y aprende que siempre hay que pedir permiso antes de tomar las cosas de otros.",
@@ -3692,7 +3692,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дедушкин огород",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un niño ayuda a su abuelo a cuidar el huerto durante el verano y descubre la satisfacción de cultivar su propia comida.",
@@ -3724,7 +3724,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Утерянный багаж",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Una viajera pierde su maleta al llegar de vacaciones, pero descubre que hasta un contratiempo puede terminar bien.",
@@ -3756,7 +3756,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый день в спортзале",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un joven principiante se anima a empezar a entrenar en el gimnasio gracias al apoyo de un entrenador paciente.",
@@ -3788,7 +3788,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Последний поезд",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un hombre que corre para no perder el último tren se reencuentra por casualidad con una vieja compañera de clase.",
@@ -3820,7 +3820,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Спор из-за пульта",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Una familia se pelea por el control remoto del televisor hasta que la madre encuentra una forma inesperada de hacerlos entender.",
@@ -3852,7 +3852,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Последний маяк",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un solitario farero recibe la noticia de que el faro será automatizado en un mes — hasta que una tormenta pone a prueba si una máquina puede reemplazar realmente su experiencia.",
@@ -3884,7 +3884,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Возвращение к тренеру",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un exnadador que abandonó el deporte tras años de entrenamientos despiadados regresa, ya adulto, para exigirle explicaciones a su antiguo entrenador — y descubre una tragedia personal que jamás sospechó.",
@@ -3916,7 +3916,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Цена правды",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una joven periodista de un pequeño diario local descubre pruebas de corrupción que implican al padre de su mejor amiga — y debe decidir si la verdad vale el precio de una amistad de toda la vida.",
@@ -3948,7 +3948,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Почтальон и молчаливый дом",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un cartero rural, a punto de jubilarse, sigue visitando cada semana la casa de una mujer a la que casi todos han olvidado — y descubre que su simple rutina es lo único que la mantiene unida al mundo.",
@@ -3980,7 +3980,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Языковой обмен",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Dos desconocidos que llevan meses practicando idiomas por videollamada se encuentran por primera vez en persona — y descubren que la torpeza real puede ser más entrañable que cualquier conversación perfecta en pantalla.",
@@ -4012,7 +4012,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Урок вождения",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una madre que enseña a conducir a su hija adolescente descubre que lo más difícil de la lección no es el volante, sino aprender a soltar el control.",
@@ -4046,7 +4046,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ответить всем",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un empleado responde por error a toda la empresa con una broma sobre su jefe dentro del mismo correo general — y descubre que la forma en que un líder reacciona ante un error ajeno decide si su equipo se atreverá a ser honesto en el futuro.",
@@ -4078,7 +4078,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Пианино за стеной",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un vecino que odia el piano que suena cada tarde tras la pared descubre, al conocer por fin a la persona que lo toca, que esa música tiene una razón que cambia por completo su forma de escucharla.",
@@ -4110,7 +4110,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Соседи по общежитию",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Dos compañeras de residencia con hábitos completamente opuestos están a punto de pedir un cambio de habitación — hasta que una noche de crisis compartida revela que sus diferencias podían complementarse en vez de chocar.",
@@ -4142,7 +4142,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Смена профессии",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un abogado exitoso deja su carrera para convertirse en carpintero, ante la incredulidad de su padre — hasta que un objeto hecho con sus propias manos le demuestra a la familia que el verdadero éxito no siempre tiene la forma que esperaban.",
@@ -4174,7 +4174,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Анонимная записка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una empleada cínica y agotada empieza a recibir pequeñas notas anónimas de ánimo en su escritorio — y su búsqueda del autor le revela que la generosidad a veces viene de la persona más invisible de la oficina.",
@@ -4206,7 +4206,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Старая библиотека",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una bibliotecaria de un pequeño pueblo se niega a aceptar el cierre de su biblioteca por falta de visitantes — y encuentra una manera inesperada de devolverle la vida a un lugar que todos daban por perdido.",
@@ -4238,7 +4238,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Клубничный вор",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "En un huerto comunitario desaparecen fresas cada noche y los vecinos empiezan a sospechar unos de otros, hasta que descubren quién es el verdadero ladrón.",
@@ -4270,7 +4270,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Заблудившийся турист",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un turista se pierde en el centro de una ciudad desconocida, y es una niña local quien termina guiándolo de vuelta a su hotel por un atajo.",
@@ -4302,7 +4302,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Соперницы в кондитерской",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Dos dueñas de pastelerías rivales llevan años compitiendo por los mejores clientes, hasta que un apagón antes de la fiesta de la ciudad las obliga a colaborar.",
@@ -4336,7 +4336,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Тихий напарник",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un empleado ruidoso y seguro de sí mismo es emparejado con un colega callado para un proyecto importante — y una crisis de último momento revela quién realmente lo salvó.",
@@ -4370,7 +4370,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Жаркий день",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "En un día de mucho calor, una familia va al río a nadar y a comer sandía juntos.",
@@ -4402,7 +4402,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Молочный зуб",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "A Misha se le cae su primer diente de leche, y una pequeña tradición rusa lo ayuda a sentirse mayor.",
@@ -4436,7 +4436,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Новая рыбка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Lena recibe un pez de regalo de cumpleaños y aprende a cuidarlo con responsabilidad todos los días.",
@@ -4468,7 +4468,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый гол",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Dima no logra meter la pelota en la portería jugando fútbol con sus amigos, hasta que la práctica diaria le trae su primer gol.",
@@ -4500,7 +4500,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Гаражная распродажа",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un niño no quiere vender su vieja bicicleta en la venta de garaje familiar, hasta que ve la alegría del nuevo dueño.",
@@ -4532,7 +4532,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Урок от дочери",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un padre orgulloso de su dominio de la tecnología en el trabajo se siente inútil frente al smartphone en casa, hasta que acepta la ayuda de su hija de catorce años.",
@@ -4564,7 +4564,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Врачебная ошибка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una joven doctora comete un error de diagnóstico que agrava la condición de un paciente, y debe decidir entre encubrirlo con una formulación ambigua o confesar la verdad a la familia.",
@@ -4596,7 +4596,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Попугай Кеша",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un loro nuevo aprende la frase equivocada de un tío ruidoso, y toda la familia debe enseñarle con paciencia algo mejor.",
@@ -4628,7 +4628,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Поход выходного дня",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un grupo de amigos se pierde durante una caminata en las montañas, y es la integrante más novata quien recuerda el truco de su abuelo para encontrar el camino de vuelta.",
@@ -4662,7 +4662,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Две сестры",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Dos hermanas distanciadas durante siete años se ven obligadas a reconciliarse mientras cuidan juntas a su madre tras un derrame cerebral.",
@@ -4694,7 +4694,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Кот соседки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Olia acepta cuidar del gato de su vecina durante una semana, pero un descuido y una tormenta la ponen a prueba el primer día.",
@@ -4726,7 +4726,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Общий огород",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Dos vecinos que comparten un pequeño terreno en el patio discuten primero por las plantas y luego por el riego, hasta que encuentran un compromiso que los acerca.",
@@ -4758,7 +4758,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Банка со старыми деталями",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un adolescente que ya ha abandonado tres actividades pasa el verano contra su voluntad en el taller de relojería de su abuelo, hasta que una vieja lata de piezas guardadas durante décadas resulta ser la clave para salvar un reloj de bolsillo que nadie más pudo reparar.",
@@ -4790,7 +4790,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Трудная задача",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Misha se enoja con un problema de matemáticas difícil hasta que su hermana mayor le enseña a resolverlo paso a paso.",
@@ -4822,7 +4822,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Пятно на скатерти",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un niño derrama jugo sobre el mantel de fiesta de su abuela antes de una cena familiar y debe elegir entre esconder el error o confesarlo.",
@@ -4854,7 +4854,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Травма перед финалом",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un jugador de vóleibol se lesiona dos días antes de la final regional y debe decidir entre arriesgarse por su propio sueño o dejar jugar a su compañero menos experimentado.",
@@ -4886,7 +4886,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Плейлист для свадьбы",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un pianista de jazz que desprecia en secreto la música pop acepta tocar en una boda ajena por dinero, hasta que la novia le pide una canción que resulta tener un significado personal inesperado.",
@@ -4918,7 +4918,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Воздушный шарик",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "El globo de Petia se escapa volando en su cumpleaños, y su papá le enseña a encontrar alegría de nuevo.",
@@ -4950,7 +4950,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Неправильный автобус",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Olia se sube al autobús equivocado camino al cumpleaños de su amiga y descubre que pedir ayuda a un desconocido no da tanto miedo.",
@@ -4982,7 +4982,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Порванная струна",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "A un músico callejero se le rompe una cuerda de la guitarra en pleno concierto, y un desconocido le ofrece una salida inesperada.",
@@ -5014,7 +5014,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Тревожная кнопка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Tras una caída, una mujer de setenta y ocho años se niega a mudarse a una residencia, hasta que su nieto le propone un compromiso tecnológico que redefine lo que significa la independencia.",
@@ -5046,7 +5046,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Радуга после дождя",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Sonia intenta alcanzar un arcoíris después de la lluvia, y su papá le enseña que no todo lo bonito hay que tenerlo en las manos.",
@@ -5078,7 +5078,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Соревнование по чтению",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Maxim no le gusta leer, pero un concurso de lectura en su clase le descubre un placer inesperado.",
@@ -5110,7 +5110,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Доклад без слайдов",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "A una analista se le rompe la laptop la noche antes de presentar un informe importante, y debe improvisar frente a los inversionistas.",
@@ -5142,7 +5142,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Экскурсия под дождём",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una guía turística improvisa cuando un aguacero arruina su recorrido a pie, y descubre que el plan roto termina siendo el momento más memorable del día.",
@@ -5174,7 +5174,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Пшеничное поле",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un agricultor mayor sin heredero recibe una oferta generosa por su campo de trigo, hasta que su nieta agrónoma le propone reinventar la tierra familiar en vez de venderla.",
@@ -5206,7 +5206,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Новый фрукт",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Vania tiene miedo de probar una fruta desconocida de cáscara rosa, hasta que descubre que lo nuevo puede ser una sorpresa deliciosa.",
@@ -5238,7 +5238,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Сломанные наушники",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Lena se le rompen los audífonos justo antes de un largo viaje en tren, y el silencio le enseña algo que la música nunca le había dejado escuchar.",
@@ -5270,7 +5270,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Гроза на озере",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Cuatro amigos en kayak son sorprendidos por una tormenta repentina en un lago, y descubren que un equipo coordinado importa más que la experiencia individual.",
@@ -5302,7 +5302,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дневник прабабушки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Al ordenar la casa de su bisabuela recién fallecida, Ania encuentra un diario de hace cincuenta años que le revela un sueño incumplido — y le da el valor para no repetir la misma historia.",
@@ -5334,7 +5334,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Рассказы под псевдонимом",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un contador que lleva treinta años pasando desapercibido escribe relatos policiacos en secreto bajo un seudónimo, hasta que una oferta editorial lo obliga a revelar su identidad a su propio hijo.",
@@ -5366,7 +5366,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Плюшевый заяц",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un niño olvida su liebre de peluche en la caja del supermercado, pero la amable cajera la había guardado a salvo.",
@@ -5398,7 +5398,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Обед без денег",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Olia olvida el dinero del almuerzo en casa, y una compañera de clase comparte con ella su comida sin que se lo pida.",
@@ -5430,7 +5430,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Три попытки входа",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un abuelo se bloquea el correo electrónico intentando encontrar una carta importante, y su nieta le enseña a manejarlo sin vergüenza.",
@@ -5462,7 +5462,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Спасение улья",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un apicultor viudo y su vecina, enfrentados desde hace años por las abejas, se reconcilian cuando ella resulta ser la única que puede salvar sus colmenas.",
@@ -5494,7 +5494,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Слепое пятно алгоритма",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una analista de datos de transporte descubre que el algoritmo que su equipo está a punto de lanzar perjudica sistemáticamente al barrio más pobre de la ciudad.",
@@ -5526,7 +5526,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Воздушный змей на дереве",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "La cometa de un niño se queda atascada en un árbol, y el abuelo vecino la baja con una escalera, dando inicio a una nueva amistad.",
@@ -5558,7 +5558,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Чужой рюкзак",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Vika se lleva por error una mochila idéntica a la suya de la escuela, y devolverla a su dueña le regala una nueva amistad.",
@@ -5590,7 +5590,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Честный отказ",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un compañero de trabajo le pide dinero prestado una y otra vez sin devolverlo, hasta que Serguéi decide, con calma, dejar de aceptar en silencio.",
@@ -5622,7 +5622,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Слепая дегустация",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un padre que siempre menospreció la pasión culinaria de su hijo descubre, sin saberlo, en una degustación a ciegas, que la comida que más lo impresionó era obra de él.",
@@ -5654,7 +5654,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Тень старой статьи",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una profesora que revisa artículos científicos descubre en un manuscrito ajeno el mismo error metodológico que ella misma cometió, sin ser cuestionada, hace quince años.",
@@ -5686,7 +5686,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Запасной ключ",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "La abuela Vera se queda encerrada fuera de casa, pero su nieto recuerda a tiempo la llave de repuesto que ella misma dejó con una vecina.",
@@ -5718,7 +5718,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Билет в два конца",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Yégor compra por error un boleto de tren con la fecha de regreso equivocada, y su visita al amigo Pasha se convierte en un solo día muy aprovechado.",
@@ -5750,7 +5750,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Замена на поле",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Ígor lleva dos temporadas en el banco de suplentes, pero una lesión de último momento le da la oportunidad que sus entrenamientos constantes ya habían preparado.",
@@ -5782,7 +5782,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Двойное свидание",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un fallo en una aplicación de reservas junta por error a dos parejas en la misma mesa, y el incómodo comienzo termina volviéndose una amistad real.",
@@ -5814,7 +5814,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Последние сто метров",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una guía de montaña debe elegir entre completar un ascenso patrocinado a solo un par de horas de la cumbre o bajar de inmediato a un cliente con los primeros signos de edema cerebral.",
@@ -5846,7 +5846,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Два одинаковых завтрака",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description: "Nastia y Sonia tienen recipientes de almuerzo idénticos y los confunden un día, hasta que descubren el error y encuentran una solución sencilla.",
     text: [
@@ -5877,7 +5877,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Торт с чужим именем",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description: "Un malentendido al dictar un nombre por teléfono hace que el pastel de cumpleaños de Nastia llegue con el nombre equivocado, y el error se convierte en una broma cariñosa.",
     text: [
@@ -5908,7 +5908,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Сигнал в грозу",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description: "Un radioaficionado capta por casualidad la señal débil de un grupo de excursionistas perdidos en la montaña y ayuda a guiar el rescate.",
     text: [
@@ -5939,7 +5939,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Мягкая правда",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description: "Una veterinaria debe decidir cómo hablarle a una niña sobre la grave enfermedad de su perro, eligiendo la honestidad dicha con cariño en vez de ocultar la verdad.",
     text: [
@@ -5970,7 +5970,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Кадр, который никто не увидел",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description: "Un fotoperiodista capta una imagen que podría ganarle el premio del año, pero decide no publicarla al darse cuenta de que expondría a una activista a un grave peligro.",
     text: [
@@ -6001,7 +6001,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Слишком много воды",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description: "Sonia riega la violeta africana de su amiga enferma con demasiada frecuencia y aprende que hasta las buenas intenciones necesitan seguir las reglas.",
     text: [
@@ -6032,7 +6032,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Мастер-класс для новичков",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description: "Insegura de sus habilidades, Polina se anima a cocinar el platillo de su abuela en un taller de cocina para principiantes y termina siendo la sensación de la clase.",
     text: [
@@ -6063,7 +6063,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Стук на повороте",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description: "Un mecánico junior resuelve un ruido misterioso en un auto que sus colegas con más experiencia no lograban encontrar, simplemente escuchando al cliente con atención.",
     text: [
@@ -6094,7 +6094,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Балконный сад",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description: "Una jardinera experimentada le enseña a su joven vecina a cuidar un jardín compartido en el balcón, y la alumna termina aportando una solución nueva.",
     text: [
@@ -6125,7 +6125,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дирижёрское решение",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description: "El director de una orquesta amateur debe decidir cómo tratar a una violinista veterana cuyas capacidades han disminuido, justo antes del concierto de aniversario más importante del grupo.",
     text: [
@@ -6156,7 +6156,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Считаем секунды",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description: "Un niño le tiene miedo a los truenos, hasta que su abuela le enseña un pequeño truco para sentirse valiente.",
     text: [
@@ -6187,7 +6187,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Пять минут до автобуса",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description: "Un niño que acaba de aprender a leer la hora tiene solo cinco minutos para no perder el autobús escolar.",
     text: [
@@ -6220,7 +6220,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Вторая жизнь лампы",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description: "Un electricista jubilado se siente inútil hasta que un adolescente le pide ayuda para reparar una lámpara rota.",
     text: [
@@ -6253,7 +6253,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Коса для внучки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description: "Una mujer se niega a hacer sus ejercicios de rehabilitación de la mano, hasta que la terapeuta descubre el verdadero motivo por el que quiere recuperar la destreza de sus dedos.",
     text: [
@@ -6286,7 +6286,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Конфликт интересов",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description: "Una jueza de un pequeño pueblo descubre que el demandado en un caso rutinario es el paramédico que, veinte años atrás, le salvó la vida a su padre.",
     text: [
@@ -6325,7 +6325,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Куда положить бутылку?",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description: "Un niño aprende, con la ayuda de su papá, a separar la basura correctamente por primera vez.",
     text: [
@@ -6356,7 +6356,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Разговор без слов",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description: "Una barista aprende algunas señas del lenguaje de señas ruso para poder comunicarse con un cliente habitual sordo.",
     text: [
@@ -6387,7 +6387,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Стриж на балконе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description: "Una mujer encuentra un vencejo herido en su balcón y debe curarlo a tiempo para que pueda emigrar con su bandada.",
     text: [
@@ -6420,7 +6420,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Общее открытие",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description: "Dos astrónomos aficionados descubren el mismo cometa la misma noche, y uno de ellos insiste en compartir el crédito de forma justa.",
     text: [
@@ -6455,7 +6455,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Курган над рекой",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description: "Una arqueóloga debe elegir entre completar la excavación de su carrera o respetar el lugar sagrado que los ancianos del pueblo le piden proteger.",
     text: [
@@ -6490,7 +6490,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Секретный узел",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un abuelo le enseña a su nieto un nudo especial para los cordones antes de su primera carrera escolar.",
@@ -6524,7 +6524,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Костюм в последний момент",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Sonia pierde su disfraz de mariposa justo antes del concierto de talentos, y su mamá improvisa uno nuevo.",
@@ -6558,7 +6558,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Не самый большой кабачок",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "En una feria de otoño, un calabacín gigante gana el primer premio, pero una vecina modesta gana con una receta.",
@@ -6592,7 +6592,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Слух наполовину",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un ingeniero de sonido sordo de un oído ayuda a una joven banda a mezclar su álbum usando métodos adaptados.",
@@ -6626,7 +6626,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Спасти лозу",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una viticultora orgánica enfrenta una enfermedad que amenaza su cosecha y debe elegir entre sus principios y la supervivencia de su bodega.",
@@ -6662,7 +6662,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Бумажный кораблик",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Un padre y su hijo hacen un barquito de papel después de la lluvia, y el niño aprende que lo importante fue el tiempo juntos.",
@@ -6698,7 +6698,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Без колёсиков",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Lena aprende a andar en bicicleta sin rueditas gracias a un truco simple de su hermano mayor.",
@@ -6732,7 +6732,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Деталь от соперников",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un equipo rival de robótica ayuda inesperadamente al equipo «Iskra» a reparar su robot justo antes de la competencia.",
@@ -6766,7 +6766,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Флаеры для дочери",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un impresor descubre un error en el diseño de su hija adolescente y lo corrige en secreto por la noche para no quitarle su orgullo.",
@@ -6800,7 +6800,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Три дня до премьеры",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una costurera de vestuario teatral debe modificar en secreto el traje de la actriz principal tras sospecharse una alergia al látex, tres días antes del estreno.",
@@ -6838,7 +6838,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Мяч на крыше",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "A Vania se le queda la pelota atascada en el techo de un garaje, y un vecino la baja con una escalera.",
@@ -6872,7 +6872,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Домик для скворца",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Tim debe trabajar con el chico más callado de la clase en un concurso de casitas para pájaros, y descubre que las apariencias engañan.",
@@ -6906,7 +6906,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Забытая посылка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un joven cartero descubre un paquete devuelto marcado solo con un nombre y decide entregarlo en persona, fuera de su zona de reparto.",
@@ -6940,7 +6940,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Свет в чужом окне",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una vecina jubilada nota que la luz del departamento de un anciano solitario lleva toda la noche encendida, y esa atención acaba salvándole la vida.",
@@ -6974,7 +6974,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Чутьё Бурана",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un cinólogo de montaña debe decidir si confiar en el instinto de su perro de rescate frente al protocolo oficial de búsqueda, con dos excursionistas atrapados bajo la nieve.",
@@ -7012,7 +7012,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Слишком солёный суп",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "A Dania le parece que la sopa de su mamá está demasiado salada, y juntos encuentran un truco sencillo para arreglarla.",
@@ -7048,7 +7048,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Забытый пароль",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Óleg se le olvida su contraseña justo antes de un plazo importante, y una carrera contra el reloj decide si logra entregar su informe a tiempo.",
@@ -7082,7 +7082,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Спор из-за забора",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Dos vecinos discuten furiosamente por unos centímetros de terreno tras cambiar la cerca entre sus casas, hasta que un viejo agrimensor revela la verdad.",
@@ -7116,7 +7116,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Стрижка для Барсика",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una peluquera de mascotas nota señales de maltrato en un gato durante una sesión de corte, y debe encontrar una manera delicada de ayudar sin asustar a la dueña.",
@@ -7150,7 +7150,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Скамейка для сына",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un entrenador de hockey juvenil debe decidir si titular a su propio hijo o a un jugador lesionado pero más talentoso, sabiendo que cualquier elección será vista como parcial.",
@@ -7186,7 +7186,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Сколько тарелок?",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "A Dania se le olvida contar bien las sillas antes de poner la mesa, y aprende a fijarse mejor en los detalles.",
@@ -7222,7 +7222,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Перепутанные книги",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Tras confundir su libro de la biblioteca con el de un compañero, Timur tiene que resolver el malentendido antes de que sea demasiado tarde.",
@@ -7256,7 +7256,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Авария в подвале",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Cuando una tubería revienta en el sótano y amenaza con dejar a todo el edificio sin luz, los vecinos deben unirse para resolver la emergencia antes de que llegue el servicio técnico.",
@@ -7292,7 +7292,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ошибка нового повара",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un cocinero nuevo pasa por alto la alergia de una niña al preparar su plato, y solo la atención de una mesera evita una tragedia.",
@@ -7326,7 +7326,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Право на историю",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una periodista está a punto de publicar una investigación que señala al culpable equivocado, y debe decidir entre cumplir el plazo o arriesgarlo todo por llegar a la verdad.",
@@ -7362,7 +7362,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Шнурки на ботинках",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Yégor aprende, paso a paso, a atarse los cordones de las botas él solo.",
@@ -7400,7 +7400,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Лишний билет",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Sonia y Vika compran, sin saberlo, entradas dobles para el mismo concierto, y convierten la confusión en una fiesta compartida.",
@@ -7432,7 +7432,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Одна и та же идея",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Marat y Polina preparan, sin saberlo, la misma idea de proyecto para una reunión, y descubren que unir fuerzas es mejor que competir.",
@@ -7470,7 +7470,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Письма в стене",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Al renovar un piso antiguo, una pareja encuentra cartas escondidas en la pared y decide buscar a la familia a la que pertenecen.",
@@ -7512,7 +7512,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дрожь в голосе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una violinista experimentada enfrenta, por primera vez, un miedo escénico paralizante, y aprende que la madurez no siempre significa vencer el miedo, sino convivir con él.",
@@ -7554,7 +7554,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Зёрнышко в горшке",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Sonia planta una semilla y aprende, día a día, que la paciencia convierte algo pequeño en algo grande.",
@@ -7590,7 +7590,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Обувь не по размеру",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Marina le llegan unas zapatillas de la talla equivocada, y descubre lo simple que puede ser resolverlo con un cambio.",
@@ -7624,7 +7624,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Папа по видеосвязи",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un conflicto de trabajo casi le impide a Ígor ver la obra escolar de su hija, y encuentra una manera de estar presente de todas formas.",
@@ -7660,7 +7660,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Раненая ласточка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Liosha encuentra una golondrina herida en el patio y, junto a su familia, la cuida hasta que puede volver a volar.",
@@ -7698,7 +7698,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Перевод без переводчика",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un traductor veterano enfrenta la llegada de la traducción automática a su oficio, y descubre en qué consiste realmente su verdadero valor como profesional.",
@@ -7740,7 +7740,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Копилка Тимура",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Timur ahorra poco a poco en su alcancía hasta conseguir el dinero para el juego que quiere.",
@@ -7778,7 +7778,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Забытый студенческий",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Marcos olvida su carnet de estudiante el día de un examen importante y aprende, a las malas, a ser más cuidadoso.",
@@ -7812,7 +7812,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Разносчик газет",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Danila reparte periódicos para ganar dinero para una bicicleta, y descubre que su ruta diaria significa mucho más para una vecina solitaria.",
@@ -7848,7 +7848,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Авария на сайте",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "La web de una pequeña tienda se cae justo antes de la gran liquidación, y su equipo aprende que la honestidad importa más que el error.",
@@ -7884,7 +7884,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Цена на полке",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Ante una subida brusca de precios, un tendero de barrio elige proteger a sus vecinos antes que su propio margen de ganancia.",
@@ -7922,7 +7922,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Бутерброд для Ромы",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Roma se prepara su propio sándwich después de la escuela, paso a paso, y descubre lo bien que sabe cuidarse solo.",
@@ -7960,7 +7960,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Разница во времени",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Nastia llama a su abuela en el otro lado del mundo sin calcular bien la diferencia horaria, y aprende a prestar más atención.",
@@ -7994,7 +7994,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Мастер с детской площадки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Un ingeniero jubilado empieza a reparar en secreto los juegos rotos del parque de su barrio, y termina cambiando la actitud de todo el vecindario.",
@@ -8030,7 +8030,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ночное дежурство в клинике",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "En su primera guardia nocturna sola, una joven veterinaria enfrenta una emergencia real y descubre de qué está hecha.",
@@ -8066,7 +8066,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Право оставаться дома",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Ante los olvidos cada vez más frecuentes de su padre, dos hermanos deben decidir entre protegerlo y respetar su derecho a seguir viviendo solo.",
@@ -8106,7 +8106,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Стол по инструкции",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Ilyá pone la mesa siguiendo el dibujo que le dejó su mamá, prestando atención a cada detalle.",
@@ -8144,7 +8144,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Встреча с туристом",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Olia ayuda a un turista perdido a encontrar su hotel, y una semana después el destino los vuelve a cruzar.",
@@ -8180,7 +8180,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Сбор для Марины",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Cuando Marina termina en el hospital, un compañero de trabajo organiza una colecta que crece mucho más allá de lo esperado.",
@@ -8218,7 +8218,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Звонок в прямом эфире",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un locutor de radio nocturno recibe la llamada en vivo de una oyente al borde de una decisión que puede cambiarle la vida.",
@@ -8254,7 +8254,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "У постели больного",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una intérprete médica debe traducir, palabra por palabra, un diagnóstico devastador, sin dejar que su papel profesional apague su humanidad.",
@@ -8294,7 +8294,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Носки из корзины",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Sonia busca por toda la casa la pareja de un calcetín amarillo, y aprende que la paciencia siempre encuentra lo perdido.",
@@ -8330,7 +8330,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Собака с характером",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Nastia descubre que el perro terco que cuida en realidad solo necesitaba pasear cerca del agua.",
@@ -8364,7 +8364,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Учитель на один день",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Una joven practicante debe dar clase a los alumnos más difíciles de la escuela por un solo día, y encuentra la clave para engancharlos.",
@@ -8400,7 +8400,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Доставка под дождём",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Timur se detiene a ayudar a un desconocido bajo la lluvia, arriesgando su puntuación como repartidor, y descubre que la bondad rara vez pasa desapercibida.",
@@ -8438,7 +8438,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Продуманное поражение",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un entrenador de ajedrez arriesga el ego de su alumno más talentoso con una derrota planeada, para enseñarle una lección que ninguna victoria podría darle.",
@@ -8480,7 +8480,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Гаммы перед ужином",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Marta practica el piano cada tarde antes de cenar, escala tras escala, hasta llegar a su melodía favorita.",
@@ -8516,7 +8516,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Одинаковые костюмы",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Lena y Marc llegan a la fiesta de la empresa con trajes idénticos por pura casualidad, y convierten la coincidencia en la broma de la noche.",
@@ -8550,7 +8550,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Свидание вслепую с книгой",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Una bibliotecaria envuelve libros en papel sin título para crear 'citas a ciegas' con la lectura, y revive el interés de los adolescentes por los libros.",
@@ -8586,7 +8586,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Посадка воздушного шара",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un piloto de globo aerostático debe improvisar un aterrizaje de emergencia en pleno campo cuando una tormenta se acerca de repente.",
@@ -8624,7 +8624,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Третий в комнате",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un juez jubilado media, sin togas ni tribunales, entre dos hermanos enfrentados por la herencia de su padre, y descubre el valor de una solución que no está en ningún código legal.",
@@ -8664,7 +8664,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Сортировка мусора дома",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "La familia Ivanov convierte la separación de la basura en una rutina semanal, y Sonia aprende jugando a reciclar.",
@@ -8700,7 +8700,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Заряд для важного звонка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Marc se le agota la batería del teléfono justo antes de una llamada importante con su hermana, y un desconocido en un café le salva el momento.",
@@ -8736,7 +8736,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Плати, сколько можешь",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Ígor cambia los precios fijos de su furgoneta de comida por 'paga lo que puedas', y descubre que confiar en la gente puede ser el mejor negocio.",
@@ -8774,7 +8774,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Питч для книжного магазина",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "La dueña de una librería en apuros se presenta ante inversores con una idea poco convencional, y descubre que la honestidad puede convencer más que cualquier plan de negocio.",
@@ -8812,7 +8812,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Слой под картиной",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una restauradora descubre una versión oculta y desgarradora bajo un cuadro célebre, y debe decidir si el mundo tiene derecho a conocer la verdad detrás de la belleza que ama.",
@@ -8850,7 +8850,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Бабочка для праздника",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Danila aprende a hacerse su propia pajarita para una celebración familiar, siguiendo con paciencia el ejemplo de su papá.",
@@ -8884,7 +8884,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Одна свадьба, одно такси",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Marina y Oleg se conocen por casualidad en un tren camino a la misma boda, y medio año después celebran la suya propia.",
@@ -8920,7 +8920,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Внук слесаря",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Ígor pasa el verano ayudando a su abuelo cerrajero, y descubre, a través de los vecinos, el valor real de un oficio que creía anticuado.",
@@ -8956,7 +8956,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Последнее кукольное представление",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un pequeño teatro de marionetas se prepara para lo que cree que será su última función, y el público responde de una manera que nadie esperaba.",
@@ -8994,7 +8994,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Слова, которые стесняются",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una lingüista debe decidir si 'corregir' el habla de los últimos hablantes de un dialecto moribundo, o conservarla tal cual, aunque los avergüence.",
@@ -9034,7 +9034,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Очередь в пекарне",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Ana hace fila en la panadería del barrio y elige qué comprar para el desayuno.",
@@ -9076,7 +9076,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Пельмени с нуля",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Katia aprende de su abuela a hacer pelmeni desde cero, entre torpezas y risas, hasta lograr los suyos propios.",
@@ -9116,7 +9116,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ремонт велосипеда",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Maxim aprende a reparar su propia bicicleta con la ayuda de un vecino experimentado.",
@@ -9152,7 +9152,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Фотография обычного дня",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "En un concurso de fotografía amateur, la imagen sin editar de Marina conmueve al jurado más que los trabajos pulidos.",
@@ -9188,7 +9188,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Перевод без прикрас",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una intérprete judicial debe decidir si suaviza la traducción de un testimonio conmovedor para ayudar al caso, o mantiene una fidelidad absoluta a cada palabra.",
@@ -9226,7 +9226,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Прогулка с собакой",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Víctor pasea a su perro Rex por el parque y conoce a una vecina amable.",
@@ -9264,7 +9264,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Шумные соседи",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Marc se enfrenta al ruido de sus vecinos de arriba hasta que decide hablar con ellos cara a cara.",
@@ -9300,7 +9300,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Чемодан не долетел",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "La maleta de la familia Ivanov se pierde al llegar de vacaciones, pero todo se resuelve a los pocos días.",
@@ -9336,7 +9336,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Реставрация старого маяка",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "La restauración de un viejo faro costero saca a la luz la historia olvidada de sus antiguos guardianes.",
@@ -9368,7 +9368,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Право не знать",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una consejera genética descubre un hallazgo inesperado y grave en el ADN de una paciente que había pedido explícitamente no conocer nada fuera de su consulta original.",
@@ -9406,7 +9406,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Поход в библиотеку",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Sonia visita la biblioteca de su barrio todos los sábados y elige libros para leer en casa.",
@@ -9442,7 +9442,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Кот убежал из дома",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "El gato de Marina se escapa por el balcón y ella lo busca por todo el barrio hasta encontrarlo sano y salvo.",
@@ -9478,7 +9478,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Собеседование на новую работу",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Oleg se prepara con nervios para una entrevista de trabajo que termina en una oferta de empleo.",
@@ -9514,7 +9514,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Благотворительный концерт студентов",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Estudiantes de música organizan un concierto benéfico para una niña enferma y recaudan mucho más de lo esperado.",
@@ -9546,7 +9546,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Обещание анонимности",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una periodista debe decidir si revela la identidad de una fuente anónima cuyo testimonio podría probar la inocencia de un hombre condenado injustamente.",
@@ -9584,7 +9584,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Завтрак в семье",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "La familia Petrov comparte un desayuno tranquilo cada mañana antes de que los niños se vayan a la escuela.",
@@ -9620,7 +9620,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Друг забыл про день рождения",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "El mejor amigo de Nastia olvida su cumpleaños por primera vez, pero lo compensa al día siguiente.",
@@ -9656,7 +9656,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Заявка на визу",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Víctor solicita una visa para sus vacaciones en el extranjero y, tras una entrevista tensa, recibe buenas noticias.",
@@ -9692,7 +9692,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Мастер-класс по резьбе по дереву",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "En un taller gratuito de talla en madera, una joven tímida descubre un talento inesperado bajo la guía de un maestro artesano.",
@@ -9724,7 +9724,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Право на молчание",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una trabajadora social debe comunicarle a un adulto adoptado que su madre biológica, localizada tras años de búsqueda, se niega a cualquier contacto.",
@@ -9762,7 +9762,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Прогулка на велосипеде",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Oleg da un paseo en bicicleta por el parque cada fin de semana y disfruta de un helado en el camino.",
@@ -9798,7 +9798,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Зонт остался в кафе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Marina olvida su paraguas en una cafetería y tiene que identificarlo entre varios parecidos.",
@@ -9834,7 +9834,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Курс первой помощи",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Antón se convierte en el héroe inesperado de un desconocido gracias a un curso de primeros auxilios que su empresa le exigió tomar.",
@@ -9870,7 +9870,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Съёмки любительского фильма",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un grupo de estudiantes rueda un cortometraje amateur en un solo verano y sorprende al jurado de un festival estudiantil con su sinceridad.",
@@ -9902,7 +9902,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Скрытая переменная",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una analista de datos descubre un sesgo de edad oculto en un algoritmo de selección de currículums y debe decidir si retrasa su lanzamiento para corregirlo.",
@@ -9940,7 +9940,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Уборка в субботу",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Cada sábado, Olia limpia tranquilamente su apartamento y disfruta de una taza de té al terminar.",
@@ -9976,7 +9976,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Забытые перчатки в автобусе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Iván olvida sus guantes en el autobús y los recupera al día siguiente en la oficina de objetos perdidos.",
@@ -10012,7 +10012,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Курсы кройки и шитья",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Marina aprende a coser en un curso local para hacer el vestido de boda de su hermana.",
@@ -10048,7 +10048,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Подкаст из бабушкиной кухни",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Nastia convierte los almuerzos dominicales en la cocina de su abuela en un podcast que conquista a miles de oyentes.",
@@ -10084,7 +10084,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Трещина в опоре",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un ingeniero descubre una grieta peligrosa en un estadio días antes de la final y debe elegir entre la presión del evento y la seguridad pública.",
@@ -10122,7 +10122,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Пробежка вдоль реки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Víctor sale a correr cada mañana por el parque y disfruta de su rutina antes de empezar el día.",
@@ -10154,7 +10154,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Встреча выпускников без адреса",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Natasha se pierde buscando la reunión de antiguos compañeros de clase y termina reencontrando a alguien que no esperaba.",
@@ -10188,7 +10188,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Волонтёры в приюте для животных",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Dima se hace voluntario en un refugio de animales y, con paciencia, gana la confianza del perro más asustadizo.",
@@ -10222,7 +10222,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Реставрация старого трамвая",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un grupo de entusiastas restaura un viejo tranvía abandonado y transforma el escepticismo de la ciudad en admiración.",
@@ -10258,7 +10258,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Экспонат с историей",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una curadora de museo descubre que una pieza estrella fue robada durante una ocupación y debe elegir entre la presión institucional y la verdad histórica.",
@@ -10296,7 +10296,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Чтение перед сном",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Cada noche Anna disfruta de un momento tranquilo de lectura antes de dormir.",
@@ -10326,7 +10326,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Пирог для новых соседей",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Polina quiere presentarse a sus nuevos vecinos con un pastel, pero un pequeño accidente termina uniendo a todo el edificio.",
@@ -10360,7 +10360,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ремонт крыши после урагана",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Tras un huracán que daña su tejado, la familia Petrov descubre la solidaridad inesperada de sus vecinos.",
@@ -10394,7 +10394,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый матч женской хоккейной команды",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un grupo de mujeres forma el primer equipo femenino de hockey de la ciudad y desafía el escepticismo con un partido inolvidable.",
@@ -10430,7 +10430,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Здоровые, но лишние",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una veterinaria de zoológico descubre que van a sacrificar crías sanas por falta de espacio y debe decidir cómo actuar sin romper su acuerdo de confidencialidad.",
@@ -10468,7 +10468,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Аквариум в гостиной",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Marcos cuida cada día de su acuario y disfruta de la calma que le aporta observar a los peces.",
@@ -10498,7 +10498,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "День без телефона",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Nastia se le rompe el teléfono por sorpresa y descubre que un día sin pantalla puede traer regalos inesperados.",
@@ -10528,7 +10528,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Урок кулинарии по видеозвонку",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Daria aprende la receta secreta de los pélmeni de su abuela a través de una videollamada llena de cortes de conexión y torpeza compartida.",
@@ -10562,7 +10562,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Тайна семейного альбома",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Al ordenar sus cosas tras una mudanza, Svetlana descubre un álbum familiar olvidado que revela un secreto guardado durante décadas.",
@@ -10596,7 +10596,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Чужими словами",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una tutora de admisiones universitarias descubre que sus colegas reescriben por completo los ensayos de los estudiantes y debe decidir cómo actuar sin destruir su propio sustento.",
@@ -10634,7 +10634,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Занятия йогой в парке",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Elena asiste cada sábado a una clase de yoga en el parque y esta semana logra mantener por fin una postura difícil.",
@@ -10666,7 +10666,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый урок танцев",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Víctor se apunta a su primera clase de baile lleno de nervios y descubre que los primeros pasos en falso pueden llevar a algo bueno.",
@@ -10698,7 +10698,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первая смена в кофейне",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "En su primer turno en una cafetería, Ania comete errores con los pedidos, pero un cliente paciente y un buen jefe la ayudan a salir adelante.",
@@ -10730,7 +10730,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Экскурсия для незрячих посетителей",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Un joven guía de museo aprende de una visitante ciega a describir el arte más allá de la vista, y transforma por completo su manera de guiar.",
@@ -10762,7 +10762,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ошибка в формуле выплат",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una analista de una aseguradora descubre un error sistemático que llevaba años perjudicando los pagos a personas con discapacidad, y decide escalarlo internamente pese a la resistencia de su jefe.",
@@ -10800,7 +10800,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Рыбалка с дедушкой по выходным",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Kostia disfruta cada fin de semana de la pesca junto a su abuelo en un pequeño lago, y hoy por fin siente el tirón de su primer pez.",
@@ -10832,7 +10832,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ошибка в счёте за электричество",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Marina le llega una factura de electricidad absurdamente alta, y su insistencia revela un simple error del que ni siquiera era responsable.",
@@ -10864,7 +10864,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Скинулись на новый лифт",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Cuando el ascensor se rompe una vez más, los vecinos de Olga aprenden a ponerse de acuerdo entre ellos para resolverlo antes que la compañía comunal.",
@@ -10896,7 +10896,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Дебютный проект",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "En su primer proyecto como arquitecta, Dasha debe reinventar su diseño soñado tras un recorte drástico de presupuesto, sin perder su esencia.",
@@ -10928,7 +10928,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Лишний год",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un entrenador de fútbol juvenil descubre que el padre de uno de sus jugadores falsificó su edad hace años, y debe proteger al adolescente inocente mientras corrige la injusticia con la liga.",
@@ -10968,7 +10968,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Кружок вязания по вторникам",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Cada martes Liuba disfruta del club de tejido en la casa de cultura, y esta semana por fin domina el patrón de trenzas.",
@@ -11000,7 +11000,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ошибка в бронировании номера",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un error de reserva pone en riesgo el aniversario de Marc e Irina, pero termina regalándoles la mejor sorpresa del viaje.",
@@ -11032,7 +11032,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Забастовка в день важного собеседования",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Una huelga de transporte pone a prueba la determinación de Pável el día de la entrevista más importante de su vida.",
@@ -11064,7 +11064,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Реставрация дедушкиного автомобиля",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Ígor restaura en secreto el coche del abuelo de Artiom durante casi un año para regalárselo el día de su cumpleaños.",
@@ -11096,7 +11096,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ловушки в заповеднике",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Un inspector de una reserva natural descubre que el «cazador furtivo» es un anciano que caza por pura necesidad, y decide una salida compasiva dentro de los límites de su deber.",
@@ -11134,7 +11134,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Занятия гончарным делом по средам",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Cada miércoles Ira va a su clase de cerámica en un taller creativo, y esta semana por fin logra hacer un cuenco liso sin ninguna grieta.",
@@ -11166,7 +11166,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Чужое место в поезде",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Un error con el asiento en el tren obliga a Nastia a cambiar de vagón, y allí encuentra una conversación que puede cambiar su carrera.",
@@ -11198,7 +11198,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Ночь перед юбилеем кафе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "La nevera industrial de la cafetería de Marina se avería la noche antes de su décimo aniversario, y todo el equipo se moviliza para salvar la fiesta.",
@@ -11230,7 +11230,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый самостоятельный заказ",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Vera, aprendiz de vidriera, recibe su primer encargo propio, y cuando la pieza se rompe en el horno debe rehacerla en dos días cambiando de técnica.",
@@ -11262,7 +11262,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Срок эмбарго",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una investigadora de ciberseguridad descubre una vulnerabilidad crítica en dispositivos médicos hospitalarios y debe elegir entre respetar el embargo de divulgación acordado con el fabricante o advertir directamente a los hospitales en riesgo.",
@@ -11294,7 +11294,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Кружок оригами по понедельникам",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Sonia asiste cada lunes a un taller de origami y descubre que el segundo intento a veces sale mejor que el primero.",
@@ -11350,7 +11350,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Посылка не по адресу",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "A Lena le entregan por error el paquete de una vecina, y ese pequeño malentendido termina regalándole una nueva amistad.",
@@ -11392,7 +11392,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Опоздание на репетицию",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Marina llega tarde a un ensayo de coro tras una avería de autobús, y aprende que avisar con honestidad importa más que la puntualidad perfecta.",
@@ -11434,7 +11434,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Экзамен ради дедушки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una profesora jubilada descubre la verdadera razón por la que un adolescente inmigrante quiere aprobar su examen de ciudadanía: poder votar junto a su abuelo.",
@@ -11476,7 +11476,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Правда за кадром",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una editora de vídeo descubre que la escena más impactante de un documental de naturaleza fue filmada con ayuda de un cebo, y debe decidir cómo proteger la confianza del espectador sin sacrificar la honestidad del equipo.",
@@ -11524,7 +11524,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "День стирки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A1",
     description:
       "Nastia lava la ropa como cada semana y encuentra en un bolsillo una pequeña sorpresa olvidada.",
@@ -11570,7 +11570,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Чужое пальто из химчистки",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "A2",
     description:
       "Oleg recoge por error el abrigo de una desconocida en la tintorería, y la confusión termina llevándolo al teatro.",
@@ -11610,7 +11610,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Первый полумарафон",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B1",
     description:
       "Vera corre su primer medio maratón bajo un aguacero repentino, y un desconocido la ayuda a llegar a la meta.",
@@ -11654,7 +11654,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Жестовый перевод на концерте",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "B2",
     description:
       "Una intérprete de lengua de señas se enfrenta a su primer concierto en vivo, y descubre en primera fila lo que realmente significa su trabajo.",
@@ -11690,7 +11690,7 @@ export const stories: SeedStory[] = [
   },
   {
     title: "Подделка в винном погребе",
-    author: "RusoFásil (relato original)",
+    author: "RusoFácil (relato original)",
     level: "C1",
     description:
       "Una joven sumiller descubre que su mentor lleva tiempo falsificando botellas de vino raro, y debe decidir entre el silencio y la verdad.",
