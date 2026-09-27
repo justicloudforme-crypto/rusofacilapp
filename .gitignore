@@ -153,3 +153,7 @@ RUN-7237.md
 .run7237/
 RUN-7238.md
 .run7238/
+
+RUN-7239.md
+.run7239/
+scripts/prod-readonly-query.mjs
