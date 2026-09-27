@@ -84,7 +84,11 @@ export function violations(src) {
   if (foreignAt < 0 || saveAt < 0 || foreignAt > saveAt) out.push("4: /api/progress не отказывает чужой записи ДО записи попытки");
   if (!/if \(recordKey\)[\s\S]*?saveLessonAttemptOnce\(/.test(route)) out.push("4: запись с ключом пишется не через saveLessonAttemptOnce — повтор ключа запишется второй раз");
   if (!/once === "duplicate"\) return/.test(route)) out.push("4: повтор ключа не возвращается до отметки дня занятия");
-  if (!/markStudyDayVisit\("lesson", user, actionInstant\(/.test(route)) out.push("4: день занятия ставится не по времени действия");
+  // 7.238: время действия вычисляется один раз (`const at = actionInstant(…)`)
+  // и идёт и в попытку, и в день занятия.
+  if (!/markStudyDayVisit\("lesson", user, actionInstant\(/.test(route) && !(/const at = actionInstant\(body\?\.at, recordKey !== null\);/.test(route) && /markStudyDayVisit\("lesson", user, at\)/.test(route))) {
+    out.push("4: день занятия ставится не по времени действия");
+  }
 
   const progress = code(src[PROGRESS]);
   const once = /export async function saveLessonAttemptOnce\([\s\S]*?\n\}/.exec(progress)?.[0] ?? "";
@@ -138,7 +142,7 @@ function plant() {
   add("очередь шлёт с маячком", OUTBOX, (s) => s.replace("{ beacon: false, attempts: 2", "{ beacon: true, attempts: 2"), "3:");
   add("сервер не сверяет владельца", ROUTE, (s) => s.replace("if (isForeignRecord(", "if (false && isForeignRecord("), "4:");
   add("запись с ключом пишется без квитанции", ROUTE, (s) => s.replace("const once = await saveLessonAttemptOnce(", "const once = await saveLessonAttempt("), "4:");
-  add("день — по времени приёма", ROUTE, (s) => s.replace('markStudyDayVisit("lesson", user, actionInstant(body?.at, recordKey !== null))', 'markStudyDayVisit("lesson", user)'), "4:");
+  add("день — по времени приёма", ROUTE, (s) => s.replace('markStudyDayVisit("lesson", user, at)', 'markStudyDayVisit("lesson", user)'), "4:");
   add("квитанция вне транзакции", PROGRESS, (s) => s.replace("await db.$transaction([\n      db.offlineReceipt.create", "await Promise.all([\n      db.offlineReceipt.create"), "5:");
   add("таблица не едет на прод", SCHEMA_SYNC, (s) => s.replace('CREATE TABLE IF NOT EXISTS "OfflineReceipt"', 'CREATE TABLE IF NOT EXISTS "OfflineReceiptX"'), "5:");
   add("отправка очереди снята с разметки", LAYOUT, (s) => s.replace("<ProgressOutboxSync owner=", "<ProgressOutboxSyncGone owner="), "6:");

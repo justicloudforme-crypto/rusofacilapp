@@ -80,17 +80,18 @@ function renderTab() {
 }
 
 describe("страница урока при запрещённом хранилище", () => {
-  it("рисуется целиком и не бросает при монтировании", () => {
+  it("рисуется целиком и не бросает при монтировании", async () => {
     forbidStorage();
     expect(() => renderTab()).not.toThrow();
-    expect(screen.getByText("¿Cómo se dice «hola» en ruso?")).toBeTruthy();
+    // С 7.238 до восстановления прошлой попытки — заглушка, форма после.
+    expect(await screen.findByText("¿Cómo se dice «hola» en ruso?", {}, { timeout: 5000 })).toBeTruthy();
     expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
   });
 
-  it("упражнение решается и проверяется — отказ хранилища не мешает", () => {
+  it("упражнение решается и проверяется — отказ хранилища не мешает", async () => {
     forbidStorage();
     renderTab();
-    fireEvent.click(screen.getByText("Привет"));
+    fireEvent.click(await screen.findByText("Привет", {}, { timeout: 5000 }));
     const check = screen.getAllByRole("button").find((b) => /comprobar|revisar|verificar/i.test(b.textContent ?? ""));
     expect(check).toBeTruthy();
     expect(() => fireEvent.click(check as HTMLElement)).not.toThrow();

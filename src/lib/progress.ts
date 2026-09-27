@@ -117,10 +117,29 @@ export async function saveLessonAttempt(
   passed: boolean,
   mistakes: MistakeDetail[],
   answers: AnswerMap,
+  at: Date = new Date(),
 ) {
-  await lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers);
+  await lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers, at);
 }
 
+/**
+ * ЗАЧЁТ УРОКА — ПО ЛУЧШЕЙ ПОПЫТКЕ, ЭКРАН — ПО ПОСЛЕДНЕЙ (заход 7.238).
+ *
+ * Строка одна на урок. `score`, `mistakes`, `answers` — последней попытки:
+ * их восстанавливает экран упражнений, чтобы ученик видел свои ошибки.
+ * `passed` — ЗАЧЁТ: ставится удачной попыткой и неудачной не снимается.
+ * До правки неудачная повторная (8/25 после 20/25) перезаписывала
+ * `passed = false` — галочка на странице уровня, «Siguiente lección» и
+ * «Ya aprobaste» пропадали; прогон на сборке до 7.236 показал, что так
+ * было с первого коммита. Миграции не нужно: у сданных строк `passed`
+ * уже `true`, а снятый раньше зачёт вернётся со следующей сданной
+ * попыткой.
+ *
+ * `completedAt` — время ДЕЙСТВИЯ (`at`), а не приёма: календарь берёт день
+ * урока из этой колонки (`fetchActivityDaySources` в streaks.ts), и ответ
+ * из очереди, отправленный позавчера, до правки добавлял в календарь
+ * «сегодня» (проба `e2e/lesson-credit-best-attempt.spec.ts`).
+ */
 function lessonAttemptUpsert(
   userId: string,
   level: string,
@@ -129,13 +148,14 @@ function lessonAttemptUpsert(
   passed: boolean,
   mistakes: MistakeDetail[],
   answers: AnswerMap,
+  at: Date,
 ) {
   const mistakesJson = JSON.stringify(mistakes.slice(0, 20));
   const answersJson = JSON.stringify(answers);
   return db.lessonProgress.upsert({
     where: { userId_level_lessonSlug: { userId, level, lessonSlug } },
-    update: { score, passed, mistakes: mistakesJson, answers: answersJson, completedAt: new Date() },
-    create: { userId, level, lessonSlug, score, passed, mistakes: mistakesJson, answers: answersJson },
+    update: { ...(passed ? { passed: true } : {}), score, mistakes: mistakesJson, answers: answersJson, completedAt: at },
+    create: { userId, level, lessonSlug, score, passed, mistakes: mistakesJson, answers: answersJson, completedAt: at },
   });
 }
 
@@ -158,13 +178,14 @@ export async function saveLessonAttemptOnce(
   passed: boolean,
   mistakes: MistakeDetail[],
   answers: AnswerMap,
+  at: Date = new Date(),
 ): Promise<"saved" | "duplicate"> {
   const seen = await db.offlineReceipt.findUnique({ where: { id: key }, select: { id: true } });
   if (seen) return "duplicate";
   try {
     await db.$transaction([
       db.offlineReceipt.create({ data: { id: key, userId, kind: "lesson" } }),
-      lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers),
+      lessonAttemptUpsert(userId, level, lessonSlug, score, passed, mistakes, answers, at),
     ]);
     return "saved";
   } catch (error) {
@@ -233,7 +254,9 @@ export interface LessonAttempt {
 /** The most recent attempt (pass OR fail) at a specific lesson, regardless
  * of outcome — what GET /api/progress?level=&lesson= returns so
  * ExercisesTab can restore a student's exact previous answers on a repeat
- * visit, not just whether they'd passed. */
+ * visit, not just whether they'd passed. `passed` here is the lesson's
+ * CREDIT (any attempt ever passed, 7.238), not this attempt's outcome —
+ * the tab recomputes that from `answers`. */
 export async function getLessonAttempt(
   userId: string,
   level: string,
