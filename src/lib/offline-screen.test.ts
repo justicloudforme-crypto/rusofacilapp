@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -126,10 +126,20 @@ describe("офлайн-заглушка", () => {
  * страницу — только на конкретном адресе.
  */
 describe("каркас без сети: запуск и конкретная страница (7.240)", () => {
+  // Скрипт каркаса решает, что показать, АСИНХРОННО (сперва ищет
+  // сохранённую копию). Фиксированная пауза здесь была бы гонкой со
+  // скоростью машины (на CI медленнее), поэтому ждём само решение: пока
+  // виден хотя бы один элемент состояния «offline».
   async function offlineAt(path: string): Promise<Document> {
     Object.defineProperty(window.navigator, "onLine", { configurable: true, get: () => false });
     const doc = renderOfflineScreenAt(path);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await vi.waitFor(
+      () => {
+        const visible = [...doc.querySelectorAll<HTMLElement>('[data-state="offline"]')].some((el) => !el.hidden);
+        if (!visible) throw new Error("каркас ещё не показал состояние «нет сети»");
+      },
+      { timeout: 5_000, interval: 20 },
+    );
     return doc;
   }
   const shown = (doc: Document) =>
