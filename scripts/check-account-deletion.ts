@@ -255,7 +255,7 @@ async function main(): Promise<number> {
     const pages = await livePages(base);
     if (plant) {
       const clean = judgeLive(pages).length === 0;
-      const spoiled = pages.map((p) => ({ ...p, html: p.html.replace("data-rf-account-deletion-page", "").split(ACCOUNT_DELETION_COPY.es.deletedNotice).join("") }));
+      const spoiled = pages.map((p) => ({ ...p, html: p.html.split("data-rf-account-deletion-page").join("").split(ACCOUNT_DELETION_COPY.es.deletedNotice).join("") }));
       const caught = judgeLive(spoiled).length;
       const withNotice = pages.map((p) => (p.mustNot?.length ? { ...p, html: p.html + p.mustNot[0] } : p));
       const caughtNot = judgeLive(withNotice).length;
