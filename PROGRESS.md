@@ -14,7 +14,16 @@
 Android**, которым агент проверяет оболочку сам (как запускать — раздел
 1.4).
 
-**Свежее: 7.244** — «покупка открывает RuStore» (сайт, AAB не нужен):
+**Свежее: 7.245** — «Запрошенное приложение не найдено» на POCO
+(только диагностика, кода нет, AAB не нужен): лог телефона показал, что
+сервер Google Play отвечает **404** на `com.rusofacilapp.app` учётке
+тестировщика `justicloudforme@gmail.com` — и в окне оплаты, и на
+странице приложения, и на вебе с любой страной; YouTube рядом открывается.
+Наш код, товары RevenueCat, подпись и Aptoide исключены прогоном. Чинит
+владелец в консоли (состояние трека Alpha и список тестировщиков) —
+долг 358 открыт. До него 7.244:
+
+**7.244** — «покупка открывает RuStore» (сайт, AAB не нужен):
 путь покупки страницы чист и до, и после #439 (тариф → только мост
 `purchasePackage`, e2e на двух сборках) — RuStore открывается за мостом,
 в окне Google Play или телефоном; лог POCO не снят (телефон не
@@ -13348,6 +13357,94 @@ C1-заголовок ловится, а A1-слова той же страни�
 * 330 замороженных страниц не затронуты (они все — `stories` и `media`).
 
 ---
+
+### 7.245. «ЗАПРОШЕННОЕ ПРИЛОЖЕНИЕ НЕ НАЙДЕНО» НА POCO: СЕРВЕР GOOGLE PLAY ОТВЕЧАЕТ 404 УЧЁТКЕ ТЕСТИРОВЩИКА — ПРИЧИНА НА СТОРОНЕ КОНСОЛИ, НЕ В КОДЕ; ДОЛГ 358 ЗАВЕДЁН (29.09.2026; ТОЛЬКО ДИАГНОСТИКА; AAB НЕ НУЖЕН; БОЕВАЯ БАЗА НЕ ТРОНУТА)
+
+## ЧАСТЬ 1 (7.245). ВХОД И ВЫХОД ЧИСЛАМИ
+
+| | строк | открытых | закрытых | снятых | правил |
+|---|---|---|---|---|---|
+| вход (после 7.244) | 357 | 85 | 259 | 4 | 9 |
+| выход (7.245) | 358 | 86 | 259 | 4 | 9 |
+
+Вход — `origin/main` `0d13208` (#441, #442 влиты). Правок кода нет: PR только документов (`docs/run-7245`). `android/`, `ios/`, сайт не тронуты — **AAB не нужен**. Ключ Turso не использовался.
+
+| строка | состояние | суть |
+|---|---|---|
+| 358 | **открыт**, заведён 29.09.2026 (7.245) по логу POCO | **Google Play не отдаёт приложение учётке тестировщика `justicloudforme@gmail.com`:** сервер `play-fe.googleapis.com/fdfe/resolveLink` отвечает **404** на `com.rusofacilapp.app` (в приложении Play и на веб-странице Play, в том числе с `gl=MX` и `gl=US`), а соседний YouTube с того же телефона и той же сети открывается. Покупка («RC-BUY-5», «Запрошенное приложение не найдено») и «Подписаться снова» в Play падают по той же причине. 27.09 в 22:51 UTC эта же учётка поставила 1.0.12 из Play, в 22:53 UTC покупка прошла — значит, доступ пропал на стороне Google после этого. Код, товары RevenueCat, подпись и пакет проверены и чисты. **Закрывается** действием владельца в консоли (см. часть 4) и повтором: страница приложения в Play открывается, окно оплаты появляется. |
+
+## ЧАСТЬ 2 (7.245). ФАКТЫ С ТЕЛЕФОНА (adb, только чтение)
+
+| что | значение |
+|---|---|
+| телефон | POCO X6 Pro 5G (`2311DRK48G`), Android 16 (SDK 36), HyperOS OS3.0, регион прошивки RU, язык ru-RU |
+| время | 29.09 09:25 +10 (Asia/Vladivostok), время сети включено |
+| сеть | Wi-Fi «INFINITUM…» (Telmex, Мексика), страна сети `mx`; VPN нет; **Private DNS = `dns.adguard-dns.com`** |
+| Google Play | 53.2.23-34 (обновлён 23.09) |
+| Сервисы Google Play | 26.34.36 (обновлены 23.09) |
+| приложение | 1.0.12 / versionCode 13, поставлено 20.09, обновлено 28.09 08:51 +10 (= 27.09 22:51 UTC) |
+| кто установил | `com.android.vending` (Google Play), владелец обновлений — тоже Play |
+| подпись | ключ подписи Google Play (`CN=Android, O=Google Inc.`, SHA-256 `e3a9d05e…54b678`), не ключ загрузки владельца — так и должно быть |
+| магазины | Google Play, Xiaomi GetApps (`com.xiaomi.mipicks`), Aptoide (`cm.aptoide.pt`); RuStore нет |
+| `market://details?id=…` | закрепления нет: система спрашивает между GetApps, Google Play и Aptoide |
+| `https://play.google.com/store/apps/details?id=…` | Google Play (или Chrome) |
+| Google-учётки | `petrov192…@gmail.com`, `justicloudforme@gmail.com` и ещё одна (адрес скрыт системой) |
+| учётка Play для приложения | по логу «account via installer for com.rusofacilapp.app» — та, что ставила; явный выбор `authAccount=justicloudforme@gmail.com` переключил Play на неё же — ответ снова 404 |
+
+Нажатия по экрану с Mac на этом телефоне запрещены (`INJECT_EVENTS`: у HyperOS выключен тумблер «Отладка по USB (настройки безопасности)»), отладки WebView в релизе нет. Поэтому шаги «а» и «б» (тариф в приложении) не повторены руками агента. Всё остальное (в, г, д, страница подписок Play, страница тестировщика и веб-страница Play в Chrome) снято командами `am start`.
+
+## ЧАСТЬ 3 (7.245). ЧТО ПОКАЗАЛ ЛОГ
+
+| шаг | что открыто | экран | ответ сервера |
+|---|---|---|---|
+| в | `market://details?id=com.rusofacilapp.app` в Google Play | «Файл не найден.» | 404 |
+| г | `https://play.google.com/store/apps/details?id=com.rusofacilapp.app` в Google Play | «Файл не найден.» | 404 |
+| д | `market://details?id=com.google.android.youtube` | страница YouTube, всё работает | 200 |
+| — | то же с `authAccount=justicloudforme@gmail.com` | «Файл не найден.» | 404 |
+| — | Play → Подписки (`sku=standard`) | «RusoFácil Estándar — срок истёк 27 сент., 3:58 PM GMT-7», «Подписаться снова» | страница есть |
+| — | `play.google.com/apps/testing/com.rusofacilapp.app` в Chrome | «You are a tester.» | — |
+| — | веб-страница приложения в Chrome (без страны, `gl=MX`, `gl=US`) | «No se ha podido encontrar la URL» | 404 |
+
+Выдержка (29.09, время +10, учётки заменены на `<A>`):
+
+```
+09:26:31.458 I Finsky: [AV::AE]: Does the account [<A>] have a permanently ineligible reason? false
+09:26:31.789 E Volley: Unexpected response code 404 for https://play-fe.googleapis.com/fdfe/resolveLink?url=http%3A%2F%2Fmarket.android.com%2Fdetails%3Fid%3Dcom.rusofacilapp.app%26lft%3D1&ref=com.rusofacilapp.app
+09:26:31.792 E Finsky: Error in resolveLink prewarming.
+09:26:31.792 E Finsky: network time: 0, HTTP status code: na, exception DisplayErrorMessage[Файл не найден.]
+09:26:42.662 E Volley: Unexpected response code 404 for https://play-fe.googleapis.com/fdfe/resolveLink?url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.rusofacilapp.app&ref=com.rusofacilapp.app
+09:29:08.860 I Finsky: Switching account to [<A>] due to intent          (authAccount=justicloudforme@gmail.com)
+09:29:08.952 E Volley: Unexpected response code 404 for https://play-fe.googleapis.com/fdfe/resolveLink?url=...details%3Fid%3Dcom.rusofacilapp.app...
+```
+
+Наше приложение при запуске (RevenueCat 1 раз за старт):
+
+```
+09:26:01.273 I [Purchases] - INFO: Missing productDetails: UnfetchedProduct{productId='premium_lifetime', productType='subs', statusCode=3}
+```
+
+Это ожидаемо: `premium_lifetime` — разовый товар, RevenueCat спрашивает его и как подписку. Про `standard` жалоб нет, товары приходят. Окно ошибки показывает **сам Google Play** (`com.android.vending/…finsky.activities.MainActivity`), не Aptoide и не GetApps.
+
+## ЧАСТЬ 4 (7.245). ДИАГНОЗ И ЧТО ДЕЛАТЬ
+
+**Причина:** сервер Google Play считает, что приложение `com.rusofacilapp.app` сейчас недоступно учётке `justicloudforme@gmail.com`. Покупка — частный случай: окно оплаты перед показом проверяет то же самое и пишет «Запрошенное приложение не найдено» (у нас это «RC-BUY-5»). Уверенность в этом — высокая (прямой ответ 404 от сервера, контроль YouTube — 200).
+
+Почему сервер так решил, с телефона не видно. Кандидаты по убыванию:
+
+1. **Состояние приложения или трека в консоли изменилось 28.09** (владелец в этот день заполнял App content по аудиту 7.241: Content rating, Target audience 18+, Data safety и т. п.). За: доступ пропал после 27.09 22:53 UTC; 404 во всех странах сразу (веб с `gl=MX` и `gl=US`), значит, это не страна и не телефон. Против: владелец видит трек Alpha «Active». Смотреть: Publishing overview (изменения на проверке, Managed publishing), Policy status и Inbox (отклонение, приостановка), трек Alpha → Releases (статус выпуска vc13).
+2. **Учётка выпала из списка тестировщиков трека Alpha.** Список License testing — это не список тестировщиков. За: 404 бывает ровно так. Против: страница `apps/testing` пишет «You are a tester» (но в Chrome мог быть вход другой учёткой — на аватаре буква «V»).
+3. **Временный сбой на стороне Google.** Против: держится больше суток, перезагрузка и остановка Play не помогают.
+
+**Исключено прогоном:** наш код (та же ошибка в самом Play, без приложения); ID товаров и RevenueCat (товары приходят); подпись и пакет (ключ Google Play, установщик — Play); Aptoide, GetApps и RuStore (окно — `com.android.vending`, запросы идут в `play-fe.googleapis.com`); AdGuard DNS (сервер ответил, 404 — это ответ Google, а не блокировка; YouTube через тот же DNS работает); страна учётки (404 и с `gl=MX`).
+
+**Для подачи 05.10:** пока держится 404, тестировщики не могут ни поставить приложение, ни купить. Это ломает и требование «12+ тестировщиков 14 дней» — чинить до подачи.
+
+Инструкция владельцу — в итоговом отчёте захода 7.245 (сводка): снять скриншоты Publishing overview, Policy status/Inbox, Alpha → Releases/Testers/Countries **до любых изменений**; проверить, что в Testers отмечен список с `justicloudforme@gmail.com`, и нажать «Сохранить»; в Chrome на телефоне войти этой же учёткой на `play.google.com/apps/testing/com.rusofacilapp.app`; повторить и снять видео.
+
+Чтобы следующий агент мог сам нажимать по экрану POCO: «Настройки → Дополнительные настройки → Для разработчиков → Отладка по USB (настройки безопасности)» (нужен вход в Mi-аккаунт; выключается обратно тем же тумблером).
+
+---
+
 
 ### 7.244. «ПОКУПКА НА ТЕЛЕФОНЕ ОТКРЫВАЕТ RuStore»: ПУТЬ ПОКУПКИ СТРАНИЦЫ ЧИСТ ДО И ПОСЛЕ #439 — ПРИЧИНА ЗА МОСТОМ (ОКНО GOOGLE PLAY / ТЕЛЕФОН); СТОРОЖ `check:purchase-no-store-link`; ОТКАЗ МАГАЗИНА С КОДОМ; ДОЛГ 356 ЗАКРЫТ, 357 ЗАВЕДЕНА И ЗАКРЫТА (29.09.2026; AAB НЕ НУЖЕН; БОЕВАЯ БАЗА — 6 SELECT, ЗАПИСЕЙ 0)
 
