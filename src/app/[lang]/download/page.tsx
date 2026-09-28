@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { routeAlternates, truncateForMeta } from "@/lib/site";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
@@ -72,7 +72,7 @@ export async function generateMetadata({
     const copy = nativeAccessCopy(lang).download;
     return { title: `${copy.heading} | RusoFácilapp`, description: copy.body, robots: { index: false }, alternates };
   }
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   return {
     title: `${dict.download.pageTitle} | RusoFácilapp`,
     description: truncateForMeta(dict.download.pageSubtitle),
@@ -98,7 +98,7 @@ export default async function DownloadPage({ params }: PageProps<"/[lang]/downlo
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   if (!dict?.download) notFound();
   const d = dict.download;
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import FlashcardAdminApp from "@/components/admin/FlashcardAdminApp";
 import { routeAlternates } from "@/lib/site";
 
@@ -16,7 +16,7 @@ export default async function AdminFlashcardsPage({ params }: PageProps<"/[lang]
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
 
   return (
     <div>

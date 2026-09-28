@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { db } from "@/lib/db";
 import { isGlossaryCategory, parseExamplesJson, parseRelatedLessonsJson } from "@/lib/glossary";
 import { attachGlossaryAudio } from "@/lib/glossary-audio";
@@ -39,7 +39,7 @@ export default async function GlossaryPage({ params }: PageProps<"/[lang]/glossa
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   if (!dict?.glossary) notFound();
 
   // Fetched here (not left to GlossaryApp's old client-side fetch) so the

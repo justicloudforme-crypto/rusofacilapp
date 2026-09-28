@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HashTokenForm from "@/components/auth/HashTokenForm";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { routeAlternates } from "@/lib/site";
 import { getCurrentUser } from "@/lib/auth";
 import { getSubscriptionsForUser } from "@/lib/subscription";
@@ -24,7 +24,7 @@ export default async function ConfirmDeleteAccountPage({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const query = await searchParams;
   // Токена здесь нет: он во фрагменте адреса, который на сервер не
   // уезжает вовсе (долг 164, тот же класс, что у сброса пароля —

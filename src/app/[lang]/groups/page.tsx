@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserGroups } from "@/lib/groups";
 import { routeAlternates } from "@/lib/site";
@@ -35,7 +35,7 @@ export default async function GroupsPage({
   const user = await getCurrentUser();
   if (!user) redirect(`/${lang}/login?redirectTo=/${lang}/groups`);
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const query = await searchParams;
   const errorCode = typeof query.error === "string" ? query.error : null;
   const errorKey = errorCode && errorCode in ERROR_KEYS ? ERROR_KEYS[errorCode as keyof typeof ERROR_KEYS] : null;

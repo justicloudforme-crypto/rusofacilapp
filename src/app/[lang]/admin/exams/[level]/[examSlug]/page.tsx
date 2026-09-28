@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isLevelSlug } from "@/lib/courses";
 import { db } from "@/lib/db";
 import { isExamSlugFormat, staticExamContent } from "@/lib/exams/content";
@@ -48,7 +48,7 @@ export default async function AdminExamEditorPage({
   const { lang, level, examSlug } = await params;
   if (!isLocale(lang) || !isLevelSlug(level) || !isExamSlugFormat(level, examSlug)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
 
   const customRow = await db.exam.findUnique({
     where: { level_examSlug: { level, examSlug } },

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
@@ -49,7 +49,7 @@ export default async function SopaDeLetrasRusoPage({
   if (lang !== "es") notFound();
 
   const [dict, user, row] = await Promise.all([
-    getDictionary("es"),
+    getPageDictionary("es"),
     getCurrentUser(),
     // Sequence 6, not 1 — sequence 1 is already the puzzle Google can
     // reach through /es/word-games itself (that page's default tab), so

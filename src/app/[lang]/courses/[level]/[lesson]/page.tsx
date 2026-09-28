@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { getLessonContent } from "@/lib/lessons/content";
@@ -29,7 +29,7 @@ export async function generateMetadata({
 }: PageProps<"/[lang]/courses/[level]/[lesson]">): Promise<Metadata> {
   const { lang, level, lesson } = await params;
   if (!isLocale(lang) || !isLevelSlug(level) || !isLessonSlug(level, lesson)) return {};
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const levelDict = dict.courses.levels[level];
   const lessonTitle = levelDict.lessons[Number(lesson) - 1];
   if (!lessonTitle) return {};
@@ -71,7 +71,7 @@ export default async function LessonPage({
   const { lang, level, lesson } = await params;
   if (!isLocale(lang) || !isLevelSlug(level) || !isLessonSlug(level, lesson)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const levelDict = dict.courses.levels[level];
   const index = Number(lesson) - 1;
   const title = levelDict.lessons[index];

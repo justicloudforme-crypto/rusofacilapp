@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import FreeTierCard from "@/components/pricing/FreeTierCard";
 import SubscriptionCard, { type BillingOption } from "@/components/pricing/SubscriptionCard";
 import PremiumCard from "@/components/pricing/PremiumCard";
@@ -28,7 +28,7 @@ import {
 export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   // ДОЛГ 179. Внутри приложения у этой страницы другое содержимое, значит и
   // подпись у неё другая. Прежний текст описания называет OXXO — сторонний
   // способ оплаты по имени, — и он оставался в `<head>` даже тогда, когда
@@ -147,7 +147,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   // than silently highlighting the wrong card.
   const highlightPremium = highlight === "premium";
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const p = dict.pricing;
 
   // Cash means OXXO, and OXXO means a shop in Mexico. Outside it the tab,

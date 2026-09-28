@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getPublicProfileData } from "@/lib/public-profile";
 import { getAvatarLabels } from "@/lib/avatarLabels";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
@@ -21,7 +21,7 @@ export default async function PublicProfilePage({
   const { lang, handle } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const profile = await getPublicProfileData(handle);
   if (!profile) notFound();
 

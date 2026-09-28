@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { levelMeta, levelSlugs } from "@/lib/courses";
 import { buildIntroSlides, introSlidesForApp } from "@/lib/intro/content";
 import { getIntroStats } from "@/lib/intro/bank";
@@ -18,7 +18,7 @@ import { isNativeShellRequest } from "@/lib/native-shell";
 export async function generateMetadata({ params }: PageProps<"/[lang]/courses">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const alternates = routeAlternates(lang, "/courses");
   // ES copy written for actual Spanish search demand ("curso de ruso
   // online", "aprender ruso") rather than a straight translation of the
@@ -45,7 +45,7 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   // Every quantity the deck states, counted from the same sources the site
   // reads — see src/lib/intro/stats.ts. Nothing on a slide is written by
   // hand any more.

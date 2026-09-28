@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFlashcardIndex } from "@/lib/flashcards/cache";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import {
   PUBLIC_VOCABULARY_LEVELS,
@@ -119,7 +119,7 @@ export default async function VocabularyCategoryPage({
   // is the correct thing to show before the regeneration and for any
   // category no rung could use.
   const puzzles = (await getThemedPuzzlesByTopic()).get(page.slug) ?? [];
-  const dict = await getDictionary("es");
+  const dict = await getPageDictionary("es");
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">

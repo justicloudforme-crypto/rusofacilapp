@@ -401,7 +401,11 @@ export type PurchaseOutcome =
   | { kind: "cancelled" }
   | { kind: "pending" }
   | { kind: "offline" }
-  | { kind: "error"; message: string };
+  /** `code` — код RevenueCat строкой (`PURCHASES_ERROR_CODE`), «configure»
+   *  если SDK не настроился, «?» если код не пришёл. Заход 7.244: до него
+   *  отказ магазина был немым — на видео владельца (POCO, RuStore вместо
+   *  окна Google) нельзя было понять, что ответил Google. */
+  | { kind: "error"; message: string; code: string };
 
 /** Коды ошибок SDK, записанные строками ровно так, как их отдаёт мост
  *  (`PURCHASES_ERROR_CODE` — строковое перечисление). Литералы, а не
@@ -413,12 +417,18 @@ const ERROR_NETWORK = "10";
 const ERROR_OFFLINE_CONNECTION = "35";
 
 function outcomeFromError(err: unknown): PurchaseOutcome {
-  const raw = err as { code?: unknown; message?: unknown; userCancelled?: unknown } | null;
+  const raw = err as { code?: unknown; message?: unknown; userCancelled?: unknown; data?: unknown } | null;
   const code = raw && raw.code != null ? String(raw.code) : "";
   if (raw?.userCancelled === true || code === ERROR_PURCHASE_CANCELLED) return { kind: "cancelled" };
   if (code === ERROR_PAYMENT_PENDING) return { kind: "pending" };
   if (code === ERROR_NETWORK || code === ERROR_OFFLINE_CONNECTION) return { kind: "offline" };
-  return { kind: "error", message: typeof raw?.message === "string" ? raw.message : "" };
+  // Ответ Google (`underlyingErrorMessage`, например «BILLING_UNAVAILABLE»)
+  // SDK кладёт в `data` исключения моста; без него «Store problem» ничего
+  // не различает.
+  const data = raw?.data as { underlyingErrorMessage?: unknown } | undefined;
+  const underlying = typeof data?.underlyingErrorMessage === "string" ? data.underlyingErrorMessage : "";
+  const message = typeof raw?.message === "string" ? raw.message : "";
+  return { kind: "error", message: underlying ? `${message} — ${underlying}` : message, code: code || "?" };
 }
 
 /**
@@ -432,7 +442,7 @@ function outcomeFromError(err: unknown): PurchaseOutcome {
  */
 export async function purchasePackage(pkg: PurchasesPackage): Promise<PurchaseOutcome> {
   try {
-    if (!(await configureRevenueCat())) return { kind: "error", message: "" };
+    if (!(await configureRevenueCat())) return { kind: "error", message: "", code: "configure" };
     const { api } = await within(sdk(), "import");
     const { customerInfo } = await api.purchasePackage({ aPackage: pkg });
     return { kind: "purchased", customerInfo };

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { levelSlugs } from "@/lib/courses";
 import { getHomepageStats, getHomepagePreviewData, getHomepageWordSample } from "@/lib/home-stats";
 import HeroWordDeck from "@/components/home/HeroWordDeck";
@@ -55,7 +55,7 @@ export default async function HomePage({ params, searchParams }: PageProps<"/[la
   // записи уже нет.
   const accountDeleted = (await searchParams).accountDeleted === "1";
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const [stats, words, preview, cashAvailableForCountry, localPrice, nativeShell] = await Promise.all([
     getHomepageStats(),
     getHomepageWordSample(),

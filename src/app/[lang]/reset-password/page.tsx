@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import HashTokenForm from "@/components/auth/HashTokenForm";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import { routeAlternates } from "@/lib/site";
@@ -20,7 +20,7 @@ export default async function ResetPasswordPage({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const query = await searchParams;
   // Токена здесь НЕТ и быть не может: он приезжает во фрагменте адреса,
   // которого сервер не видит по построению (долг 164). Читает его
