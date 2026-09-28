@@ -119,3 +119,23 @@ describe("подпись выданного доступа: код это или
     expect(subscriptionRowLabel(inside, DICTS.es, [REDEEMED], "plan")).toBe("Acceso por código");
   });
 });
+
+// Заход 7.243, задача 4в: Premium, выданный руками (строка проверяющего
+// Google Play, provider=manual), в «Accesos y pagos» — «Acceso concedido»,
+// без названия тарифа; «Plan» называет уровень. Контроль: купленный
+// Premium (provider stripe/revenuecat) по-прежнему «Premium» в истории.
+describe("ручная выдача Premium — не покупка", () => {
+  const manual = { plan: "lifetime", stripeSubscriptionId: null, createdAt: new Date("2026-09-27T12:00:00Z"), provider: "manual" };
+  const bought = { ...manual, provider: "stripe" };
+  it("история: «Acceso concedido» / «Доступ выдан»", () => {
+    expect(subscriptionRowLabel(manual, DICTS.es, [], "history")).toBe("Acceso concedido");
+    expect(subscriptionRowLabel(manual, DICTS.ru, [], "history")).toBe("Доступ выдан");
+  });
+  it("«Plan»: уровень доступа Premium", () => {
+    expect(subscriptionRowLabel(manual, DICTS.es, [], "plan")).toBe(planDisplayLabel("lifetime", DICTS.es));
+  });
+  it("контроль: купленный Premium в истории — «Premium»", () => {
+    expect(subscriptionRowLabel(bought, DICTS.es, [], "history")).toBe(planDisplayLabel("lifetime", DICTS.es));
+    expect(subscriptionRowLabel(bought, DICTS.es, [], "history")).not.toBe("Acceso concedido");
+  });
+});

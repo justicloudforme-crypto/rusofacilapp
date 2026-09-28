@@ -17,6 +17,7 @@ import { isStaff } from "@/lib/roles";
 import { isAvatarId, DEFAULT_AVATAR_ID } from "@/lib/avatars";
 import { getEntitlementTier, isPremiumTier } from "@/lib/entitlement";
 import { isNativeShellRequest } from "@/lib/native-shell";
+import { nativeAccessCopy } from "@/lib/native-access-copy";
 import { getProfileTabs } from "@/lib/profile-tabs";
 import {
   HomeIcon,
@@ -101,6 +102,17 @@ export default async function Navbar({
   const ctaHref = user ? `/${lang}/profile` : `/${lang}/login`;
   const ctaLabel = user ? dict.nav.profile : dict.nav.cta;
 
+  // В ПРИЛОЖЕНИИ ВМЕСТО «ЦЕН» — ДОКУМЕНТЫ (заход 7.243, аудит 7.241, Р10).
+  // Веб-подвала в приложении нет, а гостю в «Mi perfil → Ajustes» не
+  // попасть: Условия и Политика у него открываются из этого меню.
+  const legalGroup = {
+    label: nativeAccessCopy(lang).legal.heading,
+    links: [
+      { href: `/${lang}/terms`, label: dict.footer.termsLink },
+      { href: `/${lang}/privacy`, label: dict.footer.privacyLink },
+    ],
+  };
+
   // Mobile drawer groups: BottomNav.tsx already covers Рассказы/Курсы/
   // Слова/Игры/Профиль for a logged-in user, so the drawer only needs to
   // carry what's left (Аудио и видео, Группы, Цены) plus the full profile-
@@ -128,7 +140,7 @@ export default async function Navbar({
           label: dict.nav.groupCommunity,
           links: [{ href: `/${lang}/groups`, label: dict.nav.groups, icon: <UsersIcon className={iconClass} /> }],
         },
-        ...(nativeShell ? [] : [{ label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] }]),
+        ...(nativeShell ? [legalGroup] : [{ label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] }]),
         ...(staff ? [{ label: dict.admin.title, links: [{ href: `/${lang}/admin`, label: dict.admin.title }] }] : []),
       ]
     : [
@@ -153,7 +165,7 @@ export default async function Navbar({
             { href: `/${lang}/media`, label: dict.nav.media, icon: <HeadphonesIcon className={iconClass} /> },
           ],
         },
-        ...(nativeShell ? [] : [{ label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] }]),
+        ...(nativeShell ? [legalGroup] : [{ label: dict.nav.pricing, links: [{ href: `/${lang}/pricing`, label: dict.nav.pricing }] }]),
       ];
 
   const profileTabs = getProfileTabs(dict);

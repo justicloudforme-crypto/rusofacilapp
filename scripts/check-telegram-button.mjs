@@ -94,19 +94,19 @@ function plant() {
   add(
     "подсадка: показ привязан ко входу — ровно та версия наблюдения, что опровергнута замером",
     button,
-    layout.replace('{theme !== "reading" && <TelegramFloatButton', '{theme !== "reading" && !user && <TelegramFloatButton'),
+    layout.replace('{!nativeShell && theme !== "reading" && <TelegramFloatButton', '{!nativeShell && theme !== "reading" && !user && <TelegramFloatButton'),
     "вошли роль или вход",
   );
   add(
     "подсадка: условие темы убрано вовсе",
     button,
-    layout.replace('{theme !== "reading" && <TelegramFloatButton', "{<TelegramFloatButton"),
+    layout.replace('{!nativeShell && theme !== "reading" && <TelegramFloatButton', "{!nativeShell && <TelegramFloatButton"),
     "не по условию темы",
   );
   add(
     "подсадка: кнопку сняли с раскладки вовсе",
     button,
-    layout.replace('{theme !== "reading" && <TelegramFloatButton label={dict.profile.telegramCta} />}', ""),
+    layout.replace('{!nativeShell && theme !== "reading" && <TelegramFloatButton label={dict.profile.telegramCta} />}', ""),
     "нет вовсе",
   );
 

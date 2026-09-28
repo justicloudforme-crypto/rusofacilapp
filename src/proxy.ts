@@ -330,10 +330,14 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  if (
-    userAgentIsNativeShell(request.headers.get("user-agent")) &&
-    request.cookies.get(NATIVE_SHELL_COOKIE)?.value !== NATIVE_SHELL_COOKIE_VALUE
-  ) {
+  // ПРОДЛЕВАЕТСЯ НА КАЖДОМ ЗАПРОСЕ С ТОКЕНОМ — заход 7.243 (аудит 7.241,
+  // Р8). До него кука ставилась, только когда её не было, то есть жила
+  // ровно 365 дней с первого запуска и не продлевалась: через год запрос
+  // воркера (он токена не несёт) пришёл бы без метки, и приложение снова
+  // получило бы сайт со Stripe. Теперь каждый запрос, который webview
+  // делает сам, сдвигает срок на 365 дней вперёд. Сторож —
+  // `check:app-mode` (кука с истекающим сроком → запрос → свежий срок).
+  if (userAgentIsNativeShell(request.headers.get("user-agent"))) {
     response.cookies.set(NATIVE_SHELL_COOKIE, NATIVE_SHELL_COOKIE_VALUE, {
       path: "/",
       maxAge: NATIVE_SHELL_COOKIE_MAX_AGE,
@@ -364,10 +368,9 @@ export async function proxy(request: NextRequest) {
   const shellVersion = userAgentIsNativeShell(request.headers.get("user-agent"))
     ? nativeShellVersion({ userAgent: request.headers.get("user-agent") })
     : null;
-  if (
-    shellVersion !== null &&
-    request.cookies.get(NATIVE_SHELL_VERSION_COOKIE)?.value !== String(shellVersion)
-  ) {
+  // Продлевается так же, как метка выше (7.243): иначе через год версия
+  // пропала бы раньше метки, и покупка внутри приложения закрылась бы.
+  if (shellVersion !== null) {
     response.cookies.set(NATIVE_SHELL_VERSION_COOKIE, String(shellVersion), {
       path: "/",
       maxAge: NATIVE_SHELL_COOKIE_MAX_AGE,

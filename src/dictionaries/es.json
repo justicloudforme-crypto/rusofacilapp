@@ -730,7 +730,7 @@
     "grantNoticeCode": "Tu acceso está abierto con un código y no se renueva: termina el {date}. No hay nada que cancelar.",
     "grantNoticeManual": "Tu acceso se abrió a mano y no se renueva: termina el {date}. No hay nada que cancelar.",
     "historyGrantCode": "Acceso por código",
-    "historyGrantManual": "Acceso abierto a mano",
+    "historyGrantManual": "Acceso concedido",
     "canceledNotice": "Tu suscripción se canceló: no se renovará, y conservas el acceso a las lecciones hasta el final del periodo ya pagado.",
     "cancelingNotice": "No habrá renovación. Conservas el acceso a todo el material hasta el final del periodo ya pagado.",
     "renewButton": "Renovar suscripción",

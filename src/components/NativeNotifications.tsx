@@ -4,11 +4,15 @@ import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import type { Locale } from "@/i18n/config";
-import { clearDeliveredNotifications, scheduleStreakReminder } from "@/lib/notifications";
+import { REMINDER_CHOICE_KEY, clearDeliveredNotifications, scheduleStreakReminder } from "@/lib/notifications";
+import { readLocal } from "@/lib/safe-storage";
 
 /**
- * Requests local-notification permission and (re-)schedules the daily
- * daily reminder once per native app launch. `lang` picks the locale of
+ * (Re-)schedules the daily reminder once per native app launch — WITHOUT
+ * asking for permission (заход 7.243, аудит 7.241 Р11): the OS prompt now
+ * appears only when the person turns the reminder on in «Ajustes»
+ * (`ReminderSetting`). At launch the reminder is kept only if permission
+ * was already granted and the person has not switched it off. `lang` picks the locale of
  * the text and `userId` the position in the rotation, so two learners on
  * the same evening do not get the same sentence and the same learner does
  * not get it twice in a row (src/lib/notification-copy.ts). No-op on web — mirrors
@@ -24,6 +28,7 @@ export default function NativeNotifications({
 }) {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
+    if (readLocal(REMINDER_CHOICE_KEY) === "off") return;
     void scheduleStreakReminder(lang, userId);
   }, [lang, userId]);
 

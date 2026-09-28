@@ -126,6 +126,27 @@ export interface NativeAccessCopy {
   /** Строка в разделе подписки личного кабинета. */
   profileNote: string;
   /**
+   * ДОКУМЕНТЫ ВМЕСТО ПОДВАЛА — заход 7.243 (аудит 7.241, Р10). Веб-подвала
+   * в приложении нет, а Условия и Политика обязаны открываться изнутри
+   * (Google Play требует доступ к политике в самом приложении): вошедший
+   * находит их в «Mi perfil → Ajustes», гость — в меню «≡».
+   */
+  legal: {
+    heading: string;
+    deletion: string;
+  };
+  /**
+   * НАПОМИНАНИЕ ПО ВЫБОРУ — заход 7.243 (аудит 7.241, Р11). Системный вопрос
+   * об уведомлениях появляется только после включения этого переключателя;
+   * строка `body` — объяснение перед системным окном.
+   */
+  reminder: {
+    heading: string;
+    label: string;
+    body: string;
+    denied: string;
+  };
+  /**
    * Одна строка на месте КАЖДОЙ кнопки покупки, которая раньше стояла под
    * закрытым материалом на самой странице: три закрытых вкладки урока,
    * карточка закрытого рассказа, закрытое видео, уведомление о словах C1.
@@ -280,6 +301,8 @@ export interface NativeAccessCopy {
     restoredExpired: string;
     /** Пока ждём подтверждения от сервера после покупки. */
     activating: string;
+    /** Ж.1 (7.243): тариф нажат, магазин ещё не ответил. */
+    purchasing: string;
     activated: string;
     /** Подтверждение не доехало за отведённое время. */
     activationSlow: string;
@@ -352,6 +375,16 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     },
     profileNote:
       "En esta versión de la aplicación no hay compras. La parte abierta del curso funciona con normalidad.",
+    legal: {
+      heading: "Documentos legales",
+      deletion: "Cómo eliminar tu cuenta",
+    },
+    reminder: {
+      heading: "Recordatorio diario",
+      label: "Avisarme a las 19:00",
+      body: "Un aviso al día para no perder tu racha. Al activarlo, el teléfono te pedirá permiso para mostrar notificaciones.",
+      denied: "Las notificaciones están desactivadas para RusoFácil. Puedes permitirlas en los ajustes del teléfono.",
+    },
     closedNote:
       "Esta parte del curso está cerrada en esta versión de la aplicación.",
     locked: {
@@ -393,6 +426,7 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       restoredNothing: "No encontramos compras activas en esta cuenta.",
       restoredExpired: "Encontramos compras anteriores, pero su acceso ya venció.",
       activating: "Activando tu acceso…",
+      purchasing: "Completando la compra…",
       activated: "Listo: tu acceso ya está abierto.",
       activationSlow:
         "El pago se registró, pero el acceso todavía no llega. Espera un momento y vuelve a intentarlo; no hace falta pagar otra vez.",
@@ -456,6 +490,16 @@ const COPY: Record<Locale, NativeAccessCopy> = {
     },
     profileNote:
       "В этой версии приложения покупок нет. Открытая часть курса работает как обычно.",
+    legal: {
+      heading: "Правовые документы",
+      deletion: "Как удалить аккаунт",
+    },
+    reminder: {
+      heading: "Ежедневное напоминание",
+      label: "Напоминать в 19:00",
+      body: "Одно напоминание в день, чтобы не прервать серию. После включения телефон попросит разрешение на уведомления.",
+      denied: "Уведомления для RusoFácil выключены. Их можно разрешить в настройках телефона.",
+    },
     closedNote:
       "Эта часть курса закрыта в этой версии приложения.",
     locked: {
@@ -497,6 +541,7 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       restoredNothing: "Активных покупок у этой учётной записи не нашлось.",
       restoredExpired: "Прежние покупки нашлись, но срок доступа по ним уже закончился.",
       activating: "Активируем доступ…",
+      purchasing: "Завершаем покупку…",
       activated: "Готово: доступ открыт.",
       activationSlow:
         "Оплата прошла, а доступ ещё не доехал. Подождите немного и нажмите ещё раз — платить второй раз не нужно.",

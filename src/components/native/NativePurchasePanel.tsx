@@ -9,6 +9,8 @@ import type { NativeAccessCopy } from "@/lib/native-access-copy";
 import { loadStore, purchasePackage, restorePurchases, storeFailureCode } from "@/lib/revenuecat-client";
 import {
   activationState,
+  beginPurchase,
+  endPurchase,
   readTier,
   startActivationWatch,
   subscribeActivation,
@@ -48,6 +50,8 @@ type Stage =
    *  четыре разные причины выглядели одинаково — см. `native-access-copy.ts`. */
   | { kind: "unavailable"; reason: StoreFailure; step: StoreStep; code: string }
   | { kind: "buying" }
+  /** Ж.1: тариф нажат, магазин ещё не ответил. */
+  | { kind: "purchasing" }
   | { kind: "activating" }
   | { kind: "activated" }
   | { kind: "slow" }
@@ -159,6 +163,7 @@ export default function NativePurchasePanel({
       // тогда список вариантов показывать нечего, разговор уже идёт.
       const live = activationState();
       if (live.kind === "waiting") setStage({ kind: "activating" });
+      else if (live.kind === "purchasing") setStage({ kind: "purchasing" });
       else if (live.kind === "granted") setStage({ kind: "activated" });
       else if (live.kind === "slow") setStage({ kind: "slow" });
       else setStage({ kind: "ready" });
@@ -217,22 +222,36 @@ export default function NativePurchasePanel({
     () =>
       subscribeActivation((live) => {
         if (!alive.current) return;
-        if (live.kind === "waiting") setStage({ kind: "activating" });
+        if (live.kind === "purchasing") setStage({ kind: "purchasing" });
+        else if (live.kind === "waiting") setStage({ kind: "activating" });
         else if (live.kind === "granted") setStage({ kind: "activated" });
         else if (live.kind === "slow") setStage({ kind: "slow" });
       }),
     [],
   );
 
+  /**
+   * Ж.1 (аудит 7.241, Р17; заход 7.243). «Покупка идёт» публикуется В МОДУЛЬ
+   * с нажатия, а не после ответа магазина: RevenueCat отвечает только
+   * отправив чек на свой сервер (~1,5 с после закрытия окна Google), и всё
+   * это время значок в кабинете рисовал серверное «Expirada», а панель —
+   * тарифы. Ответ «куплено» запускает ожидание доступа ДО проверки
+   * `alive`: окно могли закрыть, пока шла оплата, а ждать доступ всё равно
+   * надо (иначе «Activando…» не сменится ничем).
+   */
   const buy = useCallback(
     async (pkg: PurchasesPackage) => {
-      setStage({ kind: "buying" });
+      setStage({ kind: "purchasing" });
+      beginPurchase();
       const outcome = await purchasePackage(pkg);
+      if (outcome.kind === "purchased") {
+        if (alive.current) setStage({ kind: "activating" });
+        await startActivationWatch(baselineTier.current);
+        return;
+      }
+      endPurchase();
       if (!alive.current) return;
       switch (outcome.kind) {
-        case "purchased":
-          await waitForAccess();
-          return;
         // Человек закрыл системный лист сам. Это не сбой, и сообщать о нём
         // нечего: экран просто возвращается к выбору.
         case "cancelled":
@@ -248,7 +267,7 @@ export default function NativePurchasePanel({
           setStage({ kind: "failed" });
       }
     },
-    [waitForAccess],
+    [],
   );
 
   const restore = useCallback(async () => {
@@ -328,6 +347,8 @@ export default function NativePurchasePanel({
                 ? copy.restoredExpired
                 : stage.kind === "activating"
                   ? copy.activating
+                  : stage.kind === "purchasing"
+                    ? copy.purchasing
                   : stage.kind === "activated"
                     ? copy.activated
                     : stage.kind === "loading"
@@ -336,13 +357,17 @@ export default function NativePurchasePanel({
                         ? failureText(stage.reason)
                         : null;
 
-  const busy = stage.kind === "buying" || stage.kind === "activating" || stage.kind === "loading";
+  const busy = stage.kind === "buying" || stage.kind === "purchasing" || stage.kind === "activating" || stage.kind === "loading";
   // Заход 7.240, задача 3: пока Google уже взял оплату, а сервер ещё не
   // открыл доступ (и после срока ожидания), тарифов на экране быть не
   // должно — на видео владельца они висели ~5 с рядом с «Expirada», и
   // экран читался как «покупка не прошла, выбери снова».
   const showList =
-    shownPackages.length > 0 && stage.kind !== "activated" && stage.kind !== "activating" && stage.kind !== "slow";
+    shownPackages.length > 0 &&
+    stage.kind !== "activated" &&
+    stage.kind !== "activating" &&
+    stage.kind !== "purchasing" &&
+    stage.kind !== "slow";
 
   return (
     <div data-testid="native-purchase" className="mt-4">

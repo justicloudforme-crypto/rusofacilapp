@@ -43,7 +43,20 @@ export const PURCHASED_PLANS = ["monthly", "annual", "lifetime"] as const;
 export interface GrantShapedRow {
   plan: string;
   stripeSubscriptionId: string | null;
+  /** «manual» — строку завели руками (заход 7.242: Premium проверяющему
+   *  Google Play). Необязательно: старые выборки колонку не несут. */
+  provider?: string | null;
 }
+
+/**
+ * РУЧНАЯ ВЫДАЧА ПРИ ЛЮБОМ ТАРИФЕ — заход 7.243, задача 4в. Строка
+ * `provider = "manual"` заведена руками, платежа за ней нет, даже если
+ * тариф в ней «lifetime» (Premium проверяющему, 7.242). До правки она шла
+ * по первому правилу ниже как покупка: «Accesos y pagos» писал «Premium»,
+ * будто был платёж, а вкладка показывала «Cancelar suscripción» (снято на
+ * проде 28.09 в приложении учёткой проверяющего).
+ */
+export const MANUAL_PROVIDER = "manual";
 
 export function isPurchasedPlan(plan: string): boolean {
   return (PURCHASED_PLANS as readonly string[]).includes(plan);
@@ -52,6 +65,7 @@ export function isPurchasedPlan(plan: string): boolean {
 /** Строка доступа, за которую не платили и которую нечем отменять. */
 export function isGrantSubscription(row: GrantShapedRow | null | undefined): boolean {
   if (!row) return false;
+  if (row.provider === MANUAL_PROVIDER) return true;
   if (isPurchasedPlan(row.plan)) return false;
   return !row.stripeSubscriptionId;
 }
