@@ -82,6 +82,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // actually in a store (see its own generateMetadata).
     "/terms",
     "/privacy",
+    // 7.242 (долг 345): публичная страница удаления аккаунта — адрес для
+    // поля «Delete account URL» анкеты Google Play. Правовая страница, как
+    // две выше, и по той же причине в карте: Google обязан до неё дойти.
+    "/eliminar-cuenta",
   ];
 
   // Spanish-search-intent landing pages — no Russian-language equivalent

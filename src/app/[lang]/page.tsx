@@ -21,6 +21,7 @@ import StoryTitle from "@/components/stories/StoryTitle";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
 import { basePricesText, marked, priceCopy, withBasePrices, withPrice } from "@/lib/pricing-display";
 import { isNativeShellRequest } from "@/lib/native-shell";
+import { accountDeletionCopy } from "@/lib/legal/account-deletion";
 import {
   GlobeIcon,
   DictionaryIcon,
@@ -45,9 +46,14 @@ export async function generateMetadata({
   return { alternates: routeAlternates(lang, "") };
 }
 
-export default async function HomePage({ params }: PageProps<"/[lang]">) {
+export default async function HomePage({ params, searchParams }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
+  // 7.242 (аудит 7.241, Р3 в): после удаления аккаунта сервер уводит сюда с
+  // `?accountDeleted=1`, а страница об этом молчала — человек не знал,
+  // сработало ли. Строка рисуется сервером, без сессии: самой учётной
+  // записи уже нет.
+  const accountDeleted = (await searchParams).accountDeleted === "1";
 
   const dict = await getDictionary(lang);
   const [stats, words, preview, cashAvailableForCountry, localPrice, nativeShell] = await Promise.all([
@@ -81,6 +87,15 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
 
   return (
     <div className="flex flex-1 flex-col">
+      {accountDeleted && (
+        <p
+          role="status"
+          data-rf-account-deleted
+          className="mx-auto mt-6 w-full max-w-3xl rounded-xl bg-emerald-500/10 px-4 py-3 text-center text-sm text-emerald-700 dark:text-emerald-300"
+        >
+          {accountDeletionCopy(lang).deletedNotice}
+        </p>
+      )}
       {/* Organization + WebSite JSON-LD — establishes RusoFácilapp's own
           identity for Google (name/url/logo/description), fixing AI
           Overviews describing an unrelated app under the same search

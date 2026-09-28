@@ -370,7 +370,7 @@
     "newPasswordLabel": "Nueva contraseña",
     "invalidResetToken": "El enlace no es válido o ha caducado. Solicita uno nuevo.",
     "confirmDeleteTitle": "Confirmar eliminación de cuenta",
-    "confirmDeleteSubtitle": "Esta acción es irreversible: se eliminarán tu progreso, suscripción y todos los datos de la cuenta.",
+    "confirmDeleteSubtitle": "Esta acción es irreversible: se eliminarán tu cuenta, tu progreso y todos sus datos. Una suscripción comprada en el sitio web se cancela.",
     "confirmDeleteButton": "Eliminar cuenta definitivamente",
     "logout": "Cerrar sesión"
   },

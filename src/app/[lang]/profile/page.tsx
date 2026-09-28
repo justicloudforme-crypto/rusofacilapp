@@ -68,6 +68,9 @@ import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import LogoutEverywhereButton from "@/components/profile/LogoutEverywhereButton";
 import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
+import PlayDeletionWarning from "@/components/legal/PlayDeletionWarning";
+import { hasRenewingStoreSubscription } from "@/lib/store-subscription";
+import { ACCOUNT_DELETION_PATH, accountDeletionCopy } from "@/lib/legal/account-deletion";
 import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
 import DownloadsPanel from "@/components/profile/DownloadsPanel";
 import LocalDate from "@/components/profile/LocalDate";
@@ -1301,6 +1304,18 @@ export default async function ProfilePage({
                       </summary>
                       <div className="mt-4">
                         <p className="text-sm text-foreground/60">{dict.profile.deleteAccountDescription}</p>
+                        {/* 7.242, долг 344: удаление не отменяет подписку
+                            Google Play — сказать это ДО пароля, а не после. */}
+                        {hasRenewingStoreSubscription(subscriptionHistory) ? (
+                          <PlayDeletionWarning lang={lang} certainty="known" href={playSubscriptionCenterUrl()} />
+                        ) : (
+                          <Link
+                            href={`/${lang}${ACCOUNT_DELETION_PATH}`}
+                            className="tap mt-2 inline-flex min-h-11 items-center text-sm underline underline-offset-2 text-foreground/70"
+                          >
+                            {accountDeletionCopy(lang).pageLinkLabel}
+                          </Link>
+                        )}
                         <DeleteAccountForm
                           lang={lang}
                           warningLabel={dict.profile.deleteAccountWarning}
