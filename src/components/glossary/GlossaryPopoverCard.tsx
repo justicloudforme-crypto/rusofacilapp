@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { GLOSSARY_POPOVER_OPEN_EVENT } from "@/lib/glossary-client";
+import { useBackLayer } from "@/lib/useBackLayer";
 
 const CARD_WIDTH = 320;
 const GAP = 8;
@@ -47,6 +48,9 @@ export default function GlossaryPopoverCard({
   children: React.ReactNode;
 }) {
   const cardRef = useRef<HTMLSpanElement>(null);
+  // Карточка смонтирована только пока открыта — «Назад» Android закрывает
+  // её, а не уводит со страницы (7.242, долг 347).
+  useBackLayer(true, onRequestClose);
   const [style, setStyle] = useState<{
     top: number;
     left: number;

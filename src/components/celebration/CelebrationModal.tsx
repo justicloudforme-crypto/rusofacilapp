@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBackLayer } from "@/lib/useBackLayer";
 import Confetti from "./Confetti";
 import ScenarioStage from "./ScenarioStage";
 import { scenarioIdsFor, type ScenarioId } from "./catalog";
@@ -64,6 +65,8 @@ export default function CelebrationModal({
   );
   const [exclamation, setExclamation] = useState<string | null>(null);
 
+  // «Назад» Android закрывает это окно (7.242, долг 347).
+  useBackLayer(open, onClose);
   useEffect(() => {
     if (!open) return;
     // Re-roll the scene/phrase and replay the jingle only on the actual

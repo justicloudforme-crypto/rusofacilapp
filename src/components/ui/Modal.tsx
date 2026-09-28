@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import { usePinnedLayer } from "@/lib/usePinnedLayer";
+import { useBackLayer } from "@/lib/useBackLayer";
 
 /**
  * Bottom sheet below `sm`, centered dialog at `sm`+ — reuses the exact
@@ -36,6 +37,8 @@ export default function Modal({
   fullScreenOnMobile?: boolean;
 }) {
   useBodyScrollLock(open);
+  // «Назад» Android закрывает этот лист, а не уводит со страницы (7.242, долг 347).
+  useBackLayer(open, onClose);
   /** На общем учёте прижатых слоёв (src/lib/pinned-layers.ts) — пока
    * открыта. Места в конце документа не резервирует: модалка временная. */
   const pinnedRef = usePinnedLayer<HTMLDivElement>({ edge: "bottom", label: "Modal", active: open });
