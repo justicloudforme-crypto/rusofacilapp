@@ -128,7 +128,12 @@ const MISSPELLED: [RegExp, string][] = [
 
 export function judge(lines: Line[]): string[] {
   const problems: string[] = [];
-  for (const { where, text } of lines) {
+  for (const { where, text: raw } of lines) {
+    // Адрес — не проза (7.242): центр подписок Google Play живёт по
+    // `…/store/account/subscriptions`, и слова пути английские по
+    // построению. Вырезаются только `https://…` целиком — английское слово
+    // в самом предложении по-прежнему ловится (контроль контроля ниже).
+    const text = raw.replace(/https:\/\/\S+/g, "");
     // 1. Типографика — общее правило, а не список.
     const quoted = text.match(/'[^']*'|"[^"]*"/g);
     if (quoted) {
@@ -188,6 +193,9 @@ function main(): number {
       ["выдуманная строка с «tu pais» — форма, которой в репозитории 0", "El precio depende de tu pais."],
       ["английское слово вместо испанского", "Puedes cancelar tu subscription cuando quieras."],
       ["прямые двойные кавычки", 'El Servicio se ofrece "tal cual".'],
+      // 7.242: вырезается только адрес — английское слово рядом с ним в
+      // самом предложении обязано ловиться.
+      ["английское слово рядом с адресом", "Cancela tu subscription en https://play.google.com/store/account/subscriptions."],
     ];
 
     let caught = 0;
@@ -205,6 +213,8 @@ function main(): number {
       "Estos Términos se rigen por las leyes de México, sin perjuicio de los derechos que la " +
         "legislación de protección al consumidor de tu país de residencia pueda otorgarte.",
       "Ofrecemos dos planes de suscripción —mensual y anual— y un plan Premium de pago único.",
+      // 7.242: адрес центра подписок с английскими словами пути.
+      "Cancélala en Google Play → Suscripciones (https://play.google.com/store/account/subscriptions).",
     ];
     const falsePositives = judge(innocent.map((text, i) => ({ where: `здоровая строка ${i + 1}`, text })));
     console.log(

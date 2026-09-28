@@ -1,4 +1,5 @@
 import { visibleLegalParagraphs, type LegalDocument } from "@/lib/legal/content";
+import LinkifiedText from "./LinkifiedText";
 
 /** Shared renderer for /terms and /privacy — both are plain, static legal
  * documents (see src/lib/legal/content.ts), so one dumb presentational
@@ -38,7 +39,9 @@ export default function LegalDocumentView({
             <h2 className="text-lg font-semibold tracking-tight">{section.heading}</h2>
             <div className="mt-2 space-y-3 text-sm leading-relaxed text-foreground/75">
               {visibleLegalParagraphs(section, { nativeShell }).map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
+                <p key={i}>
+                  <LinkifiedText text={paragraph} />
+                </p>
               ))}
             </div>
           </section>

@@ -43,6 +43,23 @@
 //    HOSTS_WITHOUT_NAME с причиной. Хост, которого нет ни там, ни там, —
 //    падение: это и есть «код ходит туда, о чём политика молчит».
 //
+// 5. GOOGLE PLAY И ДАННЫЕ, КОТОРЫЕ ПОЛИТИКА ОБЯЗАНА НАЗВАТЬ (заход 7.242,
+//    аудит 7.241 — Р2, Р3, Р14). Направления 1–3 сверяли голос и
+//    получателей, но не видели трёх классов неправды, которые Google
+//    сверяет с анкетой Data safety:
+//      Р2 — «отменить можно в профиле» и «удаление отменяет любую
+//           подписку», когда подписку из Google Play отменяет только Google;
+//      Р3 — то же обещание на экранах удаления («se eliminará tu
+//           suscripción»);
+//      Р14 — политика молчала о группах и публичном профиле, часовом поясе,
+//           стране по IP и сроке резервных копий.
+//    Каждый факт МЕРЯЕТСЯ по коду (продаёт ли приложение через магазин,
+//    отменяет ли удаление подписку магазина, сколько дней живут копии, есть
+//    ли колонка пояса, группы, публичный профиль, страна по заголовку IP), и
+//    только потом от текста требуется его назвать. Правило двустороннее там,
+//    где это возможно: научись удаление отменять подписку магазина — текст
+//    «НЕ отменяется» станет ложью, и сторож покраснеет на нём.
+//
 // Контроль: `node scripts/check-legal-truth.mjs --plant`.
 import { repoFiles } from "./repo-files.mjs";
 import { execFileSync } from "node:child_process";
@@ -208,6 +225,178 @@ function processorSections(text) {
     out[locale] = text.slice(i, end < 0 ? text.length : end);
   }
   return out;
+}
+
+/** Документ × локаль как кусок исходника: границы — объявления констант и
+ * ключ `ru: {` на два пробела внутри каждой. */
+function legalSlices(text) {
+  const terms = text.slice(text.indexOf("export const TERMS_CONTENT"), text.indexOf("export const PRIVACY_CONTENT"));
+  const privacy = text.slice(text.indexOf("export const PRIVACY_CONTENT"), text.indexOf("export function visibleLegalParagraphs"));
+  const split = (doc) => {
+    const i = doc.indexOf("\n  ru: {");
+    return { es: doc.slice(0, i), ru: doc.slice(i) };
+  };
+  return { terms: split(terms), privacy: split(privacy) };
+}
+
+/** Раздел документа по номеру заголовка («6.»), до следующего `heading:`. */
+function sectionOf(doc, number) {
+  const m = new RegExp(`heading: "${number.replace(".", "\\.")} `).exec(doc);
+  if (!m) return "";
+  const end = doc.indexOf("heading:", m.index + 10);
+  return doc.slice(m.index, end < 0 ? doc.length : end);
+}
+
+export const PLAY_SUBSCRIPTIONS = "play.google.com/store/account/subscriptions";
+const DELETE_ROUTE = "src/app/api/auth/confirm-account-deletion/route.ts";
+const BACKUP = "src/lib/backup.ts";
+const DELETION_COPY = "src/lib/legal/account-deletion.ts";
+
+/** Ложные утверждения: удаление аккаунта отменяет ЛЮБУЮ подписку или
+ *  удаляет «подписку» без оговорки о магазине. Судятся в правовых текстах,
+ *  на экранах удаления (словари) и на странице удаления. */
+const FALSE_DELETION_CLAIMS = [
+  /cancela cualquier suscripci[oó]n/i,
+  /отменяет любую (?:активную )?подписку/i,
+  /se eliminar[aá]n? tu progreso, suscripci[oó]n/i,
+  /будут удалены прогресс, подписка/i,
+];
+/** «Удаление НЕ отменяет подписку Google Play» — по локали. */
+const DELETION_KEEPS_PLAY = {
+  es: /Google Play NO se cancela|\bNO\b[^.]*Google Play/,
+  ru: /Google Play[^.]*НЕ отменя|НЕ отменя[^.]*Google Play/,
+};
+
+/** Факты кода, от которых зависит правда текстов раздела 5. */
+export function codeFacts() {
+  const read = (f) => {
+    try {
+      return readFileSync(f, "utf8");
+    } catch {
+      return "";
+    }
+  };
+  const webhooks = repoFiles(["src/app/api/webhooks"]).map(read).join("\n");
+  const route = read(DELETE_ROUTE);
+  const retention = Number(/const RETENTION_COUNT = (\d+);/.exec(read(BACKUP))?.[1] ?? NaN);
+  const daily = /"path": "\/api\/cron\/backup", "schedule": "\d+ \d+ \* \* \*"/.test(read("vercel.json"));
+  const schema = read("prisma/schema.prisma");
+  return {
+    sellsInStore: /provider:\s*"revenuecat"/.test(webhooks),
+    // Отменяет ли удаление подписку магазина: любое обращение к RevenueCat
+    // или к Google Play из маршрута удаления.
+    deletionCancelsStore: /revenuecat|googleapis|androidpublisher/i.test(route),
+    backupDays: daily ? retention : NaN,
+    timezone: /^\s*timezone\s+String/m.test(schema),
+    groups: repoFiles(["src/app/[lang]/groups"]).length > 0,
+    publicProfile: /publicProfileEnabled/.test(schema) && repoFiles(["src/app/[lang]/u"]).length > 0,
+    countryByIp: /x-vercel-ip-country/.test(read("src/lib/country.ts")),
+  };
+}
+
+/** Раздел 5 целиком: вернуть список нарушений. Вынесен из `scan`, чтобы
+ *  подсадки могли подать ему изменённый текст без записи файлов. */
+export function playTruthFailures(text, facts = codeFacts(), extraSources = null) {
+  const failures = [];
+  const docs = legalSlices(text);
+  const labels = { terms: "Условия", privacy: "Политика" };
+
+  // Р2 + Р3: ложные обещания отмены при удалении — везде, где их читает человек.
+  const sources = extraSources ?? [
+    [LEGAL, text],
+    ["src/dictionaries/es.json", readFileSync("src/dictionaries/es.json", "utf8")],
+    ["src/dictionaries/ru.json", readFileSync("src/dictionaries/ru.json", "utf8")],
+    [DELETION_COPY, readFileSync(DELETION_COPY, "utf8")],
+  ];
+  if (!facts.deletionCancelsStore && facts.sellsInStore) {
+    for (const [file, body] of sources) {
+      for (const re of FALSE_DELETION_CLAIMS) {
+        const m = re.exec(body);
+        if (m) {
+          failures.push(
+            `${file}: «${m[0]}» — удаление аккаунта отменяет только подписку сайта (${DELETE_ROUTE} ` +
+              `к магазину не обращается), а подписку Google Play не трогает. Р2/Р3 аудита 7.241.`,
+          );
+        }
+      }
+    }
+  }
+
+  for (const locale of ["es", "ru"]) {
+    const terms = docs.terms[locale];
+    const privacy = docs.privacy[locale];
+    if (facts.sellsInStore) {
+      // Р2: где отменять подписку магазина.
+      if (!sectionOf(terms, "3.").includes(PLAY_SUBSCRIPTIONS)) {
+        failures.push(
+          `${labels.terms} /${locale}, раздел 3: приложение продаёт подписку через Google Play, а раздел об отмене ` +
+            `не даёт адреса ${PLAY_SUBSCRIPTIONS} — «отменить в профиле» для такой подписки неправда.`,
+        );
+      }
+      // Р2/Р3: что удаление делает с подпиской магазина — двусторонне.
+      for (const [doc, number] of [[terms, "6."], [privacy, "6."]]) {
+        const body = sectionOf(doc, number);
+        const says = DELETION_KEEPS_PLAY[locale].test(body);
+        const name = doc === terms ? labels.terms : labels.privacy;
+        if (!facts.deletionCancelsStore && !says) {
+          failures.push(
+            `${name} /${locale}, раздел 6: не сказано, что удаление аккаунта НЕ отменяет подписку Google Play ` +
+              `(а ${DELETE_ROUTE} её не отменяет).`,
+          );
+        }
+        if (facts.deletionCancelsStore && says) {
+          failures.push(
+            `${name} /${locale}, раздел 6: текст говорит, что удаление НЕ отменяет подписку Google Play, ` +
+              `а ${DELETE_ROUTE} теперь обращается к магазину — перепишите текст под код.`,
+          );
+        }
+      }
+    }
+    // Р14: срок резервных копий — число из кода.
+    if (!Number.isFinite(facts.backupDays)) {
+      failures.push(`${BACKUP}/vercel.json: срок резервных копий не вычисляется (RETENTION_COUNT × ежедневный cron) — перечитайте сторож.`);
+    } else {
+      const want = locale === "es" ? `${facts.backupDays} días` : `${facts.backupDays} дней`;
+      if (!sectionOf(privacy, "6.").includes(want)) {
+        failures.push(
+          `${labels.privacy} /${locale}, раздел 6: резервные копии живут ${facts.backupDays} дней ` +
+            `(${BACKUP}: RETENTION_COUNT, копия раз в сутки), а текст не говорит «${want}».`,
+        );
+      }
+    }
+    // Р14: что остаётся у получателей после удаления.
+    for (const name of ["Google Play", "RevenueCat", "Stripe", "Resend", "Sentry"]) {
+      if (!sectionOf(privacy, "6.").includes(name)) {
+        failures.push(`${labels.privacy} /${locale}, раздел 6: не сказано, что остаётся у «${name}» после удаления аккаунта.`);
+      }
+    }
+    // Р14: данные, которые код собирает, а политика обязана назвать.
+    const collected = sectionOf(privacy, "2.");
+    const need = {
+      es: [
+        [facts.timezone, /zona horaria/i, "часовой пояс (User.timezone)"],
+        [facts.groups, /grupos? de estudio/i, "учебные группы (имя видно участникам)"],
+        [facts.publicProfile, /perfil público/i, "публичный профиль (/u/…)"],
+        [facts.countryByIp, /país[^.]*dirección IP|dirección IP[^.]*país/i, "страна по IP (x-vercel-ip-country)"],
+      ],
+      ru: [
+        [facts.timezone, /часовой пояс/i, "часовой пояс (User.timezone)"],
+        [facts.groups, /учебн\S* групп/i, "учебные группы (имя видно участникам)"],
+        [facts.publicProfile, /публичный профиль/i, "публичный профиль (/u/…)"],
+        [facts.countryByIp, /IP-адрес[^.]*стран|стран[^.]*IP-адрес/i, "страна по IP (x-vercel-ip-country)"],
+      ],
+    }[locale];
+    for (const [present, re, what] of need) {
+      if (present && !re.test(collected)) {
+        failures.push(`${labels.privacy} /${locale}, раздел 2: код собирает «${what}», а раздел «что собираем» об этом молчит.`);
+      }
+    }
+    // Адрес отдельной страницы удаления — в разделе о правах.
+    if (!sectionOf(privacy, "7.").includes(`rusofacilapp.com/${locale}/eliminar-cuenta`)) {
+      failures.push(`${labels.privacy} /${locale}, раздел 7 (#tus-derechos): нет адреса страницы удаления rusofacilapp.com/${locale}/eliminar-cuenta.`);
+    }
+  }
+  return failures;
 }
 
 function scan() {
@@ -412,8 +601,13 @@ function scan() {
     );
   }
 
+  // --- 5. Google Play и данные, которые обязаны быть названы (7.242) ---
+  const facts = codeFacts();
+  failures.push(...playTruthFailures(text, facts));
+
   return {
     failures,
+    facts,
     anchors,
     sends,
     voiceRoutes,
@@ -453,6 +647,12 @@ function report(r) {
     `  названы без зависимости: ${[...NAMED_WITHOUT_DEPENDENCY.keys().toArray?.() ?? NAMED_WITHOUT_DEPENDENCY.keys()].join(", ")}`,
   );
   console.log(`  даты последнего изменения: ${r.dates.join(", ")}, обе написаны рукой`);
+  console.log(
+    `  Google Play и данные (7.242): продаёт через магазин — ${r.facts.sellsInStore ? "да" : "нет"}, ` +
+      `удаление отменяет подписку магазина — ${r.facts.deletionCancelsStore ? "да" : "нет"}, ` +
+      `резервные копии ${r.facts.backupDays} дней; пояс, группы, публичный профиль, страна по IP — названы в обеих локалях; ` +
+      `ложных обещаний отмены при удалении 0 (правовые тексты, два словаря, страница удаления)`,
+  );
   console.log(
     `  якоря на разделы: ${r.anchors.length} (${r.anchors.join(", ")}); ` +
       `«${REQUIRED_ANCHOR}» — в обеих локалях, id={section.slug} в отрисовщике на месте`,
@@ -602,6 +802,68 @@ function plantControls() {
       name: "слаг в данных есть, а id в разметке нет",
       plant: () => swap(LEGAL_VIEW, "id={section.slug}", ""),
       expect: (r) => r.failures.some((m) => m.includes("нет id={section.slug}")),
+    },
+    // --- 7.242: Р2, Р3, Р14 ---
+    {
+      name: "Р2: в Условия /es вернулось «удаление отменяет любую активную подписку»",
+      plant: () => swap(LEGAL, "y elimina de forma permanente tu cuenta y tu progreso.", "y elimina de forma permanente tu cuenta y tu progreso, y cancela cualquier suscripción activa."),
+      expect: (r) => r.failures.some((m) => m.includes("cancela cualquier suscripci")),
+    },
+    {
+      name: "Р2: и в русские Условия тоже",
+      plant: () => swap(LEGAL, "безвозвратно удаляет ваш аккаунт и прогресс обучения.", "безвозвратно удаляет ваш аккаунт и прогресс обучения и отменяет любую активную подписку."),
+      expect: (r) => r.failures.some((m) => m.includes("отменяет любую активную подписку")),
+    },
+    {
+      name: "Р2: из раздела 3 Условий /es пропал адрес центра подписок Google Play",
+      plant: () => swap(LEGAL, "sólo se puede cancelar en Google Play → Suscripciones (https://play.google.com/store/account/subscriptions), no desde tu perfil", "sólo se puede cancelar en Google Play, no desde tu perfil"),
+      expect: (r) => r.failures.some((m) => m.startsWith("Условия /es, раздел 3")) && !r.failures.some((m) => m.startsWith("Условия /ru, раздел 3")),
+    },
+    {
+      name: "Р3: страница подтверждения снова пишет «se eliminarán tu progreso, suscripción»",
+      plant: () => swap("src/dictionaries/es.json", "Esta acción es irreversible: se eliminarán tu cuenta, tu progreso y todos sus datos.", "Esta acción es irreversible: se eliminarán tu progreso, suscripción y todos los datos de la cuenta."),
+      expect: (r) => r.failures.some((m) => m.startsWith("src/dictionaries/es.json")),
+    },
+    {
+      name: "Р3 ОБРАТНОЕ НАПРАВЛЕНИЕ: удаление научилось отменять подписку магазина — «НЕ отменяется» стало ложью",
+      plant: () => swap(DELETE_ROUTE, "  await db.user.delete(", "  await cancelRevenuecatSubscriptions(user.id);\n  await db.user.delete("),
+      expect: (r) => r.failures.some((m) => m.includes("теперь обращается к магазину")),
+    },
+    {
+      name: "Р14: копии стали жить 30 дней, а текст говорит «14»",
+      plant: () => swap(BACKUP, "const RETENTION_COUNT = 14;", "const RETENTION_COUNT = 30;"),
+      expect: (r) => r.failures.some((m) => m.includes("резервные копии живут 30 дней")),
+    },
+    {
+      name: "Р14: из Политики /es пропал часовой пояс",
+      plant: () => swapLine(LEGAL, "Zona horaria: guardamos la zona horaria", '          "Ajustes: guardamos tus preferencias.",'),
+      expect: (r) => r.failures.some((m) => m.includes("/es, раздел 2") && m.includes("часовой пояс")),
+    },
+    {
+      name: "Р14: из Политики /ru пропали учебные группы и публичный профиль",
+      plant: () => swapLine(LEGAL, "Учебные группы и публичный профиль:", '          "Сообщество: пока пусто.",'),
+      expect: (r) => r.failures.some((m) => m.includes("/ru, раздел 2") && m.includes("учебные группы")) && r.failures.some((m) => m.includes("/ru, раздел 2") && m.includes("публичный профиль")),
+    },
+    {
+      name: "Р14: из Политики /es пропала страна по IP",
+      plant: () => swapLine(LEGAL, "País aproximado: nuestro proveedor", '          "Idioma: elegimos el idioma de la interfaz.",'),
+      expect: (r) => r.failures.some((m) => m.includes("/es, раздел 2") && m.includes("страна по IP")),
+    },
+    {
+      name: "Р14: из раздела 6 Политики /ru пропал Resend",
+      plant: () => swap(LEGAL, "журналы отправки писем Resend (адрес и тема); и отчёты", "и отчёты"),
+      expect: (r) => r.failures.some((m) => m.includes("/ru, раздел 6") && m.includes("«Resend»")),
+    },
+    {
+      name: "Р4: из раздела о правах /es пропал адрес страницы удаления",
+      plant: () => swap(LEGAL, "Los pasos completos, qué se borra y qué se conserva están en https://rusofacilapp.com/es/eliminar-cuenta.", ""),
+      expect: (r) => r.failures.some((m) => m.includes("/es, раздел 7")),
+    },
+    {
+      name: "ОТРИЦАТЕЛЬНЫЙ 7.242: правка абзаца, не касающегося подписок и данных, — сторож молчит",
+      plant: () => swap(LEGAL, "No debes: intentar acceder a cuentas ajenas", "No debes: intentar entrar en cuentas ajenas"),
+      expect: (r) => r.failures.length === 0,
+      negative: true,
     },
     {
       name: "ОТРИЦАТЕЛЬНЫЙ: абзац про озвучку OpenAI («хранятся в нашем хранилище») — не про голос пользователя",

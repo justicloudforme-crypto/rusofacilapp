@@ -196,7 +196,15 @@ export interface LegalDocument {
 // приложении. Больше в политике не изменилось ничего, но изменение
 // касается того, чьи данные мы соглашаемся обрабатывать, и такое обязано
 // двигать дату.
-const PRIVACY_LAST_UPDATED = "2026-09-16";
+// 27.09.2026 — заход 7.242 (аудит 7.241, Р2 и Р14). Политика описывала
+// сайт и молчала о том, что есть в коде: учебные группы и публичный
+// профиль (имя видно другим), часовой пояс, страна по IP, поиск без
+// привязки к человеку, покупки внутри приложения через Google Play,
+// резервные копии до 14 дней и что остаётся у RevenueCat, Stripe, Resend и
+// Sentry после удаления. Раздел 7 получил шаги удаления и адрес отдельной
+// страницы. Это меняет то, что человеку сказано о его данных, — дата
+// обязана сдвинуться. Сверяет `check:legal-truth` (раздел 5).
+const PRIVACY_LAST_UPDATED = "2026-09-27";
 
 // 08.09.2026: section 3 of the Terms gained the three things it had never
 // said out loud — that cash (an OXXO voucher) is offered to buyers in
@@ -248,7 +256,14 @@ const PRIVACY_LAST_UPDATED = "2026-09-16";
 // изменились — значит и обе даты ниже остаются прежними. Обе и так стоят
 // на 16.09.2026, то есть на дне этой правки: двигать нечего даже при
 // обратном решении. Держит `npm run check:legal-es-text`.
-const TERMS_LAST_UPDATED = "2026-09-16";
+// 27.09.2026 — заход 7.242 (аудит 7.241, Р2). Два утверждения были
+// правдой только для сайта: «отменить можно в профиле» и что удаление
+// аккаунта будто бы снимает и подписку из магазина. Подписку, купленную в Google
+// Play, отменяет только Google Play, и наше удаление её не трогает
+// (`confirm-account-deletion/route.ts` отменяет лишь Stripe). Текст один
+// для сайта и приложения — адрес политики Google читает в браузере, —
+// поэтому он называет оба случая. Обещание изменилось — дата сдвинута.
+const TERMS_LAST_UPDATED = "2026-09-27";
 
 export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   es: {
@@ -283,7 +298,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
           "El plan Premium no es una suscripción: es un pago único. No se renueva, no genera cobros posteriores y no hay nada que cancelar; el acceso que otorga se mantiene mientras el Servicio siga en funcionamiento.",
           { webOnly: true, text: "Además del pago con tarjeta, aceptamos pago en efectivo mediante un vale OXXO, y únicamente para compradores en México: OXXO es una cadena de tiendas mexicana y su vale no puede pagarse fuera del país. El vale es válido durante 3 días; si vence sin pagarse no se te cobra nada y puedes generar otro. El acceso se activa automáticamente en cuanto la tienda confirma el pago. Un pago en efectivo cubre un solo periodo y nunca genera cobros automáticos: para continuar hay que repetirlo." },
           { webOnly: true, text: "El precio base de todos los planes está fijado en pesos mexicanos (MXN). El cobro, en cambio, no siempre se hace en pesos: la página de pago puede presentarte el importe convertido a la moneda de tu país y cobrártelo en ella, y ahí mismo puedes elegir pagar en pesos si lo prefieres. El importe exacto y el tipo de cambio los fija esa página en el momento del cobro (o tu banco, si aplica su propia conversión); los importes en otras monedas que mostramos en el sitio son aproximados y pueden diferir del cargo final. En los planes mensual y anual, el importe de las renovaciones puede variar ligeramente si varía el tipo de cambio, aunque el precio en pesos siga siendo el mismo." },
-          "Puedes cancelar tu suscripción mensual o anual en cualquier momento desde tu perfil. La cancelación detiene la renovación, no el acceso: conservas las funciones de pago hasta el final del periodo que ya has pagado, y al terminar ese periodo no se te cobra nada más. Salvo que la ley aplicable exija lo contrario, no ofrecemos reembolsos por el periodo en curso, precisamente porque lo sigues usando hasta el final.",
+          "Cómo cancelar la suscripción mensual o anual depende de dónde la compraste. Si la compraste en el sitio web, cancélala en cualquier momento desde tu perfil. Si la compraste dentro de la aplicación Android, la cobra y la gestiona Google Play: sólo se puede cancelar en Google Play → Suscripciones (https://play.google.com/store/account/subscriptions), no desde tu perfil. En los dos casos la cancelación detiene la renovación, no el acceso: conservas las funciones de pago hasta el final del periodo que ya has pagado, y al terminar ese periodo no se te cobra nada más. Salvo que la ley aplicable exija lo contrario, no ofrecemos reembolsos por el periodo en curso, precisamente porque lo sigues usando hasta el final. Los reembolsos de compras hechas en Google Play se rigen además por las políticas de Google Play.",
           "Nos reservamos el derecho de modificar los precios de las suscripciones. Cualquier cambio se aplicará a partir del siguiente ciclo de renovación, nunca de forma retroactiva.",
         ],
       },
@@ -305,7 +320,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Eliminación de cuenta",
         paragraphs: [
-          "Puedes eliminar tu cuenta en cualquier momento desde tu perfil. El proceso requiere tu contraseña y la confirmación de un enlace enviado a tu correo, y elimina de forma permanente tu cuenta y tu progreso, y cancela cualquier suscripción activa. Esta acción no se puede deshacer. Tus grabaciones de pronunciación no entran en ese borrado porque nunca estuvieron en nuestros servidores: viven en tu dispositivo y las borras tú, desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
+          "Puedes eliminar tu cuenta en cualquier momento desde tu perfil. El proceso requiere tu contraseña y la confirmación de un enlace enviado a tu correo, y elimina de forma permanente tu cuenta y tu progreso. Una suscripción comprada en el sitio web se cancela junto con la cuenta. Una suscripción comprada en Google Play NO se cancela al eliminar la cuenta: cancélala antes en Google Play → Suscripciones (https://play.google.com/store/account/subscriptions), o Google seguirá cobrándola. Esta acción no se puede deshacer. Los pasos, qué se borra y qué se conserva están en https://rusofacilapp.com/es/eliminar-cuenta. Tus grabaciones de pronunciación no entran en ese borrado porque nunca estuvieron en nuestros servidores: viven en tu dispositivo y las borras tú, desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
         ],
       },
       {
@@ -364,7 +379,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
           "Premium — не подписка, а разовый платёж. Он не продлевается, не порождает последующих списаний и его нечего отменять; выданный им доступ сохраняется, пока Сервис продолжает работать.",
           { webOnly: true, text: "Кроме оплаты картой мы принимаем наличные — по ваучеру OXXO, и только для покупателей в Мексике: OXXO это сеть магазинов в Мексике, и оплатить её ваучер за пределами страны негде. Ваучер действует 3 дня; если срок истёк, с вас ничего не списано и можно выпустить новый. Доступ включается автоматически, как только магазин подтвердит оплату. Оплата наличными покрывает один период и никогда не приводит к автосписаниям: чтобы продолжить, платёж нужно повторить." },
           { webOnly: true, text: "Базовая цена всех тарифов установлена в мексиканских песо (MXN). Само списание при этом не всегда идёт в песо: платёжная страница может показать сумму, пересчитанную в валюту вашей страны, и списать именно её — там же можно выбрать оплату в песо, если вам так удобнее. Точную сумму и курс определяет эта страница в момент списания (или ваш банк, если конвертацию делает он); суммы в других валютах, которые мы показываем на сайте, — приблизительные и могут отличаться от итогового списания. У месячной и годовой подписки сумма следующих списаний может немного меняться вслед за курсом, даже если цена в песо осталась прежней." },
-          "Отменить месячную или годовую подписку можно в любой момент в личном профиле. Отмена выключает продление, а не доступ: платные функции остаются у вас до конца уже оплаченного периода, а по его окончании новых списаний не будет. Если иное не требуется применимым законодательством, возврат средств за текущий период не производится — именно потому, что вы пользуетесь им до конца.",
+          "Как отменить месячную или годовую подписку, зависит от того, где она куплена. Купленную на сайте можно отменить в любой момент в личном профиле. Купленную в приложении для Android списывает и ведёт Google Play: отменить её можно только в Google Play → «Подписки» (https://play.google.com/store/account/subscriptions), а не в профиле. В обоих случаях отмена выключает продление, а не доступ: платные функции остаются у вас до конца уже оплаченного периода, а по его окончании новых списаний не будет. Если иное не требуется применимым законодательством, возврат средств за текущий период не производится — именно потому, что вы пользуетесь им до конца. Возвраты за покупки в Google Play также регулируются правилами Google Play.",
           "Мы оставляем за собой право менять стоимость подписки. Любое изменение применяется начиная со следующего цикла продления, никогда задним числом.",
         ],
       },
@@ -386,7 +401,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Удаление аккаунта",
         paragraphs: [
-          "Вы можете удалить свой аккаунт в любой момент в личном профиле. Процесс требует ввода пароля и подтверждения по ссылке, отправленной на вашу почту, безвозвратно удаляет ваш аккаунт и прогресс обучения и отменяет любую активную подписку. Это действие нельзя отменить. Аудиозаписи произношения в это удаление не входят — их никогда не было на наших серверах: они живут на вашем устройстве, и удаляете их вы сами, прямо в упражнении или очистив данные сайта в браузере.",
+          "Вы можете удалить свой аккаунт в любой момент в личном профиле. Процесс требует ввода пароля и подтверждения по ссылке, отправленной на вашу почту, безвозвратно удаляет ваш аккаунт и прогресс обучения. Подписка, купленная на сайте, отменяется вместе с аккаунтом. Подписка, купленная в Google Play, при удалении аккаунта НЕ отменяется: сначала отмените её в Google Play → «Подписки» (https://play.google.com/store/account/subscriptions), иначе Google продолжит списывать деньги. Это действие нельзя отменить. Шаги, что удаляется и что остаётся — на странице https://rusofacilapp.com/ru/eliminar-cuenta. Аудиозаписи произношения в это удаление не входят — их никогда не было на наших серверах: они живут на вашем устройстве, и удаляете их вы сами, прямо в упражнении или очистив данные сайта в браузере.",
         ],
       },
       {
@@ -436,6 +451,11 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "Datos de progreso de aprendizaje: qué lecciones has completado, tu racha de estudio, tus resultados en exámenes, qué palabras y expresiones ya conoces, y tu progreso de lectura en las historias.",
           "Grabaciones de voz: NO las recogemos. Si usas los ejercicios de pronunciación, el audio se guarda en el almacenamiento del propio navegador de tu dispositivo (IndexedDB, hasta 30 grabaciones o 20 MB, lo que se alcance primero) para que puedas escucharlo y compararlo. No se sube a ningún servidor, no existe ninguna ruta de subida en el Servicio y nosotros no podemos oírlo.",
           "Datos de suscripción: tu estado de suscripción (activa, cancelada, plan) y un identificador de cliente de Stripe. No almacenamos los datos de tu tarjeta de pago — Stripe los procesa directamente.",
+          "Compras dentro de la aplicación: si compras en la aplicación Android, el pago lo procesa Google Play y nosotros recibimos, a través de RevenueCat, el identificador de la compra, el producto y su estado (activa, renovada, cancelada). Nunca vemos los datos de tu tarjeta ni de tu cuenta de Google.",
+          "Grupos de estudio y perfil público: si te unes a un grupo de estudio, los demás miembros del grupo ven tu nombre (o «anónimo», si no lo indicaste), tu avatar, tu nivel y cuántas lecciones completaste. El perfil público está desactivado por defecto; si lo activas, cualquiera con el enlace ve tu nombre, tu avatar, tu nivel y tus rachas. Puedes desactivarlo o salir del grupo cuando quieras.",
+          "Zona horaria: guardamos la zona horaria de tu dispositivo (por ejemplo, «America/Mexico_City») para contar bien tus días de estudio y tu racha.",
+          "País aproximado: nuestro proveedor de alojamiento nos indica, a partir de tu dirección IP, el país desde el que te conectas. Lo usamos en ese momento para elegir el idioma y la moneda en que te mostramos la información; no lo guardamos.",
+          "Búsquedas: guardamos el texto de lo que buscas en el sitio, el número de resultados y la hora, sin vincularlo a tu cuenta, para saber qué contenido falta.",
           "Cookies técnicas: una cookie de sesión (para mantenerte conectado) y una cookie de preferencia de tema (claro/oscuro/lectura). Ninguna de las dos se usa para publicidad ni seguimiento entre sitios.",
         ],
       },
@@ -454,8 +474,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• Resend — envío de correos operativos (recuperación de contraseña, confirmación de eliminación de cuenta).",
           "• Turso — alojamiento de la base de datos.",
           "• Vercel — alojamiento del sitio y las funciones del servidor; almacenamiento de los archivos de audio del curso (Vercel Blob); y dos productos de medición del propio Vercel, Web Analytics y Speed Insights, que registran visitas de página y tiempos de carga de forma agregada, sin cookies y sin identificarte.",
-          "• Sentry — informes de errores. Cuando algo falla en el sitio o en la aplicación, Sentry recibe el error técnico, la dirección de la página y, si has iniciado sesión, tu identificador interno de usuario, para que podamos arreglarlo. No recibe tu contraseña ni tus grabaciones de voz.",
+          "• Sentry — informes de errores. Cuando algo falla en el sitio o en la aplicación, Sentry recibe el error técnico, la dirección de la página, el tipo y la versión del navegador y del sistema, una muestra de los tiempos de carga y, si has iniciado sesión, tu identificador interno de usuario (un código, no tu correo), para que podamos arreglarlo. Como cualquier servidor, ve la dirección IP desde la que llega el informe. No recibe tu contraseña, tu correo ni tus grabaciones de voz, y no graba tu pantalla.",
           "• RevenueCat — gestión de las suscripciones compradas dentro de las aplicaciones móviles (App Store y Google Play). Recibe el identificador de la compra y tu identificador interno de usuario. Las compras hechas en la web no pasan por él, sino por Stripe.",
+          "• Google Play — cobra las compras hechas dentro de la aplicación Android y gestiona su renovación y cancelación, según su propia política de privacidad.",
           "• Upstash — límite de intentos de inicio de sesión y caché de contenido; puede ver tu correo o dirección IP de forma transitoria, sin construir un perfil sobre ti.",
           "• OpenAI — la narración de las lecciones fue generada de antemano con su servicio de síntesis de voz, a partir del texto del curso. Los archivos de audio resultantes están guardados en nuestro propio almacenamiento: al escuchar una lección no se envía nada a OpenAI, ni texto tuyo ni datos personales.",
           "• MyMemory — traducción de palabras sueltas. Cuando tocas una palabra de un cuento que no está en nuestro propio diccionario, esa palabra se envía a MyMemory, una memoria de traducción pública de otra empresa, para obtener su traducción. Se envía sólo la palabra y el par de idiomas, nada más. La petición la hace nuestro servidor, no tu teléfono: MyMemory no recibe tu dirección IP, ni tu cuenta, ni tu progreso, y no puede saber quién tocó la palabra.",
@@ -474,14 +495,16 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Cuánto tiempo conservamos tus datos",
         paragraphs: [
-          "Conservamos tus datos mientras tu cuenta esté activa. Si eliminas tu cuenta, el proceso (que requiere tu contraseña y confirmación por correo) borra de inmediato y de forma permanente tu cuenta y tu progreso, no sólo el registro principal sino todas las filas asociadas. Tus grabaciones de pronunciación no aparecen en esa lista porque nunca salieron de tu dispositivo: se borran desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
+          "Conservamos tus datos mientras tu cuenta esté activa. Si eliminas tu cuenta, el proceso (que requiere tu contraseña y confirmación por correo) borra de inmediato y de forma permanente tu cuenta y tu progreso, no sólo el registro principal sino todas las filas asociadas, incluidos tus grupos de estudio y tu perfil público. Tus grabaciones de pronunciación no aparecen en esa lista porque nunca salieron de tu dispositivo: se borran desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
+          "Después de eliminar la cuenta se conservan sólo estas copias, fuera de nuestro control inmediato o por obligación: las copias de seguridad de la base de datos, que se guardan hasta 14 días y después se borran solas; los registros de las transacciones en Google Play, RevenueCat y Stripe, que esos proveedores conservan por sus obligaciones legales y fiscales; los registros de envío de correos de Resend (dirección y asunto); y los informes de errores de Sentry que lleven tu identificador interno, durante sus plazos de conservación.",
+          "Eliminar la cuenta cancela una suscripción comprada en el sitio web, pero NO una suscripción comprada en Google Play: esa hay que cancelarla en Google Play → Suscripciones (https://play.google.com/store/account/subscriptions).",
         ],
       },
       {
         heading: "7. Tus derechos",
         slug: "tus-derechos",
         paragraphs: [
-          "Tienes derecho a acceder, rectificar, eliminar y, en su caso, portar tus datos personales (derechos ARCO conforme a la ley mexicana). Puedes eliminar tu cuenta tú mismo en cualquier momento desde tu perfil. Para cualquier otra solicitud relacionada con tus datos, escríbenos a support@rusofacilapp.com y la atenderemos en un plazo razonable.",
+          "Tienes derecho a acceder, rectificar, eliminar y, en su caso, portar tus datos personales (derechos ARCO conforme a la ley mexicana). Puedes eliminar tu cuenta tú mismo en cualquier momento, en la aplicación «RusoFácil: aprender ruso» o en el sitio web: Mi perfil → Ajustes → Seguridad → Zona de riesgo → escribe tu contraseña → te enviamos un enlace por correo que vale 30 minutos → «Eliminar cuenta definitivamente». Si no tienes la aplicación o no recuerdas la contraseña, escríbenos a support@rusofacilapp.com desde el correo de tu cuenta y la eliminaremos. Los pasos completos, qué se borra y qué se conserva están en https://rusofacilapp.com/es/eliminar-cuenta. Para cualquier otra solicitud relacionada con tus datos, escríbenos a support@rusofacilapp.com y la atenderemos en un plazo razonable.",
         ],
       },
       {
@@ -528,6 +551,11 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "Данные о прогрессе обучения: какие уроки вы прошли, ваша учебная серия (стрик), результаты экзаменов, какие слова и выражения вы уже знаете, и ваш прогресс чтения историй.",
           "Аудиозаписи произношения: мы их НЕ собираем. Если вы делаете упражнения на произношение, запись сохраняется в хранилище самого браузера на вашем устройстве (IndexedDB, до 30 записей или 20 МБ — что наступит раньше), чтобы вы могли её прослушать и сравнить. На сервер она не уходит, маршрута загрузки в Сервисе не существует, и услышать её мы не можем.",
           "Данные подписки: статус вашей подписки (активна, отменена, тариф) и идентификатор клиента Stripe. Данные вашей банковской карты мы не храним — их обрабатывает напрямую Stripe.",
+          "Покупки в приложении: если вы покупаете в приложении для Android, платёж обрабатывает Google Play, а мы через RevenueCat получаем идентификатор покупки, товар и её состояние (активна, продлена, отменена). Данных вашей карты и аккаунта Google мы не видим никогда.",
+          "Учебные группы и публичный профиль: если вы вступили в учебную группу, другие участники группы видят ваше имя (или «аноним», если имя не указано), аватар, уровень и число пройденных уроков. Публичный профиль по умолчанию выключен; если вы его включили, любой, у кого есть ссылка, видит ваше имя, аватар, уровень и серии занятий. Выключить профиль и выйти из группы можно в любой момент.",
+          "Часовой пояс: мы храним часовой пояс вашего устройства (например, «America/Mexico_City»), чтобы правильно считать дни занятий и серию.",
+          "Примерная страна: хостинг-провайдер сообщает нам по вашему IP-адресу страну, из которой вы подключаетесь. Мы используем её в тот же момент, чтобы выбрать язык и валюту, в которой показываем сведения; мы её не храним.",
+          "Поиск: мы храним текст поисковых запросов на сайте, число результатов и время — без привязки к вашему аккаунту, чтобы понимать, какого материала не хватает.",
           "Технические cookie: cookie сессии (чтобы вы оставались авторизованы) и cookie предпочтения темы оформления (светлая/тёмная/для чтения). Ни один из них не используется для рекламы или межсайтового отслеживания.",
         ],
       },
@@ -546,8 +574,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• Resend — отправка служебных писем (восстановление пароля, подтверждение удаления аккаунта).",
           "• Turso — хостинг базы данных.",
           "• Vercel — хостинг сайта и серверных функций; хранение аудиофайлов курса (Vercel Blob); и два его собственных измерителя, Web Analytics и Speed Insights, которые считают просмотры страниц и время загрузки в обобщённом виде, без cookie и без вашего опознания.",
-          "• Sentry — отчёты об ошибках. Когда на сайте или в приложении что-то ломается, Sentry получает техническое описание ошибки, адрес страницы и, если вы вошли в аккаунт, ваш внутренний идентификатор пользователя, чтобы мы могли это починить. Ни пароля, ни аудиозаписей произношения он не получает.",
+          "• Sentry — отчёты об ошибках. Когда на сайте или в приложении что-то ломается, Sentry получает техническое описание ошибки, адрес страницы, тип и версию браузера и системы, выборку времени загрузки и, если вы вошли в аккаунт, ваш внутренний идентификатор пользователя (это код, а не почта), чтобы мы могли это починить. Как любой сервер, он видит IP-адрес, с которого пришёл отчёт. Ни пароля, ни почты, ни аудиозаписей произношения он не получает и запись экрана не ведёт.",
           "• RevenueCat — управление подписками, купленными внутри мобильных приложений (App Store и Google Play). Получает идентификатор покупки и ваш внутренний идентификатор пользователя. Покупки на сайте через него не проходят — они идут через Stripe.",
+          "• Google Play — списывает оплату покупок в приложении для Android и ведёт их продление и отмену по своей собственной политике конфиденциальности.",
           "• Upstash — ограничение попыток входа и кэширование контента; может видеть ваш email или IP-адрес кратковременно, без построения профиля о вас.",
           "• OpenAI — озвучка уроков была создана заранее его синтезатором речи на основе текста курса. Готовые аудиофайлы хранятся в нашем собственном хранилище: при прослушивании урока в OpenAI не уходит ничего — ни ваш текст, ни персональные данные.",
           "• MyMemory — перевод отдельных слов. Когда вы нажимаете в рассказе на слово, которого нет в нашем собственном словаре, это слово уходит в MyMemory — публичную память переводов другой компании — за переводом. Уходит только само слово и языковая пара, больше ничего. Запрос делает наш сервер, а не ваш телефон: MyMemory не получает ни вашего IP-адреса, ни аккаунта, ни прогресса и не может узнать, кто нажал на слово.",
@@ -566,7 +595,9 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Сколько мы храним ваши данные",
         paragraphs: [
-          "Мы храним ваши данные, пока ваш аккаунт активен. Если вы удаляете аккаунт (процесс требует пароль и подтверждение по почте), мы сразу и безвозвратно удаляем ваш аккаунт и прогресс — не только основную запись, но и все связанные строки. Аудиозаписей произношения в этом списке нет: они никогда не покидали ваше устройство, и удаляются они вами — прямо в упражнении или очисткой данных сайта в браузере.",
+          "Мы храним ваши данные, пока ваш аккаунт активен. Если вы удаляете аккаунт (процесс требует пароль и подтверждение по почте), мы сразу и безвозвратно удаляем ваш аккаунт и прогресс — не только основную запись, но и все связанные строки, включая учебные группы и публичный профиль. Аудиозаписей произношения в этом списке нет: они никогда не покидали ваше устройство, и удаляются они вами — прямо в упражнении или очисткой данных сайта в браузере.",
+          "После удаления аккаунта остаются только такие копии — по обязанности или вне нашего прямого контроля: резервные копии базы, которые хранятся до 14 дней и затем удаляются сами; записи о сделках у Google Play, RevenueCat и Stripe, которые эти провайдеры хранят по своим юридическим и налоговым обязанностям; журналы отправки писем Resend (адрес и тема); и отчёты об ошибках Sentry с вашим внутренним идентификатором — в течение их сроков хранения.",
+          "Удаление аккаунта отменяет подписку, купленную на сайте, но НЕ отменяет подписку, купленную в Google Play: её нужно отменить в Google Play → «Подписки» (https://play.google.com/store/account/subscriptions).",
         ],
       },
       {
@@ -575,7 +606,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
         // правило — см. комментарий к `slug` в LegalSection.
         slug: "tus-derechos",
         paragraphs: [
-          "У вас есть право на доступ, исправление, удаление и, в применимых случаях, перенос своих персональных данных. Удалить аккаунт вы можете самостоятельно в любой момент в личном профиле. По любым другим запросам, связанным с вашими данными, пишите на support@rusofacilapp.com — мы ответим в разумный срок.",
+          "У вас есть право на доступ, исправление, удаление и, в применимых случаях, перенос своих персональных данных. Удалить аккаунт вы можете сами в любой момент — в приложении «RusoFácil: aprender ruso» или на сайте: «Мой профиль» → «Настройки» → «Безопасность» → «Опасная зона» → пароль → письмо со ссылкой, которая действует 30 минут → «Удалить аккаунт навсегда». Если приложения нет или вы не помните пароль, напишите на support@rusofacilapp.com с адреса вашего аккаунта, и мы его удалим. Все шаги, что удаляется и что остаётся — на странице https://rusofacilapp.com/ru/eliminar-cuenta. По любым другим запросам, связанным с вашими данными, пишите на support@rusofacilapp.com — мы ответим в разумный срок.",
         ],
       },
       {
