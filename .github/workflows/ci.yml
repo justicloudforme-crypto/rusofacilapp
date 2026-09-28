@@ -813,6 +813,14 @@ jobs:
       - name: Тот же сторож — позитивный контроль
         run: npm run check:native-back:plant
 
+      # 7.243 (аудит 7.241, Р7/Р8/Р10): в приложении нет подвала, Telegram,
+      # оплаты сайта и «Descargar la app»; метка продлевается; рама не выделяется.
+      - name: Приложение не похоже на сайт
+        run: npm run check:app-mode
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:app-mode:plant
+
       # Заход 7.236 (PR #420). Сторожа, читавшие `git ls-files`, не видели
       # новый файл до `git add` — локальный verify был зелёным, CI красным.
       # Теперь список файлов общий (`scripts/repo-files.mjs`); самопроверка

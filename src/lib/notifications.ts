@@ -20,14 +20,32 @@ function nativeOnly<T>(fn: () => Promise<T>): Promise<T | undefined> {
 const STREAK_REMINDER_ID = 1;
 
 /**
- * Asks the user for local-notification permission. Safe to call on every
- * app launch: after the first grant/deny, `requestPermissions()` just
- * returns the already-decided status without showing the OS prompt again.
+ * Asks the user for local-notification permission — SHOWS THE OS PROMPT.
+ *
+ * Called only from a person's own action: turning the daily reminder on in
+ * «Mi perfil → Ajustes» (`ReminderSetting`). Заход 7.243 (аудит 7.241, Р11):
+ * до него запрос шёл на каждом запуске, и прежний комментарий обещал, что
+ * после первого ответа окна больше не будет. Замер на эмуляторе (7.242):
+ * системный вопрос на первом И на втором запуске после отказа — Android 13+
+ * показывает его повторно, пока человек не откажет дважды.
  */
 export async function requestNotificationPermission(): Promise<boolean> {
   const result = await nativeOnly(() => LocalNotifications.requestPermissions());
   return result?.display === "granted";
 }
+
+/** Разрешение УЖЕ дано? Без системного окна (7.243). */
+export async function notificationPermissionGranted(): Promise<boolean> {
+  const result = await nativeOnly(() => LocalNotifications.checkPermissions());
+  return result?.display === "granted";
+}
+
+/**
+ * Выбор человека про напоминание. «off» — выключил сам; «on» — включил;
+ * нет записи — не решал (тогда напоминание живёт, только если разрешение
+ * уже дано — так остаются напоминания у тех, кто разрешил до 7.243).
+ */
+export const REMINDER_CHOICE_KEY = "rf-streak-reminder";
 
 /**
  * Schedules (or re-schedules) the daily reminder. `hour`/`minute` are in
@@ -56,7 +74,8 @@ export async function scheduleStreakReminder(
   hour = 19,
   minute = 0,
 ): Promise<void> {
-  const granted = await requestNotificationPermission();
+  // Без системного окна (7.243): спрашивает только `enableStreakReminder`.
+  const granted = await notificationPermissionGranted();
   if (!granted) return;
 
   // The learner's own calendar day, in the device's zone — the same rule
@@ -133,6 +152,17 @@ export async function scheduleStreakReminder(
  */
 export async function clearDeliveredNotifications(): Promise<void> {
   await nativeOnly(() => LocalNotifications.removeAllDeliveredNotifications());
+}
+
+/**
+ * Человек включил напоминание сам — ЕДИНСТВЕННОЕ место, где появляется
+ * системный вопрос (7.243). Отказ — `false`, расписания нет.
+ */
+export async function enableStreakReminder(locale: Locale, userId: string | null): Promise<boolean> {
+  const granted = await requestNotificationPermission();
+  if (!granted) return false;
+  await scheduleStreakReminder(locale, userId);
+  return true;
 }
 
 /** Cancels the streak reminder, e.g. if the user turns reminders off. */

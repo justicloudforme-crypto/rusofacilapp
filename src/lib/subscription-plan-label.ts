@@ -1,5 +1,5 @@
 import type { Dictionary } from "@/i18n/dictionaries";
-import { grantSource, isGrantSubscription } from "./subscription-grant";
+import { grantSource, isGrantSubscription, isPurchasedPlan } from "./subscription-grant";
 
 /**
  * ПОДПИСЬ ТАРИФА НА ЭКРАНЕ — ОДНА ФУНКЦИЯ, И ОНА ТЕПЕРЬ ПРОВЕРЯЕМА.
@@ -58,18 +58,22 @@ export function planDisplayLabel(plan: string, dict: Dictionary): string {
  *
  * СЛОВА У ДВУХ МЕСТ РАЗНЫЕ НАМЕРЕННО, и это не второй признак. «Plan:
  * Acceso otorgado a mano» — про то, ЧТО у человека сейчас; строка истории
- * «Acceso abierto a mano» — про СОБЫТИЕ, которое когда-то случилось.
+ * «Acceso concedido» (до 7.243 — «Acceso abierto a mano») — про СОБЫТИЕ, которое когда-то случилось.
  * Общим у них обязано быть одно: ответ на вопрос «код это или рука».
  */
 export type LabelPlace = "plan" | "history";
 
 export function subscriptionRowLabel(
-  row: { plan: string; stripeSubscriptionId: string | null; createdAt: Date },
+  row: { plan: string; stripeSubscriptionId: string | null; createdAt: Date; provider?: string | null },
   dict: Dictionary,
   redeemedCodeDates: readonly Date[],
   place: LabelPlace,
 ): string {
   if (!isGrantSubscription(row)) return planDisplayLabel(row.plan, dict);
+  // Ручная выдача Premium (7.243, 4в): «Plan» называет уровень доступа —
+  // он у человека есть; строка истории — событие «Acceso concedido», без
+  // названия тарифа и суммы: платежа не было.
+  if (place === "plan" && isPurchasedPlan(row.plan)) return planDisplayLabel(row.plan, dict);
   if (grantSource(row, redeemedCodeDates) === "code") return dict.profile.historyGrantCode;
   return place === "plan" ? dict.profile.planManualLabel : dict.profile.historyGrantManual;
 }

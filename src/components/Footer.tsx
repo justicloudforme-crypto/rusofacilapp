@@ -11,17 +11,24 @@ export default function Footer({
   dict: Dictionary;
   lang: Locale;
   /**
-   * ВНУТРИ ОБОЛОЧКИ из подвала уходит «Скачать приложение» (долг 188):
-   * человек уже в приложении, и ссылка ведёт его на страницу, которая
-   * предлагает установить то, что у него установлено. Признак приходит с
-   * СЕРВЕРА (корневой макет), а не спрашивается у Capacitor: подвал —
-   * серверный компонент, и ссылки в его ответе быть не должно, а не
-   * «спрятаться после гидрации».
+   * ВНУТРИ ОБОЛОЧКИ ПОДВАЛА НЕТ ВОВСЕ — заход 7.243 (аудит 7.241, Р10).
+   * До него из подвала уходила одна ссылка «Скачать приложение» (долг 188),
+   * а адрес сайта, «©» и шесть ссылок оставались — на каждой странице и
+   * даже под серым каркасом загрузки кабинета: главная примета «это сайт».
+   * Условия и Политика в приложении живут в «Mi perfil → Ajustes» и в
+   * меню «≡» гостя; глоссарий и словарь — в меню и нижней панели.
+   *
+   * Признак приходит с СЕРВЕРА (корневой макет), а не спрашивается у
+   * Capacitor: подвал — серверный компонент, и в ответе приложению его быть
+   * не должно, а не «спрятаться после гидрации». Сторож — `check:app-mode`.
    */
   nativeShell: boolean;
 }) {
+  if (nativeShell) return null;
   return (
-    <footer className="border-t border-black/10 dark:border-white/30">
+    // `data-rf-web-footer` — по нему `check:app-mode` считает подвалы в
+    // отдаче: в приложении их 0, в браузере — по одному на страницу.
+    <footer className="border-t border-black/10 dark:border-white/30" data-rf-web-footer>
       {/* flex-wrap on BOTH rows, and it has to be both. The link row below
           grew to six items (428px of intrinsic width) while staying a
           non-wrapping `flex`; centred inside a 320px column that made it
@@ -61,11 +68,9 @@ export default function Footer({
           <span>{dict.footer.tagline}</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          {nativeShell ? null : (
-            <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
-              {dict.footer.appLink}
-            </Link>
-          )}
+          <Link href={`/${lang}/download`} className="tap hover:text-foreground/80 active:text-foreground/80">
+            {dict.footer.appLink}
+          </Link>
           {/* The navbar's own Glosario entry (added alongside this) lives
               inside the Practicar dropdown, whose panel only renders once
               opened — so it gives a human a path but a crawler nothing.

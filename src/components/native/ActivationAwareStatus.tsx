@@ -57,7 +57,9 @@ export default function ActivationAwareStatus({
   }, []);
   if (serverEntitled) return <>{children}</>;
   if (live === "granted") return <>{whenGranted}</>;
-  if (live === "waiting" && whenWaiting !== undefined) return <>{whenWaiting}</>;
+  // «Покупка идёт» (Ж.1, 7.243) говорит то же, что ожидание вебхука:
+  // оплата в пути, «Expirada» сервера уже неправда.
+  if ((live === "waiting" || live === "purchasing") && whenWaiting !== undefined) return <>{whenWaiting}</>;
   if (live === "slow" && whenSlow !== undefined) return <>{whenSlow}</>;
   return <>{children}</>;
 }

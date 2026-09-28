@@ -2019,3 +2019,22 @@ html[data-hydrating] button[type="submit"] {
     scroll-behavior: auto;
   }
 }
+
+/*
+ * ВЫДЕЛЕНИЕ ТЕКСТА В ПРИЛОЖЕНИИ — заход 7.243 (аудит 7.241, Р10).
+ *
+ * Долгое нажатие на шапке, вкладке или кнопке выделяло подпись и
+ * открывало меню браузера «Копировать / Перевести / Поделиться» — примета
+ * сайта. В приложении (`<html data-shell>`) это запрещено для «рамы»:
+ * шапка, нижняя панель, вкладки, меню, кнопки, чипы, подписи переключателей.
+ *
+ * Текст для чтения выделяться обязан: урок, словарь — обычный текст и сюда
+ * не попадают; рассказ и субтитры сделаны кнопками-словами, поэтому их
+ * корень помечен `data-rf-selectable`, и правило его обходит.
+ * В браузере правило не действует вовсе.
+ */
+html[data-shell] :is(header, nav, [role="tablist"], [role="tab"], [role="menu"], [role="menuitem"], button, [role="button"], summary, label):not([data-rf-selectable], [data-rf-selectable] *) {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}

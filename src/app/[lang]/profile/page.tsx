@@ -11,6 +11,7 @@ import { localizeSkillAreaTitle } from "@/lib/exams/localize";
 import { isStaff } from "@/lib/roles";
 import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
+import ReminderSetting from "@/components/native/ReminderSetting";
 import NativePurchasePanel from "@/components/native/NativePurchasePanel";
 import ActivationAwareStatus from "@/components/native/ActivationAwareStatus";
 import { playSubscriptionCenterUrl } from "@/lib/revenuecat-config";
@@ -549,6 +550,13 @@ export default async function ProfilePage({
   // Premium — ни в кабинете, ни на замке рассказа с 👑. Внутри оболочки,
   // которая умеет покупать, здесь стоит панель покупки Google Play только
   // с Premium. Больше ничего: ни «Standard ещё раз», ни ссылки на цены.
+  //
+  // В БРАУЗЕРЕ — ССЫЛКА НА PREMIUM СТРАНИЦЫ ЦЕН (заход 7.243, задача 4г).
+  // До неё у доступа по коду в браузере пути к Premium не было вовсе:
+  // здесь `null`, карточка обзора — тоже `null`. Касса та же, что у любого
+  // посетителя сайта (`/pricing`, форма Stripe; `/api/checkout` Standard
+  // не отказывает в Premium). В приложении — только окно Google Play выше:
+  // признак приложения проверяется раньше, ссылка на цены туда не попадает.
   const grantUpgrade =
     grantAccess && nativeCanBuy && !isPremiumUser ? (
       <NativePurchasePanel
@@ -558,6 +566,14 @@ export default async function ProfilePage({
         next={`/${lang}/profile`}
         onlyPremium
       />
+    ) : grantAccess && !nativeShell && !isPremiumUser ? (
+      <Link
+        href={`/${lang}/pricing?highlight=premium#premium`}
+        data-rf-grant-premium
+        className="tap inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-text"
+      >
+        {dict.profile.profileUpsellToPremium} →
+      </Link>
     ) : null;
 
   // Что сказать про введённый код (PROGRESS.md 7.146).
@@ -765,12 +781,18 @@ export default async function ProfilePage({
         hrefBase={`/${lang}/profile`}
       />
 
-      {checkout === "mock" && (
+      {/* ОПЛАТА САЙТА В ПРИЛОЖЕНИИ НЕ ПОКАЗЫВАЕТСЯ — заход 7.243 (аудит 7.241,
+          Р7). Три баннера ниже — про кассу Stripe: пробный режим, исход
+          оплаты и талон OXXO со ссылкой на код. В приложении путь к покупке
+          один — окно Google Play, поэтому ни один из них там не рисуется,
+          даже если в адресе остался `?checkout=` или у учётки висит талон,
+          открытый на сайте. */}
+      {!nativeShell && checkout === "mock" && (
         <p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
           {dict.account.checkoutMock}
         </p>
       )}
-      {checkout === "success" && (
+      {!nativeShell && checkout === "success" && (
         <CheckoutOutcomeNotice
           // The banner states a fact about the account, so it is decided
           // by the account: "your subscription is active" is only printed
@@ -785,7 +807,7 @@ export default async function ProfilePage({
           }}
         />
       )}
-      {(openVoucher !== null || checkout === "oxxo_pending") && (
+      {!nativeShell && (openVoucher !== null || checkout === "oxxo_pending") && (
         <div className="mt-6 flex flex-col gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
           <p>{voucherUnavailable ? dict.account.checkoutOxxoVoucherUnavailable : dict.account.checkoutOxxoPending}</p>
           {!voucherUnavailable && (
@@ -1067,7 +1089,9 @@ export default async function ProfilePage({
               >
                 {dict.profile.profileUpsellToAnnual} →
               </Link>
-            ) : subscription?.plan === "annual" ? (
+            ) : subscription?.plan === "annual" || (grantAccess && !isPremiumUser) ? (
+              // Доступ по коду или выдан руками (7.243, 4г): тот же путь к
+              // Premium, что у годовой подписки. Ветка уже за `nativeShell`.
               <Link
                 href={`/${lang}/pricing?highlight=premium#premium`}
                 className="tap mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-text"
@@ -1348,25 +1372,54 @@ export default async function ProfilePage({
             ]}
           />
 
-          <div className="mt-6 rounded-2xl border border-[#24A1DE]/25 bg-[#24A1DE]/5 p-5 sm:p-6">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#24A1DE] text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.666 2.01-.378.15-.577.298-.595.442-.03.243.275.339.69.47l1.75.55c.392.123.845.023 1.136-.26l2.132-2.062c.168-.163.342-.056.246.075l-1.74 1.63c-.237.222-.284.542-.107.755l1.642 1.972c.288.347.79.432 1.177.197l2.25-1.383c.485-.298.796-.867.72-1.442-.078-.598-.62-1.127-1.428-1.447l-5.06-2.11z" />
-                </svg>
-              </span>
-              <h2 className="font-serif text-lg font-semibold text-foreground">{dict.profile.telegramHeading}</h2>
+          {/* В ПРИЛОЖЕНИИ — ДОКУМЕНТЫ ВМЕСТО TELEGRAM (заход 7.243, аудит 7.241,
+              Р10). Веб-подвала в приложении нет, а Условия и Политика должны
+              открываться изнутри за два нажатия: «Mi perfil» → «Ajustes».
+              Приглашение в канал Telegram — примета сайта, в приложении его
+              нет (сторож `check:app-mode`). */}
+          {nativeShell ? <ReminderSetting lang={lang} userId={user.id} copy={nativeAccessCopy(lang).reminder} /> : null}
+          {nativeShell ? (
+            <div className="mt-6 rounded-2xl border border-foreground/10 p-5 sm:p-6" data-rf-legal-links>
+              <h2 className="font-serif text-lg font-semibold text-foreground">{nativeAccessCopy(lang).legal.heading}</h2>
+              <ul className="mt-2 flex flex-col">
+                <li>
+                  <Link href={`/${lang}/terms`} className="tap inline-flex min-h-11 items-center text-sm text-foreground/80 underline">
+                    {dict.footer.termsLink}
+                  </Link>
+                </li>
+                <li>
+                  <Link href={`/${lang}/privacy`} className="tap inline-flex min-h-11 items-center text-sm text-foreground/80 underline">
+                    {dict.footer.privacyLink}
+                  </Link>
+                </li>
+                <li>
+                  <Link href={`/${lang}/eliminar-cuenta`} className="tap inline-flex min-h-11 items-center text-sm text-foreground/80 underline">
+                    {nativeAccessCopy(lang).legal.deletion}
+                  </Link>
+                </li>
+              </ul>
             </div>
-            <p className="mt-3 text-sm text-foreground/70">{dict.profile.telegramDescription}</p>
-            <a
-              href={TELEGRAM_INVITE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="tap mt-4 inline-block rounded-full bg-[#24A1DE] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2090c7] active:bg-[#2090c7]"
-            >
-              {dict.profile.telegramCta}
-            </a>
-          </div>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-[#24A1DE]/25 bg-[#24A1DE]/5 p-5 sm:p-6">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#24A1DE] text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.666 2.01-.378.15-.577.298-.595.442-.03.243.275.339.69.47l1.75.55c.392.123.845.023 1.136-.26l2.132-2.062c.168-.163.342-.056.246.075l-1.74 1.63c-.237.222-.284.542-.107.755l1.642 1.972c.288.347.79.432 1.177.197l2.25-1.383c.485-.298.796-.867.72-1.442-.078-.598-.62-1.127-1.428-1.447l-5.06-2.11z" />
+                  </svg>
+                </span>
+                <h2 className="font-serif text-lg font-semibold text-foreground">{dict.profile.telegramHeading}</h2>
+              </div>
+              <p className="mt-3 text-sm text-foreground/70">{dict.profile.telegramDescription}</p>
+              <a
+                href={TELEGRAM_INVITE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="tap mt-4 inline-block rounded-full bg-[#24A1DE] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#2090c7] active:bg-[#2090c7]"
+              >
+                {dict.profile.telegramCta}
+              </a>
+            </div>
+          )}
         </section>
       )}
 

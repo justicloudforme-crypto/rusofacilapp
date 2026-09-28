@@ -31,8 +31,15 @@ export default function NativeShellCookie() {
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    if (nativeShellCookiePresent()) return;
+    // Признак приложения для CSS (запрет выделения «рамы», 7.243) — и
+    // тогда, когда сервер отрисовал страницу без метки.
+    document.documentElement.dataset.shell = "1";
+    const present = nativeShellCookiePresent();
+    // Срок продлевается на КАЖДОЙ загрузке (7.243, аудит 7.241 Р8): страницу
+    // мог отдать воркер без похода на сервер, и тогда продлить куку, кроме
+    // этой строки, некому.
     setNativeShellCookie();
+    if (present) return;
     // Приватный режим/запрет хранилища — тогда просто не обновляемся:
     // следующий переход всё равно уедет на сервер уже с кукой. Поэтому
     // неудачная ЗАПИСЬ флажка читается как «уже обновлялись».
