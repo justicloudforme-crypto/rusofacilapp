@@ -36,7 +36,9 @@ export const GATES = [
     file: "src/components/intro/IntroPresentation.tsx",
     guard: /\{showPdf && \(\s*<div[^>]*>\s*<a\s+href=\{`\/api\/intro\/pdf/,
     caller: "src/app/[lang]/courses/page.tsx",
-    callerGate: /showPdf=\{!\(await isNativeShellRequest\(\)\)\}/,
+    // 7.243: признак спрашивается один раз в `nativeShell` (он же убирает
+    // Telegram из колоды) и передаётся сюда.
+    callerGate: /const nativeShell = await isNativeShellRequest\(\);[\s\S]*showPdf=\{!nativeShell\}/,
   },
   {
     file: "src/components/lesson/SlidesTab.tsx",
@@ -222,7 +224,7 @@ async function main() {
     };
     const cases = [
       ["вводная снова рисует PDF всегда (как до 7.242)", edit("src/components/intro/IntroPresentation.tsx", "{showPdf && (", "{true && ("), "IntroPresentation.tsx: ссылка на файл не стоит"],
-      ["страница курсов перестала спрашивать оболочку", edit("src/app/[lang]/courses/page.tsx", "showPdf={!(await isNativeShellRequest())}", "showPdf"), "courses/page.tsx: признак"],
+      ["страница курсов перестала спрашивать оболочку", edit("src/app/[lang]/courses/page.tsx", "showPdf={!nativeShell}", "showPdf"), "courses/page.tsx: признак"],
       ["урок снова даёт PDF подписчику в оболочке", edit("src/app/[lang]/courses/[level]/[lesson]/page.tsx", 'canDownloadPdf={tier !== "free" && !nativeShell}', 'canDownloadPdf={tier !== "free"}'), "[lesson]/page.tsx: признак"],
       ["новая ссылка на файл без записи в GATES — скан находит её сам", { ...files, "src/components/__plant__/Export.tsx": 'export const E = () => <a href="/api/intro/pdf?lang=es">PDF</a>;' }, "__plant__/Export.tsx: ссылка на скачивание"],
       ["новый атрибут download без записи в GATES", { ...files, "src/components/__plant__/Save.tsx": 'export const S = () => <a href="/x.csv" download>CSV</a>;' }, "__plant__/Save.tsx"],

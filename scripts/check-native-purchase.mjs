@@ -528,8 +528,22 @@ function judge(files) {
   if (!/whenGranted=\{null\}\s+whenWaiting=\{null\}\s+whenSlow=\{null\}/.test(profileCode)) {
     problems.push(`${FILES.profile}: строка «Venció el…» видна между оплатой и вебхуком (7.240)`);
   }
-  if (!/stage\.kind !== "activating" && stage\.kind !== "slow"/.test(panelCode)) {
+  if (!/stage\.kind !== "activating"\s*&&\s*stage\.kind !== "purchasing"\s*&&\s*stage\.kind !== "slow"/.test(panelCode)) {
     problems.push(`${FILES.panel}: тарифы видны, пока Google уже взял оплату — экран читается как «купи снова» (7.240)`);
+  }
+  // Ж.1 (аудит 7.241, Р17; заход 7.243): «покупка идёт» публикуется В МОДУЛЬ
+  // до ответа магазина, значок кабинета читает её как «Activando…», а ответ
+  // «куплено» запускает ожидание и при закрытой панели.
+  const buyAt = panelCode.indexOf("beginPurchase();");
+  const callAt = panelCode.indexOf("await purchasePackage(pkg)");
+  if (buyAt === -1 || callAt === -1 || buyAt > callAt) {
+    problems.push(`${FILES.panel}: «покупка идёт» не публикуется до ответа магазина — ~1,5 с «Expirada» после окна Google (Ж.1)`);
+  }
+  if (!/if \(outcome\.kind === "purchased"\) \{[\s\S]{0,160}?await startActivationWatch\(/.test(panelCode) || panelCode.indexOf("await startActivationWatch(") > panelCode.indexOf("if (!alive.current) return;\n      switch (outcome.kind)")) {
+    problems.push(`${FILES.panel}: ожидание доступа после оплаты зависит от открытой панели (Ж.1)`);
+  }
+  if (!/live === "waiting" \|\| live === "purchasing"/.test(files.status ?? "")) {
+    problems.push(`${FILES.status}: значок не читает «покупка идёт» как «Activando…» (Ж.1)`);
   }
   if (!/stage\.kind === "slow" \?[\s\S]{0,400}?waitForAccess\(\)/.test(panelCode)) {
     problems.push(`${FILES.panel}: после срока ожидания нет «Reintentar» — человеку нечего нажать (7.240)`);
@@ -587,7 +601,7 @@ const PLANTS = [
   },
   {
     name: "7.240: ожидание снова рисует «Expirada» (НАСТОЯЩИЙ код 7.239 — whenWaiting игнорируется)",
-    apply: (f) => ({ ...f, status: f.status.replace('if (live === "waiting" && whenWaiting !== undefined)', "if (false)") }),
+    apply: (f) => ({ ...f, status: f.status.replace('if ((live === "waiting" || live === "purchasing") && whenWaiting !== undefined)', "if (false)") }),
   },
   {
     name: "7.240: кабинет не передаёт «Activando…» значку",
@@ -599,7 +613,19 @@ const PLANTS = [
   },
   {
     name: "7.240: тарифы снова видны во время «Activando…»",
-    apply: (f) => ({ ...f, panel: f.panel.replace('stage.kind !== "activated" && stage.kind !== "activating" && stage.kind !== "slow"', 'stage.kind !== "activated"') }),
+    apply: (f) => ({ ...f, panel: f.panel.replace('stage.kind !== "activating" &&\n    stage.kind !== "purchasing" &&\n    stage.kind !== "slow"', 'stage.kind !== "slow"') }),
+  },
+  {
+    name: "Ж.1 (7.243): «покупка идёт» только после ответа магазина",
+    apply: (f) => ({ ...f, panel: f.panel.replace("      beginPurchase();\n      const outcome = await purchasePackage(pkg);", "      const outcome = await purchasePackage(pkg);\n      beginPurchase();") }),
+  },
+  {
+    name: "Ж.1 (7.243): значок не знает «покупка идёт»",
+    apply: (f) => ({ ...f, status: f.status.replace('live === "waiting" || live === "purchasing"', 'live === "waiting"') }),
+  },
+  {
+    name: "Ж.1 (7.243): тарифы видны, пока магазин не ответил",
+    apply: (f) => ({ ...f, panel: f.panel.replace('    stage.kind !== "purchasing" &&\n', "") }),
   },
   {
     name: "7.240: после 30 с нет «Reintentar»",

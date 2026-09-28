@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { levelMeta, levelSlugs } from "@/lib/courses";
-import { buildIntroSlides } from "@/lib/intro/content";
+import { buildIntroSlides, introSlidesForApp } from "@/lib/intro/content";
 import { getIntroStats } from "@/lib/intro/bank";
 import IntroPresentation from "@/components/intro/IntroPresentation";
 import LevelGlossaryBadge from "@/components/glossary/LevelGlossaryBadge";
@@ -53,7 +53,9 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
   // намеренно — его обложка, подписи страниц и префикс ссылок `/es`
   // написаны по-испански целиком, и переводить его — отдельная работа
   // (заведено долгом).
-  const introSlides = buildIntroSlides(await getIntroStats(), lang);
+  const nativeShell = await isNativeShellRequest();
+  const deck = buildIntroSlides(await getIntroStats(), lang);
+  const introSlides = nativeShell ? introSlidesForApp(deck) : deck;
   const levels = levelSlugs.map((slug) => ({
     slug,
     title: dict.courses.levels[slug].title,
@@ -84,7 +86,7 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
             lang={lang}
             levels={levels}
             dict={dict.intro}
-            showPdf={!(await isNativeShellRequest())}
+            showPdf={!nativeShell}
           />
         </div>
       </div>

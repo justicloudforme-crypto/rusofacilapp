@@ -63,6 +63,31 @@ export interface IntroSlide {
 }
 
 /**
+ * КОЛОДА БЕЗ TELEGRAM — для приложения (заход 7.243, аудит 7.241, Р10).
+ * Приглашение в канал — примета сайта: из колоды внутри приложения уходят
+ * ссылка на канал, пункт списка и фразы, где он назван. Число слайдов то
+ * же, остальной текст не трогается. Сторож — `check:app-mode`.
+ */
+export function introSlidesForApp(slides: readonly IntroSlide[]): IntroSlide[] {
+  const mentions = (text: string) => /Telegram/.test(text);
+  return slides.map((slide) => ({
+    ...slide,
+    body: slide.body
+      .map((paragraph) =>
+        mentions(paragraph)
+          ? (paragraph.match(/[^.!?]+[.!?]*/g) ?? [paragraph])
+              .map((sentence) => sentence.trim())
+              .filter((sentence) => sentence.length > 0 && !mentions(sentence))
+              .join(" ")
+          : paragraph,
+      )
+      .filter((paragraph) => paragraph.length > 0),
+    ...(slide.highlights ? { highlights: slide.highlights.filter((item) => !mentions(item)) } : {}),
+    ...(slide.links ? { links: slide.links.filter((link) => link.href !== TELEGRAM_INVITE_URL) } : {}),
+  }));
+}
+
+/**
  * The PDF's page count: one cover plus one page per slide.
  *
  * It lives here rather than in ./pdf.tsx because that file is

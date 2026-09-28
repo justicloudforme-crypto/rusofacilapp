@@ -188,6 +188,8 @@ function SubtitleTrack({
   return (
     <div
       ref={containerRef}
+      // Строки субтитров — кнопки, но текст выделяться обязан (7.243).
+      data-rf-selectable
       className="flex max-h-96 flex-col gap-1 overflow-y-auto rounded-2xl border border-black/10 p-3 dark:border-white/30"
     >
       {subtitles.map((line) => (

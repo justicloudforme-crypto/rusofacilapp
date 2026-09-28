@@ -23,6 +23,8 @@ import SignedOutCachePurge from "@/components/SignedOutCachePurge";
 import OfflineSaveCopy from "@/components/OfflineSaveCopy";
 import DownloadsHeal from "@/components/DownloadsHeal";
 import ProgressOutboxSync from "@/components/ProgressOutboxSync";
+import OwnerChangeCachePurge from "@/components/OwnerChangeCachePurge";
+import { GUEST_PAGE_OWNER } from "@/lib/signed-out";
 import { ownerScopeFor } from "@/lib/recordings-owner";
 import { getThemePreference } from "@/lib/theme";
 import { getCurrentUserForChrome } from "@/lib/auth";
@@ -222,6 +224,11 @@ export default async function LangLayout({
     <html
       lang={lang}
       data-theme={theme}
+      // Признак приложения для CSS (заход 7.243, аудит 7.241 Р10): в нём
+      // шапка, панели, кнопки и меню не выделяются долгим нажатием —
+      // правило в globals.css. Клиент дублирует признак из Capacitor
+      // (`NativeShellCookie`), если сервер отрисовал страницу без метки.
+      data-shell={nativeShell ? "1" : undefined}
       // Removed by HydrationMarker the instant hydration finishes (see its
       // own comment) — globals.css uses this to dim/disable plain buttons
       // site-wide until then, instead of gating each one individually.
@@ -295,6 +302,8 @@ export default async function LangLayout({
         {/* Очередь ответов без сети уходит с любой страницы, а не только
             из урока — заход 7.236 (src/lib/progress-outbox.ts). */}
         <ProgressOutboxSync owner={user ? ownerScopeFor(user.id) : "anon"} />
+        {/* Ж.4 (7.243): вход тоже чистит чужие копии страниц, как выход. */}
+        <OwnerChangeCachePurge owner={user ? ownerScopeFor(user.id) : GUEST_PAGE_OWNER} />
         {/* Плашка «нет соединения» переехала ВНУТРЬ шапки (долг 180).
             Здесь, первым элементом потока, она стояла ВЫШЕ шапки и
             забирала себе полосу под строкой состояния: в оболочке на
@@ -323,8 +332,10 @@ export default async function LangLayout({
         <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} nativeShell={nativeShell} />
         {/* Reading mode is meant to minimize distractions — the floating
             Telegram CTA is the one persistent, animated, non-content element
-            on every page, so it's the one thing this mode hides. */}
-        {theme !== "reading" && <TelegramFloatButton label={dict.profile.telegramCta} />}
+            on every page, so it's the one thing this mode hides. Inside the
+            app it is not rendered at all (7.243, audit 7.241 Р10): an invite
+            to a Telegram channel is a mark of the website. */}
+        {!nativeShell && theme !== "reading" && <TelegramFloatButton label={dict.profile.telegramCta} />}
         {/* Both are no-ops until Web Analytics / Speed Insights are turned
             on for this project in the Vercel dashboard — see
             vercel.com/rusofacilappcom/rusofacilapp → Analytics /

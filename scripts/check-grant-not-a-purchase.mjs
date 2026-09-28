@@ -71,7 +71,7 @@ function walk(dir) {
   return out;
 }
 
-export function violations({ cabinetRaw, grantLibRaw, labelLibRaw, portalHits }) {
+export function violations({ cabinetRaw, grantLibRaw, labelLibRaw, portalHits, dictionaries }) {
   const cabinet = stripComments(cabinetRaw);
   const grantLib = stripComments(grantLibRaw);
   const labelLib = stripComments(labelLibRaw ?? "");
@@ -87,6 +87,20 @@ export function violations({ cabinetRaw, grantLibRaw, labelLibRaw, portalHits })
     if (!/!row\.stripeSubscriptionId/.test(grantLib)) {
       bad.push(`${GRANT_LIB}: выдача определяется одним планом — у настоящей подписки с новым именем тарифа отнимут отмену`);
     }
+    // 1б (7.243, задача 4в). Ручная строка — выдача при ЛЮБОМ тарифе, и
+    // этот вопрос задаётся ДО «тариф оплачиваемый?»: иначе Premium,
+    // выданный руками, снова читается покупкой.
+    const manualAt = grantLib.search(/if \(row\.provider === MANUAL_PROVIDER\) return true;/);
+    const purchasedAt = grantLib.search(/if \(isPurchasedPlan\(row\.plan\)\) return false;/);
+    if (manualAt === -1 || purchasedAt === -1 || manualAt > purchasedAt) {
+      bad.push(`${GRANT_LIB}: ручная выдача (provider=manual) с тарифом Premium снова читается покупкой (7.243, 4в)`);
+    }
+  }
+  // 1в. Подпись ручной выдачи в истории — «Acceso concedido» / «Доступ
+  //     выдан»: без названия тарифа и суммы.
+  for (const [lang, want] of [["es", "Acceso concedido"], ["ru", "Доступ выдан"]]) {
+    const got = dictionaries?.[lang]?.profile?.historyGrantManual;
+    if (got !== want) bad.push(`src/dictionaries/${lang}.json: historyGrantManual = «${got}», а должно быть «${want}» (7.243, 4в)`);
   }
 
   // 2. Кабинет считает признак той же функцией.
@@ -113,14 +127,32 @@ export function violations({ cabinetRaw, grantLibRaw, labelLibRaw, portalHits })
   if (!upgrade) {
     bad.push(`${CABINET}: нет \`grantUpgrade\` — у выданного доступа снова нет пути к Premium (долг 346)`);
   } else {
-    if (!/grantAccess && nativeCanBuy && !isPremiumUser \?/.test(upgrade)) {
+    // Две ветки (7.243, 4г): приложение — панель магазина; браузер —
+    // ссылка на Premium страницы цен. Граница — вторая проверка `grantAccess`.
+    const webAt = upgrade.search(/\) : grantAccess && /);
+    const nativePart = webAt === -1 ? upgrade : upgrade.slice(0, webAt);
+    const webPart = webAt === -1 ? "" : upgrade.slice(webAt);
+    if (!/grantAccess && nativeCanBuy && !isPremiumUser \?/.test(nativePart)) {
       bad.push(`${CABINET}: путь к Premium у выдачи не ограничен «оболочка умеет покупать и Premium ещё нет»`);
     }
-    if (!/<NativePurchasePanel[\s\S]*\bonlyPremium\b/.test(upgrade)) {
+    if (!/<NativePurchasePanel[\s\S]*\bonlyPremium\b/.test(nativePart)) {
       bad.push(`${CABINET}: панель у выдачи предлагает не только Premium`);
     }
-    if (/subscription\/cancel|\/pricing|<Link\b|<form\b/.test(upgrade)) {
+    if (/subscription\/cancel|\/pricing|<Link\b|<form\b/.test(nativePart)) {
       bad.push(`${CABINET}: у выдачи появилась отмена, форма или ссылка на цены — это снова покупка там, где её не было (долг 239)`);
+    }
+    if (!webPart) {
+      bad.push(`${CABINET}: у доступа по коду в браузере нет пути к Premium (7.243, 4г)`);
+    } else {
+      if (!/^\) : grantAccess && !nativeShell && !isPremiumUser \?/.test(webPart)) {
+        bad.push(`${CABINET}: ссылка на цены у выдачи не закрыта признаком приложения — в приложении снова путь к Stripe (7.243, 4г)`);
+      }
+      if (!/href=\{`\/\$\{lang\}\/pricing\?highlight=premium#premium`\}/.test(webPart)) {
+        bad.push(`${CABINET}: браузерный путь выдачи ведёт не к Premium`);
+      }
+      if (/subscription\/cancel|<form\b|NativePurchasePanel/.test(webPart)) {
+        bad.push(`${CABINET}: в браузерной ветке выдачи отмена, форма или панель магазина`);
+      }
     }
   }
 
@@ -178,13 +210,18 @@ function sourceFiles() {
     .sort();
 }
 
+function readDictionaries(read) {
+  return { es: JSON.parse(read("src/dictionaries/es.json")), ru: JSON.parse(read("src/dictionaries/ru.json")) };
+}
+
 function plant() {
   const files = sourceFiles();
   const read = (f) => readFileSync(f, "utf8");
   const cabinetRaw = read(CABINET);
   const grantLibRaw = read(GRANT_LIB);
   const labelLibRaw = read(LABEL_LIB);
-  const live = { cabinetRaw, grantLibRaw, labelLibRaw, portalHits: portalTouches(files, read) };
+  const dictionaries = readDictionaries(read);
+  const live = { cabinetRaw, grantLibRaw, labelLibRaw, portalHits: portalTouches(files, read), dictionaries };
 
   const cases = [{ name: "отрицательный контроль: живые файлы сегодня чисты", ok: violations(live).length === 0 }];
   const planted = (name, patch, expect) => {
@@ -218,7 +255,9 @@ function plant() {
   // 7.242, долг 346: путь к Premium у выдачи — ровно панель с Premium.
   planted(
     "подсадка 7.242: у выдачи вместо Premium — ссылка на цены — поймана",
-    { cabinetRaw: cabinetRaw.replace("onlyPremium\n      />\n    ) : null;", "onlyPremium\n      />\n    ) : <Link href={`/${lang}/pricing`}>x</Link>;") },
+    // Якорь после 7.243: за панелью теперь идёт браузерная ветка; ссылка
+    // на цены подсаживается в ветку ПРИЛОЖЕНИЯ, до неё.
+    { cabinetRaw: cabinetRaw.replace("onlyPremium\n      />\n    ) : grantAccess && !nativeShell", "onlyPremium\n      />\n    ) : true ? <Link href={`/${lang}/pricing`}>x</Link> : grantAccess && !nativeShell") },
     "ссылка на цены",
   );
   planted(
@@ -267,6 +306,26 @@ function plant() {
     "определяется одним планом",
   );
   planted(
+    "подсадка (7.243, 4в): ручной Premium снова покупка — поймана",
+    { grantLibRaw: grantLibRaw.replace("  if (row.provider === MANUAL_PROVIDER) return true;\n", "") },
+    "ручная выдача (provider=manual)",
+  );
+  planted(
+    "подсадка (7.243, 4в): в истории ручной выдачи снова название тарифа — поймана",
+    { dictionaries: { ...dictionaries, es: { ...dictionaries.es, profile: { ...dictionaries.es.profile, historyGrantManual: "Premium" } } } },
+    "historyGrantManual",
+  );
+  planted(
+    "подсадка (7.243, 4г): браузерной ветки нет — поймана",
+    { cabinetRaw: cabinetRaw.replace(") : grantAccess && !nativeShell && !isPremiumUser ? (", ") : false ? (") },
+    "нет пути к Premium",
+  );
+  planted(
+    "подсадка (7.243, 4г): ссылка на цены у выдачи в приложении — поймана",
+    { cabinetRaw: cabinetRaw.replace(") : grantAccess && !nativeShell && !isPremiumUser ? (", ") : grantAccess && !isPremiumUser ? (") },
+    "не закрыта признаком приложения",
+  );
+  planted(
     "подсадка: ссылка на портал платёжной системы — поймана",
     { portalHits: [{ file: "src/app/[lang]/profile/page.tsx", line: 1 }] },
     "портал платёжной системы",
@@ -290,6 +349,7 @@ function main() {
     grantLibRaw: read(GRANT_LIB),
     labelLibRaw: read(LABEL_LIB),
     portalHits: portalTouches(files, read),
+    dictionaries: readDictionaries(read),
   });
   if (bad.length) {
     console.error("ВЫДАННЫЙ ДОСТУП СНОВА ВЫГЛЯДИТ ПОКУПКОЙ (долг 239):");

@@ -1,4 +1,4 @@
-import { PAGE_CACHE_PREFIX } from "./sw-cache-names";
+import { DOWNLOADS_CACHE_NAME, GENERATION_CACHE_NAME, PAGE_CACHE_PREFIX } from "./sw-cache-names";
 
 /**
  * ЧТО ОСТАЁТСЯ В БРАУЗЕРЕ ПОСЛЕ ВЫХОДА ИЗ АККАУНТА (заход 7.198, часть 1).
@@ -55,4 +55,35 @@ export const SIGNED_OUT_PARAM = "signedout";
  */
 export function personalPageCaches(existing: readonly string[]): string[] {
   return existing.filter((name) => LEGACY_PAGE_CACHES.includes(name) || name.startsWith(PAGE_CACHE_PREFIX));
+}
+
+/**
+ * СМЕНА ВЛАДЕЛЬЦА КОПИЙ БЕЗ ВЫХОДА — Ж.4 (аудит 7.241; заход 7.243).
+ *
+ * Выход чистит копии страниц (выше), вход — не чистил. Шапка документа
+ * рисуется сервером под того, кто пришёл, и копия, снятая гостем до
+ * входа (например «Biblioteca de cuentos» с гостевым «≡»), жила после
+ * входа дальше. Та же дыра наоборот: учётка A → вход учёткой B без выхода —
+ * в копиях шапка и данные A.
+ *
+ * Владельца называет сервер (макет: `ownerScopeFor(user.id)` или «anon»),
+ * страница помнит прошлого в `localStorage` и при смене чистит:
+ *   • гость → учётка: копии разделов и документов, но НЕ скачанное —
+ *     его скачал гость на этом телефоне, и теперь это скачанное текущего
+ *     владельца; и не метку поколения (её ведёт выкат);
+ *   • учётка → другой владелец: ровно как выход, скачанное тоже — оно
+ *     чужое.
+ * Очередь ответов `rf-progress-outbox` — IndexedDB, а не кеш: сюда она не
+ * попадает по построению (правило 7.237 — очередь не стирается никогда).
+ * Первый запуск без записи о прошлом владельце ничего не чистит: сравнить
+ * не с чем.
+ */
+export const PAGE_OWNER_KEY = "rf-pages-owner";
+export const GUEST_PAGE_OWNER = "anon";
+
+export function ownerChangePurge(existing: readonly string[], previous: string | null, current: string): string[] {
+  if (previous === null || previous === current) return [];
+  const personal = personalPageCaches(existing);
+  if (previous !== GUEST_PAGE_OWNER) return personal;
+  return personal.filter((name) => name !== DOWNLOADS_CACHE_NAME && name !== GENERATION_CACHE_NAME);
 }

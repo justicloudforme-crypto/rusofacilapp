@@ -289,6 +289,9 @@ async function main() {
     let shellDownloadsPlant = { status: 1 };
     let lockPurchase = { status: 1 };
     let lockPurchasePlant = { status: 1 };
+    // 7.243 — «приложение не похоже на сайт».
+    let appMode = { status: 1 };
+    let appModePlant = { status: 1 };
     try {
       if (!(await waitForServer(90_000, ROLES_BASE))) {
         console.error(
@@ -415,6 +418,11 @@ async function main() {
         // — гость и бесплатный аккаунт; старая оболочка — контроль.
         lockPurchase = spawnSync(process.execPath, [TSX, "scripts/check-lock-purchase-path.ts", `--base=${ROLES_BASE}`], { stdio: "inherit" });
         lockPurchasePlant = spawnSync(process.execPath, [TSX, "scripts/check-lock-purchase-path.ts", `--base=${ROLES_BASE}`, "--plant"], { stdio: "inherit" });
+        // Заход 7.243 (аудит 7.241, Р7/Р8/Р10): в отдаче приложения 0
+        // подвалов, Telegram, оплаты сайта и «Descargar la app» — гость и
+        // подписчик; в браузере всё на месте (контроль); метка продлевается.
+        appMode = spawnSync(process.execPath, ["scripts/check-app-mode.mjs", `--base=${ROLES_BASE}`], { stdio: "inherit" });
+        appModePlant = spawnSync(process.execPath, ["scripts/check-app-mode.mjs", `--base=${ROLES_BASE}`, "--plant"], { stdio: "inherit" });
       }
     } finally {
       stopServer(rolesServer);
@@ -553,6 +561,8 @@ async function main() {
       (shellDownloadsPlant.status ?? 1) ||
       (lockPurchase.status ?? 1) ||
       (lockPurchasePlant.status ?? 1) ||
+      (appMode.status ?? 1) ||
+      (appModePlant.status ?? 1) ||
       (accountDeletion.status ?? 1) ||
       (accountDeletionPlant.status ?? 1) ||
       (accessSigns.status ?? 1) ||

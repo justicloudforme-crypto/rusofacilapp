@@ -1368,7 +1368,9 @@ export default function StoryText({
   return (
     // Название и подпись для шторки СКАЧАННОЙ КОПИИ: там React не оживает,
     // и проигрыватель копии (`public/offline.html`) берёт их отсюда.
-    <div data-rf-story-title={title} data-rf-story-author={author}>
+    // `data-rf-selectable`: слова здесь — кнопки, а текст рассказа в
+    // приложении выделяться обязан (правило «рамы» в globals.css, 7.243).
+    <div data-rf-story-title={title} data-rf-story-author={author} data-rf-selectable>
       {isCompletedBadge && (
         <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
           <span aria-hidden="true">✓</span> {dict.completedBadge}
