@@ -68,6 +68,9 @@ import ChangePasswordForm from "@/components/profile/ChangePasswordForm";
 import LogoutEverywhereButton from "@/components/profile/LogoutEverywhereButton";
 import { ownerScopeFor } from "@/lib/recordings-owner";
 import DeleteAccountForm from "@/components/profile/DeleteAccountForm";
+import PlayDeletionWarning from "@/components/legal/PlayDeletionWarning";
+import { hasRenewingStoreSubscription } from "@/lib/store-subscription";
+import { ACCOUNT_DELETION_PATH, accountDeletionCopy } from "@/lib/legal/account-deletion";
 import VoiceRecordingsPanel from "@/components/profile/VoiceRecordingsPanel";
 import DownloadsPanel from "@/components/profile/DownloadsPanel";
 import LocalDate from "@/components/profile/LocalDate";
@@ -540,6 +543,22 @@ export default async function ProfilePage({
   // crown next to the plan name in the Subscription tab — see
   // MatryoshkaAvatar.tsx's `premium` prop / entitlement.ts's isPremiumTier.
   const isPremiumUser = isPremiumTier(tier);
+  // ПУТЬ К PREMIUM У ВЫДАННОГО ДОСТУПА — заход 7.242, решение владельца
+  // (долг 346). Отмены у выдачи по-прежнему нет (долг 239: отменять
+  // нечего), но у человека с кодом Standard не было НИКАКОГО пути к
+  // Premium — ни в кабинете, ни на замке рассказа с 👑. Внутри оболочки,
+  // которая умеет покупать, здесь стоит панель покупки Google Play только
+  // с Premium. Больше ничего: ни «Standard ещё раз», ни ссылки на цены.
+  const grantUpgrade =
+    grantAccess && nativeCanBuy && !isPremiumUser ? (
+      <NativePurchasePanel
+        lang={lang}
+        copy={nativeAccessCopy(lang).purchase}
+        userId={user.id}
+        next={`/${lang}/profile`}
+        onlyPremium
+      />
+    ) : null;
 
   // Что сказать про введённый код (PROGRESS.md 7.146).
   //
@@ -1301,6 +1320,18 @@ export default async function ProfilePage({
                       </summary>
                       <div className="mt-4">
                         <p className="text-sm text-foreground/60">{dict.profile.deleteAccountDescription}</p>
+                        {/* 7.242, долг 344: удаление не отменяет подписку
+                            Google Play — сказать это ДО пароля, а не после. */}
+                        {hasRenewingStoreSubscription(subscriptionHistory) ? (
+                          <PlayDeletionWarning lang={lang} certainty="known" href={playSubscriptionCenterUrl()} />
+                        ) : (
+                          <Link
+                            href={`/${lang}${ACCOUNT_DELETION_PATH}`}
+                            className="tap mt-2 inline-flex min-h-11 items-center text-sm underline underline-offset-2 text-foreground/70"
+                          >
+                            {accountDeletionCopy(lang).pageLinkLabel}
+                          </Link>
+                        )}
                         <DeleteAccountForm
                           lang={lang}
                           warningLabel={dict.profile.deleteAccountWarning}
@@ -1479,7 +1510,7 @@ export default async function ProfilePage({
               называет (долг 196). Тем, кто оплатил на сайте, внутри
               приложения печатается только строка о состоянии — кассы в
               оболочке нет. */}
-          {grantAccess ? null : isActive && subscription?.provider === "revenuecat" && !isPremiumPlan(subscription.plan) ? (
+          {grantAccess ? grantUpgrade : isActive && subscription?.provider === "revenuecat" && !isPremiumPlan(subscription.plan) ? (
             <a
               href={playSubscriptionCenterUrl()}
               target="_blank"

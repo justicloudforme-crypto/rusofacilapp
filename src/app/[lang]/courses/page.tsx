@@ -13,6 +13,7 @@ import type { FlashcardLevel } from "@/lib/flashcards/types";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, routeAlternates } from "@/lib/site";
 import { plural } from "@/lib/plural";
+import { isNativeShellRequest } from "@/lib/native-shell";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/courses">): Promise<Metadata> {
   const { lang } = await params;
@@ -78,7 +79,13 @@ export default async function CoursesPage({ params }: PageProps<"/[lang]/courses
         <h2 className="text-xl font-semibold tracking-tight">{dict.intro.title}</h2>
         <p className="mt-2 text-sm text-foreground/70">{dict.intro.subtitle}</p>
         <div className="mt-6">
-          <IntroPresentation slides={introSlides} lang={lang} levels={levels} dict={dict.intro} />
+          <IntroPresentation
+            slides={introSlides}
+            lang={lang}
+            levels={levels}
+            dict={dict.intro}
+            showPdf={!(await isNativeShellRequest())}
+          />
         </div>
       </div>
 

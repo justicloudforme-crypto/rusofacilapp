@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useBackLayer } from "@/lib/useBackLayer";
 import { useRouter } from "next/navigation";
 import { CHARACTERS, avatarIdsForCharacter, characterOf, type AvatarId, type Character } from "@/lib/avatars";
 import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
@@ -31,6 +32,8 @@ export default function AvatarPicker({
   const [justSaved, setJustSaved] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
+  // «Назад» Android закрывает это окно (7.242, долг 347).
+  useBackLayer(open, () => setOpen(false));
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {

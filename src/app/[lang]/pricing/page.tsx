@@ -39,6 +39,12 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/pricing">)
   // Веб-подпись не тронута ни знаком: обычный браузер в эту ветку не
   // заходит, а карту сайта и выдачу поиска кормит именно она.
   if (await isNativeShellRequest()) {
+    // 7.242, долг 346: в оболочке, которая умеет покупать, «в этой версии
+    // приложения покупок нет» — неправда и в `<head>` тоже.
+    if (await canBuyInsideShell()) {
+      const purchase = nativeAccessCopy(lang).purchase;
+      return { title: `${purchase.heading} | RusoFácilapp`, description: purchase.intro, robots: { index: false } };
+    }
     const copy = nativeAccessCopy(lang).notice;
     return { title: `${copy.heading} | RusoFácilapp`, description: copy.body, robots: { index: false } };
   }

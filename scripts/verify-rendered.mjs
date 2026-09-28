@@ -284,6 +284,11 @@ async function main() {
     let accessSignsPlant = { status: 1 };
     let signedOut = { status: 1 };
     let signedOutPlant = { status: 1 };
+    // 7.242 — живые половины сторожей «правды для проверяющего».
+    let shellDownloads = { status: 1 };
+    let shellDownloadsPlant = { status: 1 };
+    let lockPurchase = { status: 1 };
+    let lockPurchasePlant = { status: 1 };
     try {
       if (!(await waitForServer(90_000, ROLES_BASE))) {
         console.error(
@@ -400,6 +405,16 @@ async function main() {
           ["scripts/check-signed-out.mjs", `--base=${ROLES_BASE}`, "--plant"],
           { stdio: "inherit" }
         );
+        // ЗАХОД 7.242, долг 343: в отдаче оболочки ссылок на скачивание
+        // файла 0 — вся перепись адресов, гость и подписчик (кнопка PDF
+        // урока есть только у подписчика, поэтому сервер ролей). Контроль
+        // измерителя встроен: в вебе ссылки обязаны найтись.
+        shellDownloads = spawnSync(process.execPath, ["scripts/check-shell-downloads.mjs", `--base=${ROLES_BASE}`], { stdio: "inherit" });
+        shellDownloadsPlant = spawnSync(process.execPath, ["scripts/check-shell-downloads.mjs", `--base=${ROLES_BASE}`, "--plant"], { stdio: "inherit" });
+        // Долг 346: в оболочке с покупкой нет «в этой версии нет покупок»
+        // — гость и бесплатный аккаунт; старая оболочка — контроль.
+        lockPurchase = spawnSync(process.execPath, [TSX, "scripts/check-lock-purchase-path.ts", `--base=${ROLES_BASE}`], { stdio: "inherit" });
+        lockPurchasePlant = spawnSync(process.execPath, [TSX, "scripts/check-lock-purchase-path.ts", `--base=${ROLES_BASE}`, "--plant"], { stdio: "inherit" });
       }
     } finally {
       stopServer(rolesServer);
@@ -523,12 +538,23 @@ async function main() {
     // колоде «Перед первым уроком» нет ни одной испанской строки.
     // Позитивный контроль у этой проверки серверу не нужен и гоняется
     // отдельно в `verify` (`check:ru-spanish:plant`).
+    // 7.242, долги 344–345: публичная страница удаления отвечает 200 гостю в
+    // браузере и в оболочке и несёт факты; главная после удаления говорит
+    // «аккаунт удалён», без параметра — нет (встроенный контроль).
+    const accountDeletion = spawnSync(process.execPath, [TSX, "scripts/check-account-deletion.ts", `--base=${BASE}`], { stdio: "inherit" });
+    const accountDeletionPlant = spawnSync(process.execPath, [TSX, "scripts/check-account-deletion.ts", `--base=${BASE}`, "--plant"], { stdio: "inherit" });
     const ruSpanish = spawnSync(
       process.execPath,
       [TSX, "scripts/check-ru-locale-spanish.ts", `--base=${BASE}`, ...passthrough],
       { stdio: "inherit" }
     );
     return (
+      (shellDownloads.status ?? 1) ||
+      (shellDownloadsPlant.status ?? 1) ||
+      (lockPurchase.status ?? 1) ||
+      (lockPurchasePlant.status ?? 1) ||
+      (accountDeletion.status ?? 1) ||
+      (accountDeletionPlant.status ?? 1) ||
       (accessSigns.status ?? 1) ||
       (accessSignsPlant.status ?? 1) ||
       (tiles.status ?? 1) ||

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useBackLayer } from "@/lib/useBackLayer";
 import type { Locale } from "@/i18n/config";
 import type { PlanId } from "@/lib/plans";
 
@@ -67,6 +68,8 @@ export default function PaywallModal({
   priceNote?: string;
   onClose: () => void;
 }) {
+  // «Назад» Android закрывает это окно (7.242, долг 347).
+  useBackLayer(open, onClose);
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent) {

@@ -17,6 +17,7 @@ import LessonGlossaryTerms from "@/components/glossary/LessonGlossaryTerms";
 import TabBar from "@/components/ui/TabBar";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
+import NativeBuyButton from "@/components/native/NativeBuyButton";
 
 type Tab = "grammar" | "vocabulary" | "alphabet" | "exercises" | "slides";
 
@@ -36,6 +37,7 @@ function LockedModuleCard({
   cta,
   pricingHref,
   closedNote,
+  buyCta = null,
 }: {
   locale: Locale;
   /** "Este módulo incluye {count} palabra(s)" — the noun agrees with the
@@ -57,12 +59,18 @@ function LockedModuleCard({
    * это правда о материале, а не призыв его купить.
    */
   closedNote: string | null;
+  /** 7.242, долг 346: оболочка умеет покупать — под строкой кнопка к окну
+   *  покупки (то же окно, что у плитки каталога). `null` — кнопки нет. */
+  buyCta?: string | null;
 }) {
   return (
     <div className="paywall-lock rounded-2xl border border-primary/30 bg-primary/[0.04] p-6 dark:border-primary-400/30 dark:bg-primary-400/[0.06]">
       <p className="text-sm leading-6 text-foreground/80">{plural(locale, count, label, { count })}</p>
       {closedNote ? (
-        <p className="mt-3 text-sm leading-6 text-foreground/60">{closedNote}</p>
+        <>
+          <p className="mt-3 text-sm leading-6 text-foreground/60">{closedNote}</p>
+          {buyCta && <NativeBuyButton label={buyCta} reason="free" kind="lesson" />}
+        </>
       ) : (
         <Link
           href={pricingHref}
@@ -87,6 +95,7 @@ export default function LessonView({
   canDownloadPdf,
   lockedCounts,
   nativeClosedNote,
+  nativeBuyCta = null,
   slideIllustrations,
   dict,
   celebrationDict,
@@ -131,6 +140,9 @@ export default function LessonView({
    * строки — её вес, умноженный на 1913 адресов; замер 7.183).
    */
   nativeClosedNote: string | null;
+  /** 7.242, долг 346: подпись кнопки к окну покупки на закрытых вкладках,
+   *  когда оболочка умеет покупать. */
+  nativeBuyCta?: string | null;
   // Pre-rendered server-side (see [lesson]/page.tsx), keyed by slide id —
   // keeps src/lib/lessons/slideIcons.ts's shape data out of this "use
   // client" component's bundle.
@@ -306,6 +318,7 @@ export default function LessonView({
                     cta={dict.locked.cta}
                     pricingHref={`/${lang}/pricing?next=/${lang}/courses/${level}/${lessonSlug}`}
                     closedNote={nativeClosedNote}
+                    buyCta={nativeBuyCta}
                   />
                 </div>
                 <div data-offline-panel="vocabulary" className={tab === "vocabulary" ? undefined : "hidden"}>
@@ -324,6 +337,7 @@ export default function LessonView({
                     cta={dict.locked.cta}
                     pricingHref={`/${lang}/pricing?next=/${lang}/courses/${level}/${lessonSlug}`}
                     closedNote={nativeClosedNote}
+                    buyCta={nativeBuyCta}
                   />
                 </div>
                 <div data-offline-panel="exercises" className={tab === "exercises" ? undefined : "hidden"}>
@@ -334,6 +348,7 @@ export default function LessonView({
                     cta={dict.locked.cta}
                     pricingHref={`/${lang}/pricing?next=/${lang}/courses/${level}/${lessonSlug}`}
                     closedNote={nativeClosedNote}
+                    buyCta={nativeBuyCta}
                   />
                 </div>
               </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBackLayer } from "@/lib/useBackLayer";
 import StreakFlame from "@/components/StreakFlame";
 import type { Locale } from "@/i18n/config";
 import { plural, type PluralForms } from "@/lib/plural";
@@ -66,6 +67,8 @@ export default function WelcomeOverlay({
   continueLabel: string;
 }) {
   const [visible, setVisible] = useState(false);
+  // «Назад» Android закрывает приветствие (7.242, долг 347).
+  useBackLayer(visible, () => setVisible(false));
 
   useEffect(() => {
     if (typeof document === "undefined") return;
