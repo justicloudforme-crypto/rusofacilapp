@@ -85,7 +85,7 @@ export function judgeStatic(raw: Sources): string[] {
   for (const file of [STORY, MEDIA]) {
     if (!/<NativeBuyButton\b/.test(s[file])) bad.push(`${file}: у карточки замка нет кнопки к окну покупки`);
   }
-  if (!/nativeBuyCta=\{lessonNativeLock\?\.buyCta/.test(s[LESSON]) || !/buyCta && <NativeBuyButton/.test(s[LESSON_VIEW])) {
+  if (!/nativeBuyCta=\{nativeShellLessonLock\?\.buyCta/.test(s[LESSON]) || !/buyCta && <NativeBuyButton/.test(s[LESSON_VIEW])) {
     bad.push(`${LESSON}/${LESSON_VIEW}: закрытые вкладки урока без кнопки к окну покупки`);
   }
   // 3. Кабинет: «покупок нет» — только после ветки покупки.
@@ -216,8 +216,8 @@ async function main(): Promise<number> {
       return next === src[file] ? null : { ...src, [file]: next };
     };
     const cases: [string, Sources | null, string][] = [
-      ["рассказ снова зовёт nativeLockBody, как до 7.242", edit(STORY, "storyNativeLock.body", 'nativeLockBody(lang, "story", false)'), "зовёт nativeLockBody"],
-      ["видео снова читает closedNote", edit(MEDIA, "{mediaNativeLock.note}", "{nativeAccessCopy(lang).closedNote}"), "closedNote"],
+      ["рассказ снова зовёт nativeLockBody, как до 7.242", edit(STORY, "nativeShellStoryLock.body", 'nativeLockBody(lang, "story", false)'), "зовёт nativeLockBody"],
+      ["видео снова читает closedNote", edit(MEDIA, "{nativeShellMediaLock.note}", "{nativeAccessCopy(lang).closedNote}"), "closedNote"],
       ["урок перестал спрашивать canBuyInsideShell", edit(LESSON, /nativeInlineLock\(lang, "lesson", false, await canBuyInsideShell\(\)\)/, 'nativeInlineLock(lang, "lesson", false, false)'), "не спрашивает canBuyInsideShell"],
       ["у рассказа пропала кнопка к окну покупки", edit(STORY, /<NativeBuyButton[\s\S]*?\/>/, "null"), "нет кнопки"],
       ["вкладки урока без кнопки", edit(LESSON_VIEW, "buyCta && <NativeBuyButton", "false && <NativeBuyButton"), "без кнопки"],

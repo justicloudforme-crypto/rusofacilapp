@@ -323,7 +323,7 @@ export default async function StoryReaderPage({
   // оболочка покупать. Умеет — «открывается здесь же» и кнопка к окну
   // покупки; не умеет — прежний честный текст. Одна функция на три
   // страницы: `nativeInlineLock`.
-  const storyNativeLock =
+  const nativeShellStoryLock =
     !entitled && (await isNativeShellRequest())
       ? nativeInlineLock(lang, "story", storySign?.mark === "premium-tier", await canBuyInsideShell())
       : null;
@@ -450,8 +450,8 @@ export default async function StoryReaderPage({
               срабатываний на двух рассказах в двух ролях и двух обличьях.
               Заголовок замка остаётся — он про положение дел. */}
           <p className="mt-2 text-sm text-foreground/70">
-            {storyNativeLock
-              ? storyNativeLock.body
+            {nativeShellStoryLock
+              ? nativeShellStoryLock.body
               : needsPremiumUpgrade
                 ? // Уровень подставляется из строки рассказа, а не вшит в
                   // словарь: замок ставит колонка `premiumOnly`, а не уровень
@@ -461,14 +461,14 @@ export default async function StoryReaderPage({
                   dict.stories.premiumTierLockBody.replace("{level}", story.level)
                 : dict.stories.premiumLockBody}
           </p>
-          {storyNativeLock?.buyCta ? (
+          {nativeShellStoryLock?.buyCta ? (
             <NativeBuyButton
-              label={storyNativeLock.buyCta}
+              label={nativeShellStoryLock.buyCta}
               reason={storySign?.mark === "premium-tier" ? "premium" : "free"}
               kind="story"
             />
-          ) : storyNativeLock ? (
-            <p className="mt-4 text-sm text-foreground/60">{storyNativeLock.note}</p>
+          ) : nativeShellStoryLock ? (
+            <p className="mt-4 text-sm text-foreground/60">{nativeShellStoryLock.note}</p>
           ) : (
             <Link
               href={`/${lang}/pricing?next=/${lang}/stories/${story.id}`}

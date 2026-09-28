@@ -113,7 +113,7 @@ export default async function LessonPage({
   const isFreeTrial = isFreeTrialLesson(level, lesson);
   const entitled = isFreeTrial || tier !== "free";
   const nativeShell = await isNativeShellRequest();
-  const lessonNativeLock = nativeShell
+  const nativeShellLessonLock = nativeShell
     ? nativeInlineLock(lang, "lesson", false, await canBuyInsideShell())
     : null;
 
@@ -219,11 +219,11 @@ export default async function LessonPage({
            DOM после гидрации, а в ответе сервера она остаётся, и ровно этот
            ответ читает ревью магазина (разбор — в шапке
            `src/lib/native-shell.ts`). */
-        nativeClosedNote={lessonNativeLock ? (lessonNativeLock.note ?? lessonNativeLock.body) : null}
+        nativeClosedNote={nativeShellLessonLock ? (nativeShellLessonLock.note ?? nativeShellLessonLock.body) : null}
         /* 7.242, долг 346: оболочка, которая умеет покупать, — на закрытых
            вкладках «открывается здесь же» и кнопка к окну покупки, а не
            «закрыто в этой версии приложения». */
-        nativeBuyCta={lessonNativeLock?.buyCta ?? null}
+        nativeBuyCta={nativeShellLessonLock?.buyCta ?? null}
         slideIllustrations={slideIllustrations}
         dict={dict.lesson}
         celebrationDict={dict.celebration}

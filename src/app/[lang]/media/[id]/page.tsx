@@ -142,7 +142,7 @@ export default async function MediaDetailPage({
 
   // 7.242, долг 346 — как на странице рассказа (`nativeInlineLock`). У медиа
   // слоя Premium нет вовсе (`mediaRequirement`), поэтому сорт не подставляется.
-  const mediaNativeLock = (await isNativeShellRequest())
+  const nativeShellMediaLock = (await isNativeShellRequest())
     ? nativeInlineLock(lang, "video", false, await canBuyInsideShell())
     : null;
 
@@ -314,12 +314,12 @@ export default async function MediaDetailPage({
               библиотеку» / «Suscríbete para desbloquear toda la
               biblioteca»), и внутри оболочки его быть не может. */}
           <p className="mt-2 text-sm text-foreground/70">
-            {mediaNativeLock ? mediaNativeLock.body : dict.media.premiumLockBody}
+            {nativeShellMediaLock ? nativeShellMediaLock.body : dict.media.premiumLockBody}
           </p>
-          {mediaNativeLock?.buyCta ? (
-            <NativeBuyButton label={mediaNativeLock.buyCta} reason="free" kind="video" />
-          ) : mediaNativeLock ? (
-            <p className="mt-4 text-sm text-foreground/60">{mediaNativeLock.note}</p>
+          {nativeShellMediaLock?.buyCta ? (
+            <NativeBuyButton label={nativeShellMediaLock.buyCta} reason="free" kind="video" />
+          ) : nativeShellMediaLock ? (
+            <p className="mt-4 text-sm text-foreground/60">{nativeShellMediaLock.note}</p>
           ) : (
             <Link
               href={`/${lang}/pricing?next=/${lang}/media/${item.id}`}
