@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { routeAlternates } from "@/lib/site";
-import { ACCOUNT_DELETION_PATH, accountDeletionCopy, PLAY_SUBSCRIPTIONS_URL } from "@/lib/legal/account-deletion";
+import { accountDeletionCopy, PLAY_SUBSCRIPTIONS_URL } from "@/lib/legal/account-deletion";
 import LinkifiedText from "@/components/legal/LinkifiedText";
 
 /**
@@ -19,7 +19,7 @@ import LinkifiedText from "@/components/legal/LinkifiedText";
  */
 export async function generateMetadata({ params }: PageProps<"/[lang]/eliminar-cuenta">): Promise<Metadata> {
   const { lang } = await params;
-  const alternates = routeAlternates(lang, ACCOUNT_DELETION_PATH);
+  const alternates = routeAlternates(lang, "/eliminar-cuenta");
   if (!isLocale(lang)) return { alternates };
   const copy = accountDeletionCopy(lang);
   return { title: `${copy.title} | RusoFácilapp`, description: copy.metaDescription, alternates };
@@ -75,7 +75,7 @@ export default async function AccountDeletionPage({ params }: PageProps<"/[lang]
           href={`/${lang}/privacy#tus-derechos`}
           className="tap inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 py-2.5 text-center text-sm font-medium transition-colors hover:bg-black/[.04] active:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06] dark:active:bg-white/[.06]"
         >
-          {lang === "ru" ? "Политика конфиденциальности" : "Política de Privacidad"}
+          {copy.privacyLinkLabel}
         </Link>
       </div>
     </div>

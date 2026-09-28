@@ -61,6 +61,7 @@ export interface AccountDeletionCopy {
   pageLinkLabel: string;
   /** Строка на главной после `?accountDeleted=1`. */
   deletedNotice: string;
+  privacyLinkLabel: string;
 }
 
 export const ACCOUNT_DELETION_COPY: Record<Locale, AccountDeletionCopy> = {
@@ -126,6 +127,7 @@ export const ACCOUNT_DELETION_COPY: Record<Locale, AccountDeletionCopy> = {
     playLinkLabel: "Abrir Google Play → Suscripciones",
     pageLinkLabel: "Qué se borra y qué se conserva al eliminar la cuenta",
     deletedNotice: "Tu cuenta se ha eliminado. Gracias por aprender con nosotros.",
+    privacyLinkLabel: "Política de Privacidad",
   },
   ru: {
     title: "Как удалить аккаунт RusoFácil",
@@ -189,6 +191,7 @@ export const ACCOUNT_DELETION_COPY: Record<Locale, AccountDeletionCopy> = {
     playLinkLabel: "Открыть Google Play → «Подписки»",
     pageLinkLabel: "Что удаляется и что остаётся при удалении аккаунта",
     deletedNotice: "Аккаунт удалён. Спасибо, что учились с нами.",
+    privacyLinkLabel: "Политика конфиденциальности",
   },
 };
 

@@ -782,6 +782,37 @@ jobs:
       - name: Тот же сторож — позитивный контроль
         run: npm run check:legal-truth:plant
 
+      # Заход 7.242 — «правда для проверяющего» Google Play (аудит 7.241).
+      # Долг 343: внутри приложения нет ссылок на скачивание файла (у
+      # оболочки нет setDownloadListener — кнопка PDF была мёртвой).
+      - name: Внутри приложения нет ссылок на скачивание файла
+        run: npm run check:shell-downloads
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:shell-downloads:plant
+
+      # Долги 344, 345: удаление предупреждает, что подписку Google Play
+      # не отменяет; публичная страница удаления называет факты кода.
+      - name: Удаление аккаунта говорит правду про подписку Google Play
+        run: npm run check:account-deletion
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:account-deletion:plant
+
+      # Долг 346: в оболочке с покупкой замок не пишет «нет покупок».
+      - name: Замок в оболочке с покупкой ведёт к покупке
+        run: npm run check:lock-purchase-path
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:lock-purchase-path:plant
+
+      # Долг 347: «Назад» Android сначала закрывает лист, окно или меню.
+      - name: «Назад» Android сначала закрывает открытое
+        run: npm run check:native-back
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:native-back:plant
+
       # Заход 7.236 (PR #420). Сторожа, читавшие `git ls-files`, не видели
       # новый файл до `git add` — локальный verify был зелёным, CI красным.
       # Теперь список файлов общий (`scripts/repo-files.mjs`); самопроверка
