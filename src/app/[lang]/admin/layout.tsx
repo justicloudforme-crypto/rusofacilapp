@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { requireStaffUser } from "@/lib/admin-auth";
 import { isOwner } from "@/lib/roles";
 import AdminNav from "@/components/admin/AdminNav";
@@ -13,7 +13,7 @@ export default async function AdminLayout({
   if (!isLocale(lang)) notFound();
 
   const user = await requireStaffUser(lang);
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 sm:py-16">

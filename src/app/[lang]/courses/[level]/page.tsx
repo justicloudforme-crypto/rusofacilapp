@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale, locales } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isLevelSlug, levelMeta, levelSlugs } from "@/lib/courses";
 import { getExamContent } from "@/lib/exams/content";
 import { localizeExamText } from "@/lib/exams/localize";
@@ -29,7 +29,7 @@ export async function generateMetadata({
 }: PageProps<"/[lang]/courses/[level]">): Promise<Metadata> {
   const { lang, level } = await params;
   if (!isLocale(lang) || !isLevelSlug(level)) return {};
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const levelDict = dict.courses.levels[level];
   const title =
     lang === "ru"
@@ -51,7 +51,7 @@ export default async function LevelPage({
   const { lang, level } = await params;
   if (!isLocale(lang) || !isLevelSlug(level)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const levelDict = dict.courses.levels[level];
   const meta = levelMeta[level];
 

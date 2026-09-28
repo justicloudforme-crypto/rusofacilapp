@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getGroupForMember } from "@/lib/groups";
 import { getAvatarLabels } from "@/lib/avatarLabels";
@@ -27,7 +27,7 @@ export default async function GroupDetailPage({
   const user = await getCurrentUser();
   if (!user) redirect(`/${lang}/login?redirectTo=/${lang}/groups/${groupId}`);
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const group = await getGroupForMember(user.id, groupId);
   if (!group) notFound();
 

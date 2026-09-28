@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import IdiomAdminApp from "@/components/admin/IdiomAdminApp";
 import { routeAlternates } from "@/lib/site";
 
@@ -16,7 +16,7 @@ export default async function AdminIdiomsPage({ params }: PageProps<"/[lang]/adm
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
 
   return (
     <div>

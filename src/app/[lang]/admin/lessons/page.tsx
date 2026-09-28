@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { levelSlugs, lessonSlugsFor } from "@/lib/courses";
 import { getAllLessonStatuses } from "@/lib/lessons/content";
 import { routeAlternates } from "@/lib/site";
@@ -26,7 +26,7 @@ export default async function AdminLessonsPage({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const statuses = await getAllLessonStatuses();
 
   const statusLabels: Record<string, string> = {

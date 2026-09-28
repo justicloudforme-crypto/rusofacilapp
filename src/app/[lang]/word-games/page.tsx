@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { isLocale, locales } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { flashcardLevels } from "@/lib/flashcards";
@@ -33,7 +33,7 @@ export default async function WordGamesPage({ params }: PageProps<"/[lang]/word-
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const user = await getCurrentUser();
 
   // 3 queries total (2 for a signed-out visitor) instead of up to 30 — one

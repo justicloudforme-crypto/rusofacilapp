@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import WhyLearnRussianBlurb from "@/components/word-games/WhyLearnRussianBlurb";
 import GameLandingLinks from "@/components/word-games/GameLandingLinks";
 import FreePuzzleIndex from "@/components/word-games/FreePuzzleIndex";
@@ -98,7 +98,7 @@ export default async function JuegosParaAprenderRusoPage({
   const { lang } = await params;
   if (lang !== "es") notFound();
 
-  const [dict, freeByPair] = await Promise.all([getDictionary("es"), getFreeSequences()]);
+  const [dict, freeByPair] = await Promise.all([getPageDictionary("es"), getFreeSequences()]);
   const freeTotal = countFree(freeByPair);
   const freeTails = countFreeTails(freeByPair);
 

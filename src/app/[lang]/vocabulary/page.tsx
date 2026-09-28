@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import VocabularyApp from "@/components/flashcards/VocabularyApp";
 import JsonLd from "@/components/seo/JsonLd";
@@ -47,7 +47,7 @@ export default async function VocabularyPage({ params }: PageProps<"/[lang]/voca
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   if (!dict?.vocabulary) notFound();
 
   // The card trainer is unchanged and still gated exactly as before. What

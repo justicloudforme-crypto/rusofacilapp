@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getGroupPreviewByInviteCode } from "@/lib/groups";
 import { routeAlternates } from "@/lib/site";
@@ -30,7 +30,7 @@ export default async function JoinGroupPage({
     redirect(`/${lang}/login?redirectTo=${encodeURIComponent(`/${lang}/groups/join?code=${code}`)}`);
   }
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const preview = code ? await getGroupPreviewByInviteCode(code) : null;
   if (!preview) notFound();
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { fixBrandSpelling, localizeStoryAuthor, storyByline } from "@/lib/story-author";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
@@ -176,7 +176,7 @@ export default async function StoryReaderPage({
   // Independent reads collapsed into one round trip instead of sequential
   // ones — dict/story/tier/allMedia don't depend on each other.
   const [dict, story, tier, allMedia] = await Promise.all([
-    getDictionary(lang),
+    getPageDictionary(lang),
     getStoryById(id),
     getEntitlementTier(),
     getAllMedia(),

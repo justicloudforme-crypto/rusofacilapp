@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { ABOUT_CONTENT } from "@/lib/about-content";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, organizationJsonLd } from "@/lib/site";
@@ -37,7 +37,7 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/sobre-nos
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const content = ABOUT_CONTENT[lang];
 
   return (

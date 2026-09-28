@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { db } from "@/lib/db";
 import { isStoryLevel, isStoryTopic } from "@/lib/stories";
 import StoryEditor from "@/components/admin/StoryEditor";
@@ -21,7 +21,7 @@ export default async function EditStoryPage({
   const { lang, id } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const story = await db.story.findUnique({ where: { id } });
   if (!story) notFound();
 

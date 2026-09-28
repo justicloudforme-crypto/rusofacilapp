@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LOCALE_HEADER } from "@/lib/locale-header";
 import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NotFoundBody from "@/components/NotFoundBody";
@@ -65,7 +65,7 @@ async function localeFromRequest(): Promise<Locale> {
 
 export default async function GlobalNotFound() {
   const lang = await localeFromRequest();
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const theme = await getThemePreference();
   const user = await getCurrentUser();
   const timeZone = await getRequestTimeZone(user?.timezone);
