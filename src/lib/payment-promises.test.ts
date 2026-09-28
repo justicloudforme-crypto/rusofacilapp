@@ -145,9 +145,10 @@ describe("what section 3 of the Terms has to state, in both locales", () => {
     // 16.09.2026 (cancellation is at period end, 18+, no payment-system
     // name inside the shell). The Privacy Policy has its own date and its
     // own reason to move — one shared constant would have back-dated one
-    // document or falsely re-dated the other.
+    // document or falsely re-dated the other. 27.09.2026 (7.242): отмена
+    // подписки Google Play — только в Google Play, удаление её не отменяет.
     for (const locale of locales) {
-      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-09-16");
+      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-09-27");
     }
   });
 

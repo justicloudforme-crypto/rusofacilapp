@@ -80,7 +80,7 @@ describe("условия использования внутри приложе�
       // продлении, отмене и изменении цены обязаны остаться на месте.
       expect(native.length).toBeGreaterThan(2000);
       expect(native).toMatch(/renueva|продлева/);
-      expect(native).toMatch(/cancel|Отмен/);
+      expect(native).toMatch(/cancel|отмен/i);
     });
 
     it(`/${locale}/terms: факт «карту мы не храним» остаётся и в оболочке`, () => {

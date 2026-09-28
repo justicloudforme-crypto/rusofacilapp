@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBackLayer } from "@/lib/useBackLayer";
 import ScenarioStage from "./ScenarioStage";
 import { scenarioIdsFor, type ScenarioId } from "./catalog";
 import { createScenarioPicker, pickRandomFrom } from "./pickScenario";
@@ -40,6 +41,8 @@ export default function EncouragementModal({
   const [activeScenario, setActiveScenario] = useState<ScenarioId>(pickFreshFailScenario);
   const [exclamation, setExclamation] = useState<string | null>(null);
 
+  // «Назад» Android закрывает это окно (7.242, долг 347).
+  useBackLayer(open, onClose);
   useEffect(() => {
     if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect

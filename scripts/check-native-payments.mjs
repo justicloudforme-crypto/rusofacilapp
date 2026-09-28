@@ -984,7 +984,9 @@ function topicVsCheckoutPlants() {
       // Долг 184 и соседи: по одной подсадке на КАЖДУЮ поверхность, которую
       // заход 7.192 не увидел.
       ["кнопка «Смотреть тарифы» вернулась на закрытые вкладки урока",
-        { [LESSON_PAGE_FILE]: sources[LESSON_PAGE_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+        // 7.242: вопрос к оболочке живёт и в имени переменной
+        // (`nativeShellLessonLock`) — вычёркивается и он, как у рассказа.
+        { [LESSON_PAGE_FILE]: sources[LESSON_PAGE_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
       ["список курсов в кабинете снова ведёт на страницу цен (тот самый дефект)",
         { [PROFILE_FILE]: sources[PROFILE_FILE].replace(
             "entitled || nativeShell\n                      ? `/${lang}/courses/${level}`\n                      : `/${lang}/pricing`",
@@ -995,7 +997,7 @@ function topicVsCheckoutPlants() {
         // знака), и без этой замены подсадка убирала бы не весь вопрос.
         { [STORY_FILE]: sources[STORY_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
       ["замок видео снова зовёт покупать",
-        { [MEDIA_FILE]: sources[MEDIA_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
+        { [MEDIA_FILE]: sources[MEDIA_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем").replace(/nativeShell/g, "неСпрашиваем2") }],
       ["подпись про C1 в словаре снова ведёт на цены",
         { [VOCAB_FILE]: sources[VOCAB_FILE].replace(/isNativeShellRequest/g, "неСпрашиваем") }],
       ["подпись про C1 в категории словаря снова ведёт на цены",

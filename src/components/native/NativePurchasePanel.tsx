@@ -63,6 +63,7 @@ export default function NativePurchasePanel({
   userId,
   next,
   withHeading = true,
+  onlyPremium = false,
 }: {
   lang: Locale;
   copy: NativeAccessCopy["purchase"];
@@ -75,6 +76,12 @@ export default function NativePurchasePanel({
   /** `false` там, где заголовок и вступление уже напечатаны рамой
    *  (страница цен внутри приложения) — иначе они стояли бы дважды. */
   withHeading?: boolean;
+  /**
+   * Показать только Premium — заход 7.242, долг 346. У выданного доступа
+   * (код Standard) предлагать ещё одну подписку Standard бессмысленно: у
+   * человека она уже есть. Ему нужен ровно один путь — к Premium.
+   */
+  onlyPremium?: boolean;
 }) {
   const [stage, setStage] = useState<Stage>({ kind: "loading" });
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
@@ -282,6 +289,7 @@ export default function NativePurchasePanel({
     );
   }
 
+  const shownPackages = onlyPremium ? packages.filter((pkg) => pkg.identifier === "$rc_lifetime") : packages;
   const note = (identifier: string) =>
     identifier === "$rc_annual"
       ? copy.noteAnnual
@@ -334,7 +342,7 @@ export default function NativePurchasePanel({
   // должно — на видео владельца они висели ~5 с рядом с «Expirada», и
   // экран читался как «покупка не прошла, выбери снова».
   const showList =
-    packages.length > 0 && stage.kind !== "activated" && stage.kind !== "activating" && stage.kind !== "slow";
+    shownPackages.length > 0 && stage.kind !== "activated" && stage.kind !== "activating" && stage.kind !== "slow";
 
   return (
     <div data-testid="native-purchase" className="mt-4">
@@ -353,7 +361,7 @@ export default function NativePurchasePanel({
 
       {showList ? (
         <ul className="mt-4 space-y-2">
-          {packages.map((pkg) => (
+          {shownPackages.map((pkg) => (
             <li key={pkg.identifier}>
               <button
                 type="button"

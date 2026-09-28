@@ -5,8 +5,9 @@ import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
-import { isNativeShellRequest } from "@/lib/native-shell";
-import { nativeAccessCopy, nativeLockBody } from "@/lib/native-access-copy";
+import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
+import NativeBuyButton from "@/components/native/NativeBuyButton";
+import { nativeInlineLock } from "@/lib/native-access-copy";
 import { getMediaGrammarLinks, getRelatedStoriesForMedia, getRelatedLessonForMedia } from "@/lib/content-links";
 import ContentInsights from "@/components/stories/ContentInsights";
 import { isPilotMedia } from "@/lib/media-pilot";
@@ -138,6 +139,12 @@ export default async function MediaDetailPage({
   const vocabularyClips = await clipsByText(item.vocabulary.map((v) => v.word));
   const vocabularyAudioMap: Record<string, string> = {};
   for (const [text, url] of Object.entries(vocabularyClips)) vocabularyAudioMap[textAudioKey(text)] = url;
+
+  // 7.242, долг 346 — как на странице рассказа (`nativeInlineLock`). У медиа
+  // слоя Premium нет вовсе (`mediaRequirement`), поэтому сорт не подставляется.
+  const nativeShellMediaLock = (await isNativeShellRequest())
+    ? nativeInlineLock(lang, "video", false, await canBuyInsideShell())
+    : null;
 
   return (
     <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
@@ -307,14 +314,12 @@ export default async function MediaDetailPage({
               библиотеку» / «Suscríbete para desbloquear toda la
               biblioteca»), и внутри оболочки его быть не может. */}
           <p className="mt-2 text-sm text-foreground/70">
-            {(await isNativeShellRequest())
-              ? // У медиа слоя Premium нет вовсе (`mediaRequirement`), поэтому
-                // здесь всегда обычный замок — сорт не подставляется.
-                nativeLockBody(lang, "video", false)
-              : dict.media.premiumLockBody}
+            {nativeShellMediaLock ? nativeShellMediaLock.body : dict.media.premiumLockBody}
           </p>
-          {(await isNativeShellRequest()) ? (
-            <p className="mt-4 text-sm text-foreground/60">{nativeAccessCopy(lang).closedNote}</p>
+          {nativeShellMediaLock?.buyCta ? (
+            <NativeBuyButton label={nativeShellMediaLock.buyCta} reason="free" kind="video" />
+          ) : nativeShellMediaLock ? (
+            <p className="mt-4 text-sm text-foreground/60">{nativeShellMediaLock.note}</p>
           ) : (
             <Link
               href={`/${lang}/pricing?next=/${lang}/media/${item.id}`}

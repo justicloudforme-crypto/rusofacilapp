@@ -31,11 +31,19 @@ export default function IntroPresentation({
   lang,
   levels,
   dict,
+  showPdf = true,
 }: {
   slides: IntroSlide[];
   lang: string;
   levels: IntroPresentationLevel[];
   dict: IntroPresentationDict;
+  /**
+   * false внутри приложения (7.242, долг 343): у оболочки нет
+   * `setDownloadListener`, и ответ `Content-Disposition: attachment`
+   * WebView молча глотает — кнопка была бы мёртвой. Решает сервер по
+   * запросу (`isNativeShellRequest`), чтобы кнопки не было и в ответе.
+   */
+  showPdf?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const slide = slides[index];
@@ -332,6 +340,7 @@ export default function IntroPresentation({
         </div>
       </div>
 
+      {showPdf && (
       <div className="flex flex-wrap items-center gap-4">
         <a
           href={`/api/intro/pdf?lang=${lang}`}
@@ -342,6 +351,7 @@ export default function IntroPresentation({
           {dict.downloadPdfButton}
         </a>
       </div>
+      )}
 
       {/* The one moment this presentation asks for a decision: after the
           last slide, offer all four levels at once instead of just

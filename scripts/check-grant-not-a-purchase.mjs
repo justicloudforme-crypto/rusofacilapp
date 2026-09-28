@@ -16,12 +16,15 @@
  *   1. Признак выдачи считается ОДНОЙ функцией (`isGrantSubscription`), а
  *      не выражением на месте: правило «не покупка и без кассы» обязано
  *      быть одно на кабинет, историю и на любой будущий экран.
- *   2. У выдачи в кабинете НЕТ формы отмены: ветка `grantAccess ? null :`
+ *   2. У выдачи в кабинете НЕТ формы отмены: ветка `grantAccess ? grantUpgrade :`
  *      стоит РАНЬШЕ формы `/api/subscription/cancel` в том же выражении.
  *      Правило по порядку, а не по наличию слова: ветка, приписанная
  *      после формы, кнопку бы не убрала.
  *   3. У выдачи в кабинете нет и кнопки покупки: та же ветка гасит весь
- *      блок органов управления целиком.
+ *      блок органов управления целиком. ИСКЛЮЧЕНИЕ 7.242 (решение
+ *      владельца, долг 346): внутри оболочки, которая умеет покупать, у
+ *      выдачи без Premium стоит панель магазина ТОЛЬКО с Premium
+ *      (`grantUpgrade`, правило 3б) — и больше ничего.
  *   4. Строка выдачи в истории подписана выдачей, а не тарифом.
  *   5. НИ ОДНОЙ ССЫЛКИ НА ПОРТАЛ ПЛАТЁЖНОЙ СИСТЕМЫ ВО ВСЁМ `src/` — ни
  *      для какого плана и ни в одной ветке. Внутри оболочки такая ссылка
@@ -92,12 +95,33 @@ export function violations({ cabinetRaw, grantLibRaw, labelLibRaw, portalHits })
   }
 
   // 3. Ветка стоит РАНЬШЕ формы отмены — иначе кнопка остаётся.
-  const controls = cabinet.indexOf("grantAccess ? null :");
+  const controls = cabinet.indexOf("grantAccess ? grantUpgrade :");
   const cancelForm = cabinet.indexOf('action="/api/subscription/cancel"');
   if (cancelForm === -1) {
     bad.push(`${CABINET}: формы отмены нет вовсе — сторож ослеп, а не доволен`);
   } else if (controls === -1 || controls > cancelForm) {
     bad.push(`${CABINET}: выданный доступ не гасит блок органов управления ДО формы отмены — кнопка «отменить» остаётся у того, кому нечего отменять`);
+  }
+
+  // 3б. ПУТЬ К PREMIUM (7.242, решение владельца, долг 346). У выдачи
+  //     может стоять ровно одно: панель покупки магазина только с Premium,
+  //     только внутри оболочки, которая умеет покупать, и только у того, у
+  //     кого Premium ещё нет. Ни формы отмены, ни ссылки на цены, ни
+  //     Standard ещё раз.
+  const upgradeAt = cabinet.indexOf("const grantUpgrade =");
+  const upgrade = upgradeAt === -1 ? "" : cabinet.slice(upgradeAt, cabinet.indexOf(": null;", upgradeAt) + 7);
+  if (!upgrade) {
+    bad.push(`${CABINET}: нет \`grantUpgrade\` — у выданного доступа снова нет пути к Premium (долг 346)`);
+  } else {
+    if (!/grantAccess && nativeCanBuy && !isPremiumUser \?/.test(upgrade)) {
+      bad.push(`${CABINET}: путь к Premium у выдачи не ограничен «оболочка умеет покупать и Premium ещё нет»`);
+    }
+    if (!/<NativePurchasePanel[\s\S]*\bonlyPremium\b/.test(upgrade)) {
+      bad.push(`${CABINET}: панель у выдачи предлагает не только Premium`);
+    }
+    if (/subscription\/cancel|\/pricing|<Link\b|<form\b/.test(upgrade)) {
+      bad.push(`${CABINET}: у выдачи появилась отмена, форма или ссылка на цены — это снова покупка там, где её не было (долг 239)`);
+    }
   }
 
   // 4. История не называет выдачу тарифом, а строка «Plan» не спорит с
@@ -174,22 +198,43 @@ function plant() {
 
   planted(
     "подсадка: вернуть кнопку отмены выданному доступу — поймана",
-    { cabinetRaw: cabinetRaw.replace("grantAccess ? null : isActive", "isActive") },
+    { cabinetRaw: cabinetRaw.replace("grantAccess ? grantUpgrade : isActive", "isActive") },
     "не гасит блок органов управления",
   );
   planted(
     "подсадка: приписать ветку ПОСЛЕ формы отмены — поймана",
     {
       cabinetRaw: cabinetRaw
-        .replace("grantAccess ? null : isActive", "isActive")
-        .replace("</div>\n\n        <div className=\"mt-6 border-t", "grantAccess ? null : null}</div>\n\n        <div className=\"mt-6 border-t"),
+        .replace("grantAccess ? grantUpgrade : isActive", "isActive")
+        .replace("</div>\n\n        <div className=\"mt-6 border-t", "grantAccess ? grantUpgrade : null}</div>\n\n        <div className=\"mt-6 border-t"),
     },
     "не гасит блок органов управления",
   );
   planted(
     "подсадка: закомментировать ветку — поймана (класс 7.182)",
-    { cabinetRaw: cabinetRaw.replace("grantAccess ? null : isActive", "/* grantAccess ? null : */ isActive") },
+    { cabinetRaw: cabinetRaw.replace("grantAccess ? grantUpgrade : isActive", "/* grantAccess ? null : */ isActive") },
     "не гасит блок органов управления",
+  );
+  // 7.242, долг 346: путь к Premium у выдачи — ровно панель с Premium.
+  planted(
+    "подсадка 7.242: у выдачи вместо Premium — ссылка на цены — поймана",
+    { cabinetRaw: cabinetRaw.replace("onlyPremium\n      />\n    ) : null;", "onlyPremium\n      />\n    ) : <Link href={`/${lang}/pricing`}>x</Link>;") },
+    "ссылка на цены",
+  );
+  planted(
+    "подсадка 7.242: панель у выдачи предлагает все тарифы — поймана",
+    { cabinetRaw: cabinetRaw.replace("        onlyPremium\n      />", "      />") },
+    "не только Premium",
+  );
+  planted(
+    "подсадка 7.242: путь к Premium и у того, у кого Premium уже есть — поймана",
+    { cabinetRaw: cabinetRaw.replace("grantAccess && nativeCanBuy && !isPremiumUser ?", "grantAccess && nativeCanBuy ?") },
+    "не ограничен",
+  );
+  planted(
+    "подсадка 7.242: путь к Premium у выдачи убран — поймана",
+    { cabinetRaw: cabinetRaw.replace("const grantUpgrade =", "const grantUpgradeGone =") },
+    "нет `grantUpgrade`",
   );
   planted(
     "подсадка: история снова называет выдачу тарифом — поймана",
@@ -251,7 +296,7 @@ function main() {
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log(`[check:grant-not-a-purchase] ${files.length} файлов: у выданного доступа нет ни отмены, ни покупки, история его платежом не называет, «Plan» и история подписаны одним признаком, ссылок на портал платёжной системы 0 (контроль — --plant).`);
+  console.log(`[check:grant-not-a-purchase] ${files.length} файлов: у выданного доступа нет отмены, а покупка — только Premium в оболочке с покупкой (7.242), история его платежом не называет, «Plan» и история подписаны одним признаком, ссылок на портал платёжной системы 0 (контроль — --plant).`);
   return 0;
 }
 

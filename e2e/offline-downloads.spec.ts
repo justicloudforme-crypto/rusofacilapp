@@ -329,6 +329,17 @@ test("скачанное открывается без сети, звучит, �
   await expect(copyPlay, "«▶» копии не перешёл в паузу").toHaveAttribute("aria-label", "Pausar lectura", { timeout: 10_000 });
   await expect(page.locator("[data-rf-reading]"), "строка копии не подсвечена").toHaveCount(1, { timeout: 10_000 });
   expect(await copyBar.evaluate((el) => (el as HTMLElement).style.width)).not.toBe("0%");
+  // `play()` каркас зовёт ПОСЛЕ асинхронного `blobFor` (клип достаётся из
+  // кеша), а подпись кнопки и подсветка строки меняются синхронно. Читать
+  // счётчик сразу после подписи — гонка: 28.09.2026 (7.242) она стала
+  // проигрываться стабильно — CI #434 и локально и на `main`, 0 вызовов;
+  // с ожиданием — 1 вызов из `blob:`. Ждём вызов, а не угадываем момент.
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __rfPlays: string[] }).__rfPlays.length), {
+      message: "«▶» копии не запустил звук",
+      timeout: 10_000,
+    })
+    .toBeGreaterThan(0);
   const plays = await page.evaluate(() => (window as unknown as { __rfPlays: string[] }).__rfPlays);
   expect(plays.length, "«▶» копии не запустил звук").toBeGreaterThan(0);
   expect(plays.every((src) => src.startsWith("blob:")), "звук копии пошёл не из кеша").toBe(true);

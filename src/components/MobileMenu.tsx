@@ -9,6 +9,7 @@ import MatryoshkaAvatar from "@/components/avatars/MatryoshkaAvatar";
 import { hapticTap } from "@/lib/haptics";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import { usePinnedLayer } from "@/lib/usePinnedLayer";
+import { useBackLayer } from "@/lib/useBackLayer";
 import Button from "@/components/ui/Button";
 
 export interface MobileMenuLink {
@@ -89,6 +90,8 @@ export default function MobileMenu({
 }) {
   const [open, setOpen] = useState(false);
   useBodyScrollLock(open);
+  // «Назад» Android закрывает меню, а не приложение (7.242, долг 347).
+  useBackLayer(open, () => setOpen(false));
   /** На общем учёте прижатых слоёв (src/lib/pinned-layers.ts) — пока
    * открыт. Места в конце документа не резервирует: лист временный. */
   const pinnedRef = usePinnedLayer<HTMLElement>({ edge: "bottom", label: "MobileMenu", active: open });
