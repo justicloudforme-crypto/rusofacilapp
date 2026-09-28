@@ -140,11 +140,16 @@ async function logoutByClick(page: Page, lang: "es" | "ru"): Promise<void> {
   // условно, а не утверждением: утверждение «оно ГАРАНТИРОВАНО есть»
   // стоит там, где это первый заход нового аккаунта в кабинет
   // (`e2e/offline-downloads.spec.ts`), а сюда можно прийти и вторым.
+  //
+  // 7.242: условная проверка `isVisible()` сразу после перехода — гонка:
+  // приветствие встаёт ПОСЛЕ гидрации (эффект `WelcomeOverlay`), и CI #435
+  // 28.09.2026 (04:5x UTC, новый день) нажимал заголовок под ним 660 с.
+  // Штатный обработчик Playwright снимает слой в тот момент, когда он
+  // перекрывает действие, — когда бы тот ни появился.
   const greeting = page.getByRole("dialog", { name: "¡Feliz nuevo día de ruso!" });
-  if (await greeting.isVisible().catch(() => false)) {
+  await page.addLocatorHandler(greeting, async () => {
     await page.getByRole("button", { name: "Continuar" }).click();
-    await greeting.waitFor({ state: "hidden", timeout: 15_000 });
-  }
+  });
   const submit = page.locator('form[action="/api/auth/logout"] button[type="submit"]').first();
   if (!(await submit.isVisible().catch(() => false))) {
     const headers = page.locator("button[aria-expanded]");
@@ -156,6 +161,7 @@ async function logoutByClick(page: Page, lang: "es" | "ru"): Promise<void> {
   }
   await submit.click();
   await page.waitForURL(new RegExp(`/${lang}(\\?|$)`), { timeout: 30_000 });
+  await page.removeLocatorHandler(greeting);
 }
 
 const button = "[data-rf-download-button]";
@@ -414,13 +420,35 @@ test("скачанное открывается без сети, звучит, �
   await context.unroute("**/*");
   await context.setOffline(false);
   await logoutByClick(page, "es");
+  // 7.242: утверждение было «кешей rf-pages 0». Оно ловило лишь миг сразу
+  // после выхода: анонимная главная (`/es?signedout=1`) тут же заново
+  // кладёт в кеш свои предзагрузки — `/es`, `/es/courses`, `/es/login`, все
+  // без сессии. С тёплым сервером гонка проигрывалась 4 из 4 (замер
+  // 28.09.2026: после выхода кеши пусты, через 2,5 с — `rf-pages-others`
+  // с `/es` и `rf-pages-rsc-prefetch` с пятью анонимными `_rsc`). Смысл
+  // проверки — ЛИЧНОЕ и СКАЧАННОЕ уходят при выходе, поэтому судится оно:
+  // кеша скачанного нет, и ни одна копия урока, рассказа и кабинета,
+  // снятая ДО выхода, не пережила его.
+  const personal = [lessonHref, story.href, "/es/profile"];
   await expect
     .poll(
       async () =>
-        page.evaluate(async () => (await caches.keys()).filter((name) => name.startsWith("rf-pages")).length),
-      { timeout: 20_000 },
+        page.evaluate(async (paths) => {
+          const left: string[] = [];
+          for (const name of await caches.keys()) {
+            if (!name.startsWith("rf-pages")) continue;
+            if (name.startsWith("rf-pages-downloads")) left.push(name);
+            const cache = await caches.open(name);
+            for (const request of await cache.keys()) {
+              const path = new URL(request.url).pathname;
+              if (paths.includes(path)) left.push(`${name}: ${path}`);
+            }
+          }
+          return left;
+        }, personal),
+      { timeout: 20_000, message: "после выхода в кеше осталось скачанное или личная копия" },
     )
-    .toBe(0);
+    .toEqual([]);
 
   await becomeNativeShell(page, context);
   // Переход на каркас — через устойчивого помощника (заход 7.233):
