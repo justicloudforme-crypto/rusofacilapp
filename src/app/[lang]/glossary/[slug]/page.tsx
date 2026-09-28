@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale, locales } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { db } from "@/lib/db";
 import {
   earliestRelatedLevel,
@@ -134,7 +134,7 @@ export async function generateMetadata({
   }
   if (!term) return {};
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const categoryLabel = dict.glossary.categoryLabels[term.category];
 
   // Every definition in the DB is >=83 chars today (checked against the
@@ -179,7 +179,7 @@ export default async function GlossaryTermPage({
   const term = await getTermBySlug(slug);
   if (!term) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const glossaryDict = dict.glossary;
   const earliestLevel = earliestRelatedLevel(term.relatedLessons);
   const relatedLessonRefs = term.relatedLessons.map(parseRelatedLessonSlug).filter((ref) => ref !== null);

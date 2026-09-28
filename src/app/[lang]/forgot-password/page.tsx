@@ -3,7 +3,7 @@ import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { routeAlternates } from "@/lib/site";
 
 export async function generateMetadata({
@@ -20,7 +20,7 @@ export default async function ForgotPasswordPage({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const query = await searchParams;
   const sent = query.sent === "1";
 

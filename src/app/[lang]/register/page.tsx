@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
@@ -22,7 +22,7 @@ export default async function RegisterPage({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const query = await searchParams;
   const redirectTo =
     typeof query.redirectTo === "string" ? query.redirectTo : `/${lang}/profile`;

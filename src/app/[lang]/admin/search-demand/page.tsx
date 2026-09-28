@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { routeAlternates } from "@/lib/site";
 import { db } from "@/lib/db";
 import { summarizeSearchDemand, type SearchDemandRow } from "@/lib/search/demand";
@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminSearchDemandPage({ params }: PageProps<"/[lang]/admin/search-demand">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const t = dict.admin.searchDemand;
 
   let rows: SearchDemandRow[] = [];

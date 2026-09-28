@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import SpeakButton from "@/components/lesson/SpeakButton";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
@@ -59,7 +59,7 @@ export default async function AlfabetoCirilicoPage({
   const { lang } = await params;
   if (lang !== "es") notFound();
 
-  const dict = await getDictionary("es");
+  const dict = await getPageDictionary("es");
   const audio = await getAlphabetAudio();
   const url = `${SITE_URL}/es${ALPHABET_PAGE_PATH}`;
   const listen = dict.lesson.alphabet.listenLabel;

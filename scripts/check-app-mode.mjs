@@ -24,7 +24,7 @@
 //
 //   node scripts/check-app-mode.mjs [--plant]
 //   node scripts/check-app-mode.mjs --base=http://… [--plant]
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { collectAddresses } from "./route-census.mjs";
 import { visibleDocument } from "./purchase-surface-rules.mjs";
@@ -42,7 +42,27 @@ const FILES = {
   css: "src/app/globals.css",
   story: "src/components/stories/StoryText.tsx",
   subtitles: "src/components/video-lesson/SubtitleTrack.tsx",
+  pageDictionary: "src/i18n/page-dictionary.ts",
+  appDictionary: "src/i18n/app-dictionary.ts",
 };
+
+/** Долг 356 (7.244): кто отвечает на запрос страницей — макет и страницы
+ *  `[lang]`, 404, общая страница тематических игр. Каждый обязан брать
+ *  словарь через `getPageDictionary`, иначе словарь веб-оплаты снова
+ *  уйдёт в данные отрисовки приложения. */
+function pageSources() {
+  const out = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = `${dir}/${e.name}`;
+      if (e.isDirectory()) walk(p);
+      else if (/\.(tsx|ts)$/.test(e.name) && !/\.test\./.test(e.name)) out.push(p);
+    }
+  };
+  walk("src/app/[lang]");
+  out.push("src/app/global-not-found.tsx", "src/components/word-games/TopicLandingPage.tsx");
+  return out;
+}
 
 const strip = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
 
@@ -89,6 +109,19 @@ export function judgeStatic(files) {
   need(/html\[data-shell\] :is\([^)]*header[^)]*nav[^)]*button[^)]*\):not\(\[data-rf-selectable\], \[data-rf-selectable\] \*\) \{[^}]*-webkit-user-select: none;\s+user-select: none;\s+-webkit-touch-callout: none;/.test(css), "globals.css: нет правила «рама приложения не выделяется»");
   need(/data-rf-selectable/.test(f.story), "StoryText.tsx: текст рассказа (кнопки-слова) перестал выделяться в приложении");
   need(/data-rf-selectable/.test(f.subtitles), "SubtitleTrack.tsx: субтитры перестали выделяться в приложении");
+  // Словарь в данных отрисовки (долг 356).
+  need(
+    /return \(await isNativeShellRequest\(\)\) \? withoutWebPaymentStrings\(dict\) : dict;/.test(f.pageDictionary),
+    "page-dictionary.ts: приложение получает словарь со строками веб-оплаты",
+  );
+  need(
+    /const WEB_PAYMENT_WORD = \/OXXO\/;/.test(f.appDictionary) && /WEB_ONLY_KEYS = new Set\(\["footer\.appLink"\]\)/.test(f.appDictionary),
+    "app-dictionary.ts: из словаря приложения не убираются «OXXO» или «Descargar la app»",
+  );
+  for (const [path, src] of Object.entries(files)) {
+    if (!path.startsWith("src/app/[lang]/") && path !== FILES.notFound && !path.endsWith("TopicLandingPage.tsx")) continue;
+    if (/\bgetDictionary\(/.test(strip(src))) bad.push(`${path}: словарь страницы через getDictionary — в приложение уйдёт словарь веб-оплаты (нужен getPageDictionary)`);
+  }
   return bad;
 }
 
@@ -119,6 +152,11 @@ export function measure(html, path = "") {
       tg.filter((x) => /(href|action)="[^"]*(\/api\/checkout|stripe\.com|\/pricing|\/precios|oxxo-voucher)/i.test(x)).length,
     download: (t.match(/Descargar la app|Скачать приложение/g) ?? []).length + tg.filter((x) => /href="\/(es|ru)\/download"/.test(x)).length,
     shellAttr: /<html\b[^>]*\bdata-shell="1"/.test(html) ? 1 : 0,
+    // Долг 356 (7.244): ИСХОДНЫЙ код ответа целиком, с <script> и данными
+    // отрисовки, — то, что покажет «просмотр кода». Видимый текст выше
+    // этого не видит (словарь в <script> не считается — так и задумано).
+    rawOxxo: (html.match(/OXXO/g) ?? []).length,
+    rawDownload: (html.match(/Descargar la app|Скачать приложение/g) ?? []).length,
   };
 }
 
@@ -189,10 +227,10 @@ async function live(base, plant) {
   const addresses = census.addresses.filter((a) => !a.includes("/admin"));
   const roles = [["гость", null], ["подписчик", await session(base)]];
   const problems = [];
-  const web = { footer: 0, telegram: 0, pay: 0, download: 0, shellAttr: 0 };
-  const app = { footer: 0, telegram: 0, pay: 0, download: 0, shellAttr: 0 };
+  const web = { footer: 0, telegram: 0, pay: 0, download: 0, shellAttr: 0, rawOxxo: 0, rawDownload: 0 };
+  const app = { footer: 0, telegram: 0, pay: 0, download: 0, shellAttr: 0, rawOxxo: 0, rawDownload: 0 };
   let judged = 0;
-  let planted = { footer: 0, oxxo: 0 };
+  let planted = { footer: 0, oxxo: 0, raw: 0 };
   for (const [role, jar] of roles) {
     const rows = await pool(addresses, 6, async (path) => ({ path, app: await get(base, path, true, jar), web: await get(base, path, false, jar) }));
     for (const row of rows) {
@@ -201,28 +239,31 @@ async function live(base, plant) {
       judged++;
       const m = measure(row.app, row.path);
       for (const [k, v] of Object.entries(m)) app[k] += v;
-      for (const k of ["footer", "telegram", "pay", "download"]) if (m[k]) problems.push(`${row.path} (${role}, приложение): ${k} ${m[k]}`);
+      for (const k of ["footer", "telegram", "pay", "download", "rawOxxo", "rawDownload"]) if (m[k]) problems.push(`${row.path} (${role}, приложение): ${k} ${m[k]}`);
       if (!m.shellAttr) problems.push(`${row.path} (${role}, приложение): у <html> нет data-shell`);
       if (plant) {
         const withFooter = measure(row.app.replace("</body>", '<footer data-rf-web-footer><a href="/es/download">Descargar la app</a></footer></body>'), row.path);
         if (withFooter.footer > m.footer && withFooter.download > m.download) planted.footer++;
         const withOxxo = measure(row.app.replace("</body>", "<dl><dt>OXXO</dt><dd>Pago en efectivo</dd></dl></body>"), row.path);
         if (withOxxo.pay > m.pay) planted.oxxo++;
+        // Словарь в данных отрисовки — невидимо, ловит только исходник.
+        const withDict = measure(row.app.replace("</body>", '<script>self.__next_f.push([1,"{\\"appLink\\":\\"Descargar la app\\",\\"paymentMethodsNote\\":\\"Aceptamos tarjetas y efectivo OXXO\\"}"])</script></body>'), row.path);
+        if (withDict.rawOxxo > m.rawOxxo && withDict.rawDownload > m.rawDownload && withDict.pay === m.pay) planted.raw++;
       }
     }
   }
   const cookie = await cookieRefresh(base);
   problems.push(...cookie.problems);
   console.log(`  адресов ${addresses.length} × ролей ${roles.length}: ответов приложения ${judged}`);
-  console.log(`  приложение: подвалов ${app.footer}, Telegram ${app.telegram}, оплата сайта ${app.pay}, «Descargar la app» ${app.download}, data-shell ${app.shellAttr}/${judged}`);
-  console.log(`  браузер (контроль): подвалов ${web.footer}, Telegram ${web.telegram}, оплата сайта ${web.pay}, «Descargar la app» ${web.download}, data-shell ${web.shellAttr}`);
+  console.log(`  приложение: подвалов ${app.footer}, Telegram ${app.telegram}, оплата сайта ${app.pay}, «Descargar la app» ${app.download}, data-shell ${app.shellAttr}/${judged}; в исходном коде — OXXO ${app.rawOxxo}, «Descargar la app» ${app.rawDownload}`);
+  console.log(`  браузер (контроль): подвалов ${web.footer}, Telegram ${web.telegram}, оплата сайта ${web.pay}, «Descargar la app» ${web.download}, data-shell ${web.shellAttr}; в исходном коде — OXXO ${web.rawOxxo}, «Descargar la app» ${web.rawDownload}`);
   console.log(`  кука: приложение Max-Age ${cookie.app.shell}/${cookie.app.version}, браузер ${cookie.web.shell}/${cookie.web.version}`);
-  for (const k of ["footer", "telegram", "pay", "download"]) if (web[k] === 0) problems.push(`КОНТРОЛЬ: в браузере «${k}» 0 — измеритель слеп`);
+  for (const k of ["footer", "telegram", "pay", "download", "rawOxxo", "rawDownload"]) if (web[k] === 0) problems.push(`КОНТРОЛЬ: в браузере «${k}» 0 — измеритель слеп`);
   if (web.shellAttr) problems.push(`браузер: data-shell у ${web.shellAttr} ответов`);
   if (judged === 0) problems.push("ни одного ответа приложения — перепись пуста");
   if (plant) {
-    const ok = problems.length === 0 && planted.footer === judged && planted.oxxo === judged;
-    console.log(ok ? `check:app-mode --base --plant — подвал пойман в ${planted.footer}/${judged}, плитка OXXO в ${planted.oxxo}/${judged}; настоящая отдача молчит` : `check:app-mode --base --plant — FAILED (подвал ${planted.footer}, OXXO ${planted.oxxo} из ${judged}; проблем ${problems.length})`);
+    const ok = problems.length === 0 && planted.footer === judged && planted.oxxo === judged && planted.raw === judged;
+    console.log(ok ? `check:app-mode --base --plant — подвал пойман в ${planted.footer}/${judged}, плитка OXXO в ${planted.oxxo}/${judged}, словарь оплаты в данных страницы в ${planted.raw}/${judged}; настоящая отдача молчит` : `check:app-mode --base --plant — FAILED (подвал ${planted.footer}, OXXO ${planted.oxxo}, словарь ${planted.raw} из ${judged}; проблем ${problems.length})`);
     return ok ? 0 : 1;
   }
   if (problems.length) {
@@ -237,7 +278,7 @@ async function live(base, plant) {
 
 function readAll() {
   const out = {};
-  for (const p of Object.values(FILES)) out[p] = readFileSync(p, "utf8");
+  for (const p of [...Object.values(FILES), ...pageSources()]) out[p] = readFileSync(p, "utf8");
   return out;
 }
 
@@ -255,6 +296,10 @@ async function main() {
       const next = files[p].replace(from, to);
       return next === files[p] ? null : { ...files, [p]: next };
     };
+    const editPath = (p, from, to) => {
+      const next = (files[p] ?? "").replace(from, to);
+      return next === files[p] ? null : { ...files, [p]: next };
+    };
     const cases = [
       ["подвал вернулся в приложение", edit("footer", "  if (nativeShell) return null;\n", ""), "Footer.tsx: подвал рисуется"],
       ["плитка OXXO вернулась на главную приложения", edit("home", "cashAvailableForCountry && !nativeShell;", "cashAvailableForCountry;"), "плитка OXXO"],
@@ -267,6 +312,10 @@ async function main() {
       ["клиент продлевает только отсутствующую метку", edit("cookie", "    setNativeShellCookie();\n    if (present) return;", "    if (present) return;\n    setNativeShellCookie();"), "NativeShellCookie.tsx"],
       ["текст рассказа перестал выделяться", edit("story", " data-rf-selectable>", ">"), "StoryText.tsx"],
       ["правило «рамы» пропало", edit("css", "user-select: none;\n  -webkit-touch-callout", "user-select: auto;\n  -webkit-touch-callout"), "globals.css"],
+      ["долг 356: приложение снова получает словарь целиком", edit("pageDictionary", "(await isNativeShellRequest()) ? withoutWebPaymentStrings(dict) : dict", "dict"), "page-dictionary.ts"],
+      ["долг 356: «Descargar la app» больше не убирается", edit("appDictionary", 'new Set(["footer.appLink"])', "new Set([])"), "app-dictionary.ts"],
+      ["долг 356: главная снова берёт словарь мимо признака", editPath("src/app/[lang]/page.tsx", "getPageDictionary(lang)", "getDictionary(lang)"), "src/app/[lang]/page.tsx: словарь страницы"],
+      ["долг 356: макет снова берёт словарь мимо признака", editPath("src/app/[lang]/layout.tsx", "const dict = await getPageDictionary(lang);", "const dict = await getDictionary(lang);"), "layout.tsx: словарь страницы"],
     ];
     let caught = 0;
     for (const [name, patched, expect] of cases) {
@@ -284,7 +333,7 @@ async function main() {
       '<html data-shell="1"><body><footer class="x" data-rf-web-footer><a href="/es/download">Descargar la app</a></footer><a href="https://t.me/+x">Unirme al canal de Telegram</a><dl><dt>OXXO</dt></dl><a href="/es/pricing">Precios</a><script>{"appLink":"Descargar la app","oxxo":"OXXO"}</script></body></html>',
       "/es",
     );
-    const probeOk = probe.footer === 1 && probe.download === 2 && probe.telegram === 2 && probe.pay === 2 && probe.shellAttr === 1;
+    const probeOk = probe.footer === 1 && probe.download === 2 && probe.telegram === 2 && probe.pay === 2 && probe.shellAttr === 1 && probe.rawOxxo === 2 && probe.rawDownload === 2;
     console.log(`  ${probeOk ? "поймано" : "ПРОПУЩЕНО"} — измеритель отдачи: подвал 1, «Descargar» 2, Telegram 2, оплата 2, словарь в <script> не считается (${JSON.stringify(probe)})`);
     const legalOk = measure("<p>Stripe</p>", "/es/privacy").pay === 0 && measure("<p>Stripe</p>", "/es/stories").pay === 1;
     console.log(`  ${legalOk ? "поймано" : "ПРОПУЩЕНО"} — Stripe прощается только Условиям и Политике`);

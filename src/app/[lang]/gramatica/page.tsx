@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
 import { GRAMMAR_GUIDES as GUIDES, GRAMMAR_INDEX_PATH } from "@/lib/gramatica/guides";
@@ -30,7 +30,7 @@ export default async function GramaticaHubPage({ params }: PageProps<"/[lang]/gr
   const { lang } = await params;
   if (lang !== "es") notFound();
 
-  const dict = await getDictionary("es");
+  const dict = await getPageDictionary("es");
   const url = `${SITE_URL}/es${PAGE_PATH}`;
 
   return (

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import StoryEditor from "@/components/admin/StoryEditor";
 import { routeAlternates } from "@/lib/site";
 
@@ -18,7 +18,7 @@ export default async function NewStoryPage({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
 
   return (
     <StoryEditor

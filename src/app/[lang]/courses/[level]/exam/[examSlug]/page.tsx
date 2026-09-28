@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isLevelSlug } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
@@ -39,7 +39,7 @@ export default async function ExamPage({
     );
   }
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
 
   // ДЕНЬ ЗАНЯТИЯ СТАВИТ ДЕЙСТВИЕ, А НЕ ОТКРЫТИЕ (17.09.2026, заход
   // 7.204). Экзамен ставит день там, где его СДАЮТ, —

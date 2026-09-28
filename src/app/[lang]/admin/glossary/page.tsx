@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import GlossaryAdminApp from "@/components/admin/GlossaryAdminApp";
 import { routeAlternates } from "@/lib/site";
 
@@ -16,7 +16,7 @@ export default async function AdminGlossaryPage({ params }: PageProps<"/[lang]/a
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
 
   return (
     <div>

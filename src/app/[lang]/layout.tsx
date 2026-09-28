@@ -7,7 +7,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "../globals.css";
 import { isLocale, locales } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -91,7 +91,7 @@ export async function generateMetadata({
 }: LayoutProps<"/[lang]">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   // No `alternates` here on purpose. This used to build canonical/hreflang
   // for every route at once from the request's own path (the `x-pathname`
   // header proxy.ts set, read via getRequestPathname). That worked, but it
@@ -130,7 +130,7 @@ export default async function LangLayout({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const theme = await getThemePreference();
   // ОТКАЗ ЧТЕНИЯ ЗДЕСЬ СТОИТ ШАПКИ, А НЕ САЙТА — 20.09.2026, заход 7.220.
   // Sentry JAVASCRIPT-NEXTJS-14, 6 событий `BLOCKED: Operation was

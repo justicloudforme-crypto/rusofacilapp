@@ -57,7 +57,8 @@ type Stage =
   | { kind: "slow" }
   | { kind: "pending" }
   | { kind: "offline" }
-  | { kind: "failed" }
+  /** `code` — «RC-BUY-…» у отказа покупки (7.244); у восстановления кода нет. */
+  | { kind: "failed"; code?: string }
   | { kind: "restoredNothing" }
   | { kind: "restoredExpired" };
 
@@ -263,8 +264,17 @@ export default function NativePurchasePanel({
         case "offline":
           setStage({ kind: "offline" });
           return;
-        default:
-          setStage({ kind: "failed" });
+        default: {
+          // Заход 7.244: отказ магазина — событие Sentry и код на экране.
+          // Личных данных нет: код RevenueCat и короткий ответ Google.
+          const code = `RC-BUY-${outcome.code}`;
+          Sentry.captureMessage(`NativeStorePurchaseFailed: ${outcome.code}`, {
+            level: "warning",
+            tags: { area: "native-purchase", code },
+            extra: { store: outcome.message.slice(0, 200) },
+          });
+          setStage({ kind: "failed", code });
+        }
       }
     },
     [],
@@ -405,6 +415,12 @@ export default function NativePurchasePanel({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {stage.kind === "failed" && stage.code ? (
+        <p data-testid="native-purchase-code" className="mt-2 text-[11px] leading-4 text-foreground/45">
+          {copy.codeLabel}: {stage.code}
+        </p>
       ) : null}
 
       {stage.kind === "unavailable" ? (

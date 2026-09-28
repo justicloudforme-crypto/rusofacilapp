@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isFlashcardLevel } from "@/lib/flashcards";
 import { isWordGameType } from "@/lib/word-games/types";
 import { getFreeSequences, getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
@@ -94,7 +94,7 @@ export default async function WordGamePuzzlePage({
   const row = await getPuzzle(type, level, sequence);
   if (!row) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const user = await getCurrentUser();
   const topicPage = buildTopicLink(lang, row.topic);
 

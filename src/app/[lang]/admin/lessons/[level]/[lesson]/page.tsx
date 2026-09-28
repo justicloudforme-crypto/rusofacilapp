@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isLevelSlug, isLessonSlug } from "@/lib/courses";
 import { db } from "@/lib/db";
 import { staticContentFor } from "@/lib/lessons/content";
@@ -93,7 +93,7 @@ export default async function AdminLessonEditorPage({
   const { lang, level, lesson } = await params;
   if (!isLocale(lang) || !isLevelSlug(level) || !isLessonSlug(level, lesson)) notFound();
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const levelDict = dict.courses.levels[level];
   const index = Number(lesson) - 1;
   const title = levelDict.lessons[index] ?? `${level} · ${lesson}`;

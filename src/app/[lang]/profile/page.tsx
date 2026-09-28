@@ -5,7 +5,8 @@ import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isLocale, locales, localeNames, type Locale } from "@/i18n/config";
-import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
+import type { Dictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { localizeSkillAreaTitle } from "@/lib/exams/localize";
 import { isStaff } from "@/lib/roles";
@@ -325,7 +326,7 @@ export default async function ProfilePage({
     redirect(`/${lang}/login?redirectTo=/${lang}/profile`);
   }
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   // ДОЛГ 179. Внутри приложения в кабинете не остаётся ни одного платного
   // входа: ни панели магазина, ни кнопки «Оформить подписку», ни ссылок
   // «перейти на годовой/Premium».

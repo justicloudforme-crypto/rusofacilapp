@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { requireOwnerUser } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { routeAlternates } from "@/lib/site";
@@ -26,7 +26,7 @@ export default async function AdminUsersPage({
   // this page enforces the tighter requirement itself.
   const actor = await requireOwnerUser(lang);
 
-  const dict = await getDictionary(lang);
+  const dict = await getPageDictionary(lang);
   const query = await searchParams;
   const hasError = query.error === "last_owner";
 

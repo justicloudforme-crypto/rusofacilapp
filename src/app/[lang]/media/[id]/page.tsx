@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getMediaById } from "@/lib/media/data";
 import { canAccessMediaItem, getEntitlementTier } from "@/lib/entitlement";
 import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
@@ -71,7 +71,7 @@ export default async function MediaDetailPage({
   const { lang, id } = await params;
   if (!isLocale(lang)) notFound();
 
-  const [dict, item, tier] = await Promise.all([getDictionary(lang), getMediaById(id), getEntitlementTier()]);
+  const [dict, item, tier] = await Promise.all([getPageDictionary(lang), getMediaById(id), getEntitlementTier()]);
   if (!dict?.media) notFound();
   if (!item) notFound();
 

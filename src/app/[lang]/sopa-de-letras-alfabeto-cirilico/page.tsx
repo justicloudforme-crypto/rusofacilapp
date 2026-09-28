@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { ALPHABET_SHOWCASE_PUZZLE } from "@/lib/word-games/alphabetShowcasePuzzle";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
@@ -36,7 +36,7 @@ export default async function AlfabetoCirilicoPage({
   const { lang } = await params;
   if (lang !== "es") notFound();
 
-  const [dict, user] = await Promise.all([getDictionary("es"), getCurrentUser()]);
+  const [dict, user] = await Promise.all([getPageDictionary("es"), getCurrentUser()]);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">

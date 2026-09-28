@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDictionary } from "@/i18n/dictionaries";
+import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getLandingPuzzleForTopic, getThemedPuzzlesByTopic, toPublicPuzzle } from "@/lib/word-games/data";
 import { getVocabularyCategoryPage } from "@/lib/vocabulary-categories";
@@ -22,7 +22,7 @@ import { wordGamePlayerDict } from "@/lib/word-games/player-dict";
  */
 export default async function TopicLandingPage({ landing }: { landing: TopicLanding }) {
   const [dict, user, puzzle, themed] = await Promise.all([
-    getDictionary("es"),
+    getPageDictionary("es"),
     getCurrentUser(),
     getLandingPuzzleForTopic(landing.topic),
     getThemedPuzzlesByTopic(),
