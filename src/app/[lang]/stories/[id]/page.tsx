@@ -7,8 +7,9 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { fixBrandSpelling, localizeStoryAuthor, storyByline } from "@/lib/story-author";
 import { db } from "@/lib/db";
 import { getStoryAccess, getEntitlementTier } from "@/lib/entitlement";
-import { isNativeShellRequest } from "@/lib/native-shell";
-import { nativeAccessCopy, nativeLockBody } from "@/lib/native-access-copy";
+import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
+import NativeBuyButton from "@/components/native/NativeBuyButton";
+import { nativeInlineLock } from "@/lib/native-access-copy";
 import { splitStoryParagraphs, toStoryAudioSegments } from "@/lib/stories";
 import { getContentInsights, getRelatedLessonForStory, getRelatedMediaForStory } from "@/lib/content-links";
 import { isPilotStory } from "@/lib/story-pilot";
@@ -318,6 +319,15 @@ export default async function StoryReaderPage({
   // original)» с опечаткой в имени проекта на обеих.
   const authorName = localizeStoryAuthor(story.author, lang);
 
+  // 7.242, долг 346: внутри оболочки карточка замка спрашивает, умеет ли
+  // оболочка покупать. Умеет — «открывается здесь же» и кнопка к окну
+  // покупки; не умеет — прежний честный текст. Одна функция на три
+  // страницы: `nativeInlineLock`.
+  const storyNativeLock =
+    !entitled && (await isNativeShellRequest())
+      ? nativeInlineLock(lang, "story", storySign?.mark === "premium-tier", await canBuyInsideShell())
+      : null;
+
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <JsonLd
@@ -440,8 +450,8 @@ export default async function StoryReaderPage({
               срабатываний на двух рассказах в двух ролях и двух обличьях.
               Заголовок замка остаётся — он про положение дел. */}
           <p className="mt-2 text-sm text-foreground/70">
-            {(await isNativeShellRequest())
-              ? nativeLockBody(lang, "story", storySign?.mark === "premium-tier")
+            {storyNativeLock
+              ? storyNativeLock.body
               : needsPremiumUpgrade
                 ? // Уровень подставляется из строки рассказа, а не вшит в
                   // словарь: замок ставит колонка `premiumOnly`, а не уровень
@@ -451,8 +461,14 @@ export default async function StoryReaderPage({
                   dict.stories.premiumTierLockBody.replace("{level}", story.level)
                 : dict.stories.premiumLockBody}
           </p>
-          {(await isNativeShellRequest()) ? (
-            <p className="mt-4 text-sm text-foreground/60">{nativeAccessCopy(lang).closedNote}</p>
+          {storyNativeLock?.buyCta ? (
+            <NativeBuyButton
+              label={storyNativeLock.buyCta}
+              reason={storySign?.mark === "premium-tier" ? "premium" : "free"}
+              kind="story"
+            />
+          ) : storyNativeLock ? (
+            <p className="mt-4 text-sm text-foreground/60">{storyNativeLock.note}</p>
           ) : (
             <Link
               href={`/${lang}/pricing?next=/${lang}/stories/${story.id}`}

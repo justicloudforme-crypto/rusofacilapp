@@ -543,6 +543,22 @@ export default async function ProfilePage({
   // crown next to the plan name in the Subscription tab — see
   // MatryoshkaAvatar.tsx's `premium` prop / entitlement.ts's isPremiumTier.
   const isPremiumUser = isPremiumTier(tier);
+  // ПУТЬ К PREMIUM У ВЫДАННОГО ДОСТУПА — заход 7.242, решение владельца
+  // (долг 346). Отмены у выдачи по-прежнему нет (долг 239: отменять
+  // нечего), но у человека с кодом Standard не было НИКАКОГО пути к
+  // Premium — ни в кабинете, ни на замке рассказа с 👑. Внутри оболочки,
+  // которая умеет покупать, здесь стоит панель покупки Google Play только
+  // с Premium. Больше ничего: ни «Standard ещё раз», ни ссылки на цены.
+  const grantUpgrade =
+    grantAccess && nativeCanBuy && !isPremiumUser ? (
+      <NativePurchasePanel
+        lang={lang}
+        copy={nativeAccessCopy(lang).purchase}
+        userId={user.id}
+        next={`/${lang}/profile`}
+        onlyPremium
+      />
+    ) : null;
 
   // Что сказать про введённый код (PROGRESS.md 7.146).
   //
@@ -1494,7 +1510,7 @@ export default async function ProfilePage({
               называет (долг 196). Тем, кто оплатил на сайте, внутри
               приложения печатается только строка о состоянии — кассы в
               оболочке нет. */}
-          {grantAccess ? null : isActive && subscription?.provider === "revenuecat" && !isPremiumPlan(subscription.plan) ? (
+          {grantAccess ? grantUpgrade : isActive && subscription?.provider === "revenuecat" && !isPremiumPlan(subscription.plan) ? (
             <a
               href={playSubscriptionCenterUrl()}
               target="_blank"

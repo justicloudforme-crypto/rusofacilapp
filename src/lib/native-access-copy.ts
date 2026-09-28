@@ -88,6 +88,20 @@ export interface NativeAccessCopy {
      *  план Premium.» Ни цены, ни кнопки, ни ссылки. */
     premiumNote: string;
     close: string;
+    /**
+     * ОБОЛОЧКА, КОТОРАЯ УМЕЕТ ПОКУПАТЬ — заход 7.242, долг 346 (аудит
+     * 7.241, Р5). Тексты `body` говорят «в этой версии приложения не
+     * открыть», и в оболочке от версии 4 это неправда: покупка Google Play
+     * работает прямо здесь. Карточки замка на рассказе, видео и уроке брали
+     * `body` и `closedNote`, не спрашивая `canBuyInsideShell`, и проверяющий
+     * Google читал «нет покупок» над работающей покупкой. При покупке
+     * карточка говорит `buyBody` (или `premiumNote` для 👑) и несёт кнопку
+     * `buyCta`, открывающую то же окно с панелью покупки, что и плитка
+     * каталога. Ни цены, ни способа оплаты — за этим следит
+     * `check:native-payments`.
+     */
+    buyBody: string;
+    buyCta: string;
   };
   /**
    * СТРАНИЦА «СКАЧАТЬ ПРИЛОЖЕНИЕ» ВНУТРИ ПРИЛОЖЕНИЯ — долг 154, заход
@@ -327,6 +341,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       },
       premiumNote: "Este material entra en el plan Premium.",
       close: "Entendido",
+      buyBody: "Se abre con el acceso completo del curso, aquí mismo en la aplicación.",
+      buyCta: "Abrir el acceso completo",
     },
     download: {
       heading: "Ya tienes la aplicación",
@@ -429,6 +445,8 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       },
       premiumNote: "Этот материал входит в план Premium.",
       close: "Понятно",
+      buyBody: "Он открывается с полным доступом к курсу — прямо здесь, в приложении.",
+      buyCta: "Открыть полный доступ",
     },
     download: {
       heading: "Приложение уже установлено",
@@ -509,7 +527,32 @@ export function nativeAccessCopy(lang: Locale): NativeAccessCopy {
  * собирает `accessSignFor`: три места, собирающие один текст, — это три
  * места, где он может разойтись.
  */
+/**
+ * Что пишет карточка замка НА СТРАНИЦЕ (не в окне) внутри оболочки —
+ * заход 7.242, долг 346. Одна функция на три страницы (рассказ, видео,
+ * урок), чтобы ветка «умеет ли оболочка покупать» не повторялась по месту
+ * и не забывалась на одной из них, как было до правки.
+ *
+ *   * `canBuy` — текст о том, что материал открывается здесь же
+ *     (`buyBody`, для 👑 — `premiumNote`), и кнопка к окну покупки;
+ *   * иначе — прежний честный текст «в этой версии не открыть» без кнопки.
+ */
+export function nativeInlineLock(
+  lang: Locale,
+  kind: LockedKind,
+  premium: boolean,
+  canBuy: boolean,
+): { body: string; note: string | null; buyCta: string | null } {
+  const lock = COPY[lang].lock;
+  if (canBuy) return { body: premium ? lock.premiumNote : lock.buyBody, note: null, buyCta: lock.buyCta };
+  return { body: nativeLockBody(lang, kind, premium), note: COPY[lang].closedNote, buyCta: null };
+}
+
 export function nativeLockBody(lang: Locale, kind: LockedKind, premium: boolean): string {
   const lock = COPY[lang].lock;
   return premium ? `${lock.body[kind]} ${lock.premiumNote}` : lock.body[kind];
 }
+
+/** Для сторожа `check:lock-purchase-path` (7.242): перепись фраз «в этой
+ *  версии приложения» берётся из самих текстов, а не рукописным списком. */
+export const NATIVE_ACCESS_COPY_FOR_GUARD = COPY;
