@@ -863,6 +863,7 @@
     "translationHint": "Toca cualquier palabra para ver su traducción. Toca una línea para saltar el audio a ella.",
     "translationLoading": "Traduciendo…",
     "translationError": "No se pudo traducir esta palabra.",
+    "translationOffline": "Sin conexión: para traducir palabras necesitas internet.",
     "wordListenLabel": "Escuchar palabra",
     "wordStressDependsOnMeaning": "Esta palabra cambia de acento según el sentido: aquí no ponemos audio para no enseñar una pronunciación equivocada.",
     "playLabel": "Escuchar el texto",
