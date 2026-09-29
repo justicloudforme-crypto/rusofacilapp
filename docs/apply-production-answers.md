@@ -1,6 +1,6 @@
 # «Apply for production» — черновик ответов (заход 7.246)
 
-Дата: 29.09.2026. Приложение: «RusoFácil: aprender ruso», `com.rusofacilapp.app`, закрытый тест Alpha с 21.09.2026, сейчас 1.0.12 (versionCode 13). Подавать **05.10.2026 или позже** (14 дней теста — аудит 7.241, раздел 5.3).
+Дата: 29.09.2026. Приложение: «RusoFácil: aprender ruso», `com.rusofacilapp.app`, закрытый тест Alpha с 21.09.2026, сейчас 1.0.13 (versionCode 14). Подавать **05.10.2026 или позже** (14 дней теста — аудит 7.241, раздел 5.3).
 
 Где в консоли: **Dashboard → Apply for production** (кнопка появляется после 14 дней теста с 12+ тестировщиками).
 
@@ -13,7 +13,7 @@
 
 Проверить перед отправкой (консоль, только владелец):
 1. **Testers** трека Alpha: в списке Google-группа `testers-community@googlegroups.com`; тестировщиков 12 и больше, 14 дней подряд. Число — вписать в ответ 2.
-2. **Android vitals → Crashes and ANRs** за 28 дней и **Pre-launch report** сборки 13. Если там есть падения — ответ 2 и 8 поправить (сейчас они говорят «падений в отчётах тестировщиков не было» — это про отчёты сообщества, не про vitals).
+2. **Android vitals → Crashes and ANRs** за 28 дней и **Pre-launch report** сборки 14. Если там есть падения — ответ 2 и 8 поправить (сейчас они говорят «падений в отчётах тестировщиков не было» — это про отчёты сообщества, не про vitals).
 3. Почта `support@rusofacilapp.com`: были ли письма от тестировщиков. Если были — коротко добавить в ответ 3.
 
 ---
@@ -24,17 +24,17 @@
 
 Выбор в шкале: **Easy** («Легко»).
 
-> We recruited testers through a testers community on Google Groups (testers-community). The group was added as the tester list of our Alpha closed track, and community members opted in through the Play testing link and installed the app from Google Play. We also tested the app every day ourselves on a physical phone (Poco X6 Pro, Android 16) with our own accounts. Recruiting through the community was straightforward; one lesson for us was that every account used for testing must be a member of that group — when one of our own test accounts was not, Google Play showed it "app not found" until the account joined the group.
+> We recruited testers through a testers community on Google Groups (testers-community). The group was added as the tester list of our Alpha closed track, and community members opted in through the Play testing link and installed the app from Google Play. We also tested the app every day ourselves on a physical phone (Poco X6 Pro, Android 16) with our own accounts. Recruiting through the community was straightforward.
 
 Перевод:
-> Тестировщиков набрали через сообщество тестировщиков в Google Groups (testers-community). Группа указана как список тестировщиков нашего закрытого трека Alpha; участники сообщества присоединились по ссылке тестирования Play и установили приложение из Google Play. Кроме того, мы сами каждый день проверяли приложение на настоящем телефоне (Poco X6 Pro, Android 16) со своими учётными записями. Набор через сообщество прошёл просто; урок для нас — каждая учётная запись для теста должна быть в этой группе: когда одна из наших тестовых учёток в ней не состояла, Google Play показывал ей «приложение не найдено», пока учётка не вступила в группу.
+> Тестировщиков набрали через сообщество тестировщиков в Google Groups (testers-community). Группа указана как список тестировщиков нашего закрытого трека Alpha; участники сообщества присоединились по ссылке тестирования Play и установили приложение из Google Play. Кроме того, мы сами каждый день проверяли приложение на настоящем телефоне (Poco X6 Pro, Android 16) со своими учётными записями. Набор через сообщество прошёл просто.
 
 ### 2. Describe the engagement you received from testers during your closed test.
 
-> [N] testers joined the closed track and kept the app installed through the 14-day test. They opened lessons, stories with audio, vocabulary cards and word games. The community testers' reports did not include crashes or blocking bugs. Most of the detailed issues came from our own daily testing on a physical device, where we recorded screen videos of full scenarios: first launch, sign-in, purchase through Google Play, downloading lessons and stories, using the app in airplane mode, background audio, the Android back button and account deletion.
+> [N] testers joined the closed track and kept the app installed through the 14-day test. According to the community reports, testers used lessons, stories with audio, vocabulary cards and word games. The community testers' reports did not include crashes or blocking bugs. Most of the detailed issues came from our own daily testing on a physical device, where we recorded screen videos of full scenarios: first launch, sign-in, purchase through Google Play, downloading lessons and stories, using the app in airplane mode, background audio, the Android back button and account deletion.
 
 Перевод:
-> К закрытому треку присоединились [N] тестировщиков, приложение оставалось у них установленным все 14 дней теста. Они открывали уроки, рассказы с аудио, карточки слов и словесные игры. В отчётах тестировщиков сообщества не было ни падений, ни блокирующих ошибок. Большая часть подробных замечаний пришла из нашей собственной ежедневной проверки на настоящем устройстве, где мы записывали видео экрана целых сценариев: первый запуск, вход, покупка через Google Play, скачивание уроков и рассказов, работа в режиме полёта, звук в фоне, кнопка «Назад» Android и удаление учётной записи.
+> К закрытому треку присоединились [N] тестировщиков, приложение оставалось у них установленным все 14 дней теста. По отчётам сообщества, тестировщики пользовались уроками, рассказами с аудио, карточками слов и словесными играми. В отчётах тестировщиков сообщества не было ни падений, ни блокирующих ошибок. Большая часть подробных замечаний пришла из нашей собственной ежедневной проверки на настоящем устройстве, где мы записывали видео экрана целых сценариев: первый запуск, вход, покупка через Google Play, скачивание уроков и рассказов, работа в режиме полёта, звук в фоне, кнопка «Назад» Android и удаление учётной записи.
 
 [N] — число из вкладки Testers. Если Play показывает меньше 12 — не подавать.
 
@@ -77,26 +77,26 @@
 
 ### 7. What changes did you make to your app based on what you learned during closed testing?
 
-> During the closed test (21 September – 5 October 2026) we shipped new app builds up to version 1.0.12 and website updates that the app loads. Main changes:
-> 1. Purchases: in-app purchase through Google Play Billing (monthly, yearly, one-time Premium) instead of no purchases in the app; fixed a purchase that never started; after paying the app shows "Activating…" until access opens; store errors now show a short code for support. Web checkout is never shown inside the app. (22–29 Sep)
+> During the closed test (21 September – 5 October 2026) we shipped new app builds up to version 1.0.13 and website updates that the app loads. Main changes:
+> 1. Purchases: in-app purchase through Google Play Billing (monthly, yearly, one-time Premium) (previously the app had no in-app purchases); fixed a purchase that never started; after paying the app shows "Activating…" until access opens; store errors now show a short code for support. Web checkout is never shown inside the app. (22–29 Sep)
 > 2. Offline mode: an offline screen with navigation instead of a blank page; lessons and stories can be downloaded with all their audio; downloads survive app updates; lesson answers given offline are queued and sent when the connection returns. (23–27 Sep)
 > 3. Reliability: the app recovers by itself when the network returns; the sign-in is kept after the app is closed; a failed retry of a lesson no longer removes the earlier pass. (22–27 Sep)
-> 4. Background audio: the story narration notification now disappears when the learner leaves the story and uses the app icon. (27 Sep)
+> 4. Background audio: the story narration notification now disappears when the learner leaves the story, shows the app icon, and its progress bar starts from zero. (27–29 Sep)
 > 5. Android back button: it first closes an open menu or sheet instead of closing the app. (27 Sep)
 > 6. Honest store and policy behavior: removed a PDF button that could not work inside the app; the Terms and Privacy Policy now explain that Google Play subscriptions are cancelled in Google Play; account deletion inside the app warns about this, and there is a public account deletion page (rusofacilapp.com/es/eliminar-cuenta); locked materials lead to the in-app purchase. (27 Sep)
 > 7. App mode: removed website elements from the app (footer, Telegram button, web payment options, "download the app"); Terms and Privacy moved to Profile → Settings; notification permission is requested only when the user turns on the daily reminder. (28 Sep)
 
 Перевод:
-> За время закрытого теста (21 сентября — 5 октября 2026) мы выпустили новые сборки приложения до версии 1.0.12 и обновления сайта, который приложение загружает. Главные изменения:
-> 1. Покупки: покупка внутри приложения через Google Play Billing (месяц, год, разовый Premium) вместо «покупок в приложении нет»; исправлена покупка, которая не запускалась; после оплаты приложение показывает «Activando…», пока не откроется доступ; ошибки магазина показывают короткий код для поддержки. Оплата сайта внутри приложения не показывается никогда. (22–29.09)
+> За время закрытого теста (21 сентября — 5 октября 2026) мы выпустили новые сборки приложения до версии 1.0.13 и обновления сайта, который приложение загружает. Главные изменения:
+> 1. Покупки: покупка внутри приложения через Google Play Billing (месяц, год, разовый Premium) (раньше покупок в приложении не было); исправлена покупка, которая не запускалась; после оплаты приложение показывает «Activando…», пока не откроется доступ; ошибки магазина показывают короткий код для поддержки. Оплата сайта внутри приложения не показывается никогда. (22–29.09)
 > 2. Без сети: экран с меню вместо пустой страницы; уроки и рассказы скачиваются со всем звуком; скачанное переживает обновления; ответы урока без сети встают в очередь и отправляются, когда связь вернётся. (23–27.09)
 > 3. Надёжность: приложение само поднимается, когда возвращается сеть; вход сохраняется после закрытия приложения; неудачная повторная попытка урока больше не снимает прошлый зачёт. (22–27.09)
-> 4. Звук в фоне: уведомление с озвучкой рассказа теперь исчезает, когда ученик уходит из рассказа, и показывает иконку приложения. (27.09)
+> 4. Звук в фоне: уведомление с озвучкой рассказа теперь исчезает, когда ученик уходит из рассказа, показывает иконку приложения, а его шкала начинается с нуля. (27–29.09)
 > 5. Кнопка «Назад» Android: сначала закрывает открытое меню или лист, а не приложение. (27.09)
 > 6. Честное поведение для магазина и политики: убрана кнопка PDF, которая не могла работать в приложении; Условия и Политика объясняют, что подписка Google Play отменяется в Google Play; удаление учётной записи в приложении предупреждает об этом, и есть публичная страница удаления (rusofacilapp.com/es/eliminar-cuenta); закрытые материалы ведут к покупке в приложении. (27.09)
 > 7. Режим приложения: из приложения убраны элементы сайта (подвал, кнопка Telegram, способы оплаты сайта, «скачать приложение»); Условия и Политика перенесены в «Профиль → Настройки»; разрешение на уведомления спрашивается только при включении ежедневного напоминания. (28.09)
 
-Откуда каждая строка (для проверки): 1 — заходы 7.224, 7.225, 7.226, 7.240, 7.243 (Ж.1), 7.244; 2 — 7.227–7.237; 3 — 7.223, 7.239, 7.238; 4 — 7.240; 5 — 7.242 (долг 347); 6 — 7.242 (долги 343–346); 7 — 7.243.
+Откуда каждая строка (для проверки): 1 — заходы 7.224, 7.225, 7.226, 7.240, 7.243 (Ж.1), 7.244; 2 — 7.227–7.237; 3 — 7.223, 7.239, 7.238; 4 — 7.240, 7.248; 5 — 7.242 (долг 347); 6 — 7.242 (долги 343–346); 7 — 7.243.
 
 ### 8. How did you decide that your app is ready for production?
 
