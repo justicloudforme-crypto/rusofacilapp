@@ -511,7 +511,11 @@ function plant() {
   add(
     "подсадка 7.240: копия не гасит устаревшую шторку при открытии",
     SHELL,
-    (s) => s.replace('            // Карточка от умершей живой страницы — долой сразу.\n            quiet(ms.setPlaybackState({ playbackState: "none" }));\n', ""),
+    (s) =>
+      s.replace(
+        '            // Карточка от умершей живой страницы — долой сразу, вместе с\n            // её длительностью и позицией (Ж.2, см. `forgetPosition`).\n            forgetPosition();\n            quiet(ms.setPlaybackState({ playbackState: "none" }));\n',
+        "",
+      ),
     "шторка копии не гасится",
   );
   add(
