@@ -36,6 +36,18 @@ export async function setNativePlaybackState(playing: boolean): Promise<void> {
 }
 
 /**
+ * ШКАЛА ШТОРКИ ОБНУЛЯЕТСЯ ВМЕСТЕ С КАРТОЧКОЙ (заход 7.248, Ж.2).
+ *
+ * Java-половина плагина хранит длительность и позицию в ПРОЦЕССЕ, а не в
+ * странице, и `setPositionState({})` оставляет прежние (`getDouble(…,
+ * прежнее)`). Замер на эмуляторе: живая «Репка» (полная дорожка 89 с),
+ * затем живой «Колобок» (фразы по очереди, шкалы нет) — сессия «Колобка»
+ * стартует с `position=66657`, позиции «Репки». Поэтому уход обнуляет
+ * шкалу явно, до «none».
+ */
+const NO_POSITION = { duration: 0, position: 0, playbackRate: 1 };
+
+/**
  * Убирает карточку проигрывателя из шторки целиком (заход 7.240, задача 2).
  *
  * Состояние `"none"` плагин понимает как «звука больше нет»: отвязывает
@@ -46,6 +58,7 @@ export async function setNativePlaybackState(playing: boolean): Promise<void> {
  * это и видел владелец («только полоса, без play/pause»).
  */
 export async function clearNativeMediaSession(): Promise<void> {
+  await nativeOnly(() => MediaSession.setPositionState(NO_POSITION));
   await nativeOnly(() => MediaSession.setPlaybackState({ playbackState: "none" }));
 }
 
@@ -117,5 +130,7 @@ export async function setNativeSeekToHandler(handler: ((seekTime: number) => voi
 export async function setNativePositionState(
   options: { duration: number; playbackRate: number; position: number } | null,
 ): Promise<void> {
-  await nativeOnly(() => MediaSession.setPositionState(options ?? {}));
+  // `null` — «шкалы нет»: пустой объект плагин понял бы как «оставить
+  // прежнюю» (Ж.2, см. `NO_POSITION`).
+  await nativeOnly(() => MediaSession.setPositionState(options ?? NO_POSITION));
 }
