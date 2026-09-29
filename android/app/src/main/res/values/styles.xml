@@ -13,6 +13,9 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Р18 (7.248): поля под вырезом и системными полосами — цвета
+             страницы, а не серого `#fafafa` темы. См. colors.xml. -->
+        <item name="android:windowBackground">@color/pageBackground</item>
     </style>
 
     <!--
