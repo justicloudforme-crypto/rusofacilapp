@@ -98,7 +98,9 @@ function renderSentenceTokens(tokens: string[]) {
 type TranslationState =
   | { status: "loading" }
   | { status: "done"; translation: string }
-  | { status: "error" };
+  | { status: "error" }
+  /** Долг 360: запрос не дошёл до сервера вовсе — нет сети. */
+  | { status: "offline" };
 
 interface PopoverPosition {
   top: number;
@@ -112,6 +114,10 @@ const POPOVER_MARGIN = 8;
 export interface StoryTextDict {
   translationLoading: string;
   translationError: string;
+  /** Долг 360 (заход 7.247): перевод слова без сети. Отдельная фраза, а не
+   *  `translationError`: «не удалось перевести» без интернета читается как
+   *  поломка приложения, а причина одна — перевод спрашивает сервер. */
+  translationOffline: string;
   wordListenLabel: string;
   /** Вариант В (заход 7.174): строка вместо молчащей кнопки у места
    *  омографа, для которого вырезки из озвучки его предложения нет. */
@@ -1281,7 +1287,12 @@ export default function StoryText({
       setTranslation({ status: "done", translation: data.translation });
       cacheTranslation(word, data.translation);
     } catch {
-      setTranslation({ status: "error" });
+      // Долг 360. Сюда попадает только ОТКАЗ САМОГО ЗАПРОСА: ответ сервера,
+      // даже 502, приходит выше, в `!res.ok`, и говорит прежней фразой.
+      // Отказ запроса — это нет сети (или service worker без сети и без
+      // копии ответа в кеше `apis`), и человек должен узнать причину.
+      // Слово, переведённое раньше, сюда не доходит вовсе: его отдал кеш.
+      setTranslation({ status: "offline" });
     }
   }
 
@@ -1583,6 +1594,7 @@ export default function StoryText({
               {translation?.status === "loading" && dict.translationLoading}
               {translation?.status === "done" && translation.translation}
               {translation?.status === "error" && dict.translationError}
+              {translation?.status === "offline" && dict.translationOffline}
             </p>
           </div>
         </>

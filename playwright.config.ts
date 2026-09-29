@@ -122,9 +122,16 @@ export default defineConfig({
        * `offline-downloads-rollout.spec.ts` (заход 7.235) — по тому же
        * замеру: в `mobile-iphone` оба теста падают ещё ДО сути, на
        * «каркас не открылся по /es», в `chromium` оба зелёные.
+       *
+       * `story-word-offline.spec.ts` (заход 7.247, долг 360) — ПО ЗАМЕРУ
+       * 29.09.2026: в `mobile-iphone` подставной ответ словаря
+       * (`context.route`) не видит запросов, которые делает воркер, и
+       * вместо «e2e:Жили-были» пришёл настоящий перевод «Érase una vez»;
+       * в `chromium` оба теста зелёные. Поведение без сети там же заперто
+       * юнит-тестом `StoryText.word-offline.test.tsx`.
        */
       testIgnore:
-        /(sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
+        /(story-word-offline|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone

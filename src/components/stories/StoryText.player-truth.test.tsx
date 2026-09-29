@@ -33,6 +33,7 @@ vi.mock("@/lib/native-media-session", () => ({
 const dict: StoryTextDict = {
   translationLoading: "…",
   translationError: "!",
+  translationOffline: "!",
   wordListenLabel: "Escuchar palabra",
   wordStressDependsOnMeaning: "El acento depende del sentido",
   closeLabel: "Cerrar",
