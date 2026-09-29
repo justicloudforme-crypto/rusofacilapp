@@ -1,5 +1,7 @@
 # Тексты и метаданные для App Store Connect / Google Play Console
 
+> **Для Google Play не использовать (29.09.2026, заход 7.246):** тексты страницы es-419, скриншоты и баннер — [`docs/store-listing-es419.md`](store-listing-es419.md); ответы «Apply for production» — [`docs/apply-production-answers.md`](apply-production-answers.md).
+>
 > **УСТАРЕЛО частично (27.09.2026, заход 7.242).** Имя приложения в Google Play — **«RusoFácil: aprender ruso»**, а не «RusoFácilapp» (таблицы ниже); **таблица Data Safety ниже неверна** (пишет, что голос собирается, — он не покидает телефон; нет покупок, поиска и страны по IP). Верные ответы для анкет консоли — **раздел 3 аудита 7.241**: [`docs/audit-7241-play-readiness.md`](audit-7241-play-readiness.md) (3.1 Data safety, 3.6 App access, 3.7 адрес удаления — после 7.242 `https://rusofacilapp.com/es/eliminar-cuenta`).
 
 Черновик, готовый к копипасте, как только верификация обоих аккаунтов
