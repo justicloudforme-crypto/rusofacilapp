@@ -401,7 +401,7 @@ async function plant() {
   add(
     "подсадка: каркас перестал отсеивать строки без копии (возврат строки 310)",
     SHELL,
-    (s) => s.replace("return keepPresent(clean, names);", "return clean;"),
+    (s) => s.replace("return keepPresent(clean, names).then(collapseSamePage);", "return clean;"),
     "не отсеивает строки без копии",
   );
   add(

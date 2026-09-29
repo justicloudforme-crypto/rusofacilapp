@@ -533,6 +533,13 @@
           <span lang="es" data-locale="es">Aún no hay nada guardado en este teléfono. Abre una lección, un cuento o el vocabulario con internet y se quedará aquí.</span>
           <span lang="ru" data-locale="ru">Пока на этом телефоне ничего не сохранено. Откройте урок, рассказ или словарь с интернетом — и они останутся здесь.</span>
         </p>
+        <!-- ПУСТО ПОД ВКЛАДКОЙ ≠ ПУСТО НА ТЕЛЕФОНЕ — заход 7.248 (Ж.3).
+             Фраза выше утверждает про ВЕСЬ телефон, и под вкладкой без
+             своих строк она врала рядом с непустым «Descargado». -->
+        <p class="empty" data-saved-empty-tab hidden>
+          <span lang="es" data-locale="es">En esta sección aún no hay nada guardado.</span>
+          <span lang="ru" data-locale="ru">В этом разделе пока ничего не сохранено.</span>
+        </p>
       </section>
 
       <!-- СКАЧАННОЕ ПО КНОПКЕ — ЗАХОД 7.231 (ОФЛАЙН-3). Отдельный блок, а
@@ -1143,11 +1150,26 @@
               playAt(audio.currentTime < 1 ? state.index - 1 : state.index);
             }
           }
+          /**
+           * ШКАЛА ШТОРКИ — НЕ ОТ ЧУЖОЙ ДОРОЖКИ (заход 7.248, Ж.2).
+           *
+           * Плагин хранит длительность и позицию в самом процессе, а не в
+           * странице: `setPositionState` без полей оставляет прежние. Замер
+           * на эмуляторе: живая «Репка» (полная дорожка 89 с) → копия без
+           * сети → «▶» — новая сессия копии стартует с позиции живой
+           * страницы (27 565 мс), и система досчитывает её сама. У копии
+           * одной дорожки нет (фразы по очереди), значит и шкалы нет —
+           * так же, как у живого рассказа без полной дорожки.
+           */
+          function forgetPosition() {
+            if (ms) quiet(ms.setPositionState({ duration: 0, position: 0, playbackRate: 1 }));
+          }
           function stopAll() {
             state.gen += 1;
             release();
             state.playing = false;
             state.started = false;
+            forgetPosition();
             if (ms) quiet(ms.setPlaybackState({ playbackState: "none" }));
           }
 
@@ -1176,7 +1198,9 @@
           window.addEventListener("pagehide", stopAll);
 
           if (ms) {
-            // Карточка от умершей живой страницы — долой сразу.
+            // Карточка от умершей живой страницы — долой сразу, вместе с
+            // её длительностью и позицией (Ж.2, см. `forgetPosition`).
+            forgetPosition();
             quiet(ms.setPlaybackState({ playbackState: "none" }));
             quiet(
               ms.setMetadata({
@@ -1830,9 +1854,48 @@
               });
               // ПОСЛЕДНИМ ДЕЛОМ — ОТСЕВ ПО ФАКТУ (строка 310).
               savedCensus.whole = clean.length;
-              return keepPresent(clean, names);
+              return keepPresent(clean, names).then(collapseSamePage);
             });
           });
+        }
+
+        /**
+         * ОДНА СТРАНИЦА — ОДНА СТРОКА (заход 7.248, Р16 аудита 7.241).
+         *
+         * Замер на эмуляторе (1.0.12 + прод): `/es/vocabulary` и два
+         * перехода из поиска на идиомы (`/es/vocabulary?mode=idioms#idiom-…`,
+         * адрес из `src/lib/search/records.ts`) — без сети ТРИ одинаковые
+         * строки «Vocabulario ruso por temas, con traducción · Vocabulario ·
+         * ES», ровно как на снимке аудита. Страница одна, хвосты адреса
+         * разные, а опись различает строки по полному адресу.
+         *
+         * Склеивается по пути без `?…` и `#…`: все виды, которые каркас
+         * вообще показывает (`kindOfPath`), сервер рисует по пути. Остаётся
+         * самая свежая строка, а скачанная побеждает всегда — у неё своё
+         * обещание (7.231). Разные страницы с одинаковым названием НЕ
+         * склеиваются: у них разный путь.
+         */
+        function pageKeyOf(url) {
+          try {
+            var parsed = new URL(url, location.href);
+            return parsed.origin + parsed.pathname.replace(/\/+$/, "");
+          } catch (e) {
+            return url;
+          }
+        }
+        function collapseSamePage(rows) {
+          var out = [];
+          var at = {};
+          for (var i = 0; i < rows.length; i++) {
+            var key = pageKeyOf(rows[i].url);
+            if (!Object.prototype.hasOwnProperty.call(at, key)) {
+              at[key] = out.length;
+              out.push(rows[i]);
+            } else if (rows[i].downloaded && !out[at[key]].downloaded) {
+              out[at[key]] = rows[i];
+            }
+          }
+          return out;
         }
 
         /** Показать сохранённую копию по нажатию из списка. Адрес в
@@ -1917,7 +1980,21 @@
             })(shown[j]);
           }
           list.hidden = shown.length === 0;
-          empty.hidden = shown.length !== 0;
+          /**
+           * «НА ТЕЛЕФОНЕ НИЧЕГО НЕТ» — ТОЛЬКО КОГДА НА ТЕЛЕФОНЕ НИЧЕГО НЕТ
+           * (заход 7.248, Ж.3).
+           *
+           * Замер на эмуляторе (1.0.12 + прод): без сети вкладка
+           * «Vocabulario» при одном скачанном рассказе — «Aún no hay nada
+           * guardado en este teléfono», а под ней «Descargado: Репка ·
+           * 1,6 MB». Список вкладки отфильтрован, блок скачанного — нет, и
+           * общая фраза про телефон спорила с тем, что нарисовано ниже.
+           * Под вкладкой без своих строк — фраза про раздел.
+           */
+          var emptyTab = document.querySelector("[data-saved-empty-tab]");
+          var phoneEmpty = shown.length === 0 && rows.length === 0;
+          empty.hidden = !phoneEmpty;
+          if (emptyTab) emptyTab.hidden = !(shown.length === 0 && !phoneEmpty);
           block.hidden = false;
           if (gauge) {
             /**

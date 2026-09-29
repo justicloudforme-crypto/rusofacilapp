@@ -7,4 +7,14 @@
 -->
 <resources>
     <color name="splashBackground">#2d5f8a</color>
+    <!--
+        ФОН ОКНА ПОД СТРАНИЦЕЙ — заход 7.248 (Р18 аудита 7.241). Тот же
+        кремовый, что у страницы: токен `color.neutral.50` (tokens.json,
+        фон страниц сайта и `public/offline.html`). Замер на эмуляторе:
+        в альбомной слева полоса 144 px цвета темы `#fafafa`, такие же
+        поля сверху и снизу — это отступы, которыми Capacitor (`SystemBars`)
+        отодвигает WebView от выреза и системных полос. Сличается сторожем
+        `npm run check:window-background`.
+    -->
+    <color name="pageBackground">#fff8ec</color>
 </resources>
