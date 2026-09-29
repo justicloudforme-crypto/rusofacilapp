@@ -1,6 +1,6 @@
-# Страница приложения в Google Play — es-419 (заход 7.246)
+# Страница приложения в Google Play — es-419 (заходы 7.246, 7.247)
 
-Дата: 29.09.2026. Приложение: «RusoFácil: aprender ruso», `com.rusofacilapp.app`, закрытый тест Alpha, 1.0.12 (versionCode 13).
+Дата: 29.09.2026. **Итоговые тексты (7.247) — те, что владелец вставил в Play Console:** краткое описание 73 знака, полное 2907 из 4000 (счётчик консоли совпал со счётом скрипта). Приложение: «RusoFácil: aprender ruso», `com.rusofacilapp.app`, закрытый тест Alpha, 1.0.12 (versionCode 13).
 
 Этот файл заменяет для Google Play таблицы и тексты из [`docs/store-listings.md`](store-listings.md): там старое имя «RusoFácilapp», неверные «Grupos», «синхронизация с веб-версией» и устаревшие числа. Ответы анкет консоли (Data safety, App access, декларации) — в [`docs/audit-7241-play-readiness.md`](audit-7241-play-readiness.md), раздел 3. Ответы на вопросы «Apply for production» — в [`docs/apply-production-answers.md`](apply-production-answers.md).
 
@@ -53,13 +53,13 @@
 
 ## 4. Полное описание (Full description, ≤ 4000)
 
-**2895 символов** (счёт скриптом, как считает Play: каждая буква, пробел, перевод строки и «•» — один символ). Ключевые фразы — по одному разу: «aprender ruso», «curso de ruso», «ruso para hispanohablantes». Слов капсом 0, эмодзи 0, «mejor», «n.º 1», «gratis», просьб об оценке — 0.
+**2907 символов — совпадает со счётчиком Play Console «2907/4000».** Счёт скриптом, как считает Play: каждая буква, пробел, перевод строки и «•» — один символ; переводов строки в тексте 46 (без них было бы 2861, с переводами строк Windows — 2953). Это текст 7.246 (2895) плюс пять правок владельца (7.247): «y necesita orden:» → «y quiere ordenar lo que sabe:» (+12); «por gusto por» → «por amor a» (−3); «apagada, y la pausas» → «apagada y puedes pausarla» (+5); «crucigramas por nivel» → «crucigramas organizados por nivel» (+12); Premium — «abre todo el material, también el nivel C1.» вместо «…abre todo, también el nivel C1 y los juegos con estrella.» (−14). Итого +12. Ключевые фразы — по одному разу: «aprender ruso», «curso de ruso», «ruso para hispanohablantes». Слов капсом 0, эмодзи 0, «mejor», «n.º 1», «gratis», просьб об оценке — 0.
 
 ```text
 Aprende ruso con un curso pensado para hispanohablantes. Cada regla se explica en español y se compara con lo que ya sabes de tu idioma: dónde el ruso se parece al español y dónde no. Así entiendes el porqué, no solo la regla.
 
 Para quién es
-Para quien quiere aprender ruso desde cero y para quien ya empezó y necesita orden: por un viaje, por trabajo, por la familia o por gusto por la literatura rusa. No necesitas saber inglés: todo el curso está en español.
+Para quien quiere aprender ruso desde cero y para quien ya empezó y quiere ordenar lo que sabe: por un viaje, por trabajo, por la familia o por amor a la literatura rusa. No necesitas saber inglés: todo el curso está en español.
 
 Un curso de ruso de A1 a B2
 • 120 lecciones en cuatro niveles (A1, A2, B1 y B2) con 2134 ejercicios que se corrigen al momento.
@@ -71,7 +71,7 @@ Un curso de ruso de A1 a B2
 Lee y escucha ruso real
 • 325 cuentos y lecturas narrados en ruso, desde cuentos populares hasta adaptaciones de clásicos.
 • Toca una palabra del texto y ve su traducción al español.
-• La narración sigue con la pantalla apagada, y la pausas desde la notificación.
+• La narración sigue con la pantalla apagada y puedes pausarla desde la notificación.
 
 Vocabulario que se queda
 • 5771 tarjetas en 23 temas, cada palabra con su audio.
@@ -79,7 +79,7 @@ Vocabulario que se queda
 • 771 expresiones y refranes rusos explicados en español.
 
 Juegos de palabras
-• 2015 sopas de letras y 1262 crucigramas por nivel, para repasar el vocabulario jugando.
+• 2015 sopas de letras y 1262 crucigramas organizados por nivel, para repasar el vocabulario jugando.
 
 Estudia sin conexión
 • Descarga lecciones y cuentos con su audio y ábrelos sin internet.
@@ -96,7 +96,7 @@ Qué está abierto y qué requiere acceso
 Puedes empezar sin pagar: la primera lección completa de cada nivel, dos cuentos, una parte del vocabulario y de los juegos.
 El acceso completo se compra dentro de la app con Google Play:
 • Suscripción de un mes o de un año: las 120 lecciones con sus exámenes, el vocabulario de A1 a B2, los cuentos y los juegos, salvo el material marcado como Premium.
-• Premium para siempre: un solo pago que abre todo, también el nivel C1 y los juegos con estrella.
+• Premium para siempre: un solo pago que abre todo el material, también el nivel C1.
 La suscripción se renueva automáticamente. Puedes cancelarla cuando quieras en Google Play → Pagos y suscripciones.
 
 Tu cuenta
@@ -109,15 +109,15 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 
 > Учи русский по курсу, созданному для испаноговорящих. Каждое правило объясняется на испанском и сравнивается с тем, что ты уже знаешь о своём языке: где русский похож на испанский, а где нет. Так ты понимаешь «почему», а не только само правило.
 >
-> **Для кого.** Для тех, кто хочет выучить русский с нуля, и для тех, кто уже начал и хочет навести порядок: ради поездки, работы, семьи или любви к русской литературе. Английский знать не нужно: весь курс на испанском.
+> **Для кого.** Для тех, кто хочет выучить русский с нуля, и для тех, кто уже начал и хочет упорядочить то, что знает: ради поездки, работы, семьи или любви к русской литературе. Английский знать не нужно: весь курс на испанском.
 >
 > **Курс русского от A1 до B2.** 120 уроков на четырёх уровнях (A1, A2, B1, B2) и 2134 упражнения с мгновенной проверкой. В каждом уроке — презентация, грамматика, слова с аудио и упражнения. Экзамен после каждых десяти уроков, всего 12 — чтобы проверить выученное, прежде чем идти дальше. Кириллица с первого урока: 33 буквы с аудио и те, что больше всего путают испаноговорящих. Тренировка произношения: послушай слово, запиши свой голос и сравни. Запись остаётся на твоём телефоне.
 >
-> **Читай и слушай настоящий русский.** 325 рассказов и текстов с озвучкой — от народных сказок до адаптаций классики. Нажми на слово в тексте — увидишь перевод на испанский. Чтение продолжает звучать при выключенном экране, пауза — из уведомления.
+> **Читай и слушай настоящий русский.** 325 рассказов и текстов с озвучкой — от народных сказок до адаптаций классики. Нажми на слово в тексте — увидишь перевод на испанский. Чтение продолжает звучать при выключенном экране, и его можно поставить на паузу из уведомления.
 >
 > **Слова, которые запоминаются.** 5771 карточка в 23 темах, у каждого слова есть аудио. Несколько способов повторять: перевернуть карточку, дополнить фразу, найти пару, написать слово. 771 русское выражение и пословица с объяснением на испанском.
 >
-> **Словесные игры.** 2015 «поисков слов» и 1262 кроссворда по уровням — повторять слова играя.
+> **Словесные игры.** 2015 «поисков слов» и 1262 кроссворда, разложенных по уровням — повторять слова играя.
 >
 > **Учись без интернета.** Скачай уроки и рассказы вместе со звуком и открывай без сети. Если отвечаешь на упражнения без сети, ответы сохраняются и отправляются сами, когда связь вернётся.
 >
@@ -125,7 +125,7 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 >
 > **Русский для испаноговорящих, на твоём языке.** Все объяснения на нейтральном испанском. Интерфейс есть и на русском.
 >
-> **Что открыто и что требует доступа.** Можно начать без оплаты: первый урок каждого уровня целиком, два рассказа, часть слов и игр. Полный доступ покупается внутри приложения через Google Play: подписка на месяц или год — 120 уроков с экзаменами, слова от A1 до B2, рассказы и игры, кроме материалов с пометкой Premium; «Premium навсегда» — один платёж, открывает всё, включая уровень C1 и игры со звёздочкой. Подписка продлевается автоматически. Отменить её можно в любой момент в Google Play → «Платежи и подписки».
+> **Что открыто и что требует доступа.** Можно начать без оплаты: первый урок каждого уровня целиком, два рассказа, часть слов и игр. Полный доступ покупается внутри приложения через Google Play: подписка на месяц или год — 120 уроков с экзаменами, слова от A1 до B2, рассказы и игры, кроме материалов с пометкой Premium; «Premium навсегда» — один платёж, открывает все материалы, включая уровень C1. Подписка продлевается автоматически. Отменить её можно в любой момент в Google Play → «Платежи и подписки».
 >
 > **Твоя учётная запись.** Прогресс сохраняется в учётной записи. Удалить её можно в приложении, в «Mi perfil».
 >
@@ -137,20 +137,22 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 |---|---|
 | вкладки урока: presentación, gramática, vocabulario, ejercicios | `src/dictionaries/es.json` `lesson.tabs` (Presentación, Gramática, Vocabulario, Ejercicios; у первых уроков ещё Alfabeto) |
 | запись голоса не уходит с телефона | `PronunciationPractice.tsx` («Recordings never leave the device»), `check:legal-truth` — 0 сетевых вызовов в записи |
-| перевод слова по нажатию | `StoryText.tsx` (слова — кнопки, карточка перевода); без сети — «No se pudo traducir esta palabra» (долг 360) |
+| перевод слова по нажатию | `StoryText.tsx` (слова — кнопки, карточка перевода); без сети — «Sin conexión: para traducir palabras necesitas internet.», слово из кеша — перевод (долг 360, закрыт 7.247) |
 | звук при выключенном экране, пауза из уведомления | служба `mediaPlayback`, аудит 7.241 раздел 3.2 |
 | четыре режима повторения | `es.json` `vocabulary.mode*`: Vocabulario por categorías, Escribir la palabra, Completa la frase, Emparejar |
 | скачивание уроков и рассказов со звуком, очередь ответов | заходы 7.231–7.236 (`check:downloads`, `check:progress-outbox`) |
 | напоминание в «Ajustes», вопрос о разрешении только при включении | 7.243, `native-access-copy.ts` `reminder` |
 | серия, календарь, значки | `es.json` `profile.activityCalendarHeading`, `badgesHeading` |
 | отмена подписки в Google Play, удаление учётки в приложении | 7.242 (Условия, `/es/eliminar-cuenta`, `check:account-deletion`) |
-| Premium — C1 и игры со звездой | `native-access-copy.ts` `noteLifetime` |
+| Premium открывает всё, включая C1 | `native-access-copy.ts` `noteLifetime` (там же — игры со звездой; в описании 7.247 они не называются) |
 
 ---
 
-## 5. Release notes для следующей подачи (es-419, ≤ 500)
+## 5. Release notes для первой подачи в продакшн (es-419, ≤ 500) — два варианта, выбирает владелец
 
-**481 символ.** Поле «Release notes» выпуска (Test and release → Production → Create new release → «Notas de la versión»), язык `<es-419>`.
+Поле «Release notes» выпуска (Test and release → Production → Create new release → «Notas de la versión»), язык `<es-419>`.
+
+### Вариант А (7.246) — список перемен за закрытый тест, 481 символ
 
 ```text
 • Compra la suscripción o Premium dentro de la app con Google Play.
@@ -173,43 +175,51 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 
 Каждая строка — сделанная за закрытый тест правка: покупка в приложении (7.224–7.226, 22–23.09), скачивание и очередь ответов (7.227–7.238, 23–27.09), шторка (7.240, 27.09), вход после закрытия (7.239, 27.09), «Назад» (7.242, 27.09), вопрос об уведомлениях (7.243, 28.09). Таймер шторки у скачанной копии (Ж.2) **не исправлен** — поэтому про «правильный прогресс в уведомлении» здесь ни слова.
 
+### Вариант Б (7.247) — «первая публичная версия», 285 символов
+
+```text
+Primera versión pública de RusoFácil.
+• Curso de ruso de A1 a B2 con explicaciones en español.
+• Cuentos narrados, vocabulario con audio y juegos de palabras.
+• Descarga lecciones y cuentos para estudiar sin conexión.
+• Compra la suscripción o Premium dentro de la app con Google Play.
+```
+
+Перевод:
+> Первая публичная версия RusoFácil.
+> • Курс русского от A1 до B2 с объяснениями на испанском.
+> • Рассказы с озвучкой, слова с аудио и словесные игры.
+> • Скачивай уроки и рассказы, чтобы заниматься без интернета.
+> • Подписку или Premium можно купить внутри приложения через Google Play.
+
+Счёт скриптом: 285 знаков (5 строк, 4 перевода строки). Разница между вариантами: А перечисляет перемены относительно тестовых сборок — их видели только тестировщики; Б говорит с тем, кто ставит приложение впервые, а таких в продакшне будет большинство. Каждое утверждение Б есть и в полном описании.
+
 ---
 
-## 6. Скриншоты телефона — снимает владелец на POCO X6 Pro
+## 6. Скриншоты телефона — итог (7.247)
 
-### 6.1. Подойдут ли снимки POCO как есть — **нет**
+Восемь снимков сделал владелец на POCO X6 Pro 29.09.2026 с 13:04 до 13:14 (всего снимков приложения за эти 10 минут — 26); восемь выбраны вместе с владельцем, агент снял их с телефона кабелем (`adb pull`, на телефоне ничего не удалено и не перемещено) и подогнал под требования Play.
 
-Требования Play к скриншотам телефона: JPEG или 24-битный PNG без прозрачности, от 2 до 8 штук, каждая сторона от 320 до 3840 пикселей, **длинная сторона не больше чем вдвое длиннее короткой**. Чтобы приложение могло попасть в подборки Google, нужно ещё не меньше 4 снимков с короткой стороной от 1080 пикселей в пропорции 9:16 (например, 1080×1920).
+**Где лежат:** `~/Desktop/rusofacil-store-assets/screenshots-es419/` — `01.png` … `08.png` и `contact-sheet.png` (все восемь уменьшенными на одном листе — для проверки глазами). **В репозиторий не коммитятся:** в шапке каждого снимка виден аватар владельца.
 
-Экран POCO X6 Pro — 1220×2712: длинная сторона в **2,22 раза** длиннее короткой, Play такой снимок **не примет**. Что делать: владелец снимает как обычно и присылает файлы (из «Галерея → Скриншоты» или из папки `DCIM/Screenshots`), а агент следующим заходом подгоняет их одной командой под **1080×1920**: снимок уменьшается целиком, по бокам — фирменный синий фон `#253B7E` (как у баннера). Обрезать ничего не придётся, содержимое экрана остаётся целиком. Резать снимок до 9:16 руками не нужно — так срезается нижняя панель приложения.
+**Как подогнаны:** снимок POCO 1220×2712 (длинная сторона в 2,22 раза длиннее короткой — Play такой не примет, предел 2:1) уменьшен целиком по высоте до 1920 (864×1920), по бокам — фирменный синий `#253B7E` по 108 пикселей; ничего не обрезано. Итог каждого файла проверен числом: **1080×1920, пропорция 1,7778 (9:16), PNG 24 бит без прозрачности, 0,23–0,55 МБ** (предел 8 МБ). Восемь снимков 1080×1920 в 9:16 — это и минимум для подборок Google (не меньше четырёх).
 
-Старые снимки 13.09 (`~/Desktop/rusofacil-store-assets/play-phone-screenshots/`, 5 штук 1080×1920) сделаны из браузера, а не с телефона, и до «режима приложения» 7.243. Для подачи лучше новые, с телефона.
+| файл | снимок телефона | что на экране | вес |
+|---|---|---|---|
+| `01.png` | 13:04:56 | рассказ «Репка», открыта карточка перевода слова «Кошка» — «gata (también es la palabra genérica para "gato" como especie)» | 0,55 МБ |
+| `02.png` | 13:08:00 | урок: «¿Qué significa la frase 'Это дом'?», выбран зелёный «Esto es una casa», «Correcto», ниже «Practica tu pronunciación» с кнопками «Grabar» | 0,33 МБ |
+| `03.png` | 13:05:41 | «El alfabeto cirílico y los sonidos del ruso», начало текста, над заголовком плашка «Las palabras subrayadas…» | 0,50 МБ |
+| `04.png` | 13:10:03 | карточка слова «десерт», метка B1, картинка торта, «disyért», «Escuchar pronunciación», «Repetir», «Lo sé» | 0,32 МБ |
+| `05.png` | 13:08:32 | «Alfabeto cirílico completo», «VOCALES (10)»: А, Е, Ё, И, О, У | 0,41 МБ |
+| `06.png` | 13:11:35 | «Sopa de letras · A1 · Puzle 1», «3/8»: «аптека» зелёным, «плечо» красным по диагонали, «палец» синим по вертикали | 0,32 МБ |
+| `07.png` | 13:12:25 | «Crucigrama · A1 · Puzle 1», вся сетка, «Palabras completas: 2 de 6 · casillas: 8 de 21» | 0,23 МБ |
+| `08.png` | 13:13:39 | «Репка» без сети: синяя полоса «Copia guardada en el teléfono», «✓ Descargado», плеер играет (пауза, жёлтая полоса прогресса), подсвечена строка | 0,39 МБ |
 
-### 6.2. Подготовка телефона (один раз, до съёмки)
+Не взяты (похожие снимки): 13:04:47 — открыто слово «бабку»; 13:11:13 — тот же пазл с красной «аптекой»; 13:12:06 — тот же кроссворд раньше («1 de 6 · 4 de 21»); 13:13:34 — «Репка» без сети до нажатия «▶».
 
-1. Сделать так, чтобы на снимках не было уведомлений: смахнуть все уведомления в шторке и включить «Не беспокоить».
-2. Приложение — на испанском (меню «≡» → язык «Español»).
-3. Интернет включён (Wi-Fi). Режим полёта — только для снимка №7.
-4. **Из своей учётной записи не выходить**: при выходе приложение стирает скачанное. Все экраны ниже — из бесплатной части курса, они открыты и так.
-5. Не снимать: «Mi perfil» (там имя и почта), «Suscripción» и окно покупки (там цены), окно Google Play, клавиатуру на экране.
-6. Скриншот — **кнопка питания + громкость вниз** одновременно.
+Загружает в консоль владелец: **Main store listing → Phone screenshots**, в порядке 01…08.
 
-### 6.3. Восемь снимков — от самого сильного
-
-| № | экран | шаги (кнопки как на экране) | что должно быть видно | чего не должно быть |
-|---|---|---|---|---|
-| 1 | **Рассказ с переводом слова** | внизу «**Cuentos**» (Рассказы) → вверху фильтр «**Nivel**» (Уровень) → «A1» → рассказ «**Репка**» → кнопка «▶» (**Escuchar el texto** — «Слушать текст») → подождать 3–4 с, пока звучит → нажать любое русское слово в тексте | русский текст, внизу плеер со звуком, всплывшая карточка с испанским переводом слова | надпись «No se pudo traducir esta palabra» (значит, нет интернета — включить Wi-Fi и повторить) |
-| 2 | **Грамматика, объяснённая на испанском** | внизу «**Cursos**» (Курсы) → «**A1 · Principiante**» (A1 · Начальный) → урок 1 → вкладка «**Gramática**» (Грамматика) → пролистать до абзаца, где русский сравнивается с испанским («En español…» — «В испанском…») | заголовок урока, вкладки, текст объяснения на испанском с русскими примерами | замок, всплывающие окна |
-| 3 | **Упражнение с проверкой** | тот же урок → вкладка «**Ejercicios**» (Упражнения) → ответить на первый вопрос правильно | вопрос и зелёная отметка правильного ответа | открытая клавиатура (если задание с вводом — снять после нажатия «Comprobar» — «Проверить») |
-| 4 | **Кириллица** | тот же урок → вкладка «**Alfabeto**» (Алфавит) | таблица русских букв с транскрипцией и кнопками звука | — |
-| 5 | **Карточка слова** | внизу «**Vocabulario**» (Словарь) → тема «**Comida y restaurante**» (Еда и ресторан) → нажать на карточку, чтобы перевернуть | русское слово, перевод на испанский, пример, кнопки «**Lo sé**» (Знаю) и «**Repetir**» (Повторить) | полоса «Suscribirme» (Подписаться) — если появилась после 10 карточек, снимать первую карточку |
-| 6 | **Поиск слов (sopa de letras)** | внизу «**Juegos de palabras**» (Словесные игры) → «**Sopa de letras**» → «**Nivel**» A1 → «**Puzle 1**» → найти 2–3 слова (провести пальцем по буквам) | сетка букв с 2–3 выделенными словами, строка «Palabras encontradas» (Найдено слов) | окно «¡Puzle resuelto!» (Головоломка решена) — не решать до конца |
-| 7 | **Кроссворд** | «**Juegos de palabras**» → «**Crucigrama**» → A1 → «**Puzle 1**» → вписать 1–2 слова | сетка с вписанными русскими буквами, подсказки «**Horizontal**» / «**Vertical**» (По горизонтали / По вертикали) | клавиатура поверх сетки — сначала спрятать её кнопкой «Назад» |
-| 8 | **Без интернета** | открыть «Репка» (как в №1) → кнопка «**Descargar**» (Скачать) → дождаться «**Descargado ✓**» (Скачано) → включить режим полёта → закрыть приложение из списка недавних → открыть снова | экран «**Estás sin conexión**» (Нет подключения) и список «**Guardado en este teléfono**» (Сохранено на этом телефоне) с «Репкой» | — (значок самолёта в строке состояния — нормально). После снимка режим полёта выключить |
-
-Порядок в консоли — как в таблице: сначала то, что отличает приложение (рассказ с переводом, грамматика на испанском), потом упражнения, алфавит, слова, игры и работа без сети.
-
-Если на экране №2 абзаца «En español…» не видно без прокрутки — снимать тот кусок, где рядом русский пример и испанское объяснение: смысл тот же.
+Старые снимки 13.09 (`~/Desktop/rusofacil-store-assets/play-phone-screenshots/`, из браузера, до «режима приложения») для подачи не использовать.
 
 ---
 
@@ -228,9 +238,9 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 | поле консоли | что вставить |
 |---|---|
 | App name | раздел 2 |
-| Short description | раздел 3, вариант 2 |
-| Full description | раздел 4, блок `text` целиком |
+| Short description | раздел 3, вариант 2 (он и вставлен, 73 знака) |
+| Full description | раздел 4, блок `text` целиком (вставлен, 2907/4000) |
 | App icon | `play-icon-512.png` |
 | Feature graphic | `play-feature-graphic-1024x500.jpg` |
-| Phone screenshots | 8 снимков раздела 6 после подгонки под 1080×1920 |
-| Release notes | раздел 5 — при создании выпуска в Production |
+| Phone screenshots | `~/Desktop/rusofacil-store-assets/screenshots-es419/01.png` … `08.png` (раздел 6) |
+| Release notes | раздел 5, вариант А или Б — при создании выпуска в Production |
