@@ -20,6 +20,7 @@ import { readCachedTranslation, resetTranslationStoreForTests } from "@/lib/tran
 const dict: StoryTextDict = {
   translationLoading: "…",
   translationError: "No se pudo traducir esta palabra.",
+  translationOffline: "Sin conexión: para traducir palabras necesitas internet.",
   wordListenLabel: "Escuchar palabra",
   wordStressDependsOnMeaning: "El acento depende del sentido",
   closeLabel: "Cerrar",

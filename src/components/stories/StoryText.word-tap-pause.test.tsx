@@ -26,6 +26,7 @@ import type { StoryAudioSegment } from "@/lib/stories";
 const dict: StoryTextDict = {
   translationLoading: "…",
   translationError: "!",
+  translationOffline: "!",
   wordListenLabel: "Escuchar palabra",
   wordStressDependsOnMeaning: "El acento depende del sentido",
   closeLabel: "Cerrar",
