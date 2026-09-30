@@ -1,6 +1,6 @@
 # Страница приложения в Google Play — es-419 (заходы 7.246, 7.247)
 
-Дата: 29.09.2026. **Итоговые тексты (7.247) — те, что владелец вставил в Play Console:** краткое описание 73 знака, полное 2907 из 4000 (счётчик консоли совпал со счётом скрипта). Приложение: «RusoFácil: aprender ruso», `com.rusofacilapp.app`, закрытый тест Alpha, 1.0.12 (versionCode 13).
+Дата: 30.09.2026. **Итоговые тексты — те, что стоят в Play Console:** краткое описание 73 знака, полное **2936 из 4000** (7.247 — 2907; 29.09.2026 владелец заменил две фразы на варианты из аудита 7.251, раздел 1.4, и отправил на проверку; заход 7.252 привёл файл к этому тексту, счёт скриптом — 2936, совпал с консолью). Приложение: «RusoFácil: aprender ruso», `com.rusofacilapp.app`, закрытый тест Alpha, 1.0.13 (versionCode 14).
 
 Этот файл заменяет для Google Play таблицы и тексты из [`docs/store-listings.md`](store-listings.md): там старое имя «RusoFácilapp», неверные «Grupos», «синхронизация с веб-версией» и устаревшие числа. Ответы анкет консоли (Data safety, App access, декларации) — в [`docs/audit-7241-play-readiness.md`](audit-7241-play-readiness.md), раздел 3. Ответы на вопросы «Apply for production» — в [`docs/apply-production-answers.md`](apply-production-answers.md).
 
@@ -53,7 +53,7 @@
 
 ## 4. Полное описание (Full description, ≤ 4000)
 
-**2907 символов — совпадает со счётчиком Play Console «2907/4000».** Счёт скриптом, как считает Play: каждая буква, пробел, перевод строки и «•» — один символ; переводов строки в тексте 46 (без них было бы 2861, с переводами строк Windows — 2953). Это текст 7.246 (2895) плюс пять правок владельца (7.247): «y necesita orden:» → «y quiere ordenar lo que sabe:» (+12); «por gusto por» → «por amor a» (−3); «apagada, y la pausas» → «apagada y puedes pausarla» (+5); «crucigramas por nivel» → «crucigramas organizados por nivel» (+12); Premium — «abre todo el material, también el nivel C1.» вместо «…abre todo, también el nivel C1 y los juegos con estrella.» (−14). Итого +12. Ключевые фразы — по одному разу: «aprender ruso», «curso de ruso», «ruso para hispanohablantes». Слов капсом 0, эмодзи 0, «mejor», «n.º 1», «gratis», просьб об оценке — 0.
+**2936 символов — совпадает со счётчиком Play Console «2936/4000» (29.09.2026).** Две замены владельца 29.09 (аудит 7.251, раздел 1.4): «cada palabra con su audio» → «con audio para escuchar la pronunciación» (+15; озвучено 5770 из 5771 слов — аудит 7.251, поэтому «у каждого» было неправдой) и «Si respondes ejercicios sin conexión…» → «Si se corta la conexión mientras haces una lección…» (+14; в скачанной копии без сети упражнения не открываются — «Para los ejercicios necesitas internet», в очередь встают ответы урока, начатого с сетью). До них — 2907: Счёт скриптом, как считает Play: каждая буква, пробел, перевод строки и «•» — один символ; переводов строки в тексте 46 (без них было бы 2861, с переводами строк Windows — 2953). Это текст 7.246 (2895) плюс пять правок владельца (7.247): «y necesita orden:» → «y quiere ordenar lo que sabe:» (+12); «por gusto por» → «por amor a» (−3); «apagada, y la pausas» → «apagada y puedes pausarla» (+5); «crucigramas por nivel» → «crucigramas organizados por nivel» (+12); Premium — «abre todo el material, también el nivel C1.» вместо «…abre todo, también el nivel C1 y los juegos con estrella.» (−14). Итого +12. Ключевые фразы — по одному разу: «aprender ruso», «curso de ruso», «ruso para hispanohablantes». Слов капсом 0, эмодзи 0, «mejor», «n.º 1», «gratis», просьб об оценке — 0.
 
 ```text
 Aprende ruso con un curso pensado para hispanohablantes. Cada regla se explica en español y se compara con lo que ya sabes de tu idioma: dónde el ruso se parece al español y dónde no. Así entiendes el porqué, no solo la regla.
@@ -74,7 +74,7 @@ Lee y escucha ruso real
 • La narración sigue con la pantalla apagada y puedes pausarla desde la notificación.
 
 Vocabulario que se queda
-• 5771 tarjetas en 23 temas, cada palabra con su audio.
+• 5771 tarjetas en 23 temas, con audio para escuchar la pronunciación.
 • Varias formas de repasar: voltear la tarjeta, completar la frase, emparejar y escribir la palabra.
 • 771 expresiones y refranes rusos explicados en español.
 
@@ -83,7 +83,7 @@ Juegos de palabras
 
 Estudia sin conexión
 • Descarga lecciones y cuentos con su audio y ábrelos sin internet.
-• Si respondes ejercicios sin conexión, tus respuestas se guardan y se envían solas cuando vuelve la red.
+• Si se corta la conexión mientras haces una lección, tus respuestas se guardan y se envían solas cuando vuelve la red.
 
 Constancia sin presión
 • Recordatorio diario opcional: lo activas tú en Mi perfil → Ajustes.
@@ -115,11 +115,11 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 >
 > **Читай и слушай настоящий русский.** 325 рассказов и текстов с озвучкой — от народных сказок до адаптаций классики. Нажми на слово в тексте — увидишь перевод на испанский. Чтение продолжает звучать при выключенном экране, и его можно поставить на паузу из уведомления.
 >
-> **Слова, которые запоминаются.** 5771 карточка в 23 темах, у каждого слова есть аудио. Несколько способов повторять: перевернуть карточку, дополнить фразу, найти пару, написать слово. 771 русское выражение и пословица с объяснением на испанском.
+> **Слова, которые запоминаются.** 5771 карточка в 23 темах, с аудио, чтобы слушать произношение. Несколько способов повторять: перевернуть карточку, дополнить фразу, найти пару, написать слово. 771 русское выражение и пословица с объяснением на испанском.
 >
 > **Словесные игры.** 2015 «поисков слов» и 1262 кроссворда, разложенных по уровням — повторять слова играя.
 >
-> **Учись без интернета.** Скачай уроки и рассказы вместе со звуком и открывай без сети. Если отвечаешь на упражнения без сети, ответы сохраняются и отправляются сами, когда связь вернётся.
+> **Учись без интернета.** Скачай уроки и рассказы вместе со звуком и открывай без сети. Если связь оборвалась во время урока, ответы сохраняются и отправляются сами, когда она вернётся.
 >
 > **Регулярность без давления.** Необязательное ежедневное напоминание — включаешь сам в «Mi perfil → Ajustes». Серия дней, календарь занятий и значки, чтобы видеть свой прогресс.
 >
@@ -152,11 +152,11 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 
 Поле «Release notes» выпуска (Test and release → Production → Create new release → «Notas de la versión»), язык `<es-419>`.
 
-### Вариант А (7.246) — список перемен за закрытый тест, 481 символ
+### Вариант А (7.246) — список перемен за закрытый тест, 490 символов (7.252: строка про ответы без сети выровнена с полным описанием)
 
 ```text
 • Compra la suscripción o Premium dentro de la app con Google Play.
-• Descarga lecciones y cuentos con su audio y ábrelos sin conexión. Las respuestas sin red se envían solas al volver la conexión.
+• Descarga lecciones y cuentos con su audio y ábrelos sin conexión. Si se corta la red en una lección, las respuestas se envían al volver.
 • La notificación del audio desaparece al salir del cuento.
 • Tu sesión se mantiene aunque cierres la app.
 • El botón Atrás cierra primero el menú o la ventana abierta.
@@ -166,7 +166,7 @@ Tu progreso se guarda en tu cuenta. Puedes eliminar la cuenta desde la app, en M
 
 Перевод:
 > • Подписку или Premium можно купить внутри приложения через Google Play.
-> • Скачивай уроки и рассказы со звуком и открывай без сети. Ответы, данные без сети, отправятся сами, когда связь вернётся.
+> • Скачивай уроки и рассказы со звуком и открывай без сети. Если сеть оборвалась во время урока, ответы отправятся, когда она вернётся.
 > • Уведомление о звуке исчезает, когда выходишь из рассказа.
 > • Вход сохраняется, даже если закрыть приложение.
 > • Кнопка «Назад» сначала закрывает открытое меню или окно.
@@ -239,7 +239,7 @@ Primera versión pública de RusoFácil.
 |---|---|
 | App name | раздел 2 |
 | Short description | раздел 3, вариант 2 (он и вставлен, 73 знака) |
-| Full description | раздел 4, блок `text` целиком (вставлен, 2907/4000) |
+| Full description | раздел 4, блок `text` целиком (вставлен; 29.09 владелец заменил две фразы — 2936/4000, отправлено на проверку) |
 | App icon | `play-icon-512.png` |
 | Feature graphic | `play-feature-graphic-1024x500.jpg` |
 | Phone screenshots | `~/Desktop/rusofacil-store-assets/screenshots-es419/01.png` … `08.png` (раздел 6) |
