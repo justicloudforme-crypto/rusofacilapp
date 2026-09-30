@@ -1,6 +1,15 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
-import { CacheFirst, CacheableResponsePlugin, ExpirationPlugin, NetworkFirst, NetworkOnly, RangeRequestsPlugin, Serwist } from "serwist";
+import {
+  CacheFirst,
+  CacheableResponsePlugin,
+  ExpirationPlugin,
+  NetworkFirst,
+  NetworkOnly,
+  RangeRequestsPlugin,
+  Serwist,
+  createPartialResponse,
+} from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
 import { GENERATION_CACHE_NAME, GENERATION_KEY, buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
 import {
@@ -526,7 +535,28 @@ const serwist = new Serwist({
        */
       handler: async (options: Parameters<CacheFirst["handle"]>[0]) => {
         try {
-          return await audioStrategy.handle(options);
+          const response = await audioStrategy.handle(options);
+          /**
+           * НА ЗАПРОС КУСКА — ВСЕГДА КУСОК (206), ДОЛГ 362, ЗАХОД 7.252.
+           *
+           * `RangeRequestsPlugin` режет только ответ ИЗ КЕША. На промахе
+           * `CacheFirst` отдавал элементу `<audio>` сетевой ответ **200**
+           * целиком на запрос `Range: bytes=0-`, а следующий кусок уже из
+           * кеша — 206. Замер 30.09.2026 на живом сайте (Chromium 151 и
+           * WebView 133 эмулятора): после такой смеси «▶» с сохранённого
+           * места (35,7 %) — `MEDIA_ERR_NETWORK` на 17,06 с и тишина;
+           * локальная проба — «▶» с НУЛЯ со звуком (2,97 с вместо 26,2),
+           * ровно как на видео владельца с POCO. Дорожка в кеше — 206 и
+           * продолжение с места; поэтому сбой был только на ПЕРВОМ заходе.
+           *
+           * Без заголовка `Range` резать нельзя: `createPartialResponse`
+           * тогда отвечает 416.
+           */
+          const { request } = options;
+          if (response.status === 200 && request instanceof Request && request.headers.has("range")) {
+            return await createPartialResponse(request, response);
+          }
+          return response;
         } catch {
           return fetch(options.request);
         }
