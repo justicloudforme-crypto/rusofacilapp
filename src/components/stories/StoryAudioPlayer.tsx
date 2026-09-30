@@ -8,8 +8,15 @@
 // turn a prop-drilling exercise into a real risk of breaking that sync;
 // this only pulls the transport bar's markup out to style it on its own,
 // unchanged behavior.
-import { useRef } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { usePinnedLayer } from "@/lib/usePinnedLayer";
+import {
+  seekGestureStep,
+  seekIndexAt,
+  seekPointerOf,
+  type SeekGestureEvent,
+  type SeekGestureState,
+} from "@/lib/seek-gesture";
 
 export const READ_ALOUD_RATES = [0.8, 1, 1.2] as const;
 export type ReadAloudRate = (typeof READ_ALOUD_RATES)[number];
@@ -37,6 +44,8 @@ export default function StoryAudioPlayer({
   onPlayPause,
   onSeek,
   onRateChange,
+  audioRef,
+  sentenceOffsets,
 }: {
   dict: StoryAudioPlayerDict;
   navOffset: number;
@@ -53,31 +62,75 @@ export default function StoryAudioPlayer({
   onPlayPause: () => void;
   onSeek: (index: number) => void;
   onRateChange: (rate: ReadAloudRate) => void;
+  /** Элемент одной дорожки рассказа — по нему полоска идёт по времени. */
+  audioRef?: RefObject<HTMLAudioElement | null>;
+  /** Начала строк в дорожке, с — вместе с `audioRef`. */
+  sentenceOffsets?: number[] | null;
 }) {
   /**
-   * ПАЛЕЦ ПО ПОЛОСКЕ НЕ ПЕРЕМАТЫВАЕТ — ДОЛГ 362, ЗАХОД 7.253.
+   * ПЕРЕМОТКА ПО ПОЛОСКЕ — ЗАХОД 7.254 (решение владельца 30.09.2026:
+   * перемотка пальцем нужна; её отключение в 7.253 — не починка).
    *
-   * Поверх полоски лежит невидимый ползунок во всю её ширину высотой
-   * 24 px, и до этой правки любое движение пальца по нему перематывало
-   * рассказ по строкам. Видео владельца 30.09.2026 (POCO, 1.0.13): «▶» с
-   * 64 % — через 4 с полоска прыгает в ноль, рассказ дальше с начала.
-   * Журнал телефона той минуты: касание 12:56:23,161 длиной 950 мс с
-   * движением (рядом нажатия громкости — палец держащей руки), и за
-   * 90 мс страница отдала шторке позиции 35,4 → 27,4 → 24,0 → 17,1 →
-   * 7,6 → 2,6 → 0 с — начала строк 8…1 подряд, лесенкой назад. Такая
-   * лесенка за весь день в журнале одна. На эмуляторе мазок пальцем
-   * влево по полоске дал ту же лесенку и 42,28 → 0,13 с; прокрутка
-   * страницы, начатая на полоске, — на строку назад (42,27 → 35,45 с).
-   * Ни кеш, ни скачанная копия, ни версия WebView (133 и 153) на это не
-   * влияют — «с места» во всех восьми прогонах без касания полоски.
+   * Как было: поверх полоски лежал невидимый `<input type="range">`
+   * высотой 24 px, и его `onChange` перематывал на КАЖДОМ шаге движения
+   * пальца — прокрутка страницы, начатая на полоске, или палец держащей
+   * руки уводили рассказ лесенкой по строкам в ноль (журнал POCO 30.09,
+   * 12:56:23: касание x≈298, y≈609 CSS px — прямо на полоске). 7.253
+   * отключил палец совсем.
    *
-   * Решение: изменения ползунка от касания (палец, стилус) не
-   * перематывают. Перейти к строке — касанием самой строки (так и
-   * написано над плеером), ⏪/⏩ — на 15 с, ползунок в шторке — как был.
-   * Мышь и клавиатура двигают ползунок как раньше. Признак — тип
-   * указателя последнего нажатия; клавиша его сбрасывает.
+   * Как теперь: касанием полоски правит `seekGestureStep`
+   * (`src/lib/seek-gesture.ts`) — тап переходит в точку, перетаскивание
+   * двигает видимый бегунок и переходит ОДИН раз при отпускании, прокрутка
+   * с полоски, долгое неподвижное касание, второй палец и отмена жеста
+   * браузером не перематывают. Зона касания — 44 px по высоте,
+   * `touch-action: pan-y` отдаёт браузеру только вертикальную прокрутку.
+   * Мышь — переход сразу и на каждом шаге, как было. Клавиатура и TalkBack
+   * — через тот же `range`, но указатель до него больше не доходит
+   * (`pointer-events: none`).
+   *
+   * Полоска рассказа с одной дорожкой идёт по ВРЕМЕНИ — так же, как шкала
+   * в шторке. До 7.254 она шла по номеру строки ((строка + 1) / всего), и
+   * на видео 01.10 шторка показывала 24,9 из 89,2 с (28 %), а страница —
+   * 50 %.
    */
-  const touchDriven = useRef(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const gestureRef = useRef<SeekGestureState | null>(null);
+  const lastMouseSeek = useRef<number | null>(null);
+  const [preview, setPreview] = useState<number | null>(null);
+  const clock = useAudioClock(audioRef ?? null);
+  const timeline =
+    sentenceOffsets && sentenceOffsets.length === queueLength && clock.duration > 0
+      ? { offsets: sentenceOffsets, duration: clock.duration }
+      : null;
+  const shown = (() => {
+    if (!timeline) return progress;
+    if (clock.time > 0) return clock.time / timeline.duration;
+    if (readingQueueIndex !== null) return (timeline.offsets[readingQueueIndex] ?? 0) / timeline.duration;
+    return 0;
+  })();
+  const fill = Math.min(Math.max(preview ?? shown, 0), 1);
+
+  function fractionAt(clientX: number): number {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0) return 0;
+    return Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  }
+
+  function run(event: SeekGestureEvent) {
+    const step = seekGestureStep(gestureRef.current, event);
+    gestureRef.current = step.state;
+    setPreview(step.preview);
+    if (step.commit === null) return;
+    const index = seekIndexAt(step.commit, queueLength, timeline);
+    const pointer = step.state?.pointer ?? (event.type === "down" ? event.pointer : "touch");
+    // Мышь перематывает на каждом шаге — но только когда сменилась строка,
+    // как `onChange` прежнего ползунка.
+    if (pointer === "mouse") {
+      if (lastMouseSeek.current === index) return;
+      lastMouseSeek.current = index;
+    }
+    onSeek(index);
+  }
 
   /**
    * Плеер на ОБЩЕМ УЧЁТЕ прижатых слоёв (src/lib/pinned-layers.ts) — это
@@ -154,19 +207,51 @@ export default function StoryAudioPlayer({
         )}
 
         <div className="relative flex min-w-[60px] flex-1 items-center">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
+          <div ref={trackRef} className="relative h-1.5 w-full rounded-full bg-primary/10">
             <div
               data-rf-player="bar"
-              className="h-full rounded-full bg-premium-400 transition-[width] duration-300"
-              style={{ width: `${Math.min(progress * 100, 100)}%` }}
-            />
+              className={`relative h-full rounded-full bg-premium-400 ${preview === null ? "transition-[width] duration-300" : ""}`}
+              style={{ width: `${fill * 100}%` }}
+            >
+              {/* Видимый бегунок — на конце заливки, поэтому едет и в
+                  скачанной копии, где ширину ставит каркас. */}
+              <span
+                aria-hidden="true"
+                data-rf-player="thumb"
+                className={`absolute right-0 top-1/2 block h-3.5 w-3.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-premium-500 shadow ring-2 ring-background transition-transform ${
+                  preview === null ? "" : "scale-125"
+                }`}
+              />
+            </div>
           </div>
-          {/* Transparent range input on top of the visual bar above — reuses
-              its look while getting native drag/keyboard seek behavior for
-              free. React's onChange fires on every drag step (not just on
-              release), so the text highlight and scroll follow the thumb
-              live — the player -> text sync side of the two-way sync.
-              Палец ползунок НЕ двигает — см. `touchDriven` выше. */}
+          {/* Зона касания — 44 px по высоте поверх полоски, места в ряду не
+              занимает. Жест — `seekGestureStep`, см. комментарий выше. */}
+          <div
+            data-rf-player="seek-zone"
+            aria-hidden="true"
+            className="absolute inset-x-0 top-1/2 h-11 -translate-y-1/2 cursor-pointer touch-pan-y"
+            onPointerDown={(event) => {
+              if (queueLength === 0) return;
+              if (event.pointerType === "mouse" && event.button !== 0) return;
+              lastMouseSeek.current = null;
+              if (event.pointerType === "mouse") event.currentTarget.setPointerCapture?.(event.pointerId);
+              run({ type: "down", pointerId: event.pointerId, pointer: seekPointerOf(event.pointerType), isPrimary: event.isPrimary, x: event.clientX, y: event.clientY, t: event.timeStamp, fraction: fractionAt(event.clientX) });
+            }}
+            onPointerMove={(event) => {
+              if (!gestureRef.current) return;
+              const before = gestureRef.current.mode;
+              run({ type: "move", pointerId: event.pointerId, x: event.clientX, y: event.clientY, t: event.timeStamp, fraction: fractionAt(event.clientX) });
+              // Перетаскивание решено — палец держим за полоской, даже если
+              // он уйдёт с неё по вертикали.
+              if (before === "pending" && gestureRef.current?.mode === "drag") event.currentTarget.setPointerCapture?.(event.pointerId);
+            }}
+            onPointerUp={(event) => {
+              run({ type: "up", pointerId: event.pointerId, x: event.clientX, y: event.clientY, t: event.timeStamp, fraction: fractionAt(event.clientX) });
+            }}
+            onPointerCancel={(event) => run({ type: "cancel", pointerId: event.pointerId })}
+          />
+          {/* Ползунок — для клавиатуры и TalkBack; указатель до него не
+              доходит (`pointer-events-none`), касанием правит зона выше. */}
           <input
             type="range"
             min={0}
@@ -175,18 +260,9 @@ export default function StoryAudioPlayer({
             value={readingQueueIndex ?? 0}
             disabled={queueLength === 0}
             data-rf-player="seek"
-            onPointerDown={(event) => {
-              touchDriven.current = event.pointerType !== "mouse";
-            }}
-            onKeyDown={() => {
-              touchDriven.current = false;
-            }}
-            onChange={(event) => {
-              if (touchDriven.current) return;
-              onSeek(Number(event.target.value));
-            }}
+            onChange={(event) => onSeek(Number(event.target.value))}
             aria-label={dict.seekLabel}
-            className="absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 cursor-pointer opacity-0"
+            className="pointer-events-none absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 opacity-0"
           />
         </div>
       </div>
@@ -209,4 +285,29 @@ export default function StoryAudioPlayer({
       </div>
     </div>
   );
+}
+
+/**
+ * Время и длина одной дорожки — только для полоски плеера. Подписка
+ * здесь, а не в `StoryText`: перерисовывается одна полоска, а не весь
+ * текст рассказа на каждом `timeupdate`.
+ */
+function useAudioClock(audioRef: RefObject<HTMLAudioElement | null> | null): { time: number; duration: number } {
+  const [clock, setClock] = useState({ time: 0, duration: 0 });
+  useEffect(() => {
+    const audio = audioRef?.current;
+    if (!audio) return;
+    const read = () => {
+      const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+      const time = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+      setClock((prev) => (prev.time === time && prev.duration === duration ? prev : { time, duration }));
+    };
+    read();
+    const events = ["timeupdate", "seeked", "loadedmetadata", "durationchange", "emptied", "ended"] as const;
+    for (const name of events) audio.addEventListener(name, read);
+    return () => {
+      for (const name of events) audio.removeEventListener(name, read);
+    };
+  }, [audioRef]);
+  return clock;
 }
