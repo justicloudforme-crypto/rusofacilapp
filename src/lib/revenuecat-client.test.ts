@@ -64,6 +64,7 @@ function workingPlugin(offerings: unknown = offeringWith(["$rc_annual", "$rc_mon
     configure: async () => ({}),
     logIn: async () => ({ customerInfo: {} }),
     logOut: async () => ({}),
+    isAnonymous: async () => ({ isAnonymous: true }),
     getOfferings: async () => offerings,
     getCustomerInfo: async () => ({ customerInfo: {} }),
     restorePurchases: async () => ({ customerInfo: {} }),
@@ -352,5 +353,27 @@ describe("appUserID в самой настройке SDK (долг 305)", () => 
     const { loadStore } = await freshClient();
     await settle(loadStore("user-2"));
     expect(configure).toHaveBeenCalledWith({ apiKey: expect.any(String), appUserID: "user-2" });
+  });
+});
+
+describe("выход из магазина только для вошедшего (долг 367)", () => {
+  it("гость: SDK и так аноним — logOut не зовётся, журнал не пишет отказ", async () => {
+    const logOut = vi.fn(async () => ({}));
+    plugin = { ...workingPlugin(), logOut, isAnonymous: async () => ({ isAnonymous: true }) };
+    const { configureRevenueCat, logoutRevenueCat } = await freshClient();
+    await settle(configureRevenueCat(null));
+    await settle(logoutRevenueCat());
+    expect(logOut, "logOut позван для анонима — SDK отвечает отказом и пишет ошибку в журнал на каждой странице").not.toHaveBeenCalled();
+  });
+
+  // Позитивный контроль той же пробы: она умеет видеть вызов logOut, и
+  // защита общего телефона на месте — вышедший человек сбрасывается.
+  it("вышедший человек: SDK ещё под его идентификатором — logOut зовётся", async () => {
+    const logOut = vi.fn(async () => ({}));
+    plugin = { ...workingPlugin(), logOut, isAnonymous: async () => ({ isAnonymous: false }) };
+    const { configureRevenueCat, logoutRevenueCat } = await freshClient();
+    await settle(configureRevenueCat(null));
+    await settle(logoutRevenueCat());
+    expect(logOut).toHaveBeenCalledTimes(1);
   });
 });
