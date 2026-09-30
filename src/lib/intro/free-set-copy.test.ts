@@ -91,6 +91,59 @@ describe("the free-set sentence in the FAQ", () => {
   });
 });
 
+/**
+ * The list on /pricing — the third place that describes the free set, and
+ * the one the 7.251 audit caught (debt 368): «1 lección de nivel A1» and
+ * «Los primeros 5 crucigramas y sopas de letras de nivel A1» on the live
+ * page, while a guest run on prod on 30.09.2026 found lesson 1 open in each
+ * of the four levels and «Llevas 0 de 230 palabras disponibles» (10 per
+ * topic). Same two checks as the FAQ sentence, same control.
+ */
+function pricingFreeList(locale: "es" | "ru"): string {
+  const dict = JSON.parse(readFileSync(join(DICTIONARIES, `${locale}.json`), "utf8")) as {
+    pricing: { freeFeatures: string[] };
+  };
+  return dict.pricing.freeFeatures.join("\n");
+}
+
+describe("the free-set list on the pricing page (debt 368)", () => {
+  const free = introStatsFrom(null).free;
+
+  it("states every rule-decided free quantity, in both locales", () => {
+    for (const locale of ["es", "ru"] as const) {
+      const text = pricingFreeList(locale);
+      for (const value of [free.lessons, free.lessonsWithFreeGrammar, free.flashcards, free.idioms, free.wordGamePuzzles, free.media]) {
+        expect(numbersIn(text), `${locale}: missing ${value}`).toContain(value);
+      }
+    }
+  });
+
+  it("states no number that is not one of them", () => {
+    const allowed = new Set([...RULE_NUMBERS, free.idioms, free.flashcards]);
+    for (const locale of ["es", "ru"] as const) {
+      for (const value of numbersIn(pricingFreeList(locale))) {
+        expect(allowed, `${locale}: ${value} is a number nothing in the code decides`).toContain(value);
+      }
+    }
+  });
+
+  it("would have rejected the list that was actually shipped", () => {
+    const shipped = [
+      "1 lección de nivel A1",
+      "10 tarjetas de vocabulario",
+      "5 modismos",
+      "2 relatos — «Репка» y «Теремок»",
+      "Los primeros 5 crucigramas y sopas de letras de nivel A1",
+      "7 videos y canciones de la mediateca",
+    ].join("\n");
+    const numbers = numbersIn(shipped);
+    expect(numbers).not.toContain(free.lessons);
+    expect(numbers).not.toContain(free.wordGamePuzzles);
+    const allowed = new Set([...RULE_NUMBERS, free.idioms, free.flashcards]);
+    expect(numbers.some((n) => !allowed.has(n))).toBe(true);
+  });
+});
+
 describe("the deck without a database", () => {
   /** bank: null is not a fallback number, it is "we could not count" — the
    * slides must lose exactly the sentences that needed the bank and keep
