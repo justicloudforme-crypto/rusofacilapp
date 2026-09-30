@@ -13539,7 +13539,7 @@ C1-заголовок ловится, а A1-слова той же страни�
 
 * `npm run verify` (ветка сайта, Mac Studio): первый прогон остановил `check:e2e-live-probes` на новой пробе (размер списка ссылок не утверждён, бюджет 300 с меньше суммы ожиданий 303 с) — поправлено (`39cdf43`). Второй прогон: всё до `measure:build-memory` зелёное (юнит 219 файлов, 2418 passed, 1 skipped); замер памяти в полном прогоне — 7457 МБ (холодный кеш после двух контрольных сборок старого кода, ловушка 7.234), повтор — **4864 МБ** (запас 1536); хвост (`check:no-runtime-tts:bundles`, `check:no-dev-origin` + подсадка, `check:rendered:local`) — зелёный.
 * e2e локально (`chromium`): `story-touch-seek` 40/40 (`--repeat-each=10`), `story-downloaded-online-fresh` 3/3; рассказы, воркер, скачанное, без сети — 44 прошли, 6 пропущены (фикстура не сеется на этой машине, в CI идут).
-* CI сайта #457 — __CI__.
+* CI сайта #457 (`39cdf43`, run 36747400837) — **зелёный целиком**: «Lint, typecheck, build, unit tests», «Playwright E2E» (в том числе «Check the e2e suite actually ran in full» с полом 482 и «Rendered surface»), «Платные поверхности» 1/3–3/3. Превью Vercel — «Canceled by Ignored Build Step», так задумано: превью `vercel-ignore-build.mjs` не собирает никогда.
 * Эмулятор погашен; на нём снова отладочный APK на боевой сайт (`"url": "https://rusofacilapp.com"`), WebView 133 образа (`pm uninstall` обновления), плотность 440 (`wm density reset`). Локальный сервер остановлен. POCO — только `logcat -d`, `dumpsys`, `adb pull` WebView; нажатий не было.
 
 ## ЧАСТЬ 9 (7.254). ЧТО СНЯТЬ НА POCO ПОСЛЕ ВЫКАТА (видео)
