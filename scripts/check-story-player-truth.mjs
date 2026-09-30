@@ -37,6 +37,11 @@
  *      `onChange` (клавиатура, TalkBack) зовёт `onSeek`. Видео POCO 30.09
  *      (до 7.253): палец по полоске — лесенка 8 → 0; решение владельца
  *      30.09: перемотка пальцем нужна.
+ *   R9 (заход 7.254) полоска рассказа с одной дорожкой идёт по ВРЕМЕНИ,
+ *      как шкала шторки: `StoryText` отдаёт плееру `audioRef` и
+ *      `sentenceOffsets`, плеер рисует `clock.time / timeline.duration`.
+ *      Видео POCO 01.10: пауза на 24,9 с — шторка 28 %, страница ≈ 50 %
+ *      (номер строки + 1 из 14).
  *
  * Позитивный контроль — `--plant`: каждая подсадка ломает одно правило
  * на копии живого файла и обязана быть пойманной; живые файлы — 0 находок.
@@ -206,6 +211,12 @@ export async function violationsIn(src) {
     if (!/\bpointer-events-none\b/.test(range)) bad.push("R8: указатель доходит до ползунка — палец снова перематывает на каждом шаге, мимо правил жеста");
     if (!/onChange=\{\(?\w+\)?\s*=>\s*onSeek\(/.test(range) && !/onChange=\{[\s\S]*?onSeek\(/.test(range)) bad.push("R8: onChange ползунка не зовёт onSeek — клавиатура и TalkBack потеряли перемотку");
   }
+  // R9
+  if (!/audioRef=\{hasFullAudio \? audioRef : undefined\}/.test(text) || !/sentenceOffsets=\{hasFullAudio \? sentenceOffsets : null\}/.test(text)) {
+    bad.push("R9: StoryText не отдаёт плееру дорожку и начала строк — полоска снова по номеру строки и расходится со шторкой");
+  }
+  if (!/clock\.time\s*\/\s*timeline\.duration/.test(player)) bad.push("R9: полоска плеера не считает время / длину дорожки — расходится со шторкой");
+  if (!/width:\s*`\$\{fill \* 100\}%`/.test(player)) bad.push("R9: ширина полоски берётся не из времени дорожки");
   bad.push(...(await gestureViolations(src.gesture ?? "")));
   return bad;
 }
@@ -272,6 +283,9 @@ async function plant() {
   planted("player", "top-1/2 h-11 -translate-y-1/2 cursor-pointer", "top-1/2 h-6 -translate-y-1/2 cursor-pointer", "подсадка: зона касания 24 px, как у прежнего ползунка", "R8");
   planted("player", "onPointerCancel={(event) => run({ type: \"cancel\", pointerId: event.pointerId })}", "", "подсадка: отмену жеста браузером зона не слушает", "R8");
   planted("player", "onChange={(event) => onSeek(Number(event.target.value))}", "onChange={() => {}}", "подсадка: клавиатура не перематывает", "R8");
+  planted("text", "audioRef={hasFullAudio ? audioRef : undefined}", "", "подсадка: StoryText не отдаёт плееру дорожку (как до 7.254)", "R9");
+  planted("player", "if (clock.time > 0) return clock.time / timeline.duration;", "if (clock.time > 0) return progress;", "подсадка: полоска по номеру строки при игре", "R9");
+  planted("player", "style={{ width: `${fill * 100}%` }}", "style={{ width: `${Math.min(progress * 100, 100)}%` }}", "подсадка: НАСТОЯЩАЯ старая ширина полоски (до 7.254)", "R9");
   // Отрицательный: объяснение в комментарии — не нарушение.
   const commented = live.text.replace("function renderSentenceTokens(", '// src: "/icons/x.png" — так было до 7.240\nfunction renderSentenceTokens(');
   cases.push({ name: "отрицательный контроль: старый адрес в КОММЕНТАРИИ — молчание", ok: (await violationsIn({ ...live, text: commented })).length === 0 });
@@ -294,7 +308,7 @@ async function main() {
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте, перемотка по полоске — только намеренный тап или перетаскивание (контроль — --plant).");
+  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте, перемотка по полоске — только намеренный тап или перетаскивание, полоска по времени как шторка (контроль — --plant).");
   return 0;
 }
 
