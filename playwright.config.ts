@@ -135,9 +135,13 @@ export default defineConfig({
        * Chromium; правило то же заперто юнит-тестом
        * `StoryAudioPlayer.touch-seek.test.tsx` и сторожем
        * `check:story-player-truth` (R8).
+       *
+       * `story-downloaded-online-fresh.spec.ts` (заход 7.254) — тот же
+       * класс, что `offline-downloads*`: копия в кеше скачанного и
+       * `context.setOffline` в Chromium.
        */
       testIgnore:
-        /(story-word-offline|story-resume-cold-cache|story-touch-seek|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
+        /(story-word-offline|story-resume-cold-cache|story-touch-seek|story-downloaded-online-fresh|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
