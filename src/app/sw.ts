@@ -18,6 +18,7 @@ import {
   isAudioClipUrl,
   isOfflineContentPath,
   isOfflineSectionPath,
+  isOfflineShellMarkup,
   looksClosedForThisVisitor,
 } from "@/lib/sw-cache-policy";
 
@@ -310,6 +311,25 @@ const CLOSED_CONTENT_NOT_STORED: SerwistPlugin = {
   },
 };
 
+/**
+ * КАРКАС БЕЗ СЕТИ В КЕШ СТРАНИЦ НЕ КЛАДЁТСЯ — заход 7.255, долг 365.
+ *
+ * Без сети оболочка отвечает на запрос документа каркасом ответом 200 по
+ * исходному адресу, и для `NetworkFirst` это «сеть ответила». Раньше этот
+ * ответ ложился в кеш поверх сохранённой копии: «Cursos» без сети — 10
+ * прогонов из 10 «Esta página no se guardó», под `/es/courses` в кеше
+ * разделов — «Sin conexión» (разбор — `isOfflineShellMarkup`). Теперь
+ * каркас уходит странице как есть (он сам найдёт копию), а кеш не
+ * трогается. Стоит ПЕРВЫМ: правило закрытости стирает копию, а каркасу
+ * стирать нечего.
+ */
+const OFFLINE_SHELL_NOT_STORED: SerwistPlugin = {
+  cacheWillUpdate: async ({ response }) => {
+    if (!response) return null;
+    return isOfflineShellMarkup(await response.clone().text()) ? null : response;
+  },
+};
+
 const DOCUMENT_FALLBACK: SerwistPlugin = {
   handlerDidError: async ({ request }) => {
     if (self.navigator.onLine !== false && (await serverAnswers())) {
@@ -470,7 +490,7 @@ const serwist = new Serwist({
         sameOrigin && request.mode === "navigate" && isOfflineContentPath(url.pathname),
       handler: new NetworkFirst({
         cacheName: CACHES.content,
-        plugins: [expiration("content"), CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+        plugins: [expiration("content"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
       }),
     },
     /**
@@ -488,13 +508,13 @@ const serwist = new Serwist({
         sameOrigin && request.mode === "navigate" && isOfflineSectionPath(url.pathname),
       handler: new NetworkFirst({
         cacheName: CACHES.section,
-        plugins: [expiration("section"), CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+        plugins: [expiration("section"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
       }),
     },
     {
       matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
         sameOrigin && request.mode === "navigate" && !url.pathname.startsWith("/api/"),
-      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html"), DOCUMENT_FALLBACK] }),
+      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html"), OFFLINE_SHELL_NOT_STORED, DOCUMENT_FALLBACK] }),
     },
     /**
      * КЛИП ОЗВУЧКИ — СВОЙ КЕШ, ДОЛГ 77.
