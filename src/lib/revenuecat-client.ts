@@ -290,10 +290,19 @@ export async function loginRevenueCat(userId: string): Promise<CustomerInfo | un
 }
 
 /** Возврат к анониму при выходе: на общем телефоне следующий вошедший не
- *  должен унаследовать чужую покупку. */
+ *  должен унаследовать чужую покупку.
+ *
+ *  ТОЛЬКО ЕСЛИ В МАГАЗИНЕ СЕЙЧАС НЕ АНОНИМ — долг 367, заход 7.252. Узел
+ *  `NativeStoreIdentity` стоит в корневом макете и у гостя зовёт выход на
+ *  КАЖДОЙ странице; SDK на `logOut` анонима отвечает отказом и пишет две
+ *  строки ошибки в журнал. Замер на эмуляторе (гость, 9 загрузок и 2
+ *  перехода): 16 строк «Called logOut but the current user is
+ *  anonymous». Выход вошедшего не меняется: у него SDK не аноним. */
 export async function logoutRevenueCat(): Promise<void> {
   if (!Capacitor.isNativePlatform() || !configured) return;
   const { api } = await within(sdk(), "import");
+  const { isAnonymous } = await within(api.isAnonymous(), "login");
+  if (isAnonymous) return;
   await within(api.logOut(), "login");
 }
 
