@@ -16,6 +16,12 @@
 //      правки этого файла: рукописный список уже стоил проекту долга 184.
 //   3. `useBackLayer` действительно ставит слой (`pushBackLayer`) и
 //      снимает его в очистке эффекта.
+//   4. (заход 7.255, долг 366) «Назад» закрывает слой ЕГО ЖЕ `onClose` —
+//      значит, `onClose` любого слоя в `src/` не уводит со страницы
+//      (`router.push/replace`, `location.*`). Замер 7.251: лист «¡Puzle
+//      resuelto!» с `onClose={backToList}` — «Назад» закрыл лист и увёл
+//      с пазла на список. Перепись — по всем `onClose={…}` в `.tsx`,
+//      имя разворачивается в тело функции того же файла.
 // Поведение самого стека и обработчика (закрыть верхний, остановиться;
 // без слоёв — история, без истории — выход) держит юнит-тест
 // `src/components/NativeBackButtonHandler.test.tsx`.
@@ -52,6 +58,23 @@ export function judge(files) {
   }
   const hook = strip(files[HOOK] ?? "");
   if (!/return pushBackLayer\(/.test(hook)) bad.push(`${HOOK}: хук не ставит слой на учёт (или не снимает его в очистке эффекта)`);
+
+  const NAV = /router\.(push|replace)\(|location\.(assign|replace)\(|location\.href\s*=/;
+  for (const [file, raw] of Object.entries(files)) {
+    if (!file.endsWith(".tsx") || file.includes(".test.")) continue;
+    const src = strip(raw);
+    for (const m of src.matchAll(/<(\w+)\b[^<>]*?\bonClose=\{([^}]*)\}/g)) {
+      const expr = m[2].trim();
+      let body = expr;
+      if (/^\w+$/.test(expr)) {
+        const def = new RegExp(`function\\s+${expr}\\s*\\(|const\\s+${expr}\\s*=`).exec(src);
+        body = def ? src.slice(def.index, src.indexOf("}", def.index) + 1) : "";
+      }
+      if (NAV.test(body)) {
+        bad.push(`${file}: <${m[1]} onClose={${expr}}> уводит со страницы — «Назад» Android закрывает слой этим же onClose и уйдёт вместе с ним (долг 366)`);
+      }
+    }
+  }
 
   let layers = 0;
   for (const [file, raw] of Object.entries(files)) {
@@ -97,6 +120,8 @@ function main() {
       ["новое окно без учёта — перепись находит его сама", { ...files, "src/components/__plant__/NewSheet.tsx": 'export default function S(){return <div role="dialog" aria-modal="true" />}' }, "__plant__/NewSheet.tsx"],
       ["учёт закомментирован (класс 7.182)", edit("src/components/subscription/PaywallModal.tsx", /useBackLayer\(/, "// useBackLayer("), "PaywallModal.tsx"],
       ["хук перестал ставить слой", edit(HOOK, "return pushBackLayer(", "void pushBackLayer("), "хук не ставит"],
+      ["НАСТОЯЩИЙ старый лист итога пазла: onClose={backToList} (как до 7.255)", edit("src/components/word-games/WordGamePlayer.tsx", "onClose={closeResult}", "onClose={backToList}"), "WordGamePlayer.tsx: <GameResultPanel onClose={backToList}>"],
+      ["закрытие стрелкой уводит со страницы", edit("src/components/profile/DownloadsPanel.tsx", "onClose={() => setConfirmAll(false)}", "onClose={() => router.push(\"/es\")}"), "DownloadsPanel.tsx"],
     ];
     let caught = 0;
     for (const [name, patched, expect] of cases) {

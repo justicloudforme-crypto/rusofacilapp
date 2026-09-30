@@ -67,6 +67,8 @@ export default function WordGamePlayer({
   const router = useRouter();
   const [usedHint, setUsedHint] = useState(false);
   const [solved, setSolved] = useState(false);
+  // Лист итога закрыт (✕, фон, «Назад» Android) — пазл остаётся на экране.
+  const [resultClosed, setResultClosed] = useState(false);
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [roundTimeSeconds, setRoundTimeSeconds] = useState(0);
   // Bumped on "play again" and used as CrosswordBoard/WordSearchBoard's
@@ -139,6 +141,7 @@ export default function WordGamePlayer({
     setAttempt((a) => a + 1);
     setUsedHint(false);
     setSolved(false);
+    setResultClosed(false);
     setStartedAt(Date.now());
     setErrorCount(puzzle.type === "CROSSWORD" ? 0 : undefined);
     completeReported.current = false;
@@ -146,6 +149,14 @@ export default function WordGamePlayer({
 
   function backToList() {
     router.push(`/${lang}/word-games`);
+  }
+
+  // «Закрыть» лист итога — только закрыть. До 7.255 здесь стоял
+  // `backToList`, и «Назад» Android (он закрывает верхний слой его же
+  // `onClose`) уводил со страницы пазла на список (долг 366). К списку
+  // ведёт кнопка листа «Volver a los juegos de palabras».
+  function closeResult() {
+    setResultClosed(true);
   }
 
   return (
@@ -174,8 +185,8 @@ export default function WordGamePlayer({
       )}
 
       <GameResultPanel
-        open={solved}
-        onClose={backToList}
+        open={solved && !resultClosed}
+        onClose={closeResult}
         title={dict.solvedTitle}
         avatarId="matryoshka_proud"
         timeSeconds={roundTimeSeconds}

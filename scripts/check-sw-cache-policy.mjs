@@ -57,6 +57,7 @@ import { pathToFileURL } from "node:url";
 const PLANT = process.argv.slice(2).includes("--plant");
 const POLICY = "src/lib/sw-cache-policy.ts";
 const SW = "src/app/sw.ts";
+const SHELL = "public/offline.html";
 // «section» добавлен 25.09.2026 (7.230, строка 309): корни разделов
 // получили свой кеш — без него вкладки каркаса без сети вели в пустоту.
 const KEYS = ["html", "rsc", "rscPrefetch", "others", "content", "section", "audio"];
@@ -65,7 +66,7 @@ export function stripComments(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^[ \t]*\/\/.*$/gm, " ");
 }
 
-export function violations(policyRaw, swRaw) {
+export function violations(policyRaw, swRaw, shell = null) {
   const bad = [];
   const policy = stripComments(policyRaw);
   const sw = stripComments(swRaw);
@@ -224,6 +225,36 @@ export function violations(policyRaw, swRaw) {
   if (!/matchPrecache\(OFFLINE_SHELL_URL\)/.test(sw)) {
     bad.push(`${SW}: каркас без сети берётся не из precache — без сети взять его больше неоткуда`);
   }
+
+  /**
+   * 17) КАРКАС БЕЗ СЕТИ В КЕШ СТРАНИЦ НЕ КЛАДЁТСЯ — заход 7.255, долг 365.
+   *
+   *    Без сети оболочка отвечает на запрос документа каркасом ответом 200
+   *    по исходному адресу, и `NetworkFirst` клал его поверх сохранённой
+   *    копии. Замер на эмуляторе (боевой APK): «Cursos» без сети — 10 из
+   *    10 «Esta página no se guardó», под `/es/courses` в кеше разделов —
+   *    «Sin conexión», запись с заголовками ответа (пишет воркер). Правило:
+   *    признак каркаса объявлен в политике по `<body data-offline-shell="1">`
+   *    и есть у настоящего каркаса; плагин с ним стоит у ВСЕХ трёх маршрутов
+   *    документов и ПЕРВЫМ среди `cacheWillUpdate` (правило закрытости
+   *    стирает копию, а каркасу стирать нечего).
+   */
+  if (!/export function isOfflineShellMarkup\(/.test(policy) || !/data-offline-shell="1"/.test(policy)) {
+    bad.push(`${POLICY}: признака каркаса без сети нет — каркас «Sin conexión» снова ляжет в кеш поверх сохранённой копии (долг 365)`);
+  }
+  if (shell !== null && !/<body\b[^>]*\bdata-offline-shell="1"/i.test(shell)) {
+    bad.push(`${SHELL}: у каркаса нет <body data-offline-shell="1"> — воркер его не узнает (долг 365)`);
+  }
+  const shellPlugin = /const OFFLINE_SHELL_NOT_STORED: SerwistPlugin = \{[\s\S]*?\n\};/.exec(sw);
+  if (!shellPlugin || !/cacheWillUpdate/.test(shellPlugin[0]) || !/isOfflineShellMarkup\(.*\)\s*\?\s*null\s*:\s*response/.test(shellPlugin[0])) {
+    bad.push(`${SW}: плагина «каркас в кеш не кладётся» нет или он пропускает каркас — копия раздела снова затрётся «Sin conexión» (долг 365)`);
+  }
+  for (const key of ["content", "section", "html"]) {
+    const route = new RegExp(`plugins: \\[expiration\\("${key}"\\)([^\\]]*)\\]`).exec(sw);
+    if (!route || !/^,\s*OFFLINE_SHELL_NOT_STORED\b/.test(route[1])) {
+      bad.push(`${SW}: маршрут документов «${key}» не отсеивает каркас без сети первым — каркас ляжет в кеш поверх копии (долг 365)`);
+    }
+  }
   return bad;
 }
 
@@ -379,6 +410,12 @@ function plant() {
     sw,
     "судится не по подписи страницы",
   );
+  add("подсадка: у маршрута разделов нет отсева каркаса (как до 7.255, долг 365)", policy, sw.replace('plugins: [expiration("section"), OFFLINE_SHELL_NOT_STORED, ', 'plugins: [expiration("section"), '), "маршрут документов «section»");
+  add("подсадка: у общего маршрута документов нет отсева каркаса", policy, sw.replace('plugins: [expiration("html"), OFFLINE_SHELL_NOT_STORED, ', 'plugins: [expiration("html"), '), "маршрут документов «html»");
+  add("подсадка: отсев каркаса встал ПОСЛЕ правила закрытости", policy, sw.replace('plugins: [expiration("content"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, ', 'plugins: [expiration("content"), CLOSED_CONTENT_NOT_STORED, OFFLINE_SHELL_NOT_STORED, '), "маршрут документов «content»");
+  add("подсадка: плагин пропускает каркас в кеш", policy, sw.replace("return isOfflineShellMarkup(await response.clone().text()) ? null : response;", "return response;"), "пропускает каркас");
+  add("подсадка: признак каркаса судится по заголовку, а не по <body>", policy.replace('const OFFLINE_SHELL_BODY = /<body\\b[^>]*\\bdata-offline-shell="1"/i;', "const OFFLINE_SHELL_BODY = /Sin conexión/;"), sw, "признака каркаса без сети нет");
+  cases.push({ name: "подсадка: у каркаса сняли <body data-offline-shell>", ok: violations(policy, sw, read(SHELL).replace('<body data-offline-shell="1">', "<body>")).some((x) => x.includes("воркер его не узнает")) });
   add(
     "подсадка: чужой источник снова узнаётся подстрокой",
     policy.replace("url.hostname.endsWith(AUDIO_HOST_SUFFIX)", "url.hostname.includes(AUDIO_HOST_SUFFIX)"),
@@ -396,14 +433,14 @@ function plant() {
 }
 
 function gate() {
-  const bad = violations(read(POLICY), read(SW));
+  const bad = violations(read(POLICY), read(SW), read(SHELL));
   if (bad.length) {
     console.error(`check:sw-cache-policy — ОТКАЗ, нарушений ${bad.length}:`);
     for (const b of bad) console.error(`  ${b}`);
     process.exitCode = 1;
     return;
   }
-  console.log(`check:sw-cache-policy — 16 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77, 278, 362)`);
+  console.log(`check:sw-cache-policy — 17 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77, 278, 362, 365)`);
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -141,7 +141,7 @@ export default defineConfig({
        * `context.setOffline` в Chromium.
        */
       testIgnore:
-        /(story-word-offline|story-resume-cold-cache|story-touch-seek|story-downloaded-online-fresh|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
+        /(story-word-offline|story-resume-cold-cache|story-touch-seek|story-preplay-skip|story-downloaded-online-fresh|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
