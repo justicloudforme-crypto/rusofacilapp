@@ -8,6 +8,7 @@
 // turn a prop-drilling exercise into a real risk of breaking that sync;
 // this only pulls the transport bar's markup out to style it on its own,
 // unchanged behavior.
+import { useRef } from "react";
 import { usePinnedLayer } from "@/lib/usePinnedLayer";
 
 export const READ_ALOUD_RATES = [0.8, 1, 1.2] as const;
@@ -53,6 +54,31 @@ export default function StoryAudioPlayer({
   onSeek: (index: number) => void;
   onRateChange: (rate: ReadAloudRate) => void;
 }) {
+  /**
+   * ПАЛЕЦ ПО ПОЛОСКЕ НЕ ПЕРЕМАТЫВАЕТ — ДОЛГ 362, ЗАХОД 7.253.
+   *
+   * Поверх полоски лежит невидимый ползунок во всю её ширину высотой
+   * 24 px, и до этой правки любое движение пальца по нему перематывало
+   * рассказ по строкам. Видео владельца 30.09.2026 (POCO, 1.0.13): «▶» с
+   * 64 % — через 4 с полоска прыгает в ноль, рассказ дальше с начала.
+   * Журнал телефона той минуты: касание 12:56:23,161 длиной 950 мс с
+   * движением (рядом нажатия громкости — палец держащей руки), и за
+   * 90 мс страница отдала шторке позиции 35,4 → 27,4 → 24,0 → 17,1 →
+   * 7,6 → 2,6 → 0 с — начала строк 8…1 подряд, лесенкой назад. Такая
+   * лесенка за весь день в журнале одна. На эмуляторе мазок пальцем
+   * влево по полоске дал ту же лесенку и 42,28 → 0,13 с; прокрутка
+   * страницы, начатая на полоске, — на строку назад (42,27 → 35,45 с).
+   * Ни кеш, ни скачанная копия, ни версия WebView (133 и 153) на это не
+   * влияют — «с места» во всех восьми прогонах без касания полоски.
+   *
+   * Решение: изменения ползунка от касания (палец, стилус) не
+   * перематывают. Перейти к строке — касанием самой строки (так и
+   * написано над плеером), ⏪/⏩ — на 15 с, ползунок в шторке — как был.
+   * Мышь и клавиатура двигают ползунок как раньше. Признак — тип
+   * указателя последнего нажатия; клавиша его сбрасывает.
+   */
+  const touchDriven = useRef(false);
+
   /**
    * Плеер на ОБЩЕМ УЧЁТЕ прижатых слоёв (src/lib/pinned-layers.ts) — это
    * и есть закрытие долга 159: карточка перевода слова накрывала ряд
@@ -136,10 +162,11 @@ export default function StoryAudioPlayer({
             />
           </div>
           {/* Transparent range input on top of the visual bar above — reuses
-              its look while getting native drag/keyboard/touch seek behavior
-              for free. React's onChange fires on every drag step (not just
-              on release), so the text highlight and scroll follow the thumb
-              live — the player -> text sync side of the two-way sync. */}
+              its look while getting native drag/keyboard seek behavior for
+              free. React's onChange fires on every drag step (not just on
+              release), so the text highlight and scroll follow the thumb
+              live — the player -> text sync side of the two-way sync.
+              Палец ползунок НЕ двигает — см. `touchDriven` выше. */}
           <input
             type="range"
             min={0}
@@ -147,7 +174,17 @@ export default function StoryAudioPlayer({
             step={1}
             value={readingQueueIndex ?? 0}
             disabled={queueLength === 0}
-            onChange={(event) => onSeek(Number(event.target.value))}
+            data-rf-player="seek"
+            onPointerDown={(event) => {
+              touchDriven.current = event.pointerType !== "mouse";
+            }}
+            onKeyDown={() => {
+              touchDriven.current = false;
+            }}
+            onChange={(event) => {
+              if (touchDriven.current) return;
+              onSeek(Number(event.target.value));
+            }}
             aria-label={dict.seekLabel}
             className="absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 cursor-pointer opacity-0"
           />

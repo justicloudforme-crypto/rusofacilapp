@@ -129,9 +129,15 @@ export default defineConfig({
        * вместо «e2e:Жили-были» пришёл настоящий перевод «Érase una vez»;
        * в `chromium` оба теста зелёные. Поведение без сети там же заперто
        * юнит-тестом `StoryText.word-offline.test.tsx`.
+       *
+       * `story-touch-seek.spec.ts` (заход 7.253, долг 362) — сенсорный
+       * ввод идёт через протокол DevTools, который есть только у
+       * Chromium; правило то же заперто юнит-тестом
+       * `StoryAudioPlayer.touch-seek.test.tsx` и сторожем
+       * `check:story-player-truth` (R8).
        */
       testIgnore:
-        /(story-word-offline|story-resume-cold-cache|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
+        /(story-word-offline|story-resume-cold-cache|story-touch-seek|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
