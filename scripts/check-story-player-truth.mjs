@@ -23,7 +23,12 @@
  *   R6 кнопка и шкала плеера несут `data-rf-player` (по ним плеер
  *      оживает в скачанной копии, долг 311);
  *   R7 каждый `data-rf-player`, который ищет каркас копии, есть у плеера,
- *      и подписи кнопки каркас берёт из тех же атрибутов.
+ *      и подписи кнопки каркас берёт из тех же атрибутов;
+ *   R8 (заход 7.253, долг 362) невидимый ползунок поверх полоски не
+ *      перематывает от касания: `onPointerDown` помечает касание
+ *      (`pointerType !== "mouse"`), `onChange` при такой метке выходит
+ *      ДО `onSeek`, `onKeyDown` метку снимает. Видео POCO 30.09: палец по
+ *      полоске — лесенка назад 8 → 0 и рассказ с начала.
  *
  * Позитивный контроль — `--plant`: каждая подсадка ломает одно правило
  * на копии живого файла и обязана быть пойманной; живые файлы — 0 находок.
@@ -123,6 +128,24 @@ export function violationsIn(src) {
   for (const attr of ["data-rf-play-label", "data-rf-pause-label", "data-rf-story-title"]) {
     if (!(src.shell ?? "").includes(attr)) bad.push(`R7: каркас не читает ${attr}`);
   }
+  // R8
+  const rangeAt = player.search(/<input\s+type="range"/);
+  if (rangeAt < 0) bad.push("R8: у плеера нет ползунка type=\"range\" — сторож ослеп, а не доволен");
+  else {
+    const range = player.slice(rangeAt, player.indexOf("/>", rangeAt) + 2);
+    const mark = /onPointerDown=\{\(?(\w+)\)?\s*=>\s*\{\s*(\w+)\.current\s*=\s*\1\.pointerType\s*!==\s*"mouse"/.exec(range);
+    if (!mark) bad.push("R8: ползунок не помечает касание по pointerType — палец по полоске снова перематывает рассказ");
+    else {
+      const ref = mark[2];
+      const change = /onChange=\{\(?\w+\)?\s*=>\s*\{([\s\S]*?)\}\}/.exec(range);
+      const body = change ? change[1] : "";
+      const guard = body.search(new RegExp(`if\\s*\\(\\s*${ref}\\.current\\s*\\)\\s*return`));
+      const seek = body.search(/onSeek\s*\(/);
+      if (!change || seek < 0) bad.push("R8: onChange ползунка не зовёт onSeek — мышь и клавиатура потеряли перемотку");
+      else if (guard < 0 || guard > seek) bad.push("R8: onChange ползунка перематывает и от касания — лесенка 8 → 0 с видео POCO вернётся");
+      if (!new RegExp(`onKeyDown=\\{[^}]*${ref}\\.current\\s*=\\s*false`).test(range)) bad.push("R8: клавиша не снимает метку касания — после пальца клавиатура не перематывает");
+    }
+  }
   return bad;
 }
 
@@ -160,6 +183,15 @@ function plant() {
   planted("player", 'data-rf-player="play"', "", "подсадка: у кнопки плеера нет признака для копии", "R6");
   planted("player", 'data-rf-player="back"', 'data-rf-player="rewind"', "подсадка: плеер переименовал «назад», каркас ищет старое имя", "R7");
   planted("shell", 'root.querySelector(\'[data-rf-player="bar"]\')', 'root.querySelector(\'[data-rf-player="progress"]\')', "подсадка: каркас ищет шкалу под именем, которого у плеера нет", "R7");
+  planted(
+    "player",
+    /onPointerDown=\{[\s\S]*?onChange=\{\(event\) => \{[\s\S]*?\}\}/,
+    "onChange={(event) => onSeek(Number(event.target.value))}",
+    "подсадка: НАСТОЯЩИЙ старый ползунок (до 7.253, перемотка от пальца)",
+    "R8",
+  );
+  planted("player", "if (touchDriven.current) return;", "", "подсадка: метку касания ставят, но onChange её не спрашивает", "R8");
+  planted("player", "touchDriven.current = false;", "", "подсадка: клавиша не снимает метку касания", "R8");
   // Отрицательный: объяснение в комментарии — не нарушение.
   const commented = live.text.replace("function renderSentenceTokens(", '// src: "/icons/x.png" — так было до 7.240\nfunction renderSentenceTokens(');
   cases.push({ name: "отрицательный контроль: старый адрес в КОММЕНТАРИИ — молчание", ok: violationsIn({ ...live, text: commented }).length === 0 });
@@ -181,7 +213,7 @@ function main() {
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте (контроль — --plant).");
+  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте, палец по полоске не перематывает (контроль — --plant).");
   return 0;
 }
 
