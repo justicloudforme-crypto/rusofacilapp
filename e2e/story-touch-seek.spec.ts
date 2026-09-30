@@ -5,29 +5,26 @@ import { loginWithSubscription } from "./helpers/auth";
 import { serveClipLocally } from "./helpers/audio-clip-origin";
 
 /**
- * «▶ С МЕСТА, А ЧЕРЕЗ 4 С — С НУЛЯ» — ЗАХОД 7.253, ДОЛГ 362 (открыт снова).
+ * ПЕРЕМОТКА ПАЛЬЦЕМ ПО ПОЛОСКЕ ПЛЕЕРА — ЗАХОДЫ 7.253 И 7.254.
  *
- * ЧТО ВИДЕЛ ВЛАДЕЛЕЦ (POCO, 1.0.13, 30.09.2026, после выката #453).
- * «Репка» с 64 %, «▶» — звук сразу, ≈4 с полоска стоит, потом прыгает почти
- * в ноль, рассказ дальше с начала. Второй заход — с места.
+ * 7.253 (долг 362): невидимый `<input type="range">` поверх полоски
+ * перематывал на КАЖДОМ шаге движения пальца — журнал POCO 30.09, 12:56:23:
+ * касание x≈298, y≈609 CSS px прямо на полоске и за 90 мс лесенка позиций
+ * по началам строк 8 → 0. 7.253 отключил палец совсем; владелец 30.09:
+ * перемотка пальцем нужна.
  *
- * ПРИЧИНА ИЗМЕРЕНА. Журнал телефона той минуты: касание экрана длиной
- * 950 мс с движением (рядом — нажатия громкости держащей рукой), и за 90 мс
- * страница отдала шторке позиции 35,4 → 27,4 → 24,0 → 17,1 → 7,6 → 2,6 → 0 с
- * — начала строк лесенкой назад. Это невидимый `<input type="range">`
- * поверх полоски плеера: `onChange` на каждом шаге движения пальца. Кеш
- * клипов, скачанная копия и версия WebView (133 и 153 с телефона) ни при
- * чём: на эмуляторе без касания — «с места» во всех восьми прогонах, а мазок
- * пальцем по полоске дал ту же лесенку и 42,28 → 0,13 с.
+ * 7.254: тап — переход в точку; перетаскивание — бегунок за пальцем и ОДИН
+ * переход при отпускании; прокрутка страницы, начатая на полоске, — не
+ * перемотка. Пробы — настоящими сенсорными событиями протокола DevTools
+ * (те же, что шлёт экран телефона), по геометрии полоски, а не по
+ * разметке: одна и та же проба гоняется на коде до 7.253, на 7.253 и
+ * после.
  *
- * ПРОБА: рассказ играет с середины, по полоске проводят ПАЛЬЦЕМ (сенсорные
- * события протокола DevTools — те же, что шлёт экран телефона) от бегунка к
- * левому краю. Требование — дорожка идёт дальше того места, где была.
- *
- * ПОЗИТИВНЫЙ КОНТРОЛЬ — второй тест: тот же путь МЫШЬЮ обязан перемотать в
- * начало. Без него «не перемотал» читалось бы и тогда, когда движение просто
- * не попало по ползунку. На коде до правки первый тест падает (дорожка
- * уходит в первые секунды).
+ * Что ловит какая проба. «Прокрутка» — код до 7.253 (перематывал на
+ * строку назад). «Перетаскивание» — код до 7.253 (переход посреди жеста)
+ * и 7.253 (перехода нет вовсе). «Тап» — 7.253. Контроль мышью проходит на
+ * всех трёх: без него «не перемотал» читалось бы и тогда, когда жест не
+ * попал по полоске.
  *
  * ТОЛЬКО CHROMIUM — сенсорный ввод идёт через протокол DevTools; из
  * `mobile-iphone` файл снят в `playwright.config.ts`.
@@ -37,7 +34,7 @@ const STORY_TITLE = "День стирки";
 /** Начало шестой строки «Дня стирки» — глубже первых секунд. */
 const START_OFFSET = 26.208;
 
-async function openPlaying(page: Page, context: BrowserContext): Promise<{ before: number; from: { x: number; y: number }; to: { x: number; y: number } }> {
+async function openPlaying(page: Page, context: BrowserContext) {
   // Лишний заголовок стенда делает запрос к чужому источнику клипов
   // непростым — снимается по той же причине, что в `sw-audio-replay.spec.ts`.
   await context.setExtraHTTPHeaders({});
@@ -81,50 +78,89 @@ async function openPlaying(page: Page, context: BrowserContext): Promise<{ befor
       throw new Error(`дорожка не заиграла с шестой строки: ${JSON.stringify(state)}`);
     });
   const geo = await page.evaluate(() => {
-    const range = document.querySelector<HTMLInputElement>('input[type="range"]')!;
-    const r = range.getBoundingClientRect();
-    const share = Number(range.value) / Math.max(1, Number(range.max));
-    return { x: r.x + r.width * share, y: r.y + r.height / 2, left: r.x + 2, t: document.querySelector("audio")!.currentTime };
+    const bar = document.querySelector<HTMLElement>('[data-rf-player="bar"]')!;
+    const track = bar.parentElement!.getBoundingClientRect();
+    const fill = bar.getBoundingClientRect().width;
+    const audio = document.querySelector("audio")!;
+    return { left: track.x, width: track.width, y: track.y + track.height / 2, thumb: track.x + fill, t: audio.currentTime, duration: audio.duration };
   });
   expect(geo.t, "дорожка не встала на шестую строку — проба не отличит «с места» от «с нуля»").toBeGreaterThan(20);
-  return { before: geo.t, from: { x: geo.x, y: geo.y }, to: { x: geo.left, y: geo.y + 8 } };
+  return geo;
 }
 
 const currentTime = (page: Page) => page.evaluate(() => document.querySelector("audio")!.currentTime);
 
-test("палец по полоске плеера не перематывает рассказ в начало", async ({ page, context }) => {
-  test.setTimeout(90_000);
-  await serveClipLocally(context);
-  const { before, from, to } = await openPlaying(page, context);
+const barWidth = (page: Page) => page.evaluate(() => document.querySelector<HTMLElement>('[data-rf-player="bar"]')!.getBoundingClientRect().width);
 
+async function touch(context: BrowserContext, page: Page) {
   const cdp = await context.newCDPSession(page);
   await cdp.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: from.x, y: from.y }] });
-  for (let i = 1; i <= 8; i++) {
-    const k = i / 8;
-    await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [{ x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k }],
-    });
-  }
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await page.waitForTimeout(1000);
+  return {
+    start: (x: number, y: number) => cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y, id: 1 }] }),
+    move: (x: number, y: number) => cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y, id: 1 }] }),
+    end: () => cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }),
+  };
+}
 
+test("прокрутка страницы, начатая на полоске, не перематывает", async ({ page, context }) => {
+  test.setTimeout(90_000);
+  await serveClipLocally(context);
+  const geo = await openPlaying(page, context);
+  const finger = await touch(context, page);
+  const x = geo.left + geo.width * 0.3;
+  await finger.start(x, geo.y);
+  for (let i = 1; i <= 6; i++) await finger.move(x + i, geo.y - i * 12);
+  await finger.end();
+  await page.waitForTimeout(1000);
   const after = await currentTime(page);
-  expect(after, `палец по полоске перемотал рассказ: было ${before.toFixed(2)} с, стало ${after.toFixed(2)} с`).toBeGreaterThan(before);
+  expect(after, `прокрутка с полоски перемотала рассказ: было ${geo.t.toFixed(2)} с, стало ${after.toFixed(2)} с`).toBeGreaterThan(geo.t);
+});
+
+test("перетаскивание пальцем: бегунок за пальцем, переход один — при отпускании", async ({ page, context }) => {
+  test.setTimeout(90_000);
+  await serveClipLocally(context);
+  const geo = await openPlaying(page, context);
+  const finger = await touch(context, page);
+  const to = geo.left + 2;
+  await finger.start(geo.thumb, geo.y);
+  for (let i = 1; i <= 8; i++) await finger.move(geo.thumb + ((to - geo.thumb) * i) / 8, geo.y + (i % 2));
+  await page.waitForTimeout(300);
+  const midTime = await currentTime(page);
+  const midWidth = await barWidth(page);
+  expect(midTime, `перемотка посреди жеста (палец ещё на полоске): было ${geo.t.toFixed(2)} с, стало ${midTime.toFixed(2)} с`).toBeGreaterThan(geo.t);
+  expect(midWidth, "бегунок не едет за пальцем").toBeLessThan(10);
+  await finger.end();
+  await page.waitForTimeout(1000);
+  const after = await currentTime(page);
+  expect(after, `палец отпущен у начала полоски, а дорожка на ${after.toFixed(2)} с (было ${geo.t.toFixed(2)})`).toBeLessThan(5);
+});
+
+test("тап пальцем по полоске — переход в эту точку", async ({ page, context }) => {
+  test.setTimeout(90_000);
+  await serveClipLocally(context);
+  const geo = await openPlaying(page, context);
+  const finger = await touch(context, page);
+  const target = 0.8;
+  await finger.start(geo.left + geo.width * target, geo.y);
+  await finger.end();
+  await page.waitForTimeout(1000);
+  const after = await currentTime(page);
+  // Переход — к началу строки, которая звучит в точке тапа: чуть левее.
+  expect(after, `тап на ${target * 100} % полоски, а дорожка на ${after.toFixed(2)} из ${geo.duration.toFixed(2)} с`).toBeGreaterThan(geo.duration * 0.6);
+  expect(after).toBeLessThan(geo.duration * target + 2);
 });
 
 test("контроль: тот же путь мышью перематывает в начало", async ({ page, context }) => {
   test.setTimeout(90_000);
   await serveClipLocally(context);
-  const { before, from, to } = await openPlaying(page, context);
+  const geo = await openPlaying(page, context);
 
-  await page.mouse.move(from.x, from.y);
+  await page.mouse.move(geo.thumb, geo.y);
   await page.mouse.down();
-  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await page.mouse.move(geo.left + 2, geo.y, { steps: 8 });
   await page.mouse.up();
   await page.waitForTimeout(1000);
 
   const after = await currentTime(page);
-  expect(after, `КОНТРОЛЬ НЕ ПОЙМАН: мышь провела по ползунку к началу, а дорожка осталась на ${after.toFixed(2)} с (было ${before.toFixed(2)})`).toBeLessThan(before - 15);
+  expect(after, `КОНТРОЛЬ НЕ ПОЙМАН: мышь провела по полоске к началу, а дорожка осталась на ${after.toFixed(2)} с (было ${geo.t.toFixed(2)})`).toBeLessThan(geo.t - 15);
 });
