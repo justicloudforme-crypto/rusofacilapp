@@ -199,6 +199,28 @@ export function looksClosedForThisVisitor(html: string): boolean {
 }
 
 /**
+ * КАРКАС «SIN CONEXIÓN» — НЕ СТРАНИЦА (заход 7.255, долг 365).
+ *
+ * Без сети оболочка приложения отвечает на запрос документа каркасом
+ * `public/offline.html` — ответом 200 по ИСХОДНОМУ адресу (так каркас живёт
+ * на источнике сайта, заход 7.228). Воркер (`NetworkFirst`) видел в этом
+ * удачный ответ сети и клал каркас в кеш страниц поверх сохранённой копии.
+ * Замер 7.255 на эмуляторе (боевой APK): с сетью под `/es/courses` —
+ * «Curso de ruso online — Niveles A1 a B2» (190 675 знаков), без сети
+ * вкладка «Cursos» — и там уже «Sin conexión — RusoFácilapp» (111 983),
+ * экран «Esta página no se guardó», 10 прогонов из 10.
+ *
+ * Каркас узнаётся по своему `<body data-offline-shell="1">` — у страниц
+ * сайта этого признака нет (копию помечает уже сам каркас, во время
+ * показа, а не в разметке).
+ */
+const OFFLINE_SHELL_BODY = /<body\b[^>]*\bdata-offline-shell="1"/i;
+
+export function isOfflineShellMarkup(html: string): boolean {
+  return OFFLINE_SHELL_BODY.test(html);
+}
+
+/**
  * СТРАНИЦЫ РАЗДЕЛОВ — ЗАХОД 7.230 (ОФЛАЙН-2б).
  *
  * Число записей здесь не «на глаз», а закрытое: два корня раздела

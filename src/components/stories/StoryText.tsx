@@ -12,6 +12,7 @@ import {
 import SpeakButton from "@/components/lesson/SpeakButton";
 import StoryAudioPlayer, { READ_ALOUD_RATES } from "@/components/stories/StoryAudioPlayer";
 import { getStoryProgress, saveStoryProgress, syncStoryProgress } from "@/lib/reading-progress";
+import { skipTarget } from "@/lib/story-skip";
 import { measurePinnedLayers, placeInFreeBand } from "@/lib/pinned-layers";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 import { isHomograph } from "@/lib/story-word-pick";
@@ -788,8 +789,17 @@ export default function StoryText({
   function skipByFull(deltaSeconds: number) {
     const audio = audioRef.current;
     if (!audio) return;
-    const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : Infinity;
-    audio.currentTime = Math.min(Math.max(0, audio.currentTime + deltaSeconds), duration);
+    // До первого «▶» дорожка на 0, а место — в метке «продолжить отсюда»:
+    // перемотка считается от места и переносит его (заход 7.255, видео
+    // POCO 01.10 — ⏪ до «▶» уводил в ноль и затирал сохранённое место).
+    const pendingResume = pendingResumeOffset(audio);
+    const target = skipTarget(audio.currentTime, pendingResume, deltaSeconds, audio.duration);
+    audio.currentTime = target;
+    if (pendingResume === null) return;
+    const index = indexAtTime(target);
+    setReadingQueueIndex(index);
+    setResumeQueueIndex(null);
+    if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });
   }
 
   /** ±15s skip, correctly crossing sentence boundaries (each clip is one
@@ -858,6 +868,13 @@ export default function StoryText({
     }
   }
 
+  /** Начало сохранённой строки, пока дорожка его ещё не получила (до
+   * первого «▶», перемотки или тапа по строке), иначе `null`. */
+  function pendingResumeOffset(audio: HTMLAudioElement): number | null {
+    if (readingQueueIndex !== null || resumeQueueIndex === null || audio.currentTime !== 0) return null;
+    return sentenceOffsets?.[resumeQueueIndex] ?? null;
+  }
+
   function skipBy(deltaSeconds: number) {
     if (hasFullAudio) {
       skipByFull(deltaSeconds);
@@ -878,10 +895,8 @@ export default function StoryText({
       }
       // Вернулись на страницу после ухода (звук остановлен, место чтения
       // помечено кольцом) — «▶» продолжает С ЭТОГО МЕСТА, а не с начала.
-      if (readingQueueIndex === null && resumeQueueIndex !== null && audio.currentTime === 0) {
-        const offset = sentenceOffsets?.[resumeQueueIndex];
-        if (offset !== undefined) audio.currentTime = offset;
-      }
+      const pendingResume = pendingResumeOffset(audio);
+      if (pendingResume !== null) audio.currentTime = pendingResume;
       setPlaying(true);
       audio.play().catch(() => setPlaying(false));
       return;

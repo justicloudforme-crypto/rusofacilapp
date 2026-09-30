@@ -42,6 +42,16 @@
  *      `sentenceOffsets`, плеер рисует `clock.time / timeline.duration`.
  *      Видео POCO 01.10: пауза на 24,9 с — шторка 28 %, страница ≈ 50 %
  *      (номер строки + 1 из 14).
+ *   R10 (заход 7.255) ⏪/⏩ до первого «▶» считают от СОХРАНЁННОГО места и
+ *      переносят его. Поведение — сам модуль `src/lib/story-skip.ts`
+ *      (Node исполняет .ts): место 26,2 с, ⏪ → 11,2, ⏩ → 41,2; место
+ *      10 с, ⏪ → 0 (не меньше); у конца — не дальше длины; во время
+ *      игры — от дорожки, ровно 15 с. Разметка: `skipByFull` берёт
+ *      `pendingResumeOffset(audio)` и передаёт его в `skipTarget`, а при
+ *      непустом месте ставит строку, снимает метку «продолжить отсюда» и
+ *      сохраняет место; «▶» подставляет место через тот же
+ *      `pendingResumeOffset`. Видео POCO 01.10: одно ⏪ до «▶» у
+ *      «Снегурочки» и «Репки» — полоска в ноль, «▶» с первой фразы.
  *
  * Позитивный контроль — `--plant`: каждая подсадка ломает одно правило
  * на копии живого файла и обязана быть пойманной; живые файлы — 0 находок.
@@ -59,6 +69,7 @@ const FILES = {
   stories: "src/lib/stories.ts",
   shell: "public/offline.html",
   gesture: "src/lib/seek-gesture.ts",
+  skip: "src/lib/story-skip.ts",
 };
 
 /**
@@ -105,6 +116,32 @@ async function gestureViolations(source) {
   if (run([down(60, 610, 0, 0.02), up(60, 610, 1200, 0.02)]).length) bad.push("R8: лежащая ладонь (долгое касание без сдвига) перематывает");
   if (run([down(200, 600, 0, 0.3), down(40, 610, 30, 0, "touch", 2, false), up(40, 610, 60, 0, 2), up(200, 600, 120, 0.3)]).length) bad.push("R8: второй палец (ладонь) не снимает перемотку");
   if (!same(run([down(100, 600, 0, 0.2, "mouse"), move(150, 600, 20, 0.4), up(150, 600, 40, 0.4)]), [0.2, 0.4])) bad.push("R8: мышь больше не перематывает сразу и на каждом шаге");
+  return bad;
+}
+
+/** Исполняет модуль ⏪/⏩ (живой или подсаженный) — правило R10. */
+async function skipViolations(source) {
+  const bad = [];
+  const dir = mkdtempSync(join(tmpdir(), "rf-story-skip-"));
+  let mod;
+  try {
+    const file = join(dir, "story-skip.ts");
+    writeFileSync(file, source);
+    mod = await import(pathToFileURL(file).href);
+  } catch (error) {
+    rmSync(dir, { recursive: true, force: true });
+    return [`R10: модуль ⏪/⏩ не исполняется (${error.message.split("\n")[0]}) — сторож ослеп`];
+  }
+  rmSync(dir, { recursive: true, force: true });
+  if (typeof mod.skipTarget !== "function") return ["R10: в модуле ⏪/⏩ нет skipTarget — сторож ослеп"];
+  const near = (a, b) => Math.abs(a - b) < 1e-6;
+  const back = mod.skipTarget(0, 26.208, -15, 80.82);
+  if (!near(back, 11.208)) bad.push(`R10: ⏪ до «▶» с места 26,2 с дал ${back} — ждали 11,208 (видео POCO 01.10: в ноль)`);
+  const fwd = mod.skipTarget(0, 26.208, 15, 80.82);
+  if (!near(fwd, 41.208)) bad.push(`R10: ⏩ до «▶» с места 26,2 с дал ${fwd} — ждали 41,208`);
+  if (!near(mod.skipTarget(0, 10, -15, 80.82), 0)) bad.push("R10: ⏪ у начала уводит ниже нуля");
+  if (!near(mod.skipTarget(0, 75, 15, 80.82), 80.82)) bad.push("R10: ⏩ у конца уводит дальше длины");
+  if (!near(mod.skipTarget(40, null, -15, 80.82), 25) || !near(mod.skipTarget(40, null, 15, 80.82), 55)) bad.push("R10: во время игры ⏪/⏩ — не ровно 15 с от дорожки");
   return bad;
 }
 
@@ -217,6 +254,18 @@ export async function violationsIn(src) {
   }
   if (!/clock\.time\s*\/\s*timeline\.duration/.test(player)) bad.push("R9: полоска плеера не считает время / длину дорожки — расходится со шторкой");
   if (!/width:\s*`\$\{fill \* 100\}%`/.test(player)) bad.push("R9: ширина полоски берётся не из времени дорожки");
+  // R10 — разметка; поведение — skipViolations().
+  const skipFull = functionBody(text, "skipByFull");
+  const pending = functionBody(text, "pendingResumeOffset");
+  if (skipFull === null || pending === null) bad.push("R10: в StoryText нет skipByFull или pendingResumeOffset — сторож ослеп, а не доволен");
+  else {
+    if (!/readingQueueIndex\s*!==\s*null/.test(pending) || !/resumeQueueIndex\s*===\s*null/.test(pending) || !/sentenceOffsets\?\.\[resumeQueueIndex\]/.test(pending)) bad.push("R10: pendingResumeOffset не отдаёт начало сохранённой строки до первого «▶»");
+    if (!/=\s*pendingResumeOffset\(audio\)/.test(skipFull) || !/skipTarget\(\s*audio\.currentTime\s*,\s*pendingResume\s*,/.test(skipFull)) bad.push("R10: ⏪/⏩ считают не от сохранённого места — до «▶» снова уведут в ноль");
+    if (!/setResumeQueueIndex\(null\)/.test(skipFull) || !/saveStoryProgress\(/.test(skipFull) || !/setReadingQueueIndex\(/.test(skipFull)) bad.push("R10: ⏪/⏩ до «▶» не переносят сохранённое место — «▶» вернёт на старое");
+  }
+  const playPause = functionBody(text, "handlePlayPause");
+  if (playPause === null || !/pendingResumeOffset\(audio\)/.test(playPause)) bad.push("R10: «▶» подставляет место не через pendingResumeOffset — правило ⏪/⏩ и «▶» разойдутся");
+  bad.push(...(await skipViolations(src.skip ?? "")));
   bad.push(...(await gestureViolations(src.gesture ?? "")));
   return bad;
 }
@@ -285,6 +334,12 @@ async function plant() {
   planted("player", "onChange={(event) => onSeek(Number(event.target.value))}", "onChange={() => {}}", "подсадка: клавиатура не перематывает", "R8");
   planted("text", "audioRef={hasFullAudio ? audioRef : undefined}", "", "подсадка: StoryText не отдаёт плееру дорожку (как до 7.254)", "R9");
   planted("player", "if (clock.time > 0) return clock.time / timeline.duration;", "if (clock.time > 0) return progress;", "подсадка: полоска по номеру строки при игре", "R9");
+  // R10 — поведение модуля ⏪/⏩ и разметка StoryText.
+  planted("skip", "const from = pendingResume ?? currentTime;", "const from = currentTime;", "подсадка: НАСТОЯЩЕЕ старое правило — ⏪/⏩ от дорожки, а не от места", "R10");
+  planted("skip", "Math.min(Math.max(0, from + delta), end)", "Math.min(from + delta, end)", "подсадка: ⏪ ниже нуля", "R10");
+  planted("text", "skipTarget(audio.currentTime, pendingResume, deltaSeconds, audio.duration)", "skipTarget(audio.currentTime, null, deltaSeconds, audio.duration)", "подсадка: StoryText не отдаёт место в skipTarget", "R10");
+  planted("text", "    setResumeQueueIndex(null);\n    if (storyId) saveStoryProgress(storyId, { currentPage: index + 1, totalPages: queue.length, queueIndex: index });\n  }\n\n  /** ±15s skip, correctly", "  }\n\n  /** ±15s skip, correctly", "подсадка: ⏪ до «▶» не переносит сохранённое место", "R10");
+  planted("text", "      const pendingResume = pendingResumeOffset(audio);\n      if (pendingResume !== null) audio.currentTime = pendingResume;", "      if (readingQueueIndex === null && resumeQueueIndex !== null && audio.currentTime === 0) {\n        const offset = sentenceOffsets?.[resumeQueueIndex];\n        if (offset !== undefined) audio.currentTime = offset;\n      }", "подсадка: «▶» со своим условием места (как до 7.255)", "R10");
   planted("player", "style={{ width: `${fill * 100}%` }}", "style={{ width: `${Math.min(progress * 100, 100)}%` }}", "подсадка: НАСТОЯЩАЯ старая ширина полоски (до 7.254)", "R9");
   // Отрицательный: объяснение в комментарии — не нарушение.
   const commented = live.text.replace("function renderSentenceTokens(", '// src: "/icons/x.png" — так было до 7.240\nfunction renderSentenceTokens(');
@@ -308,7 +363,7 @@ async function main() {
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте, перемотка по полоске — только намеренный тап или перетаскивание, полоска по времени как шторка (контроль — --plant).");
+  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте, перемотка по полоске — только намеренный тап или перетаскивание, полоска по времени как шторка, ⏪/⏩ до «▶» — от сохранённого места (контроль — --plant).");
   return 0;
 }
 
