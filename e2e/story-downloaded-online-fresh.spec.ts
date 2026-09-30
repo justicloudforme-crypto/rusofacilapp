@@ -35,6 +35,7 @@ async function openStoryWithClips(page: Page): Promise<string> {
       .locator('a[href^="/es/stories/"]')
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")).filter((href): href is string => Boolean(href)))
   ).filter((href, index, all) => all.indexOf(href) === index);
+  expect(hrefs.length, "в каталоге рассказов нет ни одной ссылки").toBeGreaterThan(0);
   for (const href of hrefs.slice(0, 6)) {
     await page.goto(href);
     await page.waitForTimeout(1500);
@@ -73,7 +74,7 @@ async function markCopies(page: Page, path: string): Promise<string[]> {
 
 test("скачанный рассказ с сетью приходит свежим, копия — только без сети", async ({ page, context }) => {
   // Бюджет больше суммы собственных ожиданий (`check:e2e-live-probes`).
-  test.setTimeout(300_000);
+  test.setTimeout(360_000);
   await serveClipLocally(context);
   await page.goto("/es");
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
