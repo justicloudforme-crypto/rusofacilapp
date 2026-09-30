@@ -1408,6 +1408,8 @@ export default function StoryText({
             onPlayPause={handlePlayPause}
             onSeek={handleSentenceClick}
             onRateChange={handleRateChange}
+            audioRef={hasFullAudio ? audioRef : undefined}
+            sentenceOffsets={hasFullAudio ? sentenceOffsets : null}
           />
         </>
       )}
