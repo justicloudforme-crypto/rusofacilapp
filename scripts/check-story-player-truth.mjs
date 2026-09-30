@@ -24,16 +24,26 @@
  *      оживает в скачанной копии, долг 311);
  *   R7 каждый `data-rf-player`, который ищет каркас копии, есть у плеера,
  *      и подписи кнопки каркас берёт из тех же атрибутов;
- *   R8 (заход 7.253, долг 362) невидимый ползунок поверх полоски не
- *      перематывает от касания: `onPointerDown` помечает касание
- *      (`pointerType !== "mouse"`), `onChange` при такой метке выходит
- *      ДО `onSeek`, `onKeyDown` метку снимает. Видео POCO 30.09: палец по
- *      полоске — лесенка назад 8 → 0 и рассказ с начала.
+ *   R8 (заходы 7.253 → 7.254, долг 362) перемотка по полоске пальцем
+ *      есть, но только намеренная. Поведение — сам модуль жеста
+ *      `src/lib/seek-gesture.ts` (без сборки, Node исполняет .ts):
+ *      тап и перетаскивание перематывают ОДИН раз при отпускании;
+ *      прокрутка с полоски (сдвиг по вертикали), отмена жеста браузером,
+ *      долгое касание без сдвига (ладонь) и второй палец — не
+ *      перематывают; мышь — сразу и на каждом шаге. Разметка плеера:
+ *      зона касания `data-rf-player="seek-zone"` высотой 44 px (`h-11`) с
+ *      `touch-pan-y` и обработчиками через `seekGestureStep`; ползунок
+ *      `range` указателю недоступен (`pointer-events-none`), а его
+ *      `onChange` (клавиатура, TalkBack) зовёт `onSeek`. Видео POCO 30.09
+ *      (до 7.253): палец по полоске — лесенка 8 → 0; решение владельца
+ *      30.09: перемотка пальцем нужна.
  *
  * Позитивный контроль — `--plant`: каждая подсадка ломает одно правило
  * на копии живого файла и обязана быть пойманной; живые файлы — 0 находок.
  */
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const PLANT = process.argv.slice(2).includes("--plant");
@@ -43,7 +53,55 @@ const FILES = {
   player: "src/components/stories/StoryAudioPlayer.tsx",
   stories: "src/lib/stories.ts",
   shell: "public/offline.html",
+  gesture: "src/lib/seek-gesture.ts",
 };
+
+/**
+ * Исполняет текст модуля жеста (живой или подсаженный) и гоняет по нему
+ * жесты. Файл кладётся во временную папку — у модуля нет импортов.
+ */
+async function gestureViolations(source) {
+  const bad = [];
+  const dir = mkdtempSync(join(tmpdir(), "rf-seek-gesture-"));
+  let mod;
+  try {
+    const file = join(dir, "seek-gesture.ts");
+    writeFileSync(file, source);
+    mod = await import(pathToFileURL(file).href);
+  } catch (error) {
+    rmSync(dir, { recursive: true, force: true });
+    return [`R8: модуль жеста не исполняется (${error.message.split("\n")[0]}) — сторож ослеп`];
+  }
+  rmSync(dir, { recursive: true, force: true });
+  if (typeof mod.seekGestureStep !== "function") return ["R8: в модуле жеста нет seekGestureStep — сторож ослеп"];
+  const run = (events) => {
+    let state = null;
+    const commits = [];
+    for (const e of events) {
+      const step = mod.seekGestureStep(state, e);
+      state = step.state;
+      if (step.commit !== null) commits.push(step.commit);
+    }
+    return commits;
+  };
+  const down = (x, y, t, f, pointer = "touch", pointerId = 1, isPrimary = true) => ({ type: "down", pointerId, pointer, isPrimary, x, y, t, fraction: f });
+  const move = (x, y, t, f, pointerId = 1) => ({ type: "move", pointerId, x, y, t, fraction: f });
+  const up = (x, y, t, f, pointerId = 1) => ({ type: "up", pointerId, x, y, t, fraction: f });
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+  if (!same(run([down(100, 600, 0, 0.4), up(101, 600, 120, 0.4)]), [0.4])) bad.push("R8: тап пальцем по полоске не перематывает — перемотка пальцем, которую просил владелец, пропала");
+  const drag = run([down(300, 600, 0, 0.8), move(270, 601, 20, 0.6), move(200, 602, 40, 0.3), move(120, 603, 60, 0.05), up(110, 603, 950, 0)]);
+  if (drag.length === 0) bad.push("R8: перетаскивание пальцем не перематывает — перемотка пальцем пропала");
+  else if (!same(drag, [0])) bad.push(`R8: перетаскивание перематывает на каждом шаге (${drag.join(" → ")}) — лесенка 8 → 0 с видео POCO вернётся`);
+  if (run([down(250, 600, 0, 0.5), move(252, 615, 20, 0.5), move(254, 660, 40, 0.5), up(254, 660, 200, 0.5)]).length) bad.push("R8: прокрутка страницы, начатая на полоске, перематывает рассказ");
+  // Прокрутка дугой: палец ушёл вниз, потом вбок — это всё ещё прокрутка.
+  if (run([down(250, 600, 0, 0.5), move(252, 630, 20, 0.5), move(300, 634, 40, 0.7), up(300, 634, 200, 0.7)]).length) bad.push("R8: прокрутка страницы дугой (вниз, потом вбок) перематывает рассказ");
+  if (run([down(250, 600, 0, 0.5), { type: "cancel", pointerId: 1 }, up(250, 600, 100, 0.5)]).length) bad.push("R8: жест, отменённый браузером (прокрутка), перематывает");
+  if (run([down(60, 610, 0, 0.02), up(60, 610, 1200, 0.02)]).length) bad.push("R8: лежащая ладонь (долгое касание без сдвига) перематывает");
+  if (run([down(200, 600, 0, 0.3), down(40, 610, 30, 0, "touch", 2, false), up(40, 610, 60, 0, 2), up(200, 600, 120, 0.3)]).length) bad.push("R8: второй палец (ладонь) не снимает перемотку");
+  if (!same(run([down(100, 600, 0, 0.2, "mouse"), move(150, 600, 20, 0.4), up(150, 600, 40, 0.4)]), [0.2, 0.4])) bad.push("R8: мышь больше не перематывает сразу и на каждом шаге");
+  return bad;
+}
 
 function blockFrom(code, index, open, close) {
   let depth = 0;
@@ -75,7 +133,7 @@ function stripComments(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 }
 
-export function violationsIn(src) {
+export async function violationsIn(src) {
   const bad = [];
   const text = stripComments(src.text);
   const bridge = stripComments(src.bridge);
@@ -128,24 +186,27 @@ export function violationsIn(src) {
   for (const attr of ["data-rf-play-label", "data-rf-pause-label", "data-rf-story-title"]) {
     if (!(src.shell ?? "").includes(attr)) bad.push(`R7: каркас не читает ${attr}`);
   }
-  // R8
-  const rangeAt = player.search(/<input\s+type="range"/);
-  if (rangeAt < 0) bad.push("R8: у плеера нет ползунка type=\"range\" — сторож ослеп, а не доволен");
+  // R8 — разметка плеера; поведение жеста — gestureViolations().
+  const zoneAt = player.search(/data-rf-player="seek-zone"/);
+  if (zoneAt < 0) bad.push("R8: у полоски нет зоны касания data-rf-player=\"seek-zone\" — сторож ослеп, а не доволен");
   else {
-    const range = player.slice(rangeAt, player.indexOf("/>", rangeAt) + 2);
-    const mark = /onPointerDown=\{\(?(\w+)\)?\s*=>\s*\{\s*(\w+)\.current\s*=\s*\1\.pointerType\s*!==\s*"mouse"/.exec(range);
-    if (!mark) bad.push("R8: ползунок не помечает касание по pointerType — палец по полоске снова перематывает рассказ");
-    else {
-      const ref = mark[2];
-      const change = /onChange=\{\(?\w+\)?\s*=>\s*\{([\s\S]*?)\}\}/.exec(range);
-      const body = change ? change[1] : "";
-      const guard = body.search(new RegExp(`if\\s*\\(\\s*${ref}\\.current\\s*\\)\\s*return`));
-      const seek = body.search(/onSeek\s*\(/);
-      if (!change || seek < 0) bad.push("R8: onChange ползунка не зовёт onSeek — мышь и клавиатура потеряли перемотку");
-      else if (guard < 0 || guard > seek) bad.push("R8: onChange ползунка перематывает и от касания — лесенка 8 → 0 с видео POCO вернётся");
-      if (!new RegExp(`onKeyDown=\\{[^}]*${ref}\\.current\\s*=\\s*false`).test(range)) bad.push("R8: клавиша не снимает метку касания — после пальца клавиатура не перематывает");
+    const open = player.lastIndexOf("<div", zoneAt);
+    const zone = player.slice(open, player.indexOf("/>", zoneAt) + 2);
+    if (!/\bh-11\b|\bh-12\b|\bh-14\b/.test(zone)) bad.push("R8: зона касания полоски ниже 44 px");
+    if (!/\btouch-pan-y\b|touchAction:\s*"pan-y"/.test(zone)) bad.push("R8: зона касания не отдаёт браузеру вертикальную прокрутку (touch-action: pan-y)");
+    for (const handler of ["onPointerDown", "onPointerMove", "onPointerUp", "onPointerCancel"]) {
+      if (!new RegExp(`${handler}=`).test(zone)) bad.push(`R8: у зоны касания нет ${handler} — жест не доходит до seekGestureStep`);
     }
   }
+  if (!/from\s+"@\/lib\/seek-gesture"/.test(player) || !/seekGestureStep\s*\(/.test(player)) bad.push("R8: плеер не ведёт жест через seekGestureStep");
+  const rangeAt = player.search(/<input\s+type="range"/);
+  if (rangeAt < 0) bad.push("R8: у плеера нет ползунка type=\"range\" — клавиатура и TalkBack без перемотки");
+  else {
+    const range = player.slice(rangeAt, player.indexOf("/>", rangeAt) + 2);
+    if (!/\bpointer-events-none\b/.test(range)) bad.push("R8: указатель доходит до ползунка — палец снова перематывает на каждом шаге, мимо правил жеста");
+    if (!/onChange=\{\(?\w+\)?\s*=>\s*onSeek\(/.test(range) && !/onChange=\{[\s\S]*?onSeek\(/.test(range)) bad.push("R8: onChange ползунка не зовёт onSeek — клавиатура и TalkBack потеряли перемотку");
+  }
+  bad.push(...(await gestureViolations(src.gesture ?? "")));
   return bad;
 }
 
@@ -153,20 +214,22 @@ function readAll() {
   return Object.fromEntries(Object.entries(FILES).map(([k, f]) => [k, readFileSync(f, "utf8")]));
 }
 
-function plant() {
+async function plant() {
   const live = readAll();
   const cases = [];
+  const pending = [];
   const planted = (key, from, to, name, expect) => {
     const mutated = live[key].replace(from, to);
     if (mutated === live[key]) {
       cases.push({ name: `${name} — ЯКОРЬ ПОДСАДКИ УЕХАЛ`, ok: false });
       return;
     }
-    const found = violationsIn({ ...live, [key]: mutated });
-    cases.push({ name, ok: found.some((f) => f.startsWith(expect)) });
+    pending.push(
+      violationsIn({ ...live, [key]: mutated }).then((found) => cases.push({ name, ok: found.some((f) => f.startsWith(expect)) })),
+    );
   };
 
-  cases.push({ name: "отрицательный контроль: живые файлы чисты", ok: violationsIn(live).length === 0 });
+  cases.push({ name: "отрицательный контроль: живые файлы чисты", ok: (await violationsIn(live)).length === 0 });
   planted("text", "      void clearNativeMediaSession();\n    };", "    };", "подсадка: уход не гасит шторку (как до 7.240)", "R1");
   planted("text", 'window.addEventListener("pagehide", stopEverything);', "", "подсадка: pagehide не слушается", "R1");
   planted("bridge", 'setPlaybackState({ playbackState: "none" })', 'setPlaybackState({ playbackState: "paused" })', "подсадка: «гашение» ставит паузу", "R2");
@@ -183,18 +246,36 @@ function plant() {
   planted("player", 'data-rf-player="play"', "", "подсадка: у кнопки плеера нет признака для копии", "R6");
   planted("player", 'data-rf-player="back"', 'data-rf-player="rewind"', "подсадка: плеер переименовал «назад», каркас ищет старое имя", "R7");
   planted("shell", 'root.querySelector(\'[data-rf-player="bar"]\')', 'root.querySelector(\'[data-rf-player="progress"]\')', "подсадка: каркас ищет шкалу под именем, которого у плеера нет", "R7");
+  // R8 — поведение модуля жеста.
   planted(
-    "player",
-    /onPointerDown=\{[\s\S]*?onChange=\{\(event\) => \{[\s\S]*?\}\}/,
-    "onChange={(event) => onSeek(Number(event.target.value))}",
-    "подсадка: НАСТОЯЩИЙ старый ползунок (до 7.253, перемотка от пальца)",
+    "gesture",
+    "if (state.mode === \"drag\") {\n      return { state: { ...state, fraction: event.fraction }, commit: null, preview: event.fraction };",
+    "if (state.mode === \"drag\") {\n      return { state: { ...state, fraction: event.fraction }, commit: event.fraction, preview: event.fraction };",
+    "подсадка: перетаскивание перематывает на каждом шаге (как ползунок до 7.253)",
     "R8",
   );
-  planted("player", "if (touchDriven.current) return;", "", "подсадка: метку касания ставят, но onChange её не спрашивает", "R8");
-  planted("player", "touchDriven.current = false;", "", "подсадка: клавиша не снимает метку касания", "R8");
+  planted(
+    "gesture",
+    "if (dy >= SEEK_SLOP_PX && dy >= dx) return { state: { ...state, mode: \"void\" }, commit: null, preview: null };",
+    "",
+    "подсадка: прокрутка с полоски не отличается от перетаскивания",
+    "R8",
+  );
+  planted("gesture", "if (event.type === \"cancel\") return { state: null, commit: null, preview: null };", "if (event.type === \"cancel\") return { state: null, commit: state.fraction, preview: null };", "подсадка: отменённый браузером жест перематывает", "R8");
+  planted("gesture", "const short = event.t - state.t0 <= SEEK_TAP_MAX_MS;", "const short = true;", "подсадка: лежащая ладонь считается тапом", "R8");
+  planted("gesture", "return { state: { ...state, mode: \"void\" }, commit: null, preview: null };\n    }\n    if (!event.isPrimary)", "return { state, commit: null, preview: null };\n    }\n    if (!event.isPrimary)", "подсадка: второй палец не снимает перемотку", "R8");
+  planted("gesture", "if (state.mode === \"drag\") return { state: null, commit: event.fraction, preview: null };", "if (state.mode === \"drag\") return { state: null, commit: null, preview: null };", "подсадка: НАСТОЯЩИЙ итог 7.253 — палец не перематывает вовсе", "R8");
+  planted("gesture", "if (event.pointer === \"mouse\") return { state: next, commit: event.fraction, preview: null };", "", "подсадка: мышь не перематывает при нажатии", "R8");
+  // R8 — разметка плеера.
+  planted("player", "pointer-events-none absolute", "absolute", "подсадка: НАСТОЯЩИЙ старый ползунок — указатель снова доходит до range", "R8");
+  planted("player", "cursor-pointer touch-pan-y", "cursor-pointer", "подсадка: зона касания без touch-action: pan-y", "R8");
+  planted("player", "top-1/2 h-11 -translate-y-1/2 cursor-pointer", "top-1/2 h-6 -translate-y-1/2 cursor-pointer", "подсадка: зона касания 24 px, как у прежнего ползунка", "R8");
+  planted("player", "onPointerCancel={(event) => run({ type: \"cancel\", pointerId: event.pointerId })}", "", "подсадка: отмену жеста браузером зона не слушает", "R8");
+  planted("player", "onChange={(event) => onSeek(Number(event.target.value))}", "onChange={() => {}}", "подсадка: клавиатура не перематывает", "R8");
   // Отрицательный: объяснение в комментарии — не нарушение.
   const commented = live.text.replace("function renderSentenceTokens(", '// src: "/icons/x.png" — так было до 7.240\nfunction renderSentenceTokens(');
-  cases.push({ name: "отрицательный контроль: старый адрес в КОММЕНТАРИИ — молчание", ok: violationsIn({ ...live, text: commented }).length === 0 });
+  cases.push({ name: "отрицательный контроль: старый адрес в КОММЕНТАРИИ — молчание", ok: (await violationsIn({ ...live, text: commented })).length === 0 });
+  await Promise.all(pending);
 
   let passed = 0;
   for (const c of cases) {
@@ -205,17 +286,17 @@ function plant() {
   return passed === cases.length ? 0 : 1;
 }
 
-function main() {
+async function main() {
   if (PLANT) return plant();
-  const bad = violationsIn(readAll());
+  const bad = await violationsIn(readAll());
   if (bad.length) {
     console.error("ПЛЕЕР РАССКАЗА СНОВА РАСХОДИТСЯ СО ЗВУКОМ (заход 7.240):");
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте, палец по полоске не перематывает (контроль — --plant).");
+  console.log("[check:story-player-truth] шторка гаснет с уходом и pagehide, кнопка слушает элемент, обложка картинкой, знак приклеен к слову, признаки плеера для копии на месте, перемотка по полоске — только намеренный тап или перетаскивание (контроль — --plant).");
   return 0;
 }
 
 const IS_ENTRY_POINT = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
-if (IS_ENTRY_POINT) process.exitCode = main();
+if (IS_ENTRY_POINT) process.exitCode = await main();
