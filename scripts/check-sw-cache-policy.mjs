@@ -128,6 +128,10 @@ export function violations(policyRaw, swRaw) {
   if (!/requestWillFetch/.test(sw) || !/mode:\s*"cors"/.test(sw)) {
     bad.push(`${SW}: клип берётся не целиком и не с CORS — элемент <audio> ходит no-cors и с Range, и в кеш снова ляжет непрозрачный ответ с пустым телом`);
   }
+  // ж) долг 362, заход 7.252: на запрос куска — всегда кусок
+  if (!/createPartialResponse\(request, response\)/.test(sw) || !/request\.headers\.has\("range"\)/.test(sw)) {
+    bad.push(`${SW}: сетевой ответ 200 на промахе кеша клипов снова уходит элементу <audio> целиком на запрос с Range — после такой смеси «200, потом 206 из кеша» первый заход в рассказ играет С НУЛЯ или молчит (замер 30.09.2026: 17,06 с и MEDIA_ERR_NETWORK; локально 2,97 с вместо 26,2)`);
+  }
   if (!/catch\s*\{\s*return fetch\(options\.request\);/.test(sw)) {
     bad.push(`${SW}: у маршрута клипов нет запасного выхода в сеть — теперь озвучка зависит от правил ЧУЖОГО источника (замер 20.09.2026: OPTIONS туда отвечает 405, разрешённый заголовок один), и отказ CORS означал бы немую озвучку на всём сайте`);
   }
@@ -306,6 +310,12 @@ function plant() {
     "нет запасного выхода в сеть",
   );
   add(
+    "подсадка: на промахе кеша клипов элементу снова уходит 200 целиком (долг 362)",
+    policy,
+    sw.replace("return await createPartialResponse(request, response);", "return response;"),
+    "первый заход в рассказ играет С НУЛЯ",
+  );
+  add(
     "подсадка: личных страниц снова нет в правилах (кабинет ложится в кеш документов)",
     policy,
     sw.replace(/const PRIVATE_PATH\s*=/, "const PRIVATE_PATH_UNUSED ="),
@@ -393,7 +403,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log(`check:sw-cache-policy — 15 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77, 278)`);
+  console.log(`check:sw-cache-policy — 16 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77, 278, 362)`);
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
