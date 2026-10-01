@@ -282,6 +282,7 @@ async function main() {
     let stallHealthy = { status: 1 };
     let accessSigns = { status: 1 };
     let accessSignsPlant = { status: 1 };
+    let accessSignsStall = { status: 1 };
     let signedOut = { status: 1 };
     let signedOutPlant = { status: 1 };
     // 7.242 — живые половины сторожей «правды для проверяющего».
@@ -386,6 +387,14 @@ async function main() {
         accessSignsPlant = spawnSync(
           process.execPath,
           [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, "--plant", ...passthrough],
+          { stdio: "inherit" }
+        );
+        // 7.257, долг 373: знаки читаются по готовности страницы, а не
+        // через паузу. Подсадка «перепись молчит» обязана дать «экран не
+        // готов», а та же поверхность без подсадки — стать готовой.
+        accessSignsStall = spawnSync(
+          process.execPath,
+          [TSX, "scripts/check-access-signs.ts", `--base=${ROLES_BASE}`, "--plant-stall"],
           { stdio: "inherit" }
         );
         // СЕДЬМАЯ И ВОСЬМАЯ на том же сервере ролей — 7.198, часть 1:
@@ -567,6 +576,7 @@ async function main() {
       (accountDeletionPlant.status ?? 1) ||
       (accessSigns.status ?? 1) ||
       (accessSignsPlant.status ?? 1) ||
+      (accessSignsStall.status ?? 1) ||
       (tiles.status ?? 1) ||
       (tilesPlant.status ?? 1) ||
       (ruSpanish.status ?? 1) ||

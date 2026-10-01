@@ -141,6 +141,15 @@ interface Surface {
    * рассуждением.
    */
   surfaceOwnsClosed?: boolean;
+  /**
+   * СТРАНИЦА ЖДЁТ ОТВЕТА ПЕРЕПИСИ — 7.257, долг 373. Пока
+   * `/api/flashcards/summary` не ответил про выбранный уровень, плитка
+   * печатает серую заглушку `tile-count-skeleton` вместо числа, и знак
+   * судить рано. Признак смотрит на ВСЕ плитки сразу и не зависит от
+   * того, какие темы есть в базе (на базе CI карточки C1 — в двух темах
+   * из 23).
+   */
+  waitsForSummary?: boolean;
 }
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
@@ -179,6 +188,7 @@ const SURFACES: Surface[] = [
     selector: "[data-testid=level-filter] button",
     expect: (node) => (LEVELS.includes(node.key) ? sortSign(levelRequirement("flashcards", node.key)) : null),
     minNodes: 6,
+    waitsForSummary: true,
   },
   {
     name: "словарь — плитки тем на C1",
@@ -191,6 +201,7 @@ const SURFACES: Surface[] = [
     surfaceOwnsClosed: true,
     // Долг 257: та же корона и в браузере, у той же роли.
     sameInWeb: true,
+    waitsForSummary: true,
   },
   {
     name: "словарь — плитки тем на B1 (отрицательный контроль сорта)",
@@ -205,6 +216,7 @@ const SURFACES: Surface[] = [
     // И отрицательный контроль сорта тоже общий: «корона везде» не должно
     // проходить ни в оболочке, ни в браузере.
     sameInWeb: true,
+    waitsForSummary: true,
   },
   {
     name: "каталог рассказов — полоса уровней",
@@ -238,19 +250,94 @@ const SURFACES: Surface[] = [
   },
 ];
 
+/**
+ * ====================================================================
+ * ГОТОВНОСТЬ ВМЕСТО ПАУЗЫ — 7.257, долг 373
+ * ====================================================================
+ *
+ * До 7.257 знаки читались через фиксированные 2500 мс после появления
+ * узлов. CI #1263 (попытка 1, 30.09.2026) прочитал у гостя в браузере 23
+ * плитки C1 из 23 без знака, при том же коде сайта зелёный до и после.
+ * Причина — разметка сервера: до гидратации уровень фильтра «все», и
+ * корона C1 появляется только после того, как страница ожила и
+ * `useLayoutEffect` взял `?level=C1` из адреса. Полоса рассказов в
+ * оболочке устроена так же (`useIsNativeShell` — эффект). Замер 7.257,
+ * Chromium с 20-кратным замедлением процессора: в момент гидратации корон
+ * ещё 0 (рассказы — 3 прогона из 3, C1 — 1 из 3), после первого простоя
+ * главного потока — итоговые 1 и 23 во всех шести. Пауза была ставкой на
+ * то, что раннер успеет.
+ *
+ * Готовность теперь — три признака, все от события, ни одного от часов:
+ *   1. каждый судимый узел ОЖИЛ — React повесил на него `__reactFiber$…`
+ *      (так он помечает узлы при гидратации, и в рабочей сборке тоже);
+ *   2. у поверхностей словаря нет ни одной заглушки
+ *      `tile-count-skeleton` — перепись ответила про выбранный уровень;
+ *   3. главный поток после этого простоял (`requestIdleCallback`): эффекты
+ *      гидратации и вызванная ими перерисовка доехали.
+ * Срок — `READY_TIMEOUT_MS`. Не дождался — поверхность красная с
+ * причиной (сколько узлов, сколько ожило, сколько заглушек), а не
+ * судится по полуготовому экрану.
+ */
+const READY_TIMEOUT_MS = 30_000;
+
+type ScreenNode = { key: string; text: string; mark: string | null; locked: boolean; uppercase: boolean; label: string };
+
 async function readNodes(
   context: BrowserContext,
   base: string,
   surface: Surface,
-): Promise<Array<{ key: string; text: string; mark: string | null; locked: boolean; uppercase: boolean; label: string }>> {
+  options: { stallSummary?: boolean; readyTimeoutMs?: number } = {},
+): Promise<{ nodes: ScreenNode[]; notReady: string | null }> {
   const page = await context.newPage();
+  const timeout = options.readyTimeoutMs ?? READY_TIMEOUT_MS;
   try {
+    // Подсадка «заглушка вместо плиток» (`--plant-stall`): перепись не
+    // отвечает никогда, и сторож обязан сказать «не готово», а не судить
+    // серые полосы.
+    if (options.stallSummary) await page.route("**/api/flashcards/summary**", () => {});
     await page.goto(`${base}${surface.path}`, { waitUntil: "domcontentloaded", timeout: 45_000 });
     await page.waitForSelector(surface.selector, { timeout: 30_000 });
-    // Знак сорта не ждёт сетевого ответа по построению, но плитки ждут
-    // переписи банка: без этой паузы сторож судил бы заглушку.
-    await page.waitForTimeout(2500);
-    return await page.$$eval(surface.selector, (els) =>
+    const ready = await page
+      .waitForFunction(
+        ({ selector, waitsForSummary }) => {
+          const els = [...document.querySelectorAll(selector)];
+          return (
+            els.length > 0 &&
+            els.every((el) => Object.keys(el).some((k) => k.startsWith("__reactFiber$"))) &&
+            !(waitsForSummary && document.querySelector("[data-testid=tile-count-skeleton]"))
+          );
+        },
+        { selector: surface.selector, waitsForSummary: surface.waitsForSummary ?? false },
+        { timeout, polling: 50 },
+      )
+      .then(() => {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        return Promise.race([
+          page.evaluate(() => new Promise<boolean>((done) => requestIdleCallback(() => done(true)))),
+          new Promise<boolean>((done) => {
+            timer = setTimeout(() => done(false), timeout);
+          }),
+        ]).finally(() => clearTimeout(timer));
+      })
+      .catch(() => false);
+    if (!ready) {
+      const seen = await page.evaluate((selector) => {
+        const els = [...document.querySelectorAll(selector)];
+        return {
+          nodes: els.length,
+          alive: els.filter((el) => Object.keys(el).some((k) => k.startsWith("__reactFiber$"))).length,
+          skeletons: document.querySelectorAll("[data-testid=tile-count-skeleton]").length,
+        };
+      }, surface.selector);
+      return {
+        nodes: [],
+        notReady:
+          `страница не стала готовой за ${Math.round(timeout / 1000)} с — узлов ${seen.nodes}, ожило ${seen.alive}` +
+          (surface.waitsForSummary ? `, заглушек вместо чисел ${seen.skeletons} (перепись не ответила)` : "") +
+          ` — судить знаки на таком экране нельзя`,
+      };
+    }
+    const nodes = await page.$$eval(surface.selector, (els) =>
       els.map((el) => {
         const badge = el.querySelector("[data-access-mark]");
         // ЗАМОК СЧИТАЕТСЯ ОТДЕЛЬНО (долг 251): у него свой признак,
@@ -267,6 +354,7 @@ async function readNodes(
         };
       }),
     );
+    return { nodes, notReady: null };
   } finally {
     await page.close().catch(() => {});
   }
@@ -633,6 +721,56 @@ function staticDirection(plant: boolean): number {
   return 0;
 }
 
+/**
+ * ПОДСАДКА «ЗАГЛУШКА ВМЕСТО ПЛИТОК» — 7.257, долг 373.
+ *
+ * Перепись `/api/flashcards/summary` не отвечает никогда, и плитки C1
+ * остаются серыми заглушками. Сторож обязан сказать «экран не готов» с
+ * причиной — а не прочитать знаки с полуготового экрана, как прочитал CI
+ * #1263. Тут же отрицательный контроль: без подсадки та же поверхность
+ * обязана стать готовой, иначе «поймано» доказывалось бы сторожем,
+ * который не готов никогда.
+ *
+ * Судится гость в оболочке и в браузере — ровно то место, где упал #1263.
+ * Срок короче рабочего, чтобы подсадка не стоила CI минуту.
+ */
+async function stallDirection(base: string): Promise<number> {
+  const surface = SURFACES.find((s) => s.waitsForSummary && s.sameInWeb && s.roles.includes("guest"));
+  if (!surface) {
+    console.error("check:access-signs --plant-stall — FAILED: нет поверхности, ждущей переписи, — подсаживать некуда");
+    return 1;
+  }
+  const browser = await chromium.launch();
+  const results: Array<[string, boolean]> = [];
+  try {
+    for (const [place, userAgent, cookies] of [
+      ["оболочка", `${SAFARI} ${TOKEN}`, [{ name: COOKIE, value: "1", url: base }]],
+      ["браузер", SAFARI, []],
+    ] as const) {
+      const ctx = await browser.newContext({ userAgent, viewport: { width: 360, height: 720 } });
+      await ctx.addCookies([...cookies]);
+      const stalled = await readNodes(ctx, base, surface, { stallSummary: true, readyTimeoutMs: 8_000 });
+      const caught = stalled.notReady !== null && stalled.notReady.includes("перепись не ответила");
+      console.log(`  ${caught ? "поймано" : "ПРОПУЩЕНО"} — ${surface.name} (${place}, guest), перепись молчит: ${stalled.notReady ?? `прочитано узлов ${stalled.nodes.length}`}`);
+      results.push([`подсадка, ${place}`, caught]);
+      const healthy = await readNodes(ctx, base, surface);
+      const ok = healthy.notReady === null && healthy.nodes.length > 0;
+      console.log(`  ${ok ? "готово" : "НЕ ГОТОВО"} — то же без подсадки (${place}): ${healthy.notReady ?? `узлов ${healthy.nodes.length}`}`);
+      results.push([`без подсадки, ${place}`, ok]);
+      await ctx.close();
+    }
+  } finally {
+    await browser.close();
+  }
+  const ok = results.every(([, r]) => r);
+  console.log(
+    ok
+      ? "check:access-signs --plant-stall — «заглушка вместо плиток» поймана 2 из 2, без подсадки готово 2 из 2"
+      : "check:access-signs --plant-stall — FAILED",
+  );
+  return ok ? 0 : 1;
+}
+
 export async function main(): Promise<number> {
   // Пятое направление живёт без браузера и без сервера — поэтому оно
   // отвечает РАНЬШЕ требования `--base`.
@@ -643,6 +781,7 @@ export async function main(): Promise<number> {
     return 1;
   }
   const base = baseArg.slice("--base=".length);
+  if (process.argv.includes("--plant-stall")) return stallDirection(base);
   const plant = process.argv.includes("--plant");
   /**
    * `--ci` — форма пустой базы. Полосы фильтров рисуются всегда (они не от
@@ -654,6 +793,12 @@ export async function main(): Promise<number> {
 
   const browser = await chromium.launch();
   const problemsBySurface = new Map<string, string[]>();
+  /**
+   * Экраны, которые не стали готовыми за срок (7.257). Отдельно от
+   * расхождений: под `--plant` такой экран не «поймал подсадку», а не
+   * судился вовсе, и прогон обязан быть красным.
+   */
+  const notReady: string[] = [];
   let nodesSeen = 0;
   let signsSeen = 0;
 
@@ -692,7 +837,12 @@ export async function main(): Promise<number> {
     for (const surface of SURFACES) {
       const problems: string[] = [];
       for (const role of surface.roles) {
-        const nodes = await readNodes(contexts[role]!, base, surface);
+        const read = await readNodes(contexts[role]!, base, surface);
+        if (read.notReady) {
+          notReady.push(`${surface.name} (${role}): ${read.notReady}`);
+          continue;
+        }
+        const nodes = read.nodes;
         const minNodes = ci ? 1 : surface.minNodes;
         if (nodes.length < minNodes) {
           problems.push(
@@ -736,7 +886,12 @@ export async function main(): Promise<number> {
       for (const surface of SURFACES) {
         if (surface.sameInWeb) {
           for (const role of surface.roles) {
-            const nodes = await readNodes(webContexts[role]!, base, surface);
+            const read = await readNodes(webContexts[role]!, base, surface);
+            if (read.notReady) {
+              notReady.push(`${surface.name} (веб, ${role}): ${read.notReady}`);
+              continue;
+            }
+            const nodes = read.nodes;
             if (nodes.length < (ci ? 1 : surface.minNodes)) {
               webSame.push(
                 `${surface.name} (веб, ${role}): узлов ${nodes.length} при ожидаемых минимум ${ci ? 1 : surface.minNodes} — ` +
@@ -762,8 +917,12 @@ export async function main(): Promise<number> {
           continue;
         }
         if (plant) continue;
-        const nodes = await readNodes(webContexts.guest!, base, surface);
-        for (const node of nodes) {
+        const read = await readNodes(webContexts.guest!, base, surface);
+        if (read.notReady) {
+          notReady.push(`${surface.name} (веб, guest): ${read.notReady}`);
+          continue;
+        }
+        for (const node of read.nodes) {
           const requirement: AccessRequirement = LEVELS.includes(node.key)
             ? levelRequirement(surface.name.includes("рассказ") ? "stories" : surface.name.includes("игры") ? "wordGames" : "flashcards", node.key)
             : "free";
@@ -847,8 +1006,13 @@ export async function main(): Promise<number> {
     await browser.close();
   }
 
+  if (notReady.length) {
+    console.error("ЭКРАН НЕ СТАЛ ГОТОВЫМ — ЗНАКИ НА НЁМ НЕ СУДИЛИСЬ:");
+    for (const p of notReady) console.error(`  ${p}`);
+  }
+
   if (plant) {
-    let ok = true;
+    let ok = notReady.length === 0;
     for (const [name, problems] of problemsBySurface) {
       const caught = problems.length > 0;
       console.log(`  ${caught ? "поймано" : "ПРОПУЩЕНО"} — ${name}${caught ? ` (${problems.length})` : ""}`);
@@ -863,6 +1027,7 @@ export async function main(): Promise<number> {
   }
 
   const all = [...problemsBySurface.values()].flat();
+  if (notReady.length && !all.length) return 1;
   if (all.length) {
     console.error("ЗНАК НА ЭКРАНЕ РАСХОДИТСЯ С ПРАВИЛОМ:");
     for (const p of all.slice(0, 40)) console.error(`  ${p}`);
