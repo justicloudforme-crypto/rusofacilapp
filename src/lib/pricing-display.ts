@@ -1,10 +1,4 @@
-import {
-  approximateAmount,
-  formatAmount,
-  machineAmount,
-  type ApproximateAmount,
-  type LocalPriceContext,
-} from "./currency";
+import { approximateAmount, formatAmount, type ApproximateAmount, type LocalPriceContext } from "./currency";
 import { BASE_CURRENCY, formatMoney, plans } from "./plans";
 
 /**
@@ -48,22 +42,13 @@ export interface PesoPriceCopy {
 
 /**
  * One plan's price as a machine reads it — what goes into the `Offer` in
- * the JSON-LD of /pricing (PROGRESS.md 7.122, debt 44).
- *
- * It is built HERE, beside the string the card prints, and from the same
- * converted amount — not recomputed at the markup's call site. Since 7.118
- * this page is personalised: a visitor in Madrid is shown euros and a
- * visitor in Mexico pesos, from the same URL. Structured data has to name
- * the figure THIS response rendered, so the only safe construction is one
- * amount with two renderings, never two amounts that are meant to agree.
+ * the JSON-LD of /pricing (PROGRESS.md 7.122, debt 44; 7.260).
  */
 export interface OfferAmount {
-  /** A plain decimal with a dot and no grouping — "150", "11.70",
-   * "13900" — which is the only form schema.org's `price` accepts. Same
-   * decimals as the printed figure. */
+  /** A plain decimal with a dot and no grouping — "150", "2299" — which is
+   * the only form schema.org's `price` accepts. */
   price: string;
-  /** ISO 4217 of the figure actually shown: the visitor's currency when
-   * these are conversions, "MXN" when they are the base prices. */
+  /** ISO 4217 — always "MXN": the currency every plan is charged in. */
   currency: string;
 }
 
@@ -73,10 +58,6 @@ export interface PriceCopy extends PesoPriceCopy {
    * and wherever no rate could be had, that sentence would be describing
    * something the reader cannot see. */
   converted: boolean;
-  /** The same three plan prices as numbers, for structured data. Always
-   * present, and always in the currency the four strings above are in —
-   * pesos when `converted` is false. */
-  offers: Record<"monthly" | "annual" | "lifetime", OfferAmount>;
 }
 
 /** The base price of a plan as an `Offer`: "$2,299 MXN" is 2299 MXN. Kept
@@ -91,7 +72,10 @@ export function pesoOffer(amountMxnCents: number): OfferAmount {
   };
 }
 
-const PESO_OFFERS: PriceCopy["offers"] = {
+/** The three base prices as `Offer` amounts, from plans.ts — the amounts
+ * Stripe charges, the ones the footnote names (basePricesText below) and
+ * the ones a Mexican reader sees on the cards. */
+export const BASE_OFFERS: Record<"monthly" | "annual" | "lifetime", OfferAmount> = {
   monthly: pesoOffer(plans.monthly.amountMxnCents),
   annual: pesoOffer(plans.annual.amountMxnCents),
   lifetime: pesoOffer(plans.lifetime.amountMxnCents),
@@ -119,22 +103,15 @@ export function priceCopy(
   const lifetime = approx(plans.lifetime.amountMxnCents);
   const annualPerMonth = approx(perMonthCents(plans.annual.amountMxnCents));
   if (!monthly || !annual || !lifetime || !annualPerMonth) {
-    return { ...peso, converted: false, offers: PESO_OFFERS };
+    return { ...peso, converted: false };
   }
   const write = (amount: ApproximateAmount) => formatAmount(amount, locale);
-  const offer = (amount: ApproximateAmount): OfferAmount => ({
-    price: machineAmount(amount),
-    currency: amount.currency,
-  });
   return {
     monthly: write(monthly),
     annual: write(annual),
     lifetime: write(lifetime),
     annualPerMonth: write(annualPerMonth),
     converted: true,
-    // Derived from the very amounts written out on the line above, so the
-    // number a crawler reads and the number a reader sees cannot diverge.
-    offers: { monthly: offer(monthly), annual: offer(annual), lifetime: offer(lifetime) },
   };
 }
 
@@ -181,20 +158,20 @@ export function withBasePrices(template: string, prices: string): string {
 /**
  * The `Product` block of /pricing, with one `Offer` per paid plan.
  *
- * DEBT 44, and why it stayed open until 10.09.2026. Until today /pricing
- * carried only FAQPage and BreadcrumbList — no Offer at all — and that was
- * the safe state rather than an oversight: since 7.118 the page is
- * personalised, so an Offer written from the peso constants would have
- * advertised "899 MXN" to a reader who was being shown "≈ 45,80 EUR". A
- * price in structured data is a promise to the person who clicks the search
- * result; naming a figure that this very response did not render is exactly
- * the class of lie 7.120 spent a whole round removing from the copy.
+ * DEBT 44 (10.09.2026, PROGRESS.md 7.122) put an Offer here and took its
+ * figures from the card: euros for a reader in Madrid, dollars for one in
+ * Texas. 7.260 changed that, because the card outside Mexico is an
+ * ESTIMATE ("≈", footnote) and the charge is always pesos: Google's
+ * Rich Results Test, crawling from the US, read 8.66 / 51.92 / 133 USD and
+ * would put a figure nobody is ever charged into a search result.
  *
- * So the numbers come from `copy.offers`, which is the same converted
- * amount the cards print (see priceCopy above), and the currency comes with
- * them. In Mexico, in an unlisted or unknown country, and whenever the rate
- * feed stayed silent, that is MXN and the base prices — the same thing the
- * reader sees.
+ * So the Offer always names the base prices in MXN, from plans.ts — the
+ * amounts Stripe charges. They are on the page for every visitor (measured
+ * 08.10.2026, MX/US/ES × es/ru): on the cards in Mexico and wherever no
+ * rate could be had, and in the footnote (`basePricesText`) whenever the
+ * cards are conversions — `copy.converted` and that footnote are one
+ * condition in the page. check:store-seo holds both halves on the rendered
+ * page.
  *
  * The free tier is deliberately not an Offer. It is not sold, it needs no
  * `price`, and a "0 MXN" offer would make the page look like it sells four
@@ -206,9 +183,8 @@ export function pricingOffersJsonLd(args: {
   name: string;
   description: string;
   planNames: Record<"monthly" | "annual" | "lifetime", string>;
-  copy: PriceCopy;
 }) {
-  const { lang, url, name, description, planNames, copy } = args;
+  const { lang, url, name, description, planNames } = args;
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -219,12 +195,11 @@ export function pricingOffersJsonLd(args: {
     offers: (["monthly", "annual", "lifetime"] as const).map((plan) => ({
       "@type": "Offer",
       name: planNames[plan],
-      price: copy.offers[plan].price,
-      priceCurrency: copy.offers[plan].currency,
+      price: BASE_OFFERS[plan].price,
+      priceCurrency: BASE_OFFERS[plan].currency,
       url,
       availability: "https://schema.org/InStock",
-      // The locale the figure was formatted in, so the block says which
-      // rendering of the page it describes.
+      // The locale the page was written in.
       inLanguage: lang,
     })),
   };
