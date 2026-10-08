@@ -18,6 +18,13 @@
  *   5. есть иконка 192 и иконка 512 назначения `any`;
  *   6. воркер зарегистрирован и у него есть обработчик `fetch`.
  *
+ * ЗАХОД 7.259. С `prefer_related_applications: true` и карточкой Google
+ * Play сайт по-прежнему ВЫПОЛНЯЕТ все шесть условий — это и нужно, чтобы на
+ * компьютере (Chrome там карточку `play` пропускает) он ставился как PWA.
+ * На Android Chrome при тех же условиях предлагает приложение, а не сайт;
+ * прибор печатает, что именно объявлено, но установку на телефоне он не
+ * измеряет — настольный Chromium этого не умеет.
+ *
  * КОНТРОЛЬ РАБОТАЕТ, и это проверяется в том же прогоне: `example.com`
  * обязан провалить условие 1. Если он его проходит — печатается «ПРИБОР
  * СЛЕП» и прогон красный, ровно по правилу 4.1.
@@ -92,6 +99,11 @@ async function main() {
       const missing = named.filter((f) => site.manifest[f] === undefined);
       console.log(`  полей из долга 83 на месте ${named.length - missing.length} из ${named.length}${missing.length ? `; нет: ${missing.join(", ")}` : ""}`);
       console.log(`  снимков экрана ${site.manifest.screenshots?.length ?? 0}`);
+      const play = (site.manifest.related_applications ?? []).filter((a) => a.platform === "play").map((a) => a.id);
+      console.log(
+        `  prefer_related_applications ${site.manifest.prefer_related_applications === true ? "true" : String(site.manifest.prefer_related_applications)}; ` +
+          `карточки Google Play: ${play.length ? play.join(", ") : "нет"} — на Android Chrome предлагает ${site.manifest.prefer_related_applications === true && play.length ? "приложение" : "сайт"}, на компьютере — сайт`,
+      );
     }
 
     console.log(`КОНТРОЛЬ — https://example.com/ (ни манифеста, ни воркера)`);
