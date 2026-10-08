@@ -466,6 +466,17 @@ async function main() {
     // той же причине, что и у check:shell-surfaces выше.
     const playLink = spawnSync(process.execPath, ["scripts/check-play-link.mjs", `--base=${BASE}`], { stdio: "inherit" });
     const playLinkPlant = spawnSync(process.execPath, ["scripts/check-play-link.mjs", `--base=${BASE}`, "--plant"], { stdio: "inherit" });
+    // Заход 7.259: Chrome на Android предлагает приложение из Google Play
+    // вместо установки сайта. Отданный сервером манифест (корень, es, ru)
+    // обязан нести одну карточку Google Play с пакетом приложения и
+    // `prefer_related_applications: true`; страница — вести на свой.
+    const pwaManifestLive = spawnSync(process.execPath, ["scripts/check-pwa-manifest.mjs", `--base=${BASE}`], { stdio: "inherit" });
+    const pwaManifestLivePlant = spawnSync(process.execPath, ["scripts/check-pwa-manifest.mjs", `--base=${BASE}`, "--plant"], { stdio: "inherit" });
+    // Заход 7.259: /download индексируется (браузеру — без noindex, в карте,
+    // robots.txt открыт), у Organization — sameAs на Google Play, в ответе
+    // приложению адреса магазина нет.
+    const storeSeo = spawnSync(TSX, ["scripts/check-store-seo.ts", `--base=${BASE}`], { stdio: "inherit" });
+    const storeSeoPlant = spawnSync(TSX, ["scripts/check-store-seo.ts", `--base=${BASE}`, "--plant"], { stdio: "inherit" });
     // ДОЛГ 82, заход 7.212: плавающая кнопка не ложится на органы
     // управления. Здесь же, на том же сервере, по той же причине, что и
     // соседи. `--ci` пробрасывается: на пустой базе CI каталог рассказов
@@ -591,6 +602,10 @@ async function main() {
       (shellSurfacesPlant.status ?? 1) ||
       (playLink.status ?? 1) ||
       (playLinkPlant.status ?? 1) ||
+      (pwaManifestLive.status ?? 1) ||
+      (pwaManifestLivePlant.status ?? 1) ||
+      (storeSeo.status ?? 1) ||
+      (storeSeoPlant.status ?? 1) ||
       (floatOverlap.status ?? 1) ||
       (floatOverlapPlant.status ?? 1) ||
       (bottomInset.status ?? 1) ||

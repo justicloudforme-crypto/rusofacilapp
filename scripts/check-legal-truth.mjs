@@ -190,7 +190,7 @@ const HOSTS_WITHOUT_NAME = new Map([
   [
     "play.google.com",
     "адрес карточки магазина (`PLAY_STORE_URL`, src/lib/pwa-manifest.ts): поле `related_applications` " +
-      "манифеста PWA (не печатается, пока признак STORE_LIVE ложен) и, с захода 7.258, ссылка-бейдж " +
+      "манифеста PWA (с захода 7.259 — карточка Google Play для Chrome) и, с захода 7.258, ссылка-бейдж " +
       "«Google Play» в браузере (`PlayStoreBadge`). Данных наружу код не отправляет ВООБЩЕ: переход " +
       "делает сам человек нажатием, как по ссылке на t.me",
   ],
