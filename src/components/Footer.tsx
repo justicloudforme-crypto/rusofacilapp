@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import MatryoshkaMark from "./MatryoshkaMark";
+import PlayStoreBadge, { playTrademarkNote } from "./PlayStoreBadge";
 
 export default function Footer({
   dict,
@@ -99,7 +100,11 @@ export default function Footer({
             {dict.footer.privacyLink}
           </Link>
         </div>
+        {/* Заход 7.258: приложение в Google Play. Подвала в приложении нет
+            вовсе (выше), признак передан, чтобы правило было одно. */}
+        <PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="footer" />
         <p>© {new Date().getFullYear()} RusoFácilapp.com. {dict.footer.rights}</p>
+        <p className="basis-full text-center text-xs text-foreground/50">{playTrademarkNote(lang)}</p>
       </div>
     </footer>
   );

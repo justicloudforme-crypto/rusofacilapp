@@ -16,6 +16,7 @@ import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-s
 import { getEntitlementTier, hasAnyAccess, planAddsNothing } from "@/lib/entitlement";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
 import { canBuyInsideShell, isNativeShellRequest } from "@/lib/native-shell";
+import PlayStoreBadge from "@/components/PlayStoreBadge";
 import {
   basePricesText,
   marked,
@@ -108,7 +109,8 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   // кнопку, которая ничего не делала, потому что продуктов в консолях нет
   // ни одного. Вернуть её из истории git — работа того захода, который
   // заведёт продукты (перепись — PROGRESS.md 7.192, часть 4).
-  if (await isNativeShellRequest()) {
+  const nativeShell = await isNativeShellRequest();
+  if (nativeShell) {
     // Право доступа считает сервер, и источник оплаты ему безразличен
     // (решение владельца 11.09.2026: «заплатил где угодно — пользуется
     // везде»). Если оно уже активно, человеку так и сказано.
@@ -356,6 +358,13 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
             {withBasePrices(p.approxNote, basePricesText(lang))}
           </p>
         )}
+      </div>
+
+      {/* Заход 7.258: приложение в Google Play — только в браузере. Сюда
+          ветка приложения не доходит (она вернулась выше), а признак всё
+          равно передан: правило одно на все три места. */}
+      <div className="mt-12 flex justify-center">
+        <PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="pricing" />
       </div>
 
       <div className="mt-16">

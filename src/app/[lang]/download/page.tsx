@@ -7,52 +7,16 @@ import { getPageDictionary } from "@/i18n/page-dictionary";
 import { routeAlternates, truncateForMeta } from "@/lib/site";
 import { isNativeShellRequest } from "@/lib/native-shell";
 import { nativeAccessCopy } from "@/lib/native-access-copy";
+import PlayStoreBadge from "@/components/PlayStoreBadge";
 
-// Simple line-icon badges instead of Apple/Google's official artwork —
-// this page ships before either store listing is actually live, so a
-// literal "Download on the App Store" badge would be both premature and
-// (for Apple's mark specifically) against their brand guidelines to
-// display before the app is published. These reuse the same
-// rounded-full / border treatment as every other button on the site
-// (see PlanCard in the pricing page) rather than imitating store chrome.
-//
-// 05.09.2026: the labels beside the glyphs are now PLATFORM names
-// ("iPhone", "Android") rather than store names. The page used to say
-// "Muy pronto — App Store" and, below it, that the review with Apple and
-// Google was being completed. There is no review: nothing has been
-// submitted to either store, so both statements were promises the project
-// had not made good on and could not date. What is left is the honest
-// shape of it — an app is being prepared, for these two platforms, with no
-// date and no store named as a fact.
-function AppleGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden>
-      <path d="M16.365 1.43c0 1.14-.463 2.1-1.04 2.83-.628.79-1.68 1.39-2.6 1.32-.12-1.1.44-2.24 1.02-2.95.64-.79 1.76-1.36 2.62-1.2ZM20.5 17.06c-.42.98-.62 1.42-1.16 2.29-.75 1.21-1.81 2.72-3.12 2.73-1.17.02-1.47-.76-3.06-.75-1.58.01-1.92.77-3.09.75-1.31-.02-2.31-1.38-3.06-2.58-2.1-3.35-2.32-7.28-1.02-9.38.92-1.49 2.38-2.36 3.75-2.36 1.4 0 2.28.77 3.44.77 1.12 0 1.8-.77 3.44-.77 1.22 0 2.52.66 3.44 1.81-3.02 1.66-2.53 5.98.44 7.49Z" />
-    </svg>
-  );
-}
-
-function PlayGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden>
-      <path d="M4.6 2.4c-.4.4-.6.9-.6 1.5v16.2c0 .6.2 1.1.6 1.5l.1.1L14 12 4.7 2.3l-.1.1Z" />
-      <path d="M17.1 14.9 14 12l3.1-3-1.16-.79L11.5 12l4.44 3.79 1.16-.9Z" />
-      <path d="M17.1 9.1l-3.7 3.1 3.7 3.1 4.6-2.6c.5-.3.8-.75.8-1.3 0-.55-.3-1-.8-1.3l-4.6-2Z" />
-    </svg>
-  );
-}
-
-function StoreBadge({ icon, storeName, status }: { icon: React.ReactNode; storeName: string; status: string }) {
-  return (
-    <div className="flex w-full items-center gap-3 rounded-2xl border border-black/10 px-5 py-3.5 text-foreground/50 dark:border-white/30 sm:w-auto">
-      {icon}
-      <div className="text-left leading-tight">
-        <p className="text-xs">{status}</p>
-        <p className="text-sm font-semibold text-foreground/70">{storeName}</p>
-      </div>
-    </div>
-  );
-}
+// 08.10.2026, заход 7.258: приложение для Android ОПУБЛИКОВАНО в Google
+// Play (07.10.2026, сборка 14 / 1.0.13). Самодельные плашки «iPhone /
+// Android — Próximamente» и фраза «устанавливать пока нечего» стали
+// неправдой у живых посетителей: на эту страницу ведёт «Descargar la app»
+// из подвала. Вместо них — официальный бейдж Google Play (`PlayStoreBadge`,
+// тот же, что на главной, в ценах и в подвале). Про iPhone страница не
+// обещает ничего: ни плашки, ни «скоро», ни даты — только то, что сайт
+// работает в браузере.
 
 export async function generateMetadata({
   params,
@@ -85,9 +49,11 @@ export async function generateMetadata({
     // and useful for a visitor who follows the link from /pricing; it just
     // does not compete in search until there is a real store listing.
     //
-    // REMOVE THIS the day either store URL becomes real — see the comment
-    // on AppleGlyph above and src/lib/site.ts's organizationJsonLd, which
-    // is waiting on the same event to gain a `sameAs`. follow:true so the
+    // REMOVE THIS the day either store URL becomes real — and since
+    // 07.10.2026 the Google Play one is (заход 7.258). Left in place on
+    // purpose: indexing this page, together with src/lib/site.ts's
+    // organizationJsonLd `sameAs`, is an SEO change for the post-launch
+    // queue in PROGRESS.md, not part of the link run. follow:true so the
     // links out of the page still pass through.
     robots: { index: false, follow: true },
     alternates,
@@ -116,7 +82,8 @@ export default async function DownloadPage({ params }: PageProps<"/[lang]/downlo
    * ответ и одну ссылку туда, где есть что делать. Ни цены, ни кнопки
    * покупки, ни ссылки в магазин — за этим следит `check:native-payments`.
    */
-  if (await isNativeShellRequest()) {
+  const nativeShell = await isNativeShellRequest();
+  if (nativeShell) {
     const copy = nativeAccessCopy(lang).download;
     return (
       <div className="flex flex-1 flex-col">
@@ -161,9 +128,8 @@ export default async function DownloadPage({ params }: PageProps<"/[lang]/downlo
         </h1>
         <p className="max-w-xl text-lg leading-8 text-foreground/70">{d.pageSubtitle}</p>
 
-        <div className="flex flex-col items-center gap-3 pt-4 sm:flex-row">
-          <StoreBadge icon={<AppleGlyph />} storeName={d.iosCta} status={d.comingSoonLabel} />
-          <StoreBadge icon={<PlayGlyph />} storeName={d.androidCta} status={d.comingSoonLabel} />
+        <div className="pt-4">
+          <PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="download" />
         </div>
 
         <p className="max-w-lg text-sm text-foreground/60">{d.notifyNote}</p>

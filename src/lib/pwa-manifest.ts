@@ -58,11 +58,24 @@ import type { Locale } from "@/i18n/config";
 export const STORE_LIVE = false;
 
 /**
+ * Страница приложения в Google Play — ЕДИНСТВЕННОЕ место в `src/`, где
+ * записан этот адрес (правило 4 `check:purchase-no-store-link`).
+ *
+ * Заход 7.258: приложение опубликовано 07.10.2026 (продакшн, сборка 14 /
+ * 1.0.13), и адрес стал нажимаемым — бейдж «Google Play» на главной, на
+ * странице цен и в подвале, ТОЛЬКО в браузере (`PlayStoreBadge`, сторож
+ * `check:play-link`). `STORE_LIVE` выше при этом НЕ поднят: он включает
+ * ещё и `prefer_related_applications`, то есть меняет поведение установки
+ * PWA в Chrome у всех посетителей, — это отдельное решение владельца.
+ */
+export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${APP_ID}`;
+
+/**
  * Карточки в магазинах. Пусто, пока `STORE_LIVE` ложно: несуществующая
  * ссылка в манифесте хуже отсутствующей — она ведёт в тупик.
  */
 export const STORE_LISTINGS: NonNullable<MetadataRoute.Manifest["related_applications"]> = STORE_LIVE
-  ? [{ platform: "play", url: `https://play.google.com/store/apps/details?id=${APP_ID}`, id: APP_ID }]
+  ? [{ platform: "play", url: PLAY_STORE_URL, id: APP_ID }]
   : [];
 
 /** Снимки экрана живого продакшна. Пути и размеры — не на глаз: их пишет

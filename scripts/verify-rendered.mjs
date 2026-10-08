@@ -460,6 +460,12 @@ async function main() {
       ["scripts/check-shell-surfaces.ts", `--base=${BASE}`, "--plant", ...passthrough],
       { stdio: "inherit" }
     );
+    // Заход 7.258: бейдж Google Play — в отдаче браузеру на главной, в
+    // ценах, на /download и в подвале (es и ru), в отдаче приложению — 0
+    // в исходном коде целиком. Пара утверждений судится одним прогоном по
+    // той же причине, что и у check:shell-surfaces выше.
+    const playLink = spawnSync(process.execPath, ["scripts/check-play-link.mjs", `--base=${BASE}`], { stdio: "inherit" });
+    const playLinkPlant = spawnSync(process.execPath, ["scripts/check-play-link.mjs", `--base=${BASE}`, "--plant"], { stdio: "inherit" });
     // ДОЛГ 82, заход 7.212: плавающая кнопка не ложится на органы
     // управления. Здесь же, на том же сервере, по той же причине, что и
     // соседи. `--ci` пробрасывается: на пустой базе CI каталог рассказов
@@ -583,6 +589,8 @@ async function main() {
       (nativeShellRender.status ?? 1) ||
       (shellSurfaces.status ?? 1) ||
       (shellSurfacesPlant.status ?? 1) ||
+      (playLink.status ?? 1) ||
+      (playLinkPlant.status ?? 1) ||
       (floatOverlap.status ?? 1) ||
       (floatOverlapPlant.status ?? 1) ||
       (bottomInset.status ?? 1) ||
