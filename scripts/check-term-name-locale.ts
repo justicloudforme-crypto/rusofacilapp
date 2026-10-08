@@ -86,12 +86,13 @@ function behaviour(names: Names): string[] {
 
 /**
  * ВИТРИНЫ, печатающие НАЗВАНИЕ термина. Перепись 7.212 (часть 3.1) дала
- * 13 строк; здесь их одиннадцать — те, которые правку получили. Две
- * оставшиеся названы в отчёте 7.215 поимённо и с причиной:
- * `GlossaryText.tsx` печатает не имя термина, а найденное слово ПРОЗЫ, а
- * перелинковка рассказов и медиа (`getContentInsights`,
- * `getMediaGrammarLinks`) рисует свои подписи на 165 страницах `/ru`,
- * замороженных до 26.09.2026.
+ * 13 строк; здесь их двенадцать — те, которые правку получили. Оставшаяся
+ * названа в отчёте 7.215 поимённо и с причиной: `GlossaryText.tsx`
+ * печатает не имя термина, а найденное слово ПРОЗЫ. Перелинковка
+ * рассказов и медиа (`getContentInsights`, `getMediaGrammarLinks` →
+ * `ContentInsights.tsx`) ждала снятия заморозки и вошла в список в 7.258
+ * (долг 268): до правки на 325 страницах `/ru` 621 подпись из 621 была
+ * испанской.
  */
 interface Surface {
   file: string;
@@ -108,6 +109,7 @@ const SURFACES: Surface[] = [
   { file: "src/components/glossary/TermQuiz.tsx", what: "викторина по терминам", forbidden: [/\{question\.term\.term\}/, /"\{term\}",\s*question\.term\.term/] },
   { file: "src/app/[lang]/glossary/[slug]/page.tsx", what: "страница термина: h1, <title>, JSON-LD, родственные термины", forbidden: [/\{term\.term\}/, /name: term\.term/, /\$\{term\.term\}/, /\{related\.term\}/] },
   { file: "src/lib/search/records.ts", what: "выдача поиска по сайту", forbidden: [/title: term\.term,/] },
+  { file: "src/components/stories/ContentInsights.tsx", what: "перелинковка рассказов и медиа (долг 268)", forbidden: [/\{item\.term\}/] },
 ];
 
 /** Файлы, которые обязаны СПРАШИВАТЬ общую функцию. Отдельным списком от
@@ -215,6 +217,13 @@ function plant(): void {
     "выдача поиска снова печатает испанское имя на /ru",
     statics((file) =>
       file === "src/lib/search/records.ts" ? real(file).replace("title: es.primary,", "title: term.term,") : real(file),
+    ).length,
+    true,
+  );
+  say(
+    "перелинковка рассказов и медиа снова печатает испанское имя (код ДО правки 7.258, долг 268)",
+    statics((file) =>
+      file === "src/components/stories/ContentInsights.tsx" ? real(file).replace("{glossaryTermPrimaryName(item, lang)}", "{item.term}") : real(file),
     ).length,
     true,
   );

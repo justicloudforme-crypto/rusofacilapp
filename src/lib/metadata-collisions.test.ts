@@ -103,9 +103,10 @@ describe("lesson and media titles never collide", () => {
 });
 
 describe("media descriptions", () => {
-  it("gives every non-frozen media page a description of its own", () => {
+  it("gives every media page a description of its own (7.258: the experiment's 100 included)", () => {
     for (const lang of ["es", "ru"] as const) {
-      const free = media.filter((m) => !isFrozenPage(m.id));
+      const free = media;
+      expect(free).toHaveLength(275);
       const descriptions = free.map((m) => mediaDescription(lang, m));
       const seen = new Map<string, string[]>();
       descriptions.forEach((d, i) => {
@@ -129,7 +130,11 @@ describe("media descriptions", () => {
     expect(old.length).toBe(275);
   });
 
-  it("leaves frozen media serving the exact text it served before", () => {
+  it("the experiment's media no longer serve the 28.08 text (долг 4, 7.258)", () => {
+    // The page now calls mediaDescription for all 275 items (check:thaw
+    // guards the call site). Positive control: for every one of the 200
+    // URLs of the 100 thawed songs that is a different string than the
+    // one they served under the freeze — the thaw is not a no-op.
     const frozen = media.filter((m) => isFrozenPage(m.id));
     expect(frozen).toHaveLength(100);
     let wouldHaveChanged = 0;
@@ -143,8 +148,6 @@ describe("media descriptions", () => {
         if (mediaDescription(lang, item) !== frozenMediaDescription(lang, item)) wouldHaveChanged++;
       }
     }
-    // Positive control on the gate: it is not a no-op — every one of the
-    // 200 frozen media URLs would otherwise have a different description.
     expect(wouldHaveChanged).toBe(200);
   });
 
