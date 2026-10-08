@@ -91,37 +91,34 @@ describe("fitTitle", () => {
 });
 
 describe("against the real content", () => {
-  it("brings every non-frozen media title inside the ceiling, all distinct", () => {
+  it("brings every media title inside the ceiling, all distinct (7.258: the experiment's 100 included)", () => {
     for (const lang of ["es", "ru"]) {
-      const titles = media
-        .filter((m) => !isFrozenPage(m.id))
-        .map((m) => fitTitle(m.title, mediaQualifier(lang, m.level)));
+      const titles = media.map((m) => contentPageTitle(m.id, m.title, mediaQualifier(lang, m.level)));
+      expect(titles).toHaveLength(275);
       for (const t of titles) expect(t.length, t).toBeLessThanOrEqual(TITLE_MAX);
       expect(new Set(titles).size, `${lang}: duplicate media titles`).toBe(titles.length);
     }
   });
 
-  it("leaves every frozen media title exactly as it shipped on 28.08.2026", () => {
-    // The experiment's guarantee, as an assertion. contentPageTitle is the
-    // function the page actually calls, so this exercises the real branch —
-    // and it is compared against the pre-change formula, not against a copy
-    // of its own output.
-    const frozen = media.filter((m) => isFrozenPage(m.id));
-    expect(frozen).toHaveLength(100);
-    let changedByTheFix = 0;
-    for (const item of frozen) {
+  it("fits the titles of the experiment's media now that the freeze is lifted (долг 4, 7.258)", () => {
+    // Until 7.258 contentPageTitle reproduced the 28.08.2026 title of these
+    // 100 songs byte for byte. Now it fits them like every other page, and
+    // the positive control is the same number the freeze used to assert:
+    // 188 of their 200 URLs serve a different title than they shipped with.
+    const thawed = media.filter((m) => isFrozenPage(m.id));
+    expect(thawed).toHaveLength(100);
+    let changedByTheThaw = 0;
+    for (const item of thawed) {
       for (const lang of ["es", "ru"]) {
         const qualifier = mediaQualifier(lang, item.level);
         const asShippedBefore = `${item.title} — ${qualifier} | RusoFácilapp`;
-        expect(contentPageTitle(item.id, item.title, qualifier), item.id).toBe(asShippedBefore);
-        if (fitTitle(item.title, qualifier) !== asShippedBefore) changedByTheFix++;
+        const now = contentPageTitle(item.id, item.title, qualifier);
+        expect(now, item.id).toBe(fitTitle(item.title, qualifier));
+        expect(now.length, now).toBeLessThanOrEqual(TITLE_MAX);
+        if (now !== asShippedBefore) changedByTheThaw++;
       }
     }
-    // Positive control: the test above would pass vacuously if the fix
-    // happened to be a no-op for these items. It is not — 188 of the 200
-    // frozen media URLs would have changed, and are deliberately left
-    // alone until the readout.
-    expect(changedByTheFix).toBe(188);
+    expect(changedByTheThaw).toBe(188);
   });
 
   it("does fit the titles of media that is not in the experiment", () => {

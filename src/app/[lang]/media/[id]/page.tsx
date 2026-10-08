@@ -18,8 +18,8 @@ import VocabularyTab from "@/components/lesson/VocabularyTab";
 import { clipsByText } from "@/lib/audio-reuse";
 import { textAudioKey } from "@/lib/lessons/audioKeys";
 import JsonLd from "@/components/seo/JsonLd";
-import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
-import { frozenMediaDescription, mediaDescription } from "@/lib/media/metadata";
+import { contentPageTitle } from "@/lib/frozen-pages";
+import { mediaDescription } from "@/lib/media/metadata";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { storyTitles } from "@/lib/story-title";
@@ -59,9 +59,9 @@ export async function generateMetadata({
   // makes each one describe its own page. The Spanish side already had a
   // per-item description; both are now capped at the 155 characters Google
   // shows, the same cap truncateForMeta already applies in the glossary.
-  const description = isFrozenPage(item.id)
-    ? frozenMediaDescription(lang, item)
-    : mediaDescription(lang, item);
+  // Since 7.258 (долг 4) for all 275 items: the 100 songs of the
+  // experiment kept their 28.08 text until the freeze was lifted.
+  const description = mediaDescription(lang, item);
   return { title, description, alternates: routeAlternates(lang, `/media/${encodeURIComponent(id)}`) };
 }
 

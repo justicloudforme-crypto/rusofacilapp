@@ -80,6 +80,11 @@ export const PRICES = {
     kind: "estimated",
     what: "330 URL живого сайта: 200 медиа-страниц по 36 строк и 130 рассказов по 260",
   },
+  "check:thaw": {
+    rows: 51_000,
+    kind: "estimated",
+    what: "те же 330 URL эксперимента, что у check:frozen (41 000), плюс /sitemap.xml: пазлы, рассказы, глоссарий, свёртка карточек (~10 000)",
+  },
   "check:reachability": {
     rows: 1_944_000,
     kind: "estimated",
@@ -203,6 +208,11 @@ function plant() {
     {
       name: "check:reachability",
       cmd: ["npx", "tsx", "scripts/check-reachability.ts", "--base=https://rusofacilapp.com"],
+      env: {},
+    },
+    {
+      name: "check:thaw",
+      cmd: ["node", "scripts/check-thaw.mjs", "--base=https://rusofacilapp.com"],
       env: {},
     },
   ];

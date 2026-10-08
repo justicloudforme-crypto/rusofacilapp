@@ -14,7 +14,6 @@ import {
   freeIndexLastModified,
 } from "@/lib/word-games/free-index";
 import { TOPIC_LANDINGS, TOPIC_LANDING_PATHS, landingPath } from "@/lib/word-games/topic-landings";
-import { isFrozenStory } from "@/lib/story-pilot";
 import { PUBLIC_VOCABULARY_LEVELS } from "@/lib/vocabulary-categories";
 import { lastModifiedField, latestLastModified, rowLastModified } from "@/lib/sitemap-lastmod";
 import { ALPHABET_PAGE_PATH } from "@/lib/alphabet/cyrillic-alphabet";
@@ -379,32 +378,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // `lastmod` у рассказов: у всех, КРОМЕ 65 замороженных.
+  // `lastmod` у рассказов — у всех 650 URL (долг 3, заход 7.258).
   //
-  // Было (29.08–05.09.2026): поля не было ни у одного из 650 URL, и
-  // формулировка звучала как «рассказы не получают дату до 25.09». Это
-  // больше, чем требует заморозка. `lastmod` — сигнал переобхода, и
-  // трогать им измеряемую группу нельзя; но измеряемая группа — это
-  // ровно 65 рассказов (50 пилот + 15 контроль, и то и другое внутри
-  // заморозки, см. PROGRESS.md «ЭКСПЕРИМЕНТЫ»), то есть 130 URL из 650.
-  // Остальные 520 в эксперименте не участвуют ни одной стороной, их
-  // частота обхода ничего не измеряет, и молчали они не по правилу
-  // заморозки, а заодно.
-  //
-  // Принадлежность спрашивается у кода, а не у списка: `isFrozenStory`
-  // — та же функция, которой пользуются сами страницы рассказов, и она
-  // покрывает обе группы. Ни один замороженный URL от этой правки не
-  // получает поля; проверка — сверка «до/после» и check:frozen.
-  //
-  // Снимается это 25.09.2026 удалением одной ветки — вместе с остальными
-  // пунктами очереди на снятие заморозки.
+  // С 05.09 по 08.10.2026 дату не получали 65 рассказов эксперимента
+  // «тело тонким страницам» (130 URL): `lastmod` — сигнал переобхода, и
+  // толкать им измеряемую группу было нельзя. Замерный период кончился
+  // 25.09.2026, данные за него лежат в Search Console и от карты сайта
+  // больше не зависят, поэтому ветка снята. Сторож — `check:thaw`.
   for (const story of stories) {
-    const frozen = isFrozenStory(story);
     for (const lang of locales) {
       entries.push({
         url: `${SITE_URL}/${lang}/stories/${story.id}`,
         changeFrequency: "monthly",
-        ...lastModifiedField(frozen ? undefined : story.updatedAt),
+        ...lastModifiedField(story.updatedAt),
       });
     }
   }
