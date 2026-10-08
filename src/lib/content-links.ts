@@ -334,6 +334,10 @@ export interface StoryGrammarRef {
   /** The glossary entry's Spanish name, read from the DB so the block and
    * the linked page can never disagree about what the term is called. */
   term: string;
+  /** Its Russian name. Долг 268 (7.258): on `/ru` the link is labelled
+   * with this one — `glossaryTermPrimaryName`, the rule every other term
+   * surface already follows (check:term-name). */
+  russianEquivalent: string | null;
   /** Words from this text that show the feature. */
   examples: string[];
 }
@@ -370,18 +374,18 @@ export async function getContentInsights(text: string): Promise<ContentInsights>
     features.length > 0
       ? db.glossaryTerm.findMany({
           where: { slug: { in: features.map((f) => f.slug) } },
-          select: { slug: true, term: true },
+          select: { slug: true, term: true, russianEquivalent: true },
         })
       : Promise.resolve([]),
   ]);
 
-  const termBySlug = new Map(terms.map((t) => [t.slug, t.term]));
+  const termBySlug = new Map(terms.map((t) => [t.slug, t]));
   const grammar: StoryGrammarRef[] = [];
   for (const feature of features) {
     const term = termBySlug.get(feature.slug);
     // A feature whose glossary entry doesn't exist (or was renamed) is
     // skipped rather than rendered as a dead link.
-    if (term) grammar.push({ slug: feature.slug, term, examples: feature.examples });
+    if (term) grammar.push({ slug: feature.slug, term: term.term, russianEquivalent: term.russianEquivalent, examples: feature.examples });
   }
 
   const vocabulary = matchVocabulary(text, buildVocabularyIndex(cards));
@@ -421,11 +425,12 @@ export async function getMediaGrammarLinks(item: {
 
   const terms = await db.glossaryTerm.findMany({
     where: { slug: { in: features.map((f) => f.slug) } },
-    select: { slug: true, term: true },
+    select: { slug: true, term: true, russianEquivalent: true },
   });
-  const termBySlug = new Map(terms.map((t) => [t.slug, t.term]));
+  const termBySlug = new Map(terms.map((t) => [t.slug, t]));
 
-  return features
-    .filter((f) => termBySlug.has(f.slug))
-    .map((f) => ({ slug: f.slug, term: termBySlug.get(f.slug) as string, examples: [] }));
+  return features.flatMap((f) => {
+    const t = termBySlug.get(f.slug);
+    return t ? [{ slug: f.slug, term: t.term, russianEquivalent: t.russianEquivalent, examples: [] }] : [];
+  });
 }
