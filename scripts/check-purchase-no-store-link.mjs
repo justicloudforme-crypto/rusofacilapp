@@ -17,8 +17,12 @@
 //   2. тариф нажимает `buy(pkg)`, а `buy` зовёт `purchasePackage(pkg)`;
 //   3. `purchasePackage` зовёт мост `api.purchasePackage(`;
 //   4. во всём `src/` — ни одного `market://` и `intent://`, а
-//      `play.google.com/store/apps` — только в `related_applications`
-//      манифеста (`pwa-manifest.ts`: это не ссылка, её не нажать).
+//      `play.google.com/store/apps` — только в `pwa-manifest.ts`
+//      (`PLAY_STORE_URL`: `related_applications` манифеста и, с захода
+//      7.258, бейдж Google Play в БРАУЗЕРЕ — `PlayStoreBadge`, который в
+//      приложении не рисуется, сторож `check:play-link`). На пути покупки
+//      запрещено и само имя `PLAY_STORE_URL` — иначе адрес протащили бы
+//      импортом мимо регулярки правила 1.
 //      Ссылка «управлять подпиской» (`store/account/subscriptions`) —
 //      своя кнопка у ДЕЙСТВУЮЩЕЙ подписки, не покупка;
 //   5. отказ магазина не немой: событие Sentry «NativeStorePurchaseFailed»
@@ -83,6 +87,7 @@ export function judge(files) {
     if (!s) bad.push(`${path}: файла нет — сторож и код разошлись`);
     const store = s.match(STORE);
     if (store) bad.push(`${path}: на пути покупки ссылка на магазин приложений «${store[0]}» (правило 1)`);
+    if (/\bPLAY_STORE_URL\b/.test(s)) bad.push(`${path}: на пути покупки адрес страницы приложения через PLAY_STORE_URL (правило 1)`);
     const exit = s.match(EXIT);
     if (exit) bad.push(`${path}: на пути покупки уход со страницы «${exit[0]}» (правило 1)`);
     void key;
@@ -146,6 +151,8 @@ function main() {
     ["мост убран из purchasePackage", edit(P.client, "await api.purchasePackage({ aPackage: pkg })", "await Promise.reject(new Error(\"no bridge\"))"), "правило 3"],
     ["кнопка замка открывает intent://", edit(P.buyButton, "onClick={() => openPaywall(reason, kind)}", 'onClick={() => window.open("intent://details?id=com.rusofacilapp.app#Intent;scheme=market;end")}'), "правило 1"],
     ["окно замка со ссылкой на Google Play", edit(P.paywall, "return (", 'const store = "https://play.google.com/store/apps/details?id=com.rusofacilapp.app";\n  return ('), "правило 1"],
+    ["окно замка берёт адрес магазина импортом PLAY_STORE_URL", edit(P.paywall, "return (", "const store = PLAY_STORE_URL;\n  return ("), "PLAY_STORE_URL"],
+    ["адрес магазина записан вне манифеста (подвал)", edit("src/components/Footer.tsx", "return (", 'const s = "https://play.google.com/store/apps/details?id=com.rusofacilapp.app";\n  return ('), "правило 4"],
     ["market:// вне пути покупки (подвал)", edit("src/components/Footer.tsx", "return (", 'const m = "market://details?id=com.rusofacilapp.app";\n  return ('), "правило 4"],
     ["Ж.1 убран: «покупка идёт» не публикуется", edit(P.panel, "      beginPurchase();\n", ""), "Ж.1"],
     ["отказ магазина снова без кода", edit(P.panel, 'setStage({ kind: "failed", code });', 'setStage({ kind: "failed" });'), "правило 5"],

@@ -21,6 +21,7 @@ import StoryTitle from "@/components/stories/StoryTitle";
 import { getLocalPriceContext, isCashAvailableForRequest } from "@/lib/country-server";
 import { basePricesText, marked, priceCopy, withBasePrices, withPrice } from "@/lib/pricing-display";
 import { isNativeShellRequest } from "@/lib/native-shell";
+import PlayStoreBadge from "@/components/PlayStoreBadge";
 import { accountDeletionCopy } from "@/lib/legal/account-deletion";
 import {
   GlobeIcon,
@@ -146,6 +147,9 @@ export default async function HomePage({ params, searchParams }: PageProps<"/[la
                 {dict.home.heroSecondaryCta}
               </Button>
             </div>
+            {/* Заход 7.258: приложение в Google Play — только в браузере
+                (в приложении компонент ничего не рисует). */}
+            <PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="home" />
             <div className="pt-6">
               <TrustStrip
                 items={[
