@@ -32,6 +32,24 @@
  *         магазина нет вовсе, `Organization` при этом есть (иначе «нет
  *         sameAs» доказано пустотой), а `/download` приложению — `noindex`.
  *      Пустая выборка — красная.
+ *
+ * ЦЕНА В РАЗМЕТКЕ `/pricing` — заход 7.260. Product JSON-LD назывался
+ * валютой страны посетителя (робот Google из США читал 8.66 / 51.92 /
+ * 133 USD), а списываются везде песо. Теперь `Offer` — всегда базовые
+ * цены в MXN из `plans.ts`, и они ВИДНЫ на странице любому читателю: на
+ * карточках в Мексике и без курса, в сноске при пересчёте (правило Google
+ * «цена разметки видна на странице»).
+ *   1д) СТАТИКА: `pricingOffersJsonLd` берёт цену и валюту из `BASE_OFFERS`,
+ *       `copy` не читает; `BASE_OFFERS` — `pesoOffer(plans.<план>.amountMxnCents)`
+ *       по каждому плану, `pesoOffer` — валюта `BASE_CURRENCY`; страница не
+ *       передаёт в разметку `copy`; сноска с базовыми ценами стоит под тем же
+ *       условием `copy.converted`, что и пересчёт. И ИСПОЛНЕНИЕМ: настоящая
+ *       функция отдаёт три `Offer` в MXN, равные `plans.ts`.
+ *   2д) ЖИВАЯ: `/es|ru/pricing` с `x-vercel-ip-country` MX, US, ES — у каждой
+ *       отдачи один Product, три `Offer`, `priceCurrency` MXN, цены = `plans.ts`,
+ *       и каждая цена, записанная как её читает человек («$2,299 MXN»), есть
+ *       в ВИДИМОМ тексте страницы. Против прода страна берётся по IP, а не из
+ *       заголовка, — сторож печатает, сколько разных отрисовок он увидел.
  *   `--plant` — в обе половины: подсадки в исходники и в отдачу;
  *   настоящие файлы и настоящая отдача — отрицательный контроль.
  *
@@ -42,6 +60,8 @@
 import { readFileSync } from "node:fs";
 import { isEntryPoint } from "../src/lib/entry-point";
 import { isDisallowed, parseRobotsTxt, decidingRule } from "../src/lib/robots-matcher";
+import { formatMoney, plans } from "../src/lib/plans";
+import { pricingOffersJsonLd } from "../src/lib/pricing-display";
 
 export const PLAY_URL = "https://play.google.com/store/apps/details?id=com.rusofacilapp.app";
 const LANGS = ["es", "ru"] as const;
@@ -55,6 +75,8 @@ const FILES = {
   site: "src/lib/site.ts",
   home: "src/app/[lang]/page.tsx",
   about: "src/app/[lang]/sobre-nosotros/page.tsx",
+  pricingDisplay: "src/lib/pricing-display.ts",
+  pricing: "src/app/[lang]/pricing/page.tsx",
 } as const;
 type Files = Record<(typeof FILES)[keyof typeof FILES], string>;
 
@@ -115,7 +137,75 @@ export function judgeStatic(f: Files): string[] {
     }
     if (!/isNativeShellRequest\(\)/.test(src)) bad.push(`${FILES[key]}: признак приложения не спрашивается у сервера`);
   }
+
+  // 1д) цена в разметке /pricing — песо из plans.ts (7.260)
+  const pd = f[FILES.pricingDisplay];
+  const fnAt = pd.indexOf("export function pricingOffersJsonLd(");
+  const fn = fnAt < 0 ? "" : pd.slice(fnAt);
+  if (!fn) bad.push(`${FILES.pricingDisplay}: pricingOffersJsonLd не найдена — сторож ослеп`);
+  else {
+    if (!/price: BASE_OFFERS\[plan\]\.price,/.test(fn) || !/priceCurrency: BASE_OFFERS\[plan\]\.currency,/.test(fn)) {
+      bad.push(`${FILES.pricingDisplay}: Offer берёт цену не из BASE_OFFERS — в разметку уйдёт пересчёт по стране, а не списываемые песо`);
+    }
+    if (/\bcopy\b/.test(fn)) bad.push(`${FILES.pricingDisplay}: pricingOffersJsonLd снова читает copy — цена разметки пойдёт за валютой посетителя`);
+  }
+  const offersDef = block(pd, /export const BASE_OFFERS[^=]*= \{([\s\S]*?)\n\};/);
+  for (const plan of PLANS) {
+    if (!new RegExp(`\\b${plan}: pesoOffer\\(plans\\.${plan}\\.amountMxnCents\\),`).test(offersDef)) {
+      bad.push(`${FILES.pricingDisplay}: BASE_OFFERS.${plan} — не pesoOffer(plans.${plan}.amountMxnCents): цена записана мимо источника цен`);
+    }
+  }
+  if (!/currency: BASE_CURRENCY\.toUpperCase\(\),/.test(block(pd, /export function pesoOffer\([\s\S]*?\{([\s\S]*?)\n\}/))) {
+    bad.push(`${FILES.pricingDisplay}: pesoOffer — валюта не BASE_CURRENCY`);
+  }
+  const pg = f[FILES.pricing];
+  const call = block(pg, /pricingOffersJsonLd\(\{([\s\S]*?)\}\)\}/);
+  if (!call) bad.push(`${FILES.pricing}: вызова pricingOffersJsonLd нет — Product пропал со страницы`);
+  else if (/\bcopy\b/.test(call)) bad.push(`${FILES.pricing}: в разметку передаётся copy — цена пойдёт за валютой посетителя`);
+  if (!/\{copy\.converted && \([\s\S]{0,200}withBasePrices\(p\.approxNote, basePricesText\(lang\)\)/.test(pg)) {
+    bad.push(`${FILES.pricing}: сноска с базовыми ценами не стоит под copy.converted — при пересчёте цены в песо на странице может не оказаться`);
+  }
   return bad;
+}
+
+const PLANS = ["monthly", "annual", "lifetime"] as const;
+
+/** Цены, которые обязана нести разметка: из источника цен сайта, как
+ * schema.org их пишет («150», «2299»), и как их читает человек («$2,299 MXN»). */
+export const EXPECTED_OFFERS = PLANS.map((plan) => {
+  const cents = plans[plan].amountMxnCents;
+  const price = cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
+  return { plan, price, written: formatMoney(cents) };
+});
+
+interface OfferLike {
+  "@type"?: unknown;
+  price?: unknown;
+  priceCurrency?: unknown;
+}
+
+/** Суд над списком Offer: три штуки, MXN, цены = plans.ts по порядку. */
+export function judgeOffers(where: string, offers: OfferLike[] | null): string[] {
+  if (!offers) return [`${where}: Product с offers нет`];
+  const bad: string[] = [];
+  if (offers.length !== PLANS.length) bad.push(`${where}: Offer ${offers.length}, а не ${PLANS.length}`);
+  offers.forEach((o, i) => {
+    const want = EXPECTED_OFFERS[i];
+    if (o.priceCurrency !== "MXN") bad.push(`${where}: Offer ${i + 1} — priceCurrency ${String(o.priceCurrency)}, а списываются MXN`);
+    if (want && o.price !== want.price) bad.push(`${where}: Offer ${i + 1} — price ${String(o.price)}, а в plans.ts ${want.price}`);
+  });
+  return bad;
+}
+
+/** Настоящая функция разметки, исполненная: то, что уйдёт в обе локали. */
+export function realOffers(lang: "es" | "ru"): OfferLike[] {
+  return pricingOffersJsonLd({
+    lang,
+    url: `https://rusofacilapp.com/${lang}/pricing`,
+    name: "x",
+    description: "x",
+    planNames: { monthly: "m", annual: "a", lifetime: "l" },
+  }).offers;
 }
 
 // -------------------------------------------------------------- живая
@@ -126,16 +216,21 @@ interface Page {
   html: string;
   robotsHeader: string;
 }
+interface PricingPage extends Page {
+  country: string;
+}
 export interface Snapshot {
   web: Page[];
   app: Page[];
   sitemap: string | null;
   robots: string | null;
+  pricing?: PricingPage[];
 }
 
-async function fetchPage(base: string, path: string, app: boolean): Promise<Page> {
+async function fetchPage(base: string, path: string, app: boolean, country?: string): Promise<Page> {
   const headers: Record<string, string> = { "user-agent": app ? APP_UA : UA };
   if (app) headers.cookie = "rf_native_shell=1; rf_shell_version=14";
+  if (country) headers["x-vercel-ip-country"] = country;
   try {
     const res = await fetch(`${base}${path}`, { headers, redirect: "manual", signal: AbortSignal.timeout(60_000) });
     return { path, status: res.status, html: await res.text(), robotsHeader: res.headers.get("x-robots-tag") ?? "" };
@@ -154,9 +249,86 @@ async function snapshot(base: string): Promise<Snapshot> {
     web.push(await fetchPage(base, p, false));
     app.push(await fetchPage(base, p, true));
   }
+  const pricing: PricingPage[] = [];
+  for (const lang of LANGS) {
+    for (const country of PRICING_COUNTRIES) pricing.push({ ...(await fetchPage(base, `/${lang}/pricing`, false, country)), country });
+  }
   const sm = await fetchPage(base, "/sitemap.xml", false);
   const rb = await fetchPage(base, "/robots.txt", false);
-  return { web, app, sitemap: sm.status === 200 ? sm.html : null, robots: rb.status === 200 ? rb.html : null };
+  return { web, app, sitemap: sm.status === 200 ? sm.html : null, robots: rb.status === 200 ? rb.html : null, pricing };
+}
+
+/** MX — песо на карточках; US и ES — пересчёт (если сервер принял страну и
+ * курс пришёл). Минимум, названный заходом 7.260. */
+const PRICING_COUNTRIES = ["MX", "US", "ES"] as const;
+
+/** Текст, который видит человек: без скриптов, стилей и тегов, сущности
+ * раскодированы (PROGRESS.md 4.3). */
+export function visibleText(html: string): string {
+  return html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;|&#xa0;/gi, "\u00a0")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ");
+}
+
+/** Все Product в JSON-LD отдачи. */
+export function products(html: string): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  for (const m of html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const d = JSON.parse(m[1]);
+      for (const x of Array.isArray(d) ? d : [d]) if (x && x["@type"] === "Product") out.push(x);
+    } catch {
+      out.push({ "@type": "Product", __broken: true });
+    }
+  }
+  return out;
+}
+
+/** Валюта карточек: «≈ 8,66 USD*» → USD; песо → MXN. Для отчёта о том,
+ * сколько разных отрисовок сторож на самом деле видел. */
+function cardCurrency(text: string): string {
+  return /≈\s?[\d.,\u00a0\u202f ]+\s([A-Z]{3})\*/.exec(text)?.[1] ?? "MXN";
+}
+
+export function judgePricing(pages: PricingPage[] | undefined): string[] {
+  if (!pages || pages.length === 0) return ["/pricing: выборка пуста — сторож ослеп, а не доволен"];
+  const bad: string[] = [];
+  const expected = LANGS.length * PRICING_COUNTRIES.length;
+  if (pages.length < expected) bad.push(`/pricing: отдач ${pages.length} из ${expected} — часть выборки потеряна`);
+  for (const p of pages) {
+    const where = `${p.path} (${p.country})`;
+    if (p.status !== 200) {
+      bad.push(`${where}: ответ ${p.status}`);
+      continue;
+    }
+    const prods = products(p.html);
+    if (prods.length !== 1) {
+      bad.push(`${where}: Product в JSON-LD — ${prods.length}, а не 1`);
+      continue;
+    }
+    if (prods[0].__broken) {
+      bad.push(`${where}: JSON-LD не разбирается`);
+      continue;
+    }
+    bad.push(...judgeOffers(where, Array.isArray(prods[0].offers) ? (prods[0].offers as OfferLike[]) : null));
+    const text = visibleText(p.html);
+    for (const o of EXPECTED_OFFERS) {
+      if (!text.includes(o.written)) bad.push(`${where}: «${o.written}» нет в видимом тексте — цена разметки не видна на странице`);
+    }
+  }
+  return bad;
+}
+
+export function pricingRenderings(pages: PricingPage[] | undefined): string {
+  return (pages ?? []).map((p) => `${p.country}→${cardCurrency(visibleText(p.html))}`).filter((v, i, a) => a.indexOf(v) === i).join(", ");
 }
 
 function tags(html: string, name: string): string[] {
@@ -259,6 +431,7 @@ export function judgeLive(s: Snapshot): string[] {
     if (organizations(p.html).length === 0) bad.push(`${p.path} (приложение): Organization нет вовсе — «нет sameAs» доказано пустотой`);
     if (p.html.includes("play.google.com/store/apps")) bad.push(`${p.path} (приложение): адрес магазина в ответе приложению`);
   }
+  bad.push(...judgePricing(s.pricing));
   return bad;
 }
 
@@ -284,7 +457,16 @@ function report(name: string, cases: [string, boolean][], clean: boolean): numbe
 
 function staticMain(plant: boolean): number {
   const f = readFiles();
-  const bad = judgeStatic(f);
+  const bad = [
+    ...judgeStatic(f),
+    ...LANGS.flatMap((lang) => {
+      try {
+        return judgeOffers(`pricingOffersJsonLd("${lang}")`, realOffers(lang));
+      } catch (e) {
+        return [`pricingOffersJsonLd("${lang}") без copy не исполняется (${(e as Error).message}) — разметка зависит от пересчёта`];
+      }
+    }),
+  ];
   if (plant) {
     const edit = (path: string, from: string | RegExp, to: string): Files | null => {
       const next = f[path as keyof Files].replace(from, to);
@@ -299,11 +481,25 @@ function staticMain(plant: boolean): number {
       ["sameAs выдаётся и приложению", edit(FILES.site, "...(nativeShell ? {} : { sameAs: [PLAY_STORE_URL] })", "sameAs: [PLAY_STORE_URL]"), "нет sameAs"],
       ["главная передаёт буквальное false", edit(FILES.home, "organizationJsonLd(lang, nativeShell)", "organizationJsonLd(lang, false)"), "не с сервера"],
       ["«О проекте» передаёт буквальное false", edit(FILES.about, "organizationJsonLd(lang, nativeShell)", "organizationJsonLd(lang, false)"), "не с сервера"],
+      ["разметка цен снова из copy (как до 7.260)", edit(FILES.pricingDisplay, "price: BASE_OFFERS[plan].price,", "price: copy.offers[plan].price,"), "не из BASE_OFFERS"],
+      ["валюта разметки — валюта посетителя", edit(FILES.pricingDisplay, "priceCurrency: BASE_OFFERS[plan].currency,", "priceCurrency: copy.offers[plan].currency,"), "не из BASE_OFFERS"],
+      ["цена годового вписана руками", edit(FILES.pricingDisplay, "annual: pesoOffer(plans.annual.amountMxnCents),", 'annual: { price: "899", currency: "MXN" },'), "мимо источника цен"],
+      ["pesoOffer с валютой USD", edit(FILES.pricingDisplay, "currency: BASE_CURRENCY.toUpperCase(),", 'currency: "USD",'), "не BASE_CURRENCY"],
+      ["страница передаёт copy в разметку", edit(FILES.pricing, "          planNames: { monthly: p.monthly.name, annual: p.annual.name, lifetime: p.lifetime.name },\n        })}", "          planNames: { monthly: p.monthly.name, annual: p.annual.name, lifetime: p.lifetime.name },\n          copy,\n        })}"), "передаётся copy"],
+      ["сноска с песо снята со страницы", edit(FILES.pricing, "{copy.converted && (", "{false && ("), "сноска с базовыми ценами"],
     ];
     const cases: [string, boolean][] = planted.map(([label, files, expect]) => [
       files ? label : `${label} — ЯКОРЬ ПОДСАДКИ УЕХАЛ`,
       files !== null && judgeStatic(files).some((x) => x.includes(expect)),
     ]);
+    // Исполненная функция: испорченный выход обязан ловиться тем же судом.
+    const real = realOffers("es");
+    const offerPlants: [string, OfferLike[]][] = [
+      ["Offer в USD (8.66 / 51.92 / 133 — что видел робот из США)", [{ price: "8.66", priceCurrency: "USD" }, { price: "51.92", priceCurrency: "USD" }, { price: "133", priceCurrency: "USD" }]],
+      ["неверное число у годового", real.map((o, i) => (i === 1 ? { ...o, price: "900" } : o))],
+      ["Offer потерян", real.slice(0, 2)],
+    ];
+    for (const [label, offers] of offerPlants) cases.push([`исполнение: ${label}`, judgeOffers("plant", offers).length > 0]);
     return report("check:store-seo", cases, bad.length === 0);
   }
   if (bad.length) {
@@ -311,7 +507,7 @@ function staticMain(plant: boolean): number {
     for (const b of bad) console.error(`  ${b}`);
     return 1;
   }
-  console.log("check:store-seo — /download индексируется (браузер без robots, приложение noindex), в карте сайта, robots.txt открыт; Organization.sameAs = Google Play вне приложения, вызовов 3; нарушений 0");
+  console.log(`check:store-seo — /download индексируется (браузер без robots, приложение noindex), в карте сайта, robots.txt открыт; Organization.sameAs = Google Play вне приложения, вызовов 3; Product на /pricing — ${EXPECTED_OFFERS.map((o) => `${o.price} MXN`).join(" / ")} из plans.ts, сноска с песо под copy.converted; нарушений 0`);
   return 0;
 }
 
@@ -330,6 +526,11 @@ async function liveMain(base: string, plant: boolean): Promise<number> {
       ["sameAs подсажен в ответ приложению", { ...s, app: map(s.app, (p) => (p.path === "/es" ? { ...p, html: p.html.replace('"@type":"Organization",', `"@type":"Organization","sameAs":["${PLAY_URL}"],`) } : p)) }],
       ["ответ браузера выдан за ответ приложения", { ...s, app: s.web }],
       ["выборка пуста", { web: [], app: [], sitemap: null, robots: null }],
+      ["/pricing (US): Offer в USD", { ...s, pricing: (s.pricing ?? []).map((p) => (p.path === "/es/pricing" && p.country === "US" ? { ...p, html: p.html.replaceAll('"priceCurrency":"MXN"', '"priceCurrency":"USD"') } : p)) }],
+      ["/pricing (ES): неверное число у Premium", { ...s, pricing: (s.pricing ?? []).map((p) => (p.path === "/ru/pricing" && p.country === "ES" ? { ...p, html: p.html.replace(/"price":"2299"/, '"price":"2399"') } : p)) }],
+      ["/pricing (US): песо не видны на странице", { ...s, pricing: (s.pricing ?? []).map((p) => (p.path === "/es/pricing" && p.country === "US" ? { ...p, html: p.html.replaceAll(EXPECTED_OFFERS[1].written, "") } : p)) }],
+      ["/pricing (MX): Product пропал", { ...s, pricing: (s.pricing ?? []).map((p) => (p.path === "/ru/pricing" && p.country === "MX" ? { ...p, html: p.html.replace('"@type":"Product"', '"@type":"Thing"') } : p)) }],
+      ["/pricing: выборка пуста", { ...s, pricing: [] }],
     ];
     const cases: [string, boolean][] = variants.map(([label, v]) => [label, judgeLive(v).length > 0]);
     return report("check:store-seo (живая)", cases, bad.length === 0);
@@ -341,7 +542,7 @@ async function liveMain(base: string, plant: boolean): Promise<number> {
   }
   const orgCount = s.web.filter((p) => ORG_PAGES.includes(p.path)).reduce((n, p) => n + organizations(p.html).length, 0);
   console.log(
-    `check:store-seo (живая, ${base}) — /es и /ru /download: 200, без noindex, canonical и hreflang на месте, в карте сайта, robots.txt открыт; Organization на ${ORG_PAGES.length} страницах — ${orgCount}, у каждой sameAs Google Play; в ответах приложению адреса магазина 0`,
+    `check:store-seo (живая, ${base}) — /es и /ru /download: 200, без noindex, canonical и hreflang на месте, в карте сайта, robots.txt открыт; Organization на ${ORG_PAGES.length} страницах — ${orgCount}, у каждой sameAs Google Play; в ответах приложению адреса магазина 0; /pricing ${s.pricing?.length ?? 0} отдач (страна→карточки: ${pricingRenderings(s.pricing)}) — Offer ${EXPECTED_OFFERS.map((o) => `${o.price}`).join(" / ")} MXN, каждая цена видна на странице`,
   );
   return 0;
 }

@@ -222,13 +222,11 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           })),
         }}
       />
-      {/* The price, for a machine, and it is the price THIS response
-          rendered — debt 44, PROGRESS.md 7.122. The figures come from the
-          same `copy` the cards below print, so a reader in Madrid who
-          arrives from a search result showing €45,80 finds €45,80 on the
-          card. Written from copy.offers rather than from plans.ts: the
-          peso constants are the right answer only for the visitors who are
-          actually shown pesos. */}
+      {/* The price, for a machine: always the peso base prices from
+          plans.ts, whatever country the reader is in — that is what every
+          buyer is charged (7.260; debt 44, 7.122). They are on this page
+          for every reader: on the cards when `copy.converted` is false, in
+          the footnote below when it is true. */}
       <JsonLd
         data={pricingOffersJsonLd({
           lang,
@@ -236,7 +234,6 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
           name: p.title,
           description: p.subtitle,
           planNames: { monthly: p.monthly.name, annual: p.annual.name, lifetime: p.lifetime.name },
-          copy,
         })}
       />
       <JsonLd

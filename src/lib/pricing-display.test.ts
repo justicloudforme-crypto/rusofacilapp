@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  BASE_OFFERS,
   FOOTNOTE_MARK,
   basePricesText,
   marked,
@@ -67,10 +68,7 @@ describe("what goes on the card", () => {
       // All three arrive here as a null context — the distinction is made
       // upstream in src/lib/currency.ts and src/lib/country-server.ts.
       const copy = priceCopy(null, "es", PESO);
-      // `offers` — the machine-readable half added for debt 44 — carries
-      // the same pesos here (PROGRESS.md 7.122).
-      expect(copy).toEqual({ ...PESO, converted: false, offers: copy.offers });
-      expect(copy.offers.monthly).toEqual({ price: "150", currency: "MXN" });
+      expect(copy).toEqual({ ...PESO, converted: false });
     });
 
     /**
@@ -172,15 +170,16 @@ describe("the button names the currency above it", () => {
 });
 
 /**
- * DEBT 44 (PROGRESS.md 7.122): the Offer in the page's structured data
- * names the figure THIS response rendered.
+ * DEBT 44 (PROGRESS.md 7.122) and 7.260: the Offer in the page's structured
+ * data names the base prices in MXN — what every buyer is charged — and
+ * those figures are on the page whatever the reader's country: on the cards
+ * when they are pesos, in the footnote when the cards are conversions.
  *
- * The assertions below are deliberately written as "the markup against the
- * card string", never as "the markup against a constant" — a constant
- * would agree with a second, independently computed number just as happily
- * as with the right one, which is the whole failure mode being guarded.
+ * The assertions hold the markup against the STRINGS a reader sees (the
+ * card, the footnote), not only against plans.ts — a constant would agree
+ * with a second, independently computed number just as happily.
  */
-describe("the Offer names the number on the card", () => {
+describe("the Offer names the peso price the page shows", () => {
   /** The digits of a figure as a human reads it: "≈ 13.900 ARS" → "13900",
    * "≈ 11,70 SGD" → "11.70", "$2,299 MXN" → "2299". Grouping separators
    * differ by locale (a dot in Spanish, U+00A0 in Russian, a comma in
@@ -198,32 +197,65 @@ describe("the Offer names the number on the card", () => {
     return parts.join("");
   }
 
+  const block = (lang: "es" | "ru") => {
+    const d = lang === "es" ? es : ru;
+    return pricingOffersJsonLd({
+      lang,
+      url: `https://rusofacilapp.com/${lang}/pricing`,
+      name: d.pricing.title,
+      description: d.pricing.subtitle,
+      planNames: { monthly: d.pricing.monthly.name, annual: d.pricing.annual.name, lifetime: d.pricing.lifetime.name },
+    });
+  };
+  const PLANS = ["monthly", "annual", "lifetime"] as const;
+
   it("reads a figure the way a reader does — the control on the reader above", () => {
     expect(digitsOf("≈ 13.900 ARS")).toBe("13900");
-    expect(digitsOf("≈ 13 900 ARS")).toBe("13900");
+    expect(digitsOf("≈ 13 900 ARS")).toBe("13900");
     expect(digitsOf("≈ 11,70 SGD")).toBe("11.70");
     expect(digitsOf("$2,299 MXN")).toBe("2299");
     expect(digitsOf("$150 MXN")).toBe("150");
   });
 
-  it.each(["es", "ru"] as const)("%s: converted — same number, same currency, on all three plans", (locale) => {
-    for (const currency of ["SGD", "EUR", "ARS"] as const) {
-      const copy = priceCopy(ctx(currency), locale, PESO);
-      expect(copy.converted).toBe(true);
-      for (const plan of ["monthly", "annual", "lifetime"] as const) {
-        expect(copy.offers[plan].currency).toBe(currency);
-        expect(digitsOf(copy[plan])).toBe(copy.offers[plan].price);
-      }
+  it.each(["es", "ru"] as const)("%s: the block is MXN and the plans.ts amounts, one Offer per paid plan", (lang) => {
+    const b = block(lang);
+    expect(b["@type"]).toBe("Product");
+    expect(b.offers).toHaveLength(3);
+    expect(b.offers.map((offer) => offer.priceCurrency)).toEqual(["MXN", "MXN", "MXN"]);
+    expect(b.offers.map((offer) => offer.price)).toEqual(PLANS.map((plan) => digitsOf(formatMoney(plans[plan].amountMxnCents))));
+    expect(b.offers.map((offer) => offer.price)).toEqual(["150", "899", "2299"]);
+    // The free tier is not sold and is not an Offer — see the helper's
+    // own comment.
+    expect(b.offers.map((offer) => offer.name)).not.toContain(es.pricing.freeHeading);
+  });
+
+  it.each(["es", "ru"] as const)("%s: pesos on the cards — the markup is the card", (locale) => {
+    const d = locale === "es" ? es : ru;
+    const copy = priceCopy(null, locale, {
+      monthly: d.pricing.monthly.price,
+      annual: d.pricing.annual.price,
+      lifetime: d.pricing.lifetime.price,
+      annualPerMonth: d.pricing.annual.perMonthPrice,
+    });
+    expect(copy.converted).toBe(false);
+    for (const plan of PLANS) {
+      expect(copy[plan]).toContain("MXN");
+      expect(digitsOf(copy[plan])).toBe(BASE_OFFERS[plan].price);
     }
   });
 
-  it.each(["es", "ru"] as const)("%s: pesos — the base prices, in MXN", (locale) => {
-    const copy = priceCopy(null, locale, PESO);
-    expect(copy.converted).toBe(false);
-    for (const plan of ["monthly", "annual", "lifetime"] as const) {
-      expect(copy.offers[plan].currency).toBe("MXN");
-      expect(digitsOf(copy[plan])).toBe(copy.offers[plan].price);
-      expect(digitsOf(formatMoney(plans[plan].amountMxnCents))).toBe(copy.offers[plan].price);
+  it.each(["es", "ru"] as const)("%s: conversions on the cards — the markup is in the footnote", (locale) => {
+    const d = locale === "es" ? es : ru;
+    for (const currency of ["SGD", "EUR", "ARS"] as const) {
+      const copy = priceCopy(ctx(currency), locale, PESO);
+      expect(copy.converted).toBe(true);
+      // The card is NOT the markup's figure here — that is the point of 7.260.
+      expect(copy.monthly).toContain(currency);
+      const footnote = withBasePrices(d.pricing.approxNote, basePricesText(locale));
+      for (const plan of PLANS) {
+        expect(footnote).toContain(formatMoney(plans[plan].amountMxnCents));
+        expect(digitsOf(formatMoney(plans[plan].amountMxnCents))).toBe(BASE_OFFERS[plan].price);
+      }
     }
   });
 
@@ -233,43 +265,7 @@ describe("the Offer names the number on the card", () => {
     expect(digitsOf(formatMoney(15_050))).toBe(pesoOffer(15_050).price);
   });
 
-  it("a dead rate feed puts pesos in the markup too, not a stale conversion", () => {
-    const copy = priceCopy({ currency: "EUR", rate: 0 }, "es", PESO);
-    expect(copy.converted).toBe(false);
-    expect(copy.offers.monthly).toEqual({ price: "150", currency: "MXN" });
-  });
-
   it("is a plain machine number: no grouping, no sign, no code", () => {
-    const copy = priceCopy(ctx("ARS"), "ru", PESO);
-    for (const plan of ["monthly", "annual", "lifetime"] as const) {
-      expect(copy.offers[plan].price).toMatch(/^\d+(\.\d+)?$/);
-    }
-  });
-
-  it("the block itself carries them, one Offer per paid plan", () => {
-    const copy = priceCopy(ctx("EUR"), "es", PESO);
-    const block = pricingOffersJsonLd({
-      lang: "es",
-      url: "https://rusofacilapp.com/es/pricing",
-      name: es.pricing.title,
-      description: es.pricing.subtitle,
-      planNames: {
-        monthly: es.pricing.monthly.name,
-        annual: es.pricing.annual.name,
-        lifetime: es.pricing.lifetime.name,
-      },
-      copy,
-    });
-    expect(block["@type"]).toBe("Product");
-    expect(block.offers).toHaveLength(3);
-    expect(block.offers.map((offer) => offer.priceCurrency)).toEqual(["EUR", "EUR", "EUR"]);
-    expect(block.offers.map((offer) => offer.price)).toEqual([
-      copy.offers.monthly.price,
-      copy.offers.annual.price,
-      copy.offers.lifetime.price,
-    ]);
-    // The free tier is not sold and is not an Offer — see the helper's
-    // own comment.
-    expect(block.offers.map((offer) => offer.name)).not.toContain(es.pricing.freeHeading);
+    for (const plan of PLANS) expect(BASE_OFFERS[plan].price).toMatch(/^\d+(\.\d+)?$/);
   });
 });
