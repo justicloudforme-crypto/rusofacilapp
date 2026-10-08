@@ -96,8 +96,17 @@ export function judgeStatic(files, pngs) {
   // Места.
   need(/<PlayStoreBadge lang=\{lang\} nativeShell=\{nativeShell\} placement="home" \/>/.test(f.home), "page.tsx (главная): бейджа нет или признак приложения не передан");
   need(/\[[^\]]*nativeShell\] = await Promise\.all\(\[[\s\S]*?isNativeShellRequest\(\),\s*\]\)/.test(f.home), "page.tsx (главная): nativeShell не из isNativeShellRequest()");
-  need(/<PlayStoreBadge lang=\{lang\} nativeShell=\{nativeShell\} placement="pricing" \/>/.test(f.pricing), "pricing/page.tsx: бейджа нет или признак приложения не передан");
-  need(/const nativeShell = await isNativeShellRequest\(\);/.test(f.pricing), "pricing/page.tsx: nativeShell не из isNativeShellRequest()");
+  // Цены: ветка приложения возвращается рано (`if (await
+  // isNativeShellRequest()) { … return … }`), и бейдж обязан стоять ПОСЛЕ
+  // неё — в веб-ветке, куда приложение не доходит. Тогда `false` — правда.
+  {
+    const body = f.pricing.slice(Math.max(0, f.pricing.indexOf("export default async function PricingPage")));
+    const branch = body.indexOf("if (await isNativeShellRequest()) {");
+    const branchReturn = branch === -1 ? -1 : body.indexOf("return (", branch);
+    const badgeAt = body.indexOf('<PlayStoreBadge lang={lang} nativeShell={false} placement="pricing" />');
+    need(badgeAt !== -1, "pricing/page.tsx: бейджа нет");
+    need(branch !== -1 && branchReturn !== -1 && badgeAt > branchReturn, "pricing/page.tsx: бейдж стоит до ранней ветки приложения — попадёт в ответ приложению");
+  }
   need(/<PlayStoreBadge lang=\{lang\} nativeShell=\{nativeShell\} placement="footer" \/>/.test(f.footer), "Footer.tsx: бейджа нет или признак приложения не передан");
   need(/\{playTrademarkNote\(lang\)\}/.test(f.footer), "Footer.tsx: нет строки о товарных знаках Google рядом с бейджем");
   need(/<PlayStoreBadge lang=\{lang\} nativeShell=\{nativeShell\} placement="download" \/>/.test(f.download), "download/page.tsx: бейджа нет или признак приложения не передан");
@@ -279,7 +288,8 @@ async function main() {
       ["бейдж рисуется в приложении", edit("badge", "  if (nativeShell) return null;\n", ""), "рисуется в приложении"],
       ["бейдж убран с главной", edit("home", '<PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="home" />', ""), "главная"],
       ["главная передаёт «не приложение» всегда", edit("home", 'nativeShell={nativeShell} placement="home"', 'nativeShell={false} placement="home"'), "главная"],
-      ["бейдж убран с цен", edit("pricing", '<PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="pricing" />', ""), "pricing/page.tsx"],
+      ["бейдж убран с цен", edit("pricing", '<PlayStoreBadge lang={lang} nativeShell={false} placement="pricing" />', ""), "pricing/page.tsx: бейджа нет"],
+      ["бейдж цен переехал внутрь ветки приложения", edit("pricing", "    const tier = await getEntitlementTier();", '    void (<PlayStoreBadge lang={lang} nativeShell={false} placement="pricing" />);\n    const tier = await getEntitlementTier();'), "до ранней ветки"],
       ["бейдж убран из подвала", edit("footer", '<PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="footer" />', ""), "Footer.tsx: бейджа нет"],
       ["строка о товарных знаках убрана", edit("footer", "{playTrademarkNote(lang)}", ""), "товарных знаках"],
       ["бейдж убран с /download", edit("download", '<PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="download" />', ""), "download/page.tsx"],

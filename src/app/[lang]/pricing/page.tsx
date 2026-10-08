@@ -109,8 +109,7 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
   // кнопку, которая ничего не делала, потому что продуктов в консолях нет
   // ни одного. Вернуть её из истории git — работа того захода, который
   // заведёт продукты (перепись — PROGRESS.md 7.192, часть 4).
-  const nativeShell = await isNativeShellRequest();
-  if (nativeShell) {
+  if (await isNativeShellRequest()) {
     // Право доступа считает сервер, и источник оплаты ему безразличен
     // (решение владельца 11.09.2026: «заплатил где угодно — пользуется
     // везде»). Если оно уже активно, человеку так и сказано.
@@ -361,10 +360,12 @@ export default async function PricingPage({ params, searchParams }: PageProps<"/
       </div>
 
       {/* Заход 7.258: приложение в Google Play — только в браузере. Сюда
-          ветка приложения не доходит (она вернулась выше), а признак всё
-          равно передан: правило одно на все три места. */}
+          ветка приложения не доходит: она вернулась выше, на
+          `if (await isNativeShellRequest())` (форму этой строки держит
+          подсадка check:native-payments). Поэтому false — правда, и
+          check:play-link требует, чтобы бейдж стоял ПОСЛЕ той ветки. */}
       <div className="mt-12 flex justify-center">
-        <PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="pricing" />
+        <PlayStoreBadge lang={lang} nativeShell={false} placement="pricing" />
       </div>
 
       <div className="mt-16">
