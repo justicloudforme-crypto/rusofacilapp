@@ -5,6 +5,7 @@ import { getPageDictionary } from "@/i18n/page-dictionary";
 import { ABOUT_CONTENT } from "@/lib/about-content";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList, organizationJsonLd } from "@/lib/site";
+import { isNativeShellRequest } from "@/lib/native-shell";
 
 const PAGE_PATH = "/sobre-nosotros";
 
@@ -39,10 +40,13 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/sobre-nos
 
   const dict = await getPageDictionary(lang);
   const content = ABOUT_CONTENT[lang];
+  // Заход 7.259: `sameAs` организации — страница Google Play, и в ответе
+  // приложению её быть не должно (как бейджа, `check:play-link`).
+  const nativeShell = await isNativeShellRequest();
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
-      <JsonLd data={organizationJsonLd(lang)} />
+      <JsonLd data={organizationJsonLd(lang, nativeShell)} />
       <JsonLd
         data={breadcrumbList([
           { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
