@@ -407,10 +407,15 @@ jobs:
 
       # Долг 83. В манифесте не было семи полей, и он был один на обе
       # локали: русская карточка установки показывала испанское описание.
+      # Заход 7.259: приложение в Google Play с 07.10.2026 — манифест несёт
+      # одну карточку Google Play (com.rusofacilapp.app) и
+      # prefer_related_applications: true, Chrome на Android предлагает
+      # приложение вместо установки сайта. Отдача сервера — в «Rendered
+      # surface» (verify-rendered.mjs, `--base`).
       - name: Манифест PWA обещает то, что есть
         run: npm run check:pwa-manifest
 
-      - name: Тот же сторож — позитивный контроль (поле снова пропало)
+      - name: Тот же сторож — позитивный контроль (поле снова пропало, признак магазина опущен, id испорчен)
         run: npm run check:pwa-manifest:plant
 
       # ДОЛГИ 3 И 4 (заход 7.258). Заморозка эксперимента «тело тонким
@@ -1282,6 +1287,16 @@ jobs:
 
       - name: Тот же сторож — позитивный контроль
         run: npm run check:play-link:plant
+
+      # ЗАХОД 7.259. «Descargar la app» (/download) — в поиске: без noindex
+      # в ответе браузеру, в карте сайта, robots.txt открыт; у Organization
+      # в JSON-LD sameAs — страница приложения в Google Play, только вне
+      # приложения. Живая половина — в «Rendered surface».
+      - name: /download в поиске, Google Play в sameAs организации
+        run: npm run check:store-seo
+
+      - name: Тот же сторож — позитивный контроль
+        run: npm run check:store-seo:plant
 
       # 0,3 с. ДОЛГ 194. «Отменена», под ней «Истекла 19 сентября 2026», а
       # сегодня 14 сентября — три утверждения владельца с живого телефона.

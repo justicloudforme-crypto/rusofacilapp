@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
+import { PLAY_STORE_URL } from "@/lib/pwa-manifest";
 
 // Canonical production origin, used for absolute URLs in robots.ts,
 // sitemap.ts, canonical/hreflang metadata, and JSON-LD. No env var for this
@@ -219,14 +220,16 @@ const ORGANIZATION_DESCRIPTION: Record<Locale, string> = {
 
 /** Organization JSON-LD — the fix for AI Overviews/knowledge panels
  * describing a different, unrelated app under this same search term (see
- * PROGRESS.md's brand-identity entry). No `sameAs` field: the only
- * existing external link is a private Telegram group invite (not a
- * public brand profile), and neither app store listing is live yet (see
- * src/app/[lang]/download/page.tsx's own comment) — adding either would
- * assert an identity link that doesn't genuinely exist yet. Add `sameAs`
- * here once a real public profile (app store listing, public social
- * account) exists. */
-export function organizationJsonLd(lang: Locale) {
+ * PROGRESS.md's brand-identity entry).
+ *
+ * `sameAs` — заход 7.259: страница приложения в Google Play
+ * (`PLAY_STORE_URL`, опубликовано 07.10.2026) — первый настоящий
+ * публичный профиль бренда. Ровно она одна: приглашение в Telegram —
+ * закрытая группа, а не профиль; App Store-листинга нет. ТОЛЬКО в ответе
+ * браузеру: в ответе приложению адреса магазина нет нигде, даже в
+ * разметке для поисковиков (`check:play-link`, живая половина) — поисковик
+ * ответа приложения не видит, а проверяющий Play видит исходный код. */
+export function organizationJsonLd(lang: Locale, nativeShell: boolean) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -234,6 +237,7 @@ export function organizationJsonLd(lang: Locale) {
     url: SITE_URL,
     logo: `${SITE_URL}/icon.png`,
     description: ORGANIZATION_DESCRIPTION[lang],
+    ...(nativeShell ? {} : { sameAs: [PLAY_STORE_URL] }),
   };
 }
 
@@ -245,12 +249,12 @@ export function organizationJsonLd(lang: Locale) {
  * need). Claiming a SearchAction against a URL that doesn't actually
  * search anything would be the same kind of dishonest markup this
  * project has avoided elsewhere (see paywallJsonLd's own reasoning). */
-export function websiteJsonLd(lang: Locale) {
+export function websiteJsonLd(lang: Locale, nativeShell: boolean) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "RusoFácilapp",
     url: SITE_URL,
-    publisher: organizationJsonLd(lang),
+    publisher: organizationJsonLd(lang, nativeShell),
   };
 }

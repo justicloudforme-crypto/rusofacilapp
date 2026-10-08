@@ -175,13 +175,18 @@ describe("every crawlable static route is accounted for", () => {
   });
 
   it("keeps the three resolutions distinguishable", () => {
-    // /terms and /privacy are listed; /download is noindex; /admin is
+    // /terms and /privacy are listed; /styleguide is noindex; /admin is
     // disallowed. If any of the three mechanisms stops being detected, the
     // main assertion turns into a weaker one without failing.
+    //
+    // Заход 7.259: примером `noindex` здесь до 08.10.2026 был /download.
+    // Он теперь в карте сайта и индексируется (приложение в Google Play);
+    // его `index: false` остался только у ответа ПРИЛОЖЕНИЮ, поэтому
+    // примером служит /styleguide, у которого `noindex` безусловный.
     expect(inSitemap.has("/terms")).toBe(true);
     expect(inSitemap.has("/privacy")).toBe(true);
-    expect(inSitemap.has("/download")).toBe(false);
-    expect(declaresNoindex("/download")).toBe(true);
+    expect(inSitemap.has("/download")).toBe(true);
+    expect(declaresNoindex("/styleguide")).toBe(true);
     expect(declaresNoindex("/terms")).toBe(false);
     expect(isDisallowed("/admin/users", disallows, allows)).toBe(true);
     expect(isDisallowed("/terms", disallows, allows)).toBe(false);

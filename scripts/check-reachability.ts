@@ -253,12 +253,23 @@ async function main() {
     const withoutTerms = new Set(sitemap);
     withoutTerms.delete(orphanPlant);
     const orphanCaught = orphansGiven(withoutTerms).includes(orphanPlant);
+    // До 08.10.2026 отрицательным контролем служил живой `noindex` у
+    // /es/download. С захода 7.259 страница индексируется и стоит в карте,
+    // а другого анонимного `noindex`, до которого доходит обход, на сайте
+    // нет (/styleguide закрыт robots.txt). Поэтому `noindex` подсаживается:
+    // та же страница вычеркивается из карты и получает метку — сиротой она
+    // называться не должна (без метки её бы назвали — это первая подсадка).
     const noindexNegative = `${BASE}/es/download`;
     const noindexSeen = status.get(noindexNegative) === 200;
-    const noindexQuiet = noindexSeen && !orphansGiven(withoutTerms).includes(noindexNegative);
+    const withoutDownload = new Set(sitemap);
+    withoutDownload.delete(noindexNegative);
+    const hadNoindex = noindex.has(noindexNegative);
+    noindex.add(noindexNegative);
+    const noindexQuiet = noindexSeen && !orphansGiven(withoutDownload).includes(noindexNegative);
+    if (!hadNoindex) noindex.delete(noindexNegative);
     console.log(`\nподсадка сироты: ${orphanPlant.slice(BASE.length)} вычеркнут из карты — ${orphanCaught ? "назван сиротой (1 из 1)" : "НЕ НАЗВАН"}`);
     console.log(
-      `отрицательный контроль: ${noindexNegative.slice(BASE.length)} (200, не в карте, noindex) — ` +
+      `отрицательный контроль: ${noindexNegative.slice(BASE.length)} (200, вычеркнут из карты, подсажен noindex) — ` +
         (!noindexSeen ? "НЕ ВИДЕН ОБХОДОМ, контроль пуст" : noindexQuiet ? "сиротой не назван, верно" : "НАЗВАН СИРОТОЙ, ЛОЖНОЕ СРАБАТЫВАНИЕ"),
     );
     if (!orphanCaught || !noindexSeen || !noindexQuiet) failed = true;

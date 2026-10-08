@@ -76,15 +76,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // sitemap disagreed with the site about what is public. Legal pages
     // are also a standard trust signal for a site that takes payments, so
     // the resolution is to list them rather than to disallow them.
-    //
-    // /download is deliberately NOT here: it is noindex until the app is
-    // actually in a store (see its own generateMetadata).
     "/terms",
     "/privacy",
     // 7.242 (долг 345): публичная страница удаления аккаунта — адрес для
     // поля «Delete account URL» анкеты Google Play. Правовая страница, как
     // две выше, и по той же причине в карте: Google обязан до неё дойти.
     "/eliminar-cuenta",
+    // Заход 7.259: «Descargar la app» — с 07.10.2026 приложение в Google
+    // Play, страница отвечает бейджем и больше не `noindex` (см. её
+    // generateMetadata). До этого её здесь не было намеренно.
+    "/download",
   ];
 
   // Spanish-search-intent landing pages — no Russian-language equivalent

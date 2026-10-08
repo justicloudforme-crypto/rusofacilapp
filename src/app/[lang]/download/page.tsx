@@ -40,22 +40,15 @@ export async function generateMetadata({
   return {
     title: `${dict.download.pageTitle} | RusoFácilapp`,
     description: truncateForMeta(dict.download.pageSubtitle),
-    // noindex, decided 31.08.2026, and still right for the same reason:
-    // there is nothing to download. The copy no longer promises one — the
-    // title dropped "Descarga" and the note says outright that there is
-    // nothing to install and no date — but a search result for a page whose
-    // whole answer is "not yet" earns the click and disappoints, which is
-    // the one thing a landing page must not do. The page stays reachable
-    // and useful for a visitor who follows the link from /pricing; it just
-    // does not compete in search until there is a real store listing.
-    //
-    // REMOVE THIS the day either store URL becomes real — and since
-    // 07.10.2026 the Google Play one is (заход 7.258). Left in place on
-    // purpose: indexing this page, together with src/lib/site.ts's
-    // organizationJsonLd `sameAs`, is an SEO change for the post-launch
-    // queue in PROGRESS.md, not part of the link run. follow:true so the
-    // links out of the page still pass through.
-    robots: { index: false, follow: true },
+    // Индексируется с 08.10.2026 (заход 7.259). С 31.08.2026 здесь стоял
+    // `noindex`: страница отвечала «пока нечего ставить», а такой ответ в
+    // выдаче зарабатывает клик и разочаровывает. С 07.10.2026 ответ есть —
+    // приложение в Google Play, бейдж на странице, — и условие, записанное
+    // тогда («убрать в день, когда адрес магазина станет настоящим»),
+    // выполнено. Страница в карте сайта; canonical и hreflang — из
+    // `routeAlternates`, как у соседей. Ответ ПРИЛОЖЕНИЮ выше остаётся
+    // `noindex`: у него другое содержимое, и поисковик его не получает.
+    // Сторож — `check:store-seo`.
     alternates,
   };
 }
