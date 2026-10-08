@@ -50,9 +50,9 @@ import { readFileSync } from "node:fs";
  * довод, по которому `check-native-shell-render.mjs` достаёт токен
  * текстом.
  */
-function downloadLabels(lang: string): { iosCta: string; androidCta: string; comingSoonLabel: string } {
+function downloadLabels(lang: string): { pageSubtitle: string } {
   const dict = JSON.parse(readFileSync(`src/dictionaries/${lang}.json`, "utf8")) as {
-    download: { iosCta: string; androidCta: string; comingSoonLabel: string };
+    download: { pageSubtitle: string };
   };
   return dict.download;
 }
@@ -204,7 +204,11 @@ export async function main(): Promise<number> {
         lang,
         webText: await downloadPage(browser, base, lang, false),
         shellText: await downloadPage(browser, base, lang, true),
-        storeLabels: [labels.iosCta, labels.androidCta, labels.comingSoonLabel],
+        // Заход 7.258: плашек «iPhone / Android — Próximamente» больше нет —
+        // приложение в Google Play, и предложение установки на странице —
+        // подзаголовок «La app para Android ya está en Google Play…» рядом
+        // с бейджем. Судится он: в вебе есть, в оболочке нет.
+        storeLabels: [labels.pageSubtitle],
         shellHeading: nativeAccessCopy(lang).download.heading,
       });
     }

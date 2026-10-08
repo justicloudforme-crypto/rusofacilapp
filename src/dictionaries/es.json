@@ -1721,12 +1721,9 @@
   },
   "download": {
     "pageTitle": "La app de RusoFácilapp",
-    "pageSubtitle": "Estamos preparando una app para iPhone y Android. Será el mismo curso y el mismo progreso que ya tienes en el navegador.",
-    "badge": "Próximamente",
-    "iosCta": "iPhone",
-    "androidCta": "Android",
-    "comingSoonLabel": "Próximamente",
-    "notifyNote": "Todavía no hay nada que instalar y no tenemos una fecha que prometerte. Mientras tanto no te falta nada: el sitio funciona completo en el navegador del celular, y tu cuenta, tu racha y tu suscripción te esperan ahí.",
+    "pageSubtitle": "La app para Android ya está en Google Play. Es el mismo curso y entras con la misma cuenta que usas en el navegador.",
+    "badge": "Android",
+    "notifyNote": "En iPhone y en la computadora, el sitio funciona completo en el navegador: tu cuenta, tu racha y tu suscripción te esperan ahí.",
     "featuresTitle": "Por qué instalar la app",
     "features": [
       {
@@ -1742,7 +1739,7 @@
         "description": "Tu cuenta, tu racha y tu suscripción se sincronizan automáticamente entre la app y la versión web."
       }
     ],
-    "webCta": "Mientras tanto, continúa en el navegador"
+    "webCta": "Seguir en el navegador"
   },
   "clientUi": {
     "download": {

@@ -43,21 +43,19 @@ export function isFrozenPage(id: string): boolean {
 }
 
 /**
- * The <title> for a story or media page: fitted to the SERP ceiling, unless
- * the page is in the experiment, in which case it is reproduced exactly as
- * it shipped on 28.08.2026 — brand suffix, qualifier and all, however long
- * that comes out.
+ * The <title> for a story or media page, fitted to the SERP ceiling.
  *
- * Both callers go through here rather than writing the branch themselves,
- * so "what a frozen page serves" is one string in one place and a test can
- * assert it against the fitted version instead of against a copy of itself.
+ * Until 7.258 the 165 pages of the experiment got their 28.08.2026 title
+ * byte for byte here (191 URLs over 70 characters). The measuring period
+ * ended on 25.09.2026, so the branch is gone (долг 4) and every page goes
+ * through `fitTitle`. `id` stays in the signature so both callers keep one
+ * place to ask; `check:thaw` guards that no freeze branch returns.
  */
 export function contentPageTitle(
-  id: string,
+  _id: string,
   base: string,
   qualifier: string,
   shortQualifier?: string,
 ): string {
-  if (isFrozenPage(id)) return `${base} — ${qualifier} | RusoFácilapp`;
   return fitTitle(base, qualifier, shortQualifier);
 }

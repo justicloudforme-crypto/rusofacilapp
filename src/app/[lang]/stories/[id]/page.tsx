@@ -23,7 +23,7 @@ import AccessMark from "@/components/ui/AccessMark";
 import { accessSignFor, storyRequirement } from "@/lib/access-marks";
 import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
-import { contentPageTitle, isFrozenPage } from "@/lib/frozen-pages";
+import { contentPageTitle } from "@/lib/frozen-pages";
 import { storyTitles } from "@/lib/story-title";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates, truncateForMeta } from "@/lib/site";
@@ -126,14 +126,13 @@ export async function generateMetadata({
   // 190 of the 650 story descriptions ran past the ~155 characters Google
   // shows in a snippet, up to 283 (measured on the live site 30.08.2026).
   // truncateForMeta is the same cap the glossary and the lessons already
-  // use. Frozen stories keep the untruncated string: 10 of them are over
-  // the cap and are queued with the rest of that backlog.
-  const description = isFrozenPage(id) ? rawDescription : truncateForMeta(rawDescription);
+  // use — for all 650 URLs since 7.258 (долг 4): the 65 stories of the
+  // experiment kept the untruncated string until the freeze was lifted.
+  const description = truncateForMeta(rawDescription);
   // 17 of the 520 non-frozen story URLs were over Google's ~70-character
   // title ceiling (measured on the live sitemap 29.08.2026), the worst at
-  // 95. The 65 stories in the experiment keep their old title byte for
-  // byte, 3 of which are over the ceiling — queued for after the 25.09
-  // readout, see PROGRESS.md and lib/frozen-pages.ts.
+  // 95. The 65 stories of the experiment (3 of them over the ceiling) join
+  // the same rule in 7.258 — see lib/frozen-pages.ts.
   const qualifier =
     lang === "ru" ? `рассказ на русском (${story.level})` : `cuento en ruso (${story.level})`;
   const shortQualifier = lang === "ru" ? `рассказ (${story.level})` : `cuento (${story.level})`;

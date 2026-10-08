@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ContentInsights } from "@/lib/content-links";
 import type { Locale } from "@/i18n/config";
+import { glossaryTermPrimaryName } from "@/lib/glossary-term-name";
 
 /**
  * Renders the "what's in this text" block. A server component on purpose:
@@ -66,7 +67,9 @@ export default function ContentInsights({
                   href={`/${lang}/glossary/${item.slug}`}
                   className="tap font-medium text-primary-text underline-offset-2 hover:underline active:underline dark:text-primary-400"
                 >
-                  {item.term}
+                  {/* Долг 268 (7.258): на /ru — русское название термина,
+                      на /es — испанское; правило одно на сайт. */}
+                  {glossaryTermPrimaryName(item, lang)}
                 </Link>
                 {item.examples.length > 0 && (
                   <span className="text-foreground/60">
