@@ -13533,7 +13533,7 @@ PR: **#471** (сторож, паспорт, скрипты захода) → **#
 
 ## ЧАСТЬ 7 (7.261). CI, ПРОВЕРКИ И ЧТО ПРОВЕРИТЬ ВЛАДЕЛЬЦУ
 
-**Локально (Mac Studio):** `tsc` 0; eslint по затронутым файлам 0; `vitest` — 222 файла, 2432 теста, 0 падений; `check:listen-buttons:plant` 24/24, `check:audio-passport` 0 + `:plant` 6/6, `check:synth-voice-source` + `:plant`, `check:no-runtime-tts`, `check:blob-orphans` (сирот 0) + `:plant` 10/10, `check:prod-reads` + `:plant` 4/4, `check:ci-covers-verify`, `count:debts` (373 = 84 + 276 + 4 + 9) — зелёные. CI на #471 — см. PR.
+**Локально (Mac Studio):** `tsc` 0; eslint по затронутым файлам 0; `vitest` — 222 файла, 2432 теста, 0 падений; `check:listen-buttons:plant` 24/24, `check:audio-passport` 0 + `:plant` 6/6, `check:synth-voice-source` + `:plant`, `check:no-runtime-tts`, `check:blob-orphans` (сирот 0) + `:plant` 10/10, `check:prod-reads` + `:plant` 4/4, `check:ci-covers-verify`, `count:debts` (373 = 84 + 276 + 4 + 9) — зелёные. **CI зелёный целиком** на #471 и #472: «Lint, typecheck, build, unit tests», три доли «Платные поверхности», «Playwright E2E»; превью Vercel пропущено намеренно («Ignored Build Step»).
 
 **Что проверить владельцу:**
 * **На слух, в Finder:** `~/rusofacil-listen/7.261/принято/` — выделить файл, пробел. Ударение: расцвет**а́**ть, **я́**блоня, гр**у́**ша. Если где-то не так — назвать слово: строка на проде заменяется одним шагом, без удаления остального.
