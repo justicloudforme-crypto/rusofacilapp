@@ -1004,6 +1004,81 @@
         function quiet(promise) {
           if (promise && typeof promise.catch === "function") promise.catch(function () {});
         }
+        /**
+         * МЕСТО ЧТЕНИЯ В КОПИИ — ЗАХОД 7.263 (ДОЛГ 363).
+         *
+         * Живая страница помнит место в `localStorage` под
+         * `rusofacil:story-progress` (`src/lib/reading-progress.ts`):
+         * номер фразы в очереди рассказа, число фраз, процент. Источник у
+         * копии тот же (каркас отдан по адресу сайта), значит и запись
+         * та же. До 7.263 копия её не читала и не писала: замер на
+         * эмуляторе — сохранена фраза 7 из 14, «▶» в копии через 3 с
+         * подсвечивает вторую фразу, а место остаётся прежним.
+         *
+         * Правила — те же, что у живой страницы:
+         *   * превью за пейволом (карточка `.paywall-lock`) места не
+         *     читает и не пишет — у живой страницы там `storyId = null`;
+         *   * дочитанный рассказ начинается сначала (у живой — значок
+         *     «прочитано» и без кольца);
+         *   * место пишется, когда начинается фраза, и при ⏪/⏩ до «▶»;
+         *   * число фраз записи обязано совпасть с числом фраз копии:
+         *     другое число значит, что текст рассказа с тех пор
+         *     поменялся, и номер фразы указал бы не туда.
+         */
+        var PROGRESS_KEY = "rusofacil:story-progress";
+        function readProgressMap() {
+          try {
+            var raw = localStorage.getItem(PROGRESS_KEY);
+            var parsed = raw ? JSON.parse(raw) : null;
+            return parsed && typeof parsed === "object" ? parsed : {};
+          } catch (e) {
+            return {};
+          }
+        }
+        function storyProgressOf(root, total) {
+          var m = location.pathname.match(/^\/(?:es|ru)\/stories\/([^/]+)\/?$/);
+          if (!m || total < 1) return null;
+          if (root.querySelector(".paywall-lock")) return null;
+          var id = decodeURIComponent(m[1]);
+          var stored = readProgressMap()[id];
+          if (!stored || typeof stored.currentPage !== "number") stored = null;
+          if (stored && stored.totalPages !== total) return null;
+          return { id: id, stored: stored };
+        }
+        function saveStoryPlace(progress, queueIndex, total) {
+          if (!progress) return;
+          var currentPage = Math.min(Math.max(1, queueIndex + 1), total);
+          var done = currentPage >= total;
+          var entry = {
+            currentPage: currentPage,
+            queueIndex: queueIndex,
+            totalPages: total,
+            percent: done ? 100 : Math.round((currentPage / total) * 100),
+            isCompleted: done,
+            updatedAt: Date.now(),
+          };
+          try {
+            var all = readProgressMap();
+            all[progress.id] = entry;
+            localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
+          } catch (e) {
+            // Хранилище закрыто — чтение важнее места, как и у живой страницы.
+          }
+          // Зеркало на сервер — тот же запрос, что у живой страницы
+          // (`syncToServer`). Без сети он падает молча, и это не отказ.
+          try {
+            quiet(
+              fetch("/api/reading-progress", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ storyId: progress.id, currentPage: currentPage, totalPages: total, queueIndex: queueIndex }),
+              }),
+            );
+          } catch (e) {
+            // `fetch` нет — место уже записано на телефоне.
+          }
+        }
+
         function armStoryPlayer(root) {
           var play = root.querySelector('[data-rf-player="play"]');
           if (!play) return null;
@@ -1017,12 +1092,98 @@
             if (all[k].tagName === "SPAN") lines.push(all[k]);
           }
           if (lines.length === 0) return null;
+          // Очередь рассказа — ВСЕ фразы, и с клипом, и без (у 15 рассказов
+          // из 325 есть фразы без клипа): номер фразы в записи места —
+          // номер в этой очереди, как у живой страницы. Фраза — `span`
+          // с ролью кнопки прямо в абзаце (`StoryText.tsx`); если разметка
+          // другая, очередью считаются фразы с клипом.
+          var sentences = holder ? holder.querySelectorAll("p > span[role='button']") : [];
+          var queueOf = [];
+          for (var q = 0; q < lines.length; q++) {
+            queueOf.push(Array.prototype.indexOf.call(sentences, lines[q]));
+          }
+          var total = sentences.length;
+          if (queueOf.indexOf(-1) !== -1) {
+            total = lines.length;
+            for (var r = 0; r < lines.length; r++) queueOf[r] = r;
+          }
+          var progress = storyProgressOf(root, total);
           var ms = nativeSession();
           // `started` — звук в этой копии уже запускали. До этого шторке
           // сообщать нечего: «paused» до первого «▶» подняло бы карточку
           // проигрывателя, который ничего не играл (замер на эмуляторе).
-          var state = { index: -1, audio: null, src: null, playing: false, gen: 0, own: 0, started: false };
+          // `pendingLine`/`pendingOffset` — место, с которого начнёт «▶»,
+          // пока звук не идёт (сохранённое или перенесённое ⏪/⏩).
+          var state = {
+            index: -1,
+            audio: null,
+            src: null,
+            playing: false,
+            gen: 0,
+            own: 0,
+            started: false,
+            pendingLine: -1,
+            pendingOffset: 0,
+          };
+          /**
+           * ШКАЛА КОПИИ — ЗАХОД 7.263 (ДОЛГ 361).
+           *
+           * Одной дорожки у копии нет: фразы играются по очереди. Длина
+           * рассказа — сумма длин клипов, позиция — сумма предыдущих фраз
+           * плюс место внутри текущей. Длины меряются здесь же, по
+           * `loadedmetadata` клипов из кеша (так же `getClipDuration` в
+           * `StoryText.tsx`), одним элементом по очереди. До 7.263 шторка
+           * без сети стояла на «00:00 / 00:00»: замер — 0 вызовов
+           * `setPositionState` за 8 с игры, `position=0` при `PLAYING`.
+           */
+          var timeline = { starts: null, lengths: null, total: 0 };
           var icon = play.querySelector("span") || play;
+
+          function lineOfQueue(queueIndex) {
+            for (var i = 0; i < lines.length; i++) {
+              if (queueOf[i] >= queueIndex) return i;
+            }
+            return -1;
+          }
+          function now() {
+            if (!timeline.starts) return null;
+            var line = state.index >= 0 ? state.index : state.pendingLine;
+            if (line < 0) return 0;
+            var inside = state.pendingOffset;
+            if (state.index >= 0 && state.audio && isFinite(state.audio.currentTime) && state.audio.currentTime > 0) {
+              inside = state.audio.currentTime;
+            }
+            return Math.min(timeline.total, timeline.starts[line] + Math.min(inside, timeline.lengths[line]));
+          }
+          function report() {
+            if (!ms || !state.started || !timeline.starts || !(timeline.total > 0)) return;
+            quiet(ms.setPositionState({ duration: timeline.total, position: now(), playbackRate: 1 }));
+          }
+          function paintBar() {
+            if (!bar) return;
+            var t = now();
+            if (t !== null && timeline.total > 0) {
+              bar.style.width = (t / timeline.total) * 100 + "%";
+              return;
+            }
+            var line = state.index >= 0 ? state.index : state.pendingLine;
+            bar.style.width = line < 0 ? "0%" : ((line + 1) / lines.length) * 100 + "%";
+          }
+          /** Кольцо «продолжить отсюда» — как у живой страницы, но своим
+           *  стилем: классы Tailwind в копии могут и не найтись. */
+          function markResume(line) {
+            for (var i = 0; i < lines.length; i++) {
+              if (i === line) {
+                lines[i].setAttribute("data-rf-resume", "1");
+                lines[i].style.outline = "2px solid rgba(251, 191, 36, 0.5)";
+                lines[i].style.outlineOffset = "4px";
+              } else if (lines[i].hasAttribute("data-rf-resume")) {
+                lines[i].removeAttribute("data-rf-resume");
+                lines[i].style.outline = "";
+                lines[i].style.outlineOffset = "";
+              }
+            }
+          }
 
           function paint() {
             var label = state.playing ? play.getAttribute("data-rf-pause-label") : play.getAttribute("data-rf-play-label");
@@ -1030,8 +1191,8 @@
               play.setAttribute("aria-label", label);
               play.setAttribute("title", label);
             }
-            icon.textContent = state.playing ? "\u23f8" : "\u25b6";
-            if (bar) bar.style.width = state.index < 0 ? "0%" : ((state.index + 1) / lines.length) * 100 + "%";
+            icon.textContent = state.playing ? "⏸" : "▶";
+            paintBar();
             for (var i = 0; i < lines.length; i++) {
               if (i === state.index) {
                 lines[i].setAttribute("data-rf-reading", "1");
@@ -1042,6 +1203,7 @@
               }
             }
             if (ms && state.started) quiet(ms.setPlaybackState({ playbackState: state.playing ? "playing" : "paused" }));
+            report();
           }
           function release() {
             if (state.audio) {
@@ -1060,6 +1222,8 @@
             release();
             state.playing = false;
             state.index = -1;
+            state.pendingLine = -1;
+            state.pendingOffset = 0;
             paint();
           }
           function playAt(i, startAt) {
@@ -1069,8 +1233,12 @@
             if (i >= lines.length) return finish();
             if (i < 0) i = 0;
             state.index = i;
+            state.pendingLine = -1;
+            state.pendingOffset = startAt || 0;
             state.playing = true;
             state.started = true;
+            markResume(-1);
+            saveStoryPlace(progress, queueOf[i], total);
             paint();
             var line = lines[i];
             blobFor(line.getAttribute("data-rf-clip")).then(function (src) {
@@ -1102,13 +1270,21 @@
                 paint();
               };
               audio.onplay = function () {
-                if (gen !== state.gen || state.playing) return;
-                state.playing = true;
-                paint();
+                if (gen !== state.gen) return;
+                if (!state.playing) {
+                  state.playing = true;
+                  paint();
+                  return;
+                }
+                report();
+              };
+              audio.ontimeupdate = function () {
+                if (gen === state.gen) paintBar();
               };
               if (startAt) {
                 audio.onloadedmetadata = function () {
                   audio.currentTime = Math.min(startAt, audio.duration || startAt);
+                  if (gen === state.gen) report();
                 };
               }
               quiet(
@@ -1119,6 +1295,44 @@
                 }),
               );
             });
+          }
+          /** Место до «▶»: звук не идёт, кольцо и шкала — там, запись
+           *  места — тоже (как `skipByFull` живой страницы, 7.255). */
+          function placeAt(line, offset) {
+            release();
+            state.gen += 1;
+            state.index = -1;
+            state.playing = false;
+            state.pendingLine = line;
+            state.pendingOffset = offset;
+            markResume(line);
+            saveStoryPlace(progress, queueOf[line], total);
+            paint();
+          }
+          function lineAtTime(t) {
+            for (var i = lines.length - 1; i >= 0; i--) {
+              if (timeline.starts[i] <= t && timeline.lengths[i] > 0) return i;
+            }
+            return 0;
+          }
+          /** Переход по шкале рассказа: ⏪/⏩ и ползунок шторки. */
+          function goTo(t, andPlay) {
+            if (t >= timeline.total) {
+              if (andPlay) return finish();
+              t = Math.max(0, timeline.total - 0.25);
+            }
+            t = Math.max(0, t);
+            var line = lineAtTime(t);
+            var offset = Math.max(0, t - timeline.starts[line]);
+            if (!andPlay) return placeAt(line, offset);
+            if (line === state.index && state.audio) {
+              state.audio.currentTime = offset;
+              state.playing = true;
+              quiet(state.audio.play());
+              paint();
+              return;
+            }
+            playAt(line, offset);
           }
           function toggle() {
             if (state.playing) {
@@ -1136,11 +1350,22 @@
               quiet(state.audio.play());
               return;
             }
-            playAt(Math.max(0, state.index));
+            if (state.pendingLine >= 0) return playAt(state.pendingLine, state.pendingOffset);
+            playAt(0);
           }
           function skip(delta) {
+            if (timeline.starts && timeline.total > 0) {
+              var from = now();
+              return goTo(from + delta, state.playing);
+            }
+            // Длины ещё не измерены (первые доли секунды) — прежний шаг
+            // по фразам, но до «▶» от сохранённого места, а не с нуля.
             var audio = state.audio;
-            if (!audio || state.index < 0) return playAt(0);
+            if (!audio || state.index < 0) {
+              var base = state.pendingLine >= 0 ? state.pendingLine : 0;
+              var to = Math.min(lines.length - 1, Math.max(0, base + (delta > 0 ? 1 : -1)));
+              return placeAt(to, 0);
+            }
             if (delta > 0) {
               if (audio.duration && audio.duration - audio.currentTime > delta) audio.currentTime += delta;
               else playAt(state.index + 1);
@@ -1150,6 +1375,58 @@
               playAt(audio.currentTime < 1 ? state.index - 1 : state.index);
             }
           }
+          function measure() {
+            var lengths = [];
+            var probe = new Audio();
+            probe.preload = "metadata";
+            function step(i) {
+              if (i >= lines.length) {
+                probe.removeAttribute("src");
+                var starts = [];
+                var sum = 0;
+                for (var j = 0; j < lengths.length; j++) {
+                  starts.push(sum);
+                  sum += lengths[j];
+                }
+                if (!(sum > 0)) return;
+                timeline.starts = starts;
+                timeline.lengths = lengths;
+                timeline.total = sum;
+                paintBar();
+                report();
+                return;
+              }
+              blobFor(lines[i].getAttribute("data-rf-clip")).then(function (src) {
+                if (!src) {
+                  lengths.push(0);
+                  return step(i + 1);
+                }
+                var settled = false;
+                var timer = setTimeout(function () {
+                  done(0);
+                }, 4000);
+                function done(seconds) {
+                  if (settled) return;
+                  settled = true;
+                  clearTimeout(timer);
+                  probe.onloadedmetadata = null;
+                  probe.onerror = null;
+                  URL.revokeObjectURL(src);
+                  lengths.push(seconds > 0 && isFinite(seconds) ? seconds : 0);
+                  step(i + 1);
+                }
+                probe.onloadedmetadata = function () {
+                  done(probe.duration);
+                };
+                probe.onerror = function () {
+                  done(0);
+                };
+                probe.src = src;
+                if (typeof probe.load === "function") probe.load();
+              });
+            }
+            step(0);
+          }
           /**
            * ШКАЛА ШТОРКИ — НЕ ОТ ЧУЖОЙ ДОРОЖКИ (заход 7.248, Ж.2).
            *
@@ -1157,9 +1434,9 @@
            * странице: `setPositionState` без полей оставляет прежние. Замер
            * на эмуляторе: живая «Репка» (полная дорожка 89 с) → копия без
            * сети → «▶» — новая сессия копии стартует с позиции живой
-           * страницы (27 565 мс), и система досчитывает её сама. У копии
-           * одной дорожки нет (фразы по очереди), значит и шкалы нет —
-           * так же, как у живого рассказа без полной дорожки.
+           * страницы (27 565 мс), и система досчитывает её сама. Поэтому
+           * при открытии и уходе — нули, а своя шкала (7.263, `report`) —
+           * только после первого «▶».
            */
           function forgetPosition() {
             if (ms) quiet(ms.setPositionState({ duration: 0, position: 0, playbackRate: 1 }));
@@ -1232,8 +1509,27 @@
             Object.keys(handlers).forEach(function (action) {
               quiet(ms.setActionHandler({ action: action }, handlers[action]));
             });
+            // Ползунок шторки — как у живой страницы с одной дорожкой.
+            quiet(
+              ms.setActionHandler({ action: "seekto" }, function (details) {
+                if (!timeline.starts) return;
+                goTo(Number(details && details.seekTime) || 0, state.playing);
+              }),
+            );
+          }
+          var stored = progress && progress.stored;
+          if (stored && !stored.isCompleted && typeof stored.queueIndex === "number") {
+            var resumeLine = lineOfQueue(stored.queueIndex);
+            if (resumeLine >= 0) {
+              state.pendingLine = resumeLine;
+              markResume(resumeLine);
+              if (typeof lines[resumeLine].scrollIntoView === "function") {
+                lines[resumeLine].scrollIntoView({ block: "center" });
+              }
+            }
           }
           paint();
+          measure();
           return state;
         }
 
@@ -1900,7 +2196,20 @@
 
         /** Показать сохранённую копию по нажатию из списка. Адрес в
          *  строке меняется ДО отрисовки: иначе «Повторить» перезапросил
-         *  бы не ту страницу, которую человек читает. */
+         *  бы не ту страницу, которую человек читает.
+         *
+         *  «НАЗАД» ИЗ КОПИИ — ЗАХОД 7.263 (ДОЛГ 364). До 7.263 адрес
+         *  менялся `replaceState`: записи в истории не появлялось,
+         *  `history.length` = 1, и «Назад» Android не делал ничего —
+         *  Capacitor без слушателя зовёт `goBack()` только при
+         *  `canGoBack()`. Теперь открытие из списка или вкладкой — новая
+         *  запись (`pushState`), как переход на живом сайте, а возврат по
+         *  ней (`popstate`) перезапрашивает адрес, на котором человек был
+         *  до копии: без сети это снова каркас со списком или с копией
+         *  того адреса. Тот же адрес (вкладка своего раздела) — без новой
+         *  записи. */
+        var shownHref = location.href.split("#")[0];
+        var skipPop = false;
         function openSavedUrl(url, names) {
           return fromCaches(url, names)
             .then(function (hit) {
@@ -1909,17 +2218,43 @@
             })
             .then(function (html) {
               if (!html) return false;
+              var pushed = false;
               try {
-                history.replaceState(null, "", url);
+                var target = new URL(url, location.href).href.split("#")[0];
+                if (target !== location.href.split("#")[0]) {
+                  history.pushState({ rfOfflineCopy: 1 }, "", url);
+                  pushed = true;
+                } else {
+                  history.replaceState(history.state, "", url);
+                }
               } catch (e) {
                 // Адрес мог быть чужого источника — тогда просто не меняем.
               }
-              return renderSaved(html);
+              return renderSaved(html).then(function (shown) {
+                if (shown) {
+                  shownHref = location.href.split("#")[0];
+                } else if (pushed) {
+                  // Копию не показали — запись в истории не нужна: на
+                  // экране тот же список, и «Назад» не должен «стоять».
+                  skipPop = true;
+                  history.back();
+                }
+                return shown;
+              });
             })
             .catch(function () {
               return false;
             });
         }
+        window.addEventListener("popstate", function () {
+          if (skipPop) {
+            skipPop = false;
+            return;
+          }
+          // Переход по якорю внутри копии — та же страница.
+          if (location.href.split("#")[0] === shownHref) return;
+          location.reload();
+        });
 
         /** Отрисовать список и строку-прибор. `filter` — вид или null. */
         function paintSaved(rows, names, filter) {

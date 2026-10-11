@@ -266,9 +266,22 @@ export function violations(sources) {
   if (!/function reloadForNetwork\(\) \{\s*rememberCopyView\(\);\s*location\.reload\(\);/.test(shell)) {
     bad.push(`${SHELL}: reloadForNetwork не запоминает вкладку копии перед перезагрузкой`);
   }
+  // Третья голая перезагрузка (заход 7.263, долг 364) — у «Назад» из
+  // копии: человек уходит С копии, записка о её вкладке там не нужна.
   const bareReloads = (shell.match(/location\.reload\(\)/g) ?? []).length;
-  if (bareReloads !== 2) {
-    bad.push(`${SHELL}: голых location.reload() ${bareReloads}, а ждали 2 (reloadForNetwork и кнопка экрана ошибки) — какая-то перезагрузка ради сети забывает вкладку копии`);
+  if (bareReloads !== 3) {
+    bad.push(`${SHELL}: голых location.reload() ${bareReloads}, а ждали 3 (reloadForNetwork, кнопка экрана ошибки и «Назад» из копии) — какая-то перезагрузка ради сети забывает вкладку копии`);
+  }
+  // 23. «Назад» из копии (заход 7.263, долг 364). Замер на эмуляторе
+  // (1.0.13): копия из «Guardado» открывалась `replaceState`,
+  // `history.length` = 1, «Назад» Android не делал ничего. Копия из
+  // списка — новая запись истории, возврат по ней перезапрашивает адрес.
+  const open = /function openSavedUrl\(url, names\) \{[\s\S]*?\n        \}\n/.exec(shell)?.[0] ?? "";
+  if (!/history\.pushState\(/.test(open)) {
+    bad.push(`${SHELL}: копия из списка открывается без записи в истории — «Назад» Android стоит на месте (долг 364)`);
+  }
+  if (!/window\.addEventListener\("popstate", function \(\) \{[\s\S]*?location\.reload\(\);\s*\}\);/.test(shell)) {
+    bad.push(`${SHELL}: возврат по истории из копии не перезапрашивает адрес — «Назад» сменит адрес, а на экране останется копия (долг 364)`);
   }
   if (!/takeCopyView\(window\.location\.pathname\)/.test(lesson)) {
     bad.push(`${LESSON}: живой урок не читает записку каркаса — после возврата сети вкладка теряется`);
@@ -339,6 +352,18 @@ function plant() {
     SHELL,
     (s) => s.replace('if (!shellOpenedDirectly()) reloadForNetwork();\n        });', 'if (!shellOpenedDirectly()) location.reload();\n        });'),
     "голых location.reload()",
+  );
+  add(
+    "подсадка: копия из списка снова открывается replaceState (как 1.0.13, долг 364)",
+    SHELL,
+    (s) => s.replace('history.pushState({ rfOfflineCopy: 1 }, "", url);', 'history.replaceState(null, "", url);'),
+    "без записи в истории",
+  );
+  add(
+    "подсадка: «Назад» меняет адрес, но копия остаётся на экране",
+    SHELL,
+    (s) => s.replace("          if (location.href.split(\"#\")[0] === shownHref) return;\n          location.reload();\n", "          if (location.href.split(\"#\")[0] === shownHref) return;\n"),
+    "не перезапрашивает адрес",
   );
   add(
     "подсадка: reloadForNetwork перестал оставлять записку",
@@ -563,7 +588,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-reader — 22 правила, нарушений 0 (заходы 7.229, 7.230, 7.239, 7.240)");
+  console.log("check:offline-reader — 23 правила, нарушений 0 (заходы 7.229, 7.230, 7.239, 7.240, 7.263)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
