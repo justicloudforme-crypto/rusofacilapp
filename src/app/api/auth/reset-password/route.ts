@@ -5,11 +5,14 @@ import { hashPassword, isPasswordStrongEnough } from "@/lib/password";
 import { decodeVerificationToken, matchesCurrentPassword } from "@/lib/verification-token";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
+import { readRequestForm } from "@/lib/request-form";
 
 const resetLimiter = getRateLimiter("resetPassword", 60_000, 20);
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const token = String(formData.get("token") ?? "");
   const password = String(formData.get("password") ?? "");
   const langRaw = String(formData.get("lang") ?? "");

@@ -69,7 +69,7 @@ function checkoutRequest(plan: string, method = "card", country?: string): NextR
   // Real requests always carry headers; the country one is what the OXXO
   // gate reads (src/lib/country.ts). Absent here unless a test names it,
   // which is exactly the shape of a request off a deployment.
-  const headers = new Headers(country ? { "x-vercel-ip-country": country } : {});
+  const headers = new Headers({ "content-type": "application/x-www-form-urlencoded", ...(country ? { "x-vercel-ip-country": country } : {}) });
   return {
     url: "https://rusofacilapp.com/api/checkout",
     headers,
@@ -227,7 +227,8 @@ describe("POST /api/checkout — Stripe refuses to open the session", () => {
       // Заголовки нужны с 13.09.2026: касса первым делом спрашивает, не
       // из нативной ли оболочки пришёл запрос (долг 179). У настоящего
       // NextRequest они есть всегда — пустой заглушке их не хватало.
-      headers: new Headers(),
+      // С 10.10.2026 (7.262) — и тип тела: без него касса отвечает 415.
+      headers: new Headers({ "content-type": "application/x-www-form-urlencoded" }),
     } as unknown as NextRequest;
 
     const body = await (await POST(request)).text();
@@ -525,5 +526,65 @@ describe("POST /api/checkout — one outstanding OXXO voucher per person", () =>
   it("records nothing for a card purchase", async () => {
     await POST(checkoutRequest("monthly", "card"));
     expect(openPendingCheckout).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Заход 7.262, Sentry `JAVASCRIPT-NEXTJS-S`: `application/json`, 2 байта,
+ * User-Agent проверки безопасности — касса бросала TypeError из
+ * `request.formData()` и отвечала 500 с событием в Sentry. Здесь запрос
+ * НАСТОЯЩИЙ (`Request`), а не заглушка: падал именно разбор тела.
+ */
+describe("POST /api/checkout — тело не той формы", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getCurrentUser.mockResolvedValue({ id: "user_1", email: "a@b.c", stripeCustomerId: "cus_1", role: "student" });
+    getEntitlementTierFor.mockResolvedValue("free");
+  });
+
+  function raw(body: BodyInit | undefined, contentType?: string): NextRequest {
+    return new Request("https://rusofacilapp.com/api/checkout", {
+      method: "POST",
+      headers: {
+        "user-agent": "Rusofacil-Owner-Security-Review/1.0",
+        ...(contentType ? { "content-type": contentType } : {}),
+      },
+      body,
+    }) as unknown as NextRequest;
+  }
+
+  it.each([
+    ["JSON из события Sentry (2 байта)", "{}", "application/json", 415],
+    ["пустое тело без типа", undefined, undefined, 415],
+    ["текст", "plan=monthly", "text/plain", 415],
+    ["битый multipart", "не multipart", "multipart/form-data; boundary=zzz", 400],
+  ])("%s → 415/400, без Stripe, без Sentry, без исключения", async (_name, body, type, status) => {
+    const response = await POST(raw(body, type));
+    expect(response.status).toBe(status);
+    expect(getStripe).not.toHaveBeenCalled();
+    expect(getCurrentUser).not.toHaveBeenCalled();
+    expect(captureException).not.toHaveBeenCalled();
+  });
+
+  it("настоящая форма браузера (urlencoded) по-прежнему доходит до кассы", async () => {
+    const sessionsCreate = vi.fn(async () => ({ url: "https://checkout.stripe.com/c/pay/cs_test" }));
+    getStripe.mockReturnValue({ checkout: { sessions: { create: sessionsCreate } }, customers: { create: vi.fn() } });
+    const response = await POST(raw("plan=monthly&lang=es&method=card", "application/x-www-form-urlencoded"));
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/pay/cs_test");
+    expect(sessionsCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("и multipart из FormData — тоже", async () => {
+    const sessionsCreate = vi.fn(async () => ({ url: "https://checkout.stripe.com/c/pay/cs_test2" }));
+    getStripe.mockReturnValue({ checkout: { sessions: { create: sessionsCreate } }, customers: { create: vi.fn() } });
+    const form = new FormData();
+    form.set("plan", "annual");
+    form.set("lang", "ru");
+    const response = await POST(
+      new Request("https://rusofacilapp.com/api/checkout", { method: "POST", body: form }) as unknown as NextRequest,
+    );
+    expect(response.status).toBe(303);
+    expect(sessionsCreate).toHaveBeenCalledTimes(1);
   });
 });

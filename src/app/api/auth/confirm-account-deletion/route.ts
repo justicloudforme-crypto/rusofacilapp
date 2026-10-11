@@ -8,9 +8,12 @@ import { getStripe } from "@/lib/stripe";
 import { decodeVerificationToken, matchesCurrentPassword } from "@/lib/verification-token";
 import { deleteAllVoiceSubmissionsForUser } from "@/lib/voice-storage";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const token = String(formData.get("token") ?? "");
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;

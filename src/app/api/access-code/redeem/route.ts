@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { redeemAccessCode } from "@/lib/access-code";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 /**
  * Погашение кода доступа вошедшим пользователем (PROGRESS.md 7.146).
@@ -26,7 +27,9 @@ import { defaultLocale, isLocale } from "@/i18n/config";
 const redeemLimiter = getRateLimiter("access-code-redeem", 60_000, 20);
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const codeRaw = String(formData.get("code") ?? "");

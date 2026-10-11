@@ -70,7 +70,7 @@ function checkoutRequest(plan: string, method = "card", country = "MX"): NextReq
   form.set("method", method);
   return {
     url: "https://rusofacilapp.com/api/checkout",
-    headers: new Headers({ "x-vercel-ip-country": country }),
+    headers: new Headers({ "content-type": "application/x-www-form-urlencoded", "x-vercel-ip-country": country }),
     formData: async () => form,
   } as unknown as NextRequest;
 }
