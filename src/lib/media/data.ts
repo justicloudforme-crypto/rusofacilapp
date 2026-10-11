@@ -91,11 +91,41 @@ async function readOverrides(): Promise<Map<string, OverrideRow>> {
   return new Map(overrides.map((o) => [o.mediaId, o]));
 }
 
+/**
+ * СПИСОК КАТАЛОГА ЧИТАЕТ НАКЛАДКУ БЕЗ СУБТИТРОВ — 10.10.2026, заход 7.262.
+ *
+ * Что было измерено. Sentry `JAVASCRIPT-NEXTJS-15`, «Slow DB Query»
+ * `SELECT main.MediaOverride.id, main.MediaOverride.mediaId, …` на
+ * `GET /[lang]/courses/[level]/[lesson]`, 6 событий за 4 недели. Индекс тут
+ * ни при чём: запрос берёт ВСЮ таблицу (233 строки, план `SCAN`, и иначе
+ * быть не может — условия нет). Дорогой он не строками, а байтами: в
+ * колонке `subtitles` у 232 строк лежит 2 274 441 байт JSON, ответ базы на
+ * полный `findMany()` — 2,9 МБ, без этой колонки — 57 КБ. И каждый рендер
+ * урока, рассказа, каталога медиа и карты сайта ещё и разбирал все 232
+ * JSON в `applyOverride`, чтобы выбросить их: этим поверхностям нужны
+ * только `embedStatus` (скрыть сломанную встройку), заголовок, уровень и
+ * связи — субтитры не печатает ни одна.
+ *
+ * Что теперь. `getAllMedia` (публичные списки) не выбирает `subtitles`
+ * вовсе — у элемента остаются субтитры статической основы из
+ * `mediaData.json`, как при отказе базы. Полная накладка — только
+ * `getAllMediaWithSubtitles` для админки и пакетной генерации субтитров.
+ * Страница одного медиа (`getMediaById`) читает одну строку по
+ * уникальному индексу и субтитры показывает — она не тронута.
+ * Сторож — `npm run check:media-list-slim`.
+ */
+const LIST_OVERRIDE_COLUMNS = {
+  mediaId: true,
+  embedStatus: true,
+  lastCheckedAt: true,
+  sourceNoteAppend: true,
+} as const;
+
 export async function getAllMedia(): Promise<MediaItem[]> {
   const store = await readStore();
-  let overrides = new Map<string, OverrideRow>();
+  let overrides = new Map<string, { embedStatus: string | null; lastCheckedAt: string | null; sourceNoteAppend: string | null }>();
   try {
-    const rows = await db.mediaOverride.findMany();
+    const rows = await db.mediaOverride.findMany({ select: LIST_OVERRIDE_COLUMNS });
     overrides = new Map(rows.map((o) => [o.mediaId, o]));
   } catch (error) {
     console.error(
@@ -103,6 +133,17 @@ export async function getAllMedia(): Promise<MediaItem[]> {
       error,
     );
   }
+  return Object.values(store).map((item) => {
+    const override = overrides.get(item.id);
+    return applyOverride(item, override ? { ...override, subtitles: null } : undefined);
+  });
+}
+
+/** Каталог с субтитрами из накладки — только админка и генерация субтитров.
+ * Отказ базы здесь громкий: это не публичная страница. */
+export async function getAllMediaWithSubtitles(): Promise<MediaItem[]> {
+  const store = await readStore();
+  const overrides = await readOverrides();
   return Object.values(store).map((item) => applyOverride(item, overrides.get(item.id)));
 }
 

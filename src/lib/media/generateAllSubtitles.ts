@@ -1,5 +1,5 @@
 import "server-only";
-import { getAllMedia, saveMediaSubtitles } from "./data";
+import { getAllMediaWithSubtitles, saveMediaSubtitles } from "./data";
 import { fetchRussianCaptions } from "@/lib/video-lesson/youtubeCaptions";
 import { generateSubtitlesWithClaude } from "./generateSubtitlesWithClaude";
 
@@ -35,7 +35,7 @@ export async function generateMissingMediaSubtitles(
     throw new Error("missing_api_key");
   }
 
-  const allItems = await getAllMedia();
+  const allItems = await getAllMediaWithSubtitles();
   const items = options.force
     ? allItems
     : allItems.filter((item) => !item.subtitles || item.subtitles.length === 0);
