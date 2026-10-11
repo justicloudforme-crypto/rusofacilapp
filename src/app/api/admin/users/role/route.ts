@@ -4,9 +4,12 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isOwner, isRole } from "@/lib/roles";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const targetUserId = String(formData.get("userId") ?? "");

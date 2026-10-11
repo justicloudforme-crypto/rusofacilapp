@@ -263,3 +263,64 @@ describe("приватное окно и отсутствующий провай
     expect(outcome).toBe("skipped-no-serwist");
   });
 });
+
+/**
+ * Заход 7.262, Sentry `JAVASCRIPT-NEXTJS-1B`: настоящий `Serwist` из
+ * @serwist/window, у которого `navigator.serviceWorker.register` — заглушка,
+ * отдающая `undefined` (так делает Playwright с `serviceWorkers: 'block'`).
+ * Библиотека читает `.waiting` у `undefined` и бросает TypeError; правило
+ * обязано отнести это к ожидаемому классу — консоль, не Sentry.
+ */
+describe("регистрация вернула undefined — подсадка заглушки на настоящем Serwist", () => {
+  const original = Object.getOwnPropertyDescriptor(navigator, "serviceWorker");
+
+  function stubServiceWorker(register: () => Promise<unknown>) {
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: { register, controller: null, addEventListener: () => {}, removeEventListener: () => {} },
+    });
+  }
+
+  afterEach(() => {
+    if (original) Object.defineProperty(navigator, "serviceWorker", original);
+    else delete (navigator as unknown as Record<string, unknown>).serviceWorker;
+  });
+
+  it("заглушка → TypeError в библиотеке → ожидаемый отказ, Sentry молчит", async () => {
+    stubServiceWorker(async () => undefined);
+    const { Serwist } = await import("@serwist/window");
+    const d = deps({ serwist: new Serwist("/sw.js", { scope: "/" }) });
+    const trap = trapUnhandledRejections();
+    const outcome = await registerServiceWorkerOnce(d);
+    await new Promise((r) => setTimeout(r, 0));
+    trap.stop();
+
+    expect(outcome).toBe("failed-expected");
+    expect(d.onUnexpectedFailure).not.toHaveBeenCalled();
+    expect(d.onExpectedFailure).toHaveBeenCalledTimes(1);
+    const [error] = (d.onExpectedFailure as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(String((error as Error).message)).toMatch(/waiting/);
+    expect(trap.seen).toEqual([]);
+  });
+
+  it("контроль: настоящий отказ библиотеки по другой причине по-прежнему уходит в Sentry", async () => {
+    stubServiceWorker(async () => {
+      throw new SyntaxError("Unexpected token '<'");
+    });
+    const { Serwist } = await import("@serwist/window");
+    const d = deps({ serwist: new Serwist("/sw.js", { scope: "/" }) });
+    const outcome = await registerServiceWorkerOnce(d);
+
+    expect(outcome).toBe("failed-unexpected");
+    expect(d.onUnexpectedFailure).toHaveBeenCalledTimes(1);
+    expect(d.onExpectedFailure).not.toHaveBeenCalled();
+  });
+
+  it("контроль: объект регистрации без ожидающего worker — «registered»", async () => {
+    stubServiceWorker(async () => ({ waiting: null, installing: null, active: null, addEventListener: () => {} }));
+    const { Serwist } = await import("@serwist/window");
+    const d = deps({ serwist: new Serwist("/sw.js", { scope: "/" }) });
+    expect(await registerServiceWorkerOnce(d)).toBe("registered");
+    expect(d.onUnexpectedFailure).not.toHaveBeenCalled();
+  });
+});

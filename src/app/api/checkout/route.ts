@@ -18,6 +18,7 @@ import { isDeployedEnvironment } from "@/lib/deploy-environment";
 import { countryFromHeaders, isCashAvailableForCountry } from "@/lib/country";
 import { getDictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 const PLAN_LABELS: Record<string, string> = {
   monthly: "Suscripción mensual",
@@ -169,7 +170,9 @@ async function reportCheckoutBlocked(error: unknown, plan: string, method: strin
 }
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const planRaw = String(formData.get("plan") ?? "");
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;

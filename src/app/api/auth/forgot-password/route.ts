@@ -5,12 +5,15 @@ import { signVerificationToken } from "@/lib/verification-token";
 import { sendEmail } from "@/lib/email";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
+import { readRequestForm } from "@/lib/request-form";
 
 const forgotLimiterByIp = getRateLimiter("forgotPasswordByIp", 60_000, 10);
 const forgotLimiterByEmail = getRateLimiter("forgotPasswordByEmail", 15 * 60_000, 5);
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isOwner } from "@/lib/roles";
 import { revokeAccessCode } from "@/lib/access-code";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 /**
  * ОТЗЫВ КОДА ДОСТУПА ИЗ ПАНЕЛИ — ОСТАТОК ДОЛГА 89 (заход 7.216).
@@ -23,7 +24,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const code = String(formData.get("code") ?? "");

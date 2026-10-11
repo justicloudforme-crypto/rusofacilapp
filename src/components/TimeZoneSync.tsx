@@ -15,7 +15,20 @@ import { TIMEZONE_COOKIE, isValidTimeZone } from "@/lib/timezone";
 //
 // Both writes are skipped when the value already matches, so a returning
 // visitor costs nothing beyond one Intl lookup.
-export default function TimeZoneSync({ storedTimeZone }: { storedTimeZone: string | null }) {
+//
+// ГОСТЮ — ТОЛЬКО КУКА (10.10.2026, заход 7.262). У гостя нет строки
+// `User`, и маршрут отвечает ему `{ stored: false }` — но `storedTimeZone`
+// у гостя всегда `null`, поэтому запрос уходил на КАЖДОЙ загрузке каждой
+// страницы. Замер зондом браузера на боевой `/es`, `/ru`: на тёплой загрузке
+// гостя этот POST — последний запрос страницы (Slow 4G: +0,2 с к pageload,
+// «3G»: 5,0 с против 3,4 с без него), плюс вызов функции Vercel впустую.
+export default function TimeZoneSync({
+  storedTimeZone,
+  signedIn,
+}: {
+  storedTimeZone: string | null;
+  signedIn: boolean;
+}) {
   useEffect(() => {
     let timezone: string;
     try {
@@ -37,7 +50,7 @@ export default function TimeZoneSync({ storedTimeZone }: { storedTimeZone: strin
       document.cookie = `${TIMEZONE_COOKIE}=${timezone}; path=/; max-age=31536000; samesite=lax`;
     }
 
-    if (storedTimeZone === timezone) return;
+    if (!signedIn || storedTimeZone === timezone) return;
 
     // Fire-and-forget: nothing on the page waits for this, and a failed
     // write just means the next page load tries again. The streak still
@@ -47,7 +60,7 @@ export default function TimeZoneSync({ storedTimeZone }: { storedTimeZone: strin
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ timezone }),
     }).catch(() => {});
-  }, [storedTimeZone]);
+  }, [storedTimeZone, signedIn]);
 
   return null;
 }
