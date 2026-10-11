@@ -129,8 +129,8 @@
       <div class="head"></div>
       <div class="body"></div>
     </div>
-    <h1 data-i18n="title">No pudimos abrir la aplicación</h1>
-    <p data-i18n="body">El servidor no respondió o tu teléfono no tiene conexión a internet. Revisa tu conexión y vuelve a intentarlo.</p>
+    <h1 data-i18n="title">No pudimos conectarnos</h1>
+    <p data-i18n="body">Revisa que tengas internet (wifi o datos móviles). Seguimos intentando: la app se abrirá sola en cuanto haya conexión.</p>
     <button type="button" id="retry">
       <span class="spin" aria-hidden="true"></span><span id="retry-label" data-i18n="retry">Reintentar</span>
     </button>
@@ -200,18 +200,22 @@
        */
       var strings = {
         es: {
-          title: "No pudimos abrir la aplicación",
-          body: "El servidor no respondió o tu teléfono no tiene conexión a internet. Revisa tu conexión y vuelve a intentarlo.",
+          title: "No pudimos conectarnos",
+          body: "Revisa que tengas internet (wifi o datos móviles). Seguimos intentando: la app se abrirá sola en cuanto haya conexión.",
+          bodyIdle: "Revisa que tengas internet (wifi o datos móviles) y toca «Reintentar».",
           retry: "Reintentar",
           retrying: "Conectando…",
-          failed: "Todavía no se pudo. Revisa tu conexión e inténtalo otra vez.",
+          stillTrying: "Aún sin conexión. Seguimos intentando: revisa tu wifi o tus datos móviles.",
+          failed: "Todavía no hay conexión. Revisa tu wifi o tus datos móviles e inténtalo otra vez.",
         },
         ru: {
-          title: "Не удалось открыть приложение",
-          body: "Сервер не ответил или на телефоне нет соединения с интернетом. Проверьте соединение и попробуйте снова.",
+          title: "Не удалось подключиться",
+          body: "Проверьте интернет (Wi-Fi или мобильные данные). Мы продолжаем пробовать: приложение откроется само, как только появится связь.",
+          bodyIdle: "Проверьте интернет (Wi-Fi или мобильные данные) и нажмите «Повторить».",
           retry: "Повторить",
-          retrying: "Пробуем…",
-          failed: "Пока не получается. Проверьте соединение и попробуйте ещё раз.",
+          retrying: "Подключаемся…",
+          stillTrying: "Связи пока нет. Мы продолжаем пробовать — проверьте Wi-Fi или мобильные данные.",
+          failed: "Связи всё ещё нет. Проверьте Wi-Fi или мобильные данные и попробуйте ещё раз.",
         },
       };
       // Запасной язык экрана — испанский, как и вся разметка выше.
@@ -254,6 +258,32 @@
        * прежним, пока оболочка молчит (первый запуск: помнить ещё нечего).
        */
       window.__rfApplyLocale = applyLocale;
+      /**
+       * ИДУТ ЛИ ЕЩЁ ПОВТОРЫ — ГОВОРИТ ОБОЛОЧКА (заход 7.263, долг 372).
+       *
+       * Замер 7.256: при молчании сайта дольше 12 с этот экран говорил «не
+       * удалось», а «Reintentar» через 8 с — «Todavía no se pudo», хотя
+       * лестница повторов `MainActivity` уже грузила сайт и поднимала
+       * приложение сама через ~1 с после ответа. Теперь `MainActivity`
+       * зовёт эту функцию тем же путём, что и язык: `trying` — повторы
+       * идут (или сети нет вовсе, и её возврат поднимет приложение сам),
+       * `idle` — повторы кончились, дальше только кнопка. Пока оболочка
+       * молчит — `trying`: экран появляется ровно тогда, когда лестница
+       * только что заведена. Неудача кнопки при `trying` не говорит «не
+       * получилось» — она говорит, что пробуем дальше.
+       */
+      var retryState = "trying";
+      function showBody(key) {
+        body.setAttribute("data-i18n", key);
+        body.textContent = say(key);
+      }
+      window.__rfRetryState = function (next) {
+        if (next !== "trying" && next !== "idle") return;
+        retryState = next;
+        if (button.getAttribute("data-busy") === "1") return;
+        var shown = body.getAttribute("data-i18n");
+        if (shown === "body" || shown === "bodyIdle") showBody(next === "idle" ? "bodyIdle" : "body");
+      };
 
       // Пока оболочка молчит — язык телефона, как и раньше. Первый запуск
       // после установки другого источника и не имеет.
@@ -290,7 +320,7 @@
             button.removeAttribute("data-busy");
             button.disabled = false;
             label.textContent = idleLabel;
-            body.textContent = say("failed");
+            showBody(retryState === "idle" ? "failed" : "stillTrying");
           }, Math.max(0, MIN_BUSY_MS - (Date.now() - startedAt)));
         };
         var timer = setTimeout(fail, PROBE_TIMEOUT_MS);
