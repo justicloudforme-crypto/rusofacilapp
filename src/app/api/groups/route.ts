@@ -4,13 +4,16 @@ import { getCurrentUser } from "@/lib/auth";
 import { createGroup, GroupError } from "@/lib/groups";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 // A student creates at most a handful of groups ever — this only exists to
 // stop a scripted client from spamming Group rows.
 const createGroupLimiter = getRateLimiter("createGroup", 60_000, 10);
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const name = String(formData.get("name") ?? "");

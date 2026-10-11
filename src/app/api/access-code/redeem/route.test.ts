@@ -29,7 +29,7 @@ function redeemRequest(code: string, lang = "es"): NextRequest {
   form.set("lang", lang);
   return {
     url: "https://rusofacilapp.com/api/access-code/redeem",
-    headers: new Headers(),
+    headers: new Headers({ "content-type": "application/x-www-form-urlencoded" }),
     formData: async () => form,
   } as unknown as NextRequest;
 }
@@ -120,7 +120,7 @@ describe("POST /api/access-code/redeem", () => {
     form.set("lang", "es");
     const request = {
       url: "https://rusofacilapp.com/api/access-code/redeem",
-      headers: new Headers(),
+      headers: new Headers({ "content-type": "application/x-www-form-urlencoded" }),
       formData: async () => form,
     } as unknown as NextRequest;
 

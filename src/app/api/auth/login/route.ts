@@ -7,6 +7,7 @@ import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import { loginRetryEmail } from "@/lib/login-retry";
+import { readRequestForm } from "@/lib/request-form";
 
 /**
  * Real email+password login (see src/lib/password.ts). Two rate limiters:
@@ -18,7 +19,9 @@ const loginLimiterByIp = getRateLimiter("loginByIp", 60_000, 20);
 const loginLimiterByEmail = getRateLimiter("loginByEmail", 10 * 60_000, 10);
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();

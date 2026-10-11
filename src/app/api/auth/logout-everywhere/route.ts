@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser, createSession } from "@/lib/auth";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 // "Sign out other devices" — bumps sessionVersion (invalidating every
 // previously-issued session token at once, see session-token.ts) and then
@@ -22,7 +23,9 @@ import { defaultLocale, isLocale } from "@/i18n/config";
 // сеанса, а на устройстве — старую куки. То есть человека выкидывало из
 // аккаунта ровно той кнопкой, которая обещает «кроме этого устройства».
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
 

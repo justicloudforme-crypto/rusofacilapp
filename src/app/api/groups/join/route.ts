@@ -4,11 +4,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { joinGroupByInviteCode, GroupError } from "@/lib/groups";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 const joinGroupLimiter = getRateLimiter("joinGroup", 60_000, 20);
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
   const code = String(formData.get("code") ?? "");

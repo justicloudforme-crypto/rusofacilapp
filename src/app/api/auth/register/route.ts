@@ -7,11 +7,14 @@ import { defaultLocale, isLocale } from "@/i18n/config";
 import { getRateLimiter, requestIp } from "@/lib/rate-limit";
 import { captureReferralOnRegister } from "@/lib/referral";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import { readRequestForm } from "@/lib/request-form";
 
 const registerLimiter = getRateLimiter("register", 60_000, 10);
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();

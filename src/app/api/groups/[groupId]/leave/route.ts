@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { leaveOrDeleteGroup } from "@/lib/groups";
 import { getRateLimiter } from "@/lib/rate-limit";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { readRequestForm } from "@/lib/request-form";
 
 const leaveGroupLimiter = getRateLimiter("leaveGroup", 60_000, 20);
 
@@ -12,7 +13,9 @@ export async function POST(
   { params }: { params: Promise<{ groupId: string }> },
 ) {
   const { groupId } = await params;
-  const formData = await request.formData();
+  const read = await readRequestForm(request);
+  if (!read.ok) return read.response;
+  const formData = read.form;
   const langRaw = String(formData.get("lang") ?? "");
   const lang = isLocale(langRaw) ? langRaw : defaultLocale;
 
