@@ -283,7 +283,7 @@ export default async function LangLayout({
           <SerwistRegister />
         </SerwistProvider>
         <SentryUser userId={user?.id ?? null} />
-        <TimeZoneSync storedTimeZone={user?.timezone ?? null} />
+        <TimeZoneSync storedTimeZone={user?.timezone ?? null} signedIn={Boolean(user)} />
         {process.env.NODE_ENV !== "production" && <DevServiceWorkerCleanup />}
         <NativeBackButtonHandler />
         <NativeNotifications lang={lang} userId={user?.id ?? null} />
