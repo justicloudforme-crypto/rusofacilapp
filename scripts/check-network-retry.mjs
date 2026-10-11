@@ -172,6 +172,25 @@ export function judge(sources) {
     }
   }
 
+  // 9. Экран ошибки знает, идут ли ещё повторы (заход 7.263, долг 372).
+  //    Замер 7.256: молчание сайта > 12 с — экран «не удалось», «Reintentar»
+  //    через 8 с — «Todavía no se pudo», а лестница тем временем поднимала
+  //    приложение сама. Оболочка обязана сказать экрану `trying`/`idle`, а
+  //    экран — не писать «не получилось», пока повторы идут.
+  if (note && !/tellErrorScreenRetryState\(url\)/.test(note)) {
+    problems.push(`${ACTIVITY}: экран ошибки не узнаёт, идут ли повторы — снова «Todavía no se pudo», пока приложение поднимается само (долг 372)`);
+  }
+  const tell = blockAfter(activity, "private void tellErrorScreenRetryState(String url)");
+  if (!tell || !/pendingAutoRetry != null/.test(tell) || !/__rfRetryState/.test(tell)) {
+    problems.push(`${ACTIVITY}: состояние повторов экрану ошибки не передаётся (нет tellErrorScreenRetryState с pendingAutoRetry → __rfRetryState) (долг 372)`);
+  }
+  if (!/window\.__rfRetryState = function/.test(errorScreen)) {
+    problems.push(`${ERROR_SCREEN}: экран ошибки не принимает состояние повторов от оболочки (долг 372)`);
+  }
+  if (!/showBody\(retryState === "idle" \? "failed" : "stillTrying"\)/.test(errorScreen)) {
+    problems.push(`${ERROR_SCREEN}: неудача «Reintentar» говорит «не получилось», даже пока повторы идут (долг 372)`);
+  }
+
   return problems;
 }
 
@@ -191,7 +210,7 @@ export async function main() {
       ["onAvailable убран — сигнала возврата сети нет",
         { [ACTIVITY]: sources[ACTIVITY].replace(/public void onAvailable\(Network /g, "public void неСобытие(Network ") }],
       ["сигнал сети ни к чему не приводит",
-        { [ACTIVITY]: sources[ACTIVITY].replace("                    if (onErrorScreenNow()) {\n                        scheduleAutoRetry();\n                    }", "") }],
+        { [ACTIVITY]: sources[ACTIVITY].replace(/ {20}if \(onErrorScreenNow\(\)\) \{\n {24}scheduleAutoRetry\(\);[\s\S]*?\n {20}\}\n/, "") }],
       ["ACCESS_NETWORK_STATE снова взято транзитивно у чужой зависимости",
         { [MANIFEST]: sources[MANIFEST].replace('<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />', "") }],
       ["у повтора отобрали предел — вечная перезагрузка при мёртвом сервере",
@@ -207,11 +226,17 @@ export async function main() {
       ["счётчик попыток нигде не обнуляется",
         { [ACTIVITY]: sources[ACTIVITY].replace(/autoRetryAttempt = 0/g, "autoRetryAttempt += 0") }],
       ["повтор заводится, не спросив, экран ли ошибки",
-        { [ACTIVITY]: sources[ACTIVITY].replace("        if (isErrorScreen(url) || offlineShellVisible) {\n            scheduleAutoRetry();\n            return;\n        }", "        scheduleAutoRetry();") }],
+        { [ACTIVITY]: sources[ACTIVITY].replace("        if (isErrorScreen(url) || offlineShellVisible) {\n            scheduleAutoRetry();\n            tellErrorScreenRetryState(url);\n            return;\n        }", "        scheduleAutoRetry();") }],
       ["перед перезагрузкой не спрашивают, что на экране — стёрли бы нажатие «Повторить»",
         { [ACTIVITY]: sources[ACTIVITY].replace("                if (!onErrorScreenNow() || getBridge() == null) {", "                if (getBridge() == null) {") }],
       ["с экрана ошибки убрали кнопку «Повторить»",
         { [ERROR_SCREEN]: sources[ERROR_SCREEN].replace(/onclick/g, "неНажатие").replace(/addEventListener\(\s*["']click["']/g, "неСлушаем(").replace(/__rfRetry/g, "__rfНеПовтор") }],
+      ["экран ошибки не узнаёт, идут ли повторы (как 1.0.13)",
+        { [ACTIVITY]: sources[ACTIVITY].replace("            scheduleAutoRetry();\n            tellErrorScreenRetryState(url);\n", "            scheduleAutoRetry();\n") }],
+      ["оболочка зовёт экран, но не смотрит на ступень лестницы",
+        { [ACTIVITY]: sources[ACTIVITY].replace("boolean trying = pendingAutoRetry != null || ", "boolean trying = ") }],
+      ["неудача кнопки снова «Todavía no se pudo» при идущих повторах (как 1.0.13)",
+        { [ERROR_SCREEN]: sources[ERROR_SCREEN].replace('showBody(retryState === "idle" ? "failed" : "stillTrying")', 'showBody("failed")') }],
       ["слушатель сети не снимается в onDestroy",
         { [ACTIVITY]: sources[ACTIVITY].replace(/unregisterNetworkCallback\(/g, "неСнимаем(") }],
       ["ступень повтора не снимается в onDestroy",
@@ -249,7 +274,7 @@ export async function main() {
     "check:network-retry — оболочка слушает НАСТОЯЩИЙ сигнал сети (registerDefaultNetworkCallback/onAvailable), " +
       "ACCESS_NETWORK_STATE объявлено нами, повтор ограничен числом с растущей паузой и потолком, счётчик " +
       "обнуляется, перезагрузка идёт только над экраном ошибки и спрашивает экран дважды, кнопка «Повторить» " +
-      "на месте, слушатель и ступень снимаются в onDestroy. Контроль — --plant.",
+      "на месте, слушатель и ступень снимаются в onDestroy, экран ошибки знает, идут ли повторы (долг 372). Контроль — --plant.",
   );
   return 0;
 }

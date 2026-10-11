@@ -71,13 +71,13 @@ const SHELL_UA = `${PIXEL.userAgent} ${TOKEN}`;
  *  проверяет, согласен с любой правкой и не стережёт ничего. */
 const EXPECTED_ERROR_TEXT = {
   es: [
-    "No pudimos abrir la aplicación",
-    "El servidor no respondió o tu teléfono no tiene conexión a internet. Revisa tu conexión y vuelve a intentarlo.",
+    "No pudimos conectarnos",
+    "Revisa que tengas internet (wifi o datos móviles). Seguimos intentando: la app se abrirá sola en cuanto haya conexión.",
     "Reintentar",
   ],
   ru: [
-    "Не удалось открыть приложение",
-    "Сервер не ответил или на телефоне нет соединения с интернетом. Проверьте соединение и попробуйте снова.",
+    "Не удалось подключиться",
+    "Проверьте интернет (Wi-Fi или мобильные данные). Мы продолжаем пробовать: приложение откроется само, как только появится связь.",
     "Повторить",
   ],
 };

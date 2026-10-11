@@ -1193,6 +1193,8 @@ public class MainActivity extends BridgeActivity {
                     autoRetryAttempt = 0;
                     if (onErrorScreenNow()) {
                         scheduleAutoRetry();
+                        WebView view = getBridge() == null ? null : getBridge().getWebView();
+                        tellErrorScreenRetryState(view == null ? null : view.getUrl());
                     }
                 });
             }
@@ -1218,6 +1220,7 @@ public class MainActivity extends BridgeActivity {
         }
         if (isErrorScreen(url) || offlineShellVisible) {
             scheduleAutoRetry();
+            tellErrorScreenRetryState(url);
             return;
         }
         cancelAutoRetry();
@@ -1261,6 +1264,31 @@ public class MainActivity extends BridgeActivity {
             }
         };
         autoRetryHandler.postDelayed(pendingAutoRetry, delay);
+    }
+
+    /**
+     * ЭКРАН ОШИБКИ ЗНАЕТ, ИДУТ ЛИ ЕЩЁ ПОВТОРЫ (заход 7.263, долг 372).
+     *
+     * Замер 7.256: сайт молчит дольше 12 с → экран ошибки, а лестница уже
+     * грузит сайт и поднимает приложение сама через ~1 с после ответа. Экран
+     * при этом говорил «не удалось», а «Reintentar» через 8 с —
+     * «Todavía no se pudo»: проба кнопки упиралась в ту же молчащую сеть.
+     * Теперь экран слышит от оболочки одно слово: `trying` — ступень
+     * лестницы заведена или сети нет вовсе (её возврат поднимет приложение
+     * через `onAvailable`); `idle` — лестница исчерпана, дальше только
+     * кнопка. Тем же путём, что язык экрана (`__rfApplyLocale`).
+     */
+    private void tellErrorScreenRetryState(String url) {
+        if (getBridge() == null || !isErrorScreen(url)) {
+            return;
+        }
+        WebView webView = getBridge().getWebView();
+        if (webView == null) {
+            return;
+        }
+        boolean trying = pendingAutoRetry != null || (networkCallback != null && deviceHasNoNetwork());
+        String js = "if(window.__rfRetryState)window.__rfRetryState('" + (trying ? "trying" : "idle") + "')";
+        webView.post(() -> webView.evaluateJavascript(js, null));
     }
 
     /** Снять ступень. Идемпотентно: снимают её и удачная загрузка, и

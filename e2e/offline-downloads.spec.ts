@@ -334,7 +334,16 @@ test("скачанное открывается без сети, звучит, �
   await copyPlay.click();
   await expect(copyPlay, "«▶» копии не перешёл в паузу").toHaveAttribute("aria-label", "Pausar lectura", { timeout: 10_000 });
   await expect(page.locator("[data-rf-reading]"), "строка копии не подсвечена").toHaveCount(1, { timeout: 10_000 });
-  expect(await copyBar.evaluate((el) => (el as HTMLElement).style.width)).not.toBe("0%");
+  // Шкала копии с 7.263 идёт по ВРЕМЕНИ рассказа (сумма клипов), как
+  // шторка и полоска живой страницы с одной дорожкой (R9), а не по номеру
+  // фразы: в нулевую секунду первой фразы она честно на 0 %. Ждём сдвиг —
+  // он приходит с первым `timeupdate` или со следующей фразой.
+  await expect
+    .poll(() => copyBar.evaluate((el) => (el as HTMLElement).style.width), {
+      message: "шкала копии не сдвинулась после «▶»",
+      timeout: 10_000,
+    })
+    .not.toBe("0%");
   // `play()` каркас зовёт ПОСЛЕ асинхронного `blobFor` (клип достаётся из
   // кеша), а подпись кнопки и подсветка строки меняются синхронно. Читать
   // счётчик сразу после подписи — гонка: 28.09.2026 (7.242) она стала
