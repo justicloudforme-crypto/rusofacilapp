@@ -302,7 +302,7 @@ function scan() {
   if (!/button\.disabled = true/.test(errorScript)) {
     failures.push(`${ERROR_PAGE}: кнопка «Повторить» не запирается на время попытки — второе нажатие заведёт вторую (долг 181).`);
   }
-  for (const key of ["retrying", "failed"]) {
+  for (const key of ["retrying", "failed", "stillTrying", "bodyIdle"]) {
     if (!new RegExp(`\\b${key}:`).test(errorScript)) {
       failures.push(`${ERROR_PAGE}: нет строки «${key}» — состояние попытки нечем назвать словами (долг 181).`);
       continue;
@@ -461,8 +461,8 @@ function plantControls() {
       expect: (r) => r.failures.some((m) => m.includes("не запирается на время попытки")),
     },
     {
-      name: "у строки «Пробуем…» пропал русский перевод",
-      plant: () => swap(ERROR_PAGE, '          retrying: "Пробуем…",\n', ""),
+      name: "у строки «Подключаемся…» пропал русский перевод",
+      plant: () => swap(ERROR_PAGE, '          retrying: "Подключаемся…",\n', ""),
       expect: (r) => r.failures.some((m) => m.includes("«retrying»") && m.includes("русск")),
     },
     {

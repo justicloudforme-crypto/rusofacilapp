@@ -450,7 +450,7 @@ export async function main() {
         { [ERROR_PAGE]: sources[ERROR_PAGE].replace(/\n        ru: \{[\s\S]*?\n        \},/, "") }],
       ["запасная строка в разметке разошлась со словарём",
         { [ERROR_PAGE]: sources[ERROR_PAGE].replace(
-          ">No pudimos abrir la aplicación<", ">Algo salió mal<") }],
+          ">No pudimos conectarnos<", ">Algo salió mal<") }],
       ["у экрана ошибки появилась четвёртая видимая строка мимо словаря",
         { [ERROR_PAGE]: sources[ERROR_PAGE].replace(
           '<button type="button" id="retry">',
