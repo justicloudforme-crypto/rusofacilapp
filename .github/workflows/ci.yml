@@ -974,6 +974,30 @@ jobs:
       - name: Тот же сторож — позитивный контроль
         run: npm run check:health-route:plant
 
+      # 7.262. Три класса из Sentry за 02–10.10.2026. Все три — статические
+      # проверки исходников (базы и сети не открывают), поэтому здесь.
+      # NEXTJS-S: тело не той формы роняло обработчик формы в 500 —
+      # 18 обработчиков читают форму только через readRequestForm (415/400).
+      - name: Тело не той формы — 415/400, а не 500
+        run: npm run check:request-body
+
+      - name: Тот же сторож — позитивный контроль (касса со старым formData())
+        run: npm run check:request-body:plant
+
+      # NEXTJS-15: список медиа тянул 2,27 МБ субтитров на каждый урок.
+      - name: Список медиа читает накладку без субтитров
+        run: npm run check:media-list-slim
+
+      - name: Тот же сторож — позитивный контроль (findMany() без select)
+        run: npm run check:media-list-slim:plant
+
+      # NEXTJS-1B: заглушка register() → undefined → TypeError «.waiting».
+      - name: Отсутствующая регистрация воркера — консоль, не Sentry
+        run: npm run check:sw-missing-registration
+
+      - name: Тот же сторож — позитивный контроль (правило вынуто)
+        run: npm run check:sw-missing-registration:plant
+
       - name: Имя бренда пишется одинаково
         run: npm run check:brand
 
