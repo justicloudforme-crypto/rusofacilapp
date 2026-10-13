@@ -311,6 +311,14 @@ export interface NativeAccessCopy {
     activatingBadge: string;
     /** Значок, когда подтверждения нет дольше срока ожидания. */
     activationSlowBadge: string;
+    /** Заход 7.264, долг 359: история «Accesos y pagos», пока страница
+     *  ещё не знает о только что оплаченном доступе. */
+    historyUpdating: string;
+    /** Заход 7.264: подтверждение поверх страницы, когда шторки уже нет.
+     *  Отдельно для подписки и для Premium — открывают они разное. */
+    confirmedStandard: string;
+    confirmedPremium: string;
+    confirmedClose: string;
     /** Отложенная покупка: оплата наличными в магазине. */
     pending: string;
     offline: string;
@@ -432,6 +440,10 @@ const COPY: Record<Locale, NativeAccessCopy> = {
         "El pago se registró, pero el acceso todavía no llega. Espera un momento y vuelve a intentarlo; no hace falta pagar otra vez.",
       activatingBadge: "Activando…",
       activationSlowBadge: "Sin confirmar",
+      historyUpdating: "Actualizando…",
+      confirmedStandard: "¡Listo! Tu suscripción está activa: ya tienes abiertas las clases, los cuentos con audio, el vocabulario y los juegos de palabras.",
+      confirmedPremium: "¡Listo! Tu acceso Premium está activo: tienes todo el curso abierto, también el nivel C1 y los juegos con estrella.",
+      confirmedClose: "Cerrar",
       pending:
         "Tu pago quedó pendiente. El acceso se abrirá solo en cuanto se confirme; no hace falta hacer nada más.",
       offline: "No hay conexión. Revisa tu internet y vuelve a intentarlo.",
@@ -547,6 +559,10 @@ const COPY: Record<Locale, NativeAccessCopy> = {
         "Оплата прошла, а доступ ещё не доехал. Подождите немного и нажмите ещё раз — платить второй раз не нужно.",
       activatingBadge: "Активируем…",
       activationSlowBadge: "Не подтверждено",
+      historyUpdating: "Обновляем…",
+      confirmedStandard: "Готово! Подписка активна: открыты уроки, рассказы со звуком, словарь и игры со словами.",
+      confirmedPremium: "Готово! Premium активен: открыт весь курс, включая уровень C1 и игры со звёздочкой.",
+      confirmedClose: "Закрыть",
       pending:
         "Оплата пока не подтверждена. Доступ откроется сам, как только она пройдёт; делать ничего не нужно.",
       offline: "Нет соединения. Проверьте интернет и попробуйте ещё раз.",
