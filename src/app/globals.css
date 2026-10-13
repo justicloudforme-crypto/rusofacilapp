@@ -2038,3 +2038,15 @@ html[data-shell] :is(header, nav, [role="tablist"], [role="tab"], [role="menu"],
   user-select: none;
   -webkit-touch-callout: none;
 }
+
+/*
+ * ЗАМКИ УХОДЯТ В МИГ ОТВЕТА СЕРВЕРА — заход 7.264.
+ * `NativeStoreIdentity` ставит `data-rf-granted-tier` на <html>, когда
+ * сервер назвал новый уровень доступа после покупки в приложении; до
+ * перерисовки страницы (на видео 13.10.2026 — ~1 с) знаки платного
+ * прячутся здесь. Подписка снимает только «🔒», Premium — и «👑».
+ */
+html[data-rf-granted-tier] [data-access-mark="subscription"],
+html[data-rf-granted-tier="premium"] [data-access-mark="premium-tier"] {
+  display: none !important;
+}
