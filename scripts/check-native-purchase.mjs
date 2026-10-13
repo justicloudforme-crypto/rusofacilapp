@@ -34,6 +34,8 @@ const FILES = {
   cancel: "src/app/api/subscription/cancel/route.ts",
   activation: "src/lib/access-activation.ts",
   status: "src/components/native/ActivationAwareStatus.tsx",
+  css: "src/app/globals.css",
+  telemetry: "src/lib/purchase-telemetry.ts",
 };
 
 /** Все файлы правила — один снимок. Подсадка правит СНИМОК, а не диск. */
@@ -534,12 +536,14 @@ function judge(files) {
   // Ж.1 (аудит 7.241, Р17; заход 7.243): «покупка идёт» публикуется В МОДУЛЬ
   // до ответа магазина, значок кабинета читает её как «Activando…», а ответ
   // «куплено» запускает ожидание и при закрытой панели.
-  const buyAt = panelCode.indexOf("beginPurchase();");
+  // 7.264: `beginPurchase(baselineTier.current)` — с уровнем ДО покупки,
+  // чтобы сервер можно было спрашивать уже во время покупки.
+  const buyAt = panelCode.indexOf("beginPurchase(");
   const callAt = panelCode.indexOf("await purchasePackage(pkg)");
   if (buyAt === -1 || callAt === -1 || buyAt > callAt) {
     problems.push(`${FILES.panel}: «покупка идёт» не публикуется до ответа магазина — ~1,5 с «Expirada» после окна Google (Ж.1)`);
   }
-  if (!/if \(outcome\.kind === "purchased"\) \{[\s\S]{0,160}?await startActivationWatch\(/.test(panelCode) || panelCode.indexOf("await startActivationWatch(") > panelCode.indexOf("if (!alive.current) return;\n      switch (outcome.kind)")) {
+  if (!/if \(outcome\.kind === "purchased"\) \{[\s\S]{0,700}?await startActivationWatch\(/.test(panelCode) || panelCode.indexOf("await startActivationWatch(") > panelCode.indexOf("if (!alive.current) return;\n      switch (outcome.kind)")) {
     problems.push(`${FILES.panel}: ожидание доступа после оплаты зависит от открытой панели (Ж.1)`);
   }
   if (!/live === "waiting" \|\| live === "purchasing"/.test(files.status ?? "")) {
@@ -556,6 +560,71 @@ function judge(files) {
       `${FILES.identity}: страницу после выдачи доступа не перечитывает никто из постоянно ` +
         "смонтированных — замки снимет только уход на другую вкладку (долг 304)",
     );
+  }
+
+  // ===== ЗАХОД 7.264 =====================================================
+  // Долг 359: история «Accesos y pagos» — ответ сервера ДО покупки, а шапка
+  // узнаёт об оплате раньше страницы. Прогон 13.10.2026 (учётка со старой
+  // истёкшей строкой магазина): «Activando…» 3,0 с и «Activa» 1,57 с над
+  // верхней строкой «Expirada». История обязана слушать то же ожидание.
+  if (
+    !/<ActivationAwareStatus\s+serverEntitled=\{entitled \|\| staffAccess\}\s+whenGranted=\{[\s\S]{0,300}?historyUpdating[\s\S]{0,300}?whenWaiting=\{[\s\S]{0,300}?historyUpdating[\s\S]{0,200}?\}\s*>\s*\{subscriptionHistory\.length === 0/.test(
+      profileCode,
+    )
+  ) {
+    problems.push(
+      `${FILES.profile}: история «Accesos y pagos» не слушает ожидание доступа — «Expirada» под «Activa» ` +
+        "1–2 с после оплаты (долг 359, 7.264)",
+    );
+  }
+  // Видео 13.10.2026: вебхук на ≈16,9 с, ответ магазина после 19,0 с, замки
+  // до 20,5 с. Сервер спрашивается уже во время покупки и при возврате в
+  // приложение, а «granted» не опускается обратно в «waiting».
+  if (
+    !/beginPurchase\(baselineTier\.current\)/.test(panelCode) ||
+    !/function watchWhilePurchasing\(/.test(activation) ||
+    !/"visibilitychange"/.test(activation) ||
+    !/startActivationWatch\([\s\S]{0,200}?\)[\s\S]{0,120}?\{[\s\S]{0,400}?if \(state\.kind === "granted"\) return state;/.test(activation)
+  ) {
+    problems.push(
+      `${FILES.activation}: сервер не спрашивается, пока магазин отвечает, — замки и «Completando la compra…» ` +
+        "держатся до ответа магазина после вебхука (видео 13.10.2026, 7.264)",
+    );
+  }
+  // Замки уходят в миг ответа сервера, а не после перерисовки (~1 с).
+  if (
+    !/setAttribute\("data-rf-granted-tier", live\.tier\)/.test(identityCode) ||
+    !/html\[data-rf-granted-tier\] \[data-access-mark="subscription"\]/.test(files.css ?? "") ||
+    !/html\[data-rf-granted-tier="premium"\] \[data-access-mark="premium-tier"\]/.test(files.css ?? "")
+  ) {
+    problems.push(
+      `${FILES.identity} / ${FILES.css}: знаки платного видны до перерисовки после ответа сервера (видео 13.10.2026: 19,5–20,5 с, 7.264)`,
+    );
+  }
+  // Подтверждение не живёт только в шторке: её закрыли до ответа сервера.
+  if (!/purchaseScreenOpen\(\)/.test(identityCode) || !/<PurchaseConfirmedNotice\b/.test(identityCode)) {
+    problems.push(
+      `${FILES.identity}: после оплаты при закрытой шторке нет подтверждения — человек не знает, что купил (видео 13.10.2026, 7.264)`,
+    );
+  }
+  // Диагностика: три события, точки отсчёта, без почты.
+  const telemetry = stripComments(files.telemetry ?? "");
+  const events = ["NativePurchaseTiming", "NativePurchaseAccessLate", "NativePurchaseStateConflict"];
+  const missingEvents = events.filter((e) => !telemetry.includes(`"${e}"`));
+  const missingCalls = [
+    ["purchaseTapped()", panelCode],
+    ["storeConfirmed()", panelCode],
+    ["purchaseFailed(code)", panelCode],
+    ["serverConfirmed(live.tier)", identityCode],
+    ["accessTimedOut()", identityCode],
+  ].filter(([call, code]) => !code.includes(call));
+  if (missingEvents.length || missingCalls.length) {
+    problems.push(
+      `${FILES.telemetry}: диагностика покупки неполна — нет ${[...missingEvents, ...missingCalls.map(([c]) => c)].join(", ")} (7.264)`,
+    );
+  }
+  if (/email|\.name\b/.test(telemetry)) {
+    problems.push(`${FILES.telemetry}: событие покупки читает почту или имя — личные данные в Sentry (7.264)`);
   }
 
   return problems;
@@ -617,7 +686,7 @@ const PLANTS = [
   },
   {
     name: "Ж.1 (7.243): «покупка идёт» только после ответа магазина",
-    apply: (f) => ({ ...f, panel: f.panel.replace("      beginPurchase();\n      const outcome = await purchasePackage(pkg);", "      const outcome = await purchasePackage(pkg);\n      beginPurchase();") }),
+    apply: (f) => ({ ...f, panel: f.panel.replace("      beginPurchase(baselineTier.current);\n      const outcome = await purchasePackage(pkg);", "      const outcome = await purchasePackage(pkg);\n      beginPurchase(baselineTier.current);") }),
   },
   {
     name: "Ж.1 (7.243): значок не знает «покупка идёт»",
@@ -743,6 +812,34 @@ const PLANTS = [
     apply: (f) => ({ ...f, activation: f.activation.replace("export async function startActivationWatch(", "async function startActivationWatchUnused(") }),
   },
   {
+    name: "7.264 / 359: история «Accesos y pagos» снова только ответ сервера",
+    apply: (f) => ({ ...f, profile: f.profile.replace("{nativeAccessCopy(lang).purchase.historyUpdating}", "{statusLabels.expired}") }),
+  },
+  {
+    name: "7.264: сервер не спрашивается во время покупки (до видео 13.10)",
+    apply: (f) => ({ ...f, panel: f.panel.replace("beginPurchase(baselineTier.current);", "beginPurchase();") }),
+  },
+  {
+    name: "7.264: ответ магазина опускает «granted» в «waiting»",
+    apply: (f) => ({ ...f, activation: f.activation.replace('if (state.kind === "granted") return state;', "") }),
+  },
+  {
+    name: "7.264: правило, прячущее замки по ответу сервера, удалено из CSS",
+    apply: (f) => ({ ...f, css: f.css.replace('html[data-rf-granted-tier] [data-access-mark="subscription"],', "") }),
+  },
+  {
+    name: "7.264: подтверждения поверх страницы нет — только «Listo» в шторке",
+    apply: (f) => ({ ...f, identity: f.identity.replace("<PurchaseConfirmedNotice", "<span") }),
+  },
+  {
+    name: "7.264: событие «доступ опоздал» пропало из диагностики",
+    apply: (f) => ({ ...f, telemetry: f.telemetry.replaceAll('"NativePurchaseAccessLate"', '"Gone"') }),
+  },
+  {
+    name: "7.264: диагностика взяла почту",
+    apply: (f) => ({ ...f, telemetry: f.telemetry.replace("const tags: Record<string, string> = { ...baseTags(), outcome };", "const tags: Record<string, string> = { ...baseTags(), outcome, who: user.email };") }),
+  },
+  {
     name: "подписки на ход активации нет — экрану нечем показать «готово»",
     apply: (f) => ({ ...f, activation: f.activation.replace("export function subscribeActivation(", "function subscribeActivationUnused(") }),
   },
@@ -761,7 +858,7 @@ function main() {
     }
     const v = versions(files);
     console.log(
-      `check:native-purchase — 16 правил, 0 нарушений. Оболочка называет себя версией ${v.fromCapacitor} ` +
+      `check:native-purchase — 22 правила, 0 нарушений. Оболочка называет себя версией ${v.fromCapacitor} ` +
         `и собрана как versionCode ${v.fromGradle} (совпадают); покупать умеет оболочка от ` +
         `${v.fromConfig} и выше; ключ магазина в одном файле; ` +
         `${REQUIRED_EVENTS.length} типов событий разбираются поимённо.`,

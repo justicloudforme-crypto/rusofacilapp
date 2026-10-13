@@ -139,6 +139,11 @@ export async function startActivationWatch(
   baselineTier: string | null,
   deps: ActivationDeps = realDeps,
 ): Promise<ActivationState> {
+  // Заход 7.264: сервер мог открыть доступ ещё пока магазин отвечал
+  // (`purchasing`, см. `beginPurchase`). Ждать нечего — и опускаться из
+  // «granted» обратно в «waiting» значило бы показать «Activando…» после
+  // «Listo».
+  if (state.kind === "granted") return state;
   if (running) return state;
   running = true;
   publish({ kind: "waiting" });
@@ -167,9 +172,63 @@ export async function startActivationWatch(
 /**
  * ПОКУПКА ИДЁТ — с нажатия тарифа до ответа магазина (Ж.1). Не начинается
  * поверх уже идущего ожидания доступа или выданного доступа.
+ *
+ * СЕРВЕР СПРАШИВАЕТСЯ УЖЕ ЗДЕСЬ — ЗАХОД 7.264. Первая настоящая покупка
+ * (13.10.2026, видео): Google взял оплату на ~6 с, вебхук записал доступ
+ * через 10,6 с (≈16,9 с видео), а ответ магазина (`purchasePackage`)
+ * пришёл только после листа «Puntos de Google Play» — после 19,0 с: всё
+ * это время экран говорил «Completando la compra…», а замки висели до
+ * 20,5 с. Поэтому, пока покупка идёт, сервер опрашивается тем же
+ * вопросом, что и после неё, — и сразу при возврате в приложение
+ * (`visibilitychange`). Новый уровень — это ответ сервера, а не догадка:
+ * «granted» публикуется на тех же основаниях, что и в
+ * `startActivationWatch`.
  */
-export function beginPurchase(): void {
-  if (state.kind === "idle" || state.kind === "slow") publish({ kind: "purchasing" });
+export function beginPurchase(baselineTier: string | null = null, deps: ActivationDeps = realDeps): void {
+  if (state.kind !== "idle" && state.kind !== "slow") return;
+  publish({ kind: "purchasing" });
+  void watchWhilePurchasing(baselineTier, deps);
+}
+
+/** Сколько опрашивать сервер, пока магазин не ответил: окно Google может
+ *  висеть долго (человек читает условия), но не вечно. */
+export const PURCHASING_WATCH_MS = 5 * 60_000;
+
+let purchasingWatch = false;
+
+async function watchWhilePurchasing(baselineTier: string | null, deps: ActivationDeps): Promise<void> {
+  if (purchasingWatch) return;
+  purchasingWatch = true;
+  const deadline = deps.now() + PURCHASING_WATCH_MS;
+  let wake: (() => void) | null = null;
+  const onVisible = () => {
+    if (typeof document !== "undefined" && document.visibilityState === "visible") wake?.();
+  };
+  if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
+  try {
+    while (state.kind === "purchasing" && deps.now() < deadline) {
+      await Promise.race([
+        deps.sleep(ACTIVATION_POLL_MS),
+        new Promise<void>((resolve) => {
+          wake = resolve;
+        }),
+      ]);
+      wake = null;
+      if (state.kind !== "purchasing") return;
+      try {
+        const tier = await deps.readTier();
+        if (state.kind === "purchasing" && tier && tier !== baselineTier) {
+          publish({ kind: "granted", tier });
+          return;
+        }
+      } catch {
+        // Сеть моргнула — следующий круг спросит снова.
+      }
+    }
+  } finally {
+    purchasingWatch = false;
+    if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible);
+  }
 }
 
 /** Магазин ответил не «куплено» (отмена, отказ, отложено) — назад к серверу. */
@@ -177,9 +236,33 @@ export function endPurchase(): void {
   if (state.kind === "purchasing") publish({ kind: "idle" });
 }
 
+/**
+ * ОТКРЫТ ЛИ ЭКРАН ПОКУПКИ — заход 7.264. Подтверждение оплаты поверх
+ * страницы показывается, только когда экрана покупки на виду нет: шторку
+ * на видео 13.10.2026 закрыли до ответа сервера, и «Listo» внутри неё
+ * никто не увидел.
+ */
+let purchaseScreens = 0;
+
+export function registerPurchaseScreen(): () => void {
+  purchaseScreens += 1;
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    purchaseScreens -= 1;
+  };
+}
+
+export function purchaseScreenOpen(): boolean {
+  return purchaseScreens > 0;
+}
+
 /** Только для примеров: вернуть модуль в исходное состояние. */
 export function resetActivationForTests(): void {
   running = false;
+  purchasingWatch = false;
+  purchaseScreens = 0;
   state = { kind: "idle" };
   listeners.clear();
 }

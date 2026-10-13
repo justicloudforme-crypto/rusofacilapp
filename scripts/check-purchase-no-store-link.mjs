@@ -98,7 +98,7 @@ export function judge(files) {
   if (!option) bad.push(`${PATH_FILES.panel}: тариф (native-purchase-option) не нажимает buy(pkg) (правило 2)`);
   const buy = bodyFrom(panel, panel.indexOf("const buy = useCallback("));
   if (!/await purchasePackage\(pkg\)/.test(buy)) bad.push(`${PATH_FILES.panel}: buy не зовёт purchasePackage(pkg) — тариф не доходит до моста (правило 2)`);
-  if (!/beginPurchase\(\);/.test(buy)) bad.push(`${PATH_FILES.panel}: buy не публикует «покупка идёт» (Ж.1) до моста`);
+  if (!/beginPurchase\((?:baselineTier\.current)?\);/.test(buy)) bad.push(`${PATH_FILES.panel}: buy не публикует «покупка идёт» (Ж.1) до моста`);
   // Правило 5: отказ магазина не немой — событие Sentry и код на экране.
   if (!/Sentry\.captureMessage\(`NativeStorePurchaseFailed: \$\{outcome\.code\}`/.test(buy) || !/setStage\(\{ kind: "failed", code \}\)/.test(buy)) {
     bad.push(`${PATH_FILES.panel}: отказ магазина снова немой — нет события Sentry или кода на экране (правило 5)`);
@@ -154,7 +154,7 @@ function main() {
     ["окно замка берёт адрес магазина импортом PLAY_STORE_URL", edit(P.paywall, "return (", "const store = PLAY_STORE_URL;\n  return ("), "PLAY_STORE_URL"],
     ["адрес магазина записан вне манифеста (подвал)", edit("src/components/Footer.tsx", "return (", 'const s = "https://play.google.com/store/apps/details?id=com.rusofacilapp.app";\n  return ('), "правило 4"],
     ["market:// вне пути покупки (подвал)", edit("src/components/Footer.tsx", "return (", 'const m = "market://details?id=com.rusofacilapp.app";\n  return ('), "правило 4"],
-    ["Ж.1 убран: «покупка идёт» не публикуется", edit(P.panel, "      beginPurchase();\n", ""), "Ж.1"],
+    ["Ж.1 убран: «покупка идёт» не публикуется", edit(P.panel, "      beginPurchase(baselineTier.current);\n", ""), "Ж.1"],
     ["отказ магазина снова без кода", edit(P.panel, 'setStage({ kind: "failed", code });', 'setStage({ kind: "failed" });'), "правило 5"],
   ];
   let caught = 0;

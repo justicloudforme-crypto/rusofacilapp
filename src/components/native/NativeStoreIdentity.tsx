@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { configureRevenueCat, loginRevenueCat, logoutRevenueCat } from "@/lib/revenuecat-client";
-import { subscribeActivation } from "@/lib/access-activation";
+import { purchaseScreenOpen, subscribeActivation } from "@/lib/access-activation";
+import { accessTimedOut, serverConfirmed } from "@/lib/purchase-telemetry";
+import type { NativeAccessCopy } from "@/lib/native-access-copy";
+import PurchaseConfirmedNotice from "@/components/native/PurchaseConfirmedNotice";
 
 /**
  * ПРИВЯЗКА ПОКУПАТЕЛЯ МАГАЗИНА К УЧЁТНОЙ ЗАПИСИ САЙТА — заход 7.224.
@@ -37,7 +40,15 @@ import { subscribeActivation } from "@/lib/access-activation";
  * у него нет — он лишь слушает `src/lib/access-activation.ts`, а тот
  * спрашивает сервер.
  */
-export default function NativeStoreIdentity({ userId }: { userId: string | null }) {
+export default function NativeStoreIdentity({
+  userId,
+  copy,
+}: {
+  userId: string | null;
+  copy: Pick<NativeAccessCopy["purchase"], "confirmedStandard" | "confirmedPremium" | "confirmedClose">;
+}) {
+  const [confirmed, setConfirmed] = useState<string | null>(null);
+  const closeConfirmed = useCallback(() => setConfirmed(null), []);
   const router = useRouter();
 
   useEffect(() => {
@@ -71,13 +82,37 @@ export default function NativeStoreIdentity({ userId }: { userId: string | null 
    * заново. Полная перезагрузка здесь была бы грубее и дороже: она
    * потеряла бы состояние всех открытых вкладок урока.
    */
+  /*
+   * ЗАХОД 7.264 — ТРИ ВЕЩИ В МИГ, КОГДА СЕРВЕР НАЗВАЛ НОВЫЙ УРОВЕНЬ.
+   *
+   * 1. Замки уходят с экрана СРАЗУ, а не после перерисовки. Видео
+   *    13.10.2026: «🔒 Con suscripción» на «День стирки» держался 19,5–20,0 с
+   *    и пропал на 20,5 с — это время перерисовки страницы. Метка на
+   *    `<html>` прячет знаки платного правилом из `globals.css` (подписка —
+   *    только «🔒», Premium — и «👑»); перерисовка затем убирает их из
+   *    разметки совсем. Основание то же, что у перерисовки, — ответ
+   *    сервера, а не магазина.
+   * 2. Подтверждение поверх страницы, если экрана покупки на виду нет.
+   * 3. Диагностика: момент ответа сервера и истечение срока ожидания.
+   */
   useEffect(
     () =>
       subscribeActivation((live) => {
-        if (live.kind === "granted") router.refresh();
+        if (live.kind === "granted") {
+          document.documentElement.setAttribute("data-rf-granted-tier", live.tier);
+          serverConfirmed(live.tier);
+          if (!purchaseScreenOpen()) {
+            setConfirmed(live.tier === "premium" ? copy.confirmedPremium : copy.confirmedStandard);
+          }
+          router.refresh();
+        } else if (live.kind === "slow") {
+          accessTimedOut();
+        }
       }),
-    [router],
+    [router, copy.confirmedPremium, copy.confirmedStandard],
   );
 
-  return null;
+  return confirmed ? (
+    <PurchaseConfirmedNotice message={confirmed} closeLabel={copy.confirmedClose} onDone={closeConfirmed} />
+  ) : null;
 }
