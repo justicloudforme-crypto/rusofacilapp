@@ -12,9 +12,11 @@ import {
   beginPurchase,
   endPurchase,
   readTier,
+  registerPurchaseScreen,
   startActivationWatch,
   subscribeActivation,
 } from "@/lib/access-activation";
+import { purchaseCancelled, purchaseFailed, purchaseTapped, storeConfirmed } from "@/lib/purchase-telemetry";
 import type { StoreFailure, StoreStep } from "@/lib/revenuecat-client";
 
 /**
@@ -102,8 +104,13 @@ export default function NativePurchasePanel({
 
   useEffect(() => {
     alive.current = true;
+    // Пока экран покупки на виду, «Listo» говорит он сам; подтверждение
+    // поверх страницы (`PurchaseConfirmedNotice`) нужно, только когда его
+    // нет (заход 7.264).
+    const unregister = registerPurchaseScreen();
     return () => {
       alive.current = false;
+      unregister();
     };
   }, []);
 
@@ -243,14 +250,25 @@ export default function NativePurchasePanel({
   const buy = useCallback(
     async (pkg: PurchasesPackage) => {
       setStage({ kind: "purchasing" });
-      beginPurchase();
+      purchaseTapped();
+      // Заход 7.264: сервер спрашивается уже пока магазин отвечает.
+      beginPurchase(baselineTier.current);
       const outcome = await purchasePackage(pkg);
       if (outcome.kind === "purchased") {
+        storeConfirmed();
+        // Сервер мог открыть доступ раньше ответа магазина — тогда сразу
+        // «Listo», без «Activando…».
+        if (activationState().kind === "granted") {
+          if (alive.current) setStage({ kind: "activated" });
+          return;
+        }
         if (alive.current) setStage({ kind: "activating" });
         await startActivationWatch(baselineTier.current);
         return;
       }
       endPurchase();
+      if (outcome.kind === "offline") purchaseFailed("offline");
+      else if (outcome.kind === "cancelled" || outcome.kind === "pending") purchaseCancelled();
       if (!alive.current) return;
       switch (outcome.kind) {
         // Человек закрыл системный лист сам. Это не сбой, и сообщать о нём
@@ -268,6 +286,7 @@ export default function NativePurchasePanel({
           // Заход 7.244: отказ магазина — событие Sentry и код на экране.
           // Личных данных нет: код RevenueCat и короткий ответ Google.
           const code = `RC-BUY-${outcome.code}`;
+          purchaseFailed(code);
           Sentry.captureMessage(`NativeStorePurchaseFailed: ${outcome.code}`, {
             level: "warning",
             tags: { area: "native-purchase", code },

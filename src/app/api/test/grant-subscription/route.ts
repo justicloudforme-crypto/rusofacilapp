@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { extendOrGrantSubscription } from "@/lib/subscription";
+import { extendOrGrantSubscription, invalidateSubscriptionCache } from "@/lib/subscription";
+import { db } from "@/lib/db";
 
 /**
  * Test-only: grants the signed-in caller a short-lived active
@@ -32,7 +33,32 @@ export async function POST(request: Request) {
   // ahead of it in a serial file failed first and Playwright never got to
   // it. Callers ask for what they need; the default stays "standard", so a
   // spec that means to test standard-tier access still does.
-  const body = (await request.json().catch(() => null)) as { plan?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { plan?: unknown; expiredStore?: unknown } | null;
+
+  // ЗАХОД 7.264, ДОЛГ 359. Учётка владельца 29.09.2026 покупала в
+  // приложении, имея девять прежних строк магазина, и последняя истекла за
+  // 34 с до новой покупки — та же дата. Чтобы проба воспроизводила этот
+  // экран, а не экран новичка без истории, нужна ровно такая строка:
+  // магазинная, истёкшая минуту назад. Доступа она не даёт.
+  if (body?.expiredStore === true) {
+    await db.subscription.create({
+      data: {
+        userId: user.id,
+        plan: "monthly",
+        status: "canceled",
+        provider: "revenuecat",
+        currentPeriodEnd: new Date(Date.now() - 60_000),
+        rcOriginalTransactionId: `GPA.e2e-${user.id}-${Date.now()}`,
+        rcAppUserId: user.id,
+        rcStore: "PLAY_STORE",
+      },
+    });
+    // Строка записана мимо `extendOrGrantSubscription` — общий кеш строк
+    // гасится здесь, как это делает вебхук.
+    await invalidateSubscriptionCache(user.id);
+    return NextResponse.json({ granted: false, expiredStore: true });
+  }
+
   const plan = body?.plan === "lifetime" ? "lifetime" : "e2e-test";
 
   await extendOrGrantSubscription(user.id, 1, plan);

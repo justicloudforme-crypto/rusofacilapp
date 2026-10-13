@@ -1454,13 +1454,17 @@ export default async function ProfilePage({
           <ActivationAwareStatus
             serverEntitled={entitled || staffAccess}
             whenGranted={
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES.active}`}>
+              <span
+                data-rf-sub-badge="active"
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES.active}`}
+              >
                 {statusLabels.active}
               </span>
             }
             whenWaiting={
               <span
                 data-testid="activation-badge"
+                data-rf-sub-badge="activating"
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES.past_due}`}
               >
                 {nativeAccessCopy(lang).purchase.activatingBadge}
@@ -1469,6 +1473,7 @@ export default async function ProfilePage({
             whenSlow={
               <span
                 data-testid="activation-badge"
+                data-rf-sub-badge="unconfirmed"
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE_CLASSES.past_due}`}
               >
                 {nativeAccessCopy(lang).purchase.activationSlowBadge}
@@ -1477,6 +1482,7 @@ export default async function ProfilePage({
           >
             <span
               data-testid="subscription-badge"
+              data-rf-sub-badge={staffAccess ? "staff" : displayStatus}
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
                 staffAccess ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES[displayStatus]
               }`}
@@ -1618,6 +1624,29 @@ export default async function ProfilePage({
           <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
             {dict.profile.paymentHistoryHeading}
           </span>
+          {/* ДОЛГ 359, заход 7.264. История — ответ сервера на момент
+              отрисовки, а шапка выше узнаёт об оплате раньше страницы
+              (`ActivationAwareStatus`). Прогон 13.10.2026 на учётке со
+              старой истёкшей строкой магазина (как у владельца 29.09:
+              прежняя истекла за 34 с до новой покупки, та же дата): шапка
+              «Activando…» 3,0 с и «Activa» 1,57 с стояла над верхней
+              строкой «Expirada». Теперь в эти секунды история говорит
+              «Actualizando…», а после перерисовки — как сервер. После
+              срока ожидания («Sin confirmar») — снова как сервер: шапка
+              тогда ничего не утверждает. */}
+          <ActivationAwareStatus
+            serverEntitled={entitled || staffAccess}
+            whenGranted={
+              <p data-testid="payment-history-updating" className="mt-2 text-sm text-foreground/60">
+                {nativeAccessCopy(lang).purchase.historyUpdating}
+              </p>
+            }
+            whenWaiting={
+              <p data-testid="payment-history-updating" className="mt-2 text-sm text-foreground/60">
+                {nativeAccessCopy(lang).purchase.historyUpdating}
+              </p>
+            }
+          >
           {subscriptionHistory.length === 0 ? (
             <p className="mt-2 text-sm text-foreground/60">{dict.profile.paymentHistoryEmpty}</p>
           ) : (
@@ -1637,6 +1666,7 @@ export default async function ProfilePage({
                     <LocalDate iso={row.createdAt.toISOString()} locale={lang} timeZone={timeZone} />
                   </span>
                   <span
+                    data-rf-sub-row={getDisplayStatus(row)}
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE_CLASSES[getDisplayStatus(row)]}`}
                   >
                     {statusLabels[getDisplayStatus(row)]}
@@ -1645,6 +1675,7 @@ export default async function ProfilePage({
               ))}
             </div>
           )}
+          </ActivationAwareStatus>
         </div>
       </section>
 

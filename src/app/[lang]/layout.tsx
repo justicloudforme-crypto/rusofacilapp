@@ -321,7 +321,9 @@ export default async function LangLayout({
             nativeCanBuy ? { copy: nativeAccessCopy(lang).purchase, userId: user?.id ?? null } : null
           }
         >
-          {nativeCanBuy ? <NativeStoreIdentity userId={user?.id ?? null} /> : null}
+          {nativeCanBuy ? (
+            <NativeStoreIdentity userId={user?.id ?? null} copy={nativeAccessCopy(lang).purchase} />
+          ) : null}
           <Navbar lang={lang} dict={dict} streak={streak} offlineMessage={dict.offline.bannerMessage} />
           {/* Отступ под BottomNav переехал на <body> (см. комментарий там):
               он обязан стоять в конце ПРОКРУЧИВАЕМОЙ ОБЛАСТИ, а конец

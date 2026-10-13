@@ -3,6 +3,10 @@ import {
   ACTIVATION_POLL_MS,
   ACTIVATION_TIMEOUT_MS,
   activationState,
+  beginPurchase,
+  endPurchase,
+  purchaseScreenOpen,
+  registerPurchaseScreen,
   resetActivationForTests,
   startActivationWatch,
   subscribeActivation,
@@ -115,5 +119,69 @@ describe("ожидание доступа живёт вне компонента
     const { deps } = bench(["free"]);
     const final = await startActivationWatch("free", deps);
     expect(final.kind).toBe("slow");
+  });
+});
+
+/**
+ * ЗАХОД 7.264 — ВИДЕО ПЕРВОЙ НАСТОЯЩЕЙ ПОКУПКИ 13.10.2026: вебхук записал
+ * доступ на ≈16,9 с, а магазин ответил «куплено» только после 19,0 с.
+ * Пока покупка идёт, сервер спрашивается тем же вопросом.
+ */
+describe("сервер спрашивается уже во время покупки", () => {
+  it("новый уровень во время «purchasing» — сразу «granted», не дожидаясь ответа магазина", async () => {
+    const { deps } = bench(["free", "standard"]);
+    const seen: ActivationState["kind"][] = [];
+    subscribeActivation((next) => seen.push(next.kind));
+    beginPurchase("free", deps);
+    await vi.waitFor(() => expect(activationState()).toEqual({ kind: "granted", tier: "standard" }));
+    expect(seen).toEqual(["purchasing", "granted"]);
+  });
+
+  it("ответ магазина ПОСЛЕ выдачи не опускает «granted» в «waiting» — «Listo» не сменяется «Activando…»", async () => {
+    const { deps } = bench(["standard"]);
+    beginPurchase("free", deps);
+    await vi.waitFor(() => expect(activationState().kind).toBe("granted"));
+    const after = await startActivationWatch("free", deps);
+    expect(after).toEqual({ kind: "granted", tier: "standard" });
+  });
+
+  it("отмена человеком останавливает опрос: после «idle» сервер больше не спрашивается", async () => {
+    let clock = 0;
+    let release: () => void = () => {};
+    const readTier = vi.fn(async (): Promise<string | null> => "standard");
+    const deps: ActivationDeps = {
+      readTier,
+      sleep: () =>
+        new Promise<void>((resolve) => {
+          release = () => {
+            clock += ACTIVATION_POLL_MS;
+            resolve();
+          };
+        }),
+      now: () => clock,
+    };
+    beginPurchase("free", deps);
+    endPurchase();
+    release();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(readTier).not.toHaveBeenCalled();
+    expect(activationState().kind).toBe("idle");
+  });
+
+  it("тот же уровень во время покупки выдачей не считается", async () => {
+    const { deps, slept } = bench(["free"]);
+    beginPurchase("free", deps);
+    await vi.waitFor(() => expect(slept.length).toBeGreaterThan(3));
+    expect(activationState().kind).toBe("purchasing");
+    endPurchase();
+  });
+
+  it("экран покупки на виду считается, пока смонтирован, и снимается один раз", () => {
+    expect(purchaseScreenOpen()).toBe(false);
+    const off = registerPurchaseScreen();
+    expect(purchaseScreenOpen()).toBe(true);
+    off();
+    off();
+    expect(purchaseScreenOpen()).toBe(false);
   });
 });
