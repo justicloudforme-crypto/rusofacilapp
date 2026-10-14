@@ -4,6 +4,7 @@
 // progress survives a device switch or app reinstall.
 
 import { readLocal, writeLocal } from "@/lib/safe-storage";
+import { recordAppSuccess } from "@/lib/app-review";
 
 const STORAGE_KEY = "rusofacil:story-progress";
 
@@ -90,6 +91,9 @@ export function saveStoryProgress(
     updatedAt: Date.now(),
   };
   const all = readAll();
+  // Рассказ только что дочитан (не был отмечен) — явный успех в счёт окна
+  // оценки (7.266; в браузере ничего не делает).
+  if (isCompleted && !all[storyId]?.isCompleted) recordAppSuccess();
   all[storyId] = entry;
   writeAll(all);
   syncToServer(storyId, entry);

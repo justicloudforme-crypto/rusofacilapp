@@ -232,6 +232,60 @@ describe("POST /api/webhooks/revenuecat", () => {
     });
   });
 
+  /* ДОЛГ 380 — заход 7.266. Возврат peterelin27 14.10.2026: CANCELLATION
+   * 02:05:09 → EXPIRATION 02:05:10 → CANCELLATION 02:08:13. Поздняя отмена
+   * возвращала строке `status: "active"`, хотя период уже кончился. */
+  describe("поздняя отмена не оживляет истёкшую подписку (долг 380)", () => {
+    const revokedAt = Date.UTC(2026, 9, 14, 2, 4, 36, 860);
+
+    function statusWritten(): string {
+      const call = upsert.mock.calls[0][0] as { update: { status: string }; create: { status: string } };
+      expect(call.create.status).toBe(call.update.status);
+      return call.update.status;
+    }
+
+    it("CANCELLATION после EXPIRATION (порядок 14.10) оставляет строку canceled", async () => {
+      findUnique.mockResolvedValue({
+        plan: "monthly",
+        status: "canceled",
+        canceledAt: new Date(Date.UTC(2026, 9, 14, 2, 5, 9, 123)),
+        currentPeriodEnd: new Date(revokedAt),
+      });
+      await POST(
+        fakeRequest(
+          rcEvent("CANCELLATION", {
+            expiration_at_ms: revokedAt,
+            event_timestamp_ms: Date.UTC(2026, 9, 14, 2, 8, 13, 359),
+          }),
+          { authorization: "Bearer rc_test_secret" }
+        )
+      );
+      expect(statusWritten()).toBe("canceled");
+    });
+
+    it("CANCELLATION с уже прошедшей датой окончания (возврат, Remove entitlement) пишет canceled", async () => {
+      findUnique.mockResolvedValue({ plan: "monthly", status: "active", canceledAt: null });
+      await POST(
+        fakeRequest(rcEvent("CANCELLATION", { expiration_at_ms: Date.now() - 30_000 }), {
+          authorization: "Bearer rc_test_secret",
+        })
+      );
+      expect(statusWritten()).toBe("canceled");
+    });
+
+    it("обычная отмена активной подписки по-прежнему active до конца периода", async () => {
+      findUnique.mockResolvedValue({ plan: "monthly", status: "active", canceledAt: null });
+      await POST(fakeRequest(rcEvent("CANCELLATION"), { authorization: "Bearer rc_test_secret" }));
+      expect(statusWritten()).toBe("active");
+    });
+
+    it.each(["UNCANCELLATION", "RENEWAL"])("%s после EXPIRATION снова пишет active", async (type) => {
+      findUnique.mockResolvedValue({ plan: "monthly", status: "canceled", canceledAt: null });
+      await POST(fakeRequest(rcEvent(type), { authorization: "Bearer rc_test_secret" }));
+      expect(statusWritten()).toBe("active");
+    });
+  });
+
   it("closes access on EXPIRATION", async () => {
     findUnique.mockResolvedValue({ userId: "user_123", plan: "monthly" });
     await POST(fakeRequest(rcEvent("EXPIRATION"), { authorization: "Bearer rc_test_secret" }));

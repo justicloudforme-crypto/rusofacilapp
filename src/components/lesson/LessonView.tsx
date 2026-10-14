@@ -99,6 +99,7 @@ export default function LessonView({
   slideIllustrations,
   dict,
   celebrationDict,
+  shareDict,
   prevHref,
   nextHref,
 }: {
@@ -149,6 +150,7 @@ export default function LessonView({
   slideIllustrations: Record<string, ReactNode>;
   dict: Dictionary["lesson"];
   celebrationDict: Dictionary["celebration"];
+  shareDict?: Dictionary["share"];
   prevHref: string | null;
   nextHref: string | null;
 }) {
@@ -431,6 +433,7 @@ export default function LessonView({
                   dict={dict.exercises}
                   pronunciationDict={dict.pronunciation}
                   celebrationDict={celebrationDict}
+                  shareDict={shareDict}
                   level={level}
                   locale={lang}
                   lessonSlug={lessonSlug}
