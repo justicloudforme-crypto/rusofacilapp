@@ -53,6 +53,8 @@
  * строку пишет вебхук). Модуль лишь спрашивает и сравнивает.
  */
 
+import { stampPurchase } from "@/lib/app-review";
+
 /** Что сейчас с ожиданием доступа. Пять состояний. */
 export type ActivationState =
   /** Ничего не ждём. */
@@ -88,6 +90,8 @@ let running = false;
 
 function publish(next: ActivationState): void {
   state = next;
+  // Доступ открыт покупкой — сутки окно оценки не просим (7.266).
+  if (next.kind === "granted") stampPurchase();
   for (const listener of [...listeners]) listener(next);
 }
 

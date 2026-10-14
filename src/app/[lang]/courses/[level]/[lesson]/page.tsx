@@ -227,6 +227,7 @@ export default async function LessonPage({
         slideIllustrations={slideIllustrations}
         dict={dict.lesson}
         celebrationDict={dict.celebration}
+        shareDict={dict.share}
         prevHref={prevSlug ? `/${lang}/courses/${level}/${prevSlug}` : null}
         nextHref={nextSlug ? `/${lang}/courses/${level}/${nextSlug}` : null}
       />

@@ -26,6 +26,7 @@ import {
   setNativeSeekToHandler,
   setNativePositionState,
 } from "@/lib/native-media-session";
+import { maybeAskForReview } from "@/lib/app-review";
 
 // Captures runs of Cyrillic letters (optionally hyphenated, e.g.
 // "кто-то") as clickable tokens; everything else (spaces, punctuation)
@@ -594,6 +595,8 @@ export default function StoryText({
     const handleEnded = () => {
       setPlaying(false);
       setReadingQueueIndex(null);
+      // Рассказ дослушан — спокойный момент для окна оценки (7.266).
+      void maybeAskForReview();
     };
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("ended", handleEnded);
@@ -745,6 +748,8 @@ export default function StoryText({
       } else {
         setPlaying(false);
         setReadingQueueIndex(null);
+        // Последняя фраза дослушана — спокойный момент для окна оценки (7.266).
+        void maybeAskForReview();
       }
     };
     audio.onerror = () => {

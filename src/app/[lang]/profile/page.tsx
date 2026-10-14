@@ -89,6 +89,7 @@ import {
   CrownIcon,
   TrophyIcon,
   GiftIcon,
+  ShareIcon,
   LockIcon,
   TrashIcon,
   CalendarIcon,
@@ -105,6 +106,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { getProfileTabs, isProfileTab, type ProfileTab } from "@/lib/profile-tabs";
 import Tabs from "@/components/ui/Tabs";
+import ShareAppButton from "@/components/share/ShareAppButton";
 import { routeAlternates } from "@/lib/site";
 import { plural } from "@/lib/plural";
 import { formatDateKey } from "@/lib/activity-calendar";
@@ -1152,6 +1154,25 @@ export default async function ProfilePage({
               «скачанное» — это настройка. Проба того же захода ходит
               туда же и тем же путём. */}
           <DownloadsPanel lang={lang} />
+
+          {/* «COMPARTIR» — заход 7.266. Поделиться приложением: в приложении —
+              системное окно Android, в браузере — navigator.share или копия
+              ссылки. Ни слова о цене и платёжных системах (долг 196); след —
+              только метка utm_source=share в ссылке. */}
+          <Card>
+            <SectionHeading icon={<ShareIcon className="h-[18px] w-[18px]" />}>
+              {dict.share.heading}
+            </SectionHeading>
+            <p className="mt-1 text-sm text-foreground/60">{dict.share.description}</p>
+            <div className="mt-3 flex justify-start">
+              <ShareAppButton
+                label={dict.share.button}
+                copiedLabel={dict.share.copied}
+                failedLabel={dict.share.failed}
+                message={dict.share.message}
+              />
+            </div>
+          </Card>
         </section>
       )}
 

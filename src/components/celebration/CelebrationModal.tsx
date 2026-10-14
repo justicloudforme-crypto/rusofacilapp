@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useBackLayer } from "@/lib/useBackLayer";
 import Confetti from "./Confetti";
 import ScenarioStage from "./ScenarioStage";
@@ -49,6 +49,7 @@ export default function CelebrationModal({
   onClose,
   variant,
   exclamations = [],
+  footer,
 }: {
   open: boolean;
   title: string;
@@ -59,6 +60,9 @@ export default function CelebrationModal({
   onClose: () => void;
   variant?: ScenarioId;
   exclamations?: string[];
+  /** Необязательная тихая строка под кнопкой (7.266: «Compartir la app»
+   *  после сданного урока). */
+  footer?: ReactNode;
 }) {
   const [activeScenario, setActiveScenario] = useState<ScenarioId>(
     () => variant ?? pickFreshWinScenario(),
@@ -125,6 +129,7 @@ export default function CelebrationModal({
         >
           {ctaLabel}
         </button>
+        {footer}
       </div>
     </div>
   );

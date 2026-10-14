@@ -235,19 +235,31 @@ async function upsertFromEvent(
         (event.event_timestamp_ms ? new Date(event.event_timestamp_ms) : new Date()))
       : null;
 
+  /* ДОЛГ 380 — заход 7.266. Возврат 14.10.2026: CANCELLATION 02:05:09 →
+   * EXPIRATION 02:05:10 → CANCELLATION 02:08:13. Поздняя отмена писала
+   * `status: "active"` строке, период которой уже кончился, — колонка врала
+   * любому счёту «платящих». Отмена не оживляет: строка, уже закрытая
+   * EXPIRATION, или строка с прошедшей датой окончания (возврат с «Remove
+   * entitlement») остаётся `canceled`. Доступ по-прежнему решает дата. */
+  const periodEnd = periodEndOf(event, plan);
+  const writtenStatus =
+    intent === "canceled" && (existing?.status === "canceled" || periodEnd.getTime() <= Date.now())
+      ? "canceled"
+      : status;
+
   await db.subscription.upsert({
     where: { rcOriginalTransactionId: transactionId },
     update: {
-      status,
-      currentPeriodEnd: periodEndOf(event, plan),
+      status: writtenStatus,
+      currentPeriodEnd: periodEnd,
       rcEnvironment: event.environment ?? null,
       canceledAt,
     },
     create: {
       userId: event.app_user_id,
       plan,
-      status,
-      currentPeriodEnd: periodEndOf(event, plan),
+      status: writtenStatus,
+      currentPeriodEnd: periodEnd,
       provider: "revenuecat",
       rcOriginalTransactionId: transactionId,
       rcAppUserId: event.app_user_id,
