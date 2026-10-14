@@ -623,6 +623,44 @@ function judge(files) {
       `${FILES.telemetry}: диагностика покупки неполна — нет ${[...missingEvents, ...missingCalls.map(([c]) => c)].join(", ")} (7.264)`,
     );
   }
+  // ===== ЗАХОД 7.265 =====================================================
+  // RC-BUY-6 («уже куплено»), Sentry NEXTJS-1A 13.10.2026: у аккаунта Google
+  // подписка уже была (куплена под другой учёткой сайта), а экран говорил
+  // «No se pudo completar. Vuelve a intentarlo.». Код 6 — не ошибка: сначала
+  // сервер, затем восстановление само, и событие info под своим именем.
+  const settle = /const settleAlreadyOwned = useCallback\(async \(\) => \{([\s\S]*?)\n  \}, \[\]\);/.exec(panelCode)?.[1] ?? "";
+  const ownedBranch = panelCode.indexOf("outcome.code === ERROR_ALREADY_PURCHASED");
+  const failedReport = panelCode.indexOf("NativeStorePurchaseFailed");
+  if (
+    !/export const ERROR_ALREADY_PURCHASED = "6";/.test(clientCode) ||
+    ownedBranch === -1 ||
+    failedReport === -1 ||
+    ownedBranch > failedReport ||
+    !/outcome\.code === ERROR_ALREADY_PURCHASED\) \{[\s\S]{0,200}?await settleAlreadyOwned\(\);[\s\S]{0,40}?return;/.test(panelCode)
+  ) {
+    problems.push(
+      `${FILES.panel}: «уже куплено» (RC-BUY-6) снова идёт как отказ магазина — «No se pudo completar» и ` +
+        "NativeStorePurchaseFailed, хотя повтор не поможет (Sentry NEXTJS-1A 13.10.2026, 7.265)",
+    );
+  }
+  if (!/readTier\(\)/.test(settle) || !/restoreNamed\(\)/.test(settle) || !/startActivationWatch\(/.test(settle)) {
+    problems.push(
+      `${FILES.panel}: на «уже куплено» экран не выясняет сам, где доступ (сервер → восстановление → ожидание), 7.265`,
+    );
+  }
+  if (!/"NativeStoreAlreadyOwned", "info"/.test(telemetry) || !/alreadyOwnedResolved\(/.test(settle)) {
+    problems.push(`${FILES.telemetry}: «уже куплено» не отдельное событие info — смешается со сбоями NEXTJS-1A (7.265)`);
+  }
+  const ownedCopy = (files.copy ?? "").match(/alreadyOwnedOtherAccount:\s*"([^"]+)"/g) ?? [];
+  if (ownedCopy.length !== 2 || ownedCopy.some((line) => !line.includes("RusoFácil"))) {
+    problems.push(
+      `${FILES.copy}: нет честного «подписка привязана к другой учётной записи RusoFácil» на es и ru (7.265)`,
+    );
+  }
+  if (!/stage\.kind !== "alreadyOwned"/.test(panelCode)) {
+    problems.push(`${FILES.panel}: после «уже куплено» снова показаны тарифы — нажатие даст тот же код 6 (7.265)`);
+  }
+
   if (/email|\.name\b/.test(telemetry)) {
     problems.push(`${FILES.telemetry}: событие покупки читает почту или имя — личные данные в Sentry (7.264)`);
   }
@@ -840,6 +878,26 @@ const PLANTS = [
     apply: (f) => ({ ...f, telemetry: f.telemetry.replace("const tags: Record<string, string> = { ...baseTags(), outcome };", "const tags: Record<string, string> = { ...baseTags(), outcome, who: user.email };") }),
   },
   {
+    name: "7.265: «уже куплено» снова отказ магазина (ветка кода 6 убрана)",
+    apply: (f) => ({ ...f, panel: f.panel.replace("outcome.kind === \"error\" && outcome.code === ERROR_ALREADY_PURCHASED", "false") }),
+  },
+  {
+    name: "7.265: восстановление после «уже куплено» не пробуется само",
+    apply: (f) => ({ ...f, panel: f.panel.replace("const restored = await restoreNamed();\n    if (restored.kind === \"active\")", "const restored = { kind: \"none\" };\n    if (restored.kind === \"active\")") }),
+  },
+  {
+    name: "7.265: «уже куплено» снова warning под чужим именем",
+    apply: (f) => ({ ...f, telemetry: f.telemetry.replace('"NativeStoreAlreadyOwned", "info"', '"NativeStorePurchaseFailed", "warning"') }),
+  },
+  {
+    name: "7.265: на ru нет текста «привязана к другой учётной записи»",
+    apply: (f) => ({ ...f, copy: f.copy.replace(/alreadyOwnedOtherAccount:\s*"Эта подписка[^"]*",/, "") }),
+  },
+  {
+    name: "7.265: тарифы снова видны после «уже куплено»",
+    apply: (f) => ({ ...f, panel: f.panel.replace('stage.kind !== "alreadyOwned";', "true;") }),
+  },
+  {
     name: "подписки на ход активации нет — экрану нечем показать «готово»",
     apply: (f) => ({ ...f, activation: f.activation.replace("export function subscribeActivation(", "function subscribeActivationUnused(") }),
   },
@@ -858,7 +916,7 @@ function main() {
     }
     const v = versions(files);
     console.log(
-      `check:native-purchase — 22 правила, 0 нарушений. Оболочка называет себя версией ${v.fromCapacitor} ` +
+      `check:native-purchase — 23 правила, 0 нарушений. Оболочка называет себя версией ${v.fromCapacitor} ` +
         `и собрана как versionCode ${v.fromGradle} (совпадают); покупать умеет оболочка от ` +
         `${v.fromConfig} и выше; ключ магазина в одном файле; ` +
         `${REQUIRED_EVENTS.length} типов событий разбираются поимённо.`,
