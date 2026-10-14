@@ -317,7 +317,10 @@ async function main() {
   process.exit(ok ? 0 : 1);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+const IS_ENTRY_POINT = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+if (IS_ENTRY_POINT) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
