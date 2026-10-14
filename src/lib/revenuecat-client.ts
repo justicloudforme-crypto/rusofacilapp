@@ -424,6 +424,16 @@ const ERROR_PURCHASE_CANCELLED = "1";
 const ERROR_PAYMENT_PENDING = "20";
 const ERROR_NETWORK = "10";
 const ERROR_OFFLINE_CONNECTION = "35";
+/**
+ * «УЖЕ КУПЛЕНО» — заход 7.265. SDK 10.17 даёт код 6 в двух случаях
+ * (`billingResponseToPurchasesError` и разбор ответа сервера RevenueCat):
+ * Google ответил ITEM_ALREADY_OWNED — у аккаунта Google на телефоне эта
+ * подписка уже есть; или сервер RevenueCat ответил 7852 — покупка
+ * принадлежит другому пользователю. Код 7 — сервер 7102, перенести покупку
+ * на этого пользователя нельзя. Повтор покупки не поможет ни в одном.
+ */
+export const ERROR_ALREADY_PURCHASED = "6";
+const ERROR_RECEIPT_IN_USE = "7";
 
 function outcomeFromError(err: unknown): PurchaseOutcome {
   const raw = err as { code?: unknown; message?: unknown; userCancelled?: unknown; data?: unknown } | null;
@@ -457,6 +467,40 @@ export async function purchasePackage(pkg: PurchasesPackage): Promise<PurchaseOu
     return { kind: "purchased", customerInfo };
   } catch (err) {
     return outcomeFromError(err);
+  }
+}
+
+/**
+ * Восстановление с НАЗВАННЫМ исходом — заход 7.265.
+ *
+ *   active        — у этой учётки сайта есть действующее право (своё или
+ *                   перенесённое RevenueCat с другой учётки — при настройке
+ *                   «Transfer to new App User ID», она в RevenueCat по
+ *                   умолчанию; перенос приходит вебхуком TRANSFER);
+ *   none          — магазин ответил, действующего права нет;
+ *   other-account — покупка принадлежит другому пользователю, и перенос
+ *                   запрещён настройкой RevenueCat (коды 6 и 7);
+ *   error         — всё остальное (сеть, срок, «магазина нет»).
+ */
+export type RestoreOutcome =
+  | { kind: "active" }
+  | { kind: "none"; everBought: boolean }
+  | { kind: "other-account"; code: string }
+  | { kind: "error" };
+
+export async function restoreNamed(): Promise<RestoreOutcome> {
+  try {
+    const info = await restorePurchases();
+    // `undefined` — магазина в этой оболочке нет: как и до 7.265, это
+    // «покупок не нашлось», а не сбой.
+    if (!info) return { kind: "none", everBought: false };
+    if (Object.keys(info.entitlements.active).length > 0) return { kind: "active" };
+    return { kind: "none", everBought: (info.allPurchasedProductIdentifiers?.length ?? 0) > 0 };
+  } catch (err) {
+    const raw = err as { code?: unknown } | null;
+    const code = raw && raw.code != null ? String(raw.code) : "";
+    if (code === ERROR_ALREADY_PURCHASED || code === ERROR_RECEIPT_IN_USE) return { kind: "other-account", code };
+    return { kind: "error" };
   }
 }
 

@@ -6,7 +6,7 @@ import * as Sentry from "@sentry/nextjs";
 import type { PurchasesPackage } from "@revenuecat/purchases-capacitor";
 import type { Locale } from "@/i18n/config";
 import type { NativeAccessCopy } from "@/lib/native-access-copy";
-import { loadStore, purchasePackage, restorePurchases, storeFailureCode } from "@/lib/revenuecat-client";
+import { ERROR_ALREADY_PURCHASED, loadStore, purchasePackage, restoreNamed, storeFailureCode } from "@/lib/revenuecat-client";
 import {
   activationState,
   beginPurchase,
@@ -16,7 +16,14 @@ import {
   startActivationWatch,
   subscribeActivation,
 } from "@/lib/access-activation";
-import { purchaseCancelled, purchaseFailed, purchaseTapped, storeConfirmed } from "@/lib/purchase-telemetry";
+import {
+  alreadyOwnedResolved,
+  purchaseAlreadyOwned,
+  purchaseCancelled,
+  purchaseFailed,
+  purchaseTapped,
+  storeConfirmed,
+} from "@/lib/purchase-telemetry";
 import type { StoreFailure, StoreStep } from "@/lib/revenuecat-client";
 
 /**
@@ -62,7 +69,10 @@ type Stage =
   /** `code` — «RC-BUY-…» у отказа покупки (7.244); у восстановления кода нет. */
   | { kind: "failed"; code?: string }
   | { kind: "restoredNothing" }
-  | { kind: "restoredExpired" };
+  | { kind: "restoredExpired" }
+  /** Заход 7.265: магазин ответил «уже куплено» (RC-BUY-6). Не ошибка —
+   *  экран сам выясняет, где доступ, и говорит это словами. */
+  | { kind: "alreadyOwned"; step: "checking" | "open" | "moving" | "other-account" | "not-found" };
 
 export default function NativePurchasePanel({
   lang,
@@ -101,6 +111,9 @@ export default function NativePurchasePanel({
    * только внутри приложения, и платит за этот вопрос только он.
    */
   const baselineTier = useRef<string | null>(null);
+  /** Чем кончилось «уже куплено», когда доступ открылся: «Listo» тогда
+   *  говорит, ГДЕ он открыт (7.265). */
+  const [owned, setOwned] = useState<"open" | "moved" | null>(null);
 
   useEffect(() => {
     alive.current = true;
@@ -224,6 +237,53 @@ export default function NativePurchasePanel({
     await startActivationWatch(baselineTier.current);
   }, []);
 
+  /**
+   * «УЖЕ КУПЛЕНО» (RC-BUY-6) — заход 7.265, Sentry NEXTJS-1A 13.10.2026.
+   *
+   * Google ответил, что у аккаунта на телефоне эта подписка уже есть. По
+   * боевой базе в тот день она была куплена под ДРУГОЙ учёткой сайта, а
+   * экран говорил «No se pudo completar. Vuelve a intentarlo.» — повтор
+   * не помог бы никогда. Теперь без второго нажатия:
+   *   1. сервер: доступ на этой учётке уже открыт → так и сказать;
+   *   2. иначе восстановление: право пришло (своё или перенесённое
+   *      RevenueCat с другой учётки) → ждать сервер и сказать, что в другой
+   *      учётке подписка больше не действует;
+   *   3. перенос запрещён (коды 6/7) → «привязана к другой учётке»;
+   *   4. ничего → «пока не видим, подождите и восстановите».
+   */
+  const settleAlreadyOwned = useCallback(async () => {
+    purchaseAlreadyOwned();
+    if (alive.current) setStage({ kind: "alreadyOwned", step: "checking" });
+    let tier: string | null = null;
+    try {
+      tier = await readTier();
+    } catch {
+      tier = null;
+    }
+    if (tier && tier !== "free") {
+      alreadyOwnedResolved("already-open");
+      setOwned("open");
+      if (alive.current) setStage({ kind: "alreadyOwned", step: "open" });
+      // Страница могла ещё не знать о доступе — пусть узнает.
+      if (tier !== baselineTier.current) void startActivationWatch(baselineTier.current);
+      return;
+    }
+    const restored = await restoreNamed();
+    if (restored.kind === "active") {
+      alreadyOwnedResolved("moved");
+      setOwned("moved");
+      if (alive.current) setStage({ kind: "alreadyOwned", step: "moving" });
+      await startActivationWatch(baselineTier.current);
+      return;
+    }
+    alreadyOwnedResolved(
+      restored.kind === "other-account" ? "other-account" : restored.kind === "none" ? "not-found" : "error",
+    );
+    if (alive.current) {
+      setStage({ kind: "alreadyOwned", step: restored.kind === "other-account" ? "other-account" : "not-found" });
+    }
+  }, []);
+
   /** Ход ожидания приходит подпиской — в том числе если шторку закрыли и
    *  открыли снова, пока доступ активируется. */
   useEffect(
@@ -267,6 +327,11 @@ export default function NativePurchasePanel({
         return;
       }
       endPurchase();
+      if (outcome.kind === "error" && outcome.code === ERROR_ALREADY_PURCHASED) {
+        // Заход 7.265: «уже куплено» — не сбой и не NativeStorePurchaseFailed.
+        await settleAlreadyOwned();
+        return;
+      }
       if (outcome.kind === "offline") purchaseFailed("offline");
       else if (outcome.kind === "cancelled" || outcome.kind === "pending") purchaseCancelled();
       if (!alive.current) return;
@@ -290,37 +355,42 @@ export default function NativePurchasePanel({
           Sentry.captureMessage(`NativeStorePurchaseFailed: ${outcome.code}`, {
             level: "warning",
             tags: { area: "native-purchase", code },
-            extra: { store: outcome.message.slice(0, 200) },
+            // Заход 7.265: какой тариф нажат — RC-BUY-5 13.10 без него не различить.
+            extra: { store: outcome.message.slice(0, 200), package: pkg.identifier },
           });
           setStage({ kind: "failed", code });
         }
       }
     },
-    [],
+    [settleAlreadyOwned],
   );
 
   const restore = useCallback(async () => {
     setStage({ kind: "buying" });
-    try {
-      const info = await restorePurchases();
-      if (!alive.current) return;
-      if (!info || Object.keys(info.entitlements.active).length === 0) {
-        /* ДВА ИСХОДА, А НЕ ОДИН — заход 7.226. «Прежних покупок не
-           нашлось» было неправдой ровно для того человека, ради которого
-           кнопка и существует: он платил, а срок доступа кончился.
-           Различает их `allPurchasedProductIdentifiers` — перепись ВСЕХ
-           когда-либо купленных товаров, которую магазин отдаёт независимо
-           от того, действует доступ или нет. Пусто — покупок не было
-           вовсе; не пусто при пустом `entitlements.active` — покупки были,
-           но истекли. */
-        const everBought = info?.allPurchasedProductIdentifiers?.length ?? 0;
-        setStage({ kind: everBought > 0 ? "restoredExpired" : "restoredNothing" });
-        return;
-      }
-      await waitForAccess();
-    } catch {
-      if (alive.current) setStage({ kind: "failed" });
+    const restored = await restoreNamed();
+    if (!alive.current) return;
+    // Заход 7.265: покупка принадлежит другой учётке сайта, перенос запрещён.
+    if (restored.kind === "other-account") {
+      setStage({ kind: "alreadyOwned", step: "other-account" });
+      return;
     }
+    if (restored.kind === "error") {
+      setStage({ kind: "failed" });
+      return;
+    }
+    if (restored.kind === "none") {
+      /* ДВА ИСХОДА, А НЕ ОДИН — заход 7.226. «Прежних покупок не
+         нашлось» было неправдой ровно для того человека, ради которого
+         кнопка и существует: он платил, а срок доступа кончился.
+         Различает их `allPurchasedProductIdentifiers` — перепись ВСЕХ
+         когда-либо купленных товаров, которую магазин отдаёт независимо
+         от того, действует доступ или нет. Пусто — покупок не было
+         вовсе; не пусто при пустом `entitlements.active` — покупки были,
+         но истекли. */
+      setStage({ kind: restored.everBought ? "restoredExpired" : "restoredNothing" });
+      return;
+    }
+    await waitForAccess();
   }, [waitForAccess]);
 
   if (!userId) {
@@ -361,8 +431,21 @@ export default function NativePurchasePanel({
           ? copy.failProducts
           : copy.failConnect;
 
+  const ownedText = (step: Extract<Stage, { kind: "alreadyOwned" }>["step"]) =>
+    step === "checking"
+      ? copy.alreadyOwnedChecking
+      : step === "open"
+        ? copy.alreadyOwnedOpen
+        : step === "moving"
+          ? copy.alreadyOwnedMoving
+          : step === "other-account"
+            ? copy.alreadyOwnedOtherAccount
+            : copy.alreadyOwnedNotFound;
+
   const message =
-    stage.kind === "pending"
+    stage.kind === "alreadyOwned"
+      ? ownedText(stage.step)
+      : stage.kind === "pending"
       ? copy.pending
       : stage.kind === "offline"
         ? copy.offline
@@ -379,14 +462,23 @@ export default function NativePurchasePanel({
                   : stage.kind === "purchasing"
                     ? copy.purchasing
                   : stage.kind === "activated"
-                    ? copy.activated
+                    ? owned === "moved"
+                      ? copy.alreadyOwnedMoved
+                      : owned === "open"
+                        ? copy.alreadyOwnedOpen
+                        : copy.activated
                     : stage.kind === "loading"
                       ? copy.loading
                       : stage.kind === "unavailable"
                         ? failureText(stage.reason)
                         : null;
 
-  const busy = stage.kind === "buying" || stage.kind === "purchasing" || stage.kind === "activating" || stage.kind === "loading";
+  const busy =
+    stage.kind === "buying" ||
+    stage.kind === "purchasing" ||
+    stage.kind === "activating" ||
+    stage.kind === "loading" ||
+    (stage.kind === "alreadyOwned" && (stage.step === "checking" || stage.step === "moving"));
   // Заход 7.240, задача 3: пока Google уже взял оплату, а сервер ещё не
   // открыл доступ (и после срока ожидания), тарифов на экране быть не
   // должно — на видео владельца они висели ~5 с рядом с «Expirada», и
@@ -396,7 +488,9 @@ export default function NativePurchasePanel({
     stage.kind !== "activated" &&
     stage.kind !== "activating" &&
     stage.kind !== "purchasing" &&
-    stage.kind !== "slow";
+    stage.kind !== "slow" &&
+    // 7.265: тариф снова дал бы то же «уже куплено».
+    stage.kind !== "alreadyOwned";
 
   return (
     <div data-testid="native-purchase" className="mt-4">
