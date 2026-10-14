@@ -299,6 +299,20 @@ export interface NativeAccessCopy {
      */
     restoredNothing: string;
     restoredExpired: string;
+    /**
+     * «УЖЕ КУПЛЕНО» (RC-BUY-6) — заход 7.265. Не ошибка: у аккаунта Google
+     * на телефоне эта подписка уже есть. Sentry NEXTJS-1A, 13.10.2026: под
+     * учёткой сайта `cmt9lqcny…` при подписке, купленной под `cmszb91fq…`,
+     * экран говорил «No se pudo completar. Vuelve a intentarlo.» — повтор
+     * не помог бы никогда. Пять исходов, пять разговоров; «Google Play» не
+     * пишется (долг 196, сторож `check:native-purchase`) — «cuenta de Google».
+     */
+    alreadyOwnedChecking: string;
+    alreadyOwnedOpen: string;
+    alreadyOwnedMoving: string;
+    alreadyOwnedMoved: string;
+    alreadyOwnedOtherAccount: string;
+    alreadyOwnedNotFound: string;
     /** Пока ждём подтверждения от сервера после покупки. */
     activating: string;
     /** Ж.1 (7.243): тариф нажат, магазин ещё не ответил. */
@@ -433,6 +447,15 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       restoreCta: "Restaurar compras",
       restoredNothing: "No encontramos compras activas en esta cuenta.",
       restoredExpired: "Encontramos compras anteriores, pero su acceso ya venció.",
+      alreadyOwnedChecking: "Ya tienes esta suscripción en tu cuenta de Google. Estamos revisando tu acceso…",
+      alreadyOwnedOpen: "Ya tienes esta suscripción en tu cuenta de Google, y tu acceso en esta cuenta ya está abierto. No hace falta pagar otra vez.",
+      alreadyOwnedMoving: "Ya tienes esta suscripción en tu cuenta de Google. La estamos activando en esta cuenta…",
+      alreadyOwnedMoved:
+        "Listo: tu suscripción ya funciona en esta cuenta. Si antes la usabas con otra cuenta de RusoFácil, allí ya no está activa.",
+      alreadyOwnedOtherAccount:
+        "Ya tienes esta suscripción en tu cuenta de Google, pero está vinculada a otra cuenta de RusoFácil: la que usaste al comprarla. Entra con esa cuenta para usarla. No hace falta pagar otra vez.",
+      alreadyOwnedNotFound:
+        "Ya tienes esta suscripción en tu cuenta de Google, pero todavía no la vemos en esta cuenta. Espera un minuto y toca «Restaurar compras». No hace falta pagar otra vez.",
       activating: "Activando tu acceso…",
       purchasing: "Completando la compra…",
       activated: "Listo: tu acceso ya está abierto.",
@@ -552,6 +575,15 @@ const COPY: Record<Locale, NativeAccessCopy> = {
       restoreCta: "Восстановить покупки",
       restoredNothing: "Активных покупок у этой учётной записи не нашлось.",
       restoredExpired: "Прежние покупки нашлись, но срок доступа по ним уже закончился.",
+      alreadyOwnedChecking: "Эта подписка уже есть в вашем аккаунте Google. Проверяем доступ…",
+      alreadyOwnedOpen: "Эта подписка уже есть в вашем аккаунте Google, и доступ в этой учётной записи уже открыт. Платить ещё раз не нужно.",
+      alreadyOwnedMoving: "Эта подписка уже есть в вашем аккаунте Google. Включаем её в этой учётной записи…",
+      alreadyOwnedMoved:
+        "Готово: подписка теперь работает в этой учётной записи. Если раньше вы пользовались ею в другой учётной записи RusoFácil, там она больше не действует.",
+      alreadyOwnedOtherAccount:
+        "Эта подписка уже есть в вашем аккаунте Google, но она привязана к другой учётной записи RusoFácil — той, с которой её купили. Войдите в неё, чтобы пользоваться подпиской. Платить ещё раз не нужно.",
+      alreadyOwnedNotFound:
+        "Эта подписка уже есть в вашем аккаунте Google, но в этой учётной записи мы её пока не видим. Подождите минуту и нажмите «Восстановить покупки». Платить ещё раз не нужно.",
       activating: "Активируем доступ…",
       purchasing: "Завершаем покупку…",
       activated: "Готово: доступ открыт.",

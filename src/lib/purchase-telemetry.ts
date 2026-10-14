@@ -20,6 +20,10 @@
  *         без замков (их нет в разметке, а не только не видно).
  *   * `NativePurchaseAccessLate` (warning) — магазин сказал «куплено», а
  *     сервер не открыл доступ за 15 с.
+ *   * `NativeStoreAlreadyOwned` (info, заход 7.265) — магазин ответил
+ *     «уже куплено» (RC-BUY-6); метка `resolution` — чем кончилось:
+ *     already-open | moved | other-account | not-found | error. Это не
+ *     сбой, поэтому НЕ `NativeStorePurchaseFailed` (NEXTJS-1A, warning).
  *   * `NativePurchaseStateConflict` (warning) — на экране дольше 500 мс
  *     держались противоречащие состояния: шапка подписки «Activa» или
  *     «Activando…», а верхняя строка «Accesos y pagos» — «Expirada»
@@ -46,7 +50,7 @@ const CHECK_EVERY_MS = 100;
 /** Пока окно Google открыто, следить есть за чем: шапка и история. */
 const PURCHASE_TICK_MS = 5 * 60_000;
 
-export type PurchaseOutcome = "success" | "error" | "timeout";
+export type PurchaseOutcome = "success" | "error" | "timeout" | "already_owned";
 
 export interface TelemetrySend {
   (name: string, level: "info" | "warning", tags: Record<string, string>, extra: Record<string, number | string | boolean>): void;
@@ -256,6 +260,18 @@ export function serverConfirmed(tier: string): void {
 /** Магазин отказал с кодом. Отмена человеком — не событие. */
 export function purchaseFailed(code: string): void {
   finish("error", code);
+}
+
+/** Магазин ответил «уже куплено» (RC-BUY-6) — итог покупки, не ошибка. */
+export function purchaseAlreadyOwned(): void {
+  finish("already_owned", "RC-BUY-6");
+}
+
+export type AlreadyOwnedResolution = "already-open" | "moved" | "other-account" | "not-found" | "error";
+
+/** Чем кончился разговор «уже куплено» — одно событие уровня info. */
+export function alreadyOwnedResolved(resolution: AlreadyOwnedResolution): void {
+  deps.send("NativeStoreAlreadyOwned", "info", { ...baseTags(), code: "RC-BUY-6", resolution }, {});
 }
 
 /** 30 с ожидания доступа истекли без ответа сервера. */
