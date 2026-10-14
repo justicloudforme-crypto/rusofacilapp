@@ -1173,6 +1173,15 @@
     "resultTimeLabel": "Tiempo: {time}",
     "resultErrorsLabel": "Errores: {count}"
   },
+  "share": {
+    "heading": "Comparte RusoFácil",
+    "description": "¿Conoces a alguien que quiera aprender ruso? Mándale el enlace.",
+    "button": "Compartir la app",
+    "copied": "Enlace copiado",
+    "failed": "Copia este enlace:",
+    "message": "RusoFácil: una app para aprender ruso en español. La primera lección de cada nivel es gratis.",
+    "celebrationLink": "Compartir la app"
+  },
   "celebration": {
     "lessonPassedTitle": "¡Lección superada!",
     "lessonPassedSubtitle": "Sigue así, cada lección te acerca a la fluidez.",

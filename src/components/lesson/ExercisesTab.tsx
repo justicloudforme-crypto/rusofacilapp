@@ -32,6 +32,8 @@ import {
   restoreLessonAttempt,
 } from "@/lib/progress-outbox";
 import CelebrationModal from "@/components/celebration/CelebrationModal";
+import ShareAppButton from "@/components/share/ShareAppButton";
+import { maybeAskForReview, recordAppSuccess } from "@/lib/app-review";
 import EncouragementModal from "@/components/celebration/EncouragementModal";
 import type { Locale } from "@/i18n/config";
 import { plural } from "@/lib/plural";
@@ -49,6 +51,7 @@ export default function ExercisesTab({
   dict,
   pronunciationDict,
   celebrationDict,
+  shareDict,
   level,
   locale,
   lessonSlug,
@@ -63,6 +66,8 @@ export default function ExercisesTab({
   dict: ExercisesDict;
   pronunciationDict: Dictionary["lesson"]["pronunciation"];
   celebrationDict: Dictionary["celebration"];
+  /** «Compartir la app» под поздравлением (7.266). Без него ссылки нет. */
+  shareDict?: Dictionary["share"];
   level: string;
   locale: Locale;
   lessonSlug: string;
@@ -252,6 +257,8 @@ export default function ExercisesTab({
       // (состояние React), а серверная попытка уходит ниже.
       writeLocal(storageKey, "1");
       onPassChange(true);
+      // Явный успех — в счёт окна оценки (7.266; в браузере ничего).
+      recordAppSuccess();
     } else if (!outcome.passed) {
       setJustFailed(true);
     }
@@ -303,6 +310,13 @@ export default function ExercisesTab({
     });
   }
 
+  // Поздравление закрыто — спокойный момент: если пора, Google покажет
+  // окно оценки (7.266). Никакого своего вопроса перед ним.
+  function closeCelebration() {
+    setJustPassed(false);
+    void maybeAskForReview();
+  }
+
   function handleRetry() {
     setSubmitted(false);
     setRestored(false);
@@ -319,7 +333,18 @@ export default function ExercisesTab({
         scoreLabel={result ? `${result.earned}/${result.total} (${result.percentage}%)` : undefined}
         ctaLabel={celebrationDict.continueButton}
         exclamations={celebrationDict.exclamations}
-        onClose={() => setJustPassed(false)}
+        onClose={closeCelebration}
+        footer={
+          shareDict ? (
+            <ShareAppButton
+              variant="quiet"
+              label={shareDict.celebrationLink}
+              copiedLabel={shareDict.copied}
+              failedLabel={shareDict.failed}
+              message={shareDict.message}
+            />
+          ) : null
+        }
       />
       <EncouragementModal
         open={justFailed}
