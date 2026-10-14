@@ -121,7 +121,7 @@ export function judge(s: Snapshot, ask: Ask = shouldAskForReview): string[] {
   if (lessonCalls !== 1 || !close || !/maybeAskForReview\(/.test(close)) {
     problems.push(`R3 ${FILES.lesson}: окно оценки зовётся не только из закрытия поздравления`);
   }
-  if (/EncouragementModal[^>]*maybeAskForReview/s.test(s.lesson)) problems.push(`R3 ${FILES.lesson}: окно после провала`);
+  if (/<EncouragementModal(?:(?!\/>)[\s\S])*maybeAskForReview/.test(s.lesson)) problems.push(`R3 ${FILES.lesson}: окно после провала`);
   const onerror = body(s.story, "audio.onerror = (");
   if (onerror && /maybeAskForReview/.test(onerror)) problems.push(`R3 ${FILES.story}: окно оценки после ошибки звука`);
   const storyCalls = s.story.match(/maybeAskForReview\(/g)?.length ?? 0;
