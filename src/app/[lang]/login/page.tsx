@@ -9,6 +9,7 @@ import { routeAlternates } from "@/lib/site";
 import { loginRetryEmail } from "@/lib/login-retry";
 import { getCurrentUserForChrome } from "@/lib/auth";
 import { signedInLoginTarget } from "@/lib/login-signed-in";
+import GoogleSignInBlock, { googleLabels } from "@/components/auth/GoogleSignInBlock";
 
 export async function generateMetadata({
   params,
@@ -49,6 +50,11 @@ export default async function LoginPage({
     invalid_email: dict.auth.invalidEmail,
     invalid_credentials: dict.auth.invalidCredentials,
     rate_limited: dict.auth.rateLimited,
+    // Вход через Google (7.267): ответы `/api/auth/google/callback`.
+    google_cancelled: dict.auth.googleCancelled,
+    google_unverified: dict.auth.googleUnverified,
+    google_ambiguous: dict.auth.googleAmbiguous,
+    google_failed: dict.auth.googleFailed,
   };
   const errorMessage =
     typeof query.error === "string" ? errorMessages[query.error] : undefined;
@@ -84,6 +90,8 @@ export default async function LoginPage({
             {errorMessage}
           </p>
         )}
+
+        <GoogleSignInBlock lang={lang} redirectTo={redirectTo} labels={googleLabels(dict.auth)} />
 
         <form action="/api/auth/login" method="POST" className="mt-6 flex flex-col gap-4">
           <input type="hidden" name="lang" value={lang} />

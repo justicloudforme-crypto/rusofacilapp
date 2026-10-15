@@ -206,6 +206,12 @@ export default defineConfig({
       // e2e/pricing-local-estimate.spec.ts exercises a dead source through
       // a real render without stubbing anything (PROGRESS.md 7.120).
       FX_RATES_MXN: JSON.stringify({ SGD: 0.074971, ARS: 89.221548, EUR: 0.050958 }),
+      // 7.267: вход через Google в e2e ВЫКЛЮЧЕН всегда — пустые значения
+      // сильнее любого .env на машине (next не перезаписывает заданные
+      // переменные). e2e/google-signin-flag-off.spec.ts держит «мерж без
+      // настроек ничего не меняет»; поведение с флагом — check:google-signin.
+      GOOGLE_CLIENT_ID: "",
+      GOOGLE_CLIENT_SECRET: "",
     },
   },
 });

@@ -44,23 +44,23 @@ export async function POST(request: NextRequest) {
 
   const existing = await db.user.findUnique({ where: { email } });
 
-  // An existing row with no password is a leftover from the old
-  // passwordless demo-login flow, not a real registered account — this
-  // request "claims" it by setting a password, rather than being blocked as
-  // a duplicate. There's no email-verification step for registration itself
-  // (unlike password-reset/account-deletion, which do use one — see
-  // src/lib/verification-token.ts), so this trusts whoever controls the
-  // email address right now — an acceptable gap pre-launch.
-  if (existing?.passwordHash) return fail("email_taken");
+  // Адрес уже занят — регистрация не создаёт вторую учётку и не трогает
+  // существующую.
+  //
+  // До 7.267 строка БЕЗ пароля «присваивалась»: регистрация ставила ей
+  // пароль без всякой проверки почты (наследие демо-входа без пароля). С
+  // входом через Google строка без пароля — это настоящая учётка человека,
+  // и присвоение стало бы захватом: кто угодно, набрав чужой адрес Gmail,
+  // получил бы чужой прогресс и подписку. Замер прода 7.267: таких строк
+  // 0 из 36, то есть живого поведения эта правка не меняет. Пароль такой
+  // учётке заводится только ссылкой из письма («¿Olvidaste tu contraseña?»,
+  // `/api/auth/forgot-password`) — то есть тем, у кого почта.
+  if (existing) return fail(existing.passwordHash ? "email_taken" : "account_exists_no_password");
 
   const passwordHash = await hashPassword(password);
-  const user = existing
-    ? await db.user.update({ where: { id: existing.id }, data: { passwordHash } })
-    : await db.user.create({ data: { email, passwordHash } });
+  const user = await db.user.create({ data: { email, passwordHash } });
 
-  // Referral attribution only applies to a genuinely new account — claiming
-  // an old passwordless demo row isn't a new signup.
-  if (!existing && referralCode) {
+  if (referralCode) {
     await captureReferralOnRegister(user.id, referralCode);
   }
 

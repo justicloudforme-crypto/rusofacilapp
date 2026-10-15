@@ -204,7 +204,7 @@ export interface LegalDocument {
 // Sentry после удаления. Раздел 7 получил шаги удаления и адрес отдельной
 // страницы. Это меняет то, что человеку сказано о его данных, — дата
 // обязана сдвинуться. Сверяет `check:legal-truth` (раздел 5).
-const PRIVACY_LAST_UPDATED = "2026-09-27";
+const PRIVACY_LAST_UPDATED = "2026-10-14";
 
 // 08.09.2026: section 3 of the Terms gained the three things it had never
 // said out loud — that cash (an OXXO voucher) is offered to buyers in
@@ -263,7 +263,7 @@ const PRIVACY_LAST_UPDATED = "2026-09-27";
 // (`confirm-account-deletion/route.ts` отменяет лишь Stripe). Текст один
 // для сайта и приложения — адрес политики Google читает в браузере, —
 // поэтому он называет оба случая. Обещание изменилось — дата сдвинута.
-const TERMS_LAST_UPDATED = "2026-09-27";
+const TERMS_LAST_UPDATED = "2026-10-14";
 
 export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
   es: {
@@ -320,7 +320,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Eliminación de cuenta",
         paragraphs: [
-          "Puedes eliminar tu cuenta en cualquier momento desde tu perfil. El proceso requiere tu contraseña y la confirmación de un enlace enviado a tu correo, y elimina de forma permanente tu cuenta y tu progreso. Una suscripción comprada en el sitio web se cancela junto con la cuenta. Una suscripción comprada en Google Play NO se cancela al eliminar la cuenta: cancélala antes en Google Play → Suscripciones (https://play.google.com/store/account/subscriptions), o Google seguirá cobrándola. Esta acción no se puede deshacer. Los pasos, qué se borra y qué se conserva están en https://rusofacilapp.com/es/eliminar-cuenta. Tus grabaciones de pronunciación no entran en ese borrado porque nunca estuvieron en nuestros servidores: viven en tu dispositivo y las borras tú, desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
+          "Puedes eliminar tu cuenta en cualquier momento desde tu perfil. El proceso pide tu contraseña (si tu cuenta tiene una; si entras con Google, no) y la confirmación de un enlace enviado a tu correo, y elimina de forma permanente tu cuenta y tu progreso. Una suscripción comprada en el sitio web se cancela junto con la cuenta. Una suscripción comprada en Google Play NO se cancela al eliminar la cuenta: cancélala antes en Google Play → Suscripciones (https://play.google.com/store/account/subscriptions), o Google seguirá cobrándola. Esta acción no se puede deshacer. Los pasos, qué se borra y qué se conserva están en https://rusofacilapp.com/es/eliminar-cuenta. Tus grabaciones de pronunciación no entran en ese borrado porque nunca estuvieron en nuestros servidores: viven en tu dispositivo y las borras tú, desde el propio ejercicio o vaciando los datos del sitio en tu navegador.",
         ],
       },
       {
@@ -401,7 +401,7 @@ export const TERMS_CONTENT: Record<Locale, LegalDocument> = {
       {
         heading: "6. Удаление аккаунта",
         paragraphs: [
-          "Вы можете удалить свой аккаунт в любой момент в личном профиле. Процесс требует ввода пароля и подтверждения по ссылке, отправленной на вашу почту, безвозвратно удаляет ваш аккаунт и прогресс обучения. Подписка, купленная на сайте, отменяется вместе с аккаунтом. Подписка, купленная в Google Play, при удалении аккаунта НЕ отменяется: сначала отмените её в Google Play → «Подписки» (https://play.google.com/store/account/subscriptions), иначе Google продолжит списывать деньги. Это действие нельзя отменить. Шаги, что удаляется и что остаётся — на странице https://rusofacilapp.com/ru/eliminar-cuenta. Аудиозаписи произношения в это удаление не входят — их никогда не было на наших серверах: они живут на вашем устройстве, и удаляете их вы сами, прямо в упражнении или очистив данные сайта в браузере.",
+          "Вы можете удалить свой аккаунт в любой момент в личном профиле. Процесс требует ввода пароля (если он есть у аккаунта; при входе через Google — не требует) и подтверждения по ссылке, отправленной на вашу почту, безвозвратно удаляет ваш аккаунт и прогресс обучения. Подписка, купленная на сайте, отменяется вместе с аккаунтом. Подписка, купленная в Google Play, при удалении аккаунта НЕ отменяется: сначала отмените её в Google Play → «Подписки» (https://play.google.com/store/account/subscriptions), иначе Google продолжит списывать деньги. Это действие нельзя отменить. Шаги, что удаляется и что остаётся — на странице https://rusofacilapp.com/ru/eliminar-cuenta. Аудиозаписи произношения в это удаление не входят — их никогда не было на наших серверах: они живут на вашем устройстве, и удаляете их вы сами, прямо в упражнении или очистив данные сайта в браузере.",
         ],
       },
       {
@@ -483,6 +483,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• ExchangeRate-API — tipos de cambio. Para poder mostrarte el precio aproximado en la moneda de tu país, nuestro servidor le pide su tabla de cambios unas pocas veces al día. En esa petición no va nada tuyo: ni tu cuenta, ni tu dirección, ni qué estabas mirando.",
           "• Anthropic — nos ayuda a redactar los subtítulos y los borradores de las lecciones en video. Lo usamos nosotros desde el panel de administración y le enviamos texto del curso. Nada tuyo pasa por ahí.",
           "• YouTube/Google — cuando reproduces un video incrustado en nuestra biblioteca, YouTube puede recopilar datos según su propia política de privacidad, independiente de la nuestra.",
+          "• Google (inicio de sesión) — sólo si eliges «Continuar con Google»: Google confirma tu identidad y nos envía tu correo electrónico confirmado; con él abrimos tu cuenta de RusoFácil (la misma si ese correo ya está registrado). No recibimos tu contraseña de Google ni pedimos acceso a tus contactos, archivos u otros datos de tu cuenta de Google.",
           "No compartimos tus datos con ningún otro tercero salvo que la ley nos obligue a ello.",
         ],
       },
@@ -583,6 +584,7 @@ export const PRIVACY_CONTENT: Record<Locale, LegalDocument> = {
           "• ExchangeRate-API — курсы валют. Чтобы показать вам примерную цену в валюте вашей страны, наш сервер несколько раз в сутки запрашивает у него таблицу курсов. В этом запросе нет ничего вашего: ни аккаунта, ни адреса, ни того, что вы смотрели.",
           "• Anthropic — помогает нам составлять субтитры и черновики видео-уроков. Им пользуемся мы сами из административной панели и отправляем туда текст курса. Ничего вашего через него не проходит.",
           "• YouTube/Google — при просмотре встроенного видео из нашей медиатеки YouTube может собирать данные согласно своей собственной политике конфиденциальности, независимой от нашей.",
+          "• Google (вход) — только если вы выбрали «Войти через Google»: Google подтверждает вашу личность и передаёт нам подтверждённый адрес электронной почты; по нему мы открываем ваш аккаунт RusoFácil (тот же, если этот адрес уже зарегистрирован). Пароль от Google мы не получаем и доступа к контактам, файлам и другим данным аккаунта Google не просим.",
           "Мы не передаём ваши данные никаким другим третьим лицам, кроме случаев, когда этого требует закон.",
         ],
       },

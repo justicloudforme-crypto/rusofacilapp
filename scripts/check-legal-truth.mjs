@@ -174,6 +174,11 @@ const HOST_PROCESSORS = new Map([
   ["img.youtube.com", "YouTube"],
   // YouTube Data API v3, админская проверка живости встроек.
   ["www.googleapis.com", "Google"],
+  // 7.267, вход через Google: страница входа (переход делает браузер
+  // человека), обмен кода на токен с сервера, ключи подписи токена
+  // (www.googleapis.com/oauth2/v3/certs — тот же хост, что выше).
+  ["accounts.google.com", "Google"],
+  ["oauth2.googleapis.com", "Google"],
 ]);
 
 /**
@@ -201,7 +206,7 @@ const HOSTS_WITHOUT_NAME = new Map([
 const NAMED_WITHOUT_DEPENDENCY = new Map([
   ["OpenAI", "озвучка сгенерирована заранее; в исполняемом коде вызова нет — это стережёт src/lib/no-runtime-tts.test.ts"],
   ["YouTube", "встроенный проигрыватель, подключается тегом iframe, а не пакетом"],
-  ["Google", "то же, через YouTube"],
+  ["Google", "то же, через YouTube; вход через Google (7.267) — свой код на node:crypto и Credential Manager оболочки, без npm-пакета"],
 ]);
 
 function readLegal() {
