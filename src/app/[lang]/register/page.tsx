@@ -7,6 +7,8 @@ import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import MatryoshkaMark from "@/components/MatryoshkaMark";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { routeAlternates } from "@/lib/site";
+import GoogleSignInBlock, { googleLabels } from "@/components/auth/GoogleSignInBlock";
+import { isGoogleSignInEnabled } from "@/lib/google-auth/config";
 
 export async function generateMetadata({
   params,
@@ -32,6 +34,12 @@ export default async function RegisterPage({
     weak_password: dict.auth.weakPassword,
     email_taken: dict.auth.emailTaken,
     rate_limited: dict.auth.rateLimited,
+    // 7.267: адрес уже есть, а пароля у учётки нет (вход через Google).
+    // Регистрация такую учётку не «присваивает» — пароль заводится только
+    // ссылкой из письма. Про Google — только когда вход через Google включён.
+    account_exists_no_password: isGoogleSignInEnabled()
+      ? dict.auth.accountExistsNoPasswordGoogle
+      : dict.auth.accountExistsNoPassword,
   };
   const errorMessage =
     typeof query.error === "string" ? errorMessages[query.error] : undefined;
@@ -58,6 +66,8 @@ export default async function RegisterPage({
             {dict.auth.referralInviteNotice}
           </p>
         )}
+
+        <GoogleSignInBlock lang={lang} redirectTo={redirectTo} labels={googleLabels(dict.auth)} />
 
         <form action="/api/auth/register" method="POST" className="mt-6 flex flex-col gap-4">
           <input type="hidden" name="lang" value={lang} />

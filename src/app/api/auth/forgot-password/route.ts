@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
   if (await forgotLimiterByEmail.check(email)) return done();
 
   const user = await db.user.findUnique({ where: { email } });
-  if (user?.passwordHash) {
+  // 7.267: и учётке без пароля (вход через Google) — письмо со ссылкой,
+  // по которой пароль заводится впервые. Ответ странице при этом тот же,
+  // что и всем: по нему нельзя узнать, есть ли учётка и есть ли у неё пароль.
+  if (user) {
+    const hasPassword = Boolean(user.passwordHash);
     const token = signVerificationToken("password_reset", user.id, user.passwordHash);
     const origin = new URL(request.url).origin;
     // ДОЛГ 164: токен во ФРАГМЕНТЕ, а не в строке запроса. Фрагмент —
@@ -44,8 +48,11 @@ export async function POST(request: NextRequest) {
 
     await sendEmail({
       to: user.email,
-      subject: "RusoFácilapp — restablecer contraseña / сброс пароля",
-      html: `
+      subject: hasPassword
+        ? "RusoFácilapp — restablecer contraseña / сброс пароля"
+        : "RusoFácilapp — crear contraseña / создание пароля",
+      html: hasPassword
+        ? `
         <p>Solicitaste restablecer tu contraseña en RusoFácilapp. Este enlace es válido durante 1 hora:</p>
         <p><a href="${resetUrl}">${resetUrl}</a></p>
         <p>Si no fuiste tú, puedes ignorar este mensaje.</p>
@@ -53,6 +60,15 @@ export async function POST(request: NextRequest) {
         <p>Вы запросили сброс пароля на RusoFácilapp. Ссылка действительна 1 час:</p>
         <p><a href="${resetUrl}">${resetUrl}</a></p>
         <p>Если это были не вы — просто проигнорируйте это письмо.</p>
+      `
+        : `
+        <p>Tu cuenta de RusoFácilapp entra con Google y todavía no tiene contraseña. Si quieres entrar también con tu correo y una contraseña, créala con este enlace (válido durante 1 hora):</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>Puedes seguir entrando con Google como siempre. Si no fuiste tú, ignora este mensaje.</p>
+        <hr />
+        <p>Ваш аккаунт RusoFácilapp входит через Google, пароля у него пока нет. Если хотите входить и по email с паролем, задайте его по этой ссылке (действует 1 час):</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>Входить через Google можно и дальше. Если это были не вы — просто проигнорируйте письмо.</p>
       `,
     });
   }

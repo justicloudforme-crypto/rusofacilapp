@@ -1304,6 +1304,23 @@ export default async function ProfilePage({
                         {dict.profile.loggedOutEverywhereNotice}
                       </p>
                     )}
+                    {/* 7.267: у учётки без пароля (вход через Google) менять
+                        нечего — пароль заводится ссылкой из письма, тем же
+                        путём, что и сброс. */}
+                    {!user.passwordHash ? (
+                      <div data-no-password>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                          {dict.profile.noPasswordHeading}
+                        </span>
+                        <p className="mt-1 text-sm text-foreground/60">{dict.profile.noPasswordDescription}</p>
+                        <Link
+                          href={`/${lang}/forgot-password`}
+                          className="tap mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-2 text-primary-text"
+                        >
+                          {dict.profile.noPasswordLink}
+                        </Link>
+                      </div>
+                    ) : (
                     <div>
                       <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
                         {dict.profile.changePasswordHeading}
@@ -1319,6 +1336,7 @@ export default async function ProfilePage({
                         minLength={MIN_PASSWORD_LENGTH}
                       />
                     </div>
+                    )}
                     <div className="border-t border-black/10 pt-5 dark:border-white/30">
                       <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
                         {dict.profile.sessionsHeading}
@@ -1380,7 +1398,12 @@ export default async function ProfilePage({
                         )}
                         <DeleteAccountForm
                           lang={lang}
-                          warningLabel={dict.profile.deleteAccountWarning}
+                          warningLabel={
+                            user.passwordHash
+                              ? dict.profile.deleteAccountWarning
+                              : dict.profile.deleteAccountWarningNoPassword
+                          }
+                          needsPassword={Boolean(user.passwordHash)}
                           passwordLabel={dict.profile.currentPasswordLabel}
                           submitLabel={dict.profile.deleteAccountButton}
                           sentLabel={dict.profile.deleteAccountEmailSent}

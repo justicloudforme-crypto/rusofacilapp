@@ -372,7 +372,16 @@
     "confirmDeleteTitle": "Confirmar eliminación de cuenta",
     "confirmDeleteSubtitle": "Esta acción es irreversible: se eliminarán tu cuenta, tu progreso y todos sus datos. Una suscripción comprada en el sitio web se cancela.",
     "confirmDeleteButton": "Eliminar cuenta definitivamente",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "googleButton": "Continuar con Google",
+    "googleDivider": "o con tu correo",
+    "googlePending": "Abriendo Google…",
+    "googleFailed": "No pudimos entrar con Google. Inténtalo de nuevo o entra con tu correo y contraseña.",
+    "googleCancelled": "Cancelaste el acceso con Google. Puedes intentarlo de nuevo o entrar con tu correo y contraseña.",
+    "googleUnverified": "Google no confirmó este correo, así que no podemos usarlo para entrar. Confírmalo en tu cuenta de Google o entra con tu correo y contraseña.",
+    "googleAmbiguous": "Este correo coincide con más de una cuenta de RusoFácil. Entra con tu correo y contraseña.",
+    "accountExistsNoPassword": "Ya existe una cuenta con este correo. Crea una contraseña con «¿Olvidaste tu contraseña?».",
+    "accountExistsNoPasswordGoogle": "Ya existe una cuenta con este correo. Entra con Google o crea una contraseña con «¿Olvidaste tu contraseña?»."
   },
   "paywall": {
     "titleFree": "Sigue aprendiendo sin límites",
@@ -639,6 +648,10 @@
     "deleteAccountWarning": "Esta acción es irreversible. Introduce tu contraseña para recibir un enlace de confirmación por correo.",
     "deleteAccountButton": "Eliminar cuenta",
     "deleteAccountEmailSent": "Revisa tu correo — te enviamos un enlace para confirmar la eliminación.",
+    "noPasswordHeading": "Contraseña",
+    "noPasswordDescription": "Entras con Google y tu cuenta todavía no tiene contraseña. Si quieres entrar también con tu correo y una contraseña, créala:",
+    "noPasswordLink": "Crear contraseña",
+    "deleteAccountWarningNoPassword": "Esta acción es irreversible. Te enviaremos a tu correo un enlace para confirmar la eliminación.",
     "nameLabel": "Nombre",
     "nameEmpty": "Nombre no indicado",
     "namePlaceholder": "¿Cómo te llamas?",
