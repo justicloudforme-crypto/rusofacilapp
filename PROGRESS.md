@@ -14,7 +14,9 @@
 Android**, которым агент проверяет оболочку сам (как запускать — раздел
 1.4).
 
-**Свежее: 7.266 — ДОЛГ 380 ЗАКРЫТ, «COMPARTIR», ОКНО ОЦЕНКИ, ОБОЛОЧКА 1.0.15 (14.10.2026).** Поздний `CANCELLATION` после `EXPIRATION` больше не возвращает строке `status = active` (правка вебхука с разрешения владельца; сторож `check:late-cancellation`: `main` 5 нарушений / ветка 0, подсадки 5 из 5); 5 строк магазина в боевой базе исправлены одной транзакцией (5 → 0, копия `~/rusofacil-backups/7.266-prod-before.json`). RevenueCat: «Transfer to new App User ID» (фото владельца) → человек с двумя учётками видит «Listo: tu suscripción ya funciona en esta cuenta…». «Compartir la app» — «Mi perfil» и после сданного урока; окно оценки Google Play — после 3-го успеха, не в первые 24 ч, не чаще раза в 30 дней (сторож `check:review-share`, 11 из 11). Оболочка 1.0.15 (vc16): плагины `RfShare`, `RfReview`, разрешений 12 → 12. Долги 380 / открытых **79** / закрытых 288. #482 (сайт) → #483 (оболочка) → документы; AAB `~/Desktop/rusofacil-release-7266-vc16-2026-10-14.aab`.
+**Свежее: 7.267 — «ВХОД ЧЕРЕЗ GOOGLE» (14.10.2026).** Сайт (#485) — за флагом: без `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` в Vercel кнопок нет нигде, маршруты 404. Подтверждённый Google адрес, который у нас уже есть, открывает ТУ ЖЕ учётку (регистр, пробелы, точки Gmail второй не делают; прод: 36 учёток, дублей 0); неподтверждённый — отказ; токен проверяет сервер (подпись, `aud`, срок, `nonce`). Учётка без пароля: пароль — письмом, удаление — письмом; регистрация её больше не присваивает. Оболочка 1.0.16 vc17 (#486): плагин `RfGoogleSignIn` (Credential Manager), разрешений 12 → 12 (biometric вычеркнут); #486 же возвращает в `main` исходники 1.0.15, которые 7.266 туда не довёл (долг 382). Сторож `check:google-signin` 25/0, подсадки 8/8. Долги 382 / открытых **81** / закрытых 288. AAB `~/Desktop/rusofacil-release-7267-vc17-2026-10-14.aab`.
+
+**7.266 — ДОЛГ 380 ЗАКРЫТ, «COMPARTIR», ОКНО ОЦЕНКИ, ОБОЛОЧКА 1.0.15 (14.10.2026).** Поздний `CANCELLATION` после `EXPIRATION` больше не возвращает строке `status = active` (правка вебхука с разрешения владельца; сторож `check:late-cancellation`: `main` 5 нарушений / ветка 0, подсадки 5 из 5); 5 строк магазина в боевой базе исправлены одной транзакцией (5 → 0, копия `~/rusofacil-backups/7.266-prod-before.json`). RevenueCat: «Transfer to new App User ID» (фото владельца) → человек с двумя учётками видит «Listo: tu suscripción ya funciona en esta cuenta…». «Compartir la app» — «Mi perfil» и после сданного урока; окно оценки Google Play — после 3-го успеха, не в первые 24 ч, не чаще раза в 30 дней (сторож `check:review-share`, 11 из 11). Оболочка 1.0.15 (vc16): плагины `RfShare`, `RfReview`, разрешений 12 → 12. Долги 380 / открытых **79** / закрытых 288. #482 (сайт) → #483 (оболочка) → документы; AAB `~/Desktop/rusofacil-release-7266-vc16-2026-10-14.aab`.
 
 **7.265 — ПЕРВЫЙ ЖИВОЙ ВОЗВРАТ И «УЖЕ КУПЛЕНО» (13.10.2026).** Возврат peterelin27 (14.10 02:04:35 UTC, Play Console, 100 %, «Remove entitlement») подтверждён по боевой базе: `CANCELLATION` через 34,6 с закрыл доступ (`currentPeriodEnd` = момент отзыва 02:04:36.860), кабинет — «Expirada», «Venció el 13 de octubre de 2026 a las 19:04 GMT-7», история «Mensual · 13 oct · Expirada»; правка не нужна. Поздний второй `CANCELLATION` вернул колонке `status` значение `active` — видимых последствий 0, долг 380 (вебхук — с разрешения владельца). RC-BUY-6 из Sentry (12:38 PDT) — «один Google-аккаунт, две учётки сайта»: тестовая подписка куплена под `cmszb91fq…`, покупала `cmt9lqcny…`; код 6 по байт-коду SDK 10.17 = Google `ITEM_ALREADY_OWNED` (или сервер RevenueCat 7852). Теперь экран сам спрашивает сервер, сам восстанавливает и честно говорит «ya funciona en esta cuenta» / «vinculada a otra cuenta de RusoFácil»; Sentry — `NativeStoreAlreadyOwned` (info), не NEXTJS-1A. RC-BUY-5 (12:32 PDT) = только Google `ITEM_UNAVAILABLE`; кто нажимал — база не показывает, гипотеза — владелец. Долг 379 заведён и закрыт, 380 заведён. Долги 380 / открытых **80** / закрытых 287. #480 (сайт) → #481 (документы). AAB не нужен.
 
@@ -2331,7 +2333,7 @@ Play не отменяет, и у него есть публичная стра�
    5. **503 с `Retry-After`** вместо 500 при отказе базы. **7.260: замерено, кодом страниц не чинится** — при недоступной базе 15 из 33 типов страниц карты сайта отдают 500 без `Retry-After`, 18 деградируют в 200, 404 нет; Next 16 разрешает странице только 401/403/404 (`ALLOWED_CODES` в `http-access-fallback`). Варианты — 7.260, часть 4. **ЗАКРЫТО решением владельца 09.10 (7.261, часть 6): вариант (в) — при отказе базы ничего не менять** (не проверять базу на каждом запросе, внешней отметки «база лежит» нет): последний отказ 11.09.2026, запас чтений 54-кратный, движок не даёт странице 503 без такой проверки. Пересмотреть, если отказы базы повторятся;
    6. **CDN** — HTML-ответы `private, no-cache, no-store`, `x-vercel-cache: MISS` (план 7.111, «известные дыры»; состояние — таблица в 7.124: «НЕ СДЕЛАН», правка задевает рамку и ждала снятия заморозки);
    7. **СДЕЛАНО в 7.259 (PR #467):** `/download` индексируется и в карте сайта, `sameAs` организации — Google Play, `STORE_LIVE` поднят по решению владельца 08.10 (сторожа `check:store-seo`, `check:pwa-manifest`). Было: найдено в 7.258: `/download` всё ещё `noindex`, а у `organizationJsonLd` нет `sameAs` на страницу Google Play — обе правки ждали «дня, когда адрес магазина станет настоящим»; и `STORE_LIVE` в `src/lib/pwa-manifest.ts` (включает ещё `prefer_related_applications`, то есть меняет установку PWA в Chrome у всех) — **решение владельца**.
-5. **Вход через Google** — новая возможность (**«Compartir» и окно оценки — СДЕЛАНЫ в 7.266**, #482/#483, оболочка 1.0.15); на витрине Play их нет намеренно (`docs/store-listing-es419.md`, раздел 1).
+5. **Вход через Google — СДЕЛАН в 7.267 за флагом** (#485 сайт, #486 оболочка 1.0.16; включается переменными Vercel — шаги владельца в 7.267, часть 6). «Compartir» и окно оценки — СДЕЛАНЫ в 7.266 (#482/#483, оболочка 1.0.15); на витрине Play их нет намеренно (`docs/store-listing-es419.md`, раздел 1).
 6. **СДЕЛАНО в 7.263 (PR #475, #476): сборка 1.0.14 (vc15)** — 361, 363, 364, 372 закрыты; AAB `~/Desktop/rusofacil-release-7263-vc15-2026-10-11.aab`, загружает владелец в PRODUCTION. Было: долги для будущей сборки (нужен AAB): 361, 363, 364, 372 — шторка 00:00 без сети, копия рассказа с первой фразы, «Назад» в копии без сети, подпись экрана при молчании сайта.
 7. **iOS — последним** (учётная запись Apple, подписанный `.ipa`, долги 113, 140, 145, 211, 214).
 
@@ -13464,6 +13466,94 @@ C1-заголовок ловится, а A1-слова той же страни�
 * Пейвол, `canAccessLevel`, `PUBLIC_VOCABULARY_LEVELS` и тренажёр
   карточек не трогались.
 * 330 замороженных страниц не затронуты (они все — `stories` и `media`).
+
+---
+
+### 7.267. «ВХОД ЧЕРЕЗ GOOGLE» — САЙТ ЗА ФЛАГОМ (#485), ОБОЛОЧКА 1.0.16 VC17 С НАТИВНЫМ ПЛАГИНОМ `RfGoogleSignIn` (#486); ПОДТВЕРЖДЁННЫЙ АДРЕС, КОТОРЫЙ У НАС ЕСТЬ, ОТКРЫВАЕТ ТУ ЖЕ УЧЁТКУ; РЕГИСТРАЦИЯ БОЛЬШЕ НЕ ПРИСВАИВАЕТ УЧЁТКУ БЕЗ ПАРОЛЯ; ИСХОДНИКИ 1.0.15 НЕ ДОШЛИ ДО `main` В 7.266 — ВОЗВРАЩЕНЫ В #486; ДОЛГИ 381, 382 ЗАВЕДЕНЫ (14.10.2026; БОЕВАЯ БАЗА — ТОЛЬКО SELECT, ЗАПИСЕЙ 0)
+
+## ЧАСТЬ 1 (7.267). ВХОД И ВЫХОД ЧИСЛАМИ
+
+| | строк | открытых | закрытых | снятых | правил |
+|---|---|---|---|---|---|
+| вход (после 7.266) | 380 | 79 | 288 | 4 | 9 |
+| выход (7.267) | 382 | 81 | 288 | 4 | 9 |
+
+Вход — `origin/main` `491aa23` (#482, #484 влиты). Заведены **381** и **382** (часть 7), закрытых новых нет. Счёт — `node scripts/count-debts.mjs`.
+
+**Флаг.** Вход через Google включается ТОЛЬКО наличием двух переменных Vercel — `GOOGLE_CLIENT_ID` и `GOOGLE_CLIENT_SECRET` (`src/lib/google-auth/config.ts`). Без них: блока кнопки нет ни на одной странице (ни обёртки, ни разделителя), `/api/auth/google/{start,callback,nonce,native}` — 404. Мерж #485 и #486 без настроек ничего видимого не включает. Видимое без флага: тексты Политики и Условий (Google назван получателем «только если выберешь «Continuar con Google»», шаги удаления — «пароль, если он есть»), даты документов 14.10.2026.
+
+## ЧАСТЬ 2 (7.267). ЗАМЕР ДО ПРАВОК
+
+* Вход — свой код (bcryptjs), таблица одна (`User`), таблицы сессий нет: кука `session` = HMAC(userId, sessionVersion), httpOnly/lax/secure, 30 дней. В оболочке — та же кука в WebView (оболочка грузит боевой сайт). Сброс пароля и удаление требовали `passwordHash` — учётка без пароля не могла ни сбросить пароль, ни удалиться. Регистрация «присваивала» строку без пароля без проверки почты (наследие демо-входа) — с Google-учётками это был бы захват.
+* Следов OAuth/Google-входа в коде, схеме, `.env.example` — 0. В Vercel — не проверено (доступа нет).
+* RevenueCat: `appUserID` = `User.id` (`NativeStoreIdentity`, `revenuecat-client.ts`), «Transfer to new App User ID» (7.266). Вход через Google в СУЩЕСТВУЮЩУЮ учётку = тот же id = тот же покупатель RC и Stripe.
+* **Боевая база (только SELECT, обёртка: записи отказано 9 из 9, чтений пропущено 4 из 4):** пользователей **36**; без пароля **0**; адрес не в нижнем регистре или с пробелами **0**; дублей по `lower(trim(email))` **0**; адресов Gmail 30, из них с точкой в имени **6**, с «+» 0, googlemail 0; `justicloudforme@gmail.com` → `cmt9lqcny…`, пароль есть. Колонок `User` 18, ничего про провайдера.
+* **Эмулятор — страница Google внутри WebView** (оболочка 1.0.15, Chrome/WebView 154, UA `…; wv) … RFNativeShell/16`): (А) ссылка на accounts.google.com, нажатая на странице приложения, — WebView остаётся, Capacitor отдаёт адрес в **Chrome** (`topResumedActivity` = `ChromeTabbedActivity`, снимок — «Sign in with Google» в Chrome с адресной строкой): вход и кука достались бы браузеру; (Б) принудительная загрузка в WebView — `net::ERR_CONNECTION_ABORTED`; (В) ответ Google на ТОЧНЫЙ UA WebView (curl, клиент OAuth Playground) — 200 «Sign in», как и для UA Chrome. **Ожидание `disallowed_useragent` на первом шаге замером НЕ подтверждено**; что будет после ввода почты — без учётки не измерить. Вывод тот же: веб-вход в оболочке непригоден → только натив.
+
+## ЧАСТЬ 3 (7.267). САЙТ — #485
+
+* `src/lib/google-auth/id-token.ts` — проверка ID-токена на сервере своими силами на `node:crypto` (новых зависимостей нет): RS256 по ключам `www.googleapis.com/oauth2/v3/certs` (кеш по `max-age`), `iss`, `aud` строго наш веб-клиент, `exp`/`iat` ±60 с, `nonce`, `email`, `email_verified`.
+* `src/lib/google-auth/account.ts` — какая учётка: точный адрес по уникальному индексу → при промахе строки того же домена без учёта регистра/пробелов → у Gmail без точек и «+метки» (тот же ящик). Две похожие строки и ни одной точной — отказ `google_ambiguous`. Иначе новая учётка без пароля (только адрес; имени и фото не просим — `scope=openid email`). Гонка двух входов → уникальность → вход в созданную.
+* Маршрут один — `src/app/api/auth/google/[step]/route.ts`, обработчики в `src/lib/google-auth/handlers.ts`: `start` (веб: код + PKCE S256 + state + nonce в подписанной куке `rf_google_flow`, путь `/api/auth/google`, 10 мин), `callback` (обмен кода с секретом, проверка токена, наша обычная сессия), `nonce` и `native` (только из оболочки: nonce в куке `rf_google_native`, проверка токена из Credential Manager). Веб-вход из оболочки — 404.
+* Кнопка — `GoogleSignInBlock` над формами `/[lang]/login` и `/[lang]/register`: «Continuar con Google» / «Войти через Google», разделитель «o con tu correo» / «или по email и паролю». В браузере — ссылка без JS и без сторонних скриптов; в приложении — `NativeGoogleSignInButton` только при плагине `RfGoogleSignIn` и версии оболочки ≥ 17. Ошибки на странице входа: `google_cancelled`, `google_unverified` («Google no confirmó este correo…»), `google_ambiguous`, `google_failed`.
+* **Учётка без пароля — выбор захода:** «¿Olvidaste tu contraseña?» присылает письмо «crear contraseña» (ссылка ЗАВОДИТ первый пароль; отпечаток «пароля нет», после установки ссылка гаснет) — входить через Google можно и дальше. В профиле вместо «Cambiar contraseña» — «Contraseña: entras con Google… Crear contraseña». Удаление — без поля пароля, подтверждение ссылкой из письма (`request-account-deletion`, `confirm-account-deletion`). Регистрация на адрес учётки без пароля — отказ `account_exists_no_password` («Ya existe una cuenta… Entra con Google o crea una contraseña con «¿Olvidaste tu contraseña?»»).
+* Сборка: 4 отдельных маршрута в тёплом кеше давали 5,0–7,7 ГБ пика против 4,4 у `main`, но **холодная** сборка ветки и `main` одинакова (7,00 / 6,95 против 6,98 / 6,93 ГБ) — разница была от состояния кеша webpack. Два падения V8 по памяти (2,5 ГБ кучи) до этого не повторились ни разу в 6 сборках. Маршрут всё равно один.
+* Проверено вживую (`next start` с подставным client ID): уход на Google — 303 с `scope=openid email`, `code_challenge_method=S256`, `state`, `nonce`; кука httpOnly; `nonce` из браузера — 404, из оболочки — 200. Снимки 375 px обеих локалей — кнопка над формой.
+
+## ЧАСТЬ 4 (7.267). ОБОЛОЧКА 1.0.16 (VC17) — #486
+
+* **Находка:** #483 (1.0.15, `305282b`) смержен в ветку сайта `site/run-7266-…` через 13 с ПОСЛЕ мержа #482 в `main` (18:32:32 и 18:32:45 UTC) → в `main` исходников 1.0.15 нет (vc15/1.0.14, нет `RfShare`/`RfReview`); AAB 1.0.15 собран правильно из `305282b`. #486 несёт черри-пик `305282b` (`2ddcf8b`) и базу `main` — долг 382.
+* `RfGoogleSignInPlugin.java`: Credential Manager, `GetSignInWithGoogleOption(serverClientId).setNonce(nonce)`; отдаёт только ID-токен; коды `cancelled` / `no_credentials` / `failed`. Зависимости: `androidx.credentials:credentials:1.5.0`, `androidx.credentials:credentials-play-services-auth:1.5.0`, `com.google.android.libraries.identity.googleid:googleid:1.1.1`.
+* **Манифест AAB (aapt2 по proto-манифесту, 1.0.15 → 1.0.16):** разрешений **12 → 14 → 12**: библиотека `androidx.biometric:biometric:1.1.0` (через Credential Manager) принесла `USE_BIOMETRIC` и `USE_FINGERPRINT` — вычеркнуты `tools:node="remove"` (нужны только ключам доступа и паролям). Итог поимённо те же 12 (ACCESS_NETWORK_STATE, FOREGROUND_SERVICE, FOREGROUND_SERVICE_MEDIA_PLAYBACK, INTERNET, MODIFY_AUDIO_SETTINGS, POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, RECORD_AUDIO, VIBRATE, WAKE_LOCK, com.android.vending.BILLING, com.rusofacilapp.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION). Новый компонент — служебная `com.google.android.gms.auth.api.signin.RevocationBoundService` (play-services-auth 21.1.1). FGS — только `mediaPlayback`; minSdk 24 / targetSdk 36. R8 не тронут.
+* Эмулятор (отладочная 1.0.16 + локальный сайт #485, подставной client ID): UA `RFNativeShell/17`, плагин доступен, на `/es/login` нативная кнопка, веб-ссылок 0; нажатие → `nonce` 200 → системное окно Google (`com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity`, на эмуляторе нет аккаунта — «Sign in with ease»); «Назад» → плагин вернул `cancelled`. Настоящий вход аккаунтом — владелец на POCO.
+* AAB: `~/Desktop/rusofacil-release-7267-vc17-2026-10-14.aab`, 14 308 814 байт, sha256 `07c9472c30c446aff95c13ff1de440571061f0e829956092d3195a7292b1a143`, `jar verified`, тот же ключ (SHA-256 `00:07:2D:34:…:0E:BB:82`), `server.url` = `https://rusofacilapp.com`; `check:apk-facts` по APK той же сборки — расхождений 0.
+* SHA-1 для Google Cloud: ключ загрузки (`~/rusofacil-keys/release.jks`) — `E6:4B:2C:0A:27:4F:07:1E:74:1D:2F:A7:9B:8E:E1:D6:D1:B1:4F:95`; ключ подписи приложения — только из Play Console (App integrity); отладочный (эмулятор) — `7D:53:80:9F:1D:FE:52:0A:BF:3A:AF:FA:E4:A5:71:48:04:D1:AA:05`.
+* **Data safety.** Новых типов данных нет: адрес почты (Personal info → Email address), имя и идентификаторы пользователя уже объявлены (`docs/audit-7241-play-readiness.md`, 3.1); токен Google сервер проверяет и выбрасывает, из него хранится только адрес. Меняется ОДИН ответ: «Which of the following methods of account creation does your app support?» — к «Username and password» добавить вариант с OAuth.
+* Release notes:
+
+```
+<es-419>
+Novedades:
+• Ahora puedes entrar con tu cuenta de Google: en «Inicia sesión» y «Crear cuenta» toca «Continuar con Google». Si ya tienes una cuenta de RusoFácil con ese mismo correo, entrarás en ella con todo tu progreso.
+</es-419>
+```
+
+## ЧАСТЬ 5 (7.267). ПРОВЕРКИ
+
+* `npm run verify` на ветке сайта — **выход 0** (пик сборки 6160 МБ из 6400).
+* **`check:google-signin`** (новый, в verify и ci.yml): настоящие маршруты esbuild-ом, база в памяти по правилам SQLite (`=`/UNIQUE с учётом регистра, LIKE — без) — **25 сценариев, 0 нарушений**. Подсадки **8 из 8**: вторая учётка при существующем адресе, сравнение с учётом регистра, неподтверждённый адрес пускают, чужой `aud` принят, «Foo@Gmail.com и foo@gmail.com — две учётки» при регистрации, регистрация присваивает учётку без пароля (это поведение `main`), флаг игнорируется, веб-вход внутри приложения; пустая выборка — выход 1 («сличений 0»).
+* Юниты: `id-token.test.ts`, `account.test.ts`, `config.test.ts` — 32; `GoogleSignInBlock.test.tsx` — 3 (позитивный контроль к e2e).
+* e2e `google-signin-flag-off.spec.ts`: флаг выключен — на `/es|ru/login|register` в браузере и в приложении (кука оболочки + версия 17) кнопки нет, 4 маршрута 404; контроль селекторов на разметке с кнопкой. `playwright.config.ts` задаёт `GOOGLE_CLIENT_ID=""`/`GOOGLE_CLIENT_SECRET=""` — флаг в e2e выключен всегда. С соседними спеками входа — 40 из 40 локально.
+* 32 сторожа оболочки на ветке #486 — зелёные.
+* Sentry — **не проверен**: локально нет `SENTRY_AUTH_TOKEN`.
+
+## ЧАСТЬ 6 (7.267). ПОРЯДОК И ЧТО СДЕЛАТЬ ВЛАДЕЛЬЦУ
+
+1. Мерж **#485** (сайт) → «Прод после выката» зелёный (флаг ещё выключен — сайт как был).
+2. Google Cloud (проект `marine-might-505804-k2`) → Google Auth Platform: экран согласия (External, только `openid`/`email`, без логотипа), клиент **Web application** с redirect URI `https://rusofacilapp.com/api/auth/google/callback`, клиенты **Android** (`com.rusofacilapp.app` + SHA-1 ключа подписи приложения из Play Console; второй — SHA-1 ключа загрузки), Publish app.
+3. Vercel → `GOOGLE_CLIENT_ID` (Production), `GOOGLE_CLIENT_SECRET` (Production, Sensitive) → Redeploy.
+4. Проверка в браузере компьютера → мерж **#486** → загрузка AAB 1.0.16 в Production с release notes выше → Data safety (один ответ про OAuth).
+5. POCO после обновления до 1.0.16: выйти → «Continuar con Google» → `justicloudforme@gmail.com` → «Mi perfil» с прежним прогрессом. Одно фото. Проверка агентом после фото — SELECT: пользователей столько же, `cmt9lqcny…` один.
+
+## ЧАСТЬ 7 (7.267). СТРОКИ ДОЛГОВ
+
+| № | Состояние | Строка |
+|---|---|---|
+| 381 | **открыт 14.10.2026 (7.267)**, измерен сторожем `check:google-signin` (сценарий «веб: адрес есть → та же учётка»: сессия выдана строке с паролем) | **вход через Google в существующую учётку с паролем доверяет регистрации, которая почту не проверяла.** Условие → регистрация паролем не подтверждает адрес (так с 16.08.2026), а Google-вход по правилу 7.267 открывает учётку с тем же адресом → триггер: кто-то заранее регистрирует чужой адрес Gmail со своим паролем, позже владелец адреса входит через Google → следствие: владелец адреса учится в учётке, к которой у регистрировавшего остаётся пароль. Сейчас 36 учёток, флаг выключен. Варианты владельцу: (а) при первом Google-входе в учётку с паролем сбрасывать пароль и все сессии (`sessionVersion + 1`) и слать письмо; (б) подтверждение почты при регистрации; (в) принять. |
+| 382 | **открыт 14.10.2026 (7.267)**, измерен `gh pr view 483` и `git show origin/main:android/app/build.gradle` | **исходники оболочки 1.0.15 не в `main`.** Условие → PR оболочки стопкой над PR сайта → триггер: PR сайта смержен в `main` раньше (7.266: #482 18:32:32, #483 18:32:45 UTC), и GitHub влил оболочку в уже отработанную ветку сайта → следствие: в `main` vc15 / 1.0.14 без `RfShare`/`RfReview`; сборка из `main` откатила бы «Compartir» и окно оценки. Закрывается мержем #486 (несёт `305282b`); проверка — `git show origin/main:android/app/build.gradle \| grep versionCode` = 17. Правило на будущее: PR оболочки — с базой `main`. |
+
+## ПОСАДКА 7.267 — ДЕСЯТЬ СТРОК ДЛЯ СЛЕДУЮЩЕГО ОКНА
+
+1. Порядок: #485 (сайт) → «Прод после выката» → консоли Google и Vercel → Redeploy → #486 (оболочка) → AAB 1.0.16 (vc17) в Production → Data safety (OAuth).
+2. Флаг — `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` в Vercel; без них кнопок нет нигде, маршруты 404.
+3. Код: `src/lib/google-auth/` (config, id-token, account, flow-cookie, sign-in, handlers, native-client), маршрут `src/app/api/auth/google/[step]`.
+4. Правило учётки: точный адрес → без регистра → Gmail без точек/+; две похожих — отказ; новая — без пароля.
+5. Учётка без пароля: пароль заводится письмом «¿Olvidaste tu contraseña?», удаление — письмом, регистрация её не присваивает.
+6. Сторож `check:google-signin` (25 сценариев, подсадки 8/8) гоняет настоящие маршруты; e2e держит «флаг выключен».
+7. Оболочка 1.0.16: `RfGoogleSignInPlugin` (Credential Manager), разрешений 12 (biometric вычеркнут), новый сервис `RevocationBoundService`.
+8. `disallowed_useragent` на первом шаге не подтверждён; веб-ссылка из WebView уходит в Chrome — поэтому только натив.
+9. Долги 381 (доверие к регистрации без проверки почты — решение владельца) и 382 (1.0.15 не в `main`, закрыть после мержа #486).
+10. После фото владельца с POCO — SELECT «учётка одна, пользователей не прибавилось»; дальше по очереди — iOS.
 
 ---
 
