@@ -102,7 +102,7 @@ export async function resolveGoogleAccount(
 type UserDelegate = {
   findUnique(args: { where: { email: string }; select: Record<string, true> }): Promise<GoogleAccountRow | null>;
   findMany(args: { where: { email: { endsWith: string } }; select: Record<string, true> }): Promise<GoogleAccountRow[]>;
-  create(args: { data: { email: string }; select: Record<string, true> }): Promise<GoogleAccountRow>;
+  create(args: { data: { email: string; googleLinkedAt: Date }; select: Record<string, true> }): Promise<GoogleAccountRow>;
 };
 
 const SELECT = { id: true, email: true, sessionVersion: true } as const;
@@ -113,7 +113,8 @@ export function prismaAccountStore(db: { user: unknown }): GoogleAccountStore {
     findByEmail: (email) => user.findUnique({ where: { email }, select: SELECT }),
     findByDomain: (domain) => user.findMany({ where: { email: { endsWith: `@${domain}` } }, select: SELECT }),
     // Пароля нет: учётка входит через Google. «¿Olvidaste tu contraseña?»
-    // пришлёт ссылку, по которой пароль можно завести.
-    create: (email) => user.create({ data: { email }, select: SELECT }),
+    // пришлёт ссылку, по которой пароль можно завести. Отметка привязки
+    // ставится сразу (7.268): следующий вход — повторный.
+    create: (email) => user.create({ data: { email, googleLinkedAt: new Date() }, select: SELECT }),
   };
 }
