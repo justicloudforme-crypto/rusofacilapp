@@ -147,8 +147,10 @@ describe("what section 3 of the Terms has to state, in both locales", () => {
     // own reason to move — one shared constant would have back-dated one
     // document or falsely re-dated the other. 27.09.2026 (7.242): отмена
     // подписки Google Play — только в Google Play, удаление её не отменяет.
+    // 14.10.2026 (7.267): удаление учётки, вошедшей через Google, — без
+    // пароля, одной ссылкой из письма.
     for (const locale of locales) {
-      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-09-27");
+      expect(TERMS_CONTENT[locale].lastUpdated).toBe("2026-10-14");
     }
   });
 

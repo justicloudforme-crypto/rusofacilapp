@@ -27,14 +27,23 @@ function getSecret(): string {
  * in the signed payload so the token stops verifying the instant the
  * password actually changes (a real reset, or someone else's session
  * beating this one to it), without storing or comparing the hash itself. */
-export function passwordFingerprint(passwordHash: string): string {
-  return createHmac("sha256", getSecret()).update(passwordHash).digest("hex").slice(0, 16);
+export function passwordFingerprint(passwordHash: string | null): string {
+  return createHmac("sha256", getSecret()).update(passwordHash ?? NO_PASSWORD_MARK).digest("hex").slice(0, 16);
 }
+
+/**
+ * Учётка без пароля (вход через Google, 7.267) — у неё тоже есть «текущее
+ * состояние пароля»: «пароля нет». Ссылка, выданная в этом состоянии,
+ * перестаёт работать, как только пароль заведён (сброс поставил хеш), —
+ * то же правило одноразовости, что и у учётки с паролем. Строка-метка не
+ * может совпасть с хешем bcrypt (`$2…`).
+ */
+const NO_PASSWORD_MARK = "no-password:7.267";
 
 export function signVerificationToken(
   purpose: VerificationPurpose,
   userId: string,
-  currentPasswordHash: string
+  currentPasswordHash: string | null
 ): string {
   const expiresAt = Date.now() + TTL_MS[purpose];
   const payload = `${purpose}.${userId}.${expiresAt}.${passwordFingerprint(currentPasswordHash)}`;
@@ -85,6 +94,6 @@ export function decodeVerificationToken(
  * currently has — false if it's changed since (the reset/deletion already
  * happened via this or another token, or the account was otherwise
  * updated), which is what makes these tokens single-use in practice. */
-export function matchesCurrentPassword(tokenFingerprint: string, currentPasswordHash: string): boolean {
+export function matchesCurrentPassword(tokenFingerprint: string, currentPasswordHash: string | null): boolean {
   return tokenFingerprint === passwordFingerprint(currentPasswordHash);
 }

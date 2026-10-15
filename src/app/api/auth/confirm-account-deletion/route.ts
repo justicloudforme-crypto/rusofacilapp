@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
   if (!decoded) return fail();
 
   const user = await db.user.findUnique({ where: { id: decoded.userId } });
-  if (!user?.passwordHash || !matchesCurrentPassword(decoded.fingerprint, user.passwordHash)) {
+  // 7.267: учётка без пароля (вход через Google) удаляется так же —
+  // ссылкой из письма; отпечаток «пароля нет» (verification-token.ts).
+  if (!user || !matchesCurrentPassword(decoded.fingerprint, user.passwordHash)) {
     return fail();
   }
 
