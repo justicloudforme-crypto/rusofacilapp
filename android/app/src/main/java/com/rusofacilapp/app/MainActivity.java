@@ -455,6 +455,8 @@ public class MainActivity extends BridgeActivity {
         // внутри него (заход 7.266: «Compartir» и окно оценки Google Play).
         registerPlugin(RfSharePlugin.class);
         registerPlugin(RfReviewPlugin.class);
+        // 7.267, оболочка 1.0.16: вход через Google окном Credential Manager.
+        registerPlugin(RfGoogleSignInPlugin.class);
         super.onCreate(savedInstanceState);
         attachBrandSplashOverlay();
         armLoadWatchdog();
