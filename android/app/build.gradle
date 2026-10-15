@@ -148,8 +148,8 @@ android {
         // (NATIVE_PURCHASE_MIN_SHELL_VERSION в src/lib/revenuecat-config.ts),
         // и три числа — здесь, в capacitor.config.ts и в настройке сайта —
         // обязаны совпадать: сличает npm run check:native-purchase.
-        versionCode 15
-        versionName "1.0.14"
+        versionCode 17
+        versionName "1.0.16"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -261,6 +261,17 @@ dependencies {
     // подставляет Capacitor.
     implementation "androidx.core:core:$androidxCoreVersion"
     implementation project(':capacitor-android')
+    // Окно оценки Google Play — официальная библиотека In-App Review
+    // (заход 7.266, плагин RfReviewPlugin). Разрешений не добавляет.
+    implementation "com.google.android.play:review:2.0.2"
+    // Вход через Google (заход 7.267, плагин RfGoogleSignInPlugin):
+    // Credential Manager + «Sign in with Google». Окно рисуют сервисы
+    // Google Play телефона; приложение получает только ID-токен и отдаёт
+    // его сайту на проверку. Разрешений не добавляет (сверено по манифесту
+    // собранного AAB, 7.267).
+    implementation "androidx.credentials:credentials:1.5.0"
+    implementation "androidx.credentials:credentials-play-services-auth:1.5.0"
+    implementation "com.google.android.libraries.identity.googleid:googleid:1.1.1"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

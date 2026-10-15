@@ -451,6 +451,12 @@ public class MainActivity extends BridgeActivity {
         // чем окно получит своё содержимое, а содержимое ставит
         // BridgeActivity внутри super.
         installBrandSplash();
+        // Свои плагины регистрируются ДО super.onCreate — мост собирается
+        // внутри него (заход 7.266: «Compartir» и окно оценки Google Play).
+        registerPlugin(RfSharePlugin.class);
+        registerPlugin(RfReviewPlugin.class);
+        // 7.267, оболочка 1.0.16: вход через Google окном Credential Manager.
+        registerPlugin(RfGoogleSignInPlugin.class);
         super.onCreate(savedInstanceState);
         attachBrandSplashOverlay();
         armLoadWatchdog();

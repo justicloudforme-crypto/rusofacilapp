@@ -77,7 +77,7 @@ export const ACCOUNT_DELETION_COPY: Record<Locale, AccountDeletionCopy> = {
         items: [
           "Inicia sesión y abre «Mi perfil».",
           "Entra en «Ajustes» → «Seguridad» y abre «Zona de riesgo».",
-          "Escribe tu contraseña y pulsa «Eliminar cuenta».",
+          "Escribe tu contraseña (si entras con Google, no hace falta) y pulsa «Eliminar cuenta».",
           "Te enviamos un correo con un enlace que vale 30 minutos. Ábrelo y pulsa «Eliminar cuenta definitivamente».",
         ],
       },
@@ -141,7 +141,7 @@ export const ACCOUNT_DELETION_COPY: Record<Locale, AccountDeletionCopy> = {
         items: [
           "Войдите и откройте «Мой профиль».",
           "Откройте «Настройки» → «Безопасность» → «Опасная зона».",
-          "Введите пароль и нажмите «Удалить аккаунт».",
+          "Введите пароль (при входе через Google он не нужен) и нажмите «Удалить аккаунт».",
           "Мы пришлём письмо со ссылкой, которая действует 30 минут. Откройте её и нажмите «Удалить аккаунт навсегда».",
         ],
       },

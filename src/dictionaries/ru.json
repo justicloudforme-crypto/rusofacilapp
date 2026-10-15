@@ -372,7 +372,16 @@
     "confirmDeleteTitle": "Подтверждение удаления аккаунта",
     "confirmDeleteSubtitle": "Это действие необратимо: будут удалены аккаунт, прогресс и все данные аккаунта. Подписка, купленная на сайте, будет отменена.",
     "confirmDeleteButton": "Удалить аккаунт навсегда",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "googleButton": "Войти через Google",
+    "googleDivider": "или по email и паролю",
+    "googlePending": "Открываем Google…",
+    "googleFailed": "Не удалось войти через Google. Попробуйте ещё раз или войдите по email и паролю.",
+    "googleCancelled": "Вход через Google отменён. Попробуйте ещё раз или войдите по email и паролю.",
+    "googleUnverified": "Google не подтвердил этот адрес, поэтому войти с ним нельзя. Подтвердите адрес в аккаунте Google или войдите по email и паролю.",
+    "googleAmbiguous": "Этот адрес совпадает с несколькими аккаунтами RusoFácil. Войдите по email и паролю.",
+    "accountExistsNoPassword": "Аккаунт с этим email уже есть. Задайте пароль через «Забыли пароль?».",
+    "accountExistsNoPasswordGoogle": "Аккаунт с этим email уже есть. Войдите через Google или задайте пароль через «Забыли пароль?»."
   },
   "paywall": {
     "titleFree": "Продолжите обучение без ограничений",
@@ -639,6 +648,10 @@
     "deleteAccountWarning": "Это действие необратимо. Введите пароль, чтобы получить на почту ссылку для подтверждения удаления.",
     "deleteAccountButton": "Удалить аккаунт",
     "deleteAccountEmailSent": "Проверьте почту — мы отправили ссылку для подтверждения удаления.",
+    "noPasswordHeading": "Пароль",
+    "noPasswordDescription": "Вы входите через Google, пароля у аккаунта пока нет. Если хотите входить и по email с паролем, задайте его:",
+    "noPasswordLink": "Задать пароль",
+    "deleteAccountWarningNoPassword": "Это действие необратимо. Мы пришлём на почту ссылку для подтверждения удаления.",
     "nameLabel": "Имя",
     "nameEmpty": "Имя не указано",
     "namePlaceholder": "Как к вам обращаться?",

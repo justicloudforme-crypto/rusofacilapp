@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 export default function DeleteAccountForm({
   lang,
   warningLabel,
+  needsPassword = true,
   passwordLabel,
   submitLabel,
   sentLabel,
@@ -12,6 +13,8 @@ export default function DeleteAccountForm({
 }: {
   lang: string;
   warningLabel: string;
+  /** 7.267: учётка без пароля (вход через Google) — поля пароля нет, удаление подтверждает письмо. */
+  needsPassword?: boolean;
   passwordLabel: string;
   submitLabel: string;
   sentLabel: string;
@@ -47,6 +50,7 @@ export default function DeleteAccountForm({
   return (
     <form onSubmit={onSubmit} className="mt-3 flex flex-col gap-3">
       <p className="text-sm text-red-600 dark:text-red-400">{warningLabel}</p>
+      {needsPassword && (
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-medium">{passwordLabel}</span>
         <input
@@ -61,6 +65,7 @@ export default function DeleteAccountForm({
           className="rounded-lg border border-black/15 bg-white/60 px-3 py-2 text-sm outline-none focus:border-red-500 dark:border-white/20 dark:bg-white/10"
         />
       </label>
+      )}
       <div className="flex items-center gap-3">
         <button
           type="submit"

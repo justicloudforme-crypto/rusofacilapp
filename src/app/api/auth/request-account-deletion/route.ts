@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
   const password = typeof body?.password === "string" ? body.password : "";
   const langRaw = typeof body?.lang === "string" ? body.lang : "";
 
-  if (!user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
+  // 7.267: у учётки без пароля (вход через Google) первого фактора —
+  // пароля — нет. Она уже вошла (сессия), а удаляет только ссылка из
+  // письма, то есть доступ к почте, который Google и подтвердил. Учётка с
+  // паролем по-прежнему вводит пароль.
+  if (user.passwordHash && !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "invalid_password" }, { status: 400 });
   }
 

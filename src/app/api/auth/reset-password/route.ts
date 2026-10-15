@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
   if (!decoded) return fail("invalid_token");
 
   const user = await db.user.findUnique({ where: { id: decoded.userId } });
-  if (!user?.passwordHash || !matchesCurrentPassword(decoded.fingerprint, user.passwordHash)) {
+  // 7.267: у учётки без пароля (вход через Google) ссылка из письма
+  // ЗАВОДИТ первый пароль — отпечаток «пароля нет» (verification-token.ts).
+  if (!user || !matchesCurrentPassword(decoded.fingerprint, user.passwordHash)) {
     return fail("invalid_token");
   }
 
