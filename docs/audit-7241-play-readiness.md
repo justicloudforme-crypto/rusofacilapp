@@ -88,6 +88,8 @@
 | Device or other IDs | — | **No** | — | рекламного и аппаратного идентификатора нет | — | `AD_ID` в пакете 0 (раздел 4) |
 | Messages, Photos/Videos, Files, Contacts, Calendar, Health, Web browsing | — | **No** | — | — | — | — |
 
+**Способы создания аккаунта** («Which of the following methods of account creation does your app support?») — с 15.10.2026 (1.0.16, вход через Google, PROGRESS.md 7.267/7.268): **Username and password** и **OAuth**. Отправлено на проверку вместе с релизом 1.0.16. Новых типов данных вход через Google не добавил: из токена Google хранится только адрес (уже в строке Email address); отметка первой привязки `User.googleLinkedAt` (7.268) — служебное время внутри учётки, отдельного типа в форме для неё нет.
+
 Ещё два пункта не про форму, но с ней связаны:
 * **Часовой пояс** хранится в `User.timezone`, чтобы правильно считать «день занятия». В форме Google отдельной строки для него нет; его надо описать в политике (Р14).
 * **Хранит ли Sentry IP-адрес**, решает настройка «Prevent Storing of IP Addresses» в самом Sentry. Её стоит включить владельцу, тогда ответы выше точны.
