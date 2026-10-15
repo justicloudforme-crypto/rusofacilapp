@@ -62,11 +62,11 @@ export async function POST(request: NextRequest) {
         <p>Если это были не вы — просто проигнорируйте это письмо.</p>
       `
         : `
-        <p>Tu cuenta de RusoFácilapp entra con Google y todavía no tiene contraseña. Si quieres entrar también con tu correo y una contraseña, créala con este enlace (válido durante 1 hora):</p>
+        <p>Tu cuenta de RusoFácilapp entra con Google y no tiene contraseña. Si quieres entrar también con tu correo y una contraseña, créala con este enlace (válido durante 1 hora):</p>
         <p><a href="${resetUrl}">${resetUrl}</a></p>
         <p>Puedes seguir entrando con Google como siempre. Si no fuiste tú, ignora este mensaje.</p>
         <hr />
-        <p>Ваш аккаунт RusoFácilapp входит через Google, пароля у него пока нет. Если хотите входить и по email с паролем, задайте его по этой ссылке (действует 1 час):</p>
+        <p>Ваш аккаунт RusoFácilapp входит через Google, пароля у него нет. Если хотите входить и по email с паролем, задайте его по этой ссылке (действует 1 час):</p>
         <p><a href="${resetUrl}">${resetUrl}</a></p>
         <p>Входить через Google можно и дальше. Если это были не вы — просто проигнорируйте письмо.</p>
       `,

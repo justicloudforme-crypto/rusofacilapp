@@ -128,7 +128,7 @@ export async function googleCallback(request: NextRequest) {
   );
   if (!verified.ok) return finish(loginErrorForToken(verified.error));
 
-  const signedIn = await signInWithGoogleIdentity(verified.identity);
+  const signedIn = await signInWithGoogleIdentity(verified.identity, { origin: url.origin });
   return finish(signedIn.ok ? null : signedIn.error);
 }
 
@@ -194,7 +194,7 @@ export async function googleNative(request: NextRequest) {
   );
   if (!verified.ok) return reply(400, { error: loginErrorForToken(verified.error) });
 
-  const signedIn = await signInWithGoogleIdentity(verified.identity);
+  const signedIn = await signInWithGoogleIdentity(verified.identity, { origin: new URL(request.url).origin });
   if (!signedIn.ok) return reply(400, { error: signedIn.error });
 
   const redirectTo = safeRedirectPath(typeof body?.redirectTo === "string" ? body.redirectTo : "", request.url, `/${lang}/profile`);

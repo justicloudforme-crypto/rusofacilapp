@@ -649,7 +649,7 @@
     "deleteAccountButton": "Eliminar cuenta",
     "deleteAccountEmailSent": "Revisa tu correo — te enviamos un enlace para confirmar la eliminación.",
     "noPasswordHeading": "Contraseña",
-    "noPasswordDescription": "Entras con Google y tu cuenta todavía no tiene contraseña. Si quieres entrar también con tu correo y una contraseña, créala:",
+    "noPasswordDescription": "Entras con Google y tu cuenta no tiene contraseña. Si quieres entrar también con tu correo y una contraseña, créala:",
     "noPasswordLink": "Crear contraseña",
     "deleteAccountWarningNoPassword": "Esta acción es irreversible. Te enviaremos a tu correo un enlace para confirmar la eliminación.",
     "nameLabel": "Nombre",

@@ -17,13 +17,13 @@ export async function sendEmail({
   to: string;
   subject: string;
   html: string;
-}): Promise<void> {
+}): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || "RusoFácilapp <onboarding@resend.dev>";
 
   if (!apiKey) {
     console.log(`[email:demo-mode] to=${to} subject="${subject}"\n${html}`);
-    return;
+    return true;
   }
 
   const resend = new Resend(apiKey);
@@ -35,5 +35,10 @@ export async function sendEmail({
     // the address exists. The console log is this app's only failure
     // signal for now; revisit if email delivery ever needs to be monitored.
     console.error("[email] send failed:", error);
+    return false;
   }
+  // 7.268: ответ «ушло/не ушло» — для вызывающих, которым неудача нужна в
+  // Sentry (письмо о первой привязке Google, `google-auth/sign-in.ts`).
+  // Прежние вызовы ответ не читают.
+  return true;
 }
