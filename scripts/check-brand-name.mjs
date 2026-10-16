@@ -181,6 +181,12 @@ const IDENT_ALLOWED = new Map([
 ]);
 
 /** file → { hits, why }. `hits` is exact; see the header on why. */
+// Журналы, которые растут каждый заход (7.270): архив месяца и архив
+// закрытых долгов — продолжение PROGRESS.md, и правило у них то же, что у
+// него (`hits: null` ниже): журнал, который не может записать ошибку, не
+// может записать и её исправление.
+const LOG_FILES = /^docs\/progress-archive\/(runs-\d{4}-\d{2}|debts-closed)\.md$/;
+
 const ALLOWED = new Map([
   [
     // Найдено 08.09.2026: этот файл приехал в main с PR #220 и сделал
@@ -260,6 +266,47 @@ const ALLOWED = new Map([
         "The project log. It quotes wrong spellings as evidence of what was found " +
         "and when; a log that cannot record a mistake cannot record its fix.",
     },
+  ],
+  // Архив PROGRESS.md (7.270, 15.10.2026): дословные куски прежнего файла,
+  // который стоял здесь с `hits: null`. Части заморожены (их целость
+  // стережёт check:progress-size), поэтому число закреплено точно: правка
+  // архива — отдельное событие, а не тихая опечатка. Журналы, которые
+  // продолжают расти (runs-ГГГГ-ММ.md, debts-closed.md), — ниже в LOG_FILES.
+  [
+    "docs/progress-archive/INDEX.md",
+    { hits: 1, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-02-section-7-runs-7.1-7.91.md",
+    { hits: 6, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-03-runs-7.228-7.269.md",
+    { hits: 8, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-04-runs-7.203-7.227.md",
+    { hits: 3, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-05-runs-7.172-7.202.md",
+    { hits: 4, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-06-runs-7.134-7.171.md",
+    { hits: 8, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-07-runs-7.93-7.133.md",
+    { hits: 14, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-09-debts-section-7.12.md",
+    { hits: 11, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
+  ],
+  [
+    "docs/progress-archive/part-10-august-2026.md",
+    { hits: 2, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },
   ],
   [
     "bots/logs/history_bot.err.log",
@@ -416,7 +463,7 @@ function scan() {
   }
 
   const failures = [];
-  const unexpected = wrong.filter((hit) => !ALLOWED.has(hit.file));
+  const unexpected = wrong.filter((hit) => !ALLOWED.has(hit.file) && !LOG_FILES.test(hit.file));
   for (const hit of unexpected) {
     failures.push(
       `${hit.file}:${hit.line}  «${hit.text}» — expected «${CORRECT}»\n      ${hit.context}`,

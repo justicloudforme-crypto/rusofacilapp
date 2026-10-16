@@ -22,10 +22,24 @@
 // по-прежнему СТРОКИ таблицы (значит, дыры в нумерации не появляется), но
 // в счёт открытых не входят.
 //
+// ДВА ФАЙЛА С 15.10.2026 (7.270, разгрузка PROGRESS.md). Таблица долгов
+// живёт в двух местах: открытые, «снятые» и «правила» — в разделе «Долги»
+// основного PROGRESS.md, закрытые — в docs/progress-archive/debts-closed.md
+// (закрыл долг — перенёс строку туда дословно). Счёт ведётся по ОБОИМ
+// файлам сразу, поэтому дыра в нумерации и дубль номера ловятся через
+// границу файлов. Части архива part-*.md хранят строки долгов как снимок
+// на 15.10.2026 и сюда НЕ читаются — иначе каждая строка считалась бы
+// дважды. Пятая и шестая проверки — раскладка: закрытая строка в основном
+// файле (он снова начал бы расти) или незакрытая в архиве (открытый долг
+// пропал бы из виду при чтении основного файла) — отказ.
+//
 // Контроль: `node scripts/count-debts.mjs --plant`.
 import { readFileSync } from "node:fs";
 const PLANT = process.argv.includes("--plant");
-const src = PLANT ? "PROGRESS.md" : (process.argv[2] ?? "PROGRESS.md");
+const MAIN = "PROGRESS.md";
+const CLOSED = "docs/progress-archive/debts-closed.md";
+// Явный аргумент — старый режим «один файл» (для разовых сверок).
+const ONLY = PLANT ? null : (process.argv[2] ?? null);
 // Разбор идёт по ТЕКСТУ, а не по имени файла, и это не украшение: тест
 // src/lib/entry-point.test.ts запрещает скрипту писать файлы на импорте, а
 // подсадке нужен изменённый вариант таблицы. Вариант живёт в памяти —
@@ -46,6 +60,11 @@ for (const line of text.split("\n")) {
   rows.push({ n, state });
 }
 return rows;
+}
+function misplaced(mainText, closedText) {
+  const inMain = collect(mainText).filter((r) => r.state.startsWith("закрыт")).map((r) => r.n);
+  const inClosed = collect(closedText).filter((r) => !r.state.startsWith("закрыт")).map((r) => r.n);
+  return { inMain, inClosed };
 }
 function summarise(rows) {
   const open = rows.filter((r) => r.state.startsWith("открыт"));
@@ -83,8 +102,14 @@ function print(s) {
 if (PLANT) {
   // Подсадка: строка таблицы в состоянии, которого счётчик не знает.
   // Именно так и выглядела бы «потерянная строка», о которой шёл спор.
-  const body = readFileSync("PROGRESS.md", "utf8");
+  const mainText = readFileSync(MAIN, "utf8");
+  const closedText = readFileSync(CLOSED, "utf8");
+  const body = mainText + "\n" + closedText;
   const healthy = summarise(collect(body));
+  const place = misplaced(mainText, closedText);
+  if (place.inMain.length || place.inClosed.length) {
+    console.log(`  ЛОЖНО КРАСНЫЙ — раскладка здоровых файлов: закрытых в основном ${place.inMain.length}, незакрытых в архиве ${place.inClosed.length}`);
+  }
   let ok = healthy.balanced;
   console.log(`  ${ok ? "молчит" : "ЛОЖНО КРАСНЫЙ"} — здоровая таблица (отрицательный контроль)`);
 
@@ -135,12 +160,46 @@ if (PLANT) {
       `против ${healthy.dupes.length} у здоровой (гейт кодом выхода, долг 165)`,
   );
 
-  ok &&= caught1 && caught2 && caught3 && caught4 && caught5 && caught6;
-  console.log(ok ? "count:debts --plant — 6 из 6 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
+  // 7 и 8. Раскладка по двум файлам (7.270): закрытая строка, оставленная
+  //    в основном файле, и открытая, уехавшая в архив закрытых.
+  const firstClosed = collect(closedText)[0];
+  const firstOpen = collect(mainText).find((r) => r.state.startsWith("открыт"));
+  const closedLine = closedText.split("\n").find((l) => new RegExp(`^\\|\\s*${firstClosed.n}\\s*\\|`).test(l));
+  const openLine = mainText.split("\n").find((l) => new RegExp(`^\\|\\s*${firstOpen.n}\\s*\\|`).test(l));
+  const p7 = misplaced(mainText + "\n" + closedLine, closedText.replace(closedLine, ""));
+  const caught7 = p7.inMain.length === 1 && p7.inMain[0] === firstClosed.n;
+  console.log(`  ${caught7 ? "поймано" : "ПРОПУЩЕНО"} — закрытая строка ${firstClosed.n} оставлена в основном файле`);
+  const p8 = misplaced(mainText.replace(openLine, ""), closedText + "\n" + openLine);
+  const caught8 = p8.inClosed.length === 1 && p8.inClosed[0] === firstOpen.n;
+  console.log(`  ${caught8 ? "поймано" : "ПРОПУЩЕНО"} — открытая строка ${firstOpen.n} уехала в архив закрытых`);
+
+  ok &&= !place.inMain.length && !place.inClosed.length;
+  ok &&= caught1 && caught2 && caught3 && caught4 && caught5 && caught6 && caught7 && caught8;
+  console.log(ok ? "count:debts --plant — 8 из 8 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
   process.exitCode = ok ? 0 : 1;
 } else {
-  const s = summarise(collect(readFileSync(src, "utf8")));
+  const mainText = ONLY ? readFileSync(ONLY, "utf8") : readFileSync(MAIN, "utf8");
+  const closedText = ONLY ? "" : readFileSync(CLOSED, "utf8");
+  const s = summarise(collect(mainText + "\n" + closedText));
   print(s);
+  if (!ONLY) {
+    const place = misplaced(mainText, closedText);
+    console.log(`  файлы: ${MAIN} — ${collect(mainText).length} строк, ${CLOSED} — ${collect(closedText).length} строк`);
+    if (place.inMain.length) {
+      console.error(
+        `count:debts — ОТКАЗ: закрытые строки в ${MAIN}: ${place.inMain.join(", ")}.\n` +
+          `  Закрыл долг — перенеси строку дословно в ${CLOSED} на место по номеру.`,
+      );
+      process.exitCode = 1;
+    }
+    if (place.inClosed.length) {
+      console.error(
+        `count:debts — ОТКАЗ: незакрытые строки в ${CLOSED}: ${place.inClosed.join(", ")}.\n` +
+          `  Открытые, «снятые» и «правила» живут в разделе «Долги» ${MAIN}.`,
+      );
+      process.exitCode = 1;
+    }
+  }
   if (!s.balanced) {
     console.error(
       "count:debts — ОТКАЗ: сумма категорий не сходится с числом строк таблицы долгов.\n" +
