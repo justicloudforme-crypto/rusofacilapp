@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -19,6 +19,54 @@ import { describe, expect, it } from "vitest";
  */
 
 const PROGRESS = readFileSync(join(process.cwd(), "PROGRESS.md"), "utf8");
+
+/**
+ * 15.10.2026 (7.270): PROGRESS.md grew to 6.8 MB and stopped being readable
+ * end to end, so the history moved, verbatim, to docs/progress-archive/.
+ * The main file now carries only what is in force. Two consequences here:
+ *
+ * - MAIN_QUESTIONS below must be answered by the main file itself — that is
+ *   what a cold reader actually reads first;
+ * - the long-standing COLD_START_QUESTIONS must still be answered by the
+ *   document SET (main + archive): an answer may move to the archive, it may
+ *   not disappear. Size and archive integrity are guarded separately by
+ *   `npm run check:progress-size`.
+ */
+const ARCHIVE_DIR = join(process.cwd(), "docs", "progress-archive");
+const ARCHIVE = readdirSync(ARCHIVE_DIR)
+  .filter((name) => name.endsWith(".md"))
+  .sort()
+  .map((name) => ({ name, text: readFileSync(join(ARCHIVE_DIR, name), "utf8") }));
+const DOC_SET = [PROGRESS, ...ARCHIVE.map((f) => f.text)].join("\n");
+
+const MAIN_QUESTIONS: [string, string][] = [
+  ["how do I read this file", "Основной файл читать целиком"],
+  ["where does the history live", "docs/progress-archive/"],
+  ["where do new run details go", "runs-ГГГГ-ММ.md"],
+  ["what is this project", "## 0. ЧТО ЭТО ЗА ПРОЕКТ"],
+  ["is the app published", "в Google Play с 07.10.2026"],
+  ["what is the stack", "Next.js 16.3"],
+  ["where does production data live", "Turso"],
+  ["how do I run and check it", "## 1. КАК ЗАПУСТИТЬ И ПРОВЕРИТЬ"],
+  ["is my local main up to date", "git merge --ff-only origin/main"],
+  ["is prod running the code I am looking at", "sentry-release"],
+  ["what state is it in", "## 2. ТЕКУЩЕЕ СОСТОЯНИЕ"],
+  ["which shell version is in main", "versionCode 17"],
+  ["what rules are in force", "## 3. ПРАВИЛА РАБОТЫ И РЕШЕНИЯ ВЛАДЕЛЬЦА"],
+  ["in which order are PRs merged", "Порядок мержа"],
+  ["may I write to the production database", "Запись в прод — только с прямого разрешения владельца"],
+  ["when is a new AAB needed", "AAB нужен только при"],
+  ["when may I trust a check that returns zero", "## 4. ПРАВИЛА ЗАМЕРА"],
+  ["does that apply to before/after comparisons too", "Сравнение двух пустых выборок обязано падать"],
+  ["where are the CI exception lists", "<!-- ci-verify-exceptions:start -->"],
+  ["where are the open debts", "## 6. ДОЛГИ"],
+  ["how are open debts written down", "условие → триггер → следствие"],
+  ["where are the closed debts", "docs/progress-archive/debts-closed.md"],
+  ["what waits for the owner", "## 7. ЖДЁТ РЕШЕНИЯ ВЛАДЕЛЬЦА"],
+  ["what happened recently", "## 8. ПОСЛЕДНИЕ ЗАХОДЫ"],
+  ["what is in the archive", "## 9. АРХИВ — ОГЛАВЛЕНИЕ"],
+  ["where old and new decisions disagree", "## 10. СПОРНЫЕ МЕСТА"],
+];
 
 /** Each entry is a question a cold reader has, and a string in the file
  * that answers it. Deliberately phrased as questions — when one of these
@@ -186,14 +234,23 @@ const COLD_START_QUESTIONS: [string, string][] = [
 
 describe("PROGRESS.md is usable from a cold start", () => {
   it("is not empty or truncated", () => {
-    // The 0-byte incident. 100 kB is far below the real size (~223 kB) and
-    // far above anything an accident would leave behind.
+    // The 0-byte incident. 100 kB is far below the real size (~268 kB after
+    // the 7.270 split) and far above anything an accident would leave behind.
+    // The upper bound lives in scripts/check-progress-size.mjs.
     expect(PROGRESS.length).toBeGreaterThan(100_000);
     expect(PROGRESS.startsWith("# PROGRESS.md")).toBe(true);
   });
 
-  it("answers every question a cold reader starts with", () => {
-    const unanswered = COLD_START_QUESTIONS.filter(([, marker]) => !PROGRESS.includes(marker)).map(
+  it("answers in the MAIN file every question a cold reader starts with", () => {
+    const unanswered = MAIN_QUESTIONS.filter(([, marker]) => !PROGRESS.includes(marker)).map(
+      ([question, marker]) => `${question}  (looked for: ${marker})`,
+    );
+    expect(unanswered).toEqual([]);
+  });
+
+  it("still answers every older question somewhere in the document set (main + archive)", () => {
+    expect(ARCHIVE.length).toBeGreaterThanOrEqual(10);
+    const unanswered = COLD_START_QUESTIONS.filter(([, marker]) => !DOC_SET.includes(marker)).map(
       ([question, marker]) => `${question}  (looked for: ${marker})`,
     );
     expect(unanswered).toEqual([]);
@@ -211,7 +268,7 @@ describe("PROGRESS.md is usable from a cold start", () => {
     // The duplicated-block incident: a patch inserted its section twice and
     // the file carried two near-identical copies of 240 lines.
     const headings = PROGRESS.split("\n").filter((line) => line.startsWith("## "));
-    expect(headings.length).toBeGreaterThan(20);
+    expect(headings.length).toBeGreaterThan(10);
     const seen = new Set<string>();
     const repeated: string[] = [];
     for (const h of headings) {
@@ -225,7 +282,7 @@ describe("PROGRESS.md is usable from a cold start", () => {
     // The standing content check, applied to the document itself — it
     // quotes Russian and Spanish side by side on almost every page.
     const mixed = new Set<string>();
-    for (const word of PROGRESS.split(/[^\p{L}]+/u)) {
+    for (const word of DOC_SET.split(/[^\p{L}]+/u)) {
       if (/[А-Яа-яЁё]/.test(word) && /[A-Za-z]/.test(word)) mixed.add(word);
     }
     expect([...mixed]).toEqual([]);
