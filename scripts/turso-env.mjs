@@ -44,6 +44,14 @@ function parseEnvFile(text) {
  * Возвращает `{ url, authToken, source }` или бросает ошибку с понятным
  * текстом. Окружение главнее файла; файл читается, только если его назвали
  * явно флагом `--env=`.
+ *
+ * @param {{
+ *   argv?: string[],
+ *   env?: Record<string, string | undefined>,
+ *   root?: string,
+ *   read?: (file: string, encoding: "utf8") => string,
+ * }} [options]
+ * @returns {{ url: string, authToken: string, source: string }}
  */
 export function readTursoEnv({ argv = process.argv.slice(2), env = process.env, root = PROJECT_ROOT, read = readFileSync } = {}) {
   const file = argv.find((a) => a.startsWith("--env="))?.slice(6);
