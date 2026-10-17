@@ -52,25 +52,18 @@
  *   · ПЕРЕНЕСТИ. Обе становятся отслеживаемыми сразу, но это запись в
  *     боевую базу по данным из чужой панели.
  *
- *   node scripts/backfill-subscription-payments.mjs              # сухой прогон
+ * Ключ — переменными окружения в той же строке или --env=<файл вне папки
+ * проекта> (scripts/turso-env.mjs, раздел 3.19 п. 4):
+ *
+ *   TURSO_DATABASE_URL=… TURSO_AUTH_TOKEN=… node scripts/backfill-subscription-payments.mjs   # сухой прогон
  *   node scripts/backfill-subscription-payments.mjs --apply --yes-write-to-prod
  */
-import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { createClient } from "@libsql/client";
+import { readTursoEnv } from "./turso-env.mjs";
 
 const argv = process.argv.slice(2);
 const APPLY = argv.includes("--apply") && argv.includes("--yes-write-to-prod");
-
-function env() {
-  const file = argv.find((a) => a.startsWith("--env="))?.slice(6) ?? ".env.turso";
-  const out = {};
-  for (const line of readFileSync(file, "utf8").split("\n")) {
-    const i = line.indexOf("=");
-    if (i > 0) out[line.slice(0, i).trim()] = line.slice(i + 1).trim();
-  }
-  return out;
-}
 
 /** Строки, которым перенос нужен: подписка Stripe без единой строки журнала. */
 export function needBackfill(subscriptions, journalRows) {
@@ -92,8 +85,8 @@ export function plannedRow(subscription, paymentIntentId) {
 }
 
 async function main() {
-  const e = env();
-  const db = createClient({ url: e.TURSO_DATABASE_URL, authToken: e.TURSO_AUTH_TOKEN });
+  const { url, authToken } = readTursoEnv({ argv });
+  const db = createClient({ url, authToken });
 
   const subs = (
     await db.execute(

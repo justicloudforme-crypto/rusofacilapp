@@ -857,6 +857,12 @@ model FlashcardCard {
 
   @@index([category])
   @@index([level])
+  // Перевод слова по тапу в рассказе (`lookupWordBank`, src/lib/word-bank.ts):
+  // `russian IN (…)` без индекса — полный проход по всем карточкам на каждый
+  // промах кеша (замер 17.10.2026 на проде: 5771 прочитанная строка).
+  // Одобрено владельцем 17.10.2026, заход 7.272; на прод его везёт
+  // CREATE_INDEX_STATEMENTS в prisma/ensure-schema-sync.ts, сторож — check:russian-index.
+  @@index([russian])
 }
 
 // A Russian idiom/proverb shown on /vocabulary's "Idioms" tab. Same
