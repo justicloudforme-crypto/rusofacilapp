@@ -28,7 +28,7 @@ All UI work follows these rules:
   on the Capacitor build (no cursor, no mouse) — treat any `hover:`-gated
   affordance as broken by default, not just suboptimal.
 - `viewport-fit=cover` + safe-area-inset for every fixed/sticky element.
-  `viewportFit: "cover"` is already set (`src/app/[lang]/layout.tsx:63`) and
+  `viewportFit: "cover"` is already set (`src/app/[lang]/layout.tsx:81`) and
   safe-area insets are already used in `src/app/globals.css`,
   `src/app/[lang]/layout.tsx`, and `src/components/stories/StoryText.tsx` —
   follow that existing pattern for any new fixed/sticky/bottom-sheet element
@@ -36,9 +36,10 @@ All UI work follows these rules:
   ignores the notch/home-indicator area.
 - Android hardware back button: already handled by
   `src/components/NativeBackButtonHandler.tsx` — any new full-screen
-  overlay/modal/sheet must register with it (or otherwise cooperate with it)
-  instead of only listening for a close button/Escape, or Android's back
-  gesture will exit the app instead of closing the UI.
+  overlay/modal/sheet/portal must register through
+  `useBackLayer(open, onClose)` (`src/lib/useBackLayer.ts`, guarded by
+  `check:native-back`) instead of only listening for a close button/Escape,
+  or Android's back gesture will exit the app instead of closing the UI.
 - `100dvh`, never `100vh`, for any full-viewport-height container (browser
   chrome inside the WebView still shifts the visual viewport). The current
   baseline (`AUDIT.md`) already found no offending `100vh`/`h-screen` usage
@@ -68,13 +69,21 @@ Narrate once, save to cloud, reuse the saved file. **Never** regenerate
 audio for content that already has it — the cache key is the row's `id`
 (via `AudioAsset(contentType, contentId, itemKey)`), not a hash of the
 text, so an editorial tweak to a card's wording does not need (and must
-not trigger) a re-narration. Browser `speechSynthesis` is an **emergency
-fallback only** (already wired into `SpeakButton.tsx` — used only when
-`audioUrl` is unset or fails to load), never the primary playback path
-for any new feature.
+not trigger) a re-narration; any re-narration needs the owner's explicit
+approval. **Only paid, recorded narration ever plays.** There is no
+browser `speechSynthesis` anywhere in the product — not even as a
+fallback (removed 11.09.2026, runs 7.161–7.168; `check:no-runtime-tts`
+fails on any call in `src/` or in the built bundles). A "listen" button is
+rendered only when a real recorded file exists (`check:silent-listen`);
+with no `audioUrl` there is no button, not a synthetic voice.
 
-Pipeline: generate locally with OpenAI `gpt-4o-mini-tts`, voice **`onyx`**
-(`prisma/generate-*-audio.ts`, Whisper-verified, ≤5 retries) → migrate to
+Pipeline: generate locally with OpenAI `gpt-4o-mini-tts` per
+`docs/audio-passport.md` (`check:audio-passport`): the story narrator is
+**`onyx`**, characters keep their own voices, and the voice for any new or
+cut clip is taken from `AudioAsset.voice` of a fresh snapshot, never
+guessed (`check:synth-voice-source`); Whisper audit with a positive
+control, ≤5 retries, and the owner's ear is final — stress is not
+machine-checkable (`prisma/generate-*-audio.ts`) → migrate to
 **Vercel Blob** (`npm run migrate:audio-to-blob`) → the permanent
 `AudioAsset.audioUrl` is the only source of truth in production.
 `public/audio/` is a local generation cache only, gitignored, never read
