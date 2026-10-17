@@ -23,6 +23,7 @@
  */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { readTursoEnv } from "../../scripts/turso-env.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n) => argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3);
@@ -30,13 +31,6 @@ const SQL_DIR = arg("sql");
 const OUT = arg("out");
 const LOCAL_DB = arg("db");
 const AGAINST_PROD = argv.includes("--against-prod");
-
-function loadEnvTurso() {
-  for (const line of readFileSync(".env.turso", "utf8").split("\n")) {
-    const m = line.match(/^([A-Z_]+)=(.*)$/);
-    if (m) process.env[m[1]] = m[2].trim();
-  }
-}
 
 function typed(v) {
   if (v === null || v === undefined) return { type: "null" };
@@ -65,8 +59,9 @@ async function main() {
   const totalStatements = plan.reduce((a, p) => a + p.stmts.length, 0);
 
   if (AGAINST_PROD) {
-    loadEnvTurso();
-    if (!/^libsql:\/\//.test(process.env.TURSO_DATABASE_URL ?? "")) throw new Error("нет боевого TURSO_DATABASE_URL");
+    const creds = readTursoEnv();
+    process.env.TURSO_DATABASE_URL = creds.url;
+    process.env.TURSO_AUTH_TOKEN = creds.authToken;
     console.log(
       `ПРОТИВ БОЕВОЙ БАЗЫ. Поверхностей ${plan.length}, запросов ${totalStatements}. Ожидаемая цена названа ДО первого запроса:\n` +
         `  до индекса — порядка 250 000 просмотренных строк (сумма замеров 7.172 по этим же поверхностям);\n` +
