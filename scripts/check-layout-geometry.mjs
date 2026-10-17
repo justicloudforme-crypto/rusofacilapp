@@ -170,12 +170,20 @@ const ALL_PAGES = [
    * that fit — so a regression that widens every board is told apart from
    * one that only widens the big ones.
    *
-   * contentOnly: both need a WordGamePuzzle row, which CI's empty database
-   * has not got.
+   * contentOnly: all three need a WordGamePuzzle row, which CI's empty
+   * database has not got.
+   *
+   * ДОЛГ 64 (7.272): `inCiFixture` — строка, на которой стоит страница,
+   * лежит в `e2e/fixtures/word-games.json` (`WORD_SEARCH/A1/6` темы
+   * `comida` и `CROSSWORD/A1/6`, взяты с прода как есть). Такая страница в
+   * `--ci` больше не выбрасывается из списка и не «пропускается»: не
+   * отдала 200 — красный. До 7.272 обе выпадали из прогона CI целиком —
+   * 12 измерений из 84 (две страницы × шесть ширин) не делались ни на
+   * что. Убрать строку из фикстуры — шаг «Rendered surface» краснеет.
    */
-  { path: "/es/sopa-de-letras-ruso-comida", contentOnly: true },
+  { path: "/es/sopa-de-letras-ruso-comida", contentOnly: true, inCiFixture: true },
   { path: "/es/sopa-de-letras-ruso-familia", contentOnly: true },
-  { path: "/es/crucigramas-ruso-principiantes", contentOnly: true },
+  { path: "/es/crucigramas-ruso-principiantes", contentOnly: true, inCiFixture: true },
   /**
    * The games entry page, added 04.09.2026 with the free-sample grid it
    * now carries. That grid is the exact shape this check's sibling
@@ -203,7 +211,7 @@ function overriddenPaths() {
 const OVERRIDE = overriddenPaths();
 const PAGES = OVERRIDE
   ? OVERRIDE.map((path) => ({ path }))
-  : ALL_PAGES.filter((p) => !(CI_MODE && p.contentOnly));
+  : ALL_PAGES.filter((p) => !(CI_MODE && p.contentOnly && !p.inCiFixture));
 
 /**
  * 320 is the narrowest phone still in use and the width the footer row
@@ -735,7 +743,9 @@ async function runControl(browser, engineName, contextOptions) {
 async function inspectAndReport(ctx, page, tally) {
   const { problems, measured, status } = await inspect(ctx, page);
   const name = page.label ?? page.path;
-  const contentOnly = Boolean(page.contentOnly);
+  // Страница, чья строка лежит в фикстуре CI (долг 64), в `--ci` обязана
+  // рендериться так же, как страница без строк в базе.
+  const contentOnly = Boolean(page.contentOnly) && !(CI_MODE && page.inCiFixture);
   if (status !== 200) {
     if (contentOnly) {
       tally.notMeasured += 1;
@@ -745,7 +755,12 @@ async function inspectAndReport(ctx, page, tally) {
     }
     tally.missing += 1;
     tally.missingPaths.add(`${name} (http ${status})`);
-    console.log(`  FAIL  ${name.padEnd(28)} http ${status} — страница обязана рендериться на любой базе`);
+    console.log(
+      `  FAIL  ${name.padEnd(28)} http ${status} — ` +
+        (page.inCiFixture && CI_MODE
+          ? "её строка лежит в e2e/fixtures/word-games.json (долг 64), страница обязана рендериться"
+          : "страница обязана рендериться на любой базе")
+    );
     return;
   }
   tally.measured += 1;
@@ -861,7 +876,7 @@ async function main() {
     console.log(`--require-content: ${tally.notMeasured} измерений пропущено, а прогон обязан быть полным`);
     failures += tally.notMeasured;
   }
-  const floor = PAGES.filter((p) => !p.contentOnly).length;
+  const floor = PAGES.filter((p) => !p.contentOnly || (CI_MODE && p.inCiFixture)).length;
   if (tally.measured < floor) {
     console.log(`пол измерений не взят: ${tally.measured} < ${floor}`);
     failures += 1;
