@@ -6,3 +6,6 @@
 # and blows past the CLI's 15,000-file-per-deploy limit (confirmed: 22,644 files
 # without this, deploy rejected outright).
 /public/audio/
+# Банк филвордов прода фикстурой (≈1,5 МБ gzip, долг 64, 7.272) — нужен только
+# проверке check:word-search в CI; сайт его не читает, в деплой не грузим.
+/prisma/fixtures/

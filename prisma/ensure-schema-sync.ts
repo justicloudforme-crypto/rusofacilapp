@@ -380,6 +380,14 @@ const CREATE_INDEX_STATEMENTS: ReadonlyArray<{ index: string; table: string; sta
     table: "AudioAsset",
     statement: `CREATE INDEX IF NOT EXISTS "AudioAsset_text_idx" ON "AudioAsset"("text")`,
   },
+  // Перевод слова по тапу: `FlashcardCard.russian IN (…)`. Создан на проде
+  // 17.10.2026 в заходе 7.272 (с разрешения владельца); здесь — чтобы схема в
+  // коде и новая база совпадали с продом, повторный билд — пустое действие.
+  {
+    index: "FlashcardCard_russian_idx",
+    table: "FlashcardCard",
+    statement: `CREATE INDEX IF NOT EXISTS "FlashcardCard_russian_idx" ON "FlashcardCard"("russian")`,
+  },
 ];
 
 /** Индексы, которые на проде БЫЛИ до 11.09.2026. Список не написан от

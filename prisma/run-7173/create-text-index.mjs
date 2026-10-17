@@ -15,16 +15,10 @@
  */
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { readTursoEnv } from "../../scripts/turso-env.mjs";
 
 const APPLY = process.argv.includes("--apply");
 const DRY = process.argv.includes("--dry-run");
-
-function env() {
-  for (const line of readFileSync(".env.turso", "utf8").split("\n")) {
-    const m = line.match(/^([A-Z_]+)=(.*)$/);
-    if (m) process.env[m[1]] = m[2].trim();
-  }
-}
 
 /** Операторы берутся ТЕКСТОМ из ensure-schema-sync: один список на прод и
  * на каждую будущую сборку, чтобы эти два пути не разошлись. */
@@ -58,11 +52,8 @@ async function pipeline(host, token, requests) {
 
 async function main() {
   const list = statements();
-  env();
-  const url = process.env.TURSO_DATABASE_URL ?? "";
-  if (!/^libsql:\/\//.test(url) || !process.env.TURSO_AUTH_TOKEN) throw new Error("нужны боевые ключи в .env.turso");
+  const { url, authToken: token } = readTursoEnv();
   const host = url.replace(/^libsql:\/\//, "https://");
-  const token = process.env.TURSO_AUTH_TOKEN;
 
   console.log("SQL, который будет отправлен в боевую базу:");
   for (const s of list) console.log(`  ${s};`);

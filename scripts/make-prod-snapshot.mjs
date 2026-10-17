@@ -24,6 +24,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync, statSync } from "node:fs"
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { DEFAULT_SNAPSHOT, SNAPSHOT_DIR } from "./prod-read-budget.mjs";
+import { readTursoEnv } from "./turso-env.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? d;
@@ -31,11 +32,14 @@ const OUT = arg("out", DEFAULT_SNAPSHOT);
 const DRY = argv.includes("--dry-run");
 
 async function main() {
-  const raw = process.env.TURSO_DATABASE_URL ?? "";
-  if (!/^libsql:\/\//.test(raw) || !process.env.TURSO_AUTH_TOKEN) {
-    console.error("нужен боевой TURSO_DATABASE_URL и TURSO_AUTH_TOKEN (в .env.turso, только чтение)");
+  let creds;
+  try {
+    creds = readTursoEnv({ argv });
+  } catch (error) {
+    console.error(error.message);
     process.exit(1);
   }
+  const raw = creds.url;
   const host = raw.replace(/^libsql:\/\//, "https://");
 
   let rowsRead = 0;
@@ -43,7 +47,7 @@ async function main() {
     const list = Array.isArray(stmts) ? stmts : [stmts];
     const res = await fetch(`${host}/v2/pipeline`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${process.env.TURSO_AUTH_TOKEN}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${creds.authToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         requests: [...list.map((s) => ({ type: "execute", stmt: typeof s === "string" ? { sql: s } : s })), { type: "close" }],
       }),
