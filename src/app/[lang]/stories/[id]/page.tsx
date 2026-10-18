@@ -25,6 +25,7 @@ import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle } from "@/lib/frozen-pages";
 import { storyTitles } from "@/lib/story-title";
+import { storyMetaDescription } from "@/lib/story-meta";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates, truncateForMeta } from "@/lib/site";
 
@@ -115,14 +116,9 @@ export async function generateMetadata({
     return { ...FALLBACK_STORY_METADATA[lang], alternates };
   }
   if (!story) return {};
-  const rawDescription =
-    (() => {
-      const text = lang === "ru" ? (story.descriptionRu ?? story.description) : story.description;
-      return text && fixBrandSpelling(text);
-    })() ??
-    (lang === "ru"
-      ? `Рассказ на русском языке, уровень ${story.level}, в RusoFácilapp.`
-      : `Cuento en ruso, nivel ${story.level}, en RusoFácilapp.`);
+  // Только на языке страницы: на /ru испанского описания больше нет
+  // (долг 205, 7.274) — см. src/lib/story-meta.ts.
+  const rawDescription = storyMetaDescription(story, lang, storyTitles(story, lang).primary);
   // 190 of the 650 story descriptions ran past the ~155 characters Google
   // shows in a snippet, up to 283 (measured on the live site 30.08.2026).
   // truncateForMeta is the same cap the glossary and the lessons already
