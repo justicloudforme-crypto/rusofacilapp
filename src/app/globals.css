@@ -72,11 +72,10 @@
    font-size scales the whole interface together (not just body text) rather
    than only enlarging some elements and leaving buttons/nav cramped by
    comparison. Brand colors are left untouched — this is a comfort mode, not
-   a full retheme. Repointed to the new --color-background/--color-foreground
-   names; the literal values (#f6efdc / #2b2318) are unchanged. */
+   a full retheme. Its two colors live in tokens.json (`color.neutral.reading`)
+   and arrive through tokens.generated.css since run 7.273; only the sizing
+   half stays here. */
 :root[data-theme="reading"] {
-  --color-background: #f6efdc;
-  --color-foreground: #2b2318;
   font-size: 106%;
 }
 :root[data-theme="reading"] body {
