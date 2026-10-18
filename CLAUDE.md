@@ -41,9 +41,9 @@ All UI work follows these rules:
   `check:native-back`) instead of only listening for a close button/Escape,
   or Android's back gesture will exit the app instead of closing the UI.
 - `100dvh`, never `100vh`, for any full-viewport-height container (browser
-  chrome inside the WebView still shifts the visual viewport). The current
-  baseline (`AUDIT.md`) already found no offending `100vh`/`h-screen` usage
-  in scope — keep it that way.
+  chrome inside the WebView still shifts the visual viewport). The August
+  2026 audit (`AUDIT.md`, now an archive) found no offending
+  `100vh`/`h-screen` usage in scope — keep it that way.
 - `position: fixed` is not allowed on text inputs or any element that can
   receive focus and open the keyboard — on Android/iOS WebViews a fixed
   input can be mispositioned or covered when the on-screen keyboard resizes
@@ -52,16 +52,29 @@ All UI work follows these rules:
 - Do not change business logic, routing, or the Stripe integration without an
   explicit request — visual/UI work should not touch `src/lib/stripe.ts`,
   `src/app/api/checkout/`, `src/app/api/webhooks/`, or `src/app/api/subscription/`.
-- Any visual change goes through design tokens (`src/app/globals.css`), not
-  new one-off hex colors, arbitrary Tailwind bracket values, or ad hoc inline
-  styles. If a needed token doesn't exist yet, add it to `globals.css` rather
-  than hardcoding a value at the call site.
+- Any visual change goes through design tokens, not new one-off hex colors,
+  arbitrary Tailwind bracket values, or ad hoc inline styles. The one source
+  of token values is `tokens.json` (repo root): edit it, then run
+  `npm run build:tokens`, which regenerates `src/app/tokens.generated.css`
+  (never hand-edit that file). `src/app/globals.css` imports the generated
+  file and is what the build compiles; it holds the Tailwind `@theme` wiring
+  and theme switches, not new color values. Measured 17.10.2026 (run 7.272):
+  `next build` does not run `build:tokens`, so the committed generated file
+  is what ships — it matches `tokens.json` exactly (regeneration diff: 0
+  lines). If a needed token doesn't exist yet, add it to `tokens.json`
+  rather than hardcoding a value at the call site.
 - Each step is its own commit — don't bundle unrelated changes.
-- Before any large change, present a plan and wait for confirmation before
-  implementing.
+- Owner's rule (17.10.2026, PROGRESS.md 3.19): work without intermediate
+  questions and finish with one final report. A large change is not held
+  for a plan and confirmation; it is described in that report — what
+  changed, why, and how it was verified. What still needs the owner's
+  explicit permission in the task itself is unchanged: writes to the
+  production database, schema changes, webhooks and payments (PROGRESS.md
+  3.1, 3.2, 3.7).
 
-See `AUDIT.md` for the current baseline (visual inconsistencies, mobile-
-readiness gaps, missing states, confirmed bugs) this work is meant to fix.
+`AUDIT.md` is the August 2026 baseline audit, kept as an archive. The
+current state, rules and open debts live in `PROGRESS.md` (sections 2, 3
+and 6).
 
 ## ЗОЛОТОЕ ПРАВИЛО ПРОЕКТА — озвучка
 

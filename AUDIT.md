@@ -1,4 +1,12 @@
-# RusoFácilapp — UI/Mobile-Readiness Audit
+# RusoFácilapp — UI/Mobile-Readiness Audit (архив, август 2026)
+
+> **АРХИВ — АВГУСТ 2026.** Это исходный аудит интерфейса и готовности к
+> мобильной оболочке от 25.08.2026, сохранён как история и больше не
+> обновляется: многое из найденного здесь с тех пор исправлено, часть путей
+> и чисел устарела. **Актуальное состояние, правила и открытые долги — в
+> [`PROGRESS.md`](PROGRESS.md)** (разделы 2, 3 и 6); правила интерфейса —
+> в [`CLAUDE.md`](CLAUDE.md). Помечено архивом 17.10.2026 (заход 7.272).
+
 
 Date: 2026-08-25. Scope: read-only code analysis, no changes made. Purpose: prepare
 the ground for a mobile-first design-system pass (site → future mobile app,
