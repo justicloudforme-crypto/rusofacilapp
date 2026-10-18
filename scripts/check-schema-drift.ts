@@ -233,7 +233,12 @@ function connect(): { client: Client; label: string } {
   return { client: createClient({ url: local }), label: `локальная база (${local})` };
 }
 
-/** Позитивный контроль. Подсаживается не в базу — в ТЕКСТ схемы, потому
+/** Подсадки ищут строку схемы по словам, а не по точному числу пробелов
+ * (7.273): `prisma format` выравнивает столбцы по самому длинному полю
+ * модели, и строковая подсадка «isPremium     Boolean  @default(false)»
+ * перестала находиться, как только схему отформатировали.
+ *
+ * Позитивный контроль. Подсаживается не в базу — в ТЕКСТ схемы, потому
  * что сверка сравнивает две стороны, и подсадка в ту, которую можно
  * менять безнаказанно, доказывает ровно то же. ЧЕТЫРЕ формы, по одной на
  * каждый вопрос сверки; четвёртая — обратный вопрос долга 69, и она
@@ -242,12 +247,12 @@ function connect(): { client: Client; label: string } {
 const PLANTS: Array<{ name: string; mutate: (schema: string) => string; expect: (f: Finding) => boolean }> = [
   {
     name: "nullable-колонка объявлена NOT NULL (форма долга 68)",
-    mutate: (s) => s.replace("descriptionRu String?", "descriptionRu String"),
+    mutate: (s) => s.replace(/(\bdescriptionRu\s+)String\?/, "$1String"),
     expect: (f) => f.model === "Story" && f.column === "descriptionRu" && f.kind === "nullability",
   },
   {
     name: "дефолт в схеме не тот, что в базе",
-    mutate: (s) => s.replace("isPremium     Boolean  @default(false)", "isPremium     Boolean  @default(true)"),
+    mutate: (s) => s.replace(/(\bisPremium\s+Boolean\s+)@default\(false\)/, "$1@default(true)"),
     expect: (f) => f.model === "Story" && f.column === "isPremium" && f.kind === "дефолт",
   },
   {
@@ -256,12 +261,12 @@ const PLANTS: Array<{ name: string; mutate: (schema: string) => string; expect: 
     // движение, каким 7.142 сняло `@default(2)` у `User.streakFreezesLeft`
     // и тем же движением лишило сверку второй стороны.
     name: "дефолт есть в базе, а из схемы убран (долг 69)",
-    mutate: (s) => s.replace("isPremium     Boolean  @default(false)", "isPremium     Boolean"),
+    mutate: (s) => s.replace(/(\bisPremium\s+Boolean)\s+@default\(false\)/, "$1"),
     expect: (f) => f.model === "Story" && f.column === "isPremium" && f.kind === "дефолт только в базе",
   },
   {
     name: "колонки, объявленной в схеме, в базе нет",
-    mutate: (s) => s.replace("readingMinutes Int?", "readingMinutesPlanted Int?"),
+    mutate: (s) => s.replace(/\breadingMinutes(\s+Int\?)/, "readingMinutesPlanted$1"),
     expect: (f) => f.model === "Story" && f.column === "readingMinutesPlanted" && f.kind === "нет колонки",
   },
 ];

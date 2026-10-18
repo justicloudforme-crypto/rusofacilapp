@@ -90,6 +90,22 @@ export default function Footer({
           <Link href={`/${lang}/vocabulary`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.footer.vocabularyLink}
           </Link>
+          {/* Same reasoning again, measured 17.10.2026 (run 7.273) against
+              Search Console's "Discovered – not indexed" queue: the navbar's
+              "Audio y video" also lives only in the Practicar dropdown and the
+              drawer, so in server HTML /media sat at depth 4 from /es and the
+              270 media pages it alone links to sat at depth 5 with one inbound
+              link (189 of them in the queue, 70 %, against 54 % at depth 3).
+              /gramatica had the same depth 4; it exists only on /es, so it is
+              printed only there. Guarded by scripts/check-hub-links.mjs. */}
+          <Link href={`/${lang}/media`} className="tap hover:text-foreground/80 active:text-foreground/80">
+            {dict.nav.media}
+          </Link>
+          {lang === "es" && (
+            <Link href="/es/gramatica" className="tap hover:text-foreground/80 active:text-foreground/80">
+              {dict.search.sections.grammar}
+            </Link>
+          )}
           <Link href={`/${lang}/sobre-nosotros`} className="tap hover:text-foreground/80 active:text-foreground/80">
             {dict.nav.about}
           </Link>
