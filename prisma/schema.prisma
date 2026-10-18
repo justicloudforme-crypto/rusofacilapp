@@ -15,25 +15,25 @@ datasource db {
 // role is one of: owner | admin | student
 // (kept as String because SQLite has no native enum type in Prisma)
 model User {
-  id                   String                 @id @default(cuid())
-  email                String                 @unique
-  name                 String?
+  id                    String                 @id @default(cuid())
+  email                 String                 @unique
+  name                  String?
   // One of AVATAR_IDS in src/lib/avatars.ts (e.g. "matryoshka_calm") — never
   // a file path or URL. The avatar itself is a client-rendered component,
   // not a stored asset; this column is only ever a tiny string.
-  avatarId             String                 @default("matryoshka_calm")
-  role                 String                 @default("student")
+  avatarId              String                 @default("matryoshka_calm")
+  role                  String                 @default("student")
   // bcrypt hash, never the plaintext. Null on accounts created before real
   // password auth existed (the old email-only demo flow) — those users are
   // asked to set a password on their next login (see src/lib/auth.ts).
-  passwordHash         String?
+  passwordHash          String?
   // Bumped by "sign out other devices"/change-password/reset-password —
   // every issued session token embeds the version it was signed with (see
   // session-token.ts), so incrementing this invalidates every
   // previously-issued token at once with no server-side session table to
   // store or clean up.
-  sessionVersion       Int                    @default(0)
-  stripeCustomerId     String?                @unique
+  sessionVersion        Int                    @default(0)
+  stripeCustomerId      String?                @unique
   // IANA time zone name reported by the browser (e.g. "America/Tijuana"),
   // written by POST /api/timezone. Null until the user's first page load
   // after this column existed — every reader falls back to UTC, which is
@@ -47,7 +47,7 @@ model User {
   // 7.68). A cookie alone would not do — badge evaluation runs in
   // after(), and a public profile is rendered for a visitor whose time
   // zone is not the profile owner's.
-  timezone             String?
+  timezone              String?
   // ——— Заморозки серии (PROGRESS.md 7.69) ———
   //
   // Both nullable ON PURPOSE. prisma/ensure-schema-sync.ts adds a missing
@@ -77,7 +77,7 @@ model User {
   // exactly how a "spend on read" scheme double-spends. This column exists
   // so a surface that must not run the five-table replay can still show the
   // number, and so there is a record of what the learner was last told.
-  streakFreezesLeft    Int?
+  streakFreezesLeft     Int?
   // The date key ("YYYY-MM-DD", in the learner's own zone) from which
   // freezes apply to this account. Written once, on the first read after
   // the feature shipped, and never moved. This is the load-bearing column:
@@ -88,7 +88,7 @@ model User {
   // A date key rather than a DateTime deliberately: every other date in
   // this system is a key in the learner's zone, and storing an instant here
   // would reintroduce the UTC-boundary ambiguity fixed on 31.08.2026.
-  streakFreezesSince   String?
+  streakFreezesSince    String?
   // ЗАМОК ПРИВЕТСТВИЯ ДНЯ — ПРО АККАУНТ, А НЕ ПРО УСТРОЙСТВО (долг 234).
   //
   // «YYYY-MM-DD» в зоне АККАУНТА — тот же ключ дня, которым считается день
@@ -107,7 +107,7 @@ model User {
   // каждый `SELECT` по `User` — это авария 27.08.2026. NULL читается как
   // «этому аккаунту ещё ни разу не здоровались», и никакого другого
   // значения у пустоты здесь нет.
-  welcomeShownDateKey  String?
+  welcomeShownDateKey   String?
   // МГНОВЕНИЕ ПОКАЗА — ДОЛГ 247, ЗАХОД 7.207.
   //
   // Ключ дня выше отвечает на вопрос «какой это был день» в той зоне,
@@ -129,7 +129,7 @@ model User {
   // ответом для строк, записанных ДО этой правки, и не переписывается.
   //
   // Нуллируемая обязательно — по той же причине, что и колонка выше.
-  welcomeShownAt       DateTime?
+  welcomeShownAt        DateTime?
   // ПЕРВАЯ ПРИВЯЗКА GOOGLE — долг 381, заход 7.268.
   //
   // Мгновение, когда к учётке впервые вошли через Google. NULL — «через
@@ -141,48 +141,48 @@ model User {
   //
   // Нуллируемая обязательно — то же правило, что у колонок выше
   // (`prisma/ensure-schema-sync.ts`, авария 27.08.2026).
-  googleLinkedAt       DateTime?
-  createdAt            DateTime               @default(now())
-  subscriptions        Subscription[]
-  pendingCheckouts     PendingCheckout[]
-  subscriptionPayments SubscriptionPayment[]
-  lessonProgress       LessonProgress[]
-  voiceSubmissions     VoiceSubmission[]
-  examAttempts         ExamAttempt[]
-  flashcardProgress    FlashcardProgress[]
-  storyReadingProgress StoryReadingProgress[]
-  badges               UserBadge[]
+  googleLinkedAt        DateTime?
+  createdAt             DateTime               @default(now())
+  subscriptions         Subscription[]
+  pendingCheckouts      PendingCheckout[]
+  subscriptionPayments  SubscriptionPayment[]
+  lessonProgress        LessonProgress[]
+  voiceSubmissions      VoiceSubmission[]
+  examAttempts          ExamAttempt[]
+  flashcardProgress     FlashcardProgress[]
+  storyReadingProgress  StoryReadingProgress[]
+  badges                UserBadge[]
   // Lazily generated on first visit to the referral tab/link (see
   // src/lib/referral.ts) rather than at signup — most users never open
   // that tab, so this avoids burning a code (and a uniqueness retry loop)
   // for every account ever created.
-  referralCode         String?                @unique
+  referralCode          String?                @unique
   // Set once, at registration, from a ?ref= link — never changed
   // afterwards ("first touch wins"). SetNull (not Cascade) on delete: if a
   // referrer's account is later deleted, the people they referred keep
   // their own accounts, they just lose the (already-resolved) attribution.
-  referredByUserId     String?
-  referredBy           User?                  @relation("UserReferrals", fields: [referredByUserId], references: [id], onDelete: SetNull)
-  referredUsers        User[]                 @relation("UserReferrals")
+  referredByUserId      String?
+  referredBy            User?                  @relation("UserReferrals", fields: [referredByUserId], references: [id], onDelete: SetNull)
+  referredUsers         User[]                 @relation("UserReferrals")
   referralRewardsEarned ReferralReward[]
   // Off by default — a badge/streak profile is only reachable at
   // /u/[publicHandle] once the user explicitly opts in from /profile.
   // publicHandle is lazily generated the same way referralCode is (see
   // src/lib/public-profile.ts): most accounts never enable this, so
   // there's no reason to burn a handle at signup.
-  publicProfileEnabled Boolean                @default(false)
-  publicHandle         String?                @unique
-  ownedGroups          Group[]                @relation("GroupOwner")
-  groupMemberships     GroupMember[]
-  wordGameProgress     WordGameProgress[]
-  studyDays            StudyDay[]
-  offlineReceipts      OfflineReceipt[]
+  publicProfileEnabled  Boolean                @default(false)
+  publicHandle          String?                @unique
+  ownedGroups           Group[]                @relation("GroupOwner")
+  groupMemberships      GroupMember[]
+  wordGameProgress      WordGameProgress[]
+  studyDays             StudyDay[]
+  offlineReceipts       OfflineReceipt[]
   // Коды доступа, которые этот человек погасил и которые он отозвал
   // (PROGRESS.md 7.146). Обе связи — SetNull, а не Cascade: погашенный
   // код остаётся израсходованным, даже если аккаунт удалён; иначе
   // удаление аккаунта возвращало бы код в оборот.
-  redeemedAccessCodes  AccessCode[]           @relation("AccessCodeRedeemer")
-  revokedAccessCodes   AccessCode[]           @relation("AccessCodeRevoker")
+  redeemedAccessCodes   AccessCode[]           @relation("AccessCodeRedeemer")
+  revokedAccessCodes    AccessCode[]           @relation("AccessCodeRevoker")
 }
 
 // One row per (learner, calendar day they studied). The day a learner
@@ -204,21 +204,21 @@ model User {
 // The five progress tables are still read as well, so the history that
 // existed before this table did is not lost.
 model StudyDay {
-  id      String @id @default(cuid())
-  userId  String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   // "YYYY-MM-DD" in the LEARNER's zone at the moment the day was marked —
   // the same key shape everything else in the streak uses, produced by
   // dateKeyIn (src/lib/timezone.ts). Deliberately not a DateTime: an
   // instant would put the UTC day-boundary ambiguity fixed on 31.08.2026
   // straight back in.
-  dateKey String
+  dateKey  String
   // Which surface marked the day first — "lesson" | "story" | "flashcards"
   // | "word-game" | "exam". Only the first mark of a day is kept (the
   // unique below), so this says what the learner opened first that day,
   // not everything they did. Kept because a day mark with no provenance is
   // impossible to argue with when a learner says "but I did study".
-  source  String
+  source   String
   markedAt DateTime @default(now())
 
   // The whole idempotency guarantee of the day mark, in one line: two marks
@@ -230,18 +230,18 @@ model StudyDay {
 // status is one of: active | trialing | past_due | canceled | incomplete_expired
 // (kept as String because SQLite has no native enum type in Prisma)
 model Subscription {
-  id                   String   @id @default(cuid())
-  userId               String
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan                 String
-  status               String   @default("active")
-  currentPeriodEnd     DateTime
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan             String
+  status           String   @default("active")
+  currentPeriodEnd DateTime
 
   // "stripe" (web) | "revenuecat" (native App Store / Play Billing).
   // Defaults to "stripe" so every existing row backfills correctly.
-  provider             String   @default("stripe")
+  provider String @default("stripe")
 
-  stripeSubscriptionId String?  @unique
+  stripeSubscriptionId String? @unique
   stripeCustomerId     String?
 
   // The Stripe PaymentIntent that most recently paid FOR this row.
@@ -282,7 +282,7 @@ model Subscription {
   // Доступ поле НЕ решает: тестовая покупка обязана открывать доступ ровно
   // так же, как боевая, иначе проверить покупку на устройстве нельзя.
   // Nullable: у строк Stripe и у всех строк до этой даты его нет.
-  rcEnvironment           String?
+  rcEnvironment String?
 
   // Когда человек нажал «Отменить подписку». NULL — не отменял.
   //
@@ -307,10 +307,10 @@ model Subscription {
   // Nullable намеренно: `prisma/ensure-schema-sync.ts` добавляет в боевую
   // базу только nullable-колонки, и сверка `scripts/check-schema-drift.ts`
   // ловит расхождение «в схеме NOT NULL, в базе nullable».
-  canceledAt              DateTime?
+  canceledAt DateTime?
 
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   // Covers getLatestSubscription's findFirst({ where: { userId }, orderBy:
@@ -347,7 +347,6 @@ model Subscription {
 // стало неправдой.
 /**
  * ОДНО СОБЫТИЕ ВЕБХУКА RevenueCat — ОДНА СТРОКА. Заход 7.224.
- *
  * Зачем таблица. RevenueCat повторяет доставку события, пока не получит
  * 2xx, и повторяет её же при ручном «Resend» из консоли. До этой таблицы
  * повтор обрабатывался заново целиком: `upsert` по
@@ -355,18 +354,21 @@ model Subscription {
  * СОСЕДНИЕ действия ею не защищены, и EXPIRATION, пришедший вторым после
  * UNCANCELLATION, снова закрыл бы доступ. Ключ по `id` события делает
  * повтор пустым: строка уже есть — отвечаем 200 и не делаем ничего.
- *
  * Строка здесь — НЕ доступ, а расписка о прочтении. Внешнего ключа на
  * User нет намеренно: событие может назвать `app_user_id`, которого у нас
  * нет вовсе (переустановка, тестировщик, TEST из консоли), и падение
  * вставки на ключе превратило бы это в бесконечную очередь повторов.
  */
 model RevenueCatEvent {
-  /** `event.id` — идентификатор, который присваивает RevenueCat. */
+  /**
+   * `event.id` — идентификатор, который присваивает RevenueCat.
+   */
   id          String   @id
   type        String
   appUserId   String
-  /** SANDBOX | PRODUCTION. */
+  /**
+   * SANDBOX | PRODUCTION.
+   */
   environment String?
   processedAt DateTime @default(now())
 
@@ -374,16 +376,16 @@ model RevenueCatEvent {
 }
 
 model SubscriptionPayment {
-  id                    String   @id @default(cuid())
-  userId                String
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Наша строка доступа, которую этот платёж оплатил. Без внешнего ключа
   // намеренно: событие о счёте может прийти раньше, чем событие о самой
   // подписке, и падение вставки на ключе превратило бы это в бесконечную
   // очередь повторов у Stripe. Строка-сирота хуже не делает: она просто
   // не найдёт, что отзывать, и скажет об этом в Sentry.
-  subscriptionId        String
+  subscriptionId String
 
   stripePaymentIntentId String   @unique
   // Подписка Stripe, если платёж пришёл по повторяющемуся счёту. NULL у
@@ -408,11 +410,15 @@ model SubscriptionPayment {
 // транзакцией — иначе упавшая запись попытки оставила бы квитанцию, и
 // повтор счёл бы потерянное принятым.
 model OfflineReceipt {
-  /** Ключ, который браузер присвоил записи очереди (UUID). */
+  /**
+   * Ключ, который браузер присвоил записи очереди (UUID).
+   */
   id        String   @id
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /** Что за запись: пока только "lesson". */
+  /**
+   * Что за запись: пока только "lesson".
+   */
   kind      String
   createdAt DateTime @default(now())
 
@@ -490,48 +496,50 @@ model ExamAttempt {
 // finished the course track. isPremium gates the full text/audio behind an
 // active subscription, mirroring the lesson access-control check.
 model Story {
-  id            String   @id @default(cuid())
-  /** Название так, как его написал автор рассказа, — по-русски. Это
+  id                  String    @id @default(cuid())
+  /**
+   * Название так, как его написал автор рассказа, — по-русски. Это
    * ОРИГИНАЛ изучаемого языка и ключ заморозки эксперимента
    * (isFrozenStory в src/lib/story-pilot.ts сверяет пару (title, level)),
-   * поэтому колонка не переводится и не переписывается никогда. */
-  title         String
-  /** Название для испаноговорящего читателя — не подстрочник, а то, как
+   * поэтому колонка не переводится и не переписывается никогда.
+   */
+  title               String
+  /**
+   * Название для испаноговорящего читателя — не подстрочник, а то, как
    * назвал бы рассказ испаноязычный редактор. Продукт сделан для тех,
    * кто русского ещё не знает: по строке «День стирки» такой читатель не
    * может понять, о чём рассказ, и каталог из 325 таких строк для него
    * нечитаем.
-   *
    * Null — это не дефект, а состояние «испанского названия ещё нет»: в
    * таком случае везде печатается ровно то, что печаталось до появления
    * колонки, знак в знак. Правило подачи живёт в ОДНОМ месте —
    * src/lib/story-title.ts (storyTitles) — и говорит: на /es испанское
    * название первой строкой, русский оригинал под ним мельче; на /ru
    * ничего не меняется, там русское название и есть название.
-   *
-   * Кириллицы здесь быть не должно: сторож npm run check:story-title-es. */
-  titleEs       String?
-  author        String
-  level         String
-  text          String
+   * Кириллицы здесь быть не должно: сторож npm run check:story-title-es.
+   */
+  titleEs             String?
+  author              String
+  level               String
+  text                String
   // Short intro shown on the catalog card and above the text on the
   // reader page — the "summary" a student reads before committing to
   // the full story. Written in Spanish only for every existing row (a
   // confirmed 325/325 data gap, not a rendering bug — see AUDIT.md).
-  description   String?
+  description         String?
   // Russian version of `description` — null for every row as of this
   // column's introduction; writing the actual Russian text is a
   // separate content task (see PROGRESS.md's open items), not something
   // this column addition does on its own. Rendering must fall back to
   // `description` (Spanish) when this is null, on BOTH locales — never
   // hide the summary block on /ru just because this field is empty.
-  descriptionRu String?
+  descriptionRu       String?
   // Spanish parallel translation, paragraph-aligned with `text` via the
   // same newline-per-paragraph convention (see splitStoryParagraphs) —
   // powers the "show translation" toggle on the reader page.
-  translationEs String?
-  audioUrl      String?
-  isPremium     Boolean  @default(false)
+  translationEs       String?
+  audioUrl            String?
+  isPremium           Boolean   @default(false)
   // Reserved for the "Premium" (lifetime) plan specifically — a
   // "standard" (monthly/annual) subscriber is otherwise fully entitled
   // (isPremium above already covers free vs. any-paid-plan) but still
@@ -540,7 +548,7 @@ model Story {
   // share at ~30% of the catalog per the access-tier policy) and then
   // hand-curated per-story via /admin/stories, same "script sets a
   // default, staff corrects" pattern as CURATED_FREE_STORIES.
-  premiumOnly   Boolean  @default(false)
+  premiumOnly         Boolean   @default(false)
   // Story topic for the catalog filter — one of storyTopics in
   // src/lib/stories.ts, "other" as the fallback bucket for anything the
   // tagging heuristic (prisma/tag-story-topics.ts) couldn't confidently
@@ -562,7 +570,7 @@ model Story {
   // приходил `null`. Приведение `isStoryTopic(row.topic) ? … : "other"` в
   // stories-catalog.ts существует ровно потому, что кто-то это
   // подозревал. Расхождение теперь сторожит `npm run check:schema-drift`.
-  topic         String?
+  topic               String?
   // Set the moment a staff member saves this row through /admin (see
   // src/app/api/admin/stories/save) — marks it as human-reviewed content.
   // Null means it has only ever been written by a seed/generation script.
@@ -570,7 +578,7 @@ model Story {
   // value as "do not silently overwrite" — added after a real incident
   // where a re-run of a seed script clobbered a good human-reviewed
   // Spanish translation with regenerated text. See CONTENT_INTEGRITY.md.
-  reviewedAt    DateTime?
+  reviewedAt          DateTime?
   // Estimated minutes to read `text` (word count / reading-speed constant,
   // rounded up, minimum 1) — computed once at write time (see
   // src/lib/stories.ts's estimateReadingMinutes and api/admin/stories/save)
@@ -579,7 +587,7 @@ model Story {
   // pull the full `text` column just to show a number on a card. Null
   // only for rows written before this column existed and not yet covered
   // by the one-time backfill script.
-  readingMinutes Int?
+  readingMinutes      Int?
   // Whole-story narration as ONE continuous file — a real <audio> element
   // playing this plays natively in the background/with the screen locked,
   // unlike the per-sentence clip chain (still the fallback below), which
@@ -591,7 +599,7 @@ model Story {
   // story (or permanently, for the handful of only-partially-narrated
   // stories it deliberately skips — see check-story-audio.ts); a null
   // here means the reader falls back to the per-sentence chain.
-  fullAudioUrl  String?
+  fullAudioUrl        String?
   // Cumulative start-second offset of every sentence within
   // `fullAudioUrl`, JSON array in the same order buildStoryQueue()
   // produces (src/lib/stories.ts) — e.g. [0, 3.2, 7.8, ...]. Drives the
@@ -600,8 +608,8 @@ model Story {
   // boundary. Same JSON-string-on-a-model-field pattern already used for
   // LessonContent/exam content below.
   sentenceOffsetsJson String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([level])
 }
@@ -737,15 +745,15 @@ model StoryReadingProgress {
 // clip, not a re-run of the whole story/lesson/corpus — see
 // src/lib/audio-assets.ts.
 model AudioAsset {
-  id          String   @id @default(cuid())
-  contentType String // "story" | "lesson" | "flashcard"
-  contentId   String // Story.id | `${level}-${lessonSlug}` | FlashcardCard.id
-  itemKey     String // position/id of the item within its content (see call sites)
-  textHash    String // sha256 of the exact sanitized text last synthesized
-  text        String // that text, kept for audit/debugging and for lesson-audio's by-word lookup
-  voice       String
-  model       String // e.g. "gpt-4o-mini-tts" — lets a future voice/model switch be told apart from old clips
-  audioUrl    String
+  id              String   @id @default(cuid())
+  contentType     String // "story" | "lesson" | "flashcard"
+  contentId       String // Story.id | `${level}-${lessonSlug}` | FlashcardCard.id
+  itemKey         String // position/id of the item within its content (see call sites)
+  textHash        String // sha256 of the exact sanitized text last synthesized
+  text            String // that text, kept for audit/debugging and for lesson-audio's by-word lookup
+  voice           String
+  model           String // e.g. "gpt-4o-mini-tts" — lets a future voice/model switch be told apart from old clips
+  audioUrl        String
   // Nullable: existing rows predate this column. Populated at generation
   // time going forward (see generate-story-audio.ts) and by a one-time
   // backfill script for rows that already existed — see
@@ -754,8 +762,8 @@ model AudioAsset {
   // which need every segment's length known up front rather than
   // discovered lazily client-side as each clip plays.
   durationSeconds Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([contentType, contentId, itemKey])
   @@index([contentType, contentId])
@@ -789,8 +797,8 @@ model AudioAsset {
 // — kept as JSON rather than a join table since this is a small reference
 // set, not a high-write relation.
 model GlossaryTerm {
-  id                String   @id @default(cuid())
-  slug              String   @unique
+  id                String    @id @default(cuid())
+  slug              String    @unique
   term              String
   definition        String
   russianEquivalent String
@@ -810,13 +818,13 @@ model GlossaryTerm {
   // pattern in more than one live context). Same JSON-string-column
   // pattern as relatedLessons below, for the same reason (small reference
   // table, not worth a join table).
-  examples          String   @default("[]")
-  relatedLessons    String   @default("[]")
+  examples          String    @default("[]")
+  relatedLessons    String    @default("[]")
   // Same human-review marker as Story.reviewedAt — set on every /admin save,
   // checked by prisma/seed-glossary.ts before overwriting an existing row.
   reviewedAt        DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([category])
 }
@@ -969,20 +977,20 @@ model GroupMember {
 // docs/plan-2026-08-19-three-windows.md (Window 1) for the full rationale
 // (avoiding unpredictable runtime compute/API cost).
 model WordGamePuzzle {
-  id       String              @id @default(cuid())
-  type     String // WordGameType: WORD_SEARCH | CROSSWORD — see src/lib/word-games/types.ts
-  level    String // FlashcardLevel: A1 | A2 | B1 | B2 | C1
+  id          String  @id @default(cuid())
+  type        String // WordGameType: WORD_SEARCH | CROSSWORD — see src/lib/word-games/types.ts
+  level       String // FlashcardLevel: A1 | A2 | B1 | B2 | C1
   // Difficulty rung within [type, level], starting at 1 — self-paced like
   // the rest of the app (see src/lib/flashcards/level-progress.ts): every
   // rung stays playable, WordGameProgress only drives a completed-checkmark
   // badge on the picker, never a lock.
-  sequence Int
+  sequence    Int
   // Expert-tier WORD_SEARCH puzzle whose words bend mid-path instead of
   // running in a single straight line (src/lib/word-games/snake-word-search.ts).
   // Always false for CROSSWORD. Surfaced as a ★ badge on the picker grid —
   // kept as a real column (not embedded in `words`) so the picker can
   // render it without parsing every puzzle's JSON.
-  curved   Boolean             @default(false)
+  curved      Boolean @default(false)
   // Reserved for the "Premium" (lifetime) plan — a "standard" subscriber
   // is otherwise fully entitled to word games. Every `curved` puzzle is
   // always also `premiumOnly` (curved is already, by construction, the
@@ -994,7 +1002,7 @@ model WordGamePuzzle {
   // access is gated (see entitlement.ts), not instead of it — so a future
   // puzzle-generation script that sets `curved` without also setting this
   // still degrades safely rather than accidentally unlocking a ★ puzzle.
-  premiumOnly Boolean            @default(false)
+  premiumOnly Boolean @default(false)
   // Vocabulary-category slug this puzzle's words were drawn from
   // ("comida", "ropa" — the /es/vocabulary/<slug> segment), or null when
   // the puzzle draws from the level-wide mixed pool. Only the 80 free
@@ -1004,10 +1012,10 @@ model WordGamePuzzle {
   // from what its words ACTUALLY are: if a future rerun leaves a rung
   // mixed because its category no longer has enough words, the title
   // follows the data instead of a stale lookup table.
-  topic    String?
+  topic       String?
   // JSON-encoded { size: number, grid: string[][] } — the finished letter
   // grid, ready to render as-is.
-  gridData String
+  gridData    String
   // JSON-encoded WordPlacement[]: { word, clue, row, col, direction,
   // number?, path? } (number only set for CROSSWORD, used as the clue-list
   // index; path only set for curved WORD_SEARCH words — the ordered list of
@@ -1018,11 +1026,11 @@ model WordGamePuzzle {
   // CROSSWORD's masked-example clue for B1+), captured at generation time
   // rather than joined live, so a puzzle keeps working even if the source
   // card is later edited or removed.
-  words    String
+  words       String
 
   progress WordGameProgress[]
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   // When this row was last written. Feeds `lastmod` in sitemap.xml, which
   // is this site's only mass-recrawl signal: Search Console's manual
   // "request indexing" is capped at ~10 URLs a day, so the 138 URLs the
@@ -1106,8 +1114,8 @@ model MediaOverride {
 
   // EmbedStatus: "ok" | "blocked". Set by the automated YouTube Data API
   // check (src/lib/media/checkEmbeds.ts) or manually via the admin panel.
-  embedStatus   String?
-  lastCheckedAt String?
+  embedStatus      String?
+  lastCheckedAt    String?
   // Appended to the static item's sourceNote for display, not a replacement —
   // keeps curatorial history readable in one place.
   sourceNoteAppend String?
@@ -1178,7 +1186,6 @@ model SearchQuery {
 
 /**
  * A checkout a person started and has not finished paying for.
- *
  * Exists for exactly one payment method: OXXO. An OXXO voucher is a barcode
  * the buyer carries to a shop and pays in cash, and Stripe gives them up to
  * three days to do it (`expires_after_days` in /api/checkout). Between the
@@ -1187,12 +1194,10 @@ model SearchQuery {
  * bounced them to, so a person who closed the tab and came back to /profile
  * was told they had no subscription, with a "buy" button under it. The most
  * likely next thing they do is pay a second time.
- *
  * A row here is NOT access and must never be read as such: it carries no
  * period and no plan tier, only the fact that a voucher is outstanding. The
  * access rule (tierOfAccount, src/lib/entitlement.ts) does not look at this
  * table at all.
- *
  * The row is opened when the voucher is created and settled by the Stripe
  * webhook — `checkout.session.async_payment_succeeded` (paid),
  * `checkout.session.expired` / `async_payment_failed` (not paid). It is
@@ -1200,28 +1205,38 @@ model SearchQuery {
  * last week has an answer.
  */
 model PendingCheckout {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  /** The plan the voucher is for — "monthly" | "annual" | "lifetime". */
+  /**
+   * The plan the voucher is for — "monthly" | "annual" | "lifetime".
+   */
   plan            String
-  /** Always "oxxo" today. A column rather than an assumption so a second
-   * asynchronous method does not have to reshape the table. */
-  method          String    @default("oxxo")
-  stripeSessionId String    @unique
+  /**
+   * Always "oxxo" today. A column rather than an assumption so a second
+   * asynchronous method does not have to reshape the table.
+   */
+  method          String @default("oxxo")
+  stripeSessionId String @unique
 
-  /** When the voucher stops being payable, as Stripe set it. */
-  expiresAt       DateTime
-  /** Null while the voucher is outstanding; the moment it stopped being so
+  /**
+   * When the voucher stops being payable, as Stripe set it.
+   */
+  expiresAt DateTime
+  /**
+   * Null while the voucher is outstanding; the moment it stopped being so
    * otherwise. The pair (settledAt, outcome) is what makes this table a
-   * record instead of a queue. */
-  settledAt       DateTime?
-  /** "paid" | "expired" | "failed", set with settledAt. */
-  outcome         String?
+   * record instead of a queue.
+   */
+  settledAt DateTime?
+  /**
+   * "paid" | "expired" | "failed", set with settledAt.
+   */
+  outcome   String?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -1268,11 +1283,11 @@ model AccessCode {
   redeemedById String?
   redeemedBy   User?     @relation("AccessCodeRedeemer", fields: [redeemedById], references: [id], onDelete: SetNull)
 
-  revokedAt    DateTime?
-  revokedById  String?
-  revokedBy    User?     @relation("AccessCodeRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+  revokedAt   DateTime?
+  revokedById String?
+  revokedBy   User?     @relation("AccessCodeRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
 
-  createdAt    DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([batch])
   @@index([redeemedById])
