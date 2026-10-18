@@ -147,6 +147,11 @@
   --color-foreground: #F5EAD2;
 }
 
+:root[data-theme="reading"] {
+  --color-background: #F6EFDC;
+  --color-foreground: #2B2318;
+}
+
 @theme inline {
   --color-background: var(--color-background);
   --color-foreground: var(--color-foreground);
