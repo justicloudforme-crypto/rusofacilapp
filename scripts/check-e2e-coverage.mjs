@@ -357,11 +357,12 @@ export function scanSource(files) {
   return problems;
 }
 
-/** @returns {{ executed: number, skipped: string[] }} */
+/** @returns {{ executed: number, skipped: string[], flaky: { name: string, attempt: number }[] }} */
 export function readReport(reportPath) {
   const report = JSON.parse(readFileSync(reportPath, "utf8"));
   let executed = 0;
   const skipped = [];
+  const flaky = [];
   const visitSuite = (suite) => {
     for (const spec of suite.specs ?? []) {
       for (const test of spec.tests ?? []) {
@@ -369,12 +370,39 @@ export function readReport(reportPath) {
         // never ran or bailed out mid-way via test.skip(condition).
         if (test.status === "skipped") skipped.push(`[${test.projectName}] ${spec.title}`);
         else executed += 1;
+        // «flaky» — упал и прошёл повтором (`retries: 2` в CI). Номер
+        // попытки — по порядку той, что прошла (вторая или третья).
+        if (test.status === "flaky") {
+          const results = test.results ?? [];
+          const passed = results.findIndex((r) => r.status === "passed");
+          flaky.push({
+            name: `[${test.projectName}] ${spec.file}:${spec.line} › ${spec.title}`,
+            attempt: passed >= 0 ? passed + 1 : results.length,
+          });
+        }
       }
     }
     for (const child of suite.suites ?? []) visitSuite(child);
   };
   for (const suite of report.suites ?? []) visitSuite(suite);
-  return { executed, skipped };
+  return { executed, skipped, flaky };
+}
+
+/**
+ * Сводка повторов (решение владельца 18.10.2026, заход 7.275): повторы
+ * Playwright оставлены, а каждый тест, прошедший не с первой попытки,
+ * учитывается отдельным долгом. Только печать — итог шага она не меняет.
+ */
+function printFlaky(flaky) {
+  const second = flaky.filter((f) => f.attempt === 2);
+  const later = flaky.filter((f) => f.attempt !== 2);
+  console.log(`\nповторы Playwright: прошли со второй попытки: ${second.length} тест(ов)`);
+  for (const f of second) console.log(`  ${f.name}`);
+  if (later.length) {
+    console.log(`повторы Playwright: прошли с третьей попытки: ${later.length} тест(ов)`);
+    for (const f of later) console.log(`  ${f.name} (попытка ${f.attempt})`);
+  }
+  if (flaky.length) console.log("каждый такой тест — отдельная строка в разделе 6 PROGRESS.md (решение владельца 18.10.2026)");
 }
 
 function main(argv) {
@@ -406,6 +434,8 @@ function main(argv) {
     console.error("A missing report is not a pass: it means nobody knows what ran.");
     return 1;
   }
+
+  printFlaky(result.flaky);
 
   let failed = false;
   if (result.skipped.length) {
