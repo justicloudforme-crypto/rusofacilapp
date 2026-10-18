@@ -466,6 +466,11 @@ async function main() {
     // той же причине, что и у check:shell-surfaces выше.
     const playLink = spawnSync(process.execPath, ["scripts/check-play-link.mjs", `--base=${BASE}`], { stdio: "inherit" });
     const playLinkPlant = spawnSync(process.execPath, ["scripts/check-play-link.mjs", `--base=${BASE}`, "--plant"], { stdio: "inherit" });
+    // Заход 7.273: подвал в СЕРВЕРНОМ ответе (es и ru) несёт ссылки на
+    // хабы, чьи пункты шапки рисуются только по нажатию; испанский хаб
+    // грамматики — только на /es.
+    const hubLinks = spawnSync(process.execPath, ["scripts/check-hub-links.mjs", `--base=${BASE}`], { stdio: "inherit" });
+    const hubLinksPlant = spawnSync(process.execPath, ["scripts/check-hub-links.mjs", `--base=${BASE}`, "--plant"], { stdio: "inherit" });
     // Заход 7.259: Chrome на Android предлагает приложение из Google Play
     // вместо установки сайта. Отданный сервером манифест (корень, es, ru)
     // обязан нести одну карточку Google Play с пакетом приложения и
@@ -602,6 +607,8 @@ async function main() {
       (shellSurfacesPlant.status ?? 1) ||
       (playLink.status ?? 1) ||
       (playLinkPlant.status ?? 1) ||
+      (hubLinks.status ?? 1) ||
+      (hubLinksPlant.status ?? 1) ||
       (pwaManifestLive.status ?? 1) ||
       (pwaManifestLivePlant.status ?? 1) ||
       (storeSeo.status ?? 1) ||
