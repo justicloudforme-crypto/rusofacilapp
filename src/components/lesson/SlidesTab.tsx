@@ -179,6 +179,8 @@ export default function SlidesTab({
       {canDownloadPdf && (
         <a
           href={`/api/lessons/${level}/${lessonSlug}/pdf`}
+          // Файл закрыт в robots (`/api/`) — роботу по ссылке не ходить (7.274).
+          rel="nofollow"
           className="tap inline-flex w-fit items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/85 active:bg-foreground/85"
         >
           {dict.downloadPdfButton}
