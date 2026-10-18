@@ -33,3 +33,38 @@ export function storyMetaDescription(
     ? story.description
     : `Cuento en ruso, nivel ${story.level}, en RusoFácilapp.`;
 }
+
+/**
+ * ВИДИМОЕ ОПИСАНИЕ ПОД ЗАГОЛОВКОМ РАССКАЗА — ДОЛГ 204, ЗАХОД 7.275.
+ *
+ * Решение владельца 18.10.2026 (вариант «а»): на `/ru` испанская аннотация
+ * под русским заголовком не печатается — так же, как в каталоге
+ * `/ru/stories` с 7.196. Абзац появится сам, когда у рассказа будет
+ * `descriptionRu` (сейчас пуст у 325 из 325 — долг 204, работа по
+ * содержимому). На `/es` — испанская аннотация, как и была.
+ */
+export function storyVisibleDescription(
+  story: { description: string | null; descriptionRu: string | null },
+  lang: "es" | "ru",
+): string | null {
+  return (lang === "ru" ? story.descriptionRu : story.description) || null;
+}
+
+/**
+ * ОПИСАНИЕ В РАЗМЕТКЕ `Article` (application/ld+json) — ОСТАТОК ДОЛГА 205,
+ * ЗАХОД 7.275.
+ *
+ * После 7.274 мета-описание `/ru` стало русским, а `description` в
+ * ld+json той же страницы остался испанским («Nastia lava la ropa como
+ * cada…» на «День стирки» — нашёл владелец). Теперь на `/ru` это та же
+ * строка, что в `<meta name="description">` (`storyMetaDescription`): одна
+ * страница — одно описание. На `/es` — испанская аннотация, а без неё
+ * поля нет, как и было.
+ */
+export function storyArticleDescription(
+  story: { description: string | null; descriptionRu: string | null; level: string },
+  lang: "es" | "ru",
+  title: string,
+): string | null {
+  return lang === "ru" ? storyMetaDescription(story, lang, title) : story.description || null;
+}

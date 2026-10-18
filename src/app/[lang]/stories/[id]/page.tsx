@@ -25,7 +25,7 @@ import Card from "@/components/ui/Card";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle } from "@/lib/frozen-pages";
 import { storyTitles } from "@/lib/story-title";
-import { storyMetaDescription } from "@/lib/story-meta";
+import { storyArticleDescription, storyMetaDescription, storyVisibleDescription } from "@/lib/story-meta";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates, truncateForMeta } from "@/lib/site";
 
@@ -216,13 +216,17 @@ export default async function StoryReaderPage({
     nativeShell: await isNativeShellRequest(),
   });
 
-  // descriptionRu is null for every row today (see schema.prisma) — this
-  // fallback is what keeps /ru showing the Spanish summary instead of
-  // hiding the block, until the Russian text exists.
-  const rawLocalizedDescription = lang === "ru" ? (story.descriptionRu ?? story.description) : story.description;
+  // Описание — только на языке страницы (долг 204, решение владельца
+  // 18.10.2026): на /ru абзаца под заголовком нет, пока нет русской
+  // аннотации (`descriptionRu` пуст у 325 из 325), как в каталоге с 7.196.
+  // В разметке `Article` на /ru — та же строка, что в мета-описании
+  // (остаток долга 205). Правила — src/lib/story-meta.ts.
   // Написание имени проекта в описании — та же опечатка, что в подписи
   // автора (одна строка прода, 7.239); чинится отрисовкой.
-  const localizedDescription = rawLocalizedDescription && fixBrandSpelling(rawLocalizedDescription);
+  const rawVisibleDescription = storyVisibleDescription(story, lang);
+  const visibleDescription = rawVisibleDescription && fixBrandSpelling(rawVisibleDescription);
+  const rawArticleDescription = storyArticleDescription(story, lang, titles.primary);
+  const articleDescription = rawArticleDescription && fixBrandSpelling(rawArticleDescription);
 
   const paragraphs = splitStoryParagraphs(story.text);
   const visibleParagraphs = entitled ? paragraphs : paragraphs.slice(0, 1);
@@ -336,7 +340,7 @@ export default async function StoryReaderPage({
           // иначе на `/ru` и у рассказов без испанского названия
           // разметка носила бы одну строку дважды.
           ...(titles.secondary ? { alternateName: titles.secondary } : {}),
-          ...(localizedDescription ? { description: localizedDescription } : {}),
+          ...(articleDescription ? { description: articleDescription } : {}),
           author: { "@type": "Person", name: authorName },
           publisher: { "@type": "Organization", name: "RusoFácilapp", url: SITE_URL },
           inLanguage: "ru",
@@ -382,7 +386,7 @@ export default async function StoryReaderPage({
       <p className="mt-1 text-foreground/60">
         {storyByline(story.author, lang, dict.stories.byAuthor)}
       </p>
-      {localizedDescription && <p className="mt-3 text-foreground/70">{localizedDescription}</p>}
+      {visibleDescription && <p className="mt-3 text-foreground/70">{visibleDescription}</p>}
 
       {/* КНОПКА «DESCARGAR» — ЗАХОД 7.231 (ОФЛАЙН-3). Стоит НАД текстом,
           а не под ним: человек решает «взять с собой» до чтения, а не
