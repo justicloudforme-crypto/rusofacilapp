@@ -117,8 +117,9 @@ export async function generateMetadata({
   }
   if (!story) return {};
   // Только на языке страницы: на /ru испанского описания больше нет
-  // (долг 205, 7.274) — см. src/lib/story-meta.ts.
-  const rawDescription = storyMetaDescription(story, lang, storyTitles(story, lang).primary);
+  // (долг 205, 7.274) — см. src/lib/story-meta.ts. Написание имени
+  // проекта чинится здесь, как и в теле страницы (7.239, `check:brand`).
+  const rawDescription = fixBrandSpelling(storyMetaDescription(story, lang, storyTitles(story, lang).primary));
   // 190 of the 650 story descriptions ran past the ~155 characters Google
   // shows in a snippet, up to 283 (measured on the live site 30.08.2026).
   // truncateForMeta is the same cap the glossary and the lessons already

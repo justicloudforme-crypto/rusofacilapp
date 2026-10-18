@@ -1,5 +1,3 @@
-import { fixBrandSpelling } from "@/lib/story-author";
-
 /**
  * МЕТА-ОПИСАНИЕ СТРАНИЦЫ РАССКАЗА — ДОЛГ 205, ЗАХОД 7.274.
  *
@@ -17,8 +15,9 @@ import { fixBrandSpelling } from "@/lib/story-author";
  * есть. На `/es` не изменилось ничего: испанское описание, без него —
  * прежняя испанская строка.
  *
- * Обрезка до потолка выдачи (`truncateForMeta`) — у вызывающего, как и
- * была.
+ * Починка написания имени проекта (`fixBrandSpelling`) и обрезка до
+ * потолка выдачи (`truncateForMeta`) — у вызывающего, как и были: их
+ * место на странице держит `check:brand` (7.239).
  */
 export function storyMetaDescription(
   story: { description: string | null; descriptionRu: string | null; level: string },
@@ -27,10 +26,10 @@ export function storyMetaDescription(
 ): string {
   if (lang === "ru") {
     return story.descriptionRu
-      ? fixBrandSpelling(story.descriptionRu)
+      ? story.descriptionRu
       : `«${title}» — рассказ на русском языке, уровень ${story.level}, в RusoFácilapp.`;
   }
   return story.description
-    ? fixBrandSpelling(story.description)
+    ? story.description
     : `Cuento en ruso, nivel ${story.level}, en RusoFácilapp.`;
 }

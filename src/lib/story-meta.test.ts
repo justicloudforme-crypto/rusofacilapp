@@ -103,11 +103,6 @@ describe("мета-описание рассказа — на языке стр�
       "Cuento en ruso, nivel A2, en RusoFácilapp.",
     );
   });
-
-  it("опечатка бренда в аннотации чинится и здесь", () => {
-    const row = { description: "Un relato de RusoFásil.", descriptionRu: null, level: "A1" };
-    expect(storyMetaDescription(row, "es", "x")).toBe("Un relato de RusoFácil.");
-  });
 });
 
 describe("страница рассказа берёт описание только из storyMetaDescription", () => {
