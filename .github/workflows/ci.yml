@@ -1384,6 +1384,16 @@ jobs:
       - name: Тот же сторож — позитивный контроль
         run: npm run check:hub-links:plant
 
+      # Долги 204 и 205 (7.275): на /ru/stories/… нет испанского описания ни
+      # в абзаце под заголовком, ни в Article.description разметки; на /es —
+      # испанская аннотация на месте. Настоящие строки прода + проводка
+      # страницы; подсадки — прежнее правило и страница до 7.275.
+      - name: Описание рассказа — на языке страницы (абзац и ld+json)
+        run: npm run check:story-description
+
+      - name: Тот же сторож — позитивный контроль (страница до 7.275)
+        run: npm run check:story-description:plant
+
       # ЗАХОД 7.259. «Descargar la app» (/download) — в поиске: без noindex
       # в ответе браузеру, в карте сайта, robots.txt открыт; у Organization
       # в JSON-LD sameAs — страница приложения в Google Play, только вне
