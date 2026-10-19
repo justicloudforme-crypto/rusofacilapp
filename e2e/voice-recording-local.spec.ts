@@ -165,18 +165,39 @@ async function recordOnce(page: Page) {
  * The clip really decodes — the difference between a working player and
  * the native control's own error text in the phone's language (7.47).
  *
- * `load()` is called explicitly, and that is a finding rather than a
- * convenience: WebKit on an iPhone profile leaves a `<audio controls>`
- * element at readyState 0 until something asks it to load, so a check that
- * only read readyState would call a perfectly good clip broken on exactly
- * the platform the original report came from. A student tapping play is
- * what does this in real life.
+ * `load()` is called only when the element is idle with nothing loaded —
+ * the case it was written for: WebKit on an iPhone profile could leave an
+ * `<audio controls>` element at readyState 0 until something asked it to
+ * load, and a check that only read readyState would then call a perfectly
+ * good clip broken on exactly the platform the original report came from.
+ *
+ * It used to be called unconditionally. On the Linux runner the element is
+ * already loading by itself (networkState 2) or already loaded (readyState
+ * 4) in every measured case (7.276: 400 of 400; 7.277: every annotation of
+ * two probe rounds), so an explicit `load()` only aborted that fetch and
+ * started over. It is NOT what hangs WebKit (debts 388/389): 7.277
+ * reproduced the hang on Linux with no `load()` at all — the page stopped
+ * painting ~0.3 s after the restored clip loaded, and the next action (the
+ * re-record click) never returned; in 7.276 the next action simply happened
+ * to be `load()`. The decision and the element's state go into the test's
+ * annotations, and the first failed attempt keeps its trace
+ * (playwright.config.ts).
  */
 async function expectPlayable(page: Page) {
   const audio = page.locator("audio").first();
   await expect(audio).toBeVisible({ timeout: 15_000 });
   await expect(audio).toHaveAttribute("src", /^blob:/);
-  await audio.evaluate((el: HTMLAudioElement) => el.load());
+  // One evaluate, so the element cannot start loading between the look and
+  // the call.
+  const loadDecision = await audio.evaluate((el: HTMLAudioElement) => {
+    const state = `readyState=${el.readyState} networkState=${el.networkState}`;
+    if (el.readyState === HTMLMediaElement.HAVE_NOTHING && el.networkState !== HTMLMediaElement.NETWORK_LOADING) {
+      el.load();
+      return `load() called (${state})`;
+    }
+    return `load() not needed (${state})`;
+  });
+  test.info().annotations.push({ type: "voice-load", description: loadDecision });
   // Poll on readyState, not on "no error yet": an element that has not
   // started loading also has error === null, and the first version of this
   // helper passed on exactly that — in Chromium, where decoding happened
