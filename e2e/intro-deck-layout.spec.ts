@@ -101,11 +101,14 @@ for (const lang of ["es", "ru"] as const) {
         // переходом 150 мс, и замер ровно через 150 мс попадал в середину
         // перехода — «43.8×43.8» у только что нажатой точки, 10 первых
         // попыток из 16 полных наборов на Linux, когда запись трассы
-        // замедлила WebKit. Мерим после того, как в деке закончились все
-        // анимации: размер нажатия — мгновенный отклик, а не цель касания.
+        // замедлила WebKit. Ожидание `getAnimations()` не помогло (раунд 2:
+        // 2 из 8, «43.4×43.4» — WebKit ещё не начал обратный переход). Ждём,
+        // пока ни у одной кнопки деки нет transform: размер нажатия —
+        // мгновенный отклик, а не цель касания. Постоянный transform здесь
+        // не прячется: ожидание упадёт по таймауту.
         await page.waitForFunction(() =>
-          (document.querySelector('[data-testid="intro-presentation"]')?.getAnimations({ subtree: true }) ?? []).every(
-            (a) => a.playState !== "running",
+          [...(document.querySelector('[data-testid="intro-presentation"]')?.querySelectorAll("a, button") ?? [])].every(
+            (el) => getComputedStyle(el).transform === "none",
           ),
         );
         const small = (await deckTargets(page)).filter((t) => t.w < MIN_TAP || t.h < MIN_TAP);

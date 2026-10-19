@@ -171,13 +171,17 @@ async function recordOnce(page: Page) {
  * load, and a check that only read readyState would then call a perfectly
  * good clip broken on exactly the platform the original report came from.
  *
- * Calling it unconditionally is what debts 388/389 were (PROGRESS.md
- * 7.276): on the Linux runner the element is already loading by itself
- * (networkState 2) or already loaded (readyState 4) in 400 of 400 measured
- * cases, and an explicit `load()` aborts that fetch and starts over — every
- * WebKit hang in CI logs sat on that call. The decision and the state it
- * was taken in go into the test's annotations, so a failed first attempt
- * says which branch it took.
+ * It used to be called unconditionally. On the Linux runner the element is
+ * already loading by itself (networkState 2) or already loaded (readyState
+ * 4) in every measured case (7.276: 400 of 400; 7.277: every annotation of
+ * two probe rounds), so an explicit `load()` only aborted that fetch and
+ * started over. It is NOT what hangs WebKit (debts 388/389): 7.277
+ * reproduced the hang on Linux with no `load()` at all — the page stopped
+ * painting ~0.3 s after the restored clip loaded, and the next action (the
+ * re-record click) never returned; in 7.276 the next action simply happened
+ * to be `load()`. The decision and the element's state go into the test's
+ * annotations, and the first failed attempt keeps its trace
+ * (playwright.config.ts).
  */
 async function expectPlayable(page: Page) {
   const audio = page.locator("audio").first();
