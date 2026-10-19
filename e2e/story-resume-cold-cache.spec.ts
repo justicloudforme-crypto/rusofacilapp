@@ -130,6 +130,36 @@ async function prepare(page: Page, context: BrowserContext) {
   return { storyPath, storyId: storyPath.split("/").pop()! };
 }
 
+/**
+ * Открыть `path` страницей, которой УЖЕ правит воркер, — долг 387 (заход 7.276).
+ *
+ * Воркер регистрируется сам после загрузки страницы (`SerwistRegister`), то
+ * есть пока тест стоит на каталоге из `prepare`. Прежде тест сразу уходил на
+ * `/ru` и ждал `controller` там. Если воркер активировался ВО ВРЕМЯ этого
+ * перехода, его `clients.claim()` случался раньше, чем новая страница
+ * становилась клиентом, и `/ru` оставалась без воркера до следующего
+ * перехода — по правилам service worker’ов, а не по ошибке сайта. Замер 7.276:
+ * на раннере CI — «active: activated», а `controller` пуст 30 с (28 из 41
+ * прогонов `main` проходили только повтором); локально при установке 0,3 с и
+ * ответе `/ru` за 2 с прежний порядок падает 5 из 5.
+ *
+ * Теперь сначала ждём АКТИВНЫЙ воркер на той странице, где он регистрируется,
+ * и только потом переходим: переход, начатый после активации, воркер берёт
+ * всегда. Нужно только контролю: настоящий воркер сайта ставится долго
+ * (precache), активируется уже на `/ru` и берёт её своим `claim()`.
+ */
+async function gotoControlled(page: Page, path: string): Promise<void> {
+  const active = await page.evaluate(() =>
+    Promise.race([
+      navigator.serviceWorker.ready.then(() => true),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 30_000)),
+    ]),
+  );
+  expect(active, "воркер не стал активным за 30 с на странице, где регистрируется").toBe(true);
+  await page.goto(path);
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 10_000 });
+}
+
 test("первый заход с пустым кешем клипов: «▶» продолжает с сохранённого места, второй заход — тоже", async ({ page, context }) => {
   // Бюджет: вход, ожидание воркера до 30 с, два захода по ~6 с, навигации.
   test.setTimeout(30_000 + 30_000 + 2 * 6_000 + 20_000);
@@ -208,8 +238,7 @@ test("контроль: прежний обработчик клипов (200 ц
     route.fulfill({ status: 200, headers: { "content-type": "application/javascript", "cache-control": "no-store" }, body: OLD_AUDIO_WORKER }),
   );
   const { storyPath, storyId } = await prepare(page, context);
-  await page.goto("/ru");
-  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
+  await gotoControlled(page, "/ru");
   const scriptUrl = await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.active?.scriptURL ?? "");
   expect(scriptUrl, "страницей управляет не подставной воркер").toContain("/sw.js");
 
