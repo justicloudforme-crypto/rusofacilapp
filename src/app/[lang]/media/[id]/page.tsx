@@ -19,7 +19,7 @@ import { clipsByText } from "@/lib/audio-reuse";
 import { textAudioKey } from "@/lib/lessons/audioKeys";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle } from "@/lib/frozen-pages";
-import { mediaDescription, mediaJsonLdDescription } from "@/lib/media/metadata";
+import { mediaDescription, mediaJsonLdDescription, mediaVisibleDescription } from "@/lib/media/metadata";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { storyTitles } from "@/lib/story-title";
@@ -117,6 +117,11 @@ export default async function MediaDetailPage({
         }))
       : [];
 
+  // 7.277 (решение владельца 19.10.2026): на /ru испанского абзаца под
+  // заголовком нет — как у рассказов с 7.275. Правило —
+  // src/lib/media/metadata.ts, сторож `check:story-description`.
+  const visibleDescription = mediaVisibleDescription(lang, item);
+
   const categoryLabels: Record<string, string> = {
     song: dict.media.categorySong,
     movie: dict.media.categoryMovie,
@@ -184,7 +189,7 @@ export default async function MediaDetailPage({
       </div>
 
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">{item.title}</h1>
-      <p className="mt-2 text-foreground/70">{item.description}</p>
+      {visibleDescription && <p className="mt-2 text-foreground/70">{visibleDescription}</p>}
 
       {(relatedStories.length > 0 || relatedLessonTitle) && (
         <section className="mt-6 flex flex-col gap-4 sm:flex-row sm:gap-8">

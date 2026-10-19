@@ -55,6 +55,22 @@ export function mediaJsonLdDescription(
   return lang === "ru" ? mediaDescription(lang, item) : item.description;
 }
 
+/**
+ * ВИДИМЫЙ АБЗАЦ ПОД ЗАГОЛОВКОМ МЕДИА — ЗАХОД 7.277, решение владельца
+ * 19.10.2026 (вариант «а» раздела 7 после 7.276).
+ *
+ * `item.description` написан по-испански для каждой записи, и до 7.277 он
+ * печатался под русским заголовком и на `/ru` — тот же класс, что у
+ * рассказов до 7.275 (`storyVisibleDescription`, долг 204). Теперь на `/ru`
+ * абзаца нет: русского абзаца у записей медиа нет ни у одной, а выдумывать
+ * его отрисовкой нельзя. На `/es` — испанский абзац записи, как и был
+ * (у `history-gagarin` и `video-saludos-presentaciones` он и на `/es` не
+ * испанский — их не трогаем, решение владельца).
+ */
+export function mediaVisibleDescription(lang: string, item: { description: string }): string | null {
+  return lang === "ru" ? null : item.description || null;
+}
+
 /** What the page served before 30.08.2026. Frozen media pages must keep
  * serving exactly this until the 25.09 readout, so it lives here next to
  * its replacement rather than inline in the page, where the two could

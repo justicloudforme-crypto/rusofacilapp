@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { storyArticleDescription, storyMetaDescription, storyVisibleDescription } from "./story-meta";
-import { mediaDescription, mediaJsonLdDescription } from "./media/metadata";
+import { mediaDescription, mediaJsonLdDescription, mediaVisibleDescription } from "./media/metadata";
 
 /**
  * ДОЛГ 205 (7.274): на `/ru/stories/…` мета-описание — не испанское.
@@ -431,5 +431,101 @@ describe("страница медиа берёт description разметки т
       "в LearningResource нет поля description",
     ]);
     expect(mediaWiringProblems("export default function Page() {}")).toEqual(["разметка LearningResource не найдена"]);
+  });
+});
+
+/**
+ * МЕДИА НА `/ru` — ВИДИМЫЙ АБЗАЦ ПОД ЗАГОЛОВКОМ (заход 7.277, решение
+ * владельца 19.10.2026, вариант «а» раздела 7 после 7.276).
+ *
+ * Тот же класс, что долг 204 у рассказов (7.275): под русским заголовком
+ * `/ru/media/…` печатался испанский абзац записи (`item.description`). Теперь
+ * на `/ru` абзаца нет (`mediaVisibleDescription`), на `/es` — абзац записи,
+ * как и был. Выборка — весь каталог `mediaData.json` (275 записей); прежнее
+ * правило — подсадка, пойманная на каждой записи; правило, стирающее абзац и
+ * на `/es`, — вторая подсадка; страница, печатающая `item.description` мимо
+ * правила, — третья.
+ */
+type MediaVisibleFn = typeof mediaVisibleDescription;
+
+/** Прежнее правило страницы (до 7.277): абзац записи на обеих локалях. */
+const before7277MediaVisible: MediaVisibleFn = (_lang, item) => item.description;
+
+function mediaVisibleProblems(fn: MediaVisibleFn): string[] {
+  const found: string[] = [];
+  for (const item of MEDIA_ROWS) {
+    const ru = fn("ru", item);
+    if (ru !== null) found.push(`/ru ${item.id}: видимый абзац «${ru.slice(0, 30)}…»`);
+    if (fn("es", item) !== item.description) found.push(`/es ${item.id}: видимого абзаца нет или он подменён`);
+  }
+  return found;
+}
+
+describe("медиа: видимый абзац под заголовком — только на /es (7.277)", () => {
+  it("новое правило: нарушений 0 на всех записях", () => {
+    expect(MEDIA_ROWS.length).toBeGreaterThanOrEqual(275);
+    expect(mediaVisibleProblems(mediaVisibleDescription)).toEqual([]);
+  });
+
+  it("подсадка: прежнее правило (испанский абзац и на /ru) ловится на каждой записи", () => {
+    const found = mediaVisibleProblems(before7277MediaVisible);
+    expect(found.filter((f) => f.startsWith("/ru")).length).toBe(MEDIA_ROWS.length);
+    expect(found.filter((f) => f.startsWith("/es")).length).toBe(0);
+  });
+
+  it("подсадка с другой стороны: правило, стирающее абзац и на /es, ловится на каждой записи", () => {
+    const found = mediaVisibleProblems(() => null);
+    expect(found.filter((f) => f.startsWith("/es")).length).toBe(MEDIA_ROWS.length);
+  });
+});
+
+describe("страница медиа печатает абзац под заголовком только через mediaVisibleDescription", () => {
+  const PAGE = join(process.cwd(), "src", "app", "[lang]", "media", "[id]", "page.tsx");
+
+  function visibleWiringProblems(source: string): string[] {
+    const from = source.indexOf("export default");
+    if (from < 0) return ["export default не найден"];
+    const body = source.slice(from);
+    const found: string[] = [];
+    const visible = /const (\w+) = mediaVisibleDescription\(lang, item\);/.exec(body);
+    if (!visible) found.push("видимый абзац собран не через mediaVisibleDescription");
+    const paragraph = /\{(\w+) && <p className="mt-2 text-foreground\/70">\{\1\}<\/p>\}/.exec(body);
+    if (!paragraph) found.push("абзац под заголовком не найден");
+    else if (!visible || paragraph[1] !== visible[1])
+      found.push(`абзац печатает «${paragraph[1]}», а не результат mediaVisibleDescription`);
+    // Абзац записи в разметке страницы — мимо правила, на обеих локалях.
+    if (/\{item\.description\}/.test(body)) found.push("страница печатает {item.description} мимо правила");
+    return found;
+  }
+
+  const source = readFileSync(PAGE, "utf8");
+
+  it("настоящая страница: нарушений 0", () => {
+    expect(visibleWiringProblems(source)).toEqual([]);
+  });
+
+  it("подсадка: страница до 7.277 (<p>{item.description}</p>) ловится", () => {
+    // Ровно та строка, что стояла в `main` до 7.277.
+    const planted = source
+      .replace(/\n\s*const visibleDescription = mediaVisibleDescription\(lang, item\);/, "")
+      .replace(
+        '{visibleDescription && <p className="mt-2 text-foreground/70">{visibleDescription}</p>}',
+        '<p className="mt-2 text-foreground/70">{item.description}</p>',
+      );
+    expect(planted).not.toBe(source);
+    expect(visibleWiringProblems(planted)).toEqual([
+      "видимый абзац собран не через mediaVisibleDescription",
+      "абзац под заголовком не найден",
+      "страница печатает {item.description} мимо правила",
+    ]);
+  });
+
+  it("подсадка: правило на месте, но абзац печатает другое — красный", () => {
+    const planted = source.replace(
+      '{visibleDescription && <p className="mt-2 text-foreground/70">{visibleDescription}</p>}',
+      '{visibleDescription && <p className="mt-2 text-foreground/70">{item.description}</p>}',
+    );
+    expect(planted).not.toBe(source);
+    expect(visibleWiringProblems(planted)).toEqual(["абзац под заголовком не найден", "страница печатает {item.description} мимо правила"]);
   });
 });
