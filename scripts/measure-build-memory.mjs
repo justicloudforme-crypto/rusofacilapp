@@ -21,9 +21,67 @@
  * дереву — то число, по которому cgroup-убийца принимает решение.
  *
  * Пик печатается в МБ и в ГБ; с `--limit-mb` превышение — ненулевой код возврата.
+ *
+ * `--clean-cache=.next/cache` (7.278, долг 399): перед стартом стереть кеш
+ * сборки. Без этого замер на ноутбуке мерил не код, а историю папки: кеш
+ * webpack разных веток копился (729 МБ 19.10.2026), сборка поднимала его на
+ * старте и падала по памяти на 5-й секунде, хотя тот же код с пустым кешем
+ * укладывался 8 из 8. В CI кеша нет вовсе, так что флаг уравнивает ноутбук с
+ * CI. Стирается ровно `<папка запуска>/.next/cache` и ничего больше: любой
+ * другой путь, путь через `..`, абсолютный путь и ссылка (symlink) вместо
+ * папки — отказ с кодом 2 ДО запуска сборки (`cacheDirVerdict`).
  */
 import { spawn, execFileSync } from "node:child_process";
+import { lstatSync, rmSync, mkdirSync, writeFileSync, existsSync, symlinkSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
+
+/** Единственный путь, который `--clean-cache` вправе стереть, — относительно папки запуска. */
+export const CLEANABLE_CACHE = path.join(".next", "cache");
+
+/**
+ * Можно ли стереть `arg` как кеш сборки, запущенной в `cwd`.
+ * Возвращает `{ ok: true, dir }` или `{ ok: false, reason }`. Файловую
+ * систему трогает только `lstat` — чтобы не пойти по ссылке наружу.
+ */
+export function cacheDirVerdict(cwd, arg) {
+  if (typeof arg !== "string" || arg.trim() === "") return { ok: false, reason: "путь не задан" };
+  if (path.isAbsolute(arg)) return { ok: false, reason: `абсолютный путь «${arg}» — разрешён только ${CLEANABLE_CACHE}` };
+  if (arg.split(/[\\/]+/).includes("..")) return { ok: false, reason: `путь «${arg}» с «..» — разрешён только ${CLEANABLE_CACHE}` };
+  const dir = path.resolve(cwd, arg);
+  if (dir !== path.resolve(cwd, CLEANABLE_CACHE)) return { ok: false, reason: `«${arg}» — не ${CLEANABLE_CACHE}` };
+  for (const p of [path.dirname(dir), dir]) {
+    let st;
+    try {
+      st = lstatSync(p);
+    } catch {
+      continue; // нет — значит, и стирать нечего
+    }
+    if (st.isSymbolicLink()) return { ok: false, reason: `«${path.relative(cwd, p)}» — ссылка, а не папка: стирать по ней нельзя` };
+    if (!st.isDirectory()) return { ok: false, reason: `«${path.relative(cwd, p)}» — не папка` };
+  }
+  return { ok: true, dir };
+}
+
+/** Размер дерева в байтах (`du -sk`), 0 — если папки нет или `du` недоступен. */
+function treeBytes(dir) {
+  if (!existsSync(dir)) return 0;
+  try {
+    return Number(execFileSync("du", ["-sk", dir], { encoding: "utf8" }).split(/\s+/)[0]) * 1024;
+  } catch {
+    return 0;
+  }
+}
+
+/** Стирает кеш после `cacheDirVerdict`; возвращает стёртые байты. */
+export function cleanCache(cwd, arg) {
+  const verdict = cacheDirVerdict(cwd, arg);
+  if (!verdict.ok) throw new Error(verdict.reason);
+  const bytes = treeBytes(verdict.dir);
+  rmSync(verdict.dir, { recursive: true, force: true });
+  return bytes;
+}
 
 const SAMPLE_MS = 250;
 
@@ -126,12 +184,53 @@ function selfTest() {
   check("порог ловит превышение", over(6000, 5600), true);
   check("порог пропускает норму", over(5000, 5600), false);
 
+  // `--clean-cache` (долг 399): разрешён ровно один путь, всё прочее — отказ.
+  const cwd = mkdtempSync(path.join(tmpdir(), "rf-build-memory-"));
+  try {
+    const ok = (arg) => cacheDirVerdict(cwd, arg).ok;
+    check("кеш .next/cache разрешён", ok(".next/cache"), true);
+    check("то же с ./ и хвостовой чертой", ok("./.next/cache/"), true);
+    check("отказ: вся .next", ok(".next"), false);
+    check("отказ: папка запуска", ok("."), false);
+    check("отказ: кеш webpack внутри (не та граница)", ok(".next/cache/webpack"), false);
+    check("отказ: выход через ..", ok(".next/cache/../../src"), false);
+    check("отказ: абсолютный путь", ok(path.join(cwd, ".next/cache")), false);
+    check("отказ: чужой кеш", ok("node_modules/.cache"), false);
+    check("отказ: пустой путь", ok(""), false);
+
+    // Живой прогон на подсаженной папке: кеш стёрт, соседи целы.
+    mkdirSync(path.join(cwd, ".next/cache/webpack"), { recursive: true });
+    writeFileSync(path.join(cwd, ".next/cache/webpack/0.pack"), "x".repeat(4096));
+    writeFileSync(path.join(cwd, ".next/BUILD_ID"), "keep");
+    mkdirSync(path.join(cwd, "src"));
+    writeFileSync(path.join(cwd, "src/keep.ts"), "keep");
+    cleanCache(cwd, ".next/cache");
+    check("кеш стёрт", existsSync(path.join(cwd, ".next/cache")), false);
+    check("соседи кеша целы (.next/BUILD_ID, src/)", [".next/BUILD_ID", "src/keep.ts"].every((p) => existsSync(path.join(cwd, p))), true);
+    check("кеша нет — не ошибка", cleanCache(cwd, ".next/cache"), 0);
+
+    // Ссылка вместо папки кеша: по ней не идём, цель цела.
+    mkdirSync(path.join(cwd, "outside"));
+    writeFileSync(path.join(cwd, "outside/precious"), "keep");
+    symlinkSync(path.join(cwd, "outside"), path.join(cwd, ".next/cache"));
+    check("отказ: .next/cache — ссылка наружу", ok(".next/cache"), false);
+    let threw = false;
+    try {
+      cleanCache(cwd, ".next/cache");
+    } catch {
+      threw = true;
+    }
+    check("стирание по ссылке отказано, цель цела", threw && existsSync(path.join(cwd, "outside/precious")), true);
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+
   console.log("");
   if (bad > 0) {
     console.error(`✗ ${bad} случай(ев) разошлись с ожиданием.`);
     process.exit(1);
   }
-  console.log("Контроль пройден: 9 случаев, из них 6 обязаны были дать НЕнулевой ответ.");
+  console.log("Контроль пройден: 23 случая, из них 15 обязаны были дать НЕнулевой ответ или отказ.");
   process.exit(0);
 }
 
@@ -146,6 +245,19 @@ async function main() {
   if (command.length === 0) {
     console.error("Нечего запускать. Пример: node scripts/measure-build-memory.mjs --limit-mb=5600 -- npm run build");
     process.exit(2);
+  }
+
+  const cleanArg = argv.slice(0, sep >= 0 ? sep : argv.length).find((a) => a.startsWith("--clean-cache="));
+  if (cleanArg) {
+    const target = cleanArg.slice("--clean-cache=".length);
+    let bytes;
+    try {
+      bytes = cleanCache(process.cwd(), target);
+    } catch (error) {
+      console.error(`✗ --clean-cache: ${error.message}. Сборку не запускаю.`);
+      process.exit(2);
+    }
+    console.log(`кеш сборки ${CLEANABLE_CACHE} стёрт перед замером: ${Math.round(bytes / 1024 / 1024)} МБ (долг 399)`);
   }
 
   const started = Date.now();
