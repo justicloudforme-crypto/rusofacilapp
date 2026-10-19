@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -32,26 +32,33 @@ type IsolatedDom = { window: { document: Document; close(): void } };
 const { JSDOM } = createRequire(import.meta.url)("jsdom") as {
   JSDOM: new (
     html: string,
-    options: { url: string; runScripts: "dangerously"; beforeParse(win: Window): void },
+    options: { url: string; runScripts: "dangerously"; beforeParse?(win: Window): void },
   ) => IsolatedDom;
 };
 
 const HTML = readFileSync(join(process.cwd(), "public", "offline.html"), "utf8");
 
+/** Окна, открытые `renderOfflineScreenAt`; закрываются после каждого теста. */
+const rendered: IsolatedDom[] = [];
+
 /** Ставит документ заглушки по адресу `path` и исполняет её скрипт —
- *  ровно то, что делает браузер, когда воркер подставил файл. */
+ *  ровно то, что делает браузер, когда воркер подставил файл.
+ *
+ *  СВОЁ ОКНО, А НЕ ОБЩИЙ `document` (долг 386, заход 7.275). Скрипт
+ *  заглушки ставит повторную пробу сети через 700 мс и после неё зовёт
+ *  `show("offline")`. Пока он исполнялся в общем окне Vitest, эти таймеры
+ *  переживали тест: файл кончается за ≈0,4 с, окружение снимается, и на
+ *  медленном раннере `show` падал «document is not defined» — шаг «Unit
+ *  tests» краснел при всех зелёных тестах (CI #1364). Отдельный `JSDOM`
+ *  держит таймеры у себя, а `window.close()` в `afterEach` их гасит, так
+ *  что пережить тест им не на чем. Фальшивые таймеры здесь не годятся:
+ *  `setTimeout` скрипт зовёт уже после своей пробы `fetch`, то есть,
+ *  возможно, после того, как тест вернул настоящие часы. */
 function renderOfflineScreenAt(path: string): Document {
-  window.history.replaceState({}, "", path);
-  document.open();
-  document.write(HTML);
-  document.close();
-  // jsdom не исполняет `document.write`-скрипты в этой конфигурации,
-  // поэтому скрипт файла берётся из него же и запускается здесь — то же
-  // тело, без копии.
-  const source = /<script>([\s\S]*?)<\/script>/.exec(HTML);
-  expect(source, "в заглушке нет скрипта выбора локали").not.toBeNull();
-  new Function(source![1])();
-  return document;
+  expect(/<script>[\s\S]*?<\/script>/.test(HTML), "в заглушке нет скрипта выбора локали").toBe(true);
+  const dom = new JSDOM(HTML, { url: `http://localhost${path}`, runScripts: "dangerously" });
+  rendered.push(dom);
+  return dom.window.document;
 }
 
 /** Видимый текст: без тела `<script>`. Русские подписи заголовка вкладки
@@ -64,8 +71,8 @@ function visibleText(doc: Document): string {
 }
 
 describe("офлайн-заглушка", () => {
-  beforeEach(() => {
-    document.title = "";
+  afterEach(() => {
+    for (const dom of rendered.splice(0)) dom.window.close();
   });
 
   it("на русском адресе печатает только русское", () => {

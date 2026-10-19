@@ -72,7 +72,8 @@
 // caught, in each engine that ran. See PROGRESS.md 4.1 — a zero without a
 // control is not a result.
 import { chromium, devices, webkit } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   FILL_THRESHOLD,
@@ -397,6 +398,34 @@ async function settle(page) {
   }
 }
 
+/**
+ * Полный текст ошибки нажатия и снимок экрана (долг 138, заход 7.275).
+ *
+ * Печатается ВЕСЬ `message` Playwright, все строки, вместе с «Call log» —
+ * там названа причина, по которой действие не прошло. Снимок ложится в
+ * `playwright-report/layout-geometry/`: эту папку шаг CI «Upload Playwright
+ * report» выгружает в артефакты при любом красном прогоне задания. Снимок
+ * — подспорье, а не условие: его отказ печатается и прогон не меняет.
+ */
+async function reportTabFailure(page, path, wanted, error, spent) {
+  const viewport = page.viewportSize();
+  const where = `${path} @ ${viewport ? `${viewport.width}x${viewport.height}` : "?"}`;
+  // Без управляющих последовательностей цвета: в журнале CI они — мусор.
+  const full = String(error?.message ?? error ?? "(ошибки нет)").replace(/\u001b\[[0-9;]*m/g, "");
+  console.log(`\n── ПОЛНЫЙ ТЕКСТ ОШИБКИ PLAYWRIGHT: вкладка «${wanted}», ${where}, потрачено ${spent} мс ──`);
+  console.log(full);
+  console.log("── конец текста ошибки ──");
+  const slug = `${path}-${viewport?.width ?? 0}`.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+  const file = join("playwright-report", "layout-geometry", `tab-${slug}-${Date.now()}.png`);
+  try {
+    mkdirSync(dirname(file), { recursive: true });
+    await page.screenshot({ path: file, timeout: 5_000 });
+    console.log(`   снимок экрана: ${file}`);
+  } catch (e) {
+    console.log(`   снимок экрана не снят: ${String(e?.message ?? e).split("\n")[0]}`);
+  }
+}
+
 async function inspect(ctx, page_, plant) {
   const path = typeof page_ === "string" ? page_ : page_.path;
   const tab = typeof page_ === "string" ? null : page_.tab;
@@ -463,9 +492,17 @@ async function inspect(ctx, page_, plant) {
     const target = page.getByRole("tab", { name: wanted, exact: true });
     const t0 = Date.now();
     let failedAt = null;
+    // Ошибка Playwright целиком (долг 138, заход 7.275). Первая строка —
+    // только «Timeout 10000ms exceeded»; ПОЧЕМУ нажатие не прошло
+    // (вкладку перекрывает другой элемент, она не стоит на месте, не
+    // принимает событий) Playwright пишет ниже, в «Call log». Строка в
+    // `problems` остаётся короткой, а полный текст печатается отдельным
+    // блоком и кладётся снимок экрана — следующий случай назовёт причину.
+    let failure = null;
     try {
       await target.waitFor({ state: "visible", timeout: 10_000 });
     } catch (e) {
+      failure = e;
       failedAt = `вкладка не появилась: ${String(e.message).split("\n")[0].slice(0, 110)}`;
     }
     if (!failedAt) {
@@ -483,6 +520,7 @@ async function inspect(ctx, page_, plant) {
           await page.waitForTimeout(50);
         }
       } catch (e) {
+        failure = e;
         failedAt = `вкладку не удалось подвести в окно прокрутки: ${String(e.message).split("\n")[0].slice(0, 110)}`;
       }
     }
@@ -490,14 +528,17 @@ async function inspect(ctx, page_, plant) {
       try {
         await target.click({ timeout: 10_000 });
       } catch (e) {
+        failure = e;
         failedAt = `нажатие не прошло: ${String(e.message).split("\n")[0].slice(0, 110)}`;
       }
     }
     if (failedAt) {
+      const spent = Date.now() - t0;
       problems.push(
         `could not open the "${wanted}" tab — this page's practice block was NOT measured ` +
-          `[${failedAt}; потрачено ${Date.now() - t0} мс]`,
+          `[${failedAt}; потрачено ${spent} мс]`,
       );
+      await reportTabFailure(page, path, wanted, failure, spent);
     }
     await settle(page);
   }
