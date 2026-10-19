@@ -36,6 +36,25 @@ export function mediaDescription(
   );
 }
 
+/**
+ * `description` разметки `LearningResource` (application/ld+json) — ЗАХОД
+ * 7.276, решение владельца 18.10.2026.
+ *
+ * До 7.276 в разметке на обеих локалях стоял `item.description` — абзац,
+ * написанный по-испански для каждой записи. Мета-описание `/ru` русское с
+ * 30.08.2026 (`mediaDescription`), а разметка той же страницы говорила
+ * по-испански: замер 7.275 на проде — 20 из 20. Теперь на `/ru` это ровно
+ * та же строка, что в `<meta name="description">`: одна страница — одно
+ * описание, как у рассказов с 7.275 (`storyArticleDescription`). На `/es`
+ * не изменилось ничего: полный испанский абзац, как и был.
+ */
+export function mediaJsonLdDescription(
+  lang: string,
+  item: { title: string; level: string; category: string; description: string },
+): string {
+  return lang === "ru" ? mediaDescription(lang, item) : item.description;
+}
+
 /** What the page served before 30.08.2026. Frozen media pages must keep
  * serving exactly this until the 25.09 readout, so it lives here next to
  * its replacement rather than inline in the page, where the two could

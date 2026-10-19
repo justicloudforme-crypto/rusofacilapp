@@ -19,7 +19,7 @@ import { clipsByText } from "@/lib/audio-reuse";
 import { textAudioKey } from "@/lib/lessons/audioKeys";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle } from "@/lib/frozen-pages";
-import { mediaDescription } from "@/lib/media/metadata";
+import { mediaDescription, mediaJsonLdDescription } from "@/lib/media/metadata";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { storyTitles } from "@/lib/story-title";
@@ -153,7 +153,9 @@ export default async function MediaDetailPage({
           "@context": "https://schema.org",
           "@type": "LearningResource",
           name: item.title,
-          description: item.description,
+          // На `/ru` — то же, что мета-описание; на `/es` — испанский абзац
+          // (7.276, сторож `check:story-description`).
+          description: mediaJsonLdDescription(lang, item),
           learningResourceType: categoryLabels[item.category],
           educationalLevel: item.level,
           inLanguage: lang,

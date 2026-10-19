@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { storyArticleDescription, storyMetaDescription, storyVisibleDescription } from "./story-meta";
+import { mediaDescription, mediaJsonLdDescription } from "./media/metadata";
 
 /**
  * ДОЛГ 205 (7.274): на `/ru/stories/…` мета-описание — не испанское.
@@ -308,5 +309,127 @@ describe("страница рассказа печатает абзац и Artic
       "в Article нет поля description",
     );
     expect(wiringProblems("export default function Page() {}")).toEqual(["разметка Article не найдена"]);
+  });
+});
+
+/**
+ * МЕДИА НА `/ru` — `description` РАЗМЕТКИ `LearningResource` (заход 7.276,
+ * решение владельца 18.10.2026).
+ *
+ * Тот же класс, что остаток долга 205 у рассказов: мета-описание `/ru/media/…`
+ * русское с 30.08.2026, а `description` в ld+json той же страницы стоял
+ * испанский (`item.description`; замер 7.275 и 7.276 на проде — 20 из 20).
+ * Теперь на `/ru` разметка = мета-описание (`mediaJsonLdDescription`), на
+ * `/es` — испанский абзац записи, как и был.
+ *
+ * Выборка — ВСЕ записи `src/lib/media/mediaData.json`: этот файл и есть
+ * каталог прода (заголовок, уровень, описание едут с кодом), 275 записей.
+ * Пустой или усохший файл — красный, а не «нарушений 0» (правило 4.1).
+ * Язык строки — по большинству букв (кириллица против латиницы, имя
+ * продукта вычтено): в русских строках есть испанские скобки названий
+ * («Катюша (canción folclórica)»), и проверка «ни одного латинского слова»
+ * судила бы название, а не язык описания.
+ */
+type MediaRow = { id: string; title: string; level: string; category: string; description: string };
+type MediaLdFn = typeof mediaJsonLdDescription;
+
+const MEDIA_ROWS = Object.values(
+  JSON.parse(readFileSync(join(process.cwd(), "src", "lib", "media", "mediaData.json"), "utf8")) as Record<string, MediaRow>,
+);
+
+function letterLanguage(text: string): "ru" | "es" | "?" {
+  const bare = text.replace(/RusoFácil(?:app)?/giu, "");
+  const latin = (bare.match(/[a-záéíóúüñ]/giu) ?? []).length;
+  const cyrillic = (bare.match(/\p{Script=Cyrillic}/gu) ?? []).length;
+  return cyrillic > latin ? "ru" : latin > 0 ? "es" : "?";
+}
+
+/** Прежнее правило страницы (до 7.276): испанский абзац на обеих локалях. */
+const before7276MediaLd: MediaLdFn = (_lang, item) => item.description;
+
+function mediaLdProblems(fn: MediaLdFn): string[] {
+  const found: string[] = [];
+  for (const item of MEDIA_ROWS) {
+    const ru = fn("ru", item);
+    if (ru !== mediaDescription("ru", item)) found.push(`/ru ${item.id}: LearningResource.description ≠ мета-описанию`);
+    if (letterLanguage(ru) !== "ru") found.push(`/ru ${item.id}: LearningResource.description не русский («${ru.slice(0, 30)}…»)`);
+    if (fn("es", item) !== item.description) found.push(`/es ${item.id}: LearningResource.description — не испанский абзац записи`);
+  }
+  return found;
+}
+
+describe("медиа: description разметки LearningResource — на языке страницы (7.276)", () => {
+  it("выборка — каталог медиа целиком, не пустая", () => {
+    expect(MEDIA_ROWS.length).toBeGreaterThanOrEqual(275);
+    expect(MEDIA_ROWS.every((item) => item.description && item.title)).toBe(true);
+  });
+
+  it("новое правило: нарушений 0 на всех записях", () => {
+    expect(mediaLdProblems(mediaJsonLdDescription)).toEqual([]);
+  });
+
+  it("подсадка: прежнее правило (испанский абзац и на /ru) ловится на каждой записи", () => {
+    const found = mediaLdProblems(before7276MediaLd);
+    // Каждая запись поймана хотя бы признаком «≠ мета-описанию». По языку
+    // букв — 273 из 275: у `history-gagarin` абзац записи и так русский, у
+    // `video-saludos-presentaciones` русских цитат больше, чем испанских букв.
+    expect(found.filter((f) => f.includes("≠ мета-описанию")).length).toBe(MEDIA_ROWS.length);
+    expect(found.filter((f) => f.includes("не русский")).length).toBeGreaterThanOrEqual(MEDIA_ROWS.length - 2);
+  });
+
+  it("подсадка с другой стороны: русская строка и на /es ловится на каждой записи", () => {
+    const found = mediaLdProblems((_lang, item) => mediaDescription("ru", item));
+    expect(found.filter((f) => f.startsWith("/es")).length).toBe(MEDIA_ROWS.length);
+  });
+
+  it("«Катюша» на /ru: разметка — ровно мета-описание; на /es — испанский абзац", () => {
+    const item = MEDIA_ROWS.find((row) => row.title.startsWith("Катюша"))!;
+    expect(item).toBeDefined();
+    expect(mediaJsonLdDescription("ru", item)).toBe(mediaDescription("ru", item));
+    expect(mediaJsonLdDescription("ru", item)).toMatch(/^«Катюша/);
+    expect(mediaJsonLdDescription("es", item)).toBe(item.description);
+  });
+});
+
+describe("страница медиа берёт description разметки только через mediaJsonLdDescription", () => {
+  const PAGE = join(process.cwd(), "src", "app", "[lang]", "media", "[id]", "page.tsx");
+
+  /** Объект разметки `LearningResource` — от `"@type": "LearningResource"` до закрытия `JsonLd`. */
+  function learningResourceBlock(source: string): string {
+    const from = source.indexOf('"@type": "LearningResource"');
+    const to = source.indexOf("/>", from);
+    return from < 0 || to < 0 ? "" : source.slice(from, to);
+  }
+
+  function mediaWiringProblems(source: string): string[] {
+    const block = learningResourceBlock(source);
+    if (!block) return ["разметка LearningResource не найдена"];
+    const described = /\bdescription: ([^\n]+?),?\n/.exec(block);
+    if (!described) return ["в LearningResource нет поля description"];
+    return described[1] === "mediaJsonLdDescription(lang, item)"
+      ? []
+      : [`LearningResource.description берёт «${described[1]}», а не mediaJsonLdDescription(lang, item)`];
+  }
+
+  const source = readFileSync(PAGE, "utf8");
+
+  it("настоящая страница: нарушений 0", () => {
+    expect(mediaWiringProblems(source)).toEqual([]);
+  });
+
+  it("подсадка: страница до 7.276 (description: item.description) ловится", () => {
+    // Ровно та строка, что стояла в `main` до 7.276.
+    const planted = source.replace("description: mediaJsonLdDescription(lang, item),", "description: item.description,");
+    expect(planted).not.toBe(source);
+    expect(mediaWiringProblems(planted)).toEqual([
+      "LearningResource.description берёт «item.description», а не mediaJsonLdDescription(lang, item)",
+    ]);
+  });
+
+  it("подсадка: разметка без description или страница без LearningResource — красный, а не «чисто»", () => {
+    expect(mediaWiringProblems(source.replace(/\n\s*description: mediaJsonLdDescription\(lang, item\),/, ""))).toEqual([
+      "в LearningResource нет поля description",
+    ]);
+    expect(mediaWiringProblems("export default function Page() {}")).toEqual(["разметка LearningResource не найдена"]);
   });
 });
