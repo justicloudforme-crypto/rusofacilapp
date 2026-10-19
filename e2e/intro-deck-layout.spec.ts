@@ -97,6 +97,17 @@ for (const lang of ["es", "ru"] as const) {
       for (const at of [0, total - 1]) {
         await dots.nth(at).click();
         await page.waitForTimeout(150);
+        // 7.277: `.tap` (globals.css) сжимает нажатую кнопку до 96 % с
+        // переходом 150 мс, и замер ровно через 150 мс попадал в середину
+        // перехода — «43.8×43.8» у только что нажатой точки, 10 первых
+        // попыток из 16 полных наборов на Linux, когда запись трассы
+        // замедлила WebKit. Мерим после того, как в деке закончились все
+        // анимации: размер нажатия — мгновенный отклик, а не цель касания.
+        await page.waitForFunction(() =>
+          (document.querySelector('[data-testid="intro-presentation"]')?.getAnimations({ subtree: true }) ?? []).every(
+            (a) => a.playState !== "running",
+          ),
+        );
         const small = (await deckTargets(page)).filter((t) => t.w < MIN_TAP || t.h < MIN_TAP);
         expect(small, `too small on slide ${at + 1}: ${small.map((t) => `${t.name} ${t.w}×${t.h}`).join("; ")}`).toEqual([]);
       }
