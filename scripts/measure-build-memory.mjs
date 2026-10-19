@@ -29,7 +29,9 @@
  * укладывался 8 из 8. В CI кеша нет вовсе, так что флаг уравнивает ноутбук с
  * CI. Стирается ровно `<папка запуска>/.next/cache` и ничего больше: любой
  * другой путь, путь через `..`, абсолютный путь и ссылка (symlink) вместо
- * папки — отказ с кодом 2 ДО запуска сборки (`cacheDirVerdict`).
+ * папки — отказ с кодом 2 ДО запуска сборки (`cacheDirVerdict`). После
+ * очистки вне CI идёт одна сборка без замера (прогрев, `shouldWarmUp`), и
+ * мерится вторая: холодная сборка на macOS меряет не код, а холодный старт.
  */
 import { spawn, execFileSync } from "node:child_process";
 import { lstatSync, rmSync, mkdirSync, writeFileSync, existsSync, symlinkSync, mkdtempSync } from "node:fs";
@@ -62,6 +64,19 @@ export function cacheDirVerdict(cwd, arg) {
     if (!st.isDirectory()) return { ok: false, reason: `«${path.relative(cwd, p)}» — не папка` };
   }
   return { ok: true, dir };
+}
+
+/**
+ * Прогревать ли кеш после очистки. В CI — нет: там кеша нет никогда, и шаг
+ * мерит ХОЛОДНУЮ сборку, как задумано (Linux, 9 прогонов `main` до 19.10.2026:
+ * пик суммы 5209–5448 МБ). На ноутбуке — да: холодная сборка на macOS
+ * (замер 7.278, Mac Studio) дала 7135–7203 МБ в 5 из 6 (один процесс
+ * компиляции 5,4–5,5 ГБ ещё не отдал память, когда стартует следующий), а
+ * тёплая — 4245–4334 МБ в 4 из 4. Это ровно ручное правило 3.4 PROGRESS.md
+ * («сначала `npm run build` и повтор»), сделанное прибором.
+ */
+export function shouldWarmUp(env) {
+  return !env.CI;
 }
 
 /** Размер дерева в байтах (`du -sk`), 0 — если папки нет или `du` недоступен. */
@@ -184,6 +199,9 @@ function selfTest() {
   check("порог ловит превышение", over(6000, 5600), true);
   check("порог пропускает норму", over(5000, 5600), false);
 
+  check("прогрев на ноутбуке", shouldWarmUp({}), true);
+  check("в CI прогрева нет — замер холодный", shouldWarmUp({ CI: "true" }), false);
+
   // `--clean-cache` (долг 399): разрешён ровно один путь, всё прочее — отказ.
   const cwd = mkdtempSync(path.join(tmpdir(), "rf-build-memory-"));
   try {
@@ -230,7 +248,7 @@ function selfTest() {
     console.error(`✗ ${bad} случай(ев) разошлись с ожиданием.`);
     process.exit(1);
   }
-  console.log("Контроль пройден: 23 случая, из них 15 обязаны были дать НЕнулевой ответ или отказ.");
+  console.log("Контроль пройден: 25 случаев, из них 16 обязаны были дать НЕнулевой ответ или отказ.");
   process.exit(0);
 }
 
@@ -258,6 +276,17 @@ async function main() {
       process.exit(2);
     }
     console.log(`кеш сборки ${CLEANABLE_CACHE} стёрт перед замером: ${Math.round(bytes / 1024 / 1024)} МБ (долг 399)`);
+    if (shouldWarmUp(process.env)) {
+      console.log("прогрев: одна сборка БЕЗ замера, чтобы кеш был только от этого дерева (долг 399)");
+      const warm = await new Promise((resolve) => {
+        const w = spawn(command[0], command.slice(1), { stdio: "inherit" });
+        w.on("exit", (c, signal) => resolve(signal ? `signal:${signal}` : c));
+      });
+      if (warm !== 0) {
+        console.error(`✗ прогревная сборка завершилась с ${warm} — замер не начинаю.`);
+        process.exit(1);
+      }
+    }
   }
 
   const started = Date.now();
