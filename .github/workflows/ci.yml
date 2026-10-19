@@ -1769,8 +1769,13 @@ jobs:
         timeout-minutes: 30
         run: npm run check:rendered:ci
 
+      # 7.277 (долги 388/389): отчёт выгружается и у ЗЕЛЁНОГО прогона, если
+      # в нём упала хоть одна попытка. Признак — файлы в
+      # `playwright-report/data/`: тесты сами вложений не кладут, а трасса
+      # (`retain-on-failure`) и снимок (`only-on-failure`) остаются только у
+      # упавших попыток. Чистый прогон артефакта не создаёт, как и раньше.
       - name: Upload Playwright report
-        if: failure()
+        if: failure() || hashFiles('playwright-report/data/**') != ''
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
