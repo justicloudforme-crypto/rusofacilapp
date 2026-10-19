@@ -14,7 +14,8 @@ import { ACCESS_MARK_ICON, type AccessRequirement } from "@/lib/access-marks";
 export interface MediaSummary {
   id: string;
   title: string;
-  description: string;
+  /** Абзац под названием; `null` — не печатать (на `/ru`, `mediaVisibleDescription`). */
+  description: string | null;
   level: MediaLevel;
   category: MediaCategory;
   youtubeVideoId: string;
@@ -171,7 +172,9 @@ export default function MediaCatalog({
                   </span>
                 </div>
                 <h2 className="mt-3 text-lg font-medium">{item.title}</h2>
-                <p className="mt-2 line-clamp-2 text-sm text-foreground/70">{item.description}</p>
+                {item.description && (
+                  <p className="mt-2 line-clamp-2 text-sm text-foreground/70">{item.description}</p>
+                )}
                 <span className="mt-4 text-sm font-medium text-foreground/70 group-hover:text-foreground">
                   {dict.openButton} →
                 </span>

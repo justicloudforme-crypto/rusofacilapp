@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getAllMedia } from "@/lib/media/data";
+import { mediaVisibleDescription } from "@/lib/media/metadata";
 import { mediaLevels } from "@/lib/media/types";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { accessSignFor, mediaRequirement } from "@/lib/access-marks";
@@ -56,7 +57,9 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
     .map((item) => ({
       id: item.id,
       title: item.title,
-      description: item.description,
+      // 7.278: на /ru абзаца в карточке нет, как и на странице записи (7.277)
+      // и в каталоге рассказов (7.196); на /es — абзац записи, как был.
+      description: mediaVisibleDescription(lang, item),
       level: item.level,
       category: item.category,
       youtubeVideoId: item.youtubeVideoId,
