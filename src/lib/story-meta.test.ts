@@ -529,3 +529,78 @@ describe("страница медиа печатает абзац под заг�
     expect(visibleWiringProblems(planted)).toEqual(["абзац под заголовком не найден", "страница печатает {item.description} мимо правила"]);
   });
 });
+
+/**
+ * КАТАЛОГ `/ru/media` — АБЗАЦ В КАРТОЧКАХ (заход 7.278, решение владельца
+ * 19.10.2026, вариант «а» раздела 7 после 7.277).
+ *
+ * Страница записи с 7.277 абзаца на `/ru` не печатает, а карточки каталога
+ * (`MediaCatalog.tsx`) печатали `item.description` — испанский абзац под
+ * русским названием, тот же класс, что каталог рассказов до 7.196. Правило
+ * одно на оба места: страница каталога берёт абзац карточки у
+ * `mediaVisibleDescription` (на `/ru` — `null`), карточка печатает его только
+ * когда он есть. Подсадки — страница и карточка в том виде, что стояли в
+ * `main` до 7.278, и правило на месте, а карточка печатает мимо него.
+ */
+describe("каталог медиа: абзац карточки только через mediaVisibleDescription (7.278)", () => {
+  const CATALOG_PAGE = join(process.cwd(), "src", "app", "[lang]", "media", "page.tsx");
+  const CARD = join(process.cwd(), "src", "components", "media", "MediaCatalog.tsx");
+
+  function catalogWiringProblems(page: string, card: string): string[] {
+    const found: string[] = [];
+    const from = page.indexOf("export default");
+    if (from < 0) return ["export default страницы каталога не найден"];
+    const body = page.slice(from);
+    if (!/\n\s*description: mediaVisibleDescription\(lang, item\),/.test(body))
+      found.push("абзац карточки собран не через mediaVisibleDescription");
+    if (/\n\s*description: item\.description,/.test(body)) found.push("страница каталога отдаёт карточке item.description мимо правила");
+    if (!/\n\s*description: string \| null;/.test(card)) found.push("MediaSummary.description не допускает null");
+    const printed = card.match(/\{item\.description\}/g) ?? [];
+    const guarded = card.match(/\{item\.description && \(?\s*<p className="mt-2 line-clamp-2 text-sm text-foreground\/70">\{item\.description\}<\/p>/g) ?? [];
+    if (guarded.length !== 1) found.push(`абзац карточки под условием найден ${guarded.length} раз, ждали 1`);
+    if (printed.length !== guarded.length) found.push("карточка печатает {item.description} без условия");
+    return found;
+  }
+
+  const page = readFileSync(CATALOG_PAGE, "utf8");
+  const card = readFileSync(CARD, "utf8");
+
+  it("настоящие страница и карточка: нарушений 0", () => {
+    expect(catalogWiringProblems(page, card)).toEqual([]);
+  });
+
+  it("правило каталога: на /ru абзаца нет ни у одной записи, на /es — абзац записи", () => {
+    expect(MEDIA_ROWS.length).toBeGreaterThanOrEqual(275);
+    expect(MEDIA_ROWS.filter((item) => mediaVisibleDescription("ru", item) !== null)).toEqual([]);
+    expect(MEDIA_ROWS.filter((item) => mediaVisibleDescription("es", item) !== item.description)).toEqual([]);
+  });
+
+  it("подсадка: страница и карточка до 7.278 ловятся", () => {
+    // Ровно те строки, что стояли в `main` до 7.278.
+    const oldPage = page.replace("description: mediaVisibleDescription(lang, item),", "description: item.description,");
+    const oldCard = card
+      .replace(/description: string \| null;/, "description: string;")
+      .replace(
+        /\{item\.description && \(?\s*<p className="mt-2 line-clamp-2 text-sm text-foreground\/70">\{item\.description\}<\/p>\s*\)?\}/,
+        '<p className="mt-2 line-clamp-2 text-sm text-foreground/70">{item.description}</p>',
+      );
+    expect(oldPage).not.toBe(page);
+    expect(oldCard).not.toBe(card);
+    expect(catalogWiringProblems(oldPage, oldCard)).toEqual([
+      "абзац карточки собран не через mediaVisibleDescription",
+      "страница каталога отдаёт карточке item.description мимо правила",
+      "MediaSummary.description не допускает null",
+      "абзац карточки под условием найден 0 раз, ждали 1",
+      "карточка печатает {item.description} без условия",
+    ]);
+  });
+
+  it("подсадка: правило на месте, но карточка печатает абзац ещё раз мимо условия", () => {
+    const planted = card.replace(
+      /(<h2 className="mt-3 text-lg font-medium">\{item\.title\}<\/h2>)/,
+      '$1\n                <span>{item.description}</span>',
+    );
+    expect(planted).not.toBe(card);
+    expect(catalogWiringProblems(page, planted)).toEqual(["карточка печатает {item.description} без условия"]);
+  });
+});
