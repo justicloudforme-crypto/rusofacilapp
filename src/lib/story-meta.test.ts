@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { storyArticleDescription, storyMetaDescription, storyVisibleDescription } from "./story-meta";
-import { mediaDescription, mediaJsonLdDescription, mediaVisibleDescription } from "./media/metadata";
+import { mediaDescription, mediaJsonLdDescription, mediaTitle, mediaVisibleDescription } from "./media/metadata";
+import { buildSearchRecords, type SearchSources } from "./search/records";
+import { titleOf } from "./search/match";
+import type { Dictionary } from "@/i18n/dictionaries";
+import es from "../dictionaries/es.json";
+import ru from "../dictionaries/ru.json";
 
 /**
  * ДОЛГ 205 (7.274): на `/ru/stories/…` мета-описание — не испанское.
@@ -602,5 +607,220 @@ describe("каталог медиа: абзац карточки только ч
     );
     expect(planted).not.toBe(card);
     expect(catalogWiringProblems(page, planted)).toEqual(["карточка печатает {item.description} без условия"]);
+  });
+});
+
+/**
+ * НАЗВАНИЕ МЕДИА НА `/ru` — БЕЗ ИСПАНСКОЙ СКОБКИ В КОНЦЕ (заход 7.279, решение
+ * владельца 19.10.2026, вариант «б» раздела 7 после 7.278).
+ *
+ * Замер 7.278: у 35 из 275 названий `mediaData.json` есть испанская скобка
+ * («Катюша (canción folclórica)»), и на `/ru` она печаталась под русским
+ * названием везде. Правило одно (`mediaTitle`): на `/ru` снимается испанская
+ * часть ПОСЛЕДНЕЙ скобки русского названия; на `/es`, у целиком испанских
+ * названий (54), у русских скобок и у скобок внутри названия — ничего.
+ *
+ * Две стороны, как у абзаца: правило (весь каталог; прежнее «название как
+ * есть» — подсадка, пойманная на каждой испанской скобке; правило, снимающее
+ * скобку и на `/es` или у русских скобок, — подсадки с другой стороны) и
+ * проводка (каждое место `/ru`, где видно название, берёт его у `mediaTitle`;
+ * страницы в том виде, что стояли в `main` до 7.279, — подсадка).
+ */
+type MediaTitleFn = typeof mediaTitle;
+
+const CYRILLIC = /\p{Script=Cyrillic}/u;
+/** Последняя скобка в конце названия и то, что до неё. */
+const TAIL_BRACKET = /^(.*\S)\s*\(([^()]*)\)\s*$/u;
+
+function spanishPart(text: string): boolean {
+  return letterLanguage(text) === "es";
+}
+
+/** Записи, у которых на `/ru` должна уйти испанская часть скобки в конце. */
+const SPANISH_TAIL_ROWS = MEDIA_ROWS.filter((item) => {
+  const tail = TAIL_BRACKET.exec(item.title);
+  return Boolean(tail && CYRILLIC.test(tail[1]) && tail[2].split(",").some((part) => spanishPart(part)));
+});
+
+function mediaTitleProblems(fn: MediaTitleFn): string[] {
+  const found: string[] = [];
+  const seen = new Map<string, string>();
+  for (const item of MEDIA_ROWS) {
+    const onEs = fn("es", item.title);
+    if (onEs !== item.title) found.push(`/es ${item.id}: название изменено («${onEs}»)`);
+    const onRu = fn("ru", item.title);
+    const wasTail = TAIL_BRACKET.exec(item.title);
+    const isTail = TAIL_BRACKET.exec(onRu);
+    if (isTail && CYRILLIC.test(isTail[1]) && isTail[2].split(",").some((part) => spanishPart(part)))
+      found.push(`/ru ${item.id}: испанская скобка в конце («${onRu}»)`);
+    if (!CYRILLIC.test(item.title) && onRu !== item.title) found.push(`/ru ${item.id}: целиком испанское название изменено`);
+    if (!SPANISH_TAIL_ROWS.includes(item) && onRu !== item.title) found.push(`/ru ${item.id}: тронута не испанская скобка («${onRu}»)`);
+    if (wasTail && SPANISH_TAIL_ROWS.includes(item) && !onRu.startsWith(wasTail[1])) found.push(`/ru ${item.id}: название обрезано не по скобке («${onRu}»)`);
+    const twin = seen.get(onRu);
+    if (twin) found.push(`/ru ${item.id}: то же название, что у ${twin}`);
+    seen.set(onRu, item.id);
+  }
+  return found;
+}
+
+/** Прежнее правило (до 7.279): название как есть на обеих локалях. */
+const before7279MediaTitle: MediaTitleFn = (_lang, title) => title;
+
+describe("медиа: название на /ru без испанской скобки в конце (7.279)", () => {
+  it("выборка — каталог целиком; испанских скобок в конце есть, и среди них «Катюша»", () => {
+    expect(MEDIA_ROWS.length).toBeGreaterThanOrEqual(275);
+    expect(SPANISH_TAIL_ROWS.length).toBeGreaterThan(0);
+    expect(SPANISH_TAIL_ROWS.map((item) => item.id)).toContain("song-katyusha");
+  });
+
+  it("новое правило: нарушений 0 на всех записях", () => {
+    expect(mediaTitleProblems(mediaTitle)).toEqual([]);
+  });
+
+  it("примеры: скобка уходит целиком или остаётся год; /es как есть", () => {
+    expect(mediaTitle("ru", "Катюша (canción folclórica)")).toBe("Катюша");
+    expect(mediaTitle("es", "Катюша (canción folclórica)")).toBe("Катюша (canción folclórica)");
+    expect(mediaTitle("ru", "Миллион алых роз — Алла Пугачёва (estrada clásica, 1982)")).toBe("Миллион алых роз — Алла Пугачёва (1982)");
+    expect(mediaTitle("ru", "Ёжик в тумане (1975, Юрий Норштейн)")).toBe("Ёжик в тумане (1975, Юрий Норштейн)");
+    expect(mediaTitle("ru", "Los casos rusos explicados en español (nominativo y acusativo)")).toBe(
+      "Los casos rusos explicados en español (nominativo y acusativo)",
+    );
+    expect(mediaTitle("ru", "La construcción «У меня есть» (tener) en ruso, explicado en español")).toBe(
+      "La construcción «У меня есть» (tener) en ruso, explicado en español",
+    );
+  });
+
+  it("подсадка: прежнее правило (название как есть) ловится на каждой испанской скобке", () => {
+    const found = mediaTitleProblems(before7279MediaTitle);
+    expect(found.filter((f) => f.includes("испанская скобка в конце")).length).toBe(SPANISH_TAIL_ROWS.length);
+    expect(found.filter((f) => f.startsWith("/es")).length).toBe(0);
+  });
+
+  it("подсадка с другой стороны: правило, снимающее скобку и на /es, ловится на каждой такой записи", () => {
+    const found = mediaTitleProblems((_lang, title) => mediaTitle("ru", title));
+    expect(found.filter((f) => f.startsWith("/es")).length).toBe(SPANISH_TAIL_ROWS.length);
+  });
+
+  it("подсадка с другой стороны: правило, снимающее любую скобку в конце, ловится на русских и целиком испанских", () => {
+    const greedy: MediaTitleFn = (lang, title) => (lang === "ru" ? title.replace(/\s*\([^()]*\)\s*$/u, "") : title);
+    const found = mediaTitleProblems(greedy);
+    expect(found.some((f) => f.startsWith("/ru movie-ezhik-v-tumane: тронута не испанская скобка"))).toBe(true);
+    expect(found.some((f) => f.startsWith("/ru video-casos-rusos: целиком испанское название изменено"))).toBe(true);
+  });
+});
+
+describe("каждое место /ru, где видно название медиа, берёт его у mediaTitle (7.279)", () => {
+  const ROOT = join(process.cwd(), "src");
+  /** Файл → сколько раз в нём обязан стоять вызов правила. */
+  const SURFACES: Record<string, number> = {
+    "app/[lang]/media/page.tsx": 2, // карточка каталога и список ссылок
+    "app/[lang]/media/[id]/page.tsx": 2, // `<title>` и displayTitle (h1, ld+json, крошки, плеер)
+    "app/[lang]/stories/[id]/page.tsx": 1, // «похожее» у рассказа
+    "app/[lang]/courses/[level]/[lesson]/page.tsx": 1, // «похожее» у урока
+  };
+  const CALL = "mediaTitle(lang, item.title)";
+
+  function wiringProblems(files: Record<string, string>): string[] {
+    const found: string[] = [];
+    for (const [file, expected] of Object.entries(SURFACES)) {
+      const source = files[file];
+      if (!source) {
+        found.push(`${file}: файла нет`);
+        continue;
+      }
+      const calls = source.split(CALL).length - 1;
+      if (calls !== expected) found.push(`${file}: вызовов ${CALL} ${calls}, ждали ${expected}`);
+      const bare = source.split(CALL).join("").match(/\bitem\.title\b/g) ?? [];
+      if (bare.length) found.push(`${file}: item.title мимо правила — ${bare.length}`);
+    }
+    const detail = files["app/[lang]/media/[id]/page.tsx"] ?? "";
+    for (const [what, pattern] of [
+      ["<h1>", /tracking-tight">\{displayTitle\}<\/h1>/],
+      ["ld+json name", /\n\s*name: displayTitle,\n/],
+      ["хлебные крошки", /\{ name: displayTitle, url: /],
+    ] as const) {
+      if (!pattern.test(detail)) found.push(`страница записи: ${what} не через displayTitle`);
+    }
+    return found;
+  }
+
+  const real = Object.fromEntries(Object.keys(SURFACES).map((file) => [file, readFileSync(join(ROOT, file), "utf8")]));
+
+  it("настоящие страницы: нарушений 0", () => {
+    expect(wiringProblems(real)).toEqual([]);
+  });
+
+  it("подсадка: страницы до 7.279 (item.title напрямую) ловятся в каждом файле", () => {
+    // Ровно то, что стояло в `main` до 7.279: название записи без правила.
+    const old = Object.fromEntries(
+      Object.entries(real).map(([file, source]) => [
+        file,
+        source
+          .split(CALL)
+          .join("item.title")
+          .replace(/\n\s*const displayTitle = item\.title;/, "")
+          .replace(/displayTitle/g, "item.title"),
+      ]),
+    );
+    const found = wiringProblems(old);
+    for (const file of Object.keys(SURFACES)) {
+      expect(found.some((f) => f.startsWith(`${file}: вызовов`)), file).toBe(true);
+      expect(found.some((f) => f.startsWith(`${file}: item.title мимо правила`)), file).toBe(true);
+    }
+    expect(found.filter((f) => f.startsWith("страница записи:")).length).toBe(3);
+  });
+
+  it("подсадка: правило на месте, но заголовок <h1> печатает item.title — красный", () => {
+    const file = "app/[lang]/media/[id]/page.tsx";
+    const planted = { ...real, [file]: real[file].replace('tracking-tight">{displayTitle}</h1>', 'tracking-tight">{item.title}</h1>') };
+    expect(planted[file]).not.toBe(real[file]);
+    expect(wiringProblems(planted)).toEqual([`${file}: item.title мимо правила — 1`, "страница записи: <h1> не через displayTitle"]);
+  });
+
+  it("подсадка: страницы нет — красный, а не «чисто»", () => {
+    const rest = { ...real };
+    delete rest["app/[lang]/stories/[id]/page.tsx"];
+    expect(wiringProblems(rest)).toEqual(["app/[lang]/stories/[id]/page.tsx: файла нет"]);
+  });
+});
+
+describe("медиа: мета-описание и поиск на /ru — то же название, что на странице (7.279)", () => {
+  const SOURCES: SearchSources = {
+    dictionaries: { es: es as unknown as Dictionary, ru: ru as unknown as Dictionary },
+    exams: [],
+    stories: [],
+    media: MEDIA_ROWS.map((item) => ({ id: item.id, title: item.title, level: item.level })),
+    flashcards: [],
+    idioms: [],
+    glossary: [],
+    puzzles: [],
+  };
+
+  function surfaceProblems(records: ReturnType<typeof buildSearchRecords>, describeRu: typeof mediaDescription): string[] {
+    const found: string[] = [];
+    const media = new Map(records.filter((r) => r.section === "media").map((r) => [r.id, r]));
+    if (media.size < MEDIA_ROWS.length) found.push(`в поиске медиа ${media.size} из ${MEDIA_ROWS.length}`);
+    for (const item of SPANISH_TAIL_ROWS) {
+      const record = media.get(item.id);
+      if (record && titleOf(record, "ru") !== mediaTitle("ru", item.title)) found.push(`поиск /ru ${item.id}: «${titleOf(record, "ru")}»`);
+      if (record && titleOf(record, "es") !== item.title) found.push(`поиск /es ${item.id}: «${titleOf(record, "es")}»`);
+      const tail = TAIL_BRACKET.exec(item.title)!;
+      if (describeRu("ru", item).includes(`(${tail[2]})`)) found.push(`мета-описание /ru ${item.id}: с испанской скобкой`);
+    }
+    return found;
+  }
+
+  it("настоящие поиск и мета-описание: нарушений 0", () => {
+    expect(SPANISH_TAIL_ROWS.length).toBeGreaterThan(0);
+    expect(surfaceProblems(buildSearchRecords(SOURCES), mediaDescription)).toEqual([]);
+  });
+
+  it("подсадка: поиск без titleRu и мета-описание с полным названием (до 7.279) ловятся на каждой записи", () => {
+    const oldRecords = buildSearchRecords(SOURCES).map((r) => (r.section === "media" ? { ...r, titleRu: undefined } : r));
+    const oldDescription: typeof mediaDescription = (_lang, item) => `«${item.title}» — песня уровня ${item.level}.`;
+    const found = surfaceProblems(oldRecords, oldDescription);
+    expect(found.filter((f) => f.startsWith("поиск /ru")).length).toBe(SPANISH_TAIL_ROWS.length);
+    expect(found.filter((f) => f.startsWith("мета-описание /ru")).length).toBe(SPANISH_TAIL_ROWS.length);
+    expect(found.filter((f) => f.startsWith("поиск /es")).length).toBe(0);
   });
 });
