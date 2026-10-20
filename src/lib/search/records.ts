@@ -20,6 +20,7 @@ import {
   wordGameRequirement,
 } from "@/lib/access-marks";
 import { glossaryTermNames } from "@/lib/glossary-term-name";
+import { mediaTitle } from "@/lib/media/metadata";
 import type { SearchRecord } from "./types";
 
 /**
@@ -218,15 +219,22 @@ function storyRecords(stories: SearchSources["stories"]): SearchRecord[] {
 }
 
 function mediaRecords(media: SearchSources["media"]): SearchRecord[] {
-  return media.map((item) => ({
+  return media.map((item) => {
+    // 7.279: на /ru — то же название, что печатает страница записи (без
+    // испанской скобки в конце, `mediaTitle`); по общему правилу индекса
+    // `titleRu` пишется только когда оно другое.
+    const titleRu = mediaTitle("ru", item.title);
+    return {
     section: "media" as const,
     id: item.id,
     path: `/media/${item.id}`,
     title: item.title,
+    ...(titleRu === item.title ? {} : { titleRu }),
     subtitle: item.level,
     level: item.level,
     requires: mediaRequirement(item),
-  }));
+    };
+  });
 }
 
 function flashcardRecords(cards: SearchSources["flashcards"]): SearchRecord[] {
