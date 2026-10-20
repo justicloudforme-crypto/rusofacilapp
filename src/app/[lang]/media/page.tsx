@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/config";
 import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getAllMedia } from "@/lib/media/data";
-import { mediaVisibleDescription } from "@/lib/media/metadata";
+import { mediaTitle, mediaVisibleDescription } from "@/lib/media/metadata";
 import { mediaLevels } from "@/lib/media/types";
 import { getEntitlementTier } from "@/lib/entitlement";
 import { accessSignFor, mediaRequirement } from "@/lib/access-marks";
@@ -56,7 +56,8 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
     .filter((item) => item.embedStatus !== "blocked")
     .map((item) => ({
       id: item.id,
-      title: item.title,
+      // 7.279: на /ru без испанской скобки в конце названия, на /es — как есть.
+      title: mediaTitle(lang, item.title),
       // 7.278: на /ru абзаца в карточке нет, как и на странице записи (7.277)
       // и в каталоге рассказов (7.196); на /es — абзац записи, как был.
       description: mediaVisibleDescription(lang, item),
@@ -103,7 +104,7 @@ export default async function MediaPage({ params }: PageProps<"/[lang]/media">) 
           то множество URL, которое стоит в карте сайта (все 275). */}
       <MediaLinkIndex
         lang={lang}
-        items={allMedia.map((item) => ({ id: item.id, title: item.title, level: item.level }))}
+        items={allMedia.map((item) => ({ id: item.id, title: mediaTitle(lang, item.title), level: item.level }))}
         dict={{ indexTitle: dict.media.indexTitle, indexIntro: dict.media.indexIntro }}
       />
     </div>

@@ -15,6 +15,7 @@ import { getContentInsights, getRelatedLessonForStory, getRelatedMediaForStory }
 import { isPilotStory } from "@/lib/story-pilot";
 import { getCulturalNote } from "@/lib/story-culture";
 import { getAllMedia } from "@/lib/media/data";
+import { mediaTitle } from "@/lib/media/metadata";
 import StoryText from "@/components/stories/StoryText";
 import DownloadButton from "@/components/DownloadButton";
 import ContentInsights from "@/components/stories/ContentInsights";
@@ -532,7 +533,8 @@ export default async function StoryReaderPage({
                   <span className="mr-1.5 text-xs font-normal uppercase tracking-wide text-foreground/50">
                     {dict.crossLinks.mediaLabel}
                   </span>
-                  {item.title}
+                  {/* 7.279: на /ru без испанской скобки в конце названия. */}
+                  {mediaTitle(lang, item.title)}
                 </Link>
               </li>
             ))}

@@ -32,7 +32,7 @@ export function mediaDescription(
   if (lang !== "ru") return truncateForMeta(item.description);
   const kind = KIND_RU[item.category] ?? "видео";
   return truncateForMeta(
-    `«${shortenTitle(item.title, TITLE_BUDGET)}» — ${kind} уровня ${item.level} с субтитрами, разбором лексики и упражнениями.`,
+    `«${shortenTitle(mediaTitle(lang, item.title), TITLE_BUDGET)}» — ${kind} уровня ${item.level} с субтитрами, разбором лексики и упражнениями.`,
   );
 }
 
@@ -69,6 +69,43 @@ export function mediaJsonLdDescription(
  */
 export function mediaVisibleDescription(lang: string, item: { description: string }): string | null {
   return lang === "ru" ? null : item.description || null;
+}
+
+/**
+ * НАЗВАНИЕ ЗАПИСИ МЕДИА НА ЯЗЫКЕ СТРАНИЦЫ — ЗАХОД 7.279, решение владельца
+ * 19.10.2026 (вариант «б» раздела 7 после 7.278).
+ *
+ * У части русских названий в `mediaData.json` в конце стоит испанская
+ * пояснительная скобка — «Катюша (canción folclórica)». На `/es` она к месту,
+ * на `/ru` это испанский хвост под русским названием (замер 7.278: 35 из 275
+ * названий с испанской скобкой где-либо). Данные не меняются: скобку снимает
+ * отрисовка, одно правило на все места `/ru`, где видно название (каталог,
+ * список ссылок, страница записи, `<title>`, ld+json, мета-описание, блоки
+ * «похожее» у рассказов и уроков, поиск).
+ *
+ * Что снимается. Только ПОСЛЕДНЯЯ скобка в конце названия, и только у
+ * русского названия (вне скобки есть кириллица): целиком испанские названия
+ * («Los casos rusos explicados en español (nominativo y acusativo)», их 54)
+ * владелец решает отдельно — их правило не трогает. Скобка делится по
+ * запятым; испанская часть (латиницы больше, чем кириллицы) уходит, остальное
+ * остаётся: «(estrada clásica, 1982)» → «(1982)», как у соседних «(1982)».
+ * Русские скобки («(1975, Юрий Норштейн)») и скобки внутри названия не
+ * трогаются. На `/es` — название как есть.
+ */
+export function mediaTitle(lang: string, title: string): string {
+  if (lang !== "ru") return title;
+  const tail = /^(.*\S)\s*\(([^()]*)\)\s*$/u.exec(title);
+  if (!tail || !/\p{Script=Cyrillic}/u.test(tail[1])) return title;
+  const parts = tail[2].split(",").map((part) => part.trim());
+  const kept = parts.filter((part) => !isSpanishPart(part));
+  if (kept.length === parts.length) return title;
+  return kept.length ? `${tail[1]} (${kept.join(", ")})` : tail[1];
+}
+
+function isSpanishPart(text: string): boolean {
+  const latin = (text.match(/\p{Script=Latin}/gu) ?? []).length;
+  const cyrillic = (text.match(/\p{Script=Cyrillic}/gu) ?? []).length;
+  return latin > cyrillic;
 }
 
 /** What the page served before 30.08.2026. Frozen media pages must keep

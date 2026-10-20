@@ -19,7 +19,7 @@ import { clipsByText } from "@/lib/audio-reuse";
 import { textAudioKey } from "@/lib/lessons/audioKeys";
 import JsonLd from "@/components/seo/JsonLd";
 import { contentPageTitle } from "@/lib/frozen-pages";
-import { mediaDescription, mediaJsonLdDescription, mediaVisibleDescription } from "@/lib/media/metadata";
+import { mediaDescription, mediaJsonLdDescription, mediaTitle, mediaVisibleDescription } from "@/lib/media/metadata";
 import { SITE_URL, breadcrumbList, paywallJsonLd, routeAlternates } from "@/lib/site";
 import StoryTitle from "@/components/stories/StoryTitle";
 import { storyTitles } from "@/lib/story-title";
@@ -52,7 +52,8 @@ export async function generateMetadata({
   // the grammar videos mirror the lesson topics on purpose. Caught by the
   // live crawl of 30.08.2026; see fitTitle's own comment.
   const shortQualifier = lang === "ru" ? `видео (${item.level})` : `vídeo (${item.level})`;
-  const title = contentPageTitle(item.id, item.title, qualifier, shortQualifier);
+  // 7.279: на /ru — название без испанской скобки в конце (`mediaTitle`).
+  const title = contentPageTitle(item.id, mediaTitle(lang, item.title), qualifier, shortQualifier);
   // The /ru description used to be one sentence with only the level
   // substituted in, so all 275 Russian media pages shared five strings
   // between them — measured on the live site 30.08.2026. Naming the item
@@ -121,6 +122,10 @@ export default async function MediaDetailPage({
   // заголовком нет — как у рассказов с 7.275. Правило —
   // src/lib/media/metadata.ts, сторож `check:story-description`.
   const visibleDescription = mediaVisibleDescription(lang, item);
+  // 7.279 (решение владельца 19.10.2026, вариант «б»): одно название на всю
+  // страницу — `<h1>`, ld+json, хлебные крошки, подпись плеера; на /ru без
+  // испанской скобки в конце. Правило — там же, сторож `check:story-description`.
+  const displayTitle = mediaTitle(lang, item.title);
 
   const categoryLabels: Record<string, string> = {
     song: dict.media.categorySong,
@@ -157,7 +162,7 @@ export default async function MediaDetailPage({
         data={{
           "@context": "https://schema.org",
           "@type": "LearningResource",
-          name: item.title,
+          name: displayTitle,
           // На `/ru` — то же, что мета-описание; на `/es` — испанский абзац
           // (7.276, сторож `check:story-description`).
           description: mediaJsonLdDescription(lang, item),
@@ -172,7 +177,7 @@ export default async function MediaDetailPage({
         data={breadcrumbList([
           { name: dict.nav.home, url: `${SITE_URL}/${lang}` },
           { name: dict.nav.media, url: `${SITE_URL}/${lang}/media` },
-          { name: item.title, url: `${SITE_URL}/${lang}/media/${item.id}` },
+          { name: displayTitle, url: `${SITE_URL}/${lang}/media/${item.id}` },
         ])}
       />
       <Link href={`/${lang}/media`} className="tap text-sm font-medium text-foreground/60 hover:text-foreground active:text-foreground">
@@ -188,7 +193,7 @@ export default async function MediaDetailPage({
         </span>
       </div>
 
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">{item.title}</h1>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight">{displayTitle}</h1>
       {visibleDescription && <p className="mt-2 text-foreground/70">{visibleDescription}</p>}
 
       {(relatedStories.length > 0 || relatedLessonTitle) && (
@@ -258,7 +263,7 @@ export default async function MediaDetailPage({
             <div className="mt-8">
               <MediaSubtitlePlayer
                 youtubeVideoId={item.youtubeVideoId}
-                title={item.title}
+                title={displayTitle}
                 subtitles={item.subtitles!}
                 transcriptHeading={dict.media.transcriptHeading}
                 brokenLabel={dict.media.videoBroken}
@@ -269,7 +274,7 @@ export default async function MediaDetailPage({
               <div className="mt-8">
                 <MediaPlayer
                   youtubeVideoId={item.youtubeVideoId}
-                  title={item.title}
+                  title={displayTitle}
                   emptyLabel={dict.media.videoUnavailable}
                   brokenLabel={dict.media.videoBroken}
                 />
