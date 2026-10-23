@@ -45,7 +45,7 @@ const MAIN_QUESTIONS: [string, string][] = [
   ["where do new run details go", "runs-ГГГГ-ММ.md"],
   ["what is this project", "## 0. ЧТО ЭТО ЗА ПРОЕКТ"],
   ["is the app published", "в Google Play с 07.10.2026"],
-  ["what is the stack", "Next.js 16.3"],
+  ["what is the stack", "Next.js 16.4"],
   ["where does production data live", "Turso"],
   ["how do I run and check it", "## 1. КАК ЗАПУСТИТЬ И ПРОВЕРИТЬ"],
   ["is my local main up to date", "git merge --ff-only origin/main"],
@@ -73,7 +73,7 @@ const MAIN_QUESTIONS: [string, string][] = [
  * fails, the fix is to write the answer, not to delete the assertion. */
 const COLD_START_QUESTIONS: [string, string][] = [
   ["what is this project", "## 0. ЧТО ЭТО ЗА ПРОЕКТ"],
-  ["what is the stack", "Next.js 16.3"],
+  ["what is the stack", "Next.js 16.4"],
   ["where does production data live", "Turso"],
   ["how do I run and check it", "## 1. КАК ЗАПУСТИТЬ И ПРОВЕРИТЬ"],
   // Added 01.09.2026 after a real cold start: the very first action of the
