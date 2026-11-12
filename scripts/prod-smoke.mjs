@@ -129,6 +129,22 @@ export function targets() {
 async function probe(context, base, target) {
   const url = `${base}${target.path}`;
 
+  // Прод, который не отвечает вовсе (отказ соединения, DNS), — КРАСНАЯ
+  // цель, а не падение прибора (7.282): до этой правки `fetch` бросал
+  // исключение мимо всего прогона, отчёт не писался, и тревога «прод
+  // упал» не заводилась ровно при самой полной аварии.
+  if (target.redirect || target.json) {
+    try {
+      return await probeHttp(url, target);
+    } catch (error) {
+      return { why: [`не ответил: ${String(error.cause?.code ?? error.cause ?? error).slice(0, 160)}`], status: 0 };
+    }
+  }
+  return probePage(context, url, target);
+}
+
+/** Цель без браузера: редирект или JSON. */
+async function probeHttp(url, target) {
   if (target.redirect) {
     const res = await fetch(url, { redirect: "manual", headers: { "user-agent": SMOKE_USER_AGENT } });
     const why = [];
@@ -146,7 +162,10 @@ async function probe(context, base, target) {
     if (!text.includes(target.json.contains)) why.push(`в ответе нет слова «${target.json.contains}»`);
     return { why, status: res.status };
   }
+}
 
+/** Цель в браузере. */
+async function probePage(context, url, target) {
   const page = await context.newPage();
   // Необработанное исключение на странице — это и есть класс отказа,
   // который прошёл мимо всех тестов 29.08.2026. Считаются именно
@@ -272,6 +291,11 @@ async function plant() {
   });
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   const base = `http://127.0.0.1:${server.address().port}`;
+  // Заведомо закрытый порт: заняли, узнали номер, отпустили.
+  const closed = createServer();
+  await new Promise((r) => closed.listen(0, "127.0.0.1", r));
+  const closedBase = `http://127.0.0.1:${closed.address().port}`;
+  await new Promise((r) => closed.close(r));
 
   const H1 = /Ровно тот заголовок/i;
   const LINKS = { sel: "a[href]", min: 3 };
@@ -286,6 +310,10 @@ async function plant() {
     { title: "кабинет уводит на вход (отрицательный контроль)", expectRed: false, target: { name: "profile", path: "/profile-307", redirect: { status: 307, location: /\/es\/login\?redirectTo=/ } } },
     { title: "/api/health отдаёт 503", expectRed: true, target: { name: "health", path: "/health-503", json: { contains: HEALTH_OK_TOKEN, status: 200 } } },
     { title: "/api/health отдаёт живое слово (отрицательный контроль)", expectRed: false, target: { name: "health", path: "/health-ok", json: { contains: HEALTH_OK_TOKEN, status: 200 } } },
+    // Прод не отвечает вовсе (7.282): цель обязана покраснеть, а прибор —
+    // НЕ упасть исключением мимо отчёта.
+    { title: "/api/health: соединение отклонено", expectRed: true, base: closedBase, target: { name: "health", path: "/api/health", json: { contains: HEALTH_OK_TOKEN, status: 200 } } },
+    { title: "кабинет: соединение отклонено", expectRed: true, base: closedBase, target: { name: "profile", path: "/es/profile", redirect: { status: 307, location: /\/es\/login\?redirectTo=/ } } },
   ];
 
   let caught = 0;
@@ -294,7 +322,7 @@ async function plant() {
   const context = await browser.newContext();
   try {
     for (const c of cases) {
-      const { why } = await probe(context, base, c.target);
+      const { why } = await probe(context, c.base ?? base, c.target);
       const red = why.length > 0;
       const ok = red === c.expectRed;
       if (ok) caught += 1;

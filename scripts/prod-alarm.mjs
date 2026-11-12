@@ -13,6 +13,15 @@
 //   3. стало зелено, а issue открыт → комментарий «восстановлено» и
 //      закрытие.
 //
+// ЧЕТВЁРТЫЙ ИСХОД — ПРОВЕРКА НЕ СОСТОЯЛАСЬ (заход 7.282). Отчёта нет, а
+// прибор не запускался: упала установка браузеров или иной шаг до него
+// (22.10 и 11.11.2026 — зеркала Ubuntu, оба раза тревога падала на
+// ENOENT). Про прод в этом случае не известно НИЧЕГО, поэтому ни новой
+// тревоги «прод упал», ни закрытия старой: открытый issue только
+// дополняется строкой, что проверка не состоялась. Если же прибор
+// запускался и упал, не оставив отчёта, — это провал прода, а не
+// инфраструктуры: молчать о нём нельзя (`SMOKE_OUTCOME=failure`).
+//
 // ПОЧЕМУ ОТКАТ ТОЛЬКО СО ВТОРОГО РАЗА. Откат — это выкат, и автоматика,
 // которая катает прод по одному наблюдению, опаснее самой аварии:
 // холодная функция, разовая сетевая неудача GitHub Actions или моргнувший
@@ -26,7 +35,7 @@
 //
 //   node scripts/prod-alarm.mjs --result=smoke-artifacts/smoke-result.json
 //   node scripts/prod-alarm.mjs --plant     # позитивный контроль, без сети
-import { readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { pathToFileURL } from "node:url";
 
@@ -106,6 +115,11 @@ async function api(url, { token, method = "GET", body, headers = {} } = {}) {
 /** Решение, принятое по отчёту и по состоянию issue. Вынесено отдельной
  *  чистой функцией специально: подсадки судят именно её, не трогая сети. */
 export function decide({ failures, openIssue, deploy, hasVercelToken }) {
+  // Отчёта нет: про прод не известно ничего — ни тревоги, ни закрытия,
+  // ни тем более отката.
+  if (failures === null) {
+    return { action: openIssue ? "note-unknown" : "unknown", rollback: false };
+  }
   if (!failures.length) {
     return openIssue ? { action: "resolve", rollback: false } : { action: "none", rollback: false };
   }
@@ -134,6 +148,7 @@ function issueBody({ report, deploy, runUrl, hasVercelToken }) {
     "",
     `Деплой: \`${deploy}\`. Прогон: ${runUrl}`,
     "",
+    ...(process.env.ALARM_NOTE ? [`**${process.env.ALARM_NOTE}**`, ""] : []),
     hasVercelToken
       ? "Автооткат включён: при втором таком же падении подряд прод откатится на предыдущий Production-деплой."
       : "**Автооткат ВЫКЛЮЧЕН** — в секретах репозитория нет `VERCEL_TOKEN`. Откатить руками: Vercel → Deployments → предыдущий Production → ⋯ → Instant Rollback (раздел «Если сайт упал» в PROGRESS.md).",
@@ -161,14 +176,39 @@ async function rollbackOnVercel({ token, projectId, teamId }) {
   return { from: current.uid, to: previous.uid, toUrl: previous.url };
 }
 
+export const NOT_RUN = "ПРОВЕРКА НЕ СОСТОЯЛАСЬ";
+
+function notRunText() {
+  const why =
+    process.env.BROWSERS_OUTCOME === "failure"
+      ? "сбой установки браузеров"
+      : "сбой инфраструктуры: шаг до проверки не дошёл";
+  return `${NOT_RUN} (${why}), состояние прода неизвестно.`;
+}
+
+/** Отчёт прибора или `null`, если прибор не запускался. Прибор, который
+ *  запускался и упал без отчёта, — провал прода: отчёт собирается здесь,
+ *  чтобы тревога ушла обычным путём. */
+function readReport(path) {
+  if (existsSync(path)) return JSON.parse(readFileSync(path, "utf-8"));
+  if (process.env.SMOKE_OUTCOME === "failure") {
+    return {
+      checked: 0,
+      failures: [{ name: "прибор упал, не оставив отчёта", path: "—", why: ["шаг «Живой прод» красный, smoke-result.json нет — см. журнал прогона"] }],
+      results: [],
+    };
+  }
+  return null;
+}
+
 async function main() {
   if (argv.includes("--plant")) return plant();
 
-  const report = JSON.parse(readFileSync(arg("result", "smoke-artifacts/smoke-result.json"), "utf-8"));
+  const report = readReport(arg("result", "smoke-artifacts/smoke-result.json"));
   const token = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPOSITORY;
   const runUrl = `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-  const deploy = process.env.DEPLOY_SHA || report.results?.find((r) => r.path === "/api/health")?.commit || "unknown";
+  const deploy = process.env.DEPLOY_SHA || report?.results?.find((r) => r.path === "/api/health")?.commit || "unknown";
   const vercelToken = process.env.VERCEL_TOKEN;
   const projectId = process.env.VERCEL_PROJECT_ID;
 
@@ -185,8 +225,28 @@ async function main() {
   }
 
   const hasVercelToken = Boolean(vercelToken && projectId);
-  const verdict = decide({ failures: report.failures, openIssue, deploy, hasVercelToken });
+  const verdict = decide({ failures: report ? report.failures : null, openIssue, deploy, hasVercelToken });
   console.log(`решение: ${verdict.action}${verdict.rollback ? " + ОТКАТ" : ""} (деплой ${deploy})`);
+
+  if (verdict.action === "unknown" || verdict.action === "note-unknown") {
+    const text = notRunText();
+    console.log(text);
+    // Аннотация и сводка прогона — чтобы этот исход был виден на странице
+    // прогона, а не только в журнале шага.
+    console.log(`::warning title=Проверка не состоялась::${text}`);
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### ${text}\n`);
+    if (verdict.action === "note-unknown") {
+      // Без упоминания владельца: про прод нового ничего не узнали, и звонить
+      // незачем. Issue остаётся открытым — закроет его только зелёный прогон.
+      await api(`${GITHUB_API}/repos/${repo}/issues/${openIssue.number}/comments`, {
+        token,
+        method: "POST",
+        body: { body: `${text} Issue остаётся открытым до зелёного прогона. ${runUrl}` },
+      });
+      console.log(`issue #${openIssue.number} дополнен: проверка не состоялась`);
+    }
+    return;
+  }
 
   if (verdict.action === "none") return;
 
@@ -322,6 +382,16 @@ async function plant() {
       input: { failures: [], openIssue: null, deploy: "aaa1111", hasVercelToken: true },
       expect: { action: "none", rollback: false },
     },
+    {
+      title: "отчёта нет, issue нет → «не состоялась», без тревоги",
+      input: { failures: null, openIssue: null, deploy: "aaa1111", hasVercelToken: true },
+      expect: { action: "unknown", rollback: false },
+    },
+    {
+      title: "отчёта нет, issue открыт на том же деплое, токен есть → только строка в issue, НЕ откат и НЕ закрытие",
+      input: { failures: null, openIssue: { number: 7, bodyAndComments: ["… <!-- prod-smoke deploy=aaa1111 -->"] }, deploy: "aaa1111", hasVercelToken: true },
+      expect: { action: "note-unknown", rollback: false },
+    },
   ];
 
   for (const c of cases) {
@@ -352,7 +422,7 @@ async function plant() {
 
   /** Один сквозной прогон против подменённого GitHub. `openIssues` —
    *  то, что отдаёт поддельный список открытых issue. */
-  async function endToEndRun(openIssues, dropsRights = false) {
+  async function endToEndRun(openIssues, dropsRights = false, { result = file, env = {} } = {}) {
     const seen = [];
     const server = createServer((req, res) => {
       let body = "";
@@ -386,15 +456,28 @@ async function plant() {
     const run = await new Promise((resolve) => {
       const child = spawn(
         process.execPath,
-        [process.argv[1], `--result=${file}`, `--github-api=http://127.0.0.1:${port}`, `--vercel-api=http://127.0.0.1:${port}`],
+        [process.argv[1], `--result=${result}`, `--github-api=http://127.0.0.1:${port}`, `--vercel-api=http://127.0.0.1:${port}`],
         {
-          env: { ...process.env, GITHUB_TOKEN: "t", GITHUB_REPOSITORY: "o/r", GITHUB_RUN_ID: "1", DEPLOY_SHA: "ccc3333", VERCEL_TOKEN: "", VERCEL_PROJECT_ID: "" },
+          env: {
+            ...process.env,
+            GITHUB_TOKEN: "t",
+            GITHUB_REPOSITORY: "o/r",
+            GITHUB_RUN_ID: "1",
+            DEPLOY_SHA: "ccc3333",
+            VERCEL_TOKEN: "",
+            VERCEL_PROJECT_ID: "",
+            GITHUB_STEP_SUMMARY: "",
+            SMOKE_OUTCOME: "",
+            BROWSERS_OUTCOME: "",
+            ...env,
+          },
         },
       );
       let stderr = "";
+      let stdout = "";
       child.stderr.on("data", (c) => (stderr += c));
-      child.stdout.on("data", () => {});
-      child.on("close", (status) => resolve({ status, stderr }));
+      child.stdout.on("data", (c) => (stdout += c));
+      child.on("close", (status) => resolve({ status, stderr, stdout }));
     });
     server.close();
     return { seen, run };
@@ -406,6 +489,18 @@ async function plant() {
   // Третий: GitHub принял issue и молча выбросил метку и назначение —
   // ровно то, что случилось с настоящим issue #348 17.09.2026.
   const dropped = await endToEndRun([], true);
+  // Отчёта нет (7.282): установка браузеров упала, прибор не запускался —
+  // ровно прогоны 22.10 и 11.11.2026, где тревога падала на ENOENT.
+  const missing = join(dir, "нет-такого-файла.json");
+  const notRun = await endToEndRun([], false, { result: missing, env: { BROWSERS_OUTCOME: "failure", SMOKE_OUTCOME: "skipped" } });
+  const notRunOpen = await endToEndRun([{ number: 101, body: `старое тело ${stateMark("ccc3333")}` }], false, {
+    result: missing,
+    env: { BROWSERS_OUTCOME: "failure", SMOKE_OUTCOME: "skipped", VERCEL_TOKEN: "v", VERCEL_PROJECT_ID: "p" },
+  });
+  // Прибор запускался и упал, не оставив отчёта, — это провал прода.
+  const crashed = await endToEndRun([], false, { result: missing, env: { BROWSERS_OUTCOME: "success", SMOKE_OUTCOME: "failure" } });
+  const notRunComments = notRunOpen.seen.filter((s) => s.method === "POST" && s.url.includes("/comments")).map((s) => JSON.parse(s.body).body);
+  const crashedIssue = crashed.seen.find((s) => s.method === "POST" && s.url.endsWith("/issues"));
   const secondComment = second.seen
     .filter((s) => s.method === "POST" && s.url.includes("/comments"))
     .map((s) => JSON.parse(s.body).body);
@@ -438,6 +533,15 @@ async function plant() {
     // журнале: без метки тревога перестаёт быть одной.
     ["молча отброшенная метка роняет шаг", dropped.run.status !== 0],
     ["и называет причину словами", /молча отбросил/.test(dropped.run.stderr ?? "")],
+    // Отчёта нет — не ENOENT и не «прод упал», а свой исход.
+    ["отчёта нет: шаг тревоги не падает", notRun.run.status === 0],
+    ["отчёта нет: сказано «проверка не состоялась, состояние неизвестно»", notRun.run.stdout.includes(NOT_RUN) && notRun.run.stdout.includes("состояние прода неизвестно")],
+    ["отчёта нет: названа причина — установка браузеров", notRun.run.stdout.includes("сбой установки браузеров")],
+    ["отчёта нет: тревога «прод упал» НЕ заводится", notRun.seen.filter((s) => s.method === "POST").length === 0],
+    ["отчёта нет, issue открыт: одна строка в issue, без упоминания", notRunComments.length === 1 && notRunComments[0].includes(NOT_RUN) && !notRunComments[0].includes(`@${ISSUE_OWNER}`)],
+    ["отчёта нет, issue открыт: issue НЕ закрыт и отката нет", !notRunOpen.seen.some((s) => s.method === "PATCH" || s.url.includes("/promote/") || s.url.includes("/v6/deployments"))],
+    ["прибор упал без отчёта: тревога «прод упал» заведена", Boolean(crashedIssue) && JSON.parse(crashedIssue.body).title.startsWith("Прод упал")],
+    ["прибор упал без отчёта: «не состоялась» НЕ сказано", !crashed.run.stdout.includes(NOT_RUN) && crashed.run.status === 0],
   ];
   for (const [title, ok] of endToEnd) {
     if (ok) caught += 1;
