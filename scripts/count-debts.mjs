@@ -33,11 +33,21 @@
 // файле (он снова начал бы расти) или незакрытая в архиве (открытый долг
 // пропал бы из виду при чтении основного файла) — отказ.
 //
+// ТРЕТИЙ ФАЙЛ С 11.11.2026 (7.282, решение владельца по отчёту 7.281).
+// Открытый долг в основном файле — КОРОТКАЯ строка (номер, состояние, суть
+// в одну-две строки), а полная строка дословно живёт в
+// docs/progress-archive/debts-open.md. Тот файл в счёт НЕ входит (иначе
+// каждый открытый считался бы дважды), но сверяется: номера открытых строк
+// основного файла и номера строк debts-open.md совпадают один в один, и
+// закрытых там нет. Иначе полный текст долга мог бы пропасть молча — или
+// остаться висеть после закрытия.
+//
 // Контроль: `node scripts/count-debts.mjs --plant`.
 import { readFileSync } from "node:fs";
 const PLANT = process.argv.includes("--plant");
 const MAIN = "PROGRESS.md";
 const CLOSED = "docs/progress-archive/debts-closed.md";
+const OPEN_FULL = "docs/progress-archive/debts-open.md";
 // Явный аргумент — старый режим «один файл» (для разовых сверок).
 const ONLY = PLANT ? null : (process.argv[2] ?? null);
 // Разбор идёт по ТЕКСТУ, а не по имени файла, и это не украшение: тест
@@ -66,6 +76,22 @@ function misplaced(mainText, closedText) {
   const inClosed = collect(closedText).filter((r) => !r.state.startsWith("закрыт")).map((r) => r.n);
   return { inMain, inClosed };
 }
+/** Короткие открытые строки основного файла ↔ полные строки debts-open.md. */
+function openSync(mainText, openText) {
+  const short = collect(mainText).filter((r) => r.state.startsWith("открыт")).map((r) => r.n);
+  const full = collect(openText);
+  const fullNums = full.map((r) => r.n);
+  return {
+    short: short.length,
+    full: full.length,
+    noFull: short.filter((n) => !fullNums.includes(n)),
+    noShort: fullNums.filter((n) => !short.includes(n)),
+    notOpen: full.filter((r) => !r.state.startsWith("открыт")).map((r) => r.n),
+    dupes: fullNums.filter((x, i) => fullNums.indexOf(x) !== i),
+  };
+}
+const syncOk = (o) => !o.noFull.length && !o.noShort.length && !o.notOpen.length && !o.dupes.length && o.short > 0;
+
 function summarise(rows) {
   const open = rows.filter((r) => r.state.startsWith("открыт"));
   const closed = rows.filter((r) => r.state.startsWith("закрыт"));
@@ -173,9 +199,25 @@ if (PLANT) {
   const caught8 = p8.inClosed.length === 1 && p8.inClosed[0] === firstOpen.n;
   console.log(`  ${caught8 ? "поймано" : "ПРОПУЩЕНО"} — открытая строка ${firstOpen.n} уехала в архив закрытых`);
 
-  ok &&= !place.inMain.length && !place.inClosed.length;
-  ok &&= caught1 && caught2 && caught3 && caught4 && caught5 && caught6 && caught7 && caught8;
-  console.log(ok ? "count:debts --plant — 8 из 8 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
+  // 9–11. Полный текст открытых (7.282): пропала полная строка, осталась
+  //    полная строка закрытого долга, закрытая строка в debts-open.md.
+  const openText = readFileSync(OPEN_FULL, "utf8");
+  const healthySync = openSync(mainText, openText);
+  if (!syncOk(healthySync)) console.log(`  ЛОЖНО КРАСНЫЙ — сверка debts-open.md на здоровых файлах: ${JSON.stringify(healthySync)}`);
+  const fullLine = openText.split("\n").find((l) => new RegExp(`^\\|\\s*${firstOpen.n}\\s*\\|`).test(l));
+  const o9 = openSync(mainText, openText.replace(fullLine, ""));
+  const caught9 = o9.noFull.length === 1 && o9.noFull[0] === firstOpen.n;
+  console.log(`  ${caught9 ? "поймано" : "ПРОПУЩЕНО"} — полная строка открытого долга ${firstOpen.n} пропала из ${OPEN_FULL}`);
+  const o10 = openSync(mainText.replace(openLine, ""), openText);
+  const caught10 = o10.noShort.length === 1 && o10.noShort[0] === firstOpen.n;
+  console.log(`  ${caught10 ? "поймано" : "ПРОПУЩЕНО"} — долг ${firstOpen.n} убран из основного файла, а полная строка осталась`);
+  const o11 = openSync(mainText, openText + "\n" + closedLine);
+  const caught11 = o11.notOpen.includes(firstClosed.n);
+  console.log(`  ${caught11 ? "поймано" : "ПРОПУЩЕНО"} — закрытая строка ${firstClosed.n} попала в ${OPEN_FULL}`);
+
+  ok &&= !place.inMain.length && !place.inClosed.length && syncOk(healthySync);
+  ok &&= caught1 && caught2 && caught3 && caught4 && caught5 && caught6 && caught7 && caught8 && caught9 && caught10 && caught11;
+  console.log(ok ? "count:debts --plant — 11 из 11 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
   process.exitCode = ok ? 0 : 1;
 } else {
   const mainText = ONLY ? readFileSync(ONLY, "utf8") : readFileSync(MAIN, "utf8");
@@ -189,6 +231,17 @@ if (PLANT) {
       console.error(
         `count:debts — ОТКАЗ: закрытые строки в ${MAIN}: ${place.inMain.join(", ")}.\n` +
           `  Закрыл долг — перенеси строку дословно в ${CLOSED} на место по номеру.`,
+      );
+      process.exitCode = 1;
+    }
+    const sync = openSync(mainText, readFileSync(OPEN_FULL, "utf8"));
+    console.log(`  полный текст открытых: ${OPEN_FULL} — ${sync.full} строк, коротких открытых в ${MAIN} — ${sync.short}`);
+    if (!syncOk(sync)) {
+      console.error(
+        `count:debts — ОТКАЗ: ${MAIN} и ${OPEN_FULL} разошлись: без полной строки ${sync.noFull.join(", ") || "—"}; ` +
+          `полная без короткой ${sync.noShort.join(", ") || "—"}; не открытые в ${OPEN_FULL} ${sync.notOpen.join(", ") || "—"}; ` +
+          `дубли ${sync.dupes.join(", ") || "—"}.\n` +
+          `  Новый долг — две строки (короткая здесь, полная там); закрыл — полную строку дословно в ${CLOSED}, короткую удалить.`,
       );
       process.exitCode = 1;
     }
