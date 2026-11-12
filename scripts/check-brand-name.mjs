@@ -184,8 +184,10 @@ const IDENT_ALLOWED = new Map([
 // Журналы, которые растут каждый заход (7.270): архив месяца и архив
 // закрытых долгов — продолжение PROGRESS.md, и правило у них то же, что у
 // него (`hits: null` ниже): журнал, который не может записать ошибку, не
-// может записать и её исправление.
-const LOG_FILES = /^docs\/progress-archive\/(runs-\d{4}-\d{2}|debts-closed)\.md$/;
+// может записать и её исправление. С 7.282 сюда же полный текст открытых
+// долгов (`debts-open.md`): эти строки до 11.11.2026 стояли в самом
+// PROGRESS.md и переехали дословно (долг 80 цитирует имя файла StoreKit).
+const LOG_FILES = /^docs\/progress-archive\/(runs-\d{4}-\d{2}|debts-closed|debts-open)\.md$/;
 
 const ALLOWED = new Map([
   [
