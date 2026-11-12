@@ -46,6 +46,24 @@ on:
         description: "Имитировать провал: завести тревогу, НЕ проверяя прод"
         type: boolean
         default: false
+      control:
+        # ПОЗИТИВНЫЙ КОНТРОЛЬ ВСЕГО ПРОГОНА, А НЕ ОДНОГО СКРИПТА (7.282).
+        # Тоже только ручной запуск, по той же причине, что выше.
+        #   broken_target   — прибор идёт не на прод, а на заведомо мёртвый
+        #                     адрес: прогон обязан покраснеть с тревогой
+        #                     «прод упал» (настоящий issue; закроет его
+        #                     следующий зелёный прогон по расписанию);
+        #   install_failure — apt направлен в никуда: установка браузеров
+        #                     обязана не удаться все три раза, прогон —
+        #                     покраснеть исходом «проверка не состоялась»,
+        #                     а тревога «прод упал» — НЕ завестись.
+        description: "Контроль: none / broken_target (прод упал) / install_failure (проверка не состоялась)"
+        type: choice
+        default: none
+        options:
+          - none
+          - broken_target
+          - install_failure
   schedule:
     # 17-я минута каждого часа: не в ноль, чтобы не толкаться с общей
     # очередью расписаний GitHub.
@@ -75,7 +93,10 @@ jobs:
       (github.event.deployment_status.state == 'success' &&
        github.event.deployment.environment == 'Production')
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 15 → 25 (7.282): три попытки установки браузеров (шаг ниже, предел
+    # 14 мин) плюс проверка (≈2 мин) обязаны уложиться, иначе задание
+    # снимается целиком, как 22.10.2026, и про прод не узнать ничего.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
 
@@ -87,14 +108,79 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Браузер кешируется по версии Playwright и образу раннера: другой
+      # версии Playwright нужен другой Chromium, другому образу — другие
+      # системные пакеты. Кеш снимает только скачивание браузера (CDN
+      # Playwright); системные пакеты (`--with-deps`, apt) ставятся каждый
+      # раз — их кешем не заменить, и именно они падали.
+      - name: Версия Playwright — ключ кеша браузеров
+        id: pw
+        # `ImageOS` (ubuntu24, ubuntu26) — переменная машины раннера, в
+        # контексте `env` выражений её нет, поэтому — через вывод шага.
+        run: |
+          echo "version=$(node -p "require('playwright-core/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=${ImageOS:-unknown}" >> "$GITHUB_OUTPUT"
+
+      - name: Кеш браузеров Playwright
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.image }}-${{ steps.pw.outputs.version }}-chromium
+
+      # ПОЧЕМУ ТРИ ПОПЫТКИ (7.282). Из 400 прогонов 20.09–11.11.2026 не
+      # дошли до прода ровно два, и оба — здесь, на apt:
+      #   22.10 (run 39803792935, ubuntu-24.04) — зеркало Azure отдавало
+      #     пакеты по капле, задание сняли по пределу 15 мин;
+      #   11.11 (run 43046492075, ubuntu-26.04) — 10 минут «Temporary
+      #     failure resolving 'security.ubuntu.com'», apt вышел с кодом 100.
+      # Оба раза следующий прогон был зелёным: сбой временный. Поэтому —
+      # таймауты apt на соединение (зависшая закачка обрывается сама),
+      # жёсткий предел на попытку, пауза и `apt-get update` между
+      # попытками. Системные пакеты ставит root под `timeout`, чтобы
+      # предел снимал и сам apt, а не только обёртку над ним.
+      #
+      # `continue-on-error` — чтобы тревога ниже сказала «проверка не
+      # состоялась», а не промолчала; вердикт прогона ставит шаг «Итог».
       - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
+        id: browsers
+        continue-on-error: true
+        timeout-minutes: 14
+        env:
+          CONTROL: ${{ inputs.control }}
+        run: |
+          set -uo pipefail
+          printf '%s\n' 'Acquire::Retries "3";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";' \
+            | sudo tee /etc/apt/apt.conf.d/80-rf-retries > /dev/null
+          if [ "${CONTROL:-none}" = "install_failure" ]; then
+            printf '%s\n' 'Acquire::http::Proxy "http://127.0.0.1:9";' 'Acquire::https::Proxy "http://127.0.0.1:9";' \
+              | sudo tee /etc/apt/apt.conf.d/99-rf-control > /dev/null
+            echo "КОНТРОЛЬ install_failure: apt направлен в никуда — установка обязана не удаться"
+          fi
+          for attempt in 1 2 3; do
+            echo "::group::установка браузеров, попытка $attempt из 3"
+            if [ "$attempt" -gt 1 ]; then
+              sudo dpkg --configure -a || true
+              sudo apt-get update || true
+            fi
+            if sudo env "PATH=$PATH" timeout -k 15 180 npx playwright install-deps chromium \
+              && timeout -k 15 180 npx playwright install chromium; then
+              echo "::endgroup::"
+              echo "браузеры установлены с попытки $attempt из 3"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning title=Установка браузеров::попытка $attempt из 3 не удалась"
+            if [ "$attempt" -lt 3 ]; then sleep 60; fi
+          done
+          echo "::error title=Установка браузеров не удалась::три попытки — живой прод НЕ проверялся"
+          exit 1
 
       # ДВУСТОРОННИЙ СТОРОЖ, ПЕРВАЯ ПОЛОВИНА. Прогон против заведомо
       # сломанной цели обязан покраснеть — иначе зелёный по живому проду
       # ниже не значит ничего (правило 4.1). Цель местная, настоящий прод
       # не трогается, тревога не поднимается.
       - name: Позитивный контроль — сломанная цель обязана дать красный
+        if: steps.browsers.outcome == 'success'
         run: npm run smoke:prod:plant
 
       - name: Позитивный контроль тревоги и отката
@@ -106,9 +192,12 @@ jobs:
       # что-нибудь узнает.
       - name: Живой прод
         id: smoke
-        if: ${{ !inputs.simulate_failure }}
+        if: ${{ !inputs.simulate_failure && steps.browsers.outcome == 'success' }}
         continue-on-error: true
-        run: npm run smoke:prod
+        env:
+          # Контроль broken_target: тот же прибор — на заведомо мёртвый адрес.
+          SMOKE_BASE_ARG: "${{ inputs.control == 'broken_target' && '--base=http://127.0.0.1:59999' || '' }}"
+        run: npm run smoke:prod -- $SMOKE_BASE_ARG
 
       # ИМИТАЦИЯ — вместо прогона, а не рядом с ним. Отчёт пишется той же
       # формы, что пишет настоящий прибор (`checked`, `failures`,
@@ -157,6 +246,13 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+          # По ним тревога отличает «прибор не запускался» (проверка не
+          # состоялась) от «прибор упал, не оставив отчёта» (прод упал).
+          SMOKE_OUTCOME: ${{ steps.smoke.outcome }}
+          BROWSERS_OUTCOME: ${{ steps.browsers.outcome }}
+          # Контроль broken_target заводит настоящий issue — и пишет в нём,
+          # что это контроль, а не авария.
+          ALARM_NOTE: "${{ inputs.control == 'broken_target' && 'КОНТРОЛЬ broken_target (ручной запуск): прибор шёл на заведомо мёртвый адрес, живой прод не проверялся. Закроет этот issue следующий зелёный прогон.' || '' }}"
         run: npm run alarm:prod
 
       # Красный шаг выше проглочен `continue-on-error`, поэтому вердикт
@@ -166,10 +262,20 @@ jobs:
       # Имитация вердикта НЕ меняет: прод в ней не проверялся, и красить
       # прогон в красный значило бы сказать про прод то, чего никто не
       # мерил. Что тревога заведена, видно по самому issue.
-      - name: Вердикт
+      - name: Вердикт — прод упал
         if: steps.smoke.outcome == 'failure'
         run: |
           echo "прод не прошёл проверку — см. issue с меткой prod-down"
+          exit 1
+
+      # Свой красный, а не тот же (7.282): прогон, где проверка не
+      # состоялась, обязан отличаться от «прод упал» уже по имени
+      # упавшего шага. Зелёным его делать нельзя — прод никто не мерил, —
+      # но и тревоги «прод упал» здесь нет: её не было бы за что заводить.
+      - name: Итог — ПРОВЕРКА НЕ СОСТОЯЛАСЬ (инфраструктура), состояние прода неизвестно
+        if: ${{ always() && steps.browsers.outcome != 'success' && !inputs.simulate_failure }}
+        run: |
+          echo "::error title=Проверка не состоялась::до проверки прода дело не дошло — упал шаг подготовки выше (обычно установка браузеров: зеркала Ubuntu или сеть раннера). Прод НЕ проверялся, его состояние неизвестно; тревога «прод упал» не заводилась. Следующий прогон по расписанию — через час."
           exit 1
 
       - name: Итог имитации

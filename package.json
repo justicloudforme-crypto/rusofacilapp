@@ -454,7 +454,7 @@
     "@react-pdf/renderer": "^4.6.0",
     "@revenuecat/purchases-capacitor": "^13.4.1",
     "@revenuecat/purchases-capacitor-ui": "^13.4.1",
-    "@sentry/nextjs": "^10.70.0",
+    "@sentry/nextjs": "^10.78.0",
     "@serwist/next": "^9.5.12",
     "@upstash/redis": "^1.38.2",
     "@vercel/analytics": "^2.0.1",
