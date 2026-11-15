@@ -265,13 +265,17 @@ function main() {
    * Сегодня все четыре действия существуют в `@v5`, и `@v5` у них — это
    * Node 24; `@v4` у `upload-artifact` GitHub уже принудительно перевёл
    * на Node 24 и аннотацией предупредил, что дальше так не будет.
+   * 7.283 (15.11.2026): `upload-artifact@v5` объявляет `runs.using: node20`
+   * (аннотация «Node.js 20 is deprecated … forced to run on Node.js 24» в
+   * CI 43168334047, «Прод после выката» 43706565653, android-debug
+   * 43160932155); `@v6` — `node24`, входы те же. Порог поднят до 6.
    */
   const MIN_NODE_VERSION = 22;
   const MIN_ACTION_MAJOR = new Map([
     ["actions/checkout", 5],
     ["actions/setup-node", 5],
     ["actions/setup-java", 5],
-    ["actions/upload-artifact", 5],
+    ["actions/upload-artifact", 6],
     ["actions/download-artifact", 5],
     ["actions/cache", 4],
   ]);
@@ -572,20 +576,20 @@ function main() {
         },
       },
       {
-        name: "в рабочем процессе вернулось actions/upload-artifact@v4",
+        name: "в рабочем процессе вернулось actions/upload-artifact@v5",
         run: () => {
           const fake = [
-            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - uses: actions/upload-artifact@v4\n`],
+            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - uses: actions/upload-artifact@v5\n`],
           ];
           const r = runtimeProblems(fake);
-          return { hit: r.out.some((p) => p.includes("upload-artifact@v4")), what: "upload-artifact@v4" };
+          return { hit: r.out.some((p) => p.includes("upload-artifact@v5")), what: "upload-artifact@v5" };
         },
       },
       {
         name: "ОТРИЦАТЕЛЬНЫЙ контроль возраста: свежие версии красноты не дают",
         run: () => {
           const fake = [
-            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - uses: actions/checkout@v5\n      - uses: actions/setup-node@v5\n        with:\n          node-version: 22\n      - uses: actions/upload-artifact@v5\n      - uses: some/unknown-action@v1\n`],
+            [".github/workflows/__planted__.yml", `jobs:\n  x:\n    steps:\n      - uses: actions/checkout@v5\n      - uses: actions/setup-node@v5\n        with:\n          node-version: 22\n      - uses: actions/upload-artifact@v6\n      - uses: some/unknown-action@v1\n`],
           ];
           const r = runtimeProblems(fake);
           return { hit: r.out.length === 0, what: `просмотрено ${r.nodeVersions} node-version и ${r.actionsSeen} действий`, negative: true };
