@@ -209,19 +209,19 @@ export default async function Navbar({
           7.71 на ссылке «Админ».
 
           От `md` и выше гэпы прежние: там запаса и так 24 px. */}
-      <div className="relative mx-auto flex h-16 max-w-5xl items-center gap-2 px-4 sm:px-6 md:gap-4">
-        <Link href={`/${lang}`} className="flex flex-shrink-0 items-center gap-2 font-serif text-base font-bold tracking-tight sm:text-lg">
+      <div className="relative mx-auto flex h-16 max-w-5xl items-center gap-2 px-4 sm:px-6 md:gap-3 lg:gap-4">
+        <Link href={`/${lang}`} className="flex flex-shrink-0 items-center gap-2 font-serif md:min-h-11 text-base font-bold tracking-tight sm:text-lg">
           <MatryoshkaMark size={26} />
           <span>RusoFácilapp</span>
         </Link>
 
-        <nav className="hidden items-center gap-3 text-sm font-medium sm:flex md:gap-6">
-          <Link href={`/${lang}/courses`} className="tap hover:text-primary-text active:text-primary-text">
+        <nav className="hidden items-center gap-3 text-sm font-medium sm:flex md:gap-2 lg:gap-6">
+          <Link href={`/${lang}/courses`} className="tap inline-flex items-center justify-center md:min-h-11 md:min-w-11 hover:text-primary-text active:text-primary-text">
             {dict.nav.courses}
           </Link>
           <PracticeMenu label={dict.nav.practice} links={practiceLinks} />
           {!nativeShell && (
-            <Link href={`/${lang}/pricing`} className="tap hover:text-primary-text active:text-primary-text">
+            <Link href={`/${lang}/pricing`} className="tap inline-flex items-center justify-center md:min-h-11 md:min-w-11 hover:text-primary-text active:text-primary-text">
               {dict.nav.pricing}
             </Link>
           )}
@@ -239,7 +239,7 @@ export default async function Navbar({
               through the mobile menu under 640 and through the profile
               dropdown from 640 up. */}
           {staff && (
-            <Link href={`/${lang}/admin`} className="tap hidden md:inline hover:text-primary-text active:text-primary-text">
+            <Link href={`/${lang}/admin`} className="tap hidden items-center md:inline-flex md:min-h-11 hover:text-primary-text active:text-primary-text">
               {dict.admin.title}
             </Link>
           )}
