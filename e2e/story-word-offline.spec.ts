@@ -77,7 +77,9 @@ async function tap(page: Page, word: string): Promise<void> {
 }
 
 async function closePopover(page: Page): Promise<void> {
-  await popover(page).getByRole("button").last().click();
+  // Крестик — по своей метке: с 7.285 под ошибкой и «нет сети» стоит ещё
+  // кнопка «ещё раз», и «последняя кнопка карточки» — уже она.
+  await popover(page).getByTestId("translation-popover-close").click();
   await expect(popover(page)).toHaveCount(0);
 }
 
@@ -132,6 +134,8 @@ test("без сети слово говорит про интернет, с се
   await tap(page, unknown);
   await expect(popoverText(page)).toHaveText(OFFLINE_ES);
   await expect(popover(page)).not.toContainText(SERVER_ERROR_ES);
+  // Долг 160 (7.285): из «нет сети» есть выход — «ещё раз» в самой карточке.
+  await expect(popover(page).getByTestId("translation-retry")).toBeVisible();
   await closePopover(page);
 
   // 4. Без сети — слово из кеша показывает перевод, а не ошибку.
