@@ -902,6 +902,7 @@
     },
     "classicLabel": "Классика (пересказ)",
     "classicOnlyLabel": "Только классика",
+    "filtersButton": "Фильтры",
     "progressLabel": "Прогресс: {percent}%",
     "notStartedLabel": "Не начато",
     "premiumLockTitle": "Эта история доступна только по подписке",
