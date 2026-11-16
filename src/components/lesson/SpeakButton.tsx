@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { takePreloadedWordClip } from "@/lib/word-audio-answers";
 
 /**
  * Проигрывает ОПЛАЧЕННУЮ запись `text` — файл из общего кэша `AudioAsset`
@@ -120,7 +121,9 @@ export default function SpeakButton({
     if (!audioUrl) return;
     {
       if (!audioRef.current) {
-        audioRef.current = new Audio(audioUrl);
+        // Долг 172 (7.285): если карточка слова уже начала качать этот клип,
+        // звучит тот же проигрыватель — второй закачки файла нет.
+        audioRef.current = takePreloadedWordClip(audioUrl) ?? new Audio(audioUrl);
         // Слушатели вешаются на СОБЫТИЯ элемента, а не на ветки
         // `speak()`, нарочно: клип может кончиться сам, может быть
         // остановлен второй нажатой кнопкой, а может и не зазвучать
