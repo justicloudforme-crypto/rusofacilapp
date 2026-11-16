@@ -16,6 +16,7 @@ import { skipTarget } from "@/lib/story-skip";
 import { measurePinnedLayers, placeInFreeBand } from "@/lib/pinned-layers";
 import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 import { isHomograph } from "@/lib/story-word-pick";
+import { askWordAudio, preloadWordClip, wordAudioKey } from "@/lib/word-audio-answers";
 import { cacheTranslation, cacheTranslations, readCachedTranslation, unknownWords } from "@/lib/translation-store";
 import {
   clearNativeMediaSession,
@@ -102,7 +103,25 @@ type TranslationState =
   | { status: "done"; translation: string }
   | { status: "error" }
   /** Долг 360: запрос не дошёл до сервера вовсе — нет сети. */
-  | { status: "offline" };
+  | { status: "offline" }
+  /** Долг 160 (7.285): ответ идёт дольше `TRANSLATION_SLOW_MS` — ждём дальше,
+   *  но говорим, что сеть медленная. */
+  | { status: "slow" }
+  /** Долг 160 (7.285): ответа нет `TRANSLATION_GIVE_UP_MS` — запрос снят,
+   *  вместо вечного «Перевод…» — сообщение и «ещё раз». */
+  | { status: "timeout" };
+
+/**
+ * Сроки ожидания перевода — долг 160, заход 7.285. Замер 16.11.2026
+ * (Playwright, эмуляция сети DevTools): ответ словаря приходит за
+ * ≈0,6–1,1 с на Fast 3G и ≈2,1 с на Slow 3G, а при оборванном соединении
+ * «Перевод…» висел 30 с и дольше — срока у запроса не было вовсе. Порог
+ * «медленно» — 3 с: дольше самого медленного нормального ответа. Отказ —
+ * 12 с: сервер сам ждёт внешний словарь не дольше 5 с, и на Slow 3G
+ * оставшегося запаса хватает с избытком.
+ */
+const TRANSLATION_SLOW_MS = 3000;
+const TRANSLATION_GIVE_UP_MS = 12000;
 
 interface PopoverPosition {
   top: number;
@@ -120,6 +139,12 @@ export interface StoryTextDict {
    *  `translationError`: «не удалось перевести» без интернета читается как
    *  поломка приложения, а причина одна — перевод спрашивает сервер. */
   translationOffline: string;
+  /** Долг 160 (7.285): «Перевод…» дольше 3 с — сеть медленная. */
+  translationSlow: string;
+  /** Долг 160 (7.285): ответа нет 12 с — запрос снят. */
+  translationTimeout: string;
+  /** Долг 160 (7.285): кнопка «ещё раз» под ошибкой, обрывом и отказом. */
+  translationRetry: string;
   wordListenLabel: string;
   /** Вариант В (заход 7.174): строка вместо молчащей кнопки у места
    *  омографа, для которого вырезки из озвучки его предложения нет. */
@@ -1240,7 +1265,24 @@ export default function StoryText({
     handlePlayPause();
   }
 
+  /** Номер последнего тапа — см. `handleWordClick`. */
+  const tapGenRef = useRef(0);
+  /** Запрос перевода в пути — снимается при закрытии карточки и по сроку. */
+  const translateAbortRef = useRef<AbortController | null>(null);
+  /** Последний тап — для кнопки «ещё раз» (долг 160). */
+  const lastTapRef = useRef<{ word: string; wordEl: HTMLElement; queueIndex: number } | null>(null);
+
+  /** Кнопка «ещё раз» под ошибкой, обрывом и отказом по сроку (долг 160):
+   *  тот же тап по тому же слову. Озвучка при этом в сеть не идёт — её
+   *  ответ уже в памяти вкладки (долг 172); перевод спрашивается снова. */
+  function retryTranslation() {
+    const last = lastTapRef.current;
+    if (!last) return;
+    void handleWordClick(last.word, last.wordEl, last.queueIndex);
+  }
+
   async function handleWordClick(word: string, wordEl: HTMLElement, queueIndex: number) {
+    lastTapRef.current = { word, wordEl, queueIndex };
     const rect = wordEl.getBoundingClientRect();
     // Место под карточку спрашивается у ОБЩЕГО УЧЁТА прижатых слоёв
     // (src/lib/pinned-layers.ts), а не считается здесь. До долга 159 эта
@@ -1263,6 +1305,9 @@ export default function StoryText({
     // попадает всё, что положила предзагрузка видимого абзаца (шаг 3), и
     // всё, что человек тапал раньше: в «Снегурочке» 126 тапаемых мест на
     // 93 различных словоформы, то есть треть тапов — повтор.
+    // Номер тапа: ответ, приехавший для ПРЕЖНЕГО слова (человек закрыл
+    // карточку и тапнул другое, пока сеть думала), сюда не пишется.
+    const tap = ++tapGenRef.current;
     const cached = readCachedTranslation(word);
     setTranslation(cached ? { status: "done", translation: cached } : { status: "loading" });
     setWordAudio({ status: "loading" });
@@ -1276,25 +1321,57 @@ export default function StoryText({
         // есть, и она верна только здесь (заход 7.168). Прочим словам
         // ответ от этих двух параметров не меняется.
         const at = queue[queueIndex];
+        const atKey = at ? `${at.paragraphIndex}-${at.sentenceIndex}-${Number(wordEl.dataset.token)}` : null;
         const place =
-          audioStoryId && at
-            ? `&story=${encodeURIComponent(audioStoryId)}&at=${at.paragraphIndex}-${at.sentenceIndex}-${Number(wordEl.dataset.token)}`
-            : "";
-        const res = await fetch(`/api/word-audio?word=${encodeURIComponent(word)}${place}`);
-        const data = await res.json().catch(() => null);
-        if (res.ok && typeof data?.audioUrl === "string") setWordAudio({ status: "done", url: data.audioUrl });
+          audioStoryId && atKey ? `&story=${encodeURIComponent(audioStoryId)}&at=${atKey}` : "";
+        // Долг 172 (7.285): повтор того же слова не уходит в сеть — ответ
+        // берётся из памяти вкладки (`word-audio-answers.ts`).
+        const url = await askWordAudio(
+          wordAudioKey(word, audioStoryId, atKey),
+          `/api/word-audio?word=${encodeURIComponent(word)}${place}`,
+        );
+        if (tapGenRef.current !== tap) return;
+        if (url) {
+          setWordAudio({ status: "done", url });
+          // Файл клипа начинает качаться сразу, а не по нажатию 🔊.
+          preloadWordClip(url);
+        }
         // 200 и `audioUrl: null` — это ШТАТНОЕ «клипа нет», а не сбой
         // (так отвечает `/api/word-audio`), и только оно включает вариант В.
-        else if (res.ok) setWordAudio({ status: "none" });
+        else setWordAudio({ status: "none" });
       } catch {
         /* сеть отказала — состояние не меняем: молчащая кнопка честнее
            строки «ударение зависит от смысла», которой мы не проверили */
       }
     })();
     if (cached) return;
+    // Перевод из словаря — со сроками (долг 160, заход 7.285): через
+    // `TRANSLATION_SLOW_MS` карточка говорит, что сеть медленная, через
+    // `TRANSLATION_GIVE_UP_MS` запрос снимается — сообщение и «ещё раз».
+    // До 7.285 оборванный запрос оставлял «Перевод…» навсегда.
+    translateAbortRef.current?.abort();
+    const controller = new AbortController();
+    translateAbortRef.current = controller;
+    let gaveUp = false;
+    setTranslation({ status: "loading" });
+    const slowTimer = setTimeout(() => {
+      if (tapGenRef.current !== tap) return;
+      setTranslation((current) => (current?.status === "loading" ? { status: "slow" } : current));
+    }, TRANSLATION_SLOW_MS);
+    const giveUpTimer = setTimeout(() => {
+      gaveUp = true;
+      controller.abort();
+    }, TRANSLATION_GIVE_UP_MS);
     try {
-      const res = await fetch(`/api/dictionary/translate?word=${encodeURIComponent(word)}`);
+      const res = await fetch(`/api/dictionary/translate?word=${encodeURIComponent(word)}`, {
+        signal: controller.signal,
+      });
       const data = await res.json().catch(() => null);
+      if (tapGenRef.current !== tap) return;
+      if (gaveUp) {
+        setTranslation({ status: "timeout" });
+        return;
+      }
       if (!res.ok || typeof data?.translation !== "string" || !data.translation) {
         // Отказ чужого сервиса приходит с HTTP 200 и строкой, похожей на
         // перевод (долг 168) — узнаёт его сервер, а сюда доезжает
@@ -1312,7 +1389,18 @@ export default function StoryText({
       // Отказ запроса — это нет сети (или service worker без сети и без
       // копии ответа в кеше `apis`), и человек должен узнать причину.
       // Слово, переведённое раньше, сюда не доходит вовсе: его отдал кеш.
+      if (tapGenRef.current !== tap) return;
+      // Долг 160: запрос сняли МЫ по сроку — это не «нет сети», а «слишком
+      // долго»; навигатор может быть онлайн при оборванном соединении.
+      if (gaveUp) {
+        setTranslation({ status: "timeout" });
+        return;
+      }
       setTranslation({ status: "offline" });
+    } finally {
+      clearTimeout(slowTimer);
+      clearTimeout(giveUpTimer);
+      if (translateAbortRef.current === controller) translateAbortRef.current = null;
     }
   }
 
@@ -1340,6 +1428,10 @@ export default function StoryText({
   }
 
   function close() {
+    // Ответы, ещё идущие по сети, закрытой карточке больше не нужны.
+    tapGenRef.current += 1;
+    translateAbortRef.current?.abort();
+    translateAbortRef.current = null;
     anchorRectRef.current = null;
     setActiveWord(null);
     setPopoverPosition(null);
@@ -1607,6 +1699,7 @@ export default function StoryText({
                 type="button"
                 onClick={close}
                 aria-label={dict.closeLabel}
+                data-testid="translation-popover-close"
                 className="tap text-foreground/50 hover:text-foreground active:text-foreground"
               >
                 ✕
@@ -1617,7 +1710,23 @@ export default function StoryText({
               {translation?.status === "done" && translation.translation}
               {translation?.status === "error" && dict.translationError}
               {translation?.status === "offline" && dict.translationOffline}
+              {translation?.status === "slow" && dict.translationSlow}
+              {translation?.status === "timeout" && dict.translationTimeout}
             </p>
+            {/* Долг 160 (7.285): из ошибки, обрыва и отказа по сроку есть
+                выход — нажать ещё раз, не закрывая карточку. */}
+            {(translation?.status === "error" ||
+              translation?.status === "offline" ||
+              translation?.status === "timeout") && (
+              <button
+                type="button"
+                data-testid="translation-retry"
+                onClick={retryTranslation}
+                className="tap mt-2 inline-flex min-h-11 items-center rounded-full border border-black/10 px-4 text-sm font-semibold text-foreground/80 hover:border-foreground/40 active:border-foreground/40 dark:border-white/15"
+              >
+                {dict.translationRetry}
+              </button>
+            )}
           </div>
         </>
       )}
