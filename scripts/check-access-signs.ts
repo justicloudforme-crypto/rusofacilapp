@@ -115,6 +115,14 @@ interface Surface {
    *  бы доказано отсутствием экрана. */
   minNodes: number;
   /**
+   * КНОПКА, КОТОРАЯ РАСКРЫВАЕТ УЗЛЫ (7.284, долг 178). Ниже `sm` ряды
+   * фильтров каталога рассказов свёрнуты под кнопку «Filtros»: узлы в
+   * DOM, но не видны. Сторож делает то же, что ученик, — нажимает кнопку,
+   * — и судит раскрытые ряды, а не ждёт видимости, которой без нажатия
+   * не будет.
+   */
+  reveal?: string;
+  /**
    * ДОЛГ 257. Поверхность, у которой браузер обязан говорить ТО ЖЕ, что
    * оболочка. Тогда веб-половина судит её тем же `expect`, а не прежним
    * `accessMarkFor`.
@@ -223,6 +231,7 @@ const SURFACES: Surface[] = [
     path: "/ru/stories",
     roles: ["guest", "premium"],
     selector: "[data-testid=story-level-filter] button",
+    reveal: "[data-testid=story-filters-toggle]",
     expect: (node) => (LEVELS.includes(node.key) ? sortSign(levelRequirement("stories", node.key)) : null),
     minNodes: 6,
   },
@@ -296,6 +305,18 @@ async function readNodes(
     // серые полосы.
     if (options.stallSummary) await page.route("**/api/flashcards/summary**", () => {});
     await page.goto(`${base}${surface.path}`, { waitUntil: "domcontentloaded", timeout: 45_000 });
+    if (surface.reveal) {
+      const toggle = page.locator(surface.reveal);
+      await toggle.waitFor({ state: "attached", timeout: 30_000 });
+      // Кнопка видна только на узком экране; на широком ряды и так открыты.
+      // Нажатие до гидрации теряется — повторять, пока кнопка не скажет
+      // `aria-expanded="true"` (не дольше 30 с).
+      for (let i = 0; i < 120 && (await toggle.isVisible()); i++) {
+        if ((await toggle.getAttribute("aria-expanded")) === "true") break;
+        await toggle.click().catch(() => {});
+        await page.waitForTimeout(250);
+      }
+    }
     await page.waitForSelector(surface.selector, { timeout: 30_000 });
     const ready = await page
       .waitForFunction(

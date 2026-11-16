@@ -63,7 +63,7 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
           aria-expanded={open}
           aria-haspopup="menu"
           aria-label={localeNames[current]}
-          className="tap flex h-9 min-w-9 items-center justify-center rounded-full px-2.5 text-sm font-semibold uppercase text-foreground/80 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
+          className="tap flex h-9 min-w-9 items-center md:h-11 md:min-w-11 justify-center rounded-full px-2.5 text-sm font-semibold uppercase text-foreground/80 transition-colors hover:bg-foreground/10 active:bg-foreground/10"
         >
           {current}
         </button>
