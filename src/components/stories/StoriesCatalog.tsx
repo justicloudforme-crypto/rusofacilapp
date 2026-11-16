@@ -63,6 +63,9 @@ export interface StoriesCatalogDict {
   topics: Record<StoryTopic, string>;
   classicLabel: string;
   classicOnlyLabel: string;
+  /** Кнопка «Filtros» — сворачивает липкий блок фильтров на телефоне
+   *  (долг 178, 7.284). На `sm` и шире не показывается. */
+  filtersButton: string;
   /** Template containing the literal placeholder "{minutes}". */
   readingTimeLabel: string;
   /** Template containing the literal placeholder "{percent}". */
@@ -90,6 +93,15 @@ export default function StoriesCatalog({
   const [filter, setFilter] = useState<"all" | StoryLevel>("all");
   const [topicFilter, setTopicFilter] = useState<"all" | StoryTopic>("all");
   const [classicOnly, setClassicOnly] = useState(false);
+  // ДОЛГ 178 (7.284). На телефоне липкий блок с тремя рядами фильтров
+  // занимал 228 из 640 CSS-пикселей (вместе с шапкой — 46 % экрана), и
+  // в кадр влезала одна карточка. Теперь ниже `sm` липкой остаётся одна
+  // кнопка «Filtros», ряды раскрываются по нажатию и сами сворачиваются
+  // после выбора. Ряды остаются в DOM (скрыты CSS), поэтому сторож знаков
+  // `check:access-signs` и подписи для чтения экрана видят их как прежде.
+  // На `sm` и шире всё как было. Стережёт e2e/stories-catalog-phone.spec.ts.
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilters = Number(filter !== "all") + Number(topicFilter !== "all") + Number(classicOnly);
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Empty until after mount (localStorage isn't available during SSR) —
@@ -157,8 +169,24 @@ export default function StoriesCatalog({
           flashcards filter bars). z-20 stays under the Navbar's z-50. */}
       <div
         style={{ top: navOffset }}
-        className="sticky z-20 mt-4 flex flex-col gap-3 bg-background/95 py-3 backdrop-blur-sm"
+        data-testid="story-filters"
+        className="sticky z-20 mt-4 flex flex-col gap-3 bg-background/95 py-2 backdrop-blur-sm sm:py-3"
       >
+        <button
+          type="button"
+          data-testid="story-filters-toggle"
+          aria-expanded={filtersOpen}
+          aria-controls="story-filter-rows"
+          onClick={() => setFiltersOpen((v) => !v)}
+          className={`${filterChipClass(activeFilters > 0)} gap-1.5 self-start sm:hidden`}
+        >
+          {dict.filtersButton}
+          {activeFilters > 0 && <span>· {activeFilters}</span>}
+          <svg aria-hidden viewBox="0 0 20 20" fill="none" className={`h-3.5 w-3.5 transition-transform ${filtersOpen ? "rotate-180" : ""}`}>
+            <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <div id="story-filter-rows" className={`${filtersOpen ? "flex" : "hidden"} flex-col gap-3 sm:flex`}>
         {/* ЗНАК НА ПОЛОСЕ УРОВНЕЙ — 7.196, часть 1. Владелец снял с
             телефона: в словаре на C1 стоит «C1 👑», а в каталоге
             рассказов у того же C1 знака нет вовсе, хотя все 65 рассказов
@@ -184,7 +212,7 @@ export default function StoriesCatalog({
             }),
           ]}
           activeId={filter}
-          onChange={(value) => { setFilter(value); setVisibleCount(PAGE_SIZE); }}
+          onChange={(value) => { setFilter(value); setVisibleCount(PAGE_SIZE); setFiltersOpen(false); }}
         />
 
         {/* 8 topics total (see storyTopics) — reads well as a horizontal
@@ -197,7 +225,7 @@ export default function StoriesCatalog({
             ...storyTopics.map((topic) => ({ id: topic, label: dict.topics[topic] })),
           ]}
           activeId={topicFilter}
-          onChange={(value) => { setTopicFilter(value); setVisibleCount(PAGE_SIZE); }}
+          onChange={(value) => { setTopicFilter(value); setVisibleCount(PAGE_SIZE); setFiltersOpen(false); }}
         />
 
         <button
@@ -205,18 +233,20 @@ export default function StoriesCatalog({
           onClick={() => {
             setClassicOnly((v) => !v);
             setVisibleCount(PAGE_SIZE);
+            setFiltersOpen(false);
           }}
           aria-pressed={classicOnly}
           className={`${filterChipClass(classicOnly)} self-start`}
         >
           {dict.classicOnlyLabel}
         </button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <p className="mt-10 text-sm text-foreground/60">{dict.emptyState}</p>
       ) : (
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {visible.map((story) => {
             const progress = progressById[story.id];
             const isLocked = story.lockReason !== null;
@@ -230,7 +260,7 @@ export default function StoriesCatalog({
                   e.preventDefault();
                   openPaywall(story.lockReason ?? "free", "story");
                 }}
-                className="tap group flex flex-col rounded-2xl border border-black/10 p-6 transition-colors hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
+                className="tap group flex flex-col rounded-2xl border border-black/10 p-4 transition-colors sm:p-6 hover:border-foreground/40 active:border-foreground/40 dark:border-white/30"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5">
@@ -305,7 +335,9 @@ export default function StoriesCatalog({
                     has any reading progress for that story yet (a confirmed
                     AUDIT.md bug: progress loads client-side after mount, so
                     this was also flashing empty->populated on every visit). */}
-                <div className="mt-4 min-h-[38px]">
+                {/* Ниже `sm` колонка одна, ровнять соседей по ряду незачем:
+                    пустое место не держится (долг 178, 7.284). */}
+                <div className={`mt-4 sm:min-h-[38px] ${progress ? "" : "hidden sm:block"}`}>
                   {progress?.isCompleted ? (
                     <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                       <span aria-hidden="true">✓</span> {dict.completedBadge}
@@ -325,7 +357,7 @@ export default function StoriesCatalog({
                   ) : null}
                 </div>
 
-                <span className="mt-4 text-sm font-medium text-foreground/70 group-hover:text-foreground">
+                <span className="mt-3 text-sm font-medium text-foreground/70 group-hover:text-foreground sm:mt-4">
                   {dict.readButton} →
                 </span>
               </Link>

@@ -902,6 +902,7 @@
     },
     "classicLabel": "Clásico (adaptación)",
     "classicOnlyLabel": "Solo clásicos",
+    "filtersButton": "Filtros",
     "progressLabel": "Progreso: {percent}%",
     "notStartedLabel": "No empezado",
     "premiumLockTitle": "Esta historia es solo para suscriptores",
