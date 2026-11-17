@@ -51,6 +51,7 @@ export default function ReadingPracticeBlock({
                   stopLabel: readAloudDict.stopLabel,
                   retryLabel: readAloudDict.retryLabel,
                   permissionDenied: readAloudDict.permissionDenied,
+                  permissionDeniedApp: readAloudDict.permissionDeniedApp,
                   unsupported: readAloudDict.recordingNotSupported,
                   recordingFailed: readAloudDict.recordingFailed,
                   playbackFailed: readAloudDict.playbackFailed,
