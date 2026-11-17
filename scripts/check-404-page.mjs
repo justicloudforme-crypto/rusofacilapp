@@ -68,19 +68,21 @@ const TITLES = {
  * страницу: рама, нужный язык, ссылки, `noindex`, код 404.
  *
  * `ourPage: false` — маршрут СОВПАЛ, и страница сама позвала `notFound()`
- * (нет такой строки в базе). В этом приложении такой ответ документа не
- * рисует вовсе: корневой layout лежит в динамическом сегменте
- * (`src/app/[lang]/layout.tsx`, файла `src/app/layout.tsx` нет), и Next
- * отдаёт пустую внутреннюю оболочку — содержимое 404 уходит в RSC-payload
- * и не видно ни в HTML, ни после гидрации. Это НЕ регрессия захода: так
- * было и до него, измерено на живом проде 11.09.2026. Чинится переносом
- * `<html>` в корневой layout — правка рамы всех страниц, отложенная до
- * снятия заморозки 26.09.2026 (долг 133).
+ * (нет такой строки в базе). Серверный HTML такого ответа — пустая
+ * оболочка Next `<html id="__next_error__">`, а страницу рисует браузер из
+ * данных (RSC), присланных в том же ответе. Измерено в 7.286 на Next
+ * 16.4.2: так ведёт себя ЛЮБОЙ `notFound()` из страницы — и с `<html>` в
+ * `app/layout.tsx`, и в `app/[lang]/layout.tsx` (два крошечных приложения),
+ * то есть перенос рамы, который долг 133 предлагал с 7.169, этого не
+ * меняет. До 7.286 в этих данных была встроенная английская заглушка Next
+ * (без шапки, подвала и ссылок): в `src/app/[lang]/` не было
+ * `not-found.tsx`. Долг 133 закрыт этим файлом, и сторож теперь требует,
+ * чтобы в данных была НАША страница на языке адреса.
  *
- * Число таких видов ЗАКРЕПЛЕНО ниже: если один из них начнёт отдавать
- * нашу страницу (например, после переноса layout'а), сторож покраснеет и
- * потребует обновить список — ровно так же, как `check:brand` держит
- * список исключений числом.
+ * Число таких видов ЗАКРЕПЛЕНО ниже: если сервер начнёт рисовать нашу
+ * страницу сам (новая версия Next), сторож покраснеет и потребует
+ * обновить список — ровно так же, как `check:brand` держит список
+ * исключений числом.
  */
 const CASES = [
   { name: "несовпавший путь /es", path: "/es/net-takoy-stranicy", lang: "es", ourPage: true },
@@ -110,7 +112,7 @@ const CASES = [
   { name: "несуществующий профиль", path: "/es/u/net-takogo-cheloveka", lang: "es", ourPage: false },
 ];
 
-/** Сколько видов адресов документа не рисуют — закреплено числом (долг 133). */
+/** Сколько видов адресов рисует браузер, а не сервер, — закреплено числом (долг 133). */
 const BLANK_KINDS = 13;
 
 /** Живая страница: нужна как контроль того, что сторож вообще способен
@@ -134,6 +136,13 @@ const STATIC_RULES = [
     name: "есть свой документ 404 (src/app/global-not-found.tsx)",
     file: "src/app/global-not-found.tsx",
     must: ["NotFoundBody", "<html", "Navbar", "Footer", "LOCALE_HEADER"],
+  },
+  {
+    // Долг 133 (7.286): без этого файла у `notFound()` из страницы нет своей
+    // границы, и 13 видов адресов снова показывают английскую заглушку Next.
+    name: "есть своя страница «не найдено» внутри рамы (src/app/[lang]/not-found.tsx)",
+    file: "src/app/[lang]/not-found.tsx",
+    must: ["NotFoundBody", "LOCALE_HEADER"],
   },
   {
     name: "конвенция global-not-found включена в next.config.ts",
@@ -183,10 +192,15 @@ export function judge({ status, html, lang, ourPage = true }) {
   if (!/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(html)) problems.push("нет noindex");
   const isOurs = html.includes('data-testid="not-found-page"');
   if (!ourPage) {
-    // Известный класс (долг 133): документа нет вовсе. Правило
-    // асимметричное — «нашей страницы здесь ПОКА не бывает»; появилась —
-    // сторож обязан покраснеть, чтобы список не врал молча.
-    if (isOurs) problems.push("адрес начал отдавать НАШУ страницу — долг 133 закрыт, обнови список в check:404");
+    // Класс «страницу рисует браузер» (долг 133, закрыт в 7.286). Серверный
+    // HTML — оболочка Next; судим данные, из которых браузер её нарисует:
+    // наша страница, заголовок языка адреса, ни слова чужой локали.
+    if (isOurs) problems.push("сервер начал рисовать страницу 404 сам — обнови класс адреса в check:404");
+    if (!html.includes('not-found-page\\"')) problems.push("в данных страницы нет нашей страницы 404 — браузер покажет заглушку Next (долг 133)");
+    const expectedTitle = TITLES[lang];
+    if (expectedTitle && !html.includes(expectedTitle)) problems.push(`в данных нет заголовка локали ${lang} («${expectedTitle}»)`);
+    const foreignTitle = Object.entries(TITLES).find(([code, title]) => code !== lang && html.includes(title));
+    if (foreignTitle) problems.push(`в данных текст чужой локали (${foreignTitle[0]})`);
     return problems;
   }
   if (!isOurs) problems.push("это не наша страница 404");
@@ -232,6 +246,14 @@ const CLEAN = `<!doctype html><html lang="es"><head><meta name="robots" content=
 <a href="/es">Ir al inicio</a><a href="/es/courses">Ver el catálogo de cursos</a>
 <button data-testid="not-found-search">Buscar en el sitio</button></div></main><footer>подвал</footer></body></html>`;
 
+/** Ответ класса «рисует браузер»: оболочка Next + данные. Экранированные
+ *  кавычки — ровно так `data-testid` лежит в данных RSC внутри HTML. */
+const SHELL_ES = `<!DOCTYPE html><html id="__next_error__"><head><meta name="robots" content="noindex"/></head><body></body></html>
+<script>self.__next_f.push([1,"[\\"$\\",\\"div\\",null,{\\"data-testid\\":\\"not-found-page\\",\\"className\\":\\"x\\"}] Página no encontrada"])</script>`;
+/** Тот же класс до 7.286: в данных только встроенная заглушка Next. */
+const SHELL_NEXT_STUB = `<!DOCTYPE html><html id="__next_error__"><head><meta name="robots" content="noindex"/></head><body></body></html>
+<script>self.__next_f.push([1,"404 This page could not be found."])</script>`;
+
 const PLANTS = [
   ["страница отдаёт 200 вместо 404", { status: 200, html: CLEAN, lang: "es" }],
   ["отдана голая страница Next", { status: 404, html: '<html id="__next_error__"><body>404 This page could not be found.</body></html>', lang: "es" }],
@@ -243,8 +265,10 @@ const PLANTS = [
   ["нет рамы сайта", { status: 404, html: CLEAN.replace("<footer>подвал</footer>", ""), lang: "es" }],
   ["кнопка «слушать» без записи", { status: 404, html: CLEAN.replace("<h1>Página no encontrada</h1>", "<h1>Página no encontrada</h1><button>🔊</button>"), lang: "es" }],
   ["русская страница по русскому адресу без русского текста", { status: 404, html: CLEAN, lang: "ru" }],
-  ["известный класс начал отдавать нашу страницу (долг 133 закрыт, список не обновлён)", { status: 404, html: CLEAN, lang: "es", ourPage: false }],
-  ["известный класс перестал отдавать 404", { status: 200, html: "<html><body></body></html>", lang: "es", ourPage: false }],
+  ["сервер начал рисовать страницу сам (класс адреса не обновлён)", { status: 404, html: CLEAN, lang: "es", ourPage: false }],
+  ["класс «рисует браузер» перестал отдавать 404", { status: 200, html: SHELL_ES, lang: "es", ourPage: false }],
+  ["класс «рисует браузер»: в данных заглушка Next — поведение до 7.286 (долг 133)", { status: 404, html: SHELL_NEXT_STUB, lang: "es", ourPage: false }],
+  ["класс «рисует браузер»: по русскому адресу испанская страница", { status: 404, html: SHELL_ES, lang: "ru", ourPage: false }],
 ];
 
 function runPlant() {
@@ -271,13 +295,15 @@ function runPlant() {
   // Отрицательные контроли: чистый случай обязан МОЛЧАТЬ, иначе сторож
   // краснеет всегда и не значит ничего.
   const cleanProblems = judge({ status: 404, html: CLEAN, lang: "es" });
+  const shellProblems = judge({ status: 404, html: SHELL_ES, lang: "es", ourPage: false });
+  console.log(`  ${shellProblems.length === 0 ? "ок" : "ПРОПУЩЕНО"}: отрицательный контроль — класс «рисует браузер» с нашей страницей молчит${shellProblems.length ? " → " + shellProblems.join("; ") : ""}`);
   const aliveProblems = judgeAlive({ status: 200, html: "<html><body>живая страница</body></html>" });
   const aliveCaught = judgeAlive({ status: 200, html: CLEAN });
   console.log(`  ${cleanProblems.length === 0 ? "ок" : "ПРОПУЩЕНО"}: отрицательный контроль — чистая страница 404 молчит${cleanProblems.length ? " → " + cleanProblems.join("; ") : ""}`);
   console.log(`  ${aliveProblems.length === 0 ? "ок" : "ПРОПУЩЕНО"}: отрицательный контроль — живая страница молчит`);
   console.log(`  ${aliveCaught.length > 0 ? "ок" : "ПРОПУЩЕНО"}: подсадка «живая страница отдала 404»`);
-  const total = PLANTS.length + 3 + STATIC_RULES.length;
-  const passed = caught + (cleanProblems.length === 0 ? 1 : 0) + (aliveProblems.length === 0 ? 1 : 0) + (aliveCaught.length > 0 ? 1 : 0);
+  const total = PLANTS.length + 4 + STATIC_RULES.length;
+  const passed = caught + (cleanProblems.length === 0 ? 1 : 0) + (shellProblems.length === 0 ? 1 : 0) + (aliveProblems.length === 0 ? 1 : 0) + (aliveCaught.length > 0 ? 1 : 0);
   console.log(`[check:404 --plant] пройдено ${passed} из ${total}`);
   return passed === total ? 0 : 1;
 }
@@ -301,7 +327,7 @@ async function runLive() {
   const ours = errs.filter((r) => r.html.includes('data-testid="not-found-page"'));
   console.log(`  наша страница 404 у ${ours.length} из ${errs.length}; noindex у ${errs.filter((r) => /name="robots"[^>]+content="[^"]*noindex/i.test(r.html)).length} из ${errs.length}`);
   const blank = errs.filter((r) => r.ourPage === false);
-  console.log(`  видов, у которых документ не рисуется (маршрут совпал, страница позвала notFound() сама, — долг 133): ${blank.length}, закреплено ${BLANK_KINDS}`);
+  console.log(`  видов, где страницу 404 рисует браузер из данных (маршрут совпал, страница позвала notFound() сама; долг 133 закрыт в 7.286): ${blank.length}, закреплено ${BLANK_KINDS}; с нашей страницей в данных ${blank.filter((r) => r.problems.length === 0).length}`);
   if (blank.length !== BLANK_KINDS) {
     console.log(`  ОТКАЗ: закреплённое число видов известного класса (${BLANK_KINDS}) разошлось со списком (${blank.length})`);
   }
