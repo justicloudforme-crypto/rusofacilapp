@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { PREFERRED_RECORDING_TYPES } from "@/lib/voice-formats";
 import {
   VoiceStorageError,
@@ -18,6 +19,11 @@ type Dict = {
   stopLabel: string;
   retryLabel: string;
   permissionDenied: string;
+  /** Тот же отказ внутри приложения (долг 112, 7.287): «разрешения
+   * браузера» в оболочке не найти — Android после двух «Запретить» окно
+   * больше не показывает, и включить микрофон можно только в настройках
+   * телефона. */
+  permissionDeniedApp: string;
   unsupported: string;
   yourRecording: string;
   /** Shown when the recorder itself failed, or produced nothing. */
@@ -105,6 +111,7 @@ export default function VoiceRecorder({
   /** True while what is on screen came out of IndexedDB rather than out of
    * the microphone just now — the only difference is the label above it. */
   const [restored, setRestored] = useState(false);
+  const [deniedInApp, setDeniedInApp] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
@@ -168,6 +175,7 @@ export default function VoiceRecorder({
     } catch {
       // Permission refused, or no microphone. Both are the student's to
       // fix and both read the same from here.
+      setDeniedInApp(Capacitor.isNativePlatform());
       setState("denied");
       return;
     }
@@ -339,7 +347,11 @@ export default function VoiceRecorder({
           </>
         )}
 
-        {state === "denied" && <p className="text-xs text-red-600 dark:text-red-400">{dict.permissionDenied}</p>}
+        {state === "denied" && (
+          <p className="text-xs text-red-600 dark:text-red-400" data-rf-mic-denied={deniedInApp ? "app" : "browser"}>
+            {deniedInApp ? dict.permissionDeniedApp : dict.permissionDenied}
+          </p>
+        )}
         {state === "failed" && <p className="text-xs text-red-600 dark:text-red-400">{dict.recordingFailed}</p>}
       </div>
 

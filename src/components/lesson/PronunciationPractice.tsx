@@ -57,6 +57,7 @@ export default function PronunciationPractice({
                 stopLabel: dict.stopLabel,
                 retryLabel: dict.retryLabel,
                 permissionDenied: dict.permissionDenied,
+                permissionDeniedApp: dict.permissionDeniedApp,
                 unsupported: dict.recordingNotSupported,
                 recordingFailed: dict.recordingFailed,
                 playbackFailed: dict.playbackFailed,
