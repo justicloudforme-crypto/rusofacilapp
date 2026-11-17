@@ -51,7 +51,7 @@ const MAIN_QUESTIONS: [string, string][] = [
   ["is my local main up to date", "git merge --ff-only origin/main"],
   ["is prod running the code I am looking at", "sentry-release"],
   ["what state is it in", "## 2. ТЕКУЩЕЕ СОСТОЯНИЕ"],
-  ["which shell version is in main", "versionCode 17"],
+  ["which shell version is in main", "versionCode 18"],
   ["what rules are in force", "## 3. ПРАВИЛА РАБОТЫ И РЕШЕНИЯ ВЛАДЕЛЬЦА"],
   ["in which order are PRs merged", "Порядок мержа"],
   ["may I write to the production database", "Запись в прод — только с прямого разрешения владельца"],
