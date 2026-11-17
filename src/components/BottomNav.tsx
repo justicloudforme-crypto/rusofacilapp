@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { hapticTap } from "@/lib/haptics";
 import { useHideOnScroll } from "@/lib/useHideOnScroll";
 import { usePinnedLayer, useKeyboardOpen } from "@/lib/usePinnedLayer";
+import { useKeyboardExpected } from "@/lib/useKeyboardExpected";
 import { BookIcon, GraduationCapIcon, DictionaryIcon, PuzzleIcon, PersonalIcon } from "@/components/profile/ProfileIcons";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
@@ -90,7 +91,15 @@ export default function BottomNav({
    * документа, ни сужать свободное место для карточек и доводок.
    */
   const keyboardOpen = useKeyboardOpen();
-  const hidden = (hiddenByScroll && !nativeShell) || keyboardOpen;
+  /**
+   * Долг 246 (7.287): прятать по касанию поля, а не по уже сжатому окну —
+   * иначе панель на кадр встаёт на край клавиатуры и съезжает на виду
+   * (замер — `src/lib/useKeyboardExpected.ts`). Под клавиатуру панель
+   * уходит без анимации: анимация здесь и была видимым «прыжком».
+   */
+  const keyboardExpected = useKeyboardExpected(keyboardOpen);
+  const hiddenForKeyboard = keyboardOpen || keyboardExpected;
+  const hidden = (hiddenByScroll && !nativeShell) || hiddenForKeyboard;
   const pinnedRef = usePinnedLayer<HTMLElement>({
     edge: "bottom",
     // Единственный слой продукта, который РЕЗЕРВИРУЕТ место: он на
@@ -100,7 +109,7 @@ export default function BottomNav({
     // Учёт занятого низа (7.185) обязан совпадать с тем, что на экране:
     // панель, которая теперь рисуется гостю в оболочке, обязана и место
     // резервировать. Иначе низ последней карточки уехал бы под неё.
-    active: (isLoggedIn || nativeShell) && !keyboardOpen,
+    active: (isLoggedIn || nativeShell) && !hiddenForKeyboard,
   });
 
   if (!isLoggedIn && !nativeShell) return null;
@@ -133,9 +142,10 @@ export default function BottomNav({
       // translate-y toggle is skipped entirely (useHideOnScroll always
       // returns false) when the OS prefers-reduced-motion — see that
       // hook's own comment.
-      className={`pb-safe fixed inset-x-0 bottom-0 z-40 flex border-t border-black/10 bg-background transition-transform duration-200 sm:hidden dark:border-white/30 ${
+      className={`pb-safe fixed inset-x-0 bottom-0 z-40 flex border-t border-black/10 bg-background duration-200 sm:hidden dark:border-white/30 ${
         hidden ? "translate-y-full" : "translate-y-0"
-      }`}
+      } ${hiddenForKeyboard ? "transition-none" : "transition-transform"}`}
+      data-rf-keyboard-hidden={hiddenForKeyboard ? "" : undefined}
     >
       {items.map((item) => {
         const active = pathname.startsWith(item.href);
