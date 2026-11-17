@@ -272,6 +272,15 @@ dependencies {
     implementation "androidx.credentials:credentials:1.5.0"
     implementation "androidx.credentials:credentials-play-services-auth:1.5.0"
     implementation "com.google.android.libraries.identity.googleid:googleid:1.1.1"
+    // СТРАНИЦЫ 16 КБ (заход 7.288). Play по сборке 1.0.16 предупредил:
+    // «some of its libraries were compiled using an older Android NDK
+    // version». Единственная нативная библиотека пакета —
+    // libandroidx.graphics.path.so (четыре ABI) из androidx.graphics:graphics-path
+    // 1.0.1, которую тянет экран покупок RevenueCat через Compose UI; она
+    // собрана NDK r25c (сегменты уже выровнены на 16 КБ, но NDK старый).
+    // Версия 1.1.0 собрана NDK r27 — названа явно, чтобы Gradle выбрал её
+    // вместо транзитивной. Разрешений и данных не добавляет (сверено по AAB).
+    implementation "androidx.graphics:graphics-path:1.1.0"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
