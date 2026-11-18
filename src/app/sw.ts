@@ -60,9 +60,10 @@ const CACHES = pageCacheNames(FINGERPRINT);
 
 /**
  * ЗАМОК НА УБОРКУ ПОСЛЕ ВЫХОДА — ДОЛГ 318 (заход 7.291). Разбор —
- * `src/lib/signed-out-lock.ts`. Плагин стоит ПЕРВЫМ в каждой стратегии,
+ * `src/lib/signed-out-lock.ts`. Плагин стоит ПОСЛЕДНИМ в каждой стратегии,
  * которая пишет в кеш, стираемый при выходе (`rf-pages*` и `apis`):
- * ответ запроса, начатого до выхода, не дойдёт ни до одной проверки ниже.
+ * порядок первых плагинов стережёт `check:sw-cache-policy`, а замку место
+ * не важно — любой `null` в цепочке `cacheWillUpdate` отменяет запись.
  */
 const SIGNED_OUT_LOCK = createSignedOutLock(self.caches);
 
@@ -138,8 +139,8 @@ const runtimeCaching = defaultCache.map((route) => {
         cacheName: "apis",
         networkTimeoutSeconds: 10,
         plugins: [
-          SIGNED_OUT_LOCK.plugin,
           new ExpirationPlugin({ maxEntries: 16, maxAgeSeconds: 24 * 60 * 60, maxAgeFrom: "last-used" }),
+          SIGNED_OUT_LOCK.plugin,
         ],
       }),
     };
@@ -159,7 +160,7 @@ const runtimeCaching = defaultCache.map((route) => {
     matcher: route.matcher,
     handler: new NetworkFirst({
       cacheName: renamed,
-      plugins: [SIGNED_OUT_LOCK.plugin, expiration(BUDGET_KEY[current!])],
+      plugins: [expiration(BUDGET_KEY[current!]), SIGNED_OUT_LOCK.plugin],
     }),
   };
 });
@@ -515,7 +516,7 @@ const serwist = new Serwist({
         sameOrigin && request.mode === "navigate" && isOfflineContentPath(url.pathname),
       handler: new NetworkFirst({
         cacheName: CACHES.content,
-        plugins: [SIGNED_OUT_LOCK.plugin, expiration("content"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+        plugins: [expiration("content"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK, SIGNED_OUT_LOCK.plugin],
       }),
     },
     /**
@@ -533,13 +534,13 @@ const serwist = new Serwist({
         sameOrigin && request.mode === "navigate" && isOfflineSectionPath(url.pathname),
       handler: new NetworkFirst({
         cacheName: CACHES.section,
-        plugins: [SIGNED_OUT_LOCK.plugin, expiration("section"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+        plugins: [expiration("section"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK, SIGNED_OUT_LOCK.plugin],
       }),
     },
     {
       matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
         sameOrigin && request.mode === "navigate" && !url.pathname.startsWith("/api/"),
-      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [SIGNED_OUT_LOCK.plugin, expiration("html"), OFFLINE_SHELL_NOT_STORED, DOCUMENT_FALLBACK] }),
+      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html"), OFFLINE_SHELL_NOT_STORED, DOCUMENT_FALLBACK, SIGNED_OUT_LOCK.plugin] }),
     },
     /**
      * КЛИП ОЗВУЧКИ — СВОЙ КЕШ, ДОЛГ 77.
