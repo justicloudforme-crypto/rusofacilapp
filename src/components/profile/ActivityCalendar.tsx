@@ -104,6 +104,23 @@ export default function ActivityCalendar({
   // September is a panel nobody can trace back to a square.
   const [openDay, setOpenDay] = useState<string | null>(null);
 
+  // СМЕНИЛСЯ «СЕГОДНЯШНИЙ» МЕСЯЦ — КАЛЕНДАРЬ ВСТАЁТ НА НЕГО (заход 7.289,
+  // долг 156). Начальный месяц выше выбирается ОДИН раз — когда календарь
+  // появился на экране. Если же страница кабинета обновилась на месте
+  // (`router.refresh()`, обновление данных после полуночи последнего дня
+  // месяца, приложение, пролежавшее в памяти телефона), компонент НЕ
+  // монтируется заново: `todayKey` приходит новый, а месяц на экране
+  // остаётся прошлым — «календарь открылся на августе» в сентябре.
+  // Поправка — во время отрисовки, а не эффектом: в этом файле эффектов
+  // нет намеренно (шапка файла), и лишнего кадра со старым месяцем тоже.
+  const currentMonth = monthKeyOf(todayKey);
+  const [shownForMonth, setShownForMonth] = useState(currentMonth);
+  if (shownForMonth !== currentMonth) {
+    setShownForMonth(currentMonth);
+    setMonthKey(clampMonth(currentMonth, min, max));
+    setOpenDay(null);
+  }
+
   const goToMonth = (delta: number) => {
     setMonthKey((current) => clampMonth(shiftMonth(current, delta), min, max));
     setOpenDay(null);
