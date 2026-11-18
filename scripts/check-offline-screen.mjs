@@ -64,6 +64,11 @@ export function violations(htmlRaw) {
   if (!/location\.pathname/.test(html)) {
     bad.push(`${FILE}: локаль выбирается не по адресу — а больше здесь знать её неоткуда`);
   }
+  // 3б) адрес без локали («/» — старт приложения) берёт язык из куки
+  //     выбора `rf-lang`, а не молча испанский (заход 7.289, долг 176)
+  if (!/rf-lang=ru/.test(html) || !/document\.cookie/.test(html)) {
+    bad.push(`${FILE}: на адресе без локали («/», старт приложения) язык не берётся из куки rf-lang — ученик с русским интерфейсом без сети читает испанский (7.289)`);
+  }
   if (!/\.remove\(\)/.test(html)) {
     bad.push(`${FILE}: лишняя половина не убирается, а дописывается — при выключенном JS экран окажется пустым`);
   }
@@ -232,6 +237,7 @@ function plant() {
   );
   add("подсадка: русской половины нет вовсе", html.replaceAll('data-locale="ru"', 'data-locale="xx"'), "половины «ru» нет");
   add("подсадка: локаль выбирается не по адресу", html.replace(/location\.pathname/g, 'navigator.language.slice(0, 2)'), "не по адресу");
+  add("подсадка: на «/» язык не из куки rf-lang", html.replace(/document\.cookie/g, '""'), "не берётся из куки rf-lang");
   add("подсадка: лишняя половина не убирается", html.replace(/\.remove\(\)/g, ".setAttribute('hidden', '')"), "не убирается");
   add("подсадка: язык документа не проставляется", html.replace(/documentElement\.lang/g, "documentElement.dataset.lang"), "язык документа не проставляется");
 
@@ -255,7 +261,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-screen — 12 правил, локалей 2, вкладок 5, нарушений 0 (заходы 7.218 и 7.227)");
+  console.log("check:offline-screen — 13 правил, локалей 2, вкладок 5, нарушений 0 (заходы 7.218 и 7.227)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
