@@ -107,6 +107,54 @@ describe("календарь занятий — что видит ученик",
     expect(screen.getByText("август 2026")).toBeTruthy();
   });
 
+  // Долг 156 (7.289): владелец видел август при первом заходе. Чистая проба
+  // кодом: занятия только в прошлых месяцах — первый взгляд всё равно на
+  // ТЕКУЩЕМ месяце, кнопка «вперёд» выключена.
+  it("занятия только в прошлых месяцах — всё равно открывается текущий месяц", () => {
+    renderCalendar(RU, {
+      activeDateKeys: ["2026-08-10"],
+      daySources: { "2026-08-10": ["lesson"] },
+      todayKey: "2026-11-17",
+      firstDateKey: "2026-08-01",
+    });
+    expect(screen.getByText("ноябрь 2026")).toBeTruthy();
+    expect((screen.getByRole("button", { name: RU.nextMonth }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("страница обновилась на месте после смены месяца — календарь встаёт на новый месяц", () => {
+    const props = {
+      activeDateKeys: ["2026-08-10"],
+      frozenDateKeys: [],
+      daySources: { "2026-08-10": ["lesson"] },
+      firstDateKey: "2026-06-15",
+      missedFromDateKey: "2026-06-15",
+      dict: RU,
+    };
+    const { rerender } = render(<ActivityCalendar {...props} todayKey="2026-08-31" />);
+    expect(screen.getByText("август 2026")).toBeTruthy();
+    // тот же компонент, без размонтирования — как при router.refresh()
+    rerender(<ActivityCalendar {...props} todayKey="2026-09-01" />);
+    expect(screen.getByText("сентябрь 2026")).toBeTruthy();
+    expect(screen.queryByText("август 2026")).toBeNull();
+  });
+
+  it("обновление внутри того же месяца не сбрасывает пролистанный назад месяц", async () => {
+    const user = userEvent.setup();
+    const props = {
+      activeDateKeys: ["2026-08-10"],
+      frozenDateKeys: [],
+      daySources: { "2026-08-10": ["lesson"] },
+      firstDateKey: "2026-06-15",
+      missedFromDateKey: "2026-06-15",
+      dict: RU,
+    };
+    const { rerender } = render(<ActivityCalendar {...props} todayKey="2026-08-30" />);
+    await user.click(screen.getByRole("button", { name: RU.prevMonth }));
+    expect(screen.getByText("июль 2026")).toBeTruthy();
+    rerender(<ActivityCalendar {...props} todayKey="2026-08-31" />);
+    expect(screen.getByText("июль 2026")).toBeTruthy();
+  });
+
   it("неделя с понедельника, одинаково в обеих локалях", () => {
     const { unmount } = renderCalendar(ES);
     expect(screen.getByText("lun")).toBeTruthy();

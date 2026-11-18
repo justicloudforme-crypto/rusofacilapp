@@ -599,7 +599,19 @@
 
     <script>
       (function () {
-        var lang = /^\/ru(\/|$)/.test(location.pathname) ? "ru" : "es";
+        // Язык — по адресу. Адреса БЕЗ локали бывают: приложение всегда
+        // стартует с «/» (заход 7.289, долг 176, вопрос 4): без сети
+        // каркас вставал на «/» по-испански даже у ученика с русским
+        // интерфейсом. Тогда — кука выбора языка `rf-lang` (та же, что
+        // `LOCALE_COOKIE` в `src/lib/remembered-locale.ts`): каркас отдан
+        // на источнике сайта и куку видит. Нет и её — испанский.
+        var lang = /^\/ru(\/|$)/.test(location.pathname)
+          ? "ru"
+          : /^\/es(\/|$)/.test(location.pathname)
+            ? "es"
+            : /(?:^|;\s*)rf-lang=ru(?:;|$)/.test(document.cookie || "")
+              ? "ru"
+              : "es";
         document.documentElement.lang = lang;
 
         // Заголовок вкладки — тоже подпись, и она обязана говорить то же,
