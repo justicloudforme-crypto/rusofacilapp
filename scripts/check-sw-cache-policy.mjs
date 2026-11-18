@@ -255,6 +255,22 @@ export function violations(policyRaw, swRaw, shell = null) {
       bad.push(`${SW}: маршрут документов «${key}» не отсеивает каркас без сети первым — каркас ляжет в кеш поверх копии (долг 365)`);
     }
   }
+  // ДОЛГ 318 (7.291): замок выхода — в КАЖДОЙ стратегии, пишущей в кеш,
+  // который стирается при выходе. Без него ответ запроса, начатого до
+  // выхода, ложится в только что стёртый кеш.
+  const lockRoutes = {
+    content: /plugins: \[expiration\("content"\)[^\]]*SIGNED_OUT_LOCK\.plugin\]/,
+    section: /plugins: \[expiration\("section"\)[^\]]*SIGNED_OUT_LOCK\.plugin\]/,
+    html: /plugins: \[expiration\("html"\)[^\]]*SIGNED_OUT_LOCK\.plugin\]/,
+    "rsc/rscPrefetch/others": /plugins: \[expiration\(BUDGET_KEY\[current!\]\), SIGNED_OUT_LOCK\.plugin\]/,
+    apis: /cacheName: "apis",[\s\S]{0,400}?SIGNED_OUT_LOCK\.plugin/,
+  };
+  for (const [key, re] of Object.entries(lockRoutes)) {
+    if (!re.test(sw)) bad.push(`${SW}: у кеша «${key}» нет замка выхода — копия вошедшего ляжет обратно после уборки (долг 318)`);
+  }
+  if (!/data\.type !== SIGNED_OUT_MESSAGE[\s\S]{0,300}SIGNED_OUT_LOCK\.signOut\(\)/.test(sw)) {
+    bad.push(`${SW}: воркер не слушает сообщение выхода — замок не поднимается никогда (долг 318)`);
+  }
   return bad;
 }
 
@@ -283,7 +299,7 @@ function plant() {
   add(
     "подсадка: воркер снова заимствует чужие плагины (ровно долг 75)",
     policy,
-    sw.replace(/plugins: \[expiration\(BUDGET_KEY\[current!\]\)\]/, "plugins: (route.handler as { plugins?: unknown[] }).plugins"),
+    sw.replace(/plugins: \[expiration\(BUDGET_KEY\[current!\]\), SIGNED_OUT_LOCK\.plugin\]/, "plugins: (route.handler as { plugins?: unknown[] }).plugins"),
     "заимствует ЧУЖИЕ плагины",
   );
   add(
@@ -413,6 +429,9 @@ function plant() {
   add("подсадка: у маршрута разделов нет отсева каркаса (как до 7.255, долг 365)", policy, sw.replace('plugins: [expiration("section"), OFFLINE_SHELL_NOT_STORED, ', 'plugins: [expiration("section"), '), "маршрут документов «section»");
   add("подсадка: у общего маршрута документов нет отсева каркаса", policy, sw.replace('plugins: [expiration("html"), OFFLINE_SHELL_NOT_STORED, ', 'plugins: [expiration("html"), '), "маршрут документов «html»");
   add("подсадка: отсев каркаса встал ПОСЛЕ правила закрытости", policy, sw.replace('plugins: [expiration("content"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, ', 'plugins: [expiration("content"), CLOSED_CONTENT_NOT_STORED, OFFLINE_SHELL_NOT_STORED, '), "маршрут документов «content»");
+  add("подсадка: у кеша содержания снят замок выхода (как до 7.291, долг 318)", policy, sw.replace("CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK, SIGNED_OUT_LOCK.plugin]", "CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK]"), "нет замка выхода");
+  add("подсадка: у кеша apis снят замок выхода", policy, sw.replace(/(cacheName: "apis",[\s\S]{0,400}?)\s*SIGNED_OUT_LOCK\.plugin,/, "$1"), "у кеша «apis» нет замка");
+  add("подсадка: воркер не слушает сообщение выхода", policy, sw.replace("SIGNED_OUT_LOCK.signOut()", "Promise.resolve([])"), "не слушает сообщение выхода");
   add("подсадка: плагин пропускает каркас в кеш", policy, sw.replace("return isOfflineShellMarkup(await response.clone().text()) ? null : response;", "return response;"), "пропускает каркас");
   add("подсадка: признак каркаса судится по заголовку, а не по <body>", policy.replace('const OFFLINE_SHELL_BODY = /<body\\b[^>]*\\bdata-offline-shell="1"/i;', "const OFFLINE_SHELL_BODY = /Sin conexión/;"), sw, "признака каркаса без сети нет");
   cases.push({ name: "подсадка: у каркаса сняли <body data-offline-shell>", ok: violations(policy, sw, read(SHELL).replace('<body data-offline-shell="1">', "<body>")).some((x) => x.includes("воркер его не узнает")) });
@@ -440,7 +459,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log(`check:sw-cache-policy — 17 правил, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77, 278, 362, 365)`);
+  console.log(`check:sw-cache-policy — 23 правила, кешей ${KEYS.length}, нарушений 0 (долги 75, 76, 77, 278, 318, 362, 365)`);
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
