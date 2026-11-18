@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { SIGNED_OUT_PARAM, personalPageCaches } from "@/lib/signed-out";
+import { SIGNED_OUT_PARAM, signedOutCaches } from "@/lib/signed-out";
+import { SIGNED_OUT_MESSAGE } from "@/lib/signed-out-lock";
 import { OWNED_LOCAL_KEYS, personalLocalKeys, purgedOwnedValue } from "@/lib/signed-out-local";
 import { localKeys, readLocal, removeLocal, writeLocal } from "@/lib/safe-storage";
 
@@ -40,6 +41,32 @@ import { localKeys, readLocal, removeLocal, writeLocal } from "@/lib/safe-storag
  * нечем, — в шапке `src/lib/signed-out-local.ts`. Уборщик один, потому
  * что момент один; хранилища два, и чистятся они по отдельности.
  */
+/**
+ * «Человек вышел» — активному воркеру, с ожиданием ответа. Сообщение идёт
+ * на `registration.active`, а не на `controller`: сразу после установки
+ * страница может быть ещё не под контролем, а воркер уже работает.
+ * Потолок ожидания 3 с — уборка со страницы не должна зависеть от того,
+ * ответил ли воркер.
+ */
+async function tellWorkerSignedOut(): Promise<void> {
+  try {
+    if (!("serviceWorker" in navigator)) return;
+    const worker = (await navigator.serviceWorker.getRegistration())?.active;
+    if (!worker) return;
+    await new Promise<void>((resolve) => {
+      const channel = new MessageChannel();
+      const timer = window.setTimeout(resolve, 3000);
+      channel.port1.onmessage = () => {
+        window.clearTimeout(timer);
+        resolve();
+      };
+      worker.postMessage({ type: SIGNED_OUT_MESSAGE }, [channel.port2]);
+    });
+  } catch {
+    // Нет воркера или он недоступен — остаётся уборка со страницы.
+  }
+}
+
 export default function SignedOutCachePurge() {
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -66,8 +93,14 @@ export default function SignedOutCachePurge() {
 
     if (typeof caches === "undefined") return;
     void (async () => {
+      // ДОЛГ 318 (7.291): сначала — воркеру. Он поднимает «эпоху выхода»
+      // и сам стирает кеши, после чего ни один запрос, начатый ДО выхода,
+      // в кеш уже не ляжет (`src/lib/signed-out-lock.ts`). Уборка со
+      // страницы ниже остаётся: воркера может не быть вовсе (свежая
+      // установка, запрет на сайт), и тогда чистит только она.
+      await tellWorkerSignedOut();
       try {
-        const names = personalPageCaches(await caches.keys());
+        const names = signedOutCaches(await caches.keys());
         await Promise.all(names.map((name) => caches.delete(name)));
       } catch {
         // То же самое про хранилище кешей.

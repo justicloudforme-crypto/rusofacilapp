@@ -87,3 +87,22 @@ export function ownerChangePurge(existing: readonly string[], previous: string |
   if (previous !== GUEST_PAGE_OWNER) return personal;
   return personal.filter((name) => name !== DOWNLOADS_CACHE_NAME && name !== GENERATION_CACHE_NAME);
 }
+
+/**
+ * КЕШ ОТВЕТОВ `/api` — ТОЖЕ ЛИЧНЫЙ (долг 318, заход 7.291).
+ *
+ * `defaultCache` из @serwist/next кладёт каждый `GET /api/…` в кеш `apis`
+ * (`NetworkFirst`, 16 записей на сутки), а среди этих ответов — прогресс
+ * чтения, прогресс карточек и статус подписки ВОШЕДШЕГО человека. Без сети
+ * `NetworkFirst` отдаёт их из кеша любому, кто спросит тот же адрес, — то
+ * есть гостю на том же телефоне после выхода. В 7.198 `apis` отнесли к
+ * «общему» вместе со шрифтами (`personalPageCaches` его не берёт и не
+ * должна: правило про ДОКУМЕНТЫ); при выходе он стирается отдельно, здесь.
+ * Цена — до 16 мелких JSON-ответов, которые воркер возьмёт заново с сетью.
+ */
+export const PERSONAL_API_CACHES = ["apis"];
+
+/** Всё, что стирается при выходе: кеши документов + кеш ответов `/api`. */
+export function signedOutCaches(existing: readonly string[]): string[] {
+  return [...personalPageCaches(existing), ...existing.filter((name) => PERSONAL_API_CACHES.includes(name))];
+}

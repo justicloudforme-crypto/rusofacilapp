@@ -1,6 +1,7 @@
 import { test, expect } from "./helpers/test";
 import type { Page } from "@playwright/test";
 import { loginWithSubscription } from "./helpers/auth";
+import { expectNothingPersonalAfterSignOut, ownerScope, personalLeft } from "./helpers/signed-out-caches";
 
 /**
  * КАРКАС БЕЗ СЕТИ — ЗАХОД 7.227 (ОФЛАЙН-1).
@@ -183,17 +184,16 @@ test("после выхода из аккаунта офлайн не показ
    * (иначе «после выхода ноль» ничего не значит — стирать было нечего),
    * ПОСЛЕ выхода — ровно ноль.
    */
-  const countPersonal = () =>
-    page.evaluate(async () => {
-      const legacy = ["pages", "pages-rsc", "pages-rsc-prefetch", "others"];
-      let entries = 0;
-      for (const name of await caches.keys()) {
-        if (!(name.startsWith("rf-pages") || legacy.includes(name))) continue;
-        entries += (await (await caches.open(name)).keys()).length;
-      }
-      return entries;
-    });
-
+  /**
+   * ДОЛГ 318 (7.291). Прежде здесь утверждалось «после выхода в кешах
+   * документов ровно 0 записей» — и это расходилось с правильным
+   * поведением: вышедший человек уже гость, и воркер за ≈0,3 с кладёт
+   * гостевые `/ru`, `/ru/login`, заготовки ссылок (замер 7.291). Ноль
+   * держался на скорости (1 из 569 в 7.233, повтор в CI #528). Теперь
+   * личное узнаётся по метке владельца, а не по счёту записей
+   * (`helpers/signed-out-caches.ts`), и проверяется ДВАЖДЫ: сразу после
+   * уборки и после того, как гостевая страница дошла до покоя.
+   */
   await loginWithSubscription(page);
   await page.goto("/ru");
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
@@ -203,8 +203,9 @@ test("после выхода из аккаунта офлайн не показ
   await page.goto("/ru/stories");
   await page.waitForTimeout(1000);
 
-  const before = await countPersonal();
-  expect(before, "ОБРАТНЫЙ КОНТРОЛЬ: до выхода личных копий не было вовсе — значит «после выхода ноль» ничего не доказывает").toBeGreaterThan(0);
+  const scope = await ownerScope(page);
+  const before = await personalLeft(page, scope);
+  expect(before.length, "ОБРАТНЫЙ КОНТРОЛЬ: до выхода личных копий не было вовсе — значит «после выхода ноль» ничего не доказывает").toBeGreaterThan(0);
 
   // Выход — той же формой, какой его делает человек: маршрут ставит в
   // адрес признак, по которому страница чистит личные кеши.
@@ -220,16 +221,7 @@ test("после выхода из аккаунта офлайн не показ
     form.submit();
   });
   await page.waitForURL(/\/ru(\?|$)/, { timeout: 30_000 });
-  await page.waitForFunction(
-    async () => {
-      const legacy = ["pages", "pages-rsc", "pages-rsc-prefetch", "others"];
-      const names = (await caches.keys()).filter((n) => n.startsWith("rf-pages") || legacy.includes(n));
-      return names.length === 0;
-    },
-    null,
-    { timeout: 20_000 },
-  );
-  expect(await countPersonal(), "после выхода в кешах документов остались страницы прежнего человека").toBe(0);
+  await expectNothingPersonalAfterSignOut(page, scope);
 
   await context.setOffline(true);
   await visit(page, "/ru/profile");
@@ -239,4 +231,43 @@ test("после выхода из аккаунта офлайн не показ
   const paid = await surface(page);
   expect(paid.shell, "без сети после выхода показалась страница, открытая прежним человеком").toBe(true);
   await context.setOffline(false);
+});
+
+test("долг 318: воркер принимает «выход» и сам стирает личные кеши", async ({ page }) => {
+  test.setTimeout(90_000);
+
+  /**
+   * Замок выхода живёт в воркере (`src/lib/signed-out-lock.ts`); порядок
+   * «запрос начат до выхода — ответ лёг после» проверен юнит-тестом на
+   * подставных кешах. Здесь — что СОБРАННЫЙ воркер этот замок носит:
+   * отвечает на сообщение выхода и стирает кеши сам, без страницы.
+   * Позитивный контроль на коде до 7.291: ответа нет вовсе (тайм-аут).
+   */
+  await loginWithSubscription(page);
+  await page.goto("/ru");
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
+  await page.goto("/ru/stories");
+  await page.waitForTimeout(1000);
+  const scope = await ownerScope(page);
+  expect((await personalLeft(page, scope)).length, "до сообщения личных копий нет — стирать нечего").toBeGreaterThan(0);
+
+  const reply = await page.evaluate(async () => {
+    const worker = (await navigator.serviceWorker.getRegistration())?.active;
+    if (!worker) return null;
+    return new Promise<{ deleted?: string[] } | null>((resolve) => {
+      const channel = new MessageChannel();
+      const timer = setTimeout(() => resolve(null), 10_000);
+      channel.port1.onmessage = (event) => {
+        clearTimeout(timer);
+        resolve(event.data as { deleted?: string[] });
+      };
+      worker.postMessage({ type: "rf-signed-out" }, [channel.port2]);
+    });
+  });
+  expect(reply, "воркер не ответил на «выход» — замка в нём нет").not.toBeNull();
+  expect(reply!.deleted ?? [], "воркер ответил, но не стёр ни одного личного кеша").toEqual(
+    expect.arrayContaining([expect.stringMatching(/^rf-pages/)]),
+  );
+  // Страница не делала ничего: всё стёр воркер.
+  expect(await personalLeft(page, scope), "после ответа воркера личное осталось").toEqual([]);
 });
