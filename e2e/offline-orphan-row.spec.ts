@@ -4,6 +4,7 @@ import { test, expect } from "./helpers/test";
 import { reachShell } from "./helpers/offline-shell";
 import { loginWithSubscription } from "./helpers/auth";
 import { dismissWelcomeOverlay } from "./helpers/welcome-overlay";
+import { expectNothingPersonalAfterSignOut, ownerScope, personalLeft } from "./helpers/signed-out-caches";
 
 /**
  * СТРОКА СПИСКА БЕЗ КОПИИ ПОД НЕЙ — ЗАХОД 7.231, СТРОКА 310.
@@ -92,28 +93,6 @@ async function logoutByClick(page: Page, lang: "es" | "ru"): Promise<void> {
   await page.waitForURL(new RegExp(`/${lang}(\\?|$)`), { timeout: 30_000 });
 }
 
-
-/** Страницы вошедшего, оставшиеся в кешах `rf-pages*`. Гостевая `/es`
- *  (ссылка на `/es/login` есть, «Grupos» только для вошедшего нет) — не
- *  его: её кладёт воркер сразу после выхода (строка 318, заход 7.239). */
-async function signedInPagesLeft(page: Page): Promise<string[]> {
-  return page.evaluate(async () => {
-    const left: string[] = [];
-    for (const name of await caches.keys()) {
-      if (!name.startsWith("rf-pages")) continue;
-      const cache = await caches.open(name);
-      for (const request of await cache.keys()) {
-        const path = new URL(request.url).pathname;
-        if (path === "/es") {
-          const html = (await (await cache.match(request))?.text()) ?? "";
-          if (html.includes('href="/es/login"') && !html.includes('href="/es/groups"')) continue;
-        }
-        left.push(`${name} ${path}`);
-      }
-    }
-    return left;
-  });
-}
 
 async function becomeNativeShell(page: Page, context: BrowserContext): Promise<void> {
   await page.evaluate(async () => {
@@ -264,9 +243,10 @@ test("сценарий владельца целиком: выход → гос�
   // именно маршрут выхода, и мимо кнопки его не получить.
   // ПОЗИТИВНЫЙ КОНТРОЛЬ проверки ниже: пока человек вошёл, она ВИДИТ его
   // страницы. Без этого «после выхода пусто» доказывало бы лишь слепоту.
+  const scope = await ownerScope(page);
   expect(
-    (await signedInPagesLeft(page)).length,
-    "до выхода в кешах rf-pages не нашлось ни одной страницы вошедшего — проверять уборку не на чем",
+    (await personalLeft(page, scope)).length,
+    "до выхода в кешах не нашлось ни одной копии вошедшего — проверять уборку не на чем",
   ).toBeGreaterThan(0);
   await logoutByClick(page, "es");
   // Уборка — фоновая, и ждём мы именно её окончания: опись обязана уйти
@@ -282,7 +262,16 @@ test("сценарий владельца целиком: выход → гос�
   // гостевой (ссылка «Entrar» на `/es/login` есть, пункта «Grupos» только
   // для вошедшего нет). Копия `/es`, снятая до выхода, этот признак не
   // пройдёт.
-  await expect.poll(() => signedInPagesLeft(page), { timeout: 20_000 }).toEqual([]);
+  //
+  // ДОЛГ 390 — ПОЧИНКА 7.291. Признак «гостевая `/es`» оказался неполным:
+  // кроме самой `/es` воркер после выхода кладёт и ГОСТЕВЫЕ заготовки
+  // ссылок (`rf-pages-rsc-prefetch` `/es/courses`, `/es/login`, `/es` —
+  // замер 7.291, через ≈0,3 с после выхода). Легли они ДО уборки — уборка
+  // их стёрла, тест зелёный; ПОСЛЕ — остаются навсегда, и 20 с ожидания
+  // кончались «deep equality» (5 из 52 в 7.275). Гостевое здесь законно;
+  // личное узнаётся по метке владельца (`helpers/signed-out-caches.ts`) и
+  // проверяется дважды — сразу и после покоя страницы.
+  await expectNothingPersonalAfterSignOut(page, scope);
 
   // Шаг 3. Гостем, с сетью, кликами — рассказ, каталоги, урок.
   await walkContentByClicks(page, "es");
