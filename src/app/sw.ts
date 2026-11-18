@@ -11,6 +11,7 @@ import {
   createPartialResponse,
 } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
+import { SIGNED_OUT_MESSAGE, createSignedOutLock } from "@/lib/signed-out-lock";
 import { GENERATION_CACHE_NAME, GENERATION_KEY, buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
 import {
   AUDIO_CACHE_NAME,
@@ -56,6 +57,14 @@ const precacheEntries = self.__SW_MANIFEST ?? [];
 // away a working cache on every deploy for no benefit.
 const FINGERPRINT = buildFingerprint(precacheEntries as Array<string | { url: string; revision?: string | null }>);
 const CACHES = pageCacheNames(FINGERPRINT);
+
+/**
+ * ЗАМОК НА УБОРКУ ПОСЛЕ ВЫХОДА — ДОЛГ 318 (заход 7.291). Разбор —
+ * `src/lib/signed-out-lock.ts`. Плагин стоит ПЕРВЫМ в каждой стратегии,
+ * которая пишет в кеш, стираемый при выходе (`rf-pages*` и `apis`):
+ * ответ запроса, начатого до выхода, не дойдёт ни до одной проверки ниже.
+ */
+const SIGNED_OUT_LOCK = createSignedOutLock(self.caches);
 
 const REBUILT: Record<string, string> = {
   "pages-rsc-prefetch": CACHES.rscPrefetch,
@@ -119,6 +128,22 @@ function expiration(key: "html" | "rsc" | "rscPrefetch" | "others" | "content" |
 
 const runtimeCaching = defaultCache.map((route) => {
   const current = (route.handler as { cacheName?: string } | undefined)?.cacheName;
+  // Кеш ответов `/api` — личный (`PERSONAL_API_CACHES`, долг 318): та же
+  // стратегия и те же числа, что у `defaultCache`, плюс замок выхода.
+  if (current === "apis") {
+    return {
+      matcher: route.matcher,
+      method: route.method,
+      handler: new NetworkFirst({
+        cacheName: "apis",
+        networkTimeoutSeconds: 10,
+        plugins: [
+          SIGNED_OUT_LOCK.plugin,
+          new ExpirationPlugin({ maxEntries: 16, maxAgeSeconds: 24 * 60 * 60, maxAgeFrom: "last-used" }),
+        ],
+      }),
+    };
+  }
   const renamed = current ? REBUILT[current] : undefined;
   if (!renamed) return route;
   // Rebuilt rather than mutated: a Strategy reads its own cacheName in
@@ -134,7 +159,7 @@ const runtimeCaching = defaultCache.map((route) => {
     matcher: route.matcher,
     handler: new NetworkFirst({
       cacheName: renamed,
-      plugins: [expiration(BUDGET_KEY[current!])],
+      plugins: [SIGNED_OUT_LOCK.plugin, expiration(BUDGET_KEY[current!])],
     }),
   };
 });
@@ -490,7 +515,7 @@ const serwist = new Serwist({
         sameOrigin && request.mode === "navigate" && isOfflineContentPath(url.pathname),
       handler: new NetworkFirst({
         cacheName: CACHES.content,
-        plugins: [expiration("content"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+        plugins: [SIGNED_OUT_LOCK.plugin, expiration("content"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
       }),
     },
     /**
@@ -508,13 +533,13 @@ const serwist = new Serwist({
         sameOrigin && request.mode === "navigate" && isOfflineSectionPath(url.pathname),
       handler: new NetworkFirst({
         cacheName: CACHES.section,
-        plugins: [expiration("section"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
+        plugins: [SIGNED_OUT_LOCK.plugin, expiration("section"), OFFLINE_SHELL_NOT_STORED, CLOSED_CONTENT_NOT_STORED, DOCUMENT_FALLBACK],
       }),
     },
     {
       matcher: ({ request, url, sameOrigin }: { request: Request; url: URL; sameOrigin: boolean }) =>
         sameOrigin && request.mode === "navigate" && !url.pathname.startsWith("/api/"),
-      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [expiration("html"), OFFLINE_SHELL_NOT_STORED, DOCUMENT_FALLBACK] }),
+      handler: new NetworkFirst({ cacheName: CACHES.html, plugins: [SIGNED_OUT_LOCK.plugin, expiration("html"), OFFLINE_SHELL_NOT_STORED, DOCUMENT_FALLBACK] }),
     },
     /**
      * КЛИП ОЗВУЧКИ — СВОЙ КЕШ, ДОЛГ 77.
@@ -695,6 +720,22 @@ self.addEventListener("message", (event) => {
     return;
   }
   (event.source as Client | null)?.postMessage(reply);
+});
+
+/**
+ * «ЧЕЛОВЕК ВЫШЕЛ» — ДОЛГ 318 (заход 7.291). Шлёт `SignedOutCachePurge`
+ * после выхода. Ответ уходит только ПОСЛЕ уборки: страница ждёт его,
+ * прежде чем чистить сама.
+ */
+self.addEventListener("message", (event) => {
+  const data = event.data as { type?: unknown } | null;
+  if (!data || data.type !== SIGNED_OUT_MESSAGE) return;
+  const port = event.ports && event.ports[0];
+  event.waitUntil(
+    SIGNED_OUT_LOCK.signOut()
+      .catch(() => [] as string[])
+      .then((deleted) => port?.postMessage({ type: SIGNED_OUT_MESSAGE, deleted })),
+  );
 });
 
 serwist.addEventListeners();
