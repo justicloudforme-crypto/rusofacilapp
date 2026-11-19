@@ -57,17 +57,26 @@ on:
         #                     обязана не удаться все три раза, прогон —
         #                     покраснеть исходом «проверка не состоялась»,
         #                     а тревога «прод упал» — НЕ завестись.
-        description: "Контроль: none / broken_target (прод упал) / install_failure (проверка не состоялась)"
+        #   webkit_broken_target — (7.293, долг 238) только задание WebKit
+        #                     идёт на мёртвый адрес и обязано покраснеть;
+        #                     задание Chromium проверяет прод как обычно,
+        #                     issue не заводится.
+        description: "Контроль: none / broken_target (прод упал) / install_failure (проверка не состоялась) / webkit_broken_target (красный только у WebKit)"
         type: choice
         default: none
         options:
           - none
           - broken_target
           - install_failure
+          - webkit_broken_target
   schedule:
     # 17-я минута каждого часа: не в ноль, чтобы не толкаться с общей
     # очередью расписаний GitHub.
     - cron: "17 * * * *"
+    # Раз в сутки — движок iPhone (WebKit, долг 238, 7.293), отдельное
+    # задание ниже. В этот прогон задание Chromium не идёт: оно и так
+    # ходит каждый час.
+    - cron: "41 6 * * *"
 
 # Ровно то, что нужно тревоге: завести и закрыть issue. Ни записи в код,
 # ни доступа к пакетам.
@@ -89,9 +98,10 @@ jobs:
     # Vercel заводят ту же цепочку событий, и без этого условия сторож
     # ходил бы на боевой адрес по десять раз за каждый PR.
     if: >-
-      github.event_name != 'deployment_status' ||
-      (github.event.deployment_status.state == 'success' &&
-       github.event.deployment.environment == 'Production')
+      github.event.schedule != '41 6 * * *' &&
+      (github.event_name != 'deployment_status' ||
+       (github.event.deployment_status.state == 'success' &&
+        github.event.deployment.environment == 'Production'))
     runs-on: ubuntu-latest
     # 15 → 25 (7.282): три попытки установки браузеров (шаг ниже, предел
     # 14 мин) плюс проверка (≈2 мин) обязаны уложиться, иначе задание
@@ -281,3 +291,109 @@ jobs:
       - name: Итог имитации
         if: ${{ inputs.simulate_failure }}
         run: echo "тревога заведена учебным отказом; живой прод не проверялся. Закроет её следующий обычный зелёный прогон."
+
+  # ДВИЖОК iPHONE (7.293, долг 238). Короткий список — главные /es и /ru,
+  # бесплатный урок, бесплатный рассказ, «не найдено» — тем же прибором
+  # (`--engine=webkit --list=webkit`, контекст iPhone 13). Только после
+  # выката, раз в сутки и вручную — не каждый час: цена — пять рендеров за
+  # прогон, а не тринадцать.
+  #
+  # КАК УЗНАЕТ ВЛАДЕЛЕЦ. Красное задание красит весь прогон «Прод после
+  # выката» — письмо GitHub «Run failed» (Failed workflows), как у любого
+  # красного прогона. Issue `prod-down` это задание НЕ заводит и НЕ
+  # закрывает: им владеет задание Chromium (оно закрывает issue на своём
+  # зелёном), и два хозяина одного issue спорили бы друг с другом.
+  webkit:
+    name: Живой прод — движок iPhone (WebKit), короткий список
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '41 6 * * *' ||
+      (github.event_name == 'deployment_status' &&
+       github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.4"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Версия Playwright — ключ кеша браузеров
+        id: pw
+        run: |
+          echo "version=$(node -p "require('playwright-core/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=${ImageOS:-unknown}" >> "$GITHUB_OUTPUT"
+
+      - name: Кеш браузеров Playwright
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.image }}-${{ steps.pw.outputs.version }}-webkit
+
+      # Те же три попытки, что у Chromium выше (причины — там же).
+      - name: Install Playwright browsers
+        id: browsers
+        continue-on-error: true
+        timeout-minutes: 14
+        env:
+          CONTROL: ${{ inputs.control }}
+        run: |
+          set -uo pipefail
+          printf '%s\n' 'Acquire::Retries "3";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";' \
+            | sudo tee /etc/apt/apt.conf.d/80-rf-retries > /dev/null
+          if [ "${CONTROL:-none}" = "install_failure" ]; then
+            printf '%s\n' 'Acquire::http::Proxy "http://127.0.0.1:9";' 'Acquire::https::Proxy "http://127.0.0.1:9";' \
+              | sudo tee /etc/apt/apt.conf.d/99-rf-control > /dev/null
+            echo "КОНТРОЛЬ install_failure: apt направлен в никуда — установка обязана не удаться"
+          fi
+          for attempt in 1 2 3; do
+            echo "::group::установка WebKit, попытка $attempt из 3"
+            if [ "$attempt" -gt 1 ]; then
+              sudo dpkg --configure -a || true
+              sudo apt-get update || true
+            fi
+            if sudo env "PATH=$PATH" timeout -k 15 180 npx playwright install-deps webkit \
+              && timeout -k 15 180 npx playwright install webkit; then
+              echo "::endgroup::"
+              echo "WebKit установлен с попытки $attempt из 3"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning title=Установка WebKit::попытка $attempt из 3 не удалась"
+            if [ "$attempt" -lt 3 ]; then sleep 60; fi
+          done
+          echo "::error title=Установка WebKit не удалась::три попытки — живой прод движком iPhone НЕ проверялся"
+          exit 1
+
+      # Двусторонний: тот же детектор тем же движком на заведомо сломанной
+      # местной цели обязан покраснеть на каждой подсадке.
+      - name: Позитивный контроль WebKit — сломанная цель обязана дать красный
+        if: steps.browsers.outcome == 'success'
+        run: npm run smoke:prod:plant -- --engine=webkit
+
+      - name: Живой прод — WebKit
+        if: ${{ !inputs.simulate_failure && steps.browsers.outcome == 'success' }}
+        env:
+          SMOKE_BASE_ARG: "${{ (inputs.control == 'broken_target' || inputs.control == 'webkit_broken_target') && '--base=http://127.0.0.1:59999' || '' }}"
+        run: npm run smoke:prod -- --engine=webkit --list=webkit --out=smoke-artifacts-webkit $SMOKE_BASE_ARG
+
+      - name: Снимки и отчёт прогона WebKit
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: prod-smoke-webkit-${{ github.run_id }}
+          path: smoke-artifacts-webkit
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Итог — ПРОВЕРКА WebKit НЕ СОСТОЯЛАСЬ (инфраструктура), состояние прода неизвестно
+        if: ${{ always() && steps.browsers.outcome != 'success' && !inputs.simulate_failure }}
+        run: |
+          echo "::error title=Проверка WebKit не состоялась::до проверки прода дело не дошло — упала установка WebKit (зеркала Ubuntu или сеть раннера). Прод движком iPhone НЕ проверялся."
+          exit 1
