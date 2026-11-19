@@ -72,6 +72,50 @@ async function markCopies(page: Page, path: string): Promise<string[]> {
   );
 }
 
+/**
+ * МЕТКА, КОТОРАЯ УСТОЯЛА (7.293, долг 403). С сетью документы и RSC идут «сначала сеть», и воркер кладёт
+ * свежий ответ в кеш ПОСЛЕ того, как отдал его странице (`cache.put` в `waitUntil`). Метка, поставленная
+ * сразу за переходом с сетью, может быть затёрта этой запоздалой записью — тогда без сети приходит
+ * свежая копия без метки, и позитивный контроль краснеет на исправном сайте. Доказано журналом пробы на
+ * Linux (7.293, run 44618016447): в миг метки копия `rf-pages-content` уже без неё, и без сети отдана именно
+ * она. Поэтому: метить, ждать покоя и пересчитывать — пока каждая копия документа и RSC этого адреса не
+ * несёт метку два захода подряд (не больше 10 заходов по 1 с). Затёртую в первом заходе — печатать.
+ */
+async function markCopiesSettled(page: Page, path: string): Promise<string[]> {
+  const unmarked = () =>
+    page.evaluate(
+      async ({ path, mark }) => {
+        const out: string[] = [];
+        for (const name of await caches.keys()) {
+          // `caches.has` до `open`: открытие стёртого имени заводит кеш заново (правило 3.15, долг 391).
+          if (!(await caches.has(name))) continue;
+          const cache = await caches.open(name);
+          for (const request of await cache.keys()) {
+            if (new URL(request.url).pathname !== path) continue;
+            const response = await cache.match(request, { ignoreVary: true });
+            if (!response) continue;
+            const type = response.headers.get("content-type") ?? "";
+            if (!type.includes("text/html") && !type.includes("text/x-component")) continue;
+            if (!(await response.text()).includes(mark)) out.push(name);
+          }
+        }
+        return out;
+      },
+      { path, mark: MARK },
+    );
+  let touched: string[] = [];
+  let calm = 0;
+  for (let round = 1; round <= 10; round++) {
+    touched = await markCopies(page, path);
+    await page.waitForTimeout(1000);
+    const lost = await unmarked();
+    if (round === 1 && lost.length) console.log(`метка затёрта запоздалой записью воркера: ${lost.join(", ")} — метим заново`);
+    calm = lost.length === 0 ? calm + 1 : 0;
+    if (calm >= 2) return touched;
+  }
+  throw new Error("метки в кешах рассказа не устоялись за 10 заходов — воркер пишет копию без конца");
+}
+
 test("скачанный рассказ с сетью приходит свежим, копия — только без сети", async ({ page, context }) => {
   // Бюджет больше суммы собственных ожиданий (`check:e2e-live-probes`).
   test.setTimeout(360_000);
@@ -109,8 +153,8 @@ test("скачанный рассказ с сетью приходит свеж�
   expect(seen.length, "переход по ссылке не запросил ни документа, ни данных рассказа — проба слепа").toBeGreaterThan(0);
   expect(seen.some((body) => body.includes(MARK)), `переход по ссылке с сетью взял копию (${seen.length} ответов)`).toBe(false);
 
-  // ПОЗИТИВНЫЙ КОНТРОЛЬ: без сети — помеченная копия.
-  await markCopies(page, path);
+  // ПОЗИТИВНЫЙ КОНТРОЛЬ: без сети — помеченная копия. Метка — после покоя записей воркера (долг 403).
+  await markCopiesSettled(page, path);
   await context.setOffline(true);
   const offline = await page.goto(path).catch(() => null);
   await page.waitForTimeout(1500);
