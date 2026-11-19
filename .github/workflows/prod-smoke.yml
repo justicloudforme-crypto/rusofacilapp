@@ -336,6 +336,20 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ms-playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.image }}-${{ steps.pw.outputs.version }}-webkit
 
+      # КЕШ СИСТЕМНЫХ ПАКЕТОВ WebKit (7.293). Системных пакетов у WebKit
+      # 140 МБ (у Chromium — единицы МБ): проба 19.11.2026 (run 44616955478)
+      # попала на зеркало Ubuntu со скоростью 169 КБ/с, и три попытки по
+      # 180 с не докачали их (соседнее задание того же прогона — 14,5 МБ/с,
+      # 10 с). Скачанные .deb складываются сюда после удачной установки и
+      # подкладываются apt перед следующей: из сети остаются индексы (≈4 МБ)
+      # и только то, что обновилось. Ключ — образ раннера и версия
+      # Playwright; новый образ — новый кеш.
+      - name: Кеш пакетов apt для WebKit
+        uses: actions/cache@v5
+        with:
+          path: ~/apt-webkit
+          key: apt-webkit-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.image }}-${{ steps.pw.outputs.version }}
+
       # Те же три попытки, что у Chromium выше (причины — там же).
       - name: Install Playwright browsers
         id: browsers
@@ -352,6 +366,14 @@ jobs:
               | sudo tee /etc/apt/apt.conf.d/99-rf-control > /dev/null
             echo "КОНТРОЛЬ install_failure: apt направлен в никуда — установка обязана не удаться"
           fi
+          printf '%s\n' 'Binary::apt::APT::Keep-Downloaded-Packages "true";' 'APT::Keep-Downloaded-Packages "true";' \
+            | sudo tee /etc/apt/apt.conf.d/81-rf-keep-debs > /dev/null
+          if ls ~/apt-webkit/*.deb > /dev/null 2>&1; then
+            sudo cp ~/apt-webkit/*.deb /var/cache/apt/archives/
+            echo "из кеша подложено пакетов: $(ls ~/apt-webkit/*.deb | wc -l), $(du -sm ~/apt-webkit | cut -f1) МБ"
+          else
+            echo "кеша пакетов нет — качаем из сети"
+          fi
           for attempt in 1 2 3; do
             echo "::group::установка WebKit, попытка $attempt из 3"
             if [ "$attempt" -gt 1 ]; then
@@ -362,6 +384,8 @@ jobs:
               && timeout -k 15 180 npx playwright install webkit; then
               echo "::endgroup::"
               echo "WebKit установлен с попытки $attempt из 3"
+              mkdir -p ~/apt-webkit && cp /var/cache/apt/archives/*.deb ~/apt-webkit/ 2>/dev/null || true
+              echo "в кеш пакетов: $(ls ~/apt-webkit/*.deb 2>/dev/null | wc -l) шт., $(du -sm ~/apt-webkit | cut -f1) МБ"
               exit 0
             fi
             echo "::endgroup::"
