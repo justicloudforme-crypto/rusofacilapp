@@ -907,6 +907,8 @@
     "classicOnlyLabel": "Только классика",
     "filtersButton": "Фильтры",
     "progressLabel": "Прогресс: {percent}%",
+    "closedProgressNote": "Сейчас закрыт: чтобы продолжить, нужна подписка",
+    "closedProgressNotePremium": "Сейчас закрыт: чтобы продолжить, нужен тариф Premium",
     "notStartedLabel": "Не начато",
     "premiumLockTitle": "Эта история доступна только по подписке",
     "premiumLockBody": "Вы видите бесплатный отрывок — первый абзац. Оформите подписку, чтобы читать историю полностью и слушать аудио.",

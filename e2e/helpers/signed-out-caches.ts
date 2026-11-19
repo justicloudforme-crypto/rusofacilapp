@@ -40,6 +40,11 @@ export async function entriesOwnedBy(page: Page, scope: string): Promise<string[
       const found: string[] = [];
       for (const name of await caches.keys()) {
         if (!personal.test(name)) continue;
+        // 7.292 (долг 391): уборщик выхода стирает кеши одновременно с этой
+        // пробой, а `caches.open` на стёртом имени заводит его заново. Стёртый
+        // между списком и открытием — пропускаем (окно сужено до одного
+        // вызова; полностью без `open` ключи кеша не прочитать).
+        if (!(await caches.has(name))) continue;
         const cache = await caches.open(name);
         for (const request of await cache.keys()) {
           const body = (await (await cache.match(request, { ignoreVary: true }))?.text()) ?? "";

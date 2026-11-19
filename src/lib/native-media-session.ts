@@ -1,7 +1,8 @@
 "use client";
 
 import { Capacitor } from "@capacitor/core";
-import { MediaSession } from "@capgo/capacitor-media-session";
+import { MediaSession as MediaSessionBridge } from "@capgo/capacitor-media-session";
+import { withNativeDeadlines } from "./native-deadline";
 import type { MediaSessionAction } from "@capgo/capacitor-media-session";
 
 // A real device report found that navigator.mediaSession — already fully
@@ -14,6 +15,12 @@ import type { MediaSessionAction } from "@capgo/capacitor-media-session";
 // notifications.ts — the existing navigator.mediaSession calls in
 // StoryText.tsx keep covering the web/PWA case unchanged; this is purely
 // additive for the native shell.
+// Каждый вызов моста — со сроком и именем шага (долг 302, 7.292,
+// `src/lib/native-deadline.ts`). Попутно: `setActionHandler` на Android
+// возвращает номер обратного вызова, а не промис, — обёртка отдаёт его
+// промисом, и `.catch` ниже больше не бросает `TypeError`.
+const MediaSession = withNativeDeadlines("MediaSession", MediaSessionBridge);
+
 function nativeOnly<T>(fn: () => Promise<T>): Promise<T | undefined> {
   if (!Capacitor.isNativePlatform()) return Promise.resolve(undefined);
   return fn().catch(() => undefined);
