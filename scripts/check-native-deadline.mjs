@@ -123,7 +123,7 @@ function main() {
       ["сырой вызов мимо обёртки", edit(NOTIF, "export async function cancelStreakReminder", "void LocalNotificationsBridge.cancel({ notifications: [] });\nexport async function cancelStreakReminder"), "мимо обёртки"],
       ["новый файл зовёт плагин напрямую", { ...files, "src/lib/__plant__.ts": 'import { MediaSession } from "@capgo/capacitor-media-session";\nvoid MediaSession.setMetadata({ title: "x" });' }, "__plant__.ts: MediaSession"],
       ["новый плагин не назван переписью", { ...files, "src/lib/__plant2__.ts": 'import { Geolocation } from "@capacitor/geolocation";\nvoid Geolocation.getCurrentPosition();' }, "@capacitor/geolocation не назван"],
-      ["обёртка потеряла срок", edit(HELPER, "Promise.race(", "Promise.any("), "не ставит срок"),
+      ["обёртка потеряла срок", edit(HELPER, "Promise.race(", "Promise.any("), "не ставит срок"],
       ["просрочка не идёт в Sentry", edit(HELPER, "Sentry.captureMessage(", "void ("), "не доходит до Sentry"],
       ["пустая перепись (импорты исчезли)", Object.fromEntries(Object.entries(files).filter(([f]) => f !== NOTIF && f !== MEDIA)), "перепись пуста"],
     ];
