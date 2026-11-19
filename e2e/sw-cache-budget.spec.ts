@@ -197,7 +197,50 @@ test("воркер держит документы своим счётом и в
   }, LOAD);
   console.log(`  предзагрузок отправлено: ${requested} разных адресов`);
 
-  const caches_ = await census(page);
+  /**
+   * ПОДРЕЗКА ДО ПОТОЛКА АСИНХРОННА — ДОЛГ 392 (заход 7.292).
+   *
+   * `ExpirationPlugin` Serwist сначала кладёт запись, потом подрезает кеш;
+   * если подрезка уже бежит, новая лишь «заказывается»
+   * (`CacheExpiration.expireEntries`: `_rerunRequested`), а вызов
+   * возвращается сразу. И кладёт воркер ПОСЛЕ того, как отдал ответ
+   * странице. Значит перепись сразу за последним `fetch` может застать
+   * 65–67 записей при потолке 64 — мгновение до подрезки.
+   *
+   * Замер 7.292 на Linux, старый тест без повторов: 2 из 8 полных наборов и
+   * 3 из 50 повторов — «65/66/67 против 64»; перепись СРАЗУ следом — 64, и
+   * через 0,5/2/5 с — 64; лишние — ровно самые старые пробные адреса
+   * (`rf-cache-probe=61…63`), чужих записей 0. То есть потолок держится,
+   * а тест мерил середину подрезки.
+   *
+   * Поэтому перепись ждёт, пока ВСЕ кеши с потолком войдут в него (не
+   * дольше 10 с), и печатает, сколько было в первый миг. Сломанный потолок
+   * (подрезки нет вовсе) так не спрячется: 128 записей не станут 64 ни за
+   * какое время, и ожидание кончится отказом с числами.
+   */
+  const LIMIT_OF: [RegExp, string, number][] = [
+    [/^rf-pages-(?!rsc-|others-|content-|section-)[a-z0-9]+$/, "документы", CACHE_BUDGET_BY_KEY.html.maxEntries],
+    [/^rf-pages-rsc-prefetch-/, "предзагрузка", CACHE_BUDGET_BY_KEY.rscPrefetch.maxEntries],
+    [/^rf-pages-section-[a-z0-9]+$/, "корни разделов", CACHE_BUDGET_BY_KEY.section.maxEntries],
+    [/^rf-pages-others-/, "прочее того же источника", CACHE_BUDGET_BY_KEY.others.maxEntries],
+  ];
+  const overBudget = (all: CacheCensus[]) =>
+    all.flatMap((c) => {
+      const rule = LIMIT_OF.find(([re]) => re.test(c.name));
+      return rule && c.entries.length > rule[2] ? [`${rule[1]} (${c.name}): ${c.entries.length} > ${rule[2]}`] : [];
+    });
+  const firstLook = await census(page);
+  console.log(`  первая перепись сразу за нагрузкой: ${overBudget(firstLook).join("; ") || "все кеши в потолке"}`);
+  let caches_ = firstLook;
+  await expect
+    .poll(
+      async () => {
+        caches_ = await census(page);
+        return overBudget(caches_);
+      },
+      { timeout: 10_000, message: "кеши не вошли в объявленный потолок и за 10 с — подрезки нет, ровно долг 75" },
+    )
+    .toEqual([]);
   expect(caches_.length, "кешей на устройстве 0 — воркер ничего не записал").toBeGreaterThan(0);
 
   // Имена отличаются СУФФИКСОМ отпечатка сборки, а префикс у всех общий
