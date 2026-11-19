@@ -438,19 +438,35 @@ test("скачанное открывается без сети, звучит, �
   // проверки — ЛИЧНОЕ и СКАЧАННОЕ уходят при выходе, поэтому судится оно:
   // кеша скачанного нет, и ни одна копия урока, рассказа и кабинета,
   // снятая ДО выхода, не пережила его.
+  //
+  // 7.292, ДОЛГ 391: ПРОБА НЕ ИМЕЕТ ПРАВА ЗАВОДИТЬ КЕШ, КОТОРЫЙ СУДИТ. Прежний
+  // опрос брал список `caches.keys()`, а потом открывал каждый кеш по имени.
+  // Уборщик выхода стирает кеши в эти же миллисекунды, и `caches.open` на
+  // стёртом имени СОЗДАЁТ его заново — пустым. Замер 7.292 на Linux без
+  // повторов, улика «кто открыл кеш скачанного и существовал ли он»: 3
+  // падения из 3 — уборщик стёр `rf-pages-downloads` (+58…+155 мс после
+  // выхода), а через 3–15 мс тот же кеш открыл САМ ОПРОС ТЕСТА с
+  // `existed=false`; дальше 20 с проба видела «скачанное осталось» в пустом
+  // кеше, который сама и завела (сайт до #540 — 2 из 100, текущий — 1 из
+  // 400 и 1 из 100). Теперь проба только читает: `caches.has` для кеша
+  // скачанного и `caches.match` с `cacheName` для копий — ни то ни другое
+  // кеша не создаёт. Признак тот же — путь копии (строка запроса не важна).
   const personal = [lessonHref, story.href, "/es/profile"];
   await expect
     .poll(
       async () =>
         page.evaluate(async (paths) => {
           const left: string[] = [];
+          if (await caches.has("rf-pages-downloads")) left.push("rf-pages-downloads");
           for (const name of await caches.keys()) {
-            if (!name.startsWith("rf-pages")) continue;
-            if (name.startsWith("rf-pages-downloads")) left.push(name);
-            const cache = await caches.open(name);
-            for (const request of await cache.keys()) {
-              const path = new URL(request.url).pathname;
-              if (paths.includes(path)) left.push(`${name}: ${path}`);
+            if (!name.startsWith("rf-pages") || name.startsWith("rf-pages-downloads")) continue;
+            for (const path of paths) {
+              const hit = await caches.match(new URL(path, location.href).toString(), {
+                cacheName: name,
+                ignoreSearch: true,
+                ignoreVary: true,
+              });
+              if (hit) left.push(`${name}: ${path}`);
             }
           }
           return left;
