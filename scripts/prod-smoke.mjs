@@ -33,7 +33,16 @@
 //   node scripts/prod-smoke.mjs                      # против живого прода
 //   node scripts/prod-smoke.mjs --base=http://…      # против чего угодно
 //   node scripts/prod-smoke.mjs --plant              # позитивный контроль
-import { chromium, webkit } from "playwright";
+//   node scripts/prod-smoke.mjs --engine=webkit --list=webkit          # движок iPhone, короткий список
+//   node scripts/prod-smoke.mjs --plant --engine=webkit               # контроль тем же движком
+//
+// ДВИЖОК iPHONE (7.293, долг 238). WebKit гоняется по КОРОТКОМУ списку
+// (`webkitTargets()`: главные /es и /ru, урок, рассказ, «не найдено») и
+// только после выката и раз в сутки, а не каждый час: отказы, которые бывают
+// только в WebKit, в этом репозитории уже были (7.47, 7.52 — `MediaRecorder`
+// и WebM), а полный список вторым движком удвоил бы цену прогона в чтениях
+// боевой базы. Контекст — iPhone 13 (ширина экрана и сенсор как у телефона).
+import { chromium, webkit, devices } from "playwright";
 import { createServer } from "node:http";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -56,6 +65,7 @@ const arg = (name, fallback) => {
 
 const BASE = (arg("base", "https://rusofacilapp.com")).replace(/\/$/, "");
 const ENGINE = arg("engine", "chromium");
+const LIST = arg("list", "full");
 const RETRY_DELAY_MS = Number(arg("retry-delay-ms", "45000"));
 const OUT_DIR = arg("out", "smoke-artifacts");
 const NAV_TIMEOUT_MS = Number(arg("nav-timeout-ms", "45000"));
@@ -76,6 +86,13 @@ const ERROR_ON_SCREEN = [
  *  признак содержимого пришлось бы писать про замок, а не про текст. */
 const FREE_STORY_ID = "cmsxtq13w000cqwnc466c87es";
 const FREE_STORY_TITLE = "Репка";
+
+/** Адрес «не найдено» (7.293, долг 238): маршрут рассказа СОВПАДАЕТ, а
+ *  рассказа с таким id нет — страница сама зовёт `notFound()` и рисует
+ *  `[lang]/not-found.tsx` (долг 133, PR #530). Это не новый адрес сайта, а
+ *  заведомо несуществующий: ответ обязан быть 404 со своим заголовком, а не
+ *  200 («мягкий 404») и не граница ошибок. */
+const NOT_FOUND_PATH = "/es/stories/rf-smoke-no-such-story";
 
 /** Бесплатная категория словаря — первая в карте сайта. */
 const VOCABULARY_CATEGORY = "comida";
@@ -117,12 +134,28 @@ export function targets() {
     { name: `бесплатный рассказ «${FREE_STORY_TITLE}»`, path: `/es/stories/${FREE_STORY_ID}`, h1: exact(FREE_STORY_TITLE), links: { sel: "h2", min: 1 } },
     { name: "игры", path: "/es/word-games", h1: exact(es.nav.wordGames), links: { sel: 'a[href^="/es/word-games/"]', min: 3 } },
     { name: "вход", path: "/es/login", h1: exact(es.auth.loginTitle), links: { sel: 'input[type="password"]', min: 1 } },
+    { name: "страница «не найдено»", path: NOT_FOUND_PATH, status: 404, h1: exact(es.notFound.title), links: { sel: 'a[href="/es/courses"]', min: 1 } },
     // Правило 7.201: кабинет гостю отвечает ОДНИМ 307 на вход, а не
     // цепочкой и не 200 с пустотой. Проверяется запросом без браузера:
     // браузер редирект проглотил бы и число переходов не показал.
     { name: "кабинет гостю → один 307", path: "/es/profile", redirect: { status: 307, location: /\/es\/login\?redirectTo=/ } },
     { name: "/api/health", path: "/api/health", json: { contains: HEALTH_OK_TOKEN, status: 200 } },
   ];
+}
+
+/** Короткий список для движка iPhone (долг 238): имена — из `targets()`,
+ *  поэтому признаки те же и берутся из того же словаря. */
+export const WEBKIT_TARGET_PATHS = ["/es", "/ru", "/es/courses/a1/1", `/es/stories/${FREE_STORY_ID}`, NOT_FOUND_PATH];
+export function webkitTargets() {
+  const all = targets();
+  const list = WEBKIT_TARGET_PATHS.map((p) => all.find((t) => t.path === p));
+  if (list.some((t) => !t)) throw new Error("короткий список WebKit разошёлся с полным списком целей");
+  return list;
+}
+
+/** Контекст браузера: у WebKit — телефон (iPhone 13), у Chromium — как было. */
+function contextOptions(engine) {
+  return engine === "webkit" ? { ...devices["iPhone 13"], locale: "es-ES" } : { locale: "es-ES" };
 }
 
 /** Одна цель, один заход. Возвращает список причин; пустой — цель жива. */
@@ -180,7 +213,8 @@ async function probePage(context, url, target) {
   try {
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
     status = response?.status() ?? 0;
-    if (status !== 200) why.push(`ответ ${status}, ожидался 200`);
+    const expected = target.status ?? 200;
+    if (status !== expected) why.push(`ответ ${status}, ожидался ${expected}`);
     await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => {});
 
     const seen = await page.evaluate(
@@ -220,7 +254,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** Прогон по всем целям с ОДНОЙ повторной попыткой на упавшую. */
 export async function run({ base, list, retryDelayMs, engine }) {
   const browser = await (engine === "webkit" ? webkit : chromium).launch();
-  const context = await browser.newContext({ locale: "es-ES" });
+  const context = await browser.newContext(contextOptions(engine));
   const startedAt = Date.now();
   const results = [];
 
@@ -259,7 +293,7 @@ export async function run({ base, list, retryDelayMs, engine }) {
  *  странице (отрицательный контроль). Сети наружу не нужно, настоящий
  *  прод не трогается, тревога не поднимается. */
 async function plant() {
-  console.log("prod-smoke --plant — сухой прогон против заведомо сломанной цели");
+  console.log(`prod-smoke --plant — сухой прогон против заведомо сломанной цели, движок ${ENGINE}`);
 
   const pages = {
     // Отрицательный контроль: всё на месте.
@@ -275,6 +309,11 @@ async function plant() {
     "/profile-307": { status: 307, location: "/es/login?redirectTo=%2Fes%2Fprofile", body: "" },
     "/health-ok": { status: 200, body: JSON.stringify({ status: HEALTH_OK_TOKEN, ok: true }) },
     "/health-503": { status: 503, body: JSON.stringify({ status: "RF-DOWN", ok: false, reason: "db_unreachable" }) },
+    // «Не найдено» (7.293, долг 238): исправная — 404 со своим заголовком;
+    // «мягкий 404» — тот же текст при 200; и 404 с границей ошибок.
+    "/nf-ok": { status: 404, body: `<h1>Página no encontrada</h1><a href="/es/courses">x</a>` },
+    "/nf-soft": { status: 200, body: `<h1>Página no encontrada</h1><a href="/es/courses">x</a>` },
+    "/nf-boundary": { status: 404, body: `<h1>Página no encontrada</h1><a href="/es/courses">x</a><p>Algo salió mal</p>` },
   };
 
   const server = createServer((req, res) => {
@@ -314,12 +353,15 @@ async function plant() {
     // НЕ упасть исключением мимо отчёта.
     { title: "/api/health: соединение отклонено", expectRed: true, base: closedBase, target: { name: "health", path: "/api/health", json: { contains: HEALTH_OK_TOKEN, status: 200 } } },
     { title: "кабинет: соединение отклонено", expectRed: true, base: closedBase, target: { name: "profile", path: "/es/profile", redirect: { status: 307, location: /\/es\/login\?redirectTo=/ } } },
+    { title: "«не найдено»: 404 со своим заголовком (отрицательный контроль)", expectRed: false, target: { name: "nf", path: "/nf-ok", status: 404, h1: /Página no encontrada/i, links: { sel: 'a[href="/es/courses"]', min: 1 } } },
+    { title: "«не найдено» отвечает 200 (мягкий 404)", expectRed: true, target: { name: "nf", path: "/nf-soft", status: 404, h1: /Página no encontrada/i, links: { sel: 'a[href="/es/courses"]', min: 1 } } },
+    { title: "«не найдено» с границей ошибок на экране", expectRed: true, target: { name: "nf", path: "/nf-boundary", status: 404, h1: /Página no encontrada/i, links: { sel: 'a[href="/es/courses"]', min: 1 } } },
   ];
 
   let caught = 0;
   const wrong = [];
-  const browser = await chromium.launch();
-  const context = await browser.newContext();
+  const browser = await (ENGINE === "webkit" ? webkit : chromium).launch();
+  const context = await browser.newContext(contextOptions(ENGINE));
   try {
     for (const c of cases) {
       const { why } = await probe(context, c.base ?? base, c.target);
@@ -345,17 +387,20 @@ async function plant() {
   // 8 из 6 на пустом месте — ровно так первая редакция этого контроля и
   // соврала.
   const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const fromDictionary = [es.home.heroTitle, ru.home.heroTitle, es.courses.pageTitle, es.vocabulary.pageTitle, es.stories.pageTitle, es.nav.wordGames, es.auth.loginTitle]
+  const fromDictionary = [es.home.heroTitle, ru.home.heroTitle, es.courses.pageTitle, es.vocabulary.pageTitle, es.stories.pageTitle, es.nav.wordGames, es.auth.loginTitle, es.notFound.title]
     .filter((s) => list.some((t) => t.h1 && t.h1.source === escape(s)));
-  console.log(`\n  целей в списке: ${list.length}; признаков, взятых ДОСЛОВНО из словаря интерфейса: ${fromDictionary.length} из 7`);
+  console.log(`\n  целей в списке: ${list.length}; признаков, взятых ДОСЛОВНО из словаря интерфейса: ${fromDictionary.length} из 8`);
+  // Короткий список WebKit — подмножество полного: те же признаки.
+  const short = webkitTargets();
+  console.log(`  короткий список WebKit: ${short.length} целей (${short.map((t) => t.path).join(", ")})`);
 
   console.log(`\nподсадок ${cases.filter((c) => c.expectRed).length} + отрицательных контролей ${cases.filter((c) => !c.expectRed).length}; сошлось ${caught} из ${cases.length}`);
   if (wrong.length) {
     console.error("НЕ СОШЛОСЬ: " + wrong.join("; "));
     process.exit(1);
   }
-  if (fromDictionary.length < 7) {
-    console.error(`признаки перестали браться из словаря интерфейса: ${fromDictionary.length} из 7`);
+  if (fromDictionary.length < 8) {
+    console.error(`признаки перестали браться из словаря интерфейса: ${fromDictionary.length} из 8`);
     process.exit(1);
   }
   console.log("контроль пройден");
@@ -364,7 +409,8 @@ async function plant() {
 async function main() {
   if (argv.includes("--plant")) return plant();
 
-  const list = targets();
+  if (LIST !== "full" && LIST !== "webkit") throw new Error(`--list=${LIST}: бывает full или webkit`);
+  const list = LIST === "webkit" ? webkitTargets() : targets();
   console.log(`prod-smoke: ${list.length} целей против ${BASE}, движок ${ENGINE}, повтор через ${RETRY_DELAY_MS} мс\n`);
   const report = await run({ base: BASE, list, retryDelayMs: RETRY_DELAY_MS, engine: ENGINE });
 
