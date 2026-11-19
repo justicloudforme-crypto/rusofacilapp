@@ -112,6 +112,7 @@ keystore.properties
 *.keystore
 prisma/snapshots/
 smoke-artifacts/
+smoke-artifacts-webkit/
 
 # Рабочая заметка захода 7.216 — в коммиты не включается
 RUN-7216.md
@@ -201,3 +202,4 @@ RUN-7279.md
 RUN-7281.md
 RUN-7282.md
 RUN-7292.md
+RUN-7293.md
