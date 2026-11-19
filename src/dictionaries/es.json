@@ -907,6 +907,8 @@
     "classicOnlyLabel": "Solo clásicos",
     "filtersButton": "Filtros",
     "progressLabel": "Progreso: {percent}%",
+    "closedProgressNote": "Cerrado ahora: necesitas suscripción para seguir",
+    "closedProgressNotePremium": "Cerrado ahora: necesitas el plan Premium para seguir",
     "notStartedLabel": "No empezado",
     "premiumLockTitle": "Esta historia es solo para suscriptores",
     "premiumLockBody": "Estás viendo una vista previa gratuita con el primer párrafo. Suscríbete para leer la historia completa y escuchar el audio.",

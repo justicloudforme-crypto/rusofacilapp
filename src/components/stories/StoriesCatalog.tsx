@@ -70,6 +70,11 @@ export interface StoriesCatalogDict {
   readingTimeLabel: string;
   /** Template containing the literal placeholder "{percent}". */
   progressLabel: string;
+  /** Подпись под прогрессом закрытого рассказа (долг 206, 7.292; решение
+   *  владельца 15.11.2026, вариант «б»): прогресс честный, но рассказ
+   *  сейчас не открыть — карточка говорит это словами. */
+  closedProgressNote: string;
+  closedProgressNotePremium: string;
   /** Template containing the literal placeholder "{count}". */
   loadMoreButton: PluralForms;
 }
@@ -355,6 +360,14 @@ export default function StoriesCatalog({
                       </span>
                     </div>
                   ) : null}
+                  {/* Долг 206 (7.292): прогресс у ЗАКРЫТОГО рассказа — настоящий
+                      (записан, пока он был открыт), но без этой строки
+                      карточка обещала «продолжить» то, что не откроется. */}
+                  {progress && isLocked && (
+                    <span data-rf-closed-progress className="mt-1.5 block text-xs font-medium text-foreground/70">
+                      {story.lockReason === "premium" ? dict.closedProgressNotePremium : dict.closedProgressNote}
+                    </span>
+                  )}
                 </div>
 
                 <span className="mt-3 text-sm font-medium text-foreground/70 group-hover:text-foreground sm:mt-4">
