@@ -52,7 +52,7 @@ const STORIES = [
   story("open", null, "free"),
   story("closed", "free", "subscription"),
   story("closedDone", "free", "subscription"),
-  story("premium", "premium", "premium"),
+  story("premium", "premium", "premium-tier"),
 ];
 
 async function renderCatalog(lang: "es" | "ru") {
