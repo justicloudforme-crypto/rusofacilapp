@@ -1,10 +1,19 @@
 "use client";
 
 import { Capacitor } from "@capacitor/core";
-import { LocalNotifications } from "@capacitor/local-notifications";
+import { LocalNotifications as LocalNotificationsBridge } from "@capacitor/local-notifications";
+import { NATIVE_HUMAN_DEADLINE_MS, withNativeDeadlines } from "./native-deadline";
 import type { Locale } from "@/i18n/config";
 import { pickNotificationCopy } from "./notification-copy";
 import { dateKeyIn } from "./timezone";
+
+// Каждый вызов моста — со сроком и именем шага (долг 302, 7.292,
+// `src/lib/native-deadline.ts`): мост, не поднявшийся в документе, иначе
+// оставляет промис висеть вечно. Окно разрешения ждёт человека — у него
+// свой, долгий срок.
+const LocalNotifications = withNativeDeadlines("LocalNotifications", LocalNotificationsBridge, {
+  requestPermissions: NATIVE_HUMAN_DEADLINE_MS,
+});
 
 // Same no-op-on-web convention as src/lib/haptics.ts and
 // src/lib/revenuecat-client.ts — the plugin isn't implemented for the
