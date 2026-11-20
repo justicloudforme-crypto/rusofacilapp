@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   GUEST_OWNER,
   OUTBOX_LIMIT,
+  coalesceFlush,
   countWith,
   enqueueWith,
   flushWith,
@@ -9,6 +10,7 @@ import {
   pendingPassedWith,
   restoreAttemptWith,
   verdictOf,
+  type FlushReport,
   type OutboxBody,
   type OutboxRecord,
   type OutboxStore,
@@ -235,5 +237,68 @@ describe("зачёт урока — по лучшей попытке (7.238)", (
     await enqueueWith(store, { ...passing("A", "k2"), lesson: "2" });
     expect(await pendingPassedWith(store, "A", "a1", "1")).toBe(false);
     expect(await pendingPassedWith(store, "B", "a1", "1")).toBe(true);
+  });
+});
+
+describe("coalesceFlush — просьба во время отправки (долг 405, 7.295)", () => {
+  const report = (stoppedBy: FlushReport["stoppedBy"], waiting: number): FlushReport => ({
+    sent: 0, duplicate: 0, dropped: 0, waiting, foreign: 0, stoppedBy,
+  });
+  function held() {
+    const calls: Array<(r: FlushReport) => void> = [];
+    const flush = vi.fn(() => new Promise<FlushReport>((resolve) => calls.push(resolve)));
+    return { flush, calls };
+  }
+
+  it("отправка встала на сети, а во время неё пришла просьба — сразу ещё одна, оба ждущих получают её итог", async () => {
+    const { flush, calls } = held();
+    const run = coalesceFlush(flush);
+    const first = run("A");
+    const second = run("A"); // `online` посреди отправки
+    expect(first).toBe(second);
+    calls[0](report("network", 2));
+    await vi.waitFor(() => expect(flush).toHaveBeenCalledTimes(2));
+    calls[1](report("empty", 0));
+    expect(await first).toEqual(report("empty", 0));
+    expect(await second).toEqual(report("empty", 0));
+  });
+
+  it("контроль: без просьбы во время отправки добавочной нет — итог «стоп network» как есть", async () => {
+    const { flush, calls } = held();
+    const run = coalesceFlush(flush);
+    const only = run("A");
+    calls[0](report("network", 2));
+    expect(await only).toEqual(report("network", 2));
+    expect(flush).toHaveBeenCalledTimes(1);
+  });
+
+  it("просьба во время отправки, кончившейся не сетью, — добавочной нет", async () => {
+    for (const stop of ["empty", "session", null] as const) {
+      const { flush, calls } = held();
+      const run = coalesceFlush(flush);
+      const a = run("A");
+      run("A");
+      calls[0](report(stop, stop === "empty" ? 0 : 1));
+      await a;
+      expect(flush).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it("добавочная ровно одна: просьбы во время неё её же и ждут; после — новая отправка с нуля", async () => {
+    const { flush, calls } = held();
+    const run = coalesceFlush(flush);
+    const a = run("A");
+    run("A");
+    calls[0](report("network", 2));
+    await vi.waitFor(() => expect(flush).toHaveBeenCalledTimes(2));
+    const during = run("A");
+    calls[1](report("network", 2));
+    expect(await a).toEqual(report("network", 2));
+    expect(await during).toEqual(report("network", 2));
+    expect(flush).toHaveBeenCalledTimes(2);
+    const next = run("A");
+    expect(flush).toHaveBeenCalledTimes(3);
+    calls[2](report("empty", 0));
+    expect(await next).toEqual(report("empty", 0));
   });
 });
