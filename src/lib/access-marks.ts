@@ -77,6 +77,24 @@ export function wordGameRequirement(puzzle: {
 }
 
 /**
+ * ВХОДИТ ЛИ СТРОКА В БЕСПЛАТНЫЙ ОБРАЗЕЦ — 7.294, долг 104 (решение
+ * владельца 15.11.2026, вариант «а»).
+ *
+ * У карточек и идиом бесплатность позиционная: какие строки открыты
+ * анониму, решает порядок выдачи, а не колонка. Сама строка этого не
+ * знает — знает тот, кто режет список (`openCardIds` у карточек,
+ * `anonymousIdiomSample` у идиом). Поэтому знание приезжает вторым
+ * аргументом: поверхность, которая порядка не знает (замок тем, плитка
+ * закрытой карточки), его не передаёт и получает прежний ответ знак в
+ * знак, а индекс поиска, который знает, — передаёт, и открытая анониму
+ * строка больше не носит 🔒. Правило бесплатности при этом не меняется
+ * ни на одну строку: меняется только то, что значок о нём знает.
+ */
+export interface FreeSampleMembership {
+  inFreeSample: boolean;
+}
+
+/**
  * Карточка словаря. Уровень C1 — план Premium (то же правило, что у
  * `canAccessLevel`); всё остальное — подписка.
  *
@@ -86,11 +104,13 @@ export function wordGameRequirement(puzzle: {
  * свойство строки. Значит про отдельную карточку «открыта всем» сказать
  * нельзя, и поле `free` у неё было бы враньём — ровно тем, из-за
  * которого поиск печатал 4783 карточки как открытые, когда открыто 230.
- * Кто попал в образец, знает только тот, кто режет список; здесь
- * известно лишь требование строки.
+ * Кто попал в образец, знает только тот, кто режет список; поэтому
+ * «открыто» здесь ставится ТОЛЬКО по второму аргументу (7.294, долг 104),
+ * а без него — прежнее «по подписке».
  */
-export function flashcardRequirement(card: { level: string }): AccessRequirement {
-  return card.level === "C1" ? "premium-tier" : "subscription";
+export function flashcardRequirement(card: { level: string }, sample?: FreeSampleMembership): AccessRequirement {
+  if (card.level === "C1") return "premium-tier";
+  return sample?.inFreeSample ? "free" : "subscription";
 }
 
 /**
@@ -100,9 +120,16 @@ export function flashcardRequirement(card: { level: string }): AccessRequirement
  * разу (все 771 строки помечены A2, см. схему), но правило записано
  * рядом с остальными, а не «по данным».
  */
-export function idiomRequirement(idiom: { level?: string | null; category?: string | null }): AccessRequirement {
+export function idiomRequirement(
+  idiom: { level?: string | null; category?: string | null },
+  sample?: FreeSampleMembership,
+): AccessRequirement {
+  // `literary` остаётся короной и в образце: 👑 — СОРТ материала (правило
+  // владельца 14.09.2026), и вкладка «Literarios» печатает его анониму
+  // так же, хотя одну фразу из неё он откроет. Значок поиска обязан
+  // говорить то же, что вкладка, куда ведёт строка.
   if (idiom.level === "C1" || idiom.category === "literary") return "premium-tier";
-  return "subscription";
+  return sample?.inFreeSample ? "free" : "subscription";
 }
 
 /**
