@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { IDIOM_LIST_CACHE_PREFIX, idiomCategories, isIdiomCategory, isIdiomLevel } from "@/lib/idioms";
+import { IDIOM_LIST_CACHE_PREFIX, isIdiomCategory, isIdiomLevel } from "@/lib/idioms";
+import { buildFreeIdiomSample, capLiteraryIdioms } from "@/lib/idioms/free-sample";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { canAccessLevel, getEntitlementTier, getLiteraryIdiomLimit, FREE_TRIAL_LIMITS } from "@/lib/entitlement";
 
@@ -14,54 +15,10 @@ import { canAccessLevel, getEntitlementTier, getLiteraryIdiomLimit, FREE_TRIAL_L
 // voice) for up to IDIOM_CACHE_TTL_MS after every generation run.
 const IDIOM_CACHE_TTL_MS = 5 * 60_000;
 
-// Free-trial sample for the common case where IdiomsList fetches everything
-// unfiltered and splits by category client-side (see the GET comment
-// below). A plain `.slice(0, limit)` by createdAt order previously handed
-// back e.g. 5 idioms that were ALL "daily" (the first-inserted category),
-// so every other tab (Refranes/Literarios) showed "no idioms" for any
-// free-trial visitor — the exact same bug shape as GET /api/flashcards had.
-// Round-robins across categories (one from each, then a second from each,
-// ...) so every category with any idioms at all gets at least one.
-function buildFreeIdiomSample<T extends { category: string }>(idioms: T[], limit: number): T[] {
-  const byCategory = new Map<string, T[]>();
-  for (const idiom of idioms) {
-    const list = byCategory.get(idiom.category);
-    if (list) list.push(idiom);
-    else byCategory.set(idiom.category, [idiom]);
-  }
-
-  const sample: T[] = [];
-  for (let round = 0; sample.length < limit; round++) {
-    let addedAny = false;
-    for (const category of idiomCategories) {
-      const list = byCategory.get(category);
-      const next = list?.[round];
-      if (next) {
-        sample.push(next);
-        addedAny = true;
-        if (sample.length >= limit) break;
-      }
-    }
-    if (!addedAny) break;
-  }
-  return sample;
-}
-
-// "literary" is capped separately from (and on top of) the general
-// entitled/free-sample logic above — see getLiteraryIdiomLimit: it's the
-// one idiom category that's Premium-exclusive beyond a small taste, even
-// for an otherwise-full-access "standard" subscriber. Preserves order and
-// only touches literary rows, so a caller filtered to any other category
-// (or "all") is unaffected apart from literary items within it.
-function capLiteraryIdioms<T extends { category: string }>(idioms: T[], limit: number | null): T[] {
-  if (limit === null) return idioms;
-  let seen = 0;
-  return idioms.filter((idiom) => {
-    if (idiom.category !== "literary") return true;
-    seen++;
-    return seen <= limit;
-  });
-}
+// Бесплатный образец (`buildFreeIdiomSample`) и потолок `literary`
+// (`capLiteraryIdioms`) с 7.294 живут в src/lib/idioms/free-sample.ts: их же
+// спрашивает индекс поиска, чтобы не ставить 🔒 на фразы, которые аноним
+// откроет (долг 104). Поведение маршрута не менялось ни на строку.
 
 // Idioms are part of Vocabulary (IdiomsList is one of VocabularyApp's
 // modes) and now require the same active-subscription gate as
