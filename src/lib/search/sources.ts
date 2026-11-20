@@ -178,6 +178,10 @@ export async function loadSearchSources(): Promise<SearchSources> {
       () =>
         db.flashcardCard.findMany({
           select: { id: true, russian: true, translationEs: true, transcription: true, category: true, level: true },
+          // Порядок выдачи `getFlashcardIndex()` — по нему индекс узнаёт
+          // бесплатный образец (долг 104, 7.294). Без `orderBy` порядок
+          // строк не обещан, и значок «открыто» встал бы не на те карточки.
+          orderBy: { createdAt: "asc" },
         }),
       [],
     ),
@@ -186,6 +190,8 @@ export async function loadSearchSources(): Promise<SearchSources> {
       () =>
         db.idiom.findMany({
           select: { id: true, phrase: true, spanishEquivalent: true, level: true, category: true },
+          // Порядок выдачи `GET /api/idioms` — см. карточки выше.
+          orderBy: { createdAt: "asc" },
         }),
       [],
     ),

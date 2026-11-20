@@ -20,6 +20,8 @@ import {
   wordGameRequirement,
 } from "@/lib/access-marks";
 import { glossaryTermNames } from "@/lib/glossary-term-name";
+import { openCardIds } from "@/lib/flashcards/locked-census";
+import { anonymousIdiomSample } from "@/lib/idioms/free-sample";
 import { mediaTitle } from "@/lib/media/metadata";
 import type { SearchRecord } from "./types";
 
@@ -45,7 +47,10 @@ export interface SearchSources {
   exams: Array<{ level: string; slug: string; title: string }>;
   stories: Array<{ id: string; title: string; titleEs: string | null; level: string; isPremium: boolean; premiumOnly: boolean }>;
   media: Array<{ id: string; title: string; level: string; free?: boolean }>;
+  /** В порядке выдачи `GET /api/flashcards` (`createdAt` по возрастанию):
+   * по нему считается бесплатный образец (долг 104). */
   flashcards: Array<{ id: string; russian: string; translationEs: string; transcription: string; category: string; level: string }>;
+  /** В порядке выдачи `GET /api/idioms` (`createdAt` по возрастанию). */
   idioms: Array<{ id: string; phrase: string; spanishEquivalent: string; level: string; category: string }>;
   glossary: Array<{ slug: string; term: string; russianEquivalent: string }>;
   puzzles: Array<{ type: string; level: string; sequence: number; topic: string | null; wordCount: number; premiumOnly: boolean; curved: boolean }>;
@@ -237,7 +242,24 @@ function mediaRecords(media: SearchSources["media"]): SearchRecord[] {
   });
 }
 
+/**
+ * Кто из карточек в бесплатном образце — тем же вызовом, каким сайт считает
+ * «открыто/закрыто» в переписи словаря (`openCardIds`: первые
+ * `FREE_TRIAL_LIMITS.flashcards` карточек каждой темы в порядке выдачи
+ * `GET /api/flashcards`, без C1). Порядок входа обязан совпадать с выдачей —
+ * `createdAt` по возрастанию; его держит `loadSearchSources`.
+ */
+function freeSampleCardIds(cards: SearchSources["flashcards"]): Set<string> {
+  return openCardIds(cards, {
+    entitled: false,
+    // Уровень, который тариф `free` вообще видит, — тот, что не требует
+    // плана Premium (`canAccessLevel` в entitlement.ts, модуль server-only).
+    canAccessLevel: (level) => flashcardRequirement({ level }) !== "premium-tier",
+  });
+}
+
 function flashcardRecords(cards: SearchSources["flashcards"]): SearchRecord[] {
+  const freeSample = freeSampleCardIds(cards);
   return cards.map((card) => {
     const slug = CATEGORY_TO_VOCABULARY_SLUG.get(card.category);
     // Куда ведёт карточка. Своей страницы у карточки нет; ближайшее
@@ -266,11 +288,12 @@ function flashcardRecords(cards: SearchSources["flashcards"]): SearchRecord[] {
       // большой раздел индекса ради нуля. Транскрипции в подписи нет.
       terms: [card.transcription],
       level: card.level,
-      // «По подписке», а не «открыта»: бесплатный образец у карточек —
-      // первые FREE_TRIAL_LIMITS.flashcards на тему, то есть 230 из 5771
-      // на 09.09.2026. До этой правки индекс печатал открытыми 4783
-      // карточки, из которых аноним открывает 230 — расхождение 4553.
-      requires: flashcardRequirement(card),
+      // «Открыта» — ровно у бесплатного образца: первые
+      // FREE_TRIAL_LIMITS.flashcards на тему, 230 из 5771. До 09.09.2026
+      // индекс печатал открытыми 4783 карточки (расхождение 4553); с
+      // 09.09.2026 до 7.294 — ни одной, и 230 открытых анониму носили 🔒
+      // (долг 104). Теперь значок знает порядок выдачи.
+      requires: flashcardRequirement(card, { inFreeSample: freeSample.has(card.id) }),
     };
   });
 }
@@ -287,6 +310,10 @@ function vocabularyTopicRecords(): SearchRecord[] {
 }
 
 function idiomRecords(idioms: SearchSources["idioms"]): SearchRecord[] {
+  // Те пять фраз, что аноним видит на вкладке, — той же цепочкой, что
+  // `GET /api/idioms` (src/lib/idioms/free-sample.ts). Порядок входа —
+  // `createdAt` по возрастанию, как у маршрута.
+  const freeSample = new Set(anonymousIdiomSample(idioms).map((idiom) => idiom.id));
   return idioms.map((idiom) => ({
     section: "idiom" as const,
     id: idiom.id,
@@ -307,8 +334,10 @@ function idiomRecords(idioms: SearchSources["idioms"]): SearchRecord[] {
     // (`LITERARY_IDIOM_LIMITS`). То есть выдача обещала открытым то, что
     // почти всегда закрыто, — и с глубокой ссылкой это стало видно сразу:
     // человек уходил бы на вкладку, где его фразы нет. Правило здесь —
-    // пересказ того же гейта, который применяет `/api/idioms`.
-    requires: idiomRequirement(idiom),
+    // пересказ того же гейта, который применяет `/api/idioms`; с 7.294
+    // (долг 104) — вместе с бесплатным образцом: открытая анониму фраза
+    // значка не носит (кроме `literary` — у неё корона-сорт, как на вкладке).
+    requires: idiomRequirement(idiom, { inFreeSample: freeSample.has(idiom.id) }),
   }));
 }
 

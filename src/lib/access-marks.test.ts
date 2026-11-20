@@ -105,7 +105,15 @@ describe("flashcardRequirement", () => {
       // тему), и «открыта» про отдельную строку — враньё: индекс поиска
       // печатал так 4783 карточки, из которых аноним открывает 230.
       expect(flashcardRequirement({ level })).toBe("subscription");
+      expect(flashcardRequirement({ level }, { inFreeSample: false })).toBe("subscription");
     }
+  });
+
+  it("7.294, долг 104: «открыто» — только когда тот, кто режет список, сказал «в образце»", () => {
+    expect(flashcardRequirement({ level: "A1" }, { inFreeSample: true })).toBe("free");
+    // C1 в образец анонима не попадает никогда; даже если вызывающий
+    // ошибся, корона побеждает.
+    expect(flashcardRequirement({ level: "C1" }, { inFreeSample: true })).toBe("premium-tier");
   });
 });
 
@@ -114,6 +122,12 @@ describe("idiomRequirement", () => {
     expect(idiomRequirement({ level: "A2", category: "literary" })).toBe("premium-tier");
     expect(idiomRequirement({ level: "C1", category: "proverbs" })).toBe("premium-tier");
     expect(idiomRequirement({ level: "A2", category: "proverbs" })).toBe("subscription");
+  });
+
+  it("7.294, долг 104: фраза из образца — «открыто», кроме literary (корона-сорт, как на вкладке)", () => {
+    expect(idiomRequirement({ level: "A2", category: "daily" }, { inFreeSample: true })).toBe("free");
+    expect(idiomRequirement({ level: "A2", category: "daily" }, { inFreeSample: false })).toBe("subscription");
+    expect(idiomRequirement({ level: "A2", category: "literary" }, { inFreeSample: true })).toBe("premium-tier");
   });
 });
 
