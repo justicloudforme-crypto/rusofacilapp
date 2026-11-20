@@ -63,6 +63,7 @@ import {
 import { readFileSync, readdirSync } from "node:fs";
 import { join, sep } from "node:path";
 import { isEntryPoint } from "../src/lib/entry-point";
+import { waitInteractive, watchPage } from "./page-interactive.mjs";
 
 const TOKEN = "RFNativeShell";
 const COOKIE = "rf_native_shell";
@@ -415,10 +416,18 @@ interface Tile {
 
 async function readGameTiles(context: BrowserContext, base: string, lang = "ru"): Promise<Tile[]> {
   const page = await context.newPage();
+  const watch = watchPage(page);
   const out: Tile[] = [];
   try {
     await page.goto(`${base}/${lang}/word-games`, { waitUntil: "domcontentloaded", timeout: 60_000 });
     await page.waitForSelector("[data-testid=word-game-level-filter] button", { timeout: 30_000 });
+    // Долг 414 (7.295): вкладки и полоса уровней — кнопки, а кнопки до конца
+    // гидратации не принимают нажатий (`html[data-hydrating] button` в
+    // globals.css) — нажатие «проваливалось» в полосу вкладок или шапку и
+    // упиралось в свои 30 с. Ждём, пока страница сама скажет «ожила», в том
+    // же сроке; не ожила — провал с диагнозом (scripts/page-interactive.mjs).
+    const notInteractive = await waitInteractive(page, 30_000, watch);
+    if (notInteractive) throw new Error(`readGameTiles ${base}/${lang}/word-games: ${notInteractive}`);
     for (const type of GAME_TYPES) {
       // Вкладка выбирается по порядку в tablist: подпись локаль-зависима,
       // а порядок — нет (см. WordGamesPicker: филворд, затем кроссворд).
