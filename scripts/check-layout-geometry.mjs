@@ -81,6 +81,7 @@ import {
   findUnderfilledRows,
   formatUnderfilled,
 } from "./layout-fill.mjs";
+import { waitInteractive, watchPage } from "./page-interactive.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -430,6 +431,9 @@ async function inspect(ctx, page_, plant) {
   const path = typeof page_ === "string" ? page_ : page_.path;
   const tab = typeof page_ === "string" ? null : page_.tab;
   const page = await ctx.newPage();
+  // Долг 414: запросы и ошибки — с самого открытия, чтобы «страница не
+  // ожила» назвало, что ей мешало (scripts/page-interactive.mjs).
+  const watch = watchPage(page);
   if (plant) await plant(page);
   const problems = [];
   const res = await page
@@ -504,6 +508,17 @@ async function inspect(ctx, page_, plant) {
     } catch (e) {
       failure = e;
       failedAt = `вкладка не появилась: ${String(e.message).split("\n")[0].slice(0, 110)}`;
+    }
+    // Долг 414 (7.295): вкладка — кнопка, а кнопки до конца гидратации не
+    // принимают нажатий (`html[data-hydrating] button` в globals.css). Нажатие
+    // ждёт, пока страница сама скажет «ожила», — в том же сроке, что было у
+    // нажатия; не ожила — провал с диагнозом, а не «перекрывает полоса».
+    if (!failedAt) {
+      const notInteractive = await waitInteractive(page, 10_000, watch);
+      if (notInteractive) {
+        failure = new Error(notInteractive);
+        failedAt = notInteractive.split("\n")[0];
+      }
     }
     if (!failedAt) {
       try {

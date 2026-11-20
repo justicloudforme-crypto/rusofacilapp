@@ -354,18 +354,39 @@ export function enqueueProgress(body: OutboxBody): Promise<EnqueueOutcome> {
   return enqueueWith(indexedDbOutbox, body);
 }
 
-let flushing: Promise<FlushReport> | null = null;
-
-/** Одна отправка за раз на вкладку; вторая просьба ждёт первую. Две
- *  вкладки могут отправить одно и то же — сервер повтор ключа не примет. */
-export function flushProgress(owner: string): Promise<FlushReport> {
-  if (!flushing) {
-    flushing = flushWith(indexedDbOutbox, owner).finally(() => {
-      flushing = null;
-    });
-  }
-  return flushing;
+/**
+ * Одна отправка за раз на вкладку; вторая просьба ждёт первую. Две
+ * вкладки могут отправить одно и то же — сервер повтор ключа не примет.
+ *
+ * ПРОСЬБА ВО ВРЕМЯ ОТПРАВКИ НЕ ТЕРЯЕТСЯ — ДОЛГ 405, ЗАХОД 7.295
+ * (решение владельца 19.11.2026, вариант «а»). До правки: `online`,
+ * пришедший, пока шла отправка, начатая ещё без сети, присоединялся к
+ * ней; она кончалась «стоп network», и следующая попытка была только
+ * через 20 с (`ProgressOutboxSync`, `RETRY_MS`). Теперь такая просьба
+ * запоминается, и если идущая отправка встала на сети — сразу ещё одна;
+ * все, кто ждал, получают её итог. Ровно одна добавочная: просьбы во
+ * время неё ждут её же, дальше — обычная проба раз в 20 с.
+ */
+export function coalesceFlush(flush: (owner: string) => Promise<FlushReport>): (owner: string) => Promise<FlushReport> {
+  let flushing: Promise<FlushReport> | null = null;
+  let askedDuring = false;
+  return (owner) => {
+    if (flushing) {
+      askedDuring = true;
+      return flushing;
+    }
+    askedDuring = false;
+    flushing = flush(owner)
+      .then((report) => (askedDuring && report.stoppedBy === "network" ? flush(owner) : report))
+      .finally(() => {
+        flushing = null;
+        askedDuring = false;
+      });
+    return flushing;
+  };
 }
+
+export const flushProgress = coalesceFlush((owner) => flushWith(indexedDbOutbox, owner));
 
 export function pendingProgress(owner: string, level?: string, lesson?: string): Promise<number> {
   return countWith(indexedDbOutbox, owner, level, lesson);
