@@ -27,13 +27,30 @@ const SOURCES: SearchSources = {
     { id: "song-katyusha", title: "Катюша", level: "A2", free: true },
     { id: "movie-x", title: "Фильм", level: "B1" },
   ],
+  // Порядок — порядок выдачи (`createdAt`). C1 стоит ВТОРОЙ, чтобы образец
+  // темы был обязан её пропустить; «food» — 11 карточек не C1, 11-я
+  // (`f12`) в образец не входит (долг 104, 7.294).
   flashcards: [
     { id: "f1", russian: "хлеб", translationEs: "pan", transcription: "jlep", category: "food", level: "A1" },
     { id: "f2", russian: "мироздание", translationEs: "cosmos", transcription: "mirozdanie", category: "food", level: "C1" },
+    ...Array.from({ length: 10 }, (_, i) => ({
+      id: `f${i + 3}`,
+      russian: `слово${i + 3}`,
+      translationEs: `palabra${i + 3}`,
+      transcription: `slovo${i + 3}`,
+      category: "food",
+      level: "A2",
+    })),
   ],
+  // Образец по кругу категорий: i0 (daily), i1 (proverbs), i2 (literary),
+  // i3 (daily), i4 (proverbs); i5 (daily) — уже за пределом пяти.
   idioms: [
+    { id: "i0", phrase: "Без труда не выловишь и рыбку из пруда", spanishEquivalent: "No hay atajo sin trabajo", level: "A2", category: "daily" },
     { id: "i1", phrase: "На воре и шапка горит", spanishEquivalent: "El que se pica, ajos come", level: "B2", category: "proverbs" },
     { id: "i2", phrase: "Лишний человек", spanishEquivalent: "El hombre superfluo", level: "B2", category: "literary" },
+    { id: "i3", phrase: "Как по маслу", spanishEquivalent: "Sobre ruedas", level: "A2", category: "daily" },
+    { id: "i4", phrase: "Тише едешь — дальше будешь", spanishEquivalent: "Despacio se llega lejos", level: "A2", category: "proverbs" },
+    { id: "i5", phrase: "Вешать лапшу на уши", spanishEquivalent: "Tomar el pelo", level: "A2", category: "daily" },
   ],
   glossary: [{ slug: "sustantivo", term: "sustantivo", russianEquivalent: "существительное" }],
   puzzles: [
@@ -82,14 +99,17 @@ describe("правило платности берётся у общего пр�
     expect(map.get("movie-x")).toBe("subscription");
   });
 
-  it("карточки: C1 — Premium, остальное — по подписке, а не «открыто»", () => {
+  it("карточки: образец темы открыт, 11-я — по подписке, C1 — Premium (долг 104)", () => {
     const map = new Map(bySection("flashcard").map((r) => [r.id, r.requires]));
-    // НЕ "free": бесплатный образец у карточек — первые
-    // FREE_TRIAL_LIMITS.flashcards на тему, то есть 230 из 5771. До
-    // 09.09.2026 здесь стоял null, и выдача печатала открытыми 4783
-    // карточки, из которых аноним открывает 230.
-    expect(map.get("f1")).toBe("subscription");
+    // Бесплатный образец у карточек — первые FREE_TRIAL_LIMITS.flashcards
+    // на тему в порядке выдачи, без C1: 230 из 5771. До 09.09.2026 здесь
+    // стоял null (4783 «открытых»), с 09.09.2026 до 7.294 — «по подписке»
+    // у всех, и 230 открытых анониму носили 🔒.
+    expect(map.get("f1")).toBe("free");
     expect(map.get("f2")).toBe("premium-tier");
+    for (let i = 3; i <= 11; i++) expect(map.get(`f${i}`), `f${i}`).toBe("free");
+    expect(map.get("f12")).toBe("subscription");
+    expect([...map.values()].filter((v) => v === "free")).toHaveLength(10);
   });
 
   it("первый урок уровня открыт, второй — нет", () => {
@@ -168,8 +188,12 @@ describe("идиома ведёт на саму фразу, а не на вкл�
     const map = new Map(bySection("idiom").map((r) => [r.id, r.requires]));
     // Неоплатившему страница отдаёт 5 фраз из 771 — значит закрыта
     // практически любая, хотя уровень у них не C1.
-    expect(map.get("i1")).toBe("subscription");
-    // `literary` режется отдельно и у подписчика `standard` тоже.
+    // Образец анонима — i0, i1, i3, i4 открыты (долг 104, 7.294); i5 — за
+    // пределом пяти.
+    for (const id of ["i0", "i1", "i3", "i4"]) expect(map.get(id), id).toBe("free");
+    expect(map.get("i5")).toBe("subscription");
+    // `literary` режется отдельно и у подписчика `standard` тоже — корона
+    // остаётся и на той одной фразе, что попала в образец.
     expect(map.get("i2")).toBe("premium-tier");
   });
 });
