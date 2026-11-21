@@ -473,8 +473,8 @@ describe("формат даты, в котором пишет Prisma", () => {
     expect(await redeemAccessCode(good, "AMIGO-FORMAT-OK01")).toMatchObject({ ok: true });
 
     // Тот же срок, положенный ЧИСЛОМ. Сравнение `expiresAt > ?` идёт в SQL,
-    // а SQLite ставит любое число ниже любой строки — живой код становится
-    // неизвестным. Это ИЗМЕРЕНИЕ сегодняшнего поведения, а не требование к
+    // а SQLite ставит любое число ниже любой строки — живой код не
+    // погашается. Это ИЗМЕРЕНИЕ сегодняшнего поведения, а не требование к
     // нему: перенеси кто-нибудь сравнение в JS, этот случай покраснеет, и
     // покраснеет он правильно — поведение изменилось.
     const bad = await newUser("ac-format-bad");
@@ -486,8 +486,19 @@ describe("формат даты, в котором пишет Prisma", () => {
       // общий форматтер, а здесь он есть — см. заголовок check-raw-datetime.mjs.
       args: ["ac_format_bad", "AMIGOFORMATBAD1", hour.getTime(), storedDateTime(new Date())],
     });
-    expect(await redeemAccessCode(bad, "AMIGO-FORMAT-BAD1")).toEqual({ ok: false, reason: "unknown" });
-    console.log("    число миллисекунд -> код выглядит неизвестным (та самая находка 7.146)");
+    // До 7.220 этот случай отвечал словом `unknown` — тем же, что «кода нет».
+    // В 7.220 (8383bc76) `unknown` разделён: «строки нет» → `not_found`,
+    // «строка свободна, а UPDATE её не задел» → `inconsistent` (уровень
+    // `error` в Sentry — дефект НАШ, а не опечатка человека). Число вместо
+    // текста — ровно второе: строка есть, не погашена, не отозвана, по
+    // разобранной дате живая, а сравнение в SQL её не берёт. Сценарий
+    // ждал старое слово и был красным с 7.220 по 7.297 (долг 341).
+    const refused = await redeemAccessCode(bad, "AMIGO-FORMAT-BAD1");
+    expect(refused).toEqual({ ok: false, reason: "inconsistent" });
+    // Позитивный контроль к самому различению: человеку не говорят «кода
+    // нет» про существующий код.
+    expect(refused).not.toEqual({ ok: false, reason: "not_found" });
+    console.log("    число миллисекунд -> отказ «inconsistent» (находка 7.146; имя — с 7.220)");
     expect(await tierOf(bad)).toBe("free");
   });
 });
