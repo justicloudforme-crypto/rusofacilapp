@@ -63,12 +63,54 @@
  *   node scripts/check-rendered-purchase-surfaces.mjs --base=http://… --plant
  */
 import { chromium } from "playwright";
+import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { collectAddresses } from "./route-census.mjs";
 import { judgeControl } from "./purchase-surface-rules.mjs";
 
 const TOKEN = "RFNativeShell";
 const COOKIE = "rf_native_shell";
+const VERSION_COOKIE = "rf_shell_version";
+
+/**
+ * ВЕРСИЯ ОБОЛОЧКИ, КОТОРУЮ СУДИТ ПРИБОР — ДОЛГ 301 (заход 7.298).
+ *
+ * ЧТО БЫЛО. С 7.224 до 7.298 каждый контекст получал ровно одну куку
+ * `rf_native_shell=1` и голый токен `RFNativeShell` без числа. По правилу
+ * `nativeShellVersion` (`src/lib/native-shell-token.ts`) это ВЕРСИЯ 2 — та,
+ * где экрана покупки нет по построению. Ноль прибора про экран покупки был
+ * нулём там, где иначе и быть не могло.
+ *
+ * ЧТО У ЛЮДЕЙ. Каждый телефон из Google Play (первая публикация — vc14,
+ * сейчас vc18) шлёт `RFNativeShell/<versionCode>` и куку
+ * `rf_shell_version=<versionCode>`; версии 2 и 3 жили только на устройствах
+ * тестировщиков до 22.09.2026. Поэтому три роли судятся как НЫНЕШНЯЯ
+ * оболочка — число берётся из `capacitor.config.ts` текстом (тем же
+ * литералом, что уходит в User-Agent телефона), не переписывается руками.
+ * Старая версия 2 остаётся одной ролью (`free2`, аккаунт без подписки — на
+ * нём больше всего замков): правило «экрана покупки там нет» продолжает
+ * судиться и отрисованным экраном, а не только ответом сервера.
+ */
+function currentShellVersion() {
+  const text = readFileSync(new URL("../capacitor.config.ts", import.meta.url), "utf8");
+  const m = /const NATIVE_SHELL_VERSION = (\d+);/.exec(text);
+  if (!m) throw new Error("capacitor.config.ts: не нашлось `const NATIVE_SHELL_VERSION = N;` — прибору нечем назвать версию оболочки");
+  return Number(m[1]);
+}
+
+/** Граница «оболочка умеет покупать» — `NATIVE_PURCHASE_MIN_SHELL_VERSION`. */
+function purchaseMinShellVersion() {
+  const text = readFileSync(new URL("../src/lib/revenuecat-config.ts", import.meta.url), "utf8");
+  const m = /export const NATIVE_PURCHASE_MIN_SHELL_VERSION = (\d+);/.exec(text);
+  if (!m) throw new Error("revenuecat-config.ts: не нашлось NATIVE_PURCHASE_MIN_SHELL_VERSION");
+  return Number(m[1]);
+}
+
+/** Адрес, где экран нативной покупки есть всегда (`/[lang]/pricing` в оболочке). */
+const PRICING_PROBE = "/ru/pricing";
+
+/** Признак единственного экрана нативной покупки (`NativePurchasePanel.tsx`). */
+const NATIVE_PURCHASE_SELECTOR = '[data-testid="native-purchase"]';
 const SAFARI =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
 
@@ -257,6 +299,9 @@ export const CONTROL_CENSUS = () => {
   return nodes.map((node) => ({
     tag: node.tagName.toLowerCase(),
     text: labelOf(node).slice(0, 200),
+    // Орган внутри экрана нативной покупки (долг 301). Там законны кнопки
+    // тарифов со строкой цены магазина — но не адрес веб-кассы.
+    inNativePurchase: Boolean(node.closest('[data-testid="native-purchase"]')),
     target:
       node.getAttribute("href") ||
       node.getAttribute("action") ||
@@ -265,10 +310,25 @@ export const CONTROL_CENSUS = () => {
   }));
 };
 
-function judgeCensus(controls, where) {
+/**
+ * Суждение переписи с учётом версии оболочки (долг 301).
+ *
+ * Орган ВНЕ экрана нативной покупки — по общим правилам, как и прежде.
+ * Орган ВНУТРИ него в оболочке, которая умеет покупать, — только по адресу:
+ * кнопка тарифа со строкой цены магазина там и есть законная покупка
+ * (`PROGRESS.md` 3.7), а вход на `/pricing`, `/api/checkout` или
+ * `stripe.com` — по-прежнему находка. В оболочке, которая покупать НЕ
+ * умеет, сам экран нативной покупки — находка.
+ */
+function judgeCensus(controls, where, shell) {
   const problems = [];
+  const panelControls = controls.filter((control) => control.inNativePurchase);
+  if (panelControls.length > 0 && shell.version < shell.purchaseMin) {
+    problems.push(`${where}: экран нативной покупки в оболочке версии ${shell.version}, где покупки нет`);
+  }
   for (const control of controls) {
-    for (const reason of judgeControl({ text: control.text, target: control.target })) {
+    const nativeAllowed = control.inNativePurchase && shell.version >= shell.purchaseMin;
+    for (const reason of judgeControl({ text: control.text, target: control.target, isControl: !nativeAllowed })) {
       problems.push(`${where}: <${control.tag}> ${reason}`);
     }
   }
@@ -389,10 +449,16 @@ async function censusOf(page, skipped, where) {
  * наверх и там сверяется с переписью: цель, которой в переписи НЕТ,
  * означает, что экран выпал из замера, и это находка, а не пропуск.
  */
-async function screen(context, base, path, role, plant, skipped, step, stallPlant = false) {
+async function screen(context, base, path, role, plant, skipped, step, stallPlant = false, shell) {
   const page = await context.newPage();
   const problems = [];
   let clicks = 0;
+  /** Видел ли этот экран нативную покупку — для контроля слепоты роли (долг 301). */
+  let nativeSeen = false;
+  const judge = (controls, where) => {
+    if (controls.some((control) => control.inNativePurchase)) nativeSeen = true;
+    return judgeCensus(controls, where, shell);
+  };
   const at = (name) => {
     if (step) step.name = name;
   };
@@ -425,11 +491,39 @@ async function screen(context, base, path, role, plant, skipped, step, stallPlan
         }, 0);
       }, STALL_PLANT_MS);
     }
-    problems.push(...judgeCensus(await censusOf(page, skipped, "перепись на открытии"), `${path} (${role}, открытие)`));
+    if (plant) {
+      // ВТОРАЯ ПОДСАДКА (долг 301): вход в веб-кассу ВНУТРИ экрана нативной
+      // покупки. Подписи там не судятся (кнопки тарифов законны), адрес —
+      // судится; эта подсадка доказывает, что послабление не ослепило
+      // правило адреса. Ставится только там, где экран действительно есть.
+      await page.evaluate((selector) => {
+        const panel = document.querySelector(selector);
+        if (!panel) return;
+        const link = document.createElement("a");
+        link.href = "/ru/pricing";
+        link.textContent = "подсадка-301";
+        link.setAttribute("data-plant-301", "1");
+        panel.appendChild(link);
+      }, NATIVE_PURCHASE_SELECTOR);
+      if (shell.version < shell.purchaseMin) {
+        // ТРЕТЬЯ ПОДСАДКА (долг 301): экран нативной покупки в оболочке,
+        // которая покупать не умеет. Обязан стать находкой.
+        await page.evaluate(() => {
+          const fake = document.createElement("div");
+          fake.setAttribute("data-testid", "native-purchase");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = "подсадка-301-старая";
+          fake.appendChild(button);
+          document.body.appendChild(fake);
+        });
+      }
+    }
+    problems.push(...judge(await censusOf(page, skipped, "перепись на открытии"), `${path} (${role}, открытие)`));
 
     const landed = new URL(page.url()).pathname;
     if (landed !== path) {
-      return { problems, clicks, opened: true, redirectedTo: landed };
+      return { problems, clicks, opened: true, redirectedTo: landed, nativeSeen };
     }
 
     // Счёт берётся ТЕМ ЖЕ локатором, каким идёт нажатие. Первая редакция
@@ -474,13 +568,13 @@ async function screen(context, base, path, role, plant, skipped, step, stallPlan
       }
       at(`перепись после нажатия ${i + 1} из ${budget}`);
       problems.push(
-        ...judgeCensus(
+        ...judge(
           await censusOf(page, skipped, `перепись после нажатия ${i + 1} из ${budget}`),
           `${path} (${role}, нажатий ${i + 1})`,
         ),
       );
     }
-    return { problems, clicks, opened: true };
+    return { problems, clicks, opened: true, nativeSeen };
   } finally {
     await page.close().catch(() => {});
   }
@@ -531,8 +625,11 @@ export async function main() {
   const allAddresses = pathsArg
     ? pathsArg.slice("--paths=".length).split(",").filter(Boolean)
     : census.addresses.slice(0, limit);
-  const addresses =
+  const sharded =
     shard.total === 1 ? allAddresses : allAddresses.filter((_, i) => i % shard.total === shard.index);
+  // Подсадка 301 ставится внутрь экрана нативной покупки, а он есть на
+  // странице цен: в прогоне `--plant` этот адрес берётся всегда (долг 301).
+  const addresses = plant && !sharded.includes(PRICING_PROBE) ? [...sharded, PRICING_PROBE] : sharded;
   if (shard.total > 1) {
     if (addresses.length === 0) {
       console.error(
@@ -549,15 +646,31 @@ export async function main() {
       (addresses.length === census.addresses.length ? "" : ` (взято ${addresses.length})`),
   );
 
+  const freeSession = await makeSession(base, false);
   const sessions = {
     guest: [],
-    free: await makeSession(base, false),
+    free: freeSession,
     sub: await makeSession(base, true),
+    // Старая оболочка версии 2 — тем же аккаунтом без подписки (долг 301).
+    free2: freeSession,
   };
-  console.log("  роли: гость (без сессии), бесплатный аккаунт, подписчик — 3 из 3, все настоящие");
+  const current = currentShellVersion();
+  const purchaseMin = purchaseMinShellVersion();
+  /** Версия оболочки каждой роли: три — нынешняя (как у телефонов из Play), одна — старая 2. */
+  const shellOf = { guest: current, free: current, sub: current, free2: 2 };
+  if (current < purchaseMin) {
+    console.error(`нынешняя оболочка ${current} младше границы покупки ${purchaseMin} — прибор судил бы не то, что у людей`);
+    return 1;
+  }
+  console.log(
+    `  роли: гость (без сессии), бесплатный аккаунт, подписчик — в оболочке ${current} (как телефоны из Play); ` +
+      `бесплатный аккаунт ещё раз — в старой оболочке 2; 4 из 4, все настоящие`,
+  );
 
   const browser = await chromium.launch();
-  const problemsByRole = { guest: [], free: [], sub: [] };
+  const problemsByRole = Object.fromEntries(Object.keys(sessions).map((role) => [role, []]));
+  /** Роли, на чьих экранах нативная покупка была увидена хоть раз (контроль слепоты, долг 301). */
+  const nativeSeenBy = new Set();
   const stalled = [];
   /** Переадресованные экраны: откуда, куда, под какой ролью. */
   const redirects = [];
@@ -572,10 +685,15 @@ export async function main() {
         // ОБА признака оболочки сразу, как их видит телефон: токен в
         // User-Agent (прямой переход webview) и кука (запрос service
         // worker'а, которому Capacitor User-Agent не ставит вовсе).
-        userAgent: `${SAFARI} ${TOKEN}`,
+        // Версия 2 — голый токен и одна кука, как у оболочек до 7.223;
+        // нынешняя — число в токене и в куке `rf_shell_version`, как у
+        // телефона (`appendUserAgent` в capacitor.config.ts).
+        userAgent: shellOf[role] === 2 ? `${SAFARI} ${TOKEN}` : `${SAFARI} ${TOKEN}/${shellOf[role]}`,
         viewport: { width: 360, height: 720 },
       });
-      await contexts[role].addCookies([{ name: COOKIE, value: "1", url: base }, ...cookies]);
+      const shellCookies = [{ name: COOKIE, value: "1", url: base }];
+      if (shellOf[role] !== 2) shellCookies.push({ name: VERSION_COOKIE, value: String(shellOf[role]), url: base });
+      await contexts[role].addCookies([...shellCookies, ...cookies]);
     }
 
     const jobs = [];
@@ -608,7 +726,10 @@ export async function main() {
         // всё равно когда-нибудь завершится, и его отказ без обработчика
         // стал бы необработанным отклонением — то есть падением процесса
         // уже ПОСЛЕ того, как отчёт напечатан.
-        const running = screen(contexts[role], base, path, role, plant, skipped, step, path === stallPath);
+        const running = screen(contexts[role], base, path, role, plant, skipped, step, path === stallPath, {
+          version: shellOf[role],
+          purchaseMin,
+        });
         running.catch(() => {});
         try {
           return { role, path, ...(await Promise.race([running, deadline])) };
@@ -627,13 +748,14 @@ export async function main() {
       if (result.redirectedTo) redirects.push({ from: result.path, to: result.redirectedTo, role: result.role });
       clicks += result.clicks;
       if (result.opened) opened += 1;
+      if (result.nativeSeen) nativeSeenBy.add(result.role);
     }
   } finally {
     await browser.close();
   }
 
   console.log(
-    `  собрано экранов: ${opened} из ${addresses.length * 3}; нажатий сделано: ${clicks}; ` +
+    `  собрано экранов: ${opened} из ${addresses.length * Object.keys(sessions).length}; нажатий сделано: ${clicks}; ` +
       `снимков пропущено из-за перехода: ${skipped.count}`,
   );
 
@@ -710,16 +832,48 @@ export async function main() {
     return 1;
   }
 
+  // КОНТРОЛЬ СЛЕПОТЫ (долг 301): аккаунт без подписки в нынешней оболочке
+  // обязан УВИДЕТЬ экран нативной покупки на странице цен. Не увидел —
+  // послабление для экрана покупки ничего не судит, а ноль прибора про
+  // него снова получен там, где экрана нет.
+  const pricingJudged = addresses.includes(PRICING_PROBE);
+  if (pricingJudged) {
+    const seen = nativeSeenBy.has("free");
+    console.log(
+      `  экран нативной покупки: ${seen ? "увиден" : "НЕ УВИДЕН"} аккаунтом без подписки в оболочке ${current} ` +
+        `(роли, где увиден: ${[...nativeSeenBy].join(", ") || "ни одной"})`,
+    );
+    if (!seen) {
+      console.error(`прибор не увидел экрана нативной покупки на ${PRICING_PROBE} в оболочке ${current} — роль ослепла`);
+      return 1;
+    }
+  }
+
   if (plant) {
     let ok = true;
+    const PANEL_PLANT = `<a> ведёт на платёжную поверхность: ${PRICING_PROBE}`;
     for (const [role, list] of Object.entries(problemsByRole)) {
-      const n = list.length;
-      console.log(`  роль ${role.padEnd(5)} — подсадка поймана ${n} раз${n === 0 ? " (ПРОПУЩЕНО)" : ""}`);
-      if (n === 0) ok = false;
+      const button = list.filter((p) => p.includes("Оформить подписку")).length;
+      const panel = list.filter((p) => p.startsWith(`${PRICING_PROBE} (${role}`) && p.includes(PANEL_PLANT)).length;
+      const canBuy = shellOf[role] >= purchaseMin;
+      console.log(
+        `  роль ${role.padEnd(5)} — кнопка-подсадка поймана ${button} раз${button === 0 ? " (ПРОПУЩЕНО)" : ""}` +
+          (canBuy && role !== "sub" && role !== "guest"
+            ? `; вход в веб-кассу внутри экрана покупки — ${panel} раз${panel === 0 ? " (ПРОПУЩЕНО)" : ""}`
+            : ""),
+      );
+      if (button === 0) ok = false;
+      if (role === "free" && panel === 0) ok = false;
+      if (!canBuy) {
+        const old = list.filter((p) => p.includes(`экран нативной покупки в оболочке версии ${shellOf[role]}`)).length;
+        console.log(`  роль ${role.padEnd(5)} — экран покупки в оболочке ${shellOf[role]} пойман ${old} раз${old === 0 ? " (ПРОПУЩЕНО)" : ""}`);
+        if (old === 0) ok = false;
+      }
     }
     console.log(
       ok
-        ? "check:rendered-purchases --plant — подсаженная кнопка покупки роняет прибор во ВСЕХ ТРЁХ ролях"
+        ? `check:rendered-purchases --plant — подсадки роняют прибор во ВСЕХ ${Object.keys(problemsByRole).length} ролях, ` +
+            "включая вход в веб-кассу внутри экрана нативной покупки"
         : "check:rendered-purchases --plant — FAILED: роль, на которой подсадка не срабатывает, прибором не судится вовсе",
     );
     return ok ? 0 : 1;
@@ -733,7 +887,8 @@ export async function main() {
     return 1;
   }
   console.log(
-    `check:rendered-purchases — ${addresses.length} адресов × 3 роли в обличье оболочки, ` +
+    `check:rendered-purchases — ${addresses.length} адресов × ${Object.keys(problemsByRole).length} роли ` +
+      `(три в оболочке ${current}, одна в оболочке 2), ` +
       `${clicks} нажатий: платных органов управления 0.`,
   );
   return 0;
