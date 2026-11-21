@@ -38,8 +38,8 @@
 //   node scripts/check-silent-listen.mjs --base=https://rusofacilapp.com
 //   node scripts/check-silent-listen.mjs --limit=25             # первые N страниц
 //   node scripts/check-silent-listen.mjs --plant                # контроли, без сети
-//   node scripts/check-silent-listen.mjs --base=https://rusofacilapp.com --audio --concurrency=2 --delay-ms=400
-//                                                               # обход по расписанию (долг 119)
+//   node scripts/check-silent-listen.mjs --base=https://rusofacilapp.com --audio --concurrency=2 --delay-ms=400 --agents=web,android-app,ios-app
+//                                                               # обход по расписанию (долги 119, 121)
 //
 // ОБХОД ПО РАСПИСАНИЮ (7.293, долг 119). Раз в неделю workflow
 // `listen-sweep.yml` гоняет этот обход по живому сайту. С `--audio` он
@@ -53,6 +53,21 @@
 // (`--retry-delay-ms`), отказ — только на второй неудаче. В конце
 // печатается счёт: сколько запросов и сколько байт ушло на страницы и на
 // звук — из него в отчёте захода считается цена в месяц.
+//
+// ТРИ АГЕНТА (7.296, долг 121). `--agents=web,android-app,ios-app` гоняет
+// тот же обход трижды: браузером телефона, приложением Android (WebView
+// с токеном `RFNativeShell/<версия>` и кукой оболочки) и приложением
+// iPhone (WKWebView с тем же токеном). Страница рассказа ВЕТВИТСЯ по
+// оболочке (`isNativeShellRequest` в `stories/[id]/page.tsx`: замок,
+// кнопка покупки, нет подвала), поэтому обход одним браузером не видит
+// путь, которым приходят ученики приложения. Версия в токене берётся из
+// `capacitor.config.ts`, а не вписана сюда. Сторож не слеп и здесь: у
+// каждого агента каждая страница обязана нести признак своего режима
+// (`"nativeShell":true` у приложения, `false` у браузера) — иначе сайт
+// молча отдал приложению браузерную страницу, и «0 нарушений» значил бы
+// повторную проверку браузера. Звуковые файлы проверяются один раз —
+// объединение ссылок всех агентов. По умолчанию (без `--agents`) — один
+// агент `web`, как раньше.
 //
 // Контроль `--plant` — двусторонний и СКВОЗНОЙ: кроме разбора разметки
 // он поднимает местный «сайт» (карта сайта, страницы рассказов, звуковые
@@ -75,12 +90,72 @@ const CONCURRENCY = Number(argValue("concurrency") ?? 8) || 8;
 const DELAY_MS = Number(argValue("delay-ms") ?? 0) || 0;
 const RETRY_DELAY_MS = Number(argValue("retry-delay-ms") ?? 30_000);
 const AUDIO = ARGS.includes("--audio");
+const AGENTS_ARG = argValue("agents") ?? "web";
 
 /** Хост звука на проде — Vercel Blob. Ссылки на звук берутся только с него. */
 export const BLOB_AUDIO_HOST = "[a-z0-9]+\\.public\\.blob\\.vercel-storage\\.com";
 
 /** Чем обход представляется серверу (написание не брендовое — см. `prod-smoke.mjs`). */
 const SWEEP_USER_AGENT = "RFListenSweep";
+
+/** Версия оболочки — из `capacitor.config.ts` (та же, что уходит в токен приложения). */
+export function shellVersion(root = process.cwd()) {
+  const text = readFileSync(join(root, "capacitor.config.ts"), "utf8");
+  const m = /const NATIVE_SHELL_VERSION = (\d+);/.exec(text);
+  if (!m) throw new Error("в capacitor.config.ts не найдено NATIVE_SHELL_VERSION — агенты приложения ослепли бы молча");
+  return Number(m[1]);
+}
+
+/**
+ * Агенты обхода (7.296, долг 121). Строки User-Agent — настоящие формы
+ * браузера телефона, Android WebView (`; wv`, `Version/4.0`) и iPhone
+ * WKWebView (без `Safari/`), к ним дописан токен обхода; у приложения —
+ * ещё токен оболочки и её куки, ровно как шлёт оболочка
+ * (`appendUserAgent` в `capacitor.config.ts`).
+ */
+export function sweepAgents(names, version = shellVersion()) {
+  const shell = `RFNativeShell/${version}`;
+  const appCookie = `rf_native_shell=1; rf_shell_version=${version}`;
+  const all = {
+    web: {
+      name: "web",
+      title: "браузер телефона",
+      app: false,
+      headers: { "user-agent": `Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 ${SWEEP_USER_AGENT}` },
+    },
+    "android-app": {
+      name: "android-app",
+      title: "приложение Android (WebView)",
+      app: true,
+      headers: {
+        "user-agent": `Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/UQ1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.0.0 Mobile Safari/537.36 ${SWEEP_USER_AGENT} ${shell}`,
+        cookie: appCookie,
+      },
+    },
+    "ios-app": {
+      name: "ios-app",
+      title: "приложение iPhone (WKWebView)",
+      app: true,
+      headers: {
+        "user-agent": `Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 ${SWEEP_USER_AGENT} ${shell}`,
+        cookie: appCookie,
+      },
+    },
+  };
+  const list = names.split(",").map((n) => n.trim()).filter(Boolean);
+  const unknown = list.filter((n) => !all[n]);
+  if (unknown.length || list.length === 0) throw new Error(`--agents: неизвестные агенты «${unknown.join(",")}» (есть: ${Object.keys(all).join(", ")})`);
+  return list.map((n) => all[n]);
+}
+
+/** Режим, в котором сервер отрисовал страницу: признак из payload страницы рассказа. */
+export function renderedMode(html) {
+  const app = /nativeShell\\?":true/.test(html);
+  const web = /nativeShell\\?":false/.test(html);
+  if (app && !web) return "app";
+  if (web && !app) return "web";
+  return app && web ? "both" : "none";
+}
 
 /** Меньше этого — не звук, а пустышка (настоящий клип банка ≥ 5 КБ). */
 const MIN_AUDIO_BYTES = 1000;
@@ -225,11 +300,11 @@ async function storyUrls(base, meter) {
   return LIMIT ? urls.slice(0, LIMIT) : urls;
 }
 
-async function fetchPage(url, labels, meter, audioHost) {
+async function fetchPage(url, labels, meter, audioHost, agent) {
   let html = "";
   let status = 0;
   try {
-    const res = await fetch(url, { redirect: "follow", headers: { "user-agent": SWEEP_USER_AGENT } });
+    const res = await fetch(url, { redirect: "follow", headers: agent?.headers ?? { "user-agent": SWEEP_USER_AGENT } });
     status = res.status;
     html = await res.text();
     meter.pageRequests += 1;
@@ -237,10 +312,10 @@ async function fetchPage(url, labels, meter, audioHost) {
   } catch (err) {
     return { url, status: 0, error: String(err), silent: false, unreachable: true, audio: [] };
   }
-  return { url, status, ...inspect(html, labels), unreachable: status !== 200, audioLinks: audioUrls(html, audioHost) };
+  return { url, status, ...inspect(html, labels), mode: renderedMode(html), unreachable: status !== 200, audioLinks: audioUrls(html, audioHost) };
 }
 
-async function sweep(urls, labels, meter, { concurrency = CONCURRENCY, delayMs = DELAY_MS, retryDelayMs = RETRY_DELAY_MS, audioHost = BLOB_AUDIO_HOST } = {}) {
+async function sweep(urls, labels, meter, { concurrency = CONCURRENCY, delayMs = DELAY_MS, retryDelayMs = RETRY_DELAY_MS, audioHost = BLOB_AUDIO_HOST, agent } = {}) {
   const rows = [];
   let cursor = 0;
   async function worker() {
@@ -248,7 +323,7 @@ async function sweep(urls, labels, meter, { concurrency = CONCURRENCY, delayMs =
       const index = cursor++;
       if (index >= urls.length) return;
       if (delayMs) await sleep(delayMs);
-      rows.push(await fetchPage(urls[index], labels, meter, audioHost));
+      rows.push(await fetchPage(urls[index], labels, meter, audioHost, agent));
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, urls.length) }, worker));
@@ -260,7 +335,7 @@ async function sweep(urls, labels, meter, { concurrency = CONCURRENCY, delayMs =
     await sleep(retryDelayMs);
     for (const r of again) {
       if (delayMs) await sleep(delayMs);
-      Object.assign(r, await fetchPage(r.url, labels, meter, audioHost));
+      Object.assign(r, await fetchPage(r.url, labels, meter, audioHost, agent));
     }
   }
   rows.sort((a, b) => a.url.localeCompare(b.url));
@@ -330,22 +405,54 @@ function runPlant() {
   return caught === planted && cleanControls === controls ? 0 : 1;
 }
 
-export async function runSweep({ base = BASE, limit = LIMIT, audio = AUDIO, concurrency = CONCURRENCY, delayMs = DELAY_MS, retryDelayMs = RETRY_DELAY_MS, audioHost = BLOB_AUDIO_HOST } = {}) {
+export async function runSweep({ base = BASE, limit = LIMIT, audio = AUDIO, concurrency = CONCURRENCY, delayMs = DELAY_MS, retryDelayMs = RETRY_DELAY_MS, audioHost = BLOB_AUDIO_HOST, agents = AGENTS_ARG } = {}) {
   const labels = dictLabels(LANG);
   const meter = newMeter();
   const startedAt = Date.now();
+  const agentList = sweepAgents(agents);
   const allUrls = await storyUrls(base, meter);
   const urls = limit ? allUrls.slice(0, limit) : allUrls;
   if (urls.length === 0) {
     console.error(`[check:silent-listen] в sitemap ${base} нет ни одной страницы рассказа — мерить нечего, это отказ, а не чистый прогон`);
     return 1;
   }
-  const rows = await sweep(urls, labels, meter, { concurrency, delayMs, retryDelayMs, audioHost });
-  const verdict = judgePages(rows, labels, base);
+  let verdict = 0;
+  const allRows = [];
+  const summary = [];
+  for (const agent of agentList) {
+    console.log(`  ── агент: ${agent.title} (${agent.name})`);
+    const rows = await sweep(urls, labels, meter, { concurrency, delayMs, retryDelayMs, audioHost, agent });
+    const pages = judgePages(rows, labels, base, agent);
+    const mode = agentList.length > 1 || agent.name !== "web" ? judgeMode(rows, agent) : 0;
+    verdict ||= pages || mode;
+    allRows.push(...rows);
+    const ok = rows.filter((r) => !r.unreachable);
+    summary.push(`${agent.name}: страниц ${rows.length}, кнопка ${ok.filter((r) => r.button).length}, <audio> ${ok.filter((r) => r.audio).length}, кнопка без записи ${ok.filter((r) => r.silent).length}, режим ${agent.app ? "app" : "web"} ${ok.filter((r) => r.mode === (agent.app ? "app" : "web")).length}/${ok.length}${pages || mode ? " — ОТКАЗ" : ""}`);
+  }
+  if (agentList.length > 1) {
+    console.log("  итог по агентам:");
+    for (const line of summary) console.log(`    ${line}`);
+  }
   let audioBad = 0;
-  if (audio) audioBad = await judgeAudio(rows, meter, { concurrency, delayMs, retryDelayMs });
+  if (audio) audioBad = await judgeAudio(allRows, meter, { concurrency, delayMs, retryDelayMs });
   printMeter(meter, Date.now() - startedAt);
   return verdict || audioBad ? 1 : 0;
+}
+
+/**
+ * Сервер обязан был отрисовать страницу в режиме агента. Страница без
+ * признака режима или с чужим — отказ: иначе проверка приложения молча
+ * повторяет проверку браузера (сайт перестал узнавать оболочку) или
+ * наоборот.
+ */
+function judgeMode(rows, agent) {
+  const want = agent.app ? "app" : "web";
+  const reachable = rows.filter((r) => !r.unreachable);
+  const wrong = reachable.filter((r) => r.mode !== want);
+  if (!wrong.length) return 0;
+  console.error(`  режим отрисовки: у ${wrong.length} из ${reachable.length} страниц не «${want}» — сайт не узнал агента «${agent.name}» (проверка этого агента слепа), это отказ`);
+  for (const r of wrong.slice(0, 10)) console.error(`    ${r.url} — режим «${r.mode}»`);
+  return 1;
 }
 
 function printMeter(meter, ms) {
@@ -373,12 +480,12 @@ async function judgeAudio(rows, meter, opts) {
   return bad.length ? 1 : 0;
 }
 
-function judgePages(rows, labels, base) {
+function judgePages(rows, labels, base, agent) {
   const reachable = rows.filter((r) => !r.unreachable);
   const withButton = reachable.filter((r) => r.button);
   const silent = reachable.filter((r) => r.silent);
 
-  console.log(`[check:silent-listen] база ${base}, локаль ${LANG}, страниц ${rows.length}, отвечают 200: ${reachable.length}`);
+  console.log(`[check:silent-listen] база ${base}, локаль ${LANG}${agent ? `, агент ${agent.name}` : ""}, страниц ${rows.length}, отвечают 200: ${reachable.length}`);
   console.log(`  с кнопкой «слушать»: ${withButton.length}`);
   console.log(`  из них без единой настоящей записи: ${silent.length}`);
 
@@ -419,7 +526,10 @@ async function runSweepPlant() {
       res.end(`<urlset><url><loc>https://rusofacilapp.com/${LANG}/stories/a</loc></url><url><loc>https://rusofacilapp.com/${LANG}/stories/b</loc></url></urlset>`);
       return;
     }
-    const page = site.pages[path];
+    // Как настоящий сайт: оболочку узнаёт по токену в User-Agent или по куке.
+    const isApp = (site.recognizes ?? ["RFNativeShell"]).some((token) => (req.headers["user-agent"] ?? "").includes(token));
+    const entry = site.pages[path];
+    const page = typeof entry === "function" ? entry(isApp) : entry;
     if (page) {
       res.writeHead(page.status ?? 200, { "content-type": "text/html; charset=utf-8" });
       res.end(page.html.replaceAll("HOST", host));
@@ -439,11 +549,18 @@ async function runSweepPlant() {
   const base = `http://127.0.0.1:${server.address().port}`;
   const audioHost = `127\\.0\\.0\\.1:${server.address().port}`;
 
-  const storyPage = (clips) => ({ html: `<main><audio preload="metadata"></audio>${button}<script>self.__next_f.push([1,"{\\"audioSegments\\":[${clips.map((c) => `{\\"url\\":\\"HOST${c}\\"}`).join(",")}]}"])</script></main>` });
+  // Страница рассказа ветвится по оболочке, как `stories/[id]/page.tsx`:
+  // признак режима в payload (`"nativeShell":true|false`).
+  const storyPage = (clips, { silentInApp = false } = {}) => (isApp) => {
+    const audioEl = isApp && silentInApp ? "" : `<audio preload="metadata"></audio>`;
+    const segs = isApp && silentInApp ? [] : clips;
+    return { html: `<main>${audioEl}${button}<script>self.__next_f.push([1,"{\\"nativeShell\\":${isApp},\\"audioSegments\\":[${segs.map((c) => `{\\"url\\":\\"HOST${c}\\"}`).join(",")}]}"])</script></main>` };
+  };
   const healthy = () => ({
     pages: { [`/${LANG}/stories/a`]: storyPage(["/audio/a/0-0.mp3", "/audio/a/0-1.mp3"]), [`/${LANG}/stories/b`]: storyPage(["/audio/b/0-0.mp3"]) },
     files: { "/audio/a/0-0.mp3": {}, "/audio/a/0-1.mp3": {}, "/audio/b/0-0.mp3": {} },
   });
+  const ALL = "web,android-app,ios-app";
   const cases = [
     { name: "исправный сайт (отрицательный контроль)", expect: 0, edit: () => {} },
     { name: "подменённый адрес звука — файла нет (404)", expect: 1, edit: (s) => { s.pages[`/${LANG}/stories/b`] = storyPage(["/audio/b/NO-SUCH.mp3"]); } },
@@ -451,6 +568,12 @@ async function runSweepPlant() {
     { name: "звуковой файл пустой", expect: 1, edit: (s) => { s.files["/audio/a/0-0.mp3"] = { body: Buffer.alloc(0) }; } },
     { name: "страница рассказа отвечает 500 (и на повторе)", expect: 1, edit: (s) => { s.pages[`/${LANG}/stories/a`] = { status: 500, html: "<h1>Algo salió mal</h1>" }; } },
     { name: "кнопка «слушать» без записи", expect: 1, edit: (s) => { s.pages[`/${LANG}/stories/b`] = { html: `<main>${button}</main>` }; } },
+    // Долг 121 (7.296): поломки, видные только агентам приложения.
+    { name: "три агента: исправный сайт (отрицательный контроль)", agents: ALL, expect: 0, edit: () => {} },
+    { name: "ДО 7.296 (один браузер): кнопка без записи только в приложении — обход её не видит", agents: "web", expect: 0, edit: (s) => { s.pages[`/${LANG}/stories/b`] = storyPage(["/audio/b/0-0.mp3"], { silentInApp: true }); } },
+    { name: "три агента: кнопка без записи только в приложении", agents: ALL, expect: 1, edit: (s) => { s.pages[`/${LANG}/stories/b`] = storyPage(["/audio/b/0-0.mp3"], { silentInApp: true }); } },
+    { name: "три агента: сайт перестал узнавать оболочку (приложению — браузерная страница)", agents: ALL, expect: 1, edit: (s) => { s.recognizes = ["NO-SUCH-TOKEN"]; } },
+    { name: "агент iPhone: сайт узнаёт только Android (`; wv`)", agents: ALL, expect: 1, edit: (s) => { s.recognizes = ["; wv)"]; } },
   ];
   let ok = 0;
   try {
@@ -458,7 +581,7 @@ async function runSweepPlant() {
       site = healthy();
       c.edit(site);
       console.log(`  ── сквозной: ${c.name}`);
-      const code = await runSweep({ base, limit: 0, audio: true, concurrency: 2, delayMs: 0, retryDelayMs: 50, audioHost });
+      const code = await runSweep({ base, limit: 0, audio: true, concurrency: 2, delayMs: 0, retryDelayMs: 50, audioHost, agents: c.agents ?? "web" });
       const good = code === c.expect;
       if (good) ok += 1;
       console.log(`  ${good ? (c.expect ? "поймано" : "чисто") : c.expect ? "ПРОПУЩЕНО" : "ЛОЖНОЕ СРАБАТЫВАНИЕ"} — ${c.name} (код ${code})`);

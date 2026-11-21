@@ -15,6 +15,18 @@
 # HEAD-запросов / 1,1 МБ; цена — меньше $0,10 в месяц. Чтения боевой базы —
 # ≈85 тыс. строк за обход (325 рендеров рассказа по ≈260 строк).
 #
+# ТРИ АГЕНТА (7.296, долг 121). Обход идёт трижды — браузером телефона,
+# приложением Android и приложением iPhone (`--agents=web,android-app,ios-app`):
+# страница рассказа ветвится по оболочке (замок, кнопка покупки, без
+# подвала), и обход одним браузером путь приложения не видел. У каждого
+# агента каждая страница обязана быть отрисована в его режиме — иначе
+# проверка приложения слепа. Звуковые файлы — один раз, общим списком.
+# Цена трёх агентов — втрое больше страниц (≈980 запросов, ≈165 МБ трафика
+# сайта и ≈255 тыс. строк Turso за обход; в месяц ≈4 200 страниц / ≈0,7 ГБ
+# и ≈1,1 млн строк — внутри тарифов Vercel Pro и Turso Developer); звук —
+# как прежде. ПОДПИСЧИКОМ обход не ходит: вход на проде — запись
+# (`PROGRESS.md` 3.2), это решение владельца (раздел 7).
+#
 # КАК УЗНАЕТ ВЛАДЕЛЕЦ. Красный прогон — письмо GitHub «Run failed» (Failed
 # workflows), как у любого красного прогона по расписанию. Issue не
 # заводится: это не «сайт упал», а «у части рассказов пропал звук», и
@@ -53,7 +65,8 @@ jobs:
   sweep:
     name: Рассказы — кнопка «слушать» и звуковые файлы
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 30 → 45 (7.296): три агента вместо одного; замер с Mac — в журнале захода.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
 
@@ -71,7 +84,7 @@ jobs:
         run: |
           if [ "${CONTROL:-none}" = "broken_target" ]; then
             echo "КОНТРОЛЬ broken_target: обход идёт на заведомо мёртвый адрес — обязан покраснеть"
-            npm run check:silent-listen:prod -- --base=http://127.0.0.1:59999 --audio --concurrency=2 --delay-ms=400 --retry-delay-ms=1000
+            npm run check:silent-listen:prod -- --base=http://127.0.0.1:59999 --audio --concurrency=2 --delay-ms=400 --retry-delay-ms=1000 --agents=web,android-app,ios-app
           else
-            npm run check:silent-listen:prod -- --audio --concurrency=2 --delay-ms=400
+            npm run check:silent-listen:prod -- --audio --concurrency=2 --delay-ms=400 --agents=web,android-app,ios-app
           fi
