@@ -270,3 +270,68 @@ export function formatStripeEnvProblems(problems: readonly StripeEnvProblem[]): 
 
   return lines.join("\n");
 }
+
+/**
+ * ПАСПОРТ ЗАПУСКА ДЛЯ СОБЫТИЯ `StripeEnvWrongShape` — заход 7.298.
+ *
+ * Зачем. 13–20.11.2026 событие пришло в Sentry впервые за 12 недель жизни
+ * сторожа — ОДНО, хотя сторож стоит на каждом холодном старте сервера (их
+ * сотни в неделю), а все 21 боевые сборки той недели прошли тот же сторож
+ * в сборке (`check:stripe-env`, первой строкой buildCommand). Само событие
+ * говорило только «какие переменные и какой вид проблемы» — и не говорило,
+ * ГДЕ: какое окружение Vercel, какая версия кода, какой регион, сборка это
+ * или работающий сервер, и видел ли этот процесс настройки сайта ВООБЩЕ.
+ * Последнее решающее: если процесс не видит и ключа базы, и секрета
+ * сессии, — это запуск без переменных проекта (особенность платформы, а
+ * касса продакшна цела); если видит их, а Stripe — нет, — настоящая поломка
+ * настройки, и чинить её надо в панели Vercel.
+ *
+ * НИ ОДНОГО ЗНАЧЕНИЯ. Только имена, «есть / нет», окружение, первые 7
+ * знаков коммита (они и так публичны — в `/api/health` и в репозитории) и
+ * регион. Это держится тестом `stripe-env.test.ts` подстановкой значений.
+ */
+export const PROJECT_SECRETS_FOR_BOOT_CONTEXT: readonly string[] = [
+  "SESSION_SECRET",
+  "TURSO_DATABASE_URL",
+  "TURSO_AUTH_TOKEN",
+  "CRON_SECRET",
+  "SENTRY_DSN",
+];
+
+export interface StripeEnvBootContext {
+  /** Теги Sentry: короткие, по ним фильтруется панель. */
+  tags: Record<string, string>;
+  /** Отпечаток: разные наборы проблем — разные записи Sentry, одинаковые — одна. */
+  fingerprint: string[];
+}
+
+export function stripeEnvBootContext(
+  problems: readonly StripeEnvProblem[],
+  env: Record<string, string | undefined>,
+): StripeEnvBootContext {
+  const present = (name: string) => (env[name] ?? "").trim() !== "";
+  const seen = PROJECT_SECRETS_FOR_BOOT_CONTEXT.filter(present);
+  const stripeSeen = Object.keys(env).filter((key) => rulesFor(key) !== undefined && present(key)).length;
+  const kinds = [...new Set(problems.map((p) => p.kind))].sort();
+  const sha = (env.VERCEL_GIT_COMMIT_SHA ?? "").trim();
+
+  return {
+    tags: {
+      defect: "stripe-env-wrong-shape",
+      vercel_env: (env.VERCEL_ENV ?? "").trim() || "none",
+      commit: /^[0-9a-f]{7,40}$/i.test(sha) ? sha.slice(0, 7) : "unknown",
+      region: (env.VERCEL_REGION ?? "").trim() || "unknown",
+      // NEXT_PHASE ставит Next.js во время `next build`; на работающем
+      // сервере его нет. Отличает «сторож сработал в сборке» от «на старте».
+      boot_phase: (env.NEXT_PHASE ?? "").trim() || "runtime",
+      problem_kinds: kinds.join(",") || "none",
+      stripe_vars_seen: String(stripeSeen),
+      project_secrets_seen: `${seen.length}/${PROJECT_SECRETS_FOR_BOOT_CONTEXT.length}`,
+      // «Процесс без переменных проекта»: не видит ни одного из секретов
+      // выше. Касса продакшна такой запуск не обслуживает — без ключа базы
+      // он не отрисует ни одной страницы.
+      env_less_boot: seen.length === 0 ? "yes" : "no",
+    },
+    fingerprint: ["stripe-env-wrong-shape", ...problems.map((p) => `${p.name}:${p.kind}`).sort()],
+  };
+}
