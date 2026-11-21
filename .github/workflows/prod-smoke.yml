@@ -61,7 +61,10 @@ on:
         #                     идёт на мёртвый адрес и обязано покраснеть;
         #                     задание Chromium проверяет прод как обычно,
         #                     issue не заводится.
-        description: "Контроль: none / broken_target (прод упал) / install_failure (проверка не состоялась) / webkit_broken_target (красный только у WebKit)"
+        #   country_expect_mx — (7.296, долг 42) задание «Страна
+        #                     посетителя» ждёт от раннера Мексику — обязано
+        #                     покраснеть: раннер вне Мексики, и сайт это видит.
+        description: "Контроль: none / broken_target (прод упал) / install_failure (проверка не состоялась) / webkit_broken_target (красный только у WebKit) / country_expect_mx (красный только у «Страны посетителя»)"
         type: choice
         default: none
         options:
@@ -69,6 +72,7 @@ on:
           - broken_target
           - install_failure
           - webkit_broken_target
+          - country_expect_mx
   schedule:
     # 17-я минута каждого часа: не в ноль, чтобы не толкаться с общей
     # очередью расписаний GitHub.
@@ -421,3 +425,47 @@ jobs:
         run: |
           echo "::error title=Проверка WebKit не состоялась::до проверки прода дело не дошло — упала установка WebKit (зеркала Ubuntu или сеть раннера). Прод движком iPhone НЕ проверялся."
           exit 1
+
+  # СТРАНА ПОСЕТИТЕЛЯ (7.296, долг 42). От страны, которую граница Vercel
+  # ставит по IP (`x-vercel-ip-country`), зависят OXXO и валюта на
+  # `/pricing`. Раннер GitHub стоит вне Мексики — второй адрес к боевому
+  # домену, которого у долга 42 не было (первый — Mac владельца в Мексике,
+  # `npm run check:visitor-country:prod -- --expect=MX`). Правила:
+  # иностранцу — только карты и пересчёт «≈ … CODE*»; подделанный
+  # заголовок `x-vercel-ip-country: MX` отрисовку не меняет. Два GET
+  # страницы цен, без браузера, без входа. После выката, раз в сутки
+  # (06:41 UTC, вместе с WebKit) и вручную.
+  #
+  # КАК УЗНАЕТ ВЛАДЕЛЕЦ — как у WebKit: красное задание красит прогон,
+  # письмо GitHub «Run failed»; issue `prod-down` не заводится (страница
+  # цен жива, неверна только страна или курс).
+  country:
+    name: Страна посетителя — OXXO и валюта с адреса вне Мексики
+    if: >-
+      !inputs.simulate_failure &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event.schedule == '41 6 * * *' ||
+       (github.event_name == 'deployment_status' &&
+        github.event.deployment_status.state == 'success' &&
+        github.event.deployment.environment == 'Production'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      # Зависимости не нужны: чистый Node (fetch).
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.4"
+
+      - name: Позитивный контроль — сломанный местный сайт цен обязан дать красный
+        run: npm run check:visitor-country:plant
+
+      - name: Живой прод — страна раннера
+        env:
+          EXPECT_ARG: "${{ inputs.control == 'country_expect_mx' && '--expect=MX' || '' }}"
+        run: |
+          if [ -n "$EXPECT_ARG" ]; then
+            echo "КОНТРОЛЬ country_expect_mx: от раннера вне Мексики ждём Мексику — обязано покраснеть"
+          fi
+          npm run check:visitor-country:prod -- $EXPECT_ARG
