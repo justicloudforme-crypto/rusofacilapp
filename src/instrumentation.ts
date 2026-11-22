@@ -38,8 +38,9 @@ export const onRequestError = async (
  */
 async function reportMisshapenStripeEnv() {
   try {
-    const { checkStripeEnvShapes, formatStripeEnvProblems } = await import("./lib/stripe-env");
-    const problems = checkStripeEnvShapes(process.env as Record<string, string | undefined>);
+    const { checkStripeEnvShapes, formatStripeEnvProblems, stripeEnvBootContext } = await import("./lib/stripe-env");
+    const env = process.env as Record<string, string | undefined>;
+    const problems = checkStripeEnvShapes(env);
     if (problems.length === 0) return;
 
     const report = formatStripeEnvProblems(problems);
@@ -50,10 +51,14 @@ async function reportMisshapenStripeEnv() {
 
     const error = new Error(report.split("\n").slice(0, problems.length + 2).join("\n"));
     error.name = "StripeEnvWrongShape";
+    // Паспорт запуска (7.298): окружение, коммит, регион, сборка или сервер,
+    // видит ли процесс настройки сайта вообще. Без единого значения.
+    const context = stripeEnvBootContext(problems, env);
     const Sentry = await import("@sentry/nextjs");
     Sentry.captureException(error, {
       level: "error",
-      tags: { defect: "stripe-env-wrong-shape" },
+      tags: context.tags,
+      fingerprint: context.fingerprint,
       extra: {
         // Names and kinds only. Never a value.
         problems: problems.map((p) => `${p.name}: ${p.kind}`),
