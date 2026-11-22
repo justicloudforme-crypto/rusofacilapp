@@ -37,6 +37,13 @@ const BRIDGE_JS = readFileSync(
 export interface NativePluginHeader {
   name: string;
   methods: string[];
+  /**
+   * Методы с `returnType = RETURN_CALLBACK` на стороне Java, кроме
+   * `addListener` (он такой у всех): вызов не отвечается сразу, его
+   * `callbackId` живёт, и нативная сторона дёргает его позже — так устроен
+   * `MediaSession.setActionHandler` (кнопки карточки в шторке, 7.299).
+   */
+  callbacks?: string[];
 }
 
 export interface NativeCall {
@@ -60,11 +67,29 @@ export const SITE_NATIVE_PLUGINS: NativePluginHeader[] = [
       "requestPermissions",
       "removeAllDeliveredNotifications",
       "getDeliveredNotifications",
+      // Есть у настоящего плагина; объявлены, чтобы вызов канала дошёл до
+      // журнала, а не упал в `@capacitor/core` как «не реализовано» —
+      // иначе «0 вызовов» в пробе звука напоминания было бы слепым (7.299).
+      "createChannel",
+      "deleteChannel",
+      "listChannels",
       "addListener",
       "removeAllListeners",
     ],
   },
 ];
+
+/**
+ * Карточка проигрывателя в шторке — `@capgo/capacitor-media-session`
+ * (методы — по `MediaSessionPlugin.java` того же пакета; `setActionHandler`
+ * там `RETURN_CALLBACK`). Отдельно от `SITE_NATIVE_PLUGINS`: страница
+ * рассказа — единственное место, где он нужен (долг 303, 7.299).
+ */
+export const MEDIA_SESSION_PLUGIN: NativePluginHeader = {
+  name: "MediaSession",
+  methods: ["setMetadata", "setPlaybackState", "setPositionState", "setActionHandler", "getPluginVersion"],
+  callbacks: ["setActionHandler"],
+};
 
 export async function installNativeBridge(
   context: BrowserContext,
@@ -73,9 +98,13 @@ export async function installNativeBridge(
   const plugins = options.plugins ?? SITE_NATIVE_PLUGINS;
   const headers = plugins.map((p) => ({
     name: p.name,
-    methods: p.methods.map((name) => ({ name, rtype: name === "addListener" ? "callback" : "promise" })),
+    methods: p.methods.map((name) => ({
+      name,
+      rtype: name === "addListener" || p.callbacks?.includes(name) ? "callback" : "promise",
+    })),
   }));
   const answers = JSON.stringify(options.answers ?? {});
+  const callbackKeys = JSON.stringify(plugins.flatMap((p) => (p.callbacks ?? []).map((m) => `${p.name}.${m}`)));
   const script = [
     `window.Capacitor = { DEBUG: false, isLoggingEnabled: false, Plugins: {} };`,
     `window.Capacitor.PluginHeaders = ${JSON.stringify(headers)};`,
@@ -86,6 +115,7 @@ export async function installNativeBridge(
     // (замерено: 3 пробы из 5 без единого вызова, 7.298).
     `(() => {
       const answers = ${answers};
+      const callbackKeys = new Set(${callbackKeys});
       window.__rfNativeCalls = [];
       window.androidBridge = { postMessage(raw) {
         const call = JSON.parse(raw);
@@ -94,7 +124,7 @@ export async function installNativeBridge(
           pluginId: call.pluginId, methodName: call.methodName,
           options: call.options || {}, callbackId: call.callbackId,
         });
-        if (call.methodName === "addListener") return;
+        if (call.methodName === "addListener" || callbackKeys.has(call.pluginId + "." + call.methodName)) return;
         setTimeout(() => window.Capacitor.fromNative({
           callbackId: call.callbackId, pluginId: call.pluginId, methodName: call.methodName,
           success: true, data: answers[call.pluginId + "." + call.methodName] ?? {},
@@ -131,22 +161,44 @@ export async function fireNativeEvent(
   eventName: string,
   data: Record<string, unknown> = {},
 ): Promise<boolean> {
+  return fireNativeCallback(page, pluginId, "addListener", { eventName }, data);
+}
+
+/**
+ * Ответ нативной стороны по последнему живому вызову `pluginId.methodName`,
+ * чьи `options` совпадают с `match` (например, `setActionHandler` с
+ * `{ action: "pause" }` — нажатие «пауза» в шторке). Так отвечает Java:
+ * `PluginCall.resolve(data)` по сохранённому `callbackId`. Возвращает false,
+ * если такого вызова не было, — проба обязана это проверить.
+ */
+export async function fireNativeCallback(
+  page: Page,
+  pluginId: string,
+  methodName: string,
+  match: Record<string, unknown>,
+  data: Record<string, unknown> = {},
+): Promise<boolean> {
   return page.evaluate(
-    ({ pluginId, eventName, data }) => {
+    ({ pluginId, methodName, match, data }) => {
       const calls = (window as unknown as { __rfNativeCalls?: NativeCall[] }).__rfNativeCalls ?? [];
       const sub = [...calls]
         .reverse()
-        .find((c) => c.pluginId === pluginId && c.methodName === "addListener" && c.options.eventName === eventName);
+        .find(
+          (c) =>
+            c.pluginId === pluginId &&
+            c.methodName === methodName &&
+            Object.entries(match).every(([k, v]) => c.options[k] === v),
+        );
       if (!sub) return false;
       (window as unknown as { Capacitor: { fromNative(m: unknown): void } }).Capacitor.fromNative({
         callbackId: sub.callbackId,
         pluginId,
-        methodName: "addListener",
+        methodName,
         success: true,
         data,
       });
       return true;
     },
-    { pluginId, eventName, data },
+    { pluginId, methodName, match, data },
   );
 }
