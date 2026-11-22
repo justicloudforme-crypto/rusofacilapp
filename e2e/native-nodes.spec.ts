@@ -7,8 +7,20 @@ import { fireNativeEvent, installNativeBridge, nativeCalls, nativePlatformOf } f
  * До этого файла из шести узлов, стоящих за `Capacitor.isNativePlatform()`,
  * прибором исполнялся один (покупка, `native-purchase-outcomes.spec.ts`).
  * Здесь — четыре следующих: `NativeShellCookie`, `NativeBackButtonHandler`,
- * `NativeNotifications`, `haptics`. Шестой, `native-media-session`, — нет
- * (нужен проигрыватель с настоящей записью; остаток долга).
+ * `NativeNotifications`, `haptics`. Шестой, `native-media-session`, — в
+ * `native-media-session.spec.ts` (7.299: нужен проигрыватель с записью).
+ *
+ * 7.299 — ЗВУК НАПОМИНАНИЯ. Проба «напоминание в канал со звуком» судит
+ * половину, которую решает САЙТ: что именно он отдаёт плагину. Звук в
+ * шторке решает канал Android, а канал плагин выбирает по полям
+ * уведомления: нет `channelId` и нет `sound` → канал `default`, который
+ * плагин создаёт сам с важностью 3 и системным звуком уведомлений
+ * (`LocalNotificationManager.kt`, `createNotificationChannel`). Что этот
+ * канал на телефоне действительно звенит, доказывает вторая половина —
+ * `scripts/emulator/reminder-sound.mjs` (запись в шторке `isNoisy=true` и
+ * `RingtonePlayer: play uri=…` в те же секунды, 150 кругов в 7.299). Если
+ * сайт однажды начнёт слать `channelId` или `sound`, канал станет другим —
+ * и эта проба покраснеет раньше, чем ученик услышит тишину.
  *
  * Каждая проба сначала утверждает, что страница видит Android
  * (`getPlatform() === "android"`), и только потом судит узел. Последняя
@@ -84,6 +96,42 @@ test("NativeNotifications: бейдж снимается на запуске и 
   const before = await cleared();
   expect(await fireNativeEvent(page, "App", "resume")).toBe(true);
   await expect.poll(cleared, "снят и на возвращении").toBe(before + 1);
+  // Контроль для пробы звука ниже: разрешения нет (мост отвечает `{}`) —
+  // расписания нет вовсе. Значит, там `schedule` вызван ответом
+  // «granted», а не происходит всегда.
+  expect(await nativeCalls(page, "LocalNotifications", "schedule")).toHaveLength(0);
+});
+
+test("NativeNotifications: напоминание уходит в канал со звуком — без своего канала и без своего звука", async ({
+  page,
+  context,
+}) => {
+  await withShellCookie(context);
+  await installNativeBridge(context, {
+    answers: { "LocalNotifications.checkPermissions": { display: "granted" } },
+  });
+  await page.goto(PAGE);
+  await expectAndroid(page);
+  await expect.poll(async () => (await nativeCalls(page, "LocalNotifications", "schedule")).length, "напоминание поставлено").toBeGreaterThanOrEqual(1);
+  const [call] = await nativeCalls(page, "LocalNotifications", "schedule");
+  const list = call.options.notifications as Record<string, unknown>[];
+  expect(list, "одно напоминание").toHaveLength(1);
+  const n = list[0];
+  expect(n.id, "постоянный номер напоминания").toBe(1);
+  expect(n.schedule, "каждый день в 19:00, в том числе в режиме сна").toMatchObject({
+    on: { hour: 19, minute: 0 },
+    repeats: true,
+    allowWhileIdle: true,
+  });
+  expect(typeof n.title === "string" && n.title.length > 0, "есть заголовок").toBe(true);
+  // Звук решает канал: без `channelId` и `sound` плагин кладёт уведомление
+  // в канал `default` (важность 3, системный звук) — замер на эмуляторе.
+  expect(n, "своего канала нет — канал `default` плагина, со звуком").not.toHaveProperty("channelId");
+  expect(n, "своего звука нет — звук канала `default` (системный)").not.toHaveProperty("sound");
+  expect(n, "не «тихое» уведомление").not.toHaveProperty("silent");
+  // Канал со звуком сайт не пересоздаёт и не удаляет.
+  expect(await nativeCalls(page, "LocalNotifications", "createChannel")).toHaveLength(0);
+  expect(await nativeCalls(page, "LocalNotifications", "deleteChannel")).toHaveLength(0);
 });
 
 test("haptics: нажатие по нижней панели даёт лёгкий отклик телефона", async ({ page, context }) => {
