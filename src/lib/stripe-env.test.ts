@@ -3,7 +3,9 @@ import {
   checkStripeEnvShapes,
   formatStripeEnvProblems,
   hasStripeShape,
+  PROJECT_SECRETS_FOR_BOOT_CONTEXT,
   STRIPE_ENV_RULES,
+  stripeEnvBootContext,
 } from "./stripe-env";
 
 // A value that has the right SHAPE and belongs to nothing. Every literal in
@@ -156,5 +158,69 @@ describe("hasStripeShape", () => {
     expect(hasStripeShape("STRIPE_PRICE_LIFETIME", "sk_live_notarealkey")).toBe(false);
     expect(hasStripeShape("STRIPE_PRICE_LIFETIME", undefined)).toBe(false);
     expect(hasStripeShape("STRIPE_PRICE_LIFETIME", "")).toBe(false);
+  });
+});
+
+// Заход 7.298: событие `StripeEnvWrongShape` должно само говорить, ГДЕ оно
+// родилось, и не уносить ни одного значения.
+function without(env: Record<string, string>, drop: string): Record<string, string> {
+  return Object.fromEntries(Object.entries(env).filter(([key]) => key !== drop));
+}
+
+describe("stripeEnvBootContext", () => {
+  const SECRETS = {
+    SESSION_SECRET: "sess_notarealsecretGGGGGGGG",
+    TURSO_DATABASE_URL: "libsql://notreal-HHHHHHHH.turso.io",
+    TURSO_AUTH_TOKEN: "eyNotARealTokenIIIIIIII",
+    CRON_SECRET: "cron_notarealJJJJJJJJ",
+    SENTRY_DSN: "https://notreal@KKKKKKKK.ingest.sentry.io/1",
+  };
+  const DEPLOY = {
+    VERCEL_ENV: "production",
+    VERCEL_GIT_COMMIT_SHA: "ca6a83017e8fdfaa3a7a4cfa5e0fc49c3ed47739",
+    VERCEL_REGION: "pdx1",
+  };
+
+  it("names environment, commit, region and phase of a real deployment", () => {
+    const env = { ...without(OK, "STRIPE_WEBHOOK_SECRET"), ...SECRETS, ...DEPLOY };
+    const { tags, fingerprint } = stripeEnvBootContext(checkStripeEnvShapes(env), env);
+    expect(tags).toMatchObject({
+      vercel_env: "production",
+      commit: "ca6a830",
+      region: "pdx1",
+      boot_phase: "runtime",
+      problem_kinds: "missing",
+      stripe_vars_seen: "5",
+      project_secrets_seen: `${PROJECT_SECRETS_FOR_BOOT_CONTEXT.length}/${PROJECT_SECRETS_FOR_BOOT_CONTEXT.length}`,
+      env_less_boot: "no",
+    });
+    expect(fingerprint).toEqual(["stripe-env-wrong-shape", "STRIPE_WEBHOOK_SECRET:missing"]);
+  });
+
+  it("tells a process that received no project variables at all from a broken Stripe setting", () => {
+    const env = { ...DEPLOY, NEXT_PHASE: "phase-production-build" };
+    const problems = checkStripeEnvShapes(env);
+    expect(problems.length).toBe(5);
+    const { tags, fingerprint } = stripeEnvBootContext(problems, env);
+    expect(tags.env_less_boot).toBe("yes");
+    expect(tags.project_secrets_seen).toBe(`0/${PROJECT_SECRETS_FOR_BOOT_CONTEXT.length}`);
+    expect(tags.stripe_vars_seen).toBe("0");
+    expect(tags.boot_phase).toBe("phase-production-build");
+    expect(fingerprint).toHaveLength(6);
+  });
+
+  it("falls back to plain words instead of copying odd values into tags", () => {
+    const env = { ...OK, STRIPE_PRICE_MONTHLY: "prod_1Wrong", VERCEL_GIT_COMMIT_SHA: "not a sha" };
+    const { tags } = stripeEnvBootContext(checkStripeEnvShapes(env), env);
+    expect(tags).toMatchObject({ vercel_env: "none", commit: "unknown", region: "unknown", problem_kinds: "wrong-prefix" });
+  });
+
+  it("never carries a value — not a Stripe one and not a project secret", () => {
+    const env = { ...OK, STRIPE_PRICE_ANNUAL: OK.STRIPE_PRICE_MONTHLY, ...SECRETS, ...DEPLOY };
+    const text = JSON.stringify(stripeEnvBootContext(checkStripeEnvShapes(env), env));
+    for (const [name, value] of Object.entries({ ...OK, ...SECRETS })) {
+      expect(text, name).not.toContain(value);
+      expect(text, name).not.toContain(value.slice(-8));
+    }
   });
 });
