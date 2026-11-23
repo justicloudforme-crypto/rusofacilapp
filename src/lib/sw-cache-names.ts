@@ -218,7 +218,7 @@ function carriedNames(fingerprint: string): string[] {
 export const CARRIED_CACHE_NAME = /^rf-pages-(?:content|section|sheets)-([a-z0-9]+)$/;
 
 /** Отпечатки, у которых на телефоне есть кеш переносимого вида. */
-function carriedFingerprints(existing: readonly string[]): string[] {
+export function carriedFingerprints(existing: readonly string[]): string[] {
   const found = new Set<string>();
   for (const name of existing) {
     const m = CARRIED_CACHE_NAME.exec(name);
@@ -233,37 +233,125 @@ function carriedFingerprints(existing: readonly string[]): string[] {
  * @serwist/next used before this change (a returning visitor still has
  * those, holding pre-fix pages, and nothing else would ever remove them).
  *
- * ПРОСМОТРЕННОЕ ПЕРЕЖИВАЕТ ОДИН ВЫКАТ — ЗАХОД 7.237, СТРОКА 308.
+ * ПРОСМОТРЕННОЕ ЗДЕСЬ НЕ РЕШАЕТСЯ — ЗАХОД 7.301, ДОЛГ 308.
  *
- * Видео владельца 27.09.2026: без сети в каркасе сначала 4 строки, через
- * 1–2 с — одна («Guardado: 1»). Прогон на эмуляторе: каркас рисуется
- * дважды (исходная отдача и первая ступень лестницы повторов оболочки,
- * загрузка на +2,1 с), а активация воркера нового выката удаляет
- * просмотренные копии прошлого отпечатка — у владельца три из четырёх
- * строк; после выката без сети на эмуляторе — «Guardado: 1», только
- * скачанное. Теперь `content`/`section`/`sheets` ПРЕДЫДУЩЕГО поколения
- * остаются до следующего выката: активация больше не уносит то, что
- * каркас только что показал.
+ * Переносимые виды (`content`/`section`/`sheets`) ЛЮБОГО отпечатка эта
+ * функция не трогает: что из них оставить, решает
+ * `planCarriedGenerations` ниже — по содержимому, а не по одному имени.
+ * До 7.301 здесь оставалось ровно одно предыдущее поколение (метка,
+ * 7.237), и копия, не открытая между двумя выкатами, уходила со вторым.
  *
  * Долг 14 этим не возвращается: маршруты воркера читают только кеши
  * ТЕКУЩЕГО отпечатка (`CACHES` в `sw.ts`), так что устаревший HTML живой
  * страницей не станет никогда; старую копию открывает только каркас без
- * сети — вместе с её собственными листами. Вес ограничен: одно поколение
- * сверх текущего (потолки `content`/`section` в записях).
- *
- * `previous` — отпечаток из метки поколения; `null` — метки ещё нет
- * (первый выкат после этой правки): тогда предыдущим считается
- * единственный чужой отпечаток переносимых кешей, а если их несколько —
- * не переносится ничего.
+ * сети — вместе с её собственными листами.
  */
-export function staleCacheNames(existing: readonly string[], fingerprint: string, previous: string | null = null): string[] {
+export function staleCacheNames(existing: readonly string[], fingerprint: string): string[] {
   const keep = new Set<string>([...Object.values(pageCacheNames(fingerprint)), GENERATION_CACHE_NAME]);
-  let carried: string | null = previous;
-  if (carried === null) {
-    const others = carriedFingerprints(existing).filter((fp) => fp !== fingerprint);
-    carried = others.length === 1 ? others[0] : null;
-  }
-  if (carried && carried !== fingerprint) for (const name of carriedNames(carried)) keep.add(name);
   const legacy = new Set(["pages", "pages-rsc", "pages-rsc-prefetch", "others"]);
-  return existing.filter((name) => legacy.has(name) || (name.startsWith(PAGE_CACHE_PREFIX) && !keep.has(name)));
+  return existing.filter(
+    (name) => legacy.has(name) || (name.startsWith(PAGE_CACHE_PREFIX) && !keep.has(name) && !CARRIED_CACHE_NAME.test(name)),
+  );
+}
+
+/** История поколений в кеше метки: отпечатки, НОВЫЕ ПЕРВЫМИ (7.301). */
+export const GENERATIONS_KEY = "/__rf-generations";
+
+/**
+ * Сколько прошлых поколений просмотренного держится сверх текущего. Не
+ * «удобное число», а предел числа ЛИСТОВ СТИЛЕЙ: у каждого поколения свои
+ * листы (`sheets`), и копия без них не показывается. Восемь выкатов —
+ * это две-три недели при нынешнем темпе; дольше держит потолок записей.
+ */
+export const MAX_CARRIED_GENERATIONS = 8;
+
+/** Одна сохранённая страница прошлого поколения: адрес и вид кеша. */
+export interface CarriedDoc {
+  kind: "content" | "section";
+  url: string;
+}
+
+/** Снимок одного поколения: что в нём лежит и когда положено последнее. */
+export interface CarriedGeneration {
+  fingerprint: string;
+  docs: readonly CarriedDoc[];
+  /** Самое свежее `savedAt` описи этого поколения; null — описи нет. */
+  newestSavedAt: number | null;
+}
+
+export interface CarriedPlan {
+  /** Кеши поколений, которые уходят целиком (все три вида). */
+  dropCaches: string[];
+  /** Отдельные копии, у которых в более новом поколении есть своя. */
+  dropEntries: { cacheName: string; url: string }[];
+  /** Новая история: текущий отпечаток первым, затем оставленные. */
+  history: string[];
+}
+
+/**
+ * ЧТО ИЗ ПРОШЛЫХ ПОКОЛЕНИЙ ПЕРЕЖИВАЕТ ЭТОТ ВЫКАТ — ЗАХОД 7.301, ДОЛГ 308.
+ *
+ * Было (7.237): ровно одно предыдущее поколение. Человек сохранил урок →
+ * выкат → открыл приложение с сетью, но не этот урок → ещё выкат → без
+ * сети на месте урока каркас. Проба `e2e/offline-saved-two-deploys.spec.ts`.
+ *
+ * Стало: поколения идут от новых к старым (история из метки; неизвестные
+ * — в конце), и каждое остаётся, пока в нём есть хоть одна копия, которой
+ * нет в более новом поколении. Уходит поколение целиком, если:
+ *   * все его копии есть в более новых (пересохранены — старая не нужна);
+ *   * последняя его копия старше срока кеша содержания (30 дней, тот же
+ *     `maxAgeSeconds`, что у воркера и у описи страницы);
+ *   * более новые поколения уже набрали потолок записей содержания
+ *     (36 — тот же `maxEntries`): вес просмотренного не растёт с числом
+ *     выкатов;
+ *   * уже оставлено `MAX_CARRIED_GENERATIONS` поколений.
+ * В оставленном поколении копии, у которых есть более новая, стираются
+ * поштучно: каркас ищет по кешам по порядку, и старая копия не должна
+ * заслонять новую.
+ *
+ * `generations` может содержать и ТЕКУЩИЙ отпечаток: его копии считаются
+ * самыми новыми и не стираются никогда.
+ */
+export function planCarriedGenerations(input: {
+  current: string;
+  history: readonly string[];
+  generations: readonly CarriedGeneration[];
+  now: number;
+  maxDocs: number;
+  maxAgeMs: number;
+  maxGenerations: number;
+}): CarriedPlan {
+  const byFp = new Map(input.generations.map((g) => [g.fingerprint, g]));
+  const seen = new Set<string>();
+  let total = 0;
+  const own = byFp.get(input.current);
+  if (own) {
+    for (const doc of own.docs) seen.add(doc.url);
+    total += own.docs.filter((d) => d.kind === "content").length;
+  }
+  const known: string[] = [];
+  for (const fp of input.history) {
+    if (fp !== input.current && byFp.has(fp) && !known.includes(fp)) known.push(fp);
+  }
+  const unknown = [...byFp.keys()].filter((fp) => fp !== input.current && !known.includes(fp)).sort();
+
+  const plan: CarriedPlan = { dropCaches: [], dropEntries: [], history: [input.current] };
+  for (const fp of [...known, ...unknown]) {
+    const generation = byFp.get(fp)!;
+    const names = pageCacheNames(fp);
+    const fresh = generation.docs.filter((d) => !seen.has(d.url));
+    const expired = generation.newestSavedAt !== null && input.now - generation.newestSavedAt > input.maxAgeMs;
+    const kept = plan.history.length - 1;
+    if (fresh.length === 0 || expired || total >= input.maxDocs || kept >= input.maxGenerations) {
+      plan.dropCaches.push(...carriedNames(fp));
+      continue;
+    }
+    plan.history.push(fp);
+    for (const doc of generation.docs) {
+      if (seen.has(doc.url)) plan.dropEntries.push({ cacheName: names[doc.kind], url: doc.url });
+    }
+    for (const doc of fresh) seen.add(doc.url);
+    total += fresh.filter((d) => d.kind === "content").length;
+  }
+  return plan;
 }

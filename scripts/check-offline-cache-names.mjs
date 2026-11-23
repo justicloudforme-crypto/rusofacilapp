@@ -30,12 +30,14 @@
 //     однажды показала бы человеку JSON вместо урока.
 //  8. Потолки, по которым страница чистит сохранённое, берутся из той же
 //     таблицы бюджетов, что и потолки воркера, а не объявлены второй раз.
-//  9. Просмотренное переживает ОДИН выкат (заход 7.237, строка 308):
-//     воркер при активации читает метку поколения и отдаёт предыдущий
-//     отпечаток в `staleCacheNames`, потом пишет свой; `staleCacheNames`
-//     держит `content`/`section`/`sheets` предыдущего; имя метки каркас
-//     кешем документов не считает. Замер до правки: без сети каркас
-//     «Guardado: 4» → после выката «Guardado: 1».
+//  9. Просмотренное переживает выкаты по СОДЕРЖИМОМУ, а не по счёту
+//     (заход 7.237 — один выкат; заход 7.301, долг 308 — сколько угодно в
+//     пределах потолка): `staleCacheNames` переносимые виды не трогает;
+//     воркер при активации читает историю поколений, снимает содержимое,
+//     отдаёт всё в `planCarriedGenerations` и пишет новую историю; план
+//     держит поколение, пока в нём есть копия, которой нет в более новом.
+//     Имя метки каркас кешем документов не считает. Замер до 7.301: два
+//     выката подряд → копии урока нет (`e2e/offline-saved-two-deploys.spec.ts`).
 //
 //   node scripts/check-offline-cache-names.mjs
 //   node scripts/check-offline-cache-names.mjs --plant
@@ -220,15 +222,23 @@ export function violations(sources) {
   // 9
   const sw = withoutJsComments(sources[SW] ?? "");
   const activate = /addEventListener\("activate"[\s\S]*?\n\}\);/.exec(sw)?.[0] ?? "";
-  const readAt = activate.search(/marker\s*\.match\(GENERATION_KEY\)/);
-  const staleAt = activate.search(/staleCacheNames\(existing, FINGERPRINT, carriedFrom\)/);
-  const writeAt = activate.search(/marker\.put\(GENERATION_KEY, new Response\(FINGERPRINT\)\)/);
-  if (readAt < 0 || staleAt < 0 || writeAt < 0 || !(readAt < staleAt && staleAt < writeAt)) {
-    bad.push(`${SW}: активация не держит «прочитать метку поколения → чистка с предыдущим → записать свою» — выкат снова унесёт просмотренное (строка 308)`);
+  const readAt = activate.search(/readGenerationHistory\(marker\)/);
+  const planAt = activate.search(/planCarriedGenerations\(\{/);
+  const writeAt = activate.search(/marker\.put\(GENERATIONS_KEY, new Response\(JSON\.stringify\(plan\.history\)\)\)/);
+  if (readAt < 0 || planAt < 0 || writeAt < 0 || !(readAt < planAt && planAt < writeAt)) {
+    bad.push(`${SW}: активация не держит «прочитать историю поколений → план по содержимому → записать новую историю» — выкат снова унесёт просмотренное (строка 308)`);
+  }
+  if (!/staleCacheNames\(existing, FINGERPRINT\)/.test(activate)) {
+    bad.push(`${SW}: активация не зовёт staleCacheNames(existing, FINGERPRINT) — чужие кеши документов останутся висеть`);
   }
   const stale = /export function staleCacheNames\([\s\S]*?\n\}/.exec(names)?.[0] ?? "";
-  if (!/carriedNames\(carried\)/.test(stale) || !/const CARRIED_KINDS = \["content", "section", "sheets"\] as const;/.test(names)) {
-    bad.push(`${NAMES}: staleCacheNames не держит content/section/sheets предыдущего поколения — каркас «сжимается» после выката (7.237)`);
+  if (!/!CARRIED_CACHE_NAME\.test\(name\)/.test(stale) || !/const CARRIED_KINDS = \["content", "section", "sheets"\] as const;/.test(names)) {
+    bad.push(`${NAMES}: staleCacheNames уносит content/section/sheets прошлых поколений мимо плана — каркас «сжимается» после выката (7.237, 7.301)`);
+  }
+  // До `return plan;`: у сигнатуры свой `}` в нулевой колонке (тип входа).
+  const plan = /export function planCarriedGenerations\([\s\S]*?\n {2}return plan;\n\}/.exec(names)?.[0] ?? "";
+  if (!/fresh\.length === 0/.test(plan) || !/seen\.has\(/.test(plan)) {
+    bad.push(`${NAMES}: planCarriedGenerations не судит поколение по копиям, которых нет в более новом, — уносит по счёту выкатов (строка 308)`);
   }
   const markerName = /GENERATION_CACHE_NAME = `\$\{PAGE_CACHE_PREFIX\}-([^`]*)`/.exec(names)?.[1];
   const matchers = shellCacheMatchers(shell);
@@ -321,22 +331,28 @@ function plant() {
   );
 
   add(
-    "подсадка: воркер чистит без метки поколения (как до 7.237)",
+    "подсадка: воркер не читает историю поколений (как до 7.301)",
     SW,
-    (s) => s.replace("staleCacheNames(existing, FINGERPRINT, carriedFrom)", "staleCacheNames(existing, FINGERPRINT)"),
-    "прочитать метку поколения",
+    (s) => s.replace("const history = await readGenerationHistory(marker);", "const history: string[] = [];"),
+    "прочитать историю поколений",
   );
   add(
-    "подсадка: метка поколения не пишется",
+    "подсадка: история поколений не пишется",
     SW,
-    (s) => s.replace("await marker.put(GENERATION_KEY, new Response(FINGERPRINT))", "void marker"),
-    "прочитать метку поколения",
+    (s) => s.replace("await marker.put(GENERATIONS_KEY, new Response(JSON.stringify(plan.history))).catch(() => {});", "void plan;"),
+    "прочитать историю поколений",
   );
   add(
-    "подсадка: staleCacheNames снова уносит предыдущее поколение",
+    "подсадка: staleCacheNames снова уносит просмотренное прошлых поколений",
     NAMES,
-    (s) => s.replace("for (const name of carriedNames(carried)) keep.add(name);", "void carried;"),
-    "не держит content/section/sheets",
+    (s) => s.replace(" && !CARRIED_CACHE_NAME.test(name)", ""),
+    "уносит content/section/sheets",
+  );
+  add(
+    "подсадка: план держит ровно одно предыдущее поколение (как 7.237)",
+    NAMES,
+    (s) => s.replace("if (fresh.length === 0 || expired", "if (kept >= 1 || expired"),
+    "по копиям, которых нет",
   );
   add(
     "подсадка: метка названа так, что каркас считает её кешем документов",
@@ -365,7 +381,7 @@ function gate() {
     process.exitCode = 1;
     return;
   }
-  console.log("check:offline-cache-names — 9 правил, нарушений 0 (заходы 7.230 и 7.237: офлайн-2б, просмотренное переживает один выкат)");
+  console.log("check:offline-cache-names — 9 правил, нарушений 0 (заходы 7.230, 7.237, 7.301: офлайн-2б, просмотренное переживает выкаты по содержимому)");
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

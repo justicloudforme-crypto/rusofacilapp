@@ -138,6 +138,24 @@ describe("saveCopy", () => {
     expect(await indexOf(store)).toHaveLength(0);
   });
 
+  it("подписка кончилась — копия стирается и в кешах ПРОШЛЫХ поколений (7.301, долг 308)", async () => {
+    const { store, args } = deps();
+    // Копия того же адреса под прошлой сборкой: после 7.301 она переживает
+    // несколько выкатов и не должна пережить конец подписки.
+    const older = await store.open("rf-pages-content-oldfp");
+    await older.put(args.url, new Response("<html>old copy</html>"));
+    const olderSection = await store.open("rf-pages-section-oldfp");
+    await olderSection.put(args.url, new Response("<html>old copy</html>"));
+    const unrelated = await store.open("rf-pages-others-oldfp");
+    await unrelated.put(args.url, new Response("<html>not a saved copy</html>"));
+
+    expect(await saveCopy({ ...args, html: CLOSED_HTML })).toBe("removed-closed");
+    expect(await (await store.open("rf-pages-content-oldfp")).match(args.url), "копия прошлой сборки пережила конец подписки").toBeUndefined();
+    expect(await (await store.open("rf-pages-section-oldfp")).match(args.url)).toBeUndefined();
+    // Контроль: чужие по смыслу кеши правило не трогает.
+    expect(await (await store.open("rf-pages-others-oldfp")).match(args.url)).toBeTruthy();
+  });
+
   it("корень раздела ложится в СВОЙ кеш, а не в кеш содержания", async () => {
     const { store, args } = deps({ url: `${ORIGIN}/ru/courses`, pathname: "/ru/courses" });
     expect(await saveCopy(args)).toBe("saved");

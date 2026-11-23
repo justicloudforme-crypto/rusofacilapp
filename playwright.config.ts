@@ -150,8 +150,14 @@ export default defineConfig({
        * класс, что `offline-downloads*`: копия в кеше скачанного и
        * `context.setOffline` в Chromium.
        */
+      /**
+       * `offline-saved-two-deploys.spec.ts` (заход 7.301, долг 308) — тот же
+       * класс, что `offline-saved-rows`/`offline-downloads*`: изображает
+       * оболочку (снимает воркер, каркас на навигацию, `setOffline`), а
+       * WebKit под Playwright навигацию без сети до документа не доводит.
+       */
       testIgnore:
-        /(story-word-offline|story-resume-cold-cache|story-touch-seek|story-preplay-skip|story-downloaded-online-fresh|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell)\.spec\.ts/,
+        /(story-word-offline|story-resume-cold-cache|story-touch-seek|story-preplay-skip|story-downloaded-online-fresh|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell|offline-saved-two-deploys)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
