@@ -348,7 +348,10 @@ const CLOSED_CONTENT_NOT_STORED: SerwistPlugin = {
       const names = (await caches.keys()).filter(
         (name) => name === CACHES.content || /^rf-pages-(?:content|section)-[a-z0-9]+$/.test(name),
       );
-      for (const name of names) await (await caches.open(name)).delete(request, { ignoreVary: true });
+      for (const name of names) {
+        const cache = await caches.open(name);
+        await cache.delete(request, { ignoreVary: true });
+      }
     } catch {
       // Кеша может не быть вовсе — тогда стирать нечего.
     }
