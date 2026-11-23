@@ -30,6 +30,7 @@ import {
   UsersIcon,
 } from "@/components/profile/ProfileIcons";
 import { plural } from "@/lib/plural";
+import { searchDict } from "@/i18n/chrome-dict";
 
 export default async function Navbar({
   lang,
@@ -246,7 +247,7 @@ export default async function Navbar({
         </nav>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
-          <GlobalSearch lang={lang} dict={dict} isLoggedIn={Boolean(user)} />
+          <GlobalSearch lang={lang} dict={searchDict(dict)} isLoggedIn={Boolean(user)} />
 
           <div className="hidden sm:flex">
             <SoundToggle onLabel={dict.nav.soundOnLabel} offLabel={dict.nav.soundOffLabel} />
