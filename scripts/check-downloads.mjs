@@ -310,7 +310,7 @@ export function violations(sources) {
 /** Правила 2 и 3 — прогоном по настоящим функциям, а не по тексту. */
 async function runtimeViolations() {
   const bad = [];
-  const { pageCacheNames, staleCacheNames, DOWNLOADS_CACHE_NAME } = await import("../src/lib/sw-cache-names.ts");
+  const { pageCacheNames, staleCacheNames, planCarriedGenerations, DOWNLOADS_CACHE_NAME } = await import("../src/lib/sw-cache-names.ts");
   const { personalPageCaches } = await import("../src/lib/signed-out.ts");
 
   const fps = ["aaa111", "bbb222", "ccc333"];
@@ -323,19 +323,45 @@ async function runtimeViolations() {
     bad.push(`${NAMES}: имя кеша СОДЕРЖАНИЯ перестало зависеть от сборки — обратный контроль провален (долг 14)`);
   }
 
-  // Выкат bbb222 после ccc333: скачанное живо; просмотренное ПРЕДЫДУЩЕГО
-  // поколения (ccc333) переживает один выкат (7.237, строка 308);
-  // позапрошлое (aaa111) — уходит (обратный контроль, долг 14).
-  const live = [pageCacheNames("aaa111").downloads, pageCacheNames("aaa111").content, pageCacheNames("ccc333").content];
-  const stale = staleCacheNames(live, "bbb222", "ccc333");
+  // Выкат bbb222 после ccc333 и aaa111: скачанное живо; кеш документов
+  // чужой сборки уходит всегда (обратный контроль, долг 14); просмотренное
+  // прошлых поколений судит planCarriedGenerations по содержимому (7.301,
+  // долг 308): позапрошлое с копией, которой нет в более новом, остаётся,
+  // а пересохранённое в более новом — уходит (второй обратный контроль).
+  const live = [
+    pageCacheNames("aaa111").downloads,
+    pageCacheNames("aaa111").content,
+    pageCacheNames("aaa111").others,
+    pageCacheNames("ccc333").content,
+  ];
+  const stale = staleCacheNames(live, "bbb222");
   if (stale.includes(DOWNLOADS_CACHE_NAME)) {
     bad.push(`${NAMES}: staleCacheNames уносит скачанное на чужом отпечатке — это и есть долг 308, только теперь по кнопке`);
   }
-  if (stale.includes(pageCacheNames("ccc333").content)) {
-    bad.push(`${NAMES}: staleCacheNames уносит просмотренное ПРЕДЫДУЩЕГО поколения — каркас без сети «сжимается» после выката (7.237)`);
+  if (stale.includes(pageCacheNames("ccc333").content) || stale.includes(pageCacheNames("aaa111").content)) {
+    bad.push(`${NAMES}: staleCacheNames уносит просмотренное прошлых поколений мимо плана — каркас без сети «сжимается» после выката (7.237, 7.301)`);
   }
-  if (!stale.includes(pageCacheNames("aaa111").content)) {
-    bad.push(`${NAMES}: staleCacheNames не уносит позапрошлый кеш содержания — обратный контроль провален`);
+  if (!stale.includes(pageCacheNames("aaa111").others)) {
+    bad.push(`${NAMES}: staleCacheNames не уносит кеш документов чужой сборки — обратный контроль провален`);
+  }
+  const plan = (urlsC, urlsA) =>
+    planCarriedGenerations({
+      current: "bbb222",
+      history: ["ccc333", "aaa111"],
+      generations: [
+        { fingerprint: "ccc333", docs: urlsC.map((url) => ({ kind: "content", url })), newestSavedAt: null },
+        { fingerprint: "aaa111", docs: urlsA.map((url) => ({ kind: "content", url })), newestSavedAt: null },
+      ],
+      now: 0,
+      maxDocs: 36,
+      maxAgeMs: 30 * 24 * 3600 * 1000,
+      maxGenerations: 8,
+    });
+  if (plan(["/u1"], ["/u2"]).dropCaches.includes(pageCacheNames("aaa111").content)) {
+    bad.push(`${NAMES}: planCarriedGenerations уносит позапрошлую копию, которой нет в более новом поколении — долг 308`);
+  }
+  if (!plan(["/u1"], ["/u1"]).dropCaches.includes(pageCacheNames("aaa111").content)) {
+    bad.push(`${NAMES}: planCarriedGenerations не уносит пересохранённое поколение — обратный контроль провален`);
   }
 
   if (!personalPageCaches([DOWNLOADS_CACHE_NAME, "rf-audio"]).includes(DOWNLOADS_CACHE_NAME)) {
