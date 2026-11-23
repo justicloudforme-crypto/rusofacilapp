@@ -71,7 +71,9 @@ describe("server Sentry gate (debt 416)", () => {
   });
 
   it("is closed where the platform is unknown (Edge runtime)", () => {
-    expect(mayReportServerSentry(vercel("production"), undefined)).toBe(false);
+    // null, не undefined: undefined включил бы значение по умолчанию — ОС
+    // этого процесса (так тест краснел на Linux-раннере CI, 7.301).
+    expect(mayReportServerSentry(vercel("production"), null)).toBe(false);
   });
 
   it("reads the real platform of this process by default", () => {

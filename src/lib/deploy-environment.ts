@@ -82,13 +82,14 @@ export function isDeployedEnvironment(env: NodeJS.ProcessEnv = process.env): boo
  * Обращение через `globalThis`, а не `process.platform`, — чтобы краевая
  * сборка не ругалась на Node-API в общем модуле.
  */
-export function currentPlatform(): string | undefined {
-  return (globalThis as { process?: { platform?: string } }).process?.platform;
+export function currentPlatform(): string | null {
+  return (globalThis as { process?: { platform?: string } }).process?.platform ?? null;
 }
 
+/** `platform: null` — ОС неизвестна (краевая среда); правило закрыто. */
 export function mayReportServerSentry(
   env: NodeJS.ProcessEnv = process.env,
-  platform: string | undefined = currentPlatform(),
+  platform: string | null = currentPlatform(),
 ): boolean {
   return isDeployedEnvironment(env) && env.VERCEL === "1" && platform === "linux";
 }
