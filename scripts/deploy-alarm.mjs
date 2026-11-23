@@ -372,7 +372,9 @@ async function plant() {
   return ok === total ? 0 : 1;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+const IS_ENTRY_POINT = process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
+
+if (IS_ENTRY_POINT) {
   main().then(
     (code) => process.exit(code ?? 0),
     (error) => {
