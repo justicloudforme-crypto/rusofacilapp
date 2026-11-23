@@ -39,7 +39,7 @@
 import { chromium, devices } from "@playwright/test";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 // Формат даты — общий для всех, кто пишет в базу мимо Prisma
@@ -631,6 +631,7 @@ async function main() {
             existsSync(evidence.png) && readFileSync(evidence.png).length > 1000 &&
             existsSync(evidence.log) && readFileSync(evidence.log, "utf8").includes("planted boundary error (control)");
           console.log(`  ${saved ? "saved  " : "NOT SAVED"} evidence for the boundary (screenshot + browser journal)`);
+          rmSync(scratch, { recursive: true, force: true });
           ok = ok && saved;
         }
         caught += ok ? 1 : 0;
