@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { currentPlatform, getDeployEnvironment, isDeployedEnvironment, mayReportServerSentry } from "./deploy-environment";
+import { currentPlatform, getDeployEnvironment, isDeployedEnvironment, isRealVercelServer, mayReportServerSentry } from "./deploy-environment";
 
 describe("deploy environment gate", () => {
   it("reports no deployment on a developer machine", () => {
@@ -79,5 +79,20 @@ describe("server Sentry gate (debt 416)", () => {
   it("reads the real platform of this process by default", () => {
     expect(currentPlatform()).toBe(process.platform);
     expect(mayReportServerSentry(vercel("production"))).toBe(process.platform === "linux");
+  });
+});
+
+describe("one rule for Sentry and the Upstash cache (7.302)", () => {
+  it("Sentry and the cache agree on every combination — no second copy of the rule", () => {
+    const envs = [{}, { VERCEL_ENV: "preview" }, { VERCEL: "1" }, { VERCEL: "1", VERCEL_ENV: "production" }, { VERCEL: "1", VERCEL_ENV: "preview" }];
+    for (const env of envs) {
+      for (const platform of ["linux", "darwin", "win32", null]) {
+        const e = env as unknown as NodeJS.ProcessEnv;
+        expect(mayReportServerSentry(e, platform)).toBe(isRealVercelServer(e, platform));
+      }
+    }
+    // Контроль: правило не вырождено — открыто ровно на настоящем Vercel.
+    expect(isRealVercelServer({ VERCEL: "1", VERCEL_ENV: "production" } as unknown as NodeJS.ProcessEnv, "linux")).toBe(true);
+    expect(isRealVercelServer({ VERCEL_ENV: "preview" } as unknown as NodeJS.ProcessEnv, "darwin")).toBe(false);
   });
 });

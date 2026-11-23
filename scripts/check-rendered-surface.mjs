@@ -39,7 +39,8 @@
 import { chromium, devices } from "@playwright/test";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 // Формат даты — общий для всех, кто пишет в базу мимо Prisma
 // (stored-datetime.mjs, PROGRESS.md 7.147 долг 91). Строка ниже кладётся в
@@ -71,6 +72,21 @@ const EXPECT_PROGRESS = argv.includes("--expect-progress");
  * scripts/seed-ci-render-fixture.mjs is for.
  */
 const CI_MODE = argv.includes("--ci");
+/**
+ * ДОЛГ 419 (7.302): КУДА КЛАСТЬ УЛИКИ, ЕСЛИ НАЙДЕНА ГРАНИЦА ОШИБОК.
+ *
+ * 22.11.2026 этот шаг в CI один раз увидел «Что-то пошло не так» на
+ * `/ru/stories`, а повтор был зелёным — и причину назвать было нечем:
+ * ответ 200, `pageerror` нет (граница React ловит ошибку отрисовки, окну
+ * она не уходит), снимка нет. Теперь при такой находке рядом кладутся
+ * снимок экрана целиком и журнал браузера: консоль (React 19 печатает
+ * пойманную границей ошибку в `console.error` со стеком), необработанные
+ * ошибки, упавшие запросы и ответы ≥ 400. В CI папку выгружает шаг
+ * «Upload rendered-surface evidence» (`ci.yml`); пустая — ничего не
+ * выгружается. Позитивный контроль ниже (`--control`) проверяет, что улики
+ * действительно пишутся, — во временную папку, не в выгружаемую.
+ */
+const EVIDENCE_DIR = arg("evidence-dir", "test-results/rendered-surface");
 const EXPECT_SUBSCRIPTION = argv.includes("--expect-subscription");
 /**
  * Grant the account named by --email an active subscription for the length
@@ -333,9 +349,44 @@ async function resolveStoryReaderFamily(ctx) {
  * Both spellings: global-error's and the localized boundaries'. */
 const BOUNDARY_TEXT = /Something went wrong|Algo salió mal|Что-то пошло не так/;
 
-async function inspect(ctx, family, breakIt, signedIn = false) {
+/** Записать снимок и журнал браузера. Возвращает пути (или null). */
+async function saveBoundaryEvidence(page, dir, family, signedIn, journal, bodyText) {
+  try {
+    mkdirSync(dir, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const base = path.join(dir, `${family.name.replace(/[^a-z0-9]+/gi, "_")}-${signedIn ? "signed-in" : "anon"}-${stamp}`);
+    await page.screenshot({ path: `${base}.png`, fullPage: true }).catch(() => undefined);
+    const at = bodyText.search(BOUNDARY_TEXT);
+    const lines = [
+      `страница: ${page.url()}`,
+      `семейство: ${family.name} (${signedIn ? "вошедший" : "аноним"})`,
+      `время: ${new Date().toISOString()}`,
+      `текст вокруг границы: ${JSON.stringify(bodyText.slice(Math.max(0, at - 200), at + 300))}`,
+      "",
+      `журнал браузера (${journal.length} записей, по порядку):`,
+      ...journal,
+    ];
+    writeFileSync(`${base}.log`, lines.join("\n") + "\n");
+    console.log(`          → улики границы ошибок: ${base}.png, ${base}.log`);
+    return { png: `${base}.png`, log: `${base}.log` };
+  } catch (error) {
+    console.log(`          → улики границы ошибок НЕ записаны: ${String(error).slice(0, 160)}`);
+    return null;
+  }
+}
+
+async function inspect(ctx, family, breakIt, signedIn = false, evidenceDir = breakIt ? null : EVIDENCE_DIR) {
   const page = await ctx.newPage();
   const problems = [];
+  // Журнал браузера для улик (долг 419): копится всегда, пишется на диск
+  // только при найденной границе ошибок.
+  const journal = [];
+  const t0 = Date.now();
+  const note = (line) => journal.length < 400 && journal.push(`+${((Date.now() - t0) / 1000).toFixed(2)}s ${line}`);
+  page.on("console", (m) => note(`console.${m.type()}: ${m.text().slice(0, 4000)}`));
+  page.on("pageerror", (e) => note(`pageerror: ${String(e?.stack ?? e).slice(0, 4000)}`));
+  page.on("requestfailed", (r) => note(`requestfailed: ${r.method()} ${r.url()} — ${r.failure()?.errorText ?? "?"}`));
+  page.on("response", (r) => { if (r.status() >= 400) note(`http ${r.status()}: ${r.request().method()} ${r.url()}`); });
   page.on("pageerror", (e) => problems.push(`uncaught: ${String(e).slice(0, 120)}`));
   if (breakIt) await breakIt(page);
 
@@ -349,7 +400,11 @@ async function inspect(ctx, family, breakIt, signedIn = false) {
   if (status !== 200) problems.push(`http ${status}`);
 
   const bodyText = await page.locator("body").innerText().catch(() => "");
-  if (BOUNDARY_TEXT.test(bodyText)) problems.push("error boundary rendered");
+  let evidence = null;
+  if (BOUNDARY_TEXT.test(bodyText)) {
+    problems.push("error boundary rendered");
+    if (evidenceDir) evidence = await saveBoundaryEvidence(page, evidenceDir, family, signedIn, journal, bodyText);
+  }
 
   const h1 = (await page.locator("h1").first().textContent().catch(() => null))?.trim() ?? "";
   if (!family.expect.h1.test(h1)) problems.push(`h1 ${h1 ? `"${h1.slice(0, 40)}"` : "missing"} fails ${family.expect.h1}`);
@@ -398,7 +453,7 @@ async function inspect(ctx, family, breakIt, signedIn = false) {
 
   const fingerprint = { h1, found, chars: bodyText.length, bottomNav: await page.locator('nav a[href="/es/profile"]').count().catch(() => 0) };
   await page.close();
-  return { problems, fingerprint };
+  return { problems, fingerprint, evidence };
 }
 
 /**
@@ -559,12 +614,26 @@ async function main() {
         // control that cannot fire is not a control.
         ...(CI_MODE ? [] : [["content stripped after hydration", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.querySelectorAll("a").forEach((a) => a.remove()), 300)); }); }]]),
         ["h1 replaced", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.querySelectorAll("h1").forEach((h) => (h.textContent = "—")), 300)); }); }],
-        ["error boundary text present", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => document.body.append("Something went wrong"), 300)); }); }],
+        ["error boundary text present", async (p) => { await p.addInitScript(() => { addEventListener("load", () => setTimeout(() => { console.error("planted boundary error (control)"); document.body.append("Something went wrong"); }, 300)); }); }],
       ];
       let caught = 0;
       for (const [label, breakIt] of breakages) {
-        const { problems } = await inspect(anon, families.find((f) => f.name === "es/courses"), breakIt);
-        const ok = problems.length > 0;
+        // Долг 419: у подсадки границы ошибок проверяется ещё и то, что
+        // улики записаны (снимок не пустой, в журнале — подсаженная ошибка
+        // консоли). Во временную папку: выгружаемая остаётся пустой.
+        const boundary = label === "error boundary text present";
+        const scratch = boundary ? mkdtempSync(path.join(tmpdir(), "rendered-evidence-control-")) : null;
+        const { problems, evidence } = await inspect(anon, families.find((f) => f.name === "es/courses"), breakIt, false, scratch);
+        let ok = problems.length > 0;
+        if (boundary) {
+          const saved =
+            evidence !== null &&
+            existsSync(evidence.png) && readFileSync(evidence.png).length > 1000 &&
+            existsSync(evidence.log) && readFileSync(evidence.log, "utf8").includes("planted boundary error (control)");
+          console.log(`  ${saved ? "saved  " : "NOT SAVED"} evidence for the boundary (screenshot + browser journal)`);
+          rmSync(scratch, { recursive: true, force: true });
+          ok = ok && saved;
+        }
         caught += ok ? 1 : 0;
         console.log(`  ${ok ? "caught " : "MISSED "} ${label}${ok ? ` → ${problems[0]}` : ""}`);
       }
